@@ -7,20 +7,20 @@ This document provides a comprehensive overview of all available AI agents for t
 | Category | Count | Agents |
 |----------|-------|--------|
 | NLP Research | 1 | nlp-research-advisor |
-| Product & Planning | 4 | pm, po, ba, release-manager |
-| System Design | 5 | sa, sd, architect, cloud-architect, api-designer |
-| UI/UX Design | 2 | uiux, visual-designer |
-| Development | 4 | frontend, backend, full-stack, dba |
-| Data & AI | 4 | data-engineer, data-scientist, ai-engineer, analytics |
-| Quality | 3 | qa, qc, code-reviewer |
-| Debugging | 2 | debugger, error-resolver |
-| Security | 1 | security |
-| Infrastructure | 2 | devops, sre |
-| Performance | 1 | performance |
-| Accessibility & i18n | 1 | i18n |
-| Leadership | 1 | tech-lead |
-| Technical Writing | 1 | technical-writer |
-| End User Support | 3 | customer-support, user-researcher, user-support |
+| Product & Planning | 4 | senior-pm, senior-po, senior-ba, senior-release-manager |
+| System Design | 5 | senior-sa, senior-sd, senior-architect, senior-cloud-architect, senior-api-designer |
+| UI/UX Design | 2 | senior-uiux, senior-visual-designer |
+| Development | 4 | senior-frontend, senior-backend, senior-full-stack, senior-dba |
+| Data & AI | 4 | senior-data-engineer, senior-data-scientist, senior-ai-engineer, senior-analytics |
+| Quality | 3 | senior-qa, senior-qc, senior-code-reviewer |
+| Debugging | 2 | senior-debugger, senior-error-resolver |
+| Security | 1 | senior-security |
+| Infrastructure | 2 | senior-devops, senior-sre |
+| Performance | 1 | senior-performance |
+| Accessibility & i18n | 1 | senior-i18n |
+| Leadership | 1 | senior-tech-lead |
+| Technical Writing | 1 | senior-technical-writer |
+| End User Support | 3 | senior-customer-support, user-researcher, user-support |
 | **Total** | **35** | |
 
 ---

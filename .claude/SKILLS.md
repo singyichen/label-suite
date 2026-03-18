@@ -52,7 +52,6 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │       ├── traceability-matrix/
 │       └── test-report/
 ├── agents/                      # AI Agent definitions (35 agents)
-├── AGENTS.md                    # Agent directory and usage guide
 └── SKILLS.md                    # This file
 ```
 
@@ -215,7 +214,7 @@ For the Label-Eval-Portal project, these skills enforce additional constraints f
 ## Related Documentation
 
 - **[CLAUDE.md](../CLAUDE.md)**: Project coding standards and conventions
-- **[AGENTS.md](AGENTS.md)**: Reference for all 35 AI agents
+- **[AGENTS.md](../AGENTS.md)**: Reference for all 35 AI agents
 - **[CODE_REVIEW_GUIDE.md](skills/code-quality/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
 - **[Constitution](./../.specify/memory/constitution.md)**: Six core development principles
 
