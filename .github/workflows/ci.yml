@@ -31,21 +31,32 @@ jobs:
         id: check
         run: |
           echo "Checking project structure..."
+          BACKEND_EXISTS=false
+          FRONTEND_EXISTS=false
+
           if [ -f "backend/pyproject.toml" ]; then
             echo "✓ Backend exists - backend jobs will run"
             echo "backend-exists=true" >> $GITHUB_OUTPUT
+            BACKEND_EXISTS=true
           else
             echo "ℹ Backend not yet implemented - backend jobs will be skipped"
             echo "backend-exists=false" >> $GITHUB_OUTPUT
           fi
+
           if [ -f "frontend/package.json" ]; then
             echo "✓ Frontend exists - frontend jobs will run"
             echo "frontend-exists=true" >> $GITHUB_OUTPUT
+            FRONTEND_EXISTS=true
           else
             echo "ℹ Frontend not yet implemented - frontend jobs will be skipped"
             echo "frontend-exists=false" >> $GITHUB_OUTPUT
           fi
-          echo "Project is in early development phase. CI checks pass."
+
+          if [ "$BACKEND_EXISTS" = false ] && [ "$FRONTEND_EXISTS" = false ]; then
+            echo "✓ Project structure validation complete. Early development phase: no backend/frontend code yet, all code jobs will be skipped."
+          else
+            echo "✓ Project structure validation complete. Additional CI jobs will now run and may pass or fail independently."
+          fi
 
   backend-ruff:
     name: Backend — Ruff (Lint + Format)
