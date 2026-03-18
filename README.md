@@ -62,7 +62,12 @@ This project is positioned as a **Demo Paper**, with its core value in:
 |---|---|
 | **Frontend** | React + TypeScript + Vite |
 | **Backend** | FastAPI (Python) |
-| **Testing** | Playwright |
+| **Database** | PostgreSQL |
+| **Cache / Queue** | Redis |
+| **Async Tasks** | Celery |
+| **Testing** | Playwright (E2E) + pytest |
+
+> **Note:** This tech stack reflects the current design decision; implementation is tracked in Phase 3.
 
 ---
 
@@ -81,27 +86,82 @@ This project is positioned as a **Demo Paper**, with its core value in:
 
 ## Research Roadmap
 
+```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "cScale0": "#3B82F6",
+    "cScale1": "#8B5CF6",
+    "cScale2": "#10B981",
+    "cScale3": "#F59E0B",
+    "gridColor": "#E5E7EB",
+    "todayLineColor": "#EF4444",
+    "fontSize": "14px"
+  }
+}}%%
+gantt
+    title Label-Eval-Portal — Research Roadmap
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %Y
+
+    section Phase 1 · Problem Definition
+    Tool survey (Label Studio, CodaBench)         :p1a, 2026-04-01, 2026-06-01
+    UX interview & pain-point questionnaire       :p1d, 2026-05-01, 2026-07-01
+    Academic paper survey (Related Work)          :p1e, 2026-05-01, 2026-08-01
+    Define system contributions                   :p1b, 2026-06-01, 2026-07-01
+    Study Demo Paper examples from target venue   :p1c, 2026-07-01, 2026-08-01
+
+    section Phase 2 · System Design
+    Core module planning                          :p2a, 2026-08-01, 2026-09-01
+    General-purpose task template design          :p2b, 2026-09-01, 2026-11-01
+    Tech stack documentation                      :p2c, 2026-10-01, 2026-11-01
+    Data flow & leakage prevention design         :p2d, 2026-11-01, 2026-12-01
+    Preliminary Related Work draft                :p2e, 2026-10-01, 2026-12-01
+
+    section Phase 3 · Development & Validation
+    Project infrastructure & CI                   :p3a, 2026-12-01, 2027-02-01
+    Backend — FastAPI + DB + Celery               :p3b, 2027-02-01, 2027-07-01
+    Frontend — React annotation UI                :p3c, 2027-04-01, 2027-09-01
+    Automated scoring & leaderboard               :p3d, 2027-07-01, 2027-11-01
+    Domain validation & user feedback             :p3e, 2027-09-01, 2027-12-01
+    Mini user study (SUS questionnaire)           :p3g, 2027-11-01, 2028-01-01
+    Demonstration scenarios & demo video          :p3h, 2027-11-01, 2028-02-01
+
+    section Phase 4 · Paper & Demo
+    Paper outline & section drafts                :p4a, 2028-01-01, 2028-03-01
+    Advisor review & revision cycle               :p4b, 2028-03-01, 2028-04-01
+    System demonstration preparation              :p4c, 2028-03-01, 2028-04-01
+```
+
 ### Phase 1 — Problem Definition & Tool Survey (Month 1–4)
 - [ ] Survey existing platforms (e.g., Label Studio, CodaBench) and identify pain points in setup, usability, and workflow integration
+- [ ] Conduct UX interviews and distribute a pain-point questionnaire to target users (researchers, annotators)
+- [ ] Survey related academic papers on annotation platforms and NLP evaluation benchmarks to establish positioning for the Related Work section
 - [ ] Define the system's contribution: clarify how the portal is simpler and more usable than existing tools (e.g., Config-driven task launch)
-- [ ] Read Demo Papers provided by advisor to understand how system tools are presented academically
+- [ ] Study Demo Paper examples from target venue proceedings to understand structure, length, and demonstration requirements
 
 ### Phase 2 — System Design & General-Purpose Architecture (Month 5–8)
 - [ ] Plan core modules: Labeling, Automated Evaluation, and Leaderboard
 - [ ] Design general-purpose task templates — ensure the system supports diverse NLP tasks (e.g., classification, regression), not just a single use case
-- [ ] Decide tech stack
+- [ ] Document and ratify tech stack decision (FastAPI + React + PostgreSQL + Redis + Celery)
 - [ ] Design data flow to prevent test-set answer leakage
+- [ ] Draft preliminary Related Work notes; confirm no existing system makes the same contribution claim
 
-### Phase 3 — Implementation & Domain Validation (Month 9–18)
+### Phase 3 — Development & Validation (Month 9–22)
+- [ ] Project infrastructure setup (SDD workflow, CI, AI agents)
 - [ ] Implement frontend interface and backend logic (leverage AI tools to assist development)
 - [ ] Implement automated scoring and leaderboard generation
+- [ ] Define evaluation criteria: task launch time, inter-annotator agreement (IAA), scoring accuracy vs. baseline
 - [ ] Validate system on domain-specific NLP tasks (e.g., Chinese medical/healthcare, sentiment & psychological analysis)
-- [ ] Collect user feedback from lab members and iterate
+- [ ] Conduct structured mini user study with lab members (SUS questionnaire); document results as paper evidence
+- [ ] Define 2–3 demonstration scenarios covering core workflows (e.g., researcher launches task via config, annotator submits and views score, leaderboard updates)
+- [ ] Capture system screenshots and record a demo walkthrough video
 
-### Phase 4 — Paper Writing & Demo Preparation (Month 19–24)
-- [ ] Write thesis in English (target: Demo Paper format)
+### Phase 4 — Paper Writing & Demo Preparation (Month 22–24)
+- [ ] Draft paper outline and confirm structure with advisor (Introduction, System Overview, Key Features, Demonstration Scenarios, Related Work, Conclusion)
+- [ ] Write thesis in English to Demo Paper length and format
+- [ ] Complete advisor review cycle; address all feedback
 - [ ] Prepare system demonstration to showcase practical impact
-- [ ] Submit to target venue
 
 ---
 
