@@ -67,6 +67,8 @@ This project is positioned as a **Demo Paper**, with its core value in:
 | **Async Tasks** | Celery |
 | **Testing** | Playwright (E2E) + pytest |
 
+> **Note:** This tech stack reflects the current design decision; implementation is tracked in Phase 3.
+
 ---
 
 ## Comparison with Existing Tools
@@ -99,36 +101,36 @@ This project is positioned as a **Demo Paper**, with its core value in:
 }}%%
 gantt
     title Label-Eval-Portal — Research Roadmap
-    dateFormat  YYYY-MM
+    dateFormat  YYYY-MM-DD
     axisFormat  %b %Y
 
     section Phase 1 · Problem Definition
-    Tool survey (Label Studio, CodaBench)         :p1a, 2026-04, 2026-06
-    UX interview & pain-point questionnaire       :p1d, 2026-05, 2026-07
-    Academic paper survey (Related Work)          :p1e, 2026-05, 2026-08
-    Define system contributions                   :p1b, 2026-06, 2026-07
-    Study Demo Paper examples from target venue   :p1c, 2026-07, 2026-08
+    Tool survey (Label Studio, CodaBench)         :p1a, 2026-04-01, 2026-06-01
+    UX interview & pain-point questionnaire       :p1d, 2026-05-01, 2026-07-01
+    Academic paper survey (Related Work)          :p1e, 2026-05-01, 2026-08-01
+    Define system contributions                   :p1b, 2026-06-01, 2026-07-01
+    Study Demo Paper examples from target venue   :p1c, 2026-07-01, 2026-08-01
 
     section Phase 2 · System Design
-    Core module planning                          :p2a, 2026-08, 2026-09
-    General-purpose task template design          :p2b, 2026-09, 2026-11
-    Tech stack documentation                      :p2c, 2026-10, 2026-11
-    Data flow & leakage prevention design         :p2d, 2026-11, 2026-12
-    Preliminary Related Work draft                :p2e, 2026-10, 2026-12
+    Core module planning                          :p2a, 2026-08-01, 2026-09-01
+    General-purpose task template design          :p2b, 2026-09-01, 2026-11-01
+    Tech stack documentation                      :p2c, 2026-10-01, 2026-11-01
+    Data flow & leakage prevention design         :p2d, 2026-11-01, 2026-12-01
+    Preliminary Related Work draft                :p2e, 2026-10-01, 2026-12-01
 
     section Phase 3 · Development & Validation
-    Project infrastructure & CI                   :p3a, 2026-12, 2027-02
-    Backend — FastAPI + DB + Celery               :p3b, 2027-02, 2027-07
-    Frontend — React annotation UI                :p3c, 2027-04, 2027-09
-    Automated scoring & leaderboard               :p3d, 2027-07, 2027-11
-    Domain validation & user feedback             :p3e, 2027-09, 2027-12
-    Mini user study (SUS questionnaire)           :p3g, 2027-11, 2028-01
-    Demonstration scenarios & demo video          :p3h, 2027-11, 2028-02
+    Project infrastructure & CI                   :p3a, 2026-12-01, 2027-02-01
+    Backend — FastAPI + DB + Celery               :p3b, 2027-02-01, 2027-07-01
+    Frontend — React annotation UI                :p3c, 2027-04-01, 2027-09-01
+    Automated scoring & leaderboard               :p3d, 2027-07-01, 2027-11-01
+    Domain validation & user feedback             :p3e, 2027-09-01, 2027-12-01
+    Mini user study (SUS questionnaire)           :p3g, 2027-11-01, 2028-01-01
+    Demonstration scenarios & demo video          :p3h, 2027-11-01, 2028-02-01
 
     section Phase 4 · Paper & Demo
-    Paper outline & section drafts                :p4a, 2028-01, 2028-03
-    Advisor review & revision cycle               :p4b, 2028-03, 2028-04
-    System demonstration preparation              :p4c, 2028-03, 2028-04
+    Paper outline & section drafts                :p4a, 2028-01-01, 2028-03-01
+    Advisor review & revision cycle               :p4b, 2028-03-01, 2028-04-01
+    System demonstration preparation              :p4c, 2028-03-01, 2028-04-01
 ```
 
 ### Phase 1 — Problem Definition & Tool Survey (Month 1–4)
