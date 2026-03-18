@@ -269,4 +269,118 @@ All development must follow the six core principles in [constitution.md](.specif
 | **Code Review** | Review code quality, type safety, security | Before creating PR | Code Style → type check (`tsc` / `mypy`) → Lint (`ruff` / `eslint`) → logic review |
 | **Testing** | Verify correctness and coverage | On code changes | Run `pytest` (backend) → `playwright test` (E2E) → verify coverage |
 | **Bug Fix** | From reproduction to resolution | Bug discovered | Create `fix/` branch → reproduce → fix → regression test → PR |
-| **PR Flow** | Merge feature into main | Feature complete | Push → Create PR → Code Review → Tests pass → Merge → Delete branch |
+| **PR Flow** | Merge feature into main | Feature complete | See **Complete PR Flow** section below |
+
+## Complete PR Flow
+
+After development is complete, execute the following steps in order. Steps 1–6 are automated; **Step 7 (Merge) requires user confirmation**.
+
+> **Documentation-only changes** (`.md` files only): skip Step 3, but still run Step 2 to verify cross-references and content consistency.
+
+### Step 1 — Commit
+
+Use the correct commit type and push all changes:
+
+```bash
+git add <files>
+git commit -m "<type>: <description>"
+```
+
+### Step 2 — Code Review
+
+Run a code review and fix all findings before proceeding:
+
+- Use `/speckit.checklist` or the `code-review` skill
+- Fix issues, then re-commit
+
+### Step 3 — Test Validation _(skip for docs-only changes)_
+
+```bash
+# Backend
+cd backend && uv run pytest
+
+# Frontend E2E
+cd frontend && pnpm playwright test
+```
+
+Fix failures, re-commit, and re-run until all tests pass.
+
+### Step 4 — Push
+
+```bash
+git push origin <branch-name>
+```
+
+### Step 5 — Create PR
+
+```bash
+gh pr create --title "<type>: <description>" --base main --head <branch-name> --body "..."
+```
+
+**Test Plan requirement**: every checklist item in the PR body must be individually verified. Mark passed items as `[x]`; leave failed items as `[ ]` with a reason.
+
+### Step 6 — Qodo Code Review
+
+After the PR is created, the `qodo-code-review` bot automatically reviews the code. Follow this process:
+
+**6a. Fetch review findings**
+
+```bash
+gh api repos/{owner}/{repo}/pulls/{number}/comments \
+  --jq '.[] | {path, line, body}'
+```
+
+**6b. Fix each finding**, then commit and push to the same branch:
+
+```bash
+git add <files>
+git commit -m "fix: address qodo review findings"
+git push origin <branch-name>
+```
+
+**6c. Fetch review thread IDs**
+
+```bash
+gh api graphql -f query='
+  query {
+    repository(owner: "{owner}", name: "{repo}") {
+      pullRequest(number: {number}) {
+        reviewThreads(first: 50) {
+          nodes { id isResolved }
+        }
+      }
+    }
+  }'
+```
+
+**6d. Resolve fixed threads**
+
+```bash
+gh api graphql -f query='
+  mutation {
+    resolveReviewThread(input: {threadId: "PRRT_xxx"}) {
+      thread { id isResolved }
+    }
+  }'
+```
+
+> After each push, the bot re-reviews. Confirm there are no new findings in the latest review round before proceeding to merge.
+
+### Step 7 — Merge + Cleanup _(requires user confirmation)_
+
+```bash
+# Merge the PR
+gh pr merge <number> --merge
+
+# Switch back to main and pull latest
+git checkout main && git pull
+
+# Prune deleted remote branch tracking refs
+git fetch --prune
+
+# Delete the local branch
+git branch -d <branch-name>
+
+# Delete the remote branch
+git push origin --delete <branch-name>
+```
