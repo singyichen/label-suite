@@ -6,12 +6,21 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel redundant runs on the same branch when a new commit is pushed (M-2)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Minimum required permissions — override per-job if needed (L-2)
+permissions:
+  contents: read
+
 # ─── Backend Jobs ─────────────────────────────────────────────────────────────
 # All backend jobs are skipped when backend/pyproject.toml does not exist yet.
 
 jobs:
-  backend-lint:
-    name: Backend — Lint (Ruff)
+  backend-ruff:
+    name: Backend — Ruff (Lint + Format)
     runs-on: ubuntu-24.04
     if: hashFiles('backend/pyproject.toml') != ''
     defaults:
@@ -19,32 +28,17 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v2
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'uv'
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --locked
       - name: Lint with Ruff
         run: uv run ruff check .
-
-  backend-format:
-    name: Backend — Format (Ruff)
-    runs-on: ubuntu-24.04
-    if: hashFiles('backend/pyproject.toml') != ''
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v2
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'uv'
-      - name: Install dependencies
-        run: uv sync --dev
       - name: Format check with Ruff
         run: uv run ruff format --check .
 
@@ -57,13 +51,15 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v2
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'uv'
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --locked
       - name: Type check with mypy
         run: uv run mypy .
 
@@ -76,13 +72,15 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v2
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'uv'
-      - name: Install dependencies
-        run: uv sync --dev
+      - name: Install production dependencies only
+        run: uv sync --no-dev --locked
       - name: Security audit with pip-audit
         run: uv run pip-audit --desc --fail-on high
 
@@ -103,7 +101,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d label_eval_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -119,24 +117,30 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/label_eval_test
       REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: "ci-test-only-not-a-real-secret"
+      ENVIRONMENT: "test"
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v2
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'uv'
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --dev --locked
       - name: Run tests with coverage
-        run: uv run pytest --cov=app --cov-fail-under=80 --junitxml=junit.xml
+        run: uv run pytest --cov=app --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=80 --junitxml=junit.xml
       - name: Upload test artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: backend-junit-results
-          path: backend/junit.xml
-          if-no-files-found: ignore
+          name: backend-test-results
+          path: |
+            backend/junit.xml
+            backend/coverage.xml
+          if-no-files-found: warn
 
 # ─── Frontend Jobs ────────────────────────────────────────────────────────────
 # Skipped when frontend/package.json does not exist yet.
@@ -156,6 +160,7 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -166,13 +171,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-
       - name: Type check
         run: pnpm exec tsc --noEmit
 
       - name: Lint
         run: pnpm lint
+
+      - name: Build
+        run: pnpm build
 
   # TODO: Playwright E2E tests will be added once frontend development begins
