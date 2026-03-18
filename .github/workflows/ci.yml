@@ -19,10 +19,50 @@ permissions:
 # All backend jobs are skipped when backend/pyproject.toml does not exist yet.
 
 jobs:
+  validate:
+    name: Validate Project Structure
+    runs-on: ubuntu-24.04
+    outputs:
+      backend-exists: ${{ steps.check.outputs.backend-exists }}
+      frontend-exists: ${{ steps.check.outputs.frontend-exists }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check project structure
+        id: check
+        run: |
+          echo "Checking project structure..."
+          BACKEND_EXISTS=false
+          FRONTEND_EXISTS=false
+
+          if [ -f "backend/pyproject.toml" ]; then
+            echo "✓ Backend exists - backend jobs will run"
+            echo "backend-exists=true" >> $GITHUB_OUTPUT
+            BACKEND_EXISTS=true
+          else
+            echo "ℹ Backend not yet implemented - backend jobs will be skipped"
+            echo "backend-exists=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -f "frontend/package.json" ]; then
+            echo "✓ Frontend exists - frontend jobs will run"
+            echo "frontend-exists=true" >> $GITHUB_OUTPUT
+            FRONTEND_EXISTS=true
+          else
+            echo "ℹ Frontend not yet implemented - frontend jobs will be skipped"
+            echo "frontend-exists=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "$BACKEND_EXISTS" = false ] && [ "$FRONTEND_EXISTS" = false ]; then
+            echo "✓ Project structure validation complete. Early development phase: no backend/frontend code yet, all code jobs will be skipped."
+          else
+            echo "✓ Project structure validation complete. Additional CI jobs will now run and may pass or fail independently."
+          fi
+
   backend-ruff:
     name: Backend — Ruff (Lint + Format)
     runs-on: ubuntu-24.04
-    if: hashFiles('backend/pyproject.toml') != ''
+    needs: validate
+    if: needs.validate.outputs.backend-exists == 'true'
     defaults:
       run:
         working-directory: backend
@@ -45,7 +85,8 @@ jobs:
   backend-type-check:
     name: Backend — Type Check (mypy)
     runs-on: ubuntu-24.04
-    if: hashFiles('backend/pyproject.toml') != ''
+    needs: validate
+    if: needs.validate.outputs.backend-exists == 'true'
     defaults:
       run:
         working-directory: backend
@@ -66,7 +107,8 @@ jobs:
   backend-security:
     name: Backend — Security Audit (pip-audit)
     runs-on: ubuntu-24.04
-    if: hashFiles('backend/pyproject.toml') != ''
+    needs: validate
+    if: needs.validate.outputs.backend-exists == 'true'
     defaults:
       run:
         working-directory: backend
@@ -87,7 +129,8 @@ jobs:
   backend-test:
     name: Backend — Tests (pytest)
     runs-on: ubuntu-24.04
-    if: hashFiles('backend/pyproject.toml') != ''
+    needs: validate
+    if: needs.validate.outputs.backend-exists == 'true'
     defaults:
       run:
         working-directory: backend
@@ -148,7 +191,8 @@ jobs:
   frontend-lint:
     name: Frontend — Lint & Type Check & Build
     runs-on: ubuntu-24.04
-    if: hashFiles('frontend/package.json') != ''
+    needs: validate
+    if: needs.validate.outputs.frontend-exists == 'true'
     defaults:
       run:
         working-directory: frontend
