@@ -1,0 +1,200 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# ─── Backend Jobs ────────────────────────────────────────────────────────────
+
+jobs:
+  backend-lint:
+    name: Backend — Lint (Ruff)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'uv'
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Lint with Ruff
+        run: uv run ruff check .
+
+  backend-format:
+    name: Backend — Format (Ruff)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'uv'
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Format check with Ruff
+        run: uv run ruff format --check .
+
+  backend-type-check:
+    name: Backend — Type Check (mypy)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'uv'
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Type check with mypy
+        run: uv run mypy .
+
+  backend-security:
+    name: Backend — Security Audit (pip-audit)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'uv'
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Security audit with pip-audit
+        run: uv run pip-audit --desc --fail-on high
+
+  backend-test:
+    name: Backend — Tests (pytest)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: label_eval_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/label_eval_test
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'uv'
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Run tests with coverage
+        run: uv run pytest --cov=app --cov-fail-under=80 --junitxml=junit.xml
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-junit-results
+          path: backend/junit.xml
+          if-no-files-found: ignore
+
+# ─── Frontend Jobs ───────────────────────────────────────────────────────────
+
+  frontend-lint:
+    name: Frontend — Lint (ESLint)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint with ESLint
+        run: pnpm lint
+
+  frontend-type-check:
+    name: Frontend — Type Check (tsc)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Type check with tsc
+        run: pnpm tsc --noEmit
+
+  frontend-build:
+    name: Frontend — Build
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+
+  # TODO: Playwright E2E tests will be added once frontend development begins
