@@ -73,6 +73,8 @@ uv run ruff format .
 
 ## Architecture
 
+> **Decision:** This project uses a Modular Monorepo — frontend and backend co-located in the same repository under separate top-level directories. See [ADR-001](docs/decisions/ADR-001-monorepo-structure.md) for the full rationale.
+
 ```
 label-eval-portal/
 ├── frontend/                # React + TypeScript frontend
