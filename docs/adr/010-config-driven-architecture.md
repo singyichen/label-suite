@@ -99,5 +99,5 @@ leaderboard:
 
 ## Referenced by
 
-- [Constitution](.specify/memory/constitution.md) — Principle 2: Generalization-First (NON-NEGOTIABLE)
+- [Constitution](../../.specify/memory/constitution.md) — Principle 2: Generalization-First (NON-NEGOTIABLE)
 - [README.md](../../README.md) — Key Contributions §1: Configurable and General-Purpose

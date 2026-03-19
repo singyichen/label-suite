@@ -85,8 +85,8 @@ def test_f1_macro_empty_raises():
 | Layer | Threshold | Rationale |
 |-------|----------:|-----------|
 | General backend | ≥ 80% | Constitution principle 4 |
-| Scoring engine (`services/scoring.py`) | ≥ 90% | Correctness-critical |
-| Leakage prevention (`api/routes/`) | 100% of security ACs | Non-negotiable |
+| Scoring engine (`backend/app/services/scoring.py`) | ≥ 90% | Correctness-critical |
+| Leakage prevention (`backend/app/api/routes/`) | 100% of security ACs | Non-negotiable |
 
 ### Test Categories
 
