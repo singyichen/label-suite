@@ -55,10 +55,10 @@ task:
 annotation:
   labels:
     - id: disease
-      display: "疾病"
+      display: "Disease"
       color: "#EF4444"
     - id: symptom
-      display: "症狀"
+      display: "Symptom"
       color: "#F59E0B"
   allow_multiple: true
   require_reason: false
