@@ -257,7 +257,7 @@ All development must follow the six core principles in [constitution.md](.specif
 1. **Spec-First Development** (RECOMMENDED) — write spec before new features
 2. **Generalization-First** (NON-NEGOTIABLE) — Config-driven, no hardcoded task logic
 3. **Data Fairness** (NON-NEGOTIABLE) — prevent test-set answer leakage
-4. **Test-First** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows
+4. **Test-First / TDD** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows; all agents must follow Red-Green-Refactor (see [ADR-009](docs/adr/009-testing-strategy.md))
 5. **Simplicity** — YAGNI, KISS, avoid over-engineering
 6. **English-First** — all project artifacts in English except `README.zh-TW.md`
 

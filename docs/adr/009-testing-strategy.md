@@ -38,6 +38,47 @@ These constraints require a layered testing strategy covering both the backend l
 
 - **Backend**: **pytest** + `pytest-asyncio` + `httpx` for unit and integration tests.
 - **E2E**: **Playwright** (Node.js, TypeScript) for browser automation and critical user flow tests.
+- **Development approach**: **Test-Driven Development (TDD)** — all agents and developers must write tests before implementation code.
+
+### TDD Workflow
+
+All feature implementation — whether by human developers or AI agents — must follow the Red-Green-Refactor cycle:
+
+```
+1. Red   — Write a failing test that defines the expected behavior
+2. Green — Write the minimum code to make the test pass
+3. Refactor — Clean up the code without changing behavior; tests must still pass
+```
+
+**Agent-specific rule**: When an AI agent (senior-backend, senior-frontend, or any other) is asked to implement a feature, it must:
+
+1. Write the test file first (`tests/unit/` or `tests/integration/`)
+2. Confirm the test fails (Red) before writing any implementation
+3. Implement only what is needed to pass the test (Green)
+4. Refactor if needed, keeping all tests green
+
+**Example — TDD for a scoring metric:**
+
+```python
+# Step 1 (Red): write the test first
+# backend/tests/unit/test_scoring.py
+def test_f1_macro_perfect_score():
+    predictions = ["positive", "negative", "neutral"]
+    ground_truth = ["positive", "negative", "neutral"]
+    assert compute_f1_macro(predictions, ground_truth) == 1.0
+
+def test_f1_macro_all_wrong():
+    predictions = ["positive", "positive", "positive"]
+    ground_truth = ["negative", "neutral", "negative"]
+    assert compute_f1_macro(predictions, ground_truth) == 0.0
+
+def test_f1_macro_empty_raises():
+    with pytest.raises(ValueError, match="empty"):
+        compute_f1_macro([], [])
+
+# Step 2 (Green): implement compute_f1_macro() to pass the above tests
+# Step 3 (Refactor): clean up implementation; re-run tests to confirm
+```
 
 ### Coverage Thresholds
 
