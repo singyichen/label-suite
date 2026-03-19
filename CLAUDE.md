@@ -73,7 +73,7 @@ uv run ruff format .
 
 ## Architecture
 
-> **Decision:** This project uses a Modular Monorepo — frontend and backend co-located in the same repository under separate top-level directories. See [ADR-001](docs/decisions/ADR-001-monorepo-structure.md) for the full rationale.
+> **Decision:** This project uses a Modular Monorepo — frontend and backend co-located in the same repository under separate top-level directories. See [ADR-001](docs/adr/001-monorepo-structure.md) for the full rationale. All architectural decisions are documented in [docs/adr/](docs/adr/).
 
 ```
 label-eval-portal/
