@@ -16,7 +16,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── speckit.checklist.md     # Generate quality checklist
 │   ├── speckit.constitution.md  # Update project constitution
 │   └── speckit.taskstoissues.md # Convert tasks to GitHub Issues
-├── skills/                      # Knowledge-Domain Skills (27 total)
+├── skills/                      # Knowledge-Domain Skills (28 total)
 │   ├── spec-driven-development/
 │   │   ├── sdd-workflow/
 │   │   ├── spec-to-plan/
@@ -46,11 +46,12 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   │   ├── test-tracking/
 │   │   ├── exploratory-testing/
 │   │   └── regression-suite/
-│   └── quality-assurance/
-│       ├── quality-gate/
-│       ├── defect-report/
-│       ├── traceability-matrix/
-│       └── test-report/
+│   ├── quality-assurance/
+│   │   ├── quality-gate/
+│   │   ├── defect-report/
+│   │   ├── traceability-matrix/
+│   │   └── test-report/
+│   └── adamelliotfields-skills-d2-diagram/  # Diagramming
 ├── agents/                      # AI Agent definitions (35 agents)
 └── SKILLS.md                    # This file
 ```
@@ -112,7 +113,7 @@ Skills for defining, converting, and validating requirements.
 | `/acceptance-criteria` | Generate comprehensive AC checklists | `/acceptance-criteria annotation submission feature` |
 | `/requirement-to-ac` | Convert User Story to testable SMART AC | `/requirement-to-ac annotator submits predictions` |
 
-### System Design (5 skills)
+### System Design (6 skills)
 
 Skills for designing APIs, services, data models, and architecture.
 
@@ -123,6 +124,7 @@ Skills for designing APIs, services, data models, and architecture.
 | `/frontend-spec` | Generate frontend component specifications | `/frontend-spec AnnotationWorkspace component` |
 | `/data-model` | Design PostgreSQL schemas and ER diagrams | `/data-model annotation submission and leaderboard` |
 | `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
+| `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
 
 ### Code Quality (5 skills)
 
@@ -170,11 +172,11 @@ Skills for quality gates, defect management, traceability, and reporting.
 |--------|-------|--------|
 | Spec-Driven Development | 3 | sdd-workflow, spec-to-plan, spec-review |
 | Requirements Engineering | 4 | user-story, functional-req, acceptance-criteria, requirement-to-ac |
-| System Design | 5 | api-spec, backend-spec, frontend-spec, data-model, flowchart |
+| System Design | 6 | api-spec, backend-spec, frontend-spec, data-model, flowchart, d2-diagram |
 | Code Quality | 5 | code-review, code-review-checklist, pr-review, code-smell, git-branch |
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
-| **Total** | **27** | |
+| **Total** | **28** | |
 
 ---
 
@@ -220,5 +222,5 @@ For the Label-Eval-Portal project, these skills enforce additional constraints f
 
 ---
 
-*Last Updated: 2026-03-18*
-*Total Skills: 27 | Spec-Kit Commands: 9*
+*Last Updated: 2026-03-21*
+*Total Skills: 28 | Spec-Kit Commands: 9*
