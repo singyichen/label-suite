@@ -1,0 +1,58 @@
+direction: right
+...@../shared/_base
+
+title: Chapter 1 — Introduction {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+researcher: Researcher {
+  class: [base; person; multiple]
+}
+
+existing_tools: Existing Tools {
+  class: tool
+
+  label_studio: Label Studio {
+    class: [base; multiple]
+    style.fill: MistyRose
+  }
+  codabench: CodaBench {
+    class: [base; multiple]
+    style.fill: MistyRose
+  }
+}
+
+pain_points: Pain Points {
+  class: tool
+
+  p1: Tedious Setup {class: base}
+  p2: Unintuitive UI {class: base}
+  p3: Excel Workaround {class: base}
+  p4: Reinventing the Wheel {class: base}
+}
+
+portal: Label-Eval-Portal {
+  class: module
+
+  o1: Config-driven Launch {class: base}
+  o2: General-Purpose NLP Tasks {class: base}
+}
+
+contributions: Contributions {
+  class: highlight
+
+  c1: Lower Entry Barriers {class: base}
+  c2: Integrated Workflow {class: base}
+  c3: Data Integrity {class: base}
+}
+
+researcher -> existing_tools: uses today {class: animated}
+existing_tools.label_studio -> pain_points.p1: causes {class: animated}
+existing_tools.label_studio -> pain_points.p3: causes {class: animated}
+existing_tools.codabench -> pain_points.p2: causes {class: animated}
+existing_tools.codabench -> pain_points.p4: causes {class: animated}
+pain_points -> portal: motivates {class: animated}
+portal -> contributions: delivers {class: animated}

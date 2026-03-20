@@ -1,0 +1,78 @@
+direction: right
+...@../shared/_base
+
+title: Chapter 4 — Implementation {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+researcher: Researcher {
+  class: [base; person]
+}
+
+frontend: Frontend {
+  style: {
+    bold: true
+    font-size: 22
+    fill: honeydew
+    fill-pattern: grain
+    border-radius: 8
+  }
+  icon: https://icons.terrastruct.com/dev%2Freact.svg
+
+  react: React 18 + TypeScript {class: base}
+  vite: Vite (HMR · Build) {class: base}
+  router: React Router v6 {class: base}
+  query: TanStack Query {class: base}
+  playwright: Playwright E2E {class: base}
+}
+
+backend: Backend {
+  style: {
+    bold: true
+    font-size: 22
+    fill: PapayaWhip
+    fill-pattern: grain
+    border-radius: 8
+  }
+  icon: https://icons.terrastruct.com/dev%2Fpython.svg
+
+  fastapi: FastAPI {class: base}
+  pydantic: Pydantic v2 {class: base}
+  celery: Celery Worker {
+    class: [base; multiple]
+  }
+  sqlalchemy: SQLAlchemy + Alembic {class: base}
+}
+
+infra: Infrastructure {
+  class: highlight
+
+  postgres: PostgreSQL {
+    class: store
+    icon: https://icons.terrastruct.com/dev%2Fpostgresql.svg
+  }
+  redis: Redis {
+    class: store
+    icon: https://icons.terrastruct.com/dev%2Fredis.svg
+    label: Redis\nBroker · Cache
+  }
+}
+
+flow: End-to-end Flow {
+  class: highlight
+
+  w1: Label {class: step}
+  w2: Submit {class: step}
+  w3: Score {class: step}
+  w4: Leaderboard {class: step}
+  w1 -> w2 -> w3 -> w4
+}
+
+researcher -> frontend: uses {class: animated}
+frontend -> backend: REST API {class: animated}
+backend.celery -> infra.redis: task queue {class: animated}
+backend.sqlalchemy -> infra.postgres: ORM {class: animated}
+backend -> flow: implements {class: animated}
