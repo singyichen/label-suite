@@ -109,89 +109,10 @@ func main() {
 
 Define classes once and apply them to multiple nodes. This is the key to consistent, maintainable diagrams.
 
-Always include the following **standard class block** at the top of every `.d2` file. This is the project-wide base style:
+The canonical class definitions live in **`docs/diagrams/shared/_base.d2`** — that file is the single source of truth. Import it at the top of every `.d2` file:
 
 ```d2
-classes: {
-  base: {
-    style: {
-      bold: true
-      font-size: 24
-    }
-  }
-
-  person: {
-    shape: person
-  }
-
-  animated: {
-    style: {
-      animated: true
-    }
-  }
-
-  multiple: {
-    style: {
-      multiple: true      # stacked visual — conveys "many instances"
-    }
-  }
-
-  tool: {
-    style: {
-      bold: true
-      font-size: 22
-      fill: PapayaWhip
-      fill-pattern: grain
-      border-radius: 8
-    }
-  }
-
-  module: {
-    style: {
-      bold: true
-      font-size: 22
-      fill: honeydew
-      fill-pattern: grain
-      border-radius: 8
-    }
-  }
-
-  highlight: {
-    style: {
-      bold: true
-      font-size: 22
-      fill: LightCyan
-      fill-pattern: grain
-      border-radius: 8
-    }
-  }
-
-  warning: {
-    shape: diamond
-    style: {
-      bold: true
-      font-size: 20
-      fill: MistyRose
-    }
-  }
-
-  step: {
-    shape: step
-    style: {
-      bold: true
-      font-size: 20
-    }
-  }
-
-  store: {
-    shape: cylinder
-    style: {
-      bold: true
-      font-size: 22
-      font: mono
-    }
-  }
-}
+...@../shared/_base   # adjust relative path as needed
 ```
 
 #### Class usage guide
