@@ -1,0 +1,44 @@
+direction: right
+...@../shared/_base
+
+title: Chapter 6 — Conclusion & Future Work {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+conclusion: 6.1 Conclusion {
+  class: module
+
+  c1: Solved workflow fragmentation {class: base}
+  c2: Eliminated reinventing the wheel {class: base}
+  c3: Config-driven NLP deployment {class: base}
+  c4: Integrated labeling + scoring + leaderboard {class: base}
+
+  value: Open-source Academic Reuse {
+    class: base
+    icon: https://icons.terrastruct.com/dev%2Fgithub.svg
+  }
+}
+
+limitations: 6.2 Research Limitations {
+  class: tool
+
+  lim1: Limited Task Types\nNo generative tasks yet {class: warning}
+  lim2: Small-scale User Study\nLab-only participants {class: warning}
+  lim3: No Stress Testing\nHigh-concurrency untested {class: warning}
+}
+
+future: 6.3 Future Work {
+  class: highlight
+
+  fw1: AI-Assisted Labeling\nLLM edge case discovery {class: base}
+  fw2: Generative Task Support\nExtend config schema {class: base}
+  fw3: Load & Stress Testing {class: base}
+}
+
+conclusion -> limitations: acknowledges {class: animated}
+limitations.lim1 -> future.fw2: motivates {class: animated}
+limitations.lim2 -> future.fw1: motivates {class: animated}
+limitations.lim3 -> future.fw3: motivates {class: animated}

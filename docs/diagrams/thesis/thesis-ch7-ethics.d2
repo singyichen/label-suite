@@ -1,0 +1,67 @@
+direction: right
+...@../shared/_base
+
+title: Chapter 7 — Ethics Statement {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+privacy: 7.1 Data Privacy & Protection {
+  class: tool
+
+  raw_data: Sensitive Data {
+    shape: stored_data
+    style: {
+      bold: true
+      font-size: 20
+      multiple: true
+    }
+    label: Medical &\nPsychology Text
+  }
+
+  deidentified: De-identified Only {
+    class: warning
+  }
+
+  compliance: Privacy Standards Compliance {class: base}
+
+  contamination: Data Contamination Prevention {
+    class: highlight
+    cp1: Third-party evaluation {class: base}
+    cp2: Test answers not exposed to LLMs {class: base}
+    cp3: Academic integrity maintained {class: base}
+    cp1 -> cp2 -> cp3
+  }
+
+  raw_data -> deidentified -> compliance
+}
+
+consent: 7.2 User Study & Informed Consent {
+  class: module
+
+  participants: Participants {
+    class: [base; person; multiple]
+  }
+
+  rights: Rights & Transparency {
+    class: tool
+    r1: Informed of purpose {class: base}
+    r2: Right to withdraw {class: base}
+  }
+
+  anonymization: Anonymization {
+    class: highlight
+    a1: Interviews anonymized {class: base}
+    a2: Feedback anonymized {class: base}
+    a3: Academic analysis only {class: base}
+    a1 -> a3
+    a2 -> a3
+  }
+
+  participants -> rights: informed {class: animated}
+  participants -> anonymization: data {class: animated}
+}
+
+privacy -> consent: extends to {class: animated}

@@ -1,0 +1,64 @@
+direction: right
+...@../shared/_base
+
+title: Chapter 3 — System Design & Architecture {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+config_file: Task Config {
+  shape: document
+  style: {
+    bold: true
+    font-size: 22
+    fill: LightYellow
+    border-radius: 8
+  }
+  label: YAML / JSON\nTask Config
+}
+
+task_types: Supported Tasks {
+  class: tool
+  t1: Classification {class: base}
+  t2: Regression {class: base}
+  t3: Span Labeling {class: base}
+}
+
+portal: Label-Eval-Portal {
+  class: module
+
+  labeling: Labeling Module {
+    class: highlight
+    l1: Intuitive Interface {class: base}
+    l2: Dynamic Components {class: base}
+    l3: Backend Storage {class: base}
+    l1 -> l2 -> l3
+  }
+
+  scoring: Scoring Engine {
+    class: highlight
+    s1: Upload Submission {class: step}
+    s2: Compute Metrics {class: step}
+    s3: Update Leaderboard {class: step}
+    s1 -> s2 -> s3
+  }
+
+  integrity: Data Integrity {
+    class: highlight
+    answers: Test-set Answers {
+      class: store
+      label: Answers\n(hidden)
+    }
+    guard: Anti-contamination {class: warning}
+    answers -> guard: protected by
+  }
+
+  labeling -> scoring: feeds {class: animated}
+  scoring -> integrity: enforces {class: animated}
+}
+
+config_file -> task_types: configures {class: animated}
+config_file -> portal: defines behavior {class: animated}
+task_types -> portal.labeling: renders {class: animated}
