@@ -145,11 +145,7 @@
 - **Small-scale User Study:** Due to sample size constraints, user study participants are primarily from a specific lab, which may introduce scenario limitations.
 - **Lack of Stress Testing:** The system has not yet undergone performance stress testing under large-scale high-concurrency conditions.
 
-### 6.3 Ethics Statement
-
-- **Data Privacy and Protection:** Describes data de-identification handling and informed consent regulations for study participants.
-
-### 6.4 Future Work
+### 6.3 Future Work
 
 - **AI-Assisted Labeling:** Inspired by the Co-DETECT approach, introduce LLM assistance for discovering annotation edge cases and optimizing labeling guidelines.
 
