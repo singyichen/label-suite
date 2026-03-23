@@ -20,15 +20,19 @@
 
 - **Friction in Existing Tools:** Existing tools like Label Studio are extremely tedious and time-consuming to set up, while CodaBench's interface is insufficiently intuitive, resulting in a steep learning curve for research teams.
 - **Inefficient Workflows:** Research teams are often forced to use Excel for labeling due to the high barrier of existing tools, or to "reinvent the wheel" by developing one-off systems for specific tasks, wasting engineering resources.
+- **Risks of Data Contamination and Evaluation Fairness:** Many studies publicly post test-set answers on GitHub, potentially allowing LLMs to "pre-study" answers during training. Existing tools generally lack a fair third-party scoring mechanism to hide answers, undermining the scientific validity of evaluation results.
+- **Fragmented and Disconnected Workflows:** Current labeling (e.g., Label Studio), evaluation (e.g., custom scripts), and leaderboard display (e.g., manual web updates) are typically separate and disconnected processes. This fragmentation forces researchers to frequently convert data formats between tools, significantly increasing error risk and time costs.
 
 ### 1.3 Research Objectives
 
 - **Developing a General-Purpose Portal:** Build a lightweight platform named `Label-Eval-Portal` that supports multiple NLP task templates.
 - **Config-driven Launch:** Enable rapid labeling server deployment through simple config files, replacing traditional complex system development workflows.
+- **Integrating a Unified Workflow:** Integrate data labeling, automated evaluation, and leaderboard display into a single portal, eliminating the friction of data conversion between existing tools.
+- **Establishing a Fair Evaluation Mechanism:** Through third-party scoring logic that isolates test-set answers, ensure the fairness of model evaluation and prevent data contamination.
 
 ### 1.4 Research Contributions
 
-- **Lowering Entry Barriers:** Enables researchers without deep engineering backgrounds to quickly launch labeling and evaluation environments.
+- **Lowering Entry Barriers:** Significantly simplifies the deployment of labeling and evaluation environments, enabling researchers without deep engineering backgrounds to quickly launch annotation and evaluation workflows so they can focus on domain tasks.
 - **Integrated Workflow:** First to integrate "data labeling," "automated scoring," and "leaderboard generation" into a single portal system.
 - **Ensuring Data Integrity:** Hides test-set answers through a third-party scoring mechanism, effectively preventing data contamination caused by models "pre-learning" answers.
 
@@ -44,7 +48,7 @@
 ### 2.2 Survey of Current Workflow Pain Points
 
 - **Inefficient Labeling Practices:** Many teams resort to Excel or Word for labeling due to high tool barriers, lacking automation and version control.
-- **Waste of Resources in "Reinventing the Wheel":** Due to the lack of general-purpose tools, researchers frequently develop one-off systems for single tasks that cannot be reused across different research projects.
+- **Waste of Resources in "Reinventing the Wheel":** Due to the lack of general-purpose tools, researchers frequently develop one-off systems for single tasks that cannot be reused across different research projects, resulting in repeated engineering investment and a lack of generalizability.
 
 ### 2.3 Research on Chinese Data Annotation
 
@@ -53,7 +57,7 @@
 
 ### 2.4 Chinese Data Evaluation & Leaderboard Mechanisms
 
-- **Establishing Evaluation Standards:** Research on establishing standardized datasets and evaluation workflows for Chinese domains lacking public benchmarks.
+- **Establishing Evaluation Standards:** Research on establishing standardized datasets and evaluation workflows for Chinese domains lacking public benchmarks, enabling fair community-wide comparison.
 - **Data Contamination & Third-party Evaluation:** In-depth discussion of the data contamination problem where models may have been pre-exposed to public test-set answers. Research on how third-party platforms retain answers server-side to ensure evaluation fairness.
 
 ---
@@ -62,22 +66,22 @@
 
 ### 3.1 Generalization Design Philosophy
 
-- **Config-driven Architecture:** The system core adopts the "Config over Code" philosophy. Users only need to write simple YAML or JSON config files to define different types of NLP tasks, enabling rapid deployment.
+- **Config-driven Architecture:** The system core adopts the "Config over Code" philosophy. Users only need to write simple YAML or JSON config files to define different types of NLP tasks, enabling rapid deployment and template reuse.
 - **Multi-task Support:** Supports general task templates including Classification, Regression, and Span Labeling to meet research needs across different domains.
 
 ### 3.2 Labeling Module Design
 
-- **High-Usability Interface:** Addresses the pain points of difficult interfaces and fragmented workflows in existing platforms by designing an intuitive labeling interface.
+- **High-Usability Interface:** Addresses the pain points of difficult interfaces and fragmented workflows in existing platforms by designing an intuitive labeling interface that lowers the learning curve for non-engineering annotators.
 - **Task Initialization Workflow:** Describes how the system reads config files and dynamically generates corresponding labeling components and backend storage logic.
 
 ### 3.3 Automated Evaluation & Leaderboard Module
 
-- **Integrated Workflow:** Integrates the previously fragmented "labeling, scoring, leaderboard" into a single portal system.
+- **Integrated Workflow:** Integrates the previously fragmented "labeling, scoring, leaderboard" into a single portal system, resolving the inefficiency of researchers repeatedly developing one-off evaluation systems.
 - **Real-time Performance Benchmarking:** Supports automated scoring — uploaded model predictions are scored instantly with results reflected on the leaderboard.
 
 ### 3.4 Data Integrity Mechanism
 
-- **Third-party Scoring & Test-set Confidentiality:** Implements the third-party scoring mechanism keeping test-set answers hidden server-side.
+- **Third-party Scoring & Test-set Confidentiality:** Implements the third-party scoring mechanism keeping test-set answers hidden server-side to ensure evaluation fairness.
 - **Preventing Data Contamination:** Designs mechanisms ensuring models can only be tested through the platform, preventing exposure to test questions and correct answers during training.
 
 ---
@@ -89,7 +93,7 @@
 - **Frontend Architecture:** React + TypeScript + Vite — component-based development for responsive, high-usability annotation interfaces.
 - **Backend Architecture:** FastAPI (Python) — async API service with native NLP ecosystem integration for scoring scripts.
 - **AI-Assisted Development:** Leveraging AI tools to improve code quality and development efficiency, shortening the system development cycle.
-- **Spec-Driven Development (SDD):** Requirements are converted into clear, verifiable specifications before coding begins.
+- **Spec-Driven Development (SDD):** Requirements are converted into clear, verifiable specifications before coding begins, serving as the basis for all development work.
 
 ### 4.2 System Interface Showcase and UX Optimization
 
@@ -119,7 +123,7 @@
 
 ### 5.3 User Study and Satisfaction Analysis
 
-- **Five-point Likert Scale:** Designed with reference to the Co-DETECT questionnaire format, covering usability, task clarity, and navigation intuitiveness.
+- **Five-point Likert Scale:** Designed with reference to the Co-DETECT questionnaire format, covering usability, task clarity, and navigation intuitiveness as quantitative indicators.
 - **Lab Member Pilot Study:** 5–10 lab members with annotation experience. Collects feedback on the config mechanism and automated leaderboard functionality.
 
 ### 5.4 Data Integrity Validation
@@ -141,7 +145,11 @@
 - **Small-scale User Study:** Due to sample size constraints, user study participants are primarily from a specific lab, which may introduce scenario limitations.
 - **Lack of Stress Testing:** The system has not yet undergone performance stress testing under large-scale high-concurrency conditions.
 
-### 6.3 Future Work
+### 6.3 Ethics Statement
+
+- **Data Privacy and Protection:** Describes data de-identification handling and informed consent regulations for study participants.
+
+### 6.4 Future Work
 
 - **AI-Assisted Labeling:** Inspired by the Co-DETECT approach, introduce LLM assistance for discovering annotation edge cases and optimizing labeling guidelines.
 
