@@ -16,19 +16,14 @@ platforms: 2.1 Platform Survey {
     style.fill: MistyRose
     ls1: Feature-rich {class: base}
     ls2: Tedious setup {class: base}
+    ls3: No annotator management {class: base}
+    ls4: No dataset analytics {class: base}
   }
-  codabench: CodaBench {
-    class: [base; multiple]
-    style.fill: MistyRose
-    cb1: Academic standard {class: base}
-    cb2: Poor UX {class: base}
-  }
-  gap: Architectural Gap {
+  gap: Differentiation Opportunity {
     class: warning
-    label: No integrated\nlabeling + scoring\n+ leaderboard
+    label: No config-driven launch\n+ no annotator management\n+ no built-in dataset analytics
   }
   label_studio -> gap
-  codabench -> gap
 }
 
 chinese: 2.3 Chinese NLP Annotation {
@@ -44,23 +39,4 @@ chinese: 2.3 Chinese NLP Annotation {
   }
 }
 
-evaluation: 2.4 Evaluation & Leaderboard {
-  class: highlight
-
-  benchmark: No Public Chinese Benchmarks {
-    class: warning
-  }
-  contamination: Data Contamination {
-    class: warning
-    label: Models pre-exposed\nto test answers
-  }
-  solution: Third-party Scoring {
-    class: base
-    label: Answers hidden\nserver-side
-  }
-  benchmark -> solution: solved by
-  contamination -> solution: solved by
-}
-
 platforms -> chinese: context for
-chinese -> evaluation: motivates
