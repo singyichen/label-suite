@@ -23,6 +23,7 @@
 - **Risks of Data Contamination and Evaluation Fairness:** Many studies publicly post test-set answers on GitHub, potentially allowing LLMs to "pre-study" answers during training. Existing tools generally lack a fair third-party scoring mechanism to hide answers, undermining the scientific validity of evaluation results.
 - **Fragmented and Disconnected Workflows:** Current labeling (e.g., Label Studio), evaluation (e.g., custom scripts), and leaderboard display (e.g., manual web updates) are separate and disconnected processes. This fragmentation forces researchers to frequently convert data formats between tools, significantly increasing error risk and time costs.
 - **Lack of Annotator Management:** Existing tools do not support lab-scale annotator management (e.g., part-time student accounts, working hours tracking, salary estimation), forcing research teams to manage human resources through external spreadsheets.
+- **Absence of Dataset Quality Visibility:** Existing annotation tools provide no built-in dataset statistics (e.g., sentence count, token distribution, label balance), forcing researchers to write ad-hoc analysis scripts after each labeling round to inspect data quality.
 
 ### 1.3 Research Objectives
 
@@ -30,6 +31,7 @@
 - **Config-driven Launch:** Enable rapid deployment of labeling servers through simple config files, replacing traditional complex system development workflows.
 - **Annotator Lifecycle Management:** Provide end-to-end annotator management covering account administration, working hours tracking, and salary estimation to streamline lab operations.
 - **Integrating a Unified Workflow:** Integrate data labeling, automated evaluation, and leaderboard display into a single portal, eliminating the friction of data conversion between existing tools.
+- **Dataset Quality Visibility:** Provide real-time dataset statistics (#Sentence, #Token, #Label) to help researchers inspect data characteristics and annotation quality without external scripts.
 - **Establishing a Fair Evaluation Mechanism:** Through third-party scoring logic that isolates test-set answers, ensure the fairness of model evaluation and prevent data contamination.
 
 ### 1.4 Research Contributions
@@ -37,6 +39,7 @@
 - **Lowering Entry Barriers:** Significantly simplifies the deployment of labeling and evaluation environments, enabling researchers without deep engineering backgrounds to quickly launch annotation workflows so they can focus on domain tasks.
 - **Annotator-centered Lab Management:** First to integrate annotator account management, working hours tracking, and salary estimation into an NLP annotation portal, addressing the operational needs of academic labs.
 - **Integrated Annotation-to-Evaluation Workflow:** Integrates "data labeling," "automated scoring," and "leaderboard generation" into a single portal system, replacing fragmented multi-tool workflows.
+- **Built-in Dataset Analytics:** Eliminates the need for post-hoc analysis scripts by automatically computing and surfacing #Sentence, #Token, and #Label statistics within the portal, enabling researchers to monitor data quality and distribution throughout the labeling process.
 - **Ensuring Data Integrity:** Hides test-set answers through a third-party scoring mechanism, effectively preventing data contamination caused by models "pre-learning" answers.
 
 ---
@@ -152,7 +155,12 @@
 - **Five-point Likert Scale:** Designed with reference to the Co-DETECT questionnaire format, covering usability, task clarity, and navigation intuitiveness as quantitative indicators.
 - **Lab Member Pilot Study:** 5–10 lab members with annotation experience. Collects feedback on the config mechanism, annotator management features, and automated leaderboard functionality.
 
-### 5.4 Data Integrity Validation
+### 5.4 Dataset Analysis Validation
+
+- **Statistics Accuracy Verification:** Validates that the system-computed #Sentence, #Token, and #Label statistics are accurate and consistent with ground-truth counts from the raw dataset, confirming the reliability of the built-in analytics pipeline.
+- **Label Distribution Inspection:** Demonstrates how the Dataset Analysis Module surfaces class imbalance and annotation inconsistency patterns, using the Chinese medical and sentiment domain datasets as concrete examples.
+
+### 5.5 Data Integrity Validation
 
 - **Prevention of Contamination Testing:** Validates whether the third-party scoring platform effectively hides test-set answers to ensure evaluation fairness.
 
@@ -162,7 +170,7 @@
 
 ### 6.1 Conclusion
 
-- **Summary of Contributions:** Summarizes how `Label-Eval-Portal` addresses the practical pain points of workflow fragmentation, "reinventing the wheel," and annotator management overhead in academic NLP labs.
+- **Summary of Contributions:** Summarizes how `Label-Eval-Portal` addresses the practical pain points of workflow fragmentation, "reinventing the wheel," annotator management overhead, and the absence of built-in dataset quality visibility in academic NLP labs.
 - **Realization of Demo Paper Value:** Emphasizes the system's positioning as an all-in-one alternative to Label Studio + CodaBench for academic research teams, with open-source reuse value.
 
 ### 6.2 Research Limitations
