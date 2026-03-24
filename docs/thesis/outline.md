@@ -1,6 +1,6 @@
 # Thesis Outline — Label-Eval-Portal
 
-**Title (tentative):** Label-Eval-Portal: A Configurable, General-Purpose NLP Annotation Platform with Integrated Annotator Management
+**Title (tentative):** LabelSuite: A Config-Driven NLP Annotation Platform with Integrated Annotator Management
 
 **Type:** Demo Paper (Master's Thesis)
 
