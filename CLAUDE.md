@@ -250,7 +250,7 @@ The deciding question is: **will this change make the system behave differently 
 | `/speckit.plan` | Build technical implementation plan |
 | `/speckit.tasks` | Generate executable task list |
 | `/speckit.analyze` | Cross-document consistency analysis |
-| `/speckit.implement` | Execute implementation from task list |
+| `/speckit.implement` | Execute implementation — single session (bug fix / single-layer) or Agent Team (new feature) |
 | `/speckit.checklist` | Generate quality validation checklist |
 
 ### Constitution Reference
@@ -270,11 +270,85 @@ All development must follow the six core principles in [constitution.md](.specif
 
 | Workflow | Purpose | When | Steps |
 |---|---|---|---|
-| **New Feature** | End-to-end feature development | Starting new feature | `/speckit.specify` → `/speckit.plan` → `/speckit.tasks` → `/speckit.implement` → PR |
+| **New Feature** | End-to-end feature development (cross-layer) | Starting new feature spanning frontend + backend | SDD Phase → Agent Team Implementation → PR Flow |
+| **Bug Fix / Single-layer** | Targeted fix or single-layer change | Bug, refactor, or change within one layer | Create `fix/` branch → single session implement → PR Flow |
 | **Code Review** | Review code quality, type safety, security | Before creating PR | Code Style → type check (`tsc` / `mypy`) → Lint (`ruff` / `eslint`) → logic review |
 | **Testing** | Verify correctness and coverage | On code changes | Run `pytest` (backend) → `playwright test` (E2E) → verify coverage |
-| **Bug Fix** | From reproduction to resolution | Bug discovered | Create `fix/` branch → reproduce → fix → regression test → PR |
 | **PR Flow** | Merge feature into main | Feature complete | See **Complete PR Flow** section below |
+
+### New Feature: Full Workflow
+
+```
+── Phase 1: Spec ─────────────────────────────────────────────────────────────
+/speckit.specify → /speckit.clarify (optional) → /speckit.plan → /speckit.tasks
+
+── Phase 2: Agent Team Implementation ────────────────────────────────────────
+[Team Lead] reads tasks.md and spawns 3 teammates:
+
+  ├──→ [BackendAgent]   owns: backend/app/       (FastAPI routes / models / services)
+  ├──→ [FrontendAgent]  owns: frontend/src/       (React components / pages / services)  ← parallel
+  └──→ [TestAgent]      owns: backend/tests/ + frontend/tests/  (pytest + Playwright)
+
+  ⚠️  Human Review checkpoint — required before any DB schema or API contract change
+      Tell Team Lead: "Require plan approval before BackendAgent makes schema changes"
+
+  TaskCompleted hook — auto quality gate after each task:
+    backend task  → uv run ruff check . && uv run mypy .
+    frontend task → pnpm tsc --noEmit && pnpm lint
+    if fails      → teammate retries (max 2), then escalates to Team Lead
+
+  TeammateIdle hook — when all teammates idle, Team Lead spawns:
+  └──→ [ReviewAgent]    reviews all changed files, retry loop ≤ 2 if issues found
+
+  ⚠️  Human Review interrupt — approve before proceeding to PR
+      ReviewAgent posts summary; you confirm or redirect
+
+  [ChecklistAgent] → /speckit.checklist
+
+── Phase 3: PR Flow ──────────────────────────────────────────────────────────
+See Complete PR Flow below
+```
+
+### Agent Team: Enable & Roles
+
+**Enable** (add to `~/.claude/settings.json`):
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+**Team composition** (3–4 teammates for most features):
+
+| Teammate | Agent Type | Owns | Responsible For |
+|---|---|---|---|
+| BackendAgent | `senior-backend` | `backend/app/` | FastAPI routes, models, schemas, services |
+| FrontendAgent | `senior-frontend` | `frontend/src/` | React components, pages, hooks, API services |
+| TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/` | pytest unit/integration + Playwright E2E |
+| ReviewAgent | `senior-code-reviewer` | all changed files | Code review, type safety, security |
+
+**File ownership is critical** — each teammate owns distinct directories to prevent git conflicts.
+
+**When to use Agent Teams vs single session:**
+
+| Scenario | Use |
+|---|---|
+| New feature spanning frontend + backend | Agent Team |
+| Bug fix or change within one layer | Single session |
+| Documentation or spec changes | Single session |
+| Refactoring within one module | Single session |
+
+**Spawn prompt template:**
+```
+Create an agent team to implement [feature] based on specs/[NNN]-[feature]/tasks.md.
+Spawn:
+- BackendAgent (senior-backend): implement backend tasks, own backend/app/
+- FrontendAgent (senior-frontend): implement frontend tasks, own frontend/src/ [parallel with backend]
+- TestAgent (senior-qa): write tests after API contract is confirmed
+Require plan approval before any DB schema or API contract changes.
+```
 
 ## Complete PR Flow
 
