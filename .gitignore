@@ -34,3 +34,7 @@ htmlcov/
 
 # Build artifacts
 *.log
+
+# Generated assets (PNG files generated from SVG)
+assets/logo/*.png
+!assets/logo/social-preview.png

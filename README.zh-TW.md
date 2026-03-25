@@ -1,8 +1,16 @@
-# LabelSuite
+<p align="center">
+  <img src="assets/logo/icon-colored.svg" width="96" alt="LabelSuite Logo">
+</p>
 
-**繁體中文** | [English](README.md)
+<h1 align="center">LabelSuite</h1>
 
-> 具整合式標記員管理之配置驅動 NLP 標記平台，專為學術研究實驗室設計。
+<p align="center">
+  <strong>繁體中文</strong> | <a href="README.md">English</a>
+</p>
+
+<p align="center">
+  具整合式標記員管理之配置驅動 NLP 標記平台，專為學術研究實驗室設計。
+</p>
 
 ---
 
