@@ -22,7 +22,7 @@
 
   <!-- Text (right side, vertically centered with logo) -->
   <text x="520" y="310" font-family="Crimson Pro, serif" font-size="80" font-weight="700" fill="#1E1B4B" text-anchor="start">
-    LabelSuite
+    Label Suite
   </text>
   <text x="520" y="370" font-family="Atkinson Hyperlegible, sans-serif" font-size="32" fill="#6B7280" text-anchor="start">
     NLP Annotation Portal
