@@ -58,7 +58,7 @@
 ### 2.2 標記平台與工具調研 (Survey of Labeling Platforms & Tools)
 
 - **Label Studio 分析 (Label Studio Analysis)：** 以 Apache 2.0 授權開源，獲 NVIDIA、Meta、IBM 等企業採用。核心強項為多模態支援（圖像、音頻、文本、影片）與 LLM 微調資料準備。然而伺服器架設對非工程背景研究員過於繁瑣，且不具備標記員管理與內建資料集統計功能。
-- **Label-Suite 的差異化定位 (Differentiated Positioning)：** 以 Label Studio 為參考標的，`LabelSuite` 針對學術 NLP 實驗室進行差異化：(1) 配置驅動快速部署，無需工程背景；(2) 新增 Label Studio 所缺乏的標記員全生命週期管理（帳號管理、工時追蹤、薪資試算）；(3) 整合內建資料集統計（#Sentence、#Token、#Label）以支援即時品質監控。
+- **LabelSuite 的差異化定位 (Differentiated Positioning)：** 以 Label Studio 為參考標的，`LabelSuite` 針對學術 NLP 實驗室進行差異化：(1) 配置驅動快速部署，無需工程背景；(2) 新增 Label Studio 所缺乏的標記員全生命週期管理（帳號管理、工時追蹤、薪資試算）；(3) 整合內建資料集統計（#Sentence、#Token、#Label）以支援即時品質監控。
 
 ### 2.3 盤點現有流程的痛點 (Survey of Current Workflow Pain Points)
 
@@ -82,7 +82,7 @@
 
 ### 3.2 標記員管理模組 (Annotator Management Module)
 
-- **帳號管理 (Account Management)：** 支援標記員帳號的新增、修改、刪除，並依角色（管理員 / 標記員）設定不同存取權限。
+- **帳號管理 (Account Management)：** 支援標記員帳號的新增、修改、刪除，並依角色（Admin / Researcher / Annotator）設定不同存取權限。
 - **工時統計與薪資試算 (Working Hours & Salary Calculation)：** 自動記錄每位標記員的工作時數並提供薪資試算功能，簡化研究團隊的人力管理流程。
 
 ### 3.3 標記模組設計 (Labeling Module Design)

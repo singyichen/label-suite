@@ -52,7 +52,7 @@
 ### 2.2 Survey of Labeling Platforms & Tools
 
 - **Label Studio Analysis:** An open-source data annotation platform (Apache 2.0) adopted by enterprises such as NVIDIA, Meta, and IBM. It excels in multi-modal support (image, audio, text, video, time series) and LLM fine-tuning data preparation. However, its server setup is tedious for non-engineering researchers, and it lacks built-in dataset analytics and annotator management features.
-- **Differentiated Positioning of Label-Suite:** Taking Label Studio as the reference baseline, `LabelSuite` targets academic NLP labs and differentiates by: (1) enabling config-driven rapid deployment without engineering overhead; (2) adding annotator lifecycle management (account administration, working hours tracking, salary estimation) absent in Label Studio; (3) integrating built-in dataset statistics (#Sentence, #Token, #Label) for real-time quality monitoring.
+- **Differentiated Positioning of LabelSuite:** Taking Label Studio as the reference baseline, `LabelSuite` targets academic NLP labs and differentiates by: (1) enabling config-driven rapid deployment without engineering overhead; (2) adding annotator lifecycle management (account administration, working hours tracking, salary estimation) absent in Label Studio; (3) integrating built-in dataset statistics (#Sentence, #Token, #Label) for real-time quality monitoring.
 
 ### 2.3 Survey of Current Workflow Pain Points
 
@@ -76,7 +76,7 @@
 
 ### 3.2 Annotator Management Module
 
-- **Account Management:** Supports annotator account creation, modification, and deletion, with role-based access control (Admin / Annotator) to ensure appropriate data access boundaries.
+- **Account Management:** Supports annotator account creation, modification, and deletion, with role-based access control (Admin / Researcher / Annotator) to ensure appropriate data access boundaries.
 - **Working Hours & Salary Calculation:** Automatically records each annotator's working hours and provides salary estimation functionality, simplifying the administrative overhead of managing research team human resources.
 
 ### 3.3 Labeling Module Design
