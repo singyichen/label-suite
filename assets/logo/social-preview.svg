@@ -1,0 +1,30 @@
+<!-- GitHub Social Preview (1280x640) -->
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1280" height="640" fill="#F5F3FF"/>
+
+  <!-- Icon (larger, centered) -->
+  <g transform="translate(440, 160)">
+    <rect width="160" height="160" rx="40" fill="#6366F1"/>
+    <g transform="translate(40, 40)">
+      <path d="M68.64 44.7l-23.9 23.9a6.67 6.67 0 0 1-9.43 0L6.67 40V6.67h33.33l28.64 28.64a6.67 6.67 0 0 1 0 9.4z"
+            stroke="white"
+            stroke-width="6"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+      <line x1="23.33" y1="23.33" x2="23.37" y2="23.33"
+            stroke="white"
+            stroke-width="6"
+            stroke-linecap="round"
+            stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- Text -->
+  <text x="640" y="400" font-family="Crimson Pro, serif" font-size="80" font-weight="700" fill="#1E1B4B" text-anchor="middle">
+    LabelSuite
+  </text>
+  <text x="640" y="460" font-family="Atkinson Hyperlegible, sans-serif" font-size="32" fill="#6B7280" text-anchor="middle">
+    NLP Annotation Portal
+  </text>
+</svg>

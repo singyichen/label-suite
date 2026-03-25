@@ -1,8 +1,16 @@
-# LabelSuite
+<p align="center">
+  <img src="assets/logo/icon-colored.svg" width="96" alt="LabelSuite Logo">
+</p>
 
-[繁體中文](README.zh-TW.md) | **English**
+<h1 align="center">LabelSuite</h1>
 
-> A config-driven NLP annotation platform with integrated annotator management, designed for academic research labs.
+<p align="center">
+  <a href="README.zh-TW.md">繁體中文</a> | <strong>English</strong>
+</p>
+
+<p align="center">
+  A config-driven NLP annotation platform with integrated annotator management, designed for academic research labs.
+</p>
 
 ---
 
