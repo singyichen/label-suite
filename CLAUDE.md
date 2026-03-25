@@ -280,7 +280,18 @@ All development must follow the six core principles in [constitution.md](.specif
 
 ```
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
-/speckit.specify → /speckit.clarify (optional) → /speckit.plan → /speckit.tasks
+/speckit.specify → /speckit.clarify (optional)
+
+  [Optional: Research Agents] — spawn before /speckit.plan for complex features
+  (read-only, parallel, skip for simple/single-layer features)
+
+  ├──→ [ArchitectAgent]     scan existing code, identify integration points and naming conventions
+  ├──→ [BackendAgent]       check DB schema conflicts, existing API contracts
+  └──→ [FrontendAgent]      identify reusable components, assess UI integration points
+       ↓ Team Lead synthesizes findings
+  ⚠️  Human Review — confirm research findings before writing plan
+
+/speckit.plan → /speckit.tasks
 
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
 [Team Lead] reads tasks.md and spawns 3 teammates:
@@ -328,6 +339,23 @@ See Complete PR Flow below
 | FrontendAgent | `senior-frontend` | `frontend/src/` | React components, pages, hooks, API services |
 | TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/` | pytest unit/integration + Playwright E2E |
 | ReviewAgent | `senior-code-reviewer` | all changed files | Code review, type safety, security |
+
+**Research Agents** (Phase 1, read-only, optional for complex features):
+
+| Teammate | Agent Type | Responsible For |
+|---|---|---|
+| ArchitectAgent | `senior-architect` | Scan existing code, identify integration points and naming conventions |
+| BackendAgent | `senior-backend` | Check DB schema conflicts, review existing API contracts |
+| FrontendAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
+
+**Research spawn prompt template:**
+```
+Before writing the plan for [feature], spawn a read-only research team:
+- ArchitectAgent (senior-architect): scan codebase for integration points, naming conventions, and potential conflicts
+- BackendAgent (senior-backend): review DB schema and existing API contracts for conflicts
+- FrontendAgent (senior-frontend): identify reusable components in frontend/src/
+All agents are read-only — no file edits. Synthesize findings for plan.md.
+```
 
 **File ownership is critical** — each teammate owns distinct directories to prevent git conflicts.
 
