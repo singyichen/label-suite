@@ -296,8 +296,9 @@ All development must follow the six core principles in [constitution.md](.specif
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
 [Team Lead] reads tasks.md and spawns 3 teammates:
 
-  ├──→ [BackendAgent]   owns: backend/app/       (FastAPI routes / models / services)
-  ├──→ [FrontendAgent]  owns: frontend/src/       (React components / pages / services)  ← parallel
+  ├──→ [BackendAgent]   owns: backend/app/            (FastAPI routes / models / services)
+  ├──→ [FrontendAgent]  owns: frontend/src/            (React components / pages / services)  ← parallel
+  ├──→ [I18nAgent]      owns: frontend/src/locales/    (zh-TW / en translation strings)       ← parallel
   └──→ [TestAgent]      owns: backend/tests/ + frontend/tests/  (pytest + Playwright)
 
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
@@ -339,6 +340,7 @@ See Complete PR Flow below
 | FrontendAgent | `senior-frontend` | `frontend/src/` | React components, pages, hooks, API services |
 | TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/` | pytest unit/integration + Playwright E2E |
 | ReviewAgent | `senior-code-reviewer` | all changed files | Code review, type safety, security |
+| I18nAgent | `senior-i18n` | `frontend/src/locales/` | Ensure no hardcoded strings; zh-TW / en translation coverage |
 
 **Research Agents** (Phase 1, read-only, optional for complex features):
 
@@ -347,6 +349,7 @@ See Complete PR Flow below
 | ArchitectAgent | `senior-architect` | Scan existing code, identify integration points and naming conventions |
 | BackendAgent | `senior-backend` | Check DB schema conflicts, review existing API contracts |
 | FrontendAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
+| I18nAgent | `senior-i18n` | Assess i18n coverage gaps; identify UI strings that need externalization |
 
 **Research spawn prompt template:**
 ```
@@ -354,6 +357,7 @@ Before writing the plan for [feature], spawn a read-only research team:
 - ArchitectAgent (senior-architect): scan codebase for integration points, naming conventions, and potential conflicts
 - BackendAgent (senior-backend): review DB schema and existing API contracts for conflicts
 - FrontendAgent (senior-frontend): identify reusable components in frontend/src/
+- I18nAgent (senior-i18n): assess i18n coverage for the feature; identify UI strings needing zh-TW/en translation
 All agents are read-only — no file edits. Synthesize findings for plan.md.
 ```
 
