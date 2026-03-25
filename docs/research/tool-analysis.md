@@ -1,135 +1,135 @@
-# Labeling Tool Analysis
+# 標記工具分析
 
-> A multi-dimensional comparison of Label Studio (reference baseline) and LabelSuite, covering deployment, task support, annotator management, dataset analytics, UX, and technical architecture. Used to define LabelSuite's contribution and positioning for the Demo Paper.
+> 針對 Label Studio（參考基準）與 LabelSuite 進行多維度比較，涵蓋部署方式、任務支援、標記員管理、資料集統計、使用者體驗與技術架構，用於定義 LabelSuite 在 Demo Paper 中的貢獻與差異化定位。
 
 ---
 
-## Table 1 — System Overview & Positioning
+## 表一 — 系統概覽與定位
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Type** | General-purpose data annotation platform | NLP-focused annotation platform with lab management |
-| **Target Users** | Enterprises, ML engineers, data teams | Academic NLP labs, part-time student annotators |
-| **Primary Use Case** | Multi-modal labeling (image, audio, video, text) | Text-based NLP annotation with annotator HR management |
-| **Open Source License** | Apache 2.0 | MIT |
-| **Deployment Model** | Self-hosted server or Label Studio Cloud (SaaS) | Self-hosted, config-driven local/cloud deployment |
-| **Reference Domain** | General ML / LLM fine-tuning data preparation | Chinese NLP research (medical, sentiment, psychology) |
+| **類型** | 通用型資料標記平台 | 具實驗室管理功能的 NLP 專用標記平台 |
+| **目標使用者** | 企業、ML 工程師、資料團隊 | 超級管理員、實驗室研究生、兼職工讀生標記員 |
+| **主要使用情境** | 多模態標記（圖片、音訊、影片、文字） | 文字 NLP 標記 + 標記員人力資源管理 |
+| **開源授權** | Apache 2.0 | MIT |
+| **部署模式** | 自架伺服器 或 Label Studio Cloud（SaaS） | 自架，配置驅動的本地 / 雲端部署 |
+| **參考領域** | 通用 ML / LLM 微調資料準備 | 中文 NLP 研究（醫療、情感、心理） |
 
 ---
 
-## Table 2 — Deployment & Setup
+## 表二 — 部署與設定
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Setup Method** | Manual server configuration (Docker, env vars, DB migration) | Single config file (YAML/JSON) + one-command launch |
-| **Engineering Requirement** | Requires DevOps / engineering background | No engineering background needed |
-| **Estimated Setup Time** | 30–60+ minutes for first deployment | < 10 minutes via config file |
-| **Number of Setup Steps** | 10+ steps (install, configure DB, set env, run migrations) | 3–5 steps (write config, run command, annotate) |
-| **Multi-task Reuse** | Requires reconfiguring per project | Reuse config templates across tasks |
-| **Docker Required** | Recommended but complex | Supported; simplified via compose |
+| **設定方式** | 手動伺服器設定（Docker、環境變數、DB 遷移） | 單一設定檔（YAML/JSON）+ 一鍵啟動 |
+| **工程背景需求** | 需要 DevOps / 工程背景 | 無需工程背景 |
+| **預估設定時間** | 首次部署 30–60 分鐘以上 | 透過設定檔 < 10 分鐘 |
+| **設定步驟數** | 10 步以上（安裝、設定 DB、設環境變數、執行遷移） | 3–5 步（撰寫設定檔、執行指令、開始標記） |
+| **多任務複用** | 每個專案需重新設定 | 可跨任務複用設定檔範本 |
+| **是否需要 Docker** | 建議使用，但設定複雜 | 支援；透過 compose 簡化 |
 
 ---
 
-## Table 3 — NLP Task Type Support
+## 表三 — NLP 任務類型支援
 
-| Task Type | Label Studio | LabelSuite |
+| 任務類型 | Label Studio | LabelSuite |
 |---|---|---|
-| **Single Sentence** (classification / scoring) | ✓ (text classification template) | ✓ (native NLP template) |
-| **Sentence Pairs** (similarity / entailment) | Partial (manual config) | ✓ (dedicated template) |
-| **Sequence Labeling** (NER, POS tagging) | ✓ (named entity template) | ✓ (native NLP template) |
-| **Generative Labeling** (human-written / rating) | Partial (text area only) | ✓ (dedicated template) |
-| **Multi-modal** (image, audio, video) | ✓ (core strength) | ✗ (text-only by design) |
-| **Config-driven Template Launch** | ✗ (GUI-based setup) | ✓ (YAML/JSON config) |
+| **單句任務**（分類 / 評分） | ✅（文字分類範本） | ✅（原生 NLP 範本） |
+| **句對任務**（相似度 / 蘊含） | 🟡（需手動設定） | ✅（專用範本） |
+| **序列標記**（NER、詞性標記） | ✅（命名實體範本） | ✅（原生 NLP 範本） |
+| **生成式標記**（人工撰寫 / 評分） | 🟡（僅文字輸入框） | ✅（專用範本） |
+| **多模態**（圖片、音訊、影片） | ✅（核心優勢） | ❌（設計上僅支援文字） |
+| **設定驅動範本啟動** | ❌（以 GUI 操作） | ✅（YAML/JSON 設定檔） |
 
 ---
 
-## Table 4 — Annotator Management
+## 表四 — 標記員管理
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Account Management** | Basic user accounts (no role distinction for annotators) | Full CRUD with role-based access (Admin / Annotator / Reviewer) |
-| **Part-time Student Support** | ✗ | ✓ (designed for lab 工讀生 workflows) |
-| **Working Hours Tracking** | ✗ | ✓ (auto-recorded per task session) |
-| **Salary Estimation** | ✗ | ✓ (hourly rate × recorded hours) |
-| **Auditable HR Log** | ✗ | ✓ (per-annotator, per-task time log) |
-| **External Spreadsheet Required** | ✓ (teams must manage HR externally) | ✗ (built into platform) |
+| **帳號管理** | 基本使用者帳號（無標記員角色區分） | 完整 CRUD，角色型存取控制（Admin / Researcher / Annotator） |
+| **工讀生支援** | ❌ | ✅（專為實驗室工讀生工作流程設計） |
+| **工時記錄** | ❌ | ✅（每次任務工作階段自動記錄） |
+| **薪資估算** | ❌ | ✅（時薪 × 記錄工時） |
+| **可稽核人資記錄** | ❌ | ✅（逐標記員、逐任務的工時日誌） |
+| **是否需要外部試算表** | ✅（團隊須以外部工具管理人資） | ❌（內建於平台） |
 
 ---
 
-## Table 5 — Dataset Analytics
+## 表五 — 資料集統計分析
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Built-in Statistics** | ✗ (no native stats dashboard) | ✓ (#Sentence, #Token, #Label) |
-| **Label Distribution View** | ✗ | ✓ (real-time imbalance detection) |
-| **Annotation Quality Monitoring** | ✗ | ✓ (statistical inconsistency alerts) |
-| **External Script Required** | ✓ (must write ad-hoc analysis scripts) | ✗ (built into platform) |
-| **Inter-Annotator Agreement (IAA)** | ✗ (planned in future work) | Partial (planned: Cohen's Kappa, Fleiss' Kappa) |
-| **Real-time Update** | N/A | ✓ (updates after each annotation session) |
+| **內建統計功能** | ❌（無原生統計儀表板） | ✅（#Sentence、#Token、#Label） |
+| **標籤分布視圖** | ❌ | ✅（即時類別不均衡偵測） |
+| **標記品質監控** | ❌ | ✅（統計異常警示） |
+| **是否需要外部腳本** | ✅（須自行撰寫分析腳本） | ❌（內建於平台） |
+| **標記員間一致性（IAA）** | ❌（未來工作中規劃） | 🟡（規劃中：Cohen's Kappa、Fleiss' Kappa） |
+| **即時更新** | N/A | ✅（每次標記作業後自動更新） |
 
 ---
 
-## Table 6 — Annotation Workflow
+## 表六 — 標記工作流程
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Dry Run Mode** | ✗ | ✓ (validate config before official collection) |
-| **Official Run Mode** | ✗ (single mode) | ✓ (strict data isolation from Dry Run) |
-| **Data Isolation** | N/A | ✓ (Dry Run data never contaminates Official Run) |
-| **Task Initialization** | GUI wizard (10+ clicks) | Config file parse → auto-generate interface |
-| **Annotation Export** | ✓ (JSON, CSV, CoNLL, custom) | Planned (JSON-L, CoNLL, BIO) |
-| **Version Control for Labels** | ✗ | Planned |
+| **試跑模式（Dry Run）** | ❌ | ✅（正式收集前驗證設定） |
+| **正式模式（Official Run）** | ❌（單一模式） | ✅（資料與試跑模式嚴格隔離） |
+| **資料隔離** | N/A | ✅（試跑資料不污染正式資料集） |
+| **任務初始化** | GUI 精靈（10 步以上點選） | 解析設定檔 → 自動生成介面 |
+| **標記結果匯出** | ✅（JSON、CSV、CoNLL、自訂格式） | 規劃中（JSON-L、CoNLL、BIO） |
+| **標籤版本控制** | ❌ | 規劃中 |
 
 ---
 
-## Table 7 — Interface & UX
+## 表七 — 介面與使用者體驗
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Interface Complexity** | High (feature-heavy, steep learning curve) | Low (minimal, task-focused) |
-| **Non-engineer Onboarding** | Difficult (requires documentation) | Simple (guided by config structure) |
-| **Navigation** | Multi-level menus, project/task/dataset hierarchy | Flat, role-based navigation |
-| **Admin Dashboard** | Project management focused | Annotator management + task management |
-| **Mobile Support** | Limited | Planned |
-| **Accessibility (WCAG)** | Partial | Target: WCAG 2.1 AA |
+| **介面複雜度** | 高（功能豐富，學習曲線陡峭） | 低（精簡，聚焦任務） |
+| **非工程師入門** | 困難（需閱讀文件） | 簡單（由設定檔結構引導） |
+| **導覽設計** | 多層選單，專案 / 任務 / 資料集層級 | 扁平化，角色型導覽 |
+| **管理員儀表板** | 以專案管理為核心 | 標記員管理 + 任務管理 |
+| **行動裝置支援** | 有限 | 規劃中 |
+| **無障礙性（WCAG）** | 部分支援 | 目標：WCAG 2.1 AA |
 
 ---
 
-## Table 8 — Technical Architecture
+## 表八 — 技術架構
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Backend Framework** | Django (Python) — heavyweight, synchronous-first | FastAPI (Python) — lightweight, async-native |
-| **Frontend Framework** | React 18 + TypeScript (Webpack 5, Nx monorepo) | React 18 + TypeScript + Vite |
-| **State Management** | MobX + MobX State Tree | TBD (Zustand / React Query) |
-| **API Style** | Django REST Framework | FastAPI (OpenAPI auto-generated) |
-| **Async Tasks** | Celery + Redis | Celery + Redis |
-| **Database** | PostgreSQL | PostgreSQL |
-| **Build Tool** | Webpack 5 | Vite (faster HMR, smaller bundles) |
-| **Testing** | Jest + Pytest | Playwright (E2E) + pytest |
-| **Deployment** | Docker / Docker Compose | Docker / Docker Compose |
+| **後端框架** | Django（Python）— 重量級，同步優先 | FastAPI（Python）— 輕量級，非同步原生 |
+| **前端框架** | React 18 + TypeScript（Webpack 5、Nx monorepo） | React 18 + TypeScript + Vite |
+| **狀態管理** | MobX + MobX State Tree | TBD（Zustand / React Query） |
+| **API 風格** | Django REST Framework | FastAPI（OpenAPI 自動生成） |
+| **非同步任務** | Celery + Redis | Celery + Redis |
+| **資料庫** | PostgreSQL | PostgreSQL |
+| **建構工具** | Webpack 5 | Vite（更快的 HMR、更小的打包體積） |
+| **測試** | Jest + Pytest | Playwright（E2E）+ pytest |
+| **部署** | Docker / Docker Compose | Docker / Docker Compose |
 
 ---
 
-## Table 9 — Research & Academic Fit
+## 表九 — 研究與學術適配性
 
-| Dimension | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | LabelSuite |
 |---|---|---|
-| **Academic Lab Oriented** | ✗ (enterprise/ML team focused) | ✓ (designed for NLP research labs) |
-| **Chinese NLP Optimization** | ✗ | ✓ (medical, sentiment, psychology domains) |
-| **Demo Paper Positioning** | N/A | ✓ (primary research output) |
-| **Config Reuse Across Papers** | ✗ | ✓ (share config templates between projects) |
-| **Student Annotator Workflow** | ✗ | ✓ (full HR lifecycle built in) |
-| **Community Reuse (Open Source)** | ✓ (large community, plugins) | ✓ (MIT, targeted NLP research community) |
+| **學術實驗室導向** | ❌（以企業 / ML 團隊為主） | ✅（專為 NLP 研究實驗室設計） |
+| **中文 NLP 優化** | ❌ | ✅（醫療、情感、心理領域） |
+| **Demo Paper 定位** | N/A | ✅（主要研究成果） |
+| **跨論文設定複用** | ❌ | ✅（可在不同研究專案間共享設定範本） |
+| **學生標記員工作流程** | ❌ | ✅（內建完整人資生命週期管理） |
+| **社群複用（開源）** | ✅（大型社群、外掛生態） | ✅（MIT 授權，鎖定 NLP 研究社群） |
 
 ---
 
-## Summary — LabelSuite Differentiation
+## 總結 — LabelSuite 差異化定位
 
-LabelSuite targets the gap left by Label Studio for **academic NLP labs** requiring:
+LabelSuite 鎖定 Label Studio 在**學術 NLP 實驗室**場景中的不足，提供：
 
-1. **Rapid, no-engineering deployment** — config file replaces server configuration
-2. **Annotator lifecycle management** — built-in HR functions absent from all existing tools
-3. **Built-in dataset quality visibility** — eliminates post-hoc analysis scripts
-4. **NLP-first task templates** — four dedicated task types versus Label Studio's generic UI
-5. **Dry Run / Official Run isolation** — prevents configuration errors from contaminating official datasets
+1. **快速、零工程部署** — 設定檔取代繁瑣的伺服器設定流程
+2. **標記員生命週期管理** — 所有現有工具均缺乏的內建人資功能
+3. **內建資料集品質可視性** — 消除事後撰寫分析腳本的需求
+4. **NLP 優先任務範本** — 四種專用任務類型，對比 Label Studio 的通用 UI
+5. **試跑 / 正式模式隔離** — 防止設定錯誤污染正式資料集

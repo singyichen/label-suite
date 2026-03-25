@@ -25,7 +25,7 @@ Auto-generated from feature plans. Last updated: [DATE]
 - **KISS & YAGNI**: Pursue extreme simplicity. Reject over-engineering; write code only for current, clearly defined needs.
 - **Config-Driven**: Task types and evaluation metrics are defined in YAML/JSON config — never hardcoded.
 - **Security First (NON-NEGOTIABLE)**: Test-set answers must never be exposed to annotators or included in any annotator-facing API response.
-- **English-First**: All code, comments, commit messages, and documentation are written in English.
+- **English-First**: Code, comments, and commit messages are written in English. Traditional Chinese is permitted in `docs/` and `specs/`.
 
 ## Protected Files
 

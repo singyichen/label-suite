@@ -1,4 +1,4 @@
-# Thesis Outline — Label-Eval-Portal
+# Thesis Outline — LabelSuite
 
 **Title (tentative):** LabelSuite: A Config-Driven NLP Annotation Platform with Integrated Annotator Management
 
@@ -14,19 +14,19 @@
 
 - **Data-driven Paradigm:** High-quality labeled data is the key foundation driving model progress under the current data-driven NLP research paradigm.
 - **Complexity of Chinese Language:** Chinese presents high complexity in word boundary determination (word segmentation), semantic ambiguity, and domain-specific terminology. Compared to English, establishing standardized Chinese labeling workflows is considerably more difficult, making the development of specialized system tools highly urgent.
-- **Domain Knowledge Needs:** Specific domains such as Chinese medical/healthcare and sentiment/psychology analysis urgently require precise and professional labeling workflows to establish reliable annotated datasets.
+- **Domain Knowledge Needs:** Specific domains such as Chinese medical/healthcare and sentiment/psychology analysis urgently require precise and professional labeling workflows to establish reliable benchmarks.
 
 ### 1.2 Research Motivation
 
-- **Friction in Existing Tools:** Label Studio is extremely tedious and time-consuming to set up, resulting in a steep learning curve for research teams without engineering backgrounds.
+- **Friction in Existing Tools:** The existing **Label Studio** is extremely tedious and time-consuming to set up, resulting in a steep learning curve for research teams without engineering backgrounds.
 - **Inefficient Workflows:** Research teams are often forced to use Excel for labeling due to high tool barriers, or to "reinvent the wheel" by developing one-off systems for specific tasks, wasting engineering resources.
-- **Fragmented and Disconnected Workflows:** The annotation workflow — from task configuration and labeling to dataset export — is fragmented across disparate tools, forcing researchers to manage multiple systems and convert data formats manually.
-- **Lack of Annotator Management:** Existing tools do not support lab-scale annotator management (e.g., part-time student accounts, working hours tracking, salary estimation), forcing research teams to manage human resources through external spreadsheets.
+- **Lack of Annotator Management:** Existing tools do not support lab-scale annotator management (e.g., part-time student accounts, working hours tracking, salary estimation), forcing research teams to manage human resources through external spreadsheets, increasing administrative burden and error risk.
 - **Absence of Dataset Quality Visibility:** Existing annotation tools provide no built-in dataset statistics (e.g., sentence count, token distribution, label balance), forcing researchers to write ad-hoc analysis scripts after each labeling round to inspect data quality.
+- **Fragmented and Disconnected Workflows:** The annotation workflow — from task configuration and labeling to dataset export — is fragmented across disparate tools, forcing researchers to manage multiple systems and convert data formats manually, significantly increasing error risk and time cost.
 
 ### 1.3 Research Objectives
 
-- **Developing a General-Purpose Annotation Platform:** Build a lightweight platform named `Label-Eval-Portal` targeting academic NLP labs, enabling rapid deployment of diverse annotation tasks through simple configuration files.
+- **Developing a General-Purpose Annotation Platform:** Build a lightweight platform named **`LabelSuite`** targeting academic NLP labs, enabling rapid deployment of diverse annotation tasks through simple configuration files.
 - **Config-driven Launch:** Enable rapid deployment of labeling servers through simple config files, replacing traditional complex system development workflows.
 - **Annotator Lifecycle Management:** Provide end-to-end annotator management covering account administration, working hours tracking, and salary estimation to streamline lab operations.
 - **Dataset Quality Visibility:** Provide real-time dataset statistics (#Sentence, #Token, #Label) to help researchers inspect data characteristics and annotation quality without external scripts.
@@ -36,8 +36,8 @@
 
 - **Lowering Entry Barriers:** Significantly simplifies the deployment of labeling environments, enabling researchers without deep engineering backgrounds to quickly launch annotation workflows so they can focus on domain tasks.
 - **Annotator-centered Lab Management:** First to integrate annotator account management, working hours tracking, and salary estimation into an NLP annotation portal, addressing the operational needs of academic labs.
-- **Built-in Dataset Analytics:** Eliminates the need for post-hoc analysis scripts by automatically computing and surfacing #Sentence, #Token, and #Label statistics within the portal, enabling researchers to monitor data quality and distribution throughout the labeling process.
 - **Integrated Annotation Workflow:** Integrates "task configuration," "data labeling," and "dataset analysis" into a single portal system, replacing fragmented multi-tool workflows.
+- **Built-in Dataset Analytics:** Eliminates the need for post-hoc analysis scripts by automatically computing and surfacing #Sentence, #Token, and #Label statistics within the portal, enabling researchers to monitor data quality and distribution throughout the labeling process.
 
 ---
 
@@ -52,7 +52,7 @@
 ### 2.2 Survey of Labeling Platforms & Tools
 
 - **Label Studio Analysis:** An open-source data annotation platform (Apache 2.0) adopted by enterprises such as NVIDIA, Meta, and IBM. It excels in multi-modal support (image, audio, text, video, time series) and LLM fine-tuning data preparation. However, its server setup is tedious for non-engineering researchers, and it lacks built-in dataset analytics and annotator management features.
-- **Positioning of Label-Eval-Portal:** Taking Label Studio as the reference baseline, `Label-Eval-Portal` targets academic NLP labs and differentiates by: (1) enabling config-driven rapid deployment without engineering overhead; (2) adding annotator lifecycle management (account administration, working hours tracking, salary estimation) absent in Label Studio; (3) integrating built-in dataset statistics (#Sentence, #Token, #Label) for real-time quality monitoring.
+- **Differentiated Positioning of LabelSuite:** Taking Label Studio as the reference baseline, `LabelSuite` targets academic NLP labs and differentiates by: (1) enabling config-driven rapid deployment without engineering overhead; (2) adding annotator lifecycle management (account administration, working hours tracking, salary estimation) absent in Label Studio; (3) integrating built-in dataset statistics (#Sentence, #Token, #Label) for real-time quality monitoring.
 
 ### 2.3 Survey of Current Workflow Pain Points
 
@@ -72,23 +72,22 @@
 ### 3.1 Generalization Design Philosophy
 
 - **Config-driven Architecture:** The system core adopts the "Config over Code" philosophy. Users only need to write simple YAML or JSON config files to define different types of NLP tasks, enabling rapid deployment and template reuse without engineering overhead.
-- **Multi-task Support:** Supports four general NLP task templates: Single Sentence, Sentence Pairs, Sequence Labeling, and Generative Labeling, covering the full spectrum of common NLP research annotation needs.
+- **Multi-task Support:** Supports four general NLP task templates: Single Sentence, Sentence Pairs, Sequence Labeling, and Generative Labeling, to meet the research needs of different domains and input formats.
 
 ### 3.2 Annotator Management Module
 
-- **Account Management:** Supports annotator account creation, modification, and deletion, with role-based access control (Admin / Annotator / Reviewer) to ensure appropriate data access boundaries.
-- **Working Hours Tracking:** Automatically records each annotator's active working hours per task session, providing an auditable log for lab administrators.
-- **Salary Estimation:** Calculates estimated compensation based on recorded hours and configured hourly rates, simplifying the administrative overhead of managing part-time research assistants.
+- **Account Management:** Supports annotator account creation, modification, and deletion, with role-based access control (Admin / Researcher / Annotator) to ensure appropriate data access boundaries.
+- **Working Hours & Salary Calculation:** Automatically records each annotator's working hours and provides salary estimation functionality, simplifying the administrative overhead of managing research team human resources.
 
-### 3.3 Annotation Tasks Module
+### 3.3 Labeling Module Design
 
 - **High-Usability Interface:** Addresses the pain points of difficult interfaces and fragmented workflows in existing platforms by designing an intuitive labeling interface that lowers the learning curve for non-engineering annotators.
-- **Task Initialization Workflow:** Describes how the system reads config files and dynamically generates corresponding labeling components and backend storage logic for each of the four supported task types.
-- **Dry Run / Official Run Mechanism (Dry Run / Official Run Mechanism):** Supports two execution modes — Dry Run for validating the labeling interface and configuration correctness; Official Run for formally collecting annotation data. Data from both modes is strictly isolated.
+- **Task Initialization Workflow:** Describes how the system reads config files and dynamically generates corresponding labeling components and backend storage logic.
+- **Dry Run / Official Run Mechanism:** Supports two execution modes — Dry Run for validating the labeling interface and configuration correctness; Official Run for formally collecting annotation data. Data from both modes is strictly isolated.
 
 ### 3.4 Dataset Analysis Module
 
-- **Statistical Overview:** Automatically computes and presents basic dataset statistics including sentence count (#Sentence), token count (#Token), and label distribution (#Label), helping researchers quickly understand dataset characteristics and identify potential imbalances.
+- **Statistical Overview:** Automatically computes and presents basic dataset statistics including sentence count (#Sentence), token count (#Token), and label distribution (#Label), helping researchers quickly understand dataset characteristics.
 - **Annotation Quality Monitoring:** Uses statistical analysis to help identify annotation inconsistencies or abnormal data distributions, improving overall annotation data quality.
 
 ---
@@ -104,7 +103,7 @@
 
 ### 4.2 System Interface Showcase and UX Optimization
 
-- **Intuitive Design:** Demonstrates how `Label-Eval-Portal` simplifies task management and labeling workflows compared to Label Studio.
+- **Intuitive Design:** Addresses the pain points of Label Studio's complex and cluttered setup, demonstrating how **`LabelSuite`** simplifies task management and labeling workflows.
 - **Visual Comparison:** Screenshot-based comparison of this system vs Label Studio for the same labeling task, highlighting the "rapid launch," "annotator management," and "built-in analytics" advantages.
 
 ### 4.3 Implementation of Core Modules
@@ -126,7 +125,7 @@
 
 - **Practical Task Validation:** Applies the system to Chinese medical data and sentiment/psychology domain labeling tasks to validate domain applicability across multiple task types.
 
-### 5.2 Quantitative Evaluation of System Efficiency
+### 5.2 Quantitative Evaluation of System Efficiency (New Metrics)
 
 - **Task Setup Cost Comparison:** Quantitatively compares this system vs Label Studio in terms of **number of steps** and **setup time (minutes)** required to initialize the same task, demonstrating the efficiency advantage of config-driven design.
 
@@ -146,10 +145,10 @@
 
 ### 6.1 Conclusion
 
-- **Summary of Contributions:** Summarizes how `Label-Eval-Portal` addresses the practical pain points of workflow fragmentation, "reinventing the wheel," annotator management overhead, and the absence of built-in dataset quality visibility in academic NLP labs.
+- **Summary of Contributions:** Summarizes how **`LabelSuite`** addresses the practical pain points of workflow fragmentation, "reinventing the wheel," annotator management overhead, and the absence of built-in dataset quality visibility in academic NLP labs.
 - **Realization of Demo Paper Value:** Emphasizes the system's positioning as a config-driven, annotator-centered alternative to Label Studio for academic research teams, with open-source reuse value.
 
-### 6.2 Research Limitations
+### 6.2 Research Limitations (New Section)
 
 - **Complexity of Generative Labeling Interface:** The interface design and quality monitoring for generative labeling tasks are considerably more complex than other task types. The current implementation provides basic support but has not yet been fully optimized for all generative scenarios.
 - **Salary Calculation Scope:** The current salary estimation covers basic hourly-rate computation and does not handle full payroll compliance (e.g., labor insurance, tax withholding), limiting applicability to rough estimation for lab budgeting purposes.
@@ -175,3 +174,7 @@
 
 - **Participant Recruitment and Rights:** All researchers and experts participating in usability testing and annotation validation are clearly informed of the research purpose and procedures beforehand, and retain the right to withdraw at any time.
 - **Anonymization of Feedback Data:** User interview and feedback data are anonymized to ensure individual participants cannot be tracked or identified, and data is used solely for system optimization and academic analysis.
+
+---
+
+## References

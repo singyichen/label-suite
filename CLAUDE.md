@@ -109,9 +109,12 @@ label-eval-portal/
 
 ## Communication
 
-- **English-first**: All documentation, comments, commit messages, spec files, and code are written in English.
-- The only exception is `README.zh-TW.md`, which is maintained in Traditional Chinese for Chinese-speaking users.
-- All conversations with Claude should be responded to in Traditional Chinese, but all written project artifacts must be in English.
+- **English-first**: Code, comments, commit messages, and API contracts are written in English.
+- **Traditional Chinese allowed** in the following locations, to accelerate development iteration:
+  - `docs/` — all research, thesis, and design documentation
+  - `specs/` — all SDD spec files (`spec.md`, `plan.md`, `tasks.md`, `checklists/`)
+- `README.zh-TW.md` is maintained in Traditional Chinese for Chinese-speaking users.
+- All conversations with Claude should be responded to in Traditional Chinese.
 
 ## Code Style
 
@@ -259,7 +262,7 @@ All development must follow the six core principles in [constitution.md](.specif
 3. **Data Fairness** (NON-NEGOTIABLE) — prevent test-set answer leakage
 4. **Test-First / TDD** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows; all agents must follow Red-Green-Refactor (see [ADR-009](docs/adr/009-testing-strategy.md))
 5. **Simplicity** — YAGNI, KISS, avoid over-engineering
-6. **English-First** — all project artifacts in English except `README.zh-TW.md`
+6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/` and `specs/`
 
 ---
 
