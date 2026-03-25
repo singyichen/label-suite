@@ -285,40 +285,53 @@ All development must follow the six core principles in [constitution.md](.specif
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)
 
-  ├──→ [ArchitectAgent]     scan existing code, identify integration points and naming conventions
-  ├──→ [BackendAgent]       check DB schema conflicts, existing API contracts
-  └──→ [FrontendAgent]      identify reusable components, assess UI integration points
+  ├──→ [ArchitectAgent]    scan existing code, integration points, naming conventions
+  ├──→ [DBResearchAgent]   review DB schema, propose migration strategy
+  ├──→ [APIDesignAgent]    check REST naming consistency, existing API contracts
+  ├──→ [BackendAgent]      identify backend integration points and service boundaries
+  ├──→ [FrontendAgent]     identify reusable components, assess UI integration points
+  ├──→ [UXAgent]           assess annotation interface UX feasibility
+  └──→ [I18nAgent]         identify UI strings needing zh-TW/en externalization
        ↓ Team Lead synthesizes findings
   ⚠️  Human Review — confirm research findings before writing plan
 
 /speckit.plan → /speckit.tasks
 
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
-[Team Lead] reads tasks.md and spawns 3 teammates:
+[Team Lead] reads tasks.md and spawns teammates:
 
-  ├──→ [BackendAgent]   owns: backend/app/            (FastAPI routes / models / services)
-  ├──→ [FrontendAgent]  owns: frontend/src/            (React components / pages / services)  ← parallel
-  ├──→ [I18nAgent]      owns: frontend/src/locales/    (zh-TW / en translation strings)       ← parallel
+  ├──→ [BackendAgent]   owns: backend/app/              (FastAPI routes / models / services)  ← parallel
+  ├──→ [FrontendAgent]  owns: frontend/src/              (React components / pages / services) ← parallel
+  ├──→ [I18nAgent]      owns: frontend/src/locales/      (zh-TW / en translation strings)      ← parallel
+  ├──→ [DBAgent]        owns: backend/migrations/        (schema migrations, index strategy)
   └──→ [TestAgent]      owns: backend/tests/ + frontend/tests/  (pytest + Playwright)
+  └──→ [DevOpsAgent]    owns: docker-compose.yml, .github/workflows/  (optional, CI/Docker changes only)
 
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
-      Tell Team Lead: "Require plan approval before BackendAgent makes schema changes"
+      Tell Team Lead: "Require plan approval before DBAgent or BackendAgent makes schema changes"
 
   TaskCompleted hook — auto quality gate after each task:
     backend task  → uv run ruff check . && uv run mypy .
     frontend task → pnpm tsc --noEmit && pnpm lint
     if fails      → teammate retries (max 2), then escalates to Team Lead
+    if retry > 2  → [ErrorResolverAgent] takes over for root-cause debugging
 
-  TeammateIdle hook — when all teammates idle, Team Lead spawns:
-  └──→ [ReviewAgent]    reviews all changed files, retry loop ≤ 2 if issues found
+  TeammateIdle hook — when all implementation teammates idle, Team Lead spawns review team:
+  ├──→ [ReviewAgent]      code quality, type safety, logic correctness
+  ├──→ [SecurityAgent]    RBAC, JWT handling, input validation, data leakage
+  └──→ [PerformanceAgent] API p95 latency, DB query efficiency, annotation write throughput
 
   ⚠️  Human Review interrupt — approve before proceeding to PR
-      ReviewAgent posts summary; you confirm or redirect
+      Review team posts consolidated findings; you confirm or redirect
 
   [ChecklistAgent] → /speckit.checklist
 
 ── Phase 3: PR Flow ──────────────────────────────────────────────────────────
 See Complete PR Flow below
+
+── Post-PR (optional) ────────────────────────────────────────────────────────
+  [TechWriterAgent]   update README / API docs after merge
+  [NLPAdvisorAgent]   on-demand for NLP task config or annotation schema decisions
 ```
 
 ### Agent Team: Enable & Roles
@@ -332,34 +345,44 @@ See Complete PR Flow below
 }
 ```
 
-**Team composition** (3–4 teammates for most features):
+**Phase 1 — Research Agents** (read-only, optional for complex features):
+
+| Teammate | Agent Type | Responsible For |
+|---|---|---|
+| ArchitectAgent | `senior-architect` | Scan existing code, integration points, naming conventions |
+| DBResearchAgent | `senior-dba` | Review DB schema, identify migration strategy |
+| APIDesignAgent | `senior-api-designer` | Check REST naming consistency, existing API contracts |
+| BackendAgent | `senior-backend` | Identify backend service boundaries and conflicts |
+| FrontendAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
+| UXAgent | `senior-uiux` | Assess annotation interface UX feasibility |
+| I18nAgent | `senior-i18n` | Identify UI strings needing zh-TW / en externalization |
+
+**Phase 2 — Implementation Agents:**
 
 | Teammate | Agent Type | Owns | Responsible For |
 |---|---|---|---|
 | BackendAgent | `senior-backend` | `backend/app/` | FastAPI routes, models, schemas, services |
 | FrontendAgent | `senior-frontend` | `frontend/src/` | React components, pages, hooks, API services |
+| I18nAgent | `senior-i18n` | `frontend/src/locales/` | zh-TW / en translation strings, no hardcoded text |
+| DBAgent | `senior-dba` | `backend/migrations/` | Schema migrations, index strategy, query optimization |
 | TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/` | pytest unit/integration + Playwright E2E |
-| ReviewAgent | `senior-code-reviewer` | all changed files | Code review, type safety, security |
-| I18nAgent | `senior-i18n` | `frontend/src/locales/` | Ensure no hardcoded strings; zh-TW / en translation coverage |
+| DevOpsAgent _(optional)_ | `senior-devops` | `docker-compose.yml`, `.github/` | Docker, CI/CD pipeline changes |
 
-**Research Agents** (Phase 1, read-only, optional for complex features):
+**Phase 2 — Review Agents** (spawned after implementation, parallel):
 
 | Teammate | Agent Type | Responsible For |
 |---|---|---|
-| ArchitectAgent | `senior-architect` | Scan existing code, identify integration points and naming conventions |
-| BackendAgent | `senior-backend` | Check DB schema conflicts, review existing API contracts |
-| FrontendAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
-| I18nAgent | `senior-i18n` | Assess i18n coverage gaps; identify UI strings that need externalization |
+| ReviewAgent | `senior-code-reviewer` | Code quality, type safety, logic correctness |
+| SecurityAgent | `senior-security` | RBAC, JWT handling, input validation, data leakage prevention |
+| PerformanceAgent | `senior-performance` | API p95 latency, DB query efficiency, annotation write throughput |
 
-**Research spawn prompt template:**
-```
-Before writing the plan for [feature], spawn a read-only research team:
-- ArchitectAgent (senior-architect): scan codebase for integration points, naming conventions, and potential conflicts
-- BackendAgent (senior-backend): review DB schema and existing API contracts for conflicts
-- FrontendAgent (senior-frontend): identify reusable components in frontend/src/
-- I18nAgent (senior-i18n): assess i18n coverage for the feature; identify UI strings needing zh-TW/en translation
-All agents are read-only — no file edits. Synthesize findings for plan.md.
-```
+**On-Demand Agents:**
+
+| Teammate | Agent Type | When to Spawn |
+|---|---|---|
+| ErrorResolverAgent | `senior-error-resolver` | TaskCompleted retry > 2 times |
+| TechWriterAgent | `senior-technical-writer` | After PR merge, update README / API docs |
+| NLPAdvisorAgent | `nlp-research-advisor` | NLP task config design or annotation schema decisions |
 
 **File ownership is critical** — each teammate owns distinct directories to prevent git conflicts.
 
@@ -372,13 +395,27 @@ All agents are read-only — no file edits. Synthesize findings for plan.md.
 | Documentation or spec changes | Single session |
 | Refactoring within one module | Single session |
 
-**Spawn prompt template:**
+**Research spawn prompt template:**
+```
+Before writing the plan for [feature], spawn a read-only research team:
+- ArchitectAgent (senior-architect): scan codebase for integration points, naming conventions, conflicts
+- DBResearchAgent (senior-dba): review DB schema and propose migration strategy
+- APIDesignAgent (senior-api-designer): check REST naming consistency and existing API contracts
+- FrontendAgent (senior-frontend): identify reusable components in frontend/src/
+- UXAgent (senior-uiux): assess annotation interface UX feasibility
+- I18nAgent (senior-i18n): identify UI strings needing zh-TW/en translation
+All agents are read-only — no file edits. Synthesize findings for plan.md.
+```
+
+**Implementation spawn prompt template:**
 ```
 Create an agent team to implement [feature] based on specs/[NNN]-[feature]/tasks.md.
 Spawn:
-- BackendAgent (senior-backend): implement backend tasks, own backend/app/
-- FrontendAgent (senior-frontend): implement frontend tasks, own frontend/src/ [parallel with backend]
-- TestAgent (senior-qa): write tests after API contract is confirmed
+- BackendAgent (senior-backend): backend tasks, owns backend/app/
+- FrontendAgent (senior-frontend): frontend tasks, owns frontend/src/ [parallel with backend]
+- I18nAgent (senior-i18n): translation strings, owns frontend/src/locales/ [parallel]
+- DBAgent (senior-dba): migrations, owns backend/migrations/
+- TestAgent (senior-qa): tests after API contract is confirmed
 Require plan approval before any DB schema or API contract changes.
 ```
 
