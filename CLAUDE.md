@@ -285,13 +285,13 @@ All development must follow the six core principles in [constitution.md](.specif
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)
 
-  ├──→ [ArchitectAgent]    scan existing code, integration points, naming conventions
-  ├──→ [DBResearchAgent]   review DB schema, propose migration strategy
-  ├──→ [APIDesignAgent]    check REST naming consistency, existing API contracts
-  ├──→ [BackendAgent]      identify backend integration points and service boundaries
-  ├──→ [FrontendAgent]     identify reusable components, assess UI integration points
-  ├──→ [UXAgent]           assess annotation interface UX feasibility
-  └──→ [I18nAgent]         identify UI strings needing zh-TW/en externalization
+  ├──→ [ArchitectAgent]         scan existing code, integration points, naming conventions
+  ├──→ [DBResearchAgent]        review DB schema, propose migration strategy
+  ├──→ [APIDesignAgent]         check REST naming consistency, existing API contracts
+  ├──→ [BackendResearchAgent]   identify backend integration points and service boundaries
+  ├──→ [FrontendResearchAgent]  identify reusable components, assess UI integration points
+  ├──→ [UXAgent]                assess annotation interface UX feasibility
+  └──→ [I18nAgent]              identify UI strings needing zh-TW/en externalization
        ↓ Team Lead synthesizes findings
   ⚠️  Human Review — confirm research findings before writing plan
 
@@ -352,8 +352,8 @@ See Complete PR Flow below
 | ArchitectAgent | `senior-architect` | Scan existing code, integration points, naming conventions |
 | DBResearchAgent | `senior-dba` | Review DB schema, identify migration strategy |
 | APIDesignAgent | `senior-api-designer` | Check REST naming consistency, existing API contracts |
-| BackendAgent | `senior-backend` | Identify backend service boundaries and conflicts |
-| FrontendAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
+| BackendResearchAgent | `senior-backend` | Identify backend service boundaries and conflicts |
+| FrontendResearchAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
 | UXAgent | `senior-uiux` | Assess annotation interface UX feasibility |
 | I18nAgent | `senior-i18n` | Identify UI strings needing zh-TW / en externalization |
 
@@ -401,7 +401,8 @@ Before writing the plan for [feature], spawn a read-only research team:
 - ArchitectAgent (senior-architect): scan codebase for integration points, naming conventions, conflicts
 - DBResearchAgent (senior-dba): review DB schema and propose migration strategy
 - APIDesignAgent (senior-api-designer): check REST naming consistency and existing API contracts
-- FrontendAgent (senior-frontend): identify reusable components in frontend/src/
+- BackendResearchAgent (senior-backend): review existing API contracts and service boundaries
+- FrontendResearchAgent (senior-frontend): identify reusable components in frontend/src/
 - UXAgent (senior-uiux): assess annotation interface UX feasibility
 - I18nAgent (senior-i18n): identify UI strings needing zh-TW/en translation
 All agents are read-only — no file edits. Synthesize findings for plan.md.
