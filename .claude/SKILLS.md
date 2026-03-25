@@ -16,7 +16,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── speckit.checklist.md     # Generate quality checklist
 │   ├── speckit.constitution.md  # Update project constitution
 │   └── speckit.taskstoissues.md # Convert tasks to GitHub Issues
-├── skills/                      # Knowledge-Domain Skills (28 total)
+├── skills/                      # Knowledge-Domain Skills (30 total)
 │   ├── spec-driven-development/
 │   │   ├── sdd-workflow/
 │   │   ├── spec-to-plan/
@@ -51,7 +51,8 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   │   ├── defect-report/
 │   │   ├── traceability-matrix/
 │   │   └── test-report/
-│   └── adamelliotfields-skills-d2-diagram/  # Diagramming
+│   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
+│   └── ui-ux-pro-max/               # UI/UX Design Intelligence
 ├── agents/                      # AI Agent definitions (35 agents)
 └── SKILLS.md                    # This file
 ```
@@ -126,6 +127,24 @@ Skills for designing APIs, services, data models, and architecture.
 | `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
 | `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
 
+### UI/UX Design (1 skill)
+
+Skills for UI design systems, component styling, and UX best practices.
+
+| Skill | Purpose | Example Usage |
+|-------|---------|---------------|
+| `/ui-ux-pro-max` | Generate complete design systems (style, color, typography, UX guidelines) for any product type | `/ui-ux-pro-max Build a dashboard for annotation analytics` |
+
+**Capabilities:**
+- 67 UI styles (Glassmorphism, Brutalism, Bento Grid, Minimalism, etc.)
+- 96 color palettes + 57 font pairings (Google Fonts)
+- 161 industry-specific design rules (SaaS, healthcare, fintech, etc.)
+- 25 chart type recommendations
+- 99 UX best practices (accessibility, touch targets, animation, etc.)
+- Supports 13 stacks: `html-tailwind` (default), `react`, `nextjs`, `vue`, `svelte`, `shadcn`, `swiftui`, `flutter`, `react-native`, and more
+
+**Source:** [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) — installed via `uipro-cli`
+
 ### Code Quality (5 skills)
 
 Skills for code review, PR evaluation, technical debt management, and git workflow.
@@ -176,7 +195,9 @@ Skills for quality gates, defect management, traceability, and reporting.
 | Code Quality | 5 | code-review, code-review-checklist, pr-review, code-smell, git-branch |
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
-| **Total** | **28** | |
+| UI/UX Design | 1 | ui-ux-pro-max |
+| Diagramming | 1 | d2-diagram (adamelliotfields) |
+| **Total** | **30** | |
 
 ---
 
@@ -205,6 +226,7 @@ For the Label-Eval-Portal project, these skills enforce additional constraints f
 | 1. Requirements | `/user-story` → `/functional-req` → `/acceptance-criteria` |
 | 2. SDD Spec | `/speckit.specify` → `/spec-review` → `/spec-to-plan` |
 | 3. Design | `/api-spec` → `/backend-spec` → `/frontend-spec` → `/data-model` → `/flowchart` |
+| 3b. UI Design | `/ui-ux-pro-max` (design system) → `/frontend-spec` (component spec) |
 | 4. Implementation | `/speckit.plan` → `/speckit.tasks` → `/speckit.implement` |
 | 5. Testing | `/test-plan` → `/test-data-strategy` → `/test-coverage` |
 | 6. Code Review | `/code-review-checklist` → `/code-review` → `/pr-review` |
@@ -222,5 +244,5 @@ For the Label-Eval-Portal project, these skills enforce additional constraints f
 
 ---
 
-*Last Updated: 2026-03-21*
-*Total Skills: 28 | Spec-Kit Commands: 9*
+*Last Updated: 2026-03-25*
+*Total Skills: 30 | Spec-Kit Commands: 9*
