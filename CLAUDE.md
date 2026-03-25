@@ -285,13 +285,13 @@ All development must follow the six core principles in [constitution.md](.specif
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)
 
-  ├──→ [ArchitectAgent]         scan existing code, integration points, naming conventions
-  ├──→ [DBResearchAgent]        review DB schema, propose migration strategy
-  ├──→ [APIDesignAgent]         check REST naming consistency, existing API contracts
-  ├──→ [BackendResearchAgent]   identify backend integration points and service boundaries
-  ├──→ [FrontendResearchAgent]  identify reusable components, assess UI integration points
-  ├──→ [UXAgent]                assess annotation interface UX feasibility
-  └──→ [I18nAgent]              identify UI strings needing zh-TW/en externalization
+  ├──→ [ArchitectAgent]         overall structure, cross-cutting integration points, naming conventions
+  ├──→ [DBResearchAgent]        existing DB schema, migration strategy
+  ├──→ [APIDesignAgent]         existing API contracts, REST naming consistency  ← no overlap with Architect
+  ├──→ [BackendResearchAgent]   service boundaries in backend/app/services/      ← no overlap with APIDesign
+  ├──→ [FrontendResearchAgent]  reusable components, UI integration points
+  ├──→ [UXAgent]                annotation interface UX feasibility
+  └──→ [I18nAgent]              UI strings needing zh-TW/en externalization
        ↓ Team Lead synthesizes findings
   ⚠️  Human Review — confirm research findings before writing plan
 
@@ -300,15 +300,20 @@ All development must follow the six core principles in [constitution.md](.specif
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
 [Team Lead] reads tasks.md and spawns teammates:
 
-  ├──→ [BackendAgent]   owns: backend/app/              (FastAPI routes / models / services)  ← parallel
-  ├──→ [FrontendAgent]  owns: frontend/src/              (React components / pages / services) ← parallel
-  ├──→ [I18nAgent]      owns: frontend/src/locales/      (zh-TW / en translation strings)      ← parallel
-  ├──→ [DBAgent]        owns: backend/migrations/        (schema migrations, index strategy)
-  └──→ [TestAgent]      owns: backend/tests/ + frontend/tests/  (pytest + Playwright)
-  └──→ [DevOpsAgent]    owns: docker-compose.yml, .github/workflows/  (optional, CI/Docker changes only)
+  Step A — parallel (no inter-dependency):
+  ├──→ [BackendAgent]   owns: backend/app/              (FastAPI routes / models / services)
+  ├──→ [FrontendAgent]  owns: frontend/src/              (React components / pages / services)
+  ├──→ [I18nAgent]      owns: frontend/src/locales/      (zh-TW / en translation strings)
+  └──→ [DevOpsAgent]    owns: docker-compose.yml, .github/workflows/  (optional, CI/Docker only)
 
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
-      Tell Team Lead: "Require plan approval before DBAgent or BackendAgent makes schema changes"
+      Tell Team Lead: "Require plan approval before BackendAgent makes schema changes"
+
+  Step B — after BackendAgent models are confirmed:
+  └──→ [DBAgent]        owns: backend/migrations/        (Alembic migrations, index strategy)
+
+  Step C — after BackendAgent + FrontendAgent complete:
+  └──→ [TestAgent]      owns: backend/tests/ + frontend/tests/  (pytest + Playwright E2E)
 
   TaskCompleted hook — auto quality gate after each task:
     backend task  → uv run ruff check . && uv run mypy .
@@ -324,7 +329,7 @@ All development must follow the six core principles in [constitution.md](.specif
   ⚠️  Human Review interrupt — approve before proceeding to PR
       Review team posts consolidated findings; you confirm or redirect
 
-  [ChecklistAgent] → /speckit.checklist
+  /speckit.checklist
 
 ── Phase 3: PR Flow ──────────────────────────────────────────────────────────
 See Complete PR Flow below
@@ -349,10 +354,10 @@ See Complete PR Flow below
 
 | Teammate | Agent Type | Responsible For |
 |---|---|---|
-| ArchitectAgent | `senior-architect` | Scan existing code, integration points, naming conventions |
+| ArchitectAgent | `senior-architect` | Overall structure, cross-cutting integration points, naming conventions (not API-level) |
 | DBResearchAgent | `senior-dba` | Review DB schema, identify migration strategy |
-| APIDesignAgent | `senior-api-designer` | Check REST naming consistency, existing API contracts |
-| BackendResearchAgent | `senior-backend` | Identify backend service boundaries and conflicts |
+| APIDesignAgent | `senior-api-designer` | Existing API contracts, REST naming consistency, OpenAPI conflicts |
+| BackendResearchAgent | `senior-backend` | Service boundaries in `backend/app/services/` (not API contracts) |
 | FrontendResearchAgent | `senior-frontend` | Identify reusable components, assess UI integration points |
 | UXAgent | `senior-uiux` | Assess annotation interface UX feasibility |
 | I18nAgent | `senior-i18n` | Identify UI strings needing zh-TW / en externalization |
@@ -398,10 +403,13 @@ See Complete PR Flow below
 **Research spawn prompt template:**
 ```
 Before writing the plan for [feature], spawn a read-only research team:
-- ArchitectAgent (senior-architect): scan codebase for integration points, naming conventions, conflicts
-- DBResearchAgent (senior-dba): review DB schema and propose migration strategy
-- APIDesignAgent (senior-api-designer): check REST naming consistency and existing API contracts
-- BackendResearchAgent (senior-backend): review existing API contracts and service boundaries
+- ArchitectAgent (senior-architect): scan overall codebase structure, cross-cutting integration points,
+  naming conventions, and architectural conflicts (do NOT duplicate backend-specific API review)
+- DBResearchAgent (senior-dba): review existing DB schema and propose migration strategy
+- APIDesignAgent (senior-api-designer): review existing API contracts, REST naming consistency,
+  and OpenAPI spec for conflicts with the planned feature
+- BackendResearchAgent (senior-backend): identify service boundaries and business logic integration
+  points within backend/app/ (focus on services/, not API contracts — that is APIDesignAgent's scope)
 - FrontendResearchAgent (senior-frontend): identify reusable components in frontend/src/
 - UXAgent (senior-uiux): assess annotation interface UX feasibility
 - I18nAgent (senior-i18n): identify UI strings needing zh-TW/en translation
