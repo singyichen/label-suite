@@ -47,9 +47,9 @@ Evaluation results must be fair and reproducible.
 - Avoid premature abstraction; three similar lines of code beats an over-engineered abstraction
 
 ### VI. English-First
-- All project artifacts are written in English: code comments, docstrings, commit messages, spec files, documentation
-- The only exception is `README.zh-TW.md`, maintained in Traditional Chinese
-- Variable names, function names, and technical terms are always in English
+- Code, comments, docstrings, commit messages, and variable/function names are always written in English
+- Traditional Chinese is permitted in `docs/` and `specs/` directories to accelerate research documentation
+- The only fully Chinese file outside those directories is `README.zh-TW.md`
 
 ## Governance
 
@@ -68,4 +68,4 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all six principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 1.2.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-25
