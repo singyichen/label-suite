@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — LabelSuite</title>
+  <title>儀表板 — LabelSuite</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -52,37 +52,50 @@
 
       <!-- Nav links (hidden on mobile) -->
       <nav class="hidden md:flex items-center gap-1" role="navigation" aria-label="Main navigation">
-        <a href="#" class="px-3 py-2 text-sm text-primary font-medium bg-surface rounded-lg cursor-pointer" aria-current="page">Dashboard</a>
-        <a href="#" aria-disabled="true" title="Coming soon" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200">Tasks</a>
-        <a href="#" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200">Leaderboard</a>
-        <a href="#" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200">Settings</a>
+        <a href="#" class="px-3 py-2 text-sm text-primary font-medium bg-surface rounded-lg cursor-pointer" aria-current="page" data-i18n="nav-dashboard">儀表板</a>
+        <a href="#" aria-disabled="true" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-tasks">任務</a>
+        <a href="#" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-leaderboard">排行榜</a>
+        <a href="#" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-settings">設定</a>
       </nav>
 
       <!-- User menu -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <!-- Avatar + name -->
-        <div class="hidden sm:flex items-center gap-2">
+        <div class="hidden sm:flex items-center gap-2 mr-1">
           <img src="https://api.dicebear.com/7.x/initials/svg?seed=Researcher&backgroundColor=6366f1&textColor=ffffff"
                alt="User avatar" class="w-8 h-8 rounded-full border-2 border-primary/20" />
           <span class="text-sm text-ink font-medium">Researcher</span>
         </div>
 
+        <!-- Language toggle -->
+        <button id="lang-toggle"
+                onclick="toggleLang()"
+                class="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-primary border border-slate-200 bg-white rounded-full px-3 py-1.5 cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-label="Switch language / 切換語言">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span id="lang-label">EN</span>
+        </button>
+
         <!-- Logout button -->
         <button onclick="signOut()"
                 class="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
-                aria-label="Sign out">
+                aria-label="登出">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
-          <span class="hidden sm:inline">Sign out</span>
+          <span class="hidden sm:inline" data-i18n="btn-signout">登出</span>
         </button>
 
         <!-- Mobile menu button -->
         <button onclick="toggleMobileMenu()"
                 class="md:hidden flex items-center justify-center w-9 h-9 text-slate-600 hover:text-ink hover:bg-slate-100 rounded-lg cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Open navigation menu" aria-expanded="false" id="mobile-menu-btn">
+                aria-label="開啟導覽選單" aria-expanded="false" id="mobile-menu-btn">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
@@ -92,10 +105,10 @@
 
     <!-- Mobile nav drawer -->
     <nav id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1" role="navigation" aria-label="Mobile navigation">
-      <a href="#" class="block px-3 py-2 text-sm text-primary font-medium bg-surface rounded-lg" aria-current="page">Dashboard</a>
-      <a href="#" aria-disabled="true" title="Coming soon" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200">Tasks</a>
-      <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200">Leaderboard</a>
-      <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200">Settings</a>
+      <a href="#" class="block px-3 py-2 text-sm text-primary font-medium bg-surface rounded-lg" aria-current="page" data-i18n="nav-dashboard">儀表板</a>
+      <a href="#" aria-disabled="true" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-tasks">任務</a>
+      <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-leaderboard">排行榜</a>
+      <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-settings">設定</a>
     </nav>
   </header>
 
@@ -104,19 +117,19 @@
 
     <!-- Welcome banner -->
     <div class="mb-8">
-      <h1 class="text-2xl font-bold text-ink">Welcome back, Researcher</h1>
-      <p class="text-slate-500 mt-1 text-sm">Here's an overview of your annotation activity.</p>
+      <h1 class="text-2xl font-bold text-ink" data-i18n="welcome">歡迎回來，Researcher</h1>
+      <p class="text-slate-500 mt-1 text-sm" data-i18n="welcome-sub">以下是您的標注活動概覽。</p>
     </div>
 
     <!-- Stat cards -->
     <section aria-labelledby="stats-heading">
-      <h2 id="stats-heading" class="sr-only">Activity statistics</h2>
+      <h2 id="stats-heading" class="sr-only" data-i18n="stats-sr">活動統計</h2>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
         <!-- Card: Active Tasks -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary transition-colors duration-200">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide">Active Tasks</span>
+            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide" data-i18n="stat-active-tasks">進行中任務</span>
             <div class="w-8 h-8 bg-surface rounded-lg flex items-center justify-center">
               <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -125,13 +138,13 @@
             </div>
           </div>
           <p class="text-2xl font-bold text-ink">3</p>
-          <p class="text-xs text-cta mt-1">2 due this week</p>
+          <p class="text-xs text-cta mt-1" data-i18n="stat-active-sub">本週到期 2 項</p>
         </div>
 
         <!-- Card: Submissions -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary transition-colors duration-200">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide">Submissions</span>
+            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide" data-i18n="stat-submissions">提交次數</span>
             <div class="w-8 h-8 bg-surface rounded-lg flex items-center justify-center">
               <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -139,13 +152,13 @@
             </div>
           </div>
           <p class="text-2xl font-bold text-ink">47</p>
-          <p class="text-xs text-slate-400 mt-1">Total submitted</p>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="stat-submissions-sub">累計提交</p>
         </div>
 
         <!-- Card: Best Score -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary transition-colors duration-200">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide">Best Score</span>
+            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide" data-i18n="stat-best-score">最高分數</span>
             <div class="w-8 h-8 bg-surface rounded-lg flex items-center justify-center">
               <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
@@ -153,13 +166,13 @@
             </div>
           </div>
           <p class="text-2xl font-bold text-ink">F1 0.89</p>
-          <p class="text-xs text-slate-400 mt-1">NER Task #2</p>
+          <p class="text-xs text-slate-400 mt-1" data-i18n="stat-best-score-sub">NER 任務 #2</p>
         </div>
 
-        <!-- Card: Leaderboard Rank -->
+        <!-- Card: Rank -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary transition-colors duration-200">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide">Rank</span>
+            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide" data-i18n="stat-rank">排名</span>
             <div class="w-8 h-8 bg-surface rounded-lg flex items-center justify-center">
               <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -167,7 +180,7 @@
             </div>
           </div>
           <p class="text-2xl font-bold text-ink">#5</p>
-          <p class="text-xs text-cta mt-1">↑ 2 since last week</p>
+          <p class="text-xs text-cta mt-1" data-i18n="stat-rank-sub">↑ 較上週上升 2 名</p>
         </div>
 
       </div>
@@ -180,42 +193,42 @@
       <section class="lg:col-span-2" aria-labelledby="tasks-heading">
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-            <h2 id="tasks-heading" class="text-base font-semibold text-ink">Active Tasks</h2>
-            <a href="#" aria-disabled="true" title="Coming soon" class="text-sm text-primary hover:underline cursor-pointer transition-colors duration-200">View all</a>
+            <h2 id="tasks-heading" class="text-base font-semibold text-ink" data-i18n="table-title">進行中任務</h2>
+            <a href="#" class="text-sm text-primary hover:underline cursor-pointer transition-colors duration-200" data-i18n="table-view-all">查看全部</a>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" role="table" aria-label="Active annotation tasks">
+            <table class="w-full text-sm" role="table" aria-label="進行中標注任務">
               <thead>
                 <tr class="text-left text-xs text-slate-400 uppercase tracking-wide bg-slate-50">
-                  <th class="px-6 py-3 font-medium" scope="col">Task</th>
-                  <th class="px-6 py-3 font-medium" scope="col">Type</th>
-                  <th class="px-6 py-3 font-medium" scope="col">Deadline</th>
-                  <th class="px-6 py-3 font-medium" scope="col">Status</th>
+                  <th class="px-6 py-3 font-medium" scope="col" data-i18n="th-task">任務</th>
+                  <th class="px-6 py-3 font-medium" scope="col" data-i18n="th-type">類型</th>
+                  <th class="px-6 py-3 font-medium" scope="col" data-i18n="th-deadline">截止日期</th>
+                  <th class="px-6 py-3 font-medium" scope="col" data-i18n="th-status">狀態</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 <tr class="hover:bg-slate-50 cursor-pointer transition-colors duration-150">
-                  <td class="px-6 py-4 font-medium text-ink">NER Task #2</td>
-                  <td class="px-6 py-4 text-slate-500">Named Entity</td>
-                  <td class="px-6 py-4 text-slate-500">Apr 2, 2026</td>
+                  <td class="px-6 py-4 font-medium text-ink" data-i18n="task1-name">NER 任務 #2</td>
+                  <td class="px-6 py-4 text-slate-500" data-i18n="task1-type">命名實體</td>
+                  <td class="px-6 py-4 text-slate-500">2026-04-02</td>
                   <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">In Progress</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200" data-i18n="status-in-progress">進行中</span>
                   </td>
                 </tr>
                 <tr class="hover:bg-slate-50 cursor-pointer transition-colors duration-150">
-                  <td class="px-6 py-4 font-medium text-ink">Sentiment Task #1</td>
-                  <td class="px-6 py-4 text-slate-500">Classification</td>
-                  <td class="px-6 py-4 text-slate-500">Apr 5, 2026</td>
+                  <td class="px-6 py-4 font-medium text-ink" data-i18n="task2-name">情感分析任務 #1</td>
+                  <td class="px-6 py-4 text-slate-500" data-i18n="task2-type">分類</td>
+                  <td class="px-6 py-4 text-slate-500">2026-04-05</td>
                   <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">Not Started</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200" data-i18n="status-not-started">尚未開始</span>
                   </td>
                 </tr>
                 <tr class="hover:bg-slate-50 cursor-pointer transition-colors duration-150">
-                  <td class="px-6 py-4 font-medium text-ink">Relation Extraction #3</td>
-                  <td class="px-6 py-4 text-slate-500">RE</td>
-                  <td class="px-6 py-4 text-slate-500">Apr 10, 2026</td>
+                  <td class="px-6 py-4 font-medium text-ink" data-i18n="task3-name">關係抽取任務 #3</td>
+                  <td class="px-6 py-4 text-slate-500" data-i18n="task3-type">關係抽取</td>
+                  <td class="px-6 py-4 text-slate-500">2026-04-10</td>
                   <td class="px-6 py-4">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700 border border-green-200">Submitted</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700 border border-green-200" data-i18n="status-submitted">已提交</span>
                   </td>
                 </tr>
               </tbody>
@@ -228,34 +241,34 @@
       <section aria-labelledby="activity-heading">
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden h-full">
           <div class="px-6 py-4 border-b border-slate-100">
-            <h2 id="activity-heading" class="text-base font-semibold text-ink">Recent Submissions</h2>
+            <h2 id="activity-heading" class="text-base font-semibold text-ink" data-i18n="recent-title">近期提交</h2>
           </div>
-          <ul class="divide-y divide-slate-100" role="list" aria-label="Recent submission history">
+          <ul class="divide-y divide-slate-100" role="list" aria-label="近期提交記錄">
             <li class="px-6 py-4">
-              <p class="text-sm font-medium text-ink">NER Task #2</p>
+              <p class="text-sm font-medium text-ink" data-i18n="task1-name">NER 任務 #2</p>
               <div class="flex items-center justify-between mt-1">
-                <span class="text-xs text-slate-400">Mar 25, 2026</span>
+                <span class="text-xs text-slate-400">2026-03-25</span>
                 <span class="text-xs font-semibold text-cta">F1 0.89</span>
               </div>
             </li>
             <li class="px-6 py-4">
-              <p class="text-sm font-medium text-ink">NER Task #2</p>
+              <p class="text-sm font-medium text-ink" data-i18n="task1-name">NER 任務 #2</p>
               <div class="flex items-center justify-between mt-1">
-                <span class="text-xs text-slate-400">Mar 22, 2026</span>
+                <span class="text-xs text-slate-400">2026-03-22</span>
                 <span class="text-xs font-semibold text-slate-500">F1 0.83</span>
               </div>
             </li>
             <li class="px-6 py-4">
-              <p class="text-sm font-medium text-ink">Relation Extraction #3</p>
+              <p class="text-sm font-medium text-ink" data-i18n="task3-name">關係抽取任務 #3</p>
               <div class="flex items-center justify-between mt-1">
-                <span class="text-xs text-slate-400">Mar 18, 2026</span>
+                <span class="text-xs text-slate-400">2026-03-18</span>
                 <span class="text-xs font-semibold text-slate-500">F1 0.76</span>
               </div>
             </li>
             <li class="px-6 py-4">
-              <p class="text-sm font-medium text-ink">Sentiment Task #1</p>
+              <p class="text-sm font-medium text-ink" data-i18n="task2-name">情感分析任務 #1</p>
               <div class="flex items-center justify-between mt-1">
-                <span class="text-xs text-slate-400">Mar 10, 2026</span>
+                <span class="text-xs text-slate-400">2026-03-10</span>
                 <span class="text-xs font-semibold text-slate-500">Acc 0.91</span>
               </div>
             </li>
@@ -270,22 +283,124 @@
   <div id="signout-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"
        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-ink/30 px-4">
     <div class="bg-white border border-slate-200 rounded-2xl shadow-none max-w-sm w-full p-6">
-      <h3 id="modal-title" class="text-lg font-semibold text-ink mb-2">Sign out?</h3>
-      <p class="text-sm text-slate-500 mb-6">Your session will be ended and you will be returned to the login page.</p>
+      <h3 id="modal-title" class="text-lg font-semibold text-ink mb-2" data-i18n="modal-title">確認登出？</h3>
+      <p class="text-sm text-slate-500 mb-6" data-i18n="modal-desc">您的工作階段將結束並返回登入頁面。</p>
       <div class="flex gap-3 justify-end">
         <button onclick="closeModal()"
-                class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-300">
-          Cancel
-        </button>
+                class="px-4 py-2 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                data-i18n="modal-cancel">取消</button>
         <a href="login.html"
-           class="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400">
-          Sign out
-        </a>
+           class="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
+           data-i18n="modal-confirm">登出</a>
       </div>
     </div>
   </div>
 
+  <!-- i18n strings -->
   <script>
+    const STRINGS = {
+      'zh-TW': {
+        'nav-dashboard':     '儀表板',
+        'nav-tasks':         '任務',
+        'nav-leaderboard':   '排行榜',
+        'nav-settings':      '設定',
+        'btn-signout':       '登出',
+        'welcome':           '歡迎回來，Researcher',
+        'welcome-sub':       '以下是您的標注活動概覽。',
+        'stats-sr':          '活動統計',
+        'stat-active-tasks': '進行中任務',
+        'stat-active-sub':   '本週到期 2 項',
+        'stat-submissions':  '提交次數',
+        'stat-submissions-sub': '累計提交',
+        'stat-best-score':   '最高分數',
+        'stat-best-score-sub': 'NER 任務 #2',
+        'stat-rank':         '排名',
+        'stat-rank-sub':     '↑ 較上週上升 2 名',
+        'table-title':       '進行中任務',
+        'table-view-all':    '查看全部',
+        'th-task':           '任務',
+        'th-type':           '類型',
+        'th-deadline':       '截止日期',
+        'th-status':         '狀態',
+        'task1-name':        'NER 任務 #2',
+        'task1-type':        '命名實體',
+        'task2-name':        '情感分析任務 #1',
+        'task2-type':        '分類',
+        'task3-name':        '關係抽取任務 #3',
+        'task3-type':        '關係抽取',
+        'status-in-progress': '進行中',
+        'status-not-started': '尚未開始',
+        'status-submitted':  '已提交',
+        'recent-title':      '近期提交',
+        'modal-title':       '確認登出？',
+        'modal-desc':        '您的工作階段將結束並返回登入頁面。',
+        'modal-cancel':      '取消',
+        'modal-confirm':     '登出',
+        'lang-label':        'EN',
+        'page-title':        '儀表板 — LabelSuite',
+      },
+      'en': {
+        'nav-dashboard':     'Dashboard',
+        'nav-tasks':         'Tasks',
+        'nav-leaderboard':   'Leaderboard',
+        'nav-settings':      'Settings',
+        'btn-signout':       'Sign out',
+        'welcome':           'Welcome back, Researcher',
+        'welcome-sub':       'Here\'s an overview of your annotation activity.',
+        'stats-sr':          'Activity statistics',
+        'stat-active-tasks': 'Active Tasks',
+        'stat-active-sub':   '2 due this week',
+        'stat-submissions':  'Submissions',
+        'stat-submissions-sub': 'Total submitted',
+        'stat-best-score':   'Best Score',
+        'stat-best-score-sub': 'NER Task #2',
+        'stat-rank':         'Rank',
+        'stat-rank-sub':     '↑ 2 since last week',
+        'table-title':       'Active Tasks',
+        'table-view-all':    'View all',
+        'th-task':           'Task',
+        'th-type':           'Type',
+        'th-deadline':       'Deadline',
+        'th-status':         'Status',
+        'task1-name':        'NER Task #2',
+        'task1-type':        'Named Entity',
+        'task2-name':        'Sentiment Task #1',
+        'task2-type':        'Classification',
+        'task3-name':        'Relation Extraction #3',
+        'task3-type':        'RE',
+        'status-in-progress': 'In Progress',
+        'status-not-started': 'Not Started',
+        'status-submitted':  'Submitted',
+        'recent-title':      'Recent Submissions',
+        'modal-title':       'Sign out?',
+        'modal-desc':        'Your session will be ended and you will be returned to the login page.',
+        'modal-cancel':      'Cancel',
+        'modal-confirm':     'Sign out',
+        'lang-label':        'ZH',
+        'page-title':        'Dashboard — LabelSuite',
+      },
+    };
+
+    const STORAGE_KEY = 'labelsuite-lang';
+    let currentLang = localStorage.getItem(STORAGE_KEY) || 'zh-TW';
+
+    function applyLang(lang) {
+      const strings = STRINGS[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (strings[key] !== undefined) el.textContent = strings[key];
+      });
+      document.getElementById('lang-label').textContent = strings['lang-label'];
+      document.documentElement.lang = lang;
+      document.title = strings['page-title'];
+    }
+
+    function toggleLang() {
+      currentLang = currentLang === 'zh-TW' ? 'en' : 'zh-TW';
+      localStorage.setItem(STORAGE_KEY, currentLang);
+      applyLang(currentLang);
+    }
+
     function signOut() {
       document.getElementById('signout-modal').classList.remove('hidden');
       document.getElementById('signout-modal').querySelector('button').focus();
@@ -293,11 +408,9 @@
     function closeModal() {
       document.getElementById('signout-modal').classList.add('hidden');
     }
-    // Close modal on backdrop click
     document.getElementById('signout-modal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
-    // Close modal on Escape
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeModal();
     });
@@ -308,6 +421,9 @@
       menu.classList.toggle('hidden', open);
       btn.setAttribute('aria-expanded', String(!open));
     }
+
+    // Init
+    applyLang(currentLang);
   </script>
 </body>
 </html>

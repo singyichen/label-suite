@@ -203,7 +203,8 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
-/speckit.clarify                        → clarify requirements (optional)
+/ui-ux-pro-max                          → prototype/ + design-system/  (optional, UI-heavy features)
+/speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
 /speckit.plan                           → specs/NNN-feature/plan.md
 /speckit.tasks                          → specs/NNN-feature/tasks.md
 /speckit.analyze                        → cross-document consistency check (optional)
@@ -246,7 +247,8 @@ The deciding question is: **will this change make the system behave differently 
 | Command | Purpose |
 |---|---|
 | `/speckit.specify` | Create feature spec from natural language description |
-| `/speckit.clarify` | Identify and clarify ambiguous requirements |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system (optional; run after specify, before clarify) |
+| `/speckit.clarify` | Identify and clarify ambiguous requirements (prototype helps surface these) |
 | `/speckit.plan` | Build technical implementation plan |
 | `/speckit.tasks` | Generate executable task list |
 | `/speckit.analyze` | Cross-document consistency analysis |
@@ -280,7 +282,10 @@ All development must follow the six core principles in [constitution.md](.specif
 
 ```
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
-/speckit.specify → /speckit.clarify (optional)
+/speckit.specify
+  → [/ui-ux-pro-max] (optional) — HTML prototype + design system
+                                   Use to surface UI ambiguities before clarify
+  → /speckit.clarify (optional)   Prototype makes ambiguities concrete
 
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)
