@@ -83,7 +83,7 @@
         <!-- Logout button -->
         <button onclick="signOut()"
                 class="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400"
-                aria-label="登出">
+                aria-label="登出" data-i18n-aria-label="aria-logout">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -95,7 +95,7 @@
         <!-- Mobile menu button -->
         <button onclick="toggleMobileMenu()"
                 class="md:hidden flex items-center justify-center w-9 h-9 text-slate-600 hover:text-ink hover:bg-slate-100 rounded-lg cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="開啟導覽選單" aria-expanded="false" id="mobile-menu-btn">
+                aria-label="開啟導覽選單" data-i18n-aria-label="aria-mobile-menu" aria-expanded="false" id="mobile-menu-btn">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
@@ -197,7 +197,7 @@
             <a href="#" class="text-sm text-primary hover:underline cursor-pointer transition-colors duration-200" data-i18n="table-view-all">查看全部</a>
           </div>
           <div class="overflow-x-auto">
-            <table class="w-full text-sm" role="table" aria-label="進行中標注任務">
+            <table class="w-full text-sm" role="table" aria-label="進行中標注任務" data-i18n-aria-label="aria-tasks-table">
               <thead>
                 <tr class="text-left text-xs text-slate-400 uppercase tracking-wide bg-slate-50">
                   <th class="px-6 py-3 font-medium" scope="col" data-i18n="th-task">任務</th>
@@ -243,7 +243,7 @@
           <div class="px-6 py-4 border-b border-slate-100">
             <h2 id="activity-heading" class="text-base font-semibold text-ink" data-i18n="recent-title">近期提交</h2>
           </div>
-          <ul class="divide-y divide-slate-100" role="list" aria-label="近期提交記錄">
+          <ul class="divide-y divide-slate-100" role="list" aria-label="近期提交記錄" data-i18n-aria-label="aria-recent-list">
             <li class="px-6 py-4">
               <p class="text-sm font-medium text-ink" data-i18n="task1-name">NER 任務 #2</p>
               <div class="flex items-center justify-between mt-1">
@@ -336,8 +336,12 @@
         'modal-desc':        '您的工作階段將結束並返回登入頁面。',
         'modal-cancel':      '取消',
         'modal-confirm':     '登出',
-        'lang-label':        'EN',
-        'page-title':        '儀表板 — LabelSuite',
+        'lang-label':            'EN',
+        'page-title':            '儀表板 — LabelSuite',
+        'aria-logout':           '登出',
+        'aria-mobile-menu':      '開啟導覽選單',
+        'aria-tasks-table':      '進行中標注任務',
+        'aria-recent-list':      '近期提交記錄',
       },
       'en': {
         'nav-dashboard':     'Dashboard',
@@ -376,8 +380,12 @@
         'modal-desc':        'Your session will be ended and you will be returned to the login page.',
         'modal-cancel':      'Cancel',
         'modal-confirm':     'Sign out',
-        'lang-label':        'ZH',
-        'page-title':        'Dashboard — LabelSuite',
+        'lang-label':            'ZH',
+        'page-title':            'Dashboard — LabelSuite',
+        'aria-logout':           'Sign out',
+        'aria-mobile-menu':      'Open navigation menu',
+        'aria-tasks-table':      'Active annotation tasks',
+        'aria-recent-list':      'Recent submission history',
       },
     };
 
@@ -385,10 +393,18 @@
     let currentLang = localStorage.getItem(STORAGE_KEY) || 'zh-TW';
 
     function applyLang(lang) {
+      if (!STRINGS[lang]) lang = 'zh-TW';
+      currentLang = lang;
+      localStorage.setItem(STORAGE_KEY, lang);
       const strings = STRINGS[lang];
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (strings[key] !== undefined) el.textContent = strings[key];
+      });
+      // Update aria-label attributes
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label');
+        if (strings[key] !== undefined) el.setAttribute('aria-label', strings[key]);
       });
       document.getElementById('lang-label').textContent = strings['lang-label'];
       document.documentElement.lang = lang;

@@ -113,6 +113,7 @@ label-eval-portal/
 - **Traditional Chinese allowed** in the following locations, to accelerate development iteration:
   - `docs/` — all research, thesis, and design documentation
   - `specs/` — all SDD spec files (`spec.md`, `plan.md`, `tasks.md`, `checklists/`)
+  - `prototype/` — HTML/CSS UI prototypes demonstrating bilingual (zh-TW/en) features
 - `README.zh-TW.md` is maintained in Traditional Chinese for Chinese-speaking users.
 - All conversations with Claude should be responded to in Traditional Chinese.
 
@@ -264,7 +265,7 @@ All development must follow the six core principles in [constitution.md](.specif
 3. **Data Fairness** (NON-NEGOTIABLE) — prevent test-set answer leakage
 4. **Test-First / TDD** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows; all agents must follow Red-Green-Refactor (see [ADR-009](docs/adr/009-testing-strategy.md))
 5. **Simplicity** — YAGNI, KISS, avoid over-engineering
-6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/` and `specs/`
+6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, and `prototype/`
 
 ---
 
@@ -306,9 +307,9 @@ All development must follow the six core principles in [constitution.md](.specif
 [Team Lead] reads tasks.md and spawns teammates:
 
   Step A — parallel (no inter-dependency):
-  ├──→ [BackendAgent]   owns: backend/app/              (FastAPI routes / models / services)
-  ├──→ [FrontendAgent]  owns: frontend/src/              (React components / pages / services)
-  ├──→ [I18nAgent]      owns: frontend/src/locales/      (zh-TW / en translation strings)
+  ├──→ [BackendAgent]   owns: backend/app/ (when present)              (FastAPI routes / models / services)
+  ├──→ [FrontendAgent]  owns: frontend/src/ (when present)             (React components / pages / services)
+  ├──→ [I18nAgent]      owns: frontend/src/locales/ (when present)     (zh-TW / en translation strings)
   └──→ [DevOpsAgent]    owns: docker-compose.yml, .github/workflows/  (optional, CI/Docker only)
 
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
