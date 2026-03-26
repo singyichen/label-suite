@@ -1,8 +1,8 @@
-# 論文大綱 — LabelSuite
+# 論文大綱 — Label Suite
 
-**論文名稱（中文）：** LabelSuite：具整合式標記員管理之配置驅動 NLP 標記平台設計與實作
+**論文名稱（中文）：** Label Suite：具整合式標記員管理之配置驅動 NLP 標記平台設計與實作
 
-**論文名稱（英文）：** LabelSuite：A Config-Driven NLP Annotation Platform with Integrated Annotator Management
+**論文名稱（英文）：** Label Suite：A Config-Driven NLP Annotation Platform with Integrated Annotator Management
 
 **類型：** Demo Paper（碩士論文）
 
@@ -32,7 +32,7 @@
 
 ### 1.3 研究目的 (Research Objectives)
 
-- **開發通用型標記平台 (Developing a General-Purpose Annotation Platform)：** 建立一個名為 **`LabelSuite`** 的輕量化平台，以學術 NLP 實驗室為目標，透過簡單設定檔即可快速部署多様化標記任務。
+- **開發通用型標記平台 (Developing a General-Purpose Annotation Platform)：** 建立一個名為 **`Label Suite`** 的輕量化平台，以學術 NLP 實驗室為目標，透過簡單設定檔即可快速部署多様化標記任務。
 - **配置化啟動 (Config-driven Launch)：** 實現透過簡單設定檔 (Config file) 即可快速啟動標記伺服器的機制，取代傳統繁雜的系統開發流程。
 - **標記員全生命週期管理 (Annotator Lifecycle Management)：** 提供涵蓋帳號管理、工時追蹤與薪資試算的端到端標記員管理功能，簡化實驗室行政作業。
 - **資料集品質可視性 (Dataset Quality Visibility)：** 提供即時資料集統計指標（#Sentence、#Token、#Label），協助研究人員無需外部腳本即可快速掌握資料集特性與標記品質。
@@ -58,7 +58,7 @@
 ### 2.2 標記平台與工具調研 (Survey of Labeling Platforms & Tools)
 
 - **Label Studio 分析 (Label Studio Analysis)：** 以 Apache 2.0 授權開源，獲 NVIDIA、Meta、IBM 等企業採用。核心強項為多模態支援（圖像、音頻、文本、影片）與 LLM 微調資料準備。然而伺服器架設對非工程背景研究員過於繁瑣，且不具備標記員管理與內建資料集統計功能。
-- **LabelSuite 的差異化定位 (Differentiated Positioning)：** 以 Label Studio 為參考標的，`LabelSuite` 針對學術 NLP 實驗室進行差異化：(1) 配置驅動快速部署，無需工程背景；(2) 新增 Label Studio 所缺乏的標記員全生命週期管理（帳號管理、工時追蹤、薪資試算）；(3) 整合內建資料集統計（#Sentence、#Token、#Label）以支援即時品質監控。
+- **Label Suite 的差異化定位 (Differentiated Positioning)：** 以 Label Studio 為參考標的，`Label Suite` 針對學術 NLP 實驗室進行差異化：(1) 配置驅動快速部署，無需工程背景；(2) 新增 Label Studio 所缺乏的標記員全生命週期管理（帳號管理、工時追蹤、薪資試算）；(3) 整合內建資料集統計（#Sentence、#Token、#Label）以支援即時品質監控。
 
 ### 2.3 盤點現有流程的痛點 (Survey of Current Workflow Pain Points)
 
@@ -109,7 +109,7 @@
 
 ### 4.2 系統介面展示與 UX 優化 (System Interface Showcase and UX Optimization)
 
-- **直覺式設計 (Intuitive Design)：** 針對 Label Studio 介面設置繁瑣的痛點，展示 **`LabelSuite`** 如何簡化任務管理與標記流程。
+- **直覺式設計 (Intuitive Design)：** 針對 Label Studio 介面設置繁瑣的痛點，展示 **`Label Suite`** 如何簡化任務管理與標記流程。
 - **可視化對比 (Visual Comparison)：** 以截圖形式對比本系統與 **Label Studio** 在執行同一標記任務時的步驟差異，強調本系統的「快速啟動」、「標記員管理」與「內建分析」優勢。
 
 ### 4.3 核心模組實作 (Implementation of Core Modules)
@@ -151,7 +151,7 @@
 
 ### 6.1 研究結論 (Conclusion)
 
-- **貢獻總結 (Summary of Contributions)：** 總結 **`LabelSuite`** 如何解決標記流程斷裂、「重複造輪子」、實驗室標記員管理負擔與缺乏內建資料集品質可視性等實務痛點。
+- **貢獻總結 (Summary of Contributions)：** 總結 **`Label Suite`** 如何解決標記流程斷裂、「重複造輪子」、實驗室標記員管理負擔與缺乏內建資料集品質可視性等實務痛點。
 - **Demo Paper 價值體現 (Realization of Demo Paper Value)：** 強調系統作為學術研究團隊以配置驅動、以標記員為中心之 Label Studio 替代方案的開源重用價值。
 
 ### 6.2 研究限制 (Research Limitations) (New Section)

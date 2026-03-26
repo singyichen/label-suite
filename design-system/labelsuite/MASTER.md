@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** LabelSuite
+**Project:** Label Suite
 **Generated:** 2026-03-25 11:49:50
 **Category:** Micro SaaS
 

@@ -1,6 +1,6 @@
-# Thesis Outline — LabelSuite
+# Thesis Outline — Label Suite
 
-**Title (tentative):** LabelSuite: A Config-Driven NLP Annotation Platform with Integrated Annotator Management
+**Title (tentative):** Label Suite: A Config-Driven NLP Annotation Platform with Integrated Annotator Management
 
 **Type:** Demo Paper (Master's Thesis)
 
@@ -26,7 +26,7 @@
 
 ### 1.3 Research Objectives
 
-- **Developing a General-Purpose Annotation Platform:** Build a lightweight platform named **`LabelSuite`** targeting academic NLP labs, enabling rapid deployment of diverse annotation tasks through simple configuration files.
+- **Developing a General-Purpose Annotation Platform:** Build a lightweight platform named **`Label Suite`** targeting academic NLP labs, enabling rapid deployment of diverse annotation tasks through simple configuration files.
 - **Config-driven Launch:** Enable rapid deployment of labeling servers through simple config files, replacing traditional complex system development workflows.
 - **Annotator Lifecycle Management:** Provide end-to-end annotator management covering account administration, working hours tracking, and salary estimation to streamline lab operations.
 - **Dataset Quality Visibility:** Provide real-time dataset statistics (#Sentence, #Token, #Label) to help researchers inspect data characteristics and annotation quality without external scripts.
@@ -52,7 +52,7 @@
 ### 2.2 Survey of Labeling Platforms & Tools
 
 - **Label Studio Analysis:** An open-source data annotation platform (Apache 2.0) adopted by enterprises such as NVIDIA, Meta, and IBM. It excels in multi-modal support (image, audio, text, video, time series) and LLM fine-tuning data preparation. However, its server setup is tedious for non-engineering researchers, and it lacks built-in dataset analytics and annotator management features.
-- **Differentiated Positioning of LabelSuite:** Taking Label Studio as the reference baseline, `LabelSuite` targets academic NLP labs and differentiates by: (1) enabling config-driven rapid deployment without engineering overhead; (2) adding annotator lifecycle management (account administration, working hours tracking, salary estimation) absent in Label Studio; (3) integrating built-in dataset statistics (#Sentence, #Token, #Label) for real-time quality monitoring.
+- **Differentiated Positioning of Label Suite:** Taking Label Studio as the reference baseline, `Label Suite` targets academic NLP labs and differentiates by: (1) enabling config-driven rapid deployment without engineering overhead; (2) adding annotator lifecycle management (account administration, working hours tracking, salary estimation) absent in Label Studio; (3) integrating built-in dataset statistics (#Sentence, #Token, #Label) for real-time quality monitoring.
 
 ### 2.3 Survey of Current Workflow Pain Points
 
@@ -103,7 +103,7 @@
 
 ### 4.2 System Interface Showcase and UX Optimization
 
-- **Intuitive Design:** Addresses the pain points of Label Studio's complex and cluttered setup, demonstrating how **`LabelSuite`** simplifies task management and labeling workflows.
+- **Intuitive Design:** Addresses the pain points of Label Studio's complex and cluttered setup, demonstrating how **`Label Suite`** simplifies task management and labeling workflows.
 - **Visual Comparison:** Screenshot-based comparison of this system vs Label Studio for the same labeling task, highlighting the "rapid launch," "annotator management," and "built-in analytics" advantages.
 
 ### 4.3 Implementation of Core Modules
@@ -145,7 +145,7 @@
 
 ### 6.1 Conclusion
 
-- **Summary of Contributions:** Summarizes how **`LabelSuite`** addresses the practical pain points of workflow fragmentation, "reinventing the wheel," annotator management overhead, and the absence of built-in dataset quality visibility in academic NLP labs.
+- **Summary of Contributions:** Summarizes how **`Label Suite`** addresses the practical pain points of workflow fragmentation, "reinventing the wheel," annotator management overhead, and the absence of built-in dataset quality visibility in academic NLP labs.
 - **Realization of Demo Paper Value:** Emphasizes the system's positioning as a config-driven, annotator-centered alternative to Label Studio for academic research teams, with open-source reuse value.
 
 ### 6.2 Research Limitations (New Section)

@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/logo/icon-colored.svg" width="96" alt="LabelSuite Logo">
+  <img src="assets/logo/banner.svg" alt="Label Suite">
 </p>
 
-<h1 align="center">LabelSuite</h1>
+<h1 align="center">Label Suite</h1>
 
 <p align="center">
   <a href="README.zh-TW.md">繁體中文</a> | <strong>English</strong>
@@ -23,7 +23,7 @@ Existing annotation platforms such as [Label Studio](https://labelstud.io/) are 
 - **Fragmented workflows:** Task configuration, labeling, and dataset analysis are often handled by separate tools or ad-hoc scripts, forcing researchers to repeatedly build one-off systems from scratch.
 - **No dataset quality visibility:** Existing tools provide no built-in dataset statistics, forcing researchers to write analysis scripts after each labeling round.
 
-**LabelSuite** aims to eliminate these pain points by providing a lightweight, config-driven annotation platform that any NLP research team can launch with minimal setup.
+**Label Suite** aims to eliminate these pain points by providing a lightweight, config-driven annotation platform that any NLP research team can launch with minimal setup.
 
 ---
 
@@ -85,7 +85,7 @@ This project is positioned as a **Demo Paper**, with its core value in:
 
 ## Comparison with Label Studio
 
-| Feature | Label Studio | **LabelSuite** |
+| Feature | Label Studio | **Label Suite** |
 |---|---|---|
 | Easy setup (no server config) | ✗ | ✓ |
 | Config-driven task definition | Partial | ✓ |
@@ -115,7 +115,7 @@ This project is positioned as a **Demo Paper**, with its core value in:
   }
 }}%%
 gantt
-    title LabelSuite — Research Roadmap
+    title Label Suite — Research Roadmap
     dateFormat  YYYY-MM-DD
     axisFormat  %b %Y
 
@@ -152,7 +152,7 @@ gantt
 - [ ] Survey Label Studio and identify pain points in setup, usability, and annotator management
 - [ ] Conduct UX interviews and distribute a pain-point questionnaire to target users (researchers, annotators)
 - [ ] Survey related academic papers on annotation platforms to establish positioning for the Related Work section
-- [ ] Define the system's contribution: clarify how LabelSuite is simpler and more usable than Label Studio
+- [ ] Define the system's contribution: clarify how Label Suite is simpler and more usable than Label Studio
 - [ ] Study Demo Paper examples from target venue proceedings to understand structure, length, and demonstration requirements
 
 ### Phase 2 — System Design & General-Purpose Architecture (Month 5–8)

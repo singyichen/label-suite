@@ -1,12 +1,12 @@
 # 標記工具分析
 
-> 針對 Label Studio（參考基準）與 LabelSuite 進行多維度比較，涵蓋部署方式、任務支援、標記員管理、資料集統計、使用者體驗與技術架構，用於定義 LabelSuite 在 Demo Paper 中的貢獻與差異化定位。
+> 針對 Label Studio（參考基準）與 Label Suite 進行多維度比較，涵蓋部署方式、任務支援、標記員管理、資料集統計、使用者體驗與技術架構，用於定義 Label Suite 在 Demo Paper 中的貢獻與差異化定位。
 
 ---
 
 ## 表一 — 系統概覽與定位
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **類型** | 通用型資料標記平台 | 具實驗室管理功能的 NLP 專用標記平台 |
 | **目標使用者** | 企業、ML 工程師、資料團隊 | 超級管理員、實驗室研究生、兼職工讀生標記員 |
@@ -19,7 +19,7 @@
 
 ## 表二 — 部署與設定
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **設定方式** | 手動伺服器設定（Docker、環境變數、DB 遷移） | 單一設定檔（YAML/JSON）+ 一鍵啟動 |
 | **工程背景需求** | 需要 DevOps / 工程背景 | 無需工程背景 |
@@ -32,7 +32,7 @@
 
 ## 表三 — NLP 任務類型支援
 
-| 任務類型 | Label Studio | LabelSuite |
+| 任務類型 | Label Studio | Label Suite |
 |---|---|---|
 | **單句任務**（分類 / 評分） | ✅（文字分類範本） | ✅（原生 NLP 範本） |
 | **句對任務**（相似度 / 蘊含） | 🟡（需手動設定） | ✅（專用範本） |
@@ -45,7 +45,7 @@
 
 ## 表四 — 標記員管理
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **帳號管理** | 基本使用者帳號（無標記員角色區分） | 完整 CRUD，角色型存取控制（Admin / Researcher / Annotator） |
 | **工讀生支援** | ❌ | ✅（專為實驗室工讀生工作流程設計） |
@@ -58,7 +58,7 @@
 
 ## 表五 — 資料集統計分析
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **內建統計功能** | ❌（無原生統計儀表板） | ✅（#Sentence、#Token、#Label） |
 | **標籤分布視圖** | ❌ | ✅（即時類別不均衡偵測） |
@@ -71,7 +71,7 @@
 
 ## 表六 — 標記工作流程
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **試跑模式（Dry Run）** | ❌ | ✅（正式收集前驗證設定） |
 | **正式模式（Official Run）** | ❌（單一模式） | ✅（資料與試跑模式嚴格隔離） |
@@ -84,7 +84,7 @@
 
 ## 表七 — 介面與使用者體驗
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **介面複雜度** | 高（功能豐富，學習曲線陡峭） | 低（精簡，聚焦任務） |
 | **非工程師入門** | 困難（需閱讀文件） | 簡單（由設定檔結構引導） |
@@ -97,7 +97,7 @@
 
 ## 表八 — 技術架構
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **後端框架** | Django（Python）— 重量級，同步優先 | FastAPI（Python）— 輕量級，非同步原生 |
 | **前端框架** | React 18 + TypeScript（Webpack 5、Nx monorepo） | React 18 + TypeScript + Vite |
@@ -113,7 +113,7 @@
 
 ## 表九 — 研究與學術適配性
 
-| 比較維度 | Label Studio | LabelSuite |
+| 比較維度 | Label Studio | Label Suite |
 |---|---|---|
 | **學術實驗室導向** | ❌（以企業 / ML 團隊為主） | ✅（專為 NLP 研究實驗室設計） |
 | **中文 NLP 優化** | ❌ | ✅（醫療、情感、心理領域） |
@@ -124,9 +124,9 @@
 
 ---
 
-## 總結 — LabelSuite 差異化定位
+## 總結 — Label Suite 差異化定位
 
-LabelSuite 鎖定 Label Studio 在**學術 NLP 實驗室**場景中的不足，提供：
+Label Suite 鎖定 Label Studio 在**學術 NLP 實驗室**場景中的不足，提供：
 
 1. **快速、零工程部署** — 設定檔取代繁瑣的伺服器設定流程
 2. **標記員生命週期管理** — 所有現有工具均缺乏的內建人資功能

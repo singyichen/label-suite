@@ -9,7 +9,7 @@
 
 ### User Story 1 — 使用 Google 或 GitHub 登入（優先級：P1）
 
-使用者（研究生或工讀生）進入 LabelSuite 入口，看到簡潔的登入頁面。
+使用者（研究生或工讀生）進入 Label Suite 入口，看到簡潔的登入頁面。
 點擊「以 Google 登入」或「以 GitHub 登入」，完成 OAuth 流程後，
 系統完成身份驗證並導向儀表板。
 

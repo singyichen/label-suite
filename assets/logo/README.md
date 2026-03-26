@@ -1,6 +1,6 @@
-# LabelSuite Logo & Brand Assets
+# Label Suite Logo & Brand Assets
 
-This directory contains the official LabelSuite logo and brand assets.
+This directory contains the official Label Suite logo and brand assets.
 
 ## Files
 
@@ -10,7 +10,7 @@ This directory contains the official LabelSuite logo and brand assets.
 |------|-------------|-------|
 | `icon.svg` | Tag icon only (monochrome) | Favicon, small icons |
 | `icon-colored.svg` | Icon with primary color background (48×48) | App icon, profile picture |
-| `logo-horizontal.svg` | Icon + "LabelSuite" text | Header, documentation |
+| `logo-horizontal.svg` | Icon + "Label Suite" text | Header, documentation |
 | `social-preview.svg` | GitHub social preview (1280×640) | GitHub repository preview |
 
 ### PNG (Raster)
@@ -101,10 +101,10 @@ GitHub repositories don't have custom icons by default, but you can:
 
 ```markdown
 <p align="center">
-  <img src="assets/logo/icon-colored.svg" width="96" alt="LabelSuite Logo">
+  <img src="assets/logo/icon-colored.svg" width="96" alt="Label Suite Logo">
 </p>
 
-<h1 align="center">LabelSuite</h1>
+<h1 align="center">Label Suite</h1>
 <p align="center">NLP Annotation Portal</p>
 ```
 
@@ -132,4 +132,4 @@ Then add to your HTML:
 
 ## License
 
-These assets are part of the LabelSuite project. See the project's main LICENSE file for details.
+These assets are part of the Label Suite project. See the project's main LICENSE file for details.

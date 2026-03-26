@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/logo/icon-colored.svg" width="96" alt="LabelSuite Logo">
+  <img src="assets/logo/banner.svg" alt="Label Suite">
 </p>
 
-<h1 align="center">LabelSuite</h1>
+<h1 align="center">Label Suite</h1>
 
 <p align="center">
   <strong>繁體中文</strong> | <a href="README.md">English</a>
@@ -23,7 +23,7 @@
 - **工作流程分散：** 任務配置、標記執行與資料集分析往往需要不同工具或自行撰寫腳本，導致研究團隊重複開發一次性系統。
 - **缺乏資料集品質可視性：** 現有工具未提供內建的資料集統計功能，研究人員每次標記後都需撰寫分析腳本才能了解資料品質。
 
-**LabelSuite** 旨在消除上述痛點，提供一個輕量、配置驅動的標記平台，讓任何 NLP 研究團隊都能以最少的設定快速啟動。
+**Label Suite** 旨在消除上述痛點，提供一個輕量、配置驅動的標記平台，讓任何 NLP 研究團隊都能以最少的設定快速啟動。
 
 ---
 
@@ -85,7 +85,7 @@
 
 ## 與 Label Studio 比較
 
-| 功能 | Label Studio | **LabelSuite** |
+| 功能 | Label Studio | **Label Suite** |
 |---|---|---|
 | 簡易架設（免伺服器配置） | ✗ | ✓ |
 | Config 驅動的任務定義 | 部分支援 | ✓ |
@@ -115,7 +115,7 @@
   }
 }}%%
 gantt
-    title LabelSuite — 研究規劃
+    title Label Suite — 研究規劃
     dateFormat  YYYY-MM-DD
     axisFormat  %b %Y
 
@@ -152,7 +152,7 @@ gantt
 - [ ] 調研 Label Studio，找出架設、易用性與標記員管理上的痛點
 - [ ] 進行 UX 需求訪談，並發放使用者痛點問卷（目標對象：研究人員、標記人員）
 - [ ] 調查標記平台的相關學術論文，為 Related Work 建立定位基礎
-- [ ] 確立論文貢獻點：定義 LabelSuite 如何比 Label Studio 更好用、更簡便
+- [ ] 確立論文貢獻點：定義 Label Suite 如何比 Label Studio 更好用、更簡便
 - [ ] 研讀目標投稿場合的 Demo Paper 範例，了解結構、篇幅與展示需求
 
 ### 第二階段 — 系統設計與一般化架構（第 5–8 個月）
