@@ -1,0 +1,30 @@
+<!-- Label Suite Banner (1280×200) — README header, similar proportion to Label Studio banner -->
+<svg width="1280" height="200" viewBox="0 0 1280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Background -->
+  <rect width="1280" height="200" fill="#FFFFFF"/>
+
+  <!-- Icon background rounded square -->
+  <rect x="48" y="28" width="144" height="144" rx="32" fill="#6366F1"/>
+
+  <!-- Tag icon (scaled up, centered in 144×144 box, origin at 48,28) -->
+  <!-- Original 24×24 icon scaled to ~80×80, centered: offset = 48 + (144-80)/2 = 48+32 = 80, 28+32 = 60 -->
+  <g transform="translate(80, 60) scale(3.33)">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+          stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="7" cy="7" r="1" fill="white"/>
+  </g>
+
+  <!-- "Label Suite" — main title -->
+  <text x="228" y="112"
+        font-family="'Crimson Pro', Georgia, 'Times New Roman', serif"
+        font-size="96" font-weight="700" fill="#1E1B4B"
+        dominant-baseline="middle" text-anchor="start">Label Suite</text>
+
+  <!-- "NLP Annotation Portal" — subtitle -->
+  <text x="234" y="158"
+        font-family="'Atkinson Hyperlegible', 'Helvetica Neue', Arial, sans-serif"
+        font-size="24" font-weight="400" fill="#64748B"
+        dominant-baseline="middle" text-anchor="start">NLP Annotation Portal</text>
+
+</svg>

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo/social-preview.svg" alt="Label Suite Logo">
+  <img src="assets/logo/banner.svg" alt="Label Suite">
 </p>
 
 <h1 align="center">Label Suite</h1>
