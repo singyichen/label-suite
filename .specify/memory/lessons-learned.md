@@ -126,6 +126,31 @@ Before executing `git push`:
 
 ---
 
+## 2026-03-26: Direct Commit to Main Branch — Second Violation
+
+### Incident Summary
+**Date:** 2026-03-26
+**Severity:** High
+**Type:** Git Workflow Violation (repeat offense)
+**Reporter:** User (mandychen)
+**Agent:** Claude Code (Sonnet 4.6)
+
+### What Happened
+Claude Code committed directly to `main` without creating a feature branch, despite the same violation being recorded on 2025-03-25.
+
+### Root Cause Analysis
+`lessons-learned.md` is stored in `.specify/memory/` which is NOT part of Claude's auto-memory system. The file is never automatically loaded into context, so the lesson had no effect on subsequent conversations.
+
+### Remediation Steps Taken
+1. Created branch `docs/logo-and-i18n-update` at current HEAD
+2. Reset `main` to `origin/main` with `git reset --hard HEAD~1`
+3. Added feedback memory to auto-memory system at `~/.claude/projects/.../memory/feedback_never_commit_to_main.md`
+
+### Prevention
+Lesson moved to auto-memory so it loads automatically in every future conversation.
+
+---
+
 ## Template for Future Incidents
 
 ```markdown
