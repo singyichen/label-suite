@@ -1,6 +1,6 @@
 ---
 name: api-spec
-description: Generate OpenAPI-compatible REST API specification for FastAPI endpoints in Label-Eval-Portal.
+description: Generate OpenAPI-compatible REST API specification for FastAPI endpoints in Label Suite.
 ---
 
 # API Specification

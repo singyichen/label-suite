@@ -1,6 +1,6 @@
 # Claude Code Skills & Commands Directory
 
-This document provides a comprehensive overview of all available Spec-Kit Commands and Knowledge-Domain Skills for the Label-Eval-Portal project.
+This document provides a comprehensive overview of all available Spec-Kit Commands and Knowledge-Domain Skills for the Label Suite project.
 
 ## Directory Structure
 
@@ -203,7 +203,7 @@ Skills for quality gates, defect management, traceability, and reporting.
 
 ## Scoring & Security Special Requirements
 
-For the Label-Eval-Portal project, these skills enforce additional constraints for the scoring engine and test-set leakage prevention:
+For the Label Suite project, these skills enforce additional constraints for the scoring engine and test-set leakage prevention:
 
 | Skill | Special Requirement |
 |-------|---------------------|

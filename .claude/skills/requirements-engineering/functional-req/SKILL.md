@@ -1,6 +1,6 @@
 ---
 name: functional-req
-description: Generate a functional requirements specification document for a Label-Eval-Portal feature.
+description: Generate a functional requirements specification document for a Label Suite feature.
 ---
 
 # Functional Requirements

@@ -1,6 +1,6 @@
 ---
 name: data-model
-description: Generate PostgreSQL database schema design with ERD, indexes, and security annotations for Label-Eval-Portal.
+description: Generate PostgreSQL database schema design with ERD, indexes, and security annotations for Label Suite.
 ---
 
 # Data Model

@@ -1,6 +1,6 @@
 ---
 name: exploratory-testing
-description: Structured exploratory testing sessions for Label-Eval-Portal with charters, heuristics, and finding documentation.
+description: Structured exploratory testing sessions for Label Suite with charters, heuristics, and finding documentation.
 ---
 
 # Exploratory Testing
@@ -51,7 +51,7 @@ Structured exploratory testing using session-based test management (SBTM) with t
 | **O**perations | Concurrent submissions, Celery task failure recovery |
 | **T**ime | Deadline enforcement, submission timestamps |
 
-### Security Heuristics (Label-Eval-Portal Specific)
+### Security Heuristics (Label Suite Specific)
 
 | Heuristic | Test Approach |
 |-----------|---------------|

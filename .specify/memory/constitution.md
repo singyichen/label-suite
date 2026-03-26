@@ -1,4 +1,4 @@
-# Label-Eval-Portal Constitution
+# Label Suite Constitution
 
 ## Core Principles
 

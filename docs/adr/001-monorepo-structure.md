@@ -29,7 +29,7 @@ Adds a dedicated build orchestration layer for managing multiple packages. Desig
 Use a **Modular Monorepo**: frontend and backend co-located in a single repository under clearly separated top-level directories.
 
 ```
-label-eval-portal/          ← single repository
+label-suite/                ← single repository
 ├── frontend/               ← React + TypeScript + Vite
 ├── backend/                ← FastAPI (Python)
 ├── docker-compose.yml      ← unified service orchestration

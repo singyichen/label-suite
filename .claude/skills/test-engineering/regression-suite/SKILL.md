@@ -1,6 +1,6 @@
 ---
 name: regression-suite
-description: Design and manage the regression test suite for Label-Eval-Portal releases.
+description: Design and manage the regression test suite for Label Suite releases.
 ---
 
 # Regression Suite

@@ -1,6 +1,6 @@
 # Claude Code Agents Directory
 
-This document provides a comprehensive overview of all available AI agents for the Label-Eval-Portal project.
+This document provides a comprehensive overview of all available AI agents for the Label Suite project.
 
 ## Quick Reference
 
@@ -27,7 +27,7 @@ This document provides a comprehensive overview of all available AI agents for t
 
 ## Complete Agent Reference
 
-**Sorting Note**: Ordered by usage frequency in the Label-Eval-Portal project, with most frequently used agents listed first.
+**Sorting Note**: Ordered by usage frequency in the Label Suite project, with most frequently used agents listed first.
 
 | Agent Name | Role | Category | Key Expertise | Example Task |
 |------------|------|----------|---------------|--------------|

@@ -1,6 +1,6 @@
 # Code Review Skills — Usage Guide
 
-This document explains how to use the Code Review related Skills in the Label-Eval-Portal project.
+This document explains how to use the Code Review related Skills in the Label Suite project.
 
 ## Available Skills
 

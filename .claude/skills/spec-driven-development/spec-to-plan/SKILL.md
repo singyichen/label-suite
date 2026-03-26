@@ -5,7 +5,7 @@ description: Transform a spec.md into a detailed implementation plan.md followin
 
 # Spec to Plan
 
-Transform a completed `spec.md` into a structured `plan.md` with implementation steps, technical design, and task breakdown for the Label-Eval-Portal project.
+Transform a completed `spec.md` into a structured `plan.md` with implementation steps, technical design, and task breakdown for the Label Suite project.
 
 ## Input
 

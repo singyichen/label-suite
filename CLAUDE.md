@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Label-Eval-Portal — A configurable, general-purpose NLP data labeling and automated evaluation portal, developed as a master's thesis research outcome (Demo Paper).
+Label Suite — A configurable, general-purpose NLP data labeling and automated evaluation portal, developed as a master's thesis research outcome (Demo Paper).
 
 **Advisor:** Prof. Lung-Hao Lee — [Natural Language Processing Lab](https://ainlp.tw/)
 
@@ -76,7 +76,7 @@ uv run ruff format .
 > **Decision:** This project uses a Modular Monorepo — frontend and backend co-located in the same repository under separate top-level directories. See [ADR-001](docs/adr/001-monorepo-structure.md) for the full rationale. All architectural decisions are documented in [docs/adr/](docs/adr/).
 
 ```
-label-eval-portal/
+label-suite/
 ├── frontend/                # React + TypeScript frontend
 │   ├── src/
 │   │   ├── components/      # React components

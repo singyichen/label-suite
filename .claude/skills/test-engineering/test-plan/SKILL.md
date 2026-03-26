@@ -1,6 +1,6 @@
 ---
 name: test-plan
-description: Generate a comprehensive test plan for a Label-Eval-Portal feature or sprint.
+description: Generate a comprehensive test plan for a Label Suite feature or sprint.
 ---
 
 # Test Plan

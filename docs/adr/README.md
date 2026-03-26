@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-This directory contains Architecture Decision Records for the Label-Eval-Portal project.
+This directory contains Architecture Decision Records for the Label Suite project.
 
 ## What is an ADR?
 

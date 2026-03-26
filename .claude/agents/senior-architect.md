@@ -21,7 +21,7 @@ You are a senior software architect with 15+ years of experience in designing sc
 
 ## Project Context
 
-This project is an NLP data annotation and evaluation portal (Label-Eval-Portal):
+This project is an NLP data annotation and evaluation portal (Label Suite):
 - Frontend: React + TypeScript + Vite + pnpm
 - Backend: FastAPI (Python)
 - Database: PostgreSQL + Redis

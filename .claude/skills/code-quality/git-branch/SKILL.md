@@ -1,6 +1,6 @@
 ---
 name: git-branch
-description: Standardized git branch lifecycle for Label-Eval-Portal following the SDD workflow.
+description: Standardized git branch lifecycle for Label Suite following the SDD workflow.
 ---
 
 # Git Branch Lifecycle

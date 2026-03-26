@@ -1,6 +1,6 @@
 ---
 name: frontend-spec
-description: Generate a frontend component specification for React + TypeScript components in Label-Eval-Portal.
+description: Generate a frontend component specification for React + TypeScript components in Label Suite.
 ---
 
 # Frontend Component Specification
@@ -31,7 +31,7 @@ Generate a detailed frontend specification for React + TypeScript components inc
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Label-Eval-Portal                 [User] [Logout]│
+│  Label Suite                 [User] [Logout]│
 ├─────────────────────────────────────────────────┤
 │  Task: Text Classification — Sentiment Analysis  │
 │  Deadline: 2026-03-31  |  Submissions: 2/10      │

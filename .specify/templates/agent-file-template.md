@@ -1,4 +1,4 @@
-# Label-Eval-Portal Development Guidelines
+# Label Suite Development Guidelines
 
 Auto-generated from feature plans. Last updated: [DATE]
 
