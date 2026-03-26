@@ -19,7 +19,7 @@ You are an NLP research advisor with deep expertise in Chinese NLP, data annotat
 ## Project Context
 
 Academic background for this project:
-- **System Name**: LabelSuite
+- **System Name**: Label Suite
 - **Advisor**: Professor Lung-Hao Lee, Natural Language Processing Laboratory
 - **Paper Type**: Demo Paper (system/tool paper)
 - **Core Contribution**: Config-driven general-purpose NLP annotation platform with integrated annotator management

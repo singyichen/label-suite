@@ -19,7 +19,7 @@ Claude Code directly committed and pushed logo assets to the `main` branch witho
 **Incorrect workflow executed:**
 ```bash
 git add assets/ .gitignore README.md README.zh-TW.md
-git commit -m "feat: add LabelSuite logo and brand assets"
+git commit -m "feat: add Label Suite logo and brand assets"
 git push origin main  # ❌ VIOLATION
 ```
 
@@ -51,7 +51,7 @@ git push origin main  # ❌ VIOLATION
    git checkout -b feat/logo-and-brand-assets
    # Re-created all assets
    git add assets/ .gitignore README.md README.zh-TW.md
-   git commit -m "feat: add LabelSuite logo and brand assets"
+   git commit -m "feat: add Label Suite logo and brand assets"
    git push -u origin feat/logo-and-brand-assets
    ```
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>儀表板 — LabelSuite</title>
+  <title>儀表板 — Label Suite</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,14 +40,14 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
       <!-- Logo -->
-      <a href="dashboard.html" class="flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" aria-label="LabelSuite home">
+      <a href="dashboard.html" class="flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" aria-label="Label Suite home">
         <div class="flex items-center justify-center w-8 h-8 bg-primary rounded-lg shrink-0">
           <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
             <line x1="7" y1="7" x2="7.01" y2="7"/>
           </svg>
         </div>
-        <span class="font-bold text-ink text-lg" style="font-family:'Crimson Pro',serif">LabelSuite</span>
+        <span class="font-bold text-ink text-lg" style="font-family:'Crimson Pro',serif">Label Suite</span>
       </a>
 
       <!-- Nav links (hidden on mobile) -->
@@ -337,7 +337,7 @@
         'modal-cancel':      '取消',
         'modal-confirm':     '登出',
         'lang-label':            'EN',
-        'page-title':            '儀表板 — LabelSuite',
+        'page-title':            '儀表板 — Label Suite',
         'aria-logout':           '登出',
         'aria-mobile-menu':      '開啟導覽選單',
         'aria-tasks-table':      '進行中標注任務',
@@ -381,7 +381,7 @@
         'modal-cancel':      'Cancel',
         'modal-confirm':     'Sign out',
         'lang-label':            'ZH',
-        'page-title':            'Dashboard — LabelSuite',
+        'page-title':            'Dashboard — Label Suite',
         'aria-logout':           'Sign out',
         'aria-mobile-menu':      'Open navigation menu',
         'aria-tasks-table':      'Active annotation tasks',
@@ -389,7 +389,7 @@
       },
     };
 
-    const STORAGE_KEY = 'labelsuite-lang';
+    const STORAGE_KEY = 'Label Suite-lang';
     let currentLang = localStorage.getItem(STORAGE_KEY) || 'zh-TW';
 
     function applyLang(lang) {
