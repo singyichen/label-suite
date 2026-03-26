@@ -1,11 +1,11 @@
 ---
 name: test-data-strategy
-description: Design test data strategy for Label-Eval-Portal including fixtures, factories, and security isolation.
+description: Design test data strategy for Label Suite including fixtures, factories, and security isolation.
 ---
 
 # Test Data Strategy
 
-Define how test data is created, managed, and isolated across different test types in Label-Eval-Portal.
+Define how test data is created, managed, and isolated across different test types in Label Suite.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 ---
 name: code-review-checklist
-description: Generate a customized code review checklist for Label-Eval-Portal (FastAPI + React + TypeScript).
+description: Generate a customized code review checklist for Label Suite (FastAPI + React + TypeScript).
 ---
 
 # Code Review Checklist

@@ -1,6 +1,6 @@
 ---
 name: backend-spec
-description: Generate a backend service specification for a FastAPI service module or Celery task in Label-Eval-Portal.
+description: Generate a backend service specification for a FastAPI service module or Celery task in Label Suite.
 ---
 
 # Backend Service Specification

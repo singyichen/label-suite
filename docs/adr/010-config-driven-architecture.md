@@ -5,7 +5,7 @@
 
 ## Context
 
-The core research contribution of Label-Eval-Portal is a **general-purpose NLP labeling and evaluation platform** — one that supports multiple task types (classification, regression, span labeling, etc.) without requiring custom code for each new task.
+The core research contribution of Label Suite is a **general-purpose NLP labeling and evaluation platform** — one that supports multiple task types (classification, regression, span labeling, etc.) without requiring custom code for each new task.
 
 A naive implementation would hardcode task-specific logic:
 ```python

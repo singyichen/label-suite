@@ -1,6 +1,6 @@
 ---
 name: user-story
-description: Generate structured User Stories with Acceptance Criteria, story points, and Definition of Done for Label-Eval-Portal.
+description: Generate structured User Stories with Acceptance Criteria, story points, and Definition of Done for Label Suite.
 ---
 
 # User Story

@@ -1,11 +1,11 @@
 ---
 name: sdd-workflow
-description: Guide for the Spec-Driven Development (SDD) workflow used in Label-Eval-Portal.
+description: Guide for the Spec-Driven Development (SDD) workflow used in Label Suite.
 ---
 
 # SDD Workflow Guide
 
-The Spec-Driven Development workflow ensures every feature begins with a formal specification before any code is written. This is the standard development process for the Label-Eval-Portal project.
+The Spec-Driven Development workflow ensures every feature begins with a formal specification before any code is written. This is the standard development process for the Label Suite project.
 
 ## Workflow Overview
 

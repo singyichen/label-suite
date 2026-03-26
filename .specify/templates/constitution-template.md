@@ -1,5 +1,5 @@
 # [PROJECT_NAME] Constitution
-<!-- Example: Label-Eval-Portal Constitution -->
+<!-- Example: Label Suite Constitution -->
 
 ## Core Principles
 

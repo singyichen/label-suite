@@ -1,6 +1,6 @@
 ---
 name: test-coverage
-description: Analyze and report test coverage for Label-Eval-Portal, identifying gaps and recommendations.
+description: Analyze and report test coverage for Label Suite, identifying gaps and recommendations.
 ---
 
 # Test Coverage Analysis

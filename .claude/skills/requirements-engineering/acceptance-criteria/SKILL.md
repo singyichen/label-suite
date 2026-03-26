@@ -1,6 +1,6 @@
 ---
 name: acceptance-criteria
-description: Generate comprehensive Acceptance Criteria checklist for a feature spec in Label-Eval-Portal.
+description: Generate comprehensive Acceptance Criteria checklist for a feature spec in Label Suite.
 ---
 
 # Acceptance Criteria
