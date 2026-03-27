@@ -206,6 +206,8 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
 /ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, UI-heavy features)
+/senior-uiux review                     → prototype QA: design system compliance + accessibility  (optional, after prototype)
+/pencil wireframe                       → pencil/pages/[page].pen  (optional, after senior-uiux review)
 /speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
 /speckit.plan                           → specs/NNN-feature/plan.md
 /speckit.tasks                          → specs/NNN-feature/tasks.md
@@ -250,12 +252,22 @@ The deciding question is: **will this change make the system behave differently 
 |---|---|
 | `/speckit.specify` | Create feature spec from natural language description |
 | `/ui-ux-pro-max` | Generate HTML prototype + design system (optional; run after specify, before clarify) |
+| `senior-uiux review` | Review prototype for design system compliance, a11y, ZH/EN symmetry (optional; run after ui-ux-pro-max) |
+| `pencil wireframe` | Draw ZH + EN wireframe frames in `pencil/pages/[page].pen` via Pencil MCP (optional; run after senior-uiux review) |
 | `/speckit.clarify` | Identify and clarify ambiguous requirements (prototype helps surface these) |
 | `/speckit.plan` | Build technical implementation plan |
 | `/speckit.tasks` | Generate executable task list |
 | `/speckit.analyze` | Cross-document consistency analysis |
 | `/speckit.implement` | Execute implementation — single session (bug fix / single-layer) or Agent Team (new feature) |
 | `/speckit.checklist` | Generate quality validation checklist |
+
+### Pencil Wireframe Convention
+
+- Each page wireframe is stored as a separate file under `pencil/pages/[page-name].pen` (e.g. `login.pen`, `profile.pen`)
+- `pencil/index.pen` is for overview purposes only — **do not** place page wireframe frames inside it
+- Each `.pen` file contains two side-by-side frames: Desktop ZH (`x:0`) and Desktop EN (`x:1500`)
+- `.pen` files are encrypted — **only operate via Pencil MCP tools**; never use `Read` / `Edit` / `Grep` on them
+- Draw the ZH frame first, then the EN frame, keeping structure symmetric between the two
 
 ### Constitution Reference
 
@@ -287,7 +299,9 @@ All development must follow the six core principles in [constitution.md](.specif
 /speckit.specify
   → [/ui-ux-pro-max] (optional) — HTML prototype + design system
                                    Use to surface UI ambiguities before clarify
-  → /speckit.clarify (optional)   Prototype makes ambiguities concrete
+  → [senior-uiux review]         Review prototype: design system compliance, a11y, ZH/EN symmetry
+  → [pencil wireframe]           Draw ZH + EN frames in pencil/pages/[page].pen via Pencil MCP
+  → /speckit.clarify (optional)  Prototype makes ambiguities concrete
 
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)
