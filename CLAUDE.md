@@ -113,8 +113,8 @@ label-suite/
 - **Traditional Chinese allowed** in the following locations, to accelerate development iteration:
   - `docs/` — all research, thesis, and design documentation
   - `specs/` — all SDD spec files (`spec.md`, `plan.md`, `tasks.md`, `checklists/`)
-  - `prototype/` — HTML/CSS UI prototypes demonstrating bilingual (zh-TW/en) features
-  - `pencil/` — Pencil wireframe files (`.pen`) demonstrating bilingual (zh-TW/en) UI designs
+  - `design/prototype/` — HTML/CSS UI prototypes demonstrating bilingual (zh-TW/en) features
+  - `design/wireframes/` — Pencil wireframe files (`.pen`) demonstrating bilingual (zh-TW/en) UI designs
 - `README.zh-TW.md` is maintained in Traditional Chinese for Chinese-speaking users.
 - All conversations with Claude should be responded to in Traditional Chinese.
 
@@ -205,7 +205,7 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
-/ui-ux-pro-max                          → prototype/ + design-system/  (optional, UI-heavy features)
+/ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, UI-heavy features)
 /speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
 /speckit.plan                           → specs/NNN-feature/plan.md
 /speckit.tasks                          → specs/NNN-feature/tasks.md
@@ -266,7 +266,7 @@ All development must follow the six core principles in [constitution.md](.specif
 3. **Data Fairness** (NON-NEGOTIABLE) — prevent test-set answer leakage
 4. **Test-First / TDD** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows; all agents must follow Red-Green-Refactor (see [ADR-009](docs/adr/009-testing-strategy.md))
 5. **Simplicity** — YAGNI, KISS, avoid over-engineering
-6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `prototype/`, and `pencil/`
+6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, and `design/wireframes/`
 
 ---
 
