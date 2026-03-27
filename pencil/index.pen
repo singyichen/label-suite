@@ -1,0 +1,1201 @@
+{
+  "version": "2.9",
+  "children": [
+    {
+      "type": "frame",
+      "id": "hf9v7",
+      "x": 0,
+      "y": 0,
+      "name": "Login Page Mobile (ZH)",
+      "width": 480,
+      "height": 800,
+      "fill": "#F5F3FF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "QzdBB",
+          "x": 356,
+          "y": 16,
+          "name": "langToggle",
+          "height": 28,
+          "fill": "#FFFFFF",
+          "cornerRadius": 999,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "gap": 6,
+          "padding": [
+            6,
+            12
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "djios",
+              "width": 14,
+              "height": 14,
+              "iconFontName": "globe",
+              "iconFontFamily": "lucide",
+              "fill": "#64748B"
+            },
+            {
+              "type": "text",
+              "id": "EmgIK",
+              "fill": "#64748B",
+              "content": "EN",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gQ1zS",
+          "x": 215,
+          "y": 80,
+          "name": "logoBox",
+          "width": 50,
+          "height": 50,
+          "fill": "#6366F1",
+          "cornerRadius": 14,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "3K7HE",
+              "width": 26,
+              "height": 26,
+              "iconFontName": "tag",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "ADmiJ",
+          "x": 40,
+          "y": 148,
+          "fill": "#1E1B4B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "Label Suite",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "8Jqa1",
+          "x": 40,
+          "y": 192,
+          "fill": "#64748B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "NLP 標注平台",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "m4jVy",
+          "x": 40,
+          "y": 224,
+          "name": "card",
+          "width": 400,
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 32,
+          "children": [
+            {
+              "type": "text",
+              "id": "R1yFC",
+              "fill": "#1E1B4B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "登入",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "qp9tB",
+              "fill": "#64748B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "使用機構或開發者帳號繼續。",
+              "lineHeight": 1.6,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "mwUdV",
+              "name": "googleBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Pbs9k",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "#64748B"
+                },
+                {
+                  "type": "text",
+                  "id": "C5CJZ",
+                  "fill": "#1E1B4B",
+                  "content": "以 Google 登入",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hpGhx",
+              "name": "githubBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "qyXMl",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "github",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1E1B4B"
+                },
+                {
+                  "type": "text",
+                  "id": "rPoOC",
+                  "fill": "#1E1B4B",
+                  "content": "以 GitHub 登入",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uJWDO",
+              "name": "divider",
+              "width": "fill_container",
+              "height": 20,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "line",
+                  "id": "cF19d",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "bfdfa",
+                  "fill": "#94A3B8",
+                  "content": "或",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "line",
+                  "id": "BMSHE",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "b1qSN",
+              "fill": "#94A3B8",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "模擬錯誤狀態（展示用）",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "XP3dN",
+          "x": 40,
+          "y": 722,
+          "fill": "#94A3B8",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "繼續即表示您同意本研究平台的使用條款。",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 11,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "NOJY1",
+      "x": 560,
+      "y": 0,
+      "name": "Login Page Mobile (EN)",
+      "width": 480,
+      "height": 800,
+      "fill": "#F5F3FF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "9IX8K",
+          "x": 356,
+          "y": 16,
+          "name": "langToggle",
+          "height": 28,
+          "fill": "#FFFFFF",
+          "cornerRadius": 999,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "gap": 6,
+          "padding": [
+            6,
+            12
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "EA2f0",
+              "width": 14,
+              "height": 14,
+              "iconFontName": "globe",
+              "iconFontFamily": "lucide",
+              "fill": "#64748B"
+            },
+            {
+              "type": "text",
+              "id": "w2iPG",
+              "fill": "#64748B",
+              "content": "ZH",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "bQszl",
+          "x": 215,
+          "y": 80,
+          "name": "logoBox",
+          "width": 50,
+          "height": 50,
+          "fill": "#6366F1",
+          "cornerRadius": 14,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "3X5QO",
+              "width": 26,
+              "height": 26,
+              "iconFontName": "tag",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "TyMRF",
+          "x": 40,
+          "y": 148,
+          "fill": "#1E1B4B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "Label Suite",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "4FtzV",
+          "x": 40,
+          "y": 192,
+          "fill": "#64748B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "NLP Annotation Portal",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "dYM7z",
+          "x": 40,
+          "y": 224,
+          "name": "card",
+          "width": 400,
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 32,
+          "children": [
+            {
+              "type": "text",
+              "id": "YGTz9",
+              "fill": "#1E1B4B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Sign In",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Z7T2a",
+              "fill": "#64748B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Use your institutional or developer account to continue.",
+              "lineHeight": 1.6,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "OAPdb",
+              "name": "googleBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Sp7Jh",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "#64748B"
+                },
+                {
+                  "type": "text",
+                  "id": "npYtQ",
+                  "fill": "#1E1B4B",
+                  "content": "Continue with Google",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "IPMqR",
+              "name": "githubBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "MiC5C",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "github",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1E1B4B"
+                },
+                {
+                  "type": "text",
+                  "id": "4tryJ",
+                  "fill": "#1E1B4B",
+                  "content": "Continue with GitHub",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "paXoU",
+              "name": "divider",
+              "width": "fill_container",
+              "height": 20,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "line",
+                  "id": "iUw6n",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "TZ3kn",
+                  "fill": "#94A3B8",
+                  "content": "or",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "line",
+                  "id": "vqQ6y",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "13j49",
+              "fill": "#94A3B8",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Simulate error state (demo only)",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "ZvSPr",
+          "x": 40,
+          "y": 722,
+          "fill": "#94A3B8",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "By signing in, you agree to the Terms of Use of this research portal.",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 11,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qY9LT",
+      "x": 0,
+      "y": 860,
+      "name": "Login Page Desktop (ZH)",
+      "width": 1440,
+      "height": 900,
+      "fill": "#F5F3FF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "chZMI",
+          "x": 1324,
+          "y": 16,
+          "name": "langToggle",
+          "height": 28,
+          "fill": "#FFFFFF",
+          "cornerRadius": 999,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "gap": 6,
+          "padding": [
+            6,
+            12
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "OlVpy",
+              "width": 14,
+              "height": 14,
+              "iconFontName": "globe",
+              "iconFontFamily": "lucide",
+              "fill": "#64748B"
+            },
+            {
+              "type": "text",
+              "id": "aHzQ1",
+              "fill": "#64748B",
+              "content": "EN",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zjDFl",
+          "x": 695,
+          "y": 130,
+          "name": "logoBox",
+          "width": 50,
+          "height": 50,
+          "fill": "#6366F1",
+          "cornerRadius": 14,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "6ufdf",
+              "width": 26,
+              "height": 26,
+              "iconFontName": "tag",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "itvMu",
+          "x": 520,
+          "y": 198,
+          "fill": "#1E1B4B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "Label Suite",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "ZfVrt",
+          "x": 520,
+          "y": 242,
+          "fill": "#64748B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "NLP 標注平台",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "uG3ee",
+          "x": 520,
+          "y": 274,
+          "name": "card",
+          "width": 400,
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 32,
+          "children": [
+            {
+              "type": "text",
+              "id": "BI04i",
+              "fill": "#1E1B4B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "登入",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "fBeCg",
+              "fill": "#64748B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "使用機構或開發者帳號繼續。",
+              "lineHeight": 1.6,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "basBP",
+              "name": "googleBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "p2sO1",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "#64748B"
+                },
+                {
+                  "type": "text",
+                  "id": "Lb5qA",
+                  "fill": "#1E1B4B",
+                  "content": "以 Google 登入",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "J8EfY",
+              "name": "githubBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "GRsyH",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "github",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1E1B4B"
+                },
+                {
+                  "type": "text",
+                  "id": "yI0bN",
+                  "fill": "#1E1B4B",
+                  "content": "以 GitHub 登入",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lTYjy",
+              "name": "divider",
+              "width": "fill_container",
+              "height": 20,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "line",
+                  "id": "N7Hj6",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "eixsr",
+                  "fill": "#94A3B8",
+                  "content": "或",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "line",
+                  "id": "ui64z",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "P7EvU",
+              "fill": "#94A3B8",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "模擬錯誤狀態（展示用）",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "325qo",
+          "x": 520,
+          "y": 772,
+          "fill": "#94A3B8",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "繼續即表示您同意本研究平台的使用條款。",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 11,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "hZY1P",
+      "x": 1500,
+      "y": 860,
+      "name": "Login Page Desktop (EN)",
+      "width": 1440,
+      "height": 900,
+      "fill": "#F5F3FF",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "9WDq9",
+          "x": 1324,
+          "y": 16,
+          "name": "langToggle",
+          "height": 28,
+          "fill": "#FFFFFF",
+          "cornerRadius": 999,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "gap": 6,
+          "padding": [
+            6,
+            12
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "yLgo2",
+              "width": 14,
+              "height": 14,
+              "iconFontName": "globe",
+              "iconFontFamily": "lucide",
+              "fill": "#64748B"
+            },
+            {
+              "type": "text",
+              "id": "X9kKd",
+              "fill": "#64748B",
+              "content": "ZH",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "1LjQZ",
+          "x": 695,
+          "y": 130,
+          "name": "logoBox",
+          "width": 50,
+          "height": 50,
+          "fill": "#6366F1",
+          "cornerRadius": 14,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "ATKCu",
+              "width": 26,
+              "height": 26,
+              "iconFontName": "tag",
+              "iconFontFamily": "lucide",
+              "fill": "#FFFFFF"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "MTC5l",
+          "x": 520,
+          "y": 198,
+          "fill": "#1E1B4B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "Label Suite",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 30,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "DlMkH",
+          "x": 520,
+          "y": 242,
+          "fill": "#64748B",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "NLP Annotation Portal",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "zMsTe",
+          "x": 520,
+          "y": 274,
+          "name": "card",
+          "width": 400,
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "#E2E8F0"
+          },
+          "layout": "vertical",
+          "gap": 16,
+          "padding": 32,
+          "children": [
+            {
+              "type": "text",
+              "id": "0YmaC",
+              "fill": "#1E1B4B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Sign In",
+              "fontFamily": "Inter",
+              "fontSize": 22,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "2lE5y",
+              "fill": "#64748B",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Use your institutional or developer account to continue.",
+              "lineHeight": 1.6,
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "3Mgcr",
+              "name": "googleBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "CfHs2",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "#64748B"
+                },
+                {
+                  "type": "text",
+                  "id": "hcalN",
+                  "fill": "#1E1B4B",
+                  "content": "Continue with Google",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Sm2sI",
+              "name": "githubBtn",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "#FFFFFF",
+              "cornerRadius": 8,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "gap": 8,
+              "padding": [
+                10,
+                16
+              ],
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "eN6QO",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "github",
+                  "iconFontFamily": "lucide",
+                  "fill": "#1E1B4B"
+                },
+                {
+                  "type": "text",
+                  "id": "8W6jH",
+                  "fill": "#1E1B4B",
+                  "content": "Continue with GitHub",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "5vA2J",
+              "name": "divider",
+              "width": "fill_container",
+              "height": 20,
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "line",
+                  "id": "zKSTw",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "ETHaq",
+                  "fill": "#94A3B8",
+                  "content": "or",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "line",
+                  "id": "xoKG8",
+                  "width": "fill_container",
+                  "height": 1,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "HDzvk",
+              "fill": "#94A3B8",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Simulate error state (demo only)",
+              "textAlign": "center",
+              "fontFamily": "Inter",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "wQpOI",
+          "x": 520,
+          "y": 772,
+          "fill": "#94A3B8",
+          "textGrowth": "fixed-width",
+          "width": 400,
+          "content": "By signing in, you agree to the Terms of Use of this research portal.",
+          "textAlign": "center",
+          "fontFamily": "Inter",
+          "fontSize": 11,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ]
+}
