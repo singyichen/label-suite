@@ -122,6 +122,24 @@ winget install Python.Python.3.12
 
 When user requests UI/UX work (design, build, create, implement, review, fix, improve), follow this workflow:
 
+### Step 0: Load Existing Project Design System (if present)
+
+Before doing any design work, check whether this project already has a design system:
+
+1. **Read `design/system/MASTER.md`** (if it exists) — this is the authoritative style spec: color tokens, typography, spacing, components, and anti-patterns. Always follow it instead of generating a new design system from scratch.
+
+2. **Read `design/wireframes/design-system.pen`** (if it exists) via Pencil MCP tools — this contains the **visual component library** that is the source of truth for implemented component specs:
+   ```
+   mcp__pencil__open_document("design/wireframes/design-system.pen")
+   mcp__pencil__get_editor_state(include_schema=false)
+   mcp__pencil__batch_get(patterns=[{reusable: true}], readDepth=2)
+   ```
+   Extract: reusable component IDs, their fills/strokes/cornerRadius/padding/font values, and variable names (e.g. `$color-surface`, `$color-ink`). Use these exact values when implementing prototype components — **do not invent new values**.
+
+3. **Page-specific overrides**: also check `design/system/pages/[page-name].md` if building a specific page. Its rules override MASTER.md.
+
+If neither file exists, proceed with Step 1–4 as normal to generate a new design system.
+
 ### Step 1: Analyze User Requirements
 
 Extract key information from user request:

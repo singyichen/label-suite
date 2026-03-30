@@ -206,6 +206,7 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
 /ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, UI-heavy features)
+                                          ⚠ Before generating: read MASTER.md + design/wireframes/design-system.pen via Pencil MCP
 /senior-uiux review                     → prototype QA: design system compliance + accessibility  (optional, after prototype)
 /pencil wireframe                       → design/wireframes/pages/[page].pen  (optional, after senior-uiux review)
 /speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
