@@ -432,12 +432,15 @@
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = e => {
-        const preview = document.getElementById('avatar-preview');
-        preview.innerHTML = `<img src="${e.target.result}" alt="${STRINGS[currentLang]['avatar-preview-alt']}" class="w-full h-full object-cover" />`;
-      };
-      reader.readAsDataURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      const preview = document.getElementById('avatar-preview');
+      preview.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = objectUrl;
+      img.alt = STRINGS[currentLang]['avatar-preview-alt'];
+      img.className = 'w-full h-full object-cover';
+      img.onload = () => URL.revokeObjectURL(objectUrl);
+      preview.appendChild(img);
     }
 
     // ── Form validation ───────────────────────────────────────────

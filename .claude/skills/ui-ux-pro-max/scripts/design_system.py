@@ -507,7 +507,7 @@ def persist_design_system(design_system: dict, page: str = None, output_dir: str
     project_name = design_system.get("project_name", "default")
     project_slug = project_name.lower().replace(' ', '-')
     
-    design_system_dir = base_dir / "design-system" / project_slug
+    design_system_dir = base_dir / "design" / "system" / project_slug
     pages_dir = design_system_dir / "pages"
     
     created_files = []
@@ -556,7 +556,7 @@ def format_master_md(design_system: dict) -> str:
     # Logic header
     lines.append("# Design System Master File")
     lines.append("")
-    lines.append("> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.")
+    lines.append("> **LOGIC:** When building a specific page, first check `design/system/pages/[page-name].md`.")
     lines.append("> If that file exists, its rules **override** this Master file.")
     lines.append("> If not, strictly follow the rules below.")
     lines.append("")
