@@ -311,7 +311,7 @@ Label Suite uses Flat Design with **one allowed exception**: a maximum `translat
 Label Suite is a **tool-based web app** (not a marketing site). Use these two shell layouts:
 
 **Pattern A: Header + Content Layout**
-- Used for: Dashboard, Leaderboard, Settings, Profile
+- Used for: Dashboard, Settings
 - Structure: Fixed top navbar (height 56px) + scrollable main content area
 - Max content width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
 - Top padding: `pt-6` below navbar
@@ -321,6 +321,12 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 - Structure: Fixed left sidebar (width 240px) + scrollable main content area
 - Sidebar contains: task metadata, label palette, progress indicator
 - Define in `design/system/pages/annotation.md` when implemented
+
+**Pattern C: Header + Sidebar + Content Layout**
+- Used for: Profile, multi-section settings pages
+- Structure: Fixed top navbar (height 56px) + fixed left nav sidebar (width 224px) + scrollable main content area
+- Sidebar contains: section navigation links (e.g., Profile Info, Security, Notifications)
+- Max content width: `max-w-3xl` within the content area
 
 ---
 

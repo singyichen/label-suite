@@ -175,7 +175,7 @@ Format: `<type>: <description>`, type must be one of:
 | `fix` | Bug fix | `fix: correct scoring logic error` |
 | `docs` | Documentation | `docs: update roadmap` |
 | `refactor` | Refactoring | `refactor: split evaluation service layer` |
-| `test` | Tests | `test: add leaderboard E2E tests` |
+| `test` | Tests | `test: add labeling flow E2E tests` |
 | `style` | Formatting | `style: apply ruff formatting` |
 | `chore` | Build / dependencies | `chore: upgrade FastAPI version` |
 | `perf` | Performance | `perf: add Redis caching` |
@@ -191,7 +191,7 @@ Format: `<type>/<short-description>`, lowercase with `-` separator, aligned with
 | `fix/` | Bug fix | `fix/score-calculation` |
 | `docs/` | Documentation | `docs/roadmap-update` |
 | `refactor/` | Refactoring | `refactor/eval-service` |
-| `test/` | Tests | `test/leaderboard-e2e` |
+| `test/` | Tests | `test/labeling-flow-e2e` |
 | `chore/` | Build / dependencies | `chore/upgrade-dependencies` |
 
 ### Protection Rules
@@ -314,7 +314,7 @@ All development must follow the six core principles in [constitution.md](.specif
   → [/ui-ux-pro-max] (optional) — HTML prototype + design system
                                    Use to surface UI ambiguities before clarify
   → [senior-uiux review]         Review prototype: design system compliance, a11y, ZH/EN symmetry
-  → [pencil wireframe]           Draw ZH + EN frames in pencil/pages/[page].pen via Pencil MCP
+  → [pencil wireframe]           Draw ZH + EN frames in design/wireframes/pages/[page].pen via Pencil MCP
   → /speckit.clarify (optional)  Prototype makes ambiguities concrete
 
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
