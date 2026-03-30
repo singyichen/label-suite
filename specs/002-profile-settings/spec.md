@@ -5,6 +5,43 @@
 **Status**: Draft
 **Input**: User description: "個人設定頁（M1b）：登入後的使用者個人資料設定頁面。使用者可以查看與編輯自己的帳號資訊，包含顯示名稱、Email（唯讀，來自 SSO）、頭像、介面語言切換（ZH/EN）。"
 
+## Process Flow
+
+單一角色操作流程（使用者在個人設定頁查看與更新資料）：
+
+```mermaid
+sequenceDiagram
+    actor 使用者
+    participant ProfilePage as Profile 設定頁
+    participant 後端API as 後端 API
+    participant 資料庫
+
+    使用者->>ProfilePage: 進入個人設定頁（點擊 Navbar Avatar）
+    ProfilePage-->>使用者: 顯示目前資料（email 唯讀、avatar、role）
+
+    使用者->>ProfilePage: 修改顯示名稱 / 上傳新頭像 / 切換語言
+    ProfilePage-->>使用者: 即時預覽頭像（未儲存）
+
+    使用者->>ProfilePage: 點擊「儲存」
+    ProfilePage->>後端API: PATCH /api/users/me
+    後端API->>資料庫: UPDATE users SET ...
+    資料庫-->>後端API: 200 OK
+    後端API-->>ProfilePage: UserProfileResponse
+    ProfilePage-->>使用者: Toast「儲存成功」+ 頁面更新
+```
+
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|---------|
+| 1 | 使用者 | 進入個人設定頁 | 顯示目前資料（email 唯讀）|
+| 2 | 使用者 | 修改欄位 / 上傳頭像 | 即時預覽（未儲存）|
+| 3 | 使用者 | 點擊「儲存」 | PATCH API → DB 更新 |
+| 4 | 系統 | 儲存成功 | Toast 通知 + 頁面更新 |
+| E1 | 使用者 | 顯示名稱為空 | 拒絕儲存 + inline 錯誤 |
+| E2 | 使用者 | 上傳檔案過大或格式錯誤 | 拒絕上傳 + 顯示錯誤訊息 |
+| E3 | 系統 | 網路中斷 | Toast「儲存失敗」+ 保留表單 |
+
+---
+
 ## User Scenarios & Testing *(required)*
 
 ### User Story 1 - View and Edit Profile Info (Priority: P1)
@@ -57,6 +94,25 @@
 - **FR-005**: 使用者必須能在個人設定頁切換介面語言（ZH 繁體中文 ／ EN English）。
 - **FR-006**: 系統必須跨 session 保存語言偏好設定。
 - **FR-007**: 系統必須在儲存操作後顯示成功／失敗的 Toast 通知。
+
+### User Flow & Navigation
+
+```mermaid
+flowchart LR
+    dashboard["/dashboard"]
+    profile["/profile"]
+
+    dashboard -->|"點擊 Navbar Avatar"| profile
+    profile   -->|"點擊 Sidebar「儀表板」連結"| dashboard
+```
+
+| From | Trigger | To |
+|------|---------|-----|
+| `/dashboard` | 點擊 Navbar Avatar（使用者名稱）| `/profile` |
+| `/profile` | 點擊 Sidebar「儀表板」連結 | `/dashboard` |
+
+**Entry points**：`/dashboard` Navbar 的 Avatar 是唯一入口。
+**Exit points**：`/profile` Sidebar 可導回 `/dashboard`。
 
 ### Key Entities
 

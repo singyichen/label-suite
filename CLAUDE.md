@@ -205,17 +205,30 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
+                                          ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
+                                          ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
 /ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, UI-heavy features)
                                           ⚠ Before generating: read MASTER.md + design/wireframes/design-system.pen via Pencil MCP
 /senior-uiux review                     → prototype QA: design system compliance + accessibility  (optional, after prototype)
 /pencil wireframe                       → design/wireframes/pages/[page].pen  (optional, after senior-uiux review)
 /speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
 /speckit.plan                           → specs/NNN-feature/plan.md
+                                          ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
 /speckit.tasks                          → specs/NNN-feature/tasks.md
 /speckit.analyze                        → cross-document consistency check (optional)
 /speckit.implement                      → execute implementation
 /speckit.checklist                      → quality validation
 ```
+
+**Flow Chart Ownership**:
+
+| Flow Type | Document | When | Purpose |
+|-----------|----------|------|---------|
+| Process Flow | `spec.md` | During `/speckit.specify` | Cross-role business process; WHO does WHAT |
+| User Flow | `spec.md` | During `/speckit.specify` | Screen navigation; prevents orphan pages |
+| System Flow | `plan.md` | During `/speckit.plan` | Data path through API → Service → DB layers |
+
+All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart LR` for navigation flows). Renders natively on GitHub — no extra tooling needed.
 
 **Key Rules**:
 - Each spec directory contains: `spec.md`, `plan.md`, `tasks.md`, `checklists/`
