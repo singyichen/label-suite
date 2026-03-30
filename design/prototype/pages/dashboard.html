@@ -60,12 +60,15 @@
 
       <!-- User menu -->
       <div class="flex items-center gap-2">
-        <!-- Avatar + name -->
-        <div class="hidden sm:flex items-center gap-2 mr-1">
+        <!-- Avatar + name → links to profile -->
+        <a href="profile.html"
+           class="hidden sm:flex items-center gap-2 mr-1 rounded-lg px-2 py-1 hover:bg-slate-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+           data-i18n-aria-label="aria-profile"
+           aria-label="查看個人資料">
           <img src="https://api.dicebear.com/7.x/initials/svg?seed=Researcher&backgroundColor=6366f1&textColor=ffffff"
                alt="User avatar" class="w-8 h-8 rounded-full border-2 border-primary/20" />
           <span class="text-sm text-ink font-medium">Researcher</span>
-        </div>
+        </a>
 
         <!-- Language toggle -->
         <button id="lang-toggle"
@@ -339,6 +342,7 @@
         'lang-label':            'EN',
         'page-title':            '儀表板 — Label Suite',
         'aria-home':             'Label Suite 首頁',
+        'aria-profile':          '查看個人資料',
         'aria-logout':           '登出',
         'aria-mobile-menu':      '開啟導覽選單',
         'aria-tasks-table':      '進行中標注任務',
@@ -384,6 +388,7 @@
         'lang-label':            'ZH',
         'page-title':            'Dashboard — Label Suite',
         'aria-home':             'Label Suite home',
+        'aria-profile':          'View profile',
         'aria-logout':           'Sign out',
         'aria-mobile-menu':      'Open navigation menu',
         'aria-tasks-table':      'Active annotation tasks',

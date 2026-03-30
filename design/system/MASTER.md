@@ -344,6 +344,9 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 Before delivering any UI code, verify:
 
+- [ ] Every page is reachable from at least one entry point (no orphan pages)
+- [ ] Every `href="#"` placeholder has been replaced with a real path or marked `aria-disabled="true"`
+- [ ] Navigation flow matches the Page Navigation Flow table in `spec.md`
 - [ ] No emojis used as icons (use SVG instead)
 - [ ] All icons from consistent icon set (Heroicons/Lucide)
 - [ ] `cursor-pointer` on all **clickable** elements only

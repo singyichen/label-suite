@@ -50,21 +50,21 @@
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST display the user's current display name, Email (read-only), avatar, and role on the profile settings page.
-- **FR-002**: The system MUST allow users to update their display name (non-empty, max 50 characters).
-- **FR-003**: The system MUST allow users to upload a new avatar (JPG/PNG/WebP, max 5MB) with live preview before saving.
-- **FR-004**: The system MUST prevent editing of the Email field, with a tooltip explaining it is managed by SSO.
-- **FR-005**: Users MUST be able to switch the interface language between ZH (Traditional Chinese) and EN (English).
-- **FR-006**: The system MUST persist the language preference across sessions.
-- **FR-007**: The system MUST show a success/failure toast notification after save actions.
+- **FR-001**: 系統必須在個人設定頁顯示使用者目前的顯示名稱、Email（唯讀）、頭像與角色。
+- **FR-002**: 系統必須允許使用者更新顯示名稱（不可為空，最多 50 個字元）。
+- **FR-003**: 系統必須允許使用者上傳新頭像（JPG／PNG／WebP，最大 5MB），並在儲存前提供即時預覽。
+- **FR-004**: 系統必須鎖定 Email 欄位為唯讀，並顯示提示說明「Email 由 SSO 帳號管理」。
+- **FR-005**: 使用者必須能在個人設定頁切換介面語言（ZH 繁體中文 ／ EN English）。
+- **FR-006**: 系統必須跨 session 保存語言偏好設定。
+- **FR-007**: 系統必須在儲存操作後顯示成功／失敗的 Toast 通知。
 
 ### Key Entities
 
-- **UserProfile**: Represents a logged-in user's profile. Key attributes: `id`, `display_name`, `email` (from SSO, read-only), `avatar_url`, `role` (admin | annotator | reviewer), `language_preference` (zh | en).
+- **UserProfile**：代表已登入使用者的個人資料。主要屬性：`id`、`display_name`、`email`（來自 SSO，唯讀）、`avatar_url`、`role`（admin｜annotator｜reviewer）、`language_preference`（zh｜en）。
 
 ## Success Criteria *(required)*
 
-- **SC-001**: Users can view and update their profile information in under 30 seconds.
-- **SC-002**: Language switch takes effect immediately without page reload.
-- **SC-003**: All form validation errors are surfaced inline before submission.
-- **SC-004**: Avatar upload and preview works correctly for JPG, PNG, and WebP formats under 5MB.
+- **SC-001**: 使用者可在 30 秒內完成個人資料的查看與更新。
+- **SC-002**: 語言切換立即生效，不需重新整理頁面。
+- **SC-003**: 所有表單驗證錯誤在送出前即時顯示於欄位旁。
+- **SC-004**: 頭像上傳與預覽功能對 JPG、PNG、WebP 格式（5MB 以內）正常運作。

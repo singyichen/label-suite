@@ -54,6 +54,22 @@
 - **FR-002**: The system MUST [specific capability]
 - **FR-003**: Users MUST be able to [key interaction]
 
+### Page Navigation Flow *(include if feature introduces new pages or modifies navigation)*
+
+<!--
+  List every page/screen in this feature and define how users navigate between them.
+  This prevents orphan pages (pages with no entry point) in prototypes and implementation.
+  Format: [Source Page] --[trigger]--> [Target Page]
+-->
+
+| From | Trigger | To |
+|------|---------|-----|
+| [Page A] | [e.g. click avatar] | [Page B] |
+| [Page B] | [e.g. sidebar link] | [Page A] |
+
+**Entry points**: [Which existing pages link INTO the new pages?]
+**Exit points**: [Which pages can users navigate to FROM the new pages?]
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes]
