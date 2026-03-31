@@ -576,6 +576,220 @@ button[disabled] {
 
 ---
 
+### Avatar
+
+用於顯示使用者身份識別圖像，分為 display-only（navbar）與 uploadable（profile）兩種用途。
+
+**尺寸規格：**
+
+| Size | 尺寸 | 使用場景 |
+|------|------|---------|
+| Small | `w-8 h-8`（32px） | Navbar user menu |
+| Large | `w-16 h-16` mobile / `w-20 h-20` desktop（64/80px） | Profile 頁頭像上傳區 |
+
+**Display-only（Navbar）：**
+
+```html
+<img
+  src="avatar-url"
+  alt="User avatar"
+  class="w-8 h-8 rounded-full border-2 border-primary/20"
+/>
+```
+
+**Uploadable（Profile）：**
+
+```html
+<div class="relative avatar-wrap cursor-pointer shrink-0"
+     role="button" tabindex="0"
+     aria-label="上傳頭像"
+     aria-describedby="avatar-error"
+     onclick="document.getElementById('avatar-input').click()"
+     onkeydown="if(event.key==='Enter'||event.key===' ')this.click()">
+
+  <!-- Avatar display -->
+  <div id="avatar-preview"
+       class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary
+              flex items-center justify-center text-white
+              text-xl md:text-2xl font-bold overflow-hidden select-none">
+    <!-- initials fallback or <img> after upload -->
+  </div>
+
+  <!-- Hover overlay -->
+  <div class="avatar-overlay absolute inset-0 rounded-full bg-black/50
+              flex items-center justify-center opacity-0
+              transition-opacity duration-200">
+    <!-- SVG upload icon, w-5 h-5 text-white -->
+  </div>
+
+  <input id="avatar-input" type="file"
+         accept="image/jpeg,image/png,image/webp"
+         class="hidden" aria-hidden="true" />
+</div>
+
+<!-- Error message -->
+<p id="avatar-error" class="hidden text-xs text-red-500 mt-1" role="alert"></p>
+<!-- Hint text -->
+<p class="text-xs text-slate-500">JPG、PNG 或 WebP，最大 5 MB</p>
+```
+
+**CSS（hover overlay）：**
+```css
+.avatar-wrap:hover .avatar-overlay { opacity: 1; }
+```
+
+**Upload 驗證規則：**
+- 允許格式：`image/jpeg`、`image/png`、`image/webp`
+- 最大檔案大小：5 MB
+- 圖片預覽：使用 `URL.createObjectURL()`，載入後執行 `URL.revokeObjectURL()` 釋放記憶體（禁止使用 `innerHTML` 設定 `src` 以防 XSS）
+
+**Avatar states（uploadable）：**
+
+| State | 表現 |
+|-------|------|
+| Default | 顯示 initials 或已上傳圖片 |
+| Hover | `.avatar-overlay` opacity 0 → 1（半透明深色 + 上傳圖示） |
+| Focus | `focus:ring-2 focus:ring-primary`（鍵盤導覽） |
+| Error | 顯示 `#avatar-error`，`role="alert"` |
+
+---
+
+### Tooltip
+
+用於提供補充說明，當元素因空間限制無法展示完整說明時使用（如 readonly 欄位的原因說明）。
+
+**規格：**
+
+| 屬性 | 值 |
+|------|---|
+| 觸發方式 | `hover` + `focus-within`（支援鍵盤） |
+| 出現位置 | 觸發元素上方，`bottom: calc(100% + 6px)`，水平置中 |
+| 背景 | `#1E1B4B`（`var(--color-ink)`） |
+| 文字 | `#fff`，`font-size: 11px` |
+| 內距 | `padding: 4px 8px` |
+| 圓角 | `border-radius: 6px`（`var(--radius-sm)` 4px 稍大） |
+| 動畫 | `opacity` 0 → 1，`150ms ease` |
+| z-index | `500`（Tooltip 層，最高） |
+| 箭頭 | `::after` 偽元素，`border-top-color: var(--color-ink)` |
+
+**CSS：**
+```css
+.tooltip-wrap { position: relative; display: inline-flex; }
+
+.tooltip-wrap .tooltip {
+  visibility: hidden; opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--color-ink); color: #fff;
+  font-size: 11px; white-space: nowrap;
+  padding: 4px 8px; border-radius: 6px;
+  transition: opacity 150ms ease;
+  pointer-events: none; z-index: 500;
+}
+
+.tooltip-wrap .tooltip::after {
+  content: '';
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--color-ink);
+}
+
+.tooltip-wrap:hover .tooltip,
+.tooltip-wrap:focus-within .tooltip { visibility: visible; opacity: 1; }
+```
+
+**HTML：**
+```html
+<div class="tooltip-wrap" tabindex="0" aria-describedby="tooltip-text-id">
+  <!-- Trigger element (e.g. info icon) -->
+  <svg class="w-3.5 h-3.5 text-slate-400 cursor-default" aria-hidden="true">
+    <!-- info-circle icon -->
+  </svg>
+  <span id="tooltip-text-id" class="tooltip">說明文字</span>
+</div>
+```
+
+**Accessibility：**
+- 觸發元素加 `tabindex="0"` 讓鍵盤可聚焦
+- `aria-describedby` 指向 tooltip 文字的 id
+- Tooltip 本身加 `pointer-events: none` 避免干擾互動
+- 禁止使用原生 `title` 屬性（無法 focus 觸發，鍵盤使用者看不到）
+
+**When NOT to use：**
+- ❌ 說明文字超過 1 行 → 改用 Popover 或展開說明
+- ❌ 說明文字包含連結或互動元素 → 改用 Popover
+- ❌ 關鍵資訊不應只放在 Tooltip（hover 才看到） → 直接顯示在頁面
+
+---
+
+### Mobile Bottom Tab Bar
+
+Mobile 專用底部導覽列（`md:hidden`），取代 Sidebar 在小螢幕上的導覽功能。
+
+**規格：**
+
+| 屬性 | 值 |
+|------|---|
+| 高度 | `h-14`（56px） |
+| 位置 | `fixed bottom-0 left-0 right-0` |
+| z-index | `z-[200]`（Sticky 層） |
+| 背景 | `bg-white` |
+| 頂部邊線 | `border-t border-slate-200` |
+| 顯示條件 | `md:hidden`（640px 以下） |
+
+**Tab item states：**
+
+| State | Classes |
+|-------|---------|
+| Active | `text-primary font-medium` + `aria-current="page"` |
+| Inactive | `text-slate-500 hover:text-primary` |
+| Focus | `focus:ring-2 focus:ring-inset focus:ring-primary` |
+
+**HTML 結構：**
+```html
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-14
+            bg-white border-t border-slate-200
+            flex items-stretch z-[200]"
+     aria-label="底部導覽">
+
+  <!-- Active tab -->
+  <a href="#"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5
+            text-primary font-medium transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+     aria-current="page">
+    <!-- SVG icon, w-5 h-5, aria-hidden="true" -->
+    <span class="text-xs font-medium">頁面名稱</span>
+  </a>
+
+  <!-- Inactive tab -->
+  <a href="target.html"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5
+            text-slate-500 hover:text-primary transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
+    <!-- SVG icon, w-5 h-5, aria-hidden="true" -->
+    <span class="text-xs">頁面名稱</span>
+  </a>
+
+</nav>
+```
+
+**頁面底部留白：**
+Tab bar 為 fixed 定位，需在 `<main>` 底部加上留白避免內容被遮擋：
+```css
+/* 僅在 mobile 套用 */
+@media (max-width: 767px) {
+  main { padding-bottom: 56px; } /* h-14 = 56px */
+}
+```
+或使用 Tailwind：`<main class="pb-14 md:pb-0">`
+
+**當 Sidebar → Mobile Tab Bar 對應規則：**
+- Sidebar 的每個 section nav item → Tab Bar 的一個 tab
+- 項目超過 5 個時，最後一個改為「更多」（overflow menu）
+
+---
+
 ## Style Guidelines
 
 **Style:** Flat Design
