@@ -54,18 +54,20 @@
       <nav class="hidden md:flex items-center gap-1" role="navigation" aria-label="Main navigation">
         <a href="#" class="px-3 py-2 text-sm text-primary font-medium bg-surface rounded-lg cursor-pointer" aria-current="page" data-i18n="nav-dashboard">儀表板</a>
         <a href="#" aria-disabled="true" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-tasks">任務</a>
-        <a href="#" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-leaderboard">排行榜</a>
         <a href="#" class="px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-settings">設定</a>
       </nav>
 
       <!-- User menu -->
       <div class="flex items-center gap-2">
-        <!-- Avatar + name -->
-        <div class="hidden sm:flex items-center gap-2 mr-1">
+        <!-- Avatar + name → links to profile -->
+        <a href="profile.html"
+           class="hidden sm:flex items-center gap-2 mr-1 rounded-lg px-2 py-1 hover:bg-slate-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+           data-i18n-aria-label="aria-profile"
+           aria-label="查看個人資料">
           <img src="https://api.dicebear.com/7.x/initials/svg?seed=Researcher&backgroundColor=6366f1&textColor=ffffff"
                alt="User avatar" class="w-8 h-8 rounded-full border-2 border-primary/20" />
           <span class="text-sm text-ink font-medium">Researcher</span>
-        </div>
+        </a>
 
         <!-- Language toggle -->
         <button id="lang-toggle"
@@ -107,8 +109,8 @@
     <nav id="mobile-menu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1" role="navigation" aria-label="Mobile navigation">
       <a href="#" class="block px-3 py-2 text-sm text-primary font-medium bg-surface rounded-lg" aria-current="page" data-i18n="nav-dashboard">儀表板</a>
       <a href="#" aria-disabled="true" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-tasks">任務</a>
-      <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-leaderboard">排行榜</a>
       <a href="#" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-settings">設定</a>
+      <a href="profile.html" class="block px-3 py-2 text-sm text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg cursor-pointer transition-colors duration-200" data-i18n="nav-profile">個人設定</a>
     </nav>
   </header>
 
@@ -124,7 +126,7 @@
     <!-- Stat cards -->
     <section aria-labelledby="stats-heading">
       <h2 id="stats-heading" class="sr-only" data-i18n="stats-sr">活動統計</h2>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
 
         <!-- Card: Active Tasks -->
         <div class="bg-white border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary transition-colors duration-200">
@@ -167,20 +169,6 @@
           </div>
           <p class="text-2xl font-bold text-ink">F1 0.89</p>
           <p class="text-xs text-slate-400 mt-1" data-i18n="stat-best-score-sub">NER 任務 #2</p>
-        </div>
-
-        <!-- Card: Rank -->
-        <div class="bg-white border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-primary transition-colors duration-200">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-xs text-slate-500 font-medium uppercase tracking-wide" data-i18n="stat-rank">排名</span>
-            <div class="w-8 h-8 bg-surface rounded-lg flex items-center justify-center">
-              <svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-              </svg>
-            </div>
-          </div>
-          <p class="text-2xl font-bold text-ink">#5</p>
-          <p class="text-xs text-cta mt-1" data-i18n="stat-rank-sub">↑ 較上週上升 2 名</p>
         </div>
 
       </div>
@@ -302,8 +290,8 @@
       'zh-TW': {
         'nav-dashboard':     '儀表板',
         'nav-tasks':         '任務',
-        'nav-leaderboard':   '排行榜',
         'nav-settings':      '設定',
+        'nav-profile':       '個人設定',
         'btn-signout':       '登出',
         'welcome':           '歡迎回來，Researcher',
         'welcome-sub':       '以下是您的標注活動概覽。',
@@ -314,8 +302,6 @@
         'stat-submissions-sub': '累計提交',
         'stat-best-score':   '最高分數',
         'stat-best-score-sub': 'NER 任務 #2',
-        'stat-rank':         '排名',
-        'stat-rank-sub':     '↑ 較上週上升 2 名',
         'table-title':       '進行中任務',
         'table-view-all':    '查看全部',
         'th-task':           '任務',
@@ -339,6 +325,7 @@
         'lang-label':            'EN',
         'page-title':            '儀表板 — Label Suite',
         'aria-home':             'Label Suite 首頁',
+        'aria-profile':          '查看個人資料',
         'aria-logout':           '登出',
         'aria-mobile-menu':      '開啟導覽選單',
         'aria-tasks-table':      '進行中標注任務',
@@ -347,8 +334,8 @@
       'en': {
         'nav-dashboard':     'Dashboard',
         'nav-tasks':         'Tasks',
-        'nav-leaderboard':   'Leaderboard',
         'nav-settings':      'Settings',
+        'nav-profile':       'Profile',
         'btn-signout':       'Sign out',
         'welcome':           'Welcome back, Researcher',
         'welcome-sub':       'Here\'s an overview of your annotation activity.',
@@ -359,8 +346,6 @@
         'stat-submissions-sub': 'Total submitted',
         'stat-best-score':   'Best Score',
         'stat-best-score-sub': 'NER Task #2',
-        'stat-rank':         'Rank',
-        'stat-rank-sub':     '↑ 2 since last week',
         'table-title':       'Active Tasks',
         'table-view-all':    'View all',
         'th-task':           'Task',
@@ -384,6 +369,7 @@
         'lang-label':            'ZH',
         'page-title':            'Dashboard — Label Suite',
         'aria-home':             'Label Suite home',
+        'aria-profile':          'View profile',
         'aria-logout':           'Sign out',
         'aria-mobile-menu':      'Open navigation menu',
         'aria-tasks-table':      'Active annotation tasks',

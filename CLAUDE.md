@@ -113,8 +113,8 @@ label-suite/
 - **Traditional Chinese allowed** in the following locations, to accelerate development iteration:
   - `docs/` — all research, thesis, and design documentation
   - `specs/` — all SDD spec files (`spec.md`, `plan.md`, `tasks.md`, `checklists/`)
-  - `prototype/` — HTML/CSS UI prototypes demonstrating bilingual (zh-TW/en) features
-  - `pencil/` — Pencil wireframe files (`.pen`) demonstrating bilingual (zh-TW/en) UI designs
+  - `design/prototype/` — HTML/CSS UI prototypes demonstrating bilingual (zh-TW/en) features
+  - `design/wireframes/` — Pencil wireframe files (`.pen`) demonstrating bilingual (zh-TW/en) UI designs
 - `README.zh-TW.md` is maintained in Traditional Chinese for Chinese-speaking users.
 - All conversations with Claude should be responded to in Traditional Chinese.
 
@@ -175,7 +175,7 @@ Format: `<type>: <description>`, type must be one of:
 | `fix` | Bug fix | `fix: correct scoring logic error` |
 | `docs` | Documentation | `docs: update roadmap` |
 | `refactor` | Refactoring | `refactor: split evaluation service layer` |
-| `test` | Tests | `test: add leaderboard E2E tests` |
+| `test` | Tests | `test: add labeling flow E2E tests` |
 | `style` | Formatting | `style: apply ruff formatting` |
 | `chore` | Build / dependencies | `chore: upgrade FastAPI version` |
 | `perf` | Performance | `perf: add Redis caching` |
@@ -191,7 +191,7 @@ Format: `<type>/<short-description>`, lowercase with `-` separator, aligned with
 | `fix/` | Bug fix | `fix/score-calculation` |
 | `docs/` | Documentation | `docs/roadmap-update` |
 | `refactor/` | Refactoring | `refactor/eval-service` |
-| `test/` | Tests | `test/leaderboard-e2e` |
+| `test/` | Tests | `test/labeling-flow-e2e` |
 | `chore/` | Build / dependencies | `chore/upgrade-dependencies` |
 
 ### Protection Rules
@@ -205,14 +205,32 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
-/ui-ux-pro-max                          → prototype/ + design-system/  (optional, UI-heavy features)
-/speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
+                                          ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
+                                          ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
+/pencil wireframe                       → design/wireframes/pages/[page].pen  (optional, after specify)
+                                          ⚠ Each .pen: Desktop ZH (x:0) · Desktop EN (x:1500) · Mobile ZH (x:3000) · Mobile EN (x:4500)
+                                            + Component ZH (x:6000) · Component EN (x:7500); draw ZH first, Desktop before Mobile
+/ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, after wireframe)
+                                          ⚠ Before generating: read MASTER.md + design/wireframes/[page].pen via Pencil MCP
+/senior-uiux review                     → prototype QA: wireframe fidelity, design system compliance, a11y  (optional, after prototype)
+/speckit.clarify                        → clarify requirements          (optional; wireframe + prototype surface ambiguities)
 /speckit.plan                           → specs/NNN-feature/plan.md
+                                          ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
 /speckit.tasks                          → specs/NNN-feature/tasks.md
 /speckit.analyze                        → cross-document consistency check (optional)
 /speckit.implement                      → execute implementation
 /speckit.checklist                      → quality validation
 ```
+
+**Flow Chart Ownership**:
+
+| Flow Type | Document | When | Purpose |
+|-----------|----------|------|---------|
+| Process Flow | `spec.md` | During `/speckit.specify` | Cross-role business process; WHO does WHAT |
+| User Flow | `spec.md` | During `/speckit.specify` | Screen navigation; prevents orphan pages |
+| System Flow | `plan.md` | During `/speckit.plan` | Data path through API → Service → DB layers |
+
+All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart LR` for navigation flows). Renders natively on GitHub — no extra tooling needed.
 
 **Key Rules**:
 - Each spec directory contains: `spec.md`, `plan.md`, `tasks.md`, `checklists/`
@@ -249,13 +267,65 @@ The deciding question is: **will this change make the system behave differently 
 | Command | Purpose |
 |---|---|
 | `/speckit.specify` | Create feature spec from natural language description |
-| `/ui-ux-pro-max` | Generate HTML prototype + design system (optional; run after specify, before clarify) |
-| `/speckit.clarify` | Identify and clarify ambiguous requirements (prototype helps surface these) |
+| `pencil wireframe` | Draw 6 frames (Desktop ZH·EN · Mobile ZH·EN · Component ZH·EN) in `design/wireframes/pages/[page].pen` via Pencil MCP (optional; run after specify, before prototype) |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system based on wireframe (optional; run after wireframe, before clarify) |
+| `senior-uiux review` | Review prototype against wireframe for fidelity, design system compliance, a11y, ZH/EN/mobile symmetry (optional; run after ui-ux-pro-max) |
+| `/speckit.clarify` | Identify and clarify ambiguous requirements (wireframe + prototype help surface these) |
 | `/speckit.plan` | Build technical implementation plan |
 | `/speckit.tasks` | Generate executable task list |
 | `/speckit.analyze` | Cross-document consistency analysis |
 | `/speckit.implement` | Execute implementation — single session (bug fix / single-layer) or Agent Team (new feature) |
 | `/speckit.checklist` | Generate quality validation checklist |
+
+### Pencil Wireframe Convention
+
+- Each page wireframe is stored as a separate file under `design/wireframes/pages/[page-name].pen` (e.g. `login.pen`, `profile.pen`)
+- `design/wireframes/index.pen` is for overview purposes only — **do not** place page wireframe frames inside it
+- Each `.pen` file contains **6 side-by-side frames** in this order:
+
+  | Frame | x offset | Purpose |
+  |---|---|---|
+  | Desktop ZH | `x:0` | Full page — Traditional Chinese, desktop |
+  | Desktop EN | `x:1500` | Full page — English, desktop |
+  | Mobile ZH | `x:3000` | Full page — Traditional Chinese, mobile |
+  | Mobile EN | `x:4500` | Full page — English, mobile |
+  | Component ZH | `x:6000` | UI component set (dropdowns, buttons, etc.) — ZH |
+  | Component EN | `x:7500` | UI component set — EN |
+
+- Draw order: Desktop ZH → Desktop EN → Mobile ZH → Mobile EN → Component ZH → Component EN
+- Keep structure symmetric between ZH and EN frames at each device tier
+- Component frames (`x:6000` onward) contain **only page-specific components** — elements unique to this page's interactions
+- **Shared / cross-page components belong in `design/wireframes/design-system.pen`**, not in individual page files
+
+#### Component Placement Rule
+
+| Where | What goes here |
+|---|---|
+| `design-system.pen` | Components used across multiple pages (e.g. Button states, Text Input states, Toast, Navigation elements) |
+| Page `.pen` Component frame | Components unique to this page only (e.g. Avatar upload interaction in `profile.pen`) |
+
+> When deciding: if the component could appear on any other page, put it in `design-system.pen`.
+
+- `.pen` files are encrypted — **only operate via Pencil MCP tools**; never use `Read` / `Edit` / `Grep` on them
+
+#### Mobile RWD Requirements
+
+Mobile frames **must implement genuine RWD** — do NOT simply shrink the desktop layout. Key rules:
+
+| Desktop pattern | Mobile replacement |
+|---|---|
+| Sidebar navigation (`width: 224`) | Remove sidebar; use **bottom tab bar** (`height: 56`, `justifyContent: space_around`) |
+| Large navbar padding (e.g. `padding: [0, 80]`) | Reduce to `padding: [0, 16]` |
+| Multi-column layout | Collapse to single-column `fill_container` |
+| Large card padding (e.g. `32`) | Reduce to `16` |
+| Inline action buttons in wide rows | Stack vertically inside card: metadata text above, full-width button (`width: fill_container`) below |
+
+- Mobile canvas size: **390 × auto** (iPhone 14 viewport, height varies by page content)
+  - Use `height: "fit_content(900)"` during drawing
+  - After completion, run `snapshot_layout` on both ZH and EN frames to get actual heights
+  - Set both to the same fixed height (use the larger value): `U("frameId", {height: N})`
+  - **ZH and EN mobile frames must have identical `width × height`**
+- After drawing, take a screenshot and verify: no element overflows, no sidebar visible, all text readable
 
 ### Constitution Reference
 
@@ -266,7 +336,7 @@ All development must follow the six core principles in [constitution.md](.specif
 3. **Data Fairness** (NON-NEGOTIABLE) — prevent test-set answer leakage
 4. **Test-First / TDD** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows; all agents must follow Red-Green-Refactor (see [ADR-009](docs/adr/009-testing-strategy.md))
 5. **Simplicity** — YAGNI, KISS, avoid over-engineering
-6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `prototype/`, and `pencil/`
+6. **English-First** — code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, and `design/wireframes/`
 
 ---
 
@@ -285,9 +355,11 @@ All development must follow the six core principles in [constitution.md](.specif
 ```
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
 /speckit.specify
-  → [/ui-ux-pro-max] (optional) — HTML prototype + design system
-                                   Use to surface UI ambiguities before clarify
-  → /speckit.clarify (optional)   Prototype makes ambiguities concrete
+  → [pencil wireframe]           Draw 6 frames (Desktop/Mobile ZH·EN + Components) in
+                                   design/wireframes/pages/[page].pen via Pencil MCP
+  → [/ui-ux-pro-max] (optional) — HTML prototype + design system; use wireframe as layout reference
+  → [senior-uiux review]         Review prototype against wireframe: fidelity, a11y, ZH/EN/mobile symmetry
+  → /speckit.clarify (optional)  Wireframe + prototype make ambiguities concrete
 
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)

@@ -2,8 +2,8 @@
 # pencil-save.sh — Save the active Pencil document to a project path.
 #
 # Usage:
-#   ./scripts/pencil-save.sh pencil/design-system.pen
-#   ./scripts/pencil-save.sh pencil/pages/dashboard.pen
+#   ./scripts/pencil-save.sh design/wireframes/design-system.pen
+#   ./scripts/pencil-save.sh design/wireframes/pages/dashboard.pen
 #
 # IMPORTANT — when to use this script:
 #   ✅ Use for NEW documents (open_document("new") → batch_design → pencil-save.sh)
@@ -21,7 +21,7 @@
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <target-path>  (relative to project root, e.g. pencil/design-system.pen)" >&2
+  echo "Usage: $0 <target-path>  (relative to project root, e.g. design/wireframes/design-system.pen)" >&2
   exit 1
 fi
 

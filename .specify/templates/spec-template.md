@@ -5,6 +5,31 @@
 **Status**: Draft
 **Input**: User description: "$ARGUMENTS"
 
+## Process Flow *(include if feature involves a multi-step business process or cross-role workflow)*
+
+<!--
+  Describe the end-to-end business process BEFORE breaking it into user stories.
+  Focus on WHO does WHAT and in what ORDER — not on technical implementation.
+  Use a Mermaid sequenceDiagram and a step table. Renders natively on GitHub — no extra tooling needed.
+-->
+
+```mermaid
+sequenceDiagram
+    actor ActorA
+    participant System
+    actor ActorB
+
+    ActorA->>System: [action]
+    System-->>ActorB: [notification / response]
+    ActorB->>System: [confirmation / next action]
+```
+
+| Step | Role | Action | System Response |
+|------|------|--------|----------------|
+| 1 | [Role] | [What they do] | [What the system does] |
+
+---
+
 ## User Scenarios & Testing *(required)*
 
 <!--
@@ -53,6 +78,30 @@
 - **FR-001**: The system MUST [specific capability]
 - **FR-002**: The system MUST [specific capability]
 - **FR-003**: Users MUST be able to [key interaction]
+
+### User Flow & Navigation *(include if feature introduces new pages or modifies navigation)*
+
+<!--
+  1. Map every screen and its navigation triggers to prevent orphan pages.
+  2. Include a Mermaid flowchart for flows with 3+ screens or branching paths.
+  Renders natively on GitHub — no extra tooling needed.
+-->
+
+```mermaid
+flowchart LR
+    Login --> |login success| Dashboard
+    Dashboard --> |click avatar| Profile
+    Profile --> |sidebar link| Dashboard
+    Dashboard --> |sign out| Login
+```
+
+| From | Trigger | To |
+|------|---------|-----|
+| [Page A] | [e.g. click avatar] | [Page B] |
+| [Page B] | [e.g. sidebar link] | [Page A] |
+
+**Entry points**: [Which existing pages link INTO the new pages?]
+**Exit points**: [Which pages can users navigate to FROM the new pages?]
 
 ### Key Entities *(include if feature involves data)*
 

@@ -5,6 +5,49 @@
 **狀態**：Clarified
 **需求來源**：「先做一個簡單的登入畫面，需要串接 Google、GitHub 登入的 SSO 功能」
 
+## Process Flow
+
+OAuth 登入涉及四個系統角色，以下為完整業務流程：
+
+```mermaid
+sequenceDiagram
+    actor 使用者
+    participant 瀏覽器
+    participant 後端API as 後端 API
+    participant OAuthProvider as OAuth Provider
+    participant 資料庫
+
+    使用者->>瀏覽器: 開啟 /login
+    瀏覽器->>後端API: GET /login（未驗證）
+    後端API-->>瀏覽器: 回傳登入頁面
+
+    使用者->>瀏覽器: 點擊「以 Google / GitHub 登入」
+    瀏覽器->>OAuthProvider: 導向授權頁（client_id、redirect_uri）
+    OAuthProvider-->>使用者: 顯示授權請求
+    使用者->>OAuthProvider: 允許授權
+
+    OAuthProvider->>後端API: callback（authorization code）
+    後端API->>OAuthProvider: 交換 access token
+    OAuthProvider-->>後端API: access token
+    後端API->>OAuthProvider: 取得使用者資料
+    OAuthProvider-->>後端API: name、email、avatar
+    後端API->>資料庫: 查詢或建立使用者記錄（以 email 比對）
+    資料庫-->>後端API: User record
+    後端API-->>瀏覽器: 設定 JWT cookie + 導向 /dashboard
+```
+
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|---------|
+| 1 | 使用者 | 開啟 `/login` | 回傳登入頁面 |
+| 2 | 使用者 | 點擊 OAuth 按鈕 | 導向 Provider 授權頁 |
+| 3 | OAuth Provider | 使用者授權後回調 | 後端接收 `code` |
+| 4 | 後端 | 交換 token + 取得資料 | 查詢或建立 User 記錄 |
+| 5 | 後端 | 簽發 JWT | 導向 `/dashboard` |
+| E1 | 使用者 | 取消授權 | 停留 `/login` 並顯示錯誤 |
+| E2 | 後端 | JWT 過期 | 導向 `/login`，不靜默更新 |
+
+---
+
 ## 使用者情境與測試 *(必填)*
 
 ### User Story 1 — 使用 Google 或 GitHub 登入（優先級：P1）
@@ -103,6 +146,32 @@
 - **FR-012**：JWT 過期時，系統必須將使用者導向 `/login`，不支援靜默更新 token。
 - **FR-013**：當使用者以某個身份提供者登入，且 email 已對應另一個身份提供者的帳號時，系統必須靜默合併兩個 provider 至既有帳號，不需使用者確認。
 - **FR-014**：登入頁面必須支援 zh-TW / en 語言切換，與應用程式其他頁面一致。
+
+### User Flow & Navigation
+
+```mermaid
+flowchart LR
+    login["/login"]
+    dashboard["/dashboard"]
+    protected["受保護路由\n/dashboard · /tasks · /profile …"]
+
+    login      -->|"登入成功（OAuth 完成）"| dashboard
+    dashboard  -->|"登出（JWT 失效）"| login
+    protected  -->|"未驗證存取 → 自動導向"| login
+    login      -->|"登入成功 + ?next= 參數"| protected
+    login      -->|"已登入使用者訪問 → 自動導向"| dashboard
+```
+
+| From | Trigger | To |
+|------|---------|-----|
+| `/login` | OAuth 登入成功 | `/dashboard` |
+| `/login` | 已登入使用者訪問 | `/dashboard`（自動導向）|
+| `/login` | 登入成功 + `?next=` 參數 | 原始目標路由 |
+| 任意已登入頁面 | 點擊登出 | `/login` |
+| 任意受保護路由 | 未驗證存取 | `/login?next=[原始路徑]` |
+
+**Entry points**：`/login` 是系統唯一的未驗證入口。
+**Exit points**：所有受保護路由均可透過登出按鈕返回 `/login`。
 
 ### 關鍵實體
 

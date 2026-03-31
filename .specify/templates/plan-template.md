@@ -24,7 +24,7 @@
 - [ ] III. Data Fairness: Does this involve test sets? If so, leakage prevention is planned
 - [ ] IV. Test-First: Test plan is listed
 - [ ] V. Simplicity: Any signs of over-engineering?
-- [ ] VI. English-First: Code, comments, and commit messages in English; Traditional Chinese allowed in `docs/` and `specs/`
+- [ ] VI. English-First: Code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, and `design/wireframes/`
 
 ## Project Structure
 
@@ -59,6 +59,42 @@ backend/
     ├── unit/test_[feature].py
     └── integration/test_[feature].py
 ```
+
+## System Flow & Data Flow *(include if feature involves API calls, async tasks, or multi-layer data processing)*
+
+<!--
+  Show how data moves through the system layers: Frontend → API → Service → DB.
+  Include error paths and async flows (Celery tasks, WebSocket, etc.) where relevant.
+  Renders natively on GitHub — no extra tooling needed.
+-->
+
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant API
+    participant Service
+    participant DB
+
+    Frontend->>API: POST /api/[resource] {payload}
+    API->>Service: [function_name](dto)
+    Service->>DB: INSERT / UPDATE [table]
+    DB-->>Service: return [entity]
+    Service-->>API: [ResponseSchema]
+    API-->>Frontend: 200 [ResponseDTO]
+
+    Note over Service,API: Error path
+    Service-->>API: raise [Exception] {detail: "..."}
+    API-->>Frontend: 4xx / 5xx {detail: "..."}
+```
+
+| Layer | Component | Responsibility |
+|-------|-----------|---------------|
+| Frontend | `pages/[feature]` | Form state, API call, display result |
+| API | `api/routes/[feature].py` | Request validation, auth check, delegate to service |
+| Service | `services/[feature].py` | Business logic, DB interaction |
+| DB | `models/[feature].py` | Persistence |
+
+---
 
 ## Complexity Tracking
 
