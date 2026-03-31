@@ -115,6 +115,9 @@ label-suite/
   - `specs/` — all SDD spec files (`spec.md`, `plan.md`, `tasks.md`, `checklists/`)
   - `design/prototype/` — HTML/CSS UI prototypes demonstrating bilingual (zh-TW/en) features
   - `design/wireframes/` — Pencil wireframe files (`.pen`) demonstrating bilingual (zh-TW/en) UI designs
+  - `design/system/inventory.md` — component inventory tracking document
+- **English only** (exceptions within otherwise Chinese-allowed directories):
+  - `design/system/MASTER.md` — consumed by AI agents (`ui-ux-pro-max`, Claude Code); must be in English for accurate token parsing
 - `README.zh-TW.md` is maintained in Traditional Chinese for Chinese-speaking users.
 - All conversations with Claude should be responded to in Traditional Chinese.
 

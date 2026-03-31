@@ -47,7 +47,8 @@ Evaluation results must be fair and reproducible.
 
 ### VI. English-First
 - Code, comments, docstrings, commit messages, and variable/function names are always written in English
-- Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, and `design/wireframes/` directories to accelerate research documentation and UI iteration
+- Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md` to accelerate research documentation and UI iteration
+- `design/system/MASTER.md` must be written in English only — it is consumed by AI agents and requires accurate token parsing
 - The only fully Chinese file outside those directories is `README.zh-TW.md`
 
 ## Governance

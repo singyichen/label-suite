@@ -24,7 +24,7 @@
 - [ ] III. Data Fairness: Does this involve test sets? If so, leakage prevention is planned
 - [ ] IV. Test-First: Test plan is listed
 - [ ] V. Simplicity: Any signs of over-engineering?
-- [ ] VI. English-First: Code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, and `design/wireframes/`
+- [ ] VI. English-First: Code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md`; `design/system/MASTER.md` must be English only
 
 ## Project Structure
 
