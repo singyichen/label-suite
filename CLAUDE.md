@@ -294,8 +294,38 @@ The deciding question is: **will this change make the system behave differently 
 
 - Draw order: Desktop ZH → Desktop EN → Mobile ZH → Mobile EN → Component ZH → Component EN
 - Keep structure symmetric between ZH and EN frames at each device tier
-- Component frames (`x:6000` onward) capture all reusable UI elements introduced in this page; not repeated in `index.pen`
+- Component frames (`x:6000` onward) contain **only page-specific components** — elements unique to this page's interactions
+- **Shared / cross-page components belong in `design/wireframes/design-system.pen`**, not in individual page files
+
+#### Component Placement Rule
+
+| Where | What goes here |
+|---|---|
+| `design-system.pen` | Components used across multiple pages (e.g. Button states, Text Input states, Toast, Navigation elements) |
+| Page `.pen` Component frame | Components unique to this page only (e.g. Avatar upload interaction in `profile.pen`) |
+
+> When deciding: if the component could appear on any other page, put it in `design-system.pen`.
+
 - `.pen` files are encrypted — **only operate via Pencil MCP tools**; never use `Read` / `Edit` / `Grep` on them
+
+#### Mobile RWD Requirements
+
+Mobile frames **must implement genuine RWD** — do NOT simply shrink the desktop layout. Key rules:
+
+| Desktop pattern | Mobile replacement |
+|---|---|
+| Sidebar navigation (`width: 224`) | Remove sidebar; use **bottom tab bar** (`height: 56`, `justifyContent: space_around`) |
+| Large navbar padding (e.g. `padding: [0, 80]`) | Reduce to `padding: [0, 16]` |
+| Multi-column layout | Collapse to single-column `fill_container` |
+| Large card padding (e.g. `32`) | Reduce to `16` |
+| Inline action buttons in wide rows | Stack vertically inside card: metadata text above, full-width button (`width: fill_container`) below |
+
+- Mobile canvas size: **390 × auto** (iPhone 14 viewport, height varies by page content)
+  - Use `height: "fit_content(900)"` during drawing
+  - After completion, run `snapshot_layout` on both ZH and EN frames to get actual heights
+  - Set both to the same fixed height (use the larger value): `U("frameId", {height: N})`
+  - **ZH and EN mobile frames must have identical `width × height`**
+- After drawing, take a screenshot and verify: no element overflows, no sidebar visible, all text readable
 
 ### Constitution Reference
 
