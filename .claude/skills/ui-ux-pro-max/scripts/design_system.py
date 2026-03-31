@@ -542,21 +542,22 @@ def persist_design_system(design_system: dict, page: str = None, output_dir: str
 def format_master_md(design_system: dict) -> str:
     """Format design system as MASTER.md with hierarchical override logic."""
     project = design_system.get("project_name", "PROJECT")
+    project_slug = project.lower().replace(' ', '-')
     pattern = design_system.get("pattern", {})
     style = design_system.get("style", {})
     colors = design_system.get("colors", {})
     typography = design_system.get("typography", {})
     effects = design_system.get("key_effects", "")
     anti_patterns = design_system.get("anti_patterns", "")
-    
+
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     lines = []
-    
+
     # Logic header
     lines.append("# Design System Master File")
     lines.append("")
-    lines.append("> **LOGIC:** When building a specific page, first check `design/system/pages/[page-name].md`.")
+    lines.append(f"> **LOGIC:** When building a specific page, first check `design/system/{project_slug}/pages/[page-name].md`.")
     lines.append("> If that file exists, its rules **override** this Master file.")
     lines.append("> If not, strictly follow the rules below.")
     lines.append("")
