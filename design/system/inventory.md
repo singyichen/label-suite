@@ -244,5 +244,5 @@
 | P3 | **Avatar** | Upload 行為需規範 | ✅ 已補充至 MASTER.md |
 | P3 | **Tooltip** | 無障礙規範需特別注意 | ✅ 已補充至 MASTER.md |
 | P3 | **Mobile Bottom Tab Bar** | RWD 規範 | ✅ 已補充至 MASTER.md |
-| P4 | **Divider** | 簡單，低優先 |
-| P4 | **List** | 簡單，低優先 |
+| P4 | **Divider** | 簡單，低優先 | ✅ 已補充至 MASTER.md |
+| P4 | **List** | 簡單，低優先 | ✅ 已補充至 MASTER.md |
