@@ -182,7 +182,75 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
   transition: all 200ms ease;
   cursor: pointer;
 }
+
+/* Danger Button — destructive actions (logout, delete) */
+.btn-danger {
+  background: transparent;
+  color: #B91C1C;           /* red-700 */
+  border: 1px solid #E2E8F0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  color: #B91C1C;
+  background: #FEF2F2;      /* red-50 */
+  border-color: #FECACA;    /* red-200 */
+}
+
+/* Ghost / Text Button — low-emphasis actions (view all, cancel) */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  text-decoration: underline;
+}
+
+/* Loading state — applies to any button variant */
+.btn-loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Disabled state — applies to any button variant */
+.btn-disabled,
+button[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 ```
+
+**Button Variants Summary:**
+
+| Variant | Use case | When NOT to use |
+|---------|----------|-----------------|
+| Primary (`btn-primary`) | 每頁最重要的單一 CTA | 同頁面出現兩個以上 |
+| Secondary (`btn-secondary`) | 次要操作、與 Primary 並列 | 獨立使用時（改用 Ghost） |
+| Danger (`btn-danger`) | 破壞性操作（登出、刪除） | 一般取消操作（用 Secondary） |
+| Ghost (`btn-ghost`) | 低優先操作（查看全部、跳過） | 需要明顯視覺重量時 |
+
+**Button States:**
+
+| State | Tailwind classes |
+|-------|-----------------|
+| Default | — |
+| Hover | `hover:opacity-90` (primary) / `hover:underline` (ghost) |
+| Focus | `focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2` |
+| Loading | `opacity-70 cursor-not-allowed` + spinner icon |
+| Disabled | `opacity-40 cursor-not-allowed pointer-events-none` |
 
 ### Cards
 
@@ -225,7 +293,30 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
 .input.error {
   border-color: #B91C1C;
 }
+
+/* Readonly — managed by system, not user-editable (e.g. SSO email) */
+.input[readonly],
+.input.readonly {
+  background: #F8FAFC;      /* slate-50 */
+  border-color: #F1F5F9;    /* slate-100 */
+  color: #94A3B8;            /* slate-400 */
+  cursor: not-allowed;
+}
 ```
+
+**Input States:**
+
+| State | Visual cue | When to use |
+|-------|-----------|-------------|
+| Default | `border-slate-200` | 可編輯欄位 |
+| Focus | `border-primary` + ring | 使用者聚焦時 |
+| Error | `border-red-400` + ring-red | 驗證失敗 |
+| Readonly | `bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed` | 系統管理欄位（如 SSO email） |
+| Disabled | `opacity-40 cursor-not-allowed` | 條件未達成不可使用 |
+
+**Readonly vs Disabled 區分：**
+- **Readonly** — 資料存在且有意義，只是不能修改（e.g. email 由 SSO 管理）；仍可被表單提交
+- **Disabled** — 功能目前不可用；不會被表單提交
 
 ### Modals
 
@@ -274,6 +365,77 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
   <span>Error message here</span>
 </div>
 ```
+
+**Alert Banner vs Toast 區分：**
+
+| | Alert Banner | Toast |
+|---|---|---|
+| **位置** | 嵌入頁面流（inline） | 浮動固定（fixed，右下角） |
+| **消失方式** | 手動關閉 或 永久顯示 | 4 秒後自動消失，可手動關閉 |
+| **使用時機** | 頁面級錯誤（登入失敗） | 操作結果回饋（儲存成功） |
+| **aria** | `role="alert"` | `aria-live="polite"` |
+
+### Toast
+
+用於操作後的即時回饋（儲存成功、更新失敗等），浮動顯示於右下角，4 秒後自動消失。
+
+```html
+<!-- Toast container — fixed position, right bottom -->
+<div
+  id="toast"
+  class="hidden fixed bottom-6 right-6 z-[400] max-w-sm w-full"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  <!-- Success Toast -->
+  <div class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 shadow-md">
+    <!-- SVG check icon -->
+    <div class="flex-1">
+      <p class="font-medium">儲存成功</p>
+      <p class="text-xs mt-0.5 opacity-80">訊息說明（可選）</p>
+    </div>
+    <!-- Close button -->
+    <button class="text-green-500 hover:text-green-700 cursor-pointer" aria-label="關閉通知">
+      <!-- SVG x icon -->
+    </button>
+  </div>
+
+  <!-- Error Toast -->
+  <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 shadow-md">
+    <!-- SVG x-circle icon -->
+    <div class="flex-1">
+      <p class="font-medium">儲存失敗</p>
+      <p class="text-xs mt-0.5 opacity-80">訊息說明（可選）</p>
+    </div>
+    <button class="text-red-500 hover:text-red-700 cursor-pointer" aria-label="關閉通知">
+      <!-- SVG x icon -->
+    </button>
+  </div>
+</div>
+```
+
+**Toast 規格：**
+
+| 屬性 | 值 |
+|------|---|
+| 位置 | `fixed bottom-6 right-6` |
+| z-index | `400`（Toast 層，高於 Modal） |
+| 最大寬度 | `max-w-sm`（384px） |
+| 自動消失 | 4000ms |
+| 動畫 | fade-in 150ms / fade-out 150ms（`transition-opacity`） |
+| 陰影 | `shadow-md`（浮動感，Toast 是允許陰影的例外情境） |
+
+**Toast Variants:**
+
+| Variant | Color role | 使用時機 |
+|---------|-----------|---------|
+| Success | `bg-green-50 border-green-200 text-green-700` | 操作成功（儲存、更新） |
+| Error | `bg-red-50 border-red-200 text-red-700` | 操作失敗（網路錯誤、伺服器錯誤） |
+
+**When NOT to use Toast:**
+- ❌ 頁面級錯誤（登入失敗）→ 改用 Alert Banner
+- ❌ 需要使用者確認的操作 → 改用 Modal
+- ❌ 重要警告不應自動消失 → 改用 Alert Banner
 
 ---
 
