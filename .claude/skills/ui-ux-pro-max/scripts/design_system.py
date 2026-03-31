@@ -468,7 +468,7 @@ def generate_design_system(query: str, project_name: str = None, output_format: 
         query: Search query (e.g., "SaaS dashboard", "e-commerce luxury")
         project_name: Optional project name for output header
         output_format: "ascii" (default) or "markdown"
-        persist: If True, save design system to design-system/ folder
+        persist: If True, save design system to design/system/ folder
         page: Optional page name for page-specific override file
         output_dir: Optional output directory (defaults to current working directory)
 
@@ -490,7 +490,7 @@ def generate_design_system(query: str, project_name: str = None, output_format: 
 # ============ PERSISTENCE FUNCTIONS ============
 def persist_design_system(design_system: dict, page: str = None, output_dir: str = None, page_query: str = None) -> dict:
     """
-    Persist design system to design-system/<project>/ folder using Master + Overrides pattern.
+    Persist design system to design/system/<project>/ folder using Master + Overrides pattern.
     
     Args:
         design_system: The generated design system dictionary
@@ -819,7 +819,7 @@ def format_page_override_md(design_system: dict, page_name: str, page_query: str
     lines.append(f"> **Generated:** {timestamp}")
     lines.append(f"> **Page Type:** {page_overrides.get('page_type', 'General')}")
     lines.append("")
-    lines.append("> ⚠️ **IMPORTANT:** Rules in this file **override** the Master file (`design-system/MASTER.md`).")
+    lines.append("> ⚠️ **IMPORTANT:** Rules in this file **override** the Master file (`design/system/MASTER.md`).")
     lines.append("> Only deviations from the Master are documented here. For all other rules, refer to the Master.")
     lines.append("")
     lines.append("---")
