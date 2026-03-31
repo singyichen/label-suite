@@ -34,11 +34,10 @@ Evaluation results must be fair and reproducible.
 
 - Test-set answers must never be exposed to annotators
 - Scoring logic must be transparent and covered by tests
-- Leaderboard update mechanism must prevent duplicate submission abuse
 
 ### IV. Test-First (RECOMMENDED)
 - Backend: pytest coverage target ≥ 80%
-- E2E: Playwright covers core user flows (labeling, submission, leaderboard)
+- E2E: Playwright covers core user flows (labeling, submission, review)
 - Tests must be written and confirmed to fail before implementation begins
 
 ### V. Simplicity
@@ -68,4 +67,4 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all six principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.2.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-30
+**Version**: 1.2.3 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-30

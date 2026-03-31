@@ -207,11 +207,13 @@ This project adopts Spec-Driven Development (SDD). New features should follow th
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
                                           ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
                                           ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
-/ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, UI-heavy features)
-                                          ⚠ Before generating: read MASTER.md + design/wireframes/design-system.pen via Pencil MCP
-/senior-uiux review                     → prototype QA: design system compliance + accessibility  (optional, after prototype)
-/pencil wireframe                       → design/wireframes/pages/[page].pen  (optional, after senior-uiux review)
-/speckit.clarify                        → clarify requirements          (optional; prototype surfaces ambiguities)
+/pencil wireframe                       → design/wireframes/pages/[page].pen  (optional, after specify)
+                                          ⚠ Each .pen: Desktop ZH (x:0) · Desktop EN (x:1500) · Mobile ZH (x:3000) · Mobile EN (x:4500)
+                                            + Component ZH (x:6000) · Component EN (x:7500); draw ZH first, Desktop before Mobile
+/ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, after wireframe)
+                                          ⚠ Before generating: read MASTER.md + design/wireframes/[page].pen via Pencil MCP
+/senior-uiux review                     → prototype QA: wireframe fidelity, design system compliance, a11y  (optional, after prototype)
+/speckit.clarify                        → clarify requirements          (optional; wireframe + prototype surface ambiguities)
 /speckit.plan                           → specs/NNN-feature/plan.md
                                           ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
 /speckit.tasks                          → specs/NNN-feature/tasks.md
@@ -265,10 +267,10 @@ The deciding question is: **will this change make the system behave differently 
 | Command | Purpose |
 |---|---|
 | `/speckit.specify` | Create feature spec from natural language description |
-| `/ui-ux-pro-max` | Generate HTML prototype + design system (optional; run after specify, before clarify) |
-| `senior-uiux review` | Review prototype for design system compliance, a11y, ZH/EN symmetry (optional; run after ui-ux-pro-max) |
-| `pencil wireframe` | Draw ZH + EN wireframe frames in `design/wireframes/pages/[page].pen` via Pencil MCP (optional; run after senior-uiux review) |
-| `/speckit.clarify` | Identify and clarify ambiguous requirements (prototype helps surface these) |
+| `pencil wireframe` | Draw 6 frames (Desktop ZH·EN · Mobile ZH·EN · Component ZH·EN) in `design/wireframes/pages/[page].pen` via Pencil MCP (optional; run after specify, before prototype) |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system based on wireframe (optional; run after wireframe, before clarify) |
+| `senior-uiux review` | Review prototype against wireframe for fidelity, design system compliance, a11y, ZH/EN/mobile symmetry (optional; run after ui-ux-pro-max) |
+| `/speckit.clarify` | Identify and clarify ambiguous requirements (wireframe + prototype help surface these) |
 | `/speckit.plan` | Build technical implementation plan |
 | `/speckit.tasks` | Generate executable task list |
 | `/speckit.analyze` | Cross-document consistency analysis |
@@ -279,9 +281,21 @@ The deciding question is: **will this change make the system behave differently 
 
 - Each page wireframe is stored as a separate file under `design/wireframes/pages/[page-name].pen` (e.g. `login.pen`, `profile.pen`)
 - `design/wireframes/index.pen` is for overview purposes only — **do not** place page wireframe frames inside it
-- Each `.pen` file contains two side-by-side frames: Desktop ZH (`x:0`) and Desktop EN (`x:1500`)
+- Each `.pen` file contains **6 side-by-side frames** in this order:
+
+  | Frame | x offset | Purpose |
+  |---|---|---|
+  | Desktop ZH | `x:0` | Full page — Traditional Chinese, desktop |
+  | Desktop EN | `x:1500` | Full page — English, desktop |
+  | Mobile ZH | `x:3000` | Full page — Traditional Chinese, mobile |
+  | Mobile EN | `x:4500` | Full page — English, mobile |
+  | Component ZH | `x:6000` | UI component set (dropdowns, buttons, etc.) — ZH |
+  | Component EN | `x:7500` | UI component set — EN |
+
+- Draw order: Desktop ZH → Desktop EN → Mobile ZH → Mobile EN → Component ZH → Component EN
+- Keep structure symmetric between ZH and EN frames at each device tier
+- Component frames (`x:6000` onward) capture all reusable UI elements introduced in this page; not repeated in `index.pen`
 - `.pen` files are encrypted — **only operate via Pencil MCP tools**; never use `Read` / `Edit` / `Grep` on them
-- Draw the ZH frame first, then the EN frame, keeping structure symmetric between the two
 
 ### Constitution Reference
 
@@ -311,11 +325,11 @@ All development must follow the six core principles in [constitution.md](.specif
 ```
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
 /speckit.specify
-  → [/ui-ux-pro-max] (optional) — HTML prototype + design system
-                                   Use to surface UI ambiguities before clarify
-  → [senior-uiux review]         Review prototype: design system compliance, a11y, ZH/EN symmetry
-  → [pencil wireframe]           Draw ZH + EN frames in design/wireframes/pages/[page].pen via Pencil MCP
-  → /speckit.clarify (optional)  Prototype makes ambiguities concrete
+  → [pencil wireframe]           Draw 6 frames (Desktop/Mobile ZH·EN + Components) in
+                                   design/wireframes/pages/[page].pen via Pencil MCP
+  → [/ui-ux-pro-max] (optional) — HTML prototype + design system; use wireframe as layout reference
+  → [senior-uiux review]         Review prototype against wireframe: fidelity, a11y, ZH/EN/mobile symmetry
+  → /speckit.clarify (optional)  Wireframe + prototype make ambiguities concrete
 
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
   (read-only, parallel, skip for simple/single-layer features)
