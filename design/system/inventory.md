@@ -238,9 +238,9 @@
 | P1 | **Toast** | profile 已使用，與 Alert Banner 需區分 | ✅ 已補充至 MASTER.md |
 | P1 | **Button — Danger / Ghost / Loading 狀態** | 多頁面使用，規格不完整 | ✅ 已補充至 MASTER.md |
 | P1 | **Input — Readonly 狀態** | profile 已使用 | ✅ 已補充至 MASTER.md |
-| P2 | **Navbar** | 下個頁面必定使用 |
-| P2 | **Sidebar** | Annotation task 頁面必定使用 |
-| P2 | **Table** | Dashboard 核心元素 |
+| P2 | **Navbar** | 下個頁面必定使用 | ✅ 已補充至 MASTER.md |
+| P2 | **Sidebar** | Annotation task 頁面必定使用 | ✅ 已補充至 MASTER.md |
+| P2 | **Table** | Dashboard 核心元素 | ✅ 已補充至 MASTER.md |
 | P3 | **Avatar** | Upload 行為需規範 |
 | P3 | **Tooltip** | 無障礙規範需特別注意 |
 | P3 | **Mobile Bottom Tab Bar** | RWD 規範 |

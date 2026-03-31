@@ -437,6 +437,143 @@ button[disabled] {
 - ❌ 需要使用者確認的操作 → 改用 Modal
 - ❌ 重要警告不應自動消失 → 改用 Alert Banner
 
+### Navbar
+
+頂部固定導覽列，用於 Pattern A（Dashboard）與 Pattern C（Profile）頁面。
+
+**規格：**
+
+| 屬性 | 值 |
+|------|---|
+| 高度 | `h-16`（64px） |
+| 背景 | `bg-white` |
+| 底部邊線 | `border-b border-slate-200` |
+| 定位 | `sticky top-0 z-[200]` |
+| 內容寬度 | `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` |
+
+**結構（左 → 右）：**
+
+```
+[ Logo ] ─────── [ Nav links (desktop only) ] ─────── [ User menu ]
+                                                         ├ Avatar + name → profile
+                                                         ├ Language toggle
+                                                         ├ Logout button (danger)
+                                                         └ Mobile hamburger (mobile only)
+```
+
+**Nav link states:**
+
+| State | Classes |
+|-------|---------|
+| Active | `text-primary font-medium bg-surface rounded-lg` + `aria-current="page"` |
+| Inactive | `text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg` |
+| Disabled | `aria-disabled="true"` + same as inactive（無 pointer-events-none，保留 tab stop） |
+
+**Mobile drawer（`md:hidden`）：**
+- 展開後位於 navbar 下方，`border-t border-slate-200`
+- 項目與 desktop nav link 相同，改為 `block` layout
+- 包含 Profile 連結（desktop 的 avatar 在 mobile 隱藏）
+
+**Accessibility：**
+- `<header role="banner">`
+- `<nav aria-label="Main navigation">`
+- Mobile hamburger：`aria-expanded` 隨開關切換
+- Logo link：`aria-label` 提供頁面名稱
+
+---
+
+### Sidebar
+
+左側固定導覽，用於 Pattern C（Profile 等多 section 頁面）。Desktop only（`hidden md:flex`）。
+
+**規格：**
+
+| 屬性 | 值 |
+|------|---|
+| 寬度 | `w-56`（224px） |
+| 背景 | `bg-white` |
+| 右側邊線 | `border-r border-slate-200` |
+| z-index | `z-[200]`（Sticky 層） |
+| 內距 | `py-4 px-3`（垂直 padding 在外層，水平在 nav） |
+| 項目間距 | `gap-1` |
+
+**Nav item states:**
+
+| State | Classes |
+|-------|---------|
+| Active | `text-primary font-medium bg-surface rounded-lg` + `aria-current="page"` |
+| Inactive | `text-slate-500 hover:bg-surface hover:text-ink rounded-lg` |
+
+**Nav item 結構：**
+```html
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
+          focus:outline-none focus:ring-2 focus:ring-primary">
+  <!-- SVG icon, w-4 h-4, aria-hidden="true" -->
+  <span>項目名稱</span>
+</a>
+```
+
+**Divider（分組用）：**
+```html
+<div class="h-px bg-slate-100 my-1 mx-3" aria-hidden="true"></div>
+```
+
+**When NOT to use：**
+- ❌ 只有單一 section 的頁面（改用 Pattern A）
+- ❌ Mobile 版本（改用 Bottom Tab Bar 或 Mobile drawer）
+
+---
+
+### Table
+
+用於列表型資料展示（如任務列表），支援 hover 行互動與 responsive 水平捲動。
+
+**規格：**
+
+| 元素 | Classes |
+|------|---------|
+| 容器 | `bg-white border border-slate-200 rounded-xl overflow-hidden` |
+| 捲動包層 | `overflow-x-auto` |
+| `<table>` | `w-full text-sm` |
+| Header row | `text-left text-xs text-slate-400 uppercase tracking-wide bg-slate-50` |
+| Header cell | `px-6 py-3 font-medium` + `scope="col"` |
+| Body rows | `divide-y divide-slate-100` |
+| Body row（可點擊）| `hover:bg-slate-50 cursor-pointer transition-colors duration-150` |
+| Primary cell | `px-6 py-4 font-medium text-ink` |
+| Secondary cell | `px-6 py-4 text-slate-500` |
+
+**HTML 結構：**
+
+```html
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm" role="table" aria-label="表格說明">
+      <thead>
+        <tr class="text-left text-xs text-slate-400 uppercase tracking-wide bg-slate-50">
+          <th class="px-6 py-3 font-medium" scope="col">欄位名稱</th>
+          <!-- more th -->
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr class="hover:bg-slate-50 cursor-pointer transition-colors duration-150">
+          <td class="px-6 py-4 font-medium text-ink">主要資料</td>
+          <td class="px-6 py-4 text-slate-500">次要資料</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+```
+
+**Accessibility：**
+- `<table role="table" aria-label="...">` 提供表格描述
+- `<th scope="col">` 標示欄位
+- 可點擊的列：加上 `tabindex="0"` 與 `onkeydown` 支援 Enter/Space
+
+**When NOT to use：**
+- ❌ 資料少於 3 筆 → 改用 List
+- ❌ 需要大量欄位比較 → 考慮折疊或分頁設計
+
 ---
 
 ## Style Guidelines
