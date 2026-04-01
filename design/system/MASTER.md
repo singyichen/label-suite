@@ -735,7 +735,7 @@ Mobile-only bottom navigation (`md:hidden`). Replaces the Sidebar for navigation
 | z-index | `z-[200]` (Sticky layer) |
 | Background | `bg-white` |
 | Top border | `border-t border-slate-200` |
-| Visibility | `md:hidden` (below 640px) |
+| Visibility | `md:hidden` (below 768px) |
 
 **Tab item states:**
 
