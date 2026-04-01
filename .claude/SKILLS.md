@@ -127,6 +127,14 @@ Skills for designing APIs, services, data models, and architecture.
 | `/data-model` | Design PostgreSQL schemas and ER diagrams | `/data-model annotation submission and leaderboard` |
 | `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
 | `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
+
+### Diagramming (2 skills)
+
+Skills for importing and generating diagrams from external sources.
+
+| Skill | Purpose | Example Usage |
+|-------|---------|---------------|
+| `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
 | `/xmind-import` | Fetch XMind share URL → parse JSON → output Mermaid `flowchart LR` | `/xmind-import https://app.xmind.com/share/PKjJEIHD docs/functional-map/functional-map.md` |
 
 ### UI/UX Design (1 skill)
