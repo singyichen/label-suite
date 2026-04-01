@@ -672,7 +672,7 @@ Provides supplementary explanation when space constraints prevent showing full c
 | z-index | `500` (Tooltip layer — highest) |
 | Arrow | `::after` pseudo-element, `border-top-color: var(--color-ink)` |
 
-**CSS：**
+**CSS:**
 ```css
 .tooltip-wrap { position: relative; display: inline-flex; }
 
@@ -942,7 +942,7 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 **Pattern A: Header + Content Layout**
 - Used for: Dashboard, Settings
-- Structure: Fixed top navbar (height 56px) + scrollable main content area
+- Structure: Fixed top navbar (height 64px) + scrollable main content area
 - Max content width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
 - Top padding: `pt-6` below navbar
 
@@ -954,7 +954,7 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 **Pattern C: Header + Sidebar + Content Layout**
 - Used for: Profile, multi-section settings pages
-- Structure: Fixed top navbar (height 56px) + fixed left nav sidebar (width 224px) + scrollable main content area
+- Structure: Fixed top navbar (height 64px) + fixed left nav sidebar (width 224px) + scrollable main content area
 - Sidebar contains: section navigation links (e.g., Profile Info, Security, Notifications)
 - Max content width: `max-w-3xl` within the content area
 
