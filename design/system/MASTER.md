@@ -182,7 +182,75 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
   transition: all 200ms ease;
   cursor: pointer;
 }
+
+/* Danger Button — destructive actions (logout, delete) */
+.btn-danger {
+  background: transparent;
+  color: #B91C1C;           /* red-700 */
+  border: 1px solid #E2E8F0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  color: #B91C1C;
+  background: #FEF2F2;      /* red-50 */
+  border-color: #FECACA;    /* red-200 */
+}
+
+/* Ghost / Text Button — low-emphasis actions (view all, cancel) */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  text-decoration: underline;
+}
+
+/* Loading state — applies to any button variant */
+.btn-loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Disabled state — applies to any button variant */
+.btn-disabled,
+button[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 ```
+
+**Button Variants Summary:**
+
+| Variant | Use case | When NOT to use |
+|---------|----------|-----------------|
+| Primary (`btn-primary`) | The single most important CTA per page | When two or more appear on the same page |
+| Secondary (`btn-secondary`) | Secondary actions, paired alongside Primary | When used standalone (use Ghost instead) |
+| Danger (`btn-danger`) | Destructive actions (logout, delete) | General cancel actions (use Secondary) |
+| Ghost (`btn-ghost`) | Low-priority actions (view all, skip) | When the action needs clear visual weight |
+
+**Button States:**
+
+| State | Tailwind classes |
+|-------|-----------------|
+| Default | — |
+| Hover | `hover:opacity-90` (primary) / `hover:underline` (ghost) |
+| Focus | `focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2` |
+| Loading | `opacity-70 cursor-not-allowed` + spinner icon |
+| Disabled | `opacity-40 cursor-not-allowed pointer-events-none` |
 
 ### Cards
 
@@ -225,7 +293,30 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
 .input.error {
   border-color: #B91C1C;
 }
+
+/* Readonly — managed by system, not user-editable (e.g. SSO email) */
+.input[readonly],
+.input.readonly {
+  background: #F8FAFC;      /* slate-50 */
+  border-color: #F1F5F9;    /* slate-100 */
+  color: #94A3B8;            /* slate-400 */
+  cursor: not-allowed;
+}
 ```
+
+**Input States:**
+
+| State | Visual cue | When to use |
+|-------|-----------|-------------|
+| Default | `border-slate-200` | Editable field |
+| Focus | `border-primary` + ring | When the user focuses the input |
+| Error | `border-red-400` + ring-red | Validation failure |
+| Readonly | `bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed` | System-managed fields (e.g. SSO email) |
+| Disabled | `opacity-40 cursor-not-allowed` | Feature unavailable under current conditions |
+
+**Readonly vs Disabled:**
+- **Readonly** — Data exists and is meaningful, but cannot be edited (e.g. email managed by SSO); still submitted with the form
+- **Disabled** — Feature is currently unavailable; not submitted with the form
 
 ### Modals
 
@@ -275,6 +366,545 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
 </div>
 ```
 
+**Alert Banner vs Toast:**
+
+| | Alert Banner | Toast |
+|---|---|---|
+| **Position** | Inline within page flow | Fixed floating (bottom-right corner) |
+| **Dismissal** | Manual close or always visible | Auto-dismiss after 4 seconds; closeable manually |
+| **When to use** | Page-level errors (login failure) | Action result feedback (save successful) |
+| **aria** | `role="alert"` | `aria-live="polite"` |
+
+### Toast
+
+Used for immediate action feedback (save success, update failure, etc.). Floats at the bottom-right corner and auto-dismisses after 4 seconds.
+
+```html
+<!-- Toast container — fixed position, right bottom -->
+<div
+  id="toast"
+  class="hidden fixed bottom-6 right-6 z-[400] max-w-sm w-full"
+  aria-live="polite"
+  aria-atomic="true"
+>
+  <!-- Success Toast -->
+  <div class="flex items-start gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 shadow-md">
+    <!-- SVG check icon -->
+    <div class="flex-1">
+      <p class="font-medium">Saved successfully</p>
+      <p class="text-xs mt-0.5 opacity-80">Optional description</p>
+    </div>
+    <!-- Close button -->
+    <button class="text-green-500 hover:text-green-700 cursor-pointer" aria-label="Close notification">
+      <!-- SVG x icon -->
+    </button>
+  </div>
+
+  <!-- Error Toast -->
+  <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 shadow-md">
+    <!-- SVG x-circle icon -->
+    <div class="flex-1">
+      <p class="font-medium">Failed to save</p>
+      <p class="text-xs mt-0.5 opacity-80">Optional description</p>
+    </div>
+    <button class="text-red-500 hover:text-red-700 cursor-pointer" aria-label="Close notification">
+      <!-- SVG x icon -->
+    </button>
+  </div>
+</div>
+```
+
+**Toast Specs:**
+
+| Property | Value |
+|----------|-------|
+| Position | `fixed bottom-6 right-6` |
+| z-index | `400` (Toast layer, above Modal) |
+| Max width | `max-w-sm` (384px) |
+| Auto-dismiss | 4000ms |
+| Animation | fade-in 150ms / fade-out 150ms (`transition-opacity`) |
+| Shadow | `shadow-md` (Toast is an approved exception to the no-shadow flat design rule) |
+
+**Toast Variants:**
+
+| Variant | Color role | When to use |
+|---------|-----------|-------------|
+| Success | `bg-green-50 border-green-200 text-green-700` | Action succeeded (save, update) |
+| Error | `bg-red-50 border-red-200 text-red-700` | Action failed (network error, server error) |
+
+**When NOT to use Toast:**
+- ❌ Page-level errors (login failure) → use Alert Banner instead
+- ❌ Actions requiring user confirmation → use Modal instead
+- ❌ Critical warnings that must not auto-dismiss → use Alert Banner instead
+
+### Navbar
+
+Top sticky navigation bar used in Pattern A (Dashboard) and Pattern C (Profile) pages.
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Height | `h-16` (64px) |
+| Background | `bg-white` |
+| Bottom border | `border-b border-slate-200` |
+| Position | `sticky top-0 z-[200]` |
+| Content width | `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` |
+
+**Structure (left → right):**
+
+```
+[ Logo ] ─────── [ Nav links (desktop only) ] ─────── [ User menu ]
+                                                         ├ Avatar + name → profile
+                                                         ├ Language toggle
+                                                         ├ Logout button (danger)
+                                                         └ Mobile hamburger (mobile only)
+```
+
+**Nav link states:**
+
+| State | Classes |
+|-------|---------|
+| Active | `text-primary font-medium bg-surface rounded-lg` + `aria-current="page"` |
+| Inactive | `text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg` |
+| Disabled | `aria-disabled="true"` + same as inactive (no `pointer-events-none` — preserves tab stop) |
+
+**Mobile drawer (`md:hidden`):**
+- Expands below the navbar with `border-t border-slate-200`
+- Same items as desktop nav links, rendered as `block` layout
+- Includes a Profile link (the desktop avatar is hidden on mobile)
+
+**Accessibility:**
+- `<header role="banner">`
+- `<nav aria-label="Main navigation">`
+- Mobile hamburger: toggle `aria-expanded` on open/close
+- Logo link: provide `aria-label` with the page name
+
+---
+
+### Sidebar
+
+Left fixed navigation used in Pattern C (Profile and other multi-section pages). Desktop only (`hidden md:flex`).
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Width | `w-56` (224px) |
+| Background | `bg-white` |
+| Right border | `border-r border-slate-200` |
+| z-index | `z-[200]` (Sticky layer) |
+| Padding | `py-4 px-3` (vertical on wrapper, horizontal on nav items) |
+| Item gap | `gap-1` |
+
+**Nav item states:**
+
+| State | Classes |
+|-------|---------|
+| Active | `text-primary font-medium bg-surface rounded-lg` + `aria-current="page"` |
+| Inactive | `text-slate-500 hover:bg-surface hover:text-ink rounded-lg` |
+
+**Nav item structure:**
+```html
+<a class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
+          focus:outline-none focus:ring-2 focus:ring-primary">
+  <!-- SVG icon, w-4 h-4, aria-hidden="true" -->
+  <span>Item label</span>
+</a>
+```
+
+**Divider (for grouping):**
+```html
+<div class="h-px bg-slate-100 my-1 mx-3" aria-hidden="true"></div>
+```
+
+**When NOT to use:**
+- ❌ Pages with only a single section (use Pattern A instead)
+- ❌ Mobile viewports (use Bottom Tab Bar or Mobile drawer instead)
+
+---
+
+### Table
+
+Used for list-style data display (e.g. task list). Supports row hover interaction and responsive horizontal scroll.
+
+**Specs:**
+
+| Element | Classes |
+|---------|---------|
+| Container | `bg-white border border-slate-200 rounded-xl overflow-hidden` |
+| Scroll wrapper | `overflow-x-auto` |
+| `<table>` | `w-full text-sm` |
+| Header row | `text-left text-xs text-slate-400 uppercase tracking-wide bg-slate-50` |
+| Header cell | `px-6 py-3 font-medium` + `scope="col"` |
+| Body rows | `divide-y divide-slate-100` |
+| Body row (clickable) | `hover:bg-slate-50 cursor-pointer transition-colors duration-150` |
+| Primary cell | `px-6 py-4 font-medium text-ink` |
+| Secondary cell | `px-6 py-4 text-slate-500` |
+
+**HTML structure:**
+
+```html
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm" role="table" aria-label="Table description">
+      <thead>
+        <tr class="text-left text-xs text-slate-400 uppercase tracking-wide bg-slate-50">
+          <th class="px-6 py-3 font-medium" scope="col">Column name</th>
+          <!-- more th -->
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr class="hover:bg-slate-50 cursor-pointer transition-colors duration-150">
+          <td class="px-6 py-4 font-medium text-ink">Primary data</td>
+          <td class="px-6 py-4 text-slate-500">Secondary data</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+```
+
+**Accessibility:**
+- `<table role="table" aria-label="...">` — provide a descriptive label
+- `<th scope="col">` — mark column headers
+- Clickable rows: add `tabindex="0"` and `onkeydown` to support Enter/Space
+
+**When NOT to use:**
+- ❌ Fewer than 3 rows → use List instead
+- ❌ Many columns requiring comparison → consider collapsible sections or pagination
+
+---
+
+### Avatar
+
+Displays the user's identity image. Two usage modes: display-only (navbar) and uploadable (profile).
+
+**Size specs:**
+
+| Size | Dimensions | Usage |
+|------|-----------|-------|
+| Small | `w-8 h-8` (32px) | Navbar user menu |
+| Large | `w-16 h-16` mobile / `w-20 h-20` desktop (64/80px) | Profile page avatar upload area |
+
+**Display-only (Navbar):**
+
+```html
+<img
+  src="avatar-url"
+  alt="User avatar"
+  class="w-8 h-8 rounded-full border-2 border-primary/20"
+/>
+```
+
+**Uploadable (Profile):**
+
+```html
+<div class="relative avatar-wrap cursor-pointer shrink-0"
+     role="button" tabindex="0"
+     aria-label="Upload avatar"
+     aria-describedby="avatar-error"
+     onclick="document.getElementById('avatar-input').click()"
+     onkeydown="if(event.key==='Enter'||event.key===' ')this.click()">
+
+  <!-- Avatar display -->
+  <div id="avatar-preview"
+       class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary
+              flex items-center justify-center text-white
+              text-xl md:text-2xl font-bold overflow-hidden select-none">
+    <!-- initials fallback or <img> after upload -->
+  </div>
+
+  <!-- Hover overlay -->
+  <div class="avatar-overlay absolute inset-0 rounded-full bg-black/50
+              flex items-center justify-center opacity-0
+              transition-opacity duration-200">
+    <!-- SVG upload icon, w-5 h-5 text-white -->
+  </div>
+
+  <input id="avatar-input" type="file"
+         accept="image/jpeg,image/png,image/webp"
+         class="hidden" aria-hidden="true" />
+</div>
+
+<!-- Error message -->
+<p id="avatar-error" class="hidden text-xs text-red-500 mt-1" role="alert"></p>
+<!-- Hint text -->
+<p class="text-xs text-slate-500">JPG, PNG, or WebP — max 5 MB</p>
+```
+
+**CSS (hover overlay):**
+```css
+.avatar-wrap:hover .avatar-overlay { opacity: 1; }
+```
+
+**Upload validation rules:**
+- Allowed formats: `image/jpeg`, `image/png`, `image/webp`
+- Max file size: 5 MB
+- Preview: use `URL.createObjectURL()` and call `URL.revokeObjectURL()` after load to free memory (never set `src` via `innerHTML` — XSS risk)
+
+**Avatar states (uploadable):**
+
+| State | Behavior |
+|-------|---------|
+| Default | Shows initials or uploaded image |
+| Hover | `.avatar-overlay` opacity 0 → 1 (semi-transparent dark overlay + upload icon) |
+| Focus | `focus:ring-2 focus:ring-primary` (keyboard navigation) |
+| Error | Shows `#avatar-error`, `role="alert"` |
+
+---
+
+### Tooltip
+
+Provides supplementary explanation when space constraints prevent showing full context inline (e.g. reason why a field is readonly).
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Trigger | `hover` + `focus-within` (keyboard-accessible) |
+| Position | Above trigger element, `bottom: calc(100% + 6px)`, horizontally centered |
+| Background | `#1E1B4B` (`var(--color-ink)`) |
+| Text | `#fff`, `font-size: 11px` |
+| Padding | `padding: 4px 8px` |
+| Border radius | `border-radius: 6px` (slightly larger than `var(--radius-sm)` at 4px) |
+| Animation | `opacity` 0 → 1, `150ms ease` |
+| z-index | `500` (Tooltip layer — highest) |
+| Arrow | `::after` pseudo-element, `border-top-color: var(--color-ink)` |
+
+**CSS:**
+```css
+.tooltip-wrap { position: relative; display: inline-flex; }
+
+.tooltip-wrap .tooltip {
+  visibility: hidden; opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--color-ink); color: #fff;
+  font-size: 11px; white-space: nowrap;
+  padding: 4px 8px; border-radius: 6px;
+  transition: opacity 150ms ease;
+  pointer-events: none; z-index: 500;
+}
+
+.tooltip-wrap .tooltip::after {
+  content: '';
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--color-ink);
+}
+
+.tooltip-wrap:hover .tooltip,
+.tooltip-wrap:focus-within .tooltip { visibility: visible; opacity: 1; }
+```
+
+**HTML:**
+```html
+<div class="tooltip-wrap" tabindex="0" aria-describedby="tooltip-text-id">
+  <!-- Trigger element (e.g. info icon) -->
+  <svg class="w-3.5 h-3.5 text-slate-400 cursor-default" aria-hidden="true">
+    <!-- info-circle icon -->
+  </svg>
+  <span id="tooltip-text-id" class="tooltip">Tooltip text</span>
+</div>
+```
+
+**Accessibility:**
+- Add `tabindex="0"` to the trigger element so keyboard users can focus it
+- `aria-describedby` must point to the tooltip's `id`
+- Add `pointer-events: none` to the tooltip itself to prevent interaction interference
+- Never use the native `title` attribute — it cannot be triggered by focus and is invisible to keyboard users
+
+**When NOT to use:**
+- ❌ Explanation longer than one line → use Popover or inline expanded text instead
+- ❌ Explanation contains links or interactive elements → use Popover instead
+- ❌ Critical information must not be hidden behind hover → display it directly on the page
+
+---
+
+### Mobile Bottom Tab Bar
+
+Mobile-only bottom navigation (`md:hidden`). Replaces the Sidebar for navigation on small screens.
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Height | `h-14` (56px) |
+| Position | `fixed bottom-0 left-0 right-0` |
+| z-index | `z-[200]` (Sticky layer) |
+| Background | `bg-white` |
+| Top border | `border-t border-slate-200` |
+| Visibility | `md:hidden` (below 768px) |
+
+**Tab item states:**
+
+| State | Classes |
+|-------|---------|
+| Active | `text-primary font-medium` + `aria-current="page"` |
+| Inactive | `text-slate-500 hover:text-primary` |
+| Focus | `focus:ring-2 focus:ring-inset focus:ring-primary` |
+
+**HTML structure:**
+```html
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-14
+            bg-white border-t border-slate-200
+            flex items-stretch z-[200]"
+     aria-label="Bottom navigation">
+
+  <!-- Active tab -->
+  <a href="#"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5
+            text-primary font-medium transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+     aria-current="page">
+    <!-- SVG icon, w-5 h-5, aria-hidden="true" -->
+    <span class="text-xs font-medium">Page name</span>
+  </a>
+
+  <!-- Inactive tab -->
+  <a href="target.html"
+     class="flex-1 flex flex-col items-center justify-center gap-0.5
+            text-slate-500 hover:text-primary transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
+    <!-- SVG icon, w-5 h-5, aria-hidden="true" -->
+    <span class="text-xs">Page name</span>
+  </a>
+
+</nav>
+```
+
+**Bottom page padding:**
+The tab bar uses fixed positioning — add bottom padding to `<main>` to prevent content from being covered:
+```css
+/* Mobile only */
+@media (max-width: 767px) {
+  main { padding-bottom: 56px; } /* h-14 = 56px */
+}
+```
+Or with Tailwind: `<main class="pb-14 md:pb-0">`
+
+**Sidebar → Mobile Tab Bar mapping rule:**
+- Each Sidebar section nav item maps to one tab in the Tab Bar
+- When there are more than 5 items, the last tab becomes "More" (overflow menu)
+
+---
+
+### Divider
+
+Visually separates two content blocks. Carries no semantic meaning.
+
+**Tokens:**
+
+| Property | Token | Value |
+|----------|-------|-------|
+| Color | `border-slate-200` | #E2E8F0 |
+| Thickness | `h-px` / `border-t` | 1px |
+
+---
+
+**Variants:**
+
+#### 1. Horizontal Rule
+
+```html
+<hr class="h-px bg-slate-200 border-0 my-6">
+```
+
+- Used to separate page sections (e.g. inside a Card, between Form groups)
+- `my-6` (24px) is the default spacing; use `my-4` when space is tight
+
+#### 2. Text Divider
+
+```html
+<div class="flex items-center gap-3 my-6">
+  <hr class="flex-1 h-px bg-slate-200 border-0">
+  <span class="text-sm text-slate-400">or</span>
+  <hr class="flex-1 h-px bg-slate-200 border-0">
+</div>
+```
+
+- Used only on the login page to separate OAuth from account login
+- Text uses `text-sm text-slate-400` (not `text-ink`) to reduce visual weight
+
+#### 3. List Divider
+
+Applied via Tailwind divide utilities — no standalone `<hr>`:
+
+```html
+<ul class="divide-y divide-slate-100">
+  <li class="py-4">...</li>
+  <li class="py-4">...</li>
+</ul>
+```
+
+- `divide-slate-100` is lighter than `divide-slate-200` — preferred for dense lists
+
+**When NOT to use:**
+- Do not use Dividers to separate too many adjacent blocks (more than 3 consecutive dividers usually signals a layout problem)
+- Do not use Dividers as a substitute for spacing — try increasing padding/margin first; add a Divider only when visual grouping is still unclear
+
+---
+
+### List (Activity List)
+
+Displays a homogeneous set of items with a consistent per-row format (e.g. activity log, task list).
+
+**Tokens:**
+
+| Property | Value |
+|----------|-------|
+| Divider | `divide-y divide-slate-100` |
+| Row padding | `py-4` |
+| Left primary text | `text-sm font-medium text-ink` |
+| Right secondary text | `text-sm text-slate-400` |
+| Hover | `hover:bg-slate-50` |
+
+---
+
+**HTML structure:**
+
+```html
+<ul class="divide-y divide-slate-100">
+  <li class="flex items-center justify-between py-4 hover:bg-slate-50 px-1 rounded">
+    <span class="text-sm font-medium text-ink">Task name</span>
+    <span class="text-sm text-slate-400">2024-01-15</span>
+  </li>
+  <li class="flex items-center justify-between py-4 hover:bg-slate-50 px-1 rounded">
+    <span class="text-sm font-medium text-ink">Task name</span>
+    <span class="text-sm text-slate-400 tabular-nums">92 pts</span>
+  </li>
+</ul>
+```
+
+**Right column types:**
+
+| Type | Style |
+|------|-------|
+| Date | `text-sm text-slate-400` |
+| Score / number | `text-sm text-slate-400 tabular-nums` |
+| Status Badge | Embed a `<span>` Badge component |
+
+**"View all" link:**
+
+```html
+<div class="mt-4 text-right">
+  <a href="#" class="text-sm text-primary hover:underline">View all</a>
+</div>
+```
+
+**Empty state:**
+
+```html
+<div class="py-8 text-center text-sm text-slate-400">
+  No records yet
+</div>
+```
+
+**When NOT to use:**
+- Data requires sorting, filtering, or multi-column comparison → use **Table** instead
+- Items need to expand for more detail → consider Accordion or a dedicated page
+
 ---
 
 ## Style Guidelines
@@ -312,7 +942,7 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 **Pattern A: Header + Content Layout**
 - Used for: Dashboard, Settings
-- Structure: Fixed top navbar (height 56px) + scrollable main content area
+- Structure: Fixed top navbar (height 64px) + scrollable main content area
 - Max content width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8`
 - Top padding: `pt-6` below navbar
 
@@ -324,7 +954,7 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 **Pattern C: Header + Sidebar + Content Layout**
 - Used for: Profile, multi-section settings pages
-- Structure: Fixed top navbar (height 56px) + fixed left nav sidebar (width 224px) + scrollable main content area
+- Structure: Fixed top navbar (height 64px) + fixed left nav sidebar (width 224px) + scrollable main content area
 - Sidebar contains: section navigation links (e.g., Profile Info, Security, Notifications)
 - Max content width: `max-w-3xl` within the content area
 
