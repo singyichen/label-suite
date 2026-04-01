@@ -41,3 +41,6 @@ assets/logo/*.png
 
 # Playwright MCP working directory (browser snapshots, console logs, temp files)
 .playwright-mcp/
+
+# Qodo code review bot working directory
+.qodo/
