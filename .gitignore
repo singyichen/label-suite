@@ -38,3 +38,6 @@ htmlcov/
 # Generated assets (PNG files generated from SVG)
 assets/logo/*.png
 !assets/logo/social-preview.png
+
+# Playwright MCP working directory (browser snapshots, console logs, temp files)
+.playwright-mcp/

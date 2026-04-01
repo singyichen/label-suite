@@ -51,6 +51,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   │   ├── defect-report/
 │   │   ├── traceability-matrix/
 │   │   └── test-report/
+│   ├── xmind-import/                # Fetch XMind share URL → Mermaid
 │   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
 │   └── ui-ux-pro-max/               # UI/UX Design Intelligence
 ├── agents/                      # AI Agent definitions (35 agents)
@@ -126,6 +127,7 @@ Skills for designing APIs, services, data models, and architecture.
 | `/data-model` | Design PostgreSQL schemas and ER diagrams | `/data-model annotation submission and leaderboard` |
 | `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
 | `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
+| `/xmind-import` | Fetch XMind share URL → parse JSON → output Mermaid `flowchart LR` | `/xmind-import https://app.xmind.com/share/PKjJEIHD docs/functional-map/functional-map.md` |
 
 ### UI/UX Design (1 skill)
 
@@ -196,8 +198,8 @@ Skills for quality gates, defect management, traceability, and reporting.
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
 | UI/UX Design | 1 | ui-ux-pro-max |
-| Diagramming | 1 | d2-diagram (adamelliotfields) |
-| **Total** | **30** | |
+| Diagramming | 2 | d2-diagram (adamelliotfields), xmind-import |
+| **Total** | **31** | |
 
 ---
 
@@ -245,4 +247,4 @@ For the Label Suite project, these skills enforce additional constraints for the
 ---
 
 *Last Updated: 2026-03-25*
-*Total Skills: 30 | Spec-Kit Commands: 9*
+*Total Skills: 31 | Spec-Kit Commands: 9*
