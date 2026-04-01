@@ -25,19 +25,19 @@
 
 ### ✅ Button
 
-**MASTER.md 狀態：** 已定義（Primary + Secondary）
+**MASTER.md 狀態：** 已定義（Primary + Secondary + Danger + Ghost + Loading + Disabled）
 
 | 變體 | 樣式 | 出現頁面 | MASTER.md |
 |------|------|----------|-----------|
 | Primary (CTA) | `bg-cta` hover:opacity-90 translateY(-1px) | login, dashboard, profile | ✅ |
 | Secondary | `border-primary text-primary` transparent bg | dashboard | ✅ |
-| Danger | `text-red-600 hover:bg-red-50 hover:border-red-200` | dashboard (logout) | ❌ 未定義 |
-| Ghost / Text | `text-primary` underline on hover | dashboard (view all) | ❌ 未定義 |
+| Danger | `text-red-600 hover:bg-red-50 hover:border-red-200` | dashboard (logout) | ✅ |
+| Ghost / Text | `text-primary` underline on hover | dashboard (view all) | ✅ |
 | OAuth (Google/GitHub) | `border-slate-200 bg-white` + 品牌 icon | login | ❌ 未定義 |
 | Icon-only | `w-9 h-9` no label, icon only | dashboard (mobile menu) | ❌ 未定義 |
 | Language Toggle | `border-slate-200 rounded-full` | login, dashboard, profile | ❌ 未定義 |
 
-**缺少規格：** Loading 狀態（spinner + opacity-70 + cursor-not-allowed）、Disabled 狀態、Danger 變體、Ghost 變體
+**缺少規格：** OAuth 變體、Icon-only 變體、Language Toggle 變體
 
 ---
 
@@ -49,9 +49,9 @@
 |------|------|----------|-----------|
 | Normal | `border-slate-200 rounded-lg` focus:ring-primary | profile | ✅ |
 | Error | `border-red-400` focus:ring-red-400 | profile | ✅ |
-| Readonly / Disabled | `bg-slate-50 border-slate-100 cursor-not-allowed` | profile (email) | ❌ 未定義 |
+| Readonly / Disabled | `bg-slate-50 border-slate-100 cursor-not-allowed` | profile (email) | ✅ |
 
-**缺少規格：** Readonly 狀態、字元計數提示（character counter）、必填標記（required indicator）
+**缺少規格：** 字元計數提示（character counter）、必填標記（required indicator）
 
 ---
 
@@ -100,120 +100,115 @@
 | 變體 | 出現頁面 | MASTER.md |
 |------|----------|-----------|
 | Error (red) | login | ✅ |
-| Success (green) — Toast 形式 | profile | ❌ 未定義（Toast 與 Banner 需區分） |
+| Success (green) — Toast 形式 | profile | ✅（Toast 已獨立定義，區分說明已補充）|
 
 ---
 
-### ❌ Toast
+### ✅ Toast
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（Success + Error，含 Alert Banner vs Toast 區分）
 
-| 變體 | 樣式 | 出現頁面 |
-|------|------|----------|
-| Success | `bg-green-50 border-green-200 text-green-700` | profile |
-| Error | `bg-red-50 border-red-200 text-red-700` | profile |
-
-**行為：** 4 秒後自動隱藏、有關閉按鈕、`aria-live="polite"`
-**需與 Alert Banner 區分：** Toast 浮動定位、自動消失；Banner 嵌入頁面、手動關閉
+| 變體 | 樣式 | 出現頁面 | MASTER.md |
+|------|------|----------|-----------|
+| Success | `bg-green-50 border-green-200 text-green-700` | profile | ✅ |
+| Error | `bg-red-50 border-red-200 text-red-700` | profile | ✅ |
 
 ---
 
-### ❌ Navbar / Header
+### ✅ Navbar / Header
 
-**MASTER.md 狀態：** 未定義（Page Shell Patterns 有提及高度 56px，但無 component 規格）
+**MASTER.md 狀態：** 已定義（結構、nav link states、mobile drawer、accessibility）
 
-| 元素 | 說明 |
-|------|------|
-| Logo + wordmark | 左側，連結至首頁 |
-| Nav links | Desktop 顯示，active state |
-| User menu | Avatar + 名稱，連結至 profile |
-| Language toggle | 右側固定 |
-| Logout button | Danger 樣式 |
-| Mobile hamburger | Icon-only button，展開 mobile drawer |
-
----
-
-### ❌ Sidebar
-
-**MASTER.md 狀態：** 未定義（Page Shell Pattern C 有提及寬度 224px，但無 component 規格）
-
-| 元素 | 說明 |
-|------|------|
-| Section nav items | active / inactive 狀態 |
-| Divider | 分組用 |
-| 僅 Desktop 顯示 | `hidden md:flex` |
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| Logo + wordmark | 左側，連結至首頁 | ✅ |
+| Nav links | Desktop 顯示，active / inactive / disabled state | ✅ |
+| User menu | Avatar + 名稱，連結至 profile | ✅ |
+| Language toggle | 右側固定 | ❌ 未定義（Icon-only button 變體） |
+| Logout button | Danger 樣式 | ✅ |
+| Mobile hamburger | Icon-only button，展開 mobile drawer | ❌ 未定義（Icon-only button 變體） |
 
 ---
 
-### ❌ Mobile Bottom Tab Bar
+### ✅ Sidebar
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（規格、nav item states、divider 用法）
 
-| 元素 | 說明 |
-|------|------|
-| Tab item (icon + label) | active / inactive 狀態 |
-| 固定底部 | `fixed bottom-0 h-14` |
-| 僅 Mobile 顯示 | `md:hidden` |
-
----
-
-### ❌ Avatar
-
-**MASTER.md 狀態：** 未定義
-
-| 變體 | 尺寸 | 出現頁面 |
-|------|------|----------|
-| Small (navbar) | w-8 h-8 | dashboard |
-| Large (profile) | w-20 h-20 (desktop) / w-16 h-16 (mobile) | profile |
-
-**行為（profile）：** hover 顯示上傳覆蓋層、支援拖放、檔案驗證（JPG/PNG/WebP, max 5MB）
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| Section nav items | active / inactive 狀態 | ✅ |
+| Divider | 分組用 | ✅ |
+| 僅 Desktop 顯示 | `hidden md:flex` | ✅ |
 
 ---
 
-### ❌ Tooltip
+### ✅ Mobile Bottom Tab Bar
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（規格、tab item states、body padding rule、Sidebar 對應規則）
 
-| 元素 | 說明 |
-|------|------|
-| 觸發器 | 小 info icon，tabindex="0" |
-| 提示框 | `bg-ink text-white` 絕對定位，底部帶箭頭 |
-| 出現時機 | hover + focus |
-
----
-
-### ❌ Table
-
-**MASTER.md 狀態：** 未定義
-
-| 元素 | 說明 |
-|------|------|
-| Header row | `bg-slate-50 text-xs uppercase` |
-| Body row | hover:bg-slate-50、cursor-pointer |
-| Cell | `px-6 py-4` |
-| Responsive | `overflow-x-auto` 水平捲動 |
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| Tab item (icon + label) | active / inactive 狀態 | ✅ |
+| 固定底部 | `fixed bottom-0 h-14` | ✅ |
+| 僅 Mobile 顯示 | `md:hidden` | ✅ |
 
 ---
 
-### ❌ List (Activity List)
+### ✅ Avatar
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（display-only + uploadable，含 upload 驗證規則、XSS-safe 實作）
 
-| 元素 | 說明 |
-|------|------|
-| List item | 左側任務名稱 + 右側日期/分數 |
-| Divider | `divide-y divide-slate-100` |
+| 變體 | 尺寸 | 出現頁面 | MASTER.md |
+|------|------|----------|-----------|
+| Small (navbar) | w-8 h-8 | dashboard | ✅ |
+| Large (profile) | w-20 h-20 (desktop) / w-16 h-16 (mobile) | profile | ✅ |
 
 ---
 
-### ❌ Divider
+### ✅ Tooltip
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（CSS 實作、規格、accessibility 規範）
 
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| 水平線 | `h-px bg-slate-200` | login, profile |
-| 文字分隔（「或」） | 線條 + 中間文字 | login |
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| 觸發器 | 小 info icon，tabindex="0" | ✅ |
+| 提示框 | `bg-ink text-white` 絕對定位，底部帶箭頭 | ✅ |
+| 出現時機 | hover + focus | ✅ |
+
+---
+
+### ✅ Table
+
+**MASTER.md 狀態：** 已定義（規格、HTML 結構、accessibility、responsive）
+
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| Header row | `bg-slate-50 text-xs uppercase` | ✅ |
+| Body row | hover:bg-slate-50、cursor-pointer | ✅ |
+| Cell | `px-6 py-4` | ✅ |
+| Responsive | `overflow-x-auto` 水平捲動 | ✅ |
+
+---
+
+### ✅ List (Activity List)
+
+**MASTER.md 狀態：** 已定義（tokens、HTML 結構、empty state、right column types）
+
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| List item | 左側任務名稱 + 右側日期/分數 | ✅ |
+| Divider | `divide-y divide-slate-100` | ✅ |
+
+---
+
+### ✅ Divider
+
+**MASTER.md 狀態：** 已定義（Horizontal Rule、Text Divider、List Divider 三種變體）
+
+| 變體 | 說明 | 出現頁面 | MASTER.md |
+|------|------|----------|-----------|
+| 水平線 | `h-px bg-slate-200` | login, profile | ✅ |
+| 文字分隔（「或」） | 線條 + 中間文字 | login | ✅ |
 
 ---
 
