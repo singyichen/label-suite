@@ -142,20 +142,6 @@
           <p class="text-sm text-slate-500 mt-1 leading-relaxed" data-i18n="page-desc">管理您的帳號資訊與顯示偏好。</p>
         </div>
 
-        <!-- ── Toast (hidden by default) ── -->
-        <div id="toast" role="status" aria-live="polite"
-             class="hidden mb-5 flex items-center gap-2 text-sm rounded-lg px-4 py-3 border">
-          <svg id="toast-icon" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"></svg>
-          <span id="toast-text" class="flex-1"></span>
-          <button type="button" onclick="document.getElementById('toast').classList.add('hidden')"
-                  class="ml-2 shrink-0 opacity-60 hover:opacity-100 cursor-pointer transition-opacity duration-150 focus:outline-none focus:ring-2 focus:ring-current rounded"
-                  aria-label="關閉通知" data-i18n-aria-label="aria-toast-close">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-        </div>
-
         <!-- ── Profile Card ── -->
         <!-- Desktop: p-8 rounded-2xl (padding 32, radius 16) | Mobile: p-4 rounded-xl (padding 16, radius 12) -->
         <div class="bg-white border border-slate-200 rounded-xl md:rounded-2xl p-4 md:p-8 flex flex-col gap-5 md:gap-6">
@@ -533,19 +519,20 @@
     }
 
     function showToast(type) {
-      const toast    = document.getElementById('toast');
+      const toast     = document.getElementById('toast');
+      const inner     = document.getElementById('toast-inner');
       const toastTxt  = document.getElementById('toast-text');
       const toastIcon = document.getElementById('toast-icon');
       const s = STRINGS[currentLang];
 
-      toast.classList.remove('hidden', 'bg-green-50', 'border-green-200', 'text-green-700',
-                                       'bg-red-50',   'border-red-200',   'text-red-700');
+      inner.classList.remove('bg-green-50', 'border-green-200', 'text-green-700',
+                              'bg-red-50',   'border-red-200',   'text-red-700');
       if (type === 'success') {
-        toast.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
+        inner.classList.add('bg-green-50', 'border-green-200', 'text-green-700');
         toastTxt.textContent = s['toast-success'];
         toastIcon.innerHTML = `<polyline points="20 6 9 17 4 12"/>`;
       } else {
-        toast.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+        inner.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
         toastTxt.textContent = s['toast-error'];
         toastIcon.innerHTML = `<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>`;
       }
@@ -556,5 +543,22 @@
     // ── Init ──────────────────────────────────────────────────────
     applyLang(currentLang);
   </script>
+
+  <!-- ── Toast — fixed bottom-right (per design system spec) ── -->
+  <div id="toast"
+       class="hidden fixed bottom-6 right-6 z-[400] max-w-sm w-full"
+       aria-live="polite" aria-atomic="true">
+    <div id="toast-inner" class="flex items-center gap-2 text-sm rounded-lg px-4 py-3 border shadow-md">
+      <svg id="toast-icon" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"></svg>
+      <span id="toast-text" class="flex-1"></span>
+      <button type="button" onclick="document.getElementById('toast').classList.add('hidden')"
+              class="ml-2 shrink-0 opacity-60 hover:opacity-100 cursor-pointer transition-opacity duration-150 focus:outline-none focus:ring-2 focus:ring-current rounded"
+              aria-label="關閉通知" data-i18n-aria-label="aria-toast-close">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 </body>
 </html>
