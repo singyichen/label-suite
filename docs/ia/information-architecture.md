@@ -91,10 +91,11 @@ flowchart TD
 
   TLIST --> TNEW
   TLIST --> TDETAIL
+  DASH -->|Reviewer 唯讀| TDETAIL
   TDETAIL -->|指派 Dry Run| ANNOT
   TDETAIL -->|指派 Official Run| ANNOT
-  ANNOT -->|完成標記| TDETAIL
-  TDETAIL -->|匯出資料| TDETAIL
+  ANNOT -->|Dry Run 全員完成\n→ Dashboard badge 通知| DASH
+  ANNOT -->|Official Run 完成標記| TDETAIL
 
   ALIST --> ANEW
   ALIST --> WLOG
@@ -142,9 +143,10 @@ flowchart TD
 - **空狀態（尚未被指派任務）：** 說明文字「尚未有指派任務，請等待管理員分配」，次要按鈕：「查看個人工時紀錄」（→ `work-log`）、「編輯個人資料」（→ `profile`）
 
 **Reviewer 視角：**
-- **待審查任務列表：** 每筆顯示任務名稱、待審核筆數、已審核 / 總筆數
+- **Navbar（Reviewer）：** 儀表板 ｜ 標記審查（→ `annotation-workspace` 審查模式）｜ 資料集分析（→ `dataset-stats`）
+- **待審查任務列表：** 每筆顯示任務名稱、待審核筆數、已審核 / 總筆數；點選任務卡 → 直接進入 `annotation-workspace` 審查模式
 - **Dry Run IAA 摘要：** 顯示當前 Dry Run 的 IAA 分數（依任務類型顯示對應指標），達標 / 未達標狀態
-- **快速進入審查按鈕：** 直接進入 `annotation-workspace` 審查模式
+- **快速進入審查按鈕：** 進入上次未完成的審查任務（`annotation-workspace`）
 - **空狀態（目前無待審查任務）：** 說明文字，次要按鈕：「查看統計報告」（→ `dataset-stats`）
 
 **Super Admin 視角：**
@@ -177,23 +179,26 @@ flowchart TD
     - **句對任務：** 選擇關係類型（相似度 / 蘊含 / 自訂），設定評分或分類標籤
     - **序列標記（NER）：** 新增 / 編輯實體類型清單（Entity Name + 顏色 + 說明）
     - **關係抽取：** 設定實體類型清單（同 NER）+ 關係類型清單（Relation Name + 說明），標記介面呈現 Entity List / Relation Type / Triple List 三區
-    - **生成式標記：** 設定評分維度（如流暢度 / 正確性）或開放文字輸入
   - **Code 模式（進階）：** 直接檢視 / 編輯系統產生的 YAML/JSON config 原始碼，供技術人員驗證或手動調整；Visual 與 Code 模式可互相切換
 - **Step 3 — 標記說明（選填）：**
   - 上傳標記範本 / 說明文件（PDF / 圖片 / 文字），顯示於 `annotation-workspace` 的「說明與範例」區
   - 可設定「開始標記前強制顯示」：Annotator 每次進入任務時先跳出說明 modal，確認後才進入標記介面
-- **任務類型：**
-  - 單句任務（分類 / 評分）
+- **任務類型（共 5 種 `task_type`）：**
+  - 單句分類（Classification）
+  - 單句評分 / 回歸（Scoring / Regression）
   - 句對任務（相似度 / 蘊含）
   - 序列標記（NER、詞性標記）
   - 關係抽取（Entity + Relation + Triple）
-  - 生成式標記（人工撰寫 / 評分）
 - **空狀態：** 不適用（此頁為建立流程，永遠有內容）
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
 #### `task-detail` 任務詳情頁
-- **進入方式：** `task-list` 點選任務
-- **功能：**
+- **進入方式（Project Leader）：** `task-list` 點選任務
+- **進入方式（Reviewer）：** `dashboard` 待審查任務列表 → 任務卡（唯讀視角；指派、發布、匯出等操作按鈕隱藏）
+- **任務狀態轉換：**
+  - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
+  - **Dry Run 完成通知：** 當所有標記員完成 Dry Run 後，系統自動將任務狀態切換至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒 Project Leader；Project Leader 從 badge 連結進入 `dataset-quality` 查看 IAA 結果
+- **功能（Project Leader）：**
   - 查看任務設定與任務類型
   - 指派標記員（從 `annotator-list` 選取）
   - 發布試標（Dry Run）：選取共用樣本集（建議 20 句），發布給所有標記員
@@ -201,14 +206,15 @@ flowchart TD
   - 查看標記進度（各標記員完成數 / 速度）
   - 匯出標記結果（JSON / JSON-MIN）
 - **資料隔離原則：** Dry Run 資料與 Official Run 資料必須隔離，不得混入正式標記集
-- **離開方式：** 「開始標記」→ `annotation-workspace`；返回 → `task-list`
+- **離開方式：** 返回 → `task-list`；匯出為頁面內操作（Toast 提示下載），不觸發頁面跳轉
 
 ---
 
 ### 標記任務模組
 
 #### `annotation-workspace` 標記作業頁
-- **進入方式：** `dashboard` 任務卡片；`task-detail` 指派後
+- **進入方式（Annotator）：** `dashboard` 任務卡片「開始 / 繼續標記」按鈕；快速繼續按鈕
+- **進入方式（Reviewer）：** `dashboard` 待審查任務列表中的任務卡；Navbar → 標記審查
 - **兩種模式（run_type）：**
   - **Dry Run（試標）：** 所有標記員標記相同樣本，結果不計入正式資料，用於計算 IAA 與討論標記準則
   - **Official Run（正式標記）：** 每位標記員分配不重疊的資料，結果計入正式資料集
@@ -233,7 +239,6 @@ flowchart TD
   - **序列標記（NER）：** 實體類型分佈、每句平均實體數、Entity span 長度分佈
   - **關係抽取：** 實體類型分佈 + 關係類型分佈、Triple 數量統計
   - **句對任務：** 依標籤或分數呈現（同分類 / 評分）
-  - **生成式標記：** 輸出文字長度分佈；若含評分維度則同評分任務
 - **空狀態（尚無標記資料）：** 說明文字「尚無標記資料，請先發布 Dry Run」，次要按鈕「前往任務詳情」（→ `task-detail`）
 - **離開方式：** 切換至 `dataset-quality`
 
@@ -311,8 +316,9 @@ sequenceDiagram
   PL->>AL: 新增標記員帳號
   PL->>TD: 指派標記員 + 發布 Dry Run（共同樣本 ~20 句）
   Note over AW: 所有標記員標記相同樣本
-  AW-->>TD: 試標完成通知
-  PL->>DQ: 查看 IAA 結果
+  AW-->>TD: 任務狀態切換 → 等待 IAA 確認
+  TD-->>PL: Dashboard 待處理事項 badge：「Dry Run 已全員完成」
+  PL->>DQ: 從 badge 連結進入，查看 IAA 結果
   alt IAA ≥ 0.8
     PL->>TD: 確認標記準則，發布 Official Run
     Note over AW: 各標記員分配不重疊資料
