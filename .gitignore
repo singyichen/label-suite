@@ -44,3 +44,6 @@ assets/logo/*.png
 
 # Qodo code review bot working directory
 .qodo/
+
+# Serena MCP server project config (local dev environment)
+.serena/
