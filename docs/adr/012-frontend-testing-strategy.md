@@ -232,7 +232,7 @@ test('disables interaction in readOnly mode', () => {
 
 ### Dashboard Role Dispatch Test Matrix
 
-All four valid `role` values plus boundary conditions must be covered. Each user holds exactly one role (single-value enum per IA):
+`DashboardPage` dispatches based on the JWT `role` value (single enum). The dispatch selects which dashboard VIEW to render — it is separate from route-level access control (RoleGuard).
 
 ```tsx
 // features/dashboard/DashboardPage.test.tsx
@@ -246,11 +246,47 @@ const cases = [
 ]
 
 test.each(cases)('role=$role renders $expected', ({ role, expected }) => {
-  const { container } = renderWithProviders(<DashboardPage />, { role })
+  renderWithProviders(<DashboardPage />, { role })
   if (expected.startsWith('redirect:')) {
     expect(mockNavigate).toHaveBeenCalledWith(expected.replace('redirect:', ''), { replace: true })
   } else {
     expect(screen.getByTestId(expected)).toBeInTheDocument()
+  }
+})
+```
+
+### RoleGuard Inheritance Test Matrix
+
+`RoleGuard` uses `ROLE_HIERARCHY` to resolve effective roles. Tests must cover both direct access and inherited access:
+
+```tsx
+// router/guards/RoleGuard.test.tsx
+const cases = [
+  // Direct access
+  { role: 'annotator',      allow: ['annotator'],      permitted: true  },
+  { role: 'reviewer',       allow: ['reviewer'],        permitted: true  },
+  { role: 'project_leader', allow: ['project_leader'],  permitted: true  },
+  { role: 'super_admin',    allow: ['super_admin'],     permitted: true  },
+  // Inherited access — project_leader inherits reviewer
+  { role: 'project_leader', allow: ['reviewer'],        permitted: true  },
+  // Inherited access — super_admin inherits all
+  { role: 'super_admin',    allow: ['annotator'],       permitted: true  },
+  { role: 'super_admin',    allow: ['reviewer'],        permitted: true  },
+  { role: 'super_admin',    allow: ['project_leader'],  permitted: true  },
+  // Denied — no inheritance upward
+  { role: 'annotator',      allow: ['reviewer'],        permitted: false },
+  { role: 'reviewer',       allow: ['project_leader'],  permitted: false },
+  { role: 'annotator',      allow: ['project_leader'],  permitted: false },
+  // Boundary — null role denied
+  { role: null,             allow: ['annotator'],       permitted: false },
+]
+
+test.each(cases)('role=$role allow=$allow → $permitted', ({ role, allow, permitted }) => {
+  renderWithProviders(<RoleGuard allow={allow}><div>content</div></RoleGuard>, { role })
+  if (permitted) {
+    expect(screen.getByText('content')).toBeInTheDocument()
+  } else {
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
   }
 })
 ```

@@ -299,16 +299,31 @@ export const router = createBrowserRouter([
 ])
 ```
 
-`RoleGuard` receives an `allow` prop listing permitted roles. It checks whether the user's single `role` is in the allow list:
+`RoleGuard` receives an `allow` prop listing permitted roles. The system uses RBAC inheritance — higher roles accumulate lower roles' capabilities. `RoleGuard` resolves the user's effective roles via a hierarchy table before checking access:
 
 ```tsx
+// shared/types/user.ts
+type Role = 'super_admin' | 'project_leader' | 'reviewer' | 'annotator'
+
 // router/guards/RoleGuard.tsx
+const ROLE_HIERARCHY: Record<Role, Role[]> = {
+  super_admin:    ['super_admin', 'project_leader', 'reviewer', 'annotator'],
+  project_leader: ['project_leader', 'reviewer'],
+  reviewer:       ['reviewer'],
+  annotator:      ['annotator'],
+}
+
 function RoleGuard({ allow }: { allow: Role[] }) {
   const { role } = useAuthStore()
-  const permitted = role !== null && allow.includes(role)
+  const effective: Role[] = role ? ROLE_HIERARCHY[role] ?? [] : []
+  const permitted = allow.some(r => effective.includes(r))
   return permitted ? <Outlet /> : <Navigate to="/" replace />
 }
 ```
+
+The JWT `role` field remains a single string. Inheritance is resolved entirely on the frontend at the guard layer — the backend uses the same hierarchy table for API-level authorization.
+
+Example: a `project_leader` accessing `/annotation` (which has `allow={['reviewer']}`) is permitted because `ROLE_HIERARCHY['project_leader']` includes `'reviewer'`.
 
 ---
 

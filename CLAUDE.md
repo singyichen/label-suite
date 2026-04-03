@@ -140,6 +140,8 @@ Zustand must **not** hold API response data — that belongs to TanStack Query.
 
 **Localization namespaces:** Translation keys namespaced per feature — `t('task-management:config_builder.label_name')`. Locale files live at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
 
+**RoleGuard inheritance:** The system uses RBAC hierarchy — `project_leader` inherits all `reviewer` capabilities; `super_admin` inherits all roles. `RoleGuard` resolves effective roles via `ROLE_HIERARCHY` lookup before checking route access. JWT `role` remains a single string; inheritance is resolved at the guard layer.
+
 **Agent Team file ownership (Phase 2 implementation):** Each `FrontendAgent` owns one `features/[module]/` directory. No agent touches another agent's feature folder.
 
 ## Communication
