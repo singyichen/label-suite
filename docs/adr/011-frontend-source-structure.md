@@ -226,7 +226,7 @@ Each user account holds exactly one `role` (single-value enum), as defined in th
 // shared/stores/authStore.ts
 interface AuthState {
   user: User | null
-  role: Role            // single-value enum: 'project_leader' | 'annotator' | 'reviewer' | 'super_admin'
+  role: Role | null     // null when unauthenticated; single-value enum when authenticated
   token: string | null
 }
 
@@ -254,7 +254,7 @@ Role sub-components and their file paths:
 
 > **Security note:** The dispatch must be explicit for every known role. Unknown or null `role` redirects to `/login` (deny-by-default). Never use a catch-all fallback that renders privileged UI.
 >
-> **Note on organisational dual roles:** The IA notes that a Project Leader may also act as Reviewer in organisational terms. At the system level this is handled by maintaining two separate accounts — the JWT `role` field is always a single string value.
+> **Note on organisational dual roles:** The IA notes that a Project Leader may also act as Reviewer in organisational terms. With RBAC hierarchy, a single `project_leader` account inherits all `reviewer` capabilities — no need for a separate Reviewer account. The JWT `role` field is always a single string value; inheritance is resolved at the guard layer.
 
 ---
 

@@ -109,7 +109,7 @@ label-suite/
 
 Zustand must **not** hold API response data.
 
-**Dashboard role dispatch:** `authStore` holds `role: Role` (single-value enum). `DashboardPage` dispatches with explicit `role ===` checks to `SuperAdminDashboard`, `LeaderDashboard`, `ReviewerDashboard`, `AnnotatorDashboard`. Null or unrecognised `role` redirects to `/login` (deny-by-default).
+**Dashboard role dispatch:** `authStore` holds `role: Role | null` (`null` when unauthenticated). `DashboardPage` dispatches with explicit `role ===` checks to `SuperAdminDashboard`, `LeaderDashboard`, `ReviewerDashboard`, `AnnotatorDashboard`. Null or unrecognised `role` redirects to `/login` (deny-by-default).
 
 **RoleGuard inheritance:** `project_leader` inherits all `reviewer` capabilities; `super_admin` inherits all roles. `RoleGuard` resolves effective roles via `ROLE_HIERARCHY` lookup. JWT `role` remains a single string — inheritance resolved at the guard layer only. See [ADR-011](docs/adr/011-frontend-source-structure.md).
 

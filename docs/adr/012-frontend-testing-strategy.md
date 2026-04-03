@@ -97,10 +97,10 @@ function makeTestQueryClient() {
 // For component tests: renders ui inside providers, returns RTL RenderResult
 export function renderWithProviders(
   ui: React.ReactElement,
-  { roles = ['annotator'], route = '/' } = {}
+  { role = 'annotator' as Role, route = '/' } = {}
 ) {
   const queryClient = makeTestQueryClient()
-  useAuthStore.setState({ roles, user: mockUser, token: 'test-token' })
+  useAuthStore.setState({ role, user: mockUser, token: 'test-token' })
 
   return render(
     <QueryClientProvider client={queryClient}>
@@ -114,9 +114,9 @@ export function renderWithProviders(
 // For renderHook: returns a React component (JSX), NOT a RenderResult.
 // renderHook's `wrapper` option requires a component that accepts { children }
 // and returns JSX — calling render() here would return RenderResult and break it.
-export function createWrapper({ roles = ['annotator'], route = '/' } = {}) {
+export function createWrapper({ role = 'annotator' as Role, route = '/' } = {}) {
   const queryClient = makeTestQueryClient()
-  useAuthStore.setState({ roles, user: mockUser, token: 'test-token' })
+  useAuthStore.setState({ role, user: mockUser, token: 'test-token' })
 
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
@@ -352,7 +352,7 @@ The following spec files map 1-to-1 to the five IA user journeys. All five must 
 |---|---|---|---|
 | A — Project Leader full lifecycle | `task-management/task-lifecycle.spec.ts` | `asProjectLeader` | P1 |
 | B — Annotator completes annotation | `annotation/dry-run.spec.ts`, `annotation/official-run.spec.ts` | `asAnnotator` | P1 |
-| C — Reviewer audits + quality report | `dataset/reviewer-audit.spec.ts` | `asReviewer`, `asLeaderAndReviewer` | P1 |
+| C — Reviewer audits + quality report | `dataset/reviewer-audit.spec.ts` | `asReviewer`, `asProjectLeader` | P1 |
 | D — Super Admin user management | `admin/user-management.spec.ts` | `asSuperAdmin` | P2 |
 | Account — login + profile | `auth/login.spec.ts`, `auth/google-sso.spec.ts` | `asUnauthenticated` | P1 |
 
