@@ -6,7 +6,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 
 ```
 .claude/
-├── commands/                    # Spec-Kit Commands
+├── commands/                    # Spec-Kit Commands + Workflow Commands
 │   ├── speckit.specify.md       # Create feature spec
 │   ├── speckit.plan.md          # Create implementation plan
 │   ├── speckit.tasks.md         # Generate task list
@@ -15,7 +15,10 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── speckit.analyze.md       # Cross-artifact analysis
 │   ├── speckit.checklist.md     # Generate quality checklist
 │   ├── speckit.constitution.md  # Update project constitution
-│   └── speckit.taskstoissues.md # Convert tasks to GitHub Issues
+│   ├── speckit.taskstoissues.md # Convert tasks to GitHub Issues
+│   ├── pencil-wireframe.md      # Draw 6-frame wireframes via Pencil MCP
+│   ├── pr-flow.md               # Full PR flow (commit → review → test → merge)
+│   └── agent-team.md            # Multi-phase agent team workflow for new features
 ├── skills/                      # Knowledge-Domain Skills (30 total)
 │   ├── spec-driven-development/
 │   │   ├── sdd-workflow/
