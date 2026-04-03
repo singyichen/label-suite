@@ -16,7 +16,7 @@
 | 審核員 | `reviewer` | 審查標記結果、協助產出標準答案、查看品質報告 | 儀表板、標記任務模組（審查模式）、資料集分析模組 |
 | 系統超級管理員 | `super_admin` | 平台維護、跨專案使用者管理、帳號與角色設定 | 全部模組 + 系統管理模組 |
 
-> **注意：** Reviewer 可以是同一位 Project Leader 擔任（雙重角色）。系統以 **role** 判斷權限，而非 user，同一使用者可同時持有多個角色。
+> **注意：** Reviewer 在組織上可由同一位 Project Leader 兼任，但系統層面每個使用者帳號僅持有一個 `role`（單值 enum）。如需讓同一人同時擔任 PL 與 Reviewer，應建立兩個帳號，分別指派不同 role；JWT payload 中的 `role` 欄位亦為單值。
 
 ---
 
@@ -88,6 +88,7 @@ flowchart TD
   
   DASH --> ALIST
   DASH -->|Annotator 個人| WLOG
+  DASH -->|IAA 待確認| QUALITY
   DASH --> USERS
 
   TLIST --> TNEW
@@ -244,7 +245,7 @@ flowchart TD
 - **離開方式：** 切換至 `dataset-quality`
 
 #### `dataset-quality` 品質監控頁
-- **進入方式：** `dataset-stats` 切換；或 Navbar 直接進入
+- **進入方式：** `dataset-stats` 切換；Navbar 直接進入；或 Dashboard 待處理事項區「IAA 待確認」連結（Project Leader）
 - **IAA 計算方法（依任務類型）：**
   - **分類任務：** Cohen's Kappa（兩人）/ Fleiss' Kappa（多人），目標 ≥ 0.8
   - **評分 / 回歸任務：** Krippendorff's Alpha、Pearson / Spearman 相關係數
