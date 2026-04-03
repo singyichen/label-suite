@@ -30,3 +30,4 @@ Each ADR follows this structure:
 | [009](009-testing-strategy.md) | Testing Strategy — pytest + Playwright | Accepted | 2026-03-19 |
 | [010](010-config-driven-architecture.md) | Config-Driven Task Architecture | Accepted | 2026-03-19 |
 | [011](011-frontend-source-structure.md) | Frontend Source Directory Structure — Vertical Feature Slicing | Accepted | 2026-04-03 |
+| [012](012-frontend-testing-strategy.md) | Frontend Testing Strategy — Vitest + RTL + Playwright | Accepted | 2026-04-03 |

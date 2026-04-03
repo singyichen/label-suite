@@ -214,6 +214,8 @@ root.render(
 )
 ```
 
+> **Test isolation:** The module-level `queryClient` singleton must **not** be used in Vitest component tests — tests would share cache state and pollute each other. Each test must create its own instance. See ADR-012 for the `renderWithProviders` helper pattern.
+
 ---
 
 ### Dashboard Role Dispatch
@@ -368,6 +370,20 @@ This prevents Vite's bundler from treating an entire feature barrel as a single 
 
 The annotation workspace renders different UI widgets per `task_type`, driven by the task config (see ADR-010). On the frontend, widgets are registered in a lookup table rather than using `switch` statements scattered across components:
 
+The `WidgetProps` interface is defined in `task-types/types.ts` and is the contract every widget must satisfy:
+
+```ts
+// features/annotation/components/workspace/task-types/types.ts
+export interface WidgetProps {
+  config: TaskConfig        // task config from backend (labels, score range, entity types…)
+  item: AnnotationItem      // current data item to annotate
+  onSubmit: (value: AnnotationValue) => void   // called when annotator confirms a label
+  readOnly?: boolean        // true in Reviewer mode
+}
+```
+
+This interface is the fixture contract for widget unit tests — construct a `WidgetProps` stub and mount the widget in isolation without rendering the full workspace. See ADR-012 for the widget testing pattern.
+
 ```ts
 // features/annotation/components/workspace/task-types/registry.ts
 import type { TaskType } from '@/shared/types/task'
@@ -421,7 +437,19 @@ frontend/tests/
     └── page-objects/              # Page Object Models (LoginPage, DashboardPage, etc.)
 ```
 
-Fixtures in `tests/shared/fixtures/` pre-authenticate sessions for each role so individual specs do not repeat login steps.
+Fixtures in `tests/shared/fixtures/` pre-authenticate sessions so individual specs do not repeat login steps. The fixture set must cover all meaningful role combinations:
+
+| Fixture | `roles` value | Purpose |
+|---------|--------------|---------|
+| `asProjectLeader` | `['project_leader']` | Standard leader flow |
+| `asAnnotator` | `['annotator']` | Standard annotator flow |
+| `asReviewer` | `['reviewer']` | Standard reviewer flow |
+| `asSuperAdmin` | `['super_admin']` | Admin management flow |
+| `asLeaderAndReviewer` | `['project_leader', 'reviewer']` | Multi-role: IA explicitly cites this combination |
+| `asUnauthenticated` | no session | Auth guard redirect tests |
+| `asEmptyRoles` | `[]` | Deny-by-default boundary test |
+
+See ADR-012 for the full Playwright fixture implementation pattern.
 
 ---
 
