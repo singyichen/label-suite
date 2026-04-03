@@ -220,26 +220,25 @@ root.render(
 
 ### Dashboard Role Dispatch
 
-Users may hold multiple roles simultaneously (per IA specification). `authStore` stores a `roles` array, and `DashboardPage` selects the highest-privilege view:
+Each user account holds exactly one `role` (single-value enum), as defined in the IA and JWT contract. `authStore` stores `role: Role`, and `DashboardPage` dispatches based on that single value:
 
 ```tsx
 // shared/stores/authStore.ts
 interface AuthState {
   user: User | null
-  roles: Role[]          // e.g. ['project_leader', 'reviewer']
+  role: Role            // single-value enum: 'project_leader' | 'annotator' | 'reviewer' | 'super_admin'
   token: string | null
 }
 
 // features/dashboard/DashboardPage.tsx
 export default function DashboardPage() {
-  const { roles } = useAuthStore()
-  const has = (r: Role) => roles.includes(r)
+  const { role } = useAuthStore()
 
-  if (has('super_admin'))    return <SuperAdminDashboard />
-  if (has('project_leader')) return <LeaderDashboard />
-  if (has('reviewer'))       return <ReviewerDashboard />
-  if (has('annotator'))      return <AnnotatorDashboard />
-  // No recognised role — deny by default
+  if (role === 'super_admin')    return <SuperAdminDashboard />
+  if (role === 'project_leader') return <LeaderDashboard />
+  if (role === 'reviewer')       return <ReviewerDashboard />
+  if (role === 'annotator')      return <AnnotatorDashboard />
+  // Unknown or missing role — deny by default
   return <Navigate to="/login" replace />
 }
 ```
@@ -253,7 +252,9 @@ Role sub-components and their file paths:
 | `ReviewerDashboard` | `features/dashboard/components/reviewer/ReviewerDashboard.tsx` |
 | `AnnotatorDashboard` | `features/dashboard/components/annotator/AnnotatorDashboard.tsx` |
 
-> **Security note:** The dispatch must be explicit for every known role with highest-privilege checked first. Unknown or empty `roles` redirects to `/login` (deny-by-default). Never use a catch-all fallback that renders privileged UI.
+> **Security note:** The dispatch must be explicit for every known role. Unknown or null `role` redirects to `/login` (deny-by-default). Never use a catch-all fallback that renders privileged UI.
+>
+> **Note on organisational dual roles:** The IA notes that a Project Leader may also act as Reviewer in organisational terms. At the system level this is handled by maintaining two separate accounts — the JWT `role` field is always a single string value.
 
 ---
 
@@ -298,13 +299,13 @@ export const router = createBrowserRouter([
 ])
 ```
 
-`RoleGuard` receives an `allow` prop listing the roles permitted. It checks `roles.includes(r)` for any role in the allow list (any-of semantics), consistent with the multi-role model in `authStore`:
+`RoleGuard` receives an `allow` prop listing permitted roles. It checks whether the user's single `role` is in the allow list:
 
 ```tsx
 // router/guards/RoleGuard.tsx
 function RoleGuard({ allow }: { allow: Role[] }) {
-  const { roles } = useAuthStore()
-  const permitted = allow.some(r => roles.includes(r))
+  const { role } = useAuthStore()
+  const permitted = role !== null && allow.includes(role)
   return permitted ? <Outlet /> : <Navigate to="/" replace />
 }
 ```
@@ -437,17 +438,15 @@ frontend/tests/
     └── page-objects/              # Page Object Models (LoginPage, DashboardPage, etc.)
 ```
 
-Fixtures in `tests/shared/fixtures/` pre-authenticate sessions so individual specs do not repeat login steps. The fixture set must cover all meaningful role combinations:
+Fixtures in `tests/shared/fixtures/` pre-authenticate sessions so individual specs do not repeat login steps. Each fixture maps to one of the four valid `role` values:
 
-| Fixture | `roles` value | Purpose |
-|---------|--------------|---------|
-| `asProjectLeader` | `['project_leader']` | Standard leader flow |
-| `asAnnotator` | `['annotator']` | Standard annotator flow |
-| `asReviewer` | `['reviewer']` | Standard reviewer flow |
-| `asSuperAdmin` | `['super_admin']` | Admin management flow |
-| `asLeaderAndReviewer` | `['project_leader', 'reviewer']` | Multi-role: IA explicitly cites this combination |
-| `asUnauthenticated` | no session | Auth guard redirect tests |
-| `asEmptyRoles` | `[]` | Deny-by-default boundary test |
+| Fixture | `role` value | Purpose |
+|---------|-------------|---------|
+| `asProjectLeader` | `'project_leader'` | Standard leader flow |
+| `asAnnotator` | `'annotator'` | Standard annotator flow |
+| `asReviewer` | `'reviewer'` | Standard reviewer flow |
+| `asSuperAdmin` | `'super_admin'` | Admin management flow |
+| `asUnauthenticated` | no session | AuthGuard redirect tests |
 
 See ADR-012 for the full Playwright fixture implementation pattern.
 

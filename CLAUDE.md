@@ -136,7 +136,7 @@ A file belongs in `shared/` only if it is directly imported by **two or more dif
 
 Zustand must **not** hold API response data — that belongs to TanStack Query.
 
-**Dashboard role dispatch:** `authStore` holds `roles: Role[]` (users may have multiple roles). `DashboardPage` checks highest-privilege role first using `roles.includes(r)` and dispatches to role-specific sub-components (`SuperAdminDashboard`, `LeaderDashboard`, `ReviewerDashboard`, `AnnotatorDashboard`) inside `features/dashboard/components/[role]/`. Empty or unrecognised `roles` redirects to `/login` (deny-by-default).
+**Dashboard role dispatch:** `authStore` holds `role: Role` (single-value enum — each user account has exactly one role per IA and JWT contract). `DashboardPage` dispatches with explicit `role ===` checks to role-specific sub-components (`SuperAdminDashboard`, `LeaderDashboard`, `ReviewerDashboard`, `AnnotatorDashboard`) inside `features/dashboard/components/[role]/`. Null or unrecognised `role` redirects to `/login` (deny-by-default).
 
 **Localization namespaces:** Translation keys namespaced per feature — `t('task-management:config_builder.label_name')`. Locale files live at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
 

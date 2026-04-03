@@ -9,7 +9,7 @@ ADR-009 defines the overall project testing strategy (pytest + Playwright), but 
 
 - **Component-level logic** that is too granular for E2E (widget rendering, role dispatch, form validation)
 - **Config-driven task-type widgets** that must be tested in isolation per `task_type`
-- **Multi-role access control** with multiple `roles: Role[]` combinations
+- **Role-based access control** with `role: Role` (single-value enum per IA and JWT contract)
 - **i18n namespace lazy-loading** that introduces async HTTP in the render path
 - **TanStack Query cache** that must be isolated between tests
 - **Axios interceptors** (JWT attach, 401 redirect) that interfere with component test assertions
@@ -232,23 +232,21 @@ test('disables interaction in readOnly mode', () => {
 
 ### Dashboard Role Dispatch Test Matrix
 
-All `roles` combinations must be covered:
+All four valid `role` values plus boundary conditions must be covered. Each user holds exactly one role (single-value enum per IA):
 
 ```tsx
 // features/dashboard/DashboardPage.test.tsx
 const cases = [
-  { roles: ['super_admin'],                   expected: 'SuperAdminDashboard' },
-  { roles: ['project_leader'],                expected: 'LeaderDashboard' },
-  { roles: ['reviewer'],                      expected: 'ReviewerDashboard' },
-  { roles: ['annotator'],                     expected: 'AnnotatorDashboard' },
-  { roles: ['project_leader', 'reviewer'],    expected: 'LeaderDashboard' },  // leader wins
-  { roles: ['reviewer', 'annotator'],         expected: 'ReviewerDashboard' },
-  { roles: [],                                expected: 'redirect:/login' },
-  { roles: ['unknown_role'],                  expected: 'redirect:/login' },
+  { role: 'super_admin',    expected: 'SuperAdminDashboard' },
+  { role: 'project_leader', expected: 'LeaderDashboard' },
+  { role: 'reviewer',       expected: 'ReviewerDashboard' },
+  { role: 'annotator',      expected: 'AnnotatorDashboard' },
+  { role: null,             expected: 'redirect:/login' },   // unauthenticated
+  { role: 'unknown_role',   expected: 'redirect:/login' },   // deny-by-default
 ]
 
-test.each(cases)('roles=$roles renders $expected', ({ roles, expected }) => {
-  const { container } = renderWithProviders(<DashboardPage />, { roles })
+test.each(cases)('role=$role renders $expected', ({ role, expected }) => {
+  const { container } = renderWithProviders(<DashboardPage />, { role })
   if (expected.startsWith('redirect:')) {
     expect(mockNavigate).toHaveBeenCalledWith(expected.replace('redirect:', ''), { replace: true })
   } else {
@@ -274,7 +272,6 @@ type Fixtures = {
   asAnnotator: Page
   asReviewer: Page
   asSuperAdmin: Page
-  asLeaderAndReviewer: Page
 }
 
 export const test = base.extend<Fixtures>({
@@ -285,11 +282,23 @@ export const test = base.extend<Fixtures>({
     await use(await ctx.newPage())
     await ctx.close()
   },
-  // … other roles
-  asLeaderAndReviewer: async ({ browser }, use) => {
-    // user holds both roles — tests multi-role priority dispatch
+  asAnnotator: async ({ browser }, use) => {
     const ctx = await browser.newContext({
-      storageState: 'tests/shared/fixtures/.auth/leader-and-reviewer.json',
+      storageState: 'tests/shared/fixtures/.auth/annotator.json',
+    })
+    await use(await ctx.newPage())
+    await ctx.close()
+  },
+  asReviewer: async ({ browser }, use) => {
+    const ctx = await browser.newContext({
+      storageState: 'tests/shared/fixtures/.auth/reviewer.json',
+    })
+    await use(await ctx.newPage())
+    await ctx.close()
+  },
+  asSuperAdmin: async ({ browser }, use) => {
+    const ctx = await browser.newContext({
+      storageState: 'tests/shared/fixtures/.auth/super-admin.json',
     })
     await use(await ctx.newPage())
     await ctx.close()
