@@ -77,35 +77,70 @@ uv run ruff format .
 
 ```
 label-suite/
-├── frontend/                # React + TypeScript frontend
+├── frontend/                     # React + TypeScript frontend
 │   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── services/        # API client layer
-│   │   ├── stores/          # State management
-│   │   └── types/           # TypeScript type definitions
-│   ├── tests/               # Playwright E2E tests
+│   │   ├── features/             # Vertical axis — one folder per IA module
+│   │   │   ├── auth/             #   LoginPage, ProfilePage + components/hooks/services
+│   │   │   ├── dashboard/        #   DashboardPage; sub-folders: leader/ annotator/ reviewer/
+│   │   │   ├── task-management/  #   TaskListPage, TaskNewPage, TaskDetailPage; ConfigBuilder/
+│   │   │   ├── annotation/       #   AnnotationWorkspacePage; workspace/ review/ task-types/
+│   │   │   ├── dataset/          #   DatasetStatsPage, DatasetQualityPage
+│   │   │   ├── annotator-management/ # AnnotatorListPage, AnnotatorNewPage, WorkLogPage
+│   │   │   └── admin/            #   UserManagementPage, RoleSettingsPage
+│   │   ├── shared/               # Horizontal axis — cross-feature only (2+ features rule)
+│   │   │   ├── ui/               #   Button, Input, Badge, Modal, Toast
+│   │   │   ├── layout/           #   Navbar, Sidebar, BottomTabBar, PageShell
+│   │   │   ├── api/              #   Axios instance + JWT interceptors
+│   │   │   ├── stores/           #   authStore (token/user), uiStore (lang, sidebar)
+│   │   │   ├── hooks/            #   useMediaQuery, useToast
+│   │   │   ├── types/            #   Domain types mirroring backend Pydantic schemas
+│   │   │   └── utils/            #   cn(), formatDate()
+│   │   ├── locales/              # i18n — namespaced per feature (zh-TW/ + en/)
+│   │   └── router/               # Route definitions (lazy per feature) + AuthGuard/RoleGuard
+│   ├── tests/                    # Playwright E2E tests
 │   ├── vite.config.ts
 │   └── package.json
-├── backend/                 # FastAPI backend
+├── backend/                      # FastAPI backend
 │   ├── app/
-│   │   ├── api/routes/      # API route handlers
-│   │   ├── core/            # Core logic, middleware
-│   │   ├── models/          # Database models
-│   │   ├── schemas/         # Pydantic schemas
-│   │   ├── services/        # Business logic layer
-│   │   ├── utils/           # Utility functions
-│   │   └── main.py          # FastAPI entry point
-│   ├── tests/               # pytest tests
+│   │   ├── api/routes/           # API route handlers
+│   │   ├── core/                 # Core logic, middleware
+│   │   ├── models/               # Database models
+│   │   ├── schemas/              # Pydantic schemas
+│   │   ├── services/             # Business logic layer
+│   │   ├── utils/                # Utility functions
+│   │   └── main.py               # FastAPI entry point
+│   ├── tests/                    # pytest tests
 │   └── pyproject.toml
-├── docs/                    # Project documentation
-│   └── research/            # Research & tool analysis
+├── docs/                         # Project documentation
+│   └── research/                 # Research & tool analysis
 ├── docker-compose.yml
 ├── README.md
 ├── README.zh-TW.md
 └── CLAUDE.md
 ```
+
+### Frontend Architecture Principles
+
+> **Decision:** Frontend uses vertical feature slicing — see [ADR-011](docs/adr/011-frontend-source-structure.md) for full rationale.
+
+**Core rule — `shared/` admission test:**
+A file belongs in `shared/` only if it is directly imported by **two or more different feature modules**. Everything else stays inside its feature folder.
+
+**State management layers:**
+
+| Layer | Tool | Manages |
+|-------|------|---------|
+| Server state | TanStack Query | All API data: fetching, caching, mutations |
+| Global client state | Zustand | Auth token/user, language preference, sidebar state |
+| Local UI state | `useState` | Component-level ephemeral state |
+
+Zustand must **not** hold API response data — that belongs to TanStack Query.
+
+**Dashboard role dispatch:** `DashboardPage` dispatches to role-specific sub-components (`LeaderDashboard`, `AnnotatorDashboard`, `ReviewerDashboard`, `AdminDashboard`) inside `features/dashboard/components/[role]/`.
+
+**Localization namespaces:** Translation keys namespaced per feature — `t('task-management:config_builder.label_name')`. Locale files live at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
+
+**Agent Team file ownership (Phase 2 implementation):** Each `FrontendAgent` owns one `features/[module]/` directory. No agent touches another agent's feature folder.
 
 ## Communication
 
