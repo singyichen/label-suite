@@ -46,7 +46,7 @@ sequenceDiagram
 
 ### User Story 1 - View and Edit Profile Info (Priority: P1)
 
-登入後的使用者（管理員、標記員、審核員）可以在個人設定頁查看自己的帳號資訊，並編輯顯示名稱與頭像，讓平台上的其他使用者能識別自己。
+登入後的使用者（Project Leader、標記員、審核員、Super Admin）可以在個人設定頁查看自己的帳號資訊，並編輯顯示名稱與頭像，讓平台上的其他使用者能識別自己。
 
 **Why this priority**: 所有角色都需要基本的個人資料管理，是帳號模組的核心功能，且不依賴任何其他模組。
 
@@ -116,7 +116,7 @@ flowchart LR
 
 ### Key Entities
 
-- **UserProfile**：代表已登入使用者的個人資料。主要屬性：`id`、`display_name`、`email`（來自 SSO，唯讀）、`avatar_url`、`role`（admin｜annotator｜reviewer）、`language_preference`（zh｜en）。
+- **UserProfile**：代表已登入使用者的個人資料。主要屬性：`id`、`display_name`、`email`（來自 SSO，唯讀）、`avatar_url`、`role`（annotator | project_leader | reviewer | super_admin）、`language_preference`（zh｜en）。
 
 ## Success Criteria *(required)*
 
