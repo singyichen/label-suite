@@ -77,35 +77,70 @@ uv run ruff format .
 
 ```
 label-suite/
-├── frontend/                # React + TypeScript frontend
+├── frontend/                     # React + TypeScript frontend
 │   ├── src/
-│   │   ├── components/      # React components
-│   │   ├── pages/           # Page components
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── services/        # API client layer
-│   │   ├── stores/          # State management
-│   │   └── types/           # TypeScript type definitions
-│   ├── tests/               # Playwright E2E tests
+│   │   ├── features/             # Vertical axis — one folder per IA module
+│   │   │   ├── account/          #   LoginPage, ProfilePage + components/hooks/services
+│   │   │   ├── dashboard/        #   DashboardPage; sub-folders: leader/ annotator/ reviewer/ super-admin/
+│   │   │   ├── task-management/  #   TaskListPage, TaskNewPage, TaskDetailPage; ConfigBuilder/
+│   │   │   ├── annotation/       #   AnnotationWorkspacePage; workspace/ review/ task-types/
+│   │   │   ├── dataset/          #   DatasetStatsPage, DatasetQualityPage
+│   │   │   ├── annotator-management/ # AnnotatorListPage, AnnotatorNewPage, WorkLogPage
+│   │   │   └── admin/            #   UserManagementPage, RoleSettingsPage
+│   │   ├── shared/               # Horizontal axis — cross-feature only (2+ features rule)
+│   │   │   ├── ui/               #   Button, Input, Badge, Modal, Toast
+│   │   │   ├── layout/           #   Navbar, Sidebar, BottomTabBar, PageShell
+│   │   │   ├── api/              #   Axios instance + JWT interceptors
+│   │   │   ├── stores/           #   authStore (token/user), uiStore (lang, sidebar)
+│   │   │   ├── hooks/            #   useMediaQuery, useToast
+│   │   │   ├── types/            #   Domain types mirroring backend Pydantic schemas
+│   │   │   └── utils/            #   cn(), formatDate()
+│   │   ├── locales/              # i18n — namespaced per feature (zh-TW/ + en/)
+│   │   └── router/               # Route definitions (lazy per feature) + AuthGuard/RoleGuard
+│   ├── tests/                    # Playwright E2E tests
 │   ├── vite.config.ts
 │   └── package.json
-├── backend/                 # FastAPI backend
+├── backend/                      # FastAPI backend
 │   ├── app/
-│   │   ├── api/routes/      # API route handlers
-│   │   ├── core/            # Core logic, middleware
-│   │   ├── models/          # Database models
-│   │   ├── schemas/         # Pydantic schemas
-│   │   ├── services/        # Business logic layer
-│   │   ├── utils/           # Utility functions
-│   │   └── main.py          # FastAPI entry point
-│   ├── tests/               # pytest tests
+│   │   ├── api/routes/           # API route handlers
+│   │   ├── core/                 # Core logic, middleware
+│   │   ├── models/               # Database models
+│   │   ├── schemas/              # Pydantic schemas
+│   │   ├── services/             # Business logic layer
+│   │   ├── utils/                # Utility functions
+│   │   └── main.py               # FastAPI entry point
+│   ├── tests/                    # pytest tests
 │   └── pyproject.toml
-├── docs/                    # Project documentation
-│   └── research/            # Research & tool analysis
+├── docs/                         # Project documentation
+│   └── research/                 # Research & tool analysis
 ├── docker-compose.yml
 ├── README.md
 ├── README.zh-TW.md
 └── CLAUDE.md
 ```
+
+### Frontend Architecture Principles
+
+> **Decision:** Frontend uses vertical feature slicing — see [ADR-011](docs/adr/011-frontend-source-structure.md) for full rationale.
+
+**Core rule — `shared/` admission test:**
+A file belongs in `shared/` only if it is directly imported by **two or more different feature modules**. Everything else stays inside its feature folder.
+
+**State management layers:**
+
+| Layer | Tool | Manages |
+|-------|------|---------|
+| Server state | TanStack Query | All API data: fetching, caching, mutations |
+| Global client state | Zustand | Auth token/user, language preference, sidebar state |
+| Local UI state | `useState` | Component-level ephemeral state |
+
+Zustand must **not** hold API response data — that belongs to TanStack Query.
+
+**Dashboard role dispatch:** `authStore` holds `roles: Role[]` (users may have multiple roles). `DashboardPage` checks highest-privilege role first using `roles.includes(r)` and dispatches to role-specific sub-components (`SuperAdminDashboard`, `LeaderDashboard`, `ReviewerDashboard`, `AnnotatorDashboard`) inside `features/dashboard/components/[role]/`. Empty or unrecognised `roles` redirects to `/login` (deny-by-default).
+
+**Localization namespaces:** Translation keys namespaced per feature — `t('task-management:config_builder.label_name')`. Locale files live at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
+
+**Agent Team file ownership (Phase 2 implementation):** Each `FrontendAgent` owns one `features/[module]/` directory. No agent touches another agent's feature folder.
 
 ## Communication
 
@@ -207,19 +242,19 @@ Format: `<type>/<short-description>`, lowercase with `-` separator, aligned with
 This project adopts Spec-Driven Development (SDD). New features should follow this sequence:
 
 ```
-/speckit.specify <feature description>  → specs/NNN-feature/spec.md
+/speckit.specify <feature description>  → specs/[module]/NNN-feature/spec.md
                                           ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
                                           ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
-/pencil wireframe                       → design/wireframes/pages/[page].pen  (optional, after specify)
+/pencil wireframe                       → design/wireframes/pages/[module]/[page].pen  (optional, after specify)
                                           ⚠ Each .pen: Desktop ZH (x:0) · Desktop EN (x:1500) · Mobile ZH (x:3000) · Mobile EN (x:4500)
                                             + Component ZH (x:6000) · Component EN (x:7500); draw ZH first, Desktop before Mobile
-/ui-ux-pro-max                          → design/prototype/ + design/system/  (optional, after wireframe)
-                                          ⚠ Before generating: read MASTER.md + design/wireframes/[page].pen via Pencil MCP
+/ui-ux-pro-max                          → design/prototype/[module]/[page].html + design/system/  (optional, after wireframe)
+                                          ⚠ Before generating: read MASTER.md + design/wireframes/pages/[module]/[page].pen via Pencil MCP
 /senior-uiux review                     → prototype QA: wireframe fidelity, design system compliance, a11y  (optional, after prototype)
 /speckit.clarify                        → clarify requirements          (optional; wireframe + prototype surface ambiguities)
-/speckit.plan                           → specs/NNN-feature/plan.md
+/speckit.plan                           → specs/[module]/NNN-feature/plan.md
                                           ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
-/speckit.tasks                          → specs/NNN-feature/tasks.md
+/speckit.tasks                          → specs/[module]/NNN-feature/tasks.md
 /speckit.analyze                        → cross-document consistency check (optional)
 /speckit.implement                      → execute implementation
 /speckit.checklist                      → quality validation
@@ -238,7 +273,10 @@ All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart
 **Key Rules**:
 - Each spec directory contains: `spec.md`, `plan.md`, `tasks.md`, `checklists/`
 - Follow User Story priority order (P1 → P2 → P3)
-- Mark completion with `touch specs/<feature-dir>/.completed`
+- Mark completion with `touch specs/<module>/<feature-dir>/.completed`
+
+**Module names** (align with `features/` in ADR-011):
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
 
 ### When to Skip SDD
 
@@ -270,8 +308,8 @@ The deciding question is: **will this change make the system behave differently 
 | Command | Purpose |
 |---|---|
 | `/speckit.specify` | Create feature spec from natural language description |
-| `pencil wireframe` | Draw 6 frames (Desktop ZH·EN · Mobile ZH·EN · Component ZH·EN) in `design/wireframes/pages/[page].pen` via Pencil MCP (optional; run after specify, before prototype) |
-| `/ui-ux-pro-max` | Generate HTML prototype + design system based on wireframe (optional; run after wireframe, before clarify) |
+| `pencil wireframe` | Draw 6 frames (Desktop ZH·EN · Mobile ZH·EN · Component ZH·EN) in `design/wireframes/pages/[module]/[page].pen` via Pencil MCP (optional; run after specify, before prototype) |
+| `/ui-ux-pro-max` | Generate HTML prototype to `design/prototype/[module]/[page].html` + design system (optional; run after wireframe, before clarify) |
 | `senior-uiux review` | Review prototype against wireframe for fidelity, design system compliance, a11y, ZH/EN/mobile symmetry (optional; run after ui-ux-pro-max) |
 | `/speckit.clarify` | Identify and clarify ambiguous requirements (wireframe + prototype help surface these) |
 | `/speckit.plan` | Build technical implementation plan |
@@ -282,7 +320,8 @@ The deciding question is: **will this change make the system behave differently 
 
 ### Pencil Wireframe Convention
 
-- Each page wireframe is stored as a separate file under `design/wireframes/pages/[page-name].pen` (e.g. `login.pen`, `profile.pen`)
+- Each page wireframe is stored as a separate file under `design/wireframes/pages/[module]/[page-name].pen` (e.g. `account/login.pen`, `task-management/task-new.pen`)
+- Module names mirror `frontend/src/features/`: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
 - `design/wireframes/index.pen` is for overview purposes only — **do not** place page wireframe frames inside it
 - Each `.pen` file contains **6 side-by-side frames** in this order:
 
@@ -359,7 +398,7 @@ All development must follow the six core principles in [constitution.md](.specif
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
 /speckit.specify
   → [pencil wireframe]           Draw 6 frames (Desktop/Mobile ZH·EN + Components) in
-                                   design/wireframes/pages/[page].pen via Pencil MCP
+                                   design/wireframes/pages/[module]/[page].pen via Pencil MCP
   → [/ui-ux-pro-max] (optional) — HTML prototype + design system; use wireframe as layout reference
   → [senior-uiux review]         Review prototype against wireframe: fidelity, a11y, ZH/EN/mobile symmetry
   → /speckit.clarify (optional)  Wireframe + prototype make ambiguities concrete
