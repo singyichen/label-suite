@@ -116,7 +116,7 @@ flowchart LR
 
 ### Key Entities
 
-- **UserProfile**：代表已登入使用者的個人資料。主要屬性：`id`、`display_name`、`email`（來自 SSO，唯讀）、`avatar_url`、`role`（admin｜annotator｜reviewer）、`language_preference`（zh｜en）。
+- **UserProfile**：代表已登入使用者的個人資料。主要屬性：`id`、`display_name`、`email`（來自 SSO，唯讀）、`avatar_url`、`role`（annotator | project_leader | reviewer | super_admin）、`language_preference`（zh｜en）。
 
 ## Success Criteria *(required)*
 

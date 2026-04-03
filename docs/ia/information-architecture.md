@@ -352,7 +352,7 @@ sequenceDiagram
 
 ### 旅程 C — 審核員審查並查看品質報告
 
-> 審核員可以是 Project Leader 本人（雙重角色）。
+> 審核員在組織上可由 Project Leader 兼任，但系統層面需建立兩個獨立帳號（各持有單一 role）分別執行兩種職責。
 
 ```mermaid
 sequenceDiagram
