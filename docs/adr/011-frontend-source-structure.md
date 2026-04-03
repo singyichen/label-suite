@@ -5,7 +5,7 @@
 
 ## Context
 
-The frontend needs a source directory convention before implementation begins. The project has 14 pages across 6 modules, 4 user roles with role-specific views, bilingual support (zh-TW / en), and a complex annotation workspace with config-driven task types.
+The frontend needs a source directory convention before implementation begins. The project has 14 pages across 7 modules, 4 user roles with role-specific views, bilingual support (zh-TW / en), and a complex annotation workspace with config-driven task types.
 
 Two primary strategies were evaluated:
 

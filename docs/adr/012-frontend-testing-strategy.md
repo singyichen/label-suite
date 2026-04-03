@@ -63,16 +63,16 @@ shared/ui/
 └── Button.test.tsx
 ```
 
-Hooks are tested with `renderHook` from React Testing Library:
+Hooks are tested with `renderHook` from React Testing Library. Use `createWrapper` (not `renderWithProviders`) as the `wrapper` option — `renderHook` expects a React component returning JSX, not a render result:
 
 ```ts
 // features/task-management/hooks/useTaskList.test.ts
 import { renderHook, waitFor } from '@testing-library/react'
 import { useTaskList } from './useTaskList'
-import { wrapper } from '@/tests/shared/utils/renderWithProviders'
+import { createWrapper } from '@/tests/shared/utils/renderWithProviders'
 
 test('fetches task list', async () => {
-  const { result } = renderHook(() => useTaskList(), { wrapper })
+  const { result } = renderHook(() => useTaskList(), { wrapper: createWrapper() })
   await waitFor(() => expect(result.current.isSuccess).toBe(true))
   expect(result.current.data).toHaveLength(2)
 })
@@ -94,12 +94,12 @@ function makeTestQueryClient() {
   })
 }
 
+// For component tests: renders ui inside providers, returns RTL RenderResult
 export function renderWithProviders(
   ui: React.ReactElement,
   { roles = ['annotator'], route = '/' } = {}
 ) {
   const queryClient = makeTestQueryClient()
-  // Seed authStore with test roles
   useAuthStore.setState({ roles, user: mockUser, token: 'test-token' })
 
   return render(
@@ -111,9 +111,23 @@ export function renderWithProviders(
   )
 }
 
-// Use as a wrapper for renderHook
-export const wrapper = ({ children }: { children: React.ReactNode }) =>
-  renderWithProviders(children as React.ReactElement)
+// For renderHook: returns a React component (JSX), NOT a RenderResult.
+// renderHook's `wrapper` option requires a component that accepts { children }
+// and returns JSX — calling render() here would return RenderResult and break it.
+export function createWrapper({ roles = ['annotator'], route = '/' } = {}) {
+  const queryClient = makeTestQueryClient()
+  useAuthStore.setState({ roles, user: mockUser, token: 'test-token' })
+
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[route]}>
+          {children}
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
+  }
+}
 ```
 
 ### HTTP Mocking with `msw`
