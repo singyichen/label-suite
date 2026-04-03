@@ -66,7 +66,8 @@ frontend/src/
 │   │   ├── components/
 │   │   │   ├── leader/
 │   │   │   ├── annotator/
-│   │   │   └── reviewer/
+│   │   │   ├── reviewer/
+│   │   │   └── super-admin/
 │   │   ├── hooks/
 │   │   └── services/
 │   ├── task-management/
@@ -168,11 +169,15 @@ export default function DashboardPage() {
   if (role === 'project_leader') return <LeaderDashboard />
   if (role === 'annotator')      return <AnnotatorDashboard />
   if (role === 'reviewer')       return <ReviewerDashboard />
-  return <AdminDashboard />
+  if (role === 'super_admin')    return <SuperAdminDashboard />
+  // Unknown role — deny by default, redirect to login
+  return <Navigate to="/login" replace />
 }
 ```
 
-Each `*Dashboard` component lives in `features/dashboard/components/[role]/`.
+Each `*Dashboard` component lives in `features/dashboard/components/[role]/` (`leader/`, `annotator/`, `reviewer/`, `super-admin/`).
+
+> **Security note:** The dispatch must be explicit for every known role. Unknown or missing roles redirect to `/login` (deny-by-default). Never use a catch-all fallback that renders privileged UI.
 
 ### Routing and Code Splitting
 

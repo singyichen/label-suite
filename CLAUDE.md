@@ -81,7 +81,7 @@ label-suite/
 │   ├── src/
 │   │   ├── features/             # Vertical axis — one folder per IA module
 │   │   │   ├── auth/             #   LoginPage, ProfilePage + components/hooks/services
-│   │   │   ├── dashboard/        #   DashboardPage; sub-folders: leader/ annotator/ reviewer/
+│   │   │   ├── dashboard/        #   DashboardPage; sub-folders: leader/ annotator/ reviewer/ super-admin/
 │   │   │   ├── task-management/  #   TaskListPage, TaskNewPage, TaskDetailPage; ConfigBuilder/
 │   │   │   ├── annotation/       #   AnnotationWorkspacePage; workspace/ review/ task-types/
 │   │   │   ├── dataset/          #   DatasetStatsPage, DatasetQualityPage
@@ -136,7 +136,7 @@ A file belongs in `shared/` only if it is directly imported by **two or more dif
 
 Zustand must **not** hold API response data — that belongs to TanStack Query.
 
-**Dashboard role dispatch:** `DashboardPage` dispatches to role-specific sub-components (`LeaderDashboard`, `AnnotatorDashboard`, `ReviewerDashboard`, `AdminDashboard`) inside `features/dashboard/components/[role]/`.
+**Dashboard role dispatch:** `DashboardPage` explicitly dispatches to role-specific sub-components (`LeaderDashboard`, `AnnotatorDashboard`, `ReviewerDashboard`, `SuperAdminDashboard`) inside `features/dashboard/components/[role]/`. Unknown roles redirect to `/login` (deny-by-default — no catch-all fallback).
 
 **Localization namespaces:** Translation keys namespaced per feature — `t('task-management:config_builder.label_name')`. Locale files live at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
 
