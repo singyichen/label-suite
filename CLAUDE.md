@@ -69,7 +69,7 @@ label-suite/
 │       │   ├── ui/
 │       │   ├── layout/
 │       │   ├── api/              # Axios instance + JWT interceptors
-│       │   ├── stores/           # authStore (token/user), uiStore (lang, sidebar)
+│       │   ├── stores/           # authStore (token/user/role), uiStore (lang, sidebar)
 │       │   ├── hooks/
 │       │   ├── types/            # Domain types mirroring backend Pydantic schemas
 │       │   └── utils/

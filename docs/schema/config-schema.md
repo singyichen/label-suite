@@ -111,7 +111,7 @@
 | `labels[].display` | string | ✅ | UI 顯示文字 |
 | `labels[].color` | string | ❌ | HEX 色碼；未填時前端從預設色盤自動指派 |
 | `allow_multiple` | boolean | ✅ | `false` = 單選，`true` = 多標籤 |
-| `require_reason` | boolean | ❌ | `false` | 是否要求標記員填寫理由 |
+| `require_reason` | boolean | ❌ | 預設 `false`；是否要求標記員填寫理由 |
 
 **建議 metric：** `f1_macro`、`accuracy`
 
@@ -305,7 +305,7 @@
     "relation_types": [
       { "id": "causes",        "display": "導致",     "description": "基因/藥物導致疾病" },
       { "id": "treats",        "display": "治療",     "description": "藥物治療疾病" },
-      { "id": "associated_with", "display": "相關",   "description": "基因與疾病相關" }
+      { "id": "associated-with", "display": "相關",   "description": "基因與疾病相關" }
     ]
   },
   "evaluation": {
