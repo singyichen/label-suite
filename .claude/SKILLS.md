@@ -18,6 +18,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── speckit.taskstoissues.md # Convert tasks to GitHub Issues
 │   ├── pencil-wireframe.md      # Draw 6-frame wireframes via Pencil MCP
 │   ├── pr-flow.md               # Full PR flow (commit → review → test → merge)
+│   ├── review-resolve.md        # Fetch PR review threads, fix findings, resolve
 │   └── agent-team.md            # Multi-phase agent team workflow for new features
 ├── skills/                      # Knowledge-Domain Skills (30 total)
 │   ├── spec-driven-development/
@@ -78,6 +79,7 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 | `/speckit.checklist` | Generate quality validation checklist | `/speckit.checklist security` |
 | `/speckit.constitution` | Create or update the project constitution | `/speckit.constitution` |
 | `/speckit.taskstoissues` | Convert tasks.md into GitHub Issues | `/speckit.taskstoissues` |
+| `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
 
 ### SDD Workflow
 
