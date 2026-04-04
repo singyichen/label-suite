@@ -43,7 +43,9 @@ Adopt a **Config-Driven Architecture** as a NON-NEGOTIABLE design principle.
 
 Every task type is defined by a configuration object stored in the database (`JSONB`) and loaded from a user-supplied config file at task creation. The platform core never contains task-specific logic.
 
-### Config Schema (planned)
+### Config Schema
+
+> **完整 schema 定義見 [`docs/config-schema.md`](../config-schema.md)**（五種 task_type 的欄位規格、Pydantic 約束、metrics registry）。以下為概略範例：
 
 ```yaml
 # example task config
