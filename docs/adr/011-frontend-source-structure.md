@@ -323,7 +323,7 @@ function RoleGuard({ allow }: { allow: Role[] }) {
 
 The JWT `role` field remains a single string. Inheritance is resolved entirely on the frontend at the guard layer — the backend uses the same hierarchy table for API-level authorization.
 
-Example: a `project_leader` accessing `/annotation` (which has `allow={['reviewer']}`) is permitted because `ROLE_HIERARCHY['project_leader']` includes `'reviewer'`.
+Example: a `project_leader` accessing `/annotation` (which has `allow={['annotator', 'reviewer']}`) is permitted because `ROLE_HIERARCHY['project_leader']` includes `'reviewer'`.
 
 ---
 
