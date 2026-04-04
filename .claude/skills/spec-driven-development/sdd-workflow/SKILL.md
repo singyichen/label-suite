@@ -14,7 +14,7 @@ This project adopts Spec-Driven Development (SDD). New features follow the seque
                                           ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
                                           ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
 /pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen  (optional, after specify)
-/ui-ux-pro-max                          → design/prototype/[module]/[page].html + design/system/  (optional, after wireframe)
+/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/  (optional, after wireframe)
                                           ⚠ Before generating: read MASTER.md + wireframe via Pencil MCP
 [senior-uiux review]                    → prototype QA: wireframe fidelity, design system compliance, a11y  (optional)
 /speckit.clarify                        → clarify requirements  (optional; wireframe + prototype surface ambiguities)
@@ -102,7 +102,7 @@ All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart
 |---|---|---|
 | `/speckit.specify` | Create feature spec from description | `specs/[module]/NNN/spec.md` |
 | `/pencil-wireframe` | Draw 6 frames (Desktop/Mobile ZH·EN + Components) | `design/wireframes/pages/[module]/[page].pen` |
-| `/ui-ux-pro-max` | Generate HTML prototype + design system | `design/prototype/[module]/[page].html` |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system | `design/prototype/pages/[module]/[page].html` |
 | `/speckit.clarify` | Identify and clarify ambiguous requirements | Questions + answers |
 | `/speckit.plan` | Build technical implementation plan | `specs/[module]/NNN/plan.md` |
 | `/speckit.tasks` | Generate executable task list | `specs/[module]/NNN/tasks.md` |

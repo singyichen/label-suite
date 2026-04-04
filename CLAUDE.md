@@ -87,7 +87,7 @@ label-suite/
 ├── specs/                        # SDD specs — specs/[module]/NNN-feature/
 ├── design/
 │   ├── wireframes/pages/         # Pencil wireframes — [module]/[page].pen
-│   ├── prototype/                # HTML prototypes — [module]/[page].html
+│   ├── prototype/pages/          # HTML prototypes — [module]/[page].html
 │   └── system/                   # Design system (MASTER.md + inventory.md)
 ├── docs/adr/                     # Architecture Decision Records
 └── docker-compose.yml
@@ -214,7 +214,7 @@ This project adopts SDD. See `/sdd-workflow` skill for the full pipeline, comman
 
 **Design artifact paths** (all mirror module names):
 - Wireframes: `design/wireframes/pages/[module]/[page].pen`
-- Prototypes: `design/prototype/[module]/[page].html`
+- Prototypes: `design/prototype/pages/[module]/[page].html`
 - Specs: `specs/[module]/NNN-feature/`
 
 ## Constitution

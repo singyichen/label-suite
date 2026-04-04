@@ -282,11 +282,21 @@ const cases = [
 ]
 
 test.each(cases)('role=$role allow=$allow → $permitted', ({ role, allow, permitted }) => {
-  renderWithProviders(<RoleGuard allow={allow}><div>content</div></RoleGuard>, { role })
+  // RoleGuard renders <Outlet /> — must use a nested route tree, not direct children
+  renderWithProviders(
+    <Routes>
+      <Route path="/" element={<div>home</div>} />
+      <Route element={<RoleGuard allow={allow} />}>
+        <Route path="/protected" element={<div>content</div>} />
+      </Route>
+    </Routes>,
+    { role, route: '/protected' }
+  )
   if (permitted) {
     expect(screen.getByText('content')).toBeInTheDocument()
   } else {
-    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true })
+    // <Navigate to="/" replace /> resolves to the home route within MemoryRouter
+    expect(screen.getByText('home')).toBeInTheDocument()
   }
 })
 ```

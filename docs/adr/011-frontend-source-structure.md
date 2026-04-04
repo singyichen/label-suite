@@ -131,7 +131,7 @@ frontend/
 │   │   │   ├── client.ts             # Axios instance + JWT interceptors + 401 redirect
 │   │   │   └── queryClient.ts        # TanStack QueryClient instance (new QueryClient())
 │   │   ├── stores/                   # Zustand stores
-│   │   │   ├── authStore.ts          # Current user, roles[], token
+│   │   │   ├── authStore.ts          # Current user, role, token
 │   │   │   └── uiStore.ts            # Language preference, sidebar open state
 │   │   ├── hooks/                    # useMediaQuery, useToast
 │   │   ├── types/                    # Domain types mirroring backend Pydantic schemas
@@ -193,7 +193,7 @@ When a type or component starts in one feature and later needs to be used in a s
 | Layer | Tool | What It Manages |
 |-------|------|-----------------|
 | Server state | TanStack Query | All API data: fetching, caching, mutations |
-| Global client state | Zustand | Auth token/user/roles, UI preferences (language, sidebar) |
+| Global client state | Zustand | Auth token/user/role, UI preferences (language, sidebar) |
 | Local UI state | `useState` / `useReducer` | Component-level ephemeral state |
 
 **Zustand stores must not hold API response data** — that is TanStack Query's responsibility.
