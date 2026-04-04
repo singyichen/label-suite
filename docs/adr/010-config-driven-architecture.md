@@ -45,7 +45,7 @@ Every task type is defined by a configuration object stored in the database (`JS
 
 ### Config Schema
 
-> **完整 schema 定義見 [`docs/config-schema.md`](../config-schema.md)**（五種 task_type 的欄位規格、Pydantic 約束、metrics registry）。以下為概略範例：
+> **完整 schema 定義見 [`docs/schema/config-schema.md`](../schema/config-schema.md)**（五種 task_type 的欄位規格、Pydantic 約束、metrics registry）。以下為概略範例：
 
 ```yaml
 # example task config
