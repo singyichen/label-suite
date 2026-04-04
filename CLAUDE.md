@@ -58,21 +58,21 @@ label-suite/
 ├── frontend/
 │   └── src/
 │       ├── features/             # Vertical axis — one folder per IA module
-│       │   ├── account/          #   LoginPage, ProfilePage
-│       │   ├── dashboard/        #   DashboardPage; sub-folders: leader/ annotator/ reviewer/ super-admin/
-│       │   ├── task-management/  #   TaskListPage, TaskNewPage, TaskDetailPage; ConfigBuilder/
-│       │   ├── annotation/       #   AnnotationWorkspacePage; workspace/ review/ task-types/
-│       │   ├── dataset/          #   DatasetStatsPage, DatasetQualityPage
-│       │   ├── annotator-management/ # AnnotatorListPage, AnnotatorNewPage, WorkLogPage
-│       │   └── admin/            #   UserManagementPage, RoleSettingsPage
+│       │   ├── account/
+│       │   ├── dashboard/        # sub-folders: leader/ annotator/ reviewer/ super-admin/
+│       │   ├── task-management/  # includes ConfigBuilder/
+│       │   ├── annotation/       # includes workspace/ review/ task-types/
+│       │   ├── dataset/
+│       │   ├── annotator-management/
+│       │   └── admin/
 │       ├── shared/               # Cross-feature only (2+ features rule)
-│       │   ├── ui/               #   Button, Input, Badge, Modal, Toast
-│       │   ├── layout/           #   Navbar, Sidebar, BottomTabBar, PageShell
-│       │   ├── api/              #   Axios instance + JWT interceptors
-│       │   ├── stores/           #   authStore (token/user), uiStore (lang, sidebar)
-│       │   ├── hooks/            #   useMediaQuery, useToast
-│       │   ├── types/            #   Domain types mirroring backend Pydantic schemas
-│       │   └── utils/            #   cn(), formatDate()
+│       │   ├── ui/
+│       │   ├── layout/
+│       │   ├── api/              # Axios instance + JWT interceptors
+│       │   ├── stores/           # authStore (token/user), uiStore (lang, sidebar)
+│       │   ├── hooks/
+│       │   ├── types/            # Domain types mirroring backend Pydantic schemas
+│       │   └── utils/
 │       ├── locales/              # i18n — namespaced per feature (zh-TW/ + en/)
 │       └── router/               # Route definitions (lazy per feature) + AuthGuard/RoleGuard
 ├── backend/
@@ -135,20 +135,14 @@ Zustand must **not** hold API response data.
 
 ### Python (Backend)
 
-- Use 4-space indentation
-- Variables use snake_case
-- All functions must have docstrings in English (`Args:`, `Returns:`, `Raises:`)
-- Functions must have complete type hints
-- Use pytest, not unittest
-- Prefer f-strings over format()
+- All functions must have docstrings in English (`Args:`, `Returns:`, `Raises:`) with complete type hints
+- Use pytest, not unittest; prefer f-strings over format()
 
 ### TypeScript (Frontend)
 
-- Use 2-space indentation
-- Variables use camelCase, React components use PascalCase
-- Use TypeScript strict mode, no `any` types
-- Prefer functional components + hooks
+- No `any` types (strict mode enforced)
 - Use `interface` for props, `type` for union/intersection types
+- Prefer functional components + hooks
 
 ## General Coding Rules
 
@@ -182,23 +176,11 @@ Commit frequently — after every logical group of changes. Keep messages concis
 
 Format: `<type>: <description>`
 
-| Type | Purpose |
-|---|---|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation |
-| `refactor` | Refactoring |
-| `test` | Tests |
-| `style` | Formatting |
-| `chore` | Build / dependencies |
-| `perf` | Performance |
-| `ci` | CI/CD changes |
+Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` · `perf` · `ci`
 
 ### Branch Naming
 
-Format: `<type>/<short-description>`, lowercase with `-` separator.
-
-Examples: `feat/labeling-ui` · `fix/score-calculation` · `docs/roadmap-update`
+Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `feat/labeling-ui` · `fix/score-calculation`
 
 ### Protection Rules
 
@@ -219,14 +201,9 @@ This project adopts SDD. See `/sdd-workflow` skill for the full pipeline, comman
 
 ## Constitution
 
-All development must follow the six core principles in [constitution.md](.specify/memory/constitution.md):
+All development must follow the six core principles in [constitution.md](.specify/memory/constitution.md).
 
-1. **Spec-First Development** (RECOMMENDED) — write spec before new features
-2. **Generalization-First** (NON-NEGOTIABLE) — config-driven, no hardcoded task logic
-3. **Data Fairness** (NON-NEGOTIABLE) — prevent test-set answer leakage
-4. **Test-First / TDD** (RECOMMENDED) — pytest 80%+ coverage, Playwright for core flows
-5. **Simplicity** — YAGNI, KISS, avoid over-engineering
-6. **English-First** — code, comments, and commit messages in English
+NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logic) · **Data Fairness** (prevent test-set answer leakage).
 
 ## Workflow Quick Reference
 
