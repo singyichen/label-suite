@@ -207,7 +207,7 @@ Skills for quality gates, defect management, traceability, and reporting.
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
 | UI/UX Design | 1 | ui-ux-pro-max |
 | Diagramming | 1 | xmind-import |
-| **Total** | **31** | |
+| **Total** | **30** | |
 
 ---
 
@@ -255,4 +255,4 @@ For the Label Suite project, these skills enforce additional constraints for the
 ---
 
 *Last Updated: 2026-04-04*
-*Total Skills: 31 | Spec-Kit Commands: 9*
+*Total Skills: 30 | Spec-Kit Commands: 9*
