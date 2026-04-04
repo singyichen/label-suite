@@ -100,15 +100,15 @@ All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart
 
 | Command | Purpose | Output |
 |---|---|---|
-| `/speckit.specify` | Create feature spec from description | `specs/[module]/NNN/spec.md` |
+| `/speckit.specify` | Create feature spec from description | `specs/[module]/NNN-feature/spec.md` |
 | `/pencil-wireframe` | Draw 6 frames (Desktop/Mobile ZH·EN + Components) | `design/wireframes/pages/[module]/[page].pen` |
 | `/ui-ux-pro-max` | Generate HTML prototype + design system | `design/prototype/pages/[module]/[page].html` |
 | `/speckit.clarify` | Identify and clarify ambiguous requirements | Questions + answers |
-| `/speckit.plan` | Build technical implementation plan | `specs/[module]/NNN/plan.md` |
-| `/speckit.tasks` | Generate executable task list | `specs/[module]/NNN/tasks.md` |
+| `/speckit.plan` | Build technical implementation plan | `specs/[module]/NNN-feature/plan.md` |
+| `/speckit.tasks` | Generate executable task list | `specs/[module]/NNN-feature/tasks.md` |
 | `/speckit.analyze` | Cross-document consistency check | Analysis report |
 | `/speckit.implement` | Execute implementation | Code changes |
-| `/speckit.checklist` | Generate quality validation checklist | `specs/[module]/NNN/checklists/` |
+| `/speckit.checklist` | Generate quality validation checklist | `specs/[module]/NNN-feature/checklists/` |
 | `/agent-team` | Multi-phase agent team workflow for cross-layer features | — |
 | `/pr-flow` | Full PR flow (commit → review → test → merge) | — |
 

@@ -361,7 +361,7 @@ sequenceDiagram
 
 ### 旅程 C — 審核員審查並查看品質報告
 
-> 審核員在組織上可由 Project Leader 兼任，但系統層面需建立兩個獨立帳號（各持有單一 role）分別執行兩種職責。
+> 審核員在組織上可由 Project Leader 兼任。透過 RBAC 繼承，單一 `project_leader` 帳號即繼承所有 `reviewer` 能力，無需建立兩個獨立帳號。
 
 ```mermaid
 sequenceDiagram
