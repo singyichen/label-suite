@@ -5,6 +5,37 @@
 **狀態**：Clarified
 **需求來源**：IA v7 Spec 清單 #009 — 工時紀錄
 
+## 流程說明
+
+```mermaid
+sequenceDiagram
+    actor A as Annotator
+    participant WS as annotation-workspace
+    participant API as Backend API
+    participant DB as Database
+
+    A->>WS: 進入 annotation-workspace
+    WS->>API: POST /work-logs/start
+    API->>DB: INSERT WorkLog (user_id, task_id, start_at)
+    DB-->>API: 記錄建立
+    A->>WS: 離開 annotation-workspace（路由切換或關閉）
+    WS->>API: PATCH /work-logs/{id}/end
+    API->>API: 計算 duration = end_at - start_at
+    API->>DB: UPDATE WorkLog SET end_at, duration, annotation_count
+    DB-->>API: 更新成功
+```
+
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|----------|
+| 1 | Annotator | 進入 `annotation-workspace` | 系統記錄 WorkLog 開始時間（`start_at`）|
+| 2 | System | — | 在 `work_logs` 表建立進行中的工時記錄 |
+| 3 | Annotator | 離開 `annotation-workspace`（路由切換或關閉）| 觸發工時結束事件 |
+| 4 | System | — | 記錄 WorkLog 結束時間（`end_at`）|
+| 5 | System | — | 計算 `duration = end_at - start_at` |
+| 6 | System | — | 寫入完整 WorkLog 至 `work_logs` 表 |
+
+---
+
 ## 使用者情境與測試 *(必填)*
 
 ### User Story 1 — Annotator 查看自己的工時紀錄（優先級：P1）
@@ -36,7 +67,7 @@
 
 1. **Given** 任務 PL 從 `/annotator-list` 點選某標記員，**When** 進入該成員的 `/work-log`，**Then** 顯示該成員在 PL 所負責任務中的標記時間與標記數量。
 2. **Given** 任務 PL 在成員的 `/work-log`，**When** 切換任務篩選，**Then** 只顯示選定任務的工時資料。
-3. **Given** 任務 PL 查看非自己任務的成員工時，**Then** 系統拒絕存取，只顯示 PL 自己負責任務的成員資料。
+3. **Given** 任務 PL 嘗試查看非自己任務的成員工時，**When** 直接以 URL 存取非所屬任務成員的 `/work-log` 頁面，**Then** 系統拒絕存取，只顯示 PL 自己負責任務的成員資料。
 
 ---
 
@@ -51,7 +82,7 @@
 
 ### 功能需求
 
-- **FR-001**：`/work-log` 只有已登入使用者可存取；`annotator` 只能查看自己的紀錄；任務 `project_leader` 可查看其負責任務的成員紀錄；`super_admin` 可查看所有平台成員的工時紀錄。
+- **FR-001**：`/work-log` 只有已登入使用者可存取；`annotator` 只能查看自己的紀錄；任務 `project_leader` 可查看其負責任務的成員紀錄；`super_admin` 可查看所有平台成員的工時紀錄（跨任務）；此為平台管理需求，超越 IA v7 文件的描述，以本 spec 為準。
 - **FR-002**：系統必須在使用者進入與離開 `annotation-workspace` 時自動記錄時間，作為任務標記時間的計算依據。
 - **FR-003（出缺勤紀錄）**：系統自動記錄每日是否有至少一次進入 `annotation-workspace` 的行為，作為出勤依據；未進行任何標記的日期標記為缺勤。出缺勤紀錄不需使用者手動打卡。
 - **FR-004**：頁面必須顯示各任務的累計標記時間、完成筆數（Dry Run / Official Run 分開）。

@@ -5,6 +5,35 @@
 **狀態**：Clarified
 **需求來源**：IA v7 Spec 清單 #008 — 平台成員列表（搜尋、啟用/停用、待指派）
 
+## 流程說明
+
+```mermaid
+sequenceDiagram
+    actor SA as Super Admin / Annotator
+    participant UI as /annotator-list
+    participant API as Backend API
+    participant DB as Database
+
+    SA->>UI: 在待指派區塊找到使用者
+    SA->>UI: 點擊「指派 Annotator 角色」
+    UI->>API: PATCH /users/{id}/role
+    API->>DB: UPDATE users SET role = 'annotator' WHERE id = ?
+    DB-->>API: 更新成功
+    API-->>UI: 200 OK
+    UI-->>SA: 使用者從待指派區塊移至平台成員區塊
+    UI-->>SA: 顯示成功提示
+```
+
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|----------|
+| 1 | Super Admin / Annotator | 在待指派區塊找到使用者 | 顯示待指派使用者的姓名與 Email |
+| 2 | Super Admin / Annotator | 點擊「指派 Annotator 角色」 | 送出 PATCH 請求 |
+| 3 | System | 更新 `users.role = annotator` | 寫入資料庫 |
+| 4 | System | — | 使用者從待指派區塊移至平台成員區塊 |
+| 5 | System | — | 顯示成功提示 |
+
+---
+
 ## 使用者情境與測試 *(必填)*
 
 ### User Story 1 — 查看平台成員列表（優先級：P1）
@@ -40,6 +69,21 @@
 
 ---
 
+### User Story 2b — 任務層級停用 / 重新啟用標記員（優先級：P2）
+
+任務 `project_leader` 可停用或重新啟用標記員在自己負責任務中的參與狀態，不影響標記員的平台帳號。
+
+**此優先級原因**：PL 有時需要在不影響帳號層級的前提下，暫停某標記員在特定任務的參與，保留彈性。
+
+**獨立測試方式**：以 PL 身份停用某標記員的任務參與狀態，確認該標記員無法在該任務繼續標記；重新啟用後可恢復。
+
+**驗收情境**：
+
+1. **Given** 任務 PL 在 `/annotator-list`，**When** 對已加入任務的標記員點擊「停用任務參與」，**Then** 該標記員的任務參與狀態標記為停用，無法在該任務進行標記操作。
+2. **Given** 任務 PL 在 `/annotator-list`，**When** 對已停用任務參與的標記員點擊「重新啟用」，**Then** 該標記員的任務參與狀態恢復為啟用，可正常進行標記操作。
+
+---
+
 ### User Story 3 — 任務 PL 邀請成員加入任務（優先級：P2）
 
 任務 `project_leader` 在 `/annotator-list` 選取平台成員，邀請加入自己負責的任務並指派任務角色（`reviewer` 或 `annotator`）。
@@ -72,7 +116,7 @@
 - **FR-004**：任何 `annotator`（系統）或 `super_admin` 可在待指派區塊對使用者指派 `annotator` 系統角色。
 - **FR-005**：任務 `project_leader` 可在 `/annotator-list` 停用或啟用平台成員在其負責任務中的參與狀態（任務層級）；`super_admin` 的平台帳號停用在 `/user-management` 管理（spec 006），不在此頁操作。
 - **FR-006**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
-- **FR-007**：任務 `project_leader` 可從此列表選取成員，邀請加入自己負責的任務並指派任務角色（`reviewer` 或 `annotator`）。
+- **FR-007**：任務 `project_leader` 可從此列表選取成員，邀請加入自己負責的任務並指派任務角色（`reviewer` 或 `annotator`）；PL 只能邀請成員加入自己負責的任務；邀請時需選擇任務與任務角色（`annotator` 或 `reviewer`）；邀請確認後寫入 `task_membership` 表。
 - **FR-008**：點選成員列表中的任一成員，導向該成員的 `/work-log`。
 - **FR-009**：空狀態（尚無任何平台成員）顯示引導說明文字。
 
