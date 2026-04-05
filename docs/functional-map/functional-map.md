@@ -3,6 +3,8 @@
 > **線上版：** [在 XMind 開啟](https://app.xmind.com/share/PKjJEIHD)（線上版可能落後本文件，以本文件為準）
 >
 > **版本：** v3（2026-04-02）— 依 [IA v3](../ia/information-architecture.md) 同步更新
+>
+> **⚠️ 注意：** IA 已升版至 [v4（2026-04-05）](../ia/information-architecture.md)。v4 新增內容為 `/pending` 待指派提示頁（`role = null` 使用者的中間頁面）與 §7 Spec 拆分計畫，功能樹節點無異動，本文件暫不需同步更新。
 
 ---
 
