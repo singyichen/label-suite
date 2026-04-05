@@ -66,7 +66,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 
 ## Spec-Kit Commands
 
-Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [GitHub spec-kit](https://github.com/github/spec-kit). Specs are stored in `specs/NNN-feature-name/` directories.
+Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [GitHub spec-kit](https://github.com/github/spec-kit). Specs are stored in `specs/[module]/NNN-feature/` directories.
 
 | Command | Purpose | Example Usage |
 |---------|---------|---------------|
@@ -79,7 +79,6 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 | `/speckit.checklist` | Generate quality validation checklist | `/speckit.checklist security` |
 | `/speckit.constitution` | Create or update the project constitution | `/speckit.constitution` |
 | `/speckit.taskstoissues` | Convert tasks.md into GitHub Issues | `/speckit.taskstoissues` |
-| `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
 
 ### SDD Workflow
 
@@ -93,7 +92,20 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 
 - **Constitution**: `.specify/memory/constitution.md` (6 core principles)
 - **Templates**: `.specify/templates/` (spec, plan, tasks, checklist, agent-file, constitution templates)
-- **Specs**: `specs/` (feature specifications, one directory per feature)
+- **Specs**: `specs/` (feature specifications, organized as `specs/[module]/NNN-feature/`)
+
+---
+
+## Workflow Commands
+
+Commands for broader development workflow tasks (PR management, wireframing, multi-agent orchestration).
+
+| Command | Purpose | Example Usage |
+|---------|---------|---------------|
+| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP | `/pencil-wireframe` |
+| `/pr-flow` | Full PR flow (commit → review → test → merge) | `/pr-flow` |
+| `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
+| `/agent-team` | Multi-phase agent team workflow for new features | `/agent-team` |
 
 ---
 
@@ -106,8 +118,8 @@ Skills for the SDD workflow — writing, reviewing, and transforming spec artifa
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
 | `/sdd-workflow` | Full SDD workflow guide (specify → checklist) | `/sdd-workflow` |
-| `/spec-to-plan` | Transform a `spec.md` into a detailed `plan.md` | `/spec-to-plan specs/001-annotation-submission/spec.md` |
-| `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/001-annotation-submission/spec.md` |
+| `/spec-to-plan` | Transform a `spec.md` into a detailed `plan.md` | `/spec-to-plan specs/annotation/001-annotation-submission/spec.md` |
+| `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/annotation/001-annotation-submission/spec.md` |
 
 ### Requirements Engineering (4 skills)
 
@@ -177,7 +189,7 @@ Skills for test planning, execution, data management, and coverage analysis.
 
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
-| `/test-plan` | Create comprehensive test plans | `/test-plan specs/001-annotation-submission/spec.md` |
+| `/test-plan` | Create comprehensive test plans | `/test-plan specs/annotation/001-annotation-submission/spec.md` |
 | `/test-coverage` | Analyze test coverage with module-specific thresholds | `/test-coverage backend/app/services/scoring.py` |
 | `/test-data-strategy` | Define test data and fixture management | `/test-data-strategy annotation submission tests` |
 | `/test-tracking` | Track test execution progress with dashboards | `/test-tracking sprint` |
@@ -192,7 +204,7 @@ Skills for quality gates, defect management, traceability, and reporting.
 |-------|---------|---------------|
 | `/quality-gate` | Evaluate release readiness (Go/No-Go) | `/quality-gate production` |
 | `/defect-report` | Create standardized defect reports | `/defect-report scoring returns wrong F1 for multi-label` |
-| `/traceability-matrix` | Build User Story → AC → Spec → Code → Test traceability | `/traceability-matrix specs/001-annotation-submission/` |
+| `/traceability-matrix` | Build User Story → AC → Spec → Code → Test traceability | `/traceability-matrix specs/annotation/001-annotation-submission/` |
 | `/test-report` | Generate Sprint/Release test reports | `/test-report sprint` |
 
 ---
@@ -257,4 +269,4 @@ For the Label Suite project, these skills enforce additional constraints for the
 ---
 
 *Last Updated: 2026-04-04*
-*Total Skills: 30 | Spec-Kit Commands: 9*
+*Total Skills: 30 | Spec-Kit Commands: 9 | Workflow Commands: 4*

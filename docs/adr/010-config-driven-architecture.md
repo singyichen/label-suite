@@ -51,22 +51,21 @@ Every task type is defined by a configuration object stored in the database (`JS
 # example task config
 task:
   name: "Chinese Medical NER"
-  type: classification              # classification | regression | span
+  type: ner                         # classification | scoring | sentence_pair | ner | relation
   description: "Named entity recognition for Chinese medical text"
 
 annotation:
-  labels:
+  entity_types:
     - id: disease
       display: "Disease"
       color: "#EF4444"
     - id: symptom
       display: "Symptom"
       color: "#F59E0B"
-  allow_multiple: true
-  require_reason: false
+  allow_overlapping: false
 
 evaluation:
-  metric: entity_f1                 # f1_macro | accuracy | bleu | entity_f1
+  metric: entity_f1                 # f1_macro | accuracy | krippendorff_alpha | entity_f1 | triple_f1
   primary_metric: entity_f1
   higher_is_better: true
   decimal_places: 4
