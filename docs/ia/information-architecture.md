@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** v3（2026-04-02）
+> **版本：** v4（2026-04-05）
 
 ---
 
@@ -26,6 +26,8 @@
 > | `annotator` | annotator |
 >
 > 同一人需兼任 PL 與 Reviewer 時，指派 `project_leader` 一個帳號即可，無需建立兩個帳號。
+
+> **新使用者預設狀態：** 任何人皆可透過 Google SSO 自行登入系統，首次登入後帳號預設 `role = null`（無角色）。無角色使用者登入後只能看到待指派提示頁，無法存取任何功能模組。Project Leader 在 `annotator-list` 中可看到待指派角色的新使用者，並指派 `annotator` 角色；Super Admin 在 `user-management` 中可指派任意角色。Email / Password 帳號仍由 Project Leader 或 Super Admin 預先建立。
 
 ---
 
@@ -272,13 +274,16 @@ flowchart TD
 
 #### `annotator-list` 標記員列表頁
 - **進入方式：** Navbar → 標記員管理
-- **功能：** 查看所有標記員帳號、啟用 / 停用、進入個別詳情
-- **空狀態（尚未新增任何標記員）：** 說明文字 + 「新增第一位標記員」按鈕（→ `annotator-new`）
+- **功能：**
+  - 查看所有已指派 `annotator` 角色的帳號、啟用 / 停用、進入個別詳情
+  - **待指派區塊：** 顯示已登入但尚未指派角色（`role = null`）的新使用者，Project Leader 可直接在此指派 `annotator` 角色
+- **空狀態（尚無任何標記員）：** 說明文字 + 「新增標記員帳號」按鈕（→ `annotator-new`，用於建立 Email/Password 帳號）
 - **離開方式：** 「新增標記員」→ `annotator-new`；點選標記員 → `work-log`
 
 #### `annotator-new` 新增標記員頁
 - **進入方式：** `annotator-list` → 新增
-- **功能：** 填寫基本資料（名稱、Email）
+- **用途：** 為無 Google 帳號的標記員建立 Email / Password 帳號；使用 Google SSO 的標記員無需此頁，自行登入後由 PL 在 `annotator-list` 指派角色即可
+- **功能：** 填寫基本資料（名稱、Email）、設定初始密碼
 - **離開方式：** 儲存 → `annotator-list`；取消 → `annotator-list`
 
 #### `work-log` 工時紀錄頁
@@ -315,6 +320,7 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
+  participant AN as Annotator
   participant PL as Project Leader
   participant TN as task-new
   participant TD as task-detail
@@ -322,9 +328,10 @@ sequenceDiagram
   participant AW as annotation-workspace
   participant DQ as dataset-quality
 
+  AN->>AL: 自行以 Google SSO 登入（role = null）
+  PL->>AL: 在待指派區塊看到新使用者，指派 annotator 角色
   PL->>TN: 上傳資料集 + 設定任務類型
   TN-->>TD: 建立成功，跳轉詳情頁
-  PL->>AL: 新增標記員帳號
   PL->>TD: 指派標記員 + 發布 Dry Run（共同樣本 ~20 句）
   Note over AW: 所有標記員標記相同樣本
   AW-->>TD: 任務狀態切換 → 等待 IAA 確認
@@ -406,3 +413,68 @@ sequenceDiagram
 | 完成後去哪裡？ | § 4 各頁面「離開方式」 |
 | 這個功能跑完整 user journey 是什麼？ | § 5 核心使用者旅程 |
 | 有沒有跨模組的資料依賴？ | § 3 頁面導覽結構圖 |
+
+---
+
+## 7. Spec 拆分計畫
+
+### 拆分原則
+
+IA 共 14 個頁面，但不是每個頁面對應一個 spec。拆分以「功能邊界」為單位：
+
+| 原則 | 說明 |
+|------|------|
+| **獨立可測試** | 該 spec 完成後能獨立驗收，不依賴其他 spec |
+| **同一操作流程** | 多個頁面屬於同一個連續操作（如精靈步驟），合為一個 spec |
+| **角色視角差異大** | 同一頁面但不同角色有截然不同的功能，拆成獨立 spec |
+
+### Spec 清單
+
+排序依複雜度由簡至繁，同時考量功能依賴關係。
+Config Builder、標記作業、統計總覽、IAA 均依任務類型拆分，每種類型可獨立實作與測試。
+
+| # | Spec 名稱 | 頁面 | 模組 | 複雜度 | 狀態 |
+|---|-----------|------|------|--------|------|
+| 001 | 登入 — Email/Password + 頁面 UI | `login` | account | ★☆☆☆☆ | ⬜ 待重做 |
+| 002 | 登入 — Google SSO 整合 | `login` | account | ★★☆☆☆ | ⬜ 待重做 |
+| 003 | 個人設定（資料編輯 + 修改密碼）| `profile` | account | ★☆☆☆☆ | ⬜ 待重做 |
+| 004 | 使用者列表與管理 | `user-management` | admin | ★★☆☆☆ | ⬜ 待做 |
+| 005 | 新增與編輯使用者 | `user-management` | admin | ★★☆☆☆ | ⬜ 待做 |
+| 006 | 角色權限設定 | `role-settings` | admin | ★★☆☆☆ | ⬜ 待做 |
+| 007 | 標記員列表（搜尋、啟用/停用）| `annotator-list` | annotator-management | ★★☆☆☆ | ⬜ 待做 |
+| 008 | 新增標記員 | `annotator-new` | annotator-management | ★☆☆☆☆ | ⬜ 待做 |
+| 009 | 工時紀錄 | `work-log` | annotator-management | ★★☆☆☆ | ⬜ 待做 |
+| 010 | 任務列表（搜尋、篩選、空狀態）| `task-list` | task-management | ★★☆☆☆ | ⬜ 待做 |
+| 011 | 儀表板 — Annotator | `dashboard` | dashboard | ★★☆☆☆ | ⬜ 待做 |
+| 012 | 儀表板 — Super Admin | `dashboard` | dashboard | ★★★☆☆ | ⬜ 待做 |
+| 013 | 儀表板 — Reviewer | `dashboard` | dashboard | ★★★☆☆ | ⬜ 待做 |
+| 014 | 儀表板 — Project Leader | `dashboard` | dashboard | ★★★☆☆ | ⬜ 待做 |
+| 015 | 任務詳情 — 資訊顯示與狀態 | `task-detail` | task-management | ★★★☆☆ | ⬜ 待做 |
+| 016 | 任務詳情 — 標記員指派與 Dry Run 發布 | `task-detail` | task-management | ★★★★☆ | ⬜ 待做 |
+| 017 | 任務詳情 — Official Run 發布與匯出 | `task-detail` | task-management | ★★★★☆ | ⬜ 待做 |
+| 018 | 任務建立 Step 1 — 基本資料與任務類型選擇 | `task-new` | task-management | ★★☆☆☆ | ⬜ 待做 |
+| 019 | 任務建立 Step 3 — 標記說明與強制顯示設定 | `task-new` | task-management | ★★☆☆☆ | ⬜ 待做 |
+| 020 | Config Builder — 分類任務（Classification）| `task-new` | task-management | ★★★☆☆ | ⬜ 待做 |
+| 021 | Config Builder — 評分/回歸任務（Scoring）| `task-new` | task-management | ★★★☆☆ | ⬜ 待做 |
+| 022 | Config Builder — 句對任務（Sentence Pair）| `task-new` | task-management | ★★★☆☆ | ⬜ 待做 |
+| 023 | Config Builder — 序列標記（NER）| `task-new` | task-management | ★★★★☆ | ⬜ 待做 |
+| 024 | Config Builder — 關係抽取（Relation Extraction）| `task-new` | task-management | ★★★★☆ | ⬜ 待做 |
+| 025 | Config Builder — Code 模式與範本快速套用 | `task-new` | task-management | ★★★☆☆ | ⬜ 待做 |
+| 026 | 標記作業 — 分類任務 | `annotation-workspace` | annotation | ★★★☆☆ | ⬜ 待做 |
+| 027 | 標記作業 — 評分/回歸任務 | `annotation-workspace` | annotation | ★★★☆☆ | ⬜ 待做 |
+| 028 | 標記作業 — 句對任務 | `annotation-workspace` | annotation | ★★★☆☆ | ⬜ 待做 |
+| 029 | 標記作業 — 序列標記（NER）| `annotation-workspace` | annotation | ★★★★☆ | ⬜ 待做 |
+| 030 | 標記作業 — 關係抽取 | `annotation-workspace` | annotation | ★★★★★ | ⬜ 待做 |
+| 031 | 標記審查（Reviewer）| `annotation-workspace` | annotation | ★★★★☆ | ⬜ 待做 |
+| 032 | 統計總覽 — 共用基礎指標（Sentence / Token / 完成率）| `dataset-stats` | dataset | ★★★☆☆ | ⬜ 待做 |
+| 033 | 統計總覽 — 分類任務（含句對分類模式）| `dataset-stats` | dataset | ★★★★☆ | ⬜ 待做 |
+| 034 | 統計總覽 — 評分/回歸任務（含句對評分模式）| `dataset-stats` | dataset | ★★★★☆ | ⬜ 待做 |
+| 035 | 統計總覽 — 序列標記（NER）| `dataset-stats` | dataset | ★★★★☆ | ⬜ 待做 |
+| 036 | 統計總覽 — 關係抽取 | `dataset-stats` | dataset | ★★★★☆ | ⬜ 待做 |
+| 037 | 品質監控 — 異常偵測與標記員速度統計 | `dataset-quality` | dataset | ★★★☆☆ | ⬜ 待做 |
+| 038 | IAA — 分類任務（含句對分類模式）| `dataset-quality` | dataset | ★★★★☆ | ⬜ 待做 |
+| 039 | IAA — 評分/回歸任務（含句對評分模式）| `dataset-quality` | dataset | ★★★★☆ | ⬜ 待做 |
+| 040 | IAA — 序列標記（NER）| `dataset-quality` | dataset | ★★★★★ | ⬜ 待做 |
+| 041 | IAA — 關係抽取 | `dataset-quality` | dataset | ★★★★★ | ⬜ 待做 |
+
+> 狀態標示：⬜ 待做 · 🔄 進行中 · ✅ 完成
