@@ -75,7 +75,7 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 具有任務 `annotator` 角色的使用者在 `/workspace/:taskId`，**When** 頁面載入，**Then** 系統從 `/work-log/start` 記錄進入時間，頁面顯示當前筆待標注資料與對應 task_type 標注工具，進度條反映已完成數 / 總筆數。
+1. **Given** 具有任務 `annotator` 角色的使用者在 `/annotation-workspace/:taskId`，**When** 頁面載入，**Then** 系統從 `/work-log/start` 記錄進入時間，頁面顯示當前筆待標注資料與對應 task_type 標注工具，進度條反映已完成數 / 總筆數。
 2. **Given** Annotator 在標注界面完成選擇，**When** 點擊「提交」按鈕，**Then** 系統呼叫 `POST /annotations/:itemId/submit`，Annotation 狀態更新為 `submitted`，進度條遞增一筆，頁面自動顯示下一筆待標注資料。
 3. **Given** Annotator 完成所有分配資料，**When** 提交最後一筆，**Then** 頁面顯示「本批次標注已全數完成」提示，並提供「返回儀表板」按鈕。
 
@@ -144,7 +144,7 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     dashboard["/dashboard"]
-    workspace["/workspace/:taskId\n標記作業頁"]
+    workspace["/annotation-workspace/:taskId\n標記作業頁"]
     next_item["下一筆（同頁面）"]
     task_detail["/task-detail\n（Reviewer 入口）"]
 
@@ -158,10 +158,10 @@ flowchart LR
 
 | From | Trigger | To |
 |------|---------|-----|
-| `/dashboard`（Annotator） | 點擊「開始 / 繼續標記」 | `/workspace/:taskId` |
-| `/dashboard`（Annotator） | 點擊「快速繼續」 | `/workspace/:taskId` |
-| `/dashboard`（Reviewer） | 點擊待審查任務卡 | `/workspace/:taskId` |
-| `/workspace/:taskId` | 全批次完成 / 點擊「返回儀表板」 | `/dashboard` |
+| `/dashboard`（Annotator） | 點擊「開始 / 繼續標記」 | `/annotation-workspace/:taskId` |
+| `/dashboard`（Annotator） | 點擊「快速繼續」 | `/annotation-workspace/:taskId` |
+| `/dashboard`（Reviewer） | 點擊待審查任務卡 | `/annotation-workspace/:taskId` |
+| `/annotation-workspace/:taskId` | 全批次完成 / 點擊「返回儀表板」 | `/dashboard` |
 | `/annotation-workspace/:taskId` | 提交當前筆（尚有剩餘） | 停留頁面，切換至下一筆 |
 
 **Entry points**：`/dashboard`（Annotator 任務卡「開始 / 繼續標記」按鈕；Annotator 快速繼續按鈕；Reviewer 待審查任務列表卡）。
