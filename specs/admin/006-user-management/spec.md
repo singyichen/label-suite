@@ -1,0 +1,97 @@
+# 功能規格：使用者列表與管理
+
+**功能分支**：`006-user-management`
+**建立日期**：2026-04-05
+**狀態**：Clarified
+**需求來源**：IA v7 Spec 清單 #006 — 使用者列表與管理
+
+## 使用者情境與測試 *(必填)*
+
+### User Story 1 — 查看所有使用者並指派系統角色（優先級：P1）
+
+Super Admin 在 `/user-management` 查看平台所有使用者帳號，並可將 `role = null`（待指派）或既有系統角色的帳號指派或變更為 `annotator` 或 `super_admin`。
+
+**此優先級原因**：系統角色指派是整個平台的權限管控核心，沒有 Super Admin 指派角色，新使用者永遠停在 `/pending` 無法使用系統。
+
+**獨立測試方式**：以 super_admin 登入進入 `/user-management`，對 `role = null` 的使用者指派 `annotator` 角色，驗證該使用者下次登入可進入 `/dashboard`。
+
+**驗收情境**：
+
+1. **Given** Super Admin 在 `/user-management`，**When** 頁面載入，**Then** 顯示所有平台使用者列表，包含姓名、Email、系統角色、帳號狀態、建立日期。
+2. **Given** Super Admin 在 `/user-management`，**When** 對 `role = null` 的使用者選擇指派 `annotator`，**Then** 該使用者系統角色更新為 `annotator`，下次登入導向 `/dashboard`。
+3. **Given** Super Admin 在 `/user-management`，**When** 對既有 `annotator` 升級為 `super_admin`，**Then** 系統角色更新，該使用者取得系統管理權限。
+4. **Given** Super Admin 在 `/user-management`，**When** 搜尋關鍵字（姓名或 Email），**Then** 列表即時篩選顯示符合結果。
+
+---
+
+### User Story 2 — 停用 / 啟用帳號（優先級：P2）
+
+Super Admin 可停用特定使用者帳號，停用後該帳號無法登入；可隨時重新啟用。
+
+**此優先級原因**：帳號停用是基本的存取控制需求，讓 Super Admin 能在不刪除帳號的情況下暫停存取權。
+
+**獨立測試方式**：停用一個已登入使用者的帳號，驗證該使用者下次請求回傳 401；重新啟用後可正常登入。
+
+**驗收情境**：
+
+1. **Given** Super Admin 在 `/user-management`，**When** 停用一個帳號，**Then** 該帳號狀態變為「已停用」，該使用者嘗試登入時回傳「帳號已停用」錯誤。
+2. **Given** Super Admin 在 `/user-management`，**When** 重新啟用已停用帳號，**Then** 該帳號狀態恢復為「啟用」，使用者可正常登入。
+3. **Given** Super Admin 在 `/user-management`，**When** 嘗試停用自己的帳號，**Then** 系統拒絕操作並顯示「無法停用自己的帳號」。
+
+---
+
+### 邊界情況
+
+- Super Admin 可以降級自己的角色嗎？→ 不允許；系統必須確保至少有一個 `super_admin` 存在，防止無人可管理的情況。
+- 停用帳號時該使用者正在線上？→ 現有 session 在 JWT 過期前仍有效；JWT 過期後無法更新，等同強制登出。
+
+---
+
+## 需求規格 *(必填)*
+
+### 功能需求
+
+- **FR-001**：只有 `super_admin` 可存取 `/user-management`；其他角色存取導向 `/dashboard`。
+- **FR-002**：頁面必須列出所有平台使用者，顯示：姓名、Email、系統角色（`null` / `annotator` / `super_admin`）、帳號狀態（啟用 / 停用）、建立日期。
+- **FR-003**：Super Admin 必須能對任意使用者指派或變更系統角色（`null` → `annotator` → `super_admin`，雙向可變更）。
+- **FR-004**：Super Admin 必須能停用或啟用任意使用者帳號，但不得停用自己的帳號。
+- **FR-005**：系統必須確保至少存在一個 `super_admin`；若操作會導致 `super_admin` 數量為 0，系統拒絕並顯示錯誤。
+- **FR-006**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
+- **FR-007**：空狀態（尚無任何使用者）顯示說明文字「尚未有任何使用者帳號」。
+
+### User Flow & Navigation
+
+```mermaid
+flowchart LR
+    dashboard["/dashboard\n（Super Admin 視角）"]
+    navbar["Navbar → 系統管理"]
+    um["/user-management"]
+    rs["/role-settings"]
+
+    dashboard -->|"Navbar → 系統管理"| um
+    navbar    --> um
+    um        -->|"點擊角色設定"| rs
+    rs        -->|"儲存"| um
+```
+
+| From | Trigger | To |
+|------|---------|-----|
+| Navbar → 系統管理 | 點擊 | `/user-management` |
+| `/user-management` | 點擊「角色設定」 | `/role-settings` |
+| `/role-settings` | 儲存 | `/user-management` |
+
+**Entry points**：Navbar → 系統管理（僅 `super_admin` 可見）。
+**Exit points**：導向 `/role-settings`；其他操作停留在本頁。
+
+### 關鍵實體
+
+- **User（使用者）**：可管理欄位：`role`（`null` | `annotator` | `super_admin`）、`is_active`（帳號啟用狀態）。
+
+---
+
+## 成功標準 *(必填)*
+
+- **SC-001**：非 `super_admin` 角色存取 `/user-management` 回傳 HTTP 403 或導向 `/dashboard`。
+- **SC-002**：角色指派後，使用者下次登入的 JWT 中 `role` 欄位反映新角色。
+- **SC-003**：停用帳號後，該帳號的所有新登入請求回傳「帳號已停用」錯誤。
+- **SC-004**：系統在任何情況下均保有至少一個 `super_admin`。
