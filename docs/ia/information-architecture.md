@@ -36,6 +36,7 @@
 | 頁面 ID | 頁面名稱 | 所屬模組 | Project Leader | Annotator | Reviewer | Super Admin | 備註 |
 |---------|----------|----------|:--------------:|:---------:|:--------:|:-----------:|------|
 | `login` | 登入頁 | 帳號模組 | ✅ | ✅ | ✅ | ✅ | 未登入唯一可進入的頁面 |
+| `pending` | 待指派提示頁 | 帳號模組 | — | — | — | — | 僅限 `role = null` 的已登入使用者；顯示「等待角色指派」提示 |
 | `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | ✅ | ✅ | |
 | `dashboard` | 儀表板 | — | ✅（全局） | ✅（個人） | ✅ | ✅ | 登入後預設落地頁 |
 | `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ❌ | ❌ | ✅ | |
@@ -61,6 +62,7 @@ flowchart TD
   end
 
   subgraph 全角色可見
+    PENDING["⏳ pending\n待指派提示頁\n（role = null）"]
     DASH["🏠 dashboard\n儀表板"]
     PROFILE["👤 profile\n個人設定頁"]
   end
@@ -91,7 +93,9 @@ flowchart TD
     ROLES["role-settings\n角色權限設定頁"]
   end
 
-  LOGIN -->|登入成功| DASH
+  LOGIN -->|"登入成功（role = null）"| PENDING
+  LOGIN -->|"登入成功（已有角色）"| DASH
+  PENDING -->|"角色指派完成"| DASH
   DASH --> PROFILE
   DASH --> TLIST
   DASH --> ANNOT
@@ -321,6 +325,8 @@ flowchart TD
 ```mermaid
 sequenceDiagram
   participant AN as Annotator
+  participant LOGIN as login
+  participant PENDING as pending
   participant PL as Project Leader
   participant TN as task-new
   participant TD as task-detail
@@ -328,8 +334,10 @@ sequenceDiagram
   participant AW as annotation-workspace
   participant DQ as dataset-quality
 
-  AN->>AL: 自行以 Google SSO 登入（role = null）
+  AN->>LOGIN: 自行以 Google SSO 登入（首次，role = null）
+  LOGIN-->>PENDING: 導向待指派提示頁
   PL->>AL: 在待指派區塊看到新使用者，指派 annotator 角色
+  AL-->>AN: 角色指派完成（role = annotator）
   PL->>TN: 上傳資料集 + 設定任務類型
   TN-->>TD: 建立成功，跳轉詳情頁
   PL->>TD: 指派標記員 + 發布 Dry Run（共同樣本 ~20 句）
