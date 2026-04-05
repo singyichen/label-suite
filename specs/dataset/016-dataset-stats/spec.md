@@ -3,7 +3,7 @@
 **功能分支**：`016-dataset-stats`
 **建立日期**：2026-04-05
 **狀態**：Draft
-**需求來源**：IA v7 Spec 清單 #016 — 統計總覽頁（dataset-stats）
+**需求來源**：IA v7 Spec 清單 #032–036 — 統計總覽（dataset-stats，依任務類型拆分）
 
 ---
 

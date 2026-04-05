@@ -3,7 +3,7 @@
 **功能分支**：`015-annotation-workspace`
 **建立日期**：2026-04-05
 **狀態**：Draft
-**需求來源**：IA v7 Spec 清單 #015 — 標記作業頁（annotation-workspace）
+**需求來源**：IA v7 Spec 清單 #026–031 — 標記作業（annotation-workspace，依任務類型拆分）
 
 ---
 

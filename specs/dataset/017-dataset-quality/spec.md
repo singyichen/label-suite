@@ -3,7 +3,7 @@
 **功能分支**：`017-dataset-quality`
 **建立日期**：2026-04-05
 **狀態**：Draft
-**需求來源**：IA v7 Spec 清單 #017 — 品質監控頁（dataset-quality）
+**需求來源**：IA v7 Spec 清單 #037–041 — 品質監控 / IAA（dataset-quality，依任務類型拆分）
 
 ---
 
