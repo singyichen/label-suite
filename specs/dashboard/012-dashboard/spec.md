@@ -22,7 +22,7 @@ sequenceDiagram
     alt role = null
         authStore-->>瀏覽器: 導向 /pending（RoleGuard）
     else role 未知 / 無效
-        authStore-->>瀏覽器: 導向 /pending（deny-by-default）
+        authStore-->>瀏覽器: 清除 JWT session 並導向 /login（invalid session）
     else role = super_admin
         authStore-->>瀏覽器: 渲染 SuperAdminDashboard
         瀏覽器->>後端API: GET /admin/stats（使用者數量、任務數量）
@@ -38,7 +38,8 @@ sequenceDiagram
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
 | 1 | 使用者 | 導向 `/dashboard` | 前端從 `authStore` 讀取 System Role（`role`）|
-| 2a | RoleGuard | `role = null` 或未知 | 導向 `/pending`（deny-by-default）|
+| 2a | RoleGuard | `role = null` | 導向 `/pending` |
+| 2a' | RoleGuard | `role` 未知 / 無效（非 null / annotator / super_admin）| 清除 JWT session 並導向 `/login`（invalid session，防止無窮重導）|
 | 2b | 前端 | `role = super_admin` | 渲染 `SuperAdminDashboard`，呼叫 `/admin/stats` |
 | 2c | 前端 | `role = annotator` | 渲染 `AnnotatorDashboard`，呼叫 `/users/me/tasks` 取得任務成員資格清單 |
 | 3 | 前端 | 收到任務成員資格清單 | 依各任務的 `task_role` 動態渲染對應內容區塊（Project Leader / Reviewer / Annotator）|
@@ -132,7 +133,6 @@ flowchart LR
     dashboard["/dashboard"]
     superAdminDash["SuperAdminDashboard"]
     annotatorDash["AnnotatorDashboard"]
-    taskNew["/task-new"]
     taskList["/task-list"]
     annotWorkspace["/annotation-workspace"]
     workLog["/work-log"]
@@ -141,7 +141,8 @@ flowchart LR
     datasetQuality["/dataset-quality"]
 
     login      -->|"登入成功（role ≠ null）"| dashboard
-    dashboard  -->|"role = null 或未知"| pending
+    dashboard  -->|"role = null"| pending
+    dashboard  -->|"role 未知 / 無效（清除 session）"| login
     dashboard  -->|"role = super_admin"| superAdminDash
     dashboard  -->|"role = annotator"| annotatorDash
 
@@ -152,13 +153,13 @@ flowchart LR
     annotatorDash  -->|"快速繼續 / 任務卡"| annotWorkspace
     annotatorDash  -->|"查看個人工時紀錄"| workLog
     annotatorDash  -->|"編輯個人資料"| profile
-    annotatorDash  -->|"建立第一個任務（空狀態）"| taskNew
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
 | `/login` | 登入成功（`role ≠ null`）| `/dashboard` |
-| `/dashboard` | `role = null` 或未知（RoleGuard）| `/pending` |
+| `/dashboard` | `role = null`（RoleGuard）| `/pending` |
+| `/dashboard` | `role` 未知 / 無效（invalid session）| `/login`（清除 JWT）|
 | `SuperAdminDashboard` | 「管理使用者」快捷連結 | `/user-management` |
 | `SuperAdminDashboard` | 任務卡點選 | `/task-list`（或 `/task-detail`）|
 | `SuperAdminDashboard` | IAA 待確認連結 | `/dataset-quality` |

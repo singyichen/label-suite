@@ -16,22 +16,22 @@ sequenceDiagram
 
     A->>WS: 進入 annotation-workspace
     WS->>API: POST /work-logs/start
-    API->>DB: INSERT WorkLog (user_id, task_id, start_at)
+    API->>DB: INSERT WorkLog (user_id, task_id, started_at)
     DB-->>API: 記錄建立
     A->>WS: 離開 annotation-workspace（路由切換或關閉）
     WS->>API: PATCH /work-logs/{id}/end
-    API->>API: 計算 duration = end_at - start_at
-    API->>DB: UPDATE WorkLog SET end_at, duration, annotation_count
+    API->>API: 計算 duration_seconds = ended_at - started_at
+    API->>DB: UPDATE WorkLog SET ended_at, duration_seconds, annotation_count
     DB-->>API: 更新成功
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|----------|
-| 1 | Annotator | 進入 `annotation-workspace` | 系統記錄 WorkLog 開始時間（`start_at`）|
+| 1 | Annotator | 進入 `annotation-workspace` | 系統記錄 WorkLog 開始時間（`started_at`）|
 | 2 | System | — | 在 `work_logs` 表建立進行中的工時記錄 |
 | 3 | Annotator | 離開 `annotation-workspace`（路由切換或關閉）| 觸發工時結束事件 |
-| 4 | System | — | 記錄 WorkLog 結束時間（`end_at`）|
-| 5 | System | — | 計算 `duration = end_at - start_at` |
+| 4 | System | — | 記錄 WorkLog 結束時間（`ended_at`）|
+| 5 | System | — | 計算 `duration_seconds = ended_at - started_at` |
 | 6 | System | — | 寫入完整 WorkLog 至 `work_logs` 表 |
 
 ---
@@ -114,7 +114,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **WorkLog**：關鍵屬性：`user_id`、`task_id`、`run_type`（`dry_run` | `official_run`）、`started_at`、`ended_at`、`annotation_count`。系統於 `annotation-workspace` 進入與離開時自動寫入。
+- **WorkLog**：關鍵屬性：`user_id`、`task_id`、`run_type`（`dry_run` | `official_run`）、`started_at`、`ended_at`、`duration_seconds`、`annotation_count`。系統於 `annotation-workspace` 進入與離開時自動寫入。
 
 ---
 

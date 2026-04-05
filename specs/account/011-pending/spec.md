@@ -35,7 +35,7 @@ Super Admin 或已有 `annotator` 系統角色的成員在 `user-management` 或
 
 **驗收情境**：
 
-1. **Given** 使用者停在 `/pending` 且管理員已指派角色，**When** 使用者重新整理頁面，**Then** 系統偵測 `role ≠ null` 並導向 `/dashboard`。
+1. **Given** 使用者停在 `/pending` 且管理員已指派角色，**When** 使用者重新整理頁面，**Then** 系統呼叫 `GET /users/me` 取得最新 `role`，偵測 `role ≠ null` 並導向 `/dashboard`（不依賴舊 JWT 中的角色快取值）。
 2. **Given** 使用者重新登入後 `role ≠ null`，**When** 登入成功，**Then** 系統跳過 `/pending` 直接導向 `/dashboard`。
 3. **Given** 已擁有角色的使用者（`role ≠ null`），**When** 直接訪問 `/pending`，**Then** 系統自動導向 `/dashboard`，不顯示等待頁面。
 
@@ -59,7 +59,7 @@ Super Admin 或已有 `annotator` 系統角色的成員在 `user-management` 或
 - **FR-003**：`/pending` 頁面必須提供「登出」按鈕；點擊後 JWT 失效、session 清除，並導向 `/login`。
 - **FR-004**：只有 `role = null` 的已登入使用者 MUST 被允許停留在 `/pending`，其他角色存取時系統導向 `/dashboard` — 由 RoleGuard 強制執行。
 - **FR-005**：`role = null` 的已登入使用者存取任何受保護路由時，系統 MUST 導向 `/pending` — 由 RoleGuard 強制執行。
-- **FR-006**：當使用者在 `/pending` 頁面重新整理且此時 `role ≠ null`（已被指派），系統 MUST 自動導向 `/dashboard`。
+- **FR-006**：當使用者在 `/pending` 頁面重新整理時，系統 MUST 呼叫 `GET /users/me` 從後端取得最新 `role`（server-truth，不依賴舊 JWT 中的快取值）；若回傳 `role ≠ null`，自動導向 `/dashboard`。
 - **FR-007**：`/pending` 頁面必須支援響應式設計（375px、768px、1440px）。
 - **FR-008**：`/pending` 頁面必須支援 zh-TW / en 語言切換，與應用程式其他頁面一致。
 

@@ -174,4 +174,4 @@ flowchart LR
 - **SC-004**：對任何受保護路由的未驗證請求回傳 HTTP 401 或導向 `/login`。
 - **SC-005**：登出後，已失效的 JWT 被所有受保護 API 端點拒絕（回傳 HTTP 401）。
 - **SC-006**：登入頁面正確顯示 zh-TW 與 en 兩種語言；語言切換立即生效，不需重新載入頁面。
-- **SC-007**：執行資料庫 migration 後，全新部署環境中存在一個預設 super_admin 帳號。
+- **SC-007**：執行資料庫 migration 後，全新部署環境中存在一個預設 `super_admin` 帳號（bootstrap seed）。此需求的功能規格定義於 `specs/admin/006-user-management/spec.md` FR-008。

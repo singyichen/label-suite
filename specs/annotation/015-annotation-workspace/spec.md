@@ -16,9 +16,9 @@ sequenceDiagram
     participant BE as Backend (API)
     participant DB as Database
 
-    AN->>FE: 進入 annotation-workspace（/workspace/:taskId）
-    FE->>BE: POST /work-log/start（task_id, user_id, timestamp）
-    BE->>DB: 建立 WorkLog entry（start_time）
+    AN->>FE: 進入 annotation-workspace（/annotation-workspace/:taskId）
+    FE->>BE: POST /work-logs/start（task_id, user_id, timestamp）
+    BE->>DB: 建立 WorkLog entry（started_at）
     BE-->>FE: 200 OK（work_log_id）
 
     FE->>BE: GET /tasks/:taskId/annotation-items（run_type, annotator_id）
@@ -48,14 +48,14 @@ sequenceDiagram
     end
 
     AN->>FE: 離開頁面（返回 dashboard 或關閉分頁）
-    FE->>BE: POST /work-log/end（work_log_id, timestamp）
-    BE->>DB: update WorkLog（end_time, duration_seconds）
+    FE->>BE: PATCH /work-logs/{work_log_id}/end（timestamp）
+    BE->>DB: update WorkLog（ended_at, duration_seconds）
     BE-->>FE: 200 OK
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
-| 1 | Annotator | 進入 `/workspace/:taskId` | 系統記錄 `work_log.start_time`，拉取待標注項目清單與 task config |
+| 1 | Annotator | 進入 `/annotation-workspace/:taskId` | 系統記錄 `work_log.started_at`，拉取待標注項目清單與 task config |
 | 2 | System | 依 `task_type` 動態渲染標注 UI | 顯示第一筆待標注資料，右側呈現對應標注工具 |
 | 3 | Annotator | 操作標注 UI 完成一筆資料 | 系統自動儲存草稿（`status: draft`）至後端 |
 | 4 | Annotator | 點擊「提交」 | 前端驗證後送出；後端更新 `status: submitted`，進度條遞增 |
@@ -128,7 +128,7 @@ sequenceDiagram
 ### 功能需求
 
 - **FR-001**：系統 MUST 依據任務的 `task.type` config 動態渲染右側標注工具；標注元件（分類按鈕、滑桿、NER span 選取器、關係三元組編輯器等）均從 config 讀取，不得在前端硬編碼任何任務類型判斷邏輯。
-- **FR-002**：系統 MUST 在 Annotator 進入頁面時呼叫 `POST /work-log/start`，在離開頁面時呼叫 `POST /work-log/end`，記錄工時。
+- **FR-002**：系統 MUST 在 Annotator 進入頁面時呼叫 `POST /work-logs/start`，在離開頁面時呼叫 `PATCH /work-logs/{work_log_id}/end`，記錄工時。
 - **FR-003**：系統 MUST 於 Annotator 每次操作後（idle 逾 2 秒）自動呼叫 `PUT /annotations/:itemId/draft` 儲存草稿，Annotation `status` 設為 `draft`。
 - **FR-004**：系統 MUST 在提交前進行前端驗證：classification / sentence_pair(cls) 必須已選擇至少一個標籤；scoring / sentence_pair(scoring) 必須已輸入評分；ner 允許零實體提交（空標注合法）；relation 至少需有一個完整 Triple（subject + relation + object）。
 - **FR-005**：提交驗證通過後，系統 MUST 呼叫 `POST /annotations/:itemId/submit`，後端以 `(item_id, annotator_id, run_type)` 唯一約束防止重複提交，提交按鈕在請求進行中 MUST 設為 disabled。
@@ -136,7 +136,7 @@ sequenceDiagram
 - **FR-007**：系統 MUST 支援鍵盤快捷鍵操作：`Enter` 或 `Space` 提交當前筆；`←` / `→` 切換至上一筆 / 下一筆（僅限草稿狀態）；classification 任務中數字鍵 `1`–`9` 快速選擇對應標籤。
 - **FR-008**：Reviewer 視角的 workspace MUST 顯示標記員的原始答案（唯讀呈現），並在右側提供「通過」、「退回（附原因）」、「直接修改」三種審查操作。
 - **FR-009**：每筆資料的標記歷程（History）MUST 記錄所有版本（who、when、what），供 Reviewer 追溯。
-- **FR-010**：只有任務角色為 `annotator` 或 `reviewer` 的使用者 MUST 能進入 `/workspace/:taskId`，透過 `useTaskRole(taskId)` hook 確認任務角色，無任務成員資格者重導至 `/dashboard`；`super_admin` 以 `reviewer` 相同視角（唯讀）進入。
+- **FR-010**：只有任務角色為 `annotator` 或 `reviewer` 的使用者 MUST 能進入 `/annotation-workspace/:taskId`，透過 `useTaskRole(taskId)` hook 確認任務角色，無任務成員資格者重導至 `/dashboard`；`super_admin` 以 `reviewer` 相同視角（唯讀）進入。
 - **FR-011**：若 Project Leader 在任務設定中啟用「開始標記前強制顯示說明」，系統 MUST 在 Annotator 進入 workspace 時先顯示說明 modal，點擊「確認」後才進入標注介面。
 
 ### User Flow & Navigation
@@ -162,7 +162,7 @@ flowchart LR
 | `/dashboard`（Annotator） | 點擊「快速繼續」 | `/workspace/:taskId` |
 | `/dashboard`（Reviewer） | 點擊待審查任務卡 | `/workspace/:taskId` |
 | `/workspace/:taskId` | 全批次完成 / 點擊「返回儀表板」 | `/dashboard` |
-| `/workspace/:taskId` | 提交當前筆（尚有剩餘） | 停留頁面，切換至下一筆 |
+| `/annotation-workspace/:taskId` | 提交當前筆（尚有剩餘） | 停留頁面，切換至下一筆 |
 
 **Entry points**：`/dashboard`（Annotator 任務卡「開始 / 繼續標記」按鈕；Annotator 快速繼續按鈕；Reviewer 待審查任務列表卡）。
 **Exit points**：全批次完成或主動離開 → `/dashboard`；中途關閉分頁 → 觸發 `work-log/end`（beforeunload event）。
@@ -172,7 +172,7 @@ flowchart LR
 - **Annotation**：記錄單筆標注結果。欄位：`id`、`item_id`（資料項目 ID）、`task_id`、`annotator_id`、`run_type`（`dry_run` | `official_run`）、`answer`（JSON，依 task_type 結構不同）、`status`（`draft` | `submitted` | `rejected`）、`submitted_at`、`created_at`、`updated_at`。唯一約束：`(item_id, annotator_id, run_type)`。
 - **AnnotationItem**：待標注的資料項目。欄位：`id`、`task_id`、`content`（依 task_type 不同，例如單句文字、句對、原始文字等）、`sequence_number`。
 - **AnnotationHistory**：標記歷程版本紀錄。欄位：`id`、`annotation_id`、`editor_id`（標記員或 Reviewer）、`previous_answer`、`new_answer`、`changed_at`。
-- **WorkLog**：工時紀錄。欄位：`id`、`task_id`、`user_id`、`run_type`、`start_time`、`end_time`、`duration_seconds`。
+- **WorkLog**：工時紀錄。欄位：`id`、`task_id`、`user_id`、`run_type`、`started_at`、`ended_at`、`duration_seconds`。
 
 ---
 

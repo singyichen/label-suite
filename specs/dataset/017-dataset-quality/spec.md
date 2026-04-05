@@ -67,7 +67,7 @@
 ### 功能需求
 
 - **FR-001**：只有任務角色為 `project_leader` 或 `reviewer` 的使用者，以及系統角色 `super_admin`，MUST 能進入 `/dataset-quality/:taskId`；透過 `useTaskRole(taskId)` hook 驗證，無任務成員資格者重導至 `/dashboard`。
-- **FR-002**：頁面 MUST 依 `task.type` config 與 `evaluation.metric` 欄位，動態顯示對應的 IAA 指標名稱與計算結果；支援 `f1_macro`（Kappa）、`krippendorff_alpha`、`pearson`、`spearman`、`entity_f1`、`triple_f1` 六種 IAA 指標（見 config-schema §5 Metrics Registry）。
+- **FR-002**：頁面 MUST 依 `task.type` config 與 `evaluation.metric` 欄位，動態顯示對應的 IAA 指標名稱與計算結果；支援 `cohen_kappa`（Cohen's Kappa）、`fleiss_kappa`（Fleiss' Kappa）、`krippendorff_alpha`（Krippendorff's Alpha）、`f1_macro`（Macro-F1）、`entity_f1`（Entity-level F1）、`pearson`、`spearman` 等 IAA 指標（見 config-schema §5 Metrics Registry）；UI 顯示名稱應使用指標的正式全名，不得以其他指標名稱代稱（例如 `f1_macro` 顯示為「Macro-F1」，而非「Kappa」）。
 - **FR-003**：系統 MUST 顯示任務設定的 IAA 門檻值（預設 ≥ 0.8），以及當前計算結果是否達標的視覺指示（達標：綠色；未達標：紅色）。
 - **FR-004**：頁面 MUST 顯示標記員兩兩之間的一致性矩陣（heat map）；矩陣中的標記員識別一律使用匿名代號（Annotator A / B / C），不顯示真實姓名；`reviewer` 視角同樣匿名。
 - **FR-005**：只有任務角色 `project_leader`（及 `super_admin`）MUST 能在 IAA 達標時看到「前往任務詳情啟動 Official Run」按鈕；`reviewer` 不顯示此按鈕。
