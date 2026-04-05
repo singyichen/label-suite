@@ -34,13 +34,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "pFHvM",
-              "fill": "$color-text",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 20,
-              "fontWeight": "700"
+              "type": "frame",
+              "id": "TVoSJ",
+              "name": "Logo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BHp2Y",
+                  "name": "iconBg",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$color-primary",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "4t5mZ",
+                      "width": 17,
+                      "height": 17,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "0i91L",
+                  "fill": "$color-text",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -124,13 +155,45 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "kRH51",
-                      "fill": "$color-text",
-                      "content": "Label Suite",
-                      "fontFamily": "Inter",
-                      "fontSize": 28,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "ztdWh",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lYE8g",
+                          "name": "iconBgL",
+                          "width": 56,
+                          "height": 56,
+                          "fill": "$color-primary",
+                          "cornerRadius": 14,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "0X8J6",
+                              "width": 28,
+                              "height": 28,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "1UtUj",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 22,
+                          "fontWeight": "700"
+                        }
+                      ]
                     },
                     {
                       "type": "text",
@@ -451,13 +514,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "oU5Lj",
-              "fill": "$color-text",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 20,
-              "fontWeight": "700"
+              "type": "frame",
+              "id": "YOtRC",
+              "name": "Logo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cDdaL",
+                  "name": "en_iconBg",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$color-primary",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "mN7vn",
+                      "width": 17,
+                      "height": 17,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "DgHMO",
+                  "fill": "$color-text",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -541,13 +635,45 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "TDjIO",
-                      "fill": "$color-text",
-                      "content": "Label Suite",
-                      "fontFamily": "Inter",
-                      "fontSize": 28,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "17clR",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Wns0L",
+                          "name": "en_iconL",
+                          "width": 56,
+                          "height": 56,
+                          "fill": "$color-primary",
+                          "cornerRadius": 14,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "qgDlV",
+                              "width": 28,
+                              "height": 28,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "fIjwo",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 22,
+                          "fontWeight": "700"
+                        }
+                      ]
                     },
                     {
                       "type": "text",
@@ -838,8 +964,8 @@
     {
       "type": "frame",
       "id": "rZvrH",
-      "x": 3000,
-      "y": 0,
+      "x": 0,
+      "y": 1000,
       "name": "Mobile ZH",
       "width": 390,
       "height": 812,
@@ -868,13 +994,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "AZA9p",
-              "fill": "$color-text",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 17,
-              "fontWeight": "700"
+              "type": "frame",
+              "id": "5BBLV",
+              "name": "Logo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WRfsx",
+                  "name": "mzh_iconBg",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$color-primary",
+                  "cornerRadius": 7,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "n2iJ5",
+                      "width": 15,
+                      "height": 15,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "dzRIt",
+                  "fill": "$color-text",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -958,13 +1115,45 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "fCcdY",
-                      "fill": "$color-text",
-                      "content": "Label Suite",
-                      "fontFamily": "Inter",
-                      "fontSize": 22,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "fWVxs",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "e1FlN",
+                          "name": "mzh_iconL",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$color-primary",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "wyNjm",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "mIumK",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        }
+                      ]
                     },
                     {
                       "type": "text",
@@ -1255,8 +1444,8 @@
     {
       "type": "frame",
       "id": "AnUXo",
-      "x": 4500,
-      "y": 0,
+      "x": 500,
+      "y": 1000,
       "name": "Mobile EN",
       "width": 390,
       "height": 812,
@@ -1285,13 +1474,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "uL4Mr",
-              "fill": "$color-text",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 17,
-              "fontWeight": "700"
+              "type": "frame",
+              "id": "ImiI4",
+              "name": "Logo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nSVQZ",
+                  "name": "men_iconBg",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$color-primary",
+                  "cornerRadius": 7,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "GQIce",
+                      "width": 15,
+                      "height": 15,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "sJJlE",
+                  "fill": "$color-text",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -1375,13 +1595,45 @@
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "WNBXn",
-                      "fill": "$color-text",
-                      "content": "Label Suite",
-                      "fontFamily": "Inter",
-                      "fontSize": 22,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "ZdKzH",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "KFM8d",
+                          "name": "men_iconL",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$color-primary",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Tm3J6",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "UqkWo",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        }
+                      ]
                     },
                     {
                       "type": "text",
@@ -1672,8 +1924,8 @@
     {
       "type": "frame",
       "id": "HnaU1",
-      "x": 6000,
-      "y": 0,
+      "x": 0,
+      "y": 1900,
       "name": "Component ZH",
       "width": 800,
       "fill": "#FFFFFF",
@@ -1829,8 +2081,8 @@
     {
       "type": "frame",
       "id": "Ezzci",
-      "x": 7500,
-      "y": 0,
+      "x": 900,
+      "y": 1900,
       "name": "Component EN",
       "width": 800,
       "fill": "#FFFFFF",
