@@ -305,7 +305,7 @@ flowchart TD
 #### `annotator-list` 平台成員列表頁
 - **進入方式：** Navbar → 標記員管理
 - **功能：**
-  - 查看所有系統角色為 `annotator` 的平台成員、啟用 / 停用（啟用 / 停用操作限 `super_admin`）
+  - 查看所有系統角色為 `annotator` 的平台成員；任務 `project_leader` 可停用 / 啟用成員在其任務中的參與狀態（任務層級）；平台帳號停用限 `super_admin`（於 `user-management` 操作）
   - **待指派區塊：** 顯示已登入或已註冊但 `role = null` 的新使用者，任何 `annotator`（系統）或 `super_admin` 可在此指派 `annotator` 系統角色
   - 任務 `project_leader` 可從此列表選取成員，邀請加入自己的任務並指派任務角色
 - **空狀態（尚無任何平台成員）：** 說明文字，提示使用者至 `/register` 或 Google SSO 自行加入

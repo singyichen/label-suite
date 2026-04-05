@@ -57,7 +57,7 @@
 
 ### 邊界情況
 
-- 一般 `annotator` 可以停用其他成員嗎？→ 不行；停用帳號只有 `super_admin` 可執行（同 spec 006）。
+- 一般 `annotator` 可以停用其他成員嗎？→ 不行；任務層級的停用只有任務 `project_leader` 可執行；平台帳號停用只有 `super_admin` 可執行（spec 006）。
 - 任務 PL 可以邀請 `super_admin` 加入任務嗎？→ 可以；`super_admin` 也可以擁有任務角色。
 
 ---
@@ -70,7 +70,7 @@
 - **FR-002**：頁面必須列出所有系統角色為 `annotator` 的平台成員，顯示姓名、Email、帳號狀態。
 - **FR-003**：頁面頂部必須設有「待指派區塊」，顯示所有 `role = null` 的已登入使用者；無待指派使用者時區塊隱藏。
 - **FR-004**：任何 `annotator`（系統）或 `super_admin` 可在待指派區塊對使用者指派 `annotator` 系統角色。
-- **FR-005**：只有 `super_admin` 可停用或啟用成員帳號。
+- **FR-005**：任務 `project_leader` 可在 `/annotator-list` 停用或啟用平台成員在其負責任務中的參與狀態（任務層級）；`super_admin` 的平台帳號停用在 `/user-management` 管理（spec 006），不在此頁操作。
 - **FR-006**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
 - **FR-007**：任務 `project_leader` 可從此列表選取成員，邀請加入自己負責的任務並指派任務角色（`reviewer` 或 `annotator`）。
 - **FR-008**：點選成員列表中的任一成員，導向該成員的 `/work-log`。
