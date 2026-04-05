@@ -397,7 +397,7 @@ sequenceDiagram
 
 ### 旅程 C — 審核員審查並查看品質報告
 
-> 審核員在組織上可由 Project Leader 兼任。透過 RBAC 繼承，單一 `project_leader` 帳號即繼承所有 `reviewer` 能力，無需建立兩個獨立帳號。
+> 審核員（`reviewer`）是任務角色（task role），透過 `task_membership` 表在任務層級指派，與系統角色（system role）無關、無繼承關係。同一使用者可在同一任務同時被指派為 `project_leader` 與 `reviewer`，但這是兩筆獨立的 `task_membership` 記錄，而非角色繼承。
 
 ```mermaid
 sequenceDiagram
@@ -423,7 +423,7 @@ sequenceDiagram
 
   SA->>UM: 查看所有使用者帳號
   SA->>UM: 新增 Project Leader 帳號（研究員 / 負責人）
-  SA->>UM: 指派角色（project_leader / reviewer / super_admin）
+  SA->>UM: 指派系統角色（annotator / super_admin）
   SA->>RS: 調整角色功能存取範圍
   Note over SA: 標記員帳號由 Project Leader 自行在標記員管理模組新增
 ```

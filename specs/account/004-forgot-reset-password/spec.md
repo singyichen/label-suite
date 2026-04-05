@@ -69,11 +69,11 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 完成密碼重設（優先級：P1）
+### User Story 2 — 完成密碼重設（優先級：P2）
 
-使用者點擊信件中的重設連結，進入 `/reset-password` 頁面，填寫新密碼後系統更新密碼雜湊並使 token 失效，導向 `/login`。
+使用者點擊信件中的重設連結，進入 `/reset-password` 頁面，填寫新密碼後系統更新密碼雜湊並使 token 失效，導向 `/login`。（與 P1 Story 1 共同構成完整忘記密碼流程）
 
-**此優先級原因**：與 User Story 1 共同構成完整的密碼重設流程，缺一不可。
+**此優先級原因**：密碼重設表單依賴 Story 1 寄出的 token，需在 Story 1 穩定後接續實作；兩者合併構成完整流程。
 
 **獨立測試方式**：以有效 token 開啟 `/reset-password`，填寫新密碼送出，驗證密碼已更新且能以新密碼登入；再以舊 token 重試，確認回傳錯誤。
 
@@ -90,7 +90,7 @@ sequenceDiagram
 
 - Resend API 暫時無法使用時？→ 後端記錄錯誤，頁面顯示「寄信暫時失敗，請稍後再試」，token 已建立可保留等待重試。
 - 使用者在 token 尚未過期前再次申請重設時？→ 舊 token 失效，建立新 token 重新寄信。
-- Google SSO 使用者（無 `hashed_password`）申請密碼重設時？→ 寄出重設信（成功），重設後帳號新增 Email / Password 登入能力（靜默合併，同 spec 002）。
+- Google SSO 使用者（無 `hashed_password`）申請密碼重設時？→ 寄出重設信（成功）。Google SSO 使用者完成密碼重設後，系統直接新增 `hashed_password` 至既有帳號，不走 OAuth 流程；該帳號此後同時支援 Google SSO 與 Email/Password 登入（靜默合併，同 spec 002）。
 - 已登入使用者訪問 `/forgot-password` 時？→ 自動導向 `/dashboard`，與 `/login`、`/register` 行為一致。
 - 使用者直接訪問 `/reset-password` 不帶 token 參數時？→ 視同 token 無效，顯示錯誤訊息並提示重新申請，導向 `/forgot-password`。
 

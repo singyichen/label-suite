@@ -5,6 +5,37 @@
 **狀態**：Clarified
 **需求來源**：IA v7 Spec 清單 #006 — 使用者列表與管理
 
+## 流程說明
+
+```mermaid
+sequenceDiagram
+    actor SA as Super Admin
+    participant UI as /user-management
+    participant API as Backend API
+    participant DB as Database
+
+    SA->>UI: 選取使用者
+    SA->>UI: 點擊「指派角色」下拉
+    SA->>UI: 選取目標角色（annotator 或 super_admin）
+    UI->>API: PATCH /users/{id}/role
+    API->>DB: UPDATE users SET role = ? WHERE id = ?
+    DB-->>API: 更新成功
+    API-->>UI: 200 OK
+    Note over SA,UI: 若使用者目前在線，其 JWT 不立即失效<br/>需重新登入後生效
+    UI-->>SA: 顯示成功提示
+```
+
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|----------|
+| 1 | Super Admin | 在 `/user-management` 選取使用者 | 顯示該使用者的角色操作選項 |
+| 2 | Super Admin | 點擊「指派角色」下拉 | 展開角色選單（`annotator` / `super_admin`）|
+| 3 | Super Admin | 選取目標角色 | 送出 PATCH 請求 |
+| 4 | System | 更新 `users.role` 欄位 | 寫入資料庫 |
+| 5 | System | 若使用者目前在線 | 現有 JWT 不立即失效，需重新登入後生效 |
+| 6 | System | — | 顯示成功提示 |
+
+---
+
 ## 使用者情境與測試 *(必填)*
 
 ### User Story 1 — 查看所有使用者並指派系統角色（優先級：P1）
@@ -67,14 +98,15 @@ Super Admin 可在 `/user-management` 直接新增使用者帳號（填寫姓名
 
 ### 功能需求
 
-- **FR-001**：只有 `super_admin` 可存取 `/user-management`；其他角色存取導向 `/dashboard`。
+- **FR-001**：只有 `super_admin` 可存取 `/user-management`；其他已登入使用者（`role = annotator`）存取導向 `/dashboard`；`role = null` 的使用者導向 `/pending`。
 - **FR-002**：頁面必須列出所有平台使用者，顯示：姓名、Email、系統角色（`null` / `annotator` / `super_admin`）、帳號狀態（啟用 / 停用）、建立日期。
 - **FR-003**：Super Admin 必須能對任意使用者指派或變更系統角色（`null` → `annotator` → `super_admin`，雙向可變更）。
 - **FR-004**：Super Admin 必須能停用或啟用任意使用者帳號，但不得停用自己的帳號。
 - **FR-005**：系統必須確保至少存在一個 `super_admin`；若操作會導致 `super_admin` 數量為 0，系統拒絕並顯示錯誤。
 - **FR-006**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
-- **FR-007**：空狀態（尚無任何使用者）顯示說明文字「尚未有任何使用者帳號」。
+- **FR-007**：空狀態（尚無任何使用者）顯示說明文字「尚未建立任何使用者帳號」，並提供「新增第一位使用者」引導按鈕（導向新增使用者表單）。
 - **FR-008**：Super Admin 必須能直接新增使用者帳號（填寫姓名、Email、初始系統角色）；新帳號無初始密碼，使用者首次登入需透過忘記密碼流程設定密碼（spec 004）。Email 已存在時回傳錯誤，不建立重複帳號。
+- **FR-009**：資料庫 migration seed 必須在全新部署環境中自動建立一個預設 `super_admin` 帳號（Email 與密碼透過環境變數設定），確保首次部署後即有管理員可登入管理平台（bootstrap 需求）。
 
 ### User Flow & Navigation
 
@@ -102,7 +134,13 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：可管理欄位：`role`（`null` | `annotator` | `super_admin`）、`is_active`（帳號啟用狀態）。
+- **User（使用者）**：平台使用者帳號。關鍵屬性：
+  - `id`：使用者唯一識別碼
+  - `email`：登入 Email（唯一）
+  - `name`：顯示名稱
+  - `role`：系統角色（`null` | `annotator` | `super_admin`）
+  - `is_active`：帳號啟用狀態（`true` | `false`）
+  - `created_at`：帳號建立時間
 
 ---
 

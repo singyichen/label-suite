@@ -559,7 +559,8 @@
       document.getElementById('email').placeholder       = t.emailPlaceholder;
       document.getElementById('passwordLabel').textContent = t.passwordLabel;
       document.getElementById('forgotLink').textContent  = t.forgotLink;
-      document.getElementById('loginBtnText').textContent = t.loginBtnText;
+      const loginBtnTextEl = document.getElementById('loginBtnText');
+      if (loginBtnTextEl) loginBtnTextEl.textContent = t.loginBtnText;
       document.getElementById('registerText').textContent = t.registerText;
       document.getElementById('registerLink').textContent = t.registerLink;
       document.getElementById('errorMsg').textContent    = t.errorMsg;
@@ -639,15 +640,11 @@
       }
       if (hasError) return;
 
-      // Loading state
-      const btn      = document.getElementById('loginBtn');
-      const btnText  = document.getElementById('loginBtnText');
-      btn.disabled   = true;
-      btnText.innerHTML = '';
-      const spinner  = document.createElement('span');
-      spinner.className = 'spinner';
-      spinner.setAttribute('aria-label', '載入中');
-      btn.appendChild(spinner);
+      // Loading state — replace entire button content to prevent applyLang()
+      // from writing text into a detached #loginBtnText during the async window
+      const btn = document.getElementById('loginBtn');
+      btn.disabled  = true;
+      btn.innerHTML = '<span class="spinner" aria-label="載入中"></span>';
 
       // Simulate async login (always fails in prototype)
       await new Promise(r => setTimeout(r, 1500));

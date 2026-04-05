@@ -158,7 +158,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`avatar_url`、`providers`（已連結的登入方式陣列，例如 `["google"]`、`["email"]`、`["google", "email"]`）、`provider_id`（Google UID；僅 Email/Password 帳號為 `null`）、`hashed_password`（Email/Password 帳號用；純 Google 帳號為 `null`，合併後有值）、`role`（`null` | `annotator` | `super_admin`）、`created_at`。`providers` 以應用層邏輯維護，非資料庫單值欄位。
+- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`avatar_url`、`providers`（已連結的登入方式陣列，例如 `["google"]`、`["email"]`、`["google", "email"]`）、`provider_id`（Google UID；僅 Email/Password 帳號為 `null`）、`hashed_password`（Email/Password 帳號用；純 Google SSO 帳號的 `hashed_password` 為 `null`；帳號合併後有值）、`role`（`null` | `annotator` | `super_admin`）、`created_at`。`providers` 以應用層邏輯維護，非資料庫單值欄位。**資料庫實作說明**：`provider` 在資料庫中以單值字串儲存（`email` / `google`）；如未來需支援多 provider，將以獨立 `user_auth_providers` 關聯表擴充，目前 MVP 以單值實作。
 - **OAuthState**：防 CSRF 用的一次性隨機 state 值，儲存於 server-side session，callback 時驗證後即失效。
 - **Session / JWT**：OAuth callback 成功後簽發的短效存取 token。包含 `user_id`、`role`、`exp`。過期後導向 `/login`，不進行靜默更新。
 

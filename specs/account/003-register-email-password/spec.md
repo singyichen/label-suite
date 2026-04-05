@@ -130,7 +130,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`hashed_password`、`provider = email`、`provider_id = null`、`avatar_url = null`、`role = null`、`created_at`。
+- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`hashed_password`（Email 註冊帳號為 bcrypt hash；純 Google SSO 帳號為 `null`）、`provider = email`、`provider_id = null`、`avatar_url = null`、`role = null`、`created_at`。
 
 ---
 

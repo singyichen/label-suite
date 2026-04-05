@@ -20,9 +20,9 @@ sequenceDiagram
 
     使用者->>瀏覽器: 填寫 Email + Password，點擊登入
     瀏覽器->>後端API: POST /auth/login（email、password）
-    後端API->>後端API: 驗證密碼雜湊（bcrypt）
     後端API->>資料庫: 查詢使用者記錄（以 email 比對）
     資料庫-->>後端API: User record
+    後端API->>後端API: 驗證密碼雜湊（bcrypt）
 
     alt role ≠ null
         後端API-->>瀏覽器: 設定 JWT cookie + 導向 /dashboard
@@ -34,8 +34,8 @@ sequenceDiagram
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
 | 1 | 使用者 | 開啟 `/login` | 回傳登入頁面（含 Google SSO 按鈕、Email/Password 表單、連結） |
-| 2 | 使用者 | 填寫 Email / Password 並送出 | 後端驗證 bcrypt 密碼雜湊 |
-| 3 | 後端 | 驗證通過 | 查詢使用者記錄 |
+| 2 | 使用者 | 填寫 Email / Password 並送出 | 後端查詢使用者記錄（以 email 比對） |
+| 3 | 後端 | 取得使用者記錄 | bcrypt 驗證密碼雜湊 |
 | 4a | 後端 | `role ≠ null` | 簽發 JWT，導向 `/dashboard` |
 | 4b | 後端 | `role = null` | 簽發 JWT，導向 `/pending` |
 | E1 | 使用者 | Email / Password 錯誤 | 停留 `/login` 並顯示錯誤訊息（不揭露哪個欄位錯誤） |
@@ -102,6 +102,7 @@ sequenceDiagram
 - JWT 在工作階段中途過期時？→ 導向 `/login`，不進行靜默更新（silent refresh），使用者必須重新驗證。
 - 已登入使用者再次訪問 `/login` 時？→ 自動導向 `/dashboard`，不顯示登入表單。
 - 相同 Email 同時存在 Google 帳號與 Email/Password 帳號時？→ 視為同一帳號靜默合併（詳見 spec 002）。
+- `?next=` 參數的目標路徑合法性驗證？→ `?next=` 參數必須驗證為系統內部路由（相對路徑或同 origin），防止 open redirect 攻擊；非法 next 值忽略，改導向 `/dashboard`。
 
 ---
 
@@ -119,9 +120,8 @@ sequenceDiagram
 - **FR-008**：登入頁面必須支援 zh-TW / en 語言切換，與應用程式其他頁面一致；語言切換立即生效，不需重新載入頁面。
 - **FR-009**：系統必須在所有已登入頁面提供可存取的登出操作（按鈕或連結）。
 - **FR-010**：登出時，系統必須使 JWT 失效並清除所有客戶端 session 儲存。
-- **FR-011**：資料庫 migration seed 必須建立一個預設 super_admin 帳號，確保首次部署時有 super_admin 可指派其他使用者的角色（屬於部署基礎建設需求；詳見 spec 006 使用者管理）。
-- **FR-012**：JWT 過期時，系統必須將使用者導向 `/login`，不支援靜默更新 token。
-- **FR-013**：登入失敗時，錯誤訊息不得揭露哪個欄位（Email 或 Password）錯誤。
+- **FR-011**：JWT 過期時，系統必須將使用者導向 `/login`，不支援靜默更新 token。
+- **FR-012**：登入失敗時，錯誤訊息不得揭露哪個欄位（Email 或 Password）錯誤。
 
 ### User Flow & Navigation
 
@@ -161,7 +161,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：代表已驗證身份。關鍵屬性：`id`、`email`、`name`、`hashed_password`（Email/Password 帳號）、`role`（系統角色：`null` | `annotator` | `super_admin`）、`created_at`。`project_leader` 與 `reviewer` 為任務角色，儲存於 `task_membership` 表，不在 JWT 中。
+- **User（使用者）**：代表已驗證身份。關鍵屬性：`id`、`email`、`name`、`contact_info`（聯絡方式，nullable string）、`hashed_password`（Email/Password 帳號）、`role`（系統角色：`null` | `annotator` | `super_admin`）、`created_at`。`project_leader` 與 `reviewer` 為任務角色，儲存於 `task_membership` 表，不在 JWT 中。
 - **Session / JWT**：成功驗證後簽發的短效存取 token。包含 `user_id`、`role`、`exp`。過期後系統導向 `/login`，不進行靜默更新。
 
 ---
@@ -174,4 +174,4 @@ flowchart LR
 - **SC-004**：對任何受保護路由的未驗證請求回傳 HTTP 401 或導向 `/login`。
 - **SC-005**：登出後，已失效的 JWT 被所有受保護 API 端點拒絕（回傳 HTTP 401）。
 - **SC-006**：登入頁面正確顯示 zh-TW 與 en 兩種語言；語言切換立即生效，不需重新載入頁面。
-- **SC-007**：執行資料庫 migration 後，全新部署環境中存在一個預設 super_admin 帳號。
+- **SC-007**：執行資料庫 migration 後，全新部署環境中存在一個預設 `super_admin` 帳號（bootstrap seed）。此需求的功能規格定義於 `specs/admin/006-user-management/spec.md` FR-008。

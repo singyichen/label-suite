@@ -47,3 +47,6 @@ assets/logo/*.png
 
 # Serena MCP server project config (local dev environment)
 .serena/
+
+# Claude Code local settings (personal dev environment)
+.claude/settings.local.json
