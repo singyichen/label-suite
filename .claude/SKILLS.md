@@ -6,7 +6,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 
 ```
 .claude/
-├── commands/                    # Spec-Kit Commands
+├── commands/                    # Spec-Kit Commands + Workflow Commands
 │   ├── speckit.specify.md       # Create feature spec
 │   ├── speckit.plan.md          # Create implementation plan
 │   ├── speckit.tasks.md         # Generate task list
@@ -15,7 +15,11 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── speckit.analyze.md       # Cross-artifact analysis
 │   ├── speckit.checklist.md     # Generate quality checklist
 │   ├── speckit.constitution.md  # Update project constitution
-│   └── speckit.taskstoissues.md # Convert tasks to GitHub Issues
+│   ├── speckit.taskstoissues.md # Convert tasks to GitHub Issues
+│   ├── pencil-wireframe.md      # Draw 6-frame wireframes via Pencil MCP
+│   ├── pr-flow.md               # Full PR flow (commit → review → test → merge)
+│   ├── review-resolve.md        # Fetch PR review threads, fix findings, resolve
+│   └── agent-team.md            # Multi-phase agent team workflow for new features
 ├── skills/                      # Knowledge-Domain Skills (30 total)
 │   ├── spec-driven-development/
 │   │   ├── sdd-workflow/
@@ -54,7 +58,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── xmind-import/                # Fetch XMind share URL → Mermaid
 │   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
 │   └── ui-ux-pro-max/               # UI/UX Design Intelligence
-├── agents/                      # AI Agent definitions (35 agents)
+├── agents/                      # AI Agent definitions (25 agents)
 └── SKILLS.md                    # This file
 ```
 
@@ -62,7 +66,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 
 ## Spec-Kit Commands
 
-Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [GitHub spec-kit](https://github.com/github/spec-kit). Specs are stored in `specs/NNN-feature-name/` directories.
+Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [GitHub spec-kit](https://github.com/github/spec-kit). Specs are stored in `specs/[module]/NNN-feature/` directories.
 
 | Command | Purpose | Example Usage |
 |---------|---------|---------------|
@@ -88,7 +92,20 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 
 - **Constitution**: `.specify/memory/constitution.md` (6 core principles)
 - **Templates**: `.specify/templates/` (spec, plan, tasks, checklist, agent-file, constitution templates)
-- **Specs**: `specs/` (feature specifications, one directory per feature)
+- **Specs**: `specs/` (feature specifications, organized as `specs/[module]/NNN-feature/`)
+
+---
+
+## Workflow Commands
+
+Commands for broader development workflow tasks (PR management, wireframing, multi-agent orchestration).
+
+| Command | Purpose | Example Usage |
+|---------|---------|---------------|
+| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP | `/pencil-wireframe` |
+| `/pr-flow` | Full PR flow (commit → review → test → merge) | `/pr-flow` |
+| `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
+| `/agent-team` | Multi-phase agent team workflow for new features | `/agent-team` |
 
 ---
 
@@ -101,8 +118,8 @@ Skills for the SDD workflow — writing, reviewing, and transforming spec artifa
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
 | `/sdd-workflow` | Full SDD workflow guide (specify → checklist) | `/sdd-workflow` |
-| `/spec-to-plan` | Transform a `spec.md` into a detailed `plan.md` | `/spec-to-plan specs/001-annotation-submission/spec.md` |
-| `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/001-annotation-submission/spec.md` |
+| `/spec-to-plan` | Transform a `spec.md` into a detailed `plan.md` | `/spec-to-plan specs/annotation/001-annotation-submission/spec.md` |
+| `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/annotation/001-annotation-submission/spec.md` |
 
 ### Requirements Engineering (4 skills)
 
@@ -128,13 +145,10 @@ Skills for designing APIs, services, data models, and architecture.
 | `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
 | `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
 
-### Diagramming (2 skills)
-
-Skills for importing and generating diagrams from external sources.
+### Diagramming (1 skill)
 
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
-| `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
 | `/xmind-import` | Fetch XMind share URL → parse JSON → output Mermaid `flowchart LR` | `/xmind-import https://app.xmind.com/share/PKjJEIHD docs/functional-map/functional-map.md` |
 
 ### UI/UX Design (1 skill)
@@ -175,7 +189,7 @@ Skills for test planning, execution, data management, and coverage analysis.
 
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
-| `/test-plan` | Create comprehensive test plans | `/test-plan specs/001-annotation-submission/spec.md` |
+| `/test-plan` | Create comprehensive test plans | `/test-plan specs/annotation/001-annotation-submission/spec.md` |
 | `/test-coverage` | Analyze test coverage with module-specific thresholds | `/test-coverage backend/app/services/scoring.py` |
 | `/test-data-strategy` | Define test data and fixture management | `/test-data-strategy annotation submission tests` |
 | `/test-tracking` | Track test execution progress with dashboards | `/test-tracking sprint` |
@@ -190,7 +204,7 @@ Skills for quality gates, defect management, traceability, and reporting.
 |-------|---------|---------------|
 | `/quality-gate` | Evaluate release readiness (Go/No-Go) | `/quality-gate production` |
 | `/defect-report` | Create standardized defect reports | `/defect-report scoring returns wrong F1 for multi-label` |
-| `/traceability-matrix` | Build User Story → AC → Spec → Code → Test traceability | `/traceability-matrix specs/001-annotation-submission/` |
+| `/traceability-matrix` | Build User Story → AC → Spec → Code → Test traceability | `/traceability-matrix specs/annotation/001-annotation-submission/` |
 | `/test-report` | Generate Sprint/Release test reports | `/test-report sprint` |
 
 ---
@@ -206,8 +220,8 @@ Skills for quality gates, defect management, traceability, and reporting.
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
 | UI/UX Design | 1 | ui-ux-pro-max |
-| Diagramming | 2 | d2-diagram (adamelliotfields), xmind-import |
-| **Total** | **31** | |
+| Diagramming | 1 | xmind-import |
+| **Total** | **30** | |
 
 ---
 
@@ -248,11 +262,11 @@ For the Label Suite project, these skills enforce additional constraints for the
 ## Related Documentation
 
 - **[CLAUDE.md](../CLAUDE.md)**: Project coding standards and conventions
-- **[AGENTS.md](../AGENTS.md)**: Reference for all 35 AI agents
+- **[AGENTS.md](../AGENTS.md)**: Reference for all 25 AI agents
 - **[CODE_REVIEW_GUIDE.md](skills/code-quality/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
 - **[Constitution](./../.specify/memory/constitution.md)**: Six core development principles
 
 ---
 
-*Last Updated: 2026-03-25*
-*Total Skills: 31 | Spec-Kit Commands: 9*
+*Last Updated: 2026-04-04*
+*Total Skills: 30 | Spec-Kit Commands: 9 | Workflow Commands: 4*

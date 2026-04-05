@@ -9,7 +9,7 @@ ADR-009 defines the overall project testing strategy (pytest + Playwright), but 
 
 - **Component-level logic** that is too granular for E2E (widget rendering, role dispatch, form validation)
 - **Config-driven task-type widgets** that must be tested in isolation per `task_type`
-- **Multi-role access control** with multiple `roles: Role[]` combinations
+- **Role-based access control** with `role: Role` (single-value enum per IA and JWT contract)
 - **i18n namespace lazy-loading** that introduces async HTTP in the render path
 - **TanStack Query cache** that must be isolated between tests
 - **Axios interceptors** (JWT attach, 401 redirect) that interfere with component test assertions
@@ -97,10 +97,10 @@ function makeTestQueryClient() {
 // For component tests: renders ui inside providers, returns RTL RenderResult
 export function renderWithProviders(
   ui: React.ReactElement,
-  { roles = ['annotator'], route = '/' } = {}
+  { role = 'annotator' as Role, route = '/' } = {}
 ) {
   const queryClient = makeTestQueryClient()
-  useAuthStore.setState({ roles, user: mockUser, token: 'test-token' })
+  useAuthStore.setState({ role, user: mockUser, token: 'test-token' })
 
   return render(
     <QueryClientProvider client={queryClient}>
@@ -114,9 +114,9 @@ export function renderWithProviders(
 // For renderHook: returns a React component (JSX), NOT a RenderResult.
 // renderHook's `wrapper` option requires a component that accepts { children }
 // and returns JSX — calling render() here would return RenderResult and break it.
-export function createWrapper({ roles = ['annotator'], route = '/' } = {}) {
+export function createWrapper({ role = 'annotator' as Role, route = '/' } = {}) {
   const queryClient = makeTestQueryClient()
-  useAuthStore.setState({ roles, user: mockUser, token: 'test-token' })
+  useAuthStore.setState({ role, user: mockUser, token: 'test-token' })
 
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
@@ -232,27 +232,71 @@ test('disables interaction in readOnly mode', () => {
 
 ### Dashboard Role Dispatch Test Matrix
 
-All `roles` combinations must be covered:
+`DashboardPage` dispatches based on the JWT `role` value (single enum). The dispatch selects which dashboard VIEW to render — it is separate from route-level access control (RoleGuard).
 
 ```tsx
 // features/dashboard/DashboardPage.test.tsx
 const cases = [
-  { roles: ['super_admin'],                   expected: 'SuperAdminDashboard' },
-  { roles: ['project_leader'],                expected: 'LeaderDashboard' },
-  { roles: ['reviewer'],                      expected: 'ReviewerDashboard' },
-  { roles: ['annotator'],                     expected: 'AnnotatorDashboard' },
-  { roles: ['project_leader', 'reviewer'],    expected: 'LeaderDashboard' },  // leader wins
-  { roles: ['reviewer', 'annotator'],         expected: 'ReviewerDashboard' },
-  { roles: [],                                expected: 'redirect:/login' },
-  { roles: ['unknown_role'],                  expected: 'redirect:/login' },
+  { role: 'super_admin',    expected: 'SuperAdminDashboard' },
+  { role: 'project_leader', expected: 'LeaderDashboard' },
+  { role: 'reviewer',       expected: 'ReviewerDashboard' },
+  { role: 'annotator',      expected: 'AnnotatorDashboard' },
+  { role: null,             expected: 'redirect:/login' },   // unauthenticated
+  { role: 'unknown_role',   expected: 'redirect:/login' },   // deny-by-default
 ]
 
-test.each(cases)('roles=$roles renders $expected', ({ roles, expected }) => {
-  const { container } = renderWithProviders(<DashboardPage />, { roles })
+test.each(cases)('role=$role renders $expected', ({ role, expected }) => {
+  renderWithProviders(<DashboardPage />, { role })
   if (expected.startsWith('redirect:')) {
     expect(mockNavigate).toHaveBeenCalledWith(expected.replace('redirect:', ''), { replace: true })
   } else {
     expect(screen.getByTestId(expected)).toBeInTheDocument()
+  }
+})
+```
+
+### RoleGuard Inheritance Test Matrix
+
+`RoleGuard` uses `ROLE_HIERARCHY` to resolve effective roles. Tests must cover both direct access and inherited access:
+
+```tsx
+// router/guards/RoleGuard.test.tsx
+const cases = [
+  // Direct access
+  { role: 'annotator',      allow: ['annotator'],      permitted: true  },
+  { role: 'reviewer',       allow: ['reviewer'],        permitted: true  },
+  { role: 'project_leader', allow: ['project_leader'],  permitted: true  },
+  { role: 'super_admin',    allow: ['super_admin'],     permitted: true  },
+  // Inherited access — project_leader inherits reviewer
+  { role: 'project_leader', allow: ['reviewer'],        permitted: true  },
+  // Inherited access — super_admin inherits all
+  { role: 'super_admin',    allow: ['annotator'],       permitted: true  },
+  { role: 'super_admin',    allow: ['reviewer'],        permitted: true  },
+  { role: 'super_admin',    allow: ['project_leader'],  permitted: true  },
+  // Denied — no inheritance upward
+  { role: 'annotator',      allow: ['reviewer'],        permitted: false },
+  { role: 'reviewer',       allow: ['project_leader'],  permitted: false },
+  { role: 'annotator',      allow: ['project_leader'],  permitted: false },
+  // Boundary — null role denied
+  { role: null,             allow: ['annotator'],       permitted: false },
+]
+
+test.each(cases)('role=$role allow=$allow → $permitted', ({ role, allow, permitted }) => {
+  // RoleGuard renders <Outlet /> — must use a nested route tree, not direct children
+  renderWithProviders(
+    <Routes>
+      <Route path="/" element={<div>home</div>} />
+      <Route element={<RoleGuard allow={allow} />}>
+        <Route path="/protected" element={<div>content</div>} />
+      </Route>
+    </Routes>,
+    { role, route: '/protected' }
+  )
+  if (permitted) {
+    expect(screen.getByText('content')).toBeInTheDocument()
+  } else {
+    // <Navigate to="/" replace /> resolves to the home route within MemoryRouter
+    expect(screen.getByText('home')).toBeInTheDocument()
   }
 })
 ```
@@ -274,7 +318,6 @@ type Fixtures = {
   asAnnotator: Page
   asReviewer: Page
   asSuperAdmin: Page
-  asLeaderAndReviewer: Page
 }
 
 export const test = base.extend<Fixtures>({
@@ -285,11 +328,23 @@ export const test = base.extend<Fixtures>({
     await use(await ctx.newPage())
     await ctx.close()
   },
-  // … other roles
-  asLeaderAndReviewer: async ({ browser }, use) => {
-    // user holds both roles — tests multi-role priority dispatch
+  asAnnotator: async ({ browser }, use) => {
     const ctx = await browser.newContext({
-      storageState: 'tests/shared/fixtures/.auth/leader-and-reviewer.json',
+      storageState: 'tests/shared/fixtures/.auth/annotator.json',
+    })
+    await use(await ctx.newPage())
+    await ctx.close()
+  },
+  asReviewer: async ({ browser }, use) => {
+    const ctx = await browser.newContext({
+      storageState: 'tests/shared/fixtures/.auth/reviewer.json',
+    })
+    await use(await ctx.newPage())
+    await ctx.close()
+  },
+  asSuperAdmin: async ({ browser }, use) => {
+    const ctx = await browser.newContext({
+      storageState: 'tests/shared/fixtures/.auth/super-admin.json',
     })
     await use(await ctx.newPage())
     await ctx.close()
@@ -307,7 +362,7 @@ The following spec files map 1-to-1 to the five IA user journeys. All five must 
 |---|---|---|---|
 | A — Project Leader full lifecycle | `task-management/task-lifecycle.spec.ts` | `asProjectLeader` | P1 |
 | B — Annotator completes annotation | `annotation/dry-run.spec.ts`, `annotation/official-run.spec.ts` | `asAnnotator` | P1 |
-| C — Reviewer audits + quality report | `dataset/reviewer-audit.spec.ts` | `asReviewer`, `asLeaderAndReviewer` | P1 |
+| C — Reviewer audits + quality report | `dataset/reviewer-audit.spec.ts` | `asReviewer`, `asProjectLeader` | P1 |
 | D — Super Admin user management | `admin/user-management.spec.ts` | `asSuperAdmin` | P2 |
 | Account — login + profile | `auth/login.spec.ts`, `auth/google-sso.spec.ts` | `asUnauthenticated` | P1 |
 

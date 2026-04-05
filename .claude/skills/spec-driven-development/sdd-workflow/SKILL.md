@@ -1,153 +1,39 @@
 ---
 name: sdd-workflow
-description: Guide for the Spec-Driven Development (SDD) workflow used in Label Suite.
+description: Complete Spec-Driven Development workflow for Label Suite — pipeline, commands, module paths, when to skip, flow chart ownership.
 ---
 
-# SDD Workflow Guide
+# SDD Workflow — Label Suite
 
-The Spec-Driven Development workflow ensures every feature begins with a formal specification before any code is written. This is the standard development process for the Label Suite project.
+This project adopts Spec-Driven Development (SDD). New features follow the sequence below.
 
-## Workflow Overview
+## Pipeline
 
 ```
-/speckit.specify <feature description>
-        ↓
-  specs/NNN-feature/spec.md
-        ↓
-/speckit.clarify  (optional — ask questions, resolve ambiguity)
-        ↓
-/spec-review  (validate completeness and Constitution compliance)
-        ↓
-/speckit.plan
-        ↓
-  specs/NNN-feature/plan.md
-        ↓
-/speckit.tasks
-        ↓
-  specs/NNN-feature/tasks.md
-        ↓
-/speckit.implement
-        ↓
-  Code changes (branch: feat/NNN-feature)
-        ↓
-/speckit.checklist
-        ↓
-  specs/NNN-feature/checklists/
-        ↓
-  Pull Request → Code Review → Merge
-```
-
-## Step-by-Step Reference
-
-### Step 1: Specify — `/speckit.specify <description>`
-
-Create a formal spec for the feature.
-
-**Output**: `specs/NNN-feature/spec.md`
-
-**Spec must include**:
-- Feature overview and motivation
-- Target users (NLP Researcher / Annotator / Administrator)
-- User Stories (US-XX format)
-- Acceptance Criteria (AC-XX format, SMART and testable)
-- Non-functional requirements (performance, security, test-set isolation)
-- Out of scope items
-- Dependencies on other specs
-
-**Naming convention**: `NNN` is zero-padded (001, 002, ...), `feature` is kebab-case
-
----
-
-### Step 2: Clarify — `/speckit.clarify` (optional)
-
-Ask clarifying questions about the spec before planning.
-
-**Use when**:
-- Evaluation metric selection is unclear → escalate to `nlp-research-advisor`
-- API design has multiple valid approaches → consult `senior-api-designer`
-- Security scope of test-set isolation is unclear → consult `senior-security`
-
----
-
-### Step 3: Review — `/spec-review`
-
-Validate the spec for completeness and Constitution compliance before investing in planning.
-
-**Blockers that prevent proceeding**:
-- Missing testable Acceptance Criteria
-- No mention of test-set leakage prevention for submission-related features
-- Constitution violations
-
----
-
-### Step 4: Plan — `/speckit.plan`
-
-Transform the validated spec into an implementation plan.
-
-**Output**: `specs/NNN-feature/plan.md`
-
-**Plan must include**:
-- Component map (files to create / modify)
-- Implementation steps (each mapped to ACs)
-- Sequence diagram for async Celery flows
-- Security checklist
-- Constitution compliance assessment
-
----
-
-### Step 5: Tasks — `/speckit.tasks`
-
-Break the plan into granular, trackable tasks.
-
-**Output**: `specs/NNN-feature/tasks.md`
-
-**Task format**:
-```markdown
-- [ ] TASK-001: Create SQLAlchemy model for SubmissionResult (backend/app/models/submission.py)
-- [ ] TASK-002: Create FastAPI router POST /api/v1/submissions (backend/app/routers/submissions.py)
-- [ ] TASK-003: Implement Celery scoring task (backend/app/tasks/scoring.py)
-- [ ] TASK-004: Write pytest unit tests for scoring logic (backend/tests/test_scoring.py)
-- [ ] TASK-005: Build SubmissionForm React component (frontend/src/components/SubmissionForm.tsx)
-- [ ] TASK-006: Write Playwright E2E test for submission flow (frontend/tests/submission.spec.ts)
+/speckit.specify <feature description>  → specs/[module]/NNN-feature/spec.md
+                                          ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
+                                          ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
+/pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen  (optional, after specify)
+/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/  (optional, after wireframe)
+                                          ⚠ Before generating: read MASTER.md + wireframe via Pencil MCP
+[senior-uiux review]                    → prototype QA: wireframe fidelity, design system compliance, a11y  (optional)
+/speckit.clarify                        → clarify requirements  (optional; wireframe + prototype surface ambiguities)
+/speckit.plan                           → specs/[module]/NNN-feature/plan.md
+                                          ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
+/speckit.tasks                          → specs/[module]/NNN-feature/tasks.md
+/speckit.analyze                        → cross-document consistency check (optional)
+/speckit.implement                      → execute implementation (single session or /agent-team)
+/speckit.checklist                      → quality validation
+/pr-flow                                → commit → review → test → push → PR → merge
 ```
 
 ---
 
-### Step 6: Implement — `/speckit.implement`
+## Module Names
 
-Execute implementation tasks following the plan.
+Align with `frontend/src/features/` and `specs/[module]/`:
 
-**Branch naming**: `feat/NNN-feature` (matches spec directory name)
-
-**Commit convention**:
-```
-feat(NNN): implement submission scoring endpoint
-
-- Add SubmissionResult model
-- Add POST /api/v1/submissions router
-- Add Celery scoring task
-
-Refs: specs/NNN-feature/tasks.md TASK-001, TASK-002, TASK-003
-```
-
----
-
-### Step 7: Checklist — `/speckit.checklist`
-
-Validate implementation against all ACs before opening a PR.
-
-**Output**: `specs/NNN-feature/checklists/ac-checklist.md`
-
-**AC verification methods**:
-
-| Verification Type | Tool |
-|-------------------|------|
-| API behavior | pytest + httpx |
-| Scoring correctness | pytest unit tests |
-| E2E user flows | Playwright |
-| Security (test-set leakage) | pytest security tests |
-| UI rendering | Playwright |
-| Performance | k6 / locust (if applicable) |
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
 
 ---
 
@@ -155,35 +41,83 @@ Validate implementation against all ACs before opening a PR.
 
 ```
 specs/
-└── NNN-feature/
-    ├── spec.md          # Feature specification
-    ├── plan.md          # Implementation plan
-    ├── tasks.md         # Task breakdown
-    └── checklists/
-        ├── ac-checklist.md      # AC verification results
-        └── security-checklist.md  # Security validation
+└── [module]/
+    └── NNN-feature/
+        ├── spec.md          # Feature specification
+        ├── plan.md          # Implementation plan
+        ├── tasks.md         # Task breakdown
+        └── checklists/
+            ├── ac-checklist.md
+            └── security-checklist.md
 ```
+
+- `NNN` is zero-padded (001, 002, …), `feature` is kebab-case
+- Mark completion: `touch specs/[module]/NNN-feature/.completed`
+- Follow User Story priority order: P1 → P2 → P3
+
+---
+
+## Flow Chart Ownership
+
+| Flow Type | Document | When | Purpose |
+|-----------|----------|------|---------|
+| Process Flow | `spec.md` | During `/speckit.specify` | Cross-role business process; WHO does WHAT |
+| User Flow | `spec.md` | During `/speckit.specify` | Screen navigation; prevents orphan pages |
+| System Flow | `plan.md` | During `/speckit.plan` | Data path through API → Service → DB layers |
+
+All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart LR` for navigation). Renders natively on GitHub.
+
+---
+
+## When to Skip SDD
+
+**Deciding question: will this change make the system behave differently from what the specs define?**
+
+### Skip SDD — modify code directly
+
+| Case | Examples |
+|---|---|
+| Bug fix | Spec says login failure returns 401, but code returns 500 — fix it |
+| Typo / formatting / comment | No behavior change |
+| Non-breaking dependency update | Bumping a package version with no API changes |
+| Config adjustment | Changing a timeout value, env var default |
+| Adding tests for existing behavior | Spec defines the behavior; tests just verify it |
+
+> If the fix is complex or you want a decision record, opening a spec is still fine.
+
+### Must go through SDD
+
+| Case | Examples |
+|---|---|
+| New feature | Anything that adds behavior not currently in specs |
+| Behavior change | Changing what an existing endpoint returns |
+| Breaking change | Removing a field, changing an API contract |
+| Architectural change | New service, new data model, new async flow |
+
+---
+
+## Spec-Kit Commands
+
+| Command | Purpose | Output |
+|---|---|---|
+| `/speckit.specify` | Create feature spec from description | `specs/[module]/NNN-feature/spec.md` |
+| `/pencil-wireframe` | Draw 6 frames (Desktop/Mobile ZH·EN + Components) | `design/wireframes/pages/[module]/[page].pen` |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system | `design/prototype/pages/[module]/[page].html` |
+| `/speckit.clarify` | Identify and clarify ambiguous requirements | Questions + answers |
+| `/speckit.plan` | Build technical implementation plan | `specs/[module]/NNN-feature/plan.md` |
+| `/speckit.tasks` | Generate executable task list | `specs/[module]/NNN-feature/tasks.md` |
+| `/speckit.analyze` | Cross-document consistency check | Analysis report |
+| `/speckit.implement` | Execute implementation | Code changes |
+| `/speckit.checklist` | Generate quality validation checklist | `specs/[module]/NNN-feature/checklists/` |
+| `/agent-team` | Multi-phase agent team workflow for cross-layer features | — |
+| `/pr-flow` | Full PR flow (commit → review → test → merge) | — |
 
 ---
 
 ## SDD Rules
 
 1. **No code without a spec** — every feature branch must have a corresponding `spec.md`
-2. **No plan without a reviewed spec** — run `/spec-review` before `/speckit.plan`
+2. **No plan without a validated spec** — validate spec completeness before `/speckit.plan`
 3. **No merge without a checklist** — all ACs must be verified before PR creation
-4. **Spec immutability** — once planning begins, spec changes require a new version bump (X.Y → X.Y+1)
+4. **Spec immutability** — once planning begins, spec changes require a version bump
 5. **One spec per feature** — do not bundle unrelated features into one spec
-
----
-
-## Quick Reference
-
-| Command | Purpose | Output |
-|---------|---------|--------|
-| `/speckit.specify` | Create feature spec | `specs/NNN/spec.md` |
-| `/speckit.clarify` | Resolve spec ambiguity | Questions + answers |
-| `/spec-review` | Validate spec quality | Review report |
-| `/speckit.plan` | Create implementation plan | `specs/NNN/plan.md` |
-| `/speckit.tasks` | Break plan into tasks | `specs/NNN/tasks.md` |
-| `/speckit.implement` | Execute tasks | Code changes |
-| `/speckit.checklist` | Verify ACs | `specs/NNN/checklists/` |
