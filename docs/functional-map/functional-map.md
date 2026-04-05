@@ -2,7 +2,7 @@
 
 > **線上版：** [在 XMind 開啟](https://app.xmind.com/share/PKjJEIHD)（線上版可能落後本文件，以本文件為準）
 >
-> **版本：** v3（2026-04-02）— 依 [IA v3](../ia/information-architecture.md) 同步更新
+> **版本：** v4（2026-04-05）— 依 [IA v7](../ia/information-architecture.md) 同步更新
 
 ---
 
@@ -15,6 +15,13 @@ flowchart LR
   nACC --> nLOGIN["登入頁"]
   nLOGIN --> nLG["Google SSO"]
   nLOGIN --> nLE["Email / Password"]
+  nACC --> nREG["自行註冊頁（/register）"]
+  nREG --> nREG1["填寫名稱 / Email / 密碼"]
+  nREG --> nREG2["建立帳號（role = null）"]
+  nACC --> nFP["忘記密碼頁（/forgot-password）"]
+  nFP --> nFP1["填寫 Email → Resend 寄送重設信（30 分鐘有效）"]
+  nFP --> nRP["重設密碼頁（/reset-password）"]
+  nRP --> nRP1["輸入新密碼（token 驗證後更新密碼雜湊）"]
   nACC --> nPROF["個人設定頁"]
   nPROF --> nPN["姓名"]
   nPROF --> nPC["聯絡方式"]
@@ -125,8 +132,9 @@ flowchart LR
 
   %% ── 標記員管理模組 ──
   n0 --> nAMGR["標記員管理模組"]
-  nAMGR --> nAL["標記員列表頁（啟用 / 停用）"]
-  nAMGR --> nANW["新增標記員頁（名稱 / Email）"]
+  nAMGR --> nAL["平台成員列表頁（啟用 / 停用）"]
+  nAL --> nAL1["待指派區塊（role = null 使用者，指派 annotator 系統角色）"]
+  nAL --> nAL2["任務 PL 邀請成員加入任務並指派任務角色"]
   nAMGR --> nWL["工時紀錄頁"]
   nWL --> nWL1["出缺勤紀錄"]
   nWL --> nWL2["任務標記時間（系統自動追蹤）"]
@@ -137,8 +145,8 @@ flowchart LR
   n0 --> nSYS["系統管理模組（Super Admin）"]
   nSYS --> nUM["使用者管理頁（跨專案帳號管理）"]
   nSYS --> nRS["角色權限設定頁"]
-  nRS --> nRS1["project_leader（資料建立者 / 計畫負責人）"]
-  nRS --> nRS2["annotator（標記員）"]
-  nRS --> nRS3["reviewer（審核員）"]
-  nRS --> nRS4["super_admin（系統超級管理員）"]
+  nRS --> nRS1["project_leader（任務角色：計畫負責人）"]
+  nRS --> nRS2["reviewer（任務角色：審核員）"]
+  nRS --> nRS3["annotator（系統角色 / 任務角色：標記員）"]
+  nRS --> nRS4["super_admin（系統角色：超級管理員）"]
 ```

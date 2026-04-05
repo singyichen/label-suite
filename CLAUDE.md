@@ -109,9 +109,11 @@ label-suite/
 
 Zustand must **not** hold API response data.
 
-**Dashboard role dispatch:** `authStore` holds `role: Role | null` (`null` when unauthenticated). `DashboardPage` dispatches with explicit `role ===` checks to `SuperAdminDashboard`, `LeaderDashboard`, `ReviewerDashboard`, `AnnotatorDashboard`. Null or unrecognised `role` redirects to `/login` (deny-by-default).
+**Role model:** The system uses a two-layer role model. **System role** (JWT single string): `null` (pending) | `annotator` (platform member) | `super_admin`. **Task role** (resolved from `task_membership` table per task): `project_leader` | `reviewer` | `annotator`. Task roles are not stored in the JWT — they are fetched per task via API.
 
-**RoleGuard inheritance:** `project_leader` inherits all `reviewer` capabilities; `super_admin` inherits all roles. `RoleGuard` resolves effective roles via `ROLE_HIERARCHY` lookup. JWT `role` remains a single string — inheritance resolved at the guard layer only. See [ADR-011](docs/adr/011-frontend-source-structure.md).
+**Dashboard role dispatch:** `authStore` holds `role: SystemRole | null` (`null` when unauthenticated). `DashboardPage` dispatches with explicit `role ===` checks: `super_admin` → `SuperAdminDashboard`; `annotator` → `AnnotatorDashboard` (content sections rendered dynamically based on the user's task memberships). `null` or unrecognised `role` redirects to `/pending` (deny-by-default).
+
+**RoleGuard:** System-level pages use `role` from JWT — no inheritance. Task-level pages additionally check task membership via `useTaskRole(taskId)` hook. See [ADR-011](docs/adr/011-frontend-source-structure.md).
 
 **Localization namespaces:** `t('task-management:config_builder.label_name')`. Locale files at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
 

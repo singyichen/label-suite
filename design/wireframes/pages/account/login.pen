@@ -1,119 +1,61 @@
 {
-  "version": "2.9",
+  "version": "2.10",
   "children": [
     {
       "type": "frame",
       "id": "bi8Au",
       "x": 0,
       "y": 0,
-      "name": "Frame",
-      "clip": true,
-      "width": 800,
-      "height": 600,
-      "fill": "#FFFFFF",
-      "layout": "none"
-    },
-    {
-      "type": "frame",
-      "id": "MFZMW",
-      "x": 0,
-      "y": 0,
-      "name": "Login Desktop (ZH)",
+      "name": "Desktop ZH",
       "width": 1440,
       "height": 900,
-      "fill": "#F5F3FF",
+      "fill": "$color-background",
       "layout": "vertical",
       "children": [
         {
           "type": "frame",
-          "id": "s9bw6",
-          "name": "topbar",
+          "id": "nBvSz",
+          "name": "Navbar",
           "width": "fill_container",
-          "height": 56,
+          "height": 64,
+          "fill": "$color-white",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$color-border"
+          },
           "padding": [
             0,
-            24
+            40
           ],
-          "justifyContent": "end",
+          "justifyContent": "space_between",
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "lqkQO",
-              "name": "langBtn",
-              "fill": "#FFFFFF",
-              "cornerRadius": 16,
-              "stroke": {
-                "thickness": 1,
-                "fill": "#E2E8F0"
-              },
-              "gap": 6,
-              "padding": [
-                6,
-                12
-              ],
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "nXNSJ",
-                  "name": "globe",
-                  "width": 14,
-                  "height": 14,
-                  "iconFontName": "globe",
-                  "iconFontFamily": "lucide",
-                  "fill": "#64748B"
-                },
-                {
-                  "type": "text",
-                  "id": "DoDkH",
-                  "name": "langTxt",
-                  "fill": "#64748B",
-                  "content": "EN",
-                  "fontFamily": "Inter",
-                  "fontSize": 12,
-                  "fontWeight": "normal"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "frame",
-          "id": "Tsioq",
-          "name": "centerWrap",
-          "width": "fill_container",
-          "height": "fill_container",
-          "layout": "vertical",
-          "gap": 32,
-          "justifyContent": "center",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "frame",
-              "id": "eixly",
-              "name": "logoArea",
-              "layout": "vertical",
-              "gap": 12,
+              "id": "TVoSJ",
+              "name": "Logo",
+              "gap": 10,
               "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "Dx1VV",
-                  "name": "logoIconBg",
-                  "width": 48,
-                  "height": 48,
-                  "fill": "#6366F1",
-                  "cornerRadius": 12,
+                  "id": "BHp2Y",
+                  "name": "iconBg",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$color-primary",
+                  "cornerRadius": 8,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
-                      "id": "o1YpO",
-                      "name": "tagIco",
-                      "width": 28,
-                      "height": 28,
+                      "id": "4t5mZ",
+                      "width": 17,
+                      "height": 17,
                       "iconFontName": "tag",
                       "iconFontFamily": "lucide",
                       "fill": "#FFFFFF"
@@ -122,205 +64,418 @@
                 },
                 {
                   "type": "text",
-                  "id": "CQuZl",
-                  "name": "logoTitle",
-                  "fill": "#1E1B4B",
+                  "id": "0i91L",
+                  "fill": "$color-text",
                   "content": "Label Suite",
                   "fontFamily": "Crimson Pro",
-                  "fontSize": 30,
+                  "fontSize": 18,
                   "fontWeight": "700"
-                },
-                {
-                  "type": "text",
-                  "id": "FqqGb",
-                  "name": "logoSub",
-                  "fill": "#64748B",
-                  "content": "NLP 標注平台",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "normal"
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "ceO2K",
-              "name": "card",
-              "width": 390,
-              "fill": "#FFFFFF",
-              "cornerRadius": 24,
+              "id": "7lvLY",
+              "name": "navR",
+              "fill": "$color-white",
+              "cornerRadius": "$radius-md",
               "stroke": {
+                "align": "inside",
                 "thickness": 1,
-                "fill": "#E2E8F0"
+                "fill": "$color-border"
               },
-              "layout": "vertical",
-              "gap": 16,
-              "padding": 32,
+              "gap": "$space-sm",
+              "padding": [
+                6,
+                12
+              ],
+              "alignItems": "center",
               "children": [
                 {
-                  "type": "text",
-                  "id": "ATTcv",
-                  "name": "cardTitle",
-                  "fill": "#1E1B4B",
-                  "content": "登入",
-                  "fontFamily": "Inter",
-                  "fontSize": 20,
-                  "fontWeight": "600"
+                  "type": "icon_font",
+                  "id": "v8nWI",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "$color-text-muted"
                 },
                 {
                   "type": "text",
-                  "id": "pClNH",
-                  "name": "cardDesc",
-                  "fill": "#64748B",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "使用機構或開發者帳號繼續。",
+                  "id": "97jV3",
+                  "fill": "$color-text-muted",
+                  "content": "ZH | EN",
                   "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "normal"
-                },
-                {
-                  "type": "frame",
-                  "id": "sXDJr",
-                  "name": "googleBtn",
-                  "width": "fill_container",
-                  "height": 48,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 8,
-                  "stroke": {
-                    "thickness": 1,
-                    "fill": "#E2E8F0"
-                  },
-                  "gap": 12,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "0dps4",
-                      "name": "googleG",
-                      "width": 20,
-                      "height": 20,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "./images/icon-google.png",
-                        "mode": "fill"
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "id": "StG1K",
-                      "name": "googleBtnTxt",
-                      "fill": "#1E1B4B",
-                      "content": "以 Google 登入",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "PAPNF",
-                  "name": "githubBtn",
-                  "width": "fill_container",
-                  "height": 48,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 8,
-                  "stroke": {
-                    "thickness": 1,
-                    "fill": "#E2E8F0"
-                  },
-                  "gap": 12,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "path",
-                      "id": "RtzC2",
-                      "name": "githubIco",
-                      "geometry": "M12 0.297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385 0.6 0.113 0.82-0.258 0.82-0.577 0-0.285-0.01-1.04-0.015-2.04-3.338 0.724-4.042-1.61-4.042-1.61-0.546-1.385-1.335-1.755-1.335-1.755-1.087-0.744 0.084-0.729 0.084-0.729 1.205 0.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495 0.998 0.108-0.776 0.417-1.305 0.76-1.605-2.665-0.3-5.466-1.332-5.466-5.93 0-1.31 0.465-2.38 1.235-3.22-0.135-0.303-0.54-1.523 0.105-3.176 0 0 1.005-0.322 3.3 1.23 0.96-0.267 1.98-0.399 3-0.405 1.02 0.006 2.04 0.138 3 0.405 2.28-1.552 3.285-1.23 3.285-1.23 0.645 1.653 0.24 2.873 0.12 3.176 0.765 0.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92 0.42 0.36 0.81 1.096 0.81 2.22 0 1.606-0.015 2.896-0.015 3.286 0 0.315 0.21 0.69 0.825 0.57 4.801-1.574 8.236-6.074 8.236-11.369 0-6.627-5.373-12-12-12",
-                      "fill": "#1E1B4B",
-                      "width": 20,
-                      "height": 20
-                    },
-                    {
-                      "type": "text",
-                      "id": "5x3uq",
-                      "name": "githubBtnTxt",
-                      "fill": "#1E1B4B",
-                      "content": "以 GitHub 登入",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "nBJgE",
-                  "name": "divider",
-                  "width": "fill_container",
-                  "height": 20,
-                  "gap": 12,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "5luGo",
-                      "name": "divLine1",
-                      "width": "fill_container",
-                      "height": 1,
-                      "fill": "#E2E8F0"
-                    },
-                    {
-                      "type": "text",
-                      "id": "z1sbD",
-                      "name": "divOrTxt",
-                      "fill": "#94A3B8",
-                      "content": "或",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "Vp3mg",
-                      "name": "divLine2",
-                      "width": "fill_container",
-                      "height": 1,
-                      "fill": "#E2E8F0"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "idWMN",
-                  "name": "demoBtn",
-                  "fill": "#94A3B8",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "模擬錯誤狀態（展示用）",
-                  "textAlign": "center",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
+                  "fontSize": 13,
                   "fontWeight": "normal"
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7KUqN",
+          "name": "Main",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": "$space-lg",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
             {
-              "type": "text",
-              "id": "uYqyp",
-              "name": "footer",
-              "fill": "#94A3B8",
-              "textGrowth": "fixed-width",
-              "width": 390,
-              "content": "繼續即表示您同意本研究平台的 使用條款。",
-              "textAlign": "center",
-              "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "normal"
+              "type": "frame",
+              "id": "ogyB6",
+              "name": "Login Card",
+              "width": 480,
+              "fill": "$color-white",
+              "cornerRadius": "$radius-lg",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#6366F114",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 24
+              },
+              "layout": "vertical",
+              "gap": "$space-lg",
+              "padding": 40,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "bA4Fr",
+                  "name": "hdr",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ztdWh",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lYE8g",
+                          "name": "iconBgL",
+                          "width": 56,
+                          "height": 56,
+                          "fill": "$color-primary",
+                          "cornerRadius": 14,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "0X8J6",
+                              "width": 28,
+                              "height": 28,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "1UtUj",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 22,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "6iI5o",
+                      "fill": "$color-text-muted",
+                      "content": "登入你的帳號",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hTraI",
+                  "name": "Google SSO",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$color-white",
+                  "cornerRadius": "$radius-md",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$color-border"
+                  },
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "N78ff",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "globe",
+                      "iconFontFamily": "lucide",
+                      "fill": "$color-text-muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "gL9Oi",
+                      "fill": "$color-text",
+                      "content": "使用 Google 帳號繼續",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jVvD2",
+                  "name": "divRow",
+                  "width": "fill_container",
+                  "height": 20,
+                  "gap": "$space-md",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "LA0OQ",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "0wDxr",
+                      "fill": "$color-text-muted",
+                      "content": "或",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "LikVd",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "4zaJR",
+                  "name": "eGrp",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Gb7rG",
+                      "fill": "$color-text",
+                      "content": "電子郵件",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dIuDE",
+                      "name": "eIn",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "IiWP3",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "mail",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KW8OP",
+                          "fill": "$color-text-muted",
+                          "content": "name@example.com",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "c4apZ",
+                  "name": "pGrp",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "BtsPI",
+                      "name": "pTop",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "i2rrr",
+                          "fill": "$color-text",
+                          "content": "密碼",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "7tSnN",
+                          "fill": "$color-primary",
+                          "content": "忘記密碼？",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6SAUX",
+                      "name": "pIn",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "daXhK",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "lock",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "w0KiY",
+                          "fill": "$color-text-muted",
+                          "content": "••••••••",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "PbNmK",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "eye-off",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Bnodf",
+                  "name": "Login Button",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$color-cta",
+                  "cornerRadius": "$radius-md",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RAHrJ",
+                      "fill": "$color-white",
+                      "content": "登入",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Bea3u",
+                  "name": "regRow",
+                  "width": "fill_container",
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "36zzT",
+                      "fill": "$color-text-muted",
+                      "content": "還沒有帳號？",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "e32Wh",
+                      "fill": "$color-primary",
+                      "content": "前往註冊",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }
@@ -328,39 +483,88 @@
     },
     {
       "type": "frame",
-      "id": "OlIWN",
-      "x": 1520,
+      "id": "2DJ4Z",
+      "x": 1500,
       "y": 0,
-      "name": "Login Desktop (EN)",
+      "name": "Desktop EN",
       "width": 1440,
       "height": 900,
-      "fill": "#F5F3FF",
+      "fill": "$color-background",
       "layout": "vertical",
       "children": [
         {
           "type": "frame",
-          "id": "cKYoC",
-          "name": "topbar",
+          "id": "q6cJ3",
+          "name": "n2",
           "width": "fill_container",
-          "height": 56,
+          "height": 64,
+          "fill": "$color-white",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$color-border"
+          },
           "padding": [
             0,
-            24
+            40
           ],
-          "justifyContent": "end",
+          "justifyContent": "space_between",
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "ZSM6n",
-              "name": "langBtn",
-              "fill": "#FFFFFF",
-              "cornerRadius": 16,
+              "id": "YOtRC",
+              "name": "Logo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cDdaL",
+                  "name": "en_iconBg",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "$color-primary",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "mN7vn",
+                      "width": 17,
+                      "height": 17,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "DgHMO",
+                  "fill": "$color-text",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WtJS9",
+              "name": "navR",
+              "fill": "$color-white",
+              "cornerRadius": "$radius-md",
               "stroke": {
+                "align": "inside",
                 "thickness": 1,
-                "fill": "#E2E8F0"
+                "fill": "$color-border"
               },
-              "gap": 6,
+              "gap": "$space-sm",
               "padding": [
                 6,
                 12
@@ -369,20 +573,498 @@
               "children": [
                 {
                   "type": "icon_font",
-                  "id": "3kpZn",
-                  "name": "globe",
+                  "id": "9bUDr",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "$color-text-muted"
+                },
+                {
+                  "type": "text",
+                  "id": "zp9UP",
+                  "fill": "$color-text-muted",
+                  "content": "ZH | EN",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PI5EP",
+          "name": "m2",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": "$space-lg",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "7eoQb",
+              "name": "Login Card",
+              "width": 480,
+              "fill": "$color-white",
+              "cornerRadius": "$radius-lg",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#6366F114",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 24
+              },
+              "layout": "vertical",
+              "gap": "$space-lg",
+              "padding": 40,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "9fdx4",
+                  "name": "hdr",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "17clR",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Wns0L",
+                          "name": "en_iconL",
+                          "width": 56,
+                          "height": 56,
+                          "fill": "$color-primary",
+                          "cornerRadius": 14,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "qgDlV",
+                              "width": 28,
+                              "height": 28,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "fIjwo",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 22,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "ipHWA",
+                      "fill": "$color-text-muted",
+                      "content": "Sign in to your account",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hCKQQ",
+                  "name": "Google SSO",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$color-white",
+                  "cornerRadius": "$radius-md",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$color-border"
+                  },
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "fcoL0",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "globe",
+                      "iconFontFamily": "lucide",
+                      "fill": "$color-text-muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "JyWvh",
+                      "fill": "$color-text",
+                      "content": "Continue with Google",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "H0myV",
+                  "name": "divRow",
+                  "width": "fill_container",
+                  "height": 20,
+                  "gap": "$space-md",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "zi6IR",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "kgthu",
+                      "fill": "$color-text-muted",
+                      "content": "或",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "TThWp",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "FetUh",
+                  "name": "eGrp",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fHd46",
+                      "fill": "$color-text",
+                      "content": "Email",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YFuv3",
+                      "name": "eIn",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "F0teh",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "mail",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "MqDb4",
+                          "fill": "$color-text-muted",
+                          "content": "name@example.com",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "51qNk",
+                  "name": "pGrp",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Hp2oY",
+                      "name": "pTop",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "VKS1q",
+                          "fill": "$color-text",
+                          "content": "Password",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "XovqH",
+                          "fill": "$color-primary",
+                          "content": "Forgot password?",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XFfU1",
+                      "name": "pIn",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "2Px5M",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "lock",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZXPHo",
+                          "fill": "$color-text-muted",
+                          "content": "••••••••",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "L4Tm4",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "eye-off",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Siq5O",
+                  "name": "Login Button",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$color-cta",
+                  "cornerRadius": "$radius-md",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZyPhc",
+                      "fill": "$color-white",
+                      "content": "Sign In",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wZpRu",
+                  "name": "regRow",
+                  "width": "fill_container",
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "r2tpa",
+                      "fill": "$color-text-muted",
+                      "content": "Don't have an account?",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "FJyaA",
+                      "fill": "$color-primary",
+                      "content": "Register",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "rZvrH",
+      "x": 0,
+      "y": 1000,
+      "name": "Mobile ZH",
+      "width": 390,
+      "height": 812,
+      "fill": "$color-background",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "W5EzY",
+          "name": "Navbar",
+          "width": "fill_container",
+          "height": 56,
+          "fill": "$color-white",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$color-border"
+          },
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "5BBLV",
+              "name": "Logo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "WRfsx",
+                  "name": "mzh_iconBg",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$color-primary",
+                  "cornerRadius": 7,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "n2iJ5",
+                      "width": 15,
+                      "height": 15,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "dzRIt",
+                  "fill": "$color-text",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "JIUc9",
+              "name": "mnR",
+              "fill": "$color-white",
+              "cornerRadius": "$radius-md",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$color-border"
+              },
+              "gap": "$space-sm",
+              "padding": [
+                5,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "T7QFV",
                   "width": 14,
                   "height": 14,
                   "iconFontName": "globe",
                   "iconFontFamily": "lucide",
-                  "fill": "#64748B"
+                  "fill": "$color-text-muted"
                 },
                 {
                   "type": "text",
-                  "id": "P8iEW",
-                  "name": "langTxt",
-                  "fill": "#64748B",
-                  "content": "ZH",
+                  "id": "uxOAI",
+                  "fill": "$color-text-muted",
+                  "content": "ZH | EN",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "normal"
@@ -393,40 +1075,427 @@
         },
         {
           "type": "frame",
-          "id": "1WAWm",
-          "name": "centerWrap",
+          "id": "mmeES",
+          "name": "Main",
           "width": "fill_container",
           "height": "fill_container",
           "layout": "vertical",
-          "gap": 32,
+          "padding": "$space-md",
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
             {
               "type": "frame",
-              "id": "tCwUt",
-              "name": "logoArea",
+              "id": "8E7RQ",
+              "name": "Login Card",
+              "width": "fill_container",
+              "fill": "$color-white",
+              "cornerRadius": "$radius-lg",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#6366F114",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 24
+              },
               "layout": "vertical",
-              "gap": 12,
-              "alignItems": "center",
+              "gap": "$space-md",
+              "padding": "$space-lg",
               "children": [
                 {
                   "type": "frame",
-                  "id": "4HUb4",
-                  "name": "logoIconBg",
-                  "width": 48,
-                  "height": 48,
-                  "fill": "#6366F1",
-                  "cornerRadius": 12,
+                  "id": "Gssw9",
+                  "name": "mhdr",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "fWVxs",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "e1FlN",
+                          "name": "mzh_iconL",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$color-primary",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "wyNjm",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "mIumK",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "uXLHU",
+                      "fill": "$color-text-muted",
+                      "content": "登入你的帳號",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "qY5wT",
+                  "name": "mgb",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$color-white",
+                  "cornerRadius": "$radius-md",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$color-border"
+                  },
+                  "gap": "$space-sm",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
                     {
                       "type": "icon_font",
-                      "id": "a4vYD",
-                      "name": "tagIco",
-                      "width": 28,
-                      "height": 28,
+                      "id": "BG4Bg",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "globe",
+                      "iconFontFamily": "lucide",
+                      "fill": "$color-text-muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "AcKvK",
+                      "fill": "$color-text",
+                      "content": "使用 Google 帳號繼續",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cXLha",
+                  "name": "mdr",
+                  "width": "fill_container",
+                  "height": 20,
+                  "gap": "$space-md",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "GXsju",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "0BP11",
+                      "fill": "$color-text-muted",
+                      "content": "或",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "XNG2V",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "5yG4c",
+                  "name": "meg",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QuOBV",
+                      "fill": "$color-text",
+                      "content": "電子郵件",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ur6hQ",
+                      "name": "mei",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "ZXnwd",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "mail",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xf7pv",
+                          "fill": "$color-text-muted",
+                          "content": "name@example.com",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "2AolR",
+                  "name": "mpg",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "DQPTI",
+                      "name": "mpt",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "niwMc",
+                          "fill": "$color-text",
+                          "content": "密碼",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "VXIGt",
+                          "fill": "$color-primary",
+                          "content": "忘記密碼？",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XAx2Z",
+                      "name": "mpi",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "DiWe4",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "lock",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "iOGKa",
+                          "fill": "$color-text-muted",
+                          "content": "••••••••",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "rlwXJ",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "eye-off",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Brkny",
+                  "name": "mlb",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$color-cta",
+                  "cornerRadius": "$radius-md",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "OWx4u",
+                      "fill": "$color-white",
+                      "content": "登入",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ih71l",
+                  "name": "mrr",
+                  "width": "fill_container",
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XP0B1",
+                      "fill": "$color-text-muted",
+                      "content": "還沒有帳號？",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZsBiZ",
+                      "fill": "$color-primary",
+                      "content": "前往註冊",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "AnUXo",
+      "x": 500,
+      "y": 1000,
+      "name": "Mobile EN",
+      "width": 390,
+      "height": 812,
+      "fill": "$color-background",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "fnkSF",
+          "name": "en_mn",
+          "width": "fill_container",
+          "height": 56,
+          "fill": "$color-white",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "$color-border"
+          },
+          "padding": [
+            0,
+            16
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ImiI4",
+              "name": "Logo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "nSVQZ",
+                  "name": "men_iconBg",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$color-primary",
+                  "cornerRadius": 7,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "GQIce",
+                      "width": 15,
+                      "height": 15,
                       "iconFontName": "tag",
                       "iconFontFamily": "lucide",
                       "fill": "#FFFFFF"
@@ -435,209 +1504,795 @@
                 },
                 {
                   "type": "text",
-                  "id": "uFW2W",
-                  "name": "logoTitle",
-                  "fill": "#1E1B4B",
+                  "id": "sJJlE",
+                  "fill": "$color-text",
                   "content": "Label Suite",
                   "fontFamily": "Crimson Pro",
-                  "fontSize": 30,
+                  "fontSize": 16,
                   "fontWeight": "700"
-                },
-                {
-                  "type": "text",
-                  "id": "V6Ykp",
-                  "name": "logoSub",
-                  "fill": "#64748B",
-                  "content": "NLP Annotation Portal",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "normal"
                 }
               ]
             },
             {
               "type": "frame",
-              "id": "yCEF6",
-              "name": "card",
-              "width": 390,
-              "fill": "#FFFFFF",
-              "cornerRadius": 24,
+              "id": "K425N",
+              "name": "mnR",
+              "fill": "$color-white",
+              "cornerRadius": "$radius-md",
               "stroke": {
+                "align": "inside",
                 "thickness": 1,
-                "fill": "#E2E8F0"
+                "fill": "$color-border"
               },
-              "layout": "vertical",
-              "gap": 16,
-              "padding": 32,
+              "gap": "$space-sm",
+              "padding": [
+                5,
+                10
+              ],
+              "alignItems": "center",
               "children": [
                 {
-                  "type": "text",
-                  "id": "rB92z",
-                  "name": "cardTitle",
-                  "fill": "#1E1B4B",
-                  "content": "Sign in",
-                  "fontFamily": "Inter",
-                  "fontSize": 20,
-                  "fontWeight": "600"
+                  "type": "icon_font",
+                  "id": "xDW2F",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "globe",
+                  "iconFontFamily": "lucide",
+                  "fill": "$color-text-muted"
                 },
                 {
                   "type": "text",
-                  "id": "NzdFz",
-                  "name": "cardDesc",
-                  "fill": "#64748B",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Use your institutional or developer account to continue.",
+                  "id": "YFmoo",
+                  "fill": "$color-text-muted",
+                  "content": "ZH | EN",
                   "fontFamily": "Inter",
-                  "fontSize": 14,
-                  "fontWeight": "normal"
-                },
-                {
-                  "type": "frame",
-                  "id": "u3PQd",
-                  "name": "googleBtn",
-                  "width": "fill_container",
-                  "height": 48,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 8,
-                  "stroke": {
-                    "thickness": 1,
-                    "fill": "#E2E8F0"
-                  },
-                  "gap": 12,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "GNoU2",
-                      "name": "googleG",
-                      "width": 20,
-                      "height": 20,
-                      "fill": {
-                        "type": "image",
-                        "enabled": true,
-                        "url": "./images/icon-google.png",
-                        "mode": "fill"
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "id": "z6HH5",
-                      "name": "googleBtnTxt",
-                      "fill": "#1E1B4B",
-                      "content": "Continue with Google",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "WLhcb",
-                  "name": "githubBtn",
-                  "width": "fill_container",
-                  "height": 48,
-                  "fill": "#FFFFFF",
-                  "cornerRadius": 8,
-                  "stroke": {
-                    "thickness": 1,
-                    "fill": "#E2E8F0"
-                  },
-                  "gap": 12,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "path",
-                      "id": "s7dOE",
-                      "name": "githubIco",
-                      "geometry": "M12 0.297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385 0.6 0.113 0.82-0.258 0.82-0.577 0-0.285-0.01-1.04-0.015-2.04-3.338 0.724-4.042-1.61-4.042-1.61-0.546-1.385-1.335-1.755-1.335-1.755-1.087-0.744 0.084-0.729 0.084-0.729 1.205 0.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495 0.998 0.108-0.776 0.417-1.305 0.76-1.605-2.665-0.3-5.466-1.332-5.466-5.93 0-1.31 0.465-2.38 1.235-3.22-0.135-0.303-0.54-1.523 0.105-3.176 0 0 1.005-0.322 3.3 1.23 0.96-0.267 1.98-0.399 3-0.405 1.02 0.006 2.04 0.138 3 0.405 2.28-1.552 3.285-1.23 3.285-1.23 0.645 1.653 0.24 2.873 0.12 3.176 0.765 0.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92 0.42 0.36 0.81 1.096 0.81 2.22 0 1.606-0.015 2.896-0.015 3.286 0 0.315 0.21 0.69 0.825 0.57 4.801-1.574 8.236-6.074 8.236-11.369 0-6.627-5.373-12-12-12",
-                      "fill": "#1E1B4B",
-                      "width": 20,
-                      "height": 20
-                    },
-                    {
-                      "type": "text",
-                      "id": "r2vCR",
-                      "name": "githubBtnTxt",
-                      "fill": "#1E1B4B",
-                      "content": "Continue with GitHub",
-                      "fontFamily": "Inter",
-                      "fontSize": 14,
-                      "fontWeight": "normal"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "9Vshc",
-                  "name": "divider",
-                  "width": "fill_container",
-                  "height": 20,
-                  "gap": 12,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "frame",
-                      "id": "c3x1a",
-                      "name": "divLine1",
-                      "width": "fill_container",
-                      "height": 1,
-                      "fill": "#E2E8F0"
-                    },
-                    {
-                      "type": "text",
-                      "id": "rHo5n",
-                      "name": "divOrTxt",
-                      "fill": "#94A3B8",
-                      "content": "or",
-                      "fontFamily": "Inter",
-                      "fontSize": 12,
-                      "fontWeight": "normal"
-                    },
-                    {
-                      "type": "frame",
-                      "id": "32JEU",
-                      "name": "divLine2",
-                      "width": "fill_container",
-                      "height": 1,
-                      "fill": "#E2E8F0"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "TdNDc",
-                  "name": "demoBtn",
-                  "fill": "#94A3B8",
-                  "textGrowth": "fixed-width",
-                  "width": "fill_container",
-                  "content": "Simulate error state (demo only)",
-                  "textAlign": "center",
-                  "fontFamily": "Inter",
-                  "fontSize": 14,
+                  "fontSize": 12,
                   "fontWeight": "normal"
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "5nI0q",
+          "name": "en_mm",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "padding": "$space-md",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "hb14H",
+              "name": "Login Card",
+              "width": "fill_container",
+              "fill": "$color-white",
+              "cornerRadius": "$radius-lg",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#6366F114",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 24
+              },
+              "layout": "vertical",
+              "gap": "$space-md",
+              "padding": "$space-lg",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pgEul",
+                  "name": "mhdr",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ZdKzH",
+                      "name": "Card Logo",
+                      "layout": "vertical",
+                      "gap": 10,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "KFM8d",
+                          "name": "men_iconL",
+                          "width": 48,
+                          "height": 48,
+                          "fill": "$color-primary",
+                          "cornerRadius": 12,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "Tm3J6",
+                              "width": 24,
+                              "height": 24,
+                              "iconFontName": "tag",
+                              "iconFontFamily": "lucide",
+                              "fill": "#FFFFFF"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "UqkWo",
+                          "fill": "$color-text",
+                          "content": "Label Suite",
+                          "fontFamily": "Crimson Pro",
+                          "fontSize": 20,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "lszum",
+                      "fill": "$color-text-muted",
+                      "content": "Sign in to your account",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fbs9p",
+                  "name": "mgb",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$color-white",
+                  "cornerRadius": "$radius-md",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$color-border"
+                  },
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "24yUY",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "globe",
+                      "iconFontFamily": "lucide",
+                      "fill": "$color-text-muted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "5bk9M",
+                      "fill": "$color-text",
+                      "content": "Continue with Google",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fsVrJ",
+                  "name": "mdr",
+                  "width": "fill_container",
+                  "height": 20,
+                  "gap": "$space-md",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "gx6qI",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "GC6xy",
+                      "fill": "$color-text-muted",
+                      "content": "或",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "euHq7",
+                      "fill": "$color-border",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "30Wsk",
+                  "name": "meg",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "LOQQo",
+                      "fill": "$color-text",
+                      "content": "Email",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ZVOsk",
+                      "name": "mei",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "CsEvs",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "mail",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "cN3nC",
+                          "fill": "$color-text-muted",
+                          "content": "name@example.com",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QvTgP",
+                  "name": "mpg",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "82VCz",
+                      "name": "mpt",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "MITLl",
+                          "fill": "$color-text",
+                          "content": "Password",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gYFg9",
+                          "fill": "$color-primary",
+                          "content": "Forgot password?",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TJ1lW",
+                      "name": "mpi",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": "$space-sm",
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "WHfhN",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "lock",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "jMpWL",
+                          "fill": "$color-text-muted",
+                          "content": "••••••••",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "j71jN",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "eye-off",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "LEm10",
+                  "name": "mlb",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$color-cta",
+                  "cornerRadius": "$radius-md",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "pVXmE",
+                      "fill": "$color-white",
+                      "content": "Sign In",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "4KEO5",
+                  "name": "mrr",
+                  "width": "fill_container",
+                  "gap": "$space-sm",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xbOkZ",
+                      "fill": "$color-text-muted",
+                      "content": "Don't have an account?",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "lzCZc",
+                      "fill": "$color-primary",
+                      "content": "Register",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HnaU1",
+      "x": 0,
+      "y": 1900,
+      "name": "Component ZH",
+      "width": 800,
+      "fill": "#FFFFFF",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": 32,
+      "children": [
+        {
+          "type": "text",
+          "id": "3KpE2",
+          "fill": "$color-text",
+          "content": "頁面元件 — 登入頁",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "MbZrd",
+          "name": "s1",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
             {
               "type": "text",
-              "id": "iTL3E",
-              "name": "footer",
-              "fill": "#94A3B8",
+              "id": "WiZcq",
+              "fill": "$color-text-muted",
               "textGrowth": "fixed-width",
-              "width": 390,
-              "content": "By signing in, you agree to the Terms of Use of this research portal.",
-              "textAlign": "center",
+              "width": "fill_container",
+              "content": "設計系統元件引用（Button / Input）",
               "fontFamily": "Inter",
-              "fontSize": 12,
-              "fontWeight": "normal"
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "HFiw6",
+              "name": "refNote",
+              "width": "fill_container",
+              "fill": "#EEF2FF",
+              "cornerRadius": "$radius-md",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "sbT33",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Button/Primary（uKTJI）→ 登入按鈕，fill: $color-cta",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "nma10",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Button/Secondary（KxBq9）→ Google SSO 按鈕（stroke variant）",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "Z5Qhn",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Input/Default（UpTvQ）→ Email & Password 欄位，width: fill_container",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "fkerV",
+          "name": "s2",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "text",
+              "id": "GXVzF",
+              "fill": "$color-text-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "互動狀態說明",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "bGkr0",
+              "name": "nb",
+              "width": "fill_container",
+              "fill": "$color-background",
+              "cornerRadius": "$radius-md",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "5UMNa",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• 登入失敗 → 卡片頂部 $color-error 紅色提示橫幅",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "Ci0ht",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• 登入中 → 登入按鈕 loading spinner，禁用點擊",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "9DIOq",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• 登入成功 → role=null → /pending；annotator/super_admin → /dashboard",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Ezzci",
+      "x": 900,
+      "y": 1900,
+      "name": "Component EN",
+      "width": 800,
+      "fill": "#FFFFFF",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": 32,
+      "children": [
+        {
+          "type": "text",
+          "id": "jfITQ",
+          "name": "ec0",
+          "fill": "$color-text",
+          "content": "Page Components — Login",
+          "fontFamily": "Inter",
+          "fontSize": 18,
+          "fontWeight": "700"
+        },
+        {
+          "type": "frame",
+          "id": "IvY91",
+          "name": "ec1",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "text",
+              "id": "ZALbh",
+              "fill": "$color-text-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Design System Component References (Button / Input)",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "7IeUl",
+              "name": "refNote",
+              "width": "fill_container",
+              "fill": "#EEF2FF",
+              "cornerRadius": "$radius-md",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "297Fp",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Button/Primary (uKTJI) → Login button, fill: $color-cta",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "qHM2L",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Button/Secondary (KxBq9) → Google SSO button (stroke variant)",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "YHBnh",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Input/Default (UpTvQ) → Email & Password fields, width: fill_container",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "2J3NY",
+          "name": "ec2",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "text",
+              "id": "NIRZS",
+              "fill": "$color-text-muted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Interaction States",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "8b5H3",
+              "name": "nb",
+              "width": "fill_container",
+              "fill": "$color-background",
+              "cornerRadius": "$radius-md",
+              "layout": "vertical",
+              "gap": 6,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "II9ri",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Login failed → $color-error red alert banner at top of card",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "GqcUl",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Signing in → Login button loading spinner, click disabled",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "9sI0h",
+                  "fill": "$color-text",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "• Login success → role=null → /pending; annotator/super_admin → /dashboard",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "variables": {
+    "color-background": {
+      "type": "color",
+      "value": "#F5F3FF"
+    },
+    "color-border": {
+      "type": "color",
+      "value": "#E2E8F0"
+    },
+    "color-cta": {
+      "type": "color",
+      "value": "#10B981"
+    },
+    "color-error": {
+      "type": "color",
+      "value": "#B91C1C"
+    },
+    "color-primary": {
+      "type": "color",
+      "value": "#6366F1"
+    },
+    "color-surface": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "color-text": {
+      "type": "color",
+      "value": "#1E1B4B"
+    },
+    "color-text-muted": {
+      "type": "color",
+      "value": "#94A3B8"
+    },
+    "color-white": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "radius-lg": {
+      "type": "number",
+      "value": 12
+    },
+    "radius-md": {
+      "type": "number",
+      "value": 8
+    },
+    "space-lg": {
+      "type": "number",
+      "value": 24
+    },
+    "space-md": {
+      "type": "number",
+      "value": 16
+    },
+    "space-sm": {
+      "type": "number",
+      "value": 8
+    }
+  }
 }
