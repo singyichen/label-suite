@@ -4,7 +4,7 @@
 >
 > **版本：** v3（2026-04-02）— 依 [IA v3](../ia/information-architecture.md) 同步更新
 >
-> **⚠️ 注意：** IA 已升版至 [v6（2026-04-05）](../ia/information-architecture.md)。v6 主要調整為：雙層角色模型（系統角色 / 任務角色）、自行註冊流程（`/register`，取代管理員預建帳號）、移除 `annotator-new` 頁面、`project_leader` 改為建立任務時自動指派。功能樹節點未新增，本文件暫不需同步更新。
+> **⚠️ 注意：** IA 已升版至 [v7（2026-04-05）](../ia/information-architecture.md)。v7 主要調整為：新增忘記密碼 / 重設密碼流程（`/forgot-password`、`/reset-password`），採用 Resend 寄送重設信（ADR-013）；spec 清單新增 spec 004，後續編號順移至 041。功能樹節點未新增，本文件暫不需同步更新。
 
 ---
 

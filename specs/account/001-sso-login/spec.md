@@ -132,7 +132,7 @@ sequenceDiagram
 ### 邊界情況
 
 - Google OAuth 暫時無法使用時？→ 在登入頁顯示友善的錯誤訊息，提示使用 Email / Password 替代登入。
-- Email / Password 帳號忘記密碼時？→ 由 Super Admin 在使用者管理頁重設密碼（系統不實作自助重設流程，避免 SMTP 依賴）。
+- Email / Password 帳號忘記密碼時？→ 點擊登入頁「忘記密碼」連結，前往 `/forgot-password` 自助申請重設（詳見 spec 004）。
 - 相同 Email 同時存在 Google 帳號與 Email/Password 帳號時？→ 靜默合併：視為同一帳號（以 email 比對），兩種登入方式均可進入同一使用者記錄，不需使用者確認。
 - JWT 在工作階段中途過期時？→ 導向 `/login`，不進行靜默更新（silent refresh），使用者必須重新驗證。
 
@@ -140,7 +140,7 @@ sequenceDiagram
 
 ### 功能需求
 
-- **FR-001**：系統必須提供含「以 Google 登入」按鈕與 Email / Password 表單的 `/login` 頁面。
+- **FR-001**：系統必須提供含「以 Google 登入」按鈕、Email / Password 表單、「前往註冊」連結與「忘記密碼」連結的 `/login` 頁面。
 - **FR-002**：系統必須對 Google 實作 OAuth 2.0 授權碼流程；並對 Email / Password 實作密碼雜湊驗證（bcrypt）。
 - **FR-003**：系統必須在成功驗證後簽發 JWT session token。
 - **FR-004**：系統必須在首次 Google SSO 登入時，使用身份提供者個人資料自動建立使用者記錄，預設 `role = null`。
@@ -163,12 +163,14 @@ flowchart LR
     login["/login"]
     dashboard["/dashboard"]
     protected["受保護路由\n/dashboard · /tasks · /profile …"]
+    forgot["/forgot-password"]
 
     login      -->|"登入成功（OAuth 完成）"| dashboard
     dashboard  -->|"登出（JWT 失效）"| login
     protected  -->|"未驗證存取 → 自動導向"| login
     login      -->|"登入成功 + ?next= 參數"| protected
     login      -->|"已登入使用者訪問 → 自動導向"| dashboard
+    login      -->|"忘記密碼"| forgot
 ```
 
 | From | Trigger | To |
@@ -178,6 +180,7 @@ flowchart LR
 | `/login` | 登入成功 + `?next=` 參數 | 原始目標路由 |
 | 任意已登入頁面 | 點擊登出 | `/login` |
 | 任意受保護路由 | 未驗證存取 | `/login?next=[原始路徑]` |
+| `/login` | 點擊「忘記密碼」| `/forgot-password`（spec 004）|
 
 **Entry points**：`/login` 是系統唯一的未驗證入口。
 **Exit points**：所有受保護路由均可透過登出按鈕返回 `/login`。
