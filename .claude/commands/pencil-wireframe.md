@@ -60,6 +60,65 @@ Mobile frames must implement **genuine RWD** — do NOT shrink the desktop layou
 
 After drawing, take a screenshot and verify: no element overflows, no sidebar visible, all text readable.
 
+## Using the Design System
+
+Before drawing any page, **always inspect `design-system.pen` first** and reuse its components.
+
+### Step 1 — Read available components
+
+Open `design/wireframes/design-system.pen` and call `get_editor_state` to list all reusable components. Current components include: `Button/Primary`, `Button/Secondary`, `Button/Ghost`, `Card/Default`, `Input/Default`, `Input/Focus`, `Modal/Default`.
+
+### Step 2 — Import design-system.pen in the page file
+
+Add an `imports` entry to the document so you can reference its components via `ref`:
+
+```javascript
+// In batch_design, set imports at document level
+U(document, {
+  imports: { "ds": "../../design-system.pen" }
+})
+```
+
+The relative path is from the page file to design-system.pen. Example for `pages/account/login.pen`:
+`../../design-system.pen`
+
+### Step 3 — Use `ref` to place design system components
+
+```javascript
+// Use a design-system component by its ID
+btn=I(card, { type:"ref", ref:"uKTJI" })          // Button/Primary
+input=I(form, { type:"ref", ref:"UpTvQ" })         // Input/Default
+card=I(main, { type:"ref", ref:"yziNu" })          // Card/Default
+```
+
+Override only the properties you need to change (text content, size, fill):
+```javascript
+U(btn+"/label", { content:"登入" })
+```
+
+### Step 4 — Page-specific components only in Component frame
+
+If a UI pattern is **not** in design-system.pen and won't be reused elsewhere, build it in the page's Component frame (`x:6000+`). If it will appear on multiple pages, add it to design-system.pen first.
+
+---
+
+## Creating a New Wireframe File
+
+**Always create the file at the correct path BEFORE opening it in Pencil.**
+
+```bash
+# Step 1 — locate the blank template (works on any machine)
+TEMPLATE=$(find "$HOME" -name "pencil-new.pen" -path "*/highagency.pencil*" 2>/dev/null | head -1)
+
+# Step 2 — copy it to the correct destination
+TARGET="design/wireframes/pages/[module]/[page].pen"
+cp "$TEMPLATE" "$TARGET"
+```
+
+Then call `open_document` with the full absolute path to `$TARGET` and begin designing.
+
+> **Never** start drawing in `pencil-new.pen` with the intention of copying afterwards — the copy may happen before Pencil flushes to disk, causing data loss.
+
 ## Key Rules
 
 - `.pen` files are encrypted — **only operate via Pencil MCP tools**; never use `Read` / `Edit` / `Grep` on them
