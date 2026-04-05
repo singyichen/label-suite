@@ -95,7 +95,7 @@ card=I(main, { type:"ref", ref:"yziNu" })          // Card/Default
 
 Override only the properties you need to change (text content, size, fill):
 ```javascript
-U(btn+"/label", { content:"登入" })
+U(btn+"/label", { content:"Sign In" })   // replace with ZH/EN label as needed
 ```
 
 ### Step 4 — Page-specific components only in Component frame

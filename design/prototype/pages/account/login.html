@@ -516,8 +516,9 @@
         cardRegion:   '登入',
         eyeShow:      '顯示密碼',
         eyeHide:      '隱藏密碼',
-        ssoAriaLabel: '使用 Google 帳號繼續登入',
-        navAriaLabel: 'Label Suite 首頁',
+        ssoAriaLabel:      '使用 Google 帳號繼續登入',
+        navAriaLabel:      'Label Suite 首頁',
+        langToggleAria:    '切換語言',
       },
       en: {
         pageTitle:    'Label Suite — Sign In',
@@ -538,8 +539,9 @@
         cardRegion:   'Sign in',
         eyeShow:      'Show password',
         eyeHide:      'Hide password',
-        ssoAriaLabel: 'Continue with Google account',
-        navAriaLabel: 'Label Suite home',
+        ssoAriaLabel:      'Continue with Google account',
+        navAriaLabel:      'Label Suite home',
+        langToggleAria:    'Switch language',
       },
     };
 
@@ -562,6 +564,7 @@
       document.getElementById('registerLink').textContent = t.registerLink;
       document.getElementById('errorMsg').textContent    = t.errorMsg;
       document.getElementById('ssoBtn').setAttribute('aria-label', t.ssoAriaLabel);
+      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
       document.querySelector('.navbar-brand').setAttribute('aria-label', t.navAriaLabel);
       document.querySelector('[role="region"]').setAttribute('aria-label', t.cardRegion);
       // update eye toggle aria-label based on current visibility state
