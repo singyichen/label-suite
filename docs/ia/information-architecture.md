@@ -305,7 +305,7 @@ flowchart TD
 #### `annotator-list` 平台成員列表頁
 - **進入方式：** Navbar → 標記員管理
 - **功能：**
-  - 查看所有系統角色為 `annotator` 的平台成員、啟用 / 停用
+  - 查看所有系統角色為 `annotator` 的平台成員、啟用 / 停用（啟用 / 停用操作限 `super_admin`）
   - **待指派區塊：** 顯示已登入或已註冊但 `role = null` 的新使用者，任何 `annotator`（系統）或 `super_admin` 可在此指派 `annotator` 系統角色
   - 任務 `project_leader` 可從此列表選取成員，邀請加入自己的任務並指派任務角色
 - **空狀態（尚無任何平台成員）：** 說明文字，提示使用者至 `/register` 或 Google SSO 自行加入
@@ -328,7 +328,7 @@ flowchart TD
 
 #### `user-management` 使用者管理頁
 - **進入方式：** Navbar → 系統管理 → 使用者管理
-- **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派角色（含 project_leader / annotator / reviewer / super_admin）
+- **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`annotator` / `super_admin`）；`project_leader` / `reviewer` 為任務角色，於 `task-detail` 管理，不在此頁指派
 - **空狀態（尚無任何使用者）：** 說明文字「尚未建立任何使用者帳號」 + 「新增第一位使用者」按鈕
 - **離開方式：** 點選角色設定 → `role-settings`
 

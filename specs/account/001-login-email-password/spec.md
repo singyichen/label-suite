@@ -92,7 +92,7 @@ sequenceDiagram
 **驗收情境**：
 
 1. **Given** 未登入使用者，**When** 直接導向 `/dashboard`，**Then** 被導向 `/login`。
-2. **Given** 從 `/tasks` 被導向 `/login` 的使用者，**When** 成功登入，**Then** 返回 `/tasks`。
+2. **Given** 從 `/task-list` 被導向 `/login` 的使用者，**When** 成功登入，**Then** 返回 `/task-list`。
 
 ---
 
@@ -119,13 +119,14 @@ sequenceDiagram
 - **FR-008**：登入頁面必須支援 zh-TW / en 語言切換，與應用程式其他頁面一致；語言切換立即生效，不需重新載入頁面。
 - **FR-009**：系統必須在所有已登入頁面提供可存取的登出操作（按鈕或連結）。
 - **FR-010**：登出時，系統必須使 JWT 失效並清除所有客戶端 session 儲存。
-- **FR-011**：資料庫 migration seed 必須建立一個預設 super_admin 帳號，確保首次部署時有 super_admin 可指派其他使用者的角色。
+- **FR-011**：資料庫 migration seed 必須建立一個預設 super_admin 帳號，確保首次部署時有 super_admin 可指派其他使用者的角色（屬於部署基礎建設需求；詳見 spec 006 使用者管理）。
 - **FR-012**：JWT 過期時，系統必須將使用者導向 `/login`，不支援靜默更新 token。
 - **FR-013**：登入失敗時，錯誤訊息不得揭露哪個欄位（Email 或 Password）錯誤。
 
 ### User Flow & Navigation
 
 ```mermaid
+
 flowchart LR
     login["/login"]
     dashboard["/dashboard"]

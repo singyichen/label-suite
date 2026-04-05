@@ -83,19 +83,20 @@ flowchart LR
     navbar["Navbar → 標記員管理"]
     al["/annotator-list"]
     wl["/work-log"]
-    td["/task-detail"]
 
     navbar -->|"點擊"| al
     al     -->|"點選成員"| wl
-    al     -->|"邀請成員加入任務"| td
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
 | Navbar → 標記員管理 | 點擊 | `/annotator-list` |
 | `/annotator-list` | 點選成員 | `/work-log`（該成員） |
+| `/annotator-list` | 待指派 / 邀請成員操作 | 停留（頁面內操作，不跳轉）|
 
-**Entry points**：Navbar → 標記員管理；`/task-detail` 指派成員時亦可連結至此。
+> **注意**：PL 邀請成員加入任務的操作在 `/annotator-list` 頁面內完成（彈窗或下拉選單選取任務與角色），操作完成後停留在 `/annotator-list`，不跳轉至 `/task-detail`。
+
+**Entry points**：Navbar → 標記員管理；`/task-detail` 的「邀請成員」按鈕可開啟此頁（依實作方式，也可以 modal 形式呈現）。
 **Exit points**：點選成員 → `/work-log`；其他操作停留在本頁。
 
 ### 關鍵實體

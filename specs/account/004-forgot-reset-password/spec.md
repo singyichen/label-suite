@@ -91,6 +91,8 @@ sequenceDiagram
 - Resend API 暫時無法使用時？→ 後端記錄錯誤，頁面顯示「寄信暫時失敗，請稍後再試」，token 已建立可保留等待重試。
 - 使用者在 token 尚未過期前再次申請重設時？→ 舊 token 失效，建立新 token 重新寄信。
 - Google SSO 使用者（無 `hashed_password`）申請密碼重設時？→ 寄出重設信（成功），重設後帳號新增 Email / Password 登入能力（靜默合併，同 spec 002）。
+- 已登入使用者訪問 `/forgot-password` 時？→ 自動導向 `/dashboard`，與 `/login`、`/register` 行為一致。
+- 使用者直接訪問 `/reset-password` 不帶 token 參數時？→ 視同 token 無效，顯示錯誤訊息並提示重新申請，導向 `/forgot-password`。
 
 ---
 
