@@ -88,7 +88,35 @@ for id in <thread-id-1> <thread-id-2> ...; do
 done
 ```
 
-## Step 6 — Confirm
+## Step 6 — Update PR description
+
+After all threads are resolved, append a review-resolution summary to the PR body.
+
+```bash
+# Fetch current PR body
+gh pr view {number} --json body --jq '.body'
+```
+
+Synthesize a concise summary of **what was fixed in this round** (one bullet per finding), then append it to the existing PR body under a `## Review Resolutions` section. If the section already exists from a previous round, append a new subsection rather than replacing.
+
+Format:
+```
+## Review Resolutions
+
+### Round N — YYYY-MM-DD
+- **`path/to/file`**: short description of what was fixed
+- **`path/to/file`**: short description of what was fixed
+```
+
+Apply the update:
+```bash
+gh pr edit {number} --body "$(cat <<'EOF'
+{updated body with appended section}
+EOF
+)"
+```
+
+## Step 7 — Confirm
 
 Re-run Step 2. If no unresolved threads remain, done.
 If new threads appear (bot re-reviews after push), repeat from Step 3.
@@ -101,3 +129,4 @@ If new threads appear (bot re-reviews after push), repeat from Step 3.
 - One commit per review round — do not create separate commits per finding
 - Always read the file before editing
 - After fixing any document with rules + examples, verify all examples comply with all rules in that document
+- Always update the PR description after resolving threads — append, never overwrite existing content
