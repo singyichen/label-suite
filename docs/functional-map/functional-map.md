@@ -4,7 +4,7 @@
 >
 > **版本：** v3（2026-04-02）— 依 [IA v3](../ia/information-architecture.md) 同步更新
 >
-> **⚠️ 注意：** IA 已升版至 [v4（2026-04-05）](../ia/information-architecture.md)。v4 新增內容為 `/pending` 待指派提示頁（`role = null` 使用者的中間頁面）與 §7 Spec 拆分計畫，功能樹節點無異動，本文件暫不需同步更新。
+> **⚠️ 注意：** IA 已升版至 [v6（2026-04-05）](../ia/information-architecture.md)。v6 主要調整為：雙層角色模型（系統角色 / 任務角色）、自行註冊流程（`/register`，取代管理員預建帳號）、移除 `annotator-new` 頁面、`project_leader` 改為建立任務時自動指派。功能樹節點未新增，本文件暫不需同步更新。
 
 ---
 
