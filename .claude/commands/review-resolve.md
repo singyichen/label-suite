@@ -7,12 +7,17 @@ If PR number is omitted, detect from the current branch via `gh pr view`.
 
 ---
 
-## Step 1 — Identify PR number
+## Step 1 — Identify PR number, owner, and repo
 
 ```bash
-# If not provided as argument:
+# Get PR number (if not provided as argument)
 gh pr view --json number --jq '.number'
+
+# Get owner and repo name (needed for GraphQL queries)
+gh repo view --json owner,name --jq '{owner: .owner.login, name: .name}'
 ```
+
+Keep all three values (`number`, `owner`, `repo`) in context for the steps below.
 
 ## Step 2 — Fetch unresolved threads
 
@@ -21,7 +26,7 @@ gh api graphql -f query='
 query {
   repository(owner: "{owner}", name: "{repo}") {
     pullRequest(number: {number}) {
-      reviewThreads(first: 50) {
+      reviewThreads(first: 100) {
         nodes {
           id
           isResolved
@@ -42,7 +47,9 @@ query {
   | {id: .id, path: .comments.nodes[0].path, line: .comments.nodes[0].line, body: .comments.nodes[0].body}'
 ```
 
-If output is empty → all threads resolved, stop here.
+If output is empty → all threads resolved, skip to Step 6.
+
+> **Pagination note:** `first: 100` handles most PRs. If exactly 100 results are returned, there may be more — re-run with `after: "{cursor}"` to fetch the next page before proceeding.
 
 ## Step 3 — Analyse and fix each finding
 
@@ -55,7 +62,9 @@ For each unresolved thread:
 3. **Fix** the issue using Edit (not Bash sed/awk)
 4. **Verify** the fix is correct and does not break surrounding content
 
-> Cross-check rule: if the finding flags an inconsistency between a rule definition and an example in the same file, verify that ALL other examples in the file also comply before committing.
+> **Cross-check rule:** if the finding flags an inconsistency between a rule definition and an example in the same file, verify that ALL other examples in the file also comply before committing.
+
+> **Static analysis rule:** if any changed file is TypeScript/TSX, run `pnpm tsc --noEmit` before committing. If any changed file is Python, run `uv run ruff check <file>`. Fix any errors before proceeding to Step 4.
 
 ## Step 4 — Commit and push
 
@@ -72,16 +81,6 @@ Use a single commit for all findings in one round. If findings span multiple fil
 For each thread that was fixed (or was already fixed):
 
 ```bash
-gh api graphql -f query='
-  mutation {
-    resolveReviewThread(input: {threadId: "{thread-id}"}) {
-      thread { id isResolved }
-    }
-  }'
-```
-
-Run in a loop:
-```bash
 for id in <thread-id-1> <thread-id-2> ...; do
   gh api graphql -f query="mutation { resolveReviewThread(input: {threadId: \"$id\"}) { thread { id isResolved } } }" \
     --jq '.data.resolveReviewThread.thread | {id, isResolved}'
@@ -96,6 +95,8 @@ After all threads are resolved, append a review-resolution summary to the PR bod
 # Fetch current PR body
 gh pr view {number} --json body --jq '.body'
 ```
+
+Count how many `### Round` headings already exist in the body to determine the next round number (N = existing count + 1).
 
 Synthesize a concise summary of **what was fixed in this round** (one bullet per finding), then append it to the existing PR body under a `## Review Resolutions` section. If the section already exists from a previous round, append a new subsection rather than replacing.
 
@@ -119,7 +120,10 @@ EOF
 ## Step 7 — Confirm
 
 Re-run Step 2. If no unresolved threads remain, done.
-If new threads appear (bot re-reviews after push), repeat from Step 3.
+
+If new threads appear (bot re-reviews after push):
+- If the finding is **identical to one already fixed** in a previous round → resolve immediately without a new commit.
+- If the finding is **genuinely new** → repeat from Step 3.
 
 ---
 
@@ -129,4 +133,6 @@ If new threads appear (bot re-reviews after push), repeat from Step 3.
 - One commit per review round — do not create separate commits per finding
 - Always read the file before editing
 - After fixing any document with rules + examples, verify all examples comply with all rules in that document
+- Run static analysis (`tsc --noEmit` / `ruff check`) after changing code files; fix errors before committing
 - Always update the PR description after resolving threads — append, never overwrite existing content
+- Round number in PR description is derived by counting existing `### Round` headings, not manually assigned
