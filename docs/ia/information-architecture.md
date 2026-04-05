@@ -3,53 +3,54 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** v4（2026-04-05）
+> **版本：** v5（2026-04-05）
 
 ---
 
 ## 1. 使用者角色
 
-| 角色 | 識別碼 | 主要職責 | 可存取模組 |
-|------|--------|----------|------------|
-| 資料建立者 / 計畫負責人 | `project_leader` | 建立任務、管理標記員、監控進度、設定試標與正式標、匯出資料；**繼承 reviewer 全部能力** | 儀表板（全局）、任務管理、資料集分析、標記員管理、標記任務模組（審查模式，繼承） |
-| 標記員 | `annotator` | 執行標記作業（試標 / 正式標）、查看個人進度 | 儀表板（個人）、帳號模組、標記任務模組、標記員管理模組（僅自己的工時） |
-| 審核員 | `reviewer` | 審查標記結果、協助產出標準答案、查看品質報告 | 儀表板、標記任務模組（審查模式）、資料集分析模組 |
-| 系統超級管理員 | `super_admin` | 平台維護、跨專案使用者管理、帳號與角色設定；**繼承所有角色能力** | 全部模組 + 系統管理模組 |
+本系統採用**雙層角色模型**：系統角色（System Role）決定平台存取權；任務角色（Task Role）決定任務內的操作權限。
 
-> **角色繼承（RBAC Hierarchy）：** 系統採用角色繼承設計，每個使用者帳號仍只持有一個 `role`（單值 enum），JWT `role` 欄位為單值。高層級角色在 RoleGuard 查表時自動展開為繼承鏈：
->
-> | 帳號 role | 實際有效能力（effective roles） |
-> |-----------|-------------------------------|
-> | `super_admin` | super_admin + project_leader + reviewer + annotator |
-> | `project_leader` | project_leader + reviewer |
-> | `reviewer` | reviewer |
-> | `annotator` | annotator |
->
-> 同一人需兼任 PL 與 Reviewer 時，指派 `project_leader` 一個帳號即可，無需建立兩個帳號。
+### 系統角色（System Role）— JWT 單值，平台層級
 
-> **新使用者預設狀態：** 任何人皆可透過 Google SSO 自行登入系統，首次登入後帳號預設 `role = null`（無角色）。無角色使用者登入後只能看到待指派提示頁，無法存取任何功能模組。Project Leader 在 `annotator-list` 中可看到待指派角色的新使用者，並指派 `annotator` 角色；Super Admin 在 `user-management` 中可指派任意角色。Email / Password 帳號仍由 Project Leader 或 Super Admin 預先建立。
+| 角色 | 識別碼 | 主要職責 | 指派方式 |
+|------|--------|----------|----------|
+| 平台成員 | `annotator` | 使用平台所有功能、建立任務、被邀請加入任務 | Super Admin 或 PL（系統角色）指派 |
+| 系統超級管理員 | `super_admin` | 平台維護、跨專案使用者管理、系統角色指派 | Super Admin 指派 |
+
+> **新使用者預設狀態：** 任何人皆可透過 Google SSO 自行登入，首次登入後帳號預設 `role = null`（無角色）。無角色使用者僅能看到 `/pending` 待指派提示頁。Super Admin 在 `user-management` 中指派系統角色；擁有 `annotator` 系統角色的成員也可在 `annotator-list` 中對待指派使用者指派 `annotator` 角色。Email / Password 帳號由 Super Admin 預先建立。
+
+### 任務角色（Task Role）— `task_membership` 表，任務層級
+
+| 任務角色 | 識別碼 | 職責 | 指派方式 |
+|----------|--------|------|----------|
+| 計畫負責人 | `project_leader` | 管理任務設定、指派成員、發布 Dry Run / Official Run、匯出資料 | 建立任務時**自動指派**給任務建立者 |
+| 審核員 | `reviewer` | 審查標記結果、協助產出標準答案、查看品質報告 | 由任務 `project_leader` 指派 |
+| 標記員 | `annotator` | 執行標記作業（試標 / 正式標）、查看個人進度 | 由任務 `project_leader` 指派 |
+
+> **Task Role 重點：** 同一使用者可在任務 A 擔任 `project_leader`，同時在任務 B 擔任 `annotator`。任務層級的授權透過查詢 `task_membership(task_id, user_id, task_role)` 表決定，不依賴 JWT 系統角色。系統角色不再有繼承關係。
 
 ---
 
 ## 2. 頁面清單與角色存取矩陣
 
-| 頁面 ID | 頁面名稱 | 所屬模組 | Project Leader | Annotator | Reviewer | Super Admin | 備註 |
-|---------|----------|----------|:--------------:|:---------:|:--------:|:-----------:|------|
-| `login` | 登入頁 | 帳號模組 | ✅ | ✅ | ✅ | ✅ | 未登入唯一可進入的頁面 |
-| `pending` | 待指派提示頁 | 帳號模組 | — | — | — | — | 僅限 `role = null` 的已登入使用者；顯示「等待角色指派」提示 |
-| `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | ✅ | ✅ | |
-| `dashboard` | 儀表板 | — | ✅（全局） | ✅（個人） | ✅ | ✅ | 登入後預設落地頁 |
-| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ❌ | ❌ | ✅ | |
-| `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ❌ | ❌ | ✅ | |
-| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ❌ | ✅（唯讀） | ✅ | |
-| `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅（審查模式，繼承） | ✅ | ✅（審查模式） | ✅ | |
-| `dataset-stats` | 統計總覽頁 | 資料集分析模組 | ✅ | ❌ | ✅ | ✅ | |
-| `dataset-quality` | 品質監控頁 | 資料集分析模組 | ✅ | ❌ | ✅ | ✅ | |
-| `annotator-list` | 標記員列表頁 | 標記員管理模組 | ✅ | ❌ | ❌ | ✅ | |
-| `annotator-new` | 新增標記員頁 | 標記員管理模組 | ✅ | ❌ | ❌ | ✅ | |
-| `work-log` | 工時紀錄頁 | 標記員管理模組 | ✅ | ✅（僅自己） | ❌ | ✅ | |
-| `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ❌ | ❌ | ✅ | 平台級帳號管理 |
-| `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ❌ | ❌ | ✅ | |
+| 頁面 ID | 頁面名稱 | 所屬模組 | annotator（系統）| super_admin | 任務角色限制 | 備註 |
+|---------|----------|----------|:----------------:|:-----------:|-------------|------|
+| `login` | 登入頁 | 帳號模組 | ✅ | ✅ | — | 未登入唯一可進入的頁面 |
+| `pending` | 待指派提示頁 | 帳號模組 | — | — | — | 僅限 `role = null` 的已登入使用者 |
+| `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | |
+| `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
+| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | 僅顯示自己有成員資格的任務 |
+| `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
+| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | 任一任務角色 | 操作按鈕依任務角色顯示 |
+| `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
+| `dataset-stats` | 統計總覽頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
+| `dataset-quality` | 品質監控頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
+| `annotator-list` | 平台成員列表頁 | 標記員管理模組 | ✅ | ✅ | — | 任務 PL 瀏覽以邀請成員；含待指派區塊 |
+| `annotator-new` | 新增平台成員頁 | 標記員管理模組 | ❌ | ✅ | — | 建立 Email/Password 帳號 |
+| `work-log` | 工時紀錄頁 | 標記員管理模組 | ✅ | ✅ | — | 一般成員僅自己；`project_leader`（任務）可查看任務成員 |
+| `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理 |
+| `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ✅ | — | |
 
 ---
 
@@ -67,24 +68,24 @@ flowchart TD
     PROFILE["👤 profile\n個人設定頁"]
   end
 
-  subgraph 任務管理模組["任務管理模組（Project Leader）"]
+  subgraph 任務管理模組["任務管理模組（所有平台成員）"]
     TLIST["task-list\n任務列表頁"]
     TNEW["task-new\n新增任務頁"]
     TDETAIL["task-detail\n任務詳情頁"]
   end
 
-  subgraph 標記任務模組["標記任務模組（Annotator / Reviewer）"]
+  subgraph 標記任務模組["標記任務模組（任務角色：annotator / reviewer）"]
     ANNOT["annotation-workspace\n標記作業頁\n（Dry Run / Official Run）"]
   end
 
-  subgraph 資料集分析模組["資料集分析模組（Project Leader / Reviewer）"]
+  subgraph 資料集分析模組["資料集分析模組（任務角色：project_leader / reviewer）"]
     STATS["dataset-stats\n統計總覽頁"]
     QUALITY["dataset-quality\n品質監控頁\n（IAA / 異常偵測）"]
   end
 
-  subgraph 標記員管理模組["標記員管理模組（Project Leader）"]
-    ALIST["annotator-list\n標記員列表頁"]
-    ANEW["annotator-new\n新增標記員頁"]
+  subgraph 標記員管理模組["標記員管理模組（所有平台成員）"]
+    ALIST["annotator-list\n平台成員列表頁"]
+    ANEW["annotator-new\n新增平台成員頁\n（super_admin 限定）"]
     WLOG["work-log\n工時紀錄頁"]
   end
 
@@ -207,21 +208,23 @@ flowchart TD
   - 序列標記（NER、詞性標記）
   - 關係抽取（Entity + Relation + Triple）
 - **空狀態：** 不適用（此頁為建立流程，永遠有內容）
+- **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
 #### `task-detail` 任務詳情頁
-- **進入方式（Project Leader）：** `task-list` 點選任務
-- **進入方式（Reviewer）：** `dashboard` 待審查任務列表 → 任務卡（唯讀視角；指派、發布、匯出等操作按鈕隱藏）
+- **進入方式：** `task-list` 點選任務（有任務成員資格的使用者皆可進入）
 - **任務狀態轉換：**
   - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
-  - **Dry Run 完成通知：** 當所有標記員完成 Dry Run 後，系統自動將任務狀態切換至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒 Project Leader；Project Leader 從 badge 連結進入 `dataset-quality` 查看 IAA 結果
-- **功能（Project Leader）：**
+  - **Dry Run 完成通知：** 當所有標記員完成 Dry Run 後，系統自動切換狀態至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
+- **功能（任務角色：project_leader）：**
   - 查看任務設定與任務類型
-  - 指派標記員（從 `annotator-list` 選取）
-  - 發布試標（Dry Run）：選取共用樣本集（建議 20 句），發布給所有標記員
+  - 邀請平台成員加入任務並指派任務角色（`reviewer` 或 `annotator`）— 從 `annotator-list` 選取
+  - 發布試標（Dry Run）：選取共用樣本集（建議 20 句），發布給所有任務標記員
   - 發布正式標記（Official Run）：在 IAA 達標（≥ 0.8）後啟動，分派不重疊資料給各標記員
   - 查看標記進度（各標記員完成數 / 速度）
   - 匯出標記結果（JSON / JSON-MIN）
+- **功能（任務角色：reviewer）：** 唯讀視角；指派、發布、匯出等操作按鈕隱藏
+- **功能（任務角色：annotator）：** 不可進入任務詳情，僅能從 dashboard 進入 annotation-workspace
 - **資料隔離原則：** Dry Run 資料與 Official Run 資料必須隔離，不得混入正式標記集
 - **離開方式：** 返回 → `task-list`；匯出為頁面內操作（Toast 提示下載），不觸發頁面跳轉
 
@@ -276,17 +279,18 @@ flowchart TD
 
 ### 標記員管理模組
 
-#### `annotator-list` 標記員列表頁
+#### `annotator-list` 平台成員列表頁
 - **進入方式：** Navbar → 標記員管理
 - **功能：**
-  - 查看所有已指派 `annotator` 角色的帳號、啟用 / 停用、進入個別詳情
-  - **待指派區塊：** 顯示已登入但尚未指派角色（`role = null`）的新使用者，Project Leader 可直接在此指派 `annotator` 角色
-- **空狀態（尚無任何標記員）：** 說明文字 + 「新增標記員帳號」按鈕（→ `annotator-new`，用於建立 Email/Password 帳號）
-- **離開方式：** 「新增標記員」→ `annotator-new`；點選標記員 → `work-log`
+  - 查看所有系統角色為 `annotator` 的平台成員、啟用 / 停用
+  - **待指派區塊：** 顯示已登入但 `role = null` 的新使用者，任何 `annotator`（系統）或 `super_admin` 可在此指派 `annotator` 系統角色
+  - 任務 `project_leader` 可從此列表選取成員，邀請加入自己的任務並指派任務角色
+- **空狀態（尚無任何平台成員）：** 說明文字 + 「新增成員帳號」按鈕（→ `annotator-new`，super_admin 限定）
+- **離開方式：** 「新增成員帳號」→ `annotator-new`；點選成員 → `work-log`
 
-#### `annotator-new` 新增標記員頁
-- **進入方式：** `annotator-list` → 新增
-- **用途：** 為無 Google 帳號的標記員建立 Email / Password 帳號；使用 Google SSO 的標記員無需此頁，自行登入後由 PL 在 `annotator-list` 指派角色即可
+#### `annotator-new` 新增平台成員頁
+- **進入方式：** `annotator-list` → 新增（**super_admin 限定**）
+- **用途：** 為無 Google 帳號的使用者建立 Email / Password 帳號；使用 Google SSO 的使用者自行登入後由管理員在 `annotator-list` 指派系統角色即可
 - **功能：** 填寫基本資料（名稱、Email）、設定初始密碼
 - **離開方式：** 儲存 → `annotator-list`；取消 → `annotator-list`
 

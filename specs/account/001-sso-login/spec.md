@@ -185,8 +185,9 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：代表已驗證身份。關鍵屬性：`id`、`email`、`name`、`avatar_url`、`provider`（google | email）、`provider_id`（Google 帳號 ID，Email/Password 帳號為 null）、`hashed_password`（Email/Password 帳號用，Google 帳號為 null）、`role`（null | annotator | project_leader | reviewer | super_admin）、`created_at`。
-  - 首次 Google SSO 登入預設 `role = null`；由 Project Leader 或 Super Admin 指派角色後才有功能存取權。Email / Password 帳號建立時由管理員直接指定角色。
+- **User（使用者）**：代表已驗證身份。關鍵屬性：`id`、`email`、`name`、`avatar_url`、`provider`（google | email）、`provider_id`（Google 帳號 ID，Email/Password 帳號為 null）、`hashed_password`（Email/Password 帳號用，Google 帳號為 null）、`role`（系統角色：null | annotator | super_admin）、`created_at`。
+  - 首次 Google SSO 登入預設 `role = null`；由管理員指派 `annotator` 系統角色後才有功能存取權。`project_leader` 和 `reviewer` 為任務角色，儲存於 `task_membership` 表，不在 JWT 中。
+- **TaskMembership（任務成員）**：紀錄使用者在特定任務中的角色。關鍵屬性：`task_id`、`user_id`、`task_role`（project_leader | reviewer | annotator）。建立任務時自動為任務建立者新增 `task_role = project_leader` 的記錄。
 - **Session / JWT**：OAuth callback 成功後簽發的短效存取 token。包含 `user_id`、`role`、`exp`。過期後系統導向 `/login`，不進行靜默更新。
 
 ## 成功標準 *(必填)*
