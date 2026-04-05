@@ -123,17 +123,27 @@ Then call `open_document` with the full absolute path to `$TARGET` and begin des
 
 ## Committing `.pen` Files
 
-Pencil stores design changes in memory and flushes to disk asynchronously. **Always verify the file has been written before committing.**
+Pencil stores design changes in memory and flushes to disk asynchronously. **Always force a flush before committing.**
 
-```bash
-# Check if the file has changed since the last commit
-git diff design/wireframes/pages/[module]/[page].pen
+### Step 1 — Force flush by re-opening the file
+
+After all `batch_design` work is done, call `open_document` with the same file path.
+The call will likely time out — that is expected and fine. The timeout itself triggers Pencil to flush the in-memory state to disk:
+
+```javascript
+open_document("X:/mandy/label-suite/design/wireframes/pages/[module]/[page].pen")
+// → MCP timeout error is OK — flush has occurred
 ```
 
-If `git diff` shows no changes but you just made edits:
-1. Press **Ctrl+S** in the Pencil editor to force a save
-2. Wait a moment, then re-check with `git diff`
-3. Only run `git add` / `git commit` once the diff shows your changes
+### Step 2 — Verify and commit
+
+```bash
+git diff design/wireframes/pages/[module]/[page].pen
+# Should show your changes. If empty, wait a moment and retry open_document.
+
+git add design/wireframes/pages/[module]/[page].pen
+git commit -m "..."
+```
 
 > Never commit a `.pen` file that `git diff` shows as unchanged — the on-disk version may be a stale snapshot.
 
