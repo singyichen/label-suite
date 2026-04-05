@@ -17,14 +17,16 @@ Module names mirror `frontend/src/features/`:
 
 ## 6-Frame Layout (per `.pen` file)
 
-| Frame | x offset | Purpose |
-|---|---|---|
-| Desktop ZH | `x:0` | Full page — Traditional Chinese, desktop |
-| Desktop EN | `x:1500` | Full page — English, desktop |
-| Mobile ZH | `x:3000` | Full page — Traditional Chinese, mobile |
-| Mobile EN | `x:4500` | Full page — English, mobile |
-| Component ZH | `x:6000` | Page-specific UI components — ZH |
-| Component EN | `x:7500` | Page-specific UI components — EN |
+Frames are arranged in **3 rows** (device tier) × **2 columns** (ZH / EN), so each tier is visually grouped for easy review:
+
+| Frame | x | y | Purpose |
+|---|---|---|---|
+| Desktop ZH | `0` | `0` | Full page — Traditional Chinese, desktop |
+| Desktop EN | `1500` | `0` | Full page — English, desktop |
+| Mobile ZH | `0` | `1000` | Full page — Traditional Chinese, mobile |
+| Mobile EN | `500` | `1000` | Full page — English, mobile |
+| Component ZH | `0` | `1900` | Page-specific UI components — ZH |
+| Component EN | `900` | `1900` | Page-specific UI components — EN |
 
 **Draw order**: Desktop ZH → Desktop EN → Mobile ZH → Mobile EN → Component ZH → Component EN
 
@@ -118,6 +120,22 @@ cp "$TEMPLATE" "$TARGET"
 Then call `open_document` with the full absolute path to `$TARGET` and begin designing.
 
 > **Never** start drawing in `pencil-new.pen` with the intention of copying afterwards — the copy may happen before Pencil flushes to disk, causing data loss.
+
+## Committing `.pen` Files
+
+Pencil stores design changes in memory and flushes to disk asynchronously. **Always verify the file has been written before committing.**
+
+```bash
+# Check if the file has changed since the last commit
+git diff design/wireframes/pages/[module]/[page].pen
+```
+
+If `git diff` shows no changes but you just made edits:
+1. Press **Ctrl+S** in the Pencil editor to force a save
+2. Wait a moment, then re-check with `git diff`
+3. Only run `git add` / `git commit` once the diff shows your changes
+
+> Never commit a `.pen` file that `git diff` shows as unchanged — the on-disk version may be a stale snapshot.
 
 ## Key Rules
 
