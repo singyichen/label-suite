@@ -79,18 +79,20 @@ sequenceDiagram
 ### User Story 2 — 首次使用者帳號建立（優先級：P2）
 
 從未登入過的使用者透過 Google SSO 完成身份驗證。
-系統自動使用 Google 個人資料（姓名、Email、頭像）建立新帳號，
-不需要額外填寫任何註冊表單。Email / Password 帳號由 Project Leader 或 Super Admin 預先建立並提供初始密碼。
+系統自動使用 Google 個人資料（姓名、Email、頭像）建立新帳號，預設 `role = null`（無角色）。
+使用者登入後進入待指派提示頁，無法存取任何功能模組，直到 Project Leader 或 Super Admin 指派角色為止。
+Email / Password 帳號仍由 Project Leader 或 Super Admin 預先建立並提供初始密碼。
 
-**此優先級原因**：流暢的首次使用體驗很重要，但核心登入流程（P1）必須先完成。自動開通帳號可降低 Google 使用者的操作摩擦。
+**此優先級原因**：流暢的首次使用體驗很重要，但核心登入流程（P1）必須先完成。自行登入後等待指派的設計讓 PL 保有控制誰能標記的權力，同時避免預先建立帳號的繁瑣流程。
 
-**獨立測試方式**：以新的 Google 帳號登入，驗證資料庫中建立了正確個人資料的使用者記錄。
+**獨立測試方式**：以新的 Google 帳號登入，驗證資料庫中建立了 `role = null` 的使用者記錄，且該使用者只能看到待指派提示頁。
 
 **驗收情境**：
 
-1. **Given** 首次使用者完成 Google OAuth，**When** callback 處理完成，**Then** 建立包含 Google 個人資料的 `name`、`email`、`avatar_url` 使用者記錄。
-2. **Given** 回訪使用者（email 已存在），**When** 再次以 Google 登入，**Then** 不建立重複帳號，回傳既有帳號的 session。
-3. **Given** Email / Password 帳號已由管理員建立，**When** 使用者首次以正確密碼登入，**Then** 回傳既有帳號的 session。
+1. **Given** 首次使用者完成 Google OAuth，**When** callback 處理完成，**Then** 建立包含 Google 個人資料的 `name`、`email`、`avatar_url` 使用者記錄，且 `role = null`。
+2. **Given** `role = null` 的已登入使用者，**When** 嘗試存取任何功能頁面，**Then** 導向待指派提示頁，顯示「您的帳號尚未被指派角色，請聯絡管理員」。
+3. **Given** 回訪使用者（email 已存在），**When** 再次以 Google 登入，**Then** 不建立重複帳號，回傳既有帳號的 session。
+4. **Given** Email / Password 帳號已由管理員建立，**When** 使用者首次以正確密碼登入，**Then** 回傳既有帳號的 session。
 
 ---
 
@@ -142,8 +144,9 @@ sequenceDiagram
 - **FR-001**：系統必須提供含「以 Google 登入」按鈕與 Email / Password 表單的 `/login` 頁面。
 - **FR-002**：系統必須對 Google 實作 OAuth 2.0 授權碼流程；並對 Email / Password 實作密碼雜湊驗證（bcrypt）。
 - **FR-003**：系統必須在成功驗證後簽發 JWT session token。
-- **FR-004**：系統必須在首次登入時使用身份提供者個人資料自動開通使用者記錄。
-- **FR-005**：系統必須將已登入使用者從 `/login` 導向 `/dashboard`。
+- **FR-004**：系統必須在首次 Google SSO 登入時，使用身份提供者個人資料自動建立使用者記錄，預設 `role = null`。
+- **FR-005**：系統必須將 `role = null` 的已登入使用者導向待指派提示頁（`/pending`），而非 `/dashboard`。
+- **FR-005b**：系統必須將已有角色的已登入使用者從 `/login` 導向 `/dashboard`。
 - **FR-006**：系統必須保護所有非登入路由，將未驗證存取導向 `/login`。
 - **FR-007**：登入頁面必須具備響應式設計，支援行動裝置瀏覽器。
 - **FR-008**：OAuth 客戶端憑證必須儲存於環境變數，絕不硬編碼。
