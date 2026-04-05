@@ -75,15 +75,28 @@ sequenceDiagram
 
 ### Functional Requirements
 
+<!--
+  For each FR, state WHAT the system must do and WHO can do it.
+  When a capability is role-restricted, the FR MUST explicitly name the allowed roles.
+  Example: "FR-XXX: Only [role] MUST be able to [action] on [page]"
+  RoleGuard inheritance rules: `project_leader` inherits all `reviewer` capabilities;
+  `super_admin` inherits all roles. Do NOT rely on implicit inheritance — state roles explicitly.
+-->
+
 - **FR-001**: The system MUST [specific capability]
 - **FR-002**: The system MUST [specific capability]
 - **FR-003**: Users MUST be able to [key interaction]
+- **FR-004**: Only [role_a] and [role_b] MUST be able to access [page/action] — enforced via RoleGuard
 
-### User Flow & Navigation *(include if feature introduces new pages or modifies navigation)*
+### User Flow & Navigation *(required)*
 
 <!--
+  Required for ALL features — even if no new pages are added.
+  Describe how users enter this feature from existing routes and how they leave.
   1. Map every screen and its navigation triggers to prevent orphan pages.
-  2. Include a Mermaid flowchart for flows with 3+ screens or branching paths.
+  2. If the feature adds no new pages, document the existing page(s) involved,
+     the entry triggers (e.g. sidebar link, button, redirect), and exit paths.
+  3. Include a Mermaid flowchart for flows with 3+ screens or branching paths.
   Renders natively on GitHub — no extra tooling needed.
 -->
 
