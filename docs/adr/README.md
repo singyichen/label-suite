@@ -31,3 +31,5 @@ Each ADR follows this structure:
 | [010](010-config-driven-architecture.md) | Config-Driven Task Architecture | Accepted | 2026-03-19 |
 | [011](011-frontend-source-structure.md) | Frontend Source Directory Structure — Vertical Feature Slicing | Accepted | 2026-04-03 |
 | [012](012-frontend-testing-strategy.md) | Frontend Testing Strategy — Vitest + RTL + Playwright | Accepted | 2026-04-03 |
+| [013](013-email-service-resend.md) | Email Service — Resend | Accepted | 2026-04-05 |
+| [014](014-prototype-playwright-testing.md) | Prototype-Layer Playwright Testing — Static HTML as Spec Validation | Accepted | 2026-04-07 |
