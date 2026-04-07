@@ -70,21 +70,19 @@ Before drawing any page, **always inspect `design-system.pen` first** and reuse 
 
 Open `design/wireframes/design-system.pen` and call `get_editor_state` to list all reusable components. Current components include: `Button/Primary`, `Button/Secondary`, `Button/Ghost`, `Card/Default`, `Input/Default`, `Input/Focus`, `Modal/Default`.
 
-### Step 2 — Import design-system.pen in the page file
+Also inspect the full design-system frame for non-reusable patterns (Navbar, lang switcher, badges, etc.) via `batch_get`.
 
-Add an `imports` entry to the document so you can reference its components via `ref`:
+### Step 2 — Verify design-system imports are active
 
-```javascript
-// In batch_design, set imports at document level
-U(document, {
-  imports: { "ds": "../../design-system.pen" }
-})
-```
+Design-system variables (`$color-*`, `$radius-*`, `$space-*`) only resolve if the page file has `design-system.pen` imported.
 
-The relative path is from the page file to design-system.pen. Example for `pages/account/login.pen`:
-`../../design-system.pen`
+> ⚠️ **MCP Limitation**: `U(document, {imports:...})` does NOT work via Pencil MCP — it throws "Node 'document' not found!". Imports must be pre-configured by **copying from a file that already has them set** (see "Creating a New Wireframe File" below).
+
+To check if the active file has design-system imports, call `get_variables` — if it returns the design-system token list, imports are active and you can use `$color-*` variables and `ref` components directly.
 
 ### Step 3 — Use `ref` to place design system components
+
+When imports are active:
 
 ```javascript
 // Use a design-system component by its ID
@@ -98,15 +96,58 @@ Override only the properties you need to change (text content, size, fill):
 U(btn+"/label", { content:"Sign In" })   // replace with ZH/EN label as needed
 ```
 
-### Step 4 — Page-specific components only in Component frame
+### Step 4 — Fallback: use hardcoded token values if imports unavailable
 
-If a UI pattern is **not** in design-system.pen and won't be reused elsewhere, build it in the page's Component frame (`x:6000+`). If it will appear on multiple pages, add it to design-system.pen first.
+If a file does NOT have design-system imports (e.g. copied from blank template), use these hardcoded values — they are the exact resolved values of design-system tokens:
+
+| Token | Value | Usage |
+|---|---|---|
+| `$color-background` / `$color-surface` | `#F5F3FF` | Page background, card bg |
+| `$color-white` | `#FFFFFF` | Navbar, card fill, input fill |
+| `$color-text` | `#1E1B4B` | Primary text, labels |
+| `$color-text-muted` | `#94A3B8` | Subtitles, placeholders, icons |
+| `$color-ink` | `#1E1B4B` | Logo text |
+| `$color-primary` | `#6366F1` | Links, active states |
+| `$color-cta` | `#10B981` | Submit / call-to-action buttons |
+| `$color-border` | `#E2E8F0` | Input stroke, card stroke, navbar stroke |
+| `$radius-md` | `8` | Inputs, buttons |
+| `$radius-lg` | `12` | Cards |
+| `$space-sm` | `8` | Icon-text gap in lang switcher |
+
+> **Design consistency rule**: All colors used in wireframes MUST match the token values above. Never use Tailwind slate / blue colors (`#0F172A`, `#1E40AF`, etc.) — they conflict with the design system.
+
+### Step 5 — Page-specific components only in Component frame
+
+If a UI pattern is **not** in design-system.pen and won't be reused elsewhere, build it in the page's Component frame. If it will appear on multiple pages, add it to design-system.pen first.
 
 ---
 
 ## Creating a New Wireframe File
 
 **Always create the file at the correct path BEFORE opening it in Pencil.**
+
+### Option A — Copy an existing page wireframe (REQUIRED when design-system variables are needed)
+
+Copying an existing file **preserves its `imports` configuration**, which is the only way to enable `$color-*` variable resolution via MCP. Always prefer this option.
+
+```bash
+cp design/wireframes/pages/[module]/[existing-page].pen \
+   design/wireframes/pages/[module]/[new-page].pen
+```
+
+**Which file to copy from:**
+
+| Module | Copy from |
+|---|---|
+| `account` | `pages/account/login.pen` |
+| `dashboard` | any existing `pages/dashboard/*.pen` |
+| other modules | any existing `.pen` in the same module |
+
+Then call `open_document` on the new file and overwrite all content with the new page's design.
+
+### Option B — Copy the blank template (design-system variables NOT available)
+
+Only use this when no existing file exists in any module. After creating the file, design-system variables will NOT work until you manually open the file in the Pencil desktop app and configure the import.
 
 ```bash
 # Step 1 — locate the blank template (works on any machine)
@@ -117,7 +158,7 @@ TARGET="design/wireframes/pages/[module]/[page].pen"
 cp "$TEMPLATE" "$TARGET"
 ```
 
-Then call `open_document` with the full absolute path to `$TARGET` and begin designing.
+After drawing, open the file in Pencil desktop app → set `imports` to `../../design-system.pen` → then run `replace_all_matching_properties` to update hardcoded colors to proper variable references.
 
 > **Never** start drawing in `pencil-new.pen` with the intention of copying afterwards — the copy may happen before Pencil flushes to disk, causing data loss.
 
