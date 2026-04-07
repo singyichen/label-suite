@@ -36,44 +36,14 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "frame",
-              "id": "r2ZWM",
-              "name": "Logo",
-              "gap": 10,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "GDBQY",
-                  "name": "iconBg",
-                  "width": 32,
-                  "height": 32,
-                  "fill": "#6366F1",
-                  "cornerRadius": 8,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "E874a",
-                      "width": 17,
-                      "height": 17,
-                      "iconFontName": "tag",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "mg1ZH",
-                  "fill": "#1E1B4B",
-                  "content": "Label Suite",
-                  "fontFamily": "Crimson Pro",
-                  "fontSize": 18,
-                  "fontWeight": "700"
-                }
-              ]
+              "type": "text",
+              "id": "uaDCR",
+              "name": "logo",
+              "fill": "#1E1B4B",
+              "content": "Label Suite",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "600"
             },
             {
               "type": "frame",
@@ -218,7 +188,6 @@
                           "id": "AdBFU",
                           "name": "Name Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -227,8 +196,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -269,7 +238,6 @@
                           "id": "WFn43",
                           "name": "Email Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -278,8 +246,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -320,7 +288,6 @@
                           "id": "5bTBB",
                           "name": "Password Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -329,8 +296,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -371,7 +338,6 @@
                           "id": "iRin8",
                           "name": "Confirm Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -380,8 +346,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -496,44 +462,14 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "frame",
-              "id": "Zt6XN",
-              "name": "Logo",
-              "gap": 10,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "XdEtT",
-                  "name": "iconBg",
-                  "width": 32,
-                  "height": 32,
-                  "fill": "#6366F1",
-                  "cornerRadius": 8,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "AzBLS",
-                      "width": 17,
-                      "height": 17,
-                      "iconFontName": "tag",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "DaqTt",
-                  "fill": "#1E1B4B",
-                  "content": "Label Suite",
-                  "fontFamily": "Crimson Pro",
-                  "fontSize": 18,
-                  "fontWeight": "700"
-                }
-              ]
+              "type": "text",
+              "id": "cPX38",
+              "name": "logo",
+              "fill": "#1E1B4B",
+              "content": "Label Suite",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "600"
             },
             {
               "type": "frame",
@@ -678,7 +614,6 @@
                           "id": "nLroL",
                           "name": "Name Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -687,8 +622,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -729,7 +664,6 @@
                           "id": "Y6E7l",
                           "name": "Email Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -738,8 +672,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -780,7 +714,6 @@
                           "id": "wDR8q",
                           "name": "Password Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -789,8 +722,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -831,7 +764,6 @@
                           "id": "VIMB0",
                           "name": "Confirm Input",
                           "width": "fill_container",
-                          "height": 40,
                           "fill": "#FFFFFF",
                           "cornerRadius": 8,
                           "stroke": {
@@ -840,8 +772,8 @@
                             "fill": "#E2E8F0"
                           },
                           "padding": [
-                            0,
-                            12
+                            12,
+                            16
                           ],
                           "alignItems": "center",
                           "children": [
@@ -930,7 +862,7 @@
       "clip": true,
       "width": 390,
       "height": 607,
-      "fill": "#F5F3FF",
+      "fill": "#FFFFFF",
       "layout": "vertical",
       "children": [
         {
@@ -955,44 +887,14 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "frame",
-              "id": "abGb0",
-              "name": "Logo",
-              "gap": 8,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "jHvhG",
-                  "name": "iconBg",
-                  "width": 28,
-                  "height": 28,
-                  "fill": "#6366F1",
-                  "cornerRadius": 7,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "AHWM9",
-                      "width": 15,
-                      "height": 15,
-                      "iconFontName": "tag",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "shGHJ",
-                  "fill": "#1E1B4B",
-                  "content": "Label Suite",
-                  "fontFamily": "Crimson Pro",
-                  "fontSize": 16,
-                  "fontWeight": "700"
-                }
-              ]
+              "type": "text",
+              "id": "xYOC9",
+              "name": "mLogo",
+              "fill": "#1E1B4B",
+              "content": "Label Suite",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "600"
             },
             {
               "type": "frame",
@@ -1110,7 +1012,6 @@
                       "id": "8nF8W",
                       "name": "mNameInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1119,8 +1020,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1160,7 +1061,6 @@
                       "id": "MQdPv",
                       "name": "mEmailInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1169,8 +1069,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1210,7 +1110,6 @@
                       "id": "G9vip",
                       "name": "mPwInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1219,8 +1118,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1260,7 +1159,6 @@
                       "id": "KxGSz",
                       "name": "mCpwInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1269,8 +1167,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1352,7 +1250,7 @@
       "clip": true,
       "width": 390,
       "height": 607,
-      "fill": "#F5F3FF",
+      "fill": "#FFFFFF",
       "layout": "vertical",
       "children": [
         {
@@ -1377,44 +1275,14 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "frame",
-              "id": "E3lpy",
-              "name": "Logo",
-              "gap": 8,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "VhDX8",
-                  "name": "iconBg",
-                  "width": 28,
-                  "height": 28,
-                  "fill": "#6366F1",
-                  "cornerRadius": 7,
-                  "justifyContent": "center",
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon_font",
-                      "id": "Yt0bq",
-                      "width": 15,
-                      "height": 15,
-                      "iconFontName": "tag",
-                      "iconFontFamily": "lucide",
-                      "fill": "#FFFFFF"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "T9rom",
-                  "fill": "#1E1B4B",
-                  "content": "Label Suite",
-                  "fontFamily": "Crimson Pro",
-                  "fontSize": 16,
-                  "fontWeight": "700"
-                }
-              ]
+              "type": "text",
+              "id": "PPG1I",
+              "name": "mLogo",
+              "fill": "#1E1B4B",
+              "content": "Label Suite",
+              "fontFamily": "Inter",
+              "fontSize": 18,
+              "fontWeight": "600"
             },
             {
               "type": "frame",
@@ -1532,7 +1400,6 @@
                       "id": "Fng7h",
                       "name": "mNameInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1541,8 +1408,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1582,7 +1449,6 @@
                       "id": "lCz23",
                       "name": "mEmailInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1591,8 +1457,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1632,7 +1498,6 @@
                       "id": "Gy3m7",
                       "name": "mPwInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1641,8 +1506,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1682,7 +1547,6 @@
                       "id": "WVE19",
                       "name": "mCpwInput",
                       "width": "fill_container",
-                      "height": 40,
                       "fill": "#FFFFFF",
                       "cornerRadius": 8,
                       "stroke": {
@@ -1691,8 +1555,8 @@
                         "fill": "#E2E8F0"
                       },
                       "padding": [
-                        0,
-                        12
+                        12,
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1837,7 +1701,7 @@
                       "width": "fill_container",
                       "height": 40,
                       "fill": "#FFF5F5",
-                      "cornerRadius": 8,
+                      "cornerRadius": 6,
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
@@ -1845,7 +1709,7 @@
                       },
                       "padding": [
                         0,
-                        12
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1895,7 +1759,7 @@
                       "width": "fill_container",
                       "height": 40,
                       "fill": "#FFF5F5",
-                      "cornerRadius": 8,
+                      "cornerRadius": 6,
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
@@ -1903,7 +1767,7 @@
                       },
                       "padding": [
                         0,
-                        12
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1955,7 +1819,7 @@
                   "width": "fill_container",
                   "height": 40,
                   "fill": "#FFF5F5",
-                  "cornerRadius": 8,
+                  "cornerRadius": 6,
                   "stroke": {
                     "align": "inside",
                     "thickness": 1,
@@ -1963,7 +1827,7 @@
                   },
                   "padding": [
                     0,
-                    12
+                    16
                   ],
                   "alignItems": "center",
                   "children": [
@@ -2063,7 +1927,7 @@
                       "width": "fill_container",
                       "height": 40,
                       "fill": "#FFF5F5",
-                      "cornerRadius": 8,
+                      "cornerRadius": 6,
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
@@ -2071,7 +1935,7 @@
                       },
                       "padding": [
                         0,
-                        12
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -2121,7 +1985,7 @@
                       "width": "fill_container",
                       "height": 40,
                       "fill": "#FFF5F5",
-                      "cornerRadius": 8,
+                      "cornerRadius": 6,
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
@@ -2129,7 +1993,7 @@
                       },
                       "padding": [
                         0,
-                        12
+                        16
                       ],
                       "alignItems": "center",
                       "children": [
@@ -2181,7 +2045,7 @@
                   "width": "fill_container",
                   "height": 40,
                   "fill": "#FFF5F5",
-                  "cornerRadius": 8,
+                  "cornerRadius": 6,
                   "stroke": {
                     "align": "inside",
                     "thickness": 1,
@@ -2189,7 +2053,7 @@
                   },
                   "padding": [
                     0,
-                    12
+                    16
                   ],
                   "alignItems": "center",
                   "children": [
