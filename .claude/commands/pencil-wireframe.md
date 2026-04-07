@@ -108,6 +108,19 @@ If a UI pattern is **not** in design-system.pen and won't be reused elsewhere, b
 
 **Always create the file at the correct path BEFORE opening it in Pencil.**
 
+### Option A — Copy an existing page wireframe (preferred)
+
+If a page wireframe already exists in the same module, copy it and rename:
+
+```bash
+cp design/wireframes/pages/[module]/[existing-page].pen \
+   design/wireframes/pages/[module]/[new-page].pen
+```
+
+Then call `open_document` on the new file and overwrite all content with the new page's design.
+
+### Option B — Copy the blank template
+
 ```bash
 # Step 1 — locate the blank template (works on any machine)
 TEMPLATE=$(find "$HOME" -name "pencil-new.pen" -path "*/highagency.pencil*" 2>/dev/null | head -1)
