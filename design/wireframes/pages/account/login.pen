@@ -743,7 +743,7 @@
                       "type": "text",
                       "id": "kgthu",
                       "fill": "$color-text-muted",
-                      "content": "或",
+                      "content": "or",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -1703,7 +1703,7 @@
                       "type": "text",
                       "id": "GC6xy",
                       "fill": "$color-text-muted",
-                      "content": "或",
+                      "content": "or",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "normal"

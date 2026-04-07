@@ -5,6 +5,50 @@
 **狀態**：Clarified
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 修改密碼）
 
+## Process Flow
+
+### 修改密碼流程
+
+```mermaid
+sequenceDiagram
+    actor 使用者
+    participant 瀏覽器
+    participant 後端API as 後端 API
+    participant 資料庫
+
+    使用者->>瀏覽器: 提交現有密碼 + 新密碼 + 確認新密碼
+    瀏覽器->>瀏覽器: 前端驗證（新密碼 == 確認新密碼）
+
+    瀏覽器->>後端API: PATCH /auth/password（current_password、new_password）
+    後端API->>資料庫: 查詢使用者現有 hashed_password
+
+    alt hashed_password 不為 null（Email / Password 帳號）
+        後端API->>後端API: bcrypt 驗證現有密碼
+        alt 驗證失敗
+            後端API-->>瀏覽器: 401 + 錯誤訊息「現有密碼錯誤」
+        else 驗證成功
+            後端API->>後端API: bcrypt hash 新密碼
+            後端API->>資料庫: 更新 hashed_password
+            後端API-->>瀏覽器: 200（顯示「密碼修改成功」）
+        end
+    else hashed_password 為 null（純 Google SSO 帳號）
+        note over 後端API: 跳過現有密碼驗證，直接設定新密碼
+        後端API->>後端API: bcrypt hash 新密碼
+        後端API->>資料庫: 更新 hashed_password
+        後端API-->>瀏覽器: 200（顯示「密碼設定成功」）
+    end
+```
+
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|---------|
+| 1 | 使用者 | 提交現有密碼 + 新密碼 + 確認新密碼 | 前端驗證新密碼與確認新密碼是否一致 |
+| 2 | 後端 | 查詢使用者 `hashed_password` | 判斷帳號類型 |
+| 3a | 後端 | Email / Password 帳號 — bcrypt 驗證現有密碼失敗 | 回傳 401 + 錯誤訊息，不更新密碼 |
+| 3b | 後端 | Email / Password 帳號 — bcrypt 驗證現有密碼成功 | bcrypt hash 新密碼 → 更新 DB → 回傳 200 |
+| 3c | 後端 | 純 Google SSO 帳號（`hashed_password = null`） | 跳過現有密碼驗證，直接 bcrypt hash 新密碼 → 更新 DB → 回傳 200 |
+
+---
+
 ## 使用者情境與測試 *(必填)*
 
 ### User Story 1 — 修改個人資料（優先級：P1）

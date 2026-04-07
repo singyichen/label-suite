@@ -101,7 +101,7 @@ flowchart LR
 | `/task-new` | 建立成功 | `/task-detail` |
 | `/task-detail` | 返回 | `/task-list` |
 
-**Entry points**：Navbar → 任務管理；Dashboard Project Leader 視角的任務總覽區「查看全部」連結，以及 Annotator 視角的任務列表「查看全部」連結（由 Dashboard spec 011/014 補充定義）。
+**Entry points**：Navbar → 任務管理；Dashboard Project Leader 視角的任務總覽區「查看全部」連結，以及 Annotator 視角的任務列表「查看全部」連結（待 Dashboard spec 與 Task Detail spec 建立後補充）。
 **Exit points**：點擊任務 → `/task-detail`；新增任務 → `/task-new`。
 
 > **設計差異說明**：`/task-list` 以任務（task）為單位顯示，每個任務只有一列，不按 run_type 分類。Dashboard Annotator 視角將任務依「Dry Run」與「Official Run」分兩區顯示，是為了讓標記員快速進入標記；`/task-list` 的目的是任務總攬與管理入口，兩者視角不同，設計差異屬預期行為。
