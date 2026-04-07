@@ -36,14 +36,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "uaDCR",
-              "name": "logo",
-              "fill": "#1E1B4B",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 20,
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "r2ZWM",
+              "name": "Logo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "GDBQY",
+                  "name": "iconBg",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "#6366F1",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "E874a",
+                      "width": 17,
+                      "height": 17,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "mg1ZH",
+                  "fill": "#1E1B4B",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -466,14 +496,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "cPX38",
-              "name": "logo",
-              "fill": "#1E1B4B",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 20,
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "Zt6XN",
+              "name": "Logo",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XdEtT",
+                  "name": "iconBg",
+                  "width": 32,
+                  "height": 32,
+                  "fill": "#6366F1",
+                  "cornerRadius": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "AzBLS",
+                      "width": 17,
+                      "height": 17,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "DaqTt",
+                  "fill": "#1E1B4B",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -895,14 +955,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "xYOC9",
-              "name": "mLogo",
-              "fill": "#1E1B4B",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 18,
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "abGb0",
+              "name": "Logo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jHvhG",
+                  "name": "iconBg",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "#6366F1",
+                  "cornerRadius": 7,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "AHWM9",
+                      "width": 15,
+                      "height": 15,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "shGHJ",
+                  "fill": "#1E1B4B",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
@@ -1287,14 +1377,44 @@
           "alignItems": "center",
           "children": [
             {
-              "type": "text",
-              "id": "PPG1I",
-              "name": "mLogo",
-              "fill": "#1E1B4B",
-              "content": "Label Suite",
-              "fontFamily": "Inter",
-              "fontSize": 18,
-              "fontWeight": "600"
+              "type": "frame",
+              "id": "E3lpy",
+              "name": "Logo",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "VhDX8",
+                  "name": "iconBg",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "#6366F1",
+                  "cornerRadius": 7,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "Yt0bq",
+                      "width": 15,
+                      "height": 15,
+                      "iconFontName": "tag",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "T9rom",
+                  "fill": "#1E1B4B",
+                  "content": "Label Suite",
+                  "fontFamily": "Crimson Pro",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
             },
             {
               "type": "frame",
