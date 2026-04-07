@@ -1,0 +1,13 @@
+{
+  "name": "label-suite-prototype-tests",
+  "private": true,
+  "description": "Playwright E2E tests for Label Suite HTML prototypes",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}

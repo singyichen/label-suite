@@ -337,13 +337,13 @@
       </svg>
       <span class="navbar-wordmark">Label Suite</span>
     </a>
-    <button class="lang-toggle" id="langToggle" aria-label="切換語言" type="button">
+    <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言" type="button">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="10"/>
         <line x1="2" y1="12" x2="22" y2="12"/>
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
-      <span id="langLabel">ZH | EN</span>
+      <span id="langLabel" data-testid="lang-label">ZH | EN</span>
     </button>
   </nav>
 
@@ -365,7 +365,7 @@
       </div>
 
       <!-- Error Banner -->
-      <div class="banner banner--error" id="errorBanner" role="alert" aria-live="assertive">
+      <div class="banner banner--error" id="errorBanner" data-testid="error-banner" role="alert" aria-live="assertive">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"/>
           <line x1="12" y1="8" x2="12" y2="12"/>
@@ -375,7 +375,7 @@
       </div>
 
       <!-- Success Banner -->
-      <div class="banner banner--success" id="successBanner" role="status" aria-live="polite">
+      <div class="banner banner--success" id="successBanner" data-testid="success-banner" role="status" aria-live="polite">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
           <polyline points="22 4 12 14.01 9 11.01"/>
@@ -400,12 +400,13 @@
               type="text"
               id="name"
               name="name"
+              data-testid="name-input"
               placeholder="王小明"
               autocomplete="name"
               aria-describedby="nameError"
             />
           </div>
-          <span class="field-error" id="nameError" role="alert"></span>
+          <span class="field-error" id="nameError" data-testid="name-error" role="alert"></span>
         </div>
 
         <!-- Email -->
@@ -422,12 +423,13 @@
               type="email"
               id="email"
               name="email"
+              data-testid="email-input"
               placeholder="name@example.com"
               autocomplete="email"
               aria-describedby="emailError"
             />
           </div>
-          <span class="field-error" id="emailError" role="alert"></span>
+          <span class="field-error" id="emailError" data-testid="email-error" role="alert"></span>
         </div>
 
         <!-- Password -->
@@ -444,6 +446,7 @@
               type="password"
               id="password"
               name="password"
+              data-testid="password-input"
               placeholder="••••••••"
               autocomplete="new-password"
               class="has-eye"
@@ -461,7 +464,7 @@
             </button>
           </div>
           <span class="field-hint" id="passwordHint"></span>
-          <span class="field-error" id="passwordError" role="alert"></span>
+          <span class="field-error" id="passwordError" data-testid="password-error" role="alert"></span>
         </div>
 
         <!-- Confirm Password -->
@@ -479,6 +482,7 @@
               type="password"
               id="confirmPassword"
               name="confirmPassword"
+              data-testid="confirm-password-input"
               placeholder="••••••••"
               autocomplete="new-password"
               class="has-eye"
@@ -495,18 +499,18 @@
               </svg>
             </button>
           </div>
-          <span class="field-error" id="confirmPasswordError" role="alert"></span>
+          <span class="field-error" id="confirmPasswordError" data-testid="confirm-password-error" role="alert"></span>
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="submit-btn" id="submitBtn" style="margin-top: 6px;">
+        <button type="submit" class="submit-btn" id="submitBtn" data-testid="submit-btn" style="margin-top: 6px;">
           <span id="submitBtnText">建立帳號</span>
         </button>
 
         <!-- Back to Login -->
         <p class="login-row">
           <span id="loginText">已有帳號？</span>
-          <a href="./login.html" id="loginLink">返回登入</a>
+          <a href="./login.html" id="loginLink" data-testid="login-link">返回登入</a>
         </p>
 
       </form>
