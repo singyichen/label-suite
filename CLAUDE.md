@@ -47,6 +47,10 @@ uv run pytest --cov=app --cov-report=term-missing
 uv run mypy .
 uv run ruff check .
 uv run ruff format .
+
+# --- Design (run from project root) ---
+./scripts/serve-prototype.sh          # serve design/prototype/ at http://localhost:8888
+./scripts/serve-prototype.sh 9000     # custom port
 ```
 
 ## Architecture
