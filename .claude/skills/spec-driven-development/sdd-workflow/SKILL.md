@@ -17,12 +17,15 @@ This project adopts Spec-Driven Development (SDD). New features follow the seque
 /ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/  (optional, after wireframe)
                                           ⚠ Before generating: read MASTER.md + wireframe via Pencil MCP
 [senior-uiux review]                    → prototype QA: wireframe fidelity, design system compliance, a11y  (optional)
+[prototype Playwright tests]            → design/prototype/tests/[module]/[page].spec.ts  (after prototype HTML, before plan)
+                                          ⚠ See § Prototype Playwright Tests below
 /speckit.clarify                        → clarify requirements  (optional; wireframe + prototype surface ambiguities)
 /speckit.plan                           → specs/[module]/NNN-feature/plan.md
                                           ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
 /speckit.tasks                          → specs/[module]/NNN-feature/tasks.md
 /speckit.analyze                        → cross-document consistency check (optional)
 /speckit.implement                      → execute implementation (single session or /agent-team)
+                                          ↳ React components reuse data-testid values from prototype tests
 /speckit.checklist                      → quality validation
 /pr-flow                                → commit → review → test → push → PR → merge
 ```
@@ -66,6 +69,90 @@ specs/
 | System Flow | `plan.md` | During `/speckit.plan` | Data path through API → Service → DB layers |
 
 All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart LR` for navigation). Renders natively on GitHub.
+
+---
+
+## Prototype Playwright Tests
+
+### Position in Pipeline
+
+Prototype Playwright tests sit **after the prototype HTML is built, before `/speckit.plan`**. They are the closing validation step of the prototype phase, not the opening step of the spec phase.
+
+```
+❌ Wrong:  /speckit.specify → Playwright tests → wireframe → prototype HTML
+✓ Correct: /speckit.specify → wireframe → prototype HTML → Playwright tests → /speckit.plan
+```
+
+Writing tests before the prototype exists produces untestable stubs. Writing them after `/speckit.plan` loses the benefit: the plan's Frontend Spec should already reference the `data-testid` contract that tests establish.
+
+### Purpose
+
+| Benefit | Detail |
+|---------|--------|
+| Executable spec | Given-When-Then AC in `spec.md` → runnable `test()` blocks |
+| `data-testid` contract | Selector names defined once here; React components reuse them verbatim |
+| Early validation | Catches spec gaps and prototype UI errors before implementation begins |
+| Regression guard | Prototype edits that break selectors or behavior fail tests immediately |
+
+### What to Test (and What Not To)
+
+**In scope — static HTML can validate:**
+- Required UI elements present and visible
+- Client-side form validation (required, format, length, match)
+- Navigation between prototype pages
+- i18n language toggle (immediate, no page reload)
+- Responsive rendering (no horizontal overflow at 375px / 768px / 1440px)
+- Simulated server error display (hardcoded in prototype JS)
+
+**Out of scope — requires backend, exclude and document:**
+- Authenticated routes / JWT state
+- Backend API responses
+- Role-based redirects
+- SSO OAuth flows
+
+Document excluded scenarios with a comment block at the top of each spec file.
+
+### TDD Workflow
+
+Follow Red-Green-Refactor at the design layer:
+
+1. **Red** — Write `design/prototype/tests/[module]/[page].spec.ts` using `getByTestId()` selectors. Run tests; they fail because `data-testid` attributes are not yet in the HTML.
+2. **Green** — Add `data-testid` attributes to the prototype HTML. Run tests; they all pass.
+3. **Refactor** — Align test descriptions precisely with spec AC wording; confirm tests stay green.
+
+### `data-testid` Naming Convention
+
+Use kebab-case: `[purpose]-[element-type]` or just `[element-type]` when unambiguous.
+
+Examples: `email-input` · `password-input` · `submit-btn` · `login-link` · `error-banner` · `success-banner` · `lang-toggle` · `lang-label` · `name-error`
+
+These names must be used verbatim in the React component (`<input data-testid="email-input" />`). Never invent new selector names in `frontend/tests/` for elements that already exist in the prototype.
+
+### File Structure
+
+```
+design/prototype/
+├── package.json               # @playwright/test only; separate from frontend/
+├── playwright.config.ts       # webServer: python3 -m http.server 8888; baseURL: http://localhost:8888
+└── tests/
+    └── [module]/
+        └── [page].spec.ts     # mirrors specs/[module]/NNN-feature/
+```
+
+### Running Tests
+
+```bash
+# From design/prototype/
+npm test                  # headless (CI)
+npm run test:headed       # with browser (debug)
+npm run test:ui           # Playwright UI mode
+```
+
+### Relationship to `frontend/tests/`
+
+Prototype tests are **precursors**, not replacements, for the React E2E suite. When React is implemented, `frontend/tests/[module]/[page].spec.ts` extends the prototype tests with backend-dependent scenarios using the same `data-testid` selectors. Prototype tests are not deleted — they continue to guard the design artifact.
+
+See ADR-014 for the full architectural rationale.
 
 ---
 
