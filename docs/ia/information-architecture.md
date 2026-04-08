@@ -351,10 +351,10 @@ sequenceDiagram
   participant AW as annotation-workspace
   participant DQ as dataset-quality
 
-  AN->>LOGIN: 自行以 Google SSO 登入（首次，role = null）
+  AN->>LOGIN: 自行以 Google SSO 登入（首次，自動取得 user 角色）
   LOGIN-->>DASHBOARD: 導向儀表板頁
-  PL->>AL: 在待指派區塊看到新使用者，指派 annotator 角色
-  AL-->>AN: 角色指派完成（role = annotator）
+  PL->>AL: 查看平台成員列表，選取成員邀請加入任務
+  AL-->>AN: 加入任務，取得任務角色
   PL->>TN: 上傳資料集 + 設定任務類型
   TN-->>TD: 建立成功，跳轉詳情頁
   PL->>TD: 指派標記員 + 發布 Dry Run（共同樣本 ~20 句）
