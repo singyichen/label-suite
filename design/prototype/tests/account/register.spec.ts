@@ -37,6 +37,7 @@ test.describe('Register page — successful registration (spec 003 US1.1)', () =
     await fillValidForm(page);
     await page.getByTestId('submit-btn').click();
     await expect(page.getByTestId('success-banner')).toBeVisible();
+    await expect(page.getByTestId('error-banner')).not.toBeVisible();
   });
 
   test('redirects to pending.html after successful registration', async ({ page }) => {
@@ -101,6 +102,18 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
     await expect(passwordError).not.toBeEmpty();
   });
 
+  test('US2.1 shows confirm-password required error when confirm-password is empty', async ({ page }) => {
+    await page.getByTestId('name-input').fill('Test User');
+    await page.getByTestId('email-input').fill('user@example.com');
+    await page.getByTestId('password-input').fill('password123');
+    // confirm-password left empty
+    await page.getByTestId('submit-btn').click();
+
+    const confirmError = page.getByTestId('confirm-password-error');
+    await expect(confirmError).toBeVisible();
+    await expect(confirmError).not.toBeEmpty();
+  });
+
   test('US2.1 does not navigate away on validation failure', async ({ page }) => {
     await page.getByTestId('submit-btn').click();
     await expect(page).toHaveURL(/register\.html/);
@@ -137,7 +150,7 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
 
     const errorBanner = page.getByTestId('error-banner');
     await expect(errorBanner).toBeVisible();
-    await expect(errorBanner).not.toBeEmpty();
+    await expect(errorBanner).toContainText(/已被使用|already taken/i);
   });
 
   test('US2.4 does not create account for duplicate email (stays on register page)', async ({ page }) => {

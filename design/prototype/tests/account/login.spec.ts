@@ -91,6 +91,7 @@ test.describe('Login page — form validation', () => {
     const emailError = page.getByTestId('email-error');
     await expect(emailError).toBeVisible();
     await expect(emailError).not.toBeEmpty();
+    await expect(page.getByTestId('password-error')).not.toBeVisible();
   });
 
   test('shows password error when email filled but password empty', async ({ page }) => {
@@ -99,11 +100,13 @@ test.describe('Login page — form validation', () => {
     const passwordError = page.getByTestId('password-error');
     await expect(passwordError).toBeVisible();
     await expect(passwordError).not.toBeEmpty();
+    await expect(page.getByTestId('email-error')).not.toBeVisible();
   });
 
-  test('does not navigate away on frontend validation failure', async ({ page }) => {
+  test('shows errors and stays on page on frontend validation failure', async ({ page }) => {
     await page.getByTestId('login-btn').click();
-    await expect(page).toHaveURL(/login\.html/);
+    await expect(page.getByTestId('email-error')).toBeVisible();
+    await expect(page.getByTestId('email-error')).not.toBeEmpty();
   });
 });
 
