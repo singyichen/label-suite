@@ -11,15 +11,15 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
-  reporter: 'list',
+  reporter: process.env.CI ? 'html' : 'list',
 
   use: {
     baseURL: 'http://localhost:8888',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
   },
 
   webServer: {
-    command: 'python3 -m http.server 8888',
+    command: 'python3 -m http.server 8888 --bind 127.0.0.1',
     cwd: path.resolve(__dirname),
     url: 'http://localhost:8888',
     reuseExistingServer: !process.env.CI,

@@ -110,13 +110,21 @@ test.describe('Login page — form validation', () => {
 test.describe('Login page — navigation', () => {
   test('register link navigates to register page', async ({ page }) => {
     await page.goto(LOGIN_URL);
-    await page.getByTestId('register-link').click();
+    const [response] = await Promise.all([
+      page.waitForResponse(res => res.url().includes('register.html')),
+      page.getByTestId('register-link').click(),
+    ]);
+    expect(response.status()).toBe(200);
     await expect(page).toHaveURL(/register\.html/);
   });
 
   test('forgot-password link navigates to forgot-password page', async ({ page }) => {
     await page.goto(LOGIN_URL);
-    await page.getByTestId('forgot-password-link').click();
+    const [response] = await Promise.all([
+      page.waitForResponse(res => res.url().includes('forgot-password.html')),
+      page.getByTestId('forgot-password-link').click(),
+    ]);
+    expect(response.status()).toBe(200);
     await expect(page).toHaveURL(/forgot-password\.html/);
   });
 });

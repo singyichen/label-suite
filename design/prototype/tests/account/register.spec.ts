@@ -42,16 +42,24 @@ test.describe('Register page — successful registration (spec 003 US1.1)', () =
   test('redirects to pending.html after successful registration', async ({ page }) => {
     await page.goto(REGISTER_URL);
     await fillValidForm(page);
-    await page.getByTestId('submit-btn').click();
-    // Prototype simulates 2-second redirect
-    await expect(page).toHaveURL(/pending\.html/, { timeout: 5000 });
+    const [response] = await Promise.all([
+      page.waitForResponse(res => res.url().includes('pending.html'), { timeout: 5000 }),
+      page.getByTestId('submit-btn').click(),
+    ]);
+    // Prototype simulates 2-second redirect; assert page exists (not 404)
+    expect(response.status()).toBe(200);
+    await expect(page).toHaveURL(/pending\.html/);
   });
 });
 
 test.describe('Register page — navigation (spec 003 US1.3)', () => {
   test('back-to-login link navigates to login.html', async ({ page }) => {
     await page.goto(REGISTER_URL);
-    await page.getByTestId('login-link').click();
+    const [response] = await Promise.all([
+      page.waitForResponse(res => res.url().includes('login.html')),
+      page.getByTestId('login-link').click(),
+    ]);
+    expect(response.status()).toBe(200);
     await expect(page).toHaveURL(/login\.html/);
   });
 });
