@@ -74,6 +74,26 @@ frontend/tests/auth/register.spec.ts
 
 The `data-testid` naming convention is `[element-type]` or `[purpose]-[element-type]` in kebab-case (e.g., `email-input`, `submit-btn`, `error-banner`, `lang-toggle`).
 
+### Navigation Test Convention
+
+All tests that click a link or trigger a redirect must assert the response status alongside the URL. Checking only the URL is insufficient — a 404 response still changes the URL and passes a `toHaveURL()` assertion.
+
+```ts
+// ✗ Wrong — passes even when the target page returns 404
+await page.getByTestId('register-link').click();
+await expect(page).toHaveURL(/register\.html/);
+
+// ✓ Correct — intercepts the response and asserts HTTP 200
+const [response] = await Promise.all([
+  page.waitForResponse(res => res.url().includes('register.html')),
+  page.getByTestId('register-link').click(),
+]);
+expect(response.status()).toBe(200);
+await expect(page).toHaveURL(/register\.html/);
+```
+
+This applies to all navigation tests: link clicks, form-submission redirects, and any other action that causes the browser to load a new page. The target HTML file must exist before the test is expected to pass.
+
 ### Test Scope
 
 Prototype Playwright tests cover **only what the static HTML prototype can validate**:
