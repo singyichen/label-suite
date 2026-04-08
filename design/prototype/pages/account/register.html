@@ -546,7 +546,7 @@
         confirmPasswordRequired:'請再次輸入密碼',
         passwordMismatch:       '密碼不一致，請重新確認',
         emailTaken:             '此 Email 已被使用，請改用其他 Email 或直接登入',
-        successMsg:             '帳號建立成功！正在導向等待頁面…',
+        successMsg:             '帳號建立成功！正在導向儀表板…',
         // aria
         navAriaLabel:           'Label Suite 首頁',
         langToggleAria:         '切換語言',
@@ -582,7 +582,7 @@
         confirmPasswordRequired:'Please confirm your password',
         passwordMismatch:       'Passwords do not match',
         emailTaken:             'This email is already in use. Please try a different email or sign in.',
-        successMsg:             'Account created! Redirecting to pending page…',
+        successMsg:             'Account created! Redirecting to dashboard…',
         // aria
         navAriaLabel:           'Label Suite home',
         langToggleAria:         'Switch language',
@@ -767,9 +767,9 @@
       });
       btn.disabled = true;
 
-      // Prototype: redirect to pending after 2s
+      // Prototype: redirect to dashboard after 2s
       setTimeout(() => {
-        window.location.href = './pending.html';
+        window.location.href = './dashboard.html';
       }, 2000);
     });
 

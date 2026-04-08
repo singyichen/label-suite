@@ -2067,7 +2067,7 @@
                   "fill": "$color-text",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "• 登入成功 → role=null → /pending；annotator/super_admin → /dashboard",
+                  "content": "• 登入成功 → user → /dashboard；super_admin → /dashboard",
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "normal"
@@ -2225,7 +2225,7 @@
                   "fill": "$color-text",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "• Login success → role=null → /pending; annotator/super_admin → /dashboard",
+                  "content": "• Login success → user → /dashboard; super_admin → /dashboard",
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "normal"

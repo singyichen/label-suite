@@ -30,17 +30,13 @@ sequenceDiagram
 
     後端API->>資料庫: 以 email 查詢使用者記錄
     alt 首次登入（email 不存在）
-        後端API->>資料庫: 建立使用者記錄（name、email、avatar_url、provider=google、role=null）
+        後端API->>資料庫: 建立使用者記錄（name、email、avatar_url、provider=google、role=user）
     else 回訪使用者（email 已存在）
         後端API->>資料庫: 更新 provider 資訊（靜默合併）
     end
     資料庫-->>後端API: User record
 
-    alt role ≠ null
-        後端API-->>瀏覽器: 設定 JWT cookie + 導向 /dashboard
-    else role = null
-        後端API-->>瀏覽器: 設定 JWT cookie + 導向 /pending
-    end
+    後端API-->>瀏覽器: 設定 JWT cookie + 導向 /dashboard
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
@@ -48,8 +44,7 @@ sequenceDiagram
 | 1 | 使用者 | 點擊「以 Google 登入」 | 導向 Google 授權頁 |
 | 2 | 使用者 | 允許授權 | Google 導回後端 callback |
 | 3 | 後端 | 驗證 state、交換 token、取得使用者資料 | 查詢或建立使用者記錄 |
-| 4a | 後端 | `role ≠ null` | 簽發 JWT，導向 `/dashboard` |
-| 4b | 後端 | `role = null` | 簽發 JWT，導向 `/pending` |
+| 4 | 後端 | 驗證成功 | 簽發 JWT，導向 `/dashboard` |
 | E1 | 使用者 | 取消或拒絕 Google 授權 | 導回 `/login` 並顯示錯誤訊息 |
 | E2 | 後端 | state 驗證失敗（CSRF） | 導回 `/login` 並顯示錯誤訊息 |
 
@@ -59,34 +54,32 @@ sequenceDiagram
 
 ### User Story 1 — Google SSO 登入（優先級：P1）
 
-使用者在 `/login` 頁面點擊「以 Google 登入」，完成 Google OAuth 授權流程，系統簽發 JWT 並依角色導向 `/dashboard`（有角色）或 `/pending`（無角色）。
+使用者在 `/login` 頁面點擊「以 Google 登入」，完成 Google OAuth 授權流程，系統簽發 JWT 並導向 `/dashboard`。
 
 **此優先級原因**：Google SSO 提供便捷的單點登入體驗，是實驗室環境最常見的登入方式。
 
-**獨立測試方式**：在 `/login` 點擊「以 Google 登入」，完成 Google 授權，驗證導向 `/dashboard` 或 `/pending` 且 session token 已設定。
+**獨立測試方式**：在 `/login` 點擊「以 Google 登入」，完成 Google 授權，驗證導向 `/dashboard` 且 session token 已設定。
 
 **驗收情境**：
 
-1. **Given** 未登入使用者在 `/login`，**When** 點擊「以 Google 登入」並完成 Google OAuth 授權，**Then** 導向 `/dashboard` 且 JWT session token 已設定（使用者 `role ≠ null`）。
-2. **Given** 未登入使用者在 `/login`，**When** 點擊「以 Google 登入」並完成 Google OAuth 授權，**Then** 導向 `/pending` 且 JWT session token 已設定（首次登入，`role = null`）。
-3. **Given** 使用者取消或拒絕 Google OAuth 授權，**When** 被導回 callback，**Then** 停留在 `/login` 並顯示明確的錯誤訊息。
-4. **Given** 已登入使用者，**When** 導向 `/login`，**Then** 自動導向 `/dashboard`（不重新觸發 OAuth 流程）。
+1. **Given** 未登入使用者在 `/login`，**When** 點擊「以 Google 登入」並完成 Google OAuth 授權，**Then** 導向 `/dashboard` 且 JWT session token 已設定。
+2. **Given** 使用者取消或拒絕 Google OAuth 授權，**When** 被導回 callback，**Then** 停留在 `/login` 並顯示明確的錯誤訊息。
+3. **Given** 已登入使用者，**When** 導向 `/login`，**Then** 自動導向 `/dashboard`（不重新觸發 OAuth 流程）。
 
 ---
 
 ### User Story 2 — 首次登入自動建立帳號（優先級：P2）
 
-從未登入過的使用者透過 Google SSO 完成授權，系統自動以 Google 個人資料（姓名、Email、頭像）建立新帳號，預設 `role = null`，導向 `/pending` 等待 Super Admin 指派角色。
+從未登入過的使用者透過 Google SSO 完成授權，系統自動以 Google 個人資料（姓名、Email、頭像）建立新帳號，預設 `role = user`，並導向 `/dashboard`。
 
 **此優先級原因**：自動建帳號是 SSO 流程的核心環節，確保使用者無需手動填寫資料即可加入系統。
 
-**獨立測試方式**：以從未登入過的 Google 帳號完成 OAuth 授權，驗證資料庫建立了包含 Google 個人資料且 `role = null` 的使用者記錄，且被導向 `/pending`。
+**獨立測試方式**：以從未登入過的 Google 帳號完成 OAuth 授權，驗證資料庫建立了包含 Google 個人資料且 `role = user` 的使用者記錄，且成功導向 `/dashboard`。
 
 **驗收情境**：
 
-1. **Given** 首次使用者完成 Google OAuth 授權，**When** callback 處理完成，**Then** 建立包含 `name`、`email`、`avatar_url`、`provider = google`、`provider_id`（Google UID）且 `role = null` 的使用者記錄。
+1. **Given** 首次使用者完成 Google OAuth 授權，**When** callback 處理完成，**Then** 建立包含 `name`、`email`、`avatar_url`、`provider = google`、`provider_id`（Google UID）且 `role = user` 的使用者記錄，並導向 `/dashboard`。
 2. **Given** 回訪使用者（email 已存在），**When** 再次以 Google 登入，**Then** 不建立重複帳號，回傳既有帳號的 session。
-3. **Given** `role = null` 的已登入使用者，**When** 嘗試存取任何功能頁面，**Then** 導向 `/pending`，顯示「您的帳號尚未被指派角色，請聯絡管理員」。
 
 ---
 
@@ -120,9 +113,8 @@ sequenceDiagram
 - **FR-001**：系統必須對 Google 實作 OAuth 2.0 授權碼流程（Authorization Code Flow），包含 state 參數的 CSRF 防護。
 - **FR-002**：OAuth 客戶端憑證（`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`）必須儲存於環境變數，絕不硬編碼於程式碼或版本控制中。
 - **FR-003**：系統必須在 OAuth callback 成功後，使用 Google 個人資料（`name`、`email`、`avatar_url`、`provider_id`）自動建立或更新使用者記錄。
-- **FR-004**：首次 Google SSO 登入時，使用者記錄預設 `role = null`；後續登入不修改既有 `role`。
-- **FR-005**：系統必須將 `role = null` 的已登入使用者導向 `/pending`，而非 `/dashboard`。
-- **FR-006**：系統必須將已有角色的已登入使用者從 `/login` 自動導向 `/dashboard`。
+- **FR-004**：首次 Google SSO 登入時，系統自動建立使用者記錄，`role` 預設為 `user`；後續登入不修改既有 `role`。
+- **FR-005**：系統必須將已登入使用者訪問 `/login` 時自動導向 `/dashboard`。
 - **FR-007**：當 Google SSO 的 email 與系統中既有的 Email / Password 帳號相符時，系統必須靜默合併兩個 provider 至既有帳號，不需使用者確認。
 - **FR-008**：使用者取消或拒絕 Google OAuth 授權時，系統必須導回 `/login` 並顯示明確的錯誤訊息。
 
@@ -134,13 +126,11 @@ flowchart LR
     google["Google 授權頁"]
     callback["後端 callback\n/auth/google/callback"]
     dashboard["/dashboard"]
-    pending["/pending"]
 
     login    -->|"點擊「以 Google 登入」"| google
     google   -->|"允許授權"| callback
     google   -->|"取消 / 拒絕"| login
-    callback -->|"驗證成功（role ≠ null）"| dashboard
-    callback -->|"驗證成功（role = null）"| pending
+    callback -->|"驗證成功"| dashboard
     callback -->|"state 驗證失敗"| login
 ```
 
@@ -149,16 +139,15 @@ flowchart LR
 | `/login` | 點擊「以 Google 登入」 | Google 授權頁 |
 | Google 授權頁 | 使用者允許授權 | `/auth/google/callback`（後端） |
 | Google 授權頁 | 使用者取消 / 拒絕 | `/login`（含錯誤訊息） |
-| `/auth/google/callback` | 驗證成功（`role ≠ null`）| `/dashboard` |
-| `/auth/google/callback` | 驗證成功（`role = null`）| `/pending` |
+| `/auth/google/callback` | 驗證成功 | `/dashboard` |
 | `/auth/google/callback` | state 驗證失敗 | `/login`（含錯誤訊息） |
 
 **Entry points**：`/login` 頁面的「以 Google 登入」按鈕（UI 由 spec 001 提供）。
-**Exit points**：OAuth 流程結束後導向 `/dashboard` 或 `/pending`；失敗時返回 `/login`。
+**Exit points**：OAuth 流程成功後導向 `/dashboard`；失敗時返回 `/login`。
 
 ### 關鍵實體
 
-- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`avatar_url`、`providers`（已連結的登入方式陣列，例如 `["google"]`、`["email"]`、`["google", "email"]`）、`provider_id`（Google UID；僅 Email/Password 帳號為 `null`）、`hashed_password`（Email/Password 帳號用；純 Google SSO 帳號的 `hashed_password` 為 `null`；帳號合併後有值）、`role`（`null` | `annotator` | `super_admin`）、`created_at`。`providers` 以應用層邏輯維護，非資料庫單值欄位。**資料庫實作說明**：`provider` 在資料庫中以單值字串儲存（`email` / `google`）；如未來需支援多 provider，將以獨立 `user_auth_providers` 關聯表擴充，目前 MVP 以單值實作。
+- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`avatar_url`、`providers`（已連結的登入方式陣列，例如 `["google"]`、`["email"]`、`["google", "email"]`）、`provider_id`（Google UID；僅 Email/Password 帳號為 `null`）、`hashed_password`（Email/Password 帳號用；純 Google 帳號為 `null`，合併後有值）、`role`（`user` | `super_admin`）、`created_at`。`providers` 以應用層邏輯維護，非資料庫單值欄位。
 - **OAuthState**：防 CSRF 用的一次性隨機 state 值，儲存於 server-side session，callback 時驗證後即失效。
 - **Session / JWT**：OAuth callback 成功後簽發的短效存取 token。包含 `user_id`、`role`、`exp`。過期後導向 `/login`，不進行靜默更新。
 

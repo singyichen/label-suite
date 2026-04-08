@@ -40,17 +40,17 @@ sequenceDiagram
 
 ### User Story 1 — 查看所有使用者並指派系統角色（優先級：P1）
 
-Super Admin 在 `/user-management` 查看平台所有使用者帳號，並可將 `role = null`（待指派）或既有系統角色的帳號指派或變更為 `annotator` 或 `super_admin`。
+Super Admin 在 `/user-management` 查看平台所有使用者帳號，並可將使用者系統角色變更為 `user` 或 `super_admin`。
 
-**此優先級原因**：系統角色指派是整個平台的權限管控核心，沒有 Super Admin 指派角色，新使用者永遠停在 `/pending` 無法使用系統。
+**此優先級原因**：系統角色管理是整個平台的權限管控核心，Super Admin 需要能夠升級一般使用者為 `super_admin` 或降級。
 
-**獨立測試方式**：以 super_admin 登入進入 `/user-management`，對 `role = null` 的使用者指派 `annotator` 角色，驗證該使用者下次登入可進入 `/dashboard`。
+**獨立測試方式**：以 super_admin 登入進入 `/user-management`，對 `user` 角色的使用者升級為 `super_admin`，驗證該使用者取得系統管理權限。
 
 **驗收情境**：
 
 1. **Given** Super Admin 在 `/user-management`，**When** 頁面載入，**Then** 顯示所有平台使用者列表，包含姓名、Email、系統角色、帳號狀態、建立日期。
-2. **Given** Super Admin 在 `/user-management`，**When** 對 `role = null` 的使用者選擇指派 `annotator`，**Then** 該使用者系統角色更新為 `annotator`，下次登入導向 `/dashboard`。
-3. **Given** Super Admin 在 `/user-management`，**When** 對既有 `annotator` 升級為 `super_admin`，**Then** 系統角色更新，該使用者取得系統管理權限。
+2. **Given** Super Admin 在 `/user-management`，**When** 對 `user` 角色的使用者升級為 `super_admin`，**Then** 系統角色更新，該使用者取得系統管理權限。
+3. **Given** Super Admin 在 `/user-management`，**When** 對 `super_admin` 降級為 `user`，**Then** 系統角色更新，該使用者失去管理員權限。
 4. **Given** Super Admin 在 `/user-management`，**When** 搜尋關鍵字（姓名或 Email），**Then** 列表即時篩選顯示符合結果。
 
 ---
@@ -81,7 +81,7 @@ Super Admin 可在 `/user-management` 直接新增使用者帳號（填寫姓名
 
 **驗收情境**：
 
-1. **Given** Super Admin 在 `/user-management`，**When** 點擊「新增使用者」並填寫姓名、Email、初始系統角色（`null` / `annotator` / `super_admin`）後送出，**Then** 系統建立對應帳號（無密碼，使用者首次登入需透過「忘記密碼」設定密碼）。
+1. **Given** Super Admin 在 `/user-management`，**When** 點擊「新增使用者」並填寫姓名、Email、初始系統角色（`user` / `super_admin`）後送出，**Then** 系統建立對應帳號（無密碼，使用者首次登入需透過「忘記密碼」設定密碼）。
 2. **Given** Super Admin 在 `/user-management`，**When** 新增帳號使用的 Email 已存在，**Then** 顯示「此 Email 已被使用」，不建立重複帳號。
 
 ---
@@ -98,14 +98,14 @@ Super Admin 可在 `/user-management` 直接新增使用者帳號（填寫姓名
 
 ### 功能需求
 
-- **FR-001**：只有 `super_admin` 可存取 `/user-management`；其他已登入使用者（`role = annotator`）存取導向 `/dashboard`；`role = null` 的使用者導向 `/pending`。
-- **FR-002**：頁面必須列出所有平台使用者，顯示：姓名、Email、系統角色（`null` / `annotator` / `super_admin`）、帳號狀態（啟用 / 停用）、建立日期。
-- **FR-003**：Super Admin 必須能對任意使用者指派或變更系統角色（`null` → `annotator` → `super_admin`，雙向可變更）。
+- **FR-001**：只有 `super_admin` 可存取 `/user-management`；其他角色存取導向 `/dashboard`。
+- **FR-002**：頁面必須列出所有平台使用者，顯示：姓名、Email、系統角色（`user` / `super_admin`）、帳號狀態（啟用 / 停用）、建立日期。
+- **FR-003**：Super Admin 必須能對任意使用者變更系統角色（`user` ↔ `super_admin`，雙向可變更）。
 - **FR-004**：Super Admin 必須能停用或啟用任意使用者帳號，但不得停用自己的帳號。
 - **FR-005**：系統必須確保至少存在一個 `super_admin`；若操作會導致 `super_admin` 數量為 0，系統拒絕並顯示錯誤。
 - **FR-006**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
-- **FR-007**：空狀態（尚無任何使用者）顯示說明文字「尚未建立任何使用者帳號」，並提供「新增第一位使用者」引導按鈕（導向新增使用者表單）。
-- **FR-008**：Super Admin 必須能直接新增使用者帳號（填寫姓名、Email、初始系統角色）；新帳號無初始密碼，使用者首次登入需透過忘記密碼流程設定密碼（spec 004）。Email 已存在時回傳錯誤，不建立重複帳號。
+- **FR-007**：空狀態（尚無任何使用者）顯示說明文字「尚未有任何使用者帳號」。
+- **FR-008**：Super Admin 必須能直接新增使用者帳號（填寫姓名、Email、初始系統角色 `user` 或 `super_admin`）；新帳號無初始密碼，使用者首次登入需透過忘記密碼流程設定密碼（spec 004）。Email 已存在時回傳錯誤，不建立重複帳號。
 - **FR-009**：資料庫 migration seed 必須在全新部署環境中自動建立一個預設 `super_admin` 帳號（Email 與密碼透過環境變數設定），確保首次部署後即有管理員可登入管理平台（bootstrap 需求）。
 
 ### User Flow & Navigation
@@ -134,19 +134,13 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：平台使用者帳號。關鍵屬性：
-  - `id`：使用者唯一識別碼
-  - `email`：登入 Email（唯一）
-  - `name`：顯示名稱
-  - `role`：系統角色（`null` | `annotator` | `super_admin`）
-  - `is_active`：帳號啟用狀態（`true` | `false`）
-  - `created_at`：帳號建立時間
+- **User（使用者）**：可管理欄位：`role`（`user` | `super_admin`）、`is_active`（帳號啟用狀態）。
 
 ---
 
 ## 成功標準 *(必填)*
 
 - **SC-001**：非 `super_admin` 角色存取 `/user-management` 回傳 HTTP 403 或導向 `/dashboard`。
-- **SC-002**：角色指派後，使用者下次登入的 JWT 中 `role` 欄位反映新角色。
+- **SC-002**：角色變更後，使用者下次登入的 JWT 中 `role` 欄位反映新角色。
 - **SC-003**：停用帳號後，該帳號的所有新登入請求回傳「帳號已停用」錯誤。
 - **SC-004**：系統在任何情況下均保有至少一個 `super_admin`。

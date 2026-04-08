@@ -3,7 +3,7 @@
  * Source spec: specs/account/003-register-email-password/spec.md
  *
  * Tests that can be validated against the static HTML prototype:
- *   - US1.1  Valid form → success banner + redirect to pending.html
+ *   - US1.1  Valid form → success banner + redirect to dashboard.html
  *   - US1.3  Cancel / back-to-login navigates to login.html
  *   - US2.1  Empty fields → per-field required errors, no request sent
  *   - US2.2  Password mismatch → error, no request sent
@@ -13,7 +13,7 @@
  *   - Responsive rendering at 375px / 768px / 1440px (spec FR-009)
  *
  * Tests NOT covered here (require backend):
- *   - US1.2  Newly registered account can log in and reach /pending
+ *   - US1.2  Newly registered account can log in and reach /dashboard
  *   - US1.4  Already-logged-in user redirected to /dashboard
  */
 import { test, expect } from '@playwright/test';
@@ -40,16 +40,16 @@ test.describe('Register page — successful registration (spec 003 US1.1)', () =
     await expect(page.getByTestId('error-banner')).not.toBeVisible();
   });
 
-  test('redirects to pending.html after successful registration', async ({ page }) => {
+  test('redirects to dashboard.html after successful registration', async ({ page }) => {
     await page.goto(REGISTER_URL);
     await fillValidForm(page);
     const [response] = await Promise.all([
-      page.waitForResponse(res => res.url().includes('pending.html'), { timeout: 5000 }),
+      page.waitForResponse(res => res.url().includes('dashboard.html'), { timeout: 5000 }),
       page.getByTestId('submit-btn').click(),
     ]);
     // Prototype simulates 2-second redirect; assert page exists (not 404)
     expect(response.status()).toBe(200);
-    await expect(page).toHaveURL(/pending\.html/);
+    await expect(page).toHaveURL(/dashboard\.html/);
   });
 });
 

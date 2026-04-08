@@ -11,9 +11,8 @@
  *   - Navigation: forgot-password link → forgot-password.html
  *
  * Tests NOT covered here (require backend):
- *   - US1.1  Login with role≠null → /dashboard
- *   - US1.2  Login with role=null → /pending
- *   - US1.4  Already-logged-in user redirected to /dashboard
+ *   - US1.1  Login with valid credentials → /dashboard
+ *   - US1.3  Already-logged-in user redirected to /dashboard
  *   - US2    Logout clears JWT
  *   - US3    Protected-route guard
  */
