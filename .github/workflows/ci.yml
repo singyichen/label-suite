@@ -25,6 +25,7 @@ jobs:
     outputs:
       backend-exists: ${{ steps.check.outputs.backend-exists }}
       frontend-exists: ${{ steps.check.outputs.frontend-exists }}
+      prototype-exists: ${{ steps.check.outputs.prototype-exists }}
     steps:
       - uses: actions/checkout@v4
       - name: Check project structure
@@ -33,6 +34,7 @@ jobs:
           echo "Checking project structure..."
           BACKEND_EXISTS=false
           FRONTEND_EXISTS=false
+          PROTOTYPE_EXISTS=false
 
           if [ -f "backend/pyproject.toml" ]; then
             echo "✓ Backend exists - backend jobs will run"
@@ -52,8 +54,17 @@ jobs:
             echo "frontend-exists=false" >> $GITHUB_OUTPUT
           fi
 
-          if [ "$BACKEND_EXISTS" = false ] && [ "$FRONTEND_EXISTS" = false ]; then
-            echo "✓ Project structure validation complete. Early development phase: no backend/frontend code yet, all code jobs will be skipped."
+          if [ -f "design/prototype/package.json" ]; then
+            echo "✓ Prototype exists - prototype jobs will run"
+            echo "prototype-exists=true" >> $GITHUB_OUTPUT
+            PROTOTYPE_EXISTS=true
+          else
+            echo "ℹ Prototype not yet implemented - prototype jobs will be skipped"
+            echo "prototype-exists=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "$BACKEND_EXISTS" = false ] && [ "$FRONTEND_EXISTS" = false ] && [ "$PROTOTYPE_EXISTS" = false ]; then
+            echo "✓ Project structure validation complete. Early development phase: no backend/frontend/prototype code yet, all code jobs will be skipped."
           else
             echo "✓ Project structure validation complete. Additional CI jobs will now run and may pass or fail independently."
           fi
@@ -225,3 +236,40 @@ jobs:
         run: pnpm build
 
   # TODO: Playwright E2E tests will be added once frontend development begins
+
+# ─── Prototype Jobs ───────────────────────────────────────────────────────────
+# Skipped when design/prototype/package.json does not exist yet.
+
+  prototype-playwright:
+    name: Prototype — Playwright Tests
+    runs-on: ubuntu-24.04
+    needs: validate
+    if: needs.validate.outputs.prototype-exists == 'true'
+    defaults:
+      run:
+        working-directory: design/prototype
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        run: npm test
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prototype-playwright-results
+          path: design/prototype/playwright-report/
+          if-no-files-found: warn
