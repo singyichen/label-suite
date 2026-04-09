@@ -113,9 +113,9 @@ label-suite/
 
 Zustand must **not** hold API response data.
 
-**Role model:** The system uses a two-layer role model. **System role** (JWT single string): `user` (any registered platform member) | `super_admin`. `null` means unauthenticated only — there is no pending/approval state. Any registered user immediately holds `user` system role and can create projects. **Task role** (resolved from `task_membership` table per task): `project_leader` | `reviewer` | `annotator`. Task roles are not stored in the JWT — they are fetched per task via API.
+**Role model:** The system uses a two-layer role model. **System role** (JWT single string): `user` | `super_admin` (`null` = unauthenticated only). All registered users immediately get `user` — no pending state, no approval flow. Any `user` can create labeling projects. **Task role** (resolved from `task_membership` table per task): `project_leader` | `reviewer` | `annotator`. Task roles are not stored in the JWT — they are fetched per task via API.
 
-**Dashboard role dispatch:** `authStore` holds `role: SystemRole | null` (`null` when unauthenticated — redirects to `/login`). `DashboardPage` dispatches with explicit `role ===` checks: `super_admin` → `SuperAdminDashboard`; `user` → `UserDashboard` (content sections rendered dynamically based on the user's task memberships; empty state shown when user has no task memberships yet).
+**Dashboard role dispatch:** `authStore` holds `role: SystemRole | null` (`null` when unauthenticated). `DashboardPage` dispatches with explicit `role ===` checks: `super_admin` → `SuperAdminDashboard`; `user` → `UserDashboard` (content sections rendered dynamically based on the user's task memberships; empty state shown when user has no task memberships yet). `null` redirects to `/login`. Unknown/unrecognised `role` clears the JWT session and redirects to `/login`.
 
 **RoleGuard:** System-level pages use `role` from JWT — no inheritance. Task-level pages additionally check task membership via `useTaskRole(taskId)` hook. See [ADR-011](docs/adr/011-frontend-source-structure.md).
 
