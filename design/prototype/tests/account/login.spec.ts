@@ -123,8 +123,6 @@ test.describe('Login page — navigation', () => {
   });
 
   test('forgot-password link navigates to forgot-password page', async ({ page }) => {
-    // forgot-password.html has not been built yet; link presence/href is verified in UI elements suite above
-    test.fixme(true, 'forgot-password.html does not exist in prototype yet — will 404');
     await page.goto(LOGIN_URL);
     const [response] = await Promise.all([
       page.waitForResponse(res => res.url().includes('forgot-password.html')),
