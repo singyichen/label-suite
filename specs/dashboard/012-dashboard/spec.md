@@ -325,6 +325,115 @@ flowchart TD
 | `UserDashboard — Reviewer Block` | 「快速進入審查」按鈕 | `/annotation-workspace`（審查模式，上次未完成任務）|
 | `UserDashboard — Reviewer 空狀態` | 「查看統計報告」次要按鈕 | `/dataset-stats` |
 
+---
+
+### Wireframe 畫面總覽
+
+> 本節為所有需繪製 wireframe 畫面的集中索引，供繪圖前確認範圍、標注共用畫面、對應 Page 命名。
+>
+> **單一檔案**：所有畫面集中在一個 `.pen` 檔 `design/wireframes/pages/dashboard/dashboard.pen`，每個畫面狀態為檔案內的獨立 **Page**，不拆分為多個 `.pen` 檔。此設計對應路由結構（`/dashboard` 為單一路由），並與後續 `design/prototype/pages/dashboard/dashboard.html` 一一對應。
+>
+> **共用畫面**：標注「✦ 共用」的 Page 僅繪製一次，在各 US 流程中重複引用。
+>
+> **多角色並存**：同一 `user` 在不同任務中同時持有多個 task role（如 PL + Annotator + Reviewer），`UserDashboard` 以垂直堆疊方式渲染各 Block（順序：PL Block → Reviewer Block → Annotator Block）。此情境不需額外 Page，可在各 Block Page 下方標注說明即可。
+
+#### 總計：11 張
+
+| 角色 | 畫面數 |
+|------|:------:|
+| Super Admin（system role = `super_admin`） | 4 |
+| User 共用 Skeleton（system role = `user`） | 1 |
+| User — 無任務空狀態 | 1 |
+| User — Project Leader Block | 2 |
+| User — Annotator Block | 1 |
+| User — Reviewer Block | 2 |
+| **合計** | **11** |
+
+---
+
+#### SuperAdminDashboard — 4 張
+
+> 觸發條件：`authStore.role === 'super_admin'`。由 RoleGuard 強制，`user` 無法存取。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| SA-1 | **Skeleton** | `SA-1 SuperAdmin Skeleton` | US1 | 全頁灰色骨架佔位：Header、使用者快覽卡區（灰塊 ×N）、任務列表區（灰色列 ×N）；無實際數字，無操作元件 | — |
+| SA-2 | **有資料** | `SA-2 SuperAdmin 有資料` | US1 | ① 平台使用者快覽：各系統角色帳號數（`user_count`、`super_admin_count`）統計卡 + 「前往使用者管理」快捷連結 ② 全任務列表：表格或卡片，每筆顯示任務名稱、任務類型（`classification` / `scoring` 等）、當前狀態（草稿 / Dry Run / IAA 確認 / Official Run / 已完成）、整體完成率進度條 ③ 若有 IAA 結果待確認的任務，顯示快速連結至 `/dataset-quality` | 「前往使用者管理」→ `/user-management`；任務卡點擊 → `/task-detail`；IAA 快速連結 → `/dataset-quality` |
+| SA-3 | **空狀態** | `SA-3 SuperAdmin 空狀態` | US1 | 空狀態插圖或圖示 + 說明文字「平台尚未有任何資料」+ 「管理使用者」次要按鈕（outlined / ghost 樣式）；不顯示任何任務列表或統計卡 | 「管理使用者」→ `/user-management` |
+| SA-4 | **錯誤** | `SA-4 SuperAdmin 錯誤` | US1 | `/admin/stats` 呼叫失敗：錯誤提示區塊（icon + 說明文字 + 「重試」按鈕）；不渲染任何空白卡片或 placeholder 數字 | 「重試」→ 重新呼叫 `/admin/stats` |
+
+---
+
+#### UserDashboard — 共用畫面 — 1 張
+
+> 觸發條件：`authStore.role === 'user'`，`GET /users/me/tasks` 載入中。US2～US5 均共用此畫面。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| U-0 | **Skeleton** ✦ 共用 | `U-0 User Skeleton` | US2、US3、US4、US5 | 全頁灰色骨架佔位：Header、內容區灰塊（高度模擬單一或多 Block 的大約佔位）；無實際數字，無 Block 標題，無操作元件 | — |
+
+---
+
+#### UserDashboard — US2 無任務空狀態 — 1 張
+
+> 觸發條件：`/users/me/tasks` 回傳空清單（`task_membership` 為空）。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| U-1 | **空狀態** | `U-1 User 空狀態` | US2 | 空狀態插圖或圖示 + 說明文字「尚未有指派任務，請等待管理員分配」+ 兩個次要按鈕：「查看個人工時紀錄」（→ `/work-log`）、「編輯個人資料」（→ `/profile`）；不顯示任何任務列表或 Block | 「查看個人工時紀錄」→ `/work-log`；「編輯個人資料」→ `/profile` |
+
+---
+
+#### UserDashboard — US3 Project Leader Block — 2 張
+
+> 觸發條件：`/users/me/tasks` 回傳至少一筆 `task_role = project_leader` 的任務成員資格。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| U-2 | **PL Block — 有任務** | `U-2 PL Block 有任務` | US3 | ① **任務總覽卡**：任務名稱、任務類型、當前狀態（badge）、整體完成率進度條 ② **待處理事項區**：IAA 結果待確認（badge + 快速連結 → `/dataset-quality`）、Dry Run 已全員完成提醒（→ 啟動 Official Run）③ **標記員進度區**：各標記員本任務完成數 / 今日完成數 / 平均速度，速度異常者顯示警示圖示或醒目顏色標示 | IAA 待確認 → `/dataset-quality`；任務卡 → `/task-detail`；啟動 Official Run → `/task-detail`（Official Run tab）|
+| U-3 | **PL 空狀態** | `U-3 PL 空狀態` | US3 | `project_leader` task_role 存在但尚未建立任何任務：說明文字「尚未建立任何任務，開始建立你的第一個標記任務」+ 主要按鈕「建立第一個任務」（→ `/task-new`）；不顯示任務卡或進度區 | 「建立第一個任務」→ `/task-new` |
+
+---
+
+#### UserDashboard — US4 Annotator Block — 1 張
+
+> 觸發條件：`/users/me/tasks` 回傳至少一筆 `task_role = annotator` 的任務成員資格。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| U-4 | **Annotator Block** | `U-4 Annotator Block` | US4 | ① **我的任務列表**（分兩區）：Dry Run 區 + Official Run 區，每筆顯示任務名稱、已完成數 / 總分配數、狀態（未開始 / 進行中 / 已提交）② **個人進度摘要**：今日完成數、累計完成數、距離本任務完成還剩幾筆 ③ **「快速繼續」按鈕**（主要按鈕，導向上次未完成任務的 `/annotation-workspace`，帶 `task_id` + `run_type` 參數）| 「快速繼續」→ `/annotation-workspace`（上次未完成任務）；任務卡點擊 → `/annotation-workspace`（對應任務）|
+
+---
+
+#### UserDashboard — US5 Reviewer Block — 2 張
+
+> 觸發條件：`/users/me/tasks` 回傳至少一筆 `task_role = reviewer` 的任務成員資格。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| U-5 | **Reviewer Block — 有任務** | `U-5 Reviewer Block 有任務` | US5 | ① **待審查任務列表**：任務名稱、待審核筆數、已審核 / 總筆數，點擊任務卡 → `/annotation-workspace`（審查模式）② **Dry Run IAA 摘要**：當前 IAA 分數（依任務類型顯示對應指標）+ 達標 / 未達標狀態（圖示或顏色）③ **「快速進入審查」按鈕**（主要按鈕，導向上次未完成任務的審查模式）| 任務卡點擊 → `/annotation-workspace`（審查模式）；「快速進入審查」→ `/annotation-workspace`（審查模式，上次未完成）|
+| U-6 | **Reviewer 空狀態** | `U-6 Reviewer 空狀態` | US5 | `reviewer` task_role 存在但目前無待審查任務：說明文字（無待審查任務）+ 「查看統計報告」次要按鈕（→ `/dataset-stats`）；不顯示任務列表或 IAA 摘要 | 「查看統計報告」→ `/dataset-stats` |
+
+---
+
+#### 畫面 ID 彙整索引
+
+檔案：`design/wireframes/pages/dashboard/dashboard.pen`
+
+| 畫面 ID | 角色 | 畫面狀態 | Page 名稱（dashboard.pen 內）|
+|--------|------|---------|------------------------------|
+| SA-1 | Super Admin | Skeleton | `SA-1 SuperAdmin Skeleton` |
+| SA-2 | Super Admin | 有資料 | `SA-2 SuperAdmin 有資料` |
+| SA-3 | Super Admin | 空狀態 | `SA-3 SuperAdmin 空狀態` |
+| SA-4 | Super Admin | 錯誤 | `SA-4 SuperAdmin 錯誤` |
+| U-0 | User（共用） | Skeleton | `U-0 User Skeleton` |
+| U-1 | User | 空狀態（無任務） | `U-1 User 空狀態` |
+| U-2 | User / PL | PL Block — 有任務 | `U-2 PL Block 有任務` |
+| U-3 | User / PL | PL 空狀態 | `U-3 PL 空狀態` |
+| U-4 | User / Annotator | Annotator Block | `U-4 Annotator Block` |
+| U-5 | User / Reviewer | Reviewer Block — 有任務 | `U-5 Reviewer Block 有任務` |
+| U-6 | User / Reviewer | Reviewer 空狀態 | `U-6 Reviewer 空狀態` |
+
 ### 關鍵實體
 
 - **User（使用者）**：`authStore` 持有 `role`（System Role，JWT 單值：`super_admin` 或 `user`）。Dashboard role dispatch 以 `role` 為唯一依據，所有已註冊使用者均持有 `user` 系統角色。
