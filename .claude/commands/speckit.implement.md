@@ -27,9 +27,11 @@ $ARGUMENTS
    - Tasks marked `[P]` can be run in parallel
    - Pause at each Checkpoint to verify the User Story works independently
 
-4. **Test-first**
-   - If a task includes tests, write the tests first and confirm they fail
-   - Then implement the feature to make the tests pass
+4. **Test-first (REQUIRED — no exceptions)**
+   - Write the test first; confirm it **fails** before writing any implementation code
+   - Then implement until the test passes
+   - Common rationalisations to reject: "it's too simple", "I tested manually", "there's no logic" — none of these are valid excuses
+   - If you wrote implementation code before a test: **delete the implementation and restart with the test**
 
 5. **Commit after each logical group of changes**
    - Format: `feat: [description]`
@@ -38,5 +40,12 @@ $ARGUMENTS
    - Remove debug statements (`print` / `console.log`)
    - Run `/speckit.checklist` to validate quality
 
-7. **Mark as complete**
+7. **Run consistency analysis (REQUIRED gate — must pass before marking complete)**
+   - Run `/speckit.analyze` and read the full output
+   - Fix every finding reported — do not skip or defer
+   - Re-run until output reports zero findings
+   - You MUST NOT open a PR or mark complete while findings remain
+
+8. **Mark as complete**
    - `touch specs/[feature-dir]/.completed`
+   - Update `specs/STATUS.md` row → `done`

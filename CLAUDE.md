@@ -195,7 +195,33 @@ Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `fe
 
 ## Spec-Driven Development (SDD)
 
-This project adopts SDD. See `/sdd-workflow` skill for the full pipeline, commands, and when-to-skip rules.
+This project adopts SDD. The full pipeline for a new feature is:
+
+```
+/superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
+  → /speckit.plan → /speckit.tasks → /speckit.implement (TDD)
+  → /speckit.analyze (REQUIRED gate) → /pr-flow
+```
+
+**Each stage is a hard gate.** Do not advance to the next stage until the current one is complete.
+
+| Stage | Command | Gate Condition |
+|-------|---------|---------------|
+| Brainstorm | `/superpowers:brainstorm` | Requirements agreed; design alternatives considered |
+| Specify | `/speckit.specify` | `spec.md` written; update `specs/STATUS.md` → `spec-ready` |
+| Clarify | `/speckit.clarify` | Optional — skip only if spec is unambiguous |
+| Plan | `/speckit.plan` | `plan.md` written; update `specs/STATUS.md` → `plan-ready` |
+| Tasks | `/speckit.tasks` | `tasks.md` written; update `specs/STATUS.md` → `tasks-ready` |
+| Implement | `/speckit.implement` | All tasks done; tests written **before** code (TDD) |
+| Analyze | `/speckit.analyze` | **Zero findings** before opening PR |
+| PR & Merge | `/pr-flow` | PR merged; archive spec; update `specs/STATUS.md` → `archived` |
+
+### TDD Rule (REQUIRED)
+
+> **You MUST NOT write implementation code before writing a failing test.**
+> If you wrote code first, delete it and restart with the test.
+
+This applies to every task in `tasks.md` that involves logic. No exceptions for "it's too simple" or "I tested it manually."
 
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
@@ -241,9 +267,9 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 
 | Workflow | When | How |
 |---|---|---|
-| New feature (cross-layer) | New frontend + backend feature | `/sdd-workflow` → `/agent-team` → `/pr-flow` |
-| Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → `/pr-flow` |
+| New feature (cross-layer) | New frontend + backend feature | `brainstorm` → `specify` → `plan` → `tasks` → `implement` → **`analyze`** → `/agent-team` → `/pr-flow` |
+| Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → **`/speckit.analyze`** → `/pr-flow` |
 | Wireframe | After `/speckit.specify` | `/pencil-wireframe` |
-| PR & merge | After implementation complete | `/pr-flow` |
+| Pre-PR gate | Before every PR — no exceptions | `/speckit.analyze` must report zero findings |
 | Spec status update | At each pipeline stage transition | Update `specs/STATUS.md` row |
 | Archive completed spec | After PR merged to `main` | `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md` |
