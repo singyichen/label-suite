@@ -94,7 +94,7 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 已登入使用者在 `/profile`，**When** 查看角色區塊，**Then** 顯示目前系統角色（`annotator` 或 `super_admin`），此欄位唯讀；若系統角色為 `null`，顯示「尚未指派系統角色」。
+1. **Given** 已登入使用者在 `/profile`，**When** 查看角色區塊，**Then** 顯示目前系統角色（`user` 或 `super_admin`），此欄位唯讀；若系統角色為 `null`，顯示「尚未指派系統角色」。
 2. **Given** 擁有任務角色的已登入使用者，**When** 查看角色區塊，**Then** 顯示所有有成員資格的任務名稱與對應任務角色（`project_leader` / `reviewer` / `annotator`）。
 
 ---
