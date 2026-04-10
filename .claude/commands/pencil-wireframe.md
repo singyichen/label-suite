@@ -95,7 +95,7 @@ card=I(main, { type:"ref", ref:"yziNu" })          // Card/Default
 
 Override only the properties you need to change (text content, size, fill):
 ```javascript
-U(btn+"/label", { content:"Sign In" })   // replace with ZH/EN label as needed
+U(btn+"/label", { content:"登入" })      // wireframes use Traditional Chinese only; EN localization is handled at prototype stage
 ```
 
 ### Step 4 — Fallback: use hardcoded token values if imports unavailable
