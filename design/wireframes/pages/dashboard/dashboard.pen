@@ -751,11 +751,11 @@
                                   "type": "frame",
                                   "id": "4oOks",
                                   "name": "tc1BadgeZH",
-                                  "fill": "#000000",
+                                  "fill": "#FEFCE8",
                                   "stroke": {
                                     "align": "inside",
                                     "thickness": 1,
-                                    "fill": "#000000"
+                                    "fill": "#FEF08A"
                                   },
                                   "padding": [
                                     3,
@@ -766,7 +766,7 @@
                                       "type": "text",
                                       "id": "uUQPy",
                                       "name": "tc1BLblZH",
-                                      "fill": "#000000",
+                                      "fill": "#A16207",
                                       "content": "進行中",
                                       "fontFamily": "Inter",
                                       "fontSize": 11,
@@ -1697,11 +1697,11 @@
                                   "type": "frame",
                                   "id": "mrwsi",
                                   "name": "enTc1Badge",
-                                  "fill": "#000000",
+                                  "fill": "#FEFCE8",
                                   "stroke": {
                                     "align": "inside",
                                     "thickness": 1,
-                                    "fill": "#000000"
+                                    "fill": "#FEF08A"
                                   },
                                   "padding": [
                                     3,
@@ -1712,7 +1712,7 @@
                                       "type": "text",
                                       "id": "QJNLR",
                                       "name": "enTc1BLbl",
-                                      "fill": "#000000",
+                                      "fill": "#A16207",
                                       "content": "In Progress",
                                       "fontFamily": "Inter",
                                       "fontSize": 11,
@@ -2267,11 +2267,11 @@
                           "type": "frame",
                           "id": "cMFSO",
                           "name": "mzhTc1Badge",
-                          "fill": "#000000",
+                          "fill": "#FEFCE8",
                           "stroke": {
                             "align": "inside",
                             "thickness": 1,
-                            "fill": "#000000"
+                            "fill": "#FEF08A"
                           },
                           "padding": [
                             2,
@@ -2282,7 +2282,7 @@
                               "type": "text",
                               "id": "6uDyM",
                               "name": "mzhTc1BLbl",
-                              "fill": "#000000",
+                              "fill": "#A16207",
                               "content": "進行中",
                               "fontFamily": "Inter",
                               "fontSize": 11,
@@ -2967,11 +2967,11 @@
                           "type": "frame",
                           "id": "8Cy8H",
                           "name": "menTc1Badge",
-                          "fill": "#000000",
+                          "fill": "#FEFCE8",
                           "stroke": {
                             "align": "inside",
                             "thickness": 1,
-                            "fill": "#000000"
+                            "fill": "#FEF08A"
                           },
                           "padding": [
                             2,
@@ -2982,7 +2982,7 @@
                               "type": "text",
                               "id": "zGv8h",
                               "name": "menTc1BLbl",
-                              "fill": "#000000",
+                              "fill": "#A16207",
                               "content": "In Progress",
                               "fontFamily": "Inter",
                               "fontSize": 11,
@@ -3403,11 +3403,11 @@
                       "type": "frame",
                       "id": "8f6wx",
                       "name": "czBadgeInProg",
-                      "fill": "#000000",
+                      "fill": "#FEFCE8",
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
-                        "fill": "#000000"
+                        "fill": "#FEF08A"
                       },
                       "padding": [
                         3,
@@ -3418,7 +3418,7 @@
                           "type": "text",
                           "id": "MPY6s",
                           "name": "czBadgeIPTxt",
-                          "fill": "#000000",
+                          "fill": "#A16207",
                           "content": "進行中",
                           "fontFamily": "Inter",
                           "fontSize": 11,
@@ -3881,11 +3881,11 @@
                       "type": "frame",
                       "id": "N7QWW",
                       "name": "enCzBadge",
-                      "fill": "#000000",
+                      "fill": "#FEFCE8",
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
-                        "fill": "#000000"
+                        "fill": "#FEF08A"
                       },
                       "padding": [
                         3,
@@ -3896,7 +3896,7 @@
                           "type": "text",
                           "id": "hCtRn",
                           "name": "enCzBadgeTxt",
-                          "fill": "#000000",
+                          "fill": "#A16207",
                           "content": "In Progress",
                           "fontFamily": "Inter",
                           "fontSize": 11,

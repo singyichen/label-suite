@@ -356,6 +356,6 @@ flowchart TD
 - **SC-006**：儀表板頁面在視窗寬度 375px、768px、1440px 下均正確渲染，無版型破版。
 - **SC-007**：儀表板頁面正確顯示 zh-TW 與 en 兩種語言；語言切換立即生效，不需重新載入頁面。
 - **SC-008**：「快速繼續」按鈕導向正確的 `/annotation-workspace`（任務 ID 與 run_type 參數正確）。
-- **SC-009**：`task_role = project_leader` 的使用者在 `UserDashboard` 看到任務總覽卡與標記員進度區，不顯示 annotator 或 reviewer 的任務區塊。
-- **SC-010**：`task_role = reviewer` 的使用者在 `UserDashboard` 看到待審查任務列表與 IAA 摘要，不顯示 annotator 或 project_leader 的任務區塊。
+- **SC-009**：僅持有 `task_role = project_leader` 的使用者在 `UserDashboard` 看到任務總覽卡與標記員進度區，不顯示 annotator 或 reviewer 的任務區塊。
+- **SC-010**：僅持有 `task_role = reviewer` 的使用者在 `UserDashboard` 看到待審查任務列表與 IAA 摘要，不顯示 annotator 或 project_leader 的任務區塊。
 - **SC-011**：同時持有多個 task role 的使用者，各 task role 對應的任務區塊均正確獨立渲染，不互相合併或覆蓋。
