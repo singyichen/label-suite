@@ -195,33 +195,16 @@ Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `fe
 
 ## Spec-Driven Development (SDD)
 
-This project adopts SDD. The full pipeline for a new feature is:
+Full pipeline — each stage is a hard gate (details: run `/sdd-workflow`):
 
 ```
 /superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
-  → /speckit.plan → /speckit.tasks → /speckit.implement (TDD)
-  → /speckit.analyze (REQUIRED gate) → /pr-flow
+  → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
 ```
 
-**Each stage is a hard gate.** Do not advance to the next stage until the current one is complete.
+**TDD (REQUIRED)**: You MUST NOT write implementation code before writing a failing test. No exceptions.
 
-| Stage | Command | Gate Condition |
-|-------|---------|---------------|
-| Brainstorm | `/superpowers:brainstorm` | Requirements agreed; design alternatives considered |
-| Specify | `/speckit.specify` | `spec.md` written; update `specs/STATUS.md` → `spec-ready` |
-| Clarify | `/speckit.clarify` | Optional — skip only if spec is unambiguous |
-| Plan | `/speckit.plan` | `plan.md` written; update `specs/STATUS.md` → `plan-ready` |
-| Tasks | `/speckit.tasks` | `tasks.md` written; update `specs/STATUS.md` → `tasks-ready` |
-| Implement | `/speckit.implement` | All tasks done; tests written **before** code (TDD) |
-| Analyze | `/speckit.analyze` | **Zero findings** before opening PR |
-| PR & Merge | `/pr-flow` | PR merged; archive spec; update `specs/STATUS.md` → `archived` |
-
-### TDD Rule (REQUIRED)
-
-> **You MUST NOT write implementation code before writing a failing test.**
-> If you wrote code first, delete it and restart with the test.
-
-This applies to every task in `tasks.md` that involves logic. No exceptions for "it's too simple" or "I tested it manually."
+**Pre-PR gate (REQUIRED)**: `/speckit.analyze` must report zero findings before every PR.
 
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
@@ -231,31 +214,9 @@ This applies to every task in `tasks.md` that involves logic. No exceptions for 
 - Prototypes: `design/prototype/pages/[module]/[page].html`
 - Specs: `specs/[module]/NNN-feature/`
 
-### Spec Status Index
+**Spec status**: Update `specs/STATUS.md` at every pipeline stage transition (see STATUS.md for full trigger list).
 
-`specs/STATUS.md` is the **single source of truth** for all feature pipeline status.
-
-**Required updates** — always update `specs/STATUS.md` when:
-- A new `spec.md` is created → set Status to `spec-ready`
-- A `plan.md` is created → update Status to `plan-ready`
-- A `tasks.md` is created → update Status to `tasks-ready`
-- An implementation branch is opened → update Status to `in-progress`, fill Branch column
-- A PR is opened → update Status to `review`
-- A PR is merged to `main` → update Status to `done`
-- A feature folder is archived → update Status to `archived`
-
-### Spec Archive Convention
-
-After a feature's PR is merged to `main`, archive it to keep `specs/` clean:
-
-```bash
-# Archive a completed feature
-mv specs/[module]/NNN-feature specs/_archive/NNN-feature
-
-# Then update specs/STATUS.md: set Status → archived, record date in Archive Log
-```
-
-`specs/_archive/` is a flat directory (no module sub-folders). Files remain readable for traceability but no longer appear in active spec listings.
+**Archive**: After PR merged → `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md`.
 
 ## Constitution
 
