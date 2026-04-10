@@ -205,6 +205,32 @@ This project adopts SDD. See `/sdd-workflow` skill for the full pipeline, comman
 - Prototypes: `design/prototype/pages/[module]/[page].html`
 - Specs: `specs/[module]/NNN-feature/`
 
+### Spec Status Index
+
+`specs/STATUS.md` is the **single source of truth** for all feature pipeline status.
+
+**Required updates** — always update `specs/STATUS.md` when:
+- A new `spec.md` is created → set Status to `spec-ready`
+- A `plan.md` is created → update Status to `plan-ready`
+- A `tasks.md` is created → update Status to `tasks-ready`
+- An implementation branch is opened → update Status to `in-progress`, fill Branch column
+- A PR is opened → update Status to `review`
+- A PR is merged to `main` → update Status to `done`
+- A feature folder is archived → update Status to `archived`
+
+### Spec Archive Convention
+
+After a feature's PR is merged to `main`, archive it to keep `specs/` clean:
+
+```bash
+# Archive a completed feature
+mv specs/[module]/NNN-feature specs/_archive/NNN-feature
+
+# Then update specs/STATUS.md: set Status → archived, record date in Archive Log
+```
+
+`specs/_archive/` is a flat directory (no module sub-folders). Files remain readable for traceability but no longer appear in active spec listings.
+
 ## Constitution
 
 All development must follow the six core principles in [constitution.md](.specify/memory/constitution.md).
@@ -219,3 +245,5 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 | Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → `/pr-flow` |
 | Wireframe | After `/speckit.specify` | `/pencil-wireframe` |
 | PR & merge | After implementation complete | `/pr-flow` |
+| Spec status update | At each pipeline stage transition | Update `specs/STATUS.md` row |
+| Archive completed spec | After PR merged to `main` | `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md` |
