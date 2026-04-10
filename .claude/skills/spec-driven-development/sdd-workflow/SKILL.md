@@ -194,6 +194,74 @@ Delete the implementation. Restart with the test. There is no exception to this 
 
 ---
 
+## Iteration Workflow (1→N)
+
+Use this section when you are **modifying an existing feature**, not building from scratch.
+
+### Update Existing Spec vs. Create a New Spec
+
+| Scenario | Action |
+|----------|--------|
+| Add a new User Story to an existing feature | Update existing `spec.md` + version bump |
+| Change what an existing User Story does | Update existing `spec.md` + version bump |
+| Independent new behaviour that reuses the same module | New spec (`specs/[module]/NNN-feature/`) |
+| Bug fix (code does not match spec) | Fix code only — spec is already correct |
+| Refactor / perf / cleanup — no behaviour change | No spec change needed |
+
+**Decision question**: Does this change add or alter *expected behaviour* already documented in a spec?
+- Yes → version-bump that spec
+- No, but it is new behaviour → new spec
+- Neither → no spec change (bug-fix / refactor path)
+
+### Version Bump Rules
+
+Spec versions follow semantic versioning — update `**Version**` in frontmatter and add a row to `## Changelog`:
+
+| Change | Bump | Example |
+|--------|------|---------|
+| Clarification, wording, non-semantic fix | PATCH | 1.0.0 → 1.0.1 |
+| New User Story added | MINOR | 1.0.0 → 1.1.0 |
+| Existing Story behaviour changed | MINOR | 1.0.0 → 1.1.0 |
+| Breaking change (remove story, change API contract) | MAJOR | 1.0.0 → 2.0.0 |
+
+### Updating an Existing Spec — Checklist
+
+When a spec that is already `plan-ready` or beyond is changed:
+
+1. Bump the version in frontmatter (`**Version**`)
+2. Add a row to `## Changelog` with date and summary
+3. Open `## Spec Dependencies → Downstream` — review every listed spec for impact
+4. If `plan.md` exists: assess whether the plan needs updating and re-version it
+5. If `tasks.md` exists: assess whether tasks need updating
+6. Update `specs/STATUS.md` notes column (e.g., `v1.1.0 — added Story 3`)
+
+---
+
+## Cross-Spec Dependencies
+
+### Declaring Dependencies
+
+Every spec has a `## Spec Dependencies` section. Fill it in at `/speckit.specify` time:
+
+- **Upstream**: specs this feature must have available (must be `plan-ready` or implemented first)
+- **Downstream**: specs that rely on something this spec defines (these must be notified on any version bump)
+
+### Impact Process (when spec A is versioned up)
+
+1. Open `spec A → ## Spec Dependencies → Downstream`
+2. For each downstream spec B: check whether spec A's change breaks or changes an assumption spec B made
+3. If yes: version-bump spec B and propagate to its `plan.md` / `tasks.md` as needed
+4. Update `specs/STATUS.md` for every affected spec
+
+### speckit.analyze — Cross-Spec Check
+
+`/speckit.analyze` checks cross-spec consistency as part of its gate:
+
+- All upstream specs listed in `## Spec Dependencies` are `plan-ready` or implemented
+- No downstream spec references a capability that this spec has removed or changed without a corresponding update
+
+---
+
 ## When to Skip SDD
 
 **Deciding question: will this change make the system behave differently from what the specs define?**
