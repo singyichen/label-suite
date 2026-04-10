@@ -70,7 +70,12 @@ For each unresolved thread:
 
 ```bash
 git add <changed files>
-git commit -m "fix: address PR #{number} review findings"
+git commit -m "$(cat <<'EOF'
+fix: address PR #{number} review findings
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+EOF
+)"
 git push origin <branch-name>
 ```
 

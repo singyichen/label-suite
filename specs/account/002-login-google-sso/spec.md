@@ -145,6 +145,25 @@ flowchart LR
 **Entry points**：`/login` 頁面的「以 Google 登入」按鈕（UI 由 spec 001 提供）。
 **Exit points**：OAuth 流程成功後導向 `/dashboard`；失敗時返回 `/login`。
 
+---
+
+### Wireframe 畫面總覽
+
+> 本節說明 spec 002 對 wireframe 的影響範圍。
+>
+> **共用 login.pen**：Google SSO 的 UI 入口（「以 Google 登入」按鈕）已包含在 `design/wireframes/pages/account/login.pen`（spec 001 主導）中。OAuth 授權流程本身發生在 Google 授權頁，不屬於本系統 UI 範疇，無需繪製。
+>
+> **spec 002 不新增獨立 Page**：SSO 失敗的錯誤狀態（使用者取消授權、state 驗證失敗）在 `/login` 頁面以 inline 錯誤訊息呈現，與 spec 001 的 email 錯誤 Page 共用相同 layout，以 annotation 標注 SSO 特有的錯誤文案即可。
+
+#### 總計：0 張（共用 spec 001 的 login.pen）
+
+| 項目 | 說明 |
+|------|------|
+| 共用檔案 | `design/wireframes/pages/account/login.pen`（spec 001 主導） |
+| 新增 Page | 無 |
+| SSO 按鈕 | 呈現於 login.pen 既有 Page 的「以 Google 登入」按鈕元件上 |
+| SSO 錯誤狀態 | 複用 login.pen 中 email 錯誤 Page，以 annotation 標注 SSO 特有的錯誤訊息文案（「取消授權」/ 「state 驗證失敗」兩種情境） |
+
 ### 關鍵實體
 
 - **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`avatar_url`、`providers`（已連結的登入方式陣列，例如 `["google"]`、`["email"]`、`["google", "email"]`）、`provider_id`（Google UID；僅 Email/Password 帳號為 `null`）、`hashed_password`（Email/Password 帳號用；純 Google 帳號為 `null`，合併後有值）、`role`（`user` | `super_admin`）、`created_at`。`providers` 以應用層邏輯維護，非資料庫單值欄位。

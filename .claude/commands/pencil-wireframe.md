@@ -15,22 +15,25 @@ Module names mirror `frontend/src/features/`:
 
 > `design/wireframes/index.pen` is for overview only — never place page frames inside it.
 
-## 6-Frame Layout (per `.pen` file)
+## Frame Layout (per Page)
 
-Frames are arranged in **3 rows** (device tier) × **2 columns** (ZH / EN), so each tier is visually grouped for easy review:
+There are three structural levels in every wireframe:
+
+- **`.pen` file** — one file per route (e.g. `dashboard.pen` for `/dashboard`)
+- **Page** — one Page per screen state within a `.pen` file (e.g. `SA-2 SuperAdmin 有資料`). The full Page list for each route is defined in the spec's `### Wireframe 畫面總覽` section.
+- **Frame** — the layout elements drawn inside each Page, arranged as described below.
+
+Each Page contains **3 frames** (Traditional Chinese only):
 
 | Frame | x | y | Purpose |
 |---|---|---|---|
-| Desktop ZH | `0` | `0` | Full page — Traditional Chinese, desktop |
-| Desktop EN | `1500` | `0` | Full page — English, desktop |
-| Mobile ZH | `0` | `1000` | Full page — Traditional Chinese, mobile |
-| Mobile EN | `500` | `1000` | Full page — English, mobile |
-| Component ZH | `0` | `1900` | Page-specific UI components — ZH |
-| Component EN | `900` | `1900` | Page-specific UI components — EN |
+| Desktop | `0` | `0` | Full page — desktop viewport |
+| Mobile | `0` | `1000` | Full page — mobile viewport |
+| Component | `0` | `1900` | Page-specific UI components |
 
-**Draw order**: Desktop ZH → Desktop EN → Mobile ZH → Mobile EN → Component ZH → Component EN
+**Draw order**: Desktop → Mobile → Component
 
-Keep structure symmetric between ZH and EN frames at each device tier.
+> **EN localization is handled at the prototype stage**, not during wireframing. When building `design/prototype/pages/[module]/[page].html`, apply i18n keys from `frontend/src/locales/`. If a component is text-length-sensitive (e.g. narrow buttons, table columns), add an annotation in the Component frame noting potential EN overflow — no separate EN frame is required.
 
 ## Component Placement Rule
 
@@ -56,9 +59,8 @@ Mobile frames must implement **genuine RWD** — do NOT shrink the desktop layou
 ### Mobile canvas size: 390 × auto (iPhone 14 viewport)
 
 1. Use `height: "fit_content(900)"` during drawing
-2. After completion, run `snapshot_layout` on both ZH and EN mobile frames
-3. Set both to the same fixed height (use the larger value): `U("frameId", {height: N})`
-4. ZH and EN mobile frames **must have identical `width × height`**
+2. After completion, run `snapshot_layout` on the Mobile frame
+3. Set the frame to the snapshotted fixed height: `U("frameId", {height: N})`
 
 After drawing, take a screenshot and verify: no element overflows, no sidebar visible, all text readable.
 
@@ -93,7 +95,7 @@ card=I(main, { type:"ref", ref:"yziNu" })          // Card/Default
 
 Override only the properties you need to change (text content, size, fill):
 ```javascript
-U(btn+"/label", { content:"Sign In" })   // replace with ZH/EN label as needed
+U(btn+"/label", { content:"登入" })      // wireframes use Traditional Chinese only; EN localization is handled at prototype stage
 ```
 
 ### Step 4 — Fallback: use hardcoded token values if imports unavailable
@@ -191,5 +193,5 @@ git commit -m "..."
 ## Key Rules
 
 - `.pen` files are encrypted — **only operate via Pencil MCP tools**; never use `Read` / `Edit` / `Grep` on them
-- Always draw ZH frame first, then copy/adapt for EN
 - Always draw Desktop before Mobile
+- EN localization is handled at the prototype stage — do not draw EN frames in wireframes

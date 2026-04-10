@@ -94,7 +94,7 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 已登入使用者在 `/profile`，**When** 查看角色區塊，**Then** 顯示目前系統角色（`annotator` 或 `super_admin`），此欄位唯讀；若系統角色為 `null`，顯示「尚未指派系統角色」。
+1. **Given** 已登入使用者在 `/profile`，**When** 查看角色區塊，**Then** 顯示目前系統角色（`user` 或 `super_admin`），此欄位唯讀；若系統角色為 `null`，顯示「尚未指派系統角色」。
 2. **Given** 擁有任務角色的已登入使用者，**When** 查看角色區塊，**Then** 顯示所有有成員資格的任務名稱與對應任務角色（`project_leader` / `reviewer` / `annotator`）。
 
 ---
@@ -141,6 +141,54 @@ flowchart LR
 
 **Entry points**：Navbar 使用者頭像點擊。
 **Exit points**：取消 → `/dashboard`；其他操作停留在 `/profile`。
+
+---
+
+### Wireframe 畫面總覽
+
+> 本節為 spec 005 `/profile` 頁面的 wireframe 畫面範圍定義。
+>
+> **單一檔案**：所有畫面集中在 `design/wireframes/pages/account/profile.pen`，每個畫面狀態為獨立 Page。
+>
+> **帳號類型變體**：Email / Password 帳號與純 Google SSO 帳號在密碼修改區塊的顯示不同（有無「現有密碼」欄位），各需一張獨立 Page（P-1、P-2）。
+>
+> **成功 / 儲存中狀態**：儲存成功以 toast 通知呈現，不改變頁面主要內容；無需獨立 Page，以 annotation 標注於 P-1 / P-2 即可。
+
+#### 總計：4 張
+
+| 畫面 | 畫面數 |
+|------|:------:|
+| Skeleton | 1 |
+| Email / Password 帳號（完整密碼欄） | 1 |
+| Google SSO 帳號（無現有密碼欄） | 1 |
+| 密碼欄位錯誤狀態 | 1 |
+| **合計** | **4** |
+
+---
+
+#### Profile 頁面 — 4 張
+
+> 觸發條件：已登入使用者存取 `/profile`（AuthGuard 保護，未登入導向 `/login`）。
+
+| ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
+|----|---------|----------|---------|-----------|---------|
+| P-0 | **Skeleton** | `P-0 Profile Skeleton` | US1、US2、US3 | 全頁灰色骨架佔位：Header、三個區塊佔位（個人資料 / 密碼修改 / 角色資訊）；無實際內容，無操作元件 | — |
+| P-1 | **Email / Password 帳號** | `P-1 Profile Email 帳號` | US1、US2、US3 | ① **個人資料區**：姓名（必填，可編輯）、聯絡方式（可編輯）、Email（唯讀標示）+ 「儲存」主要按鈕 + 「取消」次要按鈕 ② **密碼修改區**（Email / Password 帳號完整版）：現有密碼 + 新密碼 + 確認新密碼三欄（password input type）+ 「修改密碼」按鈕 ③ **角色資訊區**：系統角色 badge（唯讀，例：`user` / `super_admin`）+ 任務角色列表（任務名稱 + 任務角色） | 「取消」→ `/dashboard` |
+| P-2 | **Google SSO 帳號** | `P-2 Profile Google SSO 帳號` | US2 | 密碼修改區**不顯示「現有密碼」欄位**（純 Google SSO 帳號，`hashed_password = null`）；改為說明文字「設定密碼後即可同時使用 Email / Password 登入」；其餘區塊（個人資料 / 角色資訊）與 P-1 相同 | 「取消」→ `/dashboard` |
+| P-3 | **密碼欄位錯誤** | `P-3 Profile 密碼錯誤` | US2 | 密碼修改區「現有密碼」欄位顯示 inline 錯誤訊息「現有密碼錯誤」（紅色邊框 + 錯誤文字）；「新密碼」與「確認新密碼」欄位清空；個人資料區與角色資訊區不變 | — |
+
+---
+
+#### 畫面 ID 彙整索引
+
+檔案：`design/wireframes/pages/account/profile.pen`
+
+| 畫面 ID | 畫面狀態 | Page 名稱（profile.pen 內）|
+|--------|---------|--------------------------|
+| P-0 | Skeleton | `P-0 Profile Skeleton` |
+| P-1 | Email / Password 帳號 | `P-1 Profile Email 帳號` |
+| P-2 | Google SSO 帳號 | `P-2 Profile Google SSO 帳號` |
+| P-3 | 密碼欄位錯誤 | `P-3 Profile 密碼錯誤` |
 
 ### 關鍵實體
 
