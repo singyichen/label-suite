@@ -32,7 +32,7 @@
 | 008 | Annotator List | annotator-management | `spec-ready` | — | |
 | 009 | Work Log | annotator-management | `spec-ready` | — | |
 | 010 | Task List | task-management | `spec-ready` | — | |
-| 012 | Dashboard | dashboard | `spec-ready` | `design/012-dashboard` | wireframe in progress |
+| 012 | Dashboard | dashboard | `spec-ready` | — | wireframe done (PR #27) |
 | 013 | New Task (+ Config Builder) | task-management | `spec-ready` | — | |
 | 014 | Task Detail | task-management | `spec-ready` | — | |
 | 015 | Annotation Workspace | annotation | `spec-ready` | — | |

@@ -48,4 +48,4 @@ $ARGUMENTS
 
 8. **Mark as complete**
    - `touch specs/[feature-dir]/.completed`
-   - Update `specs/STATUS.md` row → `done`
+   - Note: `specs/STATUS.md` status remains `in-progress` until a PR is opened; `/pr-flow` will update it to `review` on PR open and `done` after merge to `main`
