@@ -122,7 +122,7 @@ flowchart LR
 - **[Entity 1]**: [What it represents, key attributes]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
-## Spec Dependencies *(include if this feature depends on or is depended on by other specs)*
+## Spec Dependencies *(required — fill in at specify time; use "—" rows if none)*
 
 <!--
   Upstream: specs that must be implemented before or alongside this feature.
