@@ -434,7 +434,7 @@
       "y": 0,
       "name": "SA-2 SuperAdmin 有資料 - Desktop",
       "width": 1440,
-      "height": 700,
+      "height": 860,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -522,7 +522,7 @@
           "id": "tKuRa",
           "name": "Main",
           "width": "fill_container",
-          "height": 637,
+          "height": 797,
           "children": [
             {
               "type": "frame",
@@ -701,7 +701,7 @@
                           "id": "ZC1l9",
                           "name": "usersLink",
                           "fill": "$color-primary",
-                          "content": "前往使用者管理 →",
+                          "content": "前往使用者管理（Post-R1）→",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -1146,7 +1146,7 @@
                                   "id": "JXltK",
                                   "name": "badgeTxt",
                                   "fill": "#BE123C",
-                                  "content": "等待 IAA 確認 ↗",
+                                  "content": "等待 IAA 確認",
                                   "fontFamily": "Inter",
                                   "fontSize": 12,
                                   "fontWeight": "normal"
@@ -1198,6 +1198,54 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "MBlVK",
+                  "name": "dProgSec",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "cA3yT",
+                      "fill": "#1E1B4B",
+                      "content": "全平台標記進度摘要",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "sOwqJ",
+                      "name": "dProgCard",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 12,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#E2E8F0"
+                      },
+                      "gap": 12,
+                      "padding": [
+                        18,
+                        20
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ceZrO",
+                          "fill": "#1E1B4B",
+                          "content": "進行中任務 12｜待確認 IAA 3｜速度異常 2",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -1212,7 +1260,7 @@
       "y": 1035,
       "name": "SA-2 SuperAdmin 有資料 - Mobile",
       "width": 390,
-      "height": 479,
+      "height": 620,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -1408,7 +1456,7 @@
               "id": "9yYeZ",
               "name": "usersLinkM",
               "fill": "$color-primary",
-              "content": "前往使用者管理 →",
+              "content": "前往使用者管理（Post-R1）→",
               "fontFamily": "Inter",
               "fontSize": 13,
               "fontWeight": "normal"
@@ -1506,6 +1554,63 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "zOgv4",
+              "name": "mProgSec",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "z61rT",
+                  "fill": "#1E1B4B",
+                  "content": "全平台標記進度摘要",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "1EeG3",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 12,
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "#E2E8F0"
+                  },
+                  "layout": "vertical",
+                  "gap": 6,
+                  "padding": [
+                    14,
+                    16
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "7waYJ",
+                      "fill": "#1E1B4B",
+                      "content": "進行中任務 12",
+                      "fontFamily": "Inter",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YPthN",
+                      "fill": "#94A3B8",
+                      "content": "待確認 IAA 3｜速度異常 2",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -1584,7 +1689,7 @@
           "id": "UPty0",
           "name": "n1",
           "fill": "$color-text-muted",
-          "content": "① 平台使用者快覽：統計卡（user_count / super_admin_count）+ 「前往使用者管理」連結",
+          "content": "① 平台使用者快覽：統計卡（user_count / super_admin_count）；使用者管理連結為 Post-R1",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
@@ -1604,7 +1709,7 @@
           "id": "EOPdh",
           "name": "n3",
           "fill": "$color-text-muted",
-          "content": "③ 等待 IAA 確認任務：badge 標注 + 快速連結 → /dataset-quality",
+          "content": "③ 全平台標記進度摘要：進行中任務 / 待確認 IAA / 速度異常提醒",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
@@ -1847,8 +1952,8 @@
                       "type": "text",
                       "id": "3EJa1",
                       "name": "sub",
-                      "fill": "$color-text-muted",
-                      "content": "請先建立使用者與標記任務",
+                      "fill": "#94A3B8",
+                      "content": "R1 僅顯示核心空狀態；若後續管理頁上線，可從這裡前往",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "normal"
@@ -1872,8 +1977,8 @@
                           "type": "text",
                           "id": "qxafD",
                           "name": "btnTxt",
-                          "fill": "$color-primary",
-                          "content": "管理使用者",
+                          "fill": "#6366F1",
+                          "content": "管理使用者（Post-R1)",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "600"
@@ -1999,8 +2104,8 @@
                   "type": "text",
                   "id": "ww26j",
                   "name": "sub",
-                  "fill": "$color-text-muted",
-                  "content": "請先建立使用者與標記任務",
+                  "fill": "#94A3B8",
+                  "content": "目前顯示 R1 核心空狀態；若 user-management 已上線，才顯示下方按鈕",
                   "fontFamily": "Inter",
                   "fontSize": 13,
                   "fontWeight": "normal"
@@ -2024,8 +2129,8 @@
                       "type": "text",
                       "id": "YkLHK",
                       "name": "btnTxt",
-                      "fill": "$color-primary",
-                      "content": "管理使用者",
+                      "fill": "#6366F1",
+                      "content": "管理使用者（Post-R1)",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "600"
@@ -2111,7 +2216,7 @@
           "id": "Bh1GB",
           "name": "note",
           "fill": "$color-text-muted",
-          "content": "觸發條件：/admin/stats 回傳無任務與使用者資料\n顯示空狀態插圖 + 說明文字 + 「管理使用者」Ghost 按鈕 → /user-management",
+          "content": "觸發條件：/admin/stats 回傳無任務與使用者資料\nR1 顯示空狀態說明；若 user-management 已上線，再顯示「管理使用者（Post-R1）」按鈕",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
@@ -3671,7 +3776,7 @@
                       "id": "fj2ES",
                       "name": "label",
                       "fill": "$color-text-muted",
-                      "content": "工時紀錄",
+                      "content": "建立任務",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "normal"
@@ -3705,7 +3810,7 @@
                       "id": "eXGmu",
                       "name": "label",
                       "fill": "$color-text-muted",
-                      "content": "個人資料",
+                      "content": "個人資料（Post-R1）",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "normal"
@@ -3752,7 +3857,7 @@
                       "id": "ZS72D",
                       "name": "msg",
                       "fill": "$color-text",
-                      "content": "尚未有指派任務，請等待管理員分配",
+                      "content": "目前尚無任務\n建立第一個任務或等待被邀請加入任務",
                       "fontFamily": "Inter",
                       "fontSize": 18,
                       "fontWeight": "600"
@@ -3762,7 +3867,7 @@
                       "id": "XOT9O",
                       "name": "sub",
                       "fill": "$color-text-muted",
-                      "content": "任務指派後將在此處顯示您的標記任務",
+                      "content": "平台成員可自行建立任務；後續 release 才擴充工時與個人頁捷徑",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "normal"
@@ -3778,11 +3883,12 @@
                           "type": "frame",
                           "id": "OLHPJ",
                           "name": "workLogBtn",
+                          "fill": "#6366F1",
                           "cornerRadius": "$radius-md",
                           "stroke": {
                             "align": "inside",
                             "thickness": 1,
-                            "fill": "$color-primary"
+                            "fill": "#6366F1"
                           },
                           "padding": [
                             10,
@@ -3793,11 +3899,11 @@
                               "type": "text",
                               "id": "P3HgZ",
                               "name": "btnTxt",
-                              "fill": "$color-primary",
-                              "content": "查看個人工時紀錄",
+                              "fill": "#FFFFFF",
+                              "content": "建立第一個任務",
                               "fontFamily": "Inter",
                               "fontSize": 14,
-                              "fontWeight": "normal"
+                              "fontWeight": "600"
                             }
                           ]
                         },
@@ -3820,8 +3926,8 @@
                               "type": "text",
                               "id": "2emEz",
                               "name": "btnTxt",
-                              "fill": "$color-text-muted",
-                              "content": "編輯個人資料",
+                              "fill": "#94A3B8",
+                              "content": "查看個人工時紀錄（Post-R1）",
                               "fontFamily": "Inter",
                               "fontSize": 14,
                               "fontWeight": "normal"
@@ -3940,7 +4046,7 @@
                   "id": "KGJZD",
                   "name": "msg",
                   "fill": "$color-text",
-                  "content": "尚未有指派任務\n請等待管理員分配",
+                  "content": "目前尚無任務\n建立第一個任務或等待被邀請加入任務",
                   "fontFamily": "Inter",
                   "fontSize": 16,
                   "fontWeight": "600"
@@ -3958,11 +4064,12 @@
                       "id": "Rucy5",
                       "name": "workLogBtn",
                       "width": "fill_container",
+                      "fill": "#6366F1",
                       "cornerRadius": "$radius-md",
                       "stroke": {
                         "align": "inside",
                         "thickness": 1,
-                        "fill": "$color-primary"
+                        "fill": "#6366F1"
                       },
                       "padding": [
                         10,
@@ -3975,11 +4082,11 @@
                           "type": "text",
                           "id": "d37Tj",
                           "name": "btnTxt",
-                          "fill": "$color-primary",
-                          "content": "查看個人工時紀錄",
+                          "fill": "#FFFFFF",
+                          "content": "建立第一個任務",
                           "fontFamily": "Inter",
                           "fontSize": 14,
-                          "fontWeight": "normal"
+                          "fontWeight": "600"
                         }
                       ]
                     },
@@ -4005,8 +4112,8 @@
                           "type": "text",
                           "id": "WRwOM",
                           "name": "btnTxt",
-                          "fill": "$color-text-muted",
-                          "content": "編輯個人資料",
+                          "fill": "#94A3B8",
+                          "content": "查看個人工時紀錄（Post-R1）",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -4094,7 +4201,7 @@
           "id": "EjTdA",
           "name": "note",
           "fill": "$color-text-muted",
-          "content": "觸發條件：GET /users/me/tasks 回傳空清單\n顯示空狀態插圖 + 說明文字 + 兩個次要按鈕\n「查看個人工時紀錄」→ /work-log ｜「編輯個人資料」→ /profile",
+          "content": "觸發條件：GET /users/me/tasks 回傳空清單\n顯示空狀態插圖 + 說明文字 + 主要按鈕「建立第一個任務」\n工時 / 個人資料捷徑僅作為 Post-R1 補充入口",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
@@ -4108,7 +4215,7 @@
       "y": 3500,
       "name": "U-2 PL Block 有任務 - Desktop",
       "width": 1440,
-      "height": 852,
+      "height": 980,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -4196,7 +4303,7 @@
           "id": "SeCnX",
           "name": "Main",
           "width": "fill_container",
-          "height": 787,
+          "height": 915,
           "children": [
             {
               "type": "frame",
@@ -4547,8 +4654,8 @@
                           "type": "text",
                           "id": "nxwtd",
                           "name": "link",
-                          "fill": "$color-primary",
-                          "content": "前往確認 →",
+                          "fill": "#6366F1",
+                          "content": "前往確認（Post-R1）→",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -4611,8 +4718,8 @@
                           "type": "text",
                           "id": "p1OnX",
                           "name": "link",
-                          "fill": "$color-cta",
-                          "content": "啟動 →",
+                          "fill": "#10B981",
+                          "content": "啟動（Post-R1）→",
                           "fontFamily": "Inter",
                           "fontSize": 13,
                           "fontWeight": "normal"
@@ -4927,6 +5034,65 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "frame",
+                  "id": "lAXdy",
+                  "name": "annSec",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QSZAX",
+                      "fill": "#1E1B4B",
+                      "content": "系統公告",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QvnMA",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 12,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "#E2E8F0"
+                      },
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": [
+                        16,
+                        18
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "YLHeE",
+                          "fill": "#1E1B4B",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "本週需完成 Dry Run 共識確認，速度異常提醒僅供 Project Leader 判斷，不直接變更成員資格。",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "03r5h",
+                          "fill": "#94A3B8",
+                          "content": "系統公告與規則變更在此集中顯示。",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -4941,7 +5107,7 @@
       "y": 4550,
       "name": "U-2 PL Block 有任務 - Mobile",
       "width": 390,
-      "height": 395,
+      "height": 620,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -5142,8 +5308,108 @@
                   "type": "text",
                   "id": "5tBVY",
                   "name": "desc",
-                  "fill": "$color-text-muted",
-                  "content": "實體辨識任務 C → /dataset-quality",
+                  "fill": "#94A3B8",
+                  "content": "實體辨識任務 C（Post-R1 品質頁）",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "nfiHj",
+              "name": "mProgTitle",
+              "fill": "#1E1B4B",
+              "content": "標記員進度摘要",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "5JHei",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kzPuz",
+                  "fill": "#1E1B4B",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "王小明 45｜李大華 38｜陳美玲 ⚠ 12",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "GnCzL",
+                  "fill": "#94A3B8",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "以完成數 / 今日數 / 平均速度顯示異常提醒",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "6F8AR",
+              "name": "mAnnTitle",
+              "fill": "#1E1B4B",
+              "content": "系統公告",
+              "fontFamily": "Inter",
+              "fontSize": 14,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "ZnYdi",
+              "width": "fill_container",
+              "fill": "#FFFFFF",
+              "cornerRadius": 12,
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "#E2E8F0"
+              },
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                12,
+                14
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0Ma1x",
+                  "fill": "#1E1B4B",
+                  "content": "本週需完成 Dry Run 共識確認",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "cfEcr",
+                  "fill": "#94A3B8",
+                  "content": "規則變更與提醒集中顯示於此",
                   "fontFamily": "Inter",
                   "fontSize": 12,
                   "fontWeight": "normal"
@@ -5237,7 +5503,7 @@
           "id": "RUPhS",
           "name": "n2",
           "fill": "$color-text-muted",
-          "content": "② 待處理事項：IAA 結果待確認（badge + 連結 → /dataset-quality）\n   Dry Run 全員完成提醒（badge + 啟動 Official Run 連結）",
+          "content": "② 待處理事項：IAA 結果待確認與 Official Run 啟動提醒；導頁為 Post-R1",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
@@ -5247,7 +5513,7 @@
           "id": "i02gi",
           "name": "n3",
           "fill": "$color-text-muted",
-          "content": "③ 標記員進度表：完成數 / 今日 / 平均速度 / 異常警示（⚠ 橙色高亮列）",
+          "content": "③ 標記員進度表：完成數 / 今日 / 平均速度 / 異常警示（⚠ 橙色高亮列）\n④ 系統公告區：平台公告與規則提醒",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
@@ -7479,8 +7745,8 @@
                       "type": "text",
                       "id": "MgPAs",
                       "name": "sub",
-                      "fill": "$color-text-muted",
-                      "content": "所有標記資料均已完成審查，或尚未有任務分配",
+                      "fill": "#94A3B8",
+                      "content": "目前沒有待審查任務；若 dataset-stats 已上線，可從下方入口查看最近任務統計",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "normal"
@@ -7504,8 +7770,8 @@
                           "type": "text",
                           "id": "oW4s6",
                           "name": "btnTxt",
-                          "fill": "$color-primary",
-                          "content": "查看統計報告",
+                          "fill": "#6366F1",
+                          "content": "查看最近任務統計（Post-R1）",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "600"
@@ -7527,7 +7793,7 @@
       "y": 8200,
       "name": "U-6 Reviewer 空狀態 - Mobile",
       "width": 390,
-      "height": 391,
+      "height": 430,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -7628,6 +7894,18 @@
                   "fontWeight": "600"
                 },
                 {
+                  "type": "text",
+                  "id": "KFxrZ",
+                  "name": "mobileReviewerSub",
+                  "fill": "#94A3B8",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "若 dataset-stats 已上線，可查看最近任務統計",
+                  "fontFamily": "Inter",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
                   "type": "frame",
                   "id": "zy6Ps",
                   "name": "statsBtn",
@@ -7646,8 +7924,8 @@
                       "type": "text",
                       "id": "uflf0",
                       "name": "btnTxt",
-                      "fill": "$color-primary",
-                      "content": "查看統計報告",
+                      "fill": "#6366F1",
+                      "content": "查看最近任務統計（Post-R1）",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "600"
@@ -7723,7 +8001,7 @@
           "id": "DjQqD",
           "name": "compTitle",
           "fill": "$color-text",
-          "content": "U-6 Reviewer 空狀態 — 元件說明",
+          "content": "U-6 Reviewer 空狀態 — 元件說明（更新）",
           "fontFamily": "Inter",
           "fontSize": 16,
           "fontWeight": "700"
@@ -7733,7 +8011,7 @@
           "id": "JIPPx",
           "name": "note",
           "fill": "$color-text-muted",
-          "content": "觸發條件：reviewer task_role 存在但目前無待審查任務\n顯示空狀態插圖 + 說明文字 + 「查看統計報告」Ghost 按鈕 → /dataset-stats",
+          "content": "觸發條件：reviewer task_role 存在但目前無待審查任務\nR1 先顯示說明文字；若 dataset-stats 已上線，再顯示「查看最近任務統計（Post-R1）」按鈕",
           "fontFamily": "Inter",
           "fontSize": 13,
           "fontWeight": "normal"
