@@ -51,6 +51,7 @@
     }
     #proto-bar .proto-logout:hover { background: #fef08a; }
     body.proto-bar-active { padding-top: 36px !important; }
+    body.proto-bar-active > [role="banner"] { top: 36px !important; }
   `;
 
   function currentRole() {

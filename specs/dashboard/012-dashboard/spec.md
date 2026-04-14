@@ -223,7 +223,7 @@ flowchart TD
     C -->|"API 成功 + 有資料"| D["SuperAdminDashboard — 有資料\n平台使用者快覽\n全任務列表（名稱/類型/狀態/完成率）\n任務待處理項"]
     C -->|"API 成功 + 無任務與使用者"| E["SuperAdminDashboard — 空狀態\n『平台尚未有任何資料』\n[管理使用者] 次要按鈕（Post-R1）"]
     C -->|"API 失敗"| F["SuperAdminDashboard — 錯誤狀態\n錯誤提示，不渲染空卡片"]
-    D -->|"點擊任務卡（Post-R1）"| H(["/task-detail/{task_id}"])
+    D -->|"點擊任務卡（Post-R1）"| H(["/task-detail/:taskId"])
     D -->|"點擊 IAA 待確認連結（Post-R1）"| I(["/dataset-quality/:taskId"])
     D -->|"點擊『前往使用者管理』（Post-R1）"| G(["/user-management"])
     E -->|"點擊『管理使用者』（Post-R1）"| G
@@ -243,7 +243,7 @@ flowchart TD
 | From | Trigger | To |
 |------|---------|-----|
 | `SuperAdminDashboard — 有資料` | 「前往使用者管理」快捷連結（Post-R1） | `/user-management` |
-| `SuperAdminDashboard — 有資料` | 點擊任務卡（Post-R1） | `/task-detail/{task_id}`（對應任務）|
+| `SuperAdminDashboard — 有資料` | 點擊任務卡（Post-R1） | `/task-detail/:taskId`（對應任務）|
 | `SuperAdminDashboard — 有資料` | IAA 待確認快速連結（Post-R1） | `/dataset-quality/:taskId`（對應任務）|
 | `SuperAdminDashboard — 空狀態` | 「管理使用者」次要按鈕（Post-R1） | `/user-management` |
 
@@ -287,7 +287,7 @@ flowchart TD
     B --> C["UserDashboard — Skeleton\nGET /users/me/tasks + /dashboard/user-summary 載入中"]
     C -->|"回傳含 task_role=project_leader 的任務"| D["UserDashboard — PL Block\n任務總覽卡（名稱/類型/狀態/完成率）\n待處理事項區（IAA 待確認 badge / Dry Run 全員完成提醒）\n標記員進度區（完成數/今日數/速度/異常警示）"]
     D -->|"點擊 IAA 待確認快速連結（Post-R1）"| F(["/dataset-quality/:taskId（對應任務）"])
-    D -->|"點擊任務卡（Post-R1）"| G(["/task-detail/{task_id}（對應任務）"])
+    D -->|"點擊任務卡（Post-R1）"| G(["/task-detail/:taskId（對應任務）"])
     D -->|"點擊待處理事項：啟動 Official Run（Post-R1）"| G
 ```
 
@@ -302,9 +302,9 @@ flowchart TD
 
 | From | Trigger | To |
 |------|---------|-----|
-| `UserDashboard — PL Block` | 點擊任務卡（Post-R1） | `/task-detail/{task_id}`（對應任務）|
+| `UserDashboard — PL Block` | 點擊任務卡（Post-R1） | `/task-detail/:taskId`（對應任務）|
 | `UserDashboard — PL Block` | IAA 待確認快速連結（Post-R1） | `/dataset-quality/:taskId`（對應任務）|
-| `UserDashboard — PL Block` | 待處理事項：啟動 Official Run（Post-R1） | `/task-detail/{task_id}`（對應任務，Official Run tab）|
+| `UserDashboard — PL Block` | 待處理事項：啟動 Official Run（Post-R1） | `/task-detail/:taskId`（對應任務，Official Run tab）|
 
 ---
 
@@ -398,7 +398,7 @@ flowchart TD
 | ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
 |----|---------|----------|---------|-----------|---------|
 | SA-1 | **Skeleton** | `SA-1 SuperAdmin Skeleton` | US1 | 全頁灰色骨架佔位：Header、使用者快覽卡區（灰塊 ×N）、任務列表區（灰色列 ×N）；無實際數字，無操作元件 | — |
-| SA-2 | **有資料** | `SA-2 SuperAdmin 有資料` | US1 | ① 平台使用者快覽：各系統角色帳號數（`user_count`、`super_admin_count`）統計卡 ② 全任務列表：表格或卡片，每筆顯示任務名稱、任務類型（`classification` / `scoring` 等）、當前狀態（草稿 / Dry Run / IAA 確認 / Official Run / 已完成）、整體完成率進度條 ③ 全平台標記進度摘要：彙整各任務標記進度與異常提醒 ④ 任務層級待處理項：若有 IAA 結果待確認的任務，顯示提醒；若 Post-R1 目標頁可用，才顯示快速連結 | 「前往使用者管理」（Post-R1）→ `/user-management`；任務卡點擊（Post-R1）→ `/task-detail/{task_id}`；IAA 快速連結（Post-R1）→ `/dataset-quality/:taskId` |
+| SA-2 | **有資料** | `SA-2 SuperAdmin 有資料` | US1 | ① 平台使用者快覽：各系統角色帳號數（`user_count`、`super_admin_count`）統計卡 ② 全任務列表：表格或卡片，每筆顯示任務名稱、任務類型（`classification` / `scoring` 等）、當前狀態（草稿 / Dry Run / IAA 確認 / Official Run / 已完成）、整體完成率進度條 ③ 全平台標記進度摘要：彙整各任務標記進度與異常提醒 ④ 任務層級待處理項：若有 IAA 結果待確認的任務，顯示提醒；若 Post-R1 目標頁可用，才顯示快速連結 | 「前往使用者管理」（Post-R1）→ `/user-management`；任務卡點擊（Post-R1）→ `/task-detail/:taskId`；IAA 快速連結（Post-R1）→ `/dataset-quality/:taskId` |
 | SA-3 | **空狀態** | `SA-3 SuperAdmin 空狀態` | US1 | 空狀態插圖或圖示 + 說明文字「平台尚未有任何資料」；若 Post-R1 已啟用 `user-management`，則顯示「管理使用者」次要按鈕（outlined / ghost 樣式）；不顯示任何任務列表或統計卡 | 「管理使用者」（Post-R1）→ `/user-management` |
 | SA-4 | **錯誤** | `SA-4 SuperAdmin 錯誤` | US1 | `/admin/stats` 呼叫失敗：錯誤提示區塊（icon + 說明文字 + 「重試」按鈕）；不渲染任何空白卡片或 placeholder 數字 | 「重試」→ 重新呼叫 `/admin/stats` |
 
@@ -431,7 +431,7 @@ flowchart TD
 
 | ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
 |----|---------|----------|---------|-----------|---------|
-| U-2 | **PL Block — 有任務** | `U-2 PL Block 有任務` | US3 | ① **任務總覽卡**：任務名稱、任務類型、當前狀態（badge）、整體完成率進度條 ② **待處理事項區**：IAA 結果待確認（badge；若 Post-R1 頁面可用才加快速連結）、Dry Run 已全員完成提醒（Post-R1 可導向啟動 Official Run）③ **標記員進度區**：各標記員本任務完成數 / 今日完成數 / 平均速度，速度異常者依 `task.config.dashboard.velocity_alert_threshold` 顯示警示圖示或醒目顏色標示 ④ **系統公告區**：平台公告或任務提醒 | IAA 待確認（Post-R1）→ `/dataset-quality/:taskId`；任務卡（Post-R1）→ `/task-detail/{task_id}`；啟動 Official Run（Post-R1）→ `/task-detail/{task_id}`（Official Run tab）|
+| U-2 | **PL Block — 有任務** | `U-2 PL Block 有任務` | US3 | ① **任務總覽卡**：任務名稱、任務類型、當前狀態（badge）、整體完成率進度條 ② **待處理事項區**：IAA 結果待確認（badge；若 Post-R1 頁面可用才加快速連結）、Dry Run 已全員完成提醒（Post-R1 可導向啟動 Official Run）③ **標記員進度區**：各標記員本任務完成數 / 今日完成數 / 平均速度，速度異常者依 `task.config.dashboard.velocity_alert_threshold` 顯示警示圖示或醒目顏色標示 ④ **系統公告區**：平台公告或任務提醒 | IAA 待確認（Post-R1）→ `/dataset-quality/:taskId`；任務卡（Post-R1）→ `/task-detail/:taskId`；啟動 Official Run（Post-R1）→ `/task-detail/:taskId`（Official Run tab）|
 
 ---
 
