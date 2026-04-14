@@ -8,7 +8,7 @@
       "y": 0,
       "name": "SA-1 SuperAdmin Skeleton - Desktop",
       "width": 1440,
-      "height": 900,
+      "height": 700,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -58,7 +58,7 @@
           "id": "VHVFd",
           "name": "Main",
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 640,
           "children": [
             {
               "type": "frame",
@@ -434,7 +434,7 @@
       "y": 0,
       "name": "SA-2 SuperAdmin 有資料 - Desktop",
       "width": 1440,
-      "height": 1300,
+      "height": 700,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -522,7 +522,7 @@
           "id": "tKuRa",
           "name": "Main",
           "width": "fill_container",
-          "height": "fill_container",
+          "height": 637,
           "children": [
             {
               "type": "frame",
@@ -1209,7 +1209,7 @@
       "type": "frame",
       "id": "FSwa3",
       "x": 1600,
-      "y": 1500,
+      "y": 1035,
       "name": "SA-2 SuperAdmin 有資料 - Mobile",
       "width": 390,
       "height": 479,
@@ -1560,8 +1560,8 @@
     {
       "type": "frame",
       "id": "ryqHB",
-      "x": 1600,
-      "y": 2500,
+      "x": 1590,
+      "y": 1928,
       "name": "SA-2 SuperAdmin 有資料 - Component",
       "width": 800,
       "fill": "$color-white",
@@ -1892,7 +1892,7 @@
       "type": "frame",
       "id": "NtfIw",
       "x": 3200,
-      "y": 1500,
+      "y": 1035,
       "name": "SA-3 SuperAdmin 空狀態 - Mobile",
       "width": 390,
       "height": 426,
@@ -2088,7 +2088,7 @@
       "type": "frame",
       "id": "f8FLX",
       "x": 3200,
-      "y": 2400,
+      "y": 1928,
       "name": "SA-3 SuperAdmin 空狀態 - Component",
       "width": 800,
       "fill": "$color-white",
@@ -2394,7 +2394,7 @@
       "type": "frame",
       "id": "2nqV0",
       "x": 4800,
-      "y": 1500,
+      "y": 1035,
       "name": "SA-4 SuperAdmin 錯誤 - Mobile",
       "width": 390,
       "height": 394,
@@ -2566,7 +2566,7 @@
       "type": "frame",
       "id": "PEKrL",
       "x": 4800,
-      "y": 2400,
+      "y": 1928,
       "name": "SA-4 SuperAdmin 錯誤 - Component",
       "width": 800,
       "fill": "$color-white",
@@ -2603,7 +2603,7 @@
       "y": 3500,
       "name": "U-0 User Skeleton - Desktop",
       "width": 1440,
-      "height": 900,
+      "height": 700,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -5261,7 +5261,7 @@
       "y": 7000,
       "name": "U-4 Annotator Block - Desktop",
       "width": 1440,
-      "height": 1100,
+      "height": 700,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
@@ -6377,7 +6377,7 @@
       "y": 7000,
       "name": "U-5 Reviewer Block 有任務 - Desktop",
       "width": 1440,
-      "height": 1000,
+      "height": 700,
       "fill": "$color-background",
       "layout": "vertical",
       "children": [
