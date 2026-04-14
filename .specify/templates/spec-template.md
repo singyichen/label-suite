@@ -2,6 +2,7 @@
 
 **Feature Branch**: `[###-feature-name]`
 **Created**: [DATE]
+**Version**: 1.0.0
 **Status**: Draft
 **Input**: User description: "$ARGUMENTS"
 
@@ -121,8 +122,38 @@ flowchart LR
 - **[Entity 1]**: [What it represents, key attributes]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
+## Spec Dependencies *(required — fill in at specify time; use "—" rows if none)*
+
+<!--
+  Upstream: specs that must be implemented before or alongside this feature.
+  Downstream: specs that depend on THIS spec — notify them whenever this spec is versioned up.
+  When updating this spec (version bump), open every downstream spec and assess impact.
+-->
+
+### Upstream (this spec depends on)
+
+| Spec # | Feature | What this spec needs from it |
+|--------|---------|------------------------------|
+| — | — | — |
+
+### Downstream (specs that depend on this)
+
+| Spec # | Feature | What they rely on from this spec |
+|--------|---------|----------------------------------|
+| — | — | — |
+
+---
+
 ## Success Criteria *(required)*
 
 - **SC-001**: [Measurable metric, e.g., "Users can complete labeling task setup in under 2 minutes"]
 - **SC-002**: [Measurable metric]
 - **SC-003**: [User satisfaction metric]
+
+---
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.0 | [DATE] | Initial spec |

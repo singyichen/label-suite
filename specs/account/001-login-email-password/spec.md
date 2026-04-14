@@ -2,6 +2,7 @@
 
 **功能分支**：`001-login-email-password`
 **建立日期**：2026-04-05
+**版本**：1.0.0
 **狀態**：Clarified
 **需求來源**：IA v7 Spec 清單 #001 — 登入 — Email/Password + 頁面 UI
 
@@ -156,6 +157,25 @@ flowchart LR
 
 ---
 
+## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
+
+### 上游（本規格依賴的規格）
+
+| 規格編號 | 功能 | 本規格需要的內容 |
+|---------|------|----------------|
+| — | — | — |
+
+### 下游（依賴本規格的規格）
+
+| 規格編號 | 功能 | 依賴本規格的內容 |
+|---------|------|----------------|
+| 002 | Login — Google SSO | `/login` 頁面結構（Google SSO 按鈕位置）、User model、帳號靜默合併邏輯（相同 email 視為同一帳號） |
+| 003 | Register — Email / Password | User model（`hashed_password`、`role` 欄位）、登入頁面連結（「前往登入」→ `/login`） |
+| 004 | Forgot / Reset Password | User model（`email` 欄位）、`/login` 頁面連結（「忘記密碼」入口） |
+| 005 | Profile Settings | 已驗證 session（JWT）、User model（`name`、`email` 可編輯欄位）、登出行為 |
+
+---
+
 ## 成功標準 *(必填)*
 
 - **SC-001**：使用者可在 30 秒內完成完整登入流程（填寫表單 → 送出 → 儀表板）。
@@ -165,3 +185,11 @@ flowchart LR
 - **SC-005**：登出後，已失效的 JWT 被所有受保護 API 端點拒絕（回傳 HTTP 401）。
 - **SC-006**：登入頁面正確顯示 zh-TW 與 en 兩種語言；語言切換立即生效，不需重新載入頁面。
 - **SC-007**：執行資料庫 migration 後，全新部署環境中存在一個預設 `super_admin` 帳號（bootstrap seed）。此需求的功能規格定義於 `specs/admin/006-user-management/spec.md` FR-008。
+
+---
+
+## Changelog
+
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.0.0 | 2026-04-05 | Initial spec |

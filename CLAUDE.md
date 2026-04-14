@@ -195,7 +195,16 @@ Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `fe
 
 ## Spec-Driven Development (SDD)
 
-This project adopts SDD. See `/sdd-workflow` skill for the full pipeline, commands, and when-to-skip rules.
+Full pipeline — each stage is a hard gate (details: run `/sdd-workflow`):
+
+```
+/superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
+  → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
+```
+
+**TDD (REQUIRED)**: You MUST NOT write implementation code before writing a failing test. No exceptions.
+
+**Pre-PR gate (REQUIRED)**: `/speckit.analyze` must report zero findings before every PR.
 
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
@@ -204,6 +213,10 @@ This project adopts SDD. See `/sdd-workflow` skill for the full pipeline, comman
 - Wireframes: `design/wireframes/pages/[module]/[page].pen`
 - Prototypes: `design/prototype/pages/[module]/[page].html`
 - Specs: `specs/[module]/NNN-feature/`
+
+**Spec status**: Update `specs/STATUS.md` at every pipeline stage transition (see STATUS.md for full trigger list).
+
+**Archive**: After PR merged → `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md`.
 
 ## Constitution
 
@@ -215,7 +228,9 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 
 | Workflow | When | How |
 |---|---|---|
-| New feature (cross-layer) | New frontend + backend feature | `/sdd-workflow` → `/agent-team` → `/pr-flow` |
-| Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → `/pr-flow` |
+| New feature (cross-layer) | New frontend + backend feature | `brainstorm` → `specify` → `plan` → `tasks` → `implement` (or `/agent-team`) → **`analyze`** → **`checklist`** → `/pr-flow` |
+| Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → **`/speckit.analyze`** → `/pr-flow` |
 | Wireframe | After `/speckit.specify` | `/pencil-wireframe` |
-| PR & merge | After implementation complete | `/pr-flow` |
+| Pre-PR gate | Before every PR — no exceptions | `/speckit.analyze` must report zero findings |
+| Spec status update | At each pipeline stage transition | Update `specs/STATUS.md` row |
+| Archive completed spec | After PR merged to `main` | `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md` |

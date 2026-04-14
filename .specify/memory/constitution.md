@@ -8,6 +8,9 @@ New features should begin with a spec. The deciding question for skipping SDD is
 - Features progress in order: requirements → spec → plan → tasks → implementation
 - Each User Story must be independently implementable, testable, and deliverable
 - Mark completed specs with a `.completed` file in the feature directory
+- **Iteration rule**: adding a new User Story to an existing feature → update that spec with a version bump; independent new behavior in the same module → new spec
+- **Spec versioning** (semantic): PATCH = clarification/wording; MINOR = new/changed User Story; MAJOR = breaking change to existing story or API contract
+- **Downstream impact**: when a spec is versioned up, every spec listed in its `## Spec Dependencies → Downstream` section must be reviewed and updated if affected
 
 **Skip SDD and modify code directly for**:
 - Bug fixes — making code match existing specs, not changing specs
@@ -68,4 +71,4 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all six principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.2.3 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-30
+**Version**: 1.3.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-04-13
