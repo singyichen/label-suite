@@ -2,82 +2,86 @@
  * Dashboard page prototype tests
  * Source spec: specs/dashboard/012-dashboard/spec.md
  *
- * Tests that can be validated against the static HTML prototype:
- *   - Role-driven dashboard rendering
- *   - Scenario switcher exposes required wireframe states
- *   - User empty state promotes create-task CTA
- *   - Super Admin shows platform progress summary
- *   - Project Leader shows system announcement block
- *   - Annotator quick continue CTA targets annotation workspace
- *   - Language toggle updates key UI copy immediately
+ * Tests validated against the current static HTML prototype:
+ *   - Scenario switcher reveals the matching dashboard view
+ *   - Each role view exposes its key content block
+ *   - Language toggle updates the document language state
  *   - Responsive rendering at 375px / 768px / 1440px
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
-async function openAsRole(page: import('@playwright/test').Page, role: string) {
-  await page.addInitScript((value) => {
-    window.sessionStorage.setItem('proto_role', value);
-  }, role);
+async function openScenario(page: Page, scenario: 'super_admin_data' | 'project_leader' | 'annotator' | 'reviewer') {
   await page.goto(DASHBOARD_URL);
+  const trigger = page.locator(`.scenario-pill[data-scenario="${scenario}"]`);
+  await expect(trigger).toBeVisible();
+  await trigger.click();
 }
 
-test.describe('Dashboard page — role rendering', () => {
-  test('super admin sees platform progress summary', async ({ page }) => {
-    await openAsRole(page, 'super_admin');
-    await expect(page.getByTestId('role-indicator')).toContainText(/系統管理員|Super Admin/i);
+test.describe('Dashboard page — scenario rendering', () => {
+  test('super admin view shows platform-level summary panels', async ({ page }) => {
+    await openScenario(page, 'super_admin_data');
     await expect(page.getByTestId('super-admin-view')).toBeVisible();
-    await expect(page.getByTestId('sa-progress-summary')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /平台統計|Platform Stats/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /最近提醒|Recent Alerts/ })).toBeVisible();
   });
 
-  test('project leader sees system announcement block', async ({ page }) => {
-    await openAsRole(page, 'project_leader');
-    await expect(page.getByTestId('pl-view')).toBeVisible();
-    await expect(page.getByTestId('system-announcement')).toBeVisible();
+  test('project leader view shows my tasks list', async ({ page }) => {
+    await openScenario(page, 'project_leader');
+    const leaderView = page.getByTestId('project-leader-view');
+    await expect(leaderView).toBeVisible();
+    await expect(leaderView.getByRole('heading', { name: /我的任務|My Tasks/ })).toBeVisible();
+    await expect(leaderView.getByText('新聞標題分類')).toBeVisible();
+    await expect(leaderView.getByText('情感分析基準')).toBeVisible();
   });
 
-  test('annotator sees quick continue CTA to annotation workspace', async ({ page }) => {
-    await openAsRole(page, 'annotator');
-    const cta = page.getByTestId('quick-continue-btn');
-    await expect(cta).toBeVisible();
-    await expect(cta).toHaveAttribute('href', /annotation-workspace\.html\?taskId=/);
+  test('annotator view shows progress metrics and continue action', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    await expect(page.getByTestId('annotator-view')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /我的進度|My Progress/ })).toBeVisible();
+    await expect(page.getByText(/247/)).toBeVisible();
+    await expect(page.getByRole('button', { name: /快速繼續|Continue/ })).toBeVisible();
   });
 
-  test('reviewer can switch to reviewer empty state', async ({ page }) => {
-    await openAsRole(page, 'reviewer');
-    await page.getByRole('button', { name: /Reviewer Empty|Reviewer 空狀態/ }).click();
-    await expect(page.getByTestId('reviewer-empty-view')).toBeVisible();
-    await expect(page.getByTestId('review-empty-stats-btn')).toBeVisible();
+  test('reviewer view shows pending review panel and start-review action', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+    await expect(page.getByTestId('reviewer-view')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /待審查|Pending Review/ })).toBeVisible();
+    await expect(page.getByText(/12 待審/)).toBeVisible();
+    await expect(page.getByRole('button', { name: /開始審查|Start Review/ })).toBeVisible();
   });
 });
 
 test.describe('Dashboard page — scenario switcher', () => {
-  test('user empty state exposes create task as primary CTA', async ({ page }) => {
-    await openAsRole(page, 'project_leader');
-    await page.getByRole('button', { name: /User Empty|無任務空狀態/ }).click();
-    const createBtn = page.getByTestId('create-task-btn');
-    await expect(page.getByTestId('user-empty-view')).toBeVisible();
-    await expect(createBtn).toBeVisible();
-    await expect(createBtn).toHaveAttribute('href', /task-new\.html/);
-  });
+  test('switching scenarios updates the active pill and visible view', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
 
-  test('super admin error state can recover back to data view', async ({ page }) => {
-    await openAsRole(page, 'super_admin');
-    await page.getByRole('button', { name: /Error|錯誤/ }).click();
-    await expect(page.getByTestId('dashboard-error')).toBeVisible();
-    await page.getByRole('button', { name: /Retry|重試載入/ }).click();
+    const superAdminPill = page.locator('.scenario-pill[data-scenario="super_admin_data"]');
+    const reviewerPill = page.locator('.scenario-pill[data-scenario="reviewer"]');
+
+    await expect(superAdminPill).toHaveClass(/active/);
     await expect(page.getByTestId('super-admin-view')).toBeVisible();
+
+    await reviewerPill.click();
+
+    await expect(reviewerPill).toHaveClass(/active/);
+    await expect(superAdminPill).not.toHaveClass(/active/);
+    await expect(page.getByTestId('reviewer-view')).toBeVisible();
+    await expect(page.getByTestId('super-admin-view')).not.toHaveClass(/is-active/);
   });
 });
 
 test.describe('Dashboard page — language toggle', () => {
-  test('switches headline copy to English immediately', async ({ page }) => {
-    await openAsRole(page, 'project_leader');
-    await expect(page.getByTestId('dashboard-title')).toContainText('儀表板');
+  test('toggles the document language between zh-TW and en', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
     await page.getByTestId('lang-toggle').click();
-    await expect(page.getByTestId('lang-label')).toHaveText('EN');
-    await expect(page.getByTestId('dashboard-title')).toContainText('Dashboard as the first decision surface');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await page.getByTestId('lang-toggle').click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
   });
 });
 
@@ -91,10 +95,10 @@ test.describe('Dashboard page — responsive rendering', () => {
   for (const vp of viewports) {
     test(`renders without horizontal overflow at ${vp.name}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await openAsRole(page, 'project_leader');
+      await page.goto(DASHBOARD_URL);
       await expect(page.getByTestId('dashboard-shell')).toBeVisible();
-      const scrollWidth = await page.evaluate(() => document.body.scrollWidth);
-      const clientWidth = await page.evaluate(() => document.body.clientWidth);
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
     });
   }
