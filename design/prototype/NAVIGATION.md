@@ -32,7 +32,7 @@
 | 007 | 角色設定 | `admin/role-settings` | admin | ★★☆☆☆ | ⬜ 待建置 |
 | 008 | 標記員列表 | `annotator-management/annotator-list` | annotator-management | ★★★☆☆ | ⬜ 待建置 |
 | 009 | 工時紀錄 | `annotator-management/work-log` | annotator-management | ★★★☆☆ | ⬜ 待建置 |
-| 012 | 儀表板 | `dashboard/dashboard` | dashboard | ★★★★☆ | ⬜ 待建置 |
+| 012 | 儀表板 | `dashboard/dashboard` | dashboard | ★★★★☆ | ✅ 完成 |
 | 010 | 任務列表 | `task-management/task-list` | task-management | ★★★☆☆ | ⬜ 待建置 |
 | 013 | 新增任務（多步驟） | `task-management/task-new` | task-management | ★★★★★ | ⬜ 待建置 |
 | 014 | 任務詳情 | `task-management/task-detail` | task-management | ★★★★☆ | ⬜ 待建置 |

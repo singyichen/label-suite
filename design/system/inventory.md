@@ -5,7 +5,7 @@
 > **更新規則：** 每次新增 prototype 頁面時，同步更新本文件。新 component 進 prototype 前，必須先在 MASTER.md 定義 token。
 >
 > **掃描範圍：** `design/prototype/` 所有頁面
-> **最後掃描：** 2026-03-31
+> **最後掃描：** 2026-04-14
 > **掃描頁面：** index.html、login.html、dashboard.html、profile.html
 
 ---
@@ -35,7 +35,7 @@
 | Ghost / Text | `text-primary` underline on hover | dashboard (view all) | ✅ |
 | OAuth (Google/GitHub) | `border-slate-200 bg-white` + 品牌 icon | login | ❌ 未定義 |
 | Icon-only | `w-9 h-9` no label, icon only | dashboard (mobile menu) | ❌ 未定義 |
-| Language Toggle | `border-slate-200 rounded-full` | login, dashboard, profile | ❌ 未定義 |
+| Language Toggle | `border-slate-200 rounded-lg` | login, dashboard, profile | ❌ 未定義 |
 
 **缺少規格：** OAuth 變體、Icon-only 變體、Language Toggle 變體
 
@@ -64,7 +64,7 @@
 | Interactive | `border-slate-200 rounded-xl` hover:border-primary translateY(-2px) | dashboard (stat card) | ✅ |
 | Non-interactive | `border-slate-200 rounded-xl` 無 hover | dashboard, profile | ✅ |
 | Login card | `border-slate-200 rounded-2xl p-8` | login | ⚠️ 尺寸未標準化 |
-| Stat card | header + 大數字 + 副文字 + icon 的特定結構 | dashboard | ❌ 未定義結構 |
+| Dashboard summary card | `border-slate-200 rounded-xl p-6` + KPI / subtitle 結構 | dashboard | ⚠️ 結構已穩定，仍未在 MASTER.md 單列變體 |
 
 ---
 
@@ -127,6 +127,18 @@
 | Language toggle | 右側固定 | ❌ 未定義（Icon-only button 變體） |
 | Logout button | Danger 樣式 | ✅ |
 | Mobile hamburger | Icon-only button，展開 mobile drawer | ❌ 未定義（Icon-only button 變體） |
+
+---
+
+### ⚠️ Prototype-Only State Switcher
+
+**MASTER.md 狀態：** 未定義（prototype 輔助控制，不屬正式產品 UI）
+
+| 變體 | 樣式 | 出現頁面 | MASTER.md |
+|------|------|----------|-----------|
+| Scenario switcher | `border-slate-200 rounded-lg` segmented button group | dashboard | ❌ 未定義 |
+
+**說明：** 此元件只用於 prototype 在單一 HTML 切換多個 wireframe state，不應直接視為正式產品 component。
 
 ---
 

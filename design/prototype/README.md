@@ -91,15 +91,19 @@ Runs `tsc --noEmit` against all test files and `playwright.config.ts`. Run this 
 ```
 design/prototype/
 ├── pages/                    # Static HTML prototypes
-│   └── account/
-│       ├── login.html
-│       └── register.html
+│   ├── account/
+│   │   ├── login.html
+│   │   └── register.html
+│   └── dashboard/
+│       └── dashboard.html
 ├── shared/                   # Shared prototype-only utilities (not part of the real product)
 │   └── proto-bar.js          # Role-switcher bar injected on every post-login page
 ├── tests/                    # Playwright spec files
-│   └── account/
-│       ├── login.spec.ts     # spec 001 — Login
-│       └── register.spec.ts  # spec 003 — Register
+│   ├── account/
+│   │   ├── login.spec.ts     # spec 001 — Login
+│   │   └── register.spec.ts  # spec 003 — Register
+│   └── dashboard/
+│       └── dashboard.spec.ts # spec 012 — Dashboard
 ├── playwright.config.ts      # Config: baseURL, webServer, browser projects
 ├── package.json
 ├── tsconfig.json
@@ -216,6 +220,7 @@ Each spec file maps to one SDD spec. The file header lists exactly which user st
 |---|---|---|
 | `tests/account/login.spec.ts` | `specs/account/001-login-email-password` | US1.5, US1.6, US1.7, form validation, navigation |
 | `tests/account/register.spec.ts` | `specs/account/003-register-email-password` | US1.1, US1.3, US2.1–US2.4, FR-009, FR-010 |
+| `tests/dashboard/dashboard.spec.ts` | `specs/dashboard/012-dashboard` | role rendering, scenario states, key CTA, language toggle, responsive layout |
 
 Tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 

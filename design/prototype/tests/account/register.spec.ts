@@ -3,7 +3,7 @@
  * Source spec: specs/account/003-register-email-password/spec.md
  *
  * Tests that can be validated against the static HTML prototype:
- *   - US1.1  Valid form → success banner + redirect to dashboard.html
+ *   - US1.1  Valid form → success banner + redirect to pages/dashboard/dashboard.html
  *   - US1.3  Cancel / back-to-login navigates to login.html
  *   - US2.1  Empty fields → per-field required errors, no request sent
  *   - US2.2  Password mismatch → error, no request sent
@@ -41,17 +41,15 @@ test.describe('Register page — successful registration (spec 003 US1.1)', () =
   });
 
   test('redirects to dashboard.html after successful registration', async ({ page }) => {
-    // dashboard.html has not been built yet; redirect target will 404 from the Python HTTP server
-    test.fixme(true, 'dashboard.html does not exist in prototype yet — will 404');
     await page.goto(REGISTER_URL);
     await fillValidForm(page);
     const [response] = await Promise.all([
-      page.waitForResponse(res => res.url().includes('dashboard.html'), { timeout: 5000 }),
+      page.waitForResponse(res => res.url().includes('/pages/dashboard/dashboard.html'), { timeout: 5000 }),
       page.getByTestId('submit-btn').click(),
     ]);
     // Prototype simulates 2-second redirect; assert page exists (not 404)
     expect(response.status()).toBe(200);
-    await expect(page).toHaveURL(/dashboard\.html/);
+    await expect(page).toHaveURL(/pages\/dashboard\/dashboard\.html/);
   });
 });
 
