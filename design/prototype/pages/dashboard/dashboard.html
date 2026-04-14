@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      /* ── Color Palette (MASTER.md §Color Palette) ───────── */
+      --color-primary:   #6366f1;
+      --color-secondary: #818cf8;
+      --color-cta:       #10b981;
+      --color-surface:   #f5f3ff;
+      --color-ink:       #1e1b4b;
+
+      /* ── Border Radius Scale (MASTER.md §Border Radius) ─── */
+      --radius-sm:   4px;
+      --radius-md:   8px;
+      --radius-lg:   12px;
+      --radius-xl:   16px;
+      --radius-full: 9999px;
+
+      /* ── Shadow Depths (MASTER.md §Shadow Depths) ────────── */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: var(--color-surface);
+      color: var(--color-ink);
+      font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+      line-height: 1.8;
+    }
+
+    html[lang="en"] body {
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    .hidden { display: none !important; }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      max-width: 1280px;
+      padding: 0 24px;
+      margin: 0 auto;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: var(--color-primary);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 1.1rem;
+      line-height: 1.1;
+    }
+
+    .brand-copy span {
+      display: block;
+      color: #64748b;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    .navbar-center {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 12px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      color: #64748b;
+      font-size: 0.92rem;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--color-ink);
+      background: #f8fafc;
+    }
+
+    .nav-link.active {
+      color: var(--color-primary);
+      background: var(--color-surface);
+      font-weight: 600;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .lang-toggle,
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: var(--color-ink);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+    }
+
+    .lang-toggle:hover,
+    .icon-btn:hover,
+    .btn:hover,
+    .scenario-pill:hover {
+      border-color: var(--color-primary);
+      background: #eef2ff;
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px 4px 12px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: var(--color-primary);
+      font-weight: 700;
+      border: 2px solid rgba(99, 102, 241, 0.16);
+    }
+
+    .layout {
+      display: block;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 24px 96px;
+    }
+
+    .page {
+      min-width: 0;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      background: white;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      border: 1px solid #e2e8f0;
+      color: var(--color-primary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .hero h1 {
+      margin: 16px 0 10px;
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: clamp(2rem, 3vw, 2.5rem);
+      line-height: 1.2;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0;
+      color: #64748b;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .hero-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .meta-card {
+      padding: 16px 18px;
+      border-radius: var(--radius-lg);
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .meta-card strong {
+      display: block;
+      font-size: 1.45rem;
+      line-height: 1.2;
+    }
+
+    .meta-card span {
+      display: block;
+      color: #64748b;
+      font-size: 0.88rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid #e2e8f0;
+      background: white;
+    }
+
+    .controls-copy strong {
+      display: block;
+      font-size: 1rem;
+    }
+
+    .controls-copy span {
+      color: #64748b;
+      font-size: 0.88rem;
+    }
+
+    .scenario-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .scenario-pill {
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 9px 14px;
+      background: white;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .scenario-pill.active {
+      background: var(--color-surface);
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    .content-grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 22px;
+    }
+
+    .view {
+      display: none;
+      gap: 20px;
+    }
+
+    .view.is-active {
+      display: grid;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid rgba(226,232,240,0.82);
+      border-radius: var(--radius-lg);
+      background: white;
+      padding: 24px;
+      min-width: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+
+    .panel-subtitle {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .btn-primary {
+      color: #fff;
+      background: var(--color-cta);
+      border-color: var(--color-cta);
+    }
+
+    .btn-secondary {
+      color: var(--color-primary);
+      background: transparent;
+      border: 2px solid var(--color-primary);
+    }
+
+    .btn-ghost {
+      color: var(--color-primary);
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary:hover {
+      background: #eef2ff;
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost:hover {
+      text-decoration: underline;
+    }
+
+    .btn:focus-visible,
+    .lang-toggle:focus-visible,
+    .icon-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18), 0 0 0 4px #fff;
+    }
+
+    .pill-row,
+    .metric-row,
+    .stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .status-pill,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    .status-info {
+      color: #1d4ed8;
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .status-warning {
+      color: #a16207;
+      background: #fefce8;
+      border-color: #fde68a;
+    }
+
+    .status-success {
+      color: #15803d;
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .status-danger {
+      color: #b91c1c;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .tag-post {
+      color: var(--color-primary);
+      background: var(--color-surface);
+      border-color: #e0e7ff;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric {
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 1.4rem;
+      line-height: 1.2;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 6px;
+      color: #64748b;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .list,
+    .table {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-item,
+    .table-row {
+      display: grid;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid #e2e8f0;
+      background: white;
+    }
+
+    .table-row {
+      grid-template-columns: minmax(180px, 1.3fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr) minmax(130px, 0.9fr) minmax(140px, 1fr);
+    }
+
+    .task-row {
+      grid-template-columns: minmax(0, 1.4fr) minmax(150px, 0.8fr) minmax(150px, 0.8fr) minmax(150px, 0.8fr);
+    }
+
+    .member-row {
+      grid-template-columns: minmax(0, 1fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(130px, 0.8fr);
+    }
+
+    .label {
+      color: #64748b;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .lead {
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .progress {
+      position: relative;
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e5e7eb;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--color-primary);
+    }
+
+    .announcement {
+      display: grid;
+      gap: 12px;
+    }
+
+    .announcement-item {
+      display: grid;
+      gap: 6px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .empty-state,
+    .error-state {
+      display: grid;
+      justify-items: start;
+      gap: 16px;
+      padding: 30px;
+      border-radius: var(--radius-lg);
+      background: white;
+      border: 1px solid #e2e8f0;
+    }
+
+    .empty-figure,
+    .error-figure {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-lg);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      background: var(--color-surface);
+      border: 1px solid #e2e8f0;
+    }
+
+    .error-figure {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    .empty-state h2,
+    .error-state h2 {
+      margin: 0;
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 1.9rem;
+      line-height: 1.15;
+    }
+
+    .empty-state p,
+    .error-state p {
+      margin: 0;
+      color: #64748b;
+    }
+
+    .skeleton {
+      display: grid;
+      gap: 18px;
+    }
+
+    .skeleton-bar,
+    .skeleton-card,
+    .skeleton-row {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      background: #e2e8f0;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    .skeleton-bar { height: 24px; width: 220px; }
+    .skeleton-card { height: 120px; }
+    .skeleton-row { height: 56px; }
+
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .mobile-tabs {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      z-index: 200;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .mobile-tabs nav {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      height: 100%;
+    }
+
+    .mobile-tab {
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 2px;
+      padding: 8px 6px;
+      color: #64748b;
+      font-size: 0.74rem;
+    }
+
+    .mobile-tab.active {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton-bar,
+      .skeleton-card,
+      .skeleton-row { animation: none; opacity: 1; background: #e2e8f0; }
+    }
+
+    /* Semantic table inside panel */
+    .panel-table-wrap {
+      margin: 18px -24px -24px;
+      overflow-x: auto;
+      border-top: 1px solid #e2e8f0;
+      border-bottom-left-radius: var(--radius-lg);
+      border-bottom-right-radius: var(--radius-lg);
+      background: white;
+    }
+
+    .panel-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .panel-table thead tr {
+      background: #f8fafc;
+    }
+
+    .panel-table thead th {
+      padding: 12px 24px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-align: left;
+    }
+
+    .panel-table tbody tr {
+      border-top: 1px solid #f1f5f9;
+      transition: background 150ms ease;
+    }
+
+    .panel-table tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .panel-table td {
+      padding: 16px 24px;
+      vertical-align: middle;
+    }
+
+    .panel-table td.td-lead {
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+
+    .panel-table td.td-muted {
+      color: #64748b;
+    }
+
+    @media (max-width: 1100px) {
+      .layout,
+      .grid-2,
+      .hero-meta,
+      .metrics,
+      .table-row,
+      .task-row,
+      .member-row {
+        grid-template-columns: 1fr;
+      }
+
+      .layout { padding-bottom: 32px; }
+    }
+
+    @media (max-width: 768px) {
+      .mobile-tabs { display: block; }
+      .navbar {
+        height: auto;
+        padding: 16px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .navbar-center {
+        order: 3;
+        width: 100%;
+        margin: 4px 0 0;
+        overflow-x: auto;
+      }
+
+      .nav-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .layout { padding: 18px 14px 72px; }
+      .hero,
+      .panel,
+      .empty-state,
+      .error-state {
+        padding: 18px;
+        border-radius: var(--radius-lg);
+      }
+
+      .panel-table-wrap {
+        margin: 14px -18px -18px;
+      }
+
+      .controls {
+        padding: 16px;
+      }
+
+      .scenario-list {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar" role="banner">
+    <a class="brand" href="#top" aria-label="Label Suite — 儀表板首頁">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-copy">
+        <strong>Label Suite</strong>
+        <span data-i18n-zh="Dashboard 原型展示" data-i18n-en="Dashboard prototype demo">Dashboard 原型展示</span>
+      </div>
+    </a>
+
+    <nav class="navbar-center" aria-label="Main navigation">
+      <a class="nav-link active" aria-current="page" href="#top" data-i18n-zh="儀表板" data-i18n-en="Dashboard">儀表板</a>
+      <a class="nav-link" href="../task-management/task-new.html" data-i18n-zh="建立任務" data-i18n-en="Create Task">建立任務</a>
+      <a class="nav-link" href="../annotation/annotation-workspace.html" data-i18n-zh="標記作業" data-i18n-en="Annotation Workspace">標記作業</a>
+      <a class="nav-link" href="../account/profile.html" data-i18n-zh="個人資料" data-i18n-en="Profile">個人資料</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" type="button" aria-label="切換語言">
+        <span id="langLabel" data-testid="lang-label">ZH</span>
+        <span>/</span>
+        <span>EN</span>
+      </button>
+      <div class="user-chip">
+        <div class="avatar" id="userAvatar">PL</div>
+        <div>
+          <div id="userName" class="lead" data-i18n-zh="Mandy Chen" data-i18n-en="Mandy Chen">Mandy Chen</div>
+          <div id="roleIndicator" class="muted" data-testid="role-indicator">Project Leader</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout" data-testid="dashboard-shell">
+    <section class="page" id="top">
+      <section class="hero">
+        <div class="eyebrow">
+          <span data-i18n-zh="UI-UX Pro Max" data-i18n-en="UI-UX Pro Max">UI-UX Pro Max</span>
+          <span>·</span>
+          <span data-i18n-zh="單一路由 Prototype" data-i18n-en="Single-route prototype">單一路由 Prototype</span>
+        </div>
+        <h1 id="dashboardTitle" data-testid="dashboard-title" data-i18n-zh="儀表板作為登入後的第一個決策面板" data-i18n-en="Dashboard as the first decision surface after sign-in">儀表板作為登入後的第一個決策面板</h1>
+        <p id="dashboardSubtitle" data-i18n-zh="依 system role 與 task role 呈現不同區塊。R1 的核心是導向下一步行動，延伸頁面全部清楚標記為 Post-R1。" data-i18n-en="Render different blocks by system role and task role. R1 focuses on the next action, while all later integrations are clearly labeled Post-R1.">依 system role 與 task role 呈現不同區塊。R1 的核心是導向下一步行動，延伸頁面全部清楚標記為 Post-R1。</p>
+        <div class="hero-meta">
+          <div class="meta-card">
+            <strong id="heroMetric1">R1</strong>
+            <span data-i18n-zh="核心驗收 release" data-i18n-en="Core acceptance release">核心驗收 release</span>
+          </div>
+          <div class="meta-card">
+            <strong id="heroMetric2">11</strong>
+            <span data-i18n-zh="對應 wireframe state" data-i18n-en="Mapped wireframe states">對應 wireframe state</span>
+          </div>
+          <div class="meta-card">
+            <strong id="heroMetric3">4</strong>
+            <span data-i18n-zh="Prototype 視角" data-i18n-en="Prototype personas">Prototype 視角</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="controls-copy">
+          <strong data-i18n-zh="畫面狀態切換" data-i18n-en="State switcher">畫面狀態切換</strong>
+          <span id="scenarioHint" data-i18n-zh="目前依登入視角切換對應的 dashboard state。" data-i18n-en="The available dashboard states change with the current role.">目前依登入視角切換對應的 dashboard state。</span>
+        </div>
+        <div class="scenario-list" id="scenarioList" data-testid="scenario-list"></div>
+      </section>
+
+      <section class="content-grid">
+        <section class="view" id="view-super-admin-data" data-scenario="super_admin_data" data-testid="super-admin-view">
+          <div class="grid-3">
+            <article class="panel">
+              <h2 class="panel-title" data-i18n-zh="平台使用者快覽" data-i18n-en="Platform role counts">平台使用者快覽</h2>
+              <div class="metrics">
+                <div class="metric">
+                  <strong>148</strong>
+                  <span data-i18n-zh="User 帳號" data-i18n-en="User accounts">User 帳號</span>
+                </div>
+                <div class="metric">
+                  <strong>12</strong>
+                  <span data-i18n-zh="活躍 Project Leader" data-i18n-en="Active Project Leaders">活躍 Project Leader</span>
+                </div>
+                <div class="metric">
+                  <strong>4</strong>
+                  <span data-i18n-zh="Super Admin 帳號" data-i18n-en="Super Admin accounts">Super Admin 帳號</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel" data-testid="sa-progress-summary">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="全平台標記進度摘要" data-i18n-en="Platform progress summary">全平台標記進度摘要</h2>
+                  <p class="panel-subtitle" data-i18n-zh="對應最新 spec 的 SA-2 新增區塊。" data-i18n-en="Added to match the latest SA-2 scope in the spec.">對應最新 spec 的 SA-2 新增區塊。</p>
+                </div>
+                <span class="status-pill status-warning">12 in progress</span>
+              </div>
+              <div class="metrics">
+                <div class="metric">
+                  <strong>12</strong>
+                  <span data-i18n-zh="進行中任務" data-i18n-en="Active tasks">進行中任務</span>
+                </div>
+                <div class="metric">
+                  <strong>3</strong>
+                  <span data-i18n-zh="等待 IAA 確認" data-i18n-en="Waiting for IAA confirmation">等待 IAA 確認</span>
+                </div>
+                <div class="metric">
+                  <strong>2</strong>
+                  <span data-i18n-zh="速度異常提醒" data-i18n-en="Velocity anomalies">速度異常提醒</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="待處理焦點" data-i18n-en="Pending attention">待處理焦點</h2>
+                  <p class="panel-subtitle" data-i18n-zh="平台層級的即時提醒。" data-i18n-en="Platform-level actions that need attention.">平台層級的即時提醒。</p>
+                </div>
+                <span class="tag tag-post" data-i18n-zh="Post-R1 快捷連結" data-i18n-en="Post-R1 shortcuts">Post-R1 快捷連結</span>
+              </div>
+              <div class="list">
+                <div class="list-item">
+                  <div class="lead">NER Benchmark Dry Run</div>
+                  <div class="muted" data-i18n-zh="IAA 已達 0.81，待 Project Leader 確認後啟動 Official Run。" data-i18n-en="IAA reached 0.81 and is waiting for Project Leader confirmation before Official Run.">IAA 已達 0.81，待 Project Leader 確認後啟動 Official Run。</div>
+                </div>
+                <div class="list-item">
+                  <div class="lead">客服意圖分類 v2</div>
+                  <div class="muted" data-i18n-zh="2 位標註員平均速度低於警戒值。" data-i18n-en="Two annotators are below the configured velocity threshold.">2 位標註員平均速度低於警戒值。</div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 class="panel-title" data-i18n-zh="全任務列表" data-i18n-en="All task summaries">全任務列表</h2>
+                <p class="panel-subtitle" data-i18n-zh="名稱、任務類型、當前狀態、完成率，與任務層級提醒一次呈現。" data-i18n-en="Show name, task type, status, completion rate, and task-level reminders in one place.">名稱、任務類型、當前狀態、完成率，與任務層級提醒一次呈現。</p>
+              </div>
+              <div class="btn-row">
+                <a class="btn btn-secondary" href="../admin/user-management.html" data-testid="sa-user-management-link">
+                  <span data-i18n-zh="前往使用者管理" data-i18n-en="Open user management">前往使用者管理</span>
+                  <span class="tag tag-post">Post-R1</span>
+                </a>
+              </div>
+            </div>
+            <div class="panel-table-wrap">
+              <table class="panel-table" role="table" aria-label="全任務列表">
+                <thead>
+                  <tr>
+                    <th scope="col">Task</th>
+                    <th scope="col" data-i18n-zh="類型" data-i18n-en="Type">類型</th>
+                    <th scope="col" data-i18n-zh="狀態" data-i18n-en="Status">狀態</th>
+                    <th scope="col" data-i18n-zh="完成率" data-i18n-en="Completion">完成率</th>
+                    <th scope="col" data-i18n-zh="提醒" data-i18n-en="Notes">提醒</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="td-lead">NER Benchmark Dry Run</td>
+                    <td>NER</td>
+                    <td><span class="status-pill status-warning" data-i18n-zh="等待 IAA 確認" data-i18n-en="Waiting for IAA">等待 IAA 確認</span></td>
+                    <td><div class="progress"><span style="width: 82%"></span></div></td>
+                    <td class="td-muted" data-i18n-zh="IAA 待確認 → Dataset Quality（Post-R1）" data-i18n-en="IAA pending → Dataset Quality (Post-R1)">IAA 待確認 → Dataset Quality（Post-R1）</td>
+                  </tr>
+                  <tr>
+                    <td class="td-lead" data-i18n-zh="客服意圖分類 v2" data-i18n-en="Customer intent v2">客服意圖分類 v2</td>
+                    <td data-i18n-zh="分類" data-i18n-en="Classification">分類</td>
+                    <td><span class="status-pill status-info" data-i18n-zh="Official Run 進行中" data-i18n-en="Official Run">Official Run 進行中</span></td>
+                    <td><div class="progress"><span style="width: 57%"></span></div></td>
+                    <td class="td-muted" data-i18n-zh="2 筆速度異常提醒" data-i18n-en="2 velocity anomaly alerts">2 筆速度異常提醒</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-super-admin-empty" data-scenario="super_admin_empty">
+          <article class="empty-state">
+            <div class="empty-figure" aria-hidden="true">SA</div>
+            <h2 data-i18n-zh="平台尚未有任何資料" data-i18n-en="The platform has no data yet">平台尚未有任何資料</h2>
+            <p data-i18n-zh="這個狀態對應 SA-3。R1 先提供說明，管理使用者入口保留為 Post-R1 次要操作。" data-i18n-en="This matches SA-3. R1 focuses on guidance first, while user management remains an optional Post-R1 secondary action.">這個狀態對應 SA-3。R1 先提供說明，管理使用者入口保留為 Post-R1 次要操作。</p>
+            <div class="btn-row">
+              <a class="btn btn-secondary" href="../admin/user-management.html">
+                <span data-i18n-zh="管理使用者" data-i18n-en="Manage users">管理使用者</span>
+                <span class="tag tag-post">Post-R1</span>
+              </a>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" id="view-super-admin-skeleton" data-scenario="super_admin_skeleton" data-testid="dashboard-skeleton">
+          <article class="panel skeleton">
+            <div class="skeleton-bar"></div>
+            <div class="skeleton-grid">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+          </article>
+        </section>
+
+        <section class="view" id="view-super-admin-error" data-scenario="super_admin_error">
+          <article class="error-state" data-testid="dashboard-error">
+            <div class="error-figure" aria-hidden="true">ERR</div>
+            <h2 data-i18n-zh="無法載入平台統計" data-i18n-en="Unable to load platform statistics">無法載入平台統計</h2>
+            <p data-i18n-zh="模擬 `/admin/stats` 失敗。依 spec，此時只顯示錯誤提示，不渲染任何空白數字卡。" data-i18n-en="This simulates a `/admin/stats` failure. Per spec, the dashboard shows an error message and does not render empty stat cards.">模擬 `/admin/stats` 失敗。依 spec，此時只顯示錯誤提示，不渲染任何空白數字卡。</p>
+            <button class="btn btn-secondary" id="retrySuperAdmin" type="button" data-i18n-zh="重試載入" data-i18n-en="Retry">重試載入</button>
+          </article>
+        </section>
+
+        <section class="view" id="view-user-empty" data-scenario="user_empty" data-testid="user-empty-view">
+          <article class="empty-state">
+            <div class="empty-figure" aria-hidden="true">NEW</div>
+            <h2 data-i18n-zh="目前尚無任務，建立第一個任務或等待被邀請加入任務" data-i18n-en="No tasks yet. Create your first task or wait to be invited.">目前尚無任務，建立第一個任務或等待被邀請加入任務</h2>
+            <p data-i18n-zh="依最新 spec，所有平台成員都可建立任務，因此主 CTA 必須是「建立第一個任務」，而不是只顯示等待指派。" data-i18n-en="Per the latest spec, every platform member can create a task, so the primary CTA must be “Create your first task,” not just a passive waiting state.">依最新 spec，所有平台成員都可建立任務，因此主 CTA 必須是「建立第一個任務」，而不是只顯示等待指派。</p>
+            <div class="btn-row">
+              <a class="btn btn-primary" href="../task-management/task-new.html" data-testid="create-task-btn">
+                <span data-i18n-zh="建立第一個任務" data-i18n-en="Create your first task">建立第一個任務</span>
+              </a>
+              <a class="btn btn-ghost" href="../annotator-management/work-log.html">
+                <span data-i18n-zh="查看個人工時紀錄" data-i18n-en="View personal work log">查看個人工時紀錄</span>
+                <span class="tag tag-post">Post-R1</span>
+              </a>
+              <a class="btn btn-ghost" href="../account/profile.html">
+                <span data-i18n-zh="編輯個人資料" data-i18n-en="Edit profile">編輯個人資料</span>
+                <span class="tag tag-post">Post-R1</span>
+              </a>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" id="view-project-leader" data-scenario="project_leader" data-testid="pl-view">
+          <div class="grid-2">
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="pill-row">
+                    <span class="status-pill status-info">Project Leader</span>
+                    <span class="status-pill status-warning" data-i18n-zh="Dry Run 完成 82%" data-i18n-en="Dry Run 82% complete">Dry Run 完成 82%</span>
+                  </div>
+                  <h2 class="panel-title" style="margin-top: 14px;">NER Benchmark Dry Run</h2>
+                  <p class="panel-subtitle" data-i18n-zh="任務總覽卡整合名稱、任務類型、狀態與完成率。" data-i18n-en="Task overview card combines task name, type, status, and completion rate.">任務總覽卡整合名稱、任務類型、狀態與完成率。</p>
+                </div>
+                <a class="btn btn-secondary" href="../task-management/task-detail.html">
+                  <span data-i18n-zh="查看任務詳情" data-i18n-en="View task detail">查看任務詳情</span>
+                  <span class="tag tag-post">Post-R1</span>
+                </a>
+              </div>
+              <div class="metrics">
+                <div class="metric">
+                  <strong>NER</strong>
+                  <span data-i18n-zh="任務類型" data-i18n-en="Task type">任務類型</span>
+                </div>
+                <div class="metric">
+                  <strong data-i18n-zh="等待 IAA" data-i18n-en="Waiting IAA">等待 IAA</strong>
+                  <span data-i18n-zh="目前狀態" data-i18n-en="Current status">目前狀態</span>
+                </div>
+                <div class="metric">
+                  <strong>82%</strong>
+                  <span data-i18n-zh="整體完成率" data-i18n-en="Completion rate">整體完成率</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="待處理事項" data-i18n-en="Pending actions">待處理事項</h2>
+                  <p class="panel-subtitle" data-i18n-zh="R1 顯示提醒，導頁仍以 Post-R1 標記。" data-i18n-en="R1 shows reminders while the linked destination remains explicitly Post-R1.">R1 顯示提醒，導頁仍以 Post-R1 標記。</p>
+                </div>
+              </div>
+              <div class="list">
+                <div class="list-item">
+                  <div class="lead" data-i18n-zh="IAA 結果待確認" data-i18n-en="IAA results pending confirmation">IAA 結果待確認</div>
+                  <div class="muted" data-i18n-zh="IAA 0.81 已達標，請確認是否啟動 Official Run。" data-i18n-en="IAA 0.81 passed the threshold. Confirm whether to launch Official Run.">IAA 0.81 已達標，請確認是否啟動 Official Run。</div>
+                  <div class="btn-row">
+                    <a class="btn btn-secondary" href="../dataset/dataset-quality.html">
+                      <span data-i18n-zh="前往確認" data-i18n-en="Review quality">前往確認</span>
+                      <span class="tag tag-post">Post-R1</span>
+                    </a>
+                  </div>
+                </div>
+                <div class="list-item">
+                  <div class="lead" data-i18n-zh="Dry Run 已全員完成" data-i18n-en="Dry Run completed by all annotators">Dry Run 已全員完成</div>
+                  <div class="muted" data-i18n-zh="請準備啟動 Official Run。這個動作在 prototype 中僅標示，不作為 R1 阻塞。" data-i18n-en="Prepare to launch Official Run. In the prototype this is labeled only and does not block R1 acceptance.">請準備啟動 Official Run。這個動作在 prototype 中僅標示，不作為 R1 阻塞。</div>
+                  <div class="btn-row">
+                    <a class="btn btn-ghost" href="../task-management/task-detail.html">
+                      <span data-i18n-zh="啟動 Official Run" data-i18n-en="Launch Official Run">啟動 Official Run</span>
+                      <span class="tag tag-post">Post-R1</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="grid-2">
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="標記員進度區" data-i18n-en="Annotator progress">標記員進度區</h2>
+                  <p class="panel-subtitle" data-i18n-zh="依 `velocity_alert_threshold` 顯示速度警示。" data-i18n-en="Velocity warnings follow the configured `velocity_alert_threshold`.">依 `velocity_alert_threshold` 顯示速度警示。</p>
+                </div>
+                <span class="status-pill status-danger" data-i18n-zh="2 筆異常" data-i18n-en="2 alerts">2 筆異常</span>
+              </div>
+              <div class="panel-table-wrap">
+                <table class="panel-table" role="table" aria-label="標記員進度列表">
+                  <thead>
+                    <tr>
+                      <th scope="col" data-i18n-zh="標記員" data-i18n-en="Annotator">標記員</th>
+                      <th scope="col" data-i18n-zh="本任務完成" data-i18n-en="Completed">本任務完成</th>
+                      <th scope="col" data-i18n-zh="今日完成" data-i18n-en="Today">今日完成</th>
+                      <th scope="col" data-i18n-zh="狀態" data-i18n-en="Status">狀態</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="td-lead">Ava Lin</td>
+                      <td>184</td>
+                      <td>36</td>
+                      <td><span class="status-pill status-success" data-i18n-zh="穩定" data-i18n-en="Stable">穩定</span></td>
+                    </tr>
+                    <tr>
+                      <td class="td-lead">Chris Wu</td>
+                      <td>102</td>
+                      <td>8</td>
+                      <td><span class="status-pill status-danger" data-i18n-zh="速度偏低" data-i18n-en="Low velocity">速度偏低</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="panel" data-testid="system-announcement">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="系統公告區" data-i18n-en="System announcements">系統公告區</h2>
+                  <p class="panel-subtitle" data-i18n-zh="這是 IA / Functional Map 明確要求，原 spec 已補回。" data-i18n-en="This section is required by IA and the Functional Map and has been restored in the latest spec.">這是 IA / Functional Map 明確要求，原 spec 已補回。</p>
+                </div>
+              </div>
+              <div class="announcement">
+                <div class="announcement-item">
+                  <div class="lead" data-i18n-zh="4/15 20:00 系統維護" data-i18n-en="Apr 15, 20:00 maintenance window">4/15 20:00 系統維護</div>
+                  <div class="muted" data-i18n-zh="維護期間僅影響資料品質計算，不影響 R1 儀表板瀏覽。" data-i18n-en="The maintenance impacts quality aggregation only and does not block R1 dashboard usage.">維護期間僅影響資料品質計算，不影響 R1 儀表板瀏覽。</div>
+                </div>
+                <div class="announcement-item">
+                  <div class="lead" data-i18n-zh="新任務模板已更新" data-i18n-en="New task template updated">新任務模板已更新</div>
+                  <div class="muted" data-i18n-zh="新增關係抽取與句對任務範本，與產品基線一致。" data-i18n-en="Relation extraction and sentence-pair templates are now included to match the current product baseline.">新增關係抽取與句對任務範本，與產品基線一致。</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-annotator" data-scenario="annotator" data-testid="annotator-view">
+          <div class="grid-2">
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="pill-row">
+                    <span class="status-pill status-info">Annotator</span>
+                    <span class="status-pill status-success" data-i18n-zh="今日完成 42 筆" data-i18n-en="42 items done today">今日完成 42 筆</span>
+                  </div>
+                  <h2 class="panel-title" style="margin-top: 14px;" data-i18n-zh="快速繼續上次未完成任務" data-i18n-en="Resume the last unfinished task">快速繼續上次未完成任務</h2>
+                  <p class="panel-subtitle" data-i18n-zh="對應 spec 的 annotator 入口：直接回到 annotation workspace。" data-i18n-en="This matches the annotator entry in the spec: jump straight back to the annotation workspace.">對應 spec 的 annotator 入口：直接回到 annotation workspace。</p>
+                </div>
+                <a class="btn btn-primary" href="../annotation/annotation-workspace.html?taskId=t-ner-benchmark" data-testid="quick-continue-btn">
+                  <span data-i18n-zh="快速繼續" data-i18n-en="Quick continue">快速繼續</span>
+                </a>
+              </div>
+              <div class="metrics">
+                <div class="metric">
+                  <strong>42</strong>
+                  <span data-i18n-zh="跨任務今日完成總數" data-i18n-en="Completed today">跨任務今日完成總數</span>
+                </div>
+                <div class="metric">
+                  <strong>678</strong>
+                  <span data-i18n-zh="跨任務累計完成總數" data-i18n-en="Completed overall">跨任務累計完成總數</span>
+                </div>
+                <div class="metric">
+                  <strong>93</strong>
+                  <span data-i18n-zh="各任務剩餘筆數" data-i18n-en="Remaining items">各任務剩餘筆數</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="我的任務列表" data-i18n-en="My assignments">我的任務列表</h2>
+                  <p class="panel-subtitle" data-i18n-zh="Dry Run 與 Official Run 明確分區。" data-i18n-en="Dry Run and Official Run are clearly separated.">Dry Run 與 Official Run 明確分區。</p>
+                </div>
+              </div>
+              <div class="list">
+                <div class="list-item">
+                  <div class="pill-row">
+                    <span class="status-pill status-warning">Dry Run</span>
+                    <span class="status-pill status-info" data-i18n-zh="進行中" data-i18n-en="In progress">進行中</span>
+                  </div>
+                  <div class="lead">NER Benchmark Dry Run</div>
+                  <div class="muted" data-i18n-zh="已完成 64 / 80 筆，尚餘 16 筆。" data-i18n-en="64 of 80 items finished, 16 remaining.">已完成 64 / 80 筆，尚餘 16 筆。</div>
+                </div>
+                <div class="list-item">
+                  <div class="pill-row">
+                    <span class="status-pill status-info">Official Run</span>
+                    <span class="status-pill status-success" data-i18n-zh="已提交" data-i18n-en="Submitted">已提交</span>
+                  </div>
+                  <div class="lead" data-i18n-zh="客服意圖分類 v2" data-i18n-en="Customer intent v2">客服意圖分類 v2</div>
+                  <div class="muted" data-i18n-zh="已完成 240 / 240 筆。" data-i18n-en="240 of 240 items finished.">已完成 240 / 240 筆。</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-reviewer" data-scenario="reviewer" data-testid="reviewer-view">
+          <div class="grid-2">
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <div class="pill-row">
+                    <span class="status-pill status-info">Reviewer</span>
+                    <span class="status-pill status-warning" data-i18n-zh="7 筆待審查" data-i18n-en="7 items pending review">7 筆待審查</span>
+                  </div>
+                  <h2 class="panel-title" style="margin-top: 14px;" data-i18n-zh="待審查任務列表" data-i18n-en="Review queue">待審查任務列表</h2>
+                  <p class="panel-subtitle" data-i18n-zh="Reviewer flow 本身仍屬 Post-R1，但 dashboard 先提供區塊與狀態。" data-i18n-en="The full reviewer flow remains Post-R1, but the dashboard already surfaces the queue and status.">Reviewer flow 本身仍屬 Post-R1，但 dashboard 先提供區塊與狀態。</p>
+                </div>
+                <a class="btn btn-secondary" href="../annotation/annotation-workspace.html?mode=review&taskId=t-ner-benchmark" data-testid="review-entry-btn">
+                  <span data-i18n-zh="快速進入審查" data-i18n-en="Enter review mode">快速進入審查</span>
+                  <span class="tag tag-post">Post-R1</span>
+                </a>
+              </div>
+              <div class="panel-table-wrap">
+                <table class="panel-table" role="table" aria-label="待審查任務列表">
+                  <thead>
+                    <tr>
+                      <th scope="col" data-i18n-zh="任務" data-i18n-en="Task">任務</th>
+                      <th scope="col" data-i18n-zh="待審核" data-i18n-en="Pending">待審核</th>
+                      <th scope="col" data-i18n-zh="已審核 / 總數" data-i18n-en="Reviewed / Total">已審核 / 總數</th>
+                      <th scope="col" data-i18n-zh="狀態" data-i18n-en="Status">狀態</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="td-lead">NER Benchmark Dry Run</td>
+                      <td>7</td>
+                      <td>31 / 38</td>
+                      <td><span class="status-pill status-warning" data-i18n-zh="Post-R1 審查入口" data-i18n-en="Post-R1 review entry">Post-R1 審查入口</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2 class="panel-title" data-i18n-zh="Dry Run IAA 摘要" data-i18n-en="Dry Run IAA summary">Dry Run IAA 摘要</h2>
+                  <p class="panel-subtitle" data-i18n-zh="顯示當前分數與是否達標。" data-i18n-en="Show the current score and whether it passes the threshold.">顯示當前分數與是否達標。</p>
+                </div>
+              </div>
+              <div class="metrics">
+                <div class="metric">
+                  <strong>0.81</strong>
+                  <span data-i18n-zh="目前 IAA" data-i18n-en="Current IAA">目前 IAA</span>
+                </div>
+                <div class="metric">
+                  <strong data-i18n-zh="達標" data-i18n-en="Pass">達標</strong>
+                  <span data-i18n-zh="狀態" data-i18n-en="Status">狀態</span>
+                </div>
+                <div class="metric">
+                  <strong>3</strong>
+                  <span data-i18n-zh="待處理衝突" data-i18n-en="Conflicts left">待處理衝突</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-reviewer-empty" data-scenario="reviewer_empty" data-testid="reviewer-empty-view">
+          <article class="empty-state">
+            <div class="empty-figure" aria-hidden="true">REV</div>
+            <h2 data-i18n-zh="目前沒有待審查任務" data-i18n-en="No review tasks are pending right now">目前沒有待審查任務</h2>
+            <p data-i18n-zh="這個狀態對應 U-6。最近任務統計報告保留為 Post-R1 次要入口。" data-i18n-en="This matches U-6. The latest task statistics remain an optional Post-R1 secondary entry.">這個狀態對應 U-6。最近任務統計報告保留為 Post-R1 次要入口。</p>
+            <div class="btn-row">
+              <a class="btn btn-secondary" href="../dataset/dataset-stats.html" data-testid="review-empty-stats-btn">
+                <span data-i18n-zh="查看最近任務統計報告" data-i18n-en="View the latest task statistics">查看最近任務統計報告</span>
+                <span class="tag tag-post">Post-R1</span>
+              </a>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" id="view-user-skeleton" data-scenario="user_skeleton">
+          <article class="panel skeleton" data-testid="dashboard-skeleton-user">
+            <div class="skeleton-bar"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </article>
+        </section>
+
+        <section class="view" id="view-user-error" data-scenario="user_error">
+          <article class="error-state" data-testid="dashboard-error-user">
+            <div class="error-figure" aria-hidden="true">ERR</div>
+            <h2 data-i18n-zh="無法載入使用者儀表板摘要" data-i18n-en="Unable to load the user dashboard summary">無法載入使用者儀表板摘要</h2>
+            <p data-i18n-zh="模擬 `/users/me/tasks` 或 `/dashboard/user-summary` 失敗。依 spec，系統需保留錯誤提示，而不是顯示空白 Block。" data-i18n-en="This simulates a `/users/me/tasks` or `/dashboard/user-summary` failure. Per spec, the dashboard must keep an explicit error state instead of empty blocks.">模擬 `/users/me/tasks` 或 `/dashboard/user-summary` 失敗。依 spec，系統需保留錯誤提示，而不是顯示空白 Block。</p>
+            <button class="btn btn-secondary" id="retryUser" type="button" data-i18n-zh="重新整理摘要" data-i18n-en="Reload summary">重新整理摘要</button>
+          </article>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <aside class="mobile-tabs" aria-label="Mobile prototype navigation">
+    <nav>
+      <a class="mobile-tab active" href="#top" aria-current="page">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12L11.204 3.045c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+        </svg>
+        <span data-i18n-zh="總覽" data-i18n-en="Overview">總覽</span>
+      </a>
+      <a class="mobile-tab" href="../task-management/task-new.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span data-i18n-zh="建立" data-i18n-en="Create">建立</span>
+      </a>
+      <a class="mobile-tab" href="../annotation/annotation-workspace.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+        </svg>
+        <span data-i18n-zh="作業" data-i18n-en="Work">作業</span>
+      </a>
+      <a class="mobile-tab" href="../account/profile.html">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+        <span data-i18n-zh="我的" data-i18n-en="Me">我的</span>
+      </a>
+    </nav>
+  </aside>
+
+  <script>
+    if (!sessionStorage.getItem('proto_role')) {
+      sessionStorage.setItem('proto_role', 'project_leader');
+    }
+
+    const roleMeta = {
+      super_admin: {
+        labelZh: '系統管理員',
+        labelEn: 'Super Admin',
+        avatar: 'SA',
+        scenarios: [
+          { key: 'super_admin_data', zh: '有資料', en: 'With Data' },
+          { key: 'super_admin_empty', zh: '空狀態', en: 'Empty' },
+          { key: 'super_admin_skeleton', zh: 'Skeleton', en: 'Skeleton' },
+          { key: 'super_admin_error', zh: '錯誤', en: 'Error' }
+        ],
+        defaultScenario: 'super_admin_data'
+      },
+      project_leader: {
+        labelZh: '專案負責人',
+        labelEn: 'Project Leader',
+        avatar: 'PL',
+        scenarios: [
+          { key: 'project_leader', zh: 'PL Block', en: 'PL Block' },
+          { key: 'user_empty', zh: '無任務空狀態', en: 'User Empty' },
+          { key: 'user_skeleton', zh: 'Skeleton', en: 'Skeleton' },
+          { key: 'user_error', zh: '錯誤', en: 'Error' }
+        ],
+        defaultScenario: 'project_leader'
+      },
+      annotator: {
+        labelZh: '標註員',
+        labelEn: 'Annotator',
+        avatar: 'AN',
+        scenarios: [
+          { key: 'annotator', zh: 'Annotator Block', en: 'Annotator Block' },
+          { key: 'user_empty', zh: '無任務空狀態', en: 'User Empty' },
+          { key: 'user_skeleton', zh: 'Skeleton', en: 'Skeleton' },
+          { key: 'user_error', zh: '錯誤', en: 'Error' }
+        ],
+        defaultScenario: 'annotator'
+      },
+      reviewer: {
+        labelZh: '審核員',
+        labelEn: 'Reviewer',
+        avatar: 'RV',
+        scenarios: [
+          { key: 'reviewer', zh: 'Reviewer Block', en: 'Reviewer Block' },
+          { key: 'reviewer_empty', zh: 'Reviewer 空狀態', en: 'Reviewer Empty' },
+          { key: 'user_empty', zh: '無任務空狀態', en: 'User Empty' },
+          { key: 'user_skeleton', zh: 'Skeleton', en: 'Skeleton' },
+          { key: 'user_error', zh: '錯誤', en: 'Error' }
+        ],
+        defaultScenario: 'reviewer'
+      }
+    };
+
+    const scenarioFallback = {
+      super_admin_data: 'super_admin_data',
+      super_admin_empty: 'super_admin_empty',
+      super_admin_skeleton: 'super_admin_skeleton',
+      super_admin_error: 'super_admin_error',
+      project_leader: 'project_leader',
+      annotator: 'annotator',
+      reviewer: 'reviewer',
+      reviewer_empty: 'reviewer_empty',
+      user_empty: 'user_empty',
+      user_skeleton: 'user_skeleton',
+      user_error: 'user_error'
+    };
+
+    let currentLang = 'zh';
+    let currentScenario = null;
+
+    function getRoleKey() {
+      const stored = sessionStorage.getItem('proto_role');
+      return roleMeta[stored] ? stored : 'project_leader';
+    }
+
+    function updateStaticCopy(lang) {
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+      document.title = lang === 'zh' ? 'Label Suite — 儀表板' : 'Label Suite — Dashboard';
+      document.getElementById('langLabel').textContent = lang === 'zh' ? 'ZH' : 'EN';
+      document.getElementById('langToggle').setAttribute('aria-label', lang === 'zh' ? '切換語言' : 'Switch language');
+
+      document.querySelectorAll('[data-i18n-zh]').forEach((node) => {
+        node.textContent = lang === 'zh' ? node.dataset.i18nZh : node.dataset.i18nEn;
+      });
+    }
+
+    function renderScenarioPills(roleKey) {
+      const list = document.getElementById('scenarioList');
+      list.textContent = '';
+      roleMeta[roleKey].scenarios.forEach((scenario) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'scenario-pill' + (scenario.key === currentScenario ? ' active' : '');
+        btn.dataset.scenario = scenario.key;
+        btn.textContent = currentLang === 'zh' ? scenario.zh : scenario.en;
+        btn.addEventListener('click', () => {
+          currentScenario = scenario.key;
+          render();
+        });
+        list.appendChild(btn);
+      });
+    }
+
+    function renderViews() {
+      document.querySelectorAll('.view').forEach((view) => {
+        view.classList.toggle('is-active', view.dataset.scenario === currentScenario);
+      });
+    }
+
+    function renderRoleMeta(roleKey) {
+      const meta = roleMeta[roleKey];
+      document.getElementById('userAvatar').textContent = meta.avatar;
+      document.getElementById('roleIndicator').textContent = currentLang === 'zh' ? meta.labelZh : meta.labelEn;
+    }
+
+    function render() {
+      const roleKey = getRoleKey();
+      const allowedScenarios = roleMeta[roleKey].scenarios.map((item) => item.key);
+      if (!allowedScenarios.includes(currentScenario)) {
+        currentScenario = roleMeta[roleKey].defaultScenario;
+      }
+
+      updateStaticCopy(currentLang);
+      renderRoleMeta(roleKey);
+      renderScenarioPills(roleKey);
+      renderViews();
+    }
+
+    document.getElementById('langToggle').addEventListener('click', () => {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      render();
+    });
+
+    document.getElementById('retrySuperAdmin').addEventListener('click', () => {
+      currentScenario = 'super_admin_data';
+      render();
+    });
+
+    document.getElementById('retryUser').addEventListener('click', () => {
+      currentScenario = scenarioFallback[getRoleKey()] || roleMeta[getRoleKey()].defaultScenario;
+      render();
+    });
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'proto_role') {
+        currentScenario = null;
+        render();
+      }
+    });
+
+    render();
+  </script>
+  <script src="../../shared/proto-bar.js"></script>
+</body>
+</html>

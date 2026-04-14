@@ -6,79 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Label Suite — A configurable, general-purpose NLP data labeling and automated evaluation portal, developed as a master's thesis research outcome (Demo Paper).
 
-**Advisor:** Prof. Lung-Hao Lee — [Natural Language Processing Lab](https://ainlp.tw/)
-
-## Tech Stack
-
-### Frontend
-- Framework: React 18
-- Language: TypeScript (strict mode)
-- Package Manager: pnpm
-- Build Tool: Vite
-- Testing: Playwright (E2E)
-
-### Backend
-- Language: Python 3.12+
-- Framework: FastAPI
-- Testing: pytest + pytest-asyncio + httpx
-
-### Infrastructure
-- Database: PostgreSQL
-- Cache / Queue: Redis
-- Async Tasks: Celery
-- Container: Docker / Docker Compose
-
-## Development Commands
-
-```bash
-# --- Frontend (run from frontend/) ---
-pnpm install
-pnpm dev
-pnpm build
-pnpm playwright test
-pnpm tsc --noEmit
-pnpm lint
-
-# --- Backend (run from backend/) ---
-uv sync --dev
-uv run uvicorn app.main:app --reload
-uv run pytest
-uv run pytest --cov=app --cov-report=term-missing
-uv run mypy .
-uv run ruff check .
-uv run ruff format .
-
-# --- Design (run from project root) ---
-./scripts/serve-prototype.sh          # serve design/prototype/ at http://localhost:8888
-./scripts/serve-prototype.sh 9000     # custom port
-```
-
 ## Architecture
 
-> **Decision:** Modular Monorepo — frontend and backend co-located under separate top-level directories. See [ADR-001](docs/adr/001-monorepo-structure.md). All architectural decisions documented in [docs/adr/](docs/adr/).
+> **Decision:** Modular Monorepo. See [ADR-001](docs/adr/001-monorepo-structure.md). All architectural decisions in [docs/adr/](docs/adr/).
 
 ```
 label-suite/
 ├── frontend/
 │   └── src/
-│       ├── features/             # Vertical axis — one folder per IA module
+│       ├── features/             # One folder per IA module
 │       │   ├── account/
-│       │   ├── dashboard/        # sub-folders: leader/ annotator/ reviewer/ super-admin/
-│       │   ├── task-management/  # includes ConfigBuilder/
-│       │   ├── annotation/       # includes workspace/ review/ task-types/
+│       │   ├── dashboard/
+│       │   ├── task-management/
+│       │   ├── annotation/
 │       │   ├── dataset/
 │       │   ├── annotator-management/
 │       │   └── admin/
-│       ├── shared/               # Cross-feature only (2+ features rule)
+│       ├── shared/               # Imported by 2+ feature modules only
 │       │   ├── ui/
 │       │   ├── layout/
-│       │   ├── api/              # Axios instance + JWT interceptors
-│       │   ├── stores/           # authStore (token/user/role), uiStore (lang, sidebar)
+│       │   ├── api/
+│       │   ├── stores/
 │       │   ├── hooks/
-│       │   ├── types/            # Domain types mirroring backend Pydantic schemas
+│       │   ├── types/
 │       │   └── utils/
-│       ├── locales/              # i18n — namespaced per feature (zh-TW/ + en/)
-│       └── router/               # Route definitions (lazy per feature) + AuthGuard/RoleGuard
+│       ├── locales/
+│       └── router/
 ├── backend/
 │   └── app/
 │       ├── api/routes/
@@ -88,12 +41,12 @@ label-suite/
 │       ├── services/
 │       ├── utils/
 │       └── main.py
-├── specs/                        # SDD specs — specs/[module]/NNN-feature/
+├── specs/
 ├── design/
-│   ├── wireframes/pages/         # Pencil wireframes — [module]/[page].pen
-│   ├── prototype/pages/          # HTML prototypes — [module]/[page].html
-│   └── system/                   # Design system (MASTER.md + inventory.md)
-├── docs/adr/                     # Architecture Decision Records
+│   ├── wireframes/pages/
+│   ├── prototype/pages/
+│   └── system/
+├── docs/adr/
 └── docker-compose.yml
 ```
 
@@ -101,40 +54,18 @@ label-suite/
 
 > **Decision:** Vertical feature slicing — see [ADR-011](docs/adr/011-frontend-source-structure.md).
 
-**`shared/` admission rule:** A file belongs in `shared/` only if directly imported by **two or more different feature modules**. Everything else stays inside its feature folder.
+**`shared/` admission rule:** A file belongs in `shared/` only if directly imported by **two or more different feature modules**.
 
-**State management:**
+**State management:** TanStack Query for all API/server state; Zustand for auth token/user/role and UI globals (never API response data); `useState` for local component state.
 
-| Layer | Tool | Manages |
-|-------|------|---------|
-| Server state | TanStack Query | All API data: fetching, caching, mutations |
-| Global client state | Zustand | Auth token/user, language preference, sidebar state |
-| Local UI state | `useState` | Component-level ephemeral state |
+**Role model:** Two-layer. **System role** (JWT): `user` | `super_admin` | `null`. **Task role** (from `task_membership` API per task): `project_leader` | `reviewer` | `annotator` — not stored in JWT. `DashboardPage` dispatches with explicit `role ===` checks; unknown role clears session and redirects to `/login`. Task pages additionally check membership via `useTaskRole(taskId)`.
 
-Zustand must **not** hold API response data.
-
-**Role model:** The system uses a two-layer role model. **System role** (JWT single string): `user` | `super_admin` (`null` = unauthenticated only). All registered users immediately get `user` — no pending state, no approval flow. Any `user` can create labeling projects. **Task role** (resolved from `task_membership` table per task): `project_leader` | `reviewer` | `annotator`. Task roles are not stored in the JWT — they are fetched per task via API.
-
-**Dashboard role dispatch:** `authStore` holds `role: SystemRole | null` (`null` when unauthenticated). `DashboardPage` dispatches with explicit `role ===` checks: `super_admin` → `SuperAdminDashboard`; `user` → `UserDashboard` (content sections rendered dynamically based on the user's task memberships; empty state shown when user has no task memberships yet). `null` redirects to `/login`. Unknown/unrecognised `role` clears the JWT session and redirects to `/login`.
-
-**RoleGuard:** System-level pages use `role` from JWT — no inheritance. Task-level pages additionally check task membership via `useTaskRole(taskId)` hook. See [ADR-011](docs/adr/011-frontend-source-structure.md).
-
-**Localization namespaces:** `t('task-management:config_builder.label_name')`. Locale files at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
-
-**Agent Team file ownership:** Each `FrontendAgent` owns one `features/[module]/` directory. No agent touches another agent's feature folder.
+**Localization:** Namespaced per module — e.g. `t('task-management:config_builder.label_name')`. Files at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
 
 ## Communication
 
-- **English-first**: Code, comments, commit messages, and API contracts are written in English.
-- **Traditional Chinese allowed** in:
-  - `docs/` — research, thesis, design documentation
-  - `specs/` — SDD spec files (`spec.md`, `plan.md`, `tasks.md`, `checklists/`)
-  - `design/prototype/` — HTML/CSS UI prototypes
-  - `design/wireframes/` — Pencil wireframe files (`.pen`)
-  - `design/system/inventory.md` — component inventory
-- **English only** (exceptions within Chinese-allowed dirs):
-  - `design/system/MASTER.md` — consumed by AI agents; must be English for accurate token parsing
-- `README.zh-TW.md` is maintained in Traditional Chinese.
+- **English:** code, comments, commit messages, API contracts, `design/system/MASTER.md`
+- **Traditional Chinese allowed:** `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, `design/system/inventory.md`
 - All conversations with Claude should be responded to in Traditional Chinese.
 
 ## Code Style
@@ -152,33 +83,64 @@ Zustand must **not** hold API response data.
 
 ## General Coding Rules
 
+### Think Before Coding
+
+Before implementing anything:
+- State your assumptions explicitly. If uncertain, ask — don't silently pick an interpretation.
+- If multiple valid approaches exist, present them with tradeoffs. Don't choose without surfacing the choice.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask before proceeding.
+
+### Simplicity First
+
+Minimum code that solves the problem. Nothing speculative.
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+The test: Would a senior engineer say this is overcomplicated? If yes, simplify.
+
+### Surgical Changes
+
+Touch only what you must. Clean up only your own mess.
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
 ### Design Principles
 - Follow SOLID, DRY, KISS, YAGNI — when DRY leads to over-abstraction, KISS takes priority
 - Each function does one thing; each module has one responsibility
-- Do not write code for hypothetical future requirements
 
 ### Security
 - All user inputs must be validated and sanitized to prevent SQL Injection and XSS attacks
 - Never hardcode API keys or tokens in code; use environment variables
 - CORS must not use `allow_origins=["*"]`; explicitly list allowed origins
 
-### AI Agent Guidelines
+### AI Agent Non-Negotiables
 
-**Prohibited**:
-1. Do not modify version numbers in `pyproject.toml` or `package.json` unless explicitly requested
-2. Do not use `pip install` for backend; use `uv add`. Use `pnpm add` for frontend
-3. Do not suggest changes without reading the relevant files first
-
-**Required**:
-1. All backend Python commands must be run via `uv run`
-2. Read relevant files before making changes to ensure compatibility with the overall architecture
-3. Clean up before finishing: remove debug `print` / `console.log` statements
+- Use `uv add` (not pip) for backend packages; `pnpm add` for frontend
+- All backend commands must be run via `uv run`
+- Read relevant files before making changes
+- Remove debug `print` / `console.log` before finishing
+- Do not modify version numbers in `pyproject.toml` or `package.json` unless explicitly asked
 
 ## Git Workflow
 
 ### Commit Convention
 
-Commit frequently — after every logical group of changes. Keep messages concise and cover the full scope of changes.
+Commit frequently — after every logical group of changes.
 
 Format: `<type>: <description>`
 
@@ -191,11 +153,10 @@ Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `fe
 ### Protection Rules
 
 - Never push directly to `main`
-- Always create and switch to a new branch before starting a new feature
 
 ## Spec-Driven Development (SDD)
 
-Full pipeline — each stage is a hard gate (details: run `/sdd-workflow`):
+Full pipeline — each stage is a hard gate:
 
 ```
 /superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
@@ -209,7 +170,7 @@ Full pipeline — each stage is a hard gate (details: run `/sdd-workflow`):
 **Module names** (align with `features/` and `specs/[module]/`):
 `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
 
-**Design artifact paths** (all mirror module names):
+**Design artifact paths:**
 - Wireframes: `design/wireframes/pages/[module]/[page].pen`
 - Prototypes: `design/prototype/pages/[module]/[page].html`
 - Specs: `specs/[module]/NNN-feature/`

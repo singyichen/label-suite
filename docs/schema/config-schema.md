@@ -2,7 +2,7 @@
 
 > **用途：** 作為 SDD 開發的 config 基準。撰寫 task-management、annotation 模組的 spec.md 前，應先對照本文件確認欄位名稱、型別與約束。後端 Pydantic schema 與前端 `WidgetProps.config` 型別皆以本文件為準。
 >
-> **關聯文件：** [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) · [Information Architecture](../ia/information-architecture.md)
+> **關聯文件：** [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) · [Information Architecture](../product/ia/information-architecture.md)
 >
 > **版本：** v1（2026-04-04）
 

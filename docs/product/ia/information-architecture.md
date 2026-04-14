@@ -48,7 +48,7 @@
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
 | `dataset-stats` | 統計總覽頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
 | `dataset-quality` | 品質監控頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
-| `annotator-list` | 平台成員列表頁 | 標記員管理模組 | ✅ | ✅ | — | 任務 PL 瀏覽以邀請成員；含待指派區塊 |
+| `annotator-list` | 平台成員列表頁 | 標記員管理模組 | ✅ | ✅ | — | 任務 PL 瀏覽以邀請成員 |
 | `work-log` | 工時紀錄頁 | 標記員管理模組 | ✅ | ✅ | — | 一般成員僅自己；`project_leader`（任務）可查看任務成員 |
 | `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理 |
 | `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ✅ | — | |
@@ -304,9 +304,10 @@ flowchart TD
 #### `annotator-list` 平台成員列表頁
 - **進入方式：** Navbar → 標記員管理
 - **功能：**
-  - 查看所有系統角色為 `annotator` 的平台成員；任務 `project_leader` 可停用 / 啟用成員在其任務中的參與狀態（任務層級）；平台帳號停用限 `super_admin`（於 `user-management` 操作）
-  - **待指派區塊：** 顯示已登入或已註冊但 `role = null` 的新使用者，任何 `annotator`（系統）或 `super_admin` 可在此指派 `annotator` 系統角色
-  - 任務 `project_leader` 可從此列表選取成員，邀請加入自己的任務並指派任務角色
+  - 查看所有平台成員（系統角色為 `user` 或 `super_admin`）
+  - 任務 `project_leader` 可從此列表選取成員，邀請加入自己的任務並指派任務角色（`annotator` / `reviewer`）
+  - 顯示成員目前參與的任務數、最近活動時間、是否已加入目前任務
+  - 任務 `project_leader` 可停用 / 啟用成員在其任務中的參與狀態（任務層級）；平台帳號停用限 `super_admin`（於 `user-management` 操作）
 - **空狀態（尚無任何平台成員）：** 說明文字，提示使用者至 `/register` 或 Google SSO 自行加入
 - **離開方式：** 點選成員 → `work-log`
 
@@ -314,10 +315,10 @@ flowchart TD
 - **進入方式（Project Leader）：** `annotator-list` → 點選標記員 → 查看該標記員紀錄
 - **進入方式（Annotator）：** Navbar → 工時紀錄 → 僅顯示自己的紀錄
 - **功能：** 出缺勤紀錄、任務標記時間（系統自動追蹤）、任務標記數量
-- **資料範圍：** Project Leader 可查看所有標記員；Annotator 只能查看自己的紀錄
+- **資料範圍：** 一般平台成員只能查看自己的紀錄；任務 `project_leader` 可查看其所屬任務成員的紀錄；`super_admin` 可查看全平台紀錄
 - **用途說明：** 作為工時結算的依據記錄；實際計薪由系統外部處理，系統不提供計薪功能
 - **空狀態（尚無工時紀錄）：** 說明文字「尚無工時紀錄」，無需額外按鈕
-- **離開方式：** 返回 `annotator-list`（Project Leader）；返回 `dashboard`（Annotator）
+- **離開方式：** 返回 `annotator-list`（Project Leader / Super Admin）；返回 `dashboard`（一般平台成員）
 
 ---
 
@@ -327,13 +328,13 @@ flowchart TD
 
 #### `user-management` 使用者管理頁
 - **進入方式：** Navbar → 系統管理 → 使用者管理
-- **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`annotator` / `super_admin`）；`project_leader` / `reviewer` 為任務角色，於 `task-detail` 管理，不在此頁指派
+- **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`user` / `super_admin`）；`project_leader` / `reviewer` / `annotator` 為任務角色，於 `task-detail` 管理，不在此頁指派
 - **空狀態（尚無任何使用者）：** 說明文字「尚未建立任何使用者帳號」 + 「新增第一位使用者」按鈕
 - **離開方式：** 點選角色設定 → `role-settings`
 
 #### `role-settings` 角色權限設定頁
 - **進入方式：** `user-management` → 角色設定
-- **功能：** 設定各角色（project_leader / annotator / reviewer / super_admin）的功能存取範圍
+- **功能：** 檢視並維護角色權限矩陣；系統角色為 `user` / `super_admin`，任務角色為 `project_leader` / `reviewer` / `annotator`
 - **離開方式：** 儲存 → `user-management`
 
 ---

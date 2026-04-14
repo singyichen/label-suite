@@ -63,6 +63,19 @@ npx playwright test -g "back-to-login link navigates to login.html"
 
 ---
 
+## Serving the Prototype Manually
+
+To browse the prototype in a browser without running tests, use the helper script from the **project root**:
+
+```bash
+./scripts/serve-prototype.sh          # serves at http://localhost:8888
+./scripts/serve-prototype.sh 9000     # custom port
+```
+
+Then open `http://localhost:8888/pages/account/login.html` to start the demo flow.
+
+---
+
 ## Type Check
 
 ```bash
@@ -78,18 +91,106 @@ Runs `tsc --noEmit` against all test files and `playwright.config.ts`. Run this 
 ```
 design/prototype/
 ├── pages/                    # Static HTML prototypes
-│   └── account/
-│       ├── login.html
-│       └── register.html
+│   ├── account/
+│   │   ├── login.html
+│   │   └── register.html
+│   └── dashboard/
+│       └── dashboard.html
+├── shared/                   # Shared prototype-only utilities (not part of the real product)
+│   └── proto-bar.js          # Role-switcher bar injected on every post-login page
 ├── tests/                    # Playwright spec files
-│   └── account/
-│       ├── login.spec.ts     # spec 001 — Login
-│       └── register.spec.ts  # spec 003 — Register
+│   ├── account/
+│   │   ├── login.spec.ts     # spec 001 — Login
+│   │   └── register.spec.ts  # spec 003 — Register
+│   └── dashboard/
+│       └── dashboard.spec.ts # spec 012 — Dashboard
 ├── playwright.config.ts      # Config: baseURL, webServer, browser projects
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
+---
+
+## Role-Based Demo Flow
+
+The prototype simulates four distinct role views so the thesis advisor can walk through each user journey in a single browser session — no backend, no real auth required.
+
+### Why This Approach
+
+The real product uses a **two-layer role model**:
+
+- **System role** (stored in JWT): `user` | `super_admin`
+- **Task role** (resolved per task from `task_membership`): `project_leader` | `reviewer` | `annotator`
+
+For demo purposes, the prototype collapses both layers into **four selectable role views**:
+
+| Role key | Label | Represents |
+|---|---|---|
+| `project_leader` | 👑 專案負責人 | Task role — creates and manages labeling tasks |
+| `annotator` | ✏️ 標註員 | Task role — performs the actual annotation work |
+| `reviewer` | 🔍 審核員 | Task role — reviews and approves annotation results |
+| `super_admin` | ⚙️ 系統管理員 | System role — platform-wide admin, user management |
+
+### How It Works
+
+**Step 1 — Login page** (`pages/account/login.html`)
+
+The login form includes a **role selection grid** before the submit button. The user must pick one of the four roles before proceeding. On submit, the selected role key is stored in `sessionStorage`:
+
+```js
+sessionStorage.setItem('proto_role', 'project_leader'); // example
+```
+
+The page then navigates to the appropriate dashboard.
+
+**Step 2 — Prototype bar** (`shared/proto-bar.js`)
+
+Every post-login page includes `proto-bar.js` via a `<script>` tag. The script reads `sessionStorage` and injects a fixed yellow banner at the top of the page containing:
+
+- A `PROTOTYPE` badge — clearly marks the page as demo-only
+- Role switch buttons — click to switch role and reload the page
+- A "← 返回登入" button — clears the session and returns to `login.html`
+
+The bar **does not render** if no role is set (i.e., the user has not gone through the login step).
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│ PROTOTYPE │ 視角：[👑 專案負責人] [✏️ 標註員] [🔍 審核員] [⚙️ 系統管理員]  ← 返回登入 │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Adding proto-bar to a New Page
+
+Every page inside `pages/` (except `account/login.html` and `account/register.html`) should include proto-bar. Adjust the relative path based on how deep the page is:
+
+```html
+<!-- pages/dashboard/index.html (depth = 1 under pages/) -->
+<script src="../../shared/proto-bar.js"></script>
+
+<!-- pages/task-management/config/builder.html (depth = 2 under pages/) -->
+<script src="../../../shared/proto-bar.js"></script>
+```
+
+The script uses `window.location.pathname` to compute the correct login URL automatically — no manual configuration needed.
+
+### Session Storage Key
+
+| Key | Type | Values |
+|---|---|---|
+| `proto_role` | `string \| null` | `'project_leader'` · `'annotator'` · `'reviewer'` · `'super_admin'` |
+
+`sessionStorage` is used (not `localStorage`) so the role resets when the browser tab is closed, matching real login-session semantics.
+
+### Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| Role selected at login, not per page | Mirrors the real auth flow — the user's role is determined at login time |
+| Proto-bar allows mid-session switching | Lets the advisor switch views quickly during a walkthrough without re-logging in |
+| Yellow bar with `PROTOTYPE` badge | Clearly signals the page is a demo artifact, not production UI |
+| `sessionStorage` over `localStorage` | Clears on tab close — avoids stale role state across separate demo sessions |
+| DOM API only (no `innerHTML`) | Satisfies the project's OWASP security hooks even in prototype code |
 
 ---
 
@@ -119,6 +220,7 @@ Each spec file maps to one SDD spec. The file header lists exactly which user st
 |---|---|---|
 | `tests/account/login.spec.ts` | `specs/account/001-login-email-password` | US1.5, US1.6, US1.7, form validation, navigation |
 | `tests/account/register.spec.ts` | `specs/account/003-register-email-password` | US1.1, US1.3, US2.1–US2.4, FR-009, FR-010 |
+| `tests/dashboard/dashboard.spec.ts` | `specs/dashboard/012-dashboard` | role rendering, scenario states, key CTA, language toggle, responsive layout |
 
 Tests that require a live backend (authentication flows, JWT handling) are documented in each file's header under "Tests NOT covered here."
 
