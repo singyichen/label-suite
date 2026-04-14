@@ -19,8 +19,8 @@
       --color-success:      #15803D;
       --color-info:         #1D4ED8;
 
-      --color-text:         #1E1B4B;
-      --color-text-muted:   #94A3B8;
+      --color-ink:          #1E1B4B;
+      --color-ink-muted:    #94A3B8;
       --color-border:       #E2E8F0;
       --color-surface:      #F5F3FF;
       --color-white:        #FFFFFF;
@@ -59,11 +59,15 @@
     body {
       font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
       background: var(--color-surface);
-      color: var(--color-text);
-      line-height: 1.6;
+      color: var(--color-ink);
+      line-height: 1.8;
       min-height: 100vh;
       display: flex;
       flex-direction: row;
+    }
+
+    html[lang="en"] body {
+      line-height: 1.6;
     }
 
     a {
@@ -126,7 +130,7 @@
       font-family: 'Crimson Pro', 'Noto Serif TC', serif;
       font-weight: 700;
       font-size: 16px;
-      color: var(--color-text);
+      color: var(--color-ink);
       line-height: 1;
     }
 
@@ -143,7 +147,7 @@
       border-radius: var(--radius-md);
       font-size: 13px;
       font-weight: 500;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       transition: color 150ms, background 150ms;
       text-align: left;
       display: flex;
@@ -160,7 +164,7 @@
     }
 
     .nav-link:hover {
-      color: var(--color-text);
+      color: var(--color-ink);
       background: #F8FAFC;
     }
 
@@ -193,7 +197,7 @@
       padding: 8px 12px;
       width: 100%;
       background: var(--color-white);
-      color: var(--color-text);
+      color: var(--color-ink);
       font-size: 12px;
       font-weight: 500;
       transition: border-color 150ms, background 150ms;
@@ -247,7 +251,7 @@
     .user-role {
       display: block;
       font-size: 11px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       line-height: 1.3;
       word-break: break-word;
     }
@@ -305,7 +309,7 @@
     .hero p {
       max-width: 760px;
       margin: 0;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 1rem;
       line-height: 1.6;
     }
@@ -334,7 +338,7 @@
     .meta-card span {
       display: block;
       margin-top: 6px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 0.875rem;
       line-height: 1.4;
     }
@@ -361,7 +365,7 @@
 
     .controls-hint {
       display: block;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 0.875rem;
       margin-top: 2px;
     }
@@ -377,7 +381,7 @@
       border-radius: var(--radius-md);
       padding: 8px 14px;
       background: var(--color-white);
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 14px;
       font-weight: 500;
       transition: all 150ms;
@@ -451,7 +455,7 @@
     .panel-subtitle {
       display: block;
       margin-top: 4px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 0.875rem;
       line-height: 1.5;
     }
@@ -575,7 +579,7 @@
     .metric span {
       display: block;
       margin-top: 6px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 0.8rem;
       line-height: 1.4;
     }
@@ -609,7 +613,7 @@
     .list-item-detail {
       display: block;
       margin-top: 4px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-size: 0.875rem;
       line-height: 1.5;
     }
@@ -738,37 +742,41 @@
     </a>
 
     <nav class="navbar-center" aria-label="Main navigation">
-      <a class="nav-link active" aria-current="page" href="#" data-i18n-zh="儀表板" data-i18n-en="Dashboard">
+      <a class="nav-link active" aria-current="page" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
         </svg>
-        <span>儀表板</span>
+        <span data-i18n-zh="儀表板" data-i18n-en="Dashboard">儀表板</span>
       </a>
-      <a class="nav-link" href="#" data-i18n-zh="建立任務" data-i18n-en="Create Task">
+      <a class="nav-link" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
         </svg>
-        <span>建立任務</span>
+        <span data-i18n-zh="建立任務" data-i18n-en="Create Task">建立任務</span>
       </a>
-      <a class="nav-link" href="#" data-i18n-zh="標記作業" data-i18n-en="Annotation">
+      <a class="nav-link" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
           <path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
         </svg>
-        <span>標記作業</span>
+        <span data-i18n-zh="標記作業" data-i18n-en="Annotation">標記作業</span>
       </a>
-      <a class="nav-link" href="#" data-i18n-zh="個人資料" data-i18n-en="Profile">
+      <a class="nav-link" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
         </svg>
-        <span>個人資料</span>
+        <span data-i18n-zh="個人資料" data-i18n-en="Profile">個人資料</span>
       </a>
     </nav>
 
     <div class="nav-actions">
       <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言">
-        <span aria-hidden="true">🌐</span>
-        <span>ZH | EN</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M2 12h20"></path>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span id="langLabel" data-testid="lang-label">EN</span>
       </button>
       <div class="user-chip">
         <div class="avatar" id="userAvatar" aria-hidden="true">PL</div>
@@ -1029,12 +1037,26 @@
       });
     });
 
+    function updateStaticCopy(lang) {
+      const langKey = lang === 'zh-TW' ? 'zh' : 'en';
+      document.querySelectorAll('[data-i18n-zh]').forEach((node) => {
+        node.textContent = langKey === 'zh' ? node.dataset.i18nZh : node.dataset.i18nEn;
+      });
+
+      const langLabel = document.getElementById('langLabel');
+      if (langLabel) {
+        langLabel.textContent = lang === 'zh-TW' ? 'EN' : 'ZH';
+      }
+    }
+
+    updateStaticCopy(document.documentElement.lang);
+
     // Language toggle
     document.getElementById('langToggle')?.addEventListener('click', () => {
       const currentLang = document.documentElement.lang;
       const newLang = currentLang === 'zh-TW' ? 'en' : 'zh-TW';
       document.documentElement.lang = newLang;
-      // Update text based on data-i18n attributes (implementation depends on i18n library)
+      updateStaticCopy(newLang);
     });
   </script>
 </body>

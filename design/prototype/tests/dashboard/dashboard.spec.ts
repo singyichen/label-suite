@@ -74,14 +74,25 @@ test.describe('Dashboard page — scenario switcher', () => {
 });
 
 test.describe('Dashboard page — language toggle', () => {
-  test('toggles the document language between zh-TW and en', async ({ page }) => {
+  test('toggles the document language and visible copy between zh-TW and en', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
 
+    const title = page.getByRole('heading', { level: 1 });
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
+    await expect(page.getByTestId('lang-label')).toHaveText('EN');
+    await expect(title).toContainText('歡迎回來，Mandy');
+
     await page.getByTestId('lang-toggle').click();
+
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH');
+    await expect(title).toContainText('Welcome back, Mandy');
+
     await page.getByTestId('lang-toggle').click();
+
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
+    await expect(page.getByTestId('lang-label')).toHaveText('EN');
+    await expect(title).toContainText('歡迎回來，Mandy');
   });
 });
 
