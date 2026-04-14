@@ -199,7 +199,7 @@ Full pipeline — each stage is a hard gate (details: run `/sdd-workflow`):
 
 ```
 /superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
-  → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
+  → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
 ```
 
 **TDD (REQUIRED)**: You MUST NOT write implementation code before writing a failing test. No exceptions.
@@ -228,7 +228,7 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 
 | Workflow | When | How |
 |---|---|---|
-| New feature (cross-layer) | New frontend + backend feature | `brainstorm` → `specify` → `plan` → `tasks` → `implement` (or `/agent-team`) → **`analyze`** → `/pr-flow` |
+| New feature (cross-layer) | New frontend + backend feature | `brainstorm` → `specify` → `plan` → `tasks` → `implement` (or `/agent-team`) → **`analyze`** → **`checklist`** → `/pr-flow` |
 | Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → **`/speckit.analyze`** → `/pr-flow` |
 | Wireframe | After `/speckit.specify` | `/pencil-wireframe` |
 | Pre-PR gate | Before every PR — no exceptions | `/speckit.analyze` must report zero findings |

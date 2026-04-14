@@ -39,7 +39,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 New features, behavior changes, breaking API changes, and architectural changes must go through:
 
 ```
-/speckit.specify → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
+/superpowers:brainstorm → /speckit.specify → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
 ```
 
 Update `specs/STATUS.md` at every pipeline stage transition. After a PR merges: `mv specs/[module]/NNN-feature specs/_archive/`.
