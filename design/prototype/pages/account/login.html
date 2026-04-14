@@ -743,6 +743,9 @@
       clearFieldError('email', 'emailError');
       clearFieldError('password', 'passwordError');
       document.getElementById('errorBanner').classList.remove('visible');
+      const roleErr = document.getElementById('roleError');
+      roleErr.textContent = '';
+      roleErr.classList.remove('visible');
     }
 
     document.getElementById('email').addEventListener('input', () => {
@@ -803,7 +806,6 @@
 
     /* ── Init ──────────────────────────────────────────────────── */
     applyLang('zh');
-    buildRoleGrid('zh');
   </script>
 </body>
 </html>

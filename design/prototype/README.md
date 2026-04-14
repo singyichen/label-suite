@@ -149,10 +149,10 @@ Every page inside `pages/` (except `account/login.html` and `account/register.ht
 
 ```html
 <!-- pages/dashboard/index.html (depth = 1 under pages/) -->
-<script src="../shared/proto-bar.js"></script>
+<script src="../../shared/proto-bar.js"></script>
 
 <!-- pages/task-management/config/builder.html (depth = 2 under pages/) -->
-<script src="../../shared/proto-bar.js"></script>
+<script src="../../../shared/proto-bar.js"></script>
 ```
 
 The script uses `window.location.pathname` to compute the correct login URL automatically — no manual configuration needed.

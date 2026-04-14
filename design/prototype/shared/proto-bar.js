@@ -68,7 +68,7 @@
     const pagesIdx = path.indexOf('/pages/');
     if (pagesIdx === -1) return '#';
     const afterPages = path.slice(pagesIdx + '/pages/'.length);
-    const depth = afterPages.split('/').length;
+    const depth = afterPages.split('/').length - 1;
     return '../'.repeat(depth) + 'account/login.html';
   }
 
@@ -88,7 +88,6 @@
 
     const bar = el('div');
     bar.id = 'proto-bar';
-    bar.setAttribute('aria-hidden', 'true');
 
     const badge = el('span', 'proto-badge');
     badge.textContent = 'Prototype';
@@ -102,6 +101,7 @@
     ROLES.forEach(r => {
       const btn = el('button', 'proto-role-btn' + (r.key === role ? ' active' : ''));
       btn.type = 'button';
+      btn.setAttribute('aria-pressed', r.key === role ? 'true' : 'false');
       btn.textContent = r.emoji + ' ' + r.labelZh;
       btn.dataset.role = r.key;
       btn.addEventListener('click', () => switchRole(r.key));
