@@ -10,6 +10,21 @@ Label Suite contains flows for at least two distinct user groups:
 - **Researchers / task owners** who create tasks, configure labels, import data, preview, publish, and review results.
 - **Annotators** who open an assigned task, read instructions, complete annotations, and submit work.
 
+### Role Mapping
+
+These onboarding segments are product-facing groupings layered on top of the project's existing role model.
+
+| Onboarding segment | Concrete roles in this repo | Notes |
+|--------|-------------------------------|-------|
+| Researchers / task owners | `super_admin`, `project_leader`, `reviewer` | Covers setup, oversight, and review surfaces. "Admin-oriented" guidance in this ADR refers to setup or management surfaces shown to these roles, with `super_admin`-only details gated separately where needed. |
+| Annotators | `annotator` | Covers task execution, instruction reading, annotation, and submission flows. |
+
+Implementation must follow the existing RBAC model documented in `CLAUDE.md` and ADR-011:
+
+- System role in JWT: `user`, `super_admin`, or `null`
+- Task role from membership: `project_leader`, `reviewer`, or `annotator`
+- Higher roles may inherit lower-role capabilities where the platform already allows it, but onboarding content should still be selected by the current page context and effective role
+
 These users do not share the same goals, vocabulary, or critical-path actions. A single generic onboarding flow would either:
 
 - overload users with irrelevant information,
@@ -129,7 +144,7 @@ Phase 1 should be treated as an MVP and limited to:
 1. **Researcher onboarding**
    - Welcome guidance on task creation surfaces
    - Empty-state prompts for zero-task / zero-data situations
-   - Checklist for `Create -> Configure -> Import -> Preview -> Publish`
+   - Checklist for `Create task -> Configure labels/rules -> Import data -> Preview -> Publish`
 
 2. **Annotator onboarding**
    - Instruction emphasis when entering a task for the first time
@@ -137,7 +152,7 @@ Phase 1 should be treated as an MVP and limited to:
    - Confirmation / next-step prompt after first successful submission
 
 3. **System capabilities**
-   - Per-user dismissal state
+   - Per-user state persistence for dismissal and in-progress onboarding flow state
    - Reopen from Help / Learn entry point
    - Event tracking for impression, skip, completion, and first-success milestones
 
