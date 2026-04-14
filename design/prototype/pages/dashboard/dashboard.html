@@ -63,7 +63,7 @@
       line-height: 1.6;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
     }
 
     a {
@@ -80,56 +80,72 @@
       display: none !important;
     }
 
-    /* ── Navbar (MASTER.md §Navbar) ──────────────────────────────── */
+    /* ── Navbar (Left Sidebar) ──────────────────────────────────── */
     .navbar {
-      height: 64px;
+      width: 240px;
+      height: 100vh;
       background: var(--color-white);
-      border-bottom: 1px solid var(--color-border);
+      border-right: 1px solid var(--color-border);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 var(--space-xl);
+      flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
       position: sticky;
       top: 0;
       z-index: 200;
+      overflow-y: auto;
+      flex-shrink: 0;
     }
 
     .navbar-brand {
       display: flex;
       align-items: center;
       gap: var(--space-sm);
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
     }
 
     .navbar-logo {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: var(--radius-md);
       background: var(--color-primary);
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .navbar-logo svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
     }
 
     .navbar-wordmark {
       font-family: 'Crimson Pro', 'Noto Serif TC', serif;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 16px;
       color: var(--color-text);
       line-height: 1;
     }
 
     .navbar-center {
       display: flex;
-      align-items: center;
-      gap: var(--space-md);
-      margin: 0 var(--space-lg);
+      flex-direction: column;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xl);
+      flex: 1;
     }
 
     .nav-link {
-      padding: 8px 12px;
+      padding: 10px 12px;
       border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--color-text-muted);
       transition: color 150ms, background 150ms;
+      text-align: left;
     }
 
     .nav-link:hover {
@@ -140,25 +156,30 @@
     .nav-link.active {
       color: var(--color-primary);
       background: var(--color-surface);
+      font-weight: 600;
     }
 
     .nav-actions {
       display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      margin-left: auto;
+      flex-direction: column;
+      gap: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-lg);
+      margin-top: auto;
     }
 
     .lang-toggle {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
-      padding: 6px 12px;
+      padding: 8px 12px;
+      width: 100%;
       background: var(--color-white);
       color: var(--color-text);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       transition: border-color 150ms, background 150ms;
     }
@@ -170,17 +191,20 @@
 
     .user-chip {
       display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 10px;
-      padding: 4px 8px 4px 12px;
-      border-radius: var(--radius-full);
-      background: var(--color-white);
+      padding: 12px;
+      width: 100%;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
       border: 1px solid var(--color-border);
+      text-align: center;
     }
 
     .avatar {
-      width: 32px;
-      height: 32px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -188,27 +212,29 @@
       background: white;
       color: var(--color-primary);
       font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
       border: 2px solid rgba(99, 102, 241, 0.16);
       flex-shrink: 0;
     }
 
     .user-info {
-      min-width: 0;
+      width: 100%;
     }
 
     .user-name {
       display: block;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.2;
+      word-break: break-word;
     }
 
     .user-role {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       color: var(--color-text-muted);
       line-height: 1.3;
+      word-break: break-word;
     }
 
     /* ── Main Layout ────────────────────────────────────────────── */
@@ -216,13 +242,14 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
     }
 
     .layout {
       max-width: 1280px;
       width: 100%;
       margin: 0 auto;
-      padding: var(--space-lg) var(--space-lg) var(--space-xl);
+      padding: var(--space-lg);
     }
 
     .page {
@@ -590,12 +617,57 @@
 
     /* ── Responsive ────────────────────────────────────────────– */
     @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
       .navbar {
-        padding: 0 var(--space-md);
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        flex-direction: row;
+        padding: var(--space-md) var(--space-lg);
+        position: sticky;
+        top: 0;
+      }
+
+      .navbar-brand {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
       }
 
       .navbar-center {
-        display: none;
+        display: flex;
+        flex-direction: row;
+        gap: var(--space-md);
+        flex: 1;
+        margin: 0 var(--space-lg);
+      }
+
+      .navbar-center .nav-link {
+        padding: 8px 12px;
+      }
+
+      .nav-actions {
+        flex-direction: row;
+        gap: var(--space-md);
+        border-top: none;
+        padding-top: 0;
+        margin-top: 0;
+      }
+
+      .user-chip {
+        flex-direction: row;
+        width: auto;
+        padding: 4px 8px 4px 12px;
+        background: var(--color-white);
+      }
+
+      .lang-toggle {
+        width: auto;
+        padding: 6px 12px;
       }
 
       .layout {
@@ -641,7 +713,12 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <header class="navbar" role="banner">
     <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
-      <div class="navbar-logo" aria-hidden="true"></div>
+      <div class="navbar-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zm8 0h2a2 2 0 012 2v4h-6V3h2z" fill-rule="evenodd"/>
+          <path d="M3 15h6v6H3v-6zm8 0h6v6h-6v-6zm8 0h2v6h-6v-6h4z" fill-rule="evenodd"/>
+        </svg>
+      </div>
       <span class="navbar-wordmark">Label Suite</span>
     </a>
 
