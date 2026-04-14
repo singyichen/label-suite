@@ -41,6 +41,10 @@
       line-height: 1.8;
     }
 
+    html[lang="en"] body {
+      line-height: 1.6;
+    }
+
     a { color: inherit; text-decoration: none; }
     button, input, select { font: inherit; }
     .hidden { display: none !important; }
@@ -54,7 +58,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
+      width: 100%;
+      max-width: 1280px;
       padding: 0 24px;
+      margin: 0 auto;
       background: white;
       border-bottom: 1px solid #e2e8f0;
     }
@@ -69,8 +76,8 @@
       width: 40px;
       height: 40px;
       border-radius: 14px;
-      background: linear-gradient(135deg, #6366f1 0%, #10b981 100%);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.4);
+      background: var(--color-primary);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
     }
 
     .brand-copy strong {
@@ -187,7 +194,6 @@
       border-radius: var(--radius-lg);
       border: 1px solid #e2e8f0;
       background: white;
-      box-shadow: var(--shadow-md);
     }
 
     .eyebrow {
@@ -216,6 +222,7 @@
       margin: 0;
       color: #64748b;
       font-size: 1rem;
+      line-height: 1.7;
     }
 
     .hero-meta {
@@ -321,7 +328,6 @@
       border: 1px solid rgba(226,232,240,0.82);
       border-radius: var(--radius-lg);
       background: white;
-      box-shadow: var(--shadow-md);
       padding: 24px;
       min-width: 0;
     }
@@ -358,18 +364,18 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-height: 44px;
-      padding: 0 18px;
+      padding: 12px 24px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
 
     .btn-primary {
       color: #fff;
       background: var(--color-cta);
+      border-color: var(--color-cta);
     }
 
     .btn-secondary {
@@ -402,7 +408,7 @@
     .lang-toggle:focus-visible,
     .icon-btn:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18), 0 0 0 4px #fff;
     }
 
     .pill-row,
@@ -418,11 +424,11 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
-      border-radius: 999px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
       border: 1px solid transparent;
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.75rem;
+      font-weight: 500;
       line-height: 1.3;
     }
 
@@ -451,9 +457,9 @@
     }
 
     .tag-post {
-      color: #a16207;
-      background: #fefce8;
-      border-color: #fde68a;
+      color: var(--color-primary);
+      background: var(--color-surface);
+      border-color: #e0e7ff;
     }
 
     .metrics {
@@ -556,7 +562,7 @@
       gap: 6px;
       padding: 16px;
       border-radius: var(--radius-md);
-      background: #f8fafc;
+      background: white;
       border: 1px solid #e2e8f0;
     }
 
@@ -569,7 +575,6 @@
       border-radius: var(--radius-lg);
       background: white;
       border: 1px solid #e2e8f0;
-      box-shadow: var(--shadow-md);
     }
 
     .empty-figure,
@@ -618,9 +623,8 @@
       position: relative;
       overflow: hidden;
       border-radius: var(--radius-md);
-      background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
-      background-size: 200% 100%;
-      animation: pulse 1.6s linear infinite;
+      background: #e2e8f0;
+      animation: pulse 1.6s ease-in-out infinite;
     }
 
     .skeleton-bar { height: 24px; width: 220px; }
@@ -639,6 +643,7 @@
       bottom: 0;
       left: 0;
       right: 0;
+      height: 56px;
       z-index: 200;
       background: white;
       border-top: 1px solid #e2e8f0;
@@ -647,13 +652,15 @@
     .mobile-tabs nav {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
+      height: 100%;
     }
 
     .mobile-tab {
       display: grid;
       justify-items: center;
-      gap: 4px;
-      padding: 10px 6px;
+      align-content: center;
+      gap: 2px;
+      padding: 8px 6px;
       color: #64748b;
       font-size: 0.74rem;
     }
@@ -664,14 +671,14 @@
     }
 
     @keyframes pulse {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .skeleton-bar,
       .skeleton-card,
-      .skeleton-row { animation: none; background: #e2e8f0; }
+      .skeleton-row { animation: none; opacity: 1; background: #e2e8f0; }
     }
 
     /* Semantic table inside panel */
@@ -679,6 +686,9 @@
       margin: 18px -24px -24px;
       overflow-x: auto;
       border-top: 1px solid #e2e8f0;
+      border-bottom-left-radius: var(--radius-lg);
+      border-bottom-right-radius: var(--radius-lg);
+      background: white;
     }
 
     .panel-table {
@@ -692,7 +702,7 @@
     }
 
     .panel-table thead th {
-      padding: 10px 16px;
+      padding: 12px 24px;
       font-size: 0.72rem;
       font-weight: 700;
       color: #64748b;
@@ -703,6 +713,7 @@
 
     .panel-table tbody tr {
       border-top: 1px solid #f1f5f9;
+      transition: background 150ms ease;
     }
 
     .panel-table tbody tr:hover {
@@ -710,7 +721,7 @@
     }
 
     .panel-table td {
-      padding: 12px 16px;
+      padding: 16px 24px;
       vertical-align: middle;
     }
 
@@ -758,7 +769,7 @@
         justify-content: space-between;
       }
 
-      .layout { padding: 18px 14px 74px; }
+      .layout { padding: 18px 14px 72px; }
       .hero,
       .panel,
       .empty-state,
@@ -852,7 +863,7 @@
         <section class="view" id="view-super-admin-data" data-scenario="super_admin_data" data-testid="super-admin-view">
           <div class="grid-3">
             <article class="panel">
-              <div class="label" data-i18n-zh="平台使用者快覽" data-i18n-en="Platform role counts">平台使用者快覽</div>
+              <h2 class="panel-title" data-i18n-zh="平台使用者快覽" data-i18n-en="Platform role counts">平台使用者快覽</h2>
               <div class="metrics">
                 <div class="metric">
                   <strong>148</strong>
