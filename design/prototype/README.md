@@ -63,6 +63,19 @@ npx playwright test -g "back-to-login link navigates to login.html"
 
 ---
 
+## Serving the Prototype Manually
+
+To browse the prototype in a browser without running tests, use the helper script from the **project root**:
+
+```bash
+./scripts/serve-prototype.sh          # serves at http://localhost:8888
+./scripts/serve-prototype.sh 9000     # custom port
+```
+
+Then open `http://localhost:8888/pages/account/login.html` to start the demo flow.
+
+---
+
 ## Type Check
 
 ```bash
