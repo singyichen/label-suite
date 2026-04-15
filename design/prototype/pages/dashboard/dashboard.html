@@ -1293,12 +1293,6 @@
         navCreateTask:        '建立任務',
         navAnnotation:        '標記作業',
         navProfile:           '個人資料',
-        heroEyebrow:          '用戶概覽',
-        heroTitle:            '歡迎回來，Mandy',
-        heroSubtitle:         '監控所有項目的標註進度與品質指標。',
-        metricActiveTasks:    '進行中的任務',
-        metricPendingReviews: '待審查項目',
-        metricTeamMembers:    '團隊成員',
         scenarioLabel:        '場景模式',
         scenarioHint:         '切換不同的角色視圖',
         scenarioPills: {
@@ -1402,12 +1396,6 @@
         navCreateTask:        'Create Task',
         navAnnotation:        'Annotation',
         navProfile:           'Profile',
-        heroEyebrow:          'Overview',
-        heroTitle:            'Welcome back, Mandy',
-        heroSubtitle:         'Monitor annotation progress and quality metrics across all projects.',
-        metricActiveTasks:    'Active Tasks',
-        metricPendingReviews: 'Pending Reviews',
-        metricTeamMembers:    'Team Members',
         scenarioLabel:        'Scenario',
         scenarioHint:         'Switch role views',
         scenarioPills: {
@@ -1511,105 +1499,16 @@
     function applyLang(l) {
       const t = i18n[l];
       document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
-      document.getElementById('langLabel').textContent        = t.langLabel;
       document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
-      document.getElementById('navDashboard').textContent     = t.navDashboard;
-      document.getElementById('navCreateTask').textContent    = t.navCreateTask;
-      document.getElementById('navAnnotation').textContent    = t.navAnnotation;
-      document.getElementById('navProfile').textContent       = t.navProfile;
-      document.getElementById('scenarioLabel').textContent    = t.scenarioLabel;
-      document.getElementById('scenarioHint').textContent     = t.scenarioHint;
       document.querySelectorAll('.scenario-pill').forEach(pill => {
         const key = pill.dataset.scenario;
         if (t.scenarioPills[key]) pill.textContent = t.scenarioPills[key];
       });
-      document.getElementById('adminPlatformTitle').textContent    = t.adminPlatformTitle;
-      document.getElementById('adminPlatformSubtitle').textContent = t.adminPlatformSubtitle;
-      document.getElementById('adminTotalUsers').textContent       = t.adminTotalUsers;
-      document.getElementById('adminProjectLeaders').textContent   = t.adminProjectLeaders;
-      document.getElementById('adminAnnotators').textContent       = t.adminAnnotators;
-      document.getElementById('adminReviewers').textContent        = t.adminReviewers;
-      document.getElementById('adminTaskTitle').textContent        = t.adminTaskTitle;
-      document.getElementById('adminTaskSubtitle').textContent     = t.adminTaskSubtitle;
-      document.getElementById('adminTotalTasks').textContent       = t.adminTotalTasks;
-      document.getElementById('adminActiveTasks').textContent      = t.adminActiveTasks;
-      document.getElementById('adminPendingIaa').textContent       = t.adminPendingIaa;
-      document.getElementById('adminSpeedAlert').textContent       = t.adminSpeedAlert;
-      document.getElementById('adminAlertsTitle').textContent      = t.adminAlertsTitle;
-      document.getElementById('adminAlertsSubtitle').textContent   = t.adminAlertsSubtitle;
-      document.getElementById('alertItem1Title').textContent       = t.alertItem1Title;
-      document.getElementById('alertItem1Detail').textContent      = t.alertItem1Detail;
-      document.getElementById('alertItem2Title').textContent       = t.alertItem2Title;
-      document.getElementById('alertItem2Detail').textContent      = t.alertItem2Detail;
-      document.getElementById('adminTaskListTitle').textContent    = t.adminTaskListTitle;
-      document.getElementById('adminTaskListSubtitle').textContent = t.adminTaskListSubtitle;
-      document.getElementById('adminViewAllBtn').textContent       = t.adminViewAllBtn;
-      document.getElementById('adminTask1Title').textContent       = t.adminTask1Title;
-      document.getElementById('adminTask1Detail').textContent      = t.adminTask1Detail;
-      document.getElementById('adminTask1Badge').textContent       = t.adminTask1Badge;
-      document.getElementById('adminTask1TaskType').textContent    = t.adminTask1TaskType;
-      document.getElementById('adminTask1RunType').textContent     = t.adminTask1RunType;
-      document.getElementById('adminTask2Title').textContent       = t.adminTask2Title;
-      document.getElementById('adminTask2Detail').textContent      = t.adminTask2Detail;
-      document.getElementById('adminTask2Badge').textContent       = t.adminTask2Badge;
-      document.getElementById('adminTask2TaskType').textContent    = t.adminTask2TaskType;
-      document.getElementById('adminTask2RunType').textContent     = t.adminTask2RunType;
-      document.getElementById('plTaskOverviewTitle').textContent   = t.plTaskOverviewTitle;
-      document.getElementById('plTaskOverviewSubtitle').textContent= t.plTaskOverviewSubtitle;
-      document.getElementById('plTotalTasks').textContent          = t.plTotalTasks;
-      document.getElementById('plActiveTasks').textContent         = t.plActiveTasks;
-      document.getElementById('plPendingIaa').textContent          = t.plPendingIaa;
-      document.getElementById('plSpeedAlert').textContent          = t.plSpeedAlert;
-      document.getElementById('plTaskListTitle').textContent       = t.plTaskListTitle;
-      document.getElementById('plTaskListSubtitle').textContent    = t.plTaskListSubtitle;
-      document.getElementById('plTask1Title').textContent          = t.plTask1Title;
-      document.getElementById('plTask1Detail').textContent         = t.plTask1Detail;
-      document.getElementById('plTask1TaskType').textContent       = t.plTask1TaskType;
-      document.getElementById('plTask1RunType').textContent        = t.plTask1RunType;
-      document.getElementById('plTask1Badge').textContent          = t.plTask1Badge;
-      document.getElementById('plTask2Title').textContent          = t.plTask2Title;
-      document.getElementById('plTask2Detail').textContent         = t.plTask2Detail;
-      document.getElementById('plTask2TaskType').textContent       = t.plTask2TaskType;
-      document.getElementById('plTask2RunType').textContent        = t.plTask2RunType;
-      document.getElementById('plTask2Badge').textContent          = t.plTask2Badge;
-      document.getElementById('annotatorProgressTitle').textContent  = t.annotatorProgressTitle;
-      document.getElementById('annotatorProgressSubtitle').textContent = t.annotatorProgressSubtitle;
-      document.getElementById('annotatorCompletedLabel').textContent = t.annotatorCompletedLabel;
-      document.getElementById('annotatorTodayLabel').textContent     = t.annotatorTodayLabel;
-      document.getElementById('annotatorAvgSpeedLabel').textContent  = t.annotatorAvgSpeedLabel;
-      document.getElementById('annotatorTaskListTitle').textContent  = t.annotatorTaskListTitle;
-      document.getElementById('annotatorTaskListSubtitle').textContent = t.annotatorTaskListSubtitle;
-      document.getElementById('annotatorTask1Title').textContent     = t.annotatorTask1Title;
-      document.getElementById('annotatorTask1Detail').textContent    = t.annotatorTask1Detail;
-      document.getElementById('annotatorTask1TaskType').textContent  = t.annotatorTask1TaskType;
-      document.getElementById('annotatorTask1RunType').textContent   = t.annotatorTask1RunType;
-      document.getElementById('annotatorTask1Badge').textContent     = t.annotatorTask1Badge;
-      document.getElementById('annotatorTask1ContinueBtn').textContent = t.annotatorTask1ContinueBtn;
-      document.getElementById('annotatorTask2Title').textContent     = t.annotatorTask2Title;
-      document.getElementById('annotatorTask2Detail').textContent    = t.annotatorTask2Detail;
-      document.getElementById('annotatorTask2TaskType').textContent  = t.annotatorTask2TaskType;
-      document.getElementById('annotatorTask2RunType').textContent   = t.annotatorTask2RunType;
-      document.getElementById('annotatorTask2Badge').textContent     = t.annotatorTask2Badge;
-      document.getElementById('annotatorTask2ContinueBtn').textContent = t.annotatorTask2ContinueBtn;
-      document.getElementById('reviewerPanelTitle').textContent      = t.reviewerPanelTitle;
-      document.getElementById('reviewerPanelSubtitle').textContent   = t.reviewerPanelSubtitle;
-      document.getElementById('reviewerPendingLabel').textContent    = t.reviewerPendingLabel;
-      document.getElementById('reviewerTodayReviewedLabel').textContent = t.reviewerTodayReviewedLabel;
-      document.getElementById('reviewerIaaLabel').textContent        = t.reviewerIaaLabel;
-      document.getElementById('reviewerTaskListTitle').textContent   = t.reviewerTaskListTitle;
-      document.getElementById('reviewerTaskListSubtitle').textContent = t.reviewerTaskListSubtitle;
-      document.getElementById('reviewerTask1Title').textContent      = t.reviewerTask1Title;
-      document.getElementById('reviewerTask1Detail').textContent     = t.reviewerTask1Detail;
-      document.getElementById('reviewerTask1TaskType').textContent   = t.reviewerTask1TaskType;
-      document.getElementById('reviewerTask1RunType').textContent    = t.reviewerTask1RunType;
-      document.getElementById('reviewerTask1Badge').textContent      = t.reviewerTask1Badge;
-      document.getElementById('reviewerTask1StartBtn').textContent   = t.reviewerTask1StartBtn;
-      document.getElementById('reviewerTask2Title').textContent      = t.reviewerTask2Title;
-      document.getElementById('reviewerTask2Detail').textContent     = t.reviewerTask2Detail;
-      document.getElementById('reviewerTask2TaskType').textContent   = t.reviewerTask2TaskType;
-      document.getElementById('reviewerTask2RunType').textContent    = t.reviewerTask2RunType;
-      document.getElementById('reviewerTask2Badge').textContent      = t.reviewerTask2Badge;
-      document.getElementById('reviewerTask2StartBtn').textContent   = t.reviewerTask2StartBtn;
+      Object.entries(t).forEach(([key, val]) => {
+        if (typeof val !== 'string') return;
+        const el = document.getElementById(key);
+        if (el) el.textContent = val;
+      });
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
