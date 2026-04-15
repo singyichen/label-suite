@@ -159,8 +159,8 @@ Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `fe
 Full pipeline — each stage is a hard gate:
 
 ```
-/superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
-  → /ui-ux-pro-max (prototype, recommended) → /pencil-wireframe (optional)
+/superpowers:brainstorm → /speckit.specify → /ui-ux-pro-max (prototype, recommended) → /pencil-wireframe (optional)
+  → /speckit.clarify (optional)
   → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
 ```
 
