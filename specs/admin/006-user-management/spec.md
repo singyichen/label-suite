@@ -28,7 +28,7 @@ sequenceDiagram
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|----------|
 | 1 | Super Admin | 在 `/user-management` 選取使用者 | 顯示該使用者的角色操作選項 |
-| 2 | Super Admin | 點擊「指派角色」下拉 | 展開角色選單（`annotator` / `super_admin`）|
+| 2 | Super Admin | 點擊「指派角色」下拉 | 展開角色選單（`user` / `super_admin`）|
 | 3 | Super Admin | 選取目標角色 | 送出 PATCH 請求 |
 | 4 | System | 更新 `users.role` 欄位 | 寫入資料庫 |
 | 5 | System | 若使用者目前在線 | 現有 JWT 不立即失效，需重新登入後生效 |

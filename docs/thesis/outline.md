@@ -76,7 +76,7 @@
 
 ### 3.2 Annotator Management Module
 
-- **Account Management:** Supports annotator account creation, modification, and deletion, with role-based access control (Admin / Researcher / Annotator) to ensure appropriate data access boundaries.
+- **Account Management:** Supports annotator account creation, modification, and deletion, with role-based access control (`super_admin` / `project_leader` / `annotator`) to ensure appropriate data access boundaries.
 - **Working Hours & Salary Calculation:** Automatically records each annotator's working hours and provides salary estimation functionality, simplifying the administrative overhead of managing research team human resources.
 
 ### 3.3 Labeling Module Design

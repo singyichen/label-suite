@@ -82,7 +82,7 @@
 
 ### 3.2 標記員管理模組 (Annotator Management Module)
 
-- **帳號管理 (Account Management)：** 支援標記員帳號的新增、修改、刪除，並依角色（Admin / Researcher / Annotator）設定不同存取權限。
+- **帳號管理 (Account Management)：** 支援標記員帳號的新增、修改、刪除，並依角色（`super_admin` / `project_leader` / `annotator`）設定不同存取權限。
 - **工時統計與薪資試算 (Working Hours & Salary Calculation)：** 自動記錄每位標記員的工作時數並提供薪資試算功能，簡化研究團隊的人力管理流程。
 
 ### 3.3 標記模組設計 (Labeling Module Design)

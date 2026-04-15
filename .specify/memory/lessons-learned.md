@@ -4,6 +4,22 @@ A record of significant errors, incidents, and lessons learned during developmen
 
 ---
 
+## 2026-04-15: Canonical Role Names
+
+### Lesson
+Use the following role names consistently across code, specs, docs, and conversation:
+
+- `project_leader` = 專案負責人
+- `annotator` = 標記員
+- `reviewer` = 審核員
+- `super_admin` = 系統管理員
+- `user` = 平台成員
+
+### Rule
+Do not substitute, shorten, or translate these identifiers inconsistently. When referring to a role, use the canonical English identifier in code and contracts, and the corresponding Chinese name only as a human-readable label.
+
+---
+
 ## 2025-03-25: Direct Push to Main Branch Violation
 
 ### Incident Summary

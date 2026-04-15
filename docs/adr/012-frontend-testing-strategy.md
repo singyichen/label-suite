@@ -255,9 +255,9 @@ test.each(cases)('role=$role renders $expected', ({ role, expected }) => {
 })
 ```
 
-### RoleGuard Inheritance Test Matrix
+### RoleGuard Exact-Match Test Matrix
 
-`RoleGuard` uses `ROLE_HIERARCHY` to resolve effective roles. Tests must cover both direct access and inherited access:
+`RoleGuard` checks the current role against the explicit allow list. Tests must cover exact matches and deny-by-default behavior:
 
 ```tsx
 // router/guards/RoleGuard.test.tsx
@@ -267,12 +267,11 @@ const cases = [
   { role: 'reviewer',       allow: ['reviewer'],        permitted: true  },
   { role: 'project_leader', allow: ['project_leader'],  permitted: true  },
   { role: 'super_admin',    allow: ['super_admin'],     permitted: true  },
-  // Inherited access — project_leader inherits reviewer
-  { role: 'project_leader', allow: ['reviewer'],        permitted: true  },
-  // Inherited access — super_admin inherits all
-  { role: 'super_admin',    allow: ['annotator'],       permitted: true  },
-  { role: 'super_admin',    allow: ['reviewer'],        permitted: true  },
-  { role: 'super_admin',    allow: ['project_leader'],  permitted: true  },
+  // Denied — no implicit inheritance
+  { role: 'project_leader', allow: ['reviewer'],        permitted: false },
+  { role: 'super_admin',    allow: ['annotator'],       permitted: false },
+  { role: 'super_admin',    allow: ['reviewer'],        permitted: false },
+  { role: 'super_admin',    allow: ['project_leader'],  permitted: false },
   // Denied — no inheritance upward
   { role: 'annotator',      allow: ['reviewer'],        permitted: false },
   { role: 'reviewer',       allow: ['project_leader'],  permitted: false },

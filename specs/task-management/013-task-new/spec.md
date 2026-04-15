@@ -47,15 +47,15 @@ sequenceDiagram
 
 ### User Story 1 — Project Leader 完成三步驟建立任務（優先級：P1）
 
-已登入且系統角色為 `annotator` 的使用者，透過三步驟精靈完整填寫基本資料、Config Builder 設定、標記說明後建立任務，系統自動將其設為該任務的 `project_leader`。
+已登入且系統角色為 `user` 的使用者，透過三步驟精靈完整填寫基本資料、Config Builder 設定、標記說明後建立任務，系統自動將其設為該任務的 `project_leader`。
 
 **此優先級原因**：新增任務是整個標記流程的起點；無法建立任務則所有後續功能（Dry Run、標記作業、統計分析）皆無從發生。
 
-**獨立測試方式**：以 `annotator` 系統角色使用者登入，完成三步驟表單送出，確認 task-detail 正確顯示任務資訊，且使用者在 `task_membership` 中具有 `project_leader` 角色。
+**獨立測試方式**：以 `user` 系統角色使用者登入，完成三步驟表單送出，確認 task-detail 正確顯示任務資訊，且使用者在 `task_membership` 中具有 `project_leader` 角色。
 
 **驗收情境**：
 
-1. **Given** 已登入使用者（系統角色 `annotator`）在 `/task-new`，**When** 完成 Step 1（填寫任務名稱、選擇任務類型 `classification`、上傳合法 CSV 資料集），**Then** 系統顯示資料集預覽（筆數與欄位名稱）並啟用「下一步」按鈕。
+1. **Given** 已登入使用者（系統角色 `user`）在 `/task-new`，**When** 完成 Step 1（填寫任務名稱、選擇任務類型 `classification`、上傳合法 CSV 資料集），**Then** 系統顯示資料集預覽（筆數與欄位名稱）並啟用「下一步」按鈕。
 2. **Given** 使用者進入 Step 2，**When** 在 Visual 模式新增兩個以上標籤（LabelItem）並選定 `f1_macro` 評估指標，**Then** Code 模式同步顯示對應 config JSON；所有必填欄位通過驗證後啟用「下一步」。
 3. **Given** 使用者完成 Step 3 並點擊「建立任務」，**When** 後端 Pydantic 驗證通過，**Then** 頁面導向新建任務的 `/task-detail`，且任務狀態顯示為「草稿」；使用者的 `task_membership` 記錄中 `task_role = project_leader`。
 
@@ -110,7 +110,7 @@ Project Leader 在 Step 2 點擊「從範本開始」，選擇預設範本（如
 
 ### 功能需求
 
-- **FR-001**：`/task-new` 僅限系統角色 `annotator` 或 `super_admin` 的已登入使用者存取 — 透過 RoleGuard 強制。
+- **FR-001**：`/task-new` 僅限系統角色 `user` 或 `super_admin` 的已登入使用者存取 — 透過 RoleGuard 強制。
 - **FR-002**：建立任務流程分三步驟（Step 1 基本資料 → Step 2 Config Builder → Step 3 標記說明），步驟指示器顯示目前進度；前一步未通過驗證時不得跳至後續步驟。
 - **FR-003**：Step 1 必填欄位：任務名稱（最長 100 字元）、任務類型（`classification` | `scoring` | `sentence_pair` | `ner` | `relation`）、資料集檔案（txt / csv / tsv / json）；任務描述為選填。
 - **FR-004**：資料集上傳後，系統必須在 Step 1 顯示預覽資訊（筆數、欄位名稱），讓使用者確認格式正確。

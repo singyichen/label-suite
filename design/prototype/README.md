@@ -128,7 +128,7 @@ For demo purposes, the prototype collapses both layers into **four selectable ro
 | Role key | Label | Represents |
 |---|---|---|
 | `project_leader` | 👑 專案負責人 | Task role — creates and manages labeling tasks |
-| `annotator` | ✏️ 標註員 | Task role — performs the actual annotation work |
+| `annotator` | ✏️ 標記員 | Task role — performs the actual annotation work |
 | `reviewer` | 🔍 審核員 | Task role — reviews and approves annotation results |
 | `super_admin` | ⚙️ 系統管理員 | System role — platform-wide admin, user management |
 
@@ -156,7 +156,7 @@ The bar **does not render** if no role is set (i.e., the user has not gone throu
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│ PROTOTYPE │ 視角：[👑 專案負責人] [✏️ 標註員] [🔍 審核員] [⚙️ 系統管理員]  ← 返回登入 │
+│ PROTOTYPE │ 視角：[👑 專案負責人] [✏️ 標記員] [🔍 審核員] [⚙️ 系統管理員]  ← 返回登入 │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 

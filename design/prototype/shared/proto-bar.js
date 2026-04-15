@@ -11,7 +11,7 @@
 (function () {
   const ROLES = [
     { key: 'project_leader', labelZh: '專案負責人', emoji: '👑' },
-    { key: 'annotator',      labelZh: '標註員',     emoji: '✏️' },
+    { key: 'annotator',      labelZh: '標記員',     emoji: '✏️' },
     { key: 'reviewer',       labelZh: '審核員',     emoji: '🔍' },
     { key: 'super_admin',    labelZh: '系統管理員', emoji: '⚙️' },
   ];
