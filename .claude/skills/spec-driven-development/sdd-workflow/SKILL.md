@@ -17,13 +17,13 @@ Each stage is a **hard gate** — do not advance until the current stage is comp
                                           ↳ Process Flow      (spec.md § Process Flow — cross-role business process)
                                           ↳ User Flow         (spec.md § User Flow & Navigation — screens + triggers)
                                           ↳ Update specs/STATUS.md → spec-ready
-/pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen  (optional, after specify)
-/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/  (optional, after wireframe)
-                                          ⚠ Before generating: read MASTER.md + wireframe via Pencil MCP
-[senior-uiux review]                    → prototype QA: wireframe fidelity, design system compliance, a11y  (optional)
+/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/  (recommended, after specify; before plan)
+                                          ⚠ Before generating: read MASTER.md (+ wireframe via Pencil MCP if one already exists)
+/pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen  (optional, after prototype)
+[senior-uiux review]                    → prototype QA: spec fidelity, design system compliance, a11y; check wireframe consistency when present  (optional)
 [prototype Playwright tests]            → design/prototype/tests/[module]/[page].spec.ts  (after prototype HTML, before plan)
                                           ⚠ See § Prototype Playwright Tests below
-/speckit.clarify                        → clarify requirements  (optional; wireframe + prototype surface ambiguities)
+/speckit.clarify                        → clarify requirements  (optional; prototype + optional wireframe surface ambiguities)
 /speckit.plan                           → specs/[module]/NNN-feature/plan.md
                                           ↳ System Flow       (plan.md § System Flow & Data Flow — API/service/DB layers)
                                           ↳ Update specs/STATUS.md → plan-ready
@@ -92,8 +92,8 @@ All diagrams use Mermaid (`sequenceDiagram` for process/system flows, `flowchart
 Prototype Playwright tests sit **after the prototype HTML is built, before `/speckit.plan`**. They are the closing validation step of the prototype phase, not the opening step of the spec phase.
 
 ```
-❌ Wrong:  /speckit.specify → Playwright tests → wireframe → prototype HTML
-✓ Correct: /speckit.specify → wireframe → prototype HTML → Playwright tests → /speckit.plan
+❌ Wrong:  /speckit.specify → Playwright tests → prototype HTML → /speckit.plan
+✓ Correct: /speckit.specify → prototype HTML → (optional) wireframe → Playwright tests → /speckit.plan
 ```
 
 Writing tests before the prototype exists produces untestable stubs. Writing them after `/speckit.plan` loses the benefit: the plan's Frontend Spec should already reference the `data-testid` contract that tests establish.
@@ -295,8 +295,8 @@ Every spec has a `## Spec Dependencies` section. Fill it in at `/speckit.specify
 |---|---|---|
 | `/superpowers:brainstorm` | Clarify requirements via Socratic dialogue; propose 2-3 design alternatives with trade-offs | Agreed requirements |
 | `/speckit.specify` | Create feature spec from description | `specs/[module]/NNN-feature/spec.md` |
-| `/pencil-wireframe` | Draw 6 frames (Desktop/Mobile ZH·EN + Components) | `design/wireframes/pages/[module]/[page].pen` |
-| `/ui-ux-pro-max` | Generate HTML prototype + design system | `design/prototype/pages/[module]/[page].html` |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system (after specify, before plan) | `design/prototype/pages/[module]/[page].html` |
+| `/pencil-wireframe` | Draw 6 frames (Desktop/Mobile ZH·EN + Components, optional after prototype) | `design/wireframes/pages/[module]/[page].pen` |
 | `/speckit.clarify` | Identify and clarify ambiguous requirements | Questions + answers |
 | `/speckit.plan` | Build technical implementation plan | `specs/[module]/NNN-feature/plan.md` |
 | `/speckit.tasks` | Generate executable task list | `specs/[module]/NNN-feature/tasks.md` |
