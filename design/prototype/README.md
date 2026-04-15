@@ -128,7 +128,7 @@ For demo purposes, the prototype collapses both layers into **four selectable ro
 | Role key | Label | Represents |
 |---|---|---|
 | `project_leader` | 👑 專案負責人 | Task role — creates and manages labeling tasks |
-| `annotator` | ✏️ 標註員 | Task role — performs the actual annotation work |
+| `annotator` | ✏️ 標記員 | Task role — performs the actual annotation work |
 | `reviewer` | 🔍 審核員 | Task role — reviews and approves annotation results |
 | `super_admin` | ⚙️ 系統管理員 | System role — platform-wide admin, user management |
 
@@ -136,60 +136,24 @@ For demo purposes, the prototype collapses both layers into **four selectable ro
 
 **Step 1 — Login page** (`pages/account/login.html`)
 
-The login form includes a **role selection grid** before the submit button. The user must pick one of the four roles before proceeding. On submit, the selected role key is stored in `sessionStorage`:
+The login form accepts email and password. On submit, the page navigates to the dashboard.
 
-```js
-sessionStorage.setItem('proto_role', 'project_leader'); // example
-```
+**Step 2 — Dashboard scenario switcher** (`pages/dashboard/dashboard.html`)
 
-The page then navigates to the appropriate dashboard.
-
-**Step 2 — Prototype bar** (`shared/proto-bar.js`)
-
-Every post-login page includes `proto-bar.js` via a `<script>` tag. The script reads `sessionStorage` and injects a fixed yellow banner at the top of the page containing:
-
-- A `PROTOTYPE` badge — clearly marks the page as demo-only
-- Role switch buttons — click to switch role and reload the page
-- A "← 返回登入" button — clears the session and returns to `login.html`
-
-The bar **does not render** if no role is set (i.e., the user has not gone through the login step).
+The dashboard includes a built-in **scenario pill bar** that lets the reviewer switch between role views without leaving the page:
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│ PROTOTYPE │ 視角：[👑 專案負責人] [✏️ 標註員] [🔍 審核員] [⚙️ 系統管理員]  ← 返回登入 │
-└──────────────────────────────────────────────────────────────────────┘
+[ 系統管理員 ]  [ 專案負責人 ]  [ 標記員 ]  [ 審核員 ]
 ```
 
-### Adding proto-bar to a New Page
-
-Every page inside `pages/` (except `account/login.html` and `account/register.html`) should include proto-bar. Adjust the relative path based on how deep the page is:
-
-```html
-<!-- pages/dashboard/index.html (depth = 1 under pages/) -->
-<script src="../../shared/proto-bar.js"></script>
-
-<!-- pages/task-management/config/builder.html (depth = 2 under pages/) -->
-<script src="../../../shared/proto-bar.js"></script>
-```
-
-The script uses `window.location.pathname` to compute the correct login URL automatically — no manual configuration needed.
-
-### Session Storage Key
-
-| Key | Type | Values |
-|---|---|---|
-| `proto_role` | `string \| null` | `'project_leader'` · `'annotator'` · `'reviewer'` · `'super_admin'` |
-
-`sessionStorage` is used (not `localStorage`) so the role resets when the browser tab is closed, matching real login-session semantics.
+Clicking a pill updates the role indicator and swaps the visible content section. The selected scenario is tracked in a JS variable (`let scenario`) — no `sessionStorage` needed.
 
 ### Design Decisions
 
 | Decision | Rationale |
 |---|---|
-| Role selected at login, not per page | Mirrors the real auth flow — the user's role is determined at login time |
-| Proto-bar allows mid-session switching | Lets the advisor switch views quickly during a walkthrough without re-logging in |
-| Yellow bar with `PROTOTYPE` badge | Clearly signals the page is a demo artifact, not production UI |
-| `sessionStorage` over `localStorage` | Clears on tab close — avoids stale role state across separate demo sessions |
+| Scenario switcher on dashboard, not at login | Lets the advisor switch views instantly during a walkthrough without re-logging in |
+| JS variable for scenario state | Simpler than sessionStorage for single-page demos; resets on reload, avoiding stale state |
 | DOM API only (no `innerHTML`) | Satisfies the project's OWASP security hooks even in prototype code |
 
 ---

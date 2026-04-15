@@ -80,8 +80,8 @@ sequenceDiagram
   For each FR, state WHAT the system must do and WHO can do it.
   When a capability is role-restricted, the FR MUST explicitly name the allowed roles.
   Example: "FR-XXX: Only [role] MUST be able to [action] on [page]"
-  RoleGuard inheritance rules: `project_leader` inherits all `reviewer` capabilities;
-  `super_admin` inherits all roles. Do NOT rely on implicit inheritance — state roles explicitly.
+  RoleGuard rules: list every allowed role explicitly in each FR and guard.
+  Do NOT rely on implicit inheritance or hierarchy tables; state roles explicitly.
 -->
 
 - **FR-001**: The system MUST [specific capability]

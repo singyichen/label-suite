@@ -16,7 +16,7 @@
 | 角色 | 識別碼 | 主要職責 | 指派方式 |
 |------|--------|----------|----------|
 | 平台成員 | `user` | 使用平台所有功能、建立任務、被邀請加入任務 | 自行註冊後自動取得 |
-| 系統超級管理員 | `super_admin` | 平台維護、跨專案使用者管理、系統角色指派 | Super Admin 指派 |
+| 系統管理員 | `super_admin` | 平台維護、跨專案使用者管理、系統角色指派 | Super Admin 指派 |
 
 > **新使用者預設狀態：** 任何人皆可透過 Google SSO 登入或 Email / Password 自行註冊（`/register`）進入系統，帳號建立後**立即取得 `user` 系統角色**，無需等待審核。
 
@@ -24,7 +24,7 @@
 
 | 任務角色 | 識別碼 | 職責 | 指派方式 |
 |----------|--------|------|----------|
-| 計畫負責人 | `project_leader` | 管理任務設定、指派成員、發布 Dry Run / Official Run、匯出資料 | 建立任務時**自動指派**給任務建立者 |
+| 專案負責人 | `project_leader` | 管理任務設定、指派成員、發布 Dry Run / Official Run、匯出資料 | 建立任務時**自動指派**給任務建立者 |
 | 審核員 | `reviewer` | 審查標記結果、協助產出標準答案、查看品質報告 | 由任務 `project_leader` 指派 |
 | 標記員 | `annotator` | 執行標記作業（試標 / 正式標）、查看個人進度 | 由任務 `project_leader` 指派 |
 
@@ -422,8 +422,8 @@ sequenceDiagram
   participant RS as role-settings
 
   SA->>UM: 查看所有使用者帳號
-  SA->>UM: 新增 Project Leader 帳號（研究員 / 負責人）
-  SA->>UM: 指派系統角色（annotator / super_admin）
+  SA->>UM: 新增平台成員帳號（user）
+  SA->>UM: 指派系統角色（user / super_admin）
   SA->>RS: 調整角色功能存取範圍
   Note over SA: 標記員帳號由 Project Leader 自行在標記員管理模組新增
 ```

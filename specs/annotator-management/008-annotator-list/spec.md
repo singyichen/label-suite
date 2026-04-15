@@ -9,15 +9,15 @@
 
 ```mermaid
 sequenceDiagram
-    actor SA as Super Admin / Annotator
+    actor SA as Super Admin / Platform Member
     participant UI as /annotator-list
     participant API as Backend API
     participant DB as Database
 
     SA->>UI: 在待指派區塊找到使用者
-    SA->>UI: 點擊「指派 Annotator 角色」
-    UI->>API: PATCH /users/{id}/role
-    API->>DB: UPDATE users SET role = 'annotator' WHERE id = ?
+    SA->>UI: 點擊「指派 `annotator` 任務角色」
+    UI->>API: POST /task-memberships
+    API->>DB: INSERT task_membership (task_id, user_id, task_role = 'annotator')
     DB-->>API: 更新成功
     API-->>UI: 200 OK
     UI-->>SA: 使用者從待指派區塊移至平台成員區塊
@@ -26,9 +26,9 @@ sequenceDiagram
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|----------|
-| 1 | Super Admin / Annotator | 在待指派區塊找到使用者 | 顯示待指派使用者的姓名與 Email |
-| 2 | Super Admin / Annotator | 點擊「指派 Annotator 角色」 | 送出 PATCH 請求 |
-| 3 | System | 更新 `users.role = annotator` | 寫入資料庫 |
+| 1 | Super Admin / Platform Member | 在待指派區塊找到使用者 | 顯示待指派使用者的姓名與 Email |
+| 2 | Super Admin / Platform Member | 點擊「指派 `annotator` 任務角色」 | 送出 POST 請求 |
+| 3 | System | 建立 `task_membership`（`task_role = annotator`） | 寫入資料庫 |
 | 4 | System | — | 使用者從待指派區塊移至平台成員區塊 |
 | 5 | System | — | 顯示成功提示 |
 
@@ -38,15 +38,15 @@ sequenceDiagram
 
 ### User Story 1 — 查看平台成員列表（優先級：P1）
 
-具有 `annotator` 系統角色或 `super_admin` 的使用者在 `/annotator-list` 查看所有平台成員，可搜尋、篩選、啟用/停用成員。
+具有 `user` 系統角色或 `super_admin` 的使用者在 `/annotator-list` 查看所有平台成員，可搜尋、篩選、啟用/停用成員。
 
 **此優先級原因**：這是任務 PL 邀請標記員加入任務的入口，也是管理員維護平台成員的主要頁面。
 
-**獨立測試方式**：登入後進入 `/annotator-list`，確認所有系統角色為 `annotator` 的平台成員均顯示，搜尋與篩選功能正常運作。
+**獨立測試方式**：登入後進入 `/annotator-list`，確認所有平台成員均顯示，搜尋與篩選功能正常運作。
 
 **驗收情境**：
 
-1. **Given** 已登入使用者（`annotator` 或 `super_admin`）在 `/annotator-list`，**When** 頁面載入，**Then** 顯示所有系統角色為 `annotator` 的平台成員，包含姓名、Email、帳號狀態。
+1. **Given** 已登入使用者（`user` 或 `super_admin`）在 `/annotator-list`，**When** 頁面載入，**Then** 顯示所有平台成員，包含姓名、Email、帳號狀態。
 2. **Given** 使用者在 `/annotator-list`，**When** 輸入搜尋關鍵字（姓名或 Email），**Then** 列表即時篩選顯示符合結果。
 3. **Given** 使用者在 `/annotator-list`，**When** 點選某成員，**Then** 導向該成員的 `/work-log` 頁面。
 4. **Given** 空狀態（尚無任何平台成員），**When** 頁面載入，**Then** 顯示說明文字「尚無平台成員，請邀請使用者至 `/register` 或 Google SSO 自行加入」。
@@ -70,7 +70,7 @@ sequenceDiagram
 
 ### 邊界情況
 
-- 一般 `annotator` 可以停用其他成員嗎？→ 不行；任務層級的停用只有任務 `project_leader` 可執行；平台帳號停用只有 `super_admin` 可執行（spec 006）。
+- 一般 `user` 可以停用其他成員嗎？→ 不行；任務層級的停用只有任務 `project_leader` 可執行；平台帳號停用只有 `super_admin` 可執行（spec 006）。
 - 任務 PL 可以邀請 `super_admin` 加入任務嗎？→ 可以；`super_admin` 也可以擁有任務角色。
 
 ---
@@ -79,8 +79,8 @@ sequenceDiagram
 
 ### 功能需求
 
-- **FR-001**：`/annotator-list` 只有系統角色為 `annotator` 或 `super_admin` 的使用者可存取。
-- **FR-002**：頁面必須列出所有系統角色為 `annotator` 的平台成員，顯示姓名、Email、帳號狀態。
+- **FR-001**：`/annotator-list` 只有系統角色為 `user` 或 `super_admin` 的使用者可存取。
+- **FR-002**：頁面必須列出所有平台成員，顯示姓名、Email、帳號狀態。
 - **FR-003**：任務 `project_leader` 可在 `/annotator-list` 停用或啟用平台成員在其負責任務中的參與狀態（任務層級）；`super_admin` 的平台帳號停用在 `/user-management` 管理（spec 006），不在此頁操作。
 - **FR-004**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
 - **FR-005**：任務 `project_leader` 可從此列表選取成員，邀請加入自己負責的任務並指派任務角色（`reviewer` 或 `annotator`）。

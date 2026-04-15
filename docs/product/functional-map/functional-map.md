@@ -133,7 +133,7 @@ flowchart LR
   %% ── 標記員管理模組 ──
   n0 --> nAMGR["標記員管理模組"]
   nAMGR --> nAL["平台成員列表頁（啟用 / 停用）"]
-  nAL --> nAL1["待指派區塊（role = null 使用者，指派 annotator 系統角色）"]
+  nAL --> nAL1["待指派區塊（role = null 使用者，指派 annotator 任務角色）"]
   nAL --> nAL2["任務 PL 邀請成員加入任務並指派任務角色"]
   nAMGR --> nWL["工時紀錄頁"]
   nWL --> nWL1["出缺勤紀錄"]
@@ -145,8 +145,8 @@ flowchart LR
   n0 --> nSYS["系統管理模組（Super Admin）"]
   nSYS --> nUM["使用者管理頁（跨專案帳號管理）"]
   nSYS --> nRS["角色權限設定頁"]
-  nRS --> nRS1["project_leader（任務角色：計畫負責人）"]
+  nRS --> nRS1["project_leader（任務角色：專案負責人）"]
   nRS --> nRS2["reviewer（任務角色：審核員）"]
-  nRS --> nRS3["annotator（系統角色 / 任務角色：標記員）"]
-  nRS --> nRS4["super_admin（系統角色：超級管理員）"]
+  nRS --> nRS3["annotator（任務角色：標記員）"]
+  nRS --> nRS4["super_admin（系統角色：系統管理員）"]
 ```

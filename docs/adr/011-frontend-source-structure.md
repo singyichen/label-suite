@@ -254,7 +254,7 @@ Role sub-components and their file paths:
 
 > **Security note:** The dispatch must be explicit for every known role. Unknown or null `role` redirects to `/login` (deny-by-default). Never use a catch-all fallback that renders privileged UI.
 >
-> **Note on organisational dual roles:** The IA notes that a Project Leader may also act as Reviewer in organisational terms. With RBAC hierarchy, a single `project_leader` account inherits all `reviewer` capabilities — no need for a separate Reviewer account. The JWT `role` field is always a single string value; inheritance is resolved at the guard layer.
+> **Note on organisational dual roles:** The IA treats `project_leader` and `reviewer` as distinct task roles. If a page or flow should be available to both roles, the route must list both explicitly in `allow`; do not rely on inherited permissions.
 
 ---
 
@@ -299,31 +299,22 @@ export const router = createBrowserRouter([
 ])
 ```
 
-`RoleGuard` receives an `allow` prop listing permitted roles. The system uses RBAC inheritance — higher roles accumulate lower roles' capabilities. `RoleGuard` resolves the user's effective roles via a hierarchy table before checking access:
+`RoleGuard` receives an `allow` prop listing permitted roles. Access is checked by explicit role match only; if a page needs multiple roles, list them all in `allow`:
 
 ```tsx
 // shared/types/user.ts
 type Role = 'super_admin' | 'project_leader' | 'reviewer' | 'annotator'
 
-// router/guards/RoleGuard.tsx
-const ROLE_HIERARCHY: Record<Role, Role[]> = {
-  super_admin:    ['super_admin', 'project_leader', 'reviewer', 'annotator'],
-  project_leader: ['project_leader', 'reviewer'],
-  reviewer:       ['reviewer'],
-  annotator:      ['annotator'],
-}
-
 function RoleGuard({ allow }: { allow: Role[] }) {
   const { role } = useAuthStore()
-  const effective: Role[] = role ? ROLE_HIERARCHY[role] ?? [] : []
-  const permitted = allow.some(r => effective.includes(r))
+  const permitted = role ? allow.includes(role) : false
   return permitted ? <Outlet /> : <Navigate to="/" replace />
 }
 ```
 
-The JWT `role` field remains a single string. Inheritance is resolved entirely on the frontend at the guard layer — the backend uses the same hierarchy table for API-level authorization.
+The JWT `role` field remains a single string. Access is granted only when the current role is listed explicitly in the guard's `allow` array; API endpoints must apply the same canonical role checks independently.
 
-Example: a `project_leader` accessing `/annotation` (which has `allow={['annotator', 'reviewer']}`) is permitted because `ROLE_HIERARCHY['project_leader']` includes `'reviewer'`.
+Example: if a page should be available to `project_leader` and `reviewer`, the route must declare `allow={['project_leader', 'reviewer']}` explicitly.
 
 ---
 
