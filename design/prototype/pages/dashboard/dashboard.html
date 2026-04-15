@@ -746,26 +746,26 @@
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
         </svg>
-        <span data-i18n-zh="儀表板" data-i18n-en="Dashboard">儀表板</span>
+        <span id="navDashboard">儀表板</span>
       </a>
       <a class="nav-link" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
         </svg>
-        <span data-i18n-zh="建立任務" data-i18n-en="Create Task">建立任務</span>
+        <span id="navCreateTask">建立任務</span>
       </a>
       <a class="nav-link" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z" fill="currentColor"/>
           <path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
         </svg>
-        <span data-i18n-zh="標記作業" data-i18n-en="Annotation">標記作業</span>
+        <span id="navAnnotation">標記作業</span>
       </a>
       <a class="nav-link" href="#">
         <svg class="nav-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" fill="currentColor"/>
         </svg>
-        <span data-i18n-zh="個人資料" data-i18n-en="Profile">個人資料</span>
+        <span id="navProfile">個人資料</span>
       </a>
     </nav>
 
@@ -781,7 +781,7 @@
       <div class="user-chip">
         <div class="avatar" id="userAvatar" aria-hidden="true">PL</div>
         <div class="user-info">
-          <span class="user-name" id="userName" data-i18n-zh="Mandy Chen" data-i18n-en="Mandy Chen">Mandy Chen</span>
+          <span class="user-name" id="userName">Mandy Chen</span>
           <span class="user-role" id="roleIndicator" data-testid="role-indicator">Project Leader</span>
         </div>
       </div>
@@ -795,23 +795,23 @@
     <section class="page" id="top">
       <!-- Hero Section -->
       <section class="hero">
-        <span class="hero-eyebrow" data-i18n-zh="用戶概覽" data-i18n-en="Overview">用戶概覽</span>
-        <h1 data-i18n-zh="歡迎回來，Mandy" data-i18n-en="Welcome back, Mandy">歡迎回來，Mandy</h1>
-        <p data-i18n-zh="監控所有項目的標註進度與品質指標。" data-i18n-en="Monitor annotation progress and quality metrics across all projects.">
+        <span id="heroEyebrow" class="hero-eyebrow">用戶概覽</span>
+        <h1 id="heroTitle">歡迎回來，Mandy</h1>
+        <p id="heroSubtitle">
           監控所有項目的標註進度與品質指標。
         </p>
         <div class="hero-meta">
           <div class="meta-card">
             <strong id="activeTasks" data-testid="active-tasks">5</strong>
-            <span data-i18n-zh="進行中的任務" data-i18n-en="Active Tasks">進行中的任務</span>
+            <span id="metricActiveTasks">進行中的任務</span>
           </div>
           <div class="meta-card">
             <strong id="pendingReviews" data-testid="pending-reviews">12</strong>
-            <span data-i18n-zh="待審查項目" data-i18n-en="Pending Reviews">待審查項目</span>
+            <span id="metricPendingReviews">待審查項目</span>
           </div>
           <div class="meta-card">
             <strong id="teamMembers" data-testid="team-members">28</strong>
-            <span data-i18n-zh="團隊成員" data-i18n-en="Team Members">團隊成員</span>
+            <span id="metricTeamMembers">團隊成員</span>
           </div>
         </div>
       </section>
@@ -819,14 +819,14 @@
       <!-- Controls -->
       <section class="controls">
         <div>
-          <strong class="controls-label" data-i18n-zh="場景模式" data-i18n-en="Scenario">場景模式</strong>
-          <span class="controls-hint" data-i18n-zh="切換不同的角色視圖" data-i18n-en="Switch role views">切換不同的角色視圖</span>
+          <strong id="scenarioLabel" class="controls-label">場景模式</strong>
+          <span id="scenarioHint" class="controls-hint">切換不同的角色視圖</span>
         </div>
         <div class="scenario-list" id="scenarioList" data-testid="scenario-list">
-          <button class="scenario-pill active" data-scenario="super_admin_data" data-i18n-zh="超級管理員" data-i18n-en="Super Admin">超級管理員</button>
-          <button class="scenario-pill" data-scenario="project_leader" data-i18n-zh="項目主負責人" data-i18n-en="Project Leader">項目主負責人</button>
-          <button class="scenario-pill" data-scenario="annotator" data-i18n-zh="標註員" data-i18n-en="Annotator">標註員</button>
-          <button class="scenario-pill" data-scenario="reviewer" data-i18n-zh="審查員" data-i18n-en="Reviewer">審查員</button>
+          <button class="scenario-pill active" data-scenario="super_admin_data">超級管理員</button>
+          <button class="scenario-pill" data-scenario="project_leader">項目主負責人</button>
+          <button class="scenario-pill" data-scenario="annotator">標註員</button>
+          <button class="scenario-pill" data-scenario="reviewer">審查員</button>
         </div>
       </section>
 
@@ -839,22 +839,22 @@
             <article class="panel">
               <div class="panel-header">
                 <div>
-                  <h2 class="panel-title" data-i18n-zh="平台統計" data-i18n-en="Platform Stats">平台統計</h2>
-                  <span class="panel-subtitle" data-i18n-zh="系統概況" data-i18n-en="System overview">系統概況</span>
+                  <h2 id="adminPlatformTitle" class="panel-title">平台統計</h2>
+                  <span id="adminPlatformSubtitle" class="panel-subtitle">系統概況</span>
                 </div>
               </div>
               <div class="metrics">
                 <div class="metric">
                   <strong>156</strong>
-                  <span data-i18n-zh="總用戶" data-i18n-en="Total Users">總用戶</span>
+                  <span id="adminTotalUsers">總用戶</span>
                 </div>
                 <div class="metric">
                   <strong>24</strong>
-                  <span data-i18n-zh="進行中" data-i18n-en="Active">進行中</span>
+                  <span id="adminActiveLabel">進行中</span>
                 </div>
                 <div class="metric">
                   <strong>8</strong>
-                  <span data-i18n-zh="已完成" data-i18n-en="Completed">已完成</span>
+                  <span id="adminCompletedLabel">已完成</span>
                 </div>
               </div>
             </article>
@@ -863,22 +863,22 @@
             <article class="panel">
               <div class="panel-header">
                 <div>
-                  <h2 class="panel-title" data-i18n-zh="任務概況" data-i18n-en="Task Overview">任務概況</h2>
-                  <span class="panel-subtitle" data-i18n-zh="所有項目統計" data-i18n-en="All projects">所有項目統計</span>
+                  <h2 id="adminTaskTitle" class="panel-title">任務概況</h2>
+                  <span id="adminTaskSubtitle" class="panel-subtitle">所有項目統計</span>
                 </div>
               </div>
               <div class="metrics">
                 <div class="metric">
                   <strong>127</strong>
-                  <span data-i18n-zh="總任務" data-i18n-en="Total Tasks">總任務</span>
+                  <span id="adminTotalTasks">總任務</span>
                 </div>
                 <div class="metric">
                   <strong>89%</strong>
-                  <span data-i18n-zh="完成率" data-i18n-en="Completion">完成率</span>
+                  <span id="adminCompletion">完成率</span>
                 </div>
                 <div class="metric">
                   <strong>0.82</strong>
-                  <span data-i18n-zh="平均 IAA" data-i18n-en="Avg IAA">平均 IAA</span>
+                  <span id="adminAvgIaa">平均 IAA</span>
                 </div>
               </div>
             </article>
@@ -887,18 +887,18 @@
             <article class="panel">
               <div class="panel-header">
                 <div>
-                  <h2 class="panel-title" data-i18n-zh="最近提醒" data-i18n-en="Recent Alerts">最近提醒</h2>
-                  <span class="panel-subtitle" data-i18n-zh="系統通知" data-i18n-en="System notifications">系統通知</span>
+                  <h2 id="adminAlertsTitle" class="panel-title">最近提醒</h2>
+                  <span id="adminAlertsSubtitle" class="panel-subtitle">系統通知</span>
                 </div>
               </div>
               <ul class="list">
                 <li class="list-item">
-                  <span class="list-item-title" data-i18n-zh="NER Benchmark" data-i18n-en="NER Benchmark">NER Benchmark</span>
-                  <span class="list-item-detail" data-i18n-zh="IAA 已達 0.81，待確認後啟動" data-i18n-en="IAA 0.81, pending confirmation">IAA 已達 0.81，待確認後啟動</span>
+                  <span id="alertItem1Title" class="list-item-title">NER Benchmark</span>
+                  <span id="alertItem1Detail" class="list-item-detail">IAA 已達 0.81，待確認後啟動</span>
                 </li>
                 <li class="list-item">
-                  <span class="list-item-title" data-i18n-zh="意圖分類 v2" data-i18n-en="Intent Classification v2">意圖分類 v2</span>
-                  <span class="list-item-detail" data-i18n-zh="2 位標註員低於標準速度" data-i18n-en="2 annotators below threshold">2 位標註員低於標準速度</span>
+                  <span id="alertItem2Title" class="list-item-title">意圖分類 v2</span>
+                  <span id="alertItem2Detail" class="list-item-detail">2 位標註員低於標準速度</span>
                 </li>
               </ul>
             </article>
@@ -908,21 +908,21 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 class="panel-title" data-i18n-zh="任務列表" data-i18n-en="Task List">任務列表</h2>
-                <span class="panel-subtitle" data-i18n-zh="進行中的所有項目" data-i18n-en="All active projects">進行中的所有項目</span>
+                <h2 id="adminTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="adminTaskListSubtitle" class="panel-subtitle">進行中的所有項目</span>
               </div>
               <div class="btn-row">
-                <button class="btn btn-secondary" data-i18n-zh="查看全部" data-i18n-en="View All">查看全部</button>
+                <button id="adminViewAllBtn" class="btn btn-secondary">查看全部</button>
               </div>
             </div>
             <div class="list">
               <div class="list-item">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                   <div>
-                    <span class="list-item-title">新聞標題分類</span>
-                    <span class="list-item-detail">已完成 89%</span>
+                    <span id="adminTask1Title" class="list-item-title">新聞標題分類</span>
+                    <span id="adminTask1Detail" class="list-item-detail">已完成 89%</span>
                   </div>
-                  <span class="badge badge-info">進行中</span>
+                  <span id="adminTask1Badge" class="badge badge-info">進行中</span>
                 </div>
                 <div class="progress" style="margin-top: 10px;">
                   <span style="width: 89%;"></span>
@@ -931,10 +931,10 @@
               <div class="list-item">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                   <div>
-                    <span class="list-item-title">情感分析基準</span>
-                    <span class="list-item-detail">已完成 42%</span>
+                    <span id="adminTask2Title" class="list-item-title">情感分析基準</span>
+                    <span id="adminTask2Detail" class="list-item-detail">已完成 42%</span>
                   </div>
-                  <span class="badge badge-warning">待確認</span>
+                  <span id="adminTask2Badge" class="badge badge-warning">待確認</span>
                 </div>
                 <div class="progress" style="margin-top: 10px;">
                   <span style="width: 42%;"></span>
@@ -949,17 +949,17 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 class="panel-title" data-i18n-zh="我的任務" data-i18n-en="My Tasks">我的任務</h2>
+                <h2 id="plTaskListTitle" class="panel-title">我的任務</h2>
               </div>
             </div>
             <div class="list">
               <div class="list-item">
-                <span class="list-item-title">新聞標題分類</span>
-                <span class="list-item-detail">8 位標註員 · 已完成 89%</span>
+                <span id="plTask1Title" class="list-item-title">新聞標題分類</span>
+                <span id="plTask1Detail" class="list-item-detail">8 位標註員 · 已完成 89%</span>
               </div>
               <div class="list-item">
-                <span class="list-item-title">情感分析基準</span>
-                <span class="list-item-detail">6 位標註員 · 已完成 42%</span>
+                <span id="plTask2Title" class="list-item-title">情感分析基準</span>
+                <span id="plTask2Detail" class="list-item-detail">6 位標註員 · 已完成 42%</span>
               </div>
             </div>
           </article>
@@ -970,25 +970,25 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 class="panel-title" data-i18n-zh="我的進度" data-i18n-en="My Progress">我的進度</h2>
+                <h2 id="annotatorProgressTitle" class="panel-title">我的進度</h2>
               </div>
             </div>
             <div class="metrics">
               <div class="metric">
                 <strong>247</strong>
-                <span data-i18n-zh="已完成" data-i18n-en="Completed">已完成</span>
+                <span id="annotatorCompletedLabel">已完成</span>
               </div>
               <div class="metric">
                 <strong>53</strong>
-                <span data-i18n-zh="今日完成" data-i18n-en="Today">今日完成</span>
+                <span id="annotatorTodayLabel">今日完成</span>
               </div>
               <div class="metric">
                 <strong>4.2</strong>
-                <span data-i18n-zh="平均速度" data-i18n-en="Avg Speed">平均速度</span>
+                <span id="annotatorAvgSpeedLabel">平均速度</span>
               </div>
             </div>
             <div class="btn-row" style="margin-top: 16px;">
-              <button class="btn btn-primary" data-i18n-zh="快速繼續" data-i18n-en="Continue">快速繼續</button>
+              <button id="annotatorContinueBtn" class="btn btn-primary">快速繼續</button>
             </div>
           </article>
         </section>
@@ -998,20 +998,20 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 class="panel-title" data-i18n-zh="待審查" data-i18n-en="Pending Review">待審查</h2>
+                <h2 id="reviewerPanelTitle" class="panel-title">待審查</h2>
               </div>
             </div>
             <div class="list">
               <div class="list-item">
-                <span class="list-item-title">新聞標題分類</span>
+                <span id="reviewerTask1Title" class="list-item-title">新聞標題分類</span>
                 <span class="list-item-detail">
-                  <span class="badge badge-warning" style="margin-right: 8px;">12 待審</span>
-                  進度 67%
+                  <span id="reviewerTask1Badge" class="badge badge-warning" style="margin-right: 8px;">12 待審</span>
+                  <span id="reviewerTask1Progress">進度 67%</span>
                 </span>
               </div>
             </div>
             <div class="btn-row" style="margin-top: 16px;">
-              <button class="btn btn-primary" data-i18n-zh="開始審查" data-i18n-en="Start Review">開始審查</button>
+              <button id="reviewerStartBtn" class="btn btn-primary">開始審查</button>
             </div>
           </article>
         </section>
@@ -1037,27 +1037,203 @@
       });
     });
 
-    function updateStaticCopy(lang) {
-      const langKey = lang === 'zh-TW' ? 'zh' : 'en';
-      document.querySelectorAll('[data-i18n-zh]').forEach((node) => {
-        node.textContent = langKey === 'zh' ? node.dataset.i18nZh : node.dataset.i18nEn;
-      });
+    /* ── i18n ──────────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        langToggleAria:       '切換語言',
+        navDashboard:         '儀表板',
+        navCreateTask:        '建立任務',
+        navAnnotation:        '標記作業',
+        navProfile:           '個人資料',
+        heroEyebrow:          '用戶概覽',
+        heroTitle:            '歡迎回來，Mandy',
+        heroSubtitle:         '監控所有項目的標註進度與品質指標。',
+        metricActiveTasks:    '進行中的任務',
+        metricPendingReviews: '待審查項目',
+        metricTeamMembers:    '團隊成員',
+        scenarioLabel:        '場景模式',
+        scenarioHint:         '切換不同的角色視圖',
+        scenarioPills: {
+          super_admin_data: '超級管理員',
+          project_leader:   '項目主負責人',
+          annotator:        '標註員',
+          reviewer:         '審查員',
+        },
+        adminPlatformTitle:    '平台統計',
+        adminPlatformSubtitle: '系統概況',
+        adminTotalUsers:       '總用戶',
+        adminActiveLabel:      '進行中',
+        adminCompletedLabel:   '已完成',
+        adminTaskTitle:        '任務概況',
+        adminTaskSubtitle:     '所有項目統計',
+        adminTotalTasks:       '總任務',
+        adminCompletion:       '完成率',
+        adminAvgIaa:           '平均 IAA',
+        adminAlertsTitle:      '最近提醒',
+        adminAlertsSubtitle:   '系統通知',
+        alertItem1Title:       'NER Benchmark',
+        alertItem1Detail:      'IAA 已達 0.81，待確認後啟動',
+        alertItem2Title:       '意圖分類 v2',
+        alertItem2Detail:      '2 位標註員低於標準速度',
+        adminTaskListTitle:    '任務列表',
+        adminTaskListSubtitle: '進行中的所有項目',
+        adminViewAllBtn:       '查看全部',
+        adminTask1Title:       '新聞標題分類',
+        adminTask1Detail:      '已完成 89%',
+        adminTask1Badge:       '進行中',
+        adminTask2Title:       '情感分析基準',
+        adminTask2Detail:      '已完成 42%',
+        adminTask2Badge:       '待確認',
+        plTaskListTitle:       '我的任務',
+        plTask1Title:          '新聞標題分類',
+        plTask1Detail:         '8 位標註員 · 已完成 89%',
+        plTask2Title:          '情感分析基準',
+        plTask2Detail:         '6 位標註員 · 已完成 42%',
+        annotatorProgressTitle:  '我的進度',
+        annotatorCompletedLabel: '已完成',
+        annotatorTodayLabel:     '今日完成',
+        annotatorAvgSpeedLabel:  '平均速度',
+        annotatorContinueBtn:    '快速繼續',
+        reviewerPanelTitle:      '待審查',
+        reviewerTask1Title:      '新聞標題分類',
+        reviewerTask1Badge:      '12 待審',
+        reviewerTask1Progress:   '進度 67%',
+        reviewerStartBtn:        '開始審查',
+      },
+      en: {
+        langToggleAria:       'Switch language',
+        navDashboard:         'Dashboard',
+        navCreateTask:        'Create Task',
+        navAnnotation:        'Annotation',
+        navProfile:           'Profile',
+        heroEyebrow:          'Overview',
+        heroTitle:            'Welcome back, Mandy',
+        heroSubtitle:         'Monitor annotation progress and quality metrics across all projects.',
+        metricActiveTasks:    'Active Tasks',
+        metricPendingReviews: 'Pending Reviews',
+        metricTeamMembers:    'Team Members',
+        scenarioLabel:        'Scenario',
+        scenarioHint:         'Switch role views',
+        scenarioPills: {
+          super_admin_data: 'Super Admin',
+          project_leader:   'Project Leader',
+          annotator:        'Annotator',
+          reviewer:         'Reviewer',
+        },
+        adminPlatformTitle:    'Platform Stats',
+        adminPlatformSubtitle: 'System overview',
+        adminTotalUsers:       'Total Users',
+        adminActiveLabel:      'Active',
+        adminCompletedLabel:   'Completed',
+        adminTaskTitle:        'Task Overview',
+        adminTaskSubtitle:     'All projects',
+        adminTotalTasks:       'Total Tasks',
+        adminCompletion:       'Completion',
+        adminAvgIaa:           'Avg IAA',
+        adminAlertsTitle:      'Recent Alerts',
+        adminAlertsSubtitle:   'System notifications',
+        alertItem1Title:       'NER Benchmark',
+        alertItem1Detail:      'IAA 0.81, pending confirmation',
+        alertItem2Title:       'Intent Classification v2',
+        alertItem2Detail:      '2 annotators below threshold',
+        adminTaskListTitle:    'Task List',
+        adminTaskListSubtitle: 'All active projects',
+        adminViewAllBtn:       'View All',
+        adminTask1Title:       'News Headline Classification',
+        adminTask1Detail:      '89% Completed',
+        adminTask1Badge:       'In Progress',
+        adminTask2Title:       'Sentiment Analysis Baseline',
+        adminTask2Detail:      '42% Completed',
+        adminTask2Badge:       'Pending Confirmation',
+        plTaskListTitle:       'My Tasks',
+        plTask1Title:          'News Headline Classification',
+        plTask1Detail:         '8 Annotators · 89% Completed',
+        plTask2Title:          'Sentiment Analysis Baseline',
+        plTask2Detail:         '6 Annotators · 42% Completed',
+        annotatorProgressTitle:  'My Progress',
+        annotatorCompletedLabel: 'Completed',
+        annotatorTodayLabel:     'Today',
+        annotatorAvgSpeedLabel:  'Avg Speed',
+        annotatorContinueBtn:    'Continue',
+        reviewerPanelTitle:      'Pending Review',
+        reviewerTask1Title:      'News Headline Classification',
+        reviewerTask1Badge:      '12 Pending',
+        reviewerTask1Progress:   '67% Progress',
+        reviewerStartBtn:        'Start Review',
+      },
+    };
 
-      const langLabel = document.getElementById('langLabel');
-      if (langLabel) {
-        langLabel.textContent = lang === 'zh-TW' ? 'EN' : 'ZH';
-      }
+    let lang = 'zh';
+
+    function applyLang(l) {
+      const t = i18n[l];
+      document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+      document.getElementById('langLabel').textContent        = l === 'zh' ? 'EN' : 'ZH';
+      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
+      document.getElementById('navDashboard').textContent     = t.navDashboard;
+      document.getElementById('navCreateTask').textContent    = t.navCreateTask;
+      document.getElementById('navAnnotation').textContent    = t.navAnnotation;
+      document.getElementById('navProfile').textContent       = t.navProfile;
+      document.getElementById('heroEyebrow').textContent      = t.heroEyebrow;
+      document.getElementById('heroTitle').textContent        = t.heroTitle;
+      document.getElementById('heroSubtitle').textContent     = t.heroSubtitle;
+      document.getElementById('metricActiveTasks').textContent    = t.metricActiveTasks;
+      document.getElementById('metricPendingReviews').textContent = t.metricPendingReviews;
+      document.getElementById('metricTeamMembers').textContent    = t.metricTeamMembers;
+      document.getElementById('scenarioLabel').textContent    = t.scenarioLabel;
+      document.getElementById('scenarioHint').textContent     = t.scenarioHint;
+      document.querySelectorAll('.scenario-pill').forEach(pill => {
+        const key = pill.dataset.scenario;
+        if (t.scenarioPills[key]) pill.textContent = t.scenarioPills[key];
+      });
+      document.getElementById('adminPlatformTitle').textContent    = t.adminPlatformTitle;
+      document.getElementById('adminPlatformSubtitle').textContent = t.adminPlatformSubtitle;
+      document.getElementById('adminTotalUsers').textContent       = t.adminTotalUsers;
+      document.getElementById('adminActiveLabel').textContent      = t.adminActiveLabel;
+      document.getElementById('adminCompletedLabel').textContent   = t.adminCompletedLabel;
+      document.getElementById('adminTaskTitle').textContent        = t.adminTaskTitle;
+      document.getElementById('adminTaskSubtitle').textContent     = t.adminTaskSubtitle;
+      document.getElementById('adminTotalTasks').textContent       = t.adminTotalTasks;
+      document.getElementById('adminCompletion').textContent       = t.adminCompletion;
+      document.getElementById('adminAvgIaa').textContent           = t.adminAvgIaa;
+      document.getElementById('adminAlertsTitle').textContent      = t.adminAlertsTitle;
+      document.getElementById('adminAlertsSubtitle').textContent   = t.adminAlertsSubtitle;
+      document.getElementById('alertItem1Title').textContent       = t.alertItem1Title;
+      document.getElementById('alertItem1Detail').textContent      = t.alertItem1Detail;
+      document.getElementById('alertItem2Title').textContent       = t.alertItem2Title;
+      document.getElementById('alertItem2Detail').textContent      = t.alertItem2Detail;
+      document.getElementById('adminTaskListTitle').textContent    = t.adminTaskListTitle;
+      document.getElementById('adminTaskListSubtitle').textContent = t.adminTaskListSubtitle;
+      document.getElementById('adminViewAllBtn').textContent       = t.adminViewAllBtn;
+      document.getElementById('adminTask1Title').textContent       = t.adminTask1Title;
+      document.getElementById('adminTask1Detail').textContent      = t.adminTask1Detail;
+      document.getElementById('adminTask1Badge').textContent       = t.adminTask1Badge;
+      document.getElementById('adminTask2Title').textContent       = t.adminTask2Title;
+      document.getElementById('adminTask2Detail').textContent      = t.adminTask2Detail;
+      document.getElementById('adminTask2Badge').textContent       = t.adminTask2Badge;
+      document.getElementById('plTaskListTitle').textContent       = t.plTaskListTitle;
+      document.getElementById('plTask1Title').textContent          = t.plTask1Title;
+      document.getElementById('plTask1Detail').textContent         = t.plTask1Detail;
+      document.getElementById('plTask2Title').textContent          = t.plTask2Title;
+      document.getElementById('plTask2Detail').textContent         = t.plTask2Detail;
+      document.getElementById('annotatorProgressTitle').textContent  = t.annotatorProgressTitle;
+      document.getElementById('annotatorCompletedLabel').textContent = t.annotatorCompletedLabel;
+      document.getElementById('annotatorTodayLabel').textContent     = t.annotatorTodayLabel;
+      document.getElementById('annotatorAvgSpeedLabel').textContent  = t.annotatorAvgSpeedLabel;
+      document.getElementById('annotatorContinueBtn').textContent    = t.annotatorContinueBtn;
+      document.getElementById('reviewerPanelTitle').textContent      = t.reviewerPanelTitle;
+      document.getElementById('reviewerTask1Title').textContent      = t.reviewerTask1Title;
+      document.getElementById('reviewerTask1Badge').textContent      = t.reviewerTask1Badge;
+      document.getElementById('reviewerTask1Progress').textContent   = t.reviewerTask1Progress;
+      document.getElementById('reviewerStartBtn').textContent        = t.reviewerStartBtn;
     }
 
-    updateStaticCopy(document.documentElement.lang);
-
-    // Language toggle
-    document.getElementById('langToggle')?.addEventListener('click', () => {
-      const currentLang = document.documentElement.lang;
-      const newLang = currentLang === 'zh-TW' ? 'en' : 'zh-TW';
-      document.documentElement.lang = newLang;
-      updateStaticCopy(newLang);
+    document.getElementById('langToggle').addEventListener('click', () => {
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
     });
+
+    applyLang('zh');
   </script>
 </body>
 </html>

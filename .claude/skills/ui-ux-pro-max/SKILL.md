@@ -140,6 +140,68 @@ Before doing any design work, check whether this project already has a design sy
 
 If neither file exists, proceed with Step 1–4 as normal to generate a new design system.
 
+### Project-Specific Prototype Conventions
+
+When generating prototype HTML pages for this project (`design/prototype/pages/`), apply the following conventions **before writing any code**:
+
+#### i18n Pattern (Centralized JS Object)
+
+All prototype pages must implement language toggle using a **centralized JS `i18n` object**, not HTML `data-` attributes. This is the project-standard pattern for maintainability and consistency across pages.
+
+```html
+<script>
+  /* ── i18n ──────────────────────────────────────────────── */
+  const i18n = {
+    zh: {
+      pageTitle: '頁面標題',
+      someLabel: '某個標籤',
+      // … all translatable strings
+    },
+    en: {
+      pageTitle: 'Page Title',
+      someLabel: 'Some Label',
+      // … all translatable strings
+    },
+  };
+
+  let lang = 'zh';
+
+  function applyLang(l) {
+    const t = i18n[l];
+    document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+    document.getElementById('langLabel').textContent = l === 'zh' ? 'ZH | EN' : 'EN | ZH';
+    document.getElementById('langToggle').setAttribute('aria-label', l === 'zh' ? '切換語言' : 'Switch language');
+    // assign each translatable element explicitly:
+    document.getElementById('someLabel').textContent = t.someLabel;
+    // …
+  }
+
+  document.getElementById('langToggle').addEventListener('click', () => {
+    lang = lang === 'zh' ? 'en' : 'zh';
+    applyLang(lang);
+  });
+
+  applyLang('zh'); // initialize
+</script>
+```
+
+**Rules:**
+- Every translatable string must be in `i18n.zh` **and** `i18n.en` — no exceptions.
+- Every translatable element must have an `id` and an explicit assignment in `applyLang()`.
+- Do **not** use `data-i18n-zh` / `data-i18n-en` attributes or `querySelectorAll('[data-i18n-zh]')` — this pattern is not the project standard.
+- Call `applyLang('zh')` at the end of the script to initialize the page in Chinese.
+
+#### Pre-Delivery i18n Checklist
+
+Before delivering any prototype HTML page:
+- [ ] All visible text strings are in both `i18n.zh` and `i18n.en`
+- [ ] Every translatable element has an `id`
+- [ ] `applyLang()` assigns every string — no element is handled only by HTML text node
+- [ ] Language toggle switches the entire page with no mixed-language content
+- [ ] `applyLang('zh')` is called on initialization
+
+---
+
 ### Step 1: Analyze User Requirements
 
 Extract key information from user request:
