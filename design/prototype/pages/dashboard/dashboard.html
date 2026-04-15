@@ -133,6 +133,58 @@
       line-height: 1;
     }
 
+    .mobile-top-logout {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-ink-muted);
+      transition: color 150ms, border-color 150ms, background 150ms;
+    }
+
+    .mobile-top-logout:hover {
+      color: var(--color-error);
+      border-color: #FECACA;
+      background: #FEF2F2;
+    }
+
+    .mobile-user-name {
+      display: none;
+      margin-left: auto;
+      max-width: 110px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-ink);
+      line-height: 1.2;
+    }
+
+    .mobile-lang-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 10px;
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      transition: border-color 150ms, background 150ms;
+    }
+
+    .mobile-lang-toggle:hover {
+      border-color: var(--color-primary);
+      background: #EEF2FF;
+    }
+
     .navbar-center {
       display: flex;
       flex-direction: column;
@@ -430,6 +482,7 @@
       border: 1px solid transparent;
       font-weight: 600;
       font-size: 14px;
+      white-space: nowrap;
       transition: opacity 150ms, transform 150ms, border-color 150ms, background 150ms;
     }
 
@@ -651,58 +704,87 @@
     @media (max-width: 768px) {
       body {
         flex-direction: column;
+        padding-top: 64px;
+        padding-bottom: 84px;
       }
 
       .navbar {
         width: 100%;
-        height: auto;
+        height: 84px;
         border-right: none;
-        border-bottom: 1px solid var(--color-border);
+        border-bottom: none;
+        border-top: 1px solid var(--color-border);
         flex-direction: row;
-        padding: var(--space-md) var(--space-lg);
-        position: sticky;
-        top: 0;
+        padding: 8px 10px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        background: var(--color-white);
+        z-index: 300;
       }
 
       .navbar-brand {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
         margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-white);
+        z-index: 320;
+      }
+
+      .navbar-wordmark {
+        font-size: 14px;
+      }
+
+      .mobile-user-name {
+        display: block;
+      }
+
+      .mobile-lang-toggle {
+        display: inline-flex;
+      }
+
+      .mobile-top-logout {
+        display: inline-flex;
       }
 
       .navbar-center {
-        display: flex;
-        flex-direction: row;
-        gap: var(--space-md);
-        flex: 1;
-        margin: 0 var(--space-lg);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+        width: 100%;
+        margin: 0;
+        flex: none;
       }
 
       .navbar-center .nav-link {
-        padding: 8px 12px;
+        min-height: 64px;
+        padding: 8px 4px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .navbar-center .nav-link span {
+        white-space: nowrap;
       }
 
       .nav-actions {
-        flex-direction: row;
-        gap: var(--space-md);
-        border-top: none;
-        padding-top: 0;
-        margin-top: 0;
-      }
-
-      .user-chip {
-        width: auto;
-        padding: 4px 8px 4px 12px;
-        background: var(--color-white);
-      }
-
-      .lang-toggle {
-        width: auto;
-        padding: 6px 12px;
+        display: none;
       }
 
       .layout {
-        padding: var(--space-md) var(--space-md) var(--space-lg);
+        padding: var(--space-md) var(--space-md) calc(var(--space-xl) + 84px);
       }
 
       .controls {
@@ -712,6 +794,13 @@
 
       .scenario-list {
         width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .scenario-pill {
+        width: 100%;
+        text-align: center;
       }
 
       .grid-3,
@@ -721,6 +810,27 @@
 
       .metrics {
         grid-template-columns: repeat(2, 1fr);
+      }
+
+      .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .task-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .task-item-meta {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      .task-item-badges {
+        justify-content: flex-start;
       }
     }
   </style>
@@ -741,6 +851,22 @@
         </svg>
       </div>
       <span class="navbar-wordmark">Label Suite</span>
+      <span id="mobileUserName" class="mobile-user-name">Mandy Chen</span>
+      <button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M2 12h20"></path>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span id="mobileLangLabel">ZH | EN</span>
+      </button>
+      <button id="mobileLogoutBtn" class="mobile-top-logout" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
     </a>
 
     <nav class="navbar-center" aria-label="Main navigation">
@@ -787,12 +913,12 @@
         <span id="langLabel" data-testid="lang-label">EN</span>
       </button>
       <div class="user-chip">
-        <div class="avatar" id="userAvatar" aria-hidden="true">PL</div>
+        <div class="avatar" id="userAvatar" aria-hidden="true">U</div>
         <div class="user-info">
           <span class="user-name" id="userName">Mandy Chen</span>
-          <span class="user-role" id="roleIndicator" data-testid="role-indicator">Project Leader</span>
+          <span class="user-role" id="roleIndicator" data-testid="role-indicator">一般使用者</span>
         </div>
-        <button class="logout-btn" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
+        <button id="logoutBtn" class="logout-btn" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -815,7 +941,8 @@
           <span id="scenarioHint" class="controls-hint">切換不同的角色視圖</span>
         </div>
         <div class="scenario-list" id="scenarioList" data-testid="scenario-list">
-          <button class="scenario-pill active" data-scenario="super_admin_data">系統管理員</button>
+          <button class="scenario-pill active" data-scenario="user">一般使用者</button>
+          <button class="scenario-pill" data-scenario="super_admin_data">系統管理員</button>
           <button class="scenario-pill" data-scenario="project_leader">專案負責人</button>
           <button class="scenario-pill" data-scenario="annotator">標記員</button>
           <button class="scenario-pill" data-scenario="reviewer">審核員</button>
@@ -824,8 +951,64 @@
 
       <!-- Content Grid -->
       <div class="content-grid">
+        <!-- User View (Default) -->
+        <section class="view is-active" id="view-user" data-scenario="user" data-testid="user-view">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="userWelcomeTitle" class="panel-title">歡迎使用 Label Suite</h2>
+                <span id="userWelcomeSubtitle" class="panel-subtitle">你目前是一般使用者，尚未建立或參與任務</span>
+              </div>
+              <div class="btn-row">
+                <button id="userCreateTaskBtn" class="btn btn-primary">建立第一個任務</button>
+              </div>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <strong id="userCurrentRoleValue">一般使用者</strong>
+                <span id="userCurrentRoleLabel">目前角色</span>
+              </div>
+              <div class="metric">
+                <strong>0</strong>
+                <span id="userOwnedTasksLabel">我建立的任務</span>
+              </div>
+              <div class="metric">
+                <strong>0</strong>
+                <span id="userAssignedTasksLabel">我被指派的任務</span>
+              </div>
+              <div class="metric">
+                <strong>0</strong>
+                <span id="userAssignedReviewsLabel">我被指派的審核</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="userNextStepTitle" class="panel-title">你接下來可以做什麼</h2>
+                <span id="userNextStepSubtitle" class="panel-subtitle">角色會依任務行為自動轉換</span>
+              </div>
+            </div>
+            <ul class="list">
+              <li class="list-item">
+                <span id="userStep1Title" class="list-item-title">建立任務後成為專案負責人</span>
+                <span id="userStep1Detail" class="list-item-detail">建立任務後，你會在該任務中擁有管理與配置權限。</span>
+              </li>
+              <li class="list-item">
+                <span id="userStep2Title" class="list-item-title">被指派標記工作後成為標記員</span>
+                <span id="userStep2Detail" class="list-item-detail">被加入標記成員後，你會看到待標記工作與快速繼續入口。</span>
+              </li>
+              <li class="list-item">
+                <span id="userStep3Title" class="list-item-title">被指派審核工作後成為審核員</span>
+                <span id="userStep3Detail" class="list-item-detail">被加入審核成員後，你會看到待審任務與快速審查入口。</span>
+              </li>
+            </ul>
+          </article>
+        </section>
+
         <!-- Super Admin View -->
-        <section class="view is-active" id="view-super_admin_data" data-scenario="super_admin_data" data-testid="super-admin-view">
+        <section class="view" id="view-super_admin_data" data-scenario="super_admin_data" data-testid="super-admin-view">
           <div class="grid-3">
             <!-- Platform Overview -->
             <article class="panel">
@@ -917,12 +1100,12 @@
             </div>
             <div class="list">
               <div class="list-item">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                  <div>
+                <div class="task-item-header">
+                  <div class="task-item-summary">
                     <span id="adminTask1Title" class="list-item-title">新聞標題分類</span>
                     <span id="adminTask1Detail" class="list-item-detail">專案負責人A · 審核員A · 8 位標記員 · 已完成 89%</span>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                  <div class="task-item-badges">
                     <span id="adminTask1TaskType" class="badge badge-task-type">分類任務</span>
                     <span id="adminTask1RunType" class="badge badge-official">正式標註</span>
                     <span id="adminTask1Badge" class="badge badge-info">進行中</span>
@@ -933,12 +1116,12 @@
                 </div>
               </div>
               <div class="list-item">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                  <div>
+                <div class="task-item-header">
+                  <div class="task-item-summary">
                     <span id="adminTask2Title" class="list-item-title">情感分析基準</span>
                     <span id="adminTask2Detail" class="list-item-detail">專案負責人B · 審核員B · 6 位標記員 · 已完成 42%</span>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                  <div class="task-item-badges">
                     <span id="adminTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
                     <span id="adminTask2RunType" class="badge badge-dry-run">試標</span>
                     <span id="adminTask2Badge" class="badge badge-warning">待確認</span>
@@ -986,6 +1169,9 @@
               <div>
                 <h2 id="plTaskListTitle" class="panel-title">任務列表</h2>
                 <span id="plTaskListSubtitle" class="panel-subtitle">進行中的所有項目</span>
+              </div>
+              <div class="btn-row">
+                <button id="plViewAllBtn" class="btn btn-secondary slim">查看全部</button>
               </div>
             </div>
             <div class="list">
@@ -1209,6 +1395,8 @@
         pageTitle:            '儀表板 — Label Suite（原型）',
         langLabel:            'ZH | EN',
         langToggleAria:       '切換語言',
+        logoutAria:           '登出',
+        logoutTitle:          '登出',
         navDashboard:         '儀表板',
         navCreateTask:        '建立任務',
         navAnnotation:        '標記作業',
@@ -1216,11 +1404,28 @@
         scenarioLabel:        '場景模式',
         scenarioHint:         '切換不同的角色視圖',
         scenarioPills: {
+          user:             '一般使用者',
           super_admin_data: '系統管理員',
           project_leader:   '專案負責人',
           annotator:        '標記員',
           reviewer:         '審核員',
         },
+        userWelcomeTitle:      '歡迎使用 Label Suite',
+        userWelcomeSubtitle:   '你目前是一般使用者，尚未建立或參與任務',
+        userCreateTaskBtn:     '建立第一個任務',
+        userOwnedTasksLabel:   '我建立的任務',
+        userAssignedTasksLabel:'我被指派的任務',
+        userAssignedReviewsLabel:'我被指派的審核',
+        userCurrentRoleValue:  '一般使用者',
+        userCurrentRoleLabel:  '目前角色',
+        userNextStepTitle:     '你接下來可以做什麼',
+        userNextStepSubtitle:  '角色會依任務行為自動轉換',
+        userStep1Title:        '建立任務後成為專案負責人',
+        userStep1Detail:       '建立任務後，你會在該任務中擁有管理與配置權限。',
+        userStep2Title:        '被指派標記工作後成為標記員',
+        userStep2Detail:       '被加入標記成員後，你會看到待標記工作與快速繼續入口。',
+        userStep3Title:        '被指派審核工作後成為審核員',
+        userStep3Detail:       '被加入審核成員後，你會看到待審任務與快速審查入口。',
         adminPlatformTitle:    '平台使用者統計',
         adminPlatformSubtitle: '系統概況',
         adminTotalUsers:       '總用戶',
@@ -1260,6 +1465,7 @@
         plSpeedAlert:          '速度異常',
         plTaskListTitle:       '任務列表',
         plTaskListSubtitle:    '進行中的所有項目',
+        plViewAllBtn:          '查看全部',
         plTask1Title:          '新聞標題分類',
         plTask1Detail:         '審核員A · 8 位標記員 · 已完成 89%',
         plTask1TaskType:       '分類任務',
@@ -1313,6 +1519,8 @@
         pageTitle:            'Dashboard — Label Suite (Prototype)',
         langLabel:            'EN | ZH',
         langToggleAria:       'Switch language',
+        logoutAria:           'Sign out',
+        logoutTitle:          'Sign out',
         navDashboard:         'Dashboard',
         navCreateTask:        'Create Task',
         navAnnotation:        'Annotation',
@@ -1320,11 +1528,28 @@
         scenarioLabel:        'Scenario',
         scenarioHint:         'Switch role views',
         scenarioPills: {
+          user:             'User',
           super_admin_data: 'Super Admin',
           project_leader:   'Project Leader',
           annotator:        'Annotator',
           reviewer:         'Reviewer',
         },
+        userWelcomeTitle:      'Welcome to Label Suite',
+        userWelcomeSubtitle:   'You are currently a user with no created or assigned tasks yet',
+        userCreateTaskBtn:     'Create Your First Task',
+        userOwnedTasksLabel:   'Tasks I Created',
+        userAssignedTasksLabel:'Tasks Assigned to Me',
+        userAssignedReviewsLabel:'Reviews Assigned to Me',
+        userCurrentRoleValue:  'User',
+        userCurrentRoleLabel:  'Current Role',
+        userNextStepTitle:     'What you can do next',
+        userNextStepSubtitle:  'Your role changes automatically based on task actions',
+        userStep1Title:        'Create a task to become Project Leader',
+        userStep1Detail:       'After creating a task, you will manage settings and members for that task.',
+        userStep2Title:        'Get assigned to annotate to become Annotator',
+        userStep2Detail:       'Once assigned as an annotator, you will see pending work and quick resume actions.',
+        userStep3Title:        'Get assigned to review to become Reviewer',
+        userStep3Detail:       'Once assigned as a reviewer, you will see pending review tasks and quick review actions.',
         adminPlatformTitle:    'Platform Stats',
         adminPlatformSubtitle: 'System overview',
         adminTotalUsers:       'Total Users',
@@ -1364,6 +1589,7 @@
         plSpeedAlert:          'Speed Alerts',
         plTaskListTitle:       'Task List',
         plTaskListSubtitle:    'All active projects',
+        plViewAllBtn:          'View All',
         plTask1Title:          'News Headline Classification',
         plTask1Detail:         'Reviewer A · 8 Annotators · 89% Completed',
         plTask1TaskType:       'Classification',
@@ -1416,14 +1642,20 @@
     };
 
     let lang = 'zh';
-    let scenario = 'super_admin_data';
+    let scenario = 'user';
 
     function applyLang(l) {
       const t = i18n[l];
       document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
       document.title = t.pageTitle;
       document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
-      document.getElementById('roleIndicator').textContent = t.scenarioPills[scenario];
+      document.getElementById('mobileLangToggle').setAttribute('aria-label', t.langToggleAria);
+      document.getElementById('logoutBtn').setAttribute('aria-label', t.logoutAria);
+      document.getElementById('logoutBtn').setAttribute('title', t.logoutTitle);
+      document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t.logoutAria);
+      document.getElementById('mobileLogoutBtn').setAttribute('title', t.logoutTitle);
+      document.getElementById('mobileLangLabel').textContent = t.langLabel;
+      document.getElementById('roleIndicator').textContent = t.scenarioPills[scenario] || t.scenarioPills.user;
       document.querySelectorAll('.scenario-pill').forEach(pill => {
         const key = pill.dataset.scenario;
         if (t.scenarioPills[key]) pill.textContent = t.scenarioPills[key];
@@ -1439,9 +1671,12 @@
       lang = lang === 'zh' ? 'en' : 'zh';
       applyLang(lang);
     });
+    document.getElementById('mobileLangToggle').addEventListener('click', () => {
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
+    });
 
     applyLang('zh');
   </script>
 </body>
 </html>
-
