@@ -23,7 +23,7 @@ Implementation must follow the existing RBAC model documented in `CLAUDE.md` and
 
 - System role in JWT: `user`, `super_admin`, or `null`
 - Task role from membership: `project_leader`, `reviewer`, or `annotator`
-- Higher roles may inherit lower-role capabilities where the platform already allows it, but onboarding content should still be selected by the current page context and effective role
+- Onboarding content is selected by the current page context and the user's effective role; no role inheritance is assumed
 
 These users do not share the same goals, vocabulary, or critical-path actions. A single generic onboarding flow would either:
 

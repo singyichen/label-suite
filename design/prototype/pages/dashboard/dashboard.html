@@ -1206,6 +1206,7 @@
     /* ── i18n ──────────────────────────────────────────────────────── */
     const i18n = {
       zh: {
+        pageTitle:            '儀表板 — Label Suite（原型）',
         langLabel:            'ZH | EN',
         langToggleAria:       '切換語言',
         navDashboard:         '儀表板',
@@ -1309,6 +1310,7 @@
         reviewerTask2StartBtn:   '快速審查',
       },
       en: {
+        pageTitle:            'Dashboard — Label Suite (Prototype)',
         langLabel:            'EN | ZH',
         langToggleAria:       'Switch language',
         navDashboard:         'Dashboard',
@@ -1419,6 +1421,7 @@
     function applyLang(l) {
       const t = i18n[l];
       document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+      document.title = t.pageTitle;
       document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
       document.getElementById('roleIndicator').textContent = t.scenarioPills[scenario];
       document.querySelectorAll('.scenario-pill').forEach(pill => {

@@ -132,7 +132,7 @@ Project Leader 在 Step 2 點擊「從範本開始」，選擇預設範本（如
 - **FR-017**：任務建立成功後，後端必須同步在 `task_membership` 中建立一筆記錄（`user_id = 建立者`, `task_role = project_leader`）。
 - **FR-018**：任務建立成功後系統必須導向 `/task-detail/{task_id}`。
 - **FR-019**：後端必須以 Pydantic `TaskConfig` 驗證 config JSON；驗證失敗時回傳欄位層級錯誤訊息，前端顯示於對應欄位旁。
-- **FR-020**：`super_admin` 在建立任務後，同樣自動成為該任務的 `project_leader`；`super_admin` 的任務建立能力等同 `annotator`，不另行擴充。
+- **FR-020**：`super_admin` 在建立任務後，同樣自動成為該任務的 `project_leader`；`super_admin` 的任務建立能力等同 `user`，不另行擴充。
 
 ### User Flow & Navigation
 
