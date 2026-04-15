@@ -118,19 +118,19 @@ test.describe('Dashboard page — language toggle', () => {
     await page.goto(DASHBOARD_URL);
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
-    await expect(page.getByTestId('lang-label')).toHaveText('ZH | EN');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH');
     await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByTestId('lang-label')).toHaveText('EN | ZH');
+    await expect(page.getByTestId('lang-label')).toHaveText('EN');
     await expect(page.locator('#scenarioLabel')).toHaveText('Scenario');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
-    await expect(page.getByTestId('lang-label')).toHaveText('ZH | EN');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH');
     await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
   });
 });
