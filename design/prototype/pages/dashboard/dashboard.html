@@ -518,6 +518,11 @@
       border: 2px solid var(--color-primary);
     }
 
+    .btn-secondary.slim {
+      padding: 10px 18px;
+      min-width: 138px;
+    }
+
     .btn-secondary:hover {
       background: #EEF2FF;
       transform: translateY(-1px);
@@ -658,6 +663,40 @@
       color: var(--color-ink-muted);
       font-size: 0.875rem;
       line-height: 1.5;
+    }
+
+    .task-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .task-item-summary {
+      min-width: 0;
+    }
+
+    .task-item-badges {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .task-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .task-item-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
     }
 
     /* ── Progress Bar ──────────────────────────────────────────– */
@@ -953,7 +992,7 @@
                 <span id="adminTaskListSubtitle" class="panel-subtitle">進行中的所有項目</span>
               </div>
               <div class="btn-row">
-                <button id="adminViewAllBtn" class="btn btn-secondary">查看全部</button>
+                <button id="adminViewAllBtn" class="btn btn-secondary slim">查看全部</button>
               </div>
             </div>
             <div class="list">
@@ -961,7 +1000,7 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                   <div>
                     <span id="adminTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="adminTask1Detail" class="list-item-detail">已完成 89%</span>
+                    <span id="adminTask1Detail" class="list-item-detail">專案負責人A · 審核員A · 8 位標記員 · 已完成 89%</span>
                   </div>
                   <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                     <span id="adminTask1TaskType" class="badge badge-task-type">分類任務</span>
@@ -977,7 +1016,7 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
                   <div>
                     <span id="adminTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="adminTask2Detail" class="list-item-detail">已完成 42%</span>
+                    <span id="adminTask2Detail" class="list-item-detail">專案負責人B · 審核員B · 6 位標記員 · 已完成 42%</span>
                   </div>
                   <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
                     <span id="adminTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
@@ -998,32 +1037,68 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="plTaskListTitle" class="panel-title">我的任務</h2>
+                <h2 id="plTaskOverviewTitle" class="panel-title">任務概況</h2>
+                <span id="plTaskOverviewSubtitle" class="panel-subtitle">所有項目統計</span>
+              </div>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <strong>127</strong>
+                <span id="plTotalTasks">總任務</span>
+              </div>
+              <div class="metric">
+                <strong>24</strong>
+                <span id="plActiveTasks">進行中</span>
+              </div>
+              <div class="metric">
+                <strong>5</strong>
+                <span id="plPendingIaa">等待 IAA 確認</span>
+              </div>
+              <div class="metric">
+                <strong>3</strong>
+                <span id="plSpeedAlert">速度異常</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+              <div class="panel-header">
+              <div>
+                <h2 id="plTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="plTaskListSubtitle" class="panel-subtitle">進行中的所有項目</span>
               </div>
             </div>
             <div class="list">
               <div class="list-item">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                  <div>
+                <div class="task-item-header">
+                  <div class="task-item-summary">
                     <span id="plTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="plTask1Detail" class="list-item-detail">8 位標記員 · 已完成 89%</span>
+                    <span id="plTask1Detail" class="list-item-detail">審核員A · 8 位標記員 · 已完成 89%</span>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                  <div class="task-item-badges">
                     <span id="plTask1TaskType" class="badge badge-task-type">分類任務</span>
                     <span id="plTask1RunType" class="badge badge-official">正式標註</span>
+                    <span id="plTask1Badge" class="badge badge-info">進行中</span>
                   </div>
+                </div>
+                <div class="progress" style="margin-top: 10px;">
+                  <span style="width: 89%;"></span>
                 </div>
               </div>
               <div class="list-item">
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                  <div>
+                <div class="task-item-header">
+                  <div class="task-item-summary">
                     <span id="plTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="plTask2Detail" class="list-item-detail">6 位標記員 · 已完成 42%</span>
+                    <span id="plTask2Detail" class="list-item-detail">審核員B · 6 位標記員 · 已完成 42%</span>
                   </div>
-                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                  <div class="task-item-badges">
                     <span id="plTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
                     <span id="plTask2RunType" class="badge badge-dry-run">試標</span>
+                    <span id="plTask2Badge" class="badge badge-warning">待確認</span>
                   </div>
+                </div>
+                <div class="progress" style="margin-top: 10px;">
+                  <span style="width: 42%;"></span>
                 </div>
               </div>
             </div>
@@ -1035,13 +1110,14 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="annotatorProgressTitle" class="panel-title">我的進度</h2>
+                <h2 id="annotatorProgressTitle" class="panel-title">我的任務</h2>
+                <span id="annotatorProgressSubtitle" class="panel-subtitle">我的標記進度與待處理任務</span>
               </div>
             </div>
             <div class="metrics">
               <div class="metric">
                 <strong>247</strong>
-                <span id="annotatorCompletedLabel">已完成</span>
+                <span id="annotatorCompletedLabel">待標記</span>
               </div>
               <div class="metric">
                 <strong>53</strong>
@@ -1052,8 +1128,49 @@
                 <span id="annotatorAvgSpeedLabel">平均速度</span>
               </div>
             </div>
-            <div class="btn-row" style="margin-top: 16px;">
-              <button id="annotatorContinueBtn" class="btn btn-primary">快速繼續</button>
+            <div class="list">
+              <div class="list-item">
+                <div class="task-item-header">
+                  <div class="task-item-summary">
+                    <span id="annotatorTask1Title" class="list-item-title">新聞標題分類</span>
+                    <span id="annotatorTask1Detail" class="list-item-detail">已完成 89% · 今日 53 筆 · 平均速度 3.0</span>
+                  </div>
+                  <div class="task-item-meta">
+                    <div class="task-item-badges">
+                      <span id="annotatorTask1TaskType" class="badge badge-task-type">分類任務</span>
+                      <span id="annotatorTask1RunType" class="badge badge-official">正式標註</span>
+                      <span id="annotatorTask1Badge" class="badge badge-info">繼續中</span>
+                    </div>
+                    <div class="task-item-actions">
+                      <button id="annotatorTask1ContinueBtn" class="btn btn-primary">快速繼續</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress" style="margin-top: 10px;">
+                  <span style="width: 89%;"></span>
+                </div>
+              </div>
+              <div class="list-item">
+                <div class="task-item-header">
+                  <div class="task-item-summary">
+                    <span id="annotatorTask2Title" class="list-item-title">情感分析基準</span>
+                    <span id="annotatorTask2Detail" class="list-item-detail">已完成 42% · 今日 18 筆 · 平均速度 4.2</span>
+                  </div>
+                  <div class="task-item-meta">
+                    <div class="task-item-badges">
+                      <span id="annotatorTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
+                      <span id="annotatorTask2RunType" class="badge badge-dry-run">試標</span>
+                      <span id="annotatorTask2Badge" class="badge badge-warning">待繼續</span>
+                    </div>
+                    <div class="task-item-actions">
+                      <button id="annotatorTask2ContinueBtn" class="btn btn-primary">快速繼續</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress" style="margin-top: 10px;">
+                  <span style="width: 42%;"></span>
+                </div>
+              </div>
             </div>
           </article>
         </section>
@@ -1063,20 +1180,67 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="reviewerPanelTitle" class="panel-title">待審查</h2>
+                <h2 id="reviewerPanelTitle" class="panel-title">待審任務</h2>
+                <span id="reviewerPanelSubtitle" class="panel-subtitle">我的審查進度與待處理項目</span>
+              </div>
+            </div>
+            <div class="metrics">
+              <div class="metric">
+                <strong>12</strong>
+                <span id="reviewerPendingLabel">待審總數</span>
+              </div>
+              <div class="metric">
+                <strong>18</strong>
+                <span id="reviewerTodayReviewedLabel">今日已審</span>
+              </div>
+              <div class="metric">
+                <strong>0.81</strong>
+                <span id="reviewerIaaLabel">IAA 摘要</span>
               </div>
             </div>
             <div class="list">
               <div class="list-item">
-                <span id="reviewerTask1Title" class="list-item-title">新聞標題分類</span>
-                <span class="list-item-detail">
-                  <span id="reviewerTask1Badge" class="badge badge-warning" style="margin-right: 8px;">12 待審</span>
-                  <span id="reviewerTask1Progress">進度 67%</span>
-                </span>
+                <div class="task-item-header">
+                  <div class="task-item-summary">
+                    <span id="reviewerTask1Title" class="list-item-title">新聞標題分類</span>
+                    <span id="reviewerTask1Detail" class="list-item-detail">待審 12 筆 · 進度 67% · IAA 0.81</span>
+                  </div>
+                  <div class="task-item-meta">
+                    <div class="task-item-badges">
+                      <span id="reviewerTask1TaskType" class="badge badge-task-type">分類任務</span>
+                      <span id="reviewerTask1RunType" class="badge badge-official">正式標註</span>
+                      <span id="reviewerTask1Badge" class="badge badge-warning">待審查</span>
+                    </div>
+                    <div class="task-item-actions">
+                      <button id="reviewerTask1StartBtn" class="btn btn-primary">快速審查</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress" style="margin-top: 10px;">
+                  <span style="width: 67%;"></span>
+                </div>
               </div>
-            </div>
-            <div class="btn-row" style="margin-top: 16px;">
-              <button id="reviewerStartBtn" class="btn btn-primary">開始審查</button>
+              <div class="list-item">
+                <div class="task-item-header">
+                  <div class="task-item-summary">
+                    <span id="reviewerTask2Title" class="list-item-title">情感分析基準</span>
+                    <span id="reviewerTask2Detail" class="list-item-detail">待審 8 筆 · 進度 52% · IAA 0.78</span>
+                  </div>
+                  <div class="task-item-meta">
+                    <div class="task-item-badges">
+                      <span id="reviewerTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
+                      <span id="reviewerTask2RunType" class="badge badge-dry-run">試標</span>
+                      <span id="reviewerTask2Badge" class="badge badge-info">進行中</span>
+                    </div>
+                    <div class="task-item-actions">
+                      <button id="reviewerTask2StartBtn" class="btn btn-primary">快速審查</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="progress" style="margin-top: 10px;">
+                  <span style="width: 52%;"></span>
+                </div>
+              </div>
             </div>
           </article>
         </section>
@@ -1147,34 +1311,68 @@
         adminTaskListSubtitle: '進行中的所有項目',
         adminViewAllBtn:       '查看全部',
         adminTask1Title:       '新聞標題分類',
-        adminTask1Detail:      '已完成 89%',
+        adminTask1Detail:      '專案負責人A · 審核員A · 8 位標記員 · 已完成 89%',
         adminTask1Badge:       '進行中',
         adminTask1TaskType:    '分類任務',
         adminTask1RunType:     '正式標註',
         adminTask2Title:       '情感分析基準',
-        adminTask2Detail:      '已完成 42%',
+        adminTask2Detail:      '專案負責人B · 審核員B · 6 位標記員 · 已完成 42%',
         adminTask2Badge:       '待確認',
         adminTask2TaskType:    '評分 / 回歸任務',
         adminTask2RunType:     '試標',
-        plTaskListTitle:       '我的任務',
+        plTaskOverviewTitle:   '任務概況',
+        plTaskOverviewSubtitle:'所有項目統計',
+        plTotalTasks:          '總任務',
+        plActiveTasks:         '進行中',
+        plPendingIaa:          '等待 IAA 確認',
+        plSpeedAlert:          '速度異常',
+        plTaskListTitle:       '任務列表',
+        plTaskListSubtitle:    '進行中的所有項目',
         plTask1Title:          '新聞標題分類',
-        plTask1Detail:         '8 位標記員 · 已完成 89%',
+        plTask1Detail:         '審核員A · 8 位標記員 · 已完成 89%',
         plTask1TaskType:       '分類任務',
         plTask1RunType:        '正式標註',
+        plTask1Badge:          '進行中',
         plTask2Title:          '情感分析基準',
-        plTask2Detail:         '6 位標記員 · 已完成 42%',
+        plTask2Detail:         '審核員B · 6 位標記員 · 已完成 42%',
         plTask2TaskType:       '評分 / 回歸任務',
         plTask2RunType:        '試標',
-        annotatorProgressTitle:  '我的進度',
-        annotatorCompletedLabel: '已完成',
+        plTask2Badge:          '待確認',
+        annotatorProgressTitle:  '我的任務',
+        annotatorProgressSubtitle:'我的標記進度與待處理任務',
+        annotatorCompletedLabel: '待標記',
         annotatorTodayLabel:     '今日完成',
         annotatorAvgSpeedLabel:  '平均速度',
         annotatorContinueBtn:    '快速繼續',
-        reviewerPanelTitle:      '待審查',
+        annotatorTask1Title:     '新聞標題分類',
+        annotatorTask1Detail:    '已完成 89% · 今日 53 筆 · 平均速度 3.0',
+        annotatorTask1TaskType:  '分類任務',
+        annotatorTask1RunType:   '正式標註',
+        annotatorTask1Badge:     '繼續中',
+        annotatorTask1ContinueBtn:'快速繼續',
+        annotatorTask2Title:     '情感分析基準',
+        annotatorTask2Detail:    '已完成 42% · 今日 18 筆 · 平均速度 4.2',
+        annotatorTask2TaskType:  '評分 / 回歸任務',
+        annotatorTask2RunType:   '試標',
+        annotatorTask2Badge:     '待繼續',
+        annotatorTask2ContinueBtn:'快速繼續',
+        reviewerPanelTitle:      '待審任務',
+        reviewerPanelSubtitle:   '我的審查進度與待處理項目',
+        reviewerPendingLabel:    '待審總數',
+        reviewerTodayReviewedLabel:'今日已審',
+        reviewerIaaLabel:        'IAA 摘要',
         reviewerTask1Title:      '新聞標題分類',
-        reviewerTask1Badge:      '12 待審',
-        reviewerTask1Progress:   '進度 67%',
-        reviewerStartBtn:        '開始審查',
+        reviewerTask1Detail:     '待審 12 筆 · 進度 67% · IAA 0.81',
+        reviewerTask1TaskType:   '分類任務',
+        reviewerTask1RunType:    '正式標註',
+        reviewerTask1Badge:      '待審查',
+        reviewerTask1StartBtn:   '快速審查',
+        reviewerTask2Title:      '情感分析基準',
+        reviewerTask2Detail:     '待審 8 筆 · 進度 52% · IAA 0.78',
+        reviewerTask2TaskType:   '評分 / 回歸任務',
+        reviewerTask2RunType:    '試標',
+        reviewerTask2Badge:      '進行中',
+        reviewerTask2StartBtn:   '快速審查',
       },
       en: {
         langLabel:            'EN | ZH',
@@ -1219,34 +1417,68 @@
         adminTaskListSubtitle: 'All active projects',
         adminViewAllBtn:       'View All',
         adminTask1Title:       'News Headline Classification',
-        adminTask1Detail:      '89% Completed',
+        adminTask1Detail:      'Project Leader A · Reviewer A · 8 Annotators · 89% Completed',
         adminTask1Badge:       'In Progress',
         adminTask1TaskType:    'Classification',
         adminTask1RunType:     'Official Run',
         adminTask2Title:       'Sentiment Analysis Baseline',
-        adminTask2Detail:      '42% Completed',
+        adminTask2Detail:      'Project Leader B · Reviewer B · 6 Annotators · 42% Completed',
         adminTask2Badge:       'Pending Confirmation',
         adminTask2TaskType:    'Rating / Regression',
         adminTask2RunType:     'Dry Run',
-        plTaskListTitle:       'My Tasks',
+        plTaskOverviewTitle:   'Task Overview',
+        plTaskOverviewSubtitle:'All projects',
+        plTotalTasks:          'Total Tasks',
+        plActiveTasks:         'In Progress',
+        plPendingIaa:          'Pending IAA',
+        plSpeedAlert:          'Speed Alerts',
+        plTaskListTitle:       'Task List',
+        plTaskListSubtitle:    'All active projects',
         plTask1Title:          'News Headline Classification',
-        plTask1Detail:         '8 Annotators · 89% Completed',
+        plTask1Detail:         'Reviewer A · 8 Annotators · 89% Completed',
         plTask1TaskType:       'Classification',
         plTask1RunType:        'Official Run',
+        plTask1Badge:          'In Progress',
         plTask2Title:          'Sentiment Analysis Baseline',
-        plTask2Detail:         '6 Annotators · 42% Completed',
+        plTask2Detail:         'Reviewer B · 6 Annotators · 42% Completed',
         plTask2TaskType:       'Rating / Regression',
         plTask2RunType:        'Dry Run',
-        annotatorProgressTitle:  'My Progress',
-        annotatorCompletedLabel: 'Completed',
+        plTask2Badge:          'Pending Confirmation',
+        annotatorProgressTitle:  'My Tasks',
+        annotatorProgressSubtitle:'My annotation progress and pending tasks',
+        annotatorCompletedLabel: 'Pending',
         annotatorTodayLabel:     'Today',
         annotatorAvgSpeedLabel:  'Avg Speed',
         annotatorContinueBtn:    'Continue',
-        reviewerPanelTitle:      'Pending Review',
+        annotatorTask1Title:     'News Headline Classification',
+        annotatorTask1Detail:    '89% Completed · 53 Today · Avg Speed 3.0',
+        annotatorTask1TaskType:  'Classification',
+        annotatorTask1RunType:   'Official Run',
+        annotatorTask1Badge:     'Continue',
+        annotatorTask1ContinueBtn:'Continue',
+        annotatorTask2Title:     'Sentiment Analysis Baseline',
+        annotatorTask2Detail:    '42% Completed · 18 Today · Avg Speed 4.2',
+        annotatorTask2TaskType:  'Rating / Regression',
+        annotatorTask2RunType:   'Dry Run',
+        annotatorTask2Badge:     'Resume',
+        annotatorTask2ContinueBtn:'Continue',
+        reviewerPanelTitle:      'Pending Review Tasks',
+        reviewerPanelSubtitle:   'My review progress and pending items',
+        reviewerPendingLabel:    'Pending Total',
+        reviewerTodayReviewedLabel:'Reviewed Today',
+        reviewerIaaLabel:        'IAA Summary',
         reviewerTask1Title:      'News Headline Classification',
-        reviewerTask1Badge:      '12 Pending',
-        reviewerTask1Progress:   '67% Progress',
-        reviewerStartBtn:        'Start Review',
+        reviewerTask1Detail:     '12 Pending · 67% Progress · IAA 0.81',
+        reviewerTask1TaskType:   'Classification',
+        reviewerTask1RunType:    'Official Run',
+        reviewerTask1Badge:      'Pending Review',
+        reviewerTask1StartBtn:   'Quick Review',
+        reviewerTask2Title:      'Sentiment Analysis Baseline',
+        reviewerTask2Detail:     '8 Pending · 52% Progress · IAA 0.78',
+        reviewerTask2TaskType:   'Rating / Regression',
+        reviewerTask2RunType:    'Dry Run',
+        reviewerTask2Badge:      'In Progress',
+        reviewerTask2StartBtn:   'Quick Review',
       },
     };
 
@@ -1298,25 +1530,59 @@
       document.getElementById('adminTask2Badge').textContent       = t.adminTask2Badge;
       document.getElementById('adminTask2TaskType').textContent    = t.adminTask2TaskType;
       document.getElementById('adminTask2RunType').textContent     = t.adminTask2RunType;
+      document.getElementById('plTaskOverviewTitle').textContent   = t.plTaskOverviewTitle;
+      document.getElementById('plTaskOverviewSubtitle').textContent= t.plTaskOverviewSubtitle;
+      document.getElementById('plTotalTasks').textContent          = t.plTotalTasks;
+      document.getElementById('plActiveTasks').textContent         = t.plActiveTasks;
+      document.getElementById('plPendingIaa').textContent          = t.plPendingIaa;
+      document.getElementById('plSpeedAlert').textContent          = t.plSpeedAlert;
       document.getElementById('plTaskListTitle').textContent       = t.plTaskListTitle;
+      document.getElementById('plTaskListSubtitle').textContent    = t.plTaskListSubtitle;
       document.getElementById('plTask1Title').textContent          = t.plTask1Title;
       document.getElementById('plTask1Detail').textContent         = t.plTask1Detail;
       document.getElementById('plTask1TaskType').textContent       = t.plTask1TaskType;
       document.getElementById('plTask1RunType').textContent        = t.plTask1RunType;
+      document.getElementById('plTask1Badge').textContent          = t.plTask1Badge;
       document.getElementById('plTask2Title').textContent          = t.plTask2Title;
       document.getElementById('plTask2Detail').textContent         = t.plTask2Detail;
       document.getElementById('plTask2TaskType').textContent       = t.plTask2TaskType;
       document.getElementById('plTask2RunType').textContent        = t.plTask2RunType;
+      document.getElementById('plTask2Badge').textContent          = t.plTask2Badge;
       document.getElementById('annotatorProgressTitle').textContent  = t.annotatorProgressTitle;
+      document.getElementById('annotatorProgressSubtitle').textContent = t.annotatorProgressSubtitle;
       document.getElementById('annotatorCompletedLabel').textContent = t.annotatorCompletedLabel;
       document.getElementById('annotatorTodayLabel').textContent     = t.annotatorTodayLabel;
       document.getElementById('annotatorAvgSpeedLabel').textContent  = t.annotatorAvgSpeedLabel;
       document.getElementById('annotatorContinueBtn').textContent    = t.annotatorContinueBtn;
+      document.getElementById('annotatorTask1Title').textContent     = t.annotatorTask1Title;
+      document.getElementById('annotatorTask1Detail').textContent    = t.annotatorTask1Detail;
+      document.getElementById('annotatorTask1TaskType').textContent  = t.annotatorTask1TaskType;
+      document.getElementById('annotatorTask1RunType').textContent   = t.annotatorTask1RunType;
+      document.getElementById('annotatorTask1Badge').textContent     = t.annotatorTask1Badge;
+      document.getElementById('annotatorTask1ContinueBtn').textContent = t.annotatorTask1ContinueBtn;
+      document.getElementById('annotatorTask2Title').textContent     = t.annotatorTask2Title;
+      document.getElementById('annotatorTask2Detail').textContent    = t.annotatorTask2Detail;
+      document.getElementById('annotatorTask2TaskType').textContent  = t.annotatorTask2TaskType;
+      document.getElementById('annotatorTask2RunType').textContent   = t.annotatorTask2RunType;
+      document.getElementById('annotatorTask2Badge').textContent     = t.annotatorTask2Badge;
+      document.getElementById('annotatorTask2ContinueBtn').textContent = t.annotatorTask2ContinueBtn;
       document.getElementById('reviewerPanelTitle').textContent      = t.reviewerPanelTitle;
+      document.getElementById('reviewerPanelSubtitle').textContent   = t.reviewerPanelSubtitle;
+      document.getElementById('reviewerPendingLabel').textContent    = t.reviewerPendingLabel;
+      document.getElementById('reviewerTodayReviewedLabel').textContent = t.reviewerTodayReviewedLabel;
+      document.getElementById('reviewerIaaLabel').textContent        = t.reviewerIaaLabel;
       document.getElementById('reviewerTask1Title').textContent      = t.reviewerTask1Title;
+      document.getElementById('reviewerTask1Detail').textContent     = t.reviewerTask1Detail;
+      document.getElementById('reviewerTask1TaskType').textContent   = t.reviewerTask1TaskType;
+      document.getElementById('reviewerTask1RunType').textContent    = t.reviewerTask1RunType;
       document.getElementById('reviewerTask1Badge').textContent      = t.reviewerTask1Badge;
-      document.getElementById('reviewerTask1Progress').textContent   = t.reviewerTask1Progress;
-      document.getElementById('reviewerStartBtn').textContent        = t.reviewerStartBtn;
+      document.getElementById('reviewerTask1StartBtn').textContent   = t.reviewerTask1StartBtn;
+      document.getElementById('reviewerTask2Title').textContent      = t.reviewerTask2Title;
+      document.getElementById('reviewerTask2Detail').textContent     = t.reviewerTask2Detail;
+      document.getElementById('reviewerTask2TaskType').textContent   = t.reviewerTask2TaskType;
+      document.getElementById('reviewerTask2RunType').textContent    = t.reviewerTask2RunType;
+      document.getElementById('reviewerTask2Badge').textContent      = t.reviewerTask2Badge;
+      document.getElementById('reviewerTask2StartBtn').textContent   = t.reviewerTask2StartBtn;
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {

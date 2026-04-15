@@ -23,34 +23,70 @@ test.describe('Dashboard page — scenario rendering', () => {
   test('super admin view shows platform-level summary panels', async ({ page }) => {
     await openScenario(page, 'super_admin_data');
     await expect(page.getByTestId('super-admin-view')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /平台統計|Platform Stats/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /平台使用者統計|Platform Stats/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
     await expect(page.getByRole('heading', { name: /最近提醒|Recent Alerts/ })).toBeVisible();
+    await expect(page.getByText(/專案負責人A · 審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
+    await expect(page.getByText(/專案負責人B · 審核員B · 6 位標記員 · 已完成 42%/)).toBeVisible();
   });
 
   test('project leader view shows my tasks list', async ({ page }) => {
     await openScenario(page, 'project_leader');
     const leaderView = page.getByTestId('project-leader-view');
     await expect(leaderView).toBeVisible();
-    await expect(leaderView.getByRole('heading', { name: /我的任務|My Tasks/ })).toBeVisible();
+    await expect(leaderView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
+    await expect(leaderView.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
+    await expect(leaderView.getByText('127')).toBeVisible();
+    await expect(leaderView.getByText('24')).toBeVisible();
+    await expect(leaderView.getByText('5')).toBeVisible();
+    await expect(leaderView.getByText('3')).toBeVisible();
     await expect(leaderView.getByText('新聞標題分類')).toBeVisible();
     await expect(leaderView.getByText('情感分析基準')).toBeVisible();
+    await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
+    await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 42%/)).toBeVisible();
+    await expect(leaderView.getByText('分類任務')).toBeVisible();
+    await expect(leaderView.getByText('評分 / 回歸任務')).toBeVisible();
+    await expect(leaderView.locator('.progress')).toHaveCount(2);
+  });
+
+  test('admin view keeps the slimmer view-all button', async ({ page }) => {
+    await openScenario(page, 'super_admin_data');
+    const viewAllButton = page.getByRole('button', { name: /查看全部|View All/ });
+    await expect(viewAllButton).toBeVisible();
+    await expect(viewAllButton).toHaveCSS('min-width', '138px');
   });
 
   test('annotator view shows progress metrics and continue action', async ({ page }) => {
     await openScenario(page, 'annotator');
-    await expect(page.getByTestId('annotator-view')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /我的進度|My Progress/ })).toBeVisible();
-    await expect(page.getByText(/247/)).toBeVisible();
-    await expect(page.getByRole('button', { name: /快速繼續|Continue/ })).toBeVisible();
+    const annotatorView = page.getByTestId('annotator-view');
+    await expect(annotatorView).toBeVisible();
+    await expect(annotatorView.getByRole('heading', { name: /我的任務|My Tasks/ })).toBeVisible();
+    await expect(annotatorView.locator('.metric strong').nth(0)).toHaveText('247');
+    await expect(annotatorView.locator('#annotatorCompletedLabel')).toHaveText(/待標記|Pending/);
+    await expect(annotatorView.locator('.metric strong').nth(1)).toHaveText('53');
+    await expect(annotatorView.locator('.metric strong').nth(2)).toHaveText('4.2');
+    await expect(annotatorView.getByText('新聞標題分類')).toBeVisible();
+    await expect(annotatorView.getByText('情感分析基準')).toBeVisible();
+    await expect(annotatorView.getByText(/已完成 89% · 今日 53 筆 · 平均速度 3.0/)).toBeVisible();
+    await expect(annotatorView.getByText(/已完成 42% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
+    await expect(annotatorView.getByText(/試標|Dry Run/)).toBeVisible();
+    await expect(annotatorView.getByText(/正式標註|Official Run/)).toBeVisible();
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(2);
   });
 
   test('reviewer view shows pending review panel and start-review action', async ({ page }) => {
     await openScenario(page, 'reviewer');
-    await expect(page.getByTestId('reviewer-view')).toBeVisible();
-    await expect(page.getByRole('heading', { name: /待審查|Pending Review/ })).toBeVisible();
-    await expect(page.getByText(/12 待審/)).toBeVisible();
-    await expect(page.getByRole('button', { name: /開始審查|Start Review/ })).toBeVisible();
+    const reviewerView = page.getByTestId('reviewer-view');
+    await expect(reviewerView).toBeVisible();
+    await expect(reviewerView.getByRole('heading', { name: /待審任務|Pending Review Tasks/ })).toBeVisible();
+    await expect(reviewerView.locator('.metric strong').nth(0)).toHaveText('12');
+    await expect(reviewerView.locator('.metric strong').nth(1)).toHaveText('18');
+    await expect(reviewerView.locator('.metric strong').nth(2)).toHaveText('0.81');
+    await expect(reviewerView.getByText('新聞標題分類')).toBeVisible();
+    await expect(reviewerView.getByText('情感分析基準')).toBeVisible();
+    await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
+    await expect(reviewerView.getByText(/待審 8 筆 · 進度 52% · IAA 0.78/)).toBeVisible();
+    await expect(reviewerView.getByRole('button', { name: /快速審查|Quick Review/ })).toHaveCount(2);
   });
 });
 
@@ -77,22 +113,21 @@ test.describe('Dashboard page — language toggle', () => {
   test('toggles the document language and visible copy between zh-TW and en', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
 
-    const title = page.getByRole('heading', { level: 1 });
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
-    await expect(page.getByTestId('lang-label')).toHaveText('EN');
-    await expect(title).toContainText('歡迎回來，Mandy');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH | EN');
+    await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByTestId('lang-label')).toHaveText('ZH');
-    await expect(title).toContainText('Welcome back, Mandy');
+    await expect(page.getByTestId('lang-label')).toHaveText('EN | ZH');
+    await expect(page.locator('#scenarioLabel')).toHaveText('Scenario');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
-    await expect(page.getByTestId('lang-label')).toHaveText('EN');
-    await expect(title).toContainText('歡迎回來，Mandy');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH | EN');
+    await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
   });
 });
 
