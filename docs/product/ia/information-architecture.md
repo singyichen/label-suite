@@ -39,7 +39,7 @@
 | `login` | 登入頁 | 帳號模組 | ✅ | ✅ | — | 未登入入口；含「前往註冊」連結 |
 | `register` | 自行註冊頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；填寫名稱、Email、密碼，建立後立即取得 `user` 系統角色 |
 | `forgot-password` | 忘記密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；填寫 Email，系統寄送重設連結（Resend）|
-| `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；需帶有效 token 參數，逾期導回 `/forgot-password` |
+| `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；prototype 預設 `valid` 並可切換 `expired/used` 狀態，錯誤時引導回 `forgot-password` |
 | `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | |
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
 | `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | 僅顯示自己有成員資格的任務 |
@@ -135,27 +135,32 @@ flowchart TD
 
 #### `login` 登入頁
 - **進入方式：** 未登入時唯一可見頁面；所有未授權跳轉均導回此頁
-- **功能：** Google SSO 登入、Email / Password 登入、「前往註冊」連結（→ `register`）
+- **功能：** Google SSO 入口、Email / Password 登入、「前往註冊」連結（→ `register`）
+- **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 登入成功 → `dashboard`
 
 #### `register` 自行註冊頁
 - **進入方式：** `login` → 「前往註冊」連結；未登入時可直接訪問
 - **功能：** 填寫名稱、Email、密碼，建立 Email / Password 帳號；建立後自動取得 `user` 系統角色
+- **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 註冊成功 → `dashboard`；取消 → `login`
 
 #### `forgot-password` 忘記密碼頁
 - **進入方式：** `login` → 「忘記密碼」連結；未登入時可直接訪問
-- **功能：** 填寫 Email，系統透過 Resend 寄送含有效期 token（30 分鐘）的重設連結至該信箱
+- **功能：** 填寫 Email 送出後顯示通用成功提示（不揭露 Email 是否存在）；prototype 以成功面板模擬寄信結果
+- **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 送出後停留並顯示「若 Email 存在，重設信已寄出」（不揭露 Email 是否存在）；「返回登入」→ `login`
 
 #### `reset-password` 重設密碼頁
-- **進入方式：** Email 重設連結（`/reset-password?token=<UUID>`）
-- **功能：** 輸入並確認新密碼；後端驗證 token 有效性與時效後更新密碼雜湊，並使該 token 失效
+- **進入方式：** 正式流程由 Email 重設連結進入；prototype 可直接開啟頁面並透過狀態切換模擬 token 情境
+- **功能：** 輸入並確認新密碼；prototype 支援 `valid / expired / used` 三種 token 狀態切換，用於驗證成功與錯誤路徑
+- **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 重設成功 → `login`；token 無效或已過期 → 顯示錯誤並提示重新申請 → `forgot-password`
 
 #### `profile` 個人設定頁
 - **進入方式：** Navbar 使用者頭像 → `profile`
 - **功能：** 修改姓名、修改聯絡方式、修改密碼、查看角色
+- **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 儲存成功 → 停留；取消 → `dashboard`
 
 ---
@@ -166,33 +171,44 @@ flowchart TD
 - **進入方式：** 登入後預設落地頁；Navbar Logo 點擊
 - **離開方式：** 導覽列 → 各模組；卡片快捷入口 → 對應頁面
 
-**User 視角（系統角色：`user`）：**
-- **渲染邏輯：** `UserDashboard` 依 `/users/me/tasks` 回傳的 `task_membership` 清單，動態組合各 task role 對應的內容區塊；一位使用者在不同任務中可同時持有多個 task role，各區塊獨立顯示，不合併
-- **空狀態（尚無任何任務成員資格）：** 說明文字「尚未有指派任務，請等待管理員分配」，次要按鈕：「查看個人工時紀錄」（→ `work-log`）、「編輯個人資料」（→ `profile`）
+**角色分流邏輯（與 spec 012 一致）：**
+- 先讀取 `system role`
+  - `super_admin`：顯示 Super Admin Dashboard
+  - `user`：再讀取 `task_membership` 判斷主視圖
+    - 無任務關係：一般使用者 Dashboard
+    - 有 `project_leader` 任務：Project Leader Dashboard
+    - 有 `annotator` 任務：Annotator Dashboard
+    - 有 `reviewer` 任務：Reviewer Dashboard
+- 若 `role` 無效：導回 `/login`
+- **備註：** 當 `user` 同時具多種 task role 時，依產品規則選擇單一主視圖呈現（不再採區塊拼接）
 
-**Project Leader 視角（任務角色:`project_leader`）：**
-- **任務總覽卡：** 所有任務列表，每筆顯示任務名稱、任務類型、當前狀態（草稿 / Dry Run 進行中 / 等待 IAA 確認 / Official Run 進行中 / 已完成）、整體完成率進度條
-- **待處理事項區：** IAA 結果待確認（附快速連結至 `dataset-quality`）、Dry Run 已全員完成待啟動 Official Run
-- **標記員進度區：** 各標記員本任務完成數 / 今日完成數 / 平均速度，速度異常者標示警示
-- **系統公告區**
-- **空狀態（尚未建立任何任務）：** 說明文字 + 「建立第一個任務」按鈕（→ `task-new`）
+**一般使用者視角（`user` + 無任務關係）：**
+- **歡迎區塊：** 歡迎文案 +「建立第一個任務」主 CTA
+- **指標卡（4 張）：** 目前角色、我建立的任務、我被指派的任務、我被指派的審核
+- **引導區塊：** 3 張角色轉換引導卡（Project Leader / Annotator / Reviewer）
 
-**Annotator 視角（任務角色:`annotator`）：**
-- **我的任務列表：** 分「Dry Run」與「Official Run」兩區，每筆顯示任務名稱、已完成數 / 總分配數、狀態（未開始 / 進行中 / 已提交）
-- **個人進度摘要：** 今日完成數、累計完成數、距離本任務完成還剩幾筆
-- **快速繼續按鈕：** 直接進入上次未完成的任務（`annotation-workspace`）
+**Project Leader 視角（任務角色：`project_leader`）：**
+- **任務概況：** 總任務、進行中、等待 IAA 確認、速度異常
+- **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
 
-**Reviewer 視角（任務角色:`reviewer`）：**
-- **Navbar（Reviewer）：** 儀表板 ｜ 標記審查（→ `annotation-workspace` 審查模式）｜ 資料集分析（→ `dataset-stats`）
-- **待審查任務列表：** 每筆顯示任務名稱、待審核筆數、已審核 / 總筆數；點選任務卡 → 直接進入 `annotation-workspace` 審查模式
-- **Dry Run IAA 摘要：** 顯示當前 Dry Run 的 IAA 分數（依任務類型顯示對應指標），達標 / 未達標狀態
-- **快速進入審查按鈕：** 進入上次未完成的審查任務（`annotation-workspace`）
-- **空狀態（目前無待審查任務）：** 說明文字，次要按鈕：「查看統計報告」（→ `dataset-stats`）
+**Annotator 視角（任務角色：`annotator`）：**
+- **我的概況：** 待標記、今日完成、平均速度
+- **任務列表：** 任務名稱、進度摘要、Task Type / Run Type / Status badge、進度條、快速繼續
+
+**Reviewer 視角（任務角色：`reviewer`）：**
+- **待審概況：** 待審總數、今日已審、IAA 摘要
+- **任務列表：** 任務名稱、審查摘要、Task Type / Run Type / Status badge、進度條、快速審查
 
 **Super Admin 視角（系統角色：`super_admin`）：**
-- 同 Project Leader 全局視角（所有任務 + 標記員進度）
-- **平台使用者快覽：** 各角色帳號數量、快速進入 `user-management`
-- **空狀態（平台剛部署，尚無任務與使用者）：** 說明文字「平台尚未有任何資料」，次要按鈕：「管理使用者」（→ `user-management`）
+- **平台使用者統計：** 總用戶、專案負責人、標記員、審核員
+- **任務概況：** 總任務、進行中、等待 IAA 確認、速度異常
+- **最近提醒：** 系統提醒清單
+- **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
+
+**導覽與語言切換（RWD）：**
+- `> MOBILE_BP`：左側側邊欄；語言切換按鈕位於品牌列（Logo + Label Suite）右側，顯示單一語言代碼（`ZH` 或 `EN`）
+- `<= MOBILE_BP`：側邊欄轉底部橫向導覽；頂部品牌列保留語言切換、當前人員名稱與登出按鈕
+- 語言切換需即時更新文案與可存取屬性（`aria-label` / `title`），不重新載入頁面
 
 ---
 

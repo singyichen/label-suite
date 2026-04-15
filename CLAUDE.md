@@ -159,7 +159,8 @@ Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `fe
 Full pipeline — each stage is a hard gate:
 
 ```
-/superpowers:brainstorm → /speckit.specify → /speckit.clarify (optional)
+/superpowers:brainstorm → /speckit.specify → /ui-ux-pro-max (prototype, recommended) → /pencil-wireframe (optional)
+  → /speckit.clarify (optional)
   → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
 ```
 
@@ -189,9 +190,10 @@ NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logi
 
 | Workflow | When | How |
 |---|---|---|
-| New feature (cross-layer) | New frontend + backend feature | `brainstorm` → `specify` → `plan` → `tasks` → `implement` (or `/agent-team`) → **`analyze`** → **`checklist`** → `/pr-flow` |
+| New feature (cross-layer) | New frontend + backend feature | `brainstorm` → `specify` → `ui-ux-pro-max` (prototype) → `pencil-wireframe` (optional) → `plan` → `tasks` → `implement` (or `/agent-team`) → **`analyze`** → **`checklist`** → `/pr-flow` |
 | Bug fix / single-layer | Bug, refactor, one-layer change | Create `fix/` branch → implement → **`/speckit.analyze`** → `/pr-flow` |
-| Wireframe | After `/speckit.specify` | `/pencil-wireframe` |
+| Prototype | After `/speckit.specify` | `/ui-ux-pro-max` |
+| Wireframe | Optional, after prototype | `/pencil-wireframe` |
 | Pre-PR gate | Before every PR — no exceptions | `/speckit.analyze` must report zero findings |
 | Spec status update | At each pipeline stage transition | Update `specs/STATUS.md` row |
 | Archive completed spec | After PR merged to `main` | `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md` |

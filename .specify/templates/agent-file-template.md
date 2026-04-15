@@ -42,6 +42,8 @@ New feature development must follow this process:
 
 ```
 /speckit.specify <feature description>  → specs/NNN-feature/spec.md
+/ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/ (recommended, after specify)
+/pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen (optional, after prototype)
 /speckit.clarify                        → clarify spec ambiguities (optional)
 /speckit.plan                           → specs/NNN-feature/plan.md
 /speckit.tasks                          → specs/NNN-feature/tasks.md

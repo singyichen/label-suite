@@ -1,109 +1,99 @@
-# 功能規格：登入 — Google SSO 整合
+# 功能規格：Login — Google SSO 入口與整合預留
 
 **功能分支**：`002-login-google-sso`
 **建立日期**：2026-04-05
-**版本**：1.0.0
+**版本**：1.2.0
 **狀態**：Clarified
-**需求來源**：IA v7 Spec 清單 #002 — 登入 — Google SSO 整合
+**需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
+
+## 規格常數
+
+- `MOBILE_BP = 767px`
+- `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
 ## Process Flow
-
-OAuth 登入涉及四個系統角色，以下為完整業務流程：
 
 ```mermaid
 sequenceDiagram
     actor 使用者
-    participant 瀏覽器
-    participant 後端API as 後端 API
-    participant Google as Google OAuth
-    participant 資料庫
+    participant login as login.html
+    participant i18n as i18n state
+    participant ssoBtn as Google SSO button
 
-    使用者->>瀏覽器: 點擊「以 Google 登入」
-    瀏覽器->>Google: 導向授權頁（client_id、redirect_uri、state）
-    Google-->>使用者: 顯示授權請求
-    使用者->>Google: 允許授權
-    Google->>後端API: callback（authorization code、state）
-    後端API->>後端API: 驗證 state（CSRF 防護）
-    後端API->>Google: 交換 access token（authorization code）
-    Google-->>後端API: access token
-    後端API->>Google: 取得使用者資料
-    Google-->>後端API: name、email、avatar_url、provider_id
+    使用者->>login: 進入 /account/login.html
+    login-->>使用者: 顯示「使用 Google 帳號繼續」按鈕
 
-    後端API->>資料庫: 以 email 查詢使用者記錄
-    alt 首次登入（email 不存在）
-        後端API->>資料庫: 建立使用者記錄（name、email、avatar_url、provider=google、role=user）
-    else 回訪使用者（email 已存在）
-        後端API->>資料庫: 更新 provider 資訊（靜默合併）
-    end
-    資料庫-->>後端API: User record
+    使用者->>login: 點擊語言切換（顯示 ZH 或 EN）
+    login->>i18n: 切換 zh / en
+    i18n-->>login: 回傳對應文案與 aria-label
+    login-->>使用者: 更新 SSO 按鈕文字與 aria-label
 
-    後端API-->>瀏覽器: 設定 JWT cookie + 導向 /dashboard
+    使用者->>ssoBtn: 點擊 Google SSO 按鈕
+    ssoBtn-->>使用者: 目前原型為 no-op（不導頁、不報錯）
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
-| 1 | 使用者 | 點擊「以 Google 登入」 | 導向 Google 授權頁 |
-| 2 | 使用者 | 允許授權 | Google 導回後端 callback |
-| 3 | 後端 | 驗證 state、交換 token、取得使用者資料 | 查詢或建立使用者記錄 |
-| 4 | 後端 | 驗證成功 | 簽發 JWT，導向 `/dashboard` |
-| E1 | 使用者 | 取消或拒絕 Google 授權 | 導回 `/login` 並顯示錯誤訊息 |
-| E2 | 後端 | state 驗證失敗（CSRF） | 導回 `/login` 並顯示錯誤訊息 |
+| 1 | 使用者 | 開啟 `/account/login.html` | 顯示 Google SSO 按鈕（含 Google icon） |
+| 2 | 使用者 | 切換語言 | SSO 按鈕文字與 `aria-label` 即時切換 |
+| 3 | 使用者 | 點擊 Google SSO 按鈕 | 目前原型不觸發 OAuth 流程（no-op） |
 
 ---
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — Google SSO 登入（優先級：P1）
+### User Story 1 — Google SSO 入口可見且可互動（優先級：P1）
 
-使用者在 `/login` 頁面點擊「以 Google 登入」，完成 Google OAuth 授權流程，系統簽發 JWT 並導向 `/dashboard`。
+登入頁必須提供清楚的 Google SSO 入口，讓使用者知道可用第三方登入。
 
-**此優先級原因**：Google SSO 提供便捷的單點登入體驗，是實驗室環境最常見的登入方式。
+**此優先級原因**：SSO 入口是本規格最小可交付範圍，缺少入口會中斷後續整合。
 
-**獨立測試方式**：在 `/login` 點擊「以 Google 登入」，完成 Google 授權，驗證導向 `/dashboard` 且 session token 已設定。
+**獨立測試方式**：進入登入頁後檢查按鈕存在、文案正確、可點擊且無錯誤。
 
 **驗收情境**：
 
-1. **Given** 未登入使用者在 `/login`，**When** 點擊「以 Google 登入」並完成 Google OAuth 授權，**Then** 導向 `/dashboard` 且 JWT session token 已設定。
-2. **Given** 使用者取消或拒絕 Google OAuth 授權，**When** 被導回 callback，**Then** 停留在 `/login` 並顯示明確的錯誤訊息。
-3. **Given** 已登入使用者，**When** 導向 `/login`，**Then** 自動導向 `/dashboard`（不重新觸發 OAuth 流程）。
+1. **Given** 使用者在 `/account/login.html`，**When** 頁面載入，**Then** 顯示 Google SSO 按鈕與圖示。
+2. **Given** 使用者在登入頁，**When** 點擊 Google SSO 按鈕，**Then** 按鈕可正常觸發 click 事件且頁面不報錯。
+3. **Given** 使用者在登入頁，**When** 檢查無障礙屬性，**Then** Google SSO 按鈕具有對應語言的 `aria-label`。
 
 ---
 
-### User Story 2 — 首次登入自動建立帳號（優先級：P2）
+### User Story 2 — SSO 入口 i18n 同步（優先級：P1）
 
-從未登入過的使用者透過 Google SSO 完成授權，系統自動以 Google 個人資料（姓名、Email、頭像）建立新帳號，預設 `role = user`，並導向 `/dashboard`。
+SSO 入口文字與可存取屬性需隨語言切換即時更新。
 
-**此優先級原因**：自動建帳號是 SSO 流程的核心環節，確保使用者無需手動填寫資料即可加入系統。
+**此優先級原因**：SSO 與 Email 登入並列，必須遵循相同 i18n 標準。
 
-**獨立測試方式**：以從未登入過的 Google 帳號完成 OAuth 授權，驗證資料庫建立了包含 Google 個人資料且 `role = user` 的使用者記錄，且成功導向 `/dashboard`。
+**獨立測試方式**：切換 `zh` / `en`，檢查按鈕文字與 `aria-label` 是否同步更新。
 
 **驗收情境**：
 
-1. **Given** 首次使用者完成 Google OAuth 授權，**When** callback 處理完成，**Then** 建立包含 `name`、`email`、`avatar_url`、`provider = google`、`provider_id`（Google UID）且 `role = user` 的使用者記錄，並導向 `/dashboard`。
-2. **Given** 回訪使用者（email 已存在），**When** 再次以 Google 登入，**Then** 不建立重複帳號，回傳既有帳號的 session。
+1. **Given** 預設語言為 `zh`，**When** 切換為 `en`，**Then** SSO 按鈕文字更新為 `Continue with Google`。
+2. **Given** 語言為 `en`，**When** 切回 `zh`，**Then** SSO 按鈕文字更新為 `使用 Google 帳號繼續`。
+3. **Given** 任一語言切換後，**When** 檢查按鈕，**Then** `aria-label` 與當前語言一致。
 
 ---
 
-### User Story 3 — Provider 靜默合併（優先級：P3）
+### User Story 3 — OAuth 正式整合預留（優先級：P2）
 
-使用者以 Google 帳號登入，而系統中已存在相同 email 的 Email / Password 帳號，系統靜默合併兩個 provider 至同一使用者記錄，不需使用者確認，兩種登入方式均可進入同一帳號。
+目前原型不執行 OAuth，規格需保留後續串接入口契約。
 
-**此優先級原因**：防止同一使用者建立重複帳號，保持資料一致性。實作難度低，但對使用者體驗影響大。
+**此優先級原因**：避免前端原型與後端 OAuth 整合時出現斷層。
 
-**獨立測試方式**：先以 Email / Password 建立帳號（spec 003），再以相同 email 的 Google 帳號登入，驗證資料庫中只有一筆使用者記錄且同時連結兩個 provider。
+**獨立測試方式**：驗證現況為 no-op，同時保留整合前後行為說明。
 
 **驗收情境**：
 
-1. **Given** 已存在 Email / Password 帳號的使用者，**When** 以相同 email 的 Google 帳號登入，**Then** 不建立新帳號，既有帳號新增 `provider = google` 與 `provider_id` 資訊，兩種登入方式均可進入同一帳號。
-2. **Given** 已合併 provider 的使用者，**When** 分別以 Google SSO 和 Email / Password 登入，**Then** 兩者均導向相同的 `/dashboard`，顯示相同的使用者資料。
+1. **Given** 目前為 prototype，**When** 點擊 SSO 按鈕，**Then** 不導頁、不呼叫 OAuth callback。
+2. **Given** 後續整合階段，**When** 將 no-op 替換為真實流程，**Then** 保持按鈕位置、文案與可存取屬性不變。
 
 ---
 
 ### 邊界情況
 
-- Google OAuth 暫時無法使用時？→ 在登入頁顯示友善的錯誤訊息，提示使用 Email / Password 替代登入（spec 001）。
-- state 參數驗證失敗（CSRF 攻擊）時？→ 拒絕 callback 並導回 `/login` 顯示錯誤，不建立 session。
-- Google 回傳的 email 為空時？→ 拒絕登入並顯示錯誤訊息「無法取得 Google 帳號 Email，請使用 Email / Password 登入」。
+- 使用者快速連點 SSO 按鈕？→ 原型仍維持 no-op，不應造成 JS 錯誤。
+- 語言切換時按鈕正被點擊？→ 以最後一次語言狀態更新文案與 `aria-label`。
+- 目前是否已有 `/auth/google/callback` 串接？→ 尚未，需在實作階段補齊。
 
 ---
 
@@ -111,65 +101,37 @@ sequenceDiagram
 
 ### 功能需求
 
-- **FR-001**：系統必須對 Google 實作 OAuth 2.0 授權碼流程（Authorization Code Flow），包含 state 參數的 CSRF 防護。
-- **FR-002**：OAuth 客戶端憑證（`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`）必須儲存於環境變數，絕不硬編碼於程式碼或版本控制中。
-- **FR-003**：系統必須在 OAuth callback 成功後，使用 Google 個人資料（`name`、`email`、`avatar_url`、`provider_id`）自動建立或更新使用者記錄。
-- **FR-004**：首次 Google SSO 登入時，系統自動建立使用者記錄，`role` 預設為 `user`；後續登入不修改既有 `role`。
-- **FR-005**：系統必須將已登入使用者訪問 `/login` 時自動導向 `/dashboard`。
-- **FR-007**：當 Google SSO 的 email 與系統中既有的 Email / Password 帳號相符時，系統必須靜默合併兩個 provider 至既有帳號，不需使用者確認。
-- **FR-008**：使用者取消或拒絕 Google OAuth 授權時，系統必須導回 `/login` 並顯示明確的錯誤訊息。
+- **FR-001**：登入頁必須提供 Google SSO 按鈕，並與 Email/Password 表單同頁呈現。
+- **FR-002**：Google SSO 按鈕必須包含可辨識的 Google 品牌圖示與文字標籤。
+- **FR-003**：Google SSO 按鈕文字必須支援 `zh` / `en` 即時切換。
+- **FR-004**：Google SSO 按鈕 `aria-label` 必須隨語言切換同步更新。
+- **FR-005**：原型模式下，Google SSO 按鈕 click 行為必須為 no-op，且不得造成前端錯誤。
+- **FR-006**：本規格必須保留後續 OAuth 2.0 Authorization Code Flow 的整合入口，不變更既有按鈕 ID 與語意。
 
 ### User Flow & Navigation
 
 ```mermaid
 flowchart LR
-    login["/login"]
-    google["Google 授權頁"]
-    callback["後端 callback\n/auth/google/callback"]
-    dashboard["/dashboard"]
+    login["/account/login.html"]
+    sso["Google SSO 按鈕"]
+    noop["Prototype: no-op"]
 
-    login    -->|"點擊「以 Google 登入」"| google
-    google   -->|"允許授權"| callback
-    google   -->|"取消 / 拒絕"| login
-    callback -->|"驗證成功"| dashboard
-    callback -->|"state 驗證失敗"| login
+    login --> sso
+    sso --> noop
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
-| `/login` | 點擊「以 Google 登入」 | Google 授權頁 |
-| Google 授權頁 | 使用者允許授權 | `/auth/google/callback`（後端） |
-| Google 授權頁 | 使用者取消 / 拒絕 | `/login`（含錯誤訊息） |
-| `/auth/google/callback` | 驗證成功 | `/dashboard` |
-| `/auth/google/callback` | state 驗證失敗 | `/login`（含錯誤訊息） |
+| `/account/login.html` | 點擊 Google SSO 按鈕 | Prototype no-op（停留原頁） |
 
-**Entry points**：`/login` 頁面的「以 Google 登入」按鈕（UI 由 spec 001 提供）。
-**Exit points**：OAuth 流程成功後導向 `/dashboard`；失敗時返回 `/login`。
-
----
-
-### Wireframe 畫面總覽
-
-> 本節說明 spec 002 對 wireframe 的影響範圍。
->
-> **共用 login.pen**：Google SSO 的 UI 入口（「以 Google 登入」按鈕）已包含在 `design/wireframes/pages/account/login.pen`（spec 001 主導）中。OAuth 授權流程本身發生在 Google 授權頁，不屬於本系統 UI 範疇，無需繪製。
->
-> **spec 002 不新增獨立 Page**：SSO 失敗的錯誤狀態（使用者取消授權、state 驗證失敗）在 `/login` 頁面以 inline 錯誤訊息呈現，與 spec 001 的 email 錯誤 Page 共用相同 layout，以 annotation 標注 SSO 特有的錯誤文案即可。
-
-#### 總計：0 張（共用 spec 001 的 login.pen）
-
-| 項目 | 說明 |
-|------|------|
-| 共用檔案 | `design/wireframes/pages/account/login.pen`（spec 001 主導） |
-| 新增 Page | 無 |
-| SSO 按鈕 | 呈現於 login.pen 既有 Page 的「以 Google 登入」按鈕元件上 |
-| SSO 錯誤狀態 | 複用 login.pen 中 email 錯誤 Page，以 annotation 標注 SSO 特有的錯誤訊息文案（「取消授權」/ 「state 驗證失敗」兩種情境） |
+**Entry points**：`/account/login.html` 的 Google SSO 按鈕。
+**Exit points**：目前原型無導頁（未串接 OAuth）。
 
 ### 關鍵實體
 
-- **User（使用者）**：關鍵屬性：`id`、`email`、`name`、`avatar_url`、`providers`（已連結的登入方式陣列，例如 `["google"]`、`["email"]`、`["google", "email"]`）、`provider_id`（Google UID；僅 Email/Password 帳號為 `null`）、`hashed_password`（Email/Password 帳號用；純 Google 帳號為 `null`，合併後有值）、`role`（`user` | `super_admin`）、`created_at`。`providers` 以應用層邏輯維護，非資料庫單值欄位。
-- **OAuthState**：防 CSRF 用的一次性隨機 state 值，儲存於 server-side session，callback 時驗證後即失效。
-- **Session / JWT**：OAuth callback 成功後簽發的短效存取 token。包含 `user_id`、`role`、`exp`。過期後導向 `/login`，不進行靜默更新。
+- **GoogleSsoEntryState**：SSO 入口狀態。關鍵欄位：`visible`、`label`、`ariaLabel`、`clickHandler`。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）。
+- **OAuthIntegrationState**：整合狀態。關鍵欄位：`mode`（`prototype_noop` / `oauth_enabled`）。
 
 ---
 
@@ -179,24 +141,22 @@ flowchart LR
 
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
-| 001 | Login — Email / Password | `/login` 頁面（Google SSO 按鈕放置於 001 主導的 login.pen）、User model（`id`、`email`、`role` 欄位）、JWT 結構與簽發機制、帳號靜默合併的 email 唯一性約束 |
+| 001 | Login — Email / Password + 頁面 UI | `/account/login.html` 頁面框架、i18n 狀態管理、語言切換控制 |
 
 ### 下游（依賴本規格的規格）
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| 005 | Profile Settings | `providers` 陣列（顯示已連結的登入方式）、`avatar_url` 欄位（Google 頭像）、`provider_id` 欄位 |
+| 005 | Profile Settings | 後續 OAuth 整合後的 provider 顯示來源 |
 
 ---
 
 ## 成功標準 *(必填)*
 
-- **SC-001**：使用者可在 30 秒內完成完整 Google SSO 登入流程（點擊 → Google 授權 → 儀表板）。
-- **SC-002**：OAuth 客戶端憑證與 access token 不暴露於 API 回應或前端 bundle 中。
-- **SC-003**：首次 Google SSO 登入建立唯一一筆使用者記錄，包含完整 Google 個人資料。
-- **SC-004**：回訪使用者以相同 Google 帳號再次登入，不建立重複使用者記錄。
-- **SC-005**：取消或拒絕 Google OAuth 授權後，`/login` 頁面顯示明確的錯誤訊息。
-- **SC-006**：使用者以 Google 登入後，再以相同 email 的 Email / Password 登入，最終只有一筆使用者記錄並連結兩個 provider。
+- **SC-001**：登入頁固定顯示 Google SSO 入口，無遺漏或跑版。
+- **SC-002**：`zh` / `en` 切換後，SSO 文案與 `aria-label` 在 1 秒內同步更新。
+- **SC-003**：點擊 SSO 按鈕在 prototype 模式不導頁且不拋出錯誤。
+- **SC-004**：SSO 入口在桌機與手機版皆可正常點擊與閱讀。
 
 ---
 
@@ -204,4 +164,6 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
+| 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 login 原型現況（Google SSO 入口與 no-op 行為） |
 | 1.0.0 | 2026-04-05 | Initial spec |

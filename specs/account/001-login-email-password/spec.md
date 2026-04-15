@@ -2,9 +2,14 @@
 
 **功能分支**：`001-login-email-password`
 **建立日期**：2026-04-05
-**版本**：1.0.0
+**版本**：1.2.0
 **狀態**：Clarified
-**需求來源**：IA v7 Spec 清單 #001 — 登入 — Email/Password + 頁面 UI
+**需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
+
+## 規格常數
+
+- `MOBILE_BP = 767px`
+- `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
 ## Process Flow
 
@@ -12,92 +17,129 @@
 sequenceDiagram
     actor 使用者
     participant 瀏覽器
-    participant 後端API as 後端 API
-    participant 資料庫
+    participant i18n as i18n state
+    participant loginForm as login form
 
-    使用者->>瀏覽器: 開啟 /login
-    瀏覽器->>後端API: 未驗證請求
-    後端API-->>瀏覽器: 回傳登入頁面
+    使用者->>瀏覽器: 開啟 /account/login.html
+    瀏覽器-->>使用者: 顯示導覽列 + 登入卡片 + Google 按鈕 + Email/Password 表單
 
-    使用者->>瀏覽器: 填寫 Email + Password，點擊登入
-    瀏覽器->>後端API: POST /auth/login（email、password）
-    後端API->>資料庫: 查詢使用者記錄（以 email 比對）
-    資料庫-->>後端API: User record
-    後端API->>後端API: 驗證密碼雜湊（bcrypt）
+    使用者->>瀏覽器: 點擊語言切換（顯示 ZH 或 EN）
+    瀏覽器->>i18n: 切換 zh / en
+    i18n-->>瀏覽器: 回傳對應文字與 aria-label
+    瀏覽器-->>使用者: 即時更新文案（不重整）
 
-    後端API-->>瀏覽器: 設定 JWT cookie + 導向 /dashboard
+    使用者->>loginForm: 輸入 Email / Password 並送出
+    loginForm->>loginForm: 驗證必填欄位
+
+    alt 任一欄位為空
+        loginForm-->>使用者: 顯示欄位錯誤（emailRequired / passwordRequired）
+    else 驗證通過
+        loginForm-->>使用者: 顯示按鈕 loading spinner
+        loginForm-->>使用者: 800ms 後導向 ../dashboard/dashboard.html（原型）
+    end
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
-| 1 | 使用者 | 開啟 `/login` | 回傳登入頁面（含 Google SSO 按鈕、Email/Password 表單、連結） |
-| 2 | 使用者 | 填寫 Email / Password 並送出 | 後端驗證 bcrypt 密碼雜湊 |
-| 3 | 後端 | 驗證通過 | 查詢使用者記錄 |
-| 4 | 後端 | 驗證通過 | 簽發 JWT，導向 `/dashboard` |
-| E1 | 使用者 | Email / Password 錯誤 | 停留 `/login` 並顯示錯誤訊息（不揭露哪個欄位錯誤） |
-| E2 | 後端 | JWT 過期 | 導向 `/login`，不靜默更新 |
+| 1 | 使用者 | 開啟 `/account/login.html` | 顯示導覽列、登入卡片、Google 按鈕、Email/Password 表單、註冊與忘記密碼連結 |
+| 2 | 使用者 | 點擊語言切換按鈕（`ZH` / `EN`） | 即時切換所有文案與 `aria-label` |
+| 3 | 使用者 | 點擊密碼眼睛圖示 | 切換密碼顯示/隱藏，並同步更新按鈕 `aria-label` |
+| 4 | 使用者 | 不填完整欄位直接送出 | 顯示欄位錯誤，停留在登入頁 |
+| 5 | 使用者 | 填寫 Email/Password 並送出 | 按鈕進入 loading 狀態，約 800ms 後導向 `../dashboard/dashboard.html`（原型） |
+| 6 | 使用者 | 點擊「忘記密碼？」 | 導向 `./forgot-password.html` |
+| 7 | 使用者 | 點擊「前往註冊」 | 導向 `./register.html` |
 
 ---
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — Email / Password 登入（優先級：P1）
+### User Story 1 — 登入頁完整呈現（優先級：P1）
 
-使用者在 `/login` 頁面填寫 Email 與 Password 並送出，系統驗證後簽發 JWT，導向 `/dashboard`。登入頁面需完整呈現所有必要 UI 元件，並支援響應式與多語言。
+未登入使用者進入 `/account/login.html` 時，頁面必須完整呈現登入所需元件與導覽連結。
 
-**此優先級原因**：Email / Password 是不依賴第三方服務的基礎登入方式，是整個系統的唯一驗證入口。
+**此優先級原因**：登入頁是帳號流程入口，若元件缺漏會直接阻斷登入與註冊/找回密碼導流。
 
-**獨立測試方式**：進入 `/login`，使用正確的 Email / Password 登入，驗證導向 `/dashboard` 且 session token 已設定。再以錯誤憑證測試，確認錯誤訊息顯示且不揭露欄位資訊。
+**獨立測試方式**：直接開啟登入頁，逐項確認元件存在與文案正確。
 
 **驗收情境**：
 
-1. **Given** 未登入使用者在 `/login`，**When** 填寫正確的 Email / Password 並送出，**Then** 導向 `/dashboard` 且 session token 已儲存。
-2. **Given** 未登入使用者在 `/login`，**When** 填寫錯誤的 Email 或 Password，**Then** 停留在 `/login` 並顯示明確的錯誤訊息，訊息不揭露哪個欄位錯誤。
-3. **Given** 已登入使用者，**When** 導向 `/login`，**Then** 自動導向 `/dashboard`。
-4. **Given** 使用者在 `/login`，**When** 頁面載入，**Then** 頁面包含：「以 Google 登入」按鈕、Email 輸入欄、Password 輸入欄、登入按鈕、「前往註冊」連結（→ `/register`）、「忘記密碼」連結（→ `/forgot-password`）。
-5. **Given** 使用者在 `/login`，**When** 切換語言，**Then** 頁面所有文字立即切換為對應語言（zh-TW / en），不需重新載入頁面。
-6. **Given** 使用者在寬度 375px / 768px / 1440px 的裝置上，**When** 開啟 `/login`，**Then** 頁面所有元件均正確渲染，無版型破版。
+1. **Given** 使用者進入登入頁，**When** 頁面載入完成，**Then** 顯示導覽列（Logo + Label Suite + 語言切換）。
+2. **Given** 使用者進入登入頁，**When** 檢視登入卡片，**Then** 顯示標題、副標、Google 按鈕、Email 欄、Password 欄、登入按鈕。
+3. **Given** 使用者進入登入頁，**When** 檢視底部導流，**Then** 顯示「忘記密碼？」與「前往註冊」連結。
 
 ---
 
-### User Story 2 — 登出（優先級：P2）
+### User Story 2 — 表單互動與錯誤顯示（優先級：P1）
 
-已登入使用者可在應用程式任意頁面點擊登出，JWT 立即失效，導向 `/login`。
+使用者送出表單時，系統先驗證必填欄位，並在欄位層級顯示錯誤。
 
-**此優先級原因**：登出是基本安全需求，在實驗室多人共用環境中尤為重要。
+**此優先級原因**：欄位驗證是登入前的最小防呆，直接影響可用性。
 
-**獨立測試方式**：登入後點擊登出按鈕，驗證導向 `/login`，並以舊 JWT 發送 API 請求確認回傳 HTTP 401。
+**獨立測試方式**：分別提交空 Email、空 Password、兩者皆空，確認欄位錯誤與樣式正確顯示。
 
 **驗收情境**：
 
-1. **Given** 已登入使用者，**When** 點擊「登出」按鈕，**Then** JWT 失效、客戶端 session 清除，並導向 `/login`。
-2. **Given** 已登出使用者，**When** 直接存取 `/dashboard`，**Then** 被導向 `/login`。
-3. **Given** 已登出使用者，**When** 使用瀏覽器返回按鈕進入快取的受保護頁面，**Then** 頁面不顯示已登入內容（重新驗證或顯示登入頁）。
+1. **Given** Email 為空，**When** 點擊登入，**Then** Email 欄位顯示必填錯誤訊息。
+2. **Given** Password 為空，**When** 點擊登入，**Then** Password 欄位顯示必填錯誤訊息。
+3. **Given** 任一欄位曾報錯，**When** 使用者重新輸入，**Then** 對應欄位錯誤即時清除。
+4. **Given** 使用者點擊密碼眼睛圖示，**When** 反覆切換，**Then** 密碼欄位在 `password` / `text` 間切換且 `aria-label` 同步更新。
 
 ---
 
-### User Story 3 — 受保護路由強制驗證（優先級：P3）
+### User Story 3 — 登入送出與導頁（優先級：P1）
 
-任何未登入使用者嘗試存取受保護頁面，系統導向 `/login`，並在登入成功後返回原始目標頁面。
+使用者填妥 Email/Password 後送出，系統顯示 loading 後導向 dashboard 原型頁。
 
-**此優先級原因**：路由保護是安全需求，但可在登入流程穩定後實作。
+**此優先級原因**：成功導頁是登入流程的核心完成訊號。
 
-**獨立測試方式**：在無 session 狀態下直接導向 `/dashboard`，驗證被導向 `/login?next=/dashboard`；登入後確認返回 `/dashboard`。
+**獨立測試方式**：輸入任意非空 Email/Password 送出，確認按鈕 loading 與導頁路徑正確。
 
 **驗收情境**：
 
-1. **Given** 未登入使用者，**When** 直接導向 `/dashboard`，**Then** 被導向 `/login`。
-2. **Given** 從 `/task-list` 被導向 `/login` 的使用者，**When** 成功登入，**Then** 返回 `/task-list`。
+1. **Given** Email/Password 皆為非空，**When** 送出表單，**Then** 登入按鈕切為 disabled + spinner。
+2. **Given** 表單驗證通過，**When** 約 800ms 後，**Then** 導向 `../dashboard/dashboard.html`（原型行為）。
+3. **Given** 使用者點擊 Google 按鈕，**When** 觸發事件，**Then** 不導頁、無錯誤（原型 no-op）。
+
+---
+
+### User Story 4 — i18n 與可存取屬性同步（優先級：P2）
+
+登入頁支援 zh / en 切換，且同步更新畫面文字與輔助屬性。
+
+**此優先級原因**：語言切換是核心 UI 要求，且需兼顧可存取性。
+
+**獨立測試方式**：切換語言後逐一檢查文字節點與 `aria-label` 是否同步更新。
+
+**驗收情境**：
+
+1. **Given** 預設語言為 `zh`，**When** 點擊語言切換，**Then** 切換為 `en` 並更新頁面標題、欄位標籤、按鈕文案。
+2. **Given** 語言切換後，**When** 檢查互動元件，**Then** `lang-toggle`、Google 按鈕、導覽品牌連結與密碼切換按鈕 `aria-label` 皆同步切換。
+3. **Given** 表單曾出現錯誤，**When** 切換語言，**Then** 既有錯誤狀態會被清除。
+
+---
+
+### User Story 5 — 響應式版面（優先級：P2）
+
+登入頁在手機、平板、桌機皆維持可讀且可操作。
+
+**此優先級原因**：登入頁會在多種裝置進入，RWD 破版會直接阻斷使用。
+
+**獨立測試方式**：在 `RWD_VIEWPORTS` 檢視導覽列、卡片間距、按鈕與輸入欄對齊。
+
+**驗收情境**：
+
+1. **Given** `<= MOBILE_BP`，**When** 開啟登入頁，**Then** 導覽列高度為 56px、左右內距為 16px。
+2. **Given** `<= MOBILE_BP`，**When** 檢視登入卡片，**Then** 卡片內距縮小（28/20/24）且內容不溢出。
+3. **Given** `RWD_VIEWPORTS` 任一寬度，**When** 操作完整流程，**Then** 無文字重疊、無元件遮擋、無水平捲軸。
 
 ---
 
 ### 邊界情況
 
-- Email / Password 帳號忘記密碼時？→ 點擊登入頁「忘記密碼」連結，前往 `/forgot-password` 自助申請重設（詳見 spec 004）。
-- JWT 在工作階段中途過期時？→ 導向 `/login`，不進行靜默更新（silent refresh），使用者必須重新驗證。
-- 已登入使用者再次訪問 `/login` 時？→ 自動導向 `/dashboard`，不顯示登入表單。
-- 相同 Email 同時存在 Google 帳號與 Email/Password 帳號時？→ 視為同一帳號靜默合併（詳見 spec 002）。
-- `?next=` 參數的目標路徑合法性驗證？→ `?next=` 參數必須驗證為系統內部路由（相對路徑或同 origin），防止 open redirect 攻擊；非法 next 值忽略，改導向 `/dashboard`。
+- 僅填空白字元（Email）後送出？→ Email 會先 `trim()`，視為空值並顯示必填錯誤。
+- 語言切換發生在密碼顯示狀態下？→ 保留目前顯示狀態，只更新對應 `aria-label`。
+- 已顯示錯誤後再次送出成功？→ 先清除錯誤，再進入 loading 與導頁流程。
+- 目前原型是否已串接真實 `/auth/login` 與 JWT？→ 尚未；現階段為前端互動原型，成功送出後固定導向 dashboard 原型頁。
 
 ---
 
@@ -105,55 +147,53 @@ sequenceDiagram
 
 ### 功能需求
 
-- **FR-001**：系統必須提供含「以 Google 登入」按鈕、Email / Password 表單、「前往註冊」連結與「忘記密碼」連結的 `/login` 頁面。
-- **FR-002**：系統必須對 Email / Password 登入實作 bcrypt 密碼雜湊驗證。
-- **FR-003**：系統必須在 Email / Password 驗證成功後簽發 JWT session token。
-- **FR-004**：系統必須將已登入使用者訪問 `/login` 時自動導向 `/dashboard`。
-- **FR-006**：系統必須保護所有非公開路由，將未驗證存取導向 `/login`（可帶 `?next=` 參數保留原始路徑）。
-- **FR-007**：登入頁面必須具備響應式設計，支援 375px、768px、1440px 視窗寬度。
-- **FR-008**：登入頁面必須支援 zh-TW / en 語言切換，與應用程式其他頁面一致；語言切換立即生效，不需重新載入頁面。
-- **FR-009**：系統必須在所有已登入頁面提供可存取的登出操作（按鈕或連結）。
-- **FR-010**：登出時，系統必須使 JWT 失效並清除所有客戶端 session 儲存。
-- **FR-011**：JWT 過期時，系統必須將使用者導向 `/login`，不支援靜默更新 token。
-- **FR-012**：登入失敗時，錯誤訊息不得揭露哪個欄位（Email 或 Password）錯誤。
+- **FR-001**：系統必須提供 `/account/login.html` 登入頁，包含導覽列、登入卡片、Google 按鈕、Email/Password 表單與導流連結。
+- **FR-002**：導覽列必須包含品牌區塊（Logo + Label Suite）與語言切換按鈕（單一語言代碼：`ZH` 或 `EN`）。
+- **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。
+- **FR-004**：語言切換時，必須同步更新文字節點與可存取屬性（至少包含 `aria-label` 與 `document.title`）。
+- **FR-005**：表單送出前必須驗證 Email 與 Password 為必填。
+- **FR-006**：Email 驗證必須以 `trim()` 後結果判定是否為空。
+- **FR-007**：欄位驗證失敗時，必須在對應欄位顯示錯誤訊息與錯誤樣式。
+- **FR-008**：使用者於錯誤欄位重新輸入時，系統必須即時清除該欄位錯誤狀態。
+- **FR-009**：Password 欄位必須提供顯示/隱藏切換按鈕，且按鈕 `aria-label` 必須依狀態切換。
+- **FR-010**：表單驗證通過後，登入按鈕必須進入 disabled + spinner 的 loading 狀態。
+- **FR-011**：原型模式下，表單驗證通過後必須於約 800ms 內導向 `../dashboard/dashboard.html`。
+- **FR-012**：Google 按鈕在原型模式必須可點擊且不報錯，但不觸發導頁（no-op）。
+- **FR-013**：忘記密碼連結必須導向 `./forgot-password.html`。
+- **FR-014**：註冊連結必須導向 `./register.html`。
+- **FR-015**：頁面必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
+- **FR-015A**：在 `<= MOBILE_BP` 時，導覽列必須改為 56px 高並使用 16px 左右內距。
+- **FR-015B**：在 `<= MOBILE_BP` 時，登入卡片必須套用手機內距與尺寸設定，避免欄位、按鈕與文字擠壓。
 
 ### User Flow & Navigation
 
 ```mermaid
-
 flowchart LR
-    login["/login"]
-    dashboard["/dashboard"]
-    register["/register"]
-    forgot["/forgot-password"]
-    protected["受保護路由\n/dashboard · /tasks · /profile …"]
+    login["/account/login.html"]
+    dashboard["../dashboard/dashboard.html"]
+    register["./register.html"]
+    forgot["./forgot-password.html"]
 
-    login      -->|"登入成功"| dashboard
-    login      -->|"前往註冊"| register
-    login      -->|"忘記密碼"| forgot
-    dashboard  -->|"登出（JWT 失效）"| login
-    protected  -->|"未驗證存取 → 自動導向"| login
-    login      -->|"登入成功 + ?next= 參數"| protected
-    login      -->|"已登入使用者訪問 → 自動導向"| dashboard
+    login -->|表單驗證通過| dashboard
+    login -->|點擊前往註冊| register
+    login -->|點擊忘記密碼| forgot
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
-| `/login` | Email/Password 登入成功 | `/dashboard` |
-| `/login` | 已登入使用者訪問 | `/dashboard`（自動導向）|
-| `/login` | 登入成功 + `?next=` 參數 | 原始目標路由 |
-| `/login` | 點擊「前往註冊」| `/register`（spec 003）|
-| `/login` | 點擊「忘記密碼」| `/forgot-password`（spec 004）|
-| 任意已登入頁面 | 點擊登出 | `/login` |
-| 任意受保護路由 | 未驗證存取 | `/login?next=[原始路徑]` |
+| `/account/login.html` | Email/Password 非空並送出 | `../dashboard/dashboard.html`（原型） |
+| `/account/login.html` | 點擊「前往註冊」 | `./register.html` |
+| `/account/login.html` | 點擊「忘記密碼？」 | `./forgot-password.html` |
 
-**Entry points**：`/login` 是系統唯一的未驗證入口（含 `/register`、`/forgot-password` 的導覽連結）。
-**Exit points**：所有受保護路由均可透過登出按鈕返回 `/login`。
+**Entry points**：`/account/login.html`。
+**Exit points**：`../dashboard/dashboard.html`、`./register.html`、`./forgot-password.html`。
 
 ### 關鍵實體
 
-- **User（使用者）**：代表已驗證身份。關鍵屬性：`id`、`email`、`name`、`hashed_password`（Email/Password 帳號）、`role`（系統角色：`user` | `super_admin`）、`created_at`。任務角色（`project_leader` | `reviewer` | `annotator`）儲存於 `task_membership` 表，不在 JWT 中。
-- **Session / JWT**：成功驗證後簽發的短效存取 token。包含 `user_id`、`role`、`exp`。過期後系統導向 `/login`，不進行靜默更新。
+- **LoginFormState**：登入表單狀態。關鍵欄位：`email`、`password`、`emailError`、`passwordError`、`isSubmitting`。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）。
+- **I18nDictionary**：語系字典。關鍵欄位：`pageTitle`、欄位文案、按鈕文案、錯誤訊息、`aria-label` 文案。
+- **PrototypeRedirectState**：原型導頁狀態。關鍵欄位：`targetPath = ../dashboard/dashboard.html`、`delayMs = 800`。
 
 ---
 
@@ -169,22 +209,21 @@ flowchart LR
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| 002 | Login — Google SSO | `/login` 頁面結構（Google SSO 按鈕位置）、User model、帳號靜默合併邏輯（相同 email 視為同一帳號） |
-| 003 | Register — Email / Password | User model（`hashed_password`、`role` 欄位）、登入頁面連結（「前往登入」→ `/login`） |
-| 004 | Forgot / Reset Password | User model（`email` 欄位）、`/login` 頁面連結（「忘記密碼」入口） |
-| 005 | Profile Settings | 已驗證 session（JWT）、User model（`name`、`email` 可編輯欄位）、登出行為 |
+| 002 | Login — Google SSO | `/account/login.html` 的 Google 按鈕位置、雙語文案與可存取屬性 |
+| 003 | Register — Email / Password | `/account/login.html` 的「前往註冊」導流路徑與入口文案 |
+| 004 | Forgot / Reset Password | `/account/login.html` 的「忘記密碼」導流路徑與入口文案 |
+| 012 | Dashboard | 登入成功後導向 dashboard（原型路徑與最終產品路徑對應） |
 
 ---
 
 ## 成功標準 *(必填)*
 
-- **SC-001**：使用者可在 30 秒內完成完整登入流程（填寫表單 → 送出 → 儀表板）。
-- **SC-002**：API 回應與前端 bundle 中不暴露任何使用者憑證或 token。
-- **SC-003**：登入頁面在視窗寬度 375px、768px、1440px 下均正確渲染，無版型破版。
-- **SC-004**：對任何受保護路由的未驗證請求回傳 HTTP 401 或導向 `/login`。
-- **SC-005**：登出後，已失效的 JWT 被所有受保護 API 端點拒絕（回傳 HTTP 401）。
-- **SC-006**：登入頁面正確顯示 zh-TW 與 en 兩種語言；語言切換立即生效，不需重新載入頁面。
-- **SC-007**：執行資料庫 migration 後，全新部署環境中存在一個預設 `super_admin` 帳號（bootstrap seed）。此需求的功能規格定義於 `specs/admin/006-user-management/spec.md` FR-008。
+- **SC-001**：登入頁首屏完整顯示核心元件（導覽列、登入卡片、雙登入入口、兩個導流連結）。
+- **SC-002**：Email/Password 任一缺漏時會顯示欄位錯誤，且不進入導頁流程。
+- **SC-003**：Email/Password 皆非空送出後，按鈕進入 loading 並於約 800ms 導向 `../dashboard/dashboard.html`。
+- **SC-004**：語言切換可在 1 秒內完成主要文案與 `aria-label` 更新（不重新整理頁面）。
+- **SC-005**：Password 顯示/隱藏切換後，欄位 type 與眼睛按鈕 `aria-label` 一致。
+- **SC-006**：在 `RWD_VIEWPORTS` 下無破版、無水平捲軸、無關鍵互動元件遮擋。
 
 ---
 
@@ -192,4 +231,6 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-04-15 | 語言切換按鈕規格改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
+| 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；全面對齊最新 login 原型（i18n、欄位驗證、密碼顯示切換、原型導頁路徑） |
 | 1.0.0 | 2026-04-05 | Initial spec |

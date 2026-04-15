@@ -1,134 +1,159 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`
-**Created**: [DATE]
-**Version**: 1.0.0
-**Status**: Draft
-**Input**: User description: "$ARGUMENTS"
+**Feature Branch**: `[###-feature-name]`  
+**Created**: [YYYY-MM-DD]  
+**Version**: 1.0.0  
+**Status**: Draft  
+**Requirement Source**: [Prototype / PRD / Existing Spec / Stakeholder Request]
 
-## Process Flow *(include if feature involves a multi-step business process or cross-role workflow)*
+## Spec Constants
 
 <!--
-  Describe the end-to-end business process BEFORE breaking it into user stories.
-  Focus on WHO does WHAT and in what ORDER — not on technical implementation.
-  Use a Mermaid sequenceDiagram and a step table. Renders natively on GitHub — no extra tooling needed.
+  Define reusable constants once, then reference them across FR/SC sections.
+  Typical examples: breakpoints, supported viewport sets, SLA thresholds, limits.
+-->
+
+- `[CONSTANT_NAME] = [value]`
+- `[CONSTANT_NAME] = [value]`
+
+## Process Flow *(required for multi-step, role-based, or cross-system behavior)*
+
+<!--
+  Describe the end-to-end business process BEFORE splitting into user stories.
+  Focus on WHO does WHAT and in what ORDER (business behavior, not implementation detail).
 -->
 
 ```mermaid
 sequenceDiagram
-    actor ActorA
-    participant System
-    actor ActorB
+    actor User
+    participant Client
+    participant Service
+    participant DataStore
 
-    ActorA->>System: [action]
-    System-->>ActorB: [notification / response]
-    ActorB->>System: [confirmation / next action]
+    User->>Client: [Trigger action]
+    Client->>Service: [Request]
+    Service->>DataStore: [Read / write]
+    DataStore-->>Service: [Result]
+    Service-->>Client: [Response]
+    Client-->>User: [UI state update]
 ```
 
 | Step | Role | Action | System Response |
 |------|------|--------|----------------|
-| 1 | [Role] | [What they do] | [What the system does] |
+| 1 | [Role] | [Action] | [Response] |
+| 2 | [Role] | [Action] | [Response] |
 
 ---
 
 ## User Scenarios & Testing *(required)*
 
 <!--
-  User Stories should be prioritized by importance. P1 is the highest priority.
-  Each Story must be independently implementable and testable — completing P1 alone should deliver a viable MVP.
+  User stories must be independently testable.
+  Prioritize by business value: P1 > P2 > P3.
 -->
 
-### User Story 1 - [Brief Title] (Priority: P1)
+### User Story 1 — [Title] (Priority: P1)
 
-[Describe this user journey in plain language]
+[Describe this user journey in plain language.]
 
-**Why this priority**: [Explain the value and reason for this priority level]
-
-**Independent Test**: [Describe how this can be tested independently, e.g., "Can be fully validated by [specific action] and delivers [specific value]"]
+**Why this priority**: [Why this must be delivered at this priority.]  
+**Independent Test**: [How to validate this story in isolation.]
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** [initial context], **When** [action], **Then** [expected outcome]
+2. **Given** [initial context], **When** [action], **Then** [expected outcome]
+
+**Interface Definition (must match prototype where applicable)**:
+
+- Section A: `[Section title]`
+  - Subtitle: `[Subtitle]`
+  - Required elements:
+    - `[Element / metric / field / CTA]`
+    - `[Element / metric / field / CTA]`
+- Section B: `[Section title]`
+  - Required elements:
+    - `[Element / metric / field / CTA]`
+
+**Behavior Rules**:
+
+- [Visibility / state / transition rule]
+- [i18n / a11y / role-based rendering rule]
+- [Action trigger and expected result]
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+### User Story 2 — [Title] (Priority: P2)
 
-[Describe this user journey in plain language]
+[Describe this user journey in plain language.]
 
-**Why this priority**: [Explain the value and reason for this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
+**Why this priority**: [Reason.]  
+**Independent Test**: [Isolated validation approach.]
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** [initial context], **When** [action], **Then** [expected outcome]
+
+**Interface Definition (if applicable)**:
+
+- Section A: `[Section title]`
+  - Required elements:
+    - `[Element / field / CTA]`
+
+**Behavior Rules**:
+
+- [Rule]
 
 ---
 
 ### Edge Cases
 
-- What happens when [boundary condition]?
-- How does the system respond to [error scenario]?
+- What happens when [invalid role / missing data / malformed state]?
+- What happens when [conflicting conditions]?
+- What happens when [i18n key missing / non-critical dependency unavailable]?
+- What happens at [responsive boundary / threshold limit]?
 
 ## Requirements *(required)*
 
 ### Functional Requirements
 
 <!--
-  For each FR, state WHAT the system must do and WHO can do it.
-  When a capability is role-restricted, the FR MUST explicitly name the allowed roles.
-  Example: "FR-XXX: Only [role] MUST be able to [action] on [page]"
-  RoleGuard rules: list every allowed role explicitly in each FR and guard.
-  Do NOT rely on implicit inheritance or hierarchy tables; state roles explicitly.
+  Use stable requirement IDs: FR-001, FR-001A, FR-001B...
+  Include role constraints explicitly where applicable.
 -->
 
-- **FR-001**: The system MUST [specific capability]
-- **FR-002**: The system MUST [specific capability]
-- **FR-003**: Users MUST be able to [key interaction]
-- **FR-004**: Only [role_a] and [role_b] MUST be able to access [page/action] — enforced via RoleGuard
+- **FR-001**: The system MUST [capability].
+- **FR-001A**: The system MUST [sub-capability refinement].
+- **FR-002**: The system MUST [capability].
+- **FR-003**: Only [explicit roles] MUST be able to [action / page].
 
 ### User Flow & Navigation *(required)*
 
-<!--
-  Required for ALL features — even if no new pages are added.
-  Describe how users enter this feature from existing routes and how they leave.
-  1. Map every screen and its navigation triggers to prevent orphan pages.
-  2. If the feature adds no new pages, document the existing page(s) involved,
-     the entry triggers (e.g. sidebar link, button, redirect), and exit paths.
-  3. Include a Mermaid flowchart for flows with 3+ screens or branching paths.
-  Renders natively on GitHub — no extra tooling needed.
--->
-
 ```mermaid
 flowchart LR
-    Login --> |login success| Dashboard
-    Dashboard --> |click avatar| Profile
-    Profile --> |sidebar link| Dashboard
-    Dashboard --> |sign out| Login
+    Entry["/entry"] --> Feature["/feature"]
+    Feature --> StateA["State A"]
+    Feature --> StateB["State B"]
+    StateA --> Exit["/exit"]
+    StateB --> Exit
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
-| [Page A] | [e.g. click avatar] | [Page B] |
-| [Page B] | [e.g. sidebar link] | [Page A] |
+| [Route / State] | [User/system trigger] | [Route / State] |
+| [Route / State] | [User/system trigger] | [Route / State] |
 
-**Entry points**: [Which existing pages link INTO the new pages?]
-**Exit points**: [Which pages can users navigate to FROM the new pages?]
+**Entry points**: [How users enter this feature.]  
+**Exit points**: [Where users can leave this feature.]
 
-### Key Entities *(include if feature involves data)*
+### Key Entities *(required when feature includes data or state modeling)*
 
-- **[Entity 1]**: [What it represents, key attributes]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **[EntityName]**: [Definition, key attributes, constraints.]
+- **[EntityName]**: [Definition, relationship to other entities.]
 
-## Spec Dependencies *(required — fill in at specify time; use "—" rows if none)*
+---
 
-<!--
-  Upstream: specs that must be implemented before or alongside this feature.
-  Downstream: specs that depend on THIS spec — notify them whenever this spec is versioned up.
-  When updating this spec (version bump), open every downstream spec and assess impact.
--->
+## Spec Dependencies *(required — use “—” rows if none)*
 
 ### Upstream (this spec depends on)
 
@@ -146,9 +171,14 @@ flowchart LR
 
 ## Success Criteria *(required)*
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete labeling task setup in under 2 minutes"]
-- **SC-002**: [Measurable metric]
-- **SC-003**: [User satisfaction metric]
+<!--
+  Success criteria should be observable and testable.
+  Use SC IDs and reference constants when relevant.
+-->
+
+- **SC-001**: [Measurable behavioral outcome.]
+- **SC-002**: [Measurable rendering / response / quality outcome.]
+- **SC-003**: [Cross-role / cross-state correctness outcome.]
 
 ---
 
@@ -156,4 +186,4 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
-| 1.0.0 | [DATE] | Initial spec |
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |

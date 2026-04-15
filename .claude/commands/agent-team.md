@@ -20,10 +20,10 @@ Add to `~/.claude/settings.json`:
 ```
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
 /speckit.specify
-  → [/pencil-wireframe]          Draw 6 frames in design/wireframes/pages/[module]/[page].pen  (optional)
-  → [/ui-ux-pro-max] (optional)  HTML prototype + design system; use wireframe as layout reference
+  → [/ui-ux-pro-max]             Generate HTML prototype + design system
+  → [/pencil-wireframe]          Draw 6 frames in design/wireframes/pages/[module]/[page].pen  (optional, after prototype)
   → [senior-uiux review]         Review prototype: fidelity, a11y, ZH/EN/mobile symmetry
-  → /speckit.clarify (optional)  Wireframe + prototype make ambiguities concrete
+  → /speckit.clarify (optional)  Prototype + optional wireframe make ambiguities concrete
 
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
 

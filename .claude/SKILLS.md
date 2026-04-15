@@ -83,9 +83,11 @@ Spec-Kit commands provide a Spec-Driven Development (SDD) workflow powered by [G
 ### SDD Workflow
 
 ```
-/speckit.specify → /speckit.clarify → /spec-review → /speckit.plan → /speckit.tasks → /speckit.analyze → /speckit.implement
-                                                                              ↓                                    ↓
-                                                              /speckit.taskstoissues              /speckit.checklist
+/speckit.specify → /ui-ux-pro-max (prototype) → /pencil-wireframe (optional) → /speckit.clarify → /spec-review
+                                                                                                     ↓
+                                                                          /speckit.plan → /speckit.tasks → /speckit.analyze → /speckit.implement
+                                                                                                                        ↓                                    ↓
+                                                                                                        /speckit.taskstoissues              /speckit.checklist
 ```
 
 ### Related Files
@@ -102,7 +104,8 @@ Commands for broader development workflow tasks (PR management, wireframing, mul
 
 | Command | Purpose | Example Usage |
 |---------|---------|---------------|
-| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP | `/pencil-wireframe` |
+| `/ui-ux-pro-max` | Generate HTML prototype + design system before planning | `/ui-ux-pro-max Build dashboard page prototype` |
+| `/pencil-wireframe` | Draw 6-frame wireframes via Pencil MCP (optional after prototype) | `/pencil-wireframe` |
 | `/pr-flow` | Full PR flow (commit → review → test → merge) | `/pr-flow` |
 | `/review-resolve` | Fetch PR review threads, fix all findings, resolve | `/review-resolve 21` |
 | `/agent-team` | Multi-phase agent team workflow for new features | `/agent-team` |

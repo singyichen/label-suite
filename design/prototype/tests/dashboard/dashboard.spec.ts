@@ -96,18 +96,20 @@ test.describe('Dashboard page — scenario switcher', () => {
   test('switching scenarios updates the active pill and visible view', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
 
+    const userPill = page.locator('.scenario-pill[data-scenario="user"]');
     const superAdminPill = page.locator('.scenario-pill[data-scenario="super_admin_data"]');
     const reviewerPill = page.locator('.scenario-pill[data-scenario="reviewer"]');
 
-    await expect(superAdminPill).toHaveClass(/active/);
-    await expect(page.getByTestId('super-admin-view')).toBeVisible();
+    await expect(userPill).toHaveClass(/active/);
+    await expect(page.getByTestId('user-view')).toBeVisible();
 
     await reviewerPill.click();
 
     await expect(reviewerPill).toHaveClass(/active/);
+    await expect(userPill).not.toHaveClass(/active/);
     await expect(superAdminPill).not.toHaveClass(/active/);
     await expect(page.getByTestId('reviewer-view')).toBeVisible();
-    await expect(page.getByTestId('super-admin-view')).not.toHaveClass(/is-active/);
+    await expect(page.getByTestId('user-view')).not.toHaveClass(/is-active/);
   });
 });
 
@@ -116,19 +118,19 @@ test.describe('Dashboard page — language toggle', () => {
     await page.goto(DASHBOARD_URL);
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
-    await expect(page.getByTestId('lang-label')).toHaveText('ZH | EN');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH');
     await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByTestId('lang-label')).toHaveText('EN | ZH');
+    await expect(page.getByTestId('lang-label')).toHaveText('EN');
     await expect(page.locator('#scenarioLabel')).toHaveText('Scenario');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
-    await expect(page.getByTestId('lang-label')).toHaveText('ZH | EN');
+    await expect(page.getByTestId('lang-label')).toHaveText('ZH');
     await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
   });
 });
