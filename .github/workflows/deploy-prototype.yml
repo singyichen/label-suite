@@ -27,6 +27,34 @@ jobs:
 
       - uses: actions/configure-pages@v4
 
+      - name: Generate analytics config from GitHub secrets
+        shell: bash
+        env:
+          POSTHOG_TOKEN: ${{ secrets.POSTHOG_TOKEN }}
+          POSTHOG_API_HOST: ${{ vars.POSTHOG_API_HOST }}
+          POSTHOG_VERSION: ${{ vars.POSTHOG_VERSION }}
+        run: |
+          if [ -z "${POSTHOG_TOKEN}" ]; then
+            echo "::error title=Missing POSTHOG_TOKEN::POSTHOG_TOKEN secret is required for deployment."
+            exit 1
+          fi
+
+          if [ -z "${POSTHOG_API_HOST}" ]; then
+            POSTHOG_API_HOST="https://us.i.posthog.com"
+          fi
+
+          if [ -z "${POSTHOG_VERSION}" ]; then
+            POSTHOG_VERSION="v1-gh-pages"
+          fi
+
+          cat > design/prototype/assets/analytics.config.local.json <<EOF
+          {
+            "token": "${POSTHOG_TOKEN}",
+            "apiHost": "${POSTHOG_API_HOST}",
+            "version": "${POSTHOG_VERSION}"
+          }
+          EOF
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: design/prototype/
