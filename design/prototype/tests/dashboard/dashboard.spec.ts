@@ -71,7 +71,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/已完成 89% · 今日 53 筆 · 平均速度 3.0/)).toBeVisible();
     await expect(annotatorView.getByText(/已完成 42% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/)).toBeVisible();
-    await expect(annotatorView.getByText(/正式標註|Official Run/)).toBeVisible();
+    await expect(annotatorView.getByText(/正式標記|Official Run/)).toBeVisible();
     await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(2);
   });
 
@@ -88,7 +88,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByText('情感分析基準')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
     await expect(reviewerView.getByText(/待審 8 筆 · 進度 52% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審查|Quick Review/ })).toHaveCount(2);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(2);
   });
 });
 

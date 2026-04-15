@@ -197,7 +197,7 @@ flowchart TD
 
 **Reviewer 視角（任務角色：`reviewer`）：**
 - **待審概況：** 待審總數、今日已審、IAA 摘要
-- **任務列表：** 任務名稱、審查摘要、Task Type / Run Type / Status badge、進度條、快速審查
+- **任務列表：** 任務名稱、審查摘要、Task Type / Run Type / Status badge、進度條、快速審核
 
 **Super Admin 視角（系統角色：`super_admin`）：**
 - **平台使用者統計：** 總用戶、專案負責人、標記員、審核員
