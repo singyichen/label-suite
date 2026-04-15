@@ -1110,7 +1110,7 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="annotatorProgressTitle" class="panel-title">我的任務</h2>
+                <h2 id="annotatorProgressTitle" class="panel-title">我的概況</h2>
                 <span id="annotatorProgressSubtitle" class="panel-subtitle">我的標記進度與待處理任務</span>
               </div>
             </div>
@@ -1126,6 +1126,15 @@
               <div class="metric">
                 <strong>4.2</strong>
                 <span id="annotatorAvgSpeedLabel">平均速度</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="annotatorTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="annotatorTaskListSubtitle" class="panel-subtitle">我的進行中任務</span>
               </div>
             </div>
             <div class="list">
@@ -1180,7 +1189,7 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="reviewerPanelTitle" class="panel-title">待審任務</h2>
+                <h2 id="reviewerPanelTitle" class="panel-title">待審概況</h2>
                 <span id="reviewerPanelSubtitle" class="panel-subtitle">我的審查進度與待處理項目</span>
               </div>
             </div>
@@ -1196,6 +1205,15 @@
               <div class="metric">
                 <strong>0.81</strong>
                 <span id="reviewerIaaLabel">IAA 摘要</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <h2 id="reviewerTaskListTitle" class="panel-title">任務列表</h2>
+                <span id="reviewerTaskListSubtitle" class="panel-subtitle">我的待審任務</span>
               </div>
             </div>
             <div class="list">
@@ -1338,12 +1356,13 @@
         plTask2TaskType:       '評分 / 回歸任務',
         plTask2RunType:        '試標',
         plTask2Badge:          '待確認',
-        annotatorProgressTitle:  '我的任務',
+        annotatorProgressTitle:  '我的概況',
         annotatorProgressSubtitle:'我的標記進度與待處理任務',
         annotatorCompletedLabel: '待標記',
         annotatorTodayLabel:     '今日完成',
         annotatorAvgSpeedLabel:  '平均速度',
-        annotatorContinueBtn:    '快速繼續',
+        annotatorTaskListTitle:  '任務列表',
+        annotatorTaskListSubtitle:'我的進行中任務',
         annotatorTask1Title:     '新聞標題分類',
         annotatorTask1Detail:    '已完成 89% · 今日 53 筆 · 平均速度 3.0',
         annotatorTask1TaskType:  '分類任務',
@@ -1356,11 +1375,13 @@
         annotatorTask2RunType:   '試標',
         annotatorTask2Badge:     '待繼續',
         annotatorTask2ContinueBtn:'快速繼續',
-        reviewerPanelTitle:      '待審任務',
+        reviewerPanelTitle:      '待審概況',
         reviewerPanelSubtitle:   '我的審查進度與待處理項目',
         reviewerPendingLabel:    '待審總數',
         reviewerTodayReviewedLabel:'今日已審',
         reviewerIaaLabel:        'IAA 摘要',
+        reviewerTaskListTitle:   '任務列表',
+        reviewerTaskListSubtitle:'我的待審任務',
         reviewerTask1Title:      '新聞標題分類',
         reviewerTask1Detail:     '待審 12 筆 · 進度 67% · IAA 0.81',
         reviewerTask1TaskType:   '分類任務',
@@ -1444,12 +1465,13 @@
         plTask2TaskType:       'Rating / Regression',
         plTask2RunType:        'Dry Run',
         plTask2Badge:          'Pending Confirmation',
-        annotatorProgressTitle:  'My Tasks',
+        annotatorProgressTitle:  'My Overview',
         annotatorProgressSubtitle:'My annotation progress and pending tasks',
         annotatorCompletedLabel: 'Pending',
         annotatorTodayLabel:     'Today',
         annotatorAvgSpeedLabel:  'Avg Speed',
-        annotatorContinueBtn:    'Continue',
+        annotatorTaskListTitle:  'Task List',
+        annotatorTaskListSubtitle:'My Active Tasks',
         annotatorTask1Title:     'News Headline Classification',
         annotatorTask1Detail:    '89% Completed · 53 Today · Avg Speed 3.0',
         annotatorTask1TaskType:  'Classification',
@@ -1462,11 +1484,13 @@
         annotatorTask2RunType:   'Dry Run',
         annotatorTask2Badge:     'Resume',
         annotatorTask2ContinueBtn:'Continue',
-        reviewerPanelTitle:      'Pending Review Tasks',
+        reviewerPanelTitle:      'Review Overview',
         reviewerPanelSubtitle:   'My review progress and pending items',
         reviewerPendingLabel:    'Pending Total',
         reviewerTodayReviewedLabel:'Reviewed Today',
         reviewerIaaLabel:        'IAA Summary',
+        reviewerTaskListTitle:   'Task List',
+        reviewerTaskListSubtitle:'My Pending Reviews',
         reviewerTask1Title:      'News Headline Classification',
         reviewerTask1Detail:     '12 Pending · 67% Progress · IAA 0.81',
         reviewerTask1TaskType:   'Classification',
@@ -1553,7 +1577,8 @@
       document.getElementById('annotatorCompletedLabel').textContent = t.annotatorCompletedLabel;
       document.getElementById('annotatorTodayLabel').textContent     = t.annotatorTodayLabel;
       document.getElementById('annotatorAvgSpeedLabel').textContent  = t.annotatorAvgSpeedLabel;
-      document.getElementById('annotatorContinueBtn').textContent    = t.annotatorContinueBtn;
+      document.getElementById('annotatorTaskListTitle').textContent  = t.annotatorTaskListTitle;
+      document.getElementById('annotatorTaskListSubtitle').textContent = t.annotatorTaskListSubtitle;
       document.getElementById('annotatorTask1Title').textContent     = t.annotatorTask1Title;
       document.getElementById('annotatorTask1Detail').textContent    = t.annotatorTask1Detail;
       document.getElementById('annotatorTask1TaskType').textContent  = t.annotatorTask1TaskType;
@@ -1571,6 +1596,8 @@
       document.getElementById('reviewerPendingLabel').textContent    = t.reviewerPendingLabel;
       document.getElementById('reviewerTodayReviewedLabel').textContent = t.reviewerTodayReviewedLabel;
       document.getElementById('reviewerIaaLabel').textContent        = t.reviewerIaaLabel;
+      document.getElementById('reviewerTaskListTitle').textContent   = t.reviewerTaskListTitle;
+      document.getElementById('reviewerTaskListSubtitle').textContent = t.reviewerTaskListSubtitle;
       document.getElementById('reviewerTask1Title').textContent      = t.reviewerTask1Title;
       document.getElementById('reviewerTask1Detail').textContent     = t.reviewerTask1Detail;
       document.getElementById('reviewerTask1TaskType').textContent   = t.reviewerTask1TaskType;
