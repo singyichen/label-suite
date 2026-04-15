@@ -35,8 +35,8 @@ jobs:
           POSTHOG_VERSION: ${{ vars.POSTHOG_VERSION }}
         run: |
           if [ -z "${POSTHOG_TOKEN}" ]; then
-            echo "::warning title=Missing POSTHOG_TOKEN::POSTHOG_TOKEN is not set. Using placeholder token."
-            POSTHOG_TOKEN="phc_dev_your_project_token_here"
+            echo "::error title=Missing POSTHOG_TOKEN::POSTHOG_TOKEN secret is required for deployment."
+            exit 1
           fi
 
           if [ -z "${POSTHOG_API_HOST}" ]; then
