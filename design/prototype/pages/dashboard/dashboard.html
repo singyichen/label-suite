@@ -1704,28 +1704,20 @@
       });
     }
 
-    document.getElementById('langToggle').addEventListener('click', () => {
+    function handleLangToggle(source) {
       const previousLang = lang;
       lang = lang === 'zh' ? 'en' : 'zh';
       applyLang(lang);
       window.LabelSuiteAnalytics.track('prototype_lang_switched', {
-        source: 'desktop_toggle',
+        source,
         from_lang: previousLang,
         to_lang: lang,
         scenario,
       });
-    });
-    document.getElementById('mobileLangToggle').addEventListener('click', () => {
-      const previousLang = lang;
-      lang = lang === 'zh' ? 'en' : 'zh';
-      applyLang(lang);
-      window.LabelSuiteAnalytics.track('prototype_lang_switched', {
-        source: 'mobile_toggle',
-        from_lang: previousLang,
-        to_lang: lang,
-        scenario,
-      });
-    });
+    }
+
+    document.getElementById('langToggle').addEventListener('click', () => handleLangToggle('desktop_toggle'));
+    document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
 
     const getTrackingContext = () => ({ lang, scenario });
 

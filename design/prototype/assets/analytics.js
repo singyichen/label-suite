@@ -68,15 +68,23 @@
   }
 
   function getOrCreateParticipantId() {
-    let participantId = windowObj.localStorage.getItem(STORAGE_KEY);
-    if (!participantId) {
-      participantId = `ux_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      windowObj.localStorage.setItem(STORAGE_KEY, participantId);
+    const fallbackId = `ux_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    try {
+      let participantId = windowObj.localStorage.getItem(STORAGE_KEY);
+      if (!participantId) {
+        participantId = fallbackId;
+        windowObj.localStorage.setItem(STORAGE_KEY, participantId);
+      }
+      return participantId;
+    } catch {
+      return fallbackId;
     }
-    return participantId;
   }
 
   function getAnalyticsScriptUrl() {
+    if (documentObj.currentScript && documentObj.currentScript.src) {
+      return documentObj.currentScript.src;
+    }
     const scripts = Array.from(documentObj.getElementsByTagName('script'));
     const analyticsScript = scripts.find(script => {
       const src = script.getAttribute('src') || '';
@@ -117,7 +125,8 @@
   }
 
   function isLocalhost() {
-    const hostname = windowObj.location && windowObj.location.hostname;
+    if (!windowObj.location || !windowObj.location.hostname) return false;
+    const hostname = windowObj.location.hostname;
     if (!hostname) return false;
     if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return true;
     if (hostname === '0.0.0.0' || hostname.endsWith('.local')) return true;
@@ -125,6 +134,21 @@
     if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
     if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
     return false;
+  }
+
+  function sanitizeString(input) {
+    if (typeof input !== 'string') return '';
+    return input.trim();
+  }
+
+  function isValidApiHost(apiHost) {
+    if (!apiHost || /[\u0000-\u001f\s]/.test(apiHost)) return false;
+    try {
+      const url = new URL(apiHost);
+      return (url.protocol === 'https:' || url.protocol === 'http:') && Boolean(url.hostname);
+    } catch {
+      return false;
+    }
   }
 
   async function init(config) {
@@ -146,12 +170,16 @@
       const configUrl = inputConfig.configUrl || getDefaultConfigUrl();
       const fromJson = await getConfigFromJson(configUrl);
       const finalConfig = {
-        token: inputConfig.token || fromJson.token || DEFAULT_CONFIG.token,
-        apiHost: inputConfig.apiHost || fromJson.apiHost || DEFAULT_CONFIG.apiHost,
+        token: sanitizeString(inputConfig.token || fromJson.token || DEFAULT_CONFIG.token),
+        apiHost: sanitizeString(inputConfig.apiHost || fromJson.apiHost || DEFAULT_CONFIG.apiHost),
         page: inputConfig.page || 'unknown',
         version: inputConfig.version || fromJson.version || DEFAULT_CONFIG.version,
       };
       if (!finalConfig.token || !finalConfig.apiHost) {
+        initPromise = null;
+        return false;
+      }
+      if (!isValidApiHost(finalConfig.apiHost)) {
         initPromise = null;
         return false;
       }
