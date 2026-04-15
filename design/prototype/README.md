@@ -76,6 +76,76 @@ Then open `http://localhost:8888/pages/account/login.html` to start the demo flo
 
 ---
 
+## Prototype Analytics (PostHog)
+
+Prototype analytics is implemented via:
+
+- `assets/analytics.js` (shared runtime)
+- `assets/analytics.config.local.json` (local token, gitignored)
+
+### 1. Create Local Config
+
+Copy the example file and fill your dev token:
+
+```bash
+cp assets/analytics.config.example.json assets/analytics.config.local.json
+```
+
+```json
+{
+  "token": "phc_your_dev_token",
+  "apiHost": "https://us.i.posthog.com",
+  "version": "v1-dev"
+}
+```
+
+> `analytics.config.local.json` is ignored by git, so dev tokens are not committed.
+
+### 2. Add Analytics to a Page
+
+In each HTML page (before `</body>`):
+
+```html
+<script src="../../assets/analytics.js"></script>
+<script>
+  window.LabelSuiteAnalytics.init({ page: 'dashboard' })
+</script>
+```
+
+Update the `src` relative path based on page location (e.g. `../assets/analytics.js` if needed).
+
+### 3. Track Events
+
+Use shared helpers in page scripts:
+
+```js
+window.LabelSuiteAnalytics.track('prototype_lang_switched', {
+  from_lang: 'zh',
+  to_lang: 'en',
+})
+
+window.LabelSuiteAnalytics.bindClickTracks(
+  [
+    { id: 'userCreateTaskBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
+  ],
+  () => ({ scenario: 'project_leader' })
+)
+
+window.LabelSuiteAnalytics.trackPageView('dashboard', () => ({ lang: 'zh', scenario: 'user' }))
+```
+
+### 4. Localhost Behavior
+
+`analytics.js` currently excludes local environments (`localhost`, `127.0.0.1`, `::1`, `.local`, private LAN IP ranges).
+
+This means:
+
+- You can still run/play the prototype locally.
+- No analytics events are sent from local addresses.
+- Use a non-local URL (e.g. GitHub Pages) when validating real event ingestion.
+
+---
+
 ## Type Check
 
 ```bash
@@ -90,6 +160,9 @@ Runs `tsc --noEmit` against all test files and `playwright.config.ts`. Run this 
 
 ```
 design/prototype/
+├── assets/                   # Shared analytics runtime + config template
+│   ├── analytics.js
+│   └── analytics.config.example.json
 ├── pages/                    # Static HTML prototypes
 │   ├── account/
 │   │   ├── login.html

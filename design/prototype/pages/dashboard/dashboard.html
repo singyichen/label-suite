@@ -1027,7 +1027,7 @@
               </li>
               <li class="list-item">
                 <span id="userStep3Title" class="list-item-title">被指派審核工作後成為審核員</span>
-                <span id="userStep3Detail" class="list-item-detail">被加入審核成員後，你會看到待審任務與快速審查入口。</span>
+                <span id="userStep3Detail" class="list-item-detail">被加入審核成員後，你會看到待審任務與快速審核入口。</span>
               </li>
             </ul>
           </article>
@@ -1133,7 +1133,7 @@
                   </div>
                   <div class="task-item-badges">
                     <span id="adminTask1TaskType" class="badge badge-task-type">分類任務</span>
-                    <span id="adminTask1RunType" class="badge badge-official">正式標註</span>
+                    <span id="adminTask1RunType" class="badge badge-official">正式標記</span>
                     <span id="adminTask1Badge" class="badge badge-info">進行中</span>
                   </div>
                 </div>
@@ -1209,7 +1209,7 @@
                   </div>
                   <div class="task-item-badges">
                     <span id="plTask1TaskType" class="badge badge-task-type">分類任務</span>
-                    <span id="plTask1RunType" class="badge badge-official">正式標註</span>
+                    <span id="plTask1RunType" class="badge badge-official">正式標記</span>
                     <span id="plTask1Badge" class="badge badge-info">進行中</span>
                   </div>
                 </div>
@@ -1279,7 +1279,7 @@
                   <div class="task-item-meta">
                     <div class="task-item-badges">
                       <span id="annotatorTask1TaskType" class="badge badge-task-type">分類任務</span>
-                      <span id="annotatorTask1RunType" class="badge badge-official">正式標註</span>
+                      <span id="annotatorTask1RunType" class="badge badge-official">正式標記</span>
                       <span id="annotatorTask1Badge" class="badge badge-info">繼續中</span>
                     </div>
                     <div class="task-item-actions">
@@ -1358,11 +1358,11 @@
                   <div class="task-item-meta">
                     <div class="task-item-badges">
                       <span id="reviewerTask1TaskType" class="badge badge-task-type">分類任務</span>
-                      <span id="reviewerTask1RunType" class="badge badge-official">正式標註</span>
+                      <span id="reviewerTask1RunType" class="badge badge-official">正式標記</span>
                       <span id="reviewerTask1Badge" class="badge badge-warning">待審查</span>
                     </div>
                     <div class="task-item-actions">
-                      <button id="reviewerTask1StartBtn" class="btn btn-primary">快速審查</button>
+                      <button id="reviewerTask1StartBtn" class="btn btn-primary">快速審核</button>
                     </div>
                   </div>
                 </div>
@@ -1383,7 +1383,7 @@
                       <span id="reviewerTask2Badge" class="badge badge-info">進行中</span>
                     </div>
                     <div class="task-item-actions">
-                      <button id="reviewerTask2StartBtn" class="btn btn-primary">快速審查</button>
+                      <button id="reviewerTask2StartBtn" class="btn btn-primary">快速審核</button>
                     </div>
                   </div>
                 </div>
@@ -1401,9 +1401,15 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- INTERACTIVITY SCRIPT                                        -->
   <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/analytics.js"></script>
   <script>
+    window.LabelSuiteAnalytics.init({
+      page: 'dashboard',
+    });
+
     document.querySelectorAll('.scenario-pill').forEach(pill => {
       pill.addEventListener('click', () => {
+        const previousScenario = scenario;
         document.querySelectorAll('.scenario-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
 
@@ -1412,6 +1418,11 @@
         const targetView = document.getElementById(`view-${scenario}`);
         if (targetView) targetView.classList.add('is-active');
         document.getElementById('roleIndicator').textContent = i18n[lang].scenarioPills[scenario];
+        window.LabelSuiteAnalytics.track('prototype_scenario_switched', {
+          from_scenario: previousScenario,
+          to_scenario: scenario,
+          lang,
+        });
       });
     });
 
@@ -1451,7 +1462,7 @@
         userStep2Title:        '被指派標記工作後成為標記員',
         userStep2Detail:       '被加入標記成員後，你會看到待標記工作與快速繼續入口。',
         userStep3Title:        '被指派審核工作後成為審核員',
-        userStep3Detail:       '被加入審核成員後，你會看到待審任務與快速審查入口。',
+        userStep3Detail:       '被加入審核成員後，你會看到待審任務與快速審核入口。',
         adminPlatformTitle:    '平台使用者統計',
         adminPlatformSubtitle: '系統概況',
         adminTotalUsers:       '總用戶',
@@ -1477,7 +1488,7 @@
         adminTask1Detail:      '專案負責人A · 審核員A · 8 位標記員 · 已完成 89%',
         adminTask1Badge:       '進行中',
         adminTask1TaskType:    '分類任務',
-        adminTask1RunType:     '正式標註',
+        adminTask1RunType:     '正式標記',
         adminTask2Title:       '情感分析基準',
         adminTask2Detail:      '專案負責人B · 審核員B · 6 位標記員 · 已完成 42%',
         adminTask2Badge:       '待確認',
@@ -1495,7 +1506,7 @@
         plTask1Title:          '新聞標題分類',
         plTask1Detail:         '審核員A · 8 位標記員 · 已完成 89%',
         plTask1TaskType:       '分類任務',
-        plTask1RunType:        '正式標註',
+        plTask1RunType:        '正式標記',
         plTask1Badge:          '進行中',
         plTask2Title:          '情感分析基準',
         plTask2Detail:         '審核員B · 6 位標記員 · 已完成 42%',
@@ -1512,7 +1523,7 @@
         annotatorTask1Title:     '新聞標題分類',
         annotatorTask1Detail:    '已完成 89% · 今日 53 筆 · 平均速度 3.0',
         annotatorTask1TaskType:  '分類任務',
-        annotatorTask1RunType:   '正式標註',
+        annotatorTask1RunType:   '正式標記',
         annotatorTask1Badge:     '繼續中',
         annotatorTask1ContinueBtn:'快速繼續',
         annotatorTask2Title:     '情感分析基準',
@@ -1531,15 +1542,15 @@
         reviewerTask1Title:      '新聞標題分類',
         reviewerTask1Detail:     '待審 12 筆 · 進度 67% · IAA 0.81',
         reviewerTask1TaskType:   '分類任務',
-        reviewerTask1RunType:    '正式標註',
+        reviewerTask1RunType:    '正式標記',
         reviewerTask1Badge:      '待審查',
-        reviewerTask1StartBtn:   '快速審查',
+        reviewerTask1StartBtn:   '快速審核',
         reviewerTask2Title:      '情感分析基準',
         reviewerTask2Detail:     '待審 8 筆 · 進度 52% · IAA 0.78',
         reviewerTask2TaskType:   '評分 / 回歸任務',
         reviewerTask2RunType:    '試標',
         reviewerTask2Badge:      '進行中',
-        reviewerTask2StartBtn:   '快速審查',
+        reviewerTask2StartBtn:   '快速審核',
       },
       en: {
         pageTitle:            'Dashboard — Label Suite (Prototype)',
@@ -1693,15 +1704,39 @@
       });
     }
 
-    document.getElementById('langToggle').addEventListener('click', () => {
+    function handleLangToggle(source) {
+      const previousLang = lang;
       lang = lang === 'zh' ? 'en' : 'zh';
       applyLang(lang);
-    });
-    document.getElementById('mobileLangToggle').addEventListener('click', () => {
-      lang = lang === 'zh' ? 'en' : 'zh';
-      applyLang(lang);
-    });
+      window.LabelSuiteAnalytics.track('prototype_lang_switched', {
+        source,
+        from_lang: previousLang,
+        to_lang: lang,
+        scenario,
+      });
+    }
 
+    document.getElementById('langToggle').addEventListener('click', () => handleLangToggle('desktop_toggle'));
+    document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
+
+    const getTrackingContext = () => ({ lang, scenario });
+
+    window.LabelSuiteAnalytics.bindClickTracks(
+      [
+        { id: 'userCreateTaskBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
+        { id: 'adminViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'admin_view_all_tasks' } },
+        { id: 'plViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'project_leader_view_all_tasks' } },
+        { id: 'annotatorTask1ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_1' } },
+        { id: 'annotatorTask2ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_2' } },
+        { id: 'reviewerTask1StartBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'reviewer_quick_review_task_1' } },
+        { id: 'reviewerTask2StartBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'reviewer_quick_review_task_2' } },
+        { id: 'logoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'desktop' } },
+        { id: 'mobileLogoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'mobile' } },
+      ],
+      getTrackingContext
+    );
+
+    window.LabelSuiteAnalytics.trackPageView('dashboard', getTrackingContext);
     applyLang('zh');
   </script>
 </body>

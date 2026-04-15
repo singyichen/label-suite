@@ -534,7 +534,11 @@
     </div>
   </main>
 
+  <script src="../../assets/analytics.js"></script>
   <script>
+    window.LabelSuiteAnalytics.init({
+      page: 'register',
+    });
     /* ── i18n ──────────────────────────────────────────────────── */
     const i18n = {
       zh: {
@@ -612,6 +616,7 @@
     };
 
     let lang = 'zh';
+    const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {
       const t = i18n[l];
@@ -649,8 +654,14 @@
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
+      const previousLang = lang;
       lang = lang === 'zh' ? 'en' : 'zh';
       applyLang(lang);
+      window.LabelSuiteAnalytics.track('prototype_lang_switched', {
+        source: 'register_lang_toggle',
+        from_lang: previousLang,
+        to_lang: lang,
+      });
     });
 
     /* ── Eye Toggles ───────────────────────────────────────────── */
@@ -743,7 +754,16 @@
         hasError = true;
       }
 
-      if (hasError) return;
+      if (hasError) {
+        window.LabelSuiteAnalytics.track('prototype_register_failed_validation', {
+          ...getTrackingContext(),
+        });
+        return;
+      }
+
+      window.LabelSuiteAnalytics.track('prototype_register_attempted', {
+        ...getTrackingContext(),
+      });
 
       // ── Loading state ────────────────────────────────────────
       const btn     = document.getElementById('submitBtn');
@@ -768,6 +788,9 @@
         errBanner.classList.add('visible');
         document.getElementById('email').classList.add('error');
         document.getElementById('email').focus();
+        window.LabelSuiteAnalytics.track('prototype_register_failed_duplicate_email', {
+          ...getTrackingContext(),
+        });
         return;
       }
 
@@ -786,12 +809,20 @@
 
       // Prototype: redirect to dashboard after 2s
       setTimeout(() => {
+        window.LabelSuiteAnalytics.track('prototype_register_succeeded', {
+          ...getTrackingContext(),
+        });
         window.location.href = '../dashboard/dashboard.html';
       }, 2000);
     });
 
     /* ── Init ──────────────────────────────────────────────────── */
+    window.LabelSuiteAnalytics.bindClickTracks(
+      [{ id: 'loginLink', eventName: 'prototype_navigate_login_clicked' }],
+      getTrackingContext
+    );
     applyLang('zh');
+    window.LabelSuiteAnalytics.trackPageView('register', getTrackingContext);
   </script>
 </body>
 </html>

@@ -200,6 +200,54 @@ Before delivering any prototype HTML page:
 - [ ] Language toggle switches the entire page with no mixed-language content
 - [ ] `applyLang('zh')` is called on initialization
 
+#### Prototype Analytics Pattern (PostHog)
+
+All new prototype pages in `design/prototype/pages/` must integrate the shared analytics runtime.
+
+**Required integration (before `</body>`):**
+
+```html
+<script src="../../assets/analytics.js"></script>
+<script>
+  window.LabelSuiteAnalytics.init({ page: 'your-page-name' })
+</script>
+```
+
+Adjust relative path based on directory depth (e.g. `../assets/analytics.js` when applicable).
+
+**Required tracking baseline per page:**
+- `window.LabelSuiteAnalytics.trackPageView('your-page-name', contextFn)` on init
+- Track language toggle with `prototype_lang_switched`
+- Track primary CTA/form submit intent (`prototype_*_attempted`)
+- Track validation failure when user cannot proceed (`prototype_*_failed_validation`)
+- Track success completion (`prototype_*_succeeded`)
+
+**Reuse shared helpers (do not reimplement analytics utilities in each page):**
+- `LabelSuiteAnalytics.track(...)`
+- `LabelSuiteAnalytics.bindClickTrack(...)`
+- `LabelSuiteAnalytics.bindClickTracks(...)`
+- `LabelSuiteAnalytics.trackPageView(...)`
+
+**Configuration and security rules:**
+- Analytics config is loaded from local JSON: `design/prototype/assets/analytics.config.local.json`
+- Never commit real tokens; keep only `analytics.config.example.json` in git
+- Ensure `.gitignore` excludes `analytics.config.local.json`
+- Do not embed `phc_...` token literals directly in page HTML
+
+**Localhost behavior:**
+- Shared runtime excludes localhost/private network hosts from event ingestion by design
+- Validate real ingestion using non-local URLs (e.g. GitHub Pages) when needed
+
+#### Pre-Delivery Analytics Checklist
+
+Before delivering any new prototype HTML page:
+- [ ] `analytics.js` is imported
+- [ ] `LabelSuiteAnalytics.init({ page: '...' })` is present
+- [ ] `trackPageView(...)` is called
+- [ ] Language toggle is tracked
+- [ ] Main action success + failure paths are tracked
+- [ ] No token appears in committed HTML/JS files under `design/prototype/pages/`
+
 ---
 
 ### Step 1: Analyze User Requirements

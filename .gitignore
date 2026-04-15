@@ -55,3 +55,6 @@ test-results/
 
 # Claude Code local settings (personal dev environment)
 .claude/settings.local.json
+
+# Prototype analytics local config (contains dev token)
+design/prototype/assets/analytics.config.local.json

@@ -1,0 +1,5 @@
+{
+  "token": "phc_dev_your_project_token_here",
+  "apiHost": "https://us.i.posthog.com",
+  "version": "v1-dev"
+}
