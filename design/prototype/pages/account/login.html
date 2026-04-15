@@ -514,7 +514,11 @@
     </div>
   </main>
 
+  <script src="../../assets/analytics.js"></script>
   <script>
+    window.LabelSuiteAnalytics.init({
+      page: 'login',
+    });
 
     /* ── i18n ──────────────────────────────────────────────────── */
     const i18n = {
@@ -567,6 +571,7 @@
     };
 
     let lang = 'zh';
+    const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {
       const t = i18n[l];
@@ -595,10 +600,16 @@
     }
 
     document.getElementById('langToggle').addEventListener('click', () => {
+      const previousLang = lang;
       lang = lang === 'zh' ? 'en' : 'zh';
       applyLang(lang);
       // clear errors on language switch
       clearErrors();
+      window.LabelSuiteAnalytics.track('prototype_lang_switched', {
+        source: 'login_lang_toggle',
+        from_lang: previousLang,
+        to_lang: lang,
+      });
     });
 
     /* ── Password Toggle ───────────────────────────────────────── */
@@ -659,7 +670,17 @@
         setFieldError('password', 'passwordError', t.passwordRequired);
         hasError = true;
       }
-      if (hasError) return;
+      if (hasError) {
+        window.LabelSuiteAnalytics.track('prototype_login_failed_validation', {
+          ...getTrackingContext(),
+        });
+        return;
+      }
+
+      window.LabelSuiteAnalytics.track('prototype_login_attempted', {
+        ...getTrackingContext(),
+        method: 'email_password',
+      });
 
       // Loading state — replace entire button content to prevent applyLang()
       // from writing text into a detached #loginBtnText during the async window
@@ -675,16 +696,31 @@
       await new Promise(r => setTimeout(r, 800));
 
       // Prototype: login always succeeds — navigate to dashboard
+      window.LabelSuiteAnalytics.track('prototype_login_succeeded', {
+        ...getTrackingContext(),
+        method: 'email_password',
+      });
       window.location.href = '../dashboard/dashboard.html';
     });
 
     /* ── SSO Button (prototype feedback) ──────────────────────── */
     document.getElementById('ssoBtn').addEventListener('click', () => {
       // Prototype: no-op with visual press feedback
+      window.LabelSuiteAnalytics.track('prototype_google_sso_clicked', {
+        ...getTrackingContext(),
+      });
     });
 
     /* ── Init ──────────────────────────────────────────────────── */
+    window.LabelSuiteAnalytics.bindClickTracks(
+      [
+        { id: 'forgotLink', eventName: 'prototype_forgot_password_clicked' },
+        { id: 'registerLink', eventName: 'prototype_navigate_register_clicked' },
+      ],
+      getTrackingContext
+    );
     applyLang('zh');
+    window.LabelSuiteAnalytics.trackPageView('login', getTrackingContext);
   </script>
 </body>
 </html>
