@@ -2,7 +2,7 @@
 
 **功能分支**：`003-register-email-password`
 **建立日期**：2026-04-05
-**版本**：1.1.0
+**版本**：1.2.0
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
 
@@ -24,7 +24,7 @@ sequenceDiagram
     使用者->>register: 開啟 /account/register.html
     register-->>使用者: 顯示姓名、Email、密碼、確認密碼欄位
 
-    使用者->>register: 點擊語言切換（ZH | EN）
+    使用者->>register: 點擊語言切換（顯示 ZH 或 EN）
     register->>i18n: 切換 zh / en
     i18n-->>register: 回傳文字與 aria-label
     register-->>使用者: 即時更新頁面文案
@@ -227,5 +227,6 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 register 原型（前端驗證、重複 Email 模擬、成功後 2 秒導頁） |
 | 1.0.0 | 2026-04-05 | Initial spec |

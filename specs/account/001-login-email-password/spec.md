@@ -2,7 +2,7 @@
 
 **功能分支**：`001-login-email-password`
 **建立日期**：2026-04-05
-**版本**：1.1.0
+**版本**：1.2.0
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
 
@@ -23,7 +23,7 @@ sequenceDiagram
     使用者->>瀏覽器: 開啟 /account/login.html
     瀏覽器-->>使用者: 顯示導覽列 + 登入卡片 + Google 按鈕 + Email/Password 表單
 
-    使用者->>瀏覽器: 點擊語言切換（ZH | EN）
+    使用者->>瀏覽器: 點擊語言切換（顯示 ZH 或 EN）
     瀏覽器->>i18n: 切換 zh / en
     i18n-->>瀏覽器: 回傳對應文字與 aria-label
     瀏覽器-->>使用者: 即時更新文案（不重整）
@@ -42,7 +42,7 @@ sequenceDiagram
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
 | 1 | 使用者 | 開啟 `/account/login.html` | 顯示導覽列、登入卡片、Google 按鈕、Email/Password 表單、註冊與忘記密碼連結 |
-| 2 | 使用者 | 點擊 `ZH | EN` | 即時切換所有文案與 `aria-label` |
+| 2 | 使用者 | 點擊語言切換按鈕（`ZH` / `EN`） | 即時切換所有文案與 `aria-label` |
 | 3 | 使用者 | 點擊密碼眼睛圖示 | 切換密碼顯示/隱藏，並同步更新按鈕 `aria-label` |
 | 4 | 使用者 | 不填完整欄位直接送出 | 顯示欄位錯誤，停留在登入頁 |
 | 5 | 使用者 | 填寫 Email/Password 並送出 | 按鈕進入 loading 狀態，約 800ms 後導向 `../dashboard/dashboard.html`（原型） |
@@ -148,7 +148,7 @@ sequenceDiagram
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/account/login.html` 登入頁，包含導覽列、登入卡片、Google 按鈕、Email/Password 表單與導流連結。
-- **FR-002**：導覽列必須包含品牌區塊（Logo + Label Suite）與語言切換按鈕（`ZH | EN` / `EN | ZH`）。
+- **FR-002**：導覽列必須包含品牌區塊（Logo + Label Suite）與語言切換按鈕（單一語言代碼：`ZH` 或 `EN`）。
 - **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。
 - **FR-004**：語言切換時，必須同步更新文字節點與可存取屬性（至少包含 `aria-label` 與 `document.title`）。
 - **FR-005**：表單送出前必須驗證 Email 與 Password 為必填。
@@ -231,5 +231,6 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-04-15 | 語言切換按鈕規格改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；全面對齊最新 login 原型（i18n、欄位驗證、密碼顯示切換、原型導頁路徑） |
 | 1.0.0 | 2026-04-05 | Initial spec |

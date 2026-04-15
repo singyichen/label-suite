@@ -2,7 +2,7 @@
 
 **功能分支**：`002-login-google-sso`
 **建立日期**：2026-04-05
-**版本**：1.1.0
+**版本**：1.2.0
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
 
@@ -23,7 +23,7 @@ sequenceDiagram
     使用者->>login: 進入 /account/login.html
     login-->>使用者: 顯示「使用 Google 帳號繼續」按鈕
 
-    使用者->>login: 點擊語言切換（ZH | EN）
+    使用者->>login: 點擊語言切換（顯示 ZH 或 EN）
     login->>i18n: 切換 zh / en
     i18n-->>login: 回傳對應文案與 aria-label
     login-->>使用者: 更新 SSO 按鈕文字與 aria-label
@@ -164,5 +164,6 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 login 原型現況（Google SSO 入口與 no-op 行為） |
 | 1.0.0 | 2026-04-05 | Initial spec |

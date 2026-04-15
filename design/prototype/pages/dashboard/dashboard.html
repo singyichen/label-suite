@@ -107,13 +107,16 @@
       flex-shrink: 0;
     }
 
+    .brand-section {
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+
     .navbar-brand {
       display: flex;
       align-items: center;
       gap: var(--space-sm);
-      margin-bottom: var(--space-xl);
-      padding-bottom: var(--space-lg);
-      border-bottom: 1px solid var(--color-border);
     }
 
     .navbar-logo {
@@ -138,6 +141,10 @@
       font-size: 16px;
       color: var(--color-ink);
       line-height: 1;
+    }
+
+    .navbar-brand .lang-toggle {
+      margin-left: auto;
     }
 
     .mobile-top-logout {
@@ -246,19 +253,19 @@
     }
 
     .lang-toggle {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
-      padding: 8px 12px;
-      width: 100%;
+      padding: 6px 12px;
       background: var(--color-white);
       color: var(--color-ink);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
       transition: border-color 150ms, background 150ms;
+      white-space: nowrap;
     }
 
     .lang-toggle:hover {
@@ -745,12 +752,22 @@
         z-index: 320;
       }
 
+      .brand-section {
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
       .navbar-wordmark {
         font-size: 14px;
       }
 
       .mobile-user-name {
         display: block;
+      }
+
+      .navbar-brand .lang-toggle {
+        display: none;
       }
 
       .mobile-lang-toggle {
@@ -848,33 +865,43 @@
   <!-- NAVBAR                                                     -->
   <!-- ═══════════════════════════════════════════════════════════ -->
   <header class="navbar" role="banner">
-    <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
-      <div class="navbar-logo" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="7" y1="7" x2="7.01" y2="7"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <span class="navbar-wordmark">Label Suite</span>
-      <span id="mobileUserName" class="mobile-user-name">Mandy Chen</span>
-      <button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M2 12h20"></path>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-        <span id="mobileLangLabel">ZH | EN</span>
-      </button>
-      <button id="mobileLogoutBtn" class="mobile-top-logout" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      </button>
-    </a>
+    <div class="brand-section">
+      <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
+        <div class="navbar-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
+                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"
+                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="navbar-wordmark">Label Suite</span>
+        <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M2 12h20"></path>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span id="langLabel" data-testid="lang-label">EN</span>
+        </button>
+        <span id="mobileUserName" class="mobile-user-name">Mandy Chen</span>
+        <button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M2 12h20"></path>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span id="mobileLangLabel">ZH</span>
+        </button>
+        <button id="mobileLogoutBtn" class="mobile-top-logout" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </a>
+    </div>
 
     <nav class="navbar-center" aria-label="Main navigation">
       <a class="nav-link active" aria-current="page" href="#">
@@ -911,14 +938,6 @@
     </nav>
 
     <div class="nav-actions">
-      <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M2 12h20"></path>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
-        <span id="langLabel" data-testid="lang-label">EN</span>
-      </button>
       <div class="user-chip">
         <div class="avatar" id="userAvatar" aria-hidden="true">U</div>
         <div class="user-info">
@@ -1400,7 +1419,7 @@
     const i18n = {
       zh: {
         pageTitle:            '儀表板 — Label Suite（原型）',
-        langLabel:            'ZH | EN',
+        langLabel:            'ZH',
         langToggleAria:       '切換語言',
         logoutAria:           '登出',
         logoutTitle:          '登出',
@@ -1524,7 +1543,7 @@
       },
       en: {
         pageTitle:            'Dashboard — Label Suite (Prototype)',
-        langLabel:            'EN | ZH',
+        langLabel:            'EN',
         langToggleAria:       'Switch language',
         logoutAria:           'Sign out',
         logoutTitle:          'Sign out',
