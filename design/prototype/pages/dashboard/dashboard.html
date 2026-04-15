@@ -296,74 +296,6 @@
       min-width: 0;
     }
 
-    /* ── Hero Section (MASTER.md §Navbar Shell) ──────────────────– */
-    .hero {
-      padding: var(--space-lg);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      margin-bottom: var(--space-lg);
-    }
-
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px;
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      color: var(--color-primary);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .hero h1 {
-      margin: var(--space-md) 0 10px;
-      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
-      font-size: clamp(1.75rem, 3vw, 2.25rem);
-      font-weight: 700;
-      line-height: 1.2;
-    }
-
-    .hero p {
-      max-width: 760px;
-      margin: 0;
-      color: var(--color-ink-muted);
-      font-size: 1rem;
-      line-height: 1.6;
-    }
-
-    .hero-meta {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: var(--space-md);
-      margin-top: var(--space-lg);
-    }
-
-    .meta-card {
-      padding: var(--space-md);
-      border-radius: var(--radius-lg);
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-    }
-
-    .meta-card strong {
-      display: block;
-      font-size: 1.4rem;
-      font-weight: 700;
-      line-height: 1.2;
-    }
-
-    .meta-card span {
-      display: block;
-      margin-top: 6px;
-      color: var(--color-ink-muted);
-      font-size: 0.875rem;
-      line-height: 1.4;
-    }
-
     /* ── Controls ──────────────────────────────────────────────── */
     .controls {
       display: flex;
@@ -771,18 +703,6 @@
 
       .layout {
         padding: var(--space-md) var(--space-md) var(--space-lg);
-      }
-
-      .hero {
-        padding: var(--space-md);
-      }
-
-      .hero h1 {
-        font-size: clamp(1.5rem, 3vw, 2rem);
-      }
-
-      .hero-meta {
-        grid-template-columns: 1fr;
       }
 
       .controls {
@@ -1272,15 +1192,14 @@
   <script>
     document.querySelectorAll('.scenario-pill').forEach(pill => {
       pill.addEventListener('click', () => {
-        // Update active pill
         document.querySelectorAll('.scenario-pill').forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
 
-        // Show/hide views
-        const scenario = pill.dataset.scenario;
+        scenario = pill.dataset.scenario;
         document.querySelectorAll('.view').forEach(view => view.classList.remove('is-active'));
         const targetView = document.getElementById(`view-${scenario}`);
         if (targetView) targetView.classList.add('is-active');
+        document.getElementById('roleIndicator').textContent = i18n[lang].scenarioPills[scenario];
       });
     });
 
@@ -1495,11 +1414,13 @@
     };
 
     let lang = 'zh';
+    let scenario = 'super_admin_data';
 
     function applyLang(l) {
       const t = i18n[l];
       document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
       document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
+      document.getElementById('roleIndicator').textContent = t.scenarioPills[scenario];
       document.querySelectorAll('.scenario-pill').forEach(pill => {
         const key = pill.dataset.scenario;
         if (t.scenarioPills[key]) pill.textContent = t.scenarioPills[key];
@@ -1520,3 +1441,4 @@
   </script>
 </body>
 </html>
+
