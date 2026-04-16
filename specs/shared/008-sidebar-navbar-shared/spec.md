@@ -74,7 +74,7 @@ sequenceDiagram
   - `Dashboard`
   - `Create Task / 建立任務`
   - `Annotation / 標記作業`
-  - `Profile / 個人資料`
+  - `Profile / 個人設定`
 - 區塊 C：`nav-actions`（Desktop）
   - `user-chip`：頭像、姓名、角色
   - `logout-btn`
@@ -163,7 +163,7 @@ flowchart LR
     profile[/profile/]
     login[/login/]
 
-    dashboard -->|個人資料 nav| profile
+    dashboard -->|個人設定 nav| profile
     profile -->|Dashboard nav| dashboard
     dashboard -->|logout| login
     profile -->|logout| login
@@ -171,7 +171,7 @@ flowchart LR
 
 | From | Trigger | To |
 |------|---------|-----|
-| `/dashboard` | 點擊「個人資料」 | `/profile` |
+| `/dashboard` | 點擊「個人設定」 | `/profile` |
 | `/profile` | 點擊「儀表板 / Dashboard」 | `/dashboard` |
 | `/dashboard` | 點擊登出 | `/login` |
 | `/profile` | 點擊登出 | `/login` |

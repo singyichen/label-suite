@@ -283,6 +283,23 @@
       border-radius: var(--radius-md);
     }
 
+    .user-chip-profile {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+      border-radius: var(--radius-sm);
+      transition: opacity 150ms;
+    }
+
+    .user-chip-profile:hover {
+      opacity: 0.75;
+    }
+
     .avatar {
       width: 40px;
       height: 40px;
@@ -928,7 +945,7 @@
         </svg>
         <span id="navAnnotation">標記作業</span>
       </a>
-      <a class="nav-link" href="#">
+      <a class="nav-link" href="../account/profile.html">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
@@ -939,11 +956,13 @@
 
     <div class="nav-actions">
       <div class="user-chip">
-        <div class="avatar" id="userAvatar" aria-hidden="true">U</div>
-        <div class="user-info">
-          <span class="user-name" id="userName">Mandy Chen</span>
-          <span class="user-role" id="roleIndicator" data-testid="role-indicator">一般使用者</span>
-        </div>
+        <a class="user-chip-profile" href="../account/profile.html" aria-label="前往個人設定">
+          <div class="avatar" id="userAvatar" aria-hidden="true">U</div>
+          <div class="user-info">
+            <span class="user-name" id="userName">Mandy Chen</span>
+            <span class="user-role" id="roleIndicator" data-testid="role-indicator">一般使用者</span>
+          </div>
+        </a>
         <button id="logoutBtn" class="logout-btn" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -1437,7 +1456,7 @@
         navDashboard:         '儀表板',
         navCreateTask:        '建立任務',
         navAnnotation:        '標記作業',
-        navProfile:           '個人資料',
+        navProfile:           '個人設定',
         scenarioLabel:        '場景模式',
         scenarioHint:         '切換不同的角色視圖',
         scenarioPills: {
