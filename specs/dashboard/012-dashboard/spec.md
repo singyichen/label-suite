@@ -8,7 +8,7 @@
 
 ## 規格常數
 
-- `MOBILE_BP = 768px`
+- `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
 ## Process Flow

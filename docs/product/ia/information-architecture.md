@@ -44,14 +44,92 @@
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
 | `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | 僅顯示自己有成員資格的任務 |
 | `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
-| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | 任一任務角色 | 操作按鈕依任務角色顯示 |
+| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含任務成員管理（僅該任務 `project_leader` 可異動）；`annotator` 不得進入，只能從 dashboard 進入 annotation-workspace |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
 | `dataset-stats` | 統計總覽頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
 | `dataset-quality` | 品質監控頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
-| `annotator-list` | 平台成員列表頁 | 標記員管理模組 | ✅ | ✅ | — | 任務 PL 瀏覽以邀請成員 |
-| `work-log` | 工時紀錄頁 | 標記員管理模組 | ✅ | ✅ | — | 一般成員僅自己；`project_leader`（任務）可查看任務成員 |
 | `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理 |
 | `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ✅ | — | |
+
+---
+
+## 2.1 Sidebar Navbar（跨模組共用）
+
+> 本節定義「登入後」全站共用的側欄導覽 IA。未登入頁（`login` / `register` / `forgot-password` / `reset-password`）不使用 Sidebar，僅保留品牌列與語言切換。
+
+### A. 導覽層級模型
+
+| 層級 | 說明 | 例子 |
+|------|------|------|
+| L0 | 全域主導覽（Sidebar Navbar） | 儀表板、任務管理、標記作業、資料集分析、系統管理、個人設定 |
+| L1 | 模組入口頁（Landing） | `task-list`、`annotation-workspace`、`dataset-stats`、`user-management` |
+| L2 | 模組內次層頁（Contextual Navigation） | `task-new` / `task-detail`、`dataset-quality`、`role-settings` |
+
+### B. L0 主導覽群組（Sidebar）
+
+| 群組 | 導覽項 | 目標頁 | 所屬模組 |
+|------|--------|--------|----------|
+| Core | 儀表板 | `dashboard` | dashboard |
+| Work | 任務管理 | `task-list` | task-management |
+| Work | 標記作業 | `annotation-workspace` | annotation |
+| Work | 資料集分析 | `dataset-stats` | dataset |
+| Admin | 系統管理 | `user-management` | admin |
+| Account | 個人設定 | `profile` | account |
+
+> `annotation-workspace`、`dataset-stats`、`dataset-quality`、`task-detail` 皆屬「任務上下文頁」，進入時若缺少任務上下文（task_id / membership）需導回對應 Landing（通常為 `task-list` 或 `dashboard`）。
+
+### C. 角色可見性矩陣（L0）
+
+| 導覽項 | user（系統） | super_admin | 任務角色 gating 規則 |
+|--------|:-------------:|:-----------:|----------------------|
+| 儀表板（`dashboard`） | ✅ | ✅ | 無 |
+| 任務管理（`task-list`） | ✅ | ✅ | 無 |
+| 標記作業（`annotation-workspace`） | ✅ | ✅ | 需為當前任務 `annotator` 或 `reviewer`，否則導回 `dashboard` |
+| 資料集分析（`dataset-stats`） | ✅ | ✅ | 需為當前任務 `project_leader` 或 `reviewer` |
+| 系統管理（`user-management`） | ❌ | ✅ | 僅 `super_admin` 可見 |
+| 個人設定（`profile`） | ✅ | ✅ | 無 |
+
+### D. Active 狀態規則（L0 與 L2）
+
+| 目前頁面 | L0 Active 項 | L2 / 頁內次導覽規則 |
+|----------|-------------|----------------------|
+| `dashboard` | 儀表板 | 依角色顯示對應區塊（User / PL / Annotator / Reviewer / Super Admin） |
+| `profile` | 個人設定 | 個人資料 / 密碼設定 / 角色資訊（頁內錨點） |
+| `task-list` | 任務管理 | 任務列表篩選（狀態 / 搜尋） |
+| `task-new` | 任務管理 | Step 1 / Step 2 / Step 3 精靈導覽 |
+| `task-detail` | 任務管理 | 任務資訊 / 任務成員管理 / 發布控制 / 匯出 / 任務內工時檢視 |
+| `annotation-workspace` | 標記作業 | Annotator / Reviewer 模式切換（依任務角色） |
+| `dataset-stats` | 資料集分析 | 指標分頁（共用指標 + task_type 特定指標） |
+| `dataset-quality` | 資料集分析 | IAA / 異常偵測 / 速度統計 |
+| `user-management` | 系統管理 | 使用者列表 / 帳號管理 |
+| `role-settings` | 系統管理 | 角色權限矩陣設定 |
+
+### E. Desktop / Mobile 導覽 IA
+
+| 規格 | Desktop（`> MOBILE_BP`） | Mobile（`<= MOBILE_BP`） |
+|------|---------------------------|---------------------------|
+| 導覽型態 | 左側固定 Sidebar | 上方品牌列 + 下方橫向主導覽 |
+| 可見資訊 | Logo、語言切換、L0 項目、使用者資訊、登出 | Logo、語言切換、使用者名稱、登出、L0 精簡主導覽 |
+| Active 呈現 | 左側 item 高亮 + `aria-current` | 底部 item 高亮 + `aria-current` |
+| 內容區避讓 | 內容區向右避讓 Sidebar 寬度 | 內容區需避讓頂部與底部導覽高度 |
+
+### F. 模組導覽責任分工（資訊架構層）
+
+| 模組 | L0 責任 | L2 / 內部導覽責任 |
+|------|---------|--------------------|
+| account | 提供 `profile` 入口與一致 user chip | profile 頁內分段（個人資料 / 密碼 / 角色） |
+| dashboard | 提供全站入口與角色落地 | 角色視圖切換（由資料驅動，不新增 L0 項） |
+| task-management | 任務主流程入口（`task-list`） | 新增任務精靈、任務詳情、任務成員管理、任務內工時檢視 |
+| annotation | 標記/審查入口（需任務上下文） | Annotator/Reviewer 模式切換與提交路徑 |
+| dataset | 分析入口（需任務上下文） | `stats` ↔ `quality` 雙頁切換 |
+| admin | 平台管理入口（僅 super_admin） | 使用者管理 ↔ 角色權限設定 |
+
+### G. 一致性原則（Navbar IA Contract）
+
+- 同一語系下，`dashboard` 與 `profile` 的 Sidebar Navbar 結構、順序、命名與互動位置必須一致。
+- 新增模組時僅能擴充 L0 導覽項，不得覆寫既有項目的語意。
+- 任務上下文頁不得直接成為跨任務全域入口；L0 入口永遠指向該模組 Landing。
+- 權限不足時採「可見但導回＋提示」或「直接隱藏」策略，需在 spec 明確定義，不可混用。
 
 ---
 
@@ -86,11 +164,6 @@ flowchart TD
     QUALITY["dataset-quality\n品質監控頁\n（IAA / 異常偵測）"]
   end
 
-  subgraph 標記員管理模組["標記員管理模組（所有平台成員）"]
-    ALIST["annotator-list\n平台成員列表頁"]
-    WLOG["work-log\n工時紀錄頁"]
-  end
-
   subgraph 系統管理模組["系統管理模組（Super Admin）"]
     USERS["user-management\n使用者管理頁"]
     ROLES["role-settings\n角色權限設定頁"]
@@ -106,9 +179,6 @@ flowchart TD
   DASH --> TLIST
   DASH --> ANNOT
   DASH --> STATS
-  
-  DASH --> ALIST
-  DASH -->|Annotator 個人| WLOG
   DASH -->|IAA 待確認| QUALITY
   DASH --> USERS
 
@@ -119,8 +189,6 @@ flowchart TD
   TDETAIL -->|指派 Official Run| ANNOT
   ANNOT -->|Dry Run 全員完成\n→ Dashboard badge 通知| DASH
   ANNOT -->|Official Run 完成標記| TDETAIL
-
-  ALIST --> WLOG
 
   USERS --> ROLES
 
@@ -256,15 +324,44 @@ flowchart TD
   - **Dry Run 完成通知：** 當所有標記員完成 Dry Run 後，系統自動切換狀態至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
 - **功能（任務角色：project_leader）：**
   - 查看任務設定與任務類型
-  - 邀請平台成員加入任務並指派任務角色（`reviewer` 或 `annotator`）— 從 `annotator-list` 選取
+  - 任務成員管理（內嵌於 `task-detail`）：
+    - 從現有平台 `user` 名單中加入成員到目前任務
+    - 指派 / 調整任務角色（`reviewer` 或 `annotator`）
+    - 移除任務成員或停用其在該任務中的參與狀態
   - 發布試標（Dry Run）：選取共用樣本集（建議 20 句），發布給所有任務標記員
   - 發布正式標記（Official Run）：在 IAA 達標（≥ 0.8）後啟動，分派不重疊資料給各標記員
   - 查看標記進度（各標記員完成數 / 速度）
+  - 查看任務內工時紀錄（僅該任務成員範圍）
   - 匯出標記結果（JSON / JSON-MIN）
 - **功能（任務角色：reviewer）：** 唯讀視角；指派、發布、匯出等操作按鈕隱藏
 - **功能（任務角色：annotator）：** 不可進入任務詳情，僅能從 dashboard 進入 annotation-workspace
 - **資料隔離原則：** Dry Run 資料與 Official Run 資料必須隔離，不得混入正式標記集
 - **離開方式：** 返回 → `task-list`；匯出為頁面內操作（Toast 提示下載），不觸發頁面跳轉
+
+#### `task-member-management` 任務成員管理（內嵌於 `task-detail`）
+- **定位：** `task-detail` 的內嵌管理區塊，不作為獨立 Sidebar 項目
+- **進入方式：** `task-list` → `task-detail` → 任務成員管理（任務 `project_leader`）
+- **功能：**
+  - 檢視目前任務成員清單（含角色與狀態）
+  - 從平台一般使用者名單加入成員到目前任務
+  - 指派或調整任務角色（`annotator` / `reviewer`）
+  - 移除成員或停用其在「目前任務」的參與
+- **限制：**
+  - `project_leader` 僅能管理自己所屬任務的成員，不得跨任務異動
+  - 成員角色為任務層級，不影響系統角色（`user` / `super_admin`）
+
+#### `task-work-log` 任務工時紀錄（內嵌於 `task-detail`）
+- **定位：** `task-detail` 的內嵌檢視區塊，不作為獨立 Sidebar 項目
+- **進入方式：** `task-list` → `task-detail` → 工時紀錄分頁
+- **功能：**
+  - 查看該任務成員的工時與標記活動紀錄（日期、時長、完成筆數、平均速度）
+  - 依成員、日期區間、任務階段（Dry Run / Official Run）篩選
+  - 顯示任務整體與成員個別統計，用於排班與進度判斷
+- **權限：**
+  - `project_leader`：可查看該任務所有成員工時
+  - `reviewer` / `annotator`：僅可查看自己在該任務的工時
+  - 非該任務成員不得查看
+- **離開方式：** 返回 `task-detail` 其他分頁或返回 `task-list`
 
 ---
 
@@ -315,32 +412,9 @@ flowchart TD
 
 ---
 
-### 標記員管理模組
-
-#### `annotator-list` 平台成員列表頁
-- **進入方式：** Navbar → 標記員管理
-- **功能：**
-  - 查看所有平台成員（系統角色為 `user` 或 `super_admin`）
-  - 任務 `project_leader` 可從此列表選取成員，邀請加入自己的任務並指派任務角色（`annotator` / `reviewer`）
-  - 顯示成員目前參與的任務數、最近活動時間、是否已加入目前任務
-  - 任務 `project_leader` 可停用 / 啟用成員在其任務中的參與狀態（任務層級）；平台帳號停用限 `super_admin`（於 `user-management` 操作）
-- **空狀態（尚無任何平台成員）：** 說明文字，提示使用者至 `/register` 或 Google SSO 自行加入
-- **離開方式：** 點選成員 → `work-log`
-
-#### `work-log` 工時紀錄頁
-- **進入方式（Project Leader）：** `annotator-list` → 點選標記員 → 查看該標記員紀錄
-- **進入方式（Annotator）：** Navbar → 工時紀錄 → 僅顯示自己的紀錄
-- **功能：** 出缺勤紀錄、任務標記時間（系統自動追蹤）、任務標記數量
-- **資料範圍：** 一般平台成員只能查看自己的紀錄；任務 `project_leader` 可查看其所屬任務成員的紀錄；`super_admin` 可查看全平台紀錄
-- **用途說明：** 作為工時結算的依據記錄；實際計薪由系統外部處理，系統不提供計薪功能
-- **空狀態（尚無工時紀錄）：** 說明文字「尚無工時紀錄」，無需額外按鈕
-- **離開方式：** 返回 `annotator-list`（Project Leader / Super Admin）；返回 `dashboard`（一般平台成員）
-
----
-
 ### 系統管理模組
 
-> 本模組僅 `super_admin` 可存取。`project_leader` 的人員管理（標記員帳號）在「標記員管理模組」中進行。
+> 本模組僅 `super_admin` 可存取。`project_leader` 的任務成員異動在 `task-detail` 的「任務成員管理」內進行。
 
 #### `user-management` 使用者管理頁
 - **進入方式：** Navbar → 系統管理 → 使用者管理
@@ -367,17 +441,18 @@ sequenceDiagram
   participant PL as Project Leader
   participant TN as task-new
   participant TD as task-detail
-  participant AL as annotator-list
   participant AW as annotation-workspace
   participant DQ as dataset-quality
 
+  PL->>LOGIN: 登入（Google SSO 或 Email）
+  LOGIN-->>DASHBOARD: 導向儀表板頁
+  PL->>TN: 上傳資料集 + 設定任務類型
+  TN-->>TD: 建立成功，跳轉詳情頁（PL 自動取得 project_leader 角色）
+  PL->>TD: 在任務成員管理中選取平台使用者並加入任務，指派任務角色
   AN->>LOGIN: 自行以 Google SSO 登入（首次，自動取得 user 角色）
   LOGIN-->>DASHBOARD: 導向儀表板頁
-  PL->>AL: 查看平台成員列表，選取成員邀請加入任務
-  AL-->>AN: 加入任務，取得任務角色
-  PL->>TN: 上傳資料集 + 設定任務類型
-  TN-->>TD: 建立成功，跳轉詳情頁
-  PL->>TD: 指派標記員 + 發布 Dry Run（共同樣本 ~20 句）
+  TD-->>AN: 取得任務角色（annotator / reviewer）
+  PL->>TD: 發布 Dry Run（共同樣本 ~20 句）
   Note over AW: 所有標記員標記相同樣本
   AW-->>TD: 任務狀態切換 → 等待 IAA 確認
   TD-->>PL: Dashboard 待處理事項 badge：「Dry Run 已全員完成」
@@ -441,7 +516,7 @@ sequenceDiagram
   SA->>UM: 新增平台成員帳號（user）
   SA->>UM: 指派系統角色（user / super_admin）
   SA->>RS: 調整角色功能存取範圍
-  Note over SA: 標記員帳號由 Project Leader 自行在標記員管理模組新增
+  Note over SA: 任務成員（annotator/reviewer）由 Project Leader 在 task-detail 內管理
 ```
 
 ---
@@ -461,71 +536,74 @@ sequenceDiagram
 
 ---
 
-## 7. Spec 拆分計畫
+## 7. Spec 清單
 
 ### 拆分原則
-
-IA 共 14 個頁面，但不是每個頁面對應一個 spec。拆分以「功能邊界」為單位：
 
 | 原則 | 說明 |
 |------|------|
 | **獨立可測試** | 該 spec 完成後能獨立驗收，不依賴其他 spec |
 | **同一操作流程** | 多個頁面屬於同一個連續操作（如精靈步驟），合為一個 spec |
-| **角色視角差異大** | 同一頁面但不同角色有截然不同的功能，拆成獨立 spec |
+| **多角色整合** | 同一頁面不同角色視圖若共用大量邏輯，合為一個 spec，以角色分 User Story |
+
+> **注意：** 此清單為實際建立的 spec 檔案清單，以 `specs/STATUS.md` 為真值。  
+> 各 spec 的詳細開發狀態（branch、進行中、已完成）請查 `specs/STATUS.md`。
+
+**開發批次：**
+
+- **P1 — 基礎建設**（001–010 + 012 + Shared）：帳號系統、角色管理、共用導覽、儀表板，所有功能的前提
+- **P2 — 核心功能**（013–017）：任務建立到標記完整流程、資料集分析
 
 ### Spec 清單
 
-排序依複雜度由簡至繁，同時考量功能依賴關係。
-Config Builder、標記作業、統計總覽、IAA 均依任務類型拆分，每種類型可獨立實作與測試。
+#### shared
 
-**開發批次：**
-- **P1 — 基礎建設**（001–010）：帳號系統、角色管理、成員管理、任務入口，所有功能的前提
-- **P2 — 分類任務主線**（011, 014–018, 020, 026, 033, 038, 042）：完整跑通一次分類任務從建立到統計分析的端對端流程
-- **P3 — 補完**（其餘）：其他任務類型、支援功能，依序接在 P2 之後
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 008 | Sidebar Navbar 共用規格 | 所有登入後頁面（shared layout） | shared | ★★☆☆☆ | P1 | 🔄 進行中 |
 
-| # | Spec 名稱 | 頁面 | 模組 | 複雜度 | 批次 | 狀態 |
-|---|-----------|------|------|--------|------|------|
-| 001 | 登入 — Email/Password + 頁面 UI | `login` | account | ★☆☆☆☆ | P1 | ⬜ 待重做 |
-| 002 | 登入 — Google SSO 整合 | `login` | account | ★★☆☆☆ | P1 | ⬜ 待重做 |
-| 003 | 自行註冊（Email/Password）| `register` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
-| 004 | 忘記密碼 / 重設密碼（Resend）| `forgot-password` · `reset-password` | account | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 005 | 個人設定（資料編輯 + 修改密碼）| `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待重做 |
+#### account
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 001 | 登入 — Email/Password + 頁面 UI | `login` | account | ★☆☆☆☆ | P1 | 🔄 進行中 |
+| 002 | 登入 — Google SSO 整合 | `login` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
+| 003 | 自行註冊（Email/Password） | `register` | account | ★☆☆☆☆ | P1 | 🔄 進行中 |
+| 004 | 忘記密碼 / 重設密碼（Resend） | `forgot-password` · `reset-password` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
+| 005 | 個人設定（資料編輯 + 修改密碼） | `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
+
+#### dashboard
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 012 | 儀表板（全角色：User / PL / Annotator / Reviewer / Super Admin） | `dashboard` | dashboard | ★★★☆☆ | P1 | 🔄 進行中 |
+
+#### task-management
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 010 | 任務列表（搜尋、篩選、空狀態） | `task-list` | task-management | ★★☆☆☆ | P1 | ⬜ 待做 |
+| 013 | 新增任務（Step 1–3 + Config Builder 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
+| 014 | 任務詳情（成員管理 / 可加入成員名單 / Dry Run / Official Run / 工時紀錄 / 匯出） | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
+
+#### annotation
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 015 | 標記作業（Annotator / Reviewer 模式，全任務類型） | `annotation-workspace` | annotation | ★★★★☆ | P2 | ⬜ 待做 |
+
+#### dataset
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 016 | 統計總覽（共用指標 + 任務類型特定） | `dataset-stats` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
+| 017 | 品質監控（IAA / 異常偵測 / 速度統計，全任務類型） | `dataset-quality` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
+
+#### admin
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
 | 006 | 使用者列表與管理 | `user-management` | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
 | 007 | 角色權限設定 | `role-settings` | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 008 | 平台成員列表（搜尋、啟用/停用、待指派）| `annotator-list` | annotator-management | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 009 | 工時紀錄 | `work-log` | annotator-management | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 010 | 任務列表（搜尋、篩選、空狀態）| `task-list` | task-management | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 011 | 儀表板 — Annotator（任務角色） | `dashboard` | dashboard | ★★☆☆☆ | P2 | ⬜ 待做 |
-| 012 | 儀表板 — Super Admin（系統角色）| `dashboard` | dashboard | ★★★☆☆ | P3 | ⬜ 待做 |
-| 013 | 儀表板 — Reviewer（任務角色）| `dashboard` | dashboard | ★★★☆☆ | P3 | ⬜ 待做 |
-| 014 | 儀表板 — Project Leader（任務角色）| `dashboard` | dashboard | ★★★☆☆ | P2 | ⬜ 待做 |
-| 042 | 儀表板 — User（系統角色，尚無任務成員資格）| `dashboard` | dashboard | ★★☆☆☆ | P2 | ⬜ 待做 |
-| 015 | 任務詳情 — 資訊顯示與狀態 | `task-detail` | task-management | ★★★☆☆ | P2 | ⬜ 待做 |
-| 016 | 任務詳情 — 成員邀請與 Dry Run 發布 | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
-| 017 | 任務詳情 — Official Run 發布與匯出 | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
-| 018 | 任務建立 Step 1 — 基本資料與任務類型選擇 | `task-new` | task-management | ★★☆☆☆ | P2 | ⬜ 待做 |
-| 019 | 任務建立 Step 3 — 標記說明與強制顯示設定 | `task-new` | task-management | ★★☆☆☆ | P3 | ⬜ 待做 |
-| 020 | Config Builder — 分類任務（Classification）| `task-new` | task-management | ★★★☆☆ | P2 | ⬜ 待做 |
-| 021 | Config Builder — 評分/回歸任務（Scoring）| `task-new` | task-management | ★★★☆☆ | P3 | ⬜ 待做 |
-| 022 | Config Builder — 句對任務（Sentence Pair）| `task-new` | task-management | ★★★☆☆ | P3 | ⬜ 待做 |
-| 023 | Config Builder — 序列標記（NER）| `task-new` | task-management | ★★★★☆ | P3 | ⬜ 待做 |
-| 024 | Config Builder — 關係抽取（Relation Extraction）| `task-new` | task-management | ★★★★☆ | P3 | ⬜ 待做 |
-| 025 | Config Builder — Code 模式與範本快速套用 | `task-new` | task-management | ★★★☆☆ | P3 | ⬜ 待做 |
-| 026 | 標記作業 — 分類任務 | `annotation-workspace` | annotation | ★★★☆☆ | P2 | ⬜ 待做 |
-| 027 | 標記作業 — 評分/回歸任務 | `annotation-workspace` | annotation | ★★★☆☆ | P3 | ⬜ 待做 |
-| 028 | 標記作業 — 句對任務 | `annotation-workspace` | annotation | ★★★☆☆ | P3 | ⬜ 待做 |
-| 029 | 標記作業 — 序列標記（NER）| `annotation-workspace` | annotation | ★★★★☆ | P3 | ⬜ 待做 |
-| 030 | 標記作業 — 關係抽取 | `annotation-workspace` | annotation | ★★★★★ | P3 | ⬜ 待做 |
-| 031 | 標記審查（任務角色：reviewer）| `annotation-workspace` | annotation | ★★★★☆ | P3 | ⬜ 待做 |
-| 032 | 統計總覽 — 共用基礎指標（Sentence / Token / 完成率）| `dataset-stats` | dataset | ★★★☆☆ | P3 | ⬜ 待做 |
-| 033 | 統計總覽 — 分類任務（含句對分類模式）| `dataset-stats` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
-| 034 | 統計總覽 — 評分/回歸任務（含句對評分模式）| `dataset-stats` | dataset | ★★★★☆ | P3 | ⬜ 待做 |
-| 035 | 統計總覽 — 序列標記（NER）| `dataset-stats` | dataset | ★★★★☆ | P3 | ⬜ 待做 |
-| 036 | 統計總覽 — 關係抽取 | `dataset-stats` | dataset | ★★★★☆ | P3 | ⬜ 待做 |
-| 037 | 品質監控 — 異常偵測與標記員速度統計 | `dataset-quality` | dataset | ★★★☆☆ | P3 | ⬜ 待做 |
-| 038 | IAA — 分類任務（含句對分類模式）| `dataset-quality` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
-| 039 | IAA — 評分/回歸任務（含句對評分模式）| `dataset-quality` | dataset | ★★★★☆ | P3 | ⬜ 待做 |
-| 040 | IAA — 序列標記（NER）| `dataset-quality` | dataset | ★★★★★ | P3 | ⬜ 待做 |
-| 041 | IAA — 關係抽取 | `dataset-quality` | dataset | ★★★★★ | P3 | ⬜ 待做 |
 
-> 狀態標示：⬜ 待做 · 🔄 進行中 · ✅ 完成 　批次：P1 基礎建設 · P2 分類任務主線 · P3 補完
+> 狀態標示：⬜ 待做 · 🔄 進行中 · ✅ 完成　　批次：P1 基礎建設 · P2 核心功能
