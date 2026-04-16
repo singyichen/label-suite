@@ -1,96 +1,160 @@
-# 功能規格：使用者列表與管理
+# 功能規格：User Management — 使用者列表與帳號管理
 
 **功能分支**：`006-user-management`
-**建立日期**：2026-04-05
-**狀態**：Clarified
-**需求來源**：IA v7 Spec 清單 #006 — 使用者列表與管理
+**建立日期**：2026-04-16
+**版本**：1.0.0
+**狀態**：Draft
+**需求來源**：IA v7 Spec 清單 #006 — 使用者列表與管理（`user-management`）
 
-## 流程說明
+## 規格常數
+
+- `SYSTEM_ROLES = user | super_admin`
+- `PAGE_SIZE_DEFAULT = 20`
+- `MOBILE_BP = 767px`
+- `RWD_VIEWPORTS = 375px / 768px / 1440px`
+
+## Process Flow
 
 ```mermaid
 sequenceDiagram
     actor SA as Super Admin
-    participant UI as /user-management
-    participant API as Backend API
+    participant UI as user-management
+    participant API as Admin API
     participant DB as Database
 
-    SA->>UI: 選取使用者
-    SA->>UI: 點擊「指派角色」下拉
-    SA->>UI: 選取目標角色（annotator 或 super_admin）
-    UI->>API: PATCH /users/{id}/role
-    API->>DB: UPDATE users SET role = ? WHERE id = ?
-    DB-->>API: 更新成功
-    API-->>UI: 200 OK
-    Note over SA,UI: 若使用者目前在線，其 JWT 不立即失效<br/>需重新登入後生效
-    UI-->>SA: 顯示成功提示
+    SA->>UI: 進入 /user-management
+    UI->>API: 驗證 system role = super_admin
+    alt 具權限
+        API-->>UI: 回傳使用者列表
+        SA->>UI: 搜尋/篩選使用者
+        UI->>API: 送出查詢條件
+        API->>DB: 查詢使用者
+        DB-->>API: 結果
+        API-->>UI: 列表資料
+        SA->>UI: 新增/編輯/停用帳號，或指派 system role
+        UI->>API: 建立/更新請求
+        API->>DB: 寫入帳號與角色
+        DB-->>API: 成功
+        API-->>UI: 回傳成功與最新資料
+    else 無權限
+        API-->>UI: 403 Forbidden
+        UI-->>SA: 導回 /dashboard 並顯示提示
+    end
+
+    SA->>UI: 點擊「角色設定」
+    UI-->>SA: 導向 /role-settings
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
-|------|------|------|----------|
-| 1 | Super Admin | 在 `/user-management` 選取使用者 | 顯示該使用者的角色操作選項 |
-| 2 | Super Admin | 點擊「指派角色」下拉 | 展開角色選單（`user` / `super_admin`）|
-| 3 | Super Admin | 選取目標角色 | 送出 PATCH 請求 |
-| 4 | System | 更新 `users.role` 欄位 | 寫入資料庫 |
-| 5 | System | 若使用者目前在線 | 現有 JWT 不立即失效，需重新登入後生效 |
-| 6 | System | — | 顯示成功提示 |
+|------|------|------|---------|
+| 1 | `super_admin` | 進入 `/user-management` | 驗證角色後載入全平台使用者列表 |
+| 2 | `super_admin` | 搜尋/篩選使用者 | 更新列表結果與分頁 |
+| 3 | `super_admin` | 新增或編輯帳號 | 儲存成功後刷新列表並顯示成功訊息 |
+| 4 | `super_admin` | 停用帳號 | 帳號狀態更新為停用 |
+| 5 | `super_admin` | 指派 `system role` | 僅可指派 `user` 或 `super_admin` |
+| 6 | 非 `super_admin` | 直接嘗試開啟 `/user-management` | 拒絕存取並導回 `/dashboard` |
+| 7 | `super_admin` | 點擊「角色設定」 | 導向 `/role-settings` |
 
 ---
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 查看所有使用者並指派系統角色（優先級：P1）
+### User Story 1 — 檢視與搜尋平台使用者（優先級：P1）
 
-Super Admin 在 `/user-management` 查看平台所有使用者帳號，並可將使用者系統角色變更為 `user` 或 `super_admin`。
+Super Admin 可在 `/user-management` 查看全平台使用者，並以關鍵字與角色篩選快速定位目標帳號。
 
-**此優先級原因**：系統角色管理是整個平台的權限管控核心，Super Admin 需要能夠升級一般使用者為 `super_admin` 或降級。
-
-**獨立測試方式**：以 super_admin 登入進入 `/user-management`，對 `user` 角色的使用者升級為 `super_admin`，驗證該使用者取得系統管理權限。
+**此優先級原因**：系統管理模組的基礎入口，其他管理操作皆依賴清單可見性。  
+**獨立測試方式**：以 `super_admin` 登入後開啟頁面，驗證列表、搜尋、篩選、分頁是否獨立可運作。
 
 **驗收情境**：
 
-1. **Given** Super Admin 在 `/user-management`，**When** 頁面載入，**Then** 顯示所有平台使用者列表，包含姓名、Email、系統角色、帳號狀態、建立日期。
-2. **Given** Super Admin 在 `/user-management`，**When** 對 `user` 角色的使用者升級為 `super_admin`，**Then** 系統角色更新，該使用者取得系統管理權限。
-3. **Given** Super Admin 在 `/user-management`，**When** 對 `super_admin` 降級為 `user`，**Then** 系統角色更新，該使用者失去管理員權限。
-4. **Given** Super Admin 在 `/user-management`，**When** 搜尋關鍵字（姓名或 Email），**Then** 列表即時篩選顯示符合結果。
+1. **Given** 已登入且 `system role = super_admin`，**When** 進入 `/user-management`，**Then** 顯示全平台使用者列表（跨專案）。
+2. **Given** 位於 `/user-management`，**When** 輸入關鍵字搜尋，**Then** 列表僅顯示符合條件的使用者。
+3. **Given** 位於 `/user-management`，**When** 套用 system role 篩選，**Then** 列表只顯示指定角色（`user` 或 `super_admin`）。
+4. **Given** 搜尋結果超過單頁數量，**When** 切換分頁，**Then** 顯示對應頁面資料且保留目前篩選條件。
+
+**介面定義（需與 IA 導覽語意一致）**：
+
+- 區塊 A：`使用者列表`
+  - 必要元素：
+    - 搜尋輸入框（姓名或 Email）
+    - 角色篩選器（`user` / `super_admin`）
+    - 狀態篩選器（啟用 / 停用）
+    - 列表表格（姓名、Email、system role、狀態、建立時間、操作）
+    - 分頁控制
+- 區塊 B：`頁面操作`
+  - 必要元素：
+    - `新增使用者` CTA
+    - `角色設定` CTA（導向 `/role-settings`）
+
+**行為規則**：
+
+- 列表資料範圍為全平台帳號，不受任務成員關係限制。
+- 任務角色（`project_leader` / `reviewer` / `annotator`）不得在本頁顯示為可編輯欄位。
+- 語言切換時，欄位標題、按鈕與篩選器文字需即時更新。
 
 ---
 
-### User Story 2 — 停用 / 啟用帳號（優先級：P2）
+### User Story 2 — 新增、編輯與停用帳號（優先級：P1）
 
-Super Admin 可停用特定使用者帳號，停用後該帳號無法登入；可隨時重新啟用。
+Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，並停用不再使用的帳號。
 
-**此優先級原因**：帳號停用是基本的存取控制需求，讓 Super Admin 能在不刪除帳號的情況下暫停存取權。
-
-**獨立測試方式**：停用一個已登入使用者的帳號，驗證該使用者下次請求回傳 401；重新啟用後可正常登入。
+**此優先級原因**：帳號生命週期管理是平台運維核心能力。  
+**獨立測試方式**：分別驗證新增、編輯、停用三個動作可在同頁獨立完成並反映在列表。
 
 **驗收情境**：
 
-1. **Given** Super Admin 在 `/user-management`，**When** 停用一個帳號，**Then** 該帳號狀態變為「已停用」，該使用者嘗試登入時回傳「帳號已停用」錯誤。
-2. **Given** Super Admin 在 `/user-management`，**When** 重新啟用已停用帳號，**Then** 該帳號狀態恢復為「啟用」，使用者可正常登入。
-3. **Given** Super Admin 在 `/user-management`，**When** 嘗試停用自己的帳號，**Then** 系統拒絕操作並顯示「無法停用自己的帳號」。
+1. **Given** `super_admin` 在 `/user-management`，**When** 建立新帳號並儲存，**Then** 新帳號出現在使用者列表中。
+2. **Given** `super_admin` 在 `/user-management`，**When** 編輯既有帳號資料並儲存，**Then** 列表顯示更新後資訊。
+3. **Given** `super_admin` 在 `/user-management`，**When** 停用帳號，**Then** 該帳號狀態顯示為停用且不可再登入。
+
+**介面定義**：
+
+- 新增/編輯表單必要欄位：
+  - `name`
+  - `email`
+  - `system role`（`user` / `super_admin`）
+  - `status`（啟用 / 停用）
+- 操作按鈕：
+  - `儲存`
+  - `取消`
+
+**行為規則**：
+
+- `system role` 僅允許 `user` 或 `super_admin`。
+- 帳號停用後應於列表中保留紀錄並標示停用狀態。
+- 新增與編輯成功後，列表需立即反映最新結果（同頁刷新或局部更新皆可）。
 
 ---
 
-### User Story 3 — Super Admin 直接新增使用者帳號（優先級：P2）
+### User Story 3 — 權限守門與跨頁導覽（優先級：P1）
 
-Super Admin 可在 `/user-management` 直接新增使用者帳號（填寫姓名、Email、初始角色），適用於需要預先建立帳號的情境（例如為尚未自行註冊的研究員建立帳號）。
+只有 Super Admin 可進入使用者管理頁；非授權角色需被阻擋並導回安全入口頁。
 
-**此優先級原因**：使用者可透過 `/register` 自行加入，但 Super Admin 直接新增是備用方案，確保特殊情境下的彈性。
-
-**獨立測試方式**：以 super_admin 身份在 `/user-management` 新增使用者，驗證資料庫建立對應帳號，且該使用者可以 Email / Password 登入。
+**此優先級原因**：管理功能涉及平台級權限，需先確保授權正確性。  
+**獨立測試方式**：以 `user` 與未登入狀態直接造訪 `/user-management`，驗證阻擋與導頁行為。
 
 **驗收情境**：
 
-1. **Given** Super Admin 在 `/user-management`，**When** 點擊「新增使用者」並填寫姓名、Email、初始系統角色（`user` / `super_admin`）後送出，**Then** 系統建立對應帳號（無密碼，使用者首次登入需透過「忘記密碼」設定密碼）。
-2. **Given** Super Admin 在 `/user-management`，**When** 新增帳號使用的 Email 已存在，**Then** 顯示「此 Email 已被使用」，不建立重複帳號。
+1. **Given** `system role = user`，**When** 直接開啟 `/user-management`，**Then** 系統拒絕存取並導回 `/dashboard`。
+2. **Given** 未登入狀態，**When** 開啟 `/user-management`，**Then** 系統導向 `/login`。
+3. **Given** `system role = super_admin`，**When** 點擊 `角色設定`，**Then** 成功導向 `/role-settings`。
+
+**行為規則**：
+
+- `/user-management` 路由需有角色守門，僅允許 `super_admin`。
+- 無權限存取不得回傳可操作的管理資料。
+- `角色設定` 導覽項僅在 `super_admin` 可見且可點擊。
 
 ---
 
 ### 邊界情況
 
-- Super Admin 可以降級自己的角色嗎？→ 不允許；系統必須確保至少有一個 `super_admin` 存在，防止無人可管理的情況。
-- 停用帳號時該使用者正在線上？→ 現有 session 在 JWT 過期前仍有效；JWT 過期後無法更新，等同強制登出。
-- Super Admin 直接新增的帳號無初始密碼？→ 是；使用者首次登入需透過「忘記密碼」流程設定密碼（spec 004）。
+- 搜尋條件無結果時：顯示空狀態與清除篩選入口，不顯示錯誤頁。
+- 新增使用者 Email 已存在時：拒絕儲存並顯示可理解錯誤訊息。
+- 停用目前登入中的帳號時：需二次確認，避免誤操作。
+- 最後一位 `super_admin` 角色被降級時：系統必須阻擋，避免平台失去管理者。
+- 行動版下表格欄位過多時：需提供可讀方案（橫向捲動或卡片化），不得內容重疊。
 
 ---
 
@@ -98,49 +162,79 @@ Super Admin 可在 `/user-management` 直接新增使用者帳號（填寫姓名
 
 ### 功能需求
 
-- **FR-001**：只有 `super_admin` 可存取 `/user-management`；其他角色存取導向 `/dashboard`。
-- **FR-002**：頁面必須列出所有平台使用者，顯示：姓名、Email、系統角色（`user` / `super_admin`）、帳號狀態（啟用 / 停用）、建立日期。
-- **FR-003**：Super Admin 必須能對任意使用者變更系統角色（`user` ↔ `super_admin`，雙向可變更）。
-- **FR-004**：Super Admin 必須能停用或啟用任意使用者帳號，但不得停用自己的帳號。
-- **FR-005**：系統必須確保至少存在一個 `super_admin`；若操作會導致 `super_admin` 數量為 0，系統拒絕並顯示錯誤。
-- **FR-006**：頁面必須支援依姓名或 Email 的即時搜尋篩選。
-- **FR-007**：空狀態（尚無任何使用者）顯示說明文字「尚未有任何使用者帳號」。
-- **FR-008**：Super Admin 必須能直接新增使用者帳號（填寫姓名、Email、初始系統角色 `user` 或 `super_admin`）；新帳號無初始密碼，使用者首次登入需透過忘記密碼流程設定密碼（spec 004）。Email 已存在時回傳錯誤，不建立重複帳號。
-- **FR-009**：資料庫 migration seed 必須在全新部署環境中自動建立一個預設 `super_admin` 帳號（Email 與密碼透過環境變數設定），確保首次部署後即有管理員可登入管理平台（bootstrap 需求）。
+- **FR-001**：系統必須提供 `/user-management` 頁面供平台級使用者管理。
+- **FR-002**：只有 `super_admin` 可以存取 `/user-management`。
+- **FR-003**：系統必須顯示全平台使用者列表，包含姓名、Email、system role、帳號狀態。
+- **FR-004**：系統必須支援依關鍵字搜尋使用者。
+- **FR-005**：系統必須支援依 system role 篩選（`user` / `super_admin`）。
+- **FR-006**：系統必須支援新增使用者帳號。
+- **FR-007**：系統必須支援編輯既有使用者帳號資訊。
+- **FR-008**：系統必須支援停用使用者帳號。
+- **FR-009**：本頁只可管理 system role（`user` / `super_admin`），不得指派任務角色。
+- **FR-010**：系統必須提供 `角色設定` 導覽入口，點擊後導向 `/role-settings`。
+- **FR-011**：無權限角色存取本頁時，系統必須拒絕並導回安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
+- **FR-012**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 時仍可完成查詢與帳號管理操作。
 
 ### User Flow & Navigation
 
 ```mermaid
 flowchart LR
-    dashboard["/dashboard\n（Super Admin 視角）"]
-    navbar["Navbar → 系統管理"]
-    um["/user-management"]
-    rs["/role-settings"]
-
-    dashboard -->|"Navbar → 系統管理"| um
-    navbar    --> um
-    um        -->|"點擊角色設定"| rs
-    rs        -->|"儲存"| um
+    dashboard["/dashboard"] --> um["/user-management"]
+    um -->|點擊角色設定| rs["/role-settings"]
+    um -->|返回儀表板| dashboard
+    userBlocked["system role = user"] -->|開啟 /user-management| dashboard
+    guestBlocked["未登入"] -->|開啟 /user-management| login["/login"]
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
-| Navbar → 系統管理 | 點擊 | `/user-management` |
+| `/dashboard` | 點擊「系統管理」 | `/user-management` |
 | `/user-management` | 點擊「角色設定」 | `/role-settings` |
-| `/role-settings` | 儲存 | `/user-management` |
+| `/user-management` | 點擊返回 | `/dashboard` |
+| 任何頁面 | `user` 直接造訪 `/user-management` | `/dashboard` |
+| 任何頁面 | 未登入造訪 `/user-management` | `/login` |
 
-**Entry points**：Navbar → 系統管理（僅 `super_admin` 可見）。
-**Exit points**：導向 `/role-settings`；其他操作停留在本頁。
+**Entry points**：`/dashboard` 的「系統管理」導覽項。  
+**Exit points**：`/role-settings`、`/dashboard`。
 
 ### 關鍵實體
 
-- **User（使用者）**：可管理欄位：`role`（`user` | `super_admin`）、`is_active`（帳號啟用狀態）。
+- **PlatformUser**：平台使用者。關鍵欄位：`id`、`name`、`email`、`system_role`、`status`、`created_at`。
+- **SystemRoleAssignment**：系統角色指派。允許值僅 `user`、`super_admin`。
+- **UserStatus**：帳號狀態。允許值：`active`、`disabled`。
+
+---
+
+## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
+
+### 上游（本規格依賴的規格）
+
+| 規格編號 | 功能 | 本規格需要的內容 |
+|---------|------|----------------|
+| 001 | Login — Email / Password | 已登入狀態與路由守門基礎 |
+| 008 | Shared Sidebar Navbar | Sidebar `系統管理` 導覽與 active 狀態規範 |
+
+### 下游（依賴本規格的規格）
+
+| 規格編號 | 功能 | 依賴本規格的內容 |
+|---------|------|----------------|
+| 007 | Role & Permission Settings | 由 `user-management` 進入 `role-settings` 的導覽與管理脈絡 |
 
 ---
 
 ## 成功標準 *(必填)*
 
-- **SC-001**：非 `super_admin` 角色存取 `/user-management` 回傳 HTTP 403 或導向 `/dashboard`。
-- **SC-002**：角色變更後，使用者下次登入的 JWT 中 `role` 欄位反映新角色。
-- **SC-003**：停用帳號後，該帳號的所有新登入請求回傳「帳號已停用」錯誤。
-- **SC-004**：系統在任何情況下均保有至少一個 `super_admin`。
+- **SC-001**：`super_admin` 可成功進入 `/user-management` 並看到全平台使用者列表。
+- **SC-002**：使用搜尋與篩選時，列表結果可在同頁正確更新。
+- **SC-003**：新增、編輯、停用帳號後，列表在不離開頁面的情況下反映最新狀態。
+- **SC-004**：`user` 或未登入使用者無法存取管理內容，並被導向正確頁面。
+- **SC-005**：頁面在 `RWD_VIEWPORTS` 下皆可完成核心操作且無版面重疊。
+- **SC-006**：本頁不提供任務角色指派入口，符合 IA 的 system role / task role 邊界。
+
+---
+
+## Changelog
+
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.0.0 | 2026-04-16 | 初版建立：依 IA v7 新增 `user-management` 規格（列表、帳號管理、system role 管理、導覽與權限守門） |

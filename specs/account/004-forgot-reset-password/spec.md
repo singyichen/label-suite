@@ -2,7 +2,7 @@
 
 **功能分支**：`004-forgot-reset-password`
 **建立日期**：2026-04-05
-**版本**：1.1.0
+**版本**：1.1.1
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/forgot-password.html`](../../../design/prototype/pages/account/forgot-password.html) / [`design/prototype/pages/account/reset-password.html`](../../../design/prototype/pages/account/reset-password.html)
 
@@ -118,6 +118,7 @@ forgot/reset 兩頁的文案與可存取屬性需支援即時語言切換。
 1. **Given** forgot 或 reset 頁，**When** 切換語言，**Then** 頁面標題、欄位標籤、按鈕文案即時更新。
 2. **Given** reset 頁為 token 錯誤狀態，**When** 切換語言，**Then** token 錯誤訊息與 CTA 文案同步更新。
 3. **Given** reset 頁有密碼顯示按鈕，**When** 切換語言或切換顯示狀態，**Then** `aria-label` 必須一致。
+4. **Given** 使用者在 forgot/reset 任一頁切換語言，**When** 導向 login 或互相切頁，**Then** 目標頁語系需維持一致。
 
 ---
 
@@ -160,6 +161,7 @@ forgot/reset 頁在手機與桌機均需可讀可操作。
 - **FR-009**：reset 在 `expired` / `used` 狀態時，必須隱藏表單並顯示 token 錯誤面板。
 - **FR-010**：token 錯誤面板中的「重新申請」連結必須導向 `./forgot-password.html`。
 - **FR-011**：forgot/reset 頁面必須支援 `zh` / `en` 即時切換，並同步更新 `document.title` 與 `aria-label`。
+- **FR-011A**：語言狀態必須跨頁持久化；forgot/reset 與 login 間導頁後需沿用同語系。
 - **FR-012**：reset 的密碼顯示切換按鈕必須同步調整欄位 type 與 `aria-label`。
 - **FR-013**：forgot/reset 頁面必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-013A**：在 `<= MOBILE_BP` 時導覽列需改為 56px 並使用 16px 左右內距。
@@ -196,7 +198,7 @@ flowchart LR
 - **ForgotFormState**：forgot 表單狀態。關鍵欄位：`email`、`emailError`、`isSubmitting`、`successVisible`。
 - **ResetFormState**：reset 表單狀態。關鍵欄位：`newPassword`、`confirmPassword`、`errors`、`isSubmitting`。
 - **ResetPrototypeTokenState**：reset token 狀態。允許值：`valid`、`expired`、`used`。
-- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 
 ---
 
@@ -207,6 +209,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password + 頁面 UI | 忘記密碼入口連結與語言切換一致性 |
+| 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
 
@@ -223,6 +226,7 @@ flowchart LR
 - **SC-003**：reset 在 `valid` 狀態可完成送出並顯示成功面板。
 - **SC-004**：reset 在 `expired` / `used` 狀態可正確顯示對應 token 錯誤文案。
 - **SC-005**：`zh` / `en` 切換可在 1 秒內更新主要文案與 `aria-label`。
+- **SC-005A**：切換語言後由 forgot/reset 導向 login 或互相切頁時，語系需維持一致。
 - **SC-006**：在 `RWD_VIEWPORTS` 下無破版、無遮擋、無水平捲軸。
 
 ---
@@ -231,5 +235,6 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.1 | 2026-04-16 | 新增跨頁語言持久化規範：forgot/reset 與 login 導頁後必須維持同語系 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 forgot/reset 原型（loading、success panel、token state 切換） |
 | 1.0.0 | 2026-04-05 | Initial spec |

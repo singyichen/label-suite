@@ -60,7 +60,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await openScenario(page, 'annotator');
     const annotatorView = page.getByTestId('annotator-view');
     await expect(annotatorView).toBeVisible();
-    await expect(annotatorView.getByRole('heading', { name: /我的概況|My Overview/ })).toBeVisible();
+    await expect(annotatorView.getByRole('heading', { name: /標記概況|Annotation Overview/ })).toBeVisible();
     await expect(annotatorView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
     await expect(annotatorView.locator('.metric strong').nth(0)).toHaveText('247');
     await expect(annotatorView.locator('#annotatorCompletedLabel')).toHaveText(/待標記|Pending/);
@@ -79,7 +79,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await openScenario(page, 'reviewer');
     const reviewerView = page.getByTestId('reviewer-view');
     await expect(reviewerView).toBeVisible();
-    await expect(reviewerView.getByRole('heading', { name: /待審概況|Review Overview/ })).toBeVisible();
+    await expect(reviewerView.getByRole('heading', { name: /審核概況|Review Overview/ })).toBeVisible();
     await expect(reviewerView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
     await expect(reviewerView.locator('.metric strong').nth(0)).toHaveText('12');
     await expect(reviewerView.locator('.metric strong').nth(1)).toHaveText('18');

@@ -534,6 +534,7 @@
     </div>
   </main>
 
+  <script src="../shared/sidebar.js"></script>
   <script src="../../assets/analytics.js"></script>
   <script>
     window.LabelSuiteAnalytics.init({
@@ -615,13 +616,15 @@
       },
     };
 
-    let lang = 'zh';
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {
-      const t = i18n[l];
+      lang = l === 'en' ? 'en' : 'zh';
+      window.LabelSuiteSharedSidebar.setStoredLang(lang);
+      const t = i18n[lang];
       document.title = t.pageTitle;
-      document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
 
       document.getElementById('langLabel').textContent            = t.langLabel;
       document.getElementById('cardTitle').textContent            = t.cardTitle;
@@ -821,7 +824,7 @@
       [{ id: 'loginLink', eventName: 'prototype_navigate_login_clicked' }],
       getTrackingContext
     );
-    applyLang('zh');
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
     window.LabelSuiteAnalytics.trackPageView('register', getTrackingContext);
   </script>
 </body>

@@ -1323,6 +1323,116 @@
                           "fontWeight": "normal"
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jzmRD",
+                      "name": "Button / Danger",
+                      "reusable": true,
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        12
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "m3zOE",
+                          "name": "btnDangerIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "log-out",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-error"
+                        },
+                        {
+                          "type": "text",
+                          "id": "IGWx8",
+                          "name": "btnDangerText",
+                          "fill": "$color-error",
+                          "content": "Danger Action",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SH9bU",
+                      "name": "Button / OAuth",
+                      "reusable": true,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "gap": 8,
+                      "padding": [
+                        10,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "mLRw7",
+                          "name": "btnOauthIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "circle",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "12vZQ",
+                          "name": "btnOauthText",
+                          "fill": "$color-ink",
+                          "content": "Continue with Provider",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bA1wO",
+                      "name": "Button / Icon Only",
+                      "reusable": true,
+                      "width": 36,
+                      "height": 36,
+                      "fill": "$color-white",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-border"
+                      },
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "wCk0a",
+                          "name": "btnIconOnlyIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "menu",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-text-muted"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -1902,7 +2012,8 @@
                         {
                           "type": "frame",
                           "id": "8TbTX",
-                          "name": "sb1",
+                          "name": "Button / CTA / Default",
+                          "reusable": true,
                           "fill": "$color-cta",
                           "cornerRadius": "$radius-md",
                           "padding": [
@@ -1944,7 +2055,8 @@
                         {
                           "type": "frame",
                           "id": "1Dmyu",
-                          "name": "sb2",
+                          "name": "Button / CTA / Hover",
+                          "reusable": true,
                           "opacity": 0.9,
                           "fill": "$color-cta",
                           "cornerRadius": "$radius-md",
@@ -1987,7 +2099,8 @@
                         {
                           "type": "frame",
                           "id": "09PNt",
-                          "name": "sb3",
+                          "name": "Button / CTA / Loading",
+                          "reusable": true,
                           "opacity": 0.7,
                           "fill": "$color-cta",
                           "cornerRadius": "$radius-md",
@@ -2043,7 +2156,8 @@
                         {
                           "type": "frame",
                           "id": "dZNTb",
-                          "name": "sb4",
+                          "name": "Button / CTA / Disabled",
+                          "reusable": true,
                           "fill": "$color-border",
                           "cornerRadius": "$radius-md",
                           "padding": [
@@ -2112,7 +2226,8 @@
                         {
                           "type": "frame",
                           "id": "tvnWU",
-                          "name": "input",
+                          "name": "Input / Default / Inline",
+                          "reusable": true,
                           "width": 200,
                           "height": 40,
                           "fill": "$color-white",
@@ -2160,7 +2275,8 @@
                         {
                           "type": "frame",
                           "id": "VIAKt",
-                          "name": "input",
+                          "name": "Input / Focus / Inline",
+                          "reusable": true,
                           "width": 200,
                           "height": 40,
                           "fill": "$color-white",
@@ -2208,7 +2324,8 @@
                         {
                           "type": "frame",
                           "id": "rRF8I",
-                          "name": "input",
+                          "name": "Input / Error / Inline",
+                          "reusable": true,
                           "width": 200,
                           "height": 40,
                           "fill": "$color-white",
@@ -2265,7 +2382,8 @@
                         {
                           "type": "frame",
                           "id": "ShEqV",
-                          "name": "input",
+                          "name": "Input / Readonly",
+                          "reusable": true,
                           "width": 200,
                           "height": 40,
                           "fill": "#F8FAFC",
@@ -2349,7 +2467,8 @@
                         {
                           "type": "frame",
                           "id": "tKlns",
-                          "name": "toast",
+                          "name": "Toast / Success",
+                          "reusable": true,
                           "width": 320,
                           "fill": "$color-success-bg",
                           "cornerRadius": "$radius-md",
@@ -2415,7 +2534,8 @@
                         {
                           "type": "frame",
                           "id": "6ZvHO",
-                          "name": "toast",
+                          "name": "Toast / Error",
+                          "reusable": true,
                           "width": 320,
                           "fill": "$color-error-bg",
                           "cornerRadius": "$radius-md",
@@ -2508,7 +2628,8 @@
                         {
                           "type": "frame",
                           "id": "r2Qph",
-                          "name": "toggle",
+                          "name": "Button / Language Toggle / ZH",
+                          "reusable": true,
                           "fill": "#F1F5F9",
                           "cornerRadius": "$radius-md",
                           "gap": 4,
@@ -2584,7 +2705,8 @@
                         {
                           "type": "frame",
                           "id": "vdk6X",
-                          "name": "toggle",
+                          "name": "Button / Language Toggle / EN",
+                          "reusable": true,
                           "fill": "#F1F5F9",
                           "cornerRadius": "$radius-md",
                           "gap": 4,
@@ -2644,6 +2766,187 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "YVXwH",
+              "name": "sub_state_panel",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "oTJ80",
+                  "name": "subStateTitle",
+                  "fill": "$color-ink",
+                  "content": "State Panel",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "nw5Ka",
+                  "name": "state_panel_row",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jLIYg",
+                      "name": "State Panel / Success",
+                      "reusable": true,
+                      "width": 280,
+                      "fill": "$color-success-bg",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-success-border"
+                      },
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": [
+                        20,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "LKOCK",
+                          "name": "ssIconWrap",
+                          "fill": "$color-white",
+                          "width": 36,
+                          "height": 36
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "zHQk0",
+                          "name": "ssIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "check",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-success"
+                        },
+                        {
+                          "type": "text",
+                          "id": "z7jhS",
+                          "name": "ssText",
+                          "fill": "$color-success",
+                          "content": "Success panel state message",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "D4eH4",
+                      "name": "State Panel / Token Error",
+                      "reusable": true,
+                      "width": 280,
+                      "fill": "$color-error-bg",
+                      "cornerRadius": "$radius-md",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$color-error-border"
+                      },
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": [
+                        20,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "aj0pq",
+                          "name": "seIconWrap",
+                          "fill": "$color-white",
+                          "width": 36,
+                          "height": 36
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "R0QUX",
+                          "name": "seIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "x",
+                          "iconFontFamily": "lucide",
+                          "fill": "$color-error"
+                        },
+                        {
+                          "type": "text",
+                          "id": "q03zJ",
+                          "name": "seText",
+                          "fill": "$color-error",
+                          "content": "Token invalid or expired",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vfCrL",
+              "name": "sub_link",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PK4NA",
+                  "name": "subLinkTitle",
+                  "fill": "$color-ink",
+                  "content": "Link",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "yLb0P",
+                  "name": "link_row",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RLBGC",
+                      "name": "Link / Inline",
+                      "reusable": true,
+                      "fill": "$color-primary",
+                      "content": "Terms and Privacy",
+                      "fontFamily": "Inter",
+                      "fontSize": 14
+                    },
+                    {
+                      "type": "text",
+                      "id": "d2uGL",
+                      "name": "Link / Action",
+                      "reusable": true,
+                      "fill": "$color-primary",
+                      "content": "View all",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
@@ -2676,7 +2979,8 @@
                 {
                   "type": "frame",
                   "id": "UNSEi",
-                  "name": "badge_not_started",
+                  "name": "Badge / Not Started",
+                  "reusable": true,
                   "fill": "$color-info-bg",
                   "cornerRadius": "$radius-sm",
                   "gap": 4,
@@ -2699,7 +3003,8 @@
                 {
                   "type": "frame",
                   "id": "HdgDb",
-                  "name": "badge_in_progress",
+                  "name": "Badge / In Progress",
+                  "reusable": true,
                   "fill": "$color-warning-bg",
                   "cornerRadius": "$radius-sm",
                   "gap": 4,
@@ -2722,7 +3027,8 @@
                 {
                   "type": "frame",
                   "id": "Kal6z",
-                  "name": "badge_submitted",
+                  "name": "Badge / Submitted",
+                  "reusable": true,
                   "fill": "$color-success-bg",
                   "cornerRadius": "$radius-sm",
                   "gap": 4,
@@ -2745,7 +3051,8 @@
                 {
                   "type": "frame",
                   "id": "FXgUa",
-                  "name": "badge_error",
+                  "name": "Badge / Error",
+                  "reusable": true,
                   "fill": "$color-error-bg",
                   "cornerRadius": "$radius-sm",
                   "gap": 4,
@@ -2790,7 +3097,8 @@
             {
               "type": "frame",
               "id": "hlDiK",
-              "name": "alert_error",
+              "name": "Alert Banner / Error",
+              "reusable": true,
               "width": 480,
               "fill": "$color-error-bg",
               "cornerRadius": "$radius-md",
@@ -2855,7 +3163,8 @@
             {
               "type": "frame",
               "id": "BF6c2",
-              "name": "navbar_desktop",
+              "name": "Navbar / Desktop",
+              "reusable": true,
               "width": 1200,
               "height": 64,
               "fill": "$color-white",
@@ -2892,7 +3201,8 @@
                     {
                       "type": "frame",
                       "id": "DyKFH",
-                      "name": "nav_active",
+                      "name": "Link / Nav / Active",
+                      "reusable": true,
                       "fill": "$color-surface",
                       "cornerRadius": "$radius-md",
                       "padding": [
@@ -2914,7 +3224,8 @@
                     {
                       "type": "frame",
                       "id": "It4Lo",
-                      "name": "nav_inactive",
+                      "name": "Link / Nav / Inactive",
+                      "reusable": true,
                       "cornerRadius": "$radius-md",
                       "padding": [
                         6,
@@ -2961,7 +3272,8 @@
                     {
                       "type": "frame",
                       "id": "7mwtI",
-                      "name": "lang_pill",
+                      "name": "Button / Language Toggle",
+                      "reusable": true,
                       "fill": "#F1F5F9",
                       "cornerRadius": 6,
                       "children": [
@@ -3036,7 +3348,8 @@
             {
               "type": "frame",
               "id": "8ADZn",
-              "name": "sidebar_desktop",
+              "name": "Sidebar / Desktop",
+              "reusable": true,
               "width": 224,
               "fill": "$color-white",
               "stroke": {
@@ -3289,7 +3602,8 @@
             {
               "type": "frame",
               "id": "L0D1m",
-              "name": "table_demo",
+              "name": "Table / Default",
+              "reusable": true,
               "clip": true,
               "width": 800,
               "fill": "$color-white",
@@ -3646,7 +3960,8 @@
                     {
                       "type": "frame",
                       "id": "UeqJT",
-                      "name": "av_hover_wrap",
+                      "name": "Avatar / Uploadable",
+                      "reusable": true,
                       "width": 64,
                       "height": 64,
                       "layout": "none",
@@ -3725,6 +4040,32 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "2fMii",
+              "name": "avatar_components",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "utFGH",
+                  "name": "Avatar / Small",
+                  "reusable": true,
+                  "fill": "$color-primary",
+                  "width": 32,
+                  "height": 32
+                },
+                {
+                  "type": "ellipse",
+                  "id": "AjeRa",
+                  "name": "Avatar / Large",
+                  "reusable": true,
+                  "fill": "$color-primary",
+                  "width": 64,
+                  "height": 64
+                }
+              ]
             }
           ]
         },
@@ -3749,7 +4090,8 @@
             {
               "type": "frame",
               "id": "ObHI8",
-              "name": "tt_wrap",
+              "name": "Tooltip / Info",
+              "reusable": true,
               "width": 200,
               "height": 60,
               "layout": "none",
@@ -3814,7 +4156,8 @@
             {
               "type": "frame",
               "id": "8pdri",
-              "name": "tabbar_mobile",
+              "name": "Mobile Tab Bar / Default",
+              "reusable": true,
               "width": 390,
               "height": 56,
               "fill": "$color-white",
@@ -4047,7 +4390,8 @@
                 {
                   "type": "rectangle",
                   "id": "4frBC",
-                  "name": "divider_horizontal",
+                  "name": "Divider / Horizontal",
+                  "reusable": true,
                   "fill": "$color-border",
                   "width": "fill_container",
                   "height": 1
@@ -4055,7 +4399,8 @@
                 {
                   "type": "frame",
                   "id": "1YjZc",
-                  "name": "text_div",
+                  "name": "Divider / Text / Or",
+                  "reusable": true,
                   "width": "fill_container",
                   "gap": 12,
                   "alignItems": "center",
@@ -4110,7 +4455,8 @@
             {
               "type": "frame",
               "id": "je8MU",
-              "name": "list_demo",
+              "name": "List / Activity",
+              "reusable": true,
               "width": 600,
               "fill": "$color-white",
               "cornerRadius": "$radius-lg",

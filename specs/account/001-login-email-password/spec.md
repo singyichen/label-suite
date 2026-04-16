@@ -2,7 +2,7 @@
 
 **功能分支**：`001-login-email-password`
 **建立日期**：2026-04-05
-**版本**：1.2.0
+**版本**：1.2.1
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
 
@@ -115,6 +115,7 @@ sequenceDiagram
 1. **Given** 預設語言為 `zh`，**When** 點擊語言切換，**Then** 切換為 `en` 並更新頁面標題、欄位標籤、按鈕文案。
 2. **Given** 語言切換後，**When** 檢查互動元件，**Then** `lang-toggle`、Google 按鈕、導覽品牌連結與密碼切換按鈕 `aria-label` 皆同步切換。
 3. **Given** 表單曾出現錯誤，**When** 切換語言，**Then** 既有錯誤狀態會被清除。
+4. **Given** 使用者在登入頁切換語言後，**When** 導向 `register` 或 `forgot-password`，**Then** 目標頁必須維持相同語言，不得回到預設語言。
 
 ---
 
@@ -151,6 +152,7 @@ sequenceDiagram
 - **FR-002**：導覽列必須包含品牌區塊（Logo + Label Suite）與語言切換按鈕（單一語言代碼：`ZH` 或 `EN`）。
 - **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。
 - **FR-004**：語言切換時，必須同步更新文字節點與可存取屬性（至少包含 `aria-label` 與 `document.title`）。
+- **FR-004A**：語言狀態必須跨頁持久化；自登入頁導向 `register`、`forgot-password`、`dashboard` 時，目標頁需沿用相同語系。
 - **FR-005**：表單送出前必須驗證 Email 與 Password 為必填。
 - **FR-006**：Email 驗證必須以 `trim()` 後結果判定是否為空。
 - **FR-007**：欄位驗證失敗時，必須在對應欄位顯示錯誤訊息與錯誤樣式。
@@ -191,7 +193,7 @@ flowchart LR
 ### 關鍵實體
 
 - **LoginFormState**：登入表單狀態。關鍵欄位：`email`、`password`、`emailError`、`passwordError`、`isSubmitting`。
-- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 - **I18nDictionary**：語系字典。關鍵欄位：`pageTitle`、欄位文案、按鈕文案、錯誤訊息、`aria-label` 文案。
 - **PrototypeRedirectState**：原型導頁狀態。關鍵欄位：`targetPath = ../dashboard/dashboard.html`、`delayMs = 800`。
 
@@ -203,7 +205,7 @@ flowchart LR
 
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
-| — | — | — |
+| 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
 
@@ -222,6 +224,7 @@ flowchart LR
 - **SC-002**：Email/Password 任一缺漏時會顯示欄位錯誤，且不進入導頁流程。
 - **SC-003**：Email/Password 皆非空送出後，按鈕進入 loading 並於約 800ms 導向 `../dashboard/dashboard.html`。
 - **SC-004**：語言切換可在 1 秒內完成主要文案與 `aria-label` 更新（不重新整理頁面）。
+- **SC-004A**：切換語言後導向 `register` / `forgot-password` / `dashboard` 時，語系需維持一致。
 - **SC-005**：Password 顯示/隱藏切換後，欄位 type 與眼睛按鈕 `aria-label` 一致。
 - **SC-006**：在 `RWD_VIEWPORTS` 下無破版、無水平捲軸、無關鍵互動元件遮擋。
 
@@ -231,6 +234,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：登入頁切換語言後，導向 register/forgot-password/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕規格改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；全面對齊最新 login 原型（i18n、欄位驗證、密碼顯示切換、原型導頁路徑） |
 | 1.0.0 | 2026-04-05 | Initial spec |

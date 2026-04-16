@@ -8,8 +8,8 @@
 
 ## Why — 商業目標
 
-> 產出一套**可配置、通用型 NLP 標注與自動評估平台**，作為碩士論文 Demo Paper 的研究成果展示，
-> 證明系統能在**不修改核心程式碼**的情況下支援多種 NLP 任務類型，並確保標注評估結果的公平性與可重現性。
+> 產出一套**可配置、通用型 NLP 標記與自動評估平台**，作為碩士論文 Demo Paper 的研究成果展示，
+> 證明系統能在**不修改核心程式碼**的情況下支援多種 NLP 任務類型，並確保標記評估結果的公平性與可重現性。
 
 ---
 
@@ -19,13 +19,13 @@
 
 | How（需要做到的行為改變） | What（對應功能／Spec） |
 |--------------------------|----------------------|
-| 不依賴工程師，能獨立透過 Config Builder 配置並啟動標注任務 | `013` New Task + Config Builder |
+| 不依賴工程師，能獨立透過 Config Builder 配置並啟動標記任務 | `013` New Task + Config Builder |
 | 能查看所有任務狀態，快速掌握進度 | `010` Task List、`012` Dashboard |
 | 能在任務詳情頁邀請成員、指派角色 | `014` Task Detail — 成員管理 |
 | 能從平台成員列表挑選任務成員並查看工時紀錄 | `008` Annotator List、`009` Work Log |
 | 能主導 Dry Run → 確認 IAA → 發布 Official Run 生命週期 | `014` Task Detail — 任務狀態流 |
-| 能匯出最終標注結果供模型訓練 | `014` Task Detail — 匯出功能 |
-| 能監控標注進度與異常 | `016` Dataset Stats |
+| 能匯出最終標記結果供模型訓練 | `014` Task Detail — 匯出功能 |
+| 能監控標記進度與異常 | `016` Dataset Stats |
 
 ---
 
@@ -35,7 +35,7 @@
 |--------------------------|----------------------|
 | 能透過 email 或 Google OAuth 快速登入 | `001` Login Email、`002` Login Google SSO |
 | 能從 Dashboard 即時看到被分配的任務與進度 | `012` Dashboard |
-| 能依任務類型（分類、評分/迴歸、句對、NER、關係抽取）執行標注 | `015` Annotation Workspace |
+| 能依任務類型（分類、評分/迴歸、句對、NER、關係抽取）執行標記 | `015` Annotation Workspace |
 | 能即時看到自己的完成筆數（進度條） | `015` Annotation Workspace — 進度追蹤 |
 
 ---
@@ -44,8 +44,8 @@
 
 | How（需要做到的行為改變） | What（對應功能／Spec） |
 |--------------------------|----------------------|
-| 能查閱已提交的標注結果，執行抽查或全審 | `015` Annotation Workspace — Reviewer 視角 |
-| 能修改、刪除、標記錯誤標注 | `015` Annotation Workspace — 審核操作 |
+| 能查閱已提交的標記結果，執行抽查或全審 | `015` Annotation Workspace — Reviewer 視角 |
+| 能修改、刪除、標記錯誤標記 | `015` Annotation Workspace — 審核操作 |
 | 能查看 IAA 報告，協助產生 Ground Truth | `017` Dataset Quality |
 
 ---
@@ -75,10 +75,10 @@ Why（Demo Paper 目標）
 ├── Annotator
 │   ├── How: 快速登入 → What: spec 001, 002
 │   ├── How: 掌握任務分配 → What: spec 012
-│   └── How: 執行標注 → What: spec 015
+│   └── How: 執行標記 → What: spec 015
 │
 ├── Reviewer
-│   ├── How: 審核標注 → What: spec 015 (reviewer flow)
+│   ├── How: 審核標記 → What: spec 015 (reviewer flow)
 │   └── How: 查看 IAA → What: spec 017
 │
 └── Super Admin

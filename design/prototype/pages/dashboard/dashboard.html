@@ -108,6 +108,9 @@
     }
 
     .brand-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
       margin-bottom: var(--space-xl);
       padding-bottom: var(--space-lg);
       border-bottom: 1px solid var(--color-border);
@@ -143,7 +146,7 @@
       line-height: 1;
     }
 
-    .navbar-brand .lang-toggle {
+    .brand-section .lang-toggle {
       margin-left: auto;
     }
 
@@ -283,6 +286,23 @@
       border-radius: var(--radius-md);
     }
 
+    .user-chip-profile {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+      border-radius: var(--radius-sm);
+      transition: opacity 150ms;
+    }
+
+    .user-chip-profile:hover {
+      opacity: 0.75;
+    }
+
     .avatar {
       width: 40px;
       height: 40px;
@@ -360,6 +380,26 @@
 
     .page {
       min-width: 0;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-main-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 28px;
+      line-height: 1.3;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin: 0 0 4px;
+    }
+
+    .page-main-subtitle {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #64748B;
+      margin: 0;
     }
 
     /* ── Controls ──────────────────────────────────────────────── */
@@ -766,7 +806,7 @@
         display: block;
       }
 
-      .navbar-brand .lang-toggle {
+      .brand-section .lang-toggle {
         display: none;
       }
 
@@ -779,17 +819,18 @@
       }
 
       .navbar-center {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 6px;
-        width: 100%;
+        flex: 1;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: space-around;
+        gap: 0;
         margin: 0;
-        flex: none;
       }
 
       .navbar-center .nav-link {
         min-height: var(--navbar-mobile-top-height);
-        padding: 8px 4px;
+        flex: 1;
+        padding: 8px 2px;
         flex-direction: column;
         justify-content: center;
         align-items: center;
@@ -864,102 +905,29 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- NAVBAR                                                     -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <header class="navbar" role="banner">
-    <div class="brand-section">
-      <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
-        <div class="navbar-logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="7" y1="7" x2="7.01" y2="7"
-                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span class="navbar-wordmark">Label Suite</span>
-        <button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M2 12h20"></path>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
-          <span id="langLabel" data-testid="lang-label">EN</span>
-        </button>
-        <span id="mobileUserName" class="mobile-user-name">Mandy Chen</span>
-        <button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M2 12h20"></path>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
-          <span id="mobileLangLabel">ZH</span>
-        </button>
-        <button id="mobileLogoutBtn" class="mobile-top-logout" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
-      </a>
-    </div>
-
-    <nav class="navbar-center" aria-label="Main navigation">
-      <a class="nav-link active" aria-current="page" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect width="7" height="9" x="3" y="3" rx="1"/>
-          <rect width="7" height="5" x="14" y="3" rx="1"/>
-          <rect width="7" height="9" x="14" y="12" rx="1"/>
-          <rect width="7" height="5" x="3" y="16" rx="1"/>
-        </svg>
-        <span id="navDashboard">儀表板</span>
-      </a>
-      <a class="nav-link" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M8 12h8"/>
-          <path d="M12 8v8"/>
-        </svg>
-        <span id="navCreateTask">建立任務</span>
-      </a>
-      <a class="nav-link" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M12 20h9"/>
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-        </svg>
-        <span id="navAnnotation">標記作業</span>
-      </a>
-      <a class="nav-link" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span id="navProfile">個人資料</span>
-      </a>
-    </nav>
-
-    <div class="nav-actions">
-      <div class="user-chip">
-        <div class="avatar" id="userAvatar" aria-hidden="true">U</div>
-        <div class="user-info">
-          <span class="user-name" id="userName">Mandy Chen</span>
-          <span class="user-role" id="roleIndicator" data-testid="role-indicator">一般使用者</span>
-        </div>
-        <button id="logoutBtn" class="logout-btn" onclick="window.location.href='../account/login.html'" aria-label="登出" title="登出">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId: 'sharedSidebarMount',
+      activeNav: 'dashboard',
+      dashboardHref: '../dashboard/dashboard.html',
+      profileHref: '../account/profile.html',
+      loginHref: '../account/login.html',
+      brandHref: '../dashboard/dashboard.html',
+    });
+  </script>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- MAIN CONTENT                                               -->
   <!-- ═══════════════════════════════════════════════════════════ -->
   <main class="layout" data-testid="dashboard-shell">
     <section class="page" id="top">
+      <section class="page-header" aria-labelledby="dashboardMainTitle">
+        <h1 id="dashboardMainTitle" class="page-main-title">儀表板</h1>
+        <p id="dashboardMainSubtitle" class="page-main-subtitle">掌握任務進度與團隊協作狀態</p>
+      </section>
+
       <!-- Controls -->
       <section class="controls">
         <div>
@@ -1242,7 +1210,7 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="annotatorProgressTitle" class="panel-title">我的概況</h2>
+                <h2 id="annotatorProgressTitle" class="panel-title">標記概況</h2>
                 <span id="annotatorProgressSubtitle" class="panel-subtitle">我的標記進度與待處理任務</span>
               </div>
             </div>
@@ -1321,7 +1289,7 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="reviewerPanelTitle" class="panel-title">待審概況</h2>
+                <h2 id="reviewerPanelTitle" class="panel-title">審核概況</h2>
                 <span id="reviewerPanelSubtitle" class="panel-subtitle">我的審查進度與待處理項目</span>
               </div>
             </div>
@@ -1407,6 +1375,29 @@
       page: 'dashboard',
     });
 
+    function scenarioToSystemRole(scenarioKey) {
+      return scenarioKey === 'super_admin_data' ? 'super_admin' : 'user';
+    }
+
+    function scenarioToAvatarLabel(scenarioKey) {
+      const map = {
+        user: 'U',
+        super_admin_data: 'SA',
+        project_leader: 'PL',
+        annotator: 'A',
+        reviewer: 'R',
+      };
+      return map[scenarioKey] || 'U';
+    }
+
+    function syncSidebarIdentity() {
+      const roleLabel = i18n[lang].scenarioPills[scenario] || i18n[lang].scenarioPills.user;
+      window.LabelSuiteSharedSidebar.updateUserChip({
+        roleLabel,
+        avatarLabel: scenarioToAvatarLabel(scenario),
+      });
+    }
+
     document.querySelectorAll('.scenario-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         const previousScenario = scenario;
@@ -1414,10 +1405,11 @@
         pill.classList.add('active');
 
         scenario = pill.dataset.scenario;
+        window.LabelSuiteSharedSidebar.setSystemRole(scenarioToSystemRole(scenario));
+        syncSidebarIdentity();
         document.querySelectorAll('.view').forEach(view => view.classList.remove('is-active'));
         const targetView = document.getElementById(`view-${scenario}`);
         if (targetView) targetView.classList.add('is-active');
-        document.getElementById('roleIndicator').textContent = i18n[lang].scenarioPills[scenario];
         window.LabelSuiteAnalytics.track('prototype_scenario_switched', {
           from_scenario: previousScenario,
           to_scenario: scenario,
@@ -1435,9 +1427,13 @@
         logoutAria:           '登出',
         logoutTitle:          '登出',
         navDashboard:         '儀表板',
-        navCreateTask:        '建立任務',
+        dashboardMainTitle:   '儀表板',
+        dashboardMainSubtitle:'掌握任務進度與團隊協作狀態',
+        navTaskManagement:    '任務管理',
         navAnnotation:        '標記作業',
-        navProfile:           '個人資料',
+        navDataset:           '資料集分析',
+        navAdmin:             '系統管理',
+        navProfile:           '個人設定',
         scenarioLabel:        '場景模式',
         scenarioHint:         '切換不同的角色視圖',
         scenarioPills: {
@@ -1513,7 +1509,7 @@
         plTask2TaskType:       '評分 / 回歸任務',
         plTask2RunType:        '試標',
         plTask2Badge:          '待確認',
-        annotatorProgressTitle:  '我的概況',
+        annotatorProgressTitle:  '標記概況',
         annotatorProgressSubtitle:'我的標記進度與待處理任務',
         annotatorCompletedLabel: '待標記',
         annotatorTodayLabel:     '今日完成',
@@ -1532,7 +1528,7 @@
         annotatorTask2RunType:   '試標',
         annotatorTask2Badge:     '待繼續',
         annotatorTask2ContinueBtn:'快速繼續',
-        reviewerPanelTitle:      '待審概況',
+        reviewerPanelTitle:      '審核概況',
         reviewerPanelSubtitle:   '我的審查進度與待處理項目',
         reviewerPendingLabel:    '待審總數',
         reviewerTodayReviewedLabel:'今日已審',
@@ -1559,8 +1555,12 @@
         logoutAria:           'Sign out',
         logoutTitle:          'Sign out',
         navDashboard:         'Dashboard',
-        navCreateTask:        'Create Task',
+        dashboardMainTitle:   'Dashboard',
+        dashboardMainSubtitle:'Track task progress and team collaboration at a glance',
+        navTaskManagement:    'Task Management',
         navAnnotation:        'Annotation',
+        navDataset:           'Dataset Analytics',
+        navAdmin:             'System Administration',
         navProfile:           'Profile',
         scenarioLabel:        'Scenario',
         scenarioHint:         'Switch role views',
@@ -1637,7 +1637,7 @@
         plTask2TaskType:       'Rating / Regression',
         plTask2RunType:        'Dry Run',
         plTask2Badge:          'Pending Confirmation',
-        annotatorProgressTitle:  'My Overview',
+        annotatorProgressTitle:  'Annotation Overview',
         annotatorProgressSubtitle:'My annotation progress and pending tasks',
         annotatorCompletedLabel: 'Pending',
         annotatorTodayLabel:     'Today',
@@ -1678,12 +1678,14 @@
       },
     };
 
-    let lang = 'zh';
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let scenario = 'user';
 
     function applyLang(l) {
-      const t = i18n[l];
-      document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+      lang = l === 'en' ? 'en' : 'zh';
+      window.LabelSuiteSharedSidebar.setStoredLang(lang);
+      const t = i18n[lang];
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
       document.title = t.pageTitle;
       document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
       document.getElementById('mobileLangToggle').setAttribute('aria-label', t.langToggleAria);
@@ -1692,7 +1694,7 @@
       document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t.logoutAria);
       document.getElementById('mobileLogoutBtn').setAttribute('title', t.logoutTitle);
       document.getElementById('mobileLangLabel').textContent = t.langLabel;
-      document.getElementById('roleIndicator').textContent = t.scenarioPills[scenario] || t.scenarioPills.user;
+      syncSidebarIdentity();
       document.querySelectorAll('.scenario-pill').forEach(pill => {
         const key = pill.dataset.scenario;
         if (t.scenarioPills[key]) pill.textContent = t.scenarioPills[key];
@@ -1737,7 +1739,8 @@
     );
 
     window.LabelSuiteAnalytics.trackPageView('dashboard', getTrackingContext);
-    applyLang('zh');
+    window.LabelSuiteSharedSidebar.setSystemRole(scenarioToSystemRole(scenario));
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
   </script>
 </body>
 </html>
