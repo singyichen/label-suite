@@ -12,8 +12,19 @@
 ---
 
 **Project:** Label Suite
-**Updated:** 2026-03-30
+**Updated:** 2026-04-16
 **Category:** Micro SaaS (Tool-based Web App)
+**Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-04-15 15:13 +0800)
+
+---
+
+## Contents
+
+**Foundation** — [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
+
+**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link)
+
+**Guidelines** — [Style / Flat Design](#style-guidelines) · [Page Shells](#page-shell-patterns) · [Anti-Patterns](#anti-patterns-do-not-use) · [Pre-Delivery Checklist](#pre-delivery-checklist)
 
 ---
 
@@ -30,6 +41,36 @@
 | Ink (Text) | `#1E1B4B` | `--color-ink` | `ink` |
 
 **Color Notes:** Indigo primary + emerald CTA. Use `surface` / `ink` (not `background` / `text`) as the canonical semantic token names in both CSS variables and Tailwind config.
+
+### Pen Variable Snapshot (Canonical)
+
+The latest `design-system.pen` defines the following variable set. Keep these names and values aligned when updating Tailwind/CSS tokens.
+
+| Group | Variable | Value |
+|------|----------|-------|
+| Core | `color-primary` | `#6366F1` |
+| Core | `color-secondary` | `#818CF8` |
+| Core | `color-cta` | `#10B981` |
+| Core | `color-surface` | `#F5F3FF` |
+| Core | `color-ink` | `#1E1B4B` |
+| Supporting | `color-border` | `#E2E8F0` |
+| Supporting | `color-text-muted` | `#94A3B8` |
+| Supporting | `color-white` | `#FFFFFF` |
+| State | `color-error` / `color-error-bg` / `color-error-border` | `#B91C1C` / `#FEF2F2` / `#FECACA` |
+| State | `color-success` / `color-success-bg` / `color-success-border` | `#15803D` / `#F0FDF4` / `#BBF7D0` |
+| State | `color-warning` / `color-warning-bg` / `color-warning-border` | `#A16207` / `#FEFCE8` / `#FEF08A` |
+| State | `color-info` / `color-info-bg` / `color-info-border` | `#1D4ED8` / `#EFF6FF` / `#BFDBFE` |
+| Alias (legacy in pen) | `color-background` | `#F5F3FF` |
+| Alias (legacy in pen) | `color-text` | `#1E1B4B` |
+| Radius | `radius-sm` / `radius-md` / `radius-lg` / `radius-xl` / `radius-full` | `4 / 8 / 12 / 16 / 9999` |
+| Spacing | `space-xs` / `space-sm` / `space-md` / `space-lg` / `space-xl` / `space-2xl` / `space-3xl` | `4 / 8 / 16 / 24 / 32 / 48 / 64` |
+
+### Pen Typography Snapshot (Canonical)
+
+Direct read from `design-system.pen` reusable components:
+
+- **Primary UI font in components:** `Inter` (buttons, card text, inputs, labels)
+- **Heading/Display font used in pen components:** `Crimson Pro` (modal title)
 
 **Tailwind Config Example:**
 ```js
@@ -65,13 +106,13 @@ Used for status badges, error banners, alerts, and feedback messages.
 ### Typography
 
 - **Heading Font:** Crimson Pro
-- **Body Font:** Atkinson Hyperlegible
+- **Body Font:** Inter
 - **Mood:** academic, research, scholarly, accessible, readable, educational
-- **Google Fonts:** [Crimson Pro + Atkinson Hyperlegible](https://fonts.google.com/share?selection.family=Atkinson+Hyperlegible:wght@400;700|Crimson+Pro:wght@400;500;600;700)
+- **Google Fonts:** [Crimson Pro + Inter](https://fonts.google.com/share?selection.family=Crimson+Pro:wght@400;500;600;700|Inter:wght@400;500;600;700)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 ```
 
 **Chinese Fallback:**
@@ -80,7 +121,7 @@ Used for status badges, error banners, alerts, and feedback messages.
 font-family: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', serif;
 
 /* Body */
-font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+font-family: 'Inter', 'Noto Sans TC', 'PingFang TC', sans-serif;
 ```
 
 ### Typography Scale
@@ -90,10 +131,10 @@ font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
 | Display | Crimson Pro | 48px / `text-5xl` | 700 | 1.2 | Hero titles |
 | H1 | Crimson Pro | 36px / `text-4xl` | 700 | 1.3 | Page titles |
 | H2 | Crimson Pro | 24px / `text-2xl` | 600 | 1.4 | Section headings |
-| H3 | Atkinson | 18px / `text-xl` | 600 | 1.5 | Card titles, subsections |
-| Body | Atkinson | 16px / `text-base` | 400 | 1.6 (EN) / 1.8 (ZH) | Default body text |
-| Caption | Atkinson | 14px / `text-sm` | 400 | 1.5 | Supporting text, metadata |
-| Label | Atkinson | 12px / `text-xs` | 500 | 1.4 | Tags, badges, form labels |
+| H3 | Inter | 18px / `text-xl` | 600 | 1.5 | Card titles, subsections |
+| Body | Inter | 16px / `text-base` | 400 | 1.6 (EN) / 1.8 (ZH) | Default body text |
+| Caption | Inter | 14px / `text-sm` | 400 | 1.5 | Supporting text, metadata |
+| Label | Inter | 12px / `text-xs` | 500 | 1.4 | Tags, badges, form labels |
 
 ### Bilingual Typography
 
@@ -151,6 +192,26 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
 ---
 
 ## Component Specs
+
+### Pencil Section Coverage (Latest Pen Sync)
+
+The current `design-system.pen` includes these section groups, and this file is aligned to them:
+
+- Foundation: `sec_color`, `sec_typo`, `sec_state`, `sec_space`, `sec_radius`, `sec_zindex`
+- Core components: `sec_comp`, `sec_form`, `sec_alert`, `sec_badge`
+- Navigation: `sec_nav`, `sec_sidebar`, `sec_tab`
+- Data/display: `sec_table`, `sec_list`, `sec_divider`, `sec_tooltip`, `sec_avatar`
+
+### Pencil Reusable Components (Latest Pen Sync)
+
+Direct read from `design-system.pen` (`reusable: true`, total `45`):
+
+- Buttons: `Button / Primary`, `Button / Secondary`, `Button / Ghost`, `Button / Danger`, `Button / OAuth`, `Button / Icon Only`, `Button / CTA / Default`, `Button / CTA / Hover`, `Button / CTA / Loading`, `Button / CTA / Disabled`, `Button / Language Toggle`, `Button / Language Toggle / ZH`, `Button / Language Toggle / EN`
+- Inputs: `Input / Default`, `Input / Focus`, `Input / Default / Inline`, `Input / Focus / Inline`, `Input / Error / Inline`, `Input / Readonly`
+- Feedback: `Toast / Success`, `Toast / Error`, `Alert Banner / Error`, `State Panel / Success`, `State Panel / Token Error`
+- Status/Link: `Badge / Not Started`, `Badge / In Progress`, `Badge / Submitted`, `Badge / Error`, `Link / Inline`, `Link / Action`, `Link / Nav / Active`, `Link / Nav / Inactive`
+- Layout/Data: `Navbar / Desktop`, `Sidebar / Desktop`, `Table / Default`, `List / Activity`, `Divider / Horizontal`, `Divider / Text / Or`, `Tooltip / Info`, `Mobile Tab Bar / Default`
+- Profile/Other: `Card / Default`, `Modal / Default`, `Avatar / Small`, `Avatar / Large`, `Avatar / Uploadable`
 
 ### Buttons
 
@@ -231,6 +292,70 @@ button[disabled] {
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* OAuth Button — third-party auth entry (Google, GitHub) */
+.btn-oauth {
+  background: white;
+  color: #334155;           /* slate-700 */
+  border: 1px solid #E2E8F0;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 200ms ease, border-color 200ms ease;
+  cursor: pointer;
+}
+
+.btn-oauth:hover {
+  background: #F8FAFC;      /* slate-50 */
+  border-color: #CBD5E1;    /* slate-300 */
+}
+
+/* Icon-only Button — compact trigger (mobile menu, utility controls) */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  background: white;
+  color: #475569;           /* slate-600 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: #F8FAFC;      /* slate-50 */
+  border-color: #CBD5E1;    /* slate-300 */
+  color: #1E293B;           /* slate-800 */
+}
+
+/* Language Toggle Button — locale switcher (zh-TW / EN) */
+.btn-language {
+  background: white;
+  color: #334155;           /* slate-700 */
+  border: 1px solid #E2E8F0;
+  padding: 8px 12px;
+  min-height: 36px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 200ms ease, border-color 200ms ease;
+  cursor: pointer;
+}
+
+.btn-language:hover {
+  background: #F8FAFC;      /* slate-50 */
+  border-color: #CBD5E1;    /* slate-300 */
+}
 ```
 
 **Button Variants Summary:**
@@ -241,6 +366,9 @@ button[disabled] {
 | Secondary (`btn-secondary`) | Secondary actions, paired alongside Primary | When used standalone (use Ghost instead) |
 | Danger (`btn-danger`) | Destructive actions (logout, delete) | General cancel actions (use Secondary) |
 | Ghost (`btn-ghost`) | Low-priority actions (view all, skip) | When the action needs clear visual weight |
+| OAuth (`btn-oauth`) | Social sign-in buttons with brand icon | Non-auth flows (use Primary/Secondary) |
+| Icon-only (`btn-icon`) | Compact icon triggers (mobile menu, utility actions) | Primary CTA requiring clear text label |
+| Language Toggle (`btn-language`) | zh-TW / EN switching control | General icon actions unrelated to locale |
 
 **Button States:**
 
@@ -273,6 +401,15 @@ button[disabled] {
 /* Non-interactive card: omit cursor:pointer and hover transform */
 ```
 
+**Card Variants:**
+
+| Variant | Classes | Use case |
+|---------|---------|----------|
+| Interactive | `border border-slate-200 rounded-xl p-6 hover:border-primary hover:-translate-y-0.5` | Clickable summary/stat card |
+| Non-interactive | `border border-slate-200 rounded-xl p-6` | Static content blocks |
+| Login Card | `border border-slate-200 rounded-2xl p-8` | Auth shell in account pages |
+| Dashboard Summary Card | `border border-slate-200 rounded-xl p-6` + title + KPI + subtitle | KPI widgets on dashboard |
+
 ### Inputs
 
 ```css
@@ -302,6 +439,78 @@ button[disabled] {
   color: #94A3B8;            /* slate-400 */
   cursor: not-allowed;
 }
+
+/* Input with leading icon */
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper .input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #94A3B8;            /* slate-400 */
+  pointer-events: none;
+}
+
+.input-wrapper .input.leading-icon {
+  padding-left: 40px;        /* icon + gap */
+}
+
+/* Password visibility toggle */
+.input-wrapper .eye-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #64748B;            /* slate-500 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.input-wrapper .eye-toggle:hover {
+  color: #334155;            /* slate-700 */
+}
+
+/* Supporting text under field */
+.field-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748B;            /* slate-500 */
+}
+
+.field-error {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #B91C1C;            /* red-700 */
+}
+
+/* Optional counters / indicators */
+.field-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748B;            /* slate-500 */
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.required-indicator {
+  color: #B91C1C;            /* red-700 */
+  margin-left: 4px;
+}
 ```
 
 **Input States:**
@@ -313,6 +522,17 @@ button[disabled] {
 | Error | `border-red-400` + ring-red | Validation failure |
 | Readonly | `bg-slate-50 border-slate-100 text-slate-400 cursor-not-allowed` | System-managed fields (e.g. SSO email) |
 | Disabled | `opacity-40 cursor-not-allowed` | Feature unavailable under current conditions |
+
+**Input Sub-patterns:**
+
+| Pattern | Key classes | Notes |
+|---------|-------------|-------|
+| Leading Icon | `.input-wrapper .input-icon` + `.input.leading-icon` | Keep icon decorative (`aria-hidden="true"`) |
+| Eye Toggle | `.eye-toggle` | Toggle `type="password"` / `type="text"`; update `aria-label` dynamically |
+| Hint Text | `.field-hint` | For constraints like min length and allowed characters |
+| Inline Error Text | `.field-error` + `role="alert"` | Error message appears below field, paired with `.input.error` |
+| Character Counter | `.field-meta` | Use for length-limited fields |
+| Required Indicator | `.required-indicator` | Append to label text only (do not rely on color alone) |
 
 **Readonly vs Disabled:**
 - **Readonly** — Data exists and is meaningful, but cannot be edited (e.g. email managed by SSO); still submitted with the form
@@ -337,6 +557,13 @@ button[disabled] {
 }
 ```
 
+**Modal Interaction Rules:**
+
+- `Escape` key closes the modal unless a blocking action is in progress
+- Click outside (`.modal-overlay`) closes only for non-destructive confirmation dialogs
+- Trap focus inside modal while open; return focus to opener when closed
+- Set `aria-modal="true"` and `role="dialog"` (or `alertdialog` for destructive confirmation)
+
 ### Status Badges
 
 ```html
@@ -354,7 +581,17 @@ button[disabled] {
 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-50 text-green-700 border border-green-200">
   Submitted
 </span>
+
+<!-- Role Badge -->
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+  <!-- Optional role icon -->
+  Reviewer
+</span>
 ```
+
+**Role Badge Use:**
+- For identity/context labels such as `Admin`, `Reviewer`, `Annotator`
+- Use rounded-full pill shape (`rounded-full`) to visually separate from task status badges
 
 ### Error / Alert Banner
 
@@ -468,6 +705,10 @@ Top sticky navigation bar used in Pattern A (Dashboard) and Pattern C (Profile) 
 | Active | `text-primary font-medium bg-surface rounded-lg` + `aria-current="page"` |
 | Inactive | `text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg` |
 | Disabled | `aria-disabled="true"` + same as inactive (no `pointer-events-none` — preserves tab stop) |
+
+**Navbar control mapping:**
+- Language toggle uses `btn-language` (not generic ghost button)
+- Mobile hamburger uses `btn-icon` and must include `aria-label="Open navigation menu"`
 
 **Mobile drawer (`md:hidden`):**
 - Expands below the navbar with `border-t border-slate-200`
@@ -790,6 +1031,61 @@ Or with Tailwind: `<main class="pb-14 md:pb-0">`
 
 ---
 
+### State Panel
+
+Form-level state container that replaces the form block after submit success or token validation failure.
+Different from Alert Banner (inline message while form remains visible) and Toast (floating auto-dismiss).
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Container | `rounded-md border p-5 text-center` |
+| Layout | icon circle + title + description + action link/button |
+| Replacement rule | Replaces the form section, not stacked above it |
+
+**Success Panel (form submitted):**
+
+```html
+<section class="bg-green-50 border border-green-200 rounded-md p-5 text-center">
+  <div class="mx-auto mb-3 w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+    <!-- success icon -->
+  </div>
+  <h2 class="text-base font-semibold text-green-800">Check your email</h2>
+  <p class="mt-1 text-sm text-green-700">We've sent a reset link to your inbox.</p>
+  <a href="login.html" class="mt-4 inline-flex text-sm font-medium text-primary hover:underline">Back to login</a>
+</section>
+```
+
+**Token Error Panel (invalid/expired token):**
+
+```html
+<section class="bg-red-50 border border-red-200 rounded-md p-5 text-center" role="alert">
+  <div class="mx-auto mb-3 w-10 h-10 rounded-full bg-red-100 text-red-700 flex items-center justify-center">
+    <!-- error icon -->
+  </div>
+  <h2 class="text-base font-semibold text-red-800">Reset link is invalid</h2>
+  <p class="mt-1 text-sm text-red-700">Please request a new password reset email.</p>
+  <a href="forgot-password.html" class="mt-4 inline-flex text-sm font-medium text-primary hover:underline">Request new link</a>
+</section>
+```
+
+---
+
+### Prototype-Only State Switcher
+
+Used only in static prototypes to switch scenarios within a single HTML file.
+This is a demo helper, not a production component.
+
+**Specs (prototype only):**
+- Container: `inline-flex rounded-lg border border-slate-200 p-1`
+- Segment button:
+  - Active: `bg-primary text-white`
+  - Inactive: `text-slate-600 hover:bg-slate-50`
+- Place in low-priority area (top-right utility zone), never as a core product interaction
+
+---
+
 ### Divider
 
 Visually separates two content blocks. Carries no semantic meaning.
@@ -800,8 +1096,6 @@ Visually separates two content blocks. Carries no semantic meaning.
 |----------|-------|-------|
 | Color | `border-slate-200` | #E2E8F0 |
 | Thickness | `h-px` / `border-t` | 1px |
-
----
 
 **Variants:**
 
@@ -860,8 +1154,6 @@ Displays a homogeneous set of items with a consistent per-row format (e.g. activ
 | Right secondary text | `text-sm text-slate-400` |
 | Hover | `hover:bg-slate-50` |
 
----
-
 **HTML structure:**
 
 ```html
@@ -904,6 +1196,30 @@ Displays a homogeneous set of items with a consistent per-row format (e.g. activ
 **When NOT to use:**
 - Data requires sorting, filtering, or multi-column comparison → use **Table** instead
 - Items need to expand for more detail → consider Accordion or a dedicated page
+
+---
+
+### Link
+
+Text-based navigation/action element. Use semantic `<a>` for navigation targets and avoid button styling unless the visual hierarchy requires it.
+
+**Link Variants:**
+
+| Variant | Classes | Use case |
+|---------|---------|----------|
+| Inline text link | `underline text-slate-700 hover:text-primary` | Legal text, inline references |
+| Nav link | `text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg` | Navbar / Sidebar navigation |
+| Action link | `text-primary hover:underline` | Lightweight actions like "View all" |
+
+**Accessibility and behavior:**
+- Always provide a real `href`; avoid `href="#"` in delivered code
+- Use `aria-current="page"` for active nav links
+- Keep focus visible: `focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2`
+- Disabled link behavior: keep focusable only when discoverability is needed; use `aria-disabled="true"` and prevent activation in JS
+
+**When NOT to use:**
+- Actions that submit data or open confirm flows → use Button
+- Primary CTA that must stand out visually → use Primary Button
 
 ---
 
