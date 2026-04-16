@@ -55,6 +55,8 @@
       flex-direction: row;
     }
 
+    .hidden { display: none !important; }
+
     /* ── Navbar ─────────────────────────────────────────────────── */
     .navbar {
       width: 240px;
@@ -758,6 +760,10 @@
         z-index: 210;
       }
 
+      .navbar-brand {
+        width: 100%;
+      }
+
       .navbar-wordmark { font-size: 14px; }
       .mobile-user-name { display: inline-block; }
       .navbar-brand .lang-toggle { display: none; }
@@ -806,110 +812,18 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- NAVBAR                                                     -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <header class="navbar" role="banner">
-    <div class="brand-section">
-      <a class="navbar-brand" href="../dashboard/dashboard.html" aria-label="Label Suite 首頁">
-        <div class="navbar-logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"
-                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="7" y1="7" x2="7.01" y2="7"
-                  stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span class="navbar-wordmark">Label Suite</span>
-        <button class="lang-toggle" id="langToggle" aria-label="切換語言">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M2 12h20"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-          <span id="langLabel">ZH</span>
-        </button>
-        <span id="mobileUserName" class="mobile-user-name">Mandy Chen</span>
-        <button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M2 12h20"/>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-          </svg>
-          <span id="mobileLangLabel">ZH</span>
-        </button>
-        <button id="mobileLogoutBtn" class="mobile-top-logout"
-                onclick="window.location.href='../account/login.html'"
-                aria-label="登出" title="登出">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
-      </a>
-    </div>
-
-    <nav class="navbar-center" aria-label="Main navigation">
-      <a class="nav-link" href="../dashboard/dashboard.html">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect width="7" height="9" x="3" y="3" rx="1"/>
-          <rect width="7" height="5" x="14" y="3" rx="1"/>
-          <rect width="7" height="9" x="14" y="12" rx="1"/>
-          <rect width="7" height="5" x="3" y="16" rx="1"/>
-        </svg>
-        <span id="navDashboard">儀表板</span>
-      </a>
-      <a class="nav-link" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M8 12h8"/>
-          <path d="M12 8v8"/>
-        </svg>
-        <span id="navCreateTask">建立任務</span>
-      </a>
-      <a class="nav-link" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 20h9"/>
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-        </svg>
-        <span id="navAnnotation">標記作業</span>
-      </a>
-      <a class="nav-link active" aria-current="page" href="#">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-        <span id="navProfile">個人設定</span>
-      </a>
-    </nav>
-
-    <div class="nav-actions">
-      <div class="user-chip">
-        <a class="user-chip-profile" href="#" aria-label="前往個人設定" aria-current="page">
-          <div class="avatar" id="userAvatar" aria-hidden="true">U</div>
-          <div class="user-info">
-            <span class="user-name" id="userName">Mandy Chen</span>
-            <span class="user-role" id="roleIndicator">一般使用者</span>
-          </div>
-        </a>
-        <button id="logoutBtn" class="logout-btn"
-                onclick="window.location.href='../account/login.html'"
-                aria-label="登出" title="登出">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId: 'sharedSidebarMount',
+      activeNav: 'profile',
+      dashboardHref: '../dashboard/dashboard.html',
+      profileHref: '../account/profile.html',
+      loginHref: '../account/login.html',
+      brandHref: '../dashboard/dashboard.html',
+    });
+  </script>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- MAIN CONTENT                                               -->
@@ -1231,8 +1145,10 @@
         logoutAria:              '登出',
         logoutTitle:             '登出',
         navDashboard:            '儀表板',
-        navCreateTask:           '建立任務',
+        navTaskManagement:       '任務管理',
         navAnnotation:           '標記作業',
+        navDataset:              '資料集分析',
+        navAdmin:                '系統管理',
         navProfile:              '個人設定',
         profileSectionTitle:     '個人資料',
         profileSectionDesc:      '修改您的姓名與聯絡方式',
@@ -1293,8 +1209,10 @@
         logoutAria:              'Sign out',
         logoutTitle:             'Sign out',
         navDashboard:            'Dashboard',
-        navCreateTask:           'Create Task',
+        navTaskManagement:       'Task Management',
         navAnnotation:           'Annotation',
+        navDataset:              'Dataset Analytics',
+        navAdmin:                'System Administration',
         navProfile:              'Profile',
         profileSectionTitle:     'Profile',
         profileSectionDesc:      'Update your name and contact information',
@@ -1345,18 +1263,38 @@
       },
     };
 
-    let lang = 'zh';
+    const LANG_STORAGE_KEY = 'labelsuite.lang';
+
+    function getStoredLang() {
+      try {
+        const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
+        return stored === 'en' ? 'en' : 'zh';
+      } catch (error) {
+        return 'zh';
+      }
+    }
+
+    function persistLang(nextLang) {
+      try {
+        window.localStorage.setItem(LANG_STORAGE_KEY, nextLang);
+      } catch (error) {
+        // Ignore storage errors in prototype mode.
+      }
+    }
+
+    let lang = getStoredLang();
     let currentState = 'email';
 
     function t(key) { return (i18n[lang] && i18n[lang][key]) || key; }
 
     function applyLang(l) {
-      lang = l;
-      document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+      lang = l === 'en' ? 'en' : 'zh';
+      persistLang(lang);
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
 
       const ids = [
         'langLabel', 'mobileLangLabel', 'userName', 'mobileUserName', 'roleIndicator',
-        'navDashboard', 'navCreateTask', 'navAnnotation', 'navProfile',
+        'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
         'pageTitle', 'pageSubtitle',
         'profileSectionTitle', 'profileSectionDesc',
         'labelName', 'labelContact', 'labelEmail', 'labelEmailChange',
@@ -1681,7 +1619,7 @@
     });
 
     /* ── Init ───────────────────────────────────────────────────── */
-    applyLang('zh');
+    applyLang(getStoredLang());
     setState('email');
   </script>
 

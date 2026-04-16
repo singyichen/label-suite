@@ -2,7 +2,7 @@
 
 **功能分支**：`003-register-email-password`
 **建立日期**：2026-04-05
-**版本**：1.2.0
+**版本**：1.2.1
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
 
@@ -118,6 +118,7 @@ sequenceDiagram
 1. **Given** 預設 `zh`，**When** 切換為 `en`，**Then** 頁面標題、欄位標籤、按鈕文字、連結文字同步更新。
 2. **Given** 語言切換後，**When** 檢查密碼顯示按鈕，**Then** `aria-label` 與當前語言一致。
 3. **Given** 語言切換事件發生，**When** 頁面有既有錯誤狀態，**Then** 欄位錯誤與 banner 會清除。
+4. **Given** 使用者在註冊頁切換語言後，**When** 導向 login 或 dashboard，**Then** 目標頁必須維持相同語言。
 
 ---
 
@@ -153,6 +154,7 @@ sequenceDiagram
 - **FR-002**：頁面必須提供「返回登入」連結並導向 `./login.html`。
 - **FR-003**：頁面必須支援 `zh` / `en` 語言切換且不需重整頁面。
 - **FR-004**：語言切換時必須同步更新文字節點與可存取屬性（含 `document.title`、`aria-label`）。
+- **FR-004A**：語言狀態必須跨頁持久化；由 register 導向 login / dashboard 時需維持同語系。
 - **FR-005**：送出前必須驗證姓名、Email、密碼、確認密碼皆為必填。
 - **FR-006**：Email 必須驗證格式合法（含基本 `@` 與網域格式）。
 - **FR-007**：密碼長度必須至少 `PASSWORD_MIN_LENGTH`。
@@ -190,7 +192,7 @@ flowchart LR
 
 - **RegisterFormState**：註冊表單狀態。關鍵欄位：`name`、`email`、`password`、`confirmPassword`、`errors`、`isSubmitting`。
 - **RegisterBannerState**：提示訊息狀態。關鍵欄位：`errorVisible`、`successVisible`、`message`。
-- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 - **PrototypeRegisterResult**：原型結果。關鍵欄位：`emailTaken`（`email === taken@example.com`）、`redirectDelayMs = 2000`。
 
 ---
@@ -202,6 +204,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password + 頁面 UI | 從登入頁導流至註冊頁的入口連結與 i18n 一致性 |
+| 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
 
@@ -219,6 +222,7 @@ flowchart LR
 - **SC-003**：`taken@example.com` 可穩定觸發重複 Email 錯誤 banner。
 - **SC-004**：成功送出後顯示成功訊息，並於約 2 秒導向 `../dashboard/dashboard.html`。
 - **SC-005**：`zh` / `en` 切換可在 1 秒內同步更新文案與 `aria-label`。
+- **SC-005A**：切換語言後由 register 導向 login / dashboard，語系需維持一致。
 - **SC-006**：在 `RWD_VIEWPORTS` 下無破版、無遮擋、無水平捲軸。
 
 ---
@@ -227,6 +231,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：register 切換語言後導向 login/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 register 原型（前端驗證、重複 Email 模擬、成功後 2 秒導頁） |
 | 1.0.0 | 2026-04-05 | Initial spec |

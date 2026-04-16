@@ -615,13 +615,34 @@
       },
     };
 
-    let lang = 'zh';
+    const LANG_STORAGE_KEY = 'labelsuite.lang';
+
+    function getStoredLang() {
+      try {
+        const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
+        return stored === 'en' ? 'en' : 'zh';
+      } catch (error) {
+        return 'zh';
+      }
+    }
+
+    function persistLang(nextLang) {
+      try {
+        window.localStorage.setItem(LANG_STORAGE_KEY, nextLang);
+      } catch (error) {
+        // Ignore storage errors in prototype mode.
+      }
+    }
+
+    let lang = getStoredLang();
     const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {
-      const t = i18n[l];
+      lang = l === 'en' ? 'en' : 'zh';
+      persistLang(lang);
+      const t = i18n[lang];
       document.title = t.pageTitle;
-      document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
 
       document.getElementById('langLabel').textContent            = t.langLabel;
       document.getElementById('cardTitle').textContent            = t.cardTitle;
@@ -821,7 +842,7 @@
       [{ id: 'loginLink', eventName: 'prototype_navigate_login_clicked' }],
       getTrackingContext
     );
-    applyLang('zh');
+    applyLang(getStoredLang());
     window.LabelSuiteAnalytics.trackPageView('register', getTrackingContext);
   </script>
 </body>

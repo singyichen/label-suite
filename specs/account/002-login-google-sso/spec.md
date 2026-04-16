@@ -2,7 +2,7 @@
 
 **功能分支**：`002-login-google-sso`
 **建立日期**：2026-04-05
-**版本**：1.2.0
+**版本**：1.2.1
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
 
@@ -71,6 +71,7 @@ SSO 入口文字與可存取屬性需隨語言切換即時更新。
 1. **Given** 預設語言為 `zh`，**When** 切換為 `en`，**Then** SSO 按鈕文字更新為 `Continue with Google`。
 2. **Given** 語言為 `en`，**When** 切回 `zh`，**Then** SSO 按鈕文字更新為 `使用 Google 帳號繼續`。
 3. **Given** 任一語言切換後，**When** 檢查按鈕，**Then** `aria-label` 與當前語言一致。
+4. **Given** 使用者在 login 頁切換語言，**When** 導向其他 account 頁面再返回 login，**Then** SSO 按鈕語言必須維持一致。
 
 ---
 
@@ -105,6 +106,7 @@ SSO 入口文字與可存取屬性需隨語言切換即時更新。
 - **FR-002**：Google SSO 按鈕必須包含可辨識的 Google 品牌圖示與文字標籤。
 - **FR-003**：Google SSO 按鈕文字必須支援 `zh` / `en` 即時切換。
 - **FR-004**：Google SSO 按鈕 `aria-label` 必須隨語言切換同步更新。
+- **FR-004A**：SSO 所在頁的語言狀態必須跨頁持久化，返回 login 頁時不得回到預設語言。
 - **FR-005**：原型模式下，Google SSO 按鈕 click 行為必須為 no-op，且不得造成前端錯誤。
 - **FR-006**：本規格必須保留後續 OAuth 2.0 Authorization Code Flow 的整合入口，不變更既有按鈕 ID 與語意。
 
@@ -130,7 +132,7 @@ flowchart LR
 ### 關鍵實體
 
 - **GoogleSsoEntryState**：SSO 入口狀態。關鍵欄位：`visible`、`label`、`ariaLabel`、`clickHandler`。
-- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 - **OAuthIntegrationState**：整合狀態。關鍵欄位：`mode`（`prototype_noop` / `oauth_enabled`）。
 
 ---
@@ -142,6 +144,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password + 頁面 UI | `/account/login.html` 頁面框架、i18n 狀態管理、語言切換控制 |
+| 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
 
@@ -155,6 +158,7 @@ flowchart LR
 
 - **SC-001**：登入頁固定顯示 Google SSO 入口，無遺漏或跑版。
 - **SC-002**：`zh` / `en` 切換後，SSO 文案與 `aria-label` 在 1 秒內同步更新。
+- **SC-002A**：切換語言後跨頁導覽再返回 login，SSO 入口語言需維持一致。
 - **SC-003**：點擊 SSO 按鈕在 prototype 模式不導頁且不拋出錯誤。
 - **SC-004**：SSO 入口在桌機與手機版皆可正常點擊與閱讀。
 
@@ -164,6 +168,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：返回 login 頁時 SSO 文案/aria 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 login 原型現況（Google SSO 入口與 no-op 行為） |
 | 1.0.0 | 2026-04-05 | Initial spec |

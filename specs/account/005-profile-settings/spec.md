@@ -2,7 +2,7 @@
 
 **功能分支**：`005-profile-settings`  
 **建立日期**：2026-04-05  
-**版本**：1.2.3  
+**版本**：1.2.4  
 **狀態**：Clarified  
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
 
@@ -225,6 +225,22 @@ sequenceDiagram
 
 ---
 
+### User Story 5 — 跨頁語言持久化（優先級：P2）
+
+使用者在 `/profile` 切換語言後，導向其他頁面再返回時，語系必須維持一致。
+
+**此優先級原因**：避免個人設定與其他模組語系不一致，造成操作與閱讀成本上升。
+
+**獨立測試方式**：在 `/profile` 切換語言後，導向 `/dashboard` 與 account 其他頁，再返回 `/profile` 驗證語系一致。
+
+**驗收情境**：
+
+1. **Given** 使用者在 `/profile` 切換為 `en`，**When** 點擊導覽至 `/dashboard`，**Then** `/dashboard` 必須維持 `en`。
+2. **Given** 使用者已切換語言，**When** 再返回 `/profile`，**Then** `/profile` 不得回退為預設語言。
+3. **Given** 語言為 `zh` 或 `en`，**When** 重新進入 `/profile`，**Then** 語言狀態需由持久化來源恢復。
+
+---
+
 ### 邊界情況
 
 - 新 Email 已被其他帳號使用？→ 拒絕請求並回傳「Email 已被使用」。
@@ -265,6 +281,7 @@ sequenceDiagram
 - **FR-011A**：`/profile` 必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-011B**：在 `<= MOBILE_BP` 時，兩個主要區塊（個人資料 / 密碼）必須單欄堆疊，避免欄位或按鈕被截斷。
 - **FR-011C**：在任一 `RWD_VIEWPORTS` 下，`/profile` 各狀態畫面（主表單 / 變更 Email / 已寄信提示）不得出現水平捲軸、文字重疊、按鈕遮擋或元件溢出容器。
+- **FR-012**：`/profile` 語言狀態必須跨頁持久化；導向 `/dashboard` 與 account 其他頁面後需維持同語系。
 
 ### User Flow & Navigation
 
@@ -348,6 +365,7 @@ flowchart LR
 - **User**：`name`、`contact_info`、`hashed_password`、`email`（可更新）
 - **EmailChangeRequest**：`user_id`、`pending_email`、`verification_token`、`expires_at`、`verified_at`
 - **Session**：多裝置登入 session 狀態（密碼更新後需失效其他裝置）
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 
 ---
 
@@ -360,6 +378,7 @@ flowchart LR
 | 001 | Login — Email / Password + 頁面 UI | `/profile` 需以已登入狀態存取；未登入導向 `/login` |
 | 002 | Login — Google SSO | 需識別 Google SSO 帳號（`hashed_password = null`）以切換「設定密碼」流程 |
 | 012 | Dashboard | Navbar 使用者頭像作為 `/profile` 入口|
+| 008 | Shared Sidebar Navbar | 全站語言持久化契約（跨頁維持同語系） |
 
 ### 下游（依賴本規格的規格）
 
@@ -379,6 +398,7 @@ flowchart LR
 - **SC-005**：在 `RWD_VIEWPORTS` 下，`/profile` 無破版、無遮擋、無水平捲軸。
 - **SC-006**：新 Email 驗證成功後，使用者可用新 Email 登入，舊 Email 登入必須失敗。
 - **SC-007**：新 Email 未驗證或驗證 token 失效時，系統不得更新帳號主 Email。
+- **SC-008**：`/profile` 切換語言後導向 `/dashboard` 或 account 其他頁再返回，語系需保持一致。
 
 ---
 
@@ -386,6 +406,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.4 | 2026-04-16 | 新增跨頁語言持久化規範（User Story / FR / SC / 關鍵實體），並引用 shared 008 契約 |
 | 1.2.3 | 2026-04-16 | 補齊 `/profile` 頁首標題規範：將主標題「個人設定」與副標題「管理您的個人資料與帳號安全」納入區塊定義與功能需求（FR-001A） |
 | 1.2.2 | 2026-04-16 | 依 `profile.html` 同步規格：移除路由式 `/profile/email-change` 描述、改為同頁狀態切換（`emailChangeState`/`emailSentState`）；補齊頭像格式與大小限制、聯絡方式即時計數，並註記已移除頁首 Prototype 狀態切換導引列 |
 | 1.2.1 | 2026-04-16 | 移除「查看角色資訊」相關規劃（User Story、FR、SC、邊界情況與 wireframe 角色區塊描述） |
