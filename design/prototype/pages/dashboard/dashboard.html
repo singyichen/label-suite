@@ -1678,31 +1678,12 @@
       },
     };
 
-    const LANG_STORAGE_KEY = 'labelsuite.lang';
-
-    function getStoredLang() {
-      try {
-        const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
-        return stored === 'en' ? 'en' : 'zh';
-      } catch (error) {
-        return 'zh';
-      }
-    }
-
-    function persistLang(nextLang) {
-      try {
-        window.localStorage.setItem(LANG_STORAGE_KEY, nextLang);
-      } catch (error) {
-        // Ignore storage errors in prototype mode.
-      }
-    }
-
-    let lang = getStoredLang();
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let scenario = 'user';
 
     function applyLang(l) {
       lang = l === 'en' ? 'en' : 'zh';
-      persistLang(lang);
+      window.LabelSuiteSharedSidebar.setStoredLang(lang);
       const t = i18n[lang];
       document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
       document.title = t.pageTitle;

@@ -119,6 +119,14 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
+### DRY (Do Not Repeat Yourself)
+
+One logic, one place.
+
+- Shared logic/validation/constants must have a single source of truth.
+- If the same code appears in 2+ places, extract and reuse.
+- Keep abstractions minimal; prefer small shared helpers.
+
 ### Design Principles
 - Follow SOLID, DRY, KISS, YAGNI — when DRY leads to over-abstraction, KISS takes priority
 - Each function does one thing; each module has one responsibility

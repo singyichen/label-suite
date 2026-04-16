@@ -1,5 +1,6 @@
 (function () {
   var SYSTEM_ROLE_STORAGE_KEY = 'labelsuite.systemRole';
+  var LANG_STORAGE_KEY = 'labelsuite.lang';
 
   function normalizeSystemRole(role) {
     return role === 'super_admin' ? 'super_admin' : 'user';
@@ -18,6 +19,27 @@
   function persistSystemRole(systemRole) {
     try {
       window.localStorage.setItem(SYSTEM_ROLE_STORAGE_KEY, normalizeSystemRole(systemRole));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  function normalizeLang(lang) {
+    return lang === 'en' ? 'en' : 'zh';
+  }
+
+  function readStoredLang() {
+    try {
+      var value = window.localStorage.getItem(LANG_STORAGE_KEY);
+      return normalizeLang(value);
+    } catch (error) {
+      return 'zh';
+    }
+  }
+
+  function persistLang(lang) {
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, normalizeLang(lang));
     } catch (error) {
       // Ignore storage errors in prototype mode.
     }
@@ -206,6 +228,8 @@
     mountSidebar: mountSidebar,
     setSystemRole: applySystemRole,
     getStoredSystemRole: readStoredSystemRole,
+    getStoredLang: readStoredLang,
+    setStoredLang: persistLang,
     updateUserChip: updateUserChip,
   };
 })();

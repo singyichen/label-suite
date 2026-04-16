@@ -1267,33 +1267,14 @@
       },
     };
 
-    const LANG_STORAGE_KEY = 'labelsuite.lang';
-
-    function getStoredLang() {
-      try {
-        const stored = window.localStorage.getItem(LANG_STORAGE_KEY);
-        return stored === 'en' ? 'en' : 'zh';
-      } catch (error) {
-        return 'zh';
-      }
-    }
-
-    function persistLang(nextLang) {
-      try {
-        window.localStorage.setItem(LANG_STORAGE_KEY, nextLang);
-      } catch (error) {
-        // Ignore storage errors in prototype mode.
-      }
-    }
-
-    let lang = getStoredLang();
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let currentState = 'email';
 
     function t(key) { return (i18n[lang] && i18n[lang][key]) || key; }
 
     function applyLang(l) {
       lang = l === 'en' ? 'en' : 'zh';
-      persistLang(lang);
+      window.LabelSuiteSharedSidebar.setStoredLang(lang);
       document.title = t('pageTitle');
       document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
 
@@ -1624,7 +1605,7 @@
     });
 
     /* ── Init ───────────────────────────────────────────────────── */
-    applyLang(getStoredLang());
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
     setState('email');
   </script>
 
