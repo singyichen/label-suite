@@ -60,7 +60,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await openScenario(page, 'annotator');
     const annotatorView = page.getByTestId('annotator-view');
     await expect(annotatorView).toBeVisible();
-    await expect(annotatorView.getByRole('heading', { name: /標記概況|My Overview/ })).toBeVisible();
+    await expect(annotatorView.getByRole('heading', { name: /標記概況|Annotation Overview/ })).toBeVisible();
     await expect(annotatorView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
     await expect(annotatorView.locator('.metric strong').nth(0)).toHaveText('247');
     await expect(annotatorView.locator('#annotatorCompletedLabel')).toHaveText(/待標記|Pending/);
