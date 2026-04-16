@@ -419,7 +419,6 @@ flowchart TD
 #### `user-management` 使用者管理頁
 - **進入方式：** Navbar → 系統管理 → 使用者管理
 - **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`user` / `super_admin`）；`project_leader` / `reviewer` / `annotator` 為任務角色，於 `task-detail` 管理，不在此頁指派
-- **空狀態（尚無任何使用者）：** 說明文字「尚未建立任何使用者帳號」 + 「新增第一位使用者」按鈕
 - **離開方式：** 點選角色設定 → `role-settings`
 
 #### `role-settings` 角色權限設定頁

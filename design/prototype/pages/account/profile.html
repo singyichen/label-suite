@@ -74,6 +74,9 @@
     }
 
     .brand-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
       margin-bottom: var(--space-xl);
       padding-bottom: var(--space-lg);
       border-bottom: 1px solid var(--color-border);
@@ -107,7 +110,7 @@
       line-height: 1;
     }
 
-    .navbar-brand .lang-toggle { margin-left: auto; }
+    .brand-section .lang-toggle { margin-left: auto; }
 
     .mobile-top-logout {
       display: none;
@@ -766,7 +769,7 @@
 
       .navbar-wordmark { font-size: 14px; }
       .mobile-user-name { display: inline-block; }
-      .navbar-brand .lang-toggle { display: none; }
+      .brand-section .lang-toggle { display: none; }
       .mobile-lang-toggle { display: inline-flex; }
       .mobile-top-logout { display: inline-flex; }
 
@@ -925,6 +928,7 @@
               <span id="contactHint">可填寫電話、LINE 或其他聯絡方式</span>
               <span id="contactCount" style="white-space:nowrap; margin-left:8px;">0 / 255</span>
             </div>
+            <p class="field-error" id="contactError" role="alert" style="display:none;"></p>
           </div>
 
           <!-- Email (masked display + change link) -->
@@ -1290,10 +1294,11 @@
     function applyLang(l) {
       lang = l === 'en' ? 'en' : 'zh';
       persistLang(lang);
+      document.title = t('pageTitle');
       document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
 
       const ids = [
-        'langLabel', 'mobileLangLabel', 'userName', 'mobileUserName', 'roleIndicator',
+        'langLabel', 'mobileLangLabel', 'roleIndicator',
         'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
         'pageTitle', 'pageSubtitle',
         'profileSectionTitle', 'profileSectionDesc',
@@ -1400,7 +1405,7 @@
         const el = document.getElementById(id);
         if (el) el.classList.remove('error');
       });
-      ['nameError', 'currentPwError', 'newPwError', 'confirmPwError'].forEach(id => {
+      ['nameError', 'contactError', 'currentPwError', 'newPwError', 'confirmPwError'].forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.style.display = 'none'; el.textContent = ''; }
       });
@@ -1425,7 +1430,7 @@
         valid = false;
       }
       if (contact.length > 255) {
-        showFieldError('fieldContact', null, t('errContactTooLong'));
+        showFieldError('fieldContact', 'contactError', t('errContactTooLong'));
         valid = false;
       }
       if (!valid) {

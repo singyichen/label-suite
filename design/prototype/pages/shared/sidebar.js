@@ -58,7 +58,7 @@
     );
     var dashboardHref = opts.dashboardHref || '../dashboard/dashboard.html';
     var profileHref = opts.profileHref || '../account/profile.html';
-    var loginHref = opts.loginHref || '../account/login.html';
+
     var taskHref = opts.taskHref || '#';
     var annotationHref = opts.annotationHref || '#';
     var datasetHref = opts.datasetHref || '#';
@@ -129,19 +129,19 @@
               '</svg>' +
             '</div>' +
             '<span class="navbar-wordmark">Label Suite</span>' +
-            '<button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言">' +
-              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
-              '<span id="langLabel" data-testid="lang-label">ZH</span>' +
-            '</button>' +
-            '<span id="mobileUserName" class="mobile-user-name">' + mobileUserName + '</span>' +
-            '<button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">' +
-              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
-              '<span id="mobileLangLabel">ZH</span>' +
-            '</button>' +
-            '<button id="mobileLogoutBtn" class="mobile-top-logout" onclick="window.location.href=\'' + loginHref + '\'" aria-label="登出" title="登出">' +
-              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
-            '</button>' +
           '</a>' +
+          '<button class="lang-toggle" id="langToggle" data-testid="lang-toggle" aria-label="切換語言">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
+            '<span id="langLabel" data-testid="lang-label">ZH</span>' +
+          '</button>' +
+          '<span id="mobileUserName" class="mobile-user-name">' + mobileUserName + '</span>' +
+          '<button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
+            '<span id="mobileLangLabel">ZH</span>' +
+          '</button>' +
+          '<button id="mobileLogoutBtn" class="mobile-top-logout" aria-label="登出" title="登出">' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
+          '</button>' +
         '</div>' +
 
         '<nav class="navbar-center" aria-label="Main navigation">' +
@@ -157,7 +157,7 @@
                 '<span class="user-role" id="roleIndicator" data-testid="role-indicator">' + roleIndicator + '</span>' +
               '</div>' +
             '</a>' +
-            '<button id="logoutBtn" class="logout-btn" onclick="window.location.href=\'' + loginHref + '\'" aria-label="登出" title="登出">' +
+            '<button id="logoutBtn" class="logout-btn" aria-label="登出" title="登出">' +
               '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
             '</button>' +
           '</div>' +
@@ -173,14 +173,12 @@
     mountNode.innerHTML = renderSidebar(opts);
     applySystemRole(opts.systemRole || readStoredSystemRole() || (opts.hideAdmin ? 'user' : 'super_admin'));
 
-    // The brand wrapper is an anchor. Prevent language toggles from bubbling
-    // into anchor navigation when clicked.
-    ['langToggle', 'mobileLangToggle', 'mobileLogoutBtn'].forEach(function (id) {
+    var loginHref = opts.loginHref || '../account/login.html';
+    ['mobileLogoutBtn', 'logoutBtn'].forEach(function (id) {
       var btn = document.getElementById(id);
       if (!btn) return;
-      btn.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
+      btn.addEventListener('click', function () {
+        window.location.href = loginHref;
       });
     });
   }

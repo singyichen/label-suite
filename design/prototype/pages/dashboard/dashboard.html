@@ -108,6 +108,9 @@
     }
 
     .brand-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
       margin-bottom: var(--space-xl);
       padding-bottom: var(--space-lg);
       border-bottom: 1px solid var(--color-border);
@@ -143,7 +146,7 @@
       line-height: 1;
     }
 
-    .navbar-brand .lang-toggle {
+    .brand-section .lang-toggle {
       margin-left: auto;
     }
 
@@ -803,7 +806,7 @@
         display: block;
       }
 
-      .navbar-brand .lang-toggle {
+      .brand-section .lang-toggle {
         display: none;
       }
 
@@ -908,7 +911,6 @@
     window.LabelSuiteSharedSidebar.mountSidebar({
       mountId: 'sharedSidebarMount',
       activeNav: 'dashboard',
-      systemRole: 'user',
       dashboardHref: '../dashboard/dashboard.html',
       profileHref: '../account/profile.html',
       loginHref: '../account/login.html',
