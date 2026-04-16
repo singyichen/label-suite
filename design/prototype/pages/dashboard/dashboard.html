@@ -379,6 +379,26 @@
       min-width: 0;
     }
 
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-main-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 28px;
+      line-height: 1.3;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin: 0 0 4px;
+    }
+
+    .page-main-subtitle {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #64748B;
+      margin: 0;
+    }
+
     /* ── Controls ──────────────────────────────────────────────── */
     .controls {
       display: flex;
@@ -979,6 +999,11 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <main class="layout" data-testid="dashboard-shell">
     <section class="page" id="top">
+      <section class="page-header" aria-labelledby="dashboardMainTitle">
+        <h1 id="dashboardMainTitle" class="page-main-title">儀表板</h1>
+        <p id="dashboardMainSubtitle" class="page-main-subtitle">掌握任務進度與團隊協作狀態</p>
+      </section>
+
       <!-- Controls -->
       <section class="controls">
         <div>
@@ -1454,6 +1479,8 @@
         logoutAria:           '登出',
         logoutTitle:          '登出',
         navDashboard:         '儀表板',
+        dashboardMainTitle:   '儀表板',
+        dashboardMainSubtitle:'掌握任務進度與團隊協作狀態',
         navCreateTask:        '建立任務',
         navAnnotation:        '標記作業',
         navProfile:           '個人設定',
@@ -1578,6 +1605,8 @@
         logoutAria:           'Sign out',
         logoutTitle:          'Sign out',
         navDashboard:         'Dashboard',
+        dashboardMainTitle:   'Dashboard',
+        dashboardMainSubtitle:'Track task progress and team collaboration at a glance',
         navCreateTask:        'Create Task',
         navAnnotation:        'Annotation',
         navProfile:           'Profile',

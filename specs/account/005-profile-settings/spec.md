@@ -2,7 +2,7 @@
 
 **功能分支**：`005-profile-settings`  
 **建立日期**：2026-04-05  
-**版本**：1.2.1  
+**版本**：1.2.3  
 **狀態**：Clarified  
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
 
@@ -131,7 +131,9 @@ sequenceDiagram
 
 **個人資料區塊定義（需與原型一致）**：
 
-- 欄位：`name`（必填）、`contact_info`（可空，單一自由文字）、`email`（遮罩顯示，含「變更」入口）
+- 頁首：主標題 `個人設定`，副標題 `管理您的個人資料與帳號安全`
+- 欄位：`name`（必填）、`contact_info`（可空，單一自由文字，顯示即時計數 `N / 255`）、`email`（遮罩顯示，含「變更」入口）
+- 頭像上傳：接受 `JPG/PNG/WebP`，檔案大小上限 5 MB
 - 按鈕：`儲存`（主要）
 - 回饋：儲存成功顯示 toast，不跳頁
 
@@ -139,6 +141,9 @@ sequenceDiagram
 
 - `name` 為必填，空值不得送出請求。
 - `contact_info` 長度上限 `CONTACT_INFO_MAX_LENGTH`，可為空字串。
+- `contact_info` 輸入時需顯示即時字數計數（`目前字數 / CONTACT_INFO_MAX_LENGTH`）。
+- `email` 欄位為唯讀遮罩顯示，不可直接編輯；須透過「變更」流程更新。
+- 頭像僅接受 `JPG/PNG/WebP` 且檔案大小 <= 5 MB。
 - 更新成功後必須同步 `authStore`，Navbar 顯示名稱即時更新。
 
 ---
@@ -153,7 +158,7 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 已登入使用者在 `/profile`，**When** 點擊 Email 欄位旁「變更」，**Then** 進入變更 Email 畫面並可輸入新 Email。
+1. **Given** 已登入使用者在 `/profile`，**When** 點擊 Email 欄位旁「變更」，**Then** 同頁切換至變更 Email 狀態並可輸入新 Email。
 2. **Given** 已登入使用者送出合法且未被使用的新 Email，**When** 提交變更請求，**Then** 系統寄送驗證信至新 Email 並顯示「已寄送驗證信」。
 3. **Given** 新 Email 尚未驗證，**When** 使用者嘗試以新 Email 登入，**Then** 登入失敗；舊 Email 仍可登入。
 4. **Given** 使用者點擊未過期且有效的驗證連結，**When** 驗證通過，**Then** 系統將帳號主 Email 切換為新 Email。
@@ -162,7 +167,7 @@ sequenceDiagram
 **變更 Email 區塊定義（需與原型一致）**：
 
 - 入口：`/profile` Email 列顯示遮罩 Email + `變更` 連結
-- 變更頁：`/profile/email-change`，欄位 `new_email` + 按鈕 `下一步`
+- 呈現方式：同一路由 `/profile` 內切換狀態（`emailChangeState`），欄位 `new_email` + 按鈕 `下一步`（預設 disabled，email 格式合法後啟用）
 - 成功提示：送出後顯示「已寄送驗證信至 {new_email}，請前往信箱完成驗證」
 
 **變更 Email 行為規則**：
@@ -239,11 +244,12 @@ sequenceDiagram
 ### 功能需求
 
 - **FR-001**：`/profile` 必須提供個人資料區塊（姓名、聯絡方式、Email 顯示與變更入口）與儲存操作。
+- **FR-001A**：`/profile` 必須顯示頁首標題區，包含主標題「個人設定」與副標題「管理您的個人資料與帳號安全」。
 - **FR-002**：`name` 必須為必填欄位，空值不得送出。
 - **FR-003**：`contact_info` 必須為單一自由文字欄位，可為空字串，長度上限 `CONTACT_INFO_MAX_LENGTH`。
 - **FR-004**：個人資料更新成功後，前端必須同步更新 `authStore`，使 Navbar 顯示名稱即時反映。
 - **FR-004A**：`/profile` 的 Email 區塊必須顯示遮罩後 Email 與「變更」入口。
-- **FR-004B**：點擊「變更」後，系統必須進入 `/profile/email-change` 並提供 `new_email` 輸入與「下一步」按鈕。
+- **FR-004B**：點擊「變更」後，系統必須在同一路由 `/profile` 內切換至 Email 變更狀態，並提供 `new_email` 輸入與「下一步」按鈕。
 - **FR-004C**：送出新 Email 後，系統必須建立 email 變更請求（`pending_email` + `verification_token` + `expires_at`）並寄送驗證信至新 Email。
 - **FR-004D**：在 Email 驗證完成前，系統不得覆蓋既有 `email`，且登入仍使用舊 Email。
 - **FR-004E**：使用者點擊有效驗證連結後，系統必須將 `email` 更新為 `pending_email` 並清除 pending/token。
@@ -258,7 +264,7 @@ sequenceDiagram
 - **FR-011**：僅已登入使用者可存取 `/profile`；未登入存取必須導向 `/login`。
 - **FR-011A**：`/profile` 必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-011B**：在 `<= MOBILE_BP` 時，兩個主要區塊（個人資料 / 密碼）必須單欄堆疊，避免欄位或按鈕被截斷。
-- **FR-011C**：在任一 `RWD_VIEWPORTS` 下，頁面與 `/profile/email-change` 不得出現水平捲軸、文字重疊、按鈕遮擋或元件溢出容器。
+- **FR-011C**：在任一 `RWD_VIEWPORTS` 下，`/profile` 各狀態畫面（主表單 / 變更 Email / 已寄信提示）不得出現水平捲軸、文字重疊、按鈕遮擋或元件溢出容器。
 
 ### User Flow & Navigation
 
@@ -266,16 +272,17 @@ sequenceDiagram
 flowchart LR
     navbar["Navbar 使用者頭像"]
     profile["/profile"]
-    emailChange["/profile/email-change"]
+    profileEmailChange["/profile（emailChangeState）"]
+    profileEmailSent["/profile（emailSentState）"]
     emailVerify["/auth/email/verify?token=..."]
     login["/login（新 Email 可登入）"]
     dashboard["/dashboard"]
 
     navbar   -->|"點擊頭像"| profile
     profile  -->|"儲存成功"| profile
-    profile  -->|"點擊 Email 變更"| emailChange
-    emailChange -->|"送出新 Email"| profile
-    emailChange -->|"點擊驗證信連結"| emailVerify
+    profile  -->|"點擊 Email 變更"| profileEmailChange
+    profileEmailChange -->|"送出新 Email"| profileEmailSent
+    profileEmailSent -->|"點擊驗證信連結"| emailVerify
     emailVerify -->|"驗證成功"| login
     profile  -->|"點擊 Navbar Logo"| dashboard
 ```
@@ -284,8 +291,8 @@ flowchart LR
 |------|---------|-----|
 | Navbar 使用者頭像 | 點擊 | `/profile` |
 | `/profile` | 儲存成功 | 停留在 `/profile` |
-| `/profile` | 點擊 Email「變更」 | `/profile/email-change` |
-| `/profile/email-change` | 送出新 Email | 停留在 `/profile`（顯示已寄送驗證信） |
+| `/profile`（主表單） | 點擊 Email「變更」 | `/profile`（`emailChangeState`） |
+| `/profile`（`emailChangeState`） | 送出新 Email | `/profile`（`emailSentState`） |
 | 驗證信連結 | token 驗證成功 | `/login`（使用新 Email） |
 | `/profile` | 點擊 Navbar Logo | `/dashboard` |
 
@@ -298,6 +305,7 @@ flowchart LR
 
 > 本節定義 spec 005 `/profile` 頁面的 wireframe 範圍。  
 > 單一檔案：`design/wireframes/pages/account/profile.pen`
+> 最新 HTML（`design/prototype/pages/account/profile.html`）已移除頁首 Prototype 狀態切換導引列（P-0 ~ P-5 按鈕），狀態切換改為頁內流程事件觸發。
 
 #### 總計：6 張
 
@@ -378,6 +386,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.3 | 2026-04-16 | 補齊 `/profile` 頁首標題規範：將主標題「個人設定」與副標題「管理您的個人資料與帳號安全」納入區塊定義與功能需求（FR-001A） |
+| 1.2.2 | 2026-04-16 | 依 `profile.html` 同步規格：移除路由式 `/profile/email-change` 描述、改為同頁狀態切換（`emailChangeState`/`emailSentState`）；補齊頭像格式與大小限制、聯絡方式即時計數，並註記已移除頁首 Prototype 狀態切換導引列 |
 | 1.2.1 | 2026-04-16 | 移除「查看角色資訊」相關規劃（User Story、FR、SC、邊界情況與 wireframe 角色區塊描述） |
 | 1.2.0 | 2026-04-16 | 新增「變更 Email」功能：新增變更入口、驗證信寄送流程、驗證成功後切換登入 Email 規則；同步更新 FR、Flow、Wireframe 與成功標準 |
 | 1.1.2 | 2026-04-16 | Profile 個人資料區操作調整為僅保留「儲存」按鈕，移除「取消」相關流程與導頁描述 |
