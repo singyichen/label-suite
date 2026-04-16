@@ -8,8 +8,8 @@
 
 | 角色 | 說明 | 訪談指引 |
 |------|------|---------|
-| 標記員受訪者（Annotator） | 執行標注任務的大學生或研究生 | [annotator/interview-guide.md](annotator/interview-guide.md) |
-| 研究員受訪者（Researcher） | 設計並指派標注任務的研究人員 | [researcher/interview-guide.md](researcher/interview-guide.md) |
+| 標記員受訪者（Annotator） | 執行標記任務的大學生或研究生 | [annotator/interview-guide.md](annotator/interview-guide.md) |
+| 研究員受訪者（Researcher） | 設計並指派標記任務的研究人員 | [researcher/interview-guide.md](researcher/interview-guide.md) |
 | 管理員受訪者（Admin） | 負責帳號、工時與薪資管理的實驗室人員 | [admin/interview-guide.md](admin/interview-guide.md) |
 
 ## 訪談格式

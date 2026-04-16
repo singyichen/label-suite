@@ -9,7 +9,7 @@
 ## Backbone — 用戶活動流（橫軸）
 
 ```
-帳號建立／登入 → 查看儀表板 → 建立任務 → 管理任務與成員 → 執行標注 → 審核品質 → 查看統計 → 平台成員與工時 → 系統管理
+帳號建立／登入 → 查看儀表板 → 建立任務 → 管理任務與成員 → 執行標記 → 審核品質 → 查看統計 → 平台成員與工時 → 系統管理
 ```
 
 ---
@@ -52,18 +52,18 @@
 | R2 | 在任務詳情頁邀請成員並指派角色 | `014` | Project Leader |
 | R2 | 從平台成員列表挑選任務成員並查看其工時紀錄 | `008`、`009` | Project Leader |
 | R2 | 發布 Dry Run → 確認 IAA → 發布 Official Run | `014` | Project Leader |
-| R2 | 匯出最終標注結果（CSV / JSON） | `014` | Project Leader |
+| R2 | 匯出最終標記結果（CSV / JSON） | `014` | Project Leader |
 
 ---
 
-### 執行標注
+### 執行標記
 
 | Release | Story | Spec | 主要角色 |
 |---------|-------|------|---------|
-| **R1** | 進入標記作業頁，依任務類型執行標注（分類 / 評分/迴歸 / 句對 / NER / 關係抽取） | `015` | Annotator |
+| **R1** | 進入標記作業頁，依任務類型執行標記（分類 / 評分/迴歸 / 句對 / NER / 關係抽取） | `015` | Annotator |
 | **R1** | 草稿自動儲存，離開後可繼續 | `015` | Annotator |
 | **R1** | 即時進度條顯示完成筆數 | `015` | Annotator |
-| R2 | Dry Run 標注（與 Official Run 隔離） | `015` | Annotator |
+| R2 | Dry Run 標記（與 Official Run 隔離） | `015` | Annotator |
 
 ---
 
@@ -71,8 +71,8 @@
 
 | Release | Story | Spec | 主要角色 |
 |---------|-------|------|---------|
-| R2 | 查閱已提交標注，執行抽查或全審 | `015` | Reviewer |
-| R2 | 修改或標記錯誤標注，回報給 Project Leader | `015` | Reviewer |
+| R2 | 查閱已提交標記，執行抽查或全審 | `015` | Reviewer |
+| R2 | 修改或標記錯誤標記，回報給 Project Leader | `015` | Reviewer |
 | R3 | 查看 IAA 報告，協助確認標記共識 | `017` | Reviewer / Project Leader |
 
 ---
@@ -81,7 +81,7 @@
 
 | Release | Story | Spec | 主要角色 |
 |---------|-------|------|---------|
-| R2 | 查看標注分佈（label distribution、token counts） | `016` | Project Leader |
+| R2 | 查看標記分佈（label distribution、token counts） | `016` | Project Leader |
 | R2 | 監控標記員進度，偵測異常 | `016` | Project Leader |
 | R3 | 查看資料集品質指標（IAA、inter-rater agreement） | `017` | Project Leader / Reviewer |
 
@@ -111,11 +111,11 @@
 
 ### R1 — Demo Core（最小可展示集合）
 
-> 目標：能向教授展示完整的核心標注流程（一個任務從建立到標注完成）
+> 目標：能向教授展示完整的核心標記流程（一個任務從建立到標記完成）
 
 涵蓋 spec：`001` · `012` · `013` · `015`
 
-**可展示流程**：登入 → Dashboard → 建立任務（含 Config Builder）→ 執行標注（含進度追蹤）
+**可展示流程**：登入 → Dashboard → 建立任務（含 Config Builder）→ 執行標記（含進度追蹤）
 
 ---
 
@@ -154,6 +154,6 @@
 | 012 | Dashboard | R1 | 查看儀表板 |
 | 013 | New Task + Config Builder | R1 | 建立任務 |
 | 014 | Task Detail | R2 | 管理任務與成員 |
-| 015 | Annotation Workspace | R1 / R2 | 執行標注 / 審核品質 |
+| 015 | Annotation Workspace | R1 / R2 | 執行標記 / 審核品質 |
 | 016 | Dataset Stats | R2 | 查看統計 |
 | 017 | Dataset Quality | R3 | 審核品質 / 查看統計 |
