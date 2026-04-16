@@ -1,11 +1,39 @@
-# 功能規格：個人設定（資料編輯 + 修改密碼）
+# 功能規格：Profile Settings — 個人設定（資料編輯 + 修改密碼）
 
-**功能分支**：`005-profile-settings`
-**建立日期**：2026-04-05
-**狀態**：Clarified
+**功能分支**：`005-profile-settings`  
+**建立日期**：2026-04-05  
+**版本**：1.1.0  
+**狀態**：Clarified  
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 修改密碼）
 
+## 規格常數
+
+- `PASSWORD_MIN_LENGTH = 8`
+- `CONTACT_INFO_MAX_LENGTH = 255`
+- `PASSWORD_RULE = 至少 1 個大寫英文字母 + 1 個小寫英文字母 + 1 個數字`
+- `MOBILE_BP = 767px`
+- `RWD_VIEWPORTS = 375px / 768px / 1440px`
+
 ## Process Flow
+
+### 個人資料儲存流程
+
+```mermaid
+sequenceDiagram
+    actor 使用者
+    participant 瀏覽器
+    participant 前端狀態 as authStore
+    participant 後端API as 後端 API
+    participant 資料庫
+
+    使用者->>瀏覽器: 編輯姓名 / 聯絡方式並送出
+    瀏覽器->>瀏覽器: 前端驗證（name 必填, contact_info 長度 <= 255）
+    瀏覽器->>後端API: PATCH /users/me（name, contact_info）
+    後端API->>資料庫: 更新使用者資料
+    後端API-->>瀏覽器: 200 + 更新後使用者資料
+    瀏覽器->>前端狀態: 同步 authStore name/contact_info
+    瀏覽器-->>使用者: 顯示「儲存成功」
+```
 
 ### 修改密碼流程
 
@@ -15,37 +43,40 @@ sequenceDiagram
     participant 瀏覽器
     participant 後端API as 後端 API
     participant 資料庫
+    participant session as Session Store
 
-    使用者->>瀏覽器: 提交現有密碼 + 新密碼 + 確認新密碼
-    瀏覽器->>瀏覽器: 前端驗證（新密碼 == 確認新密碼）
+    使用者->>瀏覽器: 提交密碼表單
+    瀏覽器->>瀏覽器: 前端驗證（新密碼規則 + 確認密碼一致）
+    瀏覽器->>後端API: PATCH /auth/password（current_password, new_password）
+    後端API->>資料庫: 讀取目前使用者 hashed_password
 
-    瀏覽器->>後端API: PATCH /auth/password（current_password、new_password）
-    後端API->>資料庫: 查詢使用者現有 hashed_password
-
-    alt hashed_password 不為 null（Email / Password 帳號）
-        後端API->>後端API: bcrypt 驗證現有密碼
+    alt Email / Password 帳號（hashed_password != null）
+        後端API->>後端API: bcrypt 驗證 current_password
         alt 驗證失敗
-            後端API-->>瀏覽器: 401 + 錯誤訊息「現有密碼錯誤」
+            後端API-->>瀏覽器: 401 +「現有密碼錯誤」
         else 驗證成功
-            後端API->>後端API: bcrypt hash 新密碼
+            後端API->>後端API: bcrypt hash(new_password)
             後端API->>資料庫: 更新 hashed_password
-            後端API-->>瀏覽器: 200（顯示「密碼修改成功」）
+            後端API->>session: 失效其他裝置 sessions（保留目前裝置）
+            後端API-->>瀏覽器: 200 +「密碼修改成功」
         end
-    else hashed_password 為 null（純 Google SSO 帳號）
-        note over 後端API: 跳過現有密碼驗證，直接設定新密碼
-        後端API->>後端API: bcrypt hash 新密碼
+    else Google SSO 帳號（hashed_password = null）
+        note over 後端API: 跳過 current_password 驗證
+        後端API->>後端API: bcrypt hash(new_password)
         後端API->>資料庫: 更新 hashed_password
-        後端API-->>瀏覽器: 200（顯示「密碼設定成功」）
+        後端API->>session: 失效其他裝置 sessions（保留目前裝置）
+        後端API-->>瀏覽器: 200 +「密碼設定成功」
     end
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
-| 1 | 使用者 | 提交現有密碼 + 新密碼 + 確認新密碼 | 前端驗證新密碼與確認新密碼是否一致 |
-| 2 | 後端 | 查詢使用者 `hashed_password` | 判斷帳號類型 |
-| 3a | 後端 | Email / Password 帳號 — bcrypt 驗證現有密碼失敗 | 回傳 401 + 錯誤訊息，不更新密碼 |
-| 3b | 後端 | Email / Password 帳號 — bcrypt 驗證現有密碼成功 | bcrypt hash 新密碼 → 更新 DB → 回傳 200 |
-| 3c | 後端 | 純 Google SSO 帳號（`hashed_password = null`） | 跳過現有密碼驗證，直接 bcrypt hash 新密碼 → 更新 DB → 回傳 200 |
+| 1 | 使用者 | 編輯姓名或聯絡方式並送出 | 前端驗證後送出更新請求 |
+| 2 | 系統 | 更新個人資料成功 | 回傳新資料並同步 `authStore`，Navbar 即時更新 |
+| 3 | 使用者 | 送出密碼變更 | 前端先驗證強度與確認密碼一致 |
+| 4a | 系統 | Email / Password 帳號且現有密碼錯誤 | 回傳 401 + 錯誤訊息，不更新密碼 |
+| 4b | 系統 | 密碼更新成功 | 寫入 bcrypt 雜湊，保留目前裝置 session，其他裝置失效 |
+| 4c | 系統 | Google SSO 帳號設定密碼 | 不顯示現有密碼欄位，直接設定新密碼並套用相同 session 規則 |
 
 ---
 
@@ -53,56 +84,111 @@ sequenceDiagram
 
 ### User Story 1 — 修改個人資料（優先級：P1）
 
-已登入使用者在 `/profile` 頁面修改姓名或聯絡方式，送出後系統更新資料庫並顯示儲存成功提示。
+已登入使用者在 `/profile` 修改姓名或聯絡方式，送出後系統更新資料並顯示成功提示。
 
-**此優先級原因**：使用者需要能維護自己的基本資料，是基本的帳號功能。
+**此優先級原因**：屬於基本帳號維護能力，必須優先可用。
 
-**獨立測試方式**：登入後進入 `/profile`，修改姓名並送出，驗證資料庫更新且頁面顯示成功提示。
+**獨立測試方式**：登入後進入 `/profile`，修改姓名與聯絡方式，驗證 API 回寫成功、畫面顯示成功訊息，且 Navbar 名稱即時更新。
 
 **驗收情境**：
 
-1. **Given** 已登入使用者在 `/profile`，**When** 修改姓名並送出，**Then** 資料庫更新 `name`，頁面顯示「儲存成功」提示，表單顯示新值。
-2. **Given** 已登入使用者在 `/profile`，**When** 修改聯絡方式並送出，**Then** 資料庫更新聯絡資訊，頁面顯示「儲存成功」提示。
-3. **Given** 已登入使用者在 `/profile`，**When** 清空姓名欄位並送出，**Then** 前端顯示必填錯誤，不送出請求。
+1. **Given** 已登入使用者在 `/profile`，**When** 修改姓名並送出，**Then** 資料庫更新 `name`，表單顯示新值且頁面顯示「儲存成功」。
+2. **Given** 已登入使用者在 `/profile`，**When** 修改聯絡方式並送出，**Then** 資料庫更新 `contact_info` 且頁面顯示「儲存成功」。
+3. **Given** 已登入使用者在 `/profile`，**When** 清空姓名欄位送出，**Then** 前端顯示必填錯誤並阻止送出。
+
+**個人資料區塊定義（需與原型一致）**：
+
+- 欄位：`name`（必填）、`contact_info`（可空，單一自由文字）、`email`（唯讀）
+- 按鈕：`儲存`（主要）、`取消`（次要）
+- 回饋：儲存成功顯示 toast，不跳頁
+
+**個人資料區塊行為規則**：
+
+- `name` 為必填，空值不得送出請求。
+- `contact_info` 長度上限 `CONTACT_INFO_MAX_LENGTH`，可為空字串。
+- 更新成功後必須同步 `authStore`，Navbar 顯示名稱即時更新。
 
 ---
 
-### User Story 2 — 修改密碼（優先級：P2）
+### User Story 2 — 修改密碼 / 設定密碼（優先級：P1）
 
-已登入使用者在 `/profile` 修改密碼，需先輸入現有密碼驗證身份，再填寫新密碼與確認密碼。Google SSO 帳號（無既有密碼）可直接設定密碼。
+已登入使用者可在 `/profile` 修改密碼；Google SSO 帳號（無既有密碼）可在同區塊直接設定新密碼。
 
-**此優先級原因**：密碼管理是帳號安全的基本需求；與忘記密碼（spec 004）互補，一個是登入後自主修改，另一個是登入前緊急重設。
+**此優先級原因**：帳號安全核心功能，且需覆蓋 Email / Password 與 Google SSO 兩種帳號型態。
 
-**獨立測試方式**：登入後進入 `/profile`，填寫正確的現有密碼與新密碼送出，驗證以新密碼可登入、舊密碼無效。
+**獨立測試方式**：分別以 Email / Password 與 Google SSO 帳號執行流程，驗證欄位顯示差異、密碼更新結果與 session 失效策略。
 
 **驗收情境**：
 
-1. **Given** Email / Password 帳號的已登入使用者，**When** 填寫正確的現有密碼與符合強度的新密碼送出，**Then** 密碼以 bcrypt 雜湊更新，頁面顯示「密碼修改成功」。
-2. **Given** Email / Password 帳號的已登入使用者，**When** 填寫錯誤的現有密碼，**Then** 顯示「現有密碼錯誤」，不更新密碼。
+1. **Given** Email / Password 帳號已登入，**When** 輸入正確現有密碼與符合規則的新密碼送出，**Then** 密碼以 bcrypt 雜湊更新並顯示「密碼修改成功」。
+2. **Given** Email / Password 帳號已登入，**When** 輸入錯誤現有密碼送出，**Then** 顯示「現有密碼錯誤」，不更新密碼。
 3. **Given** 已登入使用者，**When** 新密碼與確認密碼不一致，**Then** 前端顯示「密碼不一致」，不送出請求。
-4. **Given** Google SSO 帳號的已登入使用者（無 `hashed_password`），**When** 在密碼修改區塊設定新密碼，**Then** 密碼設定成功，帳號同時支援 Email / Password 登入（靜默合併，同 spec 002）。
+4. **Given** Google SSO 帳號已登入且 `hashed_password = null`，**When** 設定符合規則的新密碼，**Then** 密碼設定成功，帳號新增 Email / Password 登入能力。
+5. **Given** 任一帳號密碼更新成功，**When** 其他裝置帶舊 session token 呼叫 API，**Then** 請求被拒絕並需重新登入；目前裝置維持登入。
+
+**密碼區塊定義（需與原型一致）**：
+
+- Email / Password 帳號：`current_password`、`new_password`、`confirm_new_password`
+- Google SSO 帳號：僅顯示 `new_password`、`confirm_new_password`，並顯示說明「設定密碼後即可同時使用 Email / Password 登入」
+- 按鈕：`修改密碼`（或設定密碼）
+
+**密碼區塊行為規則**：
+
+- 新密碼需滿足 `PASSWORD_MIN_LENGTH` 與 `PASSWORD_RULE`。
+- 驗證失敗回傳 401 時不啟用鎖定或節流機制。
+- 成功更新後必須失效其他裝置 sessions，保留目前裝置 session。
 
 ---
 
-### User Story 3 — 查看角色（優先級：P3）
+### User Story 3 — 查看角色資訊（優先級：P2）
 
-已登入使用者在 `/profile` 查看自己的系統角色，以及目前有成員資格的任務與對應任務角色。
+已登入使用者在 `/profile` 查看自己的系統角色與任務角色資訊，所有角色欄位皆為唯讀。
 
-**此優先級原因**：讓使用者了解自己的系統與任務角色，有助於理解可存取的功能範圍。
+**此優先級原因**：有助使用者理解可存取功能與當前任務責任。
 
-**獨立測試方式**：登入後進入 `/profile`，確認系統角色與任務角色資訊均正確顯示且無法編輯。
+**獨立測試方式**：登入後進入 `/profile`，驗證系統角色與任務角色列表顯示正確且不可編輯。
 
 **驗收情境**：
 
-1. **Given** 已登入使用者在 `/profile`，**When** 查看角色區塊，**Then** 顯示目前系統角色（`user` 或 `super_admin`），此欄位唯讀；若系統角色為 `null`，顯示「尚未指派系統角色」。
-2. **Given** 擁有任務角色的已登入使用者，**When** 查看角色區塊，**Then** 顯示所有有成員資格的任務名稱與對應任務角色（`project_leader` / `reviewer` / `annotator`）。
+1. **Given** 已登入使用者在 `/profile`，**When** 查看角色資訊區塊，**Then** 顯示系統角色（`user` 或 `super_admin`）且不可編輯。
+2. **Given** 有任務成員資格的已登入使用者，**When** 查看任務角色列表，**Then** 顯示任務名稱與任務角色（`project_leader` / `reviewer` / `annotator`）。
+
+**角色資訊區塊定義（需與原型一致）**：
+
+- 系統角色 badge（唯讀）
+- 任務角色列表（任務名稱 + 任務角色）
+
+**角色資訊區塊行為規則**：
+
+- 本版不處理「無系統角色」空狀態；有效系統角色僅 `user`、`super_admin`。
+- 任務角色資訊僅展示，不提供編輯入口。
+
+---
+
+### User Story 4 — 響應式版面（優先級：P2）
+
+使用者在不同裝置寬度存取 `/profile` 時，頁面需維持可讀、可操作且不破版。
+
+**此優先級原因**：個人設定常在行動裝置使用，RWD 問題會直接影響資料更新與密碼操作成功率。
+
+**獨立測試方式**：以 `RWD_VIEWPORTS` 驗證 `/profile` 的三個主要區塊、表單欄位、按鈕與錯誤訊息呈現。
+
+**驗收情境**：
+
+1. **Given** `<= MOBILE_BP`，**When** 開啟 `/profile`，**Then** 個人資料、密碼、角色區塊改為單欄堆疊，且互動元件可完整點擊。
+2. **Given** `<= MOBILE_BP`，**When** 顯示密碼錯誤訊息或儲存成功提示，**Then** 不發生文字截斷、按鈕遮擋或元件重疊。
+3. **Given** 任一 `RWD_VIEWPORTS`，**When** 進行資料儲存與密碼修改流程，**Then** 頁面無水平捲軸且無排版破版。
 
 ---
 
 ### 邊界情況
 
-- Google SSO 帳號嘗試修改密碼時？→ 顯示設定新密碼的表單（無現有密碼欄），設定成功後帳號新增 Email / Password 登入能力。
-- 使用者修改姓名後，Navbar 上的顯示名稱是否即時更新？→ 是，儲存成功後前端 `authStore` 同步更新，Navbar 即時反映新姓名。
+- Google SSO 帳號進入密碼區塊時？→ 不顯示現有密碼欄位，改為設定新密碼流程。
+- 使用者姓名更新後 Navbar 是否即時反映？→ 是，透過 `authStore` 同步即時更新。
+- `contact_info` 欄位可否為空？→ 可以，空字串合法；超過 `CONTACT_INFO_MAX_LENGTH` 視為驗證失敗。
+- 系統是否存在無角色使用者？→ 本版不納入；使用者角色固定為 `user` 或 `super_admin`。
+- 現有密碼連續輸入錯誤是否鎖定？→ 不鎖定；每次皆回傳 401。
+- 行動版（`<= MOBILE_BP`）時內容區是否可能被擠壓或遮擋？→ 不可；需維持單欄可閱讀與可操作。
 
 ---
 
@@ -110,15 +196,22 @@ sequenceDiagram
 
 ### 功能需求
 
-- **FR-001**：`/profile` 頁面必須提供姓名、聯絡方式的編輯欄位，以及儲存按鈕。
-- **FR-002**：姓名為必填欄位；前端驗證不得為空。
-- **FR-003**：個人資料儲存成功後，前端 `authStore` 必須同步更新，Navbar 顯示名稱即時反映。
-- **FR-004**：`/profile` 必須提供修改密碼區塊，含現有密碼（Email / Password 帳號）、新密碼、確認密碼欄位。
-- **FR-005**：修改密碼前，Email / Password 帳號必須先驗證現有密碼（bcrypt 比對）。
-- **FR-006**：新密碼必須以 bcrypt 雜湊後儲存，長度 ≥ 8 字元。
-- **FR-007**：Google SSO 帳號（無 `hashed_password`）在修改密碼區塊不顯示「現有密碼」欄位，可直接設定新密碼。
-- **FR-008**：`/profile` 必須提供角色資訊區塊，顯示系統角色（唯讀）及所有任務角色（任務名稱 + 任務角色）。
-- **FR-009**：只有已登入使用者可存取 `/profile`；未登入存取導向 `/login`。
+- **FR-001**：`/profile` 必須提供個人資料區塊（姓名、聯絡方式、唯讀 Email）與儲存操作。
+- **FR-002**：`name` 必須為必填欄位，空值不得送出。
+- **FR-003**：`contact_info` 必須為單一自由文字欄位，可為空字串，長度上限 `CONTACT_INFO_MAX_LENGTH`。
+- **FR-004**：個人資料更新成功後，前端必須同步更新 `authStore`，使 Navbar 顯示名稱即時反映。
+- **FR-005**：`/profile` 必須提供密碼修改區塊，依帳號類型顯示對應欄位。
+- **FR-006**：Email / Password 帳號修改密碼前必須驗證 `current_password`（bcrypt 比對）。
+- **FR-007**：新密碼必須以 bcrypt 雜湊儲存，並符合 `PASSWORD_MIN_LENGTH` 與 `PASSWORD_RULE`。
+- **FR-008**：Google SSO 帳號（`hashed_password = null`）不得顯示「現有密碼」欄位，且可直接設定新密碼。
+- **FR-009**：密碼驗證失敗時，系統必須回傳 401 與「現有密碼錯誤」，且不啟用鎖定或節流機制。
+- **FR-010**：密碼更新成功後，必須保留目前裝置 session，並失效其他裝置既有 sessions。
+- **FR-011**：`/profile` 必須提供角色資訊區塊，顯示系統角色（唯讀）與任務角色列表（任務名稱 + 任務角色）。
+- **FR-012**：系統角色有效值為 `user`、`super_admin`；本版不支援無角色空狀態處理流程。
+- **FR-013**：僅已登入使用者可存取 `/profile`；未登入存取必須導向 `/login`。
+- **FR-013A**：`/profile` 必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
+- **FR-013B**：在 `<= MOBILE_BP` 時，三個主要區塊（個人資料 / 密碼 / 角色）必須單欄堆疊，避免欄位或按鈕被截斷。
+- **FR-013C**：在任一 `RWD_VIEWPORTS` 下，頁面不得出現水平捲軸、文字重疊、按鈕遮擋或元件溢出容器。
 
 ### User Flow & Navigation
 
@@ -129,8 +222,8 @@ flowchart LR
     dashboard["/dashboard"]
 
     navbar   -->|"點擊頭像"| profile
-    profile  -->|"儲存成功 → 停留"| profile
-    profile  -->|"點擊「取消」"| dashboard
+    profile  -->|"儲存成功"| profile
+    profile  -->|"點擊取消"| dashboard
 ```
 
 | From | Trigger | To |
@@ -139,20 +232,15 @@ flowchart LR
 | `/profile` | 儲存成功 | 停留在 `/profile` |
 | `/profile` | 點擊「取消」或 Navbar Logo | `/dashboard` |
 
-**Entry points**：Navbar 使用者頭像點擊。
-**Exit points**：取消 → `/dashboard`；其他操作停留在 `/profile`。
+**Entry points**：Navbar 使用者頭像點擊。  
+**Exit points**：取消返回 `/dashboard`；其餘成功操作留在 `/profile`。
 
 ---
 
 ### Wireframe 畫面總覽
 
-> 本節為 spec 005 `/profile` 頁面的 wireframe 畫面範圍定義。
->
-> **單一檔案**：所有畫面集中在 `design/wireframes/pages/account/profile.pen`，每個畫面狀態為獨立 Page。
->
-> **帳號類型變體**：Email / Password 帳號與純 Google SSO 帳號在密碼修改區塊的顯示不同（有無「現有密碼」欄位），各需一張獨立 Page（P-1、P-2）。
->
-> **成功 / 儲存中狀態**：儲存成功以 toast 通知呈現，不改變頁面主要內容；無需獨立 Page，以 annotation 標注於 P-1 / P-2 即可。
+> 本節定義 spec 005 `/profile` 頁面的 wireframe 範圍。  
+> 單一檔案：`design/wireframes/pages/account/profile.pen`
 
 #### 總計：4 張
 
@@ -164,27 +252,21 @@ flowchart LR
 | 密碼欄位錯誤狀態 | 1 |
 | **合計** | **4** |
 
----
-
 #### Profile 頁面 — 4 張
-
-> 觸發條件：已登入使用者存取 `/profile`（AuthGuard 保護，未登入導向 `/login`）。
 
 | ID | 畫面狀態 | Page 名稱 | 對應 US | 需繪製內容 | 導出導航 |
 |----|---------|----------|---------|-----------|---------|
-| P-0 | **Skeleton** | `P-0 Profile Skeleton` | US1、US2、US3 | 全頁灰色骨架佔位：Header、三個區塊佔位（個人資料 / 密碼修改 / 角色資訊）；無實際內容，無操作元件 | — |
-| P-1 | **Email / Password 帳號** | `P-1 Profile Email 帳號` | US1、US2、US3 | ① **個人資料區**：姓名（必填，可編輯）、聯絡方式（可編輯）、Email（唯讀標示）+ 「儲存」主要按鈕 + 「取消」次要按鈕 ② **密碼修改區**（Email / Password 帳號完整版）：現有密碼 + 新密碼 + 確認新密碼三欄（password input type）+ 「修改密碼」按鈕 ③ **角色資訊區**：系統角色 badge（唯讀，例：`user` / `super_admin`）+ 任務角色列表（任務名稱 + 任務角色） | 「取消」→ `/dashboard` |
-| P-2 | **Google SSO 帳號** | `P-2 Profile Google SSO 帳號` | US2 | 密碼修改區**不顯示「現有密碼」欄位**（純 Google SSO 帳號，`hashed_password = null`）；改為說明文字「設定密碼後即可同時使用 Email / Password 登入」；其餘區塊（個人資料 / 角色資訊）與 P-1 相同 | 「取消」→ `/dashboard` |
-| P-3 | **密碼欄位錯誤** | `P-3 Profile 密碼錯誤` | US2 | 密碼修改區「現有密碼」欄位顯示 inline 錯誤訊息「現有密碼錯誤」（紅色邊框 + 錯誤文字）；「新密碼」與「確認新密碼」欄位清空；個人資料區與角色資訊區不變 | — |
-
----
+| P-0 | **Skeleton** | `P-0 Profile Skeleton` | US1、US2、US3 | Header 與三區塊骨架（個人資料 / 密碼 / 角色） | — |
+| P-1 | **Email / Password 帳號** | `P-1 Profile Email 帳號` | US1、US2、US3 | 個人資料區 + 三密碼欄位 + 角色資訊區 | 「取消」→ `/dashboard` |
+| P-2 | **Google SSO 帳號** | `P-2 Profile Google SSO 帳號` | US2 | 密碼區不顯示現有密碼欄，顯示設定說明；其餘同 P-1 | 「取消」→ `/dashboard` |
+| P-3 | **密碼欄位錯誤** | `P-3 Profile 密碼錯誤` | US2 | 現有密碼欄位紅框與錯誤文案；新密碼欄位清空 | — |
 
 #### 畫面 ID 彙整索引
 
 檔案：`design/wireframes/pages/account/profile.pen`
 
-| 畫面 ID | 畫面狀態 | Page 名稱（profile.pen 內）|
-|--------|---------|--------------------------|
+| 畫面 ID | 畫面狀態 | Page 名稱（profile.pen 內） |
+|--------|---------|----------------------------|
 | P-0 | Skeleton | `P-0 Profile Skeleton` |
 | P-1 | Email / Password 帳號 | `P-1 Profile Email 帳號` |
 | P-2 | Google SSO 帳號 | `P-2 Profile Google SSO 帳號` |
@@ -192,13 +274,25 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User（使用者）**：可編輯欄位：`name`、`contact_info`（聯絡方式）、`hashed_password`。唯讀欄位：`email`、`role`。
+- **User**：`name`、`contact_info`、`hashed_password`（可更新）；`email`、`role`（唯讀）
+- **Session**：多裝置登入 session 狀態（密碼更新後需失效其他裝置）
 
 ---
 
 ## 成功標準 *(必填)*
 
-- **SC-001**：個人資料修改成功後，Navbar 顯示名稱即時更新，不需重新載入頁面。
-- **SC-002**：密碼修改後，舊密碼無法登入；新密碼可正常登入。
-- **SC-003**：密碼欄位輸入內容不以明文顯示（password input type）。
-- **SC-004**：角色資訊區塊正確顯示使用者的系統角色與所有任務角色。
+- **SC-001**：個人資料更新成功後，Navbar 名稱必須在同頁即時更新，無需重新整理。
+- **SC-002**：密碼更新後，舊密碼登入失敗且新密碼登入成功。
+- **SC-003**：密碼更新成功後，目前裝置維持登入；其他裝置在下一次 API 請求時被拒絕並要求重新登入。
+- **SC-004**：所有密碼欄位皆以 `password input type` 呈現，不得明文顯示。
+- **SC-005**：角色資訊區塊可正確顯示系統角色與任務角色，且皆不可編輯。
+- **SC-006**：在 `RWD_VIEWPORTS` 下，`/profile` 無破版、無遮擋、無水平捲軸。
+
+---
+
+## Changelog
+
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.1.0 | 2026-04-16 | 參照 dashboard 規格寫法重整章節；補齊 clarify 決策（密碼強度、session 失效策略、contact_info 規則）與 RWD 規範（`MOBILE_BP`、`RWD_VIEWPORTS`） |
+| 1.0.0 | 2026-04-05 | Initial spec |
