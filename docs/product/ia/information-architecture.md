@@ -260,11 +260,11 @@ flowchart TD
 - **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
 
 **Annotator 視角（任務角色：`annotator`）：**
-- **我的概況：** 待標記、今日完成、平均速度
+- **標記概況：** 待標記、今日完成、平均速度
 - **任務列表：** 任務名稱、進度摘要、Task Type / Run Type / Status badge、進度條、快速繼續
 
 **Reviewer 視角（任務角色：`reviewer`）：**
-- **待審概況：** 待審總數、今日已審、IAA 摘要
+- **審核概況：** 待審總數、今日已審、IAA 摘要
 - **任務列表：** 任務名稱、審查摘要、Task Type / Run Type / Status badge、進度條、快速審核
 
 **Super Admin 視角（系統角色：`super_admin`）：**
