@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 使用者管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design Tokens (MASTER.md) ───────────────────────────────── */
+    :root {
+      --color-primary:             #6366F1;
+      --color-secondary:           #818CF8;
+      --color-cta:                 #10B981;
+      --color-error:               #B91C1C;
+      --color-warning:             #A16207;
+      --color-success:             #15803D;
+      --color-ink:                 #1E1B4B;
+      --color-ink-muted:           #94A3B8;
+      --color-border:              #E2E8F0;
+      --color-surface:             #F5F3FF;
+      --color-white:               #FFFFFF;
+      --color-primary-soft-bg:     #EEF2FF;
+      --color-error-soft-bg:       #FEF2F2;
+      --color-error-soft-border:   #FECACA;
+      --color-success-soft-bg:     #F0FDF4;
+      --color-success-soft-border: #BBF7D0;
+      --color-warning-soft-bg:     #FEFCE8;
+      --color-warning-soft-border: #FEF08A;
+
+      --radius-sm:   4px;  --radius-md: 8px;
+      --radius-lg:   12px; --radius-xl: 16px; --radius-full: 9999px;
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+      --space-xs: 4px;  --space-sm: 8px;   --space-md: 16px;
+      --space-lg: 24px; --space-xl: 32px;  --space-2xl: 48px;
+      --navbar-mobile-top-height: 64px;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+      background: var(--color-surface); color: var(--color-ink);
+      line-height: 1.8; min-height: 100vh; display: flex;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Sidebar styles (mirrors sidebar.js injected HTML) ──────── */
+    .navbar {
+      width: 240px; height: 100vh; background: var(--color-white);
+      border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      position: sticky; top: 0; z-index: 200;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .brand-section {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-bottom: var(--space-xl); padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: var(--color-primary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .navbar-logo svg { width: 20px; height: 20px; }
+    .navbar-wordmark {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-weight: 700; font-size: 16px; color: var(--color-ink); line-height: 1;
+    }
+    .brand-section .lang-toggle { margin-left: auto; }
+    .mobile-top-logout {
+      display: none; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: var(--color-white);
+      color: var(--color-ink-muted);
+      transition: color 150ms, border-color 150ms, background 150ms;
+    }
+    .mobile-top-logout:hover {
+      color: var(--color-error); border-color: var(--color-error-soft-border);
+      background: var(--color-error-soft-bg);
+    }
+    .mobile-user-name {
+      display: none; margin-left: auto; max-width: 110px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 13px; font-weight: 600; color: var(--color-ink); line-height: 1.2;
+    }
+    .mobile-lang-toggle {
+      display: none; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 6px 10px;
+      background: var(--color-white); color: var(--color-ink);
+      font-size: 12px; font-weight: 600;
+      transition: border-color 150ms, background 150ms;
+    }
+    .mobile-lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .navbar-center { display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl); flex: 1; }
+    .nav-link {
+      padding: 10px 12px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; color: var(--color-ink-muted);
+      transition: color 150ms, background 150ms;
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+    }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
+    .nav-link:hover { color: var(--color-ink); background: #F8FAFC; }
+    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
+    .nav-link.active .nav-icon { color: var(--color-primary); }
+    .nav-actions {
+      display: flex; flex-direction: column; gap: var(--space-md);
+      border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: auto;
+    }
+    .lang-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 6px 12px; background: var(--color-white); color: var(--color-ink);
+      font-size: 13px; font-weight: 500;
+      transition: border-color 150ms, background 150ms; white-space: nowrap;
+    }
+    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; border-radius: var(--radius-md); }
+    .user-chip-profile {
+      display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+      text-decoration: none; color: inherit; border-radius: var(--radius-sm); transition: opacity 150ms;
+    }
+    .user-chip-profile:hover { opacity: 0.75; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: white; color: var(--color-primary);
+      font-weight: 700; font-size: 14px;
+      border: 2px solid rgba(99,102,241,0.16); flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      display: block; font-weight: 600; font-size: 13px; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-role {
+      display: block; font-size: 11px; color: var(--color-ink-muted); line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .logout-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: var(--radius-sm);
+      border: none; background: transparent; color: var(--color-ink-muted);
+      cursor: pointer; flex-shrink: 0; transition: color 150ms, background 150ms;
+    }
+    .logout-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+
+    /* ── Main Layout ────────────────────────────────────────────── */
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    .layout { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+
+    /* ── Page Header ────────────────────────────────────────────── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: var(--space-md);
+      margin-bottom: var(--space-lg); flex-wrap: wrap;
+    }
+    .page-header-left { flex: 1; min-width: 0; }
+    .page-main-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--color-ink); margin: 0 0 4px;
+    }
+    .page-main-subtitle { font-size: 14px; color: #64748B; margin: 0; }
+    .page-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
+
+    /* ── Admin Tabs ─────────────────────────────────────────────── */
+    .admin-tabs { display: flex; border-bottom: 2px solid #E2E8F0; margin-bottom: var(--space-lg); }
+    .admin-tab {
+      padding: 10px 20px; font-size: 14px; font-weight: 500; color: #64748B;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: color 150ms, border-color 150ms;
+      text-decoration: none; display: inline-block;
+    }
+    .admin-tab:hover { color: var(--color-primary); }
+    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--color-cta); color: white;
+      padding: 10px 20px; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 600; border: none;
+      transition: opacity 150ms, transform 150ms; cursor: pointer;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--color-primary);
+      border: 2px solid var(--color-primary);
+      padding: 9px 18px; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 600;
+      transition: background 150ms; cursor: pointer;
+    }
+    .btn-secondary:hover { background: var(--color-primary-soft-bg); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--color-ink-muted); border: none;
+      padding: 8px 14px; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 500;
+      transition: color 150ms, background 150ms; cursor: pointer;
+    }
+    .btn-ghost:hover { color: var(--color-ink); background: #F8FAFC; }
+    .btn-danger {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--color-error);
+      border: 1px solid var(--color-border);
+      padding: 7px 14px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500;
+      transition: background 150ms, border-color 150ms; cursor: pointer;
+    }
+    .btn-danger:hover { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); }
+    .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .btn-sm { padding: 6px 12px !important; font-size: 12px !important; }
+    .btn-enable {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: transparent; color: var(--color-success);
+      border: 1px solid var(--color-border);
+      padding: 6px 12px; border-radius: var(--radius-md);
+      font-size: 12px; font-weight: 500;
+      transition: background 150ms, border-color 150ms; cursor: pointer;
+    }
+    .btn-enable:hover { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
+
+    /* ── Filter Bar ─────────────────────────────────────────────── */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: var(--space-sm);
+      align-items: center; margin-bottom: var(--space-lg);
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 360px; }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: var(--color-ink-muted); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 9px 12px 9px 36px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink); background: var(--color-white);
+      transition: border-color 150ms; outline: none;
+    }
+    .search-input::placeholder { color: var(--color-ink-muted); }
+    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select {
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      appearance: none; -webkit-appearance: none; outline: none;
+      transition: border-color 150ms; cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+
+    /* ── Table ──────────────────────────────────────────────────── */
+    .table-container {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: var(--space-lg);
+    }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; text-align: left; border-collapse: collapse; font-size: 14px; white-space: nowrap; }
+    thead tr { background: #F8FAFC; border-bottom: 1px solid var(--color-border); }
+    th { padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); }
+    tbody tr { border-bottom: 1px solid #F1F5F9; transition: background 150ms; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #F8FAFC; }
+    td { padding: 14px 20px; color: var(--color-ink); vertical-align: middle; }
+    td.td-muted { color: #64748B; }
+    td.td-actions { display: flex; align-items: center; gap: var(--space-xs); padding-top: 10px; padding-bottom: 10px; }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: var(--radius-full);
+      font-size: 11px; font-weight: 600; border: 1px solid;
+    }
+    .badge-active   { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
+    .badge-disabled { background: #F8FAFC; color: #64748B; border-color: #E2E8F0; }
+    .badge-admin    { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+    .badge-user     { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
+
+    /* ── Pagination ─────────────────────────────────────────────── */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-md); flex-wrap: wrap;
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
+    .page-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      border: 1px solid var(--color-border); background: var(--color-white);
+      font-size: 13px; color: var(--color-ink);
+      transition: all 150ms; cursor: pointer;
+    }
+    .page-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .page-btn.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .page-size-select {
+      padding: 5px 28px 5px 10px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 13px;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+
+    /* ── Empty State ─────────────────────────────────────────────── */
+    .empty-state { padding: var(--space-2xl) var(--space-lg); text-align: center; }
+    .empty-state-icon {
+      width: 48px; height: 48px; border-radius: 50%; background: #F1F5F9;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: var(--space-md); color: var(--color-ink-muted);
+    }
+    .empty-state-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+    .empty-state-desc { font-size: 13px; color: #64748B; margin-bottom: var(--space-lg); }
+
+    /* ── Modal ──────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px); z-index: 300;
+      display: flex; align-items: center; justify-content: center; padding: var(--space-lg);
+    }
+    .modal-overlay.hidden { display: none !important; }
+    .modal {
+      background: white; border-radius: var(--radius-xl);
+      padding: var(--space-xl); box-shadow: var(--shadow-xl);
+      max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: var(--space-md); margin-bottom: var(--space-lg);
+    }
+    .modal-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 22px; font-weight: 700; color: var(--color-ink);
+    }
+    .modal-close {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      border: 1px solid var(--color-border); background: transparent;
+      color: var(--color-ink-muted); cursor: pointer; flex-shrink: 0; transition: all 150ms;
+    }
+    .modal-close:hover { background: #F8FAFC; color: var(--color-ink); }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: var(--space-sm);
+      margin-top: var(--space-lg); padding-top: var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+
+    /* ── Form ───────────────────────────────────────────────────── */
+    .form-group { margin-bottom: var(--space-md); }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--color-ink); margin-bottom: 6px; }
+    .required-indicator { color: var(--color-error); margin-left: 3px; }
+    .form-input {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink); background: white;
+      transition: border-color 150ms; outline: none;
+    }
+    .form-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .form-select {
+      width: 100%; padding: 10px 36px 10px 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink);
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
+      appearance: none; -webkit-appearance: none; outline: none;
+      transition: border-color 150ms; cursor: pointer;
+    }
+    .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .form-hint { margin-top: 5px; font-size: 12px; color: #64748B; }
+
+    /* ── Alert Banner ──────────────────────────────────────────── */
+    .alert-banner {
+      display: flex; align-items: flex-start; gap: var(--space-sm);
+      padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid;
+      font-size: 14px; margin-bottom: var(--space-md);
+    }
+    .alert-banner.warning {
+      background: var(--color-warning-soft-bg);
+      border-color: var(--color-warning-soft-border); color: var(--color-warning);
+    }
+
+    /* ── Toast ──────────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 400;
+      max-width: 360px; width: calc(100% - 48px);
+      transition: opacity 150ms ease;
+    }
+    #toast.hidden { opacity: 0; pointer-events: none; }
+    .toast-inner {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; border-radius: var(--radius-lg);
+      border: 1px solid; box-shadow: var(--shadow-md); font-size: 14px;
+    }
+    .toast-inner.success {
+      background: var(--color-success-soft-bg);
+      border-color: var(--color-success-soft-border); color: var(--color-success);
+    }
+    .toast-inner.error {
+      background: var(--color-error-soft-bg);
+      border-color: var(--color-error-soft-border); color: var(--color-error);
+    }
+    .toast-body { flex: 1; }
+    .toast-close {
+      flex-shrink: 0; background: transparent; border: none;
+      cursor: pointer; color: inherit; opacity: 0.6;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .toast-close:hover { opacity: 1; }
+
+    /* ── Mobile ─────────────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      body { flex-direction: column; }
+      .navbar {
+        width: 100%; height: auto; flex-direction: row; flex-wrap: wrap;
+        padding: 0; border-right: none; border-bottom: 1px solid var(--color-border);
+        position: sticky; top: 0; overflow: visible;
+      }
+      .brand-section {
+        width: 100%; flex: none; margin-bottom: 0;
+        padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+      }
+      .brand-section .lang-toggle { display: none; }
+      .mobile-user-name { display: block; }
+      .mobile-lang-toggle { display: inline-flex; }
+      .mobile-top-logout { display: inline-flex; }
+      .navbar-center {
+        flex: 1; flex-direction: row; align-items: stretch;
+        justify-content: space-around; gap: 0; margin: 0;
+      }
+      .navbar-center .nav-link {
+        min-height: var(--navbar-mobile-top-height); flex: 1;
+        padding: 8px 4px; flex-direction: column;
+        justify-content: center; align-items: center;
+        gap: 4px; text-align: center; font-size: 10px; line-height: 1.2;
+      }
+      .nav-actions { display: none; }
+      .layout { padding: var(--space-md); }
+      .page-header { flex-direction: column; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .search-wrap { max-width: 100%; }
+      td.td-actions { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- NAVBAR (injected by sidebar.js)                           -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId:       'sharedSidebarMount',
+      activeNav:     'admin',
+      systemRole:    'super_admin',
+      dashboardHref: '../dashboard/dashboard.html',
+      profileHref:   '../account/profile.html',
+      loginHref:     '../account/login.html',
+      brandHref:     '../dashboard/dashboard.html',
+      adminHref:     'user-management.html',
+      userName:      'Mandy Chen',
+      roleIndicator: '系統管理員',
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <main>
+    <div class="layout">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1 id="pageTitle" class="page-main-title">使用者管理</h1>
+          <p id="pageSubtitle" class="page-main-subtitle">管理全平台帳號與系統角色指派</p>
+        </div>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="admin-tabs" role="tablist">
+        <a id="tabUsers" class="admin-tab active" href="user-management.html" role="tab" aria-selected="true">使用者管理</a>
+        <a id="tabRoles" class="admin-tab" href="role-settings.html" role="tab" aria-selected="false">角色設定</a>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            type="search" id="searchInput" class="search-input"
+            placeholder="搜尋姓名或 Email…"
+            aria-label="搜尋使用者"
+          />
+        </div>
+        <select class="filter-select" id="roleFilter" aria-label="角色篩選">
+          <option value=""           id="roleFilterAll">全部角色</option>
+          <option value="user"       id="roleFilterUser">user</option>
+          <option value="super_admin" id="roleFilterAdmin">super_admin</option>
+        </select>
+        <select class="filter-select" id="statusFilter" aria-label="狀態篩選">
+          <option value=""         id="statusFilterAll">全部狀態</option>
+          <option value="active"   id="statusFilterActive">啟用</option>
+          <option value="disabled" id="statusFilterDisabled">停用</option>
+        </select>
+        <button class="btn-primary" id="addUserBtn" onclick="openAddModal()" style="margin-left:auto;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <line x1="19" y1="8" x2="19" y2="14"/>
+            <line x1="22" y1="11" x2="16" y2="11"/>
+          </svg>
+          <span id="addUserBtnLabel">新增使用者</span>
+        </button>
+      </div>
+
+      <!-- User Table -->
+      <div class="table-container" id="userTableWrap">
+        <div class="table-scroll">
+          <table role="table" aria-label="使用者列表">
+            <thead>
+              <tr>
+                <th scope="col" id="colName">姓名</th>
+                <th scope="col" id="colEmail">Email</th>
+                <th scope="col" id="colRole">系統角色</th>
+                <th scope="col" id="colStatus">狀態</th>
+                <th scope="col" id="colCreatedAt">建立時間</th>
+                <th scope="col" id="colActions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <!-- Row 1 — seeder super_admin (disable btn locked) -->
+              <tr>
+                <td><strong>Mandy Chen</strong></td>
+                <td class="td-muted">mandy@labelsuite.io</td>
+                <td><span class="badge badge-admin">super_admin</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-01-05</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="btn-ghost btn-sm" onclick="openEditModal(0)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="btn-danger btn-sm" disabled title="Seeder 超管不可停用" aria-label="Seeder 超管不可停用">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 2 -->
+              <tr>
+                <td><strong>Alex Wang</strong></td>
+                <td class="td-muted">alex.wang@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-01-18</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="btn-ghost btn-sm" onclick="openEditModal(1)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="btn-danger btn-sm" onclick="openDisableModal(1)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 3 -->
+              <tr>
+                <td><strong>Olivia Lin</strong></td>
+                <td class="td-muted">olivia.lin@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-02-03</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="btn-ghost btn-sm" onclick="openEditModal(2)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="btn-danger btn-sm" onclick="openDisableModal(2)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 4 — disabled account (show re-enable) -->
+              <tr>
+                <td><strong>Jason Huang</strong></td>
+                <td class="td-muted">jason.h@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-disabled">停用</span></td>
+                <td class="td-muted">2026-02-20</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="btn-ghost btn-sm" onclick="openEditModal(3)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="btn-enable" onclick="handleReEnable('Jason Huang')">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      <span class="enable-btn-text">啟用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Row 5 -->
+              <tr>
+                <td><strong>Rachel Su</strong></td>
+                <td class="td-muted">rachel.su@labelsuite.io</td>
+                <td><span class="badge badge-user">user</span></td>
+                <td><span class="badge badge-active">啟用</span></td>
+                <td class="td-muted">2026-03-01</td>
+                <td>
+                  <div class="td-actions">
+                    <button class="btn-ghost btn-sm" onclick="openEditModal(4)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                      <span class="edit-btn-text">編輯</span>
+                    </button>
+                    <button class="btn-danger btn-sm" onclick="openDisableModal(4)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                      <span class="disable-btn-text">停用</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="pagination">
+          <div style="display:flex;align-items:center;gap:var(--space-md)">
+            <span id="paginationInfo" class="pagination-info">共 24 筆 · 第 1 / 2 頁</span>
+            <select class="page-size-select" aria-label="每頁顯示">
+              <option value="20">20 筆/頁</option>
+              <option value="50">50 筆/頁</option>
+              <option value="100">100 筆/頁</option>
+            </select>
+          </div>
+          <div class="pagination-controls">
+            <button class="page-btn" disabled aria-label="上一頁">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="page-btn active" aria-current="page">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn" aria-label="下一頁">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="table-container hidden" id="emptyState">
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <p id="emptyTitle" class="empty-state-title">找不到符合條件的使用者</p>
+          <p id="emptyDesc" class="empty-state-desc">請嘗試清除篩選條件或使用不同的關鍵字</p>
+          <button class="btn-ghost" onclick="clearFilters()" id="clearFiltersBtn">清除篩選</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ADD USER MODAL                                             -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="addModal"
+       role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="addModalTitle" class="modal-title">新增使用者</h2>
+        <button class="modal-close" onclick="closeModal('addModal')" aria-label="關閉">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="addForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="addName">
+            <span id="addNameLabel">姓名</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="text" id="addName" class="form-input" required autocomplete="name" placeholder="e.g. Jane Doe" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addEmail">
+            <span id="addEmailLabel">Email</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="email" id="addEmail" class="form-input" required autocomplete="email" placeholder="e.g. jane@company.com" />
+          <p class="form-hint" id="addEmailHint">建立帳號後將寄送設定密碼信至此信箱</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addRole">
+            <span id="addRoleLabel">系統角色</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="addRole" class="form-select" required>
+            <option value="user">user</option>
+            <option value="super_admin">super_admin</option>
+          </select>
+          <p class="form-hint" id="addRoleHint">任務角色（標記員、審核員等）在任務詳情頁個別指派</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" onclick="closeModal('addModal')" id="addCancelBtn">取消</button>
+          <button type="button" class="btn-primary" onclick="submitAdd()" id="addSaveBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="addSaveBtnLabel">儲存</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- EDIT USER MODAL                                            -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="editModal"
+       role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="editModalTitle" class="modal-title">編輯使用者</h2>
+        <button class="modal-close" onclick="closeModal('editModal')" aria-label="關閉">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="editForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="editName">
+            <span id="editNameLabel">姓名</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="text" id="editName" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editEmail">
+            <span id="editEmailLabel">Email</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <input type="email" id="editEmail" class="form-input" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editRole">
+            <span id="editRoleLabel">系統角色</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="editRole" class="form-select" required>
+            <option value="user">user</option>
+            <option value="super_admin">super_admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="editStatus">
+            <span id="editStatusLabel">帳號狀態</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="editStatus" class="form-select" required>
+            <option value="active"   id="editStatusActive">啟用</option>
+            <option value="disabled" id="editStatusDisabled">停用</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" onclick="closeModal('editModal')" id="editCancelBtn">取消</button>
+          <button type="button" class="btn-primary" onclick="submitEdit()" id="editSaveBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="editSaveBtnLabel">儲存</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- DISABLE CONFIRM MODAL                                      -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="disableModal"
+       role="alertdialog" aria-modal="true" aria-labelledby="disableModalTitle">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header">
+        <h2 id="disableModalTitle" class="modal-title" style="color:var(--color-error)">停用帳號</h2>
+        <button class="modal-close" onclick="closeModal('disableModal')" aria-label="關閉">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="alert-banner warning" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0;margin-top:2px">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span id="disableWarningText">停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。</span>
+      </div>
+      <p id="disableConfirmText" style="font-size:14px;color:#334155;margin-top:var(--space-md)">
+        確定要停用 <strong id="disableTargetName">Alex Wang</strong> 的帳號嗎？
+      </p>
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" onclick="closeModal('disableModal')" id="disableCancelBtn">取消</button>
+        <button type="button" id="disableConfirmBtn"
+          style="display:inline-flex;align-items:center;gap:6px;background:var(--color-error);color:white;border:none;padding:10px 20px;border-radius:var(--radius-md);font-size:14px;font-weight:600;cursor:pointer;transition:opacity 150ms"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"
+          onclick="confirmDisable()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+          <span id="disableConfirmBtnLabel">確認停用</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- TOAST                                                      -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="toast" class="hidden" aria-live="polite" aria-atomic="true">
+    <div class="toast-inner success" id="toastInner">
+      <!-- success icon (shown by default) -->
+      <svg id="toastIconSuccess" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <!-- error icon (hidden by default) -->
+      <svg id="toastIconError" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="hidden">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div class="toast-body">
+        <p id="toastMsg" style="font-weight:600;font-size:14px">儲存成功</p>
+        <p id="toastSub" style="font-size:12px;opacity:0.8;margin-top:2px"></p>
+      </div>
+      <button class="toast-close" onclick="hideToast()" aria-label="關閉通知">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    /* ── i18n ──────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:             '使用者管理',
+        pageSubtitle:          '管理全平台帳號與系統角色指派',
+        tabUsers:              '使用者管理',
+        tabRoles:              '角色設定',
+        addUserBtnLabel:       '新增使用者',
+        searchPlaceholder:     '搜尋姓名或 Email…',
+        roleFilterAll:         '全部角色',
+        statusFilterAll:       '全部狀態',
+        statusFilterActive:    '啟用',
+        statusFilterDisabled:  '停用',
+        colName:               '姓名',
+        colEmail:              'Email',
+        colRole:               '系統角色',
+        colStatus:             '狀態',
+        colCreatedAt:          '建立時間',
+        colActions:            '操作',
+        paginationInfo:        '共 24 筆 · 第 1 / 2 頁',
+        emptyTitle:            '找不到符合條件的使用者',
+        emptyDesc:             '請嘗試清除篩選條件或使用不同的關鍵字',
+        clearFiltersBtn:       '清除篩選',
+        addModalTitle:         '新增使用者',
+        addNameLabel:          '姓名',
+        addEmailLabel:         'Email',
+        addEmailHint:          '建立帳號後將寄送設定密碼信至此信箱',
+        addRoleLabel:          '系統角色',
+        addRoleHint:           '任務角色（標記員、審核員等）在任務詳情頁個別指派',
+        addCancelBtn:          '取消',
+        addSaveBtnLabel:       '儲存',
+        editModalTitle:        '編輯使用者',
+        editNameLabel:         '姓名',
+        editEmailLabel:        'Email',
+        editRoleLabel:         '系統角色',
+        editStatusLabel:       '帳號狀態',
+        editStatusActive:      '啟用',
+        editStatusDisabled:    '停用',
+        editCancelBtn:         '取消',
+        editSaveBtnLabel:      '儲存',
+        disableWarningText:    '停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。',
+        disableCancelBtn:      '取消',
+        disableConfirmBtnLabel:'確認停用',
+        editBtnText:           '編輯',
+        disableBtnText:        '停用',
+        enableBtnText:         '啟用',
+        roleIndicatorLabel:    '系統管理員',
+        langToggleAria:        '切換語言',
+        toastUserCreated:      '使用者已建立',
+        toastPasswordSent:     '設定密碼信已寄出',
+        toastUpdated:          '帳號資訊已更新',
+        toastDisabled:         '帳號已停用',
+        toastSessionRevoked:   '所有活躍 session 已立即撤銷',
+        toastReEnabled:        '帳號已重新啟用',
+      },
+      en: {
+        pageTitle:             'User Management',
+        pageSubtitle:          'Manage platform accounts and system role assignments',
+        tabUsers:              'User Management',
+        tabRoles:              'Role Settings',
+        addUserBtnLabel:       'Add User',
+        searchPlaceholder:     'Search by name or email…',
+        roleFilterAll:         'All Roles',
+        statusFilterAll:       'All Statuses',
+        statusFilterActive:    'Active',
+        statusFilterDisabled:  'Disabled',
+        colName:               'Name',
+        colEmail:              'Email',
+        colRole:               'System Role',
+        colStatus:             'Status',
+        colCreatedAt:          'Created At',
+        colActions:            'Actions',
+        paginationInfo:        '24 records · Page 1 / 2',
+        emptyTitle:            'No users found',
+        emptyDesc:             'Try clearing filters or using different keywords',
+        clearFiltersBtn:       'Clear Filters',
+        addModalTitle:         'Add User',
+        addNameLabel:          'Name',
+        addEmailLabel:         'Email',
+        addEmailHint:          'A password setup email will be sent to this address',
+        addRoleLabel:          'System Role',
+        addRoleHint:           'Task roles (annotator, reviewer, etc.) are assigned in the task detail page',
+        addCancelBtn:          'Cancel',
+        addSaveBtnLabel:       'Save',
+        editModalTitle:        'Edit User',
+        editNameLabel:         'Name',
+        editEmailLabel:        'Email',
+        editRoleLabel:         'System Role',
+        editStatusLabel:       'Account Status',
+        editStatusActive:      'Active',
+        editStatusDisabled:    'Disabled',
+        editCancelBtn:         'Cancel',
+        editSaveBtnLabel:      'Save',
+        disableWarningText:    'After disabling, the user will immediately lose access and all active sessions/tokens will be revoked.',
+        disableCancelBtn:      'Cancel',
+        disableConfirmBtnLabel:'Confirm Disable',
+        editBtnText:           'Edit',
+        disableBtnText:        'Disable',
+        enableBtnText:         'Enable',
+        roleIndicatorLabel:    'Super Admin',
+        langToggleAria:        'Switch language',
+        toastUserCreated:      'User created',
+        toastPasswordSent:     'Password setup email sent',
+        toastUpdated:          'Account updated',
+        toastDisabled:         'Account disabled',
+        toastSessionRevoked:   'All active sessions have been revoked',
+        toastReEnabled:        'Account re-enabled',
+      },
+    };
+
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+
+    function applyLang(l) {
+      lang = l === 'en' ? 'en' : 'zh';
+      window.LabelSuiteSharedSidebar.setStoredLang(lang);
+      const t = i18n[lang];
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+      document.title = 'Label Suite — ' + t.pageTitle;
+
+      const ids = [
+        'pageTitle','pageSubtitle',
+        'tabUsers','tabRoles','addUserBtnLabel',
+        'roleFilterAll','statusFilterAll','statusFilterActive','statusFilterDisabled',
+        'colName','colEmail','colRole','colStatus','colCreatedAt','colActions',
+        'paginationInfo','emptyTitle','emptyDesc','clearFiltersBtn',
+        'addModalTitle','addNameLabel','addEmailLabel','addEmailHint',
+        'addRoleLabel','addRoleHint','addCancelBtn','addSaveBtnLabel',
+        'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
+        'editStatusLabel','editStatusActive','editStatusDisabled',
+        'editCancelBtn','editSaveBtnLabel',
+        'disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id] !== undefined) el.textContent = t[id];
+      });
+
+      document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
+      document.getElementById('mobileLangToggle').setAttribute('aria-label', t.langToggleAria);
+
+      // Update all repeated button labels in table rows
+      document.querySelectorAll('.edit-btn-text').forEach(el => { el.textContent = t.editBtnText; });
+      document.querySelectorAll('.disable-btn-text').forEach(el => { el.textContent = t.disableBtnText; });
+      document.querySelectorAll('.enable-btn-text').forEach(el => { el.textContent = t.enableBtnText; });
+
+      // Update user chip role label
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+    }
+
+    /* ── Sample data ────────────────────────────────────────────── */
+    const sampleUsers = [
+      { name: 'Mandy Chen',  email: 'mandy@labelsuite.io',     role: 'super_admin', status: 'active' },
+      { name: 'Alex Wang',   email: 'alex.wang@labelsuite.io', role: 'user',        status: 'active' },
+      { name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active' },
+      { name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled' },
+      { name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active' },
+    ];
+
+
+    /* ── Modal helpers ─────────────────────────────────────────── */
+    function openAddModal() {
+      document.getElementById('addName').value  = '';
+      document.getElementById('addEmail').value = '';
+      document.getElementById('addRole').value  = 'user';
+      openModal('addModal');
+    }
+
+    function openEditModal(idx) {
+      const u = sampleUsers[idx] || sampleUsers[1];
+      document.getElementById('editName').value   = u.name;
+      document.getElementById('editEmail').value  = u.email;
+      document.getElementById('editRole').value   = u.role;
+      document.getElementById('editStatus').value = u.status;
+      openModal('editModal');
+    }
+
+    function openDisableModal(idx) {
+      const u = sampleUsers[idx] || sampleUsers[1];
+      document.getElementById('disableTargetName').textContent = u.name;
+      openModal('disableModal');
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    ['addModal','editModal','disableModal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', e => {
+        if (e.target === document.getElementById(id)) closeModal(id);
+      });
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { ['addModal','editModal','disableModal'].forEach(closeModal); }
+    });
+
+    function submitAdd() {
+      closeModal('addModal');
+      const t = i18n[lang];
+      showToast('success', t.toastUserCreated, t.toastPasswordSent);
+      window.LabelSuiteAnalytics.track('prototype_user_add_succeeded', { lang });
+    }
+
+    function submitEdit() {
+      closeModal('editModal');
+      const t = i18n[lang];
+      showToast('success', t.toastUpdated, '');
+      window.LabelSuiteAnalytics.track('prototype_user_edit_succeeded', { lang });
+    }
+
+    function confirmDisable() {
+      closeModal('disableModal');
+      const t = i18n[lang];
+      showToast('success', t.toastDisabled, t.toastSessionRevoked);
+      window.LabelSuiteAnalytics.track('prototype_user_disable_succeeded', { lang });
+    }
+
+    function handleReEnable(name) {
+      const t = i18n[lang];
+      showToast('success', t.toastReEnabled, name);
+      window.LabelSuiteAnalytics.track('prototype_user_enable_succeeded', { lang });
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value   = '';
+      document.getElementById('roleFilter').value    = '';
+      document.getElementById('statusFilter').value  = '';
+      document.getElementById('userTableWrap').classList.remove('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+    }
+
+    /* ── Toast ──────────────────────────────────────────────────── */
+    let toastTimer = null;
+    function showToast(type, msg, sub) {
+      const el    = document.getElementById('toast');
+      const inner = document.getElementById('toastInner');
+      inner.className = 'toast-inner ' + type;
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastSub').textContent = sub || '';
+      // swap icons using hidden class (no innerHTML)
+      document.getElementById('toastIconSuccess').classList.toggle('hidden', type !== 'success');
+      document.getElementById('toastIconError').classList.toggle('hidden',   type !== 'error');
+      el.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 4000);
+    }
+    function hideToast() { document.getElementById('toast').classList.add('hidden'); }
+
+    /* ── Language toggle ────────────────────────────────────────── */
+    function handleLangToggle(source) {
+      const prev = lang;
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
+      window.LabelSuiteAnalytics.track('prototype_lang_switched',
+        { source, from_lang: prev, to_lang: lang });
+    }
+    document.getElementById('langToggle').addEventListener('click',
+      () => handleLangToggle('desktop'));
+    document.getElementById('mobileLangToggle').addEventListener('click',
+      () => handleLangToggle('mobile'));
+
+    /* ── Analytics & Init ──────────────────────────────────────── */
+    const getCtx = () => ({ lang });
+    window.LabelSuiteAnalytics.init({ page: 'user-management' });
+    window.LabelSuiteAnalytics.bindClickTracks([
+      { id: 'addUserBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'add_user' } },
+    ], getCtx);
+    window.LabelSuiteAnalytics.trackPageView('user-management', getCtx);
+    window.LabelSuiteSharedSidebar.setSystemRole('super_admin');
+    window.LabelSuiteSharedSidebar.updateUserChip({
+      userName:    'Mandy Chen',
+      roleLabel:   lang === 'zh' ? '系統管理員' : 'Super Admin',
+      avatarLabel: 'M',
+    });
+    applyLang(lang);
+  </script>
+</body>
+</html>
