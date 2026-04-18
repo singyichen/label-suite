@@ -434,7 +434,7 @@
                 <div class="annotator-email">chen.yu@nlp.ntu.edu.tw</div>
               </div>
             </div>
-            <span class="chip chip--primary">Project Leader</span>
+            <span class="chip chip--primary" data-role-chip="project_leader">Project Leader</span>
             <div><div class="data-label" id="hoursLabel">Hours</div><div class="data-value">12.4h</div></div>
             <div><div class="data-label" id="doneLabel">Done</div><div class="data-value">142</div></div>
           </div>
@@ -448,7 +448,7 @@
                 <div class="annotator-email">wei.lin@nlp.ntu.edu.tw</div>
               </div>
             </div>
-            <span class="chip chip--success">Reviewer</span>
+            <span class="chip chip--success" data-role-chip="reviewer">Reviewer</span>
             <div><div class="data-label">Hours</div><div class="data-value">8.2h</div></div>
             <div><div class="data-label">Done</div><div class="data-value">98</div></div>
           </div>
@@ -462,7 +462,7 @@
                 <div class="annotator-email">ming.kuo@nlp.ntu.edu.tw</div>
               </div>
             </div>
-            <span class="chip chip--primary">Annotator</span>
+            <span class="chip chip--primary" data-role-chip="annotator">Annotator</span>
             <div><div class="data-label">Hours</div><div class="data-value">16.1h</div></div>
             <div><div class="data-label">Done</div><div class="data-value">188</div></div>
           </div>
@@ -476,7 +476,7 @@
                 <div class="annotator-email">ahmed.hadi@nlp.ntu.edu.tw</div>
               </div>
             </div>
-            <span class="chip chip--primary">Annotator</span>
+            <span class="chip chip--primary" data-role-chip="annotator">Annotator</span>
             <div><div class="data-label">Hours</div><div class="data-value">10.5h</div></div>
             <div><div class="data-label">Done</div><div class="data-value">132</div></div>
           </div>
@@ -490,7 +490,7 @@
                 <div class="annotator-email">jia.pei@nlp.ntu.edu.tw</div>
               </div>
             </div>
-            <span class="chip chip--primary">Annotator</span>
+            <span class="chip chip--primary" data-role-chip="annotator">Annotator</span>
             <div><div class="data-label">Hours</div><div class="data-value">6.3h</div></div>
             <div><div class="data-label">Done</div><div class="data-value">74</div></div>
           </div>
@@ -589,6 +589,9 @@ mode: official_run</pre>
         configSubtitle:       'Config-driven — 無需自訂程式碼。',
         downloadConfigLabel:  '下載',
         analyticsTitle:       'Label Distribution · 標籤分佈',
+        roleChipProjectLeader: '專案領導者',
+        roleChipReviewer:     '審核員',
+        roleChipAnnotator:    '標記員',
         langToggleAria:       '切換語言',
       },
       en: {
@@ -630,6 +633,9 @@ mode: official_run</pre>
         configSubtitle:       'Config-driven — no custom code required.',
         downloadConfigLabel:  'Download',
         analyticsTitle:       'Label Distribution',
+        roleChipProjectLeader: 'Project Leader',
+        roleChipReviewer:     'Reviewer',
+        roleChipAnnotator:    'Annotator',
         langToggleAria:       'Switch language',
       },
     };
@@ -665,7 +671,12 @@ mode: official_run</pre>
         if (el && t[id] !== undefined) el.textContent = t[id];
       });
 
-      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: lang === 'zh' ? '標記員' : 'Annotator' });
+      // Update role chips in annotators table
+      document.querySelectorAll('[data-role-chip="project_leader"]').forEach(el => { el.textContent = t.roleChipProjectLeader; });
+      document.querySelectorAll('[data-role-chip="reviewer"]').forEach(el => { el.textContent = t.roleChipReviewer; });
+      document.querySelectorAll('[data-role-chip="annotator"]').forEach(el => { el.textContent = t.roleChipAnnotator; });
+
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleChipAnnotator });
     }
 
     /* ── Tab switching ─────────────────────────────────────────── */

@@ -4,38 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 角色設定</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
   <style>
-    /* ── Design Tokens (MASTER.md) ───────────────────────────────── */
     :root {
-      --color-primary:             #6366F1;
-      --color-secondary:           #818CF8;
-      --color-cta:                 #10B981;
-      --color-error:               #B91C1C;
-      --color-warning:             #A16207;
-      --color-success:             #15803D;
-      --color-ink:                 #1E1B4B;
-      --color-ink-muted:           #94A3B8;
-      --color-border:              #E2E8F0;
-      --color-surface:             #F5F3FF;
-      --color-white:               #FFFFFF;
-      --color-primary-soft-bg:     #EEF2FF;
-      --color-error-soft-bg:       #FEF2F2;
-      --color-error-soft-border:   #FECACA;
-      --color-success-soft-bg:     #F0FDF4;
-      --color-success-soft-border: #BBF7D0;
-      --color-warning-soft-bg:     #FEFCE8;
-      --color-warning-soft-border: #FEF08A;
       --color-task-soft-bg:        #F0FDFA;
       --color-task-header:         #0D9488;
-      --radius-sm:  4px;  --radius-md: 8px;
-      --radius-lg:  12px; --radius-xl: 16px; --radius-full: 9999px;
-      --shadow-md:  0 4px 6px rgba(0,0,0,0.1);
-      --shadow-xl:  0 20px 25px rgba(0,0,0,0.15);
-      --space-xs:   4px;  --space-sm:  8px;   --space-md: 16px;
-      --space-lg:   24px; --space-xl:  32px;  --space-2xl: 48px;
       --navbar-mobile-height: 84px;
       --navbar-mobile-top-height: 64px;
     }
@@ -523,11 +496,11 @@
                 <th class="col-group-task"   colspan="3" id="thTaskRoles">任務角色</th>
               </tr>
               <tr>
-                <th class="col-role-header sys-col"              scope="col">user</th>
-                <th class="col-role-header sys-col sa-col"       scope="col">super_admin</th>
-                <th class="col-role-header task-col"             scope="col">project_leader</th>
-                <th class="col-role-header task-col"             scope="col">reviewer</th>
-                <th class="col-role-header task-col last-col"    scope="col">annotator</th>
+                <th class="col-role-header sys-col"              scope="col" id="thRoleUser">user</th>
+                <th class="col-role-header sys-col sa-col"       scope="col" id="thRoleSuperAdmin">super_admin</th>
+                <th class="col-role-header task-col"             scope="col" id="thRoleProjectLeader">project_leader</th>
+                <th class="col-role-header task-col"             scope="col" id="thRoleReviewer">reviewer</th>
+                <th class="col-role-header task-col last-col"    scope="col" id="thRoleAnnotator">annotator</th>
               </tr>
             </thead>
             <tbody>
@@ -960,6 +933,12 @@
         permDesc_admin_role_settings_view:          '進入角色權限設定頁',
         permDesc_admin_role_settings_manage:        '編輯並儲存角色權限矩陣',
         readonlyNote_task_detail_view:              '（唯讀）',
+        thRoleUser:                                 '一般使用者',
+        thRoleSuperAdmin:                           '超級管理員',
+        thRoleProjectLeader:                        '專案領導者',
+        thRoleReviewer:                             '審核員',
+        thRoleAnnotator:                            '標記員',
+        roleIndicatorLabel:                         '系統管理員',
       },
       en: {
         pageTitle:               'Role Settings',
@@ -1011,6 +990,12 @@
         permDesc_admin_role_settings_view:          'Access role settings page',
         permDesc_admin_role_settings_manage:        'Edit and save role permission matrix',
         readonlyNote_task_detail_view:              '(read-only)',
+        thRoleUser:                                 'User',
+        thRoleSuperAdmin:                           'Super Admin',
+        thRoleProjectLeader:                        'Project Leader',
+        thRoleReviewer:                             'Reviewer',
+        thRoleAnnotator:                            'Annotator',
+        roleIndicatorLabel:                         'Super Admin',
       },
     };
 
@@ -1035,6 +1020,7 @@
       'permDesc_admin_user_management_view', 'permDesc_admin_user_management_manage',
       'permDesc_admin_role_settings_view', 'permDesc_admin_role_settings_manage',
       'readonlyNote_task_detail_view',
+      'thRoleUser', 'thRoleSuperAdmin', 'thRoleProjectLeader', 'thRoleReviewer', 'thRoleAnnotator',
     ];
 
     /* ── Apply language ────────────────────────────────────────────── */
@@ -1044,6 +1030,7 @@
       lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
         langToggleAria: t.langToggleAria,
       });
+      document.title = 'Label Suite — ' + t.pageTitle;
 
       /* Update all task-role badge texts (class selector, not innerHTML) */
       document.querySelectorAll('.trb-text').forEach(el => {
@@ -1055,6 +1042,8 @@
         const el = document.getElementById(id);
         if (el && t[id] !== undefined) el.textContent = t[id];
       });
+
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
     }
 
     /* ── Original checkbox state (for cancel / dirty detection) ────── */
@@ -1166,8 +1155,6 @@
     /* ── Sidebar init ──────────────────────────────────────────────── */
     function initSidebar() {
       if (!window.LabelSuiteSharedSidebar) return;
-      const stored = window.LabelSuiteSharedSidebar.getStoredLang();
-      if (stored && stored !== lang) lang = stored;
 
       window.LabelSuiteSharedSidebar.mountSidebar({
         mountId:       'sharedSidebarMount',
