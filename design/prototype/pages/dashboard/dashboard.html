@@ -1802,23 +1802,14 @@
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
       const t = i18n[nextLang];
-      lang = nextLang;
-      window.LabelSuiteSharedSidebar.setStoredLang(nextLang);
-      document.documentElement.lang = nextLang === 'zh' ? 'zh-TW' : 'en';
-      const langCode = nextLang === 'zh' ? 'ZH' : 'EN';
-      ['langLabel', 'mobileLangLabel'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = langCode;
-      });
-      ['langToggle', 'mobileLangToggle'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.setAttribute('aria-label', t.langToggleAria);
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
       });
       document.title = t.pageTitle;
-      document.getElementById('logoutBtn')?.setAttribute('aria-label', t.logoutAria);
-      document.getElementById('logoutBtn')?.setAttribute('title', t.logoutTitle);
-      document.getElementById('mobileLogoutBtn')?.setAttribute('aria-label', t.logoutAria);
-      document.getElementById('mobileLogoutBtn')?.setAttribute('title', t.logoutTitle);
+      document.getElementById('logoutBtn').setAttribute('aria-label', t.logoutAria);
+      document.getElementById('logoutBtn').setAttribute('title', t.logoutTitle);
+      document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t.logoutAria);
+      document.getElementById('mobileLogoutBtn').setAttribute('title', t.logoutTitle);
       syncSidebarIdentity();
       document.querySelectorAll('.scenario-pill').forEach(pill => {
         const key = pill.dataset.scenario;
