@@ -999,6 +999,23 @@
       },
     };
 
+    Object.assign(i18n.zh, {
+      navDashboard: '\u5100\u8868\u677f',
+      navTaskManagement: '\u4efb\u52d9\u7ba1\u7406',
+      navAnnotation: '\u6a19\u8a18\u4f5c\u696d',
+      navDataset: '\u8cc7\u6599\u96c6\u5206\u6790',
+      navAdmin: '\u7cfb\u7d71\u7ba1\u7406',
+      navProfile: '\u500b\u4eba\u8a2d\u5b9a',
+    });
+    Object.assign(i18n.en, {
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
+    });
+
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
 
     /* ── IDs requiring i18n text updates ──────────────────────────── */
@@ -1021,6 +1038,7 @@
       'permDesc_admin_role_settings_view', 'permDesc_admin_role_settings_manage',
       'readonlyNote_task_detail_view',
       'thRoleUser', 'thRoleSuperAdmin', 'thRoleProjectLeader', 'thRoleReviewer', 'thRoleAnnotator',
+      'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
     ];
 
     /* ── Apply language ────────────────────────────────────────────── */

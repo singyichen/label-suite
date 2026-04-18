@@ -984,6 +984,25 @@
       },
     };
 
+    Object.assign(i18n.zh, {
+      disableModalTitle: '\u505c\u7528\u5e33\u865f',
+      navDashboard: '\u5100\u8868\u677f',
+      navTaskManagement: '\u4efb\u52d9\u7ba1\u7406',
+      navAnnotation: '\u6a19\u8a18\u4f5c\u696d',
+      navDataset: '\u8cc7\u6599\u96c6\u5206\u6790',
+      navAdmin: '\u7cfb\u7d71\u7ba1\u7406',
+      navProfile: '\u500b\u4eba\u8a2d\u5b9a',
+    });
+    Object.assign(i18n.en, {
+      disableModalTitle: 'Disable Account',
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
+    });
+
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
 
     function applyLang(l) {
@@ -1005,7 +1024,8 @@
         'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
         'editStatusLabel','editStatusActive','editStatusDisabled',
         'editCancelBtn','editSaveBtnLabel',
-        'disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
+        'disableModalTitle','disableWarningText','disableCancelBtn','disableConfirmBtnLabel',
+        'navDashboard','navTaskManagement','navAnnotation','navDataset','navAdmin','navProfile',
       ];
       ids.forEach(id => {
         const el = document.getElementById(id);

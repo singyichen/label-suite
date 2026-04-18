@@ -51,7 +51,7 @@
   --color-info-border:      #BFDBFE;
 
   /* ── Type Families ────────────────────────────────────────── */
-  --font-serif-display:  'Crimson Pro', 'Noto Serif TC', Georgia, serif;
+  --font-serif-display:  'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
   --font-sans:           'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
   --font-sans-reading:   'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
   --font-mono:           'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
