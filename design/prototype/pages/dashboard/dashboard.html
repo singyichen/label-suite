@@ -831,37 +831,38 @@
       .navbar {
         width: 100%;
         height: var(--navbar-mobile-height);
-        border-right: none;
-        border-bottom: none;
-        border-top: 1px solid var(--color-border);
-        flex-direction: row;
-        padding: 8px 10px;
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         top: auto;
+        border-right: none;
+        border-bottom: none;
+        border-top: 1px solid var(--color-border);
+        flex-direction: row;
+        padding: 0;
+        overflow: visible;
         background: var(--color-white);
         z-index: 300;
       }
 
-      .navbar-brand {
+      .brand-section {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         height: var(--navbar-mobile-top-height);
-        margin-bottom: 0;
-        padding: 12px 16px;
+        margin: 0;
+        padding: 0 var(--space-md);
         border-bottom: 1px solid var(--color-border);
         background: var(--color-white);
+        display: flex;
+        align-items: center;
         z-index: 320;
       }
 
-      .brand-section {
-        margin: 0;
-        padding: 0;
-        border: 0;
+      .navbar-brand {
+        width: 100%;
       }
 
       .navbar-wordmark {
@@ -869,7 +870,7 @@
       }
 
       .mobile-user-name {
-        display: block;
+        display: inline-block;
       }
 
       .brand-section .lang-toggle {

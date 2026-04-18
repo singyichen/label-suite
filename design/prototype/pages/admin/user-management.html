@@ -35,6 +35,7 @@
       --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
       --space-xs: 4px;  --space-sm: 8px;   --space-md: 16px;
       --space-lg: 24px; --space-xl: 32px;  --space-2xl: 48px;
+      --navbar-mobile-height: 84px;
       --navbar-mobile-top-height: 64px;
     }
 
@@ -417,18 +418,45 @@
 
     /* ── Mobile ─────────────────────────────────────────────────── */
     @media (max-width: 767px) {
-      body { flex-direction: column; }
+      body {
+        flex-direction: column;
+        padding-top: var(--navbar-mobile-top-height);
+        padding-bottom: var(--navbar-mobile-height);
+      }
       .navbar {
-        width: 100%; height: auto; flex-direction: row; flex-wrap: wrap;
-        padding: 0; border-right: none; border-bottom: 1px solid var(--color-border);
-        position: sticky; top: 0; overflow: visible;
+        width: 100%;
+        height: var(--navbar-mobile-height);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        border-bottom: none;
+        flex-direction: row;
+        padding: 0;
+        overflow: visible;
       }
       .brand-section {
-        width: 100%; flex: none; margin-bottom: 0;
-        padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: var(--navbar-mobile-top-height);
+        margin: 0;
+        padding: 0 var(--space-md);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-white);
+        display: flex;
+        align-items: center;
+        z-index: 210;
+      }
+      .navbar-brand {
+        width: 100%;
       }
       .brand-section .lang-toggle { display: none; }
-      .mobile-user-name { display: block; }
+      .mobile-user-name { display: inline-block; }
       .mobile-lang-toggle { display: inline-flex; }
       .mobile-top-logout { display: inline-flex; }
       .navbar-center {
