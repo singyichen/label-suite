@@ -704,6 +704,72 @@
       line-height: 1.5;
     }
 
+    .workflow-entry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .workflow-entry-card {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .workflow-entry-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .workflow-entry-detail {
+      color: var(--color-ink-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .workflow-path-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .workflow-path-card {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .workflow-path-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .workflow-step-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--color-ink-muted);
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+
+    .workflow-step-list li {
+      margin-bottom: 6px;
+    }
+
+    .workflow-step-list li:last-child {
+      margin-bottom: 0;
+    }
+
     .task-item-header {
       display: flex;
       align-items: center;
@@ -951,29 +1017,31 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="userWelcomeTitle" class="panel-title">歡迎使用 Label Suite</h2>
-                <span id="userWelcomeSubtitle" class="panel-subtitle">你目前是一般使用者，尚未建立或參與任務</span>
-              </div>
-              <div class="btn-row">
-                <button id="userCreateTaskBtn" class="btn btn-primary">建立第一個任務</button>
+                <h2 id="userWorkflowTitle" class="panel-title">開始你的第一個工作流程</h2>
+                <span id="userWorkflowSubtitle" class="panel-subtitle">從三個行動入口開始，快速達成第一個可交付成果</span>
               </div>
             </div>
-            <div class="metrics">
-              <div class="metric">
-                <strong id="userCurrentRoleValue">一般使用者</strong>
-                <span id="userCurrentRoleLabel">目前角色</span>
+            <div class="workflow-entry-grid">
+              <div class="workflow-entry-card">
+                <h3 id="workflowCardCreateTitle" class="workflow-entry-title">建立標記專案</h3>
+                <p id="workflowCardCreateDetail" class="workflow-entry-detail">上傳資料、設定標籤規則、指派團隊成員。</p>
+                <div class="btn-row">
+                  <button id="workflowCardCreateBtn" class="btn btn-primary">建立第一個任務</button>
+                </div>
               </div>
-              <div class="metric">
-                <strong>0</strong>
-                <span id="userOwnedTasksLabel">我建立的任務</span>
+              <div class="workflow-entry-card">
+                <h3 id="workflowCardAnnotateTitle" class="workflow-entry-title">進行資料標記</h3>
+                <p id="workflowCardAnnotateDetail" class="workflow-entry-detail">查看待辦任務，完成資料標記並提交結果。</p>
+                <div class="btn-row">
+                  <button id="workflowCardAnnotateBtn" class="btn btn-secondary slim">開始第一筆標記</button>
+                </div>
               </div>
-              <div class="metric">
-                <strong>0</strong>
-                <span id="userAssignedTasksLabel">我被指派的任務</span>
-              </div>
-              <div class="metric">
-                <strong>0</strong>
-                <span id="userAssignedReviewsLabel">我被指派的審核</span>
+              <div class="workflow-entry-card">
+                <h3 id="workflowCardReviewTitle" class="workflow-entry-title">進行品質審核</h3>
+                <p id="workflowCardReviewDetail" class="workflow-entry-detail">檢查標記內容、退回修正或通過資料。</p>
+                <div class="btn-row">
+                  <button id="workflowCardReviewBtn" class="btn btn-secondary slim">開始第一筆審核</button>
+                </div>
               </div>
             </div>
           </article>
@@ -981,24 +1049,42 @@
           <article class="panel">
             <div class="panel-header">
               <div>
-                <h2 id="userNextStepTitle" class="panel-title">你接下來可以做什麼</h2>
-                <span id="userNextStepSubtitle" class="panel-subtitle">角色會依任務行為自動轉換</span>
+                <h2 id="userPathTitle" class="panel-title">三條最短成功路徑</h2>
+                <span id="userPathSubtitle" class="panel-subtitle">照著這三條路徑走，你可以快速完成第一次上手。</span>
               </div>
             </div>
-            <ul class="list">
-              <li class="list-item">
-                <span id="userStep1Title" class="list-item-title">建立任務後成為專案負責人</span>
-                <span id="userStep1Detail" class="list-item-detail">建立任務後，你會在該任務中擁有管理與配置權限。</span>
-              </li>
-              <li class="list-item">
-                <span id="userStep2Title" class="list-item-title">被指派標記工作後成為標記員</span>
-                <span id="userStep2Detail" class="list-item-detail">被加入標記成員後，你會看到待標記工作與快速繼續入口。</span>
-              </li>
-              <li class="list-item">
-                <span id="userStep3Title" class="list-item-title">被指派審核工作後成為審核員</span>
-                <span id="userStep3Detail" class="list-item-detail">被加入審核成員後，你會看到待審任務與快速審核入口。</span>
-              </li>
-            </ul>
+            <div class="workflow-path-grid">
+              <article class="workflow-path-card">
+                <h3 id="pathLeaderTitle" class="workflow-path-title">專案負責人路徑：建立任務成功</h3>
+                <ol class="workflow-step-list">
+                  <li id="pathLeaderStep1">建立新任務並填寫任務名稱與目標。</li>
+                  <li id="pathLeaderStep2">上傳第一批資料，確認可被系統讀取。</li>
+                  <li id="pathLeaderStep3">設定標籤規則與任務型別配置。</li>
+                  <li id="pathLeaderStep4">指派至少 1 位標記員與 1 位審核員。</li>
+                  <li id="pathLeaderStep5">啟動任務，確認狀態為進行中。</li>
+                </ol>
+              </article>
+              <article class="workflow-path-card">
+                <h3 id="pathAnnotatorTitle" class="workflow-path-title">標記員路徑：完成第一筆標記</h3>
+                <ol class="workflow-step-list">
+                  <li id="pathAnnotatorStep1">開啟待辦任務，進入標記工作區。</li>
+                  <li id="pathAnnotatorStep2">閱讀任務說明與標籤規則摘要。</li>
+                  <li id="pathAnnotatorStep3">選擇第一筆資料並完成標註。</li>
+                  <li id="pathAnnotatorStep4">自我檢查標記一致性後提交。</li>
+                  <li id="pathAnnotatorStep5">確認任務列表顯示已完成 1 筆。</li>
+                </ol>
+              </article>
+              <article class="workflow-path-card">
+                <h3 id="pathReviewerTitle" class="workflow-path-title">審核員路徑：完成第一筆審核</h3>
+                <ol class="workflow-step-list">
+                  <li id="pathReviewerStep1">開啟待審任務並進入審核模式。</li>
+                  <li id="pathReviewerStep2">比對標記內容與任務規範。</li>
+                  <li id="pathReviewerStep3">標記需要修正的欄位與原因。</li>
+                  <li id="pathReviewerStep4">選擇退回修正或審核通過。</li>
+                  <li id="pathReviewerStep5">確認審核列表顯示已完成 1 筆。</li>
+                </ol>
+              </article>
+            </div>
           </article>
         </section>
 
@@ -1444,22 +1530,37 @@
           annotator:        '標記員',
           reviewer:         '審核員',
         },
-        userWelcomeTitle:      '歡迎使用 Label Suite',
-        userWelcomeSubtitle:   '你目前是一般使用者，尚未建立或參與任務',
-        userCreateTaskBtn:     '建立第一個任務',
-        userOwnedTasksLabel:   '我建立的任務',
-        userAssignedTasksLabel:'我被指派的任務',
-        userAssignedReviewsLabel:'我被指派的審核',
-        userCurrentRoleValue:  '一般使用者',
-        userCurrentRoleLabel:  '目前角色',
-        userNextStepTitle:     '你接下來可以做什麼',
-        userNextStepSubtitle:  '角色會依任務行為自動轉換',
-        userStep1Title:        '建立任務後成為專案負責人',
-        userStep1Detail:       '建立任務後，你會在該任務中擁有管理與配置權限。',
-        userStep2Title:        '被指派標記工作後成為標記員',
-        userStep2Detail:       '被加入標記成員後，你會看到待標記工作與快速繼續入口。',
-        userStep3Title:        '被指派審核工作後成為審核員',
-        userStep3Detail:       '被加入審核成員後，你會看到待審任務與快速審核入口。',
+        userWorkflowTitle:       '開始你的第一個工作流程',
+        userWorkflowSubtitle:    '從三個行動入口開始，快速達成第一個可交付成果',
+        workflowCardCreateTitle: '建立標記專案',
+        workflowCardCreateDetail:'上傳資料、設定標籤規則、指派團隊成員。',
+        workflowCardCreateBtn:   '建立第一個任務',
+        workflowCardAnnotateTitle: '進行資料標記',
+        workflowCardAnnotateDetail:'查看待辦任務，完成資料標記並提交結果。',
+        workflowCardAnnotateBtn: '開始第一筆標記',
+        workflowCardReviewTitle: '進行品質審核',
+        workflowCardReviewDetail:'檢查標記內容、退回修正或通過資料。',
+        workflowCardReviewBtn:   '開始第一筆審核',
+        userPathTitle:           '三條最短成功路徑',
+        userPathSubtitle:        '照著這三條路徑走，你可以快速完成第一次上手。',
+        pathLeaderTitle:         '專案負責人路徑：建立任務成功',
+        pathLeaderStep1:         '建立新任務並填寫任務名稱與目標。',
+        pathLeaderStep2:         '上傳第一批資料，確認可被系統讀取。',
+        pathLeaderStep3:         '設定標籤規則與任務型別配置。',
+        pathLeaderStep4:         '指派至少 1 位標記員與 1 位審核員。',
+        pathLeaderStep5:         '啟動任務，確認狀態為進行中。',
+        pathAnnotatorTitle:      '標記員路徑：完成第一筆標記',
+        pathAnnotatorStep1:      '開啟待辦任務，進入標記工作區。',
+        pathAnnotatorStep2:      '閱讀任務說明與標籤規則摘要。',
+        pathAnnotatorStep3:      '選擇第一筆資料並完成標註。',
+        pathAnnotatorStep4:      '自我檢查標記一致性後提交。',
+        pathAnnotatorStep5:      '確認任務列表顯示已完成 1 筆。',
+        pathReviewerTitle:       '審核員路徑：完成第一筆審核',
+        pathReviewerStep1:       '開啟待審任務並進入審核模式。',
+        pathReviewerStep2:       '比對標記內容與任務規範。',
+        pathReviewerStep3:       '標記需要修正的欄位與原因。',
+        pathReviewerStep4:       '選擇退回修正或審核通過。',
+        pathReviewerStep5:       '確認審核列表顯示已完成 1 筆。',
         adminPlatformTitle:    '平台使用者統計',
         adminPlatformSubtitle: '系統概況',
         adminTotalUsers:       '總用戶',
@@ -1572,22 +1673,37 @@
           annotator:        'Annotator',
           reviewer:         'Reviewer',
         },
-        userWelcomeTitle:      'Welcome to Label Suite',
-        userWelcomeSubtitle:   'You are currently a user with no created or assigned tasks yet',
-        userCreateTaskBtn:     'Create Your First Task',
-        userOwnedTasksLabel:   'Tasks I Created',
-        userAssignedTasksLabel:'Tasks Assigned to Me',
-        userAssignedReviewsLabel:'Reviews Assigned to Me',
-        userCurrentRoleValue:  'User',
-        userCurrentRoleLabel:  'Current Role',
-        userNextStepTitle:     'What you can do next',
-        userNextStepSubtitle:  'Your role changes automatically based on task actions',
-        userStep1Title:        'Create a task to become Project Leader',
-        userStep1Detail:       'After creating a task, you will manage settings and members for that task.',
-        userStep2Title:        'Get assigned to annotate to become Annotator',
-        userStep2Detail:       'Once assigned as an annotator, you will see pending work and quick resume actions.',
-        userStep3Title:        'Get assigned to review to become Reviewer',
-        userStep3Detail:       'Once assigned as a reviewer, you will see pending review tasks and quick review actions.',
+        userWorkflowTitle:       'Start Your First Workflow',
+        userWorkflowSubtitle:    'Use these three action entry points to reach your first success quickly.',
+        workflowCardCreateTitle: 'Create Annotation Project',
+        workflowCardCreateDetail:'Upload data, define label rules, and assign team members.',
+        workflowCardCreateBtn:   'Create First Task',
+        workflowCardAnnotateTitle: 'Annotate Data',
+        workflowCardAnnotateDetail:'Open pending work, complete annotation, and submit results.',
+        workflowCardAnnotateBtn: 'Complete First Annotation',
+        workflowCardReviewTitle: 'Run Quality Review',
+        workflowCardReviewDetail:'Review annotations, request fixes, or approve the data.',
+        workflowCardReviewBtn:   'Complete First Review',
+        userPathTitle:           'Three Shortest Success Paths',
+        userPathSubtitle:        'Follow these three paths to complete your first success quickly.',
+        pathLeaderTitle:         'Leader Path: Create Task Successfully',
+        pathLeaderStep1:         'Create a new task and define the objective.',
+        pathLeaderStep2:         'Upload your first data batch and verify parsing.',
+        pathLeaderStep3:         'Configure task type and label rules.',
+        pathLeaderStep4:         'Assign at least one annotator and one reviewer.',
+        pathLeaderStep5:         'Start the task and confirm status is In Progress.',
+        pathAnnotatorTitle:      'Annotator Path: Complete First Annotation',
+        pathAnnotatorStep1:      'Open a pending task and enter the annotation workspace.',
+        pathAnnotatorStep2:      'Read task instructions and label criteria.',
+        pathAnnotatorStep3:      'Annotate the first sample item.',
+        pathAnnotatorStep4:      'Self-check consistency, then submit.',
+        pathAnnotatorStep5:      'Confirm task list shows one completed item.',
+        pathReviewerTitle:       'Reviewer Path: Complete First Review',
+        pathReviewerStep1:       'Open a pending review task.',
+        pathReviewerStep2:       'Compare annotations against guidelines.',
+        pathReviewerStep3:       'Mark correction points with clear reasons.',
+        pathReviewerStep4:       'Choose return-for-fix or approve.',
+        pathReviewerStep5:       'Confirm review list shows one completed item.',
         adminPlatformTitle:    'Platform Stats',
         adminPlatformSubtitle: 'System overview',
         adminTotalUsers:       'Total Users',
@@ -1726,7 +1842,9 @@
 
     window.LabelSuiteAnalytics.bindClickTracks(
       [
-        { id: 'userCreateTaskBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
+        { id: 'workflowCardCreateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
+        { id: 'workflowCardAnnotateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'complete_first_annotation' } },
+        { id: 'workflowCardReviewBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'complete_first_review' } },
         { id: 'adminViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'admin_view_all_tasks' } },
         { id: 'plViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'project_leader_view_all_tasks' } },
         { id: 'annotatorTask1ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_1' } },
