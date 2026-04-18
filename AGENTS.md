@@ -39,7 +39,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 New features, behavior changes, breaking API changes, and architectural changes must go through:
 
 ```
-/superpowers:brainstorm → /speckit.specify → /ui-ux-pro-max (prototype) → /pencil-wireframe (optional)
+/superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (optional)
 → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /pr-flow
 ```
 

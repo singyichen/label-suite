@@ -152,4 +152,16 @@ test.describe('Dashboard page — responsive rendering', () => {
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
     });
   }
+
+  test('uses fixed top brand section on mobile like shared sidebar baseline', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(DASHBOARD_URL);
+
+    const brandSection = page.locator('.brand-section');
+    await expect(brandSection).toBeVisible();
+    await expect(brandSection).toHaveCSS('position', 'fixed');
+    await expect(brandSection).toHaveCSS('top', '0px');
+    await expect(brandSection).toHaveCSS('left', '0px');
+    await expect(brandSection).toHaveCSS('right', '0px');
+  });
 });

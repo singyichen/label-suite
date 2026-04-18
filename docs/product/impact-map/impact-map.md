@@ -1,6 +1,6 @@
 # Impact Map — Label Suite
 
-**版本**：1.0.0
+**版本**：1.1.0
 **建立日期**：2026-04-14
 **目標受眾**：論文指導教授、開發者
 
@@ -22,7 +22,7 @@
 | 不依賴工程師，能獨立透過 Config Builder 配置並啟動標記任務 | `013` New Task + Config Builder |
 | 能查看所有任務狀態，快速掌握進度 | `010` Task List、`012` Dashboard |
 | 能在任務詳情頁邀請成員、指派角色 | `014` Task Detail — 成員管理 |
-| 能從平台成員列表挑選任務成員並查看工時紀錄 | `008` Annotator List、`009` Work Log |
+| 能在任務詳情頁挑選可加入成員並查看工時紀錄 | `014` Task Detail（可加入成員名單／任務內工時） |
 | 能主導 Dry Run → 確認 IAA → 發布 Official Run 生命週期 | `014` Task Detail — 任務狀態流 |
 | 能匯出最終標記結果供模型訓練 | `014` Task Detail — 匯出功能 |
 | 能監控標記進度與異常 | `016` Dataset Stats |
@@ -56,7 +56,6 @@
 |--------------------------|----------------------|
 | 能管理全平台用戶帳號與系統角色（建立、停用、角色指派） | `006` User Management |
 | 能配置角色與權限設定 | `007` Role & Permission Settings |
-| 能查看全平台工時與工作量記錄 | `009` Work Log |
 
 ---
 
@@ -69,7 +68,7 @@ Why（Demo Paper 目標）
 │   ├── How: 獨立配置任務 → What: spec 013
 │   ├── How: 管理任務生命週期 → What: spec 014
 │   ├── How: 監控進度 → What: spec 010, 012, 016
-│   ├── How: 邀請成員並查看工時 → What: spec 008, 009, 014
+│   ├── How: 邀請成員並查看工時 → What: spec 014
 │   └── How: 匯出結果 → What: spec 014 (export)
 │
 ├── Annotator
@@ -83,8 +82,7 @@ Why（Demo Paper 目標）
 │
 └── Super Admin
     ├── How: 管理用戶 → What: spec 006
-    ├── How: 配置權限 → What: spec 007
-    └── How: 查看全平台工時 → What: spec 009
+    └── How: 配置權限 → What: spec 007
 ```
 
 ---
@@ -92,5 +90,5 @@ Why（Demo Paper 目標）
 ## 範疇外（Out of Scope for Demo Paper）
 
 - 批次資料匯入（UI 未完成前由後端直接操作）
-- 薪資計算自動化（Work Log 提供數據，計算邏輯不在系統內）
+- 薪資計算自動化（任務內工時紀錄提供數據，計算邏輯不在系統內）
 - 多語言介面切換（中文介面為 Demo 唯一目標語言）

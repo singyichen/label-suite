@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 角色設定</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <style>
+    :root {
+      --color-task-soft-bg:        #F0FDFA;
+      --color-task-header:         #0D9488;
+      --navbar-mobile-height: 84px;
+      --navbar-mobile-top-height: 64px;
+    }
+
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+      background: var(--color-surface); color: var(--color-ink);
+      line-height: 1.8; min-height: 100vh; display: flex;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Sidebar styles ──────────────────────────────────────────── */
+    .navbar {
+      width: 240px; height: 100vh; background: var(--color-white);
+      border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      position: sticky; top: 0; z-index: 200;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .brand-section {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-bottom: var(--space-xl); padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: var(--color-primary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .navbar-logo svg { width: 20px; height: 20px; }
+    .navbar-wordmark {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-weight: 700; font-size: 16px; color: var(--color-ink); line-height: 1;
+    }
+    .brand-section .lang-toggle { margin-left: auto; }
+    .mobile-top-logout {
+      display: none; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: var(--color-white);
+      color: var(--color-ink-muted);
+      transition: color 150ms, border-color 150ms, background 150ms;
+    }
+    .mobile-top-logout:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .mobile-user-name {
+      display: none; margin-left: auto; max-width: 110px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 13px; font-weight: 600; color: var(--color-ink); line-height: 1.2;
+    }
+    .mobile-lang-toggle {
+      display: none; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 6px 10px; background: var(--color-white); color: var(--color-ink);
+      font-size: 12px; font-weight: 600; transition: border-color 150ms, background 150ms;
+    }
+    .mobile-lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .navbar-center { display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl); flex: 1; }
+    .nav-link {
+      padding: 10px 12px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; color: var(--color-ink-muted);
+      transition: color 150ms, background 150ms;
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+    }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
+    .nav-link:hover { color: var(--color-ink); background: #F8FAFC; }
+    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
+    .nav-link.active .nav-icon { color: var(--color-primary); }
+    .nav-actions {
+      display: flex; flex-direction: column; gap: var(--space-md);
+      border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: auto;
+    }
+    .lang-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 6px 12px; background: var(--color-white); color: var(--color-ink);
+      font-size: 13px; font-weight: 500; transition: border-color 150ms, background 150ms; white-space: nowrap;
+    }
+    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; border-radius: var(--radius-md); }
+    .user-chip-profile {
+      display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+      text-decoration: none; color: inherit; border-radius: var(--radius-sm); transition: opacity 150ms;
+    }
+    .user-chip-profile:hover { opacity: 0.75; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: white; color: var(--color-primary);
+      font-weight: 700; font-size: 14px;
+      border: 2px solid rgba(99,102,241,0.16); flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      display: block; font-weight: 600; font-size: 13px; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-role {
+      display: block; font-size: 11px; color: var(--color-ink-muted); line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .logout-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: var(--color-white);
+      color: var(--color-ink-muted); flex-shrink: 0;
+      transition: color 150ms, border-color 150ms, background 150ms;
+    }
+    .logout-btn:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+
+    /* ── Page Layout ─────────────────────────────────────────────── */
+    .page-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .main-content {
+      flex: 1; padding: var(--space-xl) var(--space-2xl);
+      overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-xl);
+    }
+
+    /* ── Banners ─────────────────────────────────────────────────── */
+    .banner {
+      border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+      display: flex; align-items: center; gap: var(--space-md); font-size: 14px; font-weight: 500;
+    }
+    .banner-icon { flex-shrink: 0; }
+    .banner-body { flex: 1; }
+    .banner-title { font-weight: 600; margin-bottom: 2px; }
+    .banner-desc { font-size: 13px; opacity: 0.85; }
+    .banner-action { flex-shrink: 0; }
+    .dirty-banner  { background: var(--color-warning-soft-bg); border: 1px solid var(--color-warning-soft-border); color: var(--color-warning); }
+    .conflict-banner { background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); color: var(--color-error); }
+    .banner-reload-btn {
+      padding: 6px 14px; border-radius: var(--radius-md); font-size: 13px; font-weight: 600;
+      border: 1px solid var(--color-error-soft-border); background: var(--color-white); color: var(--color-error);
+      transition: background 150ms;
+    }
+    .banner-reload-btn:hover { background: var(--color-error-soft-bg); }
+
+    /* ── Admin Tabs ─────────────────────────────────────────────── */
+    .admin-tabs { display: flex; border-bottom: 2px solid #E2E8F0; margin-bottom: var(--space-md); }
+    .admin-tab {
+      padding: 10px 20px; font-size: 14px; font-weight: 500; color: #64748B;
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: color 150ms, border-color 150ms;
+      text-decoration: none; display: inline-block;
+    }
+    .admin-tab:hover { color: var(--color-primary); }
+    .admin-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+    /* ── Page Header ─────────────────────────────────────────────── */
+    .page-header { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .page-header-main { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; }
+    .page-title { font-family: 'Crimson Pro', 'Noto Serif TC', serif; font-weight: 700; font-size: 28px; color: var(--color-ink); line-height: 1.3; margin: 0 0 4px; }
+    .page-subtitle { font-size: 14px; color: var(--color-ink-muted); margin: 0; }
+    .page-actions { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; }
+
+    /* ── Buttons ─────────────────────────────────────────────────── */
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500;
+      border: 1px solid var(--color-border); background: var(--color-white); color: var(--color-ink);
+      transition: background 150ms, border-color 150ms;
+    }
+    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .btn-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
+      border: none; background: var(--color-cta); color: var(--color-white); transition: opacity 150ms;
+    }
+    .btn-cta:hover { opacity: 0.9; }
+    .btn-cta:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Mobile Notice ───────────────────────────────────────────── */
+    /* ── Matrix Section ──────────────────────────────────────────── */
+    .matrix-section { display: flex; flex-direction: column; gap: var(--space-lg); }
+    .section-title { font-family: 'Crimson Pro', 'Noto Serif TC', serif; font-weight: 600; font-size: 18px; color: var(--color-ink); }
+    .section-desc { font-size: 13px; color: var(--color-ink-muted); line-height: 1.6; margin-top: var(--space-xs); }
+
+    /* ── Legend ──────────────────────────────────────────────────── */
+    .matrix-legend {
+      display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center;
+      padding: var(--space-md) var(--space-lg); background: var(--color-white);
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      font-size: 12px; color: var(--color-ink-muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-task-badge {
+      display: inline-flex; align-items: center; gap: 2px;
+      font-size: 10px; font-weight: 700; color: #92400E;
+      background: #FEF3C7; border: 1px solid #FDE68A;
+      border-radius: var(--radius-full); padding: 1px 8px;
+    }
+
+    /* ── Matrix Table ────────────────────────────────────────────── */
+    .matrix-scroll-wrapper { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+    .matrix-table {
+      width: 100%; border-collapse: collapse; background: var(--color-white);
+      font-size: 13px; min-width: 780px;
+    }
+
+    /* Group headers */
+    .col-group-system {
+      background: var(--color-primary-soft-bg); color: var(--color-primary);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      text-align: center; padding: 8px var(--space-md);
+      border-bottom: 2px solid var(--color-primary); border-right: 1px solid var(--color-border);
+    }
+    .col-group-task {
+      background: var(--color-task-soft-bg); color: var(--color-task-header);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      text-align: center; padding: 8px var(--space-md);
+      border-bottom: 2px solid var(--color-task-header);
+    }
+    .col-perm-header {
+      background: var(--color-white); padding: 8px var(--space-md);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--color-ink-muted); text-align: left;
+      border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border);
+      position: sticky; left: 0; z-index: 10;
+    }
+    .col-role-header {
+      text-align: center; padding: 8px var(--space-md);
+      font-size: 12px; font-weight: 600; color: var(--color-ink);
+      border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border);
+      white-space: nowrap; vertical-align: middle;
+    }
+    .col-role-header.sys-col  { background: #FAFAFE; color: var(--color-primary); }
+    .col-role-header.sa-col   { border-right: 2px solid var(--color-border); }
+    .col-role-header.task-col { background: #F8FFFE; color: var(--color-task-header); }
+    .col-role-header.last-col { border-right: none; }
+
+    /* Module header rows */
+    .module-row td {
+      background: #F8FAFC; padding: 6px var(--space-md);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--color-ink-muted);
+      border-top: 2px solid var(--color-border); border-bottom: 1px solid var(--color-border);
+    }
+
+    /* Permission rows */
+    .perm-row td { border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+    .perm-row:last-child td { border-bottom: none; }
+    .perm-row:hover td { background: #FAFAFE; }
+
+    /* Sticky permission label column */
+    .perm-cell {
+      padding: var(--space-sm) var(--space-md); text-align: left;
+      position: sticky; left: 0; background: var(--color-white);
+      border-right: 1px solid var(--color-border); min-width: 250px; z-index: 5;
+    }
+    .perm-row:hover .perm-cell { background: #FAFAFE; }
+    .perm-key {
+      display: block; font-family: 'Atkinson Hyperlegible', monospace;
+      font-size: 12px; font-weight: 600; color: var(--color-primary); line-height: 1.4;
+    }
+    .perm-desc {
+      display: block; font-size: 11px; color: var(--color-ink-muted); margin-top: 2px; line-height: 1.4;
+    }
+
+    /* Check / badge cells */
+    .check-cell {
+      text-align: center; padding: var(--space-sm);
+      border-right: 1px solid var(--color-border); min-width: 90px;
+    }
+    .check-cell.sys-bg  { background: rgba(99,102,241,0.025); }
+    .check-cell.sa-col  { border-right: 2px solid var(--color-border); }
+    .check-cell.task-bg { background: rgba(13,148,136,0.025); }
+    .check-cell.last-col { border-right: none; }
+
+    /* Editable checkboxes */
+    .matrix-checkbox {
+      width: 16px; height: 16px; cursor: pointer;
+      accent-color: var(--color-primary); border-radius: 3px;
+    }
+    .matrix-checkbox.task-check { accent-color: var(--color-task-header); }
+
+    /* Locked cells (super_admin base permissions) */
+    .locked-cell { background: #F9FAFB !important; cursor: not-allowed; }
+    .locked-wrapper { display: inline-flex; align-items: center; justify-content: center; gap: 3px; color: var(--color-ink-muted); }
+
+    /* Admin-locked cells (super_admin admin permissions — FR-008a) */
+    .admin-locked-cell { background: var(--color-primary-soft-bg) !important; cursor: not-allowed; }
+    .admin-locked-wrapper { display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
+
+    /* Task-role badge (⛔) */
+    .task-role-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 700; color: #92400E;
+      background: #FEF3C7; border: 1px solid #FDE68A;
+      border-radius: var(--radius-full); padding: 3px 8px; white-space: nowrap;
+    }
+
+    /* N/A cells */
+    .na-cell {
+      text-align: center; padding: var(--space-sm);
+      border-right: 1px solid var(--color-border);
+      color: var(--color-ink-muted); font-size: 16px; min-width: 90px;
+    }
+    .na-cell.last-col { border-right: none; }
+
+    /* Read-only annotation */
+    .readonly-note { display: block; font-size: 10px; color: var(--color-ink-muted); margin-top: 2px; white-space: nowrap; }
+
+    /* ── Toast ───────────────────────────────────────────────────── */
+    #toast { position: fixed; bottom: 24px; right: 24px; z-index: 1000; max-width: 360px; min-width: 260px; animation: slideIn 250ms ease; }
+    @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast-inner { display: flex; align-items: flex-start; gap: var(--space-sm); padding: var(--space-md); border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); }
+    .toast-inner.success { background: var(--color-success-soft-bg); border: 1px solid var(--color-success-soft-border); color: var(--color-success); }
+    .toast-inner.error   { background: var(--color-error-soft-bg);   border: 1px solid var(--color-error-soft-border);   color: var(--color-error); }
+    .toast-body { flex: 1; }
+    .toast-close { background: none; border: none; color: currentColor; opacity: 0.6; padding: 2px; border-radius: var(--radius-sm); transition: opacity 150ms; }
+    .toast-close:hover { opacity: 1; }
+
+
+    /* ── Mobile ──────────────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      body {
+        flex-direction: column;
+        padding-top: var(--navbar-mobile-top-height);
+        padding-bottom: var(--navbar-mobile-height);
+      }
+      .navbar {
+        width: 100%;
+        height: var(--navbar-mobile-height);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        border-bottom: none;
+        flex-direction: row;
+        padding: 0;
+        overflow: visible;
+      }
+      .brand-section {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: var(--navbar-mobile-top-height);
+        margin: 0;
+        padding: 0 var(--space-md);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-white);
+        display: flex;
+        align-items: center;
+        z-index: 210;
+      }
+      .navbar-brand { width: 100%; }
+      .mobile-user-name { display: inline-block; }
+      .brand-section .lang-toggle { display: none; }
+      .mobile-lang-toggle { display: inline-flex; }
+      .mobile-top-logout { display: inline-flex; }
+      .navbar-center {
+        flex: 1; flex-direction: row; align-items: stretch;
+        justify-content: space-around; gap: 0; margin: 0;
+      }
+      .navbar-center .nav-link {
+        min-height: var(--navbar-mobile-top-height); flex: 1;
+        padding: 8px 2px; flex-direction: column;
+        justify-content: center; align-items: center;
+        gap: 4px; text-align: center; font-size: 10px; line-height: 1.2;
+      }
+      .nav-actions { display: none; }
+      .main-content { padding: var(--space-md); gap: var(--space-md); }
+      .page-header-main { flex-direction: column; gap: var(--space-md); }
+      .page-actions { width: 100%; }
+      .page-actions .btn-ghost,
+      .page-actions .btn-cta { flex: 1; justify-content: center; }
+      .matrix-checkbox { pointer-events: none; }
+    }
+  </style>
+</head>
+<body>
+<!-- ─── Sidebar ─────────────────────────────────────────────────── -->
+  <div id="sharedSidebarMount"></div>
+
+  <!-- ─── Main Page ───────────────────────────────────────────────── -->
+  <div class="page-wrapper">
+    <main class="main-content">
+
+      <!-- Dirty State Banner -->
+      <div id="dirtyBanner" class="banner dirty-banner hidden" role="alert">
+        <span class="banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </span>
+        <div class="banner-body">
+          <p class="banner-title" id="dirtyTitle">有未儲存的變更</p>
+          <p class="banner-desc" id="dirtyDesc">點擊「儲存」確認變更，或點擊「取消」放棄所有修改</p>
+        </div>
+      </div>
+
+      <!-- Conflict Banner -->
+      <div id="conflictBanner" class="banner conflict-banner hidden" role="alert">
+        <span class="banner-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </span>
+        <div class="banner-body">
+          <p class="banner-title" id="conflictTitle">版本衝突：設定已被其他管理員修改</p>
+          <p class="banner-desc" id="conflictDesc">請重新載入最新設定後再進行編輯，以避免覆蓋他人變更</p>
+        </div>
+        <div class="banner-action">
+          <button class="banner-reload-btn" onclick="reloadMatrix()">
+            <span id="reloadBtnLabel">重新載入</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <h1 class="page-title" id="pageTitle">角色設定</h1>
+        <p class="page-subtitle" id="pageSubtitle">設定系統角色與任務角色的功能存取權限</p>
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="admin-tabs" role="tablist">
+        <a id="tabUsers" class="admin-tab" href="user-management.html" role="tab" aria-selected="false">使用者管理</a>
+        <a id="tabRoles" class="admin-tab active" href="role-settings.html" role="tab" aria-selected="true">角色設定</a>
+      </div>
+
+      <!-- Matrix Section -->
+      <div class="matrix-section">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-lg);flex-wrap:wrap;margin-bottom:var(--space-md);">
+          <div>
+            <h2 class="section-title" id="matrixSectionTitle">角色權限矩陣</h2>
+            <p class="section-desc" id="matrixSectionDesc">設定各角色對平台功能的存取權限。⛔ 表示需透過任務角色授權，不由系統角色直接控制。🔒 表示核心管理權限，不可關閉。</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn-ghost" onclick="cancelEdit()">
+              <span id="cancelBtnLabel">取消</span>
+            </button>
+            <button class="btn-cta" id="saveBtn" onclick="saveMatrix()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+              </svg>
+              <span id="saveBtnLabel">儲存</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="matrix-legend">
+          <span style="font-size:12px;font-weight:600;color:var(--color-ink)" id="legendTitle">圖例：</span>
+          <span class="legend-item">
+            <input type="checkbox" checked disabled style="accent-color:var(--color-primary);width:14px;height:14px;" />
+            <span id="legendOn">已啟用（可編輯）</span>
+          </span>
+          <span class="legend-item">
+            <input type="checkbox" disabled style="width:14px;height:14px;" />
+            <span id="legendOff">未啟用（可編輯）</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-task-badge">⛔ <span id="legendTaskBadgeText">需任務角色</span></span>
+            <span id="legendTaskRoleDesc">由任務角色控制</span>
+          </span>
+          <span class="legend-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink-muted)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span id="legendLocked">鎖定（不可更改）</span>
+          </span>
+          <span class="legend-item">
+            <span style="color:var(--color-ink-muted);font-size:16px">—</span>
+            <span id="legendNA">不適用</span>
+          </span>
+        </div>
+
+        <!-- Matrix Table (all rows hardcoded; JS updates text content only) -->
+        <div class="matrix-scroll-wrapper" role="region" tabindex="0">
+          <table class="matrix-table" id="matrixTable">
+            <thead>
+              <tr>
+                <th class="col-perm-header" rowspan="2" scope="col" id="thPermission">功能權限</th>
+                <th class="col-group-system" colspan="2" id="thSystemRoles">系統角色</th>
+                <th class="col-group-task"   colspan="3" id="thTaskRoles">任務角色</th>
+              </tr>
+              <tr>
+                <th class="col-role-header sys-col"              scope="col" id="thRoleUser">user</th>
+                <th class="col-role-header sys-col sa-col"       scope="col" id="thRoleSuperAdmin">super_admin</th>
+                <th class="col-role-header task-col"             scope="col" id="thRoleProjectLeader">project_leader</th>
+                <th class="col-role-header task-col"             scope="col" id="thRoleReviewer">reviewer</th>
+                <th class="col-role-header task-col last-col"    scope="col" id="thRoleAnnotator">annotator</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <!-- ══ Account ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_account">帳號（Account）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">account.profile.view</code>
+                  <span class="perm-desc" id="permDesc_account_profile_view">檢視個人設定頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - account.profile.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
+                  <div class="locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">account.profile.edit</code>
+                  <span class="perm-desc" id="permDesc_account_profile_edit">編輯個人資料與密碼</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="account.profile.edit" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - account.profile.edit" />
+                </td>
+                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
+                  <div class="locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+
+              <!-- ══ Dashboard ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_dashboard">儀表板（Dashboard）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dashboard.view</code>
+                  <span class="perm-desc" id="permDesc_dashboard_view">檢視儀表板</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="dashboard.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - dashboard.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
+                  <div class="locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+
+              <!-- ══ Task Management ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_taskMgmt">任務管理（Task Management）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.list.view</code>
+                  <span class="perm-desc" id="permDesc_task_list_view">檢視任務列表</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.list.view" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - task.list.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
+                  <div class="locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.create</code>
+                  <span class="perm-desc" id="permDesc_task_create">建立新任務</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="task.create" data-role="user" checked onchange="onCheckboxChange()" aria-label="user - task.create" />
+                </td>
+                <td class="check-cell sys-bg sa-col locked-cell" title="super_admin 基礎權限不可更改">
+                  <div class="locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.detail.view</code>
+                  <span class="perm-desc" id="permDesc_task_detail_view">檢視任務詳情</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.view" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - task.detail.view" />
+                  <span class="readonly-note" id="readonlyNote_task_detail_view">（唯讀）</span>
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - task.detail.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">task.members.manage</code>
+                  <span class="perm-desc" id="permDesc_task_members_manage">管理任務成員與任務角色</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - task.members.manage" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="rev" onchange="onCheckboxChange()" aria-label="reviewer - task.members.manage" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - task.members.manage" />
+                </td>
+              </tr>
+
+              <!-- ══ Annotation ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_annotation">標記（Annotation）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">annotation.workspace.annotate</code>
+                  <span class="perm-desc" id="permDesc_annotation_workspace_annotate">以 annotator 模式執行標記</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="pl" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.annotate" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="rev" onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.annotate" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="ann" checked onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.annotate" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">annotation.workspace.review</code>
+                  <span class="perm-desc" id="permDesc_annotation_workspace_review">以 reviewer 模式執行審核</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="pl" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.review" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.review" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.review" />
+                </td>
+              </tr>
+
+              <!-- ══ Dataset ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_dataset">資料集（Dataset）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dataset.stats.view</code>
+                  <span class="perm-desc" id="permDesc_dataset_stats_view">檢視資料集統計</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.stats.view" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.stats.view" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - dataset.stats.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dataset.quality.view</code>
+                  <span class="perm-desc" id="permDesc_dataset_quality_view">檢視資料品質頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.quality.view" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.quality.view" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - dataset.quality.view" />
+                </td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">dataset.export</code>
+                  <span class="perm-desc" id="permDesc_dataset_export">下載/匯出資料結果</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell sys-bg sa-col">
+                  <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.export" />
+                </td>
+                <td class="check-cell task-bg">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="rev" onchange="onCheckboxChange()" aria-label="reviewer - dataset.export" />
+                </td>
+                <td class="check-cell task-bg last-col">
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - dataset.export" />
+                </td>
+              </tr>
+
+              <!-- ══ Admin ══ -->
+              <tr class="module-row">
+                <td colspan="6" id="moduleHeader_admin">系統管理（Admin）</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.user_management.view</code>
+                  <span class="perm-desc" id="permDesc_admin_user_management_view">進入使用者管理頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.view" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.user_management.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.user_management.manage</code>
+                  <span class="perm-desc" id="permDesc_admin_user_management_manage">新增/編輯/停用使用者、指派 system role</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.user_management.manage" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.user_management.manage" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.role_settings.view</code>
+                  <span class="perm-desc" id="permDesc_admin_role_settings_view">進入角色權限設定頁</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.view" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.view" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+              <tr class="perm-row">
+                <td class="perm-cell">
+                  <code class="perm-key">admin.role_settings.manage</code>
+                  <span class="perm-desc" id="permDesc_admin_role_settings_manage">編輯並儲存角色權限矩陣</span>
+                </td>
+                <td class="check-cell sys-bg">
+                  <input type="checkbox" class="matrix-checkbox" data-key="admin.role_settings.manage" data-role="user" onchange="onCheckboxChange()" aria-label="user - admin.role_settings.manage" />
+                </td>
+                <td class="check-cell sys-bg sa-col admin-locked-cell" title="核心管理權限不可關閉（FR-008a）">
+                  <div class="admin-locked-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </div>
+                </td>
+                <td class="na-cell">—</td>
+                <td class="na-cell">—</td>
+                <td class="na-cell last-col">—</td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div><!-- /matrix-scroll-wrapper -->
+      </div><!-- /matrix-section -->
+
+
+    </main>
+  </div><!-- /page-wrapper -->
+
+  <!-- ─── Toast ──────────────────────────────────────────────────── -->
+  <div id="toast" class="hidden" aria-live="polite" aria-atomic="true">
+    <div class="toast-inner success" id="toastInner">
+      <svg id="toastIconSuccess" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <svg id="toastIconError" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="hidden">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div class="toast-body">
+        <p id="toastMsg" style="font-weight:600;font-size:14px">儲存成功</p>
+        <p id="toastSub" style="font-size:12px;opacity:0.8;margin-top:2px"></p>
+      </div>
+      <button class="toast-close" onclick="hideToast()" aria-label="關閉通知">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Scenario Switcher ───────────────────────────────────────── -->
+
+  <!-- ─── Scripts ─────────────────────────────────────────────────── -->
+  <script src="../shared/sidebar.js"></script>
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    /* ── i18n ──────────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:               '角色設定',
+        pageSubtitle:            '設定系統角色與任務角色的功能存取權限',
+        tabUsers:                '使用者管理',
+        tabRoles:                '角色設定',
+        cancelBtnLabel:          '取消',
+        saveBtnLabel:            '儲存',
+        matrixSectionTitle:      '角色權限矩陣',
+        matrixSectionDesc:       '設定各角色對平台功能的存取權限。⛔ 表示需透過任務角色授權，不由系統角色直接控制。🔒 表示核心管理權限，不可關閉。',
+        thPermission:            '功能權限',
+        thSystemRoles:           '系統角色',
+        thTaskRoles:             '任務角色',
+        legendTitle:             '圖例：',
+        legendOn:                '已啟用（可編輯）',
+        legendOff:               '未啟用（可編輯）',
+        legendTaskBadgeText:     '需任務角色',
+        legendTaskRoleDesc:      '由任務角色控制',
+        legendLocked:            '鎖定（不可更改）',
+        legendNA:                '不適用',
+        dirtyTitle:              '有未儲存的變更',
+        dirtyDesc:               '點擊「儲存」確認變更，或點擊「取消」放棄所有修改',
+        conflictTitle:           '版本衝突：設定已被其他管理員修改',
+        conflictDesc:            '請重新載入最新設定後再進行編輯，以避免覆蓋他人變更',
+        reloadBtnLabel:          '重新載入',
+        toastSaved:              '角色權限設定已儲存',
+        readonlyNote:            '（唯讀）',
+        langToggleAria:          '切換語言',
+        moduleHeader_account:    '帳號（Account）',
+        moduleHeader_dashboard:  '儀表板（Dashboard）',
+        moduleHeader_taskMgmt:   '任務管理（Task Management）',
+        moduleHeader_annotation: '標記（Annotation）',
+        moduleHeader_dataset:    '資料集（Dataset）',
+        moduleHeader_admin:      '系統管理（Admin）',
+        permDesc_account_profile_view:              '檢視個人設定頁',
+        permDesc_account_profile_edit:              '編輯個人資料與密碼',
+        permDesc_dashboard_view:                    '檢視儀表板',
+        permDesc_task_list_view:                    '檢視任務列表',
+        permDesc_task_create:                       '建立新任務',
+        permDesc_task_detail_view:                  '檢視任務詳情',
+        permDesc_task_members_manage:               '管理任務成員與任務角色',
+        permDesc_annotation_workspace_annotate:     '以 annotator 模式執行標記',
+        permDesc_annotation_workspace_review:       '以 reviewer 模式執行審核',
+        permDesc_dataset_stats_view:                '檢視資料集統計',
+        permDesc_dataset_quality_view:              '檢視資料品質頁',
+        permDesc_dataset_export:                    '下載/匯出資料結果',
+        permDesc_admin_user_management_view:        '進入使用者管理頁',
+        permDesc_admin_user_management_manage:      '新增/編輯/停用使用者、指派 system role',
+        permDesc_admin_role_settings_view:          '進入角色權限設定頁',
+        permDesc_admin_role_settings_manage:        '編輯並儲存角色權限矩陣',
+        readonlyNote_task_detail_view:              '（唯讀）',
+        thRoleUser:                                 '一般使用者',
+        thRoleSuperAdmin:                           '超級管理員',
+        thRoleProjectLeader:                        '專案領導者',
+        thRoleReviewer:                             '審核員',
+        thRoleAnnotator:                            '標記員',
+        roleIndicatorLabel:                         '系統管理員',
+      },
+      en: {
+        pageTitle:               'Role Settings',
+        pageSubtitle:            'Configure access permissions for system roles and task roles',
+        tabUsers:                'User Management',
+        tabRoles:                'Role Settings',
+        cancelBtnLabel:          'Cancel',
+        saveBtnLabel:            'Save',
+        matrixSectionTitle:      'Role Permission Matrix',
+        matrixSectionDesc:       'Configure feature access for each role. ⛔ means delegated to task roles, not controlled by system roles. 🔒 means critical admin permission, cannot be disabled.',
+        thPermission:            'Permission',
+        thSystemRoles:           'System Roles',
+        thTaskRoles:             'Task Roles',
+        legendTitle:             'Legend:',
+        legendOn:                'Enabled (editable)',
+        legendOff:               'Disabled (editable)',
+        legendTaskBadgeText:     'Task role required',
+        legendTaskRoleDesc:      'Controlled by task role',
+        legendLocked:            'Locked (cannot change)',
+        legendNA:                'Not applicable',
+        dirtyTitle:              'You have unsaved changes',
+        dirtyDesc:               'Click "Save" to apply changes, or "Cancel" to discard all edits',
+        conflictTitle:           'Version conflict: settings were modified by another admin',
+        conflictDesc:            'Reload the latest settings before editing to avoid overwriting others\' changes',
+        reloadBtnLabel:          'Reload',
+        toastSaved:              'Role permissions saved',
+        readonlyNote:            '(read-only)',
+        langToggleAria:          'Switch language',
+        moduleHeader_account:    'Account',
+        moduleHeader_dashboard:  'Dashboard',
+        moduleHeader_taskMgmt:   'Task Management',
+        moduleHeader_annotation: 'Annotation',
+        moduleHeader_dataset:    'Dataset',
+        moduleHeader_admin:      'Admin',
+        permDesc_account_profile_view:              'View profile page',
+        permDesc_account_profile_edit:              'Edit profile and password',
+        permDesc_dashboard_view:                    'View dashboard',
+        permDesc_task_list_view:                    'View task list',
+        permDesc_task_create:                       'Create new task',
+        permDesc_task_detail_view:                  'View task details',
+        permDesc_task_members_manage:               'Manage task members and roles',
+        permDesc_annotation_workspace_annotate:     'Annotate in annotator mode',
+        permDesc_annotation_workspace_review:       'Review in reviewer mode',
+        permDesc_dataset_stats_view:                'View dataset statistics',
+        permDesc_dataset_quality_view:              'View data quality page',
+        permDesc_dataset_export:                    'Download/export data results',
+        permDesc_admin_user_management_view:        'Access user management page',
+        permDesc_admin_user_management_manage:      'Manage users and assign system roles',
+        permDesc_admin_role_settings_view:          'Access role settings page',
+        permDesc_admin_role_settings_manage:        'Edit and save role permission matrix',
+        readonlyNote_task_detail_view:              '(read-only)',
+        thRoleUser:                                 'User',
+        thRoleSuperAdmin:                           'Super Admin',
+        thRoleProjectLeader:                        'Project Leader',
+        thRoleReviewer:                             'Reviewer',
+        thRoleAnnotator:                            'Annotator',
+        roleIndicatorLabel:                         'Super Admin',
+      },
+    };
+
+    Object.assign(i18n.zh, {
+      navDashboard: '\u5100\u8868\u677f',
+      navTaskManagement: '\u4efb\u52d9\u7ba1\u7406',
+      navAnnotation: '\u6a19\u8a18\u4f5c\u696d',
+      navDataset: '\u8cc7\u6599\u96c6\u5206\u6790',
+      navAdmin: '\u7cfb\u7d71\u7ba1\u7406',
+      navProfile: '\u500b\u4eba\u8a2d\u5b9a',
+    });
+    Object.assign(i18n.en, {
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
+    });
+
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+
+    /* ── IDs requiring i18n text updates ──────────────────────────── */
+    const TEXT_IDS = [
+      'pageTitle', 'pageSubtitle', 'tabUsers', 'tabRoles',
+      'cancelBtnLabel', 'saveBtnLabel',
+      'matrixSectionTitle', 'matrixSectionDesc',
+      'thPermission', 'thSystemRoles', 'thTaskRoles',
+      'legendTitle', 'legendOn', 'legendOff', 'legendTaskBadgeText',
+      'legendTaskRoleDesc', 'legendLocked', 'legendNA',
+      'dirtyTitle', 'dirtyDesc', 'conflictTitle', 'conflictDesc', 'reloadBtnLabel',
+      'moduleHeader_account', 'moduleHeader_dashboard', 'moduleHeader_taskMgmt',
+      'moduleHeader_annotation', 'moduleHeader_dataset', 'moduleHeader_admin',
+      'permDesc_account_profile_view', 'permDesc_account_profile_edit',
+      'permDesc_dashboard_view', 'permDesc_task_list_view', 'permDesc_task_create',
+      'permDesc_task_detail_view', 'permDesc_task_members_manage',
+      'permDesc_annotation_workspace_annotate', 'permDesc_annotation_workspace_review',
+      'permDesc_dataset_stats_view', 'permDesc_dataset_quality_view', 'permDesc_dataset_export',
+      'permDesc_admin_user_management_view', 'permDesc_admin_user_management_manage',
+      'permDesc_admin_role_settings_view', 'permDesc_admin_role_settings_manage',
+      'readonlyNote_task_detail_view',
+      'thRoleUser', 'thRoleSuperAdmin', 'thRoleProjectLeader', 'thRoleReviewer', 'thRoleAnnotator',
+      'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
+    ];
+
+    /* ── Apply language ────────────────────────────────────────────── */
+    function applyLang(l) {
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+      });
+      document.title = 'Label Suite — ' + t.pageTitle;
+
+      /* Update all task-role badge texts (class selector, not innerHTML) */
+      document.querySelectorAll('.trb-text').forEach(el => {
+        el.textContent = t.legendTaskBadgeText;
+      });
+
+      /* Update all labeled text IDs */
+      TEXT_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id] !== undefined) el.textContent = t[id];
+      });
+
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+    }
+
+    /* ── Original checkbox state (for cancel / dirty detection) ────── */
+    let originalState = {};
+
+    function captureOriginalState() {
+      originalState = {};
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        originalState[cb.dataset.key + '__' + cb.dataset.role] = cb.checked;
+      });
+    }
+
+    /* ── Dirty state ───────────────────────────────────────────────── */
+    let isDirty = false;
+
+    function onCheckboxChange() {
+      let dirty = false;
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = cb.dataset.key + '__' + cb.dataset.role;
+        if (originalState[k] !== undefined && originalState[k] !== cb.checked) dirty = true;
+      });
+      setDirty(dirty);
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_matrix_permission_toggled', { page: 'role-settings', dirty });
+    }
+
+    function setDirty(dirty) {
+      isDirty = dirty;
+      document.getElementById('dirtyBanner').classList.toggle('hidden', !dirty);
+    }
+
+    /* ── Cancel: revert to original state ──────────────────────────── */
+    function cancelEdit() {
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = cb.dataset.key + '__' + cb.dataset.role;
+        if (originalState[k] !== undefined) cb.checked = originalState[k];
+      });
+      setDirty(false);
+      document.getElementById('conflictBanner').classList.add('hidden');
+      document.getElementById('saveBtn').disabled = false;
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_cancel', { page: 'role-settings' });
+    }
+
+    /* ── Save ──────────────────────────────────────────────────────── */
+    function saveMatrix() {
+      const t = i18n[lang];
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_attempted', { page: 'role-settings' });
+      showToast('success', t.toastSaved);
+      setDirty(false);
+      captureOriginalState();
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_succeeded', { page: 'role-settings' });
+    }
+
+    /* ── Reload (conflict resolution) ──────────────────────────────── */
+    function reloadMatrix() {
+      /* Reset all checkboxes to default values */
+      const DEFAULTS = {
+        'account.profile.view__user': true,  'account.profile.edit__user': true,
+        'dashboard.view__user': true,
+        'task.list.view__user': true, 'task.create__user': true,
+        'task.detail.view__pl': true, 'task.detail.view__rev': true, 'task.detail.view__ann': false,
+        'task.members.manage__pl': true, 'task.members.manage__rev': false, 'task.members.manage__ann': false,
+        'annotation.workspace.annotate__pl': false, 'annotation.workspace.annotate__rev': false, 'annotation.workspace.annotate__ann': true,
+        'annotation.workspace.review__pl': false, 'annotation.workspace.review__rev': true, 'annotation.workspace.review__ann': false,
+        'dataset.stats.view__pl': true, 'dataset.stats.view__rev': true, 'dataset.stats.view__ann': false,
+        'dataset.quality.view__pl': true, 'dataset.quality.view__rev': true, 'dataset.quality.view__ann': false,
+        'dataset.export__pl': true, 'dataset.export__rev': false, 'dataset.export__ann': false,
+        'admin.user_management.view__user': false, 'admin.user_management.manage__user': false,
+        'admin.role_settings.view__user': false, 'admin.role_settings.manage__user': false,
+      };
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = cb.dataset.key + '__' + cb.dataset.role;
+        if (DEFAULTS[k] !== undefined) cb.checked = DEFAULTS[k];
+      });
+      captureOriginalState();
+      setDirty(false);
+      document.getElementById('conflictBanner').classList.add('hidden');
+      document.getElementById('saveBtn').disabled = false;
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_conflict_reload', { page: 'role-settings' });
+    }
+
+    /* ── Toast ─────────────────────────────────────────────────────── */
+    let toastTimer = null;
+
+    function showToast(type, msg, sub) {
+      document.getElementById('toastIconSuccess').classList.toggle('hidden', type !== 'success');
+      document.getElementById('toastIconError').classList.toggle('hidden',   type !== 'error');
+      document.getElementById('toastInner').className = 'toast-inner ' + type;
+      document.getElementById('toastMsg').textContent = msg || '';
+      document.getElementById('toastSub').textContent = sub || '';
+      document.getElementById('toast').classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(hideToast, 4000);
+    }
+
+    function hideToast() { document.getElementById('toast').classList.add('hidden'); }
+
+
+    /* ── Language toggle wiring ────────────────────────────────────── */
+    function wireLangToggle(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', () => {
+        lang = lang === 'zh' ? 'en' : 'zh';
+        applyLang(lang);
+        window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang, page: 'role-settings' });
+      });
+    }
+
+    /* ── Sidebar init ──────────────────────────────────────────────── */
+    function initSidebar() {
+      if (!window.LabelSuiteSharedSidebar) return;
+
+      window.LabelSuiteSharedSidebar.mountSidebar({
+        mountId:       'sharedSidebarMount',
+        activeNav:     'admin',
+        systemRole:    'super_admin',
+        userName:      '管理員 A',
+        userEmail:     'admin@label-suite.dev',
+        adminHref:     'user-management.html',
+        dashboardHref: '../dashboard/dashboard.html',
+        profileHref:   '../account/profile.html',
+        langToggleId:  'langToggle',
+      });
+      window.LabelSuiteSharedSidebar.setSystemRole('super_admin');
+
+      wireLangToggle('langToggle');
+    }
+
+    /* ── Init ──────────────────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+      captureOriginalState();
+      initSidebar();
+      applyLang(lang);
+      wireLangToggle('mobileLangToggle');
+
+      if (window.LabelSuiteAnalytics) {
+        window.LabelSuiteAnalytics.init({ page: 'role-settings' });
+        window.LabelSuiteAnalytics.trackPageView('role-settings', () => ({ lang, role: 'super_admin' }));
+      }
+    });
+  </script>
+</body>
+</html>

@@ -575,12 +575,14 @@
     const getTrackingContext = () => ({ lang });
 
     function applyLang(l) {
-      lang = l === 'en' ? 'en' : 'zh';
-      window.LabelSuiteSharedSidebar.setStoredLang(lang);
-      const t = i18n[lang];
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+        labelIds: ['langLabel'],
+        toggleIds: ['langToggle'],
+      });
       document.title                              = t.pageTitle;
-      document.documentElement.lang              = lang === 'zh' ? 'zh-TW' : 'en';
-      document.getElementById('langLabel').textContent   = t.langLabel;
       document.getElementById('subtitle').textContent    = t.subtitle;
       document.getElementById('ssoText').textContent     = t.ssoText;
       document.getElementById('dividerText').textContent = t.dividerText;
@@ -594,7 +596,6 @@
       document.getElementById('registerLink').textContent = t.registerLink;
       document.getElementById('errorMsg').textContent    = t.errorMsg;
       document.getElementById('ssoBtn').setAttribute('aria-label', t.ssoAriaLabel);
-      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
       document.querySelector('.navbar-brand').setAttribute('aria-label', t.navAriaLabel);
       document.querySelector('[role="region"]').setAttribute('aria-label', t.cardRegion);
       // update eye toggle aria-label based on current visibility state

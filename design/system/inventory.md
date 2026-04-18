@@ -2,12 +2,30 @@
 
 > **用途：** 記錄所有 prototype 頁面中出現的 UI elements，對照 MASTER.md 的定義狀態，作為 design system 擴充的依據。
 >
-> **更新規則：** 每次新增 prototype 頁面時，同步更新本文件。新 component 進 prototype 前，必須先在 MASTER.md 定義 token。
->
 > **掃描範圍：** `design/prototype/` 所有頁面
 > **最後掃描：** 2026-04-16
-> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、dashboard/dashboard.html
-> **Design Token 來源：** `design/wireframes/design-system.pen`（最後修改：2026-04-15 15:13 +0800）
+> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html
+> **Design Token 來源：** `design/prototype/assets/tokens.css`
+
+---
+
+## 新元件維護流程
+
+新 component 出現時，依序更新以下文件：
+
+| 步驟 | 文件 | 說明 |
+|------|------|------|
+| 1 | `design/system/MASTER.md` | 補充元件規格（結構、token、互動規則、a11y） |
+| 2 | `design/system/inventory.md` | 加入清單，狀態標為 ✅ 已定義，更新掃描頁面清單 |
+| 3 | `design/prototype/pages/` | 使用 `/label-suite-design` skill 產生 prototype HTML |
+| 4 | `design/prototype/assets/tokens.css` | 若有新 token，同步更新 CSS 變數 |
+
+**Prototype 生成工具：** `/label-suite-design`（讀 spec → 產生 HTML）。不使用 Pencil 畫板作為前置步驟。
+
+**不需要動（除非規則本身改變）：**
+- `.claude/skills/label-suite-design/SKILL.md` — 只有新增/修改設計規則時才動
+- `.claude/skills/label-suite-design/README.md` — 只有品牌方向改變時才動
+- `.claude/skills/label-suite-design/colors_and_type.css` — 只有新增全域 token 時才動（給 skill 資料夾外的 standalone artifact 用）
 
 ---
 

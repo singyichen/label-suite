@@ -1273,10 +1273,12 @@
     function t(key) { return (i18n[lang] && i18n[lang][key]) || key; }
 
     function applyLang(l) {
-      lang = l === 'en' ? 'en' : 'zh';
-      window.LabelSuiteSharedSidebar.setStoredLang(lang);
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const nextTranslations = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: nextTranslations.langToggleAria,
+      });
       document.title = t('pageTitle');
-      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
 
       const ids = [
         'langLabel', 'mobileLangLabel', 'roleIndicator',
@@ -1299,8 +1301,6 @@
         if (el) el.textContent = t(id);
       });
 
-      document.getElementById('langToggle').setAttribute('aria-label', t('langToggleAria'));
-      document.getElementById('mobileLangToggle').setAttribute('aria-label', t('langToggleAria'));
       document.getElementById('logoutBtn').setAttribute('aria-label', t('logoutAria'));
       document.getElementById('logoutBtn').setAttribute('title', t('logoutTitle'));
       document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t('logoutAria'));

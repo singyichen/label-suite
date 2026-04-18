@@ -27,12 +27,12 @@
 | 003 | 註冊 — Email/Password | `account/register` | account | ★★☆☆☆ | ✅ 完成 |
 | 004a | 忘記密碼 | `account/forgot-password` | account | ★☆☆☆☆ | ✅ 完成 |
 | 004b | 重設密碼 | `account/reset-password` | account | ★★☆☆☆ | ✅ 完成 |
-| 005 | 個人資料設定 | `account/profile` | account | ★★☆☆☆ | ⬜ 待建置 |
-| 006 | 使用者管理 | `admin/user-management` | admin | ★★★☆☆ | ⬜ 待建置 |
-| 007 | 角色設定 | `admin/role-settings` | admin | ★★☆☆☆ | ⬜ 待建置 |
+| 005 | 個人資料設定 | `account/profile` | account | ★★☆☆☆ | 🟡 HTML 完成 |
+| 006 | 使用者管理 | `admin/user-management` | admin | ★★★☆☆ | 🟡 HTML 完成 |
+| 007 | 角色設定 | `admin/role-settings` | admin | ★★☆☆☆ | 🟡 HTML 完成 |
 | 008 | 標記員列表 | `annotator-management/annotator-list` | annotator-management | ★★★☆☆ | ⬜ 待建置 |
 | 009 | 工時紀錄 | `annotator-management/work-log` | annotator-management | ★★★☆☆ | ⬜ 待建置 |
-| 012 | 儀表板 | `dashboard/dashboard` | dashboard | ★★★★☆ | ✅ 完成 |
+| 012 | 儀表板 | `dashboard/dashboard` | dashboard | ★★★★☆ | 🟡 HTML 完成 |
 | 010 | 任務列表 | `task-management/task-list` | task-management | ★★★☆☆ | ⬜ 待建置 |
 | 013 | 新增任務（多步驟） | `task-management/task-new` | task-management | ★★★★★ | ⬜ 待建置 |
 | 014 | 任務詳情 | `task-management/task-detail` | task-management | ★★★★☆ | ⬜ 待建置 |
