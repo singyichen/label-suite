@@ -8,7 +8,6 @@ const pagesNeedingUnifiedLanguageSwitch = [
   'pages/dashboard/dashboard.html',
   'pages/admin/user-management.html',
   'pages/admin/role-settings.html',
-  'pages/task-management/task-detail.html',
   'pages/account/profile.html',
   'pages/account/login.html',
   'pages/account/register.html',
