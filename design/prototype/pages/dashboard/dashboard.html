@@ -1800,18 +1800,16 @@
     let scenario = 'user';
 
     function applyLang(l) {
-      lang = l === 'en' ? 'en' : 'zh';
-      window.LabelSuiteSharedSidebar.setStoredLang(lang);
-      const t = i18n[lang];
-      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+      });
       document.title = t.pageTitle;
-      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
-      document.getElementById('mobileLangToggle').setAttribute('aria-label', t.langToggleAria);
       document.getElementById('logoutBtn').setAttribute('aria-label', t.logoutAria);
       document.getElementById('logoutBtn').setAttribute('title', t.logoutTitle);
       document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t.logoutAria);
       document.getElementById('mobileLogoutBtn').setAttribute('title', t.logoutTitle);
-      document.getElementById('mobileLangLabel').textContent = t.langLabel;
       syncSidebarIdentity();
       document.querySelectorAll('.scenario-pill').forEach(pill => {
         const key = pill.dataset.scenario;

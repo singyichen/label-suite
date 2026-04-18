@@ -1009,10 +1009,11 @@
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
 
     function applyLang(l) {
-      lang = l === 'en' ? 'en' : 'zh';
-      window.LabelSuiteSharedSidebar.setStoredLang(lang);
-      const t = i18n[lang];
-      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+      });
       document.title = 'Label Suite — ' + t.pageTitle;
 
       const ids = [
@@ -1034,8 +1035,6 @@
       });
 
       document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
-      document.getElementById('mobileLangToggle').setAttribute('aria-label', t.langToggleAria);
 
       // Update all repeated button labels in table rows
       document.querySelectorAll('.edit-btn-text').forEach(el => { el.textContent = t.editBtnText; });

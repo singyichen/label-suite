@@ -45,6 +45,31 @@
     }
   }
 
+  function applyGlobalLanguage(lang, options) {
+    var normalizedLang = normalizeLang(lang);
+    var opts = options || {};
+    var langCode = normalizedLang === 'zh' ? 'ZH' : 'EN';
+
+    persistLang(normalizedLang);
+    document.documentElement.lang = normalizedLang === 'zh' ? 'zh-TW' : 'en';
+
+    var labelIds = Array.isArray(opts.labelIds) ? opts.labelIds : ['langLabel', 'mobileLangLabel'];
+    labelIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = langCode;
+    });
+
+    if (typeof opts.langToggleAria === 'string') {
+      var toggleIds = Array.isArray(opts.toggleIds) ? opts.toggleIds : ['langToggle', 'mobileLangToggle'];
+      toggleIds.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.setAttribute('aria-label', opts.langToggleAria);
+      });
+    }
+
+    return normalizedLang;
+  }
+
   function shouldHideAdminByRole(systemRole) {
     return systemRole !== 'super_admin';
   }
@@ -230,6 +255,7 @@
     getStoredSystemRole: readStoredSystemRole,
     getStoredLang: readStoredLang,
     setStoredLang: persistLang,
+    applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
   };
 })();

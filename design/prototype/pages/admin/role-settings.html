@@ -1039,18 +1039,11 @@
 
     /* ── Apply language ────────────────────────────────────────────── */
     function applyLang(l) {
-      const t = i18n[l];
-      document.documentElement.lang = l === 'zh' ? 'zh-TW' : 'en';
-
-      const langLabel = document.getElementById('langLabel');
-      if (langLabel) langLabel.textContent = l === 'zh' ? 'ZH | EN' : 'EN | ZH';
-      const mobileLangLabel = document.getElementById('mobileLangLabel');
-      if (mobileLangLabel) mobileLangLabel.textContent = l === 'zh' ? 'ZH | EN' : 'EN | ZH';
-
-      const lt = document.getElementById('langToggle');
-      if (lt) lt.setAttribute('aria-label', t.langToggleAria);
-      const mlt = document.getElementById('mobileLangToggle');
-      if (mlt) mlt.setAttribute('aria-label', t.langToggleAria);
+      const nextLang = l === 'en' ? 'en' : 'zh';
+      const t = i18n[nextLang];
+      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
+        langToggleAria: t.langToggleAria,
+      });
 
       /* Update all task-role badge texts (class selector, not innerHTML) */
       document.querySelectorAll('.trb-text').forEach(el => {
@@ -1165,7 +1158,6 @@
       if (!el) return;
       el.addEventListener('click', () => {
         lang = lang === 'zh' ? 'en' : 'zh';
-        if (window.LabelSuiteSharedSidebar) window.LabelSuiteSharedSidebar.setStoredLang(lang);
         applyLang(lang);
         window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang, page: 'role-settings' });
       });
@@ -1196,8 +1188,8 @@
     /* ── Init ──────────────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {
       captureOriginalState();
-      applyLang(lang);
       initSidebar();
+      applyLang(lang);
       wireLangToggle('mobileLangToggle');
 
       if (window.LabelSuiteAnalytics) {

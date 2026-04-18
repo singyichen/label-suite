@@ -32,4 +32,39 @@ test.describe('Admin role settings mobile sidebar layout', () => {
     await expect(page.locator('.page-title')).toHaveCSS('font-size', '28px');
     await expect(page.locator('.page-subtitle')).toHaveCSS('font-size', '14px');
   });
+
+  test('applies stored global language on initial load', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+
+    await page.goto(ROLE_SETTINGS_URL);
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('#pageTitle')).toHaveText('Role Settings');
+  });
+
+  test('persists language selection across admin pages', async ({ page }) => {
+    await page.goto(ROLE_SETTINGS_URL);
+    await page.evaluate(() => {
+      window.localStorage.setItem('labelsuite.lang', 'zh');
+    });
+    await page.reload();
+
+    await page.click('#langToggle');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+    await page.goto('/pages/admin/user-management.html');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('#pageTitle')).toHaveText('User Management');
+  });
+
+  test('shows language toggle label in single-code format', async ({ page }) => {
+    await page.goto(ROLE_SETTINGS_URL);
+    await expect(page.locator('#langLabel')).toHaveText('ZH');
+    await expect(page.locator('#mobileLangLabel')).toHaveText('ZH');
+
+    await page.click('#langToggle');
+    await expect(page.locator('#langLabel')).toHaveText('EN');
+    await expect(page.locator('#mobileLangLabel')).toHaveText('EN');
+  });
 });
