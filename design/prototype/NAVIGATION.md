@@ -35,7 +35,7 @@
 | 012 | 儀表板 | `dashboard/dashboard` | dashboard | ★★★★☆ | 🟡 HTML 完成 |
 | 010 | 任務列表 | `task-management/task-list` | task-management | ★★★☆☆ | ⬜ 待建置 |
 | 013 | 新增任務（多步驟） | `task-management/task-new` | task-management | ★★★★★ | ⬜ 待建置 |
-| 014 | 任務詳情 | `task-management/task-detail` | task-management | ★★★★☆ | 🟡 HTML 完成 |
+| 014 | 任務詳情 | `task-management/task-detail` | task-management | ★★★★☆ | ⬜ 待建置 |
 | 015 | 標記作業頁 | `annotation/annotation-workspace` | annotation | ★★★★★ | ⬜ 待建置 |
 | 016 | 資料集統計總覽 | `dataset/dataset-stats` | dataset | ★★★★☆ | ⬜ 待建置 |
 | 017 | 資料集品質監控 | `dataset/dataset-quality` | dataset | ★★★★☆ | ⬜ 待建置 |
