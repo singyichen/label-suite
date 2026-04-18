@@ -24,4 +24,12 @@ test.describe('Admin role settings mobile sidebar layout', () => {
     await page.goto(ROLE_SETTINGS_URL);
     await expect(page.locator('#mobileNotice')).toHaveCount(0);
   });
+
+  test('uses the same heading typography scale as other admin pages', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(ROLE_SETTINGS_URL);
+
+    await expect(page.locator('.page-title')).toHaveCSS('font-size', '28px');
+    await expect(page.locator('.page-subtitle')).toHaveCSS('font-size', '14px');
+  });
 });
