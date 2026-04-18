@@ -645,8 +645,17 @@ mode: official_run</pre>
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
       const t = i18n[nextLang];
-      lang = window.LabelSuiteSharedSidebar.applyGlobalLanguage(nextLang, {
-        langToggleAria: t.langToggleAria,
+      lang = nextLang;
+      window.LabelSuiteSharedSidebar.setStoredLang(nextLang);
+      document.documentElement.lang = nextLang === 'zh' ? 'zh-TW' : 'en';
+      const langCode = nextLang === 'zh' ? 'ZH' : 'EN';
+      ['langLabel', 'mobileLangLabel'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = langCode;
+      });
+      ['langToggle', 'mobileLangToggle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute('aria-label', t.langToggleAria);
       });
       document.title = 'Label Suite — ' + t.pageTitle;
 
