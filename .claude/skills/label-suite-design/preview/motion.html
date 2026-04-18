@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Motion & Interaction</title>
+<link rel="stylesheet" href="_card.css">
+<style></style>
+</head><body><div class="card">
+<div class="col" style="gap:14px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <div class="col" style="gap:4px"><div class="label-tiny">Duration fast</div><div style="font-weight:600">150ms</div><div class="mono" style="font-size:11px">--dur-fast</div></div>
+    <div class="col" style="gap:4px"><div class="label-tiny">Duration normal</div><div style="font-weight:600">200ms</div><div class="mono" style="font-size:11px">--dur-normal</div></div>
+    <div class="col" style="gap:4px"><div class="label-tiny">Easing</div><div style="font-weight:600;font-size:13px">cubic-bezier(.4,0,.2,1)</div><div class="mono" style="font-size:11px">--ease-standard</div></div>
+  </div>
+  <div style="border-top:1px solid var(--color-border-muted);padding-top:12px">
+    <div class="label-tiny" style="margin-bottom:8px">Allowed on hover</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px">
+      <span class="chip" style="background:var(--color-success-bg);color:var(--color-success)">opacity 0.9</span>
+      <span class="chip" style="background:var(--color-success-bg);color:var(--color-success)">color shift</span>
+      <span class="chip" style="background:var(--color-success-bg);color:var(--color-success)">translateY(-1px)</span>
+      <span class="chip" style="background:var(--color-error-bg);color:var(--color-error)">✕ scale()</span>
+      <span class="chip" style="background:var(--color-error-bg);color:var(--color-error)">✕ shadow grow</span>
+      <span class="chip" style="background:var(--color-error-bg);color:var(--color-error)">✕ blur</span>
+    </div>
+  </div>
+</div>
+</div></body></html>

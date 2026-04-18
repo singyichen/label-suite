@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 任務詳情</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <style>
+    /* ── Reset ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans-reading);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.8;
+      min-height: 100vh;
+      display: flex;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Sidebar (mirrors sidebar.js injected HTML) ──────────────── */
+    .navbar {
+      width: 240px; height: 100vh; background: var(--color-white);
+      border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      position: sticky; top: 0; z-index: var(--z-sticky);
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .brand-section {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-bottom: var(--space-xl); padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: var(--color-primary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .navbar-logo svg { width: 20px; height: 20px; }
+    .navbar-wordmark {
+      font-family: var(--font-serif-display);
+      font-weight: 700; font-size: 16px; color: var(--color-ink); line-height: 1;
+    }
+    .brand-section .lang-toggle { margin-left: auto; }
+    .navbar-center { display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-xl); flex: 1; }
+    .nav-link {
+      padding: 10px 12px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; color: var(--color-text-muted);
+      transition: color var(--dur-fast), background var(--dur-fast);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
+    .nav-link:hover { color: var(--color-ink); background: var(--color-slate-50); }
+    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
+    .nav-link.active .nav-icon { color: var(--color-primary); }
+    .nav-actions {
+      display: flex; flex-direction: column; gap: var(--space-md);
+      border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: auto;
+    }
+    .lang-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 6px 12px; background: var(--color-white); color: var(--color-ink);
+      font-size: 13px; font-weight: 500;
+      transition: border-color var(--dur-fast), background var(--dur-fast); white-space: nowrap;
+    }
+    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; border-radius: var(--radius-md); }
+    .user-chip-profile {
+      display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+      text-decoration: none; color: inherit; border-radius: var(--radius-sm); transition: opacity var(--dur-fast);
+    }
+    .user-chip-profile:hover { opacity: 0.75; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: white; color: var(--color-primary);
+      font-weight: 700; font-size: 14px;
+      border: 2px solid rgba(99,102,241,0.16); flex-shrink: 0;
+    }
+    .avatar--sm { width: 28px; height: 28px; font-size: 10px; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      display: block; font-weight: 600; font-size: 13px; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-role {
+      display: block; font-size: 11px; color: var(--color-text-muted); line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .logout-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: var(--radius-sm);
+      border: none; background: transparent; color: var(--color-text-muted);
+      cursor: pointer; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .logout-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+
+    /* ── Main Layout ────────────────────────────────────────────── */
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
+    .layout { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+
+    /* ── Breadcrumb ─────────────────────────────────────────────── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--color-text-soft);
+      margin-bottom: var(--space-sm);
+    }
+    .breadcrumb a { color: var(--color-primary); }
+    .breadcrumb a:hover { opacity: 0.8; }
+    .breadcrumb-sep { color: var(--color-border); }
+
+    /* ── Page Header ────────────────────────────────────────────── */
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-md); margin-bottom: var(--space-lg); flex-wrap: wrap;
+    }
+    .page-header-left { flex: 1; min-width: 0; }
+    .chip-row { display: flex; gap: var(--space-sm); margin-bottom: var(--space-sm); flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: var(--radius-full);
+      font-size: 12px; font-weight: 500; line-height: 1;
+    }
+    .chip--success { background: var(--color-success-soft-bg); color: var(--color-success); }
+    .chip--warning { background: var(--color-warning-soft-bg); color: var(--color-warning); }
+    .chip--info    { background: var(--color-info-bg); color: var(--color-info); }
+    .chip--muted   { background: var(--color-border-muted); color: var(--color-text-soft); }
+    .chip--primary { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .page-main-title {
+      font-family: var(--font-serif-display);
+      font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--color-ink); margin: 0 0 4px;
+    }
+    .page-main-subtitle {
+      font-size: 14px; color: var(--color-text-soft); margin: 0;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .page-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: var(--radius-md);
+      font-size: 14px; font-weight: 500; border: none;
+      transition: opacity var(--dur-fast), transform var(--dur-fast), background var(--dur-fast);
+      line-height: 1;
+    }
+    .btn-primary { background: var(--color-primary); color: white; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent; color: var(--color-primary);
+      border: 1.5px solid var(--color-primary);
+    }
+    .btn-secondary:hover { background: var(--color-primary-soft-bg); }
+    .btn-ghost { background: transparent; color: var(--color-text-soft); border: 1.5px solid var(--color-border); }
+    .btn-ghost:hover { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary); }
+    .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Tabs ───────────────────────────────────────────────────── */
+    .task-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-lg); }
+    .task-tab {
+      padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-soft);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: color var(--dur-fast), border-color var(--dur-fast);
+      background: none; border-top: none; border-left: none; border-right: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .task-tab:hover { color: var(--color-primary); }
+    .task-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+    .task-tab svg { width: 15px; height: 15px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Alert Banner ───────────────────────────────────────────── */
+    .alert {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 12px 16px; border-radius: var(--radius-md); font-size: 14px;
+      border: 1px solid; margin-bottom: var(--space-md);
+    }
+    .alert--warning { background: var(--color-warning-soft-bg); border-color: var(--color-warning-soft-border); color: var(--color-warning); }
+    .alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Stat Cards ─────────────────────────────────────────────── */
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); margin-bottom: var(--space-md); }
+    .card {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-lg);
+    }
+    .card--flush { padding: 0; overflow: hidden; }
+    .stat-label-en { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+    .stat-label-zh { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+    .stat-value {
+      font-family: var(--font-serif-display);
+      font-size: 36px; font-weight: 700; line-height: 1.1;
+      margin-top: 10px; color: var(--color-ink);
+    }
+    .stat-sub { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
+
+    /* ── Progress ───────────────────────────────────────────────── */
+    .progress-bar {
+      height: 8px; background: var(--color-border-muted); border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--color-primary);
+      border-radius: var(--radius-full);
+      transition: width var(--dur-normal) var(--ease-standard);
+    }
+
+    /* ── Annotators table ───────────────────────────────────────── */
+    .table-header {
+      padding: var(--space-md) var(--space-lg);
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--color-border-muted);
+    }
+    .table-header-title { font-family: var(--font-serif-display); font-size: 18px; font-weight: 600; }
+    .col-header {
+      padding: 8px var(--space-lg);
+      display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 0.8fr;
+      gap: var(--space-md); align-items: center;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--color-text-muted); background: var(--color-slate-50);
+      border-bottom: 1px solid var(--color-border-muted);
+    }
+    .annotator-row {
+      padding: 14px var(--space-lg);
+      display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 0.8fr;
+      gap: var(--space-md); align-items: center;
+      border-top: 1px solid var(--color-border-muted);
+    }
+    .annotator-row:first-of-type { border-top: none; }
+    .annotator-meta { display: flex; align-items: center; gap: 12px; }
+    .annotator-name { font-weight: 600; font-size: 14px; }
+    .annotator-email { font-size: 11px; color: var(--color-text-muted); }
+    .data-label { font-size: 12px; color: var(--color-text-soft); }
+    .data-value { font-weight: 600; font-size: 14px; }
+
+    /* ── Config YAML ────────────────────────────────────────────── */
+    .config-header {
+      padding: var(--space-md) var(--space-lg);
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--color-border-muted);
+    }
+    .config-title { font-family: var(--font-serif-display); font-size: 18px; font-weight: 600; }
+    .config-subtitle { font-size: 12px; color: var(--color-text-soft); margin-top: 2px; }
+    .yaml-block {
+      margin: 0; padding: var(--space-lg);
+      font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+      color: var(--color-ink); background: #FAFAFE;
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    /* ── Analytics bars ─────────────────────────────────────────── */
+    .analytics-title { font-family: var(--font-serif-display); font-size: 18px; font-weight: 600; margin-bottom: var(--space-md); }
+    .bar-row {
+      display: grid; grid-template-columns: 80px 1fr 60px;
+      align-items: center; gap: var(--space-md); margin-bottom: 10px;
+    }
+    .bar-label { font-family: var(--font-mono); font-size: 12px; }
+    .bar-track { height: 18px; background: var(--color-border-muted); border-radius: var(--radius-sm); overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--color-primary); border-radius: var(--radius-sm); }
+    .bar-count { font-size: 12px; color: var(--color-text-soft); text-align: right; }
+
+    /* ── Mobile responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .navbar { display: none; }
+      .stat-grid { grid-template-columns: 1fr; }
+      .col-header, .annotator-row { grid-template-columns: 1fr 1fr; }
+      .col-header > *:nth-child(n+3),
+      .annotator-row > *:nth-child(n+3) { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- SIDEBAR                                                     -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div id="sharedSidebarMount"></div>
+  <script src="../shared/sidebar.js"></script>
+  <script>
+    window.LabelSuiteSharedSidebar.mountSidebar({
+      mountId: 'sharedSidebarMount',
+      activeNav: 'task-management',
+      dashboardHref: '../dashboard/dashboard.html',
+      adminHref: '../admin/user-management.html',
+      profileHref: '../account/profile.html',
+      loginHref: '../account/login.html',
+      brandHref: '../dashboard/dashboard.html',
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <main data-testid="task-detail-shell">
+    <div class="layout">
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="../dashboard/dashboard.html" id="breadcrumbDashboard">Dashboard</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span id="breadcrumbTasks">Tasks</span>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span>NER — Biomedical Abstracts</span>
+      </nav>
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="chip-row">
+            <span class="chip chip--success" id="statusChip">● <span id="statusLabel">In Progress</span></span>
+            <span class="chip chip--muted" id="modeChip">Official Run</span>
+            <span class="chip chip--muted" id="typeChip">Sequence Labeling</span>
+          </div>
+          <h1 class="page-main-title">NER — Biomedical Abstracts</h1>
+          <p class="page-main-subtitle">
+            <span id="subtitleUpdated">Last updated 18 min ago</span>
+            <span style="color: var(--color-border)">·</span>
+            <span id="subtitleLeader">Leader</span>
+            <span class="avatar avatar--sm" style="display:inline-flex; vertical-align:middle; margin-left:4px;" aria-label="CY">CY</span>
+          </p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-secondary" id="configureBtnEl" data-testid="configure-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span id="configureBtnLabel">Configure</span>
+          </button>
+          <button class="btn btn-primary" id="startAnnotatingBtnEl" data-testid="start-annotating-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span id="startAnnotatingBtnLabel">Start Annotating</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="task-tabs" role="tablist">
+        <button class="task-tab active" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab="overview" id="tab-overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+          <span id="tabOverview">Overview</span>
+        </button>
+        <button class="task-tab" role="tab" aria-selected="false" aria-controls="panel-annotators" data-tab="annotators" id="tab-annotators">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span id="tabAnnotators">Annotators</span>
+        </button>
+        <button class="task-tab" role="tab" aria-selected="false" aria-controls="panel-config" data-tab="config" id="tab-config">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span id="tabConfig">Config</span>
+        </button>
+        <button class="task-tab" role="tab" aria-selected="false" aria-controls="panel-analytics" data-tab="analytics" id="tab-analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16V8"/><path d="M12 16v-5"/><path d="M17 16v-3"/></svg>
+          <span id="tabAnalytics">Analytics</span>
+        </button>
+      </div>
+
+      <!-- ── Tab: Overview ─────────────────────────────────────── -->
+      <div id="panel-overview" class="tab-panel active" role="tabpanel" aria-labelledby="tab-overview">
+
+        <!-- Dry Run warning (hidden for Official Run) -->
+        <div class="alert alert--warning hidden" id="dryRunAlert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div>
+            <div style="font-weight:600;" id="dryRunTitle">Dry Run 模式下不會儲存資料</div>
+            <div style="font-size:13px; opacity:0.85;" id="dryRunBody">Dry Run mode — annotations are sandboxed and not persisted.</div>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+          <div class="card">
+            <div class="stat-label-en" id="statCompletedEn">Completed</div>
+            <div class="stat-label-zh" id="statCompletedZh">已完成</div>
+            <div class="stat-value">342</div>
+            <div class="stat-sub" id="statCompletedSub">of 600</div>
+          </div>
+          <div class="card">
+            <div class="stat-label-en" id="statIAAEn">IAA (κ)</div>
+            <div class="stat-label-zh" id="statIAAZh">標註者一致性</div>
+            <div class="stat-value">0.84</div>
+            <div class="stat-sub" id="statIAASub">Pending IAA confirmation</div>
+          </div>
+          <div class="card">
+            <div class="stat-label-en" id="statLabelsEn">Labels</div>
+            <div class="stat-label-zh" id="statLabelsZh">標籤數</div>
+            <div class="stat-value">7</div>
+            <div class="stat-sub">B-ORG · I-ORG · O · …</div>
+          </div>
+        </div>
+
+        <!-- Progress card -->
+        <div class="card">
+          <div style="font-family: var(--font-serif-display); font-size:18px; font-weight:600; margin-bottom: var(--space-md);" id="progressCardTitle">Progress · 進度</div>
+          <div class="progress-bar" role="progressbar" aria-valuenow="342" aria-valuemax="600" aria-label="342 / 600">
+            <div class="progress-fill" style="width:57%"></div>
+          </div>
+          <div style="font-size:12px; color: var(--color-text-soft); margin-top:8px;" id="progressLabel">342 / 600 sentences annotated</div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Annotators ──────────────────────────────────── -->
+      <div id="panel-annotators" class="tab-panel" role="tabpanel" aria-labelledby="tab-annotators">
+        <div class="card card--flush">
+          <div class="table-header">
+            <div class="table-header-title" id="annotatorsTitle">Annotators · 標記員</div>
+            <button class="btn btn-secondary" id="inviteBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span id="inviteBtnLabel">Invite</span>
+            </button>
+          </div>
+          <div class="col-header">
+            <span id="colAnnotator">Annotator</span>
+            <span id="colRole">Role</span>
+            <span id="colHours">Hours</span>
+            <span id="colDone">Done</span>
+          </div>
+
+          <!-- Row: Chen Yu -->
+          <div class="annotator-row">
+            <div class="annotator-meta">
+              <div class="avatar" aria-label="CY">CY</div>
+              <div>
+                <div class="annotator-name">Chen Yu</div>
+                <div class="annotator-email">chen.yu@nlp.ntu.edu.tw</div>
+              </div>
+            </div>
+            <span class="chip chip--primary">Project Leader</span>
+            <div><div class="data-label" id="hoursLabel">Hours</div><div class="data-value">12.4h</div></div>
+            <div><div class="data-label" id="doneLabel">Done</div><div class="data-value">142</div></div>
+          </div>
+
+          <!-- Row: Wei Lin -->
+          <div class="annotator-row">
+            <div class="annotator-meta">
+              <div class="avatar" aria-label="WL">WL</div>
+              <div>
+                <div class="annotator-name">Wei Lin</div>
+                <div class="annotator-email">wei.lin@nlp.ntu.edu.tw</div>
+              </div>
+            </div>
+            <span class="chip chip--success">Reviewer</span>
+            <div><div class="data-label">Hours</div><div class="data-value">8.2h</div></div>
+            <div><div class="data-label">Done</div><div class="data-value">98</div></div>
+          </div>
+
+          <!-- Row: Ming Kuo -->
+          <div class="annotator-row">
+            <div class="annotator-meta">
+              <div class="avatar" aria-label="MK">MK</div>
+              <div>
+                <div class="annotator-name">Ming Kuo</div>
+                <div class="annotator-email">ming.kuo@nlp.ntu.edu.tw</div>
+              </div>
+            </div>
+            <span class="chip chip--primary">Annotator</span>
+            <div><div class="data-label">Hours</div><div class="data-value">16.1h</div></div>
+            <div><div class="data-label">Done</div><div class="data-value">188</div></div>
+          </div>
+
+          <!-- Row: Ahmed Hadi -->
+          <div class="annotator-row">
+            <div class="annotator-meta">
+              <div class="avatar" aria-label="AH">AH</div>
+              <div>
+                <div class="annotator-name">Ahmed Hadi</div>
+                <div class="annotator-email">ahmed.hadi@nlp.ntu.edu.tw</div>
+              </div>
+            </div>
+            <span class="chip chip--primary">Annotator</span>
+            <div><div class="data-label">Hours</div><div class="data-value">10.5h</div></div>
+            <div><div class="data-label">Done</div><div class="data-value">132</div></div>
+          </div>
+
+          <!-- Row: Jia Pei -->
+          <div class="annotator-row">
+            <div class="annotator-meta">
+              <div class="avatar" aria-label="JP">JP</div>
+              <div>
+                <div class="annotator-name">Jia Pei</div>
+                <div class="annotator-email">jia.pei@nlp.ntu.edu.tw</div>
+              </div>
+            </div>
+            <span class="chip chip--primary">Annotator</span>
+            <div><div class="data-label">Hours</div><div class="data-value">6.3h</div></div>
+            <div><div class="data-label">Done</div><div class="data-value">74</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab: Config ──────────────────────────────────────── -->
+      <div id="panel-config" class="tab-panel" role="tabpanel" aria-labelledby="tab-config">
+        <div class="card card--flush">
+          <div class="config-header">
+            <div>
+              <div class="config-title" id="configTitle">Config · config.yaml</div>
+              <div class="config-subtitle" id="configSubtitle">Config-driven — no custom code required.</div>
+            </div>
+            <button class="btn btn-ghost" id="downloadConfigBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span id="downloadConfigLabel">Download</span>
+            </button>
+          </div>
+          <pre class="yaml-block" aria-label="Task configuration YAML">task:
+  type: sequence_labeling
+  language: en
+  labels: [B-ORG, I-ORG, B-LOC, I-LOC, B-PER, I-PER, O]
+
+dataset:
+  source: s3://labs/biomed-abstracts.jsonl
+  sample: 600
+
+annotators:
+  min_per_sentence: 2
+  agreement: cohen_kappa
+  threshold: 0.80
+
+mode: official_run</pre>
+        </div>
+      </div>
+
+      <!-- ── Tab: Analytics ───────────────────────────────────── -->
+      <div id="panel-analytics" class="tab-panel" role="tabpanel" aria-labelledby="tab-analytics">
+        <div class="card">
+          <div class="analytics-title" id="analyticsTitle">Label Distribution · 標籤分佈</div>
+          <div id="barChart" aria-label="Label distribution bar chart"></div>
+        </div>
+      </div>
+
+    </div><!-- /.layout -->
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ANALYTICS                                                   -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/analytics.js"></script>
+  <script>
+    window.LabelSuiteAnalytics.init({ page: 'task-detail' });
+  </script>
+
+  <script>
+    /* ── i18n ──────────────────────────────────────────────────── */
+    const i18n = {
+      zh: {
+        pageTitle:            '任務詳情',
+        breadcrumbDashboard:  '儀表板',
+        breadcrumbTasks:      '任務管理',
+        statusLabel:          '進行中',
+        modeChip:             'Official Run',
+        typeChip:             'Sequence Labeling',
+        subtitleUpdated:      '最後更新 18 分鐘前',
+        subtitleLeader:       '負責人',
+        configureBtnLabel:    '設定',
+        startAnnotatingBtnLabel: '開始標記',
+        tabOverview:          '總覽',
+        tabAnnotators:        '標記員',
+        tabConfig:            '設定檔',
+        tabAnalytics:         '數據分析',
+        dryRunTitle:          'Dry Run 模式下不會儲存資料',
+        dryRunBody:           'Dry Run 模式 — 標記結果僅作沙盒測試，不會正式儲存。',
+        statCompletedEn:      'Completed',
+        statCompletedZh:      '已完成',
+        statCompletedSub:     '共 600 筆',
+        statIAAEn:            'IAA (κ)',
+        statIAAZh:            '標註者一致性',
+        statIAASub:           '待 IAA 確認',
+        statLabelsEn:         'Labels',
+        statLabelsZh:         '標籤數',
+        progressCardTitle:    'Progress · 進度',
+        progressLabel:        '342 / 600 筆已標記',
+        annotatorsTitle:      'Annotators · 標記員',
+        inviteBtnLabel:       '邀請',
+        colAnnotator:         '標記員',
+        colRole:              '角色',
+        colHours:             '工時',
+        colDone:              '完成數',
+        hoursLabel:           '工時',
+        doneLabel:            '完成',
+        configTitle:          'Config · config.yaml',
+        configSubtitle:       'Config-driven — 無需自訂程式碼。',
+        downloadConfigLabel:  '下載',
+        analyticsTitle:       'Label Distribution · 標籤分佈',
+        langToggleAria:       '切換語言',
+      },
+      en: {
+        pageTitle:            'Task Detail',
+        breadcrumbDashboard:  'Dashboard',
+        breadcrumbTasks:      'Tasks',
+        statusLabel:          'In Progress',
+        modeChip:             'Official Run',
+        typeChip:             'Sequence Labeling',
+        subtitleUpdated:      'Last updated 18 min ago',
+        subtitleLeader:       'Leader',
+        configureBtnLabel:    'Configure',
+        startAnnotatingBtnLabel: 'Start Annotating',
+        tabOverview:          'Overview',
+        tabAnnotators:        'Annotators',
+        tabConfig:            'Config',
+        tabAnalytics:         'Analytics',
+        dryRunTitle:          'Dry Run mode — data will not be saved',
+        dryRunBody:           'Dry Run mode — annotations are sandboxed and not persisted.',
+        statCompletedEn:      'Completed',
+        statCompletedZh:      'Completed',
+        statCompletedSub:     'of 600',
+        statIAAEn:            'IAA (κ)',
+        statIAAZh:            'Inter-annotator Agreement',
+        statIAASub:           'Pending IAA confirmation',
+        statLabelsEn:         'Labels',
+        statLabelsZh:         'Labels',
+        progressCardTitle:    'Progress',
+        progressLabel:        '342 / 600 sentences annotated',
+        annotatorsTitle:      'Annotators',
+        inviteBtnLabel:       'Invite',
+        colAnnotator:         'Annotator',
+        colRole:              'Role',
+        colHours:             'Hours',
+        colDone:              'Done',
+        hoursLabel:           'Hours',
+        doneLabel:            'Done',
+        configTitle:          'Config · config.yaml',
+        configSubtitle:       'Config-driven — no custom code required.',
+        downloadConfigLabel:  'Download',
+        analyticsTitle:       'Label Distribution',
+        langToggleAria:       'Switch language',
+      },
+    };
+
+    let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+
+    function applyLang(l) {
+      lang = l === 'en' ? 'en' : 'zh';
+      window.LabelSuiteSharedSidebar.setStoredLang(lang);
+      const t = i18n[lang];
+      document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+      document.title = 'Label Suite — ' + t.pageTitle;
+
+      const ids = [
+        'breadcrumbDashboard','breadcrumbTasks','statusLabel',
+        'modeChip','typeChip','subtitleUpdated','subtitleLeader',
+        'configureBtnLabel','startAnnotatingBtnLabel',
+        'tabOverview','tabAnnotators','tabConfig','tabAnalytics',
+        'dryRunTitle','dryRunBody',
+        'statCompletedEn','statCompletedZh','statCompletedSub',
+        'statIAAEn','statIAAZh','statIAASub',
+        'statLabelsEn','statLabelsZh',
+        'progressCardTitle','progressLabel',
+        'annotatorsTitle','inviteBtnLabel',
+        'colAnnotator','colRole','colHours','colDone',
+        'hoursLabel','doneLabel',
+        'configTitle','configSubtitle','downloadConfigLabel',
+        'analyticsTitle',
+      ];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && t[id] !== undefined) el.textContent = t[id];
+      });
+
+      document.getElementById('langToggle').setAttribute('aria-label', t.langToggleAria);
+      document.getElementById('mobileLangToggle')?.setAttribute('aria-label', t.langToggleAria);
+      window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: lang === 'zh' ? '標記員' : 'Annotator' });
+    }
+
+    /* ── Tab switching ─────────────────────────────────────────── */
+    document.querySelectorAll('.task-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.task-tab').forEach(t => {
+          t.classList.remove('active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        document.getElementById('panel-' + target).classList.add('active');
+        window.LabelSuiteAnalytics.track('prototype_task_tab_switched', { tab: target, lang });
+      });
+    });
+
+    /* ── Build bar chart ───────────────────────────────────────── */
+    const bars = [
+      { label: 'B-ORG', count: 412 },
+      { label: 'I-ORG', count: 388 },
+      { label: 'B-LOC', count: 212 },
+      { label: 'I-LOC', count: 198 },
+      { label: 'B-PER', count: 356 },
+      { label: 'I-PER', count: 342 },
+      { label: 'O',     count: 1580 },
+    ];
+    const maxCount = Math.max(...bars.map(b => b.count));
+    const chartEl = document.getElementById('barChart');
+    bars.forEach(b => {
+      const pct = ((b.count / maxCount) * 100).toFixed(1);
+      chartEl.insertAdjacentHTML('beforeend', `
+        <div class="bar-row">
+          <span class="bar-label">${b.label}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          <span class="bar-count">${b.count.toLocaleString()}</span>
+        </div>
+      `);
+    });
+
+    /* ── Language toggle ───────────────────────────────────────── */
+    document.getElementById('langToggle').addEventListener('click', () => {
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
+      window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang });
+    });
+    document.getElementById('mobileLangToggle')?.addEventListener('click', () => {
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLang(lang);
+      window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang });
+    });
+
+    /* ── CTA tracking ──────────────────────────────────────────── */
+    document.getElementById('startAnnotatingBtnEl').addEventListener('click', () => {
+      window.LabelSuiteAnalytics.track('prototype_annotation_start_attempted', { lang, task: 'ner-biomedical' });
+    });
+    document.getElementById('configureBtnEl').addEventListener('click', () => {
+      window.LabelSuiteAnalytics.track('prototype_task_configure_attempted', { lang, task: 'ner-biomedical' });
+    });
+    document.getElementById('inviteBtn').addEventListener('click', () => {
+      window.LabelSuiteAnalytics.track('prototype_annotator_invite_attempted', { lang });
+    });
+
+    /* ── Init ──────────────────────────────────────────────────── */
+    applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+    window.LabelSuiteAnalytics.trackPageView('task-detail', () => ({ lang, tab: 'overview' }));
+  </script>
+</body>
+</html>
