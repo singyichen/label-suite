@@ -162,25 +162,6 @@
     .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
     .page { min-width: 0; }
 
-    /* ── Prototype controls ──────────────────────────────────── */
-    .controls {
-      display: flex; flex-wrap: wrap; align-items: center;
-      justify-content: space-between; gap: var(--space-md);
-      padding: var(--space-md); border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border); background: var(--color-white);
-      margin-bottom: var(--space-lg);
-    }
-    .controls-label { display: block; font-weight: 600; font-size: 0.95rem; }
-    .controls-hint { display: block; color: var(--color-ink-muted); font-size: 0.875rem; margin-top: 2px; }
-    .scenario-list { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
-    .scenario-pill {
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      padding: 8px 14px; background: var(--color-white); color: var(--color-ink-muted);
-      font-size: 14px; font-weight: 500; transition: all var(--dur-fast);
-    }
-    .scenario-pill:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
-    .scenario-pill.active { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-primary); }
-
     /* ── Page header ─────────────────────────────────────────── */
     .page-header {
       display: flex; align-items: flex-start;
@@ -264,6 +245,12 @@
     .task-table tbody tr:last-child td { border-bottom: none; }
     .task-name-cell { font-weight: 600; line-height: 1.4; color: var(--color-ink); }
     .updated-cell { color: var(--color-text-soft); font-size: 13px; white-space: nowrap; }
+    .empty-row { cursor: default !important; }
+    .empty-row:hover { background: transparent !important; }
+    .empty-row-cell { padding: 40px 20px !important; }
+    .empty-row-wrap { text-align: center; max-width: 520px; margin: 0 auto; }
+    .empty-row-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
+    .empty-row-desc { font-size: 14px; color: #64748B; margin: 0 0 16px; }
 
     /* ── Badges ──────────────────────────────────────────────── */
     .badge {
@@ -279,16 +266,6 @@
     .badge-task-type       { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
     .badge-run-dry         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
     .badge-run-official    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
-
-    /* ── Empty state ─────────────────────────────────────────── */
-    .empty-state { padding: var(--space-xl) var(--space-lg); text-align: center; }
-    .empty-icon {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: #F1F5F9; color: #64748B;
-      padding: 12px; margin: 0 auto 12px; display: block;
-    }
-    .empty-title { font-size: 15px; font-weight: 600; color: var(--color-ink); margin-bottom: 6px; }
-    .empty-desc { font-size: 13px; color: #64748B; max-width: 360px; line-height: 1.6; margin: 0 auto; }
 
     /* ── Pagination ──────────────────────────────────────────── */
     .pagination {
@@ -353,9 +330,6 @@
       .toolbar { flex-direction: column; align-items: stretch; }
       .toolbar-left { flex-direction: column; }
       .search-wrap { max-width: 100%; }
-      .controls { flex-direction: column; align-items: flex-start; }
-      .scenario-list { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); }
-      .scenario-pill { width: 100%; text-align: center; }
       .toast-container { bottom: 100px; right: 12px; left: 12px; }
       .toast { max-width: 100%; }
     }
@@ -385,20 +359,6 @@
 <main>
   <div class="layout">
     <section class="page">
-
-      <!-- Prototype scenario controls -->
-      <section class="controls" aria-label="原型控制項">
-        <div>
-          <strong class="controls-label" id="scenarioLabel">場景模式</strong>
-          <span class="controls-hint" id="scenarioHint">切換不同角色視圖</span>
-        </div>
-        <div class="scenario-list" id="scenarioList">
-          <button class="scenario-pill active" data-scenario="user">一般使用者</button>
-          <button class="scenario-pill" data-scenario="super_admin">系統管理員</button>
-          <button class="scenario-pill" data-scenario="empty">空狀態（無任務）</button>
-          <button class="scenario-pill" data-scenario="no_results">空結果（篩選後）</button>
-        </div>
-      </section>
 
       <!-- Page header -->
       <header class="page-header">
@@ -460,37 +420,6 @@
           </table>
         </div>
 
-        <!-- Empty: no tasks -->
-        <div class="empty-state hidden" id="emptyNoTasks">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="12" y1="11" x2="12" y2="17"/>
-            <line x1="9.5" y1="14" x2="14.5" y2="14"/>
-          </svg>
-          <p class="empty-title" id="emptyNoTasksTitle">尚無任務</p>
-          <p class="empty-desc" id="emptyNoTasksDesc">你目前沒有任何任務。建立第一個任務以開始標記工作流程。</p>
-          <button class="btn btn-primary" id="emptyCreateBtn" style="margin-top:4px;">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span id="emptyCreateBtnLabel">新增任務</span>
-          </button>
-        </div>
-
-        <!-- Empty: no results -->
-        <div class="empty-state hidden" id="emptyNoResults">
-          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            <line x1="8" y1="11" x2="14" y2="11"/>
-          </svg>
-          <p class="empty-title" id="emptyNoResultsTitle">找不到符合條件的任務</p>
-          <p class="empty-desc" id="emptyNoResultsDesc">請調整搜尋條件或清除篩選，重新查詢。</p>
-          <button class="clear-btn" id="emptyClearBtn" style="margin-top:4px;">
-            <span id="emptyClearBtnLabel">清除所有篩選</span>
-          </button>
-        </div>
-
         <!-- Pagination -->
         <div class="pagination" id="paginationBar">
           <div class="pagination-left">
@@ -536,14 +465,12 @@
       langCode: 'ZH', langToggleAria: '切換語言', logoutAria: '登出',
       navDashboard: '儀表板', navTaskManagement: '任務管理',
       navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理',
-      scenarioLabel: '場景模式', scenarioHint: '切換不同角色視圖',
       newTaskBtnLabel: '新增任務',
       thTaskName: '任務名稱', thTaskType: '任務類型', thRunType: '標記模式',
       thStatus: '狀態', thUpdatedAt: '更新時間',
       clearFiltersLabel: '清除篩選',
       emptyNoTasksTitle: '尚無任務',
       emptyNoTasksDesc: '你目前沒有任何任務。建立第一個任務以開始標記工作流程。',
-      emptyCreateBtnLabel: '新增任務',
       emptyNoResultsTitle: '找不到符合條件的任務',
       emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
       emptyClearBtnLabel: '清除所有篩選',
@@ -560,8 +487,7 @@
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       toastNoPermission: '無權限檢視任務詳情',
       toastNavigating: '前往任務詳情…',
-      toastNewTask: '前往新增任務…',
-      scenarioPills: { user: '一般使用者', super_admin: '系統管理員', empty: '空狀態（無任務）', no_results: '空結果（篩選後）' },
+      toastNewTask: '已建立新任務',
       roleLabel: { user: '一般使用者', super_admin: '系統管理員' },
       userName: { user: '使用者', super_admin: 'Super Admin' },
       statusBadge: {
@@ -577,14 +503,12 @@
       langCode: 'EN', langToggleAria: 'Switch language', logoutAria: 'Sign out',
       navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
       navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration',
-      scenarioLabel: 'Scenario', scenarioHint: 'Switch role views',
       newTaskBtnLabel: 'New task',
       thTaskName: 'Task Name', thTaskType: 'Task Type', thRunType: 'Run Type',
       thStatus: 'Status', thUpdatedAt: 'Updated',
       clearFiltersLabel: 'Clear filters',
       emptyNoTasksTitle: 'No tasks yet',
       emptyNoTasksDesc: "You don't have any tasks. Create your first task to start the annotation workflow.",
-      emptyCreateBtnLabel: 'New task',
       emptyNoResultsTitle: 'No matching tasks',
       emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
       emptyClearBtnLabel: 'Clear all filters',
@@ -601,8 +525,7 @@
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       toastNoPermission: 'No permission to view task detail',
       toastNavigating: 'Navigating to task detail…',
-      toastNewTask: 'Navigating to new task…',
-      scenarioPills: { user: 'User', super_admin: 'Super Admin', empty: 'Empty state', no_results: 'Empty results' },
+      toastNewTask: 'Task created',
       roleLabel: { user: 'User', super_admin: 'Super Admin' },
       userName: { user: 'User', super_admin: 'Super Admin' },
       statusBadge: {
@@ -615,7 +538,8 @@
   };
 
   /* ── Static task data ────────────────────────────────────────── */
-  var TASKS = [
+  var TASKS = [];
+  var CREATED_TASKS_SEED = [
     { id: 'T001', nameZh: '新聞標題情感分類', nameEn: 'News Sentiment Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true  },
     { id: 'T002', nameZh: 'NER 基準任務',       nameEn: 'NER Benchmark',                 taskType: 'Sequence Labeling', runType: 'official_run', status: 'waiting_iaa_confirmation',  updatedAt: '2026-04-18', canViewDetail: true,  isMine: true  },
     { id: 'T003', nameZh: '意圖分類試標',        nameEn: 'Intent Classification Dry Run', taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-17', canViewDetail: false, isMine: true  },
@@ -636,7 +560,7 @@
   var RUN_BADGE_CLS = { dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
 
   /* ── State ───────────────────────────────────────────────────── */
-  var state = { lang: 'zh', scenario: 'user', keyword: '', status: '', page: 1, pageSize: 20 };
+  var state = { lang: 'zh', keyword: '', status: '', page: 1, pageSize: 20 };
   var toastTimer = null;
 
   /* ── Helpers ─────────────────────────────────────────────────── */
@@ -647,10 +571,16 @@
     if (el) el.textContent = text;
   }
 
+  function getCurrentSystemRole() {
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.getStoredSystemRole === 'function') {
+      return window.LabelSuiteSharedSidebar.getStoredSystemRole() || 'user';
+    }
+    return 'user';
+  }
+
   function getFilteredTasks() {
-    if (state.scenario === 'empty' || state.scenario === 'no_results') return [];
     var tasks = TASKS;
-    if (state.scenario === 'user') {
+    if (getCurrentSystemRole() !== 'super_admin') {
       tasks = tasks.filter(function(tk) { return tk.isMine; });
     }
     if (state.keyword.trim()) {
@@ -751,6 +681,41 @@
     return tr;
   }
 
+  function createEmptyRow(isNoResults) {
+    var tr = document.createElement('tr');
+    tr.className = 'empty-row';
+
+    var td = document.createElement('td');
+    td.className = 'empty-row-cell';
+    td.colSpan = 5;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'empty-row-wrap';
+
+    var title = document.createElement('p');
+    title.className = 'empty-row-title';
+    title.textContent = isNoResults ? t('emptyNoResultsTitle') : t('emptyNoTasksTitle');
+
+    var desc = document.createElement('p');
+    desc.className = 'empty-row-desc';
+    desc.textContent = isNoResults ? t('emptyNoResultsDesc') : t('emptyNoTasksDesc');
+
+    wrap.appendChild(title);
+    wrap.appendChild(desc);
+
+    if (isNoResults) {
+      var clearBtn = document.createElement('button');
+      clearBtn.className = 'clear-btn';
+      clearBtn.textContent = t('emptyClearBtnLabel');
+      clearBtn.addEventListener('click', function () { clearFilters(); });
+      wrap.appendChild(clearBtn);
+    }
+
+    td.appendChild(wrap);
+    tr.appendChild(td);
+    return tr;
+  }
+
   /* ── Main render ─────────────────────────────────────────────── */
   function render() {
     var filtered = getFilteredTasks();
@@ -759,28 +724,24 @@
     if (state.page > totalPages) state.page = totalPages;
 
     var tableWrap = document.getElementById('tableWrap');
-    var emptyNoTasks = document.getElementById('emptyNoTasks');
-    var emptyNoResults = document.getElementById('emptyNoResults');
     var paginationBar = document.getElementById('paginationBar');
     var tbody = document.getElementById('taskTableBody');
 
-    var showEmpty = (state.scenario === 'empty') || (total === 0 && !state.keyword && !state.status);
-    var showNoResults = (state.scenario === 'no_results') || (total === 0 && (state.keyword || state.status));
+    var showEmpty = total === 0 && !state.keyword && !state.status;
+    var showNoResults = total === 0 && (state.keyword || state.status);
 
     if (showEmpty) {
-      tableWrap.classList.add('hidden');
-      emptyNoTasks.classList.remove('hidden');
-      emptyNoResults.classList.add('hidden');
+      tableWrap.classList.remove('hidden');
       paginationBar.classList.add('hidden');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      tbody.appendChild(createEmptyRow(false));
     } else if (showNoResults) {
-      tableWrap.classList.add('hidden');
-      emptyNoTasks.classList.add('hidden');
-      emptyNoResults.classList.remove('hidden');
+      tableWrap.classList.remove('hidden');
       paginationBar.classList.add('hidden');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      tbody.appendChild(createEmptyRow(true));
     } else {
       tableWrap.classList.remove('hidden');
-      emptyNoTasks.classList.add('hidden');
-      emptyNoResults.classList.add('hidden');
       paginationBar.classList.remove('hidden');
 
       // Build rows using DOM methods
@@ -833,7 +794,7 @@
     document.getElementById('clearFiltersBtn').classList.toggle('hide-clear', !hasFilter);
 
     // Admin nav
-    var systemRole = state.scenario === 'super_admin' ? 'super_admin' : 'user';
+    var systemRole = getCurrentSystemRole();
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.setSystemRole(systemRole);
     }
@@ -850,9 +811,7 @@
     var simpleIds = [
       'pageTitle', 'pageSubtitle', 'newTaskBtnLabel',
       'thTaskName', 'thTaskType', 'thRunType', 'thStatus', 'thUpdatedAt',
-      'clearFiltersLabel', 'emptyNoTasksTitle', 'emptyNoTasksDesc', 'emptyCreateBtnLabel',
-      'emptyNoResultsTitle', 'emptyNoResultsDesc', 'emptyClearBtnLabel',
-      'scenarioLabel', 'scenarioHint',
+      'clearFiltersLabel',
       'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin',
     ];
     simpleIds.forEach(function(id) {
@@ -865,13 +824,6 @@
       });
     }
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
-
-    // Scenario pills
-    document.querySelectorAll('.scenario-pill').forEach(function(pill) {
-      var key = pill.dataset.scenario;
-      var pills = (I18N[state.lang] || I18N.zh).scenarioPills;
-      if (pills[key]) pill.textContent = pills[key];
-    });
 
     // Status filter options
     var sel = document.getElementById('statusFilter');
@@ -886,40 +838,22 @@
     });
 
     // User chip
-    var sysRole = state.scenario === 'super_admin' ? 'super_admin' : 'user';
+    var sysRole = getCurrentSystemRole();
     var roleLabels = (I18N[state.lang] || I18N.zh).roleLabel;
     var userNames = (I18N[state.lang] || I18N.zh).userName;
-    var avatarMap = { user: 'U', super_admin: 'SA', empty: 'U', no_results: 'U' };
+    var avatarMap = { user: 'U', super_admin: 'SA' };
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.updateUserChip({
         roleLabel: roleLabels[sysRole] || roleLabels.user,
         userName: userNames[sysRole] || userNames.user,
-        avatarLabel: avatarMap[state.scenario] || 'U',
+        avatarLabel: avatarMap[sysRole] || 'U',
       });
     }
 
     render();
   }
 
-  /* ── Scenario switch ─────────────────────────────────────────── */
-  function switchScenario(s) {
-    state.scenario = s;
-    state.keyword = '';
-    state.status = '';
-    state.page = 1;
-    document.getElementById('searchInput').value = '';
-
-    applyLang(state.lang);
-  }
-
   /* ── Event bindings ──────────────────────────────────────────── */
-  document.querySelectorAll('.scenario-pill').forEach(function(pill) {
-    pill.addEventListener('click', function() {
-      document.querySelectorAll('.scenario-pill').forEach(function(p) { p.classList.remove('active'); });
-      pill.classList.add('active');
-      switchScenario(pill.dataset.scenario);
-    });
-  });
 
   document.getElementById('searchInput').addEventListener('input', function(e) {
     state.keyword = e.target.value;
@@ -941,10 +875,27 @@
     applyLang(state.lang);
   }
   document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
-  document.getElementById('emptyClearBtn').addEventListener('click', clearFilters);
 
-  document.getElementById('newTaskBtn').addEventListener('click', function() { showToast(t('toastNewTask')); });
-  document.getElementById('emptyCreateBtn').addEventListener('click', function() { showToast(t('toastNewTask')); });
+  document.getElementById('newTaskBtn').addEventListener('click', function() {
+    if (TASKS.length === 0) {
+      TASKS = CREATED_TASKS_SEED.map(function (task) {
+        return {
+          id: task.id,
+          nameZh: task.nameZh,
+          nameEn: task.nameEn,
+          taskType: task.taskType,
+          runType: task.runType,
+          status: task.status,
+          updatedAt: task.updatedAt,
+          canViewDetail: task.canViewDetail,
+          isMine: task.isMine,
+        };
+      });
+      state.page = 1;
+      render();
+    }
+    showToast(t('toastNewTask'));
+  });
 
   document.getElementById('prevPageBtn').addEventListener('click', function() {
     if (state.page > 1) { state.page--; render(); }
