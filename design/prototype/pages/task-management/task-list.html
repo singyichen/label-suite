@@ -316,7 +316,7 @@
       .brand-section { position: fixed; top: 0; left: 0; right: 0; height: var(--navbar-mobile-top-height); margin: 0; padding: 0 var(--space-md); border-bottom: 1px solid var(--color-border); background: var(--color-white); display: flex; align-items: center; z-index: 320; }
       .navbar-brand { width: 100%; }
       .navbar-wordmark { font-size: 14px; }
-      .mobile-user-name { display: inline-block; }
+      .mobile-user-name { display: inline-block; max-width: 72px; font-size: 12px; }
       .brand-section .lang-toggle { display: none; }
       .mobile-lang-toggle { display: inline-flex; }
       .mobile-top-logout { display: inline-flex; }
@@ -328,10 +328,20 @@
       .page-header { flex-direction: column; align-items: flex-start; }
       .page-header-actions { width: 100%; }
       .toolbar { flex-direction: column; align-items: stretch; }
-      .toolbar-left { flex-direction: column; }
-      .search-wrap { max-width: 100%; }
+      .toolbar-left { flex-direction: column; align-items: stretch; width: 100%; }
+      .toolbar-right { width: 100%; margin-left: 0; justify-content: flex-end; }
+      .search-wrap { width: 100%; min-width: 0; max-width: 100%; }
+      .filter-select { width: 100%; min-width: 0; }
+      .clear-btn { align-self: flex-start; }
       .toast-container { bottom: 100px; right: 12px; left: 12px; }
       .toast { max-width: 100%; }
+    }
+    @media (max-width: 420px) {
+      .mobile-user-name { display: inline-block; max-width: 56px; font-size: 11px; }
+      .navbar-brand { width: auto; flex: 1; min-width: 0; }
+      .navbar-wordmark { font-size: 13px; }
+      .mobile-lang-toggle { padding: 6px 8px; }
+      .toolbar-right .btn { width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
   </style>
@@ -465,7 +475,7 @@
       pageTitle: '任務列表', pageSubtitle: '查看與管理所有標記任務',
       langCode: 'ZH', langToggleAria: '切換語言', logoutAria: '登出',
       navDashboard: '儀表板', navTaskManagement: '任務管理',
-      navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理',
+      navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
       newTaskBtnLabel: '新增任務',
       thTaskName: '任務名稱', thTaskType: '任務類型', thRunType: '標記模式',
       thStatus: '狀態', thUpdatedAt: '更新時間',
@@ -490,7 +500,7 @@
       toastNavigating: '前往任務詳情…',
       toastNewTask: '已建立新任務',
       roleLabel: { user: '一般使用者', super_admin: '系統管理員' },
-      userName: { user: '使用者', super_admin: 'Super Admin' },
+      userName: { user: 'Mandy Chen', super_admin: 'Super Admin' },
       statusBadge: {
         draft: '草稿', dry_run_in_progress: '試標進行中',
         waiting_iaa_confirmation: '待 IAA 確認',
@@ -503,7 +513,7 @@
       pageTitle: 'Task list', pageSubtitle: 'View and manage all annotation tasks',
       langCode: 'EN', langToggleAria: 'Switch language', logoutAria: 'Sign out',
       navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
-      navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration',
+      navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
       newTaskBtnLabel: 'New task',
       thTaskName: 'Task Name', thTaskType: 'Task Type', thRunType: 'Run Type',
       thStatus: 'Status', thUpdatedAt: 'Updated',
@@ -835,7 +845,7 @@
       'pageTitle', 'pageSubtitle', 'newTaskBtnLabel',
       'thTaskName', 'thTaskType', 'thRunType', 'thStatus', 'thUpdatedAt',
       'clearFiltersLabel',
-      'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin',
+      'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
     ];
     simpleIds.forEach(function(id) {
       setTextContent(id, t(id));
