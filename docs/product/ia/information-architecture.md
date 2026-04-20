@@ -44,7 +44,7 @@
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
 | `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | 僅顯示自己有成員資格的任務 |
 | `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
-| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含任務成員管理（僅該任務 `project_leader` 可異動）；`annotator` 不得進入，只能從 dashboard 進入 annotation-workspace |
+| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「成員管理」、「標記進度」、「工時紀錄」四個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 annotation-workspace |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
 | `dataset-stats` | 統計總覽頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
 | `dataset-quality` | 品質監控頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
@@ -63,7 +63,7 @@
 |------|------|------|
 | L0 | 全域主導覽（Sidebar Navbar） | 儀表板、任務管理、標記作業、資料集分析、系統管理、個人設定 |
 | L1 | 模組入口頁（Landing） | `task-list`、`annotation-workspace`、`dataset-stats`、`user-management` |
-| L2 | 模組內次層頁（Contextual Navigation） | `task-new` / `task-detail`、`dataset-quality` |
+| L2 | 模組內次層頁（Contextual Navigation） | `task-new` / `task-detail`（含 4 個 tab）、`dataset-quality` |
 
 ### B. L0 主導覽群組（Sidebar）
 
@@ -97,7 +97,7 @@
 | `profile` | 個人設定 | 個人資料 / 密碼設定 / 角色資訊（頁內錨點） |
 | `task-list` | 任務管理 | 任務列表篩選（狀態 / 搜尋） |
 | `task-new` | 任務管理 | Step 1 / Step 2 / Step 3 精靈導覽 |
-| `task-detail` | 任務管理 | 任務資訊 / 任務成員管理 / 發布控制 / 匯出 / 任務內工時檢視 |
+| `task-detail` | 任務管理 | 任務概覽 tab（預設）/ 成員管理 tab / 標記進度 tab / 工時紀錄 tab |
 | `annotation-workspace` | 標記作業 | Annotator / Reviewer 模式切換（依任務角色） |
 | `dataset-stats` | 資料集分析 | 指標分頁（共用指標 + task_type 特定指標） |
 | `dataset-quality` | 資料集分析 | IAA / 異常偵測 / 速度統計 |
@@ -118,7 +118,7 @@
 |------|---------|--------------------|
 | account | 提供 `profile` 入口與一致 user chip | profile 頁內分段（個人資料 / 密碼 / 角色） |
 | dashboard | 提供全站入口與角色落地 | 角色視圖切換（由資料驅動，不新增 L0 項） |
-| task-management | 任務主流程入口（`task-list`） | 新增任務精靈、任務詳情、任務成員管理、任務內工時檢視 |
+| task-management | 任務主流程入口（`task-list`） | 新增任務精靈（L2 獨立頁）、任務詳情 tab 切換（任務概覽 / 成員管理 / 標記進度 / 工時紀錄） |
 | annotation | 標記/審查入口（需任務上下文） | Annotator/Reviewer 模式切換與提交路徑 |
 | dataset | 分析入口（需任務上下文） | `stats` ↔ `quality` 雙頁切換 |
 | admin | 平台管理入口（僅 super_admin） | 使用者管理 ↔ 角色權限設定 |
@@ -315,51 +315,25 @@ flowchart TD
 - **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
-#### `task-detail` 任務詳情頁
+#### `task-detail` 任務詳情頁（含 4 個 tab）
+
 - **進入方式：** `task-list` 點選任務（有任務成員資格的使用者皆可進入）
+- **Tab 結構：**
+  - **任務概覽 tab（預設）：** 查看任務設定與任務類型、任務狀態、發布試標（Dry Run）/ 正式標記（Official Run）控制、標記進度總覽（各標記員完成數 / 速度）、匯出標記結果（JSON / JSON-MIN）
+  - **成員管理 tab：** 檢視成員清單（含角色與狀態）、從平台 `user` 名單加入成員、指派 / 調整任務角色（`reviewer` / `annotator`）、移除或停用成員；僅該任務 `project_leader` 可編輯
+  - **標記進度 tab：** 各標記員完成數、速度、Dry Run / Official Run 分階段進度
+  - **工時紀錄 tab：** 工時與標記活動紀錄（日期、時長、完成筆數、平均速度），可依成員、日期區間、任務階段篩選
+- **Tab 切換：** 頁內切換，不觸發路由跳轉
 - **任務狀態轉換：**
   - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
-  - **Dry Run 完成通知：** 當所有標記員完成 Dry Run 後，系統自動切換狀態至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
-- **功能（任務角色：project_leader）：**
-  - 查看任務設定與任務類型
-  - 任務成員管理（內嵌於 `task-detail`）：
-    - 從現有平台 `user` 名單中加入成員到目前任務
-    - 指派 / 調整任務角色（`reviewer` 或 `annotator`）
-    - 移除任務成員或停用其在該任務中的參與狀態
-  - 發布試標（Dry Run）：選取共用樣本集（建議 20 句），發布給所有任務標記員
-  - 發布正式標記（Official Run）：在 IAA 達標（≥ 0.8）後啟動，分派不重疊資料給各標記員
-  - 查看標記進度（各標記員完成數 / 速度）
-  - 查看任務內工時紀錄（僅該任務成員範圍）
-  - 匯出標記結果（JSON / JSON-MIN）
-- **功能（任務角色：reviewer）：** 唯讀視角；指派、發布、匯出等操作按鈕隱藏
-- **功能（任務角色：annotator）：** 不可進入任務詳情，僅能從 dashboard 進入 annotation-workspace
+  - **Dry Run 完成通知：** 所有標記員完成後自動切換至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
+- **角色可見性：**
+  - `project_leader`：四個 tab 均可存取，成員管理 tab 可編輯
+  - `reviewer`：任務概覽（唯讀）/ 標記進度 / 工時紀錄（僅自己）可見；成員管理 tab 操作按鈕隱藏
+  - `annotator`：不可進入任務詳情，僅能從 dashboard 進入 annotation-workspace
+- **限制：** `project_leader` 僅能管理自己所屬任務的成員，不得跨任務異動；成員角色為任務層級，不影響系統角色
 - **資料隔離原則：** Dry Run 資料與 Official Run 資料必須隔離，不得混入正式標記集
 - **離開方式：** 返回 → `task-list`；匯出為頁面內操作（Toast 提示下載），不觸發頁面跳轉
-
-#### `task-member-management` 任務成員管理（內嵌於 `task-detail`）
-- **定位：** `task-detail` 的內嵌管理區塊，不作為獨立 Sidebar 項目
-- **進入方式：** `task-list` → `task-detail` → 任務成員管理（任務 `project_leader`）
-- **功能：**
-  - 檢視目前任務成員清單（含角色與狀態）
-  - 從平台一般使用者名單加入成員到目前任務
-  - 指派或調整任務角色（`annotator` / `reviewer`）
-  - 移除成員或停用其在「目前任務」的參與
-- **限制：**
-  - `project_leader` 僅能管理自己所屬任務的成員，不得跨任務異動
-  - 成員角色為任務層級，不影響系統角色（`user` / `super_admin`）
-
-#### `task-work-log` 任務工時紀錄（內嵌於 `task-detail`）
-- **定位：** `task-detail` 的內嵌檢視區塊，不作為獨立 Sidebar 項目
-- **進入方式：** `task-list` → `task-detail` → 工時紀錄分頁
-- **功能：**
-  - 查看該任務成員的工時與標記活動紀錄（日期、時長、完成筆數、平均速度）
-  - 依成員、日期區間、任務階段（Dry Run / Official Run）篩選
-  - 顯示任務整體與成員個別統計，用於排班與進度判斷
-- **權限：**
-  - `project_leader`：可查看該任務所有成員工時
-  - `reviewer` / `annotator`：僅可查看自己在該任務的工時
-  - 非該任務成員不得查看
-- **離開方式：** 返回 `task-detail` 其他分頁或返回 `task-list`
 
 ---
 
