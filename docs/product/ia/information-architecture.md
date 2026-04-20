@@ -48,8 +48,8 @@
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
 | `dataset-stats` | 統計總覽頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
 | `dataset-quality` | 品質監控頁 | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務）| |
-| `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理 |
-| `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ✅ | — | |
+| `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理；含「使用者管理」與「角色設定」兩個 tab，預設停留在「使用者管理」tab |
+| `role-settings` | 角色權限設定頁（`user-management` 內 tab） | 系統管理模組 | ❌ | ✅ | — | 不獨立為路由；透過 `user-management` 頁內 tab 切換進入 |
 
 ---
 
@@ -63,7 +63,7 @@
 |------|------|------|
 | L0 | 全域主導覽（Sidebar Navbar） | 儀表板、任務管理、標記作業、資料集分析、系統管理、個人設定 |
 | L1 | 模組入口頁（Landing） | `task-list`、`annotation-workspace`、`dataset-stats`、`user-management` |
-| L2 | 模組內次層頁（Contextual Navigation） | `task-new` / `task-detail`、`dataset-quality`、`role-settings` |
+| L2 | 模組內次層頁（Contextual Navigation） | `task-new` / `task-detail`、`dataset-quality` |
 
 ### B. L0 主導覽群組（Sidebar）
 
@@ -101,8 +101,7 @@
 | `annotation-workspace` | 標記作業 | Annotator / Reviewer 模式切換（依任務角色） |
 | `dataset-stats` | 資料集分析 | 指標分頁（共用指標 + task_type 特定指標） |
 | `dataset-quality` | 資料集分析 | IAA / 異常偵測 / 速度統計 |
-| `user-management` | 系統管理 | 使用者列表 / 帳號管理 |
-| `role-settings` | 系統管理 | 角色權限矩陣設定 |
+| `user-management` | 系統管理 | 使用者管理 tab（預設）/ 角色設定 tab |
 
 ### E. Desktop / Mobile 導覽 IA
 
@@ -285,7 +284,6 @@ flowchart TD
 #### `task-list` 任務列表頁
 - **進入方式：** Navbar → 任務管理
 - **功能：** 顯示所有任務（含狀態 badge）、搜尋 / 篩選、進入任務詳情
-- **空狀態（尚未建立任何任務）：** 說明文字 + 「建立第一個任務」按鈕（→ `task-new`）
 - **離開方式：** 點選任務 → `task-detail`；「新增任務」按鈕 → `task-new`
 
 #### `task-new` 新增任務頁
@@ -416,15 +414,14 @@ flowchart TD
 
 > 本模組僅 `super_admin` 可存取。`project_leader` 的任務成員異動在 `task-detail` 的「任務成員管理」內進行。
 
-#### `user-management` 使用者管理頁
-- **進入方式：** Navbar → 系統管理 → 使用者管理
-- **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`user` / `super_admin`）；`project_leader` / `reviewer` / `annotator` 為任務角色，於 `task-detail` 管理，不在此頁指派
-- **離開方式：** 點選角色設定 → `role-settings`
+#### `user-management` 使用者管理頁（含角色設定 tab）
 
-#### `role-settings` 角色權限設定頁
-- **進入方式：** `user-management` → 角色設定
-- **功能：** 檢視並維護角色權限矩陣；系統角色為 `user` / `super_admin`，任務角色為 `project_leader` / `reviewer` / `annotator`
-- **離開方式：** 儲存 → `user-management`
+- **進入方式：** Navbar → 系統管理；預設停留於「使用者管理」tab
+- **Tab 結構：**
+  - **使用者管理 tab（預設）：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`user` / `super_admin`）；`project_leader` / `reviewer` / `annotator` 為任務角色，於 `task-detail` 管理，不在此頁指派
+  - **角色設定 tab：** 檢視並維護角色權限矩陣；系統角色為 `user` / `super_admin`，任務角色為 `project_leader` / `reviewer` / `annotator`
+- **Tab 切換：** 頁內切換，不觸發路由跳轉
+- **離開方式：** Navbar 導覽至其他模組
 
 ---
 
@@ -550,8 +547,8 @@ sequenceDiagram
 
 **開發批次：**
 
-- **P1 — 基礎建設**（001–010 + 012 + Shared）：帳號系統、角色管理、共用導覽、儀表板，所有功能的前提
-- **P2 — 核心功能**（013–017）：任務建立到標記完整流程、資料集分析
+- **P1 — 基礎建設**（001–007 + 012 + Shared）：帳號系統、角色管理、共用導覽、儀表板，所有功能的前提
+- **P2 — 核心功能**（010 + 013–017）：任務建立到標記完整流程、資料集分析
 
 ### Spec 清單
 
@@ -581,7 +578,7 @@ sequenceDiagram
 
 | # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
 | --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 010 | 任務列表（搜尋、篩選、空狀態） | `task-list` | task-management | ★★☆☆☆ | P1 | ⬜ 待做 |
+| 010 | 任務列表（搜尋、篩選、空狀態） | `task-list` | task-management | ★★☆☆☆ | P2 | ⬜ 待做 |
 | 013 | 新增任務（Step 1–3 + Config Builder 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
 | 014 | 任務詳情（成員管理 / 可加入成員名單 / Dry Run / Official Run / 工時紀錄 / 匯出） | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
 
