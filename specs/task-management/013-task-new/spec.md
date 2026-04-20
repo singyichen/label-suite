@@ -13,8 +13,14 @@
 - `TASK_CREATION_STEPS = step-1-basic | step-2-config-builder | step-3-guideline`
 - `TASK_CONFIG_MODES = visual | code`
 - `CONFIG_FORMATS = yaml | json`
+- `TASK_CREATOR_SYSTEM_ROLES = user | super_admin`
 - `DATASET_UPLOAD_FORMATS = txt | csv | tsv | json`
-- `GUIDELINE_FORMATS = pdf | image | text`
+- `DATASET_MAX_FILE_SIZE_MB = 200`
+- `DATASET_MAX_ROWS = 1000000`
+- `DATASET_ENCODING = utf-8`
+- `GUIDELINE_FORMATS = pdf | image | markdown`
+- `GUIDELINE_IMAGE_FORMATS = png | jpg | jpeg | webp`
+- `IDEMPOTENCY_WINDOW_HOURS = 24`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
@@ -92,6 +98,7 @@ sequenceDiagram
 
 **行為規則**：
 
+- 僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 並提交建立任務。
 - 未完成當前步驟必要欄位不得進入下一步。
 - 建立成功前不得寫入正式任務資料。
 - 建立成功後導向 `task-detail`，L0 active 保持「任務管理」。
@@ -143,7 +150,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 
 **行為規則**：
 
-- 支援 `GUIDELINE_FORMATS`，超出格式需阻擋並提示。
+- 支援 `GUIDELINE_FORMATS`，其中 `image` 僅允許 `GUIDELINE_IMAGE_FORMATS`，`text` 以 `markdown` 儲存；超出格式需阻擋並提示。
 - Step 3 為選填，不填仍可建立任務。
 - 強制顯示設定預設為關閉。
 
@@ -151,11 +158,13 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 
 ### Edge Cases
 
+- 非 `TASK_CREATOR_SYSTEM_ROLES` 造訪 `/task-new`：導回允許入口並顯示無權限提示。
 - 上傳資料集格式不在 `DATASET_UPLOAD_FORMATS`：阻擋進下一步並顯示錯誤。
+- 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB`、非 `DATASET_ENCODING` 或超過 `DATASET_MAX_ROWS`：阻擋進下一步並顯示可定位錯誤。
 - 切換 `task_type` 後已填 Step 2 設定不相容：提示重置或轉換失敗欄位。
 - Code 模式輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - 建立任務 API 成功但 membership 建立失敗：整體交易需回滾，避免孤兒任務。
-- 網路中斷導致重送：需有 idempotency 策略避免重複建立任務。
+- 網路中斷導致重送：同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內必須回傳同一 `task_id`，不得重複建立任務。
 
 ---
 
@@ -164,16 +173,21 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 ### 功能需求
 
 - **FR-001**：系統必須提供 `/task-new` 三步驟建立流程（Step 1/2/3）。
+- **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
 - **FR-002**：Step 1 必須要求任務名稱、資料集、`task_type`。
+- **FR-002a**：資料集上傳必須限制於 `DATASET_UPLOAD_FORMATS`，且符合 `DATASET_MAX_FILE_SIZE_MB`、`DATASET_MAX_ROWS`、`DATASET_ENCODING`。
 - **FR-003**：Step 2 Config Builder 必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：系統必須支援 `Visual` 與 `Code` 兩種設定模式。
 - **FR-003b**：Visual 與 Code 必須同步同一份 config，並在提交前通過 schema 驗證。
 - **FR-003c**：新增 task type 應可透過 registry/schema 擴充，不修改核心流程（Step 1–3）。
 - **FR-004**：Step 3 必須支援標記說明資產上傳與強制顯示設定。
+- **FR-004a**：Step 3 指南格式必須支援 `GUIDELINE_FORMATS`，其中 `image` 受限於 `GUIDELINE_IMAGE_FORMATS`，文字內容以 `markdown` 儲存。
 - **FR-005**：提交成功後，系統必須建立任務並導向 `/task-detail`。
 - **FR-005a**：任務建立成功時，系統必須自動建立一筆 `task_membership`，並將建立者設為 `project_leader`。
+- **FR-005b**：建立任務 API 必須支援 `Idempotency-Key`；同一 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送時回傳同一 `task_id`。
 - **FR-006**：取消建立流程時，系統必須導回 `/task-list` 且不寫入任務。
 - **FR-007**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成三步流程。
+- **FR-007a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 Visual/Code 切換與驗證、Step 3 上傳或略過、建立成功導頁、取消返回。
 
 ### User Flow & Navigation
 
@@ -236,7 +250,8 @@ flowchart LR
 - **SC-002**：任務建立成功後，自動建立 creator 的 `project_leader` membership。
 - **SC-003**：Step 2 可依 registry/schema 產生設定介面，且 Visual/Code 雙模式一致。
 - **SC-004**：新增 task type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
-- **SC-005**：頁面在 `RWD_VIEWPORTS` 下皆可完成建立流程，且驗證錯誤可被清楚定位。
+- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 模式切換與驗證、Step 3 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
+- **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 不可建立任務；同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
 
 ---
 
