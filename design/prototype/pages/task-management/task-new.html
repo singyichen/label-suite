@@ -233,7 +233,17 @@
     /* ── Code editor ── */
     .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #1E1B4B; color: #E2E8F0; outline: none; resize: vertical; transition: border-color var(--dur-fast); }
     .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .yaml-preview { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); color: var(--color-ink); outline: none; resize: none; overflow: auto; }
+    .annotation-preview { min-height: 320px; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); display: flex; flex-direction: column; gap: 14px; }
+    .annotation-preview-sample { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); font-size: 14px; line-height: 1.6; color: var(--color-ink); }
+    .annotation-preview-divider { height: 1px; background: var(--color-border); }
+    .annotation-preview-task-title { font-size: 14px; font-weight: 700; color: var(--color-ink); }
+    .annotation-preview-options { display: flex; flex-direction: column; gap: 8px; }
+    .annotation-preview-option { display: flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14px; color: var(--color-ink); }
+    .annotation-preview-option input { margin: 0; }
+    .annotation-preview-color { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; }
+    .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
+    .annotation-preview-pair { display: flex; flex-direction: column; gap: 8px; }
+    .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
     .code-error-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-top: 6px; font-size: 12px; color: var(--color-error); }
     .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
     .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
@@ -463,8 +473,8 @@
             <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
           </div>
           <div>
-            <div class="yaml-preview-label" id="yamlPreviewLabel">YAML 預覽</div>
-            <textarea class="yaml-preview" id="yamlPreview" readonly aria-label="YAML preview"></textarea>
+            <div class="yaml-preview-label" id="yamlPreviewLabel">標記預覽</div>
+            <div class="annotation-preview" id="yamlPreview" aria-label="Annotation preview"></div>
           </div>
         </div>
 
@@ -641,7 +651,17 @@ var I18N = {
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
     s3NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
     s2TemplateSectionTitle: '從範本開始',
-    yamlPreviewLabel: 'YAML 預覽',
+    yamlPreviewLabel: '標記預覽',
+    previewTaskChooseLabel: '請選擇標記',
+    previewTaskEntity: '請選擇實體類型',
+    previewTaskRelation: '請選擇關係類型',
+    previewTaskScore: '請選擇分數',
+    previewEmpty: '請先新增至少一個標記選項',
+    previewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
+    previewSentenceALabel: '句子 A',
+    previewSentenceBLabel: '句子 B',
+    previewSampleSentenceA: '這間餐廳的服務態度很好。',
+    previewSampleSentenceB: '但上菜速度偏慢。',
     saveCodeBtnLabel: '儲存到 Visual',
     cancelBtnLabel: '取消', prevBtnLabel: '上一步', nextBtnLabel: '下一步',
     submitBtnLabel: '建立任務', submittingLabel: '建立中…',
@@ -674,7 +694,17 @@ var I18N = {
     forceToggleDesc: 'Annotators must read the guideline before starting work',
     s3NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
     s2TemplateSectionTitle: 'Start from a template',
-    yamlPreviewLabel: 'YAML preview',
+    yamlPreviewLabel: 'Annotation preview',
+    previewTaskChooseLabel: 'Choose labels',
+    previewTaskEntity: 'Choose entity types',
+    previewTaskRelation: 'Choose relation types',
+    previewTaskScore: 'Choose a score',
+    previewEmpty: 'Add at least one option to preview',
+    previewSampleSentence: 'This is a sample text. Apply annotations with the current settings.',
+    previewSentenceALabel: 'Sentence A',
+    previewSentenceBLabel: 'Sentence B',
+    previewSampleSentenceA: 'The service at this restaurant is great.',
+    previewSampleSentenceB: 'But the dishes are served slowly.',
     saveCodeBtnLabel: 'Save to Visual',
     cancelBtnLabel: 'Cancel', prevBtnLabel: 'Back', nextBtnLabel: 'Next',
     submitBtnLabel: 'Create task', submittingLabel: 'Creating…',
@@ -1179,7 +1209,114 @@ function buildEntityList(field) {
 
 function updateYamlPreview() {
   var preview = el('yamlPreview');
-  if (preview) preview.value = configToCode();
+  if (!preview) return;
+  while (preview.firstChild) preview.removeChild(preview.firstChild);
+
+  var taskType = state.taskType;
+  var config = state.configData || {};
+  var titleText = t('previewTaskChooseLabel');
+  var options = [];
+
+  if (taskType === 'sequence_labeling') {
+    titleText = t('previewTaskEntity');
+    options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
+      return { text: ent.name.trim(), color: ent.color || null };
+    }) : [];
+  } else if (taskType === 'relation_extraction') {
+    titleText = t('previewTaskRelation');
+    options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+      return { text: tag.trim(), color: null };
+    }) : [];
+  } else if (taskType === 'single_sentence_scoring_regression') {
+    titleText = t('previewTaskScore');
+    var range = String(config.scoring_range || '1-5');
+    var pieces = range.split('-');
+    var start = parseInt(pieces[0], 10);
+    var end = parseInt(pieces[1], 10);
+    if (!isNaN(start) && !isNaN(end) && end >= start) {
+      for (var score = start; score <= end; score += 1) options.push({ text: String(score), color: null });
+    }
+  } else {
+    options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+      return { text: tag.trim(), color: null };
+    }) : [];
+  }
+
+  if (taskType === 'sentence_pairs') {
+    var pairWrap = document.createElement('div');
+    pairWrap.className = 'annotation-preview-pair';
+
+    var p1Label = document.createElement('div');
+    p1Label.className = 'annotation-preview-pair-label';
+    p1Label.textContent = t('previewSentenceALabel');
+    pairWrap.appendChild(p1Label);
+
+    var p1 = document.createElement('div');
+    p1.className = 'annotation-preview-sample';
+    p1.textContent = t('previewSampleSentenceA');
+    pairWrap.appendChild(p1);
+
+    var p2Label = document.createElement('div');
+    p2Label.className = 'annotation-preview-pair-label';
+    p2Label.textContent = t('previewSentenceBLabel');
+    pairWrap.appendChild(p2Label);
+
+    var p2 = document.createElement('div');
+    p2.className = 'annotation-preview-sample';
+    p2.textContent = t('previewSampleSentenceB');
+    pairWrap.appendChild(p2);
+
+    preview.appendChild(pairWrap);
+  } else {
+    var sample = document.createElement('div');
+    sample.className = 'annotation-preview-sample';
+    sample.textContent = t('previewSampleSentence');
+    preview.appendChild(sample);
+  }
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  preview.appendChild(divider);
+
+  var title = document.createElement('div');
+  title.className = 'annotation-preview-task-title';
+  title.textContent = titleText;
+  preview.appendChild(title);
+
+  var optionsWrap = document.createElement('div');
+  optionsWrap.className = 'annotation-preview-options';
+  preview.appendChild(optionsWrap);
+
+  if (!options.length) {
+    var empty = document.createElement('div');
+    empty.className = 'annotation-preview-empty';
+    empty.textContent = t('previewEmpty');
+    optionsWrap.appendChild(empty);
+    return;
+  }
+
+  options.forEach(function(option) {
+    var row = document.createElement('label');
+    row.className = 'annotation-preview-option';
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.disabled = true;
+    row.appendChild(checkbox);
+
+    if (option.color) {
+      var color = document.createElement('span');
+      color.className = 'annotation-preview-color';
+      color.style.background = option.color;
+      row.appendChild(color);
+    }
+
+    var text = document.createElement('span');
+    text.textContent = option.text;
+    row.appendChild(text);
+
+    optionsWrap.appendChild(row);
+  });
 }
 
 /* ── Template picker ─────────────────────────────────────────── */
