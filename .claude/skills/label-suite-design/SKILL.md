@@ -33,6 +33,53 @@ When building a new prototype page, reference these via a relative path from the
 - **Radii:** 4 badges · 8 buttons/inputs · 12 cards · 16 modals · 9999 pills.
 - **Motion:** 150–200 ms · `cubic-bezier(0.4, 0, 0.2, 1)` · honor `prefers-reduced-motion`.
 
+## Prototype consistency requirements (Label Suite repo)
+
+When creating a **new prototype page** under `design/prototype/pages/`, do not invent a new page shell from scratch. Mirror the structure used by existing prototype pages (e.g. `dashboard`, `user-management`, `task-list`) and keep cross-page behavior consistent.
+
+### Required integration for every new page
+
+1) Shared sidebar (same pattern as existing pages)
+```html
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script> <!-- adjust relative path -->
+<script>
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: '...', // dashboard | task-management | annotation | dataset | admin | profile
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+```
+
+2) Global language toggle via shared sidebar helpers
+- Use centralized JS i18n object (`zh` / `en`) and explicit `applyLang()`.
+- Read initial language from `window.LabelSuiteSharedSidebar.getStoredLang()`.
+- Apply language with `window.LabelSuiteSharedSidebar.applyGlobalLanguage(...)`.
+- Do not use `data-i18n-*` attribute scanning pattern.
+
+3) Analytics runtime + baseline tracking
+```html
+<script src="../../assets/analytics.js"></script> <!-- adjust relative path -->
+<script>
+  window.LabelSuiteAnalytics.init({ page: 'your-page-id' });
+  window.LabelSuiteAnalytics.trackPageView('your-page-id', getTrackingContext);
+</script>
+```
+- Track language switch (`prototype_lang_switched`).
+- Track primary CTA intent (`prototype_cta_clicked` or page-specific `prototype_*`).
+- Track success / failure outcomes for the page's primary flow.
+- Reuse shared helpers from `analytics.js`; do not reimplement analytics utilities.
+
+### Pre-delivery checklist for new prototype pages
+- [ ] Uses shared sidebar mount + `mountSidebar(...)` (not duplicated custom navbar shell).
+- [ ] Uses shared global language pattern (`getStoredLang` + `applyGlobalLanguage` + centralized `i18n` object).
+- [ ] Imports `assets/analytics.js`, calls `init(...)`, and sends `trackPageView(...)`.
+
 ## When this skill is invoked
 If the user invokes this skill without any specific task, ask what they want to build or design. Ask a few clarifying questions about audience, flow, and variations, then act as an expert Label Suite designer.
 
