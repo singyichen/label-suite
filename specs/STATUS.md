@@ -31,6 +31,9 @@
 | admin-007 | Role & Permission Settings | admin | `spec-ready` | — | IA v7 重建完成（`specs/admin/007-role-settings/spec.md`） |
 | dashboard-012 | Dashboard | dashboard | `in-progress` | `feat/dashboard-012-spec-simplify` | spec 與 IA 對齊進行中；wireframe 已完成（PR #27） |
 | shared-008 | Shared Sidebar Navbar | shared | `in-progress` | `feat/design-system-pen-sync` | shared navbar spec 已建立並與 IA 對齊 |
+| task-management-010 | Task List | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/010-task-list/spec.md`） |
+| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/013-task-new/spec.md`） |
+| task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/014-task-detail/spec.md`） |
 
 ---
 
@@ -38,9 +41,6 @@
 
 | ID | 功能 | 目標模組 | 規劃備註 |
 |---|------|----------|----------|
-| task-management-010 | Task List | task-management | spec 檔案已移除；將依最新 IA/模組規劃重建 |
-| task-management-013 | New Task (+ Config Builder) | task-management | spec 檔案已移除；將依最新 IA/模組規劃重建 |
-| task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | spec 檔案已移除；將依最新 IA/模組規劃重建 |
 | annotation-015 | Annotation Workspace | annotation | spec 檔案已移除；將依最新 IA/模組規劃重建 |
 | dataset-016 | Dataset Stats | dataset | spec 檔案已移除；將依最新 IA/模組規劃重建 |
 | dataset-017 | Dataset Quality | dataset | spec 檔案已移除；將依最新 IA/模組規劃重建 |
@@ -51,6 +51,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-04-20 | 新增 `task-management-010`、`task-management-013`、`task-management-014` 規格檔；狀態更新為 `spec-ready`，並自 backlog 移除。 |
 | 2026-04-16 | 新增 `admin-006` 與 `admin-007` 規格檔（IA v7 重建）；狀態更新為 `spec-ready`，並自 backlog 移除。 |
 | 2026-04-16 | 已同步 STATUS 與目前 repository 狀態：自 active pipeline 移除已刪除 spec 項目、加入 `shared-001`，並將 `006/007/010/013/014/015/016/017` 移至 backlog 等待重建。 |
 | 2026-04-15 | 將 `001/002/003/004/012` 狀態由 `spec-ready` 更新為 `in-progress`；分支設定為 `feat/dashboard-012-spec-simplify`；並同步備註與最新 account/dashboard spec 及 IA 對齊進度。 |
