@@ -561,6 +561,22 @@
     { id: 'T008', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false },
   ];
 
+  function loadCreatedTaskSeed() {
+    TASKS = CREATED_TASKS_SEED.map(function (task) {
+      return {
+        id: task.id,
+        nameZh: task.nameZh,
+        nameEn: task.nameEn,
+        taskType: task.taskType,
+        runType: task.runType,
+        status: task.status,
+        updatedAt: task.updatedAt,
+        canViewDetail: task.canViewDetail,
+        isMine: task.isMine,
+      };
+    });
+  }
+
   var STATUS_BADGE_CLS = {
     draft: 'badge-draft',
     dry_run_in_progress: 'badge-dry-run-status',
@@ -913,27 +929,8 @@
   document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
 
   document.getElementById('newTaskBtn').addEventListener('click', function() {
-    var seeded = false;
-    if (TASKS.length === 0) {
-      TASKS = CREATED_TASKS_SEED.map(function (task) {
-        return {
-          id: task.id,
-          nameZh: task.nameZh,
-          nameEn: task.nameEn,
-          taskType: task.taskType,
-          runType: task.runType,
-          status: task.status,
-          updatedAt: task.updatedAt,
-          canViewDetail: task.canViewDetail,
-          isMine: task.isMine,
-        };
-      });
-      state.page = 1;
-      seeded = true;
-      render();
-    }
-    trackAnalytics('prototype_cta_clicked', { cta: 'new_task', seeded_task_list: seeded });
-    showToast(t('toastNewTask'));
+    trackAnalytics('prototype_cta_clicked', { cta: 'new_task', destination: 'task-new' });
+    window.location.href = './task-new.html';
   });
 
   document.getElementById('prevPageBtn').addEventListener('click', function() {
@@ -969,6 +966,21 @@
   document.getElementById('mobileLangToggle').addEventListener('click', function() { handleLangToggle('mobile'); });
 
   /* ── Init ────────────────────────────────────────────────────── */
+  (function initStateFromUrl() {
+    var q = new URLSearchParams(window.location.search);
+    if (q.get('view') === 'filled') {
+      loadCreatedTaskSeed();
+    }
+    var keyword = q.get('keyword');
+    var status = q.get('status');
+    var page = parseInt(q.get('page') || '', 10);
+    var pageSize = parseInt(q.get('page_size') || '', 10);
+    if (keyword) state.keyword = keyword;
+    if (status) state.status = status;
+    if (!isNaN(page) && page > 0) state.page = page;
+    if (!isNaN(pageSize) && [20, 50, 100].indexOf(pageSize) !== -1) state.pageSize = pageSize;
+  }());
+
   if (window.LabelSuiteSharedSidebar) {
     applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
   } else {
