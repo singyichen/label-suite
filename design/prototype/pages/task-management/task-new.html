@@ -236,6 +236,7 @@
     .yaml-preview { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); color: var(--color-ink); outline: none; resize: none; overflow: auto; }
     .code-error-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-top: 6px; font-size: 12px; color: var(--color-error); }
     .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
+    .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
 
     /* ── Guideline list ── */
     .guideline-list { margin-top: var(--space-sm); display: flex; flex-direction: column; gap: 6px; }
@@ -473,6 +474,11 @@
             <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <span id="codeErrorMsg"></span>
           </div>
+          <div class="code-actions">
+            <button class="btn btn-secondary" id="saveCodeBtn" type="button" disabled>
+              <span id="saveCodeBtnLabel">儲存到 Visual</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -636,6 +642,7 @@ var I18N = {
     s3NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
     s2TemplateSectionTitle: '從範本開始',
     yamlPreviewLabel: 'YAML 預覽',
+    saveCodeBtnLabel: '儲存到 Visual',
     cancelBtnLabel: '取消', prevBtnLabel: '上一步', nextBtnLabel: '下一步',
     submitBtnLabel: '建立任務', submittingLabel: '建立中…',
     leaveModalTitle: '離開此頁面？',
@@ -646,7 +653,9 @@ var I18N = {
     errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
     errDatasetSize: '檔案超過 200 MB 上限',
     errSchemaRequired: '請完成所有必填欄位',
+    errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
     toastCreated: '任務建立成功，正在返回任務列表…',
+    toastCodeSaved: 'Code 設定已同步到 Visual',
     applyTemplate: '套用預設範本：',
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
   },
@@ -666,6 +675,7 @@ var I18N = {
     s3NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
     s2TemplateSectionTitle: 'Start from a template',
     yamlPreviewLabel: 'YAML preview',
+    saveCodeBtnLabel: 'Save to Visual',
     cancelBtnLabel: 'Cancel', prevBtnLabel: 'Back', nextBtnLabel: 'Next',
     submitBtnLabel: 'Create task', submittingLabel: 'Creating…',
     leaveModalTitle: 'Leave this page?',
@@ -676,7 +686,9 @@ var I18N = {
     errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
     errDatasetSize: 'File exceeds the 200 MB limit',
     errSchemaRequired: 'Please complete all required fields',
+    errCodeInvalid: 'Invalid code format. Please fix and save again',
     toastCreated: 'Task created — returning to task list…',
+    toastCodeSaved: 'Code configuration synced to Visual',
     applyTemplate: 'Apply default template: ',
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
   },
@@ -688,6 +700,7 @@ var state = {
   taskName: '', datasetFile: null, taskType: '',
   configMode: 'visual', codeFormat: 'yaml', configData: {},
   guidelineFiles: [], forceGuideline: false,
+  codeDraftDirty: false,
   isDirty: false, isSubmitting: false, leaveCallback: null,
 };
 var toastTimer = null;
@@ -736,6 +749,106 @@ function toYaml(obj, indent) {
 function configToCode() {
   if (state.codeFormat === 'json') return JSON.stringify(state.configData, null, 2);
   return toYaml(state.configData);
+}
+
+/* ── YAML parser (subset for prototype) ───────────────────────── */
+function yamlParseScalar(raw) {
+  var val = String(raw || '').trim();
+  if (val === '') return '';
+  if (val === 'true') return true;
+  if (val === 'false') return false;
+  if (/^-?\d+(\.\d+)?$/.test(val)) return Number(val);
+  if ((val[0] === '"' && val[val.length - 1] === '"') || (val[0] === "'" && val[val.length - 1] === "'")) {
+    if (val[0] === "'") return val.slice(1, -1);
+    return JSON.parse(val);
+  }
+  return val;
+}
+function yamlIndentOf(line) { return line.length - line.replace(/^\s+/, '').length; }
+function yamlSplitKeyVal(text) {
+  var idx = text.indexOf(':');
+  if (idx < 0) return null;
+  return { key: text.slice(0, idx).trim(), value: text.slice(idx + 1).trim() };
+}
+function parseYamlSubset(text) {
+  var lines = String(text || '').replace(/\r/g, '').split('\n');
+  var i = 0;
+  var result = {};
+
+  function skipEmpty() {
+    while (i < lines.length && !lines[i].trim()) i++;
+  }
+  function parseBlock(expectedIndent) {
+    var map = {};
+    while (i < lines.length) {
+      var line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      var indent = yamlIndentOf(line);
+      if (indent < expectedIndent) break;
+      if (indent > expectedIndent) throw new Error('Invalid YAML indentation');
+      var kv = yamlSplitKeyVal(line.trim());
+      if (!kv || !kv.key) throw new Error('Invalid YAML line: ' + line.trim());
+      i++;
+      if (kv.value) {
+        map[kv.key] = yamlParseScalar(kv.value);
+        continue;
+      }
+      skipEmpty();
+      if (i >= lines.length) { map[kv.key] = ''; continue; }
+      var next = lines[i];
+      var nextIndent = yamlIndentOf(next);
+      if (nextIndent <= indent) { map[kv.key] = ''; continue; }
+      map[kv.key] = parseNested(nextIndent);
+    }
+    return map;
+  }
+  function parseNested(expectedIndent) {
+    var outArr = [];
+    var firstNonEmpty = null;
+    var start = i;
+    while (start < lines.length && !lines[start].trim()) start++;
+    if (start >= lines.length) return '';
+    firstNonEmpty = lines[start];
+    if (yamlIndentOf(firstNonEmpty) !== expectedIndent) throw new Error('Invalid YAML nesting');
+    if (firstNonEmpty.trim().indexOf('- ') === 0) {
+      i = start;
+      while (i < lines.length) {
+        var line = lines[i];
+        if (!line.trim()) { i++; continue; }
+        var indent = yamlIndentOf(line);
+        if (indent < expectedIndent) break;
+        if (indent > expectedIndent) throw new Error('Invalid array indentation');
+        var itemText = line.trim().slice(2).trim();
+        i++;
+        if (!itemText) { outArr.push(''); continue; }
+        var itemKv = yamlSplitKeyVal(itemText);
+        if (!itemKv) {
+          outArr.push(yamlParseScalar(itemText));
+          continue;
+        }
+        var obj = {};
+        obj[itemKv.key] = yamlParseScalar(itemKv.value);
+        while (i < lines.length) {
+          var sub = lines[i];
+          if (!sub.trim()) { i++; continue; }
+          var subIndent = yamlIndentOf(sub);
+          if (subIndent <= expectedIndent) break;
+          if (subIndent !== expectedIndent + 2) throw new Error('Invalid object indentation');
+          var subKv = yamlSplitKeyVal(sub.trim());
+          if (!subKv) throw new Error('Invalid object line: ' + sub.trim());
+          obj[subKv.key] = yamlParseScalar(subKv.value);
+          i++;
+        }
+        outArr.push(obj);
+      }
+      return outArr;
+    }
+    return parseBlock(expectedIndent);
+  }
+
+  skipEmpty();
+  result = parseBlock(0);
+  return result;
 }
 
 /* ── Toast ───────────────────────────────────────────────────── */
@@ -838,7 +951,9 @@ function validateStep2(showErrors) {
   if (state.configMode === 'code') {
     var codeVal = el('codeEditor').value.trim();
     try {
-      if (codeVal.startsWith('{') || codeVal.startsWith('[')) JSON.parse(codeVal);
+      if (!codeVal) throw new Error(t('errCodeInvalid'));
+      if (state.codeFormat === 'json' || codeVal.startsWith('{') || codeVal.startsWith('[')) JSON.parse(codeVal);
+      else parseYamlSubset(codeVal);
       el('codeErrorBar').classList.add('hidden');
       return true;
     } catch(e) {
@@ -1089,6 +1204,9 @@ function renderTemplateBtns() {
 
 /* ── Config mode ─────────────────────────────────────────────── */
 function setConfigMode(mode) {
+  if (mode === 'visual' && state.configMode === 'code' && state.codeDraftDirty) {
+    if (!saveCodeToVisual(false)) return;
+  }
   state.configMode = mode;
   el('tabVisual').classList.toggle('active', mode === 'visual');
   el('tabCode').classList.toggle('active', mode === 'code');
@@ -1097,20 +1215,14 @@ function setConfigMode(mode) {
   el('visualLayout').classList.toggle('hidden', mode === 'code');
   el('codeLayout').classList.toggle('hidden', mode === 'visual');
   el('codeFormatBtns').style.display = mode === 'code' ? 'flex' : 'none';
+  el('saveCodeBtn').disabled = mode !== 'code' || !state.codeDraftDirty;
   if (mode === 'code') {
     el('codeEditor').value = configToCode();
+    state.codeDraftDirty = false;
+    el('saveCodeBtn').disabled = true;
+    el('codeErrorBar').classList.add('hidden');
   } else {
-    var code = el('codeEditor').value;
-    try {
-      if (code.trim().startsWith('{') || code.trim().startsWith('[')) {
-        state.configData = JSON.parse(code);
-      }
-      el('codeErrorBar').classList.add('hidden');
-      renderSchemaFields();
-    } catch(e) {
-      el('codeErrorBar').classList.remove('hidden');
-      setText('codeErrorMsg', e.message);
-    }
+    renderSchemaFields();
   }
   revalidateCurrentStep();
   track('prototype_task_new_config_mode_changed', { mode: mode });
@@ -1120,7 +1232,51 @@ function setCodeFormat(fmt) {
   state.codeFormat = fmt;
   el('formatYamlBtn').style.fontWeight = fmt === 'yaml' ? '700' : '400';
   el('formatJsonBtn').style.fontWeight = fmt === 'json' ? '700' : '400';
+  if (state.codeDraftDirty) return;
   el('codeEditor').value = configToCode();
+}
+
+function saveCodeToVisual(showSuccessToast) {
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return false;
+  var raw = el('codeEditor').value;
+  var parsed;
+  try {
+    if (state.codeFormat === 'json' || raw.trim().startsWith('{') || raw.trim().startsWith('[')) {
+      parsed = JSON.parse(raw);
+    } else {
+      parsed = parseYamlSubset(raw);
+    }
+  } catch (err) {
+    el('codeErrorBar').classList.remove('hidden');
+    setText('codeErrorMsg', err.message || t('errCodeInvalid'));
+    return false;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    el('codeErrorBar').classList.remove('hidden');
+    setText('codeErrorMsg', t('errCodeInvalid'));
+    return false;
+  }
+
+  var merged = {};
+  Object.keys(parsed).forEach(function(k) { merged[k] = parsed[k]; });
+  schema.fields.forEach(function(field) {
+    if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
+    if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+    if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+    if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+  });
+  state.configData = merged;
+  state.codeDraftDirty = false;
+  el('saveCodeBtn').disabled = true;
+  el('codeErrorBar').classList.add('hidden');
+  renderSchemaFields();
+  updateYamlPreview();
+  markDirty();
+  revalidateCurrentStep();
+  if (showSuccessToast) showToast(t('toastCodeSaved'), 'success');
+  track('prototype_task_new_code_saved', { taskType: state.taskType, format: state.codeFormat });
+  return true;
 }
 
 /* ── Dataset upload ──────────────────────────────────────────── */
@@ -1293,7 +1449,7 @@ function applyLang(l) {
     'labelTaskName','labelTaskType','labelDataset','labelGuideline',
     'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
     'forceToggleLabel','forceToggleDesc','s3NoticeText','s2TemplateSectionTitle',
-    'yamlPreviewLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
+    'yamlPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label'));
@@ -1332,6 +1488,11 @@ el('taskNameInput').addEventListener('input', function(e) {
   markDirty(); revalidateCurrentStep();
 });
 el('taskTypeSelect').addEventListener('change', onTaskTypeChange);
+el('codeEditor').addEventListener('input', function() {
+  state.codeDraftDirty = true;
+  el('saveCodeBtn').disabled = false;
+});
+el('saveCodeBtn').addEventListener('click', function() { saveCodeToVisual(true); });
 
 el('datasetUploadZone').addEventListener('click', function() { el('datasetFileInput').click(); });
 el('datasetUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('datasetFileInput').click(); } });
