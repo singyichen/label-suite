@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** v7（2026-04-05）
+> **版本：** v8（2026-04-20）
 
 ---
 
@@ -42,7 +42,7 @@
 | `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；prototype 預設 `valid` 並可切換 `expired/used` 狀態，錯誤時引導回 `forgot-password` |
 | `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | |
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
-| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 可切換檢視全平台任務 |
+| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 預設顯示全平台任務 |
 | `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
 | `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「成員管理」、「標記進度」、「工時紀錄」四個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 annotation-workspace |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
@@ -285,7 +285,7 @@ flowchart TD
 - **進入方式：** Navbar → 任務管理
 - **功能：** 依角色顯示可見任務（含狀態 badge）、搜尋 / 篩選、進入任務詳情
   - `user`：僅可見自己有任務成員資格的任務
-  - `super_admin`：可切換「我的任務 / 全平台任務」檢視
+  - `super_admin`：預設顯示全平台任務
 - **離開方式：** 點選任務 → `task-detail`；「新增任務」按鈕 → `task-new`
 
 #### `task-new` 新增任務頁

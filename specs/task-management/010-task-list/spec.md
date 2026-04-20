@@ -2,7 +2,7 @@
 
 **功能分支**：`010-task-list`
 **建立日期**：2026-04-20
-**版本**：1.0.0
+**版本**：1.1.0
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
 
@@ -14,7 +14,6 @@
 - `PAGE_SIZE_OPTIONS = 20 | 50 | 100`
 - `DEFAULT_SORT = updated_at desc`
 - `TASK_STATUS_ENUM = draft | dry_run_in_progress | waiting_iaa_confirmation | official_run_in_progress | completed`
-- `SUPER_ADMIN_SCOPE = my | all`（`my` = 以 `task_membership` 判定）
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
@@ -33,7 +32,7 @@ sequenceDiagram
     alt role = user
         API->>DB: 依 task_membership 過濾可見任務
     else role = super_admin
-        API->>DB: 依檢視模式載入（我的任務 / 全平台任務）
+        API->>DB: 載入全平台任務
     end
     DB-->>API: 回傳列表資料
     API-->>UI: 顯示任務列表
@@ -59,7 +58,7 @@ sequenceDiagram
 |------|------|------|---------|
 | 1 | `user` / `super_admin` | 進入 `/task-list` | 顯示對應權限可見的任務列表 |
 | 2 | `user` | 檢視任務列表 | 僅顯示自己有 `task_membership` 的任務 |
-| 3 | `super_admin` | 切換檢視模式 | 可於「我的任務 / 全平台任務」間切換 |
+| 3 | `super_admin` | 進入任務列表 | 預設載入全平台任務，不顯示檢視切換 |
 | 4 | `user` / `super_admin` | 搜尋、篩選、分頁 | 列表即時更新，保留查詢條件 |
 | 5 | `user` / `super_admin` | 點選任務 | 有權限則導向 `/task-detail`；無權限則停留並提示 |
 | 6 | `user` / `super_admin` | 點選新增任務 | 導向 `/task-new` |
@@ -78,7 +77,7 @@ sequenceDiagram
 **驗收情境**：
 
 1. **Given** `system role = user`，**When** 進入 `/task-list`，**Then** 僅顯示該使用者有成員資格的任務。
-2. **Given** `system role = super_admin`，**When** 進入 `/task-list`，**Then** 可切換檢視「我的任務 / 全平台任務」。
+2. **Given** `system role = super_admin`，**When** 進入 `/task-list`，**Then** 預設顯示全平台任務，且不提供檢視切換。
 3. **Given** 位於 `/task-list`，**When** 輸入關鍵字並套用狀態篩選，**Then** 列表僅顯示符合條件的任務。
 4. **Given** 搜尋結果超過單頁，**When** 切換分頁，**Then** 顯示對應頁資料且保留現有篩選條件。
 
@@ -89,21 +88,19 @@ sequenceDiagram
     - 搜尋輸入框（任務名稱）
     - 狀態篩選器（顯示文案對應 `TASK_STATUS_ENUM`）
     - 分頁控制
-    - 任務列欄位（任務名稱、Task Type、Run Type、Status、更新時間）
+    - 任務列欄位（任務名稱、任務類型、標記模式、狀態、更新時間）
 - 區塊 B：`頁面操作`
   - 必要元素：
     - `新增任務` CTA
-    - `super_admin` 專用檢視模式切換（我的任務 / 全平台任務）
 
 **行為規則**：
 
 - `user` 不可查看沒有 membership 的任務。
 - 狀態篩選器查詢值必須使用 `TASK_STATUS_ENUM`；顯示文案由 i18n 映射，不可作為 API 契約值。
-- `super_admin` 在「全平台任務」模式可查看所有任務，但仍遵守任務細節頁角色 gating。
-- `super_admin` 的「我的任務」範圍以 `task_membership` 判定，不以 `creator_id` 判定。
+- `super_admin` 進入 `/task-list` 預設即為全平台任務視角，且不提供「我的任務 / 全平台任務」切換。
 - 搜尋條件採 `contains`，不分大小寫，作用於任務名稱。
 - 列表預設排序 `DEFAULT_SORT`，分頁預設 `PAGE_SIZE_DEFAULT`。
-- 查詢條件（`keyword`、`status`、`page`、`page_size`、`scope`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
+- 查詢條件（`keyword`、`status`、`page`、`page_size`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
 - 任務列點擊時若使用者無 `/task-detail` 存取權，系統需顯示「無權限檢視任務詳情」提示，且不得導頁。
 - 語言切換時，列表欄位、篩選器與按鈕文字需即時更新。
 
@@ -133,7 +130,7 @@ sequenceDiagram
 ### Edge Cases
 
 - 使用者沒有任何任務 membership：顯示空狀態與 `新增任務` CTA，不顯示錯誤頁。
-- `super_admin` 在「我的任務」模式無資料：顯示空狀態，允許切至「全平台任務」。
+- `super_admin` 在全平台任務無資料：顯示空狀態與 `新增任務` CTA，不顯示錯誤頁。
 - 以失效 `task_id` 嘗試進入 `/task-detail`：導回 `/task-list` 並顯示「任務不存在或無存取權限」。
 - 高篩選條件組合導致無結果：顯示空結果狀態，保留一鍵清除篩選。
 - 任務可見但無 `/task-detail` 存取權（如 `annotator`）：點擊任務列後停留原頁並顯示無權限提示。
@@ -147,14 +144,13 @@ sequenceDiagram
 
 - **FR-001**：系統必須提供 `/task-list` 作為 task-management 模組 Landing。
 - **FR-002**：`user` 在 `/task-list` 只可看見自己有 `task_membership` 的任務。
-- **FR-003**：`super_admin` 在 `/task-list` 必須可切換「我的任務 / 全平台任務」。
+- **FR-003**：`super_admin` 在 `/task-list` 必須預設載入全平台任務，且不得提供「我的任務 / 全平台任務」切換。
 - **FR-004**：系統必須支援任務名稱搜尋、狀態篩選與分頁。
 - **FR-004a**：搜尋需為 `contains` 且不分大小寫。
 - **FR-004aa**：狀態篩選查詢值必須使用 `TASK_STATUS_ENUM`，且與顯示文案分離。
 - **FR-004b**：列表預設排序必須為 `DEFAULT_SORT`。
 - **FR-004c**：分頁預設為 `PAGE_SIZE_DEFAULT`，可切換 `PAGE_SIZE_OPTIONS`。
-- **FR-004d**：查詢條件（`keyword`、`status`、`page`、`page_size`、`scope`）必須序列化於 URL query，並於重整與返回頁面時還原。
-- **FR-004e**：`super_admin` 的 `scope=my` 必須以 `task_membership` 作為過濾條件。
+- **FR-004d**：查詢條件（`keyword`、`status`、`page`、`page_size`）必須序列化於 URL query，並於重整與返回頁面時還原。
 - **FR-005**：列表每列必須包含 `task_id` 導航資訊，供導向 `/task-detail`。
 - **FR-005a**：當點擊任務列但無 `/task-detail` 存取權時，系統必須停留 `/task-list` 並顯示無權限提示。
 - **FR-006**：頁面必須提供 `新增任務` CTA 並導向 `/task-new`。
@@ -190,7 +186,7 @@ flowchart LR
 
 - **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_type`、`status`、`updated_at`。
 - **TaskMembership**：任務成員關係。關鍵欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
-- **TaskListQuery**：列表查詢條件。欄位：`keyword`、`status`（`TASK_STATUS_ENUM`）、`page`、`page_size`、`scope`（`my`/`all`；`my` 依 `task_membership` 判定）。
+- **TaskListQuery**：列表查詢條件。欄位：`keyword`、`status`（`TASK_STATUS_ENUM`）、`page`、`page_size`。
 
 ---
 
@@ -219,7 +215,7 @@ flowchart LR
 ## 成功標準 *(必填)*
 
 - **SC-001**：`user` 進入 `/task-list` 時，只會看到有 membership 的任務。
-- **SC-002**：`super_admin` 可在「我的任務 / 全平台任務」間切換且結果正確。
+- **SC-002**：`super_admin` 進入 `/task-list` 時，預設顯示全平台任務，且頁面不出現檢視切換控制。
 - **SC-003**：搜尋、篩選、分頁可獨立與組合運作，並於同頁更新結果。
 - **SC-004**：點擊任務列時，有權限者可導向 `/task-detail`，無權限者停留 `/task-list` 並收到提示。
 - **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成搜尋、狀態篩選、分頁、點擊任務列、點擊 `新增任務`，且無資訊重疊。
@@ -231,4 +227,5 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.0 | 2026-04-20 | 調整 task-list 可見性規則：`super_admin` 改為預設全平台任務且移除「我的任務 / 全平台任務」切換；URL query 與資料模型移除 `scope` 欄位 |
 | 1.0.0 | 2026-04-20 | 初版建立：依 IA 重建 `task-list` 規格（可見性、搜尋篩選、導覽與空狀態） |
