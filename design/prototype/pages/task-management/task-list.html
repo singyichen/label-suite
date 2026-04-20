@@ -456,6 +456,7 @@
   </div>
 </div>
 
+<script src="../../assets/analytics.js"></script>
 <script>
   /* ── i18n ────────────────────────────────────────────────────── */
   var I18N = {
@@ -605,6 +606,26 @@
     toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3000);
   }
 
+  function getTrackingContext() {
+    return {
+      lang: state.lang,
+      role: getCurrentSystemRole(),
+      keyword: state.keyword,
+      status: state.status,
+      page: state.page,
+      page_size: state.pageSize,
+      task_count: getFilteredTasks().length,
+    };
+  }
+
+  function trackAnalytics(eventName, extra) {
+    if (!window.LabelSuiteAnalytics) return;
+    var payload = getTrackingContext();
+    var ext = extra || {};
+    Object.keys(ext).forEach(function (key) { payload[key] = ext[key]; });
+    window.LabelSuiteAnalytics.track(eventName, payload);
+  }
+
   function syncUrl() {
     var p = new URLSearchParams();
     if (state.keyword) p.set('keyword', state.keyword);
@@ -668,8 +689,10 @@
     var canView = task.canViewDetail;
     function handleRowClick() {
       if (canView) {
+        trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id });
         showToast(t('toastNavigating'), false);
       } else {
+        trackAnalytics('prototype_task_row_clicked', { allowed: false, task_id: task.id });
         showToast(t('toastNoPermission'), true);
       }
     }
@@ -858,12 +881,14 @@
   document.getElementById('searchInput').addEventListener('input', function(e) {
     state.keyword = e.target.value;
     state.page = 1;
+    trackAnalytics('prototype_task_list_search_changed', { keyword: state.keyword });
     render();
   });
 
   document.getElementById('statusFilter').addEventListener('change', function(e) {
     state.status = e.target.value;
     state.page = 1;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'status', value: state.status || '__all__' });
     render();
   });
 
@@ -872,11 +897,13 @@
     state.status = '';
     state.page = 1;
     document.getElementById('searchInput').value = '';
+    trackAnalytics('prototype_task_list_filters_cleared');
     applyLang(state.lang);
   }
   document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
 
   document.getElementById('newTaskBtn').addEventListener('click', function() {
+    var seeded = false;
     if (TASKS.length === 0) {
       TASKS = CREATED_TASKS_SEED.map(function (task) {
         return {
@@ -892,37 +919,55 @@
         };
       });
       state.page = 1;
+      seeded = true;
       render();
     }
+    trackAnalytics('prototype_cta_clicked', { cta: 'new_task', seeded_task_list: seeded });
     showToast(t('toastNewTask'));
   });
 
   document.getElementById('prevPageBtn').addEventListener('click', function() {
-    if (state.page > 1) { state.page--; render(); }
+    if (state.page > 1) {
+      state.page--;
+      trackAnalytics('prototype_task_list_page_changed', { source: 'prev', to_page: state.page });
+      render();
+    }
   });
   document.getElementById('nextPageBtn').addEventListener('click', function() {
     var total = getFilteredTasks().length;
     var totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    if (state.page < totalPages) { state.page++; render(); }
+    if (state.page < totalPages) {
+      state.page++;
+      trackAnalytics('prototype_task_list_page_changed', { source: 'next', to_page: state.page });
+      render();
+    }
   });
 
   document.getElementById('pageSizeSelect').addEventListener('change', function(e) {
     state.pageSize = parseInt(e.target.value, 10);
     state.page = 1;
+    trackAnalytics('prototype_task_list_page_size_changed', { page_size: state.pageSize });
     render();
   });
 
-  ['langToggle', 'mobileLangToggle'].forEach(function(id) {
-    document.getElementById(id).addEventListener('click', function() {
-      applyLang(state.lang === 'zh' ? 'en' : 'zh');
-    });
-  });
+  function handleLangToggle(source) {
+    var prev = state.lang;
+    applyLang(state.lang === 'zh' ? 'en' : 'zh');
+    trackAnalytics('prototype_lang_switched', { source: source, from_lang: prev, to_lang: state.lang });
+  }
+  document.getElementById('langToggle').addEventListener('click', function() { handleLangToggle('desktop'); });
+  document.getElementById('mobileLangToggle').addEventListener('click', function() { handleLangToggle('mobile'); });
 
   /* ── Init ────────────────────────────────────────────────────── */
   if (window.LabelSuiteSharedSidebar) {
     applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
   } else {
     applyLang('zh');
+  }
+
+  if (window.LabelSuiteAnalytics) {
+    window.LabelSuiteAnalytics.init({ page: 'task-list' });
+    window.LabelSuiteAnalytics.trackPageView('task-list', getTrackingContext);
   }
 </script>
 </body>
