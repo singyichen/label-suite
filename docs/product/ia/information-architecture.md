@@ -42,7 +42,7 @@
 | `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；prototype 預設 `valid` 並可切換 `expired/used` 狀態，錯誤時引導回 `forgot-password` |
 | `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | |
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
-| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | 僅顯示自己有成員資格的任務 |
+| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 可切換檢視全平台任務 |
 | `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
 | `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「成員管理」、「標記進度」、「工時紀錄」四個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 annotation-workspace |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
@@ -127,7 +127,7 @@
 
 - 同一語系下，`dashboard` 與 `profile` 的 Sidebar Navbar 結構、順序、命名與互動位置必須一致。
 - 新增模組時僅能擴充 L0 導覽項，不得覆寫既有項目的語意。
-- 任務上下文頁不得直接成為跨任務全域入口；L0 入口永遠指向該模組 Landing。
+- 任務上下文頁可作為 L0 功能入口，但必須先執行 task context resolve；缺少 task_id / membership 時，導回該模組 Landing（通常為 `task-list` 或 `dashboard`）。
 - 權限不足時採「可見但導回＋提示」或「直接隱藏」策略，需在 spec 明確定義，不可混用。
 
 ---
@@ -283,7 +283,9 @@ flowchart TD
 
 #### `task-list` 任務列表頁
 - **進入方式：** Navbar → 任務管理
-- **功能：** 顯示所有任務（含狀態 badge）、搜尋 / 篩選、進入任務詳情
+- **功能：** 依角色顯示可見任務（含狀態 badge）、搜尋 / 篩選、進入任務詳情
+  - `user`：僅可見自己有任務成員資格的任務
+  - `super_admin`：可切換「我的任務 / 全平台任務」檢視
 - **離開方式：** 點選任務 → `task-detail`；「新增任務」按鈕 → `task-new`
 
 #### `task-new` 新增任務頁
@@ -294,35 +296,36 @@ flowchart TD
   - 上傳資料集（txt / csv / tsv / json）
   - 選擇任務類型（決定 Step 2 的 Config Builder 內容）
 - **Step 2 — Config Builder（介面輔助設定，無需手寫 config）：**
+  - **架構原則：** `task_type` 由 registry / schema 驅動，不得寫死於前端流程；新增任務類型不得要求修改核心流程或路由
   - 提供「從範本開始」入口：常用任務類型的預設 config（如三分類情感、NER 醫療實體），可直接套用後微調，降低設定門檻
   - **Visual 模式（預設）：**
-    - **分類任務：** 新增 / 編輯標籤清單（Label Name + 說明），支援多標籤 / 單標籤切換
-    - **評分 / 回歸任務：** 設定分數範圍（最小值 / 最大值）、刻度單位、介面顯示方式（滑桿 / 數字輸入 / 選項按鈕）
-    - **句對任務：** 選擇關係類型（相似度 / 蘊含 / 自訂），設定評分或分類標籤
-    - **序列標記（NER）：** 新增 / 編輯實體類型清單（Entity Name + 顏色 + 說明）
-    - **關係抽取：** 設定實體類型清單（同 NER）+ 關係類型清單（Relation Name + 說明），標記介面呈現 Entity List / Relation Type / Triple List 三區
+    - **分類型（示例）：** 新增 / 編輯標籤清單（Label Name + 說明），支援多標籤 / 單標籤切換
+    - **評分型（示例）：** 設定分數範圍（最小值 / 最大值）、刻度單位、介面顯示方式（滑桿 / 數字輸入 / 選項按鈕）
+    - **句對型（示例）：** 選擇關係類型（相似度 / 蘊含 / 自訂），設定評分或分類標籤
+    - **序列標記型（示例）：** 新增 / 編輯實體類型清單（Entity Name + 顏色 + 說明）
+    - **關係抽取型（示例）：** 設定實體類型清單（同 NER）+ 關係類型清單（Relation Name + 說明），標記介面呈現 Entity List / Relation Type / Triple List 三區
   - **Code 模式（進階）：** 直接檢視 / 編輯系統產生的 YAML/JSON config 原始碼，供技術人員驗證或手動調整；Visual 與 Code 模式可互相切換
 - **Step 3 — 標記說明（選填）：**
   - 上傳標記範本 / 說明文件（PDF / 圖片 / 文字），顯示於 `annotation-workspace` 的「說明與範例」區
   - 可設定「開始標記前強制顯示」：Annotator 每次進入任務時先跳出說明 modal，確認後才進入標記介面
-- **任務類型（共 5 種 `task_type`）：**
-  - 單句分類（Classification）
-  - 單句評分 / 回歸（Scoring / Regression）
-  - 句對任務（相似度 / 蘊含）
-  - 序列標記（NER、詞性標記）
-  - 關係抽取（Entity + Relation + Triple）
+- **任務類型（`task_type`）：**
+  - 由 `task_type` registry 決定可選型別與對應 config schema
+  - 目前預設提供：單句分類、單句評分 / 回歸、句對任務、序列標記、關係抽取
+  - 新增任務類型時應透過 registry / schema 擴充，不修改核心流程（Step 1–3）、核心路由或權限框架
 - **空狀態：** 不適用（此頁為建立流程，永遠有內容）
 - **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
 #### `task-detail` 任務詳情頁（含 4 個 tab）
 
-- **進入方式：** `task-list` 點選任務（有任務成員資格的使用者皆可進入）
+- **進入方式：** `task-list` 點選任務（僅任務 `project_leader` 或 `reviewer` 可進入）
 - **Tab 結構：**
   - **任務概覽 tab（預設）：** 查看任務設定與任務類型、任務狀態、發布試標（Dry Run）/ 正式標記（Official Run）控制、標記進度總覽（各標記員完成數 / 速度）、匯出標記結果（JSON / JSON-MIN）
   - **成員管理 tab：** 檢視成員清單（含角色與狀態）、從平台 `user` 名單加入成員、指派 / 調整任務角色（`reviewer` / `annotator`）、移除或停用成員；僅該任務 `project_leader` 可編輯
   - **標記進度 tab：** 各標記員完成數、速度、Dry Run / Official Run 分階段進度
-  - **工時紀錄 tab：** 工時與標記活動紀錄（日期、時長、完成筆數、平均速度），可依成員、日期區間、任務階段篩選
+  - **工時紀錄 tab：** 工時與標記活動紀錄（日期、時長、完成筆數、平均速度）
+    - `project_leader`：可依成員、日期區間、任務階段篩選
+    - `reviewer`：僅可檢視自己資料，可依日期區間、任務階段篩選
 - **Tab 切換：** 頁內切換，不觸發路由跳轉
 - **任務狀態轉換：**
   - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
