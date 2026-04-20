@@ -42,11 +42,7 @@ sequenceDiagram
     Registry-->>UI: 回傳 schema
 
     U->>UI: 進入 Step 2（標記設定檔）
-    alt Visual 模式
-        UI-->>U: 顯示 schema 對應設定欄位
-    else Code 模式
-        UI-->>U: 顯示 YAML/JSON 原始設定
-    end
+    UI-->>U: 上方顯示標記預覽；下方左側顯示 schema 欄位、右側顯示 YAML/JSON code 區
 
     U->>UI: 進入 Step 3（標記說明）
     U->>UI: 上傳說明 / 設定是否強制顯示
@@ -92,8 +88,8 @@ sequenceDiagram
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
   - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（顯示檔名/大小/格式）、`task_type` 下拉選單
 - Step 2：`標記設定檔`
-  - 必要元素：`Visual / Code` 模式切換、task-type 模板入口、schema 驅動設定面板
-  - 畫面元素：左側設定區、右側預覽區（或同頁預覽區）、欄位級錯誤訊息
+  - 必要元素：task-type 模板入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
+  - 畫面元素：上方預覽區、下方左側設定區、下方右側 code 區、欄位級錯誤訊息
   - 研究情境必備任務型別（第一層）：
     - `single_sentence_classification`（含多標籤）
     - `single_sentence_scoring_regression`（VA 評分 / 回歸）
@@ -127,40 +123,37 @@ sequenceDiagram
 Step 2 必須由 `task_type registry` 與 schema 驅動，不得把任務類型寫死在核心流程。
 
 **此優先級原因**：符合架構要求「新增 task type 不需修改核心流程」。  
-**獨立測試方式**：切換不同 `task_type`，驗證 UI 與校驗規則由 schema 自動生成；切換 Visual/Code 內容一致。
+**獨立測試方式**：切換不同 `task_type`，驗證 UI 與校驗規則由 schema 自動生成；左側 schema 與右側 code 內容一致。
 
 **驗收情境**：
 
 1. **Given** 在 Step 2 且已選擇 `task_type`，**When** 載入頁面，**Then** 以對應 schema 產生設定欄位。
-2. **Given** 在 Step 2，**When** 從 Visual 切到 Code 模式，**Then** 顯示等價的 YAML/JSON config。
-3. **Given** 在 Code 模式手動修改設定，**When** 切回 Visual，**Then** 能映射的欄位需同步更新；無效設定需顯示錯誤。
+2. **Given** 在 Step 2，**When** 調整 schema 欄位，**Then** 右側 code 區需即時呈現等價 YAML/JSON config。
+3. **Given** 在右側 code 區手動修改設定，**When** 點擊 `儲存到 Visual`，**Then** 能映射欄位需同步更新；無效設定需顯示錯誤。
 4. **Given** 平台新增一種 task type 到 registry，**When** 使用者進入 Step 1/Step 2，**Then** 可選到新型別並看到對應設定，無需變更核心流程。
 
 **介面定義**：
 
-- 區塊 A：`從範本開始`
-  - 必要元素：預設模板列表、套用按鈕
-- 區塊 B：`Visual 模式`
-  - 必要元素：schema 驅動欄位、即時校驗訊息、右側「實際標記預覽」區塊
+- 區塊 A：`標記預覽（上方）`
+  - 必要元素：示例文本、可選標記/實體預覽（非 YAML 純文字）
+- 區塊 B：`設定區（下方左側）`
+  - 必要元素：schema 驅動欄位、即時校驗訊息
   - 必要預設模板：
     - 多標籤分類模板（對應 MultiLabel 實務）
     - 單句評分 / 回歸模板（對應 VA 實務）
     - 序列標記模板（對應 Aspect / NER 實務）
     - 關係抽取模板（對應 Entity + Relation + Triple 實務）
-- 區塊 C：`Code 模式`
-  - 必要元素：YAML/JSON 可編輯區、`儲存到 Visual` 按鈕、格式與 schema 驗證結果
+- 區塊 C：`Code 區（下方右側）`
+  - 必要元素：YAML/JSON 切換、可編輯區、`儲存到 Visual` 按鈕、格式與 schema 驗證結果
 
 **行為規則**：
 
 - `task_type` 選項來源必須為 registry，而非前端硬編碼清單。
-- Visual 與 Code 需共享同一份結構化 config source-of-truth。
+- 左側 schema 欄位與右側 code 區需共享同一份結構化 config source-of-truth。
 - 提交前需通過 schema 驗證；失敗不得進入任務建立 API。
-- Visual -> Code：每次切換都重新輸出最新 config（YAML/JSON 由同一 source-of-truth 產生）。
-- Visual 模式右側預覽需呈現「可操作的標記樣式」（示例文本 + 可選標籤/實體），並隨 schema 欄位變更即時更新
-- Code -> Visual：可映射欄位回填到 UI；不可映射欄位保留於 code 並顯示「僅可於 Code 編輯」提示，不可直接遺失。
-- Code 解析失敗時維持在 Code 模式，保留使用者原始輸入，不自動覆蓋。
-- Code 模式允許直接編輯 YAML/JSON；僅在點擊 `儲存到 Visual`（或由 Code 切回 Visual 時觸發儲存）後才同步回 Visual 欄位。
-- Code 內容儲存成功後，Visual 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤，且維持在 Code 模式。
+- schema 欄位變更時，右側 code 區需輸出最新 YAML/JSON（由同一 source-of-truth 產生）。
+- 上方預覽需呈現「可操作的標記樣式」（示例文本 + 可選標籤/實體），並隨 schema 欄位變更即時更新。
+- code 內容儲存成功後，左側 schema 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤且保留使用者輸入。
 - 研究生目前實際任務需可直接對應至既有模板：
   - MultiLabel 勾選分類 -> `single_sentence_classification`
   - VA 分數標註 -> `single_sentence_scoring_regression`
@@ -195,7 +188,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - 上傳資料集格式不在 `DATASET_UPLOAD_FORMATS`：阻擋進下一步並顯示錯誤。
 - 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB`、非 `DATASET_ENCODING` 或超過 `DATASET_MAX_ROWS`：阻擋進下一步並顯示可定位錯誤。
 - 切換 `task_type` 後已填 Step 2 設定不相容：提示重置或轉換失敗欄位。
-- Code 模式輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
+- Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - 使用者在 Step 1~3 有變更後直接離頁：需先跳確認視窗，選擇「離開」才可導頁。
 - 建立中（submit pending）重複點擊 `建立任務`：按鈕進入 loading 並禁止重複提交。
 - 建立任務 API 成功但 membership 建立失敗：整體交易需回滾，避免孤兒任務。
@@ -212,13 +205,13 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-002**：Step 1 必須要求任務名稱、資料集、`task_type`。
 - **FR-002a**：資料集上傳必須限制於 `DATASET_UPLOAD_FORMATS`，且符合 `DATASET_MAX_FILE_SIZE_MB`、`DATASET_MAX_ROWS`、`DATASET_ENCODING`。
 - **FR-003**：Step 2 標記設定檔 必須由 `task_type registry` 與 schema 驅動。
-- **FR-003a**：系統必須支援 `Visual` 與 `Code` 兩種設定模式。
-- **FR-003b**：Visual 與 Code 必須同步同一份 config，並在提交前通過 schema 驗證。
+- **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
+- **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過 schema 驗證。
 - **FR-003c**：新增 task type 應可透過 registry/schema 擴充，不修改核心流程（Step 1–3）。
 - **FR-003d**：系統預設必須至少提供研究情境第一層任務型別：`single_sentence_classification`、`single_sentence_scoring_regression`、`sequence_labeling`、`relation_extraction`。
-- **FR-003e**：Code 模式必須支援可編輯 YAML/JSON，並提供 `儲存到 Visual` 操作以套用回 Visual 欄位。
-- **FR-003f**：當使用者由 Code 切回 Visual 時，若有未儲存變更，系統必須先嘗試儲存；失敗時留在 Code 模式並顯示錯誤。
-- **FR-003g**：Visual 模式必須提供實際標記預覽區，顯示示例文本與可標記選項，且在設定變更時即時同步更新。
+- **FR-003e**：code 區必須支援可編輯 YAML/JSON，並提供 `儲存到 Visual` 操作以套用回 schema 設定欄位。
+- **FR-003f**：當 code 區有未儲存變更且使用者嘗試進入下一步時，系統必須先嘗試儲存；失敗時停留 Step 2 並顯示錯誤。
+- **FR-003g**：Step 2 上方必須提供實際標記預覽區，顯示示例文本與可標記選項，且在設定變更時即時同步更新。
 - **FR-004**：Step 3 必須支援標記說明資產上傳與強制顯示設定。
 - **FR-004a**：Step 3 指南格式必須支援 `GUIDELINE_FORMATS`，其中 `image` 受限於 `GUIDELINE_IMAGE_FORMATS`，文字內容以 `markdown` 儲存。
 - **FR-005**：提交成功後，系統必須建立任務並導向 `/task-detail`。
@@ -227,7 +220,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-006**：取消建立流程時，系統必須導回 `/task-list` 且不寫入任務。
 - **FR-006a**：使用者在任一步驟已有未儲存變更時，離頁前必須顯示確認視窗（含取消建立、側欄跳頁、重新整理、關閉分頁）。
 - **FR-007**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成三步流程。
-- **FR-007a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 Visual/Code 切換與驗證、Step 3 上傳或略過、建立成功導頁、取消返回。
+- **FR-007a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 編輯與驗證、Step 3 上傳或略過、建立成功導頁、取消返回。
 - **FR-008**：任務型別模板需覆蓋研究生現行任務情境（MultiLabel、VA 評分、Aspect 抽取、Entity/Relation/Triple）。
 
 ### User Flow & Navigation
@@ -289,12 +282,12 @@ flowchart LR
 
 - **SC-001**：使用者可在同一流程完成 Step 1~3 並成功建立任務。
 - **SC-002**：任務建立成功後，自動建立 creator 的 `project_leader` membership。
-- **SC-003**：Step 2 可依 registry/schema 產生設定介面，且 Visual/Code 雙模式一致。
-- **SC-003a**：Visual 模式右側預覽可呈現接近實際標記介面，並可反映當前 labels/entities/scoring 設定。
+- **SC-003**：Step 2 可依 registry/schema 產生設定介面，且 schema 設定區與 code 區內容一致。
+- **SC-003a**：Step 2 上方預覽可呈現接近實際標記介面，並可反映當前 labels/entities/scoring 設定。
 - **SC-004**：新增 task type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行四種任務情境（MultiLabel、VA 評分、Aspect 抽取、Entity/Relation/Triple）可在 `task-new` 以預設模板完成設定。
-- **SC-004b**：在 Code 模式編輯 YAML/JSON 後，點擊 `儲存到 Visual` 可立即回填並反映於 Visual 欄位；格式錯誤時不覆蓋 Visual 既有設定。
-- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 模式切換與驗證、Step 3 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
+- **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存到 Visual` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
+- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 驗證、Step 3 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
 - **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 不可建立任務；同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
 
 ---
@@ -308,3 +301,4 @@ flowchart LR
 | 1.2.0 | 2026-04-20 | 同步 IA：新增研究情境任務型別覆蓋（MultiLabel/VA/Aspect/Relation）；將 FR-008 改為任務覆蓋要求 |
 | 1.3.0 | 2026-04-20 | 同步 Code 編輯需求：新增 `儲存到 Visual` 行為、Code->Visual 儲存失敗停留規則、對應 FR/SC |
 | 1.4.0 | 2026-04-20 | Step 2 Visual 預覽由 YAML 改為實際標記介面預覽（示例文本 + 可選標記），並新增對應 FR/SC |
+| 1.5.0 | 2026-04-20 | Step 2 版面重排：移除 Visual/Code 切頁，改為上方預覽 + 下方左設定右 code，並將範本區移至任務說明下方 |

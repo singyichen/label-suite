@@ -191,14 +191,14 @@
     .upload-file-remove:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
 
     /* ── Step 2 ── */
-    .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
-    .mode-tabs { display: inline-flex; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: var(--space-md); }
-    .mode-tab { padding: 7px 16px; font-size: 13px; font-weight: 500; border: none; background: transparent; color: var(--color-text-soft); transition: background var(--dur-fast), color var(--dur-fast); }
-    .mode-tab.active { background: var(--color-primary); color: white; }
+    .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; }
     .template-section { margin-bottom: var(--space-md); padding: var(--space-md); background: var(--color-slate-50); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
     .template-section-title { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
     .template-btn { padding: 5px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: 12px; font-weight: 500; background: var(--color-white); color: var(--color-ink); transition: border-color var(--dur-fast), background var(--dur-fast); margin-right: 6px; margin-bottom: 6px; }
     .template-btn:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .s2-preview-top { margin-bottom: var(--space-md); }
+    .s2-code-panel { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: var(--space-md); }
+    .s2-code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
 
     /* ── Tag list ── */
     .tag-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); min-height: 44px; align-items: flex-start; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
@@ -451,43 +451,38 @@
       <div class="form-card">
         <div class="form-card-title" id="s2CardTitle">標記設定檔</div>
 
-        <div class="template-section">
-          <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始</div>
-          <div id="templateBtns"></div>
+        <div class="s2-preview-top">
+          <div class="yaml-preview-label" id="yamlPreviewLabel">標記預覽</div>
+          <div class="annotation-preview" id="yamlPreview" aria-label="Annotation preview"></div>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);">
-          <div class="mode-tabs" role="tablist">
-            <button class="mode-tab active" id="tabVisual" role="tab" aria-selected="true" onclick="setConfigMode('visual')">Visual</button>
-            <button class="mode-tab" id="tabCode" role="tab" aria-selected="false" onclick="setConfigMode('code')">Code</button>
-          </div>
-          <div id="codeFormatBtns" style="display:none;gap:6px;display:none;">
-            <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;font-weight:700;" id="formatYamlBtn" onclick="setCodeFormat('yaml')">YAML</button>
-            <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" id="formatJsonBtn" onclick="setCodeFormat('json')">JSON</button>
-          </div>
-        </div>
-
-        <div class="s2-layout" id="visualLayout">
+        <div class="s2-layout">
           <div>
             <div id="schemaFields"></div>
+            <div class="template-section" style="margin-top:var(--space-md);">
+              <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始</div>
+              <div id="templateBtns"></div>
+            </div>
             <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
           </div>
-          <div>
-            <div class="yaml-preview-label" id="yamlPreviewLabel">標記預覽</div>
-            <div class="annotation-preview" id="yamlPreview" aria-label="Annotation preview"></div>
-          </div>
-        </div>
-
-        <div id="codeLayout" class="hidden">
-          <textarea class="code-editor" id="codeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
-          <div class="code-error-bar hidden" id="codeErrorBar">
-            <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span id="codeErrorMsg"></span>
-          </div>
-          <div class="code-actions">
-            <button class="btn btn-secondary" id="saveCodeBtn" type="button" disabled>
-              <span id="saveCodeBtnLabel">儲存到 Visual</span>
-            </button>
+          <div class="s2-code-panel">
+            <div class="s2-code-header">
+              <div class="yaml-preview-label" style="margin-bottom:0;">Code</div>
+              <div id="codeFormatBtns" style="display:flex;gap:6px;">
+                <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;font-weight:700;" id="formatYamlBtn" onclick="setCodeFormat('yaml')">YAML</button>
+                <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" id="formatJsonBtn" onclick="setCodeFormat('json')">JSON</button>
+              </div>
+            </div>
+            <textarea class="code-editor" id="codeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
+            <div class="code-error-bar hidden" id="codeErrorBar">
+              <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="codeErrorMsg"></span>
+            </div>
+            <div class="code-actions">
+              <button class="btn btn-secondary" id="saveCodeBtn" type="button" disabled>
+                <span id="saveCodeBtnLabel">儲存到 Visual</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -728,7 +723,7 @@ var I18N = {
 var state = {
   lang: 'zh', step: 1,
   taskName: '', datasetFile: null, taskType: '',
-  configMode: 'visual', codeFormat: 'yaml', configData: {},
+  codeFormat: 'yaml', configData: {},
   guidelineFiles: [], forceGuideline: false,
   codeDraftDirty: false,
   isDirty: false, isSubmitting: false, leaveCallback: null,
@@ -978,18 +973,9 @@ function validateStep1(showErrors) {
 function validateStep2(showErrors) {
   var schema = state.taskType ? REGISTRY[state.taskType] : null;
   if (!schema) return false;
-  if (state.configMode === 'code') {
-    var codeVal = el('codeEditor').value.trim();
-    try {
-      if (!codeVal) throw new Error(t('errCodeInvalid'));
-      if (state.codeFormat === 'json' || codeVal.startsWith('{') || codeVal.startsWith('[')) JSON.parse(codeVal);
-      else parseYamlSubset(codeVal);
-      el('codeErrorBar').classList.add('hidden');
-      return true;
-    } catch(e) {
-      if (showErrors) { el('codeErrorBar').classList.remove('hidden'); setText('codeErrorMsg', e.message); }
-      return false;
-    }
+  if (state.codeDraftDirty && !saveCodeToVisual(false)) {
+    if (showErrors) el('codeErrorBar').classList.remove('hidden');
+    return false;
   }
   var ok = true;
   schema.fields.forEach(function(f) {
@@ -1292,6 +1278,9 @@ function updateYamlPreview() {
     empty.className = 'annotation-preview-empty';
     empty.textContent = t('previewEmpty');
     optionsWrap.appendChild(empty);
+    if (!state.codeDraftDirty) {
+      el('codeEditor').value = configToCode();
+    }
     return;
   }
 
@@ -1317,6 +1306,10 @@ function updateYamlPreview() {
 
     optionsWrap.appendChild(row);
   });
+
+  if (!state.codeDraftDirty) {
+    el('codeEditor').value = configToCode();
+  }
 }
 
 /* ── Template picker ─────────────────────────────────────────── */
@@ -1332,37 +1325,14 @@ function renderTemplateBtns() {
   btn.addEventListener('click', function() {
     state.configData = JSON.parse(JSON.stringify(schema.defaultTemplate));
     renderSchemaFields();
-    if (state.configMode === 'code') el('codeEditor').value = configToCode();
+    state.codeDraftDirty = false;
+    el('codeEditor').value = configToCode();
+    el('saveCodeBtn').disabled = true;
+    el('codeErrorBar').classList.add('hidden');
     revalidateCurrentStep();
     track('prototype_task_new_template_applied', { taskType: state.taskType });
   });
   container.appendChild(btn);
-}
-
-/* ── Config mode ─────────────────────────────────────────────── */
-function setConfigMode(mode) {
-  if (mode === 'visual' && state.configMode === 'code' && state.codeDraftDirty) {
-    if (!saveCodeToVisual(false)) return;
-  }
-  state.configMode = mode;
-  el('tabVisual').classList.toggle('active', mode === 'visual');
-  el('tabCode').classList.toggle('active', mode === 'code');
-  el('tabVisual').setAttribute('aria-selected', String(mode === 'visual'));
-  el('tabCode').setAttribute('aria-selected', String(mode === 'code'));
-  el('visualLayout').classList.toggle('hidden', mode === 'code');
-  el('codeLayout').classList.toggle('hidden', mode === 'visual');
-  el('codeFormatBtns').style.display = mode === 'code' ? 'flex' : 'none';
-  el('saveCodeBtn').disabled = mode !== 'code' || !state.codeDraftDirty;
-  if (mode === 'code') {
-    el('codeEditor').value = configToCode();
-    state.codeDraftDirty = false;
-    el('saveCodeBtn').disabled = true;
-    el('codeErrorBar').classList.add('hidden');
-  } else {
-    renderSchemaFields();
-  }
-  revalidateCurrentStep();
-  track('prototype_task_new_config_mode_changed', { mode: mode });
 }
 
 function setCodeFormat(fmt) {
@@ -1571,7 +1541,7 @@ function submitTask() {
 /* ── Task type change ────────────────────────────────────────── */
 function onTaskTypeChange() {
   var val = el('taskTypeSelect').value;
-  if (val !== state.taskType) { state.taskType = val; state.configData = {}; }
+  if (val !== state.taskType) { state.taskType = val; state.configData = {}; state.codeDraftDirty = false; }
   renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
 
@@ -1684,7 +1654,7 @@ window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.pre
 var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
 applyLang(initLang);
 showStep(1);
-el('codeFormatBtns').style.display = 'none';
+el('codeEditor').value = configToCode();
 
 if (window.LabelSuiteAnalytics) {
   window.LabelSuiteAnalytics.init({ page: 'task-new' });
