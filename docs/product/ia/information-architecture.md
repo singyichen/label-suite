@@ -294,8 +294,8 @@ flowchart TD
 - **Step 1 — 基本資料：**
   - 填寫任務名稱
   - 上傳資料集（txt / csv / tsv / json）
-  - 選擇任務類型（決定 Step 2 的 Config Builder 內容）
-- **Step 2 — Config Builder（介面輔助設定，無需手寫 config）：**
+  - 選擇任務類型（決定 Step 2 的 標記設定 內容）
+- **Step 2 — 標記設定（介面輔助設定，無需手寫 config）：**
   - **架構原則：** `task_type` 由 registry / schema 驅動，不得寫死於前端流程；新增任務類型不得要求修改核心流程或路由
   - 提供「從範本開始」入口：常用任務類型的預設 config（如三分類情感、NER 醫療實體），可直接套用後微調，降低設定門檻
   - **Visual 模式（預設）：**
@@ -556,7 +556,7 @@ sequenceDiagram
 | # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
 | --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
 | 010 | 任務列表（搜尋、篩選、空狀態） | `task-list` | task-management | ★★☆☆☆ | P2 | ⬜ 待做 |
-| 013 | 新增任務（Step 1–3 + Config Builder 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
+| 013 | 新增任務（Step 1–3 + 標記設定 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
 | 014 | 任務詳情（成員管理 / 可加入成員名單 / Dry Run / Official Run / 工時紀錄 / 匯出） | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
 
 #### annotation

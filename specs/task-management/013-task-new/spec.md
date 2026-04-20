@@ -1,10 +1,10 @@
-# 功能規格：New Task — 新增任務（Step 1–3 + Config Builder）
+# 功能規格：New Task — 新增任務（Step 1–3 + 標記設定）
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
 **版本**：1.0.0
 **狀態**：Draft
-**需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–3 + Config Builder 全任務類型）（`task-new`）
+**需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–3 + 標記設定 全任務類型）（`task-new`）
 
 ## 規格常數
 
@@ -41,7 +41,7 @@ sequenceDiagram
     UI->>Registry: 載入該 task_type schema
     Registry-->>UI: 回傳 schema
 
-    U->>UI: 進入 Step 2（Config Builder）
+    U->>UI: 進入 Step 2（標記設定）
     alt Visual 模式
         UI-->>U: 顯示 schema 對應設定欄位
     else Code 模式
@@ -64,7 +64,7 @@ sequenceDiagram
 |------|------|------|---------|
 | 1 | `user` / `super_admin` | 進入 `/task-new` | 顯示 Step 1 基本資料 |
 | 2 | `user` / `super_admin` | 選擇 `task_type` | 載入對應 schema 與 Step 2 設定介面 |
-| 3 | `user` / `super_admin` | 完成 Step 2 Config Builder | 產生可提交的 config |
+| 3 | `user` / `super_admin` | 完成 Step 2 標記設定 | 產生可提交的 config |
 | 4 | `user` / `super_admin` | 完成 Step 3 標記說明設定 | 記錄說明資產與強制顯示設定 |
 | 5 | `user` / `super_admin` | 建立任務 | 建立 task 與 creator 的 `project_leader` membership |
 | 6 | `user` / `super_admin` | 取消建立流程 | 導回 `/task-list` |
@@ -90,7 +90,7 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-- Step 2：`Config Builder`
+- Step 2：`標記設定`
   - 必要元素：`Visual / Code` 模式切換、task-type 模板入口、schema 驅動設定面板
 - Step 3：`標記說明`
   - 必要元素：說明資產上傳（PDF/圖片/文字）、`開始標記前強制顯示` 開關
@@ -105,7 +105,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — Config Builder 以 registry/schema 驅動（優先級：P1）
+### User Story 2 — 標記設定 以 registry/schema 驅動（優先級：P1）
 
 Step 2 必須由 `task_type registry` 與 schema 驅動，不得把任務類型寫死在核心流程。
 
@@ -176,7 +176,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
 - **FR-002**：Step 1 必須要求任務名稱、資料集、`task_type`。
 - **FR-002a**：資料集上傳必須限制於 `DATASET_UPLOAD_FORMATS`，且符合 `DATASET_MAX_FILE_SIZE_MB`、`DATASET_MAX_ROWS`、`DATASET_ENCODING`。
-- **FR-003**：Step 2 Config Builder 必須由 `task_type registry` 與 schema 驅動。
+- **FR-003**：Step 2 標記設定 必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：系統必須支援 `Visual` 與 `Code` 兩種設定模式。
 - **FR-003b**：Visual 與 Code 必須同步同一份 config，並在提交前通過 schema 驗證。
 - **FR-003c**：新增 task type 應可透過 registry/schema 擴充，不修改核心流程（Step 1–3）。
@@ -195,7 +195,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 flowchart LR
     tasklist["/task-list"] --> tasknew["/task-new"]
     tasknew --> step1["Step 1 基本資料"]
-    step1 --> step2["Step 2 Config Builder"]
+    step1 --> step2["Step 2 標記設定"]
     step2 --> step3["Step 3 標記說明"]
     step3 -->|建立成功| taskdetail["/task-detail?task_id="]
     step1 -->|取消| tasklist
@@ -259,4 +259,4 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.0.0 | 2026-04-20 | 初版建立：依 IA 重建 `task-new` 規格（三步流程、registry-driven config builder、說明設定） |
+| 1.0.0 | 2026-04-20 | 初版建立：依 IA 重建 `task-new` 規格（三步流程、registry-driven 標記設定、說明設定） |
