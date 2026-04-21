@@ -315,6 +315,11 @@
       color: var(--color-ink);
       margin-bottom: var(--space-md);
     }
+    .panel-subtitle {
+      font-size: 12px;
+      color: var(--color-text-soft);
+      margin: -8px 0 10px;
+    }
 
     .kv-grid {
       display: grid;
@@ -562,6 +567,92 @@
       color: var(--color-text-soft);
       margin-top: 10px;
     }
+    .table-wrap {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--color-white);
+    }
+    .table-scroll { overflow-x: auto; }
+    .member-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      min-width: 980px;
+    }
+    .member-table thead tr {
+      background: var(--color-slate-50);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .member-table th {
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-ink-muted);
+      font-weight: 600;
+      padding: 12px 14px;
+      white-space: nowrap;
+    }
+    .member-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--color-border-muted);
+      font-size: 13px;
+      color: var(--color-ink);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .member-table tbody tr:last-child td { border-bottom: none; }
+    .member-name { font-weight: 700; }
+    .member-email { color: var(--color-text-soft); }
+    .role-select-inline {
+      width: 130px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 7px 10px;
+      background: var(--color-white);
+      font-size: 13px;
+      color: var(--color-ink);
+    }
+    .role-select-inline:disabled { background: var(--color-slate-50); color: var(--color-text-soft); }
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88px;
+      padding: 6px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-slate-50);
+      color: var(--color-ink);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .inline-actions { display: inline-flex; gap: 8px; }
+    .mini-btn {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      transition: border-color var(--dur-fast), color var(--dur-fast), opacity var(--dur-fast);
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .mini-btn-danger { color: var(--color-error); }
+    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
+    .hint-box {
+      border: 1px solid var(--color-info-border);
+      border-radius: var(--radius-md);
+      background: var(--color-info-bg);
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--color-info);
+      line-height: 1.7;
+    }
+    .hint-box strong { display: inline-block; margin-right: 6px; }
 
     .modal-backdrop {
       position: fixed;
@@ -697,6 +788,7 @@
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
       .export-grid { grid-template-columns: 1fr; }
+      .table-wrap { margin: 0 -2px; }
       .toast-container { right: 12px; left: 12px; bottom: 96px; }
       .toast { width: 100%; }
     }
@@ -745,6 +837,7 @@
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
+        <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
       </div>
 
       <div id="loadingSkeleton" class="skeleton-stack" aria-live="polite" aria-busy="true">
@@ -864,6 +957,60 @@
           <div class="export-empty" id="exportEmpty">尚無可匯出結果</div>
         </section>
       </div>
+
+      <div id="memberManagementPanel" class="hidden" aria-live="polite">
+        <section class="panel" aria-labelledby="memberListTitle">
+          <h2 class="panel-title" id="memberListTitle">目前成員清單</h2>
+          <p class="panel-subtitle" id="memberListSubtitle">任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。</p>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="member-table" role="table" aria-label="Task members table">
+                <thead>
+                  <tr>
+                    <th id="thMemberName">姓名</th>
+                    <th id="thMemberEmail">Email</th>
+                    <th id="thMemberTaskRole">任務角色</th>
+                    <th id="thMemberStatus">狀態</th>
+                    <th id="thMemberJoinedAt">加入時間</th>
+                    <th id="thMemberLastActive">最後活動</th>
+                    <th id="thMemberActions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="memberTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="candidateListTitle">
+          <h2 class="panel-title" id="candidateListTitle">可加入成員名單</h2>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="member-table" role="table" aria-label="Candidate users table">
+                <thead>
+                  <tr>
+                    <th id="thCandidateName">姓名</th>
+                    <th id="thCandidateEmail">Email</th>
+                    <th id="thCandidateSystemRole">系統角色</th>
+                    <th id="thCandidateInTask">目前是否已在任務</th>
+                    <th id="thCandidateAssignRole">指派任務角色</th>
+                    <th id="thCandidateActions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="candidateTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="assignmentRuleTitle">
+          <h2 class="panel-title" id="assignmentRuleTitle">角色指派規則提示</h2>
+          <div class="hint-box">
+            <strong id="assignmentRuleLabel">說明：</strong>
+            <span id="assignmentRuleText">任務角色為 task-level，不影響 system role；危險操作需要二次確認，且禁止跨任務批次異動。</span>
+          </div>
+        </section>
+      </div>
     </section>
   </div>
 </main>
@@ -875,6 +1022,17 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" type="button" id="riskCancelBtn">取消</button>
       <button class="btn btn-primary" type="button" id="riskConfirmBtn">確認停用並發布</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="memberActionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
+  <div class="modal">
+    <h2 id="memberActionModalTitle">確認成員操作</h2>
+    <p id="memberActionModalBody">請確認是否要對成員執行危險操作。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" id="memberActionCancelBtn">取消</button>
+      <button class="btn btn-primary" type="button" id="memberActionConfirmBtn">確認</button>
     </div>
   </div>
 </div>
@@ -893,6 +1051,7 @@
       pageTitle: '任務詳情',
       pageSubtitle: '檢視任務概覽、執行控制與匯出結果',
       tabOverview: '任務概覽',
+      tabMemberManagement: '成員管理',
       taskIdLabel: 'Task ID',
       basicInfoTitle: '任務基本資訊',
       settingsSummaryTitle: '任務設定摘要',
@@ -975,13 +1134,52 @@
       samplingErrorPercent: '百分比僅允許 1..99。',
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
       samplingErrorFloor: '百分比換算後小於 1 筆，請提高百分比或改用固定筆數。',
-      samplingErrorReserve: '正式標註至少需保留 1 筆資料。'
+      samplingErrorReserve: '正式標註至少需保留 1 筆資料。',
+      memberListTitle: '目前成員清單',
+      memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
+      candidateListTitle: '可加入成員名單',
+      assignmentRuleTitle: '角色指派規則提示',
+      assignmentRuleLabel: '說明：',
+      assignmentRuleText: '任務角色為 task-level，不影響 system role；危險操作需要二次確認，且禁止跨任務批次異動。',
+      thMemberName: '姓名',
+      thMemberEmail: 'Email',
+      thMemberTaskRole: '任務角色',
+      thMemberStatus: '狀態',
+      thMemberJoinedAt: '加入時間',
+      thMemberLastActive: '最後活動',
+      thMemberActions: '操作',
+      thCandidateName: '姓名',
+      thCandidateEmail: 'Email',
+      thCandidateSystemRole: '系統角色',
+      thCandidateInTask: '目前是否已在任務',
+      thCandidateAssignRole: '指派任務角色',
+      thCandidateActions: '操作',
+      memberStatusActive: 'active',
+      memberStatusDisabled: 'disabled',
+      taskRoleReviewer: '審核員',
+      taskRoleAnnotator: '標記員',
+      systemRoleUser: 'user',
+      yesInTask: '是',
+      noInTask: '否',
+      actionRemove: '移除',
+      actionDisable: '停用',
+      actionEnable: '啟用',
+      actionAdd: '加入任務',
+      reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
+      toastMemberUpdated: '成員設定已更新',
+      memberActionModalTitle: '確認成員操作',
+      memberActionModalBodyRemove: '是否移除 {name}（{role}）？此操作會立即生效。',
+      memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再提交標記。',
+      memberActionModalBodyEnable: '是否啟用 {name}（{role}）？',
+      memberActionCancelBtn: '取消',
+      memberActionConfirmBtn: '確認',
     },
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
       pageTitle: 'Task detail',
       pageSubtitle: 'Review overview, run control, and exports',
       tabOverview: 'Task overview',
+      tabMemberManagement: 'Member management',
       taskIdLabel: 'Task ID',
       basicInfoTitle: 'Task basics',
       settingsSummaryTitle: 'Task settings summary',
@@ -1064,7 +1262,45 @@
       samplingErrorPercent: 'Percentage must be between 1 and 99.',
       samplingErrorCount: 'Count must be >= 1 and less than total dataset size.',
       samplingErrorFloor: 'Percentage result is less than 1 item. Increase percentage or use fixed count.',
-      samplingErrorReserve: 'Official run must reserve at least 1 item.'
+      samplingErrorReserve: 'Official run must reserve at least 1 item.',
+      memberListTitle: 'Current members',
+      memberListSubtitle: 'Task role is fixed at join time. Existing members cannot switch role mid-task; remove and re-add to change role.',
+      candidateListTitle: 'Available users to add',
+      assignmentRuleTitle: 'Role assignment rule',
+      assignmentRuleLabel: 'Note:',
+      assignmentRuleText: 'Task role is task-level and does not change system role. Dangerous actions need second confirmation and cross-task bulk edits are not allowed.',
+      thMemberName: 'Name',
+      thMemberEmail: 'Email',
+      thMemberTaskRole: 'Task role',
+      thMemberStatus: 'Status',
+      thMemberJoinedAt: 'Joined at',
+      thMemberLastActive: 'Last active',
+      thMemberActions: 'Actions',
+      thCandidateName: 'Name',
+      thCandidateEmail: 'Email',
+      thCandidateSystemRole: 'System role',
+      thCandidateInTask: 'Already in task',
+      thCandidateAssignRole: 'Assign task role',
+      thCandidateActions: 'Actions',
+      memberStatusActive: 'active',
+      memberStatusDisabled: 'disabled',
+      taskRoleReviewer: 'Reviewer',
+      taskRoleAnnotator: 'Annotator',
+      systemRoleUser: 'user',
+      yesInTask: 'Yes',
+      noInTask: 'No',
+      actionRemove: 'Remove',
+      actionDisable: 'Disable',
+      actionEnable: 'Enable',
+      actionAdd: 'Add to task',
+      reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
+      toastMemberUpdated: 'Member setting updated',
+      memberActionModalTitle: 'Confirm member action',
+      memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? This takes effect immediately.',
+      memberActionModalBodyDisable: 'Disable {name} ({role})? Disabled members cannot submit annotations.',
+      memberActionModalBodyEnable: 'Enable {name} ({role})?',
+      memberActionCancelBtn: 'Cancel',
+      memberActionConfirmBtn: 'Confirm',
     }
   };
 
@@ -1094,12 +1330,28 @@
     lastExportStage: ''
   };
 
+  var TASK_MEMBERS = [
+    { name: 'Mandy Chen', email: 'mandy@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:13', lastActive: '2026-04-21 09:42' },
+    { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
+    { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:16', lastActive: '2026-04-21 08:58' },
+    { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'disabled', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
+  ];
+
+  var PLATFORM_USERS = [
+    { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', systemRole: 'user' },
+    { name: 'Steven Kao', email: 'steven.kao@labelsuite.io', systemRole: 'user' },
+    { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', systemRole: 'user' },
+  ];
+
   var state = {
     lang: 'zh',
     taskRole: 'project_leader',
+    activeTab: 'overview',
     showSkeleton: true,
     pendingAction: null,
-    isolationConfirmed: false
+    isolationConfirmed: false,
+    pendingMemberAction: null,
+    pendingReviewerTabToast: false
   };
 
   var statusHintMap = {
@@ -1142,6 +1394,7 @@
   function parseRole() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
+    var tab = params.get('tab') || 'overview';
     if (role !== 'project_leader' && role !== 'reviewer' && role !== 'annotator') {
       role = 'project_leader';
     }
@@ -1155,6 +1408,12 @@
         });
       }
       window.location.href = './task-list.html?unauthorized=annotator';
+    }
+
+    var resolvedTab = tab === 'member-management' ? 'member-management' : 'overview';
+    var allowed = setTabByRole(resolvedTab, true);
+    if (!allowed) {
+      state.pendingReviewerTabToast = true;
     }
   }
 
@@ -1177,6 +1436,7 @@
     setText('pageTitle', t('pageTitle'));
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
+    setText('tabMemberManagement', t('tabMemberManagement'));
     setText('taskIdLabel', t('taskIdLabel'));
     setText('basicInfoTitle', t('basicInfoTitle'));
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
@@ -1210,6 +1470,29 @@
     setText('riskModalBody', t('riskModalBody'));
     setText('riskCancelBtn', t('riskCancelBtn'));
     setText('riskConfirmBtn', t('riskConfirmBtn'));
+    setText('memberListTitle', t('memberListTitle'));
+    setText('memberListSubtitle', t('memberListSubtitle'));
+    setText('candidateListTitle', t('candidateListTitle'));
+    setText('assignmentRuleTitle', t('assignmentRuleTitle'));
+    setText('assignmentRuleLabel', t('assignmentRuleLabel'));
+    setText('assignmentRuleText', t('assignmentRuleText'));
+    setText('thMemberName', t('thMemberName'));
+    setText('thMemberEmail', t('thMemberEmail'));
+    setText('thMemberTaskRole', t('thMemberTaskRole'));
+    setText('thMemberStatus', t('thMemberStatus'));
+    setText('thMemberJoinedAt', t('thMemberJoinedAt'));
+    setText('thMemberLastActive', t('thMemberLastActive'));
+    setText('thMemberActions', t('thMemberActions'));
+    setText('thCandidateName', t('thCandidateName'));
+    setText('thCandidateEmail', t('thCandidateEmail'));
+    setText('thCandidateSystemRole', t('thCandidateSystemRole'));
+    setText('thCandidateInTask', t('thCandidateInTask'));
+    setText('thCandidateAssignRole', t('thCandidateAssignRole'));
+    setText('thCandidateActions', t('thCandidateActions'));
+    setText('memberActionModalTitle', t('memberActionModalTitle'));
+    setText('memberActionModalBody', t('memberActionModalBodyEnable'));
+    setText('memberActionCancelBtn', t('memberActionCancelBtn'));
+    setText('memberActionConfirmBtn', t('memberActionConfirmBtn'));
 
     var modeSelect = document.getElementById('samplingMode');
     if (modeSelect && modeSelect.options.length >= 2) {
@@ -1218,6 +1501,13 @@
     }
 
     renderOverview();
+    renderMemberManagement();
+    renderTabs();
+
+    if (state.pendingReviewerTabToast) {
+      state.pendingReviewerTabToast = false;
+      showToast(t('reviewerTabBlocked'), true);
+    }
   }
 
   function getStatusHint() {
@@ -1375,6 +1665,217 @@
     renderExport();
   }
 
+  function getTaskRoleLabel(role) {
+    return role === 'reviewer' ? t('taskRoleReviewer') : t('taskRoleAnnotator');
+  }
+
+  function setTabByRole(tabName, silent) {
+    var nextTab = tabName === 'member-management' ? 'member-management' : 'overview';
+    if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
+      state.activeTab = 'overview';
+      if (!silent) showToast(t('reviewerTabBlocked'), true);
+      return false;
+    }
+    state.activeTab = nextTab;
+    return true;
+  }
+
+  function renderTabs() {
+    var tabOverview = document.getElementById('tabOverview');
+    var tabMemberManagement = document.getElementById('tabMemberManagement');
+    var overviewPanel = document.getElementById('overviewPanel');
+    var memberManagementPanel = document.getElementById('memberManagementPanel');
+
+    var reviewer = state.taskRole === 'reviewer';
+    tabMemberManagement.classList.toggle('hidden', reviewer);
+
+    var overviewActive = state.activeTab === 'overview';
+    var memberActive = state.activeTab === 'member-management' && !reviewer;
+
+    tabOverview.classList.toggle('active', overviewActive);
+    tabOverview.setAttribute('aria-selected', overviewActive ? 'true' : 'false');
+    tabMemberManagement.classList.toggle('active', memberActive);
+    tabMemberManagement.setAttribute('aria-selected', memberActive ? 'true' : 'false');
+
+    overviewPanel.classList.toggle('hidden', !overviewActive);
+    memberManagementPanel.classList.toggle('hidden', !memberActive);
+  }
+
+  function renderMemberTable() {
+    var tbody = document.getElementById('memberTableBody');
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    TASK_MEMBERS.forEach(function(member, idx) {
+      var tr = document.createElement('tr');
+
+      function tdWithClass(text, cls) {
+        var td = document.createElement('td');
+        if (cls) td.className = cls;
+        td.textContent = text;
+        return td;
+      }
+
+      tr.appendChild(tdWithClass(member.name, 'member-name'));
+      tr.appendChild(tdWithClass(member.email, 'member-email'));
+
+      var tdRole = document.createElement('td');
+      var roleBadge = document.createElement('span');
+      roleBadge.className = 'role-badge';
+      roleBadge.textContent = getTaskRoleLabel(member.taskRole);
+      tdRole.appendChild(roleBadge);
+      tr.appendChild(tdRole);
+
+      tr.appendChild(tdWithClass(member.status === 'active' ? t('memberStatusActive') : t('memberStatusDisabled')));
+      tr.appendChild(tdWithClass(member.joinedAt));
+      tr.appendChild(tdWithClass(member.lastActive));
+
+      var tdActions = document.createElement('td');
+      var wrap = document.createElement('div');
+      wrap.className = 'inline-actions';
+
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'mini-btn mini-btn-danger';
+      removeBtn.type = 'button';
+      removeBtn.disabled = state.taskRole !== 'project_leader';
+      removeBtn.textContent = t('actionRemove');
+      removeBtn.addEventListener('click', function() {
+        openMemberActionModal({
+          type: 'remove',
+          index: idx,
+          title: t('memberActionModalTitle'),
+          message: interpolate(t('memberActionModalBodyRemove'), { name: member.name, role: getTaskRoleLabel(member.taskRole) }),
+        });
+      });
+
+      var toggleBtn = document.createElement('button');
+      toggleBtn.className = 'mini-btn';
+      toggleBtn.type = 'button';
+      toggleBtn.disabled = state.taskRole !== 'project_leader';
+      toggleBtn.textContent = member.status === 'active' ? t('actionDisable') : t('actionEnable');
+      toggleBtn.addEventListener('click', function() {
+        openMemberActionModal({
+          type: member.status === 'active' ? 'disable' : 'enable',
+          index: idx,
+          title: t('memberActionModalTitle'),
+          message: interpolate(
+            member.status === 'active' ? t('memberActionModalBodyDisable') : t('memberActionModalBodyEnable'),
+            { name: member.name, role: getTaskRoleLabel(member.taskRole) }
+          ),
+        });
+      });
+
+      wrap.appendChild(removeBtn);
+      wrap.appendChild(toggleBtn);
+      tdActions.appendChild(wrap);
+      tr.appendChild(tdActions);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderCandidateTable() {
+    var tbody = document.getElementById('candidateTableBody');
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    PLATFORM_USERS.forEach(function(user) {
+      var inTask = TASK_MEMBERS.some(function(member) { return member.email === user.email; });
+      var tr = document.createElement('tr');
+
+      function td(text, cls) {
+        var node = document.createElement('td');
+        if (cls) node.className = cls;
+        node.textContent = text;
+        return node;
+      }
+
+      tr.appendChild(td(user.name, 'member-name'));
+      tr.appendChild(td(user.email, 'member-email'));
+      tr.appendChild(td(t('systemRoleUser')));
+      tr.appendChild(td(inTask ? t('yesInTask') : t('noInTask')));
+
+      var tdAssign = document.createElement('td');
+      var assignSelect = document.createElement('select');
+      assignSelect.className = 'role-select-inline';
+      assignSelect.disabled = state.taskRole !== 'project_leader' || inTask;
+      ['annotator', 'reviewer'].forEach(function(role) {
+        var opt = document.createElement('option');
+        opt.value = role;
+        opt.textContent = getTaskRoleLabel(role);
+        assignSelect.appendChild(opt);
+      });
+      tdAssign.appendChild(assignSelect);
+      tr.appendChild(tdAssign);
+
+      var tdAction = document.createElement('td');
+      var addBtn = document.createElement('button');
+      addBtn.className = 'mini-btn';
+      addBtn.type = 'button';
+      addBtn.disabled = state.taskRole !== 'project_leader' || inTask;
+      addBtn.textContent = t('actionAdd');
+      addBtn.addEventListener('click', function() {
+        if (inTask) return;
+        TASK_MEMBERS.push({
+          name: user.name,
+          email: user.email,
+          taskRole: assignSelect.value,
+          status: 'active',
+          joinedAt: '2026-04-21 10:25',
+          lastActive: '-',
+        });
+        showToast(t('toastMemberUpdated'));
+        trackEvent('prototype_member_added', { member_email: user.email, role: assignSelect.value });
+        renderMemberTable();
+        renderCandidateTable();
+      });
+      tdAction.appendChild(addBtn);
+      tr.appendChild(tdAction);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function openMemberActionModal(action) {
+    state.pendingMemberAction = action;
+    setText('memberActionModalTitle', action.title);
+    setText('memberActionModalBody', action.message);
+    var modal = document.getElementById('memberActionModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeMemberActionModal() {
+    state.pendingMemberAction = null;
+    var modal = document.getElementById('memberActionModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function executeMemberAction() {
+    var action = state.pendingMemberAction;
+    if (!action) return;
+    var target = TASK_MEMBERS[action.index];
+    if (!target) {
+      closeMemberActionModal();
+      return;
+    }
+
+    if (action.type === 'remove') {
+      TASK_MEMBERS.splice(action.index, 1);
+    } else if (action.type === 'disable') {
+      target.status = 'disabled';
+    } else if (action.type === 'enable') {
+      target.status = 'active';
+    }
+    showToast(t('toastMemberUpdated'));
+    trackEvent('prototype_member_action_confirmed', { action_type: action.type, member_email: target.email || '' });
+    closeMemberActionModal();
+    renderMemberTable();
+    renderCandidateTable();
+  }
+
+  function renderMemberManagement() {
+    renderMemberTable();
+    renderCandidateTable();
+  }
+
   function showToast(message, isError) {
     var toast = document.getElementById('toast');
     var msg = document.getElementById('toastMsg');
@@ -1449,6 +1950,22 @@
     var modeSelect = document.getElementById('samplingMode');
     var valueInput = document.getElementById('samplingValue');
     var isolationToggle = document.getElementById('isolationToggle');
+    var tabOverview = document.getElementById('tabOverview');
+    var tabMemberManagement = document.getElementById('tabMemberManagement');
+
+    tabOverview.addEventListener('click', function() {
+      setTabByRole('overview');
+      renderTabs();
+      trackEvent('prototype_tab_switched', { tab: 'overview' });
+    });
+
+    tabMemberManagement.addEventListener('click', function() {
+      var allowed = setTabByRole('member-management');
+      renderTabs();
+      if (!allowed) return;
+      renderMemberManagement();
+      trackEvent('prototype_tab_switched', { tab: 'member-management' });
+    });
 
     modeSelect.addEventListener('change', function(e) {
       TASK_DATA.samplingMode = e.target.value;
@@ -1523,6 +2040,20 @@
       }
     });
 
+    document.getElementById('memberActionCancelBtn').addEventListener('click', function() {
+      closeMemberActionModal();
+    });
+
+    document.getElementById('memberActionConfirmBtn').addEventListener('click', function() {
+      executeMemberAction();
+    });
+
+    document.getElementById('memberActionModal').addEventListener('click', function(e) {
+      if (e.target.id === 'memberActionModal') {
+        closeMemberActionModal();
+      }
+    });
+
     document.getElementById('exportJsonBtn').addEventListener('click', function() {
       if (TASK_DATA.status === 'draft') return;
       TASK_DATA.lastExportAt = '2026-04-21 10:15';
@@ -1558,16 +2089,19 @@
 
   function showOverviewWithSkeleton() {
     var skeleton = document.getElementById('loadingSkeleton');
-    var panel = document.getElementById('overviewPanel');
+    var overviewPanel = document.getElementById('overviewPanel');
+    var memberManagementPanel = document.getElementById('memberManagementPanel');
 
     skeleton.classList.remove('hidden');
-    panel.classList.add('hidden');
+    overviewPanel.classList.add('hidden');
+    memberManagementPanel.classList.add('hidden');
 
     window.setTimeout(function() {
       state.showSkeleton = false;
       skeleton.classList.add('hidden');
-      panel.classList.remove('hidden');
+      renderTabs();
       renderOverview();
+      renderMemberManagement();
     }, 560);
   }
 
@@ -1575,7 +2109,7 @@
     return {
       task_role: state.taskRole,
       task_status: TASK_DATA.status,
-      tab: 'overview',
+      tab: state.activeTab,
       lang: state.lang,
     };
   }
