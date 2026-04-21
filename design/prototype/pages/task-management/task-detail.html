@@ -619,11 +619,40 @@
       font-size: 12px;
       font-weight: 600;
       padding: 6px 10px;
-      transition: border-color var(--dur-fast), color var(--dur-fast), opacity var(--dur-fast);
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
     }
     .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
-    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .mini-btn-danger { color: var(--color-error); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .mini-btn-primary {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white);
+    }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+    .mini-btn-success {
+      background: var(--color-success-bg);
+      border-color: var(--color-success-border);
+      color: var(--color-success);
+    }
+    .mini-btn-success:hover:not(:disabled) { border-color: var(--color-success); background: var(--color-success-bg); color: var(--color-success); }
+    .mini-btn-success:focus-visible { box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18); }
+    .mini-btn-warning {
+      background: var(--color-warning-bg);
+      border-color: var(--color-warning-border);
+      color: var(--color-warning);
+    }
+    .mini-btn-warning:hover:not(:disabled) { border-color: var(--color-warning); background: var(--color-warning-bg); color: var(--color-warning); }
+    .mini-btn-warning:focus-visible { box-shadow: 0 0 0 3px rgba(161, 98, 7, 0.18); }
+    .mini-btn-danger {
+      background: var(--color-error-bg);
+      border-color: var(--color-error-border);
+      color: var(--color-error);
+    }
     .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
     .modal-backdrop {
       position: fixed;
@@ -1693,7 +1722,7 @@
       });
 
       var toggleBtn = document.createElement('button');
-      toggleBtn.className = 'mini-btn';
+      toggleBtn.className = member.status === 'active' ? 'mini-btn mini-btn-warning' : 'mini-btn mini-btn-success';
       toggleBtn.type = 'button';
       toggleBtn.disabled = state.taskRole !== 'project_leader';
       toggleBtn.textContent = member.status === 'active' ? t('actionDisable') : t('actionEnable');
@@ -1709,8 +1738,8 @@
         });
       });
 
-      wrap.appendChild(removeBtn);
       wrap.appendChild(toggleBtn);
+      wrap.appendChild(removeBtn);
       tdActions.appendChild(wrap);
       tr.appendChild(tdActions);
       tbody.appendChild(tr);
@@ -1752,7 +1781,7 @@
 
       var tdAction = document.createElement('td');
       var addBtn = document.createElement('button');
-      addBtn.className = 'mini-btn';
+      addBtn.className = 'mini-btn mini-btn-primary';
       addBtn.type = 'button';
       addBtn.disabled = state.taskRole !== 'project_leader' || inTask;
       addBtn.textContent = t('actionAdd');

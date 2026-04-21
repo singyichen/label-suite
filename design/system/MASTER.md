@@ -370,6 +370,20 @@ button[disabled] {
 | Icon-only (`btn-icon`) | Compact icon triggers (mobile menu, utility actions) | Primary CTA requiring clear text label |
 | Language Toggle (`btn-language`) | zh-TW / EN switching control | General icon actions unrelated to locale |
 
+**Dense Row Action Mapping (Table / List Operations):**
+
+Use this mapping for compact per-row action groups (e.g., member management tables). Keep one semantic meaning per color and avoid mixing priorities.
+
+| Action intent | Color role | Recommended visual token mapping |
+|---------------|------------|----------------------------------|
+| Add / Confirm positive action | Primary | `bg: --color-primary`, `text: --color-white`, `border: --color-primary` |
+| Re-enable / Recover | Success | `bg: --color-success-bg`, `text: --color-success`, `border: --color-success-border` |
+| Pause / Disable (reversible caution) | Warning | `bg: --color-warning-bg`, `text: --color-warning`, `border: --color-warning-border` |
+| Remove / Destructive | Danger | `bg: --color-error-bg`, `text: --color-error`, `border: --color-error-border` |
+| Neutral cancel / close | Secondary | `bg: transparent/white`, `text: --color-primary`, `border: --color-primary` |
+
+For rows containing both caution and destructive actions, place destructive action at the far right to reduce accidental clicks.
+
 **Button States:**
 
 | State | Tailwind classes |
