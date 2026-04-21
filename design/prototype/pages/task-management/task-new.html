@@ -256,12 +256,22 @@
     .startup-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
     .startup-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-slate-50); }
     .startup-section-title { font-size: 14px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
+    .member-source-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-sm); }
+    .member-source-tab {
+      padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--color-text-soft);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: color var(--dur-fast), border-color var(--dur-fast);
+      background: transparent; border-left: none; border-right: none; border-top: none;
+    }
+    .member-source-tab:hover { color: var(--color-primary); }
+    .member-source-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
     .member-add-row { display: flex; gap: 8px; align-items: center; margin-bottom: var(--space-sm); }
     .member-list { display: flex; flex-direction: column; gap: 8px; }
     .member-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     .member-item-main { flex: 1; min-width: 0; }
     .member-item-name { font-size: 13px; font-weight: 600; color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .member-item-role { font-size: 11px; color: var(--color-text-soft); }
+    .member-item-meta { font-size: 11px; color: var(--color-text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .member-empty { font-size: 12px; color: var(--color-text-soft); }
     .inline-radio { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
     .inline-radio label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-ink); }
@@ -351,6 +361,15 @@
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
       .startup-layout { grid-template-columns: 1fr; }
+      .startup-section { padding: 20px 14px; }
+      .member-add-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .member-add-row .input-select { max-width: none !important; width: 100%; }
+      .member-add-row .btn { width: 100%; }
       .page-header { flex-direction: column; }
       .step-label { display: none; }
       .action-bar { flex-wrap: wrap; }
@@ -530,13 +549,29 @@
         <div class="startup-layout">
           <section class="startup-section" aria-labelledby="startupMemberTitle">
             <div class="startup-section-title" id="startupMemberTitle">成員管理</div>
-            <div class="member-add-row">
-              <input type="text" class="input-text" id="memberNameInput" placeholder="輸入成員姓名或 Email" />
+            <div class="member-source-tabs" role="tablist" aria-label="Member source tabs">
+              <button class="member-source-tab active" id="memberSourceSystemTab" type="button" role="tab" aria-selected="true">平台使用者</button>
+              <button class="member-source-tab" id="memberSourceInviteTab" type="button" role="tab" aria-selected="false">Email 邀請</button>
+            </div>
+
+            <div class="member-add-row" id="memberSourceSystemPanel">
+              <select class="input-select" id="memberUserSelect">
+                <option value="">選擇使用者</option>
+              </select>
               <select class="input-select" id="memberRoleSelect" style="max-width:140px;">
                 <option value="annotator">Annotator</option>
                 <option value="reviewer">Reviewer</option>
               </select>
-              <button class="btn btn-secondary" id="addMemberBtn" type="button" style="padding:8px 12px;">加入</button>
+              <button class="btn btn-secondary" id="addMemberFromSystemBtn" type="button" style="padding:8px 12px;">加入</button>
+            </div>
+
+            <div class="member-add-row hidden" id="memberSourceInvitePanel">
+              <input type="email" class="input-text" id="memberInviteEmailInput" placeholder="輸入邀請 Email" />
+              <select class="input-select" id="memberInviteRoleSelect" style="max-width:140px;">
+                <option value="annotator">Annotator</option>
+                <option value="reviewer">Reviewer</option>
+              </select>
+              <button class="btn btn-secondary" id="sendInviteBtn" type="button" style="padding:8px 12px;">寄送邀請連結</button>
             </div>
             <div class="member-list" id="memberList"></div>
             <div class="member-empty hidden" id="memberEmpty">尚未加入任何成員</div>
@@ -721,6 +756,12 @@ var TASK_TYPE_ORDER = [
   'sentence_pairs',
 ];
 var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9','#F97316','#14B8A6'];
+var USER_DIRECTORY = [
+  { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', systemRole: 'user' },
+  { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', systemRole: 'user' },
+  { name: 'Jason Huang', email: 'jason.h@labelsuite.io', systemRole: 'user' },
+  { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', systemRole: 'user' },
+];
 
 /* ── i18n ────────────────────────────────────────────────────── */
 var I18N = {
@@ -745,8 +786,12 @@ var I18N = {
     s4NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
     startupMemberTitle: '成員管理',
     startupRunTitle: '執行初始化',
-    memberInputPlaceholder: '輸入成員姓名或 Email',
-    addMemberBtnLabel: '加入',
+    memberSourceSystemTab: '平台使用者',
+    memberSourceInviteTab: 'Email 邀請',
+    memberSystemPlaceholder: '選擇使用者',
+    memberInvitePlaceholder: '輸入邀請 Email',
+    addMemberFromSystemBtnLabel: '加入',
+    sendInviteBtnLabel: '寄送邀請連結',
     memberEmpty: '尚未加入任何成員',
     samplingModePercentLabel: '百分比',
     samplingModeCountLabel: '筆數',
@@ -784,7 +829,11 @@ var I18N = {
     errDatasetSize: '檔案超過 200 MB 上限',
     errSchemaRequired: '請完成所有必填欄位',
     errStartupMemberRequired: '至少需加入 1 位 annotator',
+    errStartupMemberPickUser: '請先選擇一位平台使用者',
+    errStartupMemberDuplicate: '此成員已在任務名單中',
+    errStartupInviteEmail: '請輸入有效的 Email',
     errStartupSampling: '請輸入有效抽樣值：百分比 1..99；筆數 >= 1 且 < 資料集總筆數',
+    toastInviteSent: '邀請連結已寄出，成員已加入待啟用名單',
     errCodeUnsaved: '請先儲存 Code 內容',
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
     errConfigFormat: '設定檔格式錯誤，請上傳 YAML / YML / JSON',
@@ -816,8 +865,12 @@ var I18N = {
     s4NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
     startupMemberTitle: 'Member management',
     startupRunTitle: 'Run initialization',
-    memberInputPlaceholder: 'Enter member name or email',
-    addMemberBtnLabel: 'Add',
+    memberSourceSystemTab: 'Platform users',
+    memberSourceInviteTab: 'Email invite',
+    memberSystemPlaceholder: 'Select user',
+    memberInvitePlaceholder: 'Enter invitation email',
+    addMemberFromSystemBtnLabel: 'Add',
+    sendInviteBtnLabel: 'Send invite link',
     memberEmpty: 'No members added yet',
     samplingModePercentLabel: 'Percentage',
     samplingModeCountLabel: 'Count',
@@ -855,7 +908,11 @@ var I18N = {
     errDatasetSize: 'File exceeds the 200 MB limit',
     errSchemaRequired: 'Please complete all required fields',
     errStartupMemberRequired: 'At least 1 annotator is required',
+    errStartupMemberPickUser: 'Please select a platform user first',
+    errStartupMemberDuplicate: 'This member is already in the task member list',
+    errStartupInviteEmail: 'Please enter a valid email',
     errStartupSampling: 'Invalid sampling value: percent 1..99; count >= 1 and < dataset_total',
+    toastInviteSent: 'Invite link sent. Member added to pending list',
     errCodeUnsaved: 'Please save code changes before continuing',
     errCodeInvalid: 'Invalid code format. Please fix and save again',
     errConfigFormat: 'Invalid config file type. Upload YAML / YML / JSON',
@@ -873,6 +930,7 @@ var state = {
   lang: 'zh', step: 1,
   taskName: '', datasetFile: null, taskType: '',
   codeFormat: 'yaml', configData: {},
+  memberSource: 'system',
   initialMembers: [],
   runInit: { samplingMode: 'by_percentage', samplingValue: 20, isolationEnabled: true },
   guidelineText: '',
@@ -1716,8 +1774,12 @@ function renderMemberList() {
     var role = document.createElement('div');
     role.className = 'member-item-role';
     role.textContent = member.role === 'annotator' ? t('memberRoleAnnotator') : t('memberRoleReviewer');
+    var meta = document.createElement('div');
+    meta.className = 'member-item-meta';
+    meta.textContent = member.email || '';
     main.appendChild(name);
     main.appendChild(role);
+    if (meta.textContent) main.appendChild(meta);
 
     var rm = document.createElement('button');
     rm.className = 'btn btn-ghost';
@@ -1728,6 +1790,7 @@ function renderMemberList() {
       rm.addEventListener('click', function() {
         state.initialMembers.splice(i, 1);
         renderMemberList();
+        renderSystemUserSelect();
         markDirty();
         revalidateCurrentStep();
       });
@@ -1739,14 +1802,89 @@ function renderMemberList() {
   });
 }
 
-function addMemberFromInputs() {
-  var name = el('memberNameInput').value.trim();
+function renderSystemUserSelect() {
+  var select = el('memberUserSelect');
+  if (!select) return;
+  while (select.firstChild) select.removeChild(select.firstChild);
+  var def = document.createElement('option');
+  def.value = '';
+  def.textContent = t('memberSystemPlaceholder');
+  select.appendChild(def);
+
+  USER_DIRECTORY.forEach(function(user) {
+    if (user.systemRole !== 'user') return;
+    var exists = state.initialMembers.some(function(member) {
+      return (member.email || '').toLowerCase() === user.email.toLowerCase();
+    });
+    if (exists) return;
+    var opt = document.createElement('option');
+    opt.value = user.email;
+    opt.textContent = user.name + ' · ' + user.email;
+    select.appendChild(opt);
+  });
+}
+
+function switchMemberSource(source) {
+  state.memberSource = source === 'invite' ? 'invite' : 'system';
+  el('memberSourceSystemPanel').classList.toggle('hidden', state.memberSource !== 'system');
+  el('memberSourceInvitePanel').classList.toggle('hidden', state.memberSource !== 'invite');
+  el('memberSourceSystemTab').classList.toggle('active', state.memberSource === 'system');
+  el('memberSourceInviteTab').classList.toggle('active', state.memberSource === 'invite');
+  el('memberSourceSystemTab').setAttribute('aria-selected', state.memberSource === 'system' ? 'true' : 'false');
+  el('memberSourceInviteTab').setAttribute('aria-selected', state.memberSource === 'invite' ? 'true' : 'false');
+}
+
+function addMemberFromSystemUser() {
+  var email = (el('memberUserSelect').value || '').trim().toLowerCase();
   var role = el('memberRoleSelect').value;
-  if (!name) return;
-  state.initialMembers.push({ name: name, role: role });
-  el('memberNameInput').value = '';
+  if (!email) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberPickUser'));
+    return;
+  }
+  var user = USER_DIRECTORY.find(function(item) { return item.email.toLowerCase() === email; });
+  if (!user) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberPickUser'));
+    return;
+  }
+  var duplicate = state.initialMembers.some(function(member) {
+    return (member.email || '').toLowerCase() === email;
+  });
+  if (duplicate) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberDuplicate'));
+    return;
+  }
+
+  state.initialMembers.push({ name: user.name, email: user.email, role: role, source: 'system' });
+  el('memberUserSelect').value = '';
   renderMemberList();
+  renderSystemUserSelect();
   showFieldError('errStartupMembers', false);
+  markDirty();
+  revalidateCurrentStep();
+}
+
+function addMemberByInviteEmail() {
+  var email = (el('memberInviteEmailInput').value || '').trim().toLowerCase();
+  var role = el('memberInviteRoleSelect').value;
+  var emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!emailValid) {
+    showFieldError('errStartupMembers', true, t('errStartupInviteEmail'));
+    return;
+  }
+  var duplicate = state.initialMembers.some(function(member) {
+    return (member.email || '').toLowerCase() === email;
+  });
+  if (duplicate) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberDuplicate'));
+    return;
+  }
+
+  state.initialMembers.push({ name: email, email: email, role: role, source: 'invite' });
+  el('memberInviteEmailInput').value = '';
+  renderMemberList();
+  renderSystemUserSelect();
+  showFieldError('errStartupMembers', false);
+  showToast(t('toastInviteSent'), 'success');
   markDirty();
   revalidateCurrentStep();
 }
@@ -1904,14 +2042,24 @@ function applyLang(l) {
   setText('leaveModalLeaveBtn', t('leaveModalLeave'));
   setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
   el('guidelineTextInput').placeholder = t('guidelineTextPlaceholder');
-  el('memberNameInput').placeholder = t('memberInputPlaceholder');
-  setText('addMemberBtn', t('addMemberBtnLabel'));
+  setText('memberSourceSystemTab', t('memberSourceSystemTab'));
+  setText('memberSourceInviteTab', t('memberSourceInviteTab'));
+  el('memberInviteEmailInput').placeholder = t('memberInvitePlaceholder');
+  setText('addMemberFromSystemBtn', t('addMemberFromSystemBtnLabel'));
+  setText('sendInviteBtn', t('sendInviteBtnLabel'));
   setText('memberEmpty', t('memberEmpty'));
   var roleSel = el('memberRoleSelect');
   if (roleSel && roleSel.options.length >= 2) {
     roleSel.options[0].textContent = t('memberRoleAnnotator');
     roleSel.options[1].textContent = t('memberRoleReviewer');
   }
+  var inviteRoleSel = el('memberInviteRoleSelect');
+  if (inviteRoleSel && inviteRoleSel.options.length >= 2) {
+    inviteRoleSel.options[0].textContent = t('memberRoleAnnotator');
+    inviteRoleSel.options[1].textContent = t('memberRoleReviewer');
+  }
+  renderSystemUserSelect();
+  switchMemberSource(state.memberSource);
   renderMemberList();
 
   /* Task type options — safe: textContent only */
@@ -1977,14 +2125,20 @@ el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(
 el('datasetFileInput').addEventListener('change', function() { if (this.files[0]) setDatasetFile(this.files[0]); });
 el('datasetRemoveBtn').addEventListener('click', clearDatasetFile);
 
-el('addMemberBtn').addEventListener('click', addMemberFromInputs);
-el('memberNameInput').addEventListener('keydown', function(e) {
+el('memberSourceSystemTab').addEventListener('click', function() { switchMemberSource('system'); });
+el('memberSourceInviteTab').addEventListener('click', function() { switchMemberSource('invite'); });
+el('addMemberFromSystemBtn').addEventListener('click', addMemberFromSystemUser);
+el('sendInviteBtn').addEventListener('click', addMemberByInviteEmail);
+el('memberInviteEmailInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
-    addMemberFromInputs();
+    addMemberByInviteEmail();
   }
 });
 el('memberRoleSelect').addEventListener('change', function() {
+  markDirty();
+});
+el('memberInviteRoleSelect').addEventListener('change', function() {
   markDirty();
 });
 document.querySelectorAll('input[name="samplingMode"]').forEach(function(node) {
