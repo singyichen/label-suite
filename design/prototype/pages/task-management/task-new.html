@@ -252,6 +252,21 @@
     #annotationPreviewLabel { font-size: 13px; font-weight: 600; color: var(--color-ink); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
     .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
 
+    /* ── Step 3: Startup settings ── */
+    .startup-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .startup-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-slate-50); }
+    .startup-section-title { font-size: 14px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
+    .member-add-row { display: flex; gap: 8px; align-items: center; margin-bottom: var(--space-sm); }
+    .member-list { display: flex; flex-direction: column; gap: 8px; }
+    .member-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .member-item-main { flex: 1; min-width: 0; }
+    .member-item-name { font-size: 13px; font-weight: 600; color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .member-item-role { font-size: 11px; color: var(--color-text-soft); }
+    .member-empty { font-size: 12px; color: var(--color-text-soft); }
+    .inline-radio { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .inline-radio label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-ink); }
+    .startup-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 6px; }
+
     /* ── Guideline list ── */
     .guideline-list { margin-top: var(--space-sm); display: flex; flex-direction: column; gap: 6px; }
     .guideline-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
@@ -335,6 +350,7 @@
       .nav-actions { display: none; }
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
+      .startup-layout { grid-template-columns: 1fr; }
       .page-header { flex-direction: column; }
       .step-label { display: none; }
       .action-bar { flex-wrap: wrap; }
@@ -373,7 +389,7 @@
     <header class="page-header">
       <div>
         <h1 class="page-main-title" id="pageTitle">新增任務</h1>
-        <p class="page-main-subtitle" id="pageSubtitle">依序完成三個步驟以建立標記任務</p>
+        <p class="page-main-subtitle" id="pageSubtitle">依序完成四個步驟以建立標記任務</p>
       </div>
     </header>
 
@@ -397,7 +413,12 @@
       <div class="step-connector" id="conn23"></div>
       <div class="step-item">
         <div class="step-circle" id="sc3">3</div>
-        <div class="step-label" id="sl3">標記說明</div>
+        <div class="step-label" id="sl3">啟動設定</div>
+      </div>
+      <div class="step-connector" id="conn34"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc4">4</div>
+        <div class="step-label" id="sl4">標記說明</div>
       </div>
     </div>
 
@@ -499,11 +520,64 @@
     <!-- ══ STEP 3 ══ -->
     <div id="step3Panel" class="hidden">
       <div class="form-card">
-        <div class="form-card-title" id="s3CardTitle">標記說明</div>
+        <div class="form-card-title" id="s3CardTitle">啟動設定</div>
 
         <div class="notice-info" id="s3Notice">
           <svg style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="s3NoticeText">此步驟為選填。不上傳說明，仍可完成任務建立。</span>
+          <span id="s3NoticeText">先完成成員與執行初始化，建立後可直接進入執行狀態。</span>
+        </div>
+
+        <div class="startup-layout">
+          <section class="startup-section" aria-labelledby="startupMemberTitle">
+            <div class="startup-section-title" id="startupMemberTitle">成員管理</div>
+            <div class="member-add-row">
+              <input type="text" class="input-text" id="memberNameInput" placeholder="輸入成員姓名或 Email" />
+              <select class="input-select" id="memberRoleSelect" style="max-width:140px;">
+                <option value="annotator">Annotator</option>
+                <option value="reviewer">Reviewer</option>
+              </select>
+              <button class="btn btn-secondary" id="addMemberBtn" type="button" style="padding:8px 12px;">加入</button>
+            </div>
+            <div class="member-list" id="memberList"></div>
+            <div class="member-empty hidden" id="memberEmpty">尚未加入任何成員</div>
+            <div class="field-error-msg" id="errStartupMembers"></div>
+          </section>
+
+          <section class="startup-section" aria-labelledby="startupRunTitle">
+            <div class="startup-section-title" id="startupRunTitle">執行初始化</div>
+            <div class="inline-radio">
+              <label><input type="radio" name="samplingMode" value="by_percentage" checked /> <span id="samplingModePercentLabel">百分比</span></label>
+              <label><input type="radio" name="samplingMode" value="by_count" /> <span id="samplingModeCountLabel">筆數</span></label>
+            </div>
+            <div class="form-field" style="margin-bottom:8px;">
+              <label class="field-label" id="samplingValueLabel" for="samplingValueInput">試標抽樣值</label>
+              <input type="number" class="input-text" id="samplingValueInput" min="1" max="99" value="20" />
+              <div class="startup-hint" id="samplingHint">百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數</div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label-text" id="isolationToggleLabel">資料隔離</span>
+                <span class="toggle-desc" id="isolationToggleDesc">預設啟用，避免試標與正式標記資料混用</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="isolationToggle" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field-error-msg" id="errStartupRun"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 4 ══ -->
+    <div id="step4Panel" class="hidden">
+      <div class="form-card">
+        <div class="form-card-title" id="s4CardTitle">標記說明</div>
+
+        <div class="notice-info" id="s4Notice">
+          <svg style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="s4NoticeText">此步驟為選填。不上傳說明，仍可完成任務建立。</span>
         </div>
 
         <div class="form-field">
@@ -652,11 +726,11 @@ var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9'
 var I18N = {
   zh: {
     docTitle: '新增任務 — Label Suite（原型）',
-    pageTitle: '新增任務', pageSubtitle: '依序完成三個步驟以建立標記任務',
+    pageTitle: '新增任務', pageSubtitle: '依序完成四個步驟以建立標記任務',
     navDashboard: '儀表板', navTaskManagement: '任務管理',
     navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
-    s1Label: '基本資料', s2Label: '標記設定檔', s3Label: '標記說明',
-    s1CardTitle: '基本資料', s2CardTitle: '標記設定檔', s3CardTitle: '標記說明',
+    s1Label: '基本資料', s2Label: '標記設定檔', s3Label: '啟動設定', s4Label: '標記說明',
+    s1CardTitle: '基本資料', s2CardTitle: '標記設定檔', s3CardTitle: '啟動設定', s4CardTitle: '標記說明',
     labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集', labelGuideline: '說明內容',
     optTaskTypeDefault: '請選擇任務類型',
     uploadZoneLabel: '點擊或拖曳上傳資料集',
@@ -667,7 +741,21 @@ var I18N = {
     guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
     forceToggleLabel: '開始標記前強制顯示',
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
-    s3NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
+    s3NoticeText: '先完成成員與執行初始化，建立後可直接進入執行狀態。',
+    s4NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
+    startupMemberTitle: '成員管理',
+    startupRunTitle: '執行初始化',
+    memberInputPlaceholder: '輸入成員姓名或 Email',
+    addMemberBtnLabel: '加入',
+    memberEmpty: '尚未加入任何成員',
+    samplingModePercentLabel: '百分比',
+    samplingModeCountLabel: '筆數',
+    samplingValueLabel: '試標抽樣值',
+    samplingHint: '百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數',
+    isolationToggleLabel: '資料隔離',
+    isolationToggleDesc: '預設啟用，避免試標與正式標記資料混用',
+    memberRoleAnnotator: '標記員',
+    memberRoleReviewer: '審核員',
     s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     annotationPreviewLabel: '標記預覽',
@@ -695,6 +783,8 @@ var I18N = {
     errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
     errDatasetSize: '檔案超過 200 MB 上限',
     errSchemaRequired: '請完成所有必填欄位',
+    errStartupMemberRequired: '至少需加入 1 位 annotator',
+    errStartupSampling: '請輸入有效抽樣值：百分比 1..99；筆數 >= 1 且 < 資料集總筆數',
     errCodeUnsaved: '請先儲存 Code 內容',
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
     errConfigFormat: '設定檔格式錯誤，請上傳 YAML / YML / JSON',
@@ -707,11 +797,11 @@ var I18N = {
   },
   en: {
     docTitle: 'New task — Label Suite (Prototype)',
-    pageTitle: 'New task', pageSubtitle: 'Complete three steps to create an annotation task',
+    pageTitle: 'New task', pageSubtitle: 'Complete four steps to create an annotation task',
     navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
     navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
-    s1Label: 'Basic info', s2Label: 'Label config', s3Label: 'Guidelines',
-    s1CardTitle: 'Basic info', s2CardTitle: 'Label configuration', s3CardTitle: 'Annotation guidelines',
+    s1Label: 'Basic info', s2Label: 'Label config', s3Label: 'Startup settings', s4Label: 'Guidelines',
+    s1CardTitle: 'Basic info', s2CardTitle: 'Label configuration', s3CardTitle: 'Startup settings', s4CardTitle: 'Annotation guidelines',
     labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset', labelGuideline: 'Guideline content',
     optTaskTypeDefault: 'Select task type',
     uploadZoneLabel: 'Click or drag to upload dataset',
@@ -722,7 +812,21 @@ var I18N = {
     guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
     forceToggleLabel: 'Force display before annotation',
     forceToggleDesc: 'Annotators must read the guideline before starting work',
-    s3NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
+    s3NoticeText: 'Complete members and run initialization first so the task is execution-ready.',
+    s4NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
+    startupMemberTitle: 'Member management',
+    startupRunTitle: 'Run initialization',
+    memberInputPlaceholder: 'Enter member name or email',
+    addMemberBtnLabel: 'Add',
+    memberEmpty: 'No members added yet',
+    samplingModePercentLabel: 'Percentage',
+    samplingModeCountLabel: 'Count',
+    samplingValueLabel: 'Draft sampling value',
+    samplingHint: 'Percentage must be 1..99; count must be >= 1 and < dataset_total',
+    isolationToggleLabel: 'Data isolation',
+    isolationToggleDesc: 'Enabled by default to prevent Dry/Official data mixing',
+    memberRoleAnnotator: 'Annotator',
+    memberRoleReviewer: 'Reviewer',
     s2TemplateSectionTitle: 'Start from template or upload config',
     uploadConfigBtn: 'Upload config (YAML / JSON)',
     annotationPreviewLabel: 'Annotation preview',
@@ -750,6 +854,8 @@ var I18N = {
     errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
     errDatasetSize: 'File exceeds the 200 MB limit',
     errSchemaRequired: 'Please complete all required fields',
+    errStartupMemberRequired: 'At least 1 annotator is required',
+    errStartupSampling: 'Invalid sampling value: percent 1..99; count >= 1 and < dataset_total',
     errCodeUnsaved: 'Please save code changes before continuing',
     errCodeInvalid: 'Invalid code format. Please fix and save again',
     errConfigFormat: 'Invalid config file type. Upload YAML / YML / JSON',
@@ -767,6 +873,8 @@ var state = {
   lang: 'zh', step: 1,
   taskName: '', datasetFile: null, taskType: '',
   codeFormat: 'yaml', configData: {},
+  initialMembers: [],
+  runInit: { samplingMode: 'by_percentage', samplingValue: 20, isolationEnabled: true },
   guidelineText: '',
   guidelineFiles: [], forceGuideline: false,
   codeDraftDirty: false,
@@ -962,7 +1070,7 @@ function track(event, extra) {
 function updateStepIndicator() {
   var s = state.step;
   var checkSvg = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
-  [1, 2, 3].forEach(function(n) {
+  [1, 2, 3, 4].forEach(function(n) {
     var circle = el('sc' + n);
     var label = el('sl' + n);
     circle.className = 'step-circle' + (n < s ? ' done' : n === s ? ' active' : '');
@@ -975,16 +1083,17 @@ function updateStepIndicator() {
   });
   el('conn12').className = 'step-connector' + (s > 1 ? ' done' : '');
   el('conn23').className = 'step-connector' + (s > 2 ? ' done' : '');
+  el('conn34').className = 'step-connector' + (s > 3 ? ' done' : '');
 }
 
 /* ── Show step panel ─────────────────────────────────────────── */
 function showStep(n) {
-  [1, 2, 3].forEach(function(i) { el('step' + i + 'Panel').classList.toggle('hidden', i !== n); });
+  [1, 2, 3, 4].forEach(function(i) { el('step' + i + 'Panel').classList.toggle('hidden', i !== n); });
   el('prevBtn').classList.toggle('hidden', n === 1);
   state.step = n;
   var nextBtn = el('nextBtn');
   var nextIcon = el('nextBtnIcon');
-  if (n === 3) {
+  if (n === 4) {
     setText('nextBtnLabel', t('submitBtnLabel'));
     nextBtn.removeAttribute('disabled');
     if (nextIcon) nextIcon.style.display = 'none';
@@ -1040,10 +1149,31 @@ function validateStep2(showErrors) {
   if (ok) showFieldError('errSchema', false);
   return ok;
 }
+function getDatasetTotalEstimate() {
+  return 10000;
+}
+function validateStep3(showErrors) {
+  var hasAnnotator = state.initialMembers.some(function(member) { return member.role === 'annotator'; });
+  var mode = state.runInit.samplingMode;
+  var val = Number(state.runInit.samplingValue);
+  var total = getDatasetTotalEstimate();
+  var validSampling = false;
+  if (mode === 'by_percentage') {
+    validSampling = Number.isFinite(val) && val >= 1 && val <= 99;
+  } else {
+    validSampling = Number.isFinite(val) && val >= 1 && val < total;
+  }
+  if (showErrors) {
+    showFieldError('errStartupMembers', !hasAnnotator, t('errStartupMemberRequired'));
+    showFieldError('errStartupRun', !validSampling, t('errStartupSampling'));
+  }
+  return hasAnnotator && validSampling;
+}
 function revalidateCurrentStep() {
   var btn = el('nextBtn');
   if (state.step === 1) btn.disabled = !validateStep1(false);
   else if (state.step === 2) btn.disabled = !validateStep2(false);
+  else if (state.step === 3) btn.disabled = !validateStep3(false);
   else btn.disabled = false;
 }
 
@@ -1564,6 +1694,73 @@ function clearDatasetFile() {
   markDirty(); revalidateCurrentStep();
 }
 
+/* ── Startup settings (Step 3) ───────────────────────────────── */
+function renderMemberList() {
+  var list = el('memberList');
+  while (list.firstChild) list.removeChild(list.firstChild);
+  if (!state.initialMembers.length) {
+    el('memberEmpty').classList.remove('hidden');
+  } else {
+    el('memberEmpty').classList.add('hidden');
+  }
+
+  state.initialMembers.forEach(function(member, idx) {
+    var row = document.createElement('div');
+    row.className = 'member-item';
+
+    var main = document.createElement('div');
+    main.className = 'member-item-main';
+    var name = document.createElement('div');
+    name.className = 'member-item-name';
+    name.textContent = member.name;
+    var role = document.createElement('div');
+    role.className = 'member-item-role';
+    role.textContent = member.role === 'annotator' ? t('memberRoleAnnotator') : t('memberRoleReviewer');
+    main.appendChild(name);
+    main.appendChild(role);
+
+    var rm = document.createElement('button');
+    rm.className = 'btn btn-ghost';
+    rm.style.padding = '6px 8px';
+    rm.type = 'button';
+    rm.textContent = state.lang === 'en' ? 'Remove' : '移除';
+    (function(i) {
+      rm.addEventListener('click', function() {
+        state.initialMembers.splice(i, 1);
+        renderMemberList();
+        markDirty();
+        revalidateCurrentStep();
+      });
+    }(idx));
+
+    row.appendChild(main);
+    row.appendChild(rm);
+    list.appendChild(row);
+  });
+}
+
+function addMemberFromInputs() {
+  var name = el('memberNameInput').value.trim();
+  var role = el('memberRoleSelect').value;
+  if (!name) return;
+  state.initialMembers.push({ name: name, role: role });
+  el('memberNameInput').value = '';
+  renderMemberList();
+  showFieldError('errStartupMembers', false);
+  markDirty();
+  revalidateCurrentStep();
+}
+
+function syncRunInitFromControls() {
+  var modeNode = document.querySelector('input[name="samplingMode"]:checked');
+  state.runInit.samplingMode = modeNode ? modeNode.value : 'by_percentage';
+  state.runInit.samplingValue = Number(el('samplingValueInput').value || 0);
+  state.runInit.isolationEnabled = !!el('isolationToggle').checked;
+  showFieldError('errStartupRun', false);
+  markDirty();
+  revalidateCurrentStep();
+}
+
 /* ── Guideline upload (DOM-safe, no user data in innerHTML) ──── */
 function addGuidelineFiles(files) {
   var ALLOWED_G = ['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.md'];
@@ -1645,6 +1842,7 @@ function renderGuidelineList() {
       rmBtn.addEventListener('click', function() {
         state.guidelineFiles.splice(idx, 1);
         renderGuidelineList();
+        markDirty();
       });
     }(i));
     item.appendChild(rmBtn);
@@ -1691,19 +1889,30 @@ function applyLang(l) {
   document.title = t('docTitle');
 
   var ids = [
-    'pageTitle','pageSubtitle','s1CardTitle','s2CardTitle','s3CardTitle',
+    'pageTitle','pageSubtitle','s1CardTitle','s2CardTitle','s3CardTitle','s4CardTitle',
     'navDashboard','navTaskManagement','navAnnotation','navDataset','navAdmin','navProfile',
     'labelTaskName','labelTaskType','labelDataset','labelGuideline','labelGuidelineUpload',
     'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
-    'forceToggleLabel','forceToggleDesc','s3NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
+    'forceToggleLabel','forceToggleDesc','s3NoticeText','s4NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
+    'startupMemberTitle','startupRunTitle','samplingModePercentLabel','samplingModeCountLabel','samplingValueLabel',
+    'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
-  setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label'));
+  setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
   setText('leaveModalStayBtn', t('leaveModalStay'));
   setText('leaveModalLeaveBtn', t('leaveModalLeave'));
-  setText('nextBtnLabel', state.step === 3 ? t('submitBtnLabel') : t('nextBtnLabel'));
+  setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
   el('guidelineTextInput').placeholder = t('guidelineTextPlaceholder');
+  el('memberNameInput').placeholder = t('memberInputPlaceholder');
+  setText('addMemberBtn', t('addMemberBtnLabel'));
+  setText('memberEmpty', t('memberEmpty'));
+  var roleSel = el('memberRoleSelect');
+  if (roleSel && roleSel.options.length >= 2) {
+    roleSel.options[0].textContent = t('memberRoleAnnotator');
+    roleSel.options[1].textContent = t('memberRoleReviewer');
+  }
+  renderMemberList();
 
   /* Task type options — safe: textContent only */
   var sel = el('taskTypeSelect');
@@ -1768,6 +1977,34 @@ el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(
 el('datasetFileInput').addEventListener('change', function() { if (this.files[0]) setDatasetFile(this.files[0]); });
 el('datasetRemoveBtn').addEventListener('click', clearDatasetFile);
 
+el('addMemberBtn').addEventListener('click', addMemberFromInputs);
+el('memberNameInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addMemberFromInputs();
+  }
+});
+el('memberRoleSelect').addEventListener('change', function() {
+  markDirty();
+});
+document.querySelectorAll('input[name="samplingMode"]').forEach(function(node) {
+  node.addEventListener('change', function() {
+    var mode = this.value;
+    var input = el('samplingValueInput');
+    if (mode === 'by_percentage') {
+      input.min = '1';
+      input.max = '99';
+      if (Number(input.value) > 99) input.value = '99';
+    } else {
+      input.min = '1';
+      input.removeAttribute('max');
+    }
+    syncRunInitFromControls();
+  });
+});
+el('samplingValueInput').addEventListener('input', syncRunInitFromControls);
+el('isolationToggle').addEventListener('change', syncRunInitFromControls);
+
 el('guidelineUploadZone').addEventListener('click', function() { el('guidelineFileInput').click(); });
 el('guidelineUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('guidelineFileInput').click(); } });
 el('guidelineFileInput').addEventListener('change', function() { if (this.files.length) addGuidelineFiles(this.files); });
@@ -1808,6 +2045,14 @@ el('nextBtn').addEventListener('click', function() {
     if (!validateStep2(true)) return;
     showStep(3);
     track('prototype_task_new_step_next', { from: 2 });
+  } else if (state.step === 3) {
+    if (!validateStep3(true)) {
+      if (!state.initialMembers.some(function(member) { return member.role === 'annotator'; })) showBannerError(t('errStartupMemberRequired'));
+      else showBannerError(t('errStartupSampling'));
+      return;
+    }
+    showStep(4);
+    track('prototype_task_new_step_next', { from: 3 });
   } else {
     submitTask();
   }
