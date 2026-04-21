@@ -30,7 +30,8 @@
     body { font-family: var(--font-sans); background: var(--color-surface); color: var(--color-ink); line-height: 1.8; min-height: 100vh; display: flex; flex-direction: row; }
     html[lang="en"] body { line-height: 1.6; }
     a { color: inherit; text-decoration: none; }
-    button, input, select, textarea { font: inherit; cursor: pointer; }
+    button, input, select, textarea { font: inherit; }
+    button, select, input[type="checkbox"], input[type="radio"], input[type="file"] { cursor: pointer; }
     .hidden { display: none !important; }
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
     .layout { max-width: 960px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
@@ -194,8 +195,10 @@
     .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; }
     .template-section { margin-bottom: var(--space-md); padding: var(--space-md); background: var(--color-slate-50); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
     .template-section-title { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
-    .template-btn { padding: 5px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: 12px; font-weight: 500; background: var(--color-white); color: var(--color-ink); transition: border-color var(--dur-fast), background var(--dur-fast); margin-right: 6px; margin-bottom: 6px; }
+    .template-btn { padding: 5px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: 12px; font-weight: 500; background: var(--color-white); color: var(--color-ink); transition: border-color var(--dur-fast), background var(--dur-fast); }
     .template-btn:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .template-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    #templateBtns { display: flex; flex-direction: column; gap: 8px; width: auto; align-self: flex-start; }
     .s2-preview-top { margin-bottom: var(--space-md); }
     .s2-code-panel { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: var(--space-md); }
     .s2-code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
@@ -231,14 +234,14 @@
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
 
     /* ── Code editor ── */
-    .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #1E1B4B; color: #E2E8F0; outline: none; resize: vertical; transition: border-color var(--dur-fast); }
+    .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #1E1B4B; color: #E2E8F0; outline: none; resize: vertical; transition: border-color var(--dur-fast); cursor: text; }
     .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .annotation-preview { min-height: 320px; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); display: flex; flex-direction: column; gap: 14px; }
+    .annotation-preview { min-height: 220px; padding: 12px var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); display: flex; flex-direction: column; gap: 10px; }
     .annotation-preview-sample { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); font-size: 14px; line-height: 1.6; color: var(--color-ink); }
     .annotation-preview-divider { height: 1px; background: var(--color-border); }
     .annotation-preview-task-title { font-size: 14px; font-weight: 700; color: var(--color-ink); }
-    .annotation-preview-options { display: flex; flex-direction: column; gap: 8px; }
-    .annotation-preview-option { display: flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14px; color: var(--color-ink); }
+    .annotation-preview-options { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .annotation-preview-option { display: inline-flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14px; color: var(--color-ink); white-space: nowrap; }
     .annotation-preview-option input { margin: 0; }
     .annotation-preview-color { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; }
     .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
@@ -246,6 +249,7 @@
     .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
     .code-error-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-top: 6px; font-size: 12px; color: var(--color-error); }
     .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
+    #annotationPreviewLabel { font-size: 13px; font-weight: 600; color: var(--color-ink); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
     .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
 
     /* ── Guideline list ── */
@@ -458,11 +462,15 @@
 
         <div class="s2-layout">
           <div>
-            <div id="schemaFields"></div>
-            <div class="template-section" style="margin-top:var(--space-md);">
-              <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始</div>
-              <div id="templateBtns"></div>
+            <div class="template-section">
+              <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始或者上傳設定檔</div>
+              <div class="template-actions">
+                <div id="templateBtns"></div>
+                <button class="template-btn" id="uploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
+                <input type="file" id="configFileInput" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" style="display:none" aria-hidden="true" />
+              </div>
             </div>
+            <div id="schemaFields"></div>
             <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
           </div>
           <div class="s2-code-panel">
@@ -480,7 +488,7 @@
             </div>
             <div class="code-actions">
               <button class="btn btn-secondary" id="saveCodeBtn" type="button" disabled>
-                <span id="saveCodeBtnLabel">儲存到 Visual</span>
+                <span id="saveCodeBtnLabel">儲存</span>
               </button>
             </div>
           </div>
@@ -499,12 +507,17 @@
         </div>
 
         <div class="form-field">
-          <label class="field-label" id="labelGuideline">說明檔案</label>
+          <label class="field-label" id="labelGuideline">說明內容</label>
+          <textarea class="input-textarea" id="guidelineTextInput" rows="6" placeholder="輸入給標記員看的任務說明、判斷準則與注意事項"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" id="labelGuidelineUpload">上傳檔案</label>
           <div class="upload-multi-zone" id="guidelineUploadZone" role="button" tabindex="0">
             <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
-            <div style="font-size:14px;font-weight:500;color:var(--color-ink);margin-bottom:4px;" id="guidelineUploadLabel">點擊上傳說明檔案</div>
+            <div style="font-size:14px;font-weight:500;color:var(--color-ink);margin-bottom:4px;" id="guidelineUploadLabel">上傳檔案</div>
             <div style="font-size:12px;color:var(--color-text-soft);" id="guidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
             <input type="file" id="guidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple style="display:none" aria-hidden="true" />
           </div>
@@ -575,9 +588,12 @@ var REGISTRY = {
     fields: [
       { key: 'labels', type: 'tag-list', zh: '標籤清單', en: 'Labels', required: true, hint_zh: '輸入標籤後按 Enter', hint_en: 'Type label and press Enter' },
       { key: 'allow_multiple', type: 'boolean', zh: '允許多選', en: 'Allow multiple labels', required: false, defaultValue: false },
-      { key: 'display_text', type: 'text', zh: '任務說明（選填）', en: 'Task instruction (optional)', required: false, placeholder_zh: '顯示給標記員的說明文字', placeholder_en: 'Instructions shown to annotators' },
     ],
-    defaultTemplate: { labels: ['正向', '負向', '中立'], allow_multiple: false, display_text: '' },
+    defaultTemplate: { labels: ['正向', '負向', '中立'], allow_multiple: false },
+    defaultTemplateI18n: {
+      zh: { labels: ['正向', '負向', '中立'], allow_multiple: false },
+      en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
+    },
   },
   single_sentence_scoring_regression: {
     zh: '單句評分 / 回歸', en: 'Single Sentence Scoring / Regression',
@@ -615,9 +631,12 @@ var REGISTRY = {
     zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)',
     fields: [
       { key: 'labels', type: 'tag-list', zh: '關係標籤', en: 'Relation labels', required: true, hint_zh: '輸入標籤後按 Enter', hint_en: 'Type and press Enter' },
-      { key: 'task_description', type: 'textarea', zh: '任務說明（選填）', en: 'Task description (optional)', required: false, placeholder_zh: '描述句對標記的目標', placeholder_en: 'Describe the annotation goal' },
     ],
-    defaultTemplate: { labels: ['蘊含', '矛盾', '中立'], task_description: '' },
+    defaultTemplate: { labels: ['蘊含', '矛盾', '中立'] },
+    defaultTemplateI18n: {
+      zh: { labels: ['蘊含', '矛盾', '中立'] },
+      en: { labels: ['Entailment', 'Contradiction', 'Neutral'] },
+    },
   },
 };
 var TASK_TYPE_ORDER = [
@@ -634,18 +653,23 @@ var I18N = {
   zh: {
     docTitle: '新增任務 — Label Suite（原型）',
     pageTitle: '新增任務', pageSubtitle: '依序完成三個步驟以建立標記任務',
+    navDashboard: '儀表板', navTaskManagement: '任務管理',
+    navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
     s1Label: '基本資料', s2Label: '標記設定檔', s3Label: '標記說明',
     s1CardTitle: '基本資料', s2CardTitle: '標記設定檔', s3CardTitle: '標記說明',
-    labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集', labelGuideline: '說明檔案',
+    labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集', labelGuideline: '說明內容',
     optTaskTypeDefault: '請選擇任務類型',
     uploadZoneLabel: '點擊或拖曳上傳資料集',
     uploadZoneHint: '支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆',
-    guidelineUploadLabel: '點擊上傳說明檔案',
+    labelGuidelineUpload: '上傳檔案',
+    guidelineUploadLabel: '上傳檔案',
     guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
     forceToggleLabel: '開始標記前強制顯示',
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
     s3NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
-    s2TemplateSectionTitle: '從範本開始',
+    s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
+    uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     annotationPreviewLabel: '標記預覽',
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
@@ -653,11 +677,14 @@ var I18N = {
     previewTaskScore: '請選擇分數',
     previewEmpty: '請先新增至少一個標記選項',
     previewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
+    previewSampleSentenceScoring: '這次住宿整體舒適，但隔音稍差。',
+    previewSampleSentenceSequence: '台積電董事長魏哲家今天在台北出席產業論壇。',
+    previewSampleSentenceRelation: '阿司匹靈可緩解頭痛症狀，但可能造成胃部不適。',
     previewSentenceALabel: '句子 A',
     previewSentenceBLabel: '句子 B',
     previewSampleSentenceA: '這間餐廳的服務態度很好。',
     previewSampleSentenceB: '但上菜速度偏慢。',
-    saveCodeBtnLabel: '儲存到 Visual',
+    saveCodeBtnLabel: '儲存',
     cancelBtnLabel: '取消', prevBtnLabel: '上一步', nextBtnLabel: '下一步',
     submitBtnLabel: '建立任務', submittingLabel: '建立中…',
     leaveModalTitle: '離開此頁面？',
@@ -668,27 +695,36 @@ var I18N = {
     errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
     errDatasetSize: '檔案超過 200 MB 上限',
     errSchemaRequired: '請完成所有必填欄位',
+    errCodeUnsaved: '請先儲存 Code 內容',
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
+    errConfigFormat: '設定檔格式錯誤，請上傳 YAML / YML / JSON',
+    errConfigRead: '讀取設定檔失敗，請重試',
     toastCreated: '任務建立成功，正在返回任務列表…',
-    toastCodeSaved: 'Code 設定已同步到 Visual',
+    toastCodeSaved: 'Code 設定已同步',
+    toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
     applyTemplate: '套用預設範本：',
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
   },
   en: {
     docTitle: 'New task — Label Suite (Prototype)',
     pageTitle: 'New task', pageSubtitle: 'Complete three steps to create an annotation task',
+    navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
+    navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
     s1Label: 'Basic info', s2Label: 'Label config', s3Label: 'Guidelines',
     s1CardTitle: 'Basic info', s2CardTitle: 'Label configuration', s3CardTitle: 'Annotation guidelines',
-    labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset', labelGuideline: 'Guideline assets',
+    labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset', labelGuideline: 'Guideline content',
     optTaskTypeDefault: 'Select task type',
     uploadZoneLabel: 'Click or drag to upload dataset',
     uploadZoneHint: 'TXT / CSV / TSV / JSON · max 200 MB · UTF-8 · up to 1,000,000 rows',
-    guidelineUploadLabel: 'Click to upload guideline files',
+    labelGuidelineUpload: 'Upload files',
+    guidelineUploadLabel: 'Upload files',
     guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
     forceToggleLabel: 'Force display before annotation',
     forceToggleDesc: 'Annotators must read the guideline before starting work',
     s3NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
-    s2TemplateSectionTitle: 'Start from a template',
+    s2TemplateSectionTitle: 'Start from template or upload config',
+    uploadConfigBtn: 'Upload config (YAML / JSON)',
     annotationPreviewLabel: 'Annotation preview',
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
@@ -696,11 +732,14 @@ var I18N = {
     previewTaskScore: 'Choose a score',
     previewEmpty: 'Add at least one option to preview',
     previewSampleSentence: 'This is a sample text. Apply annotations with the current settings.',
+    previewSampleSentenceScoring: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
+    previewSampleSentenceSequence: 'TSMC chairman C.C. Wei attended an industry forum in Taipei today.',
+    previewSampleSentenceRelation: 'Aspirin can relieve headaches, but it may cause stomach discomfort.',
     previewSentenceALabel: 'Sentence A',
     previewSentenceBLabel: 'Sentence B',
     previewSampleSentenceA: 'The service at this restaurant is great.',
     previewSampleSentenceB: 'But the dishes are served slowly.',
-    saveCodeBtnLabel: 'Save to Visual',
+    saveCodeBtnLabel: 'Save',
     cancelBtnLabel: 'Cancel', prevBtnLabel: 'Back', nextBtnLabel: 'Next',
     submitBtnLabel: 'Create task', submittingLabel: 'Creating…',
     leaveModalTitle: 'Leave this page?',
@@ -711,9 +750,13 @@ var I18N = {
     errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
     errDatasetSize: 'File exceeds the 200 MB limit',
     errSchemaRequired: 'Please complete all required fields',
+    errCodeUnsaved: 'Please save code changes before continuing',
     errCodeInvalid: 'Invalid code format. Please fix and save again',
+    errConfigFormat: 'Invalid config file type. Upload YAML / YML / JSON',
+    errConfigRead: 'Failed to read config file. Please try again',
     toastCreated: 'Task created — returning to task list…',
-    toastCodeSaved: 'Code configuration synced to Visual',
+    toastCodeSaved: 'Code configuration synced',
+    toastConfigLoaded: 'Config loaded. Click Save to apply',
     applyTemplate: 'Apply default template: ',
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
   },
@@ -724,6 +767,7 @@ var state = {
   lang: 'zh', step: 1,
   taskName: '', datasetFile: null, taskType: '',
   codeFormat: 'yaml', configData: {},
+  guidelineText: '',
   guidelineFiles: [], forceGuideline: false,
   codeDraftDirty: false,
   isDirty: false, isSubmitting: false, leaveCallback: null,
@@ -973,8 +1017,11 @@ function validateStep1(showErrors) {
 function validateStep2(showErrors) {
   var schema = state.taskType ? REGISTRY[state.taskType] : null;
   if (!schema) return false;
-  if (state.codeDraftDirty && !saveCodeToVisual(false)) {
-    if (showErrors) el('codeErrorBar').classList.remove('hidden');
+  if (state.codeDraftDirty) {
+    if (showErrors) {
+      el('codeErrorBar').classList.remove('hidden');
+      setText('codeErrorMsg', t('errCodeUnsaved'));
+    }
     return false;
   }
   var ok = true;
@@ -1089,6 +1136,7 @@ function renderSchemaFields() {
 
 function buildTagInput(field) {
   var tags = Array.isArray(state.configData[field.key]) ? state.configData[field.key].slice() : [];
+  var isComposing = false;
   state.configData[field.key] = tags;
   var wrap = document.createElement('div');
   wrap.className = 'tag-input-wrap';
@@ -1118,18 +1166,23 @@ function buildTagInput(field) {
     var inp = document.createElement('input');
     inp.type = 'text'; inp.className = 'tag-new-input';
     inp.placeholder = field['hint_' + state.lang] || '';
+    inp.addEventListener('compositionstart', function() { isComposing = true; });
+    inp.addEventListener('compositionend', function() { isComposing = false; });
     inp.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' || e.key === ',') {
+        if (e.isComposing || isComposing || e.keyCode === 229) return;
         e.preventDefault();
         var val = inp.value.trim();
         if (val) {
+          inp.value = '';
           if (tags.indexOf(val) === -1) {
             tags.push(val);
             render();
-            wrap.querySelector('.tag-new-input').focus();
+            setTimeout(function() {
+              var nextInp = wrap.querySelector('.tag-new-input');
+              if (nextInp) nextInp.focus();
+            }, 0);
             markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
-          } else {
-            inp.value = '';
           }
         }
       }
@@ -1264,9 +1317,13 @@ function updateAnnotationPreview() {
 
     preview.appendChild(pairWrap);
   } else {
+    var sampleTextKey = 'previewSampleSentence';
+    if (taskType === 'single_sentence_scoring_regression') sampleTextKey = 'previewSampleSentenceScoring';
+    else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
+    else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
     var sample = document.createElement('div');
     sample.className = 'annotation-preview-sample';
-    sample.textContent = t('previewSampleSentence');
+    sample.textContent = t(sampleTextKey);
     preview.appendChild(sample);
   }
 
@@ -1294,13 +1351,25 @@ function updateAnnotationPreview() {
     return;
   }
 
+  var singleSelectPreview =
+    taskType === 'single_sentence_scoring_regression' ||
+    taskType === 'sentence_pairs' ||
+    (taskType === 'single_sentence_classification' && !config.allow_multiple);
+
   options.forEach(function(option) {
     var row = document.createElement('label');
     row.className = 'annotation-preview-option';
 
     var checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.disabled = true;
+    if (singleSelectPreview) {
+      checkbox.addEventListener('change', function() {
+        if (!checkbox.checked) return;
+        optionsWrap.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+          if (cb !== checkbox) cb.checked = false;
+        });
+      });
+    }
     row.appendChild(checkbox);
 
     if (option.color) {
@@ -1323,6 +1392,36 @@ function updateAnnotationPreview() {
 }
 
 /* ── Template picker ─────────────────────────────────────────── */
+function cloneObject(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function getDefaultTemplateForLang(taskType, lang) {
+  var schema = taskType ? REGISTRY[taskType] : null;
+  if (!schema) return {};
+  if (schema.defaultTemplateI18n && schema.defaultTemplateI18n[lang]) {
+    return cloneObject(schema.defaultTemplateI18n[lang]);
+  }
+  return cloneObject(schema.defaultTemplate || {});
+}
+
+function syncI18nTemplateConfig(prevLang, nextLang) {
+  if (prevLang === nextLang || state.codeDraftDirty || !state.taskType) return;
+  var schema = REGISTRY[state.taskType];
+  if (!schema || !schema.defaultTemplateI18n) return;
+
+  var prevTpl = schema.defaultTemplateI18n[prevLang];
+  var nextTpl = schema.defaultTemplateI18n[nextLang];
+  if (!prevTpl || !nextTpl) return;
+
+  if (Array.isArray(prevTpl.labels) && Array.isArray(nextTpl.labels) && Array.isArray(state.configData.labels)) {
+    var sameAsPrev = state.configData.labels.length === prevTpl.labels.length && state.configData.labels.every(function(v, i) {
+      return v === prevTpl.labels[i];
+    });
+    if (sameAsPrev) state.configData.labels = nextTpl.labels.slice();
+  }
+}
+
 function renderTemplateBtns() {
   var container = el('templateBtns');
   while (container.firstChild) container.removeChild(container.firstChild);
@@ -1333,7 +1432,7 @@ function renderTemplateBtns() {
   btn.setAttribute('type', 'button');
   btn.textContent = t('applyTemplate') + (schema[state.lang] || schema.zh);
   btn.addEventListener('click', function() {
-    state.configData = JSON.parse(JSON.stringify(schema.defaultTemplate));
+    state.configData = getDefaultTemplateForLang(state.taskType, state.lang);
     renderSchemaFields();
     state.codeDraftDirty = false;
     el('codeEditor').value = configToCode();
@@ -1351,6 +1450,35 @@ function setCodeFormat(fmt) {
   el('formatYamlBtn').style.fontWeight = fmt === 'yaml' ? '700' : '400';
   el('formatJsonBtn').style.fontWeight = fmt === 'json' ? '700' : '400';
   el('codeEditor').value = configToCode();
+}
+
+function loadConfigFile(file) {
+  var name = file.name.toLowerCase();
+  var ext = name.slice(name.lastIndexOf('.'));
+  if (['.yaml', '.yml', '.json'].indexOf(ext) === -1) {
+    showToast(t('errConfigFormat'), 'error');
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function() {
+    var fmt = ext === '.json' ? 'json' : 'yaml';
+    state.codeFormat = fmt;
+    el('formatYamlBtn').style.fontWeight = fmt === 'yaml' ? '700' : '400';
+    el('formatJsonBtn').style.fontWeight = fmt === 'json' ? '700' : '400';
+    el('codeEditor').value = String(reader.result || '');
+    state.codeDraftDirty = true;
+    el('saveCodeBtn').disabled = false;
+    el('codeErrorBar').classList.add('hidden');
+    markDirty();
+    revalidateCurrentStep();
+    showToast(t('toastConfigLoaded'), 'success');
+    track('prototype_task_new_config_uploaded', { format: fmt });
+  };
+  reader.onerror = function() {
+    showToast(t('errConfigRead'), 'error');
+  };
+  reader.readAsText(file);
 }
 
 function saveCodeToVisual(showSuccessToast) {
@@ -1557,15 +1685,17 @@ function onTaskTypeChange() {
 
 /* ── Apply language ──────────────────────────────────────────── */
 function applyLang(l) {
+  var prevLang = state.lang;
   state.lang = l === 'en' ? 'en' : 'zh';
   document.documentElement.lang = state.lang === 'en' ? 'en' : 'zh-TW';
   document.title = t('docTitle');
 
   var ids = [
     'pageTitle','pageSubtitle','s1CardTitle','s2CardTitle','s3CardTitle',
-    'labelTaskName','labelTaskType','labelDataset','labelGuideline',
+    'navDashboard','navTaskManagement','navAnnotation','navDataset','navAdmin','navProfile',
+    'labelTaskName','labelTaskType','labelDataset','labelGuideline','labelGuidelineUpload',
     'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
-    'forceToggleLabel','forceToggleDesc','s3NoticeText','s2TemplateSectionTitle',
+    'forceToggleLabel','forceToggleDesc','s3NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
@@ -1573,6 +1703,7 @@ function applyLang(l) {
   setText('leaveModalStayBtn', t('leaveModalStay'));
   setText('leaveModalLeaveBtn', t('leaveModalLeave'));
   setText('nextBtnLabel', state.step === 3 ? t('submitBtnLabel') : t('nextBtnLabel'));
+  el('guidelineTextInput').placeholder = t('guidelineTextPlaceholder');
 
   /* Task type options — safe: textContent only */
   var sel = el('taskTypeSelect');
@@ -1594,7 +1725,17 @@ function applyLang(l) {
       langToggleAria: state.lang === 'en' ? 'Switch language' : '切換語言',
     });
   }
-  if (state.taskType) { renderTemplateBtns(); renderSchemaFields(); }
+  if (state.taskType) {
+    syncI18nTemplateConfig(prevLang, state.lang);
+    renderTemplateBtns();
+    renderSchemaFields();
+  }
+}
+
+function handleLangToggle(source) {
+  var prev = state.lang;
+  applyLang(state.lang === 'zh' ? 'en' : 'zh');
+  track('prototype_lang_switched', { source: source, from_lang: prev, to_lang: state.lang });
 }
 
 /* ── Event bindings ──────────────────────────────────────────── */
@@ -1604,12 +1745,20 @@ el('taskNameInput').addEventListener('input', function(e) {
   showFieldError('errTaskName', false);
   markDirty(); revalidateCurrentStep();
 });
+el('langToggle').addEventListener('click', function() { handleLangToggle('desktop'); });
+el('mobileLangToggle').addEventListener('click', function() { handleLangToggle('mobile'); });
 el('taskTypeSelect').addEventListener('change', onTaskTypeChange);
 el('codeEditor').addEventListener('input', function() {
   state.codeDraftDirty = true;
   el('saveCodeBtn').disabled = false;
+  el('codeErrorBar').classList.add('hidden');
 });
 el('saveCodeBtn').addEventListener('click', function() { saveCodeToVisual(true); });
+el('uploadConfigBtn').addEventListener('click', function() { el('configFileInput').click(); });
+el('configFileInput').addEventListener('change', function() {
+  if (this.files && this.files[0]) loadConfigFile(this.files[0]);
+  this.value = '';
+});
 
 el('datasetUploadZone').addEventListener('click', function() { el('datasetFileInput').click(); });
 el('datasetUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('datasetFileInput').click(); } });
@@ -1622,6 +1771,10 @@ el('datasetRemoveBtn').addEventListener('click', clearDatasetFile);
 el('guidelineUploadZone').addEventListener('click', function() { el('guidelineFileInput').click(); });
 el('guidelineUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('guidelineFileInput').click(); } });
 el('guidelineFileInput').addEventListener('change', function() { if (this.files.length) addGuidelineFiles(this.files); });
+el('guidelineTextInput').addEventListener('input', function(e) {
+  state.guidelineText = e.target.value;
+  markDirty();
+});
 
 el('codeEditor').addEventListener('input', function() { markDirty(); revalidateCurrentStep(); });
 el('forceGuidelineToggle').addEventListener('change', function() {
@@ -1669,6 +1822,8 @@ window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.pre
 var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
 applyLang(initLang);
 showStep(1);
+el('codeEditor').readOnly = false;
+el('codeEditor').disabled = false;
 el('codeEditor').value = configToCode();
 
 if (window.LabelSuiteAnalytics) {
