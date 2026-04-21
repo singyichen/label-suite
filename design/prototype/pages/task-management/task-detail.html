@@ -998,8 +998,7 @@
                   <tr>
                     <th id="thCandidateName">姓名</th>
                     <th id="thCandidateEmail">Email</th>
-                    <th id="thCandidateSystemRole">系統角色</th>
-                    <th id="thCandidateInTask">目前是否已在任務</th>
+                    <th id="thCandidateTaskCount">目前已在任務數量</th>
                     <th id="thCandidateAssignRole">指派任務角色</th>
                     <th id="thCandidateActions">操作</th>
                   </tr>
@@ -1146,17 +1145,13 @@
       thMemberActions: '操作',
       thCandidateName: '姓名',
       thCandidateEmail: 'Email',
-      thCandidateSystemRole: '系統角色',
-      thCandidateInTask: '目前是否已在任務',
+      thCandidateTaskCount: '目前已在任務數量',
       thCandidateAssignRole: '指派任務角色',
       thCandidateActions: '操作',
       memberStatusActive: '啟用',
       memberStatusDisabled: '停用',
       taskRoleReviewer: '審核員',
       taskRoleAnnotator: '標記員',
-      systemRoleUser: '一般使用者',
-      yesInTask: '是',
-      noInTask: '否',
       actionRemove: '移除',
       actionDisable: '停用',
       actionEnable: '啟用',
@@ -1270,17 +1265,13 @@
       thMemberActions: 'Actions',
       thCandidateName: 'Name',
       thCandidateEmail: 'Email',
-      thCandidateSystemRole: 'System role',
-      thCandidateInTask: 'Already in task',
+      thCandidateTaskCount: 'Current task count',
       thCandidateAssignRole: 'Assign task role',
       thCandidateActions: 'Actions',
       memberStatusActive: 'active',
       memberStatusDisabled: 'disabled',
       taskRoleReviewer: 'Reviewer',
       taskRoleAnnotator: 'Annotator',
-      systemRoleUser: 'user',
-      yesInTask: 'Yes',
-      noInTask: 'No',
       actionRemove: 'Remove',
       actionDisable: 'Disable',
       actionEnable: 'Enable',
@@ -1330,9 +1321,9 @@
   ];
 
   var PLATFORM_USERS = [
-    { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', systemRole: 'user' },
-    { name: 'Steven Kao', email: 'steven.kao@labelsuite.io', systemRole: 'user' },
-    { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', systemRole: 'user' },
+    { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', activeTaskCount: 1 },
+    { name: 'Steven Kao', email: 'steven.kao@labelsuite.io', activeTaskCount: 3 },
+    { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', activeTaskCount: 5 },
   ];
 
   var state = {
@@ -1473,8 +1464,7 @@
     setText('thMemberActions', t('thMemberActions'));
     setText('thCandidateName', t('thCandidateName'));
     setText('thCandidateEmail', t('thCandidateEmail'));
-    setText('thCandidateSystemRole', t('thCandidateSystemRole'));
-    setText('thCandidateInTask', t('thCandidateInTask'));
+    setText('thCandidateTaskCount', t('thCandidateTaskCount'));
     setText('thCandidateAssignRole', t('thCandidateAssignRole'));
     setText('thCandidateActions', t('thCandidateActions'));
     setText('memberActionModalTitle', t('memberActionModalTitle'));
@@ -1788,8 +1778,7 @@
 
       tr.appendChild(td(user.name, 'member-name'));
       tr.appendChild(td(user.email, 'member-email'));
-      tr.appendChild(td(t('systemRoleUser')));
-      tr.appendChild(td(inTask ? t('yesInTask') : t('noInTask')));
+      tr.appendChild(td(String(user.activeTaskCount || 0)));
 
       var tdAssign = document.createElement('td');
       var assignSelect = document.createElement('select');
@@ -1820,6 +1809,7 @@
           joinedAt: '2026-04-21 10:25',
           lastActive: '-',
         });
+        user.activeTaskCount = (user.activeTaskCount || 0) + 1;
         showToast(t('toastMemberUpdated'));
         trackEvent('prototype_member_added', { member_email: user.email, role: assignSelect.value });
         renderMemberTable();
