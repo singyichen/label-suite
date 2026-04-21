@@ -551,6 +551,185 @@
       color: var(--color-text-soft);
       margin-top: 10px;
     }
+    .stage-filter-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .stage-toggle {
+      display: inline-flex;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 2px;
+      background: var(--color-white);
+      gap: 2px;
+    }
+    .stage-btn {
+      border: none;
+      background: transparent;
+      color: var(--color-text-soft);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background var(--dur-fast), color var(--dur-fast);
+    }
+    .stage-btn:hover { color: var(--color-primary); }
+    .stage-btn.active {
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+    }
+    .progress-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .progress-metric-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      background: var(--color-white);
+      min-width: 0;
+    }
+    .progress-metric-key {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--color-ink-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .progress-metric-value {
+      display: block;
+      color: var(--color-ink);
+      font-size: 17px;
+      line-height: 1.3;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .sort-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .sort-label {
+      font-size: 12px;
+      color: var(--color-ink-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .sort-select {
+      width: 200px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 7px 10px;
+      background: var(--color-white);
+      font-size: 13px;
+      color: var(--color-ink);
+    }
+    .progress-inline-track {
+      width: 140px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-border-muted);
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-inline-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: var(--color-primary);
+      border-radius: inherit;
+    }
+    .quality-flag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+    .quality-good {
+      color: var(--color-success);
+      background: var(--color-success-bg);
+      border-color: var(--color-success-border);
+    }
+    .quality-watch {
+      color: var(--color-warning);
+      background: var(--color-warning-bg);
+      border-color: var(--color-warning-border);
+    }
+    .quality-risk {
+      color: var(--color-error);
+      background: var(--color-error-bg);
+      border-color: var(--color-error-border);
+    }
+    .stage-split-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .stage-split-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      padding: 12px;
+    }
+    .stage-split-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin-bottom: 8px;
+    }
+    .stage-split-meta {
+      font-size: 13px;
+      color: var(--color-text-soft);
+      margin-top: 8px;
+    }
+    .stage-split-track {
+      width: 100%;
+      height: 10px;
+      border-radius: var(--radius-full);
+      background: var(--color-border-muted);
+      overflow: hidden;
+      position: relative;
+    }
+    .stage-split-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      border-radius: inherit;
+    }
+    .stage-split-fill.dry { background: var(--color-primary); }
+    .stage-split-fill.official { background: var(--color-cta); }
+    .progress-empty-state {
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      padding: 20px;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .progress-empty-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-ink);
+      margin-bottom: 10px;
+    }
     .table-wrap {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -800,6 +979,9 @@
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
       .export-grid { grid-template-columns: 1fr; }
+      .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stage-split-grid { grid-template-columns: 1fr; }
+      .sort-row { justify-content: flex-start; }
       .table-wrap { margin: 0 -2px; }
       .toast-container { right: 12px; left: 12px; bottom: 96px; }
       .toast { width: 100%; }
@@ -845,6 +1027,7 @@
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
+        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
         <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
       </div>
 
@@ -1010,6 +1193,80 @@
         </section>
 
       </div>
+
+      <div id="annotationProgressPanel" class="hidden" aria-live="polite">
+        <section class="panel" aria-labelledby="progressSummaryTitle">
+          <div class="stage-filter-row">
+            <h2 class="panel-title" id="progressSummaryTitle" style="margin-bottom: 0;">整體進度摘要</h2>
+            <div class="stage-toggle" role="tablist" aria-label="Progress stage switch">
+              <button class="stage-btn active" type="button" id="progressStageDryBtn">Dry Run</button>
+              <button class="stage-btn" type="button" id="progressStageOfficialBtn">Official Run</button>
+            </div>
+          </div>
+          <div class="progress-metric-grid">
+            <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricTotalLabel">總樣本數</span><span class="progress-metric-value" id="progressMetricTotalValue">-</span></article>
+            <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricCompletedLabel">已完成數</span><span class="progress-metric-value" id="progressMetricCompletedValue">-</span></article>
+            <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricRateLabel">完成率</span><span class="progress-metric-value" id="progressMetricRateValue">-</span></article>
+            <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricSpeedLabel">平均速度</span><span class="progress-metric-value" id="progressMetricSpeedValue">-</span></article>
+            <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricEtaLabel">剩餘估計時間</span><span class="progress-metric-value" id="progressMetricEtaValue">-</span></article>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="memberProgressTitle" id="memberProgressSection">
+          <h2 class="panel-title" id="memberProgressTitle">成員進度表</h2>
+          <div class="sort-row">
+            <label class="sort-label" id="progressSortLabel" for="memberProgressSort">排序</label>
+            <select class="sort-select" id="memberProgressSort" aria-label="Sort member progress">
+              <option value="completed_desc" id="progressSortCompleted">依已完成數（高到低）</option>
+              <option value="speed_desc" id="progressSortSpeed">依平均速度（高到低）</option>
+              <option value="submitted_desc" id="progressSortSubmitted">依最後提交（新到舊）</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="member-table" role="table" aria-label="Member progress table">
+                <thead>
+                  <tr>
+                    <th id="thProgressMemberName">成員姓名</th>
+                    <th id="thProgressRole">角色</th>
+                    <th id="thProgressCompleted">已完成數</th>
+                    <th id="thProgressPending">待完成數</th>
+                    <th id="thProgressTotal">總數量</th>
+                    <th id="thProgressSpeed">平均速度</th>
+                    <th id="thProgressBar">個人進度條</th>
+                    <th id="thProgressLastSubmitted">最後提交時間</th>
+                    <th id="thProgressQuality">品質旗標</th>
+                  </tr>
+                </thead>
+                <tbody id="memberProgressTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="stageProgressTitle" id="stageProgressSection">
+          <h2 class="panel-title" id="stageProgressTitle">階段分段進度</h2>
+          <div class="stage-split-grid">
+            <article class="stage-split-card">
+              <h3 class="stage-split-title" id="stageDryTitle">試標</h3>
+              <div class="stage-split-track" aria-hidden="true"><div class="stage-split-fill dry" id="stageDryFill"></div></div>
+              <p class="stage-split-meta" id="stageDryMeta">-</p>
+            </article>
+            <article class="stage-split-card">
+              <h3 class="stage-split-title" id="stageOfficialTitle">正式標記</h3>
+              <div class="stage-split-track" aria-hidden="true"><div class="stage-split-fill official" id="stageOfficialFill"></div></div>
+              <p class="stage-split-meta" id="stageOfficialMeta">-</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel hidden" aria-labelledby="progressEmptyTitle" id="progressEmptyState">
+          <div class="progress-empty-state">
+            <p class="progress-empty-title" id="progressEmptyTitle">尚無成員進度資料</p>
+            <button class="btn btn-secondary" type="button" id="progressBackToOverviewBtn">回到任務概覽</button>
+          </div>
+        </section>
+      </div>
     </section>
   </div>
 </main>
@@ -1050,6 +1307,7 @@
       pageTitle: '任務詳情',
       pageSubtitle: '檢視任務概覽、執行控制與匯出結果',
       tabOverview: '任務概覽',
+      tabAnnotationProgress: '標記進度',
       tabMemberManagement: '成員管理',
       basicInfoTitle: '任務基本資訊',
       settingsSummaryTitle: '任務設定摘要',
@@ -1156,6 +1414,39 @@
       actionDisable: '停用',
       actionEnable: '啟用',
       actionAdd: '加入任務',
+      progressSummaryTitle: '整體進度摘要',
+      progressStageDry: '試標',
+      progressStageOfficial: '正式標記',
+      progressMetricTotalLabel: '總樣本數',
+      progressMetricCompletedLabel: '已完成數',
+      progressMetricRateLabel: '完成率',
+      progressMetricSpeedLabel: '平均速度',
+      progressMetricEtaLabel: '剩餘估計時間',
+      memberProgressTitle: '成員進度表',
+      progressSortLabel: '排序',
+      progressSortCompleted: '依已完成數（高到低）',
+      progressSortSpeed: '依平均速度（高到低）',
+      progressSortSubmitted: '依最後提交（新到舊）',
+      thProgressMemberName: '成員姓名',
+      thProgressRole: '角色',
+      thProgressCompleted: '已完成數',
+      thProgressPending: '待完成數',
+      thProgressTotal: '總數量',
+      thProgressSpeed: '平均速度',
+      thProgressBar: '個人進度條',
+      thProgressLastSubmitted: '最後提交時間',
+      thProgressQuality: '品質旗標',
+      stageProgressTitle: '階段分段進度',
+      stageDryTitle: '試標',
+      stageOfficialTitle: '正式標記',
+      progressEmptyTitle: '尚無成員進度資料',
+      progressBackToOverviewBtn: '回到任務概覽',
+      qualityGood: '穩定',
+      qualityWatch: '觀察',
+      qualityRisk: '需複核',
+      progressSpeedUnit: '筆/小時',
+      progressEtaNone: '-',
+      progressStageMetaTpl: '{completed}/{total}（{rate}%）',
       reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
       toastMemberUpdated: '成員設定已更新',
       memberActionModalTitle: '確認成員操作',
@@ -1170,6 +1461,7 @@
       pageTitle: 'Task detail',
       pageSubtitle: 'Review overview, run control, and exports',
       tabOverview: 'Task overview',
+      tabAnnotationProgress: 'Annotation progress',
       tabMemberManagement: 'Member management',
       basicInfoTitle: 'Task basics',
       settingsSummaryTitle: 'Task settings summary',
@@ -1276,6 +1568,39 @@
       actionDisable: 'Disable',
       actionEnable: 'Enable',
       actionAdd: 'Add to task',
+      progressSummaryTitle: 'Progress summary',
+      progressStageDry: 'Dry Run',
+      progressStageOfficial: 'Official Run',
+      progressMetricTotalLabel: 'Total samples',
+      progressMetricCompletedLabel: 'Completed',
+      progressMetricRateLabel: 'Completion rate',
+      progressMetricSpeedLabel: 'Average speed',
+      progressMetricEtaLabel: 'Remaining ETA',
+      memberProgressTitle: 'Member progress',
+      progressSortLabel: 'Sort by',
+      progressSortCompleted: 'Completed (high to low)',
+      progressSortSpeed: 'Average speed (high to low)',
+      progressSortSubmitted: 'Last submitted (new to old)',
+      thProgressMemberName: 'Member',
+      thProgressRole: 'Role',
+      thProgressCompleted: 'Completed',
+      thProgressPending: 'Pending',
+      thProgressTotal: 'Total',
+      thProgressSpeed: 'Avg speed',
+      thProgressBar: 'Personal progress',
+      thProgressLastSubmitted: 'Last submitted',
+      thProgressQuality: 'Quality flag',
+      stageProgressTitle: 'Stage breakdown',
+      stageDryTitle: 'Dry Run',
+      stageOfficialTitle: 'Official Run',
+      progressEmptyTitle: 'No member progress data yet',
+      progressBackToOverviewBtn: 'Back to task overview',
+      qualityGood: 'Stable',
+      qualityWatch: 'Watch',
+      qualityRisk: 'Need review',
+      progressSpeedUnit: 'items/hour',
+      progressEtaNone: '-',
+      progressStageMetaTpl: '{completed}/{total} ({rate}%)',
       reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
       toastMemberUpdated: 'Member setting updated',
       memberActionModalTitle: 'Confirm member action',
@@ -1326,10 +1651,35 @@
     { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', activeTaskCount: 5 },
   ];
 
+  var ANNOTATION_PROGRESS = {
+    dry: {
+      totalSamples: 120,
+      completedSamples: 84,
+      avgSpeed: 22.4,
+      remainingEta: '1天 8小時',
+      remainingEtaEn: '1d 8h',
+      members: [
+        { name: 'Alex Wang', role: 'annotator', completed: 30, pending: 10, avgSpeed: 24.2, lastSubmitted: '2026-04-21 09:45', quality: 'good' },
+        { name: 'Olivia Lin', role: 'annotator', completed: 28, pending: 12, avgSpeed: 21.7, lastSubmitted: '2026-04-21 09:36', quality: 'watch' },
+        { name: 'Mandy Chen', role: 'reviewer', completed: 26, pending: 14, avgSpeed: 20.8, lastSubmitted: '2026-04-21 09:20', quality: 'good' },
+      ],
+    },
+    official: {
+      totalSamples: 1160,
+      completedSamples: 0,
+      avgSpeed: 0,
+      remainingEta: '-',
+      remainingEtaEn: '-',
+      members: [],
+    },
+  };
+
   var state = {
     lang: 'zh',
     taskRole: 'project_leader',
     activeTab: 'overview',
+    progressStage: 'dry',
+    progressSort: 'completed_desc',
     showSkeleton: true,
     pendingAction: null,
     isolationConfirmed: false,
@@ -1393,7 +1743,9 @@
       window.location.href = './task-list.html?unauthorized=annotator';
     }
 
-    var resolvedTab = tab === 'member-management' ? 'member-management' : 'overview';
+    var resolvedTab = 'overview';
+    if (tab === 'member-management') resolvedTab = 'member-management';
+    if (tab === 'annotation-progress') resolvedTab = 'annotation-progress';
     var allowed = setTabByRole(resolvedTab, true);
     if (!allowed) {
       state.pendingReviewerTabToast = true;
@@ -1419,6 +1771,7 @@
     setText('pageTitle', t('pageTitle'));
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
+    setText('tabAnnotationProgress', t('tabAnnotationProgress'));
     setText('tabMemberManagement', t('tabMemberManagement'));
     setText('basicInfoTitle', t('basicInfoTitle'));
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
@@ -1467,6 +1820,33 @@
     setText('thCandidateTaskCount', t('thCandidateTaskCount'));
     setText('thCandidateAssignRole', t('thCandidateAssignRole'));
     setText('thCandidateActions', t('thCandidateActions'));
+    setText('progressSummaryTitle', t('progressSummaryTitle'));
+    setText('progressStageDryBtn', t('progressStageDry'));
+    setText('progressStageOfficialBtn', t('progressStageOfficial'));
+    setText('progressMetricTotalLabel', t('progressMetricTotalLabel'));
+    setText('progressMetricCompletedLabel', t('progressMetricCompletedLabel'));
+    setText('progressMetricRateLabel', t('progressMetricRateLabel'));
+    setText('progressMetricSpeedLabel', t('progressMetricSpeedLabel'));
+    setText('progressMetricEtaLabel', t('progressMetricEtaLabel'));
+    setText('memberProgressTitle', t('memberProgressTitle'));
+    setText('progressSortLabel', t('progressSortLabel'));
+    setText('progressSortCompleted', t('progressSortCompleted'));
+    setText('progressSortSpeed', t('progressSortSpeed'));
+    setText('progressSortSubmitted', t('progressSortSubmitted'));
+    setText('thProgressMemberName', t('thProgressMemberName'));
+    setText('thProgressRole', t('thProgressRole'));
+    setText('thProgressCompleted', t('thProgressCompleted'));
+    setText('thProgressPending', t('thProgressPending'));
+    setText('thProgressTotal', t('thProgressTotal'));
+    setText('thProgressSpeed', t('thProgressSpeed'));
+    setText('thProgressBar', t('thProgressBar'));
+    setText('thProgressLastSubmitted', t('thProgressLastSubmitted'));
+    setText('thProgressQuality', t('thProgressQuality'));
+    setText('stageProgressTitle', t('stageProgressTitle'));
+    setText('stageDryTitle', t('stageDryTitle'));
+    setText('stageOfficialTitle', t('stageOfficialTitle'));
+    setText('progressEmptyTitle', t('progressEmptyTitle'));
+    setText('progressBackToOverviewBtn', t('progressBackToOverviewBtn'));
     setText('memberActionModalTitle', t('memberActionModalTitle'));
     setText('memberActionModalBody', t('memberActionModalBodyEnable'));
     setText('memberActionCancelBtn', t('memberActionCancelBtn'));
@@ -1480,6 +1860,7 @@
 
     renderOverview();
     renderMemberManagement();
+    renderAnnotationProgress();
     renderTabs();
 
     if (state.pendingReviewerTabToast) {
@@ -1654,7 +2035,9 @@
   }
 
   function setTabByRole(tabName, silent) {
-    var nextTab = tabName === 'member-management' ? 'member-management' : 'overview';
+    var nextTab = 'overview';
+    if (tabName === 'member-management') nextTab = 'member-management';
+    if (tabName === 'annotation-progress') nextTab = 'annotation-progress';
     if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
       state.activeTab = 'overview';
       if (!silent) showToast(t('reviewerTabBlocked'), true);
@@ -1666,22 +2049,28 @@
 
   function renderTabs() {
     var tabOverview = document.getElementById('tabOverview');
+    var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
     var tabMemberManagement = document.getElementById('tabMemberManagement');
     var overviewPanel = document.getElementById('overviewPanel');
+    var annotationProgressPanel = document.getElementById('annotationProgressPanel');
     var memberManagementPanel = document.getElementById('memberManagementPanel');
 
     var reviewer = state.taskRole === 'reviewer';
     tabMemberManagement.classList.toggle('hidden', reviewer);
 
     var overviewActive = state.activeTab === 'overview';
+    var annotationActive = state.activeTab === 'annotation-progress';
     var memberActive = state.activeTab === 'member-management' && !reviewer;
 
     tabOverview.classList.toggle('active', overviewActive);
     tabOverview.setAttribute('aria-selected', overviewActive ? 'true' : 'false');
+    tabAnnotationProgress.classList.toggle('active', annotationActive);
+    tabAnnotationProgress.setAttribute('aria-selected', annotationActive ? 'true' : 'false');
     tabMemberManagement.classList.toggle('active', memberActive);
     tabMemberManagement.setAttribute('aria-selected', memberActive ? 'true' : 'false');
 
     overviewPanel.classList.toggle('hidden', !overviewActive);
+    annotationProgressPanel.classList.toggle('hidden', !annotationActive);
     memberManagementPanel.classList.toggle('hidden', !memberActive);
   }
 
@@ -1865,6 +2254,158 @@
     renderCandidateTable();
   }
 
+  function getProgressStageData() {
+    return state.progressStage === 'official' ? ANNOTATION_PROGRESS.official : ANNOTATION_PROGRESS.dry;
+  }
+
+  function getProgressRate(completed, total) {
+    if (!total) return 0;
+    return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
+  }
+
+  function getQualityLabel(quality) {
+    if (quality === 'risk') return t('qualityRisk');
+    if (quality === 'watch') return t('qualityWatch');
+    return t('qualityGood');
+  }
+
+  function getQualityClass(quality) {
+    if (quality === 'risk') return 'quality-flag quality-risk';
+    if (quality === 'watch') return 'quality-flag quality-watch';
+    return 'quality-flag quality-good';
+  }
+
+  function formatProgressSpeed(speed) {
+    return speed > 0 ? speed.toFixed(1) + ' ' + t('progressSpeedUnit') : '-';
+  }
+
+  function getSortedProgressMembers(members) {
+    var cloned = members.slice();
+    if (state.progressSort === 'speed_desc') {
+      cloned.sort(function(a, b) { return b.avgSpeed - a.avgSpeed; });
+      return cloned;
+    }
+    if (state.progressSort === 'submitted_desc') {
+      cloned.sort(function(a, b) { return Date.parse(b.lastSubmitted) - Date.parse(a.lastSubmitted); });
+      return cloned;
+    }
+    cloned.sort(function(a, b) { return b.completed - a.completed; });
+    return cloned;
+  }
+
+  function renderProgressStageButtons() {
+    var isDry = state.progressStage === 'dry';
+    var dryBtn = document.getElementById('progressStageDryBtn');
+    var officialBtn = document.getElementById('progressStageOfficialBtn');
+    dryBtn.classList.toggle('active', isDry);
+    officialBtn.classList.toggle('active', !isDry);
+  }
+
+  function renderProgressSummary() {
+    var stageData = getProgressStageData();
+    var rate = getProgressRate(stageData.completedSamples, stageData.totalSamples);
+
+    setText('progressMetricTotalValue', String(stageData.totalSamples));
+    setText('progressMetricCompletedValue', String(stageData.completedSamples));
+    setText('progressMetricRateValue', rate + '%');
+    setText('progressMetricSpeedValue', formatProgressSpeed(stageData.avgSpeed));
+    setText('progressMetricEtaValue', state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn);
+  }
+
+  function renderMemberProgressTable() {
+    var stageData = getProgressStageData();
+    var tbody = document.getElementById('memberProgressTableBody');
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    getSortedProgressMembers(stageData.members).forEach(function(member) {
+      var tr = document.createElement('tr');
+      var role = member.role === 'reviewer' ? 'reviewer' : 'annotator';
+      var total = member.completed + member.pending;
+      var rate = getProgressRate(member.completed, total);
+
+      function tdWithText(text, cls) {
+        var td = document.createElement('td');
+        if (cls) td.className = cls;
+        td.textContent = text;
+        return td;
+      }
+
+      tr.appendChild(tdWithText(member.name, 'member-name'));
+
+      var tdRole = document.createElement('td');
+      var roleBadge = document.createElement('span');
+      roleBadge.className = getTaskRoleBadgeClass(role);
+      roleBadge.textContent = getTaskRoleLabel(role);
+      tdRole.appendChild(roleBadge);
+      tr.appendChild(tdRole);
+
+      tr.appendChild(tdWithText(String(member.completed)));
+      tr.appendChild(tdWithText(String(member.pending)));
+      tr.appendChild(tdWithText(String(total)));
+      tr.appendChild(tdWithText(formatProgressSpeed(member.avgSpeed)));
+
+      var tdBar = document.createElement('td');
+      var barTrack = document.createElement('div');
+      barTrack.className = 'progress-inline-track';
+      var barFill = document.createElement('div');
+      barFill.className = 'progress-inline-fill';
+      barFill.style.width = rate + '%';
+      barTrack.appendChild(barFill);
+      tdBar.appendChild(barTrack);
+      tr.appendChild(tdBar);
+
+      tr.appendChild(tdWithText(member.lastSubmitted));
+
+      var tdQuality = document.createElement('td');
+      var qualityFlag = document.createElement('span');
+      qualityFlag.className = getQualityClass(member.quality);
+      qualityFlag.textContent = getQualityLabel(member.quality);
+      tdQuality.appendChild(qualityFlag);
+      tr.appendChild(tdQuality);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderStageBreakdown() {
+    var dryRate = getProgressRate(ANNOTATION_PROGRESS.dry.completedSamples, ANNOTATION_PROGRESS.dry.totalSamples);
+    var officialRate = getProgressRate(ANNOTATION_PROGRESS.official.completedSamples, ANNOTATION_PROGRESS.official.totalSamples);
+    document.getElementById('stageDryFill').style.width = dryRate + '%';
+    document.getElementById('stageOfficialFill').style.width = officialRate + '%';
+    setText(
+      'stageDryMeta',
+      interpolate(t('progressStageMetaTpl'), {
+        completed: ANNOTATION_PROGRESS.dry.completedSamples,
+        total: ANNOTATION_PROGRESS.dry.totalSamples,
+        rate: dryRate,
+      })
+    );
+    setText(
+      'stageOfficialMeta',
+      interpolate(t('progressStageMetaTpl'), {
+        completed: ANNOTATION_PROGRESS.official.completedSamples,
+        total: ANNOTATION_PROGRESS.official.totalSamples,
+        rate: officialRate,
+      })
+    );
+  }
+
+  function renderProgressEmptyState() {
+    var stageData = getProgressStageData();
+    var empty = !stageData.totalSamples || !stageData.members.length;
+    document.getElementById('progressEmptyState').classList.toggle('hidden', !empty);
+    document.getElementById('memberProgressSection').classList.toggle('hidden', empty);
+    document.getElementById('stageProgressSection').classList.remove('hidden');
+  }
+
+  function renderAnnotationProgress() {
+    renderProgressStageButtons();
+    renderProgressSummary();
+    renderMemberProgressTable();
+    renderStageBreakdown();
+    renderProgressEmptyState();
+  }
+
   function showToast(message, isError) {
     var toast = document.getElementById('toast');
     var msg = document.getElementById('toastMsg');
@@ -1940,12 +2481,20 @@
     var valueInput = document.getElementById('samplingValue');
     var isolationToggle = document.getElementById('isolationToggle');
     var tabOverview = document.getElementById('tabOverview');
+    var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
     var tabMemberManagement = document.getElementById('tabMemberManagement');
 
     tabOverview.addEventListener('click', function() {
       setTabByRole('overview');
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'overview' });
+    });
+
+    tabAnnotationProgress.addEventListener('click', function() {
+      setTabByRole('annotation-progress');
+      renderTabs();
+      renderAnnotationProgress();
+      trackEvent('prototype_tab_switched', { tab: 'annotation-progress' });
     });
 
     tabMemberManagement.addEventListener('click', function() {
@@ -2063,6 +2612,30 @@
       renderExport();
     });
 
+    document.getElementById('progressStageDryBtn').addEventListener('click', function() {
+      state.progressStage = 'dry';
+      renderAnnotationProgress();
+      trackEvent('prototype_progress_stage_switched', { run_stage: 'dry' });
+    });
+
+    document.getElementById('progressStageOfficialBtn').addEventListener('click', function() {
+      state.progressStage = 'official';
+      renderAnnotationProgress();
+      trackEvent('prototype_progress_stage_switched', { run_stage: 'official' });
+    });
+
+    document.getElementById('memberProgressSort').addEventListener('change', function(e) {
+      state.progressSort = e.target.value;
+      renderAnnotationProgress();
+      trackEvent('prototype_progress_sort_changed', { sort_by: state.progressSort });
+    });
+
+    document.getElementById('progressBackToOverviewBtn').addEventListener('click', function() {
+      setTabByRole('overview');
+      renderTabs();
+      trackEvent('prototype_tab_switched', { tab: 'overview', source: 'progress_empty_state_cta' });
+    });
+
     var langToggle = document.getElementById('langToggle');
     var mobileLangToggle = document.getElementById('mobileLangToggle');
 
@@ -2079,10 +2652,12 @@
   function showOverviewWithSkeleton() {
     var skeleton = document.getElementById('loadingSkeleton');
     var overviewPanel = document.getElementById('overviewPanel');
+    var annotationProgressPanel = document.getElementById('annotationProgressPanel');
     var memberManagementPanel = document.getElementById('memberManagementPanel');
 
     skeleton.classList.remove('hidden');
     overviewPanel.classList.add('hidden');
+    annotationProgressPanel.classList.add('hidden');
     memberManagementPanel.classList.add('hidden');
 
     window.setTimeout(function() {
@@ -2091,6 +2666,7 @@
       renderTabs();
       renderOverview();
       renderMemberManagement();
+      renderAnnotationProgress();
     }, 560);
   }
 
