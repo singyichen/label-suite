@@ -351,6 +351,8 @@
     .badge-completed { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-isolated { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-non-isolated { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+    .badge-member-active { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-member-disabled { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
 
     .status-row {
       display: flex;
@@ -600,15 +602,25 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 88px;
-      padding: 6px 10px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
       background: var(--color-slate-50);
       color: var(--color-ink);
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       line-height: 1.4;
+      white-space: nowrap;
+    }
+    .role-badge-reviewer {
+      color: #5B21B6;
+      background: #EDE9FE;
+      border-color: #DDD6FE;
+    }
+    .role-badge-annotator {
+      color: #0E7490;
+      background: #ECFEFF;
+      border-color: #A5F3FC;
     }
     .inline-actions { display: inline-flex; gap: 8px; }
     .mini-btn {
@@ -1643,6 +1655,14 @@
     return role === 'reviewer' ? t('taskRoleReviewer') : t('taskRoleAnnotator');
   }
 
+  function getMemberStatusBadgeClass(status) {
+    return status === 'active' ? 'badge-member-active' : 'badge-member-disabled';
+  }
+
+  function getTaskRoleBadgeClass(role) {
+    return role === 'reviewer' ? 'role-badge role-badge-reviewer' : 'role-badge role-badge-annotator';
+  }
+
   function setTabByRole(tabName, silent) {
     var nextTab = tabName === 'member-management' ? 'member-management' : 'overview';
     if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
@@ -1694,12 +1714,17 @@
 
       var tdRole = document.createElement('td');
       var roleBadge = document.createElement('span');
-      roleBadge.className = 'role-badge';
+      roleBadge.className = getTaskRoleBadgeClass(member.taskRole);
       roleBadge.textContent = getTaskRoleLabel(member.taskRole);
       tdRole.appendChild(roleBadge);
       tr.appendChild(tdRole);
 
-      tr.appendChild(tdWithClass(member.status === 'active' ? t('memberStatusActive') : t('memberStatusDisabled')));
+      var tdStatus = document.createElement('td');
+      var statusBadge = document.createElement('span');
+      statusBadge.className = 'badge ' + getMemberStatusBadgeClass(member.status);
+      statusBadge.textContent = member.status === 'active' ? t('memberStatusActive') : t('memberStatusDisabled');
+      tdStatus.appendChild(statusBadge);
+      tr.appendChild(tdStatus);
       tr.appendChild(tdWithClass(member.joinedAt));
       tr.appendChild(tdWithClass(member.lastActive));
 
@@ -1738,8 +1763,8 @@
         });
       });
 
-      wrap.appendChild(toggleBtn);
       wrap.appendChild(removeBtn);
+      wrap.appendChild(toggleBtn);
       tdActions.appendChild(wrap);
       tr.appendChild(tdActions);
       tbody.appendChild(tr);
