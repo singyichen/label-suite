@@ -236,24 +236,6 @@
       margin: 0;
     }
 
-    .task-id-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      border-radius: var(--radius-md);
-      padding: 8px 12px;
-      font-size: 13px;
-      color: var(--color-text-soft);
-    }
-    .task-id-chip code {
-      font-family: var(--font-mono);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-    }
-
     .admin-tabs {
       display: flex;
       border-bottom: 2px solid var(--color-border);
@@ -643,17 +625,6 @@
     .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .mini-btn-danger { color: var(--color-error); }
     .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
-    .hint-box {
-      border: 1px solid var(--color-info-border);
-      border-radius: var(--radius-md);
-      background: var(--color-info-bg);
-      padding: 12px 14px;
-      font-size: 13px;
-      color: var(--color-info);
-      line-height: 1.7;
-    }
-    .hint-box strong { display: inline-block; margin-right: 6px; }
-
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -829,10 +800,6 @@
           <h1 class="page-main-title" id="pageTitle">任務詳情</h1>
           <p class="page-main-subtitle" id="pageSubtitle">檢視任務概覽、執行控制與匯出結果</p>
         </div>
-        <div class="task-id-chip">
-          <span id="taskIdLabel">Task ID</span>
-          <code id="taskIdValue">TASK-014</code>
-        </div>
       </header>
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
@@ -859,7 +826,6 @@
           <h2 class="panel-title" id="basicInfoTitle">任務基本資訊</h2>
           <div class="kv-grid">
             <article class="kv-item"><span class="kv-key" id="labelTaskName">任務名稱</span><span class="kv-value" id="valueTaskName"></span></article>
-            <article class="kv-item"><span class="kv-key">Task ID</span><span class="kv-value mono" id="valueTaskId"></span></article>
             <article class="kv-item"><span class="kv-key" id="labelTaskType">任務類型</span><span class="kv-value" id="valueTaskType"></span></article>
             <article class="kv-item"><span class="kv-key" id="labelCreatedBy">建立者</span><span class="kv-value" id="valueCreatedBy"></span></article>
             <article class="kv-item"><span class="kv-key" id="labelCreatedAt">建立時間</span><span class="kv-value" id="valueCreatedAt"></span></article>
@@ -1003,13 +969,6 @@
           </div>
         </section>
 
-        <section class="panel" aria-labelledby="assignmentRuleTitle">
-          <h2 class="panel-title" id="assignmentRuleTitle">角色指派規則提示</h2>
-          <div class="hint-box">
-            <strong id="assignmentRuleLabel">說明：</strong>
-            <span id="assignmentRuleText">任務角色為 task-level，不影響 system role；危險操作需要二次確認，且禁止跨任務批次異動。</span>
-          </div>
-        </section>
       </div>
     </section>
   </div>
@@ -1052,7 +1011,6 @@
       pageSubtitle: '檢視任務概覽、執行控制與匯出結果',
       tabOverview: '任務概覽',
       tabMemberManagement: '成員管理',
-      taskIdLabel: 'Task ID',
       basicInfoTitle: '任務基本資訊',
       settingsSummaryTitle: '任務設定摘要',
       executionTitle: '任務狀態與執行控制',
@@ -1138,9 +1096,6 @@
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       candidateListTitle: '可加入成員名單',
-      assignmentRuleTitle: '角色指派規則提示',
-      assignmentRuleLabel: '說明：',
-      assignmentRuleText: '任務角色為 task-level，不影響 system role；危險操作需要二次確認，且禁止跨任務批次異動。',
       thMemberName: '姓名',
       thMemberEmail: 'Email',
       thMemberTaskRole: '任務角色',
@@ -1154,11 +1109,11 @@
       thCandidateInTask: '目前是否已在任務',
       thCandidateAssignRole: '指派任務角色',
       thCandidateActions: '操作',
-      memberStatusActive: 'active',
-      memberStatusDisabled: 'disabled',
+      memberStatusActive: '啟用',
+      memberStatusDisabled: '停用',
       taskRoleReviewer: '審核員',
       taskRoleAnnotator: '標記員',
-      systemRoleUser: 'user',
+      systemRoleUser: '一般使用者',
       yesInTask: '是',
       noInTask: '否',
       actionRemove: '移除',
@@ -1180,7 +1135,6 @@
       pageSubtitle: 'Review overview, run control, and exports',
       tabOverview: 'Task overview',
       tabMemberManagement: 'Member management',
-      taskIdLabel: 'Task ID',
       basicInfoTitle: 'Task basics',
       settingsSummaryTitle: 'Task settings summary',
       executionTitle: 'Task status and run control',
@@ -1266,9 +1220,6 @@
       memberListTitle: 'Current members',
       memberListSubtitle: 'Task role is fixed at join time. Existing members cannot switch role mid-task; remove and re-add to change role.',
       candidateListTitle: 'Available users to add',
-      assignmentRuleTitle: 'Role assignment rule',
-      assignmentRuleLabel: 'Note:',
-      assignmentRuleText: 'Task role is task-level and does not change system role. Dangerous actions need second confirmation and cross-task bulk edits are not allowed.',
       thMemberName: 'Name',
       thMemberEmail: 'Email',
       thMemberTaskRole: 'Task role',
@@ -1437,7 +1388,6 @@
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
     setText('tabMemberManagement', t('tabMemberManagement'));
-    setText('taskIdLabel', t('taskIdLabel'));
     setText('basicInfoTitle', t('basicInfoTitle'));
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
     setText('executionTitle', t('executionTitle'));
@@ -1473,9 +1423,6 @@
     setText('memberListTitle', t('memberListTitle'));
     setText('memberListSubtitle', t('memberListSubtitle'));
     setText('candidateListTitle', t('candidateListTitle'));
-    setText('assignmentRuleTitle', t('assignmentRuleTitle'));
-    setText('assignmentRuleLabel', t('assignmentRuleLabel'));
-    setText('assignmentRuleText', t('assignmentRuleText'));
     setText('thMemberName', t('thMemberName'));
     setText('thMemberEmail', t('thMemberEmail'));
     setText('thMemberTaskRole', t('thMemberTaskRole'));
@@ -1647,8 +1594,6 @@
     var datasetSummary = TASK_DATA.datasetTotal + ' · ' + (state.lang === 'zh' ? TASK_DATA.datasetSourceZh : TASK_DATA.datasetSourceEn);
 
     setText('valueTaskName', taskName);
-    setText('taskIdValue', TASK_DATA.taskId);
-    setText('valueTaskId', TASK_DATA.taskId);
     setText('valueTaskType', TASK_DATA.taskType);
     setText('valueCreatedBy', TASK_DATA.createdBy);
     setText('valueCreatedAt', TASK_DATA.createdAt);
