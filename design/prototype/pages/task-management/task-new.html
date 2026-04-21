@@ -452,8 +452,8 @@
         <div class="form-card-title" id="s2CardTitle">標記設定檔</div>
 
         <div class="s2-preview-top">
-          <div class="yaml-preview-label" id="yamlPreviewLabel">標記預覽</div>
-          <div class="annotation-preview" id="yamlPreview" aria-label="Annotation preview"></div>
+          <div class="yaml-preview-label" id="annotationPreviewLabel">標記預覽</div>
+          <div class="annotation-preview" id="annotationPreview" aria-label="Annotation preview"></div>
         </div>
 
         <div class="s2-layout">
@@ -646,7 +646,7 @@ var I18N = {
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
     s3NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
     s2TemplateSectionTitle: '從範本開始',
-    yamlPreviewLabel: '標記預覽',
+    annotationPreviewLabel: '標記預覽',
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
@@ -689,7 +689,7 @@ var I18N = {
     forceToggleDesc: 'Annotators must read the guideline before starting work',
     s3NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
     s2TemplateSectionTitle: 'Start from a template',
-    yamlPreviewLabel: 'Annotation preview',
+    annotationPreviewLabel: 'Annotation preview',
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
@@ -937,6 +937,7 @@ function updateStepIndicator() {
 function showStep(n) {
   [1, 2, 3].forEach(function(i) { el('step' + i + 'Panel').classList.toggle('hidden', i !== n); });
   el('prevBtn').classList.toggle('hidden', n === 1);
+  state.step = n;
   var nextBtn = el('nextBtn');
   var nextIcon = el('nextBtnIcon');
   if (n === 3) {
@@ -948,7 +949,6 @@ function showStep(n) {
     if (nextIcon) nextIcon.style.display = '';
     revalidateCurrentStep();
   }
-  state.step = n;
   updateStepIndicator();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -983,7 +983,11 @@ function validateStep2(showErrors) {
     var val = state.configData[f.key];
     if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
     else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
-    else if (f.type === 'textarea' || f.type === 'text') { if (!val || !val.trim()) ok = false; }
+    else if (f.type === 'textarea' || f.type === 'text' || f.type === 'select') {
+      if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
+    } else if (f.type === 'boolean') {
+      if (val === undefined || val === null) ok = false;
+    }
   });
   if (!ok && showErrors) showFieldError('errSchema', true, t('errSchemaRequired'));
   if (ok) showFieldError('errSchema', false);
@@ -1037,7 +1041,7 @@ function renderSchemaFields() {
       chk.addEventListener('change', function() {
         state.configData[field.key] = chk.checked;
         chkText.nodeValue = chk.checked ? t('enabled') : t('disabled');
-        markDirty(); updateYamlPreview(); revalidateCurrentStep();
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
       chkLabel.appendChild(chk);
       chkLabel.appendChild(chkText);
@@ -1054,7 +1058,7 @@ function renderSchemaFields() {
       });
       sel.addEventListener('change', function() {
         state.configData[field.key] = sel.value;
-        markDirty(); updateYamlPreview(); revalidateCurrentStep();
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
       wrap.appendChild(sel);
     } else if (field.type === 'textarea') {
@@ -1064,7 +1068,7 @@ function renderSchemaFields() {
       ta.value = state.configData[field.key] || '';
       ta.addEventListener('input', function() {
         state.configData[field.key] = ta.value;
-        markDirty(); updateYamlPreview(); revalidateCurrentStep();
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
       wrap.appendChild(ta);
     } else {
@@ -1074,13 +1078,13 @@ function renderSchemaFields() {
       inp.value = state.configData[field.key] || '';
       inp.addEventListener('input', function() {
         state.configData[field.key] = inp.value;
-        markDirty(); updateYamlPreview(); revalidateCurrentStep();
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
       wrap.appendChild(inp);
     }
     container.appendChild(wrap);
   });
-  updateYamlPreview();
+  updateAnnotationPreview();
 }
 
 function buildTagInput(field) {
@@ -1105,7 +1109,7 @@ function buildTagInput(field) {
       (function(idx) {
         rm.addEventListener('click', function() {
           tags.splice(idx, 1);
-          render(); markDirty(); updateYamlPreview(); revalidateCurrentStep();
+          render(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
         });
       }(i));
       pill.appendChild(rm);
@@ -1118,9 +1122,15 @@ function buildTagInput(field) {
       if (e.key === 'Enter' || e.key === ',') {
         e.preventDefault();
         var val = inp.value.trim();
-        if (val && tags.indexOf(val) === -1) {
-          tags.push(val);
-          render(); markDirty(); updateYamlPreview(); revalidateCurrentStep();
+        if (val) {
+          if (tags.indexOf(val) === -1) {
+            tags.push(val);
+            render();
+            wrap.querySelector('.tag-new-input').focus();
+            markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+          } else {
+            inp.value = '';
+          }
         }
       }
     });
@@ -1156,7 +1166,7 @@ function buildEntityList(field) {
       (function(idx) {
         nameInp.addEventListener('input', function() {
           entities[idx].name = nameInp.value;
-          markDirty(); updateYamlPreview(); revalidateCurrentStep();
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
         });
       }(i));
 
@@ -1168,7 +1178,7 @@ function buildEntityList(field) {
       (function(idx) {
         rmBtn.addEventListener('click', function() {
           entities.splice(idx, 1);
-          render(); markDirty(); updateYamlPreview(); revalidateCurrentStep();
+          render(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
         });
       }(i));
 
@@ -1185,7 +1195,7 @@ function buildEntityList(field) {
     addBtn.appendChild(document.createTextNode(' ' + t('addEntity')));
     addBtn.addEventListener('click', function() {
       entities.push({ name: '', color: ENTITY_COLORS[entities.length % ENTITY_COLORS.length] });
-      render(); markDirty(); updateYamlPreview(); revalidateCurrentStep();
+      render(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
     });
     wrap.appendChild(addBtn);
   }
@@ -1193,8 +1203,8 @@ function buildEntityList(field) {
   return wrap;
 }
 
-function updateYamlPreview() {
-  var preview = el('yamlPreview');
+function updateAnnotationPreview() {
+  var preview = el('annotationPreview');
   if (!preview) return;
   while (preview.firstChild) preview.removeChild(preview.firstChild);
 
@@ -1336,10 +1346,10 @@ function renderTemplateBtns() {
 }
 
 function setCodeFormat(fmt) {
+  if (state.codeDraftDirty) return;
   state.codeFormat = fmt;
   el('formatYamlBtn').style.fontWeight = fmt === 'yaml' ? '700' : '400';
   el('formatJsonBtn').style.fontWeight = fmt === 'json' ? '700' : '400';
-  if (state.codeDraftDirty) return;
   el('codeEditor').value = configToCode();
 }
 
@@ -1378,7 +1388,7 @@ function saveCodeToVisual(showSuccessToast) {
   el('saveCodeBtn').disabled = true;
   el('codeErrorBar').classList.add('hidden');
   renderSchemaFields();
-  updateYamlPreview();
+  updateAnnotationPreview();
   markDirty();
   revalidateCurrentStep();
   if (showSuccessToast) showToast(t('toastCodeSaved'), 'success');
@@ -1432,7 +1442,7 @@ function addGuidelineFiles(files) {
   Array.prototype.forEach.call(files, function(file) {
     var name = file.name.toLowerCase();
     var ext = name.slice(name.lastIndexOf('.'));
-    if (ALLOWED_G.indexOf(ext) === -1) { showToast(t('errDatasetFormat'), 'error'); return; }
+    if (ALLOWED_G.indexOf(ext) === -1) { showToast(t('guidelineUploadHint'), 'error'); return; }
     var typeLabel = ext === '.pdf' ? 'PDF' : ext === '.md' ? 'Markdown' : 'Image';
     state.guidelineFiles.push({ name: file.name, type: typeLabel, size: file.size });
     renderGuidelineList();
@@ -1556,7 +1566,7 @@ function applyLang(l) {
     'labelTaskName','labelTaskType','labelDataset','labelGuideline',
     'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
     'forceToggleLabel','forceToggleDesc','s3NoticeText','s2TemplateSectionTitle',
-    'yamlPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
+    'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label'));
@@ -1633,7 +1643,12 @@ el('prevBtn').addEventListener('click', function() {
 el('nextBtn').addEventListener('click', function() {
   hideBannerError();
   if (state.step === 1) {
-    if (!validateStep1(true)) { showBannerError(t('errTaskName')); return; }
+    if (!validateStep1(true)) {
+      if (!state.taskName.trim()) showBannerError(t('errTaskName'));
+      else if (!state.taskType) showBannerError(t('errTaskType'));
+      else showBannerError(t('errDataset'));
+      return;
+    }
     showStep(2); renderTemplateBtns(); renderSchemaFields();
     track('prototype_task_new_step_next', { from: 1 });
   } else if (state.step === 2) {

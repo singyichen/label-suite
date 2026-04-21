@@ -613,8 +613,8 @@
     if (state.keyword.trim()) {
       var kw = state.keyword.trim().toLowerCase();
       tasks = tasks.filter(function(tk) {
-        return tk.nameZh.toLowerCase().indexOf(kw) !== -1 ||
-               tk.nameEn.toLowerCase().indexOf(kw) !== -1;
+        return (tk.nameZh && tk.nameZh.toLowerCase().indexOf(kw) !== -1) ||
+               (tk.nameEn && tk.nameEn.toLowerCase().indexOf(kw) !== -1);
       });
     }
     if (state.status) {
@@ -827,7 +827,7 @@
     var startP = Math.max(1, state.page - 2);
     var endP = Math.min(totalPages, startP + maxVisible - 1);
     if (endP - startP < maxVisible - 1) startP = Math.max(1, endP - maxVisible + 1);
-    for (var p = endP; p >= startP; p--) {
+    for (var p = startP; p <= endP; p++) {
       (function(pg) {
         var btn = document.createElement('button');
         btn.className = 'page-btn' + (pg === state.page ? ' active' : '');
@@ -873,6 +873,8 @@
       });
     }
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+    document.getElementById('searchInput').value = state.keyword;
+    document.getElementById('pageSizeSelect').value = String(state.pageSize);
 
     // Status filter options
     var sel = document.getElementById('statusFilter');
