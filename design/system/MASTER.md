@@ -12,7 +12,7 @@
 ---
 
 **Project:** Label Suite
-**Updated:** 2026-04-16
+**Updated:** 2026-04-21
 **Category:** Micro SaaS (Tool-based Web App)
 **Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-04-15 15:13 +0800)
 
@@ -22,7 +22,7 @@
 
 **Foundation** — [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
 
-**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link)
+**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link)
 
 **Guidelines** — [Style / Flat Design](#style-guidelines) · [Page Shells](#page-shell-patterns) · [Anti-Patterns](#anti-patterns-do-not-use) · [Pre-Delivery Checklist](#pre-delivery-checklist)
 
@@ -762,6 +762,92 @@ Left fixed navigation used in Pattern C (Profile and other multi-section pages).
 **When NOT to use:**
 - ❌ Pages with only a single section (use Pattern A instead)
 - ❌ Mobile viewports (use Bottom Tab Bar or Mobile drawer instead)
+
+---
+
+### Desktop Content Tabs
+
+Desktop/top-of-content tab navigation for section switching within the same module (for example: `admin/user-management` and `task-management/task-detail`).
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Container | `display:flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-lg)` |
+| Tab item | `padding: 10px 20px; font-size: 14px; font-weight: 500` |
+| Base color | `var(--color-text-soft)` |
+| Active state | `color: var(--color-primary); border-bottom: 2px solid var(--color-primary); font-weight: 600` |
+| Inactive hover | `color: var(--color-primary)` |
+| Active alignment | `margin-bottom: -2px` (to align with container bottom border) |
+
+**CSS reference:**
+```css
+.admin-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--space-lg);
+}
+
+.admin-tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-soft);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+  text-decoration: none;
+  display: inline-block;
+  background: transparent;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.admin-tab:hover { color: var(--color-primary); }
+
+.admin-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+```
+
+**HTML structure (navigation tabs):**
+```html
+<div class="admin-tabs" role="tablist" aria-label="Section tabs">
+  <a class="admin-tab active" href="user-management.html" role="tab" aria-selected="true">
+    使用者管理
+  </a>
+  <a class="admin-tab" href="role-settings.html" role="tab" aria-selected="false">
+    角色設定
+  </a>
+</div>
+```
+
+**HTML structure (in-page tabs):**
+```html
+<div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
+  <button class="admin-tab active" type="button" role="tab" aria-selected="true">
+    任務概覽
+  </button>
+  <button class="admin-tab" type="button" role="tab" aria-selected="false">
+    成員管理
+  </button>
+</div>
+```
+
+**Accessibility:**
+- Use `role="tablist"` on the container.
+- Use `role="tab"` and explicit `aria-selected`.
+- For button-based tabs, support keyboard interaction (`ArrowLeft/ArrowRight`, `Enter`, `Space`) in JS.
+- Do not hide disabled tabs from keyboard; keep them focusable and set `aria-disabled="true"` when needed.
+
+**Usage rules:**
+- Use Desktop Content Tabs for module-level section switching inside page content.
+- Keep this visual pattern consistent across modules; do not mix pill-style tabs on one module and underline tabs on another.
+- Mobile should still rely on page-specific layouts and/or Bottom Tab Bar; this pattern is desktop-first.
 
 ---
 

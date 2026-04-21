@@ -3,7 +3,7 @@
 > **用途：** 記錄所有 prototype 頁面中出現的 UI elements，對照 MASTER.md 的定義狀態，作為 design system 擴充的依據。
 >
 > **掃描範圍：** `design/prototype/` 所有頁面
-> **最後掃描：** 2026-04-16
+> **最後掃描：** 2026-04-21
 > **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
 
@@ -68,7 +68,7 @@
 - **Inputs（6）**：Default / Focus / Inline(Default, Focus, Error) / Readonly
 - **Feedback（5）**：Toast(Success, Error) / Alert Banner(Error) / State Panel(Success, Token Error)
 - **Status + Link（8）**：Badge(Not Started, In Progress, Submitted, Error) / Link(Inline, Action, Nav Active, Nav Inactive)
-- **Layout + Data（8）**：Navbar / Sidebar / Table / List / Divider(Horizontal, Text) / Tooltip / Mobile Tab Bar
+- **Layout + Data（9）**：Navbar / Sidebar / Desktop Content Tabs / Table / List / Divider(Horizontal, Text) / Tooltip / Mobile Tab Bar
 - **Profile + Other（5）**：Card / Modal / Avatar(Small, Large, Uploadable)
 
 ---
@@ -226,6 +226,24 @@
 
 ---
 
+### ✅ Desktop Content Tabs
+
+**MASTER.md 狀態：** 已定義（底線型 tab 規格、active/inactive state、a11y 與使用情境）
+
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| Container | `display:flex + border-bottom: 2px` | ✅ |
+| Tab item | `padding: 10px 20px; text-sm; font-medium` | ✅ |
+| Active state | `text-primary + border-bottom-primary + font-semibold` | ✅ |
+| 視覺一致性 | 模組內固定使用底線型（不混用 pill） | ✅ |
+
+**出現頁面：**
+- `admin/user-management.html`
+- `admin/role-settings.html`
+- `task-management/task-detail.html`
+
+---
+
 ### ✅ Mobile Bottom Tab Bar
 
 **MASTER.md 狀態：** 已定義（規格、tab item states、body padding rule、Sidebar 對應規則）
@@ -323,6 +341,7 @@
 | P3 | **Avatar** | Upload 行為需規範 | ✅ 已補充至 MASTER.md |
 | P3 | **Tooltip** | 無障礙規範需特別注意 | ✅ 已補充至 MASTER.md |
 | P3 | **Mobile Bottom Tab Bar** | RWD 規範 | ✅ 已補充至 MASTER.md |
+| P3 | **Desktop Content Tabs** | admin 與 task-detail 需統一 tab pattern | ✅ 已補充至 MASTER.md |
 | P4 | **Divider** | 簡單，低優先 | ✅ 已補充至 MASTER.md |
 | P4 | **List** | 簡單，低優先 | ✅ 已補充至 MASTER.md |
 | P4 | **Button — OAuth / Icon-only / Language Toggle** | 登入與導覽區已使用 | ✅ 已補充至 MASTER.md |

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Desktop Content Tabs</title>
+<link rel="stylesheet" href="_card.css">
+<style>
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid var(--color-border);
+    margin-bottom: 12px;
+  }
+  .tab {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-soft);
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    background: transparent;
+    cursor: pointer;
+    transition: color var(--dur-fast), border-color var(--dur-fast);
+  }
+  .tab:hover { color: var(--color-primary); }
+  .tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+  }
+</style>
+</head><body><div class="card">
+  <div class="col" style="gap:14px">
+    <div class="tabs" role="tablist" aria-label="Admin tabs sample">
+      <button class="tab active" type="button" role="tab" aria-selected="true">使用者管理</button>
+      <button class="tab" type="button" role="tab" aria-selected="false">角色設定</button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Task detail tabs sample">
+      <button class="tab active" type="button" role="tab" aria-selected="true">任務概覽</button>
+      <button class="tab" type="button" role="tab" aria-selected="false">成員管理</button>
+      <button class="tab" type="button" role="tab" aria-selected="false">標記進度</button>
+      <button class="tab" type="button" role="tab" aria-selected="false">工時紀錄</button>
+    </div>
+    <div class="meta" style="border-top:1px solid var(--color-border-muted);padding-top:10px">
+      Desktop content tabs use underline pattern. Do not use pill tabs for module section switches.
+    </div>
+  </div>
+</div></body></html>

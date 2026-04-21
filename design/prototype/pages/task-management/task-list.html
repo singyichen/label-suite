@@ -717,6 +717,9 @@
       if (canView) {
         trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id });
         showToast(t('toastNavigating'), false);
+        window.setTimeout(function () {
+          window.location.href = './task-detail.html?task_id=' + encodeURIComponent(task.id);
+        }, 220);
       } else {
         trackAnalytics('prototype_task_row_clicked', { allowed: false, task_id: task.id });
         showToast(t('toastNoPermission'), true);
@@ -970,7 +973,8 @@
   /* ── Init ────────────────────────────────────────────────────── */
   (function initStateFromUrl() {
     var q = new URLSearchParams(window.location.search);
-    if (q.get('view') === 'filled') {
+    var view = q.get('view');
+    if (view !== 'empty') {
       loadCreatedTaskSeed();
     }
     var keyword = q.get('keyword');
