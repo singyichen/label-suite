@@ -1633,6 +1633,11 @@
 
         <section class="panel" aria-labelledby="workLogTableTitle" id="workLogTableSection">
           <h2 class="panel-title" id="workLogTableTitle">工時明細表</h2>
+          <div class="worklog-summary-grid" style="margin-bottom: 12px;">
+            <article class="kv-item"><span class="kv-key" id="workLogSummaryHoursLabel">總工時</span><span class="kv-value" id="workLogSummaryHoursValue">-</span></article>
+            <article class="kv-item"><span class="kv-key" id="workLogSummaryCompletedLabel">總完成筆數</span><span class="kv-value" id="workLogSummaryCompletedValue">-</span></article>
+            <article class="kv-item"><span class="kv-key" id="workLogSummarySpeedLabel">加權平均速度</span><span class="kv-value" id="workLogSummarySpeedValue">-</span></article>
+          </div>
           <div class="table-wrap">
             <div class="table-scroll">
               <table class="member-table" role="table" aria-label="Work log table">
@@ -1650,11 +1655,6 @@
                 <tbody id="workLogTableBody"></tbody>
               </table>
             </div>
-          </div>
-          <div class="worklog-summary-grid" style="margin-top: 12px;">
-            <article class="kv-item"><span class="kv-key" id="workLogSummaryHoursLabel">總工時</span><span class="kv-value" id="workLogSummaryHoursValue">-</span></article>
-            <article class="kv-item"><span class="kv-key" id="workLogSummaryCompletedLabel">總完成筆數</span><span class="kv-value" id="workLogSummaryCompletedValue">-</span></article>
-            <article class="kv-item"><span class="kv-key" id="workLogSummarySpeedLabel">加權平均速度</span><span class="kv-value" id="workLogSummarySpeedValue">-</span></article>
           </div>
         </section>
 
