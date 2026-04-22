@@ -19,9 +19,11 @@ test.describe('Task detail overview edit state', () => {
     await expect(page.locator('#basicInfoView')).toHaveClass(/hidden/);
     await expect(page.locator('#overviewEditForm')).not.toHaveClass(/hidden/);
     await expect(page.locator('#overviewReadonlyHint')).toHaveText('');
-    await expect(page.locator('#editTaskNameLabel')).toContainText('*');
-    await expect(page.locator('#editTaskTypeLabel')).toContainText('*');
-    await expect(page.locator('#editDatasetLabel')).toContainText('*');
+    await expect(page.locator('#editTaskNameLabel .required')).toHaveText('*');
+    await expect(page.locator('#editTaskTypeLabel .required')).toHaveText('*');
+    await expect(page.locator('#editDatasetLabel .required')).toHaveText('*');
+    await expect(page.locator('#editDatasetFileList .guideline-item')).toHaveCount(1);
+    await expect(page.locator('#editDatasetFileList .guideline-item-name')).toContainText('customer_feedback_v3.csv');
 
     const cancelBox = await cancelBtn.boundingBox();
     const saveBox = await saveBtn.boundingBox();

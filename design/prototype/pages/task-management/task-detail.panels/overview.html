@@ -27,23 +27,23 @@
 
     <div class="overview-edit-form hidden" id="overviewEditForm">
       <div class="field-group">
-        <label class="field-label" id="editTaskNameLabel" for="editTaskNameInput">任務名稱 *</label>
+        <label class="field-label" id="editTaskNameLabel" for="editTaskNameInput">任務名稱</label>
         <input class="input-number" id="editTaskNameInput" type="text" maxlength="100" placeholder="例：新聞標題情感分類" />
       </div>
 
       <div class="field-group">
-        <label class="field-label" id="editTaskTypeLabel" for="editTaskTypeSelect">任務類型 *</label>
+        <label class="field-label" id="editTaskTypeLabel" for="editTaskTypeSelect">任務類型</label>
         <select class="input-select" id="editTaskTypeSelect"></select>
       </div>
 
       <div class="field-group">
-        <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集 *</label>
+        <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集</label>
         <label class="basic-dataset-drop" for="editDatasetFileInput">
           <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
           <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
-          <span class="basic-dataset-current mono" id="editDatasetCurrent"></span>
         </label>
         <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" />
+        <div class="guideline-list" id="editDatasetFileList"></div>
       </div>
 
       <p class="inline-error" id="overviewEditError"></p>
@@ -63,7 +63,7 @@
 
     <div id="settingsConfigView" class="kv-dl">
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelConfigVersion">Config 版本</span>
+        <span class="kv-dl-key" id="labelConfigVersion">設定檔版本</span>
         <span class="kv-dl-value mono" id="valueConfigVersion"></span>
       </div>
       <div class="kv-dl-row">

@@ -1152,14 +1152,6 @@
       line-height: 1.6;
       color: var(--color-text-soft);
     }
-    .basic-dataset-current {
-      margin-top: 4px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--color-primary);
-      font-weight: 600;
-      word-break: break-all;
-    }
     .required { color: var(--color-error); margin-left: 2px; }
     .field-hint {
       font-size: 12px;
@@ -1868,7 +1860,7 @@
       labelCreatedAt: '建立時間',
       labelUpdatedAt: '最近更新',
       labelDatasetSummary: '資料集摘要',
-      labelConfigVersion: 'Config 版本',
+      labelConfigVersion: '設定檔版本',
       labelConfigTaskType: '標記類型',
       labelConfigLabels: '標籤清單',
       labelConfigAllowMultiple: '允許多選',
@@ -1945,14 +1937,13 @@
       settingsPreviewSentenceBLabel: '句子 B',
       settingsPreviewSampleSentenceA: '這家餐廳的服務速度很快。',
       settingsPreviewSampleSentenceB: '服務效率令人滿意。',
-      editTaskNameLabel: '任務名稱 *',
-      editTaskTypeLabel: '任務類型 *',
-      editDatasetLabel: '資料集 *',
+      editTaskNameLabel: '任務名稱',
+      editTaskTypeLabel: '任務類型',
+      editDatasetLabel: '資料集',
       editConfigLabel: '標記設定檔',
       editGuidelineLabel: '說明內容',
       editGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineLabel: '開始標記前強制顯示',
-      editDatasetCurrentTpl: '目前檔案：{name}',
       basicDatasetDropTitle: '點擊或拖曳上傳資料集',
       basicDatasetDropHint: '支援 TXT / CSV / TSV / JSON，最大 200 MB，UTF-8',
       samplingTitle: '試標資料抽樣設定',
@@ -2234,14 +2225,13 @@
       settingsPreviewSentenceBLabel: 'Sentence B',
       settingsPreviewSampleSentenceA: 'The restaurant service is very fast.',
       settingsPreviewSampleSentenceB: 'The service efficiency is satisfactory.',
-      editTaskNameLabel: 'Task name *',
-      editTaskTypeLabel: 'Task type *',
-      editDatasetLabel: 'Dataset *',
+      editTaskNameLabel: 'Task name',
+      editTaskTypeLabel: 'Task type',
+      editDatasetLabel: 'Dataset',
       editConfigLabel: 'Label config',
       editGuidelineLabel: 'Guideline content',
       editGuidelineFilesLabel: 'Upload files',
       editForceGuidelineLabel: 'Force show before annotation',
-      editDatasetCurrentTpl: 'Current file: {name}',
       basicDatasetDropTitle: 'Click or drag to upload dataset',
       basicDatasetDropHint: 'Supports TXT / CSV / TSV / JSON, up to 200 MB, UTF-8',
       samplingTitle: 'Dry run sampling settings',
@@ -2631,6 +2621,16 @@
     if (el) el.textContent = value;
   }
 
+  function setRequiredLabel(id, value) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = value;
+    var req = document.createElement('span');
+    req.className = 'required';
+    req.textContent = '*';
+    el.appendChild(req);
+  }
+
   function renderPanelLoadError() {
     var mount = document.getElementById('tabPanelMount');
     if (!mount) return;
@@ -2780,9 +2780,9 @@
     setText('settingsUploadConfigBtn', t('settingsUploadConfigBtn'));
     setText('settingsCodeLabel', t('settingsCodeLabel'));
     setText('settingsSaveCodeBtnLabel', t('settingsSaveCodeBtnLabel'));
-    setText('editTaskNameLabel', t('editTaskNameLabel'));
-    setText('editTaskTypeLabel', t('editTaskTypeLabel'));
-    setText('editDatasetLabel', t('editDatasetLabel'));
+    setRequiredLabel('editTaskNameLabel', t('editTaskNameLabel'));
+    setRequiredLabel('editTaskTypeLabel', t('editTaskTypeLabel'));
+    setRequiredLabel('editDatasetLabel', t('editDatasetLabel'));
     setText('editConfigLabel', t('editConfigLabel'));
     setText('editGuidelineLabel', t('editGuidelineLabel'));
     setText('editGuidelineFilesLabel', t('editGuidelineFilesLabel'));
@@ -3162,7 +3162,6 @@
 
     var taskNameInput = document.getElementById('editTaskNameInput');
     var taskTypeSelect = document.getElementById('editTaskTypeSelect');
-    var datasetCurrent = document.getElementById('editDatasetCurrent');
 
     if (taskTypeSelect) {
       taskTypeSelect.innerHTML = '';
@@ -3176,10 +3175,53 @@
     }
 
     if (taskNameInput) taskNameInput.value = state.lang === 'zh' ? state.overviewDraft.taskNameZh : state.overviewDraft.taskNameEn;
-    if (datasetCurrent) datasetCurrent.textContent = interpolate(t('editDatasetCurrentTpl'), {
-      name: state.lang === 'zh' ? state.overviewDraft.datasetSourceZh : state.overviewDraft.datasetSourceEn,
-    });
+    renderOverviewDatasetFileList();
     setOverviewEditError('');
+  }
+
+  function createUploadedFileItem(file) {
+    var item = document.createElement('div');
+    item.className = 'guideline-item';
+
+    var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('class', 'guideline-item-icon');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '2');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+    var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', '14 2 14 8 20 8');
+    icon.appendChild(path);
+    icon.appendChild(polyline);
+    item.appendChild(icon);
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'guideline-item-name';
+    nameSpan.textContent = file.name;
+    item.appendChild(nameSpan);
+
+    var typeSpan = document.createElement('span');
+    typeSpan.className = 'guideline-item-type';
+    typeSpan.textContent = (file.type || getGuidelineFileType(file.name)).toUpperCase();
+    item.appendChild(typeSpan);
+
+    return item;
+  }
+
+  function renderOverviewDatasetFileList() {
+    var list = document.getElementById('editDatasetFileList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!state.overviewDraft) return;
+
+    var fileName = state.lang === 'zh' ? state.overviewDraft.datasetSourceZh : state.overviewDraft.datasetSourceEn;
+    if (!fileName) return;
+    list.appendChild(createUploadedFileItem({ name: fileName, type: getGuidelineFileType(fileName) }));
   }
 
   function renderOverviewEditState() {
@@ -3419,35 +3461,7 @@
     if (!state.guidelineDraft || !state.guidelineDraft.guidelineFiles.length) return;
 
     state.guidelineDraft.guidelineFiles.forEach(function(file, index) {
-      var item = document.createElement('div');
-      item.className = 'guideline-item';
-
-      var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      icon.setAttribute('class', 'guideline-item-icon');
-      icon.setAttribute('viewBox', '0 0 24 24');
-      icon.setAttribute('fill', 'none');
-      icon.setAttribute('stroke', 'currentColor');
-      icon.setAttribute('stroke-width', '2');
-      icon.setAttribute('stroke-linecap', 'round');
-      icon.setAttribute('stroke-linejoin', 'round');
-      icon.setAttribute('aria-hidden', 'true');
-      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
-      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-      polyline.setAttribute('points', '14 2 14 8 20 8');
-      icon.appendChild(path);
-      icon.appendChild(polyline);
-      item.appendChild(icon);
-
-      var nameSpan = document.createElement('span');
-      nameSpan.className = 'guideline-item-name';
-      nameSpan.textContent = file.name;
-      item.appendChild(nameSpan);
-
-      var typeSpan = document.createElement('span');
-      typeSpan.className = 'guideline-item-type';
-      typeSpan.textContent = (file.type || getGuidelineFileType(file.name)).toUpperCase();
-      item.appendChild(typeSpan);
+      var item = createUploadedFileItem(file);
 
       var removeBtn = document.createElement('button');
       removeBtn.className = 'guideline-item-remove';
