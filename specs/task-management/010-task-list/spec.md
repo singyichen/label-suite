@@ -2,7 +2,7 @@
 
 **功能分支**：`010-task-list`
 **建立日期**：2026-04-20
-**版本**：1.2.0
+**版本**：1.2.1
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
 
@@ -90,7 +90,7 @@ sequenceDiagram
     - 空資料時保留表頭（`thead`）與欄位語意
     - 空資料 / 空結果內容以 `tbody` 單列 empty row 呈現（`colspan` 全欄）
     - 分頁控制
-    - 任務列欄位（任務名稱、任務類型、標記模式、狀態、更新時間）
+    - 任務列欄位（任務名稱、任務類型、標記階段（Annotation stage）、狀態、更新時間）
 - 區塊 B：`頁面操作`
   - 必要元素：
     - `新增任務` CTA
@@ -190,7 +190,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_type`、`status`、`updated_at`。
+- **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_stage`、`status`、`updated_at`。
 - **TaskMembership**：任務成員關係。關鍵欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
 - **TaskListQuery**：列表查詢條件。欄位：`keyword`、`status`（`TASK_STATUS_ENUM`）、`page`、`page_size`。
 
@@ -235,6 +235,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.1 | 2026-04-22 | 介面詞彙統一：任務列表欄位統一為「標記階段（Annotation stage）」；欄位命名同步為 `run_stage` |
 | 1.2.0 | 2026-04-20 | 對齊 task-list 最新 empty state 呈現：保留表頭並改為表格內 empty row；移除「尚無任務」內嵌新增按鈕，空結果保留清除篩選操作 |
 | 1.1.0 | 2026-04-20 | 調整 task-list 可見性規則：`super_admin` 改為預設全平台任務且移除「我的任務 / 全平台任務」切換；URL query 與資料模型移除 `scope` 欄位 |
 | 1.0.0 | 2026-04-20 | 初版建立：依 IA 重建 `task-list` 規格（可見性、搜尋篩選、導覽與空狀態） |

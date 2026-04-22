@@ -353,6 +353,8 @@
     .badge-non-isolated { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
     .badge-member-active { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
     .badge-member-disabled { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-run-dry { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-run-official { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
 
     .status-row {
       display: flex;
@@ -730,6 +732,59 @@
       color: var(--color-ink);
       margin-bottom: 10px;
     }
+    .worklog-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+    .worklog-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .anomaly-list {
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+    .anomaly-item {
+      border: 1px solid var(--color-warning-border);
+      background: var(--color-warning-bg);
+      border-radius: var(--radius-md);
+      color: var(--color-warning);
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .anomaly-item img {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.9;
+    }
+    .worklog-empty-state {
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      padding: 22px;
+      text-align: center;
+    }
+    .worklog-empty-icon {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 10px;
+      opacity: 0.7;
+    }
+    .worklog-empty-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-ink);
+      margin-bottom: 10px;
+    }
     .table-wrap {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -981,6 +1036,8 @@
       .export-grid { grid-template-columns: 1fr; }
       .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .stage-split-grid { grid-template-columns: 1fr; }
+      .worklog-filter-grid { grid-template-columns: 1fr; }
+      .worklog-summary-grid { grid-template-columns: 1fr; }
       .sort-row { justify-content: flex-start; }
       .table-wrap { margin: 0 -2px; }
       .toast-container { right: 12px; left: 12px; bottom: 96px; }
@@ -1028,6 +1085,7 @@
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
         <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
+        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
         <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
       </div>
 
@@ -1137,7 +1195,7 @@
           <div class="export-grid">
             <div class="export-meta">
               <p id="lastExportLabel">最近一次匯出時間：<span id="lastExportAt">尚無</span></p>
-              <p id="lastExportStageLabel">匯出 run stage：<span id="lastExportStage">-</span></p>
+              <p id="lastExportStageLabel">匯出 標記階段：<span id="lastExportStage">-</span></p>
             </div>
             <div class="action-row" style="margin: 0;">
               <button class="btn btn-secondary" type="button" id="exportJsonBtn">匯出 JSON</button>
@@ -1267,6 +1325,76 @@
           </div>
         </section>
       </div>
+
+      <div id="workLogPanel" class="hidden" aria-live="polite">
+        <section class="panel" aria-labelledby="workLogFilterTitle">
+          <h2 class="panel-title" id="workLogFilterTitle">工時篩選列</h2>
+          <div class="worklog-filter-grid">
+            <div>
+              <label class="field-label" id="workLogDateFromLabel" for="workLogDateFrom">起始日期</label>
+              <input class="input-number" type="date" id="workLogDateFrom" />
+            </div>
+            <div>
+              <label class="field-label" id="workLogDateToLabel" for="workLogDateTo">結束日期</label>
+              <input class="input-number" type="date" id="workLogDateTo" />
+            </div>
+            <div>
+              <label class="field-label" id="workLogStageLabel" for="workLogStageSelect">任務階段</label>
+              <select class="input-select" id="workLogStageSelect">
+                <option value="all">全部</option>
+                <option value="dry">Dry Run</option>
+                <option value="official">Official Run</option>
+              </select>
+            </div>
+            <div id="workLogMemberFilterWrap">
+              <label class="field-label" id="workLogMemberLabel" for="workLogMemberSelect">成員</label>
+              <select class="input-select" id="workLogMemberSelect">
+                <option value="all">全部成員</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="workLogTableTitle" id="workLogTableSection">
+          <h2 class="panel-title" id="workLogTableTitle">工時明細表</h2>
+          <div class="table-wrap">
+            <div class="table-scroll">
+              <table class="member-table" role="table" aria-label="Work log table">
+                <thead>
+                  <tr>
+                    <th id="thWorkLogDate">日期</th>
+                    <th id="thWorkLogMember">成員</th>
+                    <th id="thWorkLogRole">角色</th>
+                    <th id="thWorkLogDuration">工作時長</th>
+                    <th id="thWorkLogCompleted">完成筆數</th>
+                    <th id="thWorkLogSpeed">平均速度</th>
+                    <th id="thWorkLogStage">標記階段</th>
+                  </tr>
+                </thead>
+                <tbody id="workLogTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="worklog-summary-grid" style="margin-top: 12px;">
+            <article class="kv-item"><span class="kv-key" id="workLogSummaryHoursLabel">總工時</span><span class="kv-value" id="workLogSummaryHoursValue">-</span></article>
+            <article class="kv-item"><span class="kv-key" id="workLogSummaryCompletedLabel">總完成筆數</span><span class="kv-value" id="workLogSummaryCompletedValue">-</span></article>
+            <article class="kv-item"><span class="kv-key" id="workLogSummarySpeedLabel">加權平均速度</span><span class="kv-value" id="workLogSummarySpeedValue">-</span></article>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="workLogAlertTitle" id="workLogAlertSection">
+          <h2 class="panel-title" id="workLogAlertTitle">異常提醒</h2>
+          <ul class="anomaly-list" id="workLogAlertList"></ul>
+        </section>
+
+        <section class="panel hidden" aria-labelledby="workLogEmptyTitle" id="workLogEmptyState">
+          <div class="worklog-empty-state">
+            <img class="worklog-empty-icon" src="../../assets/icons/clock.svg" alt="" aria-hidden="true" />
+            <p class="worklog-empty-title" id="workLogEmptyTitle">尚無工時紀錄</p>
+            <button class="btn btn-secondary" type="button" id="workLogBackToOverviewBtn">回到任務概覽</button>
+          </div>
+        </section>
+      </div>
     </section>
   </div>
 </main>
@@ -1308,6 +1436,7 @@
       pageSubtitle: '檢視任務概覽、執行控制與匯出結果',
       tabOverview: '任務概覽',
       tabAnnotationProgress: '標記進度',
+      tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
       basicInfoTitle: '任務基本資訊',
       settingsSummaryTitle: '任務設定摘要',
@@ -1368,7 +1497,7 @@
       exportJsonBtn: '匯出 JSON',
       exportJsonMinBtn: '匯出 JSON-MIN',
       lastExportLabel: '最近一次匯出時間：',
-      lastExportStageLabel: '匯出 run stage：',
+      lastExportStageLabel: '匯出 標記階段：',
       exportEmpty: '尚無可匯出結果',
       exportNone: '尚無',
       toastRoleDenied: 'annotator 無權限檢視任務詳情，已導回任務列表。',
@@ -1441,6 +1570,35 @@
       stageOfficialTitle: '正式標記',
       progressEmptyTitle: '尚無成員進度資料',
       progressBackToOverviewBtn: '回到任務概覽',
+      workLogFilterTitle: '工時篩選列',
+      workLogDateFromLabel: '起始日期',
+      workLogDateToLabel: '結束日期',
+      workLogStageLabel: '任務階段',
+      workLogMemberLabel: '成員',
+      workLogStageAll: '全部',
+      workLogStageDry: '試標',
+      workLogStageOfficial: '正式標記',
+      workLogMemberAll: '全部成員',
+      workLogTableTitle: '工時明細表',
+      thWorkLogDate: '日期',
+      thWorkLogMember: '成員',
+      thWorkLogRole: '角色',
+      thWorkLogDuration: '工作時長',
+      thWorkLogCompleted: '完成筆數',
+      thWorkLogSpeed: '平均速度',
+      thWorkLogStage: '標記階段',
+      workLogSummaryHoursLabel: '總工時',
+      workLogSummaryCompletedLabel: '總完成筆數',
+      workLogSummarySpeedLabel: '加權平均速度',
+      workLogAlertTitle: '異常提醒',
+      workLogAlertNone: '目前篩選條件下無速度異常紀錄。',
+      workLogAnomalyFast: '{date} · {member} 速度偏快（{speed}）',
+      workLogAnomalySlow: '{date} · {member} 速度偏慢（{speed}）',
+      workLogEmptyTitle: '尚無工時紀錄',
+      workLogBackToOverviewBtn: '回到任務概覽',
+      workLogHoursUnit: '小時',
+      workLogDurationTpl: '{hours} 小時',
+      workLogSpeedUnit: '筆/小時',
       qualityGood: '穩定',
       qualityWatch: '觀察',
       qualityRisk: '需複核',
@@ -1462,6 +1620,7 @@
       pageSubtitle: 'Review overview, run control, and exports',
       tabOverview: 'Task overview',
       tabAnnotationProgress: 'Annotation progress',
+      tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
       basicInfoTitle: 'Task basics',
       settingsSummaryTitle: 'Task settings summary',
@@ -1522,7 +1681,7 @@
       exportJsonBtn: 'Export JSON',
       exportJsonMinBtn: 'Export JSON-MIN',
       lastExportLabel: 'Last export: ',
-      lastExportStageLabel: 'Export run stage: ',
+      lastExportStageLabel: 'Export 標記階段: ',
       exportEmpty: 'No exportable result yet',
       exportNone: 'None',
       toastRoleDenied: 'Annotator is not allowed to access task detail. Redirected to task list.',
@@ -1595,6 +1754,35 @@
       stageOfficialTitle: 'Official Run',
       progressEmptyTitle: 'No member progress data yet',
       progressBackToOverviewBtn: 'Back to task overview',
+      workLogFilterTitle: 'Work log filters',
+      workLogDateFromLabel: 'Date from',
+      workLogDateToLabel: 'Date to',
+      workLogStageLabel: 'Run stage',
+      workLogMemberLabel: 'Member',
+      workLogStageAll: 'All',
+      workLogStageDry: 'Dry Run',
+      workLogStageOfficial: 'Official Run',
+      workLogMemberAll: 'All members',
+      workLogTableTitle: 'Work log details',
+      thWorkLogDate: 'Date',
+      thWorkLogMember: 'Member',
+      thWorkLogRole: 'Role',
+      thWorkLogDuration: 'Duration',
+      thWorkLogCompleted: 'Completed items',
+      thWorkLogSpeed: 'Average speed',
+      thWorkLogStage: 'Run stage',
+      workLogSummaryHoursLabel: 'Total hours',
+      workLogSummaryCompletedLabel: 'Total completed',
+      workLogSummarySpeedLabel: 'Weighted avg speed',
+      workLogAlertTitle: 'Anomaly alerts',
+      workLogAlertNone: 'No speed anomalies under current filters.',
+      workLogAnomalyFast: '{date} · {member} speed is too fast ({speed})',
+      workLogAnomalySlow: '{date} · {member} speed is too slow ({speed})',
+      workLogEmptyTitle: 'No work logs yet',
+      workLogBackToOverviewBtn: 'Back to task overview',
+      workLogHoursUnit: 'hours',
+      workLogDurationTpl: '{hours} h',
+      workLogSpeedUnit: 'items/hour',
       qualityGood: 'Stable',
       qualityWatch: 'Watch',
       qualityRisk: 'Need review',
@@ -1651,6 +1839,11 @@
     { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', activeTaskCount: 5 },
   ];
 
+  var ROLE_SELF_EMAIL = {
+    project_leader: 'mandy@labelsuite.io',
+    reviewer: 'mandy@labelsuite.io',
+  };
+
   var ANNOTATION_PROGRESS = {
     dry: {
       totalSamples: 120,
@@ -1674,12 +1867,26 @@
     },
   };
 
+  var WORK_LOG_ENTRIES = [
+    { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', durationHours: 3.2, completedCount: 72, stage: 'dry' },
+    { date: '2026-04-19', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', durationHours: 3.6, completedCount: 61, stage: 'dry' },
+    { date: '2026-04-20', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', durationHours: 2.8, completedCount: 55, stage: 'dry' },
+    { date: '2026-04-20', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', durationHours: 2.4, completedCount: 20, stage: 'dry' },
+    { date: '2026-04-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', durationHours: 2.9, completedCount: 18, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', durationHours: 3.1, completedCount: 44, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', durationHours: 1.8, completedCount: 9, stage: 'official' },
+  ];
+
   var state = {
     lang: 'zh',
     taskRole: 'project_leader',
     activeTab: 'overview',
     progressStage: 'dry',
     progressSort: 'completed_desc',
+    workLogDateFrom: '',
+    workLogDateTo: '',
+    workLogStage: 'all',
+    workLogMember: 'all',
     showSkeleton: true,
     pendingAction: null,
     isolationConfirmed: false,
@@ -1746,6 +1953,7 @@
     var resolvedTab = 'overview';
     if (tab === 'member-management') resolvedTab = 'member-management';
     if (tab === 'annotation-progress') resolvedTab = 'annotation-progress';
+    if (tab === 'work-log') resolvedTab = 'work-log';
     var allowed = setTabByRole(resolvedTab, true);
     if (!allowed) {
       state.pendingReviewerTabToast = true;
@@ -1772,6 +1980,7 @@
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
     setText('tabAnnotationProgress', t('tabAnnotationProgress'));
+    setText('tabWorkLog', t('tabWorkLog'));
     setText('tabMemberManagement', t('tabMemberManagement'));
     setText('basicInfoTitle', t('basicInfoTitle'));
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
@@ -1847,6 +2056,25 @@
     setText('stageOfficialTitle', t('stageOfficialTitle'));
     setText('progressEmptyTitle', t('progressEmptyTitle'));
     setText('progressBackToOverviewBtn', t('progressBackToOverviewBtn'));
+    setText('workLogFilterTitle', t('workLogFilterTitle'));
+    setText('workLogDateFromLabel', t('workLogDateFromLabel'));
+    setText('workLogDateToLabel', t('workLogDateToLabel'));
+    setText('workLogStageLabel', t('workLogStageLabel'));
+    setText('workLogMemberLabel', t('workLogMemberLabel'));
+    setText('workLogTableTitle', t('workLogTableTitle'));
+    setText('thWorkLogDate', t('thWorkLogDate'));
+    setText('thWorkLogMember', t('thWorkLogMember'));
+    setText('thWorkLogRole', t('thWorkLogRole'));
+    setText('thWorkLogDuration', t('thWorkLogDuration'));
+    setText('thWorkLogCompleted', t('thWorkLogCompleted'));
+    setText('thWorkLogSpeed', t('thWorkLogSpeed'));
+    setText('thWorkLogStage', t('thWorkLogStage'));
+    setText('workLogSummaryHoursLabel', t('workLogSummaryHoursLabel'));
+    setText('workLogSummaryCompletedLabel', t('workLogSummaryCompletedLabel'));
+    setText('workLogSummarySpeedLabel', t('workLogSummarySpeedLabel'));
+    setText('workLogAlertTitle', t('workLogAlertTitle'));
+    setText('workLogEmptyTitle', t('workLogEmptyTitle'));
+    setText('workLogBackToOverviewBtn', t('workLogBackToOverviewBtn'));
     setText('memberActionModalTitle', t('memberActionModalTitle'));
     setText('memberActionModalBody', t('memberActionModalBodyEnable'));
     setText('memberActionCancelBtn', t('memberActionCancelBtn'));
@@ -1858,9 +2086,18 @@
       modeSelect.options[1].textContent = t('samplingModePercent');
     }
 
+    var workLogStageSelect = document.getElementById('workLogStageSelect');
+    if (workLogStageSelect && workLogStageSelect.options.length >= 3) {
+      workLogStageSelect.options[0].textContent = t('workLogStageAll');
+      workLogStageSelect.options[1].textContent = t('workLogStageDry');
+      workLogStageSelect.options[2].textContent = t('workLogStageOfficial');
+      workLogStageSelect.value = state.workLogStage;
+    }
+
     renderOverview();
     renderMemberManagement();
     renderAnnotationProgress();
+    renderWorkLog();
     renderTabs();
 
     if (state.pendingReviewerTabToast) {
@@ -2038,6 +2275,7 @@
     var nextTab = 'overview';
     if (tabName === 'member-management') nextTab = 'member-management';
     if (tabName === 'annotation-progress') nextTab = 'annotation-progress';
+    if (tabName === 'work-log') nextTab = 'work-log';
     if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
       state.activeTab = 'overview';
       if (!silent) showToast(t('reviewerTabBlocked'), true);
@@ -2050,9 +2288,11 @@
   function renderTabs() {
     var tabOverview = document.getElementById('tabOverview');
     var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
+    var tabWorkLog = document.getElementById('tabWorkLog');
     var tabMemberManagement = document.getElementById('tabMemberManagement');
     var overviewPanel = document.getElementById('overviewPanel');
     var annotationProgressPanel = document.getElementById('annotationProgressPanel');
+    var workLogPanel = document.getElementById('workLogPanel');
     var memberManagementPanel = document.getElementById('memberManagementPanel');
 
     var reviewer = state.taskRole === 'reviewer';
@@ -2060,17 +2300,21 @@
 
     var overviewActive = state.activeTab === 'overview';
     var annotationActive = state.activeTab === 'annotation-progress';
+    var workLogActive = state.activeTab === 'work-log';
     var memberActive = state.activeTab === 'member-management' && !reviewer;
 
     tabOverview.classList.toggle('active', overviewActive);
     tabOverview.setAttribute('aria-selected', overviewActive ? 'true' : 'false');
     tabAnnotationProgress.classList.toggle('active', annotationActive);
     tabAnnotationProgress.setAttribute('aria-selected', annotationActive ? 'true' : 'false');
+    tabWorkLog.classList.toggle('active', workLogActive);
+    tabWorkLog.setAttribute('aria-selected', workLogActive ? 'true' : 'false');
     tabMemberManagement.classList.toggle('active', memberActive);
     tabMemberManagement.setAttribute('aria-selected', memberActive ? 'true' : 'false');
 
     overviewPanel.classList.toggle('hidden', !overviewActive);
     annotationProgressPanel.classList.toggle('hidden', !annotationActive);
+    workLogPanel.classList.toggle('hidden', !workLogActive);
     memberManagementPanel.classList.toggle('hidden', !memberActive);
   }
 
@@ -2406,6 +2650,189 @@
     renderProgressEmptyState();
   }
 
+  function getWorkLogStageLabel(stage) {
+    return stage === 'official' ? t('workLogStageOfficial') : t('workLogStageDry');
+  }
+
+  function getWorkLogStageBadgeClass(stage) {
+    return stage === 'official' ? 'badge-run-official' : 'badge-run-dry';
+  }
+
+  function getCurrentUserEmail() {
+    return ROLE_SELF_EMAIL[state.taskRole] || ROLE_SELF_EMAIL.project_leader;
+  }
+
+  function getFilteredWorkLogEntries() {
+    return WORK_LOG_ENTRIES.filter(function(entry) {
+      if (state.workLogDateFrom && entry.date < state.workLogDateFrom) return false;
+      if (state.workLogDateTo && entry.date > state.workLogDateTo) return false;
+      if (state.workLogStage !== 'all' && entry.stage !== state.workLogStage) return false;
+
+      if (state.taskRole === 'reviewer') {
+        return entry.memberEmail === getCurrentUserEmail();
+      }
+      if (state.workLogMember !== 'all' && entry.memberEmail !== state.workLogMember) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  function formatWorkLogDuration(hours) {
+    return interpolate(t('workLogDurationTpl'), { hours: hours.toFixed(1) });
+  }
+
+  function formatWorkLogSpeedByEntry(entry) {
+    var speed = entry.durationHours > 0 ? entry.completedCount / entry.durationHours : 0;
+    return speed.toFixed(1) + ' ' + t('workLogSpeedUnit');
+  }
+
+  function getTaskRoleByEmail(email) {
+    var target = TASK_MEMBERS.find(function(member) { return member.email === email; });
+    return target && target.taskRole ? target.taskRole : 'annotator';
+  }
+
+  function renderWorkLogMemberOptions() {
+    var memberWrap = document.getElementById('workLogMemberFilterWrap');
+    var memberSelect = document.getElementById('workLogMemberSelect');
+    if (!memberWrap || !memberSelect) return;
+
+    memberWrap.classList.toggle('hidden', state.taskRole !== 'project_leader');
+    if (state.taskRole !== 'project_leader') {
+      state.workLogMember = 'all';
+      return;
+    }
+
+    while (memberSelect.firstChild) memberSelect.removeChild(memberSelect.firstChild);
+
+    var defaultOpt = document.createElement('option');
+    defaultOpt.value = 'all';
+    defaultOpt.textContent = t('workLogMemberAll');
+    memberSelect.appendChild(defaultOpt);
+
+    TASK_MEMBERS.forEach(function(member) {
+      var opt = document.createElement('option');
+      opt.value = member.email;
+      opt.textContent = member.name;
+      memberSelect.appendChild(opt);
+    });
+
+    var hasSelected = TASK_MEMBERS.some(function(member) { return member.email === state.workLogMember; });
+    if (state.workLogMember !== 'all' && !hasSelected) {
+      state.workLogMember = 'all';
+    }
+    memberSelect.value = state.workLogMember;
+  }
+
+  function renderWorkLogTable(entries) {
+    var tbody = document.getElementById('workLogTableBody');
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    entries.forEach(function(entry) {
+      var tr = document.createElement('tr');
+
+      function td(text, cls) {
+        var node = document.createElement('td');
+        if (cls) node.className = cls;
+        node.textContent = text;
+        return node;
+      }
+
+      tr.appendChild(td(entry.date));
+      tr.appendChild(td(entry.memberName, 'member-name'));
+
+      var tdRole = document.createElement('td');
+      var roleBadge = document.createElement('span');
+      var role = getTaskRoleByEmail(entry.memberEmail);
+      roleBadge.className = getTaskRoleBadgeClass(role);
+      roleBadge.textContent = getTaskRoleLabel(role);
+      tdRole.appendChild(roleBadge);
+      tr.appendChild(tdRole);
+
+      tr.appendChild(td(formatWorkLogDuration(entry.durationHours)));
+      tr.appendChild(td(String(entry.completedCount)));
+      tr.appendChild(td(formatWorkLogSpeedByEntry(entry)));
+
+      var tdStage = document.createElement('td');
+      var stageBadge = document.createElement('span');
+      stageBadge.className = 'badge ' + getWorkLogStageBadgeClass(entry.stage);
+      stageBadge.textContent = getWorkLogStageLabel(entry.stage);
+      tdStage.appendChild(stageBadge);
+      tr.appendChild(tdStage);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderWorkLogSummary(entries) {
+    var totalHours = entries.reduce(function(sum, entry) { return sum + entry.durationHours; }, 0);
+    var totalCompleted = entries.reduce(function(sum, entry) { return sum + entry.completedCount; }, 0);
+    var weightedSpeed = totalHours > 0 ? totalCompleted / totalHours : 0;
+
+    setText('workLogSummaryHoursValue', totalHours.toFixed(1) + ' ' + t('workLogHoursUnit'));
+    setText('workLogSummaryCompletedValue', String(totalCompleted));
+    setText(
+      'workLogSummarySpeedValue',
+      (weightedSpeed > 0 ? weightedSpeed.toFixed(1) : '0.0') + ' ' + t('workLogSpeedUnit')
+    );
+  }
+
+  function renderWorkLogAlerts(entries) {
+    var list = document.getElementById('workLogAlertList');
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    var anomalies = entries.filter(function(entry) {
+      var speed = entry.durationHours > 0 ? entry.completedCount / entry.durationHours : 0;
+      return speed > 24 || speed < 9;
+    });
+
+    if (!anomalies.length) {
+      var none = document.createElement('li');
+      none.className = 'status-hint';
+      none.textContent = t('workLogAlertNone');
+      list.appendChild(none);
+      return;
+    }
+
+    anomalies.forEach(function(entry) {
+      var speed = entry.durationHours > 0 ? entry.completedCount / entry.durationHours : 0;
+      var li = document.createElement('li');
+      li.className = 'anomaly-item';
+
+      var icon = document.createElement('img');
+      icon.src = '../../assets/icons/alert-circle.svg';
+      icon.alt = '';
+      icon.setAttribute('aria-hidden', 'true');
+      li.appendChild(icon);
+
+      var message = speed > 24 ? t('workLogAnomalyFast') : t('workLogAnomalySlow');
+      li.appendChild(document.createTextNode(interpolate(message, {
+        date: entry.date,
+        member: entry.memberName,
+        speed: speed.toFixed(1) + ' ' + t('workLogSpeedUnit'),
+      })));
+      list.appendChild(li);
+    });
+  }
+
+  function renderWorkLogEmptyState(entries) {
+    var empty = !entries.length;
+    document.getElementById('workLogEmptyState').classList.toggle('hidden', !empty);
+    document.getElementById('workLogTableSection').classList.toggle('hidden', empty);
+    document.getElementById('workLogAlertSection').classList.toggle('hidden', empty);
+  }
+
+  function renderWorkLog() {
+    document.getElementById('workLogDateFrom').value = state.workLogDateFrom;
+    document.getElementById('workLogDateTo').value = state.workLogDateTo;
+    document.getElementById('workLogStageSelect').value = state.workLogStage;
+    renderWorkLogMemberOptions();
+    var entries = getFilteredWorkLogEntries();
+    renderWorkLogTable(entries);
+    renderWorkLogSummary(entries);
+    renderWorkLogAlerts(entries);
+    renderWorkLogEmptyState(entries);
+  }
+
   function showToast(message, isError) {
     var toast = document.getElementById('toast');
     var msg = document.getElementById('toastMsg');
@@ -2482,6 +2909,7 @@
     var isolationToggle = document.getElementById('isolationToggle');
     var tabOverview = document.getElementById('tabOverview');
     var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
+    var tabWorkLog = document.getElementById('tabWorkLog');
     var tabMemberManagement = document.getElementById('tabMemberManagement');
 
     tabOverview.addEventListener('click', function() {
@@ -2495,6 +2923,13 @@
       renderTabs();
       renderAnnotationProgress();
       trackEvent('prototype_tab_switched', { tab: 'annotation-progress' });
+    });
+
+    tabWorkLog.addEventListener('click', function() {
+      setTabByRole('work-log');
+      renderTabs();
+      renderWorkLog();
+      trackEvent('prototype_tab_switched', { tab: 'work-log' });
     });
 
     tabMemberManagement.addEventListener('click', function() {
@@ -2636,6 +3071,36 @@
       trackEvent('prototype_tab_switched', { tab: 'overview', source: 'progress_empty_state_cta' });
     });
 
+    document.getElementById('workLogBackToOverviewBtn').addEventListener('click', function() {
+      setTabByRole('overview');
+      renderTabs();
+      trackEvent('prototype_tab_switched', { tab: 'overview', source: 'work_log_empty_state_cta' });
+    });
+
+    document.getElementById('workLogDateFrom').addEventListener('change', function(e) {
+      state.workLogDateFrom = e.target.value || '';
+      renderWorkLog();
+      trackEvent('prototype_work_log_filter_changed', { filter: 'date_from' });
+    });
+
+    document.getElementById('workLogDateTo').addEventListener('change', function(e) {
+      state.workLogDateTo = e.target.value || '';
+      renderWorkLog();
+      trackEvent('prototype_work_log_filter_changed', { filter: 'date_to' });
+    });
+
+    document.getElementById('workLogStageSelect').addEventListener('change', function(e) {
+      state.workLogStage = e.target.value || 'all';
+      renderWorkLog();
+      trackEvent('prototype_work_log_filter_changed', { filter: 'run_stage', value: state.workLogStage });
+    });
+
+    document.getElementById('workLogMemberSelect').addEventListener('change', function(e) {
+      state.workLogMember = e.target.value || 'all';
+      renderWorkLog();
+      trackEvent('prototype_work_log_filter_changed', { filter: 'member', value: state.workLogMember });
+    });
+
     var langToggle = document.getElementById('langToggle');
     var mobileLangToggle = document.getElementById('mobileLangToggle');
 
@@ -2653,11 +3118,13 @@
     var skeleton = document.getElementById('loadingSkeleton');
     var overviewPanel = document.getElementById('overviewPanel');
     var annotationProgressPanel = document.getElementById('annotationProgressPanel');
+    var workLogPanel = document.getElementById('workLogPanel');
     var memberManagementPanel = document.getElementById('memberManagementPanel');
 
     skeleton.classList.remove('hidden');
     overviewPanel.classList.add('hidden');
     annotationProgressPanel.classList.add('hidden');
+    workLogPanel.classList.add('hidden');
     memberManagementPanel.classList.add('hidden');
 
     window.setTimeout(function() {
@@ -2667,6 +3134,7 @@
       renderOverview();
       renderMemberManagement();
       renderAnnotationProgress();
+      renderWorkLog();
     }, 560);
   }
 
