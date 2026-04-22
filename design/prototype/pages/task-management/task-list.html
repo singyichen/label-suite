@@ -334,7 +334,11 @@
     .badge-iaa             { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-in-progress     { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
     .badge-completed       { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-task-type       { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
+    .badge-task-type-single      { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
+    .badge-task-type-sequence    { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
+    .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
+    .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
+    .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .badge-run-dry         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
     .badge-run-official    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
 
@@ -452,13 +456,12 @@
       <!-- Toolbar -->
       <div class="toolbar" role="search" aria-label="任務搜尋與篩選">
         <div class="toolbar-left">
-          <div class="search-wrap">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="search" class="search-input" id="searchInput"
-              placeholder="搜尋任務名稱" aria-label="搜尋任務名稱" />
-          </div>
+          <select class="filter-select" id="taskTypeFilter" aria-label="依任務類型篩選">
+            <option value="">全部任務類型</option>
+          </select>
+          <select class="filter-select" id="runTypeFilter" aria-label="依標記階段篩選">
+            <option value="">全部標記階段</option>
+          </select>
           <select class="filter-select" id="statusFilter" aria-label="依狀態篩選">
             <option value="">全部狀態</option>
             <option value="draft">草稿</option>
@@ -473,6 +476,13 @@
             </svg>
             <span id="clearFiltersLabel">清除篩選</span>
           </button>
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="search" class="search-input" id="searchInput"
+              placeholder="搜尋" aria-label="搜尋" />
+          </div>
         </div>
         <div class="toolbar-right">
           <button class="btn btn-primary" id="newTaskBtn">
@@ -570,7 +580,21 @@
       emptyNoResultsTitle: '找不到符合條件的任務',
       emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
       emptyClearBtnLabel: '清除所有篩選',
-      searchPlaceholder: '搜尋任務名稱',
+      searchPlaceholder: '搜尋',
+      searchAriaLabel: '搜尋（所有欄位）',
+      taskTypeOptions: [
+        { value: '', label: '全部任務類型' },
+        { value: 'single_sentence_classification', label: '單句分類（含多標籤）' },
+        { value: 'single_sentence_scoring_regression', label: '單句評分 / 回歸' },
+        { value: 'sequence_labeling', label: '序列標記（含 Aspect / NER）' },
+        { value: 'relation_extraction', label: '關係抽取（Entity + Relation + Triple）' },
+        { value: 'sentence_pairs', label: '句對任務（相似度 / 蘊含）' },
+      ],
+      runTypeOptions: [
+        { value: '', label: '全部標記階段' },
+        { value: 'dry_run', label: '試標' },
+        { value: 'official_run', label: '正式標記' },
+      ],
       statusOptions: [
         { value: '', label: '全部狀態' },
         { value: 'draft', label: '草稿' },
@@ -597,7 +621,14 @@
         waiting_iaa_confirmation: '待 IAA 確認',
         official_run_in_progress: '正式標記中', completed: '已完成',
       },
-      runBadge: { dry_run: '試標', official_run: '正式' },
+      runBadge: { dry_run: '試標', official_run: '正式標記' },
+      taskTypeLabel: {
+        single_sentence_classification: '單句分類（含多標籤）',
+        single_sentence_scoring_regression: '單句評分 / 回歸',
+        sequence_labeling: '序列標記（含 Aspect / NER）',
+        relation_extraction: '關係抽取（Entity + Relation + Triple）',
+        sentence_pairs: '句對任務（相似度 / 蘊含）',
+      },
     },
     en: {
       docTitle: 'Task List — Label Suite (Prototype)',
@@ -616,7 +647,21 @@
       emptyNoResultsTitle: 'No matching tasks',
       emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
       emptyClearBtnLabel: 'Clear all filters',
-      searchPlaceholder: 'Search task name',
+      searchPlaceholder: 'Search',
+      searchAriaLabel: 'Search (all columns)',
+      taskTypeOptions: [
+        { value: '', label: 'All task types' },
+        { value: 'single_sentence_classification', label: 'Single Sentence Classification (Multi-label)' },
+        { value: 'single_sentence_scoring_regression', label: 'Single Sentence Scoring / Regression' },
+        { value: 'sequence_labeling', label: 'Sequence Labeling (Aspect / NER)' },
+        { value: 'relation_extraction', label: 'Relation Extraction (Entity + Relation + Triple)' },
+        { value: 'sentence_pairs', label: 'Sentence Pairs (Similarity / Entailment)' },
+      ],
+      runTypeOptions: [
+        { value: '', label: 'All annotation stages' },
+        { value: 'dry_run', label: 'Dry Run' },
+        { value: 'official_run', label: 'Official' },
+      ],
       statusOptions: [
         { value: '', label: 'All statuses' },
         { value: 'draft', label: 'Draft' },
@@ -644,20 +689,27 @@
         official_run_in_progress: 'Official Run', completed: 'Completed',
       },
       runBadge: { dry_run: 'Dry Run', official_run: 'Official' },
+      taskTypeLabel: {
+        single_sentence_classification: 'Single Sentence Classification (Multi-label)',
+        single_sentence_scoring_regression: 'Single Sentence Scoring / Regression',
+        sequence_labeling: 'Sequence Labeling (Aspect / NER)',
+        relation_extraction: 'Relation Extraction (Entity + Relation + Triple)',
+        sentence_pairs: 'Sentence Pairs (Similarity / Entailment)',
+      },
     },
   };
 
   /* ── Static task data ────────────────────────────────────────── */
   var TASKS = [];
   var CREATED_TASKS_SEED = [
-    { id: 'T001', nameZh: '新聞標題情感分類', nameEn: 'News Sentiment Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T002', nameZh: 'NER 基準任務',       nameEn: 'NER Benchmark',                 taskType: 'Sequence Labeling', runType: 'official_run', status: 'waiting_iaa_confirmation',  updatedAt: '2026-04-18', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T003', nameZh: '意圖分類試標',        nameEn: 'Intent Classification Dry Run', taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-17', canViewDetail: false, isMine: true, deletedAt: ''  },
-    { id: 'T004', nameZh: '句對語意相似度',      nameEn: 'Sentence Pair Similarity',     taskType: 'Sentence Pairs',  runType: 'official_run', status: 'completed',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T005', nameZh: '生成式評分標記',      nameEn: 'Generative Rating Labeling',   taskType: 'Generative Labeling', runType: 'dry_run', status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: false, deletedAt: '' },
-    { id: 'T006', nameZh: '商品評論分類 v2',     nameEn: 'Product Review Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-13', canViewDetail: true,  isMine: false, deletedAt: '' },
-    { id: 'T007', nameZh: '醫療文本 NER',        nameEn: 'Medical NER',                  taskType: 'Sequence Labeling', runType: 'official_run', status: 'completed',               updatedAt: '2026-04-12', canViewDetail: true,  isMine: false, deletedAt: '' },
-    { id: 'T008', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T001', nameZh: '新聞標題情感分類', nameEn: 'News Sentiment Classification', taskType: 'single_sentence_classification', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T002', nameZh: 'NER 基準任務',       nameEn: 'NER Benchmark',                 taskType: 'sequence_labeling', runType: 'official_run', status: 'waiting_iaa_confirmation',  updatedAt: '2026-04-18', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T003', nameZh: '意圖分類試標',        nameEn: 'Intent Classification Dry Run', taskType: 'single_sentence_classification', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-17', canViewDetail: false, isMine: true, deletedAt: ''  },
+    { id: 'T004', nameZh: '句對語意相似度',      nameEn: 'Sentence Pair Similarity',     taskType: 'sentence_pairs',  runType: 'official_run', status: 'completed',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T005', nameZh: '單句評分回歸任務',    nameEn: 'Sentence Scoring Regression',  taskType: 'single_sentence_scoring_regression', runType: 'dry_run', status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T006', nameZh: '商品評論分類 v2',     nameEn: 'Product Review Classification', taskType: 'single_sentence_classification', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-13', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T007', nameZh: '醫療文本 NER',        nameEn: 'Medical NER',                  taskType: 'sequence_labeling', runType: 'official_run', status: 'completed',               updatedAt: '2026-04-12', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T008', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'single_sentence_classification', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false, deletedAt: '' },
   ];
 
   function loadCreatedTaskSeed() {
@@ -685,9 +737,16 @@
     completed: 'badge-completed',
   };
   var RUN_BADGE_CLS = { dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
+  var TASK_TYPE_BADGE_CLS = {
+    single_sentence_classification: 'badge-task-type-single',
+    single_sentence_scoring_regression: 'badge-task-type-scoring',
+    sequence_labeling: 'badge-task-type-sequence',
+    relation_extraction: 'badge-task-type-sequence',
+    sentence_pairs: 'badge-task-type-pairs',
+  };
 
   /* ── State ───────────────────────────────────────────────────── */
-  var state = { lang: 'zh', keyword: '', status: '', page: 1, pageSize: 20 };
+  var state = { lang: 'zh', keyword: '', taskType: '', runType: '', status: '', page: 1, pageSize: 20 };
   var pendingDeleteTaskId = null;
   var toastTimer = null;
 
@@ -706,21 +765,48 @@
     return 'user';
   }
 
+  function getTaskSearchText(task) {
+    var zhType = (I18N.zh.taskTypeLabel && I18N.zh.taskTypeLabel[task.taskType]) || '';
+    var enType = (I18N.en.taskTypeLabel && I18N.en.taskTypeLabel[task.taskType]) || '';
+    var zhRun = (I18N.zh.runBadge && I18N.zh.runBadge[task.runType]) || '';
+    var enRun = (I18N.en.runBadge && I18N.en.runBadge[task.runType]) || '';
+    var zhStatus = (I18N.zh.statusBadge && I18N.zh.statusBadge[task.status]) || '';
+    var enStatus = (I18N.en.statusBadge && I18N.en.statusBadge[task.status]) || '';
+    return [
+      task.id,
+      task.nameZh,
+      task.nameEn,
+      task.taskType,
+      zhType,
+      enType,
+      task.runType,
+      zhRun,
+      enRun,
+      task.status,
+      zhStatus,
+      enStatus,
+      task.updatedAt
+    ].filter(Boolean).join(' ').toLowerCase();
+  }
+
   function getFilteredTasks() {
     var tasks = TASKS;
     if (getCurrentSystemRole() !== 'super_admin') {
       tasks = tasks.filter(function(tk) { return tk.isMine; });
     }
     tasks = tasks.filter(function(tk) { return !tk.deletedAt; });
-    if (state.keyword.trim()) {
-      var kw = state.keyword.trim().toLowerCase();
-      tasks = tasks.filter(function(tk) {
-        return (tk.nameZh && tk.nameZh.toLowerCase().indexOf(kw) !== -1) ||
-               (tk.nameEn && tk.nameEn.toLowerCase().indexOf(kw) !== -1);
-      });
+    if (state.taskType) {
+      tasks = tasks.filter(function(tk) { return tk.taskType === state.taskType; });
+    }
+    if (state.runType) {
+      tasks = tasks.filter(function(tk) { return tk.runType === state.runType; });
     }
     if (state.status) {
       tasks = tasks.filter(function(tk) { return tk.status === state.status; });
+    }
+    if (state.keyword.trim()) {
+      var kw = state.keyword.trim().toLowerCase();
+      tasks = tasks.filter(function(tk) { return getTaskSearchText(tk).indexOf(kw) !== -1; });
     }
     return tasks;
   }
@@ -739,6 +825,8 @@
       lang: state.lang,
       role: getCurrentSystemRole(),
       keyword: state.keyword,
+      task_type: state.taskType,
+      run_type: state.runType,
       status: state.status,
       page: state.page,
       page_size: state.pageSize,
@@ -757,6 +845,8 @@
   function syncUrl() {
     var p = new URLSearchParams();
     if (state.keyword) p.set('keyword', state.keyword);
+    if (state.taskType) p.set('task_type', state.taskType);
+    if (state.runType) p.set('run_stage', state.runType);
     if (state.status) p.set('status', state.status);
     if (state.page > 1) p.set('page', String(state.page));
     if (state.pageSize !== 20) p.set('page_size', String(state.pageSize));
@@ -815,11 +905,14 @@
 
     var statusInfo = I18N[state.lang].statusBadge;
     var runInfo = I18N[state.lang].runBadge;
+    var typeInfo = I18N[state.lang].taskTypeLabel || {};
     var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
     var statusLabel = statusInfo[task.status] || task.status;
     var runLabel = runInfo[task.runType] || task.runType;
+    var typeLabel = typeInfo[task.taskType] || task.taskType;
     var statusCls = STATUS_BADGE_CLS[task.status] || 'badge-draft';
     var runCls = RUN_BADGE_CLS[task.runType] || 'badge-run-dry';
+    var typeCls = TASK_TYPE_BADGE_CLS[task.taskType] || 'badge-task-type-default';
 
     // Task name cell
     var tdName = document.createElement('td');
@@ -829,8 +922,8 @@
     // Task type cell
     var tdType = document.createElement('td');
     var spanType = document.createElement('span');
-    spanType.className = 'badge badge-task-type';
-    spanType.textContent = task.taskType;
+    spanType.className = 'badge ' + typeCls;
+    spanType.textContent = typeLabel;
     tdType.appendChild(spanType);
 
     // Run type cell
@@ -948,8 +1041,8 @@
     var paginationBar = document.getElementById('paginationBar');
     var tbody = document.getElementById('taskTableBody');
 
-    var showEmpty = total === 0 && !state.keyword && !state.status;
-    var showNoResults = total === 0 && (state.keyword || state.status);
+    var showEmpty = total === 0 && !state.keyword && !state.taskType && !state.runType && !state.status;
+    var showNoResults = total === 0 && (state.keyword || state.taskType || state.runType || state.status);
 
     if (showEmpty) {
       tableWrap.classList.remove('hidden');
@@ -1011,7 +1104,7 @@
     }
 
     // Clear filter button
-    var hasFilter = state.keyword.trim() || state.status;
+    var hasFilter = state.keyword.trim() || state.taskType || state.runType || state.status;
     document.getElementById('clearFiltersBtn').classList.toggle('hide-clear', !hasFilter);
 
     // Admin nav
@@ -1045,8 +1138,31 @@
       });
     }
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+    document.getElementById('searchInput').setAttribute('aria-label', t('searchAriaLabel'));
     document.getElementById('searchInput').value = state.keyword;
     document.getElementById('pageSizeSelect').value = String(state.pageSize);
+
+    var typeSel = document.getElementById('taskTypeFilter');
+    var typeOpts = t('taskTypeOptions');
+    while (typeSel.firstChild) typeSel.removeChild(typeSel.firstChild);
+    typeOpts.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.value === state.taskType) opt.selected = true;
+      typeSel.appendChild(opt);
+    });
+
+    var runSel = document.getElementById('runTypeFilter');
+    var runOpts = t('runTypeOptions');
+    while (runSel.firstChild) runSel.removeChild(runSel.firstChild);
+    runOpts.forEach(function(o) {
+      var opt = document.createElement('option');
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (o.value === state.runType) opt.selected = true;
+      runSel.appendChild(opt);
+    });
 
     // Status filter options
     var sel = document.getElementById('statusFilter');
@@ -1097,6 +1213,20 @@
     render();
   });
 
+  document.getElementById('taskTypeFilter').addEventListener('change', function(e) {
+    state.taskType = e.target.value;
+    state.page = 1;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'task_type', value: state.taskType || '__all__' });
+    render();
+  });
+
+  document.getElementById('runTypeFilter').addEventListener('change', function(e) {
+    state.runType = e.target.value;
+    state.page = 1;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'run_stage', value: state.runType || '__all__' });
+    render();
+  });
+
   document.getElementById('statusFilter').addEventListener('change', function(e) {
     state.status = e.target.value;
     state.page = 1;
@@ -1106,6 +1236,8 @@
 
   function clearFilters() {
     state.keyword = '';
+    state.taskType = '';
+    state.runType = '';
     state.status = '';
     state.page = 1;
     document.getElementById('searchInput').value = '';
@@ -1168,10 +1300,14 @@
       loadCreatedTaskSeed();
     }
     var keyword = q.get('keyword');
+    var taskType = q.get('task_type');
+    var runStage = q.get('run_stage');
     var status = q.get('status');
     var page = parseInt(q.get('page') || '', 10);
     var pageSize = parseInt(q.get('page_size') || '', 10);
     if (keyword) state.keyword = keyword;
+    if (taskType) state.taskType = taskType;
+    if (runStage) state.runType = runStage;
     if (status) state.status = status;
     if (!isNaN(page) && page > 0) state.page = page;
     if (!isNaN(pageSize) && [20, 50, 100].indexOf(pageSize) !== -1) state.pageSize = pageSize;
