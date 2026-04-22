@@ -3,6 +3,35 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail settings edit state', () => {
+  test('renders settings summary fields by task type', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL);
+
+    await page.evaluate(() => {
+      TASK_DATA.taskTypeKey = 'sequence_labeling';
+      TASK_DATA.configContent = [
+        'entities:',
+        '  - name: PER',
+        '    color: #6366F1',
+        '  - name: ORG',
+        '    color: #10B981',
+        '  - name: LOC',
+        '    color: #F59E0B',
+        'scheme: IOB2',
+        'allow_overlapping: false',
+      ].join('\n');
+      renderOverview();
+    });
+
+    await expect(page.locator('#settingsConfigView')).toContainText('實體類型');
+    await expect(page.locator('#settingsConfigView')).toContainText('標記格式');
+    await expect(page.locator('#settingsConfigView')).toContainText('PER, ORG, LOC');
+    await expect(page.locator('#settingsConfigView')).toContainText('IOB2');
+    await expect(page.locator('#settingsConfigView')).not.toContainText('標籤清單');
+    await expect(page.locator('#settingsConfigDynamicRows .kv-dl-key:has-text("實體類型") .required')).toHaveText('*');
+    await expect(page.locator('#settingsConfigDynamicRows .kv-dl-key:has-text("標記格式") .required')).toHaveText('*');
+    await expect(page.locator('#settingsConfigDynamicRows .kv-dl-key:has-text("允許重疊標記") .required')).toHaveCount(0);
+  });
+
   test('matches task-new step2 interaction model', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 

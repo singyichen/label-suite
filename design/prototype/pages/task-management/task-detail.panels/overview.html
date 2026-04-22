@@ -70,14 +70,7 @@
         <span class="kv-dl-key" id="labelConfigTaskType">標記類型</span>
         <span class="kv-dl-value" id="valueConfigTaskType"></span>
       </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelConfigLabels">標籤清單</span>
-        <span class="kv-dl-value" id="valueConfigLabels"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelConfigAllowMultiple">允許多選</span>
-        <span class="kv-dl-value" id="valueConfigAllowMultiple"></span>
-      </div>
+      <div id="settingsConfigDynamicRows"></div>
     </div>
 
     <div class="settings-edit-form hidden" id="settingsEditForm">
@@ -280,11 +273,17 @@
     <div class="sampling-edit-form hidden" id="samplingEditForm">
       <div class="sampling-fields">
         <div class="field-group">
-          <label class="field-label" id="samplingModeLabel" for="samplingMode">抽樣方式</label>
-          <select class="input-select" id="samplingMode" aria-label="抽樣方式">
-            <option value="by_count">筆數</option>
-            <option value="by_percentage">百分比</option>
-          </select>
+          <span class="field-label" id="samplingModeLabel">抽樣方式</span>
+          <div class="sampling-mode-inline" role="radiogroup" aria-labelledby="samplingModeLabel">
+            <label>
+              <input type="radio" name="samplingMode" id="samplingModePercent" value="by_percentage" />
+              <span id="samplingModePercentLabel">百分比</span>
+            </label>
+            <label>
+              <input type="radio" name="samplingMode" id="samplingModeCount" value="by_count" />
+              <span id="samplingModeCountLabel">筆數</span>
+            </label>
+          </div>
         </div>
         <div class="field-group">
           <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣數值</label>

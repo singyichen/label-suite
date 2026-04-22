@@ -13,6 +13,9 @@ test.describe('Task detail overview edit state', () => {
     await expect(editBtn).toBeEnabled();
     await expect(saveBtn).toHaveText('儲存');
     await expect(page.locator('#overviewPanel')).not.toContainText('僅 draft 狀態可編輯');
+    await expect(page.locator('#labelTaskName .required')).toHaveText('*');
+    await expect(page.locator('#labelTaskType .required')).toHaveText('*');
+    await expect(page.locator('#labelDatasetSummary .required')).toHaveText('*');
 
     await editBtn.click();
 

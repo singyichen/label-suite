@@ -1581,6 +1581,7 @@
       gap: 10px 16px;
       align-items: baseline;
     }
+    #settingsConfigDynamicRows { display: contents; }
     .kv-dl-row { display: contents; }
     .kv-dl-key {
       font-size: 12px;
@@ -1692,6 +1693,28 @@
       gap: 10px;
       align-items: end;
       margin-bottom: var(--space-md);
+    }
+    .sampling-mode-inline {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      min-height: 40px;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .sampling-mode-inline label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--color-ink);
+    }
+    .sampling-mode-inline input[type="radio"] {
+      accent-color: var(--color-primary);
+      margin: 0;
+    }
+    .sampling-mode-inline input[type="radio"]:disabled + span {
+      color: var(--color-text-soft);
     }
     .field-group { display: flex; flex-direction: column; gap: 4px; }
     .strategy-info {
@@ -2748,12 +2771,12 @@
     setText('guidelineSectionTitle', t('guidelineSectionTitle'));
     setText('executionTitle', t('executionTitle'));
     setText('exportTitle', t('exportTitle'));
-    setText('labelTaskName', t('labelTaskName'));
-    setText('labelTaskType', t('labelTaskType'));
+    setRequiredLabel('labelTaskName', t('labelTaskName'));
+    setRequiredLabel('labelTaskType', t('labelTaskType'));
     setText('labelCreatedBy', t('labelCreatedBy'));
     setText('labelCreatedAt', t('labelCreatedAt'));
     setText('labelUpdatedAt', t('labelUpdatedAt'));
-    setText('labelDatasetSummary', t('labelDatasetSummary'));
+    setRequiredLabel('labelDatasetSummary', t('labelDatasetSummary'));
     setText('labelConfigVersion', t('labelConfigVersion'));
     setText('labelConfigTaskType', t('labelConfigTaskType'));
     setText('labelConfigLabels', t('labelConfigLabels'));
@@ -2794,14 +2817,16 @@
     setText('samplingEditBtn', t('samplingEditBtn'));
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
-    setText('labelSamplingModeControl', t('labelSamplingModeControl'));
-    setText('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setRequiredLabel('labelSamplingModeControl', t('labelSamplingModeControl'));
+    setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
     setText('labelSamplingStrategyControl', t('labelSamplingStrategyControl'));
     setText('labelSplitControl', t('labelSplitControl'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
-    setText('samplingModeLabel', t('samplingModeLabel'));
-    setText('samplingValueLabel', t('samplingValueLabel'));
+    setRequiredLabel('samplingModeLabel', t('samplingModeLabel'));
+    setText('samplingModePercentLabel', t('samplingModePercent'));
+    setText('samplingModeCountLabel', t('samplingModeCount'));
+    setRequiredLabel('samplingValueLabel', t('samplingValueLabel'));
     setText('samplingStrategyLabel', t('samplingStrategyLabel'));
     setText('samplingHelp', t('samplingHelp'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
@@ -2887,12 +2912,6 @@
     if (guidelineTextInput) guidelineTextInput.placeholder = t('guidelineTextPlaceholder');
 
     updateSettingsTemplateButtonLabel();
-
-    var modeSelect = document.getElementById('samplingMode');
-    if (modeSelect && modeSelect.options.length >= 2) {
-      modeSelect.options[0].textContent = t('samplingModeCount');
-      modeSelect.options[1].textContent = t('samplingModePercent');
-    }
 
     var workLogStageSelect = document.getElementById('workLogStageSelect');
     if (workLogStageSelect && workLogStageSelect.options.length >= 3) {
@@ -3012,8 +3031,10 @@
     setText('samplingStrategyText', data.samplingStrategy + ' (fallback: random(seed))');
     setText('samplingSeedText', 'random_seed: ' + data.randomSeed);
 
-    var modeSelect = document.getElementById('samplingMode');
-    if (modeSelect) modeSelect.value = data.samplingMode;
+    var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
+    modeRadios.forEach(function(node) {
+      node.checked = node.value === data.samplingMode;
+    });
 
     var samplingInput = document.getElementById('samplingValue');
     var samplingError = document.getElementById('samplingError');
@@ -3039,7 +3060,9 @@
     var editable = editAllowed && editing;
     var isolationToggle = document.getElementById('isolationToggle');
     var risk = document.getElementById('isolationRiskMsg');
-    if (modeSelect) modeSelect.disabled = !editable;
+    modeRadios.forEach(function(node) {
+      node.disabled = !editable;
+    });
     if (samplingInput) samplingInput.disabled = !editable;
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
@@ -4404,17 +4427,70 @@
     } catch (error) {
       parsed = {};
     }
-    var labels = [];
-    if (Array.isArray(parsed.labels)) labels = parsed.labels;
-    else if (Array.isArray(parsed.relation_types)) labels = parsed.relation_types;
-    var labelsText = labels.filter(function(item) { return String(item || '').trim(); }).join(', ');
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    var summaryRows = [];
+    if (schema && Array.isArray(schema.fields)) {
+      schema.fields.forEach(function(field) {
+        var rawValue = parsed[field.key];
+        if (rawValue === undefined && field.defaultValue !== undefined) rawValue = field.defaultValue;
+        var text = '-';
+        if (field.type === 'tag-list') {
+          var tags = Array.isArray(rawValue) ? rawValue.filter(function(item) { return String(item || '').trim(); }) : [];
+          text = tags.length ? tags.join(', ') : '-';
+        } else if (field.type === 'entity-list') {
+          var names = Array.isArray(rawValue) ? rawValue.map(function(entity) {
+            if (entity && typeof entity === 'object') return String(entity.name || '').trim();
+            return String(entity || '').trim();
+          }).filter(function(name) { return name; }) : [];
+          text = names.length ? names.join(', ') : '-';
+        } else if (field.type === 'boolean') {
+          text = rawValue ? t('yes') : t('no');
+        } else if (field.type === 'select' || field.type === 'textarea') {
+          text = String(rawValue || '').trim() || '-';
+        } else {
+          text = String(rawValue || '').trim() || '-';
+        }
+        summaryRows.push({
+          label: field[state.lang] || field.zh || field.key,
+          value: text,
+          required: Boolean(field.required),
+        });
+      });
+    }
 
     return {
       configFileName: TASK_DATA.configFileName || '',
       taskTypeLabel: getTaskTypeLabel(TASK_DATA.taskTypeKey),
-      labelsText: labelsText,
-      allowMultipleText: parsed.allow_multiple ? t('yes') : t('no'),
+      summaryRows: summaryRows,
     };
+  }
+
+  function renderSettingsSummaryRows(rows) {
+    var container = document.getElementById('settingsConfigDynamicRows');
+    if (!container) return;
+    container.innerHTML = '';
+    (rows || []).forEach(function(row) {
+      var rowNode = document.createElement('div');
+      rowNode.className = 'kv-dl-row';
+
+      var keyNode = document.createElement('span');
+      keyNode.className = 'kv-dl-key';
+      keyNode.textContent = row.label;
+      if (row.required) {
+        var req = document.createElement('span');
+        req.className = 'required';
+        req.textContent = '*';
+        keyNode.appendChild(req);
+      }
+      rowNode.appendChild(keyNode);
+
+      var valueNode = document.createElement('span');
+      valueNode.className = 'kv-dl-value';
+      valueNode.textContent = row.value;
+      rowNode.appendChild(valueNode);
+
+      container.appendChild(rowNode);
+    });
   }
 
   function renderOverview() {
@@ -4431,8 +4507,7 @@
     setText('valueDatasetSummary', datasetSummary);
     setText('valueConfigVersion', settingsSummary.configFileName);
     setText('valueConfigTaskType', settingsSummary.taskTypeLabel);
-    setText('valueConfigLabels', settingsSummary.labelsText);
-    setText('valueConfigAllowMultiple', settingsSummary.allowMultipleText);
+    renderSettingsSummaryRows(settingsSummary.summaryRows);
     setText('valueGuidelineStatus', TASK_DATA.guidelineUploaded ? t('guidelineUploaded') : t('guidelineEmpty'));
     setText('valueGuidelineFilesSummary', guidelineFilesText);
     setText('valueForceGuideline', TASK_DATA.forceGuideline ? t('yes') : t('no'));
@@ -5097,7 +5172,7 @@
   }
 
   function bindEvents() {
-    var modeSelect = document.getElementById('samplingMode');
+    var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
     var valueInput = document.getElementById('samplingValue');
     var isolationToggle = document.getElementById('isolationToggle');
     var samplingEditBtn = document.getElementById('samplingEditBtn');
@@ -5346,20 +5421,23 @@
       });
     }
 
-    if (modeSelect && valueInput) {
-      modeSelect.addEventListener('change', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.samplingMode = e.target.value;
-        if (state.samplingDraft.samplingMode === 'by_percentage') {
-          state.samplingDraft.samplingValue = Math.max(1, Math.min(99, state.samplingDraft.samplingValue));
-          valueInput.max = '99';
-        } else {
-          state.samplingDraft.samplingValue = Math.max(1, Math.min(TASK_DATA.datasetTotal - 1, state.samplingDraft.samplingValue));
-          valueInput.removeAttribute('max');
-        }
-        valueInput.value = String(state.samplingDraft.samplingValue);
-        markSamplingDirty();
-        renderSamplingState();
+    if (modeRadios.length && valueInput) {
+      modeRadios.forEach(function(modeRadio) {
+        modeRadio.addEventListener('change', function(e) {
+          if (!e.target.checked) return;
+          if (!state.samplingEditMode || !state.samplingDraft) return;
+          state.samplingDraft.samplingMode = e.target.value;
+          if (state.samplingDraft.samplingMode === 'by_percentage') {
+            state.samplingDraft.samplingValue = Math.max(1, Math.min(99, state.samplingDraft.samplingValue));
+            valueInput.max = '99';
+          } else {
+            state.samplingDraft.samplingValue = Math.max(1, Math.min(TASK_DATA.datasetTotal - 1, state.samplingDraft.samplingValue));
+            valueInput.removeAttribute('max');
+          }
+          valueInput.value = String(state.samplingDraft.samplingValue);
+          markSamplingDirty();
+          renderSamplingState();
+        });
       });
 
       valueInput.addEventListener('input', function(e) {
