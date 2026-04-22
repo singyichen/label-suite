@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 新增任務</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-primary: #6366F1; --color-cta: #10B981; --color-surface: #F5F3FF;
+      --color-white: #FFFFFF; --color-ink: #1E1B4B; --color-ink-muted: #94A3B8;
+      --color-text-soft: #64748B; --color-border: #E2E8F0; --color-border-muted: #F1F5F9;
+      --color-primary-soft-bg: #EEF2FF; --color-slate-50: #F8FAFC;
+      --color-error: #B91C1C; --color-error-soft-bg: #FEF2F2; --color-error-soft-border: #FECACA;
+      --color-success: #15803D; --color-success-bg: #F0FDF4; --color-success-border: #BBF7D0;
+      --color-warning: #A16207; --color-warning-bg: #FEFCE8; --color-warning-border: #FEF08A;
+      --font-serif-display: 'Crimson Pro','Noto Serif TC',Georgia,serif;
+      --font-sans: 'Inter','Noto Sans TC',-apple-system,sans-serif;
+      --font-mono: 'JetBrains Mono',ui-monospace,Menlo,monospace;
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-full: 9999px;
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1); --shadow-xl: 0 20px 25px rgba(0,0,0,0.15);
+      --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
+      --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
+      --dur-fast: 150ms; --dur-normal: 200ms; --ease-standard: cubic-bezier(0.4,0,0.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body { font-family: var(--font-sans); background: var(--color-surface); color: var(--color-ink); line-height: 1.8; min-height: 100vh; display: flex; flex-direction: row; }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    button, select, input[type="checkbox"], input[type="radio"], input[type="file"] { cursor: pointer; }
+    .hidden { display: none !important; }
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; min-width: 0; }
+    .layout { max-width: 960px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+
+    /* ── Shared sidebar ── */
+    .navbar {
+      width: 240px; height: 100vh;
+      background: var(--color-white);
+      border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      position: sticky; top: 0; z-index: 200;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    .brand-section {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-bottom: var(--space-xl); padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      background: var(--color-primary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .navbar-logo svg { width: 20px; height: 20px; }
+    .navbar-wordmark {
+      font-family: var(--font-serif-display);
+      font-weight: 700; font-size: 16px; color: var(--color-ink); line-height: 1;
+    }
+    .brand-section .lang-toggle { margin-left: auto; }
+    .navbar-center {
+      display: flex; flex-direction: column;
+      gap: var(--space-xs); margin-bottom: var(--space-xl); flex: 1;
+    }
+    .nav-link {
+      padding: 10px 12px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; color: var(--color-ink-muted);
+      transition: color var(--dur-fast), background var(--dur-fast);
+      text-align: left; display: flex; align-items: center; gap: 10px;
+      cursor: pointer; border: none; background: none; width: 100%;
+    }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
+    .nav-link:hover { color: var(--color-ink); background: var(--color-slate-50); }
+    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
+    .nav-link.active .nav-icon { color: var(--color-primary); }
+    .nav-actions {
+      display: flex; flex-direction: column; gap: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-lg); margin-top: auto;
+    }
+    .lang-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 6px 12px;
+      background: var(--color-white); color: var(--color-ink);
+      font-size: 13px; font-weight: 500;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; }
+    .user-chip-profile {
+      display: flex; align-items: center; gap: 10px;
+      flex: 1; min-width: 0; text-decoration: none; color: inherit;
+      transition: opacity var(--dur-fast);
+    }
+    .user-chip-profile:hover { opacity: 0.75; }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: white; color: var(--color-primary);
+      font-weight: 700; font-size: 14px;
+      border: 2px solid rgba(99,102,241,0.16); flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      display: block; font-weight: 600; font-size: 13px; line-height: 1.2;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .user-role { display: block; font-size: 11px; color: var(--color-ink-muted); line-height: 1.3; }
+    .logout-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: var(--radius-sm);
+      border: none; background: transparent; color: var(--color-ink-muted);
+      flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .logout-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+    .mobile-top-logout {
+      display: none; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: var(--color-white);
+      color: var(--color-ink-muted);
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .mobile-top-logout:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .mobile-user-name {
+      display: none; margin-left: auto; max-width: 72px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 12px; font-weight: 600; color: var(--color-ink);
+    }
+    .mobile-lang-toggle {
+      display: none; align-items: center; justify-content: center;
+      gap: 6px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 6px 10px;
+      background: var(--color-white); color: var(--color-ink);
+      font-size: 12px; font-weight: 600;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .mobile-lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+
+    /* ── Page header ── */
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-md); margin-bottom: var(--space-lg); flex-wrap: wrap; }
+    .page-main-title { font-family: var(--font-serif-display); font-size: 28px; font-weight: 700; color: var(--color-ink); margin: 0 0 4px; line-height: 1.3; }
+    .page-main-subtitle { font-size: 14px; color: var(--color-text-soft); margin: 0; }
+
+    /* ── Step indicator ── */
+    .step-indicator { display: flex; align-items: center; margin-bottom: var(--space-lg); }
+    .step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+    .step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; border: 2px solid var(--color-border); background: var(--color-white); color: var(--color-ink-muted); transition: all var(--dur-fast); }
+    .step-circle.active { border-color: var(--color-primary); background: var(--color-primary); color: white; }
+    .step-circle.done { border-color: var(--color-cta); background: var(--color-cta); color: white; }
+    .step-label { font-size: 12px; font-weight: 500; color: var(--color-ink-muted); white-space: nowrap; }
+    .step-label.active { color: var(--color-primary); font-weight: 600; }
+    .step-label.done { color: var(--color-cta); }
+    .step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
+    .step-connector.done { background: var(--color-cta); }
+
+    /* ── Form card ── */
+    .form-card { background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-lg); margin-bottom: var(--space-md); }
+    .form-card-title { font-size: 16px; font-weight: 600; color: var(--color-ink); margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border); }
+    .form-field { margin-bottom: var(--space-md); }
+    .field-label { display: block; font-size: 13px; font-weight: 600; color: var(--color-ink); margin-bottom: 6px; }
+    .field-label .required { color: var(--color-error); margin-left: 2px; }
+    .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
+    .field-error-msg { font-size: 12px; color: var(--color-error); margin-top: 4px; display: none; }
+    .field-error-msg.show { display: block; }
+    .input-text { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-text:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-text.error { border-color: var(--color-error); }
+    .input-select { width: 100%; padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; outline: none; appearance: none; -webkit-appearance: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .input-select.error { border-color: var(--color-error); }
+    .input-textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; resize: vertical; min-height: 80px; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+
+    /* ── Upload zone ── */
+    .upload-zone { border: 2px dashed var(--color-border); border-radius: var(--radius-md); padding: 32px var(--space-lg); text-align: center; cursor: pointer; transition: border-color var(--dur-fast), background var(--dur-fast); background: var(--color-slate-50); }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .upload-zone.error { border-color: var(--color-error); }
+    .upload-zone-icon { width: 32px; height: 32px; color: var(--color-ink-muted); margin: 0 auto 8px; display: block; }
+    .upload-zone-label { font-size: 14px; font-weight: 500; color: var(--color-ink); margin-bottom: 4px; }
+    .upload-zone-hint { font-size: 12px; color: var(--color-text-soft); }
+    .upload-file-preview { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--color-success-border); border-radius: var(--radius-md); background: var(--color-success-bg); margin-top: 8px; }
+    .upload-file-icon { width: 16px; height: 16px; color: var(--color-success); flex-shrink: 0; }
+    .upload-file-name { font-size: 13px; font-weight: 500; color: var(--color-success); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .upload-file-size { font-size: 12px; color: var(--color-text-soft); flex-shrink: 0; }
+    .upload-file-remove { width: 20px; height: 20px; border: none; background: none; color: var(--color-ink-muted); padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); transition: color var(--dur-fast), background var(--dur-fast); }
+    .upload-file-remove:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+
+    /* ── Step 2 ── */
+    .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; }
+    .template-section { margin-bottom: var(--space-md); padding: var(--space-md); background: var(--color-slate-50); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .template-section-title { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
+    .template-btn { padding: 5px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: 12px; font-weight: 500; background: var(--color-white); color: var(--color-ink); transition: border-color var(--dur-fast), background var(--dur-fast); }
+    .template-btn:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .template-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    #templateBtns { display: flex; flex-direction: column; gap: 8px; width: auto; align-self: flex-start; }
+    .s2-preview-top { margin-bottom: var(--space-md); }
+    .s2-code-panel { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: var(--space-md); }
+    .s2-code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
+
+    /* ── Tag list ── */
+    .tag-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); min-height: 44px; align-items: flex-start; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .tag-input-wrap:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .tag-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: var(--radius-full); background: var(--color-primary-soft-bg); border: 1px solid var(--color-primary); color: var(--color-primary); font-size: 12px; font-weight: 500; }
+    .tag-pill-remove { width: 14px; height: 14px; border: none; background: none; color: currentColor; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.7; }
+    .tag-pill-remove:hover { opacity: 1; }
+    .tag-new-input { border: none; outline: none; font-size: 13px; color: var(--color-ink); background: transparent; min-width: 80px; flex: 1; }
+
+    /* ── Entity list ── */
+    .entity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .entity-color-dot { width: 20px; height: 20px; border-radius: var(--radius-sm); flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
+    .entity-name-input { flex: 1; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; outline: none; transition: border-color var(--dur-fast); }
+    .entity-name-input:focus { border-color: var(--color-primary); }
+    .entity-remove-btn { width: 24px; height: 24px; border: none; background: none; color: var(--color-ink-muted); cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: color var(--dur-fast), background var(--dur-fast); }
+    .entity-remove-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+    .add-row-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px dashed var(--color-border); border-radius: var(--radius-md); font-size: 12px; color: var(--color-text-soft); background: transparent; transition: border-color var(--dur-fast), color var(--dur-fast); }
+    .add-row-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+    /* ── Toggle switch ── */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .toggle-info { flex: 1; }
+    .toggle-label-text { font-size: 14px; font-weight: 500; color: var(--color-ink); display: block; }
+    .toggle-desc { font-size: 12px; color: var(--color-text-soft); display: block; margin-top: 2px; }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: transform var(--dur-fast); }
+    .toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /* ── Code editor ── */
+    .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #1E1B4B; color: #E2E8F0; outline: none; resize: vertical; transition: border-color var(--dur-fast); cursor: text; }
+    .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .annotation-preview { min-height: 220px; padding: 12px var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); display: flex; flex-direction: column; gap: 10px; }
+    .annotation-preview-sample { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); font-size: 14px; line-height: 1.6; color: var(--color-ink); }
+    .annotation-preview-divider { height: 1px; background: var(--color-border); }
+    .annotation-preview-task-title { font-size: 14px; font-weight: 700; color: var(--color-ink); }
+    .annotation-preview-options { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .annotation-preview-option { display: inline-flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14px; color: var(--color-ink); white-space: nowrap; }
+    .annotation-preview-option input { margin: 0; }
+    .annotation-preview-color { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.12); flex-shrink: 0; }
+    .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
+    .annotation-preview-pair { display: flex; flex-direction: column; gap: 8px; }
+    .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+    .code-error-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-top: 6px; font-size: 12px; color: var(--color-error); }
+    .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
+    #annotationPreviewLabel { font-size: 13px; font-weight: 600; color: var(--color-ink); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
+    .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
+
+    /* ── Step 3: Startup settings ── */
+    .startup-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .startup-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-slate-50); }
+    .startup-section-title { font-size: 14px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
+    .member-source-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-sm); }
+    .member-source-tab {
+      padding: 8px 14px; font-size: 13px; font-weight: 500; color: var(--color-text-soft);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: color var(--dur-fast), border-color var(--dur-fast);
+      background: transparent; border-left: none; border-right: none; border-top: none;
+    }
+    .member-source-tab:hover { color: var(--color-primary); }
+    .member-source-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+    .member-add-row { display: flex; gap: 8px; align-items: center; margin-bottom: var(--space-sm); }
+    .member-list { display: flex; flex-direction: column; gap: 8px; }
+    .member-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .member-item-main { flex: 1; min-width: 0; }
+    .member-item-name { font-size: 13px; font-weight: 600; color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .member-item-role { font-size: 11px; color: var(--color-text-soft); }
+    .member-item-meta { font-size: 11px; color: var(--color-text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .member-empty { font-size: 12px; color: var(--color-text-soft); }
+    .inline-radio { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .inline-radio label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-ink); }
+    .startup-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 6px; }
+
+    /* ── Guideline list ── */
+    .guideline-list { margin-top: var(--space-sm); display: flex; flex-direction: column; gap: 6px; }
+    .guideline-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .guideline-item-icon { width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0; }
+    .guideline-item-name { flex: 1; font-size: 13px; color: var(--color-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .guideline-item-type { font-size: 11px; color: var(--color-text-soft); padding: 2px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); flex-shrink: 0; }
+    .guideline-item-remove { width: 20px; height: 20px; border: none; background: none; color: var(--color-ink-muted); cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: color var(--dur-fast), background var(--dur-fast); }
+    .guideline-item-remove:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+    .upload-multi-zone { border: 2px dashed var(--color-border); border-radius: var(--radius-md); padding: 24px var(--space-lg); text-align: center; cursor: pointer; transition: border-color var(--dur-fast), background var(--dur-fast); background: var(--color-slate-50); }
+    .upload-multi-zone:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+
+    /* ── Action bar ── */
+    .action-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) var(--space-lg); background: var(--color-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: var(--space-xl); }
+    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid transparent; font-weight: 600; font-size: 14px; white-space: nowrap; transition: opacity var(--dur-fast), transform var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast); }
+    .btn-primary { color: white; background: var(--color-cta); border-color: var(--color-cta); }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
+    .btn-secondary:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .btn-ghost { color: var(--color-text-soft); background: transparent; border-color: transparent; }
+    .btn-ghost:hover { background: var(--color-slate-50); color: var(--color-ink); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .btn-loading { opacity: 0.7; pointer-events: none; }
+    .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Banner error ── */
+    .banner-error { display: none; align-items: flex-start; gap: 10px; padding: var(--space-md); background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-bottom: var(--space-md); font-size: 14px; color: var(--color-error); }
+    .banner-error.show { display: flex; }
+
+    /* ── Notice ── */
+    .notice-info { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-md); font-size: 12px; color: #1D4ED8; margin-bottom: var(--space-md); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 300; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--color-white); border-radius: var(--radius-xl); padding: var(--space-xl); max-width: 440px; width: 90%; box-shadow: var(--shadow-xl); }
+    .modal-title { font-family: var(--font-serif-display); font-size: 20px; font-weight: 700; color: var(--color-ink); margin-bottom: 8px; }
+    .modal-desc { font-size: 14px; color: var(--color-text-soft); margin-bottom: var(--space-lg); line-height: 1.6; }
+    .modal-actions { display: flex; gap: var(--space-sm); justify-content: flex-end; }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 400; pointer-events: none; }
+    .toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--color-ink); color: white; font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); pointer-events: auto; opacity: 0; transform: translateY(8px); transition: opacity var(--dur-normal), transform var(--dur-normal); max-width: 360px; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.toast-error { background: var(--color-error); }
+    .toast.toast-success { background: var(--color-success); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      body { flex-direction: column; padding-top: var(--navbar-mobile-top-height); padding-bottom: var(--navbar-mobile-height); }
+      .navbar {
+        width: 100%; height: var(--navbar-mobile-height);
+        position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+        border-right: none; border-top: 1px solid var(--color-border);
+        flex-direction: row; padding: 0; overflow: visible;
+        background: var(--color-white); z-index: 300;
+      }
+      .brand-section {
+        position: fixed; top: 0; left: 0; right: 0;
+        height: var(--navbar-mobile-top-height);
+        margin: 0; padding: 0 var(--space-md);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-white); display: flex; align-items: center; z-index: 320;
+      }
+      .navbar-brand { width: 100%; }
+      .navbar-wordmark { font-size: 14px; }
+      .mobile-user-name { display: inline-block; }
+      .brand-section .lang-toggle { display: none; }
+      .mobile-lang-toggle { display: inline-flex; }
+      .mobile-top-logout { display: inline-flex; }
+      .navbar-center {
+        flex: 1; flex-direction: row; align-items: stretch;
+        justify-content: space-around; gap: 0; margin: 0;
+      }
+      .navbar-center .nav-link {
+        min-height: var(--navbar-mobile-top-height); flex: 1; padding: 8px 2px;
+        flex-direction: column; justify-content: center; align-items: center;
+        gap: 4px; text-align: center; font-size: 11px; line-height: 1.2;
+      }
+      .navbar-center .nav-link span { white-space: nowrap; }
+      .nav-actions { display: none; }
+      .layout { padding: var(--space-md); }
+      .s2-layout { grid-template-columns: 1fr; }
+      .startup-layout { grid-template-columns: 1fr; }
+      .startup-section { padding: 20px 14px; }
+      .member-add-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .member-add-row .input-select { max-width: none !important; width: 100%; }
+      .member-add-row .btn { width: 100%; }
+      .page-header { flex-direction: column; }
+      .step-label { display: none; }
+      .action-bar { flex-wrap: wrap; }
+    }
+    @media (max-width: 420px) {
+      .mobile-user-name { max-width: 56px; font-size: 11px; }
+      .navbar-brand { width: auto; flex: 1; min-width: 0; }
+      .navbar-wordmark { font-size: 13px; }
+      .mobile-lang-toggle { padding: 6px 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+    .char-count { font-size: 11px; color: var(--color-ink-muted); text-align: right; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'task-management',
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<main>
+  <div class="layout">
+
+    <!-- Page header -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-main-title" id="pageTitle">新增任務</h1>
+        <p class="page-main-subtitle" id="pageSubtitle">依序完成四個步驟以建立標記任務</p>
+      </div>
+    </header>
+
+    <!-- Banner error -->
+    <div class="banner-error" id="bannerError" role="alert">
+      <svg style="width:16px;height:16px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="bannerErrorMsg"></span>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="step-indicator" aria-label="建立步驟">
+      <div class="step-item">
+        <div class="step-circle" id="sc1">1</div>
+        <div class="step-label" id="sl1">基本資料</div>
+      </div>
+      <div class="step-connector" id="conn12"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc2">2</div>
+        <div class="step-label" id="sl2">標記設定檔</div>
+      </div>
+      <div class="step-connector" id="conn23"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc3">3</div>
+        <div class="step-label" id="sl3">啟動設定</div>
+      </div>
+      <div class="step-connector" id="conn34"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc4">4</div>
+        <div class="step-label" id="sl4">標記說明</div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 1 ══ -->
+    <div id="step1Panel">
+      <div class="form-card">
+        <div class="form-card-title" id="s1CardTitle">基本資料</div>
+
+        <div class="form-field">
+          <label class="field-label" for="taskNameInput">
+            <span id="labelTaskName">任務名稱</span><span class="required">*</span>
+          </label>
+          <input type="text" id="taskNameInput" class="input-text" maxlength="100" placeholder="例：新聞標題情感分類" aria-required="true" />
+          <div class="char-count"><span id="taskNameCount">0</span> / 100</div>
+          <div class="field-error-msg" id="errTaskName"></div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" for="taskTypeSelect">
+            <span id="labelTaskType">任務類型</span><span class="required">*</span>
+          </label>
+          <select id="taskTypeSelect" class="input-select" aria-required="true">
+            <option value="" id="optTaskTypeDefault">請選擇任務類型</option>
+          </select>
+          <div class="field-error-msg" id="errTaskType"></div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">
+            <span id="labelDataset">資料集</span><span class="required">*</span>
+          </label>
+          <div class="upload-zone" id="datasetUploadZone" role="button" tabindex="0">
+            <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="upload-zone-label" id="uploadZoneLabel">點擊或拖曳上傳資料集</div>
+            <div class="upload-zone-hint" id="uploadZoneHint">支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆</div>
+            <input type="file" id="datasetFileInput" accept=".txt,.csv,.tsv,.json" style="display:none" aria-hidden="true" />
+          </div>
+          <div id="datasetFilePreview" class="upload-file-preview hidden">
+            <svg class="upload-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="upload-file-name" id="datasetFileName"></span>
+            <span class="upload-file-size" id="datasetFileSize"></span>
+            <button class="upload-file-remove" id="datasetRemoveBtn" aria-label="移除檔案">
+              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="field-error-msg" id="errDataset"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 2 ══ -->
+    <div id="step2Panel" class="hidden">
+      <div class="form-card">
+        <div class="form-card-title" id="s2CardTitle">標記設定檔</div>
+
+        <div class="s2-preview-top">
+          <div class="yaml-preview-label" id="annotationPreviewLabel">標記預覽</div>
+          <div class="annotation-preview" id="annotationPreview" aria-label="Annotation preview"></div>
+        </div>
+
+        <div class="s2-layout">
+          <div>
+            <div class="template-section">
+              <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始或者上傳設定檔</div>
+              <div class="template-actions">
+                <div id="templateBtns"></div>
+                <button class="template-btn" id="uploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
+                <input type="file" id="configFileInput" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" style="display:none" aria-hidden="true" />
+              </div>
+            </div>
+            <div id="schemaFields"></div>
+            <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
+          </div>
+          <div class="s2-code-panel">
+            <div class="s2-code-header">
+              <div class="yaml-preview-label" style="margin-bottom:0;">Code</div>
+              <div id="codeFormatBtns" style="display:flex;gap:6px;">
+                <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;font-weight:700;" id="formatYamlBtn" onclick="setCodeFormat('yaml')">YAML</button>
+                <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" id="formatJsonBtn" onclick="setCodeFormat('json')">JSON</button>
+              </div>
+            </div>
+            <textarea class="code-editor" id="codeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
+            <div class="code-error-bar hidden" id="codeErrorBar">
+              <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="codeErrorMsg"></span>
+            </div>
+            <div class="code-actions">
+              <button class="btn btn-secondary" id="saveCodeBtn" type="button" disabled>
+                <span id="saveCodeBtnLabel">儲存</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 3 ══ -->
+    <div id="step3Panel" class="hidden">
+      <div class="form-card">
+        <div class="form-card-title" id="s3CardTitle">啟動設定</div>
+
+        <div class="notice-info" id="s3Notice">
+          <svg style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="s3NoticeText">先完成成員與抽樣方式，建立後可直接進入執行狀態。</span>
+        </div>
+
+        <div class="startup-layout">
+          <section class="startup-section" aria-labelledby="startupMemberTitle">
+            <div class="startup-section-title" id="startupMemberTitle">成員管理</div>
+            <div class="member-source-tabs" role="tablist" aria-label="Member source tabs">
+              <button class="member-source-tab active" id="memberSourceSystemTab" type="button" role="tab" aria-selected="true">平台使用者</button>
+              <button class="member-source-tab" id="memberSourceInviteTab" type="button" role="tab" aria-selected="false">Email 邀請</button>
+            </div>
+
+            <div class="member-add-row" id="memberSourceSystemPanel">
+              <select class="input-select" id="memberUserSelect">
+                <option value="">選擇使用者</option>
+              </select>
+              <select class="input-select" id="memberRoleSelect" style="max-width:140px;">
+                <option value="annotator">Annotator</option>
+                <option value="reviewer">Reviewer</option>
+              </select>
+              <button class="btn btn-secondary" id="addMemberFromSystemBtn" type="button" style="padding:8px 12px;">加入</button>
+            </div>
+
+            <div class="member-add-row hidden" id="memberSourceInvitePanel">
+              <input type="email" class="input-text" id="memberInviteEmailInput" placeholder="輸入邀請 Email" />
+              <select class="input-select" id="memberInviteRoleSelect" style="max-width:140px;">
+                <option value="annotator">Annotator</option>
+                <option value="reviewer">Reviewer</option>
+              </select>
+              <button class="btn btn-secondary" id="sendInviteBtn" type="button" style="padding:8px 12px;">寄送邀請連結</button>
+            </div>
+            <div class="member-list" id="memberList"></div>
+            <div class="member-empty hidden" id="memberEmpty">尚未加入任何成員</div>
+            <div class="field-error-msg" id="errStartupMembers"></div>
+          </section>
+
+          <section class="startup-section" aria-labelledby="startupRunTitle">
+            <div class="startup-section-title" id="startupRunTitle">抽樣方式</div>
+            <div class="inline-radio">
+              <label><input type="radio" name="samplingMode" value="by_percentage" checked /> <span id="samplingModePercentLabel">百分比</span></label>
+              <label><input type="radio" name="samplingMode" value="by_count" /> <span id="samplingModeCountLabel">筆數</span></label>
+            </div>
+            <div class="form-field" style="margin-bottom:8px;">
+              <label class="field-label" id="samplingValueLabel" for="samplingValueInput">試標抽樣值</label>
+              <input type="number" class="input-text" id="samplingValueInput" min="1" max="99" value="20" />
+              <div class="startup-hint" id="samplingHint">百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數</div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <span class="toggle-label-text" id="isolationToggleLabel">資料隔離</span>
+                <span class="toggle-desc" id="isolationToggleDesc">預設啟用，避免試標與正式標記資料混用</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="isolationToggle" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field-error-msg" id="errStartupRun"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STEP 4 ══ -->
+    <div id="step4Panel" class="hidden">
+      <div class="form-card">
+        <div class="form-card-title" id="s4CardTitle">標記說明</div>
+
+        <div class="notice-info" id="s4Notice">
+          <svg style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="s4NoticeText">此步驟為選填。不上傳說明，仍可完成任務建立。</span>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" id="labelGuideline">說明內容</label>
+          <textarea class="input-textarea" id="guidelineTextInput" rows="6" placeholder="輸入給標記員看的任務說明、判斷準則與注意事項"></textarea>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label" id="labelGuidelineUpload">上傳檔案</label>
+          <div class="upload-multi-zone" id="guidelineUploadZone" role="button" tabindex="0">
+            <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div style="font-size:14px;font-weight:500;color:var(--color-ink);margin-bottom:4px;" id="guidelineUploadLabel">上傳檔案</div>
+            <div style="font-size:12px;color:var(--color-text-soft);" id="guidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+            <input type="file" id="guidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple style="display:none" aria-hidden="true" />
+          </div>
+          <div class="guideline-list" id="guidelineList"></div>
+        </div>
+
+        <div class="form-field" style="margin-top:var(--space-md);">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <span class="toggle-label-text" id="forceToggleLabel">開始標記前強制顯示</span>
+              <span class="toggle-desc" id="forceToggleDesc">啟用後，標記員進入作業前必須先閱讀說明</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="forceGuidelineToggle" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="action-bar">
+      <button class="btn btn-ghost" id="cancelBtn">
+        <span id="cancelBtnLabel">取消</span>
+      </button>
+      <div class="action-bar-right">
+        <button class="btn btn-secondary hidden" id="prevBtn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          <span id="prevBtnLabel">上一步</span>
+        </button>
+        <button class="btn btn-primary" id="nextBtn" disabled>
+          <span id="nextBtnLabel">下一步</span>
+          <svg class="btn-icon" id="nextBtnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Leave confirm modal -->
+<div class="modal-overlay" id="leaveModal" role="dialog" aria-modal="true" aria-labelledby="leaveModalTitle">
+  <div class="modal">
+    <div class="modal-title" id="leaveModalTitle">離開此頁面？</div>
+    <p class="modal-desc" id="leaveModalDesc">你有尚未儲存的變更，離開將會遺失所有已填寫的內容。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="leaveModalStayBtn">繼續編輯</button>
+      <button class="btn btn-primary" id="leaveModalLeaveBtn" style="background:var(--color-error);border-color:var(--color-error);">離開</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert">
+    <svg style="width:18px;height:18px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span id="toastMsg"></span>
+  </div>
+</div>
+
+<script src="../../assets/analytics.js"></script>
+<script>
+/* ── Registry ────────────────────────────────────────────────── */
+var REGISTRY = {
+  single_sentence_classification: {
+    zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)',
+    fields: [
+      { key: 'labels', type: 'tag-list', zh: '標籤清單', en: 'Labels', required: true, hint_zh: '輸入標籤後按 Enter', hint_en: 'Type label and press Enter' },
+      { key: 'allow_multiple', type: 'boolean', zh: '允許多選', en: 'Allow multiple labels', required: false, defaultValue: false },
+    ],
+    defaultTemplate: { labels: ['正向', '負向', '中立'], allow_multiple: false },
+    defaultTemplateI18n: {
+      zh: { labels: ['正向', '負向', '中立'], allow_multiple: false },
+      en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
+    },
+  },
+  single_sentence_scoring_regression: {
+    zh: '單句評分 / 回歸', en: 'Single Sentence Scoring / Regression',
+    fields: [
+      { key: 'rubric', type: 'textarea', zh: 'Rubric（評分說明）', en: 'Rubric', required: true, placeholder_zh: '描述各分數對應的品質標準', placeholder_en: 'Describe quality criteria per score' },
+      { key: 'scoring_range', type: 'select', zh: '評分範圍', en: 'Scoring range', required: true, options: ['1-3', '1-5', '1-7', '1-10'], defaultValue: '1-5' },
+      { key: 'widget_type', type: 'select', zh: '評分介面', en: 'Scoring widget', required: true, options: ['slider', 'radio', 'number_input'], defaultValue: 'slider' },
+      { key: 'allow_comment', type: 'boolean', zh: '允許評語', en: 'Allow comments', required: false, defaultValue: true },
+    ],
+    defaultTemplate: { rubric: '', scoring_range: '1-5', widget_type: 'slider', allow_comment: true },
+  },
+  sequence_labeling: {
+    zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)',
+    fields: [
+      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true },
+      { key: 'scheme', type: 'select', zh: '標記格式', en: 'Labeling scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2' },
+      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false },
+    ],
+    defaultTemplate: { entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+  },
+  relation_extraction: {
+    zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)',
+    fields: [
+      { key: 'entity_types', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true },
+      { key: 'relation_types', type: 'tag-list', zh: '關係類型', en: 'Relation types', required: true, hint_zh: '輸入關係類型後按 Enter', hint_en: 'Type relation and press Enter' },
+      { key: 'tuple_mode', type: 'select', zh: '結構模式', en: 'Tuple mode', required: true, options: ['triple', 'five_tuple'], defaultValue: 'triple' },
+    ],
+    defaultTemplate: {
+      entity_types: [{ name: 'BODY', color: '#6366F1' }, { name: 'SYMPTOM', color: '#10B981' }],
+      relation_types: ['causes', 'associated_with'],
+      tuple_mode: 'triple',
+    },
+  },
+  sentence_pairs: {
+    zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)',
+    fields: [
+      { key: 'labels', type: 'tag-list', zh: '關係標籤', en: 'Relation labels', required: true, hint_zh: '輸入標籤後按 Enter', hint_en: 'Type and press Enter' },
+    ],
+    defaultTemplate: { labels: ['蘊含', '矛盾', '中立'] },
+    defaultTemplateI18n: {
+      zh: { labels: ['蘊含', '矛盾', '中立'] },
+      en: { labels: ['Entailment', 'Contradiction', 'Neutral'] },
+    },
+  },
+};
+var TASK_TYPE_ORDER = [
+  'single_sentence_classification',
+  'single_sentence_scoring_regression',
+  'sequence_labeling',
+  'relation_extraction',
+  'sentence_pairs',
+];
+var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9','#F97316','#14B8A6'];
+var USER_DIRECTORY = [
+  { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', systemRole: 'user' },
+  { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', systemRole: 'user' },
+  { name: 'Jason Huang', email: 'jason.h@labelsuite.io', systemRole: 'user' },
+  { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', systemRole: 'user' },
+];
+
+/* ── i18n ────────────────────────────────────────────────────── */
+var I18N = {
+  zh: {
+    docTitle: '新增任務 — Label Suite（原型）',
+    pageTitle: '新增任務', pageSubtitle: '依序完成四個步驟以建立標記任務',
+    navDashboard: '儀表板', navTaskManagement: '任務管理',
+    navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
+    s1Label: '基本資料', s2Label: '標記設定檔', s3Label: '啟動設定', s4Label: '標記說明',
+    s1CardTitle: '基本資料', s2CardTitle: '標記設定檔', s3CardTitle: '啟動設定', s4CardTitle: '標記說明',
+    labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集', labelGuideline: '說明內容',
+    optTaskTypeDefault: '請選擇任務類型',
+    uploadZoneLabel: '點擊或拖曳上傳資料集',
+    uploadZoneHint: '支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆',
+    labelGuidelineUpload: '上傳檔案',
+    guidelineUploadLabel: '上傳檔案',
+    guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
+    forceToggleLabel: '開始標記前強制顯示',
+    forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
+    s3NoticeText: '先完成成員與抽樣方式，建立後可直接進入執行狀態。',
+    s4NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
+    startupMemberTitle: '成員管理',
+    startupRunTitle: '抽樣方式',
+    memberSourceSystemTab: '平台使用者',
+    memberSourceInviteTab: 'Email 邀請',
+    memberSystemPlaceholder: '選擇使用者',
+    memberInvitePlaceholder: '輸入邀請 Email',
+    addMemberFromSystemBtnLabel: '加入',
+    sendInviteBtnLabel: '寄送邀請連結',
+    memberEmpty: '尚未加入任何成員',
+    samplingModePercentLabel: '百分比',
+    samplingModeCountLabel: '筆數',
+    samplingValueLabel: '試標抽樣值',
+    samplingHint: '百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數',
+    isolationToggleLabel: '資料隔離',
+    isolationToggleDesc: '預設啟用，避免試標與正式標記資料混用',
+    memberRoleAnnotator: '標記員',
+    memberRoleReviewer: '審核員',
+    s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
+    uploadConfigBtn: '上傳設定檔（YAML / JSON）',
+    annotationPreviewLabel: '標記預覽',
+    previewTaskChooseLabel: '請選擇標記',
+    previewTaskEntity: '請選擇實體類型',
+    previewTaskRelation: '請選擇關係類型',
+    previewTaskScore: '請選擇分數',
+    previewEmpty: '請先新增至少一個標記選項',
+    previewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
+    previewSampleSentenceScoring: '這次住宿整體舒適，但隔音稍差。',
+    previewSampleSentenceSequence: '台積電董事長魏哲家今天在台北出席產業論壇。',
+    previewSampleSentenceRelation: '阿司匹靈可緩解頭痛症狀，但可能造成胃部不適。',
+    previewSentenceALabel: '句子 A',
+    previewSentenceBLabel: '句子 B',
+    previewSampleSentenceA: '這間餐廳的服務態度很好。',
+    previewSampleSentenceB: '但上菜速度偏慢。',
+    saveCodeBtnLabel: '儲存',
+    cancelBtnLabel: '取消', prevBtnLabel: '上一步', nextBtnLabel: '下一步',
+    submitBtnLabel: '建立任務', submittingLabel: '建立中…',
+    leaveModalTitle: '離開此頁面？',
+    leaveModalDesc: '你有尚未儲存的變更，離開將會遺失所有已填寫的內容。',
+    leaveModalStay: '繼續編輯', leaveModalLeave: '離開',
+    errTaskName: '請輸入任務名稱', errTaskType: '請選擇任務類型',
+    errDataset: '請上傳有效的資料集檔案',
+    errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
+    errDatasetSize: '檔案超過 200 MB 上限',
+    errSchemaRequired: '請完成所有必填欄位',
+    errStartupMemberRequired: '至少需加入 1 位 annotator',
+    errStartupMemberPickUser: '請先選擇一位平台使用者',
+    errStartupMemberDuplicate: '此成員已在任務名單中',
+    errStartupInviteEmail: '請輸入有效的 Email',
+    errStartupSampling: '請輸入有效抽樣值：百分比 1..99；筆數 >= 1 且 < 資料集總筆數',
+    toastInviteSent: '邀請連結已寄出，成員已加入待啟用名單',
+    errCodeUnsaved: '請先儲存 Code 內容',
+    errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
+    errConfigFormat: '設定檔格式錯誤，請上傳 YAML / YML / JSON',
+    errConfigRead: '讀取設定檔失敗，請重試',
+    toastCreated: '任務建立成功，正在前往任務詳情…',
+    toastCodeSaved: 'Code 設定已同步',
+    toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
+    applyTemplate: '套用預設範本：',
+    addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
+  },
+  en: {
+    docTitle: 'New task — Label Suite (Prototype)',
+    pageTitle: 'New task', pageSubtitle: 'Complete four steps to create an annotation task',
+    navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
+    navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
+    s1Label: 'Basic info', s2Label: 'Label config', s3Label: 'Startup settings', s4Label: 'Guidelines',
+    s1CardTitle: 'Basic info', s2CardTitle: 'Label configuration', s3CardTitle: 'Startup settings', s4CardTitle: 'Annotation guidelines',
+    labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset', labelGuideline: 'Guideline content',
+    optTaskTypeDefault: 'Select task type',
+    uploadZoneLabel: 'Click or drag to upload dataset',
+    uploadZoneHint: 'TXT / CSV / TSV / JSON · max 200 MB · UTF-8 · up to 1,000,000 rows',
+    labelGuidelineUpload: 'Upload files',
+    guidelineUploadLabel: 'Upload files',
+    guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+    forceToggleLabel: 'Force display before annotation',
+    forceToggleDesc: 'Annotators must read the guideline before starting work',
+    s3NoticeText: 'Complete members and sampling settings first so the task is execution-ready.',
+    s4NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
+    startupMemberTitle: 'Member management',
+    startupRunTitle: 'Sampling settings',
+    memberSourceSystemTab: 'Platform users',
+    memberSourceInviteTab: 'Email invite',
+    memberSystemPlaceholder: 'Select user',
+    memberInvitePlaceholder: 'Enter invitation email',
+    addMemberFromSystemBtnLabel: 'Add',
+    sendInviteBtnLabel: 'Send invite link',
+    memberEmpty: 'No members added yet',
+    samplingModePercentLabel: 'Percentage',
+    samplingModeCountLabel: 'Count',
+    samplingValueLabel: 'Draft sampling value',
+    samplingHint: 'Percentage must be 1..99; count must be >= 1 and < dataset_total',
+    isolationToggleLabel: 'Data isolation',
+    isolationToggleDesc: 'Enabled by default to prevent Dry/Official data mixing',
+    memberRoleAnnotator: 'Annotator',
+    memberRoleReviewer: 'Reviewer',
+    s2TemplateSectionTitle: 'Start from template or upload config',
+    uploadConfigBtn: 'Upload config (YAML / JSON)',
+    annotationPreviewLabel: 'Annotation preview',
+    previewTaskChooseLabel: 'Choose labels',
+    previewTaskEntity: 'Choose entity types',
+    previewTaskRelation: 'Choose relation types',
+    previewTaskScore: 'Choose a score',
+    previewEmpty: 'Add at least one option to preview',
+    previewSampleSentence: 'This is a sample text. Apply annotations with the current settings.',
+    previewSampleSentenceScoring: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
+    previewSampleSentenceSequence: 'TSMC chairman C.C. Wei attended an industry forum in Taipei today.',
+    previewSampleSentenceRelation: 'Aspirin can relieve headaches, but it may cause stomach discomfort.',
+    previewSentenceALabel: 'Sentence A',
+    previewSentenceBLabel: 'Sentence B',
+    previewSampleSentenceA: 'The service at this restaurant is great.',
+    previewSampleSentenceB: 'But the dishes are served slowly.',
+    saveCodeBtnLabel: 'Save',
+    cancelBtnLabel: 'Cancel', prevBtnLabel: 'Back', nextBtnLabel: 'Next',
+    submitBtnLabel: 'Create task', submittingLabel: 'Creating…',
+    leaveModalTitle: 'Leave this page?',
+    leaveModalDesc: 'You have unsaved changes. Leaving will discard all progress.',
+    leaveModalStay: 'Keep editing', leaveModalLeave: 'Leave',
+    errTaskName: 'Task name is required', errTaskType: 'Please select a task type',
+    errDataset: 'Please upload a valid dataset file',
+    errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
+    errDatasetSize: 'File exceeds the 200 MB limit',
+    errSchemaRequired: 'Please complete all required fields',
+    errStartupMemberRequired: 'At least 1 annotator is required',
+    errStartupMemberPickUser: 'Please select a platform user first',
+    errStartupMemberDuplicate: 'This member is already in the task member list',
+    errStartupInviteEmail: 'Please enter a valid email',
+    errStartupSampling: 'Invalid sampling value: percent 1..99; count >= 1 and < dataset_total',
+    toastInviteSent: 'Invite link sent. Member added to pending list',
+    errCodeUnsaved: 'Please save code changes before continuing',
+    errCodeInvalid: 'Invalid code format. Please fix and save again',
+    errConfigFormat: 'Invalid config file type. Upload YAML / YML / JSON',
+    errConfigRead: 'Failed to read config file. Please try again',
+    toastCreated: 'Task created — opening task detail…',
+    toastCodeSaved: 'Code configuration synced',
+    toastConfigLoaded: 'Config loaded. Click Save to apply',
+    applyTemplate: 'Apply default template: ',
+    addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
+  },
+};
+
+/* ── State ───────────────────────────────────────────────────── */
+var state = {
+  lang: 'zh', step: 1,
+  taskName: '', datasetFile: null, taskType: '',
+  codeFormat: 'yaml', configData: {},
+  memberSource: 'system',
+  initialMembers: [],
+  runInit: { samplingMode: 'by_percentage', samplingValue: 20, isolationEnabled: true },
+  guidelineText: '',
+  guidelineFiles: [], forceGuideline: false,
+  codeDraftDirty: false,
+  isDirty: false, isSubmitting: false, leaveCallback: null,
+};
+var toastTimer = null;
+
+function t(key) { return (I18N[state.lang] || I18N.zh)[key] || key; }
+function el(id) { return document.getElementById(id); }
+function setText(id, txt) { var e = el(id); if (e) e.textContent = txt; }
+function markDirty() { state.isDirty = true; }
+
+/* ── YAML serialiser (no user data injected via innerHTML) ────── */
+function yamlScalar(v) {
+  if (typeof v === 'boolean') return v ? 'true' : 'false';
+  if (typeof v === 'number') return String(v);
+  if (typeof v === 'string') {
+    if (
+      v === '' ||
+      /^\s|\s$/.test(v) ||
+      /[:#\[\]{},|>&*!'"@`\n]/.test(v) ||
+      /^(?:true|false|null|~|[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)$/i.test(v)
+    ) return JSON.stringify(v);
+    return v;
+  }
+  return String(v);
+}
+function toYaml(obj, indent) {
+  indent = indent || '';
+  var lines = [];
+  Object.keys(obj).forEach(function(key) {
+    var val = obj[key];
+    if (Array.isArray(val)) {
+      if (val.length === 0) { lines.push(indent + key + ': []'); return; }
+      if (typeof val[0] === 'object') {
+        lines.push(indent + key + ':');
+        val.forEach(function(item) {
+          var first = true;
+          Object.keys(item).forEach(function(k) {
+            lines.push(indent + '  ' + (first ? '- ' : '  ') + k + ': ' + yamlScalar(item[k]));
+            first = false;
+          });
+        });
+      } else {
+        lines.push(indent + key + ':');
+        val.forEach(function(v) { lines.push(indent + '  - ' + yamlScalar(v)); });
+      }
+    } else {
+      lines.push(indent + key + ': ' + yamlScalar(val));
+    }
+  });
+  return lines.join('\n');
+}
+function configToCode() {
+  if (state.codeFormat === 'json') return JSON.stringify(state.configData, null, 2);
+  return toYaml(state.configData);
+}
+
+/* ── YAML parser (subset for prototype) ───────────────────────── */
+function yamlParseScalar(raw) {
+  var val = String(raw || '').trim();
+  if (val === '') return '';
+  if (val === 'true') return true;
+  if (val === 'false') return false;
+  if (/^-?\d+(\.\d+)?$/.test(val)) return Number(val);
+  if ((val[0] === '"' && val[val.length - 1] === '"') || (val[0] === "'" && val[val.length - 1] === "'")) {
+    if (val[0] === "'") return val.slice(1, -1);
+    return JSON.parse(val);
+  }
+  return val;
+}
+function yamlIndentOf(line) { return line.length - line.replace(/^\s+/, '').length; }
+function yamlSplitKeyVal(text) {
+  var idx = text.indexOf(':');
+  if (idx < 0) return null;
+  return { key: text.slice(0, idx).trim(), value: text.slice(idx + 1).trim() };
+}
+function parseYamlSubset(text) {
+  var lines = String(text || '').replace(/\r/g, '').split('\n');
+  var i = 0;
+  var result = {};
+
+  function skipEmpty() {
+    while (i < lines.length && !lines[i].trim()) i++;
+  }
+  function parseBlock(expectedIndent) {
+    var map = {};
+    while (i < lines.length) {
+      var line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      var indent = yamlIndentOf(line);
+      if (indent < expectedIndent) break;
+      if (indent > expectedIndent) throw new Error('Invalid YAML indentation');
+      var kv = yamlSplitKeyVal(line.trim());
+      if (!kv || !kv.key) throw new Error('Invalid YAML line: ' + line.trim());
+      i++;
+      if (kv.value) {
+        map[kv.key] = yamlParseScalar(kv.value);
+        continue;
+      }
+      skipEmpty();
+      if (i >= lines.length) { map[kv.key] = ''; continue; }
+      var next = lines[i];
+      var nextIndent = yamlIndentOf(next);
+      if (nextIndent <= indent) { map[kv.key] = ''; continue; }
+      map[kv.key] = parseNested(nextIndent);
+    }
+    return map;
+  }
+  function parseNested(expectedIndent) {
+    var outArr = [];
+    var firstNonEmpty = null;
+    var start = i;
+    while (start < lines.length && !lines[start].trim()) start++;
+    if (start >= lines.length) return '';
+    firstNonEmpty = lines[start];
+    if (yamlIndentOf(firstNonEmpty) !== expectedIndent) throw new Error('Invalid YAML nesting');
+    if (firstNonEmpty.trim().indexOf('- ') === 0) {
+      i = start;
+      while (i < lines.length) {
+        var line = lines[i];
+        if (!line.trim()) { i++; continue; }
+        var indent = yamlIndentOf(line);
+        if (indent < expectedIndent) break;
+        if (indent > expectedIndent) throw new Error('Invalid array indentation');
+        var itemText = line.trim().slice(2).trim();
+        i++;
+        if (!itemText) { outArr.push(''); continue; }
+        var itemKv = yamlSplitKeyVal(itemText);
+        if (!itemKv) {
+          outArr.push(yamlParseScalar(itemText));
+          continue;
+        }
+        var obj = {};
+        obj[itemKv.key] = yamlParseScalar(itemKv.value);
+        while (i < lines.length) {
+          var sub = lines[i];
+          if (!sub.trim()) { i++; continue; }
+          var subIndent = yamlIndentOf(sub);
+          if (subIndent <= expectedIndent) break;
+          if (subIndent !== expectedIndent + 2) throw new Error('Invalid object indentation');
+          var subKv = yamlSplitKeyVal(sub.trim());
+          if (!subKv) throw new Error('Invalid object line: ' + sub.trim());
+          obj[subKv.key] = yamlParseScalar(subKv.value);
+          i++;
+        }
+        outArr.push(obj);
+      }
+      return outArr;
+    }
+    return parseBlock(expectedIndent);
+  }
+
+  skipEmpty();
+  result = parseBlock(0);
+  return result;
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+function showToast(msg, type) {
+  var toast = el('toast');
+  setText('toastMsg', msg);
+  toast.className = 'toast' + (type === 'error' ? ' toast-error' : type === 'success' ? ' toast-success' : '');
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 3500);
+}
+
+/* ── Banner error ────────────────────────────────────────────── */
+function showBannerError(msg) {
+  var b = el('bannerError');
+  setText('bannerErrorMsg', msg);
+  b.classList.add('show');
+  b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function hideBannerError() { el('bannerError').classList.remove('show'); }
+
+/* ── Field error helpers ─────────────────────────────────────── */
+function showFieldError(errId, show, msg) {
+  var e = el(errId);
+  if (!e) return;
+  if (msg) e.textContent = msg;
+  e.classList.toggle('show', !!show);
+}
+
+/* ── Analytics ───────────────────────────────────────────────── */
+function getTrackingContext() {
+  return { lang: state.lang, step: state.step, taskType: state.taskType };
+}
+function track(event, extra) {
+  if (!window.LabelSuiteAnalytics) return;
+  var ctx = getTrackingContext();
+  if (extra) Object.keys(extra).forEach(function(k) { ctx[k] = extra[k]; });
+  window.LabelSuiteAnalytics.track(event, ctx);
+}
+
+/* ── Step indicator ──────────────────────────────────────────── */
+function updateStepIndicator() {
+  var s = state.step;
+  var checkSvg = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  [1, 2, 3, 4].forEach(function(n) {
+    var circle = el('sc' + n);
+    var label = el('sl' + n);
+    circle.className = 'step-circle' + (n < s ? ' done' : n === s ? ' active' : '');
+    label.className = 'step-label' + (n < s ? ' done' : n === s ? ' active' : '');
+    if (n < s) {
+      circle.innerHTML = checkSvg; /* safe: static SVG, no user data */
+    } else {
+      circle.textContent = String(n);
+    }
+  });
+  el('conn12').className = 'step-connector' + (s > 1 ? ' done' : '');
+  el('conn23').className = 'step-connector' + (s > 2 ? ' done' : '');
+  el('conn34').className = 'step-connector' + (s > 3 ? ' done' : '');
+}
+
+/* ── Show step panel ─────────────────────────────────────────── */
+function showStep(n) {
+  [1, 2, 3, 4].forEach(function(i) { el('step' + i + 'Panel').classList.toggle('hidden', i !== n); });
+  el('prevBtn').classList.toggle('hidden', n === 1);
+  state.step = n;
+  var nextBtn = el('nextBtn');
+  var nextIcon = el('nextBtnIcon');
+  if (n === 4) {
+    setText('nextBtnLabel', t('submitBtnLabel'));
+    nextBtn.removeAttribute('disabled');
+    if (nextIcon) nextIcon.style.display = 'none';
+  } else {
+    setText('nextBtnLabel', t('nextBtnLabel'));
+    if (nextIcon) nextIcon.style.display = '';
+    revalidateCurrentStep();
+  }
+  updateStepIndicator();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── Validation ──────────────────────────────────────────────── */
+function validateStep1(showErrors) {
+  var ok = true;
+  if (!state.taskName.trim()) {
+    if (showErrors) showFieldError('errTaskName', true, t('errTaskName'));
+    ok = false;
+  } else { showFieldError('errTaskName', false); }
+  if (!state.taskType) {
+    if (showErrors) showFieldError('errTaskType', true, t('errTaskType'));
+    ok = false;
+  } else { showFieldError('errTaskType', false); }
+  if (!state.datasetFile) {
+    if (showErrors) showFieldError('errDataset', true, t('errDataset'));
+    ok = false;
+  } else { showFieldError('errDataset', false); }
+  return ok;
+}
+function validateStep2(showErrors) {
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return false;
+  if (state.codeDraftDirty) {
+    if (showErrors) {
+      el('codeErrorBar').classList.remove('hidden');
+      setText('codeErrorMsg', t('errCodeUnsaved'));
+    }
+    return false;
+  }
+  var ok = true;
+  schema.fields.forEach(function(f) {
+    if (!f.required) return;
+    var val = state.configData[f.key];
+    if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
+    else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
+    else if (f.type === 'textarea' || f.type === 'text' || f.type === 'select') {
+      if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
+    } else if (f.type === 'boolean') {
+      if (val === undefined || val === null) ok = false;
+    }
+  });
+  if (!ok && showErrors) showFieldError('errSchema', true, t('errSchemaRequired'));
+  if (ok) showFieldError('errSchema', false);
+  return ok;
+}
+function getDatasetTotalEstimate() {
+  return 10000;
+}
+function validateStep3(showErrors) {
+  var hasAnnotator = state.initialMembers.some(function(member) { return member.role === 'annotator'; });
+  var mode = state.runInit.samplingMode;
+  var val = Number(state.runInit.samplingValue);
+  var total = getDatasetTotalEstimate();
+  var validSampling = false;
+  if (mode === 'by_percentage') {
+    validSampling = Number.isFinite(val) && val >= 1 && val <= 99;
+  } else {
+    validSampling = Number.isFinite(val) && val >= 1 && val < total;
+  }
+  if (showErrors) {
+    showFieldError('errStartupMembers', !hasAnnotator, t('errStartupMemberRequired'));
+    showFieldError('errStartupRun', !validSampling, t('errStartupSampling'));
+  }
+  return hasAnnotator && validSampling;
+}
+function revalidateCurrentStep() {
+  var btn = el('nextBtn');
+  if (state.step === 1) btn.disabled = !validateStep1(false);
+  else if (state.step === 2) btn.disabled = !validateStep2(false);
+  else if (state.step === 3) btn.disabled = !validateStep3(false);
+  else btn.disabled = false;
+}
+
+/* ── Schema fields (Step 2 Visual mode) ─────────────────────── */
+function renderSchemaFields() {
+  var container = el('schemaFields');
+  while (container.firstChild) container.removeChild(container.firstChild);
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return;
+
+  schema.fields.forEach(function(field) {
+    var wrap = document.createElement('div');
+    wrap.className = 'form-field';
+
+    var lbl = document.createElement('label');
+    lbl.className = 'field-label';
+    lbl.textContent = field[state.lang] || field.zh;
+    if (field.required) {
+      var req = document.createElement('span');
+      req.className = 'required'; req.textContent = '*';
+      lbl.appendChild(req);
+    }
+    wrap.appendChild(lbl);
+
+    if (field.type === 'tag-list') {
+      wrap.appendChild(buildTagInput(field));
+      if (field['hint_' + state.lang]) {
+        var hint = document.createElement('div');
+        hint.className = 'field-hint';
+        hint.textContent = field['hint_' + state.lang];
+        wrap.appendChild(hint);
+      }
+    } else if (field.type === 'entity-list') {
+      wrap.appendChild(buildEntityList(field));
+    } else if (field.type === 'boolean') {
+      var chkLabel = document.createElement('label');
+      chkLabel.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = !!(state.configData[field.key] !== undefined ? state.configData[field.key] : field.defaultValue);
+      var chkText = document.createTextNode(chk.checked ? t('enabled') : t('disabled'));
+      chk.addEventListener('change', function() {
+        state.configData[field.key] = chk.checked;
+        chkText.nodeValue = chk.checked ? t('enabled') : t('disabled');
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+      });
+      chkLabel.appendChild(chk);
+      chkLabel.appendChild(chkText);
+      wrap.appendChild(chkLabel);
+    } else if (field.type === 'select') {
+      var sel = document.createElement('select');
+      sel.className = 'input-select';
+      var curVal = state.configData[field.key] !== undefined ? state.configData[field.key] : field.defaultValue;
+      field.options.forEach(function(opt) {
+        var o = document.createElement('option');
+        o.value = opt; o.textContent = opt;
+        if (opt === curVal) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', function() {
+        state.configData[field.key] = sel.value;
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+      });
+      wrap.appendChild(sel);
+    } else if (field.type === 'textarea') {
+      var ta = document.createElement('textarea');
+      ta.className = 'input-textarea';
+      ta.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
+      ta.value = state.configData[field.key] || '';
+      ta.addEventListener('input', function() {
+        state.configData[field.key] = ta.value;
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+      });
+      wrap.appendChild(ta);
+    } else {
+      var inp = document.createElement('input');
+      inp.type = 'text'; inp.className = 'input-text';
+      inp.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
+      inp.value = state.configData[field.key] || '';
+      inp.addEventListener('input', function() {
+        state.configData[field.key] = inp.value;
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+      });
+      wrap.appendChild(inp);
+    }
+    container.appendChild(wrap);
+  });
+  updateAnnotationPreview();
+}
+
+function buildTagInput(field) {
+  var tags = Array.isArray(state.configData[field.key]) ? state.configData[field.key].slice() : [];
+  var isComposing = false;
+  state.configData[field.key] = tags;
+  var wrap = document.createElement('div');
+  wrap.className = 'tag-input-wrap';
+
+  function render() {
+    while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+    tags.forEach(function(tag, i) {
+      var pill = document.createElement('span');
+      pill.className = 'tag-pill';
+      var pillText = document.createTextNode(tag);
+      pill.appendChild(pillText);
+      var rm = document.createElement('button');
+      rm.className = 'tag-pill-remove';
+      rm.setAttribute('aria-label', '移除');
+      rm.setAttribute('type', 'button');
+      /* static SVG, no user content */
+      rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      (function(idx) {
+        rm.addEventListener('click', function() {
+          tags.splice(idx, 1);
+          render(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(i));
+      pill.appendChild(rm);
+      wrap.appendChild(pill);
+    });
+    var inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'tag-new-input';
+    inp.placeholder = field['hint_' + state.lang] || '';
+    inp.addEventListener('compositionstart', function() { isComposing = true; });
+    inp.addEventListener('compositionend', function() { isComposing = false; });
+    inp.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ',') {
+        if (e.isComposing || isComposing || e.keyCode === 229) return;
+        e.preventDefault();
+        var val = inp.value.trim();
+        if (val) {
+          inp.value = '';
+          if (tags.indexOf(val) === -1) {
+            tags.push(val);
+            render();
+            setTimeout(function() {
+              var nextInp = wrap.querySelector('.tag-new-input');
+              if (nextInp) nextInp.focus();
+            }, 0);
+            markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+          }
+        }
+      }
+    });
+    wrap.appendChild(inp);
+  }
+  render();
+  return wrap;
+}
+
+function buildEntityList(field) {
+  var entities = Array.isArray(state.configData[field.key]) ? state.configData[field.key] : [];
+  state.configData[field.key] = entities;
+  var wrap = document.createElement('div');
+
+  /* static remove-icon path (never user data) */
+  var REMOVE_SVG = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var ADD_SVG = '<svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+
+  function render() {
+    while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+    entities.forEach(function(ent, i) {
+      var row = document.createElement('div');
+      row.className = 'entity-row';
+
+      var dot = document.createElement('div');
+      dot.className = 'entity-color-dot';
+      dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+
+      var nameInp = document.createElement('input');
+      nameInp.type = 'text'; nameInp.className = 'entity-name-input';
+      nameInp.value = ent.name;
+      nameInp.placeholder = state.lang === 'en' ? 'Entity name, e.g. PER' : '實體名稱，如 PER';
+      (function(idx) {
+        nameInp.addEventListener('input', function() {
+          entities[idx].name = nameInp.value;
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(i));
+
+      var rmBtn = document.createElement('button');
+      rmBtn.className = 'entity-remove-btn';
+      rmBtn.setAttribute('aria-label', '移除');
+      rmBtn.setAttribute('type', 'button');
+      rmBtn.innerHTML = REMOVE_SVG; /* static SVG, safe */
+      (function(idx) {
+        rmBtn.addEventListener('click', function() {
+          entities.splice(idx, 1);
+          render(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(i));
+
+      row.appendChild(dot);
+      row.appendChild(nameInp);
+      row.appendChild(rmBtn);
+      wrap.appendChild(row);
+    });
+
+    var addBtn = document.createElement('button');
+    addBtn.className = 'add-row-btn';
+    addBtn.setAttribute('type', 'button');
+    addBtn.innerHTML = ADD_SVG; /* static SVG, safe */
+    addBtn.appendChild(document.createTextNode(' ' + t('addEntity')));
+    addBtn.addEventListener('click', function() {
+      entities.push({ name: '', color: ENTITY_COLORS[entities.length % ENTITY_COLORS.length] });
+      render(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+    });
+    wrap.appendChild(addBtn);
+  }
+  render();
+  return wrap;
+}
+
+function updateAnnotationPreview() {
+  var preview = el('annotationPreview');
+  if (!preview) return;
+  while (preview.firstChild) preview.removeChild(preview.firstChild);
+
+  var taskType = state.taskType;
+  var config = state.configData || {};
+  var titleText = t('previewTaskChooseLabel');
+  var options = [];
+
+  if (taskType === 'sequence_labeling') {
+    titleText = t('previewTaskEntity');
+    options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
+      return { text: ent.name.trim(), color: ent.color || null };
+    }) : [];
+  } else if (taskType === 'relation_extraction') {
+    titleText = t('previewTaskRelation');
+    options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+      return { text: tag.trim(), color: null };
+    }) : [];
+  } else if (taskType === 'single_sentence_scoring_regression') {
+    titleText = t('previewTaskScore');
+    var range = String(config.scoring_range || '1-5');
+    var pieces = range.split('-');
+    var start = parseInt(pieces[0], 10);
+    var end = parseInt(pieces[1], 10);
+    if (!isNaN(start) && !isNaN(end) && end >= start) {
+      for (var score = start; score <= end; score += 1) options.push({ text: String(score), color: null });
+    }
+  } else {
+    options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+      return { text: tag.trim(), color: null };
+    }) : [];
+  }
+
+  if (taskType === 'sentence_pairs') {
+    var pairWrap = document.createElement('div');
+    pairWrap.className = 'annotation-preview-pair';
+
+    var p1Label = document.createElement('div');
+    p1Label.className = 'annotation-preview-pair-label';
+    p1Label.textContent = t('previewSentenceALabel');
+    pairWrap.appendChild(p1Label);
+
+    var p1 = document.createElement('div');
+    p1.className = 'annotation-preview-sample';
+    p1.textContent = t('previewSampleSentenceA');
+    pairWrap.appendChild(p1);
+
+    var p2Label = document.createElement('div');
+    p2Label.className = 'annotation-preview-pair-label';
+    p2Label.textContent = t('previewSentenceBLabel');
+    pairWrap.appendChild(p2Label);
+
+    var p2 = document.createElement('div');
+    p2.className = 'annotation-preview-sample';
+    p2.textContent = t('previewSampleSentenceB');
+    pairWrap.appendChild(p2);
+
+    preview.appendChild(pairWrap);
+  } else {
+    var sampleTextKey = 'previewSampleSentence';
+    if (taskType === 'single_sentence_scoring_regression') sampleTextKey = 'previewSampleSentenceScoring';
+    else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
+    else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
+    var sample = document.createElement('div');
+    sample.className = 'annotation-preview-sample';
+    sample.textContent = t(sampleTextKey);
+    preview.appendChild(sample);
+  }
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  preview.appendChild(divider);
+
+  var title = document.createElement('div');
+  title.className = 'annotation-preview-task-title';
+  title.textContent = titleText;
+  preview.appendChild(title);
+
+  var optionsWrap = document.createElement('div');
+  optionsWrap.className = 'annotation-preview-options';
+  preview.appendChild(optionsWrap);
+
+  if (!options.length) {
+    var empty = document.createElement('div');
+    empty.className = 'annotation-preview-empty';
+    empty.textContent = t('previewEmpty');
+    optionsWrap.appendChild(empty);
+    if (!state.codeDraftDirty) {
+      el('codeEditor').value = configToCode();
+    }
+    return;
+  }
+
+  var singleSelectPreview =
+    taskType === 'single_sentence_scoring_regression' ||
+    taskType === 'sentence_pairs' ||
+    (taskType === 'single_sentence_classification' && !config.allow_multiple);
+
+  options.forEach(function(option) {
+    var row = document.createElement('label');
+    row.className = 'annotation-preview-option';
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    if (singleSelectPreview) {
+      checkbox.addEventListener('change', function() {
+        if (!checkbox.checked) return;
+        optionsWrap.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+          if (cb !== checkbox) cb.checked = false;
+        });
+      });
+    }
+    row.appendChild(checkbox);
+
+    if (option.color) {
+      var color = document.createElement('span');
+      color.className = 'annotation-preview-color';
+      color.style.background = option.color;
+      row.appendChild(color);
+    }
+
+    var text = document.createElement('span');
+    text.textContent = option.text;
+    row.appendChild(text);
+
+    optionsWrap.appendChild(row);
+  });
+
+  if (!state.codeDraftDirty) {
+    el('codeEditor').value = configToCode();
+  }
+}
+
+/* ── Template picker ─────────────────────────────────────────── */
+function cloneObject(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function getDefaultTemplateForLang(taskType, lang) {
+  var schema = taskType ? REGISTRY[taskType] : null;
+  if (!schema) return {};
+  if (schema.defaultTemplateI18n && schema.defaultTemplateI18n[lang]) {
+    return cloneObject(schema.defaultTemplateI18n[lang]);
+  }
+  return cloneObject(schema.defaultTemplate || {});
+}
+
+function syncI18nTemplateConfig(prevLang, nextLang) {
+  if (prevLang === nextLang || state.codeDraftDirty || !state.taskType) return;
+  var schema = REGISTRY[state.taskType];
+  if (!schema || !schema.defaultTemplateI18n) return;
+
+  var prevTpl = schema.defaultTemplateI18n[prevLang];
+  var nextTpl = schema.defaultTemplateI18n[nextLang];
+  if (!prevTpl || !nextTpl) return;
+
+  if (Array.isArray(prevTpl.labels) && Array.isArray(nextTpl.labels) && Array.isArray(state.configData.labels)) {
+    var sameAsPrev = state.configData.labels.length === prevTpl.labels.length && state.configData.labels.every(function(v, i) {
+      return v === prevTpl.labels[i];
+    });
+    if (sameAsPrev) state.configData.labels = nextTpl.labels.slice();
+  }
+}
+
+function renderTemplateBtns() {
+  var container = el('templateBtns');
+  while (container.firstChild) container.removeChild(container.firstChild);
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return;
+  var btn = document.createElement('button');
+  btn.className = 'template-btn';
+  btn.setAttribute('type', 'button');
+  btn.textContent = t('applyTemplate') + (schema[state.lang] || schema.zh);
+  btn.addEventListener('click', function() {
+    state.configData = getDefaultTemplateForLang(state.taskType, state.lang);
+    renderSchemaFields();
+    state.codeDraftDirty = false;
+    el('codeEditor').value = configToCode();
+    el('saveCodeBtn').disabled = true;
+    el('codeErrorBar').classList.add('hidden');
+    revalidateCurrentStep();
+    track('prototype_task_new_template_applied', { taskType: state.taskType });
+  });
+  container.appendChild(btn);
+}
+
+function setCodeFormat(fmt) {
+  if (state.codeDraftDirty) return;
+  state.codeFormat = fmt;
+  el('formatYamlBtn').style.fontWeight = fmt === 'yaml' ? '700' : '400';
+  el('formatJsonBtn').style.fontWeight = fmt === 'json' ? '700' : '400';
+  el('codeEditor').value = configToCode();
+}
+
+function loadConfigFile(file) {
+  var name = file.name.toLowerCase();
+  var ext = name.slice(name.lastIndexOf('.'));
+  if (['.yaml', '.yml', '.json'].indexOf(ext) === -1) {
+    showToast(t('errConfigFormat'), 'error');
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function() {
+    var fmt = ext === '.json' ? 'json' : 'yaml';
+    state.codeFormat = fmt;
+    el('formatYamlBtn').style.fontWeight = fmt === 'yaml' ? '700' : '400';
+    el('formatJsonBtn').style.fontWeight = fmt === 'json' ? '700' : '400';
+    el('codeEditor').value = String(reader.result || '');
+    state.codeDraftDirty = true;
+    el('saveCodeBtn').disabled = false;
+    el('codeErrorBar').classList.add('hidden');
+    markDirty();
+    revalidateCurrentStep();
+    showToast(t('toastConfigLoaded'), 'success');
+    track('prototype_task_new_config_uploaded', { format: fmt });
+  };
+  reader.onerror = function() {
+    showToast(t('errConfigRead'), 'error');
+  };
+  reader.readAsText(file);
+}
+
+function saveCodeToVisual(showSuccessToast) {
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return false;
+  var raw = el('codeEditor').value;
+  var parsed;
+  try {
+    if (state.codeFormat === 'json' || raw.trim().startsWith('{') || raw.trim().startsWith('[')) {
+      parsed = JSON.parse(raw);
+    } else {
+      parsed = parseYamlSubset(raw);
+    }
+  } catch (err) {
+    el('codeErrorBar').classList.remove('hidden');
+    setText('codeErrorMsg', err.message || t('errCodeInvalid'));
+    return false;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    el('codeErrorBar').classList.remove('hidden');
+    setText('codeErrorMsg', t('errCodeInvalid'));
+    return false;
+  }
+
+  var merged = {};
+  Object.keys(parsed).forEach(function(k) { merged[k] = parsed[k]; });
+  schema.fields.forEach(function(field) {
+    if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
+    if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+    if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+    if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+  });
+  state.configData = merged;
+  state.codeDraftDirty = false;
+  el('saveCodeBtn').disabled = true;
+  el('codeErrorBar').classList.add('hidden');
+  renderSchemaFields();
+  updateAnnotationPreview();
+  markDirty();
+  revalidateCurrentStep();
+  if (showSuccessToast) showToast(t('toastCodeSaved'), 'success');
+  track('prototype_task_new_code_saved', { taskType: state.taskType, format: state.codeFormat });
+  return true;
+}
+
+/* ── Dataset upload ──────────────────────────────────────────── */
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function setDatasetFile(file) {
+  var ALLOWED = ['.txt', '.csv', '.tsv', '.json'];
+  var name = file.name.toLowerCase();
+  var ext = name.slice(name.lastIndexOf('.'));
+  if (ALLOWED.indexOf(ext) === -1) {
+    showFieldError('errDataset', true, t('errDatasetFormat'));
+    el('datasetUploadZone').classList.add('error');
+    return;
+  }
+  if (file.size > 200 * 1048576) {
+    showFieldError('errDataset', true, t('errDatasetSize'));
+    el('datasetUploadZone').classList.add('error');
+    return;
+  }
+  state.datasetFile = file;
+  el('datasetUploadZone').classList.add('hidden');
+  el('datasetUploadZone').classList.remove('error');
+  showFieldError('errDataset', false);
+  setText('datasetFileName', file.name);
+  setText('datasetFileSize', formatBytes(file.size));
+  el('datasetFilePreview').classList.remove('hidden');
+  markDirty(); revalidateCurrentStep();
+  track('prototype_task_new_dataset_uploaded', { ext: ext, size: file.size });
+}
+
+function clearDatasetFile() {
+  state.datasetFile = null;
+  el('datasetFileInput').value = '';
+  el('datasetFilePreview').classList.add('hidden');
+  el('datasetUploadZone').classList.remove('hidden');
+  markDirty(); revalidateCurrentStep();
+}
+
+/* ── Startup settings (Step 3) ───────────────────────────────── */
+function renderMemberList() {
+  var list = el('memberList');
+  while (list.firstChild) list.removeChild(list.firstChild);
+  if (!state.initialMembers.length) {
+    el('memberEmpty').classList.remove('hidden');
+  } else {
+    el('memberEmpty').classList.add('hidden');
+  }
+
+  state.initialMembers.forEach(function(member, idx) {
+    var row = document.createElement('div');
+    row.className = 'member-item';
+
+    var main = document.createElement('div');
+    main.className = 'member-item-main';
+    var name = document.createElement('div');
+    name.className = 'member-item-name';
+    name.textContent = member.name;
+    var role = document.createElement('div');
+    role.className = 'member-item-role';
+    role.textContent = member.role === 'annotator' ? t('memberRoleAnnotator') : t('memberRoleReviewer');
+    var meta = document.createElement('div');
+    meta.className = 'member-item-meta';
+    meta.textContent = member.email || '';
+    main.appendChild(name);
+    main.appendChild(role);
+    if (meta.textContent) main.appendChild(meta);
+
+    var rm = document.createElement('button');
+    rm.className = 'btn btn-ghost';
+    rm.style.padding = '6px 8px';
+    rm.type = 'button';
+    rm.textContent = state.lang === 'en' ? 'Remove' : '移除';
+    (function(i) {
+      rm.addEventListener('click', function() {
+        state.initialMembers.splice(i, 1);
+        renderMemberList();
+        renderSystemUserSelect();
+        markDirty();
+        revalidateCurrentStep();
+      });
+    }(idx));
+
+    row.appendChild(main);
+    row.appendChild(rm);
+    list.appendChild(row);
+  });
+}
+
+function renderSystemUserSelect() {
+  var select = el('memberUserSelect');
+  if (!select) return;
+  while (select.firstChild) select.removeChild(select.firstChild);
+  var def = document.createElement('option');
+  def.value = '';
+  def.textContent = t('memberSystemPlaceholder');
+  select.appendChild(def);
+
+  USER_DIRECTORY.forEach(function(user) {
+    if (user.systemRole !== 'user') return;
+    var exists = state.initialMembers.some(function(member) {
+      return (member.email || '').toLowerCase() === user.email.toLowerCase();
+    });
+    if (exists) return;
+    var opt = document.createElement('option');
+    opt.value = user.email;
+    opt.textContent = user.name + ' · ' + user.email;
+    select.appendChild(opt);
+  });
+}
+
+function switchMemberSource(source) {
+  state.memberSource = source === 'invite' ? 'invite' : 'system';
+  el('memberSourceSystemPanel').classList.toggle('hidden', state.memberSource !== 'system');
+  el('memberSourceInvitePanel').classList.toggle('hidden', state.memberSource !== 'invite');
+  el('memberSourceSystemTab').classList.toggle('active', state.memberSource === 'system');
+  el('memberSourceInviteTab').classList.toggle('active', state.memberSource === 'invite');
+  el('memberSourceSystemTab').setAttribute('aria-selected', state.memberSource === 'system' ? 'true' : 'false');
+  el('memberSourceInviteTab').setAttribute('aria-selected', state.memberSource === 'invite' ? 'true' : 'false');
+}
+
+function addMemberFromSystemUser() {
+  var email = (el('memberUserSelect').value || '').trim().toLowerCase();
+  var role = el('memberRoleSelect').value;
+  if (!email) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberPickUser'));
+    return;
+  }
+  var user = USER_DIRECTORY.find(function(item) { return item.email.toLowerCase() === email; });
+  if (!user) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberPickUser'));
+    return;
+  }
+  var duplicate = state.initialMembers.some(function(member) {
+    return (member.email || '').toLowerCase() === email;
+  });
+  if (duplicate) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberDuplicate'));
+    return;
+  }
+
+  state.initialMembers.push({ name: user.name, email: user.email, role: role, source: 'system' });
+  el('memberUserSelect').value = '';
+  renderMemberList();
+  renderSystemUserSelect();
+  showFieldError('errStartupMembers', false);
+  markDirty();
+  revalidateCurrentStep();
+}
+
+function addMemberByInviteEmail() {
+  var email = (el('memberInviteEmailInput').value || '').trim().toLowerCase();
+  var role = el('memberInviteRoleSelect').value;
+  var emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!emailValid) {
+    showFieldError('errStartupMembers', true, t('errStartupInviteEmail'));
+    return;
+  }
+  var duplicate = state.initialMembers.some(function(member) {
+    return (member.email || '').toLowerCase() === email;
+  });
+  if (duplicate) {
+    showFieldError('errStartupMembers', true, t('errStartupMemberDuplicate'));
+    return;
+  }
+
+  state.initialMembers.push({ name: email, email: email, role: role, source: 'invite' });
+  el('memberInviteEmailInput').value = '';
+  renderMemberList();
+  renderSystemUserSelect();
+  showFieldError('errStartupMembers', false);
+  showToast(t('toastInviteSent'), 'success');
+  markDirty();
+  revalidateCurrentStep();
+}
+
+function syncRunInitFromControls() {
+  var modeNode = document.querySelector('input[name="samplingMode"]:checked');
+  state.runInit.samplingMode = modeNode ? modeNode.value : 'by_percentage';
+  state.runInit.samplingValue = Number(el('samplingValueInput').value || 0);
+  state.runInit.isolationEnabled = !!el('isolationToggle').checked;
+  showFieldError('errStartupRun', false);
+  markDirty();
+  revalidateCurrentStep();
+}
+
+/* ── Guideline upload (DOM-safe, no user data in innerHTML) ──── */
+function addGuidelineFiles(files) {
+  var ALLOWED_G = ['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.md'];
+  Array.prototype.forEach.call(files, function(file) {
+    var name = file.name.toLowerCase();
+    var ext = name.slice(name.lastIndexOf('.'));
+    if (ALLOWED_G.indexOf(ext) === -1) { showToast(t('guidelineUploadHint'), 'error'); return; }
+    var typeLabel = ext === '.pdf' ? 'PDF' : ext === '.md' ? 'Markdown' : 'Image';
+    state.guidelineFiles.push({ name: file.name, type: typeLabel, size: file.size });
+    renderGuidelineList();
+    markDirty();
+    track('prototype_task_new_guideline_uploaded', { type: typeLabel });
+  });
+}
+
+function makeFileSvg() {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'guideline-item-icon');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+  var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  poly.setAttribute('points', '14 2 14 8 20 8');
+  svg.appendChild(path); svg.appendChild(poly);
+  return svg;
+}
+
+function makeRemoveSvg() {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.width = '14px'; svg.style.height = '14px';
+  var l1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  l1.setAttribute('x1', '18'); l1.setAttribute('y1', '6'); l1.setAttribute('x2', '6'); l1.setAttribute('y2', '18');
+  var l2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  l2.setAttribute('x1', '6'); l2.setAttribute('y1', '6'); l2.setAttribute('x2', '18'); l2.setAttribute('y2', '18');
+  svg.appendChild(l1); svg.appendChild(l2);
+  return svg;
+}
+
+function renderGuidelineList() {
+  var list = el('guidelineList');
+  while (list.firstChild) list.removeChild(list.firstChild);
+
+  state.guidelineFiles.forEach(function(gf, i) {
+    var item = document.createElement('div');
+    item.className = 'guideline-item';
+
+    var icon = makeFileSvg();
+    item.appendChild(icon);
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'guideline-item-name';
+    nameSpan.textContent = gf.name; /* textContent: safe from XSS */
+    item.appendChild(nameSpan);
+
+    var typeSpan = document.createElement('span');
+    typeSpan.className = 'guideline-item-type';
+    typeSpan.textContent = gf.type; /* textContent: safe */
+    item.appendChild(typeSpan);
+
+    var rmBtn = document.createElement('button');
+    rmBtn.className = 'guideline-item-remove';
+    rmBtn.setAttribute('aria-label', '移除');
+    rmBtn.setAttribute('type', 'button');
+    rmBtn.appendChild(makeRemoveSvg());
+    (function(idx) {
+      rmBtn.addEventListener('click', function() {
+        state.guidelineFiles.splice(idx, 1);
+        renderGuidelineList();
+        markDirty();
+      });
+    }(i));
+    item.appendChild(rmBtn);
+    list.appendChild(item);
+  });
+}
+
+/* ── Leave confirm ───────────────────────────────────────────── */
+function showLeaveModal(callback) {
+  state.leaveCallback = callback;
+  el('leaveModal').classList.add('show');
+}
+function hideLeaveModal() { el('leaveModal').classList.remove('show'); state.leaveCallback = null; }
+function maybeLeave(action) { if (!state.isDirty) { action(); return; } showLeaveModal(action); }
+
+function generateCreatedTaskId() {
+  var normalizedName = state.taskName.trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (!normalizedName) normalizedName = 'task';
+  return 'task_' + normalizedName + '_' + Date.now();
+}
+
+function redirectToTaskDetail(taskId) {
+  var detailUrl = new URL('./task-detail.html', window.location.href);
+  detailUrl.searchParams.set('task_id', taskId);
+  window.location.assign(detailUrl.toString());
+}
+
+/* ── Submit ──────────────────────────────────────────────────── */
+function submitTask() {
+  if (state.isSubmitting) return;
+  state.isSubmitting = true;
+  var btn = el('nextBtn');
+  btn.classList.add('btn-loading');
+  setText('nextBtnLabel', t('submittingLabel'));
+  track('prototype_cta_clicked', { cta: 'create_task', taskType: state.taskType });
+  setTimeout(function() {
+    var createdTaskId = generateCreatedTaskId();
+    state.isSubmitting = false;
+    state.isDirty = false;
+    btn.classList.remove('btn-loading');
+    showToast(t('toastCreated'), 'success');
+    setTimeout(function() { redirectToTaskDetail(createdTaskId); }, 300);
+  }, 900);
+}
+
+/* ── Task type change ────────────────────────────────────────── */
+function onTaskTypeChange() {
+  var val = el('taskTypeSelect').value;
+  if (val !== state.taskType) { state.taskType = val; state.configData = {}; state.codeDraftDirty = false; }
+  renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
+}
+
+/* ── Apply language ──────────────────────────────────────────── */
+function applyLang(l) {
+  var prevLang = state.lang;
+  state.lang = l === 'en' ? 'en' : 'zh';
+  document.documentElement.lang = state.lang === 'en' ? 'en' : 'zh-TW';
+  document.title = t('docTitle');
+
+  var ids = [
+    'pageTitle','pageSubtitle','s1CardTitle','s2CardTitle','s3CardTitle','s4CardTitle',
+    'navDashboard','navTaskManagement','navAnnotation','navDataset','navAdmin','navProfile',
+    'labelTaskName','labelTaskType','labelDataset','labelGuideline','labelGuidelineUpload',
+    'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
+    'forceToggleLabel','forceToggleDesc','s3NoticeText','s4NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
+    'startupMemberTitle','startupRunTitle','samplingModePercentLabel','samplingModeCountLabel','samplingValueLabel',
+    'samplingHint','isolationToggleLabel','isolationToggleDesc',
+    'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
+  ];
+  ids.forEach(function(id) { setText(id, t(id)); });
+  setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
+  setText('leaveModalStayBtn', t('leaveModalStay'));
+  setText('leaveModalLeaveBtn', t('leaveModalLeave'));
+  setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
+  el('guidelineTextInput').placeholder = t('guidelineTextPlaceholder');
+  setText('memberSourceSystemTab', t('memberSourceSystemTab'));
+  setText('memberSourceInviteTab', t('memberSourceInviteTab'));
+  el('memberInviteEmailInput').placeholder = t('memberInvitePlaceholder');
+  setText('addMemberFromSystemBtn', t('addMemberFromSystemBtnLabel'));
+  setText('sendInviteBtn', t('sendInviteBtnLabel'));
+  setText('memberEmpty', t('memberEmpty'));
+  var roleSel = el('memberRoleSelect');
+  if (roleSel && roleSel.options.length >= 2) {
+    roleSel.options[0].textContent = t('memberRoleAnnotator');
+    roleSel.options[1].textContent = t('memberRoleReviewer');
+  }
+  var inviteRoleSel = el('memberInviteRoleSelect');
+  if (inviteRoleSel && inviteRoleSel.options.length >= 2) {
+    inviteRoleSel.options[0].textContent = t('memberRoleAnnotator');
+    inviteRoleSel.options[1].textContent = t('memberRoleReviewer');
+  }
+  renderSystemUserSelect();
+  switchMemberSource(state.memberSource);
+  renderMemberList();
+
+  /* Task type options — safe: textContent only */
+  var sel = el('taskTypeSelect');
+  var curVal = sel.value;
+  while (sel.firstChild) sel.removeChild(sel.firstChild);
+  var defOpt = document.createElement('option');
+  defOpt.value = ''; defOpt.textContent = t('optTaskTypeDefault');
+  sel.appendChild(defOpt);
+  TASK_TYPE_ORDER.forEach(function(key) {
+    if (!REGISTRY[key]) return;
+    var o = document.createElement('option');
+    o.value = key; o.textContent = REGISTRY[key][state.lang] || REGISTRY[key].zh;
+    if (key === curVal) o.selected = true;
+    sel.appendChild(o);
+  });
+
+  if (window.LabelSuiteSharedSidebar) {
+    window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
+      langToggleAria: state.lang === 'en' ? 'Switch language' : '切換語言',
+    });
+  }
+  if (state.taskType) {
+    syncI18nTemplateConfig(prevLang, state.lang);
+    renderTemplateBtns();
+    renderSchemaFields();
+  }
+}
+
+function handleLangToggle(source) {
+  var prev = state.lang;
+  applyLang(state.lang === 'zh' ? 'en' : 'zh');
+  track('prototype_lang_switched', { source: source, from_lang: prev, to_lang: state.lang });
+}
+
+/* ── Event bindings ──────────────────────────────────────────── */
+el('taskNameInput').addEventListener('input', function(e) {
+  state.taskName = e.target.value;
+  setText('taskNameCount', String(state.taskName.length));
+  showFieldError('errTaskName', false);
+  markDirty(); revalidateCurrentStep();
+});
+el('langToggle').addEventListener('click', function() { handleLangToggle('desktop'); });
+el('mobileLangToggle').addEventListener('click', function() { handleLangToggle('mobile'); });
+el('taskTypeSelect').addEventListener('change', onTaskTypeChange);
+el('codeEditor').addEventListener('input', function() {
+  state.codeDraftDirty = true;
+  el('saveCodeBtn').disabled = false;
+  el('codeErrorBar').classList.add('hidden');
+});
+el('saveCodeBtn').addEventListener('click', function() { saveCodeToVisual(true); });
+el('uploadConfigBtn').addEventListener('click', function() { el('configFileInput').click(); });
+el('configFileInput').addEventListener('change', function() {
+  if (this.files && this.files[0]) loadConfigFile(this.files[0]);
+  this.value = '';
+});
+
+el('datasetUploadZone').addEventListener('click', function() { el('datasetFileInput').click(); });
+el('datasetUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('datasetFileInput').click(); } });
+el('datasetUploadZone').addEventListener('dragover', function(e) { e.preventDefault(); el('datasetUploadZone').classList.add('dragover'); });
+el('datasetUploadZone').addEventListener('dragleave', function() { el('datasetUploadZone').classList.remove('dragover'); });
+el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(); el('datasetUploadZone').classList.remove('dragover'); if (e.dataTransfer.files[0]) setDatasetFile(e.dataTransfer.files[0]); });
+el('datasetFileInput').addEventListener('change', function() { if (this.files[0]) setDatasetFile(this.files[0]); });
+el('datasetRemoveBtn').addEventListener('click', clearDatasetFile);
+
+el('memberSourceSystemTab').addEventListener('click', function() { switchMemberSource('system'); });
+el('memberSourceInviteTab').addEventListener('click', function() { switchMemberSource('invite'); });
+el('addMemberFromSystemBtn').addEventListener('click', addMemberFromSystemUser);
+el('sendInviteBtn').addEventListener('click', addMemberByInviteEmail);
+el('memberInviteEmailInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addMemberByInviteEmail();
+  }
+});
+el('memberRoleSelect').addEventListener('change', function() {
+  markDirty();
+});
+el('memberInviteRoleSelect').addEventListener('change', function() {
+  markDirty();
+});
+document.querySelectorAll('input[name="samplingMode"]').forEach(function(node) {
+  node.addEventListener('change', function() {
+    var mode = this.value;
+    var input = el('samplingValueInput');
+    if (mode === 'by_percentage') {
+      input.min = '1';
+      input.max = '99';
+      if (Number(input.value) > 99) input.value = '99';
+    } else {
+      input.min = '1';
+      input.removeAttribute('max');
+    }
+    syncRunInitFromControls();
+  });
+});
+el('samplingValueInput').addEventListener('input', syncRunInitFromControls);
+el('isolationToggle').addEventListener('change', syncRunInitFromControls);
+
+el('guidelineUploadZone').addEventListener('click', function() { el('guidelineFileInput').click(); });
+el('guidelineUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('guidelineFileInput').click(); } });
+el('guidelineFileInput').addEventListener('change', function() { if (this.files.length) addGuidelineFiles(this.files); });
+el('guidelineTextInput').addEventListener('input', function(e) {
+  state.guidelineText = e.target.value;
+  markDirty();
+});
+
+el('codeEditor').addEventListener('input', function() { markDirty(); revalidateCurrentStep(); });
+el('forceGuidelineToggle').addEventListener('change', function() {
+  state.forceGuideline = this.checked;
+  markDirty();
+  track('prototype_task_new_force_guideline_toggled', { value: state.forceGuideline });
+});
+
+el('cancelBtn').addEventListener('click', function() {
+  track('prototype_task_new_cancel_clicked', { step: state.step });
+  maybeLeave(function() { window.location.href = '../task-management/task-list.html'; });
+});
+el('prevBtn').addEventListener('click', function() {
+  hideBannerError();
+  var from = state.step;
+  showStep(state.step - 1);
+  track('prototype_task_new_step_back', { from: from });
+});
+el('nextBtn').addEventListener('click', function() {
+  hideBannerError();
+  if (state.step === 1) {
+    if (!validateStep1(true)) {
+      if (!state.taskName.trim()) showBannerError(t('errTaskName'));
+      else if (!state.taskType) showBannerError(t('errTaskType'));
+      else showBannerError(t('errDataset'));
+      return;
+    }
+    showStep(2); renderTemplateBtns(); renderSchemaFields();
+    track('prototype_task_new_step_next', { from: 1 });
+  } else if (state.step === 2) {
+    if (!validateStep2(true)) return;
+    showStep(3);
+    track('prototype_task_new_step_next', { from: 2 });
+  } else if (state.step === 3) {
+    if (!validateStep3(true)) {
+      if (!state.initialMembers.some(function(member) { return member.role === 'annotator'; })) showBannerError(t('errStartupMemberRequired'));
+      else showBannerError(t('errStartupSampling'));
+      return;
+    }
+    showStep(4);
+    track('prototype_task_new_step_next', { from: 3 });
+  } else {
+    submitTask();
+  }
+});
+
+el('leaveModalStayBtn').addEventListener('click', hideLeaveModal);
+el('leaveModalLeaveBtn').addEventListener('click', function() { var cb = state.leaveCallback; hideLeaveModal(); if (cb) cb(); });
+el('leaveModal').addEventListener('click', function(e) { if (e.target === el('leaveModal')) hideLeaveModal(); });
+window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ── Init ────────────────────────────────────────────────────── */
+var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
+applyLang(initLang);
+showStep(1);
+el('codeEditor').readOnly = false;
+el('codeEditor').disabled = false;
+el('codeEditor').value = configToCode();
+
+if (window.LabelSuiteAnalytics) {
+  window.LabelSuiteAnalytics.init({ page: 'task-new' });
+  window.LabelSuiteAnalytics.trackPageView('task-new', getTrackingContext);
+}
+</script>
+</body>
+</html>

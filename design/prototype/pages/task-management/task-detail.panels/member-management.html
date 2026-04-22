@@ -1,0 +1,44 @@
+<div id="memberManagementPanel" class="hidden" aria-live="polite">
+  <section class="panel" aria-labelledby="memberListTitle">
+    <h2 class="panel-title" id="memberListTitle">目前成員清單</h2>
+    <p class="panel-subtitle" id="memberListSubtitle">任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。</p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Task members table">
+          <thead>
+            <tr>
+              <th id="thMemberName">姓名</th>
+              <th id="thMemberEmail">Email</th>
+              <th id="thMemberTaskRole">任務角色</th>
+              <th id="thMemberStatus">狀態</th>
+              <th id="thMemberJoinedAt">加入時間</th>
+              <th id="thMemberLastActive">最後活動</th>
+              <th id="thMemberActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="candidateListTitle">
+    <h2 class="panel-title" id="candidateListTitle">可加入成員名單</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Candidate users table">
+          <thead>
+            <tr>
+              <th id="thCandidateName">姓名</th>
+              <th id="thCandidateEmail">Email</th>
+              <th id="thCandidateTaskCount">目前已在任務數量</th>
+              <th id="thCandidateAssignRole">指派任務角色</th>
+              <th id="thCandidateActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="candidateTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>

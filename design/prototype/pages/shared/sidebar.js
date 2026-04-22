@@ -106,7 +106,7 @@
     var dashboardHref = opts.dashboardHref || '../dashboard/dashboard.html';
     var profileHref = opts.profileHref || '../account/profile.html';
 
-    var taskHref = opts.taskHref || '#';
+    var taskHref = opts.taskHref || '../task-management/task-list.html';
     var annotationHref = opts.annotationHref || '#';
     var datasetHref = opts.datasetHref || '#';
     var adminHref = opts.adminHref || '#';

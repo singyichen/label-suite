@@ -165,6 +165,12 @@ Three shell patterns, strictly:
 
 Mobile collapses Pattern A's navbar links into a hamburger drawer and adds a 56px bottom tab bar. `navbar-mobile-top-height: 64px`, `navbar-mobile-height: 84px`.
 
+Desktop content tabs (inside page content, not main navigation) use the **underline style**:
+- container: `border-bottom: 2px solid var(--color-border)`
+- item: `padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-soft)`
+- active: `color: var(--color-primary); border-bottom: 2px solid var(--color-primary); font-weight: 600`
+- do not mix pill tabs and underline tabs across modules
+
 ---
 
 ## Iconography
@@ -205,7 +211,7 @@ The brand mark itself is a **price tag** glyph — drawn inline in every page's 
 | `assets/icons/` | 24×24 line-icon set (Lucide-style, stroke `currentColor`). |
 | `assets/google-g.svg` | Google SSO mark. |
 | `fonts/README.md` | Font manifest + substitution notes. |
-| `preview/` | HTML cards that populate the Design System tab — one sub-concept per card. |
+| `preview/` | HTML cards that populate the Design System tab — one sub-concept per card (including `tabs-desktop.html`). |
 | `ui_kits/web-app/` | React/JSX UI kit for the Label Suite web app (login, dashboard, task list, components). |
 
 See each subfolder's `README.md` for more.
