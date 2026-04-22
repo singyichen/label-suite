@@ -832,10 +832,10 @@ Desktop/top-of-content tab navigation for section switching within the same modu
 ```html
 <div class="admin-tabs" role="tablist" aria-label="Section tabs">
   <a class="admin-tab active" href="user-management.html" role="tab" aria-selected="true">
-    使用者管理
+    User management
   </a>
   <a class="admin-tab" href="role-settings.html" role="tab" aria-selected="false">
-    角色設定
+    Role settings
   </a>
 </div>
 ```
@@ -844,10 +844,10 @@ Desktop/top-of-content tab navigation for section switching within the same modu
 ```html
 <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
   <button class="admin-tab active" type="button" role="tab" aria-selected="true">
-    任務概覽
+    Task overview
   </button>
   <button class="admin-tab" type="button" role="tab" aria-selected="false">
-    成員管理
+    Member management
   </button>
 </div>
 ```

@@ -950,7 +950,12 @@ function yamlScalar(v) {
   if (typeof v === 'boolean') return v ? 'true' : 'false';
   if (typeof v === 'number') return String(v);
   if (typeof v === 'string') {
-    if (v === '' || /[:#\[\]{},|>&*!'"@`\n]/.test(v)) return JSON.stringify(v);
+    if (
+      v === '' ||
+      /^\s|\s$/.test(v) ||
+      /[:#\[\]{},|>&*!'"@`\n]/.test(v) ||
+      /^(?:true|false|null|~|[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)$/i.test(v)
+    ) return JSON.stringify(v);
     return v;
   }
   return String(v);

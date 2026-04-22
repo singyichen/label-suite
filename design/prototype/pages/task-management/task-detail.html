@@ -2732,6 +2732,7 @@
         });
       }
       window.location.href = './task-list.html?unauthorized=annotator';
+      return;
     }
 
     var resolvedTab = 'overview';
@@ -5164,6 +5165,7 @@
   }
 
   function publishOfficialRun() {
+    if (!canPublish()) return;
     TASK_DATA.status = 'official_run_in_progress';
     TASK_DATA.updatedAt = '2026-04-21 10:11';
     showToast(t('toastPublishedOfficial'));
