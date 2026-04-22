@@ -1,0 +1,189 @@
+<div id="overviewPanel" class="hidden" aria-live="polite">
+
+  <!-- ① 雙欄：基本資訊 + 設定摘要 -->
+  <div class="overview-info-row">
+    <section class="panel" aria-labelledby="basicInfoTitle">
+      <h2 class="panel-title" id="basicInfoTitle">任務基本資訊</h2>
+      <div class="kv-dl">
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelTaskName">任務名稱</span>
+          <span class="kv-dl-value" id="valueTaskName"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelTaskType">任務類型</span>
+          <span class="kv-dl-value" id="valueTaskType"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelCreatedBy">建立者</span>
+          <span class="kv-dl-value" id="valueCreatedBy"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelCreatedAt">建立時間</span>
+          <span class="kv-dl-value" id="valueCreatedAt"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelUpdatedAt">最近更新</span>
+          <span class="kv-dl-value" id="valueUpdatedAt"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="settingsSummaryTitle">
+      <h2 class="panel-title" id="settingsSummaryTitle">任務設定摘要</h2>
+      <div class="kv-dl">
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelDatasetSummary">資料集摘要</span>
+          <span class="kv-dl-value" id="valueDatasetSummary"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelConfigVersion">Config 版本</span>
+          <span class="kv-dl-value mono" id="valueConfigVersion"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelGuideline">說明文件狀態</span>
+          <span class="kv-dl-value" id="valueGuidelineStatus"></span>
+        </div>
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
+          <span class="kv-dl-value" id="valueForceGuideline"></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ② 執行控制面板 -->
+  <section class="panel" aria-labelledby="executionTitle">
+    <h2 class="panel-title" id="executionTitle">任務狀態與執行控制</h2>
+
+    <!-- 狀態步驟流程器 -->
+    <div class="status-stepper-wrap" aria-hidden="true">
+      <div class="status-stepper" id="statusStepper">
+        <div class="step" data-step="draft">
+          <div class="step-node"></div>
+          <span class="step-label-wrap">草稿</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step" data-step="dry_run_in_progress">
+          <div class="step-node"></div>
+          <span class="step-label-wrap">試標進行中</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step" data-step="waiting_iaa_confirmation">
+          <div class="step-node"></div>
+          <span class="step-label-wrap">待 IAA 確認</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step" data-step="official_run_in_progress">
+          <div class="step-node"></div>
+          <span class="step-label-wrap">正式標記中</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step" data-step="completed">
+          <div class="step-node"></div>
+          <span class="step-label-wrap">已完成</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 狀態 badge + 發布操作 -->
+    <div class="exec-control-row">
+      <div class="exec-info">
+        <div class="exec-badges">
+          <span id="statusBadge" class="badge badge-draft">draft</span>
+          <span class="badge badge-isolated" id="isolationBadge">isolated</span>
+        </div>
+        <p id="statusHint" class="status-hint"></p>
+        <p id="isolationAudit" class="status-hint exec-isolation-audit"></p>
+      </div>
+      <div class="exec-actions">
+        <div class="action-row" id="publishActionRow" style="margin:0;"></div>
+      </div>
+    </div>
+
+    <hr class="panel-divider" />
+
+    <!-- 抽樣設定 -->
+    <h3 class="sub-panel-title" id="samplingTitle">試標資料抽樣設定</h3>
+    <div class="sampling-fields">
+      <div class="field-group">
+        <label class="field-label" id="samplingModeLabel" for="samplingMode">抽樣方式</label>
+        <select class="input-select" id="samplingMode" aria-label="抽樣方式">
+          <option value="by_count">筆數</option>
+          <option value="by_percentage">百分比</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣數值</label>
+        <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" id="samplingStrategyLabel">抽樣策略</label>
+        <div class="strategy-info">
+          <span id="samplingStrategyText" class="strategy-text">stratified_random</span>
+          <span id="samplingSeedText" class="strategy-seed mono">random_seed: —</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 資料分配視覺化 -->
+    <div class="data-split-viz">
+      <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
+        <div class="split-seg split-dry" id="splitDryBar" style="width:9.4%"></div>
+        <div class="split-seg split-official" id="splitOfficialBar" style="width:90.6%"></div>
+      </div>
+      <div class="split-legend">
+        <div class="split-legend-item">
+          <span class="split-dot split-dot-dry" aria-hidden="true"></span>
+          <span class="split-legend-key" id="sampleUsageLabel">試標使用量</span>
+          <strong class="split-legend-value" id="sampleUsageValue">—</strong>
+        </div>
+        <div class="split-legend-item">
+          <span class="split-dot split-dot-official" aria-hidden="true"></span>
+          <span class="split-legend-key" id="officialReserveLabel">正式標註預留量</span>
+          <strong class="split-legend-value" id="officialReserveValue">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <p class="inline-help" id="samplingHelp">百分比採 floor(total * percent / 100)，且正式標註至少保留 1 筆。</p>
+    <p class="inline-error" id="samplingError"></p>
+
+    <div class="sampling-footer">
+      <button class="btn btn-secondary" type="button" id="resampleBtn">重算抽樣</button>
+      <span class="status-hint" id="resampleHint">僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。</span>
+    </div>
+
+    <hr class="panel-divider" />
+
+    <!-- 資料隔離 -->
+    <div class="isolation-wrap">
+      <div class="toggle-row">
+        <div class="toggle-meta">
+          <div class="toggle-title" id="isolationToggleTitle">是否啟用資料隔離（試標 / 正式）</div>
+          <div class="toggle-desc" id="isolationToggleDesc">啟用時可避免試標結果污染正式標註資料。</div>
+        </div>
+        <label class="toggle-switch" for="isolationToggle">
+          <input id="isolationToggle" type="checkbox" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <p class="risk-warning hidden" id="isolationRiskMsg">已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。</p>
+    </div>
+  </section>
+
+  <!-- ③ 匯出結果 -->
+  <section class="panel" aria-labelledby="exportTitle">
+    <div class="export-header">
+      <h2 class="panel-title" id="exportTitle" style="margin-bottom:0;">匯出結果</h2>
+      <div class="export-actions">
+        <button class="btn btn-secondary" type="button" id="exportJsonBtn">匯出 JSON</button>
+        <button class="btn btn-secondary" type="button" id="exportJsonMinBtn">匯出 JSON-MIN</button>
+      </div>
+    </div>
+    <div class="export-meta" style="margin-top:10px;">
+      <p id="lastExportLabel">最近一次匯出時間：<span id="lastExportAt">尚無</span></p>
+      <p id="lastExportStageLabel">匯出 標記階段：<span id="lastExportStage">-</span></p>
+    </div>
+    <div class="export-empty" id="exportEmpty">尚無可匯出結果</div>
+  </section>
+</div>

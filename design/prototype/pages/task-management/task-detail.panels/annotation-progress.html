@@ -1,0 +1,73 @@
+<div id="annotationProgressPanel" class="hidden" aria-live="polite">
+  <section class="panel" aria-labelledby="progressSummaryTitle">
+    <div class="stage-filter-row">
+      <h2 class="panel-title" id="progressSummaryTitle" style="margin-bottom: 0;">整體進度摘要</h2>
+      <div class="stage-toggle" role="tablist" aria-label="Progress stage switch">
+        <button class="stage-btn active" type="button" id="progressStageDryBtn">Dry Run</button>
+        <button class="stage-btn" type="button" id="progressStageOfficialBtn">Official Run</button>
+      </div>
+    </div>
+    <div class="progress-metric-grid">
+      <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricTotalLabel">總樣本數</span><span class="progress-metric-value" id="progressMetricTotalValue">-</span></article>
+      <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricCompletedLabel">已完成數</span><span class="progress-metric-value" id="progressMetricCompletedValue">-</span></article>
+      <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricRateLabel">完成率</span><span class="progress-metric-value" id="progressMetricRateValue">-</span></article>
+      <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricSpeedLabel">平均速度</span><span class="progress-metric-value" id="progressMetricSpeedValue">-</span></article>
+      <article class="progress-metric-item"><span class="progress-metric-key" id="progressMetricEtaLabel">剩餘估計時間</span><span class="progress-metric-value" id="progressMetricEtaValue">-</span></article>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="memberProgressTitle" id="memberProgressSection">
+    <h2 class="panel-title" id="memberProgressTitle">成員進度表</h2>
+    <div class="sort-row">
+      <label class="sort-label" id="progressSortLabel" for="memberProgressSort">排序</label>
+      <select class="sort-select" id="memberProgressSort" aria-label="Sort member progress">
+        <option value="completed_desc" id="progressSortCompleted">依已完成數（高到低）</option>
+        <option value="speed_desc" id="progressSortSpeed">依平均速度（高到低）</option>
+        <option value="submitted_desc" id="progressSortSubmitted">依最後提交（新到舊）</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Member progress table">
+          <thead>
+            <tr>
+              <th id="thProgressMemberName">成員姓名</th>
+              <th id="thProgressRole">角色</th>
+              <th id="thProgressCompleted">已完成數</th>
+              <th id="thProgressPending">待完成數</th>
+              <th id="thProgressTotal">總數量</th>
+              <th id="thProgressSpeed">平均速度</th>
+              <th id="thProgressBar">個人進度條</th>
+              <th id="thProgressLastSubmitted">最後提交時間</th>
+              <th id="thProgressQuality">品質旗標</th>
+            </tr>
+          </thead>
+          <tbody id="memberProgressTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="stageProgressTitle" id="stageProgressSection">
+    <h2 class="panel-title" id="stageProgressTitle">階段分段進度</h2>
+    <div class="stage-split-grid">
+      <article class="stage-split-card">
+        <h3 class="stage-split-title" id="stageDryTitle">試標</h3>
+        <div class="stage-split-track" aria-hidden="true"><div class="stage-split-fill dry" id="stageDryFill"></div></div>
+        <p class="stage-split-meta" id="stageDryMeta">-</p>
+      </article>
+      <article class="stage-split-card">
+        <h3 class="stage-split-title" id="stageOfficialTitle">正式標記</h3>
+        <div class="stage-split-track" aria-hidden="true"><div class="stage-split-fill official" id="stageOfficialFill"></div></div>
+        <p class="stage-split-meta" id="stageOfficialMeta">-</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="progressEmptyTitle" id="progressEmptyState">
+    <div class="progress-empty-state">
+      <p class="progress-empty-title" id="progressEmptyTitle">尚無成員進度資料</p>
+      <button class="btn btn-secondary" type="button" id="progressBackToOverviewBtn">回到任務概覽</button>
+    </div>
+  </section>
+</div>

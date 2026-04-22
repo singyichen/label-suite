@@ -1,0 +1,69 @@
+<div id="workLogPanel" class="hidden" aria-live="polite">
+  <section class="panel" aria-labelledby="workLogFilterTitle">
+    <h2 class="panel-title" id="workLogFilterTitle">工時篩選列</h2>
+    <div class="worklog-filter-grid">
+      <div>
+        <label class="field-label" id="workLogDateFromLabel" for="workLogDateFrom">起始日期</label>
+        <input class="input-number" type="date" id="workLogDateFrom" />
+      </div>
+      <div>
+        <label class="field-label" id="workLogDateToLabel" for="workLogDateTo">結束日期</label>
+        <input class="input-number" type="date" id="workLogDateTo" />
+      </div>
+      <div>
+        <label class="field-label" id="workLogStageLabel" for="workLogStageSelect">任務階段</label>
+        <select class="input-select" id="workLogStageSelect">
+          <option value="all">全部</option>
+          <option value="dry">Dry Run</option>
+          <option value="official">Official Run</option>
+        </select>
+      </div>
+      <div id="workLogMemberFilterWrap">
+        <label class="field-label" id="workLogMemberLabel" for="workLogMemberSelect">成員</label>
+        <select class="input-select" id="workLogMemberSelect">
+          <option value="all">全部成員</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="workLogTableTitle" id="workLogTableSection">
+    <h2 class="panel-title" id="workLogTableTitle">工時明細表</h2>
+    <div class="worklog-summary-grid" style="margin-bottom: 12px;">
+      <article class="kv-item"><span class="kv-key" id="workLogSummaryHoursLabel">總工時</span><span class="kv-value" id="workLogSummaryHoursValue">-</span></article>
+      <article class="kv-item"><span class="kv-key" id="workLogSummaryCompletedLabel">總完成筆數</span><span class="kv-value" id="workLogSummaryCompletedValue">-</span></article>
+      <article class="kv-item"><span class="kv-key" id="workLogSummarySpeedLabel">加權平均速度</span><span class="kv-value" id="workLogSummarySpeedValue">-</span></article>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Work log table">
+          <thead>
+            <tr>
+              <th id="thWorkLogDate">日期</th>
+              <th id="thWorkLogMember">成員</th>
+              <th id="thWorkLogRole">角色</th>
+              <th id="thWorkLogDuration">工作時長</th>
+              <th id="thWorkLogCompleted">完成筆數</th>
+              <th id="thWorkLogSpeed">平均速度</th>
+              <th id="thWorkLogStage">標記階段</th>
+            </tr>
+          </thead>
+          <tbody id="workLogTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="workLogAlertTitle" id="workLogAlertSection">
+    <h2 class="panel-title" id="workLogAlertTitle">異常提醒</h2>
+    <ul class="anomaly-list" id="workLogAlertList"></ul>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="workLogEmptyTitle" id="workLogEmptyState">
+    <div class="worklog-empty-state">
+      <img class="worklog-empty-icon" src="../../assets/icons/clock.svg" alt="" aria-hidden="true" />
+      <p class="worklog-empty-title" id="workLogEmptyTitle">尚無工時紀錄</p>
+      <button class="btn btn-secondary" type="button" id="workLogBackToOverviewBtn">回到任務概覽</button>
+    </div>
+  </section>
+</div>
