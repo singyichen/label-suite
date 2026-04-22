@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.8.2
+**版本**：1.8.3
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -395,6 +395,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.3 | 2026-04-22 | 同步 prototype 建立成功導向：Step 4 點擊 `建立任務` 成功後，改為導向 `task-detail?task_id=...`（不再返回 task-list） |
 | 1.8.2 | 2026-04-22 | `TASK_TYPE_ENUM` 改為與 Step 1 任務類型下拉實際 value 完全一致：`single_sentence_classification / single_sentence_scoring_regression / sequence_labeling / relation_extraction / sentence_pairs`（不含生成式標記） |
 | 1.8.1 | 2026-04-22 | 補充共用常數：`TASK_TYPE_ENUM = Single Sentence | Sequence Labeling | Sentence Pairs | Generative Labeling`，與 `010-task-list` 對齊 |
 | 1.0.0 | 2026-04-20 | 初版建立：依 IA 重建 `task-new` 規格（三步流程、registry-driven 標記設定檔、說明設定） |

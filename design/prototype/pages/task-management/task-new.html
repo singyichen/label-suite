@@ -838,7 +838,7 @@ var I18N = {
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
     errConfigFormat: '設定檔格式錯誤，請上傳 YAML / YML / JSON',
     errConfigRead: '讀取設定檔失敗，請重試',
-    toastCreated: '任務建立成功，正在返回任務列表…',
+    toastCreated: '任務建立成功，正在前往任務詳情…',
     toastCodeSaved: 'Code 設定已同步',
     toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
     applyTemplate: '套用預設範本：',
@@ -917,7 +917,7 @@ var I18N = {
     errCodeInvalid: 'Invalid code format. Please fix and save again',
     errConfigFormat: 'Invalid config file type. Upload YAML / YML / JSON',
     errConfigRead: 'Failed to read config file. Please try again',
-    toastCreated: 'Task created — returning to task list…',
+    toastCreated: 'Task created — opening task detail…',
     toastCodeSaved: 'Code configuration synced',
     toastConfigLoaded: 'Config loaded. Click Save to apply',
     applyTemplate: 'Apply default template: ',
@@ -1996,6 +1996,20 @@ function showLeaveModal(callback) {
 function hideLeaveModal() { el('leaveModal').classList.remove('show'); state.leaveCallback = null; }
 function maybeLeave(action) { if (!state.isDirty) { action(); return; } showLeaveModal(action); }
 
+function generateCreatedTaskId() {
+  var normalizedName = state.taskName.trim().toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (!normalizedName) normalizedName = 'task';
+  return 'task_' + normalizedName + '_' + Date.now();
+}
+
+function redirectToTaskDetail(taskId) {
+  var detailUrl = new URL('./task-detail.html', window.location.href);
+  detailUrl.searchParams.set('task_id', taskId);
+  window.location.assign(detailUrl.toString());
+}
+
 /* ── Submit ──────────────────────────────────────────────────── */
 function submitTask() {
   if (state.isSubmitting) return;
@@ -2005,11 +2019,13 @@ function submitTask() {
   setText('nextBtnLabel', t('submittingLabel'));
   track('prototype_cta_clicked', { cta: 'create_task', taskType: state.taskType });
   setTimeout(function() {
-    state.isSubmitting = false; state.isDirty = false;
+    var createdTaskId = generateCreatedTaskId();
+    state.isSubmitting = false;
+    state.isDirty = false;
     btn.classList.remove('btn-loading');
     showToast(t('toastCreated'), 'success');
-    setTimeout(function() { window.location.href = '../task-management/task-list.html?view=filled'; }, 1800);
-  }, 1200);
+    setTimeout(function() { redirectToTaskDetail(createdTaskId); }, 300);
+  }, 900);
 }
 
 /* ── Task type change ────────────────────────────────────────── */
