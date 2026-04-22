@@ -2,7 +2,7 @@
 
 **功能分支**：`010-task-list`
 **建立日期**：2026-04-20
-**版本**：1.2.1
+**版本**：1.3.1
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
 
@@ -14,6 +14,7 @@
 - `PAGE_SIZE_OPTIONS = 20 | 50 | 100`
 - `DEFAULT_SORT = updated_at desc`
 - `TASK_STATUS_ENUM = draft | dry_run_in_progress | waiting_iaa_confirmation | official_run_in_progress | completed`
+- `TASK_DELETE_MODE = soft_delete`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
@@ -52,6 +53,15 @@ sequenceDiagram
 
     U->>UI: 點選「新增任務」
     UI-->>U: 導向 /task-new
+
+    U->>UI: 點選「編輯」
+    UI-->>U: 導向 /task-detail?task_id=...
+
+    U->>UI: 點選「刪除」
+    UI->>API: soft delete 任務
+    API->>DB: 更新 deleted_at / deleted_by
+    DB-->>API: 成功
+    API-->>UI: 任務從列表隱藏
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
@@ -62,6 +72,8 @@ sequenceDiagram
 | 4 | `user` / `super_admin` | 搜尋、篩選、分頁 | 列表即時更新，保留查詢條件 |
 | 5 | `user` / `super_admin` | 點選任務 | 有權限則導向 `/task-detail`；無權限則停留並提示 |
 | 6 | `user` / `super_admin` | 點選新增任務 | 導向 `/task-new` |
+| 7 | `user` / `super_admin` | 點選編輯 | 導向 `/task-detail` 並帶入目標 `task_id` |
+| 8 | `user` / `super_admin` | 點選刪除 | 對任務執行 `soft_delete`，列表隱藏該任務 |
 
 ---
 
@@ -80,6 +92,8 @@ sequenceDiagram
 2. **Given** `system role = super_admin`，**When** 進入 `/task-list`，**Then** 預設顯示全平台任務，且不提供檢視切換。
 3. **Given** 位於 `/task-list`，**When** 輸入關鍵字並套用狀態篩選，**Then** 列表僅顯示符合條件的任務。
 4. **Given** 搜尋結果超過單頁，**When** 切換分頁，**Then** 顯示對應頁資料且保留現有篩選條件。
+5. **Given** 位於任務列表，**When** 點選列內 `編輯`，**Then** 導向 `/task-detail?task_id=...`。
+6. **Given** 位於任務列表，**When** 點選列內 `刪除` 並確認，**Then** 任務被軟刪除，列表不再顯示該任務。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -90,7 +104,8 @@ sequenceDiagram
     - 空資料時保留表頭（`thead`）與欄位語意
     - 空資料 / 空結果內容以 `tbody` 單列 empty row 呈現（`colspan` 全欄）
     - 分頁控制
-    - 任務列欄位（任務名稱、任務類型、標記階段（Annotation stage）、狀態、更新時間）
+    - 任務列欄位（任務名稱、任務類型、標記階段（Annotation stage）、狀態、更新時間、操作）
+    - 操作欄位：`刪除`、`編輯`（由左至右）
 - 區塊 B：`頁面操作`
   - 必要元素：
     - `新增任務` CTA
@@ -104,6 +119,10 @@ sequenceDiagram
 - 列表預設排序 `DEFAULT_SORT`，分頁預設 `PAGE_SIZE_DEFAULT`。
 - 查詢條件（`keyword`、`status`、`page`、`page_size`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
 - 任務列點擊時若使用者無 `/task-detail` 存取權，系統需顯示「無權限檢視任務詳情」提示，且不得導頁。
+- `編輯` 操作需與點擊任務列同語意，導向 `/task-detail?task_id=...`。
+- `刪除` 操作必須為軟刪除（`TASK_DELETE_MODE`），不得物理刪除資料。
+- `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 既有共用 modal（`modal-backdrop` / `modal` / `modal-actions`）。
+- 軟刪除後任務不應出現在預設任務列表；資料保留供審計與復原。
 - 「尚無任務」狀態不顯示第二顆 `新增任務` 按鈕；新增入口維持頁面主操作區（搜尋列同列）單一 `新增任務` CTA。
 - 「空結果（篩選後）」需顯示清除篩選操作（例如 `清除所有篩選`）。
 - 語言切換時，列表欄位、篩選器與按鈕文字需即時更新。
@@ -122,6 +141,8 @@ sequenceDiagram
 1. **Given** 位於 `/task-list`，**When** 點選任務列，**Then** 導向 `/task-detail` 並帶入目標 `task_id`。
 2. **Given** 位於 `/task-list`，**When** 點選 `新增任務`，**Then** 導向 `/task-new`。
 3. **Given** 位於 `/task-list` 或其子頁（`/task-new`、`/task-detail`），**When** 檢視 Sidebar，**Then** L0 active 皆顯示在「任務管理」。
+4. **Given** 位於 `/task-list`，**When** 點選列內 `編輯`，**Then** 導向 `/task-detail?task_id=...`。
+5. **Given** 位於 `/task-list`，**When** 點選列內 `刪除` 並確認，**Then** 任務執行軟刪除且從列表隱藏。
 
 **行為規則**：
 
@@ -138,6 +159,7 @@ sequenceDiagram
 - 以失效 `task_id` 嘗試進入 `/task-detail`：導回 `/task-list` 並顯示「任務不存在或無存取權限」。
 - 高篩選條件組合導致無結果：顯示空結果狀態，保留一鍵清除篩選。
 - 任務可見但無 `/task-detail` 存取權（如 `annotator`）：點擊任務列後停留原頁並顯示無權限提示。
+- 任務已被軟刪除：不顯示於預設列表；以舊連結直連時需回應「任務不存在或無存取權限」。
 - 行動版欄位不足時：可採橫向捲動或卡片化，但不得資訊重疊。
 
 ---
@@ -164,6 +186,11 @@ sequenceDiagram
 - **FR-008b**：`空結果（篩選後）` empty row 必須提供清除篩選操作，且清除後返回無篩選列表狀態。
 - **FR-009**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成搜尋、篩選、導頁操作。
 - **FR-009a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成操作：搜尋、狀態篩選、分頁切換、點擊任務列、點擊 `新增任務`，且不得發生資訊重疊。
+- **FR-010**：任務列表每列必須提供操作欄，至少包含 `刪除` 與 `編輯`，且順序為左 `刪除`、右 `編輯`。
+- **FR-010a**：點擊 `編輯` 時，系統必須導向 `/task-detail?task_id=...`。
+- **FR-010b**：點擊 `刪除` 時，系統必須執行軟刪除（設定 `deleted_at` 與刪除操作者），且不得物理刪除資料。
+- **FR-010c**：軟刪除任務不得出現在預設 `/task-list` 結果中。
+- **FR-010d**：刪除確認流程必須使用 task-management 共用 modal 樣式，不得使用瀏覽器原生 `confirm`。
 
 ### User Flow & Navigation
 
@@ -171,6 +198,8 @@ sequenceDiagram
 flowchart LR
     dashboard["/dashboard"] --> tasklist["/task-list"]
     tasklist -->|點選任務列| taskdetail["/task-detail?task_id="]
+    tasklist -->|點選編輯| taskdetail
+    tasklist -->|點選刪除| tasklist_filtered["/task-list（已過濾軟刪除）"]
     tasklist -->|點選新增任務| tasknew["/task-new"]
     taskdetail -->|返回| tasklist
     tasknew -->|取消| tasklist
@@ -181,6 +210,8 @@ flowchart LR
 | `/dashboard` | 點擊 Sidebar「任務管理」 | `/task-list` |
 | `/task-list` | 點擊任務列（有權限） | `/task-detail?task_id=...` |
 | `/task-list` | 點擊任務列（無權限） | 停留 `/task-list` 並顯示提示 |
+| `/task-list` | 點擊 `編輯` | `/task-detail?task_id=...` |
+| `/task-list` | 點擊 `刪除`（確認） | 停留 `/task-list` 並隱藏該任務（soft delete） |
 | `/task-list` | 點擊 `新增任務` | `/task-new` |
 | `/task-detail` | 點擊返回 | `/task-list` |
 | `/task-new` | 點擊取消 | `/task-list` |
@@ -190,7 +221,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_stage`、`status`、`updated_at`。
+- **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_stage`、`status`、`updated_at`、`deleted_at`、`deleted_by`。
 - **TaskMembership**：任務成員關係。關鍵欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
 - **TaskListQuery**：列表查詢條件。欄位：`keyword`、`status`（`TASK_STATUS_ENUM`）、`page`、`page_size`。
 
@@ -228,6 +259,7 @@ flowchart LR
 - **SC-006**：查詢條件經由 URL query 保留，重新整理與返回 `/task-list` 時可正確還原。
 - **SC-007**：無資料與空結果時，`task-list` 皆保留表頭，並於 `tbody` 顯示對應 empty row 內容。
 - **SC-008**：`尚無任務` 狀態僅保留頁面主 `新增任務` CTA；`空結果` 狀態可直接清除篩選返回列表。
+- **SC-009**：點擊任務列 `編輯` 可導向 `/task-detail`；點擊 `刪除` 後任務會軟刪除並從列表隱藏。
 
 ---
 
@@ -235,6 +267,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.1 | 2026-04-22 | 操作欄位按鈕左右對調為左 `刪除`、右 `編輯`；刪除確認改為 task-management 共用 modal 樣式（取代原生 confirm） |
+| 1.3.0 | 2026-04-22 | 任務列表新增「操作」欄位（`編輯` / `刪除`）：`編輯` 導向 `task-detail`，`刪除` 改為 `soft_delete` 並從列表隱藏 |
 | 1.2.1 | 2026-04-22 | 介面詞彙統一：任務列表欄位統一為「標記階段（Annotation stage）」；欄位命名同步為 `run_stage` |
 | 1.2.0 | 2026-04-20 | 對齊 task-list 最新 empty state 呈現：保留表頭並改為表格內 empty row；移除「尚無任務」內嵌新增按鈕，空結果保留清除篩選操作 |
 | 1.1.0 | 2026-04-20 | 調整 task-list 可見性規則：`super_admin` 改為預設全平台任務且移除「我的任務 / 全平台任務」切換；URL query 與資料模型移除 `scope` 欄位 |

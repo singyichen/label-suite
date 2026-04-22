@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** v8（2026-04-20）
+> **版本：** 1.3.0（2026-04-22）
 
 ---
 
@@ -42,7 +42,7 @@
 | `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；prototype 預設 `valid` 並可切換 `expired/used` 狀態，錯誤時引導回 `forgot-password` |
 | `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | |
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
-| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 預設顯示全平台任務 |
+| `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 預設顯示全平台任務；每列含「操作」欄（編輯 / 刪除） |
 | `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
 | `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「成員管理」、「標記進度」、「工時紀錄」四個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 annotation-workspace |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 模式依任務角色切換 |
@@ -286,7 +286,10 @@ flowchart TD
 - **功能：** 依角色顯示可見任務（含狀態 badge）、搜尋 / 篩選、進入任務詳情
   - `user`：僅可見自己有任務成員資格的任務
   - `super_admin`：預設顯示全平台任務
-- **離開方式：** 點選任務 → `task-detail`；「新增任務」按鈕 → `task-new`
+- **操作欄：** 每列提供 `編輯` / `刪除`
+  - `編輯`：導向 `task-detail`（帶入 `task_id`）
+  - `刪除`：執行軟刪除（soft delete），任務從預設列表隱藏，不做物理刪除
+- **離開方式：** 點選任務或 `編輯` → `task-detail`；「新增任務」按鈕 → `task-new`
 
 #### `task-new` 新增任務頁
 - **進入方式：** `task-list` → 新增任務
@@ -586,3 +589,12 @@ sequenceDiagram
 | 007 | 角色權限設定 | `role-settings` | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
 
 > 狀態標示：⬜ 待做 · 🔄 進行中 · ✅ 完成　　批次：P1 基礎建設 · P2 核心功能
+
+---
+
+## 8. Changelog
+
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.3.0 | 2026-04-22 | `task-list` 補充每列「操作」欄位（`編輯` / `刪除`）；`編輯` 導向 `task-detail`，`刪除` 定義為軟刪除（soft delete）並自預設列表隱藏 |
+| 1.2.0 | 2026-04-20 | IA 結構與頁面導覽整理（角色存取矩陣、模組詳述、核心旅程與 spec 清單） |

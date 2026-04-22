@@ -40,6 +40,7 @@
       --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
       --space-lg: 24px; --space-xl: 32px;
       --navbar-mobile-height: 84px; --navbar-mobile-top-height: 64px;
+      --z-modal: 500;
       --dur-fast: 150ms; --dur-normal: 200ms;
       --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -219,6 +220,8 @@
     }
     .btn-primary { color: var(--color-white); background: var(--color-cta); border-color: var(--color-cta); }
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { color: var(--color-ink); background: var(--color-white); border-color: var(--color-border); }
+    .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-1px); }
     .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(99,102,241,0.18), 0 0 0 4px white; }
     .btn-icon { width: 16px; height: 16px; flex-shrink: 0; }
 
@@ -245,6 +248,74 @@
     .task-table tbody tr:last-child td { border-bottom: none; }
     .task-name-cell { font-weight: 600; line-height: 1.4; color: var(--color-ink); }
     .updated-cell { color: var(--color-text-soft); font-size: 13px; white-space: nowrap; }
+    .actions-cell { min-width: 150px; }
+    .inline-actions { display: inline-flex; gap: 8px; align-items: center; }
+    .mini-btn {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .mini-btn-primary {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white);
+    }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+    .mini-btn-danger {
+      background: var(--color-error-soft-bg);
+      border-color: var(--color-error-soft-border);
+      color: var(--color-error);
+    }
+    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: var(--z-modal);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal {
+      width: min(520px, 100%);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: var(--space-lg);
+    }
+    .modal h2 {
+      font-size: 20px;
+      margin: 0 0 8px;
+      color: var(--color-ink);
+      line-height: 1.3;
+    }
+    .modal p {
+      font-size: 14px;
+      color: var(--color-text-soft);
+      margin: 0 0 14px;
+      line-height: 1.7;
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
     .empty-row { cursor: default !important; }
     .empty-row:hover { background: transparent !important; }
     .empty-row-cell { padding: 40px 20px !important; }
@@ -424,6 +495,7 @@
                 <th id="thRunType">標記階段</th>
                 <th id="thStatus">狀態</th>
                 <th id="thUpdatedAt">更新時間</th>
+                <th id="thActions">操作</th>
               </tr>
             </thead>
             <tbody id="taskTableBody"></tbody>
@@ -455,6 +527,17 @@
   </div>
 </main>
 
+<div class="modal-backdrop" id="deleteTaskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="deleteTaskModalTitle">
+  <div class="modal">
+    <h2 id="deleteTaskModalTitle">確認刪除任務</h2>
+    <p id="deleteTaskModalBody">確認將任務軟刪除？此操作可由管理端復原。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" id="deleteTaskCancelBtn">取消</button>
+      <button class="mini-btn mini-btn-danger" type="button" id="deleteTaskConfirmBtn">刪除</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ TOAST ═══════════════════════════════════════════════════ -->
 <div class="toast-container" aria-live="polite" aria-atomic="true">
   <div class="toast" id="toast" role="alert">
@@ -478,7 +561,9 @@
       navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
       newTaskBtnLabel: '新增任務',
       thTaskName: '任務名稱', thTaskType: '任務類型', thRunType: '標記階段',
-      thStatus: '狀態', thUpdatedAt: '更新時間',
+      thStatus: '狀態', thUpdatedAt: '更新時間', thActions: '操作',
+      actionEdit: '編輯',
+      actionDelete: '刪除',
       clearFiltersLabel: '清除篩選',
       emptyNoTasksTitle: '尚無任務',
       emptyNoTasksDesc: '你目前沒有任何任務。建立第一個任務以開始標記工作流程。',
@@ -498,7 +583,13 @@
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       toastNoPermission: '無權限檢視任務詳情',
       toastNavigating: '前往任務詳情…',
+      toastTaskSoftDeleted: '任務已移至封存（軟刪除）',
       toastNewTask: '已建立新任務',
+      deleteModalTitle: '確認刪除任務',
+      deleteModalBodyDefault: '確認將任務軟刪除？此操作可由管理端復原。',
+      deleteModalBodyTpl: '確認將「{name}」軟刪除？此操作可由管理端復原。',
+      deleteModalCancel: '取消',
+      deleteModalConfirm: '刪除',
       roleLabel: { user: '一般使用者', super_admin: '系統管理員' },
       userName: { user: 'Mandy Chen', super_admin: 'Super Admin' },
       statusBadge: {
@@ -515,8 +606,10 @@
       navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
       navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
       newTaskBtnLabel: 'New task',
-      thTaskName: 'Task Name', thTaskType: 'Task Type', thRunType: 'Run Type',
-      thStatus: 'Status', thUpdatedAt: 'Updated',
+      thTaskName: 'Task Name', thTaskType: 'Task Type', thRunType: 'Annotation Stage',
+      thStatus: 'Status', thUpdatedAt: 'Updated', thActions: 'Actions',
+      actionEdit: 'Edit',
+      actionDelete: 'Delete',
       clearFiltersLabel: 'Clear filters',
       emptyNoTasksTitle: 'No tasks yet',
       emptyNoTasksDesc: "You don't have any tasks. Create your first task to start the annotation workflow.",
@@ -536,7 +629,13 @@
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       toastNoPermission: 'No permission to view task detail',
       toastNavigating: 'Navigating to task detail…',
+      toastTaskSoftDeleted: 'Task moved to archive (soft deleted)',
       toastNewTask: 'Task created',
+      deleteModalTitle: 'Confirm task deletion',
+      deleteModalBodyDefault: 'Soft delete this task? This action can be restored by admin.',
+      deleteModalBodyTpl: 'Soft delete "{name}"? This action can be restored by admin.',
+      deleteModalCancel: 'Cancel',
+      deleteModalConfirm: 'Delete',
       roleLabel: { user: 'User', super_admin: 'Super Admin' },
       userName: { user: 'User', super_admin: 'Super Admin' },
       statusBadge: {
@@ -551,14 +650,14 @@
   /* ── Static task data ────────────────────────────────────────── */
   var TASKS = [];
   var CREATED_TASKS_SEED = [
-    { id: 'T001', nameZh: '新聞標題情感分類', nameEn: 'News Sentiment Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true  },
-    { id: 'T002', nameZh: 'NER 基準任務',       nameEn: 'NER Benchmark',                 taskType: 'Sequence Labeling', runType: 'official_run', status: 'waiting_iaa_confirmation',  updatedAt: '2026-04-18', canViewDetail: true,  isMine: true  },
-    { id: 'T003', nameZh: '意圖分類試標',        nameEn: 'Intent Classification Dry Run', taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-17', canViewDetail: false, isMine: true  },
-    { id: 'T004', nameZh: '句對語意相似度',      nameEn: 'Sentence Pair Similarity',     taskType: 'Sentence Pairs',  runType: 'official_run', status: 'completed',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true  },
-    { id: 'T005', nameZh: '生成式評分標記',      nameEn: 'Generative Rating Labeling',   taskType: 'Generative Labeling', runType: 'dry_run', status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: false },
-    { id: 'T006', nameZh: '商品評論分類 v2',     nameEn: 'Product Review Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-13', canViewDetail: true,  isMine: false },
-    { id: 'T007', nameZh: '醫療文本 NER',        nameEn: 'Medical NER',                  taskType: 'Sequence Labeling', runType: 'official_run', status: 'completed',               updatedAt: '2026-04-12', canViewDetail: true,  isMine: false },
-    { id: 'T008', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false },
+    { id: 'T001', nameZh: '新聞標題情感分類', nameEn: 'News Sentiment Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T002', nameZh: 'NER 基準任務',       nameEn: 'NER Benchmark',                 taskType: 'Sequence Labeling', runType: 'official_run', status: 'waiting_iaa_confirmation',  updatedAt: '2026-04-18', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T003', nameZh: '意圖分類試標',        nameEn: 'Intent Classification Dry Run', taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-17', canViewDetail: false, isMine: true, deletedAt: ''  },
+    { id: 'T004', nameZh: '句對語意相似度',      nameEn: 'Sentence Pair Similarity',     taskType: 'Sentence Pairs',  runType: 'official_run', status: 'completed',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T005', nameZh: '生成式評分標記',      nameEn: 'Generative Rating Labeling',   taskType: 'Generative Labeling', runType: 'dry_run', status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T006', nameZh: '商品評論分類 v2',     nameEn: 'Product Review Classification', taskType: 'Single Sentence', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-13', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T007', nameZh: '醫療文本 NER',        nameEn: 'Medical NER',                  taskType: 'Sequence Labeling', runType: 'official_run', status: 'completed',               updatedAt: '2026-04-12', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T008', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'Single Sentence', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false, deletedAt: '' },
   ];
 
   function loadCreatedTaskSeed() {
@@ -573,6 +672,7 @@
         updatedAt: task.updatedAt,
         canViewDetail: task.canViewDetail,
         isMine: task.isMine,
+        deletedAt: task.deletedAt || '',
       };
     });
   }
@@ -588,6 +688,7 @@
 
   /* ── State ───────────────────────────────────────────────────── */
   var state = { lang: 'zh', keyword: '', status: '', page: 1, pageSize: 20 };
+  var pendingDeleteTaskId = null;
   var toastTimer = null;
 
   /* ── Helpers ─────────────────────────────────────────────────── */
@@ -610,6 +711,7 @@
     if (getCurrentSystemRole() !== 'super_admin') {
       tasks = tasks.filter(function(tk) { return tk.isMine; });
     }
+    tasks = tasks.filter(function(tk) { return !tk.deletedAt; });
     if (state.keyword.trim()) {
       var kw = state.keyword.trim().toLowerCase();
       tasks = tasks.filter(function(tk) {
@@ -661,6 +763,50 @@
     history.replaceState(null, '', p.toString() ? location.pathname + '?' + p.toString() : location.pathname);
   }
 
+  function navigateToTaskDetail(task, source) {
+    if (task.canViewDetail) {
+      trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id, source: source || 'row' });
+      showToast(t('toastNavigating'), false);
+      window.setTimeout(function () {
+        window.location.href = './task-detail.html?task_id=' + encodeURIComponent(task.id);
+      }, 220);
+    } else {
+      trackAnalytics('prototype_task_row_clicked', { allowed: false, task_id: task.id, source: source || 'row' });
+      showToast(t('toastNoPermission'), true);
+    }
+  }
+
+  function softDeleteTask(task) {
+    task.deletedAt = new Date().toISOString();
+    state.page = 1;
+    trackAnalytics('prototype_task_soft_deleted', { task_id: task.id });
+    showToast(t('toastTaskSoftDeleted'));
+    render();
+  }
+
+  function openDeleteModal(task) {
+    pendingDeleteTaskId = task.id;
+    var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
+    document.getElementById('deleteTaskModalBody').textContent = t('deleteModalBodyTpl').replace('{name}', taskName);
+    var modal = document.getElementById('deleteTaskModal');
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeDeleteModal() {
+    pendingDeleteTaskId = null;
+    var modal = document.getElementById('deleteTaskModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function confirmDeleteModal() {
+    if (!pendingDeleteTaskId) return;
+    var task = TASKS.find(function(item) { return item.id === pendingDeleteTaskId; });
+    if (task) softDeleteTask(task);
+    closeDeleteModal();
+  }
+
   /* ── Render task rows via DOM (no innerHTML with user data) ──── */
   function createTaskRow(task) {
     var tr = document.createElement('tr');
@@ -706,25 +852,48 @@
     tdDate.className = 'updated-cell';
     tdDate.textContent = task.updatedAt;
 
+    // Actions cell
+    var tdActions = document.createElement('td');
+    tdActions.className = 'actions-cell';
+    var actionWrap = document.createElement('div');
+    actionWrap.className = 'inline-actions';
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'mini-btn mini-btn-primary';
+    editBtn.type = 'button';
+    editBtn.textContent = t('actionEdit');
+    editBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      navigateToTaskDetail(task, 'action_edit');
+    });
+    editBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+    });
+
+    var deleteBtn = document.createElement('button');
+    deleteBtn.className = 'mini-btn mini-btn-danger';
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = t('actionDelete');
+    deleteBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openDeleteModal(task);
+    });
+    deleteBtn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+    });
+
+    actionWrap.appendChild(deleteBtn);
+    actionWrap.appendChild(editBtn);
+    tdActions.appendChild(actionWrap);
+
     tr.appendChild(tdName);
     tr.appendChild(tdType);
     tr.appendChild(tdRun);
     tr.appendChild(tdStatus);
     tr.appendChild(tdDate);
+    tr.appendChild(tdActions);
 
-    var canView = task.canViewDetail;
-    function handleRowClick() {
-      if (canView) {
-        trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id });
-        showToast(t('toastNavigating'), false);
-        window.setTimeout(function () {
-          window.location.href = './task-detail.html?task_id=' + encodeURIComponent(task.id);
-        }, 220);
-      } else {
-        trackAnalytics('prototype_task_row_clicked', { allowed: false, task_id: task.id });
-        showToast(t('toastNoPermission'), true);
-      }
-    }
+    function handleRowClick() { navigateToTaskDetail(task, 'row'); }
     tr.addEventListener('click', handleRowClick);
     tr.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(); }
@@ -739,7 +908,7 @@
 
     var td = document.createElement('td');
     td.className = 'empty-row-cell';
-    td.colSpan = 5;
+    td.colSpan = 6;
 
     var wrap = document.createElement('div');
     wrap.className = 'empty-row-wrap';
@@ -862,7 +1031,7 @@
 
     var simpleIds = [
       'pageTitle', 'pageSubtitle', 'newTaskBtnLabel',
-      'thTaskName', 'thTaskType', 'thRunType', 'thStatus', 'thUpdatedAt',
+      'thTaskName', 'thTaskType', 'thRunType', 'thStatus', 'thUpdatedAt', 'thActions',
       'clearFiltersLabel',
       'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
     ];
@@ -902,6 +1071,18 @@
         userName: userNames[sysRole] || userNames.user,
         avatarLabel: avatarMap[sysRole] || 'U',
       });
+    }
+    setTextContent('deleteTaskModalTitle', t('deleteModalTitle'));
+    setTextContent('deleteTaskCancelBtn', t('deleteModalCancel'));
+    setTextContent('deleteTaskConfirmBtn', t('deleteModalConfirm'));
+    if (pendingDeleteTaskId) {
+      var pendingTask = TASKS.find(function(item) { return item.id === pendingDeleteTaskId; });
+      if (pendingTask) {
+        var pendingName = state.lang === 'en' ? pendingTask.nameEn : pendingTask.nameZh;
+        setTextContent('deleteTaskModalBody', t('deleteModalBodyTpl').replace('{name}', pendingName));
+      }
+    } else {
+      setTextContent('deleteTaskModalBody', t('deleteModalBodyDefault'));
     }
 
     render();
@@ -969,6 +1150,15 @@
   }
   document.getElementById('langToggle').addEventListener('click', function() { handleLangToggle('desktop'); });
   document.getElementById('mobileLangToggle').addEventListener('click', function() { handleLangToggle('mobile'); });
+  document.getElementById('deleteTaskCancelBtn').addEventListener('click', closeDeleteModal);
+  document.getElementById('deleteTaskConfirmBtn').addEventListener('click', confirmDeleteModal);
+  document.getElementById('deleteTaskModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    var modal = document.getElementById('deleteTaskModal');
+    if (e.key === 'Escape' && modal.classList.contains('show')) closeDeleteModal();
+  });
 
   /* ── Init ────────────────────────────────────────────────────── */
   (function initStateFromUrl() {
