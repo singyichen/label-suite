@@ -7,8 +7,12 @@ test.describe('Task detail settings edit state', () => {
     await page.goto(TASK_DETAIL_URL);
 
     await page.evaluate(() => {
-      TASK_DATA.taskTypeKey = 'sequence_labeling';
-      TASK_DATA.configContent = [
+      const win = window as typeof window & {
+        TASK_DATA: { taskTypeKey: string; configContent: string };
+        renderOverview: () => void;
+      };
+      win.TASK_DATA.taskTypeKey = 'sequence_labeling';
+      win.TASK_DATA.configContent = [
         'entities:',
         '  - name: PER',
         '    color: #6366F1',
@@ -19,7 +23,7 @@ test.describe('Task detail settings edit state', () => {
         'scheme: IOB2',
         'allow_overlapping: false',
       ].join('\n');
-      renderOverview();
+      win.renderOverview();
     });
 
     await expect(page.locator('#settingsConfigView')).toContainText('實體類型');
