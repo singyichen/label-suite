@@ -1063,6 +1063,525 @@
       margin-bottom: var(--space-md);
     }
     .overview-info-row > .panel { margin-bottom: 0; }
+    .panel-head-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .overview-edit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .overview-edit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .overview-edit-form {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .overview-edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .overview-file-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .overview-file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      background: var(--color-white);
+      color: var(--color-ink);
+    }
+    .overview-file-remove {
+      border: none;
+      background: transparent;
+      color: var(--color-ink-muted);
+      font-size: 12px;
+      line-height: 1;
+      padding: 0;
+    }
+    .overview-force-row { justify-content: space-between; align-items: center; }
+    #editConfigContentInput,
+    #editGuidelineTextInput {
+      min-height: 92px;
+      resize: vertical;
+    }
+    .basic-dataset-drop {
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      min-height: 140px;
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+      cursor: pointer;
+    }
+    .basic-dataset-drop:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .basic-dataset-drop-title {
+      font-size: 20px;
+      line-height: 1.4;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .basic-dataset-drop-hint {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+    }
+    .basic-dataset-current {
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--color-primary);
+      font-weight: 600;
+      word-break: break-all;
+    }
+    .required { color: var(--color-error); margin-left: 2px; }
+    .field-hint {
+      font-size: 12px;
+      color: var(--color-text-soft);
+      line-height: 1.5;
+    }
+    .settings-edit-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .guideline-edit-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .settings-edit-form {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .guideline-edit-form {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .notice-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: #1D4ED8;
+    }
+    .settings-editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .template-section {
+      margin-bottom: var(--space-sm);
+      padding: var(--space-sm);
+      background: var(--color-slate-50);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+    }
+    .template-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      margin-bottom: 8px;
+    }
+    .template-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .template-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--color-white);
+      color: var(--color-ink);
+    }
+    .template-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .tag-input-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      min-height: 44px;
+      align-items: center;
+    }
+    .tag-input-wrap:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .settings-tag-pills {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .tag-pill-remove {
+      border: none;
+      background: transparent;
+      color: inherit;
+      line-height: 1;
+      font-size: 12px;
+      padding: 0;
+    }
+    .tag-new-input {
+      border: none;
+      outline: none;
+      min-width: 120px;
+      flex: 1;
+      font-size: 14px;
+      color: var(--color-ink);
+      background: transparent;
+    }
+    .entity-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .entity-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      flex-shrink: 0;
+    }
+    .entity-name-input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--color-ink);
+      outline: none;
+    }
+    .entity-name-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .entity-remove-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: var(--color-ink-muted);
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .entity-remove-btn:hover {
+      color: var(--color-error);
+      background: rgba(185, 28, 28, 0.08);
+    }
+    .add-row-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--color-text-soft);
+      background: transparent;
+    }
+    .add-row-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .input-textarea {
+      width: 100%;
+      min-height: 88px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      font-size: 14px;
+      color: var(--color-ink);
+      background: var(--color-white);
+      resize: vertical;
+      outline: none;
+    }
+    .input-textarea:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .upload-multi-zone {
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 24px var(--space-lg);
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+      background: var(--color-slate-50);
+    }
+    .upload-multi-zone:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .upload-multi-zone-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-ink);
+      margin-bottom: 4px;
+    }
+    .upload-multi-zone-hint {
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .guideline-list {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .guideline-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+    }
+    .guideline-item-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+    .guideline-item-name {
+      flex: 1;
+      font-size: 13px;
+      color: var(--color-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .guideline-item-type {
+      font-size: 11px;
+      color: var(--color-text-soft);
+      padding: 2px 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .guideline-item-remove {
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: none;
+      color: var(--color-ink-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .guideline-item-remove:hover {
+      color: var(--color-error);
+      background: var(--color-error-soft-bg);
+    }
+    .toggle-info { flex: 1; }
+    .toggle-label-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-ink);
+      display: block;
+    }
+    .settings-checkbox-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-ink);
+      font-size: 14px;
+      min-height: 36px;
+    }
+    .s2-preview-top { margin-bottom: 4px; }
+    .annotation-preview {
+      min-height: 180px;
+      padding: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .annotation-preview-sample {
+      padding: 14px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+    .annotation-preview-divider { height: 1px; background: var(--color-border); }
+    .annotation-preview-task-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .annotation-preview-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      color: var(--color-ink);
+    }
+    .annotation-preview-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14px;
+    }
+    .annotation-preview-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+    .annotation-preview-pair {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .annotation-preview-pair-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .annotation-preview-empty {
+      font-size: 13px;
+      color: var(--color-text-soft);
+    }
+    .s2-code-panel {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      padding: 12px;
+    }
+    .s2-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .settings-code-format {
+      display: flex;
+      gap: 6px;
+    }
+    .settings-code-format .btn {
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .settings-code-format .btn.active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .code-editor {
+      width: 100%;
+      min-height: 300px;
+      padding: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      outline: none;
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: #1E1B4B;
+      color: #E2E8F0;
+    }
+    .code-editor:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .code-error-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid rgba(185, 28, 28, 0.26);
+      border-radius: var(--radius-md);
+      color: var(--color-error);
+      background: rgba(185, 28, 28, 0.06);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .code-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    .yaml-preview-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
 
     .kv-dl {
       display: grid;
@@ -1239,6 +1758,8 @@
 
     @media (max-width: 768px) {
       .overview-info-row { grid-template-columns: 1fr; }
+      .overview-edit-grid { grid-template-columns: 1fr; }
+      .settings-editor-layout { grid-template-columns: 1fr; }
       .sampling-fields { grid-template-columns: 1fr; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
@@ -1336,8 +1857,9 @@
       tabAnnotationProgress: '標記進度',
       tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
-      basicInfoTitle: '任務基本資訊',
-      settingsSummaryTitle: '任務設定摘要',
+      basicInfoTitle: '基本資料',
+      settingsSummaryTitle: '標記設定',
+      guidelineSectionTitle: '標記說明',
       executionTitle: '任務狀態與執行控制',
       exportTitle: '匯出結果',
       labelTaskName: '任務名稱',
@@ -1347,22 +1869,119 @@
       labelUpdatedAt: '最近更新',
       labelDatasetSummary: '資料集摘要',
       labelConfigVersion: 'Config 版本',
-      labelGuideline: '說明文件狀態',
+      labelConfigTaskType: '標記類型',
+      labelConfigLabels: '標籤清單',
+      labelConfigAllowMultiple: '允許多選',
+      labelGuideline: '說明內容狀態',
+      labelGuidelineFilesSummary: '附件清單',
+      labelGuidelineContentSummary: '說明內容摘要',
       labelForceGuideline: '開始標記前強制顯示',
+      guidelineEditBtn: '編輯',
+      guidelineSaveBtn: '儲存',
+      guidelineCancelBtn: '取消',
+      guidelineReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記說明。',
+      guidelineReadonlyDraftOnly: '',
+      guidelineOptionalNoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
+      guidelineUploadLabel: '上傳檔案',
+      guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
+      editForceGuidelineDesc: '啟用後，標記員進入作業前必須先閱讀說明',
+      guidelineSaveSuccess: '標記說明已更新',
+      guidelineLeaveConfirm: '你有尚未儲存的標記說明變更，確定要離開編輯模式嗎？',
+      guidelineFileTypeInvalid: '僅支援 PDF / PNG / JPG / JPEG / WEBP / Markdown',
+      overviewEditTitle: '基本資料',
+      overviewEditBtn: '編輯',
+      overviewSaveBtn: '儲存',
+      overviewCancelBtn: '取消',
+      overviewEditHint: '',
+      overviewReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯基本資料。',
+      overviewReadonlyDraftOnly: '',
+      overviewSaveSuccess: '基本資料已更新',
+      overviewLeaveConfirm: '你有尚未儲存的基本資訊變更，確定要離開編輯模式嗎？',
+      overviewEditTaskNameRequired: '任務名稱不可為空。',
+      settingsEditBtn: '編輯',
+      settingsSaveBtn: '儲存',
+      settingsCancelBtn: '取消',
+      settingsReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記設定。',
+      settingsReadonlyDraftOnly: '目前狀態非 draft，標記設定不可編輯。',
+      settingsAnnotationPreviewLabel: '標記預覽',
+      settingsPreviewSample: '這是一段範例文本，請依目前設定完成標記。',
+      settingsPreviewSelectLabel: '請選擇標記',
+      settingsPreviewEmpty: '請先新增至少一個標記選項',
+      settingsTemplateSectionTitle: '從範本開始或者上傳設定檔',
+      settingsApplyTemplateBtnTpl: '套用預設範本：{template}',
+      settingsUploadConfigBtn: '上傳設定檔（YAML / JSON）',
+      settingsLabelsLabel: '標籤清單',
+      settingsLabelsHint: '輸入標籤後按 Enter',
+      settingsTagPlaceholder: '輸入標籤後按 Enter',
+      settingsAllowMultipleLabel: '允許多選',
+      settingsAllowMultipleOn: '已啟用',
+      settingsAllowMultipleOff: '已停用',
+      settingsCodeLabel: 'CODE',
+      settingsSaveCodeBtnLabel: '儲存',
+      settingsSaveSuccess: '標記設定已更新',
+      settingsLeaveConfirm: '你有尚未儲存的標記設定變更，確定要離開編輯模式嗎？',
+      settingsEditLabelRequired: '請至少新增一個標籤。',
+      settingsCodeParseError: '設定檔格式錯誤，請檢查 YAML / JSON 內容。',
+      settingsConfigLoaded: '設定檔已載入',
+      settingsCodeSaved: '設定碼已套用至表單',
+      settingsCodeInvalid: '設定碼格式錯誤',
+      settingsCodeUnsaved: '請先按「儲存」同步設定碼後再儲存變更。',
+      settingsSchemaRequired: '請完成必填設定欄位。',
+      settingsConfigFormatError: '僅支援 .yaml/.yml/.json',
+      settingsConfigReadError: '設定檔讀取失敗',
+      settingsEnabled: '已啟用',
+      settingsDisabled: '已停用',
+      settingsAddEntity: '新增實體類型',
+      settingsPreviewTaskChooseLabel: '請選擇標記',
+      settingsPreviewTaskEntity: '請標記實體',
+      settingsPreviewTaskRelation: '請標記關係',
+      settingsPreviewTaskScore: '請選擇分數',
+      settingsPreviewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
+      settingsPreviewSampleSentenceScoring: '這是一段需要評分的範例文本，請依 rubric 給分。',
+      settingsPreviewSampleSentenceSequence: '王小明今天在台北參加 AI 研討會。',
+      settingsPreviewSampleSentenceRelation: '患者出現發燒與咳嗽，可能與流感相關。',
+      settingsPreviewSentenceALabel: '句子 A',
+      settingsPreviewSentenceBLabel: '句子 B',
+      settingsPreviewSampleSentenceA: '這家餐廳的服務速度很快。',
+      settingsPreviewSampleSentenceB: '服務效率令人滿意。',
+      editTaskNameLabel: '任務名稱 *',
+      editTaskTypeLabel: '任務類型 *',
+      editDatasetLabel: '資料集 *',
+      editConfigLabel: '標記設定檔',
+      editGuidelineLabel: '說明內容',
+      editGuidelineFilesLabel: '上傳檔案',
+      editForceGuidelineLabel: '開始標記前強制顯示',
+      editDatasetCurrentTpl: '目前檔案：{name}',
+      basicDatasetDropTitle: '點擊或拖曳上傳資料集',
+      basicDatasetDropHint: '支援 TXT / CSV / TSV / JSON，最大 200 MB，UTF-8',
       samplingTitle: '試標資料抽樣設定',
+      samplingEditBtn: '編輯',
+      samplingSaveBtn: '儲存',
+      samplingCancelBtn: '取消',
+      samplingReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯抽樣設定。',
+      samplingReadonlyDraftOnly: '目前狀態非 draft，抽樣設定不可編輯。',
+      samplingSaveSuccess: '試標資料抽樣設定已更新',
+      samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
+      labelSamplingModeControl: '抽樣方式',
+      labelSamplingValueControl: '抽樣數值',
+      labelSamplingStrategyControl: '抽樣策略',
+      labelSplitControl: '試標 / 正式資料配比',
+      labelIsolationControl: '資料隔離狀態',
+      labelIsolationAuditControl: '隔離異動',
       samplingModeLabel: '抽樣方式',
       samplingValueLabel: '抽樣數值',
       samplingStrategyLabel: '抽樣策略',
       sampleUsageLabel: '試標使用量',
-      officialReserveLabel: '正式標註預留量',
+      officialReserveLabel: '正式標記預留量',
       samplingModeCount: '筆數',
       samplingModePercent: '百分比',
-      samplingHelp: '百分比採 floor(total * percent / 100)，且正式標註至少保留 1 筆。',
+      samplingHelp: '百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。',
       resampleBtn: '重算抽樣',
       resampleHintDraft: '僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。',
       resampleHintLocked: '目前狀態不可重算。請建立新 run 批次。',
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
-      isolationToggleDesc: '啟用時可避免試標結果污染正式標註資料。',
+      isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
       publishDryRun: '發布 Dry Run',
       publishOfficialRun: '發布 Official Run',
@@ -1408,6 +2027,13 @@
       yes: '是',
       no: '否',
       guidelineUploaded: '已上傳',
+      guidelineEmpty: '未上傳',
+      guidelineFilesNone: '無附件',
+      guidelineContentEmpty: '尚無說明內容',
+      samplingValueCountTpl: '{value} 筆',
+      samplingValuePercentTpl: '{value}%（約 {count} 筆）',
+      splitSummaryTpl: '試標 {sample} / 正式 {reserve}',
+      samplingStrategySummaryTpl: '{strategy} · seed {seed}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
@@ -1417,7 +2043,7 @@
       samplingErrorPercent: '百分比僅允許 1..99。',
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
       samplingErrorFloor: '百分比換算後小於 1 筆，請提高百分比或改用固定筆數。',
-      samplingErrorReserve: '正式標註至少需保留 1 筆資料。',
+      samplingErrorReserve: '正式標記至少需保留 1 筆資料。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       candidateListTitle: '可加入成員名單',
@@ -1521,7 +2147,8 @@
       tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
       basicInfoTitle: 'Task basics',
-      settingsSummaryTitle: 'Task settings summary',
+      settingsSummaryTitle: 'Label settings',
+      guidelineSectionTitle: 'Annotation guideline',
       executionTitle: 'Task status and run control',
       exportTitle: 'Export result',
       labelTaskName: 'Task name',
@@ -1531,9 +2158,106 @@
       labelUpdatedAt: 'Last updated',
       labelDatasetSummary: 'Dataset summary',
       labelConfigVersion: 'Config version',
+      labelConfigTaskType: 'Task type',
+      labelConfigLabels: 'Labels',
+      labelConfigAllowMultiple: 'Allow multiple labels',
       labelGuideline: 'Guideline status',
+      labelGuidelineFilesSummary: 'Attachment list',
+      labelGuidelineContentSummary: 'Guideline summary',
       labelForceGuideline: 'Force show before annotation',
+      guidelineEditBtn: 'Edit',
+      guidelineSaveBtn: 'Save',
+      guidelineCancelBtn: 'Cancel',
+      guidelineReadonlyRoleOnly: 'Read-only role. Only project leader can edit guideline.',
+      guidelineReadonlyDraftOnly: '',
+      guidelineOptionalNoticeText: 'This step is optional. You can create the task without uploading guidelines.',
+      guidelineUploadLabel: 'Upload files',
+      guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+      editForceGuidelineDesc: 'Annotators must read the guideline before starting work',
+      guidelineSaveSuccess: 'Guideline updated',
+      guidelineLeaveConfirm: 'You have unsaved guideline changes. Leave edit mode?',
+      guidelineFileTypeInvalid: 'Only PDF / PNG / JPG / JPEG / WEBP / Markdown are supported',
+      overviewEditTitle: 'Task basics',
+      overviewEditBtn: 'Edit basics',
+      overviewSaveBtn: 'Save',
+      overviewCancelBtn: 'Cancel',
+      overviewEditHint: '',
+      overviewReadonlyRoleOnly: 'Read-only role. Only project leader can edit task basics.',
+      overviewReadonlyDraftOnly: '',
+      overviewSaveSuccess: 'Task basics updated',
+      overviewLeaveConfirm: 'You have unsaved task basics changes. Leave edit mode?',
+      overviewEditTaskNameRequired: 'Task name is required.',
+      settingsEditBtn: 'Edit label settings',
+      settingsSaveBtn: 'Save',
+      settingsCancelBtn: 'Cancel',
+      settingsReadonlyRoleOnly: 'Read-only role. Only project leader can edit label settings.',
+      settingsReadonlyDraftOnly: 'Current status is not draft. Label settings are locked.',
+      settingsAnnotationPreviewLabel: 'Annotation preview',
+      settingsPreviewSample: 'This is a sample text. Please annotate using current settings.',
+      settingsPreviewSelectLabel: 'Select label',
+      settingsPreviewEmpty: 'Please add at least one label option',
+      settingsTemplateSectionTitle: 'Start from template or upload config',
+      settingsApplyTemplateBtnTpl: 'Apply default template: {template}',
+      settingsUploadConfigBtn: 'Upload config (YAML / JSON)',
+      settingsLabelsLabel: 'Labels',
+      settingsLabelsHint: 'Type label and press Enter',
+      settingsTagPlaceholder: 'Type label and press Enter',
+      settingsAllowMultipleLabel: 'Allow multiple labels',
+      settingsAllowMultipleOn: 'Enabled',
+      settingsAllowMultipleOff: 'Disabled',
+      settingsCodeLabel: 'CODE',
+      settingsSaveCodeBtnLabel: 'Save',
+      settingsSaveSuccess: 'Label settings updated',
+      settingsLeaveConfirm: 'You have unsaved label settings changes. Leave edit mode?',
+      settingsEditLabelRequired: 'Please add at least one label.',
+      settingsCodeParseError: 'Invalid config format. Check YAML / JSON content.',
+      settingsConfigLoaded: 'Config loaded',
+      settingsCodeSaved: 'Code has been applied to form fields',
+      settingsCodeInvalid: 'Invalid config code',
+      settingsCodeUnsaved: 'Please click "Save" to sync code before saving changes.',
+      settingsSchemaRequired: 'Please complete required config fields.',
+      settingsConfigFormatError: 'Only .yaml/.yml/.json is supported',
+      settingsConfigReadError: 'Failed to read config file',
+      settingsEnabled: 'Enabled',
+      settingsDisabled: 'Disabled',
+      settingsAddEntity: 'Add entity type',
+      settingsPreviewTaskChooseLabel: 'Select label',
+      settingsPreviewTaskEntity: 'Mark entities',
+      settingsPreviewTaskRelation: 'Mark relations',
+      settingsPreviewTaskScore: 'Select score',
+      settingsPreviewSampleSentence: 'This is a sample text. Please annotate using current settings.',
+      settingsPreviewSampleSentenceScoring: 'This is a scoring sample. Please score by rubric.',
+      settingsPreviewSampleSentenceSequence: 'John attended an AI workshop in Taipei today.',
+      settingsPreviewSampleSentenceRelation: 'The patient has fever and cough, possibly related to flu.',
+      settingsPreviewSentenceALabel: 'Sentence A',
+      settingsPreviewSentenceBLabel: 'Sentence B',
+      settingsPreviewSampleSentenceA: 'The restaurant service is very fast.',
+      settingsPreviewSampleSentenceB: 'The service efficiency is satisfactory.',
+      editTaskNameLabel: 'Task name *',
+      editTaskTypeLabel: 'Task type *',
+      editDatasetLabel: 'Dataset *',
+      editConfigLabel: 'Label config',
+      editGuidelineLabel: 'Guideline content',
+      editGuidelineFilesLabel: 'Upload files',
+      editForceGuidelineLabel: 'Force show before annotation',
+      editDatasetCurrentTpl: 'Current file: {name}',
+      basicDatasetDropTitle: 'Click or drag to upload dataset',
+      basicDatasetDropHint: 'Supports TXT / CSV / TSV / JSON, up to 200 MB, UTF-8',
       samplingTitle: 'Dry run sampling settings',
+      samplingEditBtn: 'Edit',
+      samplingSaveBtn: 'Save',
+      samplingCancelBtn: 'Cancel',
+      samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
+      samplingReadonlyDraftOnly: 'Sampling settings can only be edited in draft status.',
+      samplingSaveSuccess: 'Dry run sampling settings updated',
+      samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
+      labelSamplingModeControl: 'Sampling mode',
+      labelSamplingValueControl: 'Sampling value',
+      labelSamplingStrategyControl: 'Sampling strategy',
+      labelSplitControl: 'Dry / Official split',
+      labelIsolationControl: 'Data isolation status',
+      labelIsolationAuditControl: 'Isolation changed at',
       samplingModeLabel: 'Sampling mode',
       samplingValueLabel: 'Sampling value',
       samplingStrategyLabel: 'Sampling strategy',
@@ -1592,6 +2316,13 @@
       yes: 'Yes',
       no: 'No',
       guidelineUploaded: 'Uploaded',
+      guidelineEmpty: 'Not uploaded',
+      guidelineFilesNone: 'No attachments',
+      guidelineContentEmpty: 'No guideline text',
+      samplingValueCountTpl: '{value} items',
+      samplingValuePercentTpl: '{value}% (~{count} items)',
+      splitSummaryTpl: 'Dry {sample} / Official {reserve}',
+      samplingStrategySummaryTpl: '{strategy} · seed {seed}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
@@ -1702,7 +2433,7 @@
     taskId: 'TASK-014',
     taskNameZh: '多語料情感一致性標記',
     taskNameEn: 'Multilingual Sentiment Consistency Labeling',
-    taskType: 'Generative Labeling',
+    taskTypeKey: 'single_sentence_classification',
     createdBy: 'Mandy Chen',
     createdAt: '2026-04-20 10:12',
     updatedAt: '2026-04-21 09:38',
@@ -1710,7 +2441,14 @@
     datasetSourceZh: 'customer_feedback_v3.csv',
     datasetSourceEn: 'customer_feedback_v3.csv',
     configVersion: 'cfg-task014-v1.4.0',
+    configFileName: '',
+    configContent: 'labels: [正向, 負向, 中立]\nallow_multiple: false',
     guidelineUploaded: true,
+    guidelineText: '請根據語意判斷情緒類別，並優先依任務 Rubric 執行。',
+    guidelineFiles: [
+      { name: 'sentiment-guideline-v1.pdf', type: 'pdf' },
+      { name: 'labeling-checklist.md', type: 'md' }
+    ],
     forceGuideline: true,
     status: 'draft',
     samplingMode: 'by_count',
@@ -1789,8 +2527,83 @@
     pendingAction: null,
     isolationConfirmed: false,
     pendingMemberAction: null,
-    pendingReviewerTabToast: false
+    pendingReviewerTabToast: false,
+    overviewEditMode: false,
+    overviewDirty: false,
+    overviewDraft: null,
+    guidelineEditMode: false,
+    guidelineDirty: false,
+    guidelineDraft: null,
+    settingsEditMode: false,
+    settingsDirty: false,
+    settingsDraft: null,
+    settingsCodeDraftDirty: false,
+    samplingEditMode: false,
+    samplingDirty: false,
+    samplingDraft: null
   };
+
+  var TASK_TYPE_OPTIONS = [
+    { key: 'single_sentence_classification', zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
+    { key: 'single_sentence_scoring_regression', zh: '單句評分 / 回歸', en: 'Single Sentence Scoring / Regression' },
+    { key: 'sequence_labeling', zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+    { key: 'relation_extraction', zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)' },
+    { key: 'sentence_pairs', zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
+  ];
+
+  var SETTINGS_REGISTRY = {
+    single_sentence_classification: {
+      fields: [
+        { key: 'labels', type: 'tag-list', required: true, zh: '標籤清單', en: 'Labels', hint_zh: '輸入標籤後按 Enter', hint_en: 'Type label and press Enter' },
+        { key: 'allow_multiple', type: 'boolean', required: false, zh: '允許多選', en: 'Allow multiple labels', defaultValue: false },
+      ],
+      defaultTemplate: { labels: ['正向', '負向', '中立'], allow_multiple: false },
+      defaultTemplateI18n: {
+        zh: { labels: ['正向', '負向', '中立'], allow_multiple: false },
+        en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
+      },
+    },
+    single_sentence_scoring_regression: {
+      fields: [
+        { key: 'rubric', type: 'textarea', required: true, zh: 'Rubric（評分說明）', en: 'Rubric', placeholder_zh: '描述各分數對應的品質標準', placeholder_en: 'Describe quality criteria per score' },
+        { key: 'scoring_range', type: 'select', required: true, zh: '評分範圍', en: 'Scoring range', options: ['1-3', '1-5', '1-7', '1-10'], defaultValue: '1-5' },
+        { key: 'widget_type', type: 'select', required: true, zh: '評分介面', en: 'Scoring widget', options: ['slider', 'radio', 'number_input'], defaultValue: 'slider' },
+        { key: 'allow_comment', type: 'boolean', required: false, zh: '允許評語', en: 'Allow comments', defaultValue: true },
+      ],
+      defaultTemplate: { rubric: '', scoring_range: '1-5', widget_type: 'slider', allow_comment: true },
+    },
+    sequence_labeling: {
+      fields: [
+        { key: 'entities', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types' },
+        { key: 'scheme', type: 'select', required: true, zh: '標記格式', en: 'Labeling scheme', options: ['IOB2', 'BIOES'], defaultValue: 'IOB2' },
+        { key: 'allow_overlapping', type: 'boolean', required: false, zh: '允許重疊標記', en: 'Allow overlapping spans', defaultValue: false },
+      ],
+      defaultTemplate: { entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+    },
+    relation_extraction: {
+      fields: [
+        { key: 'entity_types', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types' },
+        { key: 'relation_types', type: 'tag-list', required: true, zh: '關係類型', en: 'Relation types', hint_zh: '輸入關係類型後按 Enter', hint_en: 'Type relation and press Enter' },
+        { key: 'tuple_mode', type: 'select', required: true, zh: '結構模式', en: 'Tuple mode', options: ['triple', 'five_tuple'], defaultValue: 'triple' },
+      ],
+      defaultTemplate: {
+        entity_types: [{ name: 'BODY', color: '#6366F1' }, { name: 'SYMPTOM', color: '#10B981' }],
+        relation_types: ['causes', 'associated_with'],
+        tuple_mode: 'triple',
+      },
+    },
+    sentence_pairs: {
+      fields: [
+        { key: 'labels', type: 'tag-list', required: true, zh: '關係標籤', en: 'Relation labels', hint_zh: '輸入標籤後按 Enter', hint_en: 'Type and press Enter' },
+      ],
+      defaultTemplate: { labels: ['蘊含', '矛盾', '中立'] },
+      defaultTemplateI18n: {
+        zh: { labels: ['蘊含', '矛盾', '中立'] },
+        en: { labels: ['Entailment', 'Contradiction', 'Neutral'] },
+      },
+    }
+  };
+  var SETTINGS_ENTITY_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9', '#F97316', '#14B8A6'];
 
   var TAB_PANEL_PATHS = {
     overview: './task-detail.panels/overview.html',
@@ -1932,6 +2745,7 @@
     setText('tabMemberManagement', t('tabMemberManagement'));
     setText('basicInfoTitle', t('basicInfoTitle'));
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
+    setText('guidelineSectionTitle', t('guidelineSectionTitle'));
     setText('executionTitle', t('executionTitle'));
     setText('exportTitle', t('exportTitle'));
     setText('labelTaskName', t('labelTaskName'));
@@ -1941,9 +2755,51 @@
     setText('labelUpdatedAt', t('labelUpdatedAt'));
     setText('labelDatasetSummary', t('labelDatasetSummary'));
     setText('labelConfigVersion', t('labelConfigVersion'));
+    setText('labelConfigTaskType', t('labelConfigTaskType'));
+    setText('labelConfigLabels', t('labelConfigLabels'));
+    setText('labelConfigAllowMultiple', t('labelConfigAllowMultiple'));
     setText('labelGuideline', t('labelGuideline'));
+    setText('labelGuidelineFilesSummary', t('labelGuidelineFilesSummary'));
+    setText('labelGuidelineContentSummary', t('labelGuidelineContentSummary'));
     setText('labelForceGuideline', t('labelForceGuideline'));
+    setText('guidelineEditBtn', t('guidelineEditBtn'));
+    setText('guidelineSaveBtn', t('guidelineSaveBtn'));
+    setText('guidelineCancelBtn', t('guidelineCancelBtn'));
+    setText('guidelineOptionalNoticeText', t('guidelineOptionalNoticeText'));
+    setText('guidelineUploadLabel', t('guidelineUploadLabel'));
+    setText('guidelineUploadHint', t('guidelineUploadHint'));
+    setText('overviewEditTitle', t('overviewEditTitle'));
+    setText('overviewEditBtn', t('overviewEditBtn'));
+    setText('overviewSaveBtn', t('overviewSaveBtn'));
+    setText('overviewCancelBtn', t('overviewCancelBtn'));
+    setText('settingsEditBtn', t('settingsEditBtn'));
+    setText('settingsSaveBtn', t('settingsSaveBtn'));
+    setText('settingsCancelBtn', t('settingsCancelBtn'));
+    setText('settingsAnnotationPreviewLabel', t('settingsAnnotationPreviewLabel'));
+    setText('settingsTemplateSectionTitle', t('settingsTemplateSectionTitle'));
+    setText('settingsUploadConfigBtn', t('settingsUploadConfigBtn'));
+    setText('settingsCodeLabel', t('settingsCodeLabel'));
+    setText('settingsSaveCodeBtnLabel', t('settingsSaveCodeBtnLabel'));
+    setText('editTaskNameLabel', t('editTaskNameLabel'));
+    setText('editTaskTypeLabel', t('editTaskTypeLabel'));
+    setText('editDatasetLabel', t('editDatasetLabel'));
+    setText('editConfigLabel', t('editConfigLabel'));
+    setText('editGuidelineLabel', t('editGuidelineLabel'));
+    setText('editGuidelineFilesLabel', t('editGuidelineFilesLabel'));
+    setText('editForceGuidelineLabel', t('editForceGuidelineLabel'));
+    setText('editForceGuidelineDesc', t('editForceGuidelineDesc'));
+    setText('basicDatasetDropTitle', t('basicDatasetDropTitle'));
+    setText('basicDatasetDropHint', t('basicDatasetDropHint'));
     setText('samplingTitle', t('samplingTitle'));
+    setText('samplingEditBtn', t('samplingEditBtn'));
+    setText('samplingSaveBtn', t('samplingSaveBtn'));
+    setText('samplingCancelBtn', t('samplingCancelBtn'));
+    setText('labelSamplingModeControl', t('labelSamplingModeControl'));
+    setText('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setText('labelSamplingStrategyControl', t('labelSamplingStrategyControl'));
+    setText('labelSplitControl', t('labelSplitControl'));
+    setText('labelIsolationControl', t('labelIsolationControl'));
+    setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
     setText('samplingModeLabel', t('samplingModeLabel'));
     setText('samplingValueLabel', t('samplingValueLabel'));
     setText('samplingStrategyLabel', t('samplingStrategyLabel'));
@@ -2027,6 +2883,10 @@
     setText('memberActionModalBody', t('memberActionModalBodyEnable'));
     setText('memberActionCancelBtn', t('memberActionCancelBtn'));
     setText('memberActionConfirmBtn', t('memberActionConfirmBtn'));
+    var guidelineTextInput = document.getElementById('editGuidelineTextInput');
+    if (guidelineTextInput) guidelineTextInput.placeholder = t('guidelineTextPlaceholder');
+
+    updateSettingsTemplateButtonLabel();
 
     var modeSelect = document.getElementById('samplingMode');
     if (modeSelect && modeSelect.options.length >= 2) {
@@ -2058,25 +2918,29 @@
     return t(statusHintMap[TASK_DATA.status] || 'statusHintDraft');
   }
 
-  function getSampleCount() {
-    if (TASK_DATA.samplingMode === 'by_percentage') {
-      return Math.floor(TASK_DATA.datasetTotal * TASK_DATA.samplingValue / 100);
+  function getSampleCountFromData(data) {
+    if (data.samplingMode === 'by_percentage') {
+      return Math.floor(TASK_DATA.datasetTotal * data.samplingValue / 100);
     }
-    return TASK_DATA.samplingValue;
+    return data.samplingValue;
   }
 
-  function validateSampling() {
-    var sampleCount = getSampleCount();
+  function getSampleCount() {
+    return getSampleCountFromData(TASK_DATA);
+  }
 
-    if (TASK_DATA.samplingMode === 'by_percentage') {
-      if (TASK_DATA.samplingValue < 1 || TASK_DATA.samplingValue > 99) {
+  function validateSamplingData(data) {
+    var sampleCount = getSampleCountFromData(data);
+
+    if (data.samplingMode === 'by_percentage') {
+      if (data.samplingValue < 1 || data.samplingValue > 99) {
         return { valid: false, message: t('samplingErrorPercent') };
       }
       if (sampleCount < 1) {
         return { valid: false, message: t('samplingErrorFloor') };
       }
     } else {
-      if (TASK_DATA.samplingValue < 1 || TASK_DATA.samplingValue >= TASK_DATA.datasetTotal) {
+      if (data.samplingValue < 1 || data.samplingValue >= TASK_DATA.datasetTotal) {
         return { valid: false, message: t('samplingErrorCount') };
       }
     }
@@ -2088,8 +2952,49 @@
     return { valid: true, message: '' };
   }
 
-  function renderSamplingState() {
+  function validateSampling() {
+    return validateSamplingData(TASK_DATA);
+  }
+
+  function getSamplingRenderData() {
+    if (state.samplingEditMode && state.samplingDraft) {
+      return state.samplingDraft;
+    }
+    return TASK_DATA;
+  }
+
+  function renderSamplingSummaryState() {
     var sampleCount = getSampleCount();
+    var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
+    var samplingModeText = TASK_DATA.samplingMode === 'by_percentage' ? t('samplingModePercent') : t('samplingModeCount');
+    var samplingValueText = TASK_DATA.samplingMode === 'by_percentage'
+      ? interpolate(t('samplingValuePercentTpl'), { value: TASK_DATA.samplingValue, count: sampleCount })
+      : interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue });
+    var splitSummaryText = interpolate(t('splitSummaryTpl'), {
+      sample: sampleCount + ' / ' + TASK_DATA.datasetTotal,
+      reserve: reserveCount + ' / ' + TASK_DATA.datasetTotal,
+    });
+
+    setText('valueSamplingModeControl', samplingModeText);
+    setText('valueSamplingValueControl', samplingValueText);
+    setText('valueSamplingStrategyControl', interpolate(t('samplingStrategySummaryTpl'), {
+      strategy: TASK_DATA.samplingStrategy,
+      seed: TASK_DATA.randomSeed,
+    }));
+    setText('valueSplitControl', splitSummaryText);
+    setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
+    setText(
+      'valueIsolationAuditControl',
+      interpolate(t('isolationAuditTpl'), {
+        actor: TASK_DATA.isolationLastActor,
+        time: TASK_DATA.isolationLastUpdated,
+      })
+    );
+  }
+
+  function renderSamplingState() {
+    var data = getSamplingRenderData();
+    var sampleCount = getSampleCountFromData(data);
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
 
     setText('sampleUsageValue', sampleCount + ' / ' + TASK_DATA.datasetTotal);
@@ -2104,27 +3009,45 @@
       dryEl.style.width = dw.toFixed(1) + '%';
       offEl.style.width = (100 - dw).toFixed(1) + '%';
     }
-    setText('samplingStrategyText', TASK_DATA.samplingStrategy + ' (fallback: random(seed))');
-    setText('samplingSeedText', 'random_seed: ' + TASK_DATA.randomSeed);
+    setText('samplingStrategyText', data.samplingStrategy + ' (fallback: random(seed))');
+    setText('samplingSeedText', 'random_seed: ' + data.randomSeed);
+
+    var modeSelect = document.getElementById('samplingMode');
+    if (modeSelect) modeSelect.value = data.samplingMode;
 
     var samplingInput = document.getElementById('samplingValue');
     var samplingError = document.getElementById('samplingError');
-    var result = validateSampling();
+    if (samplingInput) {
+      samplingInput.value = String(data.samplingValue);
+      if (data.samplingMode === 'by_percentage') samplingInput.max = '99';
+      else samplingInput.removeAttribute('max');
+    }
+    var result = validateSamplingData(data);
 
-    if (!result.valid) {
+    if (samplingInput && samplingError && !result.valid) {
       samplingInput.classList.add('error');
       samplingError.textContent = result.message;
       samplingError.classList.add('show');
-    } else {
+    } else if (samplingInput && samplingError) {
       samplingInput.classList.remove('error');
       samplingError.textContent = '';
       samplingError.classList.remove('show');
     }
 
-    var editable = TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
-    document.getElementById('samplingMode').disabled = !editable;
-    document.getElementById('samplingValue').disabled = !editable;
-    document.getElementById('resampleBtn').disabled = !editable;
+    var editAllowed = isSamplingEditable();
+    var editing = state.samplingEditMode;
+    var editable = editAllowed && editing;
+    var isolationToggle = document.getElementById('isolationToggle');
+    var risk = document.getElementById('isolationRiskMsg');
+    if (modeSelect) modeSelect.disabled = !editable;
+    if (samplingInput) samplingInput.disabled = !editable;
+    if (isolationToggle) {
+      isolationToggle.checked = Boolean(data.isolationEnabled);
+      isolationToggle.disabled = !editable;
+    }
+    if (risk) risk.classList.toggle('hidden', Boolean(data.isolationEnabled));
+    var resampleBtn = document.getElementById('resampleBtn');
+    if (resampleBtn) resampleBtn.disabled = !editable;
     setText('resampleHint', editable ? t('resampleHintDraft') : t('resampleHintLocked'));
   }
 
@@ -2155,15 +3078,9 @@
   function renderIsolationState() {
     var on = TASK_DATA.isolationEnabled;
     var badge = document.getElementById('isolationBadge');
-    var risk = document.getElementById('isolationRiskMsg');
-
-    badge.textContent = on ? t('isolationOn') : t('isolationOff');
-    badge.className = 'badge ' + (on ? 'badge-isolated' : 'badge-non-isolated');
-
-    if (on) {
-      risk.classList.add('hidden');
-    } else {
-      risk.classList.remove('hidden');
+    if (badge) {
+      badge.textContent = on ? t('isolationOn') : t('isolationOff');
+      badge.className = 'badge ' + (on ? 'badge-isolated' : 'badge-non-isolated');
     }
 
     setText(
@@ -2173,9 +3090,6 @@
         time: TASK_DATA.isolationLastUpdated,
       })
     );
-
-    document.getElementById('isolationToggle').checked = on;
-    document.getElementById('isolationToggle').disabled = !(TASK_DATA.status === 'draft' && state.taskRole === 'project_leader');
   }
 
   function updateStatusStepper() {
@@ -2211,25 +3125,1314 @@
     document.getElementById('exportJsonMinBtn').disabled = disabled;
   }
 
+  function getTaskTypeLabel(taskTypeKey) {
+    var option = TASK_TYPE_OPTIONS.find(function(item) { return item.key === taskTypeKey; });
+    if (!option) return taskTypeKey || '-';
+    return state.lang === 'zh' ? option.zh : option.en;
+  }
+
+  function isOverviewEditable() {
+    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+  }
+
+  function createOverviewDraft() {
+    return {
+      taskNameZh: TASK_DATA.taskNameZh,
+      taskNameEn: TASK_DATA.taskNameEn,
+      taskTypeKey: TASK_DATA.taskTypeKey,
+      datasetSourceZh: TASK_DATA.datasetSourceZh,
+      datasetSourceEn: TASK_DATA.datasetSourceEn,
+    };
+  }
+
+  function setOverviewEditError(message) {
+    var errorNode = document.getElementById('overviewEditError');
+    if (!errorNode) return;
+    if (message) {
+      errorNode.textContent = message;
+      errorNode.classList.add('show');
+      return;
+    }
+    errorNode.textContent = '';
+    errorNode.classList.remove('show');
+  }
+
+  function fillOverviewEditForm() {
+    if (!state.overviewDraft) return;
+
+    var taskNameInput = document.getElementById('editTaskNameInput');
+    var taskTypeSelect = document.getElementById('editTaskTypeSelect');
+    var datasetCurrent = document.getElementById('editDatasetCurrent');
+
+    if (taskTypeSelect) {
+      taskTypeSelect.innerHTML = '';
+      TASK_TYPE_OPTIONS.forEach(function(item) {
+        var option = document.createElement('option');
+        option.value = item.key;
+        option.textContent = state.lang === 'zh' ? item.zh : item.en;
+        if (item.key === state.overviewDraft.taskTypeKey) option.selected = true;
+        taskTypeSelect.appendChild(option);
+      });
+    }
+
+    if (taskNameInput) taskNameInput.value = state.lang === 'zh' ? state.overviewDraft.taskNameZh : state.overviewDraft.taskNameEn;
+    if (datasetCurrent) datasetCurrent.textContent = interpolate(t('editDatasetCurrentTpl'), {
+      name: state.lang === 'zh' ? state.overviewDraft.datasetSourceZh : state.overviewDraft.datasetSourceEn,
+    });
+    setOverviewEditError('');
+  }
+
+  function renderOverviewEditState() {
+    var editable = isOverviewEditable();
+    var editBtn = document.getElementById('overviewEditBtn');
+    var saveBtn = document.getElementById('overviewSaveBtn');
+    var cancelBtn = document.getElementById('overviewCancelBtn');
+    var form = document.getElementById('overviewEditForm');
+    var basicView = document.getElementById('basicInfoView');
+    var hint = document.getElementById('overviewReadonlyHint');
+
+    if (!editBtn || !saveBtn || !cancelBtn || !form || !hint || !basicView) return;
+
+    editBtn.disabled = !editable;
+    editBtn.classList.toggle('hidden', state.overviewEditMode);
+    saveBtn.classList.toggle('hidden', !state.overviewEditMode);
+    cancelBtn.classList.toggle('hidden', !state.overviewEditMode);
+    form.classList.toggle('hidden', !state.overviewEditMode);
+    basicView.classList.toggle('hidden', state.overviewEditMode);
+    hint.classList.toggle('hidden', state.overviewEditMode || editable);
+
+    if (!editable && state.taskRole !== 'project_leader') {
+      hint.textContent = t('overviewReadonlyRoleOnly');
+    } else {
+      hint.textContent = '';
+    }
+
+    if (state.overviewEditMode) fillOverviewEditForm();
+  }
+
+  function markOverviewDirty() {
+    if (!state.overviewEditMode) return;
+    state.overviewDirty = true;
+  }
+
+  function startOverviewEdit() {
+    if (!isOverviewEditable()) return;
+    state.overviewEditMode = true;
+    state.overviewDirty = false;
+    state.overviewDraft = createOverviewDraft();
+    renderOverviewEditState();
+    trackEvent('prototype_overview_edit_started');
+  }
+
+  function cancelOverviewEdit(force) {
+    if (!state.overviewEditMode) return true;
+    if (!force && state.overviewDirty && !window.confirm(t('overviewLeaveConfirm'))) return false;
+    state.overviewEditMode = false;
+    state.overviewDirty = false;
+    state.overviewDraft = null;
+    renderOverviewEditState();
+    return true;
+  }
+
+  function cancelOverviewInlineEdits(force) {
+    if (!cancelOverviewEdit(force)) return false;
+    if (!cancelSamplingEdit(force)) return false;
+    if (!cancelGuidelineEdit(force)) return false;
+    if (!cancelSettingsEdit(force)) return false;
+    return true;
+  }
+
+  function saveOverviewEdit() {
+    if (!isOverviewEditable() || !state.overviewDraft) return;
+
+    var taskNameInput = document.getElementById('editTaskNameInput');
+    var taskTypeSelect = document.getElementById('editTaskTypeSelect');
+
+    var taskName = (taskNameInput ? taskNameInput.value : '').trim();
+    if (!taskName) {
+      setOverviewEditError(t('overviewEditTaskNameRequired'));
+      return;
+    }
+
+    if (state.lang === 'zh') state.overviewDraft.taskNameZh = taskName;
+    else state.overviewDraft.taskNameEn = taskName;
+
+    TASK_DATA.taskNameZh = state.overviewDraft.taskNameZh;
+    TASK_DATA.taskNameEn = state.overviewDraft.taskNameEn;
+    TASK_DATA.taskTypeKey = taskTypeSelect ? taskTypeSelect.value : TASK_DATA.taskTypeKey;
+    TASK_DATA.datasetSourceZh = state.overviewDraft.datasetSourceZh;
+    TASK_DATA.datasetSourceEn = state.overviewDraft.datasetSourceEn;
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+    state.overviewEditMode = false;
+    state.overviewDirty = false;
+    state.overviewDraft = null;
+    showToast(t('overviewSaveSuccess'));
+    renderOverview();
+    trackEvent('prototype_overview_edit_saved');
+  }
+
+  function isSamplingEditable() {
+    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+  }
+
+  function createSamplingDraft() {
+    return {
+      samplingMode: TASK_DATA.samplingMode,
+      samplingValue: TASK_DATA.samplingValue,
+      samplingStrategy: TASK_DATA.samplingStrategy,
+      randomSeed: TASK_DATA.randomSeed,
+      isolationEnabled: TASK_DATA.isolationEnabled,
+      isolationLastActor: TASK_DATA.isolationLastActor,
+      isolationLastUpdated: TASK_DATA.isolationLastUpdated,
+    };
+  }
+
+  function renderSamplingEditState() {
+    var editable = isSamplingEditable();
+    var editBtn = document.getElementById('samplingEditBtn');
+    var saveBtn = document.getElementById('samplingSaveBtn');
+    var cancelBtn = document.getElementById('samplingCancelBtn');
+    var form = document.getElementById('samplingEditForm');
+    var view = document.getElementById('samplingSummaryView');
+    var hint = document.getElementById('samplingReadonlyHint');
+
+    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
+    editBtn.disabled = !editable;
+    editBtn.classList.toggle('hidden', state.samplingEditMode);
+    saveBtn.classList.toggle('hidden', !state.samplingEditMode);
+    cancelBtn.classList.toggle('hidden', !state.samplingEditMode);
+    form.classList.toggle('hidden', !state.samplingEditMode);
+    view.classList.toggle('hidden', state.samplingEditMode);
+
+    if (state.samplingEditMode) {
+      hint.classList.add('hidden');
+      hint.textContent = '';
+      renderSamplingState();
+      return;
+    }
+
+    renderSamplingSummaryState();
+    renderSamplingState();
+
+    if (!editable && state.taskRole !== 'project_leader') {
+      hint.classList.remove('hidden');
+      hint.textContent = t('samplingReadonlyRoleOnly');
+      return;
+    }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('samplingReadonlyDraftOnly');
+      return;
+    }
+    hint.classList.add('hidden');
+    hint.textContent = '';
+  }
+
+  function markSamplingDirty() {
+    if (!state.samplingEditMode) return;
+    state.samplingDirty = true;
+  }
+
+  function startSamplingEdit() {
+    if (!isSamplingEditable()) return;
+    state.samplingEditMode = true;
+    state.samplingDirty = false;
+    state.samplingDraft = createSamplingDraft();
+    renderSamplingEditState();
+    trackEvent('prototype_sampling_edit_started');
+  }
+
+  function cancelSamplingEdit(force) {
+    if (!state.samplingEditMode) return true;
+    if (!force && state.samplingDirty && !window.confirm(t('samplingLeaveConfirm'))) return false;
+    state.samplingEditMode = false;
+    state.samplingDirty = false;
+    state.samplingDraft = null;
+    renderSamplingEditState();
+    return true;
+  }
+
+  function saveSamplingEdit() {
+    if (!isSamplingEditable() || !state.samplingDraft) return;
+    var result = validateSamplingData(state.samplingDraft);
+    if (!result.valid) {
+      renderSamplingState();
+      return;
+    }
+
+    TASK_DATA.samplingMode = state.samplingDraft.samplingMode;
+    TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
+    TASK_DATA.randomSeed = state.samplingDraft.randomSeed;
+    TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
+    TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
+    TASK_DATA.isolationLastUpdated = state.samplingDraft.isolationLastUpdated;
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+    state.samplingEditMode = false;
+    state.samplingDirty = false;
+    state.samplingDraft = null;
+    state.isolationConfirmed = TASK_DATA.isolationEnabled;
+    showToast(t('samplingSaveSuccess'));
+    renderOverview();
+    trackEvent('prototype_sampling_edit_saved');
+  }
+
+  function isGuidelineEditable() {
+    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+  }
+
+  function createGuidelineDraft() {
+    return {
+      guidelineText: TASK_DATA.guidelineText || '',
+      guidelineFiles: (TASK_DATA.guidelineFiles || []).map(function(file) {
+        return { name: file.name, type: file.type };
+      }),
+      forceGuideline: Boolean(TASK_DATA.forceGuideline),
+    };
+  }
+
+  function setGuidelineEditError(message) {
+    var errorNode = document.getElementById('guidelineEditError');
+    if (!errorNode) return;
+    if (message) {
+      errorNode.textContent = message;
+      errorNode.classList.add('show');
+      return;
+    }
+    errorNode.textContent = '';
+    errorNode.classList.remove('show');
+  }
+
+  function getGuidelineFileType(fileName) {
+    var parts = (fileName || '').toLowerCase().split('.');
+    var ext = parts.length > 1 ? parts[parts.length - 1] : '';
+    if (!ext) return 'file';
+    if (ext === 'jpeg') return 'jpg';
+    return ext;
+  }
+
+  function renderGuidelineFileList() {
+    var list = document.getElementById('editGuidelineFileList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!state.guidelineDraft || !state.guidelineDraft.guidelineFiles.length) return;
+
+    state.guidelineDraft.guidelineFiles.forEach(function(file, index) {
+      var item = document.createElement('div');
+      item.className = 'guideline-item';
+
+      var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('class', 'guideline-item-icon');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      icon.setAttribute('stroke-linecap', 'round');
+      icon.setAttribute('stroke-linejoin', 'round');
+      icon.setAttribute('aria-hidden', 'true');
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', '14 2 14 8 20 8');
+      icon.appendChild(path);
+      icon.appendChild(polyline);
+      item.appendChild(icon);
+
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'guideline-item-name';
+      nameSpan.textContent = file.name;
+      item.appendChild(nameSpan);
+
+      var typeSpan = document.createElement('span');
+      typeSpan.className = 'guideline-item-type';
+      typeSpan.textContent = (file.type || getGuidelineFileType(file.name)).toUpperCase();
+      item.appendChild(typeSpan);
+
+      var removeBtn = document.createElement('button');
+      removeBtn.className = 'guideline-item-remove';
+      removeBtn.type = 'button';
+      removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除附件' : 'Remove file');
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', function() {
+        if (!state.guidelineDraft) return;
+        state.guidelineDraft.guidelineFiles.splice(index, 1);
+        renderGuidelineFileList();
+        markGuidelineDirty();
+      });
+      item.appendChild(removeBtn);
+
+      list.appendChild(item);
+    });
+  }
+
+  function fillGuidelineEditForm() {
+    if (!state.guidelineDraft) return;
+    var guidelineTextInput = document.getElementById('editGuidelineTextInput');
+    var forceToggle = document.getElementById('editForceGuidelineToggle');
+    if (guidelineTextInput) guidelineTextInput.value = state.guidelineDraft.guidelineText;
+    if (forceToggle) forceToggle.checked = state.guidelineDraft.forceGuideline;
+    setGuidelineEditError('');
+    renderGuidelineFileList();
+  }
+
+  function renderGuidelineEditState() {
+    var editable = isGuidelineEditable();
+    var editBtn = document.getElementById('guidelineEditBtn');
+    var saveBtn = document.getElementById('guidelineSaveBtn');
+    var cancelBtn = document.getElementById('guidelineCancelBtn');
+    var form = document.getElementById('guidelineEditForm');
+    var view = document.getElementById('guidelineSummaryView');
+    var hint = document.getElementById('guidelineReadonlyHint');
+    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
+
+    editBtn.disabled = !editable;
+    editBtn.classList.toggle('hidden', state.guidelineEditMode);
+    saveBtn.classList.toggle('hidden', !state.guidelineEditMode);
+    cancelBtn.classList.toggle('hidden', !state.guidelineEditMode);
+    form.classList.toggle('hidden', !state.guidelineEditMode);
+    view.classList.toggle('hidden', state.guidelineEditMode);
+
+    if (state.guidelineEditMode) {
+      hint.classList.add('hidden');
+      hint.textContent = '';
+      fillGuidelineEditForm();
+      return;
+    }
+
+    if (!editable && state.taskRole !== 'project_leader') {
+      hint.classList.remove('hidden');
+      hint.textContent = t('guidelineReadonlyRoleOnly');
+      return;
+    }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('guidelineReadonlyDraftOnly');
+      return;
+    }
+    hint.classList.add('hidden');
+    hint.textContent = '';
+  }
+
+  function markGuidelineDirty() {
+    if (!state.guidelineEditMode) return;
+    state.guidelineDirty = true;
+  }
+
+  function addGuidelineDraftFiles(fileList) {
+    if (!state.guidelineDraft || !fileList || !fileList.length) return;
+    setGuidelineEditError('');
+    var allow = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'md'];
+    Array.prototype.forEach.call(fileList, function(file) {
+      var type = getGuidelineFileType(file.name);
+      if (allow.indexOf(type) === -1) {
+        setGuidelineEditError(t('guidelineFileTypeInvalid'));
+        return;
+      }
+      state.guidelineDraft.guidelineFiles.push({ name: file.name, type: type });
+      markGuidelineDirty();
+    });
+    renderGuidelineFileList();
+  }
+
+  function startGuidelineEdit() {
+    if (!isGuidelineEditable()) return;
+    state.guidelineEditMode = true;
+    state.guidelineDirty = false;
+    state.guidelineDraft = createGuidelineDraft();
+    renderGuidelineEditState();
+    trackEvent('prototype_guideline_edit_started');
+  }
+
+  function cancelGuidelineEdit(force) {
+    if (!state.guidelineEditMode) return true;
+    if (!force && state.guidelineDirty && !window.confirm(t('guidelineLeaveConfirm'))) return false;
+    state.guidelineEditMode = false;
+    state.guidelineDirty = false;
+    state.guidelineDraft = null;
+    renderGuidelineEditState();
+    return true;
+  }
+
+  function saveGuidelineEdit() {
+    if (!isGuidelineEditable() || !state.guidelineDraft) return;
+    TASK_DATA.guidelineText = (state.guidelineDraft.guidelineText || '').trim();
+    TASK_DATA.guidelineFiles = state.guidelineDraft.guidelineFiles.map(function(file) {
+      return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
+    });
+    TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
+    TASK_DATA.guidelineUploaded = Boolean(TASK_DATA.guidelineText || TASK_DATA.guidelineFiles.length);
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    state.guidelineEditMode = false;
+    state.guidelineDirty = false;
+    state.guidelineDraft = null;
+    showToast(t('guidelineSaveSuccess'));
+    renderOverview();
+    trackEvent('prototype_guideline_edit_saved');
+  }
+
+  function isSettingsEditable() {
+    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+  }
+
+  function cloneObject(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function getSettingsSchema(taskTypeKey) {
+    return SETTINGS_REGISTRY[taskTypeKey] || null;
+  }
+
+  function getDefaultSettingsTemplateForLang(taskTypeKey, lang) {
+    var schema = getSettingsSchema(taskTypeKey);
+    if (!schema) return {};
+    if (schema.defaultTemplateI18n && schema.defaultTemplateI18n[lang]) return cloneObject(schema.defaultTemplateI18n[lang]);
+    return cloneObject(schema.defaultTemplate || {});
+  }
+
+  function settingsToYaml(obj, indent) {
+    var pad = Array((indent || 0) + 1).join(' ');
+    if (obj === null) return 'null';
+    if (typeof obj === 'boolean' || typeof obj === 'number') return String(obj);
+    if (typeof obj === 'string') return obj;
+    if (Array.isArray(obj)) {
+      return obj.map(function(item) {
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+          var lines = [];
+          Object.keys(item).forEach(function(k, idx) {
+            var v = item[k];
+            if (idx === 0) lines.push('- ' + k + ': ' + settingsToYaml(v, (indent || 0) + 2));
+            else lines.push('  ' + k + ': ' + settingsToYaml(v, (indent || 0) + 2));
+          });
+          return lines.map(function(line) { return pad + line; }).join('\n');
+        }
+        return pad + '- ' + settingsToYaml(item, (indent || 0) + 2);
+      }).join('\n');
+    }
+    var lines = [];
+    Object.keys(obj).forEach(function(key) {
+      var val = obj[key];
+      if (val && typeof val === 'object') {
+        if (Array.isArray(val) && val.length === 0) {
+          lines.push(pad + key + ': []');
+        } else {
+          lines.push(pad + key + ':');
+          lines.push(settingsToYaml(val, (indent || 0) + 2));
+        }
+      } else {
+        lines.push(pad + key + ': ' + settingsToYaml(val, (indent || 0) + 2));
+      }
+    });
+    return lines.join('\n');
+  }
+
+  function settingsConfigToCode() {
+    if (!state.settingsDraft) return '';
+    if (state.settingsDraft.codeFormat === 'json') return JSON.stringify(state.settingsDraft.configData, null, 2);
+    return settingsToYaml(state.settingsDraft.configData);
+  }
+
+  function settingsYamlParseScalar(raw) {
+    var val = String(raw || '').trim();
+    if (val === '') return '';
+    if (val === '[]') return [];
+    if (val === '{}') return {};
+    if (val[0] === '[' && val[val.length - 1] === ']') {
+      var inner = val.slice(1, -1).trim();
+      if (!inner) return [];
+      return inner.split(',').map(function(part) {
+        return settingsYamlParseScalar(part.trim());
+      });
+    }
+    if (val === 'true') return true;
+    if (val === 'false') return false;
+    if (/^-?\d+(\.\d+)?$/.test(val)) return Number(val);
+    if ((val[0] === '"' && val[val.length - 1] === '"') || (val[0] === "'" && val[val.length - 1] === "'")) {
+      if (val[0] === "'") return val.slice(1, -1);
+      return JSON.parse(val);
+    }
+    return val;
+  }
+
+  function settingsYamlIndentOf(line) {
+    return line.length - line.replace(/^\s+/, '').length;
+  }
+
+  function settingsYamlSplitKeyVal(text) {
+    var idx = text.indexOf(':');
+    if (idx < 0) return null;
+    return { key: text.slice(0, idx).trim(), value: text.slice(idx + 1).trim() };
+  }
+
+  function parseSettingsYamlSubset(text) {
+    var lines = String(text || '').replace(/\r/g, '').split('\n');
+    var i = 0;
+
+    function skipEmpty() {
+      while (i < lines.length && !lines[i].trim()) i += 1;
+    }
+
+    function parseBlock(expectedIndent) {
+      var map = {};
+      while (i < lines.length) {
+        var line = lines[i];
+        if (!line.trim()) { i += 1; continue; }
+        var indent = settingsYamlIndentOf(line);
+        if (indent < expectedIndent) break;
+        if (indent > expectedIndent) throw new Error('Invalid YAML indentation');
+        var kv = settingsYamlSplitKeyVal(line.trim());
+        if (!kv || !kv.key) throw new Error('Invalid YAML line');
+        i += 1;
+        if (kv.value) {
+          map[kv.key] = settingsYamlParseScalar(kv.value);
+          continue;
+        }
+        skipEmpty();
+        if (i >= lines.length) { map[kv.key] = ''; continue; }
+        var next = lines[i];
+        var nextIndent = settingsYamlIndentOf(next);
+        if (nextIndent <= indent) { map[kv.key] = ''; continue; }
+        map[kv.key] = parseNested(nextIndent);
+      }
+      return map;
+    }
+
+    function parseNested(expectedIndent) {
+      var start = i;
+      while (start < lines.length && !lines[start].trim()) start += 1;
+      if (start >= lines.length) return '';
+      var first = lines[start];
+      if (settingsYamlIndentOf(first) !== expectedIndent) throw new Error('Invalid YAML nesting');
+      if (first.trim().indexOf('- ') === 0) {
+        var outArr = [];
+        i = start;
+        while (i < lines.length) {
+          var line = lines[i];
+          if (!line.trim()) { i += 1; continue; }
+          var indent = settingsYamlIndentOf(line);
+          if (indent < expectedIndent) break;
+          if (indent > expectedIndent) throw new Error('Invalid array indentation');
+          var itemText = line.trim().slice(2).trim();
+          i += 1;
+          if (!itemText) { outArr.push(''); continue; }
+          var itemKv = settingsYamlSplitKeyVal(itemText);
+          if (!itemKv) {
+            outArr.push(settingsYamlParseScalar(itemText));
+            continue;
+          }
+          var obj = {};
+          obj[itemKv.key] = settingsYamlParseScalar(itemKv.value);
+          while (i < lines.length) {
+            var sub = lines[i];
+            if (!sub.trim()) { i += 1; continue; }
+            var subIndent = settingsYamlIndentOf(sub);
+            if (subIndent <= expectedIndent) break;
+            if (subIndent !== expectedIndent + 2) throw new Error('Invalid object indentation');
+            var subKv = settingsYamlSplitKeyVal(sub.trim());
+            if (!subKv) throw new Error('Invalid object line');
+            obj[subKv.key] = settingsYamlParseScalar(subKv.value);
+            i += 1;
+          }
+          outArr.push(obj);
+        }
+        return outArr;
+      }
+      return parseBlock(expectedIndent);
+    }
+
+    skipEmpty();
+    return parseBlock(0);
+  }
+
+  function settingsParseCode(raw, codeFormat) {
+    var content = String(raw || '').trim();
+    if (!content) return {};
+    if (codeFormat === 'json' || content.startsWith('{') || content.startsWith('[')) return JSON.parse(content);
+    return parseSettingsYamlSubset(content);
+  }
+
+  function createSettingsDraft() {
+    var code = (TASK_DATA.configContent || '').trim();
+    var codeFormat = code.startsWith('{') ? 'json' : 'yaml';
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    var parsed = {};
+    try {
+      parsed = settingsParseCode(code, codeFormat);
+    } catch (error) {
+      parsed = {};
+    }
+    var defaults = getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang);
+    var merged = cloneObject(defaults);
+    Object.keys(parsed || {}).forEach(function(key) { merged[key] = parsed[key]; });
+    if (schema) {
+      schema.fields.forEach(function(field) {
+        if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
+        if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+        if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+        if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+      });
+    }
+    return {
+      taskTypeKey: TASK_DATA.taskTypeKey,
+      configData: merged,
+      codeFormat: codeFormat,
+      uploadedConfigName: TASK_DATA.configFileName || '',
+    };
+  }
+
+  function setSettingsEditError(message) {
+    var errorNode = document.getElementById('settingsEditError');
+    if (!errorNode) return;
+    if (message) {
+      errorNode.textContent = message;
+      errorNode.classList.add('show');
+      return;
+    }
+    errorNode.textContent = '';
+    errorNode.classList.remove('show');
+  }
+
+  function setSettingsCodeError(message) {
+    var bar = document.getElementById('settingsCodeErrorBar');
+    var msg = document.getElementById('settingsCodeErrorMsg');
+    if (!bar || !msg) return;
+    if (message) {
+      msg.textContent = message;
+      bar.classList.remove('hidden');
+      return;
+    }
+    msg.textContent = '';
+    bar.classList.add('hidden');
+  }
+
+  function updateSettingsTemplateButtonLabel() {
+    var btn = document.getElementById('settingsApplyTemplateBtn');
+    if (!btn) return;
+    btn.textContent = interpolate(t('settingsApplyTemplateBtnTpl'), {
+      template: getTaskTypeLabel(TASK_DATA.taskTypeKey),
+    });
+  }
+
+  function updateSettingsCodeFormatButtons() {
+    var yamlBtn = document.getElementById('settingsFormatYamlBtn');
+    var jsonBtn = document.getElementById('settingsFormatJsonBtn');
+    if (!state.settingsDraft || !yamlBtn || !jsonBtn) return;
+    yamlBtn.classList.toggle('active', state.settingsDraft.codeFormat === 'yaml');
+    jsonBtn.classList.toggle('active', state.settingsDraft.codeFormat === 'json');
+  }
+
+  function updateSettingsMainSaveState() {
+    var saveBtn = document.getElementById('settingsSaveBtn');
+    if (!saveBtn) return;
+    saveBtn.disabled = state.settingsCodeDraftDirty;
+  }
+
+  function markSettingsDirty() {
+    if (!state.settingsEditMode) return;
+    state.settingsDirty = true;
+  }
+
+  function markSettingsCodeDirty() {
+    state.settingsCodeDraftDirty = true;
+    var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
+    if (saveCodeBtn) saveCodeBtn.disabled = false;
+    updateSettingsMainSaveState();
+  }
+
+  function renderSettingsCodeFromConfig() {
+    var editor = document.getElementById('settingsCodeEditor');
+    if (!editor || !state.settingsDraft) return;
+    editor.value = settingsConfigToCode();
+    state.settingsCodeDraftDirty = false;
+    var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
+    if (saveCodeBtn) saveCodeBtn.disabled = true;
+    setSettingsCodeError('');
+    updateSettingsCodeFormatButtons();
+    updateSettingsMainSaveState();
+  }
+
+  function buildSettingsTagInput(field) {
+    var tags = Array.isArray(state.settingsDraft.configData[field.key]) ? state.settingsDraft.configData[field.key].slice() : [];
+    state.settingsDraft.configData[field.key] = tags;
+    var isComposing = false;
+    var wrap = document.createElement('div');
+    wrap.className = 'tag-input-wrap';
+
+    function render() {
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      tags.forEach(function(tag, idx) {
+        var pill = document.createElement('span');
+        pill.className = 'tag-pill';
+        pill.appendChild(document.createTextNode(tag));
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'tag-pill-remove';
+        removeBtn.textContent = '×';
+        removeBtn.setAttribute('aria-label', 'Remove');
+        removeBtn.addEventListener('click', function() {
+          tags.splice(idx, 1);
+          render();
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        pill.appendChild(removeBtn);
+        wrap.appendChild(pill);
+      });
+
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'tag-new-input';
+      input.placeholder = field['hint_' + state.lang] || '';
+      input.addEventListener('compositionstart', function() { isComposing = true; });
+      input.addEventListener('compositionend', function() { isComposing = false; });
+      input.addEventListener('keydown', function(event) {
+        if (event.key !== 'Enter' && event.key !== ',') return;
+        if (event.isComposing || isComposing || event.keyCode === 229) return;
+        event.preventDefault();
+        var value = input.value.trim();
+        if (!value) return;
+        input.value = '';
+        if (tags.indexOf(value) !== -1) return;
+        tags.push(value);
+        render();
+        setTimeout(function() {
+          var nextInput = wrap.querySelector('.tag-new-input');
+          if (nextInput) nextInput.focus();
+        }, 0);
+        markSettingsDirty();
+        renderSettingsAnnotationPreview();
+        if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+      });
+      wrap.appendChild(input);
+    }
+
+    render();
+    return wrap;
+  }
+
+  function buildSettingsEntityList(field) {
+    var entities = Array.isArray(state.settingsDraft.configData[field.key]) ? state.settingsDraft.configData[field.key] : [];
+    state.settingsDraft.configData[field.key] = entities;
+    var wrap = document.createElement('div');
+
+    function render() {
+      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+      entities.forEach(function(ent, idx) {
+        var row = document.createElement('div');
+        row.className = 'entity-row';
+        var dot = document.createElement('div');
+        dot.className = 'entity-color-dot';
+        dot.style.background = ent.color || SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length];
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'entity-name-input';
+        input.value = ent.name || '';
+        input.placeholder = state.lang === 'zh' ? '實體名稱，如 PER' : 'Entity name, e.g. PER';
+        input.addEventListener('input', function() {
+          entities[idx].name = input.value;
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+
+        var removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'entity-remove-btn';
+        removeBtn.textContent = '×';
+        removeBtn.setAttribute('aria-label', 'Remove');
+        removeBtn.addEventListener('click', function() {
+          entities.splice(idx, 1);
+          render();
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+
+        row.appendChild(dot);
+        row.appendChild(input);
+        row.appendChild(removeBtn);
+        wrap.appendChild(row);
+      });
+
+      var addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'add-row-btn';
+      addBtn.textContent = t('settingsAddEntity');
+      addBtn.addEventListener('click', function() {
+        entities.push({ name: '', color: SETTINGS_ENTITY_COLORS[entities.length % SETTINGS_ENTITY_COLORS.length] });
+        render();
+        markSettingsDirty();
+        renderSettingsAnnotationPreview();
+        if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+      });
+      wrap.appendChild(addBtn);
+    }
+
+    render();
+    return wrap;
+  }
+
+  function renderSettingsSchemaFields() {
+    var container = document.getElementById('settingsSchemaFields');
+    if (!container || !state.settingsDraft) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    if (!schema) return;
+
+    schema.fields.forEach(function(field) {
+      var wrap = document.createElement('div');
+      wrap.className = 'field-group';
+      wrap.style.marginBottom = '10px';
+
+      var label = document.createElement('label');
+      label.className = 'field-label';
+      label.textContent = field[state.lang] || field.zh;
+      if (field.required) {
+        var req = document.createElement('span');
+        req.className = 'required';
+        req.textContent = '*';
+        label.appendChild(req);
+      }
+      wrap.appendChild(label);
+
+      if (field.type === 'tag-list') {
+        wrap.appendChild(buildSettingsTagInput(field));
+        if (field['hint_' + state.lang]) {
+          var hint = document.createElement('div');
+          hint.className = 'field-hint';
+          hint.textContent = field['hint_' + state.lang];
+          wrap.appendChild(hint);
+        }
+      } else if (field.type === 'entity-list') {
+        wrap.appendChild(buildSettingsEntityList(field));
+      } else if (field.type === 'boolean') {
+        var chkLabel = document.createElement('label');
+        chkLabel.className = 'settings-checkbox-row';
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !!(state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue);
+        var textNode = document.createTextNode(checkbox.checked ? t('settingsEnabled') : t('settingsDisabled'));
+        checkbox.addEventListener('change', function() {
+          state.settingsDraft.configData[field.key] = checkbox.checked;
+          textNode.nodeValue = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        chkLabel.appendChild(checkbox);
+        chkLabel.appendChild(textNode);
+        wrap.appendChild(chkLabel);
+      } else if (field.type === 'select') {
+        var select = document.createElement('select');
+        select.className = 'input-select';
+        var currentValue = state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue;
+        field.options.forEach(function(optionValue) {
+          var option = document.createElement('option');
+          option.value = optionValue;
+          option.textContent = optionValue;
+          if (optionValue === currentValue) option.selected = true;
+          select.appendChild(option);
+        });
+        select.addEventListener('change', function() {
+          state.settingsDraft.configData[field.key] = select.value;
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        wrap.appendChild(select);
+      } else if (field.type === 'textarea') {
+        var textarea = document.createElement('textarea');
+        textarea.className = 'input-textarea';
+        textarea.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
+        textarea.value = state.settingsDraft.configData[field.key] || '';
+        textarea.addEventListener('input', function() {
+          state.settingsDraft.configData[field.key] = textarea.value;
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        wrap.appendChild(textarea);
+      } else {
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'input-number';
+        input.value = state.settingsDraft.configData[field.key] || '';
+        input.addEventListener('input', function() {
+          state.settingsDraft.configData[field.key] = input.value;
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        wrap.appendChild(input);
+      }
+
+      container.appendChild(wrap);
+    });
+  }
+
+  function renderSettingsAnnotationPreview() {
+    var preview = document.getElementById('settingsAnnotationPreview');
+    if (!preview || !state.settingsDraft) return;
+    while (preview.firstChild) preview.removeChild(preview.firstChild);
+    var taskType = TASK_DATA.taskTypeKey;
+    var config = state.settingsDraft.configData || {};
+    var titleText = t('settingsPreviewTaskChooseLabel');
+    var options = [];
+
+    if (taskType === 'sequence_labeling') {
+      titleText = t('settingsPreviewTaskEntity');
+      options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
+        return { text: ent.name.trim(), color: ent.color || null };
+      }) : [];
+    } else if (taskType === 'relation_extraction') {
+      titleText = t('settingsPreviewTaskRelation');
+      options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+        return { text: tag.trim(), color: null };
+      }) : [];
+    } else if (taskType === 'single_sentence_scoring_regression') {
+      titleText = t('settingsPreviewTaskScore');
+      var range = String(config.scoring_range || '1-5');
+      var parts = range.split('-');
+      var start = parseInt(parts[0], 10);
+      var end = parseInt(parts[1], 10);
+      if (!isNaN(start) && !isNaN(end) && end >= start) {
+        for (var score = start; score <= end; score += 1) options.push({ text: String(score), color: null });
+      }
+    } else {
+      options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+        return { text: tag.trim(), color: null };
+      }) : [];
+    }
+
+    if (taskType === 'sentence_pairs') {
+      var pairWrap = document.createElement('div');
+      pairWrap.className = 'annotation-preview-pair';
+      var labelA = document.createElement('div');
+      labelA.className = 'annotation-preview-pair-label';
+      labelA.textContent = t('settingsPreviewSentenceALabel');
+      var sampleA = document.createElement('div');
+      sampleA.className = 'annotation-preview-sample';
+      sampleA.textContent = t('settingsPreviewSampleSentenceA');
+      var labelB = document.createElement('div');
+      labelB.className = 'annotation-preview-pair-label';
+      labelB.textContent = t('settingsPreviewSentenceBLabel');
+      var sampleB = document.createElement('div');
+      sampleB.className = 'annotation-preview-sample';
+      sampleB.textContent = t('settingsPreviewSampleSentenceB');
+      pairWrap.appendChild(labelA);
+      pairWrap.appendChild(sampleA);
+      pairWrap.appendChild(labelB);
+      pairWrap.appendChild(sampleB);
+      preview.appendChild(pairWrap);
+    } else {
+      var sampleKey = 'settingsPreviewSampleSentence';
+      if (taskType === 'single_sentence_scoring_regression') sampleKey = 'settingsPreviewSampleSentenceScoring';
+      else if (taskType === 'sequence_labeling') sampleKey = 'settingsPreviewSampleSentenceSequence';
+      else if (taskType === 'relation_extraction') sampleKey = 'settingsPreviewSampleSentenceRelation';
+      var sample = document.createElement('div');
+      sample.className = 'annotation-preview-sample';
+      sample.textContent = t(sampleKey);
+      preview.appendChild(sample);
+    }
+
+    var divider = document.createElement('div');
+    divider.className = 'annotation-preview-divider';
+    preview.appendChild(divider);
+
+    var title = document.createElement('div');
+    title.className = 'annotation-preview-task-title';
+    title.textContent = titleText;
+    preview.appendChild(title);
+
+    var optionsWrap = document.createElement('div');
+    optionsWrap.className = 'annotation-preview-options';
+    preview.appendChild(optionsWrap);
+
+    if (!options.length) {
+      var empty = document.createElement('div');
+      empty.className = 'annotation-preview-empty';
+      empty.textContent = t('settingsPreviewEmpty');
+      optionsWrap.appendChild(empty);
+      return;
+    }
+
+    var singleSelect = taskType === 'single_sentence_scoring_regression' || taskType === 'sentence_pairs' || (taskType === 'single_sentence_classification' && !config.allow_multiple);
+    options.forEach(function(option) {
+      var row = document.createElement('label');
+      row.className = 'annotation-preview-option';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      if (singleSelect) {
+        checkbox.addEventListener('change', function() {
+          if (!checkbox.checked) return;
+          optionsWrap.querySelectorAll('input[type=\"checkbox\"]').forEach(function(cb) {
+            if (cb !== checkbox) cb.checked = false;
+          });
+        });
+      }
+      row.appendChild(checkbox);
+      if (option.color) {
+        var color = document.createElement('span');
+        color.className = 'annotation-preview-color';
+        color.style.background = option.color;
+        row.appendChild(color);
+      }
+      var text = document.createElement('span');
+      text.textContent = option.text;
+      row.appendChild(text);
+      optionsWrap.appendChild(row);
+    });
+  }
+
+  function applySettingsTemplate() {
+    if (!state.settingsDraft) return;
+    state.settingsDraft.configData = getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang);
+    state.settingsDraft.uploadedConfigName = '';
+    renderSettingsSchemaFields();
+    state.settingsCodeDraftDirty = false;
+    renderSettingsCodeFromConfig();
+    setSettingsEditError('');
+    setSettingsCodeError('');
+    renderSettingsAnnotationPreview();
+    markSettingsDirty();
+  }
+
+  function setSettingsCodeFormat(fmt) {
+    if (!state.settingsDraft || state.settingsCodeDraftDirty) return;
+    state.settingsDraft.codeFormat = fmt === 'json' ? 'json' : 'yaml';
+    renderSettingsCodeFromConfig();
+  }
+
+  function loadSettingsConfigFile(file) {
+    var fileName = file.name || '';
+    var name = fileName.toLowerCase();
+    var ext = name.slice(name.lastIndexOf('.'));
+    if (['.yaml', '.yml', '.json'].indexOf(ext) === -1) {
+      setSettingsEditError(t('settingsConfigFormatError'));
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function() {
+      if (!state.settingsDraft) return;
+      state.settingsDraft.codeFormat = ext === '.json' ? 'json' : 'yaml';
+      state.settingsDraft.uploadedConfigName = fileName;
+      var editor = document.getElementById('settingsCodeEditor');
+      if (editor) editor.value = String(reader.result || '');
+      markSettingsCodeDirty();
+      setSettingsCodeError('');
+      setSettingsEditError('');
+      showToast(t('settingsConfigLoaded'));
+      markSettingsDirty();
+    };
+    reader.onerror = function() {
+      setSettingsEditError(t('settingsConfigReadError'));
+    };
+    reader.readAsText(file);
+  }
+
+  function saveSettingsCodeToVisual(showSuccessToast) {
+    if (!state.settingsDraft) return false;
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    if (!schema) return false;
+    var editor = document.getElementById('settingsCodeEditor');
+    var parsed;
+    try {
+      parsed = settingsParseCode(editor ? editor.value : '', state.settingsDraft.codeFormat);
+    } catch (error) {
+      setSettingsCodeError(error.message || t('settingsCodeInvalid'));
+      return false;
+    }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      setSettingsCodeError(t('settingsCodeInvalid'));
+      return false;
+    }
+    var merged = {};
+    Object.keys(parsed).forEach(function(key) { merged[key] = parsed[key]; });
+    schema.fields.forEach(function(field) {
+      if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
+      if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+      if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
+      if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+    });
+    state.settingsDraft.configData = merged;
+    state.settingsCodeDraftDirty = false;
+    var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
+    if (saveCodeBtn) saveCodeBtn.disabled = true;
+    setSettingsCodeError('');
+    renderSettingsSchemaFields();
+    renderSettingsAnnotationPreview();
+    markSettingsDirty();
+    updateSettingsMainSaveState();
+    if (showSuccessToast) showToast(t('settingsCodeSaved'));
+    return true;
+  }
+
+  function validateSettingsRequiredFields() {
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    if (!schema || !state.settingsDraft) return false;
+    var config = state.settingsDraft.configData || {};
+    var ok = true;
+    schema.fields.forEach(function(field) {
+      if (!field.required) return;
+      var val = config[field.key];
+      if (field.type === 'tag-list') {
+        if (!val || !Array.isArray(val) || !val.length) ok = false;
+      } else if (field.type === 'entity-list') {
+        if (!val || !Array.isArray(val) || !val.length || val.some(function(ent) { return !ent.name || !ent.name.trim(); })) ok = false;
+      } else if (field.type === 'textarea' || field.type === 'text' || field.type === 'select') {
+        if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
+      } else if (field.type === 'boolean') {
+        if (val === undefined || val === null) ok = false;
+      }
+    });
+    return ok;
+  }
+
+  function fillSettingsEditForm() {
+    if (!state.settingsDraft) return;
+    updateSettingsTemplateButtonLabel();
+    renderSettingsSchemaFields();
+    renderSettingsAnnotationPreview();
+    renderSettingsCodeFromConfig();
+    setSettingsEditError('');
+  }
+
+  function renderSettingsEditState() {
+    var editable = isSettingsEditable();
+    var editBtn = document.getElementById('settingsEditBtn');
+    var saveBtn = document.getElementById('settingsSaveBtn');
+    var cancelBtn = document.getElementById('settingsCancelBtn');
+    var form = document.getElementById('settingsEditForm');
+    var view = document.getElementById('settingsConfigView');
+    var hint = document.getElementById('settingsReadonlyHint');
+
+    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
+    editBtn.disabled = !editable;
+    editBtn.classList.toggle('hidden', state.settingsEditMode);
+    saveBtn.classList.toggle('hidden', !state.settingsEditMode);
+    cancelBtn.classList.toggle('hidden', !state.settingsEditMode);
+    form.classList.toggle('hidden', !state.settingsEditMode);
+    view.classList.toggle('hidden', state.settingsEditMode);
+
+    if (state.settingsEditMode) {
+      hint.classList.add('hidden');
+      hint.textContent = '';
+      fillSettingsEditForm();
+      return;
+    }
+
+    if (!editable && state.taskRole !== 'project_leader') {
+      hint.classList.remove('hidden');
+      hint.textContent = t('settingsReadonlyRoleOnly');
+      return;
+    }
+    if (!editable) {
+      hint.classList.remove('hidden');
+      hint.textContent = t('settingsReadonlyDraftOnly');
+      return;
+    }
+    hint.classList.add('hidden');
+    hint.textContent = '';
+  }
+
+  function startSettingsEdit() {
+    if (!isSettingsEditable()) return;
+    state.settingsEditMode = true;
+    state.settingsDirty = false;
+    state.settingsCodeDraftDirty = false;
+    state.settingsDraft = createSettingsDraft();
+    renderSettingsEditState();
+    trackEvent('prototype_settings_edit_started');
+  }
+
+  function cancelSettingsEdit(force) {
+    if (!state.settingsEditMode) return true;
+    if (!force && state.settingsDirty && !window.confirm(t('settingsLeaveConfirm'))) return false;
+    state.settingsEditMode = false;
+    state.settingsDirty = false;
+    state.settingsCodeDraftDirty = false;
+    state.settingsDraft = null;
+    renderSettingsEditState();
+    return true;
+  }
+
+  function saveSettingsEdit() {
+    if (!isSettingsEditable() || !state.settingsDraft) return;
+    if (state.settingsCodeDraftDirty) {
+      setSettingsCodeError(t('settingsCodeUnsaved'));
+      setSettingsEditError(t('settingsCodeUnsaved'));
+      return;
+    }
+    if (!validateSettingsRequiredFields()) {
+      setSettingsEditError(t('settingsSchemaRequired'));
+      return;
+    }
+    TASK_DATA.configContent = settingsConfigToCode();
+    TASK_DATA.configFileName = state.settingsDraft.uploadedConfigName || '';
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    state.settingsEditMode = false;
+    state.settingsDirty = false;
+    state.settingsCodeDraftDirty = false;
+    state.settingsDraft = null;
+    showToast(t('settingsSaveSuccess'));
+    renderOverview();
+    trackEvent('prototype_settings_edit_saved');
+  }
+
+  function getSettingsSummary() {
+    var code = (TASK_DATA.configContent || '').trim();
+    var codeFormat = code.startsWith('{') ? 'json' : 'yaml';
+    var parsed = {};
+    try {
+      parsed = settingsParseCode(code, codeFormat) || {};
+    } catch (error) {
+      parsed = {};
+    }
+    var labels = [];
+    if (Array.isArray(parsed.labels)) labels = parsed.labels;
+    else if (Array.isArray(parsed.relation_types)) labels = parsed.relation_types;
+    var labelsText = labels.filter(function(item) { return String(item || '').trim(); }).join(', ');
+
+    return {
+      configFileName: TASK_DATA.configFileName || '',
+      taskTypeLabel: getTaskTypeLabel(TASK_DATA.taskTypeKey),
+      labelsText: labelsText,
+      allowMultipleText: parsed.allow_multiple ? t('yes') : t('no'),
+    };
+  }
+
   function renderOverview() {
     var taskName = state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
     var datasetSummary = TASK_DATA.datasetTotal + ' · ' + (state.lang === 'zh' ? TASK_DATA.datasetSourceZh : TASK_DATA.datasetSourceEn);
+    var settingsSummary = getSettingsSummary();
+    var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
+    var guidelineFilesText = guidelineFiles.length ? guidelineFiles.join(', ') : t('guidelineFilesNone');
+    var guidelineContent = (TASK_DATA.guidelineText || '').trim();
+    var guidelineContentText = guidelineContent || t('guidelineContentEmpty');
 
     setText('valueTaskName', taskName);
-    setText('valueTaskType', TASK_DATA.taskType);
-    setText('valueCreatedBy', TASK_DATA.createdBy);
-    setText('valueCreatedAt', TASK_DATA.createdAt);
-    setText('valueUpdatedAt', TASK_DATA.updatedAt);
+    setText('valueTaskType', getTaskTypeLabel(TASK_DATA.taskTypeKey));
     setText('valueDatasetSummary', datasetSummary);
-    setText('valueConfigVersion', TASK_DATA.configVersion);
-    setText('valueGuidelineStatus', TASK_DATA.guidelineUploaded ? t('guidelineUploaded') : '-');
+    setText('valueConfigVersion', settingsSummary.configFileName);
+    setText('valueConfigTaskType', settingsSummary.taskTypeLabel);
+    setText('valueConfigLabels', settingsSummary.labelsText);
+    setText('valueConfigAllowMultiple', settingsSummary.allowMultipleText);
+    setText('valueGuidelineStatus', TASK_DATA.guidelineUploaded ? t('guidelineUploaded') : t('guidelineEmpty'));
+    setText('valueGuidelineFilesSummary', guidelineFilesText);
     setText('valueForceGuideline', TASK_DATA.forceGuideline ? t('yes') : t('no'));
+    setText('valueGuidelineContentSummary', guidelineContentText);
 
     renderStatus();
     renderPublishActions();
-    renderSamplingState();
+    renderSamplingSummaryState();
+    renderSamplingEditState();
     renderIsolationState();
     renderExport();
+    renderOverviewEditState();
+    renderGuidelineEditState();
+    renderSettingsEditState();
   }
 
   function getTaskRoleLabel(role) {
@@ -2249,6 +4452,9 @@
     if (tabName === 'member-management') nextTab = 'member-management';
     if (tabName === 'annotation-progress') nextTab = 'annotation-progress';
     if (tabName === 'work-log') nextTab = 'work-log';
+    if (!silent && state.activeTab === 'overview' && nextTab !== 'overview') {
+      if (!cancelOverviewInlineEdits(false)) return false;
+    }
     if (state.taskRole === 'reviewer' && nextTab === 'member-management') {
       state.activeTab = 'overview';
       if (!silent) showToast(t('reviewerTabBlocked'), true);
@@ -2880,6 +5086,33 @@
     var modeSelect = document.getElementById('samplingMode');
     var valueInput = document.getElementById('samplingValue');
     var isolationToggle = document.getElementById('isolationToggle');
+    var samplingEditBtn = document.getElementById('samplingEditBtn');
+    var samplingSaveBtn = document.getElementById('samplingSaveBtn');
+    var samplingCancelBtn = document.getElementById('samplingCancelBtn');
+    var resampleBtn = document.getElementById('resampleBtn');
+    var overviewEditBtn = document.getElementById('overviewEditBtn');
+    var overviewSaveBtn = document.getElementById('overviewSaveBtn');
+    var overviewCancelBtn = document.getElementById('overviewCancelBtn');
+    var guidelineEditBtn = document.getElementById('guidelineEditBtn');
+    var guidelineSaveBtn = document.getElementById('guidelineSaveBtn');
+    var guidelineCancelBtn = document.getElementById('guidelineCancelBtn');
+    var guidelineUploadZone = document.getElementById('guidelineUploadZone');
+    var editGuidelineFileInput = document.getElementById('editGuidelineFileInput');
+    var editGuidelineTextInput = document.getElementById('editGuidelineTextInput');
+    var editForceGuidelineToggle = document.getElementById('editForceGuidelineToggle');
+    var settingsEditBtn = document.getElementById('settingsEditBtn');
+    var settingsSaveBtn = document.getElementById('settingsSaveBtn');
+    var settingsCancelBtn = document.getElementById('settingsCancelBtn');
+    var settingsApplyTemplateBtn = document.getElementById('settingsApplyTemplateBtn');
+    var settingsUploadConfigBtn = document.getElementById('settingsUploadConfigBtn');
+    var settingsConfigFileInput = document.getElementById('settingsConfigFileInput');
+    var settingsCodeEditor = document.getElementById('settingsCodeEditor');
+    var settingsSaveCodeBtn = document.getElementById('settingsSaveCodeBtn');
+    var settingsFormatYamlBtn = document.getElementById('settingsFormatYamlBtn');
+    var settingsFormatJsonBtn = document.getElementById('settingsFormatJsonBtn');
+    var editTaskNameInput = document.getElementById('editTaskNameInput');
+    var editTaskTypeSelect = document.getElementById('editTaskTypeSelect');
+    var editDatasetFileInput = document.getElementById('editDatasetFileInput');
     var tabOverview = document.getElementById('tabOverview');
     var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
     var tabWorkLog = document.getElementById('tabWorkLog');
@@ -2892,14 +5125,16 @@
     });
 
     tabAnnotationProgress.addEventListener('click', function() {
-      setTabByRole('annotation-progress');
+      var allowed = setTabByRole('annotation-progress');
+      if (!allowed) return;
       renderTabs();
       renderAnnotationProgress();
       trackEvent('prototype_tab_switched', { tab: 'annotation-progress' });
     });
 
     tabWorkLog.addEventListener('click', function() {
-      setTabByRole('work-log');
+      var allowed = setTabByRole('work-log');
+      if (!allowed) return;
       renderTabs();
       renderWorkLog();
       trackEvent('prototype_tab_switched', { tab: 'work-log' });
@@ -2913,39 +5148,235 @@
       trackEvent('prototype_tab_switched', { tab: 'member-management' });
     });
 
-    modeSelect.addEventListener('change', function(e) {
-      TASK_DATA.samplingMode = e.target.value;
-      if (TASK_DATA.samplingMode === 'by_percentage') {
-        TASK_DATA.samplingValue = Math.max(1, Math.min(99, TASK_DATA.samplingValue));
-        valueInput.max = '99';
-      } else {
-        TASK_DATA.samplingValue = Math.max(1, Math.min(TASK_DATA.datasetTotal - 1, TASK_DATA.samplingValue));
-        valueInput.removeAttribute('max');
-      }
-      valueInput.value = TASK_DATA.samplingValue;
-      renderSamplingState();
-    });
+    if (overviewEditBtn) {
+      overviewEditBtn.addEventListener('click', function() {
+        startOverviewEdit();
+      });
+    }
 
-    valueInput.addEventListener('input', function(e) {
-      TASK_DATA.samplingValue = Number(e.target.value || 0);
-      renderSamplingState();
-    });
+    if (overviewSaveBtn) {
+      overviewSaveBtn.addEventListener('click', function() {
+        saveOverviewEdit();
+      });
+    }
 
-    document.getElementById('resampleBtn').addEventListener('click', function() {
-      if (!(TASK_DATA.status === 'draft' && state.taskRole === 'project_leader')) return;
-      TASK_DATA.randomSeed = Math.floor(Math.random() * 900000 + 100000);
-      showToast(t('toastResampled'));
-      trackEvent('prototype_resample_clicked');
-      renderSamplingState();
-    });
+    if (overviewCancelBtn) {
+      overviewCancelBtn.addEventListener('click', function() {
+        cancelOverviewEdit(false);
+      });
+    }
 
-    isolationToggle.addEventListener('change', function(e) {
-      TASK_DATA.isolationEnabled = Boolean(e.target.checked);
-      TASK_DATA.isolationLastActor = (I18N[state.lang].userName || I18N.zh.userName)[state.taskRole] || 'User';
-      TASK_DATA.isolationLastUpdated = '2026-04-21 10:03';
-      state.isolationConfirmed = TASK_DATA.isolationEnabled;
-      renderIsolationState();
-    });
+    if (samplingEditBtn) {
+      samplingEditBtn.addEventListener('click', function() {
+        startSamplingEdit();
+      });
+    }
+
+    if (samplingSaveBtn) {
+      samplingSaveBtn.addEventListener('click', function() {
+        saveSamplingEdit();
+      });
+    }
+
+    if (samplingCancelBtn) {
+      samplingCancelBtn.addEventListener('click', function() {
+        cancelSamplingEdit(false);
+      });
+    }
+
+    if (guidelineEditBtn) {
+      guidelineEditBtn.addEventListener('click', function() {
+        startGuidelineEdit();
+      });
+    }
+
+    if (guidelineSaveBtn) {
+      guidelineSaveBtn.addEventListener('click', function() {
+        saveGuidelineEdit();
+      });
+    }
+
+    if (guidelineCancelBtn) {
+      guidelineCancelBtn.addEventListener('click', function() {
+        cancelGuidelineEdit(false);
+      });
+    }
+
+    if (guidelineUploadZone && editGuidelineFileInput) {
+      guidelineUploadZone.addEventListener('click', function() {
+        if (!state.guidelineEditMode) return;
+        editGuidelineFileInput.click();
+      });
+      guidelineUploadZone.addEventListener('keydown', function(event) {
+        if (!state.guidelineEditMode) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          editGuidelineFileInput.click();
+        }
+      });
+    }
+
+    if (editGuidelineFileInput) {
+      editGuidelineFileInput.addEventListener('change', function() {
+        if (!this.files || !this.files.length) return;
+        addGuidelineDraftFiles(this.files);
+        this.value = '';
+      });
+    }
+
+    if (editGuidelineTextInput) {
+      editGuidelineTextInput.addEventListener('input', function(event) {
+        if (!state.guidelineDraft) return;
+        state.guidelineDraft.guidelineText = event.target.value;
+        markGuidelineDirty();
+      });
+    }
+
+    if (editForceGuidelineToggle) {
+      editForceGuidelineToggle.addEventListener('change', function(event) {
+        if (!state.guidelineDraft) return;
+        state.guidelineDraft.forceGuideline = event.target.checked;
+        markGuidelineDirty();
+      });
+    }
+
+    if (settingsEditBtn) {
+      settingsEditBtn.addEventListener('click', function() {
+        startSettingsEdit();
+      });
+    }
+
+    if (settingsSaveBtn) {
+      settingsSaveBtn.addEventListener('click', function() {
+        saveSettingsEdit();
+      });
+    }
+
+    if (settingsCancelBtn) {
+      settingsCancelBtn.addEventListener('click', function() {
+        cancelSettingsEdit(false);
+      });
+    }
+
+    if (settingsApplyTemplateBtn) {
+      settingsApplyTemplateBtn.addEventListener('click', function() {
+        applySettingsTemplate();
+      });
+    }
+
+    if (settingsUploadConfigBtn && settingsConfigFileInput) {
+      settingsUploadConfigBtn.addEventListener('click', function() {
+        settingsConfigFileInput.click();
+      });
+    }
+
+    if (settingsConfigFileInput) {
+      settingsConfigFileInput.addEventListener('change', function() {
+        if (!this.files || !this.files[0]) return;
+        loadSettingsConfigFile(this.files[0]);
+        this.value = '';
+      });
+    }
+
+    if (settingsFormatYamlBtn) {
+      settingsFormatYamlBtn.addEventListener('click', function() {
+        setSettingsCodeFormat('yaml');
+      });
+    }
+
+    if (settingsFormatJsonBtn) {
+      settingsFormatJsonBtn.addEventListener('click', function() {
+        setSettingsCodeFormat('json');
+      });
+    }
+
+    if (settingsCodeEditor) {
+      settingsCodeEditor.addEventListener('input', function() {
+        if (!state.settingsDraft) return;
+        markSettingsCodeDirty();
+        setSettingsCodeError('');
+        markSettingsDirty();
+      });
+    }
+
+    if (settingsSaveCodeBtn) {
+      settingsSaveCodeBtn.addEventListener('click', function() {
+        saveSettingsCodeToVisual(true);
+      });
+    }
+
+    if (editTaskNameInput) {
+      editTaskNameInput.addEventListener('input', function() {
+        if (state.overviewDraft && state.lang === 'zh') state.overviewDraft.taskNameZh = editTaskNameInput.value;
+        if (state.overviewDraft && state.lang === 'en') state.overviewDraft.taskNameEn = editTaskNameInput.value;
+        setOverviewEditError('');
+        markOverviewDirty();
+      });
+    }
+
+    if (editTaskTypeSelect) {
+      editTaskTypeSelect.addEventListener('change', function() {
+        if (state.overviewDraft) state.overviewDraft.taskTypeKey = editTaskTypeSelect.value;
+        markOverviewDirty();
+      });
+    }
+
+    if (editDatasetFileInput) {
+      editDatasetFileInput.addEventListener('change', function() {
+        if (!state.overviewDraft || !this.files || !this.files[0]) return;
+        state.overviewDraft.datasetSourceZh = this.files[0].name;
+        state.overviewDraft.datasetSourceEn = this.files[0].name;
+        fillOverviewEditForm();
+        markOverviewDirty();
+        this.value = '';
+      });
+    }
+
+    if (modeSelect && valueInput) {
+      modeSelect.addEventListener('change', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.samplingMode = e.target.value;
+        if (state.samplingDraft.samplingMode === 'by_percentage') {
+          state.samplingDraft.samplingValue = Math.max(1, Math.min(99, state.samplingDraft.samplingValue));
+          valueInput.max = '99';
+        } else {
+          state.samplingDraft.samplingValue = Math.max(1, Math.min(TASK_DATA.datasetTotal - 1, state.samplingDraft.samplingValue));
+          valueInput.removeAttribute('max');
+        }
+        valueInput.value = String(state.samplingDraft.samplingValue);
+        markSamplingDirty();
+        renderSamplingState();
+      });
+
+      valueInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.samplingValue = Number(e.target.value || 0);
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (resampleBtn) {
+      resampleBtn.addEventListener('click', function() {
+        if (!state.samplingEditMode || !state.samplingDraft || !isSamplingEditable()) return;
+        state.samplingDraft.randomSeed = Math.floor(Math.random() * 900000 + 100000);
+        markSamplingDirty();
+        showToast(t('toastResampled'));
+        trackEvent('prototype_resample_clicked');
+        renderSamplingState();
+      });
+    }
+
+    if (isolationToggle) {
+      isolationToggle.addEventListener('change', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.isolationEnabled = Boolean(e.target.checked);
+        state.samplingDraft.isolationLastActor = (I18N[state.lang].userName || I18N.zh.userName)[state.taskRole] || 'User';
+        state.samplingDraft.isolationLastUpdated = '2026-04-21 10:03';
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
 
     document.getElementById('publishActionRow').addEventListener('click', function(e) {
       if (e.target.id === 'publishDryRunBtn') {

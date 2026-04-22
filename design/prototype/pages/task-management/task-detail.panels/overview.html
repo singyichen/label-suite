@@ -1,55 +1,193 @@
 <div id="overviewPanel" class="hidden" aria-live="polite">
+  <section class="panel" aria-labelledby="basicInfoTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="basicInfoTitle">基本資料</h2>
+      <div class="overview-edit-actions">
+        <button class="btn btn-secondary" type="button" id="overviewEditBtn">編輯</button>
+        <button class="btn btn-secondary hidden" type="button" id="overviewCancelBtn">取消</button>
+        <button class="btn btn-primary hidden" type="button" id="overviewSaveBtn">儲存</button>
+      </div>
+    </div>
+    <p class="status-hint" id="overviewReadonlyHint"></p>
 
-  <!-- ① 雙欄：基本資訊 + 設定摘要 -->
-  <div class="overview-info-row">
-    <section class="panel" aria-labelledby="basicInfoTitle">
-      <h2 class="panel-title" id="basicInfoTitle">任務基本資訊</h2>
-      <div class="kv-dl">
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelTaskName">任務名稱</span>
-          <span class="kv-dl-value" id="valueTaskName"></span>
+    <div id="basicInfoView" class="kv-dl">
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelTaskName">任務名稱</span>
+        <span class="kv-dl-value" id="valueTaskName"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelTaskType">任務類型</span>
+        <span class="kv-dl-value" id="valueTaskType"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelDatasetSummary">資料集摘要</span>
+        <span class="kv-dl-value" id="valueDatasetSummary"></span>
+      </div>
+    </div>
+
+    <div class="overview-edit-form hidden" id="overviewEditForm">
+      <div class="field-group">
+        <label class="field-label" id="editTaskNameLabel" for="editTaskNameInput">任務名稱 *</label>
+        <input class="input-number" id="editTaskNameInput" type="text" maxlength="100" placeholder="例：新聞標題情感分類" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" id="editTaskTypeLabel" for="editTaskTypeSelect">任務類型 *</label>
+        <select class="input-select" id="editTaskTypeSelect"></select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集 *</label>
+        <label class="basic-dataset-drop" for="editDatasetFileInput">
+          <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
+          <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
+          <span class="basic-dataset-current mono" id="editDatasetCurrent"></span>
+        </label>
+        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" />
+      </div>
+
+      <p class="inline-error" id="overviewEditError"></p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="settingsSummaryTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="settingsSummaryTitle">標記設定</h2>
+      <div class="settings-edit-actions">
+        <button class="btn btn-secondary" type="button" id="settingsEditBtn">編輯</button>
+        <button class="btn btn-secondary hidden" type="button" id="settingsCancelBtn">取消</button>
+        <button class="btn btn-primary hidden" type="button" id="settingsSaveBtn">儲存</button>
+      </div>
+    </div>
+    <p class="status-hint" id="settingsReadonlyHint"></p>
+
+    <div id="settingsConfigView" class="kv-dl">
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelConfigVersion">Config 版本</span>
+        <span class="kv-dl-value mono" id="valueConfigVersion"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelConfigTaskType">標記類型</span>
+        <span class="kv-dl-value" id="valueConfigTaskType"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelConfigLabels">標籤清單</span>
+        <span class="kv-dl-value" id="valueConfigLabels"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelConfigAllowMultiple">允許多選</span>
+        <span class="kv-dl-value" id="valueConfigAllowMultiple"></span>
+      </div>
+    </div>
+
+    <div class="settings-edit-form hidden" id="settingsEditForm">
+      <div class="s2-preview-top">
+        <div class="yaml-preview-label" id="settingsAnnotationPreviewLabel">標記預覽</div>
+        <div class="annotation-preview" id="settingsAnnotationPreview"></div>
+      </div>
+
+      <div class="settings-editor-layout">
+        <div>
+          <div class="template-section">
+            <div class="template-section-title" id="settingsTemplateSectionTitle">從範本開始或者上傳設定檔</div>
+            <div class="template-actions">
+              <button class="template-btn" id="settingsApplyTemplateBtn" type="button">套用預設範本：單句分類（含多標籤）</button>
+              <button class="template-btn" id="settingsUploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
+              <input class="hidden" id="settingsConfigFileInput" type="file" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" />
+            </div>
+          </div>
+          <div id="settingsSchemaFields"></div>
+          <p class="inline-error" id="settingsEditError"></p>
         </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelTaskType">任務類型</span>
-          <span class="kv-dl-value" id="valueTaskType"></span>
-        </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelCreatedBy">建立者</span>
-          <span class="kv-dl-value" id="valueCreatedBy"></span>
-        </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelCreatedAt">建立時間</span>
-          <span class="kv-dl-value" id="valueCreatedAt"></span>
-        </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelUpdatedAt">最近更新</span>
-          <span class="kv-dl-value" id="valueUpdatedAt"></span>
+
+        <div class="s2-code-panel">
+          <div class="s2-code-header">
+            <div class="yaml-preview-label" id="settingsCodeLabel" style="margin-bottom:0;">CODE</div>
+            <div class="settings-code-format" id="settingsCodeFormatBtns">
+              <button class="btn btn-ghost" type="button" id="settingsFormatYamlBtn">YAML</button>
+              <button class="btn btn-ghost" type="button" id="settingsFormatJsonBtn">JSON</button>
+            </div>
+          </div>
+          <textarea class="code-editor" id="settingsCodeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
+          <div class="code-error-bar hidden" id="settingsCodeErrorBar">
+            <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="settingsCodeErrorMsg"></span>
+          </div>
+          <div class="code-actions">
+            <button class="btn btn-secondary" id="settingsSaveCodeBtn" type="button" disabled>
+              <span id="settingsSaveCodeBtnLabel">儲存</span>
+            </button>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="panel" aria-labelledby="settingsSummaryTitle">
-      <h2 class="panel-title" id="settingsSummaryTitle">任務設定摘要</h2>
-      <div class="kv-dl">
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelDatasetSummary">資料集摘要</span>
-          <span class="kv-dl-value" id="valueDatasetSummary"></span>
+  <section class="panel" aria-labelledby="guidelineSectionTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="guidelineSectionTitle">標記說明</h2>
+      <div class="guideline-edit-actions">
+        <button class="btn btn-secondary" type="button" id="guidelineEditBtn">編輯</button>
+        <button class="btn btn-secondary hidden" type="button" id="guidelineCancelBtn">取消</button>
+        <button class="btn btn-primary hidden" type="button" id="guidelineSaveBtn">儲存</button>
+      </div>
+    </div>
+    <p class="status-hint" id="guidelineReadonlyHint"></p>
+
+    <div id="guidelineSummaryView" class="kv-dl">
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelGuideline">說明內容狀態</span>
+        <span class="kv-dl-value" id="valueGuidelineStatus"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelGuidelineFilesSummary">附件清單</span>
+        <span class="kv-dl-value" id="valueGuidelineFilesSummary"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
+        <span class="kv-dl-value" id="valueForceGuideline"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelGuidelineContentSummary">說明內容摘要</span>
+        <span class="kv-dl-value" id="valueGuidelineContentSummary"></span>
+      </div>
+    </div>
+
+    <div class="guideline-edit-form hidden" id="guidelineEditForm">
+      <div class="field-group">
+        <label class="field-label" id="editGuidelineLabel" for="editGuidelineTextInput">說明內容</label>
+        <textarea class="input-textarea" id="editGuidelineTextInput" rows="6" placeholder="輸入給標記員看的任務說明、判斷準則與注意事項"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" id="editGuidelineFilesLabel" for="editGuidelineFileInput">上傳檔案</label>
+        <div class="upload-multi-zone" id="guidelineUploadZone" role="button" tabindex="0">
+          <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="upload-multi-zone-label" id="guidelineUploadLabel">上傳檔案</div>
+          <div class="upload-multi-zone-hint" id="guidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+          <input class="hidden" type="file" id="editGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" />
         </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelConfigVersion">Config 版本</span>
-          <span class="kv-dl-value mono" id="valueConfigVersion"></span>
-        </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelGuideline">說明文件狀態</span>
-          <span class="kv-dl-value" id="valueGuidelineStatus"></span>
-        </div>
-        <div class="kv-dl-row">
-          <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
-          <span class="kv-dl-value" id="valueForceGuideline"></span>
+        <div class="guideline-list" id="editGuidelineFileList"></div>
+      </div>
+
+      <div class="field-group">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label-text" id="editForceGuidelineLabel">開始標記前強制顯示</span>
+            <span class="toggle-desc" id="editForceGuidelineDesc">啟用後，標記員進入作業前必須先閱讀說明</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="editForceGuidelineToggle" />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
       </div>
-    </section>
-  </div>
+
+      <p class="inline-error" id="guidelineEditError"></p>
+    </div>
+  </section>
 
   <!-- ② 執行控制面板 -->
   <section class="panel" aria-labelledby="executionTitle">
@@ -99,75 +237,110 @@
         <div class="action-row" id="publishActionRow" style="margin:0;"></div>
       </div>
     </div>
+  </section>
 
-    <hr class="panel-divider" />
+  <section class="panel" aria-labelledby="samplingTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="samplingTitle">試標資料抽樣設定</h2>
+      <div class="sampling-edit-actions">
+        <button class="btn btn-secondary" type="button" id="samplingEditBtn">編輯</button>
+        <button class="btn btn-secondary hidden" type="button" id="samplingCancelBtn">取消</button>
+        <button class="btn btn-primary hidden" type="button" id="samplingSaveBtn">儲存</button>
+      </div>
+    </div>
+    <p class="status-hint" id="samplingReadonlyHint"></p>
 
-    <!-- 抽樣設定 -->
-    <h3 class="sub-panel-title" id="samplingTitle">試標資料抽樣設定</h3>
-    <div class="sampling-fields">
-      <div class="field-group">
-        <label class="field-label" id="samplingModeLabel" for="samplingMode">抽樣方式</label>
-        <select class="input-select" id="samplingMode" aria-label="抽樣方式">
-          <option value="by_count">筆數</option>
-          <option value="by_percentage">百分比</option>
-        </select>
+    <div id="samplingSummaryView" class="kv-dl">
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelSamplingModeControl">抽樣方式</span>
+        <span class="kv-dl-value" id="valueSamplingModeControl"></span>
       </div>
-      <div class="field-group">
-        <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣數值</label>
-        <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelSamplingValueControl">抽樣數值</span>
+        <span class="kv-dl-value" id="valueSamplingValueControl"></span>
       </div>
-      <div class="field-group">
-        <label class="field-label" id="samplingStrategyLabel">抽樣策略</label>
-        <div class="strategy-info">
-          <span id="samplingStrategyText" class="strategy-text">stratified_random</span>
-          <span id="samplingSeedText" class="strategy-seed mono">random_seed: —</span>
-        </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelSamplingStrategyControl">抽樣策略</span>
+        <span class="kv-dl-value mono" id="valueSamplingStrategyControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelSplitControl">試標 / 正式資料配比</span>
+        <span class="kv-dl-value" id="valueSplitControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelIsolationControl">資料隔離狀態</span>
+        <span class="kv-dl-value" id="valueIsolationControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelIsolationAuditControl">隔離異動</span>
+        <span class="kv-dl-value" id="valueIsolationAuditControl"></span>
       </div>
     </div>
 
-    <!-- 資料分配視覺化 -->
-    <div class="data-split-viz">
-      <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
-        <div class="split-seg split-dry" id="splitDryBar" style="width:9.4%"></div>
-        <div class="split-seg split-official" id="splitOfficialBar" style="width:90.6%"></div>
-      </div>
-      <div class="split-legend">
-        <div class="split-legend-item">
-          <span class="split-dot split-dot-dry" aria-hidden="true"></span>
-          <span class="split-legend-key" id="sampleUsageLabel">試標使用量</span>
-          <strong class="split-legend-value" id="sampleUsageValue">—</strong>
+    <div class="sampling-edit-form hidden" id="samplingEditForm">
+      <div class="sampling-fields">
+        <div class="field-group">
+          <label class="field-label" id="samplingModeLabel" for="samplingMode">抽樣方式</label>
+          <select class="input-select" id="samplingMode" aria-label="抽樣方式">
+            <option value="by_count">筆數</option>
+            <option value="by_percentage">百分比</option>
+          </select>
         </div>
-        <div class="split-legend-item">
-          <span class="split-dot split-dot-official" aria-hidden="true"></span>
-          <span class="split-legend-key" id="officialReserveLabel">正式標註預留量</span>
-          <strong class="split-legend-value" id="officialReserveValue">—</strong>
+        <div class="field-group">
+          <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣數值</label>
+          <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" id="samplingStrategyLabel">抽樣策略</label>
+          <div class="strategy-info">
+            <span id="samplingStrategyText" class="strategy-text">stratified_random</span>
+            <span id="samplingSeedText" class="strategy-seed mono">random_seed: —</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <p class="inline-help" id="samplingHelp">百分比採 floor(total * percent / 100)，且正式標註至少保留 1 筆。</p>
-    <p class="inline-error" id="samplingError"></p>
-
-    <div class="sampling-footer">
-      <button class="btn btn-secondary" type="button" id="resampleBtn">重算抽樣</button>
-      <span class="status-hint" id="resampleHint">僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。</span>
-    </div>
-
-    <hr class="panel-divider" />
-
-    <!-- 資料隔離 -->
-    <div class="isolation-wrap">
-      <div class="toggle-row">
-        <div class="toggle-meta">
-          <div class="toggle-title" id="isolationToggleTitle">是否啟用資料隔離（試標 / 正式）</div>
-          <div class="toggle-desc" id="isolationToggleDesc">啟用時可避免試標結果污染正式標註資料。</div>
+      <div class="data-split-viz">
+        <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
+          <div class="split-seg split-dry" id="splitDryBar" style="width:9.4%"></div>
+          <div class="split-seg split-official" id="splitOfficialBar" style="width:90.6%"></div>
         </div>
-        <label class="toggle-switch" for="isolationToggle">
-          <input id="isolationToggle" type="checkbox" checked />
-          <span class="toggle-slider"></span>
-        </label>
+        <div class="split-legend">
+          <div class="split-legend-item">
+            <span class="split-dot split-dot-dry" aria-hidden="true"></span>
+            <span class="split-legend-key" id="sampleUsageLabel">試標使用量</span>
+            <strong class="split-legend-value" id="sampleUsageValue">—</strong>
+          </div>
+          <div class="split-legend-item">
+            <span class="split-dot split-dot-official" aria-hidden="true"></span>
+            <span class="split-legend-key" id="officialReserveLabel">正式標記預留量</span>
+            <strong class="split-legend-value" id="officialReserveValue">—</strong>
+          </div>
+        </div>
       </div>
-      <p class="risk-warning hidden" id="isolationRiskMsg">已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。</p>
+
+      <p class="inline-help" id="samplingHelp">百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。</p>
+      <p class="inline-error" id="samplingError"></p>
+
+      <div class="sampling-footer">
+        <button class="btn btn-secondary" type="button" id="resampleBtn">重算抽樣</button>
+        <span class="status-hint" id="resampleHint">僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。</span>
+      </div>
+
+      <hr class="panel-divider" />
+
+      <div class="isolation-wrap">
+        <div class="toggle-row">
+          <div class="toggle-meta">
+            <div class="toggle-title" id="isolationToggleTitle">是否啟用資料隔離（試標 / 正式）</div>
+            <div class="toggle-desc" id="isolationToggleDesc">啟用時可避免試標結果污染正式標記資料。</div>
+          </div>
+          <label class="toggle-switch" for="isolationToggle">
+            <input id="isolationToggle" type="checkbox" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p class="risk-warning hidden" id="isolationRiskMsg">已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。</p>
+      </div>
     </div>
   </section>
 
