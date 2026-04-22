@@ -1674,6 +1674,84 @@
     .exec-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
     .exec-isolation-audit { font-size: 11px; }
     .exec-actions { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .run-control-tabs {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-slate-50);
+    }
+    .run-control-tab {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .run-control-tab.active {
+      background: var(--color-white);
+      color: var(--color-primary);
+      border-color: var(--color-primary-soft-border);
+    }
+    .run-control-tab:hover {
+      color: var(--color-primary);
+    }
+    .exec-round-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .exec-round-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .exec-round-key {
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .exec-round-value {
+      font-size: 20px;
+      line-height: 1.15;
+      color: var(--color-ink);
+    }
+    .exec-stop-row {
+      margin-bottom: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .exec-stop-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .stop-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      background: var(--color-white);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .stop-pill.passed {
+      border-color: var(--color-success-border);
+      color: var(--color-success);
+      background: var(--color-success-bg);
+    }
 
     .panel-divider {
       border: none;
@@ -1693,6 +1771,10 @@
       gap: 10px;
       align-items: end;
       margin-bottom: var(--space-md);
+    }
+    .sampling-fields-advanced {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      align-items: start;
     }
     .sampling-mode-inline {
       display: flex;
@@ -1748,6 +1830,7 @@
     .split-legend { display: flex; gap: var(--space-md); flex-wrap: wrap; }
     .split-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
     .split-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .split-dot-total { background: var(--color-ink-muted); }
     .split-dot-dry { background: var(--color-primary); }
     .split-dot-official { background: var(--color-cta); }
     .split-legend-key { color: var(--color-text-soft); }
@@ -1776,8 +1859,10 @@
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
       .sampling-fields { grid-template-columns: 1fr; }
+      .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
+      .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
     }
   </style>
 </head>
@@ -1876,6 +1961,8 @@
       settingsSummaryTitle: '標記設定',
       guidelineSectionTitle: '標記說明',
       executionTitle: '任務狀態與執行控制',
+      runControlTabExecution: '執行狀態',
+      runControlTabTrial: '試標回合',
       exportTitle: '匯出結果',
       labelTaskName: '任務名稱',
       labelTaskType: '任務類型',
@@ -1895,7 +1982,6 @@
       guidelineSaveBtn: '儲存',
       guidelineCancelBtn: '取消',
       guidelineReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記說明。',
-      guidelineReadonlyDraftOnly: '',
       guidelineOptionalNoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
       guidelineUploadLabel: '上傳檔案',
       guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
@@ -1918,7 +2004,6 @@
       settingsSaveBtn: '儲存',
       settingsCancelBtn: '取消',
       settingsReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記設定。',
-      settingsReadonlyDraftOnly: '目前狀態非 draft，標記設定不可編輯。',
       settingsAnnotationPreviewLabel: '標記預覽',
       settingsPreviewSample: '這是一段範例文本，請依目前設定完成標記。',
       settingsPreviewSelectLabel: '請選擇標記',
@@ -1969,35 +2054,55 @@
       editForceGuidelineLabel: '開始標記前強制顯示',
       basicDatasetDropTitle: '點擊或拖曳上傳資料集',
       basicDatasetDropHint: '支援 TXT / CSV / TSV / JSON，最大 200 MB，UTF-8',
-      samplingTitle: '試標資料抽樣設定',
+      samplingTitle: '抽樣設定',
       samplingEditBtn: '編輯',
       samplingSaveBtn: '儲存',
       samplingCancelBtn: '取消',
       samplingReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯抽樣設定。',
-      samplingReadonlyDraftOnly: '目前狀態非 draft，抽樣設定不可編輯。',
-      samplingSaveSuccess: '試標資料抽樣設定已更新',
+      samplingSaveSuccess: '抽樣設定已更新',
       samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
+      trialRoundLabel: '試標回合',
+      targetAgreementLabel: '目標 IAA',
+      currentAgreementLabel: '目前 IAA',
+      currentStdLabel: '目前標準差',
+      stopConditionTitle: '達標條件',
       labelSamplingModeControl: '抽樣方式',
       labelSamplingValueControl: '抽樣數值',
+      labelTrialRoundControl: '試標回合',
       labelSamplingStrategyControl: '抽樣策略',
+      labelStratifyByControl: '分層依據',
+      labelStopConditionControl: '停止條件',
       labelSplitControl: '試標 / 正式資料配比',
+      totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
       samplingModeLabel: '抽樣方式',
       samplingValueLabel: '抽樣數值',
       samplingStrategyLabel: '抽樣策略',
-      sampleUsageLabel: '試標使用量',
-      officialReserveLabel: '正式標記預留量',
+      samplingSeedLabel: '隨機種子',
+      samplingRoundLabel: '試標回合',
+      samplingStratifyLabel: '分層依據',
+      stratifyByLabelText: '標籤',
+      stratifyByDomainText: '領域',
+      stratifyByDifficultyText: '難度',
+      samplingStrategyOptionStratified: '分層隨機抽樣',
+      samplingStrategyOptionDisagreement: '高分歧優先',
+      samplingStrategyOptionEdgeCases: '邊界案例優先',
+      targetAgreementInputLabel: '目標 IAA',
+      targetStdInputLabel: '標準差上限',
+      minAnnotatorsInputLabel: '最少標註者數',
+      sampleUsageLabel: '試標',
+      officialReserveLabel: '正式',
       samplingModeCount: '筆數',
       samplingModePercent: '百分比',
       samplingHelp: '百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。',
       resampleBtn: '重算抽樣',
-      resampleHintDraft: '僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。',
-      resampleHintLocked: '目前狀態不可重算。請建立新 run 批次。',
+      resampleHintDraft: '僅草稿階段可重算；進入試標後需建立新的執行批次。',
+      resampleHintLocked: '目前狀態不可重算。請建立新的執行批次。',
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
       isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
-      publishDryRun: '發布 Dry Run',
+      publishDryRun: '開始試標 Round',
       publishOfficialRun: '發布 Official Run',
       noPublishAction: '此狀態不提供發布操作。',
       reviewerHint: '僅 project leader 可操作',
@@ -2022,8 +2127,8 @@
         official_run_in_progress: 'badge-official',
         completed: 'badge-completed'
       },
-      isolationOn: 'isolated',
-      isolationOff: 'non-isolated',
+      isolationOn: '已隔離',
+      isolationOff: '未隔離',
       isolationAuditTpl: '最後異動：{actor} · {time}',
       exportJsonBtn: '匯出 JSON',
       exportJsonMinBtn: '匯出 JSON-MIN',
@@ -2046,8 +2151,15 @@
       guidelineContentEmpty: '尚無說明內容',
       samplingValueCountTpl: '{value} 筆',
       samplingValuePercentTpl: '{value}%（約 {count} 筆）',
-      splitSummaryTpl: '試標 {sample} / 正式 {reserve}',
-      samplingStrategySummaryTpl: '{strategy} · seed {seed}',
+      trialRoundTpl: '第 {round} 回合',
+      splitSummaryTpl: '總筆數 {total} / 試標 {sample} / 正式 {reserve}',
+      samplingStrategySummaryTpl: '{strategy} · 隨機種子 {seed}',
+      stratifyBySummaryTpl: '{items}',
+      stopConditionSummaryTpl: 'IAA ≥ {agreement}，標準差 ≤ {std}，標註者 ≥ {annotators}',
+      stopAgreementPillTpl: 'IAA ≥ {target}',
+      stopStdPillTpl: '標準差 ≤ {target}',
+      stopAnnotatorPillTpl: '標註者 ≥ {target}',
+      stratifyByNone: '未設定',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
@@ -2058,6 +2170,11 @@
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
       samplingErrorFloor: '百分比換算後小於 1 筆，請提高百分比或改用固定筆數。',
       samplingErrorReserve: '正式標記至少需保留 1 筆資料。',
+      samplingErrorStratify: '請至少選擇 1 個分層依據。',
+      samplingErrorAgreement: '目標 IAA 需介於 0..1。',
+      samplingErrorStd: '標準差上限需介於 0..1。',
+      samplingErrorAnnotators: '最少標註者數需 >= 2。',
+      samplingErrorRound: '試標回合需 >= 1。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       candidateListTitle: '可加入成員名單',
@@ -2164,6 +2281,8 @@
       settingsSummaryTitle: 'Label settings',
       guidelineSectionTitle: 'Annotation guideline',
       executionTitle: 'Task status and run control',
+      runControlTabExecution: 'Execution',
+      runControlTabTrial: 'Trial rounds',
       exportTitle: 'Export result',
       labelTaskName: 'Task name',
       labelTaskType: 'Task type',
@@ -2183,7 +2302,6 @@
       guidelineSaveBtn: 'Save',
       guidelineCancelBtn: 'Cancel',
       guidelineReadonlyRoleOnly: 'Read-only role. Only project leader can edit guideline.',
-      guidelineReadonlyDraftOnly: '',
       guidelineOptionalNoticeText: 'This step is optional. You can create the task without uploading guidelines.',
       guidelineUploadLabel: 'Upload files',
       guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
@@ -2206,7 +2324,6 @@
       settingsSaveBtn: 'Save',
       settingsCancelBtn: 'Cancel',
       settingsReadonlyRoleOnly: 'Read-only role. Only project leader can edit label settings.',
-      settingsReadonlyDraftOnly: 'Current status is not draft. Label settings are locked.',
       settingsAnnotationPreviewLabel: 'Annotation preview',
       settingsPreviewSample: 'This is a sample text. Please annotate using current settings.',
       settingsPreviewSelectLabel: 'Select label',
@@ -2257,25 +2374,34 @@
       editForceGuidelineLabel: 'Force show before annotation',
       basicDatasetDropTitle: 'Click or drag to upload dataset',
       basicDatasetDropHint: 'Supports TXT / CSV / TSV / JSON, up to 200 MB, UTF-8',
-      samplingTitle: 'Dry run sampling settings',
+      samplingTitle: 'Sampling settings',
       samplingEditBtn: 'Edit',
       samplingSaveBtn: 'Save',
       samplingCancelBtn: 'Cancel',
       samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
-      samplingReadonlyDraftOnly: 'Sampling settings can only be edited in draft status.',
-      samplingSaveSuccess: 'Dry run sampling settings updated',
+      samplingSaveSuccess: 'Sampling settings updated',
       samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       labelSamplingModeControl: 'Sampling mode',
       labelSamplingValueControl: 'Sampling value',
       labelSamplingStrategyControl: 'Sampling strategy',
       labelSplitControl: 'Dry / Official split',
+      totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
       samplingModeLabel: 'Sampling mode',
       samplingValueLabel: 'Sampling value',
       samplingStrategyLabel: 'Sampling strategy',
-      sampleUsageLabel: 'Dry run usage',
-      officialReserveLabel: 'Official reserve',
+      samplingSeedLabel: 'Random seed',
+      samplingRoundLabel: 'Trial round',
+      samplingStratifyLabel: 'Stratify by',
+      stratifyByLabelText: 'Label',
+      stratifyByDomainText: 'Domain',
+      stratifyByDifficultyText: 'Difficulty',
+      samplingStrategyOptionStratified: 'Stratified random',
+      samplingStrategyOptionDisagreement: 'High disagreement',
+      samplingStrategyOptionEdgeCases: 'Edge cases',
+      sampleUsageLabel: 'Dry',
+      officialReserveLabel: 'Official',
       samplingModeCount: 'By count',
       samplingModePercent: 'By percentage',
       samplingHelp: 'Percentage uses floor(total * percent / 100); keep at least 1 item for official run.',
@@ -2334,7 +2460,7 @@
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
       samplingValuePercentTpl: '{value}% (~{count} items)',
-      splitSummaryTpl: 'Dry {sample} / Official {reserve}',
+      splitSummaryTpl: 'Total {total} / Dry {sample} / Official {reserve}',
       samplingStrategySummaryTpl: '{strategy} · seed {seed}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
@@ -2467,7 +2593,15 @@
     samplingMode: 'by_count',
     samplingValue: 120,
     samplingStrategy: 'stratified_random',
+    trialRound: 1,
     randomSeed: 248931,
+    stratifyBy: ['label'],
+    targetAgreement: 0.80,
+    currentAgreement: 0.62,
+    targetStd: 0.10,
+    currentStd: 0.16,
+    minAnnotators: 3,
+    currentAnnotators: 3,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
     isolationLastUpdated: '2026-04-20 19:42',
@@ -2530,6 +2664,7 @@
     lang: 'zh',
     taskRole: 'project_leader',
     activeTab: 'overview',
+    activeRunControlTab: 'execution',
     progressStage: 'dry',
     progressSort: 'completed_desc',
     workLogDateFrom: '',
@@ -2771,6 +2906,8 @@
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
     setText('guidelineSectionTitle', t('guidelineSectionTitle'));
     setText('executionTitle', t('executionTitle'));
+    setText('runControlTabExecution', t('runControlTabExecution'));
+    setText('runControlTabTrial', t('runControlTabTrial'));
     setText('exportTitle', t('exportTitle'));
     setRequiredLabel('labelTaskName', t('labelTaskName'));
     setRequiredLabel('labelTaskType', t('labelTaskType'));
@@ -2818,10 +2955,19 @@
     setText('samplingEditBtn', t('samplingEditBtn'));
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
+    setText('trialRoundLabel', t('trialRoundLabel'));
+    setText('targetAgreementLabel', t('targetAgreementLabel'));
+    setText('currentAgreementLabel', t('currentAgreementLabel'));
+    setText('currentStdLabel', t('currentStdLabel'));
+    setText('stopConditionTitle', t('stopConditionTitle'));
     setRequiredLabel('labelSamplingModeControl', t('labelSamplingModeControl'));
     setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
     setText('labelSamplingStrategyControl', t('labelSamplingStrategyControl'));
+    setText('labelStratifyByControl', t('labelStratifyByControl'));
+    setText('labelStopConditionControl', t('labelStopConditionControl'));
     setText('labelSplitControl', t('labelSplitControl'));
+    setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
     setRequiredLabel('samplingModeLabel', t('samplingModeLabel'));
@@ -2829,7 +2975,18 @@
     setText('samplingModeCountLabel', t('samplingModeCount'));
     setRequiredLabel('samplingValueLabel', t('samplingValueLabel'));
     setText('samplingStrategyLabel', t('samplingStrategyLabel'));
-    setText('samplingHelp', t('samplingHelp'));
+    setText('samplingStrategyOptionStratified', t('samplingStrategyOptionStratified'));
+    setText('samplingStrategyOptionDisagreement', t('samplingStrategyOptionDisagreement'));
+    setText('samplingStrategyOptionEdgeCases', t('samplingStrategyOptionEdgeCases'));
+    setText('samplingSeedLabel', t('samplingSeedLabel'));
+    setText('samplingRoundLabel', t('samplingRoundLabel'));
+    setText('samplingStratifyLabel', t('samplingStratifyLabel'));
+    setText('stratifyByLabelText', t('stratifyByLabelText'));
+    setText('stratifyByDomainText', t('stratifyByDomainText'));
+    setText('stratifyByDifficultyText', t('stratifyByDifficultyText'));
+    setText('targetAgreementInputLabel', t('targetAgreementInputLabel'));
+    setText('targetStdInputLabel', t('targetStdInputLabel'));
+    setText('minAnnotatorsInputLabel', t('minAnnotatorsInputLabel'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
     setText('officialReserveLabel', t('officialReserveLabel'));
     setText('resampleBtn', t('resampleBtn'));
@@ -2949,6 +3106,25 @@
     return getSampleCountFromData(TASK_DATA);
   }
 
+  function formatStratifyBy(items) {
+    var list = Array.isArray(items) ? items : [];
+    if (!list.length) return t('stratifyByNone');
+    var mapped = list.map(function(item) {
+      if (item === 'label') return t('stratifyByLabelText');
+      if (item === 'domain') return t('stratifyByDomainText');
+      if (item === 'difficulty') return t('stratifyByDifficultyText');
+      return item;
+    });
+    return interpolate(t('stratifyBySummaryTpl'), { items: mapped.join(' / ') });
+  }
+
+  function getSamplingStrategyLabel(strategy) {
+    if (strategy === 'stratified_random') return t('samplingStrategyOptionStratified');
+    if (strategy === 'high_disagreement') return t('samplingStrategyOptionDisagreement');
+    if (strategy === 'edge_cases') return t('samplingStrategyOptionEdgeCases');
+    return strategy;
+  }
+
   function validateSamplingData(data) {
     var sampleCount = getSampleCountFromData(data);
 
@@ -2967,6 +3143,26 @@
 
     if (TASK_DATA.datasetTotal - sampleCount < 1) {
       return { valid: false, message: t('samplingErrorReserve') };
+    }
+
+    if (!Array.isArray(data.stratifyBy) || data.stratifyBy.length < 1) {
+      return { valid: false, message: t('samplingErrorStratify') };
+    }
+
+    if (data.targetAgreement < 0 || data.targetAgreement > 1) {
+      return { valid: false, message: t('samplingErrorAgreement') };
+    }
+
+    if (data.targetStd < 0 || data.targetStd > 1) {
+      return { valid: false, message: t('samplingErrorStd') };
+    }
+
+    if (data.minAnnotators < 2) {
+      return { valid: false, message: t('samplingErrorAnnotators') };
+    }
+
+    if (data.trialRound < 1) {
+      return { valid: false, message: t('samplingErrorRound') };
     }
 
     return { valid: true, message: '' };
@@ -2990,16 +3186,25 @@
     var samplingValueText = TASK_DATA.samplingMode === 'by_percentage'
       ? interpolate(t('samplingValuePercentTpl'), { value: TASK_DATA.samplingValue, count: sampleCount })
       : interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue });
+    var unitText = state.lang === 'zh' ? '筆' : ' items';
     var splitSummaryText = interpolate(t('splitSummaryTpl'), {
-      sample: sampleCount + ' / ' + TASK_DATA.datasetTotal,
-      reserve: reserveCount + ' / ' + TASK_DATA.datasetTotal,
+      total: TASK_DATA.datasetTotal + unitText,
+      sample: sampleCount + unitText,
+      reserve: reserveCount + unitText,
     });
 
     setText('valueSamplingModeControl', samplingModeText);
     setText('valueSamplingValueControl', samplingValueText);
+    setText('valueTrialRoundControl', interpolate(t('trialRoundTpl'), { round: TASK_DATA.trialRound }));
     setText('valueSamplingStrategyControl', interpolate(t('samplingStrategySummaryTpl'), {
-      strategy: TASK_DATA.samplingStrategy,
+      strategy: getSamplingStrategyLabel(TASK_DATA.samplingStrategy),
       seed: TASK_DATA.randomSeed,
+    }));
+    setText('valueStratifyByControl', formatStratifyBy(TASK_DATA.stratifyBy));
+    setText('valueStopConditionControl', interpolate(t('stopConditionSummaryTpl'), {
+      agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
+      std: Number(TASK_DATA.targetStd).toFixed(2),
+      annotators: TASK_DATA.minAnnotators,
     }));
     setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
@@ -3010,6 +3215,22 @@
         time: TASK_DATA.isolationLastUpdated,
       })
     );
+
+    setText('trialRoundValue', 'R' + TASK_DATA.trialRound);
+    setText('targetAgreementValue', Number(TASK_DATA.targetAgreement).toFixed(2));
+    setText('currentAgreementValue', Number(TASK_DATA.currentAgreement).toFixed(2));
+    setText('currentStdValue', Number(TASK_DATA.currentStd).toFixed(2));
+
+    setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(TASK_DATA.targetAgreement).toFixed(2) }));
+    setText('stopStdPill', interpolate(t('stopStdPillTpl'), { target: Number(TASK_DATA.targetStd).toFixed(2) }));
+    setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
+
+    var stopAgreementPill = document.getElementById('stopAgreementPill');
+    var stopStdPill = document.getElementById('stopStdPill');
+    var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
+    if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
+    if (stopStdPill) stopStdPill.classList.toggle('passed', Number(TASK_DATA.currentStd) <= Number(TASK_DATA.targetStd));
+    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
   }
 
   function renderSamplingState() {
@@ -3017,8 +3238,9 @@
     var sampleCount = getSampleCountFromData(data);
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
 
-    setText('sampleUsageValue', sampleCount + ' / ' + TASK_DATA.datasetTotal);
-    setText('officialReserveValue', reserveCount + ' / ' + TASK_DATA.datasetTotal);
+    setText('totalSamplesValue', TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items'));
+    setText('sampleUsageValue', sampleCount + (state.lang === 'zh' ? ' 筆' : ' items'));
+    setText('officialReserveValue', reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'));
 
     var total = TASK_DATA.datasetTotal;
     var dryPct = total > 0 ? sampleCount / total * 100 : 0;
@@ -3031,6 +3253,25 @@
     }
     setText('samplingStrategyText', data.samplingStrategy + ' (fallback: random(seed))');
     setText('samplingSeedText', 'random_seed: ' + data.randomSeed);
+
+    var strategySelect = document.getElementById('samplingStrategySelect');
+    if (strategySelect) strategySelect.value = data.samplingStrategy;
+    var seedInput = document.getElementById('samplingSeedInput');
+    if (seedInput) seedInput.value = String(data.randomSeed);
+    var roundInput = document.getElementById('samplingRoundInput');
+    if (roundInput) roundInput.value = String(data.trialRound);
+    var targetAgreementInput = document.getElementById('targetAgreementInput');
+    if (targetAgreementInput) targetAgreementInput.value = Number(data.targetAgreement).toFixed(2);
+    var targetStdInput = document.getElementById('targetStdInput');
+    if (targetStdInput) targetStdInput.value = Number(data.targetStd).toFixed(2);
+    var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
+    if (minAnnotatorsInput) minAnnotatorsInput.value = String(data.minAnnotators);
+    var stratifyLabelInput = document.getElementById('stratifyByLabel');
+    var stratifyDomainInput = document.getElementById('stratifyByDomain');
+    var stratifyDifficultyInput = document.getElementById('stratifyByDifficulty');
+    if (stratifyLabelInput) stratifyLabelInput.checked = (data.stratifyBy || []).indexOf('label') >= 0;
+    if (stratifyDomainInput) stratifyDomainInput.checked = (data.stratifyBy || []).indexOf('domain') >= 0;
+    if (stratifyDifficultyInput) stratifyDifficultyInput.checked = (data.stratifyBy || []).indexOf('difficulty') >= 0;
 
     var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
     modeRadios.forEach(function(node) {
@@ -3065,6 +3306,15 @@
       node.disabled = !editable;
     });
     if (samplingInput) samplingInput.disabled = !editable;
+    if (strategySelect) strategySelect.disabled = !editable;
+    if (seedInput) seedInput.disabled = !editable;
+    if (roundInput) roundInput.disabled = !editable;
+    if (targetAgreementInput) targetAgreementInput.disabled = !editable;
+    if (targetStdInput) targetStdInput.disabled = !editable;
+    if (minAnnotatorsInput) minAnnotatorsInput.disabled = !editable;
+    if (stratifyLabelInput) stratifyLabelInput.disabled = !editable;
+    if (stratifyDomainInput) stratifyDomainInput.disabled = !editable;
+    if (stratifyDifficultyInput) stratifyDifficultyInput.disabled = !editable;
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
       isolationToggle.disabled = !editable;
@@ -3087,7 +3337,7 @@
     }
 
     if (TASK_DATA.status === 'draft') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + TASK_DATA.trialRound + '</button>';
       return;
     }
 
@@ -3128,6 +3378,25 @@
     stepper.querySelectorAll('.step-connector').forEach(function(el, i) {
       el.classList.toggle('connector-done', i < currentIdx);
     });
+  }
+
+  function renderRunControlTabs() {
+    state.activeRunControlTab = 'execution';
+    var tabs = ['execution'];
+    tabs.forEach(function(tabName) {
+      var btn = document.getElementById(
+        tabName === 'execution'
+          ? 'runControlTabExecution'
+          : 'runControlTabTrial'
+      );
+      if (!btn) return;
+      var active = state.activeRunControlTab === tabName;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    var executionPanel = document.getElementById('runControlExecutionPanel');
+    if (executionPanel) executionPanel.classList.toggle('hidden', state.activeRunControlTab !== 'execution');
   }
 
   function renderStatus() {
@@ -3347,7 +3616,12 @@
       samplingMode: TASK_DATA.samplingMode,
       samplingValue: TASK_DATA.samplingValue,
       samplingStrategy: TASK_DATA.samplingStrategy,
+      trialRound: TASK_DATA.trialRound,
       randomSeed: TASK_DATA.randomSeed,
+      stratifyBy: (TASK_DATA.stratifyBy || []).slice(),
+      targetAgreement: TASK_DATA.targetAgreement,
+      targetStd: TASK_DATA.targetStd,
+      minAnnotators: TASK_DATA.minAnnotators,
       isolationEnabled: TASK_DATA.isolationEnabled,
       isolationLastActor: TASK_DATA.isolationLastActor,
       isolationLastUpdated: TASK_DATA.isolationLastUpdated,
@@ -3384,11 +3658,6 @@
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('samplingReadonlyRoleOnly');
-      return;
-    }
-    if (!editable) {
-      hint.classList.remove('hidden');
-      hint.textContent = t('samplingReadonlyDraftOnly');
       return;
     }
     hint.classList.add('hidden');
@@ -3429,7 +3698,13 @@
 
     TASK_DATA.samplingMode = state.samplingDraft.samplingMode;
     TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
+    TASK_DATA.samplingStrategy = state.samplingDraft.samplingStrategy;
+    TASK_DATA.trialRound = state.samplingDraft.trialRound;
     TASK_DATA.randomSeed = state.samplingDraft.randomSeed;
+    TASK_DATA.stratifyBy = (state.samplingDraft.stratifyBy || []).slice();
+    TASK_DATA.targetAgreement = state.samplingDraft.targetAgreement;
+    TASK_DATA.targetStd = state.samplingDraft.targetStd;
+    TASK_DATA.minAnnotators = state.samplingDraft.minAnnotators;
     TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
     TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
     TASK_DATA.isolationLastUpdated = state.samplingDraft.isolationLastUpdated;
@@ -3541,11 +3816,6 @@
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('guidelineReadonlyRoleOnly');
-      return;
-    }
-    if (!editable) {
-      hint.classList.remove('hidden');
-      hint.textContent = t('guidelineReadonlyDraftOnly');
       return;
     }
     hint.classList.add('hidden');
@@ -4366,11 +4636,6 @@
       hint.textContent = t('settingsReadonlyRoleOnly');
       return;
     }
-    if (!editable) {
-      hint.classList.remove('hidden');
-      hint.textContent = t('settingsReadonlyDraftOnly');
-      return;
-    }
     hint.classList.add('hidden');
     hint.textContent = '';
   }
@@ -4518,6 +4783,7 @@
     renderPublishActions();
     renderSamplingSummaryState();
     renderSamplingEditState();
+    renderRunControlTabs();
     renderIsolationState();
     renderExport();
     renderOverviewEditState();
@@ -5180,6 +5446,17 @@
     var samplingEditBtn = document.getElementById('samplingEditBtn');
     var samplingSaveBtn = document.getElementById('samplingSaveBtn');
     var samplingCancelBtn = document.getElementById('samplingCancelBtn');
+    var runControlTabExecution = document.getElementById('runControlTabExecution');
+    var runControlTabTrial = document.getElementById('runControlTabTrial');
+    var strategySelect = document.getElementById('samplingStrategySelect');
+    var seedInput = document.getElementById('samplingSeedInput');
+    var roundInput = document.getElementById('samplingRoundInput');
+    var targetAgreementInput = document.getElementById('targetAgreementInput');
+    var targetStdInput = document.getElementById('targetStdInput');
+    var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
+    var stratifyByLabel = document.getElementById('stratifyByLabel');
+    var stratifyByDomain = document.getElementById('stratifyByDomain');
+    var stratifyByDifficulty = document.getElementById('stratifyByDifficulty');
     var resampleBtn = document.getElementById('resampleBtn');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
     var overviewSaveBtn = document.getElementById('overviewSaveBtn');
@@ -5274,6 +5551,21 @@
         cancelSamplingEdit(false);
       });
     }
+
+    if (runControlTabExecution) {
+      runControlTabExecution.addEventListener('click', function() {
+        state.activeRunControlTab = 'execution';
+        renderRunControlTabs();
+      });
+    }
+
+    if (runControlTabTrial) {
+      runControlTabTrial.addEventListener('click', function() {
+        state.activeRunControlTab = 'trial';
+        renderRunControlTabs();
+      });
+    }
+
 
     if (guidelineEditBtn) {
       guidelineEditBtn.addEventListener('click', function() {
@@ -5449,6 +5741,75 @@
         renderSamplingState();
       });
     }
+
+    if (strategySelect) {
+      strategySelect.addEventListener('change', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.samplingStrategy = e.target.value;
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (seedInput) {
+      seedInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.randomSeed = Math.max(1, Math.floor(Number(e.target.value || 0)));
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (roundInput) {
+      roundInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.trialRound = Math.max(1, Math.floor(Number(e.target.value || 0)));
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (targetAgreementInput) {
+      targetAgreementInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.targetAgreement = Number(e.target.value || 0);
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (targetStdInput) {
+      targetStdInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.targetStd = Number(e.target.value || 0);
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (minAnnotatorsInput) {
+      minAnnotatorsInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.minAnnotators = Math.max(2, Math.floor(Number(e.target.value || 0)));
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    function updateStratifyByDraft() {
+      if (!state.samplingEditMode || !state.samplingDraft) return;
+      var next = [];
+      if (stratifyByLabel && stratifyByLabel.checked) next.push('label');
+      if (stratifyByDomain && stratifyByDomain.checked) next.push('domain');
+      if (stratifyByDifficulty && stratifyByDifficulty.checked) next.push('difficulty');
+      state.samplingDraft.stratifyBy = next;
+      markSamplingDirty();
+      renderSamplingState();
+    }
+
+    if (stratifyByLabel) stratifyByLabel.addEventListener('change', updateStratifyByDraft);
+    if (stratifyByDomain) stratifyByDomain.addEventListener('change', updateStratifyByDraft);
+    if (stratifyByDifficulty) stratifyByDifficulty.addEventListener('change', updateStratifyByDraft);
 
     if (resampleBtn) {
       resampleBtn.addEventListener('click', function() {
