@@ -97,7 +97,7 @@ flowchart LR
   nDR --> nDR1["共同樣本 ~20 句，全員標記"]
   nDR --> nDR2["計算 IAA（目標 ≥ 0.8）"]
   nDR --> nDR3["討論標記準則直至達標"]
-  nANN --> nOR["正式標記模式（Official Run）"]
+  nANN --> nOR["正式標記階段（Official Run）"]
   nOR --> nOR1["分派不重疊資料給各標記員"]
   nANN --> nAW["標記作業頁（Annotator / Reviewer）"]
   nAW --> nAW1["標記操作區"]
