@@ -372,7 +372,7 @@ flowchart LR
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| 014 | Task Detail | 建立成功後導向與初始任務資料（含成員與抽樣方式） |
+| 014 | Task Detail | 建立成功後導向與初始任務資料（含成員與抽樣方式），並以初始成員作為 Dry Run 完成條件基準（所有 `active annotator` 完成各自全部試標樣本後才可進入 `waiting_iaa_confirmation`） |
 | 015 | Annotation Workspace | 讀取 task config 與標記說明設定 |
 | 016 | Dataset Stats | 依 `task_type` 與 config 呈現統計 |
 | 017 | Dataset Quality | 依 `task_type` 與 config 計算品質指標 |
@@ -409,6 +409,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.9 | 2026-04-23 | 補充跨規格相依說明：Task Detail 的 Dry Run 轉態門檻為所有 `active annotator` 完成各自全部試標樣本後，方可由 `dry_run_in_progress` 進入 `waiting_iaa_confirmation` |
 | 1.8.8 | 2026-04-23 | 同步 annotation-workspace mobile 收合行為：右側說明區塊收合後，主內容區仍維持單欄滿寬，避免跑版（新增 FR-008c、SC-005b） |
 | 1.8.7 | 2026-04-23 | 同步 annotation-workspace 圖片檔案預覽行為：在「說明與檔案」點擊圖片 `預覽` 後，於檔案列表下方顯示圖片預覽區塊（新增 FR-005d、SC-006b） |
 | 1.8.6 | 2026-04-23 | 同步 annotation-workspace 行為：`開始標記前強制顯示` 改為同一使用者首次進入任務時顯示一次；確認閱讀後不會在每次 page load 重複彈窗（新增 FR-005c、SC-006a） |

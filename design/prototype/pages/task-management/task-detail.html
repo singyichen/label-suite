@@ -2770,6 +2770,8 @@
     official_run_in_progress: 'statusHintOfficial',
     completed: 'statusHintCompleted'
   };
+  var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
+  var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
 
   var toastTimer = null;
 
@@ -2857,10 +2859,14 @@
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
     var tab = params.get('tab') || 'overview';
+    var urlStatus = params.get('status');
+    var taskId = params.get('task_id');
     if (role !== 'project_leader' && role !== 'reviewer' && role !== 'annotator') {
       role = 'project_leader';
     }
     state.taskRole = role;
+    if (taskId && taskId.trim()) TASK_DATA.taskId = taskId.trim();
+    if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
 
     if (state.taskRole === 'annotator') {
       if (window.LabelSuiteAnalytics) {
@@ -2881,6 +2887,29 @@
     if (!allowed) {
       state.pendingReviewerTabToast = true;
     }
+  }
+
+  function readDryRunProgress() {
+    try {
+      var raw = window.localStorage.getItem(DRY_RUN_PROGRESS_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function syncStatusFromDryRunProgress() {
+    if (TASK_DATA.status !== 'dry_run_in_progress') return;
+    var progress = readDryRunProgress();
+    if (!progress || progress.runType !== 'dry_run') return;
+    if (progress.taskId && progress.taskId !== TASK_DATA.taskId) return;
+    var submitted = Number(progress.submittedSamples);
+    var total = Number(progress.totalSamples);
+    if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
+    if (submitted < total) return;
+    TASK_DATA.status = 'waiting_iaa_confirmation';
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
   }
 
   function applyLang(lang) {
@@ -3370,8 +3399,7 @@
   }
 
   function updateStatusStepper() {
-    var ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
-    var currentIdx = ORDER.indexOf(TASK_DATA.status);
+    var currentIdx = STATUS_ORDER.indexOf(TASK_DATA.status);
     var stepper = document.getElementById('statusStepper');
     if (!stepper) return;
     stepper.querySelectorAll('.step').forEach(function(el, i) {
@@ -6199,6 +6227,7 @@
 
   function init() {
     parseRole();
+    syncStatusFromDryRunProgress();
 
     state.lang = window.LabelSuiteSharedSidebar
       ? window.LabelSuiteSharedSidebar.getStoredLang()

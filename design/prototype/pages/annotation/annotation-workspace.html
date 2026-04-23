@@ -1398,6 +1398,7 @@ var state = {
   taskRole: 'annotator',
   taskTypeKey: 'single_sentence_classification',
   runType: 'dry_run',
+  taskId: 'TASK-014',
   currentIdx: 2,
   activeTab: 'guideline',
   guidelineCollapsed: false,
@@ -1406,6 +1407,7 @@ var state = {
 };
 
 var GUIDELINE_MODAL_SEEN_KEY = 'labelsuite.guidelineModalSeen';
+var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
 
 var TASK_TYPE_UI_CONFIG = {
   single_sentence_classification: {
@@ -1643,6 +1645,25 @@ function markGuidelineModalSeen() {
   }
 }
 
+function persistDryRunProgress() {
+  if (state.runType !== 'dry_run') return;
+  try {
+    var submitted = countSubmitted();
+    var total = SAMPLES.length;
+    var payload = {
+      taskId: state.taskId,
+      runType: state.runType,
+      submittedSamples: submitted,
+      totalSamples: total,
+      status: submitted >= total ? 'waiting_iaa_confirmation' : 'dry_run_in_progress',
+      updatedAt: new Date().toISOString()
+    };
+    window.localStorage.setItem(DRY_RUN_PROGRESS_KEY, JSON.stringify(payload));
+  } catch (error) {
+    // Ignore storage errors in prototype mode.
+  }
+}
+
 function makeChevronSvg() {
   var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', '13'); svg.setAttribute('height', '13');
@@ -1772,6 +1793,7 @@ function renderProgressSummary() {
   var fill = el('progressFill');
   fill.style.width = Math.round(done / SAMPLES.length * 100) + '%';
   fill.parentElement.setAttribute('aria-valuenow', String(Math.round(done / SAMPLES.length * 100)));
+  persistDryRunProgress();
 }
 
 function renderSampleContent() {
@@ -2124,12 +2146,16 @@ function applyLaunchContextFromQuery() {
   var role = params.get('role');
   var runType = params.get('run_type');
   var taskType = params.get('task_type') || getStoredActiveTaskType();
+  var taskId = params.get('task_id');
 
   if (role === 'annotator' || role === 'reviewer') {
     state.taskRole = role;
   }
   if (runType === 'dry_run' || runType === 'official_run') {
     state.runType = runType;
+  }
+  if (taskId && taskId.trim()) {
+    state.taskId = taskId.trim();
   }
   state.taskTypeKey = normalizeTaskTypeKey(taskType);
   setStoredActiveTaskType(state.taskTypeKey);
@@ -2144,6 +2170,7 @@ function init() {
   }
   renderSampleContent();
   renderRoleControls();
+  renderProgressSummary();
   bindEvents();
 
   if (window.LabelSuiteAnalytics) {
