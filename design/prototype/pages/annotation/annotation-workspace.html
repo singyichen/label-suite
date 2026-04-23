@@ -666,6 +666,38 @@
     .guideline-file-icon.md { background: var(--color-surface); color: #7C3AED; }
     .guideline-file-name { font-size: 13px; font-weight: 500; color: var(--color-ink); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .guideline-file-action { font-size: 11px; color: var(--color-text-muted); flex-shrink: 0; }
+    .guideline-image-preview {
+      margin-top: var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      min-height: 220px;
+      padding: var(--space-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .guideline-image-preview.empty {
+      border-style: dashed;
+      background: var(--color-surface);
+    }
+    .guideline-image-preview-empty {
+      margin: 0;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      text-align: center;
+      line-height: 1.6;
+      padding: var(--space-md);
+    }
+    .guideline-image-preview-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+    }
 
     /* History */
     .history-empty { text-align: center; padding: var(--space-xl) var(--space-md); color: var(--color-text-muted); font-size: 13px; }
@@ -981,7 +1013,6 @@
         <div class="annotation-card" id="annotatorCard">
           <div class="annotation-card-header">
             <div class="annotation-card-title" id="annotationCardTitle">標記標籤</div>
-            <span style="font-size:11px;color:var(--color-text-muted);font-weight:600;" id="taskTypeLabel">文本分類</span>
           </div>
           <div class="annotation-card-body">
             <div id="classificationAnnotatorPanel">
@@ -1152,6 +1183,10 @@
             <span class="guideline-file-action" id="guidelineFileAction3">預覽</span>
           </button>
         </div>
+        <div class="guideline-image-preview empty" id="guidelineImagePreviewPanel">
+          <p class="guideline-image-preview-empty" id="guidelineImagePreviewEmpty">點擊上方圖片檔案即可在此預覽</p>
+          <img class="guideline-image-preview-img hidden" id="guidelineImagePreview" alt="VA 評分範例圖">
+        </div>
       </div>
       <div class="guideline-panel hidden" id="historyPanel">
         <div id="historyContainer"></div>
@@ -1226,6 +1261,8 @@ var I18N = {
     guidelineFileName1: '標記指引 v2.pdf', guidelineFileAction1: '新分頁',
     guidelineFileName2: '情感分類範例圖.png', guidelineFileAction2: '預覽',
     guidelineFileName3: '常見問題 FAQ.md', guidelineFileAction3: '預覽',
+    guidelineImagePreviewEmpty: '點擊上方圖片檔案即可在此預覽',
+    guidelineImagePreviewAlt: 'VA 評分範例圖',
     guidelineModalTitle: '請先閱讀任務說明',
     guidelineModalBody: '開始標記前，請閱讀以下任務說明。說明內容在右側面板中持續可見，隨時可查閱。',
     guidelinePreviewHeading: '任務目標：', guidelinePreviewGoal: '情感極性分類',
@@ -1291,6 +1328,8 @@ var I18N = {
     guidelineFileName1: 'Annotation guide v2.pdf', guidelineFileAction1: 'New tab',
     guidelineFileName2: 'Sentiment examples.png', guidelineFileAction2: 'Preview',
     guidelineFileName3: 'FAQ.md', guidelineFileAction3: 'Preview',
+    guidelineImagePreviewEmpty: 'Click an image file above to preview it here.',
+    guidelineImagePreviewAlt: 'VA scoring example chart',
     guidelineModalTitle: 'Read task instructions first',
     guidelineModalBody: 'Before you start annotating, please read the task instructions below. They remain visible in the right panel throughout your session.',
     guidelinePreviewHeading: 'Goal: ', guidelinePreviewGoal: 'Sentiment polarity classification',
@@ -1518,6 +1557,8 @@ function normalizeTaskTypeKey(taskType) {
 function isVaTaskType(taskType) {
   return normalizeTaskTypeKey(taskType) === 'single_sentence_va_scoring';
 }
+
+var VA_GUIDELINE_IMAGE_SRC = '../../assets/images/task-management/VA_emj.png';
 
 var VA_SCALE_VALUES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9];
 
@@ -1774,11 +1815,38 @@ function renderTaskTypeInterface() {
   var config = TASK_TYPE_UI_CONFIG[state.taskTypeKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
   el('classificationAnnotatorPanel').classList.toggle('hidden', isVa);
   el('vaAnnotatorPanel').classList.toggle('hidden', !isVa);
+  el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
+  if (!isVa) {
+    clearGuidelineImagePreview();
+  }
   setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
   setText('mobileGuidelineText', config.mobileGuideline[state.lang] || config.mobileGuideline.zh);
+}
+
+function clearGuidelineImagePreview() {
+  var panel = el('guidelineImagePreviewPanel');
+  var image = el('guidelineImagePreview');
+  var empty = el('guidelineImagePreviewEmpty');
+  if (!panel || !image || !empty) return;
+  panel.classList.add('empty');
+  image.classList.add('hidden');
+  image.removeAttribute('src');
+  empty.classList.remove('hidden');
+}
+
+function showGuidelineImagePreview(src, altText) {
+  var panel = el('guidelineImagePreviewPanel');
+  var image = el('guidelineImagePreview');
+  var empty = el('guidelineImagePreviewEmpty');
+  if (!panel || !image || !empty) return;
+  panel.classList.remove('empty');
+  image.classList.remove('hidden');
+  image.src = src;
+  image.alt = altText || '';
+  empty.classList.add('hidden');
 }
 
 function renderGuidelineCollapseState() {
@@ -1819,6 +1887,7 @@ function applyLang(lang) {
     'guidelineFileName1', 'guidelineFileAction1',
     'guidelineFileName2', 'guidelineFileAction2',
     'guidelineFileName3', 'guidelineFileAction3',
+    'guidelineImagePreviewEmpty',
     'guidelineModalTitle', 'guidelineModalBody', 'guidelineModalConfirm',
     'guidelinePreviewHeading', 'guidelinePreviewGoal',
     'guidelinePreviewIntro',
@@ -1833,6 +1902,10 @@ function applyLang(lang) {
     var val = (I18N[lang] || I18N.zh)[key];
     if (val !== undefined) setText(id, val);
   });
+  var previewImage = el('guidelineImagePreview');
+  if (previewImage) {
+    previewImage.alt = t('guidelineImagePreviewAlt');
+  }
 
   setText('sampleListCount', t('sampleListCount', { n: SAMPLES.length }));
 
@@ -2011,7 +2084,12 @@ function bindEvents() {
   });
 
   el('guidelineFileBtn1').addEventListener('click', function() { showToast('PDF 於新分頁開啟'); });
-  el('guidelineFileBtn2').addEventListener('click', function() { showToast('圖片預覽'); });
+  el('guidelineFileBtn2').addEventListener('click', function() {
+    if (!isVaTaskType(state.taskTypeKey)) {
+      return;
+    }
+    showGuidelineImagePreview(VA_GUIDELINE_IMAGE_SRC, t('guidelineImagePreviewAlt'));
+  });
   el('guidelineFileBtn3').addEventListener('click', function() { showToast('Markdown 預覽'); });
 
   var mobileHandle = el('mobileDrawerHandle');
