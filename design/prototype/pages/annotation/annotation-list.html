@@ -170,39 +170,117 @@
     .page-header { display: flex; align-items: flex-start; gap: var(--space-md); }
     .page-title { font-size: 28px; line-height: 1.2; font-weight: 700; }
     .page-subtitle { font-size: 14px; color: var(--color-ink-muted); margin-top: 6px; }
-    .panel {
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
     }
-    .panel-head {
-      padding: var(--space-md) var(--space-lg);
-      border-bottom: 1px solid var(--color-border);
+    .toolbar-left {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: var(--space-md);
+      gap: var(--space-sm);
+      flex: 1;
+      flex-wrap: wrap;
     }
-    .panel-title { font-size: 16px; font-weight: 700; }
-    .panel-subtitle { font-size: 12px; color: var(--color-ink-muted); }
-    table { width: 100%; border-collapse: collapse; }
-    th, td {
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 220px;
+      width: 280px;
+      flex: 0 1 auto;
+      max-width: 280px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--color-ink-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 36px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-ink);
+      background: var(--color-white);
+      transition: border-color var(--dur-fast);
+      outline: none;
+    }
+    .search-input::placeholder { color: var(--color-ink-muted); }
+    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select {
+      padding: 9px 32px 9px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      outline: none;
+      min-width: 180px;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color var(--dur-fast);
+    }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .clear-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink-muted);
+      font-size: 13px;
+      font-weight: 500;
+      transition: color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .clear-btn:hover { color: var(--color-ink); border-color: var(--color-primary); }
+    .clear-btn.hide-clear { visibility: hidden; pointer-events: none; }
+    .table-container {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      overflow: hidden;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 640px;
+      white-space: nowrap;
       text-align: left;
-      padding: 12px 16px;
+    }
+    .task-table th {
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-ink-muted);
       border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+      background: #F8FAFC;
+    }
+    .task-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid #F1F5F9;
       vertical-align: middle;
     }
-    th {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--color-ink-muted);
-      background: #F8FAFC;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-    }
-    td { font-size: 14px; }
+    .task-table tbody tr:last-child td { border-bottom: none; }
     #sampleRows tr {
       cursor: pointer;
       transition: background var(--dur-fast);
@@ -212,7 +290,14 @@
       outline: 2px solid var(--color-primary);
       outline-offset: -2px;
     }
-    .text-snippet { max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .text-snippet {
+      max-width: 520px;
+      white-space: normal;
+      word-break: break-word;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.6;
+    }
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -225,32 +310,33 @@
     .status-submitted { color: var(--color-success); background: #DCFCE7; }
     .status-saved { color: var(--color-warning); background: #FEF3C7; }
     .status-pending { color: var(--color-ink-muted); background: #E2E8F0; }
-    .btn {
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background var(--dur-fast), color var(--dur-fast);
-    }
-    .btn-primary { background: var(--color-primary); color: var(--color-white); }
-    .btn-primary:hover { background: #4F46E5; }
-    .btn-secondary {
-      background: var(--color-white);
+    .mini-btn {
       border: 1px solid var(--color-border);
-      color: var(--color-ink-muted);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
     }
-    .btn-secondary:hover {
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn-primary {
+      background: var(--color-primary);
       border-color: var(--color-primary);
-      color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
+      color: var(--color-white);
     }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
     .empty {
       padding: var(--space-xl);
       text-align: center;
       color: var(--color-ink-muted);
       font-size: 14px;
+      border-top: 1px solid var(--color-border);
     }
     @media (max-width: 768px) {
       body {
@@ -334,8 +420,26 @@
       .nav-actions { display: none; }
       .layout { padding: var(--space-md); }
       .page-title { font-size: 22px; }
-      .panel { overflow-x: auto; }
-      table { min-width: 780px; }
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .toolbar-left {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+      .search-wrap {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .filter-select {
+        width: 100%;
+        min-width: 0;
+      }
+      .clear-btn { align-self: flex-start; }
+      .clear-btn.hide-clear { display: none; }
     }
   </style>
 </head>
@@ -365,25 +469,45 @@
     </div>
   </section>
 
-  <section class="panel">
-    <header class="panel-head">
-      <div>
-        <h2 class="panel-title" id="taskTitle">任務資料清單</h2>
+  <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選">
+    <div class="toolbar-left">
+      <select class="filter-select" id="statusFilter" aria-label="依完成狀態篩選">
+        <option value="">全部完成狀態</option>
+        <option value="submitted">已提交</option>
+        <option value="saved">草稿</option>
+        <option value="pending">待處理</option>
+      </select>
+      <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
+        <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>清除篩選</span>
+      </button>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
       </div>
-    </header>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>完成狀態</th>
-          <th>完成時間</th>
-          <th>標記者</th>
-          <th>文本摘要</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="sampleRows"></tbody>
-    </table>
+    </div>
+  </div>
+
+  <section class="table-container">
+    <div class="task-table-wrap">
+      <table class="task-table" aria-label="標記清單" id="taskTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>完成狀態</th>
+            <th>完成時間</th>
+            <th>標記者</th>
+            <th>文本摘要</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="sampleRows"></tbody>
+      </table>
+    </div>
     <div class="empty hidden" id="emptyState">找不到符合條件的資料。</div>
   </section>
 </main>
@@ -419,8 +543,11 @@
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         samples: [
-          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '餐點口味普通，但價格偏高，CP 值不高。' },
-          { sampleId: 'A2-002', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '店內環境乾淨，服務態度親切，會想再次光顧。' }
+          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。' },
+          { sampleId: 'A2-002', status: 'submitted', completedAt: '2026-04-23 09:16', annotatedBy: 'Mandy', text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。' },
+          { sampleId: 'A2-003', status: 'saved', completedAt: '2026-04-23 09:22', annotatedBy: 'Mandy', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。' },
+          { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。' },
+          { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。' }
         ]
       }
     ],
@@ -437,15 +564,23 @@
       },
       {
         taskId: 'TASK-015-R2',
+        taskAliases: ['TASK-015-A2'],
         title: '情感 VA 雙維度評分',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         samples: [
-          { sampleId: 'R2-001', status: 'pending', completedAt: '-', annotatedBy: 'Annotator C', text: '影片教學很完整，但實作範例可以更多。' },
-          { sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:02', annotatedBy: 'Annotator D', text: '網頁讀取速度不穩定，尖峰時段常卡頓。' }
+          { sampleId: 'R2-001', status: 'submitted', completedAt: '2026-04-23 11:02', annotatedBy: 'Annotator C', text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。' },
+          { sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:08', annotatedBy: 'Annotator D', text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。' },
+          { sampleId: 'R2-003', status: 'saved', completedAt: '2026-04-23 11:15', annotatedBy: 'Annotator C', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。' },
+          { sampleId: 'R2-004', status: 'pending', completedAt: '-', annotatedBy: 'Annotator D', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。' },
+          { sampleId: 'R2-005', status: 'pending', completedAt: '-', annotatedBy: 'Annotator C', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。' }
         ]
       }
     ]
+  };
+  var FILTER_STATE = {
+    status: '',
+    query: ''
   };
 
   function getStoredActiveTaskType() {
@@ -499,8 +634,38 @@
     return '待處理';
   }
 
-  function taskTypeText(taskType) {
-    return TASK_TYPE_TEXT[taskType] || TASK_TYPE_TEXT.single_sentence_classification;
+  function updateClearFilterState() {
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (!clearFiltersBtn) return;
+    if (FILTER_STATE.status || FILTER_STATE.query) {
+      clearFiltersBtn.classList.remove('hide-clear');
+      return;
+    }
+    clearFiltersBtn.classList.add('hide-clear');
+  }
+
+  function filterRows(rows) {
+    return rows.filter(function (item) {
+      if (FILTER_STATE.status && item.sample.status !== FILTER_STATE.status) return false;
+      if (!FILTER_STATE.query) return true;
+
+      var query = FILTER_STATE.query.toLowerCase();
+      var status = statusText(item.sample.status).toLowerCase();
+      return (
+        item.sample.sampleId.toLowerCase().indexOf(query) !== -1 ||
+        status.indexOf(query) !== -1 ||
+        item.sample.completedAt.toLowerCase().indexOf(query) !== -1 ||
+        item.sample.annotatedBy.toLowerCase().indexOf(query) !== -1 ||
+        item.sample.text.toLowerCase().indexOf(query) !== -1
+      );
+    });
+  }
+
+  function matchesTaskId(task, taskId) {
+    if (!taskId) return true;
+    if (task.taskId === taskId) return true;
+    if (Array.isArray(task.taskAliases) && task.taskAliases.indexOf(taskId) !== -1) return true;
+    return false;
   }
 
   function renderRows(context) {
@@ -510,16 +675,10 @@
 
     var roleTasks = TASKS_BY_ROLE[context.role] || [];
     var filteredTasks = roleTasks.filter(function (task) {
-      if (context.taskId && task.taskId !== context.taskId) return false;
+      if (!matchesTaskId(task, context.taskId)) return false;
       if (context.runType && task.runType !== context.runType) return false;
       return true;
     });
-
-    if (filteredTasks.length === 0) {
-      empty.classList.remove('hidden');
-      return;
-    }
-    empty.classList.add('hidden');
 
     var flatRows = [];
     filteredTasks.forEach(function (task) {
@@ -533,7 +692,14 @@
       });
     });
 
-    flatRows.forEach(function (item) {
+    var visibleRows = filterRows(flatRows);
+    if (visibleRows.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    visibleRows.forEach(function (item) {
       var tr = document.createElement('tr');
       tr.setAttribute('tabindex', '0');
       tr.setAttribute('role', 'button');
@@ -556,7 +722,7 @@
         '<td>' + item.sample.completedAt + '</td>' +
         '<td>' + item.sample.annotatedBy + '</td>' +
         '<td class="text-snippet">' + item.sample.text + '</td>' +
-        '<td><button class="btn btn-primary sample-open-btn" type="button">進入作業頁</button></td>';
+        '<td><button class="mini-btn mini-btn-primary sample-open-btn" type="button">進入作業頁</button></td>';
 
       tr.querySelector('.sample-open-btn').addEventListener('click', function (e) {
         e.stopPropagation();
@@ -572,8 +738,33 @@
 
       rows.appendChild(tr);
     });
+  }
 
-    document.getElementById('taskTitle').textContent = '任務資料清單';
+  function bindFilters(context) {
+    var statusFilter = document.getElementById('statusFilter');
+    var searchInput = document.getElementById('searchInput');
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    statusFilter.addEventListener('change', function (event) {
+      FILTER_STATE.status = event.target.value || '';
+      updateClearFilterState();
+      renderRows(context);
+    });
+
+    searchInput.addEventListener('input', function (event) {
+      FILTER_STATE.query = event.target.value.trim();
+      updateClearFilterState();
+      renderRows(context);
+    });
+
+    clearFiltersBtn.addEventListener('click', function () {
+      FILTER_STATE.status = '';
+      FILTER_STATE.query = '';
+      statusFilter.value = '';
+      searchInput.value = '';
+      updateClearFilterState();
+      renderRows(context);
+    });
   }
 
   function renderContext(context) {
@@ -587,6 +778,8 @@
     var context = parseContext();
     setStoredActiveTaskType(context.taskType);
     renderContext(context);
+    bindFilters(context);
+    updateClearFilterState();
     renderRows(context);
 
     if (window.LabelSuiteAnalytics) {
