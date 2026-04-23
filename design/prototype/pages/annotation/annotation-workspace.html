@@ -918,9 +918,11 @@
 <div id="sharedSidebarMount"></div>
 <script src="../shared/sidebar.js"></script>
 <script>
+  var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
   window.LabelSuiteSharedSidebar.mountSidebar({
     mountId: 'sharedSidebarMount',
     activeNav: 'annotation',
+    annotationHref: annotationListHref,
     dashboardHref: '../dashboard/dashboard.html',
     taskHref: '../task-management/task-list.html',
     adminHref: '../admin/user-management.html',

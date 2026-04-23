@@ -1713,6 +1713,7 @@
 
     const ANNOTATOR_TASKS = [
       {
+        taskId: 'TASK-015-A1',
         taskType: 'single_sentence_classification',
         runType: 'official_run',
         progress: 89,
@@ -1726,6 +1727,7 @@
         actionText: { zh: '快速繼續', en: 'Continue' },
       },
       {
+        taskId: 'TASK-015-A2',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         progress: 42,
@@ -1739,6 +1741,7 @@
         actionText: { zh: '快速繼續', en: 'Continue' },
       },
       {
+        taskId: 'TASK-015-A3',
         taskType: 'sequence_labeling',
         runType: 'official_run',
         progress: 64,
@@ -1752,6 +1755,7 @@
         actionText: { zh: '快速繼續', en: 'Continue' },
       },
       {
+        taskId: 'TASK-015-A4',
         taskType: 'relation_extraction',
         runType: 'official_run',
         progress: 37,
@@ -1765,6 +1769,7 @@
         actionText: { zh: '快速繼續', en: 'Continue' },
       },
       {
+        taskId: 'TASK-015-A5',
         taskType: 'sentence_pairs',
         runType: 'dry_run',
         progress: 58,
@@ -1781,6 +1786,7 @@
 
     const REVIEWER_TASKS = [
       {
+        taskId: 'TASK-015-R1',
         taskType: 'single_sentence_classification',
         runType: 'official_run',
         progress: 67,
@@ -1794,6 +1800,7 @@
         actionText: { zh: '快速審核', en: 'Quick Review' },
       },
       {
+        taskId: 'TASK-015-R2',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         progress: 52,
@@ -1807,6 +1814,7 @@
         actionText: { zh: '快速審核', en: 'Quick Review' },
       },
       {
+        taskId: 'TASK-015-R3',
         taskType: 'sequence_labeling',
         runType: 'official_run',
         progress: 61,
@@ -1820,6 +1828,7 @@
         actionText: { zh: '快速審核', en: 'Quick Review' },
       },
       {
+        taskId: 'TASK-015-R4',
         taskType: 'relation_extraction',
         runType: 'official_run',
         progress: 44,
@@ -1833,6 +1842,7 @@
         actionText: { zh: '快速審核', en: 'Quick Review' },
       },
       {
+        taskId: 'TASK-015-R5',
         taskType: 'sentence_pairs',
         runType: 'dry_run',
         progress: 56,
@@ -1866,7 +1876,7 @@
       }
     }
 
-    function openTaskWorkspace(role, task) {
+    function openAnnotationList(role, task) {
       setActiveTaskType(task.taskType);
       window.LabelSuiteAnalytics.track('prototype_cta_clicked', {
         cta: role === 'annotator' ? 'annotator_quick_continue' : 'reviewer_quick_review',
@@ -1876,7 +1886,9 @@
         lang,
         scenario,
       });
-      const url = '../annotation/annotation-workspace.html?role=' + encodeURIComponent(role) +
+      const taskId = task.taskId || '';
+      const url = '../annotation/annotation-list.html?role=' + encodeURIComponent(role) +
+        '&task_id=' + encodeURIComponent(taskId) +
         '&task_type=' + encodeURIComponent(task.taskType) +
         '&run_type=' + encodeURIComponent(task.runType);
       window.location.href = url;
@@ -1914,7 +1926,7 @@
           const taskIndex = Number(btn.dataset.taskIndex);
           const targetTask = tasks[taskIndex];
           if (!targetTask) return;
-          openTaskWorkspace(role, targetTask);
+          openAnnotationList(role, targetTask);
         });
       });
     }
@@ -1964,10 +1976,10 @@
     document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
 
     document.getElementById('workflowCardAnnotateBtn').addEventListener('click', () => {
-      openTaskWorkspace('annotator', ANNOTATOR_TASKS[0]);
+      openAnnotationList('annotator', ANNOTATOR_TASKS[0]);
     });
     document.getElementById('workflowCardReviewBtn').addEventListener('click', () => {
-      openTaskWorkspace('reviewer', REVIEWER_TASKS[0]);
+      openAnnotationList('reviewer', REVIEWER_TASKS[0]);
     });
 
     const getTrackingContext = () => ({ lang, scenario });

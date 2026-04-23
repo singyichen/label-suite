@@ -66,13 +66,13 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.locator('#annotatorCompletedLabel')).toHaveText(/待標記|Pending/);
     await expect(annotatorView.locator('.metric strong').nth(1)).toHaveText('53');
     await expect(annotatorView.locator('.metric strong').nth(2)).toHaveText('4.2');
-    await expect(annotatorView.getByText('新聞標題分類')).toBeVisible();
-    await expect(annotatorView.getByText('情感分析基準')).toBeVisible();
+    await expect(annotatorView.getByText('新聞標題多標籤分類')).toBeVisible();
+    await expect(annotatorView.getByText('情感 VA 雙維度評分')).toBeVisible();
     await expect(annotatorView.getByText(/已完成 89% · 今日 53 筆 · 平均速度 3.0/)).toBeVisible();
     await expect(annotatorView.getByText(/已完成 42% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
-    await expect(annotatorView.getByText(/試標|Dry Run/)).toBeVisible();
-    await expect(annotatorView.getByText(/正式標記|Official Run/)).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(2);
+    await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
+    await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(5);
   });
 
   test('reviewer view shows pending review panel and start-review action', async ({ page }) => {
@@ -84,11 +84,27 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.locator('.metric strong').nth(0)).toHaveText('12');
     await expect(reviewerView.locator('.metric strong').nth(1)).toHaveText('18');
     await expect(reviewerView.locator('.metric strong').nth(2)).toHaveText('0.81');
-    await expect(reviewerView.getByText('新聞標題分類')).toBeVisible();
-    await expect(reviewerView.getByText('情感分析基準')).toBeVisible();
+    await expect(reviewerView.getByText('新聞標題多標籤分類')).toBeVisible();
+    await expect(reviewerView.getByText('情感 VA 雙維度評分')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
     await expect(reviewerView.getByText(/待審 8 筆 · 進度 52% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(2);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(5);
+  });
+
+  test('annotator quick continue routes to annotation list first', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    const firstContinueButton = page.getByRole('button', { name: /快速繼續|Continue/ }).first();
+    await firstContinueButton.click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/role=annotator/);
+  });
+
+  test('reviewer quick review routes to annotation list first', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+    const firstReviewButton = page.getByRole('button', { name: /快速審核|Quick Review/ }).first();
+    await firstReviewButton.click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/role=reviewer/);
   });
 });
 

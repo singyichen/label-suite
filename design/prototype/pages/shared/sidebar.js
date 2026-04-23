@@ -129,7 +129,7 @@
 
     var taskHref = opts.taskHref || '../task-management/task-list.html';
     var storedTaskType = readStoredActiveTaskType();
-    var annotationHref = opts.annotationHref || '../annotation/annotation-workspace.html';
+    var annotationHref = opts.annotationHref || '../annotation/annotation-list.html';
     if (storedTaskType && annotationHref.indexOf('task_type=') === -1) {
       annotationHref += (annotationHref.indexOf('?') === -1 ? '?' : '&') + 'task_type=' + encodeURIComponent(storedTaskType);
     }

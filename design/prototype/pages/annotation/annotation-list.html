@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 標記清單</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+    .hidden { display: none !important; }
+
+    /* Shared Sidebar styles */
+    .navbar {
+      width: 240px;
+      height: 100vh;
+      background: var(--color-white);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); text-decoration: none; color: inherit; }
+    .navbar-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .navbar-logo svg { width: 20px; height: 20px; }
+    .navbar-wordmark {
+      font-family: var(--font-serif-display);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--color-ink);
+    }
+    .brand-section .lang-toggle { margin-left: auto; }
+    .mobile-user-name,
+    .mobile-lang-toggle,
+    .mobile-top-logout { display: none; }
+    .navbar-center {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xl);
+      flex: 1;
+    }
+    .nav-link {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink-muted);
+      transition: color var(--dur-fast), background var(--dur-fast);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .nav-link:hover { color: var(--color-ink); background: #F8FAFC; }
+    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
+    .nav-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-lg);
+      margin-top: auto;
+    }
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 13px;
+      font-weight: 500;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; }
+    .user-chip-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: var(--color-primary);
+      font-weight: 700;
+      font-size: 14px;
+      border: 2px solid rgba(99,102,241,0.16);
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-role { display: block; font-size: 11px; color: var(--color-ink-muted); line-height: 1.3; }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--color-ink-muted);
+      flex-shrink: 0;
+    }
+    .logout-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+
+    .layout {
+      flex: 1;
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      min-width: 0;
+    }
+    .page-header { display: flex; align-items: flex-start; gap: var(--space-md); }
+    .page-title { font-size: 28px; line-height: 1.2; font-weight: 700; }
+    .page-subtitle { font-size: 14px; color: var(--color-ink-muted); margin-top: 6px; }
+    .panel {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .panel-head {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .panel-title { font-size: 16px; font-weight: 700; }
+    .panel-subtitle { font-size: 12px; color: var(--color-ink-muted); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+    th {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-ink-muted);
+      background: #F8FAFC;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    td { font-size: 14px; }
+    #sampleRows tr {
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    #sampleRows tr:hover { background: #F8FAFC; }
+    #sampleRows tr:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+    .text-snippet { max-width: 420px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-submitted { color: var(--color-success); background: #DCFCE7; }
+    .status-saved { color: var(--color-warning); background: #FEF3C7; }
+    .status-pending { color: var(--color-ink-muted); background: #E2E8F0; }
+    .btn {
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--dur-fast), color var(--dur-fast);
+    }
+    .btn-primary { background: var(--color-primary); color: var(--color-white); }
+    .btn-primary:hover { background: #4F46E5; }
+    .btn-secondary {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      color: var(--color-ink-muted);
+    }
+    .btn-secondary:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .empty {
+      padding: var(--space-xl);
+      text-align: center;
+      color: var(--color-ink-muted);
+      font-size: 14px;
+    }
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        padding-top: var(--navbar-mobile-top-height);
+        padding-bottom: var(--navbar-mobile-height);
+      }
+      .navbar {
+        width: 100%;
+        height: var(--navbar-mobile-height);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        flex-direction: row;
+        padding: 0;
+        z-index: 300;
+      }
+      .brand-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--navbar-mobile-top-height);
+        margin: 0;
+        padding: 0 var(--space-md);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-white);
+        display: flex;
+        align-items: center;
+        z-index: 320;
+      }
+      .brand-section .lang-toggle { display: none; }
+      .mobile-user-name { display: inline-block; margin-left: auto; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 600; }
+      .mobile-lang-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 6px 10px;
+        background: var(--color-white);
+        color: var(--color-ink);
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .mobile-top-logout {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--color-border);
+        background: var(--color-white);
+        color: var(--color-ink-muted);
+      }
+      .navbar-center {
+        flex: 1;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: space-around;
+        gap: 0;
+        margin: 0;
+      }
+      .navbar-center .nav-link {
+        min-height: var(--navbar-mobile-top-height);
+        flex: 1;
+        padding: 8px 2px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+        font-size: 11px;
+      }
+      .nav-actions { display: none; }
+      .layout { padding: var(--space-md); }
+      .page-title { font-size: 22px; }
+      .panel { overflow-x: auto; }
+      table { min-width: 780px; }
+    }
+  </style>
+</head>
+<body>
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'annotation',
+    annotationHref: annotationListHref,
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<main class="layout" data-testid="annotation-list-shell">
+  <section class="page-header">
+    <div>
+      <h1 class="page-title" id="pageTitle">標記清單</h1>
+      <p class="page-subtitle" id="pageSubtitle">請先選擇要處理的資料筆次，再進入標記作業頁。</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header class="panel-head">
+      <div>
+        <h2 class="panel-title" id="taskTitle">任務資料清單</h2>
+      </div>
+    </header>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>完成狀態</th>
+          <th>完成時間</th>
+          <th>標記者</th>
+          <th>文本摘要</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="sampleRows"></tbody>
+    </table>
+    <div class="empty hidden" id="emptyState">找不到符合條件的資料。</div>
+  </section>
+</main>
+
+<script src="../../assets/analytics.js"></script>
+<script>
+  var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
+
+  var TASK_TYPE_TEXT = {
+    single_sentence_classification: '單句分類',
+    single_sentence_va_scoring: '單句 VA 評分',
+    sequence_labeling: '序列標註',
+    relation_extraction: '關係抽取',
+    sentence_pairs: '句對任務'
+  };
+
+  var TASKS_BY_ROLE = {
+    annotator: [
+      {
+        taskId: 'TASK-015-A1',
+        title: '新聞標題多標籤分類',
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        samples: [
+          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '這款耳機音質很清晰，降噪效果也超乎預期。' },
+          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '客服回應速度普通，但最終仍有解決我的問題。' },
+          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '包裝完整，配送速度快，整體體驗不錯。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-A2',
+        title: '情感 VA 雙維度評分',
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        samples: [
+          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '餐點口味普通，但價格偏高，CP 值不高。' },
+          { sampleId: 'A2-002', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '店內環境乾淨，服務態度親切，會想再次光顧。' }
+        ]
+      }
+    ],
+    reviewer: [
+      {
+        taskId: 'TASK-015-R1',
+        title: '新聞標題多標籤分類',
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        samples: [
+          { sampleId: 'R1-001', status: 'pending', completedAt: '-', annotatedBy: 'Annotator A', text: '產品整體穩定，但初次設定流程偏繁瑣。' },
+          { sampleId: 'R1-002', status: 'saved', completedAt: '2026-04-23 08:58', annotatedBy: 'Annotator B', text: '售後支援回覆快速，解決效率高。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R2',
+        title: '情感 VA 雙維度評分',
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        samples: [
+          { sampleId: 'R2-001', status: 'pending', completedAt: '-', annotatedBy: 'Annotator C', text: '影片教學很完整，但實作範例可以更多。' },
+          { sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:02', annotatedBy: 'Annotator D', text: '網頁讀取速度不穩定，尖峰時段常卡頓。' }
+        ]
+      }
+    ]
+  };
+
+  function getStoredActiveTaskType() {
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.getStoredActiveTaskType === 'function') {
+      return window.LabelSuiteSharedSidebar.getStoredActiveTaskType();
+    }
+    try {
+      return window.localStorage.getItem(ACTIVE_TASK_TYPE_STORAGE_KEY) || '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function setStoredActiveTaskType(taskType) {
+    if (!taskType) return;
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
+      window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
+      return;
+    }
+    try {
+      window.localStorage.setItem(ACTIVE_TASK_TYPE_STORAGE_KEY, String(taskType));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  function parseContext() {
+    var params = new URLSearchParams(window.location.search);
+    var role = params.get('role');
+    var runType = params.get('run_type');
+    var taskId = params.get('task_id');
+    var taskType = params.get('task_type') || getStoredActiveTaskType();
+
+    return {
+      role: role === 'reviewer' ? 'reviewer' : 'annotator',
+      runType: runType === 'official_run' ? 'official_run' : 'dry_run',
+      taskId: taskId ? taskId.trim() : '',
+      taskType: TASK_TYPE_TEXT[taskType] ? taskType : 'single_sentence_classification'
+    };
+  }
+
+  function statusBadgeClass(status) {
+    if (status === 'submitted') return 'status-submitted';
+    if (status === 'saved') return 'status-saved';
+    return 'status-pending';
+  }
+
+  function statusText(status) {
+    if (status === 'submitted') return '已提交';
+    if (status === 'saved') return '草稿';
+    return '待處理';
+  }
+
+  function taskTypeText(taskType) {
+    return TASK_TYPE_TEXT[taskType] || TASK_TYPE_TEXT.single_sentence_classification;
+  }
+
+  function renderRows(context) {
+    var rows = document.getElementById('sampleRows');
+    var empty = document.getElementById('emptyState');
+    rows.innerHTML = '';
+
+    var roleTasks = TASKS_BY_ROLE[context.role] || [];
+    var filteredTasks = roleTasks.filter(function (task) {
+      if (context.taskId && task.taskId !== context.taskId) return false;
+      if (context.runType && task.runType !== context.runType) return false;
+      return true;
+    });
+
+    if (filteredTasks.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    var flatRows = [];
+    filteredTasks.forEach(function (task) {
+      task.samples.forEach(function (sample) {
+        flatRows.push({
+          taskId: task.taskId,
+          taskType: task.taskType,
+          runType: task.runType,
+          sample: sample
+        });
+      });
+    });
+
+    flatRows.forEach(function (item) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+      tr.setAttribute('aria-label', '開啟樣本 ' + item.sample.sampleId);
+
+      function openWorkspace() {
+        setStoredActiveTaskType(item.taskType);
+        var url = '../annotation/annotation-workspace.html' +
+          '?task_id=' + encodeURIComponent(item.taskId) +
+          '&sample_id=' + encodeURIComponent(item.sample.sampleId) +
+          '&role=' + encodeURIComponent(context.role) +
+          '&run_type=' + encodeURIComponent(item.runType) +
+          '&task_type=' + encodeURIComponent(item.taskType);
+        window.location.href = url;
+      }
+
+      tr.innerHTML =
+        '<td>' + item.sample.sampleId + '</td>' +
+        '<td><span class="status-badge ' + statusBadgeClass(item.sample.status) + '">' + statusText(item.sample.status) + '</span></td>' +
+        '<td>' + item.sample.completedAt + '</td>' +
+        '<td>' + item.sample.annotatedBy + '</td>' +
+        '<td class="text-snippet">' + item.sample.text + '</td>' +
+        '<td><button class="btn btn-primary sample-open-btn" type="button">進入作業頁</button></td>';
+
+      tr.querySelector('.sample-open-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        openWorkspace();
+      });
+      tr.addEventListener('click', openWorkspace);
+      tr.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openWorkspace();
+        }
+      });
+
+      rows.appendChild(tr);
+    });
+
+    document.getElementById('taskTitle').textContent = '任務資料清單';
+  }
+
+  function renderContext(context) {
+    document.getElementById('pageSubtitle').textContent =
+      context.role === 'reviewer'
+        ? '請先選擇要審查的資料筆次，再進入審核作業頁。'
+        : '請先選擇要處理的資料筆次，再進入標記作業頁。';
+  }
+
+  function init() {
+    var context = parseContext();
+    setStoredActiveTaskType(context.taskType);
+    renderContext(context);
+    renderRows(context);
+
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'annotation-list' });
+      window.LabelSuiteAnalytics.trackPageView('annotation-list', {
+        role: context.role,
+        run_type: context.runType,
+        task_id: context.taskId || null,
+        task_type: context.taskType
+      });
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
