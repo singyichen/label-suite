@@ -1838,6 +1838,13 @@
     document.getElementById('langToggle').addEventListener('click', () => handleLangToggle('desktop_toggle'));
     document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
 
+    document.getElementById('workflowCardAnnotateBtn').addEventListener('click', () => {
+      window.location.href = '../annotation/annotation-workspace.html?role=annotator';
+    });
+    document.getElementById('workflowCardReviewBtn').addEventListener('click', () => {
+      window.location.href = '../annotation/annotation-workspace.html?role=reviewer';
+    });
+
     const getTrackingContext = () => ({ lang, scenario });
 
     window.LabelSuiteAnalytics.bindClickTracks(

@@ -1,6 +1,7 @@
 (function () {
   var SYSTEM_ROLE_STORAGE_KEY = 'labelsuite.systemRole';
   var LANG_STORAGE_KEY = 'labelsuite.lang';
+  var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
 
   function normalizeSystemRole(role) {
     return role === 'super_admin' ? 'super_admin' : 'user';
@@ -70,6 +71,26 @@
     return normalizedLang;
   }
 
+  function readStoredActiveTaskType() {
+    try {
+      return window.localStorage.getItem(ACTIVE_TASK_TYPE_STORAGE_KEY) || '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function persistActiveTaskType(taskType) {
+    try {
+      if (!taskType) {
+        window.localStorage.removeItem(ACTIVE_TASK_TYPE_STORAGE_KEY);
+        return;
+      }
+      window.localStorage.setItem(ACTIVE_TASK_TYPE_STORAGE_KEY, String(taskType));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
   function shouldHideAdminByRole(systemRole) {
     return systemRole !== 'super_admin';
   }
@@ -107,7 +128,11 @@
     var profileHref = opts.profileHref || '../account/profile.html';
 
     var taskHref = opts.taskHref || '../task-management/task-list.html';
-    var annotationHref = opts.annotationHref || '#';
+    var storedTaskType = readStoredActiveTaskType();
+    var annotationHref = opts.annotationHref || '../annotation/annotation-workspace.html';
+    if (storedTaskType && annotationHref.indexOf('task_type=') === -1) {
+      annotationHref += (annotationHref.indexOf('?') === -1 ? '?' : '&') + 'task_type=' + encodeURIComponent(storedTaskType);
+    }
     var datasetHref = opts.datasetHref || '#';
     var adminHref = opts.adminHref || '#';
     var brandHref = opts.brandHref || dashboardHref;
@@ -255,6 +280,8 @@
     getStoredSystemRole: readStoredSystemRole,
     getStoredLang: readStoredLang,
     setStoredLang: persistLang,
+    setStoredActiveTaskType: persistActiveTaskType,
+    getStoredActiveTaskType: readStoredActiveTaskType,
     applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
   };

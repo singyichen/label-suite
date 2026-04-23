@@ -2,7 +2,7 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.1.3
+**版本**：1.1.4
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
@@ -14,6 +14,7 @@
 - `MOBILE_BOTTOM_NAV_HEIGHT = 84px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `SUPPORTED_PAGES = /dashboard, /task-list, /task-new, /task-detail, /annotation-workspace, /dataset-stats, /dataset-quality, /user-management, /role-settings, /profile`
+- `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
 
 ## Process Flow
 
@@ -131,6 +132,7 @@ sequenceDiagram
 
 - `系統管理`：僅 `super_admin` 可見（不渲染給 `user`）。
 - `標記作業`：需當前任務 `annotator` 或 `reviewer`。
+- `標記作業` 導頁時，若 `ACTIVE_TASK_TYPE_STORAGE_KEY` 有值，需附帶 `task_type` query 參數。
 - `資料集分析`：需當前任務 `project_leader` 或 `reviewer`。
 - 任務上下文頁缺 `task_id / membership`：導回模組 Landing（`dashboard` 或 `task-list`）並提示。
 
@@ -174,6 +176,7 @@ sequenceDiagram
 - **FR-006**：`role-settings` 必須映射為 `系統管理` active。
 - **FR-007**：每頁僅允許一個 L0 active 項，且必須同時包含 active 樣式與 `aria-current="page"`。
 - **FR-008**：`標記作業`、`資料集分析` 必須驗證任務角色與任務上下文，不符時導回 Landing 並提示。
+- **FR-008A**：點擊 `標記作業` 時，若存在 `ACTIVE_TASK_TYPE_STORAGE_KEY`，導頁 URL 必須附帶 `task_type` query（避免覆蓋既有 query 參數）。
 - **FR-009**：Navbar 必須支援 zh/en 切換，切換後同步更新文案、`aria-label`、`title`。
 - **FR-009A**：使用者點擊語言切換後，右側內容區不論目前顯示 `dashboard / task-management / annotation / dataset / admin / account` 任一模組頁，皆必須同步切換為相同語系，不可僅更新 Sidebar。
 - **FR-009B**：語言狀態必須跨頁持久化；導向任一 `SUPPORTED_PAGES` 後需維持同語系（建議實作：`localStorage`，key：`labelsuite.lang`）。
@@ -218,6 +221,9 @@ flowchart LR
 - `LanguageState`
   - `lang`: `zh` / `en`
   - `storage_key`: `labelsuite.lang`
+- `ActiveTaskTypeState`
+  - `task_type`: 值域需對齊 task registry（如 `single_sentence_classification`、`single_sentence_va_scoring`）
+  - `storage_key`: `labelsuite.activeTaskType`
 
 ---
 
@@ -253,6 +259,7 @@ flowchart LR
 - **SC-003**：`super_admin` 與 `user` 的 L0 可見性符合矩陣（僅 `super_admin` 可見 `系統管理`）。
 - **SC-003A**：L0 可見項目數驗證通過：`user = 5`、`super_admin = 6`（Desktop / Mobile 皆一致）。
 - **SC-004**：缺少任務角色或上下文時，`標記作業`/`資料集分析` 會導回 Landing 並顯示提示。
+- **SC-004A**：點擊 `標記作業` 且存在 `labelsuite.activeTaskType` 時，導頁 URL 需包含 `task_type=<stored_value>`。
 - **SC-005**：`RWD_VIEWPORTS` 下 navbar 無破版、無重疊、無不可點擊控制項。
 - **SC-006**：在任一 `SUPPORTED_PAGES` 點擊語言切換後，Sidebar 與右側模組內容語系一致，且切頁後保持同一語系狀態。
 - **SC-006A**：重新載入任一 `SUPPORTED_PAGES` 後，仍可恢復最後一次語言狀態（`zh` / `en`）。
@@ -268,6 +275,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.4 | 2026-04-23 | 同步 shared sidebar：新增 `labelsuite.activeTaskType` 導頁契約，點擊「標記作業」時附帶 `task_type` query |
 | 1.1.3 | 2026-04-16 | 新增語言持久化機制規範（FR-009B / LanguageState / SC-006A），明確定義 `labelsuite.lang` 跨頁與重載一致性 |
 | 1.1.2 | 2026-04-16 | 新增「角色可見性與 L0 項目數」矩陣，明確規範 `user=5`、`super_admin=6`，並補 FR/SC 可驗收條款 |
 | 1.1.1 | 2026-04-16 | 新增全域語言切換規則：切換語言後 Sidebar 與右側任一模組頁需同步更新並保持一致 |

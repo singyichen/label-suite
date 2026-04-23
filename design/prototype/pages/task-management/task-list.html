@@ -592,7 +592,7 @@
       taskTypeOptions: [
         { value: '', label: '全部任務類型' },
         { value: 'single_sentence_classification', label: '單句分類（含多標籤）' },
-        { value: 'single_sentence_scoring_regression', label: '單句評分 / 回歸' },
+        { value: 'single_sentence_va_scoring', label: '單句 VA 雙維度評分（Valence / Arousal）' },
         { value: 'sequence_labeling', label: '序列標記（含 Aspect / NER）' },
         { value: 'relation_extraction', label: '關係抽取（Entity + Relation + Triple）' },
         { value: 'sentence_pairs', label: '句對任務（相似度 / 蘊含）' },
@@ -631,7 +631,7 @@
       runBadge: { dry_run: '試標', official_run: '正式標記' },
       taskTypeLabel: {
         single_sentence_classification: '單句分類（含多標籤）',
-        single_sentence_scoring_regression: '單句評分 / 回歸',
+        single_sentence_va_scoring: '單句 VA 雙維度評分（Valence / Arousal）',
         sequence_labeling: '序列標記（含 Aspect / NER）',
         relation_extraction: '關係抽取（Entity + Relation + Triple）',
         sentence_pairs: '句對任務（相似度 / 蘊含）',
@@ -659,7 +659,7 @@
       taskTypeOptions: [
         { value: '', label: 'All task types' },
         { value: 'single_sentence_classification', label: 'Single Sentence Classification (Multi-label)' },
-        { value: 'single_sentence_scoring_regression', label: 'Single Sentence Scoring / Regression' },
+        { value: 'single_sentence_va_scoring', label: 'Single-sentence VA Scoring (Valence / Arousal)' },
         { value: 'sequence_labeling', label: 'Sequence Labeling (Aspect / NER)' },
         { value: 'relation_extraction', label: 'Relation Extraction (Entity + Relation + Triple)' },
         { value: 'sentence_pairs', label: 'Sentence Pairs (Similarity / Entailment)' },
@@ -698,7 +698,7 @@
       runBadge: { dry_run: 'Dry Run', official_run: 'Official' },
       taskTypeLabel: {
         single_sentence_classification: 'Single Sentence Classification (Multi-label)',
-        single_sentence_scoring_regression: 'Single Sentence Scoring / Regression',
+        single_sentence_va_scoring: 'Single-sentence VA Scoring (Valence / Arousal)',
         sequence_labeling: 'Sequence Labeling (Aspect / NER)',
         relation_extraction: 'Relation Extraction (Entity + Relation + Triple)',
         sentence_pairs: 'Sentence Pairs (Similarity / Entailment)',
@@ -713,7 +713,7 @@
     { id: 'T002', nameZh: 'NER 基準任務',       nameEn: 'NER Benchmark',                 taskType: 'sequence_labeling', runType: 'official_run', status: 'waiting_iaa_confirmation',  updatedAt: '2026-04-18', canViewDetail: true,  isMine: true, deletedAt: ''  },
     { id: 'T003', nameZh: '意圖分類試標',        nameEn: 'Intent Classification Dry Run', taskType: 'single_sentence_classification', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-17', canViewDetail: false, isMine: true, deletedAt: ''  },
     { id: 'T004', nameZh: '句對語意相似度',      nameEn: 'Sentence Pair Similarity',     taskType: 'sentence_pairs',  runType: 'official_run', status: 'completed',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T005', nameZh: '單句評分回歸任務',    nameEn: 'Sentence Scoring Regression',  taskType: 'single_sentence_scoring_regression', runType: 'dry_run', status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: false, deletedAt: '' },
+    { id: 'T005', nameZh: '單句 VA 雙維度評分',  nameEn: 'Single-sentence VA Scoring',    taskType: 'single_sentence_va_scoring', runType: 'dry_run', status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: false, deletedAt: '' },
     { id: 'T006', nameZh: '商品評論分類 v2',     nameEn: 'Product Review Classification', taskType: 'single_sentence_classification', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-13', canViewDetail: true,  isMine: false, deletedAt: '' },
     { id: 'T007', nameZh: '醫療文本 NER',        nameEn: 'Medical NER',                  taskType: 'sequence_labeling', runType: 'official_run', status: 'completed',               updatedAt: '2026-04-12', canViewDetail: true,  isMine: false, deletedAt: '' },
     { id: 'T008', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'single_sentence_classification', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false, deletedAt: '' },
@@ -746,7 +746,7 @@
   var RUN_BADGE_CLS = { dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
   var TASK_TYPE_BADGE_CLS = {
     single_sentence_classification: 'badge-task-type-single',
-    single_sentence_scoring_regression: 'badge-task-type-scoring',
+    single_sentence_va_scoring: 'badge-task-type-scoring',
     sequence_labeling: 'badge-task-type-sequence',
     relation_extraction: 'badge-task-type-relation',
     sentence_pairs: 'badge-task-type-pairs',
@@ -849,6 +849,19 @@
     window.LabelSuiteAnalytics.track(eventName, payload);
   }
 
+  function persistActiveTaskType(taskType) {
+    if (!taskType) return;
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
+      window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
+      return;
+    }
+    try {
+      window.localStorage.setItem('labelsuite.activeTaskType', String(taskType));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
   function syncUrl() {
     var p = new URLSearchParams();
     if (state.keyword) p.set('keyword', state.keyword);
@@ -861,6 +874,7 @@
   }
 
   function navigateToTaskDetail(task, source) {
+    persistActiveTaskType(task.taskType);
     if (task.canViewDetail) {
       trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id, source: source || 'row' });
       showToast(t('toastNavigating'), false);

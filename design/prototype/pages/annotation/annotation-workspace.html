@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 標記作業</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <style>
+    :root {
+      --col-samples-width: 256px;
+      --col-guideline-width: 316px;
+      --mobile-drawer-peek: 52px;
+      --navbar-mobile-height: 84px;
+      --navbar-mobile-top-height: 64px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    button, input[type="checkbox"], input[type="radio"], select { cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Sidebar / Navbar ───────────────────────────────────── */
+    .navbar {
+      width: 240px;
+      height: 100vh;
+      background: var(--color-white);
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      padding: var(--space-lg) var(--space-md);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); }
+    .navbar-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .navbar-logo svg { width: 20px; height: 20px; }
+    .navbar-wordmark {
+      font-family: var(--font-serif-display);
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--color-ink);
+      line-height: 1;
+    }
+    .brand-section .lang-toggle { margin-left: auto; }
+    .navbar-center {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xl);
+      flex: 1;
+    }
+    .nav-link {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink-muted);
+      transition: color var(--dur-fast), background var(--dur-fast);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+    }
+    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
+    .nav-link:hover { color: var(--color-ink); background: #F8FAFC; }
+    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
+    .nav-link.active .nav-icon { color: var(--color-primary); }
+    .nav-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-lg);
+      margin-top: auto;
+    }
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 13px;
+      font-weight: 500;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; }
+    .user-chip-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+      transition: opacity var(--dur-fast);
+    }
+    .user-chip-profile:hover { opacity: 0.75; }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: var(--color-primary);
+      font-weight: 700;
+      font-size: 14px;
+      border: 2px solid rgba(99,102,241,0.16);
+      flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { display: block; font-weight: 600; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { display: block; font-size: 11px; color: var(--color-ink-muted); line-height: 1.3; }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--color-ink-muted);
+      flex-shrink: 0;
+      transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .logout-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+    .mobile-top-logout {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-ink-muted);
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .mobile-top-logout:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .mobile-user-name { display: none; margin-left: auto; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 600; color: var(--color-ink); }
+    .mobile-lang-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 6px 10px;
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .mobile-lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+
+    /* ── Workspace Root ─────────────────────────────────────── */
+    .workspace-root {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .progress-text { font-size: 13px; font-weight: 600; color: var(--color-text-soft); white-space: nowrap; }
+    .progress-track {
+      width: 100px;
+      height: 5px;
+      background: var(--color-border);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--color-cta);
+      border-radius: var(--radius-full);
+      transition: width var(--dur-normal) var(--ease-standard);
+    }
+    /* ── Workspace Body (3-column) ──────────────────────────── */
+    .workspace-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: var(--col-samples-width) 1fr var(--col-guideline-width);
+      overflow: hidden;
+      min-height: 0;
+      position: relative;
+      transition: grid-template-columns var(--dur-normal) var(--ease-standard);
+    }
+    .workspace-body.guideline-collapsed { grid-template-columns: var(--col-samples-width) 1fr 0; }
+
+    /* ── Left: Sample List ──────────────────────────────────── */
+    .col-samples {
+      border-right: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .col-header {
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .col-header-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .col-header-count { font-size: 12px; color: var(--color-text-muted); }
+    .sample-list { flex: 1; overflow-y: auto; padding: var(--space-sm); }
+    .sample-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--dur-fast);
+      border: 1px solid transparent;
+      margin-bottom: 2px;
+      width: 100%;
+      background: transparent;
+      text-align: left;
+    }
+    .sample-item:hover { background: var(--color-surface); }
+    .sample-item.active { background: var(--color-primary-soft-bg); border-color: rgba(99,102,241,0.2); }
+    .sample-index {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--color-surface);
+      color: var(--color-text-soft);
+      border: 1px solid var(--color-border);
+    }
+    .sample-item.active .sample-index { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .sample-item.status-submitted .sample-index { background: var(--color-cta); color: white; border-color: var(--color-cta); }
+    .sample-item.status-saved .sample-index { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
+    .sample-meta { flex: 1; min-width: 0; }
+    .sample-snippet {
+      font-size: 12px;
+      color: var(--color-ink);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .sample-status-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+    .status-color-submitted { color: var(--color-cta); }
+    .status-color-saved { color: var(--color-warning); }
+    .status-color-todo { color: var(--color-text-muted); }
+    .status-color-reviewing { color: #7C3AED; }
+
+    /* ── Middle: Content + Annotation ───────────────────────── */
+    .col-content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--color-surface);
+      min-height: 0;
+    }
+    .content-scroll { flex: 1; height: 0; min-height: 0; overflow-y: auto; padding: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-md); }
+    .content-scroll > * { flex-shrink: 0; }
+    .sample-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-xs);
+    }
+    .sample-progress-summary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      min-width: 180px;
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .sample-nav-label { font-size: 12px; font-weight: 600; color: var(--color-text-muted); }
+
+    .content-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      padding: var(--space-lg);
+    }
+    .content-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-sm);
+    }
+    .sample-text-body { font-size: 15px; color: var(--color-ink); line-height: 1.8; }
+
+    .annotation-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      overflow: hidden;
+    }
+    .annotation-card-header {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .annotation-card-title { font-size: 14px; font-weight: 700; color: var(--color-ink); flex: 1; }
+    .annotation-card-body { padding: var(--space-lg); }
+
+    /* Classification widget */
+    .class-options { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .class-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 2px solid var(--color-border);
+      cursor: pointer;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .class-option:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .class-option.selected { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .class-option input[type="radio"] { accent-color: var(--color-primary); flex-shrink: 0; width: 16px; height: 16px; }
+    .class-option-label { font-size: 14px; font-weight: 500; color: var(--color-ink); }
+    .class-option-desc { font-size: 12px; color: var(--color-text-soft); margin-left: auto; }
+
+    /* VA widget */
+    .va-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-md); }
+    .va-axis-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      background: var(--color-slate-50);
+    }
+    .va-axis-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xs); gap: var(--space-sm); }
+    .va-axis-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .va-axis-value {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 50px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .va-axis-hint { font-size: 12px; color: var(--color-text-soft); margin-bottom: var(--space-sm); }
+    .va-scale-row {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 12px 18px;
+      align-items: center;
+      padding-top: 2px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .va-scale-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+    }
+    .va-scale-option input[type="radio"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+    .va-range-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-soft); margin-top: 8px; }
+    .va-scale-divider {
+      width: 100%;
+      border-top: 1px solid var(--color-border);
+      margin: 2px 0 0;
+    }
+
+    .field-group { margin-top: var(--space-md); }
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      margin-bottom: 6px;
+    }
+    .field-textarea {
+      width: 100%;
+      min-height: 64px;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--color-ink);
+      resize: vertical;
+      background: var(--color-white);
+      outline: none;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .field-textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .field-textarea.error-border { border-color: var(--color-error-border); }
+    .field-textarea.error-border:focus { border-color: var(--color-error); box-shadow: 0 0 0 3px rgba(185,28,28,0.10); }
+
+    /* Reviewer controls */
+    .rv-result-display { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .rv-result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+    }
+    .rv-result-annotator { font-size: 12px; color: var(--color-text-soft); }
+    .rv-result-value { font-size: 13px; font-weight: 600; color: var(--color-ink); }
+    .badge-class {
+      display: inline-flex;
+      align-items: center;
+      border-radius: var(--radius-sm);
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      border: 1px solid rgba(99,102,241,0.2);
+    }
+    .rv-decision-btns { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .rv-audit-label { font-size: 12px; font-weight: 600; color: var(--color-error); margin-bottom: 6px; display: block; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: opacity var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-fast);
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: none; }
+    .btn-primary { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .btn-primary:hover { background: #4F46E5; border-color: #4F46E5; }
+    .btn-cta { background: var(--color-cta); color: white; border-color: var(--color-cta); }
+    .btn-cta:hover { background: var(--color-cta-hover); border-color: var(--color-cta-hover); }
+    .btn-secondary { background: var(--color-white); color: var(--color-text-soft); border-color: var(--color-border); }
+    .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .btn-danger { background: var(--color-white); color: var(--color-error); border-color: var(--color-error-border); }
+    .btn-danger:hover { background: var(--color-error-bg); }
+    .btn-success { background: var(--color-success-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .btn-success:hover { background: #DCFCE7; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Action bar */
+    .action-bar {
+      flex-shrink: 0;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--color-white);
+      border-top: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .action-bar-right { display: flex; gap: var(--space-sm); margin-left: auto; }
+    .autosave-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-muted); }
+    .autosave-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-text-muted); }
+    .autosave-dot.saved { background: var(--color-cta); }
+    .autosave-dot.saving { background: var(--color-warning); animation: pulse-dot 0.8s ease-in-out infinite alternate; }
+    @keyframes pulse-dot { from { opacity: 0.4; } to { opacity: 1; } }
+
+    /* ── Right: Guideline + History ─────────────────────────── */
+    .col-guideline {
+      border-left: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+      transition: opacity var(--dur-normal) var(--ease-standard), border-color var(--dur-normal) var(--ease-standard);
+    }
+    .workspace-body.guideline-collapsed .col-guideline {
+      opacity: 0;
+      pointer-events: none;
+      border-left-color: transparent;
+    }
+    .guideline-collapse-btn {
+      position: absolute;
+      top: var(--space-md);
+      right: calc(var(--col-guideline-width) + 8px);
+      z-index: 40;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-text-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: right var(--dur-normal) var(--ease-standard), color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+    .guideline-collapse-btn:hover { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .workspace-body.guideline-collapsed .guideline-collapse-btn { right: 8px; }
+    .guideline-collapse-btn svg { width: 16px; height: 16px; transition: transform var(--dur-normal) var(--ease-standard); }
+    .workspace-body.guideline-collapsed .guideline-collapse-btn svg { transform: rotate(180deg); }
+    .guideline-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--color-border);
+      padding: 0 var(--space-md);
+      flex-shrink: 0;
+    }
+    .guideline-tab {
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-soft);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: color var(--dur-fast), border-color var(--dur-fast);
+      background: transparent;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+    }
+    .guideline-tab:hover { color: var(--color-primary); }
+    .guideline-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 700; }
+    .guideline-panel { flex: 1; overflow-y: auto; padding: var(--space-md); }
+
+    .guideline-summary {
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      background: var(--color-primary-soft-bg);
+    }
+    .guideline-summary-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .guideline-summary-text { font-size: 13px; color: var(--color-ink); line-height: 1.7; }
+    .guideline-file-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .guideline-file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      cursor: pointer;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+      width: 100%;
+      text-align: left;
+    }
+    .guideline-file-item:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .guideline-file-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .guideline-file-icon.pdf { background: #FEF2F2; color: var(--color-error); }
+    .guideline-file-icon.img { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .guideline-file-icon.md { background: var(--color-surface); color: #7C3AED; }
+    .guideline-file-name { font-size: 13px; font-weight: 500; color: var(--color-ink); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .guideline-file-action { font-size: 11px; color: var(--color-text-muted); flex-shrink: 0; }
+
+    /* History */
+    .history-empty { text-align: center; padding: var(--space-xl) var(--space-md); color: var(--color-text-muted); font-size: 13px; }
+    .history-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .history-item { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); background: var(--color-white); }
+    .history-item-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .history-actor { font-size: 12px; font-weight: 600; color: var(--color-ink); }
+    .history-meta { display: flex; align-items: center; gap: 6px; }
+    .history-time { font-size: 11px; color: var(--color-text-muted); }
+    .history-action-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+    }
+    .history-action-badge.submitted { background: var(--color-success-bg); color: var(--color-success); }
+    .history-action-badge.saved { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.approved { background: var(--color-success-bg); color: var(--color-success); }
+    .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
+    .history-action-badge.edited { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .history-diff { font-size: 12px; color: var(--color-text-soft); line-height: 1.5; }
+    .history-diff-from { color: var(--color-error); text-decoration: line-through; }
+    .history-diff-to { color: var(--color-success); font-weight: 600; }
+
+    /* ── Modal ──────────────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 27, 75, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: var(--z-modal);
+      padding: var(--space-lg);
+    }
+    .modal-backdrop.hidden { display: none; }
+    .modal {
+      background: var(--color-white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      padding: var(--space-xl);
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    .modal-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-lg);
+      background: var(--color-primary-soft-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-icon svg { width: 22px; height: 22px; color: var(--color-primary); }
+    .modal-title { font-family: var(--font-serif-display); font-size: 22px; font-weight: 700; color: var(--color-ink); }
+    .modal-body-text { font-size: 14px; color: var(--color-text-soft); line-height: 1.7; }
+    .modal-preview {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      background: var(--color-surface);
+      font-size: 13px;
+      color: var(--color-ink);
+      line-height: 1.7;
+    }
+    .modal-preview-heading { color: var(--color-primary); font-weight: 700; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
+
+    /* ── Toast ──────────────────────────────────────────────── */
+    .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
+    .toast {
+      background: var(--color-ink);
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity var(--dur-normal) var(--ease-standard), transform var(--dur-normal) var(--ease-standard);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.success { background: var(--color-success); }
+    .toast.error { background: var(--color-error); }
+
+    /* ── Mobile ─────────────────────────────────────────────── */
+    .mobile-drawer {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: var(--z-raised);
+      background: var(--color-white);
+      border-top: 1px solid var(--color-border);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      box-shadow: 0 -4px 24px rgba(30,27,75,0.10);
+      transition: transform var(--dur-normal) var(--ease-standard);
+      max-height: 60vh;
+      flex-direction: column;
+    }
+    .mobile-drawer.collapsed { transform: translateY(calc(100% - var(--mobile-drawer-peek))); }
+    .mobile-drawer-handle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-sm) var(--space-md);
+      cursor: pointer;
+      height: var(--mobile-drawer-peek);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .mobile-drawer-pill {
+      width: 36px;
+      height: 4px;
+      background: var(--color-border);
+      border-radius: var(--radius-full);
+      position: absolute;
+      left: 50%;
+      top: 10px;
+      transform: translateX(-50%);
+    }
+    .mobile-drawer-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .mobile-drawer-content { overflow-y: auto; padding: var(--space-md); }
+
+    @media (max-width: 767px) {
+      body {
+        overflow: visible;
+        height: auto;
+        flex-direction: column;
+        padding-top: var(--navbar-mobile-top-height);
+        padding-bottom: var(--navbar-mobile-height);
+      }
+      .navbar {
+        width: 100%;
+        height: var(--navbar-mobile-height);
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--color-border);
+        flex-direction: row;
+        padding: 0;
+        overflow: visible;
+        background: var(--color-white);
+        z-index: 300;
+      }
+      .brand-section {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--navbar-mobile-top-height);
+        margin: 0;
+        padding: 0 var(--space-md);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-white);
+        display: flex;
+        align-items: center;
+        z-index: 320;
+      }
+      .navbar-brand { width: 100%; }
+      .navbar-wordmark { font-size: 14px; }
+      .mobile-user-name { display: inline-block; max-width: 72px; font-size: 12px; }
+      .brand-section .lang-toggle { display: none; }
+      .mobile-lang-toggle { display: inline-flex; }
+      .mobile-top-logout { display: inline-flex; }
+      .navbar-center {
+        flex: 1;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: space-around;
+        gap: 0;
+        margin: 0;
+      }
+      .navbar-center .nav-link {
+        min-height: var(--navbar-mobile-top-height);
+        flex: 1;
+        padding: 8px 2px;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        text-align: center;
+        font-size: 11px;
+        line-height: 1.2;
+      }
+      .navbar-center .nav-link span { white-space: nowrap; }
+      .nav-actions { display: none; }
+      .workspace-root { height: auto; min-height: 100vh; overflow: visible; }
+      .workspace-body { grid-template-columns: 1fr; overflow: visible; }
+      .guideline-collapse-btn { display: none; }
+      .col-samples { display: none; }
+      .col-guideline { display: none; }
+      .content-scroll { padding: var(--space-md); }
+      .action-bar { padding: var(--space-sm) var(--space-md); }
+      .mobile-drawer { display: flex; }
+    }
+    @media (max-width: 420px) {
+      .mobile-user-name { display: inline-block; max-width: 56px; font-size: 11px; }
+      .navbar-brand { width: auto; flex: 1; min-width: 0; }
+      .navbar-wordmark { font-size: 13px; }
+      .mobile-lang-toggle { padding: 6px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'annotation',
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<!-- Guideline Force Modal -->
+<div class="modal-backdrop" id="guidelineModal" role="dialog" aria-modal="true" aria-labelledby="guidelineModalTitle">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+    </div>
+    <h2 class="modal-title" id="guidelineModalTitle">請先閱讀任務說明</h2>
+    <p class="modal-body-text" id="guidelineModalBody">開始標記前，請閱讀以下任務說明。說明內容在右側面板中持續可見，隨時可查閱。</p>
+    <div class="modal-preview" id="guidelineModalPreview">
+      <p>
+        <span class="modal-preview-heading" id="guidelinePreviewHeading">任務目標：</span>
+        <span id="guidelinePreviewGoal">情感極性分類</span>
+      </p>
+      <br>
+      <p id="guidelinePreviewIntro">請根據每筆文本的整體情感傾向，選擇最符合的類別：</p>
+      <br>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelPos">正面</span> — <span id="guidelinePreviewDescPos">包含明確正向情緒（喜悅、讚美、期待）</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelNeg">負面</span> — <span id="guidelinePreviewDescNeg">包含明確負向情緒（批評、失望、憤怒）</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelNeu">中性</span> — <span id="guidelinePreviewDescNeu">無明顯情緒傾向，或情緒混合</span></p>
+      <br>
+      <p id="guidelinePreviewFooter">如有疑問，請查閱右側說明檔案或聯繫任務負責人。</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" type="button" id="guidelineModalConfirm">我已閱讀，開始標記</button>
+    </div>
+  </div>
+</div>
+
+<!-- Workspace -->
+<div class="workspace-root">
+
+  <!-- 3-Column Body -->
+  <div class="workspace-body" id="workspaceBody">
+    <button class="guideline-collapse-btn" type="button" id="guidelineCollapseBtn" aria-label="收合說明區" aria-expanded="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <!-- Left: Sample List -->
+    <div class="col-samples">
+      <div class="col-header">
+        <span class="col-header-title" id="sampleListTitle">樣本清單</span>
+        <span class="col-header-count" id="sampleListCount">5 筆</span>
+      </div>
+      <div class="sample-list" id="sampleList" role="listbox" aria-label="樣本清單"></div>
+    </div>
+
+    <!-- Middle: Content + Controls -->
+    <div class="col-content">
+      <div class="content-scroll" id="contentScroll">
+
+        <div class="sample-nav">
+          <button class="nav-btn" type="button" id="prevBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            <span id="prevBtnLabel">上一筆</span>
+          </button>
+          <div class="sample-progress-summary">
+            <span class="progress-text" id="progressText">2 / 5 已提交</span>
+            <div class="progress-track" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" id="progressFill" style="width:40%"></div>
+            </div>
+          </div>
+          <button class="nav-btn" type="button" id="nextBtn">
+            <span id="nextBtnLabel">下一筆</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Sample Text -->
+        <div class="content-card">
+          <div class="content-card-title" id="sampleSourceLabel">原始文本</div>
+          <p class="sample-text-body" id="sampleText"></p>
+        </div>
+
+        <!-- Annotator Controls -->
+        <div class="annotation-card" id="annotatorCard">
+          <div class="annotation-card-header">
+            <div class="annotation-card-title" id="annotationCardTitle">標記標籤</div>
+            <span style="font-size:11px;color:var(--color-text-muted);font-weight:600;" id="taskTypeLabel">文本分類</span>
+          </div>
+          <div class="annotation-card-body">
+            <div id="classificationAnnotatorPanel">
+              <div class="class-options" id="classOptions">
+                <label class="class-option" id="optPositive">
+                  <input type="radio" name="sentiment" value="positive" />
+                  <span class="class-option-label" id="optLabelPositive">正面</span>
+                  <span class="class-option-desc" id="optDescPositive">明確正向情緒</span>
+                </label>
+                <label class="class-option" id="optNegative">
+                  <input type="radio" name="sentiment" value="negative" />
+                  <span class="class-option-label" id="optLabelNegative">負面</span>
+                  <span class="class-option-desc" id="optDescNegative">明確負向情緒</span>
+                </label>
+                <label class="class-option" id="optNeutral">
+                  <input type="radio" name="sentiment" value="neutral" />
+                  <span class="class-option-label" id="optLabelNeutral">中性</span>
+                  <span class="class-option-desc" id="optDescNeutral">無明顯傾向或混合</span>
+                </label>
+              </div>
+            </div>
+            <div id="vaAnnotatorPanel" class="hidden">
+              <div class="va-grid">
+                <div class="va-axis-card">
+                  <div class="va-axis-head">
+                    <span class="va-axis-title" id="vaValenceLabel">Valence（情緒正負）</span>
+                    <span class="va-axis-value" id="vaValenceValue">5</span>
+                  </div>
+                  <p class="va-axis-hint" id="vaValenceHint">1 = 非常負向，9 = 非常正向</p>
+                  <div class="va-scale-row" id="vaValenceScale"></div>
+                  <div class="va-scale-divider"></div>
+                  <div class="va-range-labels">
+                    <span id="vaValenceMin">負向</span>
+                    <span id="vaValenceMax">正向</span>
+                  </div>
+                </div>
+                <div class="va-axis-card">
+                  <div class="va-axis-head">
+                    <span class="va-axis-title" id="vaArousalLabel">Arousal（情緒強度）</span>
+                    <span class="va-axis-value" id="vaArousalValue">5</span>
+                  </div>
+                  <p class="va-axis-hint" id="vaArousalHint">1 = 非常平靜，9 = 非常激動</p>
+                  <div class="va-scale-row" id="vaArousalScale"></div>
+                  <div class="va-scale-divider"></div>
+                  <div class="va-range-labels">
+                    <span id="vaArousalMin">平靜</span>
+                    <span id="vaArousalMax">激動</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="annotationNote" id="annotationNoteLabel">備註（選填）</label>
+              <textarea class="field-textarea" id="annotationNote" rows="2" placeholder="若有特殊情況可在此說明…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviewer Controls -->
+        <div class="annotation-card hidden" id="reviewerCard">
+          <div class="annotation-card-header">
+            <div class="annotation-card-title" id="reviewCardTitle">審查結果</div>
+            <span style="font-size:11px;color:#7C3AED;font-weight:700;" id="reviewerRoleSmall">Reviewer</span>
+          </div>
+          <div class="annotation-card-body">
+            <div class="rv-result-display">
+              <div class="rv-result-row">
+                <span class="rv-result-annotator" id="rvAnnotatorA">Annotator A</span>
+                <span class="rv-result-value"><span class="badge-class" id="rvResultA">正面</span></span>
+              </div>
+              <div class="rv-result-row">
+                <span class="rv-result-annotator" id="rvAnnotatorB">Annotator B</span>
+                <span class="rv-result-value"><span class="badge-class" id="rvResultB">正面</span></span>
+              </div>
+            </div>
+            <div class="rv-decision-btns">
+              <button class="btn btn-success btn-sm" type="button" id="rvApproveBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span id="rvApproveLabel">通過</span>
+              </button>
+              <button class="btn btn-danger btn-sm" type="button" id="rvRejectBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span id="rvRejectLabel">退回</span>
+              </button>
+              <button class="btn btn-secondary btn-sm" type="button" id="rvEditBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span id="rvEditLabel">修正</span>
+              </button>
+              <button class="btn btn-danger btn-sm" type="button" id="rvDeleteBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                <span id="rvDeleteLabel">刪除</span>
+              </button>
+            </div>
+            <div class="hidden" id="rvAuditReasonWrap">
+              <label class="rv-audit-label" for="rvAuditReason" id="rvAuditReasonLabel">* 必填：請說明審查理由</label>
+              <textarea class="field-textarea error-border" id="rvAuditReason" rows="2" placeholder="說明退回或修正的原因…"></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="rvNote" id="rvNoteLabel">審查備註（選填）</label>
+              <textarea class="field-textarea" id="rvNote" rows="2" placeholder="可加入補充說明…"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div class="autosave-status">
+          <div class="autosave-dot saved" id="autosaveDot"></div>
+          <span id="autosaveLabel">草稿已自動儲存</span>
+        </div>
+        <div class="action-bar-right">
+          <div id="annotatorActions">
+            <button class="btn btn-secondary" type="button" id="saveDraftBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              <span id="saveDraftLabel">儲存草稿</span>
+            </button>
+            <button class="btn btn-cta" type="button" id="submitBtn" style="margin-left:var(--space-sm)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="submitLabel">提交</span>
+            </button>
+          </div>
+          <div class="hidden" id="reviewerActions">
+            <button class="btn btn-primary" type="button" id="rvSaveBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="rvSaveLabel">送出審查</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Guideline + History -->
+    <div class="col-guideline">
+      <div class="guideline-tabs">
+        <button class="guideline-tab active" type="button" id="tabGuideline"><span id="tabGuidelineLabel">說明與檔案</span></button>
+        <button class="guideline-tab" type="button" id="tabHistory"><span id="tabHistoryLabel">歷程</span></button>
+      </div>
+      <div class="guideline-panel" id="guidelinePanel">
+        <div class="guideline-summary">
+          <div class="guideline-summary-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="guidelineSummaryTitle">任務說明</span>
+          </div>
+          <p class="guideline-summary-text" id="guidelineSummaryText">情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。混合情緒時以主導傾向為準，若無法判定請選「中性」並補充備註。</p>
+        </div>
+        <div class="guideline-file-list">
+          <button class="guideline-file-item" type="button" id="guidelineFileBtn1">
+            <div class="guideline-file-icon pdf" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <span class="guideline-file-name" id="guidelineFileName1">標記指引 v2.pdf</span>
+            <span class="guideline-file-action" id="guidelineFileAction1">新分頁</span>
+          </button>
+          <button class="guideline-file-item" type="button" id="guidelineFileBtn2">
+            <div class="guideline-file-icon img" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <span class="guideline-file-name" id="guidelineFileName2">情感分類範例圖.png</span>
+            <span class="guideline-file-action" id="guidelineFileAction2">預覽</span>
+          </button>
+          <button class="guideline-file-item" type="button" id="guidelineFileBtn3">
+            <div class="guideline-file-icon md" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <span class="guideline-file-name" id="guidelineFileName3">常見問題 FAQ.md</span>
+            <span class="guideline-file-action" id="guidelineFileAction3">預覽</span>
+          </button>
+        </div>
+      </div>
+      <div class="guideline-panel hidden" id="historyPanel">
+        <div id="historyContainer"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mobile drawer -->
+  <div class="mobile-drawer collapsed" id="mobileDrawer" aria-label="說明與檔案">
+    <div class="mobile-drawer-handle" id="mobileDrawerHandle" role="button" tabindex="0" aria-expanded="false">
+      <div class="mobile-drawer-pill" aria-hidden="true"></div>
+      <span class="mobile-drawer-title" id="mobileDrawerTitle">說明與檔案</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="mobileDrawerChevron" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
+    </div>
+    <div class="mobile-drawer-content">
+      <p style="font-size:13px;color:var(--color-text-soft);line-height:1.7;" id="mobileGuidelineText">情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
+</div>
+
+<script src="../../assets/analytics.js"></script>
+<script>
+'use strict';
+
+/* ── i18n ─────────────────────────────────────────────────────── */
+var I18N = {
+  zh: {
+    docTitle: '標記作業 — Label Suite（原型）',
+    taskName: '情感極性分類 ｜ NLP 語料標記任務',
+    backBtnLabel: '返回',
+    phaseDryRun: 'Dry Run', phaseOfficial: 'Official Run',
+    roleAnnotator: 'Annotator', roleReviewer: 'Reviewer',
+    progressText: '{done} / {total} 已提交',
+    sampleListTitle: '樣本清單', sampleListCount: '{n} 筆',
+    prevBtnLabel: '上一筆', nextBtnLabel: '下一筆',
+    sampleNavLabel: '樣本 {cur} / {total}',
+    sampleSourceLabel: '原始文本',
+    annotationCardTitle: '標記標籤', taskTypeLabel: '文本分類',
+    taskTypeClassification: '單句分類（含多標籤）',
+    taskTypeVA: '單句 VA 雙維度評分（Valence / Arousal）',
+    optLabelPositive: '正面', optDescPositive: '明確正向情緒',
+    optLabelNegative: '負面', optDescNegative: '明確負向情緒',
+    optLabelNeutral: '中性', optDescNeutral: '無明顯傾向或混合',
+    vaValenceLabel: 'Valence（情緒正負）',
+    vaValenceHint: '1 = 非常負向，9 = 非常正向',
+    vaValenceMin: '負向',
+    vaValenceMax: '正向',
+    vaArousalLabel: 'Arousal（情緒強度）',
+    vaArousalHint: '1 = 非常平靜，9 = 非常激動',
+    vaArousalMin: '平靜',
+    vaArousalMax: '激動',
+    annotationNoteLabel: '備註（選填）',
+    saveDraftLabel: '儲存草稿', submitLabel: '提交',
+    autosaveLabel: '草稿已自動儲存', autosaveSavingLabel: '儲存中…',
+    reviewCardTitle: '審查結果', reviewerRoleSmall: 'Reviewer',
+    rvApproveLabel: '通過', rvRejectLabel: '退回',
+    rvEditLabel: '修正', rvDeleteLabel: '刪除',
+    rvAuditReasonLabel: '* 必填：請說明審查理由',
+    rvNoteLabel: '審查備註（選填）', rvSaveLabel: '送出審查',
+    tabGuidelineLabel: '說明與檔案', tabHistoryLabel: '歷程',
+    guidelineCollapseAria: '收合說明區',
+    guidelineExpandAria: '展開說明區',
+    guidelineSummaryTitle: '任務說明',
+    guidelineSummaryText: '情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。混合情緒時以主導傾向為準，若無法判定請選「中性」並補充備註。',
+    guidelineFileName1: '標記指引 v2.pdf', guidelineFileAction1: '新分頁',
+    guidelineFileName2: '情感分類範例圖.png', guidelineFileAction2: '預覽',
+    guidelineFileName3: '常見問題 FAQ.md', guidelineFileAction3: '預覽',
+    guidelineModalTitle: '請先閱讀任務說明',
+    guidelineModalBody: '開始標記前，請閱讀以下任務說明。說明內容在右側面板中持續可見，隨時可查閱。',
+    guidelinePreviewHeading: '任務目標：', guidelinePreviewGoal: '情感極性分類',
+    guidelinePreviewIntro: '請根據每筆文本的整體情感傾向，選擇最符合的類別：',
+    guidelinePreviewLabelPos: '正面', guidelinePreviewDescPos: '包含明確正向情緒（喜悅、讚美、期待）',
+    guidelinePreviewLabelNeg: '負面', guidelinePreviewDescNeg: '包含明確負向情緒（批評、失望、憤怒）',
+    guidelinePreviewLabelNeu: '中性', guidelinePreviewDescNeu: '無明顯情緒傾向，或情緒混合',
+    guidelinePreviewFooter: '如有疑問，請查閱右側說明檔案或聯繫任務負責人。',
+    guidelineModalConfirm: '我已閱讀，開始標記',
+    statusSubmitted: '已提交', statusSaved: '已儲存',
+    statusTodo: '待標記', statusReviewing: '審查中',
+    historyEmpty: '此筆樣本尚無歷程紀錄',
+    toastDraftSaved: '草稿已儲存', toastSubmitted: '已提交，載入下一筆',
+    toastApproved: '已通過', toastRejected: '已退回',
+    toastEditSaved: '修正已送出', toastDeleted: '已刪除',
+    toastSelectLabel: '請先選擇標籤',
+    toastSelectDecision: '請選擇審查決策',
+    toastFillReason: '請填寫審查理由',
+    mobileDrawerTitle: '說明與檔案',
+    mobileGuidelineText: '情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。',
+    actionSubmitted: '已提交', actionSaved: '已儲存',
+    actionApproved: '已通過', actionRejected: '已退回',
+    actionEdited: '已修正', actionDeleted: '已刪除',
+  },
+  en: {
+    docTitle: 'Annotation Workspace — Label Suite (Prototype)',
+    taskName: 'Sentiment Classification | NLP Annotation Task',
+    backBtnLabel: 'Back',
+    phaseDryRun: 'Dry Run', phaseOfficial: 'Official Run',
+    roleAnnotator: 'Annotator', roleReviewer: 'Reviewer',
+    progressText: '{done} / {total} submitted',
+    sampleListTitle: 'Samples', sampleListCount: '{n} items',
+    prevBtnLabel: 'Previous', nextBtnLabel: 'Next',
+    sampleNavLabel: 'Sample {cur} / {total}',
+    sampleSourceLabel: 'Source Text',
+    annotationCardTitle: 'Label', taskTypeLabel: 'Text Classification',
+    taskTypeClassification: 'Single Sentence Classification (Multi-label)',
+    taskTypeVA: 'Single-sentence VA Scoring (Valence / Arousal)',
+    optLabelPositive: 'Positive', optDescPositive: 'Clear positive emotion',
+    optLabelNegative: 'Negative', optDescNegative: 'Clear negative emotion',
+    optLabelNeutral: 'Neutral', optDescNeutral: 'No clear polarity or mixed',
+    vaValenceLabel: 'Valence',
+    vaValenceHint: '1 = very negative, 9 = very positive',
+    vaValenceMin: 'Negative',
+    vaValenceMax: 'Positive',
+    vaArousalLabel: 'Arousal',
+    vaArousalHint: '1 = very calm, 9 = very excited',
+    vaArousalMin: 'Calm',
+    vaArousalMax: 'Excited',
+    annotationNoteLabel: 'Notes (optional)',
+    saveDraftLabel: 'Save draft', submitLabel: 'Submit',
+    autosaveLabel: 'Draft autosaved', autosaveSavingLabel: 'Saving…',
+    reviewCardTitle: 'Review result', reviewerRoleSmall: 'Reviewer',
+    rvApproveLabel: 'Approve', rvRejectLabel: 'Reject',
+    rvEditLabel: 'Edit', rvDeleteLabel: 'Delete',
+    rvAuditReasonLabel: '* Required: reason for this decision',
+    rvNoteLabel: 'Review notes (optional)', rvSaveLabel: 'Submit review',
+    tabGuidelineLabel: 'Guidelines', tabHistoryLabel: 'History',
+    guidelineCollapseAria: 'Collapse guideline panel',
+    guidelineExpandAria: 'Expand guideline panel',
+    guidelineSummaryTitle: 'Task instructions',
+    guidelineSummaryText: 'Sentiment classification task: label each text as Positive, Negative, or Neutral based on the overall emotional tone. When mixed emotions are present, use the dominant polarity. Select Neutral if uncertain.',
+    guidelineFileName1: 'Annotation guide v2.pdf', guidelineFileAction1: 'New tab',
+    guidelineFileName2: 'Sentiment examples.png', guidelineFileAction2: 'Preview',
+    guidelineFileName3: 'FAQ.md', guidelineFileAction3: 'Preview',
+    guidelineModalTitle: 'Read task instructions first',
+    guidelineModalBody: 'Before you start annotating, please read the task instructions below. They remain visible in the right panel throughout your session.',
+    guidelinePreviewHeading: 'Goal: ', guidelinePreviewGoal: 'Sentiment polarity classification',
+    guidelinePreviewIntro: 'Select the category that best matches the overall emotional tone:',
+    guidelinePreviewLabelPos: 'Positive', guidelinePreviewDescPos: 'clear positive emotions (joy, praise, anticipation)',
+    guidelinePreviewLabelNeg: 'Negative', guidelinePreviewDescNeg: 'clear negative emotions (criticism, disappointment, anger)',
+    guidelinePreviewLabelNeu: 'Neutral', guidelinePreviewDescNeu: 'no clear polarity or mixed emotions',
+    guidelinePreviewFooter: 'If unsure, check the guideline files in the right panel or contact the task leader.',
+    guidelineModalConfirm: "I've read it — start annotating",
+    statusSubmitted: 'Submitted', statusSaved: 'Saved',
+    statusTodo: 'Todo', statusReviewing: 'Reviewing',
+    historyEmpty: 'No history for this sample yet',
+    toastDraftSaved: 'Draft saved', toastSubmitted: 'Submitted — loading next sample',
+    toastApproved: 'Approved', toastRejected: 'Rejected',
+    toastEditSaved: 'Edit submitted', toastDeleted: 'Deleted',
+    toastSelectLabel: 'Please select a label first',
+    toastSelectDecision: 'Please select a review decision',
+    toastFillReason: 'Please fill in the review reason',
+    mobileDrawerTitle: 'Guidelines',
+    mobileGuidelineText: 'Sentiment classification: label each text as Positive, Negative, or Neutral based on the overall emotional tone.',
+    actionSubmitted: 'submitted', actionSaved: 'saved',
+    actionApproved: 'approved', actionRejected: 'rejected',
+    actionEdited: 'edited', actionDeleted: 'deleted',
+  }
+};
+
+/* ── Sample Data ──────────────────────────────────────────────── */
+var SAMPLES = [
+  {
+    id: 1,
+    text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。餐點本身風味也不錯，下次一定會再來。',
+    status: 'submitted', label: 'positive', va: { valence: 5, arousal: 3 },
+    history: [{ actor: 'Annotator A', time: '04-22 14:30', action: 'submitted', from: null, to: '正面' }]
+  },
+  {
+    id: 2,
+    text: '等了快一個小時才上菜，服務生態度冷漠，食物還是涼的。完全不值這個價位，令人失望。',
+    status: 'submitted', label: 'negative', va: { valence: 1, arousal: 4 },
+    history: [
+      { actor: 'Annotator A', time: '04-22 14:45', action: 'submitted', from: null, to: '負面' },
+      { actor: 'Reviewer B', time: '04-22 15:10', action: 'approved', from: null, to: null },
+    ]
+  },
+  {
+    id: 3,
+    text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得住一整天的使用。唯一稍微讓我覺得有點遺憾的是背蓋材質稍微偏重，長時間握持手腕略感疲勞，但整體來說非常滿意這次的購買決定。',
+    status: 'saved', label: null, va: null,
+    history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: null }]
+  },
+  {
+    id: 4,
+    text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
+    status: 'todo', label: null, va: null, history: []
+  },
+  {
+    id: 5,
+    text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒有遇到任何問題。',
+    status: 'todo', label: null, va: null, history: []
+  }
+];
+
+/* ── State ────────────────────────────────────────────────────── */
+var state = {
+  lang: 'zh',
+  taskRole: 'annotator',
+  taskTypeKey: 'single_sentence_classification',
+  runType: 'dry_run',
+  currentIdx: 2,
+  activeTab: 'guideline',
+  guidelineCollapsed: false,
+  rvDecision: null,
+  mobileDrawerOpen: false,
+};
+
+/* ── Utils ────────────────────────────────────────────────────── */
+function t(key, vars) {
+  var str = (I18N[state.lang] || I18N.zh)[key] || key;
+  if (vars) {
+    Object.keys(vars).forEach(function(k) { str = str.replace('{' + k + '}', String(vars[k])); });
+  }
+  return str;
+}
+
+function el(id) { return document.getElementById(id); }
+
+function setText(id, value) {
+  var node = el(id);
+  if (node) node.textContent = value;
+}
+
+var toastTimer = null;
+function showToast(msg, type) {
+  var toast = el('toast');
+  el('toastMsg').textContent = msg;
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  toast.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2800);
+}
+
+function countSubmitted() {
+  return SAMPLES.filter(function(s) { return s.status === 'submitted'; }).length;
+}
+
+function normalizeTaskTypeKey(taskType) {
+  if (taskType === 'single_sentence_va_scoring') return 'single_sentence_va_scoring';
+  return 'single_sentence_classification';
+}
+
+function isVaTaskType(taskType) {
+  return normalizeTaskTypeKey(taskType) === 'single_sentence_va_scoring';
+}
+
+var VA_SCALE_VALUES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9];
+
+function formatVaValue(value) {
+  var numeric = typeof value === 'number' ? value : parseFloat(value);
+  if (isNaN(numeric)) return '';
+  return (Math.round(numeric * 10) % 10 === 0) ? String(Math.round(numeric)) : numeric.toFixed(1);
+}
+
+function buildVaScaleOptions(containerId, inputName, selectedValue) {
+  var container = el(containerId);
+  if (!container) return;
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  var selected = formatVaValue(selectedValue || 5);
+  VA_SCALE_VALUES.forEach(function(value, index) {
+    var valueText = formatVaValue(value);
+    var label = document.createElement('label');
+    label.className = 'va-scale-option';
+
+    var input = document.createElement('input');
+    input.type = 'radio';
+    input.name = inputName;
+    input.value = valueText;
+    if (valueText === selected) input.checked = true;
+
+    var text = document.createElement('span');
+    text.textContent = valueText;
+
+    label.appendChild(input);
+    label.appendChild(text);
+    container.appendChild(label);
+
+  });
+}
+
+function readSelectedVaValue(inputName) {
+  var selected = document.querySelector('input[name="' + inputName + '"]:checked');
+  if (!selected) return null;
+  var numeric = parseFloat(selected.value);
+  return isNaN(numeric) ? null : numeric;
+}
+
+function getStoredActiveTaskType() {
+  if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.getStoredActiveTaskType === 'function') {
+    return window.LabelSuiteSharedSidebar.getStoredActiveTaskType();
+  }
+  try {
+    return window.localStorage.getItem('labelsuite.activeTaskType') || '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function setStoredActiveTaskType(taskType) {
+  if (!taskType) return;
+  if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
+    window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
+    return;
+  }
+  try {
+    window.localStorage.setItem('labelsuite.activeTaskType', String(taskType));
+  } catch (error) {
+    // Ignore storage errors in prototype mode.
+  }
+}
+
+function makeChevronSvg() {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', '13'); svg.setAttribute('height', '13');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2.5');
+  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  var pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  pl.setAttribute('points', '15 18 9 12 15 6');
+  svg.appendChild(pl);
+  return svg;
+}
+
+/* ── Render ───────────────────────────────────────────────────── */
+function renderSampleList() {
+  var list = el('sampleList');
+  while (list.firstChild) { list.removeChild(list.firstChild); }
+
+  SAMPLES.forEach(function(sample, idx) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sample-item' +
+      (sample.status === 'submitted' ? ' status-submitted' : '') +
+      (sample.status === 'saved' ? ' status-saved' : '') +
+      (idx === state.currentIdx ? ' active' : '');
+    btn.setAttribute('role', 'option');
+    btn.setAttribute('aria-selected', String(idx === state.currentIdx));
+
+    var indexDiv = document.createElement('div');
+    indexDiv.className = 'sample-index';
+    indexDiv.textContent = String(idx + 1);
+
+    var metaDiv = document.createElement('div');
+    metaDiv.className = 'sample-meta';
+
+    var snippet = document.createElement('p');
+    snippet.className = 'sample-snippet';
+    snippet.textContent = sample.text;
+
+    var statusSpan = document.createElement('span');
+    statusSpan.className = 'sample-status-label status-color-' + sample.status;
+    statusSpan.textContent = t('status' + sample.status.charAt(0).toUpperCase() + sample.status.slice(1));
+
+    metaDiv.appendChild(snippet);
+    metaDiv.appendChild(statusSpan);
+    btn.appendChild(indexDiv);
+    btn.appendChild(metaDiv);
+
+    btn.addEventListener('click', function() { selectSample(idx); });
+    list.appendChild(btn);
+  });
+}
+
+function renderHistoryPanel() {
+  var container = el('historyContainer');
+  while (container.firstChild) { container.removeChild(container.firstChild); }
+
+  var sample = SAMPLES[state.currentIdx];
+  if (!sample.history || sample.history.length === 0) {
+    var empty = document.createElement('p');
+    empty.className = 'history-empty';
+    empty.textContent = t('historyEmpty');
+    container.appendChild(empty);
+    return;
+  }
+
+  var list = document.createElement('div');
+  list.className = 'history-list';
+
+  sample.history.slice().reverse().forEach(function(item) {
+    var card = document.createElement('div');
+    card.className = 'history-item';
+
+    var header = document.createElement('div');
+    header.className = 'history-item-header';
+
+    var actor = document.createElement('span');
+    actor.className = 'history-actor';
+    actor.textContent = item.actor;
+
+    var metaRight = document.createElement('div');
+    metaRight.className = 'history-meta';
+
+    var timeSpan = document.createElement('span');
+    timeSpan.className = 'history-time';
+    timeSpan.textContent = item.time;
+
+    var badge = document.createElement('span');
+    badge.className = 'history-action-badge ' + item.action;
+    badge.textContent = item.action;
+
+    metaRight.appendChild(timeSpan);
+    metaRight.appendChild(badge);
+    header.appendChild(actor);
+    header.appendChild(metaRight);
+    card.appendChild(header);
+
+    if (item.to || item.from) {
+      var diff = document.createElement('div');
+      diff.className = 'history-diff';
+      if (item.from) {
+        var fromSpan = document.createElement('span');
+        fromSpan.className = 'history-diff-from';
+        fromSpan.textContent = item.from;
+        diff.appendChild(fromSpan);
+        diff.appendChild(document.createTextNode(' → '));
+      }
+      if (item.to) {
+        var toSpan = document.createElement('span');
+        toSpan.className = 'history-diff-to';
+        toSpan.textContent = item.to;
+        diff.appendChild(toSpan);
+      }
+      card.appendChild(diff);
+    }
+
+    list.appendChild(card);
+  });
+
+  container.appendChild(list);
+}
+
+function renderProgressSummary() {
+  var done = countSubmitted();
+  setText('progressText', t('progressText', { done: done, total: SAMPLES.length }));
+  var fill = el('progressFill');
+  fill.style.width = Math.round(done / SAMPLES.length * 100) + '%';
+  fill.parentElement.setAttribute('aria-valuenow', String(Math.round(done / SAMPLES.length * 100)));
+}
+
+function renderSampleContent() {
+  var sample = SAMPLES[state.currentIdx];
+  setText('sampleSourceLabel', t('sampleSourceLabel'));
+  setText('sampleText', sample.text);
+
+  el('prevBtn').disabled = state.currentIdx === 0;
+  el('nextBtn').disabled = state.currentIdx === SAMPLES.length - 1;
+
+  if (isVaTaskType(state.taskTypeKey)) {
+    var valence = sample.va && sample.va.valence ? sample.va.valence : 5;
+    var arousal = sample.va && sample.va.arousal ? sample.va.arousal : 5;
+    buildVaScaleOptions('vaValenceScale', 'va_valence', valence);
+    buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
+    setText('vaValenceValue', formatVaValue(valence));
+    setText('vaArousalValue', formatVaValue(arousal));
+  } else {
+    var radios = document.querySelectorAll('input[name="sentiment"]');
+    radios.forEach(function(r) { r.checked = false; });
+    document.querySelectorAll('.class-option').forEach(function(opt) { opt.classList.remove('selected'); });
+    if (sample.label) {
+      var radio = document.querySelector('input[name="sentiment"][value="' + sample.label + '"]');
+      if (radio) {
+        radio.checked = true;
+        radio.closest('.class-option').classList.add('selected');
+      }
+    }
+  }
+  el('annotationNote').value = '';
+
+  state.rvDecision = null;
+  el('rvAuditReasonWrap').classList.add('hidden');
+  el('rvAuditReason').value = '';
+  el('rvNote').value = '';
+
+  if (state.activeTab === 'history') { renderHistoryPanel(); }
+}
+
+function renderTaskTypeInterface() {
+  var isVa = isVaTaskType(state.taskTypeKey);
+  el('classificationAnnotatorPanel').classList.toggle('hidden', isVa);
+  el('vaAnnotatorPanel').classList.toggle('hidden', !isVa);
+  setText('annotationCardTitle', isVa ? t('taskTypeVA') : t('annotationCardTitle'));
+  setText('taskTypeLabel', isVa ? t('taskTypeVA') : t('taskTypeClassification'));
+}
+
+function renderGuidelineCollapseState() {
+  var body = el('workspaceBody');
+  var btn = el('guidelineCollapseBtn');
+  if (!body || !btn) return;
+  body.classList.toggle('guideline-collapsed', state.guidelineCollapsed);
+  btn.setAttribute('aria-expanded', String(!state.guidelineCollapsed));
+  btn.setAttribute('aria-label', state.guidelineCollapsed ? t('guidelineExpandAria') : t('guidelineCollapseAria'));
+}
+
+function renderRoleControls() {
+  var isAnnotator = state.taskRole === 'annotator';
+  el('annotatorCard').classList.toggle('hidden', !isAnnotator);
+  el('reviewerCard').classList.toggle('hidden', isAnnotator);
+  el('annotatorActions').classList.toggle('hidden', !isAnnotator);
+  el('reviewerActions').classList.toggle('hidden', isAnnotator);
+}
+
+function applyLang(lang) {
+  state.lang = lang;
+  document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+  document.title = t('docTitle');
+
+  var textIds = [
+    'sampleListTitle', 'prevBtnLabel', 'nextBtnLabel',
+    'sampleSourceLabel', 'annotationCardTitle', 'taskTypeLabel',
+    'optLabelPositive', 'optDescPositive', 'optLabelNegative', 'optDescNegative',
+    'optLabelNeutral', 'optDescNeutral', 'annotationNoteLabel',
+    'vaValenceLabel', 'vaValenceHint', 'vaValenceMin', 'vaValenceMax',
+    'vaArousalLabel', 'vaArousalHint', 'vaArousalMin', 'vaArousalMax',
+    'saveDraftLabel', 'submitLabel', 'autosaveLabel',
+    'reviewCardTitle', 'reviewerRoleSmall',
+    'rvApproveLabel', 'rvRejectLabel', 'rvEditLabel', 'rvDeleteLabel',
+    'rvAuditReasonLabel', 'rvNoteLabel', 'rvSaveLabel',
+    'tabGuidelineLabel', 'tabHistoryLabel',
+    'guidelineSummaryTitle', 'guidelineSummaryText',
+    'guidelineFileName1', 'guidelineFileAction1',
+    'guidelineFileName2', 'guidelineFileAction2',
+    'guidelineFileName3', 'guidelineFileAction3',
+    'guidelineModalTitle', 'guidelineModalBody', 'guidelineModalConfirm',
+    'guidelinePreviewHeading', 'guidelinePreviewGoal',
+    'guidelinePreviewIntro',
+    'guidelinePreviewLabelPos', 'guidelinePreviewDescPos',
+    'guidelinePreviewLabelNeg', 'guidelinePreviewDescNeg',
+    'guidelinePreviewLabelNeu', 'guidelinePreviewDescNeu',
+    'guidelinePreviewFooter',
+    'mobileDrawerTitle', 'mobileGuidelineText',
+  ];
+  textIds.forEach(function(id) {
+    var key = id;
+    var val = (I18N[lang] || I18N.zh)[key];
+    if (val !== undefined) setText(id, val);
+  });
+
+  setText('sampleListCount', t('sampleListCount', { n: SAMPLES.length }));
+
+  if (window.LabelSuiteSharedSidebar) {
+    window.LabelSuiteSharedSidebar.applyGlobalLanguage(lang);
+  }
+
+  renderGuidelineCollapseState();
+  renderTaskTypeInterface();
+  renderProgressSummary();
+  renderSampleList();
+  renderSampleContent();
+  renderHistoryPanel();
+}
+
+/* ── Actions ──────────────────────────────────────────────────── */
+function triggerAutosave() {
+  el('autosaveDot').className = 'autosave-dot saving';
+  setText('autosaveLabel', t('autosaveSavingLabel'));
+  setTimeout(function() {
+    el('autosaveDot').className = 'autosave-dot saved';
+    setText('autosaveLabel', t('autosaveLabel'));
+  }, 700);
+}
+
+function selectSample(idx) {
+  triggerAutosave();
+  state.currentIdx = idx;
+  renderSampleList();
+  renderSampleContent();
+}
+
+/* ── Event Bindings ───────────────────────────────────────────── */
+function bindEvents() {
+  el('guidelineModalConfirm').addEventListener('click', function() {
+    el('guidelineModal').classList.add('hidden');
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.track('prototype_guideline_modal_confirmed', { lang: state.lang });
+    }
+  });
+
+  el('prevBtn').addEventListener('click', function() {
+    if (state.currentIdx > 0) { selectSample(state.currentIdx - 1); }
+  });
+  el('nextBtn').addEventListener('click', function() {
+    if (state.currentIdx < SAMPLES.length - 1) { selectSample(state.currentIdx + 1); }
+  });
+
+  document.querySelectorAll('.class-option').forEach(function(label) {
+    label.addEventListener('click', function() {
+      if (isVaTaskType(state.taskTypeKey)) return;
+      document.querySelectorAll('.class-option').forEach(function(opt) { opt.classList.remove('selected'); });
+      label.classList.add('selected');
+    });
+  });
+  var vaPanel = el('vaAnnotatorPanel');
+  if (vaPanel) {
+    vaPanel.addEventListener('change', function(event) {
+      var target = event.target;
+      if (!target || target.tagName !== 'INPUT' || target.type !== 'radio') return;
+      if (target.name === 'va_valence') setText('vaValenceValue', target.value);
+      if (target.name === 'va_arousal') setText('vaArousalValue', target.value);
+    });
+  }
+  var collapseBtn = el('guidelineCollapseBtn');
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', function() {
+      state.guidelineCollapsed = !state.guidelineCollapsed;
+      renderGuidelineCollapseState();
+    });
+  }
+
+  el('saveDraftBtn').addEventListener('click', function() {
+    var sample = SAMPLES[state.currentIdx];
+    if (sample.status !== 'submitted') { sample.status = 'saved'; }
+    triggerAutosave();
+    showToast(t('toastDraftSaved'));
+    renderSampleList();
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.track('prototype_draft_saved', { sample_id: sample.id, lang: state.lang });
+    }
+  });
+
+  el('submitBtn').addEventListener('click', function() {
+    var sample = SAMPLES[state.currentIdx];
+    sample.status = 'submitted';
+    var toValue = '';
+    if (isVaTaskType(state.taskTypeKey)) {
+      var v = readSelectedVaValue('va_valence');
+      var a = readSelectedVaValue('va_arousal');
+      if (v === null || a === null) { showToast(t('toastSelectLabel'), 'error'); return; }
+      sample.va = { valence: v, arousal: a };
+      sample.label = null;
+      toValue = 'V=' + formatVaValue(v) + ' / A=' + formatVaValue(a);
+    } else {
+      var radio = document.querySelector('input[name="sentiment"]:checked');
+      if (!radio) { showToast(t('toastSelectLabel'), 'error'); return; }
+      sample.label = radio.value;
+      var labelMap = { positive: '正面', negative: '負面', neutral: '中性' };
+      toValue = labelMap[radio.value] || radio.value;
+    }
+    sample.history.push({
+      actor: 'Annotator A',
+      time: '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+      action: 'submitted',
+      from: null,
+      to: toValue,
+    });
+    showToast(t('toastSubmitted'), 'success');
+    renderProgressSummary();
+    renderSampleList();
+    if (state.currentIdx < SAMPLES.length - 1) {
+      setTimeout(function() { selectSample(state.currentIdx + 1); }, 400);
+    }
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.track('prototype_annotation_submitted', {
+        sample_id: sample.id,
+        label: sample.label,
+        valence: sample.va ? sample.va.valence : null,
+        arousal: sample.va ? sample.va.arousal : null,
+        task_type: state.taskTypeKey,
+        lang: state.lang
+      });
+    }
+  });
+
+  function setRvDecision(mode) {
+    state.rvDecision = mode;
+    var needsReason = mode === 'reject' || mode === 'edit' || mode === 'delete';
+    el('rvAuditReasonWrap').classList.toggle('hidden', !needsReason);
+  }
+  el('rvApproveBtn').addEventListener('click', function() { setRvDecision('approve'); });
+  el('rvRejectBtn').addEventListener('click', function() { setRvDecision('reject'); });
+  el('rvEditBtn').addEventListener('click', function() { setRvDecision('edit'); });
+  el('rvDeleteBtn').addEventListener('click', function() { setRvDecision('delete'); });
+
+  el('rvSaveBtn').addEventListener('click', function() {
+    if (!state.rvDecision) { showToast(t('toastSelectDecision'), 'error'); return; }
+    var needsReason = state.rvDecision === 'reject' || state.rvDecision === 'edit' || state.rvDecision === 'delete';
+    if (needsReason && !el('rvAuditReason').value.trim()) { showToast(t('toastFillReason'), 'error'); return; }
+
+    var actionMap = { approve: 'approved', reject: 'rejected', edit: 'edited', delete: 'deleted' };
+    var toastMap = { approve: 'toastApproved', reject: 'toastRejected', edit: 'toastEditSaved', delete: 'toastDeleted' };
+    SAMPLES[state.currentIdx].history.push({
+      actor: 'Reviewer B',
+      time: '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+      action: actionMap[state.rvDecision],
+      from: null,
+      to: null,
+    });
+    showToast(t(toastMap[state.rvDecision]), 'success');
+    state.rvDecision = null;
+    el('rvAuditReasonWrap').classList.add('hidden');
+    el('rvAuditReason').value = '';
+    renderHistoryPanel();
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.track('prototype_review_submitted', { decision: state.rvDecision, lang: state.lang });
+    }
+  });
+
+  el('tabGuideline').addEventListener('click', function() {
+    state.activeTab = 'guideline';
+    el('tabGuideline').classList.add('active');
+    el('tabHistory').classList.remove('active');
+    el('guidelinePanel').classList.remove('hidden');
+    el('historyPanel').classList.add('hidden');
+  });
+  el('tabHistory').addEventListener('click', function() {
+    state.activeTab = 'history';
+    el('tabHistory').classList.add('active');
+    el('tabGuideline').classList.remove('active');
+    el('historyPanel').classList.remove('hidden');
+    el('guidelinePanel').classList.add('hidden');
+    renderHistoryPanel();
+  });
+
+  el('guidelineFileBtn1').addEventListener('click', function() { showToast('PDF 於新分頁開啟'); });
+  el('guidelineFileBtn2').addEventListener('click', function() { showToast('圖片預覽'); });
+  el('guidelineFileBtn3').addEventListener('click', function() { showToast('Markdown 預覽'); });
+
+  var mobileHandle = el('mobileDrawerHandle');
+  mobileHandle.addEventListener('click', function() {
+    state.mobileDrawerOpen = !state.mobileDrawerOpen;
+    el('mobileDrawer').classList.toggle('collapsed', !state.mobileDrawerOpen);
+    el('mobileDrawerChevron').style.transform = state.mobileDrawerOpen ? 'rotate(180deg)' : '';
+    mobileHandle.setAttribute('aria-expanded', String(state.mobileDrawerOpen));
+  });
+
+  document.addEventListener('labelsuite:langchange', function(e) {
+    if (e.detail && e.detail.lang) { applyLang(e.detail.lang); }
+  });
+
+  setInterval(triggerAutosave, 15000);
+}
+
+/* ── Init ─────────────────────────────────────────────────────── */
+function getTrackingContext() {
+  return {
+    task_role: state.taskRole,
+    run_type: state.runType,
+    task_type: state.taskTypeKey,
+    sample_index: state.currentIdx,
+    lang: state.lang
+  };
+}
+
+function applyLaunchContextFromQuery() {
+  var params = new URLSearchParams(window.location.search);
+  var role = params.get('role');
+  var runType = params.get('run_type');
+  var taskType = params.get('task_type') || getStoredActiveTaskType();
+
+  if (role === 'annotator' || role === 'reviewer') {
+    state.taskRole = role;
+  }
+  if (runType === 'dry_run' || runType === 'official_run') {
+    state.runType = runType;
+  }
+  state.taskTypeKey = normalizeTaskTypeKey(taskType);
+  setStoredActiveTaskType(state.taskTypeKey);
+}
+
+function init() {
+  applyLaunchContextFromQuery();
+  state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
+  applyLang(state.lang);
+  renderSampleContent();
+  renderRoleControls();
+  bindEvents();
+
+  if (window.LabelSuiteAnalytics) {
+    window.LabelSuiteAnalytics.init({ page: 'annotation-workspace' });
+    window.LabelSuiteAnalytics.trackPageView('annotation-workspace', getTrackingContext);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
