@@ -87,7 +87,8 @@ test.describe('Task detail settings edit state', () => {
     await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
     await expect(page.locator('#settingsEditForm')).toContainText('標記預覽');
     await expect(page.locator('#settingsEditForm')).toContainText('從範本開始或者上傳設定檔');
-    await expect(page.locator('#settingsEditForm')).toContainText('正向');
+    await expect(page.locator('#settingsEditForm')).toContainText('Valence');
+    await expect(page.locator('#settingsEditForm')).toContainText('Arousal');
     await expect(page.locator('#settingsEditForm')).not.toContainText('請先新增至少一個標記選項');
 
     const yamlBtn = page.locator('#settingsFormatYamlBtn');
@@ -97,7 +98,16 @@ test.describe('Task detail settings edit state', () => {
     const saveSettingsBtn = page.locator('#settingsSaveBtn');
 
     await expect(yamlBtn).toHaveClass(/active/);
-    await codeEditor.fill('labels: [正向, 負向]\nallow_multiple: false');
+    await codeEditor.fill([
+      'valence:',
+      '  min: 1',
+      '  max: 7',
+      '  step: 1',
+      'arousal:',
+      '  min: 1',
+      '  max: 5',
+      '  step: 1',
+    ].join('\n'));
     await expect(saveCodeBtn).toBeEnabled();
     await expect(saveSettingsBtn).toBeDisabled();
 

@@ -2574,7 +2574,7 @@
     taskId: 'TASK-014',
     taskNameZh: '多語料情感一致性標記',
     taskNameEn: 'Multilingual Sentiment Consistency Labeling',
-    taskTypeKey: 'single_sentence_classification',
+    taskTypeKey: 'single_sentence_va_scoring',
     createdBy: 'Mandy Chen',
     createdAt: '2026-04-20 10:12',
     updatedAt: '2026-04-21 09:38',
@@ -2583,14 +2583,13 @@
     datasetSourceEn: 'customer_feedback_v3.csv',
     configVersion: 'cfg-task014-v1.4.0',
     configFileName: '',
-    configContent: 'labels: [正向, 負向, 中立]\nallow_multiple: false',
+    configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
     guidelineUploaded: true,
     guidelineTextZh: '請將看完句子後的感覺依據右方的表情符號填入對應的數值',
     guidelineTextEn: 'After reading the sentence, enter the matching score based on the emoji scale on the right.',
     guidelineText: '請將看完句子後的感覺依據右方的表情符號填入對應的數值',
     guidelineFiles: [
-      { name: 'sentiment-guideline-v1.pdf', type: 'pdf' },
-      { name: 'labeling-checklist.md', type: 'md' }
+      { name: 'VA_emj.png', type: 'png' }
     ],
     forceGuideline: true,
     status: 'draft',
