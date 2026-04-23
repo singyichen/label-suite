@@ -488,31 +488,112 @@
     .field-textarea.error-border:focus { border-color: var(--color-error); box-shadow: 0 0 0 3px rgba(185,28,28,0.10); }
 
     /* Reviewer controls */
-    .rv-result-display { display: flex; flex-direction: column; gap: var(--space-sm); margin-bottom: var(--space-md); }
-    .rv-result-row {
+    .rv-summary-card {
+      margin-bottom: var(--space-md);
+      padding: 14px 16px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(14, 116, 144, 0.16);
+      background: linear-gradient(180deg, #F0FDFA 0%, #ECFEFF 100%);
+    }
+    .rv-summary-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .rv-summary-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(14, 116, 144, 0.12);
+      color: #0F766E;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .rv-summary-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .rv-summary-text {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--color-text-soft);
+    }
+    .rv-bulk-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      background: var(--color-surface);
+      gap: var(--space-sm);
+      margin-bottom: var(--space-md);
+      padding: 12px 14px;
       border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
     }
-    .rv-result-annotator { font-size: 12px; color: var(--color-text-soft); }
-    .rv-result-value { font-size: 13px; font-weight: 600; color: var(--color-ink); }
-    .badge-class {
+    .rv-bulk-copy { display: flex; flex-direction: column; gap: 2px; }
+    .rv-bulk-title { font-size: 12px; font-weight: 700; color: var(--color-ink); }
+    .rv-bulk-desc { font-size: 12px; color: var(--color-text-muted); }
+    .rv-bulk-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .rv-bulk-btn.active {
+      box-shadow: inset 0 0 0 1px currentColor;
+      transform: none;
+    }
+    .rv-annotator-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rv-annotator-review-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+    }
+    .rv-annotator-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .rv-annotator-name { font-size: 13px; font-weight: 700; color: var(--color-ink); word-break: break-word; }
+    .rv-annotator-subtitle { font-size: 12px; color: var(--color-text-muted); }
+    .rv-score-pill {
       display: inline-flex;
       align-items: center;
-      border-radius: var(--radius-sm);
-      padding: 2px 8px;
-      font-size: 12px;
-      font-weight: 600;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(99,102,241,0.18);
       background: var(--color-primary-soft-bg);
       color: var(--color-primary);
-      border: 1px solid rgba(99,102,241,0.2);
+      font-size: 13px;
+      font-weight: 700;
     }
-    .rv-decision-btns { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-bottom: var(--space-md); }
-    .rv-audit-label { font-size: 12px; font-weight: 600; color: var(--color-error); margin-bottom: 6px; display: block; }
+    .rv-choice-group {
+      display: inline-flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .rv-choice-btn {
+      min-width: 88px;
+      border-width: 1px;
+    }
+    .rv-choice-btn.active {
+      box-shadow: inset 0 0 0 1px currentColor;
+      transform: none;
+    }
+    .rv-choice-btn.active.btn-success {
+      background: #DCFCE7;
+    }
+    .rv-choice-btn.active.btn-danger {
+      background: #FEE2E2;
+    }
+    .rv-review-note {
+      margin-top: var(--space-md);
+      font-size: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
 
     /* Buttons */
     .btn {
@@ -1081,41 +1162,40 @@
             <span style="font-size:11px;color:#7C3AED;font-weight:700;" id="reviewerRoleSmall">Reviewer</span>
           </div>
           <div class="annotation-card-body">
-            <div class="rv-result-display">
-              <div class="rv-result-row">
-                <span class="rv-result-annotator" id="rvAnnotatorA">Annotator A</span>
-                <span class="rv-result-value"><span class="badge-class" id="rvResultA">正面</span></span>
+            <div class="rv-summary-card">
+              <div class="rv-summary-head">
+                <span class="rv-summary-chip" id="rvStatsChip">IAA 統計</span>
+                <span class="rv-summary-title" id="rvStatsTitle">單一句子 IAA 摘要</span>
               </div>
-              <div class="rv-result-row">
-                <span class="rv-result-annotator" id="rvAnnotatorB">Annotator B</span>
-                <span class="rv-result-value"><span class="badge-class" id="rvResultB">正面</span></span>
+              <div class="rv-summary-text" id="rvStatsSummary">mean : [7.33, 7.17] , std : [1.07, 1.43], ±1.5std V : 5.725~8.935, ±1.5std A : 5.025~9.315</div>
+            </div>
+            <div class="rv-bulk-bar">
+              <div class="rv-bulk-copy">
+                <span class="rv-bulk-title" id="rvBulkTitle">全部審核</span>
+                <span class="rv-bulk-desc" id="rvBulkDescription">用勾選式操作一次套用到所有標記員。</span>
+              </div>
+              <div class="rv-bulk-actions">
+                <button class="btn btn-success btn-sm rv-bulk-btn" type="button" id="rvBulkApproveBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span id="rvBulkApproveLabel">全部通過</span>
+                </button>
+                <button class="btn btn-danger btn-sm rv-bulk-btn" type="button" id="rvBulkRejectBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <span id="rvBulkRejectLabel">全部退回</span>
+                </button>
               </div>
             </div>
-            <div class="rv-decision-btns">
-              <button class="btn btn-success btn-sm" type="button" id="rvApproveBtn">
+            <div class="rv-annotator-list" id="rvAnnotatorRows"></div>
+            <div class="rv-review-note" id="rvReviewNote">通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。</div>
+            <div class="hidden" id="rvDecisionTemplates">
+              <button class="btn btn-success btn-sm rv-choice-btn" type="button" data-rv-choice="approve">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                 <span id="rvApproveLabel">通過</span>
               </button>
-              <button class="btn btn-danger btn-sm" type="button" id="rvRejectBtn">
+              <button class="btn btn-danger btn-sm rv-choice-btn" type="button" data-rv-choice="reject">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 <span id="rvRejectLabel">退回</span>
               </button>
-              <button class="btn btn-secondary btn-sm" type="button" id="rvEditBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                <span id="rvEditLabel">修正</span>
-              </button>
-              <button class="btn btn-danger btn-sm" type="button" id="rvDeleteBtn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                <span id="rvDeleteLabel">刪除</span>
-              </button>
-            </div>
-            <div class="hidden" id="rvAuditReasonWrap">
-              <label class="rv-audit-label" for="rvAuditReason" id="rvAuditReasonLabel">* 必填：請說明審查理由</label>
-              <textarea class="field-textarea error-border" id="rvAuditReason" rows="2" placeholder="說明退回或修正的原因…"></textarea>
-            </div>
-            <div class="field-group">
-              <label class="field-label" for="rvNote" id="rvNoteLabel">審查備註（選填）</label>
-              <textarea class="field-textarea" id="rvNote" rows="2" placeholder="可加入補充說明…"></textarea>
             </div>
           </div>
         </div>
@@ -1252,10 +1332,14 @@ var I18N = {
     saveDraftLabel: '儲存草稿', submitLabel: '提交',
     autosaveLabel: '草稿已自動儲存', autosaveSavingLabel: '儲存中…',
     reviewCardTitle: '審查結果', reviewerRoleSmall: 'Reviewer',
+    rvStatsChip: 'IAA 統計', rvStatsTitle: '單一句子 IAA 摘要',
+    rvBulkTitle: '全部審核',
+    rvBulkDescription: '用勾選式操作一次套用到所有標記員。',
+    rvBulkApproveLabel: '全部通過', rvBulkRejectLabel: '全部退回',
     rvApproveLabel: '通過', rvRejectLabel: '退回',
-    rvEditLabel: '修正', rvDeleteLabel: '刪除',
-    rvAuditReasonLabel: '* 必填：請說明審查理由',
-    rvNoteLabel: '審查備註（選填）', rvSaveLabel: '送出審查',
+    rvReviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
+    rvAnnotatorResultLabel: '個人標記結果',
+    rvSaveLabel: '送出審核',
     tabGuidelineLabel: '說明與檔案', tabHistoryLabel: '歷程',
     guidelineCollapseAria: '收合說明區',
     guidelineExpandAria: '展開說明區',
@@ -1281,15 +1365,13 @@ var I18N = {
     toastDraftSaved: '草稿已儲存', toastSubmitted: '已提交，載入下一筆',
     toastAllSubmittedRedirect: '已完成全部資料，返回標記清單',
     toastApproved: '已通過', toastRejected: '已退回',
-    toastEditSaved: '修正已送出', toastDeleted: '已刪除',
+    toastReviewSubmitted: '審核結果已送出',
     toastSelectLabel: '請先選擇標籤',
-    toastSelectDecision: '請選擇審查決策',
-    toastFillReason: '請填寫審查理由',
+    toastSelectDecision: '請完成每位標記員的審核決策',
     mobileDrawerTitle: '說明與檔案',
     mobileGuidelineText: '情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。',
     actionSubmitted: '已提交', actionSaved: '已儲存',
     actionApproved: '已通過', actionRejected: '已退回',
-    actionEdited: '已修正', actionDeleted: '已刪除',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1320,10 +1402,14 @@ var I18N = {
     saveDraftLabel: 'Save draft', submitLabel: 'Submit',
     autosaveLabel: 'Draft autosaved', autosaveSavingLabel: 'Saving…',
     reviewCardTitle: 'Review result', reviewerRoleSmall: 'Reviewer',
-    rvApproveLabel: 'Approve', rvRejectLabel: 'Reject',
-    rvEditLabel: 'Edit', rvDeleteLabel: 'Delete',
-    rvAuditReasonLabel: '* Required: reason for this decision',
-    rvNoteLabel: 'Review notes (optional)', rvSaveLabel: 'Submit review',
+    rvStatsChip: 'IAA Stats', rvStatsTitle: 'Sentence-level IAA summary',
+    rvBulkTitle: 'Bulk review',
+    rvBulkDescription: 'Apply the same decision to every annotator row.',
+    rvBulkApproveLabel: 'Approve all', rvBulkRejectLabel: 'Return all',
+    rvApproveLabel: 'Approve', rvRejectLabel: 'Return',
+    rvReviewNote: 'Approve keeps this annotation valid. Return resets it to unannotated so the annotator must label it again.',
+    rvAnnotatorResultLabel: 'Annotator result',
+    rvSaveLabel: 'Submit review',
     tabGuidelineLabel: 'Guidelines', tabHistoryLabel: 'History',
     guidelineCollapseAria: 'Collapse guideline panel',
     guidelineExpandAria: 'Expand guideline panel',
@@ -1348,16 +1434,14 @@ var I18N = {
     historyEmpty: 'No history for this sample yet',
     toastDraftSaved: 'Draft saved', toastSubmitted: 'Submitted — loading next sample',
     toastAllSubmittedRedirect: 'All samples submitted — returning to annotation list',
-    toastApproved: 'Approved', toastRejected: 'Rejected',
-    toastEditSaved: 'Edit submitted', toastDeleted: 'Deleted',
+    toastApproved: 'Approved', toastRejected: 'Returned',
+    toastReviewSubmitted: 'Review submitted',
     toastSelectLabel: 'Please select a label first',
-    toastSelectDecision: 'Please select a review decision',
-    toastFillReason: 'Please fill in the review reason',
+    toastSelectDecision: 'Please complete a review decision for each annotator',
     mobileDrawerTitle: 'Guidelines',
     mobileGuidelineText: 'Sentiment classification: label each text as Positive, Negative, or Neutral based on the overall emotional tone.',
     actionSubmitted: 'submitted', actionSaved: 'saved',
-    actionApproved: 'approved', actionRejected: 'rejected',
-    actionEdited: 'edited', actionDeleted: 'deleted',
+    actionApproved: 'approved', actionRejected: 'returned',
   }
 };
 
@@ -1365,32 +1449,59 @@ var I18N = {
 var SAMPLES = [
   {
     id: 1,
+    sampleId: 'R2-001',
     text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。餐點本身風味也不錯，下次一定會再來。',
     status: 'submitted', label: 'positive', va: { valence: 5, arousal: 3 },
-    history: [{ actor: 'Annotator A', time: '04-22 14:30', action: 'submitted', from: null, to: '正面' }]
+    reviewerData: {
+      statsSummary: 'mean : [7.33, 7.17] , std : [1.07, 1.43], ±1.5std V : 5.725~8.935, ±1.5std A : 5.025~9.315',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '[6, 5.5]', decision: null },
+        { annotator: '113450022', scoreText: '[8, 8]', decision: null },
+        { annotator: 'tony0950127', scoreText: '[7.5, 8]', decision: null },
+        { annotator: 'hui', scoreText: '[7.5, 7.5]', decision: null },
+        { annotator: 'chiao11', scoreText: '[6, 5]', decision: null },
+        { annotator: 'mandy610425', scoreText: '[9, 9]', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-22 14:30', action: 'submitted', from: null, to: 'V=5 / A=3' }]
   },
   {
     id: 2,
+    sampleId: 'R2-002',
     text: '等了快一個小時才上菜，服務生態度冷漠，食物還是涼的。完全不值這個價位，令人失望。',
     status: 'submitted', label: 'negative', va: { valence: 1, arousal: 4 },
+    reviewerData: {
+      statsSummary: 'mean : [4.33, 5.25] , std : [0.99, 1.55], ±1.5std V : 2.845~5.815, ±1.5std A : 2.925~7.575',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '[3.5, 5.5]', decision: null },
+        { annotator: '113450022', scoreText: '[5, 4]', decision: null },
+        { annotator: 'tony0950127', scoreText: '[5, 7]', decision: null },
+        { annotator: 'hui', scoreText: '[5, 6]', decision: null },
+        { annotator: 'chiao11', scoreText: '[5, 6.5]', decision: null },
+        { annotator: 'mandy610425', scoreText: '[2.5, 2.5]', decision: null }
+      ]
+    },
     history: [
-      { actor: 'Annotator A', time: '04-22 14:45', action: 'submitted', from: null, to: '負面' },
+      { actor: 'Annotator A', time: '04-22 14:45', action: 'submitted', from: null, to: 'V=1 / A=4' },
       { actor: 'Reviewer B', time: '04-22 15:10', action: 'approved', from: null, to: null },
     ]
   },
   {
     id: 3,
+    sampleId: 'R2-003',
     text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得住一整天的使用。唯一稍微讓我覺得有點遺憾的是背蓋材質稍微偏重，長時間握持手腕略感疲勞，但整體來說非常滿意這次的購買決定。',
     status: 'saved', label: null, va: null,
     history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: null }]
   },
   {
     id: 4,
+    sampleId: 'R2-004',
     text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
     status: 'todo', label: null, va: null, history: []
   },
   {
     id: 5,
+    sampleId: 'R2-005',
     text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒有遇到任何問題。',
     status: 'todo', label: null, va: null, history: []
   }
@@ -1406,7 +1517,6 @@ var state = {
   currentIdx: 2,
   activeTab: 'guideline',
   guidelineCollapsed: false,
-  rvDecision: null,
   mobileDrawerOpen: false,
 };
 
@@ -1597,6 +1707,37 @@ function formatVaValue(value) {
   var numeric = typeof value === 'number' ? value : parseFloat(value);
   if (isNaN(numeric)) return '';
   return (Math.round(numeric * 10) % 10 === 0) ? String(Math.round(numeric)) : numeric.toFixed(1);
+}
+
+function createFallbackReviewerData(sample) {
+  var resultText = sample.va
+    ? '[' + formatVaValue(sample.va.valence || 5) + ', ' + formatVaValue(sample.va.arousal || 5) + ']'
+    : (sample.label || 'N/A');
+
+  return {
+    statsSummary: sample.va
+      ? 'mean : [' + formatVaValue(sample.va.valence || 5) + ', ' + formatVaValue(sample.va.arousal || 5) + '] , std : [0.00, 0.00], ±1.5std V : ' + formatVaValue(sample.va.valence || 5) + '~' + formatVaValue(sample.va.valence || 5) + ', ±1.5std A : ' + formatVaValue(sample.va.arousal || 5) + '~' + formatVaValue(sample.va.arousal || 5)
+      : 'mean : [' + resultText + ']',
+    rows: [
+      { annotator: 'Annotator A', scoreText: resultText, decision: null },
+      { annotator: 'Annotator B', scoreText: resultText, decision: null }
+    ]
+  };
+}
+
+function getReviewerData(sample) {
+  if (!sample.reviewerData) {
+    sample.reviewerData = createFallbackReviewerData(sample);
+  }
+  if (!sample.reviewerData.rows) {
+    sample.reviewerData.rows = [];
+  }
+  sample.reviewerData.rows.forEach(function(row) {
+    if (row.decision !== 'approve' && row.decision !== 'reject') {
+      row.decision = null;
+    }
+  });
+  return sample.reviewerData;
 }
 
 function buildVaScaleOptions(containerId, inputName, selectedValue) {
@@ -1870,6 +2011,70 @@ function renderProgressSummary() {
   persistDryRunProgress();
 }
 
+function renderReviewerCard() {
+  var container = el('rvAnnotatorRows');
+  if (!container) return;
+  while (container.firstChild) { container.removeChild(container.firstChild); }
+
+  var sample = SAMPLES[state.currentIdx];
+  var reviewerData = getReviewerData(sample);
+
+  setText('rvStatsSummary', reviewerData.statsSummary || '');
+
+  reviewerData.rows.forEach(function(row, rowIdx) {
+    var card = document.createElement('div');
+    card.className = 'rv-annotator-review-row';
+
+    var meta = document.createElement('div');
+    meta.className = 'rv-annotator-meta';
+
+    var name = document.createElement('span');
+    name.className = 'rv-annotator-name';
+    name.textContent = row.annotator;
+
+    var subtitle = document.createElement('span');
+    subtitle.className = 'rv-annotator-subtitle';
+    subtitle.textContent = t('rvAnnotatorResultLabel');
+
+    meta.appendChild(name);
+    meta.appendChild(subtitle);
+
+    var score = document.createElement('span');
+    score.className = 'rv-score-pill';
+    score.textContent = row.scoreText;
+
+    var actions = document.createElement('div');
+    actions.className = 'rv-choice-group';
+
+    ['approve', 'reject'].forEach(function(decisionKey) {
+      var template = document.querySelector('#rvDecisionTemplates [data-rv-choice="' + decisionKey + '"]');
+      if (!template) return;
+      var button = template.cloneNode(true);
+      button.removeAttribute('id');
+      button.querySelectorAll('[id]').forEach(function(node) { node.removeAttribute('id'); });
+      button.classList.toggle('active', row.decision === decisionKey);
+      button.setAttribute('aria-pressed', String(row.decision === decisionKey));
+      button.addEventListener('click', function() {
+        row.decision = decisionKey;
+        renderReviewerCard();
+      });
+      actions.appendChild(button);
+    });
+
+    card.appendChild(meta);
+    card.appendChild(score);
+    card.appendChild(actions);
+    container.appendChild(card);
+  });
+
+  var allApproved = reviewerData.rows.length > 0 && reviewerData.rows.every(function(row) { return row.decision === 'approve'; });
+  var allRejected = reviewerData.rows.length > 0 && reviewerData.rows.every(function(row) { return row.decision === 'reject'; });
+  el('rvBulkApproveBtn').classList.toggle('active', allApproved);
+  el('rvBulkRejectBtn').classList.toggle('active', allRejected);
+  el('rvBulkApproveBtn').setAttribute('aria-pressed', String(allApproved));
+  el('rvBulkRejectBtn').setAttribute('aria-pressed', String(allRejected));
+}
+
 function renderSampleContent() {
   var sample = SAMPLES[state.currentIdx];
   setText('sampleSourceLabel', t('sampleSourceLabel'));
@@ -1899,10 +2104,7 @@ function renderSampleContent() {
   }
   el('annotationNote').value = '';
 
-  state.rvDecision = null;
-  el('rvAuditReasonWrap').classList.add('hidden');
-  el('rvAuditReason').value = '';
-  el('rvNote').value = '';
+  renderReviewerCard();
 
   if (state.activeTab === 'history') { renderHistoryPanel(); }
 }
@@ -1977,8 +2179,10 @@ function applyLang(lang) {
     'vaArousalLabel', 'vaArousalHint', 'vaArousalMin', 'vaArousalMax',
     'saveDraftLabel', 'submitLabel', 'autosaveLabel',
     'reviewCardTitle', 'reviewerRoleSmall',
-    'rvApproveLabel', 'rvRejectLabel', 'rvEditLabel', 'rvDeleteLabel',
-    'rvAuditReasonLabel', 'rvNoteLabel', 'rvSaveLabel',
+    'rvStatsChip', 'rvStatsTitle',
+    'rvBulkTitle', 'rvBulkDescription',
+    'rvBulkApproveLabel', 'rvBulkRejectLabel',
+    'rvApproveLabel', 'rvRejectLabel', 'rvReviewNote', 'rvSaveLabel',
     'tabGuidelineLabel', 'tabHistoryLabel',
     'guidelineSummaryTitle', 'guidelineSummaryText',
     'guidelineFileName1', 'guidelineFileAction1',
@@ -2138,37 +2342,38 @@ function bindEvents() {
     }
   });
 
-  function setRvDecision(mode) {
-    state.rvDecision = mode;
-    var needsReason = mode === 'reject' || mode === 'edit' || mode === 'delete';
-    el('rvAuditReasonWrap').classList.toggle('hidden', !needsReason);
-  }
-  el('rvApproveBtn').addEventListener('click', function() { setRvDecision('approve'); });
-  el('rvRejectBtn').addEventListener('click', function() { setRvDecision('reject'); });
-  el('rvEditBtn').addEventListener('click', function() { setRvDecision('edit'); });
-  el('rvDeleteBtn').addEventListener('click', function() { setRvDecision('delete'); });
+  el('rvBulkApproveBtn').addEventListener('click', function() {
+    getReviewerData(SAMPLES[state.currentIdx]).rows.forEach(function(row) { row.decision = 'approve'; });
+    renderReviewerCard();
+  });
+  el('rvBulkRejectBtn').addEventListener('click', function() {
+    getReviewerData(SAMPLES[state.currentIdx]).rows.forEach(function(row) { row.decision = 'reject'; });
+    renderReviewerCard();
+  });
 
   el('rvSaveBtn').addEventListener('click', function() {
-    if (!state.rvDecision) { showToast(t('toastSelectDecision'), 'error'); return; }
-    var needsReason = state.rvDecision === 'reject' || state.rvDecision === 'edit' || state.rvDecision === 'delete';
-    if (needsReason && !el('rvAuditReason').value.trim()) { showToast(t('toastFillReason'), 'error'); return; }
+    var sample = SAMPLES[state.currentIdx];
+    var reviewerData = getReviewerData(sample);
+    var undecided = reviewerData.rows.some(function(row) { return row.decision !== 'approve' && row.decision !== 'reject'; });
+    if (undecided) { showToast(t('toastSelectDecision'), 'error'); return; }
 
-    var actionMap = { approve: 'approved', reject: 'rejected', edit: 'edited', delete: 'deleted' };
-    var toastMap = { approve: 'toastApproved', reject: 'toastRejected', edit: 'toastEditSaved', delete: 'toastDeleted' };
-    SAMPLES[state.currentIdx].history.push({
-      actor: 'Reviewer B',
-      time: '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
-      action: actionMap[state.rvDecision],
-      from: null,
-      to: null,
+    var timeLabel = '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0');
+    reviewerData.rows.forEach(function(row) {
+      sample.history.push({
+        actor: 'Reviewer B',
+        time: timeLabel,
+        action: row.decision === 'approve' ? 'approved' : 'rejected',
+        from: row.annotator + ' ' + row.scoreText,
+        to: row.decision === 'approve' ? t('rvApproveLabel') : t('rvRejectLabel'),
+      });
     });
-    showToast(t(toastMap[state.rvDecision]), 'success');
-    state.rvDecision = null;
-    el('rvAuditReasonWrap').classList.add('hidden');
-    el('rvAuditReason').value = '';
+    showToast(t('toastReviewSubmitted'), 'success');
     renderHistoryPanel();
     if (window.LabelSuiteAnalytics) {
-      window.LabelSuiteAnalytics.track('prototype_review_submitted', { decision: state.rvDecision, lang: state.lang });
+      window.LabelSuiteAnalytics.track('prototype_review_submitted', {
+        decision_summary: reviewerData.rows.map(function(row) { return row.annotator + ':' + row.decision; }).join(','),
+        lang: state.lang
+      });
     }
   });
 
