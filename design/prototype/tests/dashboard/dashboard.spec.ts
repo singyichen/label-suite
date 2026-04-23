@@ -91,20 +91,26 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(5);
   });
 
-  test('annotator quick continue routes to annotation list first', async ({ page }) => {
+  test('annotator quick continue routes to workspace latest unfinished sample', async ({ page }) => {
     await openScenario(page, 'annotator');
     const firstContinueButton = page.getByRole('button', { name: /快速繼續|Continue/ }).first();
     await firstContinueButton.click();
-    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
+    await expect(page).toHaveURL(/sample_id=A1-003/);
+    await expect(page).toHaveURL(/run_type=official_run/);
   });
 
-  test('reviewer quick review routes to annotation list first', async ({ page }) => {
+  test('reviewer quick review routes to workspace latest unfinished sample', async ({ page }) => {
     await openScenario(page, 'reviewer');
     const firstReviewButton = page.getByRole('button', { name: /快速審核|Quick Review/ }).first();
     await firstReviewButton.click();
-    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
+    await expect(page).toHaveURL(/task_id=TASK-015-R1/);
+    await expect(page).toHaveURL(/sample_id=R1-001/);
+    await expect(page).toHaveURL(/run_type=official_run/);
   });
 });
 

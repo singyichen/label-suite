@@ -1714,6 +1714,7 @@
     const ANNOTATOR_TASKS = [
       {
         taskId: 'TASK-015-A1',
+        latestUnfinishedSampleId: 'A1-003',
         taskType: 'single_sentence_classification',
         runType: 'official_run',
         progress: 89,
@@ -1728,6 +1729,7 @@
       },
       {
         taskId: 'TASK-015-A2',
+        latestUnfinishedSampleId: 'A2-005',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         progress: 42,
@@ -1742,6 +1744,7 @@
       },
       {
         taskId: 'TASK-015-A3',
+        latestUnfinishedSampleId: 'A3-004',
         taskType: 'sequence_labeling',
         runType: 'official_run',
         progress: 64,
@@ -1756,6 +1759,7 @@
       },
       {
         taskId: 'TASK-015-A4',
+        latestUnfinishedSampleId: 'A4-003',
         taskType: 'relation_extraction',
         runType: 'official_run',
         progress: 37,
@@ -1770,6 +1774,7 @@
       },
       {
         taskId: 'TASK-015-A5',
+        latestUnfinishedSampleId: 'A5-004',
         taskType: 'sentence_pairs',
         runType: 'dry_run',
         progress: 58,
@@ -1787,6 +1792,7 @@
     const REVIEWER_TASKS = [
       {
         taskId: 'TASK-015-R1',
+        latestUnfinishedSampleId: 'R1-001',
         taskType: 'single_sentence_classification',
         runType: 'official_run',
         progress: 67,
@@ -1801,6 +1807,7 @@
       },
       {
         taskId: 'TASK-015-R2',
+        latestUnfinishedSampleId: 'R2-005',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         progress: 52,
@@ -1815,6 +1822,7 @@
       },
       {
         taskId: 'TASK-015-R3',
+        latestUnfinishedSampleId: 'R3-004',
         taskType: 'sequence_labeling',
         runType: 'official_run',
         progress: 61,
@@ -1829,6 +1837,7 @@
       },
       {
         taskId: 'TASK-015-R4',
+        latestUnfinishedSampleId: 'R4-003',
         taskType: 'relation_extraction',
         runType: 'official_run',
         progress: 44,
@@ -1843,6 +1852,7 @@
       },
       {
         taskId: 'TASK-015-R5',
+        latestUnfinishedSampleId: 'R5-004',
         taskType: 'sentence_pairs',
         runType: 'dry_run',
         progress: 56,
@@ -1894,6 +1904,29 @@
       window.location.href = url;
     }
 
+    function openAnnotationWorkspace(role, task) {
+      setActiveTaskType(task.taskType);
+      window.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+        cta: role === 'annotator' ? 'annotator_quick_continue' : 'reviewer_quick_review',
+        task_type: task.taskType,
+        run_type: task.runType,
+        task_role: role,
+        lang,
+        scenario,
+      });
+      var sampleId = task.latestUnfinishedSampleId || '';
+      if (!sampleId) {
+        openAnnotationList(role, task);
+        return;
+      }
+      const url = '../annotation/annotation-workspace.html?task_id=' + encodeURIComponent(task.taskId || '') +
+        '&sample_id=' + encodeURIComponent(sampleId) +
+        '&role=' + encodeURIComponent(role) +
+        '&run_type=' + encodeURIComponent(task.runType) +
+        '&task_type=' + encodeURIComponent(task.taskType);
+      window.location.href = url;
+    }
+
     function renderRoleTaskList(containerId, role, tasks) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -1926,7 +1959,7 @@
           const taskIndex = Number(btn.dataset.taskIndex);
           const targetTask = tasks[taskIndex];
           if (!targetTask) return;
-          openAnnotationList(role, targetTask);
+          openAnnotationWorkspace(role, targetTask);
         });
       });
     }

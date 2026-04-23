@@ -1,6 +1,37 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Annotation list routing', () => {
+  test('shows task info card above filters for selected task', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const taskInfoCard = page.locator('#taskInfoCard');
+    const toolbar = page.locator('.toolbar[role="search"]');
+    await expect(taskInfoCard).toBeVisible();
+    await expect(taskInfoCard).toContainText('情感 VA 雙維度評分');
+    await expect(taskInfoCard).toContainText('單句 VA 評分');
+    await expect(taskInfoCard).toContainText('試標');
+    await expect(taskInfoCard.getByRole('button', { name: '快速繼續' })).toBeVisible();
+
+    const taskInfoBox = await taskInfoCard.boundingBox();
+    const toolbarBox = await toolbar.boundingBox();
+    expect(taskInfoBox).not.toBeNull();
+    expect(toolbarBox).not.toBeNull();
+    expect(taskInfoBox!.y).toBeLessThan(toolbarBox!.y);
+  });
+
+  test('task info card quick continue opens latest unfinished sample in workspace', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.getByRole('button', { name: '快速繼續' }).click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
+    await expect(page).toHaveURL(/role=annotator/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A2/);
+    await expect(page).toHaveURL(/sample_id=A2-005/);
+    await expect(page).toHaveURL(/run_type=dry_run/);
+  });
+
   test('annotation list uses task-list style toolbar and table shell', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
@@ -124,5 +155,55 @@ test.describe('Annotation list routing', () => {
     const statusBadges = page.locator('#sampleRows tr td:nth-child(2) .status-badge');
     await expect(statusBadges).toHaveCount(5);
     await expect(statusBadges).toHaveText(['已提交', '已提交', '已提交', '已提交', '已提交']);
+  });
+
+  test('mobile list keeps first row compact without excessive vertical gap', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const firstRow = page.locator('#sampleRows tr').first();
+    await expect(firstRow).toBeVisible();
+
+    const metrics = await page.evaluate(() => {
+      const firstRowEl = document.querySelector('#sampleRows tr') as HTMLTableRowElement | null;
+      if (!firstRowEl) return null;
+      const firstCell = firstRowEl.querySelector('td');
+      const firstCellTop = firstCell ? firstCell.getBoundingClientRect().top : 0;
+      const rowRect = firstRowEl.getBoundingClientRect();
+      return {
+        rowHeight: rowRect.height,
+        rowTopGap: firstCellTop - rowRect.top,
+      };
+    });
+
+    expect(metrics).not.toBeNull();
+    expect(metrics!.rowHeight).toBeLessThan(160);
+    expect(metrics!.rowTopGap).toBeLessThan(24);
+  });
+
+  test('mobile top brand row stays uncompressed and does not overlap page header', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const metrics = await page.evaluate(() => {
+      const brand = document.querySelector('.brand-section') as HTMLElement | null;
+      const pageTitle = document.getElementById('pageTitle');
+      if (!brand || !pageTitle) return null;
+
+      const brandRect = brand.getBoundingClientRect();
+      const titleRect = pageTitle.getBoundingClientRect();
+      return {
+        brandClientWidth: brand.clientWidth,
+        brandScrollWidth: brand.scrollWidth,
+        brandBottom: brandRect.bottom,
+        titleTop: titleRect.top,
+      };
+    });
+
+    expect(metrics).not.toBeNull();
+    expect(metrics!.brandScrollWidth).toBeLessThanOrEqual(metrics!.brandClientWidth + 1);
+    expect(metrics!.titleTop).toBeGreaterThanOrEqual(metrics!.brandBottom + 4);
   });
 });
