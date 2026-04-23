@@ -1326,50 +1326,7 @@
                 <span id="annotatorTaskListSubtitle" class="panel-subtitle">我的進行中任務</span>
               </div>
             </div>
-            <div class="list">
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="annotatorTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="annotatorTask1Detail" class="list-item-detail">已完成 89% · 今日 53 筆 · 平均速度 3.0</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="annotatorTask1TaskType" class="badge badge-task-type">分類任務</span>
-                      <span id="annotatorTask1RunType" class="badge badge-official">正式標記</span>
-                      <span id="annotatorTask1Badge" class="badge badge-info">繼續中</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="annotatorTask1ContinueBtn" class="btn btn-primary">快速繼續</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 89%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="annotatorTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="annotatorTask2Detail" class="list-item-detail">已完成 42% · 今日 18 筆 · 平均速度 4.2</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="annotatorTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
-                      <span id="annotatorTask2RunType" class="badge badge-dry-run">試標</span>
-                      <span id="annotatorTask2Badge" class="badge badge-warning">待繼續</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="annotatorTask2ContinueBtn" class="btn btn-primary">快速繼續</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 42%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="list" id="annotatorTaskList"></div>
           </article>
         </section>
 
@@ -1405,50 +1362,7 @@
                 <span id="reviewerTaskListSubtitle" class="panel-subtitle">我的待審任務</span>
               </div>
             </div>
-            <div class="list">
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="reviewerTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="reviewerTask1Detail" class="list-item-detail">待審 12 筆 · 進度 67% · IAA 0.81</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="reviewerTask1TaskType" class="badge badge-task-type">分類任務</span>
-                      <span id="reviewerTask1RunType" class="badge badge-official">正式標記</span>
-                      <span id="reviewerTask1Badge" class="badge badge-warning">待審查</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="reviewerTask1StartBtn" class="btn btn-primary">快速審核</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 67%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="reviewerTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="reviewerTask2Detail" class="list-item-detail">待審 8 筆 · 進度 52% · IAA 0.78</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="reviewerTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
-                      <span id="reviewerTask2RunType" class="badge badge-dry-run">試標</span>
-                      <span id="reviewerTask2Badge" class="badge badge-info">進行中</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="reviewerTask2StartBtn" class="btn btn-primary">快速審核</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 52%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="list" id="reviewerTaskList"></div>
           </article>
         </section>
       </div>
@@ -1797,8 +1711,218 @@
       },
     };
 
+    const ANNOTATOR_TASKS = [
+      {
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        progress: 89,
+        title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+        detail: { zh: '已完成 89% · 今日 53 筆 · 平均速度 3.0', en: '89% Completed · 53 Today · Avg Speed 3.0' },
+        taskTypeText: { zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '繼續中', en: 'Continue' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        progress: 42,
+        title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+        detail: { zh: '已完成 42% · 今日 18 筆 · 平均速度 4.2', en: '42% Completed · 18 Today · Avg Speed 4.2' },
+        taskTypeText: { zh: '單句 VA 雙維度評分', en: 'Single-sentence VA Scoring' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '待繼續', en: 'Resume' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskType: 'sequence_labeling',
+        runType: 'official_run',
+        progress: 64,
+        title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+        detail: { zh: '已完成 64% · 今日 31 筆 · 平均速度 2.8', en: '64% Completed · 31 Today · Avg Speed 2.8' },
+        taskTypeText: { zh: '序列標註（Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        progress: 37,
+        title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+        detail: { zh: '已完成 37% · 今日 14 筆 · 平均速度 5.1', en: '37% Completed · 14 Today · Avg Speed 5.1' },
+        taskTypeText: { zh: '關係抽取（Entity / Relation / Triple）', en: 'Relation Extraction (Entity / Relation / Triple)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '待繼續', en: 'Resume' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        progress: 58,
+        title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+        detail: { zh: '已完成 58% · 今日 25 筆 · 平均速度 3.4', en: '58% Completed · 25 Today · Avg Speed 3.4' },
+        taskTypeText: { zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+    ];
+
+    const REVIEWER_TASKS = [
+      {
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        progress: 67,
+        title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+        detail: { zh: '待審 12 筆 · 進度 67% · IAA 0.81', en: '12 Pending · 67% Progress · IAA 0.81' },
+        taskTypeText: { zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '待審查', en: 'Pending Review' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        progress: 52,
+        title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+        detail: { zh: '待審 8 筆 · 進度 52% · IAA 0.78', en: '8 Pending · 52% Progress · IAA 0.78' },
+        taskTypeText: { zh: '單句 VA 雙維度評分', en: 'Single-sentence VA Scoring' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskType: 'sequence_labeling',
+        runType: 'official_run',
+        progress: 61,
+        title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+        detail: { zh: '待審 15 筆 · 進度 61% · IAA 0.83', en: '15 Pending · 61% Progress · IAA 0.83' },
+        taskTypeText: { zh: '序列標註（Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '待審查', en: 'Pending Review' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        progress: 44,
+        title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+        detail: { zh: '待審 9 筆 · 進度 44% · IAA 0.79', en: '9 Pending · 44% Progress · IAA 0.79' },
+        taskTypeText: { zh: '關係抽取（Entity / Relation / Triple）', en: 'Relation Extraction (Entity / Relation / Triple)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        progress: 56,
+        title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+        detail: { zh: '待審 11 筆 · 進度 56% · IAA 0.82', en: '11 Pending · 56% Progress · IAA 0.82' },
+        taskTypeText: { zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '待審查', en: 'Pending Review' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+    ];
+
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let scenario = 'user';
+
+    function localizedText(source) {
+      return (source && (source[lang] || source.zh || source.en)) || '';
+    }
+
+    function setActiveTaskType(taskType) {
+      if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
+        window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
+        return;
+      }
+      try {
+        window.localStorage.setItem('labelsuite.activeTaskType', String(taskType));
+      } catch (error) {
+        // Ignore prototype storage errors.
+      }
+    }
+
+    function openTaskWorkspace(role, task) {
+      setActiveTaskType(task.taskType);
+      window.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+        cta: role === 'annotator' ? 'annotator_quick_continue' : 'reviewer_quick_review',
+        task_type: task.taskType,
+        run_type: task.runType,
+        task_role: role,
+        lang,
+        scenario,
+      });
+      const url = '../annotation/annotation-workspace.html?role=' + encodeURIComponent(role) +
+        '&task_type=' + encodeURIComponent(task.taskType) +
+        '&run_type=' + encodeURIComponent(task.runType);
+      window.location.href = url;
+    }
+
+    function renderRoleTaskList(containerId, role, tasks) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = tasks.map((task, index) => (
+        '<div class="list-item">' +
+          '<div class="task-item-header">' +
+            '<div class="task-item-summary">' +
+              '<span class="list-item-title">' + localizedText(task.title) + '</span>' +
+              '<span class="list-item-detail">' + localizedText(task.detail) + '</span>' +
+            '</div>' +
+            '<div class="task-item-meta">' +
+              '<div class="task-item-badges">' +
+                '<span class="badge badge-task-type">' + localizedText(task.taskTypeText) + '</span>' +
+                '<span class="badge ' + task.runTypeClass + '">' + localizedText(task.runTypeText) + '</span>' +
+                '<span class="badge ' + task.statusClass + '">' + localizedText(task.statusText) + '</span>' +
+              '</div>' +
+              '<div class="task-item-actions">' +
+                '<button class="btn btn-primary role-task-action-btn" data-role="' + role + '" data-task-index="' + String(index) + '">' + localizedText(task.actionText) + '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="progress" style="margin-top: 10px;">' +
+            '<span style="width: ' + String(task.progress) + '%;"></span>' +
+          '</div>' +
+        '</div>'
+      )).join('');
+
+      container.querySelectorAll('.role-task-action-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const taskIndex = Number(btn.dataset.taskIndex);
+          const targetTask = tasks[taskIndex];
+          if (!targetTask) return;
+          openTaskWorkspace(role, targetTask);
+        });
+      });
+    }
+
+    function renderRoleTaskLists() {
+      renderRoleTaskList('annotatorTaskList', 'annotator', ANNOTATOR_TASKS);
+      renderRoleTaskList('reviewerTaskList', 'reviewer', REVIEWER_TASKS);
+    }
 
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
@@ -1821,6 +1945,7 @@
         const el = document.getElementById(key);
         if (el) el.textContent = val;
       });
+      renderRoleTaskLists();
     }
 
     function handleLangToggle(source) {
@@ -1839,10 +1964,10 @@
     document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
 
     document.getElementById('workflowCardAnnotateBtn').addEventListener('click', () => {
-      window.location.href = '../annotation/annotation-workspace.html?role=annotator';
+      openTaskWorkspace('annotator', ANNOTATOR_TASKS[0]);
     });
     document.getElementById('workflowCardReviewBtn').addEventListener('click', () => {
-      window.location.href = '../annotation/annotation-workspace.html?role=reviewer';
+      openTaskWorkspace('reviewer', REVIEWER_TASKS[0]);
     });
 
     const getTrackingContext = () => ({ lang, scenario });
@@ -1850,14 +1975,8 @@
     window.LabelSuiteAnalytics.bindClickTracks(
       [
         { id: 'workflowCardCreateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
-        { id: 'workflowCardAnnotateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'complete_first_annotation' } },
-        { id: 'workflowCardReviewBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'complete_first_review' } },
         { id: 'adminViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'admin_view_all_tasks' } },
         { id: 'plViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'project_leader_view_all_tasks' } },
-        { id: 'annotatorTask1ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_1' } },
-        { id: 'annotatorTask2ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_2' } },
-        { id: 'reviewerTask1StartBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'reviewer_quick_review_task_1' } },
-        { id: 'reviewerTask2StartBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'reviewer_quick_review_task_2' } },
         { id: 'logoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'desktop' } },
         { id: 'mobileLogoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'mobile' } },
       ],

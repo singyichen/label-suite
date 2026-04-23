@@ -898,7 +898,7 @@
 </script>
 
 <!-- Guideline Force Modal -->
-<div class="modal-backdrop" id="guidelineModal" role="dialog" aria-modal="true" aria-labelledby="guidelineModalTitle">
+<div class="modal-backdrop hidden" id="guidelineModal" role="dialog" aria-modal="true" aria-labelledby="guidelineModalTitle">
   <div class="modal">
     <div class="modal-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1365,6 +1365,121 @@ var state = {
   mobileDrawerOpen: false,
 };
 
+var GUIDELINE_MODAL_SEEN_KEY = 'labelsuite.guidelineModalSeen';
+
+var TASK_TYPE_UI_CONFIG = {
+  single_sentence_classification: {
+    taskTypeLabel: {
+      zh: '單句分類（含多標籤）',
+      en: 'Single Sentence Classification (Multi-label)'
+    },
+    annotationTitle: {
+      zh: '標記標籤',
+      en: 'Label'
+    },
+    guidelineGoal: {
+      zh: '單句分類（含多標籤）',
+      en: 'Single Sentence Classification (Multi-label)'
+    },
+    guidelineSummary: {
+      zh: '請依照文本整體語意選擇可套用的標籤；若符合多個標籤，請依規範採用多標籤標記並補充備註。',
+      en: 'Select all applicable labels based on sentence meaning. Apply multi-label tagging when multiple labels fit, and add notes when needed.'
+    },
+    mobileGuideline: {
+      zh: '單句分類：可依規範進行多標籤標記。',
+      en: 'Single-sentence classification: apply multi-label tagging per guideline.'
+    }
+  },
+  single_sentence_va_scoring: {
+    taskTypeLabel: {
+      zh: '單句 VA 雙維度評分（Valence / Arousal）',
+      en: 'Single-sentence VA Scoring (Valence / Arousal)'
+    },
+    annotationTitle: {
+      zh: '單句 VA 雙維度評分（Valence / Arousal）',
+      en: 'Single-sentence VA Scoring (Valence / Arousal)'
+    },
+    guidelineGoal: {
+      zh: 'VA 雙維度評分',
+      en: 'VA Dual-axis Scoring'
+    },
+    guidelineSummary: {
+      zh: '請分別評估文本的 Valence（情緒正負）與 Arousal（情緒強度），依 1-9 刻度給分。',
+      en: 'Rate each sentence on Valence (polarity) and Arousal (intensity) using the 1-9 scale.'
+    },
+    mobileGuideline: {
+      zh: 'VA 評分：請分別完成 Valence 與 Arousal。',
+      en: 'VA scoring: rate both Valence and Arousal.'
+    }
+  },
+  sequence_labeling: {
+    taskTypeLabel: {
+      zh: '序列標註（Aspect / NER）',
+      en: 'Sequence Labeling (Aspect / NER)'
+    },
+    annotationTitle: {
+      zh: '序列標註',
+      en: 'Sequence Labeling'
+    },
+    guidelineGoal: {
+      zh: '序列標註（Aspect / NER）',
+      en: 'Sequence Labeling (Aspect / NER)'
+    },
+    guidelineSummary: {
+      zh: '依指引抽取文本片段並標註實體或屬性範疇；標註邊界需與規範一致。',
+      en: 'Extract text spans and assign entity/aspect tags following the guideline-defined boundaries.'
+    },
+    mobileGuideline: {
+      zh: '序列標註：請依規範標出實體或屬性片段。',
+      en: 'Sequence labeling: mark entity/aspect spans per guideline.'
+    }
+  },
+  relation_extraction: {
+    taskTypeLabel: {
+      zh: '關係抽取（Entity / Relation / Triple）',
+      en: 'Relation Extraction (Entity / Relation / Triple)'
+    },
+    annotationTitle: {
+      zh: '關係抽取',
+      en: 'Relation Extraction'
+    },
+    guidelineGoal: {
+      zh: '關係抽取（Entity / Relation / Triple）',
+      en: 'Relation Extraction (Entity / Relation / Triple)'
+    },
+    guidelineSummary: {
+      zh: '先確認實體，再依語意建立關係並輸出三元組；若規範要求可擴充為五元組。',
+      en: 'Identify entities, assign relations, and construct triples; extend to n-tuples when required by guideline.'
+    },
+    mobileGuideline: {
+      zh: '關係抽取：確認實體後建立 Relation 與 Triple。',
+      en: 'Relation extraction: identify entities, then build relations and triples.'
+    }
+  },
+  sentence_pairs: {
+    taskTypeLabel: {
+      zh: '句對任務（相似度 / 蘊含）',
+      en: 'Sentence Pairs (Similarity / Entailment)'
+    },
+    annotationTitle: {
+      zh: '句對語意判定',
+      en: 'Sentence Pair Judgement'
+    },
+    guidelineGoal: {
+      zh: '句對相似度 / 蘊含',
+      en: 'Sentence Pair Similarity / Entailment'
+    },
+    guidelineSummary: {
+      zh: '請比較句對語意一致性，判斷其相似度或蘊含關係，並依任務規範選擇標籤。',
+      en: 'Compare sentence pairs and choose labels for semantic similarity or entailment according to guideline.'
+    },
+    mobileGuideline: {
+      zh: '句對任務：判斷相似度或蘊含關係。',
+      en: 'Sentence pairs: judge similarity or entailment relation.'
+    }
+  }
+};
+
 /* ── Utils ────────────────────────────────────────────────────── */
 function t(key, vars) {
   var str = (I18N[state.lang] || I18N.zh)[key] || key;
@@ -1396,7 +1511,7 @@ function countSubmitted() {
 }
 
 function normalizeTaskTypeKey(taskType) {
-  if (taskType === 'single_sentence_va_scoring') return 'single_sentence_va_scoring';
+  if (TASK_TYPE_UI_CONFIG[taskType]) return taskType;
   return 'single_sentence_classification';
 }
 
@@ -1465,6 +1580,22 @@ function setStoredActiveTaskType(taskType) {
   }
   try {
     window.localStorage.setItem('labelsuite.activeTaskType', String(taskType));
+  } catch (error) {
+    // Ignore storage errors in prototype mode.
+  }
+}
+
+function hasSeenGuidelineModal() {
+  try {
+    return window.localStorage.getItem(GUIDELINE_MODAL_SEEN_KEY) === '1';
+  } catch (error) {
+    return false;
+  }
+}
+
+function markGuidelineModalSeen() {
+  try {
+    window.localStorage.setItem(GUIDELINE_MODAL_SEEN_KEY, '1');
   } catch (error) {
     // Ignore storage errors in prototype mode.
   }
@@ -1640,10 +1771,14 @@ function renderSampleContent() {
 
 function renderTaskTypeInterface() {
   var isVa = isVaTaskType(state.taskTypeKey);
+  var config = TASK_TYPE_UI_CONFIG[state.taskTypeKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
   el('classificationAnnotatorPanel').classList.toggle('hidden', isVa);
   el('vaAnnotatorPanel').classList.toggle('hidden', !isVa);
-  setText('annotationCardTitle', isVa ? t('taskTypeVA') : t('annotationCardTitle'));
-  setText('taskTypeLabel', isVa ? t('taskTypeVA') : t('taskTypeClassification'));
+  setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
+  setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
+  setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
+  setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
+  setText('mobileGuidelineText', config.mobileGuideline[state.lang] || config.mobileGuideline.zh);
 }
 
 function renderGuidelineCollapseState() {
@@ -1733,6 +1868,7 @@ function selectSample(idx) {
 /* ── Event Bindings ───────────────────────────────────────────── */
 function bindEvents() {
   el('guidelineModalConfirm').addEventListener('click', function() {
+    markGuidelineModalSeen();
     el('guidelineModal').classList.add('hidden');
     if (window.LabelSuiteAnalytics) {
       window.LabelSuiteAnalytics.track('prototype_guideline_modal_confirmed', { lang: state.lang });
@@ -1924,6 +2060,9 @@ function init() {
   applyLaunchContextFromQuery();
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
   applyLang(state.lang);
+  if (!hasSeenGuidelineModal()) {
+    el('guidelineModal').classList.remove('hidden');
+  }
   renderSampleContent();
   renderRoleControls();
   bindEvents();

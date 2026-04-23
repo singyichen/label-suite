@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.8.5
+**版本**：1.8.6
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -244,6 +244,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - 支援 `GUIDELINE_FORMATS`，其中 `image` 僅允許 `GUIDELINE_IMAGE_FORMATS`；超出格式需阻擋並提示。
 - Step 4 為選填，不填仍可建立任務。
 - 強制顯示設定預設為關閉。
+- 當任務啟用 `開始標記前強制顯示` 時，annotation-workspace 應在「同一使用者首次進入該任務標記介面」時顯示任務說明彈窗；後續同任務 page reload 或再次進入不應重複彈出（除非已讀狀態被重置）。
 
 ---
 
@@ -300,6 +301,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-005**：Step 4 必須支援標記說明資產上傳與強制顯示設定。
 - **FR-005a**：Step 4 指南格式必須支援 `GUIDELINE_FORMATS`，其中 `image` 受限於 `GUIDELINE_IMAGE_FORMATS`。
 - **FR-005b**：Step 4 必須提供可直接編輯的說明內容欄位，且此欄位應可獨立於上傳檔案存在。
+- **FR-005c**：當 `force_guideline = true` 時，annotation-workspace 僅在同一使用者首次進入該任務時顯示說明彈窗；已確認閱讀後不得於每次 page load 重複顯示。
 - **FR-006**：提交成功後，系統必須建立任務並導向 `/task-detail`。
 - **FR-006a**：任務建立成功時，系統必須自動建立一筆 `task_membership`，並將建立者設為 `project_leader`。
 - **FR-006b**：若 Step 3 已設定初始成員，系統必須一併建立對應 `task_membership`。
@@ -393,6 +395,7 @@ flowchart LR
 - **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 驗證、Step 3 成員與抽樣方式、Step 4 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
 - **SC-005a**：在 `375px` 下，Step 3 的 `email-invite` 成員輸入區不擁擠（欄位垂直排列且控制項可完整輸入/點擊）。
 - **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 不可建立任務；同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
+- **SC-006a**：啟用 `開始標記前強制顯示` 的任務中，同一使用者首次進入 annotation-workspace 會看到任務說明彈窗；完成確認後重新整理或再次進入不會重複彈出。
 
 ---
 
@@ -400,6 +403,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.6 | 2026-04-23 | 同步 annotation-workspace 行為：`開始標記前強制顯示` 改為同一使用者首次進入任務時顯示一次；確認閱讀後不會在每次 page load 重複彈窗（新增 FR-005c、SC-006a） |
 | 1.8.5 | 2026-04-22 | VA 任務型別調整：以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression` 作為研究情境預設；新增 Valence/Arousal 雙維度必填、雙列預覽與 payload 欄位要求（FR-003d-1/2、SC-003d） |
 | 1.8.4 | 2026-04-22 | Step 3 用詞同步：將「執行初始化」統一改為「抽樣方式」（含流程、介面定義、FR/SC 與跨規格依賴描述） |
 | 1.8.3 | 2026-04-22 | 同步 prototype 建立成功導向：Step 4 點擊 `建立任務` 成功後，改為導向 `task-detail?task_id=...`（不再返回 task-list） |
