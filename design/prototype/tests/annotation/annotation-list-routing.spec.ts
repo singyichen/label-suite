@@ -32,6 +32,12 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/run_type=dry_run/);
   });
 
+  test('task info card quick continue uses pointer cursor', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+    await expect(page.getByRole('button', { name: '快速繼續' })).toHaveCSS('cursor', 'pointer');
+  });
+
   test('annotation list uses task-list style toolbar and table shell', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
@@ -95,7 +101,7 @@ test.describe('Annotation list routing', () => {
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
     await expect(page.getByRole('heading', { name: '標記清單' })).toBeVisible();
 
-    const firstOpenButton = page.getByRole('button', { name: '進入作業頁' }).first();
+    const firstOpenButton = page.getByRole('button', { name: '編輯' }).first();
     await firstOpenButton.click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
@@ -104,12 +110,18 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/sample_id=/);
   });
 
+  test('sample open button uses pointer cursor', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+    await expect(page.getByRole('button', { name: '編輯' }).first()).toHaveCSS('cursor', 'pointer');
+  });
+
   test('reviewer lands on list and can open sample workspace', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
     await expect(page.getByRole('heading', { name: '標記清單' })).toBeVisible();
 
-    const firstOpenButton = page.getByRole('button', { name: '進入作業頁' }).first();
+    const firstOpenButton = page.getByRole('button', { name: '編輯' }).first();
     await firstOpenButton.click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
