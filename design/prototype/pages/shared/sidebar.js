@@ -2,6 +2,7 @@
   var SYSTEM_ROLE_STORAGE_KEY = 'labelsuite.systemRole';
   var LANG_STORAGE_KEY = 'labelsuite.lang';
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
+  var SIDEBAR_COLLAPSED_STORAGE_KEY = 'labelsuite.sidebarCollapsed';
 
   function normalizeSystemRole(role) {
     return role === 'super_admin' ? 'super_admin' : 'user';
@@ -91,6 +92,43 @@
     }
   }
 
+  function normalizeSidebarCollapsed(value) {
+    return value === true || value === 'true' || value === '1';
+  }
+
+  function readStoredSidebarCollapsed() {
+    try {
+      return normalizeSidebarCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY));
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function persistSidebarCollapsed(collapsed) {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, collapsed ? 'true' : 'false');
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  function shouldEnableDesktopSidebarCollapse() {
+    if (!window || !window.matchMedia) return false;
+    return window.matchMedia('(min-width: 769px)').matches;
+  }
+
+  function applySidebarCollapsed(collapsed) {
+    var isCollapsed = normalizeSidebarCollapsed(collapsed) && shouldEnableDesktopSidebarCollapse();
+    if (document && document.body) {
+      document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+    }
+  }
+
+  function isInteractiveSidebarTarget(target) {
+    if (!target || !target.closest) return false;
+    return !!target.closest('a, button, input, select, textarea, label, [role="button"], [data-no-sidebar-toggle="true"]');
+  }
+
   function shouldHideAdminByRole(systemRole) {
     return systemRole !== 'super_admin';
   }
@@ -112,7 +150,7 @@
     var hiddenClass = config.hidden ? ' hidden' : '';
 
     return '' +
-      '<a class="' + className + hiddenClass + '" href="' + config.href + '"' + currentAttr + idAttr + '>' +
+      '<a class="' + className + hiddenClass + '" href="' + config.href + '" title="' + config.defaultLabel + '" aria-label="' + config.defaultLabel + '"' + currentAttr + idAttr + '>' +
         config.icon +
         '<span id="' + config.labelId + '">' + config.defaultLabel + '</span>' +
       '</a>';
@@ -244,6 +282,10 @@
     if (!mountNode) return;
     mountNode.innerHTML = renderSidebar(opts);
     applySystemRole(opts.systemRole || readStoredSystemRole() || (opts.hideAdmin ? 'user' : 'super_admin'));
+    var initialCollapsed = typeof opts.sidebarCollapsed === 'boolean'
+      ? opts.sidebarCollapsed
+      : readStoredSidebarCollapsed();
+    applySidebarCollapsed(initialCollapsed);
 
     var loginHref = opts.loginHref || '../account/login.html';
     ['mobileLogoutBtn', 'logoutBtn'].forEach(function (id) {
@@ -253,6 +295,23 @@
         window.location.href = loginHref;
       });
     });
+
+    var sidebarNode = mountNode.querySelector('.navbar');
+    if (sidebarNode) {
+      sidebarNode.addEventListener('click', function (event) {
+        if (!shouldEnableDesktopSidebarCollapse()) return;
+        if (isInteractiveSidebarTarget(event.target)) return;
+        var nextCollapsed = !document.body.classList.contains('sidebar-collapsed');
+        persistSidebarCollapsed(nextCollapsed);
+        applySidebarCollapsed(nextCollapsed);
+      });
+    }
+
+    if (window && window.addEventListener) {
+      window.addEventListener('resize', function () {
+        applySidebarCollapsed(readStoredSidebarCollapsed());
+      });
+    }
   }
 
   function updateUserChip(options) {
@@ -282,6 +341,9 @@
     setStoredLang: persistLang,
     setStoredActiveTaskType: persistActiveTaskType,
     getStoredActiveTaskType: readStoredActiveTaskType,
+    setStoredSidebarCollapsed: persistSidebarCollapsed,
+    getStoredSidebarCollapsed: readStoredSidebarCollapsed,
+    applySidebarCollapsed: applySidebarCollapsed,
     applyGlobalLanguage: applyGlobalLanguage,
     updateUserChip: updateUserChip,
   };
