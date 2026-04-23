@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.3.0（2026-04-22）
+> **版本：** 1.3.1（2026-04-23）
 
 ---
 
@@ -336,6 +336,11 @@ flowchart TD
     - `project_leader`：可依成員、日期區間、任務階段篩選
     - `reviewer`：僅可檢視自己資料，可依日期區間、任務階段篩選
 - **Tab 切換：** 頁內切換，不觸發路由跳轉
+- **試標抽樣設定契約（任務概覽）：**
+  - Dry Run 抽樣由任務概覽設定決定（`固定百分比` 或 `固定筆數`），不得在 annotation-workspace 端重算
+  - 抽樣設定變更後需即時反映「總筆數 / 試標使用量 / 正式標記預留量」
+  - `重算抽樣` 僅允許在 `草稿` 狀態；進入 Dry Run 後若需重切分，必須建立新的 run 批次
+  - 發布 Dry Run 時需凍結 sample snapshot（不可變 `sample_snapshot_id`），後續以同一快照作為 Dry/Official 切分依據
 - **任務狀態轉換：**
   - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
   - **Dry Run 完成通知：** 所有標記員完成後自動切換至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
@@ -344,7 +349,10 @@ flowchart TD
   - `reviewer`：任務概覽（唯讀）/ 標記進度 / 工時紀錄（僅自己）可見；成員管理 tab 操作按鈕隱藏
   - `annotator`：不可進入任務詳情，僅能從 dashboard 進入 annotation-workspace
 - **限制：** `project_leader` 僅能管理自己所屬任務的成員，不得跨任務異動；成員角色為任務層級，不影響系統角色
-- **資料隔離原則：** Dry Run 資料與 Official Run 資料必須隔離，不得混入正式標記集
+- **資料隔離原則：**
+  - 預設啟用資料隔離（Dry Run / Official Run）
+  - 啟用時 Dry Run 資料與 Official Run 資料不得混入正式標記集
+  - 若關閉資料隔離，發布前需二次風險確認並留下審計紀錄（操作者 / 時間 / 設定值）
 - **離開方式：** 返回 → `task-list`；匯出為頁面內操作（Toast 提示下載），不觸發頁面跳轉
 
 ---
@@ -357,10 +365,24 @@ flowchart TD
 - **兩種模式（run_type）：**
   - **Dry Run（試標）：** 所有標記員標記相同樣本，結果不計入正式資料，用於計算 IAA 與討論標記準則
   - **Official Run（正式標記）：** 每位標記員分配不重疊的資料，結果計入正式資料集
-- **功能（Annotator）：** 標記操作區、說明與範例（側欄）、進度指示器（即時顯示完成數）、儲存 / 提交
-  - **標記說明強制顯示：** 若 Project Leader 在任務設定中啟用，Annotator 每次進入任務前會先看到說明 modal，確認後才進入標記介面
+- **樣本來源契約：** annotation-workspace 僅可讀取 task-detail 發布時鎖定的 sample snapshot（`sample_snapshot_id`）；不得在 workspace 端重新抽樣或覆寫 Dry/Official 切分
+- **介面骨架（Desktop，`> MOBILE_BP`）：**
+  - **上方任務目標列（固定顯示）：** 左側顯示任務目標與當前操作指引；右側顯示「已標記數量 / 本輪總量 / 階段（Dry Run / Official Run）」與小型進度視覺
+  - **三欄工作區：**
+    - 左欄：樣本清單與目前定位（可快速跳筆、顯示完成狀態）
+    - 中欄：當前樣本內容與標記操作主區（不同 `task_type` 動態渲染控制項）
+    - 右欄：`說明與檔案`（預設頁）與 `History`（次頁）兩個 panel
+- **說明與檔案常駐規則（本模組強制）：**
+  - 每一筆標記頁都必須顯示任務說明摘要與說明檔案清單（不可僅在進入前 modal 顯示）
+  - 切換到下一筆/上一筆時，右欄 `說明與檔案` 內容必須持續可見，不可因翻筆被收起或清空
+  - 說明檔案至少支援快速預覽（圖片/Markdown）與新分頁開啟（PDF）
+- **功能（Annotator）：** 標記操作區、說明與範例、進度指示器（即時顯示完成數）、儲存 / 提交
+  - **標記說明強制顯示：** 若 Project Leader 在任務設定中啟用，Annotator 每次進入任務時先顯示一次說明 modal；進入後右欄仍持續顯示說明與檔案
 - **功能（Reviewer）：** 審查模式，可通過 / 退回標記結果、直接修改或刪除錯誤標記、協助產出 Dry Run 標準答案（多數決或手動確認）
 - **標記歷程（History）：** 每筆資料的所有標記修改紀錄（誰、何時、改成什麼），Reviewer 可追溯標記變更歷程
+- **介面骨架（Mobile，`<= MOBILE_BP`）：**
+  - 保留上方任務目標列（精簡版）與中欄主操作區
+  - `說明與檔案` 改為底部抽屜（預設展開），每次切筆後維持可見；`History` 以分頁切換
 - **離開方式：** 提交 → 停留（下一筆）或返回 `dashboard`；中途離開 → 自動儲存草稿
 
 ---
@@ -434,7 +456,7 @@ sequenceDiagram
   AN->>LOGIN: 自行以 Google SSO 登入（首次，自動取得 user 角色）
   LOGIN-->>DASHBOARD: 導向儀表板頁
   TD-->>AN: 取得任務角色（annotator / reviewer）
-  PL->>TD: 發布 Dry Run（共同樣本 ~20 句）
+  PL->>TD: 發布 Dry Run（依抽樣設定鎖定共同樣本）
   Note over AW: 所有標記員標記相同樣本
   AW-->>TD: 任務狀態切換 → 等待 IAA 確認
   TD-->>PL: Dashboard 待處理事項 badge：「Dry Run 已全員完成」
