@@ -2583,7 +2583,9 @@
     configFileName: '',
     configContent: 'labels: [正向, 負向, 中立]\nallow_multiple: false',
     guidelineUploaded: true,
-    guidelineText: '請根據語意判斷情緒類別，並優先依任務 Rubric 執行。',
+    guidelineTextZh: '請將看完句子後的感覺依據右方的表情符號填入對應的數值',
+    guidelineTextEn: 'After reading the sentence, enter the matching score based on the emoji scale on the right.',
+    guidelineText: '請將看完句子後的感覺依據右方的表情符號填入對應的數值',
     guidelineFiles: [
       { name: 'sentiment-guideline-v1.pdf', type: 'pdf' },
       { name: 'labeling-checklist.md', type: 'md' }
@@ -3723,9 +3725,14 @@
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
 
+  function getTaskGuidelineText() {
+    if (state.lang === 'zh') return (TASK_DATA.guidelineTextZh || TASK_DATA.guidelineText || '').trim();
+    return (TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim();
+  }
+
   function createGuidelineDraft() {
     return {
-      guidelineText: TASK_DATA.guidelineText || '',
+      guidelineText: getTaskGuidelineText(),
       guidelineFiles: (TASK_DATA.guidelineFiles || []).map(function(file) {
         return { name: file.name, type: file.type };
       }),
@@ -3864,12 +3871,15 @@
 
   function saveGuidelineEdit() {
     if (!isGuidelineEditable() || !state.guidelineDraft) return;
-    TASK_DATA.guidelineText = (state.guidelineDraft.guidelineText || '').trim();
+    var nextGuidelineText = (state.guidelineDraft.guidelineText || '').trim();
+    if (state.lang === 'zh') TASK_DATA.guidelineTextZh = nextGuidelineText;
+    else TASK_DATA.guidelineTextEn = nextGuidelineText;
+    TASK_DATA.guidelineText = nextGuidelineText;
     TASK_DATA.guidelineFiles = state.guidelineDraft.guidelineFiles.map(function(file) {
       return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
     });
     TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
-    TASK_DATA.guidelineUploaded = Boolean(TASK_DATA.guidelineText || TASK_DATA.guidelineFiles.length);
+    TASK_DATA.guidelineUploaded = Boolean((TASK_DATA.guidelineTextZh || TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim() || TASK_DATA.guidelineFiles.length);
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
@@ -4765,7 +4775,7 @@
     var settingsSummary = getSettingsSummary();
     var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
     var guidelineFilesText = guidelineFiles.length ? guidelineFiles.join(', ') : t('guidelineFilesNone');
-    var guidelineContent = (TASK_DATA.guidelineText || '').trim();
+    var guidelineContent = getTaskGuidelineText();
     var guidelineContentText = guidelineContent || t('guidelineContentEmpty');
 
     setText('valueTaskName', taskName);
