@@ -2036,9 +2036,10 @@
       settingsPreviewTaskChooseLabel: '請選擇標記',
       settingsPreviewTaskEntity: '請標記實體',
       settingsPreviewTaskRelation: '請標記關係',
-      settingsPreviewTaskScore: '請選擇分數',
+      settingsPreviewTaskValence: 'Valence 評分',
+      settingsPreviewTaskArousal: 'Arousal 評分',
       settingsPreviewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
-      settingsPreviewSampleSentenceScoring: '這是一段需要評分的範例文本，請依 rubric 給分。',
+      settingsPreviewSampleSentenceVA: '這次住宿整體舒適，但隔音稍差。',
       settingsPreviewSampleSentenceSequence: '王小明今天在台北參加 AI 研討會。',
       settingsPreviewSampleSentenceRelation: '患者出現發燒與咳嗽，可能與流感相關。',
       settingsPreviewSentenceALabel: '句子 A',
@@ -2356,9 +2357,10 @@
       settingsPreviewTaskChooseLabel: 'Select label',
       settingsPreviewTaskEntity: 'Mark entities',
       settingsPreviewTaskRelation: 'Mark relations',
-      settingsPreviewTaskScore: 'Select score',
+      settingsPreviewTaskValence: 'Valence score',
+      settingsPreviewTaskArousal: 'Arousal score',
       settingsPreviewSampleSentence: 'This is a sample text. Please annotate using current settings.',
-      settingsPreviewSampleSentenceScoring: 'This is a scoring sample. Please score by rubric.',
+      settingsPreviewSampleSentenceVA: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
       settingsPreviewSampleSentenceSequence: 'John attended an AI workshop in Taipei today.',
       settingsPreviewSampleSentenceRelation: 'The patient has fever and cough, possibly related to flu.',
       settingsPreviewSentenceALabel: 'Sentence A',
@@ -2695,7 +2697,7 @@
 
   var TASK_TYPE_OPTIONS = [
     { key: 'single_sentence_classification', zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
-    { key: 'single_sentence_scoring_regression', zh: '單句評分 / 回歸', en: 'Single Sentence Scoring / Regression' },
+    { key: 'single_sentence_va_scoring', zh: '單句 VA 雙維度評分（Valence / Arousal）', en: 'Single Sentence VA Scoring (Valence / Arousal)' },
     { key: 'sequence_labeling', zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
     { key: 'relation_extraction', zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)' },
     { key: 'sentence_pairs', zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
@@ -2713,14 +2715,14 @@
         en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
       },
     },
-    single_sentence_scoring_regression: {
+    single_sentence_va_scoring: {
       fields: [
-        { key: 'rubric', type: 'textarea', required: true, zh: 'Rubric（評分說明）', en: 'Rubric', placeholder_zh: '描述各分數對應的品質標準', placeholder_en: 'Describe quality criteria per score' },
-        { key: 'scoring_range', type: 'select', required: true, zh: '評分範圍', en: 'Scoring range', options: ['1-3', '1-5', '1-7', '1-10'], defaultValue: '1-5' },
-        { key: 'widget_type', type: 'select', required: true, zh: '評分介面', en: 'Scoring widget', options: ['slider', 'radio', 'number_input'], defaultValue: 'slider' },
-        { key: 'allow_comment', type: 'boolean', required: false, zh: '允許評語', en: 'Allow comments', defaultValue: true },
+        { key: 'va_dimensions', type: 'va-dimensions', required: true, zh: 'VA 雙維度設定', en: 'VA dimensions' },
       ],
-      defaultTemplate: { rubric: '', scoring_range: '1-5', widget_type: 'slider', allow_comment: true },
+      defaultTemplate: {
+        valence: { min: 1, max: 9, step: 1 },
+        arousal: { min: 1, max: 9, step: 1 },
+      },
     },
     sequence_labeling: {
       fields: [
@@ -4088,6 +4090,10 @@
         if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
         if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
         if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+        if (field.type === 'va-dimensions') {
+          if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
+          if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
+        }
       });
     }
     return {
@@ -4292,6 +4298,145 @@
     return wrap;
   }
 
+  function isValidVADimensionConfig(config) {
+    if (!config || typeof config !== 'object') return false;
+    var min = Number(config.min);
+    var max = Number(config.max);
+    var step = Number(config.step);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return false;
+    if (step <= 0) return false;
+    return max >= min;
+  }
+
+  function normalizeSettingsVADimensionConfig(key, fallback) {
+    var dim = state.settingsDraft.configData[key];
+    if (!dim || typeof dim !== 'object') dim = {};
+    var min = Number(dim.min);
+    var max = Number(dim.max);
+    var step = Number(dim.step);
+    if (!Number.isFinite(min)) min = fallback.min;
+    if (!Number.isFinite(max)) max = fallback.max;
+    if (!Number.isFinite(step) || step <= 0) step = fallback.step;
+    if (max < min) max = min;
+    state.settingsDraft.configData[key] = { min: min, max: max, step: step };
+  }
+
+  function buildSettingsVADimensionsInput() {
+    normalizeSettingsVADimensionConfig('valence', { min: 1, max: 9, step: 1 });
+    normalizeSettingsVADimensionConfig('arousal', { min: 1, max: 9, step: 1 });
+    var wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.gap = '12px';
+
+    function makeDimensionRow(key, title) {
+      var row = document.createElement('div');
+      row.style.display = 'grid';
+      row.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+      row.style.gap = '10px';
+      row.style.padding = '10px 12px';
+      row.style.border = '1px solid var(--color-border)';
+      row.style.borderRadius = 'var(--radius-md)';
+      row.style.background = 'var(--color-slate-50)';
+
+      var titleEl = document.createElement('div');
+      titleEl.textContent = title;
+      titleEl.style.gridColumn = '1 / -1';
+      titleEl.style.fontWeight = '600';
+      titleEl.style.fontSize = '13px';
+      row.appendChild(titleEl);
+
+      [
+        { prop: 'min', zh: '最小值', en: 'Min' },
+        { prop: 'max', zh: '最大值', en: 'Max' },
+        { prop: 'step', zh: '間距', en: 'Step' },
+      ].forEach(function(item) {
+        var fieldWrap = document.createElement('label');
+        fieldWrap.style.display = 'flex';
+        fieldWrap.style.flexDirection = 'column';
+        fieldWrap.style.gap = '6px';
+        fieldWrap.style.fontSize = '12px';
+        fieldWrap.style.color = 'var(--color-text-soft)';
+
+        var label = document.createElement('span');
+        label.textContent = state.lang === 'en' ? item.en : item.zh;
+        fieldWrap.appendChild(label);
+
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'input-number';
+        input.step = 'any';
+        input.value = String(state.settingsDraft.configData[key][item.prop]);
+        input.addEventListener('input', function() {
+          var numeric = Number(input.value);
+          state.settingsDraft.configData[key][item.prop] = Number.isFinite(numeric) ? numeric : input.value;
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        input.addEventListener('blur', function() {
+          normalizeSettingsVADimensionConfig(key, { min: 1, max: 9, step: 1 });
+          input.value = String(state.settingsDraft.configData[key][item.prop]);
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        fieldWrap.appendChild(input);
+        row.appendChild(fieldWrap);
+      });
+
+      return row;
+    }
+
+    wrap.appendChild(makeDimensionRow('valence', 'Valence'));
+    wrap.appendChild(makeDimensionRow('arousal', 'Arousal'));
+    return wrap;
+  }
+
+  function buildSettingsScoreOptionsFromDimension(dimConfig) {
+    if (!dimConfig || typeof dimConfig !== 'object') return [];
+    var min = Number(dimConfig.min);
+    var max = Number(dimConfig.max);
+    var step = Number(dimConfig.step);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return [];
+    if (step <= 0 || max < min) return [];
+    var values = [];
+    var stepText = String(step);
+    var decimal = stepText.indexOf('.') >= 0 ? stepText.split('.')[1].length : 0;
+    for (var value = min; value <= max + step / 1000; value += step) {
+      values.push({ text: value.toFixed(decimal), color: null });
+    }
+    return values;
+  }
+
+  function appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect) {
+    options.forEach(function(option) {
+      var row = document.createElement('label');
+      row.className = 'annotation-preview-option';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      if (singleSelect) {
+        checkbox.addEventListener('change', function() {
+          if (!checkbox.checked) return;
+          optionsWrap.querySelectorAll('input[type=\"checkbox\"]').forEach(function(cb) {
+            if (cb !== checkbox) cb.checked = false;
+          });
+        });
+      }
+      row.appendChild(checkbox);
+      if (option.color) {
+        var color = document.createElement('span');
+        color.className = 'annotation-preview-color';
+        color.style.background = option.color;
+        row.appendChild(color);
+      }
+      var text = document.createElement('span');
+      text.textContent = option.text;
+      row.appendChild(text);
+      optionsWrap.appendChild(row);
+    });
+  }
+
   function renderSettingsSchemaFields() {
     var container = document.getElementById('settingsSchemaFields');
     if (!container || !state.settingsDraft) return;
@@ -4323,6 +4468,8 @@
           hint.textContent = field['hint_' + state.lang];
           wrap.appendChild(hint);
         }
+      } else if (field.type === 'va-dimensions') {
+        wrap.appendChild(buildSettingsVADimensionsInput());
       } else if (field.type === 'entity-list') {
         wrap.appendChild(buildSettingsEntityList(field));
       } else if (field.type === 'boolean') {
@@ -4409,15 +4556,9 @@
       options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
         return { text: tag.trim(), color: null };
       }) : [];
-    } else if (taskType === 'single_sentence_scoring_regression') {
-      titleText = t('settingsPreviewTaskScore');
-      var range = String(config.scoring_range || '1-5');
-      var parts = range.split('-');
-      var start = parseInt(parts[0], 10);
-      var end = parseInt(parts[1], 10);
-      if (!isNaN(start) && !isNaN(end) && end >= start) {
-        for (var score = start; score <= end; score += 1) options.push({ text: String(score), color: null });
-      }
+    } else if (taskType === 'single_sentence_va_scoring') {
+      titleText = t('settingsPreviewTaskValence');
+      options = buildSettingsScoreOptionsFromDimension(config.valence);
     } else {
       options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
         return { text: tag.trim(), color: null };
@@ -4446,7 +4587,7 @@
       preview.appendChild(pairWrap);
     } else {
       var sampleKey = 'settingsPreviewSampleSentence';
-      if (taskType === 'single_sentence_scoring_regression') sampleKey = 'settingsPreviewSampleSentenceScoring';
+      if (taskType === 'single_sentence_va_scoring') sampleKey = 'settingsPreviewSampleSentenceVA';
       else if (taskType === 'sequence_labeling') sampleKey = 'settingsPreviewSampleSentenceSequence';
       else if (taskType === 'relation_extraction') sampleKey = 'settingsPreviewSampleSentenceRelation';
       var sample = document.createElement('div');
@@ -4468,6 +4609,39 @@
     optionsWrap.className = 'annotation-preview-options';
     preview.appendChild(optionsWrap);
 
+    var singleSelect = taskType === 'single_sentence_va_scoring' || taskType === 'sentence_pairs' || (taskType === 'single_sentence_classification' && !config.allow_multiple);
+    if (taskType === 'single_sentence_va_scoring') {
+      if (!options.length) {
+        var emptyVa = document.createElement('div');
+        emptyVa.className = 'annotation-preview-empty';
+        emptyVa.textContent = t('settingsPreviewEmpty');
+        optionsWrap.appendChild(emptyVa);
+      } else {
+        appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
+      }
+
+      var arousalTitle = document.createElement('div');
+      arousalTitle.className = 'annotation-preview-task-title';
+      arousalTitle.style.marginTop = '8px';
+      arousalTitle.textContent = t('settingsPreviewTaskArousal');
+      preview.appendChild(arousalTitle);
+
+      var arousalOptionsWrap = document.createElement('div');
+      arousalOptionsWrap.className = 'annotation-preview-options';
+      preview.appendChild(arousalOptionsWrap);
+
+      var arousalOptions = buildSettingsScoreOptionsFromDimension(config.arousal);
+      if (!arousalOptions.length) {
+        var emptyArousal = document.createElement('div');
+        emptyArousal.className = 'annotation-preview-empty';
+        emptyArousal.textContent = t('settingsPreviewEmpty');
+        arousalOptionsWrap.appendChild(emptyArousal);
+      } else {
+        appendSettingsPreviewOptionRows(arousalOptionsWrap, arousalOptions, singleSelect);
+      }
+      return;
+    }
+
     if (!options.length) {
       var empty = document.createElement('div');
       empty.className = 'annotation-preview-empty';
@@ -4476,32 +4650,7 @@
       return;
     }
 
-    var singleSelect = taskType === 'single_sentence_scoring_regression' || taskType === 'sentence_pairs' || (taskType === 'single_sentence_classification' && !config.allow_multiple);
-    options.forEach(function(option) {
-      var row = document.createElement('label');
-      row.className = 'annotation-preview-option';
-      var checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      if (singleSelect) {
-        checkbox.addEventListener('change', function() {
-          if (!checkbox.checked) return;
-          optionsWrap.querySelectorAll('input[type=\"checkbox\"]').forEach(function(cb) {
-            if (cb !== checkbox) cb.checked = false;
-          });
-        });
-      }
-      row.appendChild(checkbox);
-      if (option.color) {
-        var color = document.createElement('span');
-        color.className = 'annotation-preview-color';
-        color.style.background = option.color;
-        row.appendChild(color);
-      }
-      var text = document.createElement('span');
-      text.textContent = option.text;
-      row.appendChild(text);
-      optionsWrap.appendChild(row);
-    });
+    appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
   }
 
   function applySettingsTemplate() {
@@ -4573,6 +4722,10 @@
       if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
       if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
       if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+      if (field.type === 'va-dimensions') {
+        if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
+        if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
+      }
     });
     state.settingsDraft.configData = merged;
     state.settingsCodeDraftDirty = false;
@@ -4599,6 +4752,8 @@
         if (!val || !Array.isArray(val) || !val.length) ok = false;
       } else if (field.type === 'entity-list') {
         if (!val || !Array.isArray(val) || !val.length || val.some(function(ent) { return !ent.name || !ent.name.trim(); })) ok = false;
+      } else if (field.type === 'va-dimensions') {
+        if (!isValidVADimensionConfig(config.valence) || !isValidVADimensionConfig(config.arousal)) ok = false;
       } else if (field.type === 'textarea' || field.type === 'text' || field.type === 'select') {
         if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
       } else if (field.type === 'boolean') {
@@ -4707,6 +4862,33 @@
     var summaryRows = [];
     if (schema && Array.isArray(schema.fields)) {
       schema.fields.forEach(function(field) {
+        if (field.type === 'va-dimensions') {
+          var dims = [
+            { key: 'valence', label: 'Valence' },
+            { key: 'arousal', label: 'Arousal' },
+          ];
+          dims.forEach(function(dim) {
+            var dimValue = parsed[dim.key];
+            var text = '-';
+            if (dimValue && typeof dimValue === 'object') {
+              var min = Number(dimValue.min);
+              var max = Number(dimValue.max);
+              var step = Number(dimValue.step);
+              if (Number.isFinite(min) && Number.isFinite(max) && Number.isFinite(step) && step > 0 && max >= min) {
+                text = state.lang === 'zh'
+                  ? (min + ' ~ ' + max + '（間距 ' + step + '）')
+                  : (min + ' ~ ' + max + ' (step ' + step + ')');
+              }
+            }
+            summaryRows.push({
+              label: dim.label,
+              value: text,
+              required: true,
+            });
+          });
+          return;
+        }
+
         var rawValue = parsed[field.key];
         if (rawValue === undefined && field.defaultValue !== undefined) rawValue = field.defaultValue;
         var text = '-';

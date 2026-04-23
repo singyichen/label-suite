@@ -3,6 +3,38 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail settings edit state', () => {
+  test('renders VA dimensions summary and dual-row preview for single_sentence_va_scoring', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL);
+
+    await page.evaluate(() => {
+      const win = window as typeof window & {
+        TASK_DATA: { taskTypeKey: string; configContent: string };
+        renderOverview: () => void;
+      };
+      win.TASK_DATA.taskTypeKey = 'single_sentence_va_scoring';
+      win.TASK_DATA.configContent = [
+        'valence:',
+        '  min: 1',
+        '  max: 9',
+        '  step: 1',
+        'arousal:',
+        '  min: 1',
+        '  max: 9',
+        '  step: 1',
+      ].join('\n');
+      win.renderOverview();
+    });
+
+    await expect(page.locator('#settingsConfigView')).toContainText('Valence');
+    await expect(page.locator('#settingsConfigView')).toContainText('Arousal');
+
+    await page.locator('#settingsEditBtn').click();
+
+    const preview = page.locator('#settingsAnnotationPreview');
+    await expect(preview).toContainText('Valence 評分');
+    await expect(preview).toContainText('Arousal 評分');
+  });
+
   test('renders settings summary fields by task type', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
