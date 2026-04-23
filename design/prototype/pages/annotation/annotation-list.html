@@ -515,6 +515,7 @@
 <script src="../../assets/analytics.js"></script>
 <script>
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
+  var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
   var TASK_TYPE_TEXT = {
     single_sentence_classification: '單句分類',
@@ -607,6 +608,53 @@
     }
   }
 
+  function completionStateKey(role, taskId, runType) {
+    return [role, taskId, runType].join('|');
+  }
+
+  function readCompletionStateMap() {
+    try {
+      var raw = window.localStorage.getItem(ANNOTATION_COMPLETION_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+    return {};
+  }
+
+  function formatCompletedAt(timestamp) {
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    var pad = function (value) { return String(value).padStart(2, '0'); };
+    return [
+      date.getFullYear(),
+      '-',
+      pad(date.getMonth() + 1),
+      '-',
+      pad(date.getDate()),
+      ' ',
+      pad(date.getHours()),
+      ':',
+      pad(date.getMinutes())
+    ].join('');
+  }
+
+  function applySampleCompletionOverride(sample, completionState) {
+    if (!completionState || !completionState.allSubmitted) return sample;
+    var completedAt = sample.completedAt && sample.completedAt !== '-'
+      ? sample.completedAt
+      : formatCompletedAt(completionState.completedAt);
+    return {
+      sampleId: sample.sampleId,
+      status: 'submitted',
+      completedAt: completedAt,
+      annotatedBy: sample.annotatedBy,
+      text: sample.text
+    };
+  }
+
   function parseContext() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('role');
@@ -674,6 +722,7 @@
     rows.innerHTML = '';
 
     var roleTasks = TASKS_BY_ROLE[context.role] || [];
+    var completionMap = readCompletionStateMap();
     var filteredTasks = roleTasks.filter(function (task) {
       if (!matchesTaskId(task, context.taskId)) return false;
       if (context.runType && task.runType !== context.runType) return false;
@@ -682,12 +731,13 @@
 
     var flatRows = [];
     filteredTasks.forEach(function (task) {
+      var completionState = completionMap[completionStateKey(context.role, task.taskId, task.runType)];
       task.samples.forEach(function (sample) {
         flatRows.push({
           taskId: task.taskId,
           taskType: task.taskType,
           runType: task.runType,
-          sample: sample
+          sample: applySampleCompletionOverride(sample, completionState)
         });
       });
     });

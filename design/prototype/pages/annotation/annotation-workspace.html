@@ -1279,6 +1279,7 @@ var I18N = {
     statusTodo: '待標記', statusReviewing: '審查中',
     historyEmpty: '此筆樣本尚無歷程紀錄',
     toastDraftSaved: '草稿已儲存', toastSubmitted: '已提交，載入下一筆',
+    toastAllSubmittedRedirect: '已完成全部資料，返回標記清單',
     toastApproved: '已通過', toastRejected: '已退回',
     toastEditSaved: '修正已送出', toastDeleted: '已刪除',
     toastSelectLabel: '請先選擇標籤',
@@ -1346,6 +1347,7 @@ var I18N = {
     statusTodo: 'Todo', statusReviewing: 'Reviewing',
     historyEmpty: 'No history for this sample yet',
     toastDraftSaved: 'Draft saved', toastSubmitted: 'Submitted — loading next sample',
+    toastAllSubmittedRedirect: 'All samples submitted — returning to annotation list',
     toastApproved: 'Approved', toastRejected: 'Rejected',
     toastEditSaved: 'Edit submitted', toastDeleted: 'Deleted',
     toastSelectLabel: 'Please select a label first',
@@ -1410,6 +1412,7 @@ var state = {
 
 var GUIDELINE_MODAL_SEEN_KEY = 'labelsuite.guidelineModalSeen';
 var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
+var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
 var TASK_TYPE_UI_CONFIG = {
   single_sentence_classification: {
@@ -1664,6 +1667,52 @@ function persistDryRunProgress() {
   } catch (error) {
     // Ignore storage errors in prototype mode.
   }
+}
+
+function completionStateKey() {
+  return [state.taskRole, state.taskId, state.runType].join('|');
+}
+
+function readCompletionStateMap() {
+  try {
+    var raw = window.localStorage.getItem(ANNOTATION_COMPLETION_KEY);
+    if (!raw) return {};
+    var parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return parsed;
+  } catch (error) {
+    // Ignore storage errors in prototype mode.
+  }
+  return {};
+}
+
+function writeCompletionStateMap(map) {
+  try {
+    window.localStorage.setItem(ANNOTATION_COMPLETION_KEY, JSON.stringify(map));
+  } catch (error) {
+    // Ignore storage errors in prototype mode.
+  }
+}
+
+function markTaskFullySubmitted() {
+  var map = readCompletionStateMap();
+  map[completionStateKey()] = {
+    allSubmitted: true,
+    completedAt: new Date().toISOString(),
+    taskRole: state.taskRole,
+    taskId: state.taskId,
+    runType: state.runType,
+    taskType: state.taskTypeKey
+  };
+  writeCompletionStateMap(map);
+}
+
+function buildAnnotationListUrl() {
+  var params = new URLSearchParams();
+  params.set('task_id', state.taskId);
+  params.set('role', state.taskRole);
+  params.set('run_type', state.runType);
+  params.set('task_type', state.taskTypeKey);
+  return '../annotation/annotation-list.html?' + params.toString();
 }
 
 function makeChevronSvg() {
@@ -2043,6 +2092,14 @@ function bindEvents() {
     showToast(t('toastSubmitted'), 'success');
     renderProgressSummary();
     renderSampleList();
+    if (countSubmitted() >= SAMPLES.length) {
+      markTaskFullySubmitted();
+      showToast(t('toastAllSubmittedRedirect'), 'success');
+      setTimeout(function() {
+        window.location.href = buildAnnotationListUrl();
+      }, 500);
+      return;
+    }
     if (state.currentIdx < SAMPLES.length - 1) {
       setTimeout(function() { selectSample(state.currentIdx + 1); }, 400);
     }

@@ -99,4 +99,30 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/task_id=TASK-015-R1/);
     await expect(page).toHaveURL(/sample_id=/);
   });
+
+  test('annotator is redirected to list after final submit and all rows become submitted', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.locator('#sampleRows tr', { hasText: 'A2-003' }).first().click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
+
+    const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
+    if (await guidelineModalConfirm.isVisible()) {
+      await guidelineModalConfirm.click();
+    }
+
+    await page.locator('#submitBtn').click();
+    await page.waitForTimeout(500);
+    await page.locator('#submitBtn').click();
+    await page.waitForTimeout(500);
+    await page.locator('#submitBtn').click();
+
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A2/);
+
+    const statusBadges = page.locator('#sampleRows tr td:nth-child(2) .status-badge');
+    await expect(statusBadges).toHaveCount(5);
+    await expect(statusBadges).toHaveText(['已提交', '已提交', '已提交', '已提交', '已提交']);
+  });
 });
