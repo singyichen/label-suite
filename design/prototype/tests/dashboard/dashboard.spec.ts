@@ -102,6 +102,19 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
+  test('annotator task card routes to annotation list when clicking outside quick continue action', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    const firstTaskCard = page.getByTestId('annotator-view').locator('#annotatorTaskList .list-item').first();
+    await firstTaskCard.click({ position: { x: 80, y: 24 } });
+
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/role=annotator/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
+    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
+    await expect(page).toHaveURL(/run_type=official_run/);
+    await expect(page).not.toHaveURL(/sample_id=/);
+  });
+
   test('reviewer quick review routes to workspace latest unfinished sample', async ({ page }) => {
     await openScenario(page, 'reviewer');
     const firstReviewButton = page.getByRole('button', { name: /快速審核|Quick Review/ }).first();
@@ -111,6 +124,19 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/task_id=TASK-015-R1/);
     await expect(page).toHaveURL(/sample_id=R1-001/);
     await expect(page).toHaveURL(/run_type=official_run/);
+  });
+
+  test('reviewer task card routes to annotation list when clicking outside quick review action', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+    const firstTaskCard = page.getByTestId('reviewer-view').locator('#reviewerTaskList .list-item').first();
+    await firstTaskCard.click({ position: { x: 80, y: 24 } });
+
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
+    await expect(page).toHaveURL(/role=reviewer/);
+    await expect(page).toHaveURL(/task_id=TASK-015-R1/);
+    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
+    await expect(page).toHaveURL(/run_type=official_run/);
+    await expect(page).not.toHaveURL(/sample_id=/);
   });
 });
 

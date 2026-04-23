@@ -684,6 +684,10 @@
       transition: background 150ms, border-color 150ms;
     }
 
+    .list-item.role-task-card {
+      cursor: pointer;
+    }
+
     .list-item:hover {
       border-color: var(--color-primary);
       background: #F9FAFB;
@@ -1889,7 +1893,7 @@
     function openAnnotationList(role, task) {
       setActiveTaskType(task.taskType);
       window.LabelSuiteAnalytics.track('prototype_cta_clicked', {
-        cta: role === 'annotator' ? 'annotator_quick_continue' : 'reviewer_quick_review',
+        cta: role === 'annotator' ? 'annotator_task_list_open' : 'reviewer_task_list_open',
         task_type: task.taskType,
         run_type: task.runType,
         task_role: role,
@@ -1931,7 +1935,7 @@
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = tasks.map((task, index) => (
-        '<div class="list-item">' +
+        '<div class="list-item role-task-card" data-role="' + role + '" data-task-index="' + String(index) + '" tabindex="0">' +
           '<div class="task-item-header">' +
             '<div class="task-item-summary">' +
               '<span class="list-item-title">' + localizedText(task.title) + '</span>' +
@@ -1954,8 +1958,26 @@
         '</div>'
       )).join('');
 
+      container.querySelectorAll('.role-task-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const taskIndex = Number(card.dataset.taskIndex);
+          const targetTask = tasks[taskIndex];
+          if (!targetTask) return;
+          openAnnotationList(role, targetTask);
+        });
+        card.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          const taskIndex = Number(card.dataset.taskIndex);
+          const targetTask = tasks[taskIndex];
+          if (!targetTask) return;
+          openAnnotationList(role, targetTask);
+        });
+      });
+
       container.querySelectorAll('.role-task-action-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
           const taskIndex = Number(btn.dataset.taskIndex);
           const targetTask = tasks[taskIndex];
           if (!targetTask) return;
