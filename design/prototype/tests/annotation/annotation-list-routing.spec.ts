@@ -110,6 +110,25 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/sample_id=/);
   });
 
+  test('editing first sample opens workspace focused on that sample', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.getByRole('button', { name: '編輯' }).first().click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
+    await expect(page).toHaveURL(/sample_id=A2-001/);
+
+    const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
+    if (await guidelineModalConfirm.isVisible()) {
+      await guidelineModalConfirm.click();
+    }
+
+    const firstSample = page.locator('#sampleList .sample-item').first();
+    await expect(firstSample).toHaveClass(/active/);
+    await expect(firstSample).toContainText('整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。');
+    await expect(page.locator('#sampleText')).toContainText('整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。');
+  });
+
   test('sample open button uses pointer cursor', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

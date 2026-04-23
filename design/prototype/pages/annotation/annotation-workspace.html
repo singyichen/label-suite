@@ -1562,6 +1562,29 @@ function normalizeTaskTypeKey(taskType) {
   return 'single_sentence_classification';
 }
 
+function findSampleIndexByQuerySampleId(sampleId) {
+  if (!sampleId) return -1;
+
+  for (var i = 0; i < SAMPLES.length; i += 1) {
+    var sample = SAMPLES[i];
+    if (sample.sampleId && String(sample.sampleId) === String(sampleId)) {
+      return i;
+    }
+    if (String(sample.id) === String(sampleId)) {
+      return i;
+    }
+  }
+
+  var match = String(sampleId).match(/(\d+)$/);
+  if (!match) return -1;
+
+  var numericIndex = parseInt(match[1], 10);
+  if (isNaN(numericIndex) || numericIndex < 1 || numericIndex > SAMPLES.length) {
+    return -1;
+  }
+  return numericIndex - 1;
+}
+
 function isVaTaskType(taskType) {
   return normalizeTaskTypeKey(taskType) === 'single_sentence_va_scoring';
 }
@@ -2206,6 +2229,7 @@ function applyLaunchContextFromQuery() {
   var runType = params.get('run_type');
   var taskType = params.get('task_type') || getStoredActiveTaskType();
   var taskId = params.get('task_id');
+  var sampleId = params.get('sample_id');
 
   if (role === 'annotator' || role === 'reviewer') {
     state.taskRole = role;
@@ -2218,6 +2242,11 @@ function applyLaunchContextFromQuery() {
   }
   state.taskTypeKey = normalizeTaskTypeKey(taskType);
   setStoredActiveTaskType(state.taskTypeKey);
+
+  var matchedSampleIdx = findSampleIndexByQuerySampleId(sampleId);
+  if (matchedSampleIdx >= 0) {
+    state.currentIdx = matchedSampleIdx;
+  }
 }
 
 function init() {
