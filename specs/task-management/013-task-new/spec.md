@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.8.7
+**版本**：1.8.8
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -246,6 +246,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - 強制顯示設定預設為關閉。
 - 當任務啟用 `開始標記前強制顯示` 時，annotation-workspace 應在「同一使用者首次進入該任務標記介面」時顯示任務說明彈窗；後續同任務 page reload 或再次進入不應重複彈出（除非已讀狀態被重置）。
 - annotation-workspace 的「說明與檔案」面板中，點擊圖片檔案之 `預覽` 後，應在檔案列表下方的預覽區塊顯示該圖片內容。
+- 在 mobile viewport 下，annotation-workspace 若右側「說明與檔案」區塊為收合狀態，主內容區仍須維持單欄滿寬，不得出現欄寬被壓縮或版面位移。
 
 ---
 
@@ -314,6 +315,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-008**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成四步流程。
 - **FR-008a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 編輯與驗證、Step 3 成員與抽樣方式、Step 4 上傳或略過、建立成功導頁、取消返回。
 - **FR-008b**：在 `375px` 下，Step 3 成員輸入列必須採垂直堆疊與滿寬控制項，避免輸入框與按鈕擁擠或截斷。
+- **FR-008c**：在 mobile viewport 下，annotation-workspace 右側說明區塊收合後，主內容區必須維持單欄滿寬佈局，不得因收合狀態套用桌面欄位寬度造成跑版。
 - **FR-009**：任務型別模板需覆蓋研究生現行任務情境（MultiLabel、VA 雙維度評分、Aspect 抽取、Entity/Relation/Triple）。
 
 ### User Flow & Navigation
@@ -396,6 +398,7 @@ flowchart LR
 - **SC-004d**：切換 zh/en 時，新增任務頁 sidebar 與 Step 2 預設模板 labels 皆可正確切換語系。
 - **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 驗證、Step 3 成員與抽樣方式、Step 4 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
 - **SC-005a**：在 `375px` 下，Step 3 的 `email-invite` 成員輸入區不擁擠（欄位垂直排列且控制項可完整輸入/點擊）。
+- **SC-005b**：在 mobile viewport 中，即使 annotation-workspace 右側說明區塊為收合狀態，主內容區仍維持單欄滿寬顯示，且無水平擠壓或異常留白。
 - **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 不可建立任務；同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
 - **SC-006a**：啟用 `開始標記前強制顯示` 的任務中，同一使用者首次進入 annotation-workspace 會看到任務說明彈窗；完成確認後重新整理或再次進入不會重複彈出。
 - **SC-006b**：annotation-workspace 於「說明與檔案」點擊圖片檔案 `預覽` 後，可在檔案列表下方預覽區塊看到對應圖片。
@@ -406,6 +409,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.8 | 2026-04-23 | 同步 annotation-workspace mobile 收合行為：右側說明區塊收合後，主內容區仍維持單欄滿寬，避免跑版（新增 FR-008c、SC-005b） |
 | 1.8.7 | 2026-04-23 | 同步 annotation-workspace 圖片檔案預覽行為：在「說明與檔案」點擊圖片 `預覽` 後，於檔案列表下方顯示圖片預覽區塊（新增 FR-005d、SC-006b） |
 | 1.8.6 | 2026-04-23 | 同步 annotation-workspace 行為：`開始標記前強制顯示` 改為同一使用者首次進入任務時顯示一次；確認閱讀後不會在每次 page load 重複彈窗（新增 FR-005c、SC-006a） |
 | 1.8.5 | 2026-04-22 | VA 任務型別調整：以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression` 作為研究情境預設；新增 Valence/Arousal 雙維度必填、雙列預覽與 payload 欄位要求（FR-003d-1/2、SC-003d） |
