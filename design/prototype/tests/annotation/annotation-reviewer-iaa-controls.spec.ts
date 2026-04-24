@@ -19,4 +19,16 @@ test('reviewer workspace shows IAA summary, annotator results, and bulk controls
   await expect(rows.first()).toContainText('[6, 5.5]');
   await expect(page.locator('#rvBulkApproveBtn')).toBeVisible();
   await expect(page.locator('#rvBulkRejectBtn')).toBeVisible();
+
+  await expect(page.locator('#rvReviewNote')).toBeVisible();
+  await expect(page.locator('#rvReviewNote')).toContainText('通過：此筆標記有效');
+
+  const firstRowButtons = rows.first().locator('button');
+  await expect(firstRowButtons).toHaveCount(2);
+  await expect(firstRowButtons.nth(0)).toContainText('退回');
+  await expect(firstRowButtons.nth(1)).toContainText('通過');
+
+  const annotatorList = page.locator('#rvAnnotatorRows');
+  await expect(annotatorList).toHaveCSS('background-color', 'rgb(248, 250, 252)');
+  await expect(rows.first()).toHaveCSS('border-bottom-color', 'rgb(234, 236, 240)');
 });

@@ -357,74 +357,89 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
       gap: var(--space-sm);
-      margin-bottom: var(--space-md);
-      padding: 12px 14px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      background: var(--color-surface);
+      margin-bottom: var(--space-sm);
     }
-    .rv-bulk-copy { display: flex; flex-direction: column; gap: 2px; }
+    .rv-bulk-copy {
+      display: block;
+      flex: 1 1 360px;
+      min-width: 260px;
+    }
     .rv-bulk-title { font-size: 12px; font-weight: 700; color: var(--color-ink); }
-    .rv-bulk-desc { font-size: 12px; color: var(--color-text-muted); }
-    .rv-bulk-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-    .rv-bulk-btn.active {
-      box-shadow: inset 0 0 0 1px currentColor;
-      transform: none;
+    .rv-bulk-desc {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      line-height: 1.6;
     }
+    .rv-bulk-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .rv-annotator-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      padding: 8px 20px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: #F8FAFC;
     }
     .rv-annotator-review-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr) auto;
+      display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px 14px;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
+      padding: 7px 0;
+      border-bottom: 1px solid #EAECF0;
     }
-    .rv-annotator-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .rv-annotator-name { font-size: 13px; font-weight: 700; color: var(--color-ink); word-break: break-word; }
-    .rv-annotator-subtitle { font-size: 12px; color: var(--color-text-muted); }
-    .rv-score-pill {
-      display: inline-flex;
+    .rv-annotator-review-row:last-child { border-bottom: none; }
+    .rv-annotator-meta {
+      display: flex;
       align-items: center;
-      justify-content: center;
-      min-height: 38px;
-      padding: 0 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(99,102,241,0.18);
-      background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
+      min-width: 110px;
+      flex-shrink: 0;
+    }
+    .rv-annotator-name { font-size: 13px; font-weight: 600; color: var(--color-ink); word-break: break-word; }
+    .rv-annotator-subtitle { display: none; }
+    .rv-score-pill {
       font-size: 13px;
-      font-weight: 700;
+      color: var(--color-primary);
+      background: #EEF2FF;
+      border: 1px solid #C7D2FE;
+      border-radius: var(--radius-md);
+      padding: 3px 12px;
+      font-family: monospace;
+      min-width: 80px;
+      text-align: center;
+      white-space: nowrap;
     }
     .rv-choice-group {
       display: inline-flex;
-      gap: 8px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 0;
     }
-    .rv-choice-btn {
-      min-width: 88px;
-      border-width: 1px;
+    .mini-btn {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
     }
-    .rv-choice-btn.active {
-      box-shadow: inset 0 0 0 1px currentColor;
-      transform: none;
-    }
-    .rv-choice-btn.active.btn-success {
-      background: #DCFCE7;
-    }
-    .rv-choice-btn.active.btn-danger {
-      background: #FEE2E2;
-    }
+    .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
+    .mini-btn-approve:hover:not(:disabled) { background: #BBF7D0; border-color: #4ADE80; color: #166534; }
+    .mini-btn-reject { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
+    .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
+    .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
+    .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
+    .rv-score-pill.result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .rv-score-pill.result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .rv-score-pill.result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
     .rv-review-note {
-      margin-top: var(--space-md);
       font-size: 12px;
       color: var(--color-text-muted);
       line-height: 1.6;
@@ -759,6 +774,25 @@
       .content-scroll { padding: var(--space-md); }
       .action-bar { padding: var(--space-sm) var(--space-md); }
       .mobile-drawer { display: flex; }
+      .rv-bulk-bar { justify-content: flex-end; }
+      .rv-bulk-copy {
+        min-width: 0;
+        flex-basis: 100%;
+        text-align: right;
+      }
+      .rv-bulk-actions { justify-content: flex-end; width: 100%; }
+      .rv-annotator-list { padding: 8px 12px; }
+      .rv-annotator-review-row {
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .rv-annotator-meta { min-width: 0; }
+      .rv-score-pill { margin-left: auto; }
+      .rv-choice-group {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+      }
     }
     @media (max-width: 420px) {
       .mobile-user-name { display: inline-block; max-width: 56px; font-size: 11px; }
@@ -944,30 +978,28 @@
             </div>
             <div class="rv-bulk-bar">
               <div class="rv-bulk-copy">
-                <span class="rv-bulk-title" id="rvBulkTitle">全部審核</span>
-                <span class="rv-bulk-desc" id="rvBulkDescription">用勾選式操作一次套用到所有標記員。</span>
+                <div class="rv-review-note" id="rvReviewNote">通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。</div>
               </div>
               <div class="rv-bulk-actions">
-                <button class="btn btn-success btn-sm rv-bulk-btn" type="button" id="rvBulkApproveBtn">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                  <span id="rvBulkApproveLabel">全部通過</span>
-                </button>
-                <button class="btn btn-danger btn-sm rv-bulk-btn" type="button" id="rvBulkRejectBtn">
+                <button class="mini-btn mini-btn-reject rv-bulk-btn" type="button" id="rvBulkRejectBtn">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   <span id="rvBulkRejectLabel">全部退回</span>
+                </button>
+                <button class="mini-btn mini-btn-approve rv-bulk-btn" type="button" id="rvBulkApproveBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span id="rvBulkApproveLabel">全部通過</span>
                 </button>
               </div>
             </div>
             <div class="rv-annotator-list" id="rvAnnotatorRows"></div>
-            <div class="rv-review-note" id="rvReviewNote">通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。</div>
             <div class="hidden" id="rvDecisionTemplates">
-              <button class="btn btn-success btn-sm rv-choice-btn" type="button" data-rv-choice="approve">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                <span id="rvApproveLabel">通過</span>
-              </button>
-              <button class="btn btn-danger btn-sm rv-choice-btn" type="button" data-rv-choice="reject">
+              <button class="mini-btn mini-btn-reject rv-choice-btn" type="button" data-rv-choice="reject">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 <span id="rvRejectLabel">退回</span>
+              </button>
+              <button class="mini-btn mini-btn-approve rv-choice-btn" type="button" data-rv-choice="approve">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span id="rvApproveLabel">通過</span>
               </button>
             </div>
           </div>
@@ -1498,6 +1530,24 @@ function createFallbackReviewerData(sample) {
   };
 }
 
+function parseVaRangeFromSummary(statsSummary) {
+  if (!statsSummary) return null;
+  var match = statsSummary.match(/±1\.5std V : ([0-9.]+)~([0-9.]+).*±1\.5std A : ([0-9.]+)~([0-9.]+)/);
+  if (!match) return null;
+  return { loV: parseFloat(match[1]), hiV: parseFloat(match[2]), loA: parseFloat(match[3]), hiA: parseFloat(match[4]) };
+}
+
+function getVaScoreColorClass(scoreText, vaRange) {
+  if (!vaRange) return '';
+  var match = scoreText.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
+  if (!match) return '';
+  var v = parseFloat(match[1]);
+  var a = parseFloat(match[2]);
+  if (v > vaRange.hiV || a > vaRange.hiA) return 'result-tag-red';
+  if (v < vaRange.loV || a < vaRange.loA) return 'result-tag-blue';
+  return 'result-tag-green';
+}
+
 function getReviewerData(sample) {
   if (!sample.reviewerData) {
     sample.reviewerData = createFallbackReviewerData(sample);
@@ -1794,6 +1844,8 @@ function renderReviewerCard() {
 
   setText('rvStatsSummary', reviewerData.statsSummary || '');
 
+  var vaRange = isVaTaskType(state.taskTypeKey) ? parseVaRangeFromSummary(reviewerData.statsSummary) : null;
+
   reviewerData.rows.forEach(function(row, rowIdx) {
     var card = document.createElement('div');
     card.className = 'rv-annotator-review-row';
@@ -1812,23 +1864,25 @@ function renderReviewerCard() {
     meta.appendChild(name);
     meta.appendChild(subtitle);
 
+    var scoreColorClass = vaRange ? getVaScoreColorClass(row.scoreText, vaRange) : '';
     var score = document.createElement('span');
-    score.className = 'rv-score-pill';
+    score.className = 'rv-score-pill' + (scoreColorClass ? ' ' + scoreColorClass : '');
     score.textContent = row.scoreText;
 
     var actions = document.createElement('div');
     actions.className = 'rv-choice-group';
 
-    ['approve', 'reject'].forEach(function(decisionKey) {
+    ['reject', 'approve'].forEach(function(decisionKey) {
       var template = document.querySelector('#rvDecisionTemplates [data-rv-choice="' + decisionKey + '"]');
       if (!template) return;
       var button = template.cloneNode(true);
       button.removeAttribute('id');
       button.querySelectorAll('[id]').forEach(function(node) { node.removeAttribute('id'); });
-      button.classList.toggle('active', row.decision === decisionKey);
+      var activeClass = decisionKey === 'approve' ? 'mini-btn-active-approve' : 'mini-btn-active-reject';
+      button.classList.toggle(activeClass, row.decision === decisionKey);
       button.setAttribute('aria-pressed', String(row.decision === decisionKey));
       button.addEventListener('click', function() {
-        row.decision = decisionKey;
+        row.decision = row.decision === decisionKey ? null : decisionKey;
         renderReviewerCard();
       });
       actions.appendChild(button);
@@ -1842,8 +1896,8 @@ function renderReviewerCard() {
 
   var allApproved = reviewerData.rows.length > 0 && reviewerData.rows.every(function(row) { return row.decision === 'approve'; });
   var allRejected = reviewerData.rows.length > 0 && reviewerData.rows.every(function(row) { return row.decision === 'reject'; });
-  el('rvBulkApproveBtn').classList.toggle('active', allApproved);
-  el('rvBulkRejectBtn').classList.toggle('active', allRejected);
+  el('rvBulkApproveBtn').classList.toggle('mini-btn-active-approve', allApproved);
+  el('rvBulkRejectBtn').classList.toggle('mini-btn-active-reject', allRejected);
   el('rvBulkApproveBtn').setAttribute('aria-pressed', String(allApproved));
   el('rvBulkRejectBtn').setAttribute('aria-pressed', String(allRejected));
 }
@@ -2116,11 +2170,17 @@ function bindEvents() {
   });
 
   el('rvBulkApproveBtn').addEventListener('click', function() {
-    getReviewerData(SAMPLES[state.currentIdx]).rows.forEach(function(row) { row.decision = 'approve'; });
+    var reviewerData = getReviewerData(SAMPLES[state.currentIdx]);
+    var allApproved = reviewerData.rows.every(function(r) { return r.decision === 'approve'; });
+    var target = allApproved ? null : 'approve';
+    reviewerData.rows.forEach(function(row) { row.decision = target; });
     renderReviewerCard();
   });
   el('rvBulkRejectBtn').addEventListener('click', function() {
-    getReviewerData(SAMPLES[state.currentIdx]).rows.forEach(function(row) { row.decision = 'reject'; });
+    var reviewerData = getReviewerData(SAMPLES[state.currentIdx]);
+    var allRejected = reviewerData.rows.every(function(r) { return r.decision === 'reject'; });
+    var target = allRejected ? null : 'reject';
+    reviewerData.rows.forEach(function(row) { row.decision = target; });
     renderReviewerCard();
   });
 
