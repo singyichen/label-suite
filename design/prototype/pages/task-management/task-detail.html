@@ -3035,7 +3035,7 @@
       return { valid: false, message: t('samplingErrorReserve') };
     }
 
-    if (!Array.isArray(data.stratifyBy) || data.stratifyBy.length < 1) {
+    if (data.samplingStrategy === 'stratified_random' && (!Array.isArray(data.stratifyBy) || data.stratifyBy.length < 1)) {
       return { valid: false, message: t('samplingErrorStratify') };
     }
 
@@ -3205,6 +3205,11 @@
     if (stratifyLabelInput) stratifyLabelInput.disabled = !editable;
     if (stratifyDomainInput) stratifyDomainInput.disabled = !editable;
     if (stratifyDifficultyInput) stratifyDifficultyInput.disabled = !editable;
+    var isStratified = data.samplingStrategy === 'stratified_random';
+    var stratifyFieldGroup = document.getElementById('stratifyByFieldGroup');
+    var stratifyKvRow = document.getElementById('stratifyByKvRow');
+    if (stratifyFieldGroup) stratifyFieldGroup.classList.toggle('hidden', !isStratified);
+    if (stratifyKvRow) stratifyKvRow.classList.toggle('hidden', !isStratified);
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
       isolationToggle.disabled = !editable;
