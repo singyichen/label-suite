@@ -27,7 +27,7 @@ test.describe('Task new VA scoring template', () => {
     await expect(page.locator('#schemaFields')).toContainText('Arousal');
     await expect(page.locator('#schemaFields')).toContainText('最小值');
     await expect(page.locator('#schemaFields')).toContainText('最大值');
-    await expect(page.locator('#schemaFields')).toContainText('步進');
+    await expect(page.locator('#schemaFields')).toContainText('間距');
 
     const preview = page.locator('#annotationPreview');
     await expect(preview).toContainText('Valence');

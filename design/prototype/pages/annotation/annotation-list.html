@@ -1079,13 +1079,14 @@
     visibleRows.forEach(function (item) {
       var sample = item.sample;
       var annotators = Array.isArray(sample.annotators) ? sample.annotators : [];
+      var isVA = item.taskType === 'single_sentence_va_scoring';
       initReviewStates([sample]);
 
       // --- Summary row ---
       var summaryTr = document.createElement('tr');
       summaryTr.style.cursor = 'pointer';
 
-      // Detail row (initially hidden)
+      // Detail row — NOT appended to DOM initially (lazy insert on first expand)
       var detailTr = document.createElement('tr');
       detailTr.className = 'annotator-detail-row hidden';
       var detailTd = document.createElement('td');
@@ -1094,7 +1095,7 @@
       detailTd.appendChild(detailContent);
       detailTr.appendChild(detailTd);
 
-      // Expand button
+      // Expand button (chevron)
       var expandBtn = document.createElement('button');
       expandBtn.className = 'expand-btn';
       expandBtn.setAttribute('aria-label', '展開');
@@ -1108,64 +1109,85 @@
       chevronSvg.appendChild(polyline);
       expandBtn.appendChild(chevronSvg);
 
+      var detailInserted = false;
+      function showDetail() {
+        if (!detailInserted) {
+          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
+          detailInserted = true;
+        }
+        detailTr.classList.remove('hidden');
+        expandBtn.classList.add('open');
+      }
+      function hideDetail() {
+        detailTr.classList.add('hidden');
+        expandBtn.classList.remove('open');
+      }
       function toggleDetail(e) {
         if (e) e.stopPropagation();
-        if (detailTr.classList.contains('hidden')) {
-          detailTr.classList.remove('hidden');
-          expandBtn.classList.add('open');
-        } else {
-          detailTr.classList.add('hidden');
-          expandBtn.classList.remove('open');
-        }
+        if (detailTr.classList.contains('hidden')) { showDetail(); } else { hideDetail(); }
       }
       expandBtn.addEventListener('click', toggleDetail);
-      summaryTr.addEventListener('click', function () { toggleDetail(null); });
 
       // Status badge
       var statusSpan = document.createElement('span');
       statusSpan.className = 'status-badge ' + statusBadgeClass(sample.status);
       statusSpan.textContent = statusText(sample.status);
 
-      // Approve-all / Reject-all buttons
-      var approveAllBtn = document.createElement('button');
-      approveAllBtn.type = 'button';
-      approveAllBtn.className = 'mini-btn mini-btn-approve';
-      approveAllBtn.textContent = '✓ 全部通過';
-      approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
-      var rejectAllBtn = document.createElement('button');
-      rejectAllBtn.type = 'button';
-      rejectAllBtn.className = 'mini-btn mini-btn-reject';
-      rejectAllBtn.textContent = '✕ 全部退回';
-      rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
-
-      updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
-
-      function applyAllReview(newState) {
-        var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
-        var targetState = currentBulkState === newState ? null : newState;
-        annotators.forEach(function (ann, idx) {
-          REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
-        });
-        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
-        // Refresh annotator buttons inside detail row
-        var annotatorRows = detailTd.querySelectorAll('.annotator-row');
-        annotatorRows.forEach(function (row) {
-          var approveBtn = row.querySelector('.mini-btn-approve');
-          var rejectBtn = row.querySelector('.mini-btn-reject');
-          if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
-        });
-        if (detailTr.classList.contains('hidden')) {
-          detailTr.classList.remove('hidden');
-          expandBtn.classList.add('open');
-        }
-      }
-      approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
-      rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
-
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'reviewer-actions';
-      actionsDiv.appendChild(rejectAllBtn);
-      actionsDiv.appendChild(approveAllBtn);
+
+      if (isVA) {
+        // VA tasks: row click expands annotator detail; bulk approve/reject on list
+        summaryTr.addEventListener('click', function () { toggleDetail(null); });
+
+        var approveAllBtn = document.createElement('button');
+        approveAllBtn.type = 'button';
+        approveAllBtn.className = 'mini-btn mini-btn-approve';
+        approveAllBtn.textContent = '✓ 全部通過';
+        approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
+        var rejectAllBtn = document.createElement('button');
+        rejectAllBtn.type = 'button';
+        rejectAllBtn.className = 'mini-btn mini-btn-reject';
+        rejectAllBtn.textContent = '✕ 全部退回';
+        rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
+
+        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
+
+        function applyAllReview(newState) {
+          var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
+          var targetState = currentBulkState === newState ? null : newState;
+          annotators.forEach(function (ann, idx) {
+            REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
+          });
+          updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
+          var annotatorRowEls = detailTd.querySelectorAll('.annotator-row');
+          annotatorRowEls.forEach(function (row) {
+            var approveBtn = row.querySelector('.mini-btn-approve');
+            var rejectBtn = row.querySelector('.mini-btn-reject');
+            if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
+          });
+          showDetail();
+        }
+        approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
+        rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
+
+        actionsDiv.appendChild(rejectAllBtn);
+        actionsDiv.appendChild(approveAllBtn);
+      } else {
+        // Non-VA tasks: row click navigates to workspace; "編輯" button
+        function openWorkspace() {
+          setStoredActiveTaskType(item.taskType);
+          window.location.href = buildWorkspaceUrl(item.taskId, sample.sampleId, 'reviewer', item.runType, item.taskType);
+        }
+        summaryTr.addEventListener('click', openWorkspace);
+
+        var editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'mini-btn mini-btn-primary';
+        editBtn.textContent = '編輯';
+        editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+        actionsDiv.appendChild(editBtn);
+      }
 
       var expandTd = document.createElement('td');
       expandTd.className = 'expand-cell';
@@ -1189,7 +1211,7 @@
       summaryTr.appendChild(makeTd(actionsDiv));
 
       tbodyEl.appendChild(summaryTr);
-      tbodyEl.appendChild(detailTr);
+      // detailTr is NOT appended here — lazy insert on first expand
     });
   }
 
