@@ -1,0 +1,104 @@
+flowchart LR
+  %% =========================
+  %% Entry
+  %% =========================
+  Start((Start)) --> PM1[Project Planning<br/>專案規劃]
+
+  %% =========================
+  %% Project Planning
+  %% =========================
+  PM1 --> PM2[Define Task Type<br/>定義任務類型]
+  PM2 --> PM3[Design Annotation Schema<br/>設計標記設定]
+  PM3 --> PM4[Create Guidelines<br/>建立標記說明]
+  PM4 --> PM5[Upload / Sample Dataset<br/>上傳與抽樣資料]
+  PM5 --> PM6[Assign Annotators<br/>分派標記員]
+
+  %% =========================
+  %% Annotation Execution
+  %% =========================
+  PM6 --> B1[Create Annotation Batch<br/>建立標記批次]
+  B1  --> A1[Annotators Annotate<br/>標記員進行標記]
+  A1  --> A2[Annotation Logs<br/>標記行為紀錄]
+  A1  --> A3[Annotated Results<br/>標記結果]
+
+  %% =========================
+  %% Metrics & Quality Evaluation
+  %% =========================
+  A2 --> M1[Behavior Metrics<br/>行為指標]
+  A3 --> M2[Label Distribution Metrics<br/>標籤分佈指標]
+  A3 --> M3[IAA Metrics<br/>IAA 指標]
+  A3 --> M4[Data Quality Metrics<br/>資料品質指標]
+
+  M1 --> QE[Quality Evaluation Engine<br/>品質評估引擎]
+  M2 --> QE
+  M3 --> QE
+  M4 --> QE
+
+  QE --> D1[Quality Dashboard<br/>品質儀表板]
+  QE --> AD[Anomaly Detection<br/>異常偵測]
+  QE --> RISK[Annotator Risk Scoring<br/>標記員風險評估]
+
+  AD   --> QD{Quality Sufficient?<br/>品質是否達標}
+  RISK --> QD
+  D1   --> QD
+
+  %% =========================
+  %% Pass
+  %% =========================
+  QD -- Yes --> AJ[Adjudication<br/>仲裁]
+  AJ   --> GOLD[Gold Standard Dataset<br/>黃金標準資料集]
+  GOLD --> EXPORT[Export Dataset / Benchmark<br/>匯出資料集與評測基準]
+  EXPORT --> End((End))
+
+  %% =========================
+  %% Fail Feedback Loop
+  %% =========================
+  QD -- No --> FB[Root Cause Analysis<br/>問題歸因分析]
+  FB --> F1[Update Annotation Schema<br/>修正標記設定]
+  FB --> F2[Clarify Guidelines<br/>補充標記說明]
+  FB --> F3[Retrain Annotators<br/>重新訓練標記員]
+  FB --> F4[Re-sample Dataset<br/>重新抽樣資料]
+  FB --> F5[Adjust Assignment<br/>調整標記員分派]
+
+  F1 --> PM3
+  F2 --> PM4
+  F3 --> PM6
+  F4 --> PM5
+  F5 --> PM6
+
+  %% =========================
+  %% Role-Based Workflow
+  %% =========================
+  subgraph Roles[Role-Based Workflow 角色分工]
+    SA[Super Admin<br/>系統總覽 / 權限 / 全域品質]
+    PO[Project Leader<br/>專案設定 / 批次管理 / 品質決策]
+    AN[Annotator<br/>資料標記 / 問題回報]
+    RV[Reviewer<br/>審核 / 仲裁 / 最終標籤確認]
+  end
+
+  SA -. monitors    .-> D1
+  PO -. configures  .-> PM1
+  PO -. reviews     .-> QE
+  AN -. works on    .-> A1
+  RV -. adjudicates .-> AJ
+
+  %% =========================
+  %% Styles
+  %% =========================
+  classDef planning   fill:#EDE7F6,stroke:#7E57C2,stroke-width:2px,color:#2E1A47;
+  classDef annotation fill:#E3F2FD,stroke:#42A5F5,stroke-width:2px,color:#0D47A1;
+  classDef metrics    fill:#E8F5E9,stroke:#66BB6A,stroke-width:2px,color:#1B5E20;
+  classDef quality    fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100;
+  classDef alert      fill:#FFEBEE,stroke:#E53935,stroke-width:2px,color:#B71C1C;
+  classDef output     fill:#E0F2F1,stroke:#26A69A,stroke-width:2px,color:#004D40;
+  classDef role       fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px,color:#4A148C;
+  classDef decision   fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#5D4037;
+
+  class PM1,PM2,PM3,PM4,PM5,PM6,B1 planning;
+  class A1,A2,A3 annotation;
+  class M1,M2,M3,M4 metrics;
+  class QE,D1 quality;
+  class AD,RISK,FB,F1,F2,F3,F4,F5 alert;
+  class AJ,GOLD,EXPORT output;
+  class SA,PO,AN,RV role;
+  class QD decision;
