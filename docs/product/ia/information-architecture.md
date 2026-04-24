@@ -103,7 +103,7 @@
 | `annotation-workspace` | 標記作業 | 單筆作業操作區（Annotator / Reviewer 模式切換） |
 | `dataset-analysis-list` | 資料集分析 | 任務列表（依角色篩選） |
 | `/dataset-analysis-detail/:task_id?tab=stats` | 資料集分析 | 共用指標 + task_type 特定指標 |
-| `/dataset-analysis-detail/:task_id?tab=quality` | 資料集分析 | IAA / 異常偵測 / 速度統計 |
+| `/dataset-analysis-detail/:task_id?tab=quality` | 資料集分析 | IAA / 異常偵測 / 標記一致性偏離分析 / 速度統計 |
 | `user-management` | 系統管理 | 使用者管理 tab（預設）/ 角色設定 tab |
 
 ### E. Desktop / Mobile 導覽 IA
@@ -165,7 +165,7 @@ flowchart TD
   subgraph 資料集分析模組["資料集分析模組（任務角色：project_leader / reviewer）"]
     DA_LIST["dataset-analysis-list\n任務列表頁（模組入口）"]
     STATS["/dataset-analysis-detail/:task_id?tab=stats\n統計總覽 Tab"]
-    QUALITY["/dataset-analysis-detail/:task_id?tab=quality\n品質監控 Tab\n（IAA / 異常偵測）"]
+    QUALITY["/dataset-analysis-detail/:task_id?tab=quality\n品質監控 Tab\n（IAA / 異常偵測 / 標記一致性偏離分析）"]
   end
 
   subgraph 系統管理模組["系統管理模組（Super Admin）"]
@@ -439,7 +439,10 @@ flowchart TD
       - **sequence_labeling：** 主要指標 Pairwise Entity-level F1 ⭐️；strict match（預設）/ partial overlap match（進階）；目標 ≥ 0.8（strict）/ ≥ 0.7（較寬鬆）
       - **relation_extraction：** 主要指標 Pairwise Triple-level F1 ⭐️（subject + relation + object 完全一致）；輔助 entity-level F1 / relation-only agreement；目標 ≥ 0.75（合理）/ ≥ 0.8（高品質）
       - **sentence_pairs（分類型）：** 主要指標 Krippendorff’s Alpha（nominal）⭐️；替代 Fleiss’ Kappa；目標 ≥ 0.8
-    - 共用品質監控功能（所有任務）：異常偵測（標記速度異常、離群標記值）、標記員分析（個別速度、個別 IAA vs 群體平均）
+    - 共用品質監控功能（所有任務）：
+      - 異常偵測：標記速度異常、離群標記值
+      - 標記一致性偏離分析：每位標記員在可比較單位中的群體偏離次數與比例，至少顯示可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`；作為觀測訊號，不直接等同風險等級
+      - 標記員分析：個別速度、個別 IAA vs 群體平均
     - 空狀態（Dry Run 尚未完成）：說明文字「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕（→ `task-detail`）
 - **離開方式：** 麵包屑返回任務列表；空狀態按鈕跳轉至 `task-detail`；無任務成員資格時導回 `dashboard`
 

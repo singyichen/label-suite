@@ -2,7 +2,7 @@
 
 **功能分支**：`017-dataset-analysis-detail`  
 **建立日期**：2026-04-24  
-**版本**：1.2.1  
+**版本**：1.3.1  
 **狀態**：Draft  
 **需求來源**：IA v1.3.2（2026-04-24）資料集分析模組規範（雙 Tab 架構）
 
@@ -25,6 +25,8 @@
 - `IAA_SUMMARY_STATES = pass | fail | pending | not_started`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
+- `CONSISTENCY_DEVIATION_BLOCK = annotator_consistency_deviation_analysis`
+- `CONSISTENCY_DEVIATION_STD_LEVELS = 1.5xSTD | 2xSTD`
 
 - 標記員風險等級：
   - `ANNOTATOR_RISK_LEVELS = normal | watch | high_risk`
@@ -41,6 +43,11 @@
 - 樣本層級旗標（sample-level，與標記員風險分開處理）：
   - `SAMPLE_FLAG_TYPES = high_divergence`
   - `high_divergence`：同一樣本中，任一標記員的標記值距群體中位數 > 2σ，且其他標記員一致性高（pairwise ICC > 0.75）
+- 標記一致性偏離分析（annotator-level observation，非 decision layer）：
+  - `CONSISTENCY_DEVIATION_BLOCK` 顯示每位標記員在可比較單位中的群體偏離次數與比例，用於輔助判讀一致性風險，不直接等同風險等級
+  - 可比較單位需為同一資料單位具有足夠重疊標記次數後所形成的比較母體；relation extraction 可為「標記 5 次的三元組數」，其他 task type 以對應資料單位名稱顯示
+  - `1.5xSTD`：中度偏離觀測閾值；`2xSTD`：高度偏離觀測閾值
+  - 本區塊為 annotator-level 聚合統計；不得以單一高分歧樣本直接取代整體偏離比例
 - 建議行動操作權限：
   - `RISK_ACTION_ALLOWED_ROLE = project_leader`（reviewer 僅能查看，不能執行行動）
 - VA 評分任務的風險分數聚合規則：
@@ -169,10 +176,10 @@ sequenceDiagram
 
 ### User Story 3 — 查看 IAA 報告與品質監控內容（優先級：P1）
 
-使用者在品質監控 tab 可查看 Dry Run 完成後依 `task_type` 選定的主要 IAA 指標、與閾值的比較結果，以及異常偵測與標記員個別分析；其中 `sentence_pairs` 的分類型與評分型皆需被支援。
+使用者在品質監控 tab 可查看 Dry Run 完成後依 `task_type` 選定的主要 IAA 指標、與閾值的比較結果，以及異常偵測、標記一致性偏離分析與標記員個別分析；其中 `sentence_pairs` 的分類型與評分型皆需被支援。
 
 **此優先級原因**：品質監控是 detail page 的第二個核心 tab，負責 Dry Run 後的品質決策。  
-**獨立測試方式**：以不同 `task_type` 進入 `?tab=quality`，驗證 IAA 指標、異常偵測與標記員分析皆正確。
+**獨立測試方式**：以不同 `task_type` 進入 `?tab=quality`，驗證 IAA 指標、異常偵測、標記一致性偏離分析與標記員分析皆正確。
 
 **驗收情境**：
 
@@ -190,7 +197,7 @@ sequenceDiagram
   - 必要元素：主要 IAA 指標、IAA 數值、閾值比較、計算方法說明
   - 選用元素：替代 / 輔助指標（可展開 / 收合）
 - 區塊 B：`共用品質監控功能區`
-  - 必要元素：異常偵測（速度異常 / 離群值）、標記員分析（個別速度 / 個別 IAA vs 群體平均）
+  - 必要元素：異常偵測（速度異常 / 離群值）、`標記一致性偏離分析`（可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`）、標記員分析（個別速度 / 個別 IAA vs 群體平均）
 - 區塊 C：`Quality 空狀態`
   - 必要元素：說明文字、「前往任務詳情」次要按鈕（→ `task-detail`）
 
@@ -199,6 +206,7 @@ sequenceDiagram
 - 主要 IAA 指標固定顯示；替代 / 輔助指標預設收合。
 - IAA 數值需有明確的達標（綠色 / pass）與未達標（紅色 / fail）視覺標示。
 - 指標區與分析區皆為唯讀，不提供編輯操作。
+- `標記一致性偏離分析` 為觀測型區塊，不可直接覆寫 `AnnotatorRiskAssessment.risk_level`；若需影響風險等級，必須另行明確定義規則。
 - quality tab 需同時輸出可供列表頁使用的 `IAA_SUMMARY_STATES` 摘要狀態。
 
 ---
@@ -230,7 +238,7 @@ sequenceDiagram
 - 統計總覽 state 必須明確區分 `loading | empty | ready | error`；其中 `empty` 對應 `STATS_EMPTY_STATE_TRIGGER`。
 - 品質監控 state 必須明確區分 `loading | dry_run_in_progress | report_pending | report_generating | ready | error`；其中 `dry_run_in_progress | report_pending | report_generating` 皆屬 `QUALITY_EMPTY_STATE_TRIGGER` 的產品空狀態集合。
 - 語言切換後，stats 圖表與 quality 指標名稱、圖例、說明文字需同步更新。
-- 手機版（`<= MOBILE_BP`）scatter plot、co-occurrence matrix、IAA 表格與標記員分析表格需支援橫向捲動。
+- 手機版（`<= MOBILE_BP`）scatter plot、co-occurrence matrix、IAA 表格、標記一致性偏離分析表格與標記員分析表格需支援橫向捲動。
 - Tab 切換時，各 tab 的捲動位置相互獨立，切換後不重置捲動位置。
 
 ## Requirements *(必填)*
@@ -262,21 +270,25 @@ sequenceDiagram
 - **FR-012E**: `sentence_pairs`（分類型）必須顯示 Krippendorff's Alpha（nominal）為主要指標，替代 Fleiss' Kappa。
 - **FR-013**: 系統必須以明確視覺（達標綠色 / 未達標紅色）標示 IAA 數值與閾值比較結果。
 - **FR-014**: 系統必須提供異常偵測功能，至少涵蓋：標記速度異常（過快 / 過慢）與離群標記值（outliers）。
-- **FR-015**: 系統必須提供標記員個別分析，至少涵蓋：個別速度與個別 IAA vs 群體平均對照。
-- **FR-016**: 當 `QUALITY_EMPTY_STATE_TRIGGER` 觸發時，quality tab 必須顯示「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕。
-- **FR-017**: 系統必須支援 Dashboard「IAA 待確認」badge deep link（`/dataset-analysis-detail/:task_id?tab=quality`）直接進入品質監控 tab 並正確載入任務上下文。
-- **FR-018**: 語言切換必須即時更新 stats 圖表與 quality 指標的全頁文案，不觸發頁面重新載入。
-- **FR-019**: 手機版（`<= MOBILE_BP`）必須維持 stats 圖表、IAA 報告與標記員分析表格可讀性；較寬內容需支援橫向捲動。
-- **FR-020**: Tab 切換時，各 tab 的捲動位置必須相互獨立且不重置。
-- **FR-021**: quality tab 必須實作正式狀態列舉 `QUALITY_TAB_STATES`，並以互斥狀態驅動 loading、空狀態、ready、error 顯示。
-- **FR-022**: `sentence_pairs` 的品質監控必須同時支援分類型與評分型；評分型主要 IAA 指標為 ICC，門檻沿用 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT`。
-- **FR-023**: quality tab 必須輸出 `IAA_SUMMARY_STATES`（`pass | fail | pending | not_started`）作為列表頁 `IAA 狀態徽章` 的唯一摘要來源。
-- **FR-024**: 系統必須依 `ANNOTATOR_RISK_LEVELS` 規則為每位標記員計算並顯示風險等級（`normal | watch | high_risk`）。
-- **FR-025**: 當標記員已完成樣本數低於 `ANNOTATOR_MIN_SAMPLE_THRESHOLD` 時，系統必須顯示「資料不足，暫不評估」並略過風險等級計算；不可顯示預設 normal 等級。
-- **FR-026**: 系統必須依 `ANNOTATOR_CAUSE_TYPES` 為 `watch` 或 `high_risk` 標記員標示一個或多個異常原因；原因分類限定於 annotator-level（`annotator_bias | marking_too_fast | marking_too_slow`），不得以「資料模糊」等 sample-level 屬性作為標記員異常原因。
-- **FR-027**: 系統必須將 `SAMPLE_FLAG_TYPES = high_divergence` 的樣本獨立以樣本層級旗標顯示，與標記員風險等級區塊分開呈現；高分歧樣本不應拉高對應標記員的風險等級。
-- **FR-028**: 建議行動（審核標記 / 調整參與狀態）只能由 `RISK_ACTION_ALLOWED_ROLE`（`project_leader`）執行；`reviewer` 僅能查看風險等級與原因，不得觸發行動。
-- **FR-029**: `single_sentence_va_scoring` 任務的標記員風險等級必須以 `VA_RISK_AGGREGATION` 規則（取 V / A 中較高等級）決定；V / A 的原因分類需分開標示，不合併顯示。
+- **FR-015**: 系統必須提供 `CONSISTENCY_DEVIATION_BLOCK`「標記一致性偏離分析」獨立區塊，顯示每位標記員在可比較單位中的偏離統計。
+- **FR-015A**: `標記一致性偏離分析` 至少必須顯示 5 個獨立欄位：可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`。
+- **FR-015B**: `標記一致性偏離分析` 的欄位標題需依 `task_type` 使用對應資料單位名稱；relation extraction 可顯示「標記 5 次的三元組數」，其他 task type 不得硬編碼為三元組。
+- **FR-015C**: `標記一致性偏離分析` 為 annotator-level 聚合觀測，不得以單一 `SampleDivergenceFlag` 直接取代該標記員的整體偏離統計。
+- **FR-016**: 系統必須提供標記員個別分析，至少涵蓋：個別速度與個別 IAA vs 群體平均對照。
+- **FR-017**: 當 `QUALITY_EMPTY_STATE_TRIGGER` 觸發時，quality tab 必須顯示「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕。
+- **FR-018**: 系統必須支援 Dashboard「IAA 待確認」badge deep link（`/dataset-analysis-detail/:task_id?tab=quality`）直接進入品質監控 tab 並正確載入任務上下文。
+- **FR-019**: 語言切換必須即時更新 stats 圖表與 quality 指標的全頁文案，不觸發頁面重新載入。
+- **FR-020**: 手機版（`<= MOBILE_BP`）必須維持 stats 圖表、IAA 報告、標記一致性偏離分析表格與標記員分析表格可讀性；較寬內容需支援橫向捲動。
+- **FR-021**: Tab 切換時，各 tab 的捲動位置必須相互獨立且不重置。
+- **FR-022**: quality tab 必須實作正式狀態列舉 `QUALITY_TAB_STATES`，並以互斥狀態驅動 loading、空狀態、ready、error 顯示。
+- **FR-023**: `sentence_pairs` 的品質監控必須同時支援分類型與評分型；評分型主要 IAA 指標為 ICC，門檻沿用 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT`。
+- **FR-024**: quality tab 必須輸出 `IAA_SUMMARY_STATES`（`pass | fail | pending | not_started`）作為列表頁 `IAA 狀態徽章` 的唯一摘要來源。
+- **FR-025**: 系統必須依 `ANNOTATOR_RISK_LEVELS` 規則為每位標記員計算並顯示風險等級（`normal | watch | high_risk`）。
+- **FR-026**: 當標記員已完成樣本數低於 `ANNOTATOR_MIN_SAMPLE_THRESHOLD` 時，系統必須顯示「資料不足，暫不評估」並略過風險等級計算；不可顯示預設 normal 等級。
+- **FR-027**: 系統必須依 `ANNOTATOR_CAUSE_TYPES` 為 `watch` 或 `high_risk` 標記員標示一個或多個異常原因；原因分類限定於 annotator-level（`annotator_bias | marking_too_fast | marking_too_slow`），不得以「資料模糊」等 sample-level 屬性作為標記員異常原因。
+- **FR-028**: 系統必須將 `SAMPLE_FLAG_TYPES = high_divergence` 的樣本獨立以樣本層級旗標顯示，與標記員風險等級區塊分開呈現；高分歧樣本不應拉高對應標記員的風險等級。
+- **FR-029**: 建議行動（審核標記 / 調整參與狀態）只能由 `RISK_ACTION_ALLOWED_ROLE`（`project_leader`）執行；`reviewer` 僅能查看風險等級與原因，不得觸發行動。
+- **FR-030**: `single_sentence_va_scoring` 任務的標記員風險等級必須以 `VA_RISK_AGGREGATION` 規則（取 V / A 中較高等級）決定；V / A 的原因分類需分開標示，不合併顯示。
 
 ### User Flow & Navigation *(必填)*
 
@@ -318,10 +330,11 @@ flowchart LR
 - **IAAReport**: IAA 報告，包含主要指標名稱、計算結果、閾值、達標狀態與各輔助指標。
 - **IAAReportVA**: VA 雙維度 IAA 報告，包含 IAA_V、IAA_A、Overall IAA 與各輔助指標。
 - **AnomalyDetectionResult**: 異常偵測結果，包含速度異常標記員清單與離群樣本清單。
+- **AnnotatorConsistencyDeviationSummary**: 標記一致性偏離分析摘要，包含 `comparison_unit_count`、`outlier_count_1_5xstd`、`outlier_rate_1_5xstd`、`outlier_count_2xstd`、`outlier_rate_2xstd`；僅作 annotator-level 觀測，不直接代表風險等級。
 - **AnnotatorQualityProfile**: 標記員個別品質資料，包含個別速度與個別 IAA vs 群體平均。
 - **AnnotatorRiskAssessment**: 標記員風險評估結果，包含 `risk_level`（`normal | watch | high_risk | insufficient_data`）、`cause_types`（`ANNOTATOR_CAUSE_TYPES` 陣列）、`sample_count`、`insufficient_data`（布林）。
 - **SampleDivergenceFlag**: 樣本層級高分歧旗標，包含 `sample_id`、`divergence_score`、`outlier_annotator_ids`（非一致標記員清單）；與 `AnnotatorRiskAssessment` 分離儲存與顯示。
-- **QualityTabState**: quality tab 狀態，包含 `view_state`（`loading | dry_run_in_progress | report_pending | report_generating | ready | error`）、`iaa_report`、`iaa_summary_state`、`anomaly_detection`、`annotator_profiles`、`empty_state`、`loading_state`。
+- **QualityTabState**: quality tab 狀態，包含 `view_state`（`loading | dry_run_in_progress | report_pending | report_generating | ready | error`）、`iaa_report`、`iaa_summary_state`、`anomaly_detection`、`annotator_consistency_deviation`、`annotator_profiles`、`empty_state`、`loading_state`。
 
 ---
 
@@ -357,6 +370,7 @@ flowchart LR
 - **SC-008**: Tab 切換（統計總覽 ↔ 品質監控）為頁內切換，URL 的 `?tab=` query 正確更新，任務上下文不重置。
 - **SC-009**: Dashboard「IAA 待確認」badge deep link（`/dataset-analysis-detail/:task_id?tab=quality`）可正確進入品質監控 tab 並載入對應任務資料。
 - **SC-010**: 在 `375px / 768px / 1440px` 三種視窗寬度下，stats 圖表、IAA 報告與標記員分析表格皆可正常顯示且不截斷關鍵內容。
+- **SC-010A**: 在 `375px / 768px / 1440px` 三種視窗寬度下，`標記一致性偏離分析` 表格可正常顯示，必要時提供橫向捲動，且 `離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例` 欄位不截斷關鍵資訊。
 - **SC-011**: stats tab 與 quality tab 皆以正式狀態列舉驅動畫面，`loading / empty / ready / error` 與 `dry_run_in_progress / report_pending / report_generating` 不可混淆。
 - **SC-012**: `sentence_pairs` 評分型任務進入 quality tab 時，系統正確顯示 ICC 與對應門檻比較結果。
 - **SC-013**: quality tab 可穩定輸出 `pass | fail | pending | not_started` 摘要狀態，供列表頁 IAA 徽章一致使用。
@@ -364,6 +378,7 @@ flowchart LR
 - **SC-015**: 高分歧樣本（`high_divergence`）以樣本層級旗標獨立顯示，不與標記員風險等級區塊合併，且不影響相關標記員的風險等級計算。
 - **SC-016**: 建議行動 UI 僅對 `project_leader` 角色可見；以 `reviewer` 身份進入 quality tab 時，建議行動欄位不顯示或顯示為 disabled 且不可點擊。
 - **SC-017**: `single_sentence_va_scoring` 任務中，標記員風險等級以 V / A 中較高等級決定，且 V / A 原因分類分別標示，不合併為單一原因。
+- **SC-018**: quality tab 中新增 `標記一致性偏離分析` 獨立區塊，顯示每位標記員的可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`，且該區塊不直接覆寫 `risk_level`。
 
 ---
 
@@ -371,6 +386,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 1.3.1 | 2026-04-24 | Add `標記一致性偏離分析` block to quality tab: 定義獨立區塊名稱、`離群值(1.5xSTD)筆數/比例` 與 `離群值(2xSTD)筆數/比例` 欄位、task-type 單位命名規則、觀測層與風險評估的邊界；新增 `AnnotatorConsistencyDeviationSummary` entity 與對應 FR / SC |
 | 1.3.0 | 2026-04-24 | Add decision layer spec: 補入標記員風險等級（FR-024/025）、最低樣本門檻、annotator-level 原因分類（FR-026）、sample-level 高分歧旗標分離（FR-027）、行動角色門檻（FR-028）、VA 風險聚合規則（FR-029）；對應新增 SC-014~017、AnnotatorRiskAssessment、SampleDivergenceFlag entities 與風險等級規格常數 |
 | 1.2.1 | 2026-04-24 | Clarify detail contract: 權限改為僅依 task membership role；補入 stats/quality state enums；新增 `sentence_pairs` 評分型 quality 規格；定義 quality→list 的 IAA summary state |
 | 1.2.0 | 2026-04-24 | Expand spec scope from quality-only tab to full analysis-detail page: 補入共用 detail shell、stats tab 區塊定義、task_type 統計指標、stats empty/error state、detail-level entities 與 success criteria |

@@ -47,6 +47,26 @@
   <div class="anomaly-empty" id="anomSpOutlierEmpty">無 high_divergence 樣本</div>
 </section>
 
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（句對任務）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句對數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>25</td><td>2</td><td>8%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>7</td><td>1</td><td>14.3%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>15</td><td>4</td><td>26.7%</td><td>1</td><td>6.7%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">句對任務以可重疊比較的句對結果為母體；適合觀察群體偏離頻率，不單獨作為處置依據。</p>
+  </div>
+</section>
+
 <section class="panel" aria-labelledby="annotatorTitle">
   <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
   <p class="panel-subtitle" id="annotatorSubtitle">分類型句對任務沿用 Alpha；低樣本標記員顯示資料不足，不直接給 normal。</p>
