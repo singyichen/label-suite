@@ -424,11 +424,16 @@
       font-weight: 600;
       padding: 6px 10px;
       cursor: pointer;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
     }
     .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
     .mini-btn-approve:hover:not(:disabled) { background: #BBF7D0; border-color: #4ADE80; color: #166534; }
@@ -436,6 +441,7 @@
     .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
     .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
     .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
+    .rv-btn-icon { font-size: 13px; line-height: 1; }
     .rv-score-pill.result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
     .rv-score-pill.result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
     .rv-score-pill.result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
@@ -982,11 +988,11 @@
               </div>
               <div class="rv-bulk-actions">
                 <button class="mini-btn mini-btn-reject rv-bulk-btn" type="button" id="rvBulkRejectBtn">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <span class="rv-btn-icon" aria-hidden="true">✕</span>
                   <span id="rvBulkRejectLabel">全部退回</span>
                 </button>
                 <button class="mini-btn mini-btn-approve rv-bulk-btn" type="button" id="rvBulkApproveBtn">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="rv-btn-icon" aria-hidden="true">✓</span>
                   <span id="rvBulkApproveLabel">全部通過</span>
                 </button>
               </div>
@@ -994,11 +1000,11 @@
             <div class="rv-annotator-list" id="rvAnnotatorRows"></div>
             <div class="hidden" id="rvDecisionTemplates">
               <button class="mini-btn mini-btn-reject rv-choice-btn" type="button" data-rv-choice="reject">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span class="rv-btn-icon" aria-hidden="true">✕</span>
                 <span id="rvRejectLabel">退回</span>
               </button>
               <button class="mini-btn mini-btn-approve rv-choice-btn" type="button" data-rv-choice="approve">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span class="rv-btn-icon" aria-hidden="true">✓</span>
                 <span id="rvApproveLabel">通過</span>
               </button>
             </div>
