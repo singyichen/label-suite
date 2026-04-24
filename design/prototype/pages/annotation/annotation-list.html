@@ -350,7 +350,14 @@
     .expand-btn.open svg { transform: rotate(90deg); }
     .reviewer-stats {
       font-size: 12px; color: #6B7280; font-family: monospace;
-      white-space: pre-line; max-width: 280px; line-height: 1.6;
+      display: block;
+      min-width: 240px;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+    .reviewer-stats-cell {
+      min-width: 280px;
+      width: 280px;
     }
     .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
@@ -622,7 +629,7 @@
           {
             sampleId: 'R2-001', status: 'submitted', completedAt: '2026-04-23 11:02',
             text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
-            labelStats: 'mean [4.33, 5.25]\nstd [0.99, 1.55]\n±1.5std V : 2.845~5.815, ±1.5std A : 2.925~7.575',
+            labelStats: 'mean [4.33, 5.25]\nstd [0.99, 1.55]\n±1.5std V : 2.845~5.815\n ±1.5std A : 2.925~7.575',
             vaRange: { loV: 2.845, hiV: 5.815, loA: 2.925, hiA: 7.575 },
             annotators: [
               { username: 'kioleemg12', result: '[3.5, 5.5]', reviewStatus: 'approved' },
@@ -635,7 +642,7 @@
           {
             sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:08',
             text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。',
-            labelStats: 'mean [1.83, 1.5]\nstd [0.24, 0.44]\n±1.5std V : 1.470~2.190, ±1.5std A : 0.840~2.160',
+            labelStats: 'mean [1.83, 1.5]\nstd [0.24, 0.44]\n±1.5std V : 1.470~2.190\n ±1.5std A : 0.840~2.160',
             vaRange: { loV: 1.470, hiV: 2.190, loA: 0.840, hiA: 2.160 },
             annotators: [
               { username: 'kioleemg12', result: '[2, 1]', reviewStatus: 'approved' },
@@ -646,7 +653,7 @@
           {
             sampleId: 'R2-003', status: 'saved', completedAt: '2026-04-23 11:15',
             text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
-            labelStats: 'mean [6.40, 5.75]\nstd [0.43, 0.25]\n±1.5std V : 5.755~7.045, ±1.5std A : 5.375~6.125',
+            labelStats: 'mean [6.40, 5.75]\nstd [0.43, 0.25]\n±1.5std V : 5.755~7.045\n ±1.5std A : 5.375~6.125',
             vaRange: { loV: 5.755, hiV: 7.045, loA: 5.375, hiA: 6.125 },
             annotators: [
               { username: 'kioleemg12', result: '[6, 5.5]', reviewStatus: null },
@@ -658,7 +665,7 @@
           {
             sampleId: 'R2-004', status: 'pending', completedAt: '-',
             text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
-            labelStats: 'mean [4.50, 4.83]\nstd [0.50, 0.47]\n±1.5std V : 3.750~5.250, ±1.5std A : 4.125~5.535',
+            labelStats: 'mean [4.50, 4.83]\nstd [0.50, 0.47]\n±1.5std V : 3.750~5.250\n ±1.5std A : 4.125~5.535',
             vaRange: { loV: 3.750, hiV: 5.250, loA: 4.125, hiA: 5.535 },
             annotators: [
               { username: 'kioleemg12', result: '[4, 4]', reviewStatus: null },
@@ -669,7 +676,7 @@
           {
             sampleId: 'R2-005', status: 'pending', completedAt: '-',
             text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
-            labelStats: 'mean [6.67, 5.33]\nstd [0.24, 0.24]\n±1.5std V : 6.310~7.030, ±1.5std A : 4.970~5.690',
+            labelStats: 'mean [6.67, 5.33]\nstd [0.24, 0.24]\n±1.5std V : 6.310~7.030\n ±1.5std A : 4.970~5.690',
             vaRange: { loV: 6.310, hiV: 7.030, loA: 4.970, hiA: 5.690 },
             annotators: [
               { username: 'kioleemg12', result: '[7, 5]', reviewStatus: null },
@@ -715,6 +722,33 @@
     }
   }
 
+  function updateBulkReviewBtns(approveBtn, rejectBtn, state) {
+    if (state === 'approved') {
+      approveBtn.classList.add('mini-btn-active-approve');
+      rejectBtn.classList.remove('mini-btn-active-reject');
+    } else if (state === 'rejected') {
+      approveBtn.classList.remove('mini-btn-active-approve');
+      rejectBtn.classList.add('mini-btn-active-reject');
+    } else {
+      approveBtn.classList.remove('mini-btn-active-approve');
+      rejectBtn.classList.remove('mini-btn-active-reject');
+    }
+  }
+
+  function getBulkReviewState(sampleId, annotators) {
+    if (!annotators || annotators.length === 0) return null;
+    var approvedCount = 0;
+    var rejectedCount = 0;
+    annotators.forEach(function (ann, idx) {
+      var state = REVIEW_STATES[reviewKey(sampleId, idx)];
+      if (state === 'approved') approvedCount += 1;
+      if (state === 'rejected') rejectedCount += 1;
+    });
+    if (approvedCount === annotators.length) return 'approved';
+    if (rejectedCount === annotators.length) return 'rejected';
+    return null;
+  }
+
   function getVaColorClass(resultStr, vaRange) {
     if (!vaRange) return '';
     var match = resultStr.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
@@ -755,21 +789,31 @@
 
       updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
 
+      function syncBulkButtons() {
+        var bulkApproveBtn = document.querySelector('[data-bulk-approve-for="' + sampleId + '"]');
+        var bulkRejectBtn = document.querySelector('[data-bulk-reject-for="' + sampleId + '"]');
+        if (bulkApproveBtn && bulkRejectBtn) {
+          updateBulkReviewBtns(bulkApproveBtn, bulkRejectBtn, getBulkReviewState(sampleId, annotators));
+        }
+      }
+
       approveBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         REVIEW_STATES[key] = REVIEW_STATES[key] === 'approved' ? null : 'approved';
         updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+        syncBulkButtons();
       });
       rejectBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         REVIEW_STATES[key] = REVIEW_STATES[key] === 'rejected' ? null : 'rejected';
         updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+        syncBulkButtons();
       });
 
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'annotator-row-actions';
-      actionsDiv.appendChild(approveBtn);
       actionsDiv.appendChild(rejectBtn);
+      actionsDiv.appendChild(approveBtn);
 
       row.appendChild(usernameSpan);
       row.appendChild(resultSpan);
@@ -796,7 +840,7 @@
       thead.appendChild(makeTh('完成狀態'));
       thead.appendChild(makeTh('完成時間'));
       thead.appendChild(makeTh('文本摘要'));
-      thead.appendChild(makeTh('標記分布統計'));
+      thead.appendChild(makeTh('標記分布統計', '280px'));
       thead.appendChild(makeTh('操作'));
     } else {
       thead.appendChild(makeTh('ID'));
@@ -1087,20 +1131,28 @@
       approveAllBtn.type = 'button';
       approveAllBtn.className = 'mini-btn mini-btn-approve';
       approveAllBtn.textContent = '✓ 全部通過';
+      approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
       var rejectAllBtn = document.createElement('button');
       rejectAllBtn.type = 'button';
       rejectAllBtn.className = 'mini-btn mini-btn-reject';
       rejectAllBtn.textContent = '✕ 全部退回';
+      rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
+
+      updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
 
       function applyAllReview(newState) {
+        var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
+        var targetState = currentBulkState === newState ? null : newState;
         annotators.forEach(function (ann, idx) {
-          REVIEW_STATES[reviewKey(sample.sampleId, idx)] = newState;
+          REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
         });
+        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
         // Refresh annotator buttons inside detail row
         var annotatorRows = detailTd.querySelectorAll('.annotator-row');
-        annotatorRows.forEach(function (row, idx) {
-          var btns = row.querySelectorAll('button');
-          if (btns.length >= 2) updateAnnotatorBtns(btns[0], btns[1], newState);
+        annotatorRows.forEach(function (row) {
+          var approveBtn = row.querySelector('.mini-btn-approve');
+          var rejectBtn = row.querySelector('.mini-btn-reject');
+          if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
         });
         if (detailTr.classList.contains('hidden')) {
           detailTr.classList.remove('hidden');
@@ -1112,8 +1164,8 @@
 
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'reviewer-actions';
-      actionsDiv.appendChild(approveAllBtn);
       actionsDiv.appendChild(rejectAllBtn);
+      actionsDiv.appendChild(approveAllBtn);
 
       var expandTd = document.createElement('td');
       expandTd.className = 'expand-cell';
@@ -1122,6 +1174,7 @@
       var statsEl = document.createElement('span');
       statsEl.className = 'reviewer-stats';
       statsEl.textContent = sample.labelStats || '-';
+      var statsTd = makeTd(statsEl, 'reviewer-stats-cell');
 
       var textTd = document.createElement('td');
       textTd.className = 'text-snippet';
@@ -1132,7 +1185,7 @@
       summaryTr.appendChild(makeTd(statusSpan));
       summaryTr.appendChild(makeTd(sample.completedAt));
       summaryTr.appendChild(textTd);
-      summaryTr.appendChild(makeTd(statsEl));
+      summaryTr.appendChild(statsTd);
       summaryTr.appendChild(makeTd(actionsDiv));
 
       tbodyEl.appendChild(summaryTr);

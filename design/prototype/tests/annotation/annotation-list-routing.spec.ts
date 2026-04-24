@@ -83,6 +83,85 @@ test.describe('Annotation list routing', () => {
     await expect(page.locator('#sampleRows tr')).toHaveCount(5);
   });
 
+  test('reviewer bulk reject and bulk approve update per-annotator buttons with correct left-right mapping', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const firstSummaryRow = page.locator('#sampleRows tr').first();
+    await firstSummaryRow.click();
+
+    const firstAnnotatorRow = page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first();
+    await expect(firstAnnotatorRow).toBeVisible();
+
+    const rejectAllBtn = page.getByRole('button', { name: '✕ 全部退回' }).first();
+    const approveAllBtn = page.getByRole('button', { name: '✓ 全部通過' }).first();
+    const rejectBtn = firstAnnotatorRow.getByRole('button', { name: '✕ 退回' });
+    const approveBtn = firstAnnotatorRow.getByRole('button', { name: '✓ 通過' });
+
+    await rejectAllBtn.click();
+    await expect(rejectBtn).toHaveClass(/mini-btn-active-reject/);
+    await expect(approveBtn).not.toHaveClass(/mini-btn-active-approve/);
+
+    await approveAllBtn.click();
+    await expect(approveBtn).toHaveClass(/mini-btn-active-approve/);
+    await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
+  });
+
+  test('reviewer bulk buttons show active filled state after click', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const targetRow = page.locator('#sampleRows tr', { hasText: 'R2-003' }).first();
+    await targetRow.click();
+
+    const rejectAllBtn = page.locator('[data-bulk-reject-for="R2-003"]');
+    const approveAllBtn = page.locator('[data-bulk-approve-for="R2-003"]');
+
+    await approveAllBtn.click();
+    await expect(approveAllBtn).toHaveClass(/mini-btn-active-approve/);
+    await expect(rejectAllBtn).not.toHaveClass(/mini-btn-active-reject/);
+
+    await rejectAllBtn.click();
+    await expect(rejectAllBtn).toHaveClass(/mini-btn-active-reject/);
+    await expect(approveAllBtn).not.toHaveClass(/mini-btn-active-approve/);
+  });
+
+  test('reviewer can click active bulk button again to clear all decisions', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const targetRow = page.locator('#sampleRows tr', { hasText: 'R2-003' }).first();
+    await targetRow.click();
+
+    const firstAnnotatorRow = page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first();
+    await expect(firstAnnotatorRow).toBeVisible();
+
+    const rejectAllBtn = page.locator('[data-bulk-reject-for="R2-003"]');
+    const approveAllBtn = page.locator('[data-bulk-approve-for="R2-003"]');
+    const rejectBtn = firstAnnotatorRow.getByRole('button', { name: '✕ 退回' });
+    const approveBtn = firstAnnotatorRow.getByRole('button', { name: '✓ 通過' });
+
+    await approveAllBtn.click();
+    await expect(approveAllBtn).toHaveClass(/mini-btn-active-approve/);
+    await expect(approveBtn).toHaveClass(/mini-btn-active-approve/);
+
+    await approveAllBtn.click();
+    await expect(approveAllBtn).not.toHaveClass(/mini-btn-active-approve/);
+    await expect(rejectAllBtn).not.toHaveClass(/mini-btn-active-reject/);
+    await expect(approveBtn).not.toHaveClass(/mini-btn-active-approve/);
+    await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
+
+    await rejectAllBtn.click();
+    await expect(rejectAllBtn).toHaveClass(/mini-btn-active-reject/);
+    await expect(rejectBtn).toHaveClass(/mini-btn-active-reject/);
+
+    await rejectAllBtn.click();
+    await expect(rejectAllBtn).not.toHaveClass(/mini-btn-active-reject/);
+    await expect(approveAllBtn).not.toHaveClass(/mini-btn-active-approve/);
+    await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
+    await expect(approveBtn).not.toHaveClass(/mini-btn-active-approve/);
+  });
+
   test('annotator can open sample workspace by clicking a table row', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
