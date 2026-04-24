@@ -206,11 +206,55 @@
     .toast{display:inline-flex;align-items:center;gap:8px;border-radius:var(--radius-lg);padding:11px 14px;background:var(--color-ink);color:var(--color-white);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(8px);transition:opacity var(--dur-normal),transform var(--dur-normal);min-width:200px;max-width:340px}
     .toast.show{opacity:1;transform:translateY(0)}
 
+    /* Stats tab */
+    .stats-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .stats-metric-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-slate-50)}
+    .stats-metric-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);margin-bottom:6px}
+    .stats-metric-value{font-size:32px;font-weight:700;line-height:1.1;font-family:var(--font-mono);color:var(--color-ink);margin-bottom:2px}
+    .stats-metric-desc{font-size:12px;color:var(--color-text-soft)}
+    .stats-empty{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center}
+    .stats-empty-icon{width:40px;height:40px;margin:0 auto 14px;color:var(--color-ink-muted);opacity:.6}
+    .stats-empty-title{font-size:15px;font-weight:700;color:var(--color-ink);margin-bottom:8px}
+    .stats-empty-desc{font-size:13px;color:var(--color-text-soft);max-width:400px;margin:0 auto 18px;line-height:1.7}
+    .stats-hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg)}
+    .stats-chart-label{font-size:11px;font-weight:600;color:var(--color-ink-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+    .stats-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)}
+    .stats-summary-block{background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px}
+    .stats-summary-head{font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+    .stats-summary-row{display:flex;gap:var(--space-lg);flex-wrap:wrap}
+    .stats-summary-item{display:flex;flex-direction:column;gap:2px}
+    .stats-summary-item-label{font-size:10px;color:var(--color-text-soft);text-transform:uppercase;letter-spacing:.04em}
+    .stats-summary-item-val{font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)}
+    .stats-scatter-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .stats-hbar-chart{display:grid;gap:10px}
+    .stats-hbar-row{display:grid;grid-template-columns:150px 1fr 90px;align-items:center;gap:8px;font-size:13px}
+    .stats-hbar-label{color:var(--color-ink);font-weight:500;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+    .stats-hbar-track{height:10px;background:var(--color-border-muted);border-radius:var(--radius-full);overflow:hidden}
+    .stats-hbar-fill{height:100%;border-radius:var(--radius-full);background:var(--color-primary);transition:width .4s var(--ease-standard)}
+    .stats-hbar-value{color:var(--color-text-soft);font-size:11px;font-family:var(--font-mono)}
+    .stats-comatrix{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:var(--space-sm)}
+    .stats-comatrix-table{border-collapse:collapse;font-size:12px;white-space:nowrap}
+    .stats-comatrix-table th{background:var(--color-slate-50);border:1px solid var(--color-border);padding:7px 12px;font-weight:600;color:var(--color-ink-muted)}
+    .stats-comatrix-table td{border:1px solid var(--color-border);padding:7px 12px;text-align:center;font-family:var(--font-mono);font-size:12px}
+    .stats-comatrix-diag{background:var(--color-primary-soft-bg);color:var(--color-primary);font-weight:700}
+    .stats-comatrix-hi{background:#EEF2FF;color:var(--color-ink)}
+    .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
+    .stats-comatrix-low{color:var(--color-ink-muted)}
+    .stats-inline-card{display:inline-flex;align-items:center;gap:var(--space-md);padding:16px 24px;background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md)}
+    .sp-toggle{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:2px;background:var(--color-slate-50);gap:2px}
+    .sp-btn{border:1px solid transparent;border-radius:6px;background:transparent;color:var(--color-text-soft);font-size:12px;font-weight:600;padding:5px 12px;transition:background var(--dur-fast),color var(--dur-fast)}
+    .sp-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-soft-border)}
+    .sp-btn:hover:not(.active){color:var(--color-primary)}
+
     /* Responsive */
     @media(max-width:767px){
       .layout{padding:var(--space-md) var(--space-md) var(--space-xl)}
       .admin-tabs{overflow-x:auto}
       .iaa-score-grid{grid-template-columns:1fr}
+      .stats-metric-grid{grid-template-columns:1fr}
+      .stats-hist-grid{grid-template-columns:1fr}
+      .stats-summary-grid{grid-template-columns:1fr}
+      .stats-hbar-row{grid-template-columns:80px 1fr 60px}
       .toast-container{right:12px;left:12px;bottom:90px}
       .toast{width:100%}
     }
@@ -267,10 +311,44 @@
     <button class="admin-tab" id="tabQuality" type="button" role="tab" aria-selected="false">品質監控</button>
   </div>
 
-  <!-- ═══ Stats Tab (shell) ═══════════════════════════════════════ -->
+  <!-- ═══ Stats Tab ══════════════════════════════════════════════ -->
   <div id="statsPanel">
-    <div class="stats-placeholder" id="statsPlaceholder">
-      統計總覽 tab 尚未在此原型中展開，請切換至「品質監控」查看詳細規格。
+    <!-- Empty state -->
+    <div id="statsEmpty" class="hidden stats-empty">
+      <div class="stats-empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/>
+        </svg>
+      </div>
+      <p class="stats-empty-title" id="statsEmptyTitle">尚無標記資料</p>
+      <p class="stats-empty-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
+      <a href="../task-management/task-detail.html" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
+    </div>
+    <!-- Ready state -->
+    <div id="statsReady">
+      <!-- Shared metrics (FR-008) -->
+      <section class="panel" aria-labelledby="statsSharedTitle">
+        <h2 class="panel-title" id="statsSharedTitle">共用指標</h2>
+        <div class="stats-metric-grid" style="margin-top:var(--space-md)">
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblSentence">句子數量</div>
+            <div class="stats-metric-value">1,248</div>
+            <div class="stats-metric-desc" id="statsDescSentence">已提交標記的樣本總數</div>
+          </div>
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblToken">Token 數量</div>
+            <div class="stats-metric-value">42,816</div>
+            <div class="stats-metric-desc" id="statsDescToken">總 token 數（空格分詞）</div>
+          </div>
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblCompletion">整體完成率</div>
+            <div class="stats-metric-value" style="color:var(--color-success)">87.5%</div>
+            <div class="stats-metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div>
+          </div>
+        </div>
+      </section>
+      <!-- Task-type specific stats (FR-009) -->
+      <div id="statsPanelMount" aria-live="polite"></div>
     </div>
   </div>
 
@@ -313,7 +391,51 @@ var I18N = {
     docTitle: '資料集分析詳情 — Label Suite（原型）',
     bcRoot: '資料集分析', bcCurrent: '任務詳情',
     tabStats: '統計總覽', tabQuality: '品質監控',
-    statsPlaceholder: '統計總覽 tab 尚未在此原型中展開，請切換至「品質監控」查看詳細規格。',
+    statsSharedTitle:'共用指標',
+    statsLblSentence:'句子數量',statsDescSentence:'已提交標記的樣本總數',
+    statsLblToken:'Token 數量',statsDescToken:'總 token 數（空格分詞）',
+    statsLblCompletion:'整體完成率',statsDescCompletion:'1,092 / 1,248 已完成',
+    statsEmptyTitle:'尚無標記資料',
+    statsEmptyDesc:'標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。',
+    statsEmptyBtn:'前往任務詳情',
+    statsVAHistTitle:'Valence / Arousal 分佈直方圖',
+    statsVAHistDesc:'標記員在 1–7 評分量表上的分佈情形（共 412 筆有效標記）',
+    statsVALblValence:'Valence（V）',statsVALblArousal:'Arousal（A）',
+    statsLblMean:'Mean',statsLblStd:'SD',statsLblMedian:'Median',statsLblMin:'Min',statsLblMax:'Max',
+    statsVAScatterTitle:'V-A 二維分佈',
+    statsVAScatterDesc:'每筆標記在 Valence × Arousal 空間的分佈，紅點為 high_divergence 旗標樣本',
+    statsVALegendMain:'主要標記群',statsVALegendOutlier:'高分歧旗標',statsVALegendLow:'低頻分佈',
+    statsClsDistTitle:'標籤分佈',
+    statsClsDistDesc:'各標籤在提交標記中的次數與比例（共 1,248 筆標記，多標籤任務）',
+    statsClsDistNote:'平均每筆標記包含 1.96 個標籤（多標籤任務）',
+    statsClsCooccTitle:'多標籤共現矩陣',
+    statsClsCooccDesc:'兩個標籤同時出現的次數。對角線為各標籤單獨出現的樣本數。',
+    statsClsCooccNote:'顏色深度反映共現頻率高低；白色格子代表極少共現。',
+    statsSeqEntityDistTitle:'實體類型分佈',
+    statsSeqEntityDistDesc:'各實體類型在所有提交標記中的出現次數（共 3,994 個已標記實體）',
+    statsSeqAvgEntityTitle:'每句平均實體數',statsSeqAvgLabel:'平均實體數 / 句',
+    statsSeqTotalSentLabel:'總句子數',statsSeqTotalEntityLabel:'總實體標記數',
+    statsSeqZeroEntityLabel:'無實體句子比例',statsSeqMaxEntityLabel:'單句最多實體數',
+    statsSeqSpanLenTitle:'Entity Span 長度分佈',
+    statsSeqSpanLenDesc:'以 token 數計算的 span 長度分佈（長度 ≥ 6 合併為「6+」）',
+    statsSeqSpanLenXLabel:'Span 長度（token 數）',
+    statsRelEntityDistTitle:'實體類型分佈',statsRelEntityDistDesc:'各實體類型在已標記三元組中的出現次數',
+    statsRelRelDistTitle:'關係類型分佈',statsRelRelDistDesc:'各關係類型的三元組標記次數',
+    statsRelTripleTitle:'Triple 統計摘要',
+    statsRelTripleDesc:'三元組（Subject, Relation, Object）層級的聚合統計',
+    statsRelTotalTripleLabel:'Triple 總數',statsRelTotalTripleDesc:'所有標記員提交的 triple 總計',
+    statsRelUniqueTripleLabel:'唯一 Triple 數',statsRelUniqueTripleDesc:'去重後的 triple 集合大小',
+    statsRelAvgTripleLabel:'平均 / 句',statsRelAvgTripleDesc:'每個樣本平均標記的 triple 數',
+    statsRelAnnotated5xLabel:'≥ 5 次標記 Triple',statsRelAnnotated5xDesc:'達到一致性比較門檻的 triple 數',
+    statsRelAvgAnnotatorsLabel:'平均標記員數 / Triple',statsRelAvgAnnotatorsDesc:'每個唯一 triple 的平均覆蓋標記員數',
+    statsRelMaxTripleLabel:'單句最多 Triple',statsRelMaxTripleDesc:'單一樣本出現最多 triple 的數量',
+    statsSpDistTitle:'分佈統計',
+    statsSpLblDistTitle:'各標籤在提交標記中的次數與比例（共 983 筆有效標記）',
+    statsSpScoreDistTitle:'評分分數（0–1）在提交標記中的分佈（共 983 筆有效標記）',
+    statsSpClsLabelCount:'標籤類別數',statsSpClsSampleCount:'有效標記句對數',
+    statsSpClsDominantLabel:'最常見標籤',
+    statsSpScoreSummaryHead:'評分統計摘要',statsSpScoreQuartileHead:'四分位數',
+    statsSpScoreLenXLabel:'相似度分數',
     iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標',
     anomalyTitle: '異常偵測', anomalySubtitle: '自動標記標記速度異常與離群標記值',
     consistencyTitle: '標記一致性偏離分析',
@@ -415,7 +537,51 @@ var I18N = {
     docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
     bcRoot: 'Dataset Analysis', bcCurrent: 'Task Detail',
     tabStats: 'Statistics', tabQuality: 'Quality Monitor',
-    statsPlaceholder: 'Statistics tab is not implemented in this prototype. Switch to "Quality Monitor" to see the spec.',
+    statsSharedTitle:'Shared Metrics',
+    statsLblSentence:'Sentence Count',statsDescSentence:'Total annotated samples submitted',
+    statsLblToken:'Token Count',statsDescToken:'Total tokens (whitespace-split)',
+    statsLblCompletion:'Overall Completion',statsDescCompletion:'1,092 / 1,248 completed',
+    statsEmptyTitle:'No annotation data',
+    statsEmptyDesc:'Statistics will be calculated once annotators submit. Complete the Dry Run first.',
+    statsEmptyBtn:'Go to Task Detail',
+    statsVAHistTitle:'Valence / Arousal Distribution',
+    statsVAHistDesc:'Annotator distribution on the 1–7 rating scale (412 valid annotations)',
+    statsVALblValence:'Valence (V)',statsVALblArousal:'Arousal (A)',
+    statsLblMean:'Mean',statsLblStd:'SD',statsLblMedian:'Median',statsLblMin:'Min',statsLblMax:'Max',
+    statsVAScatterTitle:'V-A 2D Distribution',
+    statsVAScatterDesc:'Distribution of all annotations in the V × A space. Red dots are high-divergence flagged samples.',
+    statsVALegendMain:'Main cluster',statsVALegendOutlier:'High-divergence',statsVALegendLow:'Low-frequency',
+    statsClsDistTitle:'Label Distribution',
+    statsClsDistDesc:'Frequency and proportion of each label in submitted annotations (1,248 total, multi-label)',
+    statsClsDistNote:'Average 1.96 labels per annotation (multi-label task)',
+    statsClsCooccTitle:'Multi-label Co-occurrence Matrix',
+    statsClsCooccDesc:'Number of co-occurrences for any two labels. Diagonal = solo-label sample count.',
+    statsClsCooccNote:'Color depth reflects co-occurrence frequency; white cells indicate rare co-occurrence.',
+    statsSeqEntityDistTitle:'Entity Type Distribution',
+    statsSeqEntityDistDesc:'Count of each entity type across all submitted annotations (3,994 total)',
+    statsSeqAvgEntityTitle:'Avg Entities per Sentence',statsSeqAvgLabel:'Avg entities / sentence',
+    statsSeqTotalSentLabel:'Total sentences',statsSeqTotalEntityLabel:'Total entity labels',
+    statsSeqZeroEntityLabel:'Zero-entity sentences',statsSeqMaxEntityLabel:'Max entities / sentence',
+    statsSeqSpanLenTitle:'Entity Span Length Distribution',
+    statsSeqSpanLenDesc:'Span length distribution in tokens (length ≥ 6 collapsed to "6+")',
+    statsSeqSpanLenXLabel:'Span length (tokens)',
+    statsRelEntityDistTitle:'Entity Type Distribution',statsRelEntityDistDesc:'Count of each entity type in labeled triples',
+    statsRelRelDistTitle:'Relation Type Distribution',statsRelRelDistDesc:'Triple annotation count per relation type',
+    statsRelTripleTitle:'Triple Count Summary',
+    statsRelTripleDesc:'Aggregated statistics at the triple (Subject, Relation, Object) level',
+    statsRelTotalTripleLabel:'Total triples',statsRelTotalTripleDesc:'Total triples submitted by all annotators',
+    statsRelUniqueTripleLabel:'Unique triples',statsRelUniqueTripleDesc:'Deduplicated triple set size',
+    statsRelAvgTripleLabel:'Avg / sentence',statsRelAvgTripleDesc:'Average triples labeled per sample',
+    statsRelAnnotated5xLabel:'≥ 5× annotated',statsRelAnnotated5xDesc:'Triples meeting comparison threshold',
+    statsRelAvgAnnotatorsLabel:'Avg annotators / triple',statsRelAvgAnnotatorsDesc:'Avg annotator coverage per unique triple',
+    statsRelMaxTripleLabel:'Max triples / sentence',statsRelMaxTripleDesc:'Max triples in a single sample',
+    statsSpDistTitle:'Distribution Statistics',
+    statsSpLblDistTitle:'Frequency and proportion of each label (983 valid annotations)',
+    statsSpScoreDistTitle:'Score distribution (0–1) in submitted annotations (983 valid)',
+    statsSpClsLabelCount:'Label classes',statsSpClsSampleCount:'Valid sentence pairs',
+    statsSpClsDominantLabel:'Most common label',
+    statsSpScoreSummaryHead:'Score summary',statsSpScoreQuartileHead:'Quartiles',
+    statsSpScoreLenXLabel:'Similarity score',
     iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric',
     anomalyTitle: 'Anomaly Detection', anomalySubtitle: 'Flag annotation speed anomalies and outlier values automatically',
     consistencyTitle: 'Annotation Consistency Deviation Analysis',
@@ -517,6 +683,13 @@ var I18N = {
 
 /* ── State ─────────────────────────────────────────────────────────── */
 var S = { lang: 'zh', tab: 'stats', type: 'va', qState: 'ready', seqMode: 'strict', scrollTopByTab: { stats: 0, quality: 0 } };
+var STATS_PANEL_PATHS = {
+  va: './dataset-analysis-detail.partials/stats-va.html',
+  classification: './dataset-analysis-detail.partials/stats-classification.html',
+  sequence: './dataset-analysis-detail.partials/stats-sequence.html',
+  relation: './dataset-analysis-detail.partials/stats-relation.html',
+  sentence_pairs: './dataset-analysis-detail.partials/stats-sentence_pairs.html',
+};
 var QUALITY_PANEL_PATHS = {
   va: './dataset-analysis-detail.partials/quality-va.html',
   classification: './dataset-analysis-detail.partials/quality-classification.html',
@@ -570,6 +743,43 @@ function setText(id, key) {
   if (typeof v === 'string') el.textContent = v;
 }
 
+function loadStatsPanel() {
+  var mount = document.getElementById('statsPanelMount');
+  var path = STATS_PANEL_PATHS[S.type] || STATS_PANEL_PATHS.va;
+  if (!mount || !path) return Promise.resolve();
+  mount.innerHTML = '';
+  return fetch(path, { cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('stats panel load failed: ' + path);
+      return r.text();
+    })
+    .then(function(html) {
+      mount.innerHTML = html.trim();
+      SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+      updateStatsEmptyBtn();
+    })
+    .catch(function() {
+      if (mount) mount.innerHTML = '<div class="panel"><p class="panel-subtitle">統計資料載入失敗，請重新整理頁面。</p></div>';
+    });
+}
+
+function updateStatsEmptyBtn() {
+  var btn = document.getElementById('statsEmptyBtn');
+  if (btn) btn.href = '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId);
+}
+
+function applyStatsState() {
+  var params;
+  try { params = new URLSearchParams(window.location.search); } catch(e) { return; }
+  var sState = params.get('s_state');
+  var isEmpty = sState === 'empty';
+  var emptyEl = document.getElementById('statsEmpty');
+  var readyEl = document.getElementById('statsReady');
+  if (emptyEl) emptyEl.classList.toggle('hidden', !isEmpty);
+  if (readyEl) readyEl.classList.toggle('hidden', isEmpty);
+  updateStatsEmptyBtn();
+}
+
 function renderPanelLoadError() {
   var mount = document.getElementById('qualityPanelMount');
   if (!mount) return;
@@ -614,7 +824,24 @@ function updateTaskDetailHref() {
 /* ── Apply language ─────────────────────────────────────────────── */
 var SIMPLE_IDS = [
   'bcRoot','bcCurrent',
-  'statsPlaceholder','iaaTitle','iaaMethodSuffix',
+  'statsSharedTitle','statsLblSentence','statsDescSentence','statsLblToken','statsDescToken','statsLblCompletion','statsDescCompletion',
+  'statsEmptyTitle','statsEmptyDesc','statsEmptyBtn',
+  'statsVAHistTitle','statsVAHistDesc','statsVALblValence','statsVALblArousal',
+  'statsLblMean','statsLblStd','statsLblMedian','statsLblMin','statsLblMax',
+  'statsVAScatterTitle','statsVAScatterDesc','statsVALegendMain','statsVALegendOutlier','statsVALegendLow',
+  'statsClsDistTitle','statsClsDistDesc','statsClsDistNote','statsClsCooccTitle','statsClsCooccDesc','statsClsCooccNote',
+  'statsSeqEntityDistTitle','statsSeqEntityDistDesc','statsSeqAvgEntityTitle','statsSeqAvgLabel',
+  'statsSeqTotalSentLabel','statsSeqTotalEntityLabel','statsSeqZeroEntityLabel','statsSeqMaxEntityLabel',
+  'statsSeqSpanLenTitle','statsSeqSpanLenDesc','statsSeqSpanLenXLabel',
+  'statsRelEntityDistTitle','statsRelEntityDistDesc','statsRelRelDistTitle','statsRelRelDistDesc',
+  'statsRelTripleTitle','statsRelTripleDesc',
+  'statsRelTotalTripleLabel','statsRelTotalTripleDesc','statsRelUniqueTripleLabel','statsRelUniqueTripleDesc',
+  'statsRelAvgTripleLabel','statsRelAvgTripleDesc','statsRelAnnotated5xLabel','statsRelAnnotated5xDesc',
+  'statsRelAvgAnnotatorsLabel','statsRelAvgAnnotatorsDesc','statsRelMaxTripleLabel','statsRelMaxTripleDesc',
+  'statsSpDistTitle','statsSpLblDistTitle','statsSpScoreDistTitle',
+  'statsSpClsLabelCount','statsSpClsSampleCount','statsSpClsDominantLabel',
+  'statsSpScoreSummaryHead','statsSpScoreQuartileHead','statsSpScoreLenXLabel',
+  'iaaTitle','iaaMethodSuffix',
   'anomalyTitle','anomalySubtitle','consistencyTitle','consistencySubtitle','consistencyOutlier15CountCol','consistencyOutlier15RateCol','consistencyOutlier2CountCol','consistencyOutlier2RateCol','annotatorTitle','annotatorSubtitle',
   'emptyTitle','emptyDesc','emptyBtn',
   'lblV','lblA','lblOverall','lblOverallCalc',
@@ -807,7 +1034,7 @@ function applyTypeContent() {
   document.getElementById('taskIdChip').textContent = taskMeta && taskMeta.chipId ? taskMeta.chipId : (typeof taskIds === 'object' ? (taskIds[S.type] || taskIds.va) : '');
   updateTaskDetailHref();
   syncRoleUi();
-  return loadQualityPanel();
+  return Promise.all([loadStatsPanel(), loadQualityPanel()]);
 }
 
 /* ── Quality state ──────────────────────────────────────────────── */
@@ -888,6 +1115,8 @@ function applyRouteTask(taskId) {
     var stored = window.LabelSuiteSharedSidebar.getStoredLang();
     applyLang(stored || 'zh');
   } catch(e) { applyLang('zh'); }
+
+  applyStatsState();
 
   /* Read ?tab= from URL */
   try {

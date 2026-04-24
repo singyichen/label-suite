@@ -1,0 +1,106 @@
+<!-- Relation Extraction Statistics -->
+<section class="panel" aria-labelledby="statsRelEntityDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsRelEntityDistTitle">實體類型分佈</h2>
+      <p class="panel-subtitle" id="statsRelEntityDistDesc">各實體類型在已標記三元組中的出現次數</p>
+    </div>
+  </div>
+  <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">Drug（藥物）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:70%"></div></div>
+      <div class="stats-hbar-value">35% · 366</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">Disease（疾病）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:56%;opacity:.85"></div></div>
+      <div class="stats-hbar-value">28% · 293</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">Gene（基因）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:44%;opacity:.7"></div></div>
+      <div class="stats-hbar-value">22% · 230</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">Chemical（化合物）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:30%;opacity:.55"></div></div>
+      <div class="stats-hbar-value">15% · 157</div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="statsRelRelDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsRelRelDistTitle">關係類型分佈</h2>
+      <p class="panel-subtitle" id="statsRelRelDistDesc">各關係類型的三元組標記次數</p>
+    </div>
+  </div>
+  <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">treats（治療）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:72%;background:var(--color-cta)"></div></div>
+      <div class="stats-hbar-value">38% · 199</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">causes（導致）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:46%;background:var(--color-cta);opacity:.85"></div></div>
+      <div class="stats-hbar-value">24% · 126</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">inhibits（抑制）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:34%;background:var(--color-cta);opacity:.7"></div></div>
+      <div class="stats-hbar-value">18% · 94</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">binds（結合）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:23%;background:var(--color-cta);opacity:.6"></div></div>
+      <div class="stats-hbar-value">12% · 63</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">regulates（調控）</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:15%;background:var(--color-cta);opacity:.5"></div></div>
+      <div class="stats-hbar-value">8% · 42</div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="statsRelTripleTitle">
+  <h2 class="panel-title" id="statsRelTripleTitle">Triple 統計摘要</h2>
+  <p class="panel-subtitle" id="statsRelTripleDesc">三元組（Subject, Relation, Object）層級的聚合統計</p>
+  <div class="stats-metric-grid" style="margin-top:var(--space-md)">
+    <div class="stats-metric-card">
+      <div class="stats-metric-label" id="statsRelTotalTripleLabel">Triple 總數</div>
+      <div class="stats-metric-value">524</div>
+      <div class="stats-metric-desc" id="statsRelTotalTripleDesc">所有標記員提交的 triple 總計</div>
+    </div>
+    <div class="stats-metric-card">
+      <div class="stats-metric-label" id="statsRelUniqueTripleLabel">唯一 Triple 數</div>
+      <div class="stats-metric-value">312</div>
+      <div class="stats-metric-desc" id="statsRelUniqueTripleDesc">去重後的 triple 集合大小</div>
+    </div>
+    <div class="stats-metric-card">
+      <div class="stats-metric-label" id="statsRelAvgTripleLabel">平均 / 句</div>
+      <div class="stats-metric-value">4.1</div>
+      <div class="stats-metric-desc" id="statsRelAvgTripleDesc">每個樣本平均標記的 triple 數</div>
+    </div>
+  </div>
+  <div class="stats-metric-grid" style="margin-top:12px">
+    <div class="stats-metric-card">
+      <div class="stats-metric-label" id="statsRelAnnotated5xLabel">≥ 5 次標記 Triple</div>
+      <div class="stats-metric-value">178</div>
+      <div class="stats-metric-desc" id="statsRelAnnotated5xDesc">達到一致性比較門檻的 triple 數</div>
+    </div>
+    <div class="stats-metric-card">
+      <div class="stats-metric-label" id="statsRelAvgAnnotatorsLabel">平均標記員數 / Triple</div>
+      <div class="stats-metric-value">3.2</div>
+      <div class="stats-metric-desc" id="statsRelAvgAnnotatorsDesc">每個唯一 triple 的平均覆蓋標記員數</div>
+    </div>
+    <div class="stats-metric-card">
+      <div class="stats-metric-label" id="statsRelMaxTripleLabel">單句最多 Triple</div>
+      <div class="stats-metric-value">12</div>
+      <div class="stats-metric-desc" id="statsRelMaxTripleDesc">單一樣本出現最多 triple 的數量</div>
+    </div>
+  </div>
+</section>
