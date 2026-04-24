@@ -170,6 +170,20 @@
     .speed-flag{color:var(--color-warning);font-size:12px;margin-left:4px}
     .speed-warn{color:var(--color-warning)}
     .group-avg-note{font-size:12px;color:var(--color-text-soft);margin-top:10px}
+    .risk-level-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-full);border:1px solid transparent;font-size:12px;font-weight:700;white-space:nowrap}
+    .risk-level-badge.normal{color:var(--color-success);background:var(--color-success-bg);border-color:var(--color-success-border)}
+    .risk-level-badge.watch{color:var(--color-warning);background:var(--color-warning-bg);border-color:var(--color-warning-border)}
+    .risk-level-badge.high{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
+    .risk-level-badge.insufficient{color:var(--color-text-soft);background:var(--color-slate-50);border-color:var(--color-border)}
+    .cause-stack{display:flex;flex-wrap:wrap;gap:6px;min-width:180px}
+    .cause-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--radius-full);background:var(--color-primary-soft-bg);border:1px solid var(--color-primary-soft-border);color:var(--color-primary);font-size:11px;font-weight:600}
+    .cause-text-block{display:grid;gap:4px;min-width:180px}
+    .cause-line{font-size:12px;color:var(--color-ink)}
+    .cause-line strong{color:var(--color-ink-muted);font-weight:700}
+    .cause-muted{font-size:12px;color:var(--color-text-soft);white-space:normal}
+    .action-stack{display:grid;gap:8px;min-width:140px}
+    .risk-action-btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+    .risk-readonly-note{font-size:11px;color:var(--color-text-soft);line-height:1.5;white-space:normal}
 
     /* Quality empty state */
     .quality-empty{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center}
@@ -225,7 +239,7 @@
 </script>
 
 <!-- ══ MAIN ══════════════════════════════════════════════════════════ -->
-<main>
+<main id="detailMain">
 <div class="layout">
 
   <!-- Breadcrumb -->
@@ -241,6 +255,7 @@
       <h1 class="page-main-title" id="pageTitle">情感 VA 雙維度評分</h1>
       <div class="task-meta-row" style="margin-top:6px">
         <span class="task-type-badge" id="taskTypeBadge">VA 評分</span>
+        <span class="badge badge-neutral" id="membershipRoleChip">Reviewer</span>
         <span class="task-id-chip" id="taskIdChip">T002</span>
       </div>
     </div>
@@ -248,19 +263,19 @@
 
   <!-- Tabs -->
   <div class="admin-tabs" role="tablist">
-    <button class="admin-tab" id="tabStats" type="button" role="tab" aria-selected="false">統計總覽</button>
-    <button class="admin-tab active" id="tabQuality" type="button" role="tab" aria-selected="true">品質監控</button>
+    <button class="admin-tab active" id="tabStats" type="button" role="tab" aria-selected="true">統計總覽</button>
+    <button class="admin-tab" id="tabQuality" type="button" role="tab" aria-selected="false">品質監控</button>
   </div>
 
   <!-- ═══ Stats Tab (shell) ═══════════════════════════════════════ -->
-  <div id="statsPanel" class="hidden">
+  <div id="statsPanel">
     <div class="stats-placeholder" id="statsPlaceholder">
       統計總覽 tab 尚未在此原型中展開，請切換至「品質監控」查看詳細規格。
     </div>
   </div>
 
   <!-- ═══ Quality Tab ══════════════════════════════════════════════ -->
-  <div id="qualityPanel">
+  <div id="qualityPanel" class="hidden">
 
     <!-- Empty state (shown when qualityState != ready) -->
     <div id="qualityEmpty" class="hidden quality-empty">
@@ -301,7 +316,7 @@ var I18N = {
     statsPlaceholder: '統計總覽 tab 尚未在此原型中展開，請切換至「品質監控」查看詳細規格。',
     iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標',
     anomalyTitle: '異常偵測', anomalySubtitle: '自動標記標記速度異常與離群標記值',
-    annotatorTitle: '標記員個別分析', annotatorSubtitle: '個別標記速度與 IAA 相較群體平均',
+    annotatorTitle: '標記員風險評估', annotatorSubtitle: '風險等級與異常原因獨立於 high_divergence 樣本旗標顯示',
     emptyTitle: 'IAA 報告將在 Dry Run 完成後產生',
     emptyDesc: '請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。',
     emptyBtn: '前往任務詳情',
@@ -355,19 +370,19 @@ var I18N = {
     seqStatus1:'正常', seqStatus2:'注意', seqStatus3:'異常',
     relStatus1:'正常', relStatus2:'正常', relStatus3:'異常',
     spStatus1:'正常', spStatus2:'正常', spStatus3:'正常',
-    anomalySpeedTitleVA:'標記速度異常', anomalyOutlierTitleVA:'離群標記值',
+    anomalySpeedTitleVA:'標記速度異常', anomalyOutlierTitleVA:'高分歧樣本',
     anomVASpd1Title:'Jordan Wu — 標記速度過快', anomVASpd1Detail:'平均 18s／句（門檻：≥ 20s），共 42 筆提交紀錄',
-    anomVAOut1Title:'樣本 #47 — Mandy Chen 的評分顯著偏離群體', anomVAOut1Detail:'V: 3.8，A: 4.2 vs 群體平均 V: 2.1，A: 2.8（距離 > 2σ）',
-    anomVAOut2Title:'樣本 #112 — Jordan Wu 的評分顯著偏離群體', anomVAOut2Detail:'V: 4.5，A: 1.2 vs 群體平均 V: 2.8，A: 3.1（距離 > 2σ）',
+    anomVAOut1Title:'樣本 #47 — high_divergence 評分旗標', anomVAOut1Detail:'Mandy Chen 在此樣本的 V / A 與群體中位數距離超過 2σ，且其餘標記員 pairwise ICC > 0.75。',
+    anomVAOut2Title:'樣本 #112 — high_divergence 評分旗標', anomVAOut2Detail:'Jordan Wu 在此樣本的 A 分數偏離顯著；此旗標不直接拉高其 annotator risk。',
     anomClsSpeedTitle:'標記速度異常', anomClsSpeedEmpty:'無速度異常',
-    anomClsOutlierTitle:'離群標記值',
-    anomClsOut1Title:'樣本 #23 — Jordan Wu 的標記與多數不一致', anomClsOut1Detail:"選擇「中立」，其他 2 位標記員選擇「正向」（出現率 < 5%）",
-    anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'離群標記值',
+    anomClsOutlierTitle:'高分歧樣本',
+    anomClsOut1Title:'樣本 #23 — high_divergence 樣本旗標', anomClsOut1Detail:'Jordan Wu 選擇「中立」，其餘標記員集中於「正向」；樣本獨立標示，不直接提升其個人風險。',
+    anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'高分歧樣本',
     anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆提交紀錄',
-    anomSeqOut1Title:'樣本 #89 — 實體邊界標記分歧', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與其他標記員相差 3 個 token 以上',
-    anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'離群標記值', anomRelOutlierEmpty:'暫無離群關係標記',
+    anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
+    anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
     anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
-    anomSpSpeedTitle:'標記速度異常', anomSpSpeedEmpty:'無速度異常', anomSpOutlierTitle:'離群標記值', anomSpOutlierEmpty:'無離群標記值',
+    anomSpSpeedTitle:'標記速度異常', anomSpSpeedEmpty:'無速度異常', anomSpOutlierTitle:'高分歧樣本', anomSpOutlierEmpty:'無 high_divergence 樣本',
     emptyStateMsgs: {
       dry_run_in_progress: ['Dry Run 進行中', 'Dry Run 仍在執行中，等待所有標記員完成提交。'],
       report_pending:      ['報告待產生',     'Dry Run 已完成，IAA 報告已排入計算佇列。'],
@@ -389,7 +404,7 @@ var I18N = {
     statsPlaceholder: 'Statistics tab is not implemented in this prototype. Switch to "Quality Monitor" to see the spec.',
     iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric',
     anomalyTitle: 'Anomaly Detection', anomalySubtitle: 'Flag annotation speed anomalies and outlier values automatically',
-    annotatorTitle: 'Annotator Analysis', annotatorSubtitle: 'Individual speed and IAA compared to group average',
+    annotatorTitle: 'Annotator Risk Assessment', annotatorSubtitle: 'Risk level and cause types are shown separately from high-divergence sample flags',
     emptyTitle: 'IAA report will be generated after Dry Run completes',
     emptyDesc: 'Please complete the Dry Run first. IAA will be calculated automatically.',
     emptyBtn: 'Go to Task Detail',
@@ -443,19 +458,19 @@ var I18N = {
     seqStatus1:'Normal', seqStatus2:'Watch', seqStatus3:'Anomaly',
     relStatus1:'Normal', relStatus2:'Normal', relStatus3:'Anomaly',
     spStatus1:'Normal', spStatus2:'Normal', spStatus3:'Normal',
-    anomalySpeedTitleVA:'Speed Anomalies', anomalyOutlierTitleVA:'Outlier Annotations',
+    anomalySpeedTitleVA:'Speed Anomalies', anomalyOutlierTitleVA:'High-divergence Samples',
     anomVASpd1Title:'Jordan Wu — Annotation speed too fast', anomVASpd1Detail:'Avg 18s/sent (threshold: ≥ 20s), 42 submissions',
-    anomVAOut1Title:'Sample #47 — Mandy Chen score significantly deviates from group', anomVAOut1Detail:'V: 3.8, A: 4.2 vs group mean V: 2.1, A: 2.8 (distance > 2σ)',
-    anomVAOut2Title:'Sample #112 — Jordan Wu score significantly deviates from group', anomVAOut2Detail:'V: 4.5, A: 1.2 vs group mean V: 2.8, A: 3.1 (distance > 2σ)',
+    anomVAOut1Title:'Sample #47 — high-divergence score flag', anomVAOut1Detail:'Mandy Chen deviates from the group median by > 2σ on V/A, while the other annotators remain aligned.',
+    anomVAOut2Title:'Sample #112 — high-divergence score flag', anomVAOut2Detail:'Jordan Wu deviates sharply on A for this sample; the flag does not directly increase personal risk.',
     anomClsSpeedTitle:'Speed Anomalies', anomClsSpeedEmpty:'No speed anomalies',
-    anomClsOutlierTitle:'Outlier Annotations',
-    anomClsOut1Title:'Sample #23 — Jordan Wu label disagrees with majority', anomClsOut1Detail:'Chose "Neutral"; other 2 annotators chose "Positive" (< 5% occurrence)',
-    anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'Outlier Annotations',
+    anomClsOutlierTitle:'High-divergence Samples',
+    anomClsOut1Title:'Sample #23 — high-divergence sample flag', anomClsOut1Detail:'Jordan Wu chose "Neutral" while the remaining annotators converged on "Positive"; this sample is separated from annotator risk.',
+    anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'High-divergence Samples',
     anomSeqSpd1Title:'Jordan Wu — Annotation speed too fast', anomSeqSpd1Detail:'Avg 22s/sent (threshold: ≥ 30s), 38 submissions',
-    anomSeqOut1Title:'Sample #89 — Entity boundary disagreement', anomSeqOut1Detail:"Jordan Wu's span boundary differs from others by > 3 tokens",
-    anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'Outlier Annotations', anomRelOutlierEmpty:'No outlier relation annotations',
+    anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
+    anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
     anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
-    anomSpSpeedTitle:'Speed Anomalies', anomSpSpeedEmpty:'No speed anomalies', anomSpOutlierTitle:'Outlier Annotations', anomSpOutlierEmpty:'No outlier annotations',
+    anomSpSpeedTitle:'Speed Anomalies', anomSpSpeedEmpty:'No speed anomalies', anomSpOutlierTitle:'High-divergence Samples', anomSpOutlierEmpty:'No high-divergence samples',
     emptyStateMsgs: {
       dry_run_in_progress: ['Dry Run in progress', 'Waiting for all annotators to submit.'],
       report_pending:      ['Report pending',       'Dry Run completed. IAA report is queued.'],
@@ -473,7 +488,7 @@ var I18N = {
 };
 
 /* ── State ─────────────────────────────────────────────────────────── */
-var S = { lang: 'zh', tab: 'quality', type: 'va', qState: 'ready', seqMode: 'strict' };
+var S = { lang: 'zh', tab: 'stats', type: 'va', qState: 'ready', seqMode: 'strict', scrollTopByTab: { stats: 0, quality: 0 } };
 var QUALITY_PANEL_PATHS = {
   va: './dataset-analysis-detail.partials/quality-va.html',
   classification: './dataset-analysis-detail.partials/quality-classification.html',
@@ -486,26 +501,31 @@ var TASK_META = {
     type: 'classification',
     title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
     chipId: 'T001',
+    membershipRole: 'project_leader',
   },
   T002: {
     type: 'va',
     title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
     chipId: 'T002',
+    membershipRole: 'reviewer',
   },
   T003: {
     type: 'sequence',
     title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
     chipId: 'T003',
+    membershipRole: 'reviewer',
   },
   T004: {
     type: 'relation',
     title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
     chipId: 'T004',
+    membershipRole: 'project_leader',
   },
   T005: {
     type: 'sentence_pairs',
     title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
     chipId: 'T005',
+    membershipRole: 'reviewer',
   },
 };
 var DEFAULT_TASK_ID = 'T002';
@@ -526,6 +546,41 @@ function renderPanelLoadError() {
   var mount = document.getElementById('qualityPanelMount');
   if (!mount) return;
   mount.innerHTML = '<section class="panel" aria-live="polite"><p class="panel-subtitle">Panel 載入失敗，請重新整理頁面。</p></section>';
+}
+
+function currentMembershipRole() {
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  return taskMeta.membershipRole || 'reviewer';
+}
+
+function syncRoleUi() {
+  var role = currentMembershipRole();
+  var roleChip = document.getElementById('membershipRoleChip');
+  if (roleChip) {
+    roleChip.textContent = S.lang === 'en'
+      ? (role === 'project_leader' ? 'Project Leader' : 'Reviewer')
+      : (role === 'project_leader' ? '專案負責人' : '審查者');
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-risk-level]'), function(el) {
+    var labels = S.lang === 'en'
+      ? { normal: 'Normal', watch: 'Watch', high: 'High Risk', insufficient: 'Insufficient Data' }
+      : { normal: '正常', watch: '觀察', high: '高風險', insufficient: '資料不足' };
+    el.textContent = labels[el.getAttribute('data-risk-level')] || labels.normal;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-role-action]'), function(el) {
+    var disabled = role !== 'project_leader';
+    el.disabled = disabled;
+    el.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-role-note]'), function(el) {
+    el.classList.toggle('hidden', role === 'project_leader');
+  });
+}
+
+function updateTaskDetailHref() {
+  var emptyBtn = document.getElementById('emptyBtn');
+  if (!emptyBtn) return;
+  emptyBtn.href = '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId);
 }
 
 /* ── Apply language ─────────────────────────────────────────────── */
@@ -689,6 +744,7 @@ function loadQualityPanel() {
       syncSequenceUi();
       updateMethodName();
       updateSummaryBadge();
+      syncRoleUi();
       wireQualityPanelInteractions();
     })
     .catch(function() {
@@ -707,6 +763,8 @@ function applyTypeContent() {
   document.getElementById('pageTitle').textContent = localizedTitle || (typeof pageTitles === 'object' ? (pageTitles[S.type] || pageTitles.va) : '');
   if (typeof typeLabels === 'object') document.getElementById('taskTypeBadge').textContent = typeLabels[S.type] || typeLabels.va;
   document.getElementById('taskIdChip').textContent = taskMeta && taskMeta.chipId ? taskMeta.chipId : (typeof taskIds === 'object' ? (taskIds[S.type] || taskIds.va) : '');
+  updateTaskDetailHref();
+  syncRoleUi();
   return loadQualityPanel();
 }
 
@@ -725,21 +783,37 @@ function applyQualityState() {
 }
 
 /* ── Tabs ────────────────────────────────────────────────────────── */
+function syncUrlState() {
+  var params = new URLSearchParams(window.location.search);
+  params.set('task_id', S_ROUTE.taskId);
+  params.set('tab', S.tab);
+  if (S.qState !== 'ready') params.set('q_state', S.qState);
+  else params.delete('q_state');
+  window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
+}
+
+function switchTab(nextTab) {
+  var main = document.getElementById('detailMain');
+  if (main && S.tab) S.scrollTopByTab[S.tab] = main.scrollTop;
+  S.tab = nextTab;
+  var isStats = nextTab === 'stats';
+  var statsTab = document.getElementById('tabStats');
+  var qualityTab = document.getElementById('tabQuality');
+  statsTab.classList.toggle('active', isStats);
+  statsTab.setAttribute('aria-selected', isStats ? 'true' : 'false');
+  qualityTab.classList.toggle('active', !isStats);
+  qualityTab.setAttribute('aria-selected', isStats ? 'false' : 'true');
+  document.getElementById('statsPanel').classList.toggle('hidden', !isStats);
+  document.getElementById('qualityPanel').classList.toggle('hidden', isStats);
+  syncUrlState();
+  if (main) main.scrollTop = S.scrollTopByTab[nextTab] || 0;
+}
+
 document.getElementById('tabStats').addEventListener('click', function() {
-  S.tab = 'stats';
-  this.classList.add('active'); this.setAttribute('aria-selected', 'true');
-  var q = document.getElementById('tabQuality');
-  q.classList.remove('active'); q.setAttribute('aria-selected', 'false');
-  document.getElementById('statsPanel').classList.remove('hidden');
-  document.getElementById('qualityPanel').classList.add('hidden');
+  switchTab('stats');
 });
 document.getElementById('tabQuality').addEventListener('click', function() {
-  S.tab = 'quality';
-  this.classList.add('active'); this.setAttribute('aria-selected', 'true');
-  var s = document.getElementById('tabStats');
-  s.classList.remove('active'); s.setAttribute('aria-selected', 'false');
-  document.getElementById('qualityPanel').classList.remove('hidden');
-  document.getElementById('statsPanel').classList.add('hidden');
+  switchTab('quality');
 });
 
 function resetSequenceAndAltViews() {
@@ -776,7 +850,7 @@ function applyRouteTask(taskId) {
   /* Read ?tab= from URL */
   try {
     var tab = (params || new URLSearchParams(window.location.search)).get('tab');
-    if (tab === 'stats') document.getElementById('tabStats').click();
+    switchTab(tab === 'quality' ? 'quality' : 'stats');
   } catch(e) {}
 
   if (window.LabelSuiteAnalytics) {

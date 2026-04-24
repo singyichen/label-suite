@@ -74,30 +74,30 @@
       </div>
     </li>
   </ul>
-  <div class="anomaly-group-title" id="anomSeqOutlierTitle" style="margin-top:var(--space-md)">離群標記值</div>
+  <div class="anomaly-group-title" id="anomSeqOutlierTitle" style="margin-top:var(--space-md)">高分歧樣本</div>
   <ul class="anomaly-list">
     <li class="anomaly-item">
       <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div class="anomaly-body">
-        <div class="anomaly-title" id="anomSeqOut1Title">樣本 #89 — 實體邊界標記分歧</div>
-        <div class="anomaly-detail" id="anomSeqOut1Detail">Jordan Wu 的 span 邊界與其他標記員相差 3 個 token 以上</div>
+        <div class="anomaly-title" id="anomSeqOut1Title">樣本 #89 — 實體邊界 high_divergence 旗標</div>
+        <div class="anomaly-detail" id="anomSeqOut1Detail">Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。</div>
       </div>
     </li>
   </ul>
 </section>
 
 <section class="panel" aria-labelledby="annotatorTitle">
-  <h2 class="panel-title" id="annotatorTitle">標記員個別分析</h2>
-  <p class="panel-subtitle" id="annotatorSubtitle">個別標記速度與 IAA 相較群體平均</p>
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">風險原因僅限 annotator-level：系統性偏差、標記過快、標記過慢。</p>
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
         <table class="annotator-table" aria-label="標記員分析（序列標記）">
-          <thead><tr><th id="thSeqName">標記員</th><th id="thSeqSpeed">平均速度</th><th id="thSeqIaa">F1（strict）</th><th id="thSeqDelta">Δ vs 群體</th><th id="thSeqStatus">狀態</th></tr></thead>
+          <thead><tr><th>標記員</th><th>平均速度</th><th>F1（strict）</th><th>風險等級</th><th>異常原因</th><th>樣本數</th><th>建議行動</th></tr></thead>
           <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>52s / 句</td><td><span class="badge badge-pass">0.76</span></td><td class="delta-pos">+0.04</td><td><span class="badge badge-pass" id="seqStatus1">正常</span></td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>60s / 句</td><td><span class="badge badge-warn">0.70</span></td><td class="delta-neg">−0.02</td><td><span class="badge badge-warn" id="seqStatus2">注意</span></td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">22s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td><td><span class="badge badge-fail">0.62</span></td><td class="delta-neg">−0.10</td><td><span class="badge badge-fail" id="seqStatus3">異常</span></td></tr>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>52s / 句</td><td><span class="badge badge-pass">0.76</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted">無異常原因</div></td><td>26</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>60s / 句</td><td><span class="badge badge-warn">0.70</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip">系統性偏差</span></div></td><td>23</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">22s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td><td><span class="badge badge-fail">0.62</span></td><td><span class="risk-level-badge high" data-risk-level="high">高風險</span></td><td><div class="cause-stack"><span class="cause-chip">標記過快</span><span class="cause-chip">系統性偏差</span></div></td><td>38</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">調整參與狀態</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
           </tbody>
         </table>
       </div>

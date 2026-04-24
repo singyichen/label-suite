@@ -44,30 +44,30 @@
   <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
   <div class="anomaly-group-title" id="anomClsSpeedTitle">標記速度異常</div>
   <div class="anomaly-empty" id="anomClsSpeedEmpty">無速度異常</div>
-  <div class="anomaly-group-title" id="anomClsOutlierTitle" style="margin-top:var(--space-md)">離群標記值</div>
+  <div class="anomaly-group-title" id="anomClsOutlierTitle" style="margin-top:var(--space-md)">高分歧樣本</div>
   <ul class="anomaly-list">
     <li class="anomaly-item">
       <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <div class="anomaly-body">
-        <div class="anomaly-title" id="anomClsOut1Title">樣本 #23 — Jordan Wu 的標記與多數不一致</div>
-        <div class="anomaly-detail" id="anomClsOut1Detail">選擇「中立」，其他 2 位標記員選擇「正向」（出現率 &lt; 5%）</div>
+        <div class="anomaly-title" id="anomClsOut1Title">樣本 #23 — high_divergence 樣本旗標</div>
+        <div class="anomaly-detail" id="anomClsOut1Detail">Jordan Wu 選擇「中立」，其餘標記員集中於「正向」；樣本獨立標示，不直接提升其個人風險。</div>
       </div>
     </li>
   </ul>
 </section>
 
 <section class="panel" aria-labelledby="annotatorTitle">
-  <h2 class="panel-title" id="annotatorTitle">標記員個別分析</h2>
-  <p class="panel-subtitle" id="annotatorSubtitle">個別標記速度與 IAA 相較群體平均</p>
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">低於最小樣本門檻者不計入風險等級，直接顯示資料不足。</p>
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
         <table class="annotator-table" aria-label="標記員分析（分類）">
-          <thead><tr><th id="thClsName">標記員</th><th id="thClsSpeed">平均速度</th><th id="thClsIaa">Alpha</th><th id="thClsDelta">Δ vs 群體</th><th id="thClsStatus">狀態</th></tr></thead>
+          <thead><tr><th>標記員</th><th>平均速度</th><th>Alpha</th><th>風險等級</th><th>異常原因</th><th>樣本數</th><th>建議行動</th></tr></thead>
           <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>28s / 句</td><td><span class="badge badge-pass">0.85</span></td><td class="delta-pos">+0.02</td><td><span class="badge badge-pass" id="clsStatus1">正常</span></td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>35s / 句</td><td><span class="badge badge-pass">0.82</span></td><td class="delta-neg">−0.01</td><td><span class="badge badge-pass" id="clsStatus2">正常</span></td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>31s / 句</td><td><span class="badge badge-warn">0.78</span></td><td class="delta-neg">−0.05</td><td><span class="badge badge-warn" id="clsStatus3">注意</span></td></tr>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>28s / 句</td><td><span class="badge badge-pass">0.85</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted">無異常原因</div></td><td>36</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>35s / 句</td><td><span class="badge badge-pass">0.82</span></td><td><span class="risk-level-badge insufficient" data-risk-level="insufficient">資料不足</span></td><td><div class="cause-muted">8 / 10，暫不評估</div></td><td>8</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>31s / 句</td><td><span class="badge badge-warn">0.78</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip">系統性偏差</span></div></td><td>31</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
           </tbody>
         </table>
       </div>

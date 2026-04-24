@@ -61,17 +61,17 @@
 </section>
 
 <section class="panel" aria-labelledby="annotatorTitle">
-  <h2 class="panel-title" id="annotatorTitle">標記員個別分析</h2>
-  <p class="panel-subtitle" id="annotatorSubtitle">個別標記速度與 IAA 相較群體平均</p>
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">高分歧樣本與關係抽取者風險分離呈現；行動僅限 Project Leader。</p>
   <div style="margin-top:var(--space-md)">
     <div class="table-wrap">
       <div class="table-scroll">
         <table class="annotator-table" aria-label="標記員分析（關係抽取）">
-          <thead><tr><th id="thRelName">標記員</th><th id="thRelSpeed">平均速度</th><th id="thRelIaa">Triple F1</th><th id="thRelDelta">Δ vs 群體</th><th id="thRelStatus">狀態</th></tr></thead>
+          <thead><tr><th>標記員</th><th>平均速度</th><th>Triple F1</th><th>風險等級</th><th>異常原因</th><th>樣本數</th><th>建議行動</th></tr></thead>
           <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>65s / 句</td><td><span class="badge badge-pass">0.79</span></td><td class="delta-pos">+0.03</td><td><span class="badge badge-pass" id="relStatus1">正常</span></td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>72s / 句</td><td><span class="badge badge-warn">0.75</span></td><td class="delta-neg">−0.01</td><td><span class="badge badge-pass" id="relStatus2">正常</span></td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">25s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td><td><span class="badge badge-fail">0.68</span></td><td class="delta-neg">−0.08</td><td><span class="badge badge-fail" id="relStatus3">異常</span></td></tr>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>65s / 句</td><td><span class="badge badge-pass">0.79</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted">無異常原因</div></td><td>22</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button></div></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>72s / 句</td><td><span class="badge badge-warn">0.75</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip">標記過慢</span></div></td><td>17</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button></div></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">25s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td><td><span class="badge badge-fail">0.68</span></td><td><span class="risk-level-badge high" data-risk-level="high">高風險</span></td><td><div class="cause-stack"><span class="cause-chip">標記過快</span><span class="cause-chip">系統性偏差</span></div></td><td>29</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">調整參與狀態</button></div></td></tr>
           </tbody>
         </table>
       </div>
