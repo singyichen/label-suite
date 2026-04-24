@@ -27,6 +27,12 @@ Existing annotation platforms such as [Label Studio](https://labelstud.io/) are 
 
 ---
 
+## Annotation Workflow
+
+![Label Suite system workflow](docs/diagrams/workflow/system-workflow.png)
+
+---
+
 ## Key Features
 
 - **Config-driven Task Launch:** Define NLP annotation tasks through simple YAML/JSON config files — no custom code required. Supports Single Sentence, Sentence Pairs, Sequence Labeling, and Generative Labeling.
