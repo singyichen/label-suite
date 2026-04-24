@@ -2367,6 +2367,104 @@
     lastExportStage: ''
   };
 
+  var TASK_PROFILE_MAP = {
+    T001: {
+      taskId: 'T001',
+      taskNameZh: '新聞標題多標籤分類',
+      taskNameEn: 'News Headline Multi-label Classification',
+      taskTypeKey: 'single_sentence_classification',
+      datasetTotal: 3200,
+      datasetSourceZh: 'news_headlines_multilabel_2026.csv',
+      datasetSourceEn: 'news_headlines_multilabel_2026.csv',
+      configVersion: 'cfg-t001-v2.1.0',
+      configFileName: '',
+      configContent: 'labels:\n  - 政治\n  - 社會\n  - 娛樂\n  - 體育\n  - 科技\nallow_multiple: true',
+      guidelineUploaded: true,
+      guidelineTextZh: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
+      guidelineTextEn: 'Select multiple topic labels when the headline covers more than one news category.',
+      guidelineText: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
+      guidelineFiles: [{ name: 'headline_taxonomy.pdf', type: 'pdf' }],
+      forceGuideline: true,
+      status: 'official_run_in_progress',
+    },
+    T002: {
+      taskId: 'T002',
+      taskNameZh: '情感 VA 雙維度評分',
+      taskNameEn: 'Sentiment VA Dual-axis Scoring',
+      taskTypeKey: 'single_sentence_va_scoring',
+      datasetTotal: 1280,
+      datasetSourceZh: 'sentiment_va_corpus_v2.csv',
+      datasetSourceEn: 'sentiment_va_corpus_v2.csv',
+      configVersion: 'cfg-t002-v1.4.0',
+      configFileName: '',
+      configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
+      guidelineUploaded: true,
+      guidelineTextZh: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
+      guidelineTextEn: 'Rate both valence and arousal based on the emotion evoked by the sentence.',
+      guidelineText: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
+      guidelineFiles: [{ name: 'VA_emj.png', type: 'png' }],
+      forceGuideline: true,
+      status: 'waiting_iaa_confirmation',
+    },
+    T003: {
+      taskId: 'T003',
+      taskNameZh: '產品評論序列標註（NER / Aspect）',
+      taskNameEn: 'Product Review Sequence Labeling (NER / Aspect)',
+      taskTypeKey: 'sequence_labeling',
+      datasetTotal: 860,
+      datasetSourceZh: 'product_reviews_ner_aspect.tsv',
+      datasetSourceEn: 'product_reviews_ner_aspect.tsv',
+      configVersion: 'cfg-t003-v3.0.2',
+      configFileName: '',
+      configContent: 'entities:\n  - name: ASPECT\n    color: "#6366F1"\n  - name: OPINION\n    color: "#10B981"\n  - name: BRAND\n    color: "#F59E0B"\nscheme: BIOES\nallow_overlapping: false',
+      guidelineUploaded: true,
+      guidelineTextZh: '請圈選產品評論中的面向詞、意見詞與品牌名稱，並依 BIOES 格式輸出。',
+      guidelineTextEn: 'Label aspect terms, opinion terms, and brand mentions in BIOES format.',
+      guidelineText: '請圈選產品評論中的面向詞、意見詞與品牌名稱，並依 BIOES 格式輸出。',
+      guidelineFiles: [{ name: 'sequence_labeling_examples.pdf', type: 'pdf' }],
+      forceGuideline: true,
+      status: 'dry_run_in_progress',
+    },
+    T004: {
+      taskId: 'T004',
+      taskNameZh: '醫療關係抽取（Entity / Triple）',
+      taskNameEn: 'Medical Relation Extraction (Entity / Triple)',
+      taskTypeKey: 'relation_extraction',
+      datasetTotal: 1420,
+      datasetSourceZh: 'medical_relation_triples.jsonl',
+      datasetSourceEn: 'medical_relation_triples.jsonl',
+      configVersion: 'cfg-t004-v1.8.3',
+      configFileName: '',
+      configContent: 'entity_types:\n  - name: DRUG\n    color: "#6366F1"\n  - name: DISEASE\n    color: "#10B981"\n  - name: SYMPTOM\n    color: "#F59E0B"\nrelation_types:\n  - treats\n  - causes\n  - indicates\ntuple_mode: triple',
+      guidelineUploaded: true,
+      guidelineTextZh: '先標出醫療實體，再建立對應的藥物、疾病與症狀關係三元組。',
+      guidelineTextEn: 'Mark medical entities first, then annotate triples between drugs, diseases, and symptoms.',
+      guidelineText: '先標出醫療實體，再建立對應的藥物、疾病與症狀關係三元組。',
+      guidelineFiles: [{ name: 'medical_relation_schema.md', type: 'md' }],
+      forceGuideline: false,
+      status: 'completed',
+    },
+    T005: {
+      taskId: 'T005',
+      taskNameZh: '句對相似度 / 蘊含判定',
+      taskNameEn: 'Sentence Pair Similarity / Entailment',
+      taskTypeKey: 'sentence_pairs',
+      datasetTotal: 2100,
+      datasetSourceZh: 'sentence_pairs_nli.parquet',
+      datasetSourceEn: 'sentence_pairs_nli.parquet',
+      configVersion: 'cfg-t005-v2.0.1',
+      configFileName: '',
+      configContent: 'labels:\n  - 相似\n  - 不相似\n  - 蘊含\n  - 矛盾',
+      guidelineUploaded: true,
+      guidelineTextZh: '請根據句對語意關係判定是否相似、蘊含或互相矛盾。',
+      guidelineTextEn: 'Judge whether the sentence pair is similar, entails, or contradicts.',
+      guidelineText: '請根據句對語意關係判定是否相似、蘊含或互相矛盾。',
+      guidelineFiles: [{ name: 'nli_decision_tree.png', type: 'png' }],
+      forceGuideline: true,
+      status: 'draft',
+    },
+  };
+
   var TASK_MEMBERS = [
     { name: 'Mandy Chen', email: 'mandy@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:13', lastActive: '2026-04-21 09:42' },
     { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
@@ -2620,7 +2718,12 @@
       role = 'project_leader';
     }
     state.taskRole = role;
-    if (taskId && taskId.trim()) TASK_DATA.taskId = taskId.trim();
+    if (taskId && taskId.trim()) {
+      TASK_DATA.taskId = taskId.trim();
+      if (TASK_PROFILE_MAP[TASK_DATA.taskId]) {
+        Object.assign(TASK_DATA, JSON.parse(JSON.stringify(TASK_PROFILE_MAP[TASK_DATA.taskId])));
+      }
+    }
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
 
     if (state.taskRole === 'annotator') {
