@@ -374,6 +374,9 @@
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
     .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
@@ -620,18 +623,20 @@
             sampleId: 'R2-001', status: 'submitted', completedAt: '2026-04-23 11:02',
             text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
             labelStats: 'mean [4.33, 5.25]\nstd [0.99, 1.55]\n±1.5std V : 2.845~5.815, ±1.5std A : 2.925~7.575',
+            vaRange: { loV: 2.845, hiV: 5.815, loA: 2.925, hiA: 7.575 },
             annotators: [
               { username: 'kioleemg12', result: '[3.5, 5.5]', reviewStatus: 'approved' },
-              { username: '113450022', result: '[5, 4]', reviewStatus: 'approved' },
+              { username: '113450022', result: '[6, 4]', reviewStatus: 'approved' },
               { username: 'tony0950127', result: '[5, 7]', reviewStatus: 'approved' },
               { username: 'hui', result: '[5, 6]', reviewStatus: 'approved' },
-              { username: 'chiao11', result: '[5, 6.5]', reviewStatus: 'approved' }
+              { username: 'chiao11', result: '[2, 6.5]', reviewStatus: 'approved' }
             ]
           },
           {
             sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:08',
             text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。',
-            labelStats: 'mean [1.83, 1.5]\n std [0.24, 0.44]\n±1.5std V : 1.470~2.190, ±1.5std A : 0.840~2.160',
+            labelStats: 'mean [1.83, 1.5]\nstd [0.24, 0.44]\n±1.5std V : 1.470~2.190, ±1.5std A : 0.840~2.160',
+            vaRange: { loV: 1.470, hiV: 2.190, loA: 0.840, hiA: 2.160 },
             annotators: [
               { username: 'kioleemg12', result: '[2, 1]', reviewStatus: 'approved' },
               { username: '113450022', result: '[1.5, 2]', reviewStatus: 'approved' },
@@ -642,6 +647,7 @@
             sampleId: 'R2-003', status: 'saved', completedAt: '2026-04-23 11:15',
             text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
             labelStats: 'mean [6.40, 5.75]\nstd [0.43, 0.25]\n±1.5std V : 5.755~7.045, ±1.5std A : 5.375~6.125',
+            vaRange: { loV: 5.755, hiV: 7.045, loA: 5.375, hiA: 6.125 },
             annotators: [
               { username: 'kioleemg12', result: '[6, 5.5]', reviewStatus: null },
               { username: '113450022', result: '[7, 6]', reviewStatus: null },
@@ -653,6 +659,7 @@
             sampleId: 'R2-004', status: 'pending', completedAt: '-',
             text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
             labelStats: 'mean [4.50, 4.83]\nstd [0.50, 0.47]\n±1.5std V : 3.750~5.250, ±1.5std A : 4.125~5.535',
+            vaRange: { loV: 3.750, hiV: 5.250, loA: 4.125, hiA: 5.535 },
             annotators: [
               { username: 'kioleemg12', result: '[4, 4]', reviewStatus: null },
               { username: '113450022', result: '[5, 5.5]', reviewStatus: null },
@@ -663,6 +670,7 @@
             sampleId: 'R2-005', status: 'pending', completedAt: '-',
             text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
             labelStats: 'mean [6.67, 5.33]\nstd [0.24, 0.24]\n±1.5std V : 6.310~7.030, ±1.5std A : 4.970~5.690',
+            vaRange: { loV: 6.310, hiV: 7.030, loA: 4.970, hiA: 5.690 },
             annotators: [
               { username: 'kioleemg12', result: '[7, 5]', reviewStatus: null },
               { username: '113450022', result: '[6.5, 5.5]', reviewStatus: null },
@@ -707,7 +715,18 @@
     }
   }
 
-  function buildAnnotatorDetailContent(sampleId, annotators) {
+  function getVaColorClass(resultStr, vaRange) {
+    if (!vaRange) return '';
+    var match = resultStr.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
+    if (!match) return '';
+    var v = parseFloat(match[1]);
+    var a = parseFloat(match[2]);
+    if (v > vaRange.hiV || a > vaRange.hiA) return 'result-tag-red';
+    if (v < vaRange.loV || a < vaRange.loA) return 'result-tag-blue';
+    return 'result-tag-green';
+  }
+
+  function buildAnnotatorDetailContent(sampleId, annotators, vaRange) {
     var div = document.createElement('div');
     div.className = 'annotator-detail-inner';
     annotators.forEach(function (ann, idx) {
@@ -720,7 +739,8 @@
       usernameSpan.textContent = ann.username;
 
       var resultSpan = document.createElement('span');
-      resultSpan.className = 'annotator-result-tag';
+      var colorClass = getVaColorClass(ann.result, vaRange);
+      resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
       resultSpan.textContent = ann.result;
 
       var approveBtn = document.createElement('button');
@@ -1026,7 +1046,7 @@
       detailTr.className = 'annotator-detail-row hidden';
       var detailTd = document.createElement('td');
       detailTd.setAttribute('colspan', '7');
-      var detailContent = buildAnnotatorDetailContent(sample.sampleId, annotators);
+      var detailContent = buildAnnotatorDetailContent(sample.sampleId, annotators, sample.vaRange || null);
       detailTd.appendChild(detailContent);
       detailTr.appendChild(detailTd);
 
