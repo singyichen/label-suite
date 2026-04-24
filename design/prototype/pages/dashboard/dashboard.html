@@ -1567,6 +1567,13 @@
       window.location.href = url;
     }
 
+    function openTaskList(taskRole) {
+      const systemRole = taskRole === 'super_admin' ? 'super_admin' : 'user';
+      window.LabelSuiteSharedSidebar.setSystemRole(systemRole);
+      const url = '../task-management/task-list.html?task_role=' + encodeURIComponent(taskRole);
+      window.location.href = url;
+    }
+
     function renderRoleTaskList(containerId, role, tasks) {
       const container = document.getElementById(containerId);
       if (!container) return;
@@ -1671,6 +1678,12 @@
     });
     document.getElementById('workflowCardReviewBtn').addEventListener('click', () => {
       openAnnotationList('reviewer', REVIEWER_TASKS[0]);
+    });
+    document.getElementById('adminViewAllBtn').addEventListener('click', () => {
+      openTaskList('super_admin');
+    });
+    document.getElementById('plViewAllBtn').addEventListener('click', () => {
+      openTaskList('project_leader');
     });
 
     const getTrackingContext = () => ({ lang, scenario });

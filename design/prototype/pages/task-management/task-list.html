@@ -510,8 +510,8 @@
       deleteModalBodyTpl: '確認將「{name}」軟刪除？此操作可由管理端復原。',
       deleteModalCancel: '取消',
       deleteModalConfirm: '刪除',
-      roleLabel: { user: '一般使用者', super_admin: '系統管理員' },
-      userName: { user: 'Mandy Chen', super_admin: 'Super Admin' },
+      roleLabel: { user: '一般使用者', super_admin: '系統管理員', project_leader: '專案負責人' },
+      userName: { user: 'Mandy Chen', super_admin: 'Super Admin', project_leader: 'Mandy Chen' },
       statusBadge: {
         draft: '草稿', dry_run_in_progress: '試標進行中',
         waiting_iaa_confirmation: '待 IAA 確認',
@@ -577,8 +577,8 @@
       deleteModalBodyTpl: 'Soft delete "{name}"? This action can be restored by admin.',
       deleteModalCancel: 'Cancel',
       deleteModalConfirm: 'Delete',
-      roleLabel: { user: 'User', super_admin: 'Super Admin' },
-      userName: { user: 'User', super_admin: 'Super Admin' },
+      roleLabel: { user: 'User', super_admin: 'Super Admin', project_leader: 'Project Leader' },
+      userName: { user: 'User', super_admin: 'Super Admin', project_leader: 'Mandy Chen' },
       statusBadge: {
         draft: 'Draft', dry_run_in_progress: 'Dry Run',
         waiting_iaa_confirmation: 'Pending IAA',
@@ -645,6 +645,7 @@
   var state = { lang: 'zh', keyword: '', taskType: '', runType: '', status: '', page: 1, pageSize: 20 };
   var pendingDeleteTaskId = null;
   var toastTimer = null;
+  var pageTaskRole = 'user';
 
   /* ── Helpers ─────────────────────────────────────────────────── */
   function t(key) { return (I18N[state.lang] || I18N.zh)[key] || key; }
@@ -659,6 +660,15 @@
       return window.LabelSuiteSharedSidebar.getStoredSystemRole() || 'user';
     }
     return 'user';
+  }
+
+  function normalizeTaskRole(role) {
+    if (role === 'super_admin' || role === 'project_leader') return role;
+    return 'user';
+  }
+
+  function getDisplayedTaskRole() {
+    return normalizeTaskRole(pageTaskRole);
   }
 
   function getTaskSearchText(task) {
@@ -687,7 +697,7 @@
 
   function getFilteredTasks() {
     var tasks = TASKS;
-    if (getCurrentSystemRole() !== 'super_admin') {
+    if (getDisplayedTaskRole() !== 'super_admin') {
       tasks = tasks.filter(function(tk) { return tk.isMine; });
     }
     tasks = tasks.filter(function(tk) { return !tk.deletedAt; });
@@ -719,7 +729,7 @@
   function getTrackingContext() {
     return {
       lang: state.lang,
-      role: getCurrentSystemRole(),
+      role: getDisplayedTaskRole(),
       keyword: state.keyword,
       task_type: state.taskType,
       run_type: state.runType,
@@ -753,6 +763,7 @@
 
   function syncUrl() {
     var p = new URLSearchParams();
+    if (getDisplayedTaskRole() !== 'user') p.set('task_role', getDisplayedTaskRole());
     if (state.keyword) p.set('keyword', state.keyword);
     if (state.taskType) p.set('task_type', state.taskType);
     if (state.runType) p.set('run_stage', state.runType);
@@ -1087,10 +1098,10 @@
     });
 
     // User chip
-    var sysRole = getCurrentSystemRole();
+    var sysRole = getDisplayedTaskRole();
     var roleLabels = (I18N[state.lang] || I18N.zh).roleLabel;
     var userNames = (I18N[state.lang] || I18N.zh).userName;
-    var avatarMap = { user: 'U', super_admin: 'SA' };
+    var avatarMap = { user: 'U', super_admin: 'SA', project_leader: 'PL' };
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.updateUserChip({
         roleLabel: roleLabels[sysRole] || roleLabels.user,
@@ -1208,6 +1219,7 @@
   (function initStateFromUrl() {
     var q = new URLSearchParams(window.location.search);
     var view = q.get('view');
+    var taskRole = normalizeTaskRole(q.get('task_role'));
     if (view !== 'empty') {
       loadCreatedTaskSeed();
     }
@@ -1217,6 +1229,10 @@
     var status = q.get('status');
     var page = parseInt(q.get('page') || '', 10);
     var pageSize = parseInt(q.get('page_size') || '', 10);
+    pageTaskRole = taskRole;
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.setSystemRole(taskRole === 'super_admin' ? 'super_admin' : 'user');
+    }
     if (keyword) state.keyword = keyword;
     if (taskType) state.taskType = taskType;
     if (runStage) state.runType = runStage;
