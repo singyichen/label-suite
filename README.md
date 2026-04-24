@@ -27,7 +27,7 @@ Existing annotation platforms such as [Label Studio](https://labelstud.io/) are 
 
 ---
 
-## Annotation Workflow
+## System Workflow
 
 ![Label Suite system workflow](docs/diagrams/workflow/system-workflow.png)
 
