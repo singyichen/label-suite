@@ -171,7 +171,7 @@
     if (storedTaskType && annotationHref.indexOf('task_type=') === -1) {
       annotationHref += (annotationHref.indexOf('?') === -1 ? '?' : '&') + 'task_type=' + encodeURIComponent(storedTaskType);
     }
-    var datasetHref = opts.datasetHref || '#';
+    var datasetHref = opts.datasetHref || '../dataset/dataset-analysis-list.html';
     var adminHref = opts.adminHref || '#';
     var brandHref = opts.brandHref || dashboardHref;
     var mobileUserName = opts.mobileUserName || 'Mandy Chen';

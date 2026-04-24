@@ -1,0 +1,68 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">整體通過</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">Krippendorff's Alpha（nominal）</span>
+    <span id="iaaMethodSuffix">— 主要指標</span>
+  </div>
+  <div class="iaa-score-grid iaa-score-grid-1">
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblSpMetric">Krippendorff's Alpha（nominal）</div>
+      <div class="iaa-card-value pass">0.85</div>
+      <div class="iaa-card-calc" id="lblSpCalc">分類型子任務</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:85%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblSpThr">門檻 0.80 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnSp" type="button" aria-expanded="false" aria-controls="altBodySp">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblSp">替代指標</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodySp" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead><tr><th id="altHSpMetric">指標</th><th id="altHSpVal">數值</th></tr></thead>
+        <tbody>
+          <tr><td><span class="alt-metric-name">Fleiss' Kappa</span></td><td>0.82</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title" id="anomSpSpeedTitle">標記速度異常</div>
+  <div class="anomaly-empty" id="anomSpSpeedEmpty">無速度異常</div>
+  <div class="anomaly-group-title" id="anomSpOutlierTitle" style="margin-top:var(--space-md)">離群標記值</div>
+  <div class="anomaly-empty" id="anomSpOutlierEmpty">無離群標記值</div>
+</section>
+
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員個別分析</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">個別標記速度與 IAA 相較群體平均</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員分析（句對任務）">
+          <thead><tr><th id="thSpName">標記員</th><th id="thSpSpeed">平均速度</th><th id="thSpIaa">Alpha</th><th id="thSpDelta">Δ vs 群體</th><th id="thSpStatus">狀態</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>33s / 句</td><td><span class="badge badge-pass">0.87</span></td><td class="delta-pos">+0.02</td><td><span class="badge badge-pass" id="spStatus1">正常</span></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>38s / 句</td><td><span class="badge badge-pass">0.84</span></td><td class="delta-neg">−0.01</td><td><span class="badge badge-pass" id="spStatus2">正常</span></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>41s / 句</td><td><span class="badge badge-pass">0.81</span></td><td class="delta-neg">−0.04</td><td><span class="badge badge-pass" id="spStatus3">正常</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="spGroupAvg">群體平均 — Alpha: 0.85 ／ 平均速度: 37.3s／句</p>
+  </div>
+</section>

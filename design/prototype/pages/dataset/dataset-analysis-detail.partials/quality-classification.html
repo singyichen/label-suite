@@ -1,0 +1,77 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">整體通過</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">Krippendorff's Alpha（nominal）</span>
+    <span id="iaaMethodSuffix">— 主要指標</span>
+  </div>
+  <div class="iaa-score-grid iaa-score-grid-1">
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblClsMetric">Krippendorff's Alpha（nominal）</div>
+      <div class="iaa-card-value pass">0.83</div>
+      <div class="iaa-card-calc" id="lblClsCalc">整體 alpha（多標籤 macro average）</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:83%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblClsThr">門檻 0.80 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnCls" type="button" aria-expanded="false" aria-controls="altBodyCls">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblCls">替代指標</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodyCls" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead><tr><th id="altHClsMetric">指標</th><th id="altHClsVal">數值</th></tr></thead>
+        <tbody>
+          <tr><td><span class="alt-metric-name">Cohen's Kappa</span></td><td>0.81</td></tr>
+          <tr><td><span class="alt-metric-name">Fleiss' Kappa</span></td><td>0.79</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title" id="anomClsSpeedTitle">標記速度異常</div>
+  <div class="anomaly-empty" id="anomClsSpeedEmpty">無速度異常</div>
+  <div class="anomaly-group-title" id="anomClsOutlierTitle" style="margin-top:var(--space-md)">離群標記值</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomClsOut1Title">樣本 #23 — Jordan Wu 的標記與多數不一致</div>
+        <div class="anomaly-detail" id="anomClsOut1Detail">選擇「中立」，其他 2 位標記員選擇「正向」（出現率 &lt; 5%）</div>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員個別分析</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">個別標記速度與 IAA 相較群體平均</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員分析（分類）">
+          <thead><tr><th id="thClsName">標記員</th><th id="thClsSpeed">平均速度</th><th id="thClsIaa">Alpha</th><th id="thClsDelta">Δ vs 群體</th><th id="thClsStatus">狀態</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>28s / 句</td><td><span class="badge badge-pass">0.85</span></td><td class="delta-pos">+0.02</td><td><span class="badge badge-pass" id="clsStatus1">正常</span></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>35s / 句</td><td><span class="badge badge-pass">0.82</span></td><td class="delta-neg">−0.01</td><td><span class="badge badge-pass" id="clsStatus2">正常</span></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>31s / 句</td><td><span class="badge badge-warn">0.78</span></td><td class="delta-neg">−0.05</td><td><span class="badge badge-warn" id="clsStatus3">注意</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="clsGroupAvg">群體平均 — Alpha: 0.83 ／ 平均速度: 31.3s／句</p>
+  </div>
+</section>

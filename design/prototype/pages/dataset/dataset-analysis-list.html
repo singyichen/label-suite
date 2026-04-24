@@ -251,7 +251,7 @@
           <p class="page-main-subtitle" id="pageSubtitle">查看具成員資格的任務 IAA 分析結果</p>
         </div>
         <div class="task-count-chip" id="taskCountChip" aria-live="polite">
-          <strong id="taskCountNum">6</strong>
+          <strong id="taskCountNum">5</strong>
           <span id="taskCountLabel">個任務</span>
         </div>
       </header>
@@ -363,55 +363,46 @@
   var TASKS_SEED = [
     {
       id: 'T001',
-      nameZh: '新聞標題情感分類',
-      nameEn: 'News Sentiment Classification',
+      nameZh: '新聞標題多標籤分類',
+      nameEn: 'News Headline Multi-label Classification',
       taskType: 'single_sentence_classification',
-      completionRate: 87,
+      completionRate: 89,
       iaaStatus: 'pass',
       membershipRole: 'project_leader',
     },
     {
       id: 'T002',
-      nameZh: 'NER 基準任務',
-      nameEn: 'NER Benchmark',
-      taskType: 'sequence_labeling',
-      completionRate: 65,
-      iaaStatus: 'fail',
-      membershipRole: 'project_leader',
-    },
-    {
-      id: 'T003',
-      nameZh: '單句 VA 雙維度評分',
-      nameEn: 'Single-sentence VA Scoring',
+      nameZh: '情感 VA 雙維度評分',
+      nameEn: 'Sentiment VA Dual-axis Scoring',
       taskType: 'single_sentence_va_scoring',
-      completionRate: 45,
+      completionRate: 42,
       iaaStatus: 'pending',
       membershipRole: 'reviewer',
     },
     {
-      id: 'T004',
-      nameZh: '句對語意相似度',
-      nameEn: 'Sentence Pair Similarity',
-      taskType: 'sentence_pairs',
-      completionRate: 100,
+      id: 'T003',
+      nameZh: '產品評論序列標註（NER / Aspect）',
+      nameEn: 'Product Review Sequence Labeling (NER / Aspect)',
+      taskType: 'sequence_labeling',
+      completionRate: 64,
       iaaStatus: 'pass',
       membershipRole: 'reviewer',
     },
     {
-      id: 'T005',
-      nameZh: '醫療文本命名實體識別',
-      nameEn: 'Medical Text NER',
-      taskType: 'sequence_labeling',
-      completionRate: 12,
-      iaaStatus: 'not_started',
+      id: 'T004',
+      nameZh: '醫療關係抽取（Entity / Triple）',
+      nameEn: 'Medical Relation Extraction (Entity / Triple)',
+      taskType: 'relation_extraction',
+      completionRate: 37,
+      iaaStatus: 'fail',
       membershipRole: 'project_leader',
     },
     {
-      id: 'T006',
-      nameZh: '商品評論情感分類 v2',
-      nameEn: 'Product Review Classification v2',
-      taskType: 'single_sentence_classification',
-      completionRate: 78,
+      id: 'T005',
+      nameZh: '句對相似度 / 蘊含判定',
+      nameEn: 'Sentence Pair Similarity / Entailment',
+      taskType: 'sentence_pairs',
+      completionRate: 58,
       iaaStatus: 'pending',
       membershipRole: 'reviewer',
     },
@@ -550,7 +541,7 @@
       trackAnalytics('prototype_dataset_card_clicked', { task_id: task.id, iaa_status: task.iaaStatus });
       showToast(t('toastNavigating'));
       window.setTimeout(function () {
-        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=stats';
+        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=quality';
       }, 220);
     }
     tr.addEventListener('click', handleRowActivate);

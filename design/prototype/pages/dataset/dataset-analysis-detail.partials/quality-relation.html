@@ -1,0 +1,81 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">部分通過</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">Pairwise Triple-level F1</span>
+    <span id="iaaMethodSuffix">— 主要指標</span>
+  </div>
+  <div class="iaa-score-grid iaa-score-grid-1">
+    <div class="iaa-score-card card-warn">
+      <div class="iaa-card-label" id="lblRelMetric">Pairwise Triple-level F1</div>
+      <div class="iaa-card-value warn">0.76</div>
+      <div class="iaa-card-calc" id="lblRelCalc">subject + relation + object 完全一致</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill warn" style="width:76%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblRelThr1">門檻 0.75 — <strong class="t-pass">通過</strong></span>
+        </span>
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-fail"></span>
+          <span id="lblRelThr2">高品質門檻 0.80 — <strong class="t-fail">未達</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnRel" type="button" aria-expanded="false" aria-controls="altBodyRel">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblRel">輔助指標</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodyRel" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead><tr><th id="altHRelMetric">指標</th><th id="altHRelVal">數值</th></tr></thead>
+        <tbody>
+          <tr><td><span class="alt-metric-name">Entity-level F1</span></td><td>0.82</td></tr>
+          <tr><td><span class="alt-metric-name">Relation-only agreement</span></td><td>0.79</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title" id="anomRelSpeedTitle">標記速度異常</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomRelSpd1Title">Jordan Wu — 標記速度過快</div>
+        <div class="anomaly-detail" id="anomRelSpd1Detail">平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高</div>
+      </div>
+    </li>
+  </ul>
+  <div class="anomaly-group-title" id="anomRelOutlierTitle" style="margin-top:var(--space-md)">離群標記值</div>
+  <div class="anomaly-empty" id="anomRelOutlierEmpty">暫無離群關係標記</div>
+</section>
+
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員個別分析</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">個別標記速度與 IAA 相較群體平均</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員分析（關係抽取）">
+          <thead><tr><th id="thRelName">標記員</th><th id="thRelSpeed">平均速度</th><th id="thRelIaa">Triple F1</th><th id="thRelDelta">Δ vs 群體</th><th id="thRelStatus">狀態</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>65s / 句</td><td><span class="badge badge-pass">0.79</span></td><td class="delta-pos">+0.03</td><td><span class="badge badge-pass" id="relStatus1">正常</span></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>72s / 句</td><td><span class="badge badge-warn">0.75</span></td><td class="delta-neg">−0.01</td><td><span class="badge badge-pass" id="relStatus2">正常</span></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">25s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td><td><span class="badge badge-fail">0.68</span></td><td class="delta-neg">−0.08</td><td><span class="badge badge-fail" id="relStatus3">異常</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="relGroupAvg">群體平均 — Triple F1: 0.76 ／ 平均速度: 54.0s／句</p>
+  </div>
+</section>
