@@ -21,7 +21,7 @@
 ## 功能流程（已存在 Spec 檔案）
 
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
-|---|------|------|------|------|------|
+| --- | --- | --- | --- | --- | --- |
 | account-001 | Login — Email / Password | account | `in-progress` | `feat/dashboard-012-spec-simplify` | 規格文案已對齊最新原型（語言切換為單一代碼 `ZH/EN`） |
 | account-002 | Login — Google SSO | account | `in-progress` | `feat/dashboard-012-spec-simplify` | 規格文案已對齊最新原型（語言切換為單一代碼 `ZH/EN`） |
 | account-003 | Register — Email / Password | account | `in-progress` | `feat/dashboard-012-spec-simplify` | 規格文案已對齊最新原型（語言切換為單一代碼 `ZH/EN`） |
@@ -35,6 +35,8 @@
 | task-management-010 | Task List | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/010-task-list/spec.md`） |
 | task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/013-task-new/spec.md`） |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/014-task-detail/spec.md`） |
+| dataset-016 | Dataset Analysis List + Stats Tab | dataset | `spec-ready` | — | IA v1.3.2 重建完成（`specs/dataset/016-dataset-analysis-list/spec.md`） |
+| dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | — | IA v1.3.2 重建完成（`specs/dataset/017-dataset-analysis-detail/spec.md`） |
 
 ---
 
@@ -42,8 +44,7 @@
 
 | ID | 功能 | 目標模組 | 規劃備註 |
 |---|------|----------|----------|
-| dataset-016 | Dataset Stats | dataset | spec 檔案已移除；將依最新 IA/模組規劃重建 |
-| dataset-017 | Dataset Quality | dataset | spec 檔案已移除；將依最新 IA/模組規劃重建 |
+| — | — | — | — |
 
 ---
 
@@ -51,6 +52,8 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-04-24 | 重命名 dataset spec 資料夾為 `016-dataset-analysis-list`、`017-dataset-analysis-detail`；同步對齊 IA 的 `dataset-analysis-list` 與 `/dataset-analysis-detail/:task_id` 命名。 |
+| 2026-04-24 | 新增 `dataset-016` 與 `dataset-017` 規格檔（IA v1.3.1 重建）；狀態更新為 `spec-ready`，並自 backlog 移除。 |
 | 2026-04-23 | 新增 `annotation-015` 規格檔（`specs/annotation/015-annotation-workspace/spec.md`）；狀態更新為 `spec-ready`，並自 backlog 移除。 |
 | 2026-04-20 | 新增 `task-management-010`、`task-management-013`、`task-management-014` 規格檔；狀態更新為 `spec-ready`，並自 backlog 移除。 |
 | 2026-04-16 | 新增 `admin-006` 與 `admin-007` 規格檔（IA v7 重建）；狀態更新為 `spec-ready`，並自 backlog 移除。 |
