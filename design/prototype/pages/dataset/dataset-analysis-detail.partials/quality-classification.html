@@ -56,26 +56,6 @@
   </ul>
 </section>
 
-<section class="panel" aria-labelledby="consistencyTitle">
-  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
-  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
-  <div style="margin-top:var(--space-md)">
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（分類）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
-          <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>36</td><td>3</td><td>8.3%</td><td>0</td><td>0%</td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>8</td><td>1</td><td>12.5%</td><td>0</td><td>0%</td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>31</td><td>7</td><td>22.6%</td><td>2</td><td>6.5%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <p class="group-avg-note" id="consistencyNote">分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。</p>
-  </div>
-</section>
-
 <section class="panel" aria-labelledby="annotatorTitle">
   <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
   <p class="panel-subtitle" id="annotatorSubtitle">低於最小樣本門檻者不計入風險等級，直接顯示資料不足。</p>
@@ -93,5 +73,25 @@
       </div>
     </div>
     <p class="group-avg-note" id="clsGroupAvg">群體平均 — Alpha: 0.83 ／ 平均速度: 31.3s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（分類）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>36</td><td>3</td><td>8.3%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>8</td><td>1</td><td>12.5%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>31</td><td>7</td><td>22.6%</td><td>2</td><td>6.5%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。</p>
   </div>
 </section>

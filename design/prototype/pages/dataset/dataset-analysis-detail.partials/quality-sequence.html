@@ -86,26 +86,6 @@
   </ul>
 </section>
 
-<section class="panel" aria-labelledby="consistencyTitle">
-  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
-  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
-  <div style="margin-top:var(--space-md)">
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
-          <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>26</td><td>2</td><td>7.7%</td><td>0</td><td>0%</td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>23</td><td>4</td><td>17.4%</td><td>1</td><td>4.3%</td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>38</td><td>10</td><td>26.3%</td><td>3</td><td>7.9%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <p class="group-avg-note" id="consistencyNote">序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。</p>
-  </div>
-</section>
-
 <section class="panel" aria-labelledby="annotatorTitle">
   <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
   <p class="panel-subtitle" id="annotatorSubtitle">風險原因僅限 annotator-level：系統性偏差、標記過快、標記過慢。</p>
@@ -123,5 +103,25 @@
       </div>
     </div>
     <p class="group-avg-note" id="seqGroupAvg">群體平均 — F1（strict）: 0.72 ／ 平均速度: 44.7s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>26</td><td>2</td><td>7.7%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>23</td><td>4</td><td>17.4%</td><td>1</td><td>4.3%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>38</td><td>10</td><td>26.3%</td><td>3</td><td>7.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。</p>
   </div>
 </section>

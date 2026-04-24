@@ -2,7 +2,7 @@
 
 **功能分支**：`017-dataset-analysis-detail`  
 **建立日期**：2026-04-24  
-**版本**：1.3.1  
+**版本**：1.3.2  
 **狀態**：Draft  
 **需求來源**：IA v1.3.2（2026-04-24）資料集分析模組規範（雙 Tab 架構）
 
@@ -197,7 +197,7 @@ sequenceDiagram
   - 必要元素：主要 IAA 指標、IAA 數值、閾值比較、計算方法說明
   - 選用元素：替代 / 輔助指標（可展開 / 收合）
 - 區塊 B：`共用品質監控功能區`
-  - 必要元素：異常偵測（速度異常 / 離群值）、`標記一致性偏離分析`（可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`）、標記員分析（個別速度 / 個別 IAA vs 群體平均）
+  - 必要元素依顯示順序為：異常偵測（速度異常 / 離群值）、標記員風險評估（個別速度 / 個別 IAA vs 群體平均）、`標記一致性偏離分析`（可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`）
 - 區塊 C：`Quality 空狀態`
   - 必要元素：說明文字、「前往任務詳情」次要按鈕（→ `task-detail`）
 
@@ -206,6 +206,7 @@ sequenceDiagram
 - 主要 IAA 指標固定顯示；替代 / 輔助指標預設收合。
 - IAA 數值需有明確的達標（綠色 / pass）與未達標（紅色 / fail）視覺標示。
 - 指標區與分析區皆為唯讀，不提供編輯操作。
+- 共用品質監控區塊在 ready state 下需固定依序呈現：異常偵測 → 標記員風險評估 → `標記一致性偏離分析`。
 - `標記一致性偏離分析` 為觀測型區塊，不可直接覆寫 `AnnotatorRiskAssessment.risk_level`；若需影響風險等級，必須另行明確定義規則。
 - quality tab 需同時輸出可供列表頁使用的 `IAA_SUMMARY_STATES` 摘要狀態。
 
@@ -378,7 +379,7 @@ flowchart LR
 - **SC-015**: 高分歧樣本（`high_divergence`）以樣本層級旗標獨立顯示，不與標記員風險等級區塊合併，且不影響相關標記員的風險等級計算。
 - **SC-016**: 建議行動 UI 僅對 `project_leader` 角色可見；以 `reviewer` 身份進入 quality tab 時，建議行動欄位不顯示或顯示為 disabled 且不可點擊。
 - **SC-017**: `single_sentence_va_scoring` 任務中，標記員風險等級以 V / A 中較高等級決定，且 V / A 原因分類分別標示，不合併為單一原因。
-- **SC-018**: quality tab 中新增 `標記一致性偏離分析` 獨立區塊，顯示每位標記員的可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`，且該區塊不直接覆寫 `risk_level`。
+- **SC-018**: quality tab 中新增 `標記一致性偏離分析` 獨立區塊，並固定顯示在 `標記員風險評估` 區塊下方；該區塊顯示每位標記員的可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`，且不直接覆寫 `risk_level`。
 
 ---
 
@@ -386,6 +387,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 1.3.2 | 2026-04-24 | Reorder quality-tab shared blocks so `標記一致性偏離分析` is rendered below `標記員風險評估`; sync prototype HTML panel order and spec wording |
 | 1.3.1 | 2026-04-24 | Add `標記一致性偏離分析` block to quality tab: 定義獨立區塊名稱、`離群值(1.5xSTD)筆數/比例` 與 `離群值(2xSTD)筆數/比例` 欄位、task-type 單位命名規則、觀測層與風險評估的邊界；新增 `AnnotatorConsistencyDeviationSummary` entity 與對應 FR / SC |
 | 1.3.0 | 2026-04-24 | Add decision layer spec: 補入標記員風險等級（FR-024/025）、最低樣本門檻、annotator-level 原因分類（FR-026）、sample-level 高分歧旗標分離（FR-027）、行動角色門檻（FR-028）、VA 風險聚合規則（FR-029）；對應新增 SC-014~017、AnnotatorRiskAssessment、SampleDivergenceFlag entities 與風險等級規格常數 |
 | 1.2.1 | 2026-04-24 | Clarify detail contract: 權限改為僅依 task membership role；補入 stats/quality state enums；新增 `sentence_pairs` 評分型 quality 規格；定義 quality→list 的 IAA summary state |

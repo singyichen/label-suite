@@ -108,26 +108,6 @@
   </ul>
 </section>
 
-<section class="panel" aria-labelledby="consistencyTitle">
-  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
-  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
-  <div style="margin-top:var(--space-md)">
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（VA 評分）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
-          <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>42</td><td>6</td><td>14.3%</td><td>1</td><td>2.4%</td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>18</td><td>4</td><td>22.2%</td><td>1</td><td>5.6%</td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>42</td><td>12</td><td>28.6%</td><td>3</td><td>7.1%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <p class="group-avg-note" id="consistencyNote">以同一樣本之群體中位數為基準彙總；`1.5xSTD` 為觀測閾值，`2xSTD` 為較高偏離訊號。</p>
-  </div>
-</section>
-
 <section class="panel" aria-labelledby="annotatorTitle">
   <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
   <p class="panel-subtitle" id="annotatorSubtitle">風險等級依 V / A 的 IAA、速度與最低樣本門檻聚合；high_divergence 樣本不直接拉高個人風險。</p>
@@ -198,5 +178,25 @@
       </div>
     </div>
     <p class="group-avg-note" id="vaGroupAvg">群體平均 — IAA_V: 0.78 ／ IAA_A: 0.82 ／ 平均速度: 32.7s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（VA 評分）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>42</td><td>6</td><td>14.3%</td><td>1</td><td>2.4%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>18</td><td>4</td><td>22.2%</td><td>1</td><td>5.6%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>42</td><td>12</td><td>28.6%</td><td>3</td><td>7.1%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">以同一樣本之群體中位數為基準彙總；`1.5xSTD` 為觀測閾值，`2xSTD` 為較高偏離訊號。</p>
   </div>
 </section>

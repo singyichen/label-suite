@@ -60,26 +60,6 @@
   <div class="anomaly-empty" id="anomRelOutlierEmpty">暫無離群關係標記</div>
 </section>
 
-<section class="panel" aria-labelledby="consistencyTitle">
-  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
-  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
-  <div style="margin-top:var(--space-md)">
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="annotator-table" aria-label="標記一致性偏離分析（關係抽取）">
-          <thead><tr><th>標記員</th><th id="consistencyUnitCol">標記 5 次的三元組數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
-          <tbody>
-            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>20</td><td>10</td><td>50%</td><td>2</td><td>10%</td></tr>
-            <tr><td><span class="annotator-name">Avery Lin</span></td><td>17</td><td>5</td><td>29.4%</td><td>1</td><td>5.9%</td></tr>
-            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>29</td><td>11</td><td>37.9%</td><td>2</td><td>6.9%</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <p class="group-avg-note" id="consistencyNote">關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。</p>
-  </div>
-</section>
-
 <section class="panel" aria-labelledby="annotatorTitle">
   <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
   <p class="panel-subtitle" id="annotatorSubtitle">高分歧樣本與關係抽取者風險分離呈現；行動僅限 Project Leader。</p>
@@ -97,5 +77,25 @@
       </div>
     </div>
     <p class="group-avg-note" id="relGroupAvg">群體平均 — Triple F1: 0.76 ／ 平均速度: 54.0s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（關係抽取）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">標記 5 次的三元組數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>20</td><td>10</td><td>50%</td><td>2</td><td>10%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>17</td><td>5</td><td>29.4%</td><td>1</td><td>5.9%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>29</td><td>11</td><td>37.9%</td><td>2</td><td>6.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。</p>
   </div>
 </section>
