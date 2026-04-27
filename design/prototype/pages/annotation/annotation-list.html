@@ -620,9 +620,11 @@
         dashboardStatusText: '繼續中',
         dashboardStatusClass: 'badge-info',
         samples: [
-          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '這款耳機音質很清晰，降噪效果也超乎預期。' },
-          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '客服回應速度普通，但最終仍有解決我的問題。' },
-          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '包裝完整，配送速度快，整體體驗不錯。' }
+          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。' },
+          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。' },
+          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。' },
+          { sampleId: 'A1-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。' },
+          { sampleId: 'A1-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。' }
         ]
       },
       {
@@ -658,22 +660,52 @@
         samples: [
           {
             sampleId: 'R1-001', status: 'pending', completedAt: '-',
-            text: '產品整體穩定，但初次設定流程偏繁瑣。',
-            labelStats: '科技×3 · 消費×4 · 評論×2',
+            text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。',
+            labelStats: '政治×4 · 科技×5',
             annotators: [
-              { username: 'kioleemg12', result: '科技, 消費', reviewStatus: null },
-              { username: '113450022', result: '消費, 評論', reviewStatus: null },
-              { username: 'tony0950127', result: '科技, 消費', reviewStatus: null }
+              { username: 'kioleemg12', result: '政治, 科技', reviewStatus: null },
+              { username: '113450022', result: '政治, 科技', reviewStatus: null },
+              { username: 'tony0950127', result: '科技', reviewStatus: null }
             ]
           },
           {
             sampleId: 'R1-002', status: 'saved', completedAt: '2026-04-23 08:58',
-            text: '售後支援回覆快速，解決效率高。',
-            labelStats: '服務×5 · 評論×3',
+            text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。',
+            labelStats: '體育×4 · 娛樂×4 · 社會×3',
             annotators: [
-              { username: 'kioleemg12', result: '服務, 評論', reviewStatus: 'approved' },
-              { username: '113450022', result: '服務', reviewStatus: null },
-              { username: 'hui', result: '服務, 評論', reviewStatus: null }
+              { username: 'kioleemg12', result: '體育, 娛樂', reviewStatus: 'approved' },
+              { username: '113450022', result: '體育, 娛樂, 社會', reviewStatus: null },
+              { username: 'hui', result: '娛樂, 社會', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-003', status: 'pending', completedAt: '-',
+            text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。',
+            labelStats: '社會×5 · 政治×3',
+            annotators: [
+              { username: 'kioleemg12', result: '社會, 政治', reviewStatus: null },
+              { username: '113450022', result: '社會', reviewStatus: null },
+              { username: 'tony0950127', result: '社會, 政治', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-004', status: 'pending', completedAt: '-',
+            text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。',
+            labelStats: '娛樂×5 · 社會×4',
+            annotators: [
+              { username: 'kioleemg12', result: '娛樂, 社會', reviewStatus: null },
+              { username: '113450022', result: '娛樂', reviewStatus: null },
+              { username: 'hui', result: '娛樂, 社會', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-005', status: 'pending', completedAt: '-',
+            text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。',
+            labelStats: '科技×5 · 財經×3',
+            annotators: [
+              { username: 'kioleemg12', result: '科技', reviewStatus: null },
+              { username: '113450022', result: '科技, 財經', reviewStatus: null },
+              { username: 'tony0950127', result: '科技', reviewStatus: null }
             ]
           }
         ]
