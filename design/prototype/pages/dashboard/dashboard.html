@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
   <style>
     /* ── Design Tokens (MASTER.md) ───────────────────────────────── */
     :root {
@@ -89,278 +90,6 @@
 
     .hidden {
       display: none !important;
-    }
-
-    /* ── Navbar (Left Sidebar) ──────────────────────────────────── */
-    .navbar {
-      width: 240px;
-      height: 100vh;
-      background: var(--color-white);
-      border-right: 1px solid var(--color-border);
-      display: flex;
-      flex-direction: column;
-      padding: var(--space-lg) var(--space-md);
-      position: sticky;
-      top: 0;
-      z-index: 200;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-
-    .brand-section {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-xl);
-      padding-bottom: var(--space-lg);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    .navbar-brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .navbar-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md);
-      background: var(--color-primary);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .navbar-logo svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .navbar-wordmark {
-      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--color-ink);
-      line-height: 1;
-    }
-
-    .brand-section .lang-toggle {
-      margin-left: auto;
-    }
-
-    .mobile-top-logout {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      color: var(--color-ink-muted);
-      transition: color 150ms, border-color 150ms, background 150ms;
-    }
-
-    .mobile-top-logout:hover {
-      color: var(--color-error);
-      border-color: var(--color-error-soft-border);
-      background: var(--color-error-soft-bg);
-    }
-
-    .mobile-user-name {
-      display: none;
-      margin-left: auto;
-      max-width: 110px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-ink);
-      line-height: 1.2;
-    }
-
-    .mobile-lang-toggle {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 6px 10px;
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      transition: border-color 150ms, background 150ms;
-    }
-
-    .mobile-lang-toggle:hover {
-      border-color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-    }
-
-    .navbar-center {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xs);
-      margin-bottom: var(--space-xl);
-      flex: 1;
-    }
-
-    .nav-link {
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-ink-muted);
-      transition: color 150ms, background 150ms;
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .nav-icon {
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-      color: currentColor;
-    }
-
-    .nav-link:hover {
-      color: var(--color-ink);
-      background: #F8FAFC;
-    }
-
-    .nav-link.active {
-      color: var(--color-primary);
-      background: var(--color-surface);
-      font-weight: 600;
-    }
-
-    .nav-link.active .nav-icon {
-      color: var(--color-primary);
-    }
-
-    .nav-actions {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
-      border-top: 1px solid var(--color-border);
-      padding-top: var(--space-lg);
-      margin-top: auto;
-    }
-
-    .lang-toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 6px 12px;
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 13px;
-      font-weight: 500;
-      transition: border-color 150ms, background 150ms;
-      white-space: nowrap;
-    }
-
-    .lang-toggle:hover {
-      border-color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-    }
-
-    .user-chip {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      width: 100%;
-      border-radius: var(--radius-md);
-    }
-
-    .user-chip-profile {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
-      text-decoration: none;
-      color: inherit;
-      border-radius: var(--radius-sm);
-      transition: opacity 150ms;
-    }
-
-    .user-chip-profile:hover {
-      opacity: 0.75;
-    }
-
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: white;
-      color: var(--color-primary);
-      font-weight: 700;
-      font-size: 14px;
-      border: 2px solid rgba(99, 102, 241, 0.16);
-      flex-shrink: 0;
-    }
-
-    .user-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .user-name {
-      display: block;
-      font-weight: 600;
-      font-size: 13px;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .user-role {
-      display: block;
-      font-size: 11px;
-      color: var(--color-ink-muted);
-      line-height: 1.3;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .logout-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: var(--radius-sm);
-      border: none;
-      background: transparent;
-      color: var(--color-ink-muted);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: color 150ms, background 150ms;
-    }
-
-    .logout-btn:hover {
-      color: var(--color-error);
-      background: var(--color-error-soft-bg);
     }
 
     /* ── Main Layout ────────────────────────────────────────────── */
@@ -684,6 +413,10 @@
       transition: background 150ms, border-color 150ms;
     }
 
+    .list-item.role-task-card {
+      cursor: pointer;
+    }
+
     .list-item:hover {
       border-color: var(--color-primary);
       background: #F9FAFB;
@@ -822,99 +555,6 @@
 
     /* ── Responsive ────────────────────────────────────────────– */
     @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-        padding-top: var(--navbar-mobile-top-height);
-        padding-bottom: var(--navbar-mobile-height);
-      }
-
-      .navbar {
-        width: 100%;
-        height: var(--navbar-mobile-height);
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        top: auto;
-        border-right: none;
-        border-bottom: none;
-        border-top: 1px solid var(--color-border);
-        flex-direction: row;
-        padding: 0;
-        overflow: visible;
-        background: var(--color-white);
-        z-index: 300;
-      }
-
-      .brand-section {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: var(--navbar-mobile-top-height);
-        margin: 0;
-        padding: 0 var(--space-md);
-        border-bottom: 1px solid var(--color-border);
-        background: var(--color-white);
-        display: flex;
-        align-items: center;
-        z-index: 320;
-      }
-
-      .navbar-brand {
-        width: 100%;
-      }
-
-      .navbar-wordmark {
-        font-size: 14px;
-      }
-
-      .mobile-user-name {
-        display: inline-block;
-      }
-
-      .brand-section .lang-toggle {
-        display: none;
-      }
-
-      .mobile-lang-toggle {
-        display: inline-flex;
-      }
-
-      .mobile-top-logout {
-        display: inline-flex;
-      }
-
-      .navbar-center {
-        flex: 1;
-        flex-direction: row;
-        align-items: stretch;
-        justify-content: space-around;
-        gap: 0;
-        margin: 0;
-      }
-
-      .navbar-center .nav-link {
-        min-height: var(--navbar-mobile-top-height);
-        flex: 1;
-        padding: 8px 2px;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 4px;
-        text-align: center;
-        font-size: 11px;
-        line-height: 1.2;
-      }
-
-      .navbar-center .nav-link span {
-        white-space: nowrap;
-      }
-
-      .nav-actions {
-        display: none;
-      }
-
       .layout {
         padding: var(--space-md) var(--space-md) var(--space-xl);
       }
@@ -1326,50 +966,7 @@
                 <span id="annotatorTaskListSubtitle" class="panel-subtitle">我的進行中任務</span>
               </div>
             </div>
-            <div class="list">
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="annotatorTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="annotatorTask1Detail" class="list-item-detail">已完成 89% · 今日 53 筆 · 平均速度 3.0</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="annotatorTask1TaskType" class="badge badge-task-type">分類任務</span>
-                      <span id="annotatorTask1RunType" class="badge badge-official">正式標記</span>
-                      <span id="annotatorTask1Badge" class="badge badge-info">繼續中</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="annotatorTask1ContinueBtn" class="btn btn-primary">快速繼續</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 89%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="annotatorTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="annotatorTask2Detail" class="list-item-detail">已完成 42% · 今日 18 筆 · 平均速度 4.2</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="annotatorTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
-                      <span id="annotatorTask2RunType" class="badge badge-dry-run">試標</span>
-                      <span id="annotatorTask2Badge" class="badge badge-warning">待繼續</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="annotatorTask2ContinueBtn" class="btn btn-primary">快速繼續</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 42%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="list" id="annotatorTaskList"></div>
           </article>
         </section>
 
@@ -1405,50 +1002,7 @@
                 <span id="reviewerTaskListSubtitle" class="panel-subtitle">我的待審任務</span>
               </div>
             </div>
-            <div class="list">
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="reviewerTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="reviewerTask1Detail" class="list-item-detail">待審 12 筆 · 進度 67% · IAA 0.81</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="reviewerTask1TaskType" class="badge badge-task-type">分類任務</span>
-                      <span id="reviewerTask1RunType" class="badge badge-official">正式標記</span>
-                      <span id="reviewerTask1Badge" class="badge badge-warning">待審查</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="reviewerTask1StartBtn" class="btn btn-primary">快速審核</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 67%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="reviewerTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="reviewerTask2Detail" class="list-item-detail">待審 8 筆 · 進度 52% · IAA 0.78</span>
-                  </div>
-                  <div class="task-item-meta">
-                    <div class="task-item-badges">
-                      <span id="reviewerTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
-                      <span id="reviewerTask2RunType" class="badge badge-dry-run">試標</span>
-                      <span id="reviewerTask2Badge" class="badge badge-info">進行中</span>
-                    </div>
-                    <div class="task-item-actions">
-                      <button id="reviewerTask2StartBtn" class="btn btn-primary">快速審核</button>
-                    </div>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 52%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="list" id="reviewerTaskList"></div>
           </article>
         </section>
       </div>
@@ -1797,8 +1351,288 @@
       },
     };
 
+    const ANNOTATOR_TASKS = [
+      {
+        taskId: 'TASK-015-A1',
+        latestUnfinishedSampleId: 'A1-003',
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        progress: 89,
+        title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+        detail: { zh: '已完成 89% · 今日 53 筆 · 平均速度 3.0', en: '89% Completed · 53 Today · Avg Speed 3.0' },
+        taskTypeText: { zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '繼續中', en: 'Continue' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskId: 'TASK-015-A2',
+        latestUnfinishedSampleId: 'A2-005',
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        progress: 42,
+        title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+        detail: { zh: '已完成 42% · 今日 18 筆 · 平均速度 4.2', en: '42% Completed · 18 Today · Avg Speed 4.2' },
+        taskTypeText: { zh: '單句 VA 雙維度評分', en: 'Single-sentence VA Scoring' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '待繼續', en: 'Resume' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskId: 'TASK-015-A3',
+        latestUnfinishedSampleId: 'A3-004',
+        taskType: 'sequence_labeling',
+        runType: 'official_run',
+        progress: 64,
+        title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+        detail: { zh: '已完成 64% · 今日 31 筆 · 平均速度 2.8', en: '64% Completed · 31 Today · Avg Speed 2.8' },
+        taskTypeText: { zh: '序列標註（Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskId: 'TASK-015-A4',
+        latestUnfinishedSampleId: 'A4-003',
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        progress: 37,
+        title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+        detail: { zh: '已完成 37% · 今日 14 筆 · 平均速度 5.1', en: '37% Completed · 14 Today · Avg Speed 5.1' },
+        taskTypeText: { zh: '關係抽取（Entity / Relation / Triple）', en: 'Relation Extraction (Entity / Relation / Triple)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '待繼續', en: 'Resume' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+      {
+        taskId: 'TASK-015-A5',
+        latestUnfinishedSampleId: 'A5-004',
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        progress: 58,
+        title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+        detail: { zh: '已完成 58% · 今日 25 筆 · 平均速度 3.4', en: '58% Completed · 25 Today · Avg Speed 3.4' },
+        taskTypeText: { zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速繼續', en: 'Continue' },
+      },
+    ];
+
+    const REVIEWER_TASKS = [
+      {
+        taskId: 'TASK-015-R1',
+        latestUnfinishedSampleId: 'R1-001',
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        progress: 67,
+        title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+        detail: { zh: '待審 12 筆 · 進度 67% · IAA 0.81', en: '12 Pending · 67% Progress · IAA 0.81' },
+        taskTypeText: { zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '待審查', en: 'Pending Review' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskId: 'TASK-015-R2',
+        latestUnfinishedSampleId: 'R2-005',
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        progress: 52,
+        title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+        detail: { zh: '待審 8 筆 · 進度 52% · IAA 0.78', en: '8 Pending · 52% Progress · IAA 0.78' },
+        taskTypeText: { zh: '單句 VA 雙維度評分', en: 'Single-sentence VA Scoring' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskId: 'TASK-015-R3',
+        latestUnfinishedSampleId: 'R3-004',
+        taskType: 'sequence_labeling',
+        runType: 'official_run',
+        progress: 61,
+        title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+        detail: { zh: '待審 15 筆 · 進度 61% · IAA 0.83', en: '15 Pending · 61% Progress · IAA 0.83' },
+        taskTypeText: { zh: '序列標註（Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '待審查', en: 'Pending Review' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskId: 'TASK-015-R4',
+        latestUnfinishedSampleId: 'R4-003',
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        progress: 44,
+        title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+        detail: { zh: '待審 9 筆 · 進度 44% · IAA 0.79', en: '9 Pending · 44% Progress · IAA 0.79' },
+        taskTypeText: { zh: '關係抽取（Entity / Relation / Triple）', en: 'Relation Extraction (Entity / Relation / Triple)' },
+        runTypeText: { zh: '正式標記', en: 'Official Run' },
+        runTypeClass: 'badge-official',
+        statusText: { zh: '進行中', en: 'In Progress' },
+        statusClass: 'badge-info',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+      {
+        taskId: 'TASK-015-R5',
+        latestUnfinishedSampleId: 'R5-004',
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        progress: 56,
+        title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+        detail: { zh: '待審 11 筆 · 進度 56% · IAA 0.82', en: '11 Pending · 56% Progress · IAA 0.82' },
+        taskTypeText: { zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
+        runTypeText: { zh: '試標', en: 'Dry Run' },
+        runTypeClass: 'badge-dry-run',
+        statusText: { zh: '待審查', en: 'Pending Review' },
+        statusClass: 'badge-warning',
+        actionText: { zh: '快速審核', en: 'Quick Review' },
+      },
+    ];
+
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let scenario = 'user';
+
+    function localizedText(source) {
+      return (source && (source[lang] || source.zh || source.en)) || '';
+    }
+
+    function setActiveTaskType(taskType) {
+      if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
+        window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
+        return;
+      }
+      try {
+        window.localStorage.setItem('labelsuite.activeTaskType', String(taskType));
+      } catch (error) {
+        // Ignore prototype storage errors.
+      }
+    }
+
+    function openAnnotationList(role, task) {
+      setActiveTaskType(task.taskType);
+      window.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+        cta: role === 'annotator' ? 'annotator_task_list_open' : 'reviewer_task_list_open',
+        task_type: task.taskType,
+        run_type: task.runType,
+        task_role: role,
+        lang,
+        scenario,
+      });
+      const taskId = task.taskId || '';
+      const url = '../annotation/annotation-list.html?role=' + encodeURIComponent(role) +
+        '&task_id=' + encodeURIComponent(taskId) +
+        '&task_type=' + encodeURIComponent(task.taskType) +
+        '&run_type=' + encodeURIComponent(task.runType);
+      window.location.href = url;
+    }
+
+    function openAnnotationWorkspace(role, task) {
+      setActiveTaskType(task.taskType);
+      window.LabelSuiteAnalytics.track('prototype_cta_clicked', {
+        cta: role === 'annotator' ? 'annotator_quick_continue' : 'reviewer_quick_review',
+        task_type: task.taskType,
+        run_type: task.runType,
+        task_role: role,
+        lang,
+        scenario,
+      });
+      var sampleId = task.latestUnfinishedSampleId || '';
+      if (!sampleId) {
+        openAnnotationList(role, task);
+        return;
+      }
+      const url = '../annotation/annotation-workspace.html?task_id=' + encodeURIComponent(task.taskId || '') +
+        '&sample_id=' + encodeURIComponent(sampleId) +
+        '&role=' + encodeURIComponent(role) +
+        '&run_type=' + encodeURIComponent(task.runType) +
+        '&task_type=' + encodeURIComponent(task.taskType);
+      window.location.href = url;
+    }
+
+    function openTaskList(taskRole) {
+      const systemRole = taskRole === 'super_admin' ? 'super_admin' : 'user';
+      window.LabelSuiteSharedSidebar.setSystemRole(systemRole);
+      const url = '../task-management/task-list.html?task_role=' + encodeURIComponent(taskRole);
+      window.location.href = url;
+    }
+
+    function renderRoleTaskList(containerId, role, tasks) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = tasks.map((task, index) => (
+        '<div class="list-item role-task-card" data-role="' + role + '" data-task-index="' + String(index) + '" tabindex="0">' +
+          '<div class="task-item-header">' +
+            '<div class="task-item-summary">' +
+              '<span class="list-item-title">' + localizedText(task.title) + '</span>' +
+              '<span class="list-item-detail">' + localizedText(task.detail) + '</span>' +
+            '</div>' +
+            '<div class="task-item-meta">' +
+              '<div class="task-item-badges">' +
+                '<span class="badge badge-task-type">' + localizedText(task.taskTypeText) + '</span>' +
+                '<span class="badge ' + task.runTypeClass + '">' + localizedText(task.runTypeText) + '</span>' +
+                '<span class="badge ' + task.statusClass + '">' + localizedText(task.statusText) + '</span>' +
+              '</div>' +
+              '<div class="task-item-actions">' +
+                '<button class="btn btn-primary role-task-action-btn" data-role="' + role + '" data-task-index="' + String(index) + '">' + localizedText(task.actionText) + '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="progress" style="margin-top: 10px;">' +
+            '<span style="width: ' + String(task.progress) + '%;"></span>' +
+          '</div>' +
+        '</div>'
+      )).join('');
+
+      container.querySelectorAll('.role-task-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const taskIndex = Number(card.dataset.taskIndex);
+          const targetTask = tasks[taskIndex];
+          if (!targetTask) return;
+          openAnnotationList(role, targetTask);
+        });
+        card.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          event.preventDefault();
+          const taskIndex = Number(card.dataset.taskIndex);
+          const targetTask = tasks[taskIndex];
+          if (!targetTask) return;
+          openAnnotationList(role, targetTask);
+        });
+      });
+
+      container.querySelectorAll('.role-task-action-btn').forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const taskIndex = Number(btn.dataset.taskIndex);
+          const targetTask = tasks[taskIndex];
+          if (!targetTask) return;
+          openAnnotationWorkspace(role, targetTask);
+        });
+      });
+    }
+
+    function renderRoleTaskLists() {
+      renderRoleTaskList('annotatorTaskList', 'annotator', ANNOTATOR_TASKS);
+      renderRoleTaskList('reviewerTaskList', 'reviewer', REVIEWER_TASKS);
+    }
 
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
@@ -1821,6 +1655,7 @@
         const el = document.getElementById(key);
         if (el) el.textContent = val;
       });
+      renderRoleTaskLists();
     }
 
     function handleLangToggle(source) {
@@ -1838,19 +1673,26 @@
     document.getElementById('langToggle').addEventListener('click', () => handleLangToggle('desktop_toggle'));
     document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
 
+    document.getElementById('workflowCardAnnotateBtn').addEventListener('click', () => {
+      openAnnotationList('annotator', ANNOTATOR_TASKS[0]);
+    });
+    document.getElementById('workflowCardReviewBtn').addEventListener('click', () => {
+      openAnnotationList('reviewer', REVIEWER_TASKS[0]);
+    });
+    document.getElementById('adminViewAllBtn').addEventListener('click', () => {
+      openTaskList('super_admin');
+    });
+    document.getElementById('plViewAllBtn').addEventListener('click', () => {
+      openTaskList('project_leader');
+    });
+
     const getTrackingContext = () => ({ lang, scenario });
 
     window.LabelSuiteAnalytics.bindClickTracks(
       [
         { id: 'workflowCardCreateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
-        { id: 'workflowCardAnnotateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'complete_first_annotation' } },
-        { id: 'workflowCardReviewBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'complete_first_review' } },
         { id: 'adminViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'admin_view_all_tasks' } },
         { id: 'plViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'project_leader_view_all_tasks' } },
-        { id: 'annotatorTask1ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_1' } },
-        { id: 'annotatorTask2ContinueBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'annotator_quick_continue_task_2' } },
-        { id: 'reviewerTask1StartBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'reviewer_quick_review_task_1' } },
-        { id: 'reviewerTask2StartBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'reviewer_quick_review_task_2' } },
         { id: 'logoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'desktop' } },
         { id: 'mobileLogoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'mobile' } },
       ],

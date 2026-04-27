@@ -1,0 +1,104 @@
+<!-- Classification Statistics -->
+<section class="panel" aria-labelledby="statsClsDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsClsDistTitle">標籤分佈</h2>
+      <p class="panel-subtitle" id="statsClsDistDesc">各標籤在提交標記中的次數與比例（共 1,248 筆標記，多標籤任務）</p>
+    </div>
+  </div>
+  <!-- Horizontal bar chart: label, bar, percentage, count -->
+  <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">政治 / Politics</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:72%"></div></div>
+      <div class="stats-hbar-value">38% · 474</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">科技 / Technology</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:46%;background:var(--color-primary);opacity:.8"></div></div>
+      <div class="stats-hbar-value">24% · 299</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">財經 / Finance</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:35%;background:var(--color-primary);opacity:.7"></div></div>
+      <div class="stats-hbar-value">18% · 225</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">體育 / Sports</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:23%;background:var(--color-primary);opacity:.6"></div></div>
+      <div class="stats-hbar-value">12% · 150</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label">娛樂 / Entertainment</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:15%;background:var(--color-primary);opacity:.5"></div></div>
+      <div class="stats-hbar-value">8% · 100</div>
+    </div>
+  </div>
+  <p class="group-avg-note" style="margin-top:var(--space-sm)" id="statsClsDistNote">平均每筆標記包含 1.96 個標籤（多標籤任務）</p>
+</section>
+
+<section class="panel" aria-labelledby="statsClsCooccTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsClsCooccTitle">多標籤共現矩陣</h2>
+      <p class="panel-subtitle" id="statsClsCooccDesc">兩個標籤同時出現的次數。對角線為各標籤單獨出現的樣本數。</p>
+    </div>
+  </div>
+  <div class="stats-comatrix">
+    <table class="stats-comatrix-table" aria-label="多標籤共現矩陣">
+      <thead>
+        <tr>
+          <th></th>
+          <th>政治</th>
+          <th>科技</th>
+          <th>財經</th>
+          <th>體育</th>
+          <th>娛樂</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>政治</th>
+          <td class="stats-comatrix-diag">474</td>
+          <td class="stats-comatrix-hi">126</td>
+          <td class="stats-comatrix-hi">98</td>
+          <td class="stats-comatrix-mid">42</td>
+          <td class="stats-comatrix-low">18</td>
+        </tr>
+        <tr>
+          <th>科技</th>
+          <td class="stats-comatrix-hi">126</td>
+          <td class="stats-comatrix-diag">299</td>
+          <td class="stats-comatrix-hi">112</td>
+          <td class="stats-comatrix-low">24</td>
+          <td class="stats-comatrix-low">31</td>
+        </tr>
+        <tr>
+          <th>財經</th>
+          <td class="stats-comatrix-hi">98</td>
+          <td class="stats-comatrix-hi">112</td>
+          <td class="stats-comatrix-diag">225</td>
+          <td class="stats-comatrix-low">19</td>
+          <td class="stats-comatrix-low">22</td>
+        </tr>
+        <tr>
+          <th>體育</th>
+          <td class="stats-comatrix-mid">42</td>
+          <td class="stats-comatrix-low">24</td>
+          <td class="stats-comatrix-low">19</td>
+          <td class="stats-comatrix-diag">150</td>
+          <td class="stats-comatrix-low">38</td>
+        </tr>
+        <tr>
+          <th>娛樂</th>
+          <td class="stats-comatrix-low">18</td>
+          <td class="stats-comatrix-low">31</td>
+          <td class="stats-comatrix-low">22</td>
+          <td class="stats-comatrix-low">38</td>
+          <td class="stats-comatrix-diag">100</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="group-avg-note" style="margin-top:var(--space-sm)" id="statsClsCooccNote">顏色深度反映共現頻率高低；白色格子代表極少共現。</p>
+</section>

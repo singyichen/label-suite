@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
   <style>
     :root {
       --navbar-mobile-height: 84px;
@@ -30,189 +31,6 @@
 
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
     .layout { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
-
-    .navbar {
-      width: 240px;
-      height: 100vh;
-      background: var(--color-white);
-      border-right: 1px solid var(--color-border);
-      display: flex;
-      flex-direction: column;
-      padding: var(--space-lg) var(--space-md);
-      position: sticky;
-      top: 0;
-      z-index: 200;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-    .brand-section {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-xl);
-      padding-bottom: var(--space-lg);
-      border-bottom: 1px solid var(--color-border);
-    }
-    .navbar-brand { display: flex; align-items: center; gap: var(--space-sm); }
-    .navbar-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md);
-      background: var(--color-primary);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .navbar-logo svg { width: 20px; height: 20px; }
-    .navbar-wordmark {
-      font-family: var(--font-serif-display);
-      font-weight: 700;
-      font-size: 16px;
-      color: var(--color-ink);
-      line-height: 1;
-    }
-    .brand-section .lang-toggle { margin-left: auto; }
-    .navbar-center {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xs);
-      margin-bottom: var(--space-xl);
-      flex: 1;
-    }
-    .nav-link {
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-ink-muted);
-      transition: color var(--dur-fast), background var(--dur-fast);
-      text-align: left;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      border: none;
-      background: none;
-      width: 100%;
-    }
-    .nav-icon { width: 16px; height: 16px; flex-shrink: 0; color: currentColor; }
-    .nav-link:hover { color: var(--color-ink); background: var(--color-slate-50); }
-    .nav-link.active { color: var(--color-primary); background: var(--color-surface); font-weight: 600; }
-    .nav-link.active .nav-icon { color: var(--color-primary); }
-    .nav-actions {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-md);
-      border-top: 1px solid var(--color-border);
-      padding-top: var(--space-lg);
-      margin-top: auto;
-    }
-    .lang-toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 6px 12px;
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 13px;
-      font-weight: 500;
-      transition: border-color var(--dur-fast), background var(--dur-fast);
-    }
-    .lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
-    .user-chip { display: flex; align-items: center; gap: 10px; padding: 12px; width: 100%; }
-    .user-chip-profile {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex: 1;
-      min-width: 0;
-      text-decoration: none;
-      color: inherit;
-      transition: opacity var(--dur-fast);
-    }
-    .user-chip-profile:hover { opacity: 0.75; }
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: white;
-      color: var(--color-primary);
-      font-weight: 700;
-      font-size: 14px;
-      border: 2px solid rgba(99,102,241,0.16);
-      flex-shrink: 0;
-    }
-    .user-info { flex: 1; min-width: 0; }
-    .user-name {
-      display: block;
-      font-weight: 600;
-      font-size: 13px;
-      line-height: 1.2;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .user-role { display: block; font-size: 11px; color: var(--color-ink-muted); line-height: 1.3; }
-    .logout-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: var(--radius-sm);
-      border: none;
-      background: transparent;
-      color: var(--color-ink-muted);
-      flex-shrink: 0;
-      transition: color var(--dur-fast), background var(--dur-fast);
-    }
-    .logout-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
-    .mobile-top-logout {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      width: 34px;
-      height: 34px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
-      color: var(--color-ink-muted);
-      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
-    }
-    .mobile-top-logout:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
-    .mobile-user-name {
-      display: none;
-      margin-left: auto;
-      max-width: 110px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--color-ink);
-    }
-    .mobile-lang-toggle {
-      display: none;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 6px 10px;
-      background: var(--color-white);
-      color: var(--color-ink);
-      font-size: 12px;
-      font-weight: 600;
-      transition: border-color var(--dur-fast), background var(--dur-fast);
-    }
-    .mobile-lang-toggle:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
 
     .page-header {
       display: flex;
@@ -966,69 +784,6 @@
     .toast.error { background: var(--color-error); }
 
     @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-        padding-top: var(--navbar-mobile-top-height);
-        padding-bottom: var(--navbar-mobile-height);
-      }
-      .navbar {
-        width: 100%;
-        height: var(--navbar-mobile-height);
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        top: auto;
-        border-right: none;
-        border-top: 1px solid var(--color-border);
-        flex-direction: row;
-        padding: 0;
-        overflow: visible;
-        background: var(--color-white);
-        z-index: 300;
-      }
-      .brand-section {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: var(--navbar-mobile-top-height);
-        margin: 0;
-        padding: 0 var(--space-md);
-        border-bottom: 1px solid var(--color-border);
-        background: var(--color-white);
-        display: flex;
-        align-items: center;
-        z-index: 320;
-      }
-      .navbar-brand { width: 100%; }
-      .navbar-wordmark { font-size: 14px; }
-      .mobile-user-name { display: inline-block; max-width: 72px; font-size: 12px; }
-      .brand-section .lang-toggle { display: none; }
-      .mobile-lang-toggle { display: inline-flex; }
-      .mobile-top-logout { display: inline-flex; }
-      .navbar-center {
-        flex: 1;
-        flex-direction: row;
-        align-items: stretch;
-        justify-content: space-around;
-        gap: 0;
-        margin: 0;
-      }
-      .navbar-center .nav-link {
-        min-height: var(--navbar-mobile-top-height);
-        flex: 1;
-        padding: 8px 2px;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 4px;
-        text-align: center;
-        font-size: 11px;
-        line-height: 1.2;
-      }
-      .navbar-center .nav-link span { white-space: nowrap; }
-      .nav-actions { display: none; }
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .admin-tabs { overflow-x: auto; }
       .kv-grid { grid-template-columns: 1fr; }
@@ -1674,6 +1429,84 @@
     .exec-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
     .exec-isolation-audit { font-size: 11px; }
     .exec-actions { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .run-control-tabs {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-slate-50);
+    }
+    .run-control-tab {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .run-control-tab.active {
+      background: var(--color-white);
+      color: var(--color-primary);
+      border-color: var(--color-primary-soft-border);
+    }
+    .run-control-tab:hover {
+      color: var(--color-primary);
+    }
+    .exec-round-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .exec-round-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .exec-round-key {
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .exec-round-value {
+      font-size: 20px;
+      line-height: 1.15;
+      color: var(--color-ink);
+    }
+    .exec-stop-row {
+      margin-bottom: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .exec-stop-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .stop-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      background: var(--color-white);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .stop-pill.passed {
+      border-color: var(--color-success-border);
+      color: var(--color-success);
+      background: var(--color-success-bg);
+    }
 
     .panel-divider {
       border: none;
@@ -1693,6 +1526,10 @@
       gap: 10px;
       align-items: end;
       margin-bottom: var(--space-md);
+    }
+    .sampling-fields-advanced {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      align-items: start;
     }
     .sampling-mode-inline {
       display: flex;
@@ -1748,6 +1585,7 @@
     .split-legend { display: flex; gap: var(--space-md); flex-wrap: wrap; }
     .split-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
     .split-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .split-dot-total { background: var(--color-ink-muted); }
     .split-dot-dry { background: var(--color-primary); }
     .split-dot-official { background: var(--color-cta); }
     .split-legend-key { color: var(--color-text-soft); }
@@ -1776,8 +1614,10 @@
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
       .sampling-fields { grid-template-columns: 1fr; }
+      .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
+      .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
     }
   </style>
 </head>
@@ -1876,6 +1716,8 @@
       settingsSummaryTitle: '標記設定',
       guidelineSectionTitle: '標記說明',
       executionTitle: '任務狀態與執行控制',
+      runControlTabExecution: '執行狀態',
+      runControlTabTrial: '試標回合',
       exportTitle: '匯出結果',
       labelTaskName: '任務名稱',
       labelTaskType: '任務類型',
@@ -1895,7 +1737,6 @@
       guidelineSaveBtn: '儲存',
       guidelineCancelBtn: '取消',
       guidelineReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記說明。',
-      guidelineReadonlyDraftOnly: '',
       guidelineOptionalNoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
       guidelineUploadLabel: '上傳檔案',
       guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
@@ -1918,7 +1759,6 @@
       settingsSaveBtn: '儲存',
       settingsCancelBtn: '取消',
       settingsReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記設定。',
-      settingsReadonlyDraftOnly: '目前狀態非 draft，標記設定不可編輯。',
       settingsAnnotationPreviewLabel: '標記預覽',
       settingsPreviewSample: '這是一段範例文本，請依目前設定完成標記。',
       settingsPreviewSelectLabel: '請選擇標記',
@@ -1951,9 +1791,10 @@
       settingsPreviewTaskChooseLabel: '請選擇標記',
       settingsPreviewTaskEntity: '請標記實體',
       settingsPreviewTaskRelation: '請標記關係',
-      settingsPreviewTaskScore: '請選擇分數',
+      settingsPreviewTaskValence: 'Valence 評分',
+      settingsPreviewTaskArousal: 'Arousal 評分',
       settingsPreviewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
-      settingsPreviewSampleSentenceScoring: '這是一段需要評分的範例文本，請依 rubric 給分。',
+      settingsPreviewSampleSentenceVA: '這次住宿整體舒適，但隔音稍差。',
       settingsPreviewSampleSentenceSequence: '王小明今天在台北參加 AI 研討會。',
       settingsPreviewSampleSentenceRelation: '患者出現發燒與咳嗽，可能與流感相關。',
       settingsPreviewSentenceALabel: '句子 A',
@@ -1969,35 +1810,55 @@
       editForceGuidelineLabel: '開始標記前強制顯示',
       basicDatasetDropTitle: '點擊或拖曳上傳資料集',
       basicDatasetDropHint: '支援 TXT / CSV / TSV / JSON，最大 200 MB，UTF-8',
-      samplingTitle: '試標資料抽樣設定',
+      samplingTitle: '抽樣設定',
       samplingEditBtn: '編輯',
       samplingSaveBtn: '儲存',
       samplingCancelBtn: '取消',
       samplingReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯抽樣設定。',
-      samplingReadonlyDraftOnly: '目前狀態非 draft，抽樣設定不可編輯。',
-      samplingSaveSuccess: '試標資料抽樣設定已更新',
+      samplingSaveSuccess: '抽樣設定已更新',
       samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
+      trialRoundLabel: '試標回合',
+      targetAgreementLabel: '目標 IAA',
+      currentAgreementLabel: '目前 IAA',
+      currentStdLabel: '目前標準差',
+      stopConditionTitle: '達標條件',
       labelSamplingModeControl: '抽樣方式',
       labelSamplingValueControl: '抽樣數值',
+      labelTrialRoundControl: '試標回合',
       labelSamplingStrategyControl: '抽樣策略',
+      labelStratifyByControl: '分層依據',
+      labelStopConditionControl: '停止條件',
       labelSplitControl: '試標 / 正式資料配比',
+      totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
       samplingModeLabel: '抽樣方式',
       samplingValueLabel: '抽樣數值',
       samplingStrategyLabel: '抽樣策略',
-      sampleUsageLabel: '試標使用量',
-      officialReserveLabel: '正式標記預留量',
+      samplingSeedLabel: '隨機種子',
+      samplingRoundLabel: '試標回合',
+      samplingStratifyLabel: '分層依據',
+      stratifyByLabelText: '標籤',
+      stratifyByDomainText: '領域',
+      stratifyByDifficultyText: '難度',
+      samplingStrategyOptionStratified: '分層隨機抽樣',
+      samplingStrategyOptionDisagreement: '高分歧樣本優先',
+      samplingStrategyOptionEdgeCases: '邊界樣本優先',
+      targetAgreementInputLabel: '目標 IAA',
+      targetStdInputLabel: '標準差上限',
+      minAnnotatorsInputLabel: '最少標註者數',
+      sampleUsageLabel: '試標',
+      officialReserveLabel: '正式',
       samplingModeCount: '筆數',
       samplingModePercent: '百分比',
       samplingHelp: '百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。',
       resampleBtn: '重算抽樣',
-      resampleHintDraft: '僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。',
-      resampleHintLocked: '目前狀態不可重算。請建立新 run 批次。',
+      resampleHintDraft: '僅草稿階段可重算；進入試標後需建立新的執行批次。',
+      resampleHintLocked: '目前狀態不可重算。請建立新的執行批次。',
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
       isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
-      publishDryRun: '發布 Dry Run',
+      publishDryRun: '開始試標 Round',
       publishOfficialRun: '發布 Official Run',
       noPublishAction: '此狀態不提供發布操作。',
       reviewerHint: '僅 project leader 可操作',
@@ -2022,8 +1883,8 @@
         official_run_in_progress: 'badge-official',
         completed: 'badge-completed'
       },
-      isolationOn: 'isolated',
-      isolationOff: 'non-isolated',
+      isolationOn: '已隔離',
+      isolationOff: '未隔離',
       isolationAuditTpl: '最後異動：{actor} · {time}',
       exportJsonBtn: '匯出 JSON',
       exportJsonMinBtn: '匯出 JSON-MIN',
@@ -2046,8 +1907,15 @@
       guidelineContentEmpty: '尚無說明內容',
       samplingValueCountTpl: '{value} 筆',
       samplingValuePercentTpl: '{value}%（約 {count} 筆）',
-      splitSummaryTpl: '試標 {sample} / 正式 {reserve}',
-      samplingStrategySummaryTpl: '{strategy} · seed {seed}',
+      trialRoundTpl: '第 {round} 回合',
+      splitSummaryTpl: '總筆數 {total} / 試標 {sample} / 正式 {reserve}',
+      samplingStrategySummaryTpl: '{strategy} · 隨機種子 {seed}',
+      stratifyBySummaryTpl: '{items}',
+      stopConditionSummaryTpl: 'IAA ≥ {agreement}，標準差 ≤ {std}，標註者 ≥ {annotators}',
+      stopAgreementPillTpl: 'IAA ≥ {target}',
+      stopStdPillTpl: '標準差 ≤ {target}',
+      stopAnnotatorPillTpl: '標註者 ≥ {target}',
+      stratifyByNone: '未設定',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
@@ -2058,6 +1926,11 @@
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
       samplingErrorFloor: '百分比換算後小於 1 筆，請提高百分比或改用固定筆數。',
       samplingErrorReserve: '正式標記至少需保留 1 筆資料。',
+      samplingErrorStratify: '請至少選擇 1 個分層依據。',
+      samplingErrorAgreement: '目標 IAA 需介於 0..1。',
+      samplingErrorStd: '標準差上限需介於 0..1。',
+      samplingErrorAnnotators: '最少標註者數需 >= 2。',
+      samplingErrorRound: '試標回合需 >= 1。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       candidateListTitle: '可加入成員名單',
@@ -2164,6 +2037,8 @@
       settingsSummaryTitle: 'Label settings',
       guidelineSectionTitle: 'Annotation guideline',
       executionTitle: 'Task status and run control',
+      runControlTabExecution: 'Execution',
+      runControlTabTrial: 'Trial rounds',
       exportTitle: 'Export result',
       labelTaskName: 'Task name',
       labelTaskType: 'Task type',
@@ -2183,7 +2058,6 @@
       guidelineSaveBtn: 'Save',
       guidelineCancelBtn: 'Cancel',
       guidelineReadonlyRoleOnly: 'Read-only role. Only project leader can edit guideline.',
-      guidelineReadonlyDraftOnly: '',
       guidelineOptionalNoticeText: 'This step is optional. You can create the task without uploading guidelines.',
       guidelineUploadLabel: 'Upload files',
       guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
@@ -2206,7 +2080,6 @@
       settingsSaveBtn: 'Save',
       settingsCancelBtn: 'Cancel',
       settingsReadonlyRoleOnly: 'Read-only role. Only project leader can edit label settings.',
-      settingsReadonlyDraftOnly: 'Current status is not draft. Label settings are locked.',
       settingsAnnotationPreviewLabel: 'Annotation preview',
       settingsPreviewSample: 'This is a sample text. Please annotate using current settings.',
       settingsPreviewSelectLabel: 'Select label',
@@ -2239,9 +2112,10 @@
       settingsPreviewTaskChooseLabel: 'Select label',
       settingsPreviewTaskEntity: 'Mark entities',
       settingsPreviewTaskRelation: 'Mark relations',
-      settingsPreviewTaskScore: 'Select score',
+      settingsPreviewTaskValence: 'Valence score',
+      settingsPreviewTaskArousal: 'Arousal score',
       settingsPreviewSampleSentence: 'This is a sample text. Please annotate using current settings.',
-      settingsPreviewSampleSentenceScoring: 'This is a scoring sample. Please score by rubric.',
+      settingsPreviewSampleSentenceVA: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
       settingsPreviewSampleSentenceSequence: 'John attended an AI workshop in Taipei today.',
       settingsPreviewSampleSentenceRelation: 'The patient has fever and cough, possibly related to flu.',
       settingsPreviewSentenceALabel: 'Sentence A',
@@ -2257,25 +2131,34 @@
       editForceGuidelineLabel: 'Force show before annotation',
       basicDatasetDropTitle: 'Click or drag to upload dataset',
       basicDatasetDropHint: 'Supports TXT / CSV / TSV / JSON, up to 200 MB, UTF-8',
-      samplingTitle: 'Dry run sampling settings',
+      samplingTitle: 'Sampling settings',
       samplingEditBtn: 'Edit',
       samplingSaveBtn: 'Save',
       samplingCancelBtn: 'Cancel',
       samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
-      samplingReadonlyDraftOnly: 'Sampling settings can only be edited in draft status.',
-      samplingSaveSuccess: 'Dry run sampling settings updated',
+      samplingSaveSuccess: 'Sampling settings updated',
       samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       labelSamplingModeControl: 'Sampling mode',
       labelSamplingValueControl: 'Sampling value',
       labelSamplingStrategyControl: 'Sampling strategy',
       labelSplitControl: 'Dry / Official split',
+      totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
       samplingModeLabel: 'Sampling mode',
       samplingValueLabel: 'Sampling value',
       samplingStrategyLabel: 'Sampling strategy',
-      sampleUsageLabel: 'Dry run usage',
-      officialReserveLabel: 'Official reserve',
+      samplingSeedLabel: 'Random seed',
+      samplingRoundLabel: 'Trial round',
+      samplingStratifyLabel: 'Stratify by',
+      stratifyByLabelText: 'Label',
+      stratifyByDomainText: 'Domain',
+      stratifyByDifficultyText: 'Difficulty',
+      samplingStrategyOptionStratified: 'Stratified random',
+      samplingStrategyOptionDisagreement: 'High disagreement',
+      samplingStrategyOptionEdgeCases: 'Edge cases',
+      sampleUsageLabel: 'Dry',
+      officialReserveLabel: 'Official',
       samplingModeCount: 'By count',
       samplingModePercent: 'By percentage',
       samplingHelp: 'Percentage uses floor(total * percent / 100); keep at least 1 item for official run.',
@@ -2334,7 +2217,7 @@
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
       samplingValuePercentTpl: '{value}% (~{count} items)',
-      splitSummaryTpl: 'Dry {sample} / Official {reserve}',
+      splitSummaryTpl: 'Total {total} / Dry {sample} / Official {reserve}',
       samplingStrategySummaryTpl: '{strategy} · seed {seed}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
@@ -2446,7 +2329,7 @@
     taskId: 'TASK-014',
     taskNameZh: '多語料情感一致性標記',
     taskNameEn: 'Multilingual Sentiment Consistency Labeling',
-    taskTypeKey: 'single_sentence_classification',
+    taskTypeKey: 'single_sentence_va_scoring',
     createdBy: 'Mandy Chen',
     createdAt: '2026-04-20 10:12',
     updatedAt: '2026-04-21 09:38',
@@ -2455,24 +2338,131 @@
     datasetSourceEn: 'customer_feedback_v3.csv',
     configVersion: 'cfg-task014-v1.4.0',
     configFileName: '',
-    configContent: 'labels: [正向, 負向, 中立]\nallow_multiple: false',
+    configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
     guidelineUploaded: true,
-    guidelineText: '請根據語意判斷情緒類別，並優先依任務 Rubric 執行。',
+    guidelineTextZh: '請將看完句子後的感覺依據右方的表情符號填入對應的數值',
+    guidelineTextEn: 'After reading the sentence, enter the matching score based on the emoji scale on the right.',
+    guidelineText: '請將看完句子後的感覺依據右方的表情符號填入對應的數值',
     guidelineFiles: [
-      { name: 'sentiment-guideline-v1.pdf', type: 'pdf' },
-      { name: 'labeling-checklist.md', type: 'md' }
+      { name: 'VA_emj.png', type: 'png' }
     ],
     forceGuideline: true,
     status: 'draft',
     samplingMode: 'by_count',
     samplingValue: 120,
     samplingStrategy: 'stratified_random',
+    trialRound: 1,
     randomSeed: 248931,
+    stratifyBy: ['label'],
+    targetAgreement: 0.80,
+    currentAgreement: 0.62,
+    targetStd: 0.10,
+    currentStd: 0.16,
+    minAnnotators: 3,
+    currentAnnotators: 3,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
     isolationLastUpdated: '2026-04-20 19:42',
     lastExportAt: '',
     lastExportStage: ''
+  };
+
+  var TASK_PROFILE_MAP = {
+    T001: {
+      taskId: 'T001',
+      taskNameZh: '新聞標題多標籤分類',
+      taskNameEn: 'News Headline Multi-label Classification',
+      taskTypeKey: 'single_sentence_classification',
+      datasetTotal: 3200,
+      datasetSourceZh: 'news_headlines_multilabel_2026.csv',
+      datasetSourceEn: 'news_headlines_multilabel_2026.csv',
+      configVersion: 'cfg-t001-v2.1.0',
+      configFileName: '',
+      configContent: 'labels:\n  - 政治\n  - 社會\n  - 娛樂\n  - 體育\n  - 科技\nallow_multiple: true',
+      guidelineUploaded: true,
+      guidelineTextZh: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
+      guidelineTextEn: 'Select multiple topic labels when the headline covers more than one news category.',
+      guidelineText: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
+      guidelineFiles: [{ name: 'headline_taxonomy.pdf', type: 'pdf' }],
+      forceGuideline: true,
+      status: 'draft',
+    },
+    T002: {
+      taskId: 'T002',
+      taskNameZh: '情感 VA 雙維度評分',
+      taskNameEn: 'Sentiment VA Dual-axis Scoring',
+      taskTypeKey: 'single_sentence_va_scoring',
+      datasetTotal: 1280,
+      datasetSourceZh: 'sentiment_va_corpus_v2.csv',
+      datasetSourceEn: 'sentiment_va_corpus_v2.csv',
+      configVersion: 'cfg-t002-v1.4.0',
+      configFileName: '',
+      configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
+      guidelineUploaded: true,
+      guidelineTextZh: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
+      guidelineTextEn: 'Rate both valence and arousal based on the emotion evoked by the sentence.',
+      guidelineText: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
+      guidelineFiles: [{ name: 'VA_emj.png', type: 'png' }],
+      forceGuideline: true,
+      status: 'draft',
+    },
+    T003: {
+      taskId: 'T003',
+      taskNameZh: '產品評論序列標註（NER / Aspect）',
+      taskNameEn: 'Product Review Sequence Labeling (NER / Aspect)',
+      taskTypeKey: 'sequence_labeling',
+      datasetTotal: 860,
+      datasetSourceZh: 'product_reviews_ner_aspect.tsv',
+      datasetSourceEn: 'product_reviews_ner_aspect.tsv',
+      configVersion: 'cfg-t003-v3.0.2',
+      configFileName: '',
+      configContent: 'entities:\n  - name: ASPECT\n    color: "#6366F1"\n  - name: OPINION\n    color: "#10B981"\n  - name: BRAND\n    color: "#F59E0B"\nscheme: BIOES\nallow_overlapping: false',
+      guidelineUploaded: true,
+      guidelineTextZh: '請圈選產品評論中的面向詞、意見詞與品牌名稱，並依 BIOES 格式輸出。',
+      guidelineTextEn: 'Label aspect terms, opinion terms, and brand mentions in BIOES format.',
+      guidelineText: '請圈選產品評論中的面向詞、意見詞與品牌名稱，並依 BIOES 格式輸出。',
+      guidelineFiles: [{ name: 'sequence_labeling_examples.pdf', type: 'pdf' }],
+      forceGuideline: true,
+      status: 'draft',
+    },
+    T004: {
+      taskId: 'T004',
+      taskNameZh: '醫療關係抽取（Entity / Triple）',
+      taskNameEn: 'Medical Relation Extraction (Entity / Triple)',
+      taskTypeKey: 'relation_extraction',
+      datasetTotal: 1420,
+      datasetSourceZh: 'medical_relation_triples.jsonl',
+      datasetSourceEn: 'medical_relation_triples.jsonl',
+      configVersion: 'cfg-t004-v1.8.3',
+      configFileName: '',
+      configContent: 'entity_types:\n  - name: DRUG\n    color: "#6366F1"\n  - name: DISEASE\n    color: "#10B981"\n  - name: SYMPTOM\n    color: "#F59E0B"\nrelation_types:\n  - treats\n  - causes\n  - indicates\ntuple_mode: triple',
+      guidelineUploaded: true,
+      guidelineTextZh: '先標出醫療實體，再建立對應的藥物、疾病與症狀關係三元組。',
+      guidelineTextEn: 'Mark medical entities first, then annotate triples between drugs, diseases, and symptoms.',
+      guidelineText: '先標出醫療實體，再建立對應的藥物、疾病與症狀關係三元組。',
+      guidelineFiles: [{ name: 'medical_relation_schema.md', type: 'md' }],
+      forceGuideline: false,
+      status: 'draft',
+    },
+    T005: {
+      taskId: 'T005',
+      taskNameZh: '句對相似度 / 蘊含判定',
+      taskNameEn: 'Sentence Pair Similarity / Entailment',
+      taskTypeKey: 'sentence_pairs',
+      datasetTotal: 2100,
+      datasetSourceZh: 'sentence_pairs_nli.parquet',
+      datasetSourceEn: 'sentence_pairs_nli.parquet',
+      configVersion: 'cfg-t005-v2.0.1',
+      configFileName: '',
+      configContent: 'labels:\n  - 相似\n  - 不相似\n  - 蘊含\n  - 矛盾',
+      guidelineUploaded: true,
+      guidelineTextZh: '請根據句對語意關係判定是否相似、蘊含或互相矛盾。',
+      guidelineTextEn: 'Judge whether the sentence pair is similar, entails, or contradicts.',
+      guidelineText: '請根據句對語意關係判定是否相似、蘊含或互相矛盾。',
+      guidelineFiles: [{ name: 'nli_decision_tree.png', type: 'png' }],
+      forceGuideline: true,
+      status: 'draft',
+    },
   };
 
   var TASK_MEMBERS = [
@@ -2530,6 +2520,7 @@
     lang: 'zh',
     taskRole: 'project_leader',
     activeTab: 'overview',
+    activeRunControlTab: 'execution',
     progressStage: 'dry',
     progressSort: 'completed_desc',
     workLogDateFrom: '',
@@ -2558,7 +2549,7 @@
 
   var TASK_TYPE_OPTIONS = [
     { key: 'single_sentence_classification', zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
-    { key: 'single_sentence_scoring_regression', zh: '單句評分 / 回歸', en: 'Single Sentence Scoring / Regression' },
+    { key: 'single_sentence_va_scoring', zh: '單句 VA 雙維度評分（Valence / Arousal）', en: 'Single Sentence VA Scoring (Valence / Arousal)' },
     { key: 'sequence_labeling', zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
     { key: 'relation_extraction', zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)' },
     { key: 'sentence_pairs', zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
@@ -2576,14 +2567,14 @@
         en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
       },
     },
-    single_sentence_scoring_regression: {
+    single_sentence_va_scoring: {
       fields: [
-        { key: 'rubric', type: 'textarea', required: true, zh: 'Rubric（評分說明）', en: 'Rubric', placeholder_zh: '描述各分數對應的品質標準', placeholder_en: 'Describe quality criteria per score' },
-        { key: 'scoring_range', type: 'select', required: true, zh: '評分範圍', en: 'Scoring range', options: ['1-3', '1-5', '1-7', '1-10'], defaultValue: '1-5' },
-        { key: 'widget_type', type: 'select', required: true, zh: '評分介面', en: 'Scoring widget', options: ['slider', 'radio', 'number_input'], defaultValue: 'slider' },
-        { key: 'allow_comment', type: 'boolean', required: false, zh: '允許評語', en: 'Allow comments', defaultValue: true },
+        { key: 'va_dimensions', type: 'va-dimensions', required: true, zh: 'VA 雙維度設定', en: 'VA dimensions' },
       ],
-      defaultTemplate: { rubric: '', scoring_range: '1-5', widget_type: 'slider', allow_comment: true },
+      defaultTemplate: {
+        valence: { min: 1, max: 9, step: 1 },
+        arousal: { min: 1, max: 9, step: 1 },
+      },
     },
     sequence_labeling: {
       fields: [
@@ -2632,6 +2623,8 @@
     official_run_in_progress: 'statusHintOfficial',
     completed: 'statusHintCompleted'
   };
+  var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
+  var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
 
   var toastTimer = null;
 
@@ -2719,10 +2712,19 @@
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
     var tab = params.get('tab') || 'overview';
+    var urlStatus = params.get('status');
+    var taskId = params.get('task_id');
     if (role !== 'project_leader' && role !== 'reviewer' && role !== 'annotator') {
       role = 'project_leader';
     }
     state.taskRole = role;
+    if (taskId && taskId.trim()) {
+      TASK_DATA.taskId = taskId.trim();
+      if (TASK_PROFILE_MAP[TASK_DATA.taskId]) {
+        Object.assign(TASK_DATA, JSON.parse(JSON.stringify(TASK_PROFILE_MAP[TASK_DATA.taskId])));
+      }
+    }
+    if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
 
     if (state.taskRole === 'annotator') {
       if (window.LabelSuiteAnalytics) {
@@ -2743,6 +2745,29 @@
     if (!allowed) {
       state.pendingReviewerTabToast = true;
     }
+  }
+
+  function readDryRunProgress() {
+    try {
+      var raw = window.localStorage.getItem(DRY_RUN_PROGRESS_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function syncStatusFromDryRunProgress() {
+    if (TASK_DATA.status !== 'dry_run_in_progress') return;
+    var progress = readDryRunProgress();
+    if (!progress || progress.runType !== 'dry_run') return;
+    if (progress.taskId && progress.taskId !== TASK_DATA.taskId) return;
+    var submitted = Number(progress.submittedSamples);
+    var total = Number(progress.totalSamples);
+    if (!Number.isFinite(submitted) || !Number.isFinite(total) || total < 1) return;
+    if (submitted < total) return;
+    TASK_DATA.status = 'waiting_iaa_confirmation';
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
   }
 
   function applyLang(lang) {
@@ -2771,6 +2796,8 @@
     setText('settingsSummaryTitle', t('settingsSummaryTitle'));
     setText('guidelineSectionTitle', t('guidelineSectionTitle'));
     setText('executionTitle', t('executionTitle'));
+    setText('runControlTabExecution', t('runControlTabExecution'));
+    setText('runControlTabTrial', t('runControlTabTrial'));
     setText('exportTitle', t('exportTitle'));
     setRequiredLabel('labelTaskName', t('labelTaskName'));
     setRequiredLabel('labelTaskType', t('labelTaskType'));
@@ -2818,10 +2845,19 @@
     setText('samplingEditBtn', t('samplingEditBtn'));
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
+    setText('trialRoundLabel', t('trialRoundLabel'));
+    setText('targetAgreementLabel', t('targetAgreementLabel'));
+    setText('currentAgreementLabel', t('currentAgreementLabel'));
+    setText('currentStdLabel', t('currentStdLabel'));
+    setText('stopConditionTitle', t('stopConditionTitle'));
     setRequiredLabel('labelSamplingModeControl', t('labelSamplingModeControl'));
     setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
     setText('labelSamplingStrategyControl', t('labelSamplingStrategyControl'));
+    setText('labelStratifyByControl', t('labelStratifyByControl'));
+    setText('labelStopConditionControl', t('labelStopConditionControl'));
     setText('labelSplitControl', t('labelSplitControl'));
+    setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
     setRequiredLabel('samplingModeLabel', t('samplingModeLabel'));
@@ -2829,7 +2865,18 @@
     setText('samplingModeCountLabel', t('samplingModeCount'));
     setRequiredLabel('samplingValueLabel', t('samplingValueLabel'));
     setText('samplingStrategyLabel', t('samplingStrategyLabel'));
-    setText('samplingHelp', t('samplingHelp'));
+    setText('samplingStrategyOptionStratified', t('samplingStrategyOptionStratified'));
+    setText('samplingStrategyOptionDisagreement', t('samplingStrategyOptionDisagreement'));
+    setText('samplingStrategyOptionEdgeCases', t('samplingStrategyOptionEdgeCases'));
+    setText('samplingSeedLabel', t('samplingSeedLabel'));
+    setText('samplingRoundLabel', t('samplingRoundLabel'));
+    setText('samplingStratifyLabel', t('samplingStratifyLabel'));
+    setText('stratifyByLabelText', t('stratifyByLabelText'));
+    setText('stratifyByDomainText', t('stratifyByDomainText'));
+    setText('stratifyByDifficultyText', t('stratifyByDifficultyText'));
+    setText('targetAgreementInputLabel', t('targetAgreementInputLabel'));
+    setText('targetStdInputLabel', t('targetStdInputLabel'));
+    setText('minAnnotatorsInputLabel', t('minAnnotatorsInputLabel'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
     setText('officialReserveLabel', t('officialReserveLabel'));
     setText('resampleBtn', t('resampleBtn'));
@@ -2949,6 +2996,25 @@
     return getSampleCountFromData(TASK_DATA);
   }
 
+  function formatStratifyBy(items) {
+    var list = Array.isArray(items) ? items : [];
+    if (!list.length) return t('stratifyByNone');
+    var mapped = list.map(function(item) {
+      if (item === 'label') return t('stratifyByLabelText');
+      if (item === 'domain') return t('stratifyByDomainText');
+      if (item === 'difficulty') return t('stratifyByDifficultyText');
+      return item;
+    });
+    return interpolate(t('stratifyBySummaryTpl'), { items: mapped.join(' / ') });
+  }
+
+  function getSamplingStrategyLabel(strategy) {
+    if (strategy === 'stratified_random') return t('samplingStrategyOptionStratified');
+    if (strategy === 'high_disagreement') return t('samplingStrategyOptionDisagreement');
+    if (strategy === 'edge_cases') return t('samplingStrategyOptionEdgeCases');
+    return strategy;
+  }
+
   function validateSamplingData(data) {
     var sampleCount = getSampleCountFromData(data);
 
@@ -2967,6 +3033,26 @@
 
     if (TASK_DATA.datasetTotal - sampleCount < 1) {
       return { valid: false, message: t('samplingErrorReserve') };
+    }
+
+    if (data.samplingStrategy === 'stratified_random' && (!Array.isArray(data.stratifyBy) || data.stratifyBy.length < 1)) {
+      return { valid: false, message: t('samplingErrorStratify') };
+    }
+
+    if (data.targetAgreement < 0 || data.targetAgreement > 1) {
+      return { valid: false, message: t('samplingErrorAgreement') };
+    }
+
+    if (data.targetStd < 0 || data.targetStd > 1) {
+      return { valid: false, message: t('samplingErrorStd') };
+    }
+
+    if (data.minAnnotators < 2) {
+      return { valid: false, message: t('samplingErrorAnnotators') };
+    }
+
+    if (data.trialRound < 1) {
+      return { valid: false, message: t('samplingErrorRound') };
     }
 
     return { valid: true, message: '' };
@@ -2990,16 +3076,25 @@
     var samplingValueText = TASK_DATA.samplingMode === 'by_percentage'
       ? interpolate(t('samplingValuePercentTpl'), { value: TASK_DATA.samplingValue, count: sampleCount })
       : interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue });
+    var unitText = state.lang === 'zh' ? '筆' : ' items';
     var splitSummaryText = interpolate(t('splitSummaryTpl'), {
-      sample: sampleCount + ' / ' + TASK_DATA.datasetTotal,
-      reserve: reserveCount + ' / ' + TASK_DATA.datasetTotal,
+      total: TASK_DATA.datasetTotal + unitText,
+      sample: sampleCount + unitText,
+      reserve: reserveCount + unitText,
     });
 
     setText('valueSamplingModeControl', samplingModeText);
     setText('valueSamplingValueControl', samplingValueText);
+    setText('valueTrialRoundControl', interpolate(t('trialRoundTpl'), { round: TASK_DATA.trialRound }));
     setText('valueSamplingStrategyControl', interpolate(t('samplingStrategySummaryTpl'), {
-      strategy: TASK_DATA.samplingStrategy,
+      strategy: getSamplingStrategyLabel(TASK_DATA.samplingStrategy),
       seed: TASK_DATA.randomSeed,
+    }));
+    setText('valueStratifyByControl', formatStratifyBy(TASK_DATA.stratifyBy));
+    setText('valueStopConditionControl', interpolate(t('stopConditionSummaryTpl'), {
+      agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
+      std: Number(TASK_DATA.targetStd).toFixed(2),
+      annotators: TASK_DATA.minAnnotators,
     }));
     setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
@@ -3010,6 +3105,22 @@
         time: TASK_DATA.isolationLastUpdated,
       })
     );
+
+    setText('trialRoundValue', 'R' + TASK_DATA.trialRound);
+    setText('targetAgreementValue', Number(TASK_DATA.targetAgreement).toFixed(2));
+    setText('currentAgreementValue', Number(TASK_DATA.currentAgreement).toFixed(2));
+    setText('currentStdValue', Number(TASK_DATA.currentStd).toFixed(2));
+
+    setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(TASK_DATA.targetAgreement).toFixed(2) }));
+    setText('stopStdPill', interpolate(t('stopStdPillTpl'), { target: Number(TASK_DATA.targetStd).toFixed(2) }));
+    setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
+
+    var stopAgreementPill = document.getElementById('stopAgreementPill');
+    var stopStdPill = document.getElementById('stopStdPill');
+    var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
+    if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
+    if (stopStdPill) stopStdPill.classList.toggle('passed', Number(TASK_DATA.currentStd) <= Number(TASK_DATA.targetStd));
+    if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
   }
 
   function renderSamplingState() {
@@ -3017,8 +3128,9 @@
     var sampleCount = getSampleCountFromData(data);
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
 
-    setText('sampleUsageValue', sampleCount + ' / ' + TASK_DATA.datasetTotal);
-    setText('officialReserveValue', reserveCount + ' / ' + TASK_DATA.datasetTotal);
+    setText('totalSamplesValue', TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items'));
+    setText('sampleUsageValue', sampleCount + (state.lang === 'zh' ? ' 筆' : ' items'));
+    setText('officialReserveValue', reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'));
 
     var total = TASK_DATA.datasetTotal;
     var dryPct = total > 0 ? sampleCount / total * 100 : 0;
@@ -3031,6 +3143,25 @@
     }
     setText('samplingStrategyText', data.samplingStrategy + ' (fallback: random(seed))');
     setText('samplingSeedText', 'random_seed: ' + data.randomSeed);
+
+    var strategySelect = document.getElementById('samplingStrategySelect');
+    if (strategySelect) strategySelect.value = data.samplingStrategy;
+    var seedInput = document.getElementById('samplingSeedInput');
+    if (seedInput) seedInput.value = String(data.randomSeed);
+    var roundInput = document.getElementById('samplingRoundInput');
+    if (roundInput) roundInput.value = String(data.trialRound);
+    var targetAgreementInput = document.getElementById('targetAgreementInput');
+    if (targetAgreementInput) targetAgreementInput.value = Number(data.targetAgreement).toFixed(2);
+    var targetStdInput = document.getElementById('targetStdInput');
+    if (targetStdInput) targetStdInput.value = Number(data.targetStd).toFixed(2);
+    var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
+    if (minAnnotatorsInput) minAnnotatorsInput.value = String(data.minAnnotators);
+    var stratifyLabelInput = document.getElementById('stratifyByLabel');
+    var stratifyDomainInput = document.getElementById('stratifyByDomain');
+    var stratifyDifficultyInput = document.getElementById('stratifyByDifficulty');
+    if (stratifyLabelInput) stratifyLabelInput.checked = (data.stratifyBy || []).indexOf('label') >= 0;
+    if (stratifyDomainInput) stratifyDomainInput.checked = (data.stratifyBy || []).indexOf('domain') >= 0;
+    if (stratifyDifficultyInput) stratifyDifficultyInput.checked = (data.stratifyBy || []).indexOf('difficulty') >= 0;
 
     var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
     modeRadios.forEach(function(node) {
@@ -3065,6 +3196,20 @@
       node.disabled = !editable;
     });
     if (samplingInput) samplingInput.disabled = !editable;
+    if (strategySelect) strategySelect.disabled = !editable;
+    if (seedInput) seedInput.disabled = !editable;
+    if (roundInput) roundInput.disabled = !editable;
+    if (targetAgreementInput) targetAgreementInput.disabled = !editable;
+    if (targetStdInput) targetStdInput.disabled = !editable;
+    if (minAnnotatorsInput) minAnnotatorsInput.disabled = !editable;
+    if (stratifyLabelInput) stratifyLabelInput.disabled = !editable;
+    if (stratifyDomainInput) stratifyDomainInput.disabled = !editable;
+    if (stratifyDifficultyInput) stratifyDifficultyInput.disabled = !editable;
+    var isStratified = data.samplingStrategy === 'stratified_random';
+    var stratifyFieldGroup = document.getElementById('stratifyByFieldGroup');
+    var stratifyKvRow = document.getElementById('stratifyByKvRow');
+    if (stratifyFieldGroup) stratifyFieldGroup.classList.toggle('hidden', !isStratified);
+    if (stratifyKvRow) stratifyKvRow.classList.toggle('hidden', !isStratified);
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
       isolationToggle.disabled = !editable;
@@ -3087,7 +3232,7 @@
     }
 
     if (TASK_DATA.status === 'draft') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + TASK_DATA.trialRound + '</button>';
       return;
     }
 
@@ -3117,8 +3262,7 @@
   }
 
   function updateStatusStepper() {
-    var ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
-    var currentIdx = ORDER.indexOf(TASK_DATA.status);
+    var currentIdx = STATUS_ORDER.indexOf(TASK_DATA.status);
     var stepper = document.getElementById('statusStepper');
     if (!stepper) return;
     stepper.querySelectorAll('.step').forEach(function(el, i) {
@@ -3128,6 +3272,24 @@
     stepper.querySelectorAll('.step-connector').forEach(function(el, i) {
       el.classList.toggle('connector-done', i < currentIdx);
     });
+  }
+
+  function renderRunControlTabs() {
+    var tabs = ['execution', 'trial'];
+    tabs.forEach(function(tabName) {
+      var btn = document.getElementById(
+        tabName === 'execution'
+          ? 'runControlTabExecution'
+          : 'runControlTabTrial'
+      );
+      if (!btn) return;
+      var active = state.activeRunControlTab === tabName;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    var executionPanel = document.getElementById('runControlExecutionPanel');
+    if (executionPanel) executionPanel.classList.toggle('hidden', state.activeRunControlTab !== 'execution');
   }
 
   function renderStatus() {
@@ -3347,7 +3509,12 @@
       samplingMode: TASK_DATA.samplingMode,
       samplingValue: TASK_DATA.samplingValue,
       samplingStrategy: TASK_DATA.samplingStrategy,
+      trialRound: TASK_DATA.trialRound,
       randomSeed: TASK_DATA.randomSeed,
+      stratifyBy: (TASK_DATA.stratifyBy || []).slice(),
+      targetAgreement: TASK_DATA.targetAgreement,
+      targetStd: TASK_DATA.targetStd,
+      minAnnotators: TASK_DATA.minAnnotators,
       isolationEnabled: TASK_DATA.isolationEnabled,
       isolationLastActor: TASK_DATA.isolationLastActor,
       isolationLastUpdated: TASK_DATA.isolationLastUpdated,
@@ -3384,11 +3551,6 @@
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('samplingReadonlyRoleOnly');
-      return;
-    }
-    if (!editable) {
-      hint.classList.remove('hidden');
-      hint.textContent = t('samplingReadonlyDraftOnly');
       return;
     }
     hint.classList.add('hidden');
@@ -3429,7 +3591,13 @@
 
     TASK_DATA.samplingMode = state.samplingDraft.samplingMode;
     TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
+    TASK_DATA.samplingStrategy = state.samplingDraft.samplingStrategy;
+    TASK_DATA.trialRound = state.samplingDraft.trialRound;
     TASK_DATA.randomSeed = state.samplingDraft.randomSeed;
+    TASK_DATA.stratifyBy = (state.samplingDraft.stratifyBy || []).slice();
+    TASK_DATA.targetAgreement = state.samplingDraft.targetAgreement;
+    TASK_DATA.targetStd = state.samplingDraft.targetStd;
+    TASK_DATA.minAnnotators = state.samplingDraft.minAnnotators;
     TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
     TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
     TASK_DATA.isolationLastUpdated = state.samplingDraft.isolationLastUpdated;
@@ -3448,9 +3616,14 @@
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
 
+  function getTaskGuidelineText() {
+    if (state.lang === 'zh') return (TASK_DATA.guidelineTextZh || TASK_DATA.guidelineText || '').trim();
+    return (TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim();
+  }
+
   function createGuidelineDraft() {
     return {
-      guidelineText: TASK_DATA.guidelineText || '',
+      guidelineText: getTaskGuidelineText(),
       guidelineFiles: (TASK_DATA.guidelineFiles || []).map(function(file) {
         return { name: file.name, type: file.type };
       }),
@@ -3543,11 +3716,6 @@
       hint.textContent = t('guidelineReadonlyRoleOnly');
       return;
     }
-    if (!editable) {
-      hint.classList.remove('hidden');
-      hint.textContent = t('guidelineReadonlyDraftOnly');
-      return;
-    }
     hint.classList.add('hidden');
     hint.textContent = '';
   }
@@ -3594,12 +3762,15 @@
 
   function saveGuidelineEdit() {
     if (!isGuidelineEditable() || !state.guidelineDraft) return;
-    TASK_DATA.guidelineText = (state.guidelineDraft.guidelineText || '').trim();
+    var nextGuidelineText = (state.guidelineDraft.guidelineText || '').trim();
+    if (state.lang === 'zh') TASK_DATA.guidelineTextZh = nextGuidelineText;
+    else TASK_DATA.guidelineTextEn = nextGuidelineText;
+    TASK_DATA.guidelineText = nextGuidelineText;
     TASK_DATA.guidelineFiles = state.guidelineDraft.guidelineFiles.map(function(file) {
       return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
     });
     TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
-    TASK_DATA.guidelineUploaded = Boolean(TASK_DATA.guidelineText || TASK_DATA.guidelineFiles.length);
+    TASK_DATA.guidelineUploaded = Boolean((TASK_DATA.guidelineTextZh || TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim() || TASK_DATA.guidelineFiles.length);
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
@@ -3808,6 +3979,10 @@
         if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
         if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
         if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+        if (field.type === 'va-dimensions') {
+          if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
+          if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
+        }
       });
     }
     return {
@@ -4012,6 +4187,145 @@
     return wrap;
   }
 
+  function isValidVADimensionConfig(config) {
+    if (!config || typeof config !== 'object') return false;
+    var min = Number(config.min);
+    var max = Number(config.max);
+    var step = Number(config.step);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return false;
+    if (step <= 0) return false;
+    return max >= min;
+  }
+
+  function normalizeSettingsVADimensionConfig(key, fallback) {
+    var dim = state.settingsDraft.configData[key];
+    if (!dim || typeof dim !== 'object') dim = {};
+    var min = Number(dim.min);
+    var max = Number(dim.max);
+    var step = Number(dim.step);
+    if (!Number.isFinite(min)) min = fallback.min;
+    if (!Number.isFinite(max)) max = fallback.max;
+    if (!Number.isFinite(step) || step <= 0) step = fallback.step;
+    if (max < min) max = min;
+    state.settingsDraft.configData[key] = { min: min, max: max, step: step };
+  }
+
+  function buildSettingsVADimensionsInput() {
+    normalizeSettingsVADimensionConfig('valence', { min: 1, max: 9, step: 1 });
+    normalizeSettingsVADimensionConfig('arousal', { min: 1, max: 9, step: 1 });
+    var wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.gap = '12px';
+
+    function makeDimensionRow(key, title) {
+      var row = document.createElement('div');
+      row.style.display = 'grid';
+      row.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+      row.style.gap = '10px';
+      row.style.padding = '10px 12px';
+      row.style.border = '1px solid var(--color-border)';
+      row.style.borderRadius = 'var(--radius-md)';
+      row.style.background = 'var(--color-slate-50)';
+
+      var titleEl = document.createElement('div');
+      titleEl.textContent = title;
+      titleEl.style.gridColumn = '1 / -1';
+      titleEl.style.fontWeight = '600';
+      titleEl.style.fontSize = '13px';
+      row.appendChild(titleEl);
+
+      [
+        { prop: 'min', zh: '最小值', en: 'Min' },
+        { prop: 'max', zh: '最大值', en: 'Max' },
+        { prop: 'step', zh: '間距', en: 'Step' },
+      ].forEach(function(item) {
+        var fieldWrap = document.createElement('label');
+        fieldWrap.style.display = 'flex';
+        fieldWrap.style.flexDirection = 'column';
+        fieldWrap.style.gap = '6px';
+        fieldWrap.style.fontSize = '12px';
+        fieldWrap.style.color = 'var(--color-text-soft)';
+
+        var label = document.createElement('span');
+        label.textContent = state.lang === 'en' ? item.en : item.zh;
+        fieldWrap.appendChild(label);
+
+        var input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'input-number';
+        input.step = 'any';
+        input.value = String(state.settingsDraft.configData[key][item.prop]);
+        input.addEventListener('input', function() {
+          var numeric = Number(input.value);
+          state.settingsDraft.configData[key][item.prop] = Number.isFinite(numeric) ? numeric : input.value;
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        input.addEventListener('blur', function() {
+          normalizeSettingsVADimensionConfig(key, { min: 1, max: 9, step: 1 });
+          input.value = String(state.settingsDraft.configData[key][item.prop]);
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        fieldWrap.appendChild(input);
+        row.appendChild(fieldWrap);
+      });
+
+      return row;
+    }
+
+    wrap.appendChild(makeDimensionRow('valence', 'Valence'));
+    wrap.appendChild(makeDimensionRow('arousal', 'Arousal'));
+    return wrap;
+  }
+
+  function buildSettingsScoreOptionsFromDimension(dimConfig) {
+    if (!dimConfig || typeof dimConfig !== 'object') return [];
+    var min = Number(dimConfig.min);
+    var max = Number(dimConfig.max);
+    var step = Number(dimConfig.step);
+    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return [];
+    if (step <= 0 || max < min) return [];
+    var values = [];
+    var stepText = String(step);
+    var decimal = stepText.indexOf('.') >= 0 ? stepText.split('.')[1].length : 0;
+    for (var value = min; value <= max + step / 1000; value += step) {
+      values.push({ text: value.toFixed(decimal), color: null });
+    }
+    return values;
+  }
+
+  function appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect) {
+    options.forEach(function(option) {
+      var row = document.createElement('label');
+      row.className = 'annotation-preview-option';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      if (singleSelect) {
+        checkbox.addEventListener('change', function() {
+          if (!checkbox.checked) return;
+          optionsWrap.querySelectorAll('input[type=\"checkbox\"]').forEach(function(cb) {
+            if (cb !== checkbox) cb.checked = false;
+          });
+        });
+      }
+      row.appendChild(checkbox);
+      if (option.color) {
+        var color = document.createElement('span');
+        color.className = 'annotation-preview-color';
+        color.style.background = option.color;
+        row.appendChild(color);
+      }
+      var text = document.createElement('span');
+      text.textContent = option.text;
+      row.appendChild(text);
+      optionsWrap.appendChild(row);
+    });
+  }
+
   function renderSettingsSchemaFields() {
     var container = document.getElementById('settingsSchemaFields');
     if (!container || !state.settingsDraft) return;
@@ -4043,6 +4357,8 @@
           hint.textContent = field['hint_' + state.lang];
           wrap.appendChild(hint);
         }
+      } else if (field.type === 'va-dimensions') {
+        wrap.appendChild(buildSettingsVADimensionsInput());
       } else if (field.type === 'entity-list') {
         wrap.appendChild(buildSettingsEntityList(field));
       } else if (field.type === 'boolean') {
@@ -4129,15 +4445,9 @@
       options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
         return { text: tag.trim(), color: null };
       }) : [];
-    } else if (taskType === 'single_sentence_scoring_regression') {
-      titleText = t('settingsPreviewTaskScore');
-      var range = String(config.scoring_range || '1-5');
-      var parts = range.split('-');
-      var start = parseInt(parts[0], 10);
-      var end = parseInt(parts[1], 10);
-      if (!isNaN(start) && !isNaN(end) && end >= start) {
-        for (var score = start; score <= end; score += 1) options.push({ text: String(score), color: null });
-      }
+    } else if (taskType === 'single_sentence_va_scoring') {
+      titleText = t('settingsPreviewTaskValence');
+      options = buildSettingsScoreOptionsFromDimension(config.valence);
     } else {
       options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
         return { text: tag.trim(), color: null };
@@ -4166,7 +4476,7 @@
       preview.appendChild(pairWrap);
     } else {
       var sampleKey = 'settingsPreviewSampleSentence';
-      if (taskType === 'single_sentence_scoring_regression') sampleKey = 'settingsPreviewSampleSentenceScoring';
+      if (taskType === 'single_sentence_va_scoring') sampleKey = 'settingsPreviewSampleSentenceVA';
       else if (taskType === 'sequence_labeling') sampleKey = 'settingsPreviewSampleSentenceSequence';
       else if (taskType === 'relation_extraction') sampleKey = 'settingsPreviewSampleSentenceRelation';
       var sample = document.createElement('div');
@@ -4188,6 +4498,39 @@
     optionsWrap.className = 'annotation-preview-options';
     preview.appendChild(optionsWrap);
 
+    var singleSelect = taskType === 'single_sentence_va_scoring' || taskType === 'sentence_pairs' || (taskType === 'single_sentence_classification' && !config.allow_multiple);
+    if (taskType === 'single_sentence_va_scoring') {
+      if (!options.length) {
+        var emptyVa = document.createElement('div');
+        emptyVa.className = 'annotation-preview-empty';
+        emptyVa.textContent = t('settingsPreviewEmpty');
+        optionsWrap.appendChild(emptyVa);
+      } else {
+        appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
+      }
+
+      var arousalTitle = document.createElement('div');
+      arousalTitle.className = 'annotation-preview-task-title';
+      arousalTitle.style.marginTop = '8px';
+      arousalTitle.textContent = t('settingsPreviewTaskArousal');
+      preview.appendChild(arousalTitle);
+
+      var arousalOptionsWrap = document.createElement('div');
+      arousalOptionsWrap.className = 'annotation-preview-options';
+      preview.appendChild(arousalOptionsWrap);
+
+      var arousalOptions = buildSettingsScoreOptionsFromDimension(config.arousal);
+      if (!arousalOptions.length) {
+        var emptyArousal = document.createElement('div');
+        emptyArousal.className = 'annotation-preview-empty';
+        emptyArousal.textContent = t('settingsPreviewEmpty');
+        arousalOptionsWrap.appendChild(emptyArousal);
+      } else {
+        appendSettingsPreviewOptionRows(arousalOptionsWrap, arousalOptions, singleSelect);
+      }
+      return;
+    }
+
     if (!options.length) {
       var empty = document.createElement('div');
       empty.className = 'annotation-preview-empty';
@@ -4196,32 +4539,7 @@
       return;
     }
 
-    var singleSelect = taskType === 'single_sentence_scoring_regression' || taskType === 'sentence_pairs' || (taskType === 'single_sentence_classification' && !config.allow_multiple);
-    options.forEach(function(option) {
-      var row = document.createElement('label');
-      row.className = 'annotation-preview-option';
-      var checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      if (singleSelect) {
-        checkbox.addEventListener('change', function() {
-          if (!checkbox.checked) return;
-          optionsWrap.querySelectorAll('input[type=\"checkbox\"]').forEach(function(cb) {
-            if (cb !== checkbox) cb.checked = false;
-          });
-        });
-      }
-      row.appendChild(checkbox);
-      if (option.color) {
-        var color = document.createElement('span');
-        color.className = 'annotation-preview-color';
-        color.style.background = option.color;
-        row.appendChild(color);
-      }
-      var text = document.createElement('span');
-      text.textContent = option.text;
-      row.appendChild(text);
-      optionsWrap.appendChild(row);
-    });
+    appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
   }
 
   function applySettingsTemplate() {
@@ -4293,6 +4611,10 @@
       if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
       if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
       if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
+      if (field.type === 'va-dimensions') {
+        if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
+        if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
+      }
     });
     state.settingsDraft.configData = merged;
     state.settingsCodeDraftDirty = false;
@@ -4319,6 +4641,8 @@
         if (!val || !Array.isArray(val) || !val.length) ok = false;
       } else if (field.type === 'entity-list') {
         if (!val || !Array.isArray(val) || !val.length || val.some(function(ent) { return !ent.name || !ent.name.trim(); })) ok = false;
+      } else if (field.type === 'va-dimensions') {
+        if (!isValidVADimensionConfig(config.valence) || !isValidVADimensionConfig(config.arousal)) ok = false;
       } else if (field.type === 'textarea' || field.type === 'text' || field.type === 'select') {
         if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
       } else if (field.type === 'boolean') {
@@ -4364,11 +4688,6 @@
     if (!editable && state.taskRole !== 'project_leader') {
       hint.classList.remove('hidden');
       hint.textContent = t('settingsReadonlyRoleOnly');
-      return;
-    }
-    if (!editable) {
-      hint.classList.remove('hidden');
-      hint.textContent = t('settingsReadonlyDraftOnly');
       return;
     }
     hint.classList.add('hidden');
@@ -4432,6 +4751,33 @@
     var summaryRows = [];
     if (schema && Array.isArray(schema.fields)) {
       schema.fields.forEach(function(field) {
+        if (field.type === 'va-dimensions') {
+          var dims = [
+            { key: 'valence', label: 'Valence' },
+            { key: 'arousal', label: 'Arousal' },
+          ];
+          dims.forEach(function(dim) {
+            var dimValue = parsed[dim.key];
+            var text = '-';
+            if (dimValue && typeof dimValue === 'object') {
+              var min = Number(dimValue.min);
+              var max = Number(dimValue.max);
+              var step = Number(dimValue.step);
+              if (Number.isFinite(min) && Number.isFinite(max) && Number.isFinite(step) && step > 0 && max >= min) {
+                text = state.lang === 'zh'
+                  ? (min + ' ~ ' + max + '（間距 ' + step + '）')
+                  : (min + ' ~ ' + max + ' (step ' + step + ')');
+              }
+            }
+            summaryRows.push({
+              label: dim.label,
+              value: text,
+              required: true,
+            });
+          });
+          return;
+        }
+
         var rawValue = parsed[field.key];
         if (rawValue === undefined && field.defaultValue !== undefined) rawValue = field.defaultValue;
         var text = '-';
@@ -4500,7 +4846,7 @@
     var settingsSummary = getSettingsSummary();
     var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
     var guidelineFilesText = guidelineFiles.length ? guidelineFiles.join(', ') : t('guidelineFilesNone');
-    var guidelineContent = (TASK_DATA.guidelineText || '').trim();
+    var guidelineContent = getTaskGuidelineText();
     var guidelineContentText = guidelineContent || t('guidelineContentEmpty');
 
     setText('valueTaskName', taskName);
@@ -4518,6 +4864,7 @@
     renderPublishActions();
     renderSamplingSummaryState();
     renderSamplingEditState();
+    renderRunControlTabs();
     renderIsolationState();
     renderExport();
     renderOverviewEditState();
@@ -5180,6 +5527,17 @@
     var samplingEditBtn = document.getElementById('samplingEditBtn');
     var samplingSaveBtn = document.getElementById('samplingSaveBtn');
     var samplingCancelBtn = document.getElementById('samplingCancelBtn');
+    var runControlTabExecution = document.getElementById('runControlTabExecution');
+    var runControlTabTrial = document.getElementById('runControlTabTrial');
+    var strategySelect = document.getElementById('samplingStrategySelect');
+    var seedInput = document.getElementById('samplingSeedInput');
+    var roundInput = document.getElementById('samplingRoundInput');
+    var targetAgreementInput = document.getElementById('targetAgreementInput');
+    var targetStdInput = document.getElementById('targetStdInput');
+    var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
+    var stratifyByLabel = document.getElementById('stratifyByLabel');
+    var stratifyByDomain = document.getElementById('stratifyByDomain');
+    var stratifyByDifficulty = document.getElementById('stratifyByDifficulty');
     var resampleBtn = document.getElementById('resampleBtn');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
     var overviewSaveBtn = document.getElementById('overviewSaveBtn');
@@ -5274,6 +5632,21 @@
         cancelSamplingEdit(false);
       });
     }
+
+    if (runControlTabExecution) {
+      runControlTabExecution.addEventListener('click', function() {
+        state.activeRunControlTab = 'execution';
+        renderRunControlTabs();
+      });
+    }
+
+    if (runControlTabTrial) {
+      runControlTabTrial.addEventListener('click', function() {
+        state.activeRunControlTab = 'trial';
+        renderRunControlTabs();
+      });
+    }
+
 
     if (guidelineEditBtn) {
       guidelineEditBtn.addEventListener('click', function() {
@@ -5449,6 +5822,75 @@
         renderSamplingState();
       });
     }
+
+    if (strategySelect) {
+      strategySelect.addEventListener('change', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.samplingStrategy = e.target.value;
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (seedInput) {
+      seedInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.randomSeed = Math.max(1, Math.floor(Number(e.target.value || 0)));
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (roundInput) {
+      roundInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.trialRound = Math.max(1, Math.floor(Number(e.target.value || 0)));
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (targetAgreementInput) {
+      targetAgreementInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.targetAgreement = Number(e.target.value || 0);
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (targetStdInput) {
+      targetStdInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.targetStd = Number(e.target.value || 0);
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    if (minAnnotatorsInput) {
+      minAnnotatorsInput.addEventListener('input', function(e) {
+        if (!state.samplingEditMode || !state.samplingDraft) return;
+        state.samplingDraft.minAnnotators = Math.max(2, Math.floor(Number(e.target.value || 0)));
+        markSamplingDirty();
+        renderSamplingState();
+      });
+    }
+
+    function updateStratifyByDraft() {
+      if (!state.samplingEditMode || !state.samplingDraft) return;
+      var next = [];
+      if (stratifyByLabel && stratifyByLabel.checked) next.push('label');
+      if (stratifyByDomain && stratifyByDomain.checked) next.push('domain');
+      if (stratifyByDifficulty && stratifyByDifficulty.checked) next.push('difficulty');
+      state.samplingDraft.stratifyBy = next;
+      markSamplingDirty();
+      renderSamplingState();
+    }
+
+    if (stratifyByLabel) stratifyByLabel.addEventListener('change', updateStratifyByDraft);
+    if (stratifyByDomain) stratifyByDomain.addEventListener('change', updateStratifyByDraft);
+    if (stratifyByDifficulty) stratifyByDifficulty.addEventListener('change', updateStratifyByDraft);
 
     if (resampleBtn) {
       resampleBtn.addEventListener('click', function() {
@@ -5647,6 +6089,7 @@
 
   function init() {
     parseRole();
+    syncStatusFromDryRunProgress();
 
     state.lang = window.LabelSuiteSharedSidebar
       ? window.LabelSuiteSharedSidebar.getStoredLang()

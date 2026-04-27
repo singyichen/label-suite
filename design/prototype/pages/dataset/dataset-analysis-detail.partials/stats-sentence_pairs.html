@@ -1,0 +1,156 @@
+<!-- Sentence Pairs Statistics -->
+<section class="panel" aria-labelledby="statsSpDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsSpDistTitle">分佈統計</h2>
+    </div>
+    <!-- Subtype toggle -->
+    <div class="sp-toggle" role="group" aria-label="子類型切換">
+      <button class="sp-btn active" id="spBtnCls" type="button">分類型</button>
+      <button class="sp-btn"        id="spBtnScore" type="button">評分型</button>
+    </div>
+  </div>
+
+  <!-- Classification subtype panel -->
+  <div id="spClsPanel">
+    <p class="panel-subtitle" id="statsSpLblDistTitle" style="margin-bottom:var(--space-md)">各標籤在提交標記中的次數與比例（共 983 筆有效標記）</p>
+    <div class="stats-hbar-chart">
+      <div class="stats-hbar-row">
+        <div class="stats-hbar-label">相似 / Similar</div>
+        <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:80%"></div></div>
+        <div class="stats-hbar-value">42% · 413</div>
+      </div>
+      <div class="stats-hbar-row">
+        <div class="stats-hbar-label">不相似 / Dissimilar</div>
+        <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:53%;opacity:.85"></div></div>
+        <div class="stats-hbar-value">28% · 275</div>
+      </div>
+      <div class="stats-hbar-row">
+        <div class="stats-hbar-label">蘊含 / Entailment</div>
+        <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:34%;opacity:.7"></div></div>
+        <div class="stats-hbar-value">18% · 177</div>
+      </div>
+      <div class="stats-hbar-row">
+        <div class="stats-hbar-label">矛盾 / Contradiction</div>
+        <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:23%;opacity:.55"></div></div>
+        <div class="stats-hbar-value">12% · 118</div>
+      </div>
+    </div>
+    <div class="stats-metric-grid" style="margin-top:var(--space-md)">
+      <div class="stats-metric-card">
+        <div class="stats-metric-label" id="statsSpClsLabelCount">標籤類別數</div>
+        <div class="stats-metric-value">4</div>
+      </div>
+      <div class="stats-metric-card">
+        <div class="stats-metric-label" id="statsSpClsSampleCount">有效標記句對數</div>
+        <div class="stats-metric-value">983</div>
+      </div>
+      <div class="stats-metric-card">
+        <div class="stats-metric-label" id="statsSpClsDominantLabel">最常見標籤</div>
+        <div class="stats-metric-value" style="font-size:20px;padding-top:4px">相似</div>
+        <div class="stats-metric-desc">42%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring subtype panel (hidden by default) -->
+  <div id="spScorePanel" class="hidden">
+    <p class="panel-subtitle" id="statsSpScoreDistTitle" style="margin-bottom:var(--space-md)">評分分數（0–1）在提交標記中的分佈（共 983 筆有效標記）</p>
+    <!-- Score histogram: bins [0.0-0.1, 0.1-0.2, ..., 0.9-1.0] -->
+    <!-- Data: [18,24,38,65,120,148,180,195,142,53], max=195 -->
+    <!-- Heights (of 100px): [9,12,19,33,62,76,92,100,73,27] -->
+    <svg viewBox="0 0 340 155" style="width:100%;max-width:500px;height:auto;display:block;overflow:visible" role="img" aria-label="評分分佈直方圖">
+      <g transform="translate(12,5)">
+        <line x1="0" y1="0" x2="0" y2="115" stroke="var(--color-border)" stroke-width="1"/>
+        <!-- bar width=24, gap=4 → 10 bars = 10*24+9*4=276px -->
+        <rect x="0"   y="106" width="24" height="9"   fill="var(--color-primary)" opacity="0.4"  rx="2"/>
+        <rect x="28"  y="103" width="24" height="12"  fill="var(--color-primary)" opacity="0.45" rx="2"/>
+        <rect x="56"  y="96"  width="24" height="19"  fill="var(--color-primary)" opacity="0.5"  rx="2"/>
+        <rect x="84"  y="82"  width="24" height="33"  fill="var(--color-primary)" opacity="0.6"  rx="2"/>
+        <rect x="112" y="53"  width="24" height="62"  fill="var(--color-primary)" opacity="0.7"  rx="2"/>
+        <rect x="140" y="39"  width="24" height="76"  fill="var(--color-primary)" opacity="0.8"  rx="2"/>
+        <rect x="168" y="23"  width="24" height="92"  fill="var(--color-primary)" opacity="0.9"  rx="2"/>
+        <rect x="196" y="15"  width="24" height="100" fill="var(--color-primary)"                rx="2"/>
+        <rect x="224" y="42"  width="24" height="73"  fill="var(--color-primary)" opacity="0.8"  rx="2"/>
+        <rect x="252" y="88"  width="24" height="27"  fill="var(--color-primary)" opacity="0.55" rx="2"/>
+        <text x="208" y="12"  text-anchor="middle" font-size="9" fill="var(--color-primary)" font-weight="600">195</text>
+        <line x1="0" y1="115" x2="278" y2="115" stroke="var(--color-border)" stroke-width="1"/>
+        <text x="12"  y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.0</text>
+        <text x="40"  y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.1</text>
+        <text x="68"  y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.2</text>
+        <text x="96"  y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.3</text>
+        <text x="124" y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.4</text>
+        <text x="152" y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.5</text>
+        <text x="180" y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.6</text>
+        <text x="208" y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.7</text>
+        <text x="236" y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.8</text>
+        <text x="264" y="129" text-anchor="middle" font-size="9" fill="var(--color-ink-muted)">0.9</text>
+        <text x="139" y="148" text-anchor="middle" font-size="11" fill="var(--color-text-soft)" font-weight="600" id="statsSpScoreLenXLabel">相似度分數</text>
+      </g>
+    </svg>
+    <div class="stats-summary-grid" style="margin-top:var(--space-md)">
+      <div class="stats-summary-block">
+        <div class="stats-summary-head" id="statsSpScoreSummaryHead">評分統計摘要</div>
+        <div class="stats-summary-row">
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Mean</span>
+            <span class="stats-summary-item-val">0.63</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">SD</span>
+            <span class="stats-summary-item-val">0.18</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Median</span>
+            <span class="stats-summary-item-val">0.68</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Min</span>
+            <span class="stats-summary-item-val">0.0</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Max</span>
+            <span class="stats-summary-item-val">1.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="stats-summary-block">
+        <div class="stats-summary-head" id="statsSpScoreQuartileHead">四分位數</div>
+        <div class="stats-summary-row">
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Q1</span>
+            <span class="stats-summary-item-val">0.52</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Q2</span>
+            <span class="stats-summary-item-val">0.68</span>
+          </div>
+          <div class="stats-summary-item">
+            <span class="stats-summary-item-label">Q3</span>
+            <span class="stats-summary-item-val">0.78</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  var btnCls   = document.getElementById('spBtnCls');
+  var btnScore = document.getElementById('spBtnScore');
+  var clsPanel   = document.getElementById('spClsPanel');
+  var scorePanel = document.getElementById('spScorePanel');
+  if (!btnCls || !btnScore) return;
+  function showCls() {
+    btnCls.classList.add('active');   btnScore.classList.remove('active');
+    clsPanel.classList.remove('hidden'); scorePanel.classList.add('hidden');
+  }
+  function showScore() {
+    btnScore.classList.add('active'); btnCls.classList.remove('active');
+    scorePanel.classList.remove('hidden'); clsPanel.classList.add('hidden');
+  }
+  btnCls.addEventListener('click', showCls);
+  btnScore.addEventListener('click', showScore);
+})();
+</script>

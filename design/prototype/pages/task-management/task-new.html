@@ -704,15 +704,15 @@ var REGISTRY = {
       en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
     },
   },
-  single_sentence_scoring_regression: {
-    zh: '單句評分 / 回歸', en: 'Single Sentence Scoring / Regression',
+  single_sentence_va_scoring: {
+    zh: '單句 VA 雙維度評分（Valence / Arousal）', en: 'Single Sentence VA Scoring (Valence / Arousal)',
     fields: [
-      { key: 'rubric', type: 'textarea', zh: 'Rubric（評分說明）', en: 'Rubric', required: true, placeholder_zh: '描述各分數對應的品質標準', placeholder_en: 'Describe quality criteria per score' },
-      { key: 'scoring_range', type: 'select', zh: '評分範圍', en: 'Scoring range', required: true, options: ['1-3', '1-5', '1-7', '1-10'], defaultValue: '1-5' },
-      { key: 'widget_type', type: 'select', zh: '評分介面', en: 'Scoring widget', required: true, options: ['slider', 'radio', 'number_input'], defaultValue: 'slider' },
-      { key: 'allow_comment', type: 'boolean', zh: '允許評語', en: 'Allow comments', required: false, defaultValue: true },
+      { key: 'va_dimensions', type: 'va-dimensions', zh: 'VA 雙維度設定', en: 'VA dimensions', required: true },
     ],
-    defaultTemplate: { rubric: '', scoring_range: '1-5', widget_type: 'slider', allow_comment: true },
+    defaultTemplate: {
+      valence: { min: 1, max: 9, step: 1 },
+      arousal: { min: 1, max: 9, step: 1 },
+    },
   },
   sequence_labeling: {
     zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)',
@@ -750,11 +750,16 @@ var REGISTRY = {
 };
 var TASK_TYPE_ORDER = [
   'single_sentence_classification',
-  'single_sentence_scoring_regression',
+  'single_sentence_va_scoring',
   'sequence_labeling',
   'relation_extraction',
   'sentence_pairs',
 ];
+var DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE = {
+  single_sentence_va_scoring: [
+    { name: 'VA_emj.png', type: 'Image', size: 584508, assetPath: '../../assets/images/task-management/VA_emj.png' },
+  ],
+};
 var ENTITY_COLORS = ['#6366F1','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9','#F97316','#14B8A6'];
 var USER_DIRECTORY = [
   { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', systemRole: 'user' },
@@ -807,10 +812,11 @@ var I18N = {
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
-    previewTaskScore: '請選擇分數',
+    previewTaskValence: 'Valence 評分',
+    previewTaskArousal: 'Arousal 評分',
     previewEmpty: '請先新增至少一個標記選項',
     previewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
-    previewSampleSentenceScoring: '這次住宿整體舒適，但隔音稍差。',
+    previewSampleSentenceVA: '這次住宿整體舒適，但隔音稍差。',
     previewSampleSentenceSequence: '台積電董事長魏哲家今天在台北出席產業論壇。',
     previewSampleSentenceRelation: '阿司匹靈可緩解頭痛症狀，但可能造成胃部不適。',
     previewSentenceALabel: '句子 A',
@@ -886,10 +892,11 @@ var I18N = {
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
-    previewTaskScore: 'Choose a score',
+    previewTaskValence: 'Valence score',
+    previewTaskArousal: 'Arousal score',
     previewEmpty: 'Add at least one option to preview',
     previewSampleSentence: 'This is a sample text. Apply annotations with the current settings.',
-    previewSampleSentenceScoring: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
+    previewSampleSentenceVA: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
     previewSampleSentenceSequence: 'TSMC chairman C.C. Wei attended an industry forum in Taipei today.',
     previewSampleSentenceRelation: 'Aspirin can relieve headaches, but it may cause stomach discomfort.',
     previewSentenceALabel: 'Sentence A',
@@ -980,6 +987,9 @@ function toYaml(obj, indent) {
         lines.push(indent + key + ':');
         val.forEach(function(v) { lines.push(indent + '  - ' + yamlScalar(v)); });
       }
+    } else if (val && typeof val === 'object') {
+      lines.push(indent + key + ':');
+      lines.push(toYaml(val, indent + '  '));
     } else {
       lines.push(indent + key + ': ' + yamlScalar(val));
     }
@@ -1202,6 +1212,9 @@ function validateStep2(showErrors) {
     var val = state.configData[f.key];
     if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
     else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
+    else if (f.type === 'va-dimensions') {
+      if (!isValidVADimensionConfig(state.configData.valence) || !isValidVADimensionConfig(state.configData.arousal)) ok = false;
+    }
     else if (f.type === 'textarea' || f.type === 'text' || f.type === 'select') {
       if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
     } else if (f.type === 'boolean') {
@@ -1211,6 +1224,15 @@ function validateStep2(showErrors) {
   if (!ok && showErrors) showFieldError('errSchema', true, t('errSchemaRequired'));
   if (ok) showFieldError('errSchema', false);
   return ok;
+}
+function isValidVADimensionConfig(config) {
+  if (!config || typeof config !== 'object') return false;
+  var min = Number(config.min);
+  var max = Number(config.max);
+  var step = Number(config.step);
+  if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return false;
+  if (step <= 0) return false;
+  return max >= min;
 }
 function getDatasetTotalEstimate() {
   return 10000;
@@ -1271,6 +1293,8 @@ function renderSchemaFields() {
       }
     } else if (field.type === 'entity-list') {
       wrap.appendChild(buildEntityList(field));
+    } else if (field.type === 'va-dimensions') {
+      wrap.appendChild(buildVADimensionsInput());
     } else if (field.type === 'boolean') {
       var chkLabel = document.createElement('label');
       chkLabel.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;';
@@ -1449,6 +1473,139 @@ function buildEntityList(field) {
   return wrap;
 }
 
+function normalizeVADimensionConfig(key, fallback) {
+  var dim = state.configData[key];
+  if (!dim || typeof dim !== 'object') dim = {};
+  var min = Number(dim.min);
+  var max = Number(dim.max);
+  var step = Number(dim.step);
+  if (!Number.isFinite(min)) min = fallback.min;
+  if (!Number.isFinite(max)) max = fallback.max;
+  if (!Number.isFinite(step) || step <= 0) step = fallback.step;
+  if (max < min) max = min;
+  state.configData[key] = { min: min, max: max, step: step };
+}
+
+function buildVADimensionsInput() {
+  normalizeVADimensionConfig('valence', { min: 1, max: 9, step: 1 });
+  normalizeVADimensionConfig('arousal', { min: 1, max: 9, step: 1 });
+  var wrap = document.createElement('div');
+  wrap.style.display = 'flex';
+  wrap.style.flexDirection = 'column';
+  wrap.style.gap = '12px';
+
+  function makeDimensionRow(key, title) {
+    var row = document.createElement('div');
+    row.style.display = 'grid';
+    row.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+    row.style.gap = '10px';
+    row.style.padding = '10px 12px';
+    row.style.border = '1px solid var(--color-border)';
+    row.style.borderRadius = 'var(--radius-md)';
+    row.style.background = 'var(--color-slate-50)';
+
+    var titleEl = document.createElement('div');
+    titleEl.textContent = title;
+    titleEl.style.gridColumn = '1 / -1';
+    titleEl.style.fontWeight = '600';
+    titleEl.style.fontSize = '13px';
+    row.appendChild(titleEl);
+
+    [
+      { prop: 'min', zh: '最小值', en: 'Min' },
+      { prop: 'max', zh: '最大值', en: 'Max' },
+      { prop: 'step', zh: '間距', en: 'Step' },
+    ].forEach(function(item) {
+      var fieldWrap = document.createElement('label');
+      fieldWrap.style.display = 'flex';
+      fieldWrap.style.flexDirection = 'column';
+      fieldWrap.style.gap = '6px';
+      fieldWrap.style.fontSize = '12px';
+      fieldWrap.style.color = 'var(--color-text-soft)';
+
+      var label = document.createElement('span');
+      label.textContent = state.lang === 'en' ? item.en : item.zh;
+      fieldWrap.appendChild(label);
+
+      var input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'input-text';
+      input.step = 'any';
+      input.value = String(state.configData[key][item.prop]);
+      input.addEventListener('input', function() {
+        var numeric = Number(input.value);
+        state.configData[key][item.prop] = Number.isFinite(numeric) ? numeric : input.value;
+        markDirty();
+        updateAnnotationPreview();
+        revalidateCurrentStep();
+      });
+      input.addEventListener('blur', function() {
+        var defaults = key === 'valence' ? { min: 1, max: 9, step: 1 } : { min: 1, max: 9, step: 1 };
+        normalizeVADimensionConfig(key, defaults);
+        input.value = String(state.configData[key][item.prop]);
+        markDirty();
+        updateAnnotationPreview();
+        revalidateCurrentStep();
+      });
+      fieldWrap.appendChild(input);
+      row.appendChild(fieldWrap);
+    });
+
+    return row;
+  }
+
+  wrap.appendChild(makeDimensionRow('valence', 'Valence'));
+  wrap.appendChild(makeDimensionRow('arousal', 'Arousal'));
+  return wrap;
+}
+
+function buildScoreOptionsFromDimension(dimConfig) {
+  if (!dimConfig || typeof dimConfig !== 'object') return [];
+  var min = Number(dimConfig.min);
+  var max = Number(dimConfig.max);
+  var step = Number(dimConfig.step);
+  if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return [];
+  if (step <= 0 || max < min) return [];
+  var values = [];
+  var precision = step % 1 === 0 ? 0 : String(step).split('.')[1].length;
+  for (var value = min; value <= max + step / 1000; value += step) {
+    values.push({ text: value.toFixed(precision), color: null });
+  }
+  return values;
+}
+
+function appendPreviewOptionRows(optionsWrap, options, singleSelectPreview) {
+  options.forEach(function(option) {
+    var row = document.createElement('label');
+    row.className = 'annotation-preview-option';
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    if (singleSelectPreview) {
+      checkbox.addEventListener('change', function() {
+        if (!checkbox.checked) return;
+        optionsWrap.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+          if (cb !== checkbox) cb.checked = false;
+        });
+      });
+    }
+    row.appendChild(checkbox);
+
+    if (option.color) {
+      var color = document.createElement('span');
+      color.className = 'annotation-preview-color';
+      color.style.background = option.color;
+      row.appendChild(color);
+    }
+
+    var text = document.createElement('span');
+    text.textContent = option.text;
+    row.appendChild(text);
+
+    optionsWrap.appendChild(row);
+  });
+}
+
 function updateAnnotationPreview() {
   var preview = el('annotationPreview');
   if (!preview) return;
@@ -1469,15 +1626,9 @@ function updateAnnotationPreview() {
     options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
       return { text: tag.trim(), color: null };
     }) : [];
-  } else if (taskType === 'single_sentence_scoring_regression') {
-    titleText = t('previewTaskScore');
-    var range = String(config.scoring_range || '1-5');
-    var pieces = range.split('-');
-    var start = parseInt(pieces[0], 10);
-    var end = parseInt(pieces[1], 10);
-    if (!isNaN(start) && !isNaN(end) && end >= start) {
-      for (var score = start; score <= end; score += 1) options.push({ text: String(score), color: null });
-    }
+  } else if (taskType === 'single_sentence_va_scoring') {
+    titleText = t('previewTaskValence');
+    options = buildScoreOptionsFromDimension(config.valence);
   } else {
     options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
       return { text: tag.trim(), color: null };
@@ -1511,7 +1662,7 @@ function updateAnnotationPreview() {
     preview.appendChild(pairWrap);
   } else {
     var sampleTextKey = 'previewSampleSentence';
-    if (taskType === 'single_sentence_scoring_regression') sampleTextKey = 'previewSampleSentenceScoring';
+    if (taskType === 'single_sentence_va_scoring') sampleTextKey = 'previewSampleSentenceVA';
     else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
     else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
     var sample = document.createElement('div');
@@ -1533,51 +1684,49 @@ function updateAnnotationPreview() {
   optionsWrap.className = 'annotation-preview-options';
   preview.appendChild(optionsWrap);
 
-  if (!options.length) {
+  var singleSelectPreview =
+    taskType === 'single_sentence_va_scoring' ||
+    taskType === 'sentence_pairs' ||
+    (taskType === 'single_sentence_classification' && !config.allow_multiple);
+
+  if (taskType === 'single_sentence_va_scoring') {
+    var arousalTitle = document.createElement('div');
+    arousalTitle.className = 'annotation-preview-task-title';
+    arousalTitle.style.marginTop = '8px';
+
+    if (!options.length) {
+      var emptyVa = document.createElement('div');
+      emptyVa.className = 'annotation-preview-empty';
+      emptyVa.textContent = t('previewEmpty');
+      optionsWrap.appendChild(emptyVa);
+    } else {
+      appendPreviewOptionRows(optionsWrap, options, singleSelectPreview);
+    }
+
+    arousalTitle.textContent = t('previewTaskArousal');
+    preview.appendChild(arousalTitle);
+
+    var arousalOptionsWrap = document.createElement('div');
+    arousalOptionsWrap.className = 'annotation-preview-options';
+    preview.appendChild(arousalOptionsWrap);
+
+    var arousalOptions = buildScoreOptionsFromDimension(config.arousal);
+    if (!arousalOptions.length) {
+      var emptyArousal = document.createElement('div');
+      emptyArousal.className = 'annotation-preview-empty';
+      emptyArousal.textContent = t('previewEmpty');
+      arousalOptionsWrap.appendChild(emptyArousal);
+    } else {
+      appendPreviewOptionRows(arousalOptionsWrap, arousalOptions, singleSelectPreview);
+    }
+  } else if (!options.length) {
     var empty = document.createElement('div');
     empty.className = 'annotation-preview-empty';
     empty.textContent = t('previewEmpty');
     optionsWrap.appendChild(empty);
-    if (!state.codeDraftDirty) {
-      el('codeEditor').value = configToCode();
-    }
-    return;
+  } else {
+    appendPreviewOptionRows(optionsWrap, options, singleSelectPreview);
   }
-
-  var singleSelectPreview =
-    taskType === 'single_sentence_scoring_regression' ||
-    taskType === 'sentence_pairs' ||
-    (taskType === 'single_sentence_classification' && !config.allow_multiple);
-
-  options.forEach(function(option) {
-    var row = document.createElement('label');
-    row.className = 'annotation-preview-option';
-
-    var checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    if (singleSelectPreview) {
-      checkbox.addEventListener('change', function() {
-        if (!checkbox.checked) return;
-        optionsWrap.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
-          if (cb !== checkbox) cb.checked = false;
-        });
-      });
-    }
-    row.appendChild(checkbox);
-
-    if (option.color) {
-      var color = document.createElement('span');
-      color.className = 'annotation-preview-color';
-      color.style.background = option.color;
-      row.appendChild(color);
-    }
-
-    var text = document.createElement('span');
-    text.textContent = option.text;
-    row.appendChild(text);
-
-    optionsWrap.appendChild(row);
-  });
 
   if (!state.codeDraftDirty) {
     el('codeEditor').value = configToCode();
@@ -1699,6 +1848,11 @@ function saveCodeToVisual(showSuccessToast) {
   var merged = {};
   Object.keys(parsed).forEach(function(k) { merged[k] = parsed[k]; });
   schema.fields.forEach(function(field) {
+    if (field.type === 'va-dimensions') {
+      if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
+      if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
+      return;
+    }
     if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
     if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
     if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
@@ -1993,6 +2147,14 @@ function renderGuidelineList() {
   });
 }
 
+function applyDefaultGuidelineFiles(taskType) {
+  if (!taskType || state.guidelineFiles.length > 0) return;
+  var defaults = DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE[taskType];
+  if (!defaults || !defaults.length) return;
+  state.guidelineFiles = JSON.parse(JSON.stringify(defaults));
+  renderGuidelineList();
+}
+
 /* ── Leave confirm ───────────────────────────────────────────── */
 function showLeaveModal(callback) {
   state.leaveCallback = callback;
@@ -2037,6 +2199,7 @@ function submitTask() {
 function onTaskTypeChange() {
   var val = el('taskTypeSelect').value;
   if (val !== state.taskType) { state.taskType = val; state.configData = {}; state.codeDraftDirty = false; }
+  applyDefaultGuidelineFiles(state.taskType);
   renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
 

@@ -2,18 +2,21 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.1.3
+**版本**：1.1.5
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
 ## 規格常數
 
 - `SIDEBAR_WIDTH = 240px`
+- `SIDEBAR_COLLAPSED_WIDTH = 88px`
 - `MOBILE_BP = 767px`
 - `MOBILE_TOP_HEIGHT = 64px`
 - `MOBILE_BOTTOM_NAV_HEIGHT = 84px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `SUPPORTED_PAGES = /dashboard, /task-list, /task-new, /task-detail, /annotation-workspace, /dataset-stats, /dataset-quality, /user-management, /role-settings, /profile`
+- `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
+- `SIDEBAR_COLLAPSED_STORAGE_KEY = labelsuite.sidebarCollapsed`
 
 ## Process Flow
 
@@ -131,6 +134,7 @@ sequenceDiagram
 
 - `系統管理`：僅 `super_admin` 可見（不渲染給 `user`）。
 - `標記作業`：需當前任務 `annotator` 或 `reviewer`。
+- `標記作業` 導頁時，若 `ACTIVE_TASK_TYPE_STORAGE_KEY` 有值，需附帶 `task_type` query 參數。
 - `資料集分析`：需當前任務 `project_leader` 或 `reviewer`。
 - 任務上下文頁缺 `task_id / membership`：導回模組 Landing（`dashboard` 或 `task-list`）並提示。
 
@@ -149,6 +153,21 @@ sequenceDiagram
 1. **Given** viewport `> MOBILE_BP`，**When** 載入頁面，**Then** 顯示左側固定 Sidebar（含品牌、L0、actions）。
 2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列 + 下方主導覽。
 3. **Given** 行動版，**When** 操作 L0 導覽，**Then** 主要內容不被遮擋且導覽可點擊。
+
+### User Story 5 — Desktop Sidebar Mini / Icon-only 可收合（優先級：P2）
+
+Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容寬度，且不影響導覽可用性。
+
+**此優先級原因**：共享殼頁在資料密集頁（task-detail / annotation-workspace）需要更高可視區；收合行為須一致以避免跨頁心智切換。
+
+**獨立測試方式**：在 `RWD_VIEWPORTS` 驗證桌機收合展開、空白區觸發、互動區排除、跨頁與重整狀態保持。
+
+**驗收情境**：
+
+1. **Given** viewport `> MOBILE_BP`，**When** 點擊 sidebar 非互動空白區，**Then** Sidebar 在 `SIDEBAR_WIDTH` 與 `SIDEBAR_COLLAPSED_WIDTH` 間切換。
+2. **Given** viewport `> MOBILE_BP`，**When** 點擊 nav link / 語言切換 / 登出，**Then** 只執行原功能，不觸發 Sidebar 收合。
+3. **Given** 先前已收合 Sidebar，**When** 重新整理或切換至其他 `SUPPORTED_PAGES`，**Then** 依 `SIDEBAR_COLLAPSED_STORAGE_KEY` 還原收合狀態。
+4. **Given** viewport `<= MOBILE_BP`，**When** 點擊導覽區域，**Then** 不啟用 mini 收合，維持既有 mobile top+bottom nav 行為。
 
 ---
 
@@ -174,12 +193,18 @@ sequenceDiagram
 - **FR-006**：`role-settings` 必須映射為 `系統管理` active。
 - **FR-007**：每頁僅允許一個 L0 active 項，且必須同時包含 active 樣式與 `aria-current="page"`。
 - **FR-008**：`標記作業`、`資料集分析` 必須驗證任務角色與任務上下文，不符時導回 Landing 並提示。
+- **FR-008A**：點擊 `標記作業` 時，若存在 `ACTIVE_TASK_TYPE_STORAGE_KEY`，導頁 URL 必須附帶 `task_type` query（避免覆蓋既有 query 參數）。
 - **FR-009**：Navbar 必須支援 zh/en 切換，切換後同步更新文案、`aria-label`、`title`。
 - **FR-009A**：使用者點擊語言切換後，右側內容區不論目前顯示 `dashboard / task-management / annotation / dataset / admin / account` 任一模組頁，皆必須同步切換為相同語系，不可僅更新 Sidebar。
 - **FR-009B**：語言狀態必須跨頁持久化；導向任一 `SUPPORTED_PAGES` 後需維持同語系（建議實作：`localStorage`，key：`labelsuite.lang`）。
 - **FR-010**：Navbar 必須提供桌面與行動版登出控制項。
 - **FR-011**：`> MOBILE_BP` 使用左側固定 Sidebar；`<= MOBILE_BP` 使用上方品牌列 + 下方主導覽。
 - **FR-012**：在 `RWD_VIEWPORTS` 下不得出現重疊、不可點擊、內容被導覽遮擋。
+- **FR-013**：Shared Sidebar 樣式必須集中於 `design/prototype/pages/shared/sidebar.css`，使用共用 Sidebar 的頁面不得再頁內重複定義同一套 sidebar 規則。
+- **FR-014**：Desktop（`> MOBILE_BP`）必須支援 `Mini / Icon-only` 收合 Sidebar，收合寬度為 `SIDEBAR_COLLAPSED_WIDTH`。
+- **FR-014A**：Desktop 收合觸發必須為 sidebar 非互動空白區；互動元素（`a`、`button`、`input/select/textarea`、含語意按鈕角色元素）不得觸發收合。
+- **FR-014B**：Sidebar 收合狀態必須持久化於 `SIDEBAR_COLLAPSED_STORAGE_KEY`，並在 `SUPPORTED_PAGES` 間保持一致。
+- **FR-014C**：Mobile（`<= MOBILE_BP`）不得啟用 mini/icon-only 收合互動，避免與 bottom nav 操作衝突。
 
 ### User Flow & Navigation
 
@@ -218,6 +243,13 @@ flowchart LR
 - `LanguageState`
   - `lang`: `zh` / `en`
   - `storage_key`: `labelsuite.lang`
+- `ActiveTaskTypeState`
+  - `task_type`: 值域需對齊 task registry（如 `single_sentence_classification`、`single_sentence_va_scoring`）
+  - `storage_key`: `labelsuite.activeTaskType`
+- `SidebarCollapsedState`
+  - `collapsed`: `true` / `false`
+  - `storage_key`: `labelsuite.sidebarCollapsed`
+  - `desktop_only`: 僅在 `> MOBILE_BP` 生效
 
 ---
 
@@ -253,9 +285,14 @@ flowchart LR
 - **SC-003**：`super_admin` 與 `user` 的 L0 可見性符合矩陣（僅 `super_admin` 可見 `系統管理`）。
 - **SC-003A**：L0 可見項目數驗證通過：`user = 5`、`super_admin = 6`（Desktop / Mobile 皆一致）。
 - **SC-004**：缺少任務角色或上下文時，`標記作業`/`資料集分析` 會導回 Landing 並顯示提示。
+- **SC-004A**：點擊 `標記作業` 且存在 `labelsuite.activeTaskType` 時，導頁 URL 需包含 `task_type=<stored_value>`。
 - **SC-005**：`RWD_VIEWPORTS` 下 navbar 無破版、無重疊、無不可點擊控制項。
 - **SC-006**：在任一 `SUPPORTED_PAGES` 點擊語言切換後，Sidebar 與右側模組內容語系一致，且切頁後保持同一語系狀態。
 - **SC-006A**：重新載入任一 `SUPPORTED_PAGES` 後，仍可恢復最後一次語言狀態（`zh` / `en`）。
+- **SC-007**：Desktop 可在 `SIDEBAR_WIDTH` / `SIDEBAR_COLLAPSED_WIDTH` 間切換，且收合後保留 icon 導覽可辨識與 active 狀態可見。
+- **SC-007A**：點擊 sidebar 非互動空白區會觸發收合；點擊 nav link / 語言切換 / 登出不會觸發收合。
+- **SC-007B**：`SIDEBAR_COLLAPSED_STORAGE_KEY` 在重整與跨頁後可還原最後收合狀態。
+- **SC-007C**：Mobile viewport 下收合互動不生效，且 top+bottom nav 操作不受影響。
 
 ### 驗證建議
 
@@ -268,6 +305,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.5 | 2026-04-23 | 補充 Shared Sidebar 收合規格：新增 Desktop `Mini / Icon-only`、空白區觸發排除互動元件、`labelsuite.sidebarCollapsed` 狀態持久化、Mobile 不啟用收合，並明確化共用 `shared/sidebar.css` 契約 |
+| 1.1.4 | 2026-04-23 | 同步 shared sidebar：新增 `labelsuite.activeTaskType` 導頁契約，點擊「標記作業」時附帶 `task_type` query |
 | 1.1.3 | 2026-04-16 | 新增語言持久化機制規範（FR-009B / LanguageState / SC-006A），明確定義 `labelsuite.lang` 跨頁與重載一致性 |
 | 1.1.2 | 2026-04-16 | 新增「角色可見性與 L0 項目數」矩陣，明確規範 `user=5`、`super_admin=6`，並補 FR/SC 可驗收條款 |
 | 1.1.1 | 2026-04-16 | 新增全域語言切換規則：切換語言後 Sidebar 與右側任一模組頁需同步更新並保持一致 |

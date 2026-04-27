@@ -7,7 +7,7 @@ test.describe('Task detail sampling edit state', () => {
     await page.goto(TASK_DETAIL_URL);
 
     await expect(page.locator('#executionTitle')).toHaveText('任務狀態與執行控制');
-    await expect(page.locator('#samplingTitle')).toHaveText('試標資料抽樣設定');
+    await expect(page.locator('#samplingTitle')).toHaveText('抽樣設定');
 
     const editBtn = page.locator('#samplingEditBtn');
     const saveBtn = page.locator('#samplingSaveBtn');

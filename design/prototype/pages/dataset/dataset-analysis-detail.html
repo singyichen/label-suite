@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 資料集分析詳情</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-primary:             #6366F1;
+      --color-cta:                 #10B981;
+      --color-surface:             #F5F3FF;
+      --color-white:               #FFFFFF;
+      --color-ink:                 #1E1B4B;
+      --color-ink-muted:           #94A3B8;
+      --color-text-soft:           #64748B;
+      --color-border:              #E2E8F0;
+      --color-border-muted:        #F1F5F9;
+      --color-primary-soft-bg:     #EEF2FF;
+      --color-primary-soft-border: #C7D2FE;
+      --color-slate-50:            #F8FAFC;
+      --color-error:               #B91C1C;
+      --color-error-bg:            #FEF2F2;
+      --color-error-border:        #FECACA;
+      --color-success:             #15803D;
+      --color-success-bg:          #F0FDF4;
+      --color-success-border:      #BBF7D0;
+      --color-warning:             #A16207;
+      --color-warning-bg:          #FEFCE8;
+      --color-warning-border:      #FEF08A;
+      --color-info:                #1D4ED8;
+      --color-info-bg:             #EFF6FF;
+      --color-info-border:         #BFDBFE;
+      --font-serif-display: 'Crimson Pro', 'Noto Serif TC', Georgia, serif;
+      --font-sans:  'Inter', 'Noto Sans TC', -apple-system, sans-serif;
+      --font-mono:  'JetBrains Mono', ui-monospace, Menlo, monospace;
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+      --radius-xl: 16px; --radius-full: 9999px;
+      --shadow-lg: 0 10px 15px rgba(0,0,0,.1);
+      --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+      --space-lg: 24px; --space-xl: 32px;
+      --dur-fast: 150ms; --dur-normal: 200ms;
+      --ease-standard: cubic-bezier(.4,0,.2,1);
+      --z-toast: 300;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:16px}
+    body{font-family:var(--font-sans);background:var(--color-surface);color:var(--color-ink);line-height:1.8;min-height:100vh;display:flex;flex-direction:row}
+    html[lang="en"] body{line-height:1.6}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit;cursor:pointer}
+    .hidden{display:none !important}
+
+    main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+    .layout{max-width:1200px;width:100%;margin:0 auto;padding:var(--space-lg)}
+
+    /* Breadcrumb */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
+
+    /* Page header */
+    .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap}
+    .page-main-title{font-family:var(--font-serif-display);font-size:26px;line-height:1.3;font-weight:700;color:var(--color-ink);margin:0 0 6px}
+    .task-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .task-type-badge{display:inline-flex;align-items:center;padding:2px 10px;border:1px solid var(--color-primary-soft-border);border-radius:var(--radius-full);background:var(--color-primary-soft-bg);color:var(--color-primary);font-size:12px;font-weight:600}
+    .task-id-chip{font-size:12px;color:var(--color-ink-muted);font-family:var(--font-mono)}
+
+    /* Tabs */
+    .admin-tabs{display:flex;border-bottom:2px solid var(--color-border);margin-bottom:var(--space-lg)}
+    .admin-tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--color-text-soft);border-bottom:2px solid transparent;margin-bottom:-2px;background:transparent;border-left:none;border-right:none;border-top:none;transition:color var(--dur-fast),border-color var(--dur-fast)}
+    .admin-tab:hover{color:var(--color-primary)}
+    .admin-tab.active{color:var(--color-primary);border-bottom-color:var(--color-primary);font-weight:600}
+
+    /* Panel */
+    .panel{border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:var(--space-lg);margin-bottom:var(--space-md)}
+    .panel-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-sm);margin-bottom:var(--space-md);flex-wrap:wrap}
+    .panel-title{font-size:16px;font-weight:700;color:var(--color-ink)}
+    .panel-subtitle{font-size:13px;color:var(--color-text-soft);margin-top:2px}
+    .panel-divider{border:none;border-top:1px solid var(--color-border-muted);margin:var(--space-md) 0}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;border-radius:var(--radius-sm);border:1px solid transparent;padding:2px 8px;font-size:12px;font-weight:600;line-height:1.4;white-space:nowrap}
+    .badge-pass{color:var(--color-success);background:var(--color-success-bg);border-color:var(--color-success-border)}
+    .badge-fail{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
+    .badge-warn{color:var(--color-warning);background:var(--color-warning-bg);border-color:var(--color-warning-border)}
+    .badge-neutral{color:var(--color-text-soft);background:var(--color-slate-50);border-color:var(--color-border)}
+    .iaa-summary-badge{font-size:13px;padding:4px 12px;border-radius:var(--radius-full)}
+
+    /* IAA method row */
+    .iaa-method-row{display:flex;align-items:center;gap:8px;margin-bottom:var(--space-md);font-size:13px;color:var(--color-text-soft)}
+    .iaa-method-name{font-weight:700;color:var(--color-ink)}
+    .iaa-primary-star{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;font-size:11px;background:var(--color-warning-bg);border:1px solid var(--color-warning-border);border-radius:var(--radius-sm);color:var(--color-warning);font-weight:700;flex-shrink:0}
+
+    /* IAA score cards */
+    .iaa-score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:var(--space-md)}
+    .iaa-score-grid-1{grid-template-columns:1fr;max-width:320px}
+    .iaa-score-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-slate-50)}
+    .iaa-score-card.card-pass{border-color:var(--color-success-border);background:var(--color-success-bg)}
+    .iaa-score-card.card-warn{border-color:var(--color-warning-border);background:var(--color-warning-bg)}
+    .iaa-score-card.card-fail{border-color:var(--color-error-border);background:var(--color-error-bg)}
+    .iaa-card-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);margin-bottom:6px}
+    .iaa-card-value{font-size:32px;font-weight:700;line-height:1.1;font-family:var(--font-mono);margin-bottom:2px}
+    .iaa-card-value.pass{color:var(--color-success)}
+    .iaa-card-value.warn{color:var(--color-warning)}
+    .iaa-card-value.fail{color:var(--color-error)}
+    .iaa-card-calc{font-size:11px;color:var(--color-ink-muted);margin-bottom:10px}
+    .iaa-bar-wrap{height:8px;background:var(--color-border);border-radius:var(--radius-full);overflow:hidden;margin-bottom:8px}
+    .iaa-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .5s var(--ease-standard)}
+    .iaa-bar-fill.pass{background:var(--color-success)}
+    .iaa-bar-fill.warn{background:var(--color-warning)}
+    .iaa-bar-fill.fail{background:var(--color-error)}
+    .iaa-threshold-row{display:flex;flex-wrap:wrap;gap:8px;font-size:11px}
+    .iaa-threshold-item{display:flex;align-items:center;gap:4px}
+    .t-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .t-dot-pass{background:var(--color-success)}
+    .t-dot-fail{background:var(--color-error)}
+    .t-dot-warn{background:var(--color-warning)}
+    .t-pass{color:var(--color-success);font-weight:600}
+    .t-fail{color:var(--color-error);font-weight:600}
+    .t-warn{color:var(--color-warning);font-weight:600}
+
+    /* Match toggle (sequence labeling) */
+    .match-toggle{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:2px;background:var(--color-slate-50);gap:2px;margin-bottom:var(--space-sm)}
+    .match-btn{border:1px solid transparent;border-radius:6px;background:transparent;color:var(--color-text-soft);font-size:12px;font-weight:600;padding:5px 10px}
+    .match-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-soft-border)}
+    .match-btn:hover{color:var(--color-primary)}
+
+    /* Collapsible alt metrics */
+    .alt-toggle-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--color-primary);background:transparent;border:none;padding:6px 0;margin-top:4px}
+    .alt-toggle-btn:hover{text-decoration:underline}
+    .alt-toggle-icon{transition:transform var(--dur-fast)}
+    .alt-toggle-btn.open .alt-toggle-icon{transform:rotate(180deg)}
+    .alt-metrics-body{display:none;margin-top:var(--space-sm);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden}
+    .alt-metrics-body.open{display:block}
+    .alt-table{width:100%;border-collapse:collapse;font-size:13px}
+    .alt-table th{background:var(--color-slate-50);border-bottom:1px solid var(--color-border);padding:8px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-ink-muted);text-align:left}
+    .alt-table td{padding:9px 14px;border-bottom:1px solid var(--color-border-muted);color:var(--color-ink);vertical-align:middle}
+    .alt-table tbody tr:last-child td{border-bottom:none}
+    .alt-metric-name{font-weight:600}
+    .alt-metric-note{font-size:11px;color:var(--color-ink-muted)}
+
+    /* Anomaly */
+    .anomaly-group-title{font-size:13px;font-weight:700;color:var(--color-ink);margin:var(--space-md) 0 8px}
+    .anomaly-group-title:first-child{margin-top:0}
+    .anomaly-list{list-style:none;display:grid;gap:8px}
+    .anomaly-item{border:1px solid var(--color-warning-border);background:var(--color-warning-bg);border-radius:var(--radius-md);color:var(--color-warning);padding:10px 12px;font-size:13px;line-height:1.6;display:flex;align-items:flex-start;gap:8px}
+    .anomaly-icon{width:16px;height:16px;flex-shrink:0;margin-top:2px;opacity:.9}
+    .anomaly-body{flex:1}
+    .anomaly-title{font-weight:600}
+    .anomaly-detail{color:var(--color-ink-muted);font-size:12px;margin-top:2px}
+    .anomaly-empty{border:1px dashed var(--color-border);border-radius:var(--radius-md);background:var(--color-slate-50);padding:14px;font-size:13px;color:var(--color-text-soft);text-align:center}
+
+    /* Annotator table */
+    .table-wrap{border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;background:var(--color-white)}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .annotator-table{width:100%;border-collapse:collapse;text-align:left}
+    .annotator-table thead tr{background:var(--color-slate-50);border-bottom:1px solid var(--color-border)}
+    .annotator-table th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);font-weight:600;padding:12px 14px;white-space:nowrap}
+    .annotator-table td{padding:12px 14px;border-bottom:1px solid var(--color-border-muted);font-size:13px;color:var(--color-ink);vertical-align:middle;white-space:nowrap}
+    .annotator-table tbody tr:last-child td{border-bottom:none}
+    .annotator-name{font-weight:700}
+    .delta-pos{color:var(--color-success);font-weight:600}
+    .delta-neg{color:var(--color-error);font-weight:600}
+    .speed-flag{color:var(--color-warning);font-size:12px;margin-left:4px}
+    .speed-warn{color:var(--color-warning)}
+    .group-avg-note{font-size:12px;color:var(--color-text-soft);margin-top:10px}
+    .risk-level-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-full);border:1px solid transparent;font-size:12px;font-weight:700;white-space:nowrap}
+    .risk-level-badge.normal{color:var(--color-success);background:var(--color-success-bg);border-color:var(--color-success-border)}
+    .risk-level-badge.watch{color:var(--color-warning);background:var(--color-warning-bg);border-color:var(--color-warning-border)}
+    .risk-level-badge.high{color:var(--color-error);background:var(--color-error-bg);border-color:var(--color-error-border)}
+    .risk-level-badge.insufficient{color:var(--color-text-soft);background:var(--color-slate-50);border-color:var(--color-border)}
+    .cause-stack{display:flex;flex-wrap:wrap;gap:6px;min-width:180px}
+    .cause-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:var(--radius-full);background:var(--color-primary-soft-bg);border:1px solid var(--color-primary-soft-border);color:var(--color-primary);font-size:11px;font-weight:600}
+    .cause-text-block{display:grid;gap:4px;min-width:180px}
+    .cause-line{font-size:12px;color:var(--color-ink)}
+    .cause-line strong{color:var(--color-ink-muted);font-weight:700}
+    .cause-muted{font-size:12px;color:var(--color-text-soft);white-space:normal}
+    .action-stack{display:grid;gap:8px;min-width:140px}
+    .risk-action-btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+    .risk-readonly-note{font-size:11px;color:var(--color-text-soft);line-height:1.5;white-space:normal}
+
+    /* Quality empty state */
+    .quality-empty{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center}
+    .quality-empty-icon{width:40px;height:40px;margin:0 auto 14px;color:var(--color-ink-muted);opacity:.6}
+    .quality-empty-title{font-size:15px;font-weight:700;color:var(--color-ink);margin-bottom:8px}
+    .quality-empty-desc{font-size:13px;color:var(--color-text-soft);max-width:400px;margin:0 auto 18px;line-height:1.7}
+
+    /* Stats placeholder */
+    .stats-placeholder{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center;color:var(--color-text-soft);font-size:14px}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:var(--radius-md);border:1px solid transparent;font-size:14px;font-weight:600;transition:background var(--dur-fast),color var(--dur-fast),opacity var(--dur-fast),border-color var(--dur-fast),transform var(--dur-fast)}
+    .btn:hover{transform:translateY(-1px)}
+    .btn-secondary{color:var(--color-ink);background:var(--color-white);border-color:var(--color-border)}
+    .btn-secondary:hover{border-color:var(--color-primary);color:var(--color-primary)}
+    .btn-sm{padding:6px 12px;font-size:13px}
+
+    /* Toast */
+    .toast-container{position:fixed;right:24px;bottom:24px;z-index:var(--z-toast);pointer-events:none}
+    .toast{display:inline-flex;align-items:center;gap:8px;border-radius:var(--radius-lg);padding:11px 14px;background:var(--color-ink);color:var(--color-white);font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(8px);transition:opacity var(--dur-normal),transform var(--dur-normal);min-width:200px;max-width:340px}
+    .toast.show{opacity:1;transform:translateY(0)}
+
+    /* Stats tab */
+    .stats-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .stats-metric-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-slate-50)}
+    .stats-metric-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);margin-bottom:6px}
+    .stats-metric-value{font-size:32px;font-weight:700;line-height:1.1;font-family:var(--font-mono);color:var(--color-ink);margin-bottom:2px}
+    .stats-metric-desc{font-size:12px;color:var(--color-text-soft)}
+    .stats-empty{border:1px dashed var(--color-border);border-radius:var(--radius-lg);background:var(--color-white);padding:48px var(--space-lg);text-align:center}
+    .stats-empty-icon{width:40px;height:40px;margin:0 auto 14px;color:var(--color-ink-muted);opacity:.6}
+    .stats-empty-title{font-size:15px;font-weight:700;color:var(--color-ink);margin-bottom:8px}
+    .stats-empty-desc{font-size:13px;color:var(--color-text-soft);max-width:400px;margin:0 auto 18px;line-height:1.7}
+    .stats-hist-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-lg)}
+    .stats-chart-label{font-size:11px;font-weight:600;color:var(--color-ink-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+    .stats-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)}
+    .stats-summary-block{background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px}
+    .stats-summary-head{font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+    .stats-summary-row{display:flex;gap:var(--space-lg);flex-wrap:wrap}
+    .stats-summary-item{display:flex;flex-direction:column;gap:2px}
+    .stats-summary-item-label{font-size:10px;color:var(--color-text-soft);text-transform:uppercase;letter-spacing:.04em}
+    .stats-summary-item-val{font-size:18px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)}
+    .stats-scatter-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .stats-hbar-chart{display:grid;gap:10px}
+    .stats-hbar-row{display:grid;grid-template-columns:150px 1fr 90px;align-items:center;gap:8px;font-size:13px}
+    .stats-hbar-label{color:var(--color-ink);font-weight:500;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+    .stats-hbar-track{height:10px;background:var(--color-border-muted);border-radius:var(--radius-full);overflow:hidden}
+    .stats-hbar-fill{height:100%;border-radius:var(--radius-full);background:var(--color-primary);transition:width .4s var(--ease-standard)}
+    .stats-hbar-value{color:var(--color-text-soft);font-size:11px;font-family:var(--font-mono)}
+    .stats-comatrix{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:var(--space-sm)}
+    .stats-comatrix-table{border-collapse:collapse;font-size:12px;white-space:nowrap}
+    .stats-comatrix-table th{background:var(--color-slate-50);border:1px solid var(--color-border);padding:7px 12px;font-weight:600;color:var(--color-ink-muted)}
+    .stats-comatrix-table td{border:1px solid var(--color-border);padding:7px 12px;text-align:center;font-family:var(--font-mono);font-size:12px}
+    .stats-comatrix-diag{background:var(--color-primary-soft-bg);color:var(--color-primary);font-weight:700}
+    .stats-comatrix-hi{background:#EEF2FF;color:var(--color-ink)}
+    .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
+    .stats-comatrix-low{color:var(--color-ink-muted)}
+    .stats-inline-card{display:inline-flex;align-items:center;gap:var(--space-md);padding:16px 24px;background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md)}
+    .sp-toggle{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:2px;background:var(--color-slate-50);gap:2px}
+    .sp-btn{border:1px solid transparent;border-radius:6px;background:transparent;color:var(--color-text-soft);font-size:12px;font-weight:600;padding:5px 12px;transition:background var(--dur-fast),color var(--dur-fast)}
+    .sp-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-soft-border)}
+    .sp-btn:hover:not(.active){color:var(--color-primary)}
+
+    /* Responsive */
+    @media(max-width:767px){
+      .layout{padding:var(--space-md) var(--space-md) var(--space-xl)}
+      .admin-tabs{overflow-x:auto}
+      .iaa-score-grid{grid-template-columns:1fr}
+      .stats-metric-grid{grid-template-columns:1fr}
+      .stats-hist-grid{grid-template-columns:1fr}
+      .stats-summary-grid{grid-template-columns:1fr}
+      .stats-hbar-row{grid-template-columns:80px 1fr 60px}
+      .toast-container{right:12px;left:12px;bottom:90px}
+      .toast{width:100%}
+    }
+    @media(prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════════════════ -->
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'dataset',
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref:      '../task-management/task-list.html',
+    datasetHref:   './dataset-analysis-list.html',
+    adminHref:     '../admin/user-management.html',
+    profileHref:   '../account/profile.html',
+    loginHref:     '../account/login.html',
+    brandHref:     '../dashboard/dashboard.html',
+  });
+</script>
+
+<!-- ══ MAIN ══════════════════════════════════════════════════════════ -->
+<main id="detailMain">
+<div class="layout">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="./dataset-analysis-list.html" id="bcRoot">資料集分析</a>
+    <span class="breadcrumb-sep" aria-hidden="true">›</span>
+    <span id="bcCurrent">任務詳情</span>
+  </nav>
+
+  <!-- Page header -->
+  <header class="page-header">
+    <div>
+      <h1 class="page-main-title" id="pageTitle">情感 VA 雙維度評分</h1>
+      <div class="task-meta-row" style="margin-top:6px">
+        <span class="task-type-badge" id="taskTypeBadge">VA 評分</span>
+        <span class="badge badge-neutral" id="membershipRoleChip">Reviewer</span>
+        <span class="task-id-chip" id="taskIdChip">T002</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="admin-tabs" role="tablist">
+    <button class="admin-tab active" id="tabStats" type="button" role="tab" aria-selected="true">統計總覽</button>
+    <button class="admin-tab" id="tabQuality" type="button" role="tab" aria-selected="false">品質監控</button>
+  </div>
+
+  <!-- ═══ Stats Tab ══════════════════════════════════════════════ -->
+  <div id="statsPanel">
+    <!-- Empty state -->
+    <div id="statsEmpty" class="hidden stats-empty">
+      <div class="stats-empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18"/><path d="m7 16 4-4 4 4 4-4"/>
+        </svg>
+      </div>
+      <p class="stats-empty-title" id="statsEmptyTitle">尚無標記資料</p>
+      <p class="stats-empty-desc" id="statsEmptyDesc">標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。</p>
+      <a href="../task-management/task-detail.html" class="btn btn-secondary btn-sm" id="statsEmptyBtn">前往任務詳情</a>
+    </div>
+    <!-- Ready state -->
+    <div id="statsReady">
+      <!-- Shared metrics (FR-008) -->
+      <section class="panel" aria-labelledby="statsSharedTitle">
+        <h2 class="panel-title" id="statsSharedTitle">共用指標</h2>
+        <div class="stats-metric-grid" style="margin-top:var(--space-md)">
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblSentence">句子數量</div>
+            <div class="stats-metric-value">1,248</div>
+            <div class="stats-metric-desc" id="statsDescSentence">已提交標記的樣本總數</div>
+          </div>
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblToken">Token 數量</div>
+            <div class="stats-metric-value">42,816</div>
+            <div class="stats-metric-desc" id="statsDescToken">總 token 數（空格分詞）</div>
+          </div>
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblCompletion">整體完成率</div>
+            <div class="stats-metric-value" style="color:var(--color-success)">87.5%</div>
+            <div class="stats-metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div>
+          </div>
+        </div>
+      </section>
+      <!-- Task-type specific stats (FR-009) -->
+      <div id="statsPanelMount" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- ═══ Quality Tab ══════════════════════════════════════════════ -->
+  <div id="qualityPanel" class="hidden">
+
+    <!-- Empty state (shown when qualityState != ready) -->
+    <div id="qualityEmpty" class="hidden quality-empty">
+      <div class="quality-empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/>
+        </svg>
+      </div>
+      <p class="quality-empty-title" id="emptyTitle">IAA 報告將在 Dry Run 完成後產生</p>
+      <p class="quality-empty-desc" id="emptyDesc">請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。</p>
+      <a href="../task-management/task-detail.html" class="btn btn-secondary btn-sm" id="emptyBtn">前往任務詳情</a>
+    </div>
+
+    <!-- Ready state -->
+    <div id="qualityReady">
+      <div id="qualityPanelMount" aria-live="polite"></div>
+
+    </div><!-- /qualityReady -->
+
+  </div><!-- /qualityPanel -->
+
+</div><!-- /layout -->
+</main>
+
+<!-- ══ TOAST ═════════════════════════════════════════════════════════ -->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
+</div>
+
+<script src="../../assets/analytics.js"></script>
+<script>
+/* ── i18n ──────────────────────────────────────────────────────────── */
+var I18N = {
+  zh: {
+    docTitle: '資料集分析詳情 — Label Suite（原型）',
+    bcRoot: '資料集分析', bcCurrent: '任務詳情',
+    tabStats: '統計總覽', tabQuality: '品質監控',
+    statsSharedTitle:'共用指標',
+    statsLblSentence:'句子數量',statsDescSentence:'已提交標記的樣本總數',
+    statsLblToken:'Token 數量',statsDescToken:'總 token 數（空格分詞）',
+    statsLblCompletion:'整體完成率',statsDescCompletion:'1,092 / 1,248 已完成',
+    statsEmptyTitle:'尚無標記資料',
+    statsEmptyDesc:'標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。',
+    statsEmptyBtn:'前往任務詳情',
+    statsVAHistTitle:'Valence / Arousal 分佈直方圖',
+    statsVAHistDesc:'標記員在 1–7 評分量表上的分佈情形（共 412 筆有效標記）',
+    statsVALblValence:'Valence（V）',statsVALblArousal:'Arousal（A）',
+    statsLblMean:'Mean',statsLblStd:'SD',statsLblMedian:'Median',statsLblMin:'Min',statsLblMax:'Max',
+    statsVAScatterTitle:'V-A 二維分佈',
+    statsVAScatterDesc:'每筆標記在 Valence × Arousal 空間的分佈，紅點為 high_divergence 旗標樣本',
+    statsVALegendMain:'主要標記群',statsVALegendOutlier:'高分歧旗標',statsVALegendLow:'低頻分佈',
+    statsClsDistTitle:'標籤分佈',
+    statsClsDistDesc:'各標籤在提交標記中的次數與比例（共 1,248 筆標記，多標籤任務）',
+    statsClsDistNote:'平均每筆標記包含 1.96 個標籤（多標籤任務）',
+    statsClsCooccTitle:'多標籤共現矩陣',
+    statsClsCooccDesc:'兩個標籤同時出現的次數。對角線為各標籤單獨出現的樣本數。',
+    statsClsCooccNote:'顏色深度反映共現頻率高低；白色格子代表極少共現。',
+    statsSeqEntityDistTitle:'實體類型分佈',
+    statsSeqEntityDistDesc:'各實體類型在所有提交標記中的出現次數（共 3,994 個已標記實體）',
+    statsSeqAvgEntityTitle:'每句平均實體數',statsSeqAvgLabel:'平均實體數 / 句',
+    statsSeqTotalSentLabel:'總句子數',statsSeqTotalEntityLabel:'總實體標記數',
+    statsSeqZeroEntityLabel:'無實體句子比例',statsSeqMaxEntityLabel:'單句最多實體數',
+    statsSeqSpanLenTitle:'Entity Span 長度分佈',
+    statsSeqSpanLenDesc:'以 token 數計算的 span 長度分佈（長度 ≥ 6 合併為「6+」）',
+    statsSeqSpanLenXLabel:'Span 長度（token 數）',
+    statsRelEntityDistTitle:'實體類型分佈',statsRelEntityDistDesc:'各實體類型在已標記三元組中的出現次數',
+    statsRelRelDistTitle:'關係類型分佈',statsRelRelDistDesc:'各關係類型的三元組標記次數',
+    statsRelTripleTitle:'Triple 統計摘要',
+    statsRelTripleDesc:'三元組（Subject, Relation, Object）層級的聚合統計',
+    statsRelTotalTripleLabel:'Triple 總數',statsRelTotalTripleDesc:'所有標記員提交的 triple 總計',
+    statsRelUniqueTripleLabel:'唯一 Triple 數',statsRelUniqueTripleDesc:'去重後的 triple 集合大小',
+    statsRelAvgTripleLabel:'平均 / 句',statsRelAvgTripleDesc:'每個樣本平均標記的 triple 數',
+    statsRelAnnotated5xLabel:'≥ 5 次標記 Triple',statsRelAnnotated5xDesc:'達到一致性比較門檻的 triple 數',
+    statsRelAvgAnnotatorsLabel:'平均標記員數 / Triple',statsRelAvgAnnotatorsDesc:'每個唯一 triple 的平均覆蓋標記員數',
+    statsRelMaxTripleLabel:'單句最多 Triple',statsRelMaxTripleDesc:'單一樣本出現最多 triple 的數量',
+    statsSpDistTitle:'分佈統計',
+    statsSpLblDistTitle:'各標籤在提交標記中的次數與比例（共 983 筆有效標記）',
+    statsSpScoreDistTitle:'評分分數（0–1）在提交標記中的分佈（共 983 筆有效標記）',
+    statsSpClsLabelCount:'標籤類別數',statsSpClsSampleCount:'有效標記句對數',
+    statsSpClsDominantLabel:'最常見標籤',
+    statsSpScoreSummaryHead:'評分統計摘要',statsSpScoreQuartileHead:'四分位數',
+    statsSpScoreLenXLabel:'相似度分數',
+    iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標',
+    anomalyTitle: '異常偵測', anomalySubtitle: '自動標記標記速度異常與離群標記值',
+    consistencyTitle: '標記一致性偏離分析',
+    consistencySubtitle: '顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。',
+    consistencyOutlier15CountCol: '離群值(1.5xSTD)筆數',
+    consistencyOutlier15RateCol: '離群值(1.5xSTD)比例',
+    consistencyOutlier2CountCol: '離群值(2xSTD)筆數',
+    consistencyOutlier2RateCol: '離群值(2xSTD)比例',
+    annotatorTitle: '標記員風險評估', annotatorSubtitle: '風險等級與異常原因獨立於 high_divergence 樣本旗標顯示',
+    emptyTitle: 'IAA 報告將在 Dry Run 完成後產生',
+    emptyDesc: '請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。',
+    emptyBtn: '前往任務詳情',
+    iaaSummaryPass: '整體通過', iaaSummaryFail: '整體未達標', iaaSummaryWarn: '部分通過',
+    taskTypeBadge: { va:'VA 評分', classification:'單句分類', sequence:'序列標記', relation:'關係抽取', sentence_pairs:'句對任務' },
+    pageTitle: {
+      va: '情感 VA 雙維度評分',
+      classification: '新聞標題多標籤分類',
+      sequence: '產品評論序列標註（NER / Aspect）',
+      relation: '醫療關係抽取（Entity / Triple）',
+      sentence_pairs: '句對相似度 / 蘊含判定',
+    },
+    taskId: { va:'T002', classification:'T001', sequence:'T003', relation:'T004', sentence_pairs:'T005' },
+    iaaMethodName: {
+      va: 'ICC（Intraclass Correlation Coefficient）',
+      classification: "Krippendorff's Alpha（nominal）",
+      sequence_strict: 'Pairwise Entity-level F1（strict）',
+      sequence_partial: 'Pairwise Entity-level F1（partial overlap）',
+      relation: 'Pairwise Triple-level F1',
+      sentence_pairs: "Krippendorff's Alpha（nominal）",
+    },
+    altLblVA:'輔助指標', altLblCls:'替代指標', altLblSeq:'兩種計算模式比較',
+    altLblRel:'輔助指標', altLblSp:'替代指標',
+    altHVAMetric:'指標', altHVAV:'Valence（V）', altHVAA:'Arousal（A）',
+    altHClsMetric:'指標', altHClsVal:'數值',
+    altHSeqMode:'計算模式', altHSeqVal:'數值', altHSeqThr:'門檻', altHSeqResult:'結果',
+    altHRelMetric:'指標', altHRelVal:'數值',
+    altHSpMetric:'指標', altHSpVal:'數值',
+    altSeqStrictResult:'未達', altSeqPartialResult:'通過',
+    lblV:'Valence（V）', lblA:'Arousal（A）', lblOverall:'Overall IAA', lblOverallCalc:'（V + A）/ 2',
+    lblVrec:'建議門檻 0.75 — ', lblVstr:'嚴格門檻 0.80 — ',
+    lblArec:'建議門檻 0.75 — ', lblAstr:'嚴格門檻 0.80 — ',
+    lblOrec:'建議門檻 0.75 — ', lblOstr:'嚴格門檻 0.80 — ',
+    tPass:'通過', tFail:'未達',
+    lblClsThr:'門檻 0.80 — ',
+    lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 門檻 0.70 — ',
+    lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質門檻 0.80 — ',
+    lblSpThr:'門檻 0.80 — ',
+    thVAName:'標記員', thVASpeed:'平均速度', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs 群體', thVADeltaA:'Δ A vs 群體', thVAStatus:'狀態',
+    thClsName:'標記員', thClsSpeed:'平均速度', thClsIaa:'Alpha', thClsDelta:'Δ vs 群體', thClsStatus:'狀態',
+    thSeqName:'標記員', thSeqSpeed:'平均速度', thSeqIaa:'F1（strict）', thSeqDelta:'Δ vs 群體', thSeqStatus:'狀態',
+    thRelName:'標記員', thRelSpeed:'平均速度', thRelIaa:'Triple F1', thRelDelta:'Δ vs 群體', thRelStatus:'狀態',
+    thSpName:'標記員', thSpSpeed:'平均速度', thSpIaa:'Alpha', thSpDelta:'Δ vs 群體', thSpStatus:'狀態',
+    vaGroupAvg:'群體平均 — IAA_V: 0.78 ／ IAA_A: 0.82 ／ 平均速度: 32.7s／句',
+    clsGroupAvg:'群體平均 — Alpha: 0.83 ／ 平均速度: 31.3s／句',
+    seqGroupAvg:'群體平均 — F1（strict）: 0.72 ／ 平均速度: 44.7s／句',
+    relGroupAvg:'群體平均 — Triple F1: 0.76 ／ 平均速度: 54.0s／句',
+    spGroupAvg:'群體平均 — Alpha: 0.85 ／ 平均速度: 37.3s／句',
+    vaStatus1:'正常', vaStatus2:'注意', vaStatus3:'異常',
+    clsStatus1:'正常', clsStatus2:'正常', clsStatus3:'注意',
+    seqStatus1:'正常', seqStatus2:'注意', seqStatus3:'異常',
+    relStatus1:'正常', relStatus2:'正常', relStatus3:'異常',
+    spStatus1:'正常', spStatus2:'正常', spStatus3:'正常',
+    anomalySpeedTitleVA:'標記速度異常', anomalyOutlierTitleVA:'高分歧樣本',
+    anomVASpd1Title:'Jordan Wu — 標記速度過快', anomVASpd1Detail:'平均 18s／句（門檻：≥ 20s），共 42 筆提交紀錄',
+    anomVAOut1Title:'樣本 #47 — high_divergence 評分旗標', anomVAOut1Detail:'Mandy Chen 在此樣本的 V / A 與群體中位數距離超過 2σ，且其餘標記員 pairwise ICC > 0.75。',
+    anomVAOut2Title:'樣本 #112 — high_divergence 評分旗標', anomVAOut2Detail:'Jordan Wu 在此樣本的 A 分數偏離顯著；此旗標不直接拉高其 annotator risk。',
+    anomClsSpeedTitle:'標記速度異常', anomClsSpeedEmpty:'無速度異常',
+    anomClsOutlierTitle:'高分歧樣本',
+    anomClsOut1Title:'樣本 #23 — high_divergence 樣本旗標', anomClsOut1Detail:'Jordan Wu 選擇「中立」，其餘標記員集中於「正向」；樣本獨立標示，不直接提升其個人風險。',
+    anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'高分歧樣本',
+    anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆提交紀錄',
+    anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
+    anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
+    anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
+    anomSpSpeedTitle:'標記速度異常', anomSpSpeedEmpty:'無速度異常', anomSpOutlierTitle:'高分歧樣本', anomSpOutlierEmpty:'無 high_divergence 樣本',
+    consistencyUnitHeader: { va:'可比較句數', classification:'可比較句數', sequence:'可比較 span 數', relation:'標記 5 次的三元組數', sentence_pairs:'可比較句對數' },
+    consistencyNotes: {
+      va:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
+      classification:'分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
+      sequence:'序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
+      relation:'關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。',
+      sentence_pairs:'句對任務以可重疊比較的句對結果為母體；適合觀察群體偏離頻率，不單獨作為處置依據。',
+    },
+    emptyStateMsgs: {
+      dry_run_in_progress: ['Dry Run 進行中', 'Dry Run 仍在執行中，等待所有標記員完成提交。'],
+      report_pending:      ['報告待產生',     'Dry Run 已完成，IAA 報告已排入計算佇列。'],
+      report_generating:   ['報告產生中',     'IAA 正在計算中，請稍候。這可能需要幾分鐘。'],
+    },
+    lblClsMetric:"Krippendorff's Alpha（nominal）", lblClsCalc:'整體 alpha（多標籤 macro average）',
+    lblRelCalc:'subject + relation + object 完全一致',
+    lblSpCalc:'分類型子任務',
+    matchStrict:'Strict match', matchPartial:'Partial overlap',
+    lblSeqStrictMetric:'Pairwise Entity-level F1（strict）',
+    lblSeqPartialMetric:'Pairwise Entity-level F1（partial overlap）',
+    lblRelMetric:'Pairwise Triple-level F1',
+    lblSpMetric:"Krippendorff's Alpha（nominal）",
+  },
+  en: {
+    docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
+    bcRoot: 'Dataset Analysis', bcCurrent: 'Task Detail',
+    tabStats: 'Statistics', tabQuality: 'Quality Monitor',
+    statsSharedTitle:'Shared Metrics',
+    statsLblSentence:'Sentence Count',statsDescSentence:'Total annotated samples submitted',
+    statsLblToken:'Token Count',statsDescToken:'Total tokens (whitespace-split)',
+    statsLblCompletion:'Overall Completion',statsDescCompletion:'1,092 / 1,248 completed',
+    statsEmptyTitle:'No annotation data',
+    statsEmptyDesc:'Statistics will be calculated once annotators submit. Complete the Dry Run first.',
+    statsEmptyBtn:'Go to Task Detail',
+    statsVAHistTitle:'Valence / Arousal Distribution',
+    statsVAHistDesc:'Annotator distribution on the 1–7 rating scale (412 valid annotations)',
+    statsVALblValence:'Valence (V)',statsVALblArousal:'Arousal (A)',
+    statsLblMean:'Mean',statsLblStd:'SD',statsLblMedian:'Median',statsLblMin:'Min',statsLblMax:'Max',
+    statsVAScatterTitle:'V-A 2D Distribution',
+    statsVAScatterDesc:'Distribution of all annotations in the V × A space. Red dots are high-divergence flagged samples.',
+    statsVALegendMain:'Main cluster',statsVALegendOutlier:'High-divergence',statsVALegendLow:'Low-frequency',
+    statsClsDistTitle:'Label Distribution',
+    statsClsDistDesc:'Frequency and proportion of each label in submitted annotations (1,248 total, multi-label)',
+    statsClsDistNote:'Average 1.96 labels per annotation (multi-label task)',
+    statsClsCooccTitle:'Multi-label Co-occurrence Matrix',
+    statsClsCooccDesc:'Number of co-occurrences for any two labels. Diagonal = solo-label sample count.',
+    statsClsCooccNote:'Color depth reflects co-occurrence frequency; white cells indicate rare co-occurrence.',
+    statsSeqEntityDistTitle:'Entity Type Distribution',
+    statsSeqEntityDistDesc:'Count of each entity type across all submitted annotations (3,994 total)',
+    statsSeqAvgEntityTitle:'Avg Entities per Sentence',statsSeqAvgLabel:'Avg entities / sentence',
+    statsSeqTotalSentLabel:'Total sentences',statsSeqTotalEntityLabel:'Total entity labels',
+    statsSeqZeroEntityLabel:'Zero-entity sentences',statsSeqMaxEntityLabel:'Max entities / sentence',
+    statsSeqSpanLenTitle:'Entity Span Length Distribution',
+    statsSeqSpanLenDesc:'Span length distribution in tokens (length ≥ 6 collapsed to "6+")',
+    statsSeqSpanLenXLabel:'Span length (tokens)',
+    statsRelEntityDistTitle:'Entity Type Distribution',statsRelEntityDistDesc:'Count of each entity type in labeled triples',
+    statsRelRelDistTitle:'Relation Type Distribution',statsRelRelDistDesc:'Triple annotation count per relation type',
+    statsRelTripleTitle:'Triple Count Summary',
+    statsRelTripleDesc:'Aggregated statistics at the triple (Subject, Relation, Object) level',
+    statsRelTotalTripleLabel:'Total triples',statsRelTotalTripleDesc:'Total triples submitted by all annotators',
+    statsRelUniqueTripleLabel:'Unique triples',statsRelUniqueTripleDesc:'Deduplicated triple set size',
+    statsRelAvgTripleLabel:'Avg / sentence',statsRelAvgTripleDesc:'Average triples labeled per sample',
+    statsRelAnnotated5xLabel:'≥ 5× annotated',statsRelAnnotated5xDesc:'Triples meeting comparison threshold',
+    statsRelAvgAnnotatorsLabel:'Avg annotators / triple',statsRelAvgAnnotatorsDesc:'Avg annotator coverage per unique triple',
+    statsRelMaxTripleLabel:'Max triples / sentence',statsRelMaxTripleDesc:'Max triples in a single sample',
+    statsSpDistTitle:'Distribution Statistics',
+    statsSpLblDistTitle:'Frequency and proportion of each label (983 valid annotations)',
+    statsSpScoreDistTitle:'Score distribution (0–1) in submitted annotations (983 valid)',
+    statsSpClsLabelCount:'Label classes',statsSpClsSampleCount:'Valid sentence pairs',
+    statsSpClsDominantLabel:'Most common label',
+    statsSpScoreSummaryHead:'Score summary',statsSpScoreQuartileHead:'Quartiles',
+    statsSpScoreLenXLabel:'Similarity score',
+    iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric',
+    anomalyTitle: 'Anomaly Detection', anomalySubtitle: 'Flag annotation speed anomalies and outlier values automatically',
+    consistencyTitle: 'Annotation Consistency Deviation Analysis',
+    consistencySubtitle: 'Show outlier counts and rates for each annotator across comparable units as an observation signal without overriding risk level directly.',
+    consistencyOutlier15CountCol: 'Outlier Count (1.5xSTD)',
+    consistencyOutlier15RateCol: 'Outlier Rate (1.5xSTD)',
+    consistencyOutlier2CountCol: 'Outlier Count (2xSTD)',
+    consistencyOutlier2RateCol: 'Outlier Rate (2xSTD)',
+    annotatorTitle: 'Annotator Risk Assessment', annotatorSubtitle: 'Risk level and cause types are shown separately from high-divergence sample flags',
+    emptyTitle: 'IAA report will be generated after Dry Run completes',
+    emptyDesc: 'Please complete the Dry Run first. IAA will be calculated automatically.',
+    emptyBtn: 'Go to Task Detail',
+    iaaSummaryPass: 'Overall Pass', iaaSummaryFail: 'Overall Fail', iaaSummaryWarn: 'Partial Pass',
+    taskTypeBadge: { va:'VA Scoring', classification:'Classification', sequence:'Sequence Labeling', relation:'Relation Extraction', sentence_pairs:'Sentence Pairs' },
+    pageTitle: {
+      va: 'Sentiment VA Dual-axis Scoring',
+      classification: 'News Headline Multi-label Classification',
+      sequence: 'Product Review Sequence Labeling (NER / Aspect)',
+      relation: 'Medical Relation Extraction (Entity / Triple)',
+      sentence_pairs: 'Sentence Pair Similarity / Entailment',
+    },
+    taskId: { va:'T002', classification:'T001', sequence:'T003', relation:'T004', sentence_pairs:'T005' },
+    iaaMethodName: {
+      va: 'ICC (Intraclass Correlation Coefficient)',
+      classification: "Krippendorff's Alpha (nominal)",
+      sequence_strict: 'Pairwise Entity-level F1 (strict)',
+      sequence_partial: 'Pairwise Entity-level F1 (partial overlap)',
+      relation: 'Pairwise Triple-level F1',
+      sentence_pairs: "Krippendorff's Alpha (nominal)",
+    },
+    altLblVA:'Auxiliary metrics', altLblCls:'Alternative metrics', altLblSeq:'Match mode comparison',
+    altLblRel:'Auxiliary metrics', altLblSp:'Alternative metrics',
+    altHVAMetric:'Metric', altHVAV:'Valence (V)', altHVAA:'Arousal (A)',
+    altHClsMetric:'Metric', altHClsVal:'Value',
+    altHSeqMode:'Match mode', altHSeqVal:'Value', altHSeqThr:'Threshold', altHSeqResult:'Result',
+    altHRelMetric:'Metric', altHRelVal:'Value',
+    altHSpMetric:'Metric', altHSpVal:'Value',
+    altSeqStrictResult:'Fail', altSeqPartialResult:'Pass',
+    lblV:'Valence (V)', lblA:'Arousal (A)', lblOverall:'Overall IAA', lblOverallCalc:'(V + A) / 2',
+    lblVrec:'Recommended 0.75 — ', lblVstr:'Strict 0.80 — ',
+    lblArec:'Recommended 0.75 — ', lblAstr:'Strict 0.80 — ',
+    lblOrec:'Recommended 0.75 — ', lblOstr:'Strict 0.80 — ',
+    tPass:'Pass', tFail:'Fail',
+    lblClsThr:'Threshold 0.80 — ',
+    lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed threshold 0.70 — ',
+    lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality 0.80 — ',
+    lblSpThr:'Threshold 0.80 — ',
+    thVAName:'Annotator', thVASpeed:'Avg Speed', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs Group', thVADeltaA:'Δ A vs Group', thVAStatus:'Status',
+    thClsName:'Annotator', thClsSpeed:'Avg Speed', thClsIaa:'Alpha', thClsDelta:'Δ vs Group', thClsStatus:'Status',
+    thSeqName:'Annotator', thSeqSpeed:'Avg Speed', thSeqIaa:'F1 (strict)', thSeqDelta:'Δ vs Group', thSeqStatus:'Status',
+    thRelName:'Annotator', thRelSpeed:'Avg Speed', thRelIaa:'Triple F1', thRelDelta:'Δ vs Group', thRelStatus:'Status',
+    thSpName:'Annotator', thSpSpeed:'Avg Speed', thSpIaa:'Alpha', thSpDelta:'Δ vs Group', thSpStatus:'Status',
+    vaGroupAvg:'Group avg — IAA_V: 0.78 / IAA_A: 0.82 / Avg speed: 32.7s/sent',
+    clsGroupAvg:"Group avg — Alpha: 0.83 / Avg speed: 31.3s/sent",
+    seqGroupAvg:'Group avg — F1 (strict): 0.72 / Avg speed: 44.7s/sent',
+    relGroupAvg:'Group avg — Triple F1: 0.76 / Avg speed: 54.0s/sent',
+    spGroupAvg:"Group avg — Alpha: 0.85 / Avg speed: 37.3s/sent",
+    vaStatus1:'Normal', vaStatus2:'Watch', vaStatus3:'Anomaly',
+    clsStatus1:'Normal', clsStatus2:'Normal', clsStatus3:'Watch',
+    seqStatus1:'Normal', seqStatus2:'Watch', seqStatus3:'Anomaly',
+    relStatus1:'Normal', relStatus2:'Normal', relStatus3:'Anomaly',
+    spStatus1:'Normal', spStatus2:'Normal', spStatus3:'Normal',
+    anomalySpeedTitleVA:'Speed Anomalies', anomalyOutlierTitleVA:'High-divergence Samples',
+    anomVASpd1Title:'Jordan Wu — Annotation speed too fast', anomVASpd1Detail:'Avg 18s/sent (threshold: ≥ 20s), 42 submissions',
+    anomVAOut1Title:'Sample #47 — high-divergence score flag', anomVAOut1Detail:'Mandy Chen deviates from the group median by > 2σ on V/A, while the other annotators remain aligned.',
+    anomVAOut2Title:'Sample #112 — high-divergence score flag', anomVAOut2Detail:'Jordan Wu deviates sharply on A for this sample; the flag does not directly increase personal risk.',
+    anomClsSpeedTitle:'Speed Anomalies', anomClsSpeedEmpty:'No speed anomalies',
+    anomClsOutlierTitle:'High-divergence Samples',
+    anomClsOut1Title:'Sample #23 — high-divergence sample flag', anomClsOut1Detail:'Jordan Wu chose "Neutral" while the remaining annotators converged on "Positive"; this sample is separated from annotator risk.',
+    anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'High-divergence Samples',
+    anomSeqSpd1Title:'Jordan Wu — Annotation speed too fast', anomSeqSpd1Detail:'Avg 22s/sent (threshold: ≥ 30s), 38 submissions',
+    anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
+    anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
+    anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
+    anomSpSpeedTitle:'Speed Anomalies', anomSpSpeedEmpty:'No speed anomalies', anomSpOutlierTitle:'High-divergence Samples', anomSpOutlierEmpty:'No high-divergence samples',
+    consistencyUnitHeader: { va:'Comparable Sentences', classification:'Comparable Sentences', sequence:'Comparable Spans', relation:'Triples Annotated 5 Times', sentence_pairs:'Comparable Sentence Pairs' },
+    consistencyNotes: {
+      va:'Aggregated against the group median for the same sample. 1.5xSTD is an observation threshold and 2xSTD signals stronger deviation.',
+      classification:'For classification tasks, each submitted sentence is treated as one comparable unit. This block describes deviation, not ground-truth correctness.',
+      sequence:'For sequence labeling, aligned spans form the comparison pool. Boundary-level high_divergence samples remain separate flags.',
+      relation:'For relation extraction, only triples with enough repeated annotations enter the comparison pool. This block shows group deviation, not final risk decisions.',
+      sentence_pairs:'For sentence-pair tasks, comparable pair results form the base. Use this to observe deviation frequency, not as a standalone action trigger.',
+    },
+    emptyStateMsgs: {
+      dry_run_in_progress: ['Dry Run in progress', 'Waiting for all annotators to submit.'],
+      report_pending:      ['Report pending',       'Dry Run completed. IAA report is queued.'],
+      report_generating:   ['Generating report',    'IAA is being calculated. This may take a few minutes.'],
+    },
+    lblClsMetric:"Krippendorff's Alpha (nominal)", lblClsCalc:'Overall alpha (multi-label macro average)',
+    lblRelCalc:'subject + relation + object must fully match',
+    lblSpCalc:'Classification subtype',
+    matchStrict:'Strict match', matchPartial:'Partial overlap',
+    lblSeqStrictMetric:'Pairwise Entity-level F1 (strict)',
+    lblSeqPartialMetric:'Pairwise Entity-level F1 (partial overlap)',
+    lblRelMetric:'Pairwise Triple-level F1',
+    lblSpMetric:"Krippendorff's Alpha (nominal)",
+  },
+};
+
+/* ── State ─────────────────────────────────────────────────────────── */
+var S = { lang: 'zh', tab: 'stats', type: 'va', qState: 'ready', seqMode: 'strict', scrollTopByTab: { stats: 0, quality: 0 } };
+var STATS_PANEL_PATHS = {
+  va: './dataset-analysis-detail.partials/stats-va.html',
+  classification: './dataset-analysis-detail.partials/stats-classification.html',
+  sequence: './dataset-analysis-detail.partials/stats-sequence.html',
+  relation: './dataset-analysis-detail.partials/stats-relation.html',
+  sentence_pairs: './dataset-analysis-detail.partials/stats-sentence_pairs.html',
+};
+var QUALITY_PANEL_PATHS = {
+  va: './dataset-analysis-detail.partials/quality-va.html',
+  classification: './dataset-analysis-detail.partials/quality-classification.html',
+  sequence: './dataset-analysis-detail.partials/quality-sequence.html',
+  relation: './dataset-analysis-detail.partials/quality-relation.html',
+  sentence_pairs: './dataset-analysis-detail.partials/quality-sentence-pairs.html',
+};
+var TASK_META = {
+  T001: {
+    type: 'classification',
+    title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+    chipId: 'T001',
+    membershipRole: 'project_leader',
+  },
+  T002: {
+    type: 'va',
+    title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+    chipId: 'T002',
+    membershipRole: 'reviewer',
+  },
+  T003: {
+    type: 'sequence',
+    title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+    chipId: 'T003',
+    membershipRole: 'reviewer',
+  },
+  T004: {
+    type: 'relation',
+    title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+    chipId: 'T004',
+    membershipRole: 'project_leader',
+  },
+  T005: {
+    type: 'sentence_pairs',
+    title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+    chipId: 'T005',
+    membershipRole: 'reviewer',
+  },
+};
+var DEFAULT_TASK_ID = 'T002';
+var S_ROUTE = { taskId: DEFAULT_TASK_ID };
+
+function t(key) {
+  var dict = I18N[S.lang] || I18N.zh;
+  return dict[key] !== undefined ? dict[key] : (I18N.zh[key] !== undefined ? I18N.zh[key] : key);
+}
+function setText(id, key) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var v = t(key);
+  if (typeof v === 'string') el.textContent = v;
+}
+
+function loadStatsPanel() {
+  var mount = document.getElementById('statsPanelMount');
+  var path = STATS_PANEL_PATHS[S.type] || STATS_PANEL_PATHS.va;
+  if (!mount || !path) return Promise.resolve();
+  mount.innerHTML = '';
+  return fetch(path, { cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('stats panel load failed: ' + path);
+      return r.text();
+    })
+    .then(function(html) {
+      mount.innerHTML = html.trim();
+      SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+      updateStatsEmptyBtn();
+    })
+    .catch(function() {
+      if (mount) mount.innerHTML = '<div class="panel"><p class="panel-subtitle">統計資料載入失敗，請重新整理頁面。</p></div>';
+    });
+}
+
+function updateStatsEmptyBtn() {
+  var btn = document.getElementById('statsEmptyBtn');
+  if (btn) btn.href = '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId);
+}
+
+function applyStatsState() {
+  var params;
+  try { params = new URLSearchParams(window.location.search); } catch(e) { return; }
+  var sState = params.get('s_state');
+  var isEmpty = sState === 'empty';
+  var emptyEl = document.getElementById('statsEmpty');
+  var readyEl = document.getElementById('statsReady');
+  if (emptyEl) emptyEl.classList.toggle('hidden', !isEmpty);
+  if (readyEl) readyEl.classList.toggle('hidden', isEmpty);
+  updateStatsEmptyBtn();
+}
+
+function renderPanelLoadError() {
+  var mount = document.getElementById('qualityPanelMount');
+  if (!mount) return;
+  mount.innerHTML = '<section class="panel" aria-live="polite"><p class="panel-subtitle">Panel 載入失敗，請重新整理頁面。</p></section>';
+}
+
+function currentMembershipRole() {
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  return taskMeta.membershipRole || 'reviewer';
+}
+
+function syncRoleUi() {
+  var role = currentMembershipRole();
+  var roleChip = document.getElementById('membershipRoleChip');
+  if (roleChip) {
+    roleChip.textContent = S.lang === 'en'
+      ? (role === 'project_leader' ? 'Project Leader' : 'Reviewer')
+      : (role === 'project_leader' ? '專案負責人' : '審查者');
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-risk-level]'), function(el) {
+    var labels = S.lang === 'en'
+      ? { normal: 'Normal', watch: 'Watch', high: 'High Risk', insufficient: 'Insufficient Data' }
+      : { normal: '正常', watch: '觀察', high: '高風險', insufficient: '資料不足' };
+    el.textContent = labels[el.getAttribute('data-risk-level')] || labels.normal;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-role-action]'), function(el) {
+    var disabled = role !== 'project_leader';
+    el.disabled = disabled;
+    el.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-role-note]'), function(el) {
+    el.classList.toggle('hidden', role === 'project_leader');
+  });
+}
+
+function updateTaskDetailHref() {
+  var emptyBtn = document.getElementById('emptyBtn');
+  if (!emptyBtn) return;
+  emptyBtn.href = '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId);
+}
+
+/* ── Apply language ─────────────────────────────────────────────── */
+var SIMPLE_IDS = [
+  'bcRoot','bcCurrent',
+  'statsSharedTitle','statsLblSentence','statsDescSentence','statsLblToken','statsDescToken','statsLblCompletion','statsDescCompletion',
+  'statsEmptyTitle','statsEmptyDesc','statsEmptyBtn',
+  'statsVAHistTitle','statsVAHistDesc','statsVALblValence','statsVALblArousal',
+  'statsLblMean','statsLblStd','statsLblMedian','statsLblMin','statsLblMax',
+  'statsVAScatterTitle','statsVAScatterDesc','statsVALegendMain','statsVALegendOutlier','statsVALegendLow',
+  'statsClsDistTitle','statsClsDistDesc','statsClsDistNote','statsClsCooccTitle','statsClsCooccDesc','statsClsCooccNote',
+  'statsSeqEntityDistTitle','statsSeqEntityDistDesc','statsSeqAvgEntityTitle','statsSeqAvgLabel',
+  'statsSeqTotalSentLabel','statsSeqTotalEntityLabel','statsSeqZeroEntityLabel','statsSeqMaxEntityLabel',
+  'statsSeqSpanLenTitle','statsSeqSpanLenDesc','statsSeqSpanLenXLabel',
+  'statsRelEntityDistTitle','statsRelEntityDistDesc','statsRelRelDistTitle','statsRelRelDistDesc',
+  'statsRelTripleTitle','statsRelTripleDesc',
+  'statsRelTotalTripleLabel','statsRelTotalTripleDesc','statsRelUniqueTripleLabel','statsRelUniqueTripleDesc',
+  'statsRelAvgTripleLabel','statsRelAvgTripleDesc','statsRelAnnotated5xLabel','statsRelAnnotated5xDesc',
+  'statsRelAvgAnnotatorsLabel','statsRelAvgAnnotatorsDesc','statsRelMaxTripleLabel','statsRelMaxTripleDesc',
+  'statsSpDistTitle','statsSpLblDistTitle','statsSpScoreDistTitle',
+  'statsSpClsLabelCount','statsSpClsSampleCount','statsSpClsDominantLabel',
+  'statsSpScoreSummaryHead','statsSpScoreQuartileHead','statsSpScoreLenXLabel',
+  'iaaTitle','iaaMethodSuffix',
+  'anomalyTitle','anomalySubtitle','consistencyTitle','consistencySubtitle','consistencyOutlier15CountCol','consistencyOutlier15RateCol','consistencyOutlier2CountCol','consistencyOutlier2RateCol','annotatorTitle','annotatorSubtitle',
+  'emptyTitle','emptyDesc','emptyBtn',
+  'lblV','lblA','lblOverall','lblOverallCalc',
+  'lblClsMetric','lblClsCalc','lblRelCalc','lblSpCalc',
+  'lblSeqStrictMetric','lblSeqPartialMetric','lblRelMetric','lblSpMetric',
+  'matchStrict','matchPartial',
+  'altLblVA','altLblCls','altLblSeq','altLblRel','altLblSp',
+  'altHVAMetric','altHVAV','altHVAA',
+  'altHClsMetric','altHClsVal',
+  'altHSeqMode','altHSeqVal','altHSeqThr','altHSeqResult',
+  'altHRelMetric','altHRelVal','altHSpMetric','altHSpVal',
+  'altSeqStrictResult','altSeqPartialResult',
+  'thVAName','thVASpeed','thVAIaaV','thVAIaaA','thVADeltaV','thVADeltaA','thVAStatus',
+  'thClsName','thClsSpeed','thClsIaa','thClsDelta','thClsStatus',
+  'thSeqName','thSeqSpeed','thSeqIaa','thSeqDelta','thSeqStatus',
+  'thRelName','thRelSpeed','thRelIaa','thRelDelta','thRelStatus',
+  'thSpName','thSpSpeed','thSpIaa','thSpDelta','thSpStatus',
+  'vaGroupAvg','clsGroupAvg','seqGroupAvg','relGroupAvg','spGroupAvg',
+  'vaStatus1','vaStatus2','vaStatus3',
+  'clsStatus1','clsStatus2','clsStatus3',
+  'seqStatus1','seqStatus2','seqStatus3',
+  'relStatus1','relStatus2','relStatus3',
+  'spStatus1','spStatus2','spStatus3',
+  'anomalySpeedTitleVA','anomalyOutlierTitleVA',
+  'anomVASpd1Title','anomVASpd1Detail','anomVAOut1Title','anomVAOut1Detail','anomVAOut2Title','anomVAOut2Detail',
+  'anomClsSpeedTitle','anomClsSpeedEmpty','anomClsOutlierTitle','anomClsOut1Title','anomClsOut1Detail',
+  'anomSeqSpeedTitle','anomSeqOutlierTitle','anomSeqSpd1Title','anomSeqSpd1Detail','anomSeqOut1Title','anomSeqOut1Detail',
+  'anomRelSpeedTitle','anomRelOutlierTitle','anomRelOutlierEmpty','anomRelSpd1Title','anomRelSpd1Detail',
+  'anomSpSpeedTitle','anomSpSpeedEmpty','anomSpOutlierTitle','anomSpOutlierEmpty',
+  'lblVrec','lblVstr','lblArec','lblAstr','lblOrec','lblOstr','lblClsThr',
+  'lblSeqStrThr','lblSeqPartThr','lblRelThr1','lblRelThr2','lblSpThr',
+];
+
+function applyLang(l) {
+  S.lang = l;
+  document.documentElement.lang = l === 'en' ? 'en' : 'zh-TW';
+  document.title = t('docTitle');
+  SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+  document.getElementById('tabStats').textContent = t('tabStats');
+  document.getElementById('tabQuality').textContent = t('tabQuality');
+  applyTypeContent();
+  applyQualityState();
+  if (window.LabelSuiteAnalytics) {
+    window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang: l });
+  }
+}
+
+function updateConsistencyDeviationTexts() {
+  var unitHeader = document.getElementById('consistencyUnitCol');
+  var note = document.getElementById('consistencyNote');
+  var headers = t('consistencyUnitHeader');
+  var notes = t('consistencyNotes');
+  if (unitHeader && headers && typeof headers === 'object') {
+    unitHeader.textContent = headers[S.type] || headers.va;
+  }
+  if (note && notes && typeof notes === 'object') {
+    note.textContent = notes[S.type] || notes.va;
+  }
+}
+
+/* ── Summary badge ──────────────────────────────────────────────── */
+var SUMMARY_BY_TYPE = {
+  va: 'pass', classification: 'pass', sequence: 'fail', relation: 'warn', sentence_pairs: 'pass',
+};
+function updateSummaryBadge() {
+  var badge = document.getElementById('iaaSummaryBadge');
+  var state = SUMMARY_BY_TYPE[S.type] || 'pass';
+  if (S.type === 'sequence' && S.seqMode === 'partial') state = 'warn';
+  badge.className = 'badge iaa-summary-badge badge-' + state;
+  var labels = { pass: t('iaaSummaryPass'), fail: t('iaaSummaryFail'), warn: t('iaaSummaryWarn') };
+  badge.textContent = labels[state];
+}
+
+/* ── IAA method name ────────────────────────────────────────────── */
+function updateMethodName() {
+  var methodTarget = document.getElementById('iaaMethodName');
+  if (!methodTarget) return;
+  var methodMap = t('iaaMethodName');
+  var key = S.type;
+  if (S.type === 'sequence') key = 'sequence_' + S.seqMode;
+  if (typeof methodMap === 'object') {
+    methodTarget.textContent = methodMap[key] || methodMap['va'];
+  }
+}
+
+function wireAltToggle(btnId, bodyId) {
+  var btn = document.getElementById(btnId);
+  var body = document.getElementById(bodyId);
+  if (!btn || !body) return;
+  btn.addEventListener('click', function() {
+    var open = body.classList.toggle('open');
+    btn.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open);
+    body.setAttribute('aria-hidden', !open);
+  });
+}
+
+function closeAllAltToggles() {
+  ['altBtnVA','altBtnCls','altBtnSeq','altBtnRel','altBtnSp'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    var bodyId = id.replace('altBtn', 'altBody');
+    var body = document.getElementById(bodyId);
+    if (btn) {
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+    if (body) {
+      body.classList.remove('open');
+      body.setAttribute('aria-hidden', 'true');
+    }
+  });
+}
+
+function syncSequenceUi() {
+  var strictBtn = document.getElementById('matchStrict');
+  var partialBtn = document.getElementById('matchPartial');
+  var strictCard = document.getElementById('seqStrictCard');
+  var partialCard = document.getElementById('seqPartialCard');
+  if (!strictBtn || !partialBtn || !strictCard || !partialCard) return;
+  var isStrict = S.seqMode !== 'partial';
+  strictBtn.classList.toggle('active', isStrict);
+  partialBtn.classList.toggle('active', !isStrict);
+  strictCard.classList.toggle('hidden', !isStrict);
+  partialCard.classList.toggle('hidden', isStrict);
+}
+
+function wireSequenceToggle() {
+  var strictBtn = document.getElementById('matchStrict');
+  var partialBtn = document.getElementById('matchPartial');
+  if (!strictBtn || !partialBtn) return;
+  strictBtn.addEventListener('click', function() {
+    S.seqMode = 'strict';
+    syncSequenceUi();
+    updateMethodName();
+    updateSummaryBadge();
+  });
+  partialBtn.addEventListener('click', function() {
+    S.seqMode = 'partial';
+    syncSequenceUi();
+    updateMethodName();
+    updateSummaryBadge();
+  });
+}
+
+function wireQualityPanelInteractions() {
+  wireAltToggle('altBtnVA', 'altBodyVA');
+  wireAltToggle('altBtnCls', 'altBodyCls');
+  wireAltToggle('altBtnSeq', 'altBodySeq');
+  wireAltToggle('altBtnRel', 'altBodyRel');
+  wireAltToggle('altBtnSp', 'altBodySp');
+  wireSequenceToggle();
+}
+
+function loadQualityPanel() {
+  var mount = document.getElementById('qualityPanelMount');
+  var path = QUALITY_PANEL_PATHS[S.type] || QUALITY_PANEL_PATHS.va;
+  if (!mount || !path) return Promise.resolve();
+  mount.innerHTML = '';
+  return fetch(path, { cache: 'no-store' })
+    .then(function(response) {
+      if (!response.ok) throw new Error('Failed to load panel partial: ' + path);
+      return response.text();
+    })
+    .then(function(html) {
+      mount.innerHTML = html.trim();
+      SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+      updateConsistencyDeviationTexts();
+      closeAllAltToggles();
+      syncSequenceUi();
+      updateMethodName();
+      updateSummaryBadge();
+      syncRoleUi();
+      wireQualityPanelInteractions();
+    })
+    .catch(function() {
+      renderPanelLoadError();
+    });
+}
+
+/* ── Header texts per type ──────────────────────────────────────── */
+function applyTypeContent() {
+  var pageTitles = t('pageTitle');
+  var typeLabels = t('taskTypeBadge');
+  var taskIds = t('taskId');
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  var localizedTitle = taskMeta && taskMeta.title ? (taskMeta.title[S.lang] || taskMeta.title.zh || taskMeta.title.en) : '';
+
+  document.getElementById('pageTitle').textContent = localizedTitle || (typeof pageTitles === 'object' ? (pageTitles[S.type] || pageTitles.va) : '');
+  if (typeof typeLabels === 'object') document.getElementById('taskTypeBadge').textContent = typeLabels[S.type] || typeLabels.va;
+  document.getElementById('taskIdChip').textContent = taskMeta && taskMeta.chipId ? taskMeta.chipId : (typeof taskIds === 'object' ? (taskIds[S.type] || taskIds.va) : '');
+  updateTaskDetailHref();
+  syncRoleUi();
+  return Promise.all([loadStatsPanel(), loadQualityPanel()]);
+}
+
+/* ── Quality state ──────────────────────────────────────────────── */
+function applyQualityState() {
+  var isEmpty = S.qState !== 'ready';
+  document.getElementById('qualityEmpty').classList.toggle('hidden', !isEmpty);
+  document.getElementById('qualityReady').classList.toggle('hidden', isEmpty);
+  if (isEmpty) {
+    var msgs = (t('emptyStateMsgs') || I18N.zh.emptyStateMsgs)[S.qState];
+    if (msgs) {
+      document.getElementById('emptyTitle').textContent = msgs[0];
+      document.getElementById('emptyDesc').textContent  = msgs[1];
+    }
+  }
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────── */
+function syncUrlState() {
+  var params = new URLSearchParams(window.location.search);
+  params.set('task_id', S_ROUTE.taskId);
+  params.set('tab', S.tab);
+  if (S.qState !== 'ready') params.set('q_state', S.qState);
+  else params.delete('q_state');
+  window.history.replaceState({}, '', window.location.pathname + '?' + params.toString());
+}
+
+function switchTab(nextTab) {
+  var main = document.getElementById('detailMain');
+  if (main && S.tab) S.scrollTopByTab[S.tab] = main.scrollTop;
+  S.tab = nextTab;
+  var isStats = nextTab === 'stats';
+  var statsTab = document.getElementById('tabStats');
+  var qualityTab = document.getElementById('tabQuality');
+  statsTab.classList.toggle('active', isStats);
+  statsTab.setAttribute('aria-selected', isStats ? 'true' : 'false');
+  qualityTab.classList.toggle('active', !isStats);
+  qualityTab.setAttribute('aria-selected', isStats ? 'false' : 'true');
+  document.getElementById('statsPanel').classList.toggle('hidden', !isStats);
+  document.getElementById('qualityPanel').classList.toggle('hidden', isStats);
+  syncUrlState();
+  if (main) main.scrollTop = S.scrollTopByTab[nextTab] || 0;
+}
+
+document.getElementById('tabStats').addEventListener('click', function() {
+  switchTab('stats');
+});
+document.getElementById('tabQuality').addEventListener('click', function() {
+  switchTab('quality');
+});
+
+function resetSequenceAndAltViews() {
+  S.seqMode = 'strict';
+}
+
+function applyRouteTask(taskId) {
+  var taskMeta = TASK_META[taskId] || TASK_META[DEFAULT_TASK_ID];
+  S_ROUTE.taskId = TASK_META[taskId] ? taskId : DEFAULT_TASK_ID;
+  S.type = taskMeta.type;
+  resetSequenceAndAltViews();
+  return applyTypeContent();
+}
+
+/* ── Init ────────────────────────────────────────────────────────── */
+(function() {
+  var params;
+  try {
+    params = new URLSearchParams(window.location.search);
+    applyRouteTask(params.get('task_id'));
+    var qState = params.get('q_state');
+    if (qState === 'dry_run_in_progress' || qState === 'report_pending' || qState === 'report_generating' || qState === 'ready') {
+      S.qState = qState;
+    }
+  } catch(e) {
+    applyRouteTask(DEFAULT_TASK_ID);
+  }
+
+  try {
+    var stored = window.LabelSuiteSharedSidebar.getStoredLang();
+    applyLang(stored || 'zh');
+  } catch(e) { applyLang('zh'); }
+
+  applyStatsState();
+
+  /* Read ?tab= from URL */
+  try {
+    var tab = (params || new URLSearchParams(window.location.search)).get('tab');
+    switchTab(tab === 'quality' ? 'quality' : 'stats');
+  } catch(e) {}
+
+  if (window.LabelSuiteAnalytics) {
+    window.LabelSuiteAnalytics.init({ page: 'dataset-analysis-detail' });
+    window.LabelSuiteAnalytics.trackPageView('dataset-analysis-detail', function() {
+      return { taskId: S_ROUTE.taskId, taskType: S.type, tab: S.tab };
+    });
+  }
+
+  document.addEventListener('labelsuite:langchange', function(e) {
+    applyLang(e.detail && e.detail.lang ? e.detail.lang : 'zh');
+  });
+})();
+</script>
+</body>
+</html>

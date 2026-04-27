@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 標記清單</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <style>
+    :root {
+      --navbar-mobile-height: 84px;
+      --navbar-mobile-top-height: 64px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+    .hidden { display: none !important; }
+
+    .layout {
+      flex: 1;
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      min-width: 0;
+    }
+    .page-header { display: flex; align-items: flex-start; gap: var(--space-md); }
+    .page-title { font-size: 28px; line-height: 1.2; font-weight: 700; }
+    .page-subtitle { font-size: 14px; color: var(--color-ink-muted); margin-top: 6px; }
+    .list {
+      display: grid;
+      gap: var(--space-sm);
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .list-item {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .list-item:hover {
+      border-color: var(--color-primary);
+      background: #F9FAFB;
+    }
+    .list-item-title {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .list-item-detail {
+      display: block;
+      margin-top: 4px;
+      color: var(--color-ink-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .task-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .task-item-summary { min-width: 0; }
+    .task-item-badges {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .task-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .task-item-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-weight: 600;
+      font-size: 14px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: opacity var(--dur-fast), transform var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .btn-primary {
+      color: var(--color-white);
+      background: var(--color-cta);
+      border-color: var(--color-cta);
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .btn-primary.slim {
+      padding: 10px 18px;
+      min-width: 138px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .badge-info {
+      color: #1D4ED8;
+      background: #EFF6FF;
+      border-color: #BFDBFE;
+    }
+    .badge-warning {
+      color: var(--color-warning);
+      background: #FEFCE8;
+      border-color: #FEF08A;
+    }
+    .badge-dry-run {
+      color: #6B7280;
+      background: #F9FAFB;
+      border-color: #E5E7EB;
+    }
+    .badge-official {
+      color: #5B21B6;
+      background: #EDE9FE;
+      border-color: #DDD6FE;
+    }
+    .badge-task-type {
+      color: #0E7490;
+      background: #ECFEFF;
+      border-color: #A5F3FC;
+    }
+    .progress {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: #E2E8F0;
+      overflow: hidden;
+    }
+    .progress > span {
+      display: block;
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      transition: width 300ms ease;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      flex: 1;
+      flex-wrap: wrap;
+    }
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 220px;
+      width: 280px;
+      flex: 0 1 auto;
+      max-width: 280px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--color-ink-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 36px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-ink);
+      background: var(--color-white);
+      transition: border-color var(--dur-fast);
+      outline: none;
+    }
+    .search-input::placeholder { color: var(--color-ink-muted); }
+    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select {
+      padding: 9px 32px 9px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      outline: none;
+      min-width: 180px;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color var(--dur-fast);
+    }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .clear-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink-muted);
+      font-size: 13px;
+      font-weight: 500;
+      transition: color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .clear-btn:hover { color: var(--color-ink); border-color: var(--color-primary); }
+    .clear-btn.hide-clear { visibility: hidden; pointer-events: none; }
+    .table-container {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      overflow: hidden;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 640px;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .task-table th {
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-ink-muted);
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+      background: #F8FAFC;
+    }
+    .task-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid #F1F5F9;
+      vertical-align: middle;
+    }
+    .task-table tbody tr:last-child td { border-bottom: none; }
+    #sampleRows tr {
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    #sampleRows tr:hover { background: #F8FAFC; }
+    #sampleRows tr:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+    .text-snippet {
+      max-width: 520px;
+      white-space: normal;
+      word-break: break-word;
+      overflow: visible;
+      text-overflow: clip;
+      line-height: 1.6;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-submitted { color: var(--color-success); background: #DCFCE7; }
+    .status-saved { color: var(--color-warning); background: #FEF3C7; }
+    .status-pending { color: var(--color-ink-muted); background: #E2E8F0; }
+    .mini-btn {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .mini-btn-primary {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: var(--color-white);
+    }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    .empty {
+      padding: var(--space-xl);
+      text-align: center;
+      color: var(--color-ink-muted);
+      font-size: 14px;
+      border-top: 1px solid var(--color-border);
+    }
+    /* === Reviewer list styles === */
+    .expand-cell { width: 32px; padding: 14px 4px 14px 16px !important; }
+    .expand-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border: none; background: none;
+      color: var(--color-ink-muted); cursor: pointer; padding: 0;
+      border-radius: 4px; transition: color var(--dur-fast);
+    }
+    .expand-btn:hover { color: var(--color-ink); }
+    .expand-btn svg { transition: transform 0.15s ease; }
+    .expand-btn.open svg { transform: rotate(90deg); }
+    .reviewer-stats {
+      font-size: 12px; color: #6B7280; font-family: monospace;
+      display: block;
+      min-width: 240px;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+    .reviewer-stats-cell {
+      min-width: 280px;
+      width: 280px;
+    }
+    .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
+    .mini-btn-approve:hover:not(:disabled) { background: #BBF7D0; border-color: #4ADE80; color: #166534; }
+    .mini-btn-reject { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
+    .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
+    .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
+    .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
+    .annotator-detail-row { background: #F8FAFC; }
+    .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
+    .annotator-detail-inner { padding: 8px 20px 8px 52px; border-top: 1px solid #E2E8F0; }
+    .annotator-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 7px 0; border-bottom: 1px solid #EAECF0;
+    }
+    .annotator-row:last-child { border-bottom: none; }
+    .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
+    .annotator-result-tag {
+      font-size: 13px; color: var(--color-primary); background: #EEF2FF;
+      border: 1px solid #C7D2FE; border-radius: var(--radius-md);
+      padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
+    }
+    .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+
+    @media (max-width: 768px) {
+      .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
+      .page-title { font-size: 22px; }
+      .task-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .task-item-meta {
+        width: 100%;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      .task-item-badges {
+        justify-content: flex-start;
+      }
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .toolbar-left {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+      .search-wrap {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .filter-select {
+        width: 100%;
+        min-width: 0;
+      }
+      .clear-btn { align-self: flex-start; }
+      .clear-btn.hide-clear { display: none; }
+      .task-table td { vertical-align: top; }
+      .text-snippet {
+        max-width: 240px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+    @media (max-width: 420px) {
+      .mobile-user-name { max-width: 56px; font-size: 11px; }
+      .navbar-brand { width: auto; flex: 1; min-width: 0; }
+      .navbar-wordmark { font-size: 13px; }
+      .mobile-lang-toggle { padding: 6px 8px; }
+    }
+  </style>
+</head>
+<body>
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  var annotationListHref = '../annotation/annotation-list.html' + window.location.search;
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'annotation',
+    annotationHref: annotationListHref,
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<main class="layout" data-testid="annotation-list-shell">
+  <section class="page-header">
+    <div>
+      <h1 class="page-title" id="pageTitle">標記清單</h1>
+      <p class="page-subtitle" id="pageSubtitle">請先選擇要處理的資料筆次，再進入標記作業頁。</p>
+    </div>
+  </section>
+
+  <section class="list hidden" id="taskInfoCard" aria-label="任務資訊">
+    <article class="list-item">
+      <div class="task-item-header">
+        <div class="task-item-summary">
+          <span class="list-item-title" id="taskInfoTitle">-</span>
+          <span class="list-item-detail" id="taskInfoDetail">-</span>
+        </div>
+        <div class="task-item-meta">
+          <div class="task-item-badges">
+            <span class="badge badge-task-type" id="taskInfoTaskType">-</span>
+            <span class="badge" id="taskInfoRunType">-</span>
+            <span class="badge" id="taskInfoStatus">-</span>
+          </div>
+          <div class="task-item-actions">
+            <button class="btn btn-primary slim" id="taskQuickContinueBtn" type="button">快速繼續</button>
+          </div>
+        </div>
+      </div>
+      <div class="progress" style="margin-top: 10px;" aria-hidden="true">
+        <span id="taskInfoProgressBar" style="width: 0%;"></span>
+      </div>
+    </article>
+  </section>
+
+  <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選">
+    <div class="toolbar-left">
+      <select class="filter-select" id="statusFilter" aria-label="依完成狀態篩選">
+        <option value="">全部完成狀態</option>
+        <option value="submitted">已提交</option>
+        <option value="saved">草稿</option>
+        <option value="pending">待處理</option>
+      </select>
+      <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
+        <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>清除篩選</span>
+      </button>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
+      </div>
+    </div>
+  </div>
+
+  <section class="table-container">
+    <div class="task-table-wrap">
+      <table class="task-table" aria-label="標記清單" id="taskTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>完成狀態</th>
+            <th>完成時間</th>
+            <th>標記者</th>
+            <th>文本摘要</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="sampleRows"></tbody>
+      </table>
+    </div>
+    <div class="empty hidden" id="emptyState">找不到符合條件的資料。</div>
+  </section>
+</main>
+
+<script src="../../assets/analytics.js"></script>
+<script>
+  var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
+  var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
+
+  var TASK_TYPE_TEXT = {
+    single_sentence_classification: '單句分類',
+    single_sentence_va_scoring: '單句 VA 評分',
+    sequence_labeling: '序列標註',
+    relation_extraction: '關係抽取',
+    sentence_pairs: '句對任務'
+  };
+
+  var TASKS_BY_ROLE = {
+    annotator: [
+      {
+        taskId: 'TASK-015-A1',
+        title: '新聞標題多標籤分類',
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        dashboardTaskTypeText: '單句分類（含多標籤）',
+        dashboardDetail: '已完成 89% · 今日 53 筆 · 平均速度 3.0',
+        dashboardProgress: 89,
+        dashboardStatusText: '繼續中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '這款耳機音質很清晰，降噪效果也超乎預期。' },
+          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '客服回應速度普通，但最終仍有解決我的問題。' },
+          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '包裝完整，配送速度快，整體體驗不錯。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-A2',
+        title: '情感 VA 雙維度評分',
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        dashboardTaskTypeText: '單句 VA 評分',
+        dashboardDetail: '已完成 42% · 今日 18 筆 · 平均速度 4.2',
+        dashboardProgress: 42,
+        dashboardStatusText: '待繼續',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。' },
+          { sampleId: 'A2-002', status: 'submitted', completedAt: '2026-04-23 09:16', annotatedBy: 'Mandy', text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。' },
+          { sampleId: 'A2-003', status: 'saved', completedAt: '2026-04-23 09:22', annotatedBy: 'Mandy', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。' },
+          { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。' },
+          { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。' }
+        ]
+      }
+    ],
+    reviewer: [
+      {
+        taskId: 'TASK-015-R1',
+        title: '新聞標題多標籤分類',
+        taskType: 'single_sentence_classification',
+        runType: 'official_run',
+        dashboardTaskTypeText: '單句分類（含多標籤）',
+        dashboardDetail: '待審 12 筆 · 進度 67% · IAA 0.81',
+        dashboardProgress: 67,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'R1-001', status: 'pending', completedAt: '-',
+            text: '產品整體穩定，但初次設定流程偏繁瑣。',
+            labelStats: '科技×3 · 消費×4 · 評論×2',
+            annotators: [
+              { username: 'kioleemg12', result: '科技, 消費', reviewStatus: null },
+              { username: '113450022', result: '消費, 評論', reviewStatus: null },
+              { username: 'tony0950127', result: '科技, 消費', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-002', status: 'saved', completedAt: '2026-04-23 08:58',
+            text: '售後支援回覆快速，解決效率高。',
+            labelStats: '服務×5 · 評論×3',
+            annotators: [
+              { username: 'kioleemg12', result: '服務, 評論', reviewStatus: 'approved' },
+              { username: '113450022', result: '服務', reviewStatus: null },
+              { username: 'hui', result: '服務, 評論', reviewStatus: null }
+            ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R2',
+        taskAliases: ['TASK-015-A2'],
+        title: '情感 VA 雙維度評分',
+        taskType: 'single_sentence_va_scoring',
+        runType: 'dry_run',
+        dashboardTaskTypeText: '單句 VA 評分',
+        dashboardDetail: '待審 8 筆 · 進度 52% · IAA 0.78',
+        dashboardProgress: 52,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          {
+            sampleId: 'R2-001', status: 'submitted', completedAt: '2026-04-23 11:02',
+            text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
+            labelStats: 'mean [4.33, 5.25]\nstd [0.99, 1.55]\n±1.5std V : 2.845~5.815\n ±1.5std A : 2.925~7.575',
+            vaRange: { loV: 2.845, hiV: 5.815, loA: 2.925, hiA: 7.575 },
+            annotators: [
+              { username: 'kioleemg12', result: '[3.5, 5.5]', reviewStatus: 'approved' },
+              { username: '113450022', result: '[6, 4]', reviewStatus: 'approved' },
+              { username: 'tony0950127', result: '[5, 7]', reviewStatus: 'approved' },
+              { username: 'hui', result: '[5, 6]', reviewStatus: 'approved' },
+              { username: 'chiao11', result: '[2, 6.5]', reviewStatus: 'approved' }
+            ]
+          },
+          {
+            sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:08',
+            text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。',
+            labelStats: 'mean [1.83, 1.5]\nstd [0.24, 0.44]\n±1.5std V : 1.470~2.190\n ±1.5std A : 0.840~2.160',
+            vaRange: { loV: 1.470, hiV: 2.190, loA: 0.840, hiA: 2.160 },
+            annotators: [
+              { username: 'kioleemg12', result: '[2, 1]', reviewStatus: 'approved' },
+              { username: '113450022', result: '[1.5, 2]', reviewStatus: 'approved' },
+              { username: 'tony0950127', result: '[2, 1.5]', reviewStatus: 'approved' }
+            ]
+          },
+          {
+            sampleId: 'R2-003', status: 'saved', completedAt: '2026-04-23 11:15',
+            text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
+            labelStats: 'mean [6.40, 5.75]\nstd [0.43, 0.25]\n±1.5std V : 5.755~7.045\n ±1.5std A : 5.375~6.125',
+            vaRange: { loV: 5.755, hiV: 7.045, loA: 5.375, hiA: 6.125 },
+            annotators: [
+              { username: 'kioleemg12', result: '[6, 5.5]', reviewStatus: null },
+              { username: '113450022', result: '[7, 6]', reviewStatus: null },
+              { username: 'tony0950127', result: '[6.5, 5.5]', reviewStatus: null },
+              { username: 'hui', result: '[6, 6]', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R2-004', status: 'pending', completedAt: '-',
+            text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
+            labelStats: 'mean [4.50, 4.83]\nstd [0.50, 0.47]\n±1.5std V : 3.750~5.250\n ±1.5std A : 4.125~5.535',
+            vaRange: { loV: 3.750, hiV: 5.250, loA: 4.125, hiA: 5.535 },
+            annotators: [
+              { username: 'kioleemg12', result: '[4, 4]', reviewStatus: null },
+              { username: '113450022', result: '[5, 5.5]', reviewStatus: null },
+              { username: 'tony0950127', result: '[4.5, 5]', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R2-005', status: 'pending', completedAt: '-',
+            text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
+            labelStats: 'mean [6.67, 5.33]\nstd [0.24, 0.24]\n±1.5std V : 6.310~7.030\n ±1.5std A : 4.970~5.690',
+            vaRange: { loV: 6.310, hiV: 7.030, loA: 4.970, hiA: 5.690 },
+            annotators: [
+              { username: 'kioleemg12', result: '[7, 5]', reviewStatus: null },
+              { username: '113450022', result: '[6.5, 5.5]', reviewStatus: null },
+              { username: 'tony0950127', result: '[6.5, 5.5]', reviewStatus: null }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+  var FILTER_STATE = {
+    status: '',
+    query: ''
+  };
+
+  var REVIEW_STATES = {};
+
+  function reviewKey(sampleId, idx) { return sampleId + '|' + idx; }
+
+  function initReviewStates(samples) {
+    samples.forEach(function (s) {
+      if (!Array.isArray(s.annotators)) return;
+      s.annotators.forEach(function (ann, idx) {
+        var key = reviewKey(s.sampleId, idx);
+        if (!(key in REVIEW_STATES)) {
+          REVIEW_STATES[key] = ann.reviewStatus || null;
+        }
+      });
+    });
+  }
+
+  function updateAnnotatorBtns(approveBtn, rejectBtn, state) {
+    if (state === 'approved') {
+      approveBtn.classList.add('mini-btn-active-approve');
+      rejectBtn.classList.remove('mini-btn-active-reject');
+    } else if (state === 'rejected') {
+      approveBtn.classList.remove('mini-btn-active-approve');
+      rejectBtn.classList.add('mini-btn-active-reject');
+    } else {
+      approveBtn.classList.remove('mini-btn-active-approve');
+      rejectBtn.classList.remove('mini-btn-active-reject');
+    }
+  }
+
+  function updateBulkReviewBtns(approveBtn, rejectBtn, state) {
+    if (state === 'approved') {
+      approveBtn.classList.add('mini-btn-active-approve');
+      rejectBtn.classList.remove('mini-btn-active-reject');
+    } else if (state === 'rejected') {
+      approveBtn.classList.remove('mini-btn-active-approve');
+      rejectBtn.classList.add('mini-btn-active-reject');
+    } else {
+      approveBtn.classList.remove('mini-btn-active-approve');
+      rejectBtn.classList.remove('mini-btn-active-reject');
+    }
+  }
+
+  function getBulkReviewState(sampleId, annotators) {
+    if (!annotators || annotators.length === 0) return null;
+    var approvedCount = 0;
+    var rejectedCount = 0;
+    annotators.forEach(function (ann, idx) {
+      var state = REVIEW_STATES[reviewKey(sampleId, idx)];
+      if (state === 'approved') approvedCount += 1;
+      if (state === 'rejected') rejectedCount += 1;
+    });
+    if (approvedCount === annotators.length) return 'approved';
+    if (rejectedCount === annotators.length) return 'rejected';
+    return null;
+  }
+
+  function getVaColorClass(resultStr, vaRange) {
+    if (!vaRange) return '';
+    var match = resultStr.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
+    if (!match) return '';
+    var v = parseFloat(match[1]);
+    var a = parseFloat(match[2]);
+    if (v > vaRange.hiV || a > vaRange.hiA) return 'result-tag-red';
+    if (v < vaRange.loV || a < vaRange.loA) return 'result-tag-blue';
+    return 'result-tag-green';
+  }
+
+  function buildAnnotatorDetailContent(sampleId, annotators, vaRange) {
+    var div = document.createElement('div');
+    div.className = 'annotator-detail-inner';
+    annotators.forEach(function (ann, idx) {
+      var key = reviewKey(sampleId, idx);
+      var row = document.createElement('div');
+      row.className = 'annotator-row';
+
+      var usernameSpan = document.createElement('span');
+      usernameSpan.className = 'annotator-username';
+      usernameSpan.textContent = ann.username;
+
+      var resultSpan = document.createElement('span');
+      var colorClass = getVaColorClass(ann.result, vaRange);
+      resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+      resultSpan.textContent = ann.result;
+
+      var approveBtn = document.createElement('button');
+      approveBtn.type = 'button';
+      approveBtn.className = 'mini-btn mini-btn-approve';
+      approveBtn.textContent = '✓ 通過';
+
+      var rejectBtn = document.createElement('button');
+      rejectBtn.type = 'button';
+      rejectBtn.className = 'mini-btn mini-btn-reject';
+      rejectBtn.textContent = '✕ 退回';
+
+      updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+
+      function syncBulkButtons() {
+        var bulkApproveBtn = document.querySelector('[data-bulk-approve-for="' + sampleId + '"]');
+        var bulkRejectBtn = document.querySelector('[data-bulk-reject-for="' + sampleId + '"]');
+        if (bulkApproveBtn && bulkRejectBtn) {
+          updateBulkReviewBtns(bulkApproveBtn, bulkRejectBtn, getBulkReviewState(sampleId, annotators));
+        }
+      }
+
+      approveBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        REVIEW_STATES[key] = REVIEW_STATES[key] === 'approved' ? null : 'approved';
+        updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+        syncBulkButtons();
+      });
+      rejectBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        REVIEW_STATES[key] = REVIEW_STATES[key] === 'rejected' ? null : 'rejected';
+        updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+        syncBulkButtons();
+      });
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'annotator-row-actions';
+      actionsDiv.appendChild(rejectBtn);
+      actionsDiv.appendChild(approveBtn);
+
+      row.appendChild(usernameSpan);
+      row.appendChild(resultSpan);
+      row.appendChild(actionsDiv);
+      div.appendChild(row);
+    });
+    return div;
+  }
+
+  function makeTh(text, width) {
+    var th = document.createElement('th');
+    th.textContent = text;
+    if (width) th.style.width = width;
+    return th;
+  }
+
+  function renderTableHeader(role) {
+    var thead = document.querySelector('#taskTable thead tr');
+    if (!thead) return;
+    while (thead.firstChild) thead.removeChild(thead.firstChild);
+    if (role === 'reviewer') {
+      thead.appendChild(makeTh('', '32px'));
+      thead.appendChild(makeTh('ID'));
+      thead.appendChild(makeTh('完成狀態'));
+      thead.appendChild(makeTh('完成時間'));
+      thead.appendChild(makeTh('文本摘要'));
+      thead.appendChild(makeTh('標記分布統計', '280px'));
+      thead.appendChild(makeTh('操作'));
+    } else {
+      thead.appendChild(makeTh('ID'));
+      thead.appendChild(makeTh('完成狀態'));
+      thead.appendChild(makeTh('完成時間'));
+      thead.appendChild(makeTh('標記者'));
+      thead.appendChild(makeTh('文本摘要'));
+      thead.appendChild(makeTh('操作'));
+    }
+  }
+
+  function getStoredActiveTaskType() {
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.getStoredActiveTaskType === 'function') {
+      return window.LabelSuiteSharedSidebar.getStoredActiveTaskType();
+    }
+    try {
+      return window.localStorage.getItem(ACTIVE_TASK_TYPE_STORAGE_KEY) || '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function setStoredActiveTaskType(taskType) {
+    if (!taskType) return;
+    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
+      window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
+      return;
+    }
+    try {
+      window.localStorage.setItem(ACTIVE_TASK_TYPE_STORAGE_KEY, String(taskType));
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+  }
+
+  function completionStateKey(role, taskId, runType) {
+    return [role, taskId, runType].join('|');
+  }
+
+  function readCompletionStateMap() {
+    try {
+      var raw = window.localStorage.getItem(ANNOTATION_COMPLETION_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (error) {
+      // Ignore storage errors in prototype mode.
+    }
+    return {};
+  }
+
+  function formatCompletedAt(timestamp) {
+    var date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
+    var pad = function (value) { return String(value).padStart(2, '0'); };
+    return [
+      date.getFullYear(),
+      '-',
+      pad(date.getMonth() + 1),
+      '-',
+      pad(date.getDate()),
+      ' ',
+      pad(date.getHours()),
+      ':',
+      pad(date.getMinutes())
+    ].join('');
+  }
+
+  function applySampleCompletionOverride(sample, completionState) {
+    if (!completionState || !completionState.allSubmitted) return sample;
+    var completedAt = sample.completedAt && sample.completedAt !== '-'
+      ? sample.completedAt
+      : formatCompletedAt(completionState.completedAt);
+    return {
+      sampleId: sample.sampleId,
+      status: 'submitted',
+      completedAt: completedAt,
+      annotatedBy: sample.annotatedBy,
+      text: sample.text
+    };
+  }
+
+  function parseContext() {
+    var params = new URLSearchParams(window.location.search);
+    var role = params.get('role');
+    var runType = params.get('run_type');
+    var taskId = params.get('task_id');
+    var taskType = params.get('task_type') || getStoredActiveTaskType();
+
+    return {
+      role: role === 'reviewer' ? 'reviewer' : 'annotator',
+      runType: runType === 'official_run' ? 'official_run' : 'dry_run',
+      taskId: taskId ? taskId.trim() : '',
+      taskType: TASK_TYPE_TEXT[taskType] ? taskType : 'single_sentence_classification'
+    };
+  }
+
+  function statusBadgeClass(status) {
+    if (status === 'submitted') return 'status-submitted';
+    if (status === 'saved') return 'status-saved';
+    return 'status-pending';
+  }
+
+  function statusText(status) {
+    if (status === 'submitted') return '已提交';
+    if (status === 'saved') return '草稿';
+    return '待處理';
+  }
+
+  function updateClearFilterState() {
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (!clearFiltersBtn) return;
+    if (FILTER_STATE.status || FILTER_STATE.query) {
+      clearFiltersBtn.classList.remove('hide-clear');
+      return;
+    }
+    clearFiltersBtn.classList.add('hide-clear');
+  }
+
+  function filterRows(rows) {
+    return rows.filter(function (item) {
+      if (FILTER_STATE.status && item.sample.status !== FILTER_STATE.status) return false;
+      if (!FILTER_STATE.query) return true;
+
+      var query = FILTER_STATE.query.toLowerCase();
+      var status = statusText(item.sample.status).toLowerCase();
+      return (
+        item.sample.sampleId.toLowerCase().indexOf(query) !== -1 ||
+        status.indexOf(query) !== -1 ||
+        item.sample.completedAt.toLowerCase().indexOf(query) !== -1 ||
+        (item.sample.annotatedBy || '').toLowerCase().indexOf(query) !== -1 ||
+        item.sample.text.toLowerCase().indexOf(query) !== -1
+      );
+    });
+  }
+
+  function matchesTaskId(task, taskId) {
+    if (!taskId) return true;
+    if (task.taskId === taskId) return true;
+    if (Array.isArray(task.taskAliases) && task.taskAliases.indexOf(taskId) !== -1) return true;
+    return false;
+  }
+
+  function findCurrentTask(context) {
+    var roleTasks = TASKS_BY_ROLE[context.role] || [];
+    for (var i = 0; i < roleTasks.length; i += 1) {
+      var task = roleTasks[i];
+      if (!matchesTaskId(task, context.taskId)) continue;
+      if (context.runType && task.runType !== context.runType) continue;
+      return task;
+    }
+    return null;
+  }
+
+  function runTypeLabel(runType) {
+    return runType === 'official_run' ? '正式標記' : '試標';
+  }
+
+  function runTypeBadgeClass(runType) {
+    return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
+  }
+
+  function findLatestUnfinishedSampleId(task) {
+    if (!task || !Array.isArray(task.samples) || task.samples.length === 0) return '';
+
+    for (var i = task.samples.length - 1; i >= 0; i -= 1) {
+      if (task.samples[i].status === 'pending') return task.samples[i].sampleId;
+    }
+    for (var j = task.samples.length - 1; j >= 0; j -= 1) {
+      if (task.samples[j].status === 'saved') return task.samples[j].sampleId;
+    }
+    return task.samples[task.samples.length - 1].sampleId;
+  }
+
+  function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType) {
+    return '../annotation/annotation-workspace.html' +
+      '?task_id=' + encodeURIComponent(taskId) +
+      '&sample_id=' + encodeURIComponent(sampleId) +
+      '&role=' + encodeURIComponent(role) +
+      '&run_type=' + encodeURIComponent(runType) +
+      '&task_type=' + encodeURIComponent(taskType);
+  }
+
+  function renderTaskInfo(context) {
+    var card = document.getElementById('taskInfoCard');
+    var quickBtn = document.getElementById('taskQuickContinueBtn');
+    if (!card) return;
+
+    var task = findCurrentTask(context);
+    if (!task) {
+      card.classList.add('hidden');
+      return;
+    }
+
+    var title = document.getElementById('taskInfoTitle');
+    var detail = document.getElementById('taskInfoDetail');
+    var taskType = document.getElementById('taskInfoTaskType');
+    var runType = document.getElementById('taskInfoRunType');
+    var status = document.getElementById('taskInfoStatus');
+    var progressBar = document.getElementById('taskInfoProgressBar');
+
+    var progress = typeof task.dashboardProgress === 'number' ? task.dashboardProgress : 0;
+    var statusClass = task.dashboardStatusClass || 'badge-info';
+
+    title.textContent = task.title;
+    detail.textContent = task.dashboardDetail || '-';
+    taskType.textContent = task.dashboardTaskTypeText || TASK_TYPE_TEXT[task.taskType] || task.taskType;
+    runType.textContent = runTypeLabel(task.runType);
+    runType.className = 'badge ' + runTypeBadgeClass(task.runType);
+    status.textContent = task.dashboardStatusText || '進行中';
+    status.className = 'badge ' + statusClass;
+    progressBar.style.width = String(progress) + '%';
+
+    if (quickBtn) {
+      quickBtn.textContent = context.role === 'reviewer' ? '快速審核' : '快速繼續';
+      quickBtn.onclick = function () {
+        var sampleId = findLatestUnfinishedSampleId(task);
+        if (!sampleId) return;
+        setStoredActiveTaskType(task.taskType);
+        window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType);
+      };
+    }
+
+    card.classList.remove('hidden');
+  }
+
+  function makeTd(content, className) {
+    var td = document.createElement('td');
+    if (className) td.className = className;
+    if (typeof content === 'string') td.textContent = content;
+    else if (content) td.appendChild(content);
+    return td;
+  }
+
+  function renderReviewerRows(visibleRows, tbodyEl) {
+    visibleRows.forEach(function (item) {
+      var sample = item.sample;
+      var annotators = Array.isArray(sample.annotators) ? sample.annotators : [];
+      var isVA = item.taskType === 'single_sentence_va_scoring';
+      initReviewStates([sample]);
+
+      // --- Summary row ---
+      var summaryTr = document.createElement('tr');
+      summaryTr.style.cursor = 'pointer';
+
+      // Detail row — NOT appended to DOM initially (lazy insert on first expand)
+      var detailTr = document.createElement('tr');
+      detailTr.className = 'annotator-detail-row hidden';
+      var detailTd = document.createElement('td');
+      detailTd.setAttribute('colspan', '7');
+      var detailContent = buildAnnotatorDetailContent(sample.sampleId, annotators, sample.vaRange || null);
+      detailTd.appendChild(detailContent);
+      detailTr.appendChild(detailTd);
+
+      // Expand button (chevron)
+      var expandBtn = document.createElement('button');
+      expandBtn.className = 'expand-btn';
+      expandBtn.setAttribute('aria-label', '展開');
+      var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
+      chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
+      chevronSvg.setAttribute('stroke', 'currentColor'); chevronSvg.setAttribute('stroke-width', '2.5');
+      chevronSvg.setAttribute('stroke-linecap', 'round'); chevronSvg.setAttribute('stroke-linejoin', 'round');
+      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', '9 18 15 12 9 6');
+      chevronSvg.appendChild(polyline);
+      expandBtn.appendChild(chevronSvg);
+
+      var detailInserted = false;
+      function showDetail() {
+        if (!detailInserted) {
+          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
+          detailInserted = true;
+        }
+        detailTr.classList.remove('hidden');
+        expandBtn.classList.add('open');
+      }
+      function hideDetail() {
+        detailTr.classList.add('hidden');
+        expandBtn.classList.remove('open');
+      }
+      function toggleDetail(e) {
+        if (e) e.stopPropagation();
+        if (detailTr.classList.contains('hidden')) { showDetail(); } else { hideDetail(); }
+      }
+      expandBtn.addEventListener('click', toggleDetail);
+
+      // Status badge
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + statusBadgeClass(sample.status);
+      statusSpan.textContent = statusText(sample.status);
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'reviewer-actions';
+
+      if (isVA) {
+        // VA tasks: row click expands annotator detail; bulk approve/reject on list
+        summaryTr.addEventListener('click', function () { toggleDetail(null); });
+
+        var approveAllBtn = document.createElement('button');
+        approveAllBtn.type = 'button';
+        approveAllBtn.className = 'mini-btn mini-btn-approve';
+        approveAllBtn.textContent = '✓ 全部通過';
+        approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
+        var rejectAllBtn = document.createElement('button');
+        rejectAllBtn.type = 'button';
+        rejectAllBtn.className = 'mini-btn mini-btn-reject';
+        rejectAllBtn.textContent = '✕ 全部退回';
+        rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
+
+        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
+
+        function applyAllReview(newState) {
+          var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
+          var targetState = currentBulkState === newState ? null : newState;
+          annotators.forEach(function (ann, idx) {
+            REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
+          });
+          updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
+          var annotatorRowEls = detailTd.querySelectorAll('.annotator-row');
+          annotatorRowEls.forEach(function (row) {
+            var approveBtn = row.querySelector('.mini-btn-approve');
+            var rejectBtn = row.querySelector('.mini-btn-reject');
+            if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
+          });
+          showDetail();
+        }
+        approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
+        rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
+
+        actionsDiv.appendChild(rejectAllBtn);
+        actionsDiv.appendChild(approveAllBtn);
+      } else {
+        // Non-VA tasks: row click navigates to workspace; "編輯" button
+        function openWorkspace() {
+          setStoredActiveTaskType(item.taskType);
+          window.location.href = buildWorkspaceUrl(item.taskId, sample.sampleId, 'reviewer', item.runType, item.taskType);
+        }
+        summaryTr.addEventListener('click', openWorkspace);
+
+        var editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'mini-btn mini-btn-primary';
+        editBtn.textContent = '編輯';
+        editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+        actionsDiv.appendChild(editBtn);
+      }
+
+      var expandTd = document.createElement('td');
+      expandTd.className = 'expand-cell';
+      expandTd.appendChild(expandBtn);
+
+      var statsEl = document.createElement('span');
+      statsEl.className = 'reviewer-stats';
+      statsEl.textContent = sample.labelStats || '-';
+      var statsTd = makeTd(statsEl, 'reviewer-stats-cell');
+
+      var textTd = document.createElement('td');
+      textTd.className = 'text-snippet';
+      textTd.textContent = sample.text;
+
+      summaryTr.appendChild(expandTd);
+      summaryTr.appendChild(makeTd(sample.sampleId));
+      summaryTr.appendChild(makeTd(statusSpan));
+      summaryTr.appendChild(makeTd(sample.completedAt));
+      summaryTr.appendChild(textTd);
+      summaryTr.appendChild(statsTd);
+      summaryTr.appendChild(makeTd(actionsDiv));
+
+      tbodyEl.appendChild(summaryTr);
+      // detailTr is NOT appended here — lazy insert on first expand
+    });
+  }
+
+  function renderAnnotatorRows(visibleRows, tbodyEl, context) {
+    visibleRows.forEach(function (item) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+      tr.setAttribute('aria-label', '開啟樣本 ' + item.sample.sampleId);
+
+      function openWorkspace() {
+        setStoredActiveTaskType(item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, item.sample.sampleId, context.role, item.runType, item.taskType);
+        window.location.href = url;
+      }
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + statusBadgeClass(item.sample.status);
+      statusSpan.textContent = statusText(item.sample.status);
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      editBtn.textContent = '編輯';
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+
+      var textTd = document.createElement('td');
+      textTd.className = 'text-snippet';
+      textTd.textContent = item.sample.text;
+
+      tr.appendChild(makeTd(item.sample.sampleId));
+      tr.appendChild(makeTd(statusSpan));
+      tr.appendChild(makeTd(item.sample.completedAt));
+      tr.appendChild(makeTd(item.sample.annotatedBy || '-'));
+      tr.appendChild(textTd);
+      tr.appendChild(makeTd(editBtn));
+
+      tr.addEventListener('click', openWorkspace);
+      tr.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openWorkspace(); }
+      });
+
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function renderRows(context) {
+    var tbodyEl = document.getElementById('sampleRows');
+    var empty = document.getElementById('emptyState');
+    tbodyEl.innerHTML = '';
+
+    var roleTasks = TASKS_BY_ROLE[context.role] || [];
+    var completionMap = readCompletionStateMap();
+    var filteredTasks = roleTasks.filter(function (task) {
+      if (!matchesTaskId(task, context.taskId)) return false;
+      if (context.runType && task.runType !== context.runType) return false;
+      return true;
+    });
+
+    var flatRows = [];
+    filteredTasks.forEach(function (task) {
+      var completionState = completionMap[completionStateKey(context.role, task.taskId, task.runType)];
+      task.samples.forEach(function (sample) {
+        flatRows.push({
+          taskId: task.taskId,
+          taskType: task.taskType,
+          runType: task.runType,
+          sample: applySampleCompletionOverride(sample, completionState)
+        });
+      });
+    });
+
+    var visibleRows = filterRows(flatRows);
+    if (visibleRows.length === 0) {
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    if (context.role === 'reviewer') {
+      renderReviewerRows(visibleRows, tbodyEl);
+    } else {
+      renderAnnotatorRows(visibleRows, tbodyEl, context);
+    }
+  }
+
+  function bindFilters(context) {
+    var statusFilter = document.getElementById('statusFilter');
+    var searchInput = document.getElementById('searchInput');
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    statusFilter.addEventListener('change', function (event) {
+      FILTER_STATE.status = event.target.value || '';
+      updateClearFilterState();
+      renderRows(context);
+    });
+
+    searchInput.addEventListener('input', function (event) {
+      FILTER_STATE.query = event.target.value.trim();
+      updateClearFilterState();
+      renderRows(context);
+    });
+
+    clearFiltersBtn.addEventListener('click', function () {
+      FILTER_STATE.status = '';
+      FILTER_STATE.query = '';
+      statusFilter.value = '';
+      searchInput.value = '';
+      updateClearFilterState();
+      renderRows(context);
+    });
+  }
+
+  function renderContext(context) {
+    document.getElementById('pageSubtitle').textContent =
+      context.role === 'reviewer'
+        ? '請先選擇要審查的資料筆次，再進入審核作業頁。'
+        : '請先選擇要處理的資料筆次，再進入標記作業頁。';
+  }
+
+  function init() {
+    var context = parseContext();
+    setStoredActiveTaskType(context.taskType);
+    renderContext(context);
+    renderTableHeader(context.role);
+    renderTaskInfo(context);
+    bindFilters(context);
+    updateClearFilterState();
+    renderRows(context);
+
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'annotation-list' });
+      window.LabelSuiteAnalytics.trackPageView('annotation-list', {
+        role: context.role,
+        run_type: context.runType,
+        task_id: context.taskId || null,
+        task_type: context.taskType
+      });
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

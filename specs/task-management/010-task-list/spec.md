@@ -2,7 +2,7 @@
 
 **功能分支**：`010-task-list`
 **建立日期**：2026-04-20
-**版本**：1.3.6
+**版本**：1.3.7
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
 
@@ -14,8 +14,9 @@
 - `PAGE_SIZE_OPTIONS = 20 | 50 | 100`
 - `DEFAULT_SORT = updated_at desc`
 - `TASK_STATUS_ENUM = draft | dry_run_in_progress | waiting_iaa_confirmation | official_run_in_progress | completed`
-- `TASK_TYPE_ENUM = single_sentence_classification | single_sentence_scoring_regression | sequence_labeling | relation_extraction | sentence_pairs`
+- `TASK_TYPE_ENUM = single_sentence_classification | single_sentence_va_scoring | sequence_labeling | relation_extraction | sentence_pairs`
 - `TASK_TYPE_SOURCE = task_type_registry`（回傳值需對齊 `TASK_TYPE_ENUM`）
+- `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
 - `RUN_STAGE_ENUM = dry_run | official_run`
 - `TASK_DELETE_MODE = soft_delete`
 - `MOBILE_BP = 767px`
@@ -129,6 +130,7 @@ sequenceDiagram
 - 查詢條件（`keyword`、`task_type`、`run_stage`、`status`、`page`、`page_size`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
 - 任務列點擊時若使用者無 `/task-detail` 存取權，系統需顯示「無權限檢視任務詳情」提示，且不得導頁。
 - `編輯` 操作需與點擊任務列同語意，導向 `/task-detail?task_id=...`。
+- 任務列點擊（含 `編輯`）導向 `/task-detail` 前，需先把該列 `task_type` 寫入 `ACTIVE_TASK_TYPE_STORAGE_KEY`，供 `annotation-workspace` 預設 task type 使用。
 - `刪除` 操作必須為軟刪除（`TASK_DELETE_MODE`），不得物理刪除資料。
 - `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 既有共用 modal（`modal-backdrop` / `modal` / `modal-actions`）。
 - 軟刪除後任務不應出現在預設任務列表；資料保留供審計與復原。
@@ -209,6 +211,7 @@ sequenceDiagram
 - **FR-011**：任務類型 badge 必須依 `task_type` 使用不同視覺色彩，不得全部使用同一 badge 色彩。
 - **FR-011a**：當語系為 `zh` 時，任務類型 badge 文案必須顯示中文映射；語系為 `en` 時顯示英文文案。
 - **FR-011b**：標記階段 `official_run` 在中文文案必須顯示為 `正式標記`。
+- **FR-012**：點擊任務列或 `編輯` 導向 `/task-detail` 前，系統必須持久化該任務 `task_type` 至 `ACTIVE_TASK_TYPE_STORAGE_KEY`。
 
 ### User Flow & Navigation
 
@@ -242,6 +245,7 @@ flowchart LR
 - **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_stage`、`status`、`updated_at`、`deleted_at`、`deleted_by`。
 - **TaskMembership**：任務成員關係。關鍵欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
 - **TaskListQuery**：列表查詢條件。欄位：`keyword`、`task_type`（`TASK_TYPE_ENUM`）、`run_stage`（`RUN_STAGE_ENUM`）、`status`（`TASK_STATUS_ENUM`）、`page`、`page_size`。
+- **ActiveTaskTypeState**：跨頁 task type 快取。欄位：`storage_key = labelsuite.activeTaskType`、`task_type`（值域同 `TASK_TYPE_ENUM`）。
 
 ---
 
@@ -278,6 +282,7 @@ flowchart LR
 - **SC-007**：無資料與空結果時，`task-list` 皆保留表頭，並於 `tbody` 顯示對應 empty row 內容。
 - **SC-008**：`尚無任務` 狀態僅保留頁面主 `新增任務` CTA；`空結果` 狀態可直接清除篩選返回列表。
 - **SC-009**：點擊任務列 `編輯` 可導向 `/task-detail`；點擊 `刪除` 後任務會軟刪除並從列表隱藏。
+- **SC-010**：點擊任務列或 `編輯` 導頁後，`labelsuite.activeTaskType` 必須更新為該任務的 `task_type`。
 
 ---
 
@@ -285,6 +290,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.7 | 2026-04-23 | 同步原型：`TASK_TYPE_ENUM` 以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression`，並新增 `labelsuite.activeTaskType` 持久化契約供 annotation-workspace 啟動 fallback |
 | 1.3.6 | 2026-04-22 | 任務類型對齊 `task-new` 下拉實際選項：`TASK_TYPE_ENUM` 改為 `single_sentence_classification / single_sentence_scoring_regression / sequence_labeling / relation_extraction / sentence_pairs`（不含生成式標記） |
 | 1.3.5 | 2026-04-22 | 與 `013-task-new` 對齊：兩份 spec 共同定義 `TASK_TYPE_ENUM = Single Sentence | Sequence Labeling | Sentence Pairs | Generative Labeling`，並保留 registry 來源約束 |
 | 1.3.4 | 2026-04-22 | 對齊 `013-task-new`：任務類型改為 registry-driven，`TASK_TYPE_ENUM` 改為 `TASK_TYPE_SOURCE = task_type_registry`，相關篩選與查詢契約同步更新 |

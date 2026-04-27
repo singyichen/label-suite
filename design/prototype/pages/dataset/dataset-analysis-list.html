@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Label Suite — 資料集分析</title>
+  <link rel="stylesheet" href="../../assets/tokens.css" />
+  <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-primary:          #6366F1;
+      --color-cta:              #10B981;
+      --color-surface:          #F5F3FF;
+      --color-white:            #FFFFFF;
+      --color-ink:              #1E1B4B;
+      --color-ink-muted:        #94A3B8;
+      --color-text-soft:        #64748B;
+      --color-border:           #E2E8F0;
+      --color-border-muted:     #F1F5F9;
+      --color-primary-soft-bg:  #EEF2FF;
+      --color-slate-50:         #F8FAFC;
+      --color-error:            #B91C1C;
+      --color-error-soft-bg:    #FEF2F2;
+      --color-error-soft-border:#FECACA;
+      --color-success:          #15803D;
+      --color-success-bg:       #F0FDF4;
+      --color-success-border:   #BBF7D0;
+      --color-warning:          #A16207;
+      --color-warning-bg:       #FEFCE8;
+      --color-warning-border:   #FEF08A;
+      --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
+      --font-sans: 'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px;
+      --radius-xl: 16px; --radius-full: 9999px;
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+      --space-xs: 4px; --space-sm: 8px; --space-md: 16px;
+      --space-lg: 24px; --space-xl: 32px;
+      --dur-fast: 150ms; --dur-normal: 200ms;
+      --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-surface);
+      color: var(--color-ink);
+      line-height: 1.8;
+      min-height: 100vh;
+      display: flex; flex-direction: row;
+    }
+    html[lang="en"] body { line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+    .page { min-width: 0; }
+
+    /* ── Page header ────────────────────────────────────────── */
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: var(--space-md);
+      margin-bottom: var(--space-lg); flex-wrap: wrap;
+    }
+    .page-main-title {
+      font-family: var(--font-serif-display);
+      font-size: 28px; line-height: 1.3; font-weight: 700;
+      color: var(--color-ink); margin: 0 0 4px;
+    }
+    .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
+
+    /* ── Task count chip ─────────────────────────────────────── */
+    .task-count-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--color-white);
+      font-size: 13px; font-weight: 500; color: var(--color-text-soft);
+      align-self: flex-end;
+    }
+    .task-count-chip strong { color: var(--color-ink); }
+
+    /* ── Table panel ────────────────────────────────────────── */
+    .table-container {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      overflow: hidden;
+      min-width: 0;
+    }
+    .task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .task-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 760px;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .task-table th {
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-ink-muted);
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-slate-50);
+    }
+    .task-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid #F1F5F9;
+      vertical-align: middle;
+    }
+    .task-table tbody tr {
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    .task-table tbody tr:hover { background: var(--color-slate-50); }
+    .task-table tbody tr:last-child td { border-bottom: none; }
+    .task-row:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.18);
+    }
+    .task-name-cell {
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--color-ink);
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* ── Completion rate ────────────────────────────────────── */
+    .completion-cell {
+      min-width: 180px;
+    }
+    .completion-section { display: flex; flex-direction: column; gap: 6px; min-width: 140px; }
+    .completion-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: var(--color-text-soft); font-weight: 500;
+      gap: 12px;
+    }
+    .completion-label strong { color: var(--color-ink); font-size: 13px; }
+    .progress-track {
+      height: 6px; background: var(--color-border-muted);
+      border-radius: var(--radius-full); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--color-primary);
+      border-radius: var(--radius-full);
+      transition: width var(--dur-normal) var(--ease-standard);
+    }
+    .progress-fill.complete { background: var(--color-cta); }
+
+    .role-cell { color: var(--color-text-soft); font-size: 13px; }
+
+    /* ── Badges ─────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: var(--radius-sm); border: 1px solid transparent;
+      font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+    }
+    /* Task type badges */
+    .badge-task-type-single   { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
+    .badge-task-type-sequence { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
+    .badge-task-type-relation { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
+    .badge-task-type-pairs    { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
+    .badge-task-type-scoring  { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
+    .badge-task-type-default  { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
+    /* IAA status badges */
+    .badge-iaa-pass        { color: #15803D; background: #F0FDF4; border-color: #BBF7D0; }
+    .badge-iaa-fail        { color: #B91C1C; background: #FEF2F2; border-color: #FECACA; }
+    .badge-iaa-pending     { color: #A16207; background: #FEFCE8; border-color: #FEF08A; }
+    .badge-iaa-not-started { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
+    /* Role badge */
+    .badge-role-pl    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-role-rev   { color: #0369A1; background: #E0F2FE; border-color: #BAE6FD; }
+
+    /* ── Empty state ─────────────────────────────────────────── */
+    .empty-row { cursor: default !important; }
+    .empty-row:hover { background: transparent !important; }
+    .empty-row-cell { padding: 48px 20px !important; }
+    .empty-row-wrap { text-align: center; max-width: 420px; margin: 0 auto; }
+    .empty-icon {
+      width: 48px; height: 48px; margin: 0 auto 16px;
+      color: var(--color-ink-muted);
+    }
+    .empty-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
+    .empty-desc { font-size: 14px; color: var(--color-text-soft); margin: 0; }
+
+    /* ── Toast ──────────────────────────────────────────────── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 400; pointer-events: none; }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: var(--radius-lg);
+      background: var(--color-ink); color: white; font-size: 14px; font-weight: 500;
+      box-shadow: var(--shadow-lg); pointer-events: auto;
+      opacity: 0; transform: translateY(8px);
+      transition: opacity var(--dur-normal), transform var(--dur-normal);
+      max-width: 340px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 767px) {
+      .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .task-count-chip { align-self: flex-start; }
+      .toast-container { bottom: 100px; right: 12px; left: 12px; }
+      .toast { max-width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ════════════════════════════════════════════════ -->
+<div id="sharedSidebarMount"></div>
+<script src="../shared/sidebar.js"></script>
+<script>
+  window.LabelSuiteSharedSidebar.mountSidebar({
+    mountId: 'sharedSidebarMount',
+    activeNav: 'dataset',
+    dashboardHref: '../dashboard/dashboard.html',
+    taskHref: '../task-management/task-list.html',
+    datasetHref: './dataset-analysis-list.html',
+    adminHref: '../admin/user-management.html',
+    profileHref: '../account/profile.html',
+    loginHref: '../account/login.html',
+    brandHref: '../dashboard/dashboard.html',
+  });
+</script>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════ -->
+<main>
+  <div class="layout">
+    <section class="page">
+
+      <!-- Page header -->
+      <header class="page-header">
+        <div>
+          <h1 class="page-main-title" id="pageTitle">資料集分析</h1>
+          <p class="page-main-subtitle" id="pageSubtitle">查看具成員資格的任務 IAA 分析結果</p>
+        </div>
+        <div class="task-count-chip" id="taskCountChip" aria-live="polite">
+          <strong id="taskCountNum">5</strong>
+          <span id="taskCountLabel">個任務</span>
+        </div>
+      </header>
+
+      <div class="table-container">
+        <div class="task-table-wrap">
+          <table class="task-table" aria-label="資料集分析任務列表">
+            <thead>
+              <tr>
+                <th id="thTaskName">任務名稱</th>
+                <th id="thTaskType">任務類型</th>
+                <th id="thCompletion">完成率</th>
+                <th id="thIaaStatus">IAA 狀態</th>
+                <th id="thRole">成員角色</th>
+              </tr>
+            </thead>
+            <tbody id="taskTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<!-- ══ TOAST ════════════════════════════════════════════════════ -->
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert">
+    <span id="toastMsg"></span>
+  </div>
+</div>
+
+<script src="../../assets/analytics.js"></script>
+<script>
+  /* ── i18n ─────────────────────────────────────────────────── */
+  var I18N = {
+    zh: {
+      docTitle: '資料集分析 — Label Suite（原型）',
+      pageTitle: '資料集分析',
+      pageSubtitle: '查看具成員資格的任務 IAA 分析結果',
+      taskCountLabel: '個任務',
+      thTaskName: '任務名稱',
+      thTaskType: '任務類型',
+      thCompletion: '完成率',
+      thIaaStatus: 'IAA 狀態',
+      thRole: '成員角色',
+      completionLabel: '完成率',
+      iaaLabel: 'IAA 狀態',
+      emptyTitle: '尚無可分析的任務',
+      emptyDesc: '你目前沒有具分析權限的任務，請聯繫專案負責人確認成員資格。',
+      toastNavigating: '前往分析詳情…',
+      langToggleAria: '切換語言',
+      iaaBadge: {
+        pass: '通過',
+        fail: '未通過',
+        pending: '計算中',
+        not_started: '尚未開始',
+      },
+      taskTypeLabel: {
+        single_sentence_classification: '單句分類',
+        single_sentence_va_scoring: 'VA 評分',
+        sequence_labeling: '序列標記',
+        relation_extraction: '關係抽取',
+        sentence_pairs: '句對任務',
+      },
+      roleLabel: {
+        project_leader: '專案負責人',
+        reviewer: '審核員',
+      },
+    },
+    en: {
+      docTitle: 'Dataset Analysis — Label Suite (Prototype)',
+      pageTitle: 'Dataset analysis',
+      pageSubtitle: 'IAA analysis results for tasks with membership',
+      taskCountLabel: 'tasks',
+      thTaskName: 'Task Name',
+      thTaskType: 'Task Type',
+      thCompletion: 'Completion',
+      thIaaStatus: 'IAA Status',
+      thRole: 'Membership Role',
+      completionLabel: 'Completion',
+      iaaLabel: 'IAA status',
+      emptyTitle: 'No tasks to analyze',
+      emptyDesc: "You don't have analysis access to any task. Contact the project leader to check your membership.",
+      toastNavigating: 'Opening analysis detail…',
+      langToggleAria: 'Switch language',
+      iaaBadge: {
+        pass: 'Pass',
+        fail: 'Fail',
+        pending: 'Pending',
+        not_started: 'Not started',
+      },
+      taskTypeLabel: {
+        single_sentence_classification: 'Classification',
+        single_sentence_va_scoring: 'VA Scoring',
+        sequence_labeling: 'Sequence',
+        relation_extraction: 'Relation',
+        sentence_pairs: 'Sentence Pairs',
+      },
+      roleLabel: {
+        project_leader: 'Project Leader',
+        reviewer: 'Reviewer',
+      },
+    },
+  };
+
+  /* ── Mock task data ───────────────────────────────────────── */
+  /* Simulates tasks filtered by TASK_ROLES_ALLOWED membership */
+  var TASKS_SEED = [
+    {
+      id: 'T001',
+      nameZh: '新聞標題多標籤分類',
+      nameEn: 'News Headline Multi-label Classification',
+      taskType: 'single_sentence_classification',
+      completionRate: 89,
+      iaaStatus: 'pass',
+      membershipRole: 'project_leader',
+    },
+    {
+      id: 'T002',
+      nameZh: '情感 VA 雙維度評分',
+      nameEn: 'Sentiment VA Dual-axis Scoring',
+      taskType: 'single_sentence_va_scoring',
+      completionRate: 42,
+      iaaStatus: 'pending',
+      membershipRole: 'reviewer',
+    },
+    {
+      id: 'T003',
+      nameZh: '產品評論序列標註（NER / Aspect）',
+      nameEn: 'Product Review Sequence Labeling (NER / Aspect)',
+      taskType: 'sequence_labeling',
+      completionRate: 64,
+      iaaStatus: 'pass',
+      membershipRole: 'reviewer',
+    },
+    {
+      id: 'T004',
+      nameZh: '醫療關係抽取（Entity / Triple）',
+      nameEn: 'Medical Relation Extraction (Entity / Triple)',
+      taskType: 'relation_extraction',
+      completionRate: 37,
+      iaaStatus: 'fail',
+      membershipRole: 'project_leader',
+    },
+    {
+      id: 'T005',
+      nameZh: '句對相似度 / 蘊含判定',
+      nameEn: 'Sentence Pair Similarity / Entailment',
+      taskType: 'sentence_pairs',
+      completionRate: 58,
+      iaaStatus: 'pending',
+      membershipRole: 'reviewer',
+    },
+  ];
+
+  /* ── State ────────────────────────────────────────────────── */
+  var state = { lang: 'zh', tasks: TASKS_SEED };
+  var toastTimer = null;
+
+  /* ── Constants ────────────────────────────────────────────── */
+  var TASK_TYPE_BADGE_CLS = {
+    single_sentence_classification: 'badge-task-type-single',
+    single_sentence_va_scoring:     'badge-task-type-scoring',
+    sequence_labeling:              'badge-task-type-sequence',
+    relation_extraction:            'badge-task-type-relation',
+    sentence_pairs:                 'badge-task-type-pairs',
+  };
+  var IAA_BADGE_CLS = {
+    pass:        'badge-iaa-pass',
+    fail:        'badge-iaa-fail',
+    pending:     'badge-iaa-pending',
+    not_started: 'badge-iaa-not-started',
+  };
+  var ROLE_BADGE_CLS = {
+    project_leader: 'badge-role-pl',
+    reviewer:       'badge-role-rev',
+  };
+
+  /* ── Helpers ──────────────────────────────────────────────── */
+  function t(key) { return (I18N[state.lang] || I18N.zh)[key] || key; }
+
+  function tNested(obj, key) {
+    var dict = (I18N[state.lang] || I18N.zh)[obj] || {};
+    return dict[key] || key;
+  }
+
+  function setTextContent(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    setTextContent('toastMsg', msg);
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3000);
+  }
+
+  function getTrackingContext() {
+    return { lang: state.lang, task_count: state.tasks.length };
+  }
+
+  function trackAnalytics(eventName, extra) {
+    if (!window.LabelSuiteAnalytics) return;
+    var payload = getTrackingContext();
+    var ext = extra || {};
+    Object.keys(ext).forEach(function (k) { payload[k] = ext[k]; });
+    window.LabelSuiteAnalytics.track(eventName, payload);
+  }
+
+  /* ── Row builder ──────────────────────────────────────────── */
+  function createTaskRow(task) {
+    var tr = document.createElement('tr');
+    tr.className = 'task-row';
+    tr.setAttribute('tabindex', '0');
+    tr.setAttribute('role', 'button');
+    tr.setAttribute('aria-label', state.lang === 'en' ? task.nameEn : task.nameZh);
+
+    var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
+    var typeLabel = tNested('taskTypeLabel', task.taskType);
+    var typeCls = TASK_TYPE_BADGE_CLS[task.taskType] || 'badge-task-type-default';
+    var iaaLabel = tNested('iaaBadge', task.iaaStatus);
+    var iaaCls = IAA_BADGE_CLS[task.iaaStatus] || 'badge-iaa-not-started';
+    var roleLabel = tNested('roleLabel', task.membershipRole);
+    var roleCls = ROLE_BADGE_CLS[task.membershipRole] || 'badge-role-rev';
+    var rate = task.completionRate;
+    var isComplete = rate >= 100;
+
+    var tdName = document.createElement('td');
+    tdName.className = 'task-name-cell';
+    tdName.textContent = taskName;
+
+    var tdType = document.createElement('td');
+    var typeBadge = document.createElement('span');
+    typeBadge.className = 'badge ' + typeCls;
+    typeBadge.textContent = typeLabel;
+    tdType.appendChild(typeBadge);
+
+    var tdCompletion = document.createElement('td');
+    tdCompletion.className = 'completion-cell';
+    var compSection = document.createElement('div');
+    compSection.className = 'completion-section';
+    var compLabelEl = document.createElement('div');
+    compLabelEl.className = 'completion-label';
+    var compLabelSpan = document.createElement('span');
+    compLabelSpan.textContent = t('completionLabel');
+    var compValueEl = document.createElement('strong');
+    compValueEl.textContent = rate + '%';
+    compLabelEl.appendChild(compLabelSpan);
+    compLabelEl.appendChild(compValueEl);
+    compSection.appendChild(compLabelEl);
+    var track = document.createElement('div');
+    track.className = 'progress-track';
+    track.setAttribute('role', 'progressbar');
+    track.setAttribute('aria-valuenow', rate);
+    track.setAttribute('aria-valuemin', '0');
+    track.setAttribute('aria-valuemax', '100');
+    var fill = document.createElement('div');
+    fill.className = 'progress-fill' + (isComplete ? ' complete' : '');
+    fill.style.width = rate + '%';
+    track.appendChild(fill);
+    compSection.appendChild(track);
+    tdCompletion.appendChild(compSection);
+
+    var tdIaa = document.createElement('td');
+    var iaaBadge = document.createElement('span');
+    iaaBadge.className = 'badge ' + iaaCls;
+    iaaBadge.textContent = iaaLabel;
+    tdIaa.appendChild(iaaBadge);
+
+    var tdRole = document.createElement('td');
+    tdRole.className = 'role-cell';
+    var roleBadge = document.createElement('span');
+    roleBadge.className = 'badge ' + roleCls;
+    roleBadge.textContent = roleLabel;
+    tdRole.appendChild(roleBadge);
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdType);
+    tr.appendChild(tdCompletion);
+    tr.appendChild(tdIaa);
+    tr.appendChild(tdRole);
+
+    function handleRowActivate() {
+      trackAnalytics('prototype_dataset_card_clicked', { task_id: task.id, iaa_status: task.iaaStatus });
+      showToast(t('toastNavigating'));
+      window.setTimeout(function () {
+        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=quality';
+      }, 220);
+    }
+    tr.addEventListener('click', handleRowActivate);
+    tr.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowActivate(); }
+    });
+
+    return tr;
+  }
+
+  function createEmptyRow() {
+    var tr = document.createElement('tr');
+    tr.className = 'empty-row';
+
+    var td = document.createElement('td');
+    td.className = 'empty-row-cell';
+    td.colSpan = 5;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'empty-row-wrap';
+
+    var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('class', 'empty-icon');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '1.5');
+    icon.setAttribute('stroke-linecap', 'round');
+    icon.setAttribute('stroke-linejoin', 'round');
+    icon.setAttribute('aria-hidden', 'true');
+    [
+      { tag: 'path', attrs: { d: 'M3 3h18v18H3z', rx: '2' } },
+      { tag: 'path', attrs: { d: 'M9 9h6v6H9z' } },
+      { tag: 'path', attrs: { d: 'M3 9h6' } },
+      { tag: 'path', attrs: { d: 'M15 9h6' } },
+      { tag: 'path', attrs: { d: 'M9 15h6' } },
+      { tag: 'path', attrs: { d: 'M3 15h6' } },
+      { tag: 'path', attrs: { d: 'M15 15h6' } }
+    ].forEach(function (shape) {
+      var node = document.createElementNS('http://www.w3.org/2000/svg', shape.tag);
+      Object.keys(shape.attrs).forEach(function (key) { node.setAttribute(key, shape.attrs[key]); });
+      icon.appendChild(node);
+    });
+
+    var title = document.createElement('p');
+    title.className = 'empty-title';
+    title.id = 'emptyTitle';
+    title.textContent = t('emptyTitle');
+
+    var desc = document.createElement('p');
+    desc.className = 'empty-desc';
+    desc.id = 'emptyDesc';
+    desc.textContent = t('emptyDesc');
+
+    wrap.appendChild(icon);
+    wrap.appendChild(title);
+    wrap.appendChild(desc);
+    td.appendChild(wrap);
+    tr.appendChild(td);
+    return tr;
+  }
+
+  /* ── Render ───────────────────────────────────────────────── */
+  function render() {
+    var tableBody = document.getElementById('taskTableBody');
+
+    while (tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
+
+    if (state.tasks.length === 0) {
+      tableBody.appendChild(createEmptyRow());
+    } else {
+      state.tasks.forEach(function (task) { tableBody.appendChild(createTaskRow(task)); });
+    }
+
+    setTextContent('taskCountNum', state.tasks.length);
+    setTextContent('taskCountLabel', t('taskCountLabel'));
+  }
+
+  /* ── Apply language ───────────────────────────────────────── */
+  function applyLang(l) {
+    state.lang = l === 'en' ? 'en' : 'zh';
+    document.documentElement.lang = state.lang === 'zh' ? 'zh-TW' : 'en';
+    document.title = t('docTitle');
+
+    setTextContent('pageTitle',   t('pageTitle'));
+    setTextContent('pageSubtitle', t('pageSubtitle'));
+    setTextContent('thTaskName', t('thTaskName'));
+    setTextContent('thTaskType', t('thTaskType'));
+    setTextContent('thCompletion', t('thCompletion'));
+    setTextContent('thIaaStatus', t('thIaaStatus'));
+    setTextContent('thRole', t('thRole'));
+
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
+        langToggleAria: t('langToggleAria'),
+      });
+    }
+    render();
+  }
+
+  /* ── Language toggle wiring ───────────────────────────────── */
+  function handleLangToggle(source) {
+    var prev = state.lang;
+    applyLang(state.lang === 'zh' ? 'en' : 'zh');
+    trackAnalytics('prototype_lang_switched', { source: source, from_lang: prev, to_lang: state.lang });
+  }
+
+  /* ── Init ─────────────────────────────────────────────────── */
+  (function init() {
+    var q = new URLSearchParams(window.location.search);
+    if (q.get('view') === 'empty') {
+      state.tasks = [];
+    }
+
+    var langToggle = document.getElementById('langToggle');
+    var mobileLangToggle = document.getElementById('mobileLangToggle');
+    if (langToggle) langToggle.addEventListener('click', function () { handleLangToggle('desktop'); });
+    if (mobileLangToggle) mobileLangToggle.addEventListener('click', function () { handleLangToggle('mobile'); });
+
+    if (window.LabelSuiteSharedSidebar) {
+      applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
+    } else {
+      applyLang('zh');
+    }
+
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'dataset-analysis-list' });
+      window.LabelSuiteAnalytics.trackPageView('dataset-analysis-list', getTrackingContext);
+    }
+  }());
+</script>
+</body>
+</html>

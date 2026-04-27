@@ -1,0 +1,88 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">整體通過</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">Krippendorff's Alpha（nominal）</span>
+    <span id="iaaMethodSuffix">— 主要指標</span>
+  </div>
+  <div class="iaa-score-grid iaa-score-grid-1">
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblSpMetric">Krippendorff's Alpha（nominal）</div>
+      <div class="iaa-card-value pass">0.85</div>
+      <div class="iaa-card-calc" id="lblSpCalc">分類型子任務</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:85%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblSpThr">門檻 0.80 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnSp" type="button" aria-expanded="false" aria-controls="altBodySp">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblSp">替代指標</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodySp" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead><tr><th id="altHSpMetric">指標</th><th id="altHSpVal">數值</th></tr></thead>
+        <tbody>
+          <tr><td><span class="alt-metric-name">Fleiss' Kappa</span></td><td>0.82</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title" id="anomSpSpeedTitle">標記速度異常</div>
+  <div class="anomaly-empty" id="anomSpSpeedEmpty">無速度異常</div>
+  <div class="anomaly-group-title" id="anomSpOutlierTitle" style="margin-top:var(--space-md)">高分歧樣本</div>
+  <div class="anomaly-empty" id="anomSpOutlierEmpty">無 high_divergence 樣本</div>
+</section>
+
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">分類型句對任務沿用 Alpha；低樣本標記員顯示資料不足，不直接給 normal。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員分析（句對任務）">
+          <thead><tr><th>標記員</th><th>平均速度</th><th>Alpha</th><th>風險等級</th><th>異常原因</th><th>樣本數</th><th>建議行動</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>33s / 句</td><td><span class="badge badge-pass">0.87</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted">無異常原因</div></td><td>25</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>38s / 句</td><td><span class="badge badge-pass">0.84</span></td><td><span class="risk-level-badge insufficient" data-risk-level="insufficient">資料不足</span></td><td><div class="cause-muted">7 / 10，暫不評估</div></td><td>7</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>41s / 句</td><td><span class="badge badge-pass">0.81</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip">系統性偏差</span></div></td><td>15</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="spGroupAvg">群體平均 — Alpha: 0.85 ／ 平均速度: 37.3s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（句對任務）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句對數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>25</td><td>2</td><td>8%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>7</td><td>1</td><td>14.3%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>15</td><td>4</td><td>26.7%</td><td>1</td><td>6.7%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">句對任務以可重疊比較的句對結果為母體；適合觀察群體偏離頻率，不單獨作為處置依據。</p>
+  </div>
+</section>

@@ -182,59 +182,9 @@
     </div>
   </section>
 
-  <!-- ② 執行控制面板 -->
-  <section class="panel" aria-labelledby="executionTitle">
-    <h2 class="panel-title" id="executionTitle">任務狀態與執行控制</h2>
-
-    <!-- 狀態步驟流程器 -->
-    <div class="status-stepper-wrap" aria-hidden="true">
-      <div class="status-stepper" id="statusStepper">
-        <div class="step" data-step="draft">
-          <div class="step-node"></div>
-          <span class="step-label-wrap">草稿</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step" data-step="dry_run_in_progress">
-          <div class="step-node"></div>
-          <span class="step-label-wrap">試標進行中</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step" data-step="waiting_iaa_confirmation">
-          <div class="step-node"></div>
-          <span class="step-label-wrap">待 IAA 確認</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step" data-step="official_run_in_progress">
-          <div class="step-node"></div>
-          <span class="step-label-wrap">正式標記中</span>
-        </div>
-        <div class="step-connector"></div>
-        <div class="step" data-step="completed">
-          <div class="step-node"></div>
-          <span class="step-label-wrap">已完成</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 狀態 badge + 發布操作 -->
-    <div class="exec-control-row">
-      <div class="exec-info">
-        <div class="exec-badges">
-          <span id="statusBadge" class="badge badge-draft">draft</span>
-          <span class="badge badge-isolated" id="isolationBadge">isolated</span>
-        </div>
-        <p id="statusHint" class="status-hint"></p>
-        <p id="isolationAudit" class="status-hint exec-isolation-audit"></p>
-      </div>
-      <div class="exec-actions">
-        <div class="action-row" id="publishActionRow" style="margin:0;"></div>
-      </div>
-    </div>
-  </section>
-
   <section class="panel" aria-labelledby="samplingTitle">
     <div class="panel-head-row">
-      <h2 class="panel-title" id="samplingTitle">試標資料抽樣設定</h2>
+      <h2 class="panel-title" id="samplingTitle">抽樣設定</h2>
       <div class="sampling-edit-actions">
         <button class="btn btn-secondary" type="button" id="samplingEditBtn">編輯</button>
         <button class="btn btn-secondary hidden" type="button" id="samplingCancelBtn">取消</button>
@@ -244,6 +194,10 @@
     <p class="status-hint" id="samplingReadonlyHint"></p>
 
     <div id="samplingSummaryView" class="kv-dl">
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
+        <span class="kv-dl-value" id="valueTrialRoundControl"></span>
+      </div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelSamplingModeControl">抽樣方式</span>
         <span class="kv-dl-value" id="valueSamplingModeControl"></span>
@@ -255,6 +209,14 @@
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelSamplingStrategyControl">抽樣策略</span>
         <span class="kv-dl-value mono" id="valueSamplingStrategyControl"></span>
+      </div>
+      <div class="kv-dl-row" id="stratifyByKvRow">
+        <span class="kv-dl-key" id="labelStratifyByControl">分層依據</span>
+        <span class="kv-dl-value" id="valueStratifyByControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelStopConditionControl">停止條件</span>
+        <span class="kv-dl-value" id="valueStopConditionControl"></span>
       </div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelSplitControl">試標 / 正式資料配比</span>
@@ -291,10 +253,53 @@
         </div>
         <div class="field-group">
           <label class="field-label" id="samplingStrategyLabel">抽樣策略</label>
-          <div class="strategy-info">
-            <span id="samplingStrategyText" class="strategy-text">stratified_random</span>
-            <span id="samplingSeedText" class="strategy-seed mono">random_seed: —</span>
+          <select class="input-select" id="samplingStrategySelect">
+            <option id="samplingStrategyOptionStratified" value="stratified_random">分層隨機抽樣</option>
+            <option id="samplingStrategyOptionDisagreement" value="high_disagreement">高分歧樣本優先</option>
+            <option id="samplingStrategyOptionEdgeCases" value="edge_cases">邊界樣本優先</option>
+          </select>
+        </div>
+      </div>
+      <div class="sampling-fields sampling-fields-advanced">
+        <div class="field-group">
+          <label class="field-label" id="samplingSeedLabel" for="samplingSeedInput">Random Seed</label>
+          <input class="input-number" id="samplingSeedInput" type="number" min="1" step="1" value="248931" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
+          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
+        </div>
+        <div class="field-group" id="stratifyByFieldGroup">
+          <span class="field-label" id="samplingStratifyLabel">分層依據</span>
+          <div class="sampling-mode-inline" role="group" aria-labelledby="samplingStratifyLabel">
+            <label>
+              <input type="checkbox" id="stratifyByLabel" />
+              <span id="stratifyByLabelText">label</span>
+            </label>
+            <label>
+              <input type="checkbox" id="stratifyByDomain" />
+              <span id="stratifyByDomainText">domain</span>
+            </label>
+            <label>
+              <input type="checkbox" id="stratifyByDifficulty" />
+              <span id="stratifyByDifficultyText">difficulty</span>
+            </label>
           </div>
+        </div>
+      </div>
+
+      <div class="sampling-fields sampling-fields-advanced">
+        <div class="field-group">
+          <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
+          <input class="input-number" id="targetAgreementInput" type="number" min="0" max="1" step="0.01" value="0.80" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" id="targetStdInputLabel" for="targetStdInput">標準差上限</label>
+          <input class="input-number" id="targetStdInput" type="number" min="0" max="1" step="0.01" value="0.10" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標註者數</label>
+          <input class="input-number" id="minAnnotatorsInput" type="number" min="2" step="1" value="3" />
         </div>
       </div>
 
@@ -304,6 +309,11 @@
           <div class="split-seg split-official" id="splitOfficialBar" style="width:90.6%"></div>
         </div>
         <div class="split-legend">
+          <div class="split-legend-item">
+            <span class="split-dot split-dot-total" aria-hidden="true"></span>
+            <span class="split-legend-key" id="totalSamplesLabel">總筆數</span>
+            <strong class="split-legend-value" id="totalSamplesValue">—</strong>
+          </div>
           <div class="split-legend-item">
             <span class="split-dot split-dot-dry" aria-hidden="true"></span>
             <span class="split-legend-key" id="sampleUsageLabel">試標使用量</span>
@@ -317,12 +327,11 @@
         </div>
       </div>
 
-      <p class="inline-help" id="samplingHelp">百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。</p>
       <p class="inline-error" id="samplingError"></p>
 
       <div class="sampling-footer">
         <button class="btn btn-secondary" type="button" id="resampleBtn">重算抽樣</button>
-        <span class="status-hint" id="resampleHint">僅 draft 可重算；進入 Dry Run 後需建立新 run 批次。</span>
+        <span class="status-hint" id="resampleHint">僅草稿階段可重算；進入試標後需建立新的執行批次。</span>
       </div>
 
       <hr class="panel-divider" />
@@ -339,6 +348,86 @@
           </label>
         </div>
         <p class="risk-warning hidden" id="isolationRiskMsg">已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 執行控制面板 -->
+  <section class="panel" aria-labelledby="executionTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="executionTitle">任務狀態與執行控制</h2>
+    </div>
+
+    <!-- 狀態步驟流程器 -->
+    <div id="runControlExecutionPanel">
+      <div class="status-stepper-wrap" aria-hidden="true">
+        <div class="status-stepper" id="statusStepper">
+          <div class="step" data-step="draft">
+            <div class="step-node"></div>
+            <span class="step-label-wrap">草稿</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="dry_run_in_progress">
+            <div class="step-node"></div>
+            <span class="step-label-wrap">試標進行中</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="waiting_iaa_confirmation">
+            <div class="step-node"></div>
+            <span class="step-label-wrap">待 IAA 確認</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="official_run_in_progress">
+            <div class="step-node"></div>
+            <span class="step-label-wrap">正式標記中</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step" data-step="completed">
+            <div class="step-node"></div>
+            <span class="step-label-wrap">已完成</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exec-round-grid">
+        <div class="exec-round-item">
+          <span class="exec-round-key" id="trialRoundLabel">Trial Round</span>
+          <strong class="exec-round-value" id="trialRoundValue">R1</strong>
+        </div>
+        <div class="exec-round-item">
+          <span class="exec-round-key" id="targetAgreementLabel">目標 IAA</span>
+          <strong class="exec-round-value" id="targetAgreementValue">0.80</strong>
+        </div>
+        <div class="exec-round-item">
+          <span class="exec-round-key" id="currentAgreementLabel">目前 IAA</span>
+          <strong class="exec-round-value" id="currentAgreementValue">0.62</strong>
+        </div>
+        <div class="exec-round-item">
+          <span class="exec-round-key" id="currentStdLabel">目前標準差</span>
+          <strong class="exec-round-value" id="currentStdValue">0.16</strong>
+        </div>
+      </div>
+
+      <div class="exec-stop-row">
+        <span class="status-hint" id="stopConditionTitle">達標條件</span>
+        <div class="exec-stop-pills" id="execStopPills">
+          <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
+          <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
+          <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標註者</span>
+        </div>
+      </div>
+
+      <!-- 狀態 badge + 發布操作 -->
+      <div class="exec-control-row">
+        <div class="exec-info">
+          <div class="exec-badges hidden">
+            <span id="statusBadge" class="badge badge-draft">draft</span>
+            <span class="badge badge-isolated" id="isolationBadge">isolated</span>
+          </div>
+        </div>
+        <div class="exec-actions">
+          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
+        </div>
       </div>
     </div>
   </section>

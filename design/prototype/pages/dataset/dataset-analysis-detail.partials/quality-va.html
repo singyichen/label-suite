@@ -1,0 +1,202 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">整體通過</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">ICC（Intraclass Correlation Coefficient）</span>
+    <span id="iaaMethodSuffix">— 主要指標</span>
+  </div>
+  <div class="iaa-score-grid">
+    <div class="iaa-score-card card-warn">
+      <div class="iaa-card-label" id="lblV">Valence（V）</div>
+      <div class="iaa-card-value warn">0.78</div>
+      <div class="iaa-card-calc">ICC</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill warn" style="width:78%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblVrec">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+        </span>
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-fail"></span>
+          <span id="lblVstr">嚴格門檻 0.80 — <strong class="t-fail">未達</strong></span>
+        </span>
+      </div>
+    </div>
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblA">Arousal（A）</div>
+      <div class="iaa-card-value pass">0.82</div>
+      <div class="iaa-card-calc">ICC</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:82%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblArec">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+        </span>
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblAstr">嚴格門檻 0.80 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblOverall">Overall IAA</div>
+      <div class="iaa-card-value pass">0.80</div>
+      <div class="iaa-card-calc" id="lblOverallCalc">（V + A）/ 2</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:80%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblOrec">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+        </span>
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblOstr">嚴格門檻 0.80 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnVA" type="button" aria-expanded="false" aria-controls="altBodyVA">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblVA">輔助指標</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodyVA" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table" aria-label="輔助指標">
+        <thead><tr><th id="altHVAMetric">指標</th><th id="altHVAV">Valence（V）</th><th id="altHVAA">Arousal（A）</th></tr></thead>
+        <tbody>
+          <tr><td><span class="alt-metric-name">Krippendorff's Alpha</span> <span class="alt-metric-note">（interval）</span></td><td>0.74</td><td>0.81</td></tr>
+          <tr><td><span class="alt-metric-name">Pearson Correlation</span></td><td>0.83</td><td>0.86</td></tr>
+          <tr><td><span class="alt-metric-name">Spearman Correlation</span></td><td>0.79</td><td>0.84</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title" id="anomalySpeedTitleVA">標記速度異常</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomVASpd1Title">Jordan Wu — 標記速度過快</div>
+        <div class="anomaly-detail" id="anomVASpd1Detail">平均 18s／句（門檻：≥ 20s），共 42 筆提交紀錄</div>
+      </div>
+    </li>
+  </ul>
+  <div class="anomaly-group-title" id="anomalyOutlierTitleVA" style="margin-top:var(--space-md)">離群標記值</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomVAOut1Title">樣本 #47 — Mandy Chen 的評分顯著偏離群體</div>
+        <div class="anomaly-detail" id="anomVAOut1Detail">V: 3.8，A: 4.2 vs 群體平均 V: 2.1，A: 2.8（距離 &gt; 2σ）</div>
+      </div>
+    </li>
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomVAOut2Title">樣本 #112 — Jordan Wu 的評分顯著偏離群體</div>
+        <div class="anomaly-detail" id="anomVAOut2Detail">V: 4.5，A: 1.2 vs 群體平均 V: 2.8，A: 3.1（距離 &gt; 2σ）</div>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">風險等級依 V / A 的 IAA、速度與最低樣本門檻聚合；high_divergence 樣本不直接拉高個人風險。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員分析（VA 評分）">
+          <thead><tr><th>標記員</th><th>平均速度</th><th>IAA_V</th><th>IAA_A</th><th>風險等級</th><th>異常原因</th><th>樣本數</th><th>建議行動</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="annotator-name">Mandy Chen</span></td>
+              <td>38s / 句</td>
+              <td><span class="badge badge-pass">0.81</span></td>
+              <td><span class="badge badge-pass">0.84</span></td>
+              <td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td>
+              <td><div class="cause-muted">無異常原因</div></td>
+              <td>42</td>
+              <td>
+                <div class="action-stack">
+                  <button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button>
+                  <div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="annotator-name">Avery Lin</span></td>
+              <td>42s / 句</td>
+              <td><span class="badge badge-warn">0.77</span></td>
+              <td><span class="badge badge-pass">0.80</span></td>
+              <td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td>
+              <td>
+                <div class="cause-text-block">
+                  <div class="cause-line"><strong>V</strong> 系統性偏高</div>
+                  <div class="cause-line"><strong>A</strong> 標記過慢</div>
+                </div>
+              </td>
+              <td>18</td>
+              <td>
+                <div class="action-stack">
+                  <button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button>
+                  <div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="annotator-name">Jordan Wu</span></td>
+              <td><span class="speed-warn">18s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td>
+              <td><span class="badge badge-fail">0.71</span></td>
+              <td><span class="badge badge-warn">0.79</span></td>
+              <td><span class="risk-level-badge high" data-risk-level="high">高風險</span></td>
+              <td>
+                <div class="cause-text-block">
+                  <div class="cause-line"><strong>V</strong> 系統性偏低</div>
+                  <div class="cause-line"><strong>A</strong> 標記過快</div>
+                </div>
+              </td>
+              <td>42</td>
+              <td>
+                <div class="action-stack">
+                  <button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button>
+                  <button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">調整參與狀態</button>
+                  <div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="vaGroupAvg">群體平均 — IAA_V: 0.78 ／ IAA_A: 0.82 ／ 平均速度: 32.7s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（VA 評分）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較句數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>42</td><td>6</td><td>14.3%</td><td>1</td><td>2.4%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>18</td><td>4</td><td>22.2%</td><td>1</td><td>5.6%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>42</td><td>12</td><td>28.6%</td><td>3</td><td>7.1%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">以同一樣本之群體中位數為基準彙總；`1.5xSTD` 為觀測閾值，`2xSTD` 為較高偏離訊號。</p>
+  </div>
+</section>

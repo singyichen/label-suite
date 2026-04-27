@@ -1,0 +1,127 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">整體未達標</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">Pairwise Entity-level F1（strict）</span>
+    <span id="iaaMethodSuffix">— 主要指標</span>
+  </div>
+  <div class="match-toggle" role="group" aria-label="Match mode">
+    <button class="match-btn active" id="matchStrict" type="button">Strict match</button>
+    <button class="match-btn" id="matchPartial" type="button">Partial overlap</button>
+  </div>
+  <div id="seqStrictCard">
+    <div class="iaa-score-grid iaa-score-grid-1">
+      <div class="iaa-score-card card-fail">
+        <div class="iaa-card-label" id="lblSeqStrictMetric">Pairwise Entity-level F1（strict）</div>
+        <div class="iaa-card-value fail">0.72</div>
+        <div class="iaa-card-calc">Pairwise 平均</div>
+        <div class="iaa-bar-wrap"><div class="iaa-bar-fill fail" style="width:72%"></div></div>
+        <div class="iaa-threshold-row">
+          <span class="iaa-threshold-item">
+            <span class="t-dot t-dot-fail"></span>
+            <span id="lblSeqStrThr">Strict 門檻 0.80 — <strong class="t-fail">未達</strong></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="seqPartialCard" class="hidden">
+    <div class="iaa-score-grid iaa-score-grid-1">
+      <div class="iaa-score-card card-pass">
+        <div class="iaa-card-label" id="lblSeqPartialMetric">Pairwise Entity-level F1（partial overlap）</div>
+        <div class="iaa-card-value pass">0.78</div>
+        <div class="iaa-card-calc">Pairwise 平均</div>
+        <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:78%"></div></div>
+        <div class="iaa-threshold-row">
+          <span class="iaa-threshold-item">
+            <span class="t-dot t-dot-pass"></span>
+            <span id="lblSeqPartThr">Relaxed 門檻 0.70 — <strong class="t-pass">通過</strong></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnSeq" type="button" aria-expanded="false" aria-controls="altBodySeq">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblSeq">兩種計算模式比較</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodySeq" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead><tr><th id="altHSeqMode">計算模式</th><th id="altHSeqVal">數值</th><th id="altHSeqThr">門檻</th><th id="altHSeqResult">結果</th></tr></thead>
+        <tbody>
+          <tr><td>Strict match</td><td>0.72</td><td>0.80</td><td><span class="badge badge-fail" id="altSeqStrictResult">未達</span></td></tr>
+          <tr><td>Partial overlap</td><td>0.78</td><td>0.70</td><td><span class="badge badge-pass" id="altSeqPartialResult">通過</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title" id="anomSeqSpeedTitle">標記速度異常</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomSeqSpd1Title">Jordan Wu — 標記速度過快</div>
+        <div class="anomaly-detail" id="anomSeqSpd1Detail">平均 22s／句（門檻：≥ 30s），共 38 筆提交紀錄</div>
+      </div>
+    </li>
+  </ul>
+  <div class="anomaly-group-title" id="anomSeqOutlierTitle" style="margin-top:var(--space-md)">高分歧樣本</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title" id="anomSeqOut1Title">樣本 #89 — 實體邊界 high_divergence 旗標</div>
+        <div class="anomaly-detail" id="anomSeqOut1Detail">Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。</div>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">風險原因僅限 annotator-level：系統性偏差、標記過快、標記過慢。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員分析（序列標記）">
+          <thead><tr><th>標記員</th><th>平均速度</th><th>F1（strict）</th><th>風險等級</th><th>異常原因</th><th>樣本數</th><th>建議行動</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>52s / 句</td><td><span class="badge badge-pass">0.76</span></td><td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td><td><div class="cause-muted">無異常原因</div></td><td>26</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>60s / 句</td><td><span class="badge badge-warn">0.70</span></td><td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td><td><div class="cause-stack"><span class="cause-chip">系統性偏差</span></div></td><td>23</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td><span class="speed-warn">22s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td><td><span class="badge badge-fail">0.62</span></td><td><span class="risk-level-badge high" data-risk-level="high">高風險</span></td><td><div class="cause-stack"><span class="cause-chip">標記過快</span><span class="cause-chip">系統性偏差</span></div></td><td>38</td><td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">調整參與狀態</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="seqGroupAvg">群體平均 — F1（strict）: 0.72 ／ 平均速度: 44.7s／句</p>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（序列標記）">
+          <thead><tr><th>標記員</th><th id="consistencyUnitCol">可比較 span 數</th><th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th><th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th><th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th><th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th></tr></thead>
+          <tbody>
+            <tr><td><span class="annotator-name">Mandy Chen</span></td><td>26</td><td>2</td><td>7.7%</td><td>0</td><td>0%</td></tr>
+            <tr><td><span class="annotator-name">Avery Lin</span></td><td>23</td><td>4</td><td>17.4%</td><td>1</td><td>4.3%</td></tr>
+            <tr><td><span class="annotator-name">Jordan Wu</span></td><td>38</td><td>10</td><td>26.3%</td><td>3</td><td>7.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。</p>
+  </div>
+</section>
