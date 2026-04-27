@@ -32,6 +32,12 @@
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
     .layout { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
 
+    /* Breadcrumb */
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
+    .breadcrumb a{color:var(--color-primary)}
+    .breadcrumb a:hover{text-decoration:underline}
+    .breadcrumb-sep{color:var(--color-ink-muted);font-size:11px}
+
     .page-header {
       display: flex;
       align-items: flex-start;
@@ -1640,6 +1646,13 @@
 <main>
   <div class="layout">
     <section>
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="./task-list.html" id="bcRoot">任務管理</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span id="bcCurrent">任務詳情</span>
+      </nav>
+
       <header class="page-header">
         <div>
           <h1 class="page-main-title" id="pageTitle">任務詳情</h1>
@@ -1706,6 +1719,8 @@
   var I18N = {
     zh: {
       docTitle: '任務詳情 — Label Suite（原型）',
+      bcRoot: '任務管理',
+      bcCurrent: '任務詳情',
       pageTitle: '任務詳情',
       pageSubtitle: '檢視任務概覽、執行控制與匯出結果',
       tabOverview: '任務概覽',
@@ -2027,6 +2042,8 @@
     },
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
+      bcRoot: 'Task Management',
+      bcCurrent: 'Task Detail',
       pageTitle: 'Task detail',
       pageSubtitle: 'Review overview, run control, and exports',
       tabOverview: 'Task overview',
@@ -2786,6 +2803,8 @@
       });
     }
 
+    setText('bcRoot', t('bcRoot'));
+    setText('bcCurrent', t('bcCurrent'));
     setText('pageTitle', t('pageTitle'));
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
