@@ -119,6 +119,17 @@
       padding: 10px 18px;
       min-width: 138px;
     }
+    .btn-indigo {
+      color: var(--color-white);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .btn-indigo:hover {
+      background: #4F46E5;
+      border-color: #4F46E5;
+      opacity: 1;
+      transform: translateY(-1px);
+    }
     .badge {
       display: inline-flex;
       align-items: center;
@@ -435,6 +446,22 @@
       .navbar-wordmark { font-size: 13px; }
       .mobile-lang-toggle { padding: 6px 8px; }
     }
+    .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
+    .toast {
+      background: var(--color-ink);
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity var(--dur-normal) var(--ease-standard), transform var(--dur-normal) var(--ease-standard);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.success { background: var(--color-success); }
+    .toast.error { background: var(--color-error); }
   </style>
 </head>
 <body>
@@ -508,6 +535,9 @@
         <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
       </div>
     </div>
+    <button class="btn btn-indigo slim hidden" id="submitReviewBtn" type="button">
+      <span>送出審核</span>
+    </button>
   </div>
 
   <section class="table-container">
@@ -530,8 +560,42 @@
   </section>
 </main>
 
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
+</div>
+
 <script src="../../assets/analytics.js"></script>
 <script>
+  /* ── i18n ─────────────────────────────────────────────────────── */
+  var CURRENT_LANG = 'zh';
+  var I18N = {
+    zh: {
+      pageSubtitleAnnotator: '請先選擇要處理的資料筆次，再進入標記作業頁。',
+      pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
+      submitReviewLabel: '送出審核',
+      toastReviewSubmitted: '審核結果已送出。',
+      toastSelectDecision: '請完成每位標記員的審核決策'
+    },
+    en: {
+      pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
+      pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
+      submitReviewLabel: 'Submit review',
+      toastReviewSubmitted: 'Review submitted.',
+      toastSelectDecision: 'Please complete a review decision for each annotator'
+    }
+  };
+  function t(key) { return (I18N[CURRENT_LANG] || I18N.zh)[key] || key; }
+
+  var toastTimer = null;
+  function showToast(msg, type) {
+    var toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.className = 'toast' + (type ? ' ' + type : '');
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2800);
+  }
+
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
   var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
@@ -1304,9 +1368,29 @@
 
   function renderContext(context) {
     document.getElementById('pageSubtitle').textContent =
-      context.role === 'reviewer'
-        ? '請先選擇要審查的資料筆次，再進入審核作業頁。'
-        : '請先選擇要處理的資料筆次，再進入標記作業頁。';
+      context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');
+
+    var submitReviewBtn = document.getElementById('submitReviewBtn');
+    if (!submitReviewBtn) return;
+    submitReviewBtn.querySelector('span') && (submitReviewBtn.querySelector('span').textContent = t('submitReviewLabel'));
+    if (context.role === 'reviewer') {
+      submitReviewBtn.classList.remove('hidden');
+      submitReviewBtn.onclick = function () {
+        var roleTasks = TASKS_BY_ROLE['reviewer'] || [];
+        var allDecided = true;
+        roleTasks.forEach(function(task) {
+          if (!matchesTaskId(task, context.taskId)) return;
+          (task.samples || []).forEach(function(sample) {
+            (sample.annotators || []).forEach(function(ann, idx) {
+              var state = REVIEW_STATES[reviewKey(sample.sampleId, idx)];
+              if (state !== 'approved' && state !== 'rejected') allDecided = false;
+            });
+          });
+        });
+        if (!allDecided) { showToast(t('toastSelectDecision'), 'error'); return; }
+        showToast(t('toastReviewSubmitted'), 'success');
+      };
+    }
   }
 
   function init() {
@@ -1328,6 +1412,13 @@
         task_type: context.taskType
       });
     }
+
+    document.addEventListener('labelsuite:langchange', function (e) {
+      if (e.detail && e.detail.lang) {
+        CURRENT_LANG = e.detail.lang;
+        renderContext(context);
+      }
+    });
   }
 
   init();
