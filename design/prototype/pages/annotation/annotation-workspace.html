@@ -937,7 +937,7 @@
                 <div class="va-axis-card">
                   <div class="va-axis-head">
                     <span class="va-axis-title" id="vaValenceLabel">Valence（情緒正負）</span>
-                    <span class="va-axis-value" id="vaValenceValue">5</span>
+                    <span class="va-axis-value" id="vaValenceValue">-</span>
                   </div>
                   <p class="va-axis-hint" id="vaValenceHint">1 = 非常負向，9 = 非常正向</p>
                   <div class="va-scale-row" id="vaValenceScale"></div>
@@ -950,7 +950,7 @@
                 <div class="va-axis-card">
                   <div class="va-axis-head">
                     <span class="va-axis-title" id="vaArousalLabel">Arousal（情緒強度）</span>
-                    <span class="va-axis-value" id="vaArousalValue">5</span>
+                    <span class="va-axis-value" id="vaArousalValue">-</span>
                   </div>
                   <p class="va-axis-hint" id="vaArousalHint">1 = 非常平靜，9 = 非常激動</p>
                   <div class="va-scale-row" id="vaArousalScale"></div>
@@ -1574,7 +1574,7 @@ function buildVaScaleOptions(containerId, inputName, selectedValue) {
   if (!container) return;
   while (container.firstChild) container.removeChild(container.firstChild);
 
-  var selected = formatVaValue(selectedValue || 5);
+  var selected = (selectedValue !== null && selectedValue !== undefined) ? formatVaValue(selectedValue) : null;
   VA_SCALE_VALUES.forEach(function(value, index) {
     var valueText = formatVaValue(value);
     var label = document.createElement('label');
@@ -1584,7 +1584,7 @@ function buildVaScaleOptions(containerId, inputName, selectedValue) {
     input.type = 'radio';
     input.name = inputName;
     input.value = valueText;
-    if (valueText === selected) input.checked = true;
+    if (selected !== null && valueText === selected) input.checked = true;
 
     var text = document.createElement('span');
     text.textContent = valueText;
@@ -1917,12 +1917,12 @@ function renderSampleContent() {
   el('nextBtn').disabled = state.currentIdx === SAMPLES.length - 1;
 
   if (isVaTaskType(state.taskTypeKey)) {
-    var valence = sample.va && sample.va.valence ? sample.va.valence : 5;
-    var arousal = sample.va && sample.va.arousal ? sample.va.arousal : 5;
+    var valence = (sample.va && sample.va.valence != null) ? sample.va.valence : null;
+    var arousal = (sample.va && sample.va.arousal != null) ? sample.va.arousal : null;
     buildVaScaleOptions('vaValenceScale', 'va_valence', valence);
     buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
-    setText('vaValenceValue', formatVaValue(valence));
-    setText('vaArousalValue', formatVaValue(arousal));
+    setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
+    setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
   } else {
     var radios = document.querySelectorAll('input[name="sentiment"]');
     radios.forEach(function(r) { r.checked = false; });
