@@ -971,7 +971,7 @@
         item.sample.sampleId.toLowerCase().indexOf(query) !== -1 ||
         status.indexOf(query) !== -1 ||
         item.sample.completedAt.toLowerCase().indexOf(query) !== -1 ||
-        item.sample.annotatedBy.toLowerCase().indexOf(query) !== -1 ||
+        (item.sample.annotatedBy || '').toLowerCase().indexOf(query) !== -1 ||
         item.sample.text.toLowerCase().indexOf(query) !== -1
       );
     });

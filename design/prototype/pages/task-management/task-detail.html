@@ -3275,8 +3275,7 @@
   }
 
   function renderRunControlTabs() {
-    state.activeRunControlTab = 'execution';
-    var tabs = ['execution'];
+    var tabs = ['execution', 'trial'];
     tabs.forEach(function(tabName) {
       var btn = document.getElementById(
         tabName === 'execution'

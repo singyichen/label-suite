@@ -2126,7 +2126,6 @@ function bindEvents() {
 
   el('submitBtn').addEventListener('click', function() {
     var sample = SAMPLES[state.currentIdx];
-    sample.status = 'submitted';
     var toValue = '';
     if (isVaTaskType(state.taskTypeKey)) {
       var v = readSelectedVaValue('va_valence');
@@ -2142,6 +2141,7 @@ function bindEvents() {
       var labelMap = { positive: '正面', negative: '負面', neutral: '中性' };
       toValue = labelMap[radio.value] || radio.value;
     }
+    sample.status = 'submitted';
     sample.history.push({
       actor: 'Annotator A',
       time: '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),

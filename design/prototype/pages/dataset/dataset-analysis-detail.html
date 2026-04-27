@@ -1131,7 +1131,7 @@ function applyRouteTask(taskId) {
     });
   }
 
-  document.addEventListener('labelSuiteLangChanged', function(e) {
+  document.addEventListener('labelsuite:langchange', function(e) {
     applyLang(e.detail && e.detail.lang ? e.detail.lang : 'zh');
   });
 })();
