@@ -74,18 +74,6 @@
     }
     .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
 
-    /* ── Task count chip ─────────────────────────────────────── */
-    .task-count-chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-full);
-      background: var(--color-white);
-      font-size: 13px; font-weight: 500; color: var(--color-text-soft);
-      align-self: flex-end;
-    }
-    .task-count-chip strong { color: var(--color-ink); }
-
     /* ── Table panel ────────────────────────────────────────── */
     .table-container {
       border: 1px solid var(--color-border);
@@ -248,12 +236,9 @@
       <header class="page-header">
         <div>
           <h1 class="page-main-title" id="pageTitle">資料集分析</h1>
-          <p class="page-main-subtitle" id="pageSubtitle">查看具成員資格的任務 IAA 分析結果</p>
+          <p class="page-main-subtitle" id="pageSubtitle">資料集標記一致性與任務執行情形分析</p>
         </div>
-        <div class="task-count-chip" id="taskCountChip" aria-live="polite">
-          <strong id="taskCountNum">5</strong>
-          <span id="taskCountLabel">個任務</span>
-        </div>
+
       </header>
 
       <div class="table-container">
@@ -291,8 +276,7 @@
     zh: {
       docTitle: '資料集分析 — Label Suite（原型）',
       pageTitle: '資料集分析',
-      pageSubtitle: '查看具成員資格的任務 IAA 分析結果',
-      taskCountLabel: '個任務',
+      pageSubtitle: '資料集標記一致性與任務執行情形分析',
       thTaskName: '任務名稱',
       thTaskType: '任務類型',
       thCompletion: '完成率',
@@ -325,8 +309,7 @@
     en: {
       docTitle: 'Dataset Analysis — Label Suite (Prototype)',
       pageTitle: 'Dataset analysis',
-      pageSubtitle: 'IAA analysis results for tasks with membership',
-      taskCountLabel: 'tasks',
+      pageSubtitle: 'Annotation consistency and task execution analysis',
       thTaskName: 'Task Name',
       thTaskType: 'Task Type',
       thCompletion: 'Completion',
@@ -616,8 +599,6 @@
       state.tasks.forEach(function (task) { tableBody.appendChild(createTaskRow(task)); });
     }
 
-    setTextContent('taskCountNum', state.tasks.length);
-    setTextContent('taskCountLabel', t('taskCountLabel'));
   }
 
   /* ── Apply language ───────────────────────────────────────── */
