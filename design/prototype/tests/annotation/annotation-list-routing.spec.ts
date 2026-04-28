@@ -253,10 +253,18 @@ test.describe('Annotation list routing', () => {
       await guidelineModalConfirm.click();
     }
 
+    // A2-003 has pre-saved VA values — submit directly
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
+
+    // A2-004 and A2-005 are todo (va: null) — must select VA values before submitting
+    await page.locator('input[name="va_valence"][value="5"]').check();
+    await page.locator('input[name="va_arousal"][value="5"]').check();
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
+
+    await page.locator('input[name="va_valence"][value="5"]').check();
+    await page.locator('input[name="va_arousal"][value="5"]').check();
     await page.locator('#submitBtn').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
