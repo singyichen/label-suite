@@ -1684,7 +1684,7 @@ function applyTaskTypeSampleFixtures() {
 function createFallbackReviewerData(sample) {
   var labelValues = getSampleLabels(sample);
   var labelResult = labelValues.length
-    ? labelValues.map(function(value) { return getCategoryDisplayName(value, 'zh'); }).join('、')
+    ? labelValues.map(function(value) { return getCategoryDisplayName(value, state.lang || 'zh'); }).join(state.lang === 'zh' ? '、' : ', ')
     : 'N/A';
   var resultText = sample.va
     ? '[' + formatVaValue(sample.va.valence || 5) + ', ' + formatVaValue(sample.va.arousal || 5) + ']'
@@ -2457,15 +2457,16 @@ function applyLaunchContextFromQuery() {
   state.taskTypeKey = normalizeTaskTypeKey(taskType);
   setStoredActiveTaskType(state.taskTypeKey);
 
-  var matchedSampleIdx = findSampleIndexByQuerySampleId(sampleId);
-  if (matchedSampleIdx >= 0) {
-    state.currentIdx = matchedSampleIdx;
-  }
+  return sampleId;
 }
 
 function init() {
-  applyLaunchContextFromQuery();
+  var pendingSampleId = applyLaunchContextFromQuery();
   applyTaskTypeSampleFixtures();
+  var matchedSampleIdx = findSampleIndexByQuerySampleId(pendingSampleId);
+  if (matchedSampleIdx >= 0) {
+    state.currentIdx = matchedSampleIdx;
+  }
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
   applyLang(state.lang);
   if (!hasSeenGuidelineModal()) {

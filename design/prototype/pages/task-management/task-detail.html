@@ -5924,7 +5924,7 @@
     if (targetStdInput) {
       targetStdInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.targetStd = Number(e.target.value || 0);
+        state.samplingDraft.targetStd = e.target.value.trim() === '' ? null : Number(e.target.value);
         markSamplingDirty();
         renderSamplingState();
       });
