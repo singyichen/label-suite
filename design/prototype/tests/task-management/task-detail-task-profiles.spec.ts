@@ -22,11 +22,11 @@ const TASK_PROFILES = [
   },
   {
     id: 'T003',
-    name: '產品評論序列標註（NER / Aspect）',
+    name: '產品評論 Aspect List 抽取／校正',
     type: '序列標記（含 Aspect / NER）',
     dataset: 'product_reviews_ner_aspect.tsv',
-    settings: ['實體類型', 'ASPECT, OPINION, BRAND', '標記格式', 'BIOES'],
-    editPreview: ['ASPECT', 'OPINION', 'BRAND', 'BIOES'],
+    settings: ['子類型', 'Aspect List 抽取／校正', '輸入欄位名稱', 'sentence', '輸出欄位名稱', 'aspects'],
+    editPreview: ['欄位對應', 'Aspect 編輯規則', '數量限制', 'Aspect List'],
   },
   {
     id: 'T004',

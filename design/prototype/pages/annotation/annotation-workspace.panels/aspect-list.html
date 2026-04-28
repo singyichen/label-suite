@@ -1,0 +1,46 @@
+<div id="aspectListAnnotatorPanel" class="hidden">
+
+  <!-- Original sentence (always readonly) -->
+  <div class="aspect-sentence-block">
+    <div class="aspect-sentence-label">
+      <span id="aspectOriginalLabel">原始句子</span>
+    </div>
+    <div class="aspect-sentence-readonly" id="aspectOriginalSentence"></div>
+  </div>
+
+  <!-- Corrected sentence (shown only when allow_sentence_edit=true) -->
+  <div class="aspect-sentence-block hidden" id="aspectCorrectedBlock">
+    <div class="aspect-sentence-label">
+      <span id="aspectCorrectedLabel">校正後句子</span>
+      <span class="aspect-sentence-edit-hint" id="aspectSentenceEditHint">修改後將重新驗證所有 aspect 是否仍出現在句子中</span>
+    </div>
+    <textarea class="aspect-sentence-edit" id="aspectCorrectedSentence" rows="2"></textarea>
+  </div>
+
+  <!-- Aspect List -->
+  <div class="aspect-list-header">
+    <span class="aspect-list-label" id="aspectListTitle">Aspect List</span>
+    <span class="aspect-count-badge" id="aspectCountBadge">0 / 5</span>
+  </div>
+
+  <div class="aspect-rows" id="aspectRows"></div>
+
+  <button class="aspect-add-btn" type="button" id="aspectAddBtn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    <span id="aspectAddBtnLabel">新增 Aspect</span>
+  </button>
+
+  <div class="aspect-validation-summary hidden-summary" id="aspectValidationSummary" role="alert"></div>
+
+  <!-- Soft guidance note (always visible when require_sentiment_context_check=true) -->
+  <div class="aspect-soft-guidance" id="aspectSoftGuidance">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span id="aspectSoftGuidanceText">情緒上下文確認為軟性提醒，不影響提交。</span>
+  </div>
+
+</div>

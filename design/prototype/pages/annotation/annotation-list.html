@@ -644,6 +644,24 @@
           { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。' },
           { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。' }
         ]
+      },
+      {
+        taskId: 'TASK-015-A3',
+        title: '產品評論序列標註（NER / Aspect）',
+        taskType: 'sequence_labeling',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標註（Aspect / NER）',
+        dashboardDetail: '已完成 64% · 今日 31 筆 · 平均速度 2.8',
+        dashboardProgress: 64,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 10:30', annotatedBy: 'Mandy', text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。' },
+          { sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 10:45', annotatedBy: 'Mandy', text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。' },
+          { sampleId: 'AL-003', status: 'saved', completedAt: '2026-04-23 11:00', annotatedBy: 'Mandy', text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。' },
+          { sampleId: 'AL-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。' },
+          { sampleId: 'AL-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。' }
+        ]
       }
     ],
     reviewer: [
@@ -778,6 +796,75 @@
               { username: 'kioleemg12', result: '[7, 5]', reviewStatus: null },
               { username: '113450022', result: '[6.5, 5.5]', reviewStatus: null },
               { username: 'tony0950127', result: '[6.5, 5.5]', reviewStatus: null }
+            ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R3',
+        taskAliases: ['TASK-015-A3'],
+        title: '產品評論序列標註（NER / Aspect）',
+        taskType: 'sequence_labeling',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標註（Aspect / NER）',
+        dashboardDetail: '待審 15 筆 · 進度 61% · IAA 0.83',
+        dashboardProgress: 61,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 11:30',
+            text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+            labelStats: '螢幕×3 · 電池續航力×2 · 整體設計×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '螢幕、電池續航力、價格', reviewStatus: null },
+              { username: '113450022', result: '螢幕、電池壽命、整體設計', reviewStatus: null },
+              { username: 'tony0950127', result: '螢幕、電池續航力、整體設計', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 11:45',
+            text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+            labelStats: '環境×3 · 菜色選擇×2 · 服務員的態度×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '環境、菜色選擇、服務態度', reviewStatus: 'approved' },
+              { username: '113450022', result: '環境、服務員的態度、用餐體驗', reviewStatus: null },
+              { username: 'hui', result: '環境、菜色選擇、服務員的態度', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-003', status: 'pending', completedAt: '-',
+            text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+            labelStats: '早餐品質×3 · 停車場×2 · 隔音效果×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '早餐品質、停車場、隔音效果', reviewStatus: null },
+              { username: '113450022', result: '早餐品質、停車空間、房間隔音', reviewStatus: null },
+              { username: 'tony0950127', result: '早餐品質、停車場、隔音', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-004', status: 'pending', completedAt: '-',
+            text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+            labelStats: '介面設計×3 · 操作流程×3 · 客戶支援×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '介面設計、操作流程、客戶支援', reviewStatus: null },
+              { username: '113450022', result: '介面設計、操作流程順暢、客服回應速度', reviewStatus: null },
+              { username: 'hui', result: '介面、操作流程、客戶支援', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-005', status: 'pending', completedAt: '-',
+            text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+            labelStats: '音質×3 · 佩戴舒適度×3 · 降噪功能×3',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '音質、佩戴舒適度、主動降噪', reviewStatus: null },
+              { username: '113450022', result: '音質表現、舒適度、降噪功能', reviewStatus: null },
+              { username: 'tony0950127', result: '音質、佩戴舒適度、主動降噪功能', reviewStatus: null }
             ]
           }
         ]

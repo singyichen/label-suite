@@ -236,6 +236,38 @@
     /* ── Code editor ── */
     .code-editor { width: 100%; min-height: 320px; padding: var(--space-md); font-family: var(--font-mono); font-size: 13px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #1E1B4B; color: #E2E8F0; outline: none; resize: vertical; transition: border-color var(--dur-fast); cursor: text; }
     .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    #schemaFields { display: flex; flex-direction: column; gap: 14px; }
+    #schemaFields .form-field { margin-bottom: 0; }
+    .schema-section {
+      padding: 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+    }
+    .schema-section-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+    .schema-section-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .schema-section-desc { font-size: 12px; line-height: 1.5; color: var(--color-text-soft); }
+    .schema-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .schema-toggle-list { display: flex; flex-direction: column; gap: 8px; }
+    .schema-toggle-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 58px;
+      padding: 11px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      transition: border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .schema-toggle-card:hover { border-color: rgba(99,102,241,0.45); }
+    .schema-toggle-card.is-on { border-color: rgba(99,102,241,0.38); background: var(--color-primary-soft-bg); }
+    .schema-toggle-card:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .schema-toggle-copy { min-width: 0; }
+    .schema-toggle-label { display: block; font-size: 13px; font-weight: 650; line-height: 1.35; color: var(--color-ink); }
+    .schema-toggle-status { display: block; margin-top: 3px; font-size: 12px; line-height: 1.35; color: var(--color-text-soft); }
+    .schema-number-field .input-text { max-width: 132px; }
     .annotation-preview { min-height: 220px; padding: 12px var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); display: flex; flex-direction: column; gap: 10px; }
     .annotation-preview-sample { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); font-size: 14px; line-height: 1.6; color: var(--color-ink); }
     .annotation-preview-divider { height: 1px; background: var(--color-border); }
@@ -247,6 +279,20 @@
     .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
     .annotation-preview-pair { display: flex; flex-direction: column; gap: 8px; }
     .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+    .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
+    .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
+    .aspect-list-preview-row-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); min-width: 48px; }
+    .aspect-list-preview-input { flex: 1; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast); }
+    .aspect-list-preview-input:focus { border-color: var(--color-primary); }
+    .aspect-list-preview-delete { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); background: var(--color-error-soft-bg); color: var(--color-error); cursor: pointer; flex-shrink: 0; transition: opacity var(--dur-fast); }
+    .aspect-list-preview-delete:hover { opacity: 0.75; }
+    .aspect-list-preview-add { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid var(--color-cta); border-radius: var(--radius-md); background: transparent; color: var(--color-cta); font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity var(--dur-fast); }
+    .aspect-list-preview-add:hover { opacity: 0.75; }
+    .aspect-list-preview-hint { font-size: 12px; color: var(--color-text-soft); background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); padding: 8px 10px; line-height: 1.5; }
+    .aspect-list-preview-sentence { display: flex; flex-direction: column; gap: 6px; }
+    .aspect-list-preview-sentence-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); line-height: 1.6; resize: vertical; min-height: 56px; outline: none; transition: border-color var(--dur-fast); }
+    .aspect-list-preview-sentence-input:focus { border-color: var(--color-primary); }
+    .aspect-list-preview-sentence-readonly { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-slate-50); line-height: 1.6; }
     .code-error-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-top: 6px; font-size: 12px; color: var(--color-error); }
     .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
     #annotationPreviewLabel { font-size: 13px; font-weight: 600; color: var(--color-ink); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
@@ -360,6 +406,7 @@
       .nav-actions { display: none; }
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
+      .schema-field-grid { grid-template-columns: 1fr; }
       .startup-layout { grid-template-columns: 1fr; }
       .startup-section { padding: 20px 14px; }
       .member-add-row {
@@ -715,13 +762,30 @@ var REGISTRY = {
     },
   },
   sequence_labeling: {
-    zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)',
+    zh: '序列標記（NER / Aspect List）', en: 'Sequence Labeling (NER / Aspect List)',
     fields: [
-      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true },
-      { key: 'scheme', type: 'select', zh: '標記格式', en: 'Labeling scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2' },
-      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false },
+      { key: 'subtype', type: 'subtype-select', zh: '子類型', en: 'Subtype', required: true,
+        options: ['ner', 'aspect_list'],
+        optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction' } },
+        defaultValue: 'ner' },
+      /* NER-only fields */
+      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'ner' },
+      { key: 'scheme', type: 'select', zh: '標記格式', en: 'Labeling scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'ner' },
+      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'ner' },
+      /* aspect_list-only fields */
+      { key: 'input_field', type: 'text', zh: '輸入欄位名稱', en: 'Input field name', required: true, placeholder_zh: '預設：sentence', placeholder_en: 'Default: sentence', showWhen: 'aspect_list' },
+      { key: 'aspect_list_field', type: 'text', zh: '輸出欄位名稱', en: 'Aspect list field name', required: true, placeholder_zh: '預設：aspects', placeholder_en: 'Default: aspects', showWhen: 'aspect_list' },
+      { key: 'allow_sentence_edit', type: 'boolean', zh: '允許修改原句', en: 'Allow sentence edit', required: false, defaultValue: false, showWhen: 'aspect_list' },
+      { key: 'allow_aspect_add', type: 'boolean', zh: '允許新增 Aspect', en: 'Allow adding aspects', required: false, defaultValue: true, showWhen: 'aspect_list' },
+      { key: 'allow_aspect_delete', type: 'boolean', zh: '允許刪除 Aspect', en: 'Allow deleting aspects', required: false, defaultValue: true, showWhen: 'aspect_list' },
+      { key: 'require_exact_match_in_sentence', type: 'boolean', zh: '要求 Aspect 完全出現在句子中', en: 'Require exact match in sentence', required: false, defaultValue: true, showWhen: 'aspect_list' },
+      { key: 'min_aspects', type: 'number', zh: '最少 Aspect 數量', en: 'Min aspects', required: false, defaultValue: 1, showWhen: 'aspect_list' },
+      { key: 'max_aspects', type: 'number', zh: '最多 Aspect 數量', en: 'Max aspects', required: false, defaultValue: 10, showWhen: 'aspect_list' },
+      { key: 'require_sentiment_context_check', type: 'boolean', zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', required: false, defaultValue: false, showWhen: 'aspect_list' },
     ],
-    defaultTemplate: { entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+    nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+    aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
+    defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
   },
   relation_extraction: {
     zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)',
@@ -825,6 +889,20 @@ var I18N = {
     previewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
     previewSampleSentenceVA: '這次住宿整體舒適，但隔音稍差。',
     previewSampleSentenceSequence: '台積電董事長魏哲家今天在台北出席產業論壇。',
+    previewSampleSentenceAspectList: '這家餐廳服務態度親切，環境整潔，餐點品質也很穩定。',
+    aspectListPreviewTitle: 'Aspect List',
+    aspectListSentenceLabel: 'Sentence',
+    addAspectBtnLabel: '+ 新增 Aspect',
+    aspectRowPlaceholder: '輸入 aspect 文字',
+    requireSentimentContextHint: '提示：請確認每個 Aspect 在句子前後文中是否有對應的情緒描述，沒有的話請刪除。（軟性指引，不強制攔截）',
+    aspectFieldSectionTitle: '欄位對應',
+    aspectFieldSectionDesc: '指定資料集中的句子來源與標記輸出欄位。',
+    aspectRuleSectionTitle: 'Aspect 編輯規則',
+    aspectRuleSectionDesc: '控制標記員能否修正句子、增刪 aspect，以及系統驗證方式。',
+    aspectLimitSectionTitle: '數量限制',
+    aspectLimitSectionDesc: '設定每筆資料需要提交的 Aspect List 長度範圍。',
+    templateBtnNer: '套用預設範本：NER 命名實體辨識',
+    templateBtnAspectList: '套用預設範本：Aspect List 抽取／校正',
     previewSampleSentenceRelation: '阿司匹靈可緩解頭痛症狀，但可能造成胃部不適。',
     previewSentenceALabel: '句子 A',
     previewSentenceBLabel: '句子 B',
@@ -905,6 +983,20 @@ var I18N = {
     previewSampleSentence: 'This is a sample text. Apply annotations with the current settings.',
     previewSampleSentenceVA: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
     previewSampleSentenceSequence: 'TSMC chairman C.C. Wei attended an industry forum in Taipei today.',
+    previewSampleSentenceAspectList: 'The service was friendly, the space was clean, and the food quality was consistent.',
+    aspectListPreviewTitle: 'Aspect List',
+    aspectListSentenceLabel: 'Sentence',
+    addAspectBtnLabel: '+ Add aspect',
+    aspectRowPlaceholder: 'Enter aspect text',
+    requireSentimentContextHint: 'Hint: check that each aspect has a matching sentiment description in context. Remove any that do not. (Soft guidance — not system-enforced)',
+    aspectFieldSectionTitle: 'Field mapping',
+    aspectFieldSectionDesc: 'Choose the source sentence field and the output field for annotations.',
+    aspectRuleSectionTitle: 'Aspect editing rules',
+    aspectRuleSectionDesc: 'Control sentence edits, aspect row actions, and validation behavior.',
+    aspectLimitSectionTitle: 'Quantity limits',
+    aspectLimitSectionDesc: 'Set the accepted Aspect List length for each dataset row.',
+    templateBtnNer: 'Apply template: NER (Named Entity Recognition)',
+    templateBtnAspectList: 'Apply template: Aspect List extraction / correction',
     previewSampleSentenceRelation: 'Aspirin can relieve headaches, but it may cause stomach discomfort.',
     previewSentenceALabel: 'Sentence A',
     previewSentenceBLabel: 'Sentence B',
@@ -958,6 +1050,37 @@ function t(key) { return (I18N[state.lang] || I18N.zh)[key] || key; }
 function el(id) { return document.getElementById(id); }
 function setText(id, txt) { var e = el(id); if (e) e.textContent = txt; }
 function markDirty() { state.isDirty = true; }
+
+/* ── SVG icon helpers (DOM, no innerHTML) ────────────────────── */
+var SVG_NS = 'http://www.w3.org/2000/svg';
+function makeSvgIcon(paths, size) {
+  size = size || 12;
+  var svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2.5');
+  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  paths.forEach(function(d) {
+    var line = document.createElementNS(SVG_NS, 'line');
+    d.forEach(function(attr) { line.setAttribute(attr[0], attr[1]); });
+    svg.appendChild(line);
+  });
+  return svg;
+}
+function makeXIcon(size) {
+  return makeSvgIcon([
+    [['x1','18'],['y1','6'],['x2','6'],['y2','18']],
+    [['x1','6'],['y1','6'],['x2','18'],['y2','18']],
+  ], size);
+}
+function makePlusIcon(size) {
+  return makeSvgIcon([
+    [['x1','12'],['y1','5'],['x2','12'],['y2','19']],
+    [['x1','5'],['y1','12'],['x2','19'],['y2','12']],
+  ], size);
+}
 
 /* ── YAML serialiser (no user data injected via innerHTML) ────── */
 function yamlScalar(v) {
@@ -1217,13 +1340,14 @@ function validateStep2(showErrors) {
   var ok = true;
   schema.fields.forEach(function(f) {
     if (!f.required) return;
+    if (!fieldVisible(f)) return;
     var val = state.configData[f.key];
     if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
     else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
     else if (f.type === 'va-dimensions') {
       if (!isValidVADimensionConfig(state.configData.valence) || !isValidVADimensionConfig(state.configData.arousal)) ok = false;
     }
-    else if (f.type === 'textarea' || f.type === 'text' || f.type === 'select') {
+    else if (f.type === 'textarea' || f.type === 'text' || f.type === 'select' || f.type === 'subtype-select') {
       if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
     } else if (f.type === 'boolean') {
       if (val === undefined || val === null) ok = false;
@@ -1271,27 +1395,68 @@ function revalidateCurrentStep() {
 }
 
 /* ── Schema fields (Step 2 Visual mode) ─────────────────────── */
-function renderSchemaFields() {
-  var container = el('schemaFields');
-  while (container.firstChild) container.removeChild(container.firstChild);
-  var schema = state.taskType ? REGISTRY[state.taskType] : null;
-  if (!schema) return;
+function currentSubtype() {
+  return state.configData.subtype || 'ner';
+}
 
-  schema.fields.forEach(function(field) {
+function fieldVisible(field) {
+  if (!field.showWhen) return true;
+  return currentSubtype() === field.showWhen;
+}
+
+function buildSchemaSection(title, desc) {
+  var section = document.createElement('div');
+  section.className = 'schema-section';
+  var header = document.createElement('div');
+  header.className = 'schema-section-header';
+  var titleEl = document.createElement('div');
+  titleEl.className = 'schema-section-title';
+  titleEl.textContent = title;
+  header.appendChild(titleEl);
+  if (desc) {
+    var descEl = document.createElement('div');
+    descEl.className = 'schema-section-desc';
+    descEl.textContent = desc;
+    header.appendChild(descEl);
+  }
+  section.appendChild(header);
+  return section;
+}
+
+function appendSchemaField(container, field) {
     var wrap = document.createElement('div');
     wrap.className = 'form-field';
+    if (field.type === 'number') wrap.className += ' schema-number-field';
 
-    var lbl = document.createElement('label');
-    lbl.className = 'field-label';
-    lbl.textContent = field[state.lang] || field.zh;
-    if (field.required) {
-      var req = document.createElement('span');
-      req.className = 'required'; req.textContent = '*';
-      lbl.appendChild(req);
+    if (field.type !== 'boolean') {
+      var lbl = document.createElement('label');
+      lbl.className = 'field-label';
+      lbl.textContent = field[state.lang] || field.zh;
+      if (field.required) {
+        var req = document.createElement('span');
+        req.className = 'required'; req.textContent = '*';
+        lbl.appendChild(req);
+      }
+      wrap.appendChild(lbl);
     }
-    wrap.appendChild(lbl);
 
-    if (field.type === 'tag-list') {
+    if (field.type === 'subtype-select') {
+      var subtypeSel = document.createElement('select');
+      subtypeSel.className = 'input-select';
+      var curSubtype = state.configData[field.key] !== undefined ? state.configData[field.key] : field.defaultValue;
+      var labels = (field.optionLabels && field.optionLabels[state.lang]) || {};
+      field.options.forEach(function(opt) {
+        var o = document.createElement('option');
+        o.value = opt; o.textContent = labels[opt] || opt;
+        if (opt === curSubtype) o.selected = true;
+        subtypeSel.appendChild(o);
+      });
+      subtypeSel.addEventListener('change', function() {
+        state.configData[field.key] = subtypeSel.value;
+        markDirty(); renderSchemaFields(); revalidateCurrentStep();
+      });
+      wrap.appendChild(subtypeSel);
+    } else if (field.type === 'tag-list') {
       wrap.appendChild(buildTagInput(field));
       if (field['hint_' + state.lang]) {
         var hint = document.createElement('div');
@@ -1304,20 +1469,40 @@ function renderSchemaFields() {
     } else if (field.type === 'va-dimensions') {
       wrap.appendChild(buildVADimensionsInput());
     } else if (field.type === 'boolean') {
-      var chkLabel = document.createElement('label');
-      chkLabel.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;';
+      var card = document.createElement('label');
+      card.className = 'schema-toggle-card';
+      var checkedValue = !!(state.configData[field.key] !== undefined ? state.configData[field.key] : field.defaultValue);
+      if (checkedValue) card.classList.add('is-on');
+
+      var copy = document.createElement('span');
+      copy.className = 'schema-toggle-copy';
+      var title = document.createElement('span');
+      title.className = 'schema-toggle-label';
+      title.textContent = field[state.lang] || field.zh;
+      copy.appendChild(title);
+      var status = document.createElement('span');
+      status.className = 'schema-toggle-status';
+      status.textContent = checkedValue ? t('enabled') : t('disabled');
+      copy.appendChild(status);
+
+      var switchWrap = document.createElement('span');
+      switchWrap.className = 'toggle-switch';
       var chk = document.createElement('input');
       chk.type = 'checkbox';
-      chk.checked = !!(state.configData[field.key] !== undefined ? state.configData[field.key] : field.defaultValue);
-      var chkText = document.createTextNode(chk.checked ? t('enabled') : t('disabled'));
+      chk.checked = checkedValue;
+      var slider = document.createElement('span');
+      slider.className = 'toggle-slider';
       chk.addEventListener('change', function() {
         state.configData[field.key] = chk.checked;
-        chkText.nodeValue = chk.checked ? t('enabled') : t('disabled');
+        status.textContent = chk.checked ? t('enabled') : t('disabled');
+        card.classList.toggle('is-on', chk.checked);
         markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
-      chkLabel.appendChild(chk);
-      chkLabel.appendChild(chkText);
-      wrap.appendChild(chkLabel);
+      switchWrap.appendChild(chk);
+      switchWrap.appendChild(slider);
+      card.appendChild(copy);
+      card.appendChild(switchWrap);
+      wrap.appendChild(card);
     } else if (field.type === 'select') {
       var sel = document.createElement('select');
       sel.className = 'input-select';
@@ -1333,6 +1518,16 @@ function renderSchemaFields() {
         markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
       wrap.appendChild(sel);
+    } else if (field.type === 'number') {
+      var numInp = document.createElement('input');
+      numInp.type = 'number'; numInp.className = 'input-text';
+      numInp.style.width = '100px';
+      numInp.value = state.configData[field.key] !== undefined ? state.configData[field.key] : (field.defaultValue !== undefined ? field.defaultValue : '');
+      numInp.addEventListener('input', function() {
+        state.configData[field.key] = numInp.value === '' ? '' : Number(numInp.value);
+        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+      });
+      wrap.appendChild(numInp);
     } else if (field.type === 'textarea') {
       var ta = document.createElement('textarea');
       ta.className = 'input-textarea';
@@ -1355,6 +1550,51 @@ function renderSchemaFields() {
       wrap.appendChild(inp);
     }
     container.appendChild(wrap);
+}
+
+function renderSchemaFields() {
+  var container = el('schemaFields');
+  while (container.firstChild) container.removeChild(container.firstChild);
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return;
+
+  if (state.taskType === 'sequence_labeling' && currentSubtype() === 'aspect_list') {
+    var fieldByKey = {};
+    schema.fields.forEach(function(field) { fieldByKey[field.key] = field; });
+    appendSchemaField(container, fieldByKey.subtype);
+
+    var fieldSection = buildSchemaSection(t('aspectFieldSectionTitle'), t('aspectFieldSectionDesc'));
+    var fieldGrid = document.createElement('div');
+    fieldGrid.className = 'schema-field-grid';
+    appendSchemaField(fieldGrid, fieldByKey.input_field);
+    appendSchemaField(fieldGrid, fieldByKey.aspect_list_field);
+    fieldSection.appendChild(fieldGrid);
+    container.appendChild(fieldSection);
+
+    var ruleSection = buildSchemaSection(t('aspectRuleSectionTitle'), t('aspectRuleSectionDesc'));
+    var toggleList = document.createElement('div');
+    toggleList.className = 'schema-toggle-list';
+    ['allow_sentence_edit', 'allow_aspect_add', 'allow_aspect_delete', 'require_exact_match_in_sentence', 'require_sentiment_context_check'].forEach(function(key) {
+      appendSchemaField(toggleList, fieldByKey[key]);
+    });
+    ruleSection.appendChild(toggleList);
+    container.appendChild(ruleSection);
+
+    var limitSection = buildSchemaSection(t('aspectLimitSectionTitle'), t('aspectLimitSectionDesc'));
+    var limitGrid = document.createElement('div');
+    limitGrid.className = 'schema-field-grid';
+    appendSchemaField(limitGrid, fieldByKey.min_aspects);
+    appendSchemaField(limitGrid, fieldByKey.max_aspects);
+    limitSection.appendChild(limitGrid);
+    container.appendChild(limitSection);
+
+    updateAnnotationPreview();
+    return;
+  }
+
+  schema.fields.forEach(function(field) {
+    if (!fieldVisible(field)) return;
+    appendSchemaField(container, field);
   });
   updateAnnotationPreview();
 }
@@ -1614,6 +1854,114 @@ function appendPreviewOptionRows(optionsWrap, options, singleSelectPreview) {
   });
 }
 
+function renderAspectListPreview(preview, config) {
+  var allowEdit = !!config.allow_sentence_edit;
+  var allowAdd  = config.allow_aspect_add !== false;
+  var allowDel  = config.allow_aspect_delete !== false;
+  var showSentimentHint = !!config.require_sentiment_context_check;
+
+  var SAMPLE_SENTENCE = t('previewSampleSentenceAspectList');
+  var SAMPLE_ASPECTS  = state.lang === 'zh'
+    ? ['服務態度', '環境整潔', '餐點品質']
+    : ['service attitude', 'cleanliness', 'food quality'];
+
+  /* Sentence section */
+  var sentenceSection = document.createElement('div');
+  sentenceSection.className = 'aspect-list-preview-sentence';
+
+  var sentLabel = document.createElement('div');
+  sentLabel.className = 'annotation-preview-task-title';
+  sentLabel.textContent = t('aspectListSentenceLabel');
+  sentenceSection.appendChild(sentLabel);
+
+  if (allowEdit) {
+    var sentInput = document.createElement('textarea');
+    sentInput.className = 'aspect-list-preview-sentence-input';
+    sentInput.value = SAMPLE_SENTENCE;
+    sentInput.rows = 2;
+    sentenceSection.appendChild(sentInput);
+  } else {
+    var sentReadonly = document.createElement('div');
+    sentReadonly.className = 'aspect-list-preview-sentence-readonly';
+    sentReadonly.textContent = SAMPLE_SENTENCE;
+    sentenceSection.appendChild(sentReadonly);
+  }
+  preview.appendChild(sentenceSection);
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  preview.appendChild(divider);
+
+  var listTitle = document.createElement('div');
+  listTitle.className = 'annotation-preview-task-title';
+  listTitle.textContent = t('aspectListPreviewTitle');
+  preview.appendChild(listTitle);
+
+  var rowsWrap = document.createElement('div');
+  rowsWrap.className = 'aspect-list-preview-rows';
+
+  var aspects = SAMPLE_ASPECTS.slice();
+
+  function renderRows() {
+    while (rowsWrap.firstChild) rowsWrap.removeChild(rowsWrap.firstChild);
+    aspects.forEach(function(aspect, i) {
+      var row = document.createElement('div');
+      row.className = 'aspect-list-preview-row';
+
+      var rowLabel = document.createElement('span');
+      rowLabel.className = 'aspect-list-preview-row-label';
+      rowLabel.textContent = 'Aspect ' + (i + 1);
+      row.appendChild(rowLabel);
+
+      var inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'aspect-list-preview-input';
+      inp.value = aspect;
+      inp.placeholder = t('aspectRowPlaceholder');
+      (function(idx) {
+        inp.addEventListener('input', function() { aspects[idx] = inp.value; });
+      }(i));
+      row.appendChild(inp);
+
+      if (allowDel) {
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'aspect-list-preview-delete';
+        delBtn.setAttribute('aria-label', '刪除');
+        delBtn.appendChild(makeXIcon(12));
+        (function(idx) {
+          delBtn.addEventListener('click', function() { aspects.splice(idx, 1); renderRows(); });
+        }(i));
+        row.appendChild(delBtn);
+      }
+      rowsWrap.appendChild(row);
+    });
+
+    if (allowAdd) {
+      var addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'aspect-list-preview-add';
+      addBtn.appendChild(makePlusIcon(12));
+      addBtn.appendChild(document.createTextNode(' ' + t('addAspectBtnLabel').replace(/^[+＋]\s*/, '')));
+      addBtn.addEventListener('click', function() { aspects.push(''); renderRows(); });
+      rowsWrap.appendChild(addBtn);
+    }
+  }
+  renderRows();
+  preview.appendChild(rowsWrap);
+
+  if (showSentimentHint) {
+    var hint = document.createElement('div');
+    hint.className = 'aspect-list-preview-hint';
+    hint.textContent = t('requireSentimentContextHint');
+    preview.appendChild(hint);
+  }
+
+  if (!state.codeDraftDirty) {
+    el('codeEditor').value = configToCode();
+  }
+}
+
 function updateAnnotationPreview() {
   var preview = el('annotationPreview');
   if (!preview) return;
@@ -1624,7 +1972,10 @@ function updateAnnotationPreview() {
   var titleText = t('previewTaskChooseLabel');
   var options = [];
 
-  if (taskType === 'sequence_labeling') {
+  if (taskType === 'sequence_labeling' && currentSubtype() === 'aspect_list') {
+    renderAspectListPreview(preview, config);
+    return;
+  } else if (taskType === 'sequence_labeling') {
     titleText = t('previewTaskEntity');
     options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
       return { text: ent.name.trim(), color: ent.color || null };
@@ -1673,6 +2024,7 @@ function updateAnnotationPreview() {
     if (taskType === 'single_sentence_va_scoring') sampleTextKey = 'previewSampleSentenceVA';
     else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
     else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
+    /* aspect_list branch exits early above, so this case is only NER */
     var sample = document.createElement('div');
     sample.className = 'annotation-preview-sample';
     sample.textContent = t(sampleTextKey);
@@ -1777,21 +2129,31 @@ function renderTemplateBtns() {
   while (container.firstChild) container.removeChild(container.firstChild);
   var schema = state.taskType ? REGISTRY[state.taskType] : null;
   if (!schema) return;
-  var btn = document.createElement('button');
-  btn.className = 'template-btn';
-  btn.setAttribute('type', 'button');
-  btn.textContent = t('applyTemplate') + (schema[state.lang] || schema.zh);
-  btn.addEventListener('click', function() {
-    state.configData = getDefaultTemplateForLang(state.taskType, state.lang);
-    renderSchemaFields();
-    state.codeDraftDirty = false;
-    el('codeEditor').value = configToCode();
-    el('saveCodeBtn').disabled = true;
-    el('codeErrorBar').classList.add('hidden');
-    revalidateCurrentStep();
-    track('prototype_task_new_template_applied', { taskType: state.taskType });
-  });
-  container.appendChild(btn);
+
+  function makeTemplateBtn(label, templateData) {
+    var btn = document.createElement('button');
+    btn.className = 'template-btn';
+    btn.setAttribute('type', 'button');
+    btn.textContent = label;
+    btn.addEventListener('click', function() {
+      state.configData = JSON.parse(JSON.stringify(templateData));
+      renderSchemaFields();
+      state.codeDraftDirty = false;
+      el('codeEditor').value = configToCode();
+      el('saveCodeBtn').disabled = true;
+      el('codeErrorBar').classList.add('hidden');
+      revalidateCurrentStep();
+      track('prototype_task_new_template_applied', { taskType: state.taskType });
+    });
+    container.appendChild(btn);
+  }
+
+  if (state.taskType === 'sequence_labeling') {
+    makeTemplateBtn(t('templateBtnNer'), schema.nerTemplate);
+    makeTemplateBtn(t('templateBtnAspectList'), schema.aspectListTemplate);
+  } else {
+    makeTemplateBtn(t('applyTemplate') + (schema[state.lang] || schema.zh), getDefaultTemplateForLang(state.taskType, state.lang));
+  }
 }
 
 function setCodeFormat(fmt) {

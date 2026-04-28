@@ -806,6 +806,202 @@
       .navbar-wordmark { font-size: 13px; }
       .mobile-lang-toggle { padding: 6px 8px; }
     }
+
+    /* ── Aspect List Widget ─────────────────────────────────────── */
+    .aspect-sentence-block { margin-bottom: var(--space-md); }
+    .aspect-sentence-label {
+      display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+      font-size: 12px; font-weight: 700; color: var(--color-text-soft);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+    }
+    .aspect-sentence-edit-hint {
+      font-size: 11px; font-weight: 400; color: var(--color-text-muted);
+      text-transform: none; letter-spacing: 0;
+    }
+    .aspect-sentence-readonly {
+      font-size: 14px; color: var(--color-ink); line-height: 1.8;
+      padding: 10px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); background: var(--color-slate-50);
+    }
+    .aspect-sentence-edit {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink);
+      line-height: 1.8; resize: vertical; background: var(--color-white); outline: none;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast); min-height: 60px;
+    }
+    .aspect-sentence-edit:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .aspect-sentence-edit.modified { border-color: #A855F7; background: #FAF5FF; }
+    .aspect-list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-sm);
+    }
+    .aspect-list-label {
+      font-size: 12px; font-weight: 700; color: var(--color-text-soft);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .aspect-count-badge { font-size: 11px; font-weight: 600; color: var(--color-text-muted); }
+    .aspect-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--space-sm); }
+    .aspect-row {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 10px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); background: var(--color-white);
+      transition: border-color var(--dur-fast);
+    }
+    .aspect-row.has-error { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .aspect-row-top { display: flex; align-items: center; gap: 8px; }
+    .aspect-row-num {
+      width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      background: var(--color-surface); color: var(--color-text-soft); border: 1px solid var(--color-border);
+    }
+    .aspect-text-input {
+      flex: 1; padding: 6px 10px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink);
+      background: var(--color-white); outline: none;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .aspect-text-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .aspect-delete-btn {
+      width: 28px; height: 28px; border-radius: var(--radius-md); border: 1px solid var(--color-border);
+      background: var(--color-white); color: var(--color-text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .aspect-delete-btn:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .aspect-row-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-left: 28px; }
+    .aspect-match-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full);
+    }
+    .aspect-match-badge.valid { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+    .aspect-match-badge.invalid { background: var(--color-error-soft-bg); color: var(--color-error); border: 1px solid var(--color-error-soft-border); }
+    .aspect-sentiment-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full);
+      cursor: pointer; -webkit-user-select: none; user-select: none;
+      transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .aspect-sentiment-badge.checked { background: var(--color-primary-soft-bg); color: var(--color-primary); border: 1px solid rgba(99,102,241,0.3); }
+    .aspect-sentiment-badge.unchecked { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+    .aspect-row-error { font-size: 11px; color: var(--color-error); padding-left: 28px; line-height: 1.5; }
+    .aspect-add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 7px 14px; border-radius: var(--radius-md);
+      border: 1px dashed var(--color-border); background: transparent;
+      color: var(--color-text-soft); font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .aspect-add-btn:hover:not(:disabled) { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .aspect-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .aspect-validation-summary {
+      margin-top: var(--space-sm); padding: 10px 12px; border-radius: var(--radius-md);
+      font-size: 12px; font-weight: 600; line-height: 1.6;
+    }
+    .aspect-validation-summary.has-errors { background: var(--color-error-soft-bg); color: var(--color-error); border: 1px solid var(--color-error-soft-border); }
+    .aspect-validation-summary.ok { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+    .aspect-validation-summary.hidden-summary { display: none; }
+    .aspect-soft-guidance {
+      display: flex; align-items: flex-start; gap: 6px; margin-top: var(--space-sm);
+      font-size: 11px; color: var(--color-text-muted); line-height: 1.6; padding: 0 2px;
+    }
+    .aspect-soft-guidance svg { flex-shrink: 0; margin-top: 2px; }
+
+    /* Reviewer aspect diff */
+    .rv-aspect-diff { width: 100%; margin-top: 6px; }
+    .rv-aspect-diff-title {
+      font-size: 11px; font-weight: 700; color: var(--color-text-soft);
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;
+    }
+    .rv-aspect-diff-item { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0; line-height: 1.5; }
+    .rv-aspect-diff-op {
+      font-size: 10px; font-weight: 700; padding: 1px 5px;
+      border-radius: var(--radius-full); flex-shrink: 0;
+    }
+    .rv-aspect-diff-op.kept { background: var(--color-slate-50); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .rv-aspect-diff-op.added { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+    .rv-aspect-diff-op.edited { background: var(--color-primary-soft-bg); color: var(--color-primary); border: 1px solid rgba(99,102,241,0.3); }
+    .rv-aspect-diff-op.deleted { background: var(--color-error-soft-bg); color: var(--color-error); border: 1px solid var(--color-error-soft-border); }
+    .rv-aspect-diff-op.invalid { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+    .rv-aspect-sentence-diff {
+      font-size: 11px; color: var(--color-text-soft); padding: 4px 8px; margin-bottom: 6px;
+      background: var(--color-slate-50); border-radius: var(--radius-md); border: 1px solid var(--color-border);
+    }
+    .rv-aspect-sentence-diff .diff-from { color: var(--color-error); text-decoration: line-through; }
+    .rv-aspect-sentence-diff .diff-to { color: #15803D; font-weight: 600; }
+    .rv-aspect-score-label {
+      font-size: 11px; font-weight: 600; color: var(--color-text-muted); margin-top: 4px;
+    }
+    .rv-aspect-correction-editor {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+    }
+    .rv-aspect-correction-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+    }
+    .rv-aspect-correction-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rv-aspect-correction-label {
+      min-width: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+    }
+    .rv-aspect-correction-input {
+      flex: 1;
+      min-width: 0;
+      padding: 5px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      outline: none;
+    }
+    .rv-aspect-correction-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .rv-aspect-correction-delete {
+      padding: 3px 8px;
+      border: 1px solid var(--color-error-soft-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-error);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .rv-aspect-correction-add {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border: 1px solid var(--color-cta);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-cta);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .rv-aspect-correction-audit {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -915,65 +1111,8 @@
             <div class="annotation-card-title" id="annotationCardTitle">標記標籤</div>
           </div>
           <div class="annotation-card-body">
-            <div id="classificationAnnotatorPanel">
-              <div class="class-options" id="classOptions">
-                <label class="class-option" id="optPolitics">
-                  <input type="checkbox" name="news_category" value="politics" />
-                  <span class="class-option-label" id="optLabelPolitics">政治</span>
-                  <span class="class-option-desc" id="optDescPolitics">國內外政治動態</span>
-                </label>
-                <label class="class-option" id="optSociety">
-                  <input type="checkbox" name="news_category" value="society" />
-                  <span class="class-option-label" id="optLabelSociety">社會</span>
-                  <span class="class-option-desc" id="optDescSociety">社會事件與民生</span>
-                </label>
-                <label class="class-option" id="optEntertainment">
-                  <input type="checkbox" name="news_category" value="entertainment" />
-                  <span class="class-option-label" id="optLabelEntertainment">娛樂</span>
-                  <span class="class-option-desc" id="optDescEntertainment">影視音樂娛樂</span>
-                </label>
-                <label class="class-option" id="optSports">
-                  <input type="checkbox" name="news_category" value="sports" />
-                  <span class="class-option-label" id="optLabelSports">體育</span>
-                  <span class="class-option-desc" id="optDescSports">運動競技賽事</span>
-                </label>
-                <label class="class-option" id="optTechnology">
-                  <input type="checkbox" name="news_category" value="technology" />
-                  <span class="class-option-label" id="optLabelTechnology">科技</span>
-                  <span class="class-option-desc" id="optDescTechnology">科技產業與創新</span>
-                </label>
-              </div>
-            </div>
-            <div id="vaAnnotatorPanel" class="hidden">
-              <div class="va-grid">
-                <div class="va-axis-card">
-                  <div class="va-axis-head">
-                    <span class="va-axis-title" id="vaValenceLabel">Valence（情緒正負）</span>
-                    <span class="va-axis-value" id="vaValenceValue">-</span>
-                  </div>
-                  <p class="va-axis-hint" id="vaValenceHint">1 = 非常負向，9 = 非常正向</p>
-                  <div class="va-scale-row" id="vaValenceScale"></div>
-                  <div class="va-scale-divider"></div>
-                  <div class="va-range-labels">
-                    <span id="vaValenceMin">負向</span>
-                    <span id="vaValenceMax">正向</span>
-                  </div>
-                </div>
-                <div class="va-axis-card">
-                  <div class="va-axis-head">
-                    <span class="va-axis-title" id="vaArousalLabel">Arousal（情緒強度）</span>
-                    <span class="va-axis-value" id="vaArousalValue">-</span>
-                  </div>
-                  <p class="va-axis-hint" id="vaArousalHint">1 = 非常平靜，9 = 非常激動</p>
-                  <div class="va-scale-row" id="vaArousalScale"></div>
-                  <div class="va-scale-divider"></div>
-                  <div class="va-range-labels">
-                    <span id="vaArousalMin">平靜</span>
-                    <span id="vaArousalMax">激動</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- Task-type panels injected here by loadAnnotationPanels() -->
+            <div id="annotationPanelMount"></div>
             <div class="field-group">
               <label class="field-label" for="annotationNote" id="annotationNoteLabel">備註（選填）</label>
               <textarea class="field-textarea" id="annotationNote" rows="2" placeholder="若有特殊情況可在此說明…"></textarea>
@@ -1162,7 +1301,15 @@ var I18N = {
     rvBulkApproveLabel: '全部通過', rvBulkRejectLabel: '全部退回',
     rvApproveLabel: '通過', rvRejectLabel: '退回',
     rvReviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
+    rvAspectReviewNote: '可直接修正 Aspect 後通過；退回則讓該標記回到未標記，標記員需要重新標記。',
     rvAnnotatorResultLabel: '個人標記結果',
+    rvAspectCorrectionTitle: 'Reviewer 修正 Aspect List',
+    rvAspectCorrectionAdd: '新增 Aspect',
+    rvAspectCorrectionDelete: '刪除',
+    rvAspectCorrectionPlaceholder: '輸入 aspect',
+    rvAspectCorrectionDeleted: 'Reviewer 已刪除：{text}',
+    rvAspectCorrectionAdded: 'Reviewer 已新增',
+    rvAspectCorrectionEdited: 'Reviewer 已修改：{from} → {to}',
     rvSaveLabel: '送出審核',
     tabGuidelineLabel: '說明與檔案', tabHistoryLabel: '歷程',
     guidelineCollapseAria: '收合說明區',
@@ -1198,6 +1345,29 @@ var I18N = {
     mobileGuidelineText: '新聞標題多標籤分類：可同時勾選多個類別。',
     actionSubmitted: '已提交', actionSaved: '已儲存',
     actionApproved: '已通過', actionRejected: '已退回',
+    aspectOriginalLabel: '原始句子',
+    aspectCorrectedLabel: '校正後句子',
+    aspectSentenceEditHint: '修改後將重新驗證所有 aspect 是否仍出現在句子中',
+    aspectListTitle: 'Aspect List',
+    aspectAddBtnLabel: '新增 Aspect',
+    aspectAddBtnMaxLabel: '已達上限（{max} 個）',
+    aspectInputPlaceholder: '輸入 aspect 文字片段…',
+    aspectDeleteAria: '刪除 aspect',
+    aspectMatchValid: '✓ 句中已找到',
+    aspectMatchInvalid: '✗ 未在句中出現',
+    aspectSentimentChecked: '情緒上下文：已確認',
+    aspectSentimentUnchecked: '情緒上下文：需確認',
+    aspectSentimentToggleHint: '點擊切換確認狀態（軟性提醒，不阻擋提交）',
+    aspectRowError: '此 aspect 未完全出現在目前句子中，請修正後再提交。',
+    aspectValidationOk: '驗證通過，可提交',
+    aspectErrMinAspects: '至少需要 {min} 個 aspect',
+    aspectErrMaxAspects: '最多允許 {max} 個 aspect',
+    aspectErrBlankAspect: '第 {n} 列 aspect 不得為空白',
+    aspectErrDuplicateAspect: '第 {a} 列與第 {b} 列重複',
+    aspectErrExactMatch: '第 {n} 列「{text}」未完全出現在句子中',
+    aspectSoftGuidanceText: '情緒上下文確認為軟性提醒，不影響提交。',
+    rvAspectDiffTitle: 'Aspect List 差異',
+    rvAspectScoreLabel: 'Aspect List 標記',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1236,7 +1406,15 @@ var I18N = {
     rvBulkApproveLabel: 'Approve all', rvBulkRejectLabel: 'Return all',
     rvApproveLabel: 'Approve', rvRejectLabel: 'Return',
     rvReviewNote: 'Approve keeps this annotation valid. Return resets it to unannotated so the annotator must label it again.',
+    rvAspectReviewNote: 'Reviewers may correct aspects before approving. Return resets the annotation to unannotated so the annotator must label it again.',
     rvAnnotatorResultLabel: 'Annotator result',
+    rvAspectCorrectionTitle: 'Reviewer aspect corrections',
+    rvAspectCorrectionAdd: 'Add aspect',
+    rvAspectCorrectionDelete: 'Delete',
+    rvAspectCorrectionPlaceholder: 'Enter aspect',
+    rvAspectCorrectionDeleted: 'Reviewer deleted: {text}',
+    rvAspectCorrectionAdded: 'Reviewer added',
+    rvAspectCorrectionEdited: 'Reviewer edited: {from} → {to}',
     rvSaveLabel: 'Submit review',
     tabGuidelineLabel: 'Guidelines', tabHistoryLabel: 'History',
     guidelineCollapseAria: 'Collapse guideline panel',
@@ -1272,6 +1450,29 @@ var I18N = {
     mobileGuidelineText: 'News headline multi-label classification: multiple selections are allowed.',
     actionSubmitted: 'submitted', actionSaved: 'saved',
     actionApproved: 'approved', actionRejected: 'returned',
+    aspectOriginalLabel: 'Original sentence',
+    aspectCorrectedLabel: 'Corrected sentence',
+    aspectSentenceEditHint: 'Editing the sentence re-validates all aspects against the new text',
+    aspectListTitle: 'Aspect List',
+    aspectAddBtnLabel: 'Add aspect',
+    aspectAddBtnMaxLabel: 'Max reached ({max})',
+    aspectInputPlaceholder: 'Enter aspect text…',
+    aspectDeleteAria: 'Delete aspect',
+    aspectMatchValid: '✓ found in sentence',
+    aspectMatchInvalid: '✗ not in sentence',
+    aspectSentimentChecked: 'Context: confirmed',
+    aspectSentimentUnchecked: 'Context: needs check',
+    aspectSentimentToggleHint: 'Click to toggle (soft guidance — non-blocking)',
+    aspectRowError: 'This aspect does not appear in the current sentence. Edit before submitting.',
+    aspectValidationOk: 'Validation passed — ready to submit',
+    aspectErrMinAspects: 'At least {min} aspect required',
+    aspectErrMaxAspects: 'Maximum {max} aspects allowed',
+    aspectErrBlankAspect: 'Aspect {n} must not be empty',
+    aspectErrDuplicateAspect: 'Aspect {a} duplicates aspect {b}',
+    aspectErrExactMatch: 'Aspect {n} "{text}" is not found in the sentence',
+    aspectSoftGuidanceText: 'Sentiment context check is soft guidance — it does not block submission.',
+    rvAspectDiffTitle: 'Aspect List diff',
+    rvAspectScoreLabel: 'Aspect List annotation',
   }
 };
 
@@ -1418,6 +1619,115 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
   }
 ];
 
+/* ── Aspect List Config (mirrors task-management-013 ASPECT_LIST_CONFIG_FIELDS) ── */
+var ASPECT_LIST_CONFIG = {
+  input_field: 'sentence',
+  aspect_list_field: 'aspects',
+  allow_sentence_edit: true,
+  allow_aspect_add: true,
+  allow_aspect_delete: true,
+  require_exact_match_in_sentence: true,
+  min_aspects: 1,
+  max_aspects: 5,
+  require_sentiment_context_check: true
+};
+
+var ASPECT_LIST_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'AL-001',
+    text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+    sentence: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+    aspects: ['螢幕', '電池續航力', '整體設計'],
+    status: 'submitted',
+    aspectAnnotation: {
+      original_sentence: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+      corrected_sentence: null,
+      aspects: [
+        { id: 'a1', text: '螢幕', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'a2', text: '電池續航力', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'a3', text: '整體設計', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'Aspect List 任務 — 請查看各標記員抽取結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '螢幕' }, { op: 'kept', text: '電池續航力' }, { op: 'added', text: '價格' }
+        ]},
+        { annotator: '113450022', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '螢幕' }, { op: 'edited', text: '電池壽命（原：電池續航力）' }, { op: 'kept', text: '整體設計' }
+        ]},
+        { annotator: 'tony0950127', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '螢幕' }, { op: 'kept', text: '電池續航力' }, { op: 'kept', text: '整體設計' },
+          { op: 'invalid', text: '高效能（未完全出現在句子中）' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'submitted', from: null, to: '3 aspects：螢幕、電池續航力、整體設計' }]
+  },
+  {
+    id: 2, sampleId: 'AL-002',
+    text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+    sentence: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+    aspects: ['環境', '菜色選擇', '服務員的態度'],
+    status: 'submitted',
+    aspectAnnotation: {
+      original_sentence: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+      corrected_sentence: null,
+      aspects: [
+        { id: 'b1', text: '環境', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'b2', text: '菜色選擇', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
+        { id: 'b3', text: '服務員的態度', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'Aspect List 任務 — 請查看各標記員抽取結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '環境' }, { op: 'kept', text: '菜色選擇' }, { op: 'edited', text: '服務態度（原：服務員的態度）' }
+        ]},
+        { annotator: '113450022', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '環境' }, { op: 'deleted', text: '菜色選擇（已刪除）' },
+          { op: 'kept', text: '服務員的態度' }, { op: 'added', text: '用餐體驗' }
+        ]},
+        { annotator: 'hui', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '環境' }, { op: 'kept', text: '菜色選擇' }, { op: 'kept', text: '服務員的態度' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:45', action: 'submitted', from: null, to: '3 aspects' }]
+  },
+  {
+    id: 3, sampleId: 'AL-003',
+    text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+    sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+    aspects: ['早餐品質', '停車場', '隔音效果'],
+    status: 'saved',
+    aspectAnnotation: {
+      original_sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+      corrected_sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間的隔音效果也不錯。',
+      aspects: [
+        { id: 'c1', text: '早餐品質', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'c2', text: '停車場', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
+        { id: 'c3', text: '隔音效果', exact_match_status: 'invalid', sentiment_context_checked: false, operation: 'kept' }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '3 aspects (draft)' }]
+  },
+  {
+    id: 4, sampleId: 'AL-004',
+    text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+    sentence: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+    aspects: [], status: 'todo', aspectAnnotation: null, history: []
+  },
+  {
+    id: 5, sampleId: 'AL-005',
+    text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+    sentence: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+    aspects: [], status: 'todo', aspectAnnotation: null, history: []
+  }
+];
+
 var SAMPLES = [];
 
 /* ── State ────────────────────────────────────────────────────── */
@@ -1550,6 +1860,224 @@ var TASK_TYPE_UI_CONFIG = {
   }
 };
 
+/* ── SVG Helpers ──────────────────────────────────────────────── */
+function makeSvgIcon(paths, attrs) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  var defaults = { width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round',
+    'stroke-linejoin': 'round', 'aria-hidden': 'true' };
+  Object.keys(Object.assign({}, defaults, attrs || {})).forEach(function(k) {
+    svg.setAttribute(k, (attrs && attrs[k] !== undefined) ? attrs[k] : defaults[k]);
+  });
+  paths.forEach(function(p) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', p.tag);
+    Object.keys(p).forEach(function(k) { if (k !== 'tag') el.setAttribute(k, p[k]); });
+    svg.appendChild(el);
+  });
+  return svg;
+}
+
+function makeXIconSvg() {
+  return makeSvgIcon([
+    { tag: 'line', x1: '18', y1: '6', x2: '6', y2: '18' },
+    { tag: 'line', x1: '6', y1: '6', x2: '18', y2: '18' }
+  ]);
+}
+
+/* ── Aspect List State ────────────────────────────────────────── */
+var aspectListState = { originalSentence: '', correctedSentence: '', rows: [] };
+
+function isAspectListTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling';
+}
+
+function generateAspectId() {
+  return 'asp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+function checkExactMatch(text, sentence) {
+  if (!text || !text.trim()) return 'empty';
+  return (sentence || '').indexOf(text.trim()) !== -1 ? 'valid' : 'invalid';
+}
+
+function getEffectiveSentence() {
+  var corrected = aspectListState.correctedSentence;
+  return (corrected && corrected.trim()) ? corrected : aspectListState.originalSentence;
+}
+
+function revalidateAspectRows() {
+  var sentence = getEffectiveSentence();
+  aspectListState.rows.forEach(function(row) {
+    row.exactMatchStatus = checkExactMatch(row.text, sentence);
+  });
+}
+
+function initAspectListState(sample) {
+  var annotation = sample.aspectAnnotation;
+  aspectListState.originalSentence = sample.sentence || sample.text || '';
+  if (annotation && sample.status !== 'todo') {
+    aspectListState.correctedSentence = annotation.corrected_sentence || '';
+    aspectListState.rows = (annotation.aspects || []).map(function(a) {
+      return { id: a.id || generateAspectId(), text: a.text || '',
+        exactMatchStatus: a.exact_match_status || 'empty', sentimentChecked: !!a.sentiment_context_checked };
+    });
+  } else {
+    aspectListState.correctedSentence = '';
+    aspectListState.rows = (Array.isArray(sample.aspects) ? sample.aspects : []).map(function(asp) {
+      var text = typeof asp === 'string' ? asp : (asp.text || '');
+      return { id: generateAspectId(), text: text,
+        exactMatchStatus: checkExactMatch(text, aspectListState.originalSentence), sentimentChecked: false };
+    });
+  }
+}
+
+function validateAspectList() {
+  var errors = [];
+  var cfg = ASPECT_LIST_CONFIG;
+  var rows = aspectListState.rows;
+  if (rows.length < cfg.min_aspects) errors.push(t('aspectErrMinAspects', { min: cfg.min_aspects }));
+  if (rows.length > cfg.max_aspects) errors.push(t('aspectErrMaxAspects', { max: cfg.max_aspects }));
+  var seen = {};
+  rows.forEach(function(row, i) {
+    if (!row.text || !row.text.trim()) { errors.push(t('aspectErrBlankAspect', { n: i + 1 })); return; }
+    var key = row.text.trim().toLowerCase();
+    if (seen[key] !== undefined) { errors.push(t('aspectErrDuplicateAspect', { a: i + 1, b: seen[key] + 1 })); }
+    else { seen[key] = i; }
+    if (cfg.require_exact_match_in_sentence && row.exactMatchStatus === 'invalid') {
+      errors.push(t('aspectErrExactMatch', { n: i + 1, text: row.text }));
+    }
+  });
+  return { valid: errors.length === 0, errors: errors };
+}
+
+function renderAspectListPanel() {
+  var cfg = ASPECT_LIST_CONFIG;
+
+  var lbl; lbl = document.getElementById('aspectOriginalLabel'); if (lbl) lbl.textContent = t('aspectOriginalLabel');
+  lbl = document.getElementById('aspectCorrectedLabel'); if (lbl) lbl.textContent = t('aspectCorrectedLabel');
+  lbl = document.getElementById('aspectSentenceEditHint'); if (lbl) lbl.textContent = t('aspectSentenceEditHint');
+  lbl = document.getElementById('aspectListTitle'); if (lbl) lbl.textContent = t('aspectListTitle');
+
+  var originalEl = document.getElementById('aspectOriginalSentence');
+  if (originalEl) originalEl.textContent = aspectListState.originalSentence;
+
+  var correctedBlock = document.getElementById('aspectCorrectedBlock');
+  var correctedTA = document.getElementById('aspectCorrectedSentence');
+  if (correctedBlock && correctedTA) {
+    correctedBlock.classList.toggle('hidden', !cfg.allow_sentence_edit);
+    if (cfg.allow_sentence_edit) {
+      if (document.activeElement !== correctedTA) correctedTA.value = aspectListState.correctedSentence;
+      correctedTA.classList.toggle('modified', !!aspectListState.correctedSentence &&
+        aspectListState.correctedSentence !== aspectListState.originalSentence);
+    }
+  }
+
+  var rowsContainer = document.getElementById('aspectRows');
+  if (!rowsContainer) return;
+  while (rowsContainer.firstChild) rowsContainer.removeChild(rowsContainer.firstChild);
+
+  aspectListState.rows.forEach(function(row, idx) {
+    var hasError = cfg.require_exact_match_in_sentence && row.text.trim() && row.exactMatchStatus === 'invalid';
+    var rowEl = document.createElement('div');
+    rowEl.className = 'aspect-row' + (hasError ? ' has-error' : '');
+
+    var topRow = document.createElement('div');
+    topRow.className = 'aspect-row-top';
+
+    var numBadge = document.createElement('span');
+    numBadge.className = 'aspect-row-num';
+    numBadge.textContent = String(idx + 1);
+
+    var textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'aspect-text-input';
+    textInput.value = row.text;
+    textInput.placeholder = t('aspectInputPlaceholder');
+    textInput.addEventListener('input', (function(r) {
+      return function() { r.text = this.value; revalidateAspectRows(); renderAspectListPanel(); };
+    }(row)));
+
+    topRow.appendChild(numBadge);
+    topRow.appendChild(textInput);
+
+    if (cfg.allow_aspect_delete) {
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'aspect-delete-btn';
+      delBtn.setAttribute('aria-label', t('aspectDeleteAria'));
+      delBtn.appendChild(makeXIconSvg());
+      delBtn.addEventListener('click', (function(r) {
+        return function() {
+          aspectListState.rows = aspectListState.rows.filter(function(x) { return x.id !== r.id; });
+          revalidateAspectRows();
+          renderAspectListPanel();
+        };
+      }(row)));
+      topRow.appendChild(delBtn);
+    }
+    rowEl.appendChild(topRow);
+
+    var badgesRow = document.createElement('div');
+    badgesRow.className = 'aspect-row-badges';
+
+    if (cfg.require_exact_match_in_sentence && row.text.trim()) {
+      var matchBadge = document.createElement('span');
+      matchBadge.className = 'aspect-match-badge ' + (row.exactMatchStatus === 'valid' ? 'valid' : 'invalid');
+      matchBadge.textContent = row.exactMatchStatus === 'valid' ? t('aspectMatchValid') : t('aspectMatchInvalid');
+      badgesRow.appendChild(matchBadge);
+    }
+
+    if (cfg.require_sentiment_context_check) {
+      var sentBadge = document.createElement('span');
+      sentBadge.className = 'aspect-sentiment-badge ' + (row.sentimentChecked ? 'checked' : 'unchecked');
+      sentBadge.textContent = row.sentimentChecked ? t('aspectSentimentChecked') : t('aspectSentimentUnchecked');
+      sentBadge.title = t('aspectSentimentToggleHint');
+      sentBadge.addEventListener('click', (function(r) {
+        return function() { r.sentimentChecked = !r.sentimentChecked; renderAspectListPanel(); };
+      }(row)));
+      badgesRow.appendChild(sentBadge);
+    }
+    rowEl.appendChild(badgesRow);
+
+    if (hasError) {
+      var errMsg = document.createElement('div');
+      errMsg.className = 'aspect-row-error';
+      errMsg.textContent = t('aspectRowError');
+      rowEl.appendChild(errMsg);
+    }
+    rowsContainer.appendChild(rowEl);
+  });
+
+  var countBadge = document.getElementById('aspectCountBadge');
+  if (countBadge) countBadge.textContent = aspectListState.rows.length + ' / ' + cfg.max_aspects;
+
+  var addBtn = document.getElementById('aspectAddBtn');
+  var addBtnLabel = document.getElementById('aspectAddBtnLabel');
+  if (addBtn) {
+    var atMax = aspectListState.rows.length >= cfg.max_aspects;
+    addBtn.disabled = !cfg.allow_aspect_add || atMax;
+    if (addBtnLabel) addBtnLabel.textContent = atMax ? t('aspectAddBtnMaxLabel', { max: cfg.max_aspects }) : t('aspectAddBtnLabel');
+  }
+
+  var softGuidanceEl = document.getElementById('aspectSoftGuidanceText');
+  if (softGuidanceEl) softGuidanceEl.textContent = t('aspectSoftGuidanceText');
+
+  var summaryEl = document.getElementById('aspectValidationSummary');
+  if (summaryEl) {
+    var validation = validateAspectList();
+    if (!validation.valid) {
+      summaryEl.className = 'aspect-validation-summary has-errors';
+      summaryEl.textContent = validation.errors.join(' · ');
+    } else if (aspectListState.rows.length > 0) {
+      summaryEl.className = 'aspect-validation-summary ok';
+      summaryEl.textContent = t('aspectValidationOk');
+    } else {
+      summaryEl.className = 'aspect-validation-summary hidden-summary';
+      summaryEl.textContent = '';
+    }
+  }
+}
+
 /* ── Utils ────────────────────────────────────────────────────── */
 function t(key, vars) {
   var str = (I18N[state.lang] || I18N.zh)[key] || key;
@@ -1671,11 +2199,13 @@ function applyTaskTypeSampleFixtures() {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   } else if (isVaTaskType(state.taskTypeKey)) {
     SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+  } else if (isAspectListTaskType()) {
+    SAMPLES = cloneSamples(ASPECT_LIST_SAMPLE_FIXTURES);
   } else {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   }
   if (!Array.isArray(SAMPLES) || !SAMPLES.length) {
-    SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+    SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   }
   if (state.currentIdx >= SAMPLES.length) state.currentIdx = SAMPLES.length - 1;
   if (state.currentIdx < 0) state.currentIdx = 0;
@@ -2005,6 +2535,109 @@ function renderProgressSummary() {
   persistDryRunProgress();
 }
 
+function getReviewerAspectCorrections(row) {
+  if (!row.aspectCorrections) {
+    row.aspectCorrections = (row.aspectDiff || [])
+      .filter(function(d) { return d.op !== 'deleted' && d.op !== 'invalid'; })
+      .map(function(d) {
+        return {
+          id: generateAspectId(),
+          originalText: d.text || '',
+          text: d.text || '',
+          operation: d.op === 'added' ? 'added' : 'kept'
+        };
+      });
+    row.aspectCorrectionAudit = [];
+  }
+  if (!row.aspectCorrectionAudit) row.aspectCorrectionAudit = [];
+  return row.aspectCorrections;
+}
+
+function summarizeReviewerAspectCorrections(row) {
+  var audit = row.aspectCorrectionAudit || [];
+  var edits = (row.aspectCorrections || []).filter(function(c) {
+    return c.originalText && c.text && c.originalText !== c.text;
+  }).map(function(c) {
+    return t('rvAspectCorrectionEdited', { from: c.originalText, to: c.text });
+  });
+  return audit.concat(edits);
+}
+
+function renderReviewerAspectCorrectionEditor(row) {
+  var editor = document.createElement('div');
+  editor.className = 'rv-aspect-correction-editor';
+
+  var title = document.createElement('div');
+  title.className = 'rv-aspect-correction-title';
+  title.textContent = t('rvAspectCorrectionTitle');
+  editor.appendChild(title);
+
+  var corrections = getReviewerAspectCorrections(row);
+  corrections.forEach(function(correction, idx) {
+    var item = document.createElement('div');
+    item.className = 'rv-aspect-correction-row';
+
+    var label = document.createElement('span');
+    label.className = 'rv-aspect-correction-label';
+    label.textContent = String(idx + 1);
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'rv-aspect-correction-input';
+    input.value = correction.text;
+    input.placeholder = t('rvAspectCorrectionPlaceholder');
+    input.addEventListener('input', function() {
+      correction.text = input.value;
+    });
+
+    var deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'rv-aspect-correction-delete';
+    deleteBtn.textContent = t('rvAspectCorrectionDelete');
+    deleteBtn.addEventListener('click', function() {
+      var deletedText = correction.text || correction.originalText || '';
+      row.aspectCorrections = corrections.filter(function(itemCorrection) {
+        return itemCorrection.id !== correction.id;
+      });
+      row.aspectCorrectionAudit = row.aspectCorrectionAudit || [];
+      row.aspectCorrectionAudit.push(t('rvAspectCorrectionDeleted', { text: deletedText }));
+      renderReviewerCard();
+    });
+
+    item.appendChild(label);
+    item.appendChild(input);
+    item.appendChild(deleteBtn);
+    editor.appendChild(item);
+  });
+
+  var addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'rv-aspect-correction-add';
+  addBtn.textContent = '+ ' + t('rvAspectCorrectionAdd');
+  addBtn.addEventListener('click', function() {
+    row.aspectCorrections.push({
+      id: generateAspectId(),
+      originalText: '',
+      text: '',
+      operation: 'added'
+    });
+    row.aspectCorrectionAudit = row.aspectCorrectionAudit || [];
+    row.aspectCorrectionAudit.push(t('rvAspectCorrectionAdded'));
+    renderReviewerCard();
+  });
+  editor.appendChild(addBtn);
+
+  var auditItems = summarizeReviewerAspectCorrections(row);
+  if (auditItems.length) {
+    var audit = document.createElement('div');
+    audit.className = 'rv-aspect-correction-audit';
+    audit.textContent = auditItems.join(' · ');
+    editor.appendChild(audit);
+  }
+
+  return editor;
+}
+
 function renderReviewerCard() {
   var container = el('rvAnnotatorRows');
   if (!container) return;
@@ -2036,9 +2669,6 @@ function renderReviewerCard() {
     meta.appendChild(subtitle);
 
     var scoreColorClass = vaRange ? getVaScoreColorClass(row.scoreText, vaRange) : '';
-    var score = document.createElement('span');
-    score.className = 'rv-score-pill' + (scoreColorClass ? ' ' + scoreColorClass : '');
-    score.textContent = row.scoreText;
 
     var actions = document.createElement('div');
     actions.className = 'rv-choice-group';
@@ -2060,7 +2690,38 @@ function renderReviewerCard() {
     });
 
     card.appendChild(meta);
-    card.appendChild(score);
+
+    if (isAspectListTaskType()) {
+      // Aspect list: show diff instead of score pill
+      var diffWrapper = document.createElement('div');
+      diffWrapper.className = 'rv-aspect-diff';
+      var diffTitle = document.createElement('div');
+      diffTitle.className = 'rv-aspect-diff-title';
+      diffTitle.textContent = t('rvAspectDiffTitle');
+      diffWrapper.appendChild(diffTitle);
+      var diffs = row.aspectDiff || [];
+      diffs.forEach(function(d) {
+        var item = document.createElement('div');
+        item.className = 'rv-aspect-diff-item';
+        var opBadge = document.createElement('span');
+        opBadge.className = 'rv-aspect-diff-op ' + (d.op || 'kept');
+        opBadge.textContent = d.op === 'added' ? '+' : d.op === 'deleted' ? '−' : d.op === 'edited' ? '≈' : d.op === 'invalid' ? '!' : '=';
+        var textSpan = document.createElement('span');
+        textSpan.className = 'rv-aspect-diff-text';
+        textSpan.textContent = d.text;
+        item.appendChild(opBadge);
+        item.appendChild(textSpan);
+        diffWrapper.appendChild(item);
+      });
+      card.appendChild(diffWrapper);
+      card.appendChild(renderReviewerAspectCorrectionEditor(row));
+    } else {
+      var score = document.createElement('span');
+      score.className = 'rv-score-pill' + (scoreColorClass ? ' ' + scoreColorClass : '');
+      score.textContent = row.scoreText;
+      card.appendChild(score);
+    }
+
     card.appendChild(actions);
     container.appendChild(card);
   });
@@ -2088,6 +2749,9 @@ function renderSampleContent() {
     buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
     setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
     setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
+  } else if (isAspectListTaskType()) {
+    initAspectListState(sample);
+    renderAspectListPanel();
   } else {
     var selectedLabels = {};
     getSampleLabels(sample).forEach(function(value) { selectedLabels[value] = true; });
@@ -2108,18 +2772,26 @@ function renderSampleContent() {
 
 function renderTaskTypeInterface() {
   var isVa = isVaTaskType(state.taskTypeKey);
+  var isAspectList = isAspectListTaskType();
   var config = TASK_TYPE_UI_CONFIG[state.taskTypeKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
-  el('classificationAnnotatorPanel').classList.toggle('hidden', isVa);
-  el('vaAnnotatorPanel').classList.toggle('hidden', !isVa);
+
+  var classPanel = document.getElementById('classificationAnnotatorPanel');
+  var vaPanel = document.getElementById('vaAnnotatorPanel');
+  var aspectPanel = document.getElementById('aspectListAnnotatorPanel');
+
+  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList);
+  if (vaPanel) vaPanel.classList.toggle('hidden', !isVa);
+  if (aspectPanel) aspectPanel.classList.toggle('hidden', !isAspectList);
+
   el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
-  if (!isVa) {
-    clearGuidelineImagePreview();
-  }
+  if (!isVa) clearGuidelineImagePreview();
+
   setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
   setText('mobileGuidelineText', config.mobileGuideline[state.lang] || config.mobileGuideline.zh);
+  setText('rvReviewNote', isAspectList ? t('rvAspectReviewNote') : t('rvReviewNote'));
 }
 
 function clearGuidelineImagePreview() {
@@ -2294,6 +2966,36 @@ function bindEvents() {
   el('submitBtn').addEventListener('click', function() {
     var sample = SAMPLES[state.currentIdx];
     var toValue = '';
+    if (isAspectListTaskType()) {
+      var validation = validateAspectList();
+      if (!validation.valid) { showToast(validation.errors[0], 'error'); return; }
+      var effectiveSentence = getEffectiveSentence();
+      sample.aspectAnnotation = {
+        original_sentence: aspectListState.originalSentence,
+        corrected_sentence: aspectListState.correctedSentence || null,
+        aspects: aspectListState.rows.map(function(r) {
+          return { id: r.id, text: r.text, exact_match_status: r.exactMatchStatus,
+            sentiment_context_checked: r.sentimentChecked, operation: 'kept' };
+        }),
+        version: Date.now()
+      };
+      toValue = aspectListState.rows.length + ' aspects：' + aspectListState.rows.map(function(r) { return r.text; }).join('、');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
     if (isVaTaskType(state.taskTypeKey)) {
       var v = readSelectedVaValue('va_valence');
       var a = readSelectedVaValue('va_arousal');
@@ -2368,12 +3070,24 @@ function bindEvents() {
 
     var timeLabel = '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0');
     reviewerData.rows.forEach(function(row) {
+      var correctionSummary = '';
+      if (isAspectListTaskType()) {
+        getReviewerAspectCorrections(row);
+        var correctionTexts = row.aspectCorrections
+          .map(function(c) { return c.text.trim(); })
+          .filter(Boolean);
+        row.reviewerCorrectedAspects = correctionTexts;
+        row.reviewerCorrectionAudit = summarizeReviewerAspectCorrections(row);
+        correctionSummary = row.reviewerCorrectionAudit.length
+          ? '；' + row.reviewerCorrectionAudit.join(' · ')
+          : '';
+      }
       sample.history.push({
         actor: 'Reviewer B',
         time: timeLabel,
         action: row.decision === 'approve' ? 'approved' : 'rejected',
         from: row.annotator + ' ' + row.scoreText,
-        to: row.decision === 'approve' ? t('rvApproveLabel') : t('rvRejectLabel'),
+        to: (row.decision === 'approve' ? t('rvApproveLabel') : t('rvRejectLabel')) + correctionSummary,
       });
     });
     showToast(t('toastReviewSubmitted'), 'success');
@@ -2423,7 +3137,70 @@ function bindEvents() {
     if (e.detail && e.detail.lang) { applyLang(e.detail.lang); }
   });
 
+  // Aspect list panel bindings (elements may not exist for non-aspect tasks)
+  var annotationMount = document.getElementById('annotationPanelMount');
+  if (annotationMount) {
+    annotationMount.addEventListener('click', function(e) {
+      var addBtn = e.target.closest('#aspectAddBtn');
+      if (addBtn && !addBtn.disabled && isAspectListTaskType()) {
+        aspectListState.rows.push({ id: generateAspectId(), text: '', exactMatchStatus: 'empty', sentimentChecked: false });
+        renderAspectListPanel();
+        var inputs = document.querySelectorAll('.aspect-text-input');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }
+    });
+    annotationMount.addEventListener('input', function(e) {
+      var ta = e.target.closest('#aspectCorrectedSentence');
+      if (ta && isAspectListTaskType()) {
+        aspectListState.correctedSentence = ta.value;
+        revalidateAspectRows();
+        renderAspectListPanel();
+      }
+    });
+  }
+
   setInterval(triggerAutosave, 15000);
+}
+
+/* ── Panel Loader (mirrors task-detail pattern) ───────────────── */
+var ANNOTATION_PANEL_PATHS = {
+  classification:  './annotation-workspace.panels/classification.html',
+  'va-scoring':    './annotation-workspace.panels/va-scoring.html',
+  'aspect-list':   './annotation-workspace.panels/aspect-list.html'
+};
+
+function appendAnnotationPanel(key) {
+  var path = ANNOTATION_PANEL_PATHS[key];
+  if (!path) return Promise.resolve();
+  return fetch(path, { cache: 'no-store' })
+    .then(function(res) {
+      if (!res.ok) throw new Error('Failed to load annotation panel: ' + path);
+      return res.text();
+    })
+    .then(function(html) {
+      var mount = document.getElementById('annotationPanelMount');
+      if (!mount) return;
+      var wrapper = document.createElement('div');
+      var trimmed = html.trim();
+      var text = document.createTextNode('');
+      // Parse HTML safely via a detached container
+      var tmp = document.createElement('div');
+      tmp.setAttribute('data-panel', key);
+      // Use a template element to avoid script execution
+      var tpl = document.createElement('template');
+      tpl.innerHTML = trimmed;
+      var frag = tpl.content;
+      mount.appendChild(frag);
+    });
+}
+
+function loadAllAnnotationPanels() {
+  var mount = document.getElementById('annotationPanelMount');
+  if (!mount) return Promise.resolve();
+  mount.textContent = '';
+  return ['classification', 'va-scoring', 'aspect-list'].reduce(function(p, key) {
+    return p.then(function() { return appendAnnotationPanel(key); });
+  }, Promise.resolve());
 }
 
 /* ── Init ─────────────────────────────────────────────────────── */
@@ -2464,23 +3241,31 @@ function init() {
   var pendingSampleId = applyLaunchContextFromQuery();
   applyTaskTypeSampleFixtures();
   var matchedSampleIdx = findSampleIndexByQuerySampleId(pendingSampleId);
-  if (matchedSampleIdx >= 0) {
-    state.currentIdx = matchedSampleIdx;
-  }
+  if (matchedSampleIdx >= 0) state.currentIdx = matchedSampleIdx;
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
-  applyLang(state.lang);
-  if (!hasSeenGuidelineModal()) {
-    el('guidelineModal').classList.remove('hidden');
-  }
-  renderSampleContent();
-  renderRoleControls();
-  renderProgressSummary();
-  bindEvents();
 
-  if (window.LabelSuiteAnalytics) {
-    window.LabelSuiteAnalytics.init({ page: 'annotation-workspace' });
-    window.LabelSuiteAnalytics.trackPageView('annotation-workspace', getTrackingContext);
-  }
+  loadAllAnnotationPanels().then(function() {
+    applyLang(state.lang);
+    if (!hasSeenGuidelineModal()) el('guidelineModal').classList.remove('hidden');
+    renderSampleContent();
+    renderRoleControls();
+    renderProgressSummary();
+    bindEvents();
+
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'annotation-workspace' });
+      window.LabelSuiteAnalytics.trackPageView('annotation-workspace', getTrackingContext);
+    }
+  }).catch(function(err) {
+    // Fallback: run without panels if fetch fails (e.g. file:// protocol)
+    console.warn('Panel load failed, running inline fallback:', err);
+    applyLang(state.lang);
+    if (!hasSeenGuidelineModal()) el('guidelineModal').classList.remove('hidden');
+    renderSampleContent();
+    renderRoleControls();
+    renderProgressSummary();
+    bindEvents();
+  });
 }
 
 init();

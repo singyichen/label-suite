@@ -979,18 +979,26 @@
       gap: 8px;
     }
     .template-btn {
-      padding: 6px 12px;
+      padding: 5px 12px;
       border: 1px solid var(--color-border);
-      border-radius: 999px;
+      border-radius: var(--radius-full);
       font-size: 12px;
       font-weight: 500;
       background: var(--color-white);
       color: var(--color-ink);
+      transition: border-color var(--dur-fast), background var(--dur-fast);
     }
     .template-btn:hover {
       border-color: var(--color-primary);
       color: var(--color-primary);
       background: var(--color-primary-soft-bg);
+    }
+    #settingsTemplateBtns {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: auto;
+      align-self: flex-start;
     }
     .tag-input-wrap {
       display: flex;
@@ -1268,6 +1276,88 @@
       font-size: 13px;
       color: var(--color-text-soft);
     }
+    #settingsSchemaFields {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    #settingsSchemaFields .field-group { margin-bottom: 0 !important; }
+    .settings-schema-section {
+      padding: 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+    }
+    .settings-schema-section-header {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+    .settings-schema-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .settings-schema-section-desc {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--color-text-soft);
+    }
+    .settings-schema-field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .settings-schema-toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .settings-toggle-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 58px;
+      padding: 11px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      transition: border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .settings-toggle-card:hover { border-color: rgba(99,102,241,0.45); }
+    .settings-toggle-card.is-on { border-color: rgba(99,102,241,0.38); background: var(--color-primary-soft-bg); }
+    .settings-toggle-card:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .settings-toggle-copy { min-width: 0; }
+    .settings-toggle-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1.35;
+      color: var(--color-ink);
+    }
+    .settings-toggle-status {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--color-text-soft);
+    }
+    .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
+    .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
+    .aspect-list-preview-row-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); min-width: 48px; }
+    .aspect-list-preview-input { flex: 1; min-width: 0; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast); }
+    .aspect-list-preview-input:focus { border-color: var(--color-primary); }
+    .aspect-list-preview-delete { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); background: var(--color-error-soft-bg); color: var(--color-error); cursor: pointer; flex-shrink: 0; transition: opacity var(--dur-fast); }
+    .aspect-list-preview-delete:hover { opacity: 0.75; }
+    .aspect-list-preview-add { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 5px 12px; border: 1px solid var(--color-cta); border-radius: var(--radius-md); background: transparent; color: var(--color-cta); font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity var(--dur-fast); }
+    .aspect-list-preview-add:hover { opacity: 0.75; }
+    .aspect-list-preview-hint { font-size: 12px; color: var(--color-text-soft); background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); padding: 8px 10px; line-height: 1.5; }
+    .aspect-list-preview-sentence { display: flex; flex-direction: column; gap: 6px; }
+    .aspect-list-preview-sentence-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); line-height: 1.6; resize: vertical; min-height: 56px; outline: none; transition: border-color var(--dur-fast); }
+    .aspect-list-preview-sentence-input:focus { border-color: var(--color-primary); }
+    .aspect-list-preview-sentence-readonly { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-slate-50); line-height: 1.6; }
     .s2-code-panel {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -1620,6 +1710,7 @@
       .overview-info-row { grid-template-columns: 1fr; }
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
+      .settings-schema-field-grid { grid-template-columns: 1fr; }
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-control-row { flex-direction: column; }
@@ -1781,6 +1872,8 @@
       settingsPreviewEmpty: '請先新增至少一個標記選項',
       settingsTemplateSectionTitle: '從範本開始或者上傳設定檔',
       settingsApplyTemplateBtnTpl: '套用預設範本：{template}',
+      settingsTemplateBtnNer: '套用預設範本：NER 命名實體辨識',
+      settingsTemplateBtnAspectList: '套用預設範本：Aspect List 抽取／校正',
       settingsUploadConfigBtn: '上傳設定檔（YAML / JSON）',
       settingsLabelsLabel: '標籤清單',
       settingsLabelsHint: '輸入標籤後按 Enter',
@@ -1804,6 +1897,20 @@
       settingsEnabled: '已啟用',
       settingsDisabled: '已停用',
       settingsAddEntity: '新增實體類型',
+      settingsSubtypeNer: 'NER 命名實體辨識',
+      settingsSubtypeAspectList: 'Aspect List 抽取／校正',
+      settingsAspectFieldSectionTitle: '欄位對應',
+      settingsAspectFieldSectionDesc: '指定資料集中的原句欄位，以及標記結果輸出的 Aspect List 欄位。',
+      settingsAspectRuleSectionTitle: 'Aspect 編輯規則',
+      settingsAspectRuleSectionDesc: '控制標記員是否可修正句子、增刪 aspect，以及是否啟用比對與軟性核查。',
+      settingsAspectLimitSectionTitle: '數量限制',
+      settingsAspectLimitSectionDesc: '設定每筆資料需要提交的 Aspect List 長度範圍。',
+      settingsAspectListSentenceLabel: '句子',
+      settingsAspectListPreviewTitle: 'Aspect List',
+      settingsAspectRowPlaceholder: '輸入 aspect 文字',
+      settingsAddAspectBtnLabel: '+ 新增 Aspect',
+      settingsPreviewSampleSentenceAspectList: '這家餐廳服務態度親切，環境整潔，餐點品質也很穩定。',
+      settingsRequireSentimentContextHint: '提示：請確認每個 Aspect 在句子前後文中是否有對應的情緒描述，沒有的話請刪除。（軟性指引，不強制攔截）',
       settingsPreviewTaskChooseLabel: '請選擇標記',
       settingsPreviewTaskEntity: '請標記實體',
       settingsPreviewTaskRelation: '請標記關係',
@@ -2105,6 +2212,8 @@
       settingsPreviewEmpty: 'Please add at least one label option',
       settingsTemplateSectionTitle: 'Start from template or upload config',
       settingsApplyTemplateBtnTpl: 'Apply default template: {template}',
+      settingsTemplateBtnNer: 'Apply template: NER (Named Entity Recognition)',
+      settingsTemplateBtnAspectList: 'Apply template: Aspect List extraction / correction',
       settingsUploadConfigBtn: 'Upload config (YAML / JSON)',
       settingsLabelsLabel: 'Labels',
       settingsLabelsHint: 'Type label and press Enter',
@@ -2128,6 +2237,20 @@
       settingsEnabled: 'Enabled',
       settingsDisabled: 'Disabled',
       settingsAddEntity: 'Add entity type',
+      settingsSubtypeNer: 'NER (Named Entity Recognition)',
+      settingsSubtypeAspectList: 'Aspect List extraction / correction',
+      settingsAspectFieldSectionTitle: 'Field mapping',
+      settingsAspectFieldSectionDesc: 'Map the dataset sentence field and the output Aspect List field.',
+      settingsAspectRuleSectionTitle: 'Aspect editing rules',
+      settingsAspectRuleSectionDesc: 'Control sentence correction, aspect add/delete behavior, exact match, and soft review guidance.',
+      settingsAspectLimitSectionTitle: 'Quantity limits',
+      settingsAspectLimitSectionDesc: 'Set the accepted Aspect List length for each dataset row.',
+      settingsAspectListSentenceLabel: 'Sentence',
+      settingsAspectListPreviewTitle: 'Aspect List',
+      settingsAspectRowPlaceholder: 'Enter aspect text',
+      settingsAddAspectBtnLabel: '+ Add aspect',
+      settingsPreviewSampleSentenceAspectList: 'The service was friendly, the space was clean, and the food quality was consistent.',
+      settingsRequireSentimentContextHint: 'Hint: check that each aspect has a matching sentiment description in context. Remove any that do not. (Soft guidance, not system-enforced)',
       settingsPreviewTaskChooseLabel: 'Select label',
       settingsPreviewTaskEntity: 'Mark entities',
       settingsPreviewTaskRelation: 'Mark relations',
@@ -2432,19 +2555,19 @@
     },
     T003: {
       taskId: 'T003',
-      taskNameZh: '產品評論序列標註（NER / Aspect）',
-      taskNameEn: 'Product Review Sequence Labeling (NER / Aspect)',
+      taskNameZh: '產品評論 Aspect List 抽取／校正',
+      taskNameEn: 'Product Review Aspect List Extraction / Correction',
       taskTypeKey: 'sequence_labeling',
       datasetTotal: 860,
       datasetSourceZh: 'product_reviews_ner_aspect.tsv',
       datasetSourceEn: 'product_reviews_ner_aspect.tsv',
       configVersion: 'cfg-t003-v3.0.2',
       configFileName: '',
-      configContent: 'entities:\n  - name: ASPECT\n    color: "#6366F1"\n  - name: OPINION\n    color: "#10B981"\n  - name: BRAND\n    color: "#F59E0B"\nscheme: BIOES\nallow_overlapping: false',
+      configContent: 'subtype: aspect_list\ninput_field: sentence\naspect_list_field: aspects\nallow_sentence_edit: false\nallow_aspect_add: true\nallow_aspect_delete: true\nrequire_exact_match_in_sentence: true\nmin_aspects: 1\nmax_aspects: 10\nrequire_sentiment_context_check: true',
       guidelineUploaded: true,
-      guidelineTextZh: '請圈選產品評論中的面向詞、意見詞與品牌名稱，並依 BIOES 格式輸出。',
-      guidelineTextEn: 'Label aspect terms, opinion terms, and brand mentions in BIOES format.',
-      guidelineText: '請圈選產品評論中的面向詞、意見詞與品牌名稱，並依 BIOES 格式輸出。',
+      guidelineTextZh: '請根據產品評論句子整理 Aspect List，可新增或刪除不符合前後文情緒描述的 aspect。',
+      guidelineTextEn: 'Review each product sentence and produce an Aspect List. Add or remove aspects according to the sentiment context.',
+      guidelineText: '請根據產品評論句子整理 Aspect List，可新增或刪除不符合前後文情緒描述的 aspect。',
       guidelineFiles: [{ name: 'sequence_labeling_examples.pdf', type: 'pdf' }],
       forceGuideline: true,
       status: 'draft',
@@ -2610,11 +2733,23 @@
     },
     sequence_labeling: {
       fields: [
-        { key: 'entities', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types' },
-        { key: 'scheme', type: 'select', required: true, zh: '標記格式', en: 'Labeling scheme', options: ['IOB2', 'BIOES'], defaultValue: 'IOB2' },
-        { key: 'allow_overlapping', type: 'boolean', required: false, zh: '允許重疊標記', en: 'Allow overlapping spans', defaultValue: false },
+        { key: 'subtype', type: 'subtype-select', required: true, zh: '子類型', en: 'Subtype', options: ['ner', 'aspect_list'], optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction' } }, defaultValue: 'ner' },
+        { key: 'entities', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types', showWhen: 'ner' },
+        { key: 'scheme', type: 'select', required: true, zh: '標記格式', en: 'Labeling scheme', options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'ner' },
+        { key: 'allow_overlapping', type: 'boolean', required: false, zh: '允許重疊標記', en: 'Allow overlapping spans', defaultValue: false, showWhen: 'ner' },
+        { key: 'input_field', type: 'text', required: true, zh: '輸入欄位名稱', en: 'Input field name', placeholder_zh: '預設：sentence', placeholder_en: 'Default: sentence', showWhen: 'aspect_list' },
+        { key: 'aspect_list_field', type: 'text', required: true, zh: '輸出欄位名稱', en: 'Aspect list field name', placeholder_zh: '預設：aspects', placeholder_en: 'Default: aspects', showWhen: 'aspect_list' },
+        { key: 'allow_sentence_edit', type: 'boolean', required: false, zh: '允許修改原句', en: 'Allow sentence edit', defaultValue: false, showWhen: 'aspect_list' },
+        { key: 'allow_aspect_add', type: 'boolean', required: false, zh: '允許新增 Aspect', en: 'Allow adding aspects', defaultValue: true, showWhen: 'aspect_list' },
+        { key: 'allow_aspect_delete', type: 'boolean', required: false, zh: '允許刪除 Aspect', en: 'Allow deleting aspects', defaultValue: true, showWhen: 'aspect_list' },
+        { key: 'require_exact_match_in_sentence', type: 'boolean', required: false, zh: '要求 Aspect 完全出現在句子中', en: 'Require exact match in sentence', defaultValue: true, showWhen: 'aspect_list' },
+        { key: 'min_aspects', type: 'number', required: false, zh: '最少 Aspect 數量', en: 'Min aspects', defaultValue: 1, showWhen: 'aspect_list' },
+        { key: 'max_aspects', type: 'number', required: false, zh: '最多 Aspect 數量', en: 'Max aspects', defaultValue: 10, showWhen: 'aspect_list' },
+        { key: 'require_sentiment_context_check', type: 'boolean', required: false, zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', defaultValue: false, showWhen: 'aspect_list' },
       ],
-      defaultTemplate: { entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+      nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+      aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
+      defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
     },
     relation_extraction: {
       fields: [
@@ -2994,7 +3129,7 @@
     var guidelineTextInput = document.getElementById('editGuidelineTextInput');
     if (guidelineTextInput) guidelineTextInput.placeholder = t('guidelineTextPlaceholder');
 
-    updateSettingsTemplateButtonLabel();
+    renderSettingsTemplateBtns();
 
     var workLogStageSelect = document.getElementById('workLogStageSelect');
     if (workLogStageSelect && workLogStageSelect.options.length >= 3) {
@@ -3857,8 +3992,39 @@
   function getDefaultSettingsTemplateForLang(taskTypeKey, lang) {
     var schema = getSettingsSchema(taskTypeKey);
     if (!schema) return {};
+    if (taskTypeKey === 'sequence_labeling' && state.settingsDraft && currentSettingsSubtype() === 'aspect_list' && schema.aspectListTemplate) {
+      return cloneObject(schema.aspectListTemplate);
+    }
     if (schema.defaultTemplateI18n && schema.defaultTemplateI18n[lang]) return cloneObject(schema.defaultTemplateI18n[lang]);
     return cloneObject(schema.defaultTemplate || {});
+  }
+
+  function currentSettingsSubtype() {
+    var config = state.settingsDraft ? state.settingsDraft.configData : null;
+    if (config && config.subtype) return config.subtype;
+    try {
+      var code = (TASK_DATA.configContent || '').trim();
+      var parsed = settingsParseCode(code, code.startsWith('{') ? 'json' : 'yaml');
+      if (parsed && parsed.subtype) return parsed.subtype;
+    } catch (error) {
+      return 'ner';
+    }
+    return 'ner';
+  }
+
+  function settingsFieldVisible(field) {
+    if (!field.showWhen) return true;
+    return currentSettingsSubtype() === field.showWhen;
+  }
+
+  function settingsFieldVisibleForConfig(field, config) {
+    if (!field.showWhen) return true;
+    return (config && config.subtype ? config.subtype : 'ner') === field.showWhen;
+  }
+
+  function getSettingsSubtypeLabel(value) {
+    if (value === 'aspect_list') return t('settingsSubtypeAspectList');
+    return t('settingsSubtypeNer');
   }
 
   function settingsToYaml(obj, indent) {
@@ -4033,10 +4199,14 @@
       parsed = {};
     }
     var defaults = getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang);
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && parsed && parsed.subtype === 'aspect_list' && schema && schema.aspectListTemplate) {
+      defaults = cloneObject(schema.aspectListTemplate);
+    }
     var merged = cloneObject(defaults);
     Object.keys(parsed || {}).forEach(function(key) { merged[key] = parsed[key]; });
     if (schema) {
       schema.fields.forEach(function(field) {
+        if (!settingsFieldVisibleForConfig(field, merged)) return;
         if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
         if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
         if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
@@ -4080,12 +4250,35 @@
     bar.classList.add('hidden');
   }
 
-  function updateSettingsTemplateButtonLabel() {
-    var btn = document.getElementById('settingsApplyTemplateBtn');
-    if (!btn) return;
-    btn.textContent = interpolate(t('settingsApplyTemplateBtnTpl'), {
-      template: getTaskTypeLabel(TASK_DATA.taskTypeKey),
-    });
+  function renderSettingsTemplateBtns() {
+    var container = document.getElementById('settingsTemplateBtns');
+    if (!container || !state.settingsDraft) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    if (!schema) return;
+
+    function makeTemplateBtn(label, templateData) {
+      var btn = document.createElement('button');
+      btn.className = 'template-btn';
+      btn.type = 'button';
+      btn.textContent = label;
+      btn.addEventListener('click', function() {
+        applySettingsTemplate(templateData);
+      });
+      container.appendChild(btn);
+    }
+
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling') {
+      makeTemplateBtn(t('settingsTemplateBtnNer'), schema.nerTemplate || schema.defaultTemplate || {});
+      makeTemplateBtn(t('settingsTemplateBtnAspectList'), schema.aspectListTemplate || {});
+      return;
+    }
+
+    makeTemplateBtn(
+      interpolate(t('settingsApplyTemplateBtnTpl'), { template: getTaskTypeLabel(TASK_DATA.taskTypeKey) }),
+      getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang)
+    );
   }
 
   function updateSettingsCodeFormatButtons() {
@@ -4388,14 +4581,129 @@
     });
   }
 
-  function renderSettingsSchemaFields() {
-    var container = document.getElementById('settingsSchemaFields');
-    if (!container || !state.settingsDraft) return;
-    while (container.firstChild) container.removeChild(container.firstChild);
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    if (!schema) return;
+  function renderSettingsAspectListPreview(preview, config) {
+    var allowEdit = !!config.allow_sentence_edit;
+    var allowAdd = config.allow_aspect_add !== false;
+    var allowDel = config.allow_aspect_delete !== false;
+    var showSentimentHint = !!config.require_sentiment_context_check;
+    var sampleSentence = t('settingsPreviewSampleSentenceAspectList');
+    var aspects = state.lang === 'zh'
+      ? ['服務態度', '環境整潔', '餐點品質']
+      : ['service attitude', 'cleanliness', 'food quality'];
 
-    schema.fields.forEach(function(field) {
+    var sentenceSection = document.createElement('div');
+    sentenceSection.className = 'aspect-list-preview-sentence';
+
+    var sentenceLabel = document.createElement('div');
+    sentenceLabel.className = 'annotation-preview-task-title';
+    sentenceLabel.textContent = t('settingsAspectListSentenceLabel');
+    sentenceSection.appendChild(sentenceLabel);
+
+    if (allowEdit) {
+      var sentenceInput = document.createElement('textarea');
+      sentenceInput.className = 'aspect-list-preview-sentence-input';
+      sentenceInput.value = sampleSentence;
+      sentenceInput.rows = 2;
+      sentenceSection.appendChild(sentenceInput);
+    } else {
+      var sentenceReadonly = document.createElement('div');
+      sentenceReadonly.className = 'aspect-list-preview-sentence-readonly';
+      sentenceReadonly.textContent = sampleSentence;
+      sentenceSection.appendChild(sentenceReadonly);
+    }
+    preview.appendChild(sentenceSection);
+
+    var divider = document.createElement('div');
+    divider.className = 'annotation-preview-divider';
+    preview.appendChild(divider);
+
+    var listTitle = document.createElement('div');
+    listTitle.className = 'annotation-preview-task-title';
+    listTitle.textContent = t('settingsAspectListPreviewTitle');
+    preview.appendChild(listTitle);
+
+    var rowsWrap = document.createElement('div');
+    rowsWrap.className = 'aspect-list-preview-rows';
+
+    function renderRows() {
+      while (rowsWrap.firstChild) rowsWrap.removeChild(rowsWrap.firstChild);
+      aspects.forEach(function(aspect, index) {
+        var row = document.createElement('div');
+        row.className = 'aspect-list-preview-row';
+
+        var rowLabel = document.createElement('span');
+        rowLabel.className = 'aspect-list-preview-row-label';
+        rowLabel.textContent = 'Aspect ' + (index + 1);
+        row.appendChild(rowLabel);
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'aspect-list-preview-input';
+        input.value = aspect;
+        input.placeholder = t('settingsAspectRowPlaceholder');
+        input.addEventListener('input', function() { aspects[index] = input.value; });
+        row.appendChild(input);
+
+        if (allowDel) {
+          var deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'aspect-list-preview-delete';
+          deleteBtn.setAttribute('aria-label', state.lang === 'zh' ? '刪除' : 'Delete');
+          deleteBtn.textContent = '×';
+          deleteBtn.addEventListener('click', function() {
+            aspects.splice(index, 1);
+            renderRows();
+          });
+          row.appendChild(deleteBtn);
+        }
+        rowsWrap.appendChild(row);
+      });
+
+      if (allowAdd) {
+        var addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'aspect-list-preview-add';
+        addBtn.textContent = t('settingsAddAspectBtnLabel');
+        addBtn.addEventListener('click', function() {
+          aspects.push('');
+          renderRows();
+        });
+        rowsWrap.appendChild(addBtn);
+      }
+    }
+
+    renderRows();
+    preview.appendChild(rowsWrap);
+
+    if (showSentimentHint) {
+      var hint = document.createElement('div');
+      hint.className = 'aspect-list-preview-hint';
+      hint.textContent = t('settingsRequireSentimentContextHint');
+      preview.appendChild(hint);
+    }
+  }
+
+  function buildSettingsSchemaSection(title, desc) {
+    var section = document.createElement('div');
+    section.className = 'settings-schema-section';
+    var header = document.createElement('div');
+    header.className = 'settings-schema-section-header';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'settings-schema-section-title';
+    titleEl.textContent = title;
+    header.appendChild(titleEl);
+    if (desc) {
+      var descEl = document.createElement('div');
+      descEl.className = 'settings-schema-section-desc';
+      descEl.textContent = desc;
+      header.appendChild(descEl);
+    }
+    section.appendChild(header);
+    return section;
+  }
+
+  function appendSettingsSchemaField(container, field) {
+      if (!field) return;
       var wrap = document.createElement('div');
       wrap.className = 'field-group';
       wrap.style.marginBottom = '10px';
@@ -4425,11 +4733,39 @@
         wrap.appendChild(buildSettingsEntityList(field));
       } else if (field.type === 'boolean') {
         var chkLabel = document.createElement('label');
-        chkLabel.className = 'settings-checkbox-row';
+        var useToggleCard = TASK_DATA.taskTypeKey === 'sequence_labeling' && currentSettingsSubtype() === 'aspect_list';
+        chkLabel.className = useToggleCard ? 'settings-toggle-card' : 'settings-checkbox-row';
         var checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = !!(state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue);
         var textNode = document.createTextNode(checkbox.checked ? t('settingsEnabled') : t('settingsDisabled'));
+        if (useToggleCard) {
+          chkLabel.classList.toggle('is-on', checkbox.checked);
+          var copy = document.createElement('span');
+          copy.className = 'settings-toggle-copy';
+          var title = document.createElement('span');
+          title.className = 'settings-toggle-label';
+          title.textContent = field[state.lang] || field.zh;
+          var status = document.createElement('span');
+          status.className = 'settings-toggle-status';
+          status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
+          copy.appendChild(title);
+          copy.appendChild(status);
+          checkbox.addEventListener('change', function() {
+            state.settingsDraft.configData[field.key] = checkbox.checked;
+            status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
+            chkLabel.classList.toggle('is-on', checkbox.checked);
+            markSettingsDirty();
+            renderSettingsAnnotationPreview();
+            if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+          });
+          chkLabel.appendChild(copy);
+          chkLabel.appendChild(checkbox);
+          wrap.innerHTML = '';
+          wrap.appendChild(chkLabel);
+          container.appendChild(wrap);
+          return;
+        }
         checkbox.addEventListener('change', function() {
           state.settingsDraft.configData[field.key] = checkbox.checked;
           textNode.nodeValue = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
@@ -4440,19 +4776,29 @@
         chkLabel.appendChild(checkbox);
         chkLabel.appendChild(textNode);
         wrap.appendChild(chkLabel);
-      } else if (field.type === 'select') {
+      } else if (field.type === 'select' || field.type === 'subtype-select') {
         var select = document.createElement('select');
         select.className = 'input-select';
         var currentValue = state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue;
         field.options.forEach(function(optionValue) {
           var option = document.createElement('option');
           option.value = optionValue;
-          option.textContent = optionValue;
+          option.textContent = field.optionLabels && field.optionLabels[state.lang] && field.optionLabels[state.lang][optionValue]
+            ? field.optionLabels[state.lang][optionValue]
+            : optionValue;
           if (optionValue === currentValue) option.selected = true;
           select.appendChild(option);
         });
         select.addEventListener('change', function() {
           state.settingsDraft.configData[field.key] = select.value;
+          if (field.type === 'subtype-select') {
+            var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+            var template = select.value === 'aspect_list' && schema && schema.aspectListTemplate
+              ? schema.aspectListTemplate
+              : schema.nerTemplate || schema.defaultTemplate || {};
+            state.settingsDraft.configData = cloneObject(template);
+            renderSettingsSchemaFields();
+          }
           markSettingsDirty();
           renderSettingsAnnotationPreview();
           if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
@@ -4485,6 +4831,50 @@
       }
 
       container.appendChild(wrap);
+  }
+
+  function renderSettingsSchemaFields() {
+    var container = document.getElementById('settingsSchemaFields');
+    if (!container || !state.settingsDraft) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
+    if (!schema) return;
+
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && currentSettingsSubtype() === 'aspect_list') {
+      var fieldByKey = {};
+      schema.fields.forEach(function(field) { fieldByKey[field.key] = field; });
+      appendSettingsSchemaField(container, fieldByKey.subtype);
+
+      var fieldSection = buildSettingsSchemaSection(t('settingsAspectFieldSectionTitle'), t('settingsAspectFieldSectionDesc'));
+      var fieldGrid = document.createElement('div');
+      fieldGrid.className = 'settings-schema-field-grid';
+      appendSettingsSchemaField(fieldGrid, fieldByKey.input_field);
+      appendSettingsSchemaField(fieldGrid, fieldByKey.aspect_list_field);
+      fieldSection.appendChild(fieldGrid);
+      container.appendChild(fieldSection);
+
+      var ruleSection = buildSettingsSchemaSection(t('settingsAspectRuleSectionTitle'), t('settingsAspectRuleSectionDesc'));
+      var toggleList = document.createElement('div');
+      toggleList.className = 'settings-schema-toggle-list';
+      ['allow_sentence_edit', 'allow_aspect_add', 'allow_aspect_delete', 'require_exact_match_in_sentence', 'require_sentiment_context_check'].forEach(function(key) {
+        appendSettingsSchemaField(toggleList, fieldByKey[key]);
+      });
+      ruleSection.appendChild(toggleList);
+      container.appendChild(ruleSection);
+
+      var limitSection = buildSettingsSchemaSection(t('settingsAspectLimitSectionTitle'), t('settingsAspectLimitSectionDesc'));
+      var limitGrid = document.createElement('div');
+      limitGrid.className = 'settings-schema-field-grid';
+      appendSettingsSchemaField(limitGrid, fieldByKey.min_aspects);
+      appendSettingsSchemaField(limitGrid, fieldByKey.max_aspects);
+      limitSection.appendChild(limitGrid);
+      container.appendChild(limitSection);
+      return;
+    }
+
+    schema.fields.forEach(function(field) {
+      if (!settingsFieldVisible(field)) return;
+      appendSettingsSchemaField(container, field);
     });
   }
 
@@ -4497,7 +4887,10 @@
     var titleText = t('settingsPreviewTaskChooseLabel');
     var options = [];
 
-    if (taskType === 'sequence_labeling') {
+    if (taskType === 'sequence_labeling' && currentSettingsSubtype() === 'aspect_list') {
+      renderSettingsAspectListPreview(preview, config);
+      return;
+    } else if (taskType === 'sequence_labeling') {
       titleText = t('settingsPreviewTaskEntity');
       options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
         return { text: ent.name.trim(), color: ent.color || null };
@@ -4604,10 +4997,11 @@
     appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
   }
 
-  function applySettingsTemplate() {
+  function applySettingsTemplate(templateData) {
     if (!state.settingsDraft) return;
-    state.settingsDraft.configData = getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang);
+    state.settingsDraft.configData = cloneObject(templateData || getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang));
     state.settingsDraft.uploadedConfigName = '';
+    renderSettingsTemplateBtns();
     renderSettingsSchemaFields();
     state.settingsCodeDraftDirty = false;
     renderSettingsCodeFromConfig();
@@ -4667,8 +5061,12 @@
       return false;
     }
     var merged = {};
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && parsed.subtype === 'aspect_list' && schema.aspectListTemplate) {
+      merged = cloneObject(schema.aspectListTemplate);
+    }
     Object.keys(parsed).forEach(function(key) { merged[key] = parsed[key]; });
     schema.fields.forEach(function(field) {
+      if (!settingsFieldVisibleForConfig(field, merged)) return;
       if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
       if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
       if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
@@ -4697,6 +5095,7 @@
     var config = state.settingsDraft.configData || {};
     var ok = true;
     schema.fields.forEach(function(field) {
+      if (!settingsFieldVisible(field)) return;
       if (!field.required) return;
       var val = config[field.key];
       if (field.type === 'tag-list') {
@@ -4705,7 +5104,7 @@
         if (!val || !Array.isArray(val) || !val.length || val.some(function(ent) { return !ent.name || !ent.name.trim(); })) ok = false;
       } else if (field.type === 'va-dimensions') {
         if (!isValidVADimensionConfig(config.valence) || !isValidVADimensionConfig(config.arousal)) ok = false;
-      } else if (field.type === 'textarea' || field.type === 'text' || field.type === 'select') {
+      } else if (field.type === 'textarea' || field.type === 'text' || field.type === 'select' || field.type === 'subtype-select' || field.type === 'number') {
         if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
       } else if (field.type === 'boolean') {
         if (val === undefined || val === null) ok = false;
@@ -4716,7 +5115,7 @@
 
   function fillSettingsEditForm() {
     if (!state.settingsDraft) return;
-    updateSettingsTemplateButtonLabel();
+    renderSettingsTemplateBtns();
     renderSettingsSchemaFields();
     renderSettingsAnnotationPreview();
     renderSettingsCodeFromConfig();
@@ -4813,6 +5212,7 @@
     var summaryRows = [];
     if (schema && Array.isArray(schema.fields)) {
       schema.fields.forEach(function(field) {
+        if (!settingsFieldVisibleForConfig(field, parsed)) return;
         if (field.type === 'va-dimensions') {
           var dims = [
             { key: 'valence', label: 'Valence' },
@@ -4854,6 +5254,8 @@
           text = names.length ? names.join(', ') : '-';
         } else if (field.type === 'boolean') {
           text = rawValue ? t('yes') : t('no');
+        } else if (field.type === 'subtype-select') {
+          text = getSettingsSubtypeLabel(rawValue || field.defaultValue);
         } else if (field.type === 'select' || field.type === 'textarea') {
           text = String(rawValue || '').trim() || '-';
         } else {
@@ -5614,7 +6016,6 @@
     var settingsEditBtn = document.getElementById('settingsEditBtn');
     var settingsSaveBtn = document.getElementById('settingsSaveBtn');
     var settingsCancelBtn = document.getElementById('settingsCancelBtn');
-    var settingsApplyTemplateBtn = document.getElementById('settingsApplyTemplateBtn');
     var settingsUploadConfigBtn = document.getElementById('settingsUploadConfigBtn');
     var settingsConfigFileInput = document.getElementById('settingsConfigFileInput');
     var settingsCodeEditor = document.getElementById('settingsCodeEditor');
@@ -5781,12 +6182,6 @@
     if (settingsCancelBtn) {
       settingsCancelBtn.addEventListener('click', function() {
         cancelSettingsEdit(false);
-      });
-    }
-
-    if (settingsApplyTemplateBtn) {
-      settingsApplyTemplateBtn.addEventListener('click', function() {
-        applySettingsTemplate();
       });
     }
 
