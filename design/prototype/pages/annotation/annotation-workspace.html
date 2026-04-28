@@ -1303,7 +1303,6 @@ var I18N = {
     rvReviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
     rvAspectReviewNote: '可直接修正 Aspect 後通過；退回則讓該標記回到未標記，標記員需要重新標記。',
     rvAnnotatorResultLabel: '個人標記結果',
-    rvAspectCorrectionTitle: 'Reviewer 修正 Aspect List',
     rvAspectCorrectionAdd: '新增 Aspect',
     rvAspectCorrectionDelete: '刪除',
     rvAspectCorrectionPlaceholder: '輸入 aspect',
@@ -1408,7 +1407,6 @@ var I18N = {
     rvReviewNote: 'Approve keeps this annotation valid. Return resets it to unannotated so the annotator must label it again.',
     rvAspectReviewNote: 'Reviewers may correct aspects before approving. Return resets the annotation to unannotated so the annotator must label it again.',
     rvAnnotatorResultLabel: 'Annotator result',
-    rvAspectCorrectionTitle: 'Reviewer aspect corrections',
     rvAspectCorrectionAdd: 'Add aspect',
     rvAspectCorrectionDelete: 'Delete',
     rvAspectCorrectionPlaceholder: 'Enter aspect',
@@ -2566,11 +2564,6 @@ function summarizeReviewerAspectCorrections(row) {
 function renderReviewerAspectCorrectionEditor(row) {
   var editor = document.createElement('div');
   editor.className = 'rv-aspect-correction-editor';
-
-  var title = document.createElement('div');
-  title.className = 'rv-aspect-correction-title';
-  title.textContent = t('rvAspectCorrectionTitle');
-  editor.appendChild(title);
 
   var corrections = getReviewerAspectCorrections(row);
   corrections.forEach(function(correction, idx) {
