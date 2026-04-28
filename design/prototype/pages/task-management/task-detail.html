@@ -1928,6 +1928,7 @@
       samplingStrategySummaryTpl: '{strategy} · 隨機種子 {seed}',
       stratifyBySummaryTpl: '{items}',
       stopConditionSummaryTpl: 'IAA ≥ {agreement}，標準差 ≤ {std}，標註者 ≥ {annotators}',
+      stopConditionNoStdTpl: 'IAA ≥ {agreement}，標註者 ≥ {annotators}',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: '標準差 ≤ {target}',
       stopAnnotatorPillTpl: '標註者 ≥ {target}',
@@ -2237,6 +2238,11 @@
       samplingValuePercentTpl: '{value}% (~{count} items)',
       splitSummaryTpl: 'Total {total} / Dry {sample} / Official {reserve}',
       samplingStrategySummaryTpl: '{strategy} · seed {seed}',
+      stopConditionSummaryTpl: 'IAA ≥ {agreement} · Std ≤ {std} · annotators ≥ {annotators}',
+      stopConditionNoStdTpl: 'IAA ≥ {agreement} · annotators ≥ {annotators}',
+      stopAgreementPillTpl: 'IAA ≥ {target}',
+      stopStdPillTpl: 'Std ≤ {target}',
+      stopAnnotatorPillTpl: 'annotators ≥ {target}',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
@@ -2366,17 +2372,17 @@
     ],
     forceGuideline: true,
     status: 'draft',
-    samplingMode: 'by_count',
-    samplingValue: 120,
+    samplingMode: 'by_percentage',
+    samplingValue: 15,
     samplingStrategy: 'stratified_random',
     trialRound: 1,
     randomSeed: 248931,
     stratifyBy: ['label'],
-    targetAgreement: 0.80,
+    targetAgreement: 0.75,
     currentAgreement: 0.62,
     targetStd: 0.10,
     currentStd: 0.16,
-    minAnnotators: 3,
+    minAnnotators: 5,
     currentAnnotators: 3,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
@@ -2481,6 +2487,14 @@
       forceGuideline: true,
       status: 'draft',
     },
+  };
+
+  var SAMPLING_DEFAULTS_BY_TYPE = {
+    single_sentence_classification: { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 12 },
+    single_sentence_va_scoring:     { targetIAA: 0.75, targetStd: 0.10, minAnnotators: 5, trialPercent: 15 },
+    sequence_labeling:               { targetIAA: 0.82, targetStd: null, minAnnotators: 3, trialPercent: 15 },
+    relation_extraction:             { targetIAA: 0.78, targetStd: null, minAnnotators: 3, trialPercent: 18 },
+    sentence_pairs:                  { targetIAA: 0.76, targetStd: 0.15, minAnnotators: 3, trialPercent: 12 },
   };
 
   var TASK_MEMBERS = [
@@ -2742,6 +2756,7 @@
         Object.assign(TASK_DATA, JSON.parse(JSON.stringify(TASK_PROFILE_MAP[TASK_DATA.taskId])));
       }
     }
+    applySamplingDefaultsToTaskData();
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
 
     if (state.taskRole === 'annotator') {
@@ -3005,6 +3020,16 @@
     return t(statusHintMap[TASK_DATA.status] || 'statusHintDraft');
   }
 
+  function applySamplingDefaultsToTaskData() {
+    var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey];
+    if (!defs) return;
+    TASK_DATA.samplingMode = 'by_percentage';
+    TASK_DATA.samplingValue = defs.trialPercent;
+    TASK_DATA.targetAgreement = defs.targetIAA;
+    TASK_DATA.targetStd = defs.targetStd;
+    TASK_DATA.minAnnotators = defs.minAnnotators;
+  }
+
   function getSampleCountFromData(data) {
     if (data.samplingMode === 'by_percentage') {
       return Math.floor(TASK_DATA.datasetTotal * data.samplingValue / 100);
@@ -3063,7 +3088,7 @@
       return { valid: false, message: t('samplingErrorAgreement') };
     }
 
-    if (data.targetStd < 0 || data.targetStd > 1) {
+    if (data.targetStd !== null && data.targetStd !== undefined && (data.targetStd < 0 || data.targetStd > 1)) {
       return { valid: false, message: t('samplingErrorStd') };
     }
 
@@ -3111,11 +3136,18 @@
       seed: TASK_DATA.randomSeed,
     }));
     setText('valueStratifyByControl', formatStratifyBy(TASK_DATA.stratifyBy));
-    setText('valueStopConditionControl', interpolate(t('stopConditionSummaryTpl'), {
-      agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
-      std: Number(TASK_DATA.targetStd).toFixed(2),
-      annotators: TASK_DATA.minAnnotators,
-    }));
+    var hasStd = TASK_DATA.targetStd !== null && TASK_DATA.targetStd !== undefined;
+    setText('valueStopConditionControl', hasStd
+      ? interpolate(t('stopConditionSummaryTpl'), {
+          agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
+          std: Number(TASK_DATA.targetStd).toFixed(2),
+          annotators: TASK_DATA.minAnnotators,
+        })
+      : interpolate(t('stopConditionNoStdTpl'), {
+          agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
+          annotators: TASK_DATA.minAnnotators,
+        })
+    );
     setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
     setText(
@@ -3132,14 +3164,20 @@
     setText('currentStdValue', Number(TASK_DATA.currentStd).toFixed(2));
 
     setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(TASK_DATA.targetAgreement).toFixed(2) }));
-    setText('stopStdPill', interpolate(t('stopStdPillTpl'), { target: Number(TASK_DATA.targetStd).toFixed(2) }));
     setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
 
     var stopAgreementPill = document.getElementById('stopAgreementPill');
     var stopStdPill = document.getElementById('stopStdPill');
     var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
     if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
-    if (stopStdPill) stopStdPill.classList.toggle('passed', Number(TASK_DATA.currentStd) <= Number(TASK_DATA.targetStd));
+    if (stopStdPill) {
+      var stdActive = TASK_DATA.targetStd !== null && TASK_DATA.targetStd !== undefined;
+      stopStdPill.classList.toggle('hidden', !stdActive);
+      if (stdActive) {
+        setText('stopStdPill', interpolate(t('stopStdPillTpl'), { target: Number(TASK_DATA.targetStd).toFixed(2) }));
+        stopStdPill.classList.toggle('passed', Number(TASK_DATA.currentStd) <= Number(TASK_DATA.targetStd));
+      }
+    }
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
   }
 
@@ -3173,7 +3211,11 @@
     var targetAgreementInput = document.getElementById('targetAgreementInput');
     if (targetAgreementInput) targetAgreementInput.value = Number(data.targetAgreement).toFixed(2);
     var targetStdInput = document.getElementById('targetStdInput');
-    if (targetStdInput) targetStdInput.value = Number(data.targetStd).toFixed(2);
+    if (targetStdInput) {
+      var stdVal = data.targetStd !== null && data.targetStd !== undefined;
+      targetStdInput.value = stdVal ? Number(data.targetStd).toFixed(2) : '';
+      targetStdInput.placeholder = stdVal ? '' : (state.lang === 'zh' ? '不適用' : 'N/A');
+    }
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
     if (minAnnotatorsInput) minAnnotatorsInput.value = String(data.minAnnotators);
     var stratifyLabelInput = document.getElementById('stratifyByLabel');

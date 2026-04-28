@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.8.8
+**版本**：1.9.0
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -26,6 +26,16 @@
 - `RUN_INIT_PERCENT_RANGE = 1..99`
 - `RUN_INIT_COUNT_MIN = 1`
 - `RUN_ISOLATION_DEFAULT = enabled`
+- `SAMPLING_DEFAULTS_BY_TYPE` — 各任務類型的試標預設參數表（見下方）
+
+| 任務類型 | 建議 IAA | Std 上限 | 最少標記者數 | 試標抽樣比例 |
+| --- | --- | --- | --- | --- |
+| `single_sentence_classification` | 0.75 | — | 3 | 12% |
+| `single_sentence_va_scoring` | 0.75 | 0.10 | 5 | 15% |
+| `sequence_labeling` | 0.82 | — | 3 | 15% |
+| `relation_extraction` | 0.78 | — | 3 | 18% |
+| `sentence_pairs` | 0.76 | 0.15 | 3 | 12% |
+
 - `INITIAL_MEMBER_SOURCES = platform-users | email-invite`
 - `PLATFORM_MEMBER_ROLE_FILTER = system_role == user`
 - `IDEMPOTENCY_WINDOW_HOURS = 24`
@@ -297,7 +307,8 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-004a-3**：`email-invite` 來源必須支援 email 格式驗證、寄送邀請連結與加入初始成員清單。
 - **FR-004a-4**：成員加入必須以 email 作為唯一鍵，阻擋重複成員。
 - **FR-004b**：Step 3 完成條件至少需包含 1 位 `active annotator`。
-- **FR-004c**：Step 3 必須提供試標初始化，支援 `RUN_INIT_SAMPLING_MODES`。
+- **FR-004c**：Step 3 必須提供試標初始化，支援 `RUN_INIT_SAMPLING_MODES`；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入。
+- **FR-004c-1**：選擇任務類型後，Step 3 的試標抽樣值必須自動預填為該類型的 `trialPercent`（百分比模式）、目標 IAA 與最少標記者數。
 - **FR-004d**：試標抽樣驗證必須明確：百分比 `RUN_INIT_PERCENT_RANGE`；筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
 - **FR-004e**：Step 3 必須提供資料隔離開關，預設值為 `RUN_ISOLATION_DEFAULT`。
 - **FR-005**：Step 4 必須支援標記說明資產上傳與強制顯示設定。
@@ -409,6 +420,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.0 | 2026-04-28 | 新增 `SAMPLING_DEFAULTS_BY_TYPE`：各任務類型的試標預設參數（IAA、Std 上限、最少標記者數、試標比例）；Step 3 選定任務類型後自動帶入預設值；task-detail 抽樣設定區塊依任務類型動態顯示；`targetStd: null` 明確代表不適用（新增 FR-004c-1） |
 | 1.8.9 | 2026-04-23 | 補充跨規格相依說明：Task Detail 的 Dry Run 轉態門檻為所有 `active annotator` 完成各自全部試標樣本後，方可由 `dry_run_in_progress` 進入 `waiting_iaa_confirmation` |
 | 1.8.8 | 2026-04-23 | 同步 annotation-workspace mobile 收合行為：右側說明區塊收合後，主內容區仍維持單欄滿寬，避免跑版（新增 FR-008c、SC-005b） |
 | 1.8.7 | 2026-04-23 | 同步 annotation-workspace 圖片檔案預覽行為：在「說明與檔案」點擊圖片 `預覽` 後，於檔案列表下方顯示圖片預覽區塊（新增 FR-005d、SC-006b） |

@@ -755,6 +755,13 @@ var TASK_TYPE_ORDER = [
   'relation_extraction',
   'sentence_pairs',
 ];
+var SAMPLING_DEFAULTS_BY_TYPE = {
+  single_sentence_classification: { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 12 },
+  single_sentence_va_scoring:     { targetIAA: 0.75, targetStd: 0.10, minAnnotators: 5, trialPercent: 15 },
+  sequence_labeling:               { targetIAA: 0.82, targetStd: null, minAnnotators: 3, trialPercent: 15 },
+  relation_extraction:             { targetIAA: 0.78, targetStd: null, minAnnotators: 3, trialPercent: 18 },
+  sentence_pairs:                  { targetIAA: 0.76, targetStd: 0.15, minAnnotators: 3, trialPercent: 12 },
+};
 var DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE = {
   single_sentence_va_scoring: [
     { name: 'VA_emj.png', type: 'Image', size: 584508, assetPath: '../../assets/images/task-management/VA_emj.png' },
@@ -1164,6 +1171,7 @@ function showStep(n) {
   [1, 2, 3, 4].forEach(function(i) { el('step' + i + 'Panel').classList.toggle('hidden', i !== n); });
   el('prevBtn').classList.toggle('hidden', n === 1);
   state.step = n;
+  if (n === 3) syncStep3SamplingControls();
   var nextBtn = el('nextBtn');
   var nextIcon = el('nextBtnIcon');
   if (n === 4) {
@@ -2058,6 +2066,18 @@ function syncRunInitFromControls() {
   revalidateCurrentStep();
 }
 
+function syncStep3SamplingControls() {
+  var modePercent = el('samplingModePercent');
+  var modeCount = el('samplingModeCount');
+  var valueInput = el('samplingValueInput');
+  if (modePercent) modePercent.checked = state.runInit.samplingMode === 'by_percentage';
+  if (modeCount) modeCount.checked = state.runInit.samplingMode === 'by_count';
+  if (valueInput) {
+    valueInput.value = String(state.runInit.samplingValue);
+    valueInput.max = state.runInit.samplingMode === 'by_percentage' ? '99' : '';
+  }
+}
+
 /* ── Guideline upload (DOM-safe, no user data in innerHTML) ──── */
 function addGuidelineFiles(files) {
   var ALLOWED_G = ['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.md'];
@@ -2198,7 +2218,16 @@ function submitTask() {
 /* ── Task type change ────────────────────────────────────────── */
 function onTaskTypeChange() {
   var val = el('taskTypeSelect').value;
-  if (val !== state.taskType) { state.taskType = val; state.configData = {}; state.codeDraftDirty = false; }
+  if (val !== state.taskType) {
+    state.taskType = val;
+    state.configData = {};
+    state.codeDraftDirty = false;
+    var defs = SAMPLING_DEFAULTS_BY_TYPE[val];
+    if (defs) {
+      state.runInit.samplingMode = 'by_percentage';
+      state.runInit.samplingValue = defs.trialPercent;
+    }
+  }
   applyDefaultGuidelineFiles(state.taskType);
   renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
