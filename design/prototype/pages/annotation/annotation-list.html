@@ -119,6 +119,17 @@
       padding: 10px 18px;
       min-width: 138px;
     }
+    .btn-indigo {
+      color: var(--color-white);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .btn-indigo:hover {
+      background: #4F46E5;
+      border-color: #4F46E5;
+      opacity: 1;
+      transform: translateY(-1px);
+    }
     .badge {
       display: inline-flex;
       align-items: center;
@@ -435,6 +446,22 @@
       .navbar-wordmark { font-size: 13px; }
       .mobile-lang-toggle { padding: 6px 8px; }
     }
+    .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
+    .toast {
+      background: var(--color-ink);
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity var(--dur-normal) var(--ease-standard), transform var(--dur-normal) var(--ease-standard);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.success { background: var(--color-success); }
+    .toast.error { background: var(--color-error); }
   </style>
 </head>
 <body>
@@ -508,6 +535,9 @@
         <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
       </div>
     </div>
+    <button class="btn btn-indigo slim hidden" id="submitReviewBtn" type="button">
+      <span>送出審核</span>
+    </button>
   </div>
 
   <section class="table-container">
@@ -530,8 +560,42 @@
   </section>
 </main>
 
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
+</div>
+
 <script src="../../assets/analytics.js"></script>
 <script>
+  /* ── i18n ─────────────────────────────────────────────────────── */
+  var CURRENT_LANG = 'zh';
+  var I18N = {
+    zh: {
+      pageSubtitleAnnotator: '請先選擇要處理的資料筆次，再進入標記作業頁。',
+      pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
+      submitReviewLabel: '送出審核',
+      toastReviewSubmitted: '審核結果已送出。',
+      toastSelectDecision: '請完成每位標記員的審核決策'
+    },
+    en: {
+      pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
+      pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
+      submitReviewLabel: 'Submit review',
+      toastReviewSubmitted: 'Review submitted.',
+      toastSelectDecision: 'Please complete a review decision for each annotator'
+    }
+  };
+  function t(key) { return (I18N[CURRENT_LANG] || I18N.zh)[key] || key; }
+
+  var toastTimer = null;
+  function showToast(msg, type) {
+    var toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.className = 'toast' + (type ? ' ' + type : '');
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2800);
+  }
+
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
   var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
@@ -556,9 +620,11 @@
         dashboardStatusText: '繼續中',
         dashboardStatusClass: 'badge-info',
         samples: [
-          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '這款耳機音質很清晰，降噪效果也超乎預期。' },
-          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '客服回應速度普通，但最終仍有解決我的問題。' },
-          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '包裝完整，配送速度快，整體體驗不錯。' }
+          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。' },
+          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。' },
+          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。' },
+          { sampleId: 'A1-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。' },
+          { sampleId: 'A1-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。' }
         ]
       },
       {
@@ -594,22 +660,52 @@
         samples: [
           {
             sampleId: 'R1-001', status: 'pending', completedAt: '-',
-            text: '產品整體穩定，但初次設定流程偏繁瑣。',
-            labelStats: '科技×3 · 消費×4 · 評論×2',
+            text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。',
+            labelStats: '政治×4 · 科技×5',
             annotators: [
-              { username: 'kioleemg12', result: '科技, 消費', reviewStatus: null },
-              { username: '113450022', result: '消費, 評論', reviewStatus: null },
-              { username: 'tony0950127', result: '科技, 消費', reviewStatus: null }
+              { username: 'kioleemg12', result: '政治, 科技', reviewStatus: null },
+              { username: '113450022', result: '政治, 科技', reviewStatus: null },
+              { username: 'tony0950127', result: '科技', reviewStatus: null }
             ]
           },
           {
             sampleId: 'R1-002', status: 'saved', completedAt: '2026-04-23 08:58',
-            text: '售後支援回覆快速，解決效率高。',
-            labelStats: '服務×5 · 評論×3',
+            text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。',
+            labelStats: '體育×4 · 娛樂×4 · 社會×3',
             annotators: [
-              { username: 'kioleemg12', result: '服務, 評論', reviewStatus: 'approved' },
-              { username: '113450022', result: '服務', reviewStatus: null },
-              { username: 'hui', result: '服務, 評論', reviewStatus: null }
+              { username: 'kioleemg12', result: '體育, 娛樂', reviewStatus: 'approved' },
+              { username: '113450022', result: '體育, 娛樂, 社會', reviewStatus: null },
+              { username: 'hui', result: '娛樂, 社會', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-003', status: 'pending', completedAt: '-',
+            text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。',
+            labelStats: '社會×5 · 政治×3',
+            annotators: [
+              { username: 'kioleemg12', result: '社會, 政治', reviewStatus: null },
+              { username: '113450022', result: '社會', reviewStatus: null },
+              { username: 'tony0950127', result: '社會, 政治', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-004', status: 'pending', completedAt: '-',
+            text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。',
+            labelStats: '娛樂×5 · 社會×4',
+            annotators: [
+              { username: 'kioleemg12', result: '娛樂, 社會', reviewStatus: null },
+              { username: '113450022', result: '娛樂', reviewStatus: null },
+              { username: 'hui', result: '娛樂, 社會', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R1-005', status: 'pending', completedAt: '-',
+            text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。',
+            labelStats: '科技×5 · 財經×3',
+            annotators: [
+              { username: 'kioleemg12', result: '科技', reviewStatus: null },
+              { username: '113450022', result: '科技, 財經', reviewStatus: null },
+              { username: 'tony0950127', result: '科技', reviewStatus: null }
             ]
           }
         ]
@@ -896,17 +992,12 @@
     var date = new Date(timestamp);
     if (isNaN(date.getTime())) return '-';
     var pad = function (value) { return String(value).padStart(2, '0'); };
-    return [
-      date.getFullYear(),
-      '-',
-      pad(date.getMonth() + 1),
-      '-',
-      pad(date.getDate()),
-      ' ',
-      pad(date.getHours()),
-      ':',
-      pad(date.getMinutes())
-    ].join('');
+    return [date.getFullYear(), '-', pad(date.getMonth() + 1), '-', pad(date.getDate())].join('');
+  }
+
+  function displayDate(val) {
+    if (!val || val === '-') return '-';
+    return val.slice(0, 10);
   }
 
   function applySampleCompletionOverride(sample, completionState) {
@@ -1075,11 +1166,10 @@
     return td;
   }
 
-  function renderReviewerRows(visibleRows, tbodyEl) {
+  function renderReviewerRows(visibleRows, tbodyEl, context) {
     visibleRows.forEach(function (item) {
       var sample = item.sample;
       var annotators = Array.isArray(sample.annotators) ? sample.annotators : [];
-      var isVA = item.taskType === 'single_sentence_va_scoring';
       initReviewStates([sample]);
 
       // --- Summary row ---
@@ -1136,58 +1226,54 @@
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'reviewer-actions';
 
-      if (isVA) {
-        // VA tasks: row click expands annotator detail; bulk approve/reject on list
-        summaryTr.addEventListener('click', function () { toggleDetail(null); });
-
-        var approveAllBtn = document.createElement('button');
-        approveAllBtn.type = 'button';
-        approveAllBtn.className = 'mini-btn mini-btn-approve';
-        approveAllBtn.textContent = '✓ 全部通過';
-        approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
-        var rejectAllBtn = document.createElement('button');
-        rejectAllBtn.type = 'button';
-        rejectAllBtn.className = 'mini-btn mini-btn-reject';
-        rejectAllBtn.textContent = '✕ 全部退回';
-        rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
-
-        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
-
-        function applyAllReview(newState) {
-          var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
-          var targetState = currentBulkState === newState ? null : newState;
-          annotators.forEach(function (ann, idx) {
-            REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
-          });
-          updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
-          var annotatorRowEls = detailTd.querySelectorAll('.annotator-row');
-          annotatorRowEls.forEach(function (row) {
-            var approveBtn = row.querySelector('.mini-btn-approve');
-            var rejectBtn = row.querySelector('.mini-btn-reject');
-            if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
-          });
-          showDetail();
-        }
-        approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
-        rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
-
-        actionsDiv.appendChild(rejectAllBtn);
-        actionsDiv.appendChild(approveAllBtn);
-      } else {
-        // Non-VA tasks: row click navigates to workspace; "編輯" button
-        function openWorkspace() {
-          setStoredActiveTaskType(item.taskType);
-          window.location.href = buildWorkspaceUrl(item.taskId, sample.sampleId, 'reviewer', item.runType, item.taskType);
-        }
-        summaryTr.addEventListener('click', openWorkspace);
-
-        var editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'mini-btn mini-btn-primary';
-        editBtn.textContent = '編輯';
-        editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
-        actionsDiv.appendChild(editBtn);
+      function openWorkspace() {
+        setStoredActiveTaskType(item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType);
+        window.location.href = url;
       }
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      editBtn.textContent = '編輯';
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+      actionsDiv.appendChild(editBtn);
+
+      summaryTr.addEventListener('click', function () { toggleDetail(null); });
+
+      var approveAllBtn = document.createElement('button');
+      approveAllBtn.type = 'button';
+      approveAllBtn.className = 'mini-btn mini-btn-approve';
+      approveAllBtn.textContent = '✓ 全部通過';
+      approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
+      var rejectAllBtn = document.createElement('button');
+      rejectAllBtn.type = 'button';
+      rejectAllBtn.className = 'mini-btn mini-btn-reject';
+      rejectAllBtn.textContent = '✕ 全部退回';
+      rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
+
+      updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
+
+      function applyAllReview(newState) {
+        var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
+        var targetState = currentBulkState === newState ? null : newState;
+        annotators.forEach(function (ann, idx) {
+          REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
+        });
+        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
+        var annotatorRowEls = detailTd.querySelectorAll('.annotator-row');
+        annotatorRowEls.forEach(function (row) {
+          var approveBtn = row.querySelector('.mini-btn-approve');
+          var rejectBtn = row.querySelector('.mini-btn-reject');
+          if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
+        });
+        showDetail();
+      }
+      approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
+      rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
+
+      actionsDiv.appendChild(rejectAllBtn);
+      actionsDiv.appendChild(approveAllBtn);
 
       var expandTd = document.createElement('td');
       expandTd.className = 'expand-cell';
@@ -1205,7 +1291,7 @@
       summaryTr.appendChild(expandTd);
       summaryTr.appendChild(makeTd(sample.sampleId));
       summaryTr.appendChild(makeTd(statusSpan));
-      summaryTr.appendChild(makeTd(sample.completedAt));
+      summaryTr.appendChild(makeTd(displayDate(sample.completedAt)));
       summaryTr.appendChild(textTd);
       summaryTr.appendChild(statsTd);
       summaryTr.appendChild(makeTd(actionsDiv));
@@ -1244,7 +1330,7 @@
 
       tr.appendChild(makeTd(item.sample.sampleId));
       tr.appendChild(makeTd(statusSpan));
-      tr.appendChild(makeTd(item.sample.completedAt));
+      tr.appendChild(makeTd(displayDate(item.sample.completedAt)));
       tr.appendChild(makeTd(item.sample.annotatedBy || '-'));
       tr.appendChild(textTd);
       tr.appendChild(makeTd(editBtn));
@@ -1292,7 +1378,7 @@
     empty.classList.add('hidden');
 
     if (context.role === 'reviewer') {
-      renderReviewerRows(visibleRows, tbodyEl);
+      renderReviewerRows(visibleRows, tbodyEl, context);
     } else {
       renderAnnotatorRows(visibleRows, tbodyEl, context);
     }
@@ -1327,9 +1413,29 @@
 
   function renderContext(context) {
     document.getElementById('pageSubtitle').textContent =
-      context.role === 'reviewer'
-        ? '請先選擇要審查的資料筆次，再進入審核作業頁。'
-        : '請先選擇要處理的資料筆次，再進入標記作業頁。';
+      context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');
+
+    var submitReviewBtn = document.getElementById('submitReviewBtn');
+    if (!submitReviewBtn) return;
+    submitReviewBtn.querySelector('span') && (submitReviewBtn.querySelector('span').textContent = t('submitReviewLabel'));
+    if (context.role === 'reviewer') {
+      submitReviewBtn.classList.remove('hidden');
+      submitReviewBtn.onclick = function () {
+        var roleTasks = TASKS_BY_ROLE['reviewer'] || [];
+        var allDecided = true;
+        roleTasks.forEach(function(task) {
+          if (!matchesTaskId(task, context.taskId)) return;
+          (task.samples || []).forEach(function(sample) {
+            (sample.annotators || []).forEach(function(ann, idx) {
+              var state = REVIEW_STATES[reviewKey(sample.sampleId, idx)];
+              if (state !== 'approved' && state !== 'rejected') allDecided = false;
+            });
+          });
+        });
+        if (!allDecided) { showToast(t('toastSelectDecision'), 'error'); return; }
+        showToast(t('toastReviewSubmitted'), 'success');
+      };
+    }
   }
 
   function init() {
@@ -1351,6 +1457,13 @@
         task_type: context.taskType
       });
     }
+
+    document.addEventListener('labelsuite:langchange', function (e) {
+      if (e.detail && e.detail.lang) {
+        CURRENT_LANG = e.detail.lang;
+        renderContext(context);
+      }
+    });
   }
 
   init();

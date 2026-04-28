@@ -53,7 +53,7 @@ test.describe('Annotation list routing', () => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
 
-    await expect(page.locator('#sampleRows tr')).toHaveCount(3);
+    await expect(page.locator('#sampleRows tr')).toHaveCount(5);
     await page.locator('#statusFilter').selectOption('submitted');
     await expect(page.locator('#sampleRows tr')).toHaveCount(1);
     await expect(page.locator('#sampleRows tr').first()).toContainText('A1-001');
@@ -228,12 +228,12 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/sample_id=/);
   });
 
-  test('reviewer can open sample workspace by clicking a table row', async ({ page }) => {
+  test('reviewer can open sample workspace via edit button', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
 
-    const firstRow = page.locator('#sampleRows tr').first();
-    await firstRow.click();
+    const firstOpenButton = page.getByRole('button', { name: '編輯' }).first();
+    await firstOpenButton.click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
@@ -253,10 +253,18 @@ test.describe('Annotation list routing', () => {
       await guidelineModalConfirm.click();
     }
 
+    // A2-003 has pre-saved VA values — submit directly
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
+
+    // A2-004 and A2-005 are todo (va: null) — must select VA values before submitting
+    await page.locator('input[name="va_valence"][value="5"]').check();
+    await page.locator('input[name="va_arousal"][value="5"]').check();
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
+
+    await page.locator('input[name="va_valence"][value="5"]').check();
+    await page.locator('input[name="va_arousal"][value="5"]').check();
     await page.locator('#submitBtn').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);

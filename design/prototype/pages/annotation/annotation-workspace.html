@@ -238,7 +238,7 @@
     }
     .class-option:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
     .class-option.selected { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
-    .class-option input[type="radio"] { accent-color: var(--color-primary); flex-shrink: 0; width: 16px; height: 16px; }
+    .class-option input[type="radio"], .class-option input[type="checkbox"] { accent-color: var(--color-primary); flex-shrink: 0; width: 16px; height: 16px; }
     .class-option-label { font-size: 14px; font-weight: 500; color: var(--color-ink); }
     .class-option-desc { font-size: 12px; color: var(--color-text-soft); margin-left: auto; }
 
@@ -846,11 +846,13 @@
         <span id="guidelinePreviewGoal">情感極性分類</span>
       </p>
       <br>
-      <p id="guidelinePreviewIntro">請根據每筆文本的整體情感傾向，選擇最符合的類別：</p>
+      <p id="guidelinePreviewIntro">請依照新聞標題選擇所有適用的類別；一則標題可同時屬於多個類別：</p>
       <br>
-      <p><span class="modal-preview-heading" id="guidelinePreviewLabelPos">正面</span> — <span id="guidelinePreviewDescPos">包含明確正向情緒（喜悅、讚美、期待）</span></p>
-      <p><span class="modal-preview-heading" id="guidelinePreviewLabelNeg">負面</span> — <span id="guidelinePreviewDescNeg">包含明確負向情緒（批評、失望、憤怒）</span></p>
-      <p><span class="modal-preview-heading" id="guidelinePreviewLabelNeu">中性</span> — <span id="guidelinePreviewDescNeu">無明顯情緒傾向，或情緒混合</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelPos">政治</span> — <span id="guidelinePreviewDescPos">國內外政治動態、選舉、政策</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelNeg">社會</span> — <span id="guidelinePreviewDescNeg">社會事件、民生議題、公共安全</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelNeu">娛樂</span> — <span id="guidelinePreviewDescNeu">影視、音樂、名人娛樂</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelSports">體育</span> — <span id="guidelinePreviewDescSports">運動競技、賽事、選手</span></p>
+      <p><span class="modal-preview-heading" id="guidelinePreviewLabelTech">科技</span> — <span id="guidelinePreviewDescTech">科技產業、創新、數位轉型</span></p>
       <br>
       <p id="guidelinePreviewFooter">如有疑問，請查閱右側說明檔案或聯繫任務負責人。</p>
     </div>
@@ -874,10 +876,10 @@
     <!-- Left: Sample List -->
     <div class="col-samples">
       <div class="col-header">
-        <span class="col-header-title" id="sampleListTitle">樣本清單</span>
+        <span class="col-header-title" id="sampleListTitle">標記清單</span>
         <span class="col-header-count" id="sampleListCount">5 筆</span>
       </div>
-      <div class="sample-list" id="sampleList" role="listbox" aria-label="樣本清單"></div>
+      <div class="sample-list" id="sampleList" role="listbox" aria-label="標記清單"></div>
     </div>
 
     <!-- Middle: Content + Controls -->
@@ -915,20 +917,30 @@
           <div class="annotation-card-body">
             <div id="classificationAnnotatorPanel">
               <div class="class-options" id="classOptions">
-                <label class="class-option" id="optPositive">
-                  <input type="radio" name="sentiment" value="positive" />
-                  <span class="class-option-label" id="optLabelPositive">正面</span>
-                  <span class="class-option-desc" id="optDescPositive">明確正向情緒</span>
+                <label class="class-option" id="optPolitics">
+                  <input type="checkbox" name="news_category" value="politics" />
+                  <span class="class-option-label" id="optLabelPolitics">政治</span>
+                  <span class="class-option-desc" id="optDescPolitics">國內外政治動態</span>
                 </label>
-                <label class="class-option" id="optNegative">
-                  <input type="radio" name="sentiment" value="negative" />
-                  <span class="class-option-label" id="optLabelNegative">負面</span>
-                  <span class="class-option-desc" id="optDescNegative">明確負向情緒</span>
+                <label class="class-option" id="optSociety">
+                  <input type="checkbox" name="news_category" value="society" />
+                  <span class="class-option-label" id="optLabelSociety">社會</span>
+                  <span class="class-option-desc" id="optDescSociety">社會事件與民生</span>
                 </label>
-                <label class="class-option" id="optNeutral">
-                  <input type="radio" name="sentiment" value="neutral" />
-                  <span class="class-option-label" id="optLabelNeutral">中性</span>
-                  <span class="class-option-desc" id="optDescNeutral">無明顯傾向或混合</span>
+                <label class="class-option" id="optEntertainment">
+                  <input type="checkbox" name="news_category" value="entertainment" />
+                  <span class="class-option-label" id="optLabelEntertainment">娛樂</span>
+                  <span class="class-option-desc" id="optDescEntertainment">影視音樂娛樂</span>
+                </label>
+                <label class="class-option" id="optSports">
+                  <input type="checkbox" name="news_category" value="sports" />
+                  <span class="class-option-label" id="optLabelSports">體育</span>
+                  <span class="class-option-desc" id="optDescSports">運動競技賽事</span>
+                </label>
+                <label class="class-option" id="optTechnology">
+                  <input type="checkbox" name="news_category" value="technology" />
+                  <span class="class-option-label" id="optLabelTechnology">科技</span>
+                  <span class="class-option-desc" id="optDescTechnology">科技產業與創新</span>
                 </label>
               </div>
             </div>
@@ -937,7 +949,7 @@
                 <div class="va-axis-card">
                   <div class="va-axis-head">
                     <span class="va-axis-title" id="vaValenceLabel">Valence（情緒正負）</span>
-                    <span class="va-axis-value" id="vaValenceValue">5</span>
+                    <span class="va-axis-value" id="vaValenceValue">-</span>
                   </div>
                   <p class="va-axis-hint" id="vaValenceHint">1 = 非常負向，9 = 非常正向</p>
                   <div class="va-scale-row" id="vaValenceScale"></div>
@@ -950,7 +962,7 @@
                 <div class="va-axis-card">
                   <div class="va-axis-head">
                     <span class="va-axis-title" id="vaArousalLabel">Arousal（情緒強度）</span>
-                    <span class="va-axis-value" id="vaArousalValue">5</span>
+                    <span class="va-axis-value" id="vaArousalValue">-</span>
                   </div>
                   <p class="va-axis-hint" id="vaArousalHint">1 = 非常平靜，9 = 非常激動</p>
                   <div class="va-scale-row" id="vaArousalScale"></div>
@@ -1032,7 +1044,6 @@
           </div>
           <div class="hidden" id="reviewerActions">
             <button class="btn btn-primary" type="button" id="rvSaveBtn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
               <span id="rvSaveLabel">送出審查</span>
             </button>
           </div>
@@ -1116,21 +1127,23 @@
 var I18N = {
   zh: {
     docTitle: '標記作業 — Label Suite（原型）',
-    taskName: '情感極性分類 ｜ NLP 語料標記任務',
+    taskName: '新聞標題多標籤分類 ｜ NLP 語料標記任務',
     backBtnLabel: '返回',
     phaseDryRun: 'Dry Run', phaseOfficial: 'Official Run',
     roleAnnotator: 'Annotator', roleReviewer: 'Reviewer',
     progressText: '{done} / {total} 已提交',
-    sampleListTitle: '樣本清單', sampleListCount: '{n} 筆',
+    sampleListTitle: '標記清單', sampleListCount: '{n} 筆',
     prevBtnLabel: '上一筆', nextBtnLabel: '下一筆',
     sampleNavLabel: '樣本 {cur} / {total}',
     sampleSourceLabel: '原始文本',
     annotationCardTitle: '標記標籤', taskTypeLabel: '文本分類',
     taskTypeClassification: '單句分類（含多標籤）',
     taskTypeVA: '單句 VA 雙維度評分（Valence / Arousal）',
-    optLabelPositive: '正面', optDescPositive: '明確正向情緒',
-    optLabelNegative: '負面', optDescNegative: '明確負向情緒',
-    optLabelNeutral: '中性', optDescNeutral: '無明顯傾向或混合',
+    optLabelPolitics: '政治', optDescPolitics: '國內外政治動態',
+    optLabelSociety: '社會', optDescSociety: '社會事件與民生',
+    optLabelEntertainment: '娛樂', optDescEntertainment: '影視音樂娛樂',
+    optLabelSports: '體育', optDescSports: '運動競技賽事',
+    optLabelTechnology: '科技', optDescTechnology: '科技產業與創新',
     vaValenceLabel: 'Valence（情緒正負）',
     vaValenceHint: '1 = 非常負向，9 = 非常正向',
     vaValenceMin: '負向',
@@ -1155,19 +1168,21 @@ var I18N = {
     guidelineCollapseAria: '收合說明區',
     guidelineExpandAria: '展開說明區',
     guidelineSummaryTitle: '任務說明',
-    guidelineSummaryText: '情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。混合情緒時以主導傾向為準，若無法判定請選「中性」並補充備註。',
-    guidelineFileName1: '標記指引 v2.pdf', guidelineFileAction1: '新分頁',
-    guidelineFileName2: '情感分類範例圖.png', guidelineFileAction2: '預覽',
+    guidelineSummaryText: '新聞標題多標籤分類任務：請依標題內容選擇所有適用類別；若同時涉及多個面向，請一併勾選。',
+    guidelineFileName1: 'headline_taxonomy.pdf', guidelineFileAction1: '新分頁',
+    guidelineFileName2: 'news-headline-examples.png', guidelineFileAction2: '預覽',
     guidelineFileName3: '常見問題 FAQ.md', guidelineFileAction3: '預覽',
     guidelineImagePreviewEmpty: '點擊上方圖片檔案即可在此預覽',
     guidelineImagePreviewAlt: 'VA 評分範例圖',
     guidelineModalTitle: '請先閱讀任務說明',
     guidelineModalBody: '開始標記前，請閱讀以下任務說明。說明內容在右側面板中持續可見，隨時可查閱。',
-    guidelinePreviewHeading: '任務目標：', guidelinePreviewGoal: '情感極性分類',
-    guidelinePreviewIntro: '請根據每筆文本的整體情感傾向，選擇最符合的類別：',
-    guidelinePreviewLabelPos: '正面', guidelinePreviewDescPos: '包含明確正向情緒（喜悅、讚美、期待）',
-    guidelinePreviewLabelNeg: '負面', guidelinePreviewDescNeg: '包含明確負向情緒（批評、失望、憤怒）',
-    guidelinePreviewLabelNeu: '中性', guidelinePreviewDescNeu: '無明顯情緒傾向，或情緒混合',
+    guidelinePreviewHeading: '任務目標：', guidelinePreviewGoal: '新聞標題多標籤分類',
+    guidelinePreviewIntro: '請依照新聞標題選擇所有適用的類別；一則標題可同時屬於多個類別：',
+    guidelinePreviewLabelPos: '政治', guidelinePreviewDescPos: '國內外政治動態、選舉、政策',
+    guidelinePreviewLabelNeg: '社會', guidelinePreviewDescNeg: '社會事件、民生議題、公共安全',
+    guidelinePreviewLabelNeu: '娛樂', guidelinePreviewDescNeu: '影視、音樂、名人娛樂',
+    guidelinePreviewLabelSports: '體育', guidelinePreviewDescSports: '運動競技、賽事、選手',
+    guidelinePreviewLabelTech: '科技', guidelinePreviewDescTech: '科技產業、創新、數位轉型',
     guidelinePreviewFooter: '如有疑問，請查閱右側說明檔案或聯繫任務負責人。',
     guidelineModalConfirm: '我已閱讀，開始標記',
     statusSubmitted: '已提交', statusSaved: '已儲存',
@@ -1180,27 +1195,29 @@ var I18N = {
     toastSelectLabel: '請先選擇標籤',
     toastSelectDecision: '請完成每位標記員的審核決策',
     mobileDrawerTitle: '說明與檔案',
-    mobileGuidelineText: '情感極性分類任務：請依照文本整體情感傾向標記「正面」、「負面」或「中性」。',
+    mobileGuidelineText: '新聞標題多標籤分類：可同時勾選多個類別。',
     actionSubmitted: '已提交', actionSaved: '已儲存',
     actionApproved: '已通過', actionRejected: '已退回',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
-    taskName: 'Sentiment Classification | NLP Annotation Task',
+    taskName: 'News Headline Multi-label Classification | NLP Annotation Task',
     backBtnLabel: 'Back',
     phaseDryRun: 'Dry Run', phaseOfficial: 'Official Run',
     roleAnnotator: 'Annotator', roleReviewer: 'Reviewer',
     progressText: '{done} / {total} submitted',
-    sampleListTitle: 'Samples', sampleListCount: '{n} items',
+    sampleListTitle: 'Annotation List', sampleListCount: '{n} items',
     prevBtnLabel: 'Previous', nextBtnLabel: 'Next',
     sampleNavLabel: 'Sample {cur} / {total}',
     sampleSourceLabel: 'Source Text',
     annotationCardTitle: 'Label', taskTypeLabel: 'Text Classification',
     taskTypeClassification: 'Single Sentence Classification (Multi-label)',
     taskTypeVA: 'Single-sentence VA Scoring (Valence / Arousal)',
-    optLabelPositive: 'Positive', optDescPositive: 'Clear positive emotion',
-    optLabelNegative: 'Negative', optDescNegative: 'Clear negative emotion',
-    optLabelNeutral: 'Neutral', optDescNeutral: 'No clear polarity or mixed',
+    optLabelPolitics: 'Politics', optDescPolitics: 'Domestic and international politics',
+    optLabelSociety: 'Society', optDescSociety: 'Social affairs and public issues',
+    optLabelEntertainment: 'Entertainment', optDescEntertainment: 'Film, music, and celebrities',
+    optLabelSports: 'Sports', optDescSports: 'Competitions, events, and athletes',
+    optLabelTechnology: 'Technology', optDescTechnology: 'Tech industry and innovation',
     vaValenceLabel: 'Valence',
     vaValenceHint: '1 = very negative, 9 = very positive',
     vaValenceMin: 'Negative',
@@ -1225,19 +1242,21 @@ var I18N = {
     guidelineCollapseAria: 'Collapse guideline panel',
     guidelineExpandAria: 'Expand guideline panel',
     guidelineSummaryTitle: 'Task instructions',
-    guidelineSummaryText: 'Sentiment classification task: label each text as Positive, Negative, or Neutral based on the overall emotional tone. When mixed emotions are present, use the dominant polarity. Select Neutral if uncertain.',
-    guidelineFileName1: 'Annotation guide v2.pdf', guidelineFileAction1: 'New tab',
-    guidelineFileName2: 'Sentiment examples.png', guidelineFileAction2: 'Preview',
+    guidelineSummaryText: 'News headline multi-label classification: select all applicable categories for each headline. If a headline spans multiple topics, choose all of them.',
+    guidelineFileName1: 'headline_taxonomy.pdf', guidelineFileAction1: 'New tab',
+    guidelineFileName2: 'news-headline-examples.png', guidelineFileAction2: 'Preview',
     guidelineFileName3: 'FAQ.md', guidelineFileAction3: 'Preview',
     guidelineImagePreviewEmpty: 'Click an image file above to preview it here.',
     guidelineImagePreviewAlt: 'VA scoring example chart',
     guidelineModalTitle: 'Read task instructions first',
     guidelineModalBody: 'Before you start annotating, please read the task instructions below. They remain visible in the right panel throughout your session.',
-    guidelinePreviewHeading: 'Goal: ', guidelinePreviewGoal: 'Sentiment polarity classification',
-    guidelinePreviewIntro: 'Select the category that best matches the overall emotional tone:',
-    guidelinePreviewLabelPos: 'Positive', guidelinePreviewDescPos: 'clear positive emotions (joy, praise, anticipation)',
-    guidelinePreviewLabelNeg: 'Negative', guidelinePreviewDescNeg: 'clear negative emotions (criticism, disappointment, anger)',
-    guidelinePreviewLabelNeu: 'Neutral', guidelinePreviewDescNeu: 'no clear polarity or mixed emotions',
+    guidelinePreviewHeading: 'Goal: ', guidelinePreviewGoal: 'News Headline Multi-label Classification',
+    guidelinePreviewIntro: 'Select all applicable categories for each headline. A single headline may belong to multiple categories:',
+    guidelinePreviewLabelPos: 'Politics', guidelinePreviewDescPos: 'government, elections, and policy',
+    guidelinePreviewLabelNeg: 'Society', guidelinePreviewDescNeg: 'social events, livelihoods, and public safety',
+    guidelinePreviewLabelNeu: 'Entertainment', guidelinePreviewDescNeu: 'film, music, and celebrity news',
+    guidelinePreviewLabelSports: 'Sports', guidelinePreviewDescSports: 'matches, competitions, and athletes',
+    guidelinePreviewLabelTech: 'Technology', guidelinePreviewDescTech: 'technology trends, products, and innovation',
     guidelinePreviewFooter: 'If unsure, check the guideline files in the right panel or contact the task leader.',
     guidelineModalConfirm: "I've read it — start annotating",
     statusSubmitted: 'Submitted', statusSaved: 'Saved',
@@ -1250,19 +1269,19 @@ var I18N = {
     toastSelectLabel: 'Please select a label first',
     toastSelectDecision: 'Please complete a review decision for each annotator',
     mobileDrawerTitle: 'Guidelines',
-    mobileGuidelineText: 'Sentiment classification: label each text as Positive, Negative, or Neutral based on the overall emotional tone.',
+    mobileGuidelineText: 'News headline multi-label classification: multiple selections are allowed.',
     actionSubmitted: 'submitted', actionSaved: 'saved',
     actionApproved: 'approved', actionRejected: 'returned',
   }
 };
 
 /* ── Sample Data ──────────────────────────────────────────────── */
-var SAMPLES = [
+var VA_SAMPLE_FIXTURES = [
   {
     id: 1,
     sampleId: 'R2-001',
-    text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。餐點本身風味也不錯，下次一定會再來。',
-    status: 'submitted', label: 'positive', va: { valence: 5, arousal: 3 },
+    text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
+    status: 'submitted', labels: null, va: { valence: 5, arousal: 3 },
     reviewerData: {
       statsSummary: 'mean : [7.33, 7.17] , std : [1.07, 1.43], ±1.5std V : 5.725~8.935, ±1.5std A : 5.025~9.315',
       rows: [
@@ -1279,8 +1298,8 @@ var SAMPLES = [
   {
     id: 2,
     sampleId: 'R2-002',
-    text: '等了快一個小時才上菜，服務生態度冷漠，食物還是涼的。完全不值這個價位，令人失望。',
-    status: 'submitted', label: 'negative', va: { valence: 1, arousal: 4 },
+    text: '等了快一個小時才上菜，服務生態度冷漠，食物還是涼的，完全不值得。',
+    status: 'submitted', labels: null, va: { valence: 1, arousal: 4 },
     reviewerData: {
       statsSummary: 'mean : [4.33, 5.25] , std : [0.99, 1.55], ±1.5std V : 2.845~5.815, ±1.5std A : 2.925~7.575',
       rows: [
@@ -1300,23 +1319,106 @@ var SAMPLES = [
   {
     id: 3,
     sampleId: 'R2-003',
-    text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得住一整天的使用。唯一稍微讓我覺得有點遺憾的是背蓋材質稍微偏重，長時間握持手腕略感疲勞，但整體來說非常滿意這次的購買決定。',
-    status: 'saved', label: null, va: null,
-    history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: null }]
+    text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
+    status: 'saved', labels: null, va: { valence: 6, arousal: 5 },
+    history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: 'V=6 / A=5' }]
   },
   {
     id: 4,
     sampleId: 'R2-004',
     text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
-    status: 'todo', label: null, va: null, history: []
+    status: 'todo', labels: null, va: null, history: []
   },
   {
     id: 5,
     sampleId: 'R2-005',
-    text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒有遇到任何問題。',
-    status: 'todo', label: null, va: null, history: []
+    text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
+    status: 'todo', labels: null, va: null, history: []
   }
 ];
+
+var CLASSIFICATION_SAMPLE_FIXTURES = [
+  {
+    id: 1,
+    sampleId: 'R2-001',
+    text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案',
+    status: 'submitted', labels: ['politics', 'technology'], va: null,
+    reviewerData: {
+      statsSummary: '政治×4 · 科技×5',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '政治、科技', decision: null },
+        { annotator: '113450022', scoreText: '政治、科技', decision: null },
+        { annotator: 'tony0950127', scoreText: '科技', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-22 14:30', action: 'submitted', from: null, to: '政治、科技' }]
+  },
+  {
+    id: 2,
+    sampleId: 'R2-002',
+    text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育',
+    status: 'submitted', labels: ['sports', 'entertainment', 'society'], va: null,
+    reviewerData: {
+      statsSummary: '體育×4 · 娛樂×4 · 社會×3',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '體育、娛樂', decision: null },
+        { annotator: '113450022', scoreText: '體育、娛樂、社會', decision: null },
+        { annotator: 'hui', scoreText: '娛樂、社會', decision: null }
+      ]
+    },
+    history: [
+      { actor: 'Annotator A', time: '04-22 14:45', action: 'submitted', from: null, to: '體育、娛樂、社會' },
+      { actor: 'Reviewer B', time: '04-22 15:10', action: 'approved', from: null, to: null }
+    ]
+  },
+  {
+    id: 3,
+    sampleId: 'R2-003',
+    text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制',
+    status: 'saved', labels: null, va: null,
+    reviewerData: {
+      statsSummary: '社會×5 · 政治×3',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '社會、政治', decision: null },
+        { annotator: '113450022', scoreText: '社會', decision: null },
+        { annotator: 'tony0950127', scoreText: '社會、政治', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: null }]
+  },
+  {
+    id: 4,
+    sampleId: 'R2-004',
+    text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題',
+    status: 'todo', labels: null, va: null,
+    reviewerData: {
+      statsSummary: '娛樂×5 · 社會×4',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '娛樂、社會', decision: null },
+        { annotator: '113450022', scoreText: '娛樂', decision: null },
+        { annotator: 'hui', scoreText: '娛樂、社會', decision: null }
+      ]
+    },
+    history: []
+  },
+  {
+    id: 5,
+    sampleId: 'R2-005',
+    text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚',
+    status: 'todo', labels: null, va: null,
+    reviewerData: {
+      statsSummary: '科技×5 · 財經×3',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '科技', decision: null },
+        { annotator: '113450022', scoreText: '科技、財經', decision: null },
+        { annotator: 'tony0950127', scoreText: '科技', decision: null }
+      ]
+    },
+    history: []
+  }
+];
+
+var SAMPLES = [];
 
 /* ── State ────────────────────────────────────────────────────── */
 var state = {
@@ -1500,7 +1602,10 @@ function findSampleIndexByQuerySampleId(sampleId) {
   if (!match) return -1;
 
   var numericIndex = parseInt(match[1], 10);
-  if (isNaN(numericIndex) || numericIndex < 1 || numericIndex > SAMPLES.length) {
+  if (isNaN(numericIndex) || numericIndex < 1) {
+    return -1;
+  }
+  if (Array.isArray(SAMPLES) && SAMPLES.length > 0 && numericIndex > SAMPLES.length) {
     return -1;
   }
   return numericIndex - 1;
@@ -1520,10 +1625,70 @@ function formatVaValue(value) {
   return (Math.round(numeric * 10) % 10 === 0) ? String(Math.round(numeric)) : numeric.toFixed(1);
 }
 
+var CATEGORY_LABELS = {
+  politics: { zh: '政治', en: 'Politics' },
+  society: { zh: '社會', en: 'Society' },
+  entertainment: { zh: '娛樂', en: 'Entertainment' },
+  sports: { zh: '體育', en: 'Sports' },
+  technology: { zh: '科技', en: 'Technology' }
+};
+
+function getSampleLabels(sample) {
+  if (Array.isArray(sample.labels)) {
+    return sample.labels.filter(function(v) { return !!v; });
+  }
+  if (sample.label) {
+    return [sample.label];
+  }
+  return [];
+}
+
+function setSampleLabels(sample, labels) {
+  var normalized = Array.isArray(labels)
+    ? labels.filter(function(v) { return !!v; })
+    : [];
+  sample.labels = normalized.length ? normalized : null;
+  sample.label = normalized.length ? normalized[0] : null;
+}
+
+function getCategoryDisplayName(value, lang) {
+  var key = value || '';
+  var item = CATEGORY_LABELS[key];
+  if (item) return item[lang] || item.zh || key;
+  return key;
+}
+
+function cloneSamples(fixtures) {
+  try {
+    return JSON.parse(JSON.stringify(fixtures));
+  } catch (error) {
+    return [];
+  }
+}
+
+function applyTaskTypeSampleFixtures() {
+  if (normalizeTaskTypeKey(state.taskTypeKey) === 'single_sentence_classification') {
+    SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
+  } else if (isVaTaskType(state.taskTypeKey)) {
+    SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+  } else {
+    SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
+  }
+  if (!Array.isArray(SAMPLES) || !SAMPLES.length) {
+    SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+  }
+  if (state.currentIdx >= SAMPLES.length) state.currentIdx = SAMPLES.length - 1;
+  if (state.currentIdx < 0) state.currentIdx = 0;
+}
+
 function createFallbackReviewerData(sample) {
+  var labelValues = getSampleLabels(sample);
+  var labelResult = labelValues.length
+    ? labelValues.map(function(value) { return getCategoryDisplayName(value, state.lang || 'zh'); }).join(state.lang === 'zh' ? '、' : ', ')
+    : 'N/A';
   var resultText = sample.va
     ? '[' + formatVaValue(sample.va.valence || 5) + ', ' + formatVaValue(sample.va.arousal || 5) + ']'
-    : (sample.label || 'N/A');
+    : labelResult;
 
   return {
     statsSummary: sample.va
@@ -1574,7 +1739,7 @@ function buildVaScaleOptions(containerId, inputName, selectedValue) {
   if (!container) return;
   while (container.firstChild) container.removeChild(container.firstChild);
 
-  var selected = formatVaValue(selectedValue || 5);
+  var selected = (selectedValue !== null && selectedValue !== undefined) ? formatVaValue(selectedValue) : null;
   VA_SCALE_VALUES.forEach(function(value, index) {
     var valueText = formatVaValue(value);
     var label = document.createElement('label');
@@ -1584,7 +1749,7 @@ function buildVaScaleOptions(containerId, inputName, selectedValue) {
     input.type = 'radio';
     input.name = inputName;
     input.value = valueText;
-    if (valueText === selected) input.checked = true;
+    if (selected !== null && valueText === selected) input.checked = true;
 
     var text = document.createElement('span');
     text.textContent = valueText;
@@ -1917,23 +2082,22 @@ function renderSampleContent() {
   el('nextBtn').disabled = state.currentIdx === SAMPLES.length - 1;
 
   if (isVaTaskType(state.taskTypeKey)) {
-    var valence = sample.va && sample.va.valence ? sample.va.valence : 5;
-    var arousal = sample.va && sample.va.arousal ? sample.va.arousal : 5;
+    var valence = (sample.va && sample.va.valence != null) ? sample.va.valence : null;
+    var arousal = (sample.va && sample.va.arousal != null) ? sample.va.arousal : null;
     buildVaScaleOptions('vaValenceScale', 'va_valence', valence);
     buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
-    setText('vaValenceValue', formatVaValue(valence));
-    setText('vaArousalValue', formatVaValue(arousal));
+    setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
+    setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
   } else {
-    var radios = document.querySelectorAll('input[name="sentiment"]');
-    radios.forEach(function(r) { r.checked = false; });
-    document.querySelectorAll('.class-option').forEach(function(opt) { opt.classList.remove('selected'); });
-    if (sample.label) {
-      var radio = document.querySelector('input[name="sentiment"][value="' + sample.label + '"]');
-      if (radio) {
-        radio.checked = true;
-        radio.closest('.class-option').classList.add('selected');
-      }
-    }
+    var selectedLabels = {};
+    getSampleLabels(sample).forEach(function(value) { selectedLabels[value] = true; });
+    var checkboxes = document.querySelectorAll('input[name="news_category"]');
+    checkboxes.forEach(function(input) {
+      var checked = !!selectedLabels[input.value];
+      input.checked = checked;
+      var option = input.closest('.class-option');
+      if (option) option.classList.toggle('selected', checked);
+    });
   }
   el('annotationNote').value = '';
 
@@ -2006,8 +2170,9 @@ function applyLang(lang) {
   var textIds = [
     'sampleListTitle', 'prevBtnLabel', 'nextBtnLabel',
     'sampleSourceLabel', 'annotationCardTitle', 'taskTypeLabel',
-    'optLabelPositive', 'optDescPositive', 'optLabelNegative', 'optDescNegative',
-    'optLabelNeutral', 'optDescNeutral', 'annotationNoteLabel',
+    'optLabelPolitics', 'optDescPolitics', 'optLabelSociety', 'optDescSociety',
+    'optLabelEntertainment', 'optDescEntertainment', 'optLabelSports', 'optDescSports',
+    'optLabelTechnology', 'optDescTechnology', 'annotationNoteLabel',
     'vaValenceLabel', 'vaValenceHint', 'vaValenceMin', 'vaValenceMax',
     'vaArousalLabel', 'vaArousalHint', 'vaArousalMin', 'vaArousalMax',
     'saveDraftLabel', 'submitLabel', 'autosaveLabel',
@@ -2028,6 +2193,8 @@ function applyLang(lang) {
     'guidelinePreviewLabelPos', 'guidelinePreviewDescPos',
     'guidelinePreviewLabelNeg', 'guidelinePreviewDescNeg',
     'guidelinePreviewLabelNeu', 'guidelinePreviewDescNeu',
+    'guidelinePreviewLabelSports', 'guidelinePreviewDescSports',
+    'guidelinePreviewLabelTech', 'guidelinePreviewDescTech',
     'guidelinePreviewFooter',
     'mobileDrawerTitle', 'mobileGuidelineText',
   ];
@@ -2089,11 +2256,11 @@ function bindEvents() {
     if (state.currentIdx < SAMPLES.length - 1) { selectSample(state.currentIdx + 1); }
   });
 
-  document.querySelectorAll('.class-option').forEach(function(label) {
-    label.addEventListener('click', function() {
+  document.querySelectorAll('input[name="news_category"]').forEach(function(input) {
+    input.addEventListener('change', function() {
       if (isVaTaskType(state.taskTypeKey)) return;
-      document.querySelectorAll('.class-option').forEach(function(opt) { opt.classList.remove('selected'); });
-      label.classList.add('selected');
+      var option = input.closest('.class-option');
+      if (option) option.classList.toggle('selected', input.checked);
     });
   });
   var vaPanel = el('vaAnnotatorPanel');
@@ -2132,14 +2299,16 @@ function bindEvents() {
       var a = readSelectedVaValue('va_arousal');
       if (v === null || a === null) { showToast(t('toastSelectLabel'), 'error'); return; }
       sample.va = { valence: v, arousal: a };
-      sample.label = null;
+      setSampleLabels(sample, []);
       toValue = 'V=' + formatVaValue(v) + ' / A=' + formatVaValue(a);
     } else {
-      var radio = document.querySelector('input[name="sentiment"]:checked');
-      if (!radio) { showToast(t('toastSelectLabel'), 'error'); return; }
-      sample.label = radio.value;
-      var labelMap = { positive: '正面', negative: '負面', neutral: '中性' };
-      toValue = labelMap[radio.value] || radio.value;
+      var selectedLabels = Array.prototype.slice.call(document.querySelectorAll('input[name="news_category"]:checked'))
+        .map(function(input) { return input.value; });
+      if (!selectedLabels.length) { showToast(t('toastSelectLabel'), 'error'); return; }
+      sample.va = null;
+      setSampleLabels(sample, selectedLabels);
+      toValue = selectedLabels.map(function(value) { return getCategoryDisplayName(value, state.lang); })
+        .join(state.lang === 'zh' ? '、' : ', ');
     }
     sample.status = 'submitted';
     sample.history.push({
@@ -2167,6 +2336,7 @@ function bindEvents() {
       window.LabelSuiteAnalytics.track('prototype_annotation_submitted', {
         sample_id: sample.id,
         label: sample.label,
+        labels: sample.labels ? sample.labels.slice() : [],
         valence: sample.va ? sample.va.valence : null,
         arousal: sample.va ? sample.va.arousal : null,
         task_type: state.taskTypeKey,
@@ -2287,14 +2457,16 @@ function applyLaunchContextFromQuery() {
   state.taskTypeKey = normalizeTaskTypeKey(taskType);
   setStoredActiveTaskType(state.taskTypeKey);
 
-  var matchedSampleIdx = findSampleIndexByQuerySampleId(sampleId);
-  if (matchedSampleIdx >= 0) {
-    state.currentIdx = matchedSampleIdx;
-  }
+  return sampleId;
 }
 
 function init() {
-  applyLaunchContextFromQuery();
+  var pendingSampleId = applyLaunchContextFromQuery();
+  applyTaskTypeSampleFixtures();
+  var matchedSampleIdx = findSampleIndexByQuerySampleId(pendingSampleId);
+  if (matchedSampleIdx >= 0) {
+    state.currentIdx = matchedSampleIdx;
+  }
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
   applyLang(state.lang);
   if (!hasSeenGuidelineModal()) {

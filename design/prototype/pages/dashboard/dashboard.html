@@ -437,70 +437,166 @@
       line-height: 1.5;
     }
 
-    .workflow-entry-grid {
+    /* ── Workflow Role Cards ──────────────────────────────── */
+    .workflow-role-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: var(--space-md);
     }
 
-    .workflow-entry-card {
-      padding: var(--space-md);
-      border-radius: var(--radius-md);
+    .workflow-role-card {
+      padding: var(--space-lg) var(--space-md) var(--space-md);
+      border-radius: var(--radius-lg);
       border: 1px solid var(--color-border);
       background: var(--color-white);
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      align-items: center;
+      text-align: center;
+      gap: var(--space-xs);
     }
 
-    .workflow-entry-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      line-height: 1.4;
+    .role-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
     }
 
-    .workflow-entry-detail {
+    .role-avatar img,
+    .role-avatar svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .role-avatar--emerald { background: #D1FAE5; color: #059669; }
+    .role-avatar--violet  { background: #EDE9FE; color: #7C3AED; }
+    .role-avatar--indigo  { background: #DBEAFE; color: #1D4ED8; }
+
+    .role-name {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+
+    .role-subtitle {
+      font-size: 0.8125rem;
       color: var(--color-ink-muted);
-      font-size: 0.875rem;
-      line-height: 1.5;
+      margin-bottom: var(--space-xs);
     }
 
-    .workflow-path-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: var(--space-md);
+    /* ── Workflow Step Diagrams ───────────────────────────── */
+    .workflow-steps-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 2px;
+      width: 100%;
+      margin: var(--space-xs) 0;
     }
 
-    .workflow-path-card {
-      padding: var(--space-md);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--color-border);
-      background: var(--color-white);
+    .workflow-step {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+      gap: 4px;
+      min-width: 0;
     }
 
-    .workflow-path-title {
-      font-size: 0.95rem;
-      font-weight: 600;
+    .step-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-icon img,
+    .step-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .step-icon--emerald-solid { background: #10B981; color: #fff; }
+    .step-icon--emerald       { background: #D1FAE5; color: #059669; }
+    .step-icon--violet-solid  { background: #7C3AED; color: #fff; }
+    .step-icon--violet        { background: #EDE9FE; color: #7C3AED; }
+    .step-icon--indigo-solid  { background: #4F46E5; color: #fff; }
+    .step-icon--indigo        { background: #E0E7FF; color: #4F46E5; }
+    .step-icon--ink           { color: var(--color-ink); }
+
+    .step-title {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-ink);
+      line-height: 1.3;
+    }
+
+    .step-desc {
+      display: block;
+      font-size: 0.6875rem;
+      color: var(--color-ink-muted);
       line-height: 1.4;
     }
 
-    .workflow-step-list {
-      margin: 0;
-      padding-left: 20px;
-      color: var(--color-ink-muted);
-      font-size: 0.85rem;
-      line-height: 1.55;
+    .workflow-step-connector {
+      display: flex;
+      align-items: center;
+      padding-top: 12px;
+      flex-shrink: 0;
+      opacity: 0.4;
     }
 
-    .workflow-step-list li {
-      margin-bottom: 6px;
+    .workflow-role-cta {
+      margin-top: auto;
+      padding-top: var(--space-sm);
+      width: 100%;
     }
 
-    .workflow-step-list li:last-child {
-      margin-bottom: 0;
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+      gap: var(--space-xs);
+    }
+
+    .btn-emerald {
+      color: #fff;
+      background: #10B981;
+      border-color: #10B981;
+    }
+
+    .btn-emerald:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-violet {
+      color: #fff;
+      background: #7C3AED;
+      border-color: #7C3AED;
+    }
+
+    .btn-violet:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-indigo {
+      color: #fff;
+      background: #4F46E5;
+      border-color: #4F46E5;
+    }
+
+    .btn-indigo:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
     }
 
     .task-item-header {
@@ -576,7 +672,8 @@
       }
 
       .grid-3,
-      .grid-2 {
+      .grid-2,
+      .workflow-role-grid {
         grid-template-columns: 1fr;
       }
 
@@ -663,69 +760,133 @@
                 <span id="userWorkflowSubtitle" class="panel-subtitle">從三個行動入口開始，快速達成第一個可交付成果</span>
               </div>
             </div>
-            <div class="workflow-entry-grid">
-              <div class="workflow-entry-card">
-                <h3 id="workflowCardCreateTitle" class="workflow-entry-title">建立標記專案</h3>
-                <p id="workflowCardCreateDetail" class="workflow-entry-detail">上傳資料、設定標籤規則、指派團隊成員。</p>
-                <div class="btn-row">
-                  <button id="workflowCardCreateBtn" class="btn btn-primary">建立第一個任務</button>
+            <div class="workflow-role-grid">
+              <!-- Card 1: Project Leader (emerald) -->
+              <div class="workflow-role-card">
+                <div class="role-avatar role-avatar--emerald">
+                  <img src="../../assets/icons/users.svg" alt="" aria-hidden="true" />
+                </div>
+                <strong id="roleLeaderTitle" class="role-name">建立標記專案</strong>
+                <span id="roleLeaderSubtitle" class="role-subtitle">上傳資料、設定標籤規則、指派團隊成員。</span>
+                <div class="workflow-steps-row">
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--emerald">
+                      <img src="../../assets/icons/plus.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepLeader1Title" class="step-title">建立任務</strong>
+                    <span id="stepLeader1Desc" class="step-desc">設定任務目標與標籤規則</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--emerald step-icon--ink">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path></svg>
+                    </div>
+                    <strong id="stepLeader2Title" class="step-title">上傳資料</strong>
+                    <span id="stepLeader2Desc" class="step-desc">上傳第一批資料，確認可被系統讀取</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--emerald">
+                      <img src="../../assets/icons/users.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepLeader3Title" class="step-title">指派人員</strong>
+                    <span id="stepLeader3Desc" class="step-desc">指派至少 1 位標記員與 1 位審核員</span>
+                  </div>
+                </div>
+                <div class="workflow-role-cta">
+                  <button class="btn btn-emerald btn-full" type="button" id="ctaLeaderBtn">
+                    <span id="ctaLeaderBtnLabel">開始建立任務</span>
+                  </button>
                 </div>
               </div>
-              <div class="workflow-entry-card">
-                <h3 id="workflowCardAnnotateTitle" class="workflow-entry-title">進行資料標記</h3>
-                <p id="workflowCardAnnotateDetail" class="workflow-entry-detail">查看待辦任務，完成資料標記並提交結果。</p>
-                <div class="btn-row">
-                  <button id="workflowCardAnnotateBtn" class="btn btn-secondary slim">開始第一筆標記</button>
+              <!-- Card 2: Annotator (violet) -->
+              <div class="workflow-role-card">
+                <div class="role-avatar role-avatar--violet">
+                  <img src="../../assets/icons/tag.svg" alt="" aria-hidden="true" />
+                </div>
+                <strong id="roleAnnotatorTitle" class="role-name">進行資料標記</strong>
+                <span id="roleAnnotatorSubtitle" class="role-subtitle">查看待辦任務，完成資料標記並提交結果。</span>
+                <div class="workflow-steps-row">
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--violet">
+                      <img src="../../assets/icons/folder.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepAnnotator1Title" class="step-title">開啟任務</strong>
+                    <span id="stepAnnotator1Desc" class="step-desc">進入標記工作區，查看待辦任務</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--violet step-icon--ink">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </div>
+                    <strong id="stepAnnotator2Title" class="step-title">進行標記</strong>
+                    <span id="stepAnnotator2Desc" class="step-desc">依照標籤規則，完成標記工作</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--violet step-icon--ink">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </div>
+                    <strong id="stepAnnotator3Title" class="step-title">提交標記</strong>
+                    <span id="stepAnnotator3Desc" class="step-desc">自我檢查標記一致性，提交標記結果</span>
+                  </div>
+                </div>
+                <div class="workflow-role-cta">
+                  <button class="btn btn-violet btn-full" type="button" id="ctaAnnotatorBtn">
+                    <span id="ctaAnnotatorBtnLabel">開始標記</span>
+                  </button>
                 </div>
               </div>
-              <div class="workflow-entry-card">
-                <h3 id="workflowCardReviewTitle" class="workflow-entry-title">進行品質審核</h3>
-                <p id="workflowCardReviewDetail" class="workflow-entry-detail">檢查標記內容、退回修正或通過資料。</p>
-                <div class="btn-row">
-                  <button id="workflowCardReviewBtn" class="btn btn-secondary slim">開始第一筆審核</button>
+              <!-- Card 3: Reviewer (indigo) -->
+              <div class="workflow-role-card">
+                <div class="role-avatar role-avatar--indigo">
+                  <img src="../../assets/icons/file-text.svg" alt="" aria-hidden="true" />
+                </div>
+                <strong id="roleReviewerTitle" class="role-name">進行標記審核</strong>
+                <span id="roleReviewerSubtitle" class="role-subtitle">檢查標記內容、退回修正或通過資料。</span>
+                <div class="workflow-steps-row">
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--indigo">
+                      <img src="../../assets/icons/eye.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepReviewer1Title" class="step-title">審核標記</strong>
+                    <span id="stepReviewer1Desc" class="step-desc">檢查標記內容，檢視標記與依據</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--indigo">
+                      <img src="../../assets/icons/check.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepReviewer2Title" class="step-title">核準或修正</strong>
+                    <span id="stepReviewer2Desc" class="step-desc">確認標記正確，或退回修正原因</span>
+                  </div>
+                  <div class="workflow-step-connector" aria-hidden="true">
+                    <img src="../../assets/icons/arrow-right.svg" width="14" height="14" alt="" />
+                  </div>
+                  <div class="workflow-step">
+                    <div class="step-icon step-icon--indigo">
+                      <img src="../../assets/icons/list-checks.svg" alt="" aria-hidden="true" />
+                    </div>
+                    <strong id="stepReviewer3Title" class="step-title">完成審核</strong>
+                    <span id="stepReviewer3Desc" class="step-desc">確認審核列表，標記任務完成</span>
+                  </div>
+                </div>
+                <div class="workflow-role-cta">
+                  <button class="btn btn-indigo btn-full" type="button" id="ctaReviewerBtn">
+                    <span id="ctaReviewerBtnLabel">開始審核</span>
+                  </button>
                 </div>
               </div>
-            </div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-header">
-              <div>
-                <h2 id="userPathTitle" class="panel-title">三條最短成功路徑</h2>
-                <span id="userPathSubtitle" class="panel-subtitle">照著這三條路徑走，你可以快速完成第一次上手。</span>
-              </div>
-            </div>
-            <div class="workflow-path-grid">
-              <article class="workflow-path-card">
-                <h3 id="pathLeaderTitle" class="workflow-path-title">專案負責人路徑：建立任務成功</h3>
-                <ol class="workflow-step-list">
-                  <li id="pathLeaderStep1">建立新任務並填寫任務名稱與目標。</li>
-                  <li id="pathLeaderStep2">上傳第一批資料，確認可被系統讀取。</li>
-                  <li id="pathLeaderStep3">設定標籤規則與任務型別配置。</li>
-                  <li id="pathLeaderStep4">指派至少 1 位標記員與 1 位審核員。</li>
-                  <li id="pathLeaderStep5">啟動任務，確認狀態為進行中。</li>
-                </ol>
-              </article>
-              <article class="workflow-path-card">
-                <h3 id="pathAnnotatorTitle" class="workflow-path-title">標記員路徑：完成第一筆標記</h3>
-                <ol class="workflow-step-list">
-                  <li id="pathAnnotatorStep1">開啟待辦任務，進入標記工作區。</li>
-                  <li id="pathAnnotatorStep2">閱讀任務說明與標籤規則摘要。</li>
-                  <li id="pathAnnotatorStep3">選擇第一筆資料並完成標記。</li>
-                  <li id="pathAnnotatorStep4">自我檢查標記一致性後提交。</li>
-                  <li id="pathAnnotatorStep5">確認任務列表顯示已完成 1 筆。</li>
-                </ol>
-              </article>
-              <article class="workflow-path-card">
-                <h3 id="pathReviewerTitle" class="workflow-path-title">審核員路徑：完成第一筆審核</h3>
-                <ol class="workflow-step-list">
-                  <li id="pathReviewerStep1">開啟待審任務並進入審核模式。</li>
-                  <li id="pathReviewerStep2">比對標記內容與任務規範。</li>
-                  <li id="pathReviewerStep3">標記需要修正的欄位與原因。</li>
-                  <li id="pathReviewerStep4">選擇退回修正或審核通過。</li>
-                  <li id="pathReviewerStep5">確認審核列表顯示已完成 1 筆。</li>
-                </ol>
-              </article>
             </div>
           </article>
         </section>
@@ -1088,35 +1249,33 @@
         },
         userWorkflowTitle:       '開始你的第一個工作流程',
         userWorkflowSubtitle:    '從三個行動入口開始，快速達成第一個可交付成果',
-        workflowCardCreateTitle: '建立標記專案',
-        workflowCardCreateDetail:'上傳資料、設定標籤規則、指派團隊成員。',
-        workflowCardCreateBtn:   '建立第一個任務',
-        workflowCardAnnotateTitle: '進行資料標記',
-        workflowCardAnnotateDetail:'查看待辦任務，完成資料標記並提交結果。',
-        workflowCardAnnotateBtn: '開始第一筆標記',
-        workflowCardReviewTitle: '進行品質審核',
-        workflowCardReviewDetail:'檢查標記內容、退回修正或通過資料。',
-        workflowCardReviewBtn:   '開始第一筆審核',
-        userPathTitle:           '三條最短成功路徑',
-        userPathSubtitle:        '照著這三條路徑走，你可以快速完成第一次上手。',
-        pathLeaderTitle:         '專案負責人路徑：建立任務成功',
-        pathLeaderStep1:         '建立新任務並填寫任務名稱與目標。',
-        pathLeaderStep2:         '上傳第一批資料，確認可被系統讀取。',
-        pathLeaderStep3:         '設定標籤規則與任務型別配置。',
-        pathLeaderStep4:         '指派至少 1 位標記員與 1 位審核員。',
-        pathLeaderStep5:         '啟動任務，確認狀態為進行中。',
-        pathAnnotatorTitle:      '標記員路徑：完成第一筆標記',
-        pathAnnotatorStep1:      '開啟待辦任務，進入標記工作區。',
-        pathAnnotatorStep2:      '閱讀任務說明與標籤規則摘要。',
-        pathAnnotatorStep3:      '選擇第一筆資料並完成標記。',
-        pathAnnotatorStep4:      '自我檢查標記一致性後提交。',
-        pathAnnotatorStep5:      '確認任務列表顯示已完成 1 筆。',
-        pathReviewerTitle:       '審核員路徑：完成第一筆審核',
-        pathReviewerStep1:       '開啟待審任務並進入審核模式。',
-        pathReviewerStep2:       '比對標記內容與任務規範。',
-        pathReviewerStep3:       '標記需要修正的欄位與原因。',
-        pathReviewerStep4:       '選擇退回修正或審核通過。',
-        pathReviewerStep5:       '確認審核列表顯示已完成 1 筆。',
+        roleLeaderTitle:         '建立標記專案',
+        roleLeaderSubtitle:      '上傳資料、設定標籤規則、指派團隊成員。',
+        roleAnnotatorTitle:      '進行資料標記',
+        roleAnnotatorSubtitle:   '查看待辦任務，完成資料標記並提交結果。',
+        roleReviewerTitle:       '進行標記審核',
+        roleReviewerSubtitle:    '檢查標記內容、退回修正或通過資料。',
+        stepLeader1Title:        '建立任務',
+        stepLeader1Desc:         '設定任務目標與標籤規則',
+        stepLeader2Title:        '上傳資料',
+        stepLeader2Desc:         '上傳第一批資料，確認可被系統讀取',
+        stepLeader3Title:        '指派人員',
+        stepLeader3Desc:         '指派至少 1 位標記員與 1 位審核員',
+        stepAnnotator1Title:     '開啟任務',
+        stepAnnotator1Desc:      '進入標記工作區，查看待辦任務',
+        stepAnnotator2Title:     '進行標記',
+        stepAnnotator2Desc:      '依照標籤規則，完成標記工作',
+        stepAnnotator3Title:     '提交標記',
+        stepAnnotator3Desc:      '自我檢查標記一致性，提交標記結果',
+        stepReviewer1Title:      '審核標記',
+        stepReviewer1Desc:       '檢查標記內容，檢視標記與依據',
+        stepReviewer2Title:      '核準或修正',
+        stepReviewer2Desc:       '確認標記正確，或退回修正原因',
+        stepReviewer3Title:      '完成審核',
+        stepReviewer3Desc:       '確認審核列表，標記任務完成',
+        ctaLeaderBtnLabel:       '開始建立任務',
+        ctaAnnotatorBtnLabel:    '開始標記',
+        ctaReviewerBtnLabel:     '開始審核',
         adminPlatformTitle:    '平台使用者統計',
         adminPlatformSubtitle: '系統概況',
         adminTotalUsers:       '總用戶',
@@ -1231,35 +1390,33 @@
         },
         userWorkflowTitle:       'Start Your First Workflow',
         userWorkflowSubtitle:    'Use these three action entry points to reach your first success quickly.',
-        workflowCardCreateTitle: 'Create Annotation Project',
-        workflowCardCreateDetail:'Upload data, define label rules, and assign team members.',
-        workflowCardCreateBtn:   'Create First Task',
-        workflowCardAnnotateTitle: 'Annotate Data',
-        workflowCardAnnotateDetail:'Open pending work, complete annotation, and submit results.',
-        workflowCardAnnotateBtn: 'Complete First Annotation',
-        workflowCardReviewTitle: 'Run Quality Review',
-        workflowCardReviewDetail:'Review annotations, request fixes, or approve the data.',
-        workflowCardReviewBtn:   'Complete First Review',
-        userPathTitle:           'Three Shortest Success Paths',
-        userPathSubtitle:        'Follow these three paths to complete your first success quickly.',
-        pathLeaderTitle:         'Leader Path: Create Task Successfully',
-        pathLeaderStep1:         'Create a new task and define the objective.',
-        pathLeaderStep2:         'Upload your first data batch and verify parsing.',
-        pathLeaderStep3:         'Configure task type and label rules.',
-        pathLeaderStep4:         'Assign at least one annotator and one reviewer.',
-        pathLeaderStep5:         'Start the task and confirm status is In Progress.',
-        pathAnnotatorTitle:      'Annotator Path: Complete First Annotation',
-        pathAnnotatorStep1:      'Open a pending task and enter the annotation workspace.',
-        pathAnnotatorStep2:      'Read task instructions and label criteria.',
-        pathAnnotatorStep3:      'Annotate the first sample item.',
-        pathAnnotatorStep4:      'Self-check consistency, then submit.',
-        pathAnnotatorStep5:      'Confirm task list shows one completed item.',
-        pathReviewerTitle:       'Reviewer Path: Complete First Review',
-        pathReviewerStep1:       'Open a pending review task.',
-        pathReviewerStep2:       'Compare annotations against guidelines.',
-        pathReviewerStep3:       'Mark correction points with clear reasons.',
-        pathReviewerStep4:       'Choose return-for-fix or approve.',
-        pathReviewerStep5:       'Confirm review list shows one completed item.',
+        roleLeaderTitle:         'Create Labeling Project',
+        roleLeaderSubtitle:      'Upload data, set labeling rules, and assign team members.',
+        roleAnnotatorTitle:      'Conduct Data Labeling',
+        roleAnnotatorSubtitle:   'View pending tasks, complete data labeling, and submit results.',
+        roleReviewerTitle:       'Conduct Labeling Review',
+        roleReviewerSubtitle:    'Check labeling content, return for corrections, or approve data.',
+        stepLeader1Title:        'Create Task',
+        stepLeader1Desc:         'Define task objectives and label rules',
+        stepLeader2Title:        'Upload Data',
+        stepLeader2Desc:         'Upload the first batch and verify parsing',
+        stepLeader3Title:        'Assign Team',
+        stepLeader3Desc:         'Assign at least one annotator and one reviewer',
+        stepAnnotator1Title:     'Open Task',
+        stepAnnotator1Desc:      'Enter the annotation workspace and view pending items',
+        stepAnnotator2Title:     'Annotate',
+        stepAnnotator2Desc:      'Follow label rules and complete annotation work',
+        stepAnnotator3Title:     'Submit Annotation',
+        stepAnnotator3Desc:      'Self-check consistency, then submit results',
+        stepReviewer1Title:      'Review Annotations',
+        stepReviewer1Desc:       'Inspect annotation content and compare against guidelines',
+        stepReviewer2Title:      'Approve or Request Fix',
+        stepReviewer2Desc:       'Confirm correct annotations or return with reason',
+        stepReviewer3Title:      'Complete Review',
+        stepReviewer3Desc:       'Confirm review list and mark task complete',
+        ctaLeaderBtnLabel:       'Start Creating Task',
+        ctaAnnotatorBtnLabel:    'Start Annotating',
+        ctaReviewerBtnLabel:     'Start Reviewing',
         adminPlatformTitle:    'Platform Stats',
         adminPlatformSubtitle: 'System overview',
         adminTotalUsers:       'Total Users',
@@ -1673,10 +1830,10 @@
     document.getElementById('langToggle').addEventListener('click', () => handleLangToggle('desktop_toggle'));
     document.getElementById('mobileLangToggle').addEventListener('click', () => handleLangToggle('mobile_toggle'));
 
-    document.getElementById('workflowCardAnnotateBtn').addEventListener('click', () => {
+    document.getElementById('ctaAnnotatorBtn').addEventListener('click', () => {
       openAnnotationList('annotator', ANNOTATOR_TASKS[0]);
     });
-    document.getElementById('workflowCardReviewBtn').addEventListener('click', () => {
+    document.getElementById('ctaReviewerBtn').addEventListener('click', () => {
       openAnnotationList('reviewer', REVIEWER_TASKS[0]);
     });
     document.getElementById('adminViewAllBtn').addEventListener('click', () => {
@@ -1690,7 +1847,7 @@
 
     window.LabelSuiteAnalytics.bindClickTracks(
       [
-        { id: 'workflowCardCreateBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
+        { id: 'ctaLeaderBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'create_first_task' } },
         { id: 'adminViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'admin_view_all_tasks' } },
         { id: 'plViewAllBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'project_leader_view_all_tasks' } },
         { id: 'logoutBtn', eventName: 'prototype_logout_clicked', extra: { source: 'desktop' } },
