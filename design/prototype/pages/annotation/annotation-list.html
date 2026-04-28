@@ -1166,7 +1166,7 @@
     return td;
   }
 
-  function renderReviewerRows(visibleRows, tbodyEl) {
+  function renderReviewerRows(visibleRows, tbodyEl, context) {
     visibleRows.forEach(function (item) {
       var sample = item.sample;
       var annotators = Array.isArray(sample.annotators) ? sample.annotators : [];
@@ -1225,6 +1225,19 @@
 
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'reviewer-actions';
+
+      function openWorkspace() {
+        setStoredActiveTaskType(item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType);
+        window.location.href = url;
+      }
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      editBtn.textContent = '編輯';
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+      actionsDiv.appendChild(editBtn);
 
       summaryTr.addEventListener('click', function () { toggleDetail(null); });
 
@@ -1365,7 +1378,7 @@
     empty.classList.add('hidden');
 
     if (context.role === 'reviewer') {
-      renderReviewerRows(visibleRows, tbodyEl);
+      renderReviewerRows(visibleRows, tbodyEl, context);
     } else {
       renderAnnotatorRows(visibleRows, tbodyEl, context);
     }

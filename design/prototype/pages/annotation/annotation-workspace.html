@@ -1320,20 +1320,20 @@ var VA_SAMPLE_FIXTURES = [
     id: 3,
     sampleId: 'R2-003',
     text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
-    status: 'saved', labels: null, va: null,
-    history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: null }]
+    status: 'saved', labels: null, va: { valence: 6, arousal: 5 },
+    history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: 'V=6 / A=5' }]
   },
   {
     id: 4,
     sampleId: 'R2-004',
     text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
-    status: 'todo', labels: null, va: null, history: []
+    status: 'todo', labels: null, va: { valence: 4, arousal: 4 }, history: []
   },
   {
     id: 5,
     sampleId: 'R2-005',
     text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
-    status: 'todo', labels: null, va: null, history: []
+    status: 'todo', labels: null, va: { valence: 6, arousal: 3 }, history: []
   }
 ];
 
