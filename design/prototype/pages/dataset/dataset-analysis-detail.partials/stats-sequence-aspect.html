@@ -2,32 +2,32 @@
 
 <!-- KPI Cards -->
 <section class="panel" aria-labelledby="statsAspKPITitle">
-  <h2 class="panel-title" id="statsAspKPITitle">Aspect 分析摘要</h2>
+  <h2 class="panel-title" id="statsAspKPITitle" data-i18n="sequenceAspectStats.kpiTitle">Aspect 分析摘要</h2>
   <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:var(--space-md)">
     <div class="stats-metric-card">
-      <div class="stats-metric-label" id="statsAspLblSentCount">句子數量</div>
+      <div class="stats-metric-label" id="statsAspLblSentCount" data-i18n="sequenceAspectStats.sentenceCountLabel">句子數量</div>
       <div class="stats-metric-value">1,248</div>
-      <div class="stats-metric-desc" id="statsAspDescSentCount">分析母體</div>
+      <div class="stats-metric-desc" id="statsAspDescSentCount" data-i18n="sequenceAspectStats.sentenceCountDesc">分析母體</div>
     </div>
     <div class="stats-metric-card">
-      <div class="stats-metric-label" id="statsAspLblTokenCount">Token 數量</div>
+      <div class="stats-metric-label" id="statsAspLblTokenCount" data-i18n="sequenceAspectStats.tokenCountLabel">Token 數量</div>
       <div class="stats-metric-value">42,816</div>
-      <div class="stats-metric-desc" id="statsAspDescTokenCount">空格分詞</div>
+      <div class="stats-metric-desc" id="statsAspDescTokenCount" data-i18n="sequenceAspectStats.tokenCountDesc">空格分詞</div>
     </div>
     <div class="stats-metric-card">
-      <div class="stats-metric-label" id="statsAspLblCompletion">完成率</div>
+      <div class="stats-metric-label" id="statsAspLblCompletion" data-i18n="sequenceAspectStats.completionLabel">完成率</div>
       <div class="stats-metric-value" style="color:var(--color-success)">87.5%</div>
-      <div class="stats-metric-desc" id="statsAspDescCompletion">1,092 / 1,248</div>
+      <div class="stats-metric-desc" id="statsAspDescCompletion" data-i18n="sequenceAspectStats.completionDesc">1,092 / 1,248</div>
     </div>
     <div class="stats-metric-card">
-      <div class="stats-metric-label" id="statsAspLblSubmitted">已提交樣本</div>
+      <div class="stats-metric-label" id="statsAspLblSubmitted" data-i18n="sequenceAspectStats.submittedLabel">已提交樣本</div>
       <div class="stats-metric-value">1,092</div>
-      <div class="stats-metric-desc" id="statsAspDescSubmitted">至少 1 位已提交</div>
+      <div class="stats-metric-desc" id="statsAspDescSubmitted" data-i18n="sequenceAspectStats.submittedDesc">至少 1 位已提交</div>
     </div>
     <div class="stats-metric-card">
-      <div class="stats-metric-label" id="statsAspLblAvgTime">平均標記時間</div>
+      <div class="stats-metric-label" id="statsAspLblAvgTime" data-i18n="sequenceAspectStats.avgTimeLabel">平均標記時間</div>
       <div class="stats-metric-value">48<span style="font-size:18px;font-weight:500">s</span></div>
-      <div class="stats-metric-desc" id="statsAspDescAvgTime">每句平均用時</div>
+      <div class="stats-metric-desc" id="statsAspDescAvgTime" data-i18n="sequenceAspectStats.avgTimeDesc">每句平均用時</div>
     </div>
   </div>
 </section>
@@ -36,38 +36,38 @@
 <section class="panel" aria-labelledby="statsAspDistTitle">
   <div class="panel-head-row">
     <div>
-      <h2 class="panel-title" id="statsAspDistTitle">Aspect 類型分佈</h2>
-      <p class="panel-subtitle" id="statsAspDistDesc">各 Aspect taxonomy 在提交標記中的出現次數（共 2,617 個 aspect 標記）</p>
+      <h2 class="panel-title" id="statsAspDistTitle" data-i18n="sequenceAspectStats.distTitle">Aspect 類型分佈</h2>
+      <p class="panel-subtitle" id="statsAspDistDesc" data-i18n="sequenceAspectStats.distDesc">各 Aspect taxonomy 在提交標記中的出現次數（共 2,617 個 aspect 標記）</p>
     </div>
   </div>
   <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">產品品質</div>
+      <div class="stats-hbar-label" data-aspect-label="product_quality">產品品質</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:80%"></div></div>
       <div class="stats-hbar-value">38% · 995</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">CP值（性價比）</div>
+      <div class="stats-hbar-label" data-aspect-label="value_for_money">CP值（性價比）</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:55%;opacity:.85"></div></div>
       <div class="stats-hbar-value">25% · 654</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">外觀設計</div>
+      <div class="stats-hbar-label" data-aspect-label="appearance_design">外觀設計</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:42%;opacity:.7"></div></div>
       <div class="stats-hbar-value">18% · 471</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">客戶服務</div>
+      <div class="stats-hbar-label" data-aspect-label="customer_service">客戶服務</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:24%;opacity:.6"></div></div>
       <div class="stats-hbar-value">10% · 262</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">包裝品質</div>
+      <div class="stats-hbar-label" data-aspect-label="packaging_quality">包裝品質</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:12%;opacity:.5"></div></div>
       <div class="stats-hbar-value">5% · 131</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">功能性</div>
+      <div class="stats-hbar-label" data-aspect-label="functionality">功能性</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:10%;opacity:.4"></div></div>
       <div class="stats-hbar-value">4% · 104</div>
     </div>
@@ -76,17 +76,17 @@
 
 <!-- 每句平均 Aspect 數量 -->
 <section class="panel" aria-labelledby="statsAspAvgTitle">
-  <h2 class="panel-title" id="statsAspAvgTitle">每句平均 Aspect 數量</h2>
+  <h2 class="panel-title" id="statsAspAvgTitle" data-i18n="sequenceAspectStats.avgTitle">每句平均 Aspect 數量</h2>
   <div style="margin-top:var(--space-md);display:flex;align-items:flex-start;gap:var(--space-xl);flex-wrap:wrap">
     <div class="stats-inline-card">
       <div>
-        <div class="stats-metric-label" id="statsAspAvgLabel">平均 Aspect 數 / 句</div>
+        <div class="stats-metric-label" id="statsAspAvgLabel" data-i18n="sequenceAspectStats.avgLabel">平均 Aspect 數 / 句</div>
         <div class="stats-metric-value" style="font-size:40px">2.1</div>
       </div>
     </div>
     <!-- Bucket distribution -->
     <div>
-      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px" id="statsAspBucketLabel">分桶分佈</div>
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px" id="statsAspBucketLabel" data-i18n="sequenceAspectStats.bucketLabel">分桶分佈</div>
       <div style="display:flex;gap:8px;align-items:flex-end;height:80px">
         <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:44px">
           <span style="font-size:10px;color:var(--color-text-soft)">8%</span>
@@ -117,15 +117,15 @@
     </div>
     <div style="display:grid;gap:10px;font-size:13px">
       <div style="display:flex;gap:var(--space-md)">
-        <span style="color:var(--color-text-soft);min-width:140px" id="statsAspTotalLabel">總 Aspect 標記數</span>
+        <span style="color:var(--color-text-soft);min-width:140px" id="statsAspTotalLabel" data-i18n="sequenceAspectStats.totalLabel">總 Aspect 標記數</span>
         <span style="font-family:var(--font-mono);font-weight:600">2,617</span>
       </div>
       <div style="display:flex;gap:var(--space-md)">
-        <span style="color:var(--color-text-soft);min-width:140px" id="statsAspZeroLabel">無 Aspect 句子比例</span>
+        <span style="color:var(--color-text-soft);min-width:140px" id="statsAspZeroLabel" data-i18n="sequenceAspectStats.zeroLabel">無 Aspect 句子比例</span>
         <span style="font-family:var(--font-mono);font-weight:600">8.0%</span>
       </div>
       <div style="display:flex;gap:var(--space-md)">
-        <span style="color:var(--color-text-soft);min-width:140px" id="statsAspMaxLabel">單句最多 Aspect 數</span>
+        <span style="color:var(--color-text-soft);min-width:140px" id="statsAspMaxLabel" data-i18n="sequenceAspectStats.maxLabel">單句最多 Aspect 數</span>
         <span style="font-family:var(--font-mono);font-weight:600">9</span>
       </div>
     </div>
@@ -136,8 +136,8 @@
 <section class="panel" aria-labelledby="statsAspSpanLenTitle">
   <div class="panel-head-row">
     <div>
-      <h2 class="panel-title" id="statsAspSpanLenTitle">Aspect Span 長度分佈</h2>
-      <p class="panel-subtitle" id="statsAspSpanLenDesc">以 token 數計算的 span 長度分佈（長度 ≥ 5 合併為「5+」）</p>
+      <h2 class="panel-title" id="statsAspSpanLenTitle" data-i18n="sequenceAspectStats.spanLenTitle">Aspect Span 長度分佈</h2>
+      <p class="panel-subtitle" id="statsAspSpanLenDesc" data-i18n="sequenceAspectStats.spanLenDesc">以 token 數計算的 span 長度分佈（長度 ≥ 5 合併為「5+」）</p>
     </div>
   </div>
   <!-- Data: [1,2,3,4,5+] → [890,1123,487,82,35] max=1123 -->
@@ -158,18 +158,18 @@
       <text x="120" y="130" text-anchor="middle" font-size="11" fill="var(--color-ink-muted)">3</text>
       <text x="170" y="130" text-anchor="middle" font-size="11" fill="var(--color-ink-muted)">4</text>
       <text x="220" y="130" text-anchor="middle" font-size="11" fill="var(--color-ink-muted)">5+</text>
-      <text x="124" y="148" text-anchor="middle" font-size="11" fill="var(--color-text-soft)" font-weight="600" id="statsAspSpanLenXLabel">Span 長度（token 數）</text>
+      <text x="124" y="148" text-anchor="middle" font-size="11" fill="var(--color-text-soft)" font-weight="600" id="statsAspSpanLenXLabel" data-i18n="sequenceAspectStats.spanLenXLabel">Span 長度（token 數）</text>
     </g>
   </svg>
-  <p style="font-size:12px;color:var(--color-text-soft);margin-top:8px">代表例：「高品質」(1)、「耐用性強」(2)、「外觀設計精美」(3)、「整體性價比相當高」(4)</p>
+  <p style="font-size:12px;color:var(--color-text-soft);margin-top:8px" data-i18n="sequenceAspectStats.spanLenExample">代表例：「高品質」(1)、「耐用性強」(2)、「外觀設計精美」(3)、「整體性價比相當高」(4)</p>
 </section>
 
 <!-- Aspect 共現矩陣 -->
 <section class="panel" aria-labelledby="statsAspCooccTitle">
   <div class="panel-head-row">
     <div>
-      <h2 class="panel-title" id="statsAspCooccTitle">Aspect 共現矩陣</h2>
-      <p class="panel-subtitle" id="statsAspCooccDesc">同一句內兩個不同 Aspect 共同出現的次數；矩陣對稱，對角線不顯示自共現</p>
+      <h2 class="panel-title" id="statsAspCooccTitle" data-i18n="sequenceAspectStats.cooccTitle">Aspect 共現矩陣</h2>
+      <p class="panel-subtitle" id="statsAspCooccDesc" data-i18n="sequenceAspectStats.cooccDesc">同一句內兩個不同 Aspect 共同出現的次數；矩陣對稱，對角線不顯示自共現</p>
     </div>
   </div>
   <div class="stats-comatrix">
@@ -177,12 +177,12 @@
       <thead>
         <tr>
           <th></th>
-          <th>品質</th><th>CP值</th><th>外觀</th><th>客服</th><th>包裝</th><th>功能</th>
+          <th data-aspect-label="product_quality">品質</th><th data-aspect-label="value_for_money">CP值</th><th data-aspect-label="appearance_design">外觀</th><th data-aspect-label="customer_service">客服</th><th data-aspect-label="packaging_quality">包裝</th><th data-aspect-label="functionality">功能</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <th>品質</th>
+          <th data-aspect-label="product_quality">品質</th>
           <td class="stats-comatrix-diag">—</td>
           <td class="stats-comatrix-hi">312</td>
           <td class="stats-comatrix-hi">248</td>
@@ -191,7 +191,7 @@
           <td class="stats-comatrix-mid">76</td>
         </tr>
         <tr>
-          <th>CP值</th>
+          <th data-aspect-label="value_for_money">CP值</th>
           <td class="stats-comatrix-hi">312</td>
           <td class="stats-comatrix-diag">—</td>
           <td class="stats-comatrix-mid">195</td>
@@ -200,7 +200,7 @@
           <td class="stats-comatrix-low">44</td>
         </tr>
         <tr>
-          <th>外觀</th>
+          <th data-aspect-label="appearance_design">外觀</th>
           <td class="stats-comatrix-hi">248</td>
           <td class="stats-comatrix-mid">195</td>
           <td class="stats-comatrix-diag">—</td>
@@ -209,7 +209,7 @@
           <td class="stats-comatrix-low">38</td>
         </tr>
         <tr>
-          <th>客服</th>
+          <th data-aspect-label="customer_service">客服</th>
           <td class="stats-comatrix-mid">142</td>
           <td class="stats-comatrix-low">88</td>
           <td class="stats-comatrix-low">61</td>
@@ -218,7 +218,7 @@
           <td class="stats-comatrix-low">31</td>
         </tr>
         <tr>
-          <th>包裝</th>
+          <th data-aspect-label="packaging_quality">包裝</th>
           <td class="stats-comatrix-mid">89</td>
           <td class="stats-comatrix-low">52</td>
           <td class="stats-comatrix-hi">184</td>
@@ -227,7 +227,7 @@
           <td class="stats-comatrix-low">18</td>
         </tr>
         <tr>
-          <th>功能</th>
+          <th data-aspect-label="functionality">功能</th>
           <td class="stats-comatrix-mid">76</td>
           <td class="stats-comatrix-low">44</td>
           <td class="stats-comatrix-low">38</td>
@@ -238,25 +238,25 @@
       </tbody>
     </table>
   </div>
-  <p class="panel-subtitle" style="margin-top:var(--space-sm)">外觀 × 包裝共現頻率偏高（184 次），反映評論中同時討論視覺與包裝的傾向。</p>
+  <p class="panel-subtitle" style="margin-top:var(--space-sm)" data-i18n="sequenceAspectStats.cooccNote">外觀 × 包裝共現頻率偏高（184 次），反映評論中同時討論視覺與包裝的傾向。</p>
 </section>
 
 <!-- Aspect × Sentiment 分佈 -->
 <section class="panel" aria-labelledby="statsAspSentimentTitle">
   <div class="panel-head-row">
     <div>
-      <h2 class="panel-title" id="statsAspSentimentTitle">Aspect × Sentiment 分佈</h2>
-      <p class="panel-subtitle" id="statsAspSentimentDesc">各 Aspect 的正面 / 中立 / 負面標記比例（sentiment 資料存在時顯示）</p>
+      <h2 class="panel-title" id="statsAspSentimentTitle" data-i18n="sequenceAspectStats.sentimentTitle">Aspect × Sentiment 分佈</h2>
+      <p class="panel-subtitle" id="statsAspSentimentDesc" data-i18n="sequenceAspectStats.sentimentDesc">各 Aspect 的正面 / 中立 / 負面標記比例（sentiment 資料存在時顯示）</p>
     </div>
   </div>
   <div style="display:flex;gap:16px;font-size:12px;color:var(--color-text-soft);flex-wrap:wrap;margin-top:var(--space-md);margin-bottom:var(--space-sm)">
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-success);display:inline-block"></span>正面</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-ink-muted);display:inline-block"></span>中立</span>
-    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-error);display:inline-block"></span>負面</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-success);display:inline-block"></span><span data-i18n="sequenceAspectStats.sentimentPositive">正面</span></span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-ink-muted);display:inline-block"></span><span data-i18n="sequenceAspectStats.sentimentNeutral">中立</span></span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:var(--color-error);display:inline-block"></span><span data-i18n="sequenceAspectStats.sentimentNegative">負面</span></span>
   </div>
   <div style="display:grid;gap:8px">
     <div style="display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px">
-      <span>產品品質</span>
+      <span data-aspect-label="product_quality">產品品質</span>
       <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px">
         <div style="flex:62;background:var(--color-success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">62%</div>
         <div style="flex:20;background:var(--color-ink-muted);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">20%</div>
@@ -264,7 +264,7 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px">
-      <span>CP值（性價比）</span>
+      <span data-aspect-label="value_for_money">CP值（性價比）</span>
       <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px">
         <div style="flex:55;background:var(--color-success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">55%</div>
         <div style="flex:28;background:var(--color-ink-muted);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">28%</div>
@@ -272,7 +272,7 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px">
-      <span>外觀設計</span>
+      <span data-aspect-label="appearance_design">外觀設計</span>
       <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px">
         <div style="flex:72;background:var(--color-success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">72%</div>
         <div style="flex:18;background:var(--color-ink-muted);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">18%</div>
@@ -280,7 +280,7 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px">
-      <span>客戶服務</span>
+      <span data-aspect-label="customer_service">客戶服務</span>
       <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px">
         <div style="flex:40;background:var(--color-success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">40%</div>
         <div style="flex:18;background:var(--color-ink-muted);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">18%</div>
@@ -288,7 +288,7 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:120px 1fr;align-items:center;gap:10px;font-size:12px">
-      <span>功能性</span>
+      <span data-aspect-label="functionality">功能性</span>
       <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px">
         <div style="flex:58;background:var(--color-success);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">58%</div>
         <div style="flex:30;background:var(--color-ink-muted);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">30%</div>
@@ -302,54 +302,54 @@
 <section class="panel" aria-labelledby="statsAspCoverageTitle">
   <div class="panel-head-row">
     <div>
-      <h2 class="panel-title" id="statsAspCoverageTitle">Aspect Coverage 分析</h2>
-      <p class="panel-subtitle" id="statsAspCoverageDesc">各 Aspect taxonomy 的樣本覆蓋率；低於目標分佈最小樣本數時標示偏斜警告</p>
+      <h2 class="panel-title" id="statsAspCoverageTitle" data-i18n="sequenceAspectStats.coverageTitle">Aspect Coverage 分析</h2>
+      <p class="panel-subtitle" id="statsAspCoverageDesc" data-i18n="sequenceAspectStats.coverageDesc">各 Aspect taxonomy 的樣本覆蓋率；低於目標分佈最小樣本數時標示偏斜警告</p>
     </div>
-    <span class="badge badge-warn">偏斜警告</span>
+    <span class="badge badge-warn" data-i18n="sequenceAspectStats.coverageBadge">偏斜警告</span>
   </div>
   <div style="display:grid;gap:0;margin-top:var(--space-md);border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden">
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:8px 14px;background:var(--color-slate-50);border-bottom:1px solid var(--color-border);font-size:11px;font-weight:600;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.04em">
-      <span>Aspect</span><span>樣本覆蓋率</span><span>樣本數</span><span>狀態</span>
+      <span data-i18n="sequenceAspectStats.coverageHeaderAspect">Aspect</span><span data-i18n="sequenceAspectStats.coverageHeaderRate">樣本覆蓋率</span><span data-i18n="sequenceAspectStats.coverageHeaderCount">樣本數</span><span data-i18n="sequenceAspectStats.coverageHeaderStatus">狀態</span>
     </div>
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--color-border-muted)">
-      <span>產品品質</span>
+      <span data-aspect-label="product_quality">產品品質</span>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:80%"></div></div>
       <span style="font-family:var(--font-mono)">995</span>
-      <span class="badge badge-pass">符合</span>
+      <span class="badge badge-pass" data-i18n="sequenceAspectStats.statusOnTarget">符合</span>
     </div>
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--color-border-muted)">
-      <span>CP值（性價比）</span>
+      <span data-aspect-label="value_for_money">CP值（性價比）</span>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:52%;opacity:.85"></div></div>
       <span style="font-family:var(--font-mono)">654</span>
-      <span class="badge badge-pass">符合</span>
+      <span class="badge badge-pass" data-i18n="sequenceAspectStats.statusOnTarget">符合</span>
     </div>
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--color-border-muted)">
-      <span>外觀設計</span>
+      <span data-aspect-label="appearance_design">外觀設計</span>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:38%;opacity:.7"></div></div>
       <span style="font-family:var(--font-mono)">471</span>
-      <span class="badge badge-pass">符合</span>
+      <span class="badge badge-pass" data-i18n="sequenceAspectStats.statusOnTarget">符合</span>
     </div>
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--color-border-muted)">
-      <span>客戶服務</span>
+      <span data-aspect-label="customer_service">客戶服務</span>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:21%;opacity:.6"></div></div>
       <span style="font-family:var(--font-mono)">262</span>
-      <span class="badge badge-pass">符合</span>
+      <span class="badge badge-pass" data-i18n="sequenceAspectStats.statusOnTarget">符合</span>
     </div>
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:10px 14px;font-size:13px;border-bottom:1px solid var(--color-border-muted)">
-      <span>包裝品質</span>
+      <span data-aspect-label="packaging_quality">包裝品質</span>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:10%;opacity:.5"></div></div>
       <span style="font-family:var(--font-mono)">131</span>
-      <span class="badge badge-warn">低於目標</span>
+      <span class="badge badge-warn" data-i18n="sequenceAspectStats.statusBelowTarget">低於目標</span>
     </div>
     <div style="display:grid;grid-template-columns:150px 1fr 70px 80px;align-items:center;gap:12px;padding:10px 14px;font-size:13px;background:var(--color-error-bg)">
-      <span style="color:var(--color-error);font-weight:600">功能性</span>
+      <span style="color:var(--color-error);font-weight:600" data-aspect-label="functionality">功能性</span>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:8%;background:var(--color-error);opacity:.5"></div></div>
       <span style="font-family:var(--font-mono);color:var(--color-error)">104</span>
-      <span class="badge badge-fail">偏斜警告</span>
+      <span class="badge badge-fail" data-i18n="sequenceAspectStats.statusBiasWarning">偏斜警告</span>
     </div>
   </div>
   <div style="margin-top:var(--space-sm);padding:10px 12px;border:1px solid var(--color-warning-border);border-radius:var(--radius-md);background:var(--color-warning-bg);font-size:12px;color:var(--color-warning);display:flex;align-items:flex-start;gap:8px">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    <span>「功能性」覆蓋率（4%）明顯低於目標分佈，已標示 <code style="font-family:var(--font-mono);font-size:11px">dataset_bias_detected = true</code>。建議增加該類別樣本或調整 Dry Run 配置。</span>
+    <span data-i18n-html="sequenceAspectStats.coverageWarningHtml">「功能性」覆蓋率（4%）明顯低於目標分佈，已標示 <code style="font-family:var(--font-mono);font-size:11px">dataset_bias_detected = true</code>。建議增加該類別樣本或調整 Dry Run 配置。</span>
   </div>
 </section>

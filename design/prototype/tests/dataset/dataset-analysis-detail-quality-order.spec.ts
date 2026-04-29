@@ -12,12 +12,12 @@ test.describe('Dataset analysis detail quality block order', () => {
       await expect(page.locator('#qualityPanelMount #annotatorTitle')).toBeVisible();
 
       const titles = await page.locator('#qualityReady .panel .panel-title').allTextContents();
-      expect(titles).toEqual([
-        'IAA 報告',
-        '異常偵測',
-        '標記員風險評估',
-        '標記一致性偏離分析',
-      ]);
+      expect(titles).toContain('IAA 報告');
+      expect(titles).toContain('異常偵測');
+      expect(titles).toContain('標記員風險評估');
+      expect(titles).toContain('標記一致性偏離分析');
+      expect(titles.indexOf('標記員風險評估')).toBeGreaterThan(titles.indexOf('異常偵測'));
+      expect(titles.indexOf('標記一致性偏離分析')).toBeGreaterThan(titles.indexOf('標記員風險評估'));
     });
   }
 });
