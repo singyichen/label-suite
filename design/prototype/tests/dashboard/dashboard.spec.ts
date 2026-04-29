@@ -36,17 +36,17 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView).toBeVisible();
     await expect(leaderView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
     await expect(leaderView.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
-    await expect(leaderView.getByText('127')).toBeVisible();
-    await expect(leaderView.getByText('24')).toBeVisible();
-    await expect(leaderView.getByText('5')).toBeVisible();
-    await expect(leaderView.getByText('3')).toBeVisible();
+    await expect(leaderView.locator('.metric strong').nth(0)).toHaveText('127');
+    await expect(leaderView.locator('.metric strong').nth(1)).toHaveText('24');
+    await expect(leaderView.locator('.metric strong').nth(2)).toHaveText('5');
+    await expect(leaderView.locator('.metric strong').nth(3)).toHaveText('3');
     await expect(leaderView.getByText('新聞標題分類')).toBeVisible();
     await expect(leaderView.getByText('情感分析基準')).toBeVisible();
     await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
     await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 42%/)).toBeVisible();
     await expect(leaderView.getByText('單句分類（含多標籤）')).toBeVisible();
     await expect(leaderView.getByText('單句 VA 雙維度評分（Valence / Arousal）')).toBeVisible();
-    await expect(leaderView.locator('.progress')).toHaveCount(2);
+    await expect(leaderView.locator('.progress')).toHaveCount(3);
   });
 
   test('admin view keeps the slimmer view-all button', async ({ page }) => {
@@ -72,7 +72,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/已完成 42% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(5);
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(6);
   });
 
   test('annotator task type badges use per-category colors matching task list styles', async ({ page }) => {
@@ -113,7 +113,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByText('情感 VA 雙維度評分')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
     await expect(reviewerView.getByText(/待審 8 筆 · 進度 52% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(5);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(6);
   });
 
   test('annotator quick continue routes to workspace latest unfinished sample', async ({ page }) => {

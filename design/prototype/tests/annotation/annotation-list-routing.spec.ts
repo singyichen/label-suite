@@ -139,6 +139,47 @@ test.describe('Annotation list routing', () => {
     await expect(page.locator('#sampleRows tr')).toHaveCount(5);
   });
 
+  test('sentence-pairs annotator task shows five samples in annotation list', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A5&run_type=dry_run&task_type=sentence_pairs');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await expect(page.locator('#sampleRows tr')).toHaveCount(5);
+    await expect(page.locator('#sampleRows tr').first()).toContainText('A5-001');
+    await expect(page.locator('#sampleRows tr').first()).toContainText('這部電影的視覺特效令人嘆為觀止');
+    await expect(page.locator('#sampleRows tr').nth(4)).toContainText('A5-005');
+    await expect(page.locator('#sampleRows tr').nth(4)).toContainText('研究指出長期久坐對心血管健康有負面影響');
+  });
+
+  test('sentence-pairs reviewer task shows five samples in annotation list', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R5&run_type=dry_run&task_type=sentence_pairs');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await expect(page.locator('#sampleRows tr')).toHaveCount(5);
+    await expect(page.locator('#sampleRows tr').first()).toContainText('R5-001');
+    await expect(page.locator('#sampleRows tr').nth(4)).toContainText('R5-005');
+  });
+
+  test('sentence-pairs sample edit opens workspace focused on selected pair', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A5&run_type=dry_run&task_type=sentence_pairs');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.getByRole('button', { name: '編輯' }).nth(2).click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A5/);
+    await expect(page).toHaveURL(/task_type=sentence_pairs/);
+    await expect(page).toHaveURL(/sample_id=A5-003/);
+
+    const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
+    if (await guidelineModalConfirm.isVisible()) {
+      await guidelineModalConfirm.click();
+    }
+
+    const activeSample = page.locator('#sampleList .sample-item.active');
+    await expect(activeSample).toContainText('台積電公布第一季財報，營收創歷史新高。');
+    await expect(page.locator('#spSentence1Text')).toContainText('台積電公布第一季財報，營收創歷史新高。');
+    await expect(page.locator('#spSentence2Text')).toContainText('本季科技類股受國際情勢影響出現明顯震盪。');
+  });
+
   test('reviewer bulk reject and bulk approve update per-annotator buttons with correct left-right mapping', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

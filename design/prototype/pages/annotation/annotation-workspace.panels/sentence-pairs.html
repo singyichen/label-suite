@@ -1,0 +1,39 @@
+<div id="sentencePairsAnnotatorPanel" class="sp-panel hidden">
+  <div class="sp-pair-header">
+    <span class="sp-mode-badge" id="spModeBadge">相似度判定</span>
+  </div>
+  <div class="sp-sentence-block">
+    <div class="sp-sentence-block-label" id="spSentence1Label">Sentence A</div>
+    <p class="sp-sentence-text" id="spSentence1Text"></p>
+  </div>
+  <div class="sp-sentence-block">
+    <div class="sp-sentence-block-label" id="spSentence2Label">Sentence B</div>
+    <p class="sp-sentence-text" id="spSentence2Text"></p>
+  </div>
+  <div class="sp-section-divider" aria-hidden="true"></div>
+  <div id="spClassificationArea">
+    <div class="sp-response-title" id="spResponseTitle">判定結果</div>
+    <div class="sp-label-options" id="spLabelOptions" role="radiogroup" aria-label="判定標籤">
+      <!-- Built by buildSpLabelOptions() -->
+    </div>
+  </div>
+  <div class="hidden" id="spScoringArea">
+    <div class="sp-response-title" id="spScoreTitle">相似度評分</div>
+    <div class="sp-score-track">
+      <div class="sp-score-row" id="spScoreRow" role="radiogroup">
+        <!-- Built by buildSpScoreRow() -->
+      </div>
+      <div class="sp-score-extremes">
+        <span id="spScoreMinLabel">0</span>
+        <span class="sp-score-current-display" id="spScoreCurrent">—</span>
+        <span id="spScoreMaxLabel">5</span>
+      </div>
+    </div>
+  </div>
+  <div class="sp-unsure-area hidden" id="spUnsureArea">
+    <label class="sp-unsure-label" for="spUnsureCheck">
+      <input type="checkbox" id="spUnsureCheck" />
+      <span id="spUnsureText">無法判定 / Unsure</span>
+    </label>
+  </div>
+</div>

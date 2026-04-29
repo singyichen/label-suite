@@ -1088,6 +1088,42 @@
     .ner-entity-type-badge { display: inline-block; vertical-align: middle; }
     .ner-validation-summary { font-size: 13px; color: var(--color-error); margin-top: var(--space-sm); }
     .ner-validation-summary.hidden { display: none; }
+
+    /* ── Sentence Pairs Panel ────────────────────────────────── */
+    .sp-panel { display: flex; flex-direction: column; gap: var(--space-md); }
+    .sp-panel.hidden { display: none; }
+    .sp-pair-header { display: flex; align-items: center; gap: var(--space-sm); }
+    .sp-mode-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .02em;
+      background: var(--color-primary); color: #fff; border-radius: 4px; padding: 2px 8px; }
+    .sp-sentence-block { background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 8px; padding: var(--space-md); display: flex; flex-direction: column; gap: 6px; }
+    .sp-sentence-block-label { font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--color-primary); }
+    .sp-sentence-text { font-size: 15px; line-height: 1.8; color: var(--color-ink); margin: 0; }
+    .sp-section-divider { height: 1px; background: var(--color-border); margin: 4px 0; }
+    .sp-response-title { font-size: 13px; font-weight: 600; color: var(--color-ink); margin-bottom: 8px; }
+    .sp-label-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sp-label-option { padding: 6px 16px; border: 1.5px solid var(--color-border); border-radius: 8px;
+      background: #fff; font-size: 13px; font-weight: 500; color: var(--color-ink); cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard); }
+    .sp-label-option:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .sp-label-option.selected { border-color: var(--color-primary); background: #EEF2FF; color: var(--color-primary); font-weight: 600; }
+    .sp-score-track { display: flex; flex-direction: column; gap: 6px; }
+    .sp-score-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sp-score-btn { width: 40px; height: 40px; border: 1.5px solid var(--color-border); border-radius: 8px;
+      background: #fff; font-size: 13px; font-weight: 600; color: var(--color-ink); cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard); }
+    .sp-score-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .sp-score-btn.active { border-color: var(--color-primary); background: #EEF2FF; color: var(--color-primary); }
+    .sp-score-extremes { display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--color-muted); }
+    .sp-score-current-display { font-size: 15px; font-weight: 700; color: var(--color-primary); }
+    .sp-unsure-area { margin-top: 4px; }
+    .sp-unsure-area.hidden { display: none; }
+    .sp-unsure-label { display: flex; align-items: center; gap: 8px; font-size: 13px;
+      color: var(--color-ink); cursor: pointer; user-select: none; }
+    .sp-unsure-label input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--color-primary); cursor: pointer; }
+    .result-tag-neutral { background: #F1F5F9; color: #475569; border-radius: 4px; padding: 2px 8px; }
   </style>
 </head>
 <body>
@@ -1186,9 +1222,30 @@
         </div>
 
         <!-- Sample Text -->
-        <div class="content-card">
+        <div class="content-card" id="sampleTextCard">
           <div class="content-card-title" id="sampleSourceLabel">原始文本</div>
           <p class="sample-text-body" id="sampleText"></p>
+        </div>
+
+        <div class="annotation-card hidden" id="sentencePairsReviewerSourceCard">
+          <div class="annotation-card-header">
+            <div class="annotation-card-title" id="sentencePairsReviewerSourceTitle">句對語意判定</div>
+          </div>
+          <div class="annotation-card-body">
+            <div class="sp-panel" id="sentencePairsReviewerSourcePanel">
+              <div class="sp-pair-header">
+                <span class="sp-mode-badge" id="spReviewerModeBadge">相似度判定</span>
+              </div>
+              <div class="sp-sentence-block">
+                <div class="sp-sentence-block-label" id="spReviewerSentence1Label">Sentence A</div>
+                <p class="sp-sentence-text" id="spReviewerSentence1Text"></p>
+              </div>
+              <div class="sp-sentence-block">
+                <div class="sp-sentence-block-label" id="spReviewerSentence2Label">Sentence B</div>
+                <p class="sp-sentence-text" id="spReviewerSentence2Text"></p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Annotator Controls -->
@@ -1487,6 +1544,18 @@ var I18N = {
     nerErrNoEntities: '請至少標記一個實體',
     rvNerDiffTitle: 'NER 標記差異',
     rvNerReviewNote: '通過：此筆 NER 標記有效。退回：標記員需要重新標記。',
+    spSentence1LabelSimilarity: 'Sentence A',
+    spSentence2LabelSimilarity: 'Sentence B',
+    spSentence1LabelEntailment: 'Premise（前提）',
+    spSentence2LabelEntailment: 'Hypothesis（假設）',
+    spModeBadgeSimilarity: '相似度判定',
+    spModeBadgeEntailment: '蘊含關係判定',
+    spResponseTitle: '判定結果',
+    spScoreTitle: '相似度評分',
+    spUnsureText: '無法判定 / Unsure',
+    spErrNoLabel: '請選擇判定結果',
+    spErrNoScore: '請選擇評分',
+    rvSpReviewNote: '通過：此筆句對標記有效。退回：標記員需重新判定。',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1625,6 +1694,18 @@ var I18N = {
     nerErrNoEntities: 'Please annotate at least one entity',
     rvNerDiffTitle: 'NER annotation diff',
     rvNerReviewNote: 'Approve: mark this NER annotation as valid. Reject: returns it to the annotator for re-annotation.',
+    spSentence1LabelSimilarity: 'Sentence A',
+    spSentence2LabelSimilarity: 'Sentence B',
+    spSentence1LabelEntailment: 'Premise',
+    spSentence2LabelEntailment: 'Hypothesis',
+    spModeBadgeSimilarity: 'Similarity',
+    spModeBadgeEntailment: 'Entailment',
+    spResponseTitle: 'Judgement',
+    spScoreTitle: 'Similarity Score',
+    spUnsureText: 'Unsure / Cannot decide',
+    spErrNoLabel: 'Please select a judgement',
+    spErrNoScore: 'Please select a score',
+    rvSpReviewNote: 'Approve: mark this sentence-pair annotation as valid. Reject: returns it to the annotator.',
   }
 };
 
@@ -1767,6 +1848,94 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
         { annotator: 'tony0950127', scoreText: '科技', decision: null }
       ]
     },
+    history: []
+  }
+];
+
+/* ── Sentence Pairs Config (mirrors task-management-015 SP_CONFIG_FIELDS) ── */
+var SP_TASK_CONFIG = {
+  pair_mode: 'similarity',
+  response_format: 'classification',
+  sentence_1_field: 'sentence_1',
+  sentence_2_field: 'sentence_2',
+  sentence_1_label: null,
+  sentence_2_label: null,
+  label_options: [
+    { value: 'equivalent', label_zh: '語意等價', label_en: 'Equivalent' },
+    { value: 'related', label_zh: '語意相關', label_en: 'Related' },
+    { value: 'unrelated', label_zh: '語意無關', label_en: 'Unrelated' }
+  ],
+  score_min: 0,
+  score_max: 5,
+  score_step: 1,
+  allow_unsure: true,
+  note_enabled: true
+};
+
+var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'SP-001',
+    text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+    sentence_1: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。',
+    sentence_2: '這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+    status: 'submitted',
+    spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'equivalent', score: null, unsure: false, version: 1 },
+    reviewerData: {
+      statsSummary: '等價×3 · 相關×2',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '等價', decision: null },
+        { annotator: '113450022', scoreText: '相關', decision: null },
+        { annotator: 'tony0950127', scoreText: '等價', decision: null },
+        { annotator: 'hui', scoreText: '等價', decision: null },
+        { annotator: 'chiao11', scoreText: '相關', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:00', action: 'submitted', from: null, to: '等價' }]
+  },
+  {
+    id: 2, sampleId: 'SP-002',
+    text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。',
+    sentence_1: '政府宣布下週起調漲電費，幅度約為 8%。',
+    sentence_2: '下週電費將上漲，政府公告調幅 8%。',
+    status: 'submitted',
+    spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'equivalent', score: null, unsure: false, version: 1 },
+    reviewerData: {
+      statsSummary: '等價×4 · 相關×1',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '等價', decision: null },
+        { annotator: '113450022', scoreText: '等價', decision: null },
+        { annotator: 'tony0950127', scoreText: '等價', decision: null },
+        { annotator: 'hui', scoreText: '相關', decision: null },
+        { annotator: 'mandy610425', scoreText: '等價', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:15', action: 'submitted', from: null, to: '等價' }]
+  },
+  {
+    id: 3, sampleId: 'SP-003',
+    text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。',
+    sentence_1: '台積電公布第一季財報，營收創歷史新高。',
+    sentence_2: '本季科技類股受國際情勢影響出現明顯震盪。',
+    status: 'saved',
+    spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'unrelated', score: null, unsure: false, version: 1 },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'saved', from: null, to: '語意無關（草稿）' }]
+  },
+  {
+    id: 4, sampleId: 'SP-004',
+    text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。',
+    sentence_1: '颱風警報解除，各縣市陸續恢復對外交通。',
+    sentence_2: '氣象局發布颱風警報，預計明天登陸。',
+    status: 'todo',
+    spAnnotation: null,
+    history: []
+  },
+  {
+    id: 5, sampleId: 'SP-005',
+    text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。',
+    sentence_1: '研究指出長期久坐對心血管健康有負面影響。',
+    sentence_2: '定期運動能有效降低心臟病風險。',
+    status: 'todo',
+    spAnnotation: null,
     history: []
   }
 ];
@@ -2254,6 +2423,13 @@ function makeXIconSvg() {
 /* ── Aspect List State ────────────────────────────────────────── */
 var aspectListState = { originalSentence: '', correctedSentence: '', rows: [] };
 
+/* ── Sentence Pairs State ─────────────────────────────────────── */
+var spAnnotationState = { label: null, score: null, unsure: false };
+
+function isSentencePairsTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sentence_pairs';
+}
+
 function isNerTaskType() {
   return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling' && state.subType === 'ner';
 }
@@ -2264,6 +2440,121 @@ function isAspectListTaskType() {
 
 function isRelationExtractionTaskType() {
   return normalizeTaskTypeKey(state.taskTypeKey) === 'relation_extraction';
+}
+
+/* ── Sentence Pairs Functions ─────────────────────────────────── */
+function getSpConfig() {
+  return SP_TASK_CONFIG;
+}
+
+function initSentencePairsState(sample) {
+  var ann = sample.spAnnotation || null;
+  spAnnotationState.label = ann ? (ann.label || null) : null;
+  spAnnotationState.score = ann ? (ann.score != null ? ann.score : null) : null;
+  spAnnotationState.unsure = ann ? (!!ann.unsure) : false;
+}
+
+function buildSpLabelOptions(config) {
+  var container = document.getElementById('spLabelOptions');
+  if (!container) return;
+  while (container.firstChild) { container.removeChild(container.firstChild); }
+  (config.label_options || []).forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sp-label-option' + (spAnnotationState.label === opt.value ? ' selected' : '');
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', String(spAnnotationState.label === opt.value));
+    btn.setAttribute('data-sp-value', opt.value);
+    btn.textContent = state.lang === 'en' ? (opt.label_en || opt.value) : (opt.label_zh || opt.value);
+    btn.addEventListener('click', function() {
+      spAnnotationState.label = opt.value;
+      buildSpLabelOptions(config);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function buildSpScoreRow(config) {
+  var container = document.getElementById('spScoreRow');
+  var currentDisplay = document.getElementById('spScoreCurrent');
+  var minLabel = document.getElementById('spScoreMinLabel');
+  var maxLabel = document.getElementById('spScoreMaxLabel');
+  if (!container) return;
+  while (container.firstChild) { container.removeChild(container.firstChild); }
+  if (minLabel) minLabel.textContent = String(config.score_min);
+  if (maxLabel) maxLabel.textContent = String(config.score_max);
+  if (currentDisplay) currentDisplay.textContent = spAnnotationState.score != null ? String(spAnnotationState.score) : '—';
+  var step = config.score_step || 1;
+  for (var v = config.score_min; v <= config.score_max; v += step) {
+    (function(val) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sp-score-btn' + (spAnnotationState.score === val ? ' active' : '');
+      btn.setAttribute('role', 'radio');
+      btn.setAttribute('aria-checked', String(spAnnotationState.score === val));
+      btn.textContent = String(val);
+      btn.addEventListener('click', function() {
+        spAnnotationState.score = val;
+        buildSpScoreRow(config);
+      });
+      container.appendChild(btn);
+    })(v);
+  }
+}
+
+function renderSentencePairSource(prefix, config, sample) {
+  var pairMode = config.pair_mode || 'similarity';
+  var modeBadge = document.getElementById(prefix + 'ModeBadge');
+  if (modeBadge) {
+    modeBadge.textContent = pairMode === 'entailment'
+      ? t('spModeBadgeEntailment') : t('spModeBadgeSimilarity');
+  }
+
+  var s1Key = pairMode === 'entailment' ? 'spSentence1LabelEntailment' : 'spSentence1LabelSimilarity';
+  var s2Key = pairMode === 'entailment' ? 'spSentence2LabelEntailment' : 'spSentence2LabelSimilarity';
+  var s1Label = config.sentence_1_label || t(s1Key);
+  var s2Label = config.sentence_2_label || t(s2Key);
+  var s1Text = sample[config.sentence_1_field] || sample.sentence_1 || '';
+  var s2Text = sample[config.sentence_2_field] || sample.sentence_2 || '';
+
+  setText(prefix + 'Sentence1Label', s1Label);
+  setText(prefix + 'Sentence2Label', s2Label);
+  setText(prefix + 'Sentence1Text', s1Text);
+  setText(prefix + 'Sentence2Text', s2Text);
+}
+
+function renderSentencePairsPanel() {
+  var config = getSpConfig();
+  var sample = SAMPLES[state.currentIdx];
+  var responseFormat = config.response_format || 'classification';
+  renderSentencePairSource('sp', config, sample);
+  renderSentencePairSource('spReviewer', config, sample);
+
+  var classArea = document.getElementById('spClassificationArea');
+  var scoreArea = document.getElementById('spScoringArea');
+  var isClassification = responseFormat === 'classification';
+
+  if (classArea) classArea.classList.toggle('hidden', !isClassification);
+  if (scoreArea) scoreArea.classList.toggle('hidden', isClassification);
+
+  if (isClassification) {
+    setText('spResponseTitle', t('spResponseTitle'));
+    buildSpLabelOptions(config);
+  } else {
+    setText('spScoreTitle', t('spScoreTitle'));
+    buildSpScoreRow(config);
+  }
+
+  var unsureArea = document.getElementById('spUnsureArea');
+  if (unsureArea) {
+    unsureArea.classList.toggle('hidden', !config.allow_unsure);
+    var unsureCheck = document.getElementById('spUnsureCheck');
+    if (unsureCheck) unsureCheck.checked = spAnnotationState.unsure;
+    setText('spUnsureText', t('spUnsureText'));
+    if (unsureCheck) {
+      unsureCheck.onchange = function() { spAnnotationState.unsure = unsureCheck.checked; };
+    }
+  }
 }
 
 function generateReId() {
@@ -2904,6 +3195,8 @@ function applyTaskTypeSampleFixtures() {
     SAMPLES = cloneSamples(ASPECT_LIST_SAMPLE_FIXTURES);
   } else if (isRelationExtractionTaskType()) {
     SAMPLES = cloneSamples(RE_SAMPLE_FIXTURES);
+  } else if (isSentencePairsTaskType()) {
+    SAMPLES = cloneSamples(SENTENCE_PAIRS_SAMPLE_FIXTURES);
   } else {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   }
@@ -2915,6 +3208,19 @@ function applyTaskTypeSampleFixtures() {
 }
 
 function createFallbackReviewerData(sample) {
+  if (isSentencePairsTaskType() && sample.spAnnotation) {
+    var ann = sample.spAnnotation;
+    var spResult = ann.response_format === 'scoring'
+      ? (state.lang === 'zh' ? '評分：' : 'Score: ') + String(ann.score)
+      : (ann.label || 'N/A');
+    return {
+      statsSummary: spResult,
+      rows: [
+        { annotator: 'Annotator A', scoreText: spResult, decision: null },
+        { annotator: 'Annotator B', scoreText: spResult, decision: null }
+      ]
+    };
+  }
   var labelValues = getSampleLabels(sample);
   var labelResult = labelValues.length
     ? labelValues.map(function(value) { return getCategoryDisplayName(value, state.lang || 'zh'); }).join(state.lang === 'zh' ? '、' : ', ')
@@ -3438,6 +3744,11 @@ function renderReviewerCard() {
       });
       card.appendChild(diffWrapper);
       card.appendChild(renderReviewerAspectCorrectionEditor(row));
+    } else if (isSentencePairsTaskType()) {
+      var spPill = document.createElement('span');
+      spPill.className = 'rv-score-pill result-tag-neutral';
+      spPill.textContent = row.scoreText;
+      card.appendChild(spPill);
     } else {
       var score = document.createElement('span');
       score.className = 'rv-score-pill' + (scoreColorClass ? ' ' + scoreColorClass : '');
@@ -3460,12 +3771,17 @@ function renderReviewerCard() {
 function renderSampleContent() {
   var sample = SAMPLES[state.currentIdx];
   setText('sampleSourceLabel', t('sampleSourceLabel'));
-  if (!isNerTaskType()) setText('sampleText', sample.text);
+  if (!isNerTaskType() && !isSentencePairsTaskType()) {
+    setText('sampleText', sample.text);
+  }
 
   el('prevBtn').disabled = state.currentIdx === 0;
   el('nextBtn').disabled = state.currentIdx === SAMPLES.length - 1;
 
-  if (isVaTaskType(state.taskTypeKey)) {
+  if (isSentencePairsTaskType()) {
+    initSentencePairsState(sample);
+    renderSentencePairsPanel();
+  } else if (isVaTaskType(state.taskTypeKey)) {
     var valence = (sample.va && sample.va.valence != null) ? sample.va.valence : null;
     var arousal = (sample.va && sample.va.arousal != null) ? sample.va.arousal : null;
     buildVaScaleOptions('vaValenceScale', 'va_valence', valence);
@@ -3504,6 +3820,7 @@ function renderTaskTypeInterface() {
   var isNer = isNerTaskType();
   var isAspectList = isAspectListTaskType();
   var isRE = isRelationExtractionTaskType();
+  var isSP = isSentencePairsTaskType();
   var configKey = isNer ? 'ner' : state.taskTypeKey;
   var config = TASK_TYPE_UI_CONFIG[configKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
 
@@ -3512,17 +3829,24 @@ function renderTaskTypeInterface() {
   var aspectPanel = document.getElementById('aspectListAnnotatorPanel');
   var rePanel = document.getElementById('relationAnnotatorPanel');
   var nerPanel = document.getElementById('nerAnnotatorPanel');
+  var spPanel = document.getElementById('sentencePairsAnnotatorPanel');
+  var textCard = document.getElementById('sampleTextCard');
+  var spReviewerSourceCard = document.getElementById('sentencePairsReviewerSourceCard');
 
-  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList || isRE || isNer);
+  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList || isRE || isNer || isSP);
   if (vaPanel) vaPanel.classList.toggle('hidden', !isVa);
   if (aspectPanel) aspectPanel.classList.toggle('hidden', !isAspectList);
   if (rePanel) rePanel.classList.toggle('hidden', !isRE);
   if (nerPanel) nerPanel.classList.toggle('hidden', !isNer);
+  if (spPanel) spPanel.classList.toggle('hidden', !isSP);
+  if (textCard) textCard.classList.toggle('hidden', isSP);
+  if (spReviewerSourceCard) spReviewerSourceCard.classList.toggle('hidden', !(isSP && state.taskRole === 'reviewer'));
 
   el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
   if (!isVa) clearGuidelineImagePreview();
 
   setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
+  setText('sentencePairsReviewerSourceTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
@@ -3531,6 +3855,8 @@ function renderTaskTypeInterface() {
     setText('rvReviewNote', t('rvNerReviewNote'));
   } else if (isAspectList) {
     setText('rvReviewNote', t('rvAspectReviewNote'));
+  } else if (isSP) {
+    setText('rvReviewNote', t('rvSpReviewNote'));
   } else {
     setText('rvReviewNote', t('rvReviewNote'));
   }
@@ -3570,10 +3896,12 @@ function renderGuidelineCollapseState() {
 
 function renderRoleControls() {
   var isAnnotator = state.taskRole === 'annotator';
+  var showSentencePairReviewerSource = !isAnnotator && isSentencePairsTaskType();
   el('annotatorCard').classList.toggle('hidden', !isAnnotator);
   el('reviewerCard').classList.toggle('hidden', isAnnotator);
   el('annotatorActions').classList.toggle('hidden', !isAnnotator);
   el('reviewerActions').classList.toggle('hidden', isAnnotator);
+  el('sentencePairsReviewerSourceCard').classList.toggle('hidden', !showSentencePairReviewerSource);
 }
 
 function applyLang(lang) {
@@ -3749,6 +4077,42 @@ function bindEvents() {
         version: Date.now()
       };
       toValue = aspectListState.rows.length + ' aspects：' + aspectListState.rows.map(function(r) { return r.text; }).join('、');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
+    if (isSentencePairsTaskType()) {
+      var spConfig = getSpConfig();
+      if (spConfig.response_format === 'classification' && !spAnnotationState.label) {
+        showToast(t('spErrNoLabel'), 'error'); return;
+      }
+      if (spConfig.response_format === 'scoring' && spAnnotationState.score == null) {
+        showToast(t('spErrNoScore'), 'error'); return;
+      }
+      sample.spAnnotation = {
+        pair_mode: spConfig.pair_mode,
+        response_format: spConfig.response_format,
+        label: spAnnotationState.label,
+        score: spAnnotationState.score,
+        unsure: spAnnotationState.unsure,
+        note: el('annotationNote').value.trim() || null,
+        version: Date.now()
+      };
+      toValue = spConfig.response_format === 'scoring'
+        ? (state.lang === 'zh' ? '評分：' : 'Score: ') + String(spAnnotationState.score)
+        : (spAnnotationState.label || '');
       sample.status = 'submitted';
       sample.history.push({ actor: 'Annotator A',
         time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
@@ -4081,7 +4445,8 @@ var ANNOTATION_PANEL_PATHS = {
   'va-scoring':           './annotation-workspace.panels/va-scoring.html',
   'aspect-list':          './annotation-workspace.panels/aspect-list.html',
   'relation-extraction':  './annotation-workspace.panels/relation-extraction.html',
-  'ner-labeling':         './annotation-workspace.panels/ner-labeling.html'
+  'ner-labeling':         './annotation-workspace.panels/ner-labeling.html',
+  'sentence-pairs':       './annotation-workspace.panels/sentence-pairs.html'
 };
 
 function appendAnnotationPanel(key) {
@@ -4113,7 +4478,7 @@ function loadAllAnnotationPanels() {
   var mount = document.getElementById('annotationPanelMount');
   if (!mount) return Promise.resolve();
   mount.textContent = '';
-  return ['classification', 'va-scoring', 'aspect-list', 'relation-extraction', 'ner-labeling'].reduce(function(p, key) {
+  return ['classification', 'va-scoring', 'aspect-list', 'relation-extraction', 'ner-labeling', 'sentence-pairs'].reduce(function(p, key) {
     return p.then(function() { return appendAnnotationPanel(key); });
   }, Promise.resolve());
 }

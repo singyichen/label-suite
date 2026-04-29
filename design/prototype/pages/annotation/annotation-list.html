@@ -672,6 +672,24 @@
         ]
       },
       {
+        taskId: 'TASK-015-A5',
+        title: '句對相似度 / 蘊含判定',
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
+        dashboardDetail: '已完成 58% · 今日 25 筆 · 平均速度 3.4',
+        dashboardProgress: 58,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'A5-001', status: 'submitted', completedAt: '2026-04-28 10:00', annotatedBy: 'Mandy', text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。' },
+          { sampleId: 'A5-002', status: 'submitted', completedAt: '2026-04-28 10:15', annotatedBy: 'Mandy', text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。' },
+          { sampleId: 'A5-003', status: 'saved', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。' },
+          { sampleId: 'A5-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。' },
+          { sampleId: 'A5-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。' }
+        ]
+      },
+      {
         taskId: 'TASK-015-A6',
         title: 'NER 命名實體辨識',
         taskType: 'sequence_labeling',
@@ -911,6 +929,67 @@
               { username: '113450022', result: '音質表現、舒適度、降噪功能', reviewStatus: null },
               { username: 'tony0950127', result: '音質、佩戴舒適度、主動降噪功能', reviewStatus: null }
             ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R5',
+        taskAliases: ['TASK-015-A5'],
+        title: '句對相似度 / 蘊含判定',
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
+        dashboardDetail: '待審 11 筆 · 進度 56% · IAA 0.82',
+        dashboardProgress: 56,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'R5-001', status: 'submitted', completedAt: '2026-04-28 10:00',
+            text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+            labelStats: '等價×3 · 相關×2',
+            annotators: [
+              { username: 'kioleemg12', result: '等價', reviewStatus: null },
+              { username: '113450022', result: '相關', reviewStatus: null },
+              { username: 'tony0950127', result: '等價', reviewStatus: null },
+              { username: 'hui', result: '等價', reviewStatus: null },
+              { username: 'chiao11', result: '相關', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R5-002', status: 'submitted', completedAt: '2026-04-28 10:15',
+            text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。',
+            labelStats: '等價×4 · 相關×1',
+            annotators: [
+              { username: 'kioleemg12', result: '等價', reviewStatus: null },
+              { username: '113450022', result: '等價', reviewStatus: null },
+              { username: 'tony0950127', result: '等價', reviewStatus: null },
+              { username: 'hui', result: '相關', reviewStatus: null },
+              { username: 'mandy610425', result: '等價', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R5-003', status: 'saved', completedAt: '2026-04-28 10:30',
+            text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。',
+            labelStats: '無關×3 · 相關×1',
+            annotators: [
+              { username: 'kioleemg12', result: '無關', reviewStatus: null },
+              { username: '113450022', result: '無關', reviewStatus: null },
+              { username: 'tony0950127', result: '相關', reviewStatus: null },
+              { username: 'hui', result: '無關', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R5-004', status: 'pending', completedAt: '-',
+            text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。',
+            labelStats: '-',
+            annotators: []
+          },
+          {
+            sampleId: 'R5-005', status: 'pending', completedAt: '-',
+            text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。',
+            labelStats: '-',
+            annotators: []
           }
         ]
       },
