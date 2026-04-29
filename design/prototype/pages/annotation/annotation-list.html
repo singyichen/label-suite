@@ -664,6 +664,25 @@
         ]
       },
       {
+        taskId: 'TASK-015-A6',
+        title: 'NER 命名實體辨識',
+        taskType: 'sequence_labeling',
+        subType: 'ner',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標註（NER）',
+        dashboardDetail: '已完成 28% · 今日 12 筆 · 平均速度 2.5',
+        dashboardProgress: 28,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。' },
+          { sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。' },
+          { sampleId: 'NER-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。' },
+          { sampleId: 'NER-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。' },
+          { sampleId: 'NER-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。' }
+        ]
+      },
+      {
         taskId: 'TASK-015-A4',
         title: '醫療關係抽取（Entity / Triple）',
         taskType: 'relation_extraction',
@@ -884,6 +903,62 @@
               { username: '113450022', result: '音質表現、舒適度、降噪功能', reviewStatus: null },
               { username: 'tony0950127', result: '音質、佩戴舒適度、主動降噪功能', reviewStatus: null }
             ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R6',
+        taskAliases: ['TASK-015-A6'],
+        title: 'NER 命名實體辨識',
+        taskType: 'sequence_labeling',
+        subType: 'ner',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標註（NER）',
+        dashboardDetail: '待審 10 筆 · 進度 28% · IAA 0.79',
+        dashboardProgress: 28,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30',
+            text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。',
+            labelStats: 'ORG×3 · PER×3 · LOC×3 · DATE×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: 'ORG:台積電, PER:張忠謀, LOC:台北', reviewStatus: null },
+              { username: '113450022',  result: 'ORG:台積電, PER:張忠謀, LOC:台北, MISC:半導體產業論壇', reviewStatus: null },
+              { username: 'tony0950127', result: 'ORG:台積電, PER:創辦人張忠謀, LOC:台北', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45',
+            text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。',
+            labelStats: 'ORG×3 · LOC×3 · DATE×3',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: 'ORG:鴻海精密工業, LOC:越南, LOC:胡志明市, DATE:2025年', reviewStatus: null },
+              { username: '113450022',  result: 'ORG:鴻海精密工業, LOC:越南胡志明市, DATE:2025年', reviewStatus: null },
+              { username: 'tony0950127', result: 'ORG:鴻海, LOC:越南, LOC:胡志明市, DATE:2025年', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'NER-003', status: 'saved', completedAt: '2026-04-28 11:00',
+            text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+            labelStats: 'ORG×2 · PER×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: 'ORG:衛生福利部, PER:薛瑞元', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'NER-004', status: 'pending', completedAt: '-',
+            text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+            labelStats: '-', vaRange: null, annotators: []
+          },
+          {
+            sampleId: 'NER-005', status: 'pending', completedAt: '-',
+            text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+            labelStats: '-', vaRange: null, annotators: []
           }
         ]
       },
@@ -1264,13 +1339,15 @@
     return task.samples[task.samples.length - 1].sampleId;
   }
 
-  function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType) {
-    return '../annotation/annotation-workspace.html' +
+  function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType, subType) {
+    var url = '../annotation/annotation-workspace.html' +
       '?task_id=' + encodeURIComponent(taskId) +
       '&sample_id=' + encodeURIComponent(sampleId) +
       '&role=' + encodeURIComponent(role) +
       '&run_type=' + encodeURIComponent(runType) +
       '&task_type=' + encodeURIComponent(taskType);
+    if (subType) url += '&sub_type=' + encodeURIComponent(subType);
+    return url;
   }
 
   function renderTaskInfo(context) {
@@ -1309,7 +1386,7 @@
         var sampleId = findLatestUnfinishedSampleId(task);
         if (!sampleId) return;
         setStoredActiveTaskType(task.taskType);
-        window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType);
+        window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType, task.subType);
       };
     }
 
@@ -1386,7 +1463,7 @@
 
       function openWorkspace() {
         setStoredActiveTaskType(item.taskType);
-        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType, item.subType);
         window.location.href = url;
       }
 
@@ -1468,7 +1545,7 @@
 
       function openWorkspace() {
         setStoredActiveTaskType(item.taskType);
-        var url = buildWorkspaceUrl(item.taskId, item.sample.sampleId, context.role, item.runType, item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, item.sample.sampleId, context.role, item.runType, item.taskType, item.subType);
         window.location.href = url;
       }
 
@@ -1522,6 +1599,7 @@
         flatRows.push({
           taskId: task.taskId,
           taskType: task.taskType,
+          subType: task.subType || '',
           runType: task.runType,
           sample: applySampleCompletionOverride(sample, completionState)
         });

@@ -1572,9 +1572,10 @@
         actionText: { zh: '快速繼續', en: 'Continue' },
       },
       {
-        taskId: 'TASK-015-A5',
-        latestUnfinishedSampleId: 'A5-002',
+        taskId: 'TASK-015-A6',
+        latestUnfinishedSampleId: 'NER-004',
         taskType: 'sequence_labeling',
+        subType: 'ner',
         runType: 'official_run',
         progress: 28,
         title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
@@ -1590,6 +1591,7 @@
         taskId: 'TASK-015-A3',
         latestUnfinishedSampleId: 'A3-004',
         taskType: 'sequence_labeling',
+        subType: 'aspect_list',
         runType: 'official_run',
         progress: 64,
         title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
@@ -1665,9 +1667,10 @@
         actionText: { zh: '快速審核', en: 'Quick Review' },
       },
       {
-        taskId: 'TASK-015-R4',
-        latestUnfinishedSampleId: 'R4-003',
+        taskId: 'TASK-015-R6',
+        latestUnfinishedSampleId: 'NER-003',
         taskType: 'sequence_labeling',
+        subType: 'ner',
         runType: 'official_run',
         progress: 28,
         title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
@@ -1756,11 +1759,12 @@
         scenario,
       });
       const taskId = task.taskId || '';
-      const url = '../annotation/annotation-list.html?role=' + encodeURIComponent(role) +
+      var listUrl = '../annotation/annotation-list.html?role=' + encodeURIComponent(role) +
         '&task_id=' + encodeURIComponent(taskId) +
         '&task_type=' + encodeURIComponent(task.taskType) +
         '&run_type=' + encodeURIComponent(task.runType);
-      window.location.href = url;
+      if (task.subType) listUrl += '&sub_type=' + encodeURIComponent(task.subType);
+      window.location.href = listUrl;
     }
 
     function openAnnotationWorkspace(role, task) {
@@ -1778,12 +1782,13 @@
         openAnnotationList(role, task);
         return;
       }
-      const url = '../annotation/annotation-workspace.html?task_id=' + encodeURIComponent(task.taskId || '') +
+      var wsBase = '../annotation/annotation-workspace.html?task_id=' + encodeURIComponent(task.taskId || '') +
         '&sample_id=' + encodeURIComponent(sampleId) +
         '&role=' + encodeURIComponent(role) +
         '&run_type=' + encodeURIComponent(task.runType) +
         '&task_type=' + encodeURIComponent(task.taskType);
-      window.location.href = url;
+      if (task.subType) wsBase += '&sub_type=' + encodeURIComponent(task.subType);
+      window.location.href = wsBase;
     }
 
     function openTaskList(taskRole) {

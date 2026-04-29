@@ -32,6 +32,17 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/run_type=dry_run/);
   });
 
+  test('ner task carries sub_type route context into workspace', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A6&run_type=official_run&task_type=sequence_labeling');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.getByRole('button', { name: '快速繼續' }).click();
+    await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
+    await expect(page).toHaveURL(/task_type=sequence_labeling/);
+    await expect(page).toHaveURL(/sub_type=ner/);
+    await expect(page).toHaveURL(/sample_id=NER-005/);
+  });
+
   test('task info card quick continue uses pointer cursor', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

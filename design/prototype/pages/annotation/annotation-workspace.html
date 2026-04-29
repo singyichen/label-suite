@@ -1081,6 +1081,13 @@
       color: var(--color-text-muted);
       line-height: 1.5;
     }
+
+    /* ── NER ─────────────────────────────────────────────────────── */
+    #sampleText { -webkit-user-select: text; user-select: text; cursor: text; }
+    .ner-entity-highlight { display: inline; cursor: default; }
+    .ner-entity-type-badge { display: inline-block; vertical-align: middle; }
+    .ner-validation-summary { font-size: 13px; color: var(--color-error); margin-top: var(--space-sm); }
+    .ner-validation-summary.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -1470,6 +1477,16 @@ var I18N = {
     reErrSameEntity: 'E1 與 E2 不能是同一個實體',
     reErrMissingField: '請選擇 E1、關係與 E2',
     toastSelectTextFirst: '請先在文本中選取文字',
+    nerEntityTypeLabel: 'Entity Type',
+    nerEntityListLabel: '已標記實體',
+    nerPendingHintDefault: '在上方文本中選取文字，再點擊實體類型',
+    nerPendingHintSelected: '點擊上方實體類型按鈕以完成標記',
+    nerEntityEmpty: '尚未標記實體',
+    nerEntityCountUnit: '個實體',
+    nerDeleteEntityAria: '刪除實體',
+    nerErrNoEntities: '請至少標記一個實體',
+    rvNerDiffTitle: 'NER 標記差異',
+    rvNerReviewNote: '通過：此筆 NER 標記有效。退回：標記員需要重新標記。',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1598,6 +1615,16 @@ var I18N = {
     reErrSameEntity: 'E1 and E2 must be different entities',
     reErrMissingField: 'Please select E1, relation, and E2',
     toastSelectTextFirst: 'Please select text in the sentence first',
+    nerEntityTypeLabel: 'Entity Type',
+    nerEntityListLabel: 'Tagged Entities',
+    nerPendingHintDefault: 'Select text above, then click an entity type',
+    nerPendingHintSelected: 'Click an entity type button to assign',
+    nerEntityEmpty: 'No entities annotated yet',
+    nerEntityCountUnit: 'entities',
+    nerDeleteEntityAria: 'Delete entity',
+    nerErrNoEntities: 'Please annotate at least one entity',
+    rvNerDiffTitle: 'NER annotation diff',
+    rvNerReviewNote: 'Approve: mark this NER annotation as valid. Reject: returns it to the annotator for re-annotation.',
   }
 };
 
@@ -1948,6 +1975,103 @@ var RE_CONFIG = {
 
 var reState = { entities: [], triples: [], pendingText: '', pendingStart: null, pendingEnd: null };
 
+/* ── NER Config & State ───────────────────────────────────────── */
+var NER_CONFIG = {
+  entities: [
+    { name: 'PER', label_zh: '人名', label_en: 'Person', color: '#6366F1' },
+    { name: 'ORG', label_zh: '組織', label_en: 'Organization', color: '#10B981' },
+    { name: 'LOC', label_zh: '地點', label_en: 'Location', color: '#F59E0B' },
+    { name: 'DATE', label_zh: '時間', label_en: 'Date', color: '#8B5CF6' },
+    { name: 'MISC', label_zh: '其他', label_en: 'Misc', color: '#94A3B8' }
+  ],
+  scheme: 'IOB2',
+  allow_overlapping: false,
+  require_entity_type: true
+};
+
+var nerState = { originalText: '', entities: [], pendingText: '', pendingStart: null, pendingEnd: null };
+
+var NER_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'NER-001',
+    text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。',
+    status: 'submitted',
+    nerAnnotation: {
+      entities: [
+        { id: 'n1', text: '台積電', type: 'ORG', start: 0, end: 3 },
+        { id: 'n2', text: '張忠謀', type: 'PER', start: 5, end: 8 },
+        { id: 'n3', text: '台北', type: 'LOC', start: 9, end: 11 },
+        { id: 'n4', text: '2024年', type: 'DATE', start: 12, end: 17 }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'F1 mean: 0.81 · Macro-F1: 0.79 · 3 annotators',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '台積電', type: 'ORG' }, { text: '張忠謀', type: 'PER' }, { text: '台北', type: 'LOC' }
+        ]},
+        { annotator: '113450022', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '台積電', type: 'ORG' }, { text: '張忠謀', type: 'PER' }, { text: '台北', type: 'LOC' }, { text: '半導體產業論壇', type: 'MISC' }
+        ]},
+        { annotator: 'tony0950127', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '台積電', type: 'ORG' }, { text: '創辦人張忠謀', type: 'PER' }, { text: '台北', type: 'LOC' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'submitted', from: null, to: '4 entities: ORG×1, PER×1, LOC×1, DATE×1' }]
+  },
+  {
+    id: 2, sampleId: 'NER-002',
+    text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。',
+    status: 'submitted',
+    nerAnnotation: {
+      entities: [
+        { id: 'n5', text: '鴻海精密工業', type: 'ORG', start: 0, end: 6 },
+        { id: 'n6', text: '越南', type: 'LOC', start: 8, end: 10 },
+        { id: 'n7', text: '胡志明市', type: 'LOC', start: 10, end: 14 },
+        { id: 'n8', text: '2025年', type: 'DATE', start: 18, end: 23 }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'F1 mean: 0.88 · Macro-F1: 0.85 · 3 annotators',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '鴻海精密工業', type: 'ORG' }, { text: '越南', type: 'LOC' }, { text: '胡志明市', type: 'LOC' }, { text: '2025年', type: 'DATE' }
+        ]},
+        { annotator: '113450022', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '鴻海精密工業', type: 'ORG' }, { text: '越南胡志明市', type: 'LOC' }, { text: '2025年', type: 'DATE' }
+        ]},
+        { annotator: 'tony0950127', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '鴻海', type: 'ORG' }, { text: '越南', type: 'LOC' }, { text: '胡志明市', type: 'LOC' }, { text: '2025年', type: 'DATE' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:45', action: 'submitted', from: null, to: '4 entities: ORG×1, LOC×2, DATE×1' }]
+  },
+  {
+    id: 3, sampleId: 'NER-003',
+    text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+    status: 'saved',
+    nerAnnotation: {
+      entities: [
+        { id: 'n9', text: '衛生福利部', type: 'ORG', start: 0, end: 5 },
+        { id: 'n10', text: '薛瑞元', type: 'PER', start: 6, end: 9 }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '2 entities (draft)' }]
+  },
+  {
+    id: 4, sampleId: 'NER-004',
+    text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+    status: 'todo', nerAnnotation: null, history: []
+  },
+  {
+    id: 5, sampleId: 'NER-005',
+    text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+    status: 'todo', nerAnnotation: null, history: []
+  }
+];
+
 var SAMPLES = [];
 
 /* ── State ────────────────────────────────────────────────────── */
@@ -1955,6 +2079,7 @@ var state = {
   lang: 'zh',
   taskRole: 'annotator',
   taskTypeKey: 'single_sentence_classification',
+  subType: 'aspect_list',
   runType: 'dry_run',
   taskId: 'TASK-014',
   currentIdx: 2,
@@ -2034,6 +2159,28 @@ var TASK_TYPE_UI_CONFIG = {
       en: 'Sequence labeling: mark entity/aspect spans per guideline.'
     }
   },
+  ner: {
+    taskTypeLabel: {
+      zh: '序列標註（NER）',
+      en: 'Sequence Labeling (NER)'
+    },
+    annotationTitle: {
+      zh: 'NER 命名實體辨識',
+      en: 'NER Named Entity Recognition'
+    },
+    guidelineGoal: {
+      zh: 'NER 命名實體辨識',
+      en: 'NER Named Entity Recognition'
+    },
+    guidelineSummary: {
+      zh: '選取文本中的命名實體片段，並標記對應的實體類型（人名、組織、地點、時間等）。',
+      en: 'Select text spans of named entities and assign their entity types (PER, ORG, LOC, DATE, etc.).'
+    },
+    mobileGuideline: {
+      zh: 'NER：選取文字片段後點擊實體類型按鈕完成標記。',
+      en: 'NER: select text span, then click entity type button.'
+    }
+  },
   relation_extraction: {
     taskTypeLabel: {
       zh: '關係抽取（Entity / Relation / Triple）',
@@ -2107,8 +2254,12 @@ function makeXIconSvg() {
 /* ── Aspect List State ────────────────────────────────────────── */
 var aspectListState = { originalSentence: '', correctedSentence: '', rows: [] };
 
+function isNerTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling' && state.subType === 'ner';
+}
+
 function isAspectListTaskType() {
-  return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling';
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling' && state.subType !== 'ner';
 }
 
 function isRelationExtractionTaskType() {
@@ -2304,6 +2455,123 @@ function renderAspectListPanel() {
       summaryEl.textContent = '';
     }
   }
+}
+
+/* ── NER ──────────────────────────────────────────────────────── */
+function generateNerId() {
+  return 'ner_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+function initNerState(sample) {
+  nerState.originalText = sample.text || '';
+  if (sample.nerAnnotation && sample.status !== 'todo') {
+    nerState.entities = (sample.nerAnnotation.entities || []).map(function(e) {
+      var et = NER_CONFIG.entities.find(function(t) { return t.name === e.type; });
+      return { id: e.id || generateNerId(), text: e.text, type: e.type, start: e.start, end: e.end, color: et ? et.color : '#94A3B8' };
+    });
+  } else {
+    nerState.entities = [];
+  }
+  nerState.pendingText = '';
+  nerState.pendingStart = null;
+  nerState.pendingEnd = null;
+}
+
+function renderNerEntityHighlights() {
+  var textEl = document.getElementById('sampleText');
+  if (!textEl) return;
+  var text = nerState.originalText;
+  while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
+  if (!text) return;
+  var sorted = nerState.entities.slice().sort(function(a, b) { return a.start - b.start; });
+  var cursor = 0;
+  sorted.forEach(function(e) {
+    if (e.start > cursor) textEl.appendChild(document.createTextNode(text.slice(cursor, e.start)));
+    var highlight = document.createElement('span');
+    highlight.className = 'ner-entity-highlight';
+    highlight.style.cssText = 'background:' + e.color + '22;border-bottom:2px solid ' + e.color + ';border-radius:2px;padding:0 1px;';
+    highlight.appendChild(document.createTextNode(text.slice(e.start, e.end)));
+    var badge = document.createElement('span');
+    badge.className = 'ner-entity-type-badge';
+    badge.style.cssText = 'background:' + e.color + ';color:#fff;font-size:10px;padding:0 3px;border-radius:2px;margin-left:2px;';
+    badge.textContent = e.type;
+    highlight.appendChild(badge);
+    textEl.appendChild(highlight);
+    cursor = e.end;
+  });
+  if (cursor < text.length) textEl.appendChild(document.createTextNode(text.slice(cursor)));
+}
+
+function renderNerPanel() {
+  var panel = document.getElementById('nerAnnotatorPanel');
+  if (!panel) return;
+
+  var typeBtns = document.getElementById('nerEntityTypeBtns');
+  if (typeBtns) {
+    while (typeBtns.firstChild) typeBtns.removeChild(typeBtns.firstChild);
+    NER_CONFIG.entities.forEach(function(et) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 're-entity-type-btn';
+      btn.dataset.entityType = et.name;
+      btn.style.cssText = 'border-color:' + et.color + ';color:' + et.color + ';';
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 're-entity-type-name';
+      nameSpan.textContent = et.name;
+      var labelSpan = document.createElement('span');
+      labelSpan.className = 're-entity-type-label';
+      labelSpan.textContent = state.lang === 'en' ? et.label_en : et.label_zh;
+      btn.appendChild(nameSpan);
+      btn.appendChild(labelSpan);
+      typeBtns.appendChild(btn);
+    });
+  }
+
+  var pendingEl = document.getElementById('nerPendingSelection');
+  var pendingText = document.getElementById('nerPendingText');
+  var pendingHint = document.getElementById('nerPendingHint');
+  if (pendingEl && pendingText && pendingHint) {
+    pendingEl.classList.remove('hidden');
+    pendingText.textContent = nerState.pendingText ? '「' + nerState.pendingText + '」' : '';
+    pendingHint.textContent = t(nerState.pendingText ? 'nerPendingHintSelected' : 'nerPendingHintDefault');
+  }
+
+  var listEl = document.getElementById('nerEntityList');
+  var countEl = document.getElementById('nerEntityCount');
+  if (listEl) {
+    while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+    if (nerState.entities.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 're-entity-empty';
+      empty.textContent = t('nerEntityEmpty');
+      listEl.appendChild(empty);
+    } else {
+      nerState.entities.forEach(function(e) {
+        var row = document.createElement('div');
+        row.className = 're-entity-row';
+        var badge = document.createElement('span');
+        badge.className = 're-entity-badge';
+        badge.style.background = e.color + '22';
+        badge.style.color = e.color;
+        badge.style.borderColor = e.color + '66';
+        badge.textContent = e.type;
+        var textSpan = document.createElement('span');
+        textSpan.className = 're-entity-text';
+        textSpan.textContent = e.text;
+        row.appendChild(badge);
+        row.appendChild(textSpan);
+        row.appendChild(makeReDelBtn('data-entity-id', e.id, 'nerDeleteEntityAria'));
+        listEl.appendChild(row);
+      });
+    }
+  }
+  if (countEl) countEl.textContent = nerState.entities.length + ' ' + t('nerEntityCountUnit');
+  renderNerEntityHighlights();
+}
+
+function validateNerAnnotation() {
+  if (nerState.entities.length === 0) return { valid: false, error: t('nerErrNoEntities') };
+  return { valid: true, error: '' };
 }
 
 /* ── Relation Extraction ──────────────────────────────────────── */
@@ -2630,6 +2898,8 @@ function applyTaskTypeSampleFixtures() {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   } else if (isVaTaskType(state.taskTypeKey)) {
     SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+  } else if (isNerTaskType()) {
+    SAMPLES = cloneSamples(NER_SAMPLE_FIXTURES);
   } else if (isAspectListTaskType()) {
     SAMPLES = cloneSamples(ASPECT_LIST_SAMPLE_FIXTURES);
   } else if (isRelationExtractionTaskType()) {
@@ -3119,8 +3389,33 @@ function renderReviewerCard() {
 
     card.appendChild(meta);
 
-    if (isAspectListTaskType()) {
-      // Aspect list: show diff instead of score pill
+    if (isNerTaskType()) {
+      var nerDiffWrapper = document.createElement('div');
+      nerDiffWrapper.className = 'rv-aspect-diff';
+      var nerEntities = row.nerEntities || [];
+      nerEntities.forEach(function(ne) {
+        var item = document.createElement('div');
+        item.className = 'rv-aspect-diff-item';
+        var et = NER_CONFIG.entities.find(function(x) { return x.name === ne.type; });
+        var chip = document.createElement('span');
+        chip.className = 'rv-aspect-diff-op kept';
+        chip.style.cssText = et ? 'background:' + et.color + '22;color:' + et.color + ';border-radius:3px;padding:0 4px;' : '';
+        chip.textContent = ne.type;
+        var textSpan = document.createElement('span');
+        textSpan.className = 'rv-aspect-diff-text';
+        textSpan.textContent = ne.text;
+        item.appendChild(chip);
+        item.appendChild(textSpan);
+        nerDiffWrapper.appendChild(item);
+      });
+      if (nerEntities.length === 0) {
+        var emptyNote = document.createElement('div');
+        emptyNote.className = 'rv-aspect-diff-item';
+        emptyNote.textContent = t('nerEntityEmpty');
+        nerDiffWrapper.appendChild(emptyNote);
+      }
+      card.appendChild(nerDiffWrapper);
+    } else if (isAspectListTaskType()) {
       var diffWrapper = document.createElement('div');
       diffWrapper.className = 'rv-aspect-diff';
       var diffTitle = document.createElement('div');
@@ -3165,7 +3460,7 @@ function renderReviewerCard() {
 function renderSampleContent() {
   var sample = SAMPLES[state.currentIdx];
   setText('sampleSourceLabel', t('sampleSourceLabel'));
-  setText('sampleText', sample.text);
+  if (!isNerTaskType()) setText('sampleText', sample.text);
 
   el('prevBtn').disabled = state.currentIdx === 0;
   el('nextBtn').disabled = state.currentIdx === SAMPLES.length - 1;
@@ -3177,6 +3472,9 @@ function renderSampleContent() {
     buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
     setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
     setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
+  } else if (isNerTaskType()) {
+    initNerState(sample);
+    renderNerPanel();
   } else if (isAspectListTaskType()) {
     initAspectListState(sample);
     renderAspectListPanel();
@@ -3203,19 +3501,23 @@ function renderSampleContent() {
 
 function renderTaskTypeInterface() {
   var isVa = isVaTaskType(state.taskTypeKey);
+  var isNer = isNerTaskType();
   var isAspectList = isAspectListTaskType();
   var isRE = isRelationExtractionTaskType();
-  var config = TASK_TYPE_UI_CONFIG[state.taskTypeKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
+  var configKey = isNer ? 'ner' : state.taskTypeKey;
+  var config = TASK_TYPE_UI_CONFIG[configKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
 
   var classPanel = document.getElementById('classificationAnnotatorPanel');
   var vaPanel = document.getElementById('vaAnnotatorPanel');
   var aspectPanel = document.getElementById('aspectListAnnotatorPanel');
   var rePanel = document.getElementById('relationAnnotatorPanel');
+  var nerPanel = document.getElementById('nerAnnotatorPanel');
 
-  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList || isRE);
+  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList || isRE || isNer);
   if (vaPanel) vaPanel.classList.toggle('hidden', !isVa);
   if (aspectPanel) aspectPanel.classList.toggle('hidden', !isAspectList);
   if (rePanel) rePanel.classList.toggle('hidden', !isRE);
+  if (nerPanel) nerPanel.classList.toggle('hidden', !isNer);
 
   el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
   if (!isVa) clearGuidelineImagePreview();
@@ -3225,7 +3527,13 @@ function renderTaskTypeInterface() {
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
   setText('mobileGuidelineText', config.mobileGuideline[state.lang] || config.mobileGuideline.zh);
-  setText('rvReviewNote', isAspectList ? t('rvAspectReviewNote') : t('rvReviewNote'));
+  if (isNer) {
+    setText('rvReviewNote', t('rvNerReviewNote'));
+  } else if (isAspectList) {
+    setText('rvReviewNote', t('rvAspectReviewNote'));
+  } else {
+    setText('rvReviewNote', t('rvReviewNote'));
+  }
 }
 
 function clearGuidelineImagePreview() {
@@ -3303,6 +3611,7 @@ function applyLang(lang) {
     'guidelinePreviewLabelTech', 'guidelinePreviewDescTech',
     'guidelinePreviewFooter',
     'mobileDrawerTitle', 'mobileGuidelineText',
+    'nerEntityTypeLabel', 'nerEntityListLabel',
   ];
   textIds.forEach(function(id) {
     var key = id;
@@ -3400,6 +3709,32 @@ function bindEvents() {
   el('submitBtn').addEventListener('click', function() {
     var sample = SAMPLES[state.currentIdx];
     var toValue = '';
+    if (isNerTaskType()) {
+      var nerValidation = validateNerAnnotation();
+      if (!nerValidation.valid) { showToast(nerValidation.error, 'error'); return; }
+      sample.nerAnnotation = {
+        entities: nerState.entities.map(function(e) { return { id: e.id, text: e.text, type: e.type, start: e.start, end: e.end }; }),
+        version: Date.now()
+      };
+      var typeCounts = {};
+      nerState.entities.forEach(function(e) { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
+      toValue = nerState.entities.length + ' entities: ' + Object.keys(typeCounts).map(function(k) { return k + '×' + typeCounts[k]; }).join(', ');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
     if (isAspectListTaskType()) {
       var validation = validateAspectList();
       if (!validation.valid) { showToast(validation.errors[0], 'error'); return; }
@@ -3613,8 +3948,30 @@ function bindEvents() {
         if (inputs.length) inputs[inputs.length - 1].focus();
       }
 
-      /* Relation extraction — entity type button */
+      /* NER — entity type button */
       var etBtn = e.target.closest('[data-entity-type]');
+      if (etBtn && isNerTaskType()) {
+        if (!nerState.pendingText.trim()) { showToast(t('toastSelectTextFirst'), 'error'); return; }
+        var nerEtName = etBtn.getAttribute('data-entity-type');
+        var nerEtConfig = NER_CONFIG.entities.find(function(x) { return x.name === nerEtName; });
+        nerState.entities.push({ id: generateNerId(), text: nerState.pendingText.trim(), type: nerEtName, color: nerEtConfig ? nerEtConfig.color : '#94A3B8', start: nerState.pendingStart, end: nerState.pendingEnd });
+        nerState.pendingText = '';
+        nerState.pendingStart = null;
+        nerState.pendingEnd = null;
+        renderNerPanel();
+        return;
+      }
+
+      /* NER — delete entity */
+      var nerDelEntityBtn = e.target.closest('[data-entity-id]');
+      if (nerDelEntityBtn && isNerTaskType()) {
+        var nerEntityId = nerDelEntityBtn.getAttribute('data-entity-id');
+        nerState.entities = nerState.entities.filter(function(x) { return x.id !== nerEntityId; });
+        renderNerPanel();
+        return;
+      }
+
+      /* Relation extraction — entity type button */
       if (etBtn && isRelationExtractionTaskType()) {
         if (!reState.pendingText.trim()) { showToast(t('toastSelectTextFirst'), 'error'); return; }
         var etName = etBtn.getAttribute('data-entity-type');
@@ -3686,14 +4043,23 @@ function bindEvents() {
     });
   }
 
-  /* Text selection for relation extraction */
+  /* Text selection for NER and relation extraction */
   var sampleTextEl = document.getElementById('sampleText');
   if (sampleTextEl) {
     sampleTextEl.addEventListener('mouseup', function() {
-      if (!isRelationExtractionTaskType()) return;
       var selection = window.getSelection();
       var selected = selection ? selection.toString().trim() : '';
-      if (selected.length > 0) {
+      if (!selected.length) return;
+      if (isNerTaskType()) {
+        nerState.pendingText = selected;
+        var nerRange = selection.getRangeAt(0);
+        var nerPre = nerRange.cloneRange();
+        nerPre.selectNodeContents(sampleTextEl);
+        nerPre.setEnd(nerRange.startContainer, nerRange.startOffset);
+        nerState.pendingStart = nerPre.toString().length;
+        nerState.pendingEnd = nerState.pendingStart + selected.length;
+        renderNerPanel();
+      } else if (isRelationExtractionTaskType()) {
         reState.pendingText = selected;
         var range = selection.getRangeAt(0);
         var pre = range.cloneRange();
@@ -3714,7 +4080,8 @@ var ANNOTATION_PANEL_PATHS = {
   classification:         './annotation-workspace.panels/classification.html',
   'va-scoring':           './annotation-workspace.panels/va-scoring.html',
   'aspect-list':          './annotation-workspace.panels/aspect-list.html',
-  'relation-extraction':  './annotation-workspace.panels/relation-extraction.html'
+  'relation-extraction':  './annotation-workspace.panels/relation-extraction.html',
+  'ner-labeling':         './annotation-workspace.panels/ner-labeling.html'
 };
 
 function appendAnnotationPanel(key) {
@@ -3746,7 +4113,7 @@ function loadAllAnnotationPanels() {
   var mount = document.getElementById('annotationPanelMount');
   if (!mount) return Promise.resolve();
   mount.textContent = '';
-  return ['classification', 'va-scoring', 'aspect-list', 'relation-extraction'].reduce(function(p, key) {
+  return ['classification', 'va-scoring', 'aspect-list', 'relation-extraction', 'ner-labeling'].reduce(function(p, key) {
     return p.then(function() { return appendAnnotationPanel(key); });
   }, Promise.resolve());
 }
@@ -3769,6 +4136,7 @@ function applyLaunchContextFromQuery() {
   var taskType = params.get('task_type') || getStoredActiveTaskType();
   var taskId = params.get('task_id');
   var sampleId = params.get('sample_id');
+  var subType = params.get('sub_type');
 
   if (role === 'annotator' || role === 'reviewer') {
     state.taskRole = role;
@@ -3780,6 +4148,9 @@ function applyLaunchContextFromQuery() {
     state.taskId = taskId.trim();
   }
   state.taskTypeKey = normalizeTaskTypeKey(taskType);
+  if (subType === 'ner' || subType === 'aspect_list') {
+    state.subType = subType;
+  }
   setStoredActiveTaskType(state.taskTypeKey);
 
   return sampleId;
