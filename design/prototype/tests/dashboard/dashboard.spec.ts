@@ -44,8 +44,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView.getByText('情感分析基準')).toBeVisible();
     await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
     await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 42%/)).toBeVisible();
-    await expect(leaderView.getByText('分類任務')).toBeVisible();
-    await expect(leaderView.getByText('評分 / 回歸任務')).toBeVisible();
+    await expect(leaderView.getByText('單句分類（含多標籤）')).toBeVisible();
+    await expect(leaderView.getByText('單句 VA 雙維度評分（Valence / Arousal）')).toBeVisible();
     await expect(leaderView.locator('.progress')).toHaveCount(2);
   });
 
@@ -73,6 +73,31 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
     await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(5);
+  });
+
+  test('annotator task type badges use per-category colors matching task list styles', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    const annotatorView = page.getByTestId('annotator-view');
+
+    const classificationBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '單句分類（含多標籤）' });
+    const scoringBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '單句 VA 雙維度評分（Valence / Arousal）' });
+    const sequenceBadges = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '序列標記（含 Aspect / NER）' });
+    const relationBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '關係抽取（Entity + Relation + Triple）' });
+    const pairsBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '句對任務（相似度 / 蘊含）' });
+
+    await expect(classificationBadge).toHaveClass(/badge-task-type-single/);
+    await expect(scoringBadge).toHaveClass(/badge-task-type-scoring/);
+    await expect(sequenceBadges).toHaveCount(2);
+    await expect(sequenceBadges.first()).toHaveClass(/badge-task-type-sequence/);
+    await expect(sequenceBadges.nth(1)).toHaveClass(/badge-task-type-sequence/);
+    await expect(relationBadge).toHaveClass(/badge-task-type-relation/);
+    await expect(pairsBadge).toHaveClass(/badge-task-type-pairs/);
+
+    await expect(classificationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(scoringBadge).toHaveCSS('background-color', 'rgb(250, 245, 255)');
+    await expect(sequenceBadges.first()).toHaveCSS('background-color', 'rgb(255, 247, 237)');
+    await expect(relationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(pairsBadge).toHaveCSS('background-color', 'rgb(236, 253, 245)');
   });
 
   test('reviewer view shows pending review panel and start-review action', async ({ page }) => {

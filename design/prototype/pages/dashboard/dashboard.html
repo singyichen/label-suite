@@ -361,10 +361,40 @@
       border-color: #DDD6FE;
     }
 
-    .badge-task-type {
+    .badge-task-type-single {
       color: #0E7490;
       background: #ECFEFF;
       border-color: #A5F3FC;
+    }
+
+    .badge-task-type-sequence {
+      color: #7C2D12;
+      background: #FFF7ED;
+      border-color: #FDBA74;
+    }
+
+    .badge-task-type-relation {
+      color: #155E75;
+      background: #ECFEFF;
+      border-color: #67E8F9;
+    }
+
+    .badge-task-type-pairs {
+      color: #065F46;
+      background: #ECFDF5;
+      border-color: #A7F3D0;
+    }
+
+    .badge-task-type-scoring {
+      color: #7E22CE;
+      background: #FAF5FF;
+      border-color: #E9D5FF;
+    }
+
+    .badge-task-type-default {
+      color: #334155;
+      background: #F8FAFC;
+      border-color: #CBD5E1;
     }
 
     /* ── Metrics ───────────────────────────────────────────────– */
@@ -990,7 +1020,7 @@
                     <span id="adminTask1Detail" class="list-item-detail">專案負責人A · 審核員A · 8 位標記員 · 已完成 89%</span>
                   </div>
                   <div class="task-item-badges">
-                    <span id="adminTask1TaskType" class="badge badge-task-type">分類任務</span>
+                    <span id="adminTask1TaskType" class="badge badge-task-type-single">單句分類（含多標籤）</span>
                     <span id="adminTask1RunType" class="badge badge-official">正式標記</span>
                     <span id="adminTask1Badge" class="badge badge-info">進行中</span>
                   </div>
@@ -1006,7 +1036,7 @@
                     <span id="adminTask2Detail" class="list-item-detail">專案負責人B · 審核員B · 6 位標記員 · 已完成 42%</span>
                   </div>
                   <div class="task-item-badges">
-                    <span id="adminTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
+                    <span id="adminTask2TaskType" class="badge badge-task-type-scoring">單句 VA 雙維度評分（Valence / Arousal）</span>
                     <span id="adminTask2RunType" class="badge badge-dry-run">試標</span>
                     <span id="adminTask2Badge" class="badge badge-warning">待確認</span>
                   </div>
@@ -1022,7 +1052,7 @@
                     <span id="adminTask3Detail" class="list-item-detail">專案負責人C · 審核員C · 5 位標記員 · 已完成 28%</span>
                   </div>
                   <div class="task-item-badges">
-                    <span id="adminTask3TaskType" class="badge badge-task-type">序列標註（NER）</span>
+                    <span id="adminTask3TaskType" class="badge badge-task-type-sequence">序列標記（含 Aspect / NER）</span>
                     <span id="adminTask3RunType" class="badge badge-official">正式標記</span>
                     <span id="adminTask3Badge" class="badge badge-info">進行中</span>
                   </div>
@@ -1082,7 +1112,7 @@
                     <span id="plTask1Detail" class="list-item-detail">審核員A · 8 位標記員 · 已完成 89%</span>
                   </div>
                   <div class="task-item-badges">
-                    <span id="plTask1TaskType" class="badge badge-task-type">分類任務</span>
+                    <span id="plTask1TaskType" class="badge badge-task-type-single">單句分類（含多標籤）</span>
                     <span id="plTask1RunType" class="badge badge-official">正式標記</span>
                     <span id="plTask1Badge" class="badge badge-info">進行中</span>
                   </div>
@@ -1098,7 +1128,7 @@
                     <span id="plTask2Detail" class="list-item-detail">審核員B · 6 位標記員 · 已完成 42%</span>
                   </div>
                   <div class="task-item-badges">
-                    <span id="plTask2TaskType" class="badge badge-task-type">評分 / 回歸任務</span>
+                    <span id="plTask2TaskType" class="badge badge-task-type-scoring">單句 VA 雙維度評分（Valence / Arousal）</span>
                     <span id="plTask2RunType" class="badge badge-dry-run">試標</span>
                     <span id="plTask2Badge" class="badge badge-warning">待確認</span>
                   </div>
@@ -1114,7 +1144,7 @@
                     <span id="plTask3Detail" class="list-item-detail">審核員C · 5 位標記員 · 已完成 28%</span>
                   </div>
                   <div class="task-item-badges">
-                    <span id="plTask3TaskType" class="badge badge-task-type">序列標註（NER）</span>
+                    <span id="plTask3TaskType" class="badge badge-task-type-sequence">序列標記（含 Aspect / NER）</span>
                     <span id="plTask3RunType" class="badge badge-official">正式標記</span>
                     <span id="plTask3Badge" class="badge badge-info">進行中</span>
                   </div>
@@ -1332,12 +1362,12 @@
         adminTask1Title:       '新聞標題分類',
         adminTask1Detail:      '專案負責人A · 審核員A · 8 位標記員 · 已完成 89%',
         adminTask1Badge:       '進行中',
-        adminTask1TaskType:    '分類任務',
+        adminTask1TaskType:    '單句分類（含多標籤）',
         adminTask1RunType:     '正式標記',
         adminTask2Title:       '情感分析基準',
         adminTask2Detail:      '專案負責人B · 審核員B · 6 位標記員 · 已完成 42%',
         adminTask2Badge:       '待確認',
-        adminTask2TaskType:    '評分 / 回歸任務',
+        adminTask2TaskType:    '單句 VA 雙維度評分（Valence / Arousal）',
         adminTask2RunType:     '試標',
         plTaskOverviewTitle:   '任務概況',
         plTaskOverviewSubtitle:'所有項目統計',
@@ -1350,12 +1380,12 @@
         plViewAllBtn:          '查看全部',
         plTask1Title:          '新聞標題分類',
         plTask1Detail:         '審核員A · 8 位標記員 · 已完成 89%',
-        plTask1TaskType:       '分類任務',
+        plTask1TaskType:       '單句分類（含多標籤）',
         plTask1RunType:        '正式標記',
         plTask1Badge:          '進行中',
         plTask2Title:          '情感分析基準',
         plTask2Detail:         '審核員B · 6 位標記員 · 已完成 42%',
-        plTask2TaskType:       '評分 / 回歸任務',
+        plTask2TaskType:       '單句 VA 雙維度評分（Valence / Arousal）',
         plTask2RunType:        '試標',
         plTask2Badge:          '待確認',
         annotatorProgressTitle:  '標記概況',
@@ -1367,13 +1397,13 @@
         annotatorTaskListSubtitle:'我的進行中任務',
         annotatorTask1Title:     '新聞標題分類',
         annotatorTask1Detail:    '已完成 89% · 今日 53 筆 · 平均速度 3.0',
-        annotatorTask1TaskType:  '分類任務',
+        annotatorTask1TaskType:  '單句分類（含多標籤）',
         annotatorTask1RunType:   '正式標記',
         annotatorTask1Badge:     '繼續中',
         annotatorTask1ContinueBtn:'快速繼續',
         annotatorTask2Title:     '情感分析基準',
         annotatorTask2Detail:    '已完成 42% · 今日 18 筆 · 平均速度 4.2',
-        annotatorTask2TaskType:  '評分 / 回歸任務',
+        annotatorTask2TaskType:  '單句 VA 雙維度評分（Valence / Arousal）',
         annotatorTask2RunType:   '試標',
         annotatorTask2Badge:     '待繼續',
         annotatorTask2ContinueBtn:'快速繼續',
@@ -1386,13 +1416,13 @@
         reviewerTaskListSubtitle:'我的待審任務',
         reviewerTask1Title:      '新聞標題分類',
         reviewerTask1Detail:     '待審 12 筆 · 進度 67% · IAA 0.81',
-        reviewerTask1TaskType:   '分類任務',
+        reviewerTask1TaskType:   '單句分類（含多標籤）',
         reviewerTask1RunType:    '正式標記',
         reviewerTask1Badge:      '待審查',
         reviewerTask1StartBtn:   '快速審核',
         reviewerTask2Title:      '情感分析基準',
         reviewerTask2Detail:     '待審 8 筆 · 進度 52% · IAA 0.78',
-        reviewerTask2TaskType:   '評分 / 回歸任務',
+        reviewerTask2TaskType:   '單句 VA 雙維度評分（Valence / Arousal）',
         reviewerTask2RunType:    '試標',
         reviewerTask2Badge:      '進行中',
         reviewerTask2StartBtn:   '快速審核',
@@ -1564,7 +1594,7 @@
         progress: 42,
         title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
         detail: { zh: '已完成 42% · 今日 18 筆 · 平均速度 4.2', en: '42% Completed · 18 Today · Avg Speed 4.2' },
-        taskTypeText: { zh: '單句 VA 雙維度評分', en: 'Single-sentence VA Scoring' },
+        taskTypeText: { zh: '單句 VA 雙維度評分（Valence / Arousal）', en: 'Single-sentence VA Scoring (Valence / Arousal)' },
         runTypeText: { zh: '試標', en: 'Dry Run' },
         runTypeClass: 'badge-dry-run',
         statusText: { zh: '待繼續', en: 'Resume' },
@@ -1580,7 +1610,7 @@
         progress: 28,
         title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
         detail: { zh: '已完成 28% · 今日 12 筆 · 平均速度 2.5', en: '28% Completed · 12 Today · Avg Speed 2.5' },
-        taskTypeText: { zh: '序列標註（NER）', en: 'Sequence Labeling (NER)' },
+        taskTypeText: { zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
         runTypeText: { zh: '正式標記', en: 'Official Run' },
         runTypeClass: 'badge-official',
         statusText: { zh: '進行中', en: 'In Progress' },
@@ -1596,7 +1626,7 @@
         progress: 64,
         title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
         detail: { zh: '已完成 64% · 今日 31 筆 · 平均速度 2.8', en: '64% Completed · 31 Today · Avg Speed 2.8' },
-        taskTypeText: { zh: '序列標註（Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+        taskTypeText: { zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
         runTypeText: { zh: '正式標記', en: 'Official Run' },
         runTypeClass: 'badge-official',
         statusText: { zh: '進行中', en: 'In Progress' },
@@ -1611,7 +1641,7 @@
         progress: 37,
         title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
         detail: { zh: '已完成 37% · 今日 14 筆 · 平均速度 5.1', en: '37% Completed · 14 Today · Avg Speed 5.1' },
-        taskTypeText: { zh: '關係抽取（Entity / Relation / Triple）', en: 'Relation Extraction (Entity / Relation / Triple)' },
+        taskTypeText: { zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)' },
         runTypeText: { zh: '正式標記', en: 'Official Run' },
         runTypeClass: 'badge-official',
         statusText: { zh: '待繼續', en: 'Resume' },
@@ -1659,7 +1689,7 @@
         progress: 52,
         title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
         detail: { zh: '待審 8 筆 · 進度 52% · IAA 0.78', en: '8 Pending · 52% Progress · IAA 0.78' },
-        taskTypeText: { zh: '單句 VA 雙維度評分', en: 'Single-sentence VA Scoring' },
+        taskTypeText: { zh: '單句 VA 雙維度評分（Valence / Arousal）', en: 'Single-sentence VA Scoring (Valence / Arousal)' },
         runTypeText: { zh: '試標', en: 'Dry Run' },
         runTypeClass: 'badge-dry-run',
         statusText: { zh: '進行中', en: 'In Progress' },
@@ -1675,7 +1705,7 @@
         progress: 28,
         title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
         detail: { zh: '待審 10 筆 · 進度 28% · IAA 0.79', en: '10 Pending · 28% Progress · IAA 0.79' },
-        taskTypeText: { zh: '序列標註（NER）', en: 'Sequence Labeling (NER)' },
+        taskTypeText: { zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
         runTypeText: { zh: '正式標記', en: 'Official Run' },
         runTypeClass: 'badge-official',
         statusText: { zh: '待審查', en: 'Pending Review' },
@@ -1690,7 +1720,7 @@
         progress: 61,
         title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
         detail: { zh: '待審 15 筆 · 進度 61% · IAA 0.83', en: '15 Pending · 61% Progress · IAA 0.83' },
-        taskTypeText: { zh: '序列標註（Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
+        taskTypeText: { zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
         runTypeText: { zh: '正式標記', en: 'Official Run' },
         runTypeClass: 'badge-official',
         statusText: { zh: '待審查', en: 'Pending Review' },
@@ -1705,7 +1735,7 @@
         progress: 44,
         title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
         detail: { zh: '待審 9 筆 · 進度 44% · IAA 0.79', en: '9 Pending · 44% Progress · IAA 0.79' },
-        taskTypeText: { zh: '關係抽取（Entity / Relation / Triple）', en: 'Relation Extraction (Entity / Relation / Triple)' },
+        taskTypeText: { zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)' },
         runTypeText: { zh: '正式標記', en: 'Official Run' },
         runTypeClass: 'badge-official',
         statusText: { zh: '進行中', en: 'In Progress' },
@@ -1734,6 +1764,18 @@
 
     function localizedText(source) {
       return (source && (source[lang] || source.zh || source.en)) || '';
+    }
+
+    const TASK_TYPE_BADGE_CLASS = {
+      single_sentence_classification: 'badge-task-type-single',
+      single_sentence_va_scoring: 'badge-task-type-scoring',
+      sequence_labeling: 'badge-task-type-sequence',
+      relation_extraction: 'badge-task-type-relation',
+      sentence_pairs: 'badge-task-type-pairs',
+    };
+
+    function getTaskTypeBadgeClass(taskType) {
+      return TASK_TYPE_BADGE_CLASS[taskType] || 'badge-task-type-default';
     }
 
     function setActiveTaskType(taskType) {
@@ -1810,7 +1852,7 @@
             '</div>' +
             '<div class="task-item-meta">' +
               '<div class="task-item-badges">' +
-                '<span class="badge badge-task-type">' + localizedText(task.taskTypeText) + '</span>' +
+                '<span class="badge ' + getTaskTypeBadgeClass(task.taskType) + '">' + localizedText(task.taskTypeText) + '</span>' +
                 '<span class="badge ' + task.runTypeClass + '">' + localizedText(task.runTypeText) + '</span>' +
                 '<span class="badge ' + task.statusClass + '">' + localizedText(task.statusText) + '</span>' +
               '</div>' +

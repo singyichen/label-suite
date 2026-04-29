@@ -161,11 +161,12 @@
       background: #EDE9FE;
       border-color: #DDD6FE;
     }
-    .badge-task-type {
-      color: #0E7490;
-      background: #ECFEFF;
-      border-color: #A5F3FC;
-    }
+    .badge-task-type-single      { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
+    .badge-task-type-sequence    { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
+    .badge-task-type-relation    { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
+    .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
+    .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
+    .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .progress {
       height: 6px;
       border-radius: var(--radius-full);
@@ -499,7 +500,7 @@
         </div>
         <div class="task-item-meta">
           <div class="task-item-badges">
-            <span class="badge badge-task-type" id="taskInfoTaskType">-</span>
+            <span class="badge badge-task-type-default" id="taskInfoTaskType">-</span>
             <span class="badge" id="taskInfoRunType">-</span>
             <span class="badge" id="taskInfoStatus">-</span>
           </div>
@@ -600,11 +601,18 @@
   var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
   var TASK_TYPE_TEXT = {
-    single_sentence_classification: '單句分類',
-    single_sentence_va_scoring: '單句 VA 評分',
-    sequence_labeling: '序列標註',
-    relation_extraction: '關係抽取',
-    sentence_pairs: '句對任務'
+    single_sentence_classification: '單句分類（含多標籤）',
+    single_sentence_va_scoring: '單句 VA 雙維度評分（Valence / Arousal）',
+    sequence_labeling: '序列標記（含 Aspect / NER）',
+    relation_extraction: '關係抽取（Entity + Relation + Triple）',
+    sentence_pairs: '句對任務（相似度 / 蘊含）'
+  };
+  var TASK_TYPE_BADGE_CLS = {
+    single_sentence_classification: 'badge-task-type-single',
+    single_sentence_va_scoring: 'badge-task-type-scoring',
+    sequence_labeling: 'badge-task-type-sequence',
+    relation_extraction: 'badge-task-type-relation',
+    sentence_pairs: 'badge-task-type-pairs'
   };
 
   var TASKS_BY_ROLE = {
@@ -632,7 +640,7 @@
         title: '情感 VA 雙維度評分',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
-        dashboardTaskTypeText: '單句 VA 評分',
+        dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
         dashboardDetail: '已完成 42% · 今日 18 筆 · 平均速度 4.2',
         dashboardProgress: 42,
         dashboardStatusText: '待繼續',
@@ -650,7 +658,7 @@
         title: '產品評論序列標註（NER / Aspect）',
         taskType: 'sequence_labeling',
         runType: 'official_run',
-        dashboardTaskTypeText: '序列標註（Aspect / NER）',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '已完成 64% · 今日 31 筆 · 平均速度 2.8',
         dashboardProgress: 64,
         dashboardStatusText: '進行中',
@@ -669,7 +677,7 @@
         taskType: 'sequence_labeling',
         subType: 'ner',
         runType: 'official_run',
-        dashboardTaskTypeText: '序列標註（NER）',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '已完成 28% · 今日 12 筆 · 平均速度 2.5',
         dashboardProgress: 28,
         dashboardStatusText: '進行中',
@@ -687,7 +695,7 @@
         title: '醫療關係抽取（Entity / Triple）',
         taskType: 'relation_extraction',
         runType: 'official_run',
-        dashboardTaskTypeText: '關係抽取（Entity / Relation / Triple）',
+        dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
         dashboardDetail: '已完成 37% · 今日 14 筆 · 平均速度 5.1',
         dashboardProgress: 37,
         dashboardStatusText: '待繼續',
@@ -771,7 +779,7 @@
         title: '情感 VA 雙維度評分',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
-        dashboardTaskTypeText: '單句 VA 評分',
+        dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
         dashboardDetail: '待審 8 筆 · 進度 52% · IAA 0.78',
         dashboardProgress: 52,
         dashboardStatusText: '進行中',
@@ -843,7 +851,7 @@
         title: '產品評論序列標註（NER / Aspect）',
         taskType: 'sequence_labeling',
         runType: 'official_run',
-        dashboardTaskTypeText: '序列標註（Aspect / NER）',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '待審 15 筆 · 進度 61% · IAA 0.83',
         dashboardProgress: 61,
         dashboardStatusText: '待審查',
@@ -913,7 +921,7 @@
         taskType: 'sequence_labeling',
         subType: 'ner',
         runType: 'official_run',
-        dashboardTaskTypeText: '序列標註（NER）',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '待審 10 筆 · 進度 28% · IAA 0.79',
         dashboardProgress: 28,
         dashboardStatusText: '待審查',
@@ -968,7 +976,7 @@
         title: '醫療關係抽取（Entity / Triple）',
         taskType: 'relation_extraction',
         runType: 'official_run',
-        dashboardTaskTypeText: '關係抽取（Entity / Relation / Triple）',
+        dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
         dashboardDetail: '待審 9 筆 · 進度 44% · IAA 0.79',
         dashboardProgress: 44,
         dashboardStatusText: '進行中',
@@ -1327,6 +1335,10 @@
     return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
   }
 
+  function taskTypeBadgeClass(taskType) {
+    return TASK_TYPE_BADGE_CLS[taskType] || 'badge-task-type-default';
+  }
+
   function findLatestUnfinishedSampleId(task) {
     if (!task || !Array.isArray(task.samples) || task.samples.length === 0) return '';
 
@@ -1374,6 +1386,7 @@
     title.textContent = task.title;
     detail.textContent = task.dashboardDetail || '-';
     taskType.textContent = task.dashboardTaskTypeText || TASK_TYPE_TEXT[task.taskType] || task.taskType;
+    taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
     runType.textContent = runTypeLabel(task.runType);
     runType.className = 'badge ' + runTypeBadgeClass(task.runType);
     status.textContent = task.dashboardStatusText || '進行中';

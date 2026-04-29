@@ -9,7 +9,7 @@ test.describe('Annotation list routing', () => {
     const toolbar = page.locator('.toolbar[role="search"]');
     await expect(taskInfoCard).toBeVisible();
     await expect(taskInfoCard).toContainText('情感 VA 雙維度評分');
-    await expect(taskInfoCard).toContainText('單句 VA 評分');
+    await expect(taskInfoCard).toContainText('單句 VA 雙維度評分（Valence / Arousal）');
     await expect(taskInfoCard).toContainText('試標');
     await expect(taskInfoCard.getByRole('button', { name: '快速繼續' })).toBeVisible();
 
@@ -18,6 +18,51 @@ test.describe('Annotation list routing', () => {
     expect(taskInfoBox).not.toBeNull();
     expect(toolbarBox).not.toBeNull();
     expect(taskInfoBox!.y).toBeLessThan(toolbarBox!.y);
+  });
+
+  test('task info card uses standardized task type copy and matching badge colors', async ({ page }) => {
+    const cases = [
+      {
+        url: '/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification',
+        text: '單句分類（含多標籤）',
+        className: /badge-task-type-single/,
+        backgroundColor: 'rgb(236, 254, 255)',
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring',
+        text: '單句 VA 雙維度評分（Valence / Arousal）',
+        className: /badge-task-type-scoring/,
+        backgroundColor: 'rgb(250, 245, 255)',
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A3&run_type=official_run&task_type=sequence_labeling',
+        text: '序列標記（含 Aspect / NER）',
+        className: /badge-task-type-sequence/,
+        backgroundColor: 'rgb(255, 247, 237)',
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A4&run_type=official_run&task_type=relation_extraction',
+        text: '關係抽取（Entity + Relation + Triple）',
+        className: /badge-task-type-relation/,
+        backgroundColor: 'rgb(236, 254, 255)',
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A6&run_type=official_run&task_type=sequence_labeling',
+        text: '序列標記（含 Aspect / NER）',
+        className: /badge-task-type-sequence/,
+        backgroundColor: 'rgb(255, 247, 237)',
+      },
+    ];
+
+    for (const item of cases) {
+      await page.goto(item.url);
+      await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+      const taskTypeBadge = page.locator('#taskInfoTaskType');
+      await expect(taskTypeBadge).toHaveText(item.text);
+      await expect(taskTypeBadge).toHaveClass(item.className);
+      await expect(taskTypeBadge).toHaveCSS('background-color', item.backgroundColor);
+    }
   });
 
   test('task info card quick continue opens latest unfinished sample in workspace', async ({ page }) => {
