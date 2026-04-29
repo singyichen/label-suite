@@ -534,7 +534,7 @@
       trackAnalytics('prototype_dataset_card_clicked', { task_id: task.id, iaa_status: task.iaaStatus });
       showToast(t('toastNavigating'));
       window.setTimeout(function () {
-        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=quality';
+        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=stats';
       }, 220);
     }
     tr.addEventListener('click', handleRowActivate);

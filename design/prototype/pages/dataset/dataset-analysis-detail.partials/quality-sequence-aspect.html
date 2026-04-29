@@ -1,0 +1,329 @@
+<!-- Quality Monitor — Sequence Labeling (Aspect profile) -->
+
+<!-- IAA 報告 — 三指標群組 -->
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+    <span class="badge iaa-summary-badge badge-fail" id="iaaSummaryBadge">整體未達標</span>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName">Exact Span F1 · Partial Match F1 · Label Accuracy</span>
+    <span id="iaaAspMethodSuffix" style="font-size:13px;color:var(--color-text-soft)">— 主要指標群組</span>
+  </div>
+  <!-- 三指標並排，spec: FR-012C-1 預設同時顯示，不以替代指標收合 -->
+  <div class="iaa-score-grid" style="margin-bottom:var(--space-md)">
+    <!-- Exact Span F1: 0.71 < 0.80 → fail -->
+    <div class="iaa-score-card card-fail">
+      <div class="iaa-card-label" id="lblAspExactF1">Exact Span F1</div>
+      <div class="iaa-card-value fail">0.71</div>
+      <div class="iaa-card-calc" id="lblAspExactCalc">boundary + label 完全一致</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill fail" style="width:71%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-fail"></span>
+          <span id="lblAspExactThr">門檻 0.80 — <strong class="t-fail">未達</strong></span>
+        </span>
+      </div>
+    </div>
+    <!-- Partial Match F1: 0.79 > 0.70 → pass -->
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblAspPartialF1">Partial Match F1</div>
+      <div class="iaa-card-value pass">0.79</div>
+      <div class="iaa-card-calc" id="lblAspPartialCalc">spans overlap + label 相容</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:79%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblAspPartialThr">Relaxed 門檻 0.70 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+    <!-- Label Accuracy: 0.84 > 0.80 → pass -->
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblAspLabelAcc">Label Accuracy</div>
+      <div class="iaa-card-value pass">0.84</div>
+      <div class="iaa-card-calc" id="lblAspLabelAccCalc">matched spans 上的 label 正確率</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:84%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblAspLabelAccThr">門檻 0.80 — <strong class="t-pass">通過</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <!-- Per-aspect breakdown (collapsible aux) -->
+  <button class="alt-toggle-btn" id="altBtnAsp" type="button" aria-expanded="false" aria-controls="altBodyAsp">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span>各 Aspect 類別指標明細</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodyAsp" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead>
+          <tr><th>Aspect</th><th>Exact Span F1</th><th>Partial F1</th><th>Label Acc</th><th>結果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>產品品質</td><td>0.74</td><td>0.81</td><td>0.87</td><td><span class="badge badge-warn">Exact 未達</span></td></tr>
+          <tr><td>CP值（性價比）</td><td>0.72</td><td>0.80</td><td>0.85</td><td><span class="badge badge-warn">Exact 未達</span></td></tr>
+          <tr><td>外觀設計</td><td>0.82</td><td>0.88</td><td>0.91</td><td><span class="badge badge-pass">通過</span></td></tr>
+          <tr><td>客戶服務</td><td>0.68</td><td>0.75</td><td>0.82</td><td><span class="badge badge-fail">未達</span></td></tr>
+          <tr><td>包裝品質</td><td>0.71</td><td>0.78</td><td>0.83</td><td><span class="badge badge-warn">Exact 未達</span></td></tr>
+          <tr><td>功能性</td><td>0.63</td><td>0.70</td><td>0.79</td><td><span class="badge badge-fail">未達</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 邊界錯誤分析 — spec FR-012C-2 -->
+<section class="panel" aria-labelledby="boundaryErrTitle">
+  <h2 class="panel-title" id="boundaryErrTitle">邊界錯誤分析</h2>
+  <p class="panel-subtitle" style="margin-top:4px">Span 邊界錯誤分類（共 87 筆邊界錯誤），以 gold / consensus span 為基準對比標記員版本</p>
+  <!-- Error type summary cards -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:var(--space-md)">
+    <div style="border:1px solid var(--color-warning-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-warning-bg)">
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">span_too_long</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)">42</div>
+      <div style="font-size:12px;color:var(--color-text-soft)">48.3%</div>
+      <div class="iaa-bar-wrap" style="margin-top:8px"><div class="iaa-bar-fill warn" style="width:48.3%"></div></div>
+    </div>
+    <div style="border:1px solid var(--color-info-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-info-bg)">
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">span_too_short</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)">29</div>
+      <div style="font-size:12px;color:var(--color-text-soft)">33.3%</div>
+      <div class="iaa-bar-wrap" style="margin-top:8px"><div class="iaa-bar-fill" style="width:33.3%;background:var(--color-info)"></div></div>
+    </div>
+    <div style="border:1px solid var(--color-error-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-error-bg)">
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">wrong_boundary</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)">16</div>
+      <div style="font-size:12px;color:var(--color-text-soft)">18.4%</div>
+      <div class="iaa-bar-wrap" style="margin-top:8px"><div class="iaa-bar-fill fail" style="width:18.4%"></div></div>
+    </div>
+  </div>
+  <!-- Representative examples -->
+  <div style="margin-top:var(--space-md);display:grid;gap:8px">
+    <div style="font-size:13px;font-weight:700;color:var(--color-ink)">代表例句</div>
+    <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 14px">
+      <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;flex-wrap:wrap">
+        <span style="background:var(--color-warning-bg);border:1px solid var(--color-warning-border);color:var(--color-warning);border-radius:var(--radius-sm);padding:1px 7px;font-size:11px;font-weight:700">span_too_long</span>
+        <span style="font-size:12px;color:var(--color-text-soft)">Aspect: 產品品質</span>
+      </div>
+      <div style="font-size:13px;color:var(--color-ink);line-height:1.8">
+        「這款手機的 <mark style="background:#FEF3C7;padding:0 2px;border-radius:2px">外殼材質非常堅固耐用，不易刮傷</mark> 且設計感十足」
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:var(--color-text-soft)">
+        Gold: 「外殼材質非常堅固耐用」&nbsp;|&nbsp; Annotator: 「外殼材質非常堅固耐用，不易刮傷」（多標 3 tokens）
+      </div>
+    </div>
+    <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 14px">
+      <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;flex-wrap:wrap">
+        <span style="background:var(--color-info-bg);border:1px solid var(--color-info-border);color:var(--color-info);border-radius:var(--radius-sm);padding:1px 7px;font-size:11px;font-weight:700">span_too_short</span>
+        <span style="font-size:12px;color:var(--color-text-soft)">Aspect: CP值（性價比）</span>
+      </div>
+      <div style="font-size:13px;color:var(--color-ink);line-height:1.8">
+        「整體來說這個 <mark style="background:#DBEAFE;padding:0 2px;border-radius:2px">價格</mark> 相比同類競品真的很划算」
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:var(--color-text-soft)">
+        Gold: 「價格相比同類競品」&nbsp;|&nbsp; Annotator: 「價格」（少標 6 tokens）
+      </div>
+    </div>
+    <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 14px">
+      <div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;flex-wrap:wrap">
+        <span style="background:var(--color-error-bg);border:1px solid var(--color-error-border);color:var(--color-error);border-radius:var(--radius-sm);padding:1px 7px;font-size:11px;font-weight:700">wrong_boundary</span>
+        <span style="font-size:12px;color:var(--color-text-soft)">Aspect: 客戶服務</span>
+      </div>
+      <div style="font-size:13px;color:var(--color-ink);line-height:1.8">
+        「<mark style="background:#FEE2E2;padding:0 2px;border-radius:2px">客服非常</mark> 有耐心地解決了我的問題，讓我很滿意」
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:var(--color-text-soft)">
+        Gold: 「客服」&nbsp;|&nbsp; Annotator: 「客服非常」（邊界偏移 1 token，語意含糊）
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 高分歧樣本分析 — spec FR-012C-3 -->
+<section class="panel" aria-labelledby="highDisagreeTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="highDisagreeTitle">高分歧樣本分析</h2>
+    <span class="badge badge-neutral">23 筆</span>
+  </div>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)">依 disagreement_score 由高到低排序（strict F1 低分 + boundary conflict + label 不一致加權）</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="高分歧樣本清單">
+        <thead>
+          <tr>
+            <th>樣本</th>
+            <th>分歧分數</th>
+            <th style="min-width:200px">句子摘要</th>
+            <th style="min-width:160px">衝突描述</th>
+            <th>佇列狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#312</span></td>
+            <td><span class="badge badge-fail">0.94</span></td>
+            <td style="white-space:normal;font-size:12px">「這支手機最令我滿意的是其相機功能以及充電速度極快…」</td>
+            <td style="white-space:normal;font-size:12px">功能性 ↔ 產品品質（3 版本，span 差 4 tokens）</td>
+            <td><span class="badge badge-warn">待審核</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#078</span></td>
+            <td><span class="badge badge-fail">0.88</span></td>
+            <td style="white-space:normal;font-size:12px">「客服態度親切，且退換貨流程非常簡便，讓我很滿意…」</td>
+            <td style="white-space:normal;font-size:12px">客戶服務（2 標記員 span 不重疊）</td>
+            <td><span class="badge badge-warn">待審核</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#445</span></td>
+            <td><span class="badge badge-warn">0.81</span></td>
+            <td style="white-space:normal;font-size:12px">「包裝設計很精緻，整個開箱過程令人印象深刻…」</td>
+            <td style="white-space:normal;font-size:12px">外觀設計 ↔ 包裝品質（label 分歧）</td>
+            <td><span class="badge badge-neutral">已完成</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#189</span></td>
+            <td><span class="badge badge-warn">0.76</span></td>
+            <td style="white-space:normal;font-size:12px">「雖然價格略高，但整體質感與耐用度完全值得…」</td>
+            <td style="white-space:normal;font-size:12px">CP值 ↔ 產品品質（boundary overlap）</td>
+            <td><span class="badge badge-warn">待審核</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#521</span></td>
+            <td><span class="badge badge-warn">0.72</span></td>
+            <td style="white-space:normal;font-size:12px">「功能雖不算最頂尖，但性價比確實不錯，推薦入手…」</td>
+            <td style="white-space:normal;font-size:12px">功能性 span 邊界一致性低</td>
+            <td><span class="badge badge-neutral">已完成</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="group-avg-note">顯示 disagreement_score ≥ 0.70 的樣本（共 23 筆）。完整清單可於 Reviewer Queue 查看。</p>
+</section>
+
+<!-- ─── 共用品質監控區塊 ─────────────────────────────────────────────── -->
+
+<!-- 異常偵測 -->
+<section class="panel" aria-labelledby="anomalyTitle">
+  <h2 class="panel-title" id="anomalyTitle">異常偵測</h2>
+  <p class="panel-subtitle" id="anomalySubtitle">自動標記標記速度異常與離群標記值</p>
+  <div class="anomaly-group-title">標記速度異常</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title">Jordan Wu — 標記速度過快</div>
+        <div class="anomaly-detail">平均 24s／句（群體平均 45.3s；Aspect 任務預期 ≥ 40s），共 35 筆提交紀錄</div>
+      </div>
+    </li>
+  </ul>
+  <div class="anomaly-group-title" style="margin-top:var(--space-md)">高分歧樣本（sample-level 旗標）</div>
+  <ul class="anomaly-list">
+    <li class="anomaly-item">
+      <svg class="anomaly-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="anomaly-body">
+        <div class="anomaly-title">樣本 #312 — Aspect span high_divergence 旗標</div>
+        <div class="anomaly-detail">功能性 span 邊界在三位標記員間差異超過 4 tokens；此旗標為 sample-level，與個人風險等級分開處理，不拉高任何標記員風險等級。</div>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<!-- 標記員風險評估 -->
+<section class="panel" aria-labelledby="annotatorTitle">
+  <h2 class="panel-title" id="annotatorTitle">標記員風險評估</h2>
+  <p class="panel-subtitle" id="annotatorSubtitle">風險原因僅限 annotator-level：系統性偏差、標記過快、標記過慢。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記員風險評估（Aspect）">
+          <thead>
+            <tr>
+              <th>標記員</th>
+              <th>平均速度</th>
+              <th>Aspect F1（exact）</th>
+              <th>風險等級</th>
+              <th>異常原因</th>
+              <th>樣本數</th>
+              <th>建議行動</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="annotator-name">Mandy Chen</span></td>
+              <td>52s / 句</td>
+              <td><span class="badge badge-pass">0.78</span></td>
+              <td><span class="risk-level-badge normal" data-risk-level="normal">正常</span></td>
+              <td><div class="cause-muted">無異常原因</div></td>
+              <td>24</td>
+              <td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td>
+            </tr>
+            <tr>
+              <td><span class="annotator-name">Avery Lin</span></td>
+              <td>60s / 句</td>
+              <td><span class="badge badge-warn">0.69</span></td>
+              <td><span class="risk-level-badge watch" data-risk-level="watch">觀察</span></td>
+              <td><div class="cause-stack"><span class="cause-chip">系統性偏差</span></div></td>
+              <td>21</td>
+              <td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td>
+            </tr>
+            <tr>
+              <td><span class="annotator-name">Jordan Wu</span></td>
+              <td><span class="speed-warn">24s / 句</span><span class="speed-flag" aria-label="速度異常">⚠</span></td>
+              <td><span class="badge badge-fail">0.58</span></td>
+              <td><span class="risk-level-badge high" data-risk-level="high">高風險</span></td>
+              <td><div class="cause-stack"><span class="cause-chip">標記過快</span><span class="cause-chip">系統性偏差</span></div></td>
+              <td>35</td>
+              <td><div class="action-stack"><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">審核標記</button><button class="btn btn-secondary btn-sm risk-action-btn" data-role-action type="button">調整參與狀態</button><div class="risk-readonly-note hidden" data-role-note>僅 Project Leader 可執行</div></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="aspRiskGroupAvg">群體平均 — Aspect F1（exact）: 0.68 ／ 平均速度: 45.3s／句</p>
+  </div>
+</section>
+
+<!-- 標記一致性偏離分析 -->
+<section class="panel" aria-labelledby="consistencyTitle">
+  <h2 class="panel-title" id="consistencyTitle">標記一致性偏離分析</h2>
+  <p class="panel-subtitle" id="consistencySubtitle">顯示每位標記員在可比較單位中的離群值筆數與比例，作為觀測訊號，不直接覆寫風險等級。</p>
+  <div style="margin-top:var(--space-md)">
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="annotator-table" aria-label="標記一致性偏離分析（Aspect）">
+          <thead>
+            <tr>
+              <th>標記員</th>
+              <th id="consistencyUnitCol">可比較 span 數</th>
+              <th id="consistencyOutlier15CountCol">離群值(1.5xSTD)筆數</th>
+              <th id="consistencyOutlier15RateCol">離群值(1.5xSTD)比例</th>
+              <th id="consistencyOutlier2CountCol">離群值(2xSTD)筆數</th>
+              <th id="consistencyOutlier2RateCol">離群值(2xSTD)比例</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="annotator-name">Mandy Chen</span></td>
+              <td>24</td><td>3</td><td>12.5%</td><td>0</td><td>0%</td>
+            </tr>
+            <tr>
+              <td><span class="annotator-name">Avery Lin</span></td>
+              <td>21</td><td>5</td><td>23.8%</td><td>2</td><td>9.5%</td>
+            </tr>
+            <tr>
+              <td><span class="annotator-name">Jordan Wu</span></td>
+              <td>35</td><td>12</td><td>34.3%</td><td>4</td><td>11.4%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="group-avg-note" id="consistencyNote">Aspect 標記以可對齊的 span（aspect taxonomy 類別相符）作為比較母體；boundary high_divergence 樣本維持獨立 sample-level 旗標。</p>
+  </div>
+</section>

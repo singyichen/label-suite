@@ -218,7 +218,7 @@ sequenceDiagram
 1. **Given** `task_type=single_sentence_classification`，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 為主要指標，替代指標區（Cohen's Kappa / Fleiss' Kappa）可選顯示，並標示 `IAA_THRESHOLD_CLASSIFICATION`。
 2. **Given** `task_type=single_sentence_va_scoring`，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，分別計算 IAA_V / IAA_A，Overall = (IAA_V + IAA_A) / 2，並標示 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT`。
 3. **Given** `task_type=sequence_labeling` 且 `analysis_profile=ner`，**When** 進入品質監控，**Then** 顯示 Pairwise Entity-level F1 ⭐️ 為主要指標，提供 strict 與 partial overlap match 切換，並標示 `IAA_THRESHOLD_SEQUENCE` / `IAA_THRESHOLD_SEQUENCE_RELAXED`。
-4. **Given** `task_type=sequence_labeling` 且 `analysis_profile=aspect`，**When** 進入品質監控，**Then** 顯示 Exact Span F1、Partial Match F1、Label Accuracy 作為主要摘要，並提供 Boundary Error Analysis、High Disagreement Samples 與 Annotator Quality Ranking。
+4. **Given** `task_type=sequence_labeling` 且 `analysis_profile=aspect`，**When** 進入品質監控，**Then** 顯示 Exact Span F1、Partial Match F1、Label Accuracy 作為主要摘要，並提供邊界錯誤分析、高分歧樣本分析 與 Annotator Quality Ranking。
 5. **Given** `task_type=relation_extraction`，**When** 進入品質監控，**Then** 顯示 Pairwise Triple-level F1 ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_RELATION` / `IAA_THRESHOLD_RELATION_HIGH`。
 6. **Given** `task_type=sentence_pairs` 且 `response_format = classification`，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 與 `IAA_THRESHOLD_SENTENCE_PAIRS`。
 7. **Given** `task_type=sentence_pairs` 且 `response_format = scoring`，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，並沿用 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT` 作為門檻。
@@ -231,8 +231,8 @@ sequenceDiagram
   - 選用元素：替代 / 輔助指標（可展開 / 收合）
 - `sequence_labeling.analysis_profile = ner` 時，品質監控區以 `Pairwise Entity-level F1` 為主，提供 strict / partial overlap match 切換。
 - `sequence_labeling.analysis_profile = aspect` 時，品質監控區需額外包含：
-  - `Boundary Error Analysis`：`span_too_long | span_too_short | wrong_boundary` 類型統計、代表例句與錯誤比例
-  - `High Disagreement Samples`：依 `DISAGREEMENT_SAMPLE_SORT` 排序，顯示句子文本、衝突 spans、各標記員版本摘要與 reviewer queue 狀態
+  - `邊界錯誤分析`：`span_too_long | span_too_short | wrong_boundary` 類型統計、代表例句與錯誤比例
+  - `高分歧樣本分析`：依 `DISAGREEMENT_SAMPLE_SORT` 排序，顯示句子文本、衝突 spans、各標記員版本摘要與 reviewer queue 狀態
   - `Annotator Quality Ranking`：Annotator、Entity/Aspect-level F1、Avg Speed、Risk
 - 區塊 B：`共用品質監控功能區`
   - 必要元素依顯示順序為：異常偵測（速度異常 / 離群值）、標記員風險評估（個別速度 / 個別 IAA vs 群體平均）、`標記一致性偏離分析`（可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`）
@@ -261,8 +261,8 @@ sequenceDiagram
 - `Exact Span F1`：需以 entity boundary + label 完全一致計算。
 - `Partial Match F1`：只要 spans 有 overlap 且 label 相容即視為 match；需與 strict mode 分開存放。
 - `Label Accuracy`：在 matched spans 上計算 label 正確率，不得把 boundary mismatch 直接算入 label accuracy 分母。
-- `Boundary Error Analysis`：以 gold / consensus 與 annotator span 對比後，將錯誤歸類為 `span_too_long | span_too_short | wrong_boundary`；每類需保留代表例句與原始 spans 供 reviewer 追查。
-- `High Disagreement Samples`：綜合 strict F1 低分、boundary conflict 數量、aspect taxonomy 不一致數量形成 `disagreement_score`，供排序 reviewer queue。
+- `邊界錯誤分析`：以 gold / consensus 與 annotator span 對比後，將錯誤歸類為 `span_too_long | span_too_short | wrong_boundary`；每類需保留代表例句與原始 spans 供 reviewer 追查。
+- `高分歧樣本分析`：綜合 strict F1 低分、boundary conflict 數量、aspect taxonomy 不一致數量形成 `disagreement_score`，供排序 reviewer queue。
 - `Cold Start Missing Aspect`：若模型預標或 reviewer baseline 存在，可額外統計常漏標 aspect；若無模型基準，該分析為 optional，不列為 blocking requirement。
 
 ---
@@ -330,8 +330,8 @@ sequenceDiagram
 - **FR-012C**: `sequence_labeling` 必須依 `analysis_profile` 拆分為 `ner` 與 `aspect` 兩種品質分析結構，不得共用同一套摘要指標。
 - **FR-012C-0**: `sequence_labeling.analysis_profile = ner` 時，quality tab 必須顯示 Pairwise Entity-level F1 為主要指標，提供 strict（預設）與 partial overlap match 切換。
 - **FR-012C-1**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須同時顯示 `Exact Span F1`、`Partial Match F1`、`Label Accuracy` 三項摘要指標。
-- **FR-012C-2**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `Boundary Error Analysis`，至少統計 `BOUNDARY_ERROR_TYPES` 三類錯誤。
-- **FR-012C-3**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `High Disagreement Samples` 清單，並依 `disagreement_score` 由高到低排序。
+- **FR-012C-2**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `邊界錯誤分析`，至少統計 `BOUNDARY_ERROR_TYPES` 三類錯誤。
+- **FR-012C-3**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `高分歧樣本分析` 清單，並依 `disagreement_score` 由高到低排序。
 - **FR-012C-4**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `Annotator Quality Ranking`，至少顯示 annotator、個別 F1、平均速度、風險等級。
 - **FR-012D**: `relation_extraction` 必須顯示 Pairwise Triple-level F1 為主要指標（subject + relation + object 完全一致）；輔助指標（entity-level F1 / relation-only agreement）以可展開區塊顯示。
 - **FR-012E**: `sentence_pairs`（`response_format = classification`）必須顯示 Krippendorff's Alpha（nominal）為主要指標，替代 Fleiss' Kappa。
@@ -450,7 +450,7 @@ flowchart LR
 - **SC-005**: `STATS_EMPTY_STATE_TRIGGER` 觸發時，stats 空狀態說明文字與「前往任務詳情」按鈕正確顯示並可正確導向 `task-detail`。
 - **SC-006**: `TASK_TYPE_KEYS` 五種任務類型各自對應的主要 IAA 指標皆可正確顯示，替代 / 輔助指標以可展開區塊承載。
 - **SC-006N**: `sequence_labeling.analysis_profile = ner` 時，quality tab 正確顯示 strict / partial 兩種 Pairwise Entity-level F1，並可切換 active match mode。
-- **SC-006A**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 正確顯示 `Exact Span F1`、`Partial Match F1`、`Label Accuracy`，並可查看 `Boundary Error Analysis`、`High Disagreement Samples`、`Annotator Quality Ranking`。
+- **SC-006A**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 正確顯示 `Exact Span F1`、`Partial Match F1`、`Label Accuracy`，並可查看 `邊界錯誤分析`、`高分歧樣本分析`、`Annotator Quality Ranking`。
 - **SC-007**: `QUALITY_EMPTY_STATE_TRIGGER` 觸發時，quality 空狀態說明文字與「前往任務詳情」按鈕正確顯示並可正確導向 `task-detail`。
 - **SC-008**: Tab 切換（統計總覽 ↔ 品質監控）為頁內切換，URL 的 `?tab=` query 正確更新，任務上下文不重置。
 - **SC-009**: Dashboard「IAA 待確認」badge deep link（`/dataset-analysis-detail/:task_id?tab=quality`）可正確進入品質監控 tab 並載入對應任務資料。
@@ -474,7 +474,7 @@ flowchart LR
 | Version | Date | Change Summary |
 | --- | --- | --- |
 | 1.4.1 | 2026-04-29 | 對齊 `sentence_pairs` 上游 config：stats / quality 改明確依 `pair_mode / response_format` 分流，新增句對分析設定與評分型統計實體，避免僅以 task_type 猜測分析模式 |
-| 1.4.0 | 2026-04-29 | Add `sequence_labeling.analysis_profile` support for `ner | aspect`: 定義 Aspect 專屬 stats/quality 區塊、Aspect taxonomy normalization、Boundary Error Analysis、High Disagreement Samples 與報告產製規則 |
+| 1.4.0 | 2026-04-29 | Add `sequence_labeling.analysis_profile` support for `ner | aspect`: 定義 Aspect 專屬 stats/quality 區塊、Aspect taxonomy normalization、邊界錯誤分析、高分歧樣本分析 與報告產製規則 |
 | 1.3.2 | 2026-04-24 | Reorder quality-tab shared blocks so `標記一致性偏離分析` is rendered below `標記員風險評估`; sync prototype HTML panel order and spec wording |
 | 1.3.1 | 2026-04-24 | Add `標記一致性偏離分析` block to quality tab: 定義獨立區塊名稱、`離群值(1.5xSTD)筆數/比例` 與 `離群值(2xSTD)筆數/比例` 欄位、task-type 單位命名規則、觀測層與風險評估的邊界；新增 `AnnotatorConsistencyDeviationSummary` entity 與對應 FR / SC |
 | 1.3.0 | 2026-04-24 | Add decision layer spec: 補入標記員風險等級（FR-024/025）、最低樣本門檻、annotator-level 原因分類（FR-026）、sample-level 高分歧旗標分離（FR-027）、行動角色門檻（FR-028）、VA 風險聚合規則（FR-029）；對應新增 SC-014~017、AnnotatorRiskAssessment、SampleDivergenceFlag entities 與風險等級規格常數 |
