@@ -249,6 +249,42 @@
     .schema-section-desc { font-size: 12px; line-height: 1.5; color: var(--color-text-soft); }
     .schema-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .schema-toggle-list { display: flex; flex-direction: column; gap: 8px; }
+    .schema-disclosure { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .schema-disclosure summary {
+      list-style: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      cursor: pointer;
+    }
+    .schema-disclosure summary::-webkit-details-marker { display: none; }
+    .schema-disclosure-summary-copy { min-width: 0; }
+    .schema-disclosure-summary-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .schema-disclosure-summary-desc { margin-top: 2px; font-size: 12px; line-height: 1.5; color: var(--color-text-soft); }
+    .schema-disclosure-chevron {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-soft);
+      flex-shrink: 0;
+      transition: transform var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .schema-disclosure[open] .schema-disclosure-chevron {
+      transform: rotate(90deg);
+      color: var(--color-primary);
+      border-color: rgba(99,102,241,0.28);
+    }
+    .schema-disclosure-body {
+      border-top: 1px solid var(--color-border);
+      padding: 14px;
+      background: var(--color-slate-50);
+    }
     .schema-toggle-card {
       display: flex;
       align-items: center;
@@ -772,6 +808,13 @@ var REGISTRY = {
       { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'ner' },
       { key: 'scheme', type: 'select', zh: '標記格式', en: 'Labeling scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'ner' },
       { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'ner' },
+      { key: 'input_field', type: 'text', zh: '輸入欄位名稱', en: 'Input field name', required: true, defaultValue: 'text', placeholder_zh: '預設：text', placeholder_en: 'Default: text', showWhen: 'ner', advanced: true },
+      { key: 'entity_field', type: 'text', zh: '實體欄位名稱', en: 'Entity field name', required: true, defaultValue: 'entities', placeholder_zh: '預設：entities', placeholder_en: 'Default: entities', showWhen: 'ner', advanced: true },
+      { key: 'allow_custom_entity_type', type: 'boolean', zh: '允許自訂實體類型', en: 'Allow custom entity type', required: false, defaultValue: false, showWhen: 'ner', advanced: true },
+      { key: 'require_entity_type', type: 'boolean', zh: '要求實體類型', en: 'Require entity type', required: false, defaultValue: true, showWhen: 'ner', advanced: true },
+      { key: 'allow_nested_entities', type: 'boolean', zh: '允許巢狀實體', en: 'Allow nested entities', required: false, defaultValue: false, showWhen: 'ner', advanced: true },
+      { key: 'min_entity_length', type: 'number', zh: '最少實體長度', en: 'Min entity length', required: false, defaultValue: 1, showWhen: 'ner', advanced: true },
+      { key: 'max_entity_length', type: 'number', zh: '最多實體長度', en: 'Max entity length', required: false, defaultValue: 50, showWhen: 'ner', advanced: true },
       /* aspect_list-only fields */
       { key: 'input_field', type: 'text', zh: '輸入欄位名稱', en: 'Input field name', required: true, placeholder_zh: '預設：sentence', placeholder_en: 'Default: sentence', showWhen: 'aspect_list' },
       { key: 'aspect_list_field', type: 'text', zh: '輸出欄位名稱', en: 'Aspect list field name', required: true, placeholder_zh: '預設：aspects', placeholder_en: 'Default: aspects', showWhen: 'aspect_list' },
@@ -783,9 +826,9 @@ var REGISTRY = {
       { key: 'max_aspects', type: 'number', zh: '最多 Aspect 數量', en: 'Max aspects', required: false, defaultValue: 10, showWhen: 'aspect_list' },
       { key: 'require_sentiment_context_check', type: 'boolean', zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', required: false, defaultValue: false, showWhen: 'aspect_list' },
     ],
-    nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+    nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
     aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
-    defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false },
+    defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
   },
   relation_extraction: {
     zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)',
@@ -895,6 +938,10 @@ var I18N = {
     addAspectBtnLabel: '+ 新增 Aspect',
     aspectRowPlaceholder: '輸入 aspect 文字',
     requireSentimentContextHint: '提示：請確認每個 Aspect 在句子前後文中是否有對應的情緒描述，沒有的話請刪除。（軟性指引，不強制攔截）',
+    nerCoreSectionTitle: '核心設定',
+    nerCoreSectionDesc: '建立任務時優先設定實體類型、標記格式與是否允許重疊標記。',
+    nerAdvancedSectionTitle: '進階設定',
+    nerAdvancedSectionDesc: '只在資料欄位映射、巢狀實體或長度限制有特殊需求時再展開調整。',
     aspectFieldSectionTitle: '欄位對應',
     aspectFieldSectionDesc: '指定資料集中的句子來源與標記輸出欄位。',
     aspectRuleSectionTitle: 'Aspect 編輯規則',
@@ -989,6 +1036,10 @@ var I18N = {
     addAspectBtnLabel: '+ Add aspect',
     aspectRowPlaceholder: 'Enter aspect text',
     requireSentimentContextHint: 'Hint: check that each aspect has a matching sentiment description in context. Remove any that do not. (Soft guidance — not system-enforced)',
+    nerCoreSectionTitle: 'Core settings',
+    nerCoreSectionDesc: 'Configure entity types, labeling scheme, and overlapping spans first when creating the task.',
+    nerAdvancedSectionTitle: 'Advanced settings',
+    nerAdvancedSectionDesc: 'Expand only when you need custom field mapping, nested entities, or length constraints.',
     aspectFieldSectionTitle: 'Field mapping',
     aspectFieldSectionDesc: 'Choose the source sentence field and the output field for annotations.',
     aspectRuleSectionTitle: 'Aspect editing rules',
@@ -1042,6 +1093,7 @@ var state = {
   guidelineText: '',
   guidelineFiles: [], forceGuideline: false,
   codeDraftDirty: false,
+  nerAdvancedOpen: false,
   isDirty: false, isSubmitting: false, leaveCallback: null,
 };
 var toastTimer = null;
@@ -1423,6 +1475,40 @@ function buildSchemaSection(title, desc) {
   return section;
 }
 
+function buildSchemaDisclosureSection(title, desc, isOpen, onToggle) {
+  var section = document.createElement('details');
+  section.className = 'schema-disclosure';
+  section.open = !!isOpen;
+  section.addEventListener('toggle', function() {
+    onToggle(section.open);
+  });
+
+  var summary = document.createElement('summary');
+  var copy = document.createElement('div');
+  copy.className = 'schema-disclosure-summary-copy';
+  var titleEl = document.createElement('div');
+  titleEl.className = 'schema-disclosure-summary-title';
+  titleEl.textContent = title;
+  copy.appendChild(titleEl);
+  if (desc) {
+    var descEl = document.createElement('div');
+    descEl.className = 'schema-disclosure-summary-desc';
+    descEl.textContent = desc;
+    copy.appendChild(descEl);
+  }
+  summary.appendChild(copy);
+  var chevron = document.createElement('span');
+  chevron.className = 'schema-disclosure-chevron';
+  chevron.textContent = '›';
+  summary.appendChild(chevron);
+  section.appendChild(summary);
+
+  var body = document.createElement('div');
+  body.className = 'schema-disclosure-body';
+  section.appendChild(body);
+  return { section: section, body: body };
+}
+
 function appendSchemaField(container, field) {
     var wrap = document.createElement('div');
     wrap.className = 'form-field';
@@ -1587,6 +1673,32 @@ function renderSchemaFields() {
     appendSchemaField(limitGrid, fieldByKey.max_aspects);
     limitSection.appendChild(limitGrid);
     container.appendChild(limitSection);
+
+    updateAnnotationPreview();
+    return;
+  }
+
+  if (state.taskType === 'sequence_labeling' && currentSubtype() === 'ner') {
+    var nerFieldByKey = {};
+    schema.fields.forEach(function(field) { nerFieldByKey[field.key] = field; });
+    appendSchemaField(container, nerFieldByKey.subtype);
+
+    var coreSection = buildSchemaSection(t('nerCoreSectionTitle'), t('nerCoreSectionDesc'));
+    appendSchemaField(coreSection, nerFieldByKey.entities);
+    appendSchemaField(coreSection, nerFieldByKey.scheme);
+    appendSchemaField(coreSection, nerFieldByKey.allow_overlapping);
+    container.appendChild(coreSection);
+
+    var advancedSection = buildSchemaDisclosureSection(
+      t('nerAdvancedSectionTitle'),
+      t('nerAdvancedSectionDesc'),
+      state.nerAdvancedOpen,
+      function(open) { state.nerAdvancedOpen = open; }
+    );
+    ['input_field', 'entity_field', 'allow_custom_entity_type', 'require_entity_type', 'allow_nested_entities', 'min_entity_length', 'max_entity_length'].forEach(function(key) {
+      appendSchemaField(advancedSection.body, nerFieldByKey[key]);
+    });
+    container.appendChild(advancedSection.section);
 
     updateAnnotationPreview();
     return;
@@ -2213,6 +2325,28 @@ function saveCodeToVisual(showSuccessToast) {
     el('codeErrorBar').classList.remove('hidden');
     setText('codeErrorMsg', t('errCodeInvalid'));
     return false;
+  }
+
+  if (state.taskType === 'sequence_labeling' && (parsed.subtype || currentSubtype()) === 'ner') {
+    if (Array.isArray(parsed.entity_types) && !parsed.entities) {
+      parsed.entities = parsed.entity_types.map(function(entity, idx) {
+        if (entity && typeof entity === 'object') {
+          return {
+            name: String(entity.name || '').trim(),
+            color: entity.color || ENTITY_COLORS[idx % ENTITY_COLORS.length],
+          };
+        }
+        return {
+          name: String(entity || '').trim(),
+          color: ENTITY_COLORS[idx % ENTITY_COLORS.length],
+        };
+      });
+    }
+    if (parsed.span_scheme && !parsed.scheme) parsed.scheme = parsed.span_scheme;
+    if (parsed.allow_overlapping_spans !== undefined && parsed.allow_overlapping === undefined) parsed.allow_overlapping = parsed.allow_overlapping_spans;
+    delete parsed.entity_types;
+    delete parsed.span_scheme;
+    delete parsed.allow_overlapping_spans;
   }
 
   var merged = {};

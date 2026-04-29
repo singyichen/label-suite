@@ -252,6 +252,7 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
+    .input-text,
     .input-select,
     .input-number {
       width: 100%;
@@ -259,16 +260,38 @@
       border-radius: var(--radius-md);
       background: var(--color-white);
       color: var(--color-ink);
-      padding: 9px 10px;
+      padding: 9px 12px;
       font-size: 14px;
       outline: none;
       transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
     }
+    .input-select {
+      padding: 9px 32px 9px 12px;
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .input-textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-ink);
+      background: var(--color-white);
+      outline: none;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .input-textarea:focus,
+    .input-text:focus,
     .input-select:focus,
     .input-number:focus {
       border-color: var(--color-primary);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
     }
+    .input-text.error,
     .input-number.error,
     .input-select.error {
       border-color: var(--color-error);
@@ -1314,6 +1337,55 @@
       flex-direction: column;
       gap: 8px;
     }
+    .settings-schema-disclosure {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+    }
+    .settings-schema-disclosure summary {
+      list-style: none;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      cursor: pointer;
+    }
+    .settings-schema-disclosure summary::-webkit-details-marker { display: none; }
+    .settings-schema-disclosure-summary-copy { min-width: 0; }
+    .settings-schema-disclosure-summary-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .settings-schema-disclosure-summary-desc {
+      margin-top: 2px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--color-text-soft);
+    }
+    .settings-schema-disclosure-chevron {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-soft);
+      flex-shrink: 0;
+      transition: transform var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .settings-schema-disclosure[open] .settings-schema-disclosure-chevron {
+      transform: rotate(90deg);
+      color: var(--color-primary);
+      border-color: rgba(99,102,241,0.28);
+    }
+    .settings-schema-disclosure-body {
+      border-top: 1px solid var(--color-border);
+      padding: 14px;
+      background: var(--color-slate-50);
+    }
     .settings-toggle-card {
       display: flex;
       align-items: center;
@@ -1899,6 +1971,10 @@
       settingsAddEntity: '新增實體類型',
       settingsSubtypeNer: 'NER 命名實體辨識',
       settingsSubtypeAspectList: 'Aspect List 抽取／校正',
+      settingsNerCoreSectionTitle: '核心設定',
+      settingsNerCoreSectionDesc: '優先設定實體類型、標記格式與是否允許重疊標記，覆蓋大多數 NER 任務。',
+      settingsNerAdvancedSectionTitle: '進階設定',
+      settingsNerAdvancedSectionDesc: '僅在欄位映射、自訂實體類型、巢狀實體或長度限制有特殊需求時再展開。',
       settingsAspectFieldSectionTitle: '欄位對應',
       settingsAspectFieldSectionDesc: '指定資料集中的原句欄位，以及標記結果輸出的 Aspect List 欄位。',
       settingsAspectRuleSectionTitle: 'Aspect 編輯規則',
@@ -2239,6 +2315,10 @@
       settingsAddEntity: 'Add entity type',
       settingsSubtypeNer: 'NER (Named Entity Recognition)',
       settingsSubtypeAspectList: 'Aspect List extraction / correction',
+      settingsNerCoreSectionTitle: 'Core settings',
+      settingsNerCoreSectionDesc: 'Configure entity types, labeling scheme, and overlapping spans first for the common NER path.',
+      settingsNerAdvancedSectionTitle: 'Advanced settings',
+      settingsNerAdvancedSectionDesc: 'Expand only when you need field mapping, custom entity types, nested entities, or length limits.',
       settingsAspectFieldSectionTitle: 'Field mapping',
       settingsAspectFieldSectionDesc: 'Map the dataset sentence field and the output Aspect List field.',
       settingsAspectRuleSectionTitle: 'Aspect editing rules',
@@ -2620,7 +2700,7 @@
       datasetSourceEn: 'news_ner_corpus_v1.csv',
       configVersion: 'cfg-t006-v1.2.0',
       configFileName: '',
-      configContent: 'subtype: ner\ninput_field: text\nentity_field: entities\nentity_types:\n  - PERSON\n  - ORG\n  - LOC\n  - MISC\nallow_custom_entity_type: false\nrequire_entity_type: true\nspan_scheme: BIO\nallow_overlapping_spans: false\nallow_nested_entities: false\nmin_entity_length: 1\nmax_entity_length: 50',
+      configContent: 'subtype: ner\nentities:\n  - name: PER\n    color: "#6366F1"\n  - name: ORG\n    color: "#10B981"\n  - name: LOC\n    color: "#F59E0B"\nscheme: IOB2\nallow_overlapping: false\ninput_field: text\nentity_field: entities\nallow_custom_entity_type: false\nrequire_entity_type: true\nallow_nested_entities: false\nmin_entity_length: 1\nmax_entity_length: 50',
       guidelineUploaded: true,
       guidelineTextZh: '從新聞文本中識別並標註命名實體，包括人名、組織、地名和其他實體類型。',
       guidelineTextEn: 'Identify and annotate named entities from news text, including persons, organizations, locations, and other entity types.',
@@ -2716,6 +2796,7 @@
     settingsDirty: false,
     settingsDraft: null,
     settingsCodeDraftDirty: false,
+    settingsNerAdvancedOpen: false,
     samplingEditMode: false,
     samplingDirty: false,
     samplingDraft: null
@@ -2753,16 +2834,16 @@
     sequence_labeling: {
       fields: [
         { key: 'subtype', type: 'subtype-select', required: true, zh: '子類型', en: 'Subtype', options: ['ner', 'aspect_list'], optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction' } }, defaultValue: 'ner' },
-        { key: 'input_field', type: 'text', required: true, zh: '輸入欄位名稱', en: 'Input field name', placeholder_zh: '預設：text', placeholder_en: 'Default: text', showWhen: 'ner' },
-        { key: 'entity_field', type: 'text', required: true, zh: '實體欄位名稱', en: 'Entity field name', placeholder_zh: '預設：entities', placeholder_en: 'Default: entities', showWhen: 'ner' },
-        { key: 'entity_types', type: 'tag-list', required: true, zh: '實體類型', en: 'Entity types', hint_zh: '輸入實體類型後按 Enter', hint_en: 'Type entity type and press Enter', showWhen: 'ner' },
-        { key: 'allow_custom_entity_type', type: 'boolean', required: false, zh: '允許自訂實體類型', en: 'Allow custom entity type', defaultValue: false, showWhen: 'ner' },
-        { key: 'require_entity_type', type: 'boolean', required: false, zh: '要求實體類型', en: 'Require entity type', defaultValue: true, showWhen: 'ner' },
-        { key: 'span_scheme', type: 'select', required: true, zh: '標記格式', en: 'Labeling scheme', options: ['BIO', 'BIOES', 'IO'], defaultValue: 'BIO', showWhen: 'ner' },
-        { key: 'allow_overlapping_spans', type: 'boolean', required: false, zh: '允許重疊標記', en: 'Allow overlapping spans', defaultValue: false, showWhen: 'ner' },
-        { key: 'allow_nested_entities', type: 'boolean', required: false, zh: '允許巢狀實體', en: 'Allow nested entities', defaultValue: false, showWhen: 'ner' },
-        { key: 'min_entity_length', type: 'number', required: false, zh: '最少實體長度', en: 'Min entity length', defaultValue: 1, showWhen: 'ner' },
-        { key: 'max_entity_length', type: 'number', required: false, zh: '最多實體長度', en: 'Max entity length', defaultValue: 50, showWhen: 'ner' },
+        { key: 'entities', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types', showWhen: 'ner' },
+        { key: 'scheme', type: 'select', required: true, zh: '標記格式', en: 'Labeling scheme', options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'ner' },
+        { key: 'allow_overlapping', type: 'boolean', required: false, zh: '允許重疊標記', en: 'Allow overlapping spans', defaultValue: false, showWhen: 'ner' },
+        { key: 'input_field', type: 'text', required: true, zh: '輸入欄位名稱', en: 'Input field name', defaultValue: 'text', placeholder_zh: '預設：text', placeholder_en: 'Default: text', showWhen: 'ner', advanced: true },
+        { key: 'entity_field', type: 'text', required: true, zh: '實體欄位名稱', en: 'Entity field name', defaultValue: 'entities', placeholder_zh: '預設：entities', placeholder_en: 'Default: entities', showWhen: 'ner', advanced: true },
+        { key: 'allow_custom_entity_type', type: 'boolean', required: false, zh: '允許自訂實體類型', en: 'Allow custom entity type', defaultValue: false, showWhen: 'ner', advanced: true },
+        { key: 'require_entity_type', type: 'boolean', required: false, zh: '要求實體類型', en: 'Require entity type', defaultValue: true, showWhen: 'ner', advanced: true },
+        { key: 'allow_nested_entities', type: 'boolean', required: false, zh: '允許巢狀實體', en: 'Allow nested entities', defaultValue: false, showWhen: 'ner', advanced: true },
+        { key: 'min_entity_length', type: 'number', required: false, zh: '最少實體長度', en: 'Min entity length', defaultValue: 1, showWhen: 'ner', advanced: true },
+        { key: 'max_entity_length', type: 'number', required: false, zh: '最多實體長度', en: 'Max entity length', defaultValue: 50, showWhen: 'ner', advanced: true },
         { key: 'input_field', type: 'text', required: true, zh: '輸入欄位名稱', en: 'Input field name', placeholder_zh: '預設：sentence', placeholder_en: 'Default: sentence', showWhen: 'aspect_list' },
         { key: 'aspect_list_field', type: 'text', required: true, zh: '輸出欄位名稱', en: 'Aspect list field name', placeholder_zh: '預設：aspects', placeholder_en: 'Default: aspects', showWhen: 'aspect_list' },
         { key: 'allow_sentence_edit', type: 'boolean', required: false, zh: '允許修改原句', en: 'Allow sentence edit', defaultValue: false, showWhen: 'aspect_list' },
@@ -2773,9 +2854,9 @@
         { key: 'max_aspects', type: 'number', required: false, zh: '最多 Aspect 數量', en: 'Max aspects', defaultValue: 10, showWhen: 'aspect_list' },
         { key: 'require_sentiment_context_check', type: 'boolean', required: false, zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', defaultValue: false, showWhen: 'aspect_list' },
       ],
-      nerTemplate: { subtype: 'ner', input_field: 'text', entity_field: 'entities', entity_types: ['PERSON', 'ORG', 'LOC', 'MISC'], allow_custom_entity_type: false, require_entity_type: true, span_scheme: 'BIO', allow_overlapping_spans: false, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
+      nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
       aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
-      defaultTemplate: { subtype: 'ner', input_field: 'text', entity_field: 'entities', entity_types: ['PERSON', 'ORG', 'LOC', 'MISC'], allow_custom_entity_type: false, require_entity_type: true, span_scheme: 'BIO', allow_overlapping_spans: false, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
+      defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
     },
     relation_extraction: {
       fields: [
@@ -4224,6 +4305,27 @@
     } catch (error) {
       parsed = {};
     }
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && (parsed.subtype || 'ner') === 'ner') {
+      if (Array.isArray(parsed.entity_types) && !parsed.entities) {
+        parsed.entities = parsed.entity_types.map(function(entity, idx) {
+          if (entity && typeof entity === 'object') {
+            return {
+              name: String(entity.name || '').trim(),
+              color: entity.color || SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
+            };
+          }
+          return {
+            name: String(entity || '').trim(),
+            color: SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
+          };
+        });
+      }
+      if (parsed.span_scheme && !parsed.scheme) parsed.scheme = parsed.span_scheme;
+      if (parsed.allow_overlapping_spans !== undefined && parsed.allow_overlapping === undefined) parsed.allow_overlapping = parsed.allow_overlapping_spans;
+      delete parsed.entity_types;
+      delete parsed.span_scheme;
+      delete parsed.allow_overlapping_spans;
+    }
     var defaults = getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang);
     if (TASK_DATA.taskTypeKey === 'sequence_labeling' && parsed && parsed.subtype === 'aspect_list' && schema && schema.aspectListTemplate) {
       defaults = cloneObject(schema.aspectListTemplate);
@@ -4728,22 +4830,59 @@
     return section;
   }
 
+  function buildSettingsSchemaDisclosureSection(title, desc, isOpen, onToggle) {
+    var section = document.createElement('details');
+    section.className = 'settings-schema-disclosure';
+    section.open = !!isOpen;
+    section.addEventListener('toggle', function() {
+      onToggle(section.open);
+    });
+
+    var summary = document.createElement('summary');
+    var copy = document.createElement('div');
+    copy.className = 'settings-schema-disclosure-summary-copy';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'settings-schema-disclosure-summary-title';
+    titleEl.textContent = title;
+    copy.appendChild(titleEl);
+    if (desc) {
+      var descEl = document.createElement('div');
+      descEl.className = 'settings-schema-disclosure-summary-desc';
+      descEl.textContent = desc;
+      copy.appendChild(descEl);
+    }
+    summary.appendChild(copy);
+    var chevron = document.createElement('span');
+    chevron.className = 'settings-schema-disclosure-chevron';
+    chevron.textContent = '›';
+    summary.appendChild(chevron);
+    section.appendChild(summary);
+
+    var body = document.createElement('div');
+    body.className = 'settings-schema-disclosure-body';
+    section.appendChild(body);
+    return { section: section, body: body };
+  }
+
   function appendSettingsSchemaField(container, field) {
       if (!field) return;
       var wrap = document.createElement('div');
       wrap.className = 'field-group';
+      if (field.type === 'number') wrap.className += ' schema-number-field';
       wrap.style.marginBottom = '10px';
 
-      var label = document.createElement('label');
-      label.className = 'field-label';
-      label.textContent = field[state.lang] || field.zh;
-      if (field.required) {
-        var req = document.createElement('span');
-        req.className = 'required';
-        req.textContent = '*';
-        label.appendChild(req);
+      if (field.type !== 'boolean') {
+        var label = document.createElement('label');
+        label.className = 'field-label';
+        label.textContent = field[state.lang] || field.zh;
+        if (field.required) {
+          var req = document.createElement('span');
+          req.className = 'required';
+          req.textContent = '*';
+          label.appendChild(req);
+        }
+        wrap.appendChild(label);
       }
-      wrap.appendChild(label);
 
       if (field.type === 'tag-list') {
         wrap.appendChild(buildSettingsTagInput(field));
@@ -4759,48 +4898,38 @@
         wrap.appendChild(buildSettingsEntityList(field));
       } else if (field.type === 'boolean') {
         var chkLabel = document.createElement('label');
-        var useToggleCard = TASK_DATA.taskTypeKey === 'sequence_labeling' && currentSettingsSubtype() === 'aspect_list';
-        chkLabel.className = useToggleCard ? 'settings-toggle-card' : 'settings-checkbox-row';
+        chkLabel.className = 'settings-toggle-card';
         var checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = !!(state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue);
-        var textNode = document.createTextNode(checkbox.checked ? t('settingsEnabled') : t('settingsDisabled'));
-        if (useToggleCard) {
-          chkLabel.classList.toggle('is-on', checkbox.checked);
-          var copy = document.createElement('span');
-          copy.className = 'settings-toggle-copy';
-          var title = document.createElement('span');
-          title.className = 'settings-toggle-label';
-          title.textContent = field[state.lang] || field.zh;
-          var status = document.createElement('span');
-          status.className = 'settings-toggle-status';
-          status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
-          copy.appendChild(title);
-          copy.appendChild(status);
-          checkbox.addEventListener('change', function() {
-            state.settingsDraft.configData[field.key] = checkbox.checked;
-            status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
-            chkLabel.classList.toggle('is-on', checkbox.checked);
-            markSettingsDirty();
-            renderSettingsAnnotationPreview();
-            if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-          });
-          chkLabel.appendChild(copy);
-          chkLabel.appendChild(checkbox);
-          wrap.innerHTML = '';
-          wrap.appendChild(chkLabel);
-          container.appendChild(wrap);
-          return;
-        }
+        chkLabel.classList.toggle('is-on', checkbox.checked);
+        var copy = document.createElement('span');
+        copy.className = 'settings-toggle-copy';
+        var title = document.createElement('span');
+        title.className = 'settings-toggle-label';
+        title.textContent = field[state.lang] || field.zh;
+        var status = document.createElement('span');
+        status.className = 'settings-toggle-status';
+        status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
+        copy.appendChild(title);
+        copy.appendChild(status);
         checkbox.addEventListener('change', function() {
           state.settingsDraft.configData[field.key] = checkbox.checked;
-          textNode.nodeValue = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
+          status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
+          chkLabel.classList.toggle('is-on', checkbox.checked);
           markSettingsDirty();
           renderSettingsAnnotationPreview();
           if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
         });
-        chkLabel.appendChild(checkbox);
-        chkLabel.appendChild(textNode);
+        var switchWrap = document.createElement('span');
+        switchWrap.className = 'toggle-switch';
+        var slider = document.createElement('span');
+        slider.className = 'toggle-slider';
+        switchWrap.appendChild(checkbox);
+        switchWrap.appendChild(slider);
+        chkLabel.appendChild(copy);
+        chkLabel.appendChild(switchWrap);
+        wrap.innerHTML = '';
         wrap.appendChild(chkLabel);
       } else if (field.type === 'select' || field.type === 'subtype-select') {
         var select = document.createElement('select');
@@ -4842,10 +4971,24 @@
           if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
         });
         wrap.appendChild(textarea);
+      } else if (field.type === 'number') {
+        var numberInput = document.createElement('input');
+        numberInput.type = 'number';
+        numberInput.className = 'input-text';
+        numberInput.style.width = '100px';
+        numberInput.value = state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : (field.defaultValue !== undefined ? field.defaultValue : '');
+        numberInput.addEventListener('input', function() {
+          state.settingsDraft.configData[field.key] = numberInput.value === '' ? '' : Number(numberInput.value);
+          markSettingsDirty();
+          renderSettingsAnnotationPreview();
+          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
+        });
+        wrap.appendChild(numberInput);
       } else {
         var input = document.createElement('input');
         input.type = 'text';
-        input.className = 'input-number';
+        input.className = 'input-text';
+        input.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
         input.value = state.settingsDraft.configData[field.key] || '';
         input.addEventListener('input', function() {
           state.settingsDraft.configData[field.key] = input.value;
@@ -4895,6 +5038,30 @@
       appendSettingsSchemaField(limitGrid, fieldByKey.max_aspects);
       limitSection.appendChild(limitGrid);
       container.appendChild(limitSection);
+      return;
+    }
+
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && currentSettingsSubtype() === 'ner') {
+      var nerFieldByKey = {};
+      schema.fields.forEach(function(field) { nerFieldByKey[field.key] = field; });
+      appendSettingsSchemaField(container, nerFieldByKey.subtype);
+
+      var coreSection = buildSettingsSchemaSection(t('settingsNerCoreSectionTitle'), t('settingsNerCoreSectionDesc'));
+      appendSettingsSchemaField(coreSection, nerFieldByKey.entities);
+      appendSettingsSchemaField(coreSection, nerFieldByKey.scheme);
+      appendSettingsSchemaField(coreSection, nerFieldByKey.allow_overlapping);
+      container.appendChild(coreSection);
+
+      var advancedSection = buildSettingsSchemaDisclosureSection(
+        t('settingsNerAdvancedSectionTitle'),
+        t('settingsNerAdvancedSectionDesc'),
+        state.settingsNerAdvancedOpen,
+        function(open) { state.settingsNerAdvancedOpen = open; }
+      );
+      ['input_field', 'entity_field', 'allow_custom_entity_type', 'require_entity_type', 'allow_nested_entities', 'min_entity_length', 'max_entity_length'].forEach(function(key) {
+        appendSettingsSchemaField(advancedSection.body, nerFieldByKey[key]);
+      });
+      container.appendChild(advancedSection.section);
       return;
     }
 
@@ -5085,6 +5252,27 @@
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       setSettingsCodeError(t('settingsCodeInvalid'));
       return false;
+    }
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && (parsed.subtype || currentSettingsSubtype()) === 'ner') {
+      if (Array.isArray(parsed.entity_types) && !parsed.entities) {
+        parsed.entities = parsed.entity_types.map(function(entity, idx) {
+          if (entity && typeof entity === 'object') {
+            return {
+              name: String(entity.name || '').trim(),
+              color: entity.color || SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
+            };
+          }
+          return {
+            name: String(entity || '').trim(),
+            color: SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
+          };
+        });
+      }
+      if (parsed.span_scheme && !parsed.scheme) parsed.scheme = parsed.span_scheme;
+      if (parsed.allow_overlapping_spans !== undefined && parsed.allow_overlapping === undefined) parsed.allow_overlapping = parsed.allow_overlapping_spans;
+      delete parsed.entity_types;
+      delete parsed.span_scheme;
+      delete parsed.allow_overlapping_spans;
     }
     var merged = {};
     if (TASK_DATA.taskTypeKey === 'sequence_labeling' && parsed.subtype === 'aspect_list' && schema.aspectListTemplate) {
