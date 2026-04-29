@@ -2,7 +2,7 @@
 
 **功能分支**：`017-dataset-analysis-detail`  
 **建立日期**：2026-04-24  
-**版本**：1.3.2  
+**版本**：1.4.0  
 **狀態**：Draft  
 **需求來源**：IA v1.3.2（2026-04-24）資料集分析模組規範（雙 Tab 架構）
 
@@ -10,6 +10,7 @@
 
 - `TASK_ROLES_ALLOWED = project_leader | reviewer`
 - `TASK_TYPE_KEYS = single_sentence_classification | single_sentence_va_scoring | sequence_labeling | relation_extraction | sentence_pairs`
+- `SEQUENCE_LABELING_ANALYSIS_PROFILES = ner | aspect`
 - `DATASET_ANALYSIS_LIST_ROUTE = /dataset-analysis`
 - `DATASET_ANALYSIS_DETAIL_ROUTE = /dataset-analysis-detail/:task_id`
 - `TAB_STATS = stats`
@@ -63,6 +64,9 @@
   - `IAA_THRESHOLD_RELATION = 0.75`（Pairwise Triple-level F1）
   - `IAA_THRESHOLD_RELATION_HIGH = 0.8`（Pairwise Triple-level F1 高品質）
   - `IAA_THRESHOLD_SENTENCE_PAIRS = 0.8`（Krippendorff's Alpha nominal）
+- `BOUNDARY_ERROR_TYPES = span_too_long | span_too_short | wrong_boundary`
+- `DISAGREEMENT_SAMPLE_SORT = disagreement_score_desc`
+- `ASPECT_COVERAGE_ALERT_THRESHOLD = configurable`（預設以目標 label distribution / 最低樣本數檢查，無固定全域常數）
 
 ## Process Flow
 
@@ -148,10 +152,11 @@ sequenceDiagram
 
 1. **Given** 任務 `task_type=single_sentence_classification`，**When** 進入統計總覽 tab，**Then** 顯示 `SHARED_METRICS` 與分類特定指標（標籤長條圖、多標籤共現矩陣）。
 2. **Given** 任務 `task_type=single_sentence_va_scoring`，**When** 進入統計總覽 tab，**Then** 顯示 Valence / Arousal 分佈直方圖、平均值 / 標準差 / 中位數，以及二維 V-A scatter plot。
-3. **Given** 任務 `task_type=sequence_labeling`，**When** 進入統計總覽 tab，**Then** 顯示實體類型分佈、每句平均實體數、Entity span 長度分佈。
-4. **Given** 任務 `task_type=relation_extraction`，**When** 進入統計總覽 tab，**Then** 顯示實體類型分佈、關係類型分佈、Triple 數量統計。
-5. **Given** 任務 `task_type=sentence_pairs`，**When** 進入統計總覽 tab，**Then** 依子類型顯示標籤分佈（分類）或分數分佈（評分）。
-6. **Given** 尚無已提交標記資料（`STATS_EMPTY_STATE_TRIGGER`），**When** 進入統計總覽 tab，**Then** 顯示「尚無標記資料，請先發布 Dry Run」與「前往任務詳情」次要按鈕。
+3. **Given** 任務 `task_type=sequence_labeling` 且 `analysis_profile=ner`，**When** 進入統計總覽 tab，**Then** 顯示實體類型分佈、每句平均實體數、Entity span 長度分佈。
+4. **Given** 任務 `task_type=sequence_labeling` 且 `analysis_profile=aspect`，**When** 進入統計總覽 tab，**Then** 顯示 Aspect 類型分佈、每句平均 Aspect 數量、span 長度分佈、Aspect 共現矩陣，並在資料存在時額外顯示 Aspect × Sentiment 分佈。
+5. **Given** 任務 `task_type=relation_extraction`，**When** 進入統計總覽 tab，**Then** 顯示實體類型分佈、關係類型分佈、Triple 數量統計。
+6. **Given** 任務 `task_type=sentence_pairs`，**When** 進入統計總覽 tab，**Then** 依子類型顯示標籤分佈（分類）或分數分佈（評分）。
+7. **Given** 尚無已提交標記資料（`STATS_EMPTY_STATE_TRIGGER`），**When** 進入統計總覽 tab，**Then** 顯示「尚無標記資料，請先發布 Dry Run」與「前往任務詳情」次要按鈕。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -160,7 +165,9 @@ sequenceDiagram
 - 區塊 B：`任務類型特定指標區`
   - `single_sentence_classification`：各標籤次數 / 比例長條圖、多標籤共現矩陣
   - `single_sentence_va_scoring`：Valence / Arousal 分佈直方圖、統計摘要列、V-A 二維分佈 scatter plot
-  - `sequence_labeling`：實體類型分佈、每句平均實體數、Entity span 長度分佈
+  - `sequence_labeling`：
+    - `ner`：實體類型分佈、每句平均實體數、Entity span 長度分佈
+    - `aspect`：KPI Cards（Sentence Count / Token Count / Completion Rate / Submitted Samples / Avg Annotation Time）、Aspect 類型分佈、每句平均 Aspect 數量、Aspect span 長度分佈、Aspect 共現矩陣；若資料存在則加顯 Aspect × Sentiment 分佈與 Aspect Coverage
   - `relation_extraction`：實體類型分佈、關係類型分佈、Triple 數量統計
   - `sentence_pairs`：分類子類型為標籤分佈；評分子類型為分數分佈
 - 區塊 C：`Stats 空狀態`
@@ -169,8 +176,30 @@ sequenceDiagram
 **行為規則**：
 
 - `task_type` 由任務資料載入，不由路由 query 決定。
+- `sequence_labeling` 的統計內容除 `task_type` 外，還必須由任務分析設定或後端分析器回傳 `analysis_profile` 決定；不得把 Aspect 專屬圖表硬套到所有序列標註任務。
 - 空狀態下仍保留 detail shell 與 Tab 列；`SHARED_METRICS` 可顯示既有值，特定圖表以空狀態取代。
 - 語言切換需同步更新圖表標題、軸標籤、圖例與說明文字。
+
+**sequence_labeling + ner 分析規則**：
+
+- 任務條件：`task_type=sequence_labeling` 且 `analysis_profile=ner`。
+- 統計目標：以 entity span 為主要分析單位，不處理 aspect taxonomy、sentiment 或共現矩陣。
+- 必備統計：實體類型分佈、每句平均實體數、Entity span 長度分佈。
+- `實體類型分佈`：依 task config 的 entity labels 聚合，不得混入非 entity metadata。
+- `每句平均實體數`：以句子中標註 entity span 數量計算平均值，可附帶 0、1、2、3+ bucket 分佈。
+- `Entity span 長度分佈`：以 token 長度為主、字元長度為輔；至少輸出 1、2、3、4+ token buckets。
+
+**sequence_labeling + aspect 分析規則**：
+
+- 任務條件：`task_type=sequence_labeling` 且 `analysis_profile=aspect`。
+- 基本標註單位：`annotation_unit = sentence`；統計母體以已提交句子為準。
+- span 類別至少支援：`Aspect`；若任務另有子類別、極性或屬性欄位，需視為附加維度，不得混入主 label count。
+- `Aspect 類型分佈`：以標準化 aspect taxonomy 聚合；若原始標註文字為自由文本，需先經 synonym / alias mapping 對齊 taxonomy 後再統計。
+- `每句平均 Aspect 數量`：每句中 label=`Aspect` 或映射至 aspect taxonomy 的 span 數量平均值；同時輸出分桶分佈（0、1、2、3+）。
+- `span 長度分佈`：以 token 長度為主、字元長度為輔；至少輸出 1、2、3、4+ token buckets 與代表例。
+- `Aspect 共現矩陣`：以同一句內共同出現的兩個不同 aspect taxonomy 作為共現；矩陣需對稱，對角線保留空值或自共現不顯示。
+- `Aspect × Sentiment`：僅當標註結果包含 sentiment 時顯示；需至少提供 positive / neutral / negative 三類比例。
+- `Aspect Coverage`：檢查各 aspect taxonomy 的樣本覆蓋率與分佈偏斜；當稀有類別低於專案設定最小樣本數或明顯低於目標分佈時，標示 `dataset_bias_detected=true`。
 
 ---
 
@@ -185,17 +214,23 @@ sequenceDiagram
 
 1. **Given** `task_type=single_sentence_classification`，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 為主要指標，替代指標區（Cohen's Kappa / Fleiss' Kappa）可選顯示，並標示 `IAA_THRESHOLD_CLASSIFICATION`。
 2. **Given** `task_type=single_sentence_va_scoring`，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，分別計算 IAA_V / IAA_A，Overall = (IAA_V + IAA_A) / 2，並標示 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT`。
-3. **Given** `task_type=sequence_labeling`，**When** 進入品質監控，**Then** 顯示 Pairwise Entity-level F1 ⭐️ 為主要指標，提供 strict 與 partial overlap match 切換，並標示 `IAA_THRESHOLD_SEQUENCE` / `IAA_THRESHOLD_SEQUENCE_RELAXED`。
-4. **Given** `task_type=relation_extraction`，**When** 進入品質監控，**Then** 顯示 Pairwise Triple-level F1 ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_RELATION` / `IAA_THRESHOLD_RELATION_HIGH`。
-5. **Given** `task_type=sentence_pairs` 且子類型為分類型，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 與 `IAA_THRESHOLD_SENTENCE_PAIRS`。
-6. **Given** `task_type=sentence_pairs` 且子類型為評分型，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，並沿用 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT` 作為門檻。
-7. **Given** Dry Run 尚未完成（`QUALITY_EMPTY_STATE_TRIGGER`），**When** 進入品質監控，**Then** 顯示「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕。
+3. **Given** `task_type=sequence_labeling` 且 `analysis_profile=ner`，**When** 進入品質監控，**Then** 顯示 Pairwise Entity-level F1 ⭐️ 為主要指標，提供 strict 與 partial overlap match 切換，並標示 `IAA_THRESHOLD_SEQUENCE` / `IAA_THRESHOLD_SEQUENCE_RELAXED`。
+4. **Given** `task_type=sequence_labeling` 且 `analysis_profile=aspect`，**When** 進入品質監控，**Then** 顯示 Exact Span F1、Partial Match F1、Label Accuracy 作為主要摘要，並提供 Boundary Error Analysis、High Disagreement Samples 與 Annotator Quality Ranking。
+5. **Given** `task_type=relation_extraction`，**When** 進入品質監控，**Then** 顯示 Pairwise Triple-level F1 ⭐️ 為主要指標，並標示 `IAA_THRESHOLD_RELATION` / `IAA_THRESHOLD_RELATION_HIGH`。
+6. **Given** `task_type=sentence_pairs` 且子類型為分類型，**When** 進入品質監控，**Then** 顯示 Krippendorff's Alpha（nominal）⭐️ 與 `IAA_THRESHOLD_SENTENCE_PAIRS`。
+7. **Given** `task_type=sentence_pairs` 且子類型為評分型，**When** 進入品質監控，**Then** 顯示 ICC ⭐️ 為主要指標，並沿用 `IAA_THRESHOLD_VA_RECOMMENDED` 與 `IAA_THRESHOLD_VA_STRICT` 作為門檻。
+8. **Given** Dry Run 尚未完成（`QUALITY_EMPTY_STATE_TRIGGER`），**When** 進入品質監控，**Then** 顯示「IAA 報告將在 Dry Run 完成後產生」與「前往任務詳情」次要按鈕。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`IAA 報告區`
   - 必要元素：主要 IAA 指標、IAA 數值、閾值比較、計算方法說明
   - 選用元素：替代 / 輔助指標（可展開 / 收合）
+- `sequence_labeling.analysis_profile = ner` 時，品質監控區以 `Pairwise Entity-level F1` 為主，提供 strict / partial overlap match 切換。
+- `sequence_labeling.analysis_profile = aspect` 時，品質監控區需額外包含：
+  - `Boundary Error Analysis`：`span_too_long | span_too_short | wrong_boundary` 類型統計、代表例句與錯誤比例
+  - `High Disagreement Samples`：依 `DISAGREEMENT_SAMPLE_SORT` 排序，顯示句子文本、衝突 spans、各標記員版本摘要與 reviewer queue 狀態
+  - `Annotator Quality Ranking`：Annotator、Entity/Aspect-level F1、Avg Speed、Risk
 - 區塊 B：`共用品質監控功能區`
   - 必要元素依顯示順序為：異常偵測（速度異常 / 離群值）、標記員風險評估（個別速度 / 個別 IAA vs 群體平均）、`標記一致性偏離分析`（可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`）
 - 區塊 C：`Quality 空狀態`
@@ -204,11 +239,28 @@ sequenceDiagram
 **行為規則**：
 
 - 主要 IAA 指標固定顯示；替代 / 輔助指標預設收合。
+- `sequence_labeling.analysis_profile = aspect` 時，`Exact Span F1 / Partial Match F1 / Label Accuracy` 視為同一摘要群組，預設同時顯示，不需以替代指標收合。
 - IAA 數值需有明確的達標（綠色 / pass）與未達標（紅色 / fail）視覺標示。
 - 指標區與分析區皆為唯讀，不提供編輯操作。
 - 共用品質監控區塊在 ready state 下需固定依序呈現：異常偵測 → 標記員風險評估 → `標記一致性偏離分析`。
 - `標記一致性偏離分析` 為觀測型區塊，不可直接覆寫 `AnnotatorRiskAssessment.risk_level`；若需影響風險等級，必須另行明確定義規則。
 - quality tab 需同時輸出可供列表頁使用的 `IAA_SUMMARY_STATES` 摘要狀態。
+
+**sequence_labeling + ner 品質規則**：
+
+- `Pairwise Entity-level F1` 為主要指標，需提供 strict（預設）與 partial overlap match 兩種模式。
+- strict mode 以 entity boundary + label 完全一致計算。
+- partial overlap mode 允許 boundary overlap，但仍需 label 相容。
+- NER 品質報告不需顯示 Aspect taxonomy、Aspect Coverage 或 Aspect 共現矩陣。
+
+**sequence_labeling + aspect 品質規則**：
+
+- `Exact Span F1`：需以 entity boundary + label 完全一致計算。
+- `Partial Match F1`：只要 spans 有 overlap 且 label 相容即視為 match；需與 strict mode 分開存放。
+- `Label Accuracy`：在 matched spans 上計算 label 正確率，不得把 boundary mismatch 直接算入 label accuracy 分母。
+- `Boundary Error Analysis`：以 gold / consensus 與 annotator span 對比後，將錯誤歸類為 `span_too_long | span_too_short | wrong_boundary`；每類需保留代表例句與原始 spans 供 reviewer 追查。
+- `High Disagreement Samples`：綜合 strict F1 低分、boundary conflict 數量、aspect taxonomy 不一致數量形成 `disagreement_score`，供排序 reviewer queue。
+- `Cold Start Missing Aspect`：若模型預標或 reviewer baseline 存在，可額外統計常漏標 aspect；若無模型基準，該分析為 optional，不列為 blocking requirement。
 
 ---
 
@@ -236,8 +288,9 @@ sequenceDiagram
 
 - `/dataset-analysis-detail/:task_id` 的 `task_id` 不存在或無成員資格時，導回 `/dataset-analysis` 並顯示錯誤提示。
 - `task_type` 無法從 API 取得時，stats 與 quality 皆顯示錯誤狀態，不可靜默回退為預設類型。
+- `sequence_labeling` 任務若缺少 `analysis_profile` 且無法從 task config / label schema 安全推導，系統需優先依 `subtype` 推導為 `ner` 或 `aspect`；若仍無法判定，回退為 `ner`，並不得顯示 Aspect 專屬圖表。
 - 統計總覽 state 必須明確區分 `loading | empty | ready | error`；其中 `empty` 對應 `STATS_EMPTY_STATE_TRIGGER`。
-- 品質監控 state 必須明確區分 `loading | dry_run_in_progress | report_pending | report_generating | ready | error`；其中 `dry_run_in_progress | report_pending | report_generating` 皆屬 `QUALITY_EMPTY_STATE_TRIGGER` 的產品空狀態集合。
+- 品質監控 state 必須明確區分 `loading | dry_run_in_progress | report_pending | report_generating | ready | error`；其中 `dry_run_in_progress | report_pending | report_generating` 皆屬 `QUALITY_EMPTY_STATE_TRIGGER` 的空狀態集合。
 - 語言切換後，stats 圖表與 quality 指標名稱、圖例、說明文字需同步更新。
 - 手機版（`<= MOBILE_BP`）scatter plot、co-occurrence matrix、IAA 表格、標記一致性偏離分析表格與標記員分析表格需支援橫向捲動。
 - Tab 切換時，各 tab 的捲動位置相互獨立，切換後不重置捲動位置。
@@ -258,7 +311,12 @@ sequenceDiagram
 - **FR-009**: 系統必須依任務資料中的 `task_type` 動態渲染 stats tab 對應特定統計指標區塊，涵蓋 `TASK_TYPE_KEYS` 所有值。
 - **FR-009A**: `single_sentence_classification` 必須顯示各標籤次數 / 比例長條圖與多標籤共現矩陣。
 - **FR-009B**: `single_sentence_va_scoring` 必須顯示 Valence / Arousal 分佈直方圖、統計摘要與 V-A scatter plot。
-- **FR-009C**: `sequence_labeling` 必須顯示實體類型分佈、每句平均實體數與 Entity span 長度分佈。
+- **FR-009C**: `sequence_labeling` 必須依 `analysis_profile` 拆分為 `ner` 與 `aspect` 兩種分析結構，不得以單一 generic block 混用。
+- **FR-009C-1**: `sequence_labeling` 必須支援依 `analysis_profile` 切換統計區塊，至少涵蓋 `ner` 與 `aspect`。
+- **FR-009C-1A**: `sequence_labeling.analysis_profile = ner` 時，stats tab 必須顯示實體類型分佈、每句平均實體數與 Entity span 長度分佈。
+- **FR-009C-2**: `sequence_labeling.analysis_profile = aspect` 時，stats tab 必須顯示 Aspect 類型分佈、每句平均 Aspect 數量、Aspect span 長度分佈與 Aspect 共現矩陣。
+- **FR-009C-3**: `sequence_labeling.analysis_profile = aspect` 且資料存在時，stats tab 必須額外顯示 Aspect × Sentiment 分佈與 Aspect Coverage；若 sentiment 資料不存在，相關區塊需隱藏而非顯示空圖。
+- **FR-009C-4**: `sequence_labeling.analysis_profile = aspect` 的分析器必須支援 aspect taxonomy normalization，將自由文本或 alias 映射至標準 aspect 類別後再統計。
 - **FR-009D**: `relation_extraction` 必須顯示實體類型分佈、關係類型分佈與 Triple 數量統計。
 - **FR-009E**: `sentence_pairs` 必須依子類型顯示標籤分佈（分類）或分數分佈（評分）。
 - **FR-010**: 當 `STATS_EMPTY_STATE_TRIGGER` 觸發時，stats tab 必須顯示「尚無標記資料，請先發布 Dry Run」與「前往任務詳情」次要按鈕。
@@ -266,7 +324,12 @@ sequenceDiagram
 - **FR-012**: 系統必須依 `task_type` 顯示對應的主要 IAA 指標，涵蓋 `TASK_TYPE_KEYS` 所有值。
 - **FR-012A**: `single_sentence_classification` 必須顯示 Krippendorff's Alpha（nominal）為主要指標；多標籤任務需顯示 label-wise alpha → macro average；替代指標（Cohen's Kappa / Fleiss' Kappa）以可展開區塊顯示。
 - **FR-012B**: `single_sentence_va_scoring` 必須分別顯示 IAA_V / IAA_A，並計算 Overall IAA = (IAA_V + IAA_A) / 2；輔助指標（Krippendorff's Alpha interval / Pearson / Spearman）以可展開區塊顯示。
-- **FR-012C**: `sequence_labeling` 必須顯示 Pairwise Entity-level F1 為主要指標，提供 strict（預設）與 partial overlap match 切換。
+- **FR-012C**: `sequence_labeling` 必須依 `analysis_profile` 拆分為 `ner` 與 `aspect` 兩種品質分析結構，不得共用同一套摘要指標。
+- **FR-012C-0**: `sequence_labeling.analysis_profile = ner` 時，quality tab 必須顯示 Pairwise Entity-level F1 為主要指標，提供 strict（預設）與 partial overlap match 切換。
+- **FR-012C-1**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須同時顯示 `Exact Span F1`、`Partial Match F1`、`Label Accuracy` 三項摘要指標。
+- **FR-012C-2**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `Boundary Error Analysis`，至少統計 `BOUNDARY_ERROR_TYPES` 三類錯誤。
+- **FR-012C-3**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `High Disagreement Samples` 清單，並依 `disagreement_score` 由高到低排序。
+- **FR-012C-4**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 必須提供 `Annotator Quality Ranking`，至少顯示 annotator、個別 F1、平均速度、風險等級。
 - **FR-012D**: `relation_extraction` 必須顯示 Pairwise Triple-level F1 為主要指標（subject + relation + object 完全一致）；輔助指標（entity-level F1 / relation-only agreement）以可展開區塊顯示。
 - **FR-012E**: `sentence_pairs`（分類型）必須顯示 Krippendorff's Alpha（nominal）為主要指標，替代 Fleiss' Kappa。
 - **FR-013**: 系統必須以明確視覺（達標綠色 / 未達標紅色）標示 IAA 數值與閾值比較結果。
@@ -290,6 +353,9 @@ sequenceDiagram
 - **FR-028**: 系統必須將 `SAMPLE_FLAG_TYPES = high_divergence` 的樣本獨立以樣本層級旗標顯示，與標記員風險等級區塊分開呈現；高分歧樣本不應拉高對應標記員的風險等級。
 - **FR-029**: 建議行動（審核標記 / 調整參與狀態）只能由 `RISK_ACTION_ALLOWED_ROLE`（`project_leader`）執行；`reviewer` 僅能查看風險等級與原因，不得觸發行動。
 - **FR-030**: `single_sentence_va_scoring` 任務的標記員風險等級必須以 `VA_RISK_AGGREGATION` 規則（取 V / A 中較高等級）決定；V / A 的原因分類需分開標示，不合併顯示。
+- **FR-031**: dataset analysis API 或分析器回傳的 `TaskContext` 衍生資料中，對 `sequence_labeling` 至少必須包含 `analysis_profile`；若為 `aspect`，需可選地包含 `aspect_taxonomy_version` 與 `sentiment_enabled`。
+- **FR-032**: `sequence_labeling.analysis_profile = aspect` 時，系統必須支援以句子為單位產製 Aspect 共現矩陣，不得跨句串接共現。
+- **FR-033**: `sequence_labeling.analysis_profile = aspect` 時，系統必須將 sentiment 視為 optional dimension；資料不存在時不得阻擋報告產生。
 
 ### User Flow & Navigation *(必填)*
 
@@ -320,15 +386,23 @@ flowchart LR
 ### Key Entities *(必填)*
 
 - **TaskContext**: 任務上下文，至少包含 `task_id`、`task_name`、`task_type`、`membership_role`。
+- **TaskAnalysisProfile**: 任務分析設定，至少包含 `analysis_profile`；`sequence_labeling` 可為 `ner | aspect`。
 - **DetailShellState**: detail 頁共用狀態，包含 `active_tab`、`breadcrumb`、`task_context_loaded`、`error_state`。
 - **SharedMetrics**: 共用統計指標，包含 `sentence_count`、`token_count`、`overall_completion_rate`。
 - **ClassificationStats**: 分類任務統計，包含各標籤次數 / 比例與多標籤共現矩陣。
 - **VAScoringStats**: VA 評分任務統計，包含 Valence / Arousal 分佈、統計摘要與二維分佈資料。
-- **SequenceLabelingStats**: 序列標記任務統計，包含實體類型分佈、平均實體數與 span 長度分佈。
+- **SequenceLabelingStats**: 序列標記任務統計抽象父型別，必須依 `analysis_profile` 分派至 `NerSequenceLabelingStats` 或 `AspectSequenceLabelingStats`。
+- **NerSequenceLabelingStats**: NER 序列標註統計，包含 `entity_type_distribution`、`avg_entities_per_sentence`、`entity_span_length_distribution`。
+- **AspectSequenceLabelingStats**: Aspect 序列標註統計，包含 `aspect_distribution`、`avg_aspect_per_sentence`、`aspect_count_buckets`、`span_length_distribution`、`aspect_cooccurrence_matrix`、`aspect_sentiment_distribution?`、`aspect_coverage_alerts?`。
 - **RelationExtractionStats**: 關係抽取任務統計，包含實體類型分佈、關係類型分佈與 Triple 數量。
 - **SentencePairsStats**: 句對任務統計，依子類型對應 ClassificationStats 或 VAScoringStats 結構。
 - **StatsTabState**: stats tab 狀態，包含 `view_state`（`loading | empty | ready | error`）、`shared_metrics`、`task_type_stats`、`empty_state`、`loading_state`。
 - **IAAReport**: IAA 報告，包含主要指標名稱、計算結果、閾值、達標狀態與各輔助指標。
+- **SequenceLabelingQualityReport**: 序列標註品質報告抽象父型別，必須依 `analysis_profile` 分派至 `NerSequenceLabelingQualityReport` 或 `AspectSequenceLabelingQualityReport`。
+- **NerSequenceLabelingQualityReport**: NER 序列標註品質報告，包含 `pairwise_entity_f1_strict`、`pairwise_entity_f1_partial`、`active_match_mode`。
+- **AspectSequenceLabelingQualityReport**: Aspect 序列標註品質報告，包含 `exact_span_f1`、`partial_match_f1`、`label_accuracy`、`boundary_error_analysis`、`high_disagreement_samples`。
+- **BoundaryErrorSummary**: span 邊界錯誤摘要，包含 `error_type`、`count`、`ratio`、`example_samples[]`。
+- **DisagreementSample**: 高分歧樣本，包含 `sample_id`、`sentence_text`、`disagreement_score`、`conflicting_spans[]`、`annotator_variants[]`、`reviewer_queue_status`。
 - **IAAReportVA**: VA 雙維度 IAA 報告，包含 IAA_V、IAA_A、Overall IAA 與各輔助指標。
 - **AnomalyDetectionResult**: 異常偵測結果，包含速度異常標記員清單與離群樣本清單。
 - **AnnotatorConsistencyDeviationSummary**: 標記一致性偏離分析摘要，包含 `comparison_unit_count`、`outlier_count_1_5xstd`、`outlier_rate_1_5xstd`、`outlier_count_2xstd`、`outlier_rate_2xstd`；僅作 annotator-level 觀測，不直接代表風險等級。
@@ -365,8 +439,12 @@ flowchart LR
 - **SC-002**: 未帶 `?tab=` 時，頁面預設進入統計總覽 tab；帶 `?tab=quality` 時可正確進入品質監控 tab。
 - **SC-003**: `SHARED_METRICS` 三項指標在所有 `task_type` 下皆固定可見於 stats tab。
 - **SC-004**: `TASK_TYPE_KEYS` 的五種任務類型各自對應的 stats 指標區塊皆可正確渲染。
+- **SC-004N**: `sequence_labeling.analysis_profile = ner` 時，stats tab 正確顯示實體類型分佈、每句平均實體數與 Entity span 長度分佈。
+- **SC-004A**: `sequence_labeling.analysis_profile = aspect` 時，stats tab 正確顯示 Aspect 分佈、每句平均 Aspect 數量、span 長度分佈與共現矩陣；有 sentiment 資料時，相關區塊一併顯示。
 - **SC-005**: `STATS_EMPTY_STATE_TRIGGER` 觸發時，stats 空狀態說明文字與「前往任務詳情」按鈕正確顯示並可正確導向 `task-detail`。
 - **SC-006**: `TASK_TYPE_KEYS` 五種任務類型各自對應的主要 IAA 指標皆可正確顯示，替代 / 輔助指標以可展開區塊承載。
+- **SC-006N**: `sequence_labeling.analysis_profile = ner` 時，quality tab 正確顯示 strict / partial 兩種 Pairwise Entity-level F1，並可切換 active match mode。
+- **SC-006A**: `sequence_labeling.analysis_profile = aspect` 時，quality tab 正確顯示 `Exact Span F1`、`Partial Match F1`、`Label Accuracy`，並可查看 `Boundary Error Analysis`、`High Disagreement Samples`、`Annotator Quality Ranking`。
 - **SC-007**: `QUALITY_EMPTY_STATE_TRIGGER` 觸發時，quality 空狀態說明文字與「前往任務詳情」按鈕正確顯示並可正確導向 `task-detail`。
 - **SC-008**: Tab 切換（統計總覽 ↔ 品質監控）為頁內切換，URL 的 `?tab=` query 正確更新，任務上下文不重置。
 - **SC-009**: Dashboard「IAA 待確認」badge deep link（`/dataset-analysis-detail/:task_id?tab=quality`）可正確進入品質監控 tab 並載入對應任務資料。
@@ -380,6 +458,8 @@ flowchart LR
 - **SC-016**: 建議行動 UI 僅對 `project_leader` 角色可見；以 `reviewer` 身份進入 quality tab 時，建議行動欄位不顯示或顯示為 disabled 且不可點擊。
 - **SC-017**: `single_sentence_va_scoring` 任務中，標記員風險等級以 V / A 中較高等級決定，且 V / A 原因分類分別標示，不合併為單一原因。
 - **SC-018**: quality tab 中新增 `標記一致性偏離分析` 獨立區塊，並固定顯示在 `標記員風險評估` 區塊下方；該區塊顯示每位標記員的可比較單位數、`離群值(1.5xSTD)筆數`、`離群值(1.5xSTD)比例`、`離群值(2xSTD)筆數`、`離群值(2xSTD)比例`，且不直接覆寫 `risk_level`。
+- **SC-019**: `sequence_labeling.analysis_profile = aspect` 的 Aspect 共現矩陣只統計同句共現，矩陣對稱，且不把非 Aspect 類別誤算成 aspect taxonomy。
+- **SC-020**: `sequence_labeling.analysis_profile = aspect` 若缺少 sentiment 維度，報告仍能產出且隱藏對應區塊，不出現空白卡片或 error state。
 
 ---
 
@@ -387,6 +467,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 1.4.0 | 2026-04-29 | Add `sequence_labeling.analysis_profile` support for `ner | aspect`: 定義 Aspect 專屬 stats/quality 區塊、Aspect taxonomy normalization、Boundary Error Analysis、High Disagreement Samples 與報告產製規則 |
 | 1.3.2 | 2026-04-24 | Reorder quality-tab shared blocks so `標記一致性偏離分析` is rendered below `標記員風險評估`; sync prototype HTML panel order and spec wording |
 | 1.3.1 | 2026-04-24 | Add `標記一致性偏離分析` block to quality tab: 定義獨立區塊名稱、`離群值(1.5xSTD)筆數/比例` 與 `離群值(2xSTD)筆數/比例` 欄位、task-type 單位命名規則、觀測層與風險評估的邊界；新增 `AnnotatorConsistencyDeviationSummary` entity 與對應 FR / SC |
 | 1.3.0 | 2026-04-24 | Add decision layer spec: 補入標記員風險等級（FR-024/025）、最低樣本門檻、annotator-level 原因分類（FR-026）、sample-level 高分歧旗標分離（FR-027）、行動角色門檻（FR-028）、VA 風險聚合規則（FR-029）；對應新增 SC-014~017、AnnotatorRiskAssessment、SampleDivergenceFlag entities 與風險等級規格常數 |
