@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.9.5
+**版本**：1.9.6
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -319,6 +319,8 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-003d-6**：當 `sequence_labeling.subtype = aspect_list` 且 `require_exact_match_in_sentence = true` 時，系統必須提供 aspect 完全出現在句子中的驗證規則；驗證失敗時不得允許進入下一步。
 - **FR-003d-7**：當 `sequence_labeling.subtype = aspect_list` 且 `allow_sentence_edit = true` 時，標記結果 payload 必須能區分原始句子、修正後句子與 Aspect List，避免覆寫資料集原文。
 - **FR-003d-8**：當 `sequence_labeling.subtype = aspect_list` 任務進入 reviewer 審核流程時，annotation-workspace 必須可使用同一份 task config / Aspect List schema 產生 reviewer-corrected result；Reviewer 可新增、刪除、修改 aspect，且系統必須保留 annotator 原始提交與 reviewer 修正 diff。
+- **FR-003d-9**：`relation_extraction` 的 schema 必須支援 `entity_types`（`{ name, color }[]`）、`relation_types`（`{ name }[]`）與 `tuple_mode`（`triple | five_tuple`）；Step 2 schema 設定區需呈現可編輯的實體類型清單與關係類型清單。
+- **FR-003d-10**：`relation_extraction` 的 Step 2 預覽必須呈現：實體類型按鈕列、實體清單、關係建構器（E1 / Relation / E2 三欄下拉選單）與 Triple 清單；不得只顯示一般分類標籤。
 - **FR-003e**：code 區必須支援可編輯 YAML/JSON，並提供 `儲存` 操作以套用回 schema 設定欄位。
 - **FR-003f**：當 code 區有未儲存變更且使用者嘗試進入下一步時，系統必須阻擋前進並提示先儲存；不得自動儲存。
 - **FR-003g**：Step 2 上方必須提供實際標記預覽區，顯示示例文本與可標記選項，且在設定變更時即時同步更新。
@@ -431,6 +433,7 @@ flowchart LR
 - **SC-003e**：`sequence_labeling.subtype = aspect_list` 在 Step 2 可完成 Aspect List 專用設定，且預覽同頁呈現句子與可編輯 Aspect List rows。
 - **SC-003e-1**：`sequence_labeling.subtype = aspect_list` 在 Step 2 的 schema 設定區會顯示 `欄位對應`、`Aspect 編輯規則`、`數量限制` 三個群組；五個 boolean 規則以 toggle card 呈現，切換後 code 區與預覽同步更新。
 - **SC-003f**：`sequence_labeling.subtype = aspect_list` 啟用 exact match 驗證時，不存在於句子中的 aspect 會被標示為錯誤並阻擋進入下一步。
+- **SC-003g**：`relation_extraction` 在 Step 2 可完成 entity_types 與 relation_types 設定，且預覽同頁呈現實體類型按鈕列與關係建構器（E1 / Relation / E2 三欄下拉選單）。
 - **SC-004**：新增 task type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行四種任務情境（MultiLabel、VA 雙維度評分、Aspect List 抽取 / 校正、Entity/Relation/Triple）可在 `task-new` 以預設模板完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -449,6 +452,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.6 | 2026-04-29 | 補充 relation_extraction 細規：新增 FR-003d-9（schema 欄位：entity_types / relation_types / tuple_mode）、FR-003d-10（Step 2 預覽：實體類型按鈕、實體清單、關係建構器、Triple 清單）、SC-003g（驗收標準） |
 | 1.9.5 | 2026-04-29 | 統一 NER schema 與 task-detail：`sequence_labeling.subtype = ner` 改為核心設定 + 進階設定的漸進揭露；統一 key 為 `entities` / `scheme` / `allow_overlapping`，並保留進階欄位於收合區塊 |
 | 1.9.4 | 2026-04-28 | 同步 Aspect List reviewer 直接修正需求：Reviewer 可新增、刪除、修改標記員提交的 aspect，並保留原始提交與 correction diff |
 | 1.9.3 | 2026-04-28 | 同步 Aspect List Step 2 視覺排版：schema 設定區分為欄位對應、Aspect 編輯規則、數量限制；boolean 規則改以 toggle card 呈現並補充 mobile 單欄要求 |

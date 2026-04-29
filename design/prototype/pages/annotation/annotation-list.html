@@ -662,6 +662,24 @@
           { sampleId: 'AL-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。' },
           { sampleId: 'AL-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。' }
         ]
+      },
+      {
+        taskId: 'TASK-015-A4',
+        title: '醫療關係抽取（Entity / Triple）',
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        dashboardTaskTypeText: '關係抽取（Entity / Relation / Triple）',
+        dashboardDetail: '已完成 37% · 今日 14 筆 · 平均速度 5.1',
+        dashboardProgress: 37,
+        dashboardStatusText: '待繼續',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          { sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。' },
+          { sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。' },
+          { sampleId: 'RE-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。' },
+          { sampleId: 'RE-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。' },
+          { sampleId: 'RE-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。' }
+        ]
       }
     ],
     reviewer: [
@@ -866,6 +884,59 @@
               { username: '113450022', result: '音質表現、舒適度、降噪功能', reviewStatus: null },
               { username: 'tony0950127', result: '音質、佩戴舒適度、主動降噪功能', reviewStatus: null }
             ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R4',
+        taskAliases: ['TASK-015-A4'],
+        title: '醫療關係抽取（Entity / Triple）',
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        dashboardTaskTypeText: '關係抽取（Entity / Relation / Triple）',
+        dashboardDetail: '待審 9 筆 · 進度 44% · IAA 0.79',
+        dashboardProgress: 44,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          {
+            sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30',
+            text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。',
+            labelStats: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛) ×2 · (DRUG:阿司匹靈)→causes→(SYMP:胃部不適) ×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', reviewStatus: null },
+              { username: '113450022',  result: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45',
+            text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。',
+            labelStats: '(SYMP:疼痛)→associated_with→(TIME:月經週期) ×2 · (SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化) ×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '(SYMP:疼痛)→associated_with→(TIME:月經週期)', reviewStatus: null },
+              { username: '113450022',  result: '(SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化)', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'RE-003', status: 'saved', completedAt: '2026-04-28 11:00',
+            text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。',
+            labelStats: '(EXAM:超音波檢查)→diagnoses→(DISE:膽囊結石) ×1（草稿）',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '(EXAM:超音波)→diagnoses→(DISE:膽囊結石)', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'RE-004', status: 'pending', completedAt: '-',
+            text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。',
+            labelStats: '-', vaRange: null, annotators: []
+          },
+          {
+            sampleId: 'RE-005', status: 'pending', completedAt: '-',
+            text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。',
+            labelStats: '-', vaRange: null, annotators: []
           }
         ]
       }

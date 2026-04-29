@@ -927,6 +927,85 @@
       background: var(--color-slate-50); border-radius: var(--radius-md); border: 1px solid var(--color-border);
     }
     .rv-aspect-sentence-diff .diff-from { color: var(--color-error); text-decoration: line-through; }
+
+    /* ── Relation Extraction Panel ──────────────────────────────── */
+    .re-section { margin-bottom: var(--space-md); }
+    .re-section-head { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+    .re-section-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .re-entity-count { font-size: 11px; font-weight: 600; color: var(--color-text-muted); }
+    .re-entity-type-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-sm); }
+    .re-entity-type-btn {
+      padding: 3px 10px; border-radius: var(--radius-full);
+      border: 1.5px solid; font-size: 12px; font-weight: 700;
+      background: transparent; cursor: pointer;
+      transition: background var(--dur-fast), opacity var(--dur-fast);
+    }
+    .re-entity-type-btn:hover { opacity: 0.75; }
+    .re-pending-selection {
+      display: flex; align-items: center; gap: 6px; min-height: 30px;
+      font-size: 12px; padding: 5px 10px; border-radius: var(--radius-md);
+      border: 1px dashed var(--color-border); background: var(--color-border-muted);
+      color: var(--color-text-soft);
+    }
+    .re-pending-text { font-weight: 600; color: var(--color-ink); }
+    .re-entity-list { display: flex; flex-direction: column; gap: 4px; }
+    .re-entity-row {
+      display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+      border-radius: var(--radius-md); background: white; border: 1px solid var(--color-border);
+    }
+    .re-entity-badge {
+      display: inline-flex; align-items: center; padding: 1px 7px;
+      border-radius: var(--radius-full); font-size: 10px; font-weight: 700;
+      border: 1px solid; flex-shrink: 0; white-space: nowrap;
+    }
+    .re-entity-text {
+      font-size: 13px; color: var(--color-ink); flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .re-entity-span {
+      font-size: 11px; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0;
+    }
+    .re-entity-del-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: transparent;
+      color: var(--color-text-muted); cursor: pointer; flex-shrink: 0;
+      transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .re-entity-del-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); }
+    .re-empty-hint {
+      font-size: 12px; color: var(--color-text-muted); padding: 8px;
+      text-align: center; border: 1px dashed var(--color-border); border-radius: var(--radius-md);
+    }
+    .re-divider { border-top: 1px solid var(--color-border); margin: var(--space-sm) 0; }
+    .re-relation-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: var(--space-sm); }
+    .re-role-cell { display: flex; flex-direction: column; gap: 3px; }
+    .re-role-label { font-size: 10px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+    .re-select {
+      width: 100%; padding: 5px 6px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: white;
+      font-size: 11px; color: var(--color-ink);
+    }
+    .re-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .re-relation-actions { display: flex; gap: 6px; justify-content: flex-end; margin-bottom: 6px; }
+    .re-validation-error {
+      padding: 5px 10px; border-radius: var(--radius-md); font-size: 11px; font-weight: 600;
+      color: var(--color-error); background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border);
+    }
+    .re-triple-list { display: flex; flex-direction: column; gap: 4px; }
+    .re-triple-row {
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding: 5px 8px;
+      border-radius: var(--radius-md); background: white; border: 1px solid var(--color-border);
+    }
+    .re-triple-num { font-size: 11px; color: var(--color-text-muted); flex-shrink: 0; min-width: 16px; }
+    .re-triple-arrow { font-size: 11px; color: var(--color-text-soft); flex-shrink: 0; }
+    .re-relation-badge {
+      display: inline-flex; padding: 1px 8px; border-radius: var(--radius-full);
+      font-size: 10px; font-weight: 700;
+      background: var(--color-primary-soft-bg); color: var(--color-primary);
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    @media (max-width: 767px) { .re-relation-grid { grid-template-columns: 1fr; } }
     .rv-aspect-sentence-diff .diff-to { color: #15803D; font-weight: 600; }
     .rv-aspect-score-label {
       font-size: 11px; font-weight: 600; color: var(--color-text-muted); margin-top: 4px;
@@ -1367,6 +1446,30 @@ var I18N = {
     aspectSoftGuidanceText: '情緒上下文確認為軟性提醒，不影響提交。',
     rvAspectDiffTitle: 'Aspect List 差異',
     rvAspectScoreLabel: 'Aspect List 標記',
+    reEntityTypeLabel: 'Entity Type',
+    reEntityListLabel: 'Entity List',
+    reRelationTypeLabel: 'Relation Type',
+    reTripleListLabel: 'Triple List',
+    reE1RoleLabel: 'E1/Arg1',
+    reRelationLabel: 'Relation',
+    reE2RoleLabel: 'E2/Arg2',
+    reUndoLabel: '撤銷',
+    reAddTripleLabel: '新增',
+    rePendingHintDefault: '在上方文本中選取文字，再點擊實體類型',
+    rePendingHintSelected: '點擊上方實體類型按鈕以完成標記',
+    reEntityEmpty: '尚未標記實體',
+    reTripleEmpty: '尚未建立三元組',
+    reEntityCountUnit: '個實體',
+    reSelectE1Placeholder: '選擇 E1…',
+    reSelectE2Placeholder: '選擇 E2…',
+    reSelectRelPlaceholder: '選擇關係…',
+    reDeleteEntityAria: '刪除實體',
+    reDeleteTripleAria: '刪除三元組',
+    reErrNoEntities: '請先標記至少一個實體',
+    reErrNoTriples: '請至少建立一個三元組',
+    reErrSameEntity: 'E1 與 E2 不能是同一個實體',
+    reErrMissingField: '請選擇 E1、關係與 E2',
+    toastSelectTextFirst: '請先在文本中選取文字',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1471,6 +1574,30 @@ var I18N = {
     aspectSoftGuidanceText: 'Sentiment context check is soft guidance — it does not block submission.',
     rvAspectDiffTitle: 'Aspect List diff',
     rvAspectScoreLabel: 'Aspect List annotation',
+    reEntityTypeLabel: 'Entity Type',
+    reEntityListLabel: 'Entity List',
+    reRelationTypeLabel: 'Relation Type',
+    reTripleListLabel: 'Triple List',
+    reE1RoleLabel: 'E1/Arg1',
+    reRelationLabel: 'Relation',
+    reE2RoleLabel: 'E2/Arg2',
+    reUndoLabel: 'Undo',
+    reAddTripleLabel: 'Add',
+    rePendingHintDefault: 'Select text above, then click an entity type',
+    rePendingHintSelected: 'Click an entity type button to assign',
+    reEntityEmpty: 'No entities annotated yet',
+    reTripleEmpty: 'No triples built yet',
+    reEntityCountUnit: 'entities',
+    reSelectE1Placeholder: 'Select E1…',
+    reSelectE2Placeholder: 'Select E2…',
+    reSelectRelPlaceholder: 'Select relation…',
+    reDeleteEntityAria: 'Delete entity',
+    reDeleteTripleAria: 'Delete triple',
+    reErrNoEntities: 'Please annotate at least one entity',
+    reErrNoTriples: 'Please build at least one triple',
+    reErrSameEntity: 'E1 and E2 must be different entities',
+    reErrMissingField: 'Please select E1, relation, and E2',
+    toastSelectTextFirst: 'Please select text in the sentence first',
   }
 };
 
@@ -1726,6 +1853,101 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
   }
 ];
 
+var RE_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'RE-001',
+    text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。',
+    status: 'submitted',
+    reAnnotation: {
+      entities: [
+        { id: 're1', text: '阿司匹靈', type: 'DRUG', start: 0, end: 4 },
+        { id: 're2', text: '頭痛', type: 'SYMP', start: 7, end: 9 },
+        { id: 're3', text: '胃部不適', type: 'SYMP', start: 21, end: 25 }
+      ],
+      triples: [
+        { id: 'rt1', e1Id: 're1', relation: 'treats', e2Id: 're2' },
+        { id: 'rt2', e1Id: 're1', relation: 'causes', e2Id: 're3' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: '關係抽取任務 — 請查看各標記員三元組結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', decision: null },
+        { annotator: '113450022', scoreText: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'submitted', from: null, to: '2 triples' }]
+  },
+  {
+    id: 2, sampleId: 'RE-002',
+    text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。',
+    status: 'submitted',
+    reAnnotation: {
+      entities: [
+        { id: 're1', text: '乳房', type: 'BODY', start: 0, end: 2 },
+        { id: 're2', text: '疼痛', type: 'SYMP', start: 2, end: 4 },
+        { id: 're3', text: '月經週期', type: 'TIME', start: 8, end: 12 },
+        { id: 're4', text: '賀爾蒙變化', type: 'BODY', start: 13, end: 18 }
+      ],
+      triples: [
+        { id: 'rt1', e1Id: 're2', relation: 'associated_with', e2Id: 're3' },
+        { id: 'rt2', e1Id: 're2', relation: 'associated_with', e2Id: 're4' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: '關係抽取任務 — 請查看各標記員三元組結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '(SYMP:疼痛)→associated_with→(TIME:月經週期)', decision: null },
+        { annotator: '113450022', scoreText: '(SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化)', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:45', action: 'submitted', from: null, to: '2 triples' }]
+  },
+  {
+    id: 3, sampleId: 'RE-003',
+    text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。',
+    status: 'saved',
+    reAnnotation: {
+      entities: [
+        { id: 're1', text: '超音波檢查', type: 'EXAM', start: 0, end: 5 },
+        { id: 're2', text: '膽囊結石', type: 'DISE', start: 10, end: 14 },
+        { id: 're3', text: '腹部疼痛', type: 'SYMP', start: 18, end: 22 }
+      ],
+      triples: [{ id: 'rt1', e1Id: 're1', relation: 'diagnoses', e2Id: 're2' }]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '1 triple (draft)' }]
+  },
+  {
+    id: 4, sampleId: 'RE-004',
+    text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。',
+    status: 'todo', reAnnotation: null, history: []
+  },
+  {
+    id: 5, sampleId: 'RE-005',
+    text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。',
+    status: 'todo', reAnnotation: null, history: []
+  }
+];
+
+var RE_CONFIG = {
+  entity_types: [
+    { name: 'BODY', color: '#6366F1' },
+    { name: 'DISE', color: '#EF4444' },
+    { name: 'SYMP', color: '#F59E0B' },
+    { name: 'DRUG', color: '#10B981' },
+    { name: 'INST', color: '#8B5CF6' },
+    { name: 'SUPP', color: '#EC4899' },
+    { name: 'EXAM', color: '#06B6D4' },
+    { name: 'TREAT', color: '#84CC16' },
+    { name: 'CHEM', color: '#F97316' },
+    { name: 'TIME', color: '#14B8A6' }
+  ],
+  relation_types: ['causes', 'associated_with', 'treats', 'diagnoses', 'located_in'],
+  tuple_mode: 'triple'
+};
+
+var reState = { entities: [], triples: [], pendingText: '', pendingStart: null, pendingEnd: null };
+
 var SAMPLES = [];
 
 /* ── State ────────────────────────────────────────────────────── */
@@ -1818,8 +2040,8 @@ var TASK_TYPE_UI_CONFIG = {
       en: 'Relation Extraction (Entity / Relation / Triple)'
     },
     annotationTitle: {
-      zh: '關係抽取',
-      en: 'Relation Extraction'
+      zh: '關係抽取（Entity / Relation / Triple）',
+      en: 'Relation Extraction (Entity / Relation / Triple)'
     },
     guidelineGoal: {
       zh: '關係抽取（Entity / Relation / Triple）',
@@ -1887,6 +2109,14 @@ var aspectListState = { originalSentence: '', correctedSentence: '', rows: [] };
 
 function isAspectListTaskType() {
   return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling';
+}
+
+function isRelationExtractionTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'relation_extraction';
+}
+
+function generateReId() {
+  return 're_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
 }
 
 function generateAspectId() {
@@ -2076,6 +2306,209 @@ function renderAspectListPanel() {
   }
 }
 
+/* ── Relation Extraction ──────────────────────────────────────── */
+function initRelationState(sample) {
+  var annotation = sample.reAnnotation;
+  if (annotation && sample.status !== 'todo') {
+    reState.entities = (annotation.entities || []).map(function(e) {
+      var et = RE_CONFIG.entity_types.find(function(x) { return x.name === e.type; });
+      return { id: e.id || generateReId(), text: e.text, type: e.type, color: et ? et.color : '#94A3B8', start: e.start, end: e.end };
+    });
+    reState.triples = (annotation.triples || []).map(function(tr) {
+      return { id: tr.id || generateReId(), e1Id: tr.e1Id, relation: tr.relation, e2Id: tr.e2Id };
+    });
+  } else {
+    reState.entities = [];
+    reState.triples = [];
+  }
+  reState.pendingText = '';
+  reState.pendingStart = null;
+  reState.pendingEnd = null;
+}
+
+function makeReDelBtn(dataAttr, dataVal, ariaKey) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 're-entity-del-btn';
+  btn.setAttribute(dataAttr, dataVal);
+  btn.setAttribute('aria-label', t(ariaKey));
+  btn.appendChild(makeXIconSvg());
+  return btn;
+}
+
+function makeEntityBadge(entity) {
+  var b = document.createElement('span');
+  b.className = 're-entity-badge';
+  b.style.background = entity.color + '22';
+  b.style.color = entity.color;
+  b.style.borderColor = entity.color + '66';
+  b.textContent = entity.text + '/' + entity.type;
+  return b;
+}
+
+function renderRelationPanel() {
+  var lbl;
+  lbl = document.getElementById('reEntityTypeLabel'); if (lbl) lbl.textContent = t('reEntityTypeLabel');
+  lbl = document.getElementById('reEntityListLabel'); if (lbl) lbl.textContent = t('reEntityListLabel');
+  lbl = document.getElementById('reRelationTypeLabel'); if (lbl) lbl.textContent = t('reRelationTypeLabel');
+  lbl = document.getElementById('reTripleListLabel'); if (lbl) lbl.textContent = t('reTripleListLabel');
+  lbl = document.getElementById('reE1RoleLabel'); if (lbl) lbl.textContent = t('reE1RoleLabel');
+  lbl = document.getElementById('reRelationLabel'); if (lbl) lbl.textContent = t('reRelationLabel');
+  lbl = document.getElementById('reE2RoleLabel'); if (lbl) lbl.textContent = t('reE2RoleLabel');
+  lbl = document.getElementById('reUndoLabel'); if (lbl) lbl.textContent = t('reUndoLabel');
+  lbl = document.getElementById('reAddTripleLabel'); if (lbl) lbl.textContent = t('reAddTripleLabel');
+
+  /* Entity type buttons */
+  var btnsEl = document.getElementById('reEntityTypeBtns');
+  if (btnsEl) {
+    btnsEl.textContent = '';
+    RE_CONFIG.entity_types.forEach(function(et) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 're-entity-type-btn';
+      btn.setAttribute('data-entity-type', et.name);
+      btn.textContent = et.name;
+      btn.style.borderColor = et.color;
+      btn.style.color = et.color;
+      btnsEl.appendChild(btn);
+    });
+  }
+
+  /* Pending selection hint */
+  var pendingTextEl = document.getElementById('rePendingText');
+  var pendingHintEl = document.getElementById('rePendingHint');
+  if (pendingTextEl) pendingTextEl.textContent = reState.pendingText ? '「' + reState.pendingText + '」' : '';
+  if (pendingHintEl) pendingHintEl.textContent = reState.pendingText ? t('rePendingHintSelected') : t('rePendingHintDefault');
+
+  /* Entity list */
+  var entityCount = document.getElementById('reEntityCount');
+  if (entityCount) entityCount.textContent = reState.entities.length + ' ' + t('reEntityCountUnit');
+  var entityListEl = document.getElementById('reEntityList');
+  if (entityListEl) {
+    entityListEl.textContent = '';
+    if (!reState.entities.length) {
+      var emptyE = document.createElement('div');
+      emptyE.className = 're-empty-hint';
+      emptyE.textContent = t('reEntityEmpty');
+      entityListEl.appendChild(emptyE);
+    } else {
+      reState.entities.forEach(function(entity) {
+        var row = document.createElement('div');
+        row.className = 're-entity-row';
+        var badge = document.createElement('span');
+        badge.className = 're-entity-badge';
+        badge.style.background = entity.color + '22';
+        badge.style.color = entity.color;
+        badge.style.borderColor = entity.color + '66';
+        badge.textContent = entity.type;
+        var text = document.createElement('span');
+        text.className = 're-entity-text';
+        text.textContent = entity.text;
+        var spanEl = document.createElement('span');
+        spanEl.className = 're-entity-span';
+        spanEl.textContent = (entity.start != null && entity.end != null) ? '(' + entity.start + ', ' + entity.end + ')' : '';
+        row.appendChild(badge);
+        row.appendChild(text);
+        row.appendChild(spanEl);
+        row.appendChild(makeReDelBtn('data-entity-id', entity.id, 'reDeleteEntityAria'));
+        entityListEl.appendChild(row);
+      });
+    }
+  }
+
+  /* Relation selects */
+  var e1Sel = document.getElementById('reE1Select');
+  var relSel = document.getElementById('reRelationSelect');
+  var e2Sel = document.getElementById('reE2Select');
+  [e1Sel, e2Sel].forEach(function(sel, idx) {
+    if (!sel) return;
+    var prev = sel.value;
+    sel.textContent = '';
+    var ph = document.createElement('option');
+    ph.value = '';
+    ph.textContent = t(idx === 0 ? 'reSelectE1Placeholder' : 'reSelectE2Placeholder');
+    sel.appendChild(ph);
+    reState.entities.forEach(function(entity) {
+      var opt = document.createElement('option');
+      opt.value = entity.id;
+      opt.textContent = '[' + entity.type + '] ' + entity.text;
+      if (entity.id === prev) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  });
+  if (relSel) {
+    var prevRel = relSel.value;
+    relSel.textContent = '';
+    var relPh = document.createElement('option');
+    relPh.value = '';
+    relPh.textContent = t('reSelectRelPlaceholder');
+    relSel.appendChild(relPh);
+    RE_CONFIG.relation_types.forEach(function(rel) {
+      var opt = document.createElement('option');
+      opt.value = rel;
+      opt.textContent = rel;
+      if (rel === prevRel) opt.selected = true;
+      relSel.appendChild(opt);
+    });
+  }
+
+  var addBtn = document.getElementById('reAddTripleBtn');
+  if (addBtn) addBtn.disabled = reState.entities.length < 2;
+  var undoBtn = document.getElementById('reUndoBtn');
+  if (undoBtn) undoBtn.disabled = !reState.entities.length && !reState.triples.length;
+
+  /* Triple list */
+  var tripleCount = document.getElementById('reTripleCount');
+  if (tripleCount) tripleCount.textContent = reState.triples.length;
+  var tripleListEl = document.getElementById('reTripleList');
+  if (tripleListEl) {
+    tripleListEl.textContent = '';
+    if (!reState.triples.length) {
+      var emptyT = document.createElement('div');
+      emptyT.className = 're-empty-hint';
+      emptyT.textContent = t('reTripleEmpty');
+      tripleListEl.appendChild(emptyT);
+    } else {
+      reState.triples.forEach(function(triple, idx) {
+        var e1 = reState.entities.find(function(e) { return e.id === triple.e1Id; });
+        var e2 = reState.entities.find(function(e) { return e.id === triple.e2Id; });
+        if (!e1 || !e2) return;
+        var row = document.createElement('div');
+        row.className = 're-triple-row';
+        var num = document.createElement('span');
+        num.className = 're-triple-num';
+        num.textContent = (idx + 1) + '.';
+        var arrow1 = document.createElement('span');
+        arrow1.className = 're-triple-arrow';
+        arrow1.textContent = '→';
+        var relBadge = document.createElement('span');
+        relBadge.className = 're-relation-badge';
+        relBadge.textContent = triple.relation;
+        var arrow2 = document.createElement('span');
+        arrow2.className = 're-triple-arrow';
+        arrow2.textContent = '→';
+        row.appendChild(num);
+        row.appendChild(makeEntityBadge(e1));
+        row.appendChild(arrow1);
+        row.appendChild(relBadge);
+        row.appendChild(arrow2);
+        row.appendChild(makeEntityBadge(e2));
+        row.appendChild(makeReDelBtn('data-triple-id', triple.id, 'reDeleteTripleAria'));
+        tripleListEl.appendChild(row);
+      });
+    }
+  }
+
+  var tripleErr = document.getElementById('reTripleError');
+  if (tripleErr) tripleErr.classList.add('hidden');
+}
+
+function validateRelationAnnotation() {
+  if (!reState.entities.length) return { valid: false, error: t('reErrNoEntities') };
+  if (!reState.triples.length) return { valid: false, error: t('reErrNoTriples') };
+  return { valid: true };
+}
+
 /* ── Utils ────────────────────────────────────────────────────── */
 function t(key, vars) {
   var str = (I18N[state.lang] || I18N.zh)[key] || key;
@@ -2199,6 +2632,8 @@ function applyTaskTypeSampleFixtures() {
     SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
   } else if (isAspectListTaskType()) {
     SAMPLES = cloneSamples(ASPECT_LIST_SAMPLE_FIXTURES);
+  } else if (isRelationExtractionTaskType()) {
+    SAMPLES = cloneSamples(RE_SAMPLE_FIXTURES);
   } else {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   }
@@ -2745,6 +3180,9 @@ function renderSampleContent() {
   } else if (isAspectListTaskType()) {
     initAspectListState(sample);
     renderAspectListPanel();
+  } else if (isRelationExtractionTaskType()) {
+    initRelationState(sample);
+    renderRelationPanel();
   } else {
     var selectedLabels = {};
     getSampleLabels(sample).forEach(function(value) { selectedLabels[value] = true; });
@@ -2766,15 +3204,18 @@ function renderSampleContent() {
 function renderTaskTypeInterface() {
   var isVa = isVaTaskType(state.taskTypeKey);
   var isAspectList = isAspectListTaskType();
+  var isRE = isRelationExtractionTaskType();
   var config = TASK_TYPE_UI_CONFIG[state.taskTypeKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
 
   var classPanel = document.getElementById('classificationAnnotatorPanel');
   var vaPanel = document.getElementById('vaAnnotatorPanel');
   var aspectPanel = document.getElementById('aspectListAnnotatorPanel');
+  var rePanel = document.getElementById('relationAnnotatorPanel');
 
-  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList);
+  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList || isRE);
   if (vaPanel) vaPanel.classList.toggle('hidden', !isVa);
   if (aspectPanel) aspectPanel.classList.toggle('hidden', !isAspectList);
+  if (rePanel) rePanel.classList.toggle('hidden', !isRE);
 
   el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
   if (!isVa) clearGuidelineImagePreview();
@@ -2989,6 +3430,35 @@ function bindEvents() {
       if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
       return;
     }
+    if (isRelationExtractionTaskType()) {
+      var reValidation = validateRelationAnnotation();
+      if (!reValidation.valid) { showToast(reValidation.error, 'error'); return; }
+      sample.reAnnotation = {
+        entities: reState.entities.map(function(e) { return { id: e.id, text: e.text, type: e.type }; }),
+        triples: reState.triples.map(function(tr) { return { id: tr.id, e1Id: tr.e1Id, relation: tr.relation, e2Id: tr.e2Id }; }),
+        version: Date.now()
+      };
+      toValue = reState.triples.length + ' triples：' + reState.triples.map(function(tr) {
+        var e1 = reState.entities.find(function(e) { return e.id === tr.e1Id; });
+        var e2 = reState.entities.find(function(e) { return e.id === tr.e2Id; });
+        return '(' + (e1 ? e1.type + ':' + e1.text : '?') + ')→' + tr.relation + '→(' + (e2 ? e2.type + ':' + e2.text : '?') + ')';
+      }).join('；');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
     if (isVaTaskType(state.taskTypeKey)) {
       var v = readSelectedVaValue('va_valence');
       var a = readSelectedVaValue('va_arousal');
@@ -3130,10 +3600,11 @@ function bindEvents() {
     if (e.detail && e.detail.lang) { applyLang(e.detail.lang); }
   });
 
-  // Aspect list panel bindings (elements may not exist for non-aspect tasks)
+  // Panel event bindings (delegated via annotationPanelMount)
   var annotationMount = document.getElementById('annotationPanelMount');
   if (annotationMount) {
     annotationMount.addEventListener('click', function(e) {
+      /* Aspect list */
       var addBtn = e.target.closest('#aspectAddBtn');
       if (addBtn && !addBtn.disabled && isAspectListTaskType()) {
         aspectListState.rows.push({ id: generateAspectId(), text: '', exactMatchStatus: 'empty', sentimentChecked: false });
@@ -3141,7 +3612,70 @@ function bindEvents() {
         var inputs = document.querySelectorAll('.aspect-text-input');
         if (inputs.length) inputs[inputs.length - 1].focus();
       }
+
+      /* Relation extraction — entity type button */
+      var etBtn = e.target.closest('[data-entity-type]');
+      if (etBtn && isRelationExtractionTaskType()) {
+        if (!reState.pendingText.trim()) { showToast(t('toastSelectTextFirst'), 'error'); return; }
+        var etName = etBtn.getAttribute('data-entity-type');
+        var etConfig = RE_CONFIG.entity_types.find(function(x) { return x.name === etName; });
+        reState.entities.push({ id: generateReId(), text: reState.pendingText.trim(), type: etName, color: etConfig ? etConfig.color : '#94A3B8', start: reState.pendingStart, end: reState.pendingEnd });
+        reState.pendingText = '';
+        reState.pendingStart = null;
+        reState.pendingEnd = null;
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — delete entity */
+      var delEntityBtn = e.target.closest('[data-entity-id]');
+      if (delEntityBtn && isRelationExtractionTaskType()) {
+        var entityId = delEntityBtn.getAttribute('data-entity-id');
+        reState.entities = reState.entities.filter(function(x) { return x.id !== entityId; });
+        reState.triples = reState.triples.filter(function(x) { return x.e1Id !== entityId && x.e2Id !== entityId; });
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — delete triple */
+      var delTripleBtn = e.target.closest('[data-triple-id]');
+      if (delTripleBtn && isRelationExtractionTaskType()) {
+        var tripleId = delTripleBtn.getAttribute('data-triple-id');
+        reState.triples = reState.triples.filter(function(x) { return x.id !== tripleId; });
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — add triple */
+      var reAddBtn = e.target.closest('#reAddTripleBtn');
+      if (reAddBtn && !reAddBtn.disabled && isRelationExtractionTaskType()) {
+        var e1Id = document.getElementById('reE1Select') ? document.getElementById('reE1Select').value : '';
+        var relation = document.getElementById('reRelationSelect') ? document.getElementById('reRelationSelect').value : '';
+        var e2Id = document.getElementById('reE2Select') ? document.getElementById('reE2Select').value : '';
+        var errEl = document.getElementById('reTripleError');
+        if (!e1Id || !relation || !e2Id) {
+          if (errEl) { errEl.textContent = t('reErrMissingField'); errEl.classList.remove('hidden'); }
+          return;
+        }
+        if (e1Id === e2Id) {
+          if (errEl) { errEl.textContent = t('reErrSameEntity'); errEl.classList.remove('hidden'); }
+          return;
+        }
+        reState.triples.push({ id: generateReId(), e1Id: e1Id, relation: relation, e2Id: e2Id });
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — undo */
+      var reUndoBtn = e.target.closest('#reUndoBtn');
+      if (reUndoBtn && isRelationExtractionTaskType()) {
+        if (reState.triples.length > 0) { reState.triples.pop(); }
+        else if (reState.entities.length > 0) { reState.entities.pop(); }
+        renderRelationPanel();
+        return;
+      }
     });
+
     annotationMount.addEventListener('input', function(e) {
       var ta = e.target.closest('#aspectCorrectedSentence');
       if (ta && isAspectListTaskType()) {
@@ -3152,14 +3686,35 @@ function bindEvents() {
     });
   }
 
+  /* Text selection for relation extraction */
+  var sampleTextEl = document.getElementById('sampleText');
+  if (sampleTextEl) {
+    sampleTextEl.addEventListener('mouseup', function() {
+      if (!isRelationExtractionTaskType()) return;
+      var selection = window.getSelection();
+      var selected = selection ? selection.toString().trim() : '';
+      if (selected.length > 0) {
+        reState.pendingText = selected;
+        var range = selection.getRangeAt(0);
+        var pre = range.cloneRange();
+        pre.selectNodeContents(sampleTextEl);
+        pre.setEnd(range.startContainer, range.startOffset);
+        reState.pendingStart = pre.toString().length;
+        reState.pendingEnd = reState.pendingStart + selected.length;
+        renderRelationPanel();
+      }
+    });
+  }
+
   setInterval(triggerAutosave, 15000);
 }
 
 /* ── Panel Loader (mirrors task-detail pattern) ───────────────── */
 var ANNOTATION_PANEL_PATHS = {
-  classification:  './annotation-workspace.panels/classification.html',
-  'va-scoring':    './annotation-workspace.panels/va-scoring.html',
-  'aspect-list':   './annotation-workspace.panels/aspect-list.html'
+  classification:         './annotation-workspace.panels/classification.html',
+  'va-scoring':           './annotation-workspace.panels/va-scoring.html',
+  'aspect-list':          './annotation-workspace.panels/aspect-list.html',
+  'relation-extraction':  './annotation-workspace.panels/relation-extraction.html'
 };
 
 function appendAnnotationPanel(key) {
@@ -3191,7 +3746,7 @@ function loadAllAnnotationPanels() {
   var mount = document.getElementById('annotationPanelMount');
   if (!mount) return Promise.resolve();
   mount.textContent = '';
-  return ['classification', 'va-scoring', 'aspect-list'].reduce(function(p, key) {
+  return ['classification', 'va-scoring', 'aspect-list', 'relation-extraction'].reduce(function(p, key) {
     return p.then(function() { return appendAnnotationPanel(key); });
   }, Promise.resolve());
 }

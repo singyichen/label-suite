@@ -324,6 +324,17 @@
     .aspect-list-preview-delete:hover { opacity: 0.75; }
     .aspect-list-preview-add { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid var(--color-cta); border-radius: var(--radius-md); background: transparent; color: var(--color-cta); font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity var(--dur-fast); }
     .aspect-list-preview-add:hover { opacity: 0.75; }
+    .re-preview-entity-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .re-preview-entity-btn { padding: 2px 9px; border-radius: 999px; border: 1.5px solid; font-size: 11px; font-weight: 700; background: transparent; }
+    .re-preview-entity-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .re-preview-entity-row { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; background: white; border: 1px solid var(--color-border); }
+    .re-preview-entity-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; border: 1px solid; white-space: nowrap; }
+    .re-preview-entity-text { font-size: 12px; color: var(--color-ink); }
+    .re-preview-relation-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 6px; }
+    .re-preview-role-label { font-size: 9px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+    .re-preview-select { width: 100%; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--color-border); background: white; font-size: 11px; color: var(--color-ink); }
+    .re-preview-triple-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 4px 8px; border-radius: 6px; background: white; border: 1px solid var(--color-border); font-size: 11px; }
+    .re-preview-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #EEF2FF; color: #6366F1; border: 1px solid rgba(99,102,241,0.3); }
     .aspect-list-preview-hint { font-size: 12px; color: var(--color-text-soft); background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); padding: 8px 10px; line-height: 1.5; }
     .aspect-list-preview-sentence { display: flex; flex-direction: column; gap: 6px; }
     .aspect-list-preview-sentence-input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); line-height: 1.6; resize: vertical; min-height: 56px; outline: none; transition: border-color var(--dur-fast); }
@@ -926,6 +937,10 @@ var I18N = {
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
+    previewTaskEntityType: 'Entity Type',
+    previewEntityList: 'Entity List',
+    previewRelationType: 'Relation Type',
+    previewTripleList: 'Triple List',
     previewTaskValence: 'Valence 評分',
     previewTaskArousal: 'Arousal 評分',
     previewEmpty: '請先新增至少一個標記選項',
@@ -1024,6 +1039,10 @@ var I18N = {
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
+    previewTaskEntityType: 'Entity Type',
+    previewEntityList: 'Entity List',
+    previewRelationType: 'Relation Type',
+    previewTripleList: 'Triple List',
     previewTaskValence: 'Valence score',
     previewTaskArousal: 'Arousal score',
     previewEmpty: 'Add at least one option to preview',
@@ -2074,6 +2093,136 @@ function renderAspectListPreview(preview, config) {
   }
 }
 
+function renderRelationExtractionPreview(preview, config) {
+  var entityTypes = Array.isArray(config.entity_types) ? config.entity_types.filter(function(e) { return e && e.name; }) : [];
+  var relationTypes = Array.isArray(config.relation_types) ? config.relation_types.filter(Boolean) : [];
+
+  /* Sample sentence */
+  var sampleEl = document.createElement('div');
+  sampleEl.className = 'annotation-preview-sample';
+  sampleEl.textContent = t('previewSampleSentenceRelation');
+  preview.appendChild(sampleEl);
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  preview.appendChild(divider);
+
+  /* Entity type buttons */
+  var etLabel = document.createElement('div');
+  etLabel.className = 'annotation-preview-task-title';
+  etLabel.textContent = t('previewTaskEntityType');
+  preview.appendChild(etLabel);
+
+  var btnsRow = document.createElement('div');
+  btnsRow.className = 're-preview-entity-btns';
+  (entityTypes.length ? entityTypes : [{ name: 'BODY', color: '#6366F1' }, { name: 'SYMP', color: '#F59E0B' }]).forEach(function(et) {
+    var btn = document.createElement('span');
+    btn.className = 're-preview-entity-btn';
+    btn.textContent = et.name;
+    btn.style.borderColor = et.color || '#94A3B8';
+    btn.style.color = et.color || '#94A3B8';
+    btnsRow.appendChild(btn);
+  });
+  preview.appendChild(btnsRow);
+
+  /* Sample entity list */
+  var elLabel = document.createElement('div');
+  elLabel.className = 'annotation-preview-task-title';
+  elLabel.textContent = t('previewEntityList');
+  preview.appendChild(elLabel);
+
+  var sampleEntities = state.lang === 'zh'
+    ? [{ text: '阿司匹靈', type: 'DRUG', color: '#10B981' }, { text: '頭痛', type: 'SYMP', color: '#F59E0B' }]
+    : [{ text: 'Aspirin', type: 'DRUG', color: '#10B981' }, { text: 'headache', type: 'SYMP', color: '#F59E0B' }];
+  var entityListEl = document.createElement('div');
+  entityListEl.className = 're-preview-entity-list';
+  sampleEntities.forEach(function(e) {
+    var row = document.createElement('div');
+    row.className = 're-preview-entity-row';
+    var badge = document.createElement('span');
+    badge.className = 're-preview-entity-badge';
+    badge.style.background = e.color + '22';
+    badge.style.color = e.color;
+    badge.style.borderColor = e.color + '66';
+    badge.textContent = e.type;
+    var text = document.createElement('span');
+    text.className = 're-preview-entity-text';
+    text.textContent = e.text;
+    row.appendChild(badge);
+    row.appendChild(text);
+    entityListEl.appendChild(row);
+  });
+  preview.appendChild(entityListEl);
+
+  var div2 = document.createElement('div');
+  div2.className = 'annotation-preview-divider';
+  preview.appendChild(div2);
+
+  /* Relation builder */
+  var relLabel = document.createElement('div');
+  relLabel.className = 'annotation-preview-task-title';
+  relLabel.textContent = t('previewRelationType');
+  preview.appendChild(relLabel);
+
+  var grid = document.createElement('div');
+  grid.className = 're-preview-relation-grid';
+  [{ key: 'E1/Arg1', idx: 0 }, { key: 'Relation', idx: -1 }, { key: 'E2/Arg2', idx: 1 }].forEach(function(col) {
+    var cell = document.createElement('div');
+    var lbl = document.createElement('div');
+    lbl.className = 're-preview-role-label';
+    lbl.textContent = col.key;
+    var sel = document.createElement('select');
+    sel.className = 're-preview-select';
+    if (col.idx === -1) {
+      (relationTypes.length ? relationTypes : ['causes', 'treats']).forEach(function(r) {
+        var opt = document.createElement('option');
+        opt.textContent = r;
+        sel.appendChild(opt);
+      });
+    } else {
+      sampleEntities.forEach(function(e) {
+        var opt = document.createElement('option');
+        opt.textContent = '[' + e.type + '] ' + e.text;
+        sel.appendChild(opt);
+      });
+    }
+    cell.appendChild(lbl);
+    cell.appendChild(sel);
+    grid.appendChild(cell);
+  });
+  preview.appendChild(grid);
+
+  /* Sample triple */
+  var tlLabel = document.createElement('div');
+  tlLabel.className = 'annotation-preview-task-title';
+  tlLabel.textContent = t('previewTripleList');
+  preview.appendChild(tlLabel);
+
+  var tripleRow = document.createElement('div');
+  tripleRow.className = 're-preview-triple-row';
+  var sampleRel = relationTypes.length ? relationTypes[0] : 'treats';
+  [sampleEntities[0].text + '/' + sampleEntities[0].type, '→', sampleRel, '→', sampleEntities[1].text + '/' + sampleEntities[1].type].forEach(function(part, i) {
+    if (i === 2) {
+      var rb = document.createElement('span');
+      rb.className = 're-preview-relation-badge';
+      rb.textContent = part;
+      tripleRow.appendChild(rb);
+    } else if (i === 0 || i === 4) {
+      var eb = document.createElement('span');
+      eb.style.fontWeight = '600';
+      eb.style.fontSize = '11px';
+      eb.textContent = part;
+      tripleRow.appendChild(eb);
+    } else {
+      var ar = document.createElement('span');
+      ar.style.color = 'var(--color-text-soft)';
+      ar.textContent = part;
+      tripleRow.appendChild(ar);
+    }
+  });
+  preview.appendChild(tripleRow);
+}
+
 function updateAnnotationPreview() {
   var preview = el('annotationPreview');
   if (!preview) return;
@@ -2086,6 +2235,9 @@ function updateAnnotationPreview() {
 
   if (taskType === 'sequence_labeling' && currentSubtype() === 'aspect_list') {
     renderAspectListPreview(preview, config);
+    return;
+  } else if (taskType === 'relation_extraction') {
+    renderRelationExtractionPreview(preview, config);
     return;
   } else if (taskType === 'sequence_labeling') {
     titleText = t('previewTaskEntity');
