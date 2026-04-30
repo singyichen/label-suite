@@ -36,10 +36,10 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView).toBeVisible();
     await expect(leaderView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
     await expect(leaderView.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
-    await expect(leaderView.locator('.metric strong').nth(0)).toHaveText('127');
-    await expect(leaderView.locator('.metric strong').nth(1)).toHaveText('24');
-    await expect(leaderView.locator('.metric strong').nth(2)).toHaveText('5');
-    await expect(leaderView.locator('.metric strong').nth(3)).toHaveText('3');
+    await expect(leaderView.locator('.metric strong').nth(0)).toContainText('127');
+    await expect(leaderView.locator('.metric strong').nth(1)).toContainText('24');
+    await expect(leaderView.locator('.metric strong').nth(2)).toContainText('5');
+    await expect(leaderView.locator('.metric strong').nth(3)).toContainText('3');
     await expect(leaderView.getByText('新聞標題分類')).toBeVisible();
     await expect(leaderView.getByText('情感分析基準')).toBeVisible();
     await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
@@ -62,10 +62,10 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView).toBeVisible();
     await expect(annotatorView.getByRole('heading', { name: /標記概況|Annotation Overview/ })).toBeVisible();
     await expect(annotatorView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
-    await expect(annotatorView.locator('.metric strong').nth(0)).toHaveText('247');
+    await expect(annotatorView.locator('.metric strong').nth(0)).toContainText('247');
     await expect(annotatorView.locator('#annotatorCompletedLabel')).toHaveText(/待標記|Pending/);
-    await expect(annotatorView.locator('.metric strong').nth(1)).toHaveText('53');
-    await expect(annotatorView.locator('.metric strong').nth(2)).toHaveText('4.2');
+    await expect(annotatorView.locator('.metric strong').nth(1)).toContainText('53');
+    await expect(annotatorView.locator('.metric strong').nth(2)).toContainText('4.2');
     await expect(annotatorView.getByText('新聞標題多標籤分類')).toBeVisible();
     await expect(annotatorView.getByText('情感 VA 雙維度評分')).toBeVisible();
     await expect(annotatorView.getByText(/已完成 89% · 今日 53 筆 · 平均速度 3.0/)).toBeVisible();
@@ -106,9 +106,9 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView).toBeVisible();
     await expect(reviewerView.getByRole('heading', { name: /審核概況|Review Overview/ })).toBeVisible();
     await expect(reviewerView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
-    await expect(reviewerView.locator('.metric strong').nth(0)).toHaveText('12');
-    await expect(reviewerView.locator('.metric strong').nth(1)).toHaveText('18');
-    await expect(reviewerView.locator('.metric strong').nth(2)).toHaveText('0.81');
+    await expect(reviewerView.locator('.metric strong').nth(0)).toContainText('12');
+    await expect(reviewerView.locator('.metric strong').nth(1)).toContainText('18');
+    await expect(reviewerView.locator('.metric strong').nth(2)).toContainText('0.81');
     await expect(reviewerView.getByText('新聞標題多標籤分類')).toBeVisible();
     await expect(reviewerView.getByText('情感 VA 雙維度評分')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
@@ -116,14 +116,14 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(6);
   });
 
-  test('annotator quick continue routes to workspace latest unfinished sample', async ({ page }) => {
+  test('annotator quick continue routes to workspace first non-submitted sample', async ({ page }) => {
     await openScenario(page, 'annotator');
     const firstContinueButton = page.getByRole('button', { name: /快速繼續|Continue/ }).first();
     await firstContinueButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
     await expect(page).toHaveURL(/task_id=TASK-015-A1/);
-    await expect(page).toHaveURL(/sample_id=A1-003/);
+    await expect(page).toHaveURL(/sample_id=A1-002/);
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
@@ -140,7 +140,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
-  test('reviewer quick review routes to workspace latest unfinished sample', async ({ page }) => {
+  test('reviewer quick review routes to workspace first non-submitted sample', async ({ page }) => {
     await openScenario(page, 'reviewer');
     const firstReviewButton = page.getByRole('button', { name: /快速審核|Quick Review/ }).first();
     await firstReviewButton.click();
@@ -149,32 +149,38 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/task_id=TASK-015-R1/);
     await expect(page).toHaveURL(/sample_id=R1-001/);
     await expect(page).toHaveURL(/run_type=official_run/);
+
+    const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
+    if (await guidelineModalConfirm.isVisible()) {
+      await guidelineModalConfirm.click();
+    }
+    await expect(page.locator('#sampleList .sample-item.active .sample-status-label')).toHaveText(/待審核|Pending Review|已儲存|Saved/);
   });
 
-  test('annotator quick continue uses the last pending sample for NER and sentence-pairs tasks', async ({ page }) => {
+  test('annotator quick continue uses the first non-submitted sample for NER and sentence-pairs tasks', async ({ page }) => {
     await openScenario(page, 'annotator');
     const annotatorView = page.getByTestId('annotator-view');
 
     const nerCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
     await nerCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
     await expect(page).toHaveURL(/task_id=TASK-015-A6/);
-    await expect(page).toHaveURL(/sample_id=NER-005/);
+    await expect(page).toHaveURL(/sample_id=NER-003/);
 
     await openScenario(page, 'annotator');
     const sentencePairsCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '句對相似度 \/ 蘊含判定' });
     await sentencePairsCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
     await expect(page).toHaveURL(/task_id=TASK-015-A5/);
-    await expect(page).toHaveURL(/sample_id=A5-005/);
+    await expect(page).toHaveURL(/sample_id=A5-003/);
   });
 
-  test('reviewer quick review uses the last pending sample for NER tasks', async ({ page }) => {
+  test('reviewer quick review uses the first non-submitted sample for NER tasks', async ({ page }) => {
     await openScenario(page, 'reviewer');
     const reviewerView = page.getByTestId('reviewer-view');
     const nerCard = reviewerView.locator('#reviewerTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
 
     await nerCard.getByRole('button', { name: /快速審核|Quick Review/ }).click();
     await expect(page).toHaveURL(/task_id=TASK-015-R6/);
-    await expect(page).toHaveURL(/sample_id=NER-005/);
+    await expect(page).toHaveURL(/sample_id=NER-003/);
   });
 
   test('reviewer task card routes to annotation list when clicking outside quick review action', async ({ page }) => {

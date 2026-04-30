@@ -1423,16 +1423,13 @@
     return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
   }
 
-  function findLatestUnfinishedSampleId(task) {
+  function findFirstNonSubmittedSampleId(task) {
     if (!task || !Array.isArray(task.samples) || task.samples.length === 0) return '';
 
-    for (var i = task.samples.length - 1; i >= 0; i -= 1) {
-      if (task.samples[i].status === 'pending') return task.samples[i].sampleId;
+    for (var i = 0; i < task.samples.length; i += 1) {
+      if (task.samples[i].status !== 'submitted') return task.samples[i].sampleId;
     }
-    for (var j = task.samples.length - 1; j >= 0; j -= 1) {
-      if (task.samples[j].status === 'saved') return task.samples[j].sampleId;
-    }
-    return task.samples[task.samples.length - 1].sampleId;
+    return task.samples[0].sampleId;
   }
 
   function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType, subType) {
@@ -1480,7 +1477,7 @@
     if (quickBtn) {
       quickBtn.textContent = context.role === 'reviewer' ? '快速審核' : '快速繼續';
       quickBtn.onclick = function () {
-        var sampleId = findLatestUnfinishedSampleId(task);
+        var sampleId = findFirstNonSubmittedSampleId(task);
         if (!sampleId) return;
         setStoredActiveTaskType(task.taskType);
         window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType, task.subType);
