@@ -404,6 +404,10 @@
       gap: var(--space-md);
     }
 
+    .metrics.metrics-readable-labels {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
     .metric {
       padding: var(--space-md);
       border-radius: var(--radius-lg);
@@ -713,6 +717,10 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
+      .metrics.metrics-readable-labels {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .panel-header {
         flex-direction: column;
         align-items: flex-start;
@@ -726,12 +734,22 @@
       .task-item-meta {
         width: 100%;
         margin-left: 0;
-        flex-wrap: wrap;
-        justify-content: space-between;
+        flex-direction: column;
+        align-items: stretch;
       }
 
       .task-item-badges {
+        width: 100%;
+        min-width: 0;
         justify-content: flex-start;
+      }
+
+      .task-item-actions {
+        width: 100%;
+      }
+
+      .task-item-actions .btn {
+        width: 100%;
       }
     }
   </style>
@@ -934,22 +952,22 @@
                   <span id="adminPlatformSubtitle" class="panel-subtitle">系統概況</span>
                 </div>
               </div>
-              <div class="metrics">
+              <div class="metrics metrics-readable-labels">
                 <div class="metric">
                   <span id="adminTotalUsers">總用戶</span>
-                  <strong>156 人</strong>
+                  <strong id="adminTotalUsersValue">156 人</strong>
                 </div>
                 <div class="metric">
                   <span id="adminProjectLeaders">專案負責人</span>
-                  <strong>18 人</strong>
+                  <strong id="adminProjectLeadersValue">18 人</strong>
                 </div>
                 <div class="metric">
                   <span id="adminAnnotators">標記員</span>
-                  <strong>112 人</strong>
+                  <strong id="adminAnnotatorsValue">112 人</strong>
                 </div>
                 <div class="metric">
                   <span id="adminReviewers">審核員</span>
-                  <strong>26 人</strong>
+                  <strong id="adminReviewersValue">26 人</strong>
                 </div>
               </div>
             </article>
@@ -962,22 +980,22 @@
                   <span id="adminTaskSubtitle" class="panel-subtitle">所有項目統計</span>
                 </div>
               </div>
-              <div class="metrics">
+              <div class="metrics metrics-readable-labels">
                 <div class="metric">
                   <span id="adminTotalTasks">總任務</span>
-                  <strong>127 個</strong>
+                  <strong id="adminTotalTasksValue">127 個</strong>
                 </div>
                 <div class="metric">
                   <span id="adminActiveTasks">進行中</span>
-                  <strong>24 個</strong>
+                  <strong id="adminActiveTasksValue">24 個</strong>
                 </div>
                 <div class="metric">
                   <span id="adminPendingIaa">等待 IAA 確認</span>
-                  <strong>5 個</strong>
+                  <strong id="adminPendingIaaValue">5 個</strong>
                 </div>
                 <div class="metric">
                   <span id="adminSpeedAlert">速度異常</span>
-                  <strong>3 個</strong>
+                  <strong id="adminSpeedAlertValue">3 個</strong>
                 </div>
               </div>
             </article>
@@ -1076,22 +1094,22 @@
                 <span id="plTaskOverviewSubtitle" class="panel-subtitle">所有項目統計</span>
               </div>
             </div>
-            <div class="metrics">
+            <div class="metrics metrics-readable-labels">
               <div class="metric">
                 <span id="plTotalTasks">總任務</span>
-                <strong>127 個</strong>
+                <strong id="plTotalTasksValue">127 個</strong>
               </div>
               <div class="metric">
                 <span id="plActiveTasks">進行中</span>
-                <strong>24 個</strong>
+                <strong id="plActiveTasksValue">24 個</strong>
               </div>
               <div class="metric">
                 <span id="plPendingIaa">等待 IAA 確認</span>
-                <strong>5 個</strong>
+                <strong id="plPendingIaaValue">5 個</strong>
               </div>
               <div class="metric">
                 <span id="plSpeedAlert">速度異常</span>
-                <strong>3 個</strong>
+                <strong id="plSpeedAlertValue">3 個</strong>
               </div>
             </div>
           </article>
@@ -1171,15 +1189,15 @@
             <div class="metrics">
               <div class="metric">
                 <span id="annotatorCompletedLabel">待標記</span>
-                <strong>247 筆</strong>
+                <strong id="annotatorCompletedValue">247 筆</strong>
               </div>
               <div class="metric">
                 <span id="annotatorTodayLabel">今日完成</span>
-                <strong>53 筆</strong>
+                <strong id="annotatorTodayValue">53 筆</strong>
               </div>
               <div class="metric">
                 <span id="annotatorAvgSpeedLabel">平均速度</span>
-                <strong>4.2 分/筆</strong>
+                <strong id="annotatorAvgSpeedValue">4.2 分/筆</strong>
               </div>
             </div>
           </article>
@@ -1207,15 +1225,15 @@
             <div class="metrics">
               <div class="metric">
                 <span id="reviewerPendingLabel">待審總數</span>
-                <strong>12 筆</strong>
+                <strong id="reviewerPendingValue">12 筆</strong>
               </div>
               <div class="metric">
                 <span id="reviewerTodayReviewedLabel">今日已審</span>
-                <strong>18 筆</strong>
+                <strong id="reviewerTodayReviewedValue">18 筆</strong>
               </div>
               <div class="metric">
                 <span id="reviewerIaaLabel">IAA 摘要</span>
-                <strong>0.81</strong>
+                <strong id="reviewerIaaValue">0.81</strong>
               </div>
             </div>
           </article>
@@ -1343,15 +1361,23 @@
         adminPlatformTitle:    '平台使用者統計',
         adminPlatformSubtitle: '系統概況',
         adminTotalUsers:       '總用戶',
+        adminTotalUsersValue:  '156 人',
         adminProjectLeaders:   '專案負責人',
+        adminProjectLeadersValue:'18 人',
         adminAnnotators:       '標記員',
+        adminAnnotatorsValue:  '112 人',
         adminReviewers:        '審核員',
+        adminReviewersValue:   '26 人',
         adminTaskTitle:        '任務概況',
         adminTaskSubtitle:     '所有項目統計',
         adminTotalTasks:       '總任務',
+        adminTotalTasksValue:  '127 個',
         adminActiveTasks:      '進行中',
+        adminActiveTasksValue: '24 個',
         adminPendingIaa:       '等待 IAA 確認',
+        adminPendingIaaValue:  '5 個',
         adminSpeedAlert:       '速度異常',
+        adminSpeedAlertValue:  '3 個',
         adminAlertsTitle:      '最近提醒',
         adminAlertsSubtitle:   '系統通知',
         alertItem1Title:       'NER Benchmark',
@@ -1371,12 +1397,21 @@
         adminTask2Badge:       '待確認',
         adminTask2TaskType:    '單句 VA 雙維度評分（Valence / Arousal）',
         adminTask2RunType:     '試標',
+        adminTask3Title:       'NER 命名實體辨識',
+        adminTask3Detail:      '專案負責人C · 審核員C · 5 位標記員 · 已完成 28%',
+        adminTask3TaskType:    '序列標記（含 Aspect / NER）',
+        adminTask3RunType:     '正式標記',
+        adminTask3Badge:       '進行中',
         plTaskOverviewTitle:   '任務概況',
         plTaskOverviewSubtitle:'所有項目統計',
         plTotalTasks:          '總任務',
+        plTotalTasksValue:     '127 個',
         plActiveTasks:         '進行中',
+        plActiveTasksValue:    '24 個',
         plPendingIaa:          '等待 IAA 確認',
+        plPendingIaaValue:     '5 個',
         plSpeedAlert:          '速度異常',
+        plSpeedAlertValue:     '3 個',
         plTaskListTitle:       '任務列表',
         plTaskListSubtitle:    '進行中的所有項目',
         plViewAllBtn:          '查看全部',
@@ -1390,11 +1425,19 @@
         plTask2TaskType:       '單句 VA 雙維度評分（Valence / Arousal）',
         plTask2RunType:        '試標',
         plTask2Badge:          '待確認',
+        plTask3Title:          'NER 命名實體辨識',
+        plTask3Detail:         '審核員C · 5 位標記員 · 已完成 28%',
+        plTask3TaskType:       '序列標記（含 Aspect / NER）',
+        plTask3RunType:        '正式標記',
+        plTask3Badge:          '進行中',
         annotatorProgressTitle:  '標記概況',
         annotatorProgressSubtitle:'我的標記進度與待處理任務',
         annotatorCompletedLabel: '待標記',
+        annotatorCompletedValue: '247 筆',
         annotatorTodayLabel:     '今日完成',
+        annotatorTodayValue:     '53 筆',
         annotatorAvgSpeedLabel:  '平均速度',
+        annotatorAvgSpeedValue:  '4.2 分/筆',
         annotatorTaskListTitle:  '任務列表',
         annotatorTaskListSubtitle:'我的進行中任務',
         annotatorTask1Title:     '新聞標題分類',
@@ -1412,8 +1455,11 @@
         reviewerPanelTitle:      '審核概況',
         reviewerPanelSubtitle:   '我的審查進度與待處理項目',
         reviewerPendingLabel:    '待審總數',
+        reviewerPendingValue:    '12 筆',
         reviewerTodayReviewedLabel:'今日已審',
+        reviewerTodayReviewedValue:'18 筆',
         reviewerIaaLabel:        'IAA 摘要',
+        reviewerIaaValue:        '0.81',
         reviewerTaskListTitle:   '任務列表',
         reviewerTaskListSubtitle:'我的待審任務',
         reviewerTask1Title:      '新聞標題分類',
@@ -1484,15 +1530,23 @@
         adminPlatformTitle:    'Platform Stats',
         adminPlatformSubtitle: 'System overview',
         adminTotalUsers:       'Total Users',
+        adminTotalUsersValue:  '156 Users',
         adminProjectLeaders:   'Project Leaders',
+        adminProjectLeadersValue:'18 Leaders',
         adminAnnotators:       'Annotators',
+        adminAnnotatorsValue:  '112 Annotators',
         adminReviewers:        'Reviewers',
+        adminReviewersValue:   '26 Reviewers',
         adminTaskTitle:        'Task Overview',
         adminTaskSubtitle:     'All projects',
         adminTotalTasks:       'Total Tasks',
+        adminTotalTasksValue:  '127 Tasks',
         adminActiveTasks:      'In Progress',
+        adminActiveTasksValue: '24 Active',
         adminPendingIaa:       'Pending IAA',
+        adminPendingIaaValue:  '5 Pending',
         adminSpeedAlert:       'Speed Alerts',
+        adminSpeedAlertValue:  '3 Alerts',
         adminAlertsTitle:      'Recent Alerts',
         adminAlertsSubtitle:   'System notifications',
         alertItem1Title:       'NER Benchmark',
@@ -1512,12 +1566,21 @@
         adminTask2Badge:       'Pending Confirmation',
         adminTask2TaskType:    'Rating / Regression',
         adminTask2RunType:     'Dry Run',
+        adminTask3Title:       'NER Named Entity Recognition',
+        adminTask3Detail:      'Project Leader C · Reviewer C · 5 Annotators · 28% Completed',
+        adminTask3TaskType:    'Sequence Labeling (Aspect / NER)',
+        adminTask3RunType:     'Official Run',
+        adminTask3Badge:       'In Progress',
         plTaskOverviewTitle:   'Task Overview',
         plTaskOverviewSubtitle:'All projects',
         plTotalTasks:          'Total Tasks',
+        plTotalTasksValue:     '127 Tasks',
         plActiveTasks:         'In Progress',
+        plActiveTasksValue:    '24 Active',
         plPendingIaa:          'Pending IAA',
+        plPendingIaaValue:     '5 Pending',
         plSpeedAlert:          'Speed Alerts',
+        plSpeedAlertValue:     '3 Alerts',
         plTaskListTitle:       'Task List',
         plTaskListSubtitle:    'All active projects',
         plViewAllBtn:          'View All',
@@ -1531,11 +1594,19 @@
         plTask2TaskType:       'Rating / Regression',
         plTask2RunType:        'Dry Run',
         plTask2Badge:          'Pending Confirmation',
+        plTask3Title:          'NER Named Entity Recognition',
+        plTask3Detail:         'Reviewer C · 5 Annotators · 28% Completed',
+        plTask3TaskType:       'Sequence Labeling (Aspect / NER)',
+        plTask3RunType:        'Official Run',
+        plTask3Badge:          'In Progress',
         annotatorProgressTitle:  'Annotation Overview',
         annotatorProgressSubtitle:'My annotation progress and pending tasks',
         annotatorCompletedLabel: 'Pending',
+        annotatorCompletedValue: '247 Items',
         annotatorTodayLabel:     'Today',
+        annotatorTodayValue:     '53 Items',
         annotatorAvgSpeedLabel:  'Avg Speed',
+        annotatorAvgSpeedValue:  '4.2 min/item',
         annotatorTaskListTitle:  'Task List',
         annotatorTaskListSubtitle:'My Active Tasks',
         annotatorTask1Title:     'News Headline Classification',
@@ -1553,8 +1624,11 @@
         reviewerPanelTitle:      'Review Overview',
         reviewerPanelSubtitle:   'My review progress and pending items',
         reviewerPendingLabel:    'Pending Total',
+        reviewerPendingValue:    '12 Items',
         reviewerTodayReviewedLabel:'Reviewed Today',
+        reviewerTodayReviewedValue:'18 Items',
         reviewerIaaLabel:        'IAA Summary',
+        reviewerIaaValue:        '0.81',
         reviewerTaskListTitle:   'Task List',
         reviewerTaskListSubtitle:'My Pending Reviews',
         reviewerTask1Title:      'News Headline Classification',

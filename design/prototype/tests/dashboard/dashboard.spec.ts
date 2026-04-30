@@ -56,6 +56,27 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(viewAllButton).toHaveCSS('min-width', '138px');
   });
 
+  test('super admin summary metrics keep readable card widths when sidebar is collapsed', async ({ page }) => {
+    await openScenario(page, 'super_admin_data');
+    await page.evaluate(() => {
+      window.localStorage.setItem('labelsuite.sidebarCollapsed', 'true');
+      document.body.classList.add('sidebar-collapsed');
+    });
+
+    const projectLeadersMetric = page.locator('#adminProjectLeaders').locator('..');
+    const pendingIaaMetric = page.locator('#adminPendingIaa').locator('..');
+    await expect(projectLeadersMetric).toBeVisible();
+    await expect(pendingIaaMetric).toBeVisible();
+
+    const projectLeadersMetricBox = await projectLeadersMetric.boundingBox();
+    const pendingIaaMetricBox = await pendingIaaMetric.boundingBox();
+
+    expect(projectLeadersMetricBox).not.toBeNull();
+    expect(pendingIaaMetricBox).not.toBeNull();
+    expect(projectLeadersMetricBox!.width).toBeGreaterThanOrEqual(150);
+    expect(pendingIaaMetricBox!.width).toBeGreaterThanOrEqual(150);
+  });
+
   test('annotator view shows progress metrics and continue action', async ({ page }) => {
     await openScenario(page, 'annotator');
     const annotatorView = page.getByTestId('annotator-view');
@@ -238,6 +259,39 @@ test.describe('Dashboard page — language toggle', () => {
     await expect(page.getByTestId('lang-label')).toHaveText('ZH');
     await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
   });
+
+  test('translates metric value units between zh-TW and en', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
+
+    await page.locator('.scenario-pill[data-scenario="super_admin_data"]').click();
+    const superAdminView = page.getByTestId('super-admin-view');
+    await expect(superAdminView.locator('.metric strong').nth(0)).toHaveText('156 人');
+    await expect(superAdminView.locator('.metric strong').nth(4)).toHaveText('127 個');
+    await expect(superAdminView.locator('#adminTask3Title')).toHaveText('NER 命名實體辨識');
+
+    await page.getByTestId('lang-toggle').click();
+
+    await expect(superAdminView.locator('.metric strong').nth(0)).toHaveText('156 Users');
+    await expect(superAdminView.locator('.metric strong').nth(4)).toHaveText('127 Tasks');
+    await expect(superAdminView.locator('#adminTask3Title')).toHaveText('NER Named Entity Recognition');
+    await expect(superAdminView.locator('#adminTask3Detail')).toHaveText('Project Leader C · Reviewer C · 5 Annotators · 28% Completed');
+
+    await page.locator('.scenario-pill[data-scenario="project_leader"]').click();
+    const projectLeaderView = page.getByTestId('project-leader-view');
+    await expect(projectLeaderView.locator('#plTask3Title')).toHaveText('NER Named Entity Recognition');
+    await expect(projectLeaderView.locator('#plTask3Detail')).toHaveText('Reviewer C · 5 Annotators · 28% Completed');
+
+    await page.locator('.scenario-pill[data-scenario="annotator"]').click();
+    const annotatorView = page.getByTestId('annotator-view');
+    await expect(annotatorView.locator('.metric strong').nth(0)).toHaveText('247 Items');
+    await expect(annotatorView.locator('.metric strong').nth(2)).toHaveText('4.2 min/item');
+
+    await page.locator('.scenario-pill[data-scenario="reviewer"]').click();
+    const reviewerView = page.getByTestId('reviewer-view');
+    await expect(reviewerView.locator('.metric strong').nth(0)).toHaveText('12 Items');
+    await expect(reviewerView.locator('.metric strong').nth(1)).toHaveText('18 Items');
+    await expect(reviewerView.locator('.metric strong').nth(2)).toHaveText('0.81');
+  });
 });
 
 test.describe('Dashboard page — responsive rendering', () => {
@@ -268,5 +322,57 @@ test.describe('Dashboard page — responsive rendering', () => {
     await expect(brandSection).toHaveCSS('top', '0px');
     await expect(brandSection).toHaveCSS('left', '0px');
     await expect(brandSection).toHaveCSS('right', '0px');
+  });
+
+  test('mobile super admin summary metrics keep a two-column card layout', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(DASHBOARD_URL);
+    await page.locator('.scenario-pill[data-scenario="super_admin_data"]').click();
+
+    const adminPlatformMetrics = page.getByTestId('super-admin-view').locator('.metrics').first().locator('.metric');
+    const adminTaskMetrics = page.getByTestId('super-admin-view').locator('.metrics').nth(1).locator('.metric');
+
+    const platformFirstBox = await adminPlatformMetrics.nth(0).boundingBox();
+    const platformSecondBox = await adminPlatformMetrics.nth(1).boundingBox();
+    const taskFirstBox = await adminTaskMetrics.nth(0).boundingBox();
+    const taskSecondBox = await adminTaskMetrics.nth(1).boundingBox();
+
+    expect(platformFirstBox).not.toBeNull();
+    expect(platformSecondBox).not.toBeNull();
+    expect(taskFirstBox).not.toBeNull();
+    expect(taskSecondBox).not.toBeNull();
+
+    expect(Math.abs(platformFirstBox!.y - platformSecondBox!.y)).toBeLessThanOrEqual(2);
+    expect(Math.abs(taskFirstBox!.y - taskSecondBox!.y)).toBeLessThanOrEqual(2);
+  });
+
+  test('mobile annotator and reviewer task badges stay within each task card', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(DASHBOARD_URL);
+
+    for (const scenario of ['annotator', 'reviewer'] as const) {
+      await page.locator(`.scenario-pill[data-scenario="${scenario}"]`).click();
+      const cards = page.getByTestId(`${scenario}-view`).locator('.role-task-card');
+      const cardCount = await cards.count();
+
+      for (let index = 0; index < cardCount; index += 1) {
+        const card = cards.nth(index);
+        const badges = card.locator('.task-item-badges .badge');
+        const badgeCount = await badges.count();
+
+        await expect(card).toBeVisible();
+        const cardBox = await card.boundingBox();
+        expect(cardBox).not.toBeNull();
+
+        for (let badgeIndex = 0; badgeIndex < badgeCount; badgeIndex += 1) {
+          const badge = badges.nth(badgeIndex);
+          await expect(badge).toBeVisible();
+          const badgeBox = await badge.boundingBox();
+
+          expect(badgeBox).not.toBeNull();
+          expect(badgeBox!.x + badgeBox!.width).toBeLessThanOrEqual(cardBox!.x + cardBox!.width);
+        }
+      }
+    }
   });
 });
