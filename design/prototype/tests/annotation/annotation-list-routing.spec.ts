@@ -377,7 +377,6 @@ test.describe('Annotation list routing', () => {
     await dismissGuidelineModal(page);
 
     // A2-003 has pre-saved VA values — submit directly
-    await dismissGuidelineModal(page);
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
 
