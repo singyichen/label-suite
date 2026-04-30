@@ -3,7 +3,17 @@ import { test, expect } from '@playwright/test';
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=project_leader';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
-const TASK_PROFILES = [
+type TaskProfile = {
+  id: string;
+  name: string;
+  listName?: string;
+  type: string;
+  dataset: string;
+  settings: string[];
+  editPreview: string[];
+};
+
+const TASK_PROFILES: TaskProfile[] = [
   {
     id: 'T001',
     name: '新聞標題多標籤分類',
@@ -52,7 +62,7 @@ test.describe('Task detail profile mapping', () => {
     await page.goto(TASK_LIST_URL);
 
     for (const task of TASK_PROFILES) {
-      const listName = 'listName' in task ? task.listName : task.name;
+      const listName = task.listName ?? task.name;
       await page.locator('#searchInput').fill(listName);
       const row = page.locator('tbody tr').filter({ hasText: listName }).first();
       await expect(row).toContainText('草稿');
