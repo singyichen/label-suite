@@ -806,6 +806,324 @@
       .navbar-wordmark { font-size: 13px; }
       .mobile-lang-toggle { padding: 6px 8px; }
     }
+
+    /* ── Aspect List Widget ─────────────────────────────────────── */
+    .aspect-sentence-block { margin-bottom: var(--space-md); }
+    .aspect-sentence-label {
+      display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+      font-size: 12px; font-weight: 700; color: var(--color-text-soft);
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+    }
+    .aspect-sentence-edit-hint {
+      font-size: 11px; font-weight: 400; color: var(--color-text-muted);
+      text-transform: none; letter-spacing: 0;
+    }
+    .aspect-sentence-readonly {
+      font-size: 14px; color: var(--color-ink); line-height: 1.8;
+      padding: 10px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); background: var(--color-slate-50);
+    }
+    .aspect-sentence-edit {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink);
+      line-height: 1.8; resize: vertical; background: var(--color-white); outline: none;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast); min-height: 60px;
+    }
+    .aspect-sentence-edit:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .aspect-sentence-edit.modified { border-color: #A855F7; background: #FAF5FF; }
+    .aspect-list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-sm);
+    }
+    .aspect-list-label {
+      font-size: 12px; font-weight: 700; color: var(--color-text-soft);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .aspect-count-badge { font-size: 11px; font-weight: 600; color: var(--color-text-muted); }
+    .aspect-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: var(--space-sm); }
+    .aspect-row {
+      display: flex; flex-direction: column; gap: 4px;
+      padding: 10px 12px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); background: var(--color-white);
+      transition: border-color var(--dur-fast);
+    }
+    .aspect-row.has-error { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .aspect-row-top { display: flex; align-items: center; gap: 8px; }
+    .aspect-row-num {
+      width: 20px; height: 20px; border-radius: 50%; font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      background: var(--color-surface); color: var(--color-text-soft); border: 1px solid var(--color-border);
+    }
+    .aspect-text-input {
+      flex: 1; padding: 6px 10px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink);
+      background: var(--color-white); outline: none;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .aspect-text-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .aspect-delete-btn {
+      width: 28px; height: 28px; border-radius: var(--radius-md); border: 1px solid var(--color-border);
+      background: var(--color-white); color: var(--color-text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .aspect-delete-btn:hover { color: var(--color-error); border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); }
+    .aspect-row-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-left: 28px; }
+    .aspect-match-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full);
+    }
+    .aspect-match-badge.valid { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+    .aspect-match-badge.invalid { background: var(--color-error-soft-bg); color: var(--color-error); border: 1px solid var(--color-error-soft-border); }
+    .aspect-sentiment-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: var(--radius-full);
+      cursor: pointer; -webkit-user-select: none; user-select: none;
+      transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .aspect-sentiment-badge.checked { background: var(--color-primary-soft-bg); color: var(--color-primary); border: 1px solid rgba(99,102,241,0.3); }
+    .aspect-sentiment-badge.unchecked { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+    .aspect-row-error { font-size: 11px; color: var(--color-error); padding-left: 28px; line-height: 1.5; }
+    .aspect-add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 7px 14px; border-radius: var(--radius-md);
+      border: 1px dashed var(--color-border); background: transparent;
+      color: var(--color-text-soft); font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: color var(--dur-fast), border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .aspect-add-btn:hover:not(:disabled) { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .aspect-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .aspect-validation-summary {
+      margin-top: var(--space-sm); padding: 10px 12px; border-radius: var(--radius-md);
+      font-size: 12px; font-weight: 600; line-height: 1.6;
+    }
+    .aspect-validation-summary.has-errors { background: var(--color-error-soft-bg); color: var(--color-error); border: 1px solid var(--color-error-soft-border); }
+    .aspect-validation-summary.ok { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+    .aspect-validation-summary.hidden-summary { display: none; }
+    .aspect-soft-guidance {
+      display: flex; align-items: flex-start; gap: 6px; margin-top: var(--space-sm);
+      font-size: 11px; color: var(--color-text-muted); line-height: 1.6; padding: 0 2px;
+    }
+    .aspect-soft-guidance svg { flex-shrink: 0; margin-top: 2px; }
+
+    /* Reviewer aspect diff */
+    .rv-aspect-diff { width: 100%; margin-top: 6px; }
+    .rv-aspect-diff-title {
+      font-size: 11px; font-weight: 700; color: var(--color-text-soft);
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;
+    }
+    .rv-aspect-diff-item { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0; line-height: 1.5; }
+    .rv-aspect-diff-op {
+      font-size: 10px; font-weight: 700; padding: 1px 5px;
+      border-radius: var(--radius-full); flex-shrink: 0;
+    }
+    .rv-aspect-diff-op.kept { background: var(--color-slate-50); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+    .rv-aspect-diff-op.added { background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; }
+    .rv-aspect-diff-op.edited { background: var(--color-primary-soft-bg); color: var(--color-primary); border: 1px solid rgba(99,102,241,0.3); }
+    .rv-aspect-diff-op.deleted { background: var(--color-error-soft-bg); color: var(--color-error); border: 1px solid var(--color-error-soft-border); }
+    .rv-aspect-diff-op.invalid { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
+    .rv-aspect-sentence-diff {
+      font-size: 11px; color: var(--color-text-soft); padding: 4px 8px; margin-bottom: 6px;
+      background: var(--color-slate-50); border-radius: var(--radius-md); border: 1px solid var(--color-border);
+    }
+    .rv-aspect-sentence-diff .diff-from { color: var(--color-error); text-decoration: line-through; }
+
+    /* ── Relation Extraction Panel ──────────────────────────────── */
+    .re-section { margin-bottom: var(--space-md); }
+    .re-section-head { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+    .re-section-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .re-entity-count { font-size: 11px; font-weight: 600; color: var(--color-text-muted); }
+    .re-entity-type-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-sm); }
+    .re-entity-type-btn {
+      padding: 3px 10px; border-radius: var(--radius-full);
+      border: 1.5px solid; font-size: 12px; font-weight: 700;
+      background: transparent; cursor: pointer;
+      transition: background var(--dur-fast), opacity var(--dur-fast);
+    }
+    .re-entity-type-btn:hover { opacity: 0.75; }
+    .re-pending-selection {
+      display: flex; align-items: center; gap: 6px; min-height: 30px;
+      font-size: 12px; padding: 5px 10px; border-radius: var(--radius-md);
+      border: 1px dashed var(--color-border); background: var(--color-border-muted);
+      color: var(--color-text-soft);
+    }
+    .re-pending-text { font-weight: 600; color: var(--color-ink); }
+    .re-entity-list { display: flex; flex-direction: column; gap: 4px; }
+    .re-entity-row {
+      display: flex; align-items: center; gap: 6px; padding: 5px 8px;
+      border-radius: var(--radius-md); background: white; border: 1px solid var(--color-border);
+    }
+    .re-entity-badge {
+      display: inline-flex; align-items: center; padding: 1px 7px;
+      border-radius: var(--radius-full); font-size: 10px; font-weight: 700;
+      border: 1px solid; flex-shrink: 0; white-space: nowrap;
+    }
+    .re-entity-text {
+      font-size: 13px; color: var(--color-ink); flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .re-entity-span {
+      font-size: 11px; color: var(--color-text-muted); white-space: nowrap; flex-shrink: 0;
+    }
+    .re-entity-del-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: transparent;
+      color: var(--color-text-muted); cursor: pointer; flex-shrink: 0;
+      transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .re-entity-del-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); }
+    .re-empty-hint {
+      font-size: 12px; color: var(--color-text-muted); padding: 8px;
+      text-align: center; border: 1px dashed var(--color-border); border-radius: var(--radius-md);
+    }
+    .re-divider { border-top: 1px solid var(--color-border); margin: var(--space-sm) 0; }
+    .re-relation-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: var(--space-sm); }
+    .re-role-cell { display: flex; flex-direction: column; gap: 3px; }
+    .re-role-label { font-size: 10px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+    .re-select {
+      width: 100%; padding: 5px 6px; border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border); background: white;
+      font-size: 11px; color: var(--color-ink);
+    }
+    .re-select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .re-relation-actions { display: flex; gap: 6px; justify-content: flex-end; margin-bottom: 6px; }
+    .re-validation-error {
+      padding: 5px 10px; border-radius: var(--radius-md); font-size: 11px; font-weight: 600;
+      color: var(--color-error); background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border);
+    }
+    .re-triple-list { display: flex; flex-direction: column; gap: 4px; }
+    .re-triple-row {
+      display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding: 5px 8px;
+      border-radius: var(--radius-md); background: white; border: 1px solid var(--color-border);
+    }
+    .re-triple-num { font-size: 11px; color: var(--color-text-muted); flex-shrink: 0; min-width: 16px; }
+    .re-triple-arrow { font-size: 11px; color: var(--color-text-soft); flex-shrink: 0; }
+    .re-relation-badge {
+      display: inline-flex; padding: 1px 8px; border-radius: var(--radius-full);
+      font-size: 10px; font-weight: 700;
+      background: var(--color-primary-soft-bg); color: var(--color-primary);
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    @media (max-width: 767px) { .re-relation-grid { grid-template-columns: 1fr; } }
+    .rv-aspect-sentence-diff .diff-to { color: #15803D; font-weight: 600; }
+    .rv-aspect-score-label {
+      font-size: 11px; font-weight: 600; color: var(--color-text-muted); margin-top: 4px;
+    }
+    .rv-aspect-correction-editor {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+    }
+    .rv-aspect-correction-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-soft);
+    }
+    .rv-aspect-correction-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rv-aspect-correction-label {
+      min-width: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--color-text-muted);
+    }
+    .rv-aspect-correction-input {
+      flex: 1;
+      min-width: 0;
+      padding: 5px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      outline: none;
+    }
+    .rv-aspect-correction-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .rv-aspect-correction-delete {
+      padding: 3px 8px;
+      border: 1px solid var(--color-error-soft-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-error);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .rv-aspect-correction-add {
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border: 1px solid var(--color-cta);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-cta);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .rv-aspect-correction-audit {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── NER ─────────────────────────────────────────────────────── */
+    #sampleText { -webkit-user-select: text; user-select: text; cursor: text; }
+    .ner-entity-highlight { display: inline; cursor: default; }
+    .ner-entity-type-badge { display: inline-block; vertical-align: middle; }
+    .ner-validation-summary { font-size: 13px; color: var(--color-error); margin-top: var(--space-sm); }
+    .ner-validation-summary.hidden { display: none; }
+
+    /* ── Sentence Pairs Panel ────────────────────────────────── */
+    .sp-panel { display: flex; flex-direction: column; gap: var(--space-md); }
+    .sp-panel.hidden { display: none; }
+    .sp-pair-header { display: flex; align-items: center; gap: var(--space-sm); }
+    .sp-mode-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .02em;
+      background: var(--color-primary); color: #fff; border-radius: 4px; padding: 2px 8px; }
+    .sp-sentence-block { background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: 8px; padding: var(--space-md); display: flex; flex-direction: column; gap: 6px; }
+    .sp-sentence-block-label { font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--color-primary); }
+    .sp-sentence-text { font-size: 15px; line-height: 1.8; color: var(--color-ink); margin: 0; }
+    .sp-section-divider { height: 1px; background: var(--color-border); margin: 4px 0; }
+    .sp-response-title { font-size: 13px; font-weight: 600; color: var(--color-ink); margin-bottom: 8px; }
+    .sp-label-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sp-label-option { padding: 6px 16px; border: 1.5px solid var(--color-border); border-radius: 8px;
+      background: #fff; font-size: 13px; font-weight: 500; color: var(--color-ink); cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard); }
+    .sp-label-option:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .sp-label-option.selected { border-color: var(--color-primary); background: #EEF2FF; color: var(--color-primary); font-weight: 600; }
+    .sp-score-track { display: flex; flex-direction: column; gap: 6px; }
+    .sp-score-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sp-score-btn { width: 40px; height: 40px; border: 1.5px solid var(--color-border); border-radius: 8px;
+      background: #fff; font-size: 13px; font-weight: 600; color: var(--color-ink); cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease-standard), background var(--dur-fast) var(--ease-standard); }
+    .sp-score-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .sp-score-btn.active { border-color: var(--color-primary); background: #EEF2FF; color: var(--color-primary); }
+    .sp-score-extremes { display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--color-muted); }
+    .sp-score-current-display { font-size: 15px; font-weight: 700; color: var(--color-primary); }
+    .sp-unsure-area { margin-top: 4px; }
+    .sp-unsure-area.hidden { display: none; }
+    .sp-unsure-label { display: flex; align-items: center; gap: 8px; font-size: 13px;
+      color: var(--color-ink); cursor: pointer; user-select: none; }
+    .sp-unsure-label input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--color-primary); cursor: pointer; }
+    .result-tag-neutral { background: #F1F5F9; color: #475569; border-radius: 4px; padding: 2px 8px; }
   </style>
 </head>
 <body>
@@ -904,9 +1222,30 @@
         </div>
 
         <!-- Sample Text -->
-        <div class="content-card">
+        <div class="content-card" id="sampleTextCard">
           <div class="content-card-title" id="sampleSourceLabel">原始文本</div>
           <p class="sample-text-body" id="sampleText"></p>
+        </div>
+
+        <div class="annotation-card hidden" id="sentencePairsReviewerSourceCard">
+          <div class="annotation-card-header">
+            <div class="annotation-card-title" id="sentencePairsReviewerSourceTitle">句對語意判定</div>
+          </div>
+          <div class="annotation-card-body">
+            <div class="sp-panel" id="sentencePairsReviewerSourcePanel">
+              <div class="sp-pair-header">
+                <span class="sp-mode-badge" id="spReviewerModeBadge">相似度判定</span>
+              </div>
+              <div class="sp-sentence-block">
+                <div class="sp-sentence-block-label" id="spReviewerSentence1Label">Sentence A</div>
+                <p class="sp-sentence-text" id="spReviewerSentence1Text"></p>
+              </div>
+              <div class="sp-sentence-block">
+                <div class="sp-sentence-block-label" id="spReviewerSentence2Label">Sentence B</div>
+                <p class="sp-sentence-text" id="spReviewerSentence2Text"></p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Annotator Controls -->
@@ -915,65 +1254,8 @@
             <div class="annotation-card-title" id="annotationCardTitle">標記標籤</div>
           </div>
           <div class="annotation-card-body">
-            <div id="classificationAnnotatorPanel">
-              <div class="class-options" id="classOptions">
-                <label class="class-option" id="optPolitics">
-                  <input type="checkbox" name="news_category" value="politics" />
-                  <span class="class-option-label" id="optLabelPolitics">政治</span>
-                  <span class="class-option-desc" id="optDescPolitics">國內外政治動態</span>
-                </label>
-                <label class="class-option" id="optSociety">
-                  <input type="checkbox" name="news_category" value="society" />
-                  <span class="class-option-label" id="optLabelSociety">社會</span>
-                  <span class="class-option-desc" id="optDescSociety">社會事件與民生</span>
-                </label>
-                <label class="class-option" id="optEntertainment">
-                  <input type="checkbox" name="news_category" value="entertainment" />
-                  <span class="class-option-label" id="optLabelEntertainment">娛樂</span>
-                  <span class="class-option-desc" id="optDescEntertainment">影視音樂娛樂</span>
-                </label>
-                <label class="class-option" id="optSports">
-                  <input type="checkbox" name="news_category" value="sports" />
-                  <span class="class-option-label" id="optLabelSports">體育</span>
-                  <span class="class-option-desc" id="optDescSports">運動競技賽事</span>
-                </label>
-                <label class="class-option" id="optTechnology">
-                  <input type="checkbox" name="news_category" value="technology" />
-                  <span class="class-option-label" id="optLabelTechnology">科技</span>
-                  <span class="class-option-desc" id="optDescTechnology">科技產業與創新</span>
-                </label>
-              </div>
-            </div>
-            <div id="vaAnnotatorPanel" class="hidden">
-              <div class="va-grid">
-                <div class="va-axis-card">
-                  <div class="va-axis-head">
-                    <span class="va-axis-title" id="vaValenceLabel">Valence（情緒正負）</span>
-                    <span class="va-axis-value" id="vaValenceValue">-</span>
-                  </div>
-                  <p class="va-axis-hint" id="vaValenceHint">1 = 非常負向，9 = 非常正向</p>
-                  <div class="va-scale-row" id="vaValenceScale"></div>
-                  <div class="va-scale-divider"></div>
-                  <div class="va-range-labels">
-                    <span id="vaValenceMin">負向</span>
-                    <span id="vaValenceMax">正向</span>
-                  </div>
-                </div>
-                <div class="va-axis-card">
-                  <div class="va-axis-head">
-                    <span class="va-axis-title" id="vaArousalLabel">Arousal（情緒強度）</span>
-                    <span class="va-axis-value" id="vaArousalValue">-</span>
-                  </div>
-                  <p class="va-axis-hint" id="vaArousalHint">1 = 非常平靜，9 = 非常激動</p>
-                  <div class="va-scale-row" id="vaArousalScale"></div>
-                  <div class="va-scale-divider"></div>
-                  <div class="va-range-labels">
-                    <span id="vaArousalMin">平靜</span>
-                    <span id="vaArousalMax">激動</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- Task-type panels injected here by loadAnnotationPanels() -->
+            <div id="annotationPanelMount"></div>
             <div class="field-group">
               <label class="field-label" for="annotationNote" id="annotationNoteLabel">備註（選填）</label>
               <textarea class="field-textarea" id="annotationNote" rows="2" placeholder="若有特殊情況可在此說明…"></textarea>
@@ -1162,7 +1444,14 @@ var I18N = {
     rvBulkApproveLabel: '全部通過', rvBulkRejectLabel: '全部退回',
     rvApproveLabel: '通過', rvRejectLabel: '退回',
     rvReviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
+    rvAspectReviewNote: '可直接修正 Aspect 後通過；退回則讓該標記回到未標記，標記員需要重新標記。',
     rvAnnotatorResultLabel: '個人標記結果',
+    rvAspectCorrectionAdd: '新增 Aspect',
+    rvAspectCorrectionDelete: '刪除',
+    rvAspectCorrectionPlaceholder: '輸入 aspect',
+    rvAspectCorrectionDeleted: 'Reviewer 已刪除：{text}',
+    rvAspectCorrectionAdded: 'Reviewer 已新增',
+    rvAspectCorrectionEdited: 'Reviewer 已修改：{from} → {to}',
     rvSaveLabel: '送出審核',
     tabGuidelineLabel: '說明與檔案', tabHistoryLabel: '歷程',
     guidelineCollapseAria: '收合說明區',
@@ -1198,6 +1487,75 @@ var I18N = {
     mobileGuidelineText: '新聞標題多標籤分類：可同時勾選多個類別。',
     actionSubmitted: '已提交', actionSaved: '已儲存',
     actionApproved: '已通過', actionRejected: '已退回',
+    aspectOriginalLabel: '原始句子',
+    aspectCorrectedLabel: '校正後句子',
+    aspectSentenceEditHint: '修改後將重新驗證所有 aspect 是否仍出現在句子中',
+    aspectListTitle: 'Aspect List',
+    aspectAddBtnLabel: '新增 Aspect',
+    aspectAddBtnMaxLabel: '已達上限（{max} 個）',
+    aspectInputPlaceholder: '輸入 aspect 文字片段…',
+    aspectDeleteAria: '刪除 aspect',
+    aspectMatchValid: '✓ 句中已找到',
+    aspectMatchInvalid: '✗ 未在句中出現',
+    aspectSentimentChecked: '情緒上下文：已確認',
+    aspectSentimentUnchecked: '情緒上下文：需確認',
+    aspectSentimentToggleHint: '點擊切換確認狀態（軟性提醒，不阻擋提交）',
+    aspectRowError: '此 aspect 未完全出現在目前句子中，請修正後再提交。',
+    aspectValidationOk: '驗證通過，可提交',
+    aspectErrMinAspects: '至少需要 {min} 個 aspect',
+    aspectErrMaxAspects: '最多允許 {max} 個 aspect',
+    aspectErrBlankAspect: '第 {n} 列 aspect 不得為空白',
+    aspectErrDuplicateAspect: '第 {a} 列與第 {b} 列重複',
+    aspectErrExactMatch: '第 {n} 列「{text}」未完全出現在句子中',
+    aspectSoftGuidanceText: '情緒上下文確認為軟性提醒，不影響提交。',
+    rvAspectDiffTitle: 'Aspect List 差異',
+    rvAspectScoreLabel: 'Aspect List 標記',
+    reEntityTypeLabel: 'Entity Type',
+    reEntityListLabel: 'Entity List',
+    reRelationTypeLabel: 'Relation Type',
+    reTripleListLabel: 'Triple List',
+    reE1RoleLabel: 'E1/Arg1',
+    reRelationLabel: 'Relation',
+    reE2RoleLabel: 'E2/Arg2',
+    reUndoLabel: '撤銷',
+    reAddTripleLabel: '新增',
+    rePendingHintDefault: '在上方文本中選取文字，再點擊實體類型',
+    rePendingHintSelected: '點擊上方實體類型按鈕以完成標記',
+    reEntityEmpty: '尚未標記實體',
+    reTripleEmpty: '尚未建立三元組',
+    reEntityCountUnit: '個實體',
+    reSelectE1Placeholder: '選擇 E1…',
+    reSelectE2Placeholder: '選擇 E2…',
+    reSelectRelPlaceholder: '選擇關係…',
+    reDeleteEntityAria: '刪除實體',
+    reDeleteTripleAria: '刪除三元組',
+    reErrNoEntities: '請先標記至少一個實體',
+    reErrNoTriples: '請至少建立一個三元組',
+    reErrSameEntity: 'E1 與 E2 不能是同一個實體',
+    reErrMissingField: '請選擇 E1、關係與 E2',
+    toastSelectTextFirst: '請先在文本中選取文字',
+    nerEntityTypeLabel: 'Entity Type',
+    nerEntityListLabel: '已標記實體',
+    nerPendingHintDefault: '在上方文本中選取文字，再點擊實體類型',
+    nerPendingHintSelected: '點擊上方實體類型按鈕以完成標記',
+    nerEntityEmpty: '尚未標記實體',
+    nerEntityCountUnit: '個實體',
+    nerDeleteEntityAria: '刪除實體',
+    nerErrNoEntities: '請至少標記一個實體',
+    rvNerDiffTitle: 'NER 標記差異',
+    rvNerReviewNote: '通過：此筆 NER 標記有效。退回：標記員需要重新標記。',
+    spSentence1LabelSimilarity: 'Sentence A',
+    spSentence2LabelSimilarity: 'Sentence B',
+    spSentence1LabelEntailment: 'Premise（前提）',
+    spSentence2LabelEntailment: 'Hypothesis（假設）',
+    spModeBadgeSimilarity: '相似度判定',
+    spModeBadgeEntailment: '蘊含關係判定',
+    spResponseTitle: '判定結果',
+    spScoreTitle: '相似度評分',
+    spUnsureText: '無法判定 / Unsure',
+    spErrNoLabel: '請選擇判定結果',
+    spErrNoScore: '請選擇評分',
+    rvSpReviewNote: '通過：此筆句對標記有效。退回：標記員需重新判定。',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1236,7 +1594,14 @@ var I18N = {
     rvBulkApproveLabel: 'Approve all', rvBulkRejectLabel: 'Return all',
     rvApproveLabel: 'Approve', rvRejectLabel: 'Return',
     rvReviewNote: 'Approve keeps this annotation valid. Return resets it to unannotated so the annotator must label it again.',
+    rvAspectReviewNote: 'Reviewers may correct aspects before approving. Return resets the annotation to unannotated so the annotator must label it again.',
     rvAnnotatorResultLabel: 'Annotator result',
+    rvAspectCorrectionAdd: 'Add aspect',
+    rvAspectCorrectionDelete: 'Delete',
+    rvAspectCorrectionPlaceholder: 'Enter aspect',
+    rvAspectCorrectionDeleted: 'Reviewer deleted: {text}',
+    rvAspectCorrectionAdded: 'Reviewer added',
+    rvAspectCorrectionEdited: 'Reviewer edited: {from} → {to}',
     rvSaveLabel: 'Submit review',
     tabGuidelineLabel: 'Guidelines', tabHistoryLabel: 'History',
     guidelineCollapseAria: 'Collapse guideline panel',
@@ -1272,6 +1637,75 @@ var I18N = {
     mobileGuidelineText: 'News headline multi-label classification: multiple selections are allowed.',
     actionSubmitted: 'submitted', actionSaved: 'saved',
     actionApproved: 'approved', actionRejected: 'returned',
+    aspectOriginalLabel: 'Original sentence',
+    aspectCorrectedLabel: 'Corrected sentence',
+    aspectSentenceEditHint: 'Editing the sentence re-validates all aspects against the new text',
+    aspectListTitle: 'Aspect List',
+    aspectAddBtnLabel: 'Add aspect',
+    aspectAddBtnMaxLabel: 'Max reached ({max})',
+    aspectInputPlaceholder: 'Enter aspect text…',
+    aspectDeleteAria: 'Delete aspect',
+    aspectMatchValid: '✓ found in sentence',
+    aspectMatchInvalid: '✗ not in sentence',
+    aspectSentimentChecked: 'Context: confirmed',
+    aspectSentimentUnchecked: 'Context: needs check',
+    aspectSentimentToggleHint: 'Click to toggle (soft guidance — non-blocking)',
+    aspectRowError: 'This aspect does not appear in the current sentence. Edit before submitting.',
+    aspectValidationOk: 'Validation passed — ready to submit',
+    aspectErrMinAspects: 'At least {min} aspect required',
+    aspectErrMaxAspects: 'Maximum {max} aspects allowed',
+    aspectErrBlankAspect: 'Aspect {n} must not be empty',
+    aspectErrDuplicateAspect: 'Aspect {a} duplicates aspect {b}',
+    aspectErrExactMatch: 'Aspect {n} "{text}" is not found in the sentence',
+    aspectSoftGuidanceText: 'Sentiment context check is soft guidance — it does not block submission.',
+    rvAspectDiffTitle: 'Aspect List diff',
+    rvAspectScoreLabel: 'Aspect List annotation',
+    reEntityTypeLabel: 'Entity Type',
+    reEntityListLabel: 'Entity List',
+    reRelationTypeLabel: 'Relation Type',
+    reTripleListLabel: 'Triple List',
+    reE1RoleLabel: 'E1/Arg1',
+    reRelationLabel: 'Relation',
+    reE2RoleLabel: 'E2/Arg2',
+    reUndoLabel: 'Undo',
+    reAddTripleLabel: 'Add',
+    rePendingHintDefault: 'Select text above, then click an entity type',
+    rePendingHintSelected: 'Click an entity type button to assign',
+    reEntityEmpty: 'No entities annotated yet',
+    reTripleEmpty: 'No triples built yet',
+    reEntityCountUnit: 'entities',
+    reSelectE1Placeholder: 'Select E1…',
+    reSelectE2Placeholder: 'Select E2…',
+    reSelectRelPlaceholder: 'Select relation…',
+    reDeleteEntityAria: 'Delete entity',
+    reDeleteTripleAria: 'Delete triple',
+    reErrNoEntities: 'Please annotate at least one entity',
+    reErrNoTriples: 'Please build at least one triple',
+    reErrSameEntity: 'E1 and E2 must be different entities',
+    reErrMissingField: 'Please select E1, relation, and E2',
+    toastSelectTextFirst: 'Please select text in the sentence first',
+    nerEntityTypeLabel: 'Entity Type',
+    nerEntityListLabel: 'Tagged Entities',
+    nerPendingHintDefault: 'Select text above, then click an entity type',
+    nerPendingHintSelected: 'Click an entity type button to assign',
+    nerEntityEmpty: 'No entities annotated yet',
+    nerEntityCountUnit: 'entities',
+    nerDeleteEntityAria: 'Delete entity',
+    nerErrNoEntities: 'Please annotate at least one entity',
+    rvNerDiffTitle: 'NER annotation diff',
+    rvNerReviewNote: 'Approve: mark this NER annotation as valid. Reject: returns it to the annotator for re-annotation.',
+    spSentence1LabelSimilarity: 'Sentence A',
+    spSentence2LabelSimilarity: 'Sentence B',
+    spSentence1LabelEntailment: 'Premise',
+    spSentence2LabelEntailment: 'Hypothesis',
+    spModeBadgeSimilarity: 'Similarity',
+    spModeBadgeEntailment: 'Entailment',
+    spResponseTitle: 'Judgement',
+    spScoreTitle: 'Similarity Score',
+    spUnsureText: 'Unsure / Cannot decide',
+    spErrNoLabel: 'Please select a judgement',
+    spErrNoScore: 'Please select a score',
+    rvSpReviewNote: 'Approve: mark this sentence-pair annotation as valid. Reject: returns it to the annotator.',
   }
 };
 
@@ -1418,6 +1852,395 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
   }
 ];
 
+/* ── Sentence Pairs Config (mirrors task-management-015 SP_CONFIG_FIELDS) ── */
+var SP_TASK_CONFIG = {
+  pair_mode: 'similarity',
+  response_format: 'classification',
+  sentence_1_field: 'sentence_1',
+  sentence_2_field: 'sentence_2',
+  sentence_1_label: null,
+  sentence_2_label: null,
+  label_options: [
+    { value: 'equivalent', label_zh: '語意等價', label_en: 'Equivalent' },
+    { value: 'related', label_zh: '語意相關', label_en: 'Related' },
+    { value: 'unrelated', label_zh: '語意無關', label_en: 'Unrelated' }
+  ],
+  score_min: 0,
+  score_max: 5,
+  score_step: 1,
+  allow_unsure: true,
+  note_enabled: true
+};
+
+var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'SP-001',
+    text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+    sentence_1: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。',
+    sentence_2: '這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+    status: 'submitted',
+    spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'equivalent', score: null, unsure: false, version: 1 },
+    reviewerData: {
+      statsSummary: '等價×3 · 相關×2',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '等價', decision: null },
+        { annotator: '113450022', scoreText: '相關', decision: null },
+        { annotator: 'tony0950127', scoreText: '等價', decision: null },
+        { annotator: 'hui', scoreText: '等價', decision: null },
+        { annotator: 'chiao11', scoreText: '相關', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:00', action: 'submitted', from: null, to: '等價' }]
+  },
+  {
+    id: 2, sampleId: 'SP-002',
+    text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。',
+    sentence_1: '政府宣布下週起調漲電費，幅度約為 8%。',
+    sentence_2: '下週電費將上漲，政府公告調幅 8%。',
+    status: 'submitted',
+    spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'equivalent', score: null, unsure: false, version: 1 },
+    reviewerData: {
+      statsSummary: '等價×4 · 相關×1',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '等價', decision: null },
+        { annotator: '113450022', scoreText: '等價', decision: null },
+        { annotator: 'tony0950127', scoreText: '等價', decision: null },
+        { annotator: 'hui', scoreText: '相關', decision: null },
+        { annotator: 'mandy610425', scoreText: '等價', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:15', action: 'submitted', from: null, to: '等價' }]
+  },
+  {
+    id: 3, sampleId: 'SP-003',
+    text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。',
+    sentence_1: '台積電公布第一季財報，營收創歷史新高。',
+    sentence_2: '本季科技類股受國際情勢影響出現明顯震盪。',
+    status: 'saved',
+    spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'unrelated', score: null, unsure: false, version: 1 },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'saved', from: null, to: '語意無關（草稿）' }]
+  },
+  {
+    id: 4, sampleId: 'SP-004',
+    text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。',
+    sentence_1: '颱風警報解除，各縣市陸續恢復對外交通。',
+    sentence_2: '氣象局發布颱風警報，預計明天登陸。',
+    status: 'todo',
+    spAnnotation: null,
+    history: []
+  },
+  {
+    id: 5, sampleId: 'SP-005',
+    text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。',
+    sentence_1: '研究指出長期久坐對心血管健康有負面影響。',
+    sentence_2: '定期運動能有效降低心臟病風險。',
+    status: 'todo',
+    spAnnotation: null,
+    history: []
+  }
+];
+
+/* ── Aspect List Config (mirrors task-management-013 ASPECT_LIST_CONFIG_FIELDS) ── */
+var ASPECT_LIST_CONFIG = {
+  input_field: 'sentence',
+  aspect_list_field: 'aspects',
+  allow_sentence_edit: true,
+  allow_aspect_add: true,
+  allow_aspect_delete: true,
+  require_exact_match_in_sentence: true,
+  min_aspects: 1,
+  max_aspects: 5,
+  require_sentiment_context_check: true
+};
+
+var ASPECT_LIST_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'AL-001',
+    text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+    sentence: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+    aspects: ['螢幕', '電池續航力', '整體設計'],
+    status: 'submitted',
+    aspectAnnotation: {
+      original_sentence: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+      corrected_sentence: null,
+      aspects: [
+        { id: 'a1', text: '螢幕', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'a2', text: '電池續航力', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'a3', text: '整體設計', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'Aspect List 任務 — 請查看各標記員抽取結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '螢幕' }, { op: 'kept', text: '電池續航力' }, { op: 'added', text: '價格' }
+        ]},
+        { annotator: '113450022', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '螢幕' }, { op: 'edited', text: '電池壽命（原：電池續航力）' }, { op: 'kept', text: '整體設計' }
+        ]},
+        { annotator: 'tony0950127', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '螢幕' }, { op: 'kept', text: '電池續航力' }, { op: 'kept', text: '整體設計' },
+          { op: 'invalid', text: '高效能（未完全出現在句子中）' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'submitted', from: null, to: '3 aspects：螢幕、電池續航力、整體設計' }]
+  },
+  {
+    id: 2, sampleId: 'AL-002',
+    text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+    sentence: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+    aspects: ['環境', '菜色選擇', '服務員的態度'],
+    status: 'submitted',
+    aspectAnnotation: {
+      original_sentence: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+      corrected_sentence: null,
+      aspects: [
+        { id: 'b1', text: '環境', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'b2', text: '菜色選擇', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
+        { id: 'b3', text: '服務員的態度', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'Aspect List 任務 — 請查看各標記員抽取結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '環境' }, { op: 'kept', text: '菜色選擇' }, { op: 'edited', text: '服務態度（原：服務員的態度）' }
+        ]},
+        { annotator: '113450022', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '環境' }, { op: 'deleted', text: '菜色選擇（已刪除）' },
+          { op: 'kept', text: '服務員的態度' }, { op: 'added', text: '用餐體驗' }
+        ]},
+        { annotator: 'hui', scoreText: 'AL', decision: null, aspectDiff: [
+          { op: 'kept', text: '環境' }, { op: 'kept', text: '菜色選擇' }, { op: 'kept', text: '服務員的態度' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:45', action: 'submitted', from: null, to: '3 aspects' }]
+  },
+  {
+    id: 3, sampleId: 'AL-003',
+    text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+    sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+    aspects: ['早餐品質', '停車場', '隔音效果'],
+    status: 'saved',
+    aspectAnnotation: {
+      original_sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+      corrected_sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間的隔音效果也不錯。',
+      aspects: [
+        { id: 'c1', text: '早餐品質', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'c2', text: '停車場', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
+        { id: 'c3', text: '隔音效果', exact_match_status: 'invalid', sentiment_context_checked: false, operation: 'kept' }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '3 aspects (draft)' }]
+  },
+  {
+    id: 4, sampleId: 'AL-004',
+    text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+    sentence: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+    aspects: [], status: 'todo', aspectAnnotation: null, history: []
+  },
+  {
+    id: 5, sampleId: 'AL-005',
+    text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+    sentence: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+    aspects: [], status: 'todo', aspectAnnotation: null, history: []
+  }
+];
+
+var RE_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'RE-001',
+    text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。',
+    status: 'submitted',
+    reAnnotation: {
+      entities: [
+        { id: 're1', text: '阿司匹靈', type: 'DRUG', start: 0, end: 4 },
+        { id: 're2', text: '頭痛', type: 'SYMP', start: 7, end: 9 },
+        { id: 're3', text: '胃部不適', type: 'SYMP', start: 21, end: 25 }
+      ],
+      triples: [
+        { id: 'rt1', e1Id: 're1', relation: 'treats', e2Id: 're2' },
+        { id: 'rt2', e1Id: 're1', relation: 'causes', e2Id: 're3' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: '關係抽取任務 — 請查看各標記員三元組結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', decision: null },
+        { annotator: '113450022', scoreText: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'submitted', from: null, to: '2 triples' }]
+  },
+  {
+    id: 2, sampleId: 'RE-002',
+    text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。',
+    status: 'submitted',
+    reAnnotation: {
+      entities: [
+        { id: 're1', text: '乳房', type: 'BODY', start: 0, end: 2 },
+        { id: 're2', text: '疼痛', type: 'SYMP', start: 2, end: 4 },
+        { id: 're3', text: '月經週期', type: 'TIME', start: 8, end: 12 },
+        { id: 're4', text: '賀爾蒙變化', type: 'BODY', start: 13, end: 18 }
+      ],
+      triples: [
+        { id: 'rt1', e1Id: 're2', relation: 'associated_with', e2Id: 're3' },
+        { id: 'rt2', e1Id: 're2', relation: 'associated_with', e2Id: 're4' }
+      ]
+    },
+    reviewerData: {
+      statsSummary: '關係抽取任務 — 請查看各標記員三元組結果',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: '(SYMP:疼痛)→associated_with→(TIME:月經週期)', decision: null },
+        { annotator: '113450022', scoreText: '(SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化)', decision: null }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:45', action: 'submitted', from: null, to: '2 triples' }]
+  },
+  {
+    id: 3, sampleId: 'RE-003',
+    text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。',
+    status: 'saved',
+    reAnnotation: {
+      entities: [
+        { id: 're1', text: '超音波檢查', type: 'EXAM', start: 0, end: 5 },
+        { id: 're2', text: '膽囊結石', type: 'DISE', start: 10, end: 14 },
+        { id: 're3', text: '腹部疼痛', type: 'SYMP', start: 18, end: 22 }
+      ],
+      triples: [{ id: 'rt1', e1Id: 're1', relation: 'diagnoses', e2Id: 're2' }]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '1 triple (draft)' }]
+  },
+  {
+    id: 4, sampleId: 'RE-004',
+    text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。',
+    status: 'todo', reAnnotation: null, history: []
+  },
+  {
+    id: 5, sampleId: 'RE-005',
+    text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。',
+    status: 'todo', reAnnotation: null, history: []
+  }
+];
+
+var RE_CONFIG = {
+  entity_types: [
+    { name: 'BODY', color: '#6366F1' },
+    { name: 'DISE', color: '#EF4444' },
+    { name: 'SYMP', color: '#F59E0B' },
+    { name: 'DRUG', color: '#10B981' },
+    { name: 'INST', color: '#8B5CF6' },
+    { name: 'SUPP', color: '#EC4899' },
+    { name: 'EXAM', color: '#06B6D4' },
+    { name: 'TREAT', color: '#84CC16' },
+    { name: 'CHEM', color: '#F97316' },
+    { name: 'TIME', color: '#14B8A6' }
+  ],
+  relation_types: ['causes', 'associated_with', 'treats', 'diagnoses', 'located_in'],
+  tuple_mode: 'triple'
+};
+
+var reState = { entities: [], triples: [], pendingText: '', pendingStart: null, pendingEnd: null };
+
+/* ── NER Config & State ───────────────────────────────────────── */
+var NER_CONFIG = {
+  entities: [
+    { name: 'PER', label_zh: '人名', label_en: 'Person', color: '#6366F1' },
+    { name: 'ORG', label_zh: '組織', label_en: 'Organization', color: '#10B981' },
+    { name: 'LOC', label_zh: '地點', label_en: 'Location', color: '#F59E0B' },
+    { name: 'DATE', label_zh: '時間', label_en: 'Date', color: '#8B5CF6' },
+    { name: 'MISC', label_zh: '其他', label_en: 'Misc', color: '#94A3B8' }
+  ],
+  scheme: 'IOB2',
+  allow_overlapping: false,
+  require_entity_type: true
+};
+
+var nerState = { originalText: '', entities: [], pendingText: '', pendingStart: null, pendingEnd: null };
+
+var NER_SAMPLE_FIXTURES = [
+  {
+    id: 1, sampleId: 'NER-001',
+    text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。',
+    status: 'submitted',
+    nerAnnotation: {
+      entities: [
+        { id: 'n1', text: '台積電', type: 'ORG', start: 0, end: 3 },
+        { id: 'n2', text: '張忠謀', type: 'PER', start: 5, end: 8 },
+        { id: 'n3', text: '台北', type: 'LOC', start: 9, end: 11 },
+        { id: 'n4', text: '2024年', type: 'DATE', start: 12, end: 17 }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'F1 mean: 0.81 · Macro-F1: 0.79 · 3 annotators',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '台積電', type: 'ORG' }, { text: '張忠謀', type: 'PER' }, { text: '台北', type: 'LOC' }
+        ]},
+        { annotator: '113450022', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '台積電', type: 'ORG' }, { text: '張忠謀', type: 'PER' }, { text: '台北', type: 'LOC' }, { text: '半導體產業論壇', type: 'MISC' }
+        ]},
+        { annotator: 'tony0950127', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '台積電', type: 'ORG' }, { text: '創辦人張忠謀', type: 'PER' }, { text: '台北', type: 'LOC' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'submitted', from: null, to: '4 entities: ORG×1, PER×1, LOC×1, DATE×1' }]
+  },
+  {
+    id: 2, sampleId: 'NER-002',
+    text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。',
+    status: 'submitted',
+    nerAnnotation: {
+      entities: [
+        { id: 'n5', text: '鴻海精密工業', type: 'ORG', start: 0, end: 6 },
+        { id: 'n6', text: '越南', type: 'LOC', start: 8, end: 10 },
+        { id: 'n7', text: '胡志明市', type: 'LOC', start: 10, end: 14 },
+        { id: 'n8', text: '2025年', type: 'DATE', start: 18, end: 23 }
+      ]
+    },
+    reviewerData: {
+      statsSummary: 'F1 mean: 0.88 · Macro-F1: 0.85 · 3 annotators',
+      rows: [
+        { annotator: 'kioleemg12', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '鴻海精密工業', type: 'ORG' }, { text: '越南', type: 'LOC' }, { text: '胡志明市', type: 'LOC' }, { text: '2025年', type: 'DATE' }
+        ]},
+        { annotator: '113450022', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '鴻海精密工業', type: 'ORG' }, { text: '越南胡志明市', type: 'LOC' }, { text: '2025年', type: 'DATE' }
+        ]},
+        { annotator: 'tony0950127', scoreText: 'NER', decision: null, nerEntities: [
+          { text: '鴻海', type: 'ORG' }, { text: '越南', type: 'LOC' }, { text: '胡志明市', type: 'LOC' }, { text: '2025年', type: 'DATE' }
+        ]}
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 10:45', action: 'submitted', from: null, to: '4 entities: ORG×1, LOC×2, DATE×1' }]
+  },
+  {
+    id: 3, sampleId: 'NER-003',
+    text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+    status: 'saved',
+    nerAnnotation: {
+      entities: [
+        { id: 'n9', text: '衛生福利部', type: 'ORG', start: 0, end: 5 },
+        { id: 'n10', text: '薛瑞元', type: 'PER', start: 6, end: 9 }
+      ]
+    },
+    history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '2 entities (draft)' }]
+  },
+  {
+    id: 4, sampleId: 'NER-004',
+    text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+    status: 'todo', nerAnnotation: null, history: []
+  },
+  {
+    id: 5, sampleId: 'NER-005',
+    text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+    status: 'todo', nerAnnotation: null, history: []
+  }
+];
+
 var SAMPLES = [];
 
 /* ── State ────────────────────────────────────────────────────── */
@@ -1425,6 +2248,7 @@ var state = {
   lang: 'zh',
   taskRole: 'annotator',
   taskTypeKey: 'single_sentence_classification',
+  subType: 'aspect_list',
   runType: 'dry_run',
   taskId: 'TASK-014',
   currentIdx: 2,
@@ -1484,7 +2308,7 @@ var TASK_TYPE_UI_CONFIG = {
   },
   sequence_labeling: {
     taskTypeLabel: {
-      zh: '序列標註（Aspect / NER）',
+      zh: '序列標記（含 Aspect / NER）',
       en: 'Sequence Labeling (Aspect / NER)'
     },
     annotationTitle: {
@@ -1492,7 +2316,7 @@ var TASK_TYPE_UI_CONFIG = {
       en: 'Sequence Labeling'
     },
     guidelineGoal: {
-      zh: '序列標註（Aspect / NER）',
+      zh: '序列標記（含 Aspect / NER）',
       en: 'Sequence Labeling (Aspect / NER)'
     },
     guidelineSummary: {
@@ -1504,17 +2328,39 @@ var TASK_TYPE_UI_CONFIG = {
       en: 'Sequence labeling: mark entity/aspect spans per guideline.'
     }
   },
+  ner: {
+    taskTypeLabel: {
+      zh: '序列標記（含 Aspect / NER）',
+      en: 'Sequence Labeling (NER)'
+    },
+    annotationTitle: {
+      zh: 'NER 命名實體辨識',
+      en: 'NER Named Entity Recognition'
+    },
+    guidelineGoal: {
+      zh: 'NER 命名實體辨識',
+      en: 'NER Named Entity Recognition'
+    },
+    guidelineSummary: {
+      zh: '選取文本中的命名實體片段，並標記對應的實體類型（人名、組織、地點、時間等）。',
+      en: 'Select text spans of named entities and assign their entity types (PER, ORG, LOC, DATE, etc.).'
+    },
+    mobileGuideline: {
+      zh: 'NER：選取文字片段後點擊實體類型按鈕完成標記。',
+      en: 'NER: select text span, then click entity type button.'
+    }
+  },
   relation_extraction: {
     taskTypeLabel: {
-      zh: '關係抽取（Entity / Relation / Triple）',
+      zh: '關係抽取（Entity + Relation + Triple）',
       en: 'Relation Extraction (Entity / Relation / Triple)'
     },
     annotationTitle: {
-      zh: '關係抽取',
-      en: 'Relation Extraction'
+      zh: '關係抽取（Entity + Relation + Triple）',
+      en: 'Relation Extraction (Entity / Relation / Triple)'
     },
     guidelineGoal: {
-      zh: '關係抽取（Entity / Relation / Triple）',
+      zh: '關係抽取（Entity + Relation + Triple）',
       en: 'Relation Extraction (Entity / Relation / Triple)'
     },
     guidelineSummary: {
@@ -1549,6 +2395,679 @@ var TASK_TYPE_UI_CONFIG = {
     }
   }
 };
+
+/* ── SVG Helpers ──────────────────────────────────────────────── */
+function makeSvgIcon(paths, attrs) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  var defaults = { width: '13', height: '13', viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', 'stroke-width': '2.5', 'stroke-linecap': 'round',
+    'stroke-linejoin': 'round', 'aria-hidden': 'true' };
+  Object.keys(Object.assign({}, defaults, attrs || {})).forEach(function(k) {
+    svg.setAttribute(k, (attrs && attrs[k] !== undefined) ? attrs[k] : defaults[k]);
+  });
+  paths.forEach(function(p) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', p.tag);
+    Object.keys(p).forEach(function(k) { if (k !== 'tag') el.setAttribute(k, p[k]); });
+    svg.appendChild(el);
+  });
+  return svg;
+}
+
+function makeXIconSvg() {
+  return makeSvgIcon([
+    { tag: 'line', x1: '18', y1: '6', x2: '6', y2: '18' },
+    { tag: 'line', x1: '6', y1: '6', x2: '18', y2: '18' }
+  ]);
+}
+
+/* ── Aspect List State ────────────────────────────────────────── */
+var aspectListState = { originalSentence: '', correctedSentence: '', rows: [] };
+
+/* ── Sentence Pairs State ─────────────────────────────────────── */
+var spAnnotationState = { label: null, score: null, unsure: false };
+
+function isSentencePairsTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sentence_pairs';
+}
+
+function isNerTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling' && state.subType === 'ner';
+}
+
+function isAspectListTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'sequence_labeling' && state.subType !== 'ner';
+}
+
+function isRelationExtractionTaskType() {
+  return normalizeTaskTypeKey(state.taskTypeKey) === 'relation_extraction';
+}
+
+/* ── Sentence Pairs Functions ─────────────────────────────────── */
+function getSpConfig() {
+  return SP_TASK_CONFIG;
+}
+
+function initSentencePairsState(sample) {
+  var ann = sample.spAnnotation || null;
+  spAnnotationState.label = ann ? (ann.label || null) : null;
+  spAnnotationState.score = ann ? (ann.score != null ? ann.score : null) : null;
+  spAnnotationState.unsure = ann ? (!!ann.unsure) : false;
+}
+
+function buildSpLabelOptions(config) {
+  var container = document.getElementById('spLabelOptions');
+  if (!container) return;
+  while (container.firstChild) { container.removeChild(container.firstChild); }
+  (config.label_options || []).forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sp-label-option' + (spAnnotationState.label === opt.value ? ' selected' : '');
+    btn.setAttribute('role', 'radio');
+    btn.setAttribute('aria-checked', String(spAnnotationState.label === opt.value));
+    btn.setAttribute('data-sp-value', opt.value);
+    btn.textContent = state.lang === 'en' ? (opt.label_en || opt.value) : (opt.label_zh || opt.value);
+    btn.addEventListener('click', function() {
+      spAnnotationState.label = opt.value;
+      buildSpLabelOptions(config);
+    });
+    container.appendChild(btn);
+  });
+}
+
+function buildSpScoreRow(config) {
+  var container = document.getElementById('spScoreRow');
+  var currentDisplay = document.getElementById('spScoreCurrent');
+  var minLabel = document.getElementById('spScoreMinLabel');
+  var maxLabel = document.getElementById('spScoreMaxLabel');
+  if (!container) return;
+  while (container.firstChild) { container.removeChild(container.firstChild); }
+  if (minLabel) minLabel.textContent = String(config.score_min);
+  if (maxLabel) maxLabel.textContent = String(config.score_max);
+  if (currentDisplay) currentDisplay.textContent = spAnnotationState.score != null ? String(spAnnotationState.score) : '—';
+  var step = config.score_step || 1;
+  for (var v = config.score_min; v <= config.score_max; v += step) {
+    (function(val) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sp-score-btn' + (spAnnotationState.score === val ? ' active' : '');
+      btn.setAttribute('role', 'radio');
+      btn.setAttribute('aria-checked', String(spAnnotationState.score === val));
+      btn.textContent = String(val);
+      btn.addEventListener('click', function() {
+        spAnnotationState.score = val;
+        buildSpScoreRow(config);
+      });
+      container.appendChild(btn);
+    })(v);
+  }
+}
+
+function renderSentencePairSource(prefix, config, sample) {
+  var pairMode = config.pair_mode || 'similarity';
+  var modeBadge = document.getElementById(prefix + 'ModeBadge');
+  if (modeBadge) {
+    modeBadge.textContent = pairMode === 'entailment'
+      ? t('spModeBadgeEntailment') : t('spModeBadgeSimilarity');
+  }
+
+  var s1Key = pairMode === 'entailment' ? 'spSentence1LabelEntailment' : 'spSentence1LabelSimilarity';
+  var s2Key = pairMode === 'entailment' ? 'spSentence2LabelEntailment' : 'spSentence2LabelSimilarity';
+  var s1Label = config.sentence_1_label || t(s1Key);
+  var s2Label = config.sentence_2_label || t(s2Key);
+  var s1Text = sample[config.sentence_1_field] || sample.sentence_1 || '';
+  var s2Text = sample[config.sentence_2_field] || sample.sentence_2 || '';
+
+  setText(prefix + 'Sentence1Label', s1Label);
+  setText(prefix + 'Sentence2Label', s2Label);
+  setText(prefix + 'Sentence1Text', s1Text);
+  setText(prefix + 'Sentence2Text', s2Text);
+}
+
+function renderSentencePairsPanel() {
+  var config = getSpConfig();
+  var sample = SAMPLES[state.currentIdx];
+  var responseFormat = config.response_format || 'classification';
+  renderSentencePairSource('sp', config, sample);
+  renderSentencePairSource('spReviewer', config, sample);
+
+  var classArea = document.getElementById('spClassificationArea');
+  var scoreArea = document.getElementById('spScoringArea');
+  var isClassification = responseFormat === 'classification';
+
+  if (classArea) classArea.classList.toggle('hidden', !isClassification);
+  if (scoreArea) scoreArea.classList.toggle('hidden', isClassification);
+
+  if (isClassification) {
+    setText('spResponseTitle', t('spResponseTitle'));
+    buildSpLabelOptions(config);
+  } else {
+    setText('spScoreTitle', t('spScoreTitle'));
+    buildSpScoreRow(config);
+  }
+
+  var unsureArea = document.getElementById('spUnsureArea');
+  if (unsureArea) {
+    unsureArea.classList.toggle('hidden', !config.allow_unsure);
+    var unsureCheck = document.getElementById('spUnsureCheck');
+    if (unsureCheck) unsureCheck.checked = spAnnotationState.unsure;
+    setText('spUnsureText', t('spUnsureText'));
+    if (unsureCheck) {
+      unsureCheck.onchange = function() { spAnnotationState.unsure = unsureCheck.checked; };
+    }
+  }
+}
+
+function generateReId() {
+  return 're_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+function generateAspectId() {
+  return 'asp_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+function checkExactMatch(text, sentence) {
+  if (!text || !text.trim()) return 'empty';
+  return (sentence || '').indexOf(text.trim()) !== -1 ? 'valid' : 'invalid';
+}
+
+function getEffectiveSentence() {
+  var corrected = aspectListState.correctedSentence;
+  return (corrected && corrected.trim()) ? corrected : aspectListState.originalSentence;
+}
+
+function revalidateAspectRows() {
+  var sentence = getEffectiveSentence();
+  aspectListState.rows.forEach(function(row) {
+    row.exactMatchStatus = checkExactMatch(row.text, sentence);
+  });
+}
+
+function initAspectListState(sample) {
+  var annotation = sample.aspectAnnotation;
+  aspectListState.originalSentence = sample.sentence || sample.text || '';
+  if (annotation && sample.status !== 'todo') {
+    aspectListState.correctedSentence = annotation.corrected_sentence || '';
+    aspectListState.rows = (annotation.aspects || []).map(function(a) {
+      return { id: a.id || generateAspectId(), text: a.text || '',
+        exactMatchStatus: a.exact_match_status || 'empty', sentimentChecked: !!a.sentiment_context_checked };
+    });
+  } else {
+    aspectListState.correctedSentence = '';
+    aspectListState.rows = (Array.isArray(sample.aspects) ? sample.aspects : []).map(function(asp) {
+      var text = typeof asp === 'string' ? asp : (asp.text || '');
+      return { id: generateAspectId(), text: text,
+        exactMatchStatus: checkExactMatch(text, aspectListState.originalSentence), sentimentChecked: false };
+    });
+  }
+}
+
+function validateAspectList() {
+  var errors = [];
+  var cfg = ASPECT_LIST_CONFIG;
+  var rows = aspectListState.rows;
+  if (rows.length < cfg.min_aspects) errors.push(t('aspectErrMinAspects', { min: cfg.min_aspects }));
+  if (rows.length > cfg.max_aspects) errors.push(t('aspectErrMaxAspects', { max: cfg.max_aspects }));
+  var seen = {};
+  rows.forEach(function(row, i) {
+    if (!row.text || !row.text.trim()) { errors.push(t('aspectErrBlankAspect', { n: i + 1 })); return; }
+    var key = row.text.trim().toLowerCase();
+    if (seen[key] !== undefined) { errors.push(t('aspectErrDuplicateAspect', { a: i + 1, b: seen[key] + 1 })); }
+    else { seen[key] = i; }
+    if (cfg.require_exact_match_in_sentence && row.exactMatchStatus === 'invalid') {
+      errors.push(t('aspectErrExactMatch', { n: i + 1, text: row.text }));
+    }
+  });
+  return { valid: errors.length === 0, errors: errors };
+}
+
+function renderAspectListPanel() {
+  var cfg = ASPECT_LIST_CONFIG;
+
+  var lbl; lbl = document.getElementById('aspectOriginalLabel'); if (lbl) lbl.textContent = t('aspectOriginalLabel');
+  lbl = document.getElementById('aspectCorrectedLabel'); if (lbl) lbl.textContent = t('aspectCorrectedLabel');
+  lbl = document.getElementById('aspectSentenceEditHint'); if (lbl) lbl.textContent = t('aspectSentenceEditHint');
+  lbl = document.getElementById('aspectListTitle'); if (lbl) lbl.textContent = t('aspectListTitle');
+
+  var originalEl = document.getElementById('aspectOriginalSentence');
+  if (originalEl) originalEl.textContent = aspectListState.originalSentence;
+
+  var correctedBlock = document.getElementById('aspectCorrectedBlock');
+  var correctedTA = document.getElementById('aspectCorrectedSentence');
+  if (correctedBlock && correctedTA) {
+    correctedBlock.classList.toggle('hidden', !cfg.allow_sentence_edit);
+    if (cfg.allow_sentence_edit) {
+      if (document.activeElement !== correctedTA) correctedTA.value = aspectListState.correctedSentence;
+      correctedTA.classList.toggle('modified', !!aspectListState.correctedSentence &&
+        aspectListState.correctedSentence !== aspectListState.originalSentence);
+    }
+  }
+
+  var rowsContainer = document.getElementById('aspectRows');
+  if (!rowsContainer) return;
+  while (rowsContainer.firstChild) rowsContainer.removeChild(rowsContainer.firstChild);
+
+  aspectListState.rows.forEach(function(row, idx) {
+    var hasError = cfg.require_exact_match_in_sentence && row.text.trim() && row.exactMatchStatus === 'invalid';
+    var rowEl = document.createElement('div');
+    rowEl.className = 'aspect-row' + (hasError ? ' has-error' : '');
+
+    var topRow = document.createElement('div');
+    topRow.className = 'aspect-row-top';
+
+    var numBadge = document.createElement('span');
+    numBadge.className = 'aspect-row-num';
+    numBadge.textContent = String(idx + 1);
+
+    var textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'aspect-text-input';
+    textInput.value = row.text;
+    textInput.placeholder = t('aspectInputPlaceholder');
+    textInput.addEventListener('input', (function(r) {
+      return function() { r.text = this.value; revalidateAspectRows(); renderAspectListPanel(); };
+    }(row)));
+
+    topRow.appendChild(numBadge);
+    topRow.appendChild(textInput);
+
+    if (cfg.allow_aspect_delete) {
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'aspect-delete-btn';
+      delBtn.setAttribute('aria-label', t('aspectDeleteAria'));
+      delBtn.appendChild(makeXIconSvg());
+      delBtn.addEventListener('click', (function(r) {
+        return function() {
+          aspectListState.rows = aspectListState.rows.filter(function(x) { return x.id !== r.id; });
+          revalidateAspectRows();
+          renderAspectListPanel();
+        };
+      }(row)));
+      topRow.appendChild(delBtn);
+    }
+    rowEl.appendChild(topRow);
+
+    var badgesRow = document.createElement('div');
+    badgesRow.className = 'aspect-row-badges';
+
+    if (cfg.require_exact_match_in_sentence && row.text.trim()) {
+      var matchBadge = document.createElement('span');
+      matchBadge.className = 'aspect-match-badge ' + (row.exactMatchStatus === 'valid' ? 'valid' : 'invalid');
+      matchBadge.textContent = row.exactMatchStatus === 'valid' ? t('aspectMatchValid') : t('aspectMatchInvalid');
+      badgesRow.appendChild(matchBadge);
+    }
+
+    if (cfg.require_sentiment_context_check) {
+      var sentBadge = document.createElement('span');
+      sentBadge.className = 'aspect-sentiment-badge ' + (row.sentimentChecked ? 'checked' : 'unchecked');
+      sentBadge.textContent = row.sentimentChecked ? t('aspectSentimentChecked') : t('aspectSentimentUnchecked');
+      sentBadge.title = t('aspectSentimentToggleHint');
+      sentBadge.addEventListener('click', (function(r) {
+        return function() { r.sentimentChecked = !r.sentimentChecked; renderAspectListPanel(); };
+      }(row)));
+      badgesRow.appendChild(sentBadge);
+    }
+    rowEl.appendChild(badgesRow);
+
+    if (hasError) {
+      var errMsg = document.createElement('div');
+      errMsg.className = 'aspect-row-error';
+      errMsg.textContent = t('aspectRowError');
+      rowEl.appendChild(errMsg);
+    }
+    rowsContainer.appendChild(rowEl);
+  });
+
+  var countBadge = document.getElementById('aspectCountBadge');
+  if (countBadge) countBadge.textContent = aspectListState.rows.length + ' / ' + cfg.max_aspects;
+
+  var addBtn = document.getElementById('aspectAddBtn');
+  var addBtnLabel = document.getElementById('aspectAddBtnLabel');
+  if (addBtn) {
+    var atMax = aspectListState.rows.length >= cfg.max_aspects;
+    addBtn.disabled = !cfg.allow_aspect_add || atMax;
+    if (addBtnLabel) addBtnLabel.textContent = atMax ? t('aspectAddBtnMaxLabel', { max: cfg.max_aspects }) : t('aspectAddBtnLabel');
+  }
+
+  var softGuidanceEl = document.getElementById('aspectSoftGuidanceText');
+  if (softGuidanceEl) softGuidanceEl.textContent = t('aspectSoftGuidanceText');
+
+  var summaryEl = document.getElementById('aspectValidationSummary');
+  if (summaryEl) {
+    var validation = validateAspectList();
+    if (!validation.valid) {
+      summaryEl.className = 'aspect-validation-summary has-errors';
+      summaryEl.textContent = validation.errors.join(' · ');
+    } else if (aspectListState.rows.length > 0) {
+      summaryEl.className = 'aspect-validation-summary ok';
+      summaryEl.textContent = t('aspectValidationOk');
+    } else {
+      summaryEl.className = 'aspect-validation-summary hidden-summary';
+      summaryEl.textContent = '';
+    }
+  }
+}
+
+/* ── NER ──────────────────────────────────────────────────────── */
+function generateNerId() {
+  return 'ner_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+}
+
+function initNerState(sample) {
+  nerState.originalText = sample.text || '';
+  if (sample.nerAnnotation && sample.status !== 'todo') {
+    nerState.entities = (sample.nerAnnotation.entities || []).map(function(e) {
+      var et = NER_CONFIG.entities.find(function(t) { return t.name === e.type; });
+      return { id: e.id || generateNerId(), text: e.text, type: e.type, start: e.start, end: e.end, color: et ? et.color : '#94A3B8' };
+    });
+  } else {
+    nerState.entities = [];
+  }
+  nerState.pendingText = '';
+  nerState.pendingStart = null;
+  nerState.pendingEnd = null;
+}
+
+function renderNerEntityHighlights() {
+  var textEl = document.getElementById('sampleText');
+  if (!textEl) return;
+  var text = nerState.originalText;
+  while (textEl.firstChild) textEl.removeChild(textEl.firstChild);
+  if (!text) return;
+  var sorted = nerState.entities.slice().sort(function(a, b) { return a.start - b.start; });
+  var cursor = 0;
+  sorted.forEach(function(e) {
+    if (e.start > cursor) textEl.appendChild(document.createTextNode(text.slice(cursor, e.start)));
+    var highlight = document.createElement('span');
+    highlight.className = 'ner-entity-highlight';
+    highlight.style.cssText = 'background:' + e.color + '22;border-bottom:2px solid ' + e.color + ';border-radius:2px;padding:0 1px;';
+    highlight.appendChild(document.createTextNode(text.slice(e.start, e.end)));
+    var badge = document.createElement('span');
+    badge.className = 'ner-entity-type-badge';
+    badge.style.cssText = 'background:' + e.color + ';color:#fff;font-size:10px;padding:0 3px;border-radius:2px;margin-left:2px;';
+    badge.textContent = e.type;
+    highlight.appendChild(badge);
+    textEl.appendChild(highlight);
+    cursor = e.end;
+  });
+  if (cursor < text.length) textEl.appendChild(document.createTextNode(text.slice(cursor)));
+}
+
+function renderNerPanel() {
+  var panel = document.getElementById('nerAnnotatorPanel');
+  if (!panel) return;
+
+  var typeBtns = document.getElementById('nerEntityTypeBtns');
+  if (typeBtns) {
+    while (typeBtns.firstChild) typeBtns.removeChild(typeBtns.firstChild);
+    NER_CONFIG.entities.forEach(function(et) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 're-entity-type-btn';
+      btn.dataset.entityType = et.name;
+      btn.style.cssText = 'border-color:' + et.color + ';color:' + et.color + ';';
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 're-entity-type-name';
+      nameSpan.textContent = et.name;
+      var labelSpan = document.createElement('span');
+      labelSpan.className = 're-entity-type-label';
+      labelSpan.textContent = state.lang === 'en' ? et.label_en : et.label_zh;
+      btn.appendChild(nameSpan);
+      btn.appendChild(labelSpan);
+      typeBtns.appendChild(btn);
+    });
+  }
+
+  var pendingEl = document.getElementById('nerPendingSelection');
+  var pendingText = document.getElementById('nerPendingText');
+  var pendingHint = document.getElementById('nerPendingHint');
+  if (pendingEl && pendingText && pendingHint) {
+    pendingEl.classList.remove('hidden');
+    pendingText.textContent = nerState.pendingText ? '「' + nerState.pendingText + '」' : '';
+    pendingHint.textContent = t(nerState.pendingText ? 'nerPendingHintSelected' : 'nerPendingHintDefault');
+  }
+
+  var listEl = document.getElementById('nerEntityList');
+  var countEl = document.getElementById('nerEntityCount');
+  if (listEl) {
+    while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
+    if (nerState.entities.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 're-entity-empty';
+      empty.textContent = t('nerEntityEmpty');
+      listEl.appendChild(empty);
+    } else {
+      nerState.entities.forEach(function(e) {
+        var row = document.createElement('div');
+        row.className = 're-entity-row';
+        var badge = document.createElement('span');
+        badge.className = 're-entity-badge';
+        badge.style.background = e.color + '22';
+        badge.style.color = e.color;
+        badge.style.borderColor = e.color + '66';
+        badge.textContent = e.type;
+        var textSpan = document.createElement('span');
+        textSpan.className = 're-entity-text';
+        textSpan.textContent = e.text;
+        row.appendChild(badge);
+        row.appendChild(textSpan);
+        row.appendChild(makeReDelBtn('data-entity-id', e.id, 'nerDeleteEntityAria'));
+        listEl.appendChild(row);
+      });
+    }
+  }
+  if (countEl) countEl.textContent = nerState.entities.length + ' ' + t('nerEntityCountUnit');
+  renderNerEntityHighlights();
+}
+
+function validateNerAnnotation() {
+  if (nerState.entities.length === 0) return { valid: false, error: t('nerErrNoEntities') };
+  return { valid: true, error: '' };
+}
+
+/* ── Relation Extraction ──────────────────────────────────────── */
+function initRelationState(sample) {
+  var annotation = sample.reAnnotation;
+  if (annotation && sample.status !== 'todo') {
+    reState.entities = (annotation.entities || []).map(function(e) {
+      var et = RE_CONFIG.entity_types.find(function(x) { return x.name === e.type; });
+      return { id: e.id || generateReId(), text: e.text, type: e.type, color: et ? et.color : '#94A3B8', start: e.start, end: e.end };
+    });
+    reState.triples = (annotation.triples || []).map(function(tr) {
+      return { id: tr.id || generateReId(), e1Id: tr.e1Id, relation: tr.relation, e2Id: tr.e2Id };
+    });
+  } else {
+    reState.entities = [];
+    reState.triples = [];
+  }
+  reState.pendingText = '';
+  reState.pendingStart = null;
+  reState.pendingEnd = null;
+}
+
+function makeReDelBtn(dataAttr, dataVal, ariaKey) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 're-entity-del-btn';
+  btn.setAttribute(dataAttr, dataVal);
+  btn.setAttribute('aria-label', t(ariaKey));
+  btn.appendChild(makeXIconSvg());
+  return btn;
+}
+
+function makeEntityBadge(entity) {
+  var b = document.createElement('span');
+  b.className = 're-entity-badge';
+  b.style.background = entity.color + '22';
+  b.style.color = entity.color;
+  b.style.borderColor = entity.color + '66';
+  b.textContent = entity.text + '/' + entity.type;
+  return b;
+}
+
+function renderRelationPanel() {
+  var lbl;
+  lbl = document.getElementById('reEntityTypeLabel'); if (lbl) lbl.textContent = t('reEntityTypeLabel');
+  lbl = document.getElementById('reEntityListLabel'); if (lbl) lbl.textContent = t('reEntityListLabel');
+  lbl = document.getElementById('reRelationTypeLabel'); if (lbl) lbl.textContent = t('reRelationTypeLabel');
+  lbl = document.getElementById('reTripleListLabel'); if (lbl) lbl.textContent = t('reTripleListLabel');
+  lbl = document.getElementById('reE1RoleLabel'); if (lbl) lbl.textContent = t('reE1RoleLabel');
+  lbl = document.getElementById('reRelationLabel'); if (lbl) lbl.textContent = t('reRelationLabel');
+  lbl = document.getElementById('reE2RoleLabel'); if (lbl) lbl.textContent = t('reE2RoleLabel');
+  lbl = document.getElementById('reUndoLabel'); if (lbl) lbl.textContent = t('reUndoLabel');
+  lbl = document.getElementById('reAddTripleLabel'); if (lbl) lbl.textContent = t('reAddTripleLabel');
+  lbl = document.getElementById('reUndoBtn'); if (lbl) lbl.setAttribute('aria-label', t('reUndoLabel'));
+
+  /* Entity type buttons */
+  var btnsEl = document.getElementById('reEntityTypeBtns');
+  if (btnsEl) {
+    btnsEl.textContent = '';
+    RE_CONFIG.entity_types.forEach(function(et) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 're-entity-type-btn';
+      btn.setAttribute('data-entity-type', et.name);
+      btn.textContent = et.name;
+      btn.style.borderColor = et.color;
+      btn.style.color = et.color;
+      btnsEl.appendChild(btn);
+    });
+  }
+
+  /* Pending selection hint */
+  var pendingTextEl = document.getElementById('rePendingText');
+  var pendingHintEl = document.getElementById('rePendingHint');
+  if (pendingTextEl) pendingTextEl.textContent = reState.pendingText ? '「' + reState.pendingText + '」' : '';
+  if (pendingHintEl) pendingHintEl.textContent = reState.pendingText ? t('rePendingHintSelected') : t('rePendingHintDefault');
+
+  /* Entity list */
+  var entityCount = document.getElementById('reEntityCount');
+  if (entityCount) entityCount.textContent = reState.entities.length + ' ' + t('reEntityCountUnit');
+  var entityListEl = document.getElementById('reEntityList');
+  if (entityListEl) {
+    entityListEl.textContent = '';
+    if (!reState.entities.length) {
+      var emptyE = document.createElement('div');
+      emptyE.className = 're-empty-hint';
+      emptyE.textContent = t('reEntityEmpty');
+      entityListEl.appendChild(emptyE);
+    } else {
+      reState.entities.forEach(function(entity) {
+        var row = document.createElement('div');
+        row.className = 're-entity-row';
+        var badge = document.createElement('span');
+        badge.className = 're-entity-badge';
+        badge.style.background = entity.color + '22';
+        badge.style.color = entity.color;
+        badge.style.borderColor = entity.color + '66';
+        badge.textContent = entity.type;
+        var text = document.createElement('span');
+        text.className = 're-entity-text';
+        text.textContent = entity.text;
+        var spanEl = document.createElement('span');
+        spanEl.className = 're-entity-span';
+        spanEl.textContent = (entity.start != null && entity.end != null) ? '(' + entity.start + ', ' + entity.end + ')' : '';
+        row.appendChild(badge);
+        row.appendChild(text);
+        row.appendChild(spanEl);
+        row.appendChild(makeReDelBtn('data-entity-id', entity.id, 'reDeleteEntityAria'));
+        entityListEl.appendChild(row);
+      });
+    }
+  }
+
+  /* Relation selects */
+  var e1Sel = document.getElementById('reE1Select');
+  var relSel = document.getElementById('reRelationSelect');
+  var e2Sel = document.getElementById('reE2Select');
+  [e1Sel, e2Sel].forEach(function(sel, idx) {
+    if (!sel) return;
+    var prev = sel.value;
+    sel.textContent = '';
+    var ph = document.createElement('option');
+    ph.value = '';
+    ph.textContent = t(idx === 0 ? 'reSelectE1Placeholder' : 'reSelectE2Placeholder');
+    sel.appendChild(ph);
+    reState.entities.forEach(function(entity) {
+      var opt = document.createElement('option');
+      opt.value = entity.id;
+      opt.textContent = '[' + entity.type + '] ' + entity.text;
+      if (entity.id === prev) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  });
+  if (relSel) {
+    var prevRel = relSel.value;
+    relSel.textContent = '';
+    var relPh = document.createElement('option');
+    relPh.value = '';
+    relPh.textContent = t('reSelectRelPlaceholder');
+    relSel.appendChild(relPh);
+    RE_CONFIG.relation_types.forEach(function(rel) {
+      var opt = document.createElement('option');
+      opt.value = rel;
+      opt.textContent = rel;
+      if (rel === prevRel) opt.selected = true;
+      relSel.appendChild(opt);
+    });
+  }
+
+  var addBtn = document.getElementById('reAddTripleBtn');
+  if (addBtn) addBtn.disabled = reState.entities.length < 2;
+  var undoBtn = document.getElementById('reUndoBtn');
+  if (undoBtn) undoBtn.disabled = !reState.entities.length && !reState.triples.length;
+
+  /* Triple list */
+  var tripleCount = document.getElementById('reTripleCount');
+  if (tripleCount) tripleCount.textContent = reState.triples.length;
+  var tripleListEl = document.getElementById('reTripleList');
+  if (tripleListEl) {
+    tripleListEl.textContent = '';
+    if (!reState.triples.length) {
+      var emptyT = document.createElement('div');
+      emptyT.className = 're-empty-hint';
+      emptyT.textContent = t('reTripleEmpty');
+      tripleListEl.appendChild(emptyT);
+    } else {
+      reState.triples.forEach(function(triple, idx) {
+        var e1 = reState.entities.find(function(e) { return e.id === triple.e1Id; });
+        var e2 = reState.entities.find(function(e) { return e.id === triple.e2Id; });
+        if (!e1 || !e2) return;
+        var row = document.createElement('div');
+        row.className = 're-triple-row';
+        var num = document.createElement('span');
+        num.className = 're-triple-num';
+        num.textContent = (idx + 1) + '.';
+        var arrow1 = document.createElement('span');
+        arrow1.className = 're-triple-arrow';
+        arrow1.textContent = '→';
+        var relBadge = document.createElement('span');
+        relBadge.className = 're-relation-badge';
+        relBadge.textContent = triple.relation;
+        var arrow2 = document.createElement('span');
+        arrow2.className = 're-triple-arrow';
+        arrow2.textContent = '→';
+        row.appendChild(num);
+        row.appendChild(makeEntityBadge(e1));
+        row.appendChild(arrow1);
+        row.appendChild(relBadge);
+        row.appendChild(arrow2);
+        row.appendChild(makeEntityBadge(e2));
+        row.appendChild(makeReDelBtn('data-triple-id', triple.id, 'reDeleteTripleAria'));
+        tripleListEl.appendChild(row);
+      });
+    }
+  }
+
+  var tripleErr = document.getElementById('reTripleError');
+  if (tripleErr) tripleErr.classList.add('hidden');
+}
+
+function validateRelationAnnotation() {
+  if (!reState.entities.length) return { valid: false, error: t('reErrNoEntities') };
+  if (!reState.triples.length) return { valid: false, error: t('reErrNoTriples') };
+  return { valid: true };
+}
 
 /* ── Utils ────────────────────────────────────────────────────── */
 function t(key, vars) {
@@ -1671,17 +3190,38 @@ function applyTaskTypeSampleFixtures() {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   } else if (isVaTaskType(state.taskTypeKey)) {
     SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+  } else if (isNerTaskType()) {
+    SAMPLES = cloneSamples(NER_SAMPLE_FIXTURES);
+  } else if (isAspectListTaskType()) {
+    SAMPLES = cloneSamples(ASPECT_LIST_SAMPLE_FIXTURES);
+  } else if (isRelationExtractionTaskType()) {
+    SAMPLES = cloneSamples(RE_SAMPLE_FIXTURES);
+  } else if (isSentencePairsTaskType()) {
+    SAMPLES = cloneSamples(SENTENCE_PAIRS_SAMPLE_FIXTURES);
   } else {
     SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   }
   if (!Array.isArray(SAMPLES) || !SAMPLES.length) {
-    SAMPLES = cloneSamples(VA_SAMPLE_FIXTURES);
+    SAMPLES = cloneSamples(CLASSIFICATION_SAMPLE_FIXTURES);
   }
   if (state.currentIdx >= SAMPLES.length) state.currentIdx = SAMPLES.length - 1;
   if (state.currentIdx < 0) state.currentIdx = 0;
 }
 
 function createFallbackReviewerData(sample) {
+  if (isSentencePairsTaskType() && sample.spAnnotation) {
+    var ann = sample.spAnnotation;
+    var spResult = ann.response_format === 'scoring'
+      ? (state.lang === 'zh' ? '評分：' : 'Score: ') + String(ann.score)
+      : (ann.label || 'N/A');
+    return {
+      statsSummary: spResult,
+      rows: [
+        { annotator: 'Annotator A', scoreText: spResult, decision: null },
+        { annotator: 'Annotator B', scoreText: spResult, decision: null }
+      ]
+    };
+  }
   var labelValues = getSampleLabels(sample);
   var labelResult = labelValues.length
     ? labelValues.map(function(value) { return getCategoryDisplayName(value, state.lang || 'zh'); }).join(state.lang === 'zh' ? '、' : ', ')
@@ -2005,6 +3545,104 @@ function renderProgressSummary() {
   persistDryRunProgress();
 }
 
+function getReviewerAspectCorrections(row) {
+  if (!row.aspectCorrections) {
+    row.aspectCorrections = (row.aspectDiff || [])
+      .filter(function(d) { return d.op !== 'deleted' && d.op !== 'invalid'; })
+      .map(function(d) {
+        return {
+          id: generateAspectId(),
+          originalText: d.text || '',
+          text: d.text || '',
+          operation: d.op === 'added' ? 'added' : 'kept'
+        };
+      });
+    row.aspectCorrectionAudit = [];
+  }
+  if (!row.aspectCorrectionAudit) row.aspectCorrectionAudit = [];
+  return row.aspectCorrections;
+}
+
+function summarizeReviewerAspectCorrections(row) {
+  var audit = row.aspectCorrectionAudit || [];
+  var edits = (row.aspectCorrections || []).filter(function(c) {
+    return c.originalText && c.text && c.originalText !== c.text;
+  }).map(function(c) {
+    return t('rvAspectCorrectionEdited', { from: c.originalText, to: c.text });
+  });
+  return audit.concat(edits);
+}
+
+function renderReviewerAspectCorrectionEditor(row) {
+  var editor = document.createElement('div');
+  editor.className = 'rv-aspect-correction-editor';
+
+  var corrections = getReviewerAspectCorrections(row);
+  corrections.forEach(function(correction, idx) {
+    var item = document.createElement('div');
+    item.className = 'rv-aspect-correction-row';
+
+    var label = document.createElement('span');
+    label.className = 'rv-aspect-correction-label';
+    label.textContent = String(idx + 1);
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'rv-aspect-correction-input';
+    input.value = correction.text;
+    input.placeholder = t('rvAspectCorrectionPlaceholder');
+    input.addEventListener('input', function() {
+      correction.text = input.value;
+    });
+
+    var deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'rv-aspect-correction-delete';
+    deleteBtn.textContent = t('rvAspectCorrectionDelete');
+    deleteBtn.addEventListener('click', function() {
+      var deletedText = correction.text || correction.originalText || '';
+      row.aspectCorrections = corrections.filter(function(itemCorrection) {
+        return itemCorrection.id !== correction.id;
+      });
+      row.aspectCorrectionAudit = row.aspectCorrectionAudit || [];
+      row.aspectCorrectionAudit.push(t('rvAspectCorrectionDeleted', { text: deletedText }));
+      renderReviewerCard();
+    });
+
+    item.appendChild(label);
+    item.appendChild(input);
+    item.appendChild(deleteBtn);
+    editor.appendChild(item);
+  });
+
+  var addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'rv-aspect-correction-add';
+  addBtn.textContent = '+ ' + t('rvAspectCorrectionAdd');
+  addBtn.addEventListener('click', function() {
+    row.aspectCorrections.push({
+      id: generateAspectId(),
+      originalText: '',
+      text: '',
+      operation: 'added'
+    });
+    row.aspectCorrectionAudit = row.aspectCorrectionAudit || [];
+    row.aspectCorrectionAudit.push(t('rvAspectCorrectionAdded'));
+    renderReviewerCard();
+  });
+  editor.appendChild(addBtn);
+
+  var auditItems = summarizeReviewerAspectCorrections(row);
+  if (auditItems.length) {
+    var audit = document.createElement('div');
+    audit.className = 'rv-aspect-correction-audit';
+    audit.textContent = auditItems.join(' · ');
+    editor.appendChild(audit);
+  }
+
+  return editor;
+}
+
 function renderReviewerCard() {
   var container = el('rvAnnotatorRows');
   if (!container) return;
@@ -2036,9 +3674,6 @@ function renderReviewerCard() {
     meta.appendChild(subtitle);
 
     var scoreColorClass = vaRange ? getVaScoreColorClass(row.scoreText, vaRange) : '';
-    var score = document.createElement('span');
-    score.className = 'rv-score-pill' + (scoreColorClass ? ' ' + scoreColorClass : '');
-    score.textContent = row.scoreText;
 
     var actions = document.createElement('div');
     actions.className = 'rv-choice-group';
@@ -2060,7 +3695,68 @@ function renderReviewerCard() {
     });
 
     card.appendChild(meta);
-    card.appendChild(score);
+
+    if (isNerTaskType()) {
+      var nerDiffWrapper = document.createElement('div');
+      nerDiffWrapper.className = 'rv-aspect-diff';
+      var nerEntities = row.nerEntities || [];
+      nerEntities.forEach(function(ne) {
+        var item = document.createElement('div');
+        item.className = 'rv-aspect-diff-item';
+        var et = NER_CONFIG.entities.find(function(x) { return x.name === ne.type; });
+        var chip = document.createElement('span');
+        chip.className = 'rv-aspect-diff-op kept';
+        chip.style.cssText = et ? 'background:' + et.color + '22;color:' + et.color + ';border-radius:3px;padding:0 4px;' : '';
+        chip.textContent = ne.type;
+        var textSpan = document.createElement('span');
+        textSpan.className = 'rv-aspect-diff-text';
+        textSpan.textContent = ne.text;
+        item.appendChild(chip);
+        item.appendChild(textSpan);
+        nerDiffWrapper.appendChild(item);
+      });
+      if (nerEntities.length === 0) {
+        var emptyNote = document.createElement('div');
+        emptyNote.className = 'rv-aspect-diff-item';
+        emptyNote.textContent = t('nerEntityEmpty');
+        nerDiffWrapper.appendChild(emptyNote);
+      }
+      card.appendChild(nerDiffWrapper);
+    } else if (isAspectListTaskType()) {
+      var diffWrapper = document.createElement('div');
+      diffWrapper.className = 'rv-aspect-diff';
+      var diffTitle = document.createElement('div');
+      diffTitle.className = 'rv-aspect-diff-title';
+      diffTitle.textContent = t('rvAspectDiffTitle');
+      diffWrapper.appendChild(diffTitle);
+      var diffs = row.aspectDiff || [];
+      diffs.forEach(function(d) {
+        var item = document.createElement('div');
+        item.className = 'rv-aspect-diff-item';
+        var opBadge = document.createElement('span');
+        opBadge.className = 'rv-aspect-diff-op ' + (d.op || 'kept');
+        opBadge.textContent = d.op === 'added' ? '+' : d.op === 'deleted' ? '−' : d.op === 'edited' ? '≈' : d.op === 'invalid' ? '!' : '=';
+        var textSpan = document.createElement('span');
+        textSpan.className = 'rv-aspect-diff-text';
+        textSpan.textContent = d.text;
+        item.appendChild(opBadge);
+        item.appendChild(textSpan);
+        diffWrapper.appendChild(item);
+      });
+      card.appendChild(diffWrapper);
+      card.appendChild(renderReviewerAspectCorrectionEditor(row));
+    } else if (isSentencePairsTaskType()) {
+      var spPill = document.createElement('span');
+      spPill.className = 'rv-score-pill result-tag-neutral';
+      spPill.textContent = row.scoreText;
+      card.appendChild(spPill);
+    } else {
+      var score = document.createElement('span');
+      score.className = 'rv-score-pill' + (scoreColorClass ? ' ' + scoreColorClass : '');
+      score.textContent = row.scoreText;
+      card.appendChild(score);
+    }
+
     card.appendChild(actions);
     container.appendChild(card);
   });
@@ -2076,18 +3772,32 @@ function renderReviewerCard() {
 function renderSampleContent() {
   var sample = SAMPLES[state.currentIdx];
   setText('sampleSourceLabel', t('sampleSourceLabel'));
-  setText('sampleText', sample.text);
+  if (!isNerTaskType() && !isSentencePairsTaskType()) {
+    setText('sampleText', sample.text);
+  }
 
   el('prevBtn').disabled = state.currentIdx === 0;
   el('nextBtn').disabled = state.currentIdx === SAMPLES.length - 1;
 
-  if (isVaTaskType(state.taskTypeKey)) {
+  if (isSentencePairsTaskType()) {
+    initSentencePairsState(sample);
+    renderSentencePairsPanel();
+  } else if (isVaTaskType(state.taskTypeKey)) {
     var valence = (sample.va && sample.va.valence != null) ? sample.va.valence : null;
     var arousal = (sample.va && sample.va.arousal != null) ? sample.va.arousal : null;
     buildVaScaleOptions('vaValenceScale', 'va_valence', valence);
     buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
     setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
     setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
+  } else if (isNerTaskType()) {
+    initNerState(sample);
+    renderNerPanel();
+  } else if (isAspectListTaskType()) {
+    initAspectListState(sample);
+    renderAspectListPanel();
+  } else if (isRelationExtractionTaskType()) {
+    initRelationState(sample);
+    renderRelationPanel();
   } else {
     var selectedLabels = {};
     getSampleLabels(sample).forEach(function(value) { selectedLabels[value] = true; });
@@ -2108,18 +3818,49 @@ function renderSampleContent() {
 
 function renderTaskTypeInterface() {
   var isVa = isVaTaskType(state.taskTypeKey);
-  var config = TASK_TYPE_UI_CONFIG[state.taskTypeKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
-  el('classificationAnnotatorPanel').classList.toggle('hidden', isVa);
-  el('vaAnnotatorPanel').classList.toggle('hidden', !isVa);
+  var isNer = isNerTaskType();
+  var isAspectList = isAspectListTaskType();
+  var isRE = isRelationExtractionTaskType();
+  var isSP = isSentencePairsTaskType();
+  var configKey = isNer ? 'ner' : state.taskTypeKey;
+  var config = TASK_TYPE_UI_CONFIG[configKey] || TASK_TYPE_UI_CONFIG.single_sentence_classification;
+
+  var classPanel = document.getElementById('classificationAnnotatorPanel');
+  var vaPanel = document.getElementById('vaAnnotatorPanel');
+  var aspectPanel = document.getElementById('aspectListAnnotatorPanel');
+  var rePanel = document.getElementById('relationAnnotatorPanel');
+  var nerPanel = document.getElementById('nerAnnotatorPanel');
+  var spPanel = document.getElementById('sentencePairsAnnotatorPanel');
+  var textCard = document.getElementById('sampleTextCard');
+  var spReviewerSourceCard = document.getElementById('sentencePairsReviewerSourceCard');
+
+  if (classPanel) classPanel.classList.toggle('hidden', isVa || isAspectList || isRE || isNer || isSP);
+  if (vaPanel) vaPanel.classList.toggle('hidden', !isVa);
+  if (aspectPanel) aspectPanel.classList.toggle('hidden', !isAspectList);
+  if (rePanel) rePanel.classList.toggle('hidden', !isRE);
+  if (nerPanel) nerPanel.classList.toggle('hidden', !isNer);
+  if (spPanel) spPanel.classList.toggle('hidden', !isSP);
+  if (textCard) textCard.classList.toggle('hidden', isSP);
+  if (spReviewerSourceCard) spReviewerSourceCard.classList.toggle('hidden', !(isSP && state.taskRole === 'reviewer'));
+
   el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
-  if (!isVa) {
-    clearGuidelineImagePreview();
-  }
+  if (!isVa) clearGuidelineImagePreview();
+
   setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
+  setText('sentencePairsReviewerSourceTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
   setText('mobileGuidelineText', config.mobileGuideline[state.lang] || config.mobileGuideline.zh);
+  if (isNer) {
+    setText('rvReviewNote', t('rvNerReviewNote'));
+  } else if (isAspectList) {
+    setText('rvReviewNote', t('rvAspectReviewNote'));
+  } else if (isSP) {
+    setText('rvReviewNote', t('rvSpReviewNote'));
+  } else {
+    setText('rvReviewNote', t('rvReviewNote'));
+  }
 }
 
 function clearGuidelineImagePreview() {
@@ -2156,10 +3897,12 @@ function renderGuidelineCollapseState() {
 
 function renderRoleControls() {
   var isAnnotator = state.taskRole === 'annotator';
+  var showSentencePairReviewerSource = !isAnnotator && isSentencePairsTaskType();
   el('annotatorCard').classList.toggle('hidden', !isAnnotator);
   el('reviewerCard').classList.toggle('hidden', isAnnotator);
   el('annotatorActions').classList.toggle('hidden', !isAnnotator);
   el('reviewerActions').classList.toggle('hidden', isAnnotator);
+  el('sentencePairsReviewerSourceCard').classList.toggle('hidden', !showSentencePairReviewerSource);
 }
 
 function applyLang(lang) {
@@ -2197,6 +3940,7 @@ function applyLang(lang) {
     'guidelinePreviewLabelTech', 'guidelinePreviewDescTech',
     'guidelinePreviewFooter',
     'mobileDrawerTitle', 'mobileGuidelineText',
+    'nerEntityTypeLabel', 'nerEntityListLabel',
   ];
   textIds.forEach(function(id) {
     var key = id;
@@ -2294,6 +4038,127 @@ function bindEvents() {
   el('submitBtn').addEventListener('click', function() {
     var sample = SAMPLES[state.currentIdx];
     var toValue = '';
+    if (isNerTaskType()) {
+      var nerValidation = validateNerAnnotation();
+      if (!nerValidation.valid) { showToast(nerValidation.error, 'error'); return; }
+      sample.nerAnnotation = {
+        entities: nerState.entities.map(function(e) { return { id: e.id, text: e.text, type: e.type, start: e.start, end: e.end }; }),
+        version: Date.now()
+      };
+      var typeCounts = {};
+      nerState.entities.forEach(function(e) { typeCounts[e.type] = (typeCounts[e.type] || 0) + 1; });
+      toValue = nerState.entities.length + ' entities: ' + Object.keys(typeCounts).map(function(k) { return k + '×' + typeCounts[k]; }).join(', ');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
+    if (isAspectListTaskType()) {
+      var validation = validateAspectList();
+      if (!validation.valid) { showToast(validation.errors[0], 'error'); return; }
+      var effectiveSentence = getEffectiveSentence();
+      sample.aspectAnnotation = {
+        original_sentence: aspectListState.originalSentence,
+        corrected_sentence: aspectListState.correctedSentence || null,
+        aspects: aspectListState.rows.map(function(r) {
+          return { id: r.id, text: r.text, exact_match_status: r.exactMatchStatus,
+            sentiment_context_checked: r.sentimentChecked, operation: 'kept' };
+        }),
+        version: Date.now()
+      };
+      toValue = aspectListState.rows.length + ' aspects：' + aspectListState.rows.map(function(r) { return r.text; }).join('、');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
+    if (isSentencePairsTaskType()) {
+      var spConfig = getSpConfig();
+      if (spConfig.response_format === 'classification' && !spAnnotationState.label) {
+        showToast(t('spErrNoLabel'), 'error'); return;
+      }
+      if (spConfig.response_format === 'scoring' && spAnnotationState.score == null) {
+        showToast(t('spErrNoScore'), 'error'); return;
+      }
+      sample.spAnnotation = {
+        pair_mode: spConfig.pair_mode,
+        response_format: spConfig.response_format,
+        label: spAnnotationState.label,
+        score: spAnnotationState.score,
+        unsure: spAnnotationState.unsure,
+        note: el('annotationNote').value.trim() || null,
+        version: Date.now()
+      };
+      toValue = spConfig.response_format === 'scoring'
+        ? (state.lang === 'zh' ? '評分：' : 'Score: ') + String(spAnnotationState.score)
+        : (spAnnotationState.label || '');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
+    if (isRelationExtractionTaskType()) {
+      var reValidation = validateRelationAnnotation();
+      if (!reValidation.valid) { showToast(reValidation.error, 'error'); return; }
+      sample.reAnnotation = {
+        entities: reState.entities.map(function(e) { return { id: e.id, text: e.text, type: e.type }; }),
+        triples: reState.triples.map(function(tr) { return { id: tr.id, e1Id: tr.e1Id, relation: tr.relation, e2Id: tr.e2Id }; }),
+        version: Date.now()
+      };
+      toValue = reState.triples.length + ' triples：' + reState.triples.map(function(tr) {
+        var e1 = reState.entities.find(function(e) { return e.id === tr.e1Id; });
+        var e2 = reState.entities.find(function(e) { return e.id === tr.e2Id; });
+        return '(' + (e1 ? e1.type + ':' + e1.text : '?') + ')→' + tr.relation + '→(' + (e2 ? e2.type + ':' + e2.text : '?') + ')';
+      }).join('；');
+      sample.status = 'submitted';
+      sample.history.push({ actor: 'Annotator A',
+        time: '04-28 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0'),
+        action: 'submitted', from: null, to: toValue });
+      showToast(t('toastSubmitted'), 'success');
+      renderProgressSummary();
+      renderSampleList();
+      if (countSubmitted() >= SAMPLES.length) {
+        markTaskFullySubmitted();
+        showToast(t('toastAllSubmittedRedirect'), 'success');
+        setTimeout(function() { window.location.href = buildAnnotationListUrl(); }, 500);
+        return;
+      }
+      if (state.currentIdx < SAMPLES.length - 1) { setTimeout(function() { selectSample(state.currentIdx + 1); }, 400); }
+      return;
+    }
     if (isVaTaskType(state.taskTypeKey)) {
       var v = readSelectedVaValue('va_valence');
       var a = readSelectedVaValue('va_arousal');
@@ -2368,12 +4233,24 @@ function bindEvents() {
 
     var timeLabel = '04-23 ' + new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2, '0');
     reviewerData.rows.forEach(function(row) {
+      var correctionSummary = '';
+      if (isAspectListTaskType()) {
+        getReviewerAspectCorrections(row);
+        var correctionTexts = row.aspectCorrections
+          .map(function(c) { return c.text.trim(); })
+          .filter(Boolean);
+        row.reviewerCorrectedAspects = correctionTexts;
+        row.reviewerCorrectionAudit = summarizeReviewerAspectCorrections(row);
+        correctionSummary = row.reviewerCorrectionAudit.length
+          ? '；' + row.reviewerCorrectionAudit.join(' · ')
+          : '';
+      }
       sample.history.push({
         actor: 'Reviewer B',
         time: timeLabel,
         action: row.decision === 'approve' ? 'approved' : 'rejected',
         from: row.annotator + ' ' + row.scoreText,
-        to: row.decision === 'approve' ? t('rvApproveLabel') : t('rvRejectLabel'),
+        to: (row.decision === 'approve' ? t('rvApproveLabel') : t('rvRejectLabel')) + correctionSummary,
       });
     });
     showToast(t('toastReviewSubmitted'), 'success');
@@ -2423,7 +4300,188 @@ function bindEvents() {
     if (e.detail && e.detail.lang) { applyLang(e.detail.lang); }
   });
 
+  // Panel event bindings (delegated via annotationPanelMount)
+  var annotationMount = document.getElementById('annotationPanelMount');
+  if (annotationMount) {
+    annotationMount.addEventListener('click', function(e) {
+      /* Aspect list */
+      var addBtn = e.target.closest('#aspectAddBtn');
+      if (addBtn && !addBtn.disabled && isAspectListTaskType()) {
+        aspectListState.rows.push({ id: generateAspectId(), text: '', exactMatchStatus: 'empty', sentimentChecked: false });
+        renderAspectListPanel();
+        var inputs = document.querySelectorAll('.aspect-text-input');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }
+
+      /* NER — entity type button */
+      var etBtn = e.target.closest('[data-entity-type]');
+      if (etBtn && isNerTaskType()) {
+        if (!nerState.pendingText.trim()) { showToast(t('toastSelectTextFirst'), 'error'); return; }
+        var nerEtName = etBtn.getAttribute('data-entity-type');
+        var nerEtConfig = NER_CONFIG.entities.find(function(x) { return x.name === nerEtName; });
+        nerState.entities.push({ id: generateNerId(), text: nerState.pendingText.trim(), type: nerEtName, color: nerEtConfig ? nerEtConfig.color : '#94A3B8', start: nerState.pendingStart, end: nerState.pendingEnd });
+        nerState.pendingText = '';
+        nerState.pendingStart = null;
+        nerState.pendingEnd = null;
+        renderNerPanel();
+        return;
+      }
+
+      /* NER — delete entity */
+      var nerDelEntityBtn = e.target.closest('[data-entity-id]');
+      if (nerDelEntityBtn && isNerTaskType()) {
+        var nerEntityId = nerDelEntityBtn.getAttribute('data-entity-id');
+        nerState.entities = nerState.entities.filter(function(x) { return x.id !== nerEntityId; });
+        renderNerPanel();
+        return;
+      }
+
+      /* Relation extraction — entity type button */
+      if (etBtn && isRelationExtractionTaskType()) {
+        if (!reState.pendingText.trim()) { showToast(t('toastSelectTextFirst'), 'error'); return; }
+        var etName = etBtn.getAttribute('data-entity-type');
+        var etConfig = RE_CONFIG.entity_types.find(function(x) { return x.name === etName; });
+        reState.entities.push({ id: generateReId(), text: reState.pendingText.trim(), type: etName, color: etConfig ? etConfig.color : '#94A3B8', start: reState.pendingStart, end: reState.pendingEnd });
+        reState.pendingText = '';
+        reState.pendingStart = null;
+        reState.pendingEnd = null;
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — delete entity */
+      var delEntityBtn = e.target.closest('[data-entity-id]');
+      if (delEntityBtn && isRelationExtractionTaskType()) {
+        var entityId = delEntityBtn.getAttribute('data-entity-id');
+        reState.entities = reState.entities.filter(function(x) { return x.id !== entityId; });
+        reState.triples = reState.triples.filter(function(x) { return x.e1Id !== entityId && x.e2Id !== entityId; });
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — delete triple */
+      var delTripleBtn = e.target.closest('[data-triple-id]');
+      if (delTripleBtn && isRelationExtractionTaskType()) {
+        var tripleId = delTripleBtn.getAttribute('data-triple-id');
+        reState.triples = reState.triples.filter(function(x) { return x.id !== tripleId; });
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — add triple */
+      var reAddBtn = e.target.closest('#reAddTripleBtn');
+      if (reAddBtn && !reAddBtn.disabled && isRelationExtractionTaskType()) {
+        var e1Id = document.getElementById('reE1Select') ? document.getElementById('reE1Select').value : '';
+        var relation = document.getElementById('reRelationSelect') ? document.getElementById('reRelationSelect').value : '';
+        var e2Id = document.getElementById('reE2Select') ? document.getElementById('reE2Select').value : '';
+        var errEl = document.getElementById('reTripleError');
+        if (!e1Id || !relation || !e2Id) {
+          if (errEl) { errEl.textContent = t('reErrMissingField'); errEl.classList.remove('hidden'); }
+          return;
+        }
+        if (e1Id === e2Id) {
+          if (errEl) { errEl.textContent = t('reErrSameEntity'); errEl.classList.remove('hidden'); }
+          return;
+        }
+        reState.triples.push({ id: generateReId(), e1Id: e1Id, relation: relation, e2Id: e2Id });
+        renderRelationPanel();
+        return;
+      }
+
+      /* Relation extraction — undo */
+      var reUndoBtn = e.target.closest('#reUndoBtn');
+      if (reUndoBtn && isRelationExtractionTaskType()) {
+        if (reState.triples.length > 0) { reState.triples.pop(); }
+        else if (reState.entities.length > 0) { reState.entities.pop(); }
+        renderRelationPanel();
+        return;
+      }
+    });
+
+    annotationMount.addEventListener('input', function(e) {
+      var ta = e.target.closest('#aspectCorrectedSentence');
+      if (ta && isAspectListTaskType()) {
+        aspectListState.correctedSentence = ta.value;
+        revalidateAspectRows();
+        renderAspectListPanel();
+      }
+    });
+  }
+
+  /* Text selection for NER and relation extraction */
+  var sampleTextEl = document.getElementById('sampleText');
+  if (sampleTextEl) {
+    sampleTextEl.addEventListener('mouseup', function() {
+      var selection = window.getSelection();
+      var selected = selection ? selection.toString().trim() : '';
+      if (!selected.length) return;
+      if (isNerTaskType()) {
+        nerState.pendingText = selected;
+        var nerRange = selection.getRangeAt(0);
+        var nerPre = nerRange.cloneRange();
+        nerPre.selectNodeContents(sampleTextEl);
+        nerPre.setEnd(nerRange.startContainer, nerRange.startOffset);
+        nerState.pendingStart = nerPre.toString().length;
+        nerState.pendingEnd = nerState.pendingStart + selected.length;
+        renderNerPanel();
+      } else if (isRelationExtractionTaskType()) {
+        reState.pendingText = selected;
+        var range = selection.getRangeAt(0);
+        var pre = range.cloneRange();
+        pre.selectNodeContents(sampleTextEl);
+        pre.setEnd(range.startContainer, range.startOffset);
+        reState.pendingStart = pre.toString().length;
+        reState.pendingEnd = reState.pendingStart + selected.length;
+        renderRelationPanel();
+      }
+    });
+  }
+
   setInterval(triggerAutosave, 15000);
+}
+
+/* ── Panel Loader (mirrors task-detail pattern) ───────────────── */
+var ANNOTATION_PANEL_PATHS = {
+  classification:         './annotation-workspace.panels/classification.html',
+  'va-scoring':           './annotation-workspace.panels/va-scoring.html',
+  'aspect-list':          './annotation-workspace.panels/aspect-list.html',
+  'relation-extraction':  './annotation-workspace.panels/relation-extraction.html',
+  'ner-labeling':         './annotation-workspace.panels/ner-labeling.html',
+  'sentence-pairs':       './annotation-workspace.panels/sentence-pairs.html'
+};
+
+function appendAnnotationPanel(key) {
+  var path = ANNOTATION_PANEL_PATHS[key];
+  if (!path) return Promise.resolve();
+  return fetch(path, { cache: 'no-store' })
+    .then(function(res) {
+      if (!res.ok) throw new Error('Failed to load annotation panel: ' + path);
+      return res.text();
+    })
+    .then(function(html) {
+      var mount = document.getElementById('annotationPanelMount');
+      if (!mount) return;
+      var wrapper = document.createElement('div');
+      var trimmed = html.trim();
+      var text = document.createTextNode('');
+      // Parse HTML safely via a detached container
+      var tmp = document.createElement('div');
+      tmp.setAttribute('data-panel', key);
+      // Use a template element to avoid script execution
+      var tpl = document.createElement('template');
+      tpl.innerHTML = trimmed;
+      var frag = tpl.content;
+      mount.appendChild(frag);
+    });
+}
+
+function loadAllAnnotationPanels() {
+  var mount = document.getElementById('annotationPanelMount');
+  if (!mount) return Promise.resolve();
+  mount.textContent = '';
+  return ['classification', 'va-scoring', 'aspect-list', 'relation-extraction', 'ner-labeling', 'sentence-pairs'].reduce(function(p, key) {
+    return p.then(function() { return appendAnnotationPanel(key); });
+  }, Promise.resolve());
 }
 
 /* ── Init ─────────────────────────────────────────────────────── */
@@ -2444,6 +4502,7 @@ function applyLaunchContextFromQuery() {
   var taskType = params.get('task_type') || getStoredActiveTaskType();
   var taskId = params.get('task_id');
   var sampleId = params.get('sample_id');
+  var subType = params.get('sub_type');
 
   if (role === 'annotator' || role === 'reviewer') {
     state.taskRole = role;
@@ -2455,6 +4514,9 @@ function applyLaunchContextFromQuery() {
     state.taskId = taskId.trim();
   }
   state.taskTypeKey = normalizeTaskTypeKey(taskType);
+  if (subType === 'ner' || subType === 'aspect_list') {
+    state.subType = subType;
+  }
   setStoredActiveTaskType(state.taskTypeKey);
 
   return sampleId;
@@ -2464,23 +4526,31 @@ function init() {
   var pendingSampleId = applyLaunchContextFromQuery();
   applyTaskTypeSampleFixtures();
   var matchedSampleIdx = findSampleIndexByQuerySampleId(pendingSampleId);
-  if (matchedSampleIdx >= 0) {
-    state.currentIdx = matchedSampleIdx;
-  }
+  if (matchedSampleIdx >= 0) state.currentIdx = matchedSampleIdx;
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
-  applyLang(state.lang);
-  if (!hasSeenGuidelineModal()) {
-    el('guidelineModal').classList.remove('hidden');
-  }
-  renderSampleContent();
-  renderRoleControls();
-  renderProgressSummary();
-  bindEvents();
 
-  if (window.LabelSuiteAnalytics) {
-    window.LabelSuiteAnalytics.init({ page: 'annotation-workspace' });
-    window.LabelSuiteAnalytics.trackPageView('annotation-workspace', getTrackingContext);
-  }
+  loadAllAnnotationPanels().then(function() {
+    applyLang(state.lang);
+    if (!hasSeenGuidelineModal()) el('guidelineModal').classList.remove('hidden');
+    renderSampleContent();
+    renderRoleControls();
+    renderProgressSummary();
+    bindEvents();
+
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'annotation-workspace' });
+      window.LabelSuiteAnalytics.trackPageView('annotation-workspace', getTrackingContext);
+    }
+  }).catch(function(err) {
+    // Fallback: run without panels if fetch fails (e.g. file:// protocol)
+    console.warn('Panel load failed, running inline fallback:', err);
+    applyLang(state.lang);
+    if (!hasSeenGuidelineModal()) el('guidelineModal').classList.remove('hidden');
+    renderSampleContent();
+    renderRoleControls();
+    renderProgressSummary();
+    bindEvents();
+  });
 }
 
 init();

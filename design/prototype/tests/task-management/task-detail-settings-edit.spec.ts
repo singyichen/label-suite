@@ -68,6 +68,60 @@ test.describe('Task detail settings edit state', () => {
     await expect(page.locator('#settingsConfigDynamicRows .kv-dl-key:has-text("允許重疊標記") .required')).toHaveCount(0);
   });
 
+  test('renders aspect_list settings with grouped visual editor and row preview', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL);
+
+    await page.evaluate(() => {
+      const win = window as typeof window & {
+        TASK_DATA: { taskTypeKey: string; configContent: string };
+        renderOverview: () => void;
+      };
+      win.TASK_DATA.taskTypeKey = 'sequence_labeling';
+      win.TASK_DATA.configContent = [
+        'subtype: aspect_list',
+        'input_field: sentence',
+        'aspect_list_field: aspects',
+        'allow_sentence_edit: false',
+        'allow_aspect_add: true',
+        'allow_aspect_delete: true',
+        'require_exact_match_in_sentence: true',
+        'min_aspects: 1',
+        'max_aspects: 10',
+        'require_sentiment_context_check: true',
+      ].join('\n');
+      win.renderOverview();
+    });
+
+    const summary = page.locator('#settingsConfigView');
+    await expect(summary).toContainText('子類型');
+    await expect(summary).toContainText('Aspect List 抽取／校正');
+    await expect(summary).toContainText('輸入欄位名稱');
+    await expect(summary).toContainText('sentence');
+    await expect(summary).toContainText('輸出欄位名稱');
+    await expect(summary).toContainText('aspects');
+    await expect(summary).toContainText('提示前後文情緒描述核查');
+    await expect(summary).not.toContainText('實體類型');
+    await expect(summary).not.toContainText('標記格式');
+
+    await page.locator('#settingsEditBtn').click();
+
+    const form = page.locator('#settingsEditForm');
+    await expect(form).toContainText('欄位對應');
+    await expect(form).toContainText('Aspect 編輯規則');
+    await expect(form).toContainText('數量限制');
+    await expect(form.locator('#settingsTemplateBtns .template-btn')).toHaveCount(2);
+    await expect(form.locator('#settingsTemplateBtns')).toContainText('套用預設範本：NER 命名實體辨識');
+    await expect(form.locator('#settingsTemplateBtns')).toContainText('套用預設範本：Aspect List 抽取／校正');
+    await expect(form.locator('.settings-schema-toggle-list .settings-toggle-card')).toHaveCount(5);
+
+    const preview = page.locator('#settingsAnnotationPreview');
+    await expect(preview).toContainText('句子');
+    await expect(preview).toContainText('Aspect List');
+    await expect(preview.locator('.aspect-list-preview-row')).toHaveCount(3);
+    await expect(preview.locator('.aspect-list-preview-add')).toBeVisible();
+    await expect(preview).toContainText('軟性指引');
+  });
+
   test('matches task-new step2 interaction model', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 

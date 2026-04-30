@@ -296,11 +296,11 @@
         not_started: '尚未開始',
       },
       taskTypeLabel: {
-        single_sentence_classification: '單句分類',
-        single_sentence_va_scoring: 'VA 評分',
-        sequence_labeling: '序列標記',
-        relation_extraction: '關係抽取',
-        sentence_pairs: '句對任務',
+        single_sentence_classification: '單句分類（含多標籤）',
+        single_sentence_va_scoring: '單句 VA 雙維度評分（Valence / Arousal）',
+        sequence_labeling: '序列標記（含 Aspect / NER）',
+        relation_extraction: '關係抽取（Entity + Relation + Triple）',
+        sentence_pairs: '句對任務（相似度 / 蘊含）',
       },
       roleLabel: {
         project_leader: '專案負責人',
@@ -329,11 +329,11 @@
         not_started: 'Not started',
       },
       taskTypeLabel: {
-        single_sentence_classification: 'Classification',
-        single_sentence_va_scoring: 'VA Scoring',
-        sequence_labeling: 'Sequence',
-        relation_extraction: 'Relation',
-        sentence_pairs: 'Sentence Pairs',
+        single_sentence_classification: 'Single Sentence Classification (Multi-label)',
+        single_sentence_va_scoring: 'Single-sentence VA Scoring (Valence / Arousal)',
+        sequence_labeling: 'Sequence Labeling (Aspect / NER)',
+        relation_extraction: 'Relation Extraction (Entity + Relation + Triple)',
+        sentence_pairs: 'Sentence Pairs (Similarity / Entailment)',
       },
       roleLabel: {
         project_leader: 'Project Leader',
@@ -388,6 +388,15 @@
       taskType: 'sentence_pairs',
       completionRate: 58,
       iaaStatus: 'pending',
+      membershipRole: 'reviewer',
+    },
+    {
+      id: 'T006',
+      nameZh: 'NER 命名實體辨識',
+      nameEn: 'NER Named Entity Recognition',
+      taskType: 'sequence_labeling',
+      completionRate: 71,
+      iaaStatus: 'pass',
       membershipRole: 'reviewer',
     },
   ];
@@ -525,7 +534,7 @@
       trackAnalytics('prototype_dataset_card_clicked', { task_id: task.id, iaa_status: task.iaaStatus });
       showToast(t('toastNavigating'));
       window.setTimeout(function () {
-        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=quality';
+        window.location.href = './dataset-analysis-detail.html?task_id=' + encodeURIComponent(task.id) + '&tab=stats';
       }, 220);
     }
     tr.addEventListener('click', handleRowActivate);

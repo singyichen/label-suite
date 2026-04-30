@@ -161,11 +161,12 @@
       background: #EDE9FE;
       border-color: #DDD6FE;
     }
-    .badge-task-type {
-      color: #0E7490;
-      background: #ECFEFF;
-      border-color: #A5F3FC;
-    }
+    .badge-task-type-single      { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
+    .badge-task-type-sequence    { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
+    .badge-task-type-relation    { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
+    .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
+    .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
+    .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .progress {
       height: 6px;
       border-radius: var(--radius-full);
@@ -499,7 +500,7 @@
         </div>
         <div class="task-item-meta">
           <div class="task-item-badges">
-            <span class="badge badge-task-type" id="taskInfoTaskType">-</span>
+            <span class="badge badge-task-type-default" id="taskInfoTaskType">-</span>
             <span class="badge" id="taskInfoRunType">-</span>
             <span class="badge" id="taskInfoStatus">-</span>
           </div>
@@ -599,12 +600,12 @@
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
   var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
-  var TASK_TYPE_TEXT = {
-    single_sentence_classification: '單句分類',
-    single_sentence_va_scoring: '單句 VA 評分',
-    sequence_labeling: '序列標註',
-    relation_extraction: '關係抽取',
-    sentence_pairs: '句對任務'
+  var TASK_TYPE_META = {
+    single_sentence_classification: { text: '單句分類（含多標籤）', badgeClass: 'badge-task-type-single' },
+    single_sentence_va_scoring: { text: '單句 VA 雙維度評分（Valence / Arousal）', badgeClass: 'badge-task-type-scoring' },
+    sequence_labeling: { text: '序列標記（含 Aspect / NER）', badgeClass: 'badge-task-type-sequence' },
+    relation_extraction: { text: '關係抽取（Entity + Relation + Triple）', badgeClass: 'badge-task-type-relation' },
+    sentence_pairs: { text: '句對任務（相似度 / 蘊含）', badgeClass: 'badge-task-type-pairs' }
   };
 
   var TASKS_BY_ROLE = {
@@ -632,7 +633,7 @@
         title: '情感 VA 雙維度評分',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
-        dashboardTaskTypeText: '單句 VA 評分',
+        dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
         dashboardDetail: '已完成 42% · 今日 18 筆 · 平均速度 4.2',
         dashboardProgress: 42,
         dashboardStatusText: '待繼續',
@@ -643,6 +644,80 @@
           { sampleId: 'A2-003', status: 'saved', completedAt: '2026-04-23 09:22', annotatedBy: 'Mandy', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。' },
           { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。' },
           { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-A3',
+        title: '產品評論序列標註（NER / Aspect）',
+        taskType: 'sequence_labeling',
+        subType: 'aspect_list',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
+        dashboardDetail: '已完成 64% · 今日 31 筆 · 平均速度 2.8',
+        dashboardProgress: 64,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 10:30', annotatedBy: 'Mandy', text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。' },
+          { sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 10:45', annotatedBy: 'Mandy', text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。' },
+          { sampleId: 'AL-003', status: 'saved', completedAt: '2026-04-23 11:00', annotatedBy: 'Mandy', text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。' },
+          { sampleId: 'AL-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。' },
+          { sampleId: 'AL-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-A5',
+        title: '句對相似度 / 蘊含判定',
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
+        dashboardDetail: '已完成 58% · 今日 25 筆 · 平均速度 3.4',
+        dashboardProgress: 58,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'A5-001', status: 'submitted', completedAt: '2026-04-28 10:00', annotatedBy: 'Mandy', text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。' },
+          { sampleId: 'A5-002', status: 'submitted', completedAt: '2026-04-28 10:15', annotatedBy: 'Mandy', text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。' },
+          { sampleId: 'A5-003', status: 'saved', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。' },
+          { sampleId: 'A5-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。' },
+          { sampleId: 'A5-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-A6',
+        title: 'NER 命名實體辨識',
+        taskType: 'sequence_labeling',
+        subType: 'ner',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
+        dashboardDetail: '已完成 28% · 今日 12 筆 · 平均速度 2.5',
+        dashboardProgress: 28,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          { sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。' },
+          { sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。' },
+          { sampleId: 'NER-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。' },
+          { sampleId: 'NER-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。' },
+          { sampleId: 'NER-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。' }
+        ]
+      },
+      {
+        taskId: 'TASK-015-A4',
+        title: '醫療關係抽取（Entity / Triple）',
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
+        dashboardDetail: '已完成 37% · 今日 14 筆 · 平均速度 5.1',
+        dashboardProgress: 37,
+        dashboardStatusText: '待繼續',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          { sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。' },
+          { sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。' },
+          { sampleId: 'RE-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。' },
+          { sampleId: 'RE-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。' },
+          { sampleId: 'RE-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。' }
         ]
       }
     ],
@@ -716,7 +791,7 @@
         title: '情感 VA 雙維度評分',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
-        dashboardTaskTypeText: '單句 VA 評分',
+        dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
         dashboardDetail: '待審 8 筆 · 進度 52% · IAA 0.78',
         dashboardProgress: 52,
         dashboardStatusText: '進行中',
@@ -779,6 +854,246 @@
               { username: '113450022', result: '[6.5, 5.5]', reviewStatus: null },
               { username: 'tony0950127', result: '[6.5, 5.5]', reviewStatus: null }
             ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R3',
+        taskAliases: ['TASK-015-A3'],
+        title: '產品評論序列標註（NER / Aspect）',
+        taskType: 'sequence_labeling',
+        subType: 'aspect_list',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
+        dashboardDetail: '待審 15 筆 · 進度 61% · IAA 0.83',
+        dashboardProgress: 61,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 11:30',
+            text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+            labelStats: '螢幕×3 · 電池續航力×2 · 整體設計×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '螢幕、電池續航力、價格', reviewStatus: null },
+              { username: '113450022', result: '螢幕、電池壽命、整體設計', reviewStatus: null },
+              { username: 'tony0950127', result: '螢幕、電池續航力、整體設計', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 11:45',
+            text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+            labelStats: '環境×3 · 菜色選擇×2 · 服務員的態度×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '環境、菜色選擇、服務態度', reviewStatus: 'approved' },
+              { username: '113450022', result: '環境、服務員的態度、用餐體驗', reviewStatus: null },
+              { username: 'hui', result: '環境、菜色選擇、服務員的態度', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-003', status: 'pending', completedAt: '-',
+            text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+            labelStats: '早餐品質×3 · 停車場×2 · 隔音效果×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '早餐品質、停車場、隔音效果', reviewStatus: null },
+              { username: '113450022', result: '早餐品質、停車空間、房間隔音', reviewStatus: null },
+              { username: 'tony0950127', result: '早餐品質、停車場、隔音', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-004', status: 'pending', completedAt: '-',
+            text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+            labelStats: '介面設計×3 · 操作流程×3 · 客戶支援×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '介面設計、操作流程、客戶支援', reviewStatus: null },
+              { username: '113450022', result: '介面設計、操作流程順暢、客服回應速度', reviewStatus: null },
+              { username: 'hui', result: '介面、操作流程、客戶支援', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'AL-005', status: 'pending', completedAt: '-',
+            text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+            labelStats: '音質×3 · 佩戴舒適度×3 · 降噪功能×3',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '音質、佩戴舒適度、主動降噪', reviewStatus: null },
+              { username: '113450022', result: '音質表現、舒適度、降噪功能', reviewStatus: null },
+              { username: 'tony0950127', result: '音質、佩戴舒適度、主動降噪功能', reviewStatus: null }
+            ]
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R5',
+        taskAliases: ['TASK-015-A5'],
+        title: '句對相似度 / 蘊含判定',
+        taskType: 'sentence_pairs',
+        runType: 'dry_run',
+        dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
+        dashboardDetail: '待審 11 筆 · 進度 56% · IAA 0.82',
+        dashboardProgress: 56,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'R5-001', status: 'submitted', completedAt: '2026-04-28 10:00',
+            text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+            labelStats: '等價×3 · 相關×2',
+            annotators: [
+              { username: 'kioleemg12', result: '等價', reviewStatus: null },
+              { username: '113450022', result: '相關', reviewStatus: null },
+              { username: 'tony0950127', result: '等價', reviewStatus: null },
+              { username: 'hui', result: '等價', reviewStatus: null },
+              { username: 'chiao11', result: '相關', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R5-002', status: 'submitted', completedAt: '2026-04-28 10:15',
+            text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。',
+            labelStats: '等價×4 · 相關×1',
+            annotators: [
+              { username: 'kioleemg12', result: '等價', reviewStatus: null },
+              { username: '113450022', result: '等價', reviewStatus: null },
+              { username: 'tony0950127', result: '等價', reviewStatus: null },
+              { username: 'hui', result: '相關', reviewStatus: null },
+              { username: 'mandy610425', result: '等價', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R5-003', status: 'saved', completedAt: '2026-04-28 10:30',
+            text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。',
+            labelStats: '無關×3 · 相關×1',
+            annotators: [
+              { username: 'kioleemg12', result: '無關', reviewStatus: null },
+              { username: '113450022', result: '無關', reviewStatus: null },
+              { username: 'tony0950127', result: '相關', reviewStatus: null },
+              { username: 'hui', result: '無關', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'R5-004', status: 'pending', completedAt: '-',
+            text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。',
+            labelStats: '-',
+            annotators: []
+          },
+          {
+            sampleId: 'R5-005', status: 'pending', completedAt: '-',
+            text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。',
+            labelStats: '-',
+            annotators: []
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R6',
+        taskAliases: ['TASK-015-A6'],
+        title: 'NER 命名實體辨識',
+        taskType: 'sequence_labeling',
+        subType: 'ner',
+        runType: 'official_run',
+        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
+        dashboardDetail: '待審 10 筆 · 進度 28% · IAA 0.79',
+        dashboardProgress: 28,
+        dashboardStatusText: '待審查',
+        dashboardStatusClass: 'badge-warning',
+        samples: [
+          {
+            sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30',
+            text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。',
+            labelStats: 'ORG×3 · PER×3 · LOC×3 · DATE×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: 'ORG:台積電, PER:張忠謀, LOC:台北', reviewStatus: null },
+              { username: '113450022',  result: 'ORG:台積電, PER:張忠謀, LOC:台北, MISC:半導體產業論壇', reviewStatus: null },
+              { username: 'tony0950127', result: 'ORG:台積電, PER:創辦人張忠謀, LOC:台北', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45',
+            text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。',
+            labelStats: 'ORG×3 · LOC×3 · DATE×3',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: 'ORG:鴻海精密工業, LOC:越南, LOC:胡志明市, DATE:2025年', reviewStatus: null },
+              { username: '113450022',  result: 'ORG:鴻海精密工業, LOC:越南胡志明市, DATE:2025年', reviewStatus: null },
+              { username: 'tony0950127', result: 'ORG:鴻海, LOC:越南, LOC:胡志明市, DATE:2025年', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'NER-003', status: 'saved', completedAt: '2026-04-28 11:00',
+            text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+            labelStats: 'ORG×2 · PER×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: 'ORG:衛生福利部, PER:薛瑞元', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'NER-004', status: 'pending', completedAt: '-',
+            text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+            labelStats: '-', vaRange: null, annotators: []
+          },
+          {
+            sampleId: 'NER-005', status: 'pending', completedAt: '-',
+            text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+            labelStats: '-', vaRange: null, annotators: []
+          }
+        ]
+      },
+      {
+        taskId: 'TASK-015-R4',
+        taskAliases: ['TASK-015-A4'],
+        title: '醫療關係抽取（Entity / Triple）',
+        taskType: 'relation_extraction',
+        runType: 'official_run',
+        dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
+        dashboardDetail: '待審 9 筆 · 進度 44% · IAA 0.79',
+        dashboardProgress: 44,
+        dashboardStatusText: '進行中',
+        dashboardStatusClass: 'badge-info',
+        samples: [
+          {
+            sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30',
+            text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。',
+            labelStats: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛) ×2 · (DRUG:阿司匹靈)→causes→(SYMP:胃部不適) ×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', reviewStatus: null },
+              { username: '113450022',  result: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45',
+            text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。',
+            labelStats: '(SYMP:疼痛)→associated_with→(TIME:月經週期) ×2 · (SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化) ×2',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '(SYMP:疼痛)→associated_with→(TIME:月經週期)', reviewStatus: null },
+              { username: '113450022',  result: '(SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化)', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'RE-003', status: 'saved', completedAt: '2026-04-28 11:00',
+            text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。',
+            labelStats: '(EXAM:超音波檢查)→diagnoses→(DISE:膽囊結石) ×1（草稿）',
+            vaRange: null,
+            annotators: [
+              { username: 'kioleemg12', result: '(EXAM:超音波)→diagnoses→(DISE:膽囊結石)', reviewStatus: null }
+            ]
+          },
+          {
+            sampleId: 'RE-004', status: 'pending', completedAt: '-',
+            text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。',
+            labelStats: '-', vaRange: null, annotators: []
+          },
+          {
+            sampleId: 'RE-005', status: 'pending', completedAt: '-',
+            text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。',
+            labelStats: '-', vaRange: null, annotators: []
           }
         ]
       }
@@ -1025,7 +1340,7 @@
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
       taskId: taskId ? taskId.trim() : '',
-      taskType: TASK_TYPE_TEXT[taskType] ? taskType : 'single_sentence_classification'
+      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification'
     };
   }
 
@@ -1094,6 +1409,10 @@
     return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
   }
 
+  function taskTypeBadgeClass(taskType) {
+    return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
+  }
+
   function findLatestUnfinishedSampleId(task) {
     if (!task || !Array.isArray(task.samples) || task.samples.length === 0) return '';
 
@@ -1106,13 +1425,15 @@
     return task.samples[task.samples.length - 1].sampleId;
   }
 
-  function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType) {
-    return '../annotation/annotation-workspace.html' +
+  function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType, subType) {
+    var url = '../annotation/annotation-workspace.html' +
       '?task_id=' + encodeURIComponent(taskId) +
       '&sample_id=' + encodeURIComponent(sampleId) +
       '&role=' + encodeURIComponent(role) +
       '&run_type=' + encodeURIComponent(runType) +
       '&task_type=' + encodeURIComponent(taskType);
+    if (subType) url += '&sub_type=' + encodeURIComponent(subType);
+    return url;
   }
 
   function renderTaskInfo(context) {
@@ -1138,7 +1459,8 @@
 
     title.textContent = task.title;
     detail.textContent = task.dashboardDetail || '-';
-    taskType.textContent = task.dashboardTaskTypeText || TASK_TYPE_TEXT[task.taskType] || task.taskType;
+    taskType.textContent = task.dashboardTaskTypeText || (TASK_TYPE_META[task.taskType] && TASK_TYPE_META[task.taskType].text) || task.taskType;
+    taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
     runType.textContent = runTypeLabel(task.runType);
     runType.className = 'badge ' + runTypeBadgeClass(task.runType);
     status.textContent = task.dashboardStatusText || '進行中';
@@ -1151,7 +1473,7 @@
         var sampleId = findLatestUnfinishedSampleId(task);
         if (!sampleId) return;
         setStoredActiveTaskType(task.taskType);
-        window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType);
+        window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType, task.subType);
       };
     }
 
@@ -1228,7 +1550,7 @@
 
       function openWorkspace() {
         setStoredActiveTaskType(item.taskType);
-        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType, item.subType);
         window.location.href = url;
       }
 
@@ -1310,7 +1632,7 @@
 
       function openWorkspace() {
         setStoredActiveTaskType(item.taskType);
-        var url = buildWorkspaceUrl(item.taskId, item.sample.sampleId, context.role, item.runType, item.taskType);
+        var url = buildWorkspaceUrl(item.taskId, item.sample.sampleId, context.role, item.runType, item.taskType, item.subType);
         window.location.href = url;
       }
 
@@ -1364,6 +1686,7 @@
         flatRows.push({
           taskId: task.taskId,
           taskType: task.taskType,
+          subType: task.subType || '',
           runType: task.runType,
           sample: applySampleCompletionOverride(sample, completionState)
         });

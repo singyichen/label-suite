@@ -454,6 +454,7 @@ var I18N = {
       classification: "Krippendorff's Alpha（nominal）",
       sequence_strict: 'Pairwise Entity-level F1（strict）',
       sequence_partial: 'Pairwise Entity-level F1（partial overlap）',
+      sequence_aspect: 'Exact Span F1 · Partial Match F1 · Label Accuracy',
       relation: 'Pairwise Triple-level F1',
       sentence_pairs: "Krippendorff's Alpha（nominal）",
     },
@@ -502,11 +503,12 @@ var I18N = {
     anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
     anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
     anomSpSpeedTitle:'標記速度異常', anomSpSpeedEmpty:'無速度異常', anomSpOutlierTitle:'高分歧樣本', anomSpOutlierEmpty:'無 high_divergence 樣本',
-    consistencyUnitHeader: { va:'可比較句數', classification:'可比較句數', sequence:'可比較 span 數', relation:'標記 5 次的三元組數', sentence_pairs:'可比較句對數' },
+    consistencyUnitHeader: { va:'可比較句數', classification:'可比較句數', sequence:'可比較 span 數', sequence_aspect:'可比較 span 數', relation:'標記 5 次的三元組數', sentence_pairs:'可比較句對數' },
     consistencyNotes: {
       va:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
       classification:'分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
       sequence:'序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
+      sequence_aspect:'Aspect 標記以可對齊的 span（aspect taxonomy 類別相符）作為比較母體；boundary high_divergence 樣本維持獨立 sample-level 旗標。',
       relation:'關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。',
       sentence_pairs:'句對任務以可重疊比較的句對結果為母體；適合觀察群體偏離頻率，不單獨作為處置依據。',
     },
@@ -523,6 +525,131 @@ var I18N = {
     lblSeqPartialMetric:'Pairwise Entity-level F1（partial overlap）',
     lblRelMetric:'Pairwise Triple-level F1',
     lblSpMetric:"Krippendorff's Alpha（nominal）",
+    aspectTaxonomyLabels: {
+      product_quality: '產品品質',
+      value_for_money: 'CP值（性價比）',
+      appearance_design: '外觀設計',
+      customer_service: '客戶服務',
+      packaging_quality: '包裝品質',
+      functionality: '功能性',
+    },
+    sequenceAspectStats: {
+      kpiTitle: 'Aspect 分析摘要',
+      sentenceCountLabel: '句子數量',
+      sentenceCountDesc: '分析母體',
+      tokenCountLabel: 'Token 數量',
+      tokenCountDesc: '空格分詞',
+      completionLabel: '完成率',
+      completionDesc: '1,092 / 1,248',
+      submittedLabel: '已提交樣本',
+      submittedDesc: '至少 1 位已提交',
+      avgTimeLabel: '平均標記時間',
+      avgTimeDesc: '每句平均用時',
+      distTitle: 'Aspect 類型分佈',
+      distDesc: '各 Aspect taxonomy 在提交標記中的出現次數（共 2,617 個 aspect 標記）',
+      avgTitle: '每句平均 Aspect 數量',
+      avgLabel: '平均 Aspect 數 / 句',
+      bucketLabel: '分桶分佈',
+      totalLabel: '總 Aspect 標記數',
+      zeroLabel: '無 Aspect 句子比例',
+      maxLabel: '單句最多 Aspect 數',
+      spanLenTitle: 'Aspect Span 長度分佈',
+      spanLenDesc: '以 token 數計算的 span 長度分佈（長度 ≥ 5 合併為「5+」）',
+      spanLenXLabel: 'Span 長度（token 數）',
+      spanLenExample: '代表例：「高品質」(1)、「耐用性強」(2)、「外觀設計精美」(3)、「整體性價比相當高」(4)',
+      cooccTitle: 'Aspect 共現矩陣',
+      cooccDesc: '同一句內兩個不同 Aspect 共同出現的次數；矩陣對稱，對角線不顯示自共現',
+      cooccNote: '外觀 × 包裝共現頻率偏高（184 次），反映評論中同時討論視覺與包裝的傾向。',
+      sentimentTitle: 'Aspect × Sentiment 分佈',
+      sentimentDesc: '各 Aspect 的正面 / 中立 / 負面標記比例（sentiment 資料存在時顯示）',
+      sentimentPositive: '正面',
+      sentimentNeutral: '中立',
+      sentimentNegative: '負面',
+      coverageTitle: 'Aspect Coverage 分析',
+      coverageDesc: '各 Aspect taxonomy 的樣本覆蓋率；低於目標分佈最小樣本數時標示偏斜警告',
+      coverageBadge: '偏斜警告',
+      coverageHeaderAspect: 'Aspect',
+      coverageHeaderRate: '樣本覆蓋率',
+      coverageHeaderCount: '樣本數',
+      coverageHeaderStatus: '狀態',
+      statusOnTarget: '符合',
+      statusBelowTarget: '低於目標',
+      statusBiasWarning: '偏斜警告',
+      coverageWarningHtml: '「功能性」覆蓋率（4%）明顯低於目標分佈，已標示 <code style="font-family:var(--font-mono);font-size:11px">dataset_bias_detected = true</code>。建議增加該類別樣本或調整 Dry Run 配置。',
+    },
+    sequenceAspectQuality: {
+      methodSuffix: '— 主要指標群組',
+      exactF1: 'Exact Span F1',
+      exactCalc: 'boundary + label 完全一致',
+      exactThrHtml: '門檻 0.80 — <strong class="t-fail">未達</strong>',
+      partialF1: 'Partial Match F1',
+      partialCalc: 'spans overlap + label 相容',
+      partialThrHtml: 'Relaxed 門檻 0.70 — <strong class="t-pass">通過</strong>',
+      labelAcc: 'Label Accuracy',
+      labelAccCalc: 'matched spans 上的 label 正確率',
+      labelAccThrHtml: '門檻 0.80 — <strong class="t-pass">通過</strong>',
+      perAspectButton: '各 Aspect 類別指標明細',
+      perAspectHeaderAspect: 'Aspect',
+      perAspectHeaderExact: 'Exact Span F1',
+      perAspectHeaderPartial: 'Partial F1',
+      perAspectHeaderLabelAcc: 'Label Acc',
+      perAspectHeaderResult: '結果',
+      perAspectResultExactFail: 'Exact 未達',
+      perAspectResultPass: '通過',
+      perAspectResultFail: '未達',
+      boundaryTitle: '邊界錯誤分析',
+      boundarySubtitle: 'Span 邊界錯誤分類（共 87 筆邊界錯誤），以 gold / consensus span 為基準對比標記員版本',
+      representativeExamples: '代表例句',
+      aspectPrefix: 'Aspect',
+      goldAnnotatorLong: 'Gold: 「外殼材質非常堅固耐用」 | Annotator: 「外殼材質非常堅固耐用，不易刮傷」（多標 3 tokens）',
+      goldAnnotatorShort: 'Gold: 「價格相比同類競品」 | Annotator: 「價格」（少標 6 tokens）',
+      goldAnnotatorWrong: 'Gold: 「客服」 | Annotator: 「客服非常」（邊界偏移 1 token，語意含糊）',
+      highDisagreeTitle: '高分歧樣本分析',
+      highDisagreeCount: '23 筆',
+      highDisagreeSubtitle: '依 disagreement_score 由高到低排序（strict F1 低分 + boundary conflict + label 不一致加權）',
+      highDisagreeHeaderSample: '樣本',
+      highDisagreeHeaderScore: '分歧分數',
+      highDisagreeHeaderSentence: '句子摘要',
+      highDisagreeHeaderConflict: '衝突描述',
+      highDisagreeHeaderQueue: '佇列狀態',
+      queuePending: '待審核',
+      queueCompleted: '已完成',
+      highDisagreeNote: '顯示 disagreement_score ≥ 0.70 的樣本（共 23 筆）。完整清單可於 Reviewer Queue 查看。',
+      anomalySpeedGroup: '標記速度異常',
+      anomalyOutlierGroup: '高分歧樣本（sample-level 旗標）',
+      anomalySpeedTitle: 'Jordan Wu — 標記速度過快',
+      anomalySpeedDetail: '平均 24s／句（群體平均 45.3s；Aspect 任務預期 ≥ 40s），共 35 筆提交紀錄',
+      anomalyOutlierTitle: '樣本 #312 — Aspect span high_divergence 旗標',
+      anomalyOutlierDetail: '功能性 span 邊界在三位標記員間差異超過 4 tokens；此旗標為 sample-level，與個人風險等級分開處理，不拉高任何標記員風險等級。',
+      riskHeaderAnnotator: '標記員',
+      riskHeaderSpeed: '平均速度',
+      riskHeaderAspectF1: 'Aspect F1（exact）',
+      riskHeaderLevel: '風險等級',
+      riskHeaderCause: '異常原因',
+      riskHeaderSamples: '樣本數',
+      riskHeaderAction: '建議行動',
+      riskSpeed1: '52s / 句',
+      riskSpeed2: '60s / 句',
+      riskSpeed3: '24s / 句',
+      causeNone: '無異常原因',
+      causeSystematic: '系統性偏差',
+      causeTooFast: '標記過快',
+      actionReview: '審核標記',
+      actionAdjust: '調整參與狀態',
+      leaderOnly: '僅 Project Leader 可執行',
+      riskGroupAvg: '群體平均 — Aspect F1（exact）: 0.68 ／ 平均速度: 45.3s／句',
+      consistencyHeaderAnnotator: '標記員',
+      sentence312: '「這支手機最令我滿意的是其相機功能以及充電速度極快…」',
+      sentence078: '「客服態度親切，且退換貨流程非常簡便，讓我很滿意…」',
+      sentence445: '「包裝設計很精緻，整個開箱過程令人印象深刻…」',
+      sentence189: '「雖然價格略高，但整體質感與耐用度完全值得…」',
+      sentence521: '「功能雖不算最頂尖，但性價比確實不錯，推薦入手…」',
+      conflict312: '功能性 ↔ 產品品質（3 版本，span 差 4 tokens）',
+      conflict078: '客戶服務（2 標記員 span 不重疊）',
+      conflict445: '外觀設計 ↔ 包裝品質（label 分歧）',
+      conflict189: 'CP值 ↔ 產品品質（boundary overlap）',
+      conflict521: '功能性 span 邊界一致性低',
+    },
   },
   en: {
     docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
@@ -598,6 +725,7 @@ var I18N = {
       classification: "Krippendorff's Alpha (nominal)",
       sequence_strict: 'Pairwise Entity-level F1 (strict)',
       sequence_partial: 'Pairwise Entity-level F1 (partial overlap)',
+      sequence_aspect: 'Exact Span F1 · Partial Match F1 · Label Accuracy',
       relation: 'Pairwise Triple-level F1',
       sentence_pairs: "Krippendorff's Alpha (nominal)",
     },
@@ -646,11 +774,12 @@ var I18N = {
     anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
     anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
     anomSpSpeedTitle:'Speed Anomalies', anomSpSpeedEmpty:'No speed anomalies', anomSpOutlierTitle:'High-divergence Samples', anomSpOutlierEmpty:'No high-divergence samples',
-    consistencyUnitHeader: { va:'Comparable Sentences', classification:'Comparable Sentences', sequence:'Comparable Spans', relation:'Triples Annotated 5 Times', sentence_pairs:'Comparable Sentence Pairs' },
+    consistencyUnitHeader: { va:'Comparable Sentences', classification:'Comparable Sentences', sequence:'Comparable Spans', sequence_aspect:'Comparable Spans', relation:'Triples Annotated 5 Times', sentence_pairs:'Comparable Sentence Pairs' },
     consistencyNotes: {
       va:'Aggregated against the group median for the same sample. 1.5xSTD is an observation threshold and 2xSTD signals stronger deviation.',
       classification:'For classification tasks, each submitted sentence is treated as one comparable unit. This block describes deviation, not ground-truth correctness.',
       sequence:'For sequence labeling, aligned spans form the comparison pool. Boundary-level high_divergence samples remain separate flags.',
+      sequence_aspect:'For aspect labeling, aligned spans with matching aspect taxonomy form the comparison pool. Boundary high_divergence samples remain separate sample-level flags.',
       relation:'For relation extraction, only triples with enough repeated annotations enter the comparison pool. This block shows group deviation, not final risk decisions.',
       sentence_pairs:'For sentence-pair tasks, comparable pair results form the base. Use this to observe deviation frequency, not as a standalone action trigger.',
     },
@@ -667,6 +796,131 @@ var I18N = {
     lblSeqPartialMetric:'Pairwise Entity-level F1 (partial overlap)',
     lblRelMetric:'Pairwise Triple-level F1',
     lblSpMetric:"Krippendorff's Alpha (nominal)",
+    aspectTaxonomyLabels: {
+      product_quality: 'Product Quality',
+      value_for_money: 'Value for Money',
+      appearance_design: 'Appearance Design',
+      customer_service: 'Customer Service',
+      packaging_quality: 'Packaging Quality',
+      functionality: 'Functionality',
+    },
+    sequenceAspectStats: {
+      kpiTitle: 'Aspect Analysis Summary',
+      sentenceCountLabel: 'Sentence Count',
+      sentenceCountDesc: 'Analysis base',
+      tokenCountLabel: 'Token Count',
+      tokenCountDesc: 'Whitespace tokenization',
+      completionLabel: 'Completion Rate',
+      completionDesc: '1,092 / 1,248',
+      submittedLabel: 'Submitted Samples',
+      submittedDesc: 'Submitted by at least 1 annotator',
+      avgTimeLabel: 'Avg Annotation Time',
+      avgTimeDesc: 'Avg time per sentence',
+      distTitle: 'Aspect Type Distribution',
+      distDesc: 'Occurrences of each aspect taxonomy in submitted labels (2,617 aspect labels total)',
+      avgTitle: 'Avg Aspects per Sentence',
+      avgLabel: 'Avg aspects / sentence',
+      bucketLabel: 'Bucket Distribution',
+      totalLabel: 'Total aspect labels',
+      zeroLabel: 'Zero-aspect sentence rate',
+      maxLabel: 'Max aspects / sentence',
+      spanLenTitle: 'Aspect Span Length Distribution',
+      spanLenDesc: 'Span length distribution in tokens (length ≥ 5 collapsed into "5+")',
+      spanLenXLabel: 'Span length (tokens)',
+      spanLenExample: 'Examples: "High quality" (1), "Very durable" (2), "Elegant exterior design" (3), "Overall excellent value" (4)',
+      cooccTitle: 'Aspect Co-occurrence Matrix',
+      cooccDesc: 'Counts of two different aspects appearing in the same sentence; the matrix is symmetric and hides self-co-occurrence on the diagonal',
+      cooccNote: 'Appearance × Packaging co-occurs frequently (184), suggesting reviews often discuss visual design and packaging together.',
+      sentimentTitle: 'Aspect × Sentiment Distribution',
+      sentimentDesc: 'Positive / neutral / negative label ratios for each aspect (shown when sentiment data is available)',
+      sentimentPositive: 'Positive',
+      sentimentNeutral: 'Neutral',
+      sentimentNegative: 'Negative',
+      coverageTitle: 'Aspect Coverage Analysis',
+      coverageDesc: 'Sample coverage of each aspect taxonomy; show a skew warning when the count falls below the target minimum',
+      coverageBadge: 'Skew Warning',
+      coverageHeaderAspect: 'Aspect',
+      coverageHeaderRate: 'Sample Coverage',
+      coverageHeaderCount: 'Samples',
+      coverageHeaderStatus: 'Status',
+      statusOnTarget: 'On Target',
+      statusBelowTarget: 'Below Target',
+      statusBiasWarning: 'Skew Warning',
+      coverageWarningHtml: '"Functionality" coverage (4%) is materially below the target distribution and is flagged as <code style="font-family:var(--font-mono);font-size:11px">dataset_bias_detected = true</code>. Increase samples for this class or adjust the Dry Run setup.',
+    },
+    sequenceAspectQuality: {
+      methodSuffix: '— Primary metric group',
+      exactF1: 'Exact Span F1',
+      exactCalc: 'Exact match on boundary + label',
+      exactThrHtml: 'Threshold 0.80 — <strong class="t-fail">Fail</strong>',
+      partialF1: 'Partial Match F1',
+      partialCalc: 'Overlapping spans + compatible label',
+      partialThrHtml: 'Relaxed threshold 0.70 — <strong class="t-pass">Pass</strong>',
+      labelAcc: 'Label Accuracy',
+      labelAccCalc: 'Label accuracy on matched spans',
+      labelAccThrHtml: 'Threshold 0.80 — <strong class="t-pass">Pass</strong>',
+      perAspectButton: 'Per-aspect Metric Details',
+      perAspectHeaderAspect: 'Aspect',
+      perAspectHeaderExact: 'Exact Span F1',
+      perAspectHeaderPartial: 'Partial F1',
+      perAspectHeaderLabelAcc: 'Label Acc',
+      perAspectHeaderResult: 'Result',
+      perAspectResultExactFail: 'Exact Fail',
+      perAspectResultPass: 'Pass',
+      perAspectResultFail: 'Fail',
+      boundaryTitle: 'Boundary Error Analysis',
+      boundarySubtitle: 'Span boundary error categories (87 total), comparing annotator output against the gold / consensus span',
+      representativeExamples: 'Representative examples',
+      aspectPrefix: 'Aspect',
+      goldAnnotatorLong: 'Gold: "外殼材質非常堅固耐用" | Annotator: "外殼材質非常堅固耐用，不易刮傷" (3 extra tokens)',
+      goldAnnotatorShort: 'Gold: "價格相比同類競品" | Annotator: "價格" (6 missing tokens)',
+      goldAnnotatorWrong: 'Gold: "客服" | Annotator: "客服非常" (boundary shifted by 1 token; ambiguous meaning)',
+      highDisagreeTitle: 'High-disagreement Sample Analysis',
+      highDisagreeCount: '23 samples',
+      highDisagreeSubtitle: 'Sorted by disagreement_score from high to low (low strict F1 + boundary conflicts + weighted label disagreement)',
+      highDisagreeHeaderSample: 'Sample',
+      highDisagreeHeaderScore: 'Disagreement Score',
+      highDisagreeHeaderSentence: 'Sentence Summary',
+      highDisagreeHeaderConflict: 'Conflict Description',
+      highDisagreeHeaderQueue: 'Queue Status',
+      queuePending: 'Pending Review',
+      queueCompleted: 'Completed',
+      highDisagreeNote: 'Showing samples with disagreement_score ≥ 0.70 (23 total). Open the Reviewer Queue for the full list.',
+      anomalySpeedGroup: 'Speed Anomalies',
+      anomalyOutlierGroup: 'High-divergence Samples (sample-level flags)',
+      anomalySpeedTitle: 'Jordan Wu — Annotation speed too fast',
+      anomalySpeedDetail: 'Avg 24s/sent (group avg 45.3s; expected ≥ 40s for aspect tasks), 35 submissions',
+      anomalyOutlierTitle: 'Sample #312 — aspect span high_divergence flag',
+      anomalyOutlierDetail: 'Functionality span boundaries differ by more than 4 tokens across three annotators; this is a sample-level flag and does not increase any annotator risk level.',
+      riskHeaderAnnotator: 'Annotator',
+      riskHeaderSpeed: 'Avg Speed',
+      riskHeaderAspectF1: 'Aspect F1 (exact)',
+      riskHeaderLevel: 'Risk Level',
+      riskHeaderCause: 'Cause',
+      riskHeaderSamples: 'Sample Count',
+      riskHeaderAction: 'Recommended Action',
+      riskSpeed1: '52s / sent',
+      riskSpeed2: '60s / sent',
+      riskSpeed3: '24s / sent',
+      causeNone: 'No abnormal cause',
+      causeSystematic: 'Systematic deviation',
+      causeTooFast: 'Too fast',
+      actionReview: 'Review annotations',
+      actionAdjust: 'Adjust participation',
+      leaderOnly: 'Project Leader only',
+      riskGroupAvg: 'Group avg — Aspect F1 (exact): 0.68 / Avg speed: 45.3s/sent',
+      consistencyHeaderAnnotator: 'Annotator',
+      sentence312: '“這支手機最令我滿意的是其相機功能以及充電速度極快…”',
+      sentence078: '“客服態度親切，且退換貨流程非常簡便，讓我很滿意…”',
+      sentence445: '“包裝設計很精緻，整個開箱過程令人印象深刻…”',
+      sentence189: '“雖然價格略高，但整體質感與耐用度完全值得…”',
+      sentence521: '“功能雖不算最頂尖，但性價比確實不錯，推薦入手…”',
+      conflict312: 'Functionality ↔ Product Quality (3 variants, span delta 4 tokens)',
+      conflict078: 'Customer Service (2 annotators with non-overlapping spans)',
+      conflict445: 'Appearance Design ↔ Packaging Quality (label disagreement)',
+      conflict189: 'Value for Money ↔ Product Quality (boundary overlap)',
+      conflict521: 'Low span-boundary consistency for Functionality',
+    },
   },
 };
 
@@ -676,6 +930,7 @@ var STATS_PANEL_PATHS = {
   va: './dataset-analysis-detail.partials/stats-va.html',
   classification: './dataset-analysis-detail.partials/stats-classification.html',
   sequence: './dataset-analysis-detail.partials/stats-sequence.html',
+  sequence_aspect: './dataset-analysis-detail.partials/stats-sequence-aspect.html',
   relation: './dataset-analysis-detail.partials/stats-relation.html',
   sentence_pairs: './dataset-analysis-detail.partials/stats-sentence_pairs.html',
 };
@@ -683,6 +938,7 @@ var QUALITY_PANEL_PATHS = {
   va: './dataset-analysis-detail.partials/quality-va.html',
   classification: './dataset-analysis-detail.partials/quality-classification.html',
   sequence: './dataset-analysis-detail.partials/quality-sequence.html',
+  sequence_aspect: './dataset-analysis-detail.partials/quality-sequence-aspect.html',
   relation: './dataset-analysis-detail.partials/quality-relation.html',
   sentence_pairs: './dataset-analysis-detail.partials/quality-sentence-pairs.html',
 };
@@ -698,9 +954,9 @@ var TASK_META = {
     membershipRole: 'reviewer',
   },
   T003: {
-    type: 'sequence',
+    type: 'sequence_aspect',
     title: { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
-    membershipRole: 'reviewer',
+    membershipRole: 'project_leader',
   },
   T004: {
     type: 'relation',
@@ -712,19 +968,54 @@ var TASK_META = {
     title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
     membershipRole: 'reviewer',
   },
+  T006: {
+    type: 'sequence',
+    title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
+    membershipRole: 'reviewer',
+  },
 };
-var DEFAULT_TASK_ID = 'T002';
+var DEFAULT_TASK_ID = 'T003';
 var S_ROUTE = { taskId: DEFAULT_TASK_ID };
 
 function t(key) {
   var dict = I18N[S.lang] || I18N.zh;
   return dict[key] !== undefined ? dict[key] : (I18N.zh[key] !== undefined ? I18N.zh[key] : key);
 }
+function tPath(path) {
+  var parts = String(path || '').split('.');
+  function read(obj) {
+    var cur = obj;
+    for (var i = 0; i < parts.length; i += 1) {
+      if (!cur || typeof cur !== 'object' || cur[parts[i]] === undefined) return undefined;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
+  var localized = read(I18N[S.lang] || I18N.zh);
+  if (localized !== undefined) return localized;
+  var fallback = read(I18N.zh);
+  return fallback !== undefined ? fallback : path;
+}
 function setText(id, key) {
   var el = document.getElementById(id);
   if (!el) return;
   var v = t(key);
   if (typeof v === 'string') el.textContent = v;
+}
+function applyDataI18n(root) {
+  if (!root || !root.querySelectorAll) return;
+  Array.prototype.forEach.call(root.querySelectorAll('[data-i18n]'), function(el) {
+    var value = tPath(el.getAttribute('data-i18n'));
+    if (typeof value === 'string') el.textContent = value;
+  });
+  Array.prototype.forEach.call(root.querySelectorAll('[data-i18n-html]'), function(el) {
+    var value = tPath(el.getAttribute('data-i18n-html'));
+    if (typeof value === 'string') el.innerHTML = value;
+  });
+  Array.prototype.forEach.call(root.querySelectorAll('[data-aspect-label]'), function(el) {
+    var value = tPath('aspectTaxonomyLabels.' + el.getAttribute('data-aspect-label'));
+    if (typeof value === 'string') el.textContent = value;
+  });
 }
 
 function loadStatsPanel() {
@@ -740,6 +1031,7 @@ function loadStatsPanel() {
     .then(function(html) {
       mount.innerHTML = html.trim();
       SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+      applyDataI18n(mount);
       updateStatsEmptyBtn();
     })
     .catch(function() {
@@ -882,7 +1174,7 @@ function updateConsistencyDeviationTexts() {
 
 /* ── Summary badge ──────────────────────────────────────────────── */
 var SUMMARY_BY_TYPE = {
-  va: 'pass', classification: 'pass', sequence: 'fail', relation: 'warn', sentence_pairs: 'pass',
+  va: 'pass', classification: 'pass', sequence: 'fail', sequence_aspect: 'fail', relation: 'warn', sentence_pairs: 'pass',
 };
 function updateSummaryBadge() {
   var badge = document.getElementById('iaaSummaryBadge');
@@ -905,6 +1197,7 @@ function updateMethodName() {
   }
 }
 
+
 function wireAltToggle(btnId, bodyId) {
   var btn = document.getElementById(btnId);
   var body = document.getElementById(bodyId);
@@ -918,7 +1211,7 @@ function wireAltToggle(btnId, bodyId) {
 }
 
 function closeAllAltToggles() {
-  ['altBtnVA','altBtnCls','altBtnSeq','altBtnRel','altBtnSp'].forEach(function(id) {
+  ['altBtnVA','altBtnCls','altBtnSeq','altBtnAsp','altBtnRel','altBtnSp'].forEach(function(id) {
     var btn = document.getElementById(id);
     var bodyId = id.replace('altBtn', 'altBody');
     var body = document.getElementById(bodyId);
@@ -968,6 +1261,7 @@ function wireQualityPanelInteractions() {
   wireAltToggle('altBtnVA', 'altBodyVA');
   wireAltToggle('altBtnCls', 'altBodyCls');
   wireAltToggle('altBtnSeq', 'altBodySeq');
+  wireAltToggle('altBtnAsp', 'altBodyAsp');
   wireAltToggle('altBtnRel', 'altBodyRel');
   wireAltToggle('altBtnSp', 'altBodySp');
   wireSequenceToggle();
@@ -986,6 +1280,7 @@ function loadQualityPanel() {
     .then(function(html) {
       mount.innerHTML = html.trim();
       SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+      applyDataI18n(mount);
       updateConsistencyDeviationTexts();
       closeAllAltToggles();
       syncSequenceUi();

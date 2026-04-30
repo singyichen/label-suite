@@ -1,0 +1,65 @@
+<div id="relationAnnotatorPanel" class="hidden">
+
+  <!-- Entity Type buttons -->
+  <div class="re-section">
+    <div class="re-section-head">
+      <span class="re-section-title" id="reEntityTypeLabel">Entity Type</span>
+    </div>
+    <div class="re-entity-type-btns" id="reEntityTypeBtns"></div>
+    <div class="re-pending-selection" id="rePendingSelection">
+      <span class="re-pending-text" id="rePendingText"></span>
+      <span class="re-pending-hint" id="rePendingHint"></span>
+    </div>
+  </div>
+
+  <!-- Entity List -->
+  <div class="re-section">
+    <div class="re-section-head">
+      <span class="re-section-title" id="reEntityListLabel">Entity List</span>
+      <span class="re-entity-count" id="reEntityCount"></span>
+    </div>
+    <div class="re-entity-list" id="reEntityList"></div>
+  </div>
+
+  <div class="re-divider"></div>
+
+  <!-- Relation Builder -->
+  <div class="re-section">
+    <div class="re-section-head">
+      <span class="re-section-title" id="reRelationTypeLabel">Relation Type</span>
+    </div>
+    <div class="re-relation-grid">
+      <div class="re-role-cell">
+        <label class="re-role-label" id="reE1RoleLabel">E1/Arg1</label>
+        <select class="re-select" id="reE1Select" aria-labelledby="reE1RoleLabel"></select>
+      </div>
+      <div class="re-role-cell">
+        <label class="re-role-label" id="reRelationLabel">Relation</label>
+        <select class="re-select" id="reRelationSelect" aria-labelledby="reRelationLabel"></select>
+      </div>
+      <div class="re-role-cell">
+        <label class="re-role-label" id="reE2RoleLabel">E2/Arg2</label>
+        <select class="re-select" id="reE2Select" aria-labelledby="reE2RoleLabel"></select>
+      </div>
+    </div>
+    <div class="re-relation-actions">
+      <button class="mini-btn" type="button" id="reUndoBtn" aria-label="撤銷">
+        <span id="reUndoLabel">撤銷</span>
+      </button>
+      <button class="mini-btn mini-btn-approve" type="button" id="reAddTripleBtn">
+        <span id="reAddTripleLabel">新增</span>
+      </button>
+    </div>
+    <div class="re-validation-error hidden" id="reTripleError"></div>
+  </div>
+
+  <!-- Triple List -->
+  <div class="re-section">
+    <div class="re-section-head">
+      <span class="re-section-title" id="reTripleListLabel">Triple List</span>
+      <span class="re-entity-count" id="reTripleCount"></span>
+    </div>
+    <div class="re-triple-list" id="reTripleList"></div>
+  </div>
+
+</div>

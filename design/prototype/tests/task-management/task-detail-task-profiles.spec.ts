@@ -3,7 +3,17 @@ import { test, expect } from '@playwright/test';
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=project_leader';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
-const TASK_PROFILES = [
+type TaskProfile = {
+  id: string;
+  name: string;
+  listName?: string;
+  type: string;
+  dataset: string;
+  settings: string[];
+  editPreview: string[];
+};
+
+const TASK_PROFILES: TaskProfile[] = [
   {
     id: 'T001',
     name: '新聞標題多標籤分類',
@@ -22,11 +32,12 @@ const TASK_PROFILES = [
   },
   {
     id: 'T003',
-    name: '產品評論序列標註（NER / Aspect）',
+    name: '產品評論 Aspect List 抽取／校正',
+    listName: '產品評論序列標註（NER / Aspect）',
     type: '序列標記（含 Aspect / NER）',
     dataset: 'product_reviews_ner_aspect.tsv',
-    settings: ['實體類型', 'ASPECT, OPINION, BRAND', '標記格式', 'BIOES'],
-    editPreview: ['ASPECT', 'OPINION', 'BRAND', 'BIOES'],
+    settings: ['子類型', 'Aspect List 抽取／校正', '輸入欄位名稱', 'sentence', '輸出欄位名稱', 'aspects'],
+    editPreview: ['欄位對應', 'Aspect 編輯規則', '數量限制', 'Aspect List'],
   },
   {
     id: 'T004',
@@ -40,9 +51,9 @@ const TASK_PROFILES = [
     id: 'T005',
     name: '句對相似度 / 蘊含判定',
     type: '句對任務（相似度 / 蘊含）',
-    dataset: 'sentence_pairs_nli.parquet',
-    settings: ['關係標籤', '相似, 不相似, 蘊含, 矛盾'],
-    editPreview: ['句子 A', '句子 B', '相似', '不相似'],
+    dataset: 'sentence_pairs_similarity.jsonl',
+    settings: ['關係標籤', '蘊含, 矛盾, 中立'],
+    editPreview: ['句子 A', '句子 B', '蘊含', '矛盾'],
   },
 ];
 
@@ -51,12 +62,15 @@ test.describe('Task detail profile mapping', () => {
     await page.goto(TASK_LIST_URL);
 
     for (const task of TASK_PROFILES) {
-      const row = page.locator('tbody tr').filter({ hasText: task.name }).first();
+      const listName = task.listName ?? task.name;
+      await page.locator('#searchInput').fill(listName);
+      const row = page.locator('tbody tr').filter({ hasText: listName }).first();
       await expect(row).toContainText('草稿');
       await row.click();
       await expect(page).toHaveURL(new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=${task.id}$`));
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=project_leader/);
+      await page.locator('#searchInput').fill('');
     }
   });
 

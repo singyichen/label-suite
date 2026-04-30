@@ -36,17 +36,17 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView).toBeVisible();
     await expect(leaderView.getByRole('heading', { name: /任務列表|Task List/ })).toBeVisible();
     await expect(leaderView.getByRole('heading', { name: /任務概況|Task Overview/ })).toBeVisible();
-    await expect(leaderView.getByText('127')).toBeVisible();
-    await expect(leaderView.getByText('24')).toBeVisible();
-    await expect(leaderView.getByText('5')).toBeVisible();
-    await expect(leaderView.getByText('3')).toBeVisible();
+    await expect(leaderView.locator('.metric strong').nth(0)).toHaveText('127');
+    await expect(leaderView.locator('.metric strong').nth(1)).toHaveText('24');
+    await expect(leaderView.locator('.metric strong').nth(2)).toHaveText('5');
+    await expect(leaderView.locator('.metric strong').nth(3)).toHaveText('3');
     await expect(leaderView.getByText('新聞標題分類')).toBeVisible();
     await expect(leaderView.getByText('情感分析基準')).toBeVisible();
     await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
     await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 42%/)).toBeVisible();
-    await expect(leaderView.getByText('分類任務')).toBeVisible();
-    await expect(leaderView.getByText('評分 / 回歸任務')).toBeVisible();
-    await expect(leaderView.locator('.progress')).toHaveCount(2);
+    await expect(leaderView.getByText('單句分類（含多標籤）')).toBeVisible();
+    await expect(leaderView.getByText('單句 VA 雙維度評分（Valence / Arousal）')).toBeVisible();
+    await expect(leaderView.locator('.progress')).toHaveCount(3);
   });
 
   test('admin view keeps the slimmer view-all button', async ({ page }) => {
@@ -72,7 +72,32 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/已完成 42% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(5);
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(6);
+  });
+
+  test('annotator task type badges use per-category colors matching task list styles', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    const annotatorView = page.getByTestId('annotator-view');
+
+    const classificationBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '單句分類（含多標籤）' });
+    const scoringBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '單句 VA 雙維度評分（Valence / Arousal）' });
+    const sequenceBadges = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '序列標記（含 Aspect / NER）' });
+    const relationBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '關係抽取（Entity + Relation + Triple）' });
+    const pairsBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '句對任務（相似度 / 蘊含）' });
+
+    await expect(classificationBadge).toHaveClass(/badge-task-type-single/);
+    await expect(scoringBadge).toHaveClass(/badge-task-type-scoring/);
+    await expect(sequenceBadges).toHaveCount(2);
+    await expect(sequenceBadges.first()).toHaveClass(/badge-task-type-sequence/);
+    await expect(sequenceBadges.nth(1)).toHaveClass(/badge-task-type-sequence/);
+    await expect(relationBadge).toHaveClass(/badge-task-type-relation/);
+    await expect(pairsBadge).toHaveClass(/badge-task-type-pairs/);
+
+    await expect(classificationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(scoringBadge).toHaveCSS('background-color', 'rgb(250, 245, 255)');
+    await expect(sequenceBadges.first()).toHaveCSS('background-color', 'rgb(255, 247, 237)');
+    await expect(relationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(pairsBadge).toHaveCSS('background-color', 'rgb(236, 253, 245)');
   });
 
   test('reviewer view shows pending review panel and start-review action', async ({ page }) => {
@@ -88,7 +113,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByText('情感 VA 雙維度評分')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
     await expect(reviewerView.getByText(/待審 8 筆 · 進度 52% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(5);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(6);
   });
 
   test('annotator quick continue routes to workspace latest unfinished sample', async ({ page }) => {
@@ -124,6 +149,32 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/task_id=TASK-015-R1/);
     await expect(page).toHaveURL(/sample_id=R1-001/);
     await expect(page).toHaveURL(/run_type=official_run/);
+  });
+
+  test('annotator quick continue uses the last pending sample for NER and sentence-pairs tasks', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    const annotatorView = page.getByTestId('annotator-view');
+
+    const nerCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
+    await nerCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
+    await expect(page).toHaveURL(/task_id=TASK-015-A6/);
+    await expect(page).toHaveURL(/sample_id=NER-005/);
+
+    await openScenario(page, 'annotator');
+    const sentencePairsCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '句對相似度 \/ 蘊含判定' });
+    await sentencePairsCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
+    await expect(page).toHaveURL(/task_id=TASK-015-A5/);
+    await expect(page).toHaveURL(/sample_id=A5-005/);
+  });
+
+  test('reviewer quick review uses the last pending sample for NER tasks', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+    const reviewerView = page.getByTestId('reviewer-view');
+    const nerCard = reviewerView.locator('#reviewerTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
+
+    await nerCard.getByRole('button', { name: /快速審核|Quick Review/ }).click();
+    await expect(page).toHaveURL(/task_id=TASK-015-R6/);
+    await expect(page).toHaveURL(/sample_id=NER-005/);
   });
 
   test('reviewer task card routes to annotation list when clicking outside quick review action', async ({ page }) => {
