@@ -154,6 +154,16 @@ test.describe('Annotation list routing', () => {
     await expect(page.locator('#sampleRows tr').nth(4)).toContainText('產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。');
   });
 
+  test('task_type-only VA route does not mix sentence-pairs samples into list', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await expect(page.locator('#sampleRows tr')).toHaveCount(5);
+    await expect(page.locator('#sampleRows tr').first()).toContainText('A2-001');
+    await expect(page.locator('#sampleRows tr').nth(4)).toContainText('A2-005');
+    await expect(page.locator('#sampleRows')).not.toContainText('A5-001');
+  });
+
   test('reviewer sees five samples for TASK-015-A2', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

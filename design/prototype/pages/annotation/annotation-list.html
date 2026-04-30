@@ -1335,12 +1335,14 @@
     var runType = params.get('run_type');
     var taskId = params.get('task_id');
     var taskType = params.get('task_type') || getStoredActiveTaskType();
+    var subType = params.get('sub_type');
 
     return {
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
       taskId: taskId ? taskId.trim() : '',
-      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification'
+      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification',
+      subType: subType ? subType.trim() : ''
     };
   }
 
@@ -1390,12 +1392,20 @@
     return false;
   }
 
+  function matchesTaskContext(task, context) {
+    if (!task) return false;
+    if (context.runType && task.runType !== context.runType) return false;
+    if (context.taskId) return matchesTaskId(task, context.taskId);
+    if (context.taskType && task.taskType !== context.taskType) return false;
+    if (context.subType && (task.subType || '') !== context.subType) return false;
+    return true;
+  }
+
   function findCurrentTask(context) {
     var roleTasks = TASKS_BY_ROLE[context.role] || [];
     for (var i = 0; i < roleTasks.length; i += 1) {
       var task = roleTasks[i];
-      if (!matchesTaskId(task, context.taskId)) continue;
-      if (context.runType && task.runType !== context.runType) continue;
+      if (!matchesTaskContext(task, context)) continue;
       return task;
     }
     return null;
@@ -1674,9 +1684,7 @@
     var roleTasks = TASKS_BY_ROLE[context.role] || [];
     var completionMap = readCompletionStateMap();
     var filteredTasks = roleTasks.filter(function (task) {
-      if (!matchesTaskId(task, context.taskId)) return false;
-      if (context.runType && task.runType !== context.runType) return false;
-      return true;
+      return matchesTaskContext(task, context);
     });
 
     var flatRows = [];
@@ -1747,7 +1755,7 @@
         var roleTasks = TASKS_BY_ROLE['reviewer'] || [];
         var allDecided = true;
         roleTasks.forEach(function(task) {
-          if (!matchesTaskId(task, context.taskId)) return;
+          if (!matchesTaskContext(task, context)) return;
           (task.samples || []).forEach(function(sample) {
             (sample.annotators || []).forEach(function(ann, idx) {
               var state = REVIEW_STATES[reviewKey(sample.sampleId, idx)];
