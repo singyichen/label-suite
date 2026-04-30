@@ -75,6 +75,46 @@
     }
     .page-main-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
 
+    /* ── Toolbar ─────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+    .toolbar-left { display: flex; align-items: center; gap: var(--space-sm); flex: 1; flex-wrap: wrap; }
+    .search-wrap {
+      position: relative; display: flex; align-items: center;
+      min-width: 220px; width: 280px; flex: 0 1 auto; max-width: 280px;
+    }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: var(--color-ink-muted); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 9px 12px 9px 36px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink); background: var(--color-white);
+      transition: border-color var(--dur-fast); outline: none;
+    }
+    .search-input::placeholder { color: var(--color-ink-muted); }
+    .search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .filter-select {
+      padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 14px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center;
+      outline: none; min-width: 160px;
+      appearance: none; -webkit-appearance: none;
+      transition: border-color var(--dur-fast);
+    }
+    .filter-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .clear-btn {
+      display: inline-flex; align-items: center; gap: 4px; padding: 8px 12px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      background: var(--color-white); color: var(--color-ink-muted);
+      font-size: 13px; font-weight: 500; transition: color var(--dur-fast), border-color var(--dur-fast);
+    }
+    .clear-btn:hover { color: var(--color-ink); border-color: var(--color-primary); }
+    .clear-btn.hide-clear { visibility: hidden; pointer-events: none; }
+
     /* ── Table panel ────────────────────────────────────────── */
     .table-container {
       border: 1px solid var(--color-border);
@@ -82,6 +122,8 @@
       background: var(--color-white);
       overflow: hidden;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
     }
     .task-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .task-table {
@@ -184,6 +226,33 @@
     .empty-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
     .empty-desc { font-size: 14px; color: var(--color-text-soft); margin: 0; }
 
+    /* ── Pagination ──────────────────────────────────────────── */
+    .pagination {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-md); flex-wrap: wrap;
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+    .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
+    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
+    .page-btn {
+      width: 32px; height: 32px; padding: 0 8px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; color: var(--color-ink); background: var(--color-white);
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: all var(--dur-fast);
+    }
+    .page-btn:hover:not(:disabled):not(.active) { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .page-btn.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .page-size-select {
+      padding: 5px 28px 5px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-size: 13px; color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+
     /* ── Toast ──────────────────────────────────────────────── */
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 400; pointer-events: none; }
     .toast {
@@ -201,7 +270,11 @@
     @media (max-width: 767px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .page-header { flex-direction: column; align-items: flex-start; }
-      .task-count-chip { align-self: flex-start; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-left { flex-direction: column; align-items: stretch; width: 100%; }
+      .search-wrap { width: 100%; min-width: 0; max-width: 100%; }
+      .filter-select { width: 100%; min-width: 0; }
+      .clear-btn.hide-clear { display: none; }
       .toast-container { bottom: 100px; right: 12px; left: 12px; }
       .toast { max-width: 100%; }
     }
@@ -242,9 +315,32 @@
 
       </header>
 
+      <div class="toolbar" role="search" aria-label="資料集分析篩選">
+        <div class="toolbar-left">
+          <select class="filter-select" id="taskTypeFilter" aria-label="依任務類型篩選">
+            <option value="">全部任務類型</option>
+          </select>
+          <select class="filter-select" id="iaaStatusFilter" aria-label="依 IAA 狀態篩選">
+            <option value="">全部 IAA 狀態</option>
+          </select>
+          <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            <span id="clearFiltersLabel">清除篩選</span>
+          </button>
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋" />
+          </div>
+        </div>
+      </div>
+
       <div class="table-container">
-        <div class="task-table-wrap">
-          <table class="task-table" aria-label="資料集分析任務列表">
+        <div class="task-table-wrap" id="tableWrap">
+          <table class="task-table" aria-label="資料集分析任務列表" id="taskTable">
             <thead>
               <tr>
                 <th id="thTaskName">任務名稱</th>
@@ -256,6 +352,24 @@
             </thead>
             <tbody id="taskTableBody"></tbody>
           </table>
+        </div>
+        <div class="pagination" id="paginationBar">
+          <div class="pagination-left">
+            <span class="pagination-info" id="paginationInfo"></span>
+            <select class="page-size-select" id="pageSizeSelect" aria-label="每頁筆數">
+              <option value="20" selected>20 筆/頁</option>
+              <option value="50">50 筆/頁</option>
+              <option value="100">100 筆/頁</option>
+            </select>
+          </div>
+          <div class="pagination-controls" id="paginationControls">
+            <button class="page-btn" id="prevPageBtn" aria-label="上一頁" disabled>
+              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="page-btn" id="nextPageBtn" aria-label="下一頁" disabled>
+              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -278,15 +392,37 @@
       docTitle: '資料集分析 — Label Suite（原型）',
       pageTitle: '資料集分析',
       pageSubtitle: '資料集標記一致性與任務執行情形分析',
+      clearFiltersLabel: '清除篩選',
       thTaskName: '任務名稱',
       thTaskType: '任務類型',
       thCompletion: '完成率',
       thIaaStatus: 'IAA 狀態',
       thRole: '成員角色',
       completionLabel: '完成率',
+      searchPlaceholder: '搜尋',
+      searchAriaLabel: '搜尋任務名稱、類型、IAA 狀態與角色',
+      taskTypeOptions: [
+        { value: '', label: '全部任務類型' },
+        { value: 'single_sentence_classification', label: '單句分類（含多標籤）' },
+        { value: 'single_sentence_va_scoring', label: '單句 VA 雙維度評分（Valence / Arousal）' },
+        { value: 'sequence_labeling', label: '序列標記（含 Aspect / NER）' },
+        { value: 'relation_extraction', label: '關係抽取（Entity + Relation + Triple）' },
+        { value: 'sentence_pairs', label: '句對任務（相似度 / 蘊含）' },
+      ],
+      iaaStatusOptions: [
+        { value: '', label: '全部 IAA 狀態' },
+        { value: 'pass', label: '通過' },
+        { value: 'pending', label: '計算中' },
+        { value: 'fail', label: '未通過' },
+        { value: 'not_started', label: '尚未開始' },
+      ],
+      pageSizeLabel: ' 筆/頁',
+      paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       iaaLabel: 'IAA 狀態',
       emptyTitle: '尚無可分析的任務',
       emptyDesc: '你目前沒有具分析權限的任務，請聯繫專案負責人確認成員資格。',
+      emptyNoResultsTitle: '找不到符合條件的分析任務',
+      emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
       toastNavigating: '前往分析詳情…',
       langToggleAria: '切換語言',
       iaaBadge: {
@@ -311,15 +447,37 @@
       docTitle: 'Dataset Analysis — Label Suite (Prototype)',
       pageTitle: 'Dataset analysis',
       pageSubtitle: 'Annotation consistency and task execution analysis',
+      clearFiltersLabel: 'Clear filters',
       thTaskName: 'Task Name',
       thTaskType: 'Task Type',
       thCompletion: 'Completion',
       thIaaStatus: 'IAA Status',
       thRole: 'Membership Role',
       completionLabel: 'Completion',
+      searchPlaceholder: 'Search',
+      searchAriaLabel: 'Search task name, type, IAA status, or role',
+      taskTypeOptions: [
+        { value: '', label: 'All task types' },
+        { value: 'single_sentence_classification', label: 'Single Sentence Classification (Multi-label)' },
+        { value: 'single_sentence_va_scoring', label: 'Single-sentence VA Scoring (Valence / Arousal)' },
+        { value: 'sequence_labeling', label: 'Sequence Labeling (Aspect / NER)' },
+        { value: 'relation_extraction', label: 'Relation Extraction (Entity + Relation + Triple)' },
+        { value: 'sentence_pairs', label: 'Sentence Pairs (Similarity / Entailment)' },
+      ],
+      iaaStatusOptions: [
+        { value: '', label: 'All IAA statuses' },
+        { value: 'pass', label: 'Pass' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'fail', label: 'Fail' },
+        { value: 'not_started', label: 'Not started' },
+      ],
+      pageSizeLabel: ' / page',
+      paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       iaaLabel: 'IAA status',
       emptyTitle: 'No tasks to analyze',
       emptyDesc: "You don't have analysis access to any task. Contact the project leader to check your membership.",
+      emptyNoResultsTitle: 'No matching analysis tasks',
+      emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
       toastNavigating: 'Opening analysis detail…',
       langToggleAria: 'Switch language',
       iaaBadge: {
@@ -402,7 +560,15 @@
   ];
 
   /* ── State ────────────────────────────────────────────────── */
-  var state = { lang: 'zh', tasks: TASKS_SEED };
+  var state = {
+    lang: 'zh',
+    tasks: TASKS_SEED,
+    keyword: '',
+    taskType: '',
+    iaaStatus: '',
+    page: 1,
+    pageSize: 20,
+  };
   var toastTimer = null;
 
   /* ── Constants ────────────────────────────────────────────── */
@@ -446,7 +612,15 @@
   }
 
   function getTrackingContext() {
-    return { lang: state.lang, task_count: state.tasks.length };
+    return {
+      lang: state.lang,
+      task_count: getFilteredTasks().length,
+      keyword: state.keyword,
+      task_type: state.taskType,
+      iaa_status: state.iaaStatus,
+      page: state.page,
+      page_size: state.pageSize,
+    };
   }
 
   function trackAnalytics(eventName, extra) {
@@ -455,6 +629,43 @@
     var ext = extra || {};
     Object.keys(ext).forEach(function (k) { payload[k] = ext[k]; });
     window.LabelSuiteAnalytics.track(eventName, payload);
+  }
+
+  function getTaskSearchText(task) {
+    return [
+      task.id,
+      task.nameZh,
+      task.nameEn,
+      task.taskType,
+      tNested('taskTypeLabel', task.taskType),
+      tNested('iaaBadge', task.iaaStatus),
+      tNested('roleLabel', task.membershipRole),
+    ].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  function getFilteredTasks() {
+    var tasks = state.tasks.slice();
+    if (state.taskType) {
+      tasks = tasks.filter(function (task) { return task.taskType === state.taskType; });
+    }
+    if (state.iaaStatus) {
+      tasks = tasks.filter(function (task) { return task.iaaStatus === state.iaaStatus; });
+    }
+    if (state.keyword.trim()) {
+      var keyword = state.keyword.trim().toLowerCase();
+      tasks = tasks.filter(function (task) { return getTaskSearchText(task).indexOf(keyword) !== -1; });
+    }
+    return tasks;
+  }
+
+  function syncUrl() {
+    var params = new URLSearchParams();
+    if (state.taskType) params.set('task_type', state.taskType);
+    if (state.iaaStatus) params.set('iaa_status', state.iaaStatus);
+    if (state.keyword) params.set('keyword', state.keyword);
+    if (state.page > 1) params.set('page', String(state.page));
+    if (state.pageSize !== 20) params.set('page_size', String(state.pageSize));
+    history.replaceState(null, '', params.toString() ? location.pathname + '?' + params.toString() : location.pathname);
   }
 
   /* ── Row builder ──────────────────────────────────────────── */
@@ -545,7 +756,7 @@
     return tr;
   }
 
-  function createEmptyRow() {
+  function createEmptyRow(isNoResults) {
     var tr = document.createElement('tr');
     tr.className = 'empty-row';
 
@@ -582,12 +793,12 @@
     var title = document.createElement('p');
     title.className = 'empty-title';
     title.id = 'emptyTitle';
-    title.textContent = t('emptyTitle');
+    title.textContent = isNoResults ? t('emptyNoResultsTitle') : t('emptyTitle');
 
     var desc = document.createElement('p');
     desc.className = 'empty-desc';
     desc.id = 'emptyDesc';
-    desc.textContent = t('emptyDesc');
+    desc.textContent = isNoResults ? t('emptyNoResultsDesc') : t('emptyDesc');
 
     wrap.appendChild(icon);
     wrap.appendChild(title);
@@ -599,16 +810,72 @@
 
   /* ── Render ───────────────────────────────────────────────── */
   function render() {
+    var filtered = getFilteredTasks();
+    var total = filtered.length;
+    var totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+
+    var tableWrap = document.getElementById('tableWrap');
+    var paginationBar = document.getElementById('paginationBar');
     var tableBody = document.getElementById('taskTableBody');
+    var showEmpty = total === 0 && !state.keyword && !state.taskType && !state.iaaStatus;
+    var showNoResults = total === 0 && (state.keyword || state.taskType || state.iaaStatus);
 
     while (tableBody.firstChild) tableBody.removeChild(tableBody.firstChild);
 
-    if (state.tasks.length === 0) {
-      tableBody.appendChild(createEmptyRow());
+    if (showEmpty) {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.add('hidden');
+      tableBody.appendChild(createEmptyRow(false));
+    } else if (showNoResults) {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.add('hidden');
+      tableBody.appendChild(createEmptyRow(true));
     } else {
-      state.tasks.forEach(function (task) { tableBody.appendChild(createTaskRow(task)); });
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.remove('hidden');
+      filtered
+        .slice((state.page - 1) * state.pageSize, state.page * state.pageSize)
+        .forEach(function (task) { tableBody.appendChild(createTaskRow(task)); });
     }
 
+    setTextContent(
+      'paginationInfo',
+      t('paginationTpl')
+        .replace('{total}', total)
+        .replace('{page}', state.page)
+        .replace('{totalPages}', totalPages)
+    );
+
+    var pageSizeSelect = document.getElementById('pageSizeSelect');
+    Array.prototype.forEach.call(pageSizeSelect.options, function (option) {
+      option.textContent = option.value + t('pageSizeLabel');
+    });
+
+    document.getElementById('prevPageBtn').disabled = state.page <= 1;
+    document.getElementById('nextPageBtn').disabled = state.page >= totalPages;
+
+    var controls = document.getElementById('paginationControls');
+    var nextBtn = document.getElementById('nextPageBtn');
+    controls.querySelectorAll('[data-page]').forEach(function (button) { button.remove(); });
+    for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+      (function (pageValue) {
+        var button = document.createElement('button');
+        button.className = 'page-btn' + (pageValue === state.page ? ' active' : '');
+        button.dataset.page = pageValue;
+        button.textContent = pageValue;
+        button.addEventListener('click', function () {
+          state.page = pageValue;
+          trackAnalytics('prototype_dataset_analysis_page_changed', { source: 'number', to_page: state.page });
+          render();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', button);
+      }(pageNumber));
+    }
+
+    var hasFilter = state.keyword.trim() || state.taskType || state.iaaStatus;
+    document.getElementById('clearFiltersBtn').classList.toggle('hide-clear', !hasFilter);
+    syncUrl();
   }
 
   /* ── Apply language ───────────────────────────────────────── */
@@ -619,6 +886,7 @@
 
     setTextContent('pageTitle',   t('pageTitle'));
     setTextContent('pageSubtitle', t('pageSubtitle'));
+    setTextContent('clearFiltersLabel', t('clearFiltersLabel'));
     setTextContent('thTaskName', t('thTaskName'));
     setTextContent('thTaskType', t('thTaskType'));
     setTextContent('thCompletion', t('thCompletion'));
@@ -630,6 +898,32 @@
         langToggleAria: t('langToggleAria'),
       });
     }
+
+    document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+    document.getElementById('searchInput').setAttribute('aria-label', t('searchAriaLabel'));
+    document.getElementById('searchInput').value = state.keyword;
+    document.getElementById('pageSizeSelect').value = String(state.pageSize);
+
+    var taskTypeFilter = document.getElementById('taskTypeFilter');
+    while (taskTypeFilter.firstChild) taskTypeFilter.removeChild(taskTypeFilter.firstChild);
+    t('taskTypeOptions').forEach(function (optionData) {
+      var option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.label;
+      if (optionData.value === state.taskType) option.selected = true;
+      taskTypeFilter.appendChild(option);
+    });
+
+    var iaaStatusFilter = document.getElementById('iaaStatusFilter');
+    while (iaaStatusFilter.firstChild) iaaStatusFilter.removeChild(iaaStatusFilter.firstChild);
+    t('iaaStatusOptions').forEach(function (optionData) {
+      var option = document.createElement('option');
+      option.value = optionData.value;
+      option.textContent = optionData.label;
+      if (optionData.value === state.iaaStatus) option.selected = true;
+      iaaStatusFilter.appendChild(option);
+    });
+
     render();
   }
 
@@ -640,12 +934,71 @@
     trackAnalytics('prototype_lang_switched', { source: source, from_lang: prev, to_lang: state.lang });
   }
 
+  function clearFilters() {
+    state.keyword = '';
+    state.taskType = '';
+    state.iaaStatus = '';
+    state.page = 1;
+    document.getElementById('searchInput').value = '';
+    trackAnalytics('prototype_dataset_analysis_filters_cleared');
+    applyLang(state.lang);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', function (event) {
+    state.keyword = event.target.value;
+    state.page = 1;
+    trackAnalytics('prototype_dataset_analysis_search_changed', { keyword: state.keyword });
+    render();
+  });
+
+  document.getElementById('taskTypeFilter').addEventListener('change', function (event) {
+    state.taskType = event.target.value;
+    state.page = 1;
+    trackAnalytics('prototype_dataset_analysis_filter_changed', { filter: 'task_type', value: state.taskType || '__all__' });
+    render();
+  });
+
+  document.getElementById('iaaStatusFilter').addEventListener('change', function (event) {
+    state.iaaStatus = event.target.value;
+    state.page = 1;
+    trackAnalytics('prototype_dataset_analysis_filter_changed', { filter: 'iaa_status', value: state.iaaStatus || '__all__' });
+    render();
+  });
+
+  document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+  document.getElementById('prevPageBtn').addEventListener('click', function () {
+    if (state.page > 1) {
+      state.page--;
+      trackAnalytics('prototype_dataset_analysis_page_changed', { source: 'prev', to_page: state.page });
+      render();
+    }
+  });
+  document.getElementById('nextPageBtn').addEventListener('click', function () {
+    var totalPages = Math.max(1, Math.ceil(getFilteredTasks().length / state.pageSize));
+    if (state.page < totalPages) {
+      state.page++;
+      trackAnalytics('prototype_dataset_analysis_page_changed', { source: 'next', to_page: state.page });
+      render();
+    }
+  });
+  document.getElementById('pageSizeSelect').addEventListener('change', function (event) {
+    state.pageSize = parseInt(event.target.value, 10);
+    state.page = 1;
+    trackAnalytics('prototype_dataset_analysis_page_size_changed', { page_size: state.pageSize });
+    render();
+  });
+
   /* ── Init ─────────────────────────────────────────────────── */
   (function init() {
     var q = new URLSearchParams(window.location.search);
     if (q.get('view') === 'empty') {
       state.tasks = [];
     }
+    state.taskType = q.get('task_type') || '';
+    state.iaaStatus = q.get('iaa_status') || '';
+    state.keyword = q.get('keyword') || '';
+    state.page = Math.max(1, parseInt(q.get('page') || '1', 10) || 1);
+    state.pageSize = [20, 50, 100].indexOf(parseInt(q.get('page_size') || '20', 10)) >= 0 ? parseInt(q.get('page_size') || '20', 10) : 20;
 
     var langToggle = document.getElementById('langToggle');
     var mobileLangToggle = document.getElementById('mobileLangToggle');
