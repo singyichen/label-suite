@@ -2075,6 +2075,13 @@
         official_run_in_progress: '正式標記進行中',
         completed: '已完成'
       },
+      statusStepLabel: {
+        draft: '草稿',
+        dry_run_in_progress: '試標進行中',
+        waiting_iaa_confirmation: '待 IAA 確認',
+        official_run_in_progress: '正式標記中',
+        completed: '已完成'
+      },
       statusCls: {
         draft: 'badge-draft',
         dry_run_in_progress: 'badge-dry-run',
@@ -2360,9 +2367,17 @@
       samplingReadonlyRoleOnly: 'Read-only role. Only project leader can edit sampling settings.',
       samplingSaveSuccess: 'Sampling settings updated',
       samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
+      trialRoundLabel: 'Trial round',
+      targetAgreementLabel: 'Target IAA',
+      currentAgreementLabel: 'Current IAA',
+      currentStdLabel: 'Current standard deviation',
+      stopConditionTitle: 'Stop conditions',
       labelSamplingModeControl: 'Sampling mode',
       labelSamplingValueControl: 'Sampling value',
+      labelTrialRoundControl: 'Trial round',
       labelSamplingStrategyControl: 'Sampling strategy',
+      labelStratifyByControl: 'Stratify by',
+      labelStopConditionControl: 'Stop conditions',
       labelSplitControl: 'Dry / Official split',
       totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
@@ -2379,6 +2394,9 @@
       samplingStrategyOptionStratified: 'Stratified random',
       samplingStrategyOptionDisagreement: 'High disagreement',
       samplingStrategyOptionEdgeCases: 'Edge cases',
+      targetAgreementInputLabel: 'Target IAA',
+      targetStdInputLabel: 'Standard deviation limit',
+      minAnnotatorsInputLabel: 'Minimum annotators',
       sampleUsageLabel: 'Dry',
       officialReserveLabel: 'Official',
       samplingModeCount: 'By count',
@@ -2402,6 +2420,13 @@
       statusHintOfficial: 'Official run is in progress.',
       statusHintCompleted: 'Task is completed.',
       statusLabel: {
+        draft: 'Draft',
+        dry_run_in_progress: 'Dry run in progress',
+        waiting_iaa_confirmation: 'Waiting IAA confirmation',
+        official_run_in_progress: 'Official run in progress',
+        completed: 'Completed'
+      },
+      statusStepLabel: {
         draft: 'Draft',
         dry_run_in_progress: 'Dry run in progress',
         waiting_iaa_confirmation: 'Waiting IAA confirmation',
@@ -2446,6 +2471,7 @@
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: 'Std ≤ {target}',
       stopAnnotatorPillTpl: 'annotators ≥ {target}',
+      stratifyByNone: 'Not set',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
@@ -3127,6 +3153,7 @@
     setText('currentAgreementLabel', t('currentAgreementLabel'));
     setText('currentStdLabel', t('currentStdLabel'));
     setText('stopConditionTitle', t('stopConditionTitle'));
+    renderStatusStepperLabels();
     setRequiredLabel('labelSamplingModeControl', t('labelSamplingModeControl'));
     setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
     setText('labelTrialRoundControl', t('labelTrialRoundControl'));
@@ -3576,6 +3603,15 @@
     stepper.querySelectorAll('.step-connector').forEach(function(el, i) {
       el.classList.toggle('connector-done', i < currentIdx);
     });
+  }
+
+  function renderStatusStepperLabels() {
+    var stepLabels = I18N[state.lang].statusStepLabel || I18N.zh.statusStepLabel || {};
+    setText('statusStepDraft', stepLabels.draft || 'draft');
+    setText('statusStepDryRun', stepLabels.dry_run_in_progress || 'dry_run_in_progress');
+    setText('statusStepWaitingIaa', stepLabels.waiting_iaa_confirmation || 'waiting_iaa_confirmation');
+    setText('statusStepOfficialRun', stepLabels.official_run_in_progress || 'official_run_in_progress');
+    setText('statusStepCompleted', stepLabels.completed || 'completed');
   }
 
   function renderRunControlTabs() {
