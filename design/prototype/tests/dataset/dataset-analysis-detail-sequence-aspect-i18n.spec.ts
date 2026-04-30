@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T003';
 
-async function gotoWithLang(page: Parameters<typeof test>[0]['page'], lang: 'zh' | 'en', tab: 'stats' | 'quality') {
-  await page.addInitScript((storedLang) => {
+async function gotoWithLang(page: Page, lang: 'zh' | 'en', tab: 'stats' | 'quality') {
+  await page.addInitScript((storedLang: 'zh' | 'en') => {
     window.localStorage.setItem('labelsuite.lang', storedLang);
   }, lang);
 

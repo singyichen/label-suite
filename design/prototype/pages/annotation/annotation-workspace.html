@@ -2916,6 +2916,7 @@ function renderRelationPanel() {
   lbl = document.getElementById('reE2RoleLabel'); if (lbl) lbl.textContent = t('reE2RoleLabel');
   lbl = document.getElementById('reUndoLabel'); if (lbl) lbl.textContent = t('reUndoLabel');
   lbl = document.getElementById('reAddTripleLabel'); if (lbl) lbl.textContent = t('reAddTripleLabel');
+  lbl = document.getElementById('reUndoBtn'); if (lbl) lbl.setAttribute('aria-label', t('reUndoLabel'));
 
   /* Entity type buttons */
   var btnsEl = document.getElementById('reEntityTypeBtns');

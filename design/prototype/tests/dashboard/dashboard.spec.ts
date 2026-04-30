@@ -151,6 +151,32 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
+  test('annotator quick continue uses the last pending sample for NER and sentence-pairs tasks', async ({ page }) => {
+    await openScenario(page, 'annotator');
+    const annotatorView = page.getByTestId('annotator-view');
+
+    const nerCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
+    await nerCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
+    await expect(page).toHaveURL(/task_id=TASK-015-A6/);
+    await expect(page).toHaveURL(/sample_id=NER-005/);
+
+    await openScenario(page, 'annotator');
+    const sentencePairsCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '句對相似度 \/ 蘊含判定' });
+    await sentencePairsCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
+    await expect(page).toHaveURL(/task_id=TASK-015-A5/);
+    await expect(page).toHaveURL(/sample_id=A5-005/);
+  });
+
+  test('reviewer quick review uses the last pending sample for NER tasks', async ({ page }) => {
+    await openScenario(page, 'reviewer');
+    const reviewerView = page.getByTestId('reviewer-view');
+    const nerCard = reviewerView.locator('#reviewerTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
+
+    await nerCard.getByRole('button', { name: /快速審核|Quick Review/ }).click();
+    await expect(page).toHaveURL(/task_id=TASK-015-R6/);
+    await expect(page).toHaveURL(/sample_id=NER-005/);
+  });
+
   test('reviewer task card routes to annotation list when clicking outside quick review action', async ({ page }) => {
     await openScenario(page, 'reviewer');
     const firstTaskCard = page.getByTestId('reviewer-view').locator('#reviewerTaskList .list-item').first();

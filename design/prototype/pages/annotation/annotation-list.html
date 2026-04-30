@@ -600,19 +600,12 @@
   var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
   var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
-  var TASK_TYPE_TEXT = {
-    single_sentence_classification: '單句分類（含多標籤）',
-    single_sentence_va_scoring: '單句 VA 雙維度評分（Valence / Arousal）',
-    sequence_labeling: '序列標記（含 Aspect / NER）',
-    relation_extraction: '關係抽取（Entity + Relation + Triple）',
-    sentence_pairs: '句對任務（相似度 / 蘊含）'
-  };
-  var TASK_TYPE_BADGE_CLS = {
-    single_sentence_classification: 'badge-task-type-single',
-    single_sentence_va_scoring: 'badge-task-type-scoring',
-    sequence_labeling: 'badge-task-type-sequence',
-    relation_extraction: 'badge-task-type-relation',
-    sentence_pairs: 'badge-task-type-pairs'
+  var TASK_TYPE_META = {
+    single_sentence_classification: { text: '單句分類（含多標籤）', badgeClass: 'badge-task-type-single' },
+    single_sentence_va_scoring: { text: '單句 VA 雙維度評分（Valence / Arousal）', badgeClass: 'badge-task-type-scoring' },
+    sequence_labeling: { text: '序列標記（含 Aspect / NER）', badgeClass: 'badge-task-type-sequence' },
+    relation_extraction: { text: '關係抽取（Entity + Relation + Triple）', badgeClass: 'badge-task-type-relation' },
+    sentence_pairs: { text: '句對任務（相似度 / 蘊含）', badgeClass: 'badge-task-type-pairs' }
   };
 
   var TASKS_BY_ROLE = {
@@ -1345,7 +1338,7 @@
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
       taskId: taskId ? taskId.trim() : '',
-      taskType: TASK_TYPE_TEXT[taskType] ? taskType : 'single_sentence_classification'
+      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification'
     };
   }
 
@@ -1415,7 +1408,7 @@
   }
 
   function taskTypeBadgeClass(taskType) {
-    return TASK_TYPE_BADGE_CLS[taskType] || 'badge-task-type-default';
+    return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
   }
 
   function findLatestUnfinishedSampleId(task) {
@@ -1464,7 +1457,7 @@
 
     title.textContent = task.title;
     detail.textContent = task.dashboardDetail || '-';
-    taskType.textContent = task.dashboardTaskTypeText || TASK_TYPE_TEXT[task.taskType] || task.taskType;
+    taskType.textContent = task.dashboardTaskTypeText || (TASK_TYPE_META[task.taskType] && TASK_TYPE_META[task.taskType].text) || task.taskType;
     taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
     runType.textContent = runTypeLabel(task.runType);
     runType.className = 'badge ' + runTypeBadgeClass(task.runType);
