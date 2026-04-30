@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 async function dismissGuidelineModal(page: import('@playwright/test').Page) {
-  const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
-  if (await guidelineModalConfirm.isVisible()) {
-    await guidelineModalConfirm.click();
-  }
+  const guidelineModal = page.locator('#guidelineModal');
+  await page.locator('#guidelineModalConfirm').click({ timeout: 2000 }).catch(() => {
+    // The modal may not render for every sample transition.
+  });
+  await expect(guidelineModal).toBeHidden();
 }
 
 test.describe('Annotation list routing', () => {
