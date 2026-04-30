@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
 
+async function dismissGuidelineModal(page: import('@playwright/test').Page) {
+  const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
+  if (await guidelineModalConfirm.isVisible()) {
+    await guidelineModalConfirm.click();
+  }
+}
+
 test.describe('Annotation list routing', () => {
   test('shows task info card above filters for selected task', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
@@ -366,22 +373,21 @@ test.describe('Annotation list routing', () => {
 
     await page.locator('#sampleRows tr', { hasText: 'A2-003' }).first().click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
-
-    const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
-    if (await guidelineModalConfirm.isVisible()) {
-      await guidelineModalConfirm.click();
-    }
+    await dismissGuidelineModal(page);
 
     // A2-003 has pre-saved VA values — submit directly
+    await dismissGuidelineModal(page);
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
 
     // A2-004 and A2-005 are todo (va: null) — must select VA values before submitting
+    await dismissGuidelineModal(page);
     await page.locator('input[name="va_valence"][value="5"]').check();
     await page.locator('input[name="va_arousal"][value="5"]').check();
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
 
+    await dismissGuidelineModal(page);
     await page.locator('input[name="va_valence"][value="5"]').check();
     await page.locator('input[name="va_arousal"][value="5"]').check();
     await page.locator('#submitBtn').click();
