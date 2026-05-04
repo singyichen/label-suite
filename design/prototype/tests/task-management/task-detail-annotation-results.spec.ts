@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
@@ -12,6 +13,63 @@ const TASK_RESULT_EXPECTATIONS = [
 ];
 
 test.describe('Task detail annotation results', () => {
+  test('downloads full JSON export with manifest and VA task-specific fields', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+
+    await page.locator('#arStageSelect').selectOption('official');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#arExportJsonBtn').click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/\.json$/);
+
+    const downloadPath = await download.path();
+    expect(downloadPath).not.toBeNull();
+    const payload = JSON.parse(await fs.readFile(downloadPath!, 'utf8'));
+
+    expect(payload.manifest.export_format).toBe('json');
+    expect(payload.manifest.task_type).toBe('single_sentence_va_scoring');
+    expect(payload.manifest.applied_filters.run_stage).toBe('official');
+    expect(Array.isArray(payload.items)).toBe(true);
+    expect(payload.items.length).toBeGreaterThan(0);
+    expect(payload.items.every((item: { run_stage: string }) => item.run_stage === 'official')).toBe(true);
+
+    const firstItem = payload.items[0];
+    expect(firstItem.source_data.text).toBeTruthy();
+    expect(Array.isArray(firstItem.annotations)).toBe(true);
+    expect(firstItem.annotations[0].result.valence).toBeDefined();
+    expect(firstItem.annotations[0].result.arousal).toBeDefined();
+    expect(firstItem.annotations[0].result.labels).toBeUndefined();
+  });
+
+  test('downloads JSON-MIN export with task-specific NER summary fields', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+
+    await page.locator('#arStageSelect').selectOption('official');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#arExportJsonMinBtn').click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/json-min-.*\.json$/);
+
+    const downloadPath = await download.path();
+    expect(downloadPath).not.toBeNull();
+    const payload = JSON.parse(await fs.readFile(downloadPath!, 'utf8'));
+
+    expect(Array.isArray(payload)).toBe(true);
+    expect(payload.length).toBeGreaterThan(0);
+    expect(payload.every((row: { run_stage: string }) => row.run_stage === 'official')).toBe(true);
+
+    const firstRow = payload[0];
+    expect(firstRow.task_type).toBe('sequence_labeling');
+    expect(firstRow.sequence_labeling_subtype).toBe('ner');
+    expect(firstRow.entities_summary).toContain('ORG:');
+    expect(firstRow.review_status).toBeTruthy();
+    expect(firstRow.valence).toBeUndefined();
+  });
+
   test('includes export stage metadata and success toasts for annotation result exports', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible();

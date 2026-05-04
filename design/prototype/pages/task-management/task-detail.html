@@ -7134,6 +7134,264 @@ function getTaskTypeLabel(taskTypeKey) {
     });
   }
 
+  function getExportStageLabel(stage) {
+    return stage === 'dry' ? 'Dry Run' : stage === 'official' ? 'Official Run' : 'All';
+  }
+
+  function getExportSampleSnapshotId(stage) {
+    return 'snapshot-' + TASK_DATA.taskId + '-' + (stage || 'all') + '-v1';
+  }
+
+  function getExportConfigData() {
+    var code = (TASK_DATA.configContent || '').trim();
+    if (!code) return {};
+    try {
+      return settingsParseCode(code, code.startsWith('{') ? 'json' : 'yaml') || {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function getExportSequenceSubtype(config) {
+    if (config && config.subtype) return config.subtype;
+    return currentSettingsSubtype();
+  }
+
+  function getExportedByName() {
+    return state.taskRole === 'reviewer' ? 'Mandy Chen' : 'Mandy Chen';
+  }
+
+  function getExportedById() {
+    return state.taskRole === 'reviewer' ? 'mandy.chen' : 'mandy.chen';
+  }
+
+  function getAnnotatorId(name) {
+    return String(name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'unknown_annotator';
+  }
+
+  function splitSentencePairText(text) {
+    var value = String(text || '');
+    var match = value.match(/^句子 A：(.*?)句子 B：(.*)$/);
+    if (match) {
+      return {
+        sentence1: match[1].trim(),
+        sentence2: match[2].trim()
+      };
+    }
+    return { sentence1: value, sentence2: '' };
+  }
+
+  function cloneExportValue(value) {
+    if (value == null) return null;
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function buildExportSourceData(sample, config) {
+    var sourceData = {
+      text: state.lang === 'en' ? sample.textEn : sample.textZh,
+      text_zh: sample.textZh,
+      text_en: sample.textEn
+    };
+    if (TASK_DATA.taskTypeKey === 'sentence_pairs') {
+      var pair = splitSentencePairText(sample.textZh);
+      sourceData.sentence_1 = pair.sentence1;
+      sourceData.sentence_2 = pair.sentence2;
+      sourceData.sentence_1_field = config.sentence_1_field || 'sentence_1';
+      sourceData.sentence_2_field = config.sentence_2_field || 'sentence_2';
+    }
+    return sourceData;
+  }
+
+  function buildExportReviewData(annotation, index) {
+    var pending = annotation.reviewStatus === 'pending';
+    var reviewData = {
+      review_id: pending ? null : 'review-' + index,
+      reviewer_id: pending ? null : getExportedById(),
+      reviewer_name: pending ? null : getExportedByName(),
+      reviewed_at: pending ? null : (annotation.submittedAt || null),
+      decision: annotation.reviewStatus || 'pending',
+      review_note: null
+    };
+    if (!pending && annotation.value) {
+      reviewData.corrected_result = cloneExportValue(annotation.value);
+    } else {
+      reviewData.corrected_result = null;
+    }
+    return reviewData;
+  }
+
+  function buildTaskSpecificExportFields(sample, annotation, config) {
+    var value = annotation && annotation.value ? annotation.value : null;
+    var fields = {};
+    if (TASK_DATA.taskTypeKey === 'single_sentence_classification') {
+      fields.labels = value && value.labels ? value.labels.slice() : [];
+      fields.labels_summary = fields.labels.join(', ');
+      return fields;
+    }
+    if (TASK_DATA.taskTypeKey === 'single_sentence_va_scoring') {
+      fields.valence = value && value.valence !== undefined ? value.valence : null;
+      fields.arousal = value && value.arousal !== undefined ? value.arousal : null;
+      return fields;
+    }
+    if (TASK_DATA.taskTypeKey === 'relation_extraction') {
+      fields.relations = value && value.resultText ? [value.resultText] : [];
+      fields.relations_summary = fields.relations.join(' | ');
+      return fields;
+    }
+    if (TASK_DATA.taskTypeKey === 'sentence_pairs') {
+      var pair = splitSentencePairText(sample.textZh);
+      fields.pair_mode = config.pair_mode || 'entailment';
+      fields.response_format = config.response_format || 'classification';
+      fields.sentence_1_field = config.sentence_1_field || 'sentence_1';
+      fields.sentence_2_field = config.sentence_2_field || 'sentence_2';
+      fields.sentence_1 = pair.sentence1;
+      fields.sentence_2 = pair.sentence2;
+      fields.label = value && value.label ? value.label : null;
+      fields.score = value && value.score !== undefined ? value.score : null;
+      fields.unsure = value && value.unsure === true ? true : false;
+      return fields;
+    }
+    if (TASK_DATA.taskTypeKey === 'sequence_labeling') {
+      var subtype = getExportSequenceSubtype(config);
+      fields.sequence_labeling_subtype = subtype;
+      if (subtype === 'aspect_list') {
+        fields.original_sentence = state.lang === 'en' ? sample.textEn : sample.textZh;
+        fields.corrected_sentence = value && value.corrected_sentence ? value.corrected_sentence : fields.original_sentence;
+        fields.aspects = value && value.aspects ? value.aspects.slice() : [];
+        fields.aspects_summary = fields.aspects.join(', ');
+      } else {
+        fields.entities = value && value.entities ? cloneExportValue(value.entities) : [];
+        fields.entities_summary = fields.entities.map(function(entity) {
+          return entity.type + ':' + entity.text;
+        }).join(', ');
+      }
+      return fields;
+    }
+    return fields;
+  }
+
+  function buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config) {
+    var annotationId = 'ann-' + sample.sampleId + '-' + (annotationIndex + 1);
+    return {
+      annotation_id: annotationId,
+      annotator_id: getAnnotatorId(annotation.annotator),
+      annotator_name: annotation.annotator,
+      submitted_at: annotation.submittedAt || null,
+      lead_time_seconds: null,
+      is_draft: sample.status === 'draft',
+      result: Object.assign(
+        {},
+        cloneExportValue(annotation.value) || {},
+        buildTaskSpecificExportFields(sample, annotation, config)
+      )
+    };
+  }
+
+  function buildJsonExportPayload(samples) {
+    var exportedAt = new Date().toISOString();
+    var config = getExportConfigData();
+    return {
+      manifest: {
+        task_id: TASK_DATA.taskId,
+        task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+        task_type: TASK_DATA.taskTypeKey,
+        export_format: 'json',
+        exported_at: exportedAt,
+        exported_by: getExportedByName(),
+        schema_version: '1.0.0',
+        run_stage: state.arStage,
+        isolation_enabled: TASK_DATA.isolationEnabled,
+        sampling_mode: TASK_DATA.samplingMode,
+        sampling_value: TASK_DATA.samplingValue,
+        sampling_strategy: TASK_DATA.samplingStrategy,
+        sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
+        applied_filters: {
+          run_stage: state.arStage,
+          submission_status: state.arStatus,
+          annotators: state.arAnnotators.slice()
+        }
+      },
+      items: samples.map(function(sample, sampleIndex) {
+        return {
+          task_id: TASK_DATA.taskId,
+          task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+          task_type: TASK_DATA.taskTypeKey,
+          run_stage: sample.stage,
+          sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
+          sample_id: sample.sampleId,
+          source_data: buildExportSourceData(sample, config),
+          annotation_status: sample.status,
+          review_status: sample.annotations.every(function(annotation) { return annotation.reviewStatus === 'approved'; }) ? 'approved' : 'pending',
+          created_at: sample.completedAt || null,
+          updated_at: sample.completedAt || null,
+          annotations: sample.annotations.map(function(annotation, annotationIndex) {
+            return buildExportAnnotationRecord(sample, annotation, sampleIndex, annotationIndex, config);
+          }),
+          reviews: sample.annotations.map(function(annotation, annotationIndex) {
+            return buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
+          })
+        };
+      })
+    };
+  }
+
+  function buildJsonMinExportPayload(samples) {
+    var config = getExportConfigData();
+    var rows = [];
+    samples.forEach(function(sample) {
+      sample.annotations.forEach(function(annotation, annotationIndex) {
+        var taskFields = buildTaskSpecificExportFields(sample, annotation, config);
+        var reviewData = buildExportReviewData(annotation, sample.sampleId + '-' + (annotationIndex + 1));
+        rows.push(Object.assign({
+          task_id: TASK_DATA.taskId,
+          task_name: state.lang === 'en' ? TASK_DATA.taskNameEn : TASK_DATA.taskNameZh,
+          task_type: TASK_DATA.taskTypeKey,
+          run_stage: sample.stage,
+          sample_snapshot_id: getExportSampleSnapshotId(sample.stage),
+          sample_id: sample.sampleId,
+          source_data: buildExportSourceData(sample, config),
+          annotation_status: sample.status,
+          review_status: annotation.reviewStatus || 'pending',
+          created_at: annotation.submittedAt || null,
+          updated_at: annotation.submittedAt || null,
+          annotation_id: 'ann-' + sample.sampleId + '-' + (annotationIndex + 1),
+          annotator_id: getAnnotatorId(annotation.annotator),
+          annotator_name: annotation.annotator,
+          submitted_at: annotation.submittedAt || null,
+          lead_time_seconds: null,
+          is_draft: sample.status === 'draft',
+          reviewer_id: reviewData.reviewer_id,
+          reviewer_name: reviewData.reviewer_name,
+          reviewed_at: reviewData.reviewed_at,
+          decision: reviewData.decision,
+          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }).tags[0] : null
+        }, taskFields));
+      });
+    });
+    return rows;
+  }
+
+  function downloadArExport(format) {
+    var samples = getArFilteredSamples();
+    var payload = format === 'json' ? buildJsonExportPayload(samples) : buildJsonMinExportPayload(samples);
+    var exportedAt = new Date().toISOString();
+    var stamp = exportedAt.slice(0, 19).replace(/[:T]/g, '-');
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    var suffix = format === 'json' ? 'json' : 'json-min';
+    link.href = url;
+    link.download = TASK_DATA.taskId + '-' + suffix + '-' + stamp + '.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+    return exportedAt;
+  }
+
   function renderArExportMeta() {
     var meta = document.getElementById('arExportMeta');
     if (!meta) return;
@@ -7756,16 +8014,18 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
     });
 
     document.getElementById('arExportJsonBtn').addEventListener('click', function() {
-      TASK_DATA.lastExportAt = '2026-05-04 ' + new Date().toTimeString().slice(0, 5);
-      TASK_DATA.lastExportStage = state.arStage === 'dry' ? 'Dry Run' : state.arStage === 'official' ? 'Official Run' : 'All';
+      var exportedAt = downloadArExport('json');
+      TASK_DATA.lastExportAt = exportedAt.slice(0, 16).replace('T', ' ');
+      TASK_DATA.lastExportStage = getExportStageLabel(state.arStage);
       renderArExportMeta();
       showToast(t('toastExportJson'));
       trackEvent('prototype_ar_export', { format: 'json', stage: state.arStage });
     });
 
     document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
-      TASK_DATA.lastExportAt = '2026-05-04 ' + new Date().toTimeString().slice(0, 5);
-      TASK_DATA.lastExportStage = state.arStage === 'dry' ? 'Dry Run' : state.arStage === 'official' ? 'Official Run' : 'All';
+      var exportedAt = downloadArExport('json-min');
+      TASK_DATA.lastExportAt = exportedAt.slice(0, 16).replace('T', ' ');
+      TASK_DATA.lastExportStage = getExportStageLabel(state.arStage);
       renderArExportMeta();
       showToast(t('toastExportJsonMin'));
       trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
