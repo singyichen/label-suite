@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('shows VA example image in guideline preview area when image file is clicked', async ({ page }) => {
+test('opens guideline image modal when image file is clicked', async ({ page }) => {
   await page.goto('/pages/annotation/annotation-workspace.html?task_type=single_sentence_va_scoring');
 
   const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
@@ -10,10 +10,10 @@ test('shows VA example image in guideline preview area when image file is clicke
 
   await page.locator('#guidelineFileBtn2').click();
 
-  const previewPanel = page.locator('#guidelineImagePreviewPanel');
-  const previewImage = page.locator('#guidelineImagePreview');
+  const imageModal = page.locator('#guidelineImageModal');
+  const modalImage = page.locator('#guidelineImageModalPreview');
 
-  await expect(previewPanel).toBeVisible();
-  await expect(previewImage).toBeVisible();
-  await expect(previewImage).toHaveAttribute('src', /assets\/images\/task-management\/VA_emj\.png$/);
+  await expect(imageModal).toBeVisible();
+  await expect(modalImage).toBeVisible();
+  await expect(modalImage).toHaveAttribute('src', /assets\/images\/task-management\/VA_emj\.png$/);
 });

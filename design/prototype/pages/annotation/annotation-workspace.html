@@ -634,6 +634,7 @@
       max-height: 520px;
       object-fit: contain;
       border-radius: var(--radius-sm);
+      cursor: zoom-in;
     }
 
     /* History */
@@ -707,6 +708,70 @@
     }
     .modal-preview-heading { color: var(--color-primary); font-weight: 700; }
     .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-sm); }
+    .image-modal {
+      max-width: min(1120px, calc(100vw - 48px));
+      max-height: calc(100vh - 48px);
+      padding: var(--space-lg);
+      gap: var(--space-sm);
+    }
+    .image-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .image-modal-title {
+      margin: 0;
+      font-family: var(--font-serif-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .image-modal-close {
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-text-soft);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color var(--dur-fast), color var(--dur-fast), background var(--dur-fast);
+    }
+    .image-modal-close:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .image-modal-close svg {
+      width: 18px;
+      height: 18px;
+    }
+    .image-modal-body {
+      flex: 1;
+      min-height: 0;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #F8FAFF 0%, #F3F5FF 100%);
+      padding: var(--space-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+    .image-modal-preview {
+      display: block;
+      max-width: 100%;
+      max-height: calc(100vh - 180px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      background: var(--color-white);
+    }
 
     /* ── Toast ──────────────────────────────────────────────── */
     .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
@@ -1180,6 +1245,23 @@
   </div>
 </div>
 
+<div class="modal-backdrop hidden" id="guidelineImageModal" role="dialog" aria-modal="true" aria-labelledby="guidelineImageModalTitle">
+  <div class="modal image-modal">
+    <div class="image-modal-header">
+      <h2 class="image-modal-title" id="guidelineImageModalTitle">圖片預覽</h2>
+      <button class="image-modal-close" type="button" id="guidelineImageModalClose" aria-label="關閉圖片預覽">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="image-modal-body">
+      <img class="image-modal-preview" id="guidelineImageModalPreview" alt="VA 評分範例圖">
+    </div>
+  </div>
+</div>
+
 <!-- Workspace -->
 <div class="workspace-root">
 
@@ -1463,6 +1545,8 @@ var I18N = {
     guidelineFileName3: '常見問題 FAQ.md', guidelineFileAction3: '預覽',
     guidelineImagePreviewEmpty: '點擊上方圖片檔案即可在此預覽',
     guidelineImagePreviewAlt: 'VA 評分範例圖',
+    guidelineImageModalTitle: '圖片預覽',
+    guidelineImageModalCloseAria: '關閉圖片預覽',
     guidelineModalTitle: '請先閱讀任務說明',
     guidelineModalBody: '開始標記前，請閱讀以下任務說明。說明內容在右側面板中持續可見，隨時可查閱。',
     guidelinePreviewHeading: '任務目標：', guidelinePreviewGoal: '新聞標題多標籤分類',
@@ -1613,6 +1697,8 @@ var I18N = {
     guidelineFileName3: 'FAQ.md', guidelineFileAction3: 'Preview',
     guidelineImagePreviewEmpty: 'Click an image file above to preview it here.',
     guidelineImagePreviewAlt: 'VA scoring example chart',
+    guidelineImageModalTitle: 'Image Preview',
+    guidelineImageModalCloseAria: 'Close image preview',
     guidelineModalTitle: 'Read task instructions first',
     guidelineModalBody: 'Before you start annotating, please read the task instructions below. They remain visible in the right panel throughout your session.',
     guidelinePreviewHeading: 'Goal: ', guidelinePreviewGoal: 'News Headline Multi-label Classification',
@@ -3949,7 +4035,10 @@ function renderTaskTypeInterface() {
   if (spReviewerSourceCard) spReviewerSourceCard.classList.toggle('hidden', !(isSP && state.taskRole === 'reviewer'));
 
   el('guidelineImagePreviewPanel').classList.toggle('hidden', !isVa);
-  if (!isVa) clearGuidelineImagePreview();
+  if (!isVa) {
+    clearGuidelineImagePreview();
+    closeGuidelineImageModal();
+  }
 
   setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
   setText('sentencePairsReviewerSourceTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
@@ -3989,6 +4078,21 @@ function showGuidelineImagePreview(src, altText) {
   image.src = src;
   image.alt = altText || '';
   empty.classList.add('hidden');
+}
+
+function closeGuidelineImageModal() {
+  var modal = el('guidelineImageModal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+}
+
+function openGuidelineImageModal(src, altText) {
+  var modal = el('guidelineImageModal');
+  var image = el('guidelineImageModalPreview');
+  if (!modal || !image) return;
+  image.src = src;
+  image.alt = altText || '';
+  modal.classList.remove('hidden');
 }
 
 function renderGuidelineCollapseState() {
@@ -4035,6 +4139,7 @@ function applyLang(lang) {
     'guidelineFileName2', 'guidelineFileAction2',
     'guidelineFileName3', 'guidelineFileAction3',
     'guidelineImagePreviewEmpty',
+    'guidelineImageModalTitle',
     'guidelineModalTitle', 'guidelineModalBody', 'guidelineModalConfirm',
     'guidelinePreviewHeading', 'guidelinePreviewGoal',
     'guidelinePreviewIntro',
@@ -4055,6 +4160,14 @@ function applyLang(lang) {
   var previewImage = el('guidelineImagePreview');
   if (previewImage) {
     previewImage.alt = t('guidelineImagePreviewAlt');
+  }
+  var modalImage = el('guidelineImageModalPreview');
+  if (modalImage) {
+    modalImage.alt = t('guidelineImagePreviewAlt');
+  }
+  var modalClose = el('guidelineImageModalClose');
+  if (modalClose) {
+    modalClose.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
   }
 
   setText('sampleListCount', t('sampleListCount', { n: SAMPLES.length }));
@@ -4389,9 +4502,22 @@ function bindEvents() {
     if (!isVaTaskType(state.taskTypeKey)) {
       return;
     }
-    showGuidelineImagePreview(VA_GUIDELINE_IMAGE_SRC, t('guidelineImagePreviewAlt'));
+    var altText = t('guidelineImagePreviewAlt');
+    showGuidelineImagePreview(VA_GUIDELINE_IMAGE_SRC, altText);
+    openGuidelineImageModal(VA_GUIDELINE_IMAGE_SRC, altText);
   });
   el('guidelineFileBtn3').addEventListener('click', function() { showToast('Markdown 預覽'); });
+  el('guidelineImagePreview').addEventListener('click', function() {
+    var image = el('guidelineImagePreview');
+    if (!image || !image.getAttribute('src')) return;
+    openGuidelineImageModal(image.getAttribute('src'), image.alt || t('guidelineImagePreviewAlt'));
+  });
+  el('guidelineImageModalClose').addEventListener('click', closeGuidelineImageModal);
+  el('guidelineImageModal').addEventListener('click', function(e) {
+    if (e.target === el('guidelineImageModal')) {
+      closeGuidelineImageModal();
+    }
+  });
 
   var mobileHandle = el('mobileDrawerHandle');
   mobileHandle.addEventListener('click', function() {
@@ -4403,6 +4529,11 @@ function bindEvents() {
 
   document.addEventListener('labelsuite:langchange', function(e) {
     if (e.detail && e.detail.lang) { applyLang(e.detail.lang); }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeGuidelineImageModal();
+    }
   });
 
   // Panel event bindings (delegated via annotationPanelMount)
