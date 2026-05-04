@@ -118,6 +118,15 @@ test.describe('Annotation list routing', () => {
     await expect(page).toHaveURL(/sample_id=AL-003/);
   });
 
+  test('task_id alias route still respects sub_type when filtering sequence labeling tasks', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-A6&run_type=official_run&task_type=sequence_labeling&sub_type=ner');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await expect(page.locator('#sampleRows tr')).toHaveCount(5);
+    await expect(page.locator('#sampleRows')).toContainText('NER-001');
+    await expect(page.locator('#sampleRows')).not.toContainText('AL-001');
+  });
+
   test('task info card quick continue uses pointer cursor', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

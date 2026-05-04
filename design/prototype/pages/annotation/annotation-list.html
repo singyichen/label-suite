@@ -1395,7 +1395,7 @@
   function matchesTaskContext(task, context) {
     if (!task) return false;
     if (context.runType && task.runType !== context.runType) return false;
-    if (context.taskId) return matchesTaskId(task, context.taskId);
+    if (context.taskId && !matchesTaskId(task, context.taskId)) return false;
     if (context.taskType && task.taskType !== context.taskType) return false;
     if (context.subType && (task.subType || '') !== context.subType) return false;
     return true;

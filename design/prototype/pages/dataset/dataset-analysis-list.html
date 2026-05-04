@@ -570,6 +570,7 @@
     pageSize: 20,
   };
   var toastTimer = null;
+  var searchDebounceTimer = null;
 
   /* ── Constants ────────────────────────────────────────────── */
   var TASK_TYPE_BADGE_CLS = {
@@ -656,6 +657,24 @@
       tasks = tasks.filter(function (task) { return getTaskSearchText(task).indexOf(keyword) !== -1; });
     }
     return tasks;
+  }
+
+  function getVisiblePaginationPages(totalPages, currentPage) {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, function (_, index) { return index + 1; });
+    }
+
+    var interiorSize = 5;
+    var start = Math.max(2, currentPage - 2);
+    var end = Math.min(totalPages - 1, start + interiorSize - 1);
+    start = Math.max(2, end - interiorSize + 1);
+
+    var pages = [1];
+    for (var pageNumber = start; pageNumber <= end; pageNumber += 1) {
+      pages.push(pageNumber);
+    }
+    pages.push(totalPages);
+    return pages;
   }
 
   function syncUrl() {
@@ -858,7 +877,7 @@
     var controls = document.getElementById('paginationControls');
     var nextBtn = document.getElementById('nextPageBtn');
     controls.querySelectorAll('[data-page]').forEach(function (button) { button.remove(); });
-    for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++) {
+    getVisiblePaginationPages(totalPages, state.page).forEach(function (pageNumber) {
       (function (pageValue) {
         var button = document.createElement('button');
         button.className = 'page-btn' + (pageValue === state.page ? ' active' : '');
@@ -871,7 +890,7 @@
         });
         nextBtn.insertAdjacentElement('beforebegin', button);
       }(pageNumber));
-    }
+    });
 
     var hasFilter = state.keyword.trim() || state.taskType || state.iaaStatus;
     document.getElementById('clearFiltersBtn').classList.toggle('hide-clear', !hasFilter);
@@ -945,10 +964,14 @@
   }
 
   document.getElementById('searchInput').addEventListener('input', function (event) {
-    state.keyword = event.target.value;
-    state.page = 1;
-    trackAnalytics('prototype_dataset_analysis_search_changed', { keyword: state.keyword });
-    render();
+    var nextKeyword = event.target.value;
+    if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = window.setTimeout(function () {
+      state.keyword = nextKeyword;
+      state.page = 1;
+      trackAnalytics('prototype_dataset_analysis_search_changed', { keyword: state.keyword });
+      render();
+    }, 300);
   });
 
   document.getElementById('taskTypeFilter').addEventListener('change', function (event) {

@@ -2410,6 +2410,8 @@
       arExportLastAt: '最近匯出：{time}',
       arExportStage: '匯出階段：{stage}',
       arExportNone: '尚未執行過匯出',
+      toastExportJson: '已建立 JSON 匯出',
+      toastExportJsonMin: '已建立精簡 JSON 匯出',
       arEmptyTitle: '尚無標記結果',
       arEmptyHint: '標記員提交後，結果將顯示於此。',
     },
@@ -2783,6 +2785,8 @@
       arExportLastAt: 'Last exported: {time}',
       arExportStage: 'Export stage: {stage}',
       arExportNone: 'No exports yet',
+      toastExportJson: 'JSON export created',
+      toastExportJsonMin: 'Compact JSON export created',
       arEmptyTitle: 'No annotation results yet',
       arEmptyHint: 'Results will appear here once annotators submit.',
     }
@@ -7134,7 +7138,9 @@ function getTaskTypeLabel(taskTypeKey) {
     var meta = document.getElementById('arExportMeta');
     if (!meta) return;
     if (TASK_DATA.lastExportAt) {
-      meta.textContent = interpolate(t('arExportLastAt'), { time: TASK_DATA.lastExportAt });
+      var timeStr = interpolate(t('arExportLastAt'), { time: TASK_DATA.lastExportAt });
+      var stageStr = interpolate(t('arExportStage'), { stage: TASK_DATA.lastExportStage || '-' });
+      meta.textContent = timeStr + ' · ' + stageStr;
     } else {
       meta.textContent = t('arExportNone');
     }
@@ -7753,7 +7759,7 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
       TASK_DATA.lastExportAt = '2026-05-04 ' + new Date().toTimeString().slice(0, 5);
       TASK_DATA.lastExportStage = state.arStage === 'dry' ? 'Dry Run' : state.arStage === 'official' ? 'Official Run' : 'All';
       renderArExportMeta();
-      showToast(t('arExportJsonBtn'));
+      showToast(t('toastExportJson'));
       trackEvent('prototype_ar_export', { format: 'json', stage: state.arStage });
     });
 
@@ -7761,7 +7767,7 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
       TASK_DATA.lastExportAt = '2026-05-04 ' + new Date().toTimeString().slice(0, 5);
       TASK_DATA.lastExportStage = state.arStage === 'dry' ? 'Dry Run' : state.arStage === 'official' ? 'Official Run' : 'All';
       renderArExportMeta();
-      showToast(t('arExportJsonMinBtn'));
+      showToast(t('toastExportJsonMin'));
       trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
     });
 

@@ -12,8 +12,23 @@ const TASK_RESULT_EXPECTATIONS = [
 ];
 
 test.describe('Task detail annotation results', () => {
+  test('includes export stage metadata and success toasts for annotation result exports', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+
+    await page.locator('#arStageSelect').selectOption('official');
+    await page.locator('#arExportJsonBtn').click();
+    await expect(page.locator('#toastMsg')).toContainText('已建立 JSON 匯出');
+    await expect(page.locator('#arExportMeta')).toContainText('最近匯出：');
+    await expect(page.locator('#arExportMeta')).toContainText('匯出階段：Official Run');
+
+    await page.locator('#arExportJsonMinBtn').click();
+    await expect(page.locator('#toastMsg')).toContainText('已建立精簡 JSON 匯出');
+  });
+
   test('renders reviewer-style readonly rows for NER tasks with six samples', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
 
     const table = page.locator('#arResultTable');
     await expect(page.locator('#arTableTitle')).toHaveText('標記結果表');
@@ -47,13 +62,17 @@ test.describe('Task detail annotation results', () => {
     expect(layoutOk).toBe(true);
     const tagNotStretched = await page.locator('#arResultTableBody .annotator-result-tag').first().evaluate((tag) => {
       const tagRect = tag.getBoundingClientRect();
-      const rowRect = tag.closest('.annotator-row').getBoundingClientRect();
+      const row = tag.closest('.annotator-row');
+      if (!row) return false;
+      const rowRect = row.getBoundingClientRect();
       return tagRect.width < rowRect.width * 0.7;
     });
     expect(tagNotStretched).toBe(true);
     const reviewBadgeVisible = await page.locator('#arResultTableBody .ar-review-badge').first().evaluate((badge) => {
       const badgeRect = badge.getBoundingClientRect();
-      const tableRect = badge.closest('table').getBoundingClientRect();
+      const table = badge.closest('table');
+      if (!table) return false;
+      const tableRect = table.getBoundingClientRect();
       return badgeRect.right <= tableRect.right - 4 && badgeRect.left >= tableRect.left;
     });
     expect(reviewBadgeVisible).toBe(true);
@@ -62,6 +81,7 @@ test.describe('Task detail annotation results', () => {
 
   test('keeps review badge visible for VA tasks and avoids stale summary meta block spacing', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
     await firstRow.click();
@@ -69,7 +89,9 @@ test.describe('Task detail annotation results', () => {
     await expect(page.locator('#arResultTableBody .ar-review-badge').first()).toContainText('待審核');
     const vaBadgeVisible = await page.locator('#arResultTableBody .ar-review-badge').first().evaluate((badge) => {
       const badgeRect = badge.getBoundingClientRect();
-      const tableRect = badge.closest('table').getBoundingClientRect();
+      const table = badge.closest('table');
+      if (!table) return false;
+      const tableRect = table.getBoundingClientRect();
       return badgeRect.right <= tableRect.right - 4 && badgeRect.width > 40;
     });
     expect(vaBadgeVisible).toBe(true);
@@ -84,6 +106,7 @@ test.describe('Task detail annotation results', () => {
   test('checks summary and review-badge layout across every task type', async ({ page }) => {
     for (const expectation of TASK_RESULT_EXPECTATIONS) {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
+      await expect(page.locator('#arTableSection')).toBeVisible();
 
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       await firstRow.click();
@@ -114,6 +137,7 @@ test.describe('Task detail annotation results', () => {
   for (const expectation of TASK_RESULT_EXPECTATIONS) {
     test(`renders task-specific distribution summary for ${expectation.taskId}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
+      await expect(page.locator('#arTableSection')).toBeVisible();
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       for (const statText of expectation.statTexts) {
         await expect(firstRow).toContainText(statText);
