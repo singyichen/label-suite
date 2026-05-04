@@ -478,7 +478,7 @@ flowchart LR
 **Entry points**：`/task-list` 任務列。  
 **Exit points**：返回 `/task-list` 或切換到其他 L0 模組。
 
-**麵包屑導航**：頁面頂端顯示 `任務管理 › 任務詳情`，`任務管理` 為可點擊連結，導向 `/task-list`；`任務詳情` 為當前頁面靜態文字。語言切換後同步更新（zh：`任務管理 › 任務詳情`；en：`Task Management › Task Detail`）。
+**麵包屑導航**：頁面頂端顯示 `任務管理 › {task_name}`，`任務管理` 為可點擊連結，導向 `/task-list`；第二段必須顯示當前任務名稱而非固定文案。語言切換後同步更新為當前語系的任務名稱（zh 例如：`任務管理 › 新聞標題多標籤分類`；en 例如：`Task Management › News Headline Multi-label Classification`）。
 
 ### 關鍵實體
 
@@ -561,6 +561,7 @@ flowchart LR
 | 1.5.16 | 2026-04-29 | 對齊 `013-task-new` 的 NER 設定：Overview「標記設定」改為核心設定 + 進階設定的漸進揭露；NER 主要 key 統一為 `entities` / `scheme` / `allow_overlapping`，舊 key 僅保留相容轉換 |
 | 1.5.15 | 2026-04-28 | 同步 Aspect List reviewer 直接修正流程：task-detail 發布的 Aspect List schema 需支援 annotation-workspace reviewer 新增、刪除、修改 aspect 並保留 correction diff |
 | 1.5.14 | 2026-04-28 | 同步 `013-task-new` 的 `sequence_labeling.subtype = aspect_list`：補齊 task-detail Overview「標記設定」摘要欄位、Visual 編輯分組、Aspect List 預覽、exact match 驗證與 payload 語意 |
+| 1.5.13a | 2026-05-04 | 麵包屑導航第二段改為顯示當前 `task_name`，不再使用固定的 `任務詳情 / Task Detail` 文案；prototype 與規格同步更新 |
 | 1.5.13 | 2026-04-27 | 新增麵包屑導航：頁面頂端加入 `任務管理 › 任務詳情`，對齊 dataset-analysis-detail 麵包屑樣式與 i18n 模式 |
 | 1.5.12 | 2026-04-24 | 分層依據條件顯示：`stratify_by[]` 欄位（顯示/編輯）僅在 `sampling_strategy = stratified_random` 時出現；其他策略不顯示，驗證規則亦同步改為條件觸發 |
 | 1.5.11 | 2026-04-23 | 補充 Dry Run 轉態門檻：僅當任務內每位 `active annotator` 完成其被指派的全部試標樣本，狀態才可由 `dry_run_in_progress` 進入 `waiting_iaa_confirmation` |

@@ -15,6 +15,9 @@ test.describe('Dataset analysis detail sequence_aspect i18n', () => {
   test('renders sequence_aspect stats panel in zh', async ({ page }) => {
     await gotoWithLang(page, 'zh', 'stats');
 
+    await expect(page.locator('#bcCurrent')).toHaveText('產品評論序列標註（NER / Aspect）');
+    await expect(page.locator('#pageTitle')).toHaveText('任務詳情');
+    await expect(page.locator('#pageSubtitle')).toHaveText('檢視統計總覽與品質監控');
     await expect(page.locator('#statsAspKPITitle')).toHaveText('Aspect 分析摘要');
     await expect(page.locator('#statsAspLblSentCount')).toHaveText('句子數量');
     await expect(page.locator('#statsAspCoverageTitle')).toHaveText('Aspect Coverage 分析');
@@ -24,6 +27,9 @@ test.describe('Dataset analysis detail sequence_aspect i18n', () => {
   test('renders sequence_aspect quality panel in en', async ({ page }) => {
     await gotoWithLang(page, 'en', 'quality');
 
+    await expect(page.locator('#bcCurrent')).toHaveText('Product Review Sequence Labeling (NER / Aspect)');
+    await expect(page.locator('#pageTitle')).toHaveText('Task detail');
+    await expect(page.locator('#pageSubtitle')).toHaveText('Review statistics and quality monitoring');
     await expect(page.locator('#iaaAspMethodSuffix')).toHaveText('— Primary metric group');
     await expect(page.locator('#lblAspExactCalc')).toHaveText('Exact match on boundary + label');
     await expect(page.locator('#boundaryErrTitle')).toHaveText('Boundary Error Analysis');

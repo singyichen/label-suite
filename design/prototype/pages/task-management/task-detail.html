@@ -3738,7 +3738,7 @@ function interpolate(template, payload) {
     }
 
     setText('bcRoot', t('bcRoot'));
-    setText('bcCurrent', t('bcCurrent'));
+    renderBreadcrumbCurrent();
     setText('pageTitle', t('pageTitle'));
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
@@ -4266,6 +4266,14 @@ function interpolate(template, payload) {
     stepper.querySelectorAll('.step-connector').forEach(function(el, i) {
       el.classList.toggle('connector-done', i < currentIdx);
     });
+  }
+
+  function getCurrentTaskName() {
+    return state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
+  }
+
+  function renderBreadcrumbCurrent() {
+    setText('bcCurrent', getCurrentTaskName());
   }
 
   function renderStatusStepperLabels() {
@@ -6208,7 +6216,7 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function renderOverview() {
-    var taskName = state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
+    var taskName = getCurrentTaskName();
     var datasetSummary = TASK_DATA.datasetTotal + ' · ' + (state.lang === 'zh' ? TASK_DATA.datasetSourceZh : TASK_DATA.datasetSourceEn);
     var settingsSummary = getSettingsSummary();
     var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
@@ -6216,6 +6224,7 @@ function getTaskTypeLabel(taskTypeKey) {
     var guidelineContent = getTaskGuidelineText();
     var guidelineContentText = guidelineContent || t('guidelineContentEmpty');
 
+    renderBreadcrumbCurrent();
     setText('valueTaskName', taskName);
     setText('valueTaskType', getTaskTypeLabel(TASK_DATA.taskTypeKey));
     setText('valueDatasetSummary', datasetSummary);
