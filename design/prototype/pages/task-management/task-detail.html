@@ -381,27 +381,7 @@
       font-size: 12px;
     }
 
-    .export-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: center;
-    }
-    .export-meta {
-      font-size: 13px;
-      color: var(--color-text-soft);
-      line-height: 1.6;
-    }
-    .export-empty {
-      border: 1px dashed var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-      padding: 14px;
-      font-size: 13px;
-      color: var(--color-text-soft);
-      margin-top: 10px;
-    }
-    .stage-filter-row {
+.stage-filter-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -813,18 +793,199 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast.error { background: var(--color-error); }
 
+    /* Annotation results panel */
+    .ar-filter-grid {
+      display: grid;
+      grid-template-columns: 200px 200px 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+    .ar-multiselect-wrap { position: relative; }
+    .ar-multiselect { position: relative; }
+    .ar-multiselect-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      padding: 9px 12px;
+      font-size: 14px;
+      text-align: left;
+      transition: border-color var(--dur-fast);
+    }
+    .ar-multiselect-trigger:hover { border-color: var(--color-primary); }
+    .ar-multiselect-trigger[aria-expanded="true"] { border-color: var(--color-primary); }
+    .ar-multiselect-chevron { width: 16px; height: 16px; opacity: 0.5; flex-shrink: 0; transition: transform var(--dur-fast); }
+    .ar-multiselect-trigger[aria-expanded="true"] .ar-multiselect-chevron { transform: rotate(180deg); }
+    .ar-multiselect-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 20;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .ar-multiselect-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    .ar-multiselect-option:hover { background: var(--color-surface); }
+    .ar-multiselect-option input[type="checkbox"] { accent-color: var(--color-primary); width: 14px; height: 14px; cursor: pointer; }
+    .ar-summary-row { cursor: pointer; }
+    .ar-summary-row td { vertical-align: middle; }
+    .ar-expand-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border: none; background: none;
+      color: var(--color-ink-muted); cursor: pointer; padding: 0;
+      border-radius: 4px; transition: color var(--dur-fast);
+    }
+    .ar-expand-btn:hover { color: var(--color-ink); }
+    .ar-expand-btn img { width: 16px; height: 16px; transition: transform 0.15s ease; }
+    .ar-expand-btn.expanded img { transform: rotate(90deg); }
+    .ar-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .ar-completed-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; }
+    .ar-summary-text {
+      display: block;
+      min-width: 260px;
+    }
+    .ar-summary-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-ink);
+      line-height: 1.7;
+      margin: 0;
+    }
+    .ar-stage-cell {
+      white-space: nowrap;
+    }
+    .reviewer-stats {
+      font-size: 12px; color: #6B7280; font-family: monospace;
+      display: block;
+      min-width: 240px;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+    .reviewer-stats-cell {
+      min-width: 280px;
+      width: 280px;
+    }
+    .annotator-detail-row { background: #F8FAFC; }
+    .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
+    .annotator-detail-inner {
+      padding: 8px 28px 8px 52px;
+      border-top: 1px solid #E2E8F0;
+    }
+    .annotator-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 140px) minmax(0, 1fr) minmax(150px, 180px) minmax(72px, 88px);
+      gap: 12px;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid #EAECF0;
+      min-width: 0;
+    }
+    .annotator-row:last-child { border-bottom: none; }
+    .annotator-username {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-ink);
+      min-width: 0;
+    }
+    .annotator-result-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      justify-self: start;
+      font-size: 13px; color: var(--color-primary); background: #EEF2FF;
+      border: 1px solid #C7D2FE; border-radius: var(--radius-md);
+      padding: 3px 12px;
+      font-family: monospace;
+      min-width: 80px;
+      max-width: 100%;
+      width: fit-content;
+      text-align: center;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    .annotator-submitted-at {
+      font-size: 12px;
+      color: var(--color-text-soft);
+      white-space: nowrap;
+      text-align: right;
+      justify-self: end;
+    }
+    .ar-review-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      justify-self: end;
+    }
+    .badge-ar-approved { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .badge-ar-returned { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+    .badge-ar-pending-review { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+    .badge-ar-submitted { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .badge-ar-draft { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
+    .badge-ar-pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .ar-export-meta { font-size: 13px; color: var(--color-text-soft); margin-bottom: 4px; }
+    .ar-empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: var(--space-xl) 0; text-align: center; }
+    .ar-empty-icon { width: 40px; height: 40px; opacity: 0.3; }
+    .ar-empty-title { font-size: 16px; font-weight: 600; color: var(--color-ink); }
+    .ar-empty-hint { font-size: 13px; color: var(--color-text-soft); }
+    .ar-va-stats { font-size: 12px; line-height: 1.7; font-family: var(--font-mono); }
+    .ar-va-stats-row { color: var(--color-text-soft); white-space: nowrap; }
+    .ar-dist-text { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .ar-dist-dot { color: var(--color-ink-muted); }
+    .ar-va-chip { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 13px; font-family: var(--font-mono); border: 1px solid; white-space: nowrap; }
+    .ar-va-chip-normal { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+    .ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+    .ar-va-chip-default { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border); }
+    .ar-classif-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .admin-tabs { overflow-x: auto; }
       .kv-grid { grid-template-columns: 1fr; }
       .sampling-grid { grid-template-columns: 1fr; }
-      .export-grid { grid-template-columns: 1fr; }
-      .progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.progress-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .stage-split-grid { grid-template-columns: 1fr; }
       .worklog-filter-grid { grid-template-columns: 1fr; }
       .worklog-summary-grid { grid-template-columns: 1fr; }
+      .ar-filter-grid { grid-template-columns: 1fr; }
       .sort-row { justify-content: flex-start; }
       .table-wrap { margin: 0 -2px; }
+      .annotator-detail-inner {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      .annotator-row {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+      }
+      .annotator-submitted-at {
+        text-align: left;
+        justify-self: start;
+      }
+      .ar-review-badge { justify-self: start; }
       .toast-container { right: 12px; left: 12px; bottom: 96px; }
       .toast { width: 100%; }
     }
@@ -1768,17 +1929,7 @@
       margin-top: 10px;
     }
 
-    .export-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-sm);
-    }
-    .export-actions { display: flex; gap: 8px; }
-
-    @media (max-width: 768px) {
+@media (max-width: 768px) {
       .overview-info-row { grid-template-columns: 1fr; }
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
@@ -1826,6 +1977,7 @@
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
+        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
         <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
         <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
         <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
@@ -1886,8 +2038,9 @@
       bcRoot: '任務管理',
       bcCurrent: '任務詳情',
       pageTitle: '任務詳情',
-      pageSubtitle: '檢視任務概覽、執行控制與匯出結果',
+      pageSubtitle: '檢視任務概覽與執行控制',
       tabOverview: '任務概覽',
+      tabAnnotationResults: '標記結果',
       tabAnnotationProgress: '標記進度',
       tabWorkLog: '工時紀錄',
       tabMemberManagement: '成員管理',
@@ -1897,7 +2050,6 @@
       executionTitle: '任務狀態與執行控制',
       runControlTabExecution: '執行狀態',
       runControlTabTrial: '試標回合',
-      exportTitle: '匯出結果',
       labelTaskName: '任務名稱',
       labelTaskType: '任務類型',
       labelCreatedBy: '建立者',
@@ -2092,19 +2244,11 @@
       isolationOn: '已隔離',
       isolationOff: '未隔離',
       isolationAuditTpl: '最後異動：{actor} · {time}',
-      exportJsonBtn: '匯出 JSON',
-      exportJsonMinBtn: '匯出 JSON-MIN',
-      lastExportLabel: '最近一次匯出時間：',
-      lastExportStageLabel: '匯出 標記階段：',
-      exportEmpty: '尚無可匯出結果',
-      exportNone: '尚無',
       toastRoleDenied: 'annotator 無權限檢視任務詳情，已導回任務列表。',
       toastPublishedDry: '已發布 Dry Run',
       toastPublishedOfficial: '已發布 Official Run',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
       toastResampled: '抽樣已重算',
-      toastExportJson: '已建立 JSON 匯出',
-      toastExportJsonMin: '已建立 JSON-MIN 匯出',
       yes: '是',
       no: '否',
       guidelineUploaded: '已上傳',
@@ -2231,14 +2375,52 @@
       memberActionModalBodyEnable: '是否啟用 {name}（{role}）？',
       memberActionCancelBtn: '取消',
       memberActionConfirmBtn: '確認',
+      arFilterTitle: '篩選列',
+      arStageFilterLabel: '標記階段',
+      arStageAll: '全部',
+      arStageDry: '試標',
+      arStageOfficial: '正式標記',
+      arStatusFilterLabel: '提交狀態',
+      arStatusAll: '全部',
+      arStatusSubmitted: '已提交',
+      arStatusDraft: '草稿',
+      arStatusPending: '待處理',
+      arAnnotatorFilterLabel: '標記員',
+      arAnnotatorAll: '全部標記員',
+      arTableTitle: '標記結果表',
+      thArSampleId: '樣本 ID',
+      thArTextPreview: '文本摘要',
+      thArDistribution: '標記分布統計',
+      thArStatus: '完成狀態',
+      thArCompletedAt: '完成時間',
+      thArStage: '標記階段',
+      thArAnnotator: '標記員',
+      thArValue: '標記值',
+      thArSubmittedAt: '提交時間',
+      thArReviewStatus: '審核狀態',
+      arReviewApproved: '通過',
+      arReviewReturned: '退回',
+      arReviewPending: '待審核',
+      arStatusBadgeSubmitted: '已提交',
+      arStatusBadgeDraft: '草稿',
+      arStatusBadgePending: '待處理',
+      arExportTitle: '匯出',
+      arExportJsonBtn: '匯出 JSON',
+      arExportJsonMinBtn: '匯出 JSON-MIN',
+      arExportLastAt: '最近匯出：{time}',
+      arExportStage: '匯出階段：{stage}',
+      arExportNone: '尚未執行過匯出',
+      arEmptyTitle: '尚無標記結果',
+      arEmptyHint: '標記員提交後，結果將顯示於此。',
     },
     en: {
       docTitle: 'Task Detail — Label Suite (Prototype)',
       bcRoot: 'Task Management',
       bcCurrent: 'Task Detail',
       pageTitle: 'Task detail',
-      pageSubtitle: 'Review overview, run control, and exports',
+      pageSubtitle: 'Review overview and run control',
       tabOverview: 'Task overview',
+      tabAnnotationResults: 'Annotation results',
       tabAnnotationProgress: 'Annotation progress',
       tabWorkLog: 'Work log',
       tabMemberManagement: 'Member management',
@@ -2248,7 +2430,6 @@
       executionTitle: 'Task status and run control',
       runControlTabExecution: 'Execution',
       runControlTabTrial: 'Trial rounds',
-      exportTitle: 'Export result',
       labelTaskName: 'Task name',
       labelTaskType: 'Task type',
       labelCreatedBy: 'Created by',
@@ -2443,19 +2624,11 @@
       isolationOn: 'isolated',
       isolationOff: 'non-isolated',
       isolationAuditTpl: 'Last changed by {actor} · {time}',
-      exportJsonBtn: 'Export JSON',
-      exportJsonMinBtn: 'Export JSON-MIN',
-      lastExportLabel: 'Last export: ',
-      lastExportStageLabel: 'Export 標記階段: ',
-      exportEmpty: 'No exportable result yet',
-      exportNone: 'None',
       toastRoleDenied: 'Annotator is not allowed to access task detail. Redirected to task list.',
       toastPublishedDry: 'Dry run published',
       toastPublishedOfficial: 'Official run published',
       toastPublishBlocked: 'Cannot publish due to invalid sampling setting.',
       toastResampled: 'Sampling recalculated',
-      toastExportJson: 'JSON export requested',
-      toastExportJsonMin: 'JSON-MIN export requested',
       yes: 'Yes',
       no: 'No',
       guidelineUploaded: 'Uploaded',
@@ -2575,6 +2748,43 @@
       memberActionModalBodyEnable: 'Enable {name} ({role})?',
       memberActionCancelBtn: 'Cancel',
       memberActionConfirmBtn: 'Confirm',
+      arFilterTitle: 'Filters',
+      arStageFilterLabel: 'Annotation stage',
+      arStageAll: 'All',
+      arStageDry: 'Dry Run',
+      arStageOfficial: 'Official Run',
+      arStatusFilterLabel: 'Submission status',
+      arStatusAll: 'All',
+      arStatusSubmitted: 'Submitted',
+      arStatusDraft: 'Draft',
+      arStatusPending: 'Pending',
+      arAnnotatorFilterLabel: 'Annotator',
+      arAnnotatorAll: 'All annotators',
+      arTableTitle: 'Annotation results',
+      thArSampleId: 'Sample ID',
+      thArTextPreview: 'Text preview',
+      thArDistribution: 'Distribution stats',
+      thArStatus: 'Status',
+      thArCompletedAt: 'Completed at',
+      thArStage: 'Stage',
+      thArAnnotator: 'Annotator',
+      thArValue: 'Label value',
+      thArSubmittedAt: 'Submitted at',
+      thArReviewStatus: 'Review',
+      arReviewApproved: 'Approved',
+      arReviewReturned: 'Returned',
+      arReviewPending: 'Pending review',
+      arStatusBadgeSubmitted: 'Submitted',
+      arStatusBadgeDraft: 'Draft',
+      arStatusBadgePending: 'Pending',
+      arExportTitle: 'Export',
+      arExportJsonBtn: 'Export JSON',
+      arExportJsonMinBtn: 'Export JSON-MIN',
+      arExportLastAt: 'Last exported: {time}',
+      arExportStage: 'Export stage: {stage}',
+      arExportNone: 'No exports yet',
+      arEmptyTitle: 'No annotation results yet',
+      arEmptyHint: 'Results will appear here once annotators submit.',
     }
   };
 
@@ -2615,9 +2825,7 @@
     currentAnnotators: 3,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
-    isolationLastUpdated: '2026-04-20 19:42',
-    lastExportAt: '',
-    lastExportStage: ''
+    isolationLastUpdated: '2026-04-20 19:42'
   };
 
   var TASK_PROFILE_MAP = {
@@ -2825,7 +3033,12 @@
     settingsNerAdvancedOpen: false,
     samplingEditMode: false,
     samplingDirty: false,
-    samplingDraft: null
+    samplingDraft: null,
+    arStage: 'all',
+    arStatus: 'all',
+    arAnnotators: [],
+    arAnnotatorDropdownOpen: false,
+    arExpandedRows: {}
   };
 
   var TASK_TYPE_OPTIONS = [
@@ -2909,8 +3122,456 @@
   };
   var SETTINGS_ENTITY_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9', '#F97316', '#14B8A6'];
 
+  var ANNOTATION_RESULTS_BY_TASK = {
+    T001: [
+      {
+        sampleId: 'CLS-001', stage: 'official',
+        textZh: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。',
+        textEn: 'Legislature passes tech industry transformation bill, government announces expanded R&D subsidies.',
+        summaryStats: [{ label: '政治', value: '×2' }, { label: '科技', value: '×3' }],
+        status: 'submitted', completedAt: '2026-04-25',
+        annotations: [
+          { annotator: 'kioleemg12', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:10', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { labels: ['政治', '科技'] }, submittedAt: '2026-04-25 14:22', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { labels: ['科技'] }, submittedAt: '2026-04-25 14:30', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'CLS-002', stage: 'official',
+        textZh: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。',
+        textEn: 'Famous athletes join charity concert, sports and entertainment sectors team up for children’s education.',
+        summaryStats: [{ label: '體育', value: '×2' }, { label: '娛樂', value: '×2' }, { label: '社會', value: '×2' }],
+        status: 'draft', completedAt: '2026-04-23',
+        annotations: [
+          { annotator: 'kioleemg12', value: { labels: ['體育', '娛樂'] }, submittedAt: '2026-04-23 09:00', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-23 09:30', reviewStatus: 'returned' },
+          { annotator: 'tony0950127', value: { labels: ['體育', '社會'] }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'CLS-003', stage: 'official',
+        textZh: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。',
+        textEn: 'Approaching typhoon causes widespread closures as authorities activate disaster response mechanisms.',
+        summaryStats: [{ label: '社會', value: '×3' }, { label: '政治', value: '×1' }],
+        status: 'submitted', completedAt: '2026-04-24',
+        annotations: [
+          { annotator: 'kioleemg12', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:05', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { labels: ['社會', '政治'] }, submittedAt: '2026-04-24 11:18', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { labels: ['社會'] }, submittedAt: '2026-04-24 11:34', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'CLS-004', stage: 'dry',
+        textZh: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。',
+        textEn: 'International film festival announces nominations featuring Taiwanese director’s socially conscious new work.',
+        summaryStats: [{ label: '娛樂', value: '×3' }, { label: '社會', value: '×2' }],
+        status: 'submitted', completedAt: '2026-04-22',
+        annotations: [
+          { annotator: 'kioleemg12', value: { labels: ['娛樂'] }, submittedAt: '2026-04-22 16:05', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:18', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { labels: ['娛樂', '社會'] }, submittedAt: '2026-04-22 16:34', reviewStatus: 'approved' }
+        ]
+      },
+      {
+        sampleId: 'CLS-005', stage: 'dry',
+        textZh: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。',
+        textEn: 'Major chip maker announces new production timeline, boosting tech stocks on the Taiwan exchange.',
+        summaryStats: [{ label: '科技', value: '×3' }, { label: '財經', value: '×2' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { labels: ['科技', '財經'] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { labels: ['科技'] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { labels: ['科技', '財經'] }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'CLS-006', stage: 'dry',
+        textZh: '新創公司推出 AI 醫療助手，吸引多家醫院與投資人關注。',
+        textEn: 'A startup launches an AI medical assistant, drawing attention from hospitals and investors.',
+        summaryStats: [{ label: '科技', value: '×2' }, { label: '健康', value: '×2' }, { label: '財經', value: '×1' }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { labels: ['科技', '健康'] }, submittedAt: '2026-05-01 09:10', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { labels: ['科技', '財經'] }, submittedAt: '2026-05-01 09:26', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { labels: ['健康'] }, submittedAt: '2026-05-01 09:44', reviewStatus: 'pending' }
+        ]
+      }
+    ],
+    T002: [
+      {
+        sampleId: 'VA-001', stage: 'official',
+        textZh: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
+        textEn: 'The overall service was great; the staff explained everything patiently, making me feel valued.',
+        summaryStats: [{ label: '平均 V/A', value: '4.7 / 5.6' }, { label: '分布區間', value: 'V 2.0-6.0 · A 4.0-7.0', muted: true }],
+        status: 'submitted', completedAt: '2026-04-23',
+        annotations: [
+          { annotator: 'kioleemg12', value: { valence: 3.5, arousal: 5.5 }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { valence: 6, arousal: 4 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { valence: 5, arousal: 7 }, submittedAt: '2026-04-23 10:40', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'VA-002', stage: 'official',
+        textZh: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。',
+        textEn: 'Waited almost an hour for food, the waitstaff was cold, and the food arrived cold.',
+        summaryStats: [{ label: '平均 V/A', value: '1.8 / 7.5' }, { label: '分布區間', value: 'V 1.5-2.0 · A 7.0-8.0', muted: true }],
+        status: 'submitted', completedAt: '2026-04-23',
+        annotations: [
+          { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-04-23 12:00', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { valence: 1.5, arousal: 8 }, submittedAt: '2026-04-23 12:20', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-04-23 12:40', reviewStatus: 'returned' }
+        ]
+      },
+      {
+        sampleId: 'VA-003', stage: 'official',
+        textZh: '這款手機真的超出我的預期，螢幕效果非常清晰，電池也撐得久。',
+        textEn: 'This phone exceeded my expectations with a clear display and long battery life.',
+        summaryStats: [{ label: '平均 V/A', value: '7.2 / 4.0' }, { label: '分布區間', value: 'V 6.5-8.0 · A 3.0-5.0', muted: true }],
+        status: 'draft', completedAt: '2026-04-23',
+        annotations: [
+          { annotator: 'kioleemg12', value: { valence: 7, arousal: 4 }, submittedAt: '2026-04-23 14:00', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { valence: 8, arousal: 5 }, submittedAt: '2026-04-23 14:20', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { valence: 6.5, arousal: 3 }, submittedAt: '2026-04-23 14:40', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'VA-004', stage: 'dry',
+        textZh: '這家餐廳的環境很安靜，適合商務洽談，但菜單選項有限。',
+        textEn: 'The restaurant is quiet and suitable for business meetings, though the menu is limited.',
+        summaryStats: [{ label: '平均 V/A', value: '4.0 / 3.7' }, { label: '分布區間', value: 'V 3.0-5.0 · A 3.0-4.0', muted: true }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: null, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { valence: 4, arousal: 4 }, submittedAt: '2026-04-21 13:20', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { valence: 3, arousal: 3 }, submittedAt: '2026-04-21 13:48', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'VA-005', stage: 'dry',
+        textZh: '搭乘高鐵南下，沿途風景讓人心曠神怡，準點率也很高。',
+        textEn: 'Took the high-speed rail south with beautiful scenery and excellent punctuality.',
+        summaryStats: [{ label: '平均 V/A', value: '7.5 / 5.0' }, { label: '分布區間', value: 'V 7.0-8.0 · A 4.0-6.0', muted: true }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { valence: 7, arousal: 5 }, submittedAt: '2026-05-01 10:00', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { valence: 8, arousal: 6 }, submittedAt: '2026-05-01 10:20', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { valence: 7.5, arousal: 4 }, submittedAt: '2026-05-01 10:40', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'VA-006', stage: 'dry',
+        textZh: '臨時取消的會議打亂整天節奏，讓人既沮喪又焦躁。',
+        textEn: 'A last-minute meeting cancellation disrupted the whole day and left me frustrated.',
+        summaryStats: [{ label: '平均 V/A', value: '2.3 / 6.8' }, { label: '分布區間', value: 'V 2.0-3.0 · A 6.0-7.0', muted: true }],
+        status: 'submitted', completedAt: '2026-05-02',
+        annotations: [
+          { annotator: 'kioleemg12', value: { valence: 2, arousal: 7 }, submittedAt: '2026-05-02 11:08', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { valence: 3, arousal: 6 }, submittedAt: '2026-05-02 11:22', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-05-02 11:37', reviewStatus: 'returned' }
+        ]
+      }
+    ],
+    T003: [
+      {
+        sampleId: 'ASP-001', stage: 'official',
+        textZh: '這支手機的螢幕顯示很細緻，但電池續航還有進步空間。',
+        textEn: 'The phone display is crisp, but the battery life still needs improvement.',
+        summaryStats: [{ label: '螢幕', value: '×3' }, { label: '電池', value: '×2' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:12', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { aspects: ['螢幕'] }, submittedAt: '2026-04-28 09:28', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { aspects: ['螢幕', '電池'] }, submittedAt: '2026-04-28 09:44', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'ASP-002', stage: 'official',
+        textZh: '客服回覆速度很快，不過退款流程有點繁瑣。',
+        textEn: 'Customer service replies quickly, but the refund process is cumbersome.',
+        summaryStats: [{ label: '客服', value: '×3' }, { label: '退款流程', value: '×2' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { aspects: ['客服'] }, submittedAt: '2026-04-28 10:26', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { aspects: ['客服', '退款流程'] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'ASP-003', stage: 'official',
+        textZh: '鍵盤手感紮實，觸控板也夠大，但散熱風扇聲音明顯。',
+        textEn: 'The keyboard feels solid and the touchpad is spacious, though the fan is loud.',
+        summaryStats: [{ label: '鍵盤', value: '×2' }, { label: '觸控板', value: '×2' }, { label: '散熱', value: '×3' }],
+        status: 'draft', completedAt: '2026-04-27',
+        annotations: [
+          { annotator: 'kioleemg12', value: { aspects: ['鍵盤', '觸控板', '散熱'] }, submittedAt: '2026-04-27 15:00', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { aspects: ['觸控板', '散熱'] }, submittedAt: '2026-04-27 15:16', reviewStatus: 'returned' },
+          { annotator: 'tony0950127', value: { aspects: ['鍵盤', '散熱'] }, submittedAt: '2026-04-27 15:34', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'ASP-004', stage: 'dry',
+        textZh: '包裝很完整，外盒設計也有質感。',
+        textEn: 'The packaging is complete and the outer box feels premium.',
+        summaryStats: [{ label: '包裝', value: '×3' }, { label: '外盒', value: '×1' }],
+        status: 'submitted', completedAt: '2026-04-22',
+        annotations: [
+          { annotator: 'kioleemg12', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:02', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { aspects: ['包裝', '外盒'] }, submittedAt: '2026-04-22 13:18', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { aspects: ['包裝'] }, submittedAt: '2026-04-22 13:34', reviewStatus: 'approved' }
+        ]
+      },
+      {
+        sampleId: 'ASP-005', stage: 'dry',
+        textZh: '送貨速度普通，但司機聯繫很即時。',
+        textEn: 'Shipping speed is average, but the driver communication is timely.',
+        summaryStats: [{ label: '送貨速度', value: '×2' }, { label: '司機聯繫', value: '×2' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { aspects: ['送貨速度'] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { aspects: ['司機聯繫'] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { aspects: ['送貨速度', '司機聯繫'] }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'ASP-006', stage: 'dry',
+        textZh: '冷氣很安靜，出風也均勻，但安裝預約等待太久。',
+        textEn: 'The air conditioner is quiet with even airflow, but installation scheduling took too long.',
+        summaryStats: [{ label: '噪音', value: '×2' }, { label: '出風', value: '×2' }, { label: '安裝預約', value: '×2' }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { aspects: ['噪音', '出風'] }, submittedAt: '2026-05-01 14:04', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { aspects: ['噪音', '安裝預約'] }, submittedAt: '2026-05-01 14:20', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { aspects: ['出風', '安裝預約'] }, submittedAt: '2026-05-01 14:38', reviewStatus: 'pending' }
+        ]
+      }
+    ],
+    T004: [
+      {
+        sampleId: 'RE-001', stage: 'official',
+        textZh: '阿司匹靈可緩解發燒症狀，醫師建議搭配補水。',
+        textEn: 'Aspirin can relieve fever symptoms, and doctors recommend hydration.',
+        labelStatsText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒) ×2 · (DOCTOR:醫師)→indicates→(TREATMENT:補水) ×2',
+        status: 'submitted', completedAt: '2026-04-30',
+        annotations: [
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:06', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { resultText: '(DRUG:阿司匹靈)→treats→(SYMP:發燒)' }, submittedAt: '2026-04-30 09:24', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { resultText: '(DOCTOR:醫師)→indicates→(TREATMENT:補水)' }, submittedAt: '2026-04-30 09:38', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'RE-002', stage: 'official',
+        textZh: '抗生素可能造成腹瀉，需評估是否與既有腸胃疾病相關。',
+        textEn: 'Antibiotics may cause diarrhea, requiring evaluation against existing GI disease.',
+        labelStatsText: '(DRUG:抗生素)→causes→(SYMP:腹瀉) ×2 · (SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病) ×2',
+        status: 'submitted', completedAt: '2026-04-30',
+        annotations: [
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:12', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { resultText: '(SYMP:腹瀉)→associated_with→(DISEASE:腸胃疾病)' }, submittedAt: '2026-04-30 10:30', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { resultText: '(DRUG:抗生素)→causes→(SYMP:腹瀉)' }, submittedAt: '2026-04-30 10:46', reviewStatus: 'returned' }
+        ]
+      },
+      {
+        sampleId: 'RE-003', stage: 'official',
+        textZh: '流感疫苗降低重症風險，但高燒患者仍需追蹤。',
+        textEn: 'Flu vaccines reduce severe risk, but high-fever patients still need follow-up.',
+        labelStatsText: '(DRUG:流感疫苗)→reduces→(RISK:重症風險) ×2 · (SYMP:高燒)→indicates→(ACTION:追蹤) ×1',
+        status: 'draft', completedAt: '2026-04-29',
+        annotations: [
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:流感疫苗)→reduces→(RISK:重症風險)' }, submittedAt: '2026-04-29 16:02', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { resultText: '(DRUG:流感疫苗)→reduces→(RISK:重症風險)' }, submittedAt: '2026-04-29 16:18', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { resultText: '(SYMP:高燒)→indicates→(ACTION:追蹤)' }, submittedAt: '2026-04-29 16:36', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'RE-004', stage: 'dry',
+        textZh: '止痛藥能減輕術後疼痛，但可能引發噁心。',
+        textEn: 'Painkillers can reduce postoperative pain but may trigger nausea.',
+        labelStatsText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛) ×2 · (DRUG:止痛藥)→causes→(SYMP:噁心) ×1',
+        status: 'submitted', completedAt: '2026-04-22',
+        annotations: [
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 08:56', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { resultText: '(DRUG:止痛藥)→treats→(SYMP:術後疼痛)' }, submittedAt: '2026-04-22 09:12', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { resultText: '(DRUG:止痛藥)→causes→(SYMP:噁心)' }, submittedAt: '2026-04-22 09:28', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'RE-005', stage: 'dry',
+        textZh: '醫師調整胰島素劑量後，病患血糖逐步穩定。',
+        textEn: 'After doctors adjusted insulin dosage, the patient’s blood sugar stabilized.',
+        labelStatsText: '(DOCTOR:醫師)→adjusts→(DRUG:胰島素) ×1 · (DRUG:胰島素)→stabilizes→(BIOMARKER:血糖) ×2',
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { resultText: '(DOCTOR:醫師)→adjusts→(DRUG:胰島素)' }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { resultText: '(DRUG:胰島素)→stabilizes→(BIOMARKER:血糖)' }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { resultText: '(DRUG:胰島素)→stabilizes→(BIOMARKER:血糖)' }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'RE-006', stage: 'dry',
+        textZh: '止咳藥改善夜間咳嗽，但對喉嚨乾癢效果有限。',
+        textEn: 'Cough medicine improved nighttime coughing, but had limited effect on throat irritation.',
+        labelStatsText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽) ×2 · (DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢) ×1',
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:08', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { resultText: '(DRUG:止咳藥)→treats→(SYMP:夜間咳嗽)' }, submittedAt: '2026-05-01 15:22', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { resultText: '(DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢)' }, submittedAt: '2026-05-01 15:36', reviewStatus: 'pending' }
+        ]
+      }
+    ],
+    T005: [
+      {
+        sampleId: 'SP-001', stage: 'official',
+        textZh: '句子 A：公司宣布今年營收創新高。句子 B：企業營收表現刷新紀錄。',
+        textEn: 'Sentence A: The company announced record-high annual revenue. Sentence B: The company set a new revenue record.',
+        summaryStats: [{ label: '蘊含', value: '×2' }, { label: '中立', value: '×1' }],
+        status: 'submitted', completedAt: '2026-04-26',
+        annotations: [
+          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:05', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-26 09:22', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-04-26 09:38', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'SP-002', stage: 'official',
+        textZh: '句子 A：球隊今天贏得冠軍。句子 B：球隊在決賽失利。',
+        textEn: 'Sentence A: The team won the championship today. Sentence B: The team lost the final.',
+        summaryStats: [{ label: '矛盾', value: '×3' }],
+        status: 'submitted', completedAt: '2026-04-26',
+        annotations: [
+          { annotator: 'kioleemg12', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:04', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:18', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { label: '矛盾' }, submittedAt: '2026-04-26 10:32', reviewStatus: 'approved' }
+        ]
+      },
+      {
+        sampleId: 'SP-003', stage: 'official',
+        textZh: '句子 A：新政策預計明年上路。句子 B：政策細節仍待行政院公布。',
+        textEn: 'Sentence A: The new policy is expected to launch next year. Sentence B: Details are still pending cabinet release.',
+        summaryStats: [{ label: '中立', value: '×2' }, { label: '蘊含', value: '×1' }],
+        status: 'draft', completedAt: '2026-04-26',
+        annotations: [
+          { annotator: 'kioleemg12', value: { label: '中立' }, submittedAt: '2026-04-26 11:00', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { label: '中立' }, submittedAt: '2026-04-26 11:14', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-26 11:28', reviewStatus: 'returned' }
+        ]
+      },
+      {
+        sampleId: 'SP-004', stage: 'dry',
+        textZh: '句子 A：研究顯示咖啡有助提升警覺。句子 B：喝咖啡可能讓人更清醒。',
+        textEn: 'Sentence A: Research shows coffee improves alertness. Sentence B: Coffee may make people more awake.',
+        summaryStats: [{ label: '蘊含', value: '×3' }],
+        status: 'submitted', completedAt: '2026-04-21',
+        annotations: [
+          { annotator: 'kioleemg12', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:06', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:22', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { label: '蘊含' }, submittedAt: '2026-04-21 13:38', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'SP-005', stage: 'dry',
+        textZh: '句子 A：政府將加碼青年租屋補助。句子 B：政策將刪減租屋補貼預算。',
+        textEn: 'Sentence A: The government will increase youth rental subsidies. Sentence B: The policy will cut rental subsidy budgets.',
+        summaryStats: [{ label: '矛盾', value: '×2' }, { label: '中立', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { label: '矛盾' }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { label: '矛盾' }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'SP-006', stage: 'dry',
+        textZh: '句子 A：企業明年將擴編海外據點。句子 B：公司正在評估東南亞市場機會。',
+        textEn: 'Sentence A: The company will expand overseas offices next year. Sentence B: The company is evaluating Southeast Asia opportunities.',
+        summaryStats: [{ label: '中立', value: '×2' }, { label: '蘊含', value: '×1' }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { label: '中立' }, submittedAt: '2026-05-01 10:12', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { label: '蘊含' }, submittedAt: '2026-05-01 10:26', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-05-01 10:42', reviewStatus: 'pending' }
+        ]
+      }
+    ],
+    T006: [
+      {
+        sampleId: 'NER-001', stage: 'official',
+        textZh: '台積電創辦人張忠謀在台北出席 2024 年半導體產業論壇。',
+        textEn: 'TSMC founder Morris Chang attended the 2024 semiconductor forum in Taipei.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×2' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }] }, submittedAt: '2026-04-28 10:10', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '張忠謀' }, { type: 'LOC', text: '台北' }, { type: 'MISC', text: '半導體產業論壇' }] }, submittedAt: '2026-04-28 10:24', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '台積電' }, { type: 'PER', text: '創辦人張忠謀' }, { type: 'LOC', text: '台北' }] }, submittedAt: '2026-04-28 10:42', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-002', stage: 'official',
+        textZh: '鴻海精密工業宣布在越南胡志明市設立新廠，預計 2025 年完工。',
+        textEn: 'Hon Hai announced a new plant in Ho Chi Minh City, Vietnam, expected in 2025.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×3' }, { label: 'DATE', value: '×3' }],
+        status: 'submitted', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '越南' }, { type: 'LOC', text: '胡志明市' }] }, submittedAt: '2026-04-28 11:08', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '鴻海精密工業' }, { type: 'LOC', text: '胡志明市' }, { type: 'DATE', text: '2025 年' }] }, submittedAt: '2026-04-28 11:26', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '鴻海' }, { type: 'LOC', text: '越南胡志明市' }, { type: 'DATE', text: '2025 年' }] }, submittedAt: '2026-04-28 11:44', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-003', stage: 'official',
+        textZh: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+        textEn: 'Minister Hsueh Jui-yuan attended the World Health Assembly on behalf of Taiwan.',
+        summaryStats: [{ label: 'ORG', value: '×2' }, { label: 'PER', value: '×2' }],
+        status: 'draft', completedAt: '2026-04-28',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '衛生福利部' }, { type: 'PER', text: '薛瑞元' }] }, submittedAt: '2026-04-28 13:04', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '世界衛生大會' }, { type: 'LOC', text: '台灣' }] }, submittedAt: '2026-04-28 13:18', reviewStatus: 'returned' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'PER', text: '薛瑞元' }, { type: 'ORG', text: '衛生福利部' }] }, submittedAt: '2026-04-28 13:34', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-004', stage: 'dry',
+        textZh: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+        textEn: 'The Fed kept rates unchanged, and Chair Jerome Powell said inflation will be monitored.',
+        summaryStats: [{ label: 'ORG', value: '×2' }, { label: 'PER', value: '×1' }, { label: 'LOC', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'LOC', text: '美國' }, { type: 'ORG', text: '聯準會' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '聯準會' }, { type: 'PER', text: '鮑威爾' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: null, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-005', stage: 'dry',
+        textZh: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+        textEn: 'The European Parliament passed a new AI Act to take effect across Europe next year.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'DATE', value: '×1' }],
+        status: 'pending', completedAt: '',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: '歐盟議會' }, { type: 'LOC', text: '歐洲' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: '人工智慧法案' }, { type: 'DATE', text: '明年' }] }, submittedAt: '', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: '歐盟' }, { type: 'LOC', text: '歐洲全境' }] }, submittedAt: '', reviewStatus: 'pending' }
+        ]
+      },
+      {
+        sampleId: 'NER-006', stage: 'dry',
+        textZh: 'Google 執行長 Sundar Pichai 在加州山景城發表 Gemini 新版本。',
+        textEn: 'Google CEO Sundar Pichai unveiled a new Gemini version in Mountain View, California.',
+        summaryStats: [{ label: 'ORG', value: '×3' }, { label: 'PER', value: '×3' }, { label: 'LOC', value: '×2' }, { label: 'PRODUCT', value: '×2' }],
+        status: 'submitted', completedAt: '2026-05-01',
+        annotations: [
+          { annotator: 'kioleemg12', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: 'Sundar Pichai' }, { type: 'LOC', text: '加州山景城' }] }, submittedAt: '2026-05-01 16:08', reviewStatus: 'approved' },
+          { annotator: '113450022', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PRODUCT', text: 'Gemini' }, { type: 'PER', text: 'Sundar Pichai' }] }, submittedAt: '2026-05-01 16:22', reviewStatus: 'pending' },
+          { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
+        ]
+      }
+    ]
+  };
+
   var TAB_PANEL_PATHS = {
     overview: './task-detail.panels/overview.html',
+    'annotation-results': './task-detail.panels/annotation-results.html',
     'annotation-progress': './task-detail.panels/annotation-progress.html',
     'work-log': './task-detail.panels/work-log.html',
     'member-management': './task-detail.panels/member-management.html'
@@ -2980,7 +3641,7 @@
     if (!mount) return Promise.resolve(false);
     mount.innerHTML = '';
 
-    var order = ['overview', 'annotation-progress', 'work-log', 'member-management'];
+    var order = ['overview', 'annotation-results', 'annotation-progress', 'work-log', 'member-management'];
     return order.reduce(function(promise, tabName) {
       return promise.then(function() {
         return appendPanelPartial(TAB_PANEL_PATHS[tabName]);
@@ -2990,19 +3651,7 @@
     });
   }
 
-  function setExportMetaLabels() {
-    var lastExportLabel = document.getElementById('lastExportLabel');
-    if (lastExportLabel && lastExportLabel.firstChild) {
-      lastExportLabel.firstChild.nodeValue = t('lastExportLabel');
-    }
-
-    var lastExportStageLabel = document.getElementById('lastExportStageLabel');
-    if (lastExportStageLabel && lastExportStageLabel.firstChild) {
-      lastExportStageLabel.firstChild.nodeValue = t('lastExportStageLabel');
-    }
-  }
-
-  function interpolate(template, payload) {
+function interpolate(template, payload) {
     return template.replace(/\{(\w+)\}/g, function(_, key) {
       return payload[key] == null ? '' : payload[key];
     });
@@ -3039,6 +3688,7 @@
     }
 
     var resolvedTab = 'overview';
+    if (tab === 'annotation-results') resolvedTab = 'annotation-results';
     if (tab === 'member-management') resolvedTab = 'member-management';
     if (tab === 'annotation-progress') resolvedTab = 'annotation-progress';
     if (tab === 'work-log') resolvedTab = 'work-log';
@@ -3092,6 +3742,7 @@
     setText('pageTitle', t('pageTitle'));
     setText('pageSubtitle', t('pageSubtitle'));
     setText('tabOverview', t('tabOverview'));
+    setText('tabAnnotationResults', t('tabAnnotationResults'));
     setText('tabAnnotationProgress', t('tabAnnotationProgress'));
     setText('tabWorkLog', t('tabWorkLog'));
     setText('tabMemberManagement', t('tabMemberManagement'));
@@ -3101,7 +3752,6 @@
     setText('executionTitle', t('executionTitle'));
     setText('runControlTabExecution', t('runControlTabExecution'));
     setText('runControlTabTrial', t('runControlTabTrial'));
-    setText('exportTitle', t('exportTitle'));
     setRequiredLabel('labelTaskName', t('labelTaskName'));
     setRequiredLabel('labelTaskType', t('labelTaskType'));
     setText('labelCreatedBy', t('labelCreatedBy'));
@@ -3187,10 +3837,6 @@
     setText('isolationToggleTitle', t('isolationToggleTitle'));
     setText('isolationToggleDesc', t('isolationToggleDesc'));
     setText('isolationRiskMsg', t('isolationRiskMsg'));
-    setText('exportJsonBtn', t('exportJsonBtn'));
-    setText('exportJsonMinBtn', t('exportJsonMinBtn'));
-    setText('exportEmpty', t('exportEmpty'));
-    setExportMetaLabels();
     setText('riskModalTitle', t('riskModalTitle'));
     setText('riskModalBody', t('riskModalBody'));
     setText('riskCancelBtn', t('riskCancelBtn'));
@@ -3237,6 +3883,23 @@
     setText('stageOfficialTitle', t('stageOfficialTitle'));
     setText('progressEmptyTitle', t('progressEmptyTitle'));
     setText('progressBackToOverviewBtn', t('progressBackToOverviewBtn'));
+    setText('arFilterTitle', t('arFilterTitle'));
+    setText('arStageFilterLabel', t('arStageFilterLabel'));
+    setText('arStatusFilterLabel', t('arStatusFilterLabel'));
+    setText('arAnnotatorFilterLabel', t('arAnnotatorFilterLabel'));
+    setText('arTableTitle', t('arTableTitle'));
+    setText('thArSampleId', t('thArSampleId'));
+    setText('thArTextPreview', t('thArTextPreview'));
+    setText('thArDistribution', t('thArDistribution'));
+    setText('thArStatus', t('thArStatus'));
+    setText('thArCompletedAt', t('thArCompletedAt'));
+    setText('thArStage', t('thArStage'));
+    setText('arExportTitle', t('arExportTitle'));
+    setText('arExportJsonBtn', t('arExportJsonBtn'));
+    setText('arExportJsonMinBtn', t('arExportJsonMinBtn'));
+    setText('arEmptyTitle', t('arEmptyTitle'));
+    setText('arEmptyHint', t('arEmptyHint'));
+    renderAnnotationResults();
     setText('workLogFilterTitle', t('workLogFilterTitle'));
     setText('workLogDateFromLabel', t('workLogDateFromLabel'));
     setText('workLogDateToLabel', t('workLogDateToLabel'));
@@ -3641,17 +4304,7 @@
     updateStatusStepper();
   }
 
-  function renderExport() {
-    setText('lastExportAt', TASK_DATA.lastExportAt || t('exportNone'));
-    setText('lastExportStage', TASK_DATA.lastExportStage || '-');
-    document.getElementById('exportEmpty').classList.toggle('hidden', Boolean(TASK_DATA.lastExportAt));
-
-    var disabled = TASK_DATA.status === 'draft';
-    document.getElementById('exportJsonBtn').disabled = disabled;
-    document.getElementById('exportJsonMinBtn').disabled = disabled;
-  }
-
-  function getTaskTypeLabel(taskTypeKey) {
+function getTaskTypeLabel(taskTypeKey) {
     var option = TASK_TYPE_OPTIONS.find(function(item) { return item.key === taskTypeKey; });
     if (!option) return taskTypeKey || '-';
     return state.lang === 'zh' ? option.zh : option.en;
@@ -5580,7 +6233,6 @@
     renderSamplingEditState();
     renderRunControlTabs();
     renderIsolationState();
-    renderExport();
     renderOverviewEditState();
     renderGuidelineEditState();
     renderSettingsEditState();
@@ -5601,6 +6253,7 @@
   function setTabByRole(tabName, silent) {
     var nextTab = 'overview';
     if (tabName === 'member-management') nextTab = 'member-management';
+    if (tabName === 'annotation-results') nextTab = 'annotation-results';
     if (tabName === 'annotation-progress') nextTab = 'annotation-progress';
     if (tabName === 'work-log') nextTab = 'work-log';
     if (!silent && state.activeTab === 'overview' && nextTab !== 'overview') {
@@ -5617,10 +6270,12 @@
 
   function renderTabs() {
     var tabOverview = document.getElementById('tabOverview');
+    var tabAnnotationResults = document.getElementById('tabAnnotationResults');
     var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
     var tabWorkLog = document.getElementById('tabWorkLog');
     var tabMemberManagement = document.getElementById('tabMemberManagement');
     var overviewPanel = document.getElementById('overviewPanel');
+    var annotationResultsPanel = document.getElementById('annotationResultsPanel');
     var annotationProgressPanel = document.getElementById('annotationProgressPanel');
     var workLogPanel = document.getElementById('workLogPanel');
     var memberManagementPanel = document.getElementById('memberManagementPanel');
@@ -5629,12 +6284,15 @@
     tabMemberManagement.classList.toggle('hidden', reviewer);
 
     var overviewActive = state.activeTab === 'overview';
+    var arActive = state.activeTab === 'annotation-results';
     var annotationActive = state.activeTab === 'annotation-progress';
     var workLogActive = state.activeTab === 'work-log';
     var memberActive = state.activeTab === 'member-management' && !reviewer;
 
     tabOverview.classList.toggle('active', overviewActive);
     tabOverview.setAttribute('aria-selected', overviewActive ? 'true' : 'false');
+    tabAnnotationResults.classList.toggle('active', arActive);
+    tabAnnotationResults.setAttribute('aria-selected', arActive ? 'true' : 'false');
     tabAnnotationProgress.classList.toggle('active', annotationActive);
     tabAnnotationProgress.setAttribute('aria-selected', annotationActive ? 'true' : 'false');
     tabWorkLog.classList.toggle('active', workLogActive);
@@ -5643,6 +6301,7 @@
     tabMemberManagement.setAttribute('aria-selected', memberActive ? 'true' : 'false');
 
     overviewPanel.classList.toggle('hidden', !overviewActive);
+    annotationResultsPanel.classList.toggle('hidden', !arActive);
     annotationProgressPanel.classList.toggle('hidden', !annotationActive);
     workLogPanel.classList.toggle('hidden', !workLogActive);
     memberManagementPanel.classList.toggle('hidden', !memberActive);
@@ -6163,6 +6822,354 @@
     renderWorkLogEmptyState(entries);
   }
 
+  function getAnnotationResultsData() {
+    return ANNOTATION_RESULTS_BY_TASK[TASK_DATA.taskId] || ANNOTATION_RESULTS_BY_TASK.T001;
+  }
+
+  function computeVaStats(annotations) {
+    var vals = annotations.filter(function(a) { return a.value && a.value.valence !== undefined; });
+    if (vals.length === 0) return null;
+    var vArr = vals.map(function(a) { return a.value.valence; });
+    var aArr = vals.map(function(a) { return a.value.arousal; });
+    function mean(arr) { return arr.reduce(function(s, x) { return s + x; }, 0) / arr.length; }
+    function std(arr, m) { return Math.sqrt(arr.reduce(function(s, x) { return s + (x - m) * (x - m); }, 0) / arr.length); }
+    var vm = mean(vArr), am = mean(aArr), vs = std(vArr, vm), as_ = std(aArr, am);
+    return { meanV: vm, meanA: am, stdV: vs, stdA: as_, minV: vm - 1.5 * vs, maxV: vm + 1.5 * vs, minA: am - 1.5 * as_, maxA: am + 1.5 * as_ };
+  }
+
+  function getVaColorClass(resultStr, vaRange) {
+    if (!vaRange) return '';
+    var match = resultStr.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
+    if (!match) return '';
+    var v = parseFloat(match[1]);
+    var a = parseFloat(match[2]);
+    if (v > vaRange.maxV || a > vaRange.maxA) return 'result-tag-red';
+    if (v < vaRange.minV || a < vaRange.minA) return 'result-tag-blue';
+    return 'result-tag-green';
+  }
+
+  function getArStatsText(sample, stats) {
+    if (TASK_DATA.taskTypeKey === 'single_sentence_va_scoring') {
+      if (!stats) return '-';
+      return [
+        'mean [' + stats.meanV.toFixed(2) + ', ' + stats.meanA.toFixed(2) + ']',
+        'std [' + stats.stdV.toFixed(2) + ', ' + stats.stdA.toFixed(2) + ']',
+        '±1.5std V : ' + stats.minV.toFixed(3) + '~' + stats.maxV.toFixed(3),
+        '±1.5std A : ' + stats.minA.toFixed(3) + '~' + stats.maxA.toFixed(3)
+      ].join('\n');
+    }
+    if (sample.labelStatsText) return sample.labelStatsText;
+    if (!sample.summaryStats || sample.summaryStats.length === 0) return '-';
+    return sample.summaryStats.map(function(stat) {
+      return stat.label + (stat.value ? stat.value : '');
+    }).join(' · ');
+  }
+
+  function getAnnotationResultDisplay(annotation) {
+    var v = annotation.value;
+    if (!v) return { tags: ['-'], colorClass: '' };
+    if (v.resultText) {
+      return { tags: [v.resultText], colorClass: '' };
+    }
+    if (v.valence !== undefined && v.arousal !== undefined) {
+      return { tags: ['[' + v.valence + ', ' + v.arousal + ']'], colorClass: '' };
+    }
+    if (v.labels && v.labels.length > 0) {
+      return { tags: [v.labels.join(', ')], colorClass: '' };
+    }
+    if (v.aspects && v.aspects.length > 0) {
+      return { tags: [v.aspects.join(', ')], colorClass: '' };
+    }
+    if (v.entities && v.entities.length > 0) {
+      return {
+        tags: [v.entities.map(function(entity) { return entity.type + ':' + entity.text; }).join(', ')],
+        colorClass: ''
+      };
+    }
+    if (v.triples && v.triples.length > 0) {
+      return { tags: [v.triples.join(' | ')], colorClass: '' };
+    }
+    if (v.label) {
+      return { tags: [v.label], colorClass: '' };
+    }
+    return { tags: ['-'], colorClass: '' };
+  }
+
+  function renderArDistCell(td, sample) {
+    var statsEl = document.createElement('span');
+    statsEl.className = 'reviewer-stats';
+    statsEl.textContent = getArStatsText(sample, computeVaStats(sample.annotations));
+    td.className = 'reviewer-stats-cell';
+    td.appendChild(statsEl);
+  }
+
+  function getArReviewBadge(reviewStatus) {
+    var map = {
+      approved: { cls: 'badge-ar-approved', label: t('arReviewApproved') },
+      returned: { cls: 'badge-ar-returned', label: t('arReviewReturned') },
+      pending: { cls: 'badge-ar-pending-review', label: t('arReviewPending') }
+    };
+    return map[reviewStatus] || map.pending;
+  }
+
+  function getArFilteredSamples() {
+    return getAnnotationResultsData().filter(function(sample) {
+      if (state.arStage !== 'all' && sample.stage !== state.arStage) return false;
+      if (state.arStatus !== 'all' && sample.status !== state.arStatus) return false;
+      if (state.arAnnotators.length > 0) {
+        var hasAnnotator = sample.annotations.some(function(a) {
+          return state.arAnnotators.indexOf(a.annotator) >= 0;
+        });
+        if (!hasAnnotator) return false;
+      }
+      return true;
+    });
+  }
+
+  function getArAnnotators() {
+    var seen = {};
+    var list = [];
+    getAnnotationResultsData().forEach(function(sample) {
+      sample.annotations.forEach(function(a) {
+        if (!seen[a.annotator]) { seen[a.annotator] = true; list.push(a.annotator); }
+      });
+    });
+    return list;
+  }
+
+  function renderArAnnotatorDropdown() {
+    var dropdown = document.getElementById('arAnnotatorDropdown');
+    if (!dropdown) return;
+    while (dropdown.firstChild) dropdown.removeChild(dropdown.firstChild);
+
+    var allOpt = document.createElement('label');
+    allOpt.className = 'ar-multiselect-option';
+    var allChk = document.createElement('input');
+    allChk.type = 'checkbox';
+    allChk.checked = state.arAnnotators.length === 0;
+    allChk.addEventListener('change', function() {
+      state.arAnnotators = [];
+      renderAnnotationResults();
+    });
+    allOpt.appendChild(allChk);
+    allOpt.appendChild(document.createTextNode(t('arAnnotatorAll')));
+    dropdown.appendChild(allOpt);
+
+    getArAnnotators().forEach(function(name) {
+      var opt = document.createElement('label');
+      opt.className = 'ar-multiselect-option';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.checked = state.arAnnotators.indexOf(name) >= 0;
+      chk.addEventListener('change', function() {
+        if (chk.checked) {
+          if (state.arAnnotators.indexOf(name) < 0) state.arAnnotators.push(name);
+        } else {
+          state.arAnnotators = state.arAnnotators.filter(function(n) { return n !== name; });
+        }
+        renderAnnotationResults();
+      });
+      opt.appendChild(chk);
+      opt.appendChild(document.createTextNode(name));
+      dropdown.appendChild(opt);
+    });
+  }
+
+  function renderArAnnotatorTriggerLabel() {
+    var label = document.getElementById('arAnnotatorTriggerLabel');
+    if (!label) return;
+    if (state.arAnnotators.length === 0) {
+      label.textContent = t('arAnnotatorAll');
+    } else if (state.arAnnotators.length === 1) {
+      label.textContent = state.arAnnotators[0];
+    } else {
+      label.textContent = state.arAnnotators[0] + ' +' + (state.arAnnotators.length - 1);
+    }
+  }
+
+  function getArStatusBadge(status) {
+    var map = { submitted: 'badge-ar-submitted', draft: 'badge-ar-draft', pending: 'badge-ar-pending' };
+    var labelKey = { submitted: 'arStatusBadgeSubmitted', draft: 'arStatusBadgeDraft', pending: 'arStatusBadgePending' };
+    return { cls: map[status] || 'badge-ar-pending', label: t(labelKey[status] || 'arStatusBadgePending') };
+  }
+
+  function renderArResultTable(samples) {
+    var tbody = document.getElementById('arResultTableBody');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    samples.forEach(function(sample) {
+      var expanded = !!state.arExpandedRows[sample.sampleId];
+      var text = state.lang === 'en' ? sample.textEn : sample.textZh;
+      var textPreview = text.length > 48 ? text.slice(0, 48) + '…' : text;
+      var statusBadge = getArStatusBadge(sample.status);
+      var vaStats = TASK_DATA.taskTypeKey === 'single_sentence_va_scoring' ? computeVaStats(sample.annotations) : null;
+
+      var tr = document.createElement('tr');
+      tr.className = 'ar-summary-row';
+
+      var tdExpand = document.createElement('td');
+      var expandBtn = document.createElement('button');
+      expandBtn.className = 'ar-expand-btn' + (expanded ? ' expanded' : '');
+      expandBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      expandBtn.setAttribute('aria-label', expanded ? '收合' : '展開');
+      expandBtn.type = 'button';
+      var chevronImg = document.createElement('img');
+      chevronImg.src = '../../assets/icons/chevron-right.svg';
+      chevronImg.alt = '';
+      chevronImg.setAttribute('aria-hidden', 'true');
+      expandBtn.appendChild(chevronImg);
+      expandBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        state.arExpandedRows[sample.sampleId] = !state.arExpandedRows[sample.sampleId];
+        renderArResultTable(samples);
+      });
+      tdExpand.appendChild(expandBtn);
+      tr.appendChild(tdExpand);
+
+      var tdId = document.createElement('td');
+      tdId.className = 'ar-id-cell';
+      tdId.textContent = sample.sampleId;
+      tr.appendChild(tdId);
+
+      var tdStatus = document.createElement('td');
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'badge ' + statusBadge.cls;
+      statusSpan.textContent = statusBadge.label;
+      tdStatus.appendChild(statusSpan);
+      tr.appendChild(tdStatus);
+
+      var tdCompleted = document.createElement('td');
+      tdCompleted.className = 'ar-completed-cell';
+      tdCompleted.textContent = sample.completedAt || '-';
+      tr.appendChild(tdCompleted);
+
+      var tdStage = document.createElement('td');
+      tdStage.className = 'ar-stage-cell';
+      var stageBadge = document.createElement('span');
+      stageBadge.className = 'badge ' + getWorkLogStageBadgeClass(sample.stage);
+      stageBadge.textContent = sample.stage === 'official' ? t('arStageOfficial') : t('arStageDry');
+      tdStage.appendChild(stageBadge);
+      tr.appendChild(tdStage);
+
+      var tdText = document.createElement('td');
+      tdText.className = 'ar-summary-text';
+      tdText.title = text;
+      var textTitle = document.createElement('div');
+      textTitle.className = 'ar-summary-title';
+      textTitle.textContent = textPreview;
+      tdText.appendChild(textTitle);
+      tr.appendChild(tdText);
+
+      var tdDist = document.createElement('td');
+      renderArDistCell(tdDist, sample);
+      tr.appendChild(tdDist);
+
+      tr.addEventListener('click', function() {
+        state.arExpandedRows[sample.sampleId] = !state.arExpandedRows[sample.sampleId];
+        renderArResultTable(samples);
+      });
+
+      tbody.appendChild(tr);
+
+      if (expanded) {
+        var detailTr = document.createElement('tr');
+        detailTr.className = 'annotator-detail-row';
+        var detailTd = document.createElement('td');
+        detailTd.colSpan = 7;
+        var detailInner = document.createElement('div');
+        detailInner.className = 'annotator-detail-inner';
+
+        sample.annotations.forEach(function(annotation) {
+          var row = document.createElement('div');
+          row.className = 'annotator-row';
+
+          var annotatorName = document.createElement('span');
+          annotatorName.className = 'annotator-username';
+          annotatorName.textContent = annotation.annotator;
+
+          var result = getAnnotationResultDisplay(annotation);
+          var resultSpan = document.createElement('span');
+          var colorClass = TASK_DATA.taskTypeKey === 'single_sentence_va_scoring'
+            ? getVaColorClass(result.tags[0], vaStats)
+            : '';
+          resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+          resultSpan.textContent = result.tags[0];
+
+          var submittedAt = document.createElement('span');
+          submittedAt.className = 'annotator-submitted-at';
+          submittedAt.textContent = annotation.submittedAt || '-';
+          var reviewBadge = getArReviewBadge(annotation.reviewStatus);
+          var reviewWrap = document.createElement('span');
+          reviewWrap.className = 'ar-review-badge';
+          var reviewSpan = document.createElement('span');
+          reviewSpan.className = 'badge ' + reviewBadge.cls;
+          reviewSpan.textContent = reviewBadge.label;
+          reviewWrap.appendChild(reviewSpan);
+
+          row.appendChild(annotatorName);
+          row.appendChild(resultSpan);
+          row.appendChild(submittedAt);
+          row.appendChild(reviewWrap);
+          detailInner.appendChild(row);
+        });
+
+        detailTd.appendChild(detailInner);
+        detailTr.appendChild(detailTd);
+        tbody.appendChild(detailTr);
+      }
+    });
+  }
+
+  function renderArExportMeta() {
+    var meta = document.getElementById('arExportMeta');
+    if (!meta) return;
+    if (TASK_DATA.lastExportAt) {
+      meta.textContent = interpolate(t('arExportLastAt'), { time: TASK_DATA.lastExportAt });
+    } else {
+      meta.textContent = t('arExportNone');
+    }
+  }
+
+  function renderAnnotationResults() {
+    var arStageSelect = document.getElementById('arStageSelect');
+    var arStatusSelect = document.getElementById('arStatusSelect');
+    if (arStageSelect) arStageSelect.value = state.arStage;
+    if (arStatusSelect) arStatusSelect.value = state.arStatus;
+
+    var arStageOpts = document.getElementById('arStageSelect');
+    if (arStageOpts && arStageOpts.options.length >= 3) {
+      arStageOpts.options[0].textContent = t('arStageAll');
+      arStageOpts.options[1].textContent = t('arStageDry');
+      arStageOpts.options[2].textContent = t('arStageOfficial');
+    }
+    var arStatusOpts = document.getElementById('arStatusSelect');
+    if (arStatusOpts && arStatusOpts.options.length >= 4) {
+      arStatusOpts.options[0].textContent = t('arStatusAll');
+      arStatusOpts.options[1].textContent = t('arStatusSubmitted');
+      arStatusOpts.options[2].textContent = t('arStatusDraft');
+      arStatusOpts.options[3].textContent = t('arStatusPending');
+    }
+
+    renderArAnnotatorDropdown();
+    renderArAnnotatorTriggerLabel();
+
+    var samples = getArFilteredSamples();
+    var tableSection = document.getElementById('arTableSection');
+    var emptyState = document.getElementById('arEmptyState');
+
+    if (samples.length === 0) {
+      if (tableSection) tableSection.classList.add('hidden');
+      if (emptyState) emptyState.classList.remove('hidden');
+    } else {
+      if (tableSection) tableSection.classList.remove('hidden');
+      if (emptyState) emptyState.classList.add('hidden');
+      renderArResultTable(samples);
+    }
+
+    renderArExportMeta();
+  }
+
   function showToast(message, isError) {
     var toast = document.getElementById('toast');
     var msg = document.getElementById('toastMsg');
@@ -6284,6 +7291,14 @@
       setTabByRole('overview');
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'overview' });
+    });
+
+    document.getElementById('tabAnnotationResults').addEventListener('click', function() {
+      var allowed = setTabByRole('annotation-results');
+      if (!allowed) return;
+      renderTabs();
+      renderAnnotationResults();
+      trackEvent('prototype_tab_switched', { tab: 'annotation-results' });
     });
 
     tabAnnotationProgress.addEventListener('click', function() {
@@ -6674,27 +7689,7 @@
       }
     });
 
-    document.getElementById('exportJsonBtn').addEventListener('click', function() {
-      if (TASK_DATA.status === 'draft') return;
-      TASK_DATA.lastExportAt = '2026-04-21 10:15';
-      TASK_DATA.lastExportStage = TASK_DATA.status.indexOf('official') >= 0 ? 'Official' : 'Dry';
-      showToast(t('toastExportJson'));
-      trackEvent('prototype_cta_clicked', { cta: 'export_json' });
-      trackEvent('prototype_export_success', { export_format: 'json', run_stage: TASK_DATA.lastExportStage.toLowerCase() });
-      renderExport();
-    });
-
-    document.getElementById('exportJsonMinBtn').addEventListener('click', function() {
-      if (TASK_DATA.status === 'draft') return;
-      TASK_DATA.lastExportAt = '2026-04-21 10:16';
-      TASK_DATA.lastExportStage = TASK_DATA.status.indexOf('official') >= 0 ? 'Official' : 'Dry';
-      showToast(t('toastExportJsonMin'));
-      trackEvent('prototype_cta_clicked', { cta: 'export_json_min' });
-      trackEvent('prototype_export_success', { export_format: 'json-min', run_stage: TASK_DATA.lastExportStage.toLowerCase() });
-      renderExport();
-    });
-
-    document.getElementById('progressStageDryBtn').addEventListener('click', function() {
+document.getElementById('progressStageDryBtn').addEventListener('click', function() {
       state.progressStage = 'dry';
       renderAnnotationProgress();
       trackEvent('prototype_progress_stage_switched', { run_stage: 'dry' });
@@ -6722,6 +7717,56 @@
       setTabByRole('overview');
       renderTabs();
       trackEvent('prototype_tab_switched', { tab: 'overview', source: 'work_log_empty_state_cta' });
+    });
+
+    document.getElementById('arStageSelect').addEventListener('change', function(e) {
+      state.arStage = e.target.value || 'all';
+      renderAnnotationResults();
+      trackEvent('prototype_ar_filter_changed', { filter: 'stage', value: state.arStage });
+    });
+
+    document.getElementById('arStatusSelect').addEventListener('change', function(e) {
+      state.arStatus = e.target.value || 'all';
+      renderAnnotationResults();
+      trackEvent('prototype_ar_filter_changed', { filter: 'status', value: state.arStatus });
+    });
+
+    document.getElementById('arAnnotatorTrigger').addEventListener('click', function(e) {
+      e.stopPropagation();
+      state.arAnnotatorDropdownOpen = !state.arAnnotatorDropdownOpen;
+      var trigger = document.getElementById('arAnnotatorTrigger');
+      var dropdown = document.getElementById('arAnnotatorDropdown');
+      if (trigger) trigger.setAttribute('aria-expanded', state.arAnnotatorDropdownOpen ? 'true' : 'false');
+      if (dropdown) dropdown.classList.toggle('hidden', !state.arAnnotatorDropdownOpen);
+    });
+
+    document.getElementById('arExportJsonBtn').addEventListener('click', function() {
+      TASK_DATA.lastExportAt = '2026-05-04 ' + new Date().toTimeString().slice(0, 5);
+      TASK_DATA.lastExportStage = state.arStage === 'dry' ? 'Dry Run' : state.arStage === 'official' ? 'Official Run' : 'All';
+      renderArExportMeta();
+      showToast(t('arExportJsonBtn'));
+      trackEvent('prototype_ar_export', { format: 'json', stage: state.arStage });
+    });
+
+    document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
+      TASK_DATA.lastExportAt = '2026-05-04 ' + new Date().toTimeString().slice(0, 5);
+      TASK_DATA.lastExportStage = state.arStage === 'dry' ? 'Dry Run' : state.arStage === 'official' ? 'Official Run' : 'All';
+      renderArExportMeta();
+      showToast(t('arExportJsonMinBtn'));
+      trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
+    });
+
+    document.addEventListener('click', function(e) {
+      if (state.arAnnotatorDropdownOpen) {
+        var multiselect = document.getElementById('arAnnotatorMultiselect');
+        if (multiselect && !multiselect.contains(e.target)) {
+          state.arAnnotatorDropdownOpen = false;
+          var trigger = document.getElementById('arAnnotatorTrigger');
+          var dropdown = document.getElementById('arAnnotatorDropdown');
+          if (trigger) trigger.setAttribute('aria-expanded', 'false');
+          if (dropdown) dropdown.classList.add('hidden');
+        }
+      }
     });
 
     document.getElementById('workLogDateFrom').addEventListener('change', function(e) {
@@ -6768,8 +7813,10 @@
     var workLogPanel = document.getElementById('workLogPanel');
     var memberManagementPanel = document.getElementById('memberManagementPanel');
 
+    var annotationResultsPanel = document.getElementById('annotationResultsPanel');
     skeleton.classList.remove('hidden');
     overviewPanel.classList.add('hidden');
+    annotationResultsPanel.classList.add('hidden');
     annotationProgressPanel.classList.add('hidden');
     workLogPanel.classList.add('hidden');
     memberManagementPanel.classList.add('hidden');
@@ -6780,6 +7827,7 @@
       renderTabs();
       renderOverview();
       renderMemberManagement();
+      renderAnnotationResults();
       renderAnnotationProgress();
       renderWorkLog();
     }, 560);
