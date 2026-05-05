@@ -1335,12 +1335,14 @@
     var runType = params.get('run_type');
     var taskId = params.get('task_id');
     var taskType = params.get('task_type') || getStoredActiveTaskType();
+    var subType = params.get('sub_type');
 
     return {
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
       taskId: taskId ? taskId.trim() : '',
-      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification'
+      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification',
+      subType: subType ? subType.trim() : ''
     };
   }
 
@@ -1390,12 +1392,20 @@
     return false;
   }
 
+  function matchesTaskContext(task, context) {
+    if (!task) return false;
+    if (context.runType && task.runType !== context.runType) return false;
+    if (context.taskId && !matchesTaskId(task, context.taskId)) return false;
+    if (context.taskType && task.taskType !== context.taskType) return false;
+    if (context.subType && (task.subType || '') !== context.subType) return false;
+    return true;
+  }
+
   function findCurrentTask(context) {
     var roleTasks = TASKS_BY_ROLE[context.role] || [];
     for (var i = 0; i < roleTasks.length; i += 1) {
       var task = roleTasks[i];
-      if (!matchesTaskId(task, context.taskId)) continue;
-      if (context.runType && task.runType !== context.runType) continue;
+      if (!matchesTaskContext(task, context)) continue;
       return task;
     }
     return null;
@@ -1413,16 +1423,13 @@
     return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
   }
 
-  function findLatestUnfinishedSampleId(task) {
+  function findFirstNonSubmittedSampleId(task) {
     if (!task || !Array.isArray(task.samples) || task.samples.length === 0) return '';
 
-    for (var i = task.samples.length - 1; i >= 0; i -= 1) {
-      if (task.samples[i].status === 'pending') return task.samples[i].sampleId;
+    for (var i = 0; i < task.samples.length; i += 1) {
+      if (task.samples[i].status !== 'submitted') return task.samples[i].sampleId;
     }
-    for (var j = task.samples.length - 1; j >= 0; j -= 1) {
-      if (task.samples[j].status === 'saved') return task.samples[j].sampleId;
-    }
-    return task.samples[task.samples.length - 1].sampleId;
+    return task.samples[0].sampleId;
   }
 
   function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType, subType) {
@@ -1470,7 +1477,7 @@
     if (quickBtn) {
       quickBtn.textContent = context.role === 'reviewer' ? '快速審核' : '快速繼續';
       quickBtn.onclick = function () {
-        var sampleId = findLatestUnfinishedSampleId(task);
+        var sampleId = findFirstNonSubmittedSampleId(task);
         if (!sampleId) return;
         setStoredActiveTaskType(task.taskType);
         window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType, task.subType);
@@ -1674,9 +1681,7 @@
     var roleTasks = TASKS_BY_ROLE[context.role] || [];
     var completionMap = readCompletionStateMap();
     var filteredTasks = roleTasks.filter(function (task) {
-      if (!matchesTaskId(task, context.taskId)) return false;
-      if (context.runType && task.runType !== context.runType) return false;
-      return true;
+      return matchesTaskContext(task, context);
     });
 
     var flatRows = [];
@@ -1747,7 +1752,7 @@
         var roleTasks = TASKS_BY_ROLE['reviewer'] || [];
         var allDecided = true;
         roleTasks.forEach(function(task) {
-          if (!matchesTaskId(task, context.taskId)) return;
+          if (!matchesTaskContext(task, context)) return;
           (task.samples || []).forEach(function(sample) {
             (sample.annotators || []).forEach(function(ann, idx) {
               var state = REVIEW_STATES[reviewKey(sample.sampleId, idx)];

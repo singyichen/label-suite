@@ -1,0 +1,75 @@
+<div id="annotationResultsPanel" class="hidden" aria-live="polite">
+
+  <section class="panel" aria-labelledby="arFilterTitle">
+    <h2 class="panel-title" id="arFilterTitle">篩選列</h2>
+    <div class="ar-filter-grid">
+      <div>
+        <label class="field-label" id="arStageFilterLabel" for="arStageSelect">標記階段</label>
+        <select class="input-select" id="arStageSelect">
+          <option value="all">全部</option>
+          <option value="dry">試標</option>
+          <option value="official">正式標記</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label" id="arStatusFilterLabel" for="arStatusSelect">提交狀態</label>
+        <select class="input-select" id="arStatusSelect">
+          <option value="all">全部</option>
+          <option value="submitted">已提交</option>
+          <option value="draft">草稿</option>
+          <option value="pending">待處理</option>
+        </select>
+      </div>
+      <div class="ar-multiselect-wrap">
+        <label class="field-label" id="arAnnotatorFilterLabel">標記員</label>
+        <div class="ar-multiselect" id="arAnnotatorMultiselect">
+          <button class="ar-multiselect-trigger" type="button" id="arAnnotatorTrigger" aria-haspopup="listbox" aria-expanded="false">
+            <span id="arAnnotatorTriggerLabel">全部標記員</span>
+            <img src="../../assets/icons/chevron-down.svg" alt="" aria-hidden="true" class="ar-multiselect-chevron" />
+          </button>
+          <div class="ar-multiselect-dropdown hidden" id="arAnnotatorDropdown" role="listbox" aria-multiselectable="true"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="arTableTitle" id="arTableSection">
+    <h2 class="panel-title" id="arTableTitle">標記結果表</h2>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" id="arResultTable" role="table" aria-label="Sample annotation results">
+          <thead>
+            <tr>
+              <th style="width:36px;"></th>
+              <th id="thArSampleId">樣本 ID</th>
+              <th id="thArStatus">完成狀態</th>
+              <th id="thArCompletedAt">完成時間</th>
+              <th id="thArStage">標記階段</th>
+              <th id="thArTextPreview">文本摘要</th>
+              <th id="thArDistribution">標記分布統計</th>
+            </tr>
+          </thead>
+          <tbody id="arResultTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="arExportTitle" id="arExportSection">
+    <h2 class="panel-title" id="arExportTitle">匯出</h2>
+    <div id="arExportMeta" class="ar-export-meta"></div>
+    <div class="action-row" style="margin-top: var(--space-sm);">
+      <button class="btn btn-secondary" type="button" id="arExportJsonBtn">匯出 JSON</button>
+      <button class="btn btn-secondary" type="button" id="arExportJsonMinBtn">匯出 JSON-MIN</button>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="arEmptyState" aria-labelledby="arEmptyTitle">
+    <div class="ar-empty-state">
+      <img src="../../assets/icons/file-text.svg" alt="" aria-hidden="true" class="ar-empty-icon" />
+      <p class="ar-empty-title" id="arEmptyTitle">尚無標記結果</p>
+      <p class="ar-empty-hint" id="arEmptyHint">標記員提交後，結果將顯示於此。</p>
+    </div>
+  </section>
+
+</div>

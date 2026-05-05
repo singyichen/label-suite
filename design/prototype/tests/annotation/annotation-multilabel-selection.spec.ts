@@ -1,12 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+async function dismissGuidelineModal(page: import('@playwright/test').Page) {
+  const guidelineModal = page.locator('#guidelineModal');
+  const confirmBtn = page.locator('#guidelineModalConfirm');
+  if (await confirmBtn.isVisible()) {
+    await confirmBtn.click();
+    await expect(guidelineModal).toBeHidden();
+  }
+}
+
 test('classification task supports multi-label selection and submission', async ({ page }) => {
   await page.goto('/pages/annotation/annotation-workspace.html?task_type=single_sentence_classification&sample_id=R2-003');
 
-  const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
-  if (await guidelineModalConfirm.isVisible()) {
-    await guidelineModalConfirm.click();
-  }
+  await dismissGuidelineModal(page);
 
   const politics = page.locator('input[name="news_category"][value="politics"]');
   const technology = page.locator('input[name="news_category"][value="technology"]');

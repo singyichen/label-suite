@@ -78,6 +78,8 @@ test.describe('Task detail profile mapping', () => {
     test(`renders task-specific overview for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
+      await expect(page.locator('#bcCurrent')).toHaveText(task.name);
+
       const overview = page.locator('#overviewPanel');
       await expect(overview).toContainText(task.name);
       await expect(overview).toContainText(task.type);
