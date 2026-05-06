@@ -171,12 +171,17 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - 區塊 2：`標記結果表`
     - 樣式：可展開階層式表格，父列與子列的視覺語言需對齊審核員 `annotation-list` 的 reviewer list，但移除所有操作功能
     - 父列欄位：樣本 ID、完成狀態（待處理 / 草稿 / 已提交）、完成時間、標記階段、文本摘要（單行截斷顯示）、標記分布統計
+    - 列表底部：需顯示與 `task-list` 相同視覺語法的 footer pagination
     - 父列規則：
       - `標記階段` 必須獨立成欄，不得跟著 `文本摘要` 一起顯示
       - `標記階段` 必須以 badge 顯示，`試標` / `正式標記` 的顏色與樣式需對齊既有 stage badge
       - 表格標題固定為 `標記結果表`；英文文案為 `Annotation results`
       - `文本摘要` 欄僅保留單一摘要文字容器，不得殘留舊的標記階段 meta 區塊、重複包裝節點或額外空白佔位
       - 當父列因多行統計文字而增高時，`文本摘要` 欄需維持單一 block 摘要容器，並確保摘要標題貼齊容器頂部；即使摘要內容僅單行，也不得因舊版 meta wrapper 留下額外垂直留白
+    - 分頁規則：
+      - footer pagination 必須顯示總筆數與目前頁數資訊（例如 `共 6 筆 · 第 1 / 1 頁`）
+      - 必須提供每頁筆數切換（`20 / 50 / 100`）與上一頁 / 下一頁 / 頁碼按鈕
+      - 視覺樣式、間距、按鈕狀態與 `task-list` pagination 一致
     - 標記分布統計規則：
       - `single_sentence_classification` / `sequence_labeling` / `sentence_pairs` / `relation_extraction` 使用 reviewer list 同款 monospace 統計文字
       - `single_sentence_va_scoring` 使用 reviewer list 同款 `mean / std / ±1.5std` 多行統計文字
@@ -474,6 +479,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015b-1**：父列 `標記階段` 必須獨立成欄，以 badge 顯示 `試標` / `正式標記`，樣式對齊既有 stage badge；不得將標記階段文案放入 `文本摘要` 欄內。
 - **FR-015b-2**：父列 `標記結果表` 的視覺語法必須對齊 reviewer `annotation-list`：統計區使用 reviewer stats 文字樣式，展開列標記值使用 reviewer result tag 樣式。
 - **FR-015b-3**：父列 `文本摘要` 儲存格必須只承載單一摘要容器；當列高因多行統計而增加時，摘要標題仍需自容器頂部對齊，不得殘留舊 meta 區塊、額外垂直留白或多餘占位。
+- **FR-015b-4**：`annotation-results` 表格底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕。
 - **FR-015c**：標記員子列必須以 `task_type` 適配方式顯示標記值，不得以單一 generic string 取代所有類型。
 - **FR-015c-1**：`single_sentence_classification`、`sequence_labeling.subtype = ner`、`sequence_labeling.subtype = aspect_list`、`sentence_pairs` 的子列標記值需以 reviewer list 同款 result tag 顯示。
 - **FR-015c-2**：`single_sentence_va_scoring` 的父列統計必須顯示 reviewer list 同款 `mean / std / ±1.5std` 多行文字；子列標記值必須顯示 `[valence, arousal]`，並沿用相同顏色判斷規則。
@@ -602,6 +608,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.4 | 2026-05-06 | 同步 `annotation-results` prototype 分頁：標記結果表底部新增與 `task-list` 一致的 footer pagination（總筆數 / 目前頁數、每頁筆數切換、上一頁 / 下一頁 / 頁碼按鈕） |
 | 1.6.3 | 2026-05-06 | 同步 `task-detail` prototype RWD 修訂：補充 `annotation-results` 文本摘要單一 wrapper 與頂對齊規則、展開列 `提交時間 + 審核狀態` metadata 群組在 desktop / mobile 的排列約束、result tag 不可被拉伸成整列色塊，並新增 `member-management` 與 `annotation-results` 窄 viewport 的表格捲動/換行規則 |
 | 1.6.2 | 2026-05-04 | 新增 export schema 規劃：以 Label Studio `JSON / JSON-MIN` 為參考，明確定義 Label Suite 採 `manifest + items[]` 的完整 JSON 與 flat rows 的 JSON-MIN；補齊共通欄位、task-specific 動態欄位與 reviewer-corrected result 匯出原則 |
 | 1.6.1 | 2026-05-04 | 同步 `annotation-results` prototype 調整：區塊 2 標題由 `樣本結果表` 改為 `標記結果表`（EN: `Annotation results`）；父列表頭新增獨立 `標記階段` 欄並以 stage badge 呈現；文本摘要移除舊 stage meta 佔位；各 task type 的標記分布統計與展開列 result tag 視覺對齊 reviewer `annotation-list`；補充 `relation_extraction` / `single_sentence_va_scoring` 的字串格式與展開列右側審核狀態不可裁切規則 |

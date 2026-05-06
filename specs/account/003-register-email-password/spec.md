@@ -2,7 +2,7 @@
 
 **功能分支**：`003-register-email-password`
 **建立日期**：2026-04-05
-**版本**：1.2.1
+**版本**：1.2.2
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
 
@@ -11,6 +11,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `PASSWORD_MIN_LENGTH = 8`
+- `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`
 
 ## Process Flow
 
@@ -83,7 +84,7 @@ sequenceDiagram
 
 1. **Given** 任一欄位為空，**When** 送出表單，**Then** 顯示對應欄位必填錯誤。
 2. **Given** Email 格式不合法，**When** 送出表單，**Then** 顯示 Email 格式錯誤。
-3. **Given** 密碼長度小於 `PASSWORD_MIN_LENGTH`，**When** 送出表單，**Then** 顯示密碼長度錯誤。
+3. **Given** 密碼未滿足 `PASSWORD_MIN_LENGTH` 或未同時包含大寫英文、小寫英文與數字，**When** 送出表單，**Then** 顯示密碼規則錯誤。
 4. **Given** 密碼與確認密碼不一致，**When** 送出表單，**Then** 顯示「密碼不一致」錯誤。
 5. **Given** 欄位曾報錯，**When** 使用者重新輸入，**Then** 該欄位錯誤需即時清除。
 
@@ -158,6 +159,7 @@ sequenceDiagram
 - **FR-005**：送出前必須驗證姓名、Email、密碼、確認密碼皆為必填。
 - **FR-006**：Email 必須驗證格式合法（含基本 `@` 與網域格式）。
 - **FR-007**：密碼長度必須至少 `PASSWORD_MIN_LENGTH`。
+- **FR-007A**：密碼說明文案必須明確顯示 `PASSWORD_RULE`。
 - **FR-008**：確認密碼必須與密碼完全一致。
 - **FR-009**：密碼與確認密碼欄位必須提供顯示/隱藏切換，且 `aria-label` 需同步。
 - **FR-010**：驗證失敗時必須顯示對應欄位錯誤，不送出成功流程。
@@ -231,6 +233,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.2 | 2026-05-06 | 同步 register prototype 密碼說明文案：新增 `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`，並明確要求註冊頁顯示該規則 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：register 切換語言後導向 login/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 register 原型（前端驗證、重複 Email 模擬、成功後 2 秒導頁） |

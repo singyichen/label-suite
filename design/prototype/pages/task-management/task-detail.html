@@ -646,6 +646,61 @@
       color: var(--color-ink);
       vertical-align: middle;
     }
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+      background: var(--color-white);
+    }
+    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
+    .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink);
+      background: var(--color-white);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--dur-fast);
+    }
+    .page-btn:hover:not(:disabled):not(.active) {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+    }
+    .page-btn.active {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .page-size-select {
+      padding: 5px 28px 5px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
     .member-table tbody tr:last-child td { border-bottom: none; }
     .member-name { font-weight: 700; }
     .member-email { color: var(--color-text-soft); }
@@ -858,7 +913,7 @@
     .ar-expand-btn.expanded img { transform: rotate(90deg); }
     .ar-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .ar-completed-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; }
-    .ar-summary-cell { vertical-align: middle; }
+    .ar-summary-row .ar-summary-cell { vertical-align: top; }
     .ar-summary-text {
       display: block;
       min-width: 260px;
@@ -888,22 +943,25 @@
     .annotator-detail-row { background: #F8FAFC; }
     .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
     .annotator-detail-inner {
-      padding: 8px 20px 8px 52px;
+      padding: 8px 48px 8px 52px;
       border-top: 1px solid #E2E8F0;
     }
     .annotator-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
       padding: 7px 0;
       border-bottom: 1px solid #EAECF0;
+      min-width: 0;
     }
     .annotator-row:last-child { border-bottom: none; }
     .annotator-username {
       font-size: 13px;
       font-weight: 600;
       color: var(--color-ink);
-      min-width: 110px;
+      min-width: 0;
+      flex: 0 1 110px;
     }
     .annotator-result-tag {
       display: inline-flex;
@@ -915,6 +973,7 @@
       font-family: monospace;
       min-width: 80px;
       text-align: center;
+      flex: 0 1 320px;
       max-width: min(100%, 320px);
       white-space: normal;
       overflow-wrap: anywhere;
@@ -926,9 +985,11 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 12px;
+      gap: 8px;
       margin-left: auto;
       flex-shrink: 0;
+      min-width: 0;
+      max-width: 100%;
     }
     .annotator-submitted-at {
       font-size: 12px;
@@ -2408,6 +2469,10 @@
       arReviewApproved: '通過',
       arReviewReturned: '退回',
       arReviewPending: '待審核',
+      arPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      arPageSizeLabel: ' 筆/頁',
+      arPrevPageAria: '上一頁',
+      arNextPageAria: '下一頁',
       arStatusBadgeSubmitted: '已提交',
       arStatusBadgeDraft: '草稿',
       arStatusBadgePending: '待處理',
@@ -2783,6 +2848,10 @@
       arReviewApproved: 'Approved',
       arReviewReturned: 'Returned',
       arReviewPending: 'Pending review',
+      arPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      arPageSizeLabel: ' / page',
+      arPrevPageAria: 'Previous page',
+      arNextPageAria: 'Next page',
       arStatusBadgeSubmitted: 'Submitted',
       arStatusBadgeDraft: 'Draft',
       arStatusBadgePending: 'Pending',
@@ -3047,6 +3116,8 @@
     samplingDraft: null,
     arStage: 'all',
     arStatus: 'all',
+    arPage: 1,
+    arPageSize: 20,
     arAnnotators: [],
     arAnnotatorDropdownOpen: false,
     arExpandedRows: {}
@@ -6969,6 +7040,7 @@ function getTaskTypeLabel(taskTypeKey) {
     allChk.checked = state.arAnnotators.length === 0;
     allChk.addEventListener('change', function() {
       state.arAnnotators = [];
+      state.arPage = 1;
       renderAnnotationResults();
     });
     allOpt.appendChild(allChk);
@@ -6987,6 +7059,7 @@ function getTaskTypeLabel(taskTypeKey) {
         } else {
           state.arAnnotators = state.arAnnotators.filter(function(n) { return n !== name; });
         }
+        state.arPage = 1;
         renderAnnotationResults();
       });
       opt.appendChild(chk);
@@ -7419,6 +7492,72 @@ function getTaskTypeLabel(taskTypeKey) {
     }
   }
 
+  function renderArPagination(total) {
+    var bar = document.getElementById('arPaginationBar');
+    if (!bar) return;
+
+    var totalPages = Math.max(1, Math.ceil(total / state.arPageSize));
+    if (state.arPage > totalPages) state.arPage = totalPages;
+
+    bar.classList.toggle('hidden', total === 0);
+
+    var info = document.getElementById('arPaginationInfo');
+    if (info) {
+      info.textContent = t('arPaginationTpl')
+        .replace('{total}', total)
+        .replace('{page}', state.arPage)
+        .replace('{totalPages}', totalPages);
+    }
+
+    var pageSizeSelect = document.getElementById('arPageSizeSelect');
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(state.arPageSize);
+      Array.prototype.forEach.call(pageSizeSelect.options, function(opt) {
+        opt.textContent = opt.value + t('arPageSizeLabel');
+      });
+    }
+
+    var prevBtn = document.getElementById('arPrevPageBtn');
+    var nextBtn = document.getElementById('arNextPageBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.arPage <= 1;
+      prevBtn.setAttribute('aria-label', t('arPrevPageAria'));
+    }
+    if (nextBtn) {
+      nextBtn.disabled = state.arPage >= totalPages;
+      nextBtn.setAttribute('aria-label', t('arNextPageAria'));
+    }
+
+    var controls = document.getElementById('arPaginationControls');
+    if (!controls || !nextBtn) return;
+
+    Array.prototype.forEach.call(controls.querySelectorAll('[data-page]'), function(btn) {
+      btn.remove();
+    });
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, state.arPage - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (var pageNum = startPage; pageNum <= endPage; pageNum++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pg === state.arPage ? ' active' : '');
+        btn.dataset.page = String(pg);
+        btn.type = 'button';
+        btn.textContent = String(pg);
+        btn.addEventListener('click', function() {
+          state.arPage = pg;
+          renderAnnotationResults();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', btn);
+      }(pageNum));
+    }
+  }
+
   function renderAnnotationResults() {
     var arStageSelect = document.getElementById('arStageSelect');
     var arStatusSelect = document.getElementById('arStatusSelect');
@@ -7445,6 +7584,8 @@ function getTaskTypeLabel(taskTypeKey) {
     var samples = getArFilteredSamples();
     var tableSection = document.getElementById('arTableSection');
     var emptyState = document.getElementById('arEmptyState');
+    var totalPages = Math.max(1, Math.ceil(samples.length / state.arPageSize));
+    if (state.arPage > totalPages) state.arPage = totalPages;
 
     if (samples.length === 0) {
       if (tableSection) tableSection.classList.add('hidden');
@@ -7452,9 +7593,10 @@ function getTaskTypeLabel(taskTypeKey) {
     } else {
       if (tableSection) tableSection.classList.remove('hidden');
       if (emptyState) emptyState.classList.add('hidden');
-      renderArResultTable(samples);
+      renderArResultTable(samples.slice((state.arPage - 1) * state.arPageSize, state.arPage * state.arPageSize));
     }
 
+    renderArPagination(samples.length);
     renderArExportMeta();
   }
 
@@ -8009,12 +8151,14 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
 
     document.getElementById('arStageSelect').addEventListener('change', function(e) {
       state.arStage = e.target.value || 'all';
+      state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'stage', value: state.arStage });
     });
 
     document.getElementById('arStatusSelect').addEventListener('change', function(e) {
       state.arStatus = e.target.value || 'all';
+      state.arPage = 1;
       renderAnnotationResults();
       trackEvent('prototype_ar_filter_changed', { filter: 'status', value: state.arStatus });
     });
@@ -8044,6 +8188,28 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
       renderArExportMeta();
       showToast(t('toastExportJsonMin'));
       trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
+    });
+
+    document.getElementById('arPrevPageBtn').addEventListener('click', function() {
+      if (state.arPage > 1) {
+        state.arPage--;
+        renderAnnotationResults();
+      }
+    });
+
+    document.getElementById('arNextPageBtn').addEventListener('click', function() {
+      var total = getArFilteredSamples().length;
+      var totalPages = Math.max(1, Math.ceil(total / state.arPageSize));
+      if (state.arPage < totalPages) {
+        state.arPage++;
+        renderAnnotationResults();
+      }
+    });
+
+    document.getElementById('arPageSizeSelect').addEventListener('change', function(e) {
+      state.arPageSize = parseInt(e.target.value, 10) || 20;
+      state.arPage = 1;
+      renderAnnotationResults();
     });
 
     document.addEventListener('click', function(e) {

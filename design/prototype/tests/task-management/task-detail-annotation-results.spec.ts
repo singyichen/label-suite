@@ -94,6 +94,10 @@ test.describe('Task detail annotation results', () => {
     await expect(table).toContainText('完成狀態');
     await expect(table).toContainText('標記階段');
     await expect(table).toContainText('標記分布統計');
+    await expect(page.locator('#arPaginationBar')).toBeVisible();
+    await expect(page.locator('#arPaginationInfo')).toHaveText('共 6 筆 · 第 1 / 1 頁');
+    await expect(page.locator('#arPageSizeSelect')).toHaveValue('20');
+    await expect(page.locator('#arPaginationControls [data-page].active')).toHaveText('1');
 
     const summaryRows = page.locator('#arResultTableBody tr.ar-summary-row');
     await expect(summaryRows).toHaveCount(6);
