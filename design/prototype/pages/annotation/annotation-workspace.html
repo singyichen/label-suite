@@ -4099,11 +4099,11 @@ function renderTaskTypeInterface() {
     closeGuidelineImageModal();
   }
 
-  var taskTitle = config.annotationTitle[state.lang] || config.annotationTitle.zh;
-  var reviewerTaskTitle = getWorkspaceTaskTitle(taskTitle);
-  setText('annotationCardTitle', taskTitle);
-  setText('reviewCardTitle', state.taskRole === 'reviewer' ? reviewerTaskTitle : taskTitle);
-  setText('sentencePairsReviewerSourceTitle', reviewerTaskTitle);
+  var fallbackTaskTitle = config.annotationTitle[state.lang] || config.annotationTitle.zh;
+  var workspaceTaskTitle = getWorkspaceTaskTitle(fallbackTaskTitle);
+  setText('annotationCardTitle', workspaceTaskTitle);
+  setText('reviewCardTitle', workspaceTaskTitle);
+  setText('sentencePairsReviewerSourceTitle', workspaceTaskTitle);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);

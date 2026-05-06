@@ -2,7 +2,7 @@
 
 **功能分支**：`015-annotation-workspace`  
 **建立日期**：2026-04-23  
-**版本**：1.4.7  
+**版本**：1.4.8  
 **狀態**：Draft  
 **需求來源**：IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
 
@@ -154,6 +154,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 3. **Given** 已完成可提交條件，**When** 點擊提交，**Then** 系統記錄提交並預設導向下一筆（`SUBMIT_DEFAULT_ACTION`）。
 4. **Given** 任務最後一筆完成提交，**When** 完成提交流程，**Then** 系統導回 `annotation-list` 並將該任務資料列狀態顯示為 `已提交`。
 5. **Given** 切換樣本或手動儲存，**When** 有編輯行為發生，**Then** 顯示自動儲存狀態更新（Saving → Saved）。
+6. **Given** annotator 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄標記卡標題，**Then** 標題必須顯示與 reviewer 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標註`、`句對語意判定`）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -202,6 +203,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 - `sequence_labeling.subtype = aspect_list` 提交 payload 必須保留 `original_sentence`、`corrected_sentence`（若有修改）、`aspects[]`、每個 aspect 的驗證狀態與標記者備註；其中 `aspects[]` 對應 task config 的 `aspect_list_field`，不得覆寫資料集原文。
 - `task_type = sentence_pairs` 時，workspace 必須讀取凍結的 `SentencePairsTaskConfig`，依 `pair_mode / response_format` 選擇分類或評分控制項；不得以單句分類 UI 退而代之。
 - `task_type = sentence_pairs` 的提交 payload 必須保留 `pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field` 的 snapshot 語意，以及 `label` 或 `score`、`unsure`、`note`、`version`；不得覆寫原始資料集文本欄位。
+- 中欄主卡 header 必須優先使用 `task_id` 對應的實際任務名稱；此規則同時適用於 annotator 的標記卡、reviewer 的審查卡，以及 reviewer 句對來源卡。僅在缺少任務上下文時，才可退回 task-type 級別的預設文案。
 
 ### User Story 2A — Annotator 完成 Aspect List 抽取 / 校正（優先級：P1）
 
@@ -286,7 +288,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - Reviewer 可於 Dry Run 協助產出標準答案（多數決、IAA 輔助判讀或手動確認）。
 - Reviewer 操作必須留下完整審計資訊，供後續品質追溯。
 - Reviewer 與 Annotator 共用相同樣本來源契約與導覽骨架，避免視圖不一致。
-- Reviewer 工作區的審查卡標題必須優先使用 `task_id` 對應的實際任務名稱；僅在缺少任務上下文時，才可退回 task-type 級別的預設文案。
+- Reviewer 工作區的審查卡標題必須優先使用 `task_id` 對應的實際任務名稱；Annotator 工作區的標記卡標題與 reviewer 句對來源卡也必須共用同一名稱來源。僅在缺少任務上下文時，才可退回 task-type 級別的預設文案。
 - 一般分類與 VA 任務的 Reviewer 介面只提供 `通過 / 退回` 兩種決策；不提供直接修改標記值入口。
 - `sentence_pairs` 的 Reviewer 介面比照一般分類 / 評分任務，只提供 `通過 / 退回`，不提供 reviewer 直接修改 `label` 或 `score` 的入口。
 - `sequence_labeling.subtype = aspect_list` 的 Reviewer 介面需額外提供 row-level 修正入口：Reviewer 可直接新增缺漏 aspect、刪除多標 / 錯標 aspect、修改 aspect 文字與修正句子。這些修正不等同於 `退回`，而是產生 reviewer-corrected result。
@@ -398,6 +400,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - **FR-014A**: Reviewer 視圖（workspace）中，VA 評分任務每位標記員的 `[V, A]` result tag 必須依 ±1.5std 範圍著色（綠/藍/紅；優先順序紅 > 藍 > 綠），規則與 `annotation-list` reviewer 視圖一致。
 - **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態。
 - **FR-014C**: 工作區 reviewer 視圖的審查卡標題必須顯示與 annotator 視角一致的實際任務名稱，名稱來源需與 Dashboard / annotation-list 的任務名稱一致；不得以 task type 通稱取代。
+- **FR-014D**: 工作區 annotator 視圖的標記卡標題必須顯示與 reviewer 視角一致的實際任務名稱，名稱來源需與 Dashboard / annotation-list 的任務名稱一致；不得以 task type 通稱取代。若 reviewer 視圖另有句對來源卡，其標題也必須共用同一任務名稱來源。
 - **FR-015**: Reviewer 在 Dry Run 必須可使用多數決或手動確認流程協助產出標準答案。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
