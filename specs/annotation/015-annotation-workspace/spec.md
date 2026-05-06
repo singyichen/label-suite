@@ -2,7 +2,7 @@
 
 **功能分支**：`015-annotation-workspace`  
 **建立日期**：2026-04-23  
-**版本**：1.4.4  
+**版本**：1.4.5  
 **狀態**：Draft  
 **需求來源**：IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
 
@@ -254,10 +254,12 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 4. **Given** reviewer 在 Dry Run 審查，**When** 需要產生標準答案，**Then** 可使用 標記分布統計、各標記員結果與手動確認流程完成該筆決策。
 5. **Given** reviewer 審核 `sequence_labeling.subtype = aspect_list` 任務，**When** 發現標記員多標、漏標或文字需修正，**Then** 可直接刪除、新增或修改該標記員的 aspect row，並在送出審核時留下原始提交與 reviewer 修正 diff。
 6. **Given** reviewer 審核 `task_type = sentence_pairs` 任務，**When** 進入工作區，**Then** 必須能查看各標記員的句對判定結果與句對內容，並依 `response_format` 顯示分類分布或分數摘要後執行 `通過 / 退回`。
+7. **Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄審查卡標題，**Then** 標題必須顯示與 annotator 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標註`、`句對語意判定`）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`中欄審查操作區`
+  - 標題規則：審查卡 header 必須顯示當前任務名稱，並與 annotator 視角、Dashboard 任務卡、annotation-list 任務資訊卡的任務名稱保持一致；同一任務在 reviewer 視角不得改顯示為 task type 通稱
   - 必要元素：句子級 標記分布統計摘要（`mean`、`std`、`±1.5std` 範圍）
   - 必要元素：標記員逐列結果（帳號、標記值）
   - 必要元素：逐列決策按鈕（`通過` / `退回`）
@@ -271,7 +273,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
   - 標記結果顏色標記（VA 評分任務）：每位標記員的 `[V, A]` result tag 依以下規則著色：🟢 綠色（`result-tag-green`）：V 與 A 皆落在 `[lo, hi]` 範圍內；🔵 藍色（`result-tag-blue`）：任一維度低於下界（`< lo`）；🔴 紅色（`result-tag-red`）：任一維度高於上界（`> hi`）；優先順序：紅色 > 藍色 > 綠色；`lo`/`hi` 由當筆統計摘要中的 `±1.5std` 範圍解析
   - `sequence_labeling.subtype = ner` 任務：各標記員結果需以可掃讀的 entity badge list 呈現，至少顯示 entity type badge 與 entity text；Reviewer 可直接查看各標記員 NER 結果後執行 `通過 / 退回`，但不提供 reviewer 直接改寫 entity 的入口。
   - `sequence_labeling.subtype = aspect_list` 任務：各標記員結果需以可掃讀的 Aspect List diff 呈現，至少顯示每位標記員的新增、刪除、修改、exact match invalid 與句子修正差異；Reviewer 需可在同一列直接新增、刪除、修改 aspect，必要時修正句子，並可選擇「修正後通過」或「退回標記員」。
-  - `task_type = sentence_pairs` 任務：各標記員結果需以可掃讀的句對結果卡呈現；`response_format = classification` 時需顯示標籤分布與各標記員單一標籤，`response_format = scoring` 時需顯示平均值、標準差與各標記員分數。Reviewer 不提供直接改寫句對標記值入口。
+  - `task_type = sentence_pairs` 任務：各標記員結果需以可掃讀的句對結果卡呈現；`response_format = classification` 時需顯示標籤分布與各標記員單一標籤，`response_format = scoring` 時需顯示平均值、標準差與各標記員分數。Reviewer 不提供直接改寫句對標記值入口。位於審查卡上方的句對內容來源區僅保留 mode badge 與兩句內容，不得再額外顯示一個與審查卡相同的重複 header。
 - 區塊 B：`右欄 History`
   - 必要元素：操作者、時間、欄位差異、決策狀態
 - 區塊 C：`右欄說明與檔案`
@@ -283,6 +285,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - Reviewer 可於 Dry Run 協助產出標準答案（多數決、IAA 輔助判讀或手動確認）。
 - Reviewer 操作必須留下完整審計資訊，供後續品質追溯。
 - Reviewer 與 Annotator 共用相同樣本來源契約與導覽骨架，避免視圖不一致。
+- Reviewer 工作區的審查卡標題必須優先使用 `task_id` 對應的實際任務名稱；僅在缺少任務上下文時，才可退回 task-type 級別的預設文案。
 - 一般分類與 VA 任務的 Reviewer 介面只提供 `通過 / 退回` 兩種決策；不提供直接修改標記值入口。
 - `sentence_pairs` 的 Reviewer 介面比照一般分類 / 評分任務，只提供 `通過 / 退回`，不提供 reviewer 直接修改 `label` 或 `score` 的入口。
 - `sequence_labeling.subtype = aspect_list` 的 Reviewer 介面需額外提供 row-level 修正入口：Reviewer 可直接新增缺漏 aspect、刪除多標 / 錯標 aspect、修改 aspect 文字與修正句子。這些修正不等同於 `退回`，而是產生 reviewer-corrected result。
@@ -392,6 +395,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - **FR-014**: Reviewer 模式必須支援通過、退回、修正、刪除標記結果。
 - **FR-014A**: Reviewer 視圖（workspace）中，VA 評分任務每位標記員的 `[V, A]` result tag 必須依 ±1.5std 範圍著色（綠/藍/紅；優先順序紅 > 藍 > 綠），規則與 `annotation-list` reviewer 視圖一致。
 - **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態。
+- **FR-014C**: 工作區 reviewer 視圖的審查卡標題必須顯示與 annotator 視角一致的實際任務名稱，名稱來源需與 Dashboard / annotation-list 的任務名稱一致；不得以 task type 通稱取代。
 - **FR-015**: Reviewer 在 Dry Run 必須可使用多數決或手動確認流程協助產出標準答案。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
@@ -433,6 +437,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - **FR-024R**: `sentence_pairs.response_format = scoring` 時，工作區必須使用 `score_min / score_max / score_step` 產生單列分數控制項；`status=pending` 時不得預填中位數或任意預設分數。
 - **FR-024S**: `sentence_pairs` 標記結果 payload 必須至少包含 `pair_mode`、`response_format`、`label?`、`score?`、`unsure`、`note?`、`version`；分類型不得提交 `score`，評分型不得提交 `label`。
 - **FR-024T**: Reviewer 視圖遇到 `sentence_pairs` 時，必須依 `response_format` 顯示句對結果摘要：分類型顯示標籤分布與各標記員標籤；評分型顯示平均值、標準差與各標記員分數；Reviewer 僅提供 `通過 / 退回` 決策。
+- **FR-024U**: `sentence_pairs` 的 Reviewer 視圖中，位於審查卡上方的句對來源區不得顯示與審查卡相同的重複標題；僅保留 mode badge、Sentence 1 / Sentence 2（或 `pair_mode = entailment` 時的 `Premise / Hypothesis`）與句子內容。
 - **FR-025**: 工作區啟動時若缺少 `task_type` query，必須讀取 `ACTIVE_TASK_TYPE_STORAGE_KEY` 作為 fallback。
 - **FR-026**: `annotation-workspace` 初始化每一筆樣本時，所有標記控制項（radio、分類選項、VA scale 等）必須呈現空白/未選取狀態，**除非該筆樣本已有儲存的標記結果**（`status=saved` 且含有效值，或 `status=submitted`）。`status=pending` 或無儲存值的樣本，不得預填任何預設選取值（包含數值中間點如 5）。
 - **FR-027**: `annotation-list` 在 `role=reviewer` 時，toolbar 右側必須顯示 `送出審核` 按鈕（`i18n: submitReviewLabel`）；`role=annotator` 時不得顯示此按鈕。
@@ -540,6 +545,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.4.5 | 2026-05-06 | Synced reviewer workspace title behavior with prototype: review-card header now uses the actual task name (matching annotator/dashboard/list context) instead of generic task-type copy; sentence-pairs reviewer source block no longer repeats the same header above the review card |
 | 1.4.4 | 2026-05-04 | Synced guideline image preview behavior with prototype: image assets now open in centered modal, added close-path requirements, and clarified PDF/Markdown/image preview split |
 | 1.4.3 | 2026-04-29 | 補齊 `sentence_pairs` workspace 規格：新增 Annotator/Reviewer 介面、`SentencePairsTaskConfig` / payload / edge cases，並對齊 task-new / task-detail / dataset-analysis 的分類型與評分型契約 |
 | 1.4.2 | 2026-04-29 | Synced NER workspace planning with prototype: added `sub_type` route contract, `sequence_labeling.subtype = ner` annotator/reviewer UI + payload requirements, and aligned NER config keys to `entities / scheme / allow_overlapping` |

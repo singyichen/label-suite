@@ -10,7 +10,7 @@ test('reviewer workspace shows original sentence-pair source block above review 
 
   await expect(page.locator('#sampleTextCard')).toBeHidden();
   await expect(page.locator('#sentencePairsReviewerSourceCard')).toBeVisible();
-  await expect(page.locator('#sentencePairsReviewerSourceTitle')).toContainText('句對語意判定');
+  await expect(page.locator('#sentencePairsReviewerSourceTitle')).toBeHidden();
   await expect(page.locator('#spReviewerModeBadge')).toContainText('相似度判定');
   await expect(page.locator('#spReviewerSentence1Label')).toContainText('Sentence A');
   await expect(page.locator('#spReviewerSentence2Label')).toContainText('Sentence B');

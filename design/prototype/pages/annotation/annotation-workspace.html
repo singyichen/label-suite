@@ -1310,7 +1310,7 @@
         </div>
 
         <div class="annotation-card hidden" id="sentencePairsReviewerSourceCard">
-          <div class="annotation-card-header">
+          <div class="annotation-card-header hidden">
             <div class="annotation-card-title" id="sentencePairsReviewerSourceTitle">句對語意判定</div>
           </div>
           <div class="annotation-card-body">
@@ -1348,8 +1348,8 @@
         <!-- Reviewer Controls -->
         <div class="annotation-card hidden" id="reviewerCard">
           <div class="annotation-card-header">
-            <div class="annotation-card-title" id="reviewCardTitle">審查結果</div>
-            <span style="font-size:11px;color:#7C3AED;font-weight:700;" id="reviewerRoleSmall">Reviewer</span>
+            <div class="annotation-card-title" id="reviewCardTitle">標記標籤</div>
+            <span class="hidden" style="font-size:11px;color:#7C3AED;font-weight:700;" id="reviewerRoleSmall">Reviewer</span>
           </div>
           <div class="annotation-card-body">
             <div class="rv-summary-card">
@@ -2343,6 +2343,21 @@ var state = {
   mobileDrawerOpen: false,
 };
 
+var TASK_TITLES_BY_ID = {
+  'TASK-015-A1': { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+  'TASK-015-A2': { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+  'TASK-015-A3': { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+  'TASK-015-A4': { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+  'TASK-015-A5': { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+  'TASK-015-A6': { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
+  'TASK-015-R1': { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+  'TASK-015-R2': { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+  'TASK-015-R3': { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+  'TASK-015-R4': { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+  'TASK-015-R5': { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+  'TASK-015-R6': { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' }
+};
+
 var GUIDELINE_MODAL_SEEN_KEY = 'labelsuite.guidelineModalSeen';
 var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
 var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
@@ -2526,6 +2541,12 @@ function isAspectListTaskType() {
 
 function isRelationExtractionTaskType() {
   return normalizeTaskTypeKey(state.taskTypeKey) === 'relation_extraction';
+}
+
+function getWorkspaceTaskTitle(fallbackTitle) {
+  var taskTitle = TASK_TITLES_BY_ID[state.taskId];
+  if (!taskTitle) return fallbackTitle;
+  return taskTitle[state.lang] || taskTitle.zh || fallbackTitle;
 }
 
 /* ── Sentence Pairs Functions ─────────────────────────────────── */
@@ -4040,8 +4061,11 @@ function renderTaskTypeInterface() {
     closeGuidelineImageModal();
   }
 
-  setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
-  setText('sentencePairsReviewerSourceTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
+  var taskTitle = config.annotationTitle[state.lang] || config.annotationTitle.zh;
+  var reviewerTaskTitle = getWorkspaceTaskTitle(taskTitle);
+  setText('annotationCardTitle', taskTitle);
+  setText('reviewCardTitle', state.taskRole === 'reviewer' ? reviewerTaskTitle : taskTitle);
+  setText('sentencePairsReviewerSourceTitle', reviewerTaskTitle);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
@@ -4112,6 +4136,7 @@ function renderRoleControls() {
   el('annotatorActions').classList.toggle('hidden', !isAnnotator);
   el('reviewerActions').classList.toggle('hidden', isAnnotator);
   el('sentencePairsReviewerSourceCard').classList.toggle('hidden', !showSentencePairReviewerSource);
+  el('reviewerRoleSmall').classList.add('hidden');
 }
 
 function applyLang(lang) {
