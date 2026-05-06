@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.6.5
+**版本**：1.6.6
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -612,6 +612,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.6 | 2026-05-06 | 修正 prototype label pill CSS：移除 `.annotator-result-tag` 的 `flex: 0 1 320px` flex-basis，改為內容寬度驅動的膠囊樣式，對齊 reviewer `annotation-list` 同款 result tag，符合 SC-027c 規格 |
 | 1.6.5 | 2026-05-06 | 同步 reviewer `annotation-list` 關係抽取統計樣式：`relation_extraction` 的標記分布統計需逐行顯示每一筆 relation / triple 摘要，不得以單行 ` · ` 串接壓縮 |
 | 1.6.4 | 2026-05-06 | 同步 `annotation-results` prototype 分頁：標記結果表底部新增與 `task-list` 一致的 footer pagination（總筆數 / 目前頁數、每頁筆數切換、上一頁 / 下一頁 / 頁碼按鈕） |
 | 1.6.3 | 2026-05-06 | 同步 `task-detail` prototype RWD 修訂：補充 `annotation-results` 文本摘要單一 wrapper 與頂對齊規則、展開列 `提交時間 + 審核狀態` metadata 群組在 desktop / mobile 的排列約束、result tag 不可被拉伸成整列色塊，並新增 `member-management` 與 `annotation-results` 窄 viewport 的表格捲動/換行規則 |

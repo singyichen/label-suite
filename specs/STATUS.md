@@ -34,7 +34,7 @@
 | annotation-015 | Annotation Workspace | annotation | `spec-ready` | — | IA v1.3.1 重建完成（`specs/annotation/015-annotation-workspace/spec.md`） |
 | task-management-010 | Task List | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/010-task-list/spec.md`） |
 | task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/013-task-new/spec.md`） |
-| task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `in-progress` | `fix/task-detail-annotation-results-layout` | spec 已同步目前 `annotation-results` prototype：摘要頂對齊、detail row metadata 群組與 scroll container 邊界規則 |
+| task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `in-progress` | `fix/task-detail-annotation-results-layout` | spec v1.6.6；prototype 已對齊 spec：label pill CSS 符合 SC-027c 內容寬度規則、`relation_extraction` 統計逐行顯示對齊 1.6.5、摘要頂對齊、detail row metadata 群組與 scroll container 邊界規則 |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset-analysis-table-refresh` | spec 已同步目前 prototype：table layout、task type / IAA / search filters、footer pagination、URL query 保留 |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | — | IA v1.3.2 重建完成（`specs/dataset/017-dataset-analysis-detail/spec.md`） |
 
