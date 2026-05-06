@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test('moves task status to waiting IAA confirmation after all 5 dry-run samples are submitted', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+  });
   await page.goto('/pages/annotation/annotation-workspace.html?task_id=TASK-014&run_type=dry_run&task_type=single_sentence_classification');
 
   const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
