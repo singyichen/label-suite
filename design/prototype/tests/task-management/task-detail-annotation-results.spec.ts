@@ -5,7 +5,7 @@ const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 const TASK_RESULT_EXPECTATIONS = [
   { taskId: 'T001', statTexts: ['政治×2', '科技×3'] },
-  { taskId: 'T002', statTexts: ['mean [4.83, 5.50]', 'std [1.03, 1.22]'] },
+  { taskId: 'T002', statTexts: ['mean [7.33, 7.17]', 'std [1.07, 1.43]'] },
   { taskId: 'T003', statTexts: ['螢幕×3', '電池×2'] },
   { taskId: 'T004', statTexts: ['(DRUG:阿司匹靈)→treats→(SYMP:發燒) ×2', '(DOCTOR:醫師)→indicates→(TREATMENT:補水) ×2'] },
   { taskId: 'T005', statTexts: ['蘊含×2', '中立×1'] },
@@ -13,6 +13,67 @@ const TASK_RESULT_EXPECTATIONS = [
 ];
 
 test.describe('Task detail annotation results', () => {
+  test('matches annotator select style with adjacent filter selects', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+
+    const stageMetrics = await page.locator('#arStageSelect').evaluate((element) => {
+      const styles = window.getComputedStyle(element);
+      return {
+        borderRadius: styles.borderRadius,
+        borderColor: styles.borderColor,
+        backgroundColor: styles.backgroundColor,
+        fontSize: styles.fontSize,
+        lineHeight: styles.lineHeight,
+        paddingTop: styles.paddingTop,
+        paddingRight: styles.paddingRight,
+        paddingBottom: styles.paddingBottom,
+        paddingLeft: styles.paddingLeft,
+        boxShadow: styles.boxShadow,
+      };
+    });
+
+    const annotatorMetrics = await page.locator('#arAnnotatorSelect').evaluate((element) => {
+      const styles = window.getComputedStyle(element);
+      return {
+        borderRadius: styles.borderRadius,
+        borderColor: styles.borderColor,
+        backgroundColor: styles.backgroundColor,
+        fontSize: styles.fontSize,
+        lineHeight: styles.lineHeight,
+        paddingTop: styles.paddingTop,
+        paddingRight: styles.paddingRight,
+        paddingBottom: styles.paddingBottom,
+        paddingLeft: styles.paddingLeft,
+        boxShadow: styles.boxShadow,
+      };
+    });
+
+    expect(annotatorMetrics).toEqual(stageMetrics);
+  });
+
+  test('uses reviewer-style VA color coding for per-annotator result tags', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+
+    const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
+    await firstRow.click();
+
+    const firstSampleRows = page.locator('#arResultTableBody .annotator-row');
+    await expect(firstSampleRows).toContainText([
+      'kioleemg12',
+      '113450022',
+      'tony0950127',
+      'hui',
+      'chiao11',
+      'mandy610425',
+    ]);
+
+    await expect(firstSampleRows.filter({ hasText: 'kioleemg12' }).locator('.annotator-result-tag')).toHaveClass(/result-tag-green/);
+    await expect(firstSampleRows.filter({ hasText: 'chiao11' }).locator('.annotator-result-tag')).toHaveClass(/result-tag-blue/);
+    await expect(firstSampleRows.filter({ hasText: 'mandy610425' }).locator('.annotator-result-tag')).toHaveClass(/result-tag-red/);
+  });
+
   test('downloads full JSON export with manifest and VA task-specific fields', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible();

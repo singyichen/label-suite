@@ -850,56 +850,10 @@
     /* Annotation results panel */
     .ar-filter-grid {
       display: grid;
-      grid-template-columns: 200px 200px 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
       align-items: end;
     }
-    .ar-multiselect-wrap { position: relative; }
-    .ar-multiselect { position: relative; }
-    .ar-multiselect-trigger {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      color: var(--color-ink);
-      padding: 9px 12px;
-      font-size: 14px;
-      text-align: left;
-      transition: border-color var(--dur-fast);
-    }
-    .ar-multiselect-trigger:hover { border-color: var(--color-primary); }
-    .ar-multiselect-trigger[aria-expanded="true"] { border-color: var(--color-primary); }
-    .ar-multiselect-chevron { width: 16px; height: 16px; opacity: 0.5; flex-shrink: 0; transition: transform var(--dur-fast); }
-    .ar-multiselect-trigger[aria-expanded="true"] .ar-multiselect-chevron { transform: rotate(180deg); }
-    .ar-multiselect-dropdown {
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
-      right: 0;
-      z-index: 20;
-      background: var(--color-white);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.10);
-      max-height: 220px;
-      overflow-y: auto;
-      padding: 4px 0;
-    }
-    .ar-multiselect-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background var(--dur-fast);
-    }
-    .ar-multiselect-option:hover { background: var(--color-surface); }
-    .ar-multiselect-option input[type="checkbox"] { accent-color: var(--color-primary); width: 14px; height: 14px; cursor: pointer; }
     .ar-summary-row { cursor: pointer; }
     .ar-summary-row td { vertical-align: middle; }
     .ar-expand-btn {
@@ -3118,8 +3072,7 @@
     arStatus: 'all',
     arPage: 1,
     arPageSize: 20,
-    arAnnotators: [],
-    arAnnotatorDropdownOpen: false,
+    arAnnotator: 'all',
     arExpandedRows: {}
   };
 
@@ -3287,9 +3240,12 @@
         summaryStats: [{ label: '平均 V/A', value: '4.7 / 5.6' }, { label: '分布區間', value: 'V 2.0-6.0 · A 4.0-7.0', muted: true }],
         status: 'submitted', completedAt: '2026-04-23',
         annotations: [
-          { annotator: 'kioleemg12', value: { valence: 3.5, arousal: 5.5 }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' },
-          { annotator: '113450022', value: { valence: 6, arousal: 4 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'approved' },
-          { annotator: 'tony0950127', value: { valence: 5, arousal: 7 }, submittedAt: '2026-04-23 10:40', reviewStatus: 'pending' }
+          { annotator: 'kioleemg12', value: { valence: 6, arousal: 5.5 }, submittedAt: '2026-04-23 10:00', reviewStatus: 'pending' },
+          { annotator: '113450022', value: { valence: 8, arousal: 8 }, submittedAt: '2026-04-23 10:20', reviewStatus: 'approved' },
+          { annotator: 'tony0950127', value: { valence: 7.5, arousal: 8 }, submittedAt: '2026-04-23 10:40', reviewStatus: 'pending' },
+          { annotator: 'hui', value: { valence: 7.5, arousal: 7.5 }, submittedAt: '2026-04-23 11:00', reviewStatus: 'approved' },
+          { annotator: 'chiao11', value: { valence: 6, arousal: 5 }, submittedAt: '2026-04-23 11:20', reviewStatus: 'pending' },
+          { annotator: 'mandy610425', value: { valence: 9, arousal: 9 }, submittedAt: '2026-04-23 11:40', reviewStatus: 'returned' }
         ]
       },
       {
@@ -6928,7 +6884,20 @@ function getTaskTypeLabel(taskTypeKey) {
     return { meanV: vm, meanA: am, stdV: vs, stdA: as_, minV: vm - 1.5 * vs, maxV: vm + 1.5 * vs, minA: am - 1.5 * as_, maxA: am + 1.5 * as_ };
   }
 
-  function getVaColorClass(resultStr, vaRange) {
+  function parseVaRangeFromStatsSummary(statsSummary) {
+    if (!statsSummary) return null;
+    var match = statsSummary.match(/±1\.5std V : ([0-9.]+)~([0-9.]+)[\s\S]*±1\.5std A : ([0-9.]+)~([0-9.]+)/);
+    if (!match) return null;
+    return {
+      minV: parseFloat(match[1]),
+      maxV: parseFloat(match[2]),
+      minA: parseFloat(match[3]),
+      maxA: parseFloat(match[4])
+    };
+  }
+
+  function getVaColorClass(resultStr, statsSummary) {
+    var vaRange = parseVaRangeFromStatsSummary(statsSummary);
     if (!vaRange) return '';
     var match = resultStr.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
     if (!match) return '';
@@ -6986,10 +6955,10 @@ function getTaskTypeLabel(taskTypeKey) {
     return { tags: ['-'], colorClass: '' };
   }
 
-  function renderArDistCell(td, sample) {
+  function renderArDistCell(td, sample, statsText) {
     var statsEl = document.createElement('span');
     statsEl.className = 'reviewer-stats';
-    statsEl.textContent = getArStatsText(sample, computeVaStats(sample.annotations));
+    statsEl.textContent = statsText || getArStatsText(sample, computeVaStats(sample.annotations));
     td.className = 'reviewer-stats-cell';
     td.appendChild(statsEl);
   }
@@ -7007,10 +6976,8 @@ function getTaskTypeLabel(taskTypeKey) {
     return getAnnotationResultsData().filter(function(sample) {
       if (state.arStage !== 'all' && sample.stage !== state.arStage) return false;
       if (state.arStatus !== 'all' && sample.status !== state.arStatus) return false;
-      if (state.arAnnotators.length > 0) {
-        var hasAnnotator = sample.annotations.some(function(a) {
-          return state.arAnnotators.indexOf(a.annotator) >= 0;
-        });
+      if (state.arAnnotator !== 'all') {
+        var hasAnnotator = sample.annotations.some(function(a) { return a.annotator === state.arAnnotator; });
         if (!hasAnnotator) return false;
       }
       return true;
@@ -7028,56 +6995,22 @@ function getTaskTypeLabel(taskTypeKey) {
     return list;
   }
 
-  function renderArAnnotatorDropdown() {
-    var dropdown = document.getElementById('arAnnotatorDropdown');
-    if (!dropdown) return;
-    while (dropdown.firstChild) dropdown.removeChild(dropdown.firstChild);
-
-    var allOpt = document.createElement('label');
-    allOpt.className = 'ar-multiselect-option';
-    var allChk = document.createElement('input');
-    allChk.type = 'checkbox';
-    allChk.checked = state.arAnnotators.length === 0;
-    allChk.addEventListener('change', function() {
-      state.arAnnotators = [];
-      state.arPage = 1;
-      renderAnnotationResults();
-    });
-    allOpt.appendChild(allChk);
-    allOpt.appendChild(document.createTextNode(t('arAnnotatorAll')));
-    dropdown.appendChild(allOpt);
-
+  function renderArAnnotatorSelect() {
+    var sel = document.getElementById('arAnnotatorSelect');
+    if (!sel) return;
+    var current = sel.value || state.arAnnotator;
+    while (sel.firstChild) sel.removeChild(sel.firstChild);
+    var allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = t('arAnnotatorAll');
+    sel.appendChild(allOpt);
     getArAnnotators().forEach(function(name) {
-      var opt = document.createElement('label');
-      opt.className = 'ar-multiselect-option';
-      var chk = document.createElement('input');
-      chk.type = 'checkbox';
-      chk.checked = state.arAnnotators.indexOf(name) >= 0;
-      chk.addEventListener('change', function() {
-        if (chk.checked) {
-          if (state.arAnnotators.indexOf(name) < 0) state.arAnnotators.push(name);
-        } else {
-          state.arAnnotators = state.arAnnotators.filter(function(n) { return n !== name; });
-        }
-        state.arPage = 1;
-        renderAnnotationResults();
-      });
-      opt.appendChild(chk);
-      opt.appendChild(document.createTextNode(name));
-      dropdown.appendChild(opt);
+      var opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      sel.appendChild(opt);
     });
-  }
-
-  function renderArAnnotatorTriggerLabel() {
-    var label = document.getElementById('arAnnotatorTriggerLabel');
-    if (!label) return;
-    if (state.arAnnotators.length === 0) {
-      label.textContent = t('arAnnotatorAll');
-    } else if (state.arAnnotators.length === 1) {
-      label.textContent = state.arAnnotators[0];
-    } else {
-      label.textContent = state.arAnnotators[0] + ' +' + (state.arAnnotators.length - 1);
-    }
+    sel.value = current;
   }
 
   function getArStatusBadge(status) {
@@ -7096,7 +7029,9 @@ function getTaskTypeLabel(taskTypeKey) {
       var text = state.lang === 'en' ? sample.textEn : sample.textZh;
       var textPreview = text.length > 48 ? text.slice(0, 48) + '…' : text;
       var statusBadge = getArStatusBadge(sample.status);
-      var vaStats = TASK_DATA.taskTypeKey === 'single_sentence_va_scoring' ? computeVaStats(sample.annotations) : null;
+      var vaStatsText = TASK_DATA.taskTypeKey === 'single_sentence_va_scoring'
+        ? getArStatsText(sample, computeVaStats(sample.annotations))
+        : '';
 
       var tr = document.createElement('tr');
       tr.className = 'ar-summary-row';
@@ -7158,7 +7093,7 @@ function getTaskTypeLabel(taskTypeKey) {
       tr.appendChild(tdText);
 
       var tdDist = document.createElement('td');
-      renderArDistCell(tdDist, sample);
+      renderArDistCell(tdDist, sample, vaStatsText);
       tr.appendChild(tdDist);
 
       tr.addEventListener('click', function() {
@@ -7187,7 +7122,7 @@ function getTaskTypeLabel(taskTypeKey) {
           var result = getAnnotationResultDisplay(annotation);
           var resultSpan = document.createElement('span');
           var colorClass = TASK_DATA.taskTypeKey === 'single_sentence_va_scoring'
-            ? getVaColorClass(result.tags[0], vaStats)
+            ? getVaColorClass(result.tags[0], vaStatsText)
             : '';
           resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
           resultSpan.textContent = result.tags[0];
@@ -7399,7 +7334,7 @@ function getTaskTypeLabel(taskTypeKey) {
         applied_filters: {
           run_stage: state.arStage,
           submission_status: state.arStatus,
-          annotators: state.arAnnotators.slice()
+          annotators: state.arAnnotator === 'all' ? [] : [state.arAnnotator]
         }
       },
       items: samples.map(function(sample, sampleIndex) {
@@ -7578,8 +7513,7 @@ function getTaskTypeLabel(taskTypeKey) {
       arStatusOpts.options[3].textContent = t('arStatusPending');
     }
 
-    renderArAnnotatorDropdown();
-    renderArAnnotatorTriggerLabel();
+    renderArAnnotatorSelect();
 
     var samples = getArFilteredSamples();
     var tableSection = document.getElementById('arTableSection');
@@ -8163,13 +8097,11 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
       trackEvent('prototype_ar_filter_changed', { filter: 'status', value: state.arStatus });
     });
 
-    document.getElementById('arAnnotatorTrigger').addEventListener('click', function(e) {
-      e.stopPropagation();
-      state.arAnnotatorDropdownOpen = !state.arAnnotatorDropdownOpen;
-      var trigger = document.getElementById('arAnnotatorTrigger');
-      var dropdown = document.getElementById('arAnnotatorDropdown');
-      if (trigger) trigger.setAttribute('aria-expanded', state.arAnnotatorDropdownOpen ? 'true' : 'false');
-      if (dropdown) dropdown.classList.toggle('hidden', !state.arAnnotatorDropdownOpen);
+    document.getElementById('arAnnotatorSelect').addEventListener('change', function(e) {
+      state.arAnnotator = e.target.value || 'all';
+      state.arPage = 1;
+      renderAnnotationResults();
+      trackEvent('prototype_ar_filter_changed', { filter: 'annotator', value: state.arAnnotator });
     });
 
     document.getElementById('arExportJsonBtn').addEventListener('click', function() {
@@ -8210,19 +8142,6 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
       state.arPageSize = parseInt(e.target.value, 10) || 20;
       state.arPage = 1;
       renderAnnotationResults();
-    });
-
-    document.addEventListener('click', function(e) {
-      if (state.arAnnotatorDropdownOpen) {
-        var multiselect = document.getElementById('arAnnotatorMultiselect');
-        if (multiselect && !multiselect.contains(e.target)) {
-          state.arAnnotatorDropdownOpen = false;
-          var trigger = document.getElementById('arAnnotatorTrigger');
-          var dropdown = document.getElementById('arAnnotatorDropdown');
-          if (trigger) trigger.setAttribute('aria-expanded', 'false');
-          if (dropdown) dropdown.classList.add('hidden');
-        }
-      }
     });
 
     document.getElementById('workLogDateFrom').addEventListener('change', function(e) {

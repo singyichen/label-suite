@@ -20,15 +20,11 @@
           <option value="pending">待處理</option>
         </select>
       </div>
-      <div class="ar-multiselect-wrap">
-        <label class="field-label" id="arAnnotatorFilterLabel">標記員</label>
-        <div class="ar-multiselect" id="arAnnotatorMultiselect">
-          <button class="ar-multiselect-trigger" type="button" id="arAnnotatorTrigger" aria-haspopup="listbox" aria-expanded="false">
-            <span id="arAnnotatorTriggerLabel">全部標記員</span>
-            <img src="../../assets/icons/chevron-down.svg" alt="" aria-hidden="true" class="ar-multiselect-chevron" />
-          </button>
-          <div class="ar-multiselect-dropdown hidden" id="arAnnotatorDropdown" role="listbox" aria-multiselectable="true"></div>
-        </div>
+      <div>
+        <label class="field-label" id="arAnnotatorFilterLabel" for="arAnnotatorSelect">標記員</label>
+        <select class="input-select" id="arAnnotatorSelect">
+          <option value="all">全部標記員</option>
+        </select>
       </div>
     </div>
   </section>
