@@ -10,6 +10,9 @@ async function dismissGuidelineModal(page: import('@playwright/test').Page) {
 }
 
 test('keeps single-column content width on mobile even after guideline panel is collapsed', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+  });
   await page.goto('/pages/annotation/annotation-workspace.html?task_type=single_sentence_va_scoring');
 
   await dismissGuidelineModal(page);

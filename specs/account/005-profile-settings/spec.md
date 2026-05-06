@@ -10,7 +10,7 @@
 
 - `PASSWORD_MIN_LENGTH = 8`
 - `CONTACT_INFO_MAX_LENGTH = 255`
-- `PASSWORD_RULE = 至少 1 個大寫英文字母 + 1 個小寫英文字母 + 1 個數字`
+- `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`
 - `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES = 30`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`

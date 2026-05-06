@@ -34,7 +34,7 @@
 | annotation-015 | Annotation Workspace | annotation | `spec-ready` | — | IA v1.3.1 重建完成（`specs/annotation/015-annotation-workspace/spec.md`） |
 | task-management-010 | Task List | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/010-task-list/spec.md`） |
 | task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/013-task-new/spec.md`） |
-| task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/014-task-detail/spec.md`） |
+| task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `in-progress` | `fix/task-detail-annotation-results-layout` | spec v1.6.6；prototype 已對齊 spec：label pill CSS 符合 SC-027c 內容寬度規則、`relation_extraction` 統計逐行顯示對齊 1.6.5、摘要頂對齊、detail row metadata 群組與 scroll container 邊界規則 |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset-analysis-table-refresh` | spec 已同步目前 prototype：table layout、task type / IAA / search filters、footer pagination、URL query 保留 |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | — | IA v1.3.2 重建完成（`specs/dataset/017-dataset-analysis-detail/spec.md`） |
 
@@ -52,6 +52,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-05-06 | `task-management-014` 狀態更新為 `in-progress`，分支為 `fix/task-detail-annotation-results-layout`；spec 同步目前 `annotation-results` prototype 的摘要頂對齊、detail row metadata 群組與 scroll container 邊界規則。 |
 | 2026-04-30 | `dataset-016` 狀態更新為 `in-progress`，分支為 `feat/dataset-analysis-table-refresh`；spec 同步目前 prototype 的 table layout、篩選器、分頁與 URL query 保留行為。 |
 | 2026-04-24 | 重命名 dataset spec 資料夾為 `016-dataset-analysis-list`、`017-dataset-analysis-detail`；同步對齊 IA 的 `dataset-analysis-list` 與 `/dataset-analysis-detail/:task_id` 命名。 |
 | 2026-04-24 | 新增 `dataset-016` 與 `dataset-017` 規格檔（IA v1.3.1 重建）；狀態更新為 `spec-ready`，並自 backlog 移除。 |

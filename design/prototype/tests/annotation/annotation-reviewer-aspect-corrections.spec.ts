@@ -19,10 +19,13 @@ test('reviewer can directly add and delete aspects for aspect list review', asyn
 
   await editor.locator('.rv-aspect-correction-delete').first().click();
   await expect(editor.locator('.rv-aspect-correction-input')).toHaveCount(2);
-  await expect(firstReviewRow).toContainText('Reviewer 已刪除');
+  await expect(editor.locator('.rv-aspect-correction-audit')).toHaveCount(0);
 
   await addButton.click();
   await expect(editor.locator('.rv-aspect-correction-input')).toHaveCount(3);
+  const newInput = editor.locator('.rv-aspect-correction-input').last();
   await editor.locator('.rv-aspect-correction-input').last().fill('政策影響');
-  await expect(firstReviewRow).toContainText('Reviewer 已新增');
+  await expect(editor.locator('.rv-aspect-correction-audit')).toHaveCount(0);
+  await expect(newInput).toHaveCSS('background-color', 'rgb(240, 253, 244)');
+  await expect(newInput).toHaveClass(/reviewer-added/);
 });

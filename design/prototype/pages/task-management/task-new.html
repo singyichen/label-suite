@@ -184,12 +184,27 @@
     .upload-zone-icon { width: 32px; height: 32px; color: var(--color-ink-muted); margin: 0 auto 8px; display: block; }
     .upload-zone-label { font-size: 14px; font-weight: 500; color: var(--color-ink); margin-bottom: 4px; }
     .upload-zone-hint { font-size: 12px; color: var(--color-text-soft); }
-    .upload-file-preview { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--color-success-border); border-radius: var(--radius-md); background: var(--color-success-bg); margin-top: 8px; }
+    .upload-file-preview { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--color-success-border); border-radius: var(--radius-md); background: var(--color-success-bg); margin-top: 8px; cursor: pointer; transition: border-color var(--dur-fast), background var(--dur-fast); }
+    .upload-file-preview:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
     .upload-file-icon { width: 16px; height: 16px; color: var(--color-success); flex-shrink: 0; }
     .upload-file-name { font-size: 13px; font-weight: 500; color: var(--color-success); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .upload-file-size { font-size: 12px; color: var(--color-text-soft); flex-shrink: 0; }
     .upload-file-remove { width: 20px; height: 20px; border: none; background: none; color: var(--color-ink-muted); padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); transition: color var(--dur-fast), background var(--dur-fast); }
     .upload-file-remove:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
+    .upload-file-preview-btn { width: 24px; height: 24px; border: none; background: none; color: var(--color-ink-muted); padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast); }
+    .upload-file-preview-btn:hover { color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    /* ── Dataset Preview Modal ── */
+    .modal-xl { max-width: 720px; width: 95vw; max-height: 80vh; display: flex; flex-direction: column; }
+    .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md); }
+    .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast); }
+    .modal-close-btn:hover { background: var(--color-slate-100); color: var(--color-ink); }
+    .preview-hint { font-size: 12px; color: var(--color-text-soft); margin: 2px 0 0; }
+    .preview-table-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .preview-table th { position: sticky; top: 0; background: var(--color-slate-50); padding: 8px 12px; text-align: left; font-weight: 600; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; font-size: 12px; }
+    .preview-table td { padding: 8px 12px; border-bottom: 1px solid var(--color-border); color: var(--color-ink); max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .preview-table tr:last-child td { border-bottom: none; }
+    .preview-table tr:hover td { background: var(--color-slate-50); }
 
     /* ── Step 2 ── */
     .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; }
@@ -575,6 +590,9 @@
             <svg class="upload-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <span class="upload-file-name" id="datasetFileName"></span>
             <span class="upload-file-size" id="datasetFileSize"></span>
+            <button class="upload-file-preview-btn" id="datasetPreviewBtn" aria-label="預覽資料集">
+              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
             <button class="upload-file-remove" id="datasetRemoveBtn" aria-label="移除檔案">
               <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -770,6 +788,27 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" id="leaveModalStayBtn">繼續編輯</button>
       <button class="btn btn-primary" id="leaveModalLeaveBtn" style="background:var(--color-error);border-color:var(--color-error);">離開</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dataset preview modal -->
+<div class="modal-overlay" id="datasetPreviewModal" role="dialog" aria-modal="true" aria-labelledby="datasetPreviewModalTitle">
+  <div class="modal modal-xl">
+    <div class="modal-xl-header">
+      <div>
+        <div class="modal-title" id="datasetPreviewModalTitle">資料集預覽</div>
+        <p class="preview-hint" id="datasetPreviewModalHint">顯示前 10 筆・僅供確認用途</p>
+      </div>
+      <button class="modal-close-btn" id="datasetPreviewCloseBtn" aria-label="關閉">
+        <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="preview-table-wrap">
+      <table class="preview-table">
+        <thead id="datasetPreviewHead"></thead>
+        <tbody id="datasetPreviewBody"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -976,6 +1015,8 @@ var I18N = {
     leaveModalTitle: '離開此頁面？',
     leaveModalDesc: '你有尚未儲存的變更，離開將會遺失所有已填寫的內容。',
     leaveModalStay: '繼續編輯', leaveModalLeave: '離開',
+    datasetPreviewTitle: '資料集預覽',
+    datasetPreviewHint: '顯示前 10 筆・僅供確認用途',
     errTaskName: '請輸入任務名稱', errTaskType: '請選擇任務類型',
     errDataset: '請上傳有效的資料集檔案',
     errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
@@ -1078,6 +1119,8 @@ var I18N = {
     leaveModalTitle: 'Leave this page?',
     leaveModalDesc: 'You have unsaved changes. Leaving will discard all progress.',
     leaveModalStay: 'Keep editing', leaveModalLeave: 'Leave',
+    datasetPreviewTitle: 'Dataset Preview',
+    datasetPreviewHint: 'Showing first 10 rows — for verification only',
     errTaskName: 'Task name is required', errTaskType: 'Please select a task type',
     errDataset: 'Please upload a valid dataset file',
     errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
@@ -2549,7 +2592,6 @@ function setDatasetFile(file) {
     return;
   }
   state.datasetFile = file;
-  el('datasetUploadZone').classList.add('hidden');
   el('datasetUploadZone').classList.remove('error');
   showFieldError('errDataset', false);
   setText('datasetFileName', file.name);
@@ -2563,9 +2605,45 @@ function clearDatasetFile() {
   state.datasetFile = null;
   el('datasetFileInput').value = '';
   el('datasetFilePreview').classList.add('hidden');
-  el('datasetUploadZone').classList.remove('hidden');
   markDirty(); revalidateCurrentStep();
 }
+
+/* ── Dataset preview modal ───────────────────────────────────── */
+var DATASET_PREVIEW_MOCK = {
+  columns: ['id', 'text'],
+  rows: [
+    ['RAW-001', '立法院三讀通過科技產業條例，明年起適用'],
+    ['RAW-002', '知名球星參與公益演唱會，現場逾萬人聚集'],
+    ['RAW-003', '颱風逼近造成多地停班停課，交通大亂'],
+    ['RAW-004', '國際影展公布入圍名單，台灣導演獲提名'],
+    ['RAW-005', '半導體大廠宣布新晶片量產，效能倍增'],
+    ['RAW-006', '央行維持利率不變，分析師看法分歧'],
+    ['RAW-007', '新北市推動智慧路燈計畫，節電成效顯著'],
+    ['RAW-008', '本土疫情趨緩，衛福部調整防疫措施'],
+    ['RAW-009', '國際油價回落，民生物價壓力暫緩'],
+    ['RAW-010', '青年就業補貼政策上路，申請首日湧入人潮'],
+  ]
+};
+function clearChildren(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+function showDatasetPreviewModal() {
+  var head = el('datasetPreviewHead');
+  var tbody = el('datasetPreviewBody');
+  var headRow = document.createElement('tr');
+  DATASET_PREVIEW_MOCK.columns.forEach(function(col) {
+    var th = document.createElement('th'); th.textContent = col; headRow.appendChild(th);
+  });
+  clearChildren(head); head.appendChild(headRow);
+  clearChildren(tbody);
+  DATASET_PREVIEW_MOCK.rows.forEach(function(row) {
+    var tr = document.createElement('tr');
+    row.forEach(function(cell) {
+      var td = document.createElement('td'); td.textContent = cell; tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  el('datasetPreviewModal').classList.add('show');
+}
+function hideDatasetPreviewModal() { el('datasetPreviewModal').classList.remove('show'); }
 
 /* ── Startup settings (Step 3) ───────────────────────────────── */
 function renderMemberList() {
@@ -2901,6 +2979,8 @@ function applyLang(l) {
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
   setText('leaveModalStayBtn', t('leaveModalStay'));
   setText('leaveModalLeaveBtn', t('leaveModalLeave'));
+  setText('datasetPreviewModalTitle', t('datasetPreviewTitle'));
+  setText('datasetPreviewModalHint', t('datasetPreviewHint'));
   setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
   el('guidelineTextInput').placeholder = t('guidelineTextPlaceholder');
   setText('memberSourceSystemTab', t('memberSourceSystemTab'));
@@ -2984,7 +3064,10 @@ el('datasetUploadZone').addEventListener('dragover', function(e) { e.preventDefa
 el('datasetUploadZone').addEventListener('dragleave', function() { el('datasetUploadZone').classList.remove('dragover'); });
 el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(); el('datasetUploadZone').classList.remove('dragover'); if (e.dataTransfer.files[0]) setDatasetFile(e.dataTransfer.files[0]); });
 el('datasetFileInput').addEventListener('change', function() { if (this.files[0]) setDatasetFile(this.files[0]); });
-el('datasetRemoveBtn').addEventListener('click', clearDatasetFile);
+el('datasetRemoveBtn').addEventListener('click', function(e) { e.stopPropagation(); clearDatasetFile(); });
+el('datasetFilePreview').addEventListener('click', showDatasetPreviewModal);
+el('datasetPreviewCloseBtn').addEventListener('click', hideDatasetPreviewModal);
+el('datasetPreviewModal').addEventListener('click', function(e) { if (e.target === el('datasetPreviewModal')) hideDatasetPreviewModal(); });
 
 el('memberSourceSystemTab').addEventListener('click', function() { switchMemberSource('system'); });
 el('memberSourceInviteTab').addEventListener('click', function() { switchMemberSource('invite'); });

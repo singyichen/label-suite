@@ -395,6 +395,31 @@
       min-width: 110px;
       flex-shrink: 0;
     }
+    .rv-annotator-review-row-sequence {
+      display: grid;
+      grid-template-columns: minmax(120px, 152px) minmax(0, 1fr);
+      align-items: start;
+      gap: 14px 16px;
+      padding: 16px 0;
+    }
+    .rv-annotator-review-row-sequence .rv-annotator-meta {
+      min-width: 0;
+      align-self: start;
+      padding-top: 2px;
+    }
+    .rv-sequence-review-content {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rv-annotator-review-row-sequence .rv-choice-group {
+      grid-column: 1 / -1;
+      margin-left: 0;
+      justify-content: flex-end;
+      padding-top: 6px;
+      border-top: 1px dashed #D7DEEA;
+    }
     .rv-annotator-name { font-size: 13px; font-weight: 600; color: var(--color-ink); word-break: break-word; }
     .rv-annotator-subtitle { display: none; }
     .rv-score-pill {
@@ -857,6 +882,15 @@
         flex-wrap: wrap;
         align-items: center;
       }
+      .rv-annotator-review-row-sequence {
+        display: flex;
+        gap: 12px;
+      }
+      .rv-annotator-review-row-sequence .rv-choice-group {
+        grid-column: auto;
+        padding-top: 0;
+        border-top: none;
+      }
       .rv-annotator-meta { min-width: 0; }
       .rv-score-pill { margin-left: auto; }
       .rv-choice-group {
@@ -972,12 +1006,18 @@
     .aspect-soft-guidance svg { flex-shrink: 0; margin-top: 2px; }
 
     /* Reviewer aspect diff */
-    .rv-aspect-diff { width: 100%; margin-top: 6px; }
+    .rv-aspect-diff { width: 100%; min-width: 0; margin-top: 6px; }
     .rv-aspect-diff-title {
       font-size: 11px; font-weight: 700; color: var(--color-text-soft);
       text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;
     }
     .rv-aspect-diff-item { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0; line-height: 1.5; }
+    .rv-aspect-diff-text {
+      min-width: 0;
+      color: var(--color-ink);
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
     .rv-aspect-diff-op {
       font-size: 10px; font-weight: 700; padding: 1px 5px;
       border-radius: var(--radius-full); flex-shrink: 0;
@@ -1077,6 +1117,7 @@
     }
     .rv-aspect-correction-editor {
       width: 100%;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -1095,6 +1136,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
     .rv-aspect-correction-label {
       min-width: 20px;
@@ -1112,6 +1154,11 @@
       color: var(--color-ink);
       font-size: 12px;
       outline: none;
+    }
+    .rv-aspect-correction-input.reviewer-added {
+      background: #F0FDF4;
+      border-color: #86EFAC;
+      color: #166534;
     }
     .rv-aspect-correction-input:focus {
       border-color: var(--color-primary);
@@ -1141,12 +1188,6 @@
       font-weight: 700;
       cursor: pointer;
     }
-    .rv-aspect-correction-audit {
-      font-size: 11px;
-      color: var(--color-text-muted);
-      line-height: 1.5;
-    }
-
     /* ── NER ─────────────────────────────────────────────────────── */
     #sampleText { -webkit-user-select: text; user-select: text; cursor: text; }
     .ner-entity-highlight { display: inline; cursor: default; }
@@ -1310,7 +1351,7 @@
         </div>
 
         <div class="annotation-card hidden" id="sentencePairsReviewerSourceCard">
-          <div class="annotation-card-header">
+          <div class="annotation-card-header hidden">
             <div class="annotation-card-title" id="sentencePairsReviewerSourceTitle">句對語意判定</div>
           </div>
           <div class="annotation-card-body">
@@ -1348,8 +1389,8 @@
         <!-- Reviewer Controls -->
         <div class="annotation-card hidden" id="reviewerCard">
           <div class="annotation-card-header">
-            <div class="annotation-card-title" id="reviewCardTitle">審查結果</div>
-            <span style="font-size:11px;color:#7C3AED;font-weight:700;" id="reviewerRoleSmall">Reviewer</span>
+            <div class="annotation-card-title" id="reviewCardTitle">標記標籤</div>
+            <span class="hidden" style="font-size:11px;color:#7C3AED;font-weight:700;" id="reviewerRoleSmall">Reviewer</span>
           </div>
           <div class="annotation-card-body">
             <div class="rv-summary-card">
@@ -1532,7 +1573,7 @@ var I18N = {
     rvAspectCorrectionDelete: '刪除',
     rvAspectCorrectionPlaceholder: '輸入 aspect',
     rvAspectCorrectionDeleted: 'Reviewer 已刪除：{text}',
-    rvAspectCorrectionAdded: 'Reviewer 已新增',
+    rvAspectCorrectionAdded: 'Reviewer 已新增：{text}',
     rvAspectCorrectionEdited: 'Reviewer 已修改：{from} → {to}',
     rvSaveLabel: '送出審核',
     tabGuidelineLabel: '說明與檔案', tabHistoryLabel: '歷程',
@@ -1684,7 +1725,7 @@ var I18N = {
     rvAspectCorrectionDelete: 'Delete',
     rvAspectCorrectionPlaceholder: 'Enter aspect',
     rvAspectCorrectionDeleted: 'Reviewer deleted: {text}',
-    rvAspectCorrectionAdded: 'Reviewer added',
+    rvAspectCorrectionAdded: 'Reviewer added: {text}',
     rvAspectCorrectionEdited: 'Reviewer edited: {from} → {to}',
     rvSaveLabel: 'Submit review',
     tabGuidelineLabel: 'Guidelines', tabHistoryLabel: 'History',
@@ -2343,6 +2384,21 @@ var state = {
   mobileDrawerOpen: false,
 };
 
+var TASK_TITLES_BY_ID = {
+  'TASK-015-A1': { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+  'TASK-015-A2': { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+  'TASK-015-A3': { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+  'TASK-015-A4': { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+  'TASK-015-A5': { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+  'TASK-015-A6': { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
+  'TASK-015-R1': { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
+  'TASK-015-R2': { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
+  'TASK-015-R3': { zh: '產品評論序列標註（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+  'TASK-015-R4': { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
+  'TASK-015-R5': { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+  'TASK-015-R6': { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' }
+};
+
 var GUIDELINE_MODAL_SEEN_KEY = 'labelsuite.guidelineModalSeen';
 var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
 var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
@@ -2526,6 +2582,12 @@ function isAspectListTaskType() {
 
 function isRelationExtractionTaskType() {
   return normalizeTaskTypeKey(state.taskTypeKey) === 'relation_extraction';
+}
+
+function getWorkspaceTaskTitle(fallbackTitle) {
+  var taskTitle = TASK_TITLES_BY_ID[state.taskId];
+  if (!taskTitle) return fallbackTitle;
+  return taskTitle[state.lang] || taskTitle.zh || fallbackTitle;
 }
 
 /* ── Sentence Pairs Functions ─────────────────────────────────── */
@@ -3748,20 +3810,8 @@ function getReviewerAspectCorrections(row) {
           operation: d.op === 'added' ? 'added' : 'kept'
         };
       });
-    row.aspectCorrectionAudit = [];
   }
-  if (!row.aspectCorrectionAudit) row.aspectCorrectionAudit = [];
   return row.aspectCorrections;
-}
-
-function summarizeReviewerAspectCorrections(row) {
-  var audit = row.aspectCorrectionAudit || [];
-  var edits = (row.aspectCorrections || []).filter(function(c) {
-    return c.originalText && c.text && c.originalText !== c.text;
-  }).map(function(c) {
-    return t('rvAspectCorrectionEdited', { from: c.originalText, to: c.text });
-  });
-  return audit.concat(edits);
 }
 
 function renderReviewerAspectCorrectionEditor(row) {
@@ -3780,6 +3830,9 @@ function renderReviewerAspectCorrectionEditor(row) {
     var input = document.createElement('input');
     input.type = 'text';
     input.className = 'rv-aspect-correction-input';
+    if (!correction.originalText) {
+      input.classList.add('reviewer-added');
+    }
     input.value = correction.text;
     input.placeholder = t('rvAspectCorrectionPlaceholder');
     input.addEventListener('input', function() {
@@ -3791,12 +3844,9 @@ function renderReviewerAspectCorrectionEditor(row) {
     deleteBtn.className = 'rv-aspect-correction-delete';
     deleteBtn.textContent = t('rvAspectCorrectionDelete');
     deleteBtn.addEventListener('click', function() {
-      var deletedText = correction.text || correction.originalText || '';
       row.aspectCorrections = corrections.filter(function(itemCorrection) {
         return itemCorrection.id !== correction.id;
       });
-      row.aspectCorrectionAudit = row.aspectCorrectionAudit || [];
-      row.aspectCorrectionAudit.push(t('rvAspectCorrectionDeleted', { text: deletedText }));
       renderReviewerCard();
     });
 
@@ -3817,19 +3867,9 @@ function renderReviewerAspectCorrectionEditor(row) {
       text: '',
       operation: 'added'
     });
-    row.aspectCorrectionAudit = row.aspectCorrectionAudit || [];
-    row.aspectCorrectionAudit.push(t('rvAspectCorrectionAdded'));
     renderReviewerCard();
   });
   editor.appendChild(addBtn);
-
-  var auditItems = summarizeReviewerAspectCorrections(row);
-  if (auditItems.length) {
-    var audit = document.createElement('div');
-    audit.className = 'rv-aspect-correction-audit';
-    audit.textContent = auditItems.join(' · ');
-    editor.appendChild(audit);
-  }
 
   return editor;
 }
@@ -3849,6 +3889,13 @@ function renderReviewerCard() {
   reviewerData.rows.forEach(function(row, rowIdx) {
     var card = document.createElement('div');
     card.className = 'rv-annotator-review-row';
+    var isSequenceReviewerRow = isNerTaskType() || isAspectListTaskType();
+    var sequenceContent = null;
+    if (isSequenceReviewerRow) {
+      card.classList.add('rv-annotator-review-row-sequence');
+      sequenceContent = document.createElement('div');
+      sequenceContent.className = 'rv-sequence-review-content';
+    }
 
     var meta = document.createElement('div');
     meta.className = 'rv-annotator-meta';
@@ -3912,7 +3959,7 @@ function renderReviewerCard() {
         emptyNote.textContent = t('nerEntityEmpty');
         nerDiffWrapper.appendChild(emptyNote);
       }
-      card.appendChild(nerDiffWrapper);
+      sequenceContent.appendChild(nerDiffWrapper);
     } else if (isAspectListTaskType()) {
       var diffWrapper = document.createElement('div');
       diffWrapper.className = 'rv-aspect-diff';
@@ -3934,8 +3981,8 @@ function renderReviewerCard() {
         item.appendChild(textSpan);
         diffWrapper.appendChild(item);
       });
-      card.appendChild(diffWrapper);
-      card.appendChild(renderReviewerAspectCorrectionEditor(row));
+      sequenceContent.appendChild(diffWrapper);
+      sequenceContent.appendChild(renderReviewerAspectCorrectionEditor(row));
     } else if (isSentencePairsTaskType()) {
       var spPill = document.createElement('span');
       spPill.className = 'rv-score-pill result-tag-neutral';
@@ -3948,6 +3995,9 @@ function renderReviewerCard() {
       card.appendChild(score);
     }
 
+    if (sequenceContent) {
+      card.appendChild(sequenceContent);
+    }
     card.appendChild(actions);
     container.appendChild(card);
   });
@@ -4040,8 +4090,11 @@ function renderTaskTypeInterface() {
     closeGuidelineImageModal();
   }
 
-  setText('annotationCardTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
-  setText('sentencePairsReviewerSourceTitle', config.annotationTitle[state.lang] || config.annotationTitle.zh);
+  var fallbackTaskTitle = config.annotationTitle[state.lang] || config.annotationTitle.zh;
+  var workspaceTaskTitle = getWorkspaceTaskTitle(fallbackTaskTitle);
+  setText('annotationCardTitle', workspaceTaskTitle);
+  setText('reviewCardTitle', workspaceTaskTitle);
+  setText('sentencePairsReviewerSourceTitle', workspaceTaskTitle);
   setText('taskTypeLabel', config.taskTypeLabel[state.lang] || config.taskTypeLabel.zh);
   setText('guidelinePreviewGoal', config.guidelineGoal[state.lang] || config.guidelineGoal.zh);
   setText('guidelineSummaryText', config.guidelineSummary[state.lang] || config.guidelineSummary.zh);
@@ -4112,6 +4165,7 @@ function renderRoleControls() {
   el('annotatorActions').classList.toggle('hidden', !isAnnotator);
   el('reviewerActions').classList.toggle('hidden', isAnnotator);
   el('sentencePairsReviewerSourceCard').classList.toggle('hidden', !showSentencePairReviewerSource);
+  el('reviewerRoleSmall').classList.add('hidden');
 }
 
 function applyLang(lang) {

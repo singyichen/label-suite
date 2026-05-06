@@ -145,6 +145,7 @@ sequenceDiagram
 **Prototype 互動規格（本版必做）**：
 
 - Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已選 `task_type`、dataset 檔案通過格式/大小/編碼檢查後 enabled。
+- Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可直接再次上傳取代目前檔案，並同時保留下方的成功檔案列。
 - Step 2 `下一步` 按鈕預設 disabled；schema 必填欄位通過且無 parser/schema error 才 enabled。
 - Step 2 在 code 有未儲存變更時，`下一步` 必須維持 disabled 並提示先儲存；不得自動覆寫/自動儲存 code。
 - Step 3 `下一步` 按鈕預設 disabled；至少需有 1 位 `annotator` 且試標初始化設定通過驗證才 enabled。
@@ -321,6 +322,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
 - **FR-002**：Step 1 必須要求任務名稱、資料集、`task_type`。
 - **FR-002a**：資料集上傳必須限制於 `DATASET_UPLOAD_FORMATS`，且符合 `DATASET_MAX_FILE_SIZE_MB`、`DATASET_MAX_ROWS`、`DATASET_ENCODING`。
+- **FR-002b**：資料集上傳成功後，已上傳檔案列須顯示眼睛圖示；點擊該列（× 移除按鈕除外）開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列），供使用者確認是否上傳正確資料集；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。
 - **FR-003**：Step 2 標記設定檔必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
 - **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 欄位。

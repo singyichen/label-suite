@@ -144,6 +144,30 @@ test.describe('Annotation list routing', () => {
     await expect(page.locator('.task-table')).toBeVisible();
   });
 
+  test('annotator list shows task-list style pagination with current page info', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await expect(page.locator('#paginationBar')).toBeVisible();
+    await expect(page.locator('#paginationInfo')).toHaveText('共 5 筆 · 第 1 / 1 頁');
+    await expect(page.locator('#pageSizeSelect')).toBeVisible();
+    await expect(page.locator('#prevPageBtn')).toBeDisabled();
+    await expect(page.locator('#nextPageBtn')).toBeDisabled();
+    await expect(page.locator('#paginationControls [data-page="1"]')).toHaveClass(/active/);
+  });
+
+  test('reviewer list shows task-list style pagination with current page info', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R1&run_type=official_run&task_type=single_sentence_classification');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await expect(page.locator('#paginationBar')).toBeVisible();
+    await expect(page.locator('#paginationInfo')).toHaveText('共 5 筆 · 第 1 / 1 頁');
+    await expect(page.locator('#pageSizeSelect')).toBeVisible();
+    await expect(page.locator('#prevPageBtn')).toBeDisabled();
+    await expect(page.locator('#nextPageBtn')).toBeDisabled();
+    await expect(page.locator('#paginationControls [data-page="1"]')).toHaveClass(/active/);
+  });
+
   test('status filter can filter rows by completion status', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
@@ -186,6 +210,20 @@ test.describe('Annotation list routing', () => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
     await expect(page.locator('#sampleRows tr')).toHaveCount(5);
+  });
+
+  test('reviewer relation extraction stats render one metric per line', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R4&run_type=official_run&task_type=relation_extraction');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const firstStatsCell = page.locator('#sampleRows .reviewer-stats').first();
+    await expect(firstStatsCell).toBeVisible();
+
+    const statsText = await firstStatsCell.innerText();
+    expect(statsText).toContain('(DRUG:阿司匹靈)→treats→(SYMP:頭痛) ×2');
+    expect(statsText).toContain('(DRUG:阿司匹靈)→causes→(SYMP:胃部不適) ×2');
+    expect(statsText).toContain('\n');
+    expect(statsText).not.toContain(' · ');
   });
 
   test('sentence-pairs annotator task shows five samples in annotation list', async ({ page }) => {

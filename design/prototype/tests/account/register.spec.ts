@@ -70,6 +70,10 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
     await page.goto(REGISTER_URL);
   });
 
+  test('shows password hint text with uppercase, lowercase, and number requirements', async ({ page }) => {
+    await expect(page.locator('#passwordHint')).toHaveText('至少 8 個字元，含大寫英文、小寫英文與數字');
+  });
+
   test('US2.1 shows name required error when name is empty', async ({ page }) => {
     await page.getByTestId('email-input').fill('user@example.com');
     await page.getByTestId('password-input').fill('password123');

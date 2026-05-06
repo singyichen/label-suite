@@ -25,8 +25,8 @@ test.describe('Task detail overview edit state', () => {
     await expect(page.locator('#editTaskNameLabel .required')).toHaveText('*');
     await expect(page.locator('#editTaskTypeLabel .required')).toHaveText('*');
     await expect(page.locator('#editDatasetLabel .required')).toHaveText('*');
-    await expect(page.locator('#editDatasetFileList .guideline-item')).toHaveCount(1);
-    await expect(page.locator('#editDatasetFileList .guideline-item-name')).toContainText('customer_feedback_v3.csv');
+    await expect(page.locator('#editDatasetFileList .overview-upload-file-preview')).toHaveCount(1);
+    await expect(page.locator('#editDatasetFileList .overview-upload-file-name')).toContainText('customer_feedback_v3.csv');
 
     const cancelBox = await cancelBtn.boundingBox();
     const saveBox = await saveBtn.boundingBox();

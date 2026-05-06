@@ -20,15 +20,11 @@
           <option value="pending">待處理</option>
         </select>
       </div>
-      <div class="ar-multiselect-wrap">
-        <label class="field-label" id="arAnnotatorFilterLabel">標記員</label>
-        <div class="ar-multiselect" id="arAnnotatorMultiselect">
-          <button class="ar-multiselect-trigger" type="button" id="arAnnotatorTrigger" aria-haspopup="listbox" aria-expanded="false">
-            <span id="arAnnotatorTriggerLabel">全部標記員</span>
-            <img src="../../assets/icons/chevron-down.svg" alt="" aria-hidden="true" class="ar-multiselect-chevron" />
-          </button>
-          <div class="ar-multiselect-dropdown hidden" id="arAnnotatorDropdown" role="listbox" aria-multiselectable="true"></div>
-        </div>
+      <div>
+        <label class="field-label" id="arAnnotatorFilterLabel" for="arAnnotatorSelect">標記員</label>
+        <select class="input-select" id="arAnnotatorSelect">
+          <option value="all">全部標記員</option>
+        </select>
       </div>
     </div>
   </section>
@@ -52,15 +48,54 @@
           <tbody id="arResultTableBody"></tbody>
         </table>
       </div>
+      <div class="pagination" id="arPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="arPaginationInfo"></span>
+          <select class="page-size-select" id="arPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="arPaginationControls">
+          <button class="page-btn" id="arPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" id="arNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 
-  <section class="panel" aria-labelledby="arExportTitle" id="arExportSection">
-    <h2 class="panel-title" id="arExportTitle">匯出</h2>
-    <div id="arExportMeta" class="ar-export-meta"></div>
-    <div class="action-row" style="margin-top: var(--space-sm);">
-      <button class="btn btn-secondary" type="button" id="arExportJsonBtn">匯出 JSON</button>
-      <button class="btn btn-secondary" type="button" id="arExportJsonMinBtn">匯出 JSON-MIN</button>
+  <section class="panel" aria-labelledby="arExportHistoryTitle" id="arExportSection">
+    <div class="ar-export-header">
+      <h2 class="panel-title" id="arExportHistoryTitle">匯出記錄表</h2>
+      <div class="action-row">
+        <button class="btn btn-secondary" type="button" id="arExportJsonBtn">匯出 JSON</button>
+        <button class="btn btn-secondary" type="button" id="arExportJsonMinBtn">匯出 JSON-MIN</button>
+      </div>
+    </div>
+      <div class="table-wrap ar-export-table-wrap">
+        <div class="table-scroll">
+        <table class="member-table" id="arExportHistoryTable" role="table" aria-label="Export history">
+          <thead>
+            <tr>
+              <th id="thArExportTime">匯出時間</th>
+              <th id="thArExportType">匯出類型</th>
+              <th id="thArExportStageCol">標記階段</th>
+              <th id="thArExportCount">筆數</th>
+              <th id="thArExportScope">任務範圍</th>
+              <th id="thArExportBy">匯出人</th>
+              <th id="thArExportFormat">格式</th>
+              <th id="thArExportOps">操作</th>
+            </tr>
+          </thead>
+          <tbody id="arExportHistoryBody"></tbody>
+        </table>
+      </div>
+      <p class="ar-export-empty hidden" id="arExportHistoryEmpty">尚未執行過匯出</p>
     </div>
   </section>
 
