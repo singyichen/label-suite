@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test';
 test('opens guideline image modal when image file is clicked', async ({ page }) => {
   await page.goto('/pages/annotation/annotation-workspace.html?task_type=single_sentence_va_scoring');
 
+  const guidelineModal = page.locator('#guidelineModal');
   const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
+  await guidelineModal.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   if (await guidelineModalConfirm.isVisible()) {
     await guidelineModalConfirm.click();
   }

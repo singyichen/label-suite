@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 async function dismissGuidelineModal(page: import('@playwright/test').Page) {
   const guidelineModal = page.locator('#guidelineModal');
   const confirmBtn = page.locator('#guidelineModalConfirm');
+  await guidelineModal.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   if (await confirmBtn.isVisible()) {
     await confirmBtn.click();
     await expect(guidelineModal).toBeHidden();
