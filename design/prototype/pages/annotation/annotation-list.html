@@ -1495,6 +1495,12 @@
     return td;
   }
 
+  function formatReviewerLabelStats(sample, taskType) {
+    var statsText = sample && sample.labelStats ? String(sample.labelStats) : '-';
+    if (taskType !== 'relation_extraction') return statsText;
+    return statsText.replace(/\s·\s/g, '\n');
+  }
+
   function renderReviewerRows(visibleRows, tbodyEl, context) {
     visibleRows.forEach(function (item) {
       var sample = item.sample;
@@ -1610,7 +1616,7 @@
 
       var statsEl = document.createElement('span');
       statsEl.className = 'reviewer-stats';
-      statsEl.textContent = sample.labelStats || '-';
+      statsEl.textContent = formatReviewerLabelStats(sample, item.taskType);
       var statsTd = makeTd(statsEl, 'reviewer-stats-cell');
 
       var textTd = document.createElement('td');

@@ -188,6 +188,20 @@ test.describe('Annotation list routing', () => {
     await expect(page.locator('#sampleRows tr')).toHaveCount(5);
   });
 
+  test('reviewer relation extraction stats render one metric per line', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R4&run_type=official_run&task_type=relation_extraction');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const firstStatsCell = page.locator('#sampleRows .reviewer-stats').first();
+    await expect(firstStatsCell).toBeVisible();
+
+    const statsText = await firstStatsCell.innerText();
+    expect(statsText).toContain('(DRUG:阿司匹靈)→treats→(SYMP:頭痛) ×2');
+    expect(statsText).toContain('(DRUG:阿司匹靈)→causes→(SYMP:胃部不適) ×2');
+    expect(statsText).toContain('\n');
+    expect(statsText).not.toContain(' · ');
+  });
+
   test('sentence-pairs annotator task shows five samples in annotation list', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A5&run_type=dry_run&task_type=sentence_pairs');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

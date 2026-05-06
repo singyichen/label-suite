@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.6.3
+**版本**：1.6.5
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -185,6 +185,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 標記分布統計規則：
       - `single_sentence_classification` / `sequence_labeling` / `sentence_pairs` / `relation_extraction` 使用 reviewer list 同款 monospace 統計文字
       - `single_sentence_va_scoring` 使用 reviewer list 同款 `mean / std / ±1.5std` 多行統計文字
+      - `relation_extraction` 的每一筆 relation / triple 摘要需各占一行，沿用 reviewer list 的逐行呈現；不得將多筆統計以單行 ` · ` 串接壓縮
     - 子列欄位（展開後顯示，每位標記員一列）：
       - 標記員姓名
       - 標記值（依 `task_type` 動態呈現）：
@@ -608,6 +609,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.5 | 2026-05-06 | 同步 reviewer `annotation-list` 關係抽取統計樣式：`relation_extraction` 的標記分布統計需逐行顯示每一筆 relation / triple 摘要，不得以單行 ` · ` 串接壓縮 |
 | 1.6.4 | 2026-05-06 | 同步 `annotation-results` prototype 分頁：標記結果表底部新增與 `task-list` 一致的 footer pagination（總筆數 / 目前頁數、每頁筆數切換、上一頁 / 下一頁 / 頁碼按鈕） |
 | 1.6.3 | 2026-05-06 | 同步 `task-detail` prototype RWD 修訂：補充 `annotation-results` 文本摘要單一 wrapper 與頂對齊規則、展開列 `提交時間 + 審核狀態` metadata 群組在 desktop / mobile 的排列約束、result tag 不可被拉伸成整列色塊，並新增 `member-management` 與 `annotation-results` 窄 viewport 的表格捲動/換行規則 |
 | 1.6.2 | 2026-05-04 | 新增 export schema 規劃：以 Label Studio `JSON / JSON-MIN` 為參考，明確定義 Label Suite 採 `manifest + items[]` 的完整 JSON 與 flat rows 的 JSON-MIN；補齊共通欄位、task-specific 動態欄位與 reviewer-corrected result 匯出原則 |
