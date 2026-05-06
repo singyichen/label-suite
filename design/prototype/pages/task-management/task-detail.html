@@ -2349,6 +2349,8 @@
       thWorkLogDate: '日期',
       thWorkLogMember: '成員',
       thWorkLogRole: '角色',
+      thWorkLogLoginLogout: '登入／登出時間',
+      thWorkLogOnlineDuration: '上線時長',
       thWorkLogDuration: '工作時長',
       thWorkLogCompleted: '完成筆數',
       thWorkLogSpeed: '平均速度',
@@ -2363,7 +2365,8 @@
       workLogEmptyTitle: '尚無工時紀錄',
       workLogBackToOverviewBtn: '回到任務概覽',
       workLogHoursUnit: '小時',
-      workLogDurationTpl: '{hours} 小時',
+      workLogDurationTpl: '{hours} 小時 {minutes} 分',
+      workLogOnlineDurationTpl: '{hours} 小時 {minutes} 分',
       workLogSpeedUnit: '筆/小時',
       qualityGood: '穩定',
       qualityWatch: '觀察',
@@ -2739,6 +2742,8 @@
       thWorkLogDate: 'Date',
       thWorkLogMember: 'Member',
       thWorkLogRole: 'Role',
+      thWorkLogLoginLogout: 'Login / logout',
+      thWorkLogOnlineDuration: 'Online duration',
       thWorkLogDuration: 'Duration',
       thWorkLogCompleted: 'Completed items',
       thWorkLogSpeed: 'Average speed',
@@ -2753,7 +2758,8 @@
       workLogEmptyTitle: 'No work logs yet',
       workLogBackToOverviewBtn: 'Back to task overview',
       workLogHoursUnit: 'hours',
-      workLogDurationTpl: '{hours} h',
+      workLogDurationTpl: '{hours}h {minutes}m',
+      workLogOnlineDurationTpl: '{hours}h {minutes}m',
       workLogSpeedUnit: 'items/hour',
       qualityGood: 'Stable',
       qualityWatch: 'Watch',
@@ -3038,13 +3044,13 @@
   };
 
   var WORK_LOG_ENTRIES = [
-    { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', durationHours: 3.2, completedCount: 72, stage: 'dry' },
-    { date: '2026-04-19', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', durationHours: 3.6, completedCount: 61, stage: 'dry' },
-    { date: '2026-04-20', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', durationHours: 2.8, completedCount: 55, stage: 'dry' },
-    { date: '2026-04-20', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', durationHours: 2.4, completedCount: 20, stage: 'dry' },
-    { date: '2026-04-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', durationHours: 2.9, completedCount: 18, stage: 'official' },
-    { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', durationHours: 3.1, completedCount: 44, stage: 'official' },
-    { date: '2026-04-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', durationHours: 1.8, completedCount: 9, stage: 'official' },
+    { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:02', logoutAt: '12:28', durationHours: 3.2, completedCount: 72, stage: 'dry' },
+    { date: '2026-04-19', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '09:18', logoutAt: '13:07', durationHours: 3.6, completedCount: 61, stage: 'dry' },
+    { date: '2026-04-20', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '10:11', logoutAt: '13:19', durationHours: 2.8, completedCount: 55, stage: 'dry' },
+    { date: '2026-04-20', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '14:06', logoutAt: '16:54', durationHours: 2.4, completedCount: 20, stage: 'dry' },
+    { date: '2026-04-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:35', logoutAt: '12:47', durationHours: 2.9, completedCount: 18, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '13:12', logoutAt: '16:36', durationHours: 3.1, completedCount: 44, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '15:08', logoutAt: '17:21', durationHours: 1.8, completedCount: 9, stage: 'official' },
   ];
 
   var state = {
@@ -3964,6 +3970,8 @@ function interpolate(template, payload) {
     setText('thWorkLogDate', t('thWorkLogDate'));
     setText('thWorkLogMember', t('thWorkLogMember'));
     setText('thWorkLogRole', t('thWorkLogRole'));
+    setText('thWorkLogLoginLogout', t('thWorkLogLoginLogout'));
+    setText('thWorkLogOnlineDuration', t('thWorkLogOnlineDuration'));
     setText('thWorkLogDuration', t('thWorkLogDuration'));
     setText('thWorkLogCompleted', t('thWorkLogCompleted'));
     setText('thWorkLogSpeed', t('thWorkLogSpeed'));
@@ -6732,7 +6740,29 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function formatWorkLogDuration(hours) {
-    return interpolate(t('workLogDurationTpl'), { hours: hours.toFixed(1) });
+    var totalMinutes = Math.round(hours * 60);
+    var durationHours = Math.floor(totalMinutes / 60);
+    var durationMinutes = totalMinutes % 60;
+    return interpolate(t('workLogDurationTpl'), { hours: durationHours, minutes: durationMinutes });
+  }
+
+  function getOnlineDurationMinutes(entry) {
+    if (!entry.loginAt || !entry.logoutAt) return 0;
+    var login = entry.loginAt.split(':').map(Number);
+    var logout = entry.logoutAt.split(':').map(Number);
+    if (login.length < 2 || logout.length < 2) return 0;
+    return Math.max(0, ((logout[0] * 60) + logout[1]) - ((login[0] * 60) + login[1]));
+  }
+
+  function formatWorkLogLoginLogout(entry) {
+    return (entry.loginAt || '--:--') + ' / ' + (entry.logoutAt || '--:--');
+  }
+
+  function formatWorkLogOnlineDuration(entry) {
+    var totalMinutes = getOnlineDurationMinutes(entry);
+    var hours = Math.floor(totalMinutes / 60);
+    var minutes = totalMinutes % 60;
+    return interpolate(t('workLogOnlineDurationTpl'), { hours: hours, minutes: minutes });
   }
 
   function formatWorkLogSpeedByEntry(entry) {
@@ -6802,6 +6832,8 @@ function getTaskTypeLabel(taskTypeKey) {
       tdRole.appendChild(roleBadge);
       tr.appendChild(tdRole);
 
+      tr.appendChild(td(formatWorkLogLoginLogout(entry)));
+      tr.appendChild(td(formatWorkLogOnlineDuration(entry)));
       tr.appendChild(td(formatWorkLogDuration(entry.durationHours)));
       tr.appendChild(td(String(entry.completedCount)));
       tr.appendChild(td(formatWorkLogSpeedByEntry(entry)));
@@ -6821,7 +6853,7 @@ function getTaskTypeLabel(taskTypeKey) {
     var totalCompleted = entries.reduce(function(sum, entry) { return sum + entry.completedCount; }, 0);
     var weightedSpeed = totalHours > 0 ? totalCompleted / totalHours : 0;
 
-    setText('workLogSummaryHoursValue', totalHours.toFixed(1) + ' ' + t('workLogHoursUnit'));
+    setText('workLogSummaryHoursValue', formatWorkLogDuration(totalHours));
     setText('workLogSummaryCompletedValue', String(totalCompleted));
     setText(
       'workLogSummarySpeedValue',

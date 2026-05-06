@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.6.8
+**版本**：1.6.11
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -252,10 +252,13 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - `project_leader` 額外可用：成員篩選
   - 區塊 2：`工時明細表`
     - 版面順序：匯總卡片（總工時、總完成筆數、加權平均速度）固定顯示於明細表上方
-    - 欄位：日期、成員、角色（標記員/審核員）、工作時長、完成筆數、平均速度、標記階段
+    - 欄位：日期、成員、角色（標記員/審核員）、登入／登出時間、上線時長、工作時長、完成筆數、平均速度、標記階段
+    - `登入／登出時間`：顯示實際登入時間與實際登出時間
+    - `上線時長`：由實際登入時間與實際登出時間計算出的時間差，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
+    - `工作時長`：計算實際標記總時數，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
     - 角色顯示：使用與既有介面一致的角色 badge 樣式（`reviewer` / `annotator` 色彩區分）
     - 標記階段顯示：以 badge 呈現，樣式對齊 task-list「標記階段」badge（`試標` / `正式標記`；英文：`Dry Run` / `Official Run`）
-    - 匯總：當前篩選條件下總工時、總完成筆數、加權平均速度
+    - 匯總：當前篩選條件下總工時、總完成筆數、加權平均速度；其中 `總工時` 顯示格式需與 `工作時長` / `上線時長` 一致，使用「小時 + 分」呈現
   - 區塊 3：`異常提醒`
     - 顯示：速度異常（過快/過慢）
   - 角色可見性：
@@ -545,7 +548,7 @@ flowchart LR
 - **SentencePairsTaskConfig**：`sentence_pairs` 專用設定。欄位：`pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`label_options[]?`、`score_min?`、`score_max?`、`score_step?`、`allow_unsure`、`note_enabled`。
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
-- **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
+- **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_mode`、`sampling_value`、`sampling_strategy`、`random_seed`、`trial_round`、`stratify_by`、`target_agreement`、`target_std`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
 - **IsolationAuditLog**：資料隔離設定審計。欄位：`task_id`、`from_isolation_enabled`、`to_isolation_enabled`、`changed_by`、`changed_at`、`reason`。
 
@@ -669,3 +672,6 @@ flowchart LR
 | 1.4.15 | 2026-04-22 | Tab D「標記階段」改為 badge 顯示並同步中文文案（`試標` / `正式標記`），樣式對齊 task-list「標記階段」badge |
 | 1.4.16 | 2026-04-22 | 介面詞彙統一：全文件統一使用「標記階段」，並補齊英文對照 `Annotation stage`（`Dry Run` / `Official Run`） |
 | 1.4.17 | 2026-04-22 | prototype 架構調整：`task-detail.html` 改為單一殼頁，四個 tab 內容拆分為 `task-detail.panels/*.html` partial 載入，降低單檔維護複雜度並同步規格化檔案結構 |
+| 1.4.18 | 2026-05-06 | Tab D 工時明細表新增「登入／登出時間」與「上線時長」欄位，並同步擴充 `WorkLogEntry` 欄位定義 |
+| 1.4.19 | 2026-05-06 | Tab D「工作時長」顯示格式改為與「上線時長」一致，統一使用小時與分呈現 |
+| 1.4.20 | 2026-05-06 | Tab D「總工時」匯總顯示格式改為與時長欄位一致，統一使用小時與分呈現 |
