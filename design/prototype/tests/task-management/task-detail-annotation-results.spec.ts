@@ -128,10 +128,10 @@ test.describe('Task detail annotation results', () => {
     expect(tagNotStretched).toBe(true);
     const reviewBadgeVisible = await page.locator('#arResultTableBody .ar-review-badge').first().evaluate((badge) => {
       const badgeRect = badge.getBoundingClientRect();
-      const table = badge.closest('table');
-      if (!table) return false;
-      const tableRect = table.getBoundingClientRect();
-      return badgeRect.right <= tableRect.right - 4 && badgeRect.left >= tableRect.left;
+      const scroller = badge.closest('.table-scroll');
+      if (!scroller) return false;
+      const scrollerRect = scroller.getBoundingClientRect();
+      return badgeRect.right <= scrollerRect.right - 4 && badgeRect.left >= scrollerRect.left;
     });
     expect(reviewBadgeVisible).toBe(true);
     await expect(page.locator('#arResultTableBody .reviewer-actions, #arResultTableBody .mini-btn')).toHaveCount(0);
@@ -154,11 +154,23 @@ test.describe('Task detail annotation results', () => {
     });
     expect(vaBadgeVisible).toBe(true);
 
-    const summaryTextCompact = await firstRow.locator('.ar-summary-text').evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return style.display === 'block';
+    const summaryTextCompact = await firstRow.locator('.ar-summary-cell').evaluate((cell) => {
+      const summaryText = cell.querySelector('.ar-summary-text');
+      const summaryTitle = cell.querySelector('.ar-summary-title');
+      if (!(summaryText instanceof HTMLElement) || !(summaryTitle instanceof HTMLElement)) {
+        return { display: '', isTopAligned: false };
+      }
+
+      const style = window.getComputedStyle(summaryText);
+      const cellRect = cell.getBoundingClientRect();
+      const titleRect = summaryTitle.getBoundingClientRect();
+      return {
+        display: style.display,
+        isTopAligned: Math.abs(titleRect.top - cellRect.top) <= 16,
+      };
     });
-    expect(summaryTextCompact).toBe(true);
+    expect(summaryTextCompact.display).toBe('block');
+    expect(summaryTextCompact.isTopAligned).toBe(true);
   });
 
   test('checks summary and review-badge layout across every task type', async ({ page }) => {
@@ -169,26 +181,46 @@ test.describe('Task detail annotation results', () => {
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       await firstRow.click();
 
-      const summaryTextCompact = await firstRow.locator('.ar-summary-text').evaluate((el) => {
-        const style = window.getComputedStyle(el);
+      const summaryTextCompact = await firstRow.locator('.ar-summary-cell').evaluate((cell) => {
+        const summaryText = cell.querySelector('.ar-summary-text');
+        const summaryTitle = cell.querySelector('.ar-summary-title');
+        if (!(summaryText instanceof HTMLElement) || !(summaryTitle instanceof HTMLElement)) {
+          return { display: '', childCount: 0, height: 0, isTopAligned: false };
+        }
+
+        const style = window.getComputedStyle(summaryText);
+        const cellRect = cell.getBoundingClientRect();
+        const titleRect = summaryTitle.getBoundingClientRect();
         return {
           display: style.display,
-          childCount: el.children.length,
-          height: el.getBoundingClientRect().height,
+          childCount: summaryText.children.length,
+          height: cell.getBoundingClientRect().height,
+          isTopAligned: Math.abs(titleRect.top - cellRect.top) <= 16,
         };
       });
       expect(summaryTextCompact.display).toBe('block');
       expect(summaryTextCompact.childCount).toBe(1);
+      expect(summaryTextCompact.isTopAligned).toBe(true);
 
-      const reviewBadgesVisible = await page.locator('#arResultTable').evaluate((table) => {
-        const tableRect = table.getBoundingClientRect();
-        const badges = Array.from(table.querySelectorAll('#arResultTableBody .ar-review-badge'));
+      const reviewBadgesVisible = await page.locator('#arTableSection .table-scroll').evaluate((scroller) => {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const badges = Array.from(scroller.querySelectorAll('#arResultTableBody .ar-review-badge'));
         return badges.every((badge) => {
           const rect = badge.getBoundingClientRect();
-          return rect.left >= tableRect.left && rect.right <= tableRect.right - 2 && rect.width > 40;
+          return rect.left >= scrollerRect.left && rect.right <= scrollerRect.right - 2 && rect.width > 40;
         });
       });
       expect(reviewBadgesVisible).toBe(true);
+
+      const detailRowsFitTable = await page.locator('#arTableSection .table-scroll').evaluate((scroller) => {
+        const scrollerRect = scroller.getBoundingClientRect();
+        const rows = Array.from(scroller.querySelectorAll('#arResultTableBody .annotator-row'));
+        return rows.every((row) => {
+          const rect = row.getBoundingClientRect();
+          return rect.left >= scrollerRect.left && rect.right <= scrollerRect.right - 2;
+        });
+      });
+      expect(detailRowsFitTable).toBe(true);
     }
   });
 

@@ -619,12 +619,12 @@
       overflow: hidden;
       background: var(--color-white);
     }
-    .table-scroll { overflow-x: auto; }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .member-table {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      min-width: 980px;
+      min-width: 640px;
     }
     .member-table thead tr {
       background: var(--color-slate-50);
@@ -645,7 +645,6 @@
       font-size: 13px;
       color: var(--color-ink);
       vertical-align: middle;
-      white-space: nowrap;
     }
     .member-table tbody tr:last-child td { border-bottom: none; }
     .member-name { font-weight: 700; }
@@ -859,9 +858,11 @@
     .ar-expand-btn.expanded img { transform: rotate(90deg); }
     .ar-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .ar-completed-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; }
+    .ar-summary-cell { vertical-align: middle; }
     .ar-summary-text {
       display: block;
       min-width: 260px;
+      max-width: 520px;
     }
     .ar-summary-title {
       font-size: 15px;
@@ -881,63 +882,66 @@
       line-height: 1.6;
     }
     .reviewer-stats-cell {
-      min-width: 280px;
-      width: 280px;
+      min-width: 240px;
+      width: 240px;
     }
     .annotator-detail-row { background: #F8FAFC; }
     .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
     .annotator-detail-inner {
-      padding: 8px 28px 8px 52px;
+      padding: 8px 20px 8px 52px;
       border-top: 1px solid #E2E8F0;
     }
     .annotator-row {
-      display: grid;
-      grid-template-columns: minmax(110px, 140px) minmax(0, 1fr) minmax(150px, 180px) minmax(72px, 88px);
-      gap: 12px;
+      display: flex;
       align-items: center;
+      gap: 12px;
       padding: 7px 0;
       border-bottom: 1px solid #EAECF0;
-      min-width: 0;
     }
     .annotator-row:last-child { border-bottom: none; }
     .annotator-username {
       font-size: 13px;
       font-weight: 600;
       color: var(--color-ink);
-      min-width: 0;
+      min-width: 110px;
     }
     .annotator-result-tag {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      justify-self: start;
       font-size: 13px; color: var(--color-primary); background: #EEF2FF;
       border: 1px solid #C7D2FE; border-radius: var(--radius-md);
       padding: 3px 12px;
       font-family: monospace;
       min-width: 80px;
-      max-width: 100%;
-      width: fit-content;
       text-align: center;
+      max-width: min(100%, 320px);
       white-space: normal;
       overflow-wrap: anywhere;
     }
     .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
     .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
     .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    .annotator-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
     .annotator-submitted-at {
       font-size: 12px;
       color: var(--color-text-soft);
       white-space: nowrap;
       text-align: right;
-      justify-self: end;
     }
     .ar-review-badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       min-width: 72px;
-      justify-self: end;
+      flex-shrink: 0;
     }
     .badge-ar-approved { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-ar-returned { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
@@ -978,14 +982,17 @@
         padding-right: 20px;
       }
       .annotator-row {
-        grid-template-columns: 1fr;
         align-items: flex-start;
+        flex-direction: column;
+      }
+      .annotator-meta {
+        margin-left: 0;
+        justify-content: flex-start;
+        flex-wrap: wrap;
       }
       .annotator-submitted-at {
         text-align: left;
-        justify-self: start;
       }
-      .ar-review-badge { justify-self: start; }
       .toast-container { right: 12px; left: 12px; bottom: 96px; }
       .toast { width: 100%; }
     }
@@ -7066,12 +7073,15 @@ function getTaskTypeLabel(taskTypeKey) {
       tr.appendChild(tdStage);
 
       var tdText = document.createElement('td');
-      tdText.className = 'ar-summary-text';
+      tdText.className = 'ar-summary-cell';
       tdText.title = text;
+      var textWrap = document.createElement('div');
+      textWrap.className = 'ar-summary-text';
       var textTitle = document.createElement('div');
       textTitle.className = 'ar-summary-title';
       textTitle.textContent = textPreview;
-      tdText.appendChild(textTitle);
+      textWrap.appendChild(textTitle);
+      tdText.appendChild(textWrap);
       tr.appendChild(tdText);
 
       var tdDist = document.createElement('td');
@@ -7112,6 +7122,10 @@ function getTaskTypeLabel(taskTypeKey) {
           var submittedAt = document.createElement('span');
           submittedAt.className = 'annotator-submitted-at';
           submittedAt.textContent = annotation.submittedAt || '-';
+
+          var metaWrap = document.createElement('div');
+          metaWrap.className = 'annotator-meta';
+
           var reviewBadge = getArReviewBadge(annotation.reviewStatus);
           var reviewWrap = document.createElement('span');
           reviewWrap.className = 'ar-review-badge';
@@ -7122,8 +7136,9 @@ function getTaskTypeLabel(taskTypeKey) {
 
           row.appendChild(annotatorName);
           row.appendChild(resultSpan);
-          row.appendChild(submittedAt);
-          row.appendChild(reviewWrap);
+          metaWrap.appendChild(submittedAt);
+          metaWrap.appendChild(reviewWrap);
+          row.appendChild(metaWrap);
           detailInner.appendChild(row);
         });
 

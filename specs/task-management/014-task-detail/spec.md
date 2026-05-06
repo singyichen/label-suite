@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.6.2
+**版本**：1.6.3
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -175,7 +175,8 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
       - `標記階段` 必須獨立成欄，不得跟著 `文本摘要` 一起顯示
       - `標記階段` 必須以 badge 顯示，`試標` / `正式標記` 的顏色與樣式需對齊既有 stage badge
       - 表格標題固定為 `標記結果表`；英文文案為 `Annotation results`
-      - `文本摘要` 欄僅保留摘要文字，不得殘留舊的標記階段 meta 區塊或額外空白佔位
+      - `文本摘要` 欄僅保留單一摘要文字容器，不得殘留舊的標記階段 meta 區塊、重複包裝節點或額外空白佔位
+      - 當父列因多行統計文字而增高時，`文本摘要` 欄需維持單一 block 摘要容器，並確保摘要標題貼齊容器頂部；即使摘要內容僅單行，也不得因舊版 meta wrapper 留下額外垂直留白
     - 標記分布統計規則：
       - `single_sentence_classification` / `sequence_labeling` / `sentence_pairs` / `relation_extraction` 使用 reviewer list 同款 monospace 統計文字
       - `single_sentence_va_scoring` 使用 reviewer list 同款 `mean / std / ±1.5std` 多行統計文字
@@ -191,8 +192,10 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
       - 提交時間
       - 審核狀態（唯讀 badge）：`通過` / `退回` / `待審核`
     - 子列規則：
-      - 展開列需固定對齊為 `標記員 / 標記值 / 提交時間 / 審核狀態`
-      - 任一 `task_type` 下，右側 `審核狀態` badge 不得被裁切或完全不可見
+      - desktop / tablet 展開列需採 `標記員 + 標記值` 在左、`提交時間 + 審核狀態` 在右的兩群組布局；右側 meta 群組需靠右對齊且不可擠壓 `標記值` 到不可讀
+      - mobile viewport 下，展開列需改為垂直堆疊；`提交時間 + 審核狀態` meta 群組需移至下方並左對齊，可換行但不得遮蓋或裁切內容
+      - `標記值` result tag 需維持內容寬度驅動的膠囊外觀，不得被拉伸成近乎整列寬度的大色塊；長字串允許換行
+      - 任一 `task_type` 下，右側 `審核狀態` badge 不得被裁切或完全不可見；table 發生 overflow 時，整列內容仍需完整落在 `table-scroll` 容器可視範圍內
     - 所有欄位皆唯讀，不提供任何標記或審核操作按鈕
   - 區塊 3：`匯出`（自 Tab A「任務概覽」區塊 6 移入）
     - 顯示狀態：最近一次匯出時間、匯出標記階段（Annotation stage：Dry Run / Official Run）、空狀態提示
@@ -214,6 +217,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 成員狀態顯示：`啟用/停用` 需以 badge 呈現，樣式對齊 task-list「標記階段」badge 規格
     - 操作：移除成員、停用成員（僅 `project_leader`）；既有成員角色唯讀不可編輯
     - 操作欄順序：`移除` 固定在左側，`停用/啟用` 固定在右側
+    - RWD 規則：窄 viewport 可使用橫向捲動容器，但表格基準寬度需控制在可用手機寬度附近；一般文字儲存格允許換行，不得依賴全列 `nowrap` 導致過度橫向延展
   - 區塊 2：`可加入成員名單`
     - 欄位：平台使用者姓名、Email、目前已在任務數量（active task count）
     - 欄位語意：`目前已在任務數量` 代表該人員目前參與中的任務數，提供 `project_leader` 作為加入前負載評估依據
@@ -286,6 +290,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - `reviewer` 在 `overview` 需顯示 disabled 執行按鈕（含 tooltip：`僅 project leader 可操作`），避免看不到入口而誤解。
 - 各 tab 需定義空狀態區塊（icon + 文案 + 可行下一步 CTA）；空狀態不得使用全白空表格。
 - `member-management` 的危險操作（移除/停用）需二次確認 modal，modal 文案包含被影響成員名稱與角色。
+- `annotation-results` 的表格在窄 viewport 必須保留橫向捲動能力與 touch scrolling；基準最小寬度需控制在約 `640px` 等級，避免沿用過寬桌面設定造成手機 viewport 幾乎無法閱讀。
 - `annotation-progress` 與 `work-log` 的表格在 mobile 使用橫向捲動容器，不壓縮到欄位重疊。
 - `annotation-progress` 的階段切換按鈕需與「整體進度摘要」標題同列顯示（左標題、右切換）。
 - 當語言切換為中文時，`member-management` 中成員狀態與可加入成員名單欄位標題需使用中文（例如：`active/disabled` 顯示為 `啟用/停用`，`active task count` 顯示為 `目前已在任務數量`）。
@@ -468,12 +473,15 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015b**：`annotation-results` tab 的 `標記結果表` 必須為可展開兩層的階層式結構：父列顯示樣本摘要（樣本 ID、完成狀態、完成時間、標記階段、文本摘要截斷、標記分布統計），展開後子列每位標記員各一列。
 - **FR-015b-1**：父列 `標記階段` 必須獨立成欄，以 badge 顯示 `試標` / `正式標記`，樣式對齊既有 stage badge；不得將標記階段文案放入 `文本摘要` 欄內。
 - **FR-015b-2**：父列 `標記結果表` 的視覺語法必須對齊 reviewer `annotation-list`：統計區使用 reviewer stats 文字樣式，展開列標記值使用 reviewer result tag 樣式。
+- **FR-015b-3**：父列 `文本摘要` 儲存格必須只承載單一摘要容器；當列高因多行統計而增加時，摘要標題仍需自容器頂部對齊，不得殘留舊 meta 區塊、額外垂直留白或多餘占位。
 - **FR-015c**：標記員子列必須以 `task_type` 適配方式顯示標記值，不得以單一 generic string 取代所有類型。
 - **FR-015c-1**：`single_sentence_classification`、`sequence_labeling.subtype = ner`、`sequence_labeling.subtype = aspect_list`、`sentence_pairs` 的子列標記值需以 reviewer list 同款 result tag 顯示。
 - **FR-015c-2**：`single_sentence_va_scoring` 的父列統計必須顯示 reviewer list 同款 `mean / std / ±1.5std` 多行文字；子列標記值必須顯示 `[valence, arousal]`，並沿用相同顏色判斷規則。
 - **FR-015c-3**：`relation_extraction` 的父列統計與子列標記值必須保留 relation / tuple 原始字串語意（例如 `(DRUG:阿司匹靈)→treats→(SYMP:頭痛)`），不得退化為 `實體 / 關係 / Triple` 數字摘要或壓縮代碼。
 - **FR-015d**：標記員子列必須顯示該條目的審核員審核結果（`通過` / `退回` / `待審核`），以唯讀 badge 呈現，不提供任何審核操作按鈕。
-- **FR-015d-1**：展開列 `提交時間` 與 `審核狀態` 必須固定在右側獨立欄位，任何 `task_type`、字串長度或 viewport 不得導致審核狀態 badge 被截斷或完全不可見。
+- **FR-015d-1**：展開列 `提交時間` 與 `審核狀態` 必須在 desktop / tablet 維持右側獨立 meta 群組；任何 `task_type`、字串長度或 viewport 不得導致審核狀態 badge 被截斷或完全不可見。
+- **FR-015d-2**：展開列在 `<= MOBILE_BP` 時必須改為垂直堆疊，右側 meta 群組需移至內容下方並左對齊；result tag 可換行但不得被拉伸為整列寬度色塊。
+- **FR-015d-3**：展開列的可見範圍判定必須以 `annotation-results` 的橫向捲動容器為準，而非以 table 本體寬度為準；table 發生 overflow 時，`審核狀態` badge 與整列內容仍需完整落在 scroll container 內。
 - **FR-015e**：`annotation-results` tab 必須提供匯出功能（格式至少含 `EXPORT_FORMATS`），需指定標記階段（Dry Run / Official Run）；`<= EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻採背景工作並通知下載連結；匯出 metadata 規格對齊 FR-010i。
 - **FR-015f**：`annotation-results` tab 空狀態（尚無任何標記提交）必須顯示引導文案，不得顯示空表格。
 - **FR-015g**：`JSON` 匯出必須採 `EXPORT_JSON_SHAPE`，頂層包含 `manifest` 與 `items[]`；每個 `item` 至少包含 `sample_id`、`source_data`、`annotations[]`、`reviews[]` 與當前 sample 聚合狀態，不得退化為純扁平列。
@@ -580,6 +588,8 @@ flowchart LR
 - **SC-027**：`annotation-results` tab 正確以可展開兩層的階層式結構顯示每筆樣本的各標記員提交內容，標記值依 `task_type` 動態呈現，且審核員審核結果以唯讀 badge 顯示（無任何操作按鈕）。
 - **SC-027a**：六種 prototype 任務型別（`single_sentence_classification`、`single_sentence_va_scoring`、`sequence_labeling.subtype = aspect_list`、`sequence_labeling.subtype = ner`、`relation_extraction`、`sentence_pairs`）於 `annotation-results` 首筆展開列中，文本摘要不得出現殘留的舊標記階段區塊或額外空白佔位。
 - **SC-027b**：六種 prototype 任務型別於 `annotation-results` 首筆展開列中，右側 `審核狀態` badge 皆完整可見，且不得超出表格右界。
+- **SC-027c**：六種 prototype 任務型別於 `annotation-results` 首筆展開列中，result tag 皆維持內容寬度驅動的膠囊樣式，不得被拉伸至接近整列寬度。
+- **SC-027d**：六種 prototype 任務型別於 `annotation-results` 首筆展開列中，`文本摘要` 標題皆需維持頂對齊，且展開列內容不得超出 `table-scroll` 容器右界；mobile viewport 下 `提交時間 + 審核狀態` 可堆疊但不得分離。
 - **SC-028**：`annotation-results` tab 的匯出功能已自 Overview 移入，且匯出行為（格式、同步／背景切換門檻、metadata 欄位）與原 FR-009、FR-009a、FR-010i 規格保持一致。
 - **SC-029**：`reviewer` 進入 `annotation-results` tab 時可唯讀查看全部樣本與審核決定，不可執行任何標記或審核操作。
 - **SC-030**：`JSON` 匯出可完整保留任務 metadata、sample 原始資料、多位 annotator 提交、reviewer 決策與 reviewer-corrected result，足以作為系統交換與備份格式。
@@ -592,6 +602,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.3 | 2026-05-06 | 同步 `task-detail` prototype RWD 修訂：補充 `annotation-results` 文本摘要單一 wrapper 與頂對齊規則、展開列 `提交時間 + 審核狀態` metadata 群組在 desktop / mobile 的排列約束、result tag 不可被拉伸成整列色塊，並新增 `member-management` 與 `annotation-results` 窄 viewport 的表格捲動/換行規則 |
 | 1.6.2 | 2026-05-04 | 新增 export schema 規劃：以 Label Studio `JSON / JSON-MIN` 為參考，明確定義 Label Suite 採 `manifest + items[]` 的完整 JSON 與 flat rows 的 JSON-MIN；補齊共通欄位、task-specific 動態欄位與 reviewer-corrected result 匯出原則 |
 | 1.6.1 | 2026-05-04 | 同步 `annotation-results` prototype 調整：區塊 2 標題由 `樣本結果表` 改為 `標記結果表`（EN: `Annotation results`）；父列表頭新增獨立 `標記階段` 欄並以 stage badge 呈現；文本摘要移除舊 stage meta 佔位；各 task type 的標記分布統計與展開列 result tag 視覺對齊 reviewer `annotation-list`；補充 `relation_extraction` / `single_sentence_va_scoring` 的字串格式與展開列右側審核狀態不可裁切規則 |
 | 1.6.0 | 2026-04-30 | 新增 `annotation-results` tab（Tab B）：PL 與 Reviewer 可唯讀查看逐筆樣本的標記員提交內容（task_type 動態標記值）與審核員逐筆審核結果（唯讀 badge）；匯出功能自 Overview 區塊 6 移入；Overview 從 6 區塊縮減為 5 區塊；Tab 數量 4 → 5，順序：任務概覽 → 標記結果 → 標記進度 → 工時紀錄 → 成員管理 |
