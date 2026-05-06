@@ -3959,11 +3959,7 @@ function renderReviewerCard() {
         emptyNote.textContent = t('nerEntityEmpty');
         nerDiffWrapper.appendChild(emptyNote);
       }
-      if (sequenceContent) {
-        sequenceContent.appendChild(nerDiffWrapper);
-      } else {
-        card.appendChild(nerDiffWrapper);
-      }
+      sequenceContent.appendChild(nerDiffWrapper);
     } else if (isAspectListTaskType()) {
       var diffWrapper = document.createElement('div');
       diffWrapper.className = 'rv-aspect-diff';
@@ -3985,13 +3981,8 @@ function renderReviewerCard() {
         item.appendChild(textSpan);
         diffWrapper.appendChild(item);
       });
-      if (sequenceContent) {
-        sequenceContent.appendChild(diffWrapper);
-        sequenceContent.appendChild(renderReviewerAspectCorrectionEditor(row));
-      } else {
-        card.appendChild(diffWrapper);
-        card.appendChild(renderReviewerAspectCorrectionEditor(row));
-      }
+      sequenceContent.appendChild(diffWrapper);
+      sequenceContent.appendChild(renderReviewerAspectCorrectionEditor(row));
     } else if (isSentencePairsTaskType()) {
       var spPill = document.createElement('span');
       spPill.className = 'rv-score-pill result-tag-neutral';

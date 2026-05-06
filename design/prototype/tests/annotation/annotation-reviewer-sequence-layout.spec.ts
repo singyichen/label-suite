@@ -9,6 +9,9 @@ async function dismissGuidelineModal(page: import('@playwright/test').Page) {
 
 test('desktop aspect-list reviewer layout keeps correction editor and decisions visible before and after collapsing guideline', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 960 });
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+  });
   await page.goto('/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R3&run_type=official_run&task_type=sequence_labeling&sub_type=aspect_list&sample_id=AL-001');
 
   await dismissGuidelineModal(page);

@@ -138,11 +138,35 @@ test.describe('Task detail annotation results', () => {
     await page.locator('#arStageSelect').selectOption('official');
     await page.locator('#arExportJsonBtn').click();
     await expect(page.locator('#toastMsg')).toContainText('已建立 JSON 匯出');
-    await expect(page.locator('#arExportMeta')).toContainText('最近匯出：');
-    await expect(page.locator('#arExportMeta')).toContainText('匯出階段：Official Run');
+    const latestExportRow = page.locator('#arExportHistoryBody tr').first();
+    await expect(latestExportRow).toContainText('正式標記');
+    await expect(latestExportRow).toContainText('篩選匯出');
+    await expect(latestExportRow.locator('.ar-export-action-btn')).toHaveAttribute('type', 'button');
+    await expect(latestExportRow.locator('.ar-export-action-btn')).not.toHaveAttribute('onclick', /.+/);
 
     await page.locator('#arExportJsonMinBtn').click();
     await expect(page.locator('#toastMsg')).toContainText('已建立精簡 JSON 匯出');
+  });
+
+  test('parses negative VA ranges from stats summaries for color coding', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+
+    const parsed = await page.evaluate(() => {
+      const pageWindow = window as Window & typeof globalThis & {
+        parseVaRangeFromStatsSummary?: (statsSummary: string) => { minV: number; maxV: number; minA: number; maxA: number } | null;
+      };
+      return pageWindow.parseVaRangeFromStatsSummary
+        ? pageWindow.parseVaRangeFromStatsSummary('mean : [0.50, 1.00] , std : [1.33, 1.50], ±1.5std V : -1.495~2.495, ±1.5std A : -1.250~3.250')
+        : null;
+    });
+
+    expect(parsed).toEqual({
+      minV: -1.495,
+      maxV: 2.495,
+      minA: -1.25,
+      maxA: 3.25,
+    });
   });
 
   test('renders reviewer-style readonly rows for NER tasks with six samples', async ({ page }) => {

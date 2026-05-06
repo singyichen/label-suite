@@ -6935,7 +6935,7 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function parseVaRangeFromStatsSummary(statsSummary) {
     if (!statsSummary) return null;
-    var match = statsSummary.match(/±1\.5std V : ([0-9.]+)~([0-9.]+)[\s\S]*±1\.5std A : ([0-9.]+)~([0-9.]+)/);
+    var match = statsSummary.match(/±1\.5std V : (-?[0-9.]+)~(-?[0-9.]+)[\s\S]*±1\.5std A : (-?[0-9.]+)~(-?[0-9.]+)/);
     if (!match) return null;
     return {
       minV: parseFloat(match[1]),
@@ -8190,7 +8190,7 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
     document.getElementById('arExportJsonBtn').addEventListener('click', function() {
       var samples = getArFilteredSamples();
       var exportedAt = downloadArExport('json');
-      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all') ? 'full' : 'filtered';
+      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all') ? 'full' : 'filtered';
       if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
       TASK_DATA.exportHistory.unshift({
         exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
@@ -8209,7 +8209,7 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
     document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
       var samples = getArFilteredSamples();
       var exportedAt = downloadArExport('json-min');
-      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all') ? 'full' : 'filtered';
+      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all' && state.arStage === 'all') ? 'full' : 'filtered';
       if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
       TASK_DATA.exportHistory.unshift({
         exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
