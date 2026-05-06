@@ -19,7 +19,7 @@
 - `TAB_QUALITY = quality`
 - `DEFAULT_TAB = stats`
 - `ROUTE_PARAM = task_id`
-- `SHARED_METRICS = sentence_count | token_count | overall_completion_rate`
+- `SHARED_METRICS = sentence_count | token_count | completion_rate | submitted_sample_count | avg_annotation_time_per_sentence`
 - `STATS_EMPTY_STATE_TRIGGER = no_submitted_annotations`
 - `QUALITY_EMPTY_STATE_TRIGGER = dry_run_not_completed`
 - `INVALID_TASK_TRIGGER = task_not_found_or_no_membership`
@@ -166,13 +166,13 @@ sequenceDiagram
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`共用指標區`
-  - 必要元素：Sentence 數量、Token 數量、整體完成率
+  - 必要元素：Sentence 數量（分析母體）、Token 數量（空格分詞）、完成率（已完成 / 全部）、已提交樣本（至少 1 位已提交）、平均標記時間（每句平均用時）
 - 區塊 B：`任務類型特定指標區`
   - `single_sentence_classification`：各標籤次數 / 比例長條圖、多標籤共現矩陣
   - `single_sentence_va_scoring`：Valence / Arousal 分佈直方圖、統計摘要列、V-A 二維分佈 scatter plot
   - `sequence_labeling`：
     - `ner`：實體類型分佈、每句平均實體數、Entity span 長度分佈
-    - `aspect`：KPI Cards（Sentence Count / Token Count / Completion Rate / Submitted Samples / Avg Annotation Time）、Aspect 類型分佈、每句平均 Aspect 數量、Aspect span 長度分佈、Aspect 共現矩陣；若資料存在則加顯 Aspect × Sentiment 分佈與 Aspect Coverage
+    - `aspect`：Aspect 類型分佈、每句平均 Aspect 數量、Aspect span 長度分佈、Aspect 共現矩陣；若資料存在則加顯 Aspect × Sentiment 分佈與 Aspect Coverage
   - `relation_extraction`：實體類型分佈、關係類型分佈、Triple 數量統計
   - `sentence_pairs`：分類型顯示標籤分佈；評分型顯示分數分佈，且需同步顯示 `pair_mode = similarity | entailment`
 - 區塊 C：`Stats 空狀態`
@@ -312,7 +312,7 @@ sequenceDiagram
 - **FR-005**: detail 頁必須提供共用 detail shell，至少包含麵包屑、任務基本資訊與 Tab 列。
 - **FR-006**: Tab 列必須提供「統計總覽」與「品質監控」兩個入口；切換為頁內切換，active tab 以 `?tab=` query 標示。
 - **FR-007**: 未帶 `?tab=` 時，系統必須以 `DEFAULT_TAB`（`stats`）作為預設 active tab。
-- **FR-008**: 統計總覽 tab 必須固定顯示 `SHARED_METRICS`（Sentence 數量、Token 數量、整體完成率）。
+- **FR-008**: 統計總覽 tab 必須固定顯示 `SHARED_METRICS`（Sentence 數量、Token 數量、完成率、已提交樣本、平均標記時間）。
 - **FR-008A**: stats tab 必須實作正式狀態列舉 `STATS_TAB_STATES`，並以互斥狀態驅動 loading、empty、ready、error 顯示。
 - **FR-009**: 系統必須依任務資料中的 `task_type` 動態渲染 stats tab 對應特定統計指標區塊，涵蓋 `TASK_TYPE_KEYS` 所有值。
 - **FR-009A**: `single_sentence_classification` 必須顯示各標籤次數 / 比例長條圖與多標籤共現矩陣。
@@ -446,7 +446,7 @@ flowchart LR
 
 - **SC-001**: 進入 `/dataset-analysis-detail/:task_id` 時，detail shell 正確顯示任務上下文、麵包屑與雙 Tab 導覽。
 - **SC-002**: 未帶 `?tab=` 時，頁面預設進入統計總覽 tab；帶 `?tab=quality` 時可正確進入品質監控 tab。
-- **SC-003**: `SHARED_METRICS` 三項指標在所有 `task_type` 下皆固定可見於 stats tab。
+- **SC-003**: `SHARED_METRICS` 五項指標在所有 `task_type` 下皆固定可見於 stats tab。
 - **SC-004**: `TASK_TYPE_KEYS` 的五種任務類型各自對應的 stats 指標區塊皆可正確渲染。
 - **SC-004N**: `sequence_labeling.analysis_profile = ner` 時，stats tab 正確顯示實體類型分佈、每句平均實體數與 Entity span 長度分佈。
 - **SC-004A**: `sequence_labeling.analysis_profile = aspect` 時，stats tab 正確顯示 Aspect 分佈、每句平均 Aspect 數量、span 長度分佈與共現矩陣；有 sentiment 資料時，相關區塊一併顯示。

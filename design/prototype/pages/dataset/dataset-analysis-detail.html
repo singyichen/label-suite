@@ -206,7 +206,7 @@
     .toast.show{opacity:1;transform:translateY(0)}
 
     /* Stats tab */
-    .stats-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .stats-metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
     .stats-metric-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-slate-50)}
     .stats-metric-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--color-ink-muted);margin-bottom:6px}
     .stats-metric-value{font-size:32px;font-weight:700;line-height:1.1;font-family:var(--font-mono);color:var(--color-ink);margin-bottom:2px}
@@ -328,17 +328,27 @@
           <div class="stats-metric-card">
             <div class="stats-metric-label" id="statsLblSentence">句子數量</div>
             <div class="stats-metric-value">1,248</div>
-            <div class="stats-metric-desc" id="statsDescSentence">已提交標記的樣本總數</div>
+            <div class="stats-metric-desc" id="statsDescSentence">分析母體</div>
           </div>
           <div class="stats-metric-card">
             <div class="stats-metric-label" id="statsLblToken">Token 數量</div>
             <div class="stats-metric-value">42,816</div>
-            <div class="stats-metric-desc" id="statsDescToken">總 token 數（空格分詞）</div>
+            <div class="stats-metric-desc" id="statsDescToken">空格分詞</div>
           </div>
           <div class="stats-metric-card">
-            <div class="stats-metric-label" id="statsLblCompletion">整體完成率</div>
+            <div class="stats-metric-label" id="statsLblCompletion">完成率</div>
             <div class="stats-metric-value" style="color:var(--color-success)">87.5%</div>
             <div class="stats-metric-desc" id="statsDescCompletion">1,092 / 1,248 已完成</div>
+          </div>
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblSubmitted">已提交樣本</div>
+            <div class="stats-metric-value">1,092</div>
+            <div class="stats-metric-desc" id="statsDescSubmitted">至少 1 位已提交</div>
+          </div>
+          <div class="stats-metric-card">
+            <div class="stats-metric-label" id="statsLblAvgTime">平均標記時間</div>
+            <div class="stats-metric-value">48<span style="font-size:18px;font-weight:500">s</span></div>
+            <div class="stats-metric-desc" id="statsDescAvgTime">每句平均用時</div>
           </div>
         </div>
       </section>
@@ -389,9 +399,11 @@ var I18N = {
     pageSubtitle: '檢視統計總覽與品質監控',
     tabStats: '統計總覽', tabQuality: '品質監控',
     statsSharedTitle:'共用指標',
-    statsLblSentence:'句子數量',statsDescSentence:'已提交標記的樣本總數',
-    statsLblToken:'Token 數量',statsDescToken:'總 token 數（空格分詞）',
-    statsLblCompletion:'整體完成率',statsDescCompletion:'1,092 / 1,248 已完成',
+    statsLblSentence:'句子數量',statsDescSentence:'分析母體',
+    statsLblToken:'Token 數量',statsDescToken:'空格分詞',
+    statsLblCompletion:'完成率',statsDescCompletion:'1,092 / 1,248 已完成',
+    statsLblSubmitted:'已提交樣本',statsDescSubmitted:'至少 1 位已提交',
+    statsLblAvgTime:'平均標記時間',statsDescAvgTime:'每句平均用時',
     statsEmptyTitle:'尚無標記資料',
     statsEmptyDesc:'標記員提交後，系統將自動計算統計資料。請先完成 Dry Run 並等待標記員提交。',
     statsEmptyBtn:'前往任務詳情',
@@ -662,9 +674,11 @@ var I18N = {
     pageSubtitle: 'Review statistics and quality monitoring',
     tabStats: 'Statistics', tabQuality: 'Quality Monitor',
     statsSharedTitle:'Shared Metrics',
-    statsLblSentence:'Sentence Count',statsDescSentence:'Total annotated samples submitted',
-    statsLblToken:'Token Count',statsDescToken:'Total tokens (whitespace-split)',
-    statsLblCompletion:'Overall Completion',statsDescCompletion:'1,092 / 1,248 completed',
+    statsLblSentence:'Sentence Count',statsDescSentence:'Analysis population',
+    statsLblToken:'Token Count',statsDescToken:'Whitespace split',
+    statsLblCompletion:'Completion Rate',statsDescCompletion:'1,092 / 1,248 completed',
+    statsLblSubmitted:'Submitted Samples',statsDescSubmitted:'Submitted by at least 1 annotator',
+    statsLblAvgTime:'Avg Annotation Time',statsDescAvgTime:'Avg time per sentence',
     statsEmptyTitle:'No annotation data',
     statsEmptyDesc:'Statistics will be calculated once annotators submit. Complete the Dry Run first.',
     statsEmptyBtn:'Go to Task Detail',
@@ -1100,7 +1114,7 @@ function updateTaskDetailHref() {
 /* ── Apply language ─────────────────────────────────────────────── */
 var SIMPLE_IDS = [
   'bcRoot',
-  'statsSharedTitle','statsLblSentence','statsDescSentence','statsLblToken','statsDescToken','statsLblCompletion','statsDescCompletion',
+  'statsSharedTitle','statsLblSentence','statsDescSentence','statsLblToken','statsDescToken','statsLblCompletion','statsDescCompletion','statsLblSubmitted','statsDescSubmitted','statsLblAvgTime','statsDescAvgTime',
   'statsEmptyTitle','statsEmptyDesc','statsEmptyBtn',
   'statsVAHistTitle','statsVAHistDesc','statsVALblValence','statsVALblArousal',
   'statsLblMean','statsLblStd','statsLblMedian','statsLblMin','statsLblMax',
