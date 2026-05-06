@@ -2,7 +2,7 @@
 
 **功能分支**：`015-annotation-workspace`  
 **建立日期**：2026-04-23  
-**版本**：1.4.5  
+**版本**：1.4.6  
 **狀態**：Draft  
 **需求來源**：IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
 
@@ -252,7 +252,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 2. **Given** reviewer 需快速處理同一句的多位標記員結果，**When** 點擊 `全部通過` 或 `全部退回`，**Then** 系統必須以勾選式批次套用到所有標記員列。
 3. **Given** reviewer 退回或通過某位標記員結果，**When** 送出審核，**Then** 該筆歷程新增一筆可追溯紀錄（誰、何時、對哪位標記員做了什麼決策）。
 4. **Given** reviewer 在 Dry Run 審查，**When** 需要產生標準答案，**Then** 可使用 標記分布統計、各標記員結果與手動確認流程完成該筆決策。
-5. **Given** reviewer 審核 `sequence_labeling.subtype = aspect_list` 任務，**When** 發現標記員多標、漏標或文字需修正，**Then** 可直接刪除、新增或修改該標記員的 aspect row，並在送出審核時留下原始提交與 reviewer 修正 diff。
+5. **Given** reviewer 審核 `sequence_labeling.subtype = aspect_list` 任務，**When** 發現標記員多標、漏標或文字需修正，**Then** 可直接刪除、新增或修改該標記員的 aspect row；頁面內不額外顯示逐筆新增/刪除/修改 audit 文案，送出審核後再由 History / payload 保留原始提交與 reviewer 修正 diff。
 6. **Given** reviewer 審核 `task_type = sentence_pairs` 任務，**When** 進入工作區，**Then** 必須能查看各標記員的句對判定結果與句對內容，並依 `response_format` 顯示分類分布或分數摘要後執行 `通過 / 退回`。
 7. **Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄審查卡標題，**Then** 標題必須顯示與 annotator 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標註`、`句對語意判定`）。
 
@@ -272,7 +272,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
   - 逐筆按鈕行為：逐筆 `通過 / 退回` 按鈕點擊後切換為 active 深色實心；再次點擊當前 active 按鈕時視為取消該筆決策，回到未選取狀態；逐筆決策狀態與批次按鈕狀態保持同步
   - 標記結果顏色標記（VA 評分任務）：每位標記員的 `[V, A]` result tag 依以下規則著色：🟢 綠色（`result-tag-green`）：V 與 A 皆落在 `[lo, hi]` 範圍內；🔵 藍色（`result-tag-blue`）：任一維度低於下界（`< lo`）；🔴 紅色（`result-tag-red`）：任一維度高於上界（`> hi`）；優先順序：紅色 > 藍色 > 綠色；`lo`/`hi` 由當筆統計摘要中的 `±1.5std` 範圍解析
   - `sequence_labeling.subtype = ner` 任務：各標記員結果需以可掃讀的 entity badge list 呈現，至少顯示 entity type badge 與 entity text；Reviewer 可直接查看各標記員 NER 結果後執行 `通過 / 退回`，但不提供 reviewer 直接改寫 entity 的入口。
-  - `sequence_labeling.subtype = aspect_list` 任務：各標記員結果需以可掃讀的 Aspect List diff 呈現，至少顯示每位標記員的新增、刪除、修改、exact match invalid 與句子修正差異；Reviewer 需可在同一列直接新增、刪除、修改 aspect，必要時修正句子，並可選擇「修正後通過」或「退回標記員」。
+  - `sequence_labeling.subtype = aspect_list` 任務：各標記員結果需以可掃讀的 Aspect List diff 呈現，至少顯示每位標記員的新增、刪除、修改、exact match invalid 與句子修正差異；Reviewer 需可在同一列直接新增、刪除、修改 aspect，必要時修正句子。頁面內不需額外顯示逐筆操作的文字 audit；由 reviewer 新增的 aspect row 需以簡單色彩狀態區分（例如淺綠底/綠色邊框），方便與原始列快速辨識。
   - `task_type = sentence_pairs` 任務：各標記員結果需以可掃讀的句對結果卡呈現；`response_format = classification` 時需顯示標籤分布與各標記員單一標籤，`response_format = scoring` 時需顯示平均值、標準差與各標記員分數。Reviewer 不提供直接改寫句對標記值入口。位於審查卡上方的句對內容來源區僅保留 mode badge 與兩句內容，不得再額外顯示一個與審查卡相同的重複 header。
 - 區塊 B：`右欄 History`
   - 必要元素：操作者、時間、欄位差異、決策狀態
@@ -289,6 +289,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - 一般分類與 VA 任務的 Reviewer 介面只提供 `通過 / 退回` 兩種決策；不提供直接修改標記值入口。
 - `sentence_pairs` 的 Reviewer 介面比照一般分類 / 評分任務，只提供 `通過 / 退回`，不提供 reviewer 直接修改 `label` 或 `score` 的入口。
 - `sequence_labeling.subtype = aspect_list` 的 Reviewer 介面需額外提供 row-level 修正入口：Reviewer 可直接新增缺漏 aspect、刪除多標 / 錯標 aspect、修改 aspect 文字與修正句子。這些修正不等同於 `退回`，而是產生 reviewer-corrected result。
+- Reviewer 新增的 aspect row 需在頁面中以簡單色彩狀態區分；刪除操作直接反映在目前編輯結果中，不要求於中欄額外保留逐筆刪除/修改文字紀錄。
 - `通過` 表示該筆標記有效；Aspect List 任務若 Reviewer 有直接修正，則表示修正後結果有效。`退回` 表示該筆標記狀態回到未標記，由原標記員重新標記。
 - Reviewer 直接修正 Aspect List 時，系統必須保留 annotator 原始提交、reviewer 修正後結果、修正 diff（新增 / 刪除 / 修改 / 句子修正）、Reviewer 身分、時間與最終決策，供品質追溯。
 - 手機版（`<= MOBILE_BP`）Reviewer 工作區中，批次操作區需右對齊；各標記員列的 result tag 與逐列 `退回 / 通過` 按鈕也需靠右對齊，維持一致的行尾操作視覺。
@@ -424,7 +425,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - **FR-024E**: 當 `require_sentiment_context_check = true` 時，每個 aspect row 必須顯示情緒上下文確認狀態（例如「已檢查 / 需確認」）供標記者自行判斷；此為**軟性指引，不觸發系統硬性攔截**，與 `require_exact_match_in_sentence` 的阻擋行為不同。
 - **FR-024F**: Aspect List 標記結果 payload 必須包含 `original_sentence`、`corrected_sentence`、`aspects[]`、`validation_status`、`note`、`version`，且 `aspects[]` 必須對應 task config 的 `aspect_list_field`；annotator 可見資料不得包含 ground truth。
 - **FR-024G**: Reviewer 視圖遇到 `sequence_labeling.subtype = aspect_list` 時，必須以可掃讀的 Aspect List diff 呈現各標記員結果，至少包含新增、刪除、修改、exact match invalid 與句子修正差異；審核操作仍沿用 `通過 / 退回` 決策與歷程紀錄。
-- **FR-024H**: Reviewer 視圖遇到 `sequence_labeling.subtype = aspect_list` 時，必須提供直接修正控制項，包含新增 aspect、刪除 aspect、修改 aspect 文字與修正句子。Reviewer 修正後通過時，payload / history 必須同時保留 annotator 原始提交與 reviewer-corrected result，並記錄 correction diff。
+- **FR-024H**: Reviewer 視圖遇到 `sequence_labeling.subtype = aspect_list` 時，必須提供直接修正控制項，包含新增 aspect、刪除 aspect、修改 aspect 文字與修正句子。由 reviewer 新增的 aspect row 需以簡單色彩狀態區分；中欄不需額外顯示逐筆新增/刪除/修改 audit 文案。Reviewer 修正後通過時，payload / history 必須同時保留 annotator 原始提交與 reviewer-corrected result，並記錄 correction diff。
 - **FR-024I**: 當 `task_type = relation_extraction` 時，Annotator 工作區必須顯示三區結構：① Entity Type 按鈕列（依 config `entity_types` 動態產生）、② Entity List（顯示已標記實體含 span 座標 + 每筆可刪除）、③ Relation Builder（E1/Relation/E2 選單 + 撤銷 / 新增 按鈕）、④ Triple List（顯示已建立三元組 + 每筆可刪除）；Entity List 每筆必須以 `(start, end)` 格式顯示該實體在原始文本中的字元起訖索引（半開區間，[start, end)）。
 - **FR-024J**: `relation_extraction` 實體標記流程：使用者在文本中選取文字片段，再點擊 Entity Type 按鈕後，系統將「選取文字 + entity type + color + 字元起訖索引 (start, end)」存入 Entity List；start/end 以選取範圍相對原始文本的字元 offset（半開區間）計算；未先選取文字時點擊 Entity Type 按鈕必須顯示錯誤提示並不建立實體。
 - **FR-024K**: `relation_extraction` Triple 建構流程：使用者從 E1 選單選擇實體、從 Relation 選單選擇關係類型、從 E2 選單選擇實體，點擊 Add 後建立三元組；E1 與 E2 相同時必須阻擋並顯示錯誤；任一欄位為空時亦必須阻擋。
@@ -545,6 +546,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.4.6 | 2026-05-06 | Synced Aspect List reviewer correction UI with prototype: removed inline add/delete/edit audit copy from the review card, clarified that reviewer-added rows are distinguished by simple highlight color, and kept correction diff retention in payload/history only |
 | 1.4.5 | 2026-05-06 | Synced reviewer workspace title behavior with prototype: review-card header now uses the actual task name (matching annotator/dashboard/list context) instead of generic task-type copy; sentence-pairs reviewer source block no longer repeats the same header above the review card |
 | 1.4.4 | 2026-05-04 | Synced guideline image preview behavior with prototype: image assets now open in centered modal, added close-path requirements, and clarified PDF/Markdown/image preview split |
 | 1.4.3 | 2026-04-29 | 補齊 `sentence_pairs` workspace 規格：新增 Annotator/Reviewer 介面、`SentencePairsTaskConfig` / payload / edge cases，並對齊 task-new / task-detail / dataset-analysis 的分類型與評分型契約 |
