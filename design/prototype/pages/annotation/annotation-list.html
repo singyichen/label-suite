@@ -349,6 +349,56 @@
       font-size: 14px;
       border-top: 1px solid var(--color-border);
     }
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+      padding: var(--space-md) var(--space-lg);
+      border-top: 1px solid var(--color-border);
+    }
+    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
+    .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      padding: 0 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-ink);
+      background: var(--color-white);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--dur-fast);
+    }
+    .page-btn:hover:not(:disabled):not(.active) {
+      border-color: var(--color-primary);
+      background: #EEF2FF;
+      color: var(--color-primary);
+    }
+    .page-btn.active {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+    .page-size-select {
+      padding: 5px 28px 5px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--color-ink);
+      background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
     /* === Reviewer list styles === */
     .expand-cell { width: 32px; padding: 14px 4px 14px 16px !important; }
     .expand-btn {
@@ -433,6 +483,12 @@
       }
       .clear-btn { align-self: flex-start; }
       .clear-btn.hide-clear { display: none; }
+      .pagination-left {
+        width: 100%;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .pagination-controls { width: 100%; justify-content: flex-end; }
       .task-table td { vertical-align: top; }
       .text-snippet {
         max-width: 240px;
@@ -558,6 +614,24 @@
       </table>
     </div>
     <div class="empty hidden" id="emptyState">找不到符合條件的資料。</div>
+    <div class="pagination hidden" id="paginationBar">
+      <div class="pagination-left">
+        <span class="pagination-info" id="paginationInfo"></span>
+        <select class="page-size-select" id="pageSizeSelect" aria-label="每頁筆數">
+          <option value="20" selected>20 / 頁</option>
+          <option value="50">50 / 頁</option>
+          <option value="100">100 / 頁</option>
+        </select>
+      </div>
+      <div class="pagination-controls" id="paginationControls">
+        <button class="page-btn" id="prevPageBtn" aria-label="上一頁" disabled>
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <button class="page-btn" id="nextPageBtn" aria-label="下一頁" disabled>
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -1103,6 +1177,10 @@
     status: '',
     query: ''
   };
+  var PAGINATION_STATE = {
+    page: 1,
+    pageSize: 20
+  };
 
   var REVIEW_STATES = {};
 
@@ -1366,6 +1444,70 @@
       return;
     }
     clearFiltersBtn.classList.add('hide-clear');
+  }
+
+  function resetPaginationToFirstPage() {
+    PAGINATION_STATE.page = 1;
+  }
+
+  function updatePageSizeLabels() {
+    var pageSizeSelect = document.getElementById('pageSizeSelect');
+    if (!pageSizeSelect) return;
+    Array.prototype.forEach.call(pageSizeSelect.options, function (opt) {
+      opt.textContent = opt.value + ' / 頁';
+    });
+  }
+
+  function renderPagination(totalCount, context) {
+    var paginationBar = document.getElementById('paginationBar');
+    var paginationInfo = document.getElementById('paginationInfo');
+    var paginationControls = document.getElementById('paginationControls');
+    var prevPageBtn = document.getElementById('prevPageBtn');
+    var nextPageBtn = document.getElementById('nextPageBtn');
+    var totalPages = Math.max(1, Math.ceil(totalCount / PAGINATION_STATE.pageSize));
+
+    if (!paginationBar || !paginationInfo || !paginationControls || !prevPageBtn || !nextPageBtn) {
+      return totalPages;
+    }
+
+    paginationControls.querySelectorAll('[data-page]').forEach(function (btn) { btn.remove(); });
+    updatePageSizeLabels();
+
+    if (totalCount === 0) {
+      paginationBar.classList.add('hidden');
+      paginationInfo.textContent = '';
+      prevPageBtn.disabled = true;
+      nextPageBtn.disabled = true;
+      return totalPages;
+    }
+
+    if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
+
+    paginationBar.classList.remove('hidden');
+    paginationInfo.textContent = '共 ' + totalCount + ' 筆 · 第 ' + PAGINATION_STATE.page + ' / ' + totalPages + ' 頁';
+    prevPageBtn.disabled = PAGINATION_STATE.page <= 1;
+    nextPageBtn.disabled = PAGINATION_STATE.page >= totalPages;
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, PAGINATION_STATE.page - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+
+    for (var p = startPage; p <= endPage; p += 1) {
+      (function (pageNumber) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pageNumber === PAGINATION_STATE.page ? ' active' : '');
+        btn.dataset.page = String(pageNumber);
+        btn.textContent = String(pageNumber);
+        btn.addEventListener('click', function () {
+          PAGINATION_STATE.page = pageNumber;
+          renderRows(context);
+        });
+        nextPageBtn.insertAdjacentElement('beforebegin', btn);
+      }(p));
+    }
+
+    return totalPages;
   }
 
   function filterRows(rows) {
@@ -1705,16 +1847,52 @@
     });
 
     var visibleRows = filterRows(flatRows);
+    var totalPages = renderPagination(visibleRows.length, context);
+    if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
+
     if (visibleRows.length === 0) {
       empty.classList.remove('hidden');
       return;
     }
     empty.classList.add('hidden');
 
+    var startIndex = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
+    var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
+
     if (context.role === 'reviewer') {
-      renderReviewerRows(visibleRows, tbodyEl, context);
+      renderReviewerRows(pagedRows, tbodyEl, context);
     } else {
-      renderAnnotatorRows(visibleRows, tbodyEl, context);
+      renderAnnotatorRows(pagedRows, tbodyEl, context);
+    }
+  }
+
+  function bindPagination(context) {
+    var pageSizeSelect = document.getElementById('pageSizeSelect');
+    var prevPageBtn = document.getElementById('prevPageBtn');
+    var nextPageBtn = document.getElementById('nextPageBtn');
+
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener('change', function (event) {
+        var nextPageSize = parseInt(event.target.value, 10);
+        PAGINATION_STATE.pageSize = Number.isFinite(nextPageSize) ? nextPageSize : 20;
+        resetPaginationToFirstPage();
+        renderRows(context);
+      });
+    }
+
+    if (prevPageBtn) {
+      prevPageBtn.addEventListener('click', function () {
+        if (PAGINATION_STATE.page <= 1) return;
+        PAGINATION_STATE.page -= 1;
+        renderRows(context);
+      });
+    }
+
+    if (nextPageBtn) {
+      nextPageBtn.addEventListener('click', function () {
+        PAGINATION_STATE.page += 1;
+        renderRows(context);
+      });
     }
   }
 
@@ -1725,12 +1903,14 @@
 
     statusFilter.addEventListener('change', function (event) {
       FILTER_STATE.status = event.target.value || '';
+      resetPaginationToFirstPage();
       updateClearFilterState();
       renderRows(context);
     });
 
     searchInput.addEventListener('input', function (event) {
       FILTER_STATE.query = event.target.value.trim();
+      resetPaginationToFirstPage();
       updateClearFilterState();
       renderRows(context);
     });
@@ -1738,6 +1918,7 @@
     clearFiltersBtn.addEventListener('click', function () {
       FILTER_STATE.status = '';
       FILTER_STATE.query = '';
+      resetPaginationToFirstPage();
       statusFilter.value = '';
       searchInput.value = '';
       updateClearFilterState();
@@ -1778,8 +1959,10 @@
     renderContext(context);
     renderTableHeader(context.role);
     renderTaskInfo(context);
+    bindPagination(context);
     bindFilters(context);
     updateClearFilterState();
+    updatePageSizeLabels();
     renderRows(context);
 
     if (window.LabelSuiteAnalytics) {
