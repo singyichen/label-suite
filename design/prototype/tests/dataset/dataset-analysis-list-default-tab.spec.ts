@@ -3,11 +3,11 @@ import { test, expect } from '@playwright/test';
 const DATASET_ANALYSIS_URL = '/pages/dataset/dataset-analysis-list.html';
 
 test.describe('Dataset analysis list detail default tab', () => {
-  test('uses task-list copy for the sidebar entry and page title', async ({ page }) => {
+  test('uses dataset-analysis copy for the sidebar entry and page title', async ({ page }) => {
     await page.goto(DATASET_ANALYSIS_URL);
 
-    await expect(page.locator('#navDataset')).toHaveText('任務列表');
-    await expect(page.locator('#pageTitle')).toHaveText('任務列表');
+    await expect(page.locator('#navDataset')).toHaveText('資料集分析');
+    await expect(page.locator('#pageTitle')).toHaveText('資料集分析');
   });
 
   test('opens stats overview tab by default when entering a dataset analysis item', async ({ page }) => {
