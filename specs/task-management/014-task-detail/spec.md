@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.6.6
+**版本**：1.6.8
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -204,9 +204,15 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
       - `標記值` result tag 需維持內容寬度驅動的膠囊外觀，不得被拉伸成近乎整列寬度的大色塊；長字串允許換行
       - 任一 `task_type` 下，右側 `審核狀態` badge 不得被裁切或完全不可見；table 發生 overflow 時，整列內容仍需完整落在 `table-scroll` 容器可視範圍內
     - 所有欄位皆唯讀，不提供任何標記或審核操作按鈕
-  - 區塊 3：`匯出`（自 Tab A「任務概覽」區塊 6 移入）
-    - 顯示狀態：最近一次匯出時間、匯出標記階段（Annotation stage：Dry Run / Official Run）、空狀態提示
+  - 區塊 3：`匯出記錄表`（自 Tab A「任務概覽」區塊 6 移入）
+    - 標頭區：`匯出記錄表` 標題 + 右側 `匯出 JSON` / `匯出 JSON-MIN` 操作按鈕
+    - 記錄表欄位：匯出時間、匯出類型（全部匯出 / 篩選匯出）、標記階段（試標 / 正式標記 / 試標+正式）、筆數、任務範圍（全任務 / 指定標記員）、匯出人、格式（JSON / JSON-MIN）、操作（重新下載）
+    - 空狀態：尚未執行過任何匯出時顯示「尚未執行過匯出」提示文字，不顯示空表格
+    - 每次點擊匯出按鈕後，新記錄即時插入表格最前列（降冪排列）
+    - `操作` 欄中的 `下載` 語意為 `重新下載`：系統必須依該筆記錄保存的原始匯出條件重新產生相同範圍的匯出結果，不得套用使用者目前畫面上的篩選條件
+    - 每筆匯出記錄都必須保存當次匯出條件快照，至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會影響匯出結果集合的條件；若當次匯出綁定 sample snapshot / dataset version / config version，也必須一併保存，確保可追溯與可重現
     - 操作：`匯出 JSON`、`匯出 JSON-MIN`
+    - 下載按鈕樣式：`操作` 欄中的 `下載` 必須採用與 `task-list` 頁面 `編輯` 按鈕一致的主要操作按鈕視覺語言；需對齊按鈕尺寸、padding、圓角、字重、主色背景與 hover / focus 狀態，不得使用純文字連結樣式
     - 格式說明：
       - `JSON`：供系統交換、備份與完整追溯使用；格式需參考 Label Studio 完整 JSON 的精神，保留 `source_data + annotations + reviews + export manifest` 的完整巢狀結構，但欄位命名與內容需以 Label Suite domain model 為主，不直接複製 Label Studio key
       - `JSON-MIN`：供分析、二次處理、下游 ETL 與表格工具使用；格式需參考 Label Studio `JSON-MIN` 的精神，採扁平化列資料（flat rows），只保留共通欄位與當前 `task_type` 必要結果欄位
@@ -439,6 +445,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010h**：Overview 必須顯示資料隔離狀態（`已隔離`/`未隔離`）與最後變更資訊。
 - **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_mode`、`sampling_value`、`sampling_strategy`、`sample_snapshot_id`。
 - **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。
+- **FR-010i-2**：匯出記錄表中的每筆紀錄必須保存 `re-download` 所需的條件快照；重新下載時必須以該快照為唯一依據重建匯出結果，不得讀取使用者當前頁面 filter state。條件快照至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會改變結果集合的版本/快照識別資訊。
 - **FR-010j**：`stratified_random` 的分層欄位來源必須為 `task_config.sampling_strata_fields`；若未設定或無效，系統必須自動退化為 `random(seed)`。
 - **FR-010k**：當百分比抽樣換算結果 `< 1` 時，系統必須阻擋發布並提供可修正提示，不得自動調整為 1。
 - **FR-010l**：`重算抽樣` 僅允許在 `draft` 狀態；非 `draft` 狀態僅可建立新 run 批次，且不得覆寫既有 `sample_snapshot_id`。
@@ -612,6 +619,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.8 | 2026-05-06 | 補充匯出記錄表 `下載` 的產品語意為 `重新下載`，並要求每筆匯出記錄保存當次匯出條件快照，重新下載時不得套用目前畫面篩選條件 |
+| 1.6.7 | 2026-05-06 | 同步匯出記錄表 prototype 文案與操作樣式：匯出類型 `全量匯出` 改為 `全部匯出`，並補充 `下載` 按鈕需對齊 `task-list` `編輯` 的主要按鈕視覺語言 |
 | 1.6.6 | 2026-05-06 | 修正 prototype label pill CSS：移除 `.annotator-result-tag` 的 `flex: 0 1 320px` flex-basis，改為內容寬度驅動的膠囊樣式，對齊 reviewer `annotation-list` 同款 result tag，符合 SC-027c 規格 |
 | 1.6.5 | 2026-05-06 | 同步 reviewer `annotation-list` 關係抽取統計樣式：`relation_extraction` 的標記分布統計需逐行顯示每一筆 relation / triple 摘要，不得以單行 ` · ` 串接壓縮 |
 | 1.6.4 | 2026-05-06 | 同步 `annotation-results` prototype 分頁：標記結果表底部新增與 `task-list` 一致的 footer pagination（總筆數 / 目前頁數、每頁筆數切換、上一頁 / 下一頁 / 頁碼按鈕） |

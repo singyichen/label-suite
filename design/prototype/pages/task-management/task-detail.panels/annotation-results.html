@@ -69,12 +69,33 @@
     </div>
   </section>
 
-  <section class="panel" aria-labelledby="arExportTitle" id="arExportSection">
-    <h2 class="panel-title" id="arExportTitle">匯出</h2>
-    <div id="arExportMeta" class="ar-export-meta"></div>
-    <div class="action-row" style="margin-top: var(--space-sm);">
-      <button class="btn btn-secondary" type="button" id="arExportJsonBtn">匯出 JSON</button>
-      <button class="btn btn-secondary" type="button" id="arExportJsonMinBtn">匯出 JSON-MIN</button>
+  <section class="panel" aria-labelledby="arExportHistoryTitle" id="arExportSection">
+    <div class="ar-export-header">
+      <h2 class="panel-title" id="arExportHistoryTitle">匯出記錄表</h2>
+      <div class="action-row">
+        <button class="btn btn-secondary" type="button" id="arExportJsonBtn">匯出 JSON</button>
+        <button class="btn btn-secondary" type="button" id="arExportJsonMinBtn">匯出 JSON-MIN</button>
+      </div>
+    </div>
+      <div class="table-wrap ar-export-table-wrap">
+        <div class="table-scroll">
+        <table class="member-table" id="arExportHistoryTable" role="table" aria-label="Export history">
+          <thead>
+            <tr>
+              <th id="thArExportTime">匯出時間</th>
+              <th id="thArExportType">匯出類型</th>
+              <th id="thArExportStageCol">標記階段</th>
+              <th id="thArExportCount">筆數</th>
+              <th id="thArExportScope">任務範圍</th>
+              <th id="thArExportBy">匯出人</th>
+              <th id="thArExportFormat">格式</th>
+              <th id="thArExportOps">操作</th>
+            </tr>
+          </thead>
+          <tbody id="arExportHistoryBody"></tbody>
+        </table>
+      </div>
+      <p class="ar-export-empty hidden" id="arExportHistoryEmpty">尚未執行過匯出</p>
     </div>
   </section>
 

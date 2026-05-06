@@ -943,7 +943,10 @@
     .badge-ar-submitted { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-ar-draft { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
     .badge-ar-pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
-    .ar-export-meta { font-size: 13px; color: var(--color-text-soft); margin-bottom: 4px; }
+    .ar-export-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
+    .ar-export-table-wrap { margin-top: var(--space-sm); }
+    .ar-export-empty { font-size: 13px; color: var(--color-text-soft); text-align: center; padding: var(--space-lg) 0; margin: 0; }
+    .ar-export-action-btn { white-space: nowrap; }
     .ar-empty-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: var(--space-xl) 0; text-align: center; }
     .ar-empty-icon { width: 40px; height: 40px; opacity: 0.3; }
     .ar-empty-title { font-size: 16px; font-weight: 600; color: var(--color-ink); }
@@ -2409,12 +2412,23 @@
       arStatusBadgeSubmitted: '已提交',
       arStatusBadgeDraft: '草稿',
       arStatusBadgePending: '待處理',
-      arExportTitle: '匯出',
+      arExportHistoryTitle: '匯出記錄表',
       arExportJsonBtn: '匯出 JSON',
       arExportJsonMinBtn: '匯出 JSON-MIN',
-      arExportLastAt: '最近匯出：{time}',
-      arExportStage: '匯出階段：{stage}',
-      arExportNone: '尚未執行過匯出',
+      thArExportTime: '匯出時間',
+      thArExportType: '匯出類型',
+      thArExportStageCol: '標記階段',
+      thArExportCount: '筆數',
+      thArExportScope: '任務範圍',
+      thArExportBy: '匯出人',
+      thArExportFormat: '格式',
+      thArExportOps: '操作',
+      arExportTypeFull: '全部匯出',
+      arExportTypeFiltered: '篩選匯出',
+      arExportScopeAll: '全任務',
+      arStageBoth: '試標+正式',
+      arExportDownload: '下載',
+      arExportHistoryEmpty: '尚未執行過匯出',
       toastExportJson: '已建立 JSON 匯出',
       toastExportJsonMin: '已建立精簡 JSON 匯出',
       arEmptyTitle: '尚無標記結果',
@@ -2788,12 +2802,23 @@
       arStatusBadgeSubmitted: 'Submitted',
       arStatusBadgeDraft: 'Draft',
       arStatusBadgePending: 'Pending',
-      arExportTitle: 'Export',
+      arExportHistoryTitle: 'Export History',
       arExportJsonBtn: 'Export JSON',
       arExportJsonMinBtn: 'Export JSON-MIN',
-      arExportLastAt: 'Last exported: {time}',
-      arExportStage: 'Export stage: {stage}',
-      arExportNone: 'No exports yet',
+      thArExportTime: 'Export time',
+      thArExportType: 'Export type',
+      thArExportStageCol: 'Stage',
+      thArExportCount: 'Records',
+      thArExportScope: 'Scope',
+      thArExportBy: 'Exported by',
+      thArExportFormat: 'Format',
+      thArExportOps: 'Actions',
+      arExportTypeFull: 'Full export',
+      arExportTypeFiltered: 'Filtered export',
+      arExportScopeAll: 'All tasks',
+      arStageBoth: 'Dry + Official',
+      arExportDownload: 'Download',
+      arExportHistoryEmpty: 'No exports yet',
       toastExportJson: 'JSON export created',
       toastExportJsonMin: 'Compact JSON export created',
       arEmptyTitle: 'No annotation results yet',
@@ -2838,7 +2863,12 @@
     currentAnnotators: 3,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
-    isolationLastUpdated: '2026-04-20 19:42'
+    isolationLastUpdated: '2026-04-20 19:42',
+    exportHistory: [
+      { exportedAt: '2026-05-01 14:32', exportType: 'full', stage: 'official', count: 1240, scope: '__all__', exportedBy: 'Mandy', format: 'JSON' },
+      { exportedAt: '2026-05-01 10:15', exportType: 'filtered', stage: 'dry', count: 320, scope: 'ASP-001~010', exportedBy: 'Mandy', format: 'JSON-MIN' },
+      { exportedAt: '2026-04-30 18:20', exportType: 'full', stage: 'all', count: 1560, scope: '__all__', exportedBy: 'System', format: 'JSON' }
+    ]
   };
 
   var TASK_PROFILE_MAP = {
@@ -3911,9 +3941,17 @@ function interpolate(template, payload) {
     setText('thArStatus', t('thArStatus'));
     setText('thArCompletedAt', t('thArCompletedAt'));
     setText('thArStage', t('thArStage'));
-    setText('arExportTitle', t('arExportTitle'));
+    setText('arExportHistoryTitle', t('arExportHistoryTitle'));
     setText('arExportJsonBtn', t('arExportJsonBtn'));
     setText('arExportJsonMinBtn', t('arExportJsonMinBtn'));
+    setText('thArExportTime', t('thArExportTime'));
+    setText('thArExportType', t('thArExportType'));
+    setText('thArExportStageCol', t('thArExportStageCol'));
+    setText('thArExportCount', t('thArExportCount'));
+    setText('thArExportScope', t('thArExportScope'));
+    setText('thArExportBy', t('thArExportBy'));
+    setText('thArExportFormat', t('thArExportFormat'));
+    setText('thArExportOps', t('thArExportOps'));
     setText('arEmptyTitle', t('arEmptyTitle'));
     setText('arEmptyHint', t('arEmptyHint'));
     renderAnnotationResults();
@@ -7395,16 +7433,49 @@ function getTaskTypeLabel(taskTypeKey) {
     return exportedAt;
   }
 
-  function renderArExportMeta() {
-    var meta = document.getElementById('arExportMeta');
-    if (!meta) return;
-    if (TASK_DATA.lastExportAt) {
-      var timeStr = interpolate(t('arExportLastAt'), { time: TASK_DATA.lastExportAt });
-      var stageStr = interpolate(t('arExportStage'), { stage: TASK_DATA.lastExportStage || '-' });
-      meta.textContent = timeStr + ' · ' + stageStr;
-    } else {
-      meta.textContent = t('arExportNone');
+  function getArExportStageLabel(stage) {
+    if (stage === 'dry') return t('arStageDry');
+    if (stage === 'official') return t('arStageOfficial');
+    return t('arStageBoth');
+  }
+
+  function renderArExportHistory() {
+    var body = document.getElementById('arExportHistoryBody');
+    var empty = document.getElementById('arExportHistoryEmpty');
+    if (!body) return;
+    var history = TASK_DATA.exportHistory || [];
+    while (body.firstChild) body.removeChild(body.firstChild);
+    if (history.length === 0) {
+      if (empty) empty.classList.remove('hidden');
+      return;
     }
+    if (empty) empty.classList.add('hidden');
+    history.forEach(function(record) {
+      var tr = document.createElement('tr');
+      var typeLabel = record.exportType === 'filtered' ? t('arExportTypeFiltered') : t('arExportTypeFull');
+      var stageLabel = getArExportStageLabel(record.stage);
+      var scopeText = record.scope === '__all__' ? t('arExportScopeAll') : record.scope;
+      [record.exportedAt, typeLabel, stageLabel, record.count.toLocaleString(), scopeText, record.exportedBy].forEach(function(text, i) {
+        var td = document.createElement('td');
+        td.textContent = text;
+        if (i === 3) td.style.textAlign = 'right';
+        tr.appendChild(td);
+      });
+      var formatTd = document.createElement('td');
+      var badge = document.createElement('span');
+      badge.className = 'badge badge-draft';
+      badge.textContent = record.format;
+      formatTd.appendChild(badge);
+      tr.appendChild(formatTd);
+      var opsTd = document.createElement('td');
+      var dlBtn = document.createElement('button');
+      dlBtn.className = 'mini-btn mini-btn-primary ar-export-action-btn';
+      dlBtn.type = 'button';
+      dlBtn.textContent = t('arExportDownload');
+      opsTd.appendChild(dlBtn);
+      tr.appendChild(opsTd);
+      body.appendChild(tr);
+    });
   }
 
   function renderArPagination(total) {
@@ -7511,7 +7582,7 @@ function getTaskTypeLabel(taskTypeKey) {
     }
 
     renderArPagination(samples.length);
-    renderArExportMeta();
+    renderArExportHistory();
   }
 
   function showToast(message, isError) {
@@ -8085,19 +8156,39 @@ document.getElementById('progressStageDryBtn').addEventListener('click', functio
     });
 
     document.getElementById('arExportJsonBtn').addEventListener('click', function() {
+      var samples = getArFilteredSamples();
       var exportedAt = downloadArExport('json');
-      TASK_DATA.lastExportAt = exportedAt.slice(0, 16).replace('T', ' ');
-      TASK_DATA.lastExportStage = getExportStageLabel(state.arStage);
-      renderArExportMeta();
+      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all') ? 'full' : 'filtered';
+      if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
+      TASK_DATA.exportHistory.unshift({
+        exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
+        exportType: exportType,
+        stage: state.arStage,
+        count: samples.length,
+        scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
+        exportedBy: 'Mandy',
+        format: 'JSON'
+      });
+      renderArExportHistory();
       showToast(t('toastExportJson'));
       trackEvent('prototype_ar_export', { format: 'json', stage: state.arStage });
     });
 
     document.getElementById('arExportJsonMinBtn').addEventListener('click', function() {
+      var samples = getArFilteredSamples();
       var exportedAt = downloadArExport('json-min');
-      TASK_DATA.lastExportAt = exportedAt.slice(0, 16).replace('T', ' ');
-      TASK_DATA.lastExportStage = getExportStageLabel(state.arStage);
-      renderArExportMeta();
+      var exportType = (state.arStatus === 'all' && state.arAnnotator === 'all') ? 'full' : 'filtered';
+      if (!TASK_DATA.exportHistory) TASK_DATA.exportHistory = [];
+      TASK_DATA.exportHistory.unshift({
+        exportedAt: exportedAt.slice(0, 16).replace('T', ' '),
+        exportType: exportType,
+        stage: state.arStage,
+        count: samples.length,
+        scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
+        exportedBy: 'Mandy',
+        format: 'JSON-MIN'
+      });
+      renderArExportHistory();
       showToast(t('toastExportJsonMin'));
       trackEvent('prototype_ar_export', { format: 'json-min', stage: state.arStage });
     });
