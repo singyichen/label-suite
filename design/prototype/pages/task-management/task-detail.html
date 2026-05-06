@@ -819,6 +819,90 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    /* ── Dataset preview ── */
+    .dataset-preview-trigger { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit; }
+    .dataset-preview-trigger:hover { color: var(--color-primary); }
+    .dataset-preview-eye { width: 13px; height: 13px; flex-shrink: 0; }
+    .overview-dataset-upload-zone { margin-top: var(--space-sm); }
+    .overview-dataset-file-list {
+      margin-top: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .overview-upload-file-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--color-success-border);
+      border-radius: var(--radius-md);
+      background: var(--color-success-bg);
+      cursor: pointer;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .overview-upload-file-preview:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .overview-upload-file-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--color-success);
+      flex-shrink: 0;
+    }
+    .overview-upload-file-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-success);
+    }
+    .overview-upload-file-size {
+      font-size: 12px;
+      color: var(--color-text-soft);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .overview-upload-file-preview-btn,
+    .overview-upload-file-remove {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: none;
+      color: var(--color-ink-muted);
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: color var(--dur-fast), background var(--dur-fast);
+    }
+    .overview-upload-file-preview-btn:hover {
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+    }
+    .overview-upload-file-remove:hover {
+      color: var(--color-error);
+      background: var(--color-error-soft-bg);
+    }
+    .modal-xl { width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
+    .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md, 16px); }
+    .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .modal-close-btn:hover { background: var(--color-slate-100); color: var(--color-ink); }
+    .preview-hint { font-size: 12px; color: var(--color-text-soft); margin: 2px 0 0; }
+    .preview-table-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .preview-table th { position: sticky; top: 0; background: var(--color-slate-50); padding: 8px 12px; text-align: left; font-weight: 600; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; font-size: 12px; }
+    .preview-table td { padding: 8px 12px; border-bottom: 1px solid var(--color-border); color: var(--color-ink); max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .preview-table tr:last-child td { border-bottom: none; }
+    .preview-table tr:hover td { background: var(--color-slate-50); }
+    .modal-close-icon { width: 16px; height: 16px; }
 
     .toast-container {
       position: fixed;
@@ -1072,7 +1156,8 @@
       min-height: 92px;
       resize: vertical;
     }
-    .basic-dataset-drop {
+    .basic-dataset-drop,
+    .upload-zone {
       border: 2px dashed var(--color-border);
       border-radius: var(--radius-md);
       background: var(--color-slate-50);
@@ -1087,7 +1172,9 @@
       transition: border-color var(--dur-fast), background var(--dur-fast);
       cursor: pointer;
     }
-    .basic-dataset-drop:hover {
+    .basic-dataset-drop:hover,
+    .upload-zone:hover,
+    .upload-zone.dragover {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
     }
@@ -2006,6 +2093,26 @@
   </div>
 </main>
 
+<div class="modal-backdrop" id="datasetPreviewModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="datasetPreviewModalTitle">
+  <div class="modal modal-xl">
+    <div class="modal-xl-header">
+      <div>
+        <h2 id="datasetPreviewModalTitle">資料集預覽</h2>
+        <p class="preview-hint">顯示前 10 筆・僅供確認用途</p>
+      </div>
+      <button class="modal-close-btn" id="datasetPreviewCloseBtn" type="button" aria-label="關閉">
+        <svg class="modal-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="preview-table-wrap">
+      <table class="preview-table">
+        <thead id="datasetPreviewHead"></thead>
+        <tbody id="datasetPreviewBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="riskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="riskModalTitle">
   <div class="modal">
     <h2 id="riskModalTitle">確認停用資料隔離</h2>
@@ -2843,6 +2950,7 @@
     datasetTotal: 1280,
     datasetSourceZh: 'customer_feedback_v3.csv',
     datasetSourceEn: 'customer_feedback_v3.csv',
+    datasetSizeBytes: 413,
     configVersion: 'cfg-task014-v1.4.0',
     configFileName: '',
     configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
@@ -2886,6 +2994,7 @@
       datasetTotal: 3200,
       datasetSourceZh: 'news_headlines_multilabel_2026.csv',
       datasetSourceEn: 'news_headlines_multilabel_2026.csv',
+      datasetSizeBytes: 413,
       configVersion: 'cfg-t001-v2.1.0',
       configFileName: '',
       configContent: 'labels:\n  - 政治\n  - 社會\n  - 娛樂\n  - 體育\n  - 科技\nallow_multiple: true',
@@ -2905,6 +3014,7 @@
       datasetTotal: 1280,
       datasetSourceZh: 'sentiment_va_corpus_v2.csv',
       datasetSourceEn: 'sentiment_va_corpus_v2.csv',
+      datasetSizeBytes: 413,
       configVersion: 'cfg-t002-v1.4.0',
       configFileName: '',
       configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
@@ -2924,6 +3034,7 @@
       datasetTotal: 860,
       datasetSourceZh: 'product_reviews_ner_aspect.tsv',
       datasetSourceEn: 'product_reviews_ner_aspect.tsv',
+      datasetSizeBytes: 526,
       configVersion: 'cfg-t003-v3.0.2',
       configFileName: '',
       configContent: 'subtype: aspect_list\ninput_field: sentence\naspect_list_field: aspects\nallow_sentence_edit: false\nallow_aspect_add: true\nallow_aspect_delete: true\nrequire_exact_match_in_sentence: true\nmin_aspects: 1\nmax_aspects: 10\nrequire_sentiment_context_check: true',
@@ -2943,6 +3054,7 @@
       datasetTotal: 1420,
       datasetSourceZh: 'medical_relation_triples.jsonl',
       datasetSourceEn: 'medical_relation_triples.jsonl',
+      datasetSizeBytes: 768,
       configVersion: 'cfg-t004-v1.8.3',
       configFileName: '',
       configContent: 'entity_types:\n  - name: DRUG\n    color: "#6366F1"\n  - name: DISEASE\n    color: "#10B981"\n  - name: SYMPTOM\n    color: "#F59E0B"\nrelation_types:\n  - treats\n  - causes\n  - indicates\ntuple_mode: triple',
@@ -2962,6 +3074,7 @@
       datasetTotal: 2100,
       datasetSourceZh: 'sentence_pairs_similarity.jsonl',
       datasetSourceEn: 'sentence_pairs_similarity.jsonl',
+      datasetSizeBytes: 682,
       configVersion: 'cfg-t005-v1.3.1',
       configFileName: '',
       configContent: 'task_type: sentence_pairs\nsimilarity_metric: cosine\nentailment_mode: binary\nallow_bidirectional: false\nlabels:\n  - 蘊含\n  - 矛盾\n  - 中立',
@@ -2981,6 +3094,7 @@
       datasetTotal: 950,
       datasetSourceZh: 'news_ner_corpus_v1.csv',
       datasetSourceEn: 'news_ner_corpus_v1.csv',
+      datasetSizeBytes: 504,
       configVersion: 'cfg-t006-v1.2.0',
       configFileName: '',
       configContent: 'subtype: ner\nentities:\n  - name: PER\n    color: "#6366F1"\n  - name: ORG\n    color: "#10B981"\n  - name: LOC\n    color: "#F59E0B"\nscheme: IOB2\nallow_overlapping: false\ninput_field: text\nentity_field: entities\nallow_custom_entity_type: false\nrequire_entity_type: true\nallow_nested_entities: false\nmin_entity_length: 1\nmax_entity_length: 50',
@@ -3639,6 +3753,21 @@
   };
   var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
   var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
+  var DATASET_PREVIEW_MOCK = {
+    columns: ['id', 'text'],
+    rows: [
+      ['RAW-001', '立法院三讀通過科技產業條例，明年起適用'],
+      ['RAW-002', '知名球星參與公益演唱會，現場逾萬人聚集'],
+      ['RAW-003', '颱風逼近造成多地停班停課，交通大亂'],
+      ['RAW-004', '國際影展公布入圍名單，台灣導演獲提名'],
+      ['RAW-005', '半導體大廠宣布新晶片量產，效能倍增'],
+      ['RAW-006', '央行維持利率不變，分析師看法分歧'],
+      ['RAW-007', '新北市推動智慧路燈計畫，節電成效顯著'],
+      ['RAW-008', '本土疫情趨緩，衛福部調整防疫措施'],
+      ['RAW-009', '國際油價回落，民生物價壓力暫緩'],
+      ['RAW-010', '青年就業補貼政策上路，申請首日湧入人潮'],
+    ]
+  };
 
   var toastTimer = null;
 
@@ -3659,6 +3788,42 @@
     req.className = 'required';
     req.textContent = '*';
     el.appendChild(req);
+  }
+
+  function clearChildren(node) {
+    if (!node) return;
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function showDatasetPreviewModal() {
+    var head = document.getElementById('datasetPreviewHead');
+    var tbody = document.getElementById('datasetPreviewBody');
+    var modal = document.getElementById('datasetPreviewModal');
+    if (!head || !tbody || !modal) return;
+    var headRow = document.createElement('tr');
+    DATASET_PREVIEW_MOCK.columns.forEach(function(col) {
+      var th = document.createElement('th');
+      th.textContent = col;
+      headRow.appendChild(th);
+    });
+    clearChildren(head);
+    head.appendChild(headRow);
+    clearChildren(tbody);
+    DATASET_PREVIEW_MOCK.rows.forEach(function(row) {
+      var tr = document.createElement('tr');
+      row.forEach(function(cell) {
+        var td = document.createElement('td');
+        td.textContent = cell;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    modal.classList.add('show');
+  }
+
+  function hideDatasetPreviewModal() {
+    var modal = document.getElementById('datasetPreviewModal');
+    if (modal) modal.classList.remove('show');
   }
 
   function renderPanelLoadError() {
@@ -4392,7 +4557,15 @@ function getTaskTypeLabel(taskTypeKey) {
       taskTypeKey: TASK_DATA.taskTypeKey,
       datasetSourceZh: TASK_DATA.datasetSourceZh,
       datasetSourceEn: TASK_DATA.datasetSourceEn,
+      datasetSizeBytes: TASK_DATA.datasetSizeBytes || 0,
     };
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes < 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
   }
 
   function setOverviewEditError(message) {
@@ -4429,12 +4602,40 @@ function getTaskTypeLabel(taskTypeKey) {
     setOverviewEditError('');
   }
 
-  function createUploadedFileItem(file) {
+  function syncOverviewDatasetUploadState(hasFile) {
+    var list = document.getElementById('editDatasetFileList');
+    if (list) list.classList.toggle('hidden', !hasFile);
+  }
+
+  function clearOverviewDatasetFile() {
+    if (!state.overviewDraft) return;
+    state.overviewDraft.datasetSourceZh = '';
+    state.overviewDraft.datasetSourceEn = '';
+    state.overviewDraft.datasetSizeBytes = 0;
+    var input = document.getElementById('editDatasetFileInput');
+    if (input) input.value = '';
+    renderOverviewDatasetFileList();
+    markOverviewDirty();
+  }
+
+  function createOverviewDatasetFileItem(file) {
     var item = document.createElement('div');
-    item.className = 'guideline-item';
+    item.className = 'overview-upload-file-preview';
+    item.setAttribute('role', 'button');
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('aria-label', (state.lang === 'zh' ? '查看資料集 ' : 'Preview dataset ') + file.name);
+    item.addEventListener('click', function() {
+      showDatasetPreviewModal();
+    });
+    item.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        showDatasetPreviewModal();
+      }
+    });
 
     var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    icon.setAttribute('class', 'guideline-item-icon');
+    icon.setAttribute('class', 'overview-upload-file-icon');
     icon.setAttribute('viewBox', '0 0 24 24');
     icon.setAttribute('fill', 'none');
     icon.setAttribute('stroke', 'currentColor');
@@ -4451,14 +4652,36 @@ function getTaskTypeLabel(taskTypeKey) {
     item.appendChild(icon);
 
     var nameSpan = document.createElement('span');
-    nameSpan.className = 'guideline-item-name';
+    nameSpan.className = 'overview-upload-file-name';
     nameSpan.textContent = file.name;
     item.appendChild(nameSpan);
 
-    var typeSpan = document.createElement('span');
-    typeSpan.className = 'guideline-item-type';
-    typeSpan.textContent = (file.type || getGuidelineFileType(file.name)).toUpperCase();
-    item.appendChild(typeSpan);
+    var sizeSpan = document.createElement('span');
+    sizeSpan.className = 'overview-upload-file-size';
+    sizeSpan.textContent = formatBytes(file.sizeBytes || 0);
+    item.appendChild(sizeSpan);
+
+    var previewBtn = document.createElement('button');
+    previewBtn.type = 'button';
+    previewBtn.className = 'overview-upload-file-preview-btn';
+    previewBtn.setAttribute('aria-label', state.lang === 'zh' ? '查看資料集' : 'Preview dataset');
+    previewBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+    previewBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      showDatasetPreviewModal();
+    });
+    item.appendChild(previewBtn);
+
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'overview-upload-file-remove';
+    removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除資料集' : 'Remove dataset');
+    removeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    removeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      clearOverviewDatasetFile();
+    });
+    item.appendChild(removeBtn);
 
     return item;
   }
@@ -4467,11 +4690,18 @@ function getTaskTypeLabel(taskTypeKey) {
     var list = document.getElementById('editDatasetFileList');
     if (!list) return;
     list.innerHTML = '';
-    if (!state.overviewDraft) return;
+    if (!state.overviewDraft) {
+      syncOverviewDatasetUploadState(false);
+      return;
+    }
 
     var fileName = state.lang === 'zh' ? state.overviewDraft.datasetSourceZh : state.overviewDraft.datasetSourceEn;
-    if (!fileName) return;
-    list.appendChild(createUploadedFileItem({ name: fileName, type: getGuidelineFileType(fileName) }));
+    if (!fileName) {
+      syncOverviewDatasetUploadState(false);
+      return;
+    }
+    list.appendChild(createOverviewDatasetFileItem({ name: fileName, sizeBytes: state.overviewDraft.datasetSizeBytes || 0 }));
+    syncOverviewDatasetUploadState(true);
   }
 
   function renderOverviewEditState() {
@@ -4554,6 +4784,7 @@ function getTaskTypeLabel(taskTypeKey) {
     TASK_DATA.taskTypeKey = taskTypeSelect ? taskTypeSelect.value : TASK_DATA.taskTypeKey;
     TASK_DATA.datasetSourceZh = state.overviewDraft.datasetSourceZh;
     TASK_DATA.datasetSourceEn = state.overviewDraft.datasetSourceEn;
+    TASK_DATA.datasetSizeBytes = state.overviewDraft.datasetSizeBytes || 0;
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
     state.overviewEditMode = false;
@@ -7959,9 +8190,41 @@ function getTaskTypeLabel(taskTypeKey) {
         if (!state.overviewDraft || !this.files || !this.files[0]) return;
         state.overviewDraft.datasetSourceZh = this.files[0].name;
         state.overviewDraft.datasetSourceEn = this.files[0].name;
+        state.overviewDraft.datasetSizeBytes = this.files[0].size || 0;
         fillOverviewEditForm();
         markOverviewDirty();
         this.value = '';
+      });
+    }
+
+    var overviewDatasetUploadZone = document.getElementById('overviewDatasetUploadZone');
+    if (overviewDatasetUploadZone && editDatasetFileInput) {
+      overviewDatasetUploadZone.addEventListener('click', function() {
+        editDatasetFileInput.click();
+      });
+      overviewDatasetUploadZone.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          editDatasetFileInput.click();
+        }
+      });
+      overviewDatasetUploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        overviewDatasetUploadZone.classList.add('dragover');
+      });
+      overviewDatasetUploadZone.addEventListener('dragleave', function() {
+        overviewDatasetUploadZone.classList.remove('dragover');
+      });
+      overviewDatasetUploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        overviewDatasetUploadZone.classList.remove('dragover');
+        if (!state.overviewDraft || !e.dataTransfer.files || !e.dataTransfer.files[0]) return;
+        var file = e.dataTransfer.files[0];
+        state.overviewDraft.datasetSourceZh = file.name;
+        state.overviewDraft.datasetSourceEn = file.name;
+        state.overviewDraft.datasetSizeBytes = file.size || 0;
+        fillOverviewEditForm();
+        markOverviewDirty();
       });
     }
 
@@ -8121,6 +8384,21 @@ function getTaskTypeLabel(taskTypeKey) {
         closeRiskModal();
       }
     });
+
+    var datasetSummaryPreviewBtn = document.getElementById('datasetSummaryPreviewBtn');
+    if (datasetSummaryPreviewBtn) {
+      datasetSummaryPreviewBtn.addEventListener('click', showDatasetPreviewModal);
+    }
+    var datasetPreviewCloseBtn = document.getElementById('datasetPreviewCloseBtn');
+    if (datasetPreviewCloseBtn) {
+      datasetPreviewCloseBtn.addEventListener('click', hideDatasetPreviewModal);
+    }
+    var datasetPreviewModal = document.getElementById('datasetPreviewModal');
+    if (datasetPreviewModal) {
+      datasetPreviewModal.addEventListener('click', function(e) {
+        if (e.target.id === 'datasetPreviewModal') hideDatasetPreviewModal();
+      });
+    }
 
     document.getElementById('memberActionCancelBtn').addEventListener('click', function() {
       closeMemberActionModal();

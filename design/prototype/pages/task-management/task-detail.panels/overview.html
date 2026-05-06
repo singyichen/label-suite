@@ -21,7 +21,12 @@
       </div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelDatasetSummary">資料集摘要</span>
-        <span class="kv-dl-value" id="valueDatasetSummary"></span>
+        <span class="kv-dl-value">
+          <button class="dataset-preview-trigger" id="datasetSummaryPreviewBtn" type="button" aria-label="預覽資料集">
+            <span id="valueDatasetSummary"></span>
+            <svg class="dataset-preview-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </span>
       </div>
     </div>
 
@@ -38,12 +43,17 @@
 
       <div class="field-group">
         <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集</label>
-        <label class="basic-dataset-drop" for="editDatasetFileInput">
+        <div class="upload-zone overview-dataset-upload-zone" id="overviewDatasetUploadZone" role="button" tabindex="0">
+          <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 10px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
           <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
           <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
-        </label>
+        </div>
         <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" />
-        <div class="guideline-list" id="editDatasetFileList"></div>
+        <div class="overview-dataset-file-list hidden" id="editDatasetFileList"></div>
       </div>
 
       <p class="inline-error" id="overviewEditError"></p>
