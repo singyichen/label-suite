@@ -1948,9 +1948,19 @@
       align-items: end;
       margin-bottom: var(--space-md);
     }
+    .sampling-fields-primary {
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+    }
+    .sampling-fields-primary .field-group {
+      height: 100%;
+    }
     .sampling-fields-advanced {
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       align-items: start;
+    }
+    .field-hint-placeholder {
+      visibility: hidden;
     }
     .sampling-mode-inline {
       display: flex;

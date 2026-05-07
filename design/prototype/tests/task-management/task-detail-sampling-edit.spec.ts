@@ -33,5 +33,21 @@ test.describe('Task detail sampling edit state', () => {
     await expect(page.locator('#targetAgreementInput')).toBeEnabled();
     await expect(page.locator('#minAnnotatorsInput')).toBeEnabled();
     await expect(page.locator('#isolationToggle')).toBeEnabled();
+
+    const firstRowFields = page.locator('#samplingEditForm .sampling-fields').first().locator('.field-group');
+    await expect(firstRowFields).toHaveCount(2);
+    await expect(firstRowFields.nth(0).locator('label')).toContainText('抽樣筆數');
+    await expect(firstRowFields.nth(1).locator('label')).toContainText('試標回合');
+
+    const secondRowFields = page.locator('#samplingEditForm .sampling-fields-advanced').first().locator('.field-group');
+    await expect(secondRowFields.nth(0).locator('label')).toContainText('IAA 計算方式');
+
+    const samplingBox = await firstRowFields.nth(0).boundingBox();
+    const roundBox = await firstRowFields.nth(1).boundingBox();
+
+    expect(samplingBox).not.toBeNull();
+    expect(roundBox).not.toBeNull();
+    expect(Math.abs((samplingBox?.y ?? 0) - (roundBox?.y ?? 0))).toBeLessThanOrEqual(2);
+    expect(Math.abs(((samplingBox?.y ?? 0) + (samplingBox?.height ?? 0)) - ((roundBox?.y ?? 0) + (roundBox?.height ?? 0)))).toBeLessThanOrEqual(2);
   });
 });

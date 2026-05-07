@@ -204,12 +204,12 @@
         <span class="kv-dl-value" id="valueSamplingValueControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
-        <span class="kv-dl-value" id="valueTrialRoundControl"></span>
-      </div>
-      <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelIaaMethodControl">IAA 計算方式</span>
         <span class="kv-dl-value" id="valueIaaMethodControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
+        <span class="kv-dl-value" id="valueTrialRoundControl"></span>
       </div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelTargetAgreementControl">目標 IAA</span>
@@ -234,12 +234,20 @@
     </div>
 
     <div class="sampling-edit-form hidden" id="samplingEditForm">
-      <div class="sampling-fields" style="grid-template-columns: 1fr 1fr;">
+      <div class="sampling-fields sampling-fields-primary">
         <div class="field-group">
           <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣筆數</label>
           <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
           <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
         </div>
+        <div class="field-group">
+          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
+          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
+          <p class="field-hint field-hint-placeholder" aria-hidden="true">placeholder</p>
+        </div>
+      </div>
+
+      <div class="sampling-fields sampling-fields-advanced">
         <div class="field-group">
           <label class="field-label" id="iaaMethodLabel" for="iaaMethodSelect">IAA 計算方式</label>
           <select class="input-select" id="iaaMethodSelect">
@@ -251,13 +259,6 @@
             <option id="iaaOptPairwiseF1Partial" value="pairwise_f1_partial">Pairwise F1（部分重疊）</option>
             <option id="iaaOptPairwiseTripleF1" value="pairwise_triple_f1">Pairwise Triple-level F1</option>
           </select>
-        </div>
-      </div>
-
-      <div class="sampling-fields sampling-fields-advanced">
-        <div class="field-group">
-          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
-          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
         </div>
         <div class="field-group">
           <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
