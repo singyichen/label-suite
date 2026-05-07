@@ -114,7 +114,7 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（顯示檔名/大小/格式）、`task_type` 下拉選單
+  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 下拉選單
 - Step 2：`標記設定檔`
   - 必要元素：task-type 模板入口、設定檔上傳入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
   - 畫面元素：上方預覽區、下方左側「範本/上傳設定檔」區塊 + schema 設定區、下方右側 code 區、欄位級錯誤訊息
@@ -145,7 +145,7 @@ sequenceDiagram
 **Prototype 互動規格（本版必做）**：
 
 - Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已選 `task_type`、dataset 檔案通過格式/大小/編碼檢查後 enabled。
-- Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可直接再次上傳取代目前檔案，並同時保留下方的成功檔案列。
+- Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可繼續追加多個資料集檔案；每個已上傳檔案在下方獨立一列顯示，各列含移除按鈕可單獨刪除；所有上傳檔案視為同一資料集的集合。
 - Step 2 `下一步` 按鈕預設 disabled；schema 必填欄位通過且無 parser/schema error 才 enabled。
 - Step 2 在 code 有未儲存變更時，`下一步` 必須維持 disabled 並提示先儲存；不得自動覆寫/自動儲存 code。
 - Step 3 `下一步` 按鈕預設 disabled；至少需有 1 位 `annotator` 且試標初始化設定通過驗證才 enabled。
@@ -320,9 +320,9 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、資料集、`task_type`。
-- **FR-002a**：資料集上傳必須限制於 `DATASET_UPLOAD_FORMATS`，且符合 `DATASET_MAX_FILE_SIZE_MB`、`DATASET_MAX_ROWS`、`DATASET_ENCODING`。
-- **FR-002b**：資料集上傳成功後，已上傳檔案列須顯示眼睛圖示；點擊該列（× 移除按鈕除外）開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列），供使用者確認是否上傳正確資料集；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。
+- **FR-002a**：每個資料集檔案必須限制於 `DATASET_UPLOAD_FORMATS`，且各自符合 `DATASET_MAX_FILE_SIZE_MB`；不符合規格的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
+- **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-003**：Step 2 標記設定檔必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
 - **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 欄位。
@@ -507,3 +507,4 @@ flowchart LR
 | 1.7.0 | 2026-04-21 | 流程改為四步：新增 Step 3 啟動設定（成員管理 + Run 初始化），原標記說明改為 Step 4；同步更新流程圖、FR、SC、關鍵實體與導覽 |
 | 1.7.1 | 2026-04-21 | 同步用詞本地化：將 Step 3 相關描述由 Run/Draft/dataset_total/Dry Run/Official Run 改為「執行初始化／試標抽樣／資料集總筆數／試標與正式標記」 |
 | 1.8.0 | 2026-04-21 | 同步 Step 3 成員管理雙來源：新增 `platform-users`（僅 system role=user）與 `email-invite`（寄送邀請連結）規格；補充重複成員阻擋、email 驗證、mobile（375px）輸入列堆疊規則與對應 FR/SC |
+| 2.0.0 | 2026-05-07 | 資料集上傳改支援多檔：Step 1 upload zone 支援同時選取/拖曳多個資料集檔案；每個已上傳檔案獨立一列；各檔案可獨立移除；所有上傳檔案合併為一個資料集；更新 FR-002/FR-002a/FR-002b 與 Prototype 互動規格 |

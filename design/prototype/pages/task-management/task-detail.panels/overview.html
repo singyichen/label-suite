@@ -20,13 +20,8 @@
         <span class="kv-dl-value" id="valueTaskType"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelDatasetSummary">資料集摘要</span>
-        <span class="kv-dl-value">
-          <button class="dataset-preview-trigger" id="datasetSummaryPreviewBtn" type="button" aria-label="預覽資料集">
-            <span id="valueDatasetSummary"></span>
-            <svg class="dataset-preview-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </span>
+        <span class="kv-dl-key" id="labelDatasetSummary">資料集</span>
+        <span class="kv-dl-value" id="valueDatasetSummary"></span>
       </div>
     </div>
 
@@ -52,7 +47,7 @@
           <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
           <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
         </div>
-        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" />
+        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" multiple />
         <div class="overview-dataset-file-list hidden" id="editDatasetFileList"></div>
       </div>
 

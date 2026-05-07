@@ -2166,7 +2166,7 @@
       labelCreatedBy: '建立者',
       labelCreatedAt: '建立時間',
       labelUpdatedAt: '最近更新',
-      labelDatasetSummary: '資料集摘要',
+      labelDatasetSummary: '資料集',
       labelConfigVersion: '設定檔版本',
       labelConfigTaskType: '標記類型',
       labelConfigLabels: '標籤清單',
@@ -2566,7 +2566,7 @@
       labelCreatedBy: 'Created by',
       labelCreatedAt: 'Created at',
       labelUpdatedAt: 'Last updated',
-      labelDatasetSummary: 'Dataset summary',
+      labelDatasetSummary: 'Dataset',
       labelConfigVersion: 'Config version',
       labelConfigTaskType: 'Task type',
       labelConfigLabels: 'Labels',
@@ -4551,6 +4551,13 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function createOverviewDraft() {
+    var existingName = TASK_DATA.datasetSourceZh || '';
+    var existingFiles = [];
+    if (existingName) {
+      var names = existingName.split(' + ');
+      var perFileBytes = Math.floor((TASK_DATA.datasetSizeBytes || 0) / names.length);
+      names.forEach(function(n) { existingFiles.push({ name: n.trim(), sizeBytes: perFileBytes }); });
+    }
     return {
       taskNameZh: TASK_DATA.taskNameZh,
       taskNameEn: TASK_DATA.taskNameEn,
@@ -4558,6 +4565,7 @@ function getTaskTypeLabel(taskTypeKey) {
       datasetSourceZh: TASK_DATA.datasetSourceZh,
       datasetSourceEn: TASK_DATA.datasetSourceEn,
       datasetSizeBytes: TASK_DATA.datasetSizeBytes || 0,
+      datasetFiles: existingFiles,
     };
   }
 
@@ -4607,18 +4615,20 @@ function getTaskTypeLabel(taskTypeKey) {
     if (list) list.classList.toggle('hidden', !hasFile);
   }
 
-  function clearOverviewDatasetFile() {
+  function clearOverviewDatasetFile(idx) {
     if (!state.overviewDraft) return;
-    state.overviewDraft.datasetSourceZh = '';
-    state.overviewDraft.datasetSourceEn = '';
-    state.overviewDraft.datasetSizeBytes = 0;
+    if (typeof idx === 'number') {
+      state.overviewDraft.datasetFiles.splice(idx, 1);
+    } else {
+      state.overviewDraft.datasetFiles = [];
+    }
     var input = document.getElementById('editDatasetFileInput');
     if (input) input.value = '';
     renderOverviewDatasetFileList();
     markOverviewDirty();
   }
 
-  function createOverviewDatasetFileItem(file) {
+  function createOverviewDatasetFileItem(file, idx) {
     var item = document.createElement('div');
     item.className = 'overview-upload-file-preview';
     item.setAttribute('role', 'button');
@@ -4679,7 +4689,7 @@ function getTaskTypeLabel(taskTypeKey) {
     removeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     removeBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      clearOverviewDatasetFile();
+      clearOverviewDatasetFile(idx);
     });
     item.appendChild(removeBtn);
 
@@ -4689,18 +4699,14 @@ function getTaskTypeLabel(taskTypeKey) {
   function renderOverviewDatasetFileList() {
     var list = document.getElementById('editDatasetFileList');
     if (!list) return;
-    list.innerHTML = '';
-    if (!state.overviewDraft) {
+    while (list.firstChild) list.removeChild(list.firstChild);
+    if (!state.overviewDraft || !state.overviewDraft.datasetFiles || !state.overviewDraft.datasetFiles.length) {
       syncOverviewDatasetUploadState(false);
       return;
     }
-
-    var fileName = state.lang === 'zh' ? state.overviewDraft.datasetSourceZh : state.overviewDraft.datasetSourceEn;
-    if (!fileName) {
-      syncOverviewDatasetUploadState(false);
-      return;
-    }
-    list.appendChild(createOverviewDatasetFileItem({ name: fileName, sizeBytes: state.overviewDraft.datasetSizeBytes || 0 }));
+    state.overviewDraft.datasetFiles.forEach(function(file, idx) {
+      list.appendChild(createOverviewDatasetFileItem(file, idx));
+    });
     syncOverviewDatasetUploadState(true);
   }
 
@@ -4782,9 +4788,10 @@ function getTaskTypeLabel(taskTypeKey) {
     TASK_DATA.taskNameZh = state.overviewDraft.taskNameZh;
     TASK_DATA.taskNameEn = state.overviewDraft.taskNameEn;
     TASK_DATA.taskTypeKey = taskTypeSelect ? taskTypeSelect.value : TASK_DATA.taskTypeKey;
-    TASK_DATA.datasetSourceZh = state.overviewDraft.datasetSourceZh;
-    TASK_DATA.datasetSourceEn = state.overviewDraft.datasetSourceEn;
-    TASK_DATA.datasetSizeBytes = state.overviewDraft.datasetSizeBytes || 0;
+    var draftFiles = state.overviewDraft.datasetFiles || [];
+    TASK_DATA.datasetSourceZh = draftFiles.map(function(f) { return f.name; }).join(' + ') || '';
+    TASK_DATA.datasetSourceEn = TASK_DATA.datasetSourceZh;
+    TASK_DATA.datasetSizeBytes = draftFiles.reduce(function(sum, f) { return sum + (f.sizeBytes || 0); }, 0);
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
     state.overviewEditMode = false;
@@ -6511,7 +6518,7 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function renderOverview() {
     var taskName = getCurrentTaskName();
-    var datasetSummary = TASK_DATA.datasetTotal + ' · ' + (state.lang === 'zh' ? TASK_DATA.datasetSourceZh : TASK_DATA.datasetSourceEn);
+    var datasetSummary = TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items');
     var settingsSummary = getSettingsSummary();
     var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
     var guidelineFilesText = guidelineFiles.length ? guidelineFiles.join(', ') : t('guidelineFilesNone');
@@ -8187,13 +8194,13 @@ function getTaskTypeLabel(taskTypeKey) {
 
     if (editDatasetFileInput) {
       editDatasetFileInput.addEventListener('change', function() {
-        if (!state.overviewDraft || !this.files || !this.files[0]) return;
-        state.overviewDraft.datasetSourceZh = this.files[0].name;
-        state.overviewDraft.datasetSourceEn = this.files[0].name;
-        state.overviewDraft.datasetSizeBytes = this.files[0].size || 0;
-        fillOverviewEditForm();
+        if (!state.overviewDraft || !this.files || !this.files.length) return;
+        Array.prototype.forEach.call(this.files, function(file) {
+          state.overviewDraft.datasetFiles.push({ name: file.name, sizeBytes: file.size || 0 });
+        });
+        renderOverviewDatasetFileList();
         markOverviewDirty();
-        this.value = '';
+        editDatasetFileInput.value = '';
       });
     }
 
@@ -8218,12 +8225,11 @@ function getTaskTypeLabel(taskTypeKey) {
       overviewDatasetUploadZone.addEventListener('drop', function(e) {
         e.preventDefault();
         overviewDatasetUploadZone.classList.remove('dragover');
-        if (!state.overviewDraft || !e.dataTransfer.files || !e.dataTransfer.files[0]) return;
-        var file = e.dataTransfer.files[0];
-        state.overviewDraft.datasetSourceZh = file.name;
-        state.overviewDraft.datasetSourceEn = file.name;
-        state.overviewDraft.datasetSizeBytes = file.size || 0;
-        fillOverviewEditForm();
+        if (!state.overviewDraft || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+        Array.prototype.forEach.call(e.dataTransfer.files, function(file) {
+          state.overviewDraft.datasetFiles.push({ name: file.name, sizeBytes: file.size || 0 });
+        });
+        renderOverviewDatasetFileList();
         markOverviewDirty();
       });
     }
@@ -8385,10 +8391,6 @@ function getTaskTypeLabel(taskTypeKey) {
       }
     });
 
-    var datasetSummaryPreviewBtn = document.getElementById('datasetSummaryPreviewBtn');
-    if (datasetSummaryPreviewBtn) {
-      datasetSummaryPreviewBtn.addEventListener('click', showDatasetPreviewModal);
-    }
     var datasetPreviewCloseBtn = document.getElementById('datasetPreviewCloseBtn');
     if (datasetPreviewCloseBtn) {
       datasetPreviewCloseBtn.addEventListener('click', hideDatasetPreviewModal);

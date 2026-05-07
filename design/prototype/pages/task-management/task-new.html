@@ -584,19 +584,9 @@
             </svg>
             <div class="upload-zone-label" id="uploadZoneLabel">點擊或拖曳上傳資料集</div>
             <div class="upload-zone-hint" id="uploadZoneHint">支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆</div>
-            <input type="file" id="datasetFileInput" accept=".txt,.csv,.tsv,.json" style="display:none" aria-hidden="true" />
+            <input type="file" id="datasetFileInput" accept=".txt,.csv,.tsv,.json" multiple style="display:none" aria-hidden="true" />
           </div>
-          <div id="datasetFilePreview" class="upload-file-preview hidden">
-            <svg class="upload-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span class="upload-file-name" id="datasetFileName"></span>
-            <span class="upload-file-size" id="datasetFileSize"></span>
-            <button class="upload-file-preview-btn" id="datasetPreviewBtn" aria-label="預覽資料集">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-            <button class="upload-file-remove" id="datasetRemoveBtn" aria-label="移除檔案">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
+          <div id="datasetFileList"></div>
           <div class="field-error-msg" id="errDataset"></div>
         </div>
       </div>
@@ -1147,7 +1137,7 @@ var I18N = {
 /* ── State ───────────────────────────────────────────────────── */
 var state = {
   lang: 'zh', step: 1,
-  taskName: '', datasetFile: null, taskType: '',
+  taskName: '', datasetFiles: [], taskType: '',
   codeFormat: 'yaml', configData: {},
   memberSource: 'system',
   initialMembers: [],
@@ -1435,7 +1425,7 @@ function validateStep1(showErrors) {
     if (showErrors) showFieldError('errTaskType', true, t('errTaskType'));
     ok = false;
   } else { showFieldError('errTaskType', false); }
-  if (!state.datasetFile) {
+  if (!state.datasetFiles.length) {
     if (showErrors) showFieldError('errDataset', true, t('errDataset'));
     ok = false;
   } else { showFieldError('errDataset', false); }
@@ -2577,35 +2567,106 @@ function formatBytes(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-function setDatasetFile(file) {
-  var ALLOWED = ['.txt', '.csv', '.tsv', '.json'];
-  var name = file.name.toLowerCase();
-  var ext = name.slice(name.lastIndexOf('.'));
-  if (ALLOWED.indexOf(ext) === -1) {
-    showFieldError('errDataset', true, t('errDatasetFormat'));
-    el('datasetUploadZone').classList.add('error');
-    return;
+var DATASET_ALLOWED = ['.txt', '.csv', '.tsv', '.json'];
+
+function addDatasetFiles(files) {
+  var hadError = false;
+  Array.prototype.forEach.call(files, function(file) {
+    var name = file.name.toLowerCase();
+    var ext = name.slice(name.lastIndexOf('.'));
+    if (DATASET_ALLOWED.indexOf(ext) === -1) {
+      showFieldError('errDataset', true, t('errDatasetFormat'));
+      el('datasetUploadZone').classList.add('error');
+      hadError = true;
+      return;
+    }
+    if (file.size > 200 * 1048576) {
+      showFieldError('errDataset', true, t('errDatasetSize'));
+      el('datasetUploadZone').classList.add('error');
+      hadError = true;
+      return;
+    }
+    state.datasetFiles.push(file);
+    track('prototype_task_new_dataset_uploaded', { ext: ext, size: file.size });
+  });
+  if (!hadError) {
+    el('datasetUploadZone').classList.remove('error');
+    showFieldError('errDataset', false);
   }
-  if (file.size > 200 * 1048576) {
-    showFieldError('errDataset', true, t('errDatasetSize'));
-    el('datasetUploadZone').classList.add('error');
-    return;
-  }
-  state.datasetFile = file;
-  el('datasetUploadZone').classList.remove('error');
-  showFieldError('errDataset', false);
-  setText('datasetFileName', file.name);
-  setText('datasetFileSize', formatBytes(file.size));
-  el('datasetFilePreview').classList.remove('hidden');
+  renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
-  track('prototype_task_new_dataset_uploaded', { ext: ext, size: file.size });
 }
 
-function clearDatasetFile() {
-  state.datasetFile = null;
+function removeDatasetFile(idx) {
+  state.datasetFiles.splice(idx, 1);
   el('datasetFileInput').value = '';
-  el('datasetFilePreview').classList.add('hidden');
+  renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
+}
+
+function makeDatasetFileItem(file, idx) {
+  var item = document.createElement('div');
+  item.className = 'upload-file-preview';
+  item.style.marginTop = '8px';
+
+  var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('class', 'upload-file-icon');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('fill', 'none');
+  icon.setAttribute('stroke', 'currentColor');
+  icon.setAttribute('stroke-width', '2');
+  icon.setAttribute('stroke-linecap', 'round');
+  icon.setAttribute('stroke-linejoin', 'round');
+  icon.setAttribute('aria-hidden', 'true');
+  var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+  var pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  pl.setAttribute('points', '14 2 14 8 20 8');
+  icon.appendChild(p); icon.appendChild(pl);
+  item.appendChild(icon);
+
+  var nameSpan = document.createElement('span');
+  nameSpan.className = 'upload-file-name';
+  nameSpan.textContent = file.name;
+  item.appendChild(nameSpan);
+
+  var sizeSpan = document.createElement('span');
+  sizeSpan.className = 'upload-file-size';
+  sizeSpan.textContent = formatBytes(file.size);
+  item.appendChild(sizeSpan);
+
+  var previewBtn = document.createElement('button');
+  previewBtn.type = 'button';
+  previewBtn.className = 'upload-file-preview-btn';
+  previewBtn.setAttribute('aria-label', '預覽資料集');
+  previewBtn.setAttribute('title', '預覽');
+  previewBtn.textContent = '👁';
+  previewBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    showDatasetPreviewModal();
+  });
+  item.appendChild(previewBtn);
+
+  var removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'upload-file-remove';
+  removeBtn.setAttribute('aria-label', '移除檔案');
+  removeBtn.textContent = '✕';
+  removeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    removeDatasetFile(idx);
+  });
+  item.appendChild(removeBtn);
+
+  return item;
+}
+
+function renderDatasetFileList() {
+  var list = el('datasetFileList');
+  while (list.firstChild) list.removeChild(list.firstChild);
+  state.datasetFiles.forEach(function(file, idx) {
+    list.appendChild(makeDatasetFileItem(file, idx));
+  });
 }
 
 /* ── Dataset preview modal ───────────────────────────────────── */
@@ -3062,10 +3123,8 @@ el('datasetUploadZone').addEventListener('click', function() { el('datasetFileIn
 el('datasetUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('datasetFileInput').click(); } });
 el('datasetUploadZone').addEventListener('dragover', function(e) { e.preventDefault(); el('datasetUploadZone').classList.add('dragover'); });
 el('datasetUploadZone').addEventListener('dragleave', function() { el('datasetUploadZone').classList.remove('dragover'); });
-el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(); el('datasetUploadZone').classList.remove('dragover'); if (e.dataTransfer.files[0]) setDatasetFile(e.dataTransfer.files[0]); });
-el('datasetFileInput').addEventListener('change', function() { if (this.files[0]) setDatasetFile(this.files[0]); });
-el('datasetRemoveBtn').addEventListener('click', function(e) { e.stopPropagation(); clearDatasetFile(); });
-el('datasetFilePreview').addEventListener('click', showDatasetPreviewModal);
+el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(); el('datasetUploadZone').classList.remove('dragover'); if (e.dataTransfer.files.length) addDatasetFiles(e.dataTransfer.files); });
+el('datasetFileInput').addEventListener('change', function() { if (this.files.length) { addDatasetFiles(this.files); this.value = ''; } });
 el('datasetPreviewCloseBtn').addEventListener('click', hideDatasetPreviewModal);
 el('datasetPreviewModal').addEventListener('click', function(e) { if (e.target === el('datasetPreviewModal')) hideDatasetPreviewModal(); });
 
