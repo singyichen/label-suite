@@ -1847,7 +1847,7 @@
       margin-bottom: var(--space-md);
     }
     .exec-info { flex: 1; min-width: 0; }
-    .exec-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+    .exec-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
     .exec-isolation-audit { font-size: 11px; }
     .exec-actions { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
     .run-control-tabs {
@@ -1922,13 +1922,6 @@
       color: var(--color-text-soft);
       max-width: 720px;
     }
-    .exec-stage-meta {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      flex-shrink: 0;
-    }
     .exec-stage-pill,
     .round-history-summary {
       display: inline-flex;
@@ -1968,13 +1961,28 @@
     .exec-stop-row {
       margin-bottom: var(--space-md);
       display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .exec-stop-main {
+      display: flex;
       flex-direction: column;
       gap: 8px;
+      min-width: 0;
+      flex: 1;
     }
     .exec-stop-pills {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+    .exec-stop-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-shrink: 0;
     }
     .stop-pill {
       display: inline-flex;
@@ -2015,7 +2023,7 @@
     .round-timeline-item {
       position: relative;
       display: grid;
-      grid-template-columns: 88px minmax(0, 1fr) auto;
+      grid-template-columns: 118px minmax(0, 1fr) auto;
       gap: 14px;
       align-items: start;
       padding: 14px;
@@ -2023,18 +2031,6 @@
       border: 1px solid var(--color-border);
       background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
     }
-    .round-timeline-item::before {
-      content: '';
-      position: absolute;
-      left: 43px;
-      top: -12px;
-      bottom: -12px;
-      width: 2px;
-      background: linear-gradient(180deg, rgba(99,102,241,0.22), rgba(148,163,184,0.08));
-      z-index: 0;
-    }
-    .round-timeline-item:first-child::before { top: 26px; }
-    .round-timeline-item:last-child::before { bottom: 26px; }
     .round-timeline-index,
     .round-timeline-body,
     .round-timeline-side {
@@ -2076,6 +2072,7 @@
     .round-timeline-date {
       font-size: 11px;
       color: var(--color-text-soft);
+      white-space: nowrap;
     }
     .round-timeline-body {
       display: flex;
@@ -2245,21 +2242,32 @@
       border-radius: var(--radius-md);
       overflow: hidden;
       margin-bottom: 10px;
+      background: #E5E7EB;
     }
     .split-seg {
       min-width: 0;
       transition: width var(--dur-normal) var(--ease-standard);
+      box-shadow: inset -1px 0 0 rgba(255,255,255,0.92);
     }
+    .split-seg:first-child { border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
+    .split-seg:last-child { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
     .split-dry { background: var(--color-primary); }
     .split-official { background: var(--color-cta); }
     .split-legend { display: flex; gap: var(--space-md); flex-wrap: wrap; }
     .split-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .split-legend-item strong { color: var(--color-ink); }
     .split-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .split-dot-total { background: var(--color-ink-muted); }
     .split-dot-dry { background: var(--color-primary); }
     .split-dot-official { background: var(--color-cta); }
     .split-legend-key { color: var(--color-text-soft); }
     .split-legend-value { color: var(--color-ink); font-weight: 600; }
+    .split-legend-dynamic .split-legend-item {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+    }
 
     .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
 
@@ -2271,12 +2279,12 @@
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-stage-banner { flex-direction: column; }
-      .exec-stage-meta,
       .round-timeline-side { justify-content: flex-start; }
+      .exec-stop-row,
+      .exec-stop-actions { align-items: flex-start; }
       .round-timeline-item {
         grid-template-columns: 1fr;
       }
-      .round-timeline-item::before { display: none; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
@@ -2566,6 +2574,7 @@
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
       publishDryRun: '新增試標 Round',
       publishOfficialRun: '開始正式標記',
+      publishComplete: '標記完成',
       noPublishAction: '此狀態不提供發布操作。',
       reviewerHint: '僅 project leader 可操作',
       dryRunDisabled: '新增試標 Round（唯讀）',
@@ -2600,8 +2609,9 @@
       isolationOff: '未隔離',
       isolationAuditTpl: '最後異動：{actor} · {time}',
       toastRoleDenied: 'annotator 無權限檢視任務詳情，已導回任務列表。',
-      toastPublishedDry: '已發布 Dry Run',
-      toastPublishedOfficial: '已發布 Official Run',
+      toastPublishedDry: '已建立試標 round',
+      toastPublishedOfficial: '已啟動正式標記',
+      toastPublishedComplete: '任務已標記完成',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
       yes: '是',
       no: '否',
@@ -2616,9 +2626,9 @@
       roundOutcomeInProgress: '目前 round 進行中，待所有標記員完成後再判定',
       executionStageEyebrow: '目前任務階段',
       executionStageTrial: '試標階段',
-      executionStageOfficial: '正式標記階段',
+      executionStageOfficial: '正式標記中',
       executionStageDraft: '尚未開始試標',
-      executionStageCompleted: '正式標記已完成',
+      executionStageCompleted: '已完成',
       executionStageDescTrial: '目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。',
       executionStageDescOfficial: '正式標記已啟動，作業範圍為未進入任何試標 round 的剩餘樣本。',
       executionStageDescDraft: '先建立第一個試標 round，確認一致性門檻與樣本使用策略。',
@@ -2633,6 +2643,10 @@
       roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標 round',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面 round 混用。',
       roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
+      roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
+      roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
+      roundDecisionDescCompletedTpl: '此任務已走完整個草稿、試標、正式標記流程，可回顧所有 round 與正式標記結果。',
       roundMetricSampleTpl: '{count} 筆樣本',
       roundMetricIaaTpl: 'IAA {value}',
       roundMetricAnnotatorsTpl: '{count} 位標記者',
@@ -2975,6 +2989,7 @@
       isolationRiskMsg: 'Isolation is off. Risk confirmation is required before publishing and will be audited.',
       publishDryRun: 'Add trial round',
       publishOfficialRun: 'Start official run',
+      publishComplete: 'Mark complete',
       noPublishAction: 'No publish action is available in this status.',
       reviewerHint: 'Only project leader can perform this action',
       dryRunDisabled: 'Add trial round (Read-only)',
@@ -3009,8 +3024,9 @@
       isolationOff: 'non-isolated',
       isolationAuditTpl: 'Last changed by {actor} · {time}',
       toastRoleDenied: 'Annotator is not allowed to access task detail. Redirected to task list.',
-      toastPublishedDry: 'Dry run published',
-      toastPublishedOfficial: 'Official run published',
+      toastPublishedDry: 'Trial round created',
+      toastPublishedOfficial: 'Official run started',
+      toastPublishedComplete: 'Task marked as completed',
       toastPublishBlocked: 'Cannot publish due to invalid sampling setting.',
       yes: 'Yes',
       no: 'No',
@@ -3025,9 +3041,9 @@
       roundOutcomeInProgress: 'The current round is still in progress and awaits completion',
       executionStageEyebrow: 'Current task stage',
       executionStageTrial: 'Trial stage',
-      executionStageOfficial: 'Official stage',
+      executionStageOfficial: 'Official run in progress',
       executionStageDraft: 'Trial not started',
-      executionStageCompleted: 'Official work completed',
+      executionStageCompleted: 'Completed',
       executionStageDescTrial: 'The task is validating agreement through multiple trial rounds. Any passing round can unlock official work.',
       executionStageDescOfficial: 'Official work has started on the remaining samples that were never used in any trial round.',
       executionStageDescDraft: 'Create the first trial round to validate agreement thresholds and sample usage rules.',
@@ -3042,6 +3058,10 @@
       roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
       roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
       roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
+      roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
+      roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
+      roundDecisionDescCompletedTpl: 'This task has completed the full draft, trial, and official flow. Review the rounds and final output as needed.',
       roundMetricSampleTpl: '{count} items',
       roundMetricIaaTpl: 'IAA {value}',
       roundMetricAnnotatorsTpl: '{count} annotators',
@@ -3282,6 +3302,7 @@
       { exportedAt: '2026-04-30 18:20', exportType: 'full', stage: 'all', count: 1560, scope: '__all__', exportedBy: 'System', format: 'JSON' }
     ]
   };
+  var DEFAULT_TASK_DATA = JSON.parse(JSON.stringify(TASK_DATA));
 
   var TASK_PROFILE_MAP = {
     T001: {
@@ -3302,6 +3323,19 @@
       guidelineText: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
       guidelineFiles: [{ name: 'headline_taxonomy.pdf', type: 'pdf' }],
       forceGuideline: true,
+      samplingMode: 'by_count',
+      samplingValue: 10,
+      iaaMethod: 'krippendorff_alpha_nominal',
+      trialRound: 0,
+      targetAgreement: 0.8,
+      currentAgreement: 0,
+      minAnnotators: 3,
+      currentAnnotators: 0,
+      currentStd: 0,
+      isolationEnabled: true,
+      isolationLastActor: 'Mandy Chen',
+      isolationLastUpdated: '2026-05-07 09:00',
+      trialRounds: [],
       status: 'draft',
     },
     T002: {
@@ -4173,6 +4207,19 @@ function interpolate(template, payload) {
     });
   }
 
+  function cloneData(data) {
+    return JSON.parse(JSON.stringify(data));
+  }
+
+  function resetTaskData(taskId) {
+    TASK_DATA = cloneData(DEFAULT_TASK_DATA);
+    if (taskId && TASK_PROFILE_MAP[taskId]) {
+      Object.assign(TASK_DATA, cloneData(TASK_PROFILE_MAP[taskId]));
+    } else if (taskId) {
+      TASK_DATA.taskId = taskId;
+    }
+  }
+
   function parseRole() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
@@ -4183,11 +4230,9 @@ function interpolate(template, payload) {
       role = 'project_leader';
     }
     state.taskRole = role;
+    resetTaskData(taskId && taskId.trim() ? taskId.trim() : '');
     if (taskId && taskId.trim()) {
       TASK_DATA.taskId = taskId.trim();
-      if (TASK_PROFILE_MAP[TASK_DATA.taskId]) {
-        Object.assign(TASK_DATA, JSON.parse(JSON.stringify(TASK_PROFILE_MAP[TASK_DATA.taskId])));
-      }
     }
     applySamplingDefaultsToTaskData();
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
@@ -4529,8 +4574,12 @@ function interpolate(template, payload) {
     }, 0);
   }
 
-  function getOfficialPoolCount() {
+  function getOfficialRunCount() {
     return Math.max(Number(TASK_DATA.datasetTotal || 0) - getUsedTrialSampleCount(), 0);
+  }
+
+  function getOfficialPoolCount() {
+    return getOfficialRunCount();
   }
 
   function hasPassedTrialRound() {
@@ -4552,6 +4601,78 @@ function interpolate(template, payload) {
     return 'in_progress';
   }
 
+  function getTrialRoundScenario(roundNumber) {
+    var scenarios = [
+      {
+        agreement: 0.68,
+        std: 0.15,
+        result: 'failed',
+        date: '2026-05-01',
+        noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
+        noteEn: 'Round 1 showed larger disagreement on borderline cases and did not pass.'
+      },
+      {
+        agreement: 0.81,
+        std: 0.08,
+        result: 'passed',
+        date: '2026-05-03',
+        noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
+        noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+      }
+    ];
+    return scenarios[roundNumber - 1] || {
+      agreement: Number(TASK_DATA.targetAgreement || 0.8),
+      std: 0.08,
+      result: 'passed',
+      date: '2026-05-05',
+      noteZh: '此回合已達標，可直接沿用剩餘樣本進入正式標記。',
+      noteEn: 'This round passed and the remaining sample pool is ready for official work.'
+    };
+  }
+
+  function getRoundColor(roundNumber) {
+    var palette = ['#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9'];
+    return palette[(Math.max(roundNumber, 1) - 1) % palette.length];
+  }
+
+  function renderSplitVisualization(segments, totalCount) {
+    var bar = document.getElementById('dataSplitBar');
+    var legend = document.getElementById('splitLegendDynamic');
+    if (!bar || !legend) return;
+    clearChildren(bar);
+    clearChildren(legend);
+
+    var total = Math.max(Number(totalCount) || 0, 0);
+    if (!segments.length || total <= 0) {
+      return;
+    }
+
+    segments.forEach(function(segment) {
+      var segmentEl = document.createElement('div');
+      segmentEl.className = 'split-seg';
+      segmentEl.style.width = (Math.max(segment.count, 0) / total * 100).toFixed(3) + '%';
+      segmentEl.style.background = segment.color;
+      bar.appendChild(segmentEl);
+
+      var legendItem = document.createElement('div');
+      legendItem.className = 'split-legend-item';
+      var dot = document.createElement('span');
+      dot.className = 'split-dot';
+      dot.style.background = segment.color;
+      dot.setAttribute('aria-hidden', 'true');
+      var label = document.createElement('span');
+      label.className = 'split-legend-key';
+      label.textContent = segment.label + ' ';
+      var value = document.createElement('strong');
+      value.className = 'split-legend-value';
+      value.textContent = segment.valueText;
+      legendItem.appendChild(dot);
+      legendItem.appendChild(label);
+      legendItem.appendChild(value);
+      legend.appendChild(legendItem);
+    });
+  }
+
   function renderTrialRoundTimeline() {
     var mount = document.getElementById('trialRoundTimeline');
     if (!mount) return;
@@ -4570,11 +4691,13 @@ function interpolate(template, payload) {
     rounds.forEach(function(round) {
       var item = document.createElement('article');
       item.className = 'round-timeline-item';
+      item.style.setProperty('--round-accent', getRoundColor(round.round));
 
       var index = document.createElement('div');
       index.className = 'round-timeline-index';
       var dot = document.createElement('span');
       dot.className = 'round-timeline-dot ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : '');
+      dot.style.background = getRoundColor(round.round);
       index.appendChild(dot);
       var label = document.createElement('div');
       label.className = 'round-timeline-label';
@@ -4676,7 +4799,6 @@ function interpolate(template, payload) {
   };
 
   function renderSamplingSummaryState() {
-    var sampleCount = getSampleCount();
     var usedTrialCount = getUsedTrialSampleCount();
     var reserveCount = getOfficialPoolCount();
     var unitText = state.lang === 'zh' ? '筆' : ' items';
@@ -4730,7 +4852,13 @@ function interpolate(template, payload) {
     setText('roundHistorySummary', interpolate(t('roundHistorySummaryTpl'), { used: usedTrialCount, total: TASK_DATA.datasetTotal }));
     setText('trialDecisionEyebrow', t('roundDecisionEyebrow'));
 
-    if (currentRound && currentRound.result === 'passed') {
+    if (taskStageKey === 'official') {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleOfficialTpl'), { count: getOfficialRunCount() }));
+      setText('trialDecisionDesc', t('roundDecisionDescOfficialTpl'));
+    } else if (taskStageKey === 'completed') {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleCompletedTpl'), { count: getOfficialRunCount() }));
+      setText('trialDecisionDesc', t('roundDecisionDescCompletedTpl'));
+    } else if (currentRound && currentRound.result === 'passed') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
     } else if (currentRound) {
@@ -4752,6 +4880,37 @@ function interpolate(template, payload) {
     if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
     if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
+    renderSplitVisualization(
+      (function() {
+        var rounds = getTrialRounds();
+        if (!rounds.length) {
+          return [{
+            label: t('totalSamplesLabel'),
+            valueText: TASK_DATA.datasetTotal + unitText,
+            count: Number(TASK_DATA.datasetTotal) || 0,
+            color: '#94A3B8'
+          }];
+        }
+        var segments = rounds.map(function(round) {
+          return {
+            label: 'R' + round.round,
+            valueText: String(round.sampleCount) + unitText,
+            count: Number(round.sampleCount) || 0,
+            color: getRoundColor(round.round)
+          };
+        });
+        if (reserveCount > 0) {
+          segments.push({
+            label: t('officialReserveLabel'),
+            valueText: String(reserveCount) + unitText,
+            count: reserveCount,
+            color: '#58B88B'
+          });
+        }
+        return segments;
+      }()),
+      TASK_DATA.datasetTotal
+    );
     renderTrialRoundTimeline();
   }
 
@@ -4763,18 +4922,21 @@ function interpolate(template, payload) {
     var sampleCount = Number.isFinite(numericSamplingValue) ? numericSamplingValue : 0;
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
 
-    setText('totalSamplesValue', TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items'));
-    setText('sampleUsageValue', sampleCount + (state.lang === 'zh' ? ' 筆' : ' items'));
-    setText('officialReserveValue', reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'));
-
-    var total = TASK_DATA.datasetTotal;
-    var dryPct = total > 0 ? sampleCount / total * 100 : 0;
-    var dryEl = document.getElementById('splitDryBar');
-    var offEl = document.getElementById('splitOfficialBar');
-    if (dryEl && offEl) {
-      var dw = Math.max(0.5, Math.min(99.5, dryPct));
-      dryEl.style.width = dw.toFixed(1) + '%';
-      offEl.style.width = (100 - dw).toFixed(1) + '%';
+    if (state.samplingEditMode) {
+      renderSplitVisualization([
+        {
+          label: t('sampleUsageLabel'),
+          valueText: sampleCount + (state.lang === 'zh' ? ' 筆' : ' items'),
+          count: sampleCount,
+          color: getRoundColor(1)
+        },
+        {
+          label: t('officialReserveLabel'),
+          valueText: reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'),
+          count: reserveCount,
+          color: '#58B88B'
+        }
+      ], TASK_DATA.datasetTotal);
     }
     var iaaMethodSelect = document.getElementById('iaaMethodSelect');
     if (iaaMethodSelect) iaaMethodSelect.value = data.iaaMethod || 'krippendorff_alpha_nominal';
@@ -4824,9 +4986,7 @@ function interpolate(template, payload) {
     var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
-      actionRow.innerHTML = '' +
-        '<button class="btn btn-cta" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>' +
-        '<button class="btn btn-secondary" type="button" disabled title="' + t('reviewerHint') + '">' + t('officialRunDisabled') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>';
       return;
     }
 
@@ -4841,9 +5001,12 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      actionRow.innerHTML =
-        '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
-        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>';
+      return;
+    }
+
+    if (TASK_DATA.status === 'official_run_in_progress') {
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>';
       return;
     }
 
@@ -4917,8 +5080,10 @@ function interpolate(template, payload) {
   function renderStatus() {
     var statusBadge = document.getElementById('statusBadge');
     var statusCls = (I18N[state.lang].statusCls || I18N.zh.statusCls)[TASK_DATA.status] || 'badge-draft';
-    statusBadge.className = 'badge ' + statusCls;
-    statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
+    if (statusBadge) {
+      statusBadge.className = 'badge ' + statusCls;
+      statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
+    }
     setText('statusHint', getStatusHint());
     updateStatusStepper();
   }
@@ -8286,35 +8451,45 @@ function getTaskTypeLabel(taskTypeKey) {
   function publishDryRun() {
     if (!canPublish()) return;
     var nextRound = getTrialRounds().length + 1;
+    var scenario = getTrialRoundScenario(nextRound);
     if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
     TASK_DATA.trialRounds.push({
       round: nextRound,
       sampleCount: Number(TASK_DATA.samplingValue) || 0,
-      agreement: Math.max(Number(TASK_DATA.targetAgreement || 0) - 0.04, 0.01),
+      agreement: scenario.agreement,
       annotators: Number(TASK_DATA.minAnnotators) || 0,
-      std: 0.12,
-      result: 'in_progress',
+      std: scenario.std,
+      result: scenario.result,
       usedSamples: Number(TASK_DATA.samplingValue) || 0,
-      date: '2026-05-07',
-      noteZh: '新回合已建立，等待所有標記員完成後再計算一致性。',
-      noteEn: 'A new round has been created and is waiting for all annotators to complete before agreement is calculated.'
+      date: scenario.date,
+      noteZh: scenario.noteZh,
+      noteEn: scenario.noteEn
     });
     TASK_DATA.trialRound = nextRound;
-    TASK_DATA.currentAgreement = Math.max(Number(TASK_DATA.targetAgreement || 0) - 0.04, 0.01);
-    TASK_DATA.currentStd = 0.12;
-    TASK_DATA.status = 'dry_run_in_progress';
-    TASK_DATA.updatedAt = '2026-05-07 10:07';
+    TASK_DATA.currentAgreement = scenario.agreement;
+    TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
+    TASK_DATA.currentStd = scenario.std;
+    TASK_DATA.status = scenario.result === 'passed' ? 'waiting_iaa_confirmation' : 'dry_run_in_progress';
+    TASK_DATA.updatedAt = scenario.date + ' 10:07';
     showToast(t('toastPublishedDry'));
-    trackEvent('prototype_publish_success', { target_status: 'dry_run_in_progress' });
+    trackEvent('prototype_publish_success', { target_status: TASK_DATA.status });
     renderOverview();
   }
 
   function publishOfficialRun() {
     if (!canPublish()) return;
     TASK_DATA.status = 'official_run_in_progress';
-    TASK_DATA.updatedAt = '2026-04-21 10:11';
+    TASK_DATA.updatedAt = '2026-05-04 11:20';
     showToast(t('toastPublishedOfficial'));
     trackEvent('prototype_publish_success', { target_status: 'official_run_in_progress' });
+    renderOverview();
+  }
+
+  function publishComplete() {
+    TASK_DATA.status = 'completed';
+    TASK_DATA.updatedAt = '2026-05-06 18:20';
+    showToast(t('toastPublishedComplete'));
+    trackEvent('prototype_publish_success', { target_status: 'completed' });
     renderOverview();
   }
 
@@ -8694,6 +8869,11 @@ function getTaskTypeLabel(taskTypeKey) {
           return;
         }
         publishOfficialRun();
+      }
+
+      if (e.target.id === 'publishCompleteBtn') {
+        trackEvent('prototype_cta_clicked', { cta: 'publish_complete' });
+        publishComplete();
       }
     });
 

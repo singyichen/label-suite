@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
+const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_id=T001';
 
 test.describe('Task detail overview edit state', () => {
   test('hides draft-only hint text and uses simplified edit mode layout', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Task detail overview edit state', () => {
     await expect(page.locator('#editTaskTypeLabel .required')).toHaveText('*');
     await expect(page.locator('#editDatasetLabel .required')).toHaveText('*');
     await expect(page.locator('#editDatasetFileList .overview-upload-file-preview')).toHaveCount(1);
-    await expect(page.locator('#editDatasetFileList .overview-upload-file-name')).toContainText('customer_feedback_v3.csv');
+    await expect(page.locator('#editDatasetFileList .overview-upload-file-name')).toContainText('news_headlines_multilabel_2026.csv');
 
     const cancelBox = await cancelBtn.boundingBox();
     const saveBox = await saveBtn.boundingBox();
