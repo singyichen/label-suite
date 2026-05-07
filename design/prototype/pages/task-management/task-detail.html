@@ -1782,7 +1782,7 @@
     .status-stepper {
       display: flex;
       align-items: flex-start;
-      min-width: 520px;
+      min-width: 420px;
     }
     .step {
       display: flex;
@@ -1882,6 +1882,71 @@
       gap: 10px;
       margin-bottom: 12px;
     }
+    .exec-stage-banner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(99,102,241,0.18);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 42%),
+        linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);
+    }
+    .exec-stage-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .exec-stage-eyebrow,
+    .round-decision-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+    }
+    .exec-stage-title,
+    .round-decision-title {
+      font-size: 20px;
+      line-height: 1.2;
+      color: var(--color-ink);
+    }
+    .exec-stage-desc,
+    .round-decision-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      max-width: 720px;
+    }
+    .exec-stage-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+    .exec-stage-pill,
+    .round-history-summary {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .exec-stage-pill-accent {
+      border-color: rgba(16,185,129,0.25);
+      background: rgba(16,185,129,0.08);
+      color: #047857;
+    }
     .exec-round-item {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -1928,6 +1993,166 @@
       color: var(--color-success);
       background: var(--color-success-bg);
     }
+    .round-history-panel {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      padding: 16px;
+      margin-bottom: var(--space-md);
+    }
+    .round-history-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .round-timeline {
+      display: grid;
+      gap: 12px;
+    }
+    .round-timeline-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    }
+    .round-timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 43px;
+      top: -12px;
+      bottom: -12px;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(99,102,241,0.22), rgba(148,163,184,0.08));
+      z-index: 0;
+    }
+    .round-timeline-item:first-child::before { top: 26px; }
+    .round-timeline-item:last-child::before { bottom: 26px; }
+    .round-timeline-index,
+    .round-timeline-body,
+    .round-timeline-side {
+      position: relative;
+      z-index: 1;
+    }
+    .round-timeline-index {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .round-timeline-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid var(--color-white);
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.16);
+      background: var(--color-primary);
+      flex-shrink: 0;
+    }
+    .round-timeline-dot.failed {
+      background: #DC2626;
+      box-shadow: 0 0 0 2px rgba(220,38,38,0.12);
+    }
+    .round-timeline-dot.passed {
+      background: #10B981;
+      box-shadow: 0 0 0 2px rgba(16,185,129,0.14);
+    }
+    .round-timeline-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .round-timeline-round {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .round-timeline-date {
+      font-size: 11px;
+      color: var(--color-text-soft);
+    }
+    .round-timeline-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+    .round-timeline-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .round-metric-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .round-timeline-note {
+      font-size: 13px;
+      color: var(--color-ink);
+      line-height: 1.6;
+    }
+    .round-timeline-side {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .round-status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .round-status-badge.failed {
+      color: #B91C1C;
+      background: #FEF2F2;
+      border-color: #FECACA;
+    }
+    .round-status-badge.passed {
+      color: #047857;
+      background: #ECFDF5;
+      border-color: #A7F3D0;
+    }
+    .round-status-badge.in-progress {
+      color: #6D28D9;
+      background: #F5F3FF;
+      border-color: #DDD6FE;
+    }
+    .round-decision-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      margin-bottom: var(--space-md);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(16,185,129,0.22);
+      background:
+        linear-gradient(135deg, rgba(16,185,129,0.10), rgba(99,102,241,0.04)),
+        #FFFFFF;
+    }
+    .round-decision-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
 
     .panel-divider {
       border: none;
@@ -1949,7 +2174,7 @@
       margin-bottom: var(--space-md);
     }
     .sampling-fields-primary {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       align-items: stretch;
     }
     .sampling-fields-primary .field-group {
@@ -2000,6 +2225,20 @@
     .strategy-seed { font-size: 11px; color: var(--color-ink-muted); }
 
     .data-split-viz { margin-bottom: var(--space-sm); }
+    .exec-data-split-viz {
+      padding: 14px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      margin-bottom: var(--space-md);
+    }
+    .split-viz-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
     .split-bar {
       display: flex;
       height: 28px;
@@ -2031,6 +2270,13 @@
       .settings-schema-field-grid { grid-template-columns: 1fr; }
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
+      .exec-stage-banner { flex-direction: column; }
+      .exec-stage-meta,
+      .round-timeline-side { justify-content: flex-start; }
+      .round-timeline-item {
+        grid-template-columns: 1fr;
+      }
+      .round-timeline-item::before { display: none; }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
@@ -2284,20 +2530,22 @@
       samplingSaveSuccess: '抽樣設定已更新',
       samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
       trialRoundLabel: '試標回合',
+      trialRoundsUsedLabel: '已完成試標回合',
       targetAgreementLabel: '目標 IAA',
-      currentAgreementLabel: '目前 IAA',
+      currentAgreementLabel: '最新回合 IAA',
       currentStdLabel: '目前標準差',
+      officialPoolLabel: '正式標記池',
       stopConditionTitle: '達標條件',
-      labelSamplingValueControl: '抽樣筆數',
-      labelTrialRoundControl: '試標回合',
+      labelSamplingValueControl: '每回合抽樣筆數',
+      labelRoundOutcomeControl: '目前判定',
       labelIaaMethodControl: 'IAA 計算方式',
       labelTargetAgreementControl: '目標 IAA',
       labelMinAnnotatorsControl: '最少標記者數',
-      labelSplitControl: '試標 / 正式資料配比',
+      labelSplitControl: '已用試標 / 可進正式',
       totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
-      samplingValueLabel: '抽樣筆數',
+      samplingValueLabel: '每回合抽樣筆數',
       samplingValueHint: '筆數需 >= 1 且 < 資料集總筆數',
       iaaMethodLabel: 'IAA 計算方式',
       iaaMethodOptKrippendorff: "Krippendorff's Alpha（nominal）",
@@ -2308,23 +2556,23 @@
       iaaMethodOptPairwisePartial: 'Pairwise F1（部分重疊）',
       iaaMethodOptTriple: 'Pairwise Triple-level F1',
       targetAgreementHintTpl: '建議值：{value}',
-      samplingRoundLabel: '試標回合',
       targetAgreementInputLabel: '目標 IAA',
       minAnnotatorsInputLabel: '最少標記者數',
       sampleUsageLabel: '試標',
       officialReserveLabel: '正式',
+      executionSplitTitle: '樣本池分配',
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
       isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
-      publishDryRun: '開始試標 Round',
-      publishOfficialRun: '發布 Official Run',
+      publishDryRun: '新增試標 Round',
+      publishOfficialRun: '開始正式標記',
       noPublishAction: '此狀態不提供發布操作。',
       reviewerHint: '僅 project leader 可操作',
-      dryRunDisabled: '發布 Dry Run（唯讀）',
-      officialRunDisabled: '發布 Official Run（唯讀）',
-      statusHintDraft: '目前任務處於 draft，可發布 Dry Run。',
-      statusHintDry: 'Dry Run 進行中，等待所有 active annotator 完成。',
-      statusHintIaa: '所有試標已完成，可發布 Official Run。',
+      dryRunDisabled: '新增試標 Round（唯讀）',
+      officialRunDisabled: '開始正式標記（唯讀）',
+      statusHintDraft: '目前任務仍在草稿，可建立第一個試標 round。',
+      statusHintDry: '目前處於試標階段，可依結果持續建立下一個 round。',
+      statusHintIaa: '已有試標 round 達標，可用剩餘樣本啟動正式標記。',
       statusHintOfficial: 'Official Run 進行中。',
       statusHintCompleted: '任務已完成。',
       statusLabel: {
@@ -2336,8 +2584,8 @@
       },
       statusStepLabel: {
         draft: '草稿',
-        dry_run_in_progress: '試標進行中',
-        waiting_iaa_confirmation: '待 IAA 確認',
+        dry_run_in_progress: '試標階段',
+        waiting_iaa_confirmation: '試標階段',
         official_run_in_progress: '正式標記中',
         completed: '已完成'
       },
@@ -2361,9 +2609,37 @@
       guidelineEmpty: '未上傳',
       guidelineFilesNone: '無附件',
       guidelineContentEmpty: '尚無說明內容',
-      samplingValueCountTpl: '{value} 筆',
-      trialRoundTpl: '第 {round} 回合',
-      splitSummaryTpl: '總筆數 {total} / 試標 {sample} / 正式 {reserve}',
+      samplingValueCountTpl: '每回合 {value} 筆',
+      splitSummaryTpl: '已用試標 {sample} / 可進正式 {reserve} / 總筆數 {total}',
+      roundOutcomePassed: '已有 round 達標，可進入正式標記',
+      roundOutcomeFailed: '最近 round 未達標，建議追加下一回合試標',
+      roundOutcomeInProgress: '目前 round 進行中，待所有標記員完成後再判定',
+      executionStageEyebrow: '目前任務階段',
+      executionStageTrial: '試標階段',
+      executionStageOfficial: '正式標記階段',
+      executionStageDraft: '尚未開始試標',
+      executionStageCompleted: '正式標記已完成',
+      executionStageDescTrial: '目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。',
+      executionStageDescOfficial: '正式標記已啟動，作業範圍為未進入任何試標 round 的剩餘樣本。',
+      executionStageDescDraft: '先建立第一個試標 round，確認一致性門檻與樣本使用策略。',
+      executionStageDescCompleted: '所有試標與正式標記都已完成，可回顧 round 歷程與輸出結果。',
+      executionStagePillTpl: '已用 {rounds} 個 rounds',
+      executionOfficialPoolPillTpl: '正式池 {count} 筆',
+      roundHistoryTitle: '試標 Round 歷程',
+      roundHistoryHint: '每個 round 使用新的抽樣樣本；通過的 round 會解鎖正式標記。',
+      roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
+      roundDecisionEyebrow: '正式標記判定',
+      roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
+      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標 round',
+      roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面 round 混用。',
+      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundMetricSampleTpl: '{count} 筆樣本',
+      roundMetricIaaTpl: 'IAA {value}',
+      roundMetricAnnotatorsTpl: '{count} 位標記者',
+      roundMetricStdTpl: 'Std {value}',
+      roundStatusPassed: '已通過',
+      roundStatusFailed: '未通過',
+      roundStatusInProgress: '進行中',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: '標準差 ≤ {target}',
       stopAnnotatorPillTpl: '標註者 ≥ {target}',
@@ -2376,7 +2652,6 @@
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
       samplingErrorAgreement: '目標 IAA 需介於 0..1。',
       samplingErrorAnnotators: '最少標記者數需 >= 2。',
-      samplingErrorRound: '試標回合需 >= 1。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
       candidateListTitle: '可加入成員名單',
@@ -2664,20 +2939,22 @@
       samplingSaveSuccess: 'Sampling settings updated',
       samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       trialRoundLabel: 'Trial round',
+      trialRoundsUsedLabel: 'Trial rounds used',
       targetAgreementLabel: 'Target IAA',
-      currentAgreementLabel: 'Current IAA',
+      currentAgreementLabel: 'Latest round IAA',
       currentStdLabel: 'Current standard deviation',
+      officialPoolLabel: 'Official pool',
       stopConditionTitle: 'Stop conditions',
-      labelSamplingValueControl: 'Trial sample count',
-      labelTrialRoundControl: 'Trial round',
+      labelSamplingValueControl: 'Per-round sample count',
+      labelRoundOutcomeControl: 'Current decision',
       labelIaaMethodControl: 'IAA method',
       labelTargetAgreementControl: 'Target IAA',
       labelMinAnnotatorsControl: 'Minimum annotators',
-      labelSplitControl: 'Dry / Official split',
+      labelSplitControl: 'Used in trial / Ready for official',
       totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
-      samplingValueLabel: 'Trial sample count',
+      samplingValueLabel: 'Per-round sample count',
       samplingValueHint: 'Count must be >= 1 and < total dataset size',
       iaaMethodLabel: 'IAA method',
       iaaMethodOptKrippendorff: "Krippendorff's Alpha (nominal)",
@@ -2688,23 +2965,23 @@
       iaaMethodOptPairwisePartial: 'Pairwise F1 (partial)',
       iaaMethodOptTriple: 'Pairwise Triple-level F1',
       targetAgreementHintTpl: 'Suggested: {value}',
-      samplingRoundLabel: 'Trial round',
       targetAgreementInputLabel: 'Target IAA',
       minAnnotatorsInputLabel: 'Minimum annotators',
       sampleUsageLabel: 'Dry',
       officialReserveLabel: 'Official',
+      executionSplitTitle: 'Sample pool split',
       isolationToggleTitle: 'Enable data isolation (dry / official)',
       isolationToggleDesc: 'Isolation prevents dry-run results from contaminating official data.',
       isolationRiskMsg: 'Isolation is off. Risk confirmation is required before publishing and will be audited.',
-      publishDryRun: 'Publish Dry Run',
-      publishOfficialRun: 'Publish Official Run',
+      publishDryRun: 'Add trial round',
+      publishOfficialRun: 'Start official run',
       noPublishAction: 'No publish action is available in this status.',
       reviewerHint: 'Only project leader can perform this action',
-      dryRunDisabled: 'Publish Dry Run (Read-only)',
-      officialRunDisabled: 'Publish Official Run (Read-only)',
-      statusHintDraft: 'Task is in draft. Dry run can be published.',
-      statusHintDry: 'Dry run is in progress, waiting all active annotators to complete.',
-      statusHintIaa: 'Dry run is complete. Official run can be published.',
+      dryRunDisabled: 'Add trial round (Read-only)',
+      officialRunDisabled: 'Start official run (Read-only)',
+      statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
+      statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
+      statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
       statusHintOfficial: 'Official run is in progress.',
       statusHintCompleted: 'Task is completed.',
       statusLabel: {
@@ -2716,8 +2993,8 @@
       },
       statusStepLabel: {
         draft: 'Draft',
-        dry_run_in_progress: 'Dry run in progress',
-        waiting_iaa_confirmation: 'Waiting IAA confirmation',
+        dry_run_in_progress: 'Trial stage',
+        waiting_iaa_confirmation: 'Trial stage',
         official_run_in_progress: 'Official run in progress',
         completed: 'Completed'
       },
@@ -2742,7 +3019,36 @@
       guidelineFilesNone: 'No attachments',
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
-      splitSummaryTpl: 'Total {total} / Dry {sample} / Official {reserve}',
+      splitSummaryTpl: 'Used in trial {sample} / Ready for official {reserve} / Total {total}',
+      roundOutcomePassed: 'A trial round has passed and official work can start',
+      roundOutcomeFailed: 'The latest round did not pass. Consider creating the next trial round',
+      roundOutcomeInProgress: 'The current round is still in progress and awaits completion',
+      executionStageEyebrow: 'Current task stage',
+      executionStageTrial: 'Trial stage',
+      executionStageOfficial: 'Official stage',
+      executionStageDraft: 'Trial not started',
+      executionStageCompleted: 'Official work completed',
+      executionStageDescTrial: 'The task is validating agreement through multiple trial rounds. Any passing round can unlock official work.',
+      executionStageDescOfficial: 'Official work has started on the remaining samples that were never used in any trial round.',
+      executionStageDescDraft: 'Create the first trial round to validate agreement thresholds and sample usage rules.',
+      executionStageDescCompleted: 'All trial and official work is finished. Review the round history and export results as needed.',
+      executionStagePillTpl: '{rounds} rounds used',
+      executionOfficialPoolPillTpl: 'Official pool {count}',
+      roundHistoryTitle: 'Trial round history',
+      roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
+      roundHistorySummaryTpl: '{used} / {total} items used in trial',
+      roundDecisionEyebrow: 'Official run decision',
+      roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
+      roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
+      roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
+      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundMetricSampleTpl: '{count} items',
+      roundMetricIaaTpl: 'IAA {value}',
+      roundMetricAnnotatorsTpl: '{count} annotators',
+      roundMetricStdTpl: 'Std {value}',
+      roundStatusPassed: 'Passed',
+      roundStatusFailed: 'Failed',
+      roundStatusInProgress: 'In progress',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: 'Std ≤ {target}',
       stopAnnotatorPillTpl: 'annotators ≥ {target}',
@@ -2755,7 +3061,6 @@
       samplingErrorCount: 'Count must be >= 1 and less than total dataset size.',
       samplingErrorAgreement: 'Target IAA must be between 0 and 1.',
       samplingErrorAnnotators: 'Minimum annotators must be >= 2.',
-      samplingErrorRound: 'Trial round must be >= 1.',
       memberListTitle: 'Current members',
       memberListSubtitle: 'Task role is fixed at join time. Existing members cannot switch role mid-task; remove and re-add to change role.',
       candidateListTitle: 'Available users to add',
@@ -2932,18 +3237,45 @@
       { name: 'VA_emj.png', type: 'png' }
     ],
     forceGuideline: true,
-    status: 'draft',
+    status: 'waiting_iaa_confirmation',
     samplingMode: 'by_count',
-    samplingValue: 384,
+    samplingValue: 10,
     iaaMethod: 'krippendorff_alpha_nominal',
-    trialRound: 1,
-    targetAgreement: 0.75,
-    currentAgreement: 0.62,
-    minAnnotators: 5,
+    trialRound: 2,
+    targetAgreement: 0.8,
+    currentAgreement: 0.81,
+    minAnnotators: 3,
     currentAnnotators: 3,
+    currentStd: 0.08,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
     isolationLastUpdated: '2026-04-20 19:42',
+    trialRounds: [
+      {
+        round: 1,
+        sampleCount: 10,
+        agreement: 0.68,
+        annotators: 3,
+        std: 0.15,
+        result: 'failed',
+        usedSamples: 10,
+        date: '2026-05-01',
+        noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
+        noteEn: 'Round 1 showed large disagreement on borderline sentiment cases and did not pass.'
+      },
+      {
+        round: 2,
+        sampleCount: 10,
+        agreement: 0.81,
+        annotators: 3,
+        std: 0.08,
+        result: 'passed',
+        usedSamples: 10,
+        date: '2026-05-03',
+        noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
+        noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+      }
+    ],
     exportHistory: [
       { exportedAt: '2026-05-01 14:32', exportType: 'full', stage: 'official', count: 1240, scope: '__all__', exportedBy: 'Mandy', format: 'JSON' },
       { exportedAt: '2026-05-01 10:15', exportType: 'filtered', stage: 'dry', count: 320, scope: 'ASP-001~010', exportedBy: 'Mandy', format: 'JSON-MIN' },
@@ -3983,13 +4315,15 @@ function interpolate(template, payload) {
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
     setText('trialRoundLabel', t('trialRoundLabel'));
+    setText('trialRoundsUsedLabel', t('trialRoundsUsedLabel'));
     setText('targetAgreementLabel', t('targetAgreementLabel'));
     setText('currentAgreementLabel', t('currentAgreementLabel'));
     setText('currentStdLabel', t('currentStdLabel'));
+    setText('officialPoolLabel', t('officialPoolLabel'));
     setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
     setText('labelSamplingValueControl', t('labelSamplingValueControl'));
-    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
+    setText('labelRoundOutcomeControl', t('labelRoundOutcomeControl'));
     setText('labelIaaMethodControl', t('labelIaaMethodControl'));
     setText('labelTargetAgreementControl', t('labelTargetAgreementControl'));
     setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
@@ -4007,11 +4341,11 @@ function interpolate(template, payload) {
     setText('iaaOptPairwiseF1Strict', t('iaaMethodOptPairwiseStrict'));
     setText('iaaOptPairwiseF1Partial', t('iaaMethodOptPairwisePartial'));
     setText('iaaOptPairwiseTripleF1', t('iaaMethodOptTriple'));
-    setText('samplingRoundLabel', t('samplingRoundLabel'));
     setText('targetAgreementInputLabel', t('targetAgreementInputLabel'));
     setText('minAnnotatorsInputLabel', t('minAnnotatorsInputLabel'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
     setText('officialReserveLabel', t('officialReserveLabel'));
+    setText('executionSplitTitle', t('executionSplitTitle'));
     setText('isolationToggleTitle', t('isolationToggleTitle'));
     setText('isolationToggleDesc', t('isolationToggleDesc'));
     setText('isolationRiskMsg', t('isolationRiskMsg'));
@@ -4144,9 +4478,15 @@ function interpolate(template, payload) {
     var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey];
     if (!defs) return;
     TASK_DATA.samplingMode = 'by_count';
-    TASK_DATA.samplingValue = Math.round(TASK_DATA.datasetTotal * defs.trialPercent / 100);
-    TASK_DATA.targetAgreement = defs.targetIAA;
-    TASK_DATA.minAnnotators = defs.minAnnotators;
+    if (!Number.isFinite(Number(TASK_DATA.samplingValue)) || Number(TASK_DATA.samplingValue) < 1) {
+      TASK_DATA.samplingValue = Math.round(TASK_DATA.datasetTotal * defs.trialPercent / 100);
+    }
+    if (!Number.isFinite(Number(TASK_DATA.targetAgreement))) {
+      TASK_DATA.targetAgreement = defs.targetIAA;
+    }
+    if (!Number.isFinite(Number(TASK_DATA.minAnnotators)) || Number(TASK_DATA.minAnnotators) < 2) {
+      TASK_DATA.minAnnotators = defs.minAnnotators;
+    }
   }
 
   function getSampleCountFromData(data) {
@@ -4155,6 +4495,133 @@ function interpolate(template, payload) {
 
   function getSampleCount() {
     return getSampleCountFromData(TASK_DATA);
+  }
+
+  function getTrialRounds() {
+    if (Array.isArray(TASK_DATA.trialRounds) && TASK_DATA.trialRounds.length) {
+      return TASK_DATA.trialRounds.slice();
+    }
+    if (TASK_DATA.status === 'draft') {
+      return [];
+    }
+    return [{
+      round: Number(TASK_DATA.trialRound) || 1,
+      sampleCount: Number(TASK_DATA.samplingValue) || 0,
+      agreement: Number(TASK_DATA.currentAgreement) || 0,
+      annotators: Number(TASK_DATA.currentAnnotators) || 0,
+      std: Number(TASK_DATA.currentStd) || 0,
+      result: TASK_DATA.status === 'waiting_iaa_confirmation' ? 'passed' : (TASK_DATA.status === 'dry_run_in_progress' ? 'in_progress' : 'failed'),
+      usedSamples: Number(TASK_DATA.samplingValue) || 0,
+      date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : '',
+      noteZh: '此回合資料為 prototype 自動推導。',
+      noteEn: 'This round is auto-derived for the prototype.'
+    }];
+  }
+
+  function getCurrentTrialRound() {
+    var rounds = getTrialRounds();
+    return rounds.length ? rounds[rounds.length - 1] : null;
+  }
+
+  function getUsedTrialSampleCount() {
+    return getTrialRounds().reduce(function(sum, round) {
+      return sum + Number(round.usedSamples || round.sampleCount || 0);
+    }, 0);
+  }
+
+  function getOfficialPoolCount() {
+    return Math.max(Number(TASK_DATA.datasetTotal || 0) - getUsedTrialSampleCount(), 0);
+  }
+
+  function hasPassedTrialRound() {
+    return getTrialRounds().some(function(round) { return round.result === 'passed'; });
+  }
+
+  function getTaskStageKey() {
+    if (TASK_DATA.status === 'official_run_in_progress') return 'official';
+    if (TASK_DATA.status === 'completed') return 'completed';
+    if (TASK_DATA.status === 'draft') return 'draft';
+    return 'trial';
+  }
+
+  function getRoundOutcomeKey() {
+    var currentRound = getCurrentTrialRound();
+    if (!currentRound) return 'in_progress';
+    if (currentRound.result === 'passed') return 'passed';
+    if (currentRound.result === 'failed') return 'failed';
+    return 'in_progress';
+  }
+
+  function renderTrialRoundTimeline() {
+    var mount = document.getElementById('trialRoundTimeline');
+    if (!mount) return;
+    clearChildren(mount);
+    var rounds = getTrialRounds();
+    if (!rounds.length) {
+      var empty = document.createElement('p');
+      empty.className = 'status-hint';
+      empty.textContent = state.lang === 'zh'
+        ? '尚未建立任何試標 round。先建立 R1 再開始追蹤一致性。'
+        : 'No trial rounds yet. Create R1 first to start tracking agreement.';
+      mount.appendChild(empty);
+      return;
+    }
+
+    rounds.forEach(function(round) {
+      var item = document.createElement('article');
+      item.className = 'round-timeline-item';
+
+      var index = document.createElement('div');
+      index.className = 'round-timeline-index';
+      var dot = document.createElement('span');
+      dot.className = 'round-timeline-dot ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : '');
+      index.appendChild(dot);
+      var label = document.createElement('div');
+      label.className = 'round-timeline-label';
+      var roundName = document.createElement('strong');
+      roundName.className = 'round-timeline-round';
+      roundName.textContent = 'R' + round.round;
+      var date = document.createElement('span');
+      date.className = 'round-timeline-date';
+      date.textContent = round.date || '-';
+      label.appendChild(roundName);
+      label.appendChild(date);
+      index.appendChild(label);
+
+      var body = document.createElement('div');
+      body.className = 'round-timeline-body';
+      var metrics = document.createElement('div');
+      metrics.className = 'round-timeline-metrics';
+      [
+        interpolate(t('roundMetricSampleTpl'), { count: round.sampleCount }),
+        interpolate(t('roundMetricIaaTpl'), { value: Number(round.agreement || 0).toFixed(2) }),
+        interpolate(t('roundMetricAnnotatorsTpl'), { count: round.annotators }),
+        interpolate(t('roundMetricStdTpl'), { value: Number(round.std || 0).toFixed(2) })
+      ].forEach(function(text) {
+        var chip = document.createElement('span');
+        chip.className = 'round-metric-chip';
+        chip.textContent = text;
+        metrics.appendChild(chip);
+      });
+      var note = document.createElement('p');
+      note.className = 'round-timeline-note';
+      note.textContent = state.lang === 'zh' ? (round.noteZh || '') : (round.noteEn || '');
+      body.appendChild(metrics);
+      body.appendChild(note);
+
+      var side = document.createElement('div');
+      side.className = 'round-timeline-side';
+      var badge = document.createElement('span');
+      var statusKey = round.result === 'passed' ? 'Passed' : round.result === 'failed' ? 'Failed' : 'InProgress';
+      badge.className = 'round-status-badge ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : 'in-progress');
+      badge.textContent = t('roundStatus' + statusKey);
+      side.appendChild(badge);
+
+      item.appendChild(index);
+      item.appendChild(body);
+      item.appendChild(side);
+      mount.appendChild(item);
+    });
   }
 
 
@@ -4169,10 +4636,6 @@ function interpolate(template, payload) {
 
     if (data.minAnnotators < 2) {
       return { valid: false, message: t('samplingErrorAnnotators') };
-    }
-
-    if (data.trialRound < 1) {
-      return { valid: false, message: t('samplingErrorRound') };
     }
 
     return { valid: true, message: '' };
@@ -4214,16 +4677,21 @@ function interpolate(template, payload) {
 
   function renderSamplingSummaryState() {
     var sampleCount = getSampleCount();
-    var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
+    var usedTrialCount = getUsedTrialSampleCount();
+    var reserveCount = getOfficialPoolCount();
     var unitText = state.lang === 'zh' ? '筆' : ' items';
     var splitSummaryText = interpolate(t('splitSummaryTpl'), {
       total: TASK_DATA.datasetTotal + unitText,
-      sample: sampleCount + unitText,
+      sample: usedTrialCount + unitText,
       reserve: reserveCount + unitText,
     });
+    var currentRound = getCurrentTrialRound();
+    var roundCount = getTrialRounds().length;
+    var taskStageKey = getTaskStageKey();
+    var roundOutcomeKey = getRoundOutcomeKey();
 
     setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
-    setText('valueTrialRoundControl', interpolate(t('trialRoundTpl'), { round: TASK_DATA.trialRound }));
+    setText('valueRoundOutcomeControl', t('roundOutcome' + (roundOutcomeKey === 'passed' ? 'Passed' : roundOutcomeKey === 'failed' ? 'Failed' : 'InProgress')));
     setText('valueIaaMethodControl', getIaaMethodLabel(TASK_DATA.iaaMethod));
     setText('valueTargetAgreementControl', Number(TASK_DATA.targetAgreement).toFixed(2));
     setText('valueMinAnnotatorsControl', String(TASK_DATA.minAnnotators));
@@ -4237,10 +4705,43 @@ function interpolate(template, payload) {
       })
     );
 
-    setText('trialRoundValue', 'R' + TASK_DATA.trialRound);
+    setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
+    setText('trialRoundsUsedValue', String(roundCount));
     setText('targetAgreementValue', Number(TASK_DATA.targetAgreement).toFixed(2));
-    setText('currentAgreementValue', Number(TASK_DATA.currentAgreement).toFixed(2));
-    setText('currentStdValue', Number(TASK_DATA.currentStd).toFixed(2));
+    setText('currentAgreementValue', currentRound ? Number(currentRound.agreement || 0).toFixed(2) : Number(TASK_DATA.currentAgreement).toFixed(2));
+    setText('officialPoolValue', String(reserveCount));
+    setText('executionStageEyebrow', t('executionStageEyebrow'));
+    setText('executionStageTitle', t(
+      taskStageKey === 'official' ? 'executionStageOfficial'
+        : taskStageKey === 'completed' ? 'executionStageCompleted'
+        : taskStageKey === 'draft' ? 'executionStageDraft'
+        : 'executionStageTrial'
+    ));
+    setText('executionStageDesc', t(
+      taskStageKey === 'official' ? 'executionStageDescOfficial'
+        : taskStageKey === 'completed' ? 'executionStageDescCompleted'
+        : taskStageKey === 'draft' ? 'executionStageDescDraft'
+        : 'executionStageDescTrial'
+    ));
+    setText('executionStagePill', interpolate(t('executionStagePillTpl'), { rounds: roundCount }));
+    setText('executionOfficialPoolPill', interpolate(t('executionOfficialPoolPillTpl'), { count: reserveCount }));
+    setText('roundHistoryTitle', t('roundHistoryTitle'));
+    setText('roundHistoryHint', t('roundHistoryHint'));
+    setText('roundHistorySummary', interpolate(t('roundHistorySummaryTpl'), { used: usedTrialCount, total: TASK_DATA.datasetTotal }));
+    setText('trialDecisionEyebrow', t('roundDecisionEyebrow'));
+
+    if (currentRound && currentRound.result === 'passed') {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
+    } else if (currentRound) {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleFailedTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', interpolate(t('roundDecisionDescFailedTpl'), { used: usedTrialCount }));
+    } else {
+      setText('trialDecisionTitle', state.lang === 'zh' ? '尚未建立試標 round' : 'No trial round created yet');
+      setText('trialDecisionDesc', state.lang === 'zh'
+        ? '先建立第一個試標 round，確認一致性門檻是否合理，再決定是否進入正式標記。'
+        : 'Create the first trial round to validate agreement before deciding whether to start official work.');
+    }
 
     setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(TASK_DATA.targetAgreement).toFixed(2) }));
     setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
@@ -4251,11 +4752,15 @@ function interpolate(template, payload) {
     if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
     if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
+    renderTrialRoundTimeline();
   }
 
   function renderSamplingState() {
     var data = getSamplingRenderData();
-    var sampleCount = getSampleCountFromData(data);
+    var numericSamplingValue = Number(data.samplingValue);
+    var numericTargetAgreement = Number(data.targetAgreement);
+    var numericMinAnnotators = Number(data.minAnnotators);
+    var sampleCount = Number.isFinite(numericSamplingValue) ? numericSamplingValue : 0;
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
 
     setText('totalSamplesValue', TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items'));
@@ -4273,12 +4778,10 @@ function interpolate(template, payload) {
     }
     var iaaMethodSelect = document.getElementById('iaaMethodSelect');
     if (iaaMethodSelect) iaaMethodSelect.value = data.iaaMethod || 'krippendorff_alpha_nominal';
-    var roundInput = document.getElementById('samplingRoundInput');
-    if (roundInput) roundInput.value = String(data.trialRound);
     var targetAgreementInput = document.getElementById('targetAgreementInput');
-    if (targetAgreementInput) targetAgreementInput.value = Number(data.targetAgreement).toFixed(2);
+    if (targetAgreementInput) targetAgreementInput.value = Number.isFinite(numericTargetAgreement) ? numericTargetAgreement.toFixed(2) : '';
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
-    if (minAnnotatorsInput) minAnnotatorsInput.value = String(data.minAnnotators);
+    if (minAnnotatorsInput) minAnnotatorsInput.value = Number.isFinite(numericMinAnnotators) ? String(Math.floor(numericMinAnnotators)) : '';
 
     var suggestedVal = IAA_METHOD_DEFAULTS[data.iaaMethod || 'krippendorff_alpha_nominal'];
     var hintEl = document.getElementById('targetAgreementHint');
@@ -4286,7 +4789,7 @@ function interpolate(template, payload) {
 
     var samplingInput = document.getElementById('samplingValue');
     var samplingError = document.getElementById('samplingError');
-    if (samplingInput) samplingInput.value = String(data.samplingValue);
+    if (samplingInput) samplingInput.value = Number.isFinite(numericSamplingValue) ? String(Math.floor(numericSamplingValue)) : '';
     var result = validateSamplingData(data);
 
     if (samplingInput && samplingError && !result.valid) {
@@ -4306,7 +4809,6 @@ function interpolate(template, payload) {
     var risk = document.getElementById('isolationRiskMsg');
     if (samplingInput) samplingInput.disabled = !editable;
     if (iaaMethodSelect) iaaMethodSelect.disabled = !editable;
-    if (roundInput) roundInput.disabled = !editable;
     if (targetAgreementInput) targetAgreementInput.disabled = !editable;
     if (minAnnotatorsInput) minAnnotatorsInput.disabled = !editable;
     if (isolationToggle) {
@@ -4319,6 +4821,7 @@ function interpolate(template, payload) {
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
+    var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
       actionRow.innerHTML = '' +
@@ -4328,12 +4831,19 @@ function interpolate(template, payload) {
     }
 
     if (TASK_DATA.status === 'draft') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + TASK_DATA.trialRound + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
+      return;
+    }
+
+    if (TASK_DATA.status === 'dry_run_in_progress') {
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
-      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>';
+      actionRow.innerHTML =
+        '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>' +
+        '<button class="btn btn-secondary" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
@@ -4358,7 +4868,7 @@ function interpolate(template, payload) {
   }
 
   function updateStatusStepper() {
-    var currentIdx = STATUS_ORDER.indexOf(TASK_DATA.status);
+    var currentIdx = getTaskStageKey() === 'draft' ? 0 : getTaskStageKey() === 'trial' ? 1 : getTaskStageKey() === 'official' ? 2 : 3;
     var stepper = document.getElementById('statusStepper');
     if (!stepper) return;
     stepper.querySelectorAll('.step').forEach(function(el, i) {
@@ -4381,8 +4891,7 @@ function interpolate(template, payload) {
   function renderStatusStepperLabels() {
     var stepLabels = I18N[state.lang].statusStepLabel || I18N.zh.statusStepLabel || {};
     setText('statusStepDraft', stepLabels.draft || 'draft');
-    setText('statusStepDryRun', stepLabels.dry_run_in_progress || 'dry_run_in_progress');
-    setText('statusStepWaitingIaa', stepLabels.waiting_iaa_confirmation || 'waiting_iaa_confirmation');
+    setText('statusStepTrialStage', stepLabels.dry_run_in_progress || 'dry_run_in_progress');
     setText('statusStepOfficialRun', stepLabels.official_run_in_progress || 'official_run_in_progress');
     setText('statusStepCompleted', stepLabels.completed || 'completed');
   }
@@ -4683,11 +5192,10 @@ function getTaskTypeLabel(taskTypeKey) {
   function createSamplingDraft() {
     return {
       samplingMode: 'by_count',
-      samplingValue: TASK_DATA.samplingValue,
+      samplingValue: Number.isFinite(Number(TASK_DATA.samplingValue)) ? Number(TASK_DATA.samplingValue) : 10,
       iaaMethod: TASK_DATA.iaaMethod || 'krippendorff_alpha_nominal',
-      trialRound: TASK_DATA.trialRound,
-      targetAgreement: TASK_DATA.targetAgreement,
-      minAnnotators: TASK_DATA.minAnnotators,
+      targetAgreement: Number.isFinite(Number(TASK_DATA.targetAgreement)) ? Number(TASK_DATA.targetAgreement) : 0.8,
+      minAnnotators: Number.isFinite(Number(TASK_DATA.minAnnotators)) ? Number(TASK_DATA.minAnnotators) : 3,
       isolationEnabled: TASK_DATA.isolationEnabled,
       isolationLastActor: TASK_DATA.isolationLastActor,
       isolationLastUpdated: TASK_DATA.isolationLastUpdated,
@@ -4765,7 +5273,6 @@ function getTaskTypeLabel(taskTypeKey) {
     TASK_DATA.samplingMode = 'by_count';
     TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
     TASK_DATA.iaaMethod = state.samplingDraft.iaaMethod;
-    TASK_DATA.trialRound = state.samplingDraft.trialRound;
     TASK_DATA.targetAgreement = state.samplingDraft.targetAgreement;
     TASK_DATA.minAnnotators = state.samplingDraft.minAnnotators;
     TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
@@ -7778,8 +8285,25 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function publishDryRun() {
     if (!canPublish()) return;
+    var nextRound = getTrialRounds().length + 1;
+    if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
+    TASK_DATA.trialRounds.push({
+      round: nextRound,
+      sampleCount: Number(TASK_DATA.samplingValue) || 0,
+      agreement: Math.max(Number(TASK_DATA.targetAgreement || 0) - 0.04, 0.01),
+      annotators: Number(TASK_DATA.minAnnotators) || 0,
+      std: 0.12,
+      result: 'in_progress',
+      usedSamples: Number(TASK_DATA.samplingValue) || 0,
+      date: '2026-05-07',
+      noteZh: '新回合已建立，等待所有標記員完成後再計算一致性。',
+      noteEn: 'A new round has been created and is waiting for all annotators to complete before agreement is calculated.'
+    });
+    TASK_DATA.trialRound = nextRound;
+    TASK_DATA.currentAgreement = Math.max(Number(TASK_DATA.targetAgreement || 0) - 0.04, 0.01);
+    TASK_DATA.currentStd = 0.12;
     TASK_DATA.status = 'dry_run_in_progress';
-    TASK_DATA.updatedAt = '2026-04-21 10:07';
+    TASK_DATA.updatedAt = '2026-05-07 10:07';
     showToast(t('toastPublishedDry'));
     trackEvent('prototype_publish_success', { target_status: 'dry_run_in_progress' });
     renderOverview();
@@ -7803,7 +8327,6 @@ function getTaskTypeLabel(taskTypeKey) {
     var runControlTabExecution = document.getElementById('runControlTabExecution');
     var runControlTabTrial = document.getElementById('runControlTabTrial');
     var iaaMethodSelect = document.getElementById('iaaMethodSelect');
-    var roundInput = document.getElementById('samplingRoundInput');
     var targetAgreementInput = document.getElementById('targetAgreementInput');
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
@@ -8098,9 +8621,10 @@ function getTaskTypeLabel(taskTypeKey) {
     if (valueInput) {
       valueInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.samplingValue = Number(e.target.value || 0);
+        var digits = String(e.target.value || '').replace(/[^\d]/g, '');
+        e.target.value = digits;
+        state.samplingDraft.samplingValue = digits === '' ? NaN : Number(digits);
         markSamplingDirty();
-        renderSamplingState();
       });
     }
 
@@ -8118,30 +8642,27 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (roundInput) {
-      roundInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.trialRound = Math.max(1, Math.floor(Number(e.target.value || 0)));
-        markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
     if (targetAgreementInput) {
       targetAgreementInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.targetAgreement = Number(e.target.value || 0);
+        var normalized = String(e.target.value || '').replace(/[^0-9.]/g, '');
+        var firstDot = normalized.indexOf('.');
+        if (firstDot >= 0) {
+          normalized = normalized.slice(0, firstDot + 1) + normalized.slice(firstDot + 1).replace(/\./g, '');
+        }
+        e.target.value = normalized;
+        state.samplingDraft.targetAgreement = normalized === '' ? NaN : Number(normalized);
         markSamplingDirty();
-        renderSamplingState();
       });
     }
 
     if (minAnnotatorsInput) {
       minAnnotatorsInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.minAnnotators = Math.max(2, Math.floor(Number(e.target.value || 0)));
+        var digits = String(e.target.value || '').replace(/[^\d]/g, '');
+        e.target.value = digits;
+        state.samplingDraft.minAnnotators = digits === '' ? NaN : Math.max(2, Math.floor(Number(digits)));
         markSamplingDirty();
-        renderSamplingState();
       });
     }
 

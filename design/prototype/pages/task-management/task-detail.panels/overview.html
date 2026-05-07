@@ -208,8 +208,8 @@
         <span class="kv-dl-value" id="valueIaaMethodControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
-        <span class="kv-dl-value" id="valueTrialRoundControl"></span>
+        <span class="kv-dl-key" id="labelRoundOutcomeControl">目前判定</span>
+        <span class="kv-dl-value" id="valueRoundOutcomeControl"></span>
       </div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelTargetAgreementControl">目標 IAA</span>
@@ -220,7 +220,7 @@
         <span class="kv-dl-value" id="valueMinAnnotatorsControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSplitControl">試標 / 正式資料配比</span>
+        <span class="kv-dl-key" id="labelSplitControl">已用試標 / 可進正式</span>
         <span class="kv-dl-value" id="valueSplitControl"></span>
       </div>
       <div class="kv-dl-row">
@@ -236,14 +236,9 @@
     <div class="sampling-edit-form hidden" id="samplingEditForm">
       <div class="sampling-fields sampling-fields-primary">
         <div class="field-group">
-          <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣筆數</label>
-          <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
+          <label class="field-label" id="samplingValueLabel" for="samplingValue">每回合抽樣筆數</label>
+          <input class="input-number" id="samplingValue" type="text" inputmode="numeric" pattern="[0-9]*" value="10" />
           <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
-          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
-          <p class="field-hint field-hint-placeholder" aria-hidden="true">placeholder</p>
         </div>
       </div>
 
@@ -262,36 +257,12 @@
         </div>
         <div class="field-group">
           <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
-          <input class="input-number" id="targetAgreementInput" type="number" min="0" max="1" step="0.01" value="0.80" />
+          <input class="input-number" id="targetAgreementInput" type="text" inputmode="decimal" value="0.80" />
           <p class="field-hint" id="targetAgreementHint"></p>
         </div>
         <div class="field-group">
           <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標記者數</label>
-          <input class="input-number" id="minAnnotatorsInput" type="number" min="2" step="1" value="3" />
-        </div>
-      </div>
-
-      <div class="data-split-viz">
-        <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
-          <div class="split-seg split-dry" id="splitDryBar" style="width:12%"></div>
-          <div class="split-seg split-official" id="splitOfficialBar" style="width:88%"></div>
-        </div>
-        <div class="split-legend">
-          <div class="split-legend-item">
-            <span class="split-dot split-dot-total" aria-hidden="true"></span>
-            <span class="split-legend-key" id="totalSamplesLabel">總筆數</span>
-            <strong class="split-legend-value" id="totalSamplesValue">—</strong>
-          </div>
-          <div class="split-legend-item">
-            <span class="split-dot split-dot-dry" aria-hidden="true"></span>
-            <span class="split-legend-key" id="sampleUsageLabel">試標</span>
-            <strong class="split-legend-value" id="sampleUsageValue">—</strong>
-          </div>
-          <div class="split-legend-item">
-            <span class="split-dot split-dot-official" aria-hidden="true"></span>
-            <span class="split-legend-key" id="officialReserveLabel">正式</span>
-            <strong class="split-legend-value" id="officialReserveValue">—</strong>
-          </div>
+          <input class="input-number" id="minAnnotatorsInput" type="text" inputmode="numeric" pattern="[0-9]*" value="3" />
         </div>
       </div>
 
@@ -330,14 +301,9 @@
             <span class="step-label-wrap" id="statusStepDraft">草稿</span>
           </div>
           <div class="step-connector"></div>
-          <div class="step" data-step="dry_run_in_progress">
+          <div class="step" data-step="trial_stage">
             <div class="step-node"></div>
-            <span class="step-label-wrap" id="statusStepDryRun">試標進行中</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step" data-step="waiting_iaa_confirmation">
-            <div class="step-node"></div>
-            <span class="step-label-wrap" id="statusStepWaitingIaa">待 IAA 確認</span>
+            <span class="step-label-wrap" id="statusStepTrialStage">試標階段</span>
           </div>
           <div class="step-connector"></div>
           <div class="step" data-step="official_run_in_progress">
@@ -352,22 +318,61 @@
         </div>
       </div>
 
+      <div class="exec-stage-banner">
+        <div class="exec-stage-copy">
+          <span class="exec-stage-eyebrow" id="executionStageEyebrow">目前任務階段</span>
+          <strong class="exec-stage-title" id="executionStageTitle">試標階段</strong>
+          <p class="exec-stage-desc" id="executionStageDesc">目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。</p>
+        </div>
+        <div class="exec-stage-meta">
+          <span class="exec-stage-pill" id="executionStagePill">2 rounds used</span>
+          <span class="exec-stage-pill exec-stage-pill-accent" id="executionOfficialPoolPill">正式池 80 筆</span>
+        </div>
+      </div>
+
       <div class="exec-round-grid">
         <div class="exec-round-item">
-          <span class="exec-round-key" id="trialRoundLabel">Trial Round</span>
-          <strong class="exec-round-value" id="trialRoundValue">R1</strong>
+          <span class="exec-round-key" id="trialRoundLabel">目前回合</span>
+          <strong class="exec-round-value" id="trialRoundValue">R2</strong>
         </div>
         <div class="exec-round-item">
-          <span class="exec-round-key" id="targetAgreementLabel">目標 IAA</span>
-          <strong class="exec-round-value" id="targetAgreementValue">0.80</strong>
+          <span class="exec-round-key" id="trialRoundsUsedLabel">已完成試標回合</span>
+          <strong class="exec-round-value" id="trialRoundsUsedValue">2</strong>
         </div>
         <div class="exec-round-item">
-          <span class="exec-round-key" id="currentAgreementLabel">目前 IAA</span>
-          <strong class="exec-round-value" id="currentAgreementValue">0.62</strong>
+          <span class="exec-round-key" id="currentAgreementLabel">最新回合 IAA</span>
+          <strong class="exec-round-value" id="currentAgreementValue">0.81</strong>
         </div>
         <div class="exec-round-item">
-          <span class="exec-round-key" id="currentStdLabel">目前標準差</span>
-          <strong class="exec-round-value" id="currentStdValue">0.16</strong>
+          <span class="exec-round-key" id="officialPoolLabel">正式標記池</span>
+          <strong class="exec-round-value" id="officialPoolValue">80</strong>
+        </div>
+      </div>
+
+      <div class="data-split-viz exec-data-split-viz">
+        <div class="split-viz-head">
+          <span class="status-hint" id="executionSplitTitle">樣本池分配</span>
+        </div>
+        <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
+          <div class="split-seg split-dry" id="splitDryBar" style="width:12%"></div>
+          <div class="split-seg split-official" id="splitOfficialBar" style="width:88%"></div>
+        </div>
+        <div class="split-legend">
+          <div class="split-legend-item">
+            <span class="split-dot split-dot-total" aria-hidden="true"></span>
+            <span class="split-legend-key" id="totalSamplesLabel">總筆數</span>
+            <strong class="split-legend-value" id="totalSamplesValue">—</strong>
+          </div>
+          <div class="split-legend-item">
+            <span class="split-dot split-dot-dry" aria-hidden="true"></span>
+            <span class="split-legend-key" id="sampleUsageLabel">試標</span>
+            <strong class="split-legend-value" id="sampleUsageValue">—</strong>
+          </div>
+          <div class="split-legend-item">
+            <span class="split-dot split-dot-official" aria-hidden="true"></span>
+            <span class="split-legend-key" id="officialReserveLabel">正式</span>
+            <strong class="split-legend-value" id="officialReserveValue">—</strong>
+          </div>
         </div>
       </div>
 
@@ -377,6 +382,25 @@
           <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
           <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
           <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標註者</span>
+        </div>
+      </div>
+
+      <section class="round-history-panel" aria-labelledby="roundHistoryTitle">
+        <div class="round-history-head">
+          <div>
+            <h3 class="sub-panel-title" id="roundHistoryTitle">試標 Round 歷程</h3>
+            <p class="status-hint" id="roundHistoryHint">每個 round 使用新的抽樣樣本；通過的 round 會解鎖正式標記。</p>
+          </div>
+          <span class="round-history-summary" id="roundHistorySummary">已用 20 / 100 筆試標</span>
+        </div>
+        <div class="round-timeline" id="trialRoundTimeline"></div>
+      </section>
+
+      <div class="round-decision-card" id="trialDecisionCard">
+        <div class="round-decision-copy">
+          <span class="round-decision-eyebrow" id="trialDecisionEyebrow">正式標記判定</span>
+          <strong class="round-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
+          <p class="round-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
         </div>
       </div>
 
