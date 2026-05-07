@@ -2572,16 +2572,16 @@
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
       isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
-      publishDryRun: '新增試標 Round',
+      publishDryRun: '新增試標回合',
       publishOfficialRun: '開始正式標記',
       publishComplete: '標記完成',
       noPublishAction: '此狀態不提供發布操作。',
       reviewerHint: '僅 project leader 可操作',
-      dryRunDisabled: '新增試標 Round（唯讀）',
+      dryRunDisabled: '新增試標回合（唯讀）',
       officialRunDisabled: '開始正式標記（唯讀）',
-      statusHintDraft: '目前任務仍在草稿，可建立第一個試標 round。',
-      statusHintDry: '目前處於試標階段，可依結果持續建立下一個 round。',
-      statusHintIaa: '已有試標 round 達標，可用剩餘樣本啟動正式標記。',
+      statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
+      statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
+      statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
       statusHintOfficial: 'Official Run 進行中。',
       statusHintCompleted: '任務已完成。',
       statusLabel: {
@@ -2609,7 +2609,7 @@
       isolationOff: '未隔離',
       isolationAuditTpl: '最後異動：{actor} · {time}',
       toastRoleDenied: 'annotator 無權限檢視任務詳情，已導回任務列表。',
-      toastPublishedDry: '已建立試標 round',
+      toastPublishedDry: '已建立試標回合',
       toastPublishedOfficial: '已啟動正式標記',
       toastPublishedComplete: '任務已標記完成',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
@@ -2621,32 +2621,32 @@
       guidelineContentEmpty: '尚無說明內容',
       samplingValueCountTpl: '每回合 {value} 筆',
       splitSummaryTpl: '已用試標 {sample} / 可進正式 {reserve} / 總筆數 {total}',
-      roundOutcomePassed: '已有 round 達標，可進入正式標記',
-      roundOutcomeFailed: '最近 round 未達標，建議追加下一回合試標',
-      roundOutcomeInProgress: '目前 round 進行中，待所有標記員完成後再判定',
+      roundOutcomePassed: '已有回合達標，可進入正式標記',
+      roundOutcomeFailed: '最近回合未達標，建議追加下一回合試標',
+      roundOutcomeInProgress: '目前回合進行中，待所有標記員完成後再判定',
       executionStageEyebrow: '目前任務階段',
       executionStageTrial: '試標階段',
       executionStageOfficial: '正式標記中',
       executionStageDraft: '尚未開始試標',
       executionStageCompleted: '已完成',
       executionStageDescTrial: '目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。',
-      executionStageDescOfficial: '正式標記已啟動，作業範圍為未進入任何試標 round 的剩餘樣本。',
-      executionStageDescDraft: '先建立第一個試標 round，確認一致性門檻與樣本使用策略。',
-      executionStageDescCompleted: '所有試標與正式標記都已完成，可回顧 round 歷程與輸出結果。',
-      executionStagePillTpl: '已用 {rounds} 個 rounds',
+      executionStageDescOfficial: '正式標記已啟動，作業範圍為未進入任何試標回合的剩餘樣本。',
+      executionStageDescDraft: '先建立第一個試標回合，確認一致性門檻與樣本使用策略。',
+      executionStageDescCompleted: '所有試標與正式標記都已完成，可回顧回合歷程與輸出結果。',
+      executionStagePillTpl: '已用 {rounds} 個回合',
       executionOfficialPoolPillTpl: '正式池 {count} 筆',
-      roundHistoryTitle: '試標 Round 歷程',
-      roundHistoryHint: '每個 round 使用新的抽樣樣本；通過的 round 會解鎖正式標記。',
+      roundHistoryTitle: '試標回合歷程',
+      roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
       roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
       roundDecisionEyebrow: '正式標記判定',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
-      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標 round',
-      roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面 round 混用。',
+      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
+      roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
       roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
       roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
       roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
       roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
-      roundDecisionDescCompletedTpl: '此任務已走完整個草稿、試標、正式標記流程，可回顧所有 round 與正式標記結果。',
+      roundDecisionDescCompletedTpl: '此任務已走完整個草稿、試標、正式標記流程，可回顧所有回合與正式標記結果。',
       roundMetricSampleTpl: '{count} 筆樣本',
       roundMetricIaaTpl: 'IAA {value}',
       roundMetricAnnotatorsTpl: '{count} 位標記者',
@@ -4682,7 +4682,7 @@ function interpolate(template, payload) {
       var empty = document.createElement('p');
       empty.className = 'status-hint';
       empty.textContent = state.lang === 'zh'
-        ? '尚未建立任何試標 round。先建立 R1 再開始追蹤一致性。'
+        ? '尚未建立任何試標回合。先建立 R1 再開始追蹤一致性。'
         : 'No trial rounds yet. Create R1 first to start tracking agreement.';
       mount.appendChild(empty);
       return;
@@ -4865,9 +4865,9 @@ function interpolate(template, payload) {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleFailedTpl'), { round: currentRound.round }));
       setText('trialDecisionDesc', interpolate(t('roundDecisionDescFailedTpl'), { used: usedTrialCount }));
     } else {
-      setText('trialDecisionTitle', state.lang === 'zh' ? '尚未建立試標 round' : 'No trial round created yet');
+      setText('trialDecisionTitle', state.lang === 'zh' ? '尚未建立試標回合' : 'No trial round created yet');
       setText('trialDecisionDesc', state.lang === 'zh'
-        ? '先建立第一個試標 round，確認一致性門檻是否合理，再決定是否進入正式標記。'
+        ? '先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。'
         : 'Create the first trial round to validate agreement before deciding whether to start official work.');
     }
 

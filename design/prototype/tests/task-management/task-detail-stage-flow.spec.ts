@@ -13,12 +13,16 @@ test('keeps the 4-stage stepper while showing a complete trial-to-official flow'
   ]);
 
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(0);
-  await expect(page.locator('#trialRoundTimeline')).toContainText('尚未建立任何試標 round');
+  await expect(page.locator('#roundHistoryTitle')).toHaveText('試標回合歷程');
+  await expect(page.locator('#roundHistoryHint')).toHaveText('每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。');
+  await expect(page.locator('#trialRoundTimeline')).toContainText('尚未建立任何試標回合');
+  await expect(page.locator('#trialDecisionTitle')).toHaveText('尚未建立試標回合');
+  await expect(page.locator('#trialDecisionDesc')).toHaveText('先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。');
 
   const stopRow = page.locator('#execStopRow');
   const dryRunBtn = page.locator('#publishDryRunBtn');
-  await expect(dryRunBtn).toHaveText('新增試標 Round R1');
-  await expect(stopRow.locator('#publishDryRunBtn')).toHaveText('新增試標 Round R1');
+  await expect(dryRunBtn).toHaveText('新增試標回合 R1');
+  await expect(stopRow.locator('#publishDryRunBtn')).toHaveText('新增試標回合 R1');
 
   await dryRunBtn.click();
 
