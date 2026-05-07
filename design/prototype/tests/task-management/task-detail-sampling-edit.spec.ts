@@ -27,9 +27,11 @@ test.describe('Task detail sampling edit state', () => {
     await expect(cancelBtn).toBeVisible();
     await expect(page.locator('#samplingSummaryView')).toHaveClass(/hidden/);
     await expect(page.locator('#samplingEditForm')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#samplingModePercent')).toBeEnabled();
-    await expect(page.locator('#samplingModeCount')).toBeEnabled();
     await expect(page.locator('#samplingValue')).toBeEnabled();
+    await expect(page.locator('#iaaMethodSelect')).toBeEnabled();
+    await expect(page.locator('#samplingRoundInput')).toBeEnabled();
+    await expect(page.locator('#targetAgreementInput')).toBeEnabled();
+    await expect(page.locator('#minAnnotatorsInput')).toBeEnabled();
     await expect(page.locator('#isolationToggle')).toBeEnabled();
   });
 });

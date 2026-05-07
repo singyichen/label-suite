@@ -381,9 +381,17 @@
     .member-item-role { font-size: 11px; color: var(--color-text-soft); }
     .member-item-meta { font-size: 11px; color: var(--color-text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .member-empty { font-size: 12px; color: var(--color-text-soft); }
-    .inline-radio { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
-    .inline-radio label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-ink); }
     .startup-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 6px; }
+    .sampling-dist-wrap { margin: 12px 0 16px; }
+    .sampling-dist-bar { height: 14px; border-radius: 7px; overflow: hidden; display: flex; background: var(--color-border); }
+    .sampling-dist-trial { background: #6366f1; transition: width 0.2s ease; min-width: 0; }
+    .sampling-dist-official { background: #22c55e; transition: width 0.2s ease; flex: 1; }
+    .sampling-dist-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--color-text-soft); flex-wrap: wrap; }
+    .sampling-dist-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .legend-dot-total { background: #94a3b8; }
+    .legend-dot-trial { background: #6366f1; }
+    .legend-dot-official { background: #22c55e; }
 
     /* ── Guideline list ── */
     .guideline-list { margin-top: var(--space-sm); display: flex; flex-direction: column; gap: 6px; }
@@ -681,15 +689,22 @@
           </section>
 
           <section class="startup-section" aria-labelledby="startupRunTitle">
-            <div class="startup-section-title" id="startupRunTitle">抽樣方式</div>
-            <div class="inline-radio">
-              <label><input type="radio" name="samplingMode" value="by_percentage" checked /> <span id="samplingModePercentLabel">百分比</span></label>
-              <label><input type="radio" name="samplingMode" value="by_count" /> <span id="samplingModeCountLabel">筆數</span></label>
-            </div>
+            <div class="startup-section-title" id="startupRunTitle">抽樣設定</div>
             <div class="form-field" style="margin-bottom:8px;">
-              <label class="field-label" id="samplingValueLabel" for="samplingValueInput">試標抽樣值</label>
-              <input type="number" class="input-text" id="samplingValueInput" min="1" max="99" value="20" />
-              <div class="startup-hint" id="samplingHint">百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數</div>
+              <label class="field-label" id="samplingValueLabel" for="samplingValueInput">抽樣筆數</label>
+              <input type="number" class="input-text" id="samplingValueInput" min="1" value="100" />
+              <div class="startup-hint" id="samplingHint">筆數需 >= 1 且 < 資料集總筆數</div>
+            </div>
+            <div class="sampling-dist-wrap" id="samplingDistWrap">
+              <div class="sampling-dist-bar">
+                <div class="sampling-dist-trial" id="samplingBarTrial" style="width:1%"></div>
+                <div class="sampling-dist-official" id="samplingBarOfficial"></div>
+              </div>
+              <div class="sampling-dist-legend">
+                <span><span class="legend-dot legend-dot-total"></span><span id="samplingLegendTotal"></span></span>
+                <span><span class="legend-dot legend-dot-trial"></span><span id="samplingLegendTrial"></span></span>
+                <span><span class="legend-dot legend-dot-official"></span><span id="samplingLegendOfficial"></span></span>
+              </div>
             </div>
             <div class="toggle-row">
               <div class="toggle-info">
@@ -941,10 +956,10 @@ var I18N = {
     guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
     forceToggleLabel: '開始標記前強制顯示',
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
-    s3NoticeText: '先完成成員與抽樣方式，建立後可直接進入執行狀態。',
+    s3NoticeText: '先完成成員與抽樣筆數，建立後可直接進入執行狀態。',
     s4NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
     startupMemberTitle: '成員管理',
-    startupRunTitle: '抽樣方式',
+    startupRunTitle: '抽樣設定',
     memberSourceSystemTab: '平台使用者',
     memberSourceInviteTab: 'Email 邀請',
     memberSystemPlaceholder: '選擇使用者',
@@ -952,10 +967,8 @@ var I18N = {
     addMemberFromSystemBtnLabel: '加入',
     sendInviteBtnLabel: '寄送邀請連結',
     memberEmpty: '尚未加入任何成員',
-    samplingModePercentLabel: '百分比',
-    samplingModeCountLabel: '筆數',
-    samplingValueLabel: '試標抽樣值',
-    samplingHint: '百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數',
+    samplingValueLabel: '抽樣筆數',
+    samplingHint: '筆數需 >= 1 且 < 資料集總筆數',
     isolationToggleLabel: '資料隔離',
     isolationToggleDesc: '預設啟用，避免試標與正式標記資料混用',
     memberRoleAnnotator: '標記員',
@@ -1016,7 +1029,7 @@ var I18N = {
     errStartupMemberPickUser: '請先選擇一位平台使用者',
     errStartupMemberDuplicate: '此成員已在任務名單中',
     errStartupInviteEmail: '請輸入有效的 Email',
-    errStartupSampling: '請輸入有效抽樣值：百分比 1..99；筆數 >= 1 且 < 資料集總筆數',
+    errStartupSampling: '請輸入有效抽樣筆數：需 >= 1 且 < 資料集總筆數',
     toastInviteSent: '邀請連結已寄出，成員已加入待啟用名單',
     errCodeUnsaved: '請先儲存 Code 內容',
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
@@ -1045,7 +1058,7 @@ var I18N = {
     guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
     forceToggleLabel: 'Force display before annotation',
     forceToggleDesc: 'Annotators must read the guideline before starting work',
-    s3NoticeText: 'Complete members and sampling settings first so the task is execution-ready.',
+    s3NoticeText: 'Complete members and trial sample count first so the task is execution-ready.',
     s4NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
     startupMemberTitle: 'Member management',
     startupRunTitle: 'Sampling settings',
@@ -1056,10 +1069,8 @@ var I18N = {
     addMemberFromSystemBtnLabel: 'Add',
     sendInviteBtnLabel: 'Send invite link',
     memberEmpty: 'No members added yet',
-    samplingModePercentLabel: 'Percentage',
-    samplingModeCountLabel: 'Count',
-    samplingValueLabel: 'Draft sampling value',
-    samplingHint: 'Percentage must be 1..99; count must be >= 1 and < dataset_total',
+    samplingValueLabel: 'Trial sample count',
+    samplingHint: 'Count must be >= 1 and < total dataset rows',
     isolationToggleLabel: 'Data isolation',
     isolationToggleDesc: 'Enabled by default to prevent Dry/Official data mixing',
     memberRoleAnnotator: 'Annotator',
@@ -1120,7 +1131,7 @@ var I18N = {
     errStartupMemberPickUser: 'Please select a platform user first',
     errStartupMemberDuplicate: 'This member is already in the task member list',
     errStartupInviteEmail: 'Please enter a valid email',
-    errStartupSampling: 'Invalid sampling value: percent 1..99; count >= 1 and < dataset_total',
+    errStartupSampling: 'Invalid trial count: must be >= 1 and < total dataset rows',
     toastInviteSent: 'Invite link sent. Member added to pending list',
     errCodeUnsaved: 'Please save code changes before continuing',
     errCodeInvalid: 'Invalid code format. Please fix and save again',
@@ -1141,7 +1152,7 @@ var state = {
   codeFormat: 'yaml', configData: {},
   memberSource: 'system',
   initialMembers: [],
-  runInit: { samplingMode: 'by_percentage', samplingValue: 20, isolationEnabled: true },
+  runInit: { samplingMode: 'by_count', samplingValue: 100, isolationEnabled: true },
   guidelineText: '',
   guidelineFiles: [], forceGuideline: false,
   codeDraftDirty: false,
@@ -1475,15 +1486,9 @@ function getDatasetTotalEstimate() {
 }
 function validateStep3(showErrors) {
   var hasAnnotator = state.initialMembers.some(function(member) { return member.role === 'annotator'; });
-  var mode = state.runInit.samplingMode;
   var val = Number(state.runInit.samplingValue);
   var total = getDatasetTotalEstimate();
-  var validSampling = false;
-  if (mode === 'by_percentage') {
-    validSampling = Number.isFinite(val) && val >= 1 && val <= 99;
-  } else {
-    validSampling = Number.isFinite(val) && val >= 1 && val < total;
-  }
+  var validSampling = Number.isFinite(val) && val >= 1 && val < total;
   if (showErrors) {
     showFieldError('errStartupMembers', !hasAnnotator, t('errStartupMemberRequired'));
     showFieldError('errStartupRun', !validSampling, t('errStartupSampling'));
@@ -2844,25 +2849,38 @@ function addMemberByInviteEmail() {
 }
 
 function syncRunInitFromControls() {
-  var modeNode = document.querySelector('input[name="samplingMode"]:checked');
-  state.runInit.samplingMode = modeNode ? modeNode.value : 'by_percentage';
+  state.runInit.samplingMode = 'by_count';
   state.runInit.samplingValue = Number(el('samplingValueInput').value || 0);
   state.runInit.isolationEnabled = !!el('isolationToggle').checked;
   showFieldError('errStartupRun', false);
+  renderSamplingBar();
   markDirty();
   revalidateCurrentStep();
 }
 
 function syncStep3SamplingControls() {
-  var modePercent = el('samplingModePercent');
-  var modeCount = el('samplingModeCount');
   var valueInput = el('samplingValueInput');
-  if (modePercent) modePercent.checked = state.runInit.samplingMode === 'by_percentage';
-  if (modeCount) modeCount.checked = state.runInit.samplingMode === 'by_count';
-  if (valueInput) {
-    valueInput.value = String(state.runInit.samplingValue);
-    valueInput.max = state.runInit.samplingMode === 'by_percentage' ? '99' : '';
-  }
+  if (valueInput) valueInput.value = String(state.runInit.samplingValue);
+  renderSamplingBar();
+}
+
+function renderSamplingBar() {
+  var total = getDatasetTotalEstimate();
+  var trial = Math.max(0, Math.min(Number(state.runInit.samplingValue) || 0, total - 1));
+  var official = total - trial;
+  var trialPct = total > 0 ? (trial / total * 100) : 0;
+  var trialBar = el('samplingBarTrial');
+  if (trialBar) trialBar.style.width = trialPct.toFixed(1) + '%';
+  var isZh = state.lang !== 'en';
+  var fmtTotal = isZh ? ('總筆數 ' + total + ' 筆') : ('Total: ' + total + ' rows');
+  var fmtTrial = isZh ? ('試標 ' + trial + ' 筆') : ('Trial: ' + trial + ' rows');
+  var fmtOfficial = isZh ? ('正式 ' + official + ' 筆') : ('Official: ' + official + ' rows');
+  var eTotal = el('samplingLegendTotal');
+  var eTrial = el('samplingLegendTrial');
+  var eOfficial = el('samplingLegendOfficial');
+  if (eTotal) eTotal.textContent = fmtTotal;
+  if (eTrial) eTrial.textContent = fmtTrial;
+  if (eOfficial) eOfficial.textContent = fmtOfficial;
 }
 
 /* ── Guideline upload (DOM-safe, no user data in innerHTML) ──── */
@@ -3011,8 +3029,8 @@ function onTaskTypeChange() {
     state.codeDraftDirty = false;
     var defs = SAMPLING_DEFAULTS_BY_TYPE[val];
     if (defs) {
-      state.runInit.samplingMode = 'by_percentage';
-      state.runInit.samplingValue = defs.trialPercent;
+      state.runInit.samplingMode = 'by_count';
+      state.runInit.samplingValue = Math.round(getDatasetTotalEstimate() * defs.trialPercent / 100);
     }
   }
   applyDefaultGuidelineFiles(state.taskType);
@@ -3032,7 +3050,7 @@ function applyLang(l) {
     'labelTaskName','labelTaskType','labelDataset','labelGuideline','labelGuidelineUpload',
     'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
     'forceToggleLabel','forceToggleDesc','s3NoticeText','s4NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
-    'startupMemberTitle','startupRunTitle','samplingModePercentLabel','samplingModeCountLabel','samplingValueLabel',
+    'startupMemberTitle','startupRunTitle','samplingValueLabel',
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
@@ -3089,6 +3107,7 @@ function applyLang(l) {
     renderTemplateBtns();
     renderSchemaFields();
   }
+  renderSamplingBar();
 }
 
 function handleLangToggle(source) {
@@ -3143,21 +3162,6 @@ el('memberRoleSelect').addEventListener('change', function() {
 });
 el('memberInviteRoleSelect').addEventListener('change', function() {
   markDirty();
-});
-document.querySelectorAll('input[name="samplingMode"]').forEach(function(node) {
-  node.addEventListener('change', function() {
-    var mode = this.value;
-    var input = el('samplingValueInput');
-    if (mode === 'by_percentage') {
-      input.min = '1';
-      input.max = '99';
-      if (Number(input.value) > 99) input.value = '99';
-    } else {
-      input.min = '1';
-      input.removeAttribute('max');
-    }
-    syncRunInitFromControls();
-  });
 });
 el('samplingValueInput').addEventListener('input', syncRunInitFromControls);
 el('isolationToggle').addEventListener('change', syncRunInitFromControls);

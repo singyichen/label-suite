@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.9.7
+**版本**：2.0.1
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -26,19 +26,20 @@
 - `DATASET_ENCODING = utf-8`
 - `GUIDELINE_FORMATS = pdf | image | markdown`
 - `GUIDELINE_IMAGE_FORMATS = png | jpg | jpeg | webp`
-- `RUN_INIT_SAMPLING_MODES = by_count | by_percentage`
-- `RUN_INIT_PERCENT_RANGE = 1..99`
+- `RUN_INIT_SAMPLING_MODE = by_count`
 - `RUN_INIT_COUNT_MIN = 1`
 - `RUN_ISOLATION_DEFAULT = enabled`
 - `SAMPLING_DEFAULTS_BY_TYPE` — 各任務類型的試標預設參數表（見下方）
 
-| 任務類型 | 建議 IAA | Std 上限 | 最少標記者數 | 試標抽樣比例 |
+| 任務類型 | 建議 IAA | Std 上限 | 最少標記者數 | 試標比例參數（用於換算預設筆數） |
 | --- | --- | --- | --- | --- |
 | `single_sentence_classification` | 0.75 | — | 3 | 12% |
 | `single_sentence_va_scoring` | 0.75 | 0.10 | 5 | 15% |
 | `sequence_labeling` | 0.82 | — | 3 | 15% |
 | `relation_extraction` | 0.78 | — | 3 | 18% |
 | `sentence_pairs` | 0.76 | 0.15 | 3 | 12% |
+
+> **注意**：`試標比例參數` 僅作為系統換算預設抽樣筆數之用（`round(dataset_total × trialPercent / 100)`），UI 不暴露百分比模式，使用者僅輸入筆數。
 
 - `INITIAL_MEMBER_SOURCES = platform-users | email-invite`
 - `PLATFORM_MEMBER_ROLE_FILTER = system_role == user`
@@ -67,7 +68,7 @@ sequenceDiagram
     UI-->>U: 上方顯示標記預覽；下方左側顯示「範本/上傳設定檔 + schema 欄位」、右側顯示 YAML/JSON code 區
 
     U->>UI: 進入 Step 3（啟動設定）
-    U->>UI: 設定成員管理與抽樣方式（試標抽樣、資料隔離）
+    U->>UI: 設定成員管理與試標抽樣筆數（含資料隔離）
 
     U->>UI: 進入 Step 4（標記說明）
     U->>UI: 上傳說明 / 設定是否強制顯示
@@ -125,8 +126,8 @@ sequenceDiagram
     - `relation_extraction`（Entity + Relation + Triple，可擴充五元組）
   - 延伸任務型別（第二層）：`sentence_pairs`（相似度 / 蘊含）
 - Step 3：`啟動設定`
-  - 必要元素：成員管理（至少可加入 `reviewer` / `annotator`）、抽樣方式（試標抽樣 + 資料隔離）
-  - 畫面元素：成員來源切換 tabs（`平台使用者` / `Email 邀請`）、目前成員清單、可加入成員名單、角色指派控制、抽樣模式切換（筆數/百分比）、抽樣數值輸入、資料隔離開關與說明
+  - 必要元素：成員管理（至少可加入 `reviewer` / `annotator`）、試標抽樣筆數設定 + 資料隔離
+  - 畫面元素：成員來源切換 tabs（`平台使用者` / `Email 邀請`）、目前成員清單、可加入成員名單、角色指派控制、抽樣筆數輸入、抽樣分佈視覺化進度條（總筆數 / 試標 / 正式）、資料隔離開關與說明
   - 成員來源 A（`平台使用者`）：下拉選單只顯示可加入使用者（`PLATFORM_MEMBER_ROLE_FILTER`），placeholder 為「選擇使用者」
   - 成員來源 B（`Email 邀請`）：輸入 email 並寄送邀請連結，邀請成功後加入初始成員清單（待啟用）
 - Step 4：`標記說明`
@@ -242,7 +243,7 @@ Project Leader 在建立任務時必須先完成啟動設定，包含成員管�
 **驗收情境**：
 
 1. **Given** 位於 Step 3，**When** 加入成員並指定任務角色，**Then** 建立後可在 task-detail member-management 看到相同初始成員。
-2. **Given** 位於 Step 3，**When** 設定試標抽樣（筆數或百分比）與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣方式設定。
+2. **Given** 位於 Step 3，**When** 設定試標抽樣筆數與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣筆數設定。
 3. **Given** 位於 Step 3，**When** 未指派任何 `annotator` 或抽樣設定無效，**Then** 不可進入 Step 4 並顯示可修正錯誤訊息。
 
 **行為規則**：
@@ -257,9 +258,10 @@ Project Leader 在建立任務時必須先完成啟動設定，包含成員管�
 - 任一來源皆需阻擋重複成員（同 email）。
 - Step 3 完成條件至少包含 1 位 `annotator` 為 `active`。
 - Step 3 必須提供試標初始化：
-  - 抽樣模式：`by_count` 或 `by_percentage`
-  - 抽樣驗證：百分比僅允許 `RUN_INIT_PERCENT_RANGE`；筆數需 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
-  - 百分比換算筆數採 `floor(total * percent / 100)`；若結果 `< 1` 必須阻擋前進
+  - 抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`），UI 僅暴露筆數輸入
+  - 抽樣驗證：筆數需 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
+  - 選定任務類型後，預設值由 `round(dataset_total × trialPercent / 100)` 自動帶入
+  - 輸入筆數後即時顯示抽樣分佈進度條（試標筆數 / 正式筆數 / 總筆數）
 - Step 3 資料隔離開關預設 `RUN_ISOLATION_DEFAULT`。
 - Step 3 僅做首次初始化；後續調整由 `task-detail` 負責。
 
@@ -300,7 +302,7 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - Step 3 `platform-users` 未選擇任何使用者即點擊加入：顯示錯誤並維持原狀。
 - Step 3 `email-invite` 輸入無效 email：阻擋寄送邀請連結並提示有效格式。
 - Step 3 嘗試加入已存在成員（同 email）：阻擋加入並顯示重複提示。
-- Step 3 抽樣輸入為 `0%`、`100%`、`0 筆`、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
+- Step 3 抽樣筆數輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - `sequence_labeling.subtype = aspect_list` 且未設定必要欄位名稱、Aspect List 輸出欄位或驗證規則：阻擋進入 Step 3 並顯示可定位錯誤。
 - `sequence_labeling.subtype = aspect_list` 設定 `require_exact_match_in_sentence = true`，但預覽或 code 範例中的 aspect 無法在句子中找到完全一致片段：顯示 schema/preview 驗證提示，不得視為有效設定。
 - `task_type = sentence_pairs` 但缺少 `sentence_1_field` 或 `sentence_2_field`：阻擋進入 Step 3 並顯示可定位錯誤。
@@ -358,9 +360,10 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-004a-3**：`email-invite` 來源必須支援 email 格式驗證、寄送邀請連結與加入初始成員清單。
 - **FR-004a-4**：成員加入必須以 email 作為唯一鍵，阻擋重複成員。
 - **FR-004b**：Step 3 完成條件至少需包含 1 位 `active annotator`。
-- **FR-004c**：Step 3 必須提供試標初始化，支援 `RUN_INIT_SAMPLING_MODES`；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入。
-- **FR-004c-1**：選擇任務類型後，Step 3 的試標抽樣值必須自動預填為該類型的 `trialPercent`（百分比模式）、目標 IAA 與最少標記者數。
-- **FR-004d**：試標抽樣驗證必須明確：百分比 `RUN_INIT_PERCENT_RANGE`；筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
+- **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`。
+- **FR-004c-1**：選擇任務類型後，Step 3 的試標抽樣筆數必須自動預填換算後的預設筆數。
+- **FR-004d**：試標抽樣驗證：筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
+- **FR-004d-1**：Step 3 抽樣筆數輸入後，系統必須即時顯示抽樣分佈進度條，呈現試標筆數（紫色）與正式筆數（綠色）比例，並列出總筆數 / 試標 / 正式之文字標籤。
 - **FR-004e**：Step 3 必須提供資料隔離開關，預設值為 `RUN_ISOLATION_DEFAULT`。
 - **FR-005**：Step 4 必須支援標記說明資產上傳與強制顯示設定。
 - **FR-005a**：Step 4 指南格式必須支援 `GUIDELINE_FORMATS`，其中 `image` 受限於 `GUIDELINE_IMAGE_FORMATS`。
@@ -419,7 +422,7 @@ flowchart LR
 - **AspectListTaskConfig**：`sequence_labeling.subtype = aspect_list` 專用設定。欄位：`input_field`、`aspect_list_field`、`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`min_aspects`、`max_aspects`、`require_sentiment_context_check`。
 - **SentencePairsTaskConfig**：`sentence_pairs` 專用設定。欄位：`pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`label_options[]?`、`score_min?`、`score_max?`、`score_step?`、`allow_unsure`、`note_enabled`。
 - **TaskMembership**：建立者自動加入的任務角色關係，及 Step 3 指派的初始成員關係。
-- **RunInitConfig**：首次啟動設定。欄位：`sampling_mode`、`sampling_value`、`isolation_enabled`。
+- **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
 
 ---
 
@@ -480,7 +483,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.9.7 | 2026-04-29 | 補齊 `sentence_pairs` task config 契約：新增 `pair_mode / response_format / sentence_1_field / sentence_2_field / label_options / score_*` 規格、Step 2 預覽與驗證規則，並同步下游 workspace / analysis 相依 |
+| 2.0.1 | 2026-05-07 | Step 3 抽樣設定統一改為筆數模式：移除 `by_percentage`、`RUN_INIT_SAMPLING_MODES`、`RUN_INIT_PERCENT_RANGE`；`RunInitConfig` 移除 `sampling_mode` 欄位；抽樣比例參數改為僅供內部換算預設筆數；新增抽樣分佈進度條規格（FR-004d-1）；更新介面定義、行為規則、Edge Cases 與 SAMPLING_DEFAULTS_BY_TYPE 欄位說明 |
+| 2.0.0 | 2026-05-07 | 補齊 `sentence_pairs` task config 契約：新增 `pair_mode / response_format / sentence_1_field / sentence_2_field / label_options / score_*` 規格、Step 2 預覽與驗證規則，並同步下游 workspace / analysis 相依 |
 | 1.9.6 | 2026-04-29 | 補充 relation_extraction 細規：新增 FR-003d-9（schema 欄位：entity_types / relation_types / tuple_mode）、FR-003d-10（Step 2 預覽：實體類型按鈕、實體清單、關係建構器、Triple 清單）、SC-003g（驗收標準） |
 | 1.9.5 | 2026-04-29 | 統一 NER schema 與 task-detail：`sequence_labeling.subtype = ner` 改為核心設定 + 進階設定的漸進揭露；統一 key 為 `entities` / `scheme` / `allow_overlapping`，並保留進階欄位於收合區塊 |
 | 1.9.4 | 2026-04-28 | 同步 Aspect List reviewer 直接修正需求：Reviewer 可新增、刪除、修改標記員提交的 aspect，並保留原始提交與 correction diff |

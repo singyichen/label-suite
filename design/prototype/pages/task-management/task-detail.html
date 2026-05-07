@@ -2012,13 +2012,7 @@
     .split-legend-key { color: var(--color-text-soft); }
     .split-legend-value { color: var(--color-ink); font-weight: 600; }
 
-    .sampling-footer {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
+    .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
 
 @media (max-width: 768px) {
       .overview-info-row { grid-template-columns: 1fr; }
@@ -2284,39 +2278,31 @@
       currentAgreementLabel: '目前 IAA',
       currentStdLabel: '目前標準差',
       stopConditionTitle: '達標條件',
-      labelSamplingModeControl: '抽樣方式',
-      labelSamplingValueControl: '抽樣數值',
+      labelSamplingValueControl: '抽樣筆數',
       labelTrialRoundControl: '試標回合',
-      labelSamplingStrategyControl: '抽樣策略',
-      labelStratifyByControl: '分層依據',
-      labelStopConditionControl: '停止條件',
+      labelIaaMethodControl: 'IAA 計算方式',
+      labelTargetAgreementControl: '目標 IAA',
+      labelMinAnnotatorsControl: '最少標記者數',
       labelSplitControl: '試標 / 正式資料配比',
       totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
-      samplingModeLabel: '抽樣方式',
-      samplingValueLabel: '抽樣數值',
-      samplingStrategyLabel: '抽樣策略',
-      samplingSeedLabel: '隨機種子',
+      samplingValueLabel: '抽樣筆數',
+      samplingValueHint: '筆數需 >= 1 且 < 資料集總筆數',
+      iaaMethodLabel: 'IAA 計算方式',
+      iaaMethodOptKrippendorff: "Krippendorff's Alpha（nominal）",
+      iaaMethodOptCohens: "Cohen's Kappa",
+      iaaMethodOptFleiss: "Fleiss' Kappa",
+      iaaMethodOptIcc: 'ICC（組內相關係數）',
+      iaaMethodOptPairwiseStrict: 'Pairwise F1（嚴格）',
+      iaaMethodOptPairwisePartial: 'Pairwise F1（部分重疊）',
+      iaaMethodOptTriple: 'Pairwise Triple-level F1',
+      targetAgreementHintTpl: '建議值：{value}',
       samplingRoundLabel: '試標回合',
-      samplingStratifyLabel: '分層依據',
-      stratifyByLabelText: '標籤',
-      stratifyByDomainText: '領域',
-      stratifyByDifficultyText: '難度',
-      samplingStrategyOptionStratified: '分層隨機抽樣',
-      samplingStrategyOptionDisagreement: '高分歧樣本優先',
-      samplingStrategyOptionEdgeCases: '邊界樣本優先',
       targetAgreementInputLabel: '目標 IAA',
-      targetStdInputLabel: '標準差上限',
-      minAnnotatorsInputLabel: '最少標註者數',
+      minAnnotatorsInputLabel: '最少標記者數',
       sampleUsageLabel: '試標',
       officialReserveLabel: '正式',
-      samplingModeCount: '筆數',
-      samplingModePercent: '百分比',
-      samplingHelp: '百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。',
-      resampleBtn: '重算抽樣',
-      resampleHintDraft: '僅草稿階段可重算；進入試標後需建立新的執行批次。',
-      resampleHintLocked: '目前狀態不可重算。請建立新的執行批次。',
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
       isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
@@ -2359,7 +2345,6 @@
       toastPublishedDry: '已發布 Dry Run',
       toastPublishedOfficial: '已發布 Official Run',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
-      toastResampled: '抽樣已重算',
       yes: '是',
       no: '否',
       guidelineUploaded: '已上傳',
@@ -2367,31 +2352,20 @@
       guidelineFilesNone: '無附件',
       guidelineContentEmpty: '尚無說明內容',
       samplingValueCountTpl: '{value} 筆',
-      samplingValuePercentTpl: '{value}%（約 {count} 筆）',
       trialRoundTpl: '第 {round} 回合',
       splitSummaryTpl: '總筆數 {total} / 試標 {sample} / 正式 {reserve}',
-      samplingStrategySummaryTpl: '{strategy} · 隨機種子 {seed}',
-      stratifyBySummaryTpl: '{items}',
-      stopConditionSummaryTpl: 'IAA ≥ {agreement}，標準差 ≤ {std}，標註者 ≥ {annotators}',
-      stopConditionNoStdTpl: 'IAA ≥ {agreement}，標註者 ≥ {annotators}',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: '標準差 ≤ {target}',
       stopAnnotatorPillTpl: '標註者 ≥ {target}',
-      stratifyByNone: '未設定',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
       riskModalBody: '你已選擇停用資料隔離。此設定可能導致 Dry Run 與 Official Run 資料混用，風險不可逆。是否確認並繼續發布？',
       riskCancelBtn: '取消',
       riskConfirmBtn: '確認停用並發布',
-      samplingErrorPercent: '百分比僅允許 1..99。',
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
-      samplingErrorFloor: '百分比換算後小於 1 筆，請提高百分比或改用固定筆數。',
-      samplingErrorReserve: '正式標記至少需保留 1 筆資料。',
-      samplingErrorStratify: '請至少選擇 1 個分層依據。',
       samplingErrorAgreement: '目標 IAA 需介於 0..1。',
-      samplingErrorStd: '標準差上限需介於 0..1。',
-      samplingErrorAnnotators: '最少標註者數需 >= 2。',
+      samplingErrorAnnotators: '最少標記者數需 >= 2。',
       samplingErrorRound: '試標回合需 >= 1。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
@@ -2684,39 +2658,31 @@
       currentAgreementLabel: 'Current IAA',
       currentStdLabel: 'Current standard deviation',
       stopConditionTitle: 'Stop conditions',
-      labelSamplingModeControl: 'Sampling mode',
-      labelSamplingValueControl: 'Sampling value',
+      labelSamplingValueControl: 'Trial sample count',
       labelTrialRoundControl: 'Trial round',
-      labelSamplingStrategyControl: 'Sampling strategy',
-      labelStratifyByControl: 'Stratify by',
-      labelStopConditionControl: 'Stop conditions',
+      labelIaaMethodControl: 'IAA method',
+      labelTargetAgreementControl: 'Target IAA',
+      labelMinAnnotatorsControl: 'Minimum annotators',
       labelSplitControl: 'Dry / Official split',
       totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
-      samplingModeLabel: 'Sampling mode',
-      samplingValueLabel: 'Sampling value',
-      samplingStrategyLabel: 'Sampling strategy',
-      samplingSeedLabel: 'Random seed',
+      samplingValueLabel: 'Trial sample count',
+      samplingValueHint: 'Count must be >= 1 and < total dataset size',
+      iaaMethodLabel: 'IAA method',
+      iaaMethodOptKrippendorff: "Krippendorff's Alpha (nominal)",
+      iaaMethodOptCohens: "Cohen's Kappa",
+      iaaMethodOptFleiss: "Fleiss' Kappa",
+      iaaMethodOptIcc: 'ICC (Intraclass Correlation)',
+      iaaMethodOptPairwiseStrict: 'Pairwise F1 (strict)',
+      iaaMethodOptPairwisePartial: 'Pairwise F1 (partial)',
+      iaaMethodOptTriple: 'Pairwise Triple-level F1',
+      targetAgreementHintTpl: 'Suggested: {value}',
       samplingRoundLabel: 'Trial round',
-      samplingStratifyLabel: 'Stratify by',
-      stratifyByLabelText: 'Label',
-      stratifyByDomainText: 'Domain',
-      stratifyByDifficultyText: 'Difficulty',
-      samplingStrategyOptionStratified: 'Stratified random',
-      samplingStrategyOptionDisagreement: 'High disagreement',
-      samplingStrategyOptionEdgeCases: 'Edge cases',
       targetAgreementInputLabel: 'Target IAA',
-      targetStdInputLabel: 'Standard deviation limit',
       minAnnotatorsInputLabel: 'Minimum annotators',
       sampleUsageLabel: 'Dry',
       officialReserveLabel: 'Official',
-      samplingModeCount: 'By count',
-      samplingModePercent: 'By percentage',
-      samplingHelp: 'Percentage uses floor(total * percent / 100); keep at least 1 item for official run.',
-      resampleBtn: 'Resample',
-      resampleHintDraft: 'Resample is allowed only in draft. Create a new run batch after dry run starts.',
-      resampleHintLocked: 'Resample is locked in current status. Create a new run batch.',
       isolationToggleTitle: 'Enable data isolation (dry / official)',
       isolationToggleDesc: 'Isolation prevents dry-run results from contaminating official data.',
       isolationRiskMsg: 'Isolation is off. Risk confirmation is required before publishing and will be audited.',
@@ -2759,7 +2725,6 @@
       toastPublishedDry: 'Dry run published',
       toastPublishedOfficial: 'Official run published',
       toastPublishBlocked: 'Cannot publish due to invalid sampling setting.',
-      toastResampled: 'Sampling recalculated',
       yes: 'Yes',
       no: 'No',
       guidelineUploaded: 'Uploaded',
@@ -2767,25 +2732,20 @@
       guidelineFilesNone: 'No attachments',
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
-      samplingValuePercentTpl: '{value}% (~{count} items)',
       splitSummaryTpl: 'Total {total} / Dry {sample} / Official {reserve}',
-      samplingStrategySummaryTpl: '{strategy} · seed {seed}',
-      stopConditionSummaryTpl: 'IAA ≥ {agreement} · Std ≤ {std} · annotators ≥ {annotators}',
-      stopConditionNoStdTpl: 'IAA ≥ {agreement} · annotators ≥ {annotators}',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: 'Std ≤ {target}',
       stopAnnotatorPillTpl: 'annotators ≥ {target}',
-      stratifyByNone: 'Not set',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
       riskModalBody: 'Disabling isolation may mix dry-run and official data, and the risk is irreversible. Confirm and continue publishing?',
       riskCancelBtn: 'Cancel',
       riskConfirmBtn: 'Confirm and publish',
-      samplingErrorPercent: 'Percentage must be between 1 and 99.',
       samplingErrorCount: 'Count must be >= 1 and less than total dataset size.',
-      samplingErrorFloor: 'Percentage result is less than 1 item. Increase percentage or use fixed count.',
-      samplingErrorReserve: 'Official run must reserve at least 1 item.',
+      samplingErrorAgreement: 'Target IAA must be between 0 and 1.',
+      samplingErrorAnnotators: 'Minimum annotators must be >= 2.',
+      samplingErrorRound: 'Trial round must be >= 1.',
       memberListTitle: 'Current members',
       memberListSubtitle: 'Task role is fixed at join time. Existing members cannot switch role mid-task; remove and re-add to change role.',
       candidateListTitle: 'Available users to add',
@@ -2963,16 +2923,12 @@
     ],
     forceGuideline: true,
     status: 'draft',
-    samplingMode: 'by_percentage',
-    samplingValue: 15,
-    samplingStrategy: 'stratified_random',
+    samplingMode: 'by_count',
+    samplingValue: 384,
+    iaaMethod: 'krippendorff_alpha_nominal',
     trialRound: 1,
-    randomSeed: 248931,
-    stratifyBy: ['label'],
     targetAgreement: 0.75,
     currentAgreement: 0.62,
-    targetStd: 0.10,
-    currentStd: 0.16,
     minAnnotators: 5,
     currentAnnotators: 3,
     isolationEnabled: true,
@@ -4022,36 +3978,30 @@ function interpolate(template, payload) {
     setText('currentStdLabel', t('currentStdLabel'));
     setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
-    setRequiredLabel('labelSamplingModeControl', t('labelSamplingModeControl'));
-    setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setText('labelSamplingValueControl', t('labelSamplingValueControl'));
     setText('labelTrialRoundControl', t('labelTrialRoundControl'));
-    setText('labelSamplingStrategyControl', t('labelSamplingStrategyControl'));
-    setText('labelStratifyByControl', t('labelStratifyByControl'));
-    setText('labelStopConditionControl', t('labelStopConditionControl'));
+    setText('labelIaaMethodControl', t('labelIaaMethodControl'));
+    setText('labelTargetAgreementControl', t('labelTargetAgreementControl'));
+    setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
     setText('labelSplitControl', t('labelSplitControl'));
     setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
-    setRequiredLabel('samplingModeLabel', t('samplingModeLabel'));
-    setText('samplingModePercentLabel', t('samplingModePercent'));
-    setText('samplingModeCountLabel', t('samplingModeCount'));
     setRequiredLabel('samplingValueLabel', t('samplingValueLabel'));
-    setText('samplingStrategyLabel', t('samplingStrategyLabel'));
-    setText('samplingStrategyOptionStratified', t('samplingStrategyOptionStratified'));
-    setText('samplingStrategyOptionDisagreement', t('samplingStrategyOptionDisagreement'));
-    setText('samplingStrategyOptionEdgeCases', t('samplingStrategyOptionEdgeCases'));
-    setText('samplingSeedLabel', t('samplingSeedLabel'));
+    setText('samplingValueHint', t('samplingValueHint'));
+    setText('iaaMethodLabel', t('iaaMethodLabel'));
+    setText('iaaOptKrippendorff', t('iaaMethodOptKrippendorff'));
+    setText('iaaOptCohensKappa', t('iaaMethodOptCohens'));
+    setText('iaaOptFleissKappa', t('iaaMethodOptFleiss'));
+    setText('iaaOptIcc', t('iaaMethodOptIcc'));
+    setText('iaaOptPairwiseF1Strict', t('iaaMethodOptPairwiseStrict'));
+    setText('iaaOptPairwiseF1Partial', t('iaaMethodOptPairwisePartial'));
+    setText('iaaOptPairwiseTripleF1', t('iaaMethodOptTriple'));
     setText('samplingRoundLabel', t('samplingRoundLabel'));
-    setText('samplingStratifyLabel', t('samplingStratifyLabel'));
-    setText('stratifyByLabelText', t('stratifyByLabelText'));
-    setText('stratifyByDomainText', t('stratifyByDomainText'));
-    setText('stratifyByDifficultyText', t('stratifyByDifficultyText'));
     setText('targetAgreementInputLabel', t('targetAgreementInputLabel'));
-    setText('targetStdInputLabel', t('targetStdInputLabel'));
     setText('minAnnotatorsInputLabel', t('minAnnotatorsInputLabel'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
     setText('officialReserveLabel', t('officialReserveLabel'));
-    setText('resampleBtn', t('resampleBtn'));
     setText('isolationToggleTitle', t('isolationToggleTitle'));
     setText('isolationToggleDesc', t('isolationToggleDesc'));
     setText('isolationRiskMsg', t('isolationRiskMsg'));
@@ -4183,17 +4133,13 @@ function interpolate(template, payload) {
   function applySamplingDefaultsToTaskData() {
     var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey];
     if (!defs) return;
-    TASK_DATA.samplingMode = 'by_percentage';
-    TASK_DATA.samplingValue = defs.trialPercent;
+    TASK_DATA.samplingMode = 'by_count';
+    TASK_DATA.samplingValue = Math.round(TASK_DATA.datasetTotal * defs.trialPercent / 100);
     TASK_DATA.targetAgreement = defs.targetIAA;
-    TASK_DATA.targetStd = defs.targetStd;
     TASK_DATA.minAnnotators = defs.minAnnotators;
   }
 
   function getSampleCountFromData(data) {
-    if (data.samplingMode === 'by_percentage') {
-      return Math.floor(TASK_DATA.datasetTotal * data.samplingValue / 100);
-    }
     return data.samplingValue;
   }
 
@@ -4201,55 +4147,14 @@ function interpolate(template, payload) {
     return getSampleCountFromData(TASK_DATA);
   }
 
-  function formatStratifyBy(items) {
-    var list = Array.isArray(items) ? items : [];
-    if (!list.length) return t('stratifyByNone');
-    var mapped = list.map(function(item) {
-      if (item === 'label') return t('stratifyByLabelText');
-      if (item === 'domain') return t('stratifyByDomainText');
-      if (item === 'difficulty') return t('stratifyByDifficultyText');
-      return item;
-    });
-    return interpolate(t('stratifyBySummaryTpl'), { items: mapped.join(' / ') });
-  }
-
-  function getSamplingStrategyLabel(strategy) {
-    if (strategy === 'stratified_random') return t('samplingStrategyOptionStratified');
-    if (strategy === 'high_disagreement') return t('samplingStrategyOptionDisagreement');
-    if (strategy === 'edge_cases') return t('samplingStrategyOptionEdgeCases');
-    return strategy;
-  }
 
   function validateSamplingData(data) {
-    var sampleCount = getSampleCountFromData(data);
-
-    if (data.samplingMode === 'by_percentage') {
-      if (data.samplingValue < 1 || data.samplingValue > 99) {
-        return { valid: false, message: t('samplingErrorPercent') };
-      }
-      if (sampleCount < 1) {
-        return { valid: false, message: t('samplingErrorFloor') };
-      }
-    } else {
-      if (data.samplingValue < 1 || data.samplingValue >= TASK_DATA.datasetTotal) {
-        return { valid: false, message: t('samplingErrorCount') };
-      }
-    }
-
-    if (TASK_DATA.datasetTotal - sampleCount < 1) {
-      return { valid: false, message: t('samplingErrorReserve') };
-    }
-
-    if (data.samplingStrategy === 'stratified_random' && (!Array.isArray(data.stratifyBy) || data.stratifyBy.length < 1)) {
-      return { valid: false, message: t('samplingErrorStratify') };
+    if (data.samplingValue < 1 || data.samplingValue >= TASK_DATA.datasetTotal) {
+      return { valid: false, message: t('samplingErrorCount') };
     }
 
     if (data.targetAgreement < 0 || data.targetAgreement > 1) {
       return { valid: false, message: t('samplingErrorAgreement') };
-    }
-
-    if (data.targetStd !== null && data.targetStd !== undefined && (data.targetStd < 0 || data.targetStd > 1)) {
-      return { valid: false, message: t('samplingErrorStd') };
     }
 
     if (data.minAnnotators < 2) {
@@ -4274,13 +4179,32 @@ function interpolate(template, payload) {
     return TASK_DATA;
   }
 
+  function getIaaMethodLabel(method) {
+    var map = {
+      krippendorff_alpha_nominal: t('iaaMethodOptKrippendorff'),
+      cohens_kappa: t('iaaMethodOptCohens'),
+      fleiss_kappa: t('iaaMethodOptFleiss'),
+      icc: t('iaaMethodOptIcc'),
+      pairwise_f1_strict: t('iaaMethodOptPairwiseStrict'),
+      pairwise_f1_partial: t('iaaMethodOptPairwisePartial'),
+      pairwise_triple_f1: t('iaaMethodOptTriple'),
+    };
+    return map[method] || method;
+  }
+
+  var IAA_METHOD_DEFAULTS = {
+    krippendorff_alpha_nominal: 0.80,
+    cohens_kappa: 0.80,
+    fleiss_kappa: 0.80,
+    icc: 0.75,
+    pairwise_f1_strict: 0.80,
+    pairwise_f1_partial: 0.70,
+    pairwise_triple_f1: 0.75,
+  };
+
   function renderSamplingSummaryState() {
     var sampleCount = getSampleCount();
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
-    var samplingModeText = TASK_DATA.samplingMode === 'by_percentage' ? t('samplingModePercent') : t('samplingModeCount');
-    var samplingValueText = TASK_DATA.samplingMode === 'by_percentage'
-      ? interpolate(t('samplingValuePercentTpl'), { value: TASK_DATA.samplingValue, count: sampleCount })
-      : interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue });
     var unitText = state.lang === 'zh' ? '筆' : ' items';
     var splitSummaryText = interpolate(t('splitSummaryTpl'), {
       total: TASK_DATA.datasetTotal + unitText,
@@ -4288,26 +4212,11 @@ function interpolate(template, payload) {
       reserve: reserveCount + unitText,
     });
 
-    setText('valueSamplingModeControl', samplingModeText);
-    setText('valueSamplingValueControl', samplingValueText);
+    setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
     setText('valueTrialRoundControl', interpolate(t('trialRoundTpl'), { round: TASK_DATA.trialRound }));
-    setText('valueSamplingStrategyControl', interpolate(t('samplingStrategySummaryTpl'), {
-      strategy: getSamplingStrategyLabel(TASK_DATA.samplingStrategy),
-      seed: TASK_DATA.randomSeed,
-    }));
-    setText('valueStratifyByControl', formatStratifyBy(TASK_DATA.stratifyBy));
-    var hasStd = TASK_DATA.targetStd !== null && TASK_DATA.targetStd !== undefined;
-    setText('valueStopConditionControl', hasStd
-      ? interpolate(t('stopConditionSummaryTpl'), {
-          agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
-          std: Number(TASK_DATA.targetStd).toFixed(2),
-          annotators: TASK_DATA.minAnnotators,
-        })
-      : interpolate(t('stopConditionNoStdTpl'), {
-          agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
-          annotators: TASK_DATA.minAnnotators,
-        })
-    );
+    setText('valueIaaMethodControl', getIaaMethodLabel(TASK_DATA.iaaMethod));
+    setText('valueTargetAgreementControl', Number(TASK_DATA.targetAgreement).toFixed(2));
+    setText('valueMinAnnotatorsControl', String(TASK_DATA.minAnnotators));
     setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
     setText(
@@ -4330,14 +4239,7 @@ function interpolate(template, payload) {
     var stopStdPill = document.getElementById('stopStdPill');
     var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
     if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
-    if (stopStdPill) {
-      var stdActive = TASK_DATA.targetStd !== null && TASK_DATA.targetStd !== undefined;
-      stopStdPill.classList.toggle('hidden', !stdActive);
-      if (stdActive) {
-        setText('stopStdPill', interpolate(t('stopStdPillTpl'), { target: Number(TASK_DATA.targetStd).toFixed(2) }));
-        stopStdPill.classList.toggle('passed', Number(TASK_DATA.currentStd) <= Number(TASK_DATA.targetStd));
-      }
-    }
+    if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
   }
 
@@ -4359,44 +4261,22 @@ function interpolate(template, payload) {
       dryEl.style.width = dw.toFixed(1) + '%';
       offEl.style.width = (100 - dw).toFixed(1) + '%';
     }
-    setText('samplingStrategyText', data.samplingStrategy + ' (fallback: random(seed))');
-    setText('samplingSeedText', 'random_seed: ' + data.randomSeed);
-
-    var strategySelect = document.getElementById('samplingStrategySelect');
-    if (strategySelect) strategySelect.value = data.samplingStrategy;
-    var seedInput = document.getElementById('samplingSeedInput');
-    if (seedInput) seedInput.value = String(data.randomSeed);
+    var iaaMethodSelect = document.getElementById('iaaMethodSelect');
+    if (iaaMethodSelect) iaaMethodSelect.value = data.iaaMethod || 'krippendorff_alpha_nominal';
     var roundInput = document.getElementById('samplingRoundInput');
     if (roundInput) roundInput.value = String(data.trialRound);
     var targetAgreementInput = document.getElementById('targetAgreementInput');
     if (targetAgreementInput) targetAgreementInput.value = Number(data.targetAgreement).toFixed(2);
-    var targetStdInput = document.getElementById('targetStdInput');
-    if (targetStdInput) {
-      var stdVal = data.targetStd !== null && data.targetStd !== undefined;
-      targetStdInput.value = stdVal ? Number(data.targetStd).toFixed(2) : '';
-      targetStdInput.placeholder = stdVal ? '' : (state.lang === 'zh' ? '不適用' : 'N/A');
-    }
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
     if (minAnnotatorsInput) minAnnotatorsInput.value = String(data.minAnnotators);
-    var stratifyLabelInput = document.getElementById('stratifyByLabel');
-    var stratifyDomainInput = document.getElementById('stratifyByDomain');
-    var stratifyDifficultyInput = document.getElementById('stratifyByDifficulty');
-    if (stratifyLabelInput) stratifyLabelInput.checked = (data.stratifyBy || []).indexOf('label') >= 0;
-    if (stratifyDomainInput) stratifyDomainInput.checked = (data.stratifyBy || []).indexOf('domain') >= 0;
-    if (stratifyDifficultyInput) stratifyDifficultyInput.checked = (data.stratifyBy || []).indexOf('difficulty') >= 0;
 
-    var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
-    modeRadios.forEach(function(node) {
-      node.checked = node.value === data.samplingMode;
-    });
+    var suggestedVal = IAA_METHOD_DEFAULTS[data.iaaMethod || 'krippendorff_alpha_nominal'];
+    var hintEl = document.getElementById('targetAgreementHint');
+    if (hintEl) hintEl.textContent = suggestedVal !== undefined ? interpolate(t('targetAgreementHintTpl'), { value: suggestedVal.toFixed(2) }) : '';
 
     var samplingInput = document.getElementById('samplingValue');
     var samplingError = document.getElementById('samplingError');
-    if (samplingInput) {
-      samplingInput.value = String(data.samplingValue);
-      if (data.samplingMode === 'by_percentage') samplingInput.max = '99';
-      else samplingInput.removeAttribute('max');
-    }
+    if (samplingInput) samplingInput.value = String(data.samplingValue);
     var result = validateSamplingData(data);
 
     if (samplingInput && samplingError && !result.valid) {
@@ -4414,32 +4294,16 @@ function interpolate(template, payload) {
     var editable = editAllowed && editing;
     var isolationToggle = document.getElementById('isolationToggle');
     var risk = document.getElementById('isolationRiskMsg');
-    modeRadios.forEach(function(node) {
-      node.disabled = !editable;
-    });
     if (samplingInput) samplingInput.disabled = !editable;
-    if (strategySelect) strategySelect.disabled = !editable;
-    if (seedInput) seedInput.disabled = !editable;
+    if (iaaMethodSelect) iaaMethodSelect.disabled = !editable;
     if (roundInput) roundInput.disabled = !editable;
     if (targetAgreementInput) targetAgreementInput.disabled = !editable;
-    if (targetStdInput) targetStdInput.disabled = !editable;
     if (minAnnotatorsInput) minAnnotatorsInput.disabled = !editable;
-    if (stratifyLabelInput) stratifyLabelInput.disabled = !editable;
-    if (stratifyDomainInput) stratifyDomainInput.disabled = !editable;
-    if (stratifyDifficultyInput) stratifyDifficultyInput.disabled = !editable;
-    var isStratified = data.samplingStrategy === 'stratified_random';
-    var stratifyFieldGroup = document.getElementById('stratifyByFieldGroup');
-    var stratifyKvRow = document.getElementById('stratifyByKvRow');
-    if (stratifyFieldGroup) stratifyFieldGroup.classList.toggle('hidden', !isStratified);
-    if (stratifyKvRow) stratifyKvRow.classList.toggle('hidden', !isStratified);
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
       isolationToggle.disabled = !editable;
     }
     if (risk) risk.classList.toggle('hidden', Boolean(data.isolationEnabled));
-    var resampleBtn = document.getElementById('resampleBtn');
-    if (resampleBtn) resampleBtn.disabled = !editable;
-    setText('resampleHint', editable ? t('resampleHintDraft') : t('resampleHintLocked'));
   }
 
   function renderPublishActions() {
@@ -4808,14 +4672,11 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function createSamplingDraft() {
     return {
-      samplingMode: TASK_DATA.samplingMode,
+      samplingMode: 'by_count',
       samplingValue: TASK_DATA.samplingValue,
-      samplingStrategy: TASK_DATA.samplingStrategy,
+      iaaMethod: TASK_DATA.iaaMethod || 'krippendorff_alpha_nominal',
       trialRound: TASK_DATA.trialRound,
-      randomSeed: TASK_DATA.randomSeed,
-      stratifyBy: (TASK_DATA.stratifyBy || []).slice(),
       targetAgreement: TASK_DATA.targetAgreement,
-      targetStd: TASK_DATA.targetStd,
       minAnnotators: TASK_DATA.minAnnotators,
       isolationEnabled: TASK_DATA.isolationEnabled,
       isolationLastActor: TASK_DATA.isolationLastActor,
@@ -4891,14 +4752,11 @@ function getTaskTypeLabel(taskTypeKey) {
       return;
     }
 
-    TASK_DATA.samplingMode = state.samplingDraft.samplingMode;
+    TASK_DATA.samplingMode = 'by_count';
     TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
-    TASK_DATA.samplingStrategy = state.samplingDraft.samplingStrategy;
+    TASK_DATA.iaaMethod = state.samplingDraft.iaaMethod;
     TASK_DATA.trialRound = state.samplingDraft.trialRound;
-    TASK_DATA.randomSeed = state.samplingDraft.randomSeed;
-    TASK_DATA.stratifyBy = (state.samplingDraft.stratifyBy || []).slice();
     TASK_DATA.targetAgreement = state.samplingDraft.targetAgreement;
-    TASK_DATA.targetStd = state.samplingDraft.targetStd;
     TASK_DATA.minAnnotators = state.samplingDraft.minAnnotators;
     TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
     TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
@@ -7617,7 +7475,7 @@ function getTaskTypeLabel(taskTypeKey) {
         isolation_enabled: TASK_DATA.isolationEnabled,
         sampling_mode: TASK_DATA.samplingMode,
         sampling_value: TASK_DATA.samplingValue,
-        sampling_strategy: TASK_DATA.samplingStrategy,
+        iaa_method: TASK_DATA.iaaMethod,
         sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
         applied_filters: {
           run_stage: state.arStage,
@@ -7927,7 +7785,6 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function bindEvents() {
-    var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
     var valueInput = document.getElementById('samplingValue');
     var isolationToggle = document.getElementById('isolationToggle');
     var samplingEditBtn = document.getElementById('samplingEditBtn');
@@ -7935,16 +7792,10 @@ function getTaskTypeLabel(taskTypeKey) {
     var samplingCancelBtn = document.getElementById('samplingCancelBtn');
     var runControlTabExecution = document.getElementById('runControlTabExecution');
     var runControlTabTrial = document.getElementById('runControlTabTrial');
-    var strategySelect = document.getElementById('samplingStrategySelect');
-    var seedInput = document.getElementById('samplingSeedInput');
+    var iaaMethodSelect = document.getElementById('iaaMethodSelect');
     var roundInput = document.getElementById('samplingRoundInput');
     var targetAgreementInput = document.getElementById('targetAgreementInput');
-    var targetStdInput = document.getElementById('targetStdInput');
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
-    var stratifyByLabel = document.getElementById('stratifyByLabel');
-    var stratifyByDomain = document.getElementById('stratifyByDomain');
-    var stratifyByDifficulty = document.getElementById('stratifyByDifficulty');
-    var resampleBtn = document.getElementById('resampleBtn');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
     var overviewSaveBtn = document.getElementById('overviewSaveBtn');
     var overviewCancelBtn = document.getElementById('overviewCancelBtn');
@@ -8234,25 +8085,7 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (modeRadios.length && valueInput) {
-      modeRadios.forEach(function(modeRadio) {
-        modeRadio.addEventListener('change', function(e) {
-          if (!e.target.checked) return;
-          if (!state.samplingEditMode || !state.samplingDraft) return;
-          state.samplingDraft.samplingMode = e.target.value;
-          if (state.samplingDraft.samplingMode === 'by_percentage') {
-            state.samplingDraft.samplingValue = Math.max(1, Math.min(99, state.samplingDraft.samplingValue));
-            valueInput.max = '99';
-          } else {
-            state.samplingDraft.samplingValue = Math.max(1, Math.min(TASK_DATA.datasetTotal - 1, state.samplingDraft.samplingValue));
-            valueInput.removeAttribute('max');
-          }
-          valueInput.value = String(state.samplingDraft.samplingValue);
-          markSamplingDirty();
-          renderSamplingState();
-        });
-      });
-
+    if (valueInput) {
       valueInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
         state.samplingDraft.samplingValue = Number(e.target.value || 0);
@@ -8261,19 +8094,15 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (strategySelect) {
-      strategySelect.addEventListener('change', function(e) {
+    if (iaaMethodSelect) {
+      iaaMethodSelect.addEventListener('change', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.samplingStrategy = e.target.value;
-        markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    if (seedInput) {
-      seedInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.randomSeed = Math.max(1, Math.floor(Number(e.target.value || 0)));
+        state.samplingDraft.iaaMethod = e.target.value;
+        var suggested = IAA_METHOD_DEFAULTS[e.target.value];
+        if (suggested !== undefined) {
+          state.samplingDraft.targetAgreement = suggested;
+          if (targetAgreementInput) targetAgreementInput.value = suggested.toFixed(2);
+        }
         markSamplingDirty();
         renderSamplingState();
       });
@@ -8297,46 +8126,11 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (targetStdInput) {
-      targetStdInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.targetStd = e.target.value.trim() === '' ? null : Number(e.target.value);
-        markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
     if (minAnnotatorsInput) {
       minAnnotatorsInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
         state.samplingDraft.minAnnotators = Math.max(2, Math.floor(Number(e.target.value || 0)));
         markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    function updateStratifyByDraft() {
-      if (!state.samplingEditMode || !state.samplingDraft) return;
-      var next = [];
-      if (stratifyByLabel && stratifyByLabel.checked) next.push('label');
-      if (stratifyByDomain && stratifyByDomain.checked) next.push('domain');
-      if (stratifyByDifficulty && stratifyByDifficulty.checked) next.push('difficulty');
-      state.samplingDraft.stratifyBy = next;
-      markSamplingDirty();
-      renderSamplingState();
-    }
-
-    if (stratifyByLabel) stratifyByLabel.addEventListener('change', updateStratifyByDraft);
-    if (stratifyByDomain) stratifyByDomain.addEventListener('change', updateStratifyByDraft);
-    if (stratifyByDifficulty) stratifyByDifficulty.addEventListener('change', updateStratifyByDraft);
-
-    if (resampleBtn) {
-      resampleBtn.addEventListener('click', function() {
-        if (!state.samplingEditMode || !state.samplingDraft || !isSamplingEditable()) return;
-        state.samplingDraft.randomSeed = Math.floor(Math.random() * 900000 + 100000);
-        markSamplingDirty();
-        showToast(t('toastResampled'));
-        trackEvent('prototype_resample_clicked');
         renderSamplingState();
       });
     }

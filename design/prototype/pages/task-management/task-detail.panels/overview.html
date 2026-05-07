@@ -200,28 +200,24 @@
 
     <div id="samplingSummaryView" class="kv-dl">
       <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelSamplingValueControl">抽樣筆數</span>
+        <span class="kv-dl-value" id="valueSamplingValueControl"></span>
+      </div>
+      <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
         <span class="kv-dl-value" id="valueTrialRoundControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSamplingModeControl">抽樣方式</span>
-        <span class="kv-dl-value" id="valueSamplingModeControl"></span>
+        <span class="kv-dl-key" id="labelIaaMethodControl">IAA 計算方式</span>
+        <span class="kv-dl-value" id="valueIaaMethodControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSamplingValueControl">抽樣數值</span>
-        <span class="kv-dl-value" id="valueSamplingValueControl"></span>
+        <span class="kv-dl-key" id="labelTargetAgreementControl">目標 IAA</span>
+        <span class="kv-dl-value" id="valueTargetAgreementControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSamplingStrategyControl">抽樣策略</span>
-        <span class="kv-dl-value mono" id="valueSamplingStrategyControl"></span>
-      </div>
-      <div class="kv-dl-row" id="stratifyByKvRow">
-        <span class="kv-dl-key" id="labelStratifyByControl">分層依據</span>
-        <span class="kv-dl-value" id="valueStratifyByControl"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelStopConditionControl">停止條件</span>
-        <span class="kv-dl-value" id="valueStopConditionControl"></span>
+        <span class="kv-dl-key" id="labelMinAnnotatorsControl">最少標記者數</span>
+        <span class="kv-dl-value" id="valueMinAnnotatorsControl"></span>
       </div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelSplitControl">試標 / 正式資料配比</span>
@@ -238,80 +234,46 @@
     </div>
 
     <div class="sampling-edit-form hidden" id="samplingEditForm">
-      <div class="sampling-fields">
+      <div class="sampling-fields" style="grid-template-columns: 1fr 1fr;">
         <div class="field-group">
-          <span class="field-label" id="samplingModeLabel">抽樣方式</span>
-          <div class="sampling-mode-inline" role="radiogroup" aria-labelledby="samplingModeLabel">
-            <label>
-              <input type="radio" name="samplingMode" id="samplingModePercent" value="by_percentage" />
-              <span id="samplingModePercentLabel">百分比</span>
-            </label>
-            <label>
-              <input type="radio" name="samplingMode" id="samplingModeCount" value="by_count" />
-              <span id="samplingModeCountLabel">筆數</span>
-            </label>
-          </div>
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣數值</label>
+          <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣筆數</label>
           <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
+          <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
         </div>
         <div class="field-group">
-          <label class="field-label" id="samplingStrategyLabel">抽樣策略</label>
-          <select class="input-select" id="samplingStrategySelect">
-            <option id="samplingStrategyOptionStratified" value="stratified_random">分層隨機抽樣</option>
-            <option id="samplingStrategyOptionDisagreement" value="high_disagreement">高分歧樣本優先</option>
-            <option id="samplingStrategyOptionEdgeCases" value="edge_cases">邊界樣本優先</option>
+          <label class="field-label" id="iaaMethodLabel" for="iaaMethodSelect">IAA 計算方式</label>
+          <select class="input-select" id="iaaMethodSelect">
+            <option id="iaaOptKrippendorff" value="krippendorff_alpha_nominal">Krippendorff's Alpha（nominal）</option>
+            <option id="iaaOptCohensKappa" value="cohens_kappa">Cohen's Kappa</option>
+            <option id="iaaOptFleissKappa" value="fleiss_kappa">Fleiss' Kappa</option>
+            <option id="iaaOptIcc" value="icc">ICC（組內相關係數）</option>
+            <option id="iaaOptPairwiseF1Strict" value="pairwise_f1_strict">Pairwise F1（嚴格）</option>
+            <option id="iaaOptPairwiseF1Partial" value="pairwise_f1_partial">Pairwise F1（部分重疊）</option>
+            <option id="iaaOptPairwiseTripleF1" value="pairwise_triple_f1">Pairwise Triple-level F1</option>
           </select>
-        </div>
-      </div>
-      <div class="sampling-fields sampling-fields-advanced">
-        <div class="field-group">
-          <label class="field-label" id="samplingSeedLabel" for="samplingSeedInput">Random Seed</label>
-          <input class="input-number" id="samplingSeedInput" type="number" min="1" step="1" value="248931" />
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
-          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
-        </div>
-        <div class="field-group" id="stratifyByFieldGroup">
-          <span class="field-label" id="samplingStratifyLabel">分層依據</span>
-          <div class="sampling-mode-inline" role="group" aria-labelledby="samplingStratifyLabel">
-            <label>
-              <input type="checkbox" id="stratifyByLabel" />
-              <span id="stratifyByLabelText">label</span>
-            </label>
-            <label>
-              <input type="checkbox" id="stratifyByDomain" />
-              <span id="stratifyByDomainText">domain</span>
-            </label>
-            <label>
-              <input type="checkbox" id="stratifyByDifficulty" />
-              <span id="stratifyByDifficultyText">difficulty</span>
-            </label>
-          </div>
         </div>
       </div>
 
       <div class="sampling-fields sampling-fields-advanced">
         <div class="field-group">
+          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
+          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
+        </div>
+        <div class="field-group">
           <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
           <input class="input-number" id="targetAgreementInput" type="number" min="0" max="1" step="0.01" value="0.80" />
+          <p class="field-hint" id="targetAgreementHint"></p>
         </div>
         <div class="field-group">
-          <label class="field-label" id="targetStdInputLabel" for="targetStdInput">標準差上限</label>
-          <input class="input-number" id="targetStdInput" type="number" min="0" max="1" step="0.01" value="0.10" />
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標註者數</label>
+          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標記者數</label>
           <input class="input-number" id="minAnnotatorsInput" type="number" min="2" step="1" value="3" />
         </div>
       </div>
 
       <div class="data-split-viz">
         <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
-          <div class="split-seg split-dry" id="splitDryBar" style="width:9.4%"></div>
-          <div class="split-seg split-official" id="splitOfficialBar" style="width:90.6%"></div>
+          <div class="split-seg split-dry" id="splitDryBar" style="width:12%"></div>
+          <div class="split-seg split-official" id="splitOfficialBar" style="width:88%"></div>
         </div>
         <div class="split-legend">
           <div class="split-legend-item">
@@ -321,23 +283,18 @@
           </div>
           <div class="split-legend-item">
             <span class="split-dot split-dot-dry" aria-hidden="true"></span>
-            <span class="split-legend-key" id="sampleUsageLabel">試標使用量</span>
+            <span class="split-legend-key" id="sampleUsageLabel">試標</span>
             <strong class="split-legend-value" id="sampleUsageValue">—</strong>
           </div>
           <div class="split-legend-item">
             <span class="split-dot split-dot-official" aria-hidden="true"></span>
-            <span class="split-legend-key" id="officialReserveLabel">正式標記預留量</span>
+            <span class="split-legend-key" id="officialReserveLabel">正式</span>
             <strong class="split-legend-value" id="officialReserveValue">—</strong>
           </div>
         </div>
       </div>
 
       <p class="inline-error" id="samplingError"></p>
-
-      <div class="sampling-footer">
-        <button class="btn btn-secondary" type="button" id="resampleBtn">重算抽樣</button>
-        <span class="status-hint" id="resampleHint">僅草稿階段可重算；進入試標後需建立新的執行批次。</span>
-      </div>
 
       <hr class="panel-divider" />
 
