@@ -704,6 +704,52 @@
     .member-table tbody tr:last-child td { border-bottom: none; }
     .member-name { font-weight: 700; }
     .member-email { color: var(--color-text-soft); }
+    .member-entry-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+      gap: var(--space-md);
+    }
+    .member-entry-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-slate-50);
+      padding: var(--space-md);
+    }
+    .member-entry-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .member-entry-hint {
+      margin: 0 0 var(--space-sm);
+      font-size: 13px;
+      color: var(--color-text-soft);
+      line-height: 1.6;
+    }
+    .member-entry-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: var(--space-sm);
+    }
+    .member-entry-row .input-text { flex: 1; }
+    .member-entry-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .member-account {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .member-search-empty {
+      text-align: center;
+      color: var(--color-text-soft);
+      font-size: 13px;
+      padding: 18px 12px;
+    }
     .role-select-inline {
       width: 130px;
       border: 1px solid var(--color-border);
@@ -2293,6 +2339,13 @@
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
       .settings-schema-field-grid { grid-template-columns: 1fr; }
+      .member-entry-grid { grid-template-columns: 1fr; }
+      .member-entry-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .member-entry-row .role-select-inline,
+      .member-entry-row .mini-btn { width: 100%; }
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
       .exec-stage-banner { flex-direction: column; }
@@ -2697,7 +2750,14 @@
       samplingErrorAnnotators: '最少標記者數需 >= 2。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
-      candidateListTitle: '可加入成員名單',
+      memberAddTitle: '加入成員',
+      memberAddSubtitle: '可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。',
+      memberSearchTitle: '搜尋平台成員',
+      memberSearchSubtitle: '支援以帳號、姓名或 Email 搜尋目前平台成員。',
+      memberSearchPlaceholder: '輸入帳號、姓名或 Email',
+      memberInviteTitle: 'Email 邀請',
+      memberInviteSubtitle: '填寫對方 Email 並指定任務角色後，寄送邀請加入任務。',
+      memberInvitePlaceholder: '輸入邀請 Email',
       thMemberName: '姓名',
       thMemberEmail: 'Email',
       thMemberTaskRole: '任務角色',
@@ -2705,19 +2765,25 @@
       thMemberJoinedAt: '加入時間',
       thMemberLastActive: '最後活動',
       thMemberActions: '操作',
-      thCandidateName: '姓名',
-      thCandidateEmail: 'Email',
-      thCandidateTaskCount: '目前已在任務數量',
-      thCandidateAssignRole: '指派任務角色',
-      thCandidateActions: '操作',
+      thSearchAccount: '帳號',
+      thSearchName: '姓名',
+      thSearchEmail: 'Email',
+      thSearchTaskCount: '目前已在任務數量',
+      thSearchActions: '操作',
       memberStatusActive: '啟用',
       memberStatusDisabled: '停用',
+      memberStatusInvited: '邀請中',
       taskRoleReviewer: '審核員',
       taskRoleAnnotator: '標記員',
       actionRemove: '移除',
       actionDisable: '停用',
       actionEnable: '啟用',
       actionAdd: '加入任務',
+      actionSendInvite: '寄送邀請',
+      memberSearchIdle: '請先輸入帳號、姓名或 Email 再開始搜尋',
+      memberSearchEmpty: '沒有符合條件、且尚未加入此任務的平台成員',
+      errMemberInviteEmail: '請輸入有效的 Email',
+      errMemberDuplicate: '此成員已在任務中或已寄出邀請',
       progressSummaryTitle: '整體進度摘要',
       progressStageDry: '試標',
       progressStageOfficial: '正式標記',
@@ -2785,6 +2851,7 @@
       progressStageMetaTpl: '{completed}/{total}（{rate}%）',
       reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
       toastMemberUpdated: '成員設定已更新',
+      toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
       memberActionModalBodyRemove: '是否移除 {name}（{role}）？此操作會立即生效。',
       memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再提交標記。',
@@ -3124,7 +3191,14 @@
       samplingErrorAnnotators: 'Minimum annotators must be >= 2.',
       memberListTitle: 'Current members',
       memberListSubtitle: 'Task role is fixed at join time. Existing members cannot switch role mid-task; remove and re-add to change role.',
-      candidateListTitle: 'Available users to add',
+      memberAddTitle: 'Add members',
+      memberAddSubtitle: 'Search existing platform members or send an email invitation to join this task.',
+      memberSearchTitle: 'Search platform members',
+      memberSearchSubtitle: 'Search current platform members by account, name, or email.',
+      memberSearchPlaceholder: 'Enter account, name, or email',
+      memberInviteTitle: 'Email invite',
+      memberInviteSubtitle: 'Send an invitation email after assigning the task role.',
+      memberInvitePlaceholder: 'Enter invitation email',
       thMemberName: 'Name',
       thMemberEmail: 'Email',
       thMemberTaskRole: 'Task role',
@@ -3132,19 +3206,25 @@
       thMemberJoinedAt: 'Joined at',
       thMemberLastActive: 'Last active',
       thMemberActions: 'Actions',
-      thCandidateName: 'Name',
-      thCandidateEmail: 'Email',
-      thCandidateTaskCount: 'Current task count',
-      thCandidateAssignRole: 'Assign task role',
-      thCandidateActions: 'Actions',
+      thSearchAccount: 'Account',
+      thSearchName: 'Name',
+      thSearchEmail: 'Email',
+      thSearchTaskCount: 'Current task count',
+      thSearchActions: 'Actions',
       memberStatusActive: 'active',
       memberStatusDisabled: 'disabled',
+      memberStatusInvited: 'invited',
       taskRoleReviewer: 'Reviewer',
       taskRoleAnnotator: 'Annotator',
       actionRemove: 'Remove',
       actionDisable: 'Disable',
       actionEnable: 'Enable',
       actionAdd: 'Add to task',
+      actionSendInvite: 'Send invite',
+      memberSearchIdle: 'Enter an account, name, or email to start searching',
+      memberSearchEmpty: 'No matching platform members are available to add',
+      errMemberInviteEmail: 'Please enter a valid email',
+      errMemberDuplicate: 'This member is already in the task or already invited',
       progressSummaryTitle: 'Progress summary',
       progressStageDry: 'Dry Run',
       progressStageOfficial: 'Official Run',
@@ -3212,6 +3292,7 @@
       progressStageMetaTpl: '{completed}/{total} ({rate}%)',
       reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
       toastMemberUpdated: 'Member setting updated',
+      toastMemberInvited: 'Invitation sent. The member will join after accepting it',
       memberActionModalTitle: 'Confirm member action',
       memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? This takes effect immediately.',
       memberActionModalBodyDisable: 'Disable {name} ({role})? Disabled members cannot submit annotations.',
@@ -3497,9 +3578,9 @@
   ];
 
   var PLATFORM_USERS = [
-    { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', activeTaskCount: 1 },
-    { name: 'Steven Kao', email: 'steven.kao@labelsuite.io', activeTaskCount: 3 },
-    { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', activeTaskCount: 5 },
+    { account: 'alex.wang', name: 'Alex Wang', email: 'alex.wang@labelsuite.io', activeTaskCount: 1 },
+    { account: 'olivia.lin', name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', activeTaskCount: 2 },
+    { account: 'jason.h', name: 'Jason Huang', email: 'jason.h@labelsuite.io', activeTaskCount: 3 },
   ];
 
   var ROLE_SELF_EMAIL = {
@@ -4452,7 +4533,12 @@ function interpolate(template, payload) {
     setText('riskConfirmBtn', t('riskConfirmBtn'));
     setText('memberListTitle', t('memberListTitle'));
     setText('memberListSubtitle', t('memberListSubtitle'));
-    setText('candidateListTitle', t('candidateListTitle'));
+    setText('memberAddTitle', t('memberAddTitle'));
+    setText('memberAddSubtitle', t('memberAddSubtitle'));
+    setText('memberSearchTitle', t('memberSearchTitle'));
+    setText('memberSearchSubtitle', t('memberSearchSubtitle'));
+    setText('memberInviteTitle', t('memberInviteTitle'));
+    setText('memberInviteSubtitle', t('memberInviteSubtitle'));
     setText('thMemberName', t('thMemberName'));
     setText('thMemberEmail', t('thMemberEmail'));
     setText('thMemberTaskRole', t('thMemberTaskRole'));
@@ -4460,11 +4546,23 @@ function interpolate(template, payload) {
     setText('thMemberJoinedAt', t('thMemberJoinedAt'));
     setText('thMemberLastActive', t('thMemberLastActive'));
     setText('thMemberActions', t('thMemberActions'));
-    setText('thCandidateName', t('thCandidateName'));
-    setText('thCandidateEmail', t('thCandidateEmail'));
-    setText('thCandidateTaskCount', t('thCandidateTaskCount'));
-    setText('thCandidateAssignRole', t('thCandidateAssignRole'));
-    setText('thCandidateActions', t('thCandidateActions'));
+    setText('thSearchAccount', t('thSearchAccount'));
+    setText('thSearchName', t('thSearchName'));
+    setText('thSearchEmail', t('thSearchEmail'));
+    setText('thSearchTaskCount', t('thSearchTaskCount'));
+    setText('thSearchActions', t('thSearchActions'));
+    var memberSearchInput = document.getElementById('memberSearchInput');
+    if (memberSearchInput) memberSearchInput.placeholder = t('memberSearchPlaceholder');
+    var memberInviteEmailInput = document.getElementById('memberInviteEmailInput');
+    if (memberInviteEmailInput) memberInviteEmailInput.placeholder = t('memberInvitePlaceholder');
+    setText('memberInviteSendBtn', t('actionSendInvite'));
+    ['memberSearchRoleSelect', 'memberInviteRoleSelect'].forEach(function(id) {
+      var select = document.getElementById(id);
+      if (select && select.options.length >= 2) {
+        select.options[0].textContent = t('taskRoleAnnotator');
+        select.options[1].textContent = t('taskRoleReviewer');
+      }
+    });
     setText('progressSummaryTitle', t('progressSummaryTitle'));
     setText('progressStageDryBtn', t('progressStageDry'));
     setText('progressStageOfficialBtn', t('progressStageOfficial'));
@@ -7307,7 +7405,9 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function getMemberStatusBadgeClass(status) {
-    return status === 'active' ? 'badge-member-active' : 'badge-member-disabled';
+    if (status === 'active') return 'badge-member-active';
+    if (status === 'invited') return 'badge-draft';
+    return 'badge-member-disabled';
   }
 
   function getTaskRoleBadgeClass(role) {
@@ -7398,7 +7498,11 @@ function getTaskTypeLabel(taskTypeKey) {
       var tdStatus = document.createElement('td');
       var statusBadge = document.createElement('span');
       statusBadge.className = 'badge ' + getMemberStatusBadgeClass(member.status);
-      statusBadge.textContent = member.status === 'active' ? t('memberStatusActive') : t('memberStatusDisabled');
+      statusBadge.textContent = member.status === 'active'
+        ? t('memberStatusActive')
+        : member.status === 'invited'
+          ? t('memberStatusInvited')
+          : t('memberStatusDisabled');
       tdStatus.appendChild(statusBadge);
       tr.appendChild(tdStatus);
       tr.appendChild(tdWithClass(member.joinedAt));
@@ -7422,37 +7526,91 @@ function getTaskTypeLabel(taskTypeKey) {
         });
       });
 
-      var toggleBtn = document.createElement('button');
-      toggleBtn.className = member.status === 'active' ? 'mini-btn mini-btn-warning' : 'mini-btn mini-btn-success';
-      toggleBtn.type = 'button';
-      toggleBtn.disabled = state.taskRole !== 'project_leader';
-      toggleBtn.textContent = member.status === 'active' ? t('actionDisable') : t('actionEnable');
-      toggleBtn.addEventListener('click', function() {
-        openMemberActionModal({
-          type: member.status === 'active' ? 'disable' : 'enable',
-          index: idx,
-          title: t('memberActionModalTitle'),
-          message: interpolate(
-            member.status === 'active' ? t('memberActionModalBodyDisable') : t('memberActionModalBodyEnable'),
-            { name: member.name, role: getTaskRoleLabel(member.taskRole) }
-          ),
-        });
-      });
-
       wrap.appendChild(removeBtn);
-      wrap.appendChild(toggleBtn);
+      if (member.status !== 'invited') {
+        var toggleBtn = document.createElement('button');
+        toggleBtn.className = member.status === 'active' ? 'mini-btn mini-btn-warning' : 'mini-btn mini-btn-success';
+        toggleBtn.type = 'button';
+        toggleBtn.disabled = state.taskRole !== 'project_leader';
+        toggleBtn.textContent = member.status === 'active' ? t('actionDisable') : t('actionEnable');
+        toggleBtn.addEventListener('click', function() {
+          openMemberActionModal({
+            type: member.status === 'active' ? 'disable' : 'enable',
+            index: idx,
+            title: t('memberActionModalTitle'),
+            message: interpolate(
+              member.status === 'active' ? t('memberActionModalBodyDisable') : t('memberActionModalBodyEnable'),
+              { name: member.name, role: getTaskRoleLabel(member.taskRole) }
+            ),
+          });
+        });
+        wrap.appendChild(toggleBtn);
+      }
       tdActions.appendChild(wrap);
       tr.appendChild(tdActions);
       tbody.appendChild(tr);
     });
   }
 
-  function renderCandidateTable() {
-    var tbody = document.getElementById('candidateTableBody');
-    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-
-    PLATFORM_USERS.forEach(function(user) {
+  function getAvailablePlatformUsers(query) {
+    var needle = String(query || '').trim().toLowerCase();
+    if (!needle) return [];
+    return PLATFORM_USERS.filter(function(user) {
       var inTask = TASK_MEMBERS.some(function(member) { return member.email === user.email; });
+      if (inTask) return false;
+      return [user.account, user.name, user.email].some(function(value) {
+        return String(value || '').toLowerCase().indexOf(needle) >= 0;
+      });
+    });
+  }
+
+  function addPlatformUserToTask(user, role) {
+    if (!user || TASK_MEMBERS.some(function(member) { return member.email === user.email; })) return;
+    TASK_MEMBERS.push({
+      name: user.name,
+      email: user.email,
+      taskRole: role,
+      status: 'active',
+      joinedAt: '2026-04-21 10:25',
+      lastActive: '-',
+    });
+    user.activeTaskCount = (user.activeTaskCount || 0) + 1;
+    showToast(t('toastMemberUpdated'));
+    trackEvent('prototype_member_added', { member_email: user.email, role: role, source: 'platform_search' });
+    renderMemberManagement();
+  }
+
+  function renderMemberSearchResults() {
+    var tbody = document.getElementById('memberSearchResultsBody');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    var input = document.getElementById('memberSearchInput');
+    var roleSelect = document.getElementById('memberSearchRoleSelect');
+    var query = input ? input.value : '';
+    var normalizedQuery = String(query || '').trim();
+    var available = getAvailablePlatformUsers(query);
+    if (!normalizedQuery) {
+      var idleTr = document.createElement('tr');
+      var idleTd = document.createElement('td');
+      idleTd.colSpan = 5;
+      idleTd.className = 'member-search-empty';
+      idleTd.textContent = t('memberSearchIdle');
+      idleTr.appendChild(idleTd);
+      tbody.appendChild(idleTr);
+      return;
+    }
+    if (!available.length) {
+      var emptyTr = document.createElement('tr');
+      var emptyTd = document.createElement('td');
+      emptyTd.colSpan = 5;
+      emptyTd.className = 'member-search-empty';
+      emptyTd.textContent = t('memberSearchEmpty');
+      emptyTr.appendChild(emptyTd);
+      tbody.appendChild(emptyTr);
+      return;
+    }
+
+    available.forEach(function(user) {
       var tr = document.createElement('tr');
 
       function td(text, cls) {
@@ -7462,49 +7620,51 @@ function getTaskTypeLabel(taskTypeKey) {
         return node;
       }
 
+      tr.appendChild(td(user.account || '-', 'member-account'));
       tr.appendChild(td(user.name, 'member-name'));
       tr.appendChild(td(user.email, 'member-email'));
       tr.appendChild(td(String(user.activeTaskCount || 0)));
-
-      var tdAssign = document.createElement('td');
-      var assignSelect = document.createElement('select');
-      assignSelect.className = 'role-select-inline';
-      assignSelect.disabled = state.taskRole !== 'project_leader' || inTask;
-      ['annotator', 'reviewer'].forEach(function(role) {
-        var opt = document.createElement('option');
-        opt.value = role;
-        opt.textContent = getTaskRoleLabel(role);
-        assignSelect.appendChild(opt);
-      });
-      tdAssign.appendChild(assignSelect);
-      tr.appendChild(tdAssign);
 
       var tdAction = document.createElement('td');
       var addBtn = document.createElement('button');
       addBtn.className = 'mini-btn mini-btn-primary';
       addBtn.type = 'button';
-      addBtn.disabled = state.taskRole !== 'project_leader' || inTask;
+      addBtn.disabled = state.taskRole !== 'project_leader';
       addBtn.textContent = t('actionAdd');
       addBtn.addEventListener('click', function() {
-        if (inTask) return;
-        TASK_MEMBERS.push({
-          name: user.name,
-          email: user.email,
-          taskRole: assignSelect.value,
-          status: 'active',
-          joinedAt: '2026-04-21 10:25',
-          lastActive: '-',
-        });
-        user.activeTaskCount = (user.activeTaskCount || 0) + 1;
-        showToast(t('toastMemberUpdated'));
-        trackEvent('prototype_member_added', { member_email: user.email, role: assignSelect.value });
-        renderMemberTable();
-        renderCandidateTable();
+        addPlatformUserToTask(user, roleSelect ? roleSelect.value : 'annotator');
       });
       tdAction.appendChild(addBtn);
       tr.appendChild(tdAction);
       tbody.appendChild(tr);
     });
+  }
+
+  function inviteMemberByEmail() {
+    var input = document.getElementById('memberInviteEmailInput');
+    var roleSelect = document.getElementById('memberInviteRoleSelect');
+    if (!input || !roleSelect) return;
+    var email = String(input.value || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showToast(t('errMemberInviteEmail'), true);
+      return;
+    }
+    if (TASK_MEMBERS.some(function(member) { return String(member.email || '').toLowerCase() === email; })) {
+      showToast(t('errMemberDuplicate'), true);
+      return;
+    }
+    TASK_MEMBERS.push({
+      name: email,
+      email: email,
+      taskRole: roleSelect.value,
+      status: 'invited',
+      joinedAt: '2026-04-21 10:30',
+      lastActive: '-',
+    });
+    input.value = '';
+    showToast(t('toastMemberInvited'));
+    trackEvent('prototype_member_added', { member_email: email, role: roleSelect.value, source: 'email_invite' });
+    renderMemberManagement();
   }
 
   function openMemberActionModal(action) {
@@ -7542,13 +7702,12 @@ function getTaskTypeLabel(taskTypeKey) {
     showToast(t('toastMemberUpdated'));
     trackEvent('prototype_member_action_confirmed', { action_type: action.type, member_email: target.email || '' });
     closeMemberActionModal();
-    renderMemberTable();
-    renderCandidateTable();
+    renderMemberManagement();
   }
 
   function renderMemberManagement() {
     renderMemberTable();
-    renderCandidateTable();
+    renderMemberSearchResults();
   }
 
   function getProgressStageData() {
@@ -9101,6 +9260,37 @@ function getTaskTypeLabel(taskTypeKey) {
         closeMemberActionModal();
       }
     });
+
+    var memberSearchInput = document.getElementById('memberSearchInput');
+    if (memberSearchInput) {
+      memberSearchInput.addEventListener('input', function() {
+        renderMemberSearchResults();
+      });
+    }
+
+    var memberSearchRoleSelect = document.getElementById('memberSearchRoleSelect');
+    if (memberSearchRoleSelect) {
+      memberSearchRoleSelect.addEventListener('change', function() {
+        renderMemberSearchResults();
+      });
+    }
+
+    var memberInviteSendBtn = document.getElementById('memberInviteSendBtn');
+    if (memberInviteSendBtn) {
+      memberInviteSendBtn.addEventListener('click', function() {
+        inviteMemberByEmail();
+      });
+    }
+
+    var memberInviteEmailInput = document.getElementById('memberInviteEmailInput');
+    if (memberInviteEmailInput) {
+      memberInviteEmailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inviteMemberByEmail();
+        }
+      });
+    }
 
 document.getElementById('progressStageDryBtn').addEventListener('click', function() {
       state.progressStage = 'dry';

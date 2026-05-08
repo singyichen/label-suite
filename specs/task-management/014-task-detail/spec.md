@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.7.2
+**版本**：1.7.3
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -50,10 +50,10 @@ sequenceDiagram
     UI->>API: 驗證 task context 與角色
     API->>DB: 查詢 task + membership
     DB-->>API: 回傳任務資料與角色
-    Note over UI,API: 讀取 task-new 已建立的初始成員與初始抽樣/隔離設定
+    Note over UI,API: 讀取 task-new 已建立的 creator membership 與初始抽樣/隔離設定
     API-->>UI: 顯示 4 tabs（預設 overview）
 
-    PL->>UI: 在 member-management 新增/移除/停用成員
+    PL->>UI: 在 member-management 以搜尋或 Email 邀請新增成員，並可移除/停用既有成員
     UI->>API: 更新 task_membership
     API->>DB: 寫入 membership
     DB-->>API: 成功
@@ -108,7 +108,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 **驗收情境**：
 
 1. **Given** `task_role = project_leader`，**When** 進入 `/task-detail`，**Then** 可看到五個 tab 且預設為 `overview`。
-2. **Given** 位於 `member-management`，**When** 從平台使用者清單加入/移除/停用成員，**Then** 成員列表更新且新加入成員角色生效。
+2. **Given** 位於 `member-management`，**When** 透過搜尋平台成員或 Email 邀請加入，並對既有成員執行移除/停用，**Then** 成員列表更新且新加入成員角色生效。
 3. **Given** 任務在 `draft`，**When** 點擊「開始試標回合」，**Then** 狀態變為 `dry_run_in_progress`。
 4. **Given** 任務在 `waiting_iaa_confirmation`，**When** 點擊「開始正式標記」，**Then** 狀態變為 `official_run_in_progress`。
 5. **Given** 位於 `annotation-results`，**When** 點擊匯出，**Then** 可匯出 `json` 或 `json-min`，且欄位結構需依格式與 `task_type` 正確切換。
@@ -226,16 +226,23 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - 空狀態：尚無任何標記提交時顯示「尚無標記結果」並提供引導文案，不得顯示空表格
 - Tab E：`成員管理`
   - 區塊 1：`目前成員清單`
-    - 欄位：姓名、Email、任務角色、狀態（active/disabled）、加入時間、最後活動時間、操作
+    - 欄位：姓名、Email、任務角色、狀態（active/disabled/invited）、加入時間、最後活動時間、操作
     - 任務角色顯示：以有色標籤區隔（`reviewer` 與 `annotator` 使用不同色彩），樣式對齊 task-list「標記階段」badge 規格（輕量標籤尺寸與邊框）
-    - 成員狀態顯示：`啟用/停用` 需以 badge 呈現，樣式對齊 task-list「標記階段」badge 規格
-    - 操作：移除成員、停用成員（僅 `project_leader`）；既有成員角色唯讀不可編輯
+    - 成員狀態顯示：`啟用/停用/邀請中` 需以 badge 呈現，樣式對齊 task-list「標記階段」badge 規格
+    - 操作：移除成員、停用成員（僅 `project_leader`）；既有成員角色唯讀不可編輯；`invited` 狀態僅允許移除，不顯示停用/啟用
     - 操作欄順序：`移除` 固定在左側，`停用/啟用` 固定在右側
     - RWD 規則：窄 viewport 可使用橫向捲動容器，但表格基準寬度需控制在可用手機寬度附近；一般文字儲存格允許換行，不得依賴全列 `nowrap` 導致過度橫向延展
-  - 區塊 2：`可加入成員名單`
-    - 欄位：平台使用者姓名、Email、目前已在任務數量（active task count）
-    - 欄位語意：`目前已在任務數量` 代表該人員目前參與中的任務數，提供 `project_leader` 作為加入前負載評估依據
-    - 操作：加入任務並指派 `reviewer` 或 `annotator`
+  - 區塊 2：`加入成員`
+    - 子區塊 A：`搜尋平台成員`
+      - 欄位：搜尋輸入框、欲指派任務角色下拉、搜尋結果表
+      - 搜尋條件：支援以 `帳號 / 姓名 / Email` 查詢目前平台成員
+      - 搜尋結果欄位：帳號、姓名、Email、目前已在任務數量（active task count）、操作
+      - 欄位語意：`目前已在任務數量` 代表該人員目前參與中的任務數，提供 `project_leader` 作為加入前負載評估依據
+      - 隱私限制：頁面初始載入時不得預載或顯示所有平台成員資料；必須在使用者輸入查詢關鍵字後才可顯示搜尋結果
+      - 操作：將搜尋結果加入任務並指派 `reviewer` 或 `annotator`
+    - 子區塊 B：`Email 邀請`
+      - 欄位：Email 輸入框、欲指派任務角色下拉、寄送邀請按鈕
+      - 操作：寄送邀請後，該成員需以 `invited` 狀態出現在目前成員清單
   - 角色可見性：`reviewer` 不顯示此 tab；若以直連方式進入，導回 `overview` 並提示無權限
 - Tab C：`標記進度`
   - 區塊 1：`整體進度摘要`
@@ -273,6 +280,9 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - prototype 實作需採「單一殼頁 + tab partial」結構：`task-detail.html` 僅負責 shared layout、tab header 與狀態管理；五個 tab 內容拆分為獨立 partial 檔案載入，避免單檔維護過大。
 - `project_leader` 可編輯 member-management 中的新增/停用/移除；既有成員角色維持唯讀，其他角色不得有編輯權。
 - `project_leader` 僅可管理自己所屬任務的成員，不可跨任務異動。
+- `member-management` 搜尋區在未輸入查詢關鍵字前，不得顯示任何平台成員資料，避免 project leader 直接瀏覽全站使用者 Email。
+- `member-management` 搜尋結果必須排除已在當前任務中的成員；被移除後才可再次被搜尋與加入。
+- `member-management` 的 Email 邀請必須驗證 email 格式，並阻擋與既有任務成員或既有邀請重複的 email。
 - Overview 可編輯模式僅在 `OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE` 同時成立時啟用。
 - Overview 編輯模式需支援未儲存變更保護；切換 tab、返回列表、重新整理時，若有未儲存內容需先確認。
 - 變更 `task_type`、`dataset`、`config` 前，系統需顯示影響確認（可能影響抽樣設定與既有預覽設定）；使用者確認後才套用。
@@ -311,10 +321,11 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - `reviewer` 在 `overview` 需顯示 disabled 執行按鈕（含 tooltip：`僅 project leader 可操作`），避免看不到入口而誤解。
 - 各 tab 需定義空狀態區塊（icon + 文案 + 可行下一步 CTA）；空狀態不得使用全白空表格。
 - `member-management` 的危險操作（移除/停用）需二次確認 modal，modal 文案包含被影響成員名稱與角色。
+- `member-management` 的搜尋結果區在 idle state 必須顯示「請先輸入帳號、姓名或 Email 再開始搜尋」或等價提示，不得顯示空白表格或預載名單。
 - `annotation-results` 的表格在窄 viewport 必須保留橫向捲動能力與 touch scrolling；基準最小寬度需控制在約 `640px` 等級，避免沿用過寬桌面設定造成手機 viewport 幾乎無法閱讀。
 - `annotation-progress` 與 `work-log` 的表格在 mobile 使用橫向捲動容器，不壓縮到欄位重疊。
 - `annotation-progress` 的階段切換按鈕需與「整體進度摘要」標題同列顯示（左標題、右切換）。
-- 當語言切換為中文時，`member-management` 中成員狀態與可加入成員名單欄位標題需使用中文（例如：`active/disabled` 顯示為 `啟用/停用`，`active task count` 顯示為 `目前已在任務數量`）。
+- 當語言切換為中文時，`member-management` 中成員狀態與搜尋結果欄位標題需使用中文（例如：`active/disabled/invited` 顯示為 `啟用/停用/邀請中`，`active task count` 顯示為 `目前已在任務數量`）。
 - `member-management` 的列內操作按鈕需使用語意色階：`加入任務=primary`、`啟用=success`、`停用=warning`、`移除=danger`，以降低誤操作。
 - 列內操作按鈕必須定義 `default / hover / focus-visible / disabled` 狀態，且 `focus-visible` 需有可見外框。
 - 成員清單操作欄位按鈕順序固定為：`移除`（左）→ `停用/啟用`（右）。
@@ -365,7 +376,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 **行為規則**：
 
 - 狀態轉換必須符合 `TASK_STATUSES` 順序，不允許跳階。
-- 任務建立後，task-detail 必須先顯示由 `task-new` 帶入的初始成員、抽樣與資料隔離設定，再允許調整。
+- 任務建立後，task-detail 必須先顯示由 `task-new` 帶入的 creator membership、抽樣與資料隔離設定，再允許後續成員調整。
 - Dry Run 完成條件採 `DRY_RUN_COMPLETION_RULE`，僅計入 `membership_status = active` 的 annotator。
 - 只要仍有任一位 `active annotator` 未完成其被指派的 Dry Run 樣本，任務狀態不得由 `dry_run_in_progress` 轉為 `waiting_iaa_confirmation`。
 - Dry Run 完成通知需在 dashboard 待處理區顯示 badge。
@@ -430,7 +441,11 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-003**：頁面必須提供五個 tabs：`overview`、`annotation-results`、`annotation-progress`、`work-log`、`member-management`，且預設為 `overview`。
 - **FR-004**：tab 切換必須為頁內行為，不觸發路由跳轉。
 - **FR-005**：`project_leader` 必須可於 `member-management` 執行成員新增、移除/停用；新加入時可指派角色。
-- **FR-005a**：`member-management` 必須先顯示由 `task-new` 帶入的初始成員；既有成員角色為唯讀，若需變更必須移除後重新加入。
+- **FR-005a**：`member-management` 必須先顯示任務既有成員（至少包含由 `task-new` 建立時帶入的 `project_leader` membership）；既有成員角色為唯讀，若需變更必須移除後重新加入。
+- **FR-005b**：成員新增入口必須拆分為「搜尋平台成員」與「Email 邀請」兩種方式，不得提供可直接瀏覽全部候選成員的靜態名單。
+- **FR-005c**：搜尋平台成員功能必須支援以 `帳號 / 姓名 / Email` 查詢；未輸入查詢關鍵字前不得顯示任何平台成員資料。
+- **FR-005d**：搜尋結果必須排除已在當前任務中的成員，且加入後需立即自搜尋結果消失。
+- **FR-005e**：Email 邀請必須驗證 email 格式並阻擋重複；寄送成功後該成員需以 `invited` 狀態出現在目前成員清單。
 - **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
@@ -576,7 +591,9 @@ flowchart LR
 ## 成功標準 *(必填)*
 
 - **SC-001**：`project_leader` 可在 `/task-detail` 使用五個 tabs 並完成成員調整、執行控制與標記結果查看／匯出。
-- **SC-001a**：`task-detail` 可正確顯示由 `task-new` 建立時帶入的初始成員、抽樣與資料隔離設定。
+- **SC-001a**：`task-detail` 可正確顯示由 `task-new` 建立時帶入的 `project_leader` membership、抽樣與資料隔離設定。
+- **SC-001b**：`member-management` 搜尋區在未輸入查詢關鍵字前，不會顯示任何平台成員資料；輸入查詢後才顯示符合條件且尚未加入任務的結果。
+- **SC-001c**：`member-management` 可同時支援「搜尋平台成員加入」與「Email 邀請加入」兩種流程；Email 邀請成功後，新成員會以 `invited` 狀態顯示於目前成員清單。
 - **SC-002**：`reviewer` 可唯讀存取授權內容，且 `work-log` 僅顯示本人資料。
 - **SC-003**：`annotator` 不能進入 `/task-detail`，會被導向 `/task-list` 並顯示無權限提示。
 - **SC-004**：任務狀態轉換遵循定義順序，且僅在所有 `active annotator` 完成各自全部試標樣本後才可由 `dry_run_in_progress` 自動進入 `waiting_iaa_confirmation` 並產生提醒。
@@ -620,6 +637,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.3 | 2026-05-08 | 同步 member-management 最新 prototype：移除「可加入成員名單」，改為「搜尋平台成員 + Email 邀請」雙入口；新增 `invited` 狀態、搜尋前不得預載平台成員資料的隱私限制，以及 idle / search / invite 流程對應 FR/SC |
 | 1.7.2 | 2026-05-08 | 同步 `013-task-new` 最新說明結構：Overview「說明文件上傳」改為標記員/審核員雙角色區塊；`OVERVIEW_EDITABLE_FIELDS`、關鍵實體與成功標準同步改為分離的 guideline text / assets 欄位 |
 | 1.7.1 | 2026-05-07 | 同步任務狀態與執行控制 UI 精簡：stage flow 明確維持 `draft → 試標階段 → 正式標記中 → 已完成`；樣本池分配改為依回合動態分色並逐一顯示 `R1 / R2 / 正式` 圖例；試標回合歷程日期改為單行且移除 R1/R2 間垂直連接線；移除 stage banner 的 `已用回合 / 正式池` meta pills 與達標條件下方的 `草稿 / 已隔離` badges；同步更新 FR-010p、FR-010p-1、SC-019 與 Prototype 互動規格 |
 | 1.7.0 | 2026-05-07 | 簡化抽樣設定：移除百分比模式、抽樣策略、隨機種子、分層依據、標準差上限、重算抽樣；改為固定筆數 + IAA 計算方式（`IAA_METHOD_ENUM` 下拉）+ 動態建議目標 IAA；更新常數、FR-010 系列、SC-017/018、TaskDetail/SampleSnapshot 欄位、OVERVIEW_EDITABLE_FIELDS |

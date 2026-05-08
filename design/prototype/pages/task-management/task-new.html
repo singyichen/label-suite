@@ -362,6 +362,7 @@
 
     /* ── Step 3: Startup settings ── */
     .startup-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .startup-layout-single { grid-template-columns: 1fr; }
     .startup-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-slate-50); }
     .startup-section-title { font-size: 14px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
     .member-source-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-sm); }
@@ -656,40 +657,10 @@
 
         <div class="notice-info" id="s3Notice">
           <svg style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="s3NoticeText">先完成成員與抽樣方式，建立後可直接進入執行狀態。</span>
+          <span id="s3NoticeText">完成任務建立後，再邀請標記員與審核員加入任務。</span>
         </div>
 
-        <div class="startup-layout">
-          <section class="startup-section" aria-labelledby="startupMemberTitle">
-            <div class="startup-section-title" id="startupMemberTitle">成員管理</div>
-            <div class="member-source-tabs" role="tablist" aria-label="Member source tabs">
-              <button class="member-source-tab active" id="memberSourceSystemTab" type="button" role="tab" aria-selected="true">平台使用者</button>
-              <button class="member-source-tab" id="memberSourceInviteTab" type="button" role="tab" aria-selected="false">Email 邀請</button>
-            </div>
-
-            <div class="member-add-row" id="memberSourceSystemPanel">
-              <select class="input-select" id="memberUserSelect">
-                <option value="">選擇使用者</option>
-              </select>
-              <select class="input-select" id="memberRoleSelect" style="max-width:140px;">
-                <option value="annotator">Annotator</option>
-                <option value="reviewer">Reviewer</option>
-              </select>
-              <button class="btn btn-secondary" id="addMemberFromSystemBtn" type="button" style="padding:8px 12px;">加入</button>
-            </div>
-
-            <div class="member-add-row hidden" id="memberSourceInvitePanel">
-              <input type="email" class="input-text" id="memberInviteEmailInput" placeholder="輸入邀請 Email" />
-              <select class="input-select" id="memberInviteRoleSelect" style="max-width:140px;">
-                <option value="annotator">Annotator</option>
-                <option value="reviewer">Reviewer</option>
-              </select>
-              <button class="btn btn-secondary" id="sendInviteBtn" type="button" style="padding:8px 12px;">寄送邀請連結</button>
-            </div>
-            <div class="member-list" id="memberList"></div>
-            <div class="member-empty hidden" id="memberEmpty">尚未加入任何成員</div>
-            <div class="field-error-msg" id="errStartupMembers"></div>
-          </section>
+        <div class="startup-layout startup-layout-single">
 
           <section class="startup-section" aria-labelledby="startupRunTitle">
             <div class="startup-section-title" id="startupRunTitle">抽樣設定</div>
@@ -992,23 +963,13 @@ var I18N = {
     reviewerGuidelineTextPlaceholder: '輸入提供給審核員的審核原則、退回條件與注意事項',
     forceToggleLabel: '開始標記前強制顯示',
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
-    s3NoticeText: '先完成成員與抽樣筆數，建立後可直接進入執行狀態。',
+    s3NoticeText: '完成任務建立後，再邀請標記員與審核員加入任務。',
     s4NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
-    startupMemberTitle: '成員管理',
     startupRunTitle: '抽樣設定',
-    memberSourceSystemTab: '平台使用者',
-    memberSourceInviteTab: 'Email 邀請',
-    memberSystemPlaceholder: '選擇使用者',
-    memberInvitePlaceholder: '輸入邀請 Email',
-    addMemberFromSystemBtnLabel: '加入',
-    sendInviteBtnLabel: '寄送邀請連結',
-    memberEmpty: '尚未加入任何成員',
     samplingValueLabel: '每回合抽樣筆數',
     samplingHint: '筆數需 >= 1 且 < 資料集總筆數',
     isolationToggleLabel: '資料隔離',
     isolationToggleDesc: '預設啟用，避免試標與正式標記資料混用',
-    memberRoleAnnotator: '標記員',
-    memberRoleReviewer: '審核員',
     s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     annotationPreviewLabel: '標記預覽',
@@ -1103,23 +1064,13 @@ var I18N = {
     reviewerGuidelineTextPlaceholder: 'Enter review rules, rejection criteria, and cautions for reviewers',
     forceToggleLabel: 'Force display before annotation',
     forceToggleDesc: 'Annotators must read the guideline before starting work',
-    s3NoticeText: 'Complete members and trial sample count first so the task is execution-ready.',
+    s3NoticeText: 'Create the task first, then invite annotators and reviewers to join it.',
     s4NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
-    startupMemberTitle: 'Member management',
     startupRunTitle: 'Sampling settings',
-    memberSourceSystemTab: 'Platform users',
-    memberSourceInviteTab: 'Email invite',
-    memberSystemPlaceholder: 'Select user',
-    memberInvitePlaceholder: 'Enter invitation email',
-    addMemberFromSystemBtnLabel: 'Add',
-    sendInviteBtnLabel: 'Send invite link',
-    memberEmpty: 'No members added yet',
     samplingValueLabel: 'Sample count per round',
     samplingHint: 'Count must be >= 1 and < total dataset rows',
     isolationToggleLabel: 'Data isolation',
     isolationToggleDesc: 'Enabled by default to prevent Dry/Official data mixing',
-    memberRoleAnnotator: 'Annotator',
-    memberRoleReviewer: 'Reviewer',
     s2TemplateSectionTitle: 'Start from template or upload config',
     uploadConfigBtn: 'Upload config (YAML / JSON)',
     annotationPreviewLabel: 'Annotation preview',
@@ -1533,15 +1484,13 @@ function getDatasetTotalEstimate() {
   return 10000;
 }
 function validateStep3(showErrors) {
-  var hasAnnotator = state.initialMembers.some(function(member) { return member.role === 'annotator'; });
   var val = Number(state.runInit.samplingValue);
   var total = getDatasetTotalEstimate();
   var validSampling = Number.isFinite(val) && val >= 1 && val < total;
   if (showErrors) {
-    showFieldError('errStartupMembers', !hasAnnotator, t('errStartupMemberRequired'));
     showFieldError('errStartupRun', !validSampling, t('errStartupSampling'));
   }
-  return hasAnnotator && validSampling;
+  return validSampling;
 }
 function revalidateCurrentStep() {
   var btn = el('nextBtn');
@@ -3113,7 +3062,7 @@ function applyLang(l) {
     'annotatorGuidelineUploadLabel','reviewerGuidelineUploadLabel',
     'annotatorGuidelineUploadHint','reviewerGuidelineUploadHint',
     'forceToggleLabel','forceToggleDesc','s3NoticeText','s4NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
-    'startupMemberTitle','startupRunTitle','samplingValueLabel',
+    'startupRunTitle','samplingValueLabel',
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
@@ -3126,25 +3075,6 @@ function applyLang(l) {
   setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
   el('annotatorGuidelineTextInput').placeholder = t('annotatorGuidelineTextPlaceholder');
   el('reviewerGuidelineTextInput').placeholder = t('reviewerGuidelineTextPlaceholder');
-  setText('memberSourceSystemTab', t('memberSourceSystemTab'));
-  setText('memberSourceInviteTab', t('memberSourceInviteTab'));
-  el('memberInviteEmailInput').placeholder = t('memberInvitePlaceholder');
-  setText('addMemberFromSystemBtn', t('addMemberFromSystemBtnLabel'));
-  setText('sendInviteBtn', t('sendInviteBtnLabel'));
-  setText('memberEmpty', t('memberEmpty'));
-  var roleSel = el('memberRoleSelect');
-  if (roleSel && roleSel.options.length >= 2) {
-    roleSel.options[0].textContent = t('memberRoleAnnotator');
-    roleSel.options[1].textContent = t('memberRoleReviewer');
-  }
-  var inviteRoleSel = el('memberInviteRoleSelect');
-  if (inviteRoleSel && inviteRoleSel.options.length >= 2) {
-    inviteRoleSel.options[0].textContent = t('memberRoleAnnotator');
-    inviteRoleSel.options[1].textContent = t('memberRoleReviewer');
-  }
-  renderSystemUserSelect();
-  switchMemberSource(state.memberSource);
-  renderMemberList();
   renderGuidelineList('annotator');
   renderGuidelineList('reviewer');
 
@@ -3213,22 +3143,6 @@ el('datasetFileInput').addEventListener('change', function() { if (this.files.le
 el('datasetPreviewCloseBtn').addEventListener('click', hideDatasetPreviewModal);
 el('datasetPreviewModal').addEventListener('click', function(e) { if (e.target === el('datasetPreviewModal')) hideDatasetPreviewModal(); });
 
-el('memberSourceSystemTab').addEventListener('click', function() { switchMemberSource('system'); });
-el('memberSourceInviteTab').addEventListener('click', function() { switchMemberSource('invite'); });
-el('addMemberFromSystemBtn').addEventListener('click', addMemberFromSystemUser);
-el('sendInviteBtn').addEventListener('click', addMemberByInviteEmail);
-el('memberInviteEmailInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addMemberByInviteEmail();
-  }
-});
-el('memberRoleSelect').addEventListener('change', function() {
-  markDirty();
-});
-el('memberInviteRoleSelect').addEventListener('change', function() {
-  markDirty();
-});
 el('samplingValueInput').addEventListener('input', syncRunInitFromControls);
 el('isolationToggle').addEventListener('change', syncRunInitFromControls);
 
@@ -3287,8 +3201,7 @@ el('nextBtn').addEventListener('click', function() {
     track('prototype_task_new_step_next', { from: 2 });
   } else if (state.step === 3) {
     if (!validateStep3(true)) {
-      if (!state.initialMembers.some(function(member) { return member.role === 'annotator'; })) showBannerError(t('errStartupMemberRequired'));
-      else showBannerError(t('errStartupSampling'));
+      showBannerError(t('errStartupSampling'));
       return;
     }
     showStep(4);
