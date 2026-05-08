@@ -146,6 +146,20 @@ One logic, one place.
 - Remove debug `print` / `console.log` before finishing
 - Do not modify version numbers in `pyproject.toml` or `package.json` unless explicitly asked
 
+## Agent Execution Rules
+
+**Model selection** (by files touched): 0–1 → Haiku 4.5 · 2–9 → Sonnet 4.6 · 10+ → Sonnet + `advisor()` or Opus 4.7. Borderline: bias up.
+
+**Escalation gates** — escalate one tier or surface to user when any triggers:
+- Same problem failed ≥ 3 attempts
+- Task touches ≥ 10 files
+- Task type ∈ {Architecture · Counter-factual · Security threat modeling} → Opus or `advisor()`
+- Unrequested code gen > 300 LoC → halt first
+
+**Context management**: compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
+
+**Source-Verify gate**: any cited number / benchmark / verbatim quote must be locatable via `grep -i <term> <source>`. If not found → remove or correct; never approximate.
+
 ## Git Workflow
 
 ### Commit Convention
