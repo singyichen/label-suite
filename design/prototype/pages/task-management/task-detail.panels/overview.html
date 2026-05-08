@@ -288,6 +288,11 @@
           <input class="input-number" id="samplingValue" type="text" inputmode="numeric" pattern="[0-9]*" value="10" />
           <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
         </div>
+        <div class="field-group">
+          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
+          <input class="input-number" id="samplingRoundInput" type="text" inputmode="numeric" pattern="[0-9]*" value="1" />
+          <p class="field-hint field-hint-placeholder" aria-hidden="true"></p>
+        </div>
       </div>
 
       <div class="sampling-fields sampling-fields-advanced">
@@ -417,6 +422,10 @@
 
       <div class="exec-control-row">
         <div class="exec-info">
+          <div class="exec-badges hidden">
+            <span id="statusBadge" class="badge badge-draft">草稿</span>
+            <span class="badge badge-isolated hidden" id="isolationBadge">isolated</span>
+          </div>
         </div>
       </div>
 
