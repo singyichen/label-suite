@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：2.0.1
+**版本**：2.0.2
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -127,12 +127,12 @@ sequenceDiagram
   - 延伸任務型別（第二層）：`sentence_pairs`（相似度 / 蘊含）
 - Step 3：`啟動設定`
   - 必要元素：成員管理（至少可加入 `reviewer` / `annotator`）、試標抽樣筆數設定 + 資料隔離
-  - 畫面元素：成員來源切換 tabs（`平台使用者` / `Email 邀請`）、目前成員清單、可加入成員名單、角色指派控制、抽樣筆數輸入、抽樣分佈視覺化進度條（總筆數 / 試標 / 正式）、資料隔離開關與說明
+  - 畫面元素：成員來源切換 tabs（`平台使用者` / `Email 邀請`）、目前成員清單、可加入成員名單、角色指派控制、`每回合抽樣筆數` 輸入、資料隔離開關與說明
   - 成員來源 A（`平台使用者`）：下拉選單只顯示可加入使用者（`PLATFORM_MEMBER_ROLE_FILTER`），placeholder 為「選擇使用者」
   - 成員來源 B（`Email 邀請`）：輸入 email 並寄送邀請連結，邀請成功後加入初始成員清單（待啟用）
 - Step 4：`標記說明`
-  - 必要元素：可直接編輯之說明內容區塊、上傳檔案區塊（PDF/圖片/Markdown）、`開始標記前強制顯示` 開關
-  - 畫面元素：說明內容 textarea、上傳列表（可移除）、強制顯示 toggle
+  - 必要元素：`標記員說明` 區塊、`審核員說明` 區塊、`開始標記前強制顯示` 開關
+  - 畫面元素：`標記說明內容` textarea、`審核說明內容` textarea、兩組各自獨立的多檔上傳列表（可移除）、強制顯示 toggle
 - 操作列：`上一步`、`下一步`、`取消`、`建立任務`
 
 **行為規則**：
@@ -243,7 +243,7 @@ Project Leader 在建立任務時必須先完成啟動設定，包含成員管�
 **驗收情境**：
 
 1. **Given** 位於 Step 3，**When** 加入成員並指定任務角色，**Then** 建立後可在 task-detail member-management 看到相同初始成員。
-2. **Given** 位於 Step 3，**When** 設定試標抽樣筆數與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣筆數設定。
+2. **Given** 位於 Step 3，**When** 設定每回合抽樣筆數與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣設定。
 3. **Given** 位於 Step 3，**When** 未指派任何 `annotator` 或抽樣設定無效，**Then** 不可進入 Step 4 並顯示可修正錯誤訊息。
 
 **行為規則**：
@@ -261,7 +261,8 @@ Project Leader 在建立任務時必須先完成啟動設定，包含成員管�
   - 抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`），UI 僅暴露筆數輸入
   - 抽樣驗證：筆數需 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
   - 選定任務類型後，預設值由 `round(dataset_total × trialPercent / 100)` 自動帶入
-  - 輸入筆數後即時顯示抽樣分佈進度條（試標筆數 / 正式筆數 / 總筆數）
+  - 欄位文案必須明確為 `每回合抽樣筆數`
+  - UI 不顯示抽樣分佈進度條，避免與 task-detail Overview「抽樣設定」的固定筆數模式不一致
 - Step 3 資料隔離開關預設 `RUN_ISOLATION_DEFAULT`。
 - Step 3 僅做首次初始化；後續調整由 `task-detail` 負責。
 
@@ -269,20 +270,24 @@ Project Leader 在建立任務時必須先完成啟動設定，包含成員管�
 
 ### User Story 4 — 標記說明與強制顯示設定（優先級：P2）
 
-Project Leader 在建立任務時可設定標記說明資產，並決定 annotator 進入作業前是否強制顯示。
+Project Leader 在建立任務時可分別設定提供給標記員與審核員的說明資產，並決定 annotator 進入作業前是否強制顯示。
 
 **此優先級原因**：可降低任務啟動時的學習成本與操作錯誤。  
-**獨立測試方式**：上傳說明資產並啟用強制顯示，驗證設定儲存到任務並可供 annotation 模組使用。
+**獨立測試方式**：分別上傳標記員/審核員說明資產並啟用強制顯示，驗證設定儲存到任務並可供 annotation 模組使用。
 
 **驗收情境**：
 
-1. **Given** 位於 Step 4，**When** 上傳說明文件並完成建立，**Then** 任務保存對應說明資產。
+1. **Given** 位於 Step 4，**When** 分別填寫標記員或審核員說明並完成建立，**Then** 任務保存對應角色的說明內容與附件。
 2. **Given** 位於 Step 4，**When** 啟用 `開始標記前強制顯示`，**Then** 任務設定需紀錄此旗標供 annotation-workspace 讀取。
 
 **行為規則**：
 
-- Step 4 應提供可直接編輯的說明內容文字區塊（textarea），並可與上傳檔案並行使用。
+- Step 4 應提供兩組角色分流的說明設定：
+  - `標記員`：`標記說明內容` textarea + 獨立附件列表
+  - `審核員`：`審核說明內容` textarea + 獨立附件列表
+- 兩個角色區塊皆可單獨只填文字、只上傳檔案，或文字與檔案並行使用。
 - 支援 `GUIDELINE_FORMATS`，其中 `image` 僅允許 `GUIDELINE_IMAGE_FORMATS`；超出格式需阻擋並提示。
+- 兩個角色的附件上傳皆必須支援多檔。
 - Step 4 為選填，不填仍可建立任務。
 - 強制顯示設定預設為關閉。
 - 當任務啟用 `開始標記前強制顯示` 時，annotation-workspace 應在「同一使用者首次進入該任務標記介面」時顯示任務說明彈窗；後續同任務 page reload 或再次進入不應重複彈出（除非已讀狀態被重置）。
@@ -302,7 +307,8 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - Step 3 `platform-users` 未選擇任何使用者即點擊加入：顯示錯誤並維持原狀。
 - Step 3 `email-invite` 輸入無效 email：阻擋寄送邀請連結並提示有效格式。
 - Step 3 嘗試加入已存在成員（同 email）：阻擋加入並顯示重複提示。
-- Step 3 抽樣筆數輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
+- Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
+- Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
 - `sequence_labeling.subtype = aspect_list` 且未設定必要欄位名稱、Aspect List 輸出欄位或驗證規則：阻擋進入 Step 3 並顯示可定位錯誤。
 - `sequence_labeling.subtype = aspect_list` 設定 `require_exact_match_in_sentence = true`，但預覽或 code 範例中的 aspect 無法在句子中找到完全一致片段：顯示 schema/preview 驗證提示，不得視為有效設定。
 - `task_type = sentence_pairs` 但缺少 `sentence_1_field` 或 `sentence_2_field`：阻擋進入 Step 3 並顯示可定位錯誤。
@@ -361,13 +367,14 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-004a-4**：成員加入必須以 email 作為唯一鍵，阻擋重複成員。
 - **FR-004b**：Step 3 完成條件至少需包含 1 位 `active annotator`。
 - **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`。
-- **FR-004c-1**：選擇任務類型後，Step 3 的試標抽樣筆數必須自動預填換算後的預設筆數。
+- **FR-004c-1**：選擇任務類型後，Step 3 的 `每回合抽樣筆數` 必須自動預填換算後的預設筆數。
 - **FR-004d**：試標抽樣驗證：筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
-- **FR-004d-1**：Step 3 抽樣筆數輸入後，系統必須即時顯示抽樣分佈進度條，呈現試標筆數（紫色）與正式筆數（綠色）比例，並列出總筆數 / 試標 / 正式之文字標籤。
+- **FR-004d-1**：Step 3 抽樣設定欄位文案必須明確為 `每回合抽樣筆數`，且 UI 不提供抽樣分佈進度條或百分比分配視覺化。
 - **FR-004e**：Step 3 必須提供資料隔離開關，預設值為 `RUN_ISOLATION_DEFAULT`。
 - **FR-005**：Step 4 必須支援標記說明資產上傳與強制顯示設定。
 - **FR-005a**：Step 4 指南格式必須支援 `GUIDELINE_FORMATS`，其中 `image` 受限於 `GUIDELINE_IMAGE_FORMATS`。
-- **FR-005b**：Step 4 必須提供可直接編輯的說明內容欄位，且此欄位應可獨立於上傳檔案存在。
+- **FR-005b**：Step 4 必須提供 `標記說明內容` 與 `審核說明內容` 兩個可直接編輯的說明欄位，且各自皆可獨立於上傳檔案存在。
+- **FR-005b-1**：Step 4 必須提供兩組彼此獨立的附件上傳區塊：`標記員附件` 與 `審核員附件`；兩組皆支援多檔上傳、逐檔移除與各自獨立清單。
 - **FR-005c**：當 `force_guideline = true` 時，annotation-workspace 僅在同一使用者首次進入該任務時顯示說明彈窗；已確認閱讀後不得於每次 page load 重複顯示。
 - **FR-005d**：annotation-workspace 的「說明與檔案」面板中，點擊圖片檔案之 `預覽` 後，系統必須在檔案列表下方預覽區塊顯示該圖片。
 - **FR-006**：提交成功後，系統必須建立任務並導向 `/task-detail`。
@@ -415,7 +422,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`initial_members`、`run_init`、`guideline_assets`、`force_guideline`。
+- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **TaskTypeRegistryItem**：任務類型定義。欄位：`task_type`、`display_name`、`schema`、`default_templates`。
 - **TaskConfig**：schema 驗證後設定內容（供 annotation/dataset 模組使用）。
 - **SequenceLabelingTaskConfig**：`sequence_labeling` 專用設定。欄位：`subtype`（`ner` / `aspect_list`）、`schema`、`validation_rules`、`preview_sample`。
@@ -423,6 +430,7 @@ flowchart LR
 - **SentencePairsTaskConfig**：`sentence_pairs` 專用設定。欄位：`pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`label_options[]?`、`score_min?`、`score_max?`、`score_step?`、`allow_unsure`、`note_enabled`。
 - **TaskMembership**：建立者自動加入的任務角色關係，及 Step 3 指派的初始成員關係。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
+- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 
 ---
 
@@ -454,6 +462,7 @@ flowchart LR
 - **SC-002a**：Step 3 設定的初始成員可於建立後在 task-detail member-management 正確呈現。
 - **SC-002b**：Step 3 設定的抽樣方式可於建立後在 task-detail overview 正確呈現。
 - **SC-002c**：Step 3 可透過 `platform-users` 或 `email-invite` 兩種來源新增成員，建立後皆可在 task-detail 正確呈現。
+- **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
 - **SC-003**：Step 2 可依 registry/schema 產生設定介面，且 schema 設定區與 code 區內容一致。
 - **SC-003a**：Step 2 上方預覽可呈現接近實際標記介面，並可反映當前 labels/entities/scoring 設定。
 - **SC-003b**：Step 2 預覽可勾選標記選項；單選情境一次僅可勾選一個。
@@ -483,6 +492,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.2 | 2026-05-08 | 同步新增任務最新原型：Step 3 文案改為「每回合抽樣筆數」並移除抽樣分佈進度條；Step 4 改為標記員/審核員雙角色說明內容與獨立多檔附件區塊；新增 `TaskGuidelineConfig` 與對應 FR/SC |
 | 2.0.1 | 2026-05-07 | Step 3 抽樣設定統一改為筆數模式：移除 `by_percentage`、`RUN_INIT_SAMPLING_MODES`、`RUN_INIT_PERCENT_RANGE`；`RunInitConfig` 移除 `sampling_mode` 欄位；抽樣比例參數改為僅供內部換算預設筆數；新增抽樣分佈進度條規格（FR-004d-1）；更新介面定義、行為規則、Edge Cases 與 SAMPLING_DEFAULTS_BY_TYPE 欄位說明 |
 | 2.0.0 | 2026-05-07 | 補齊 `sentence_pairs` task config 契約：新增 `pair_mode / response_format / sentence_1_field / sentence_2_field / label_options / score_*` 規格、Step 2 預覽與驗證規則，並同步下游 workspace / analysis 相依 |
 | 1.9.6 | 2026-04-29 | 補充 relation_extraction 細規：新增 FR-003d-9（schema 欄位：entity_types / relation_types / tuple_mode）、FR-003d-10（Step 2 預覽：實體類型按鈕、實體清單、關係建構器、Triple 清單）、SC-003g（驗收標準） |

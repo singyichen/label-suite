@@ -132,42 +132,90 @@
     </div>
     <p class="status-hint" id="guidelineReadonlyHint"></p>
 
-    <div id="guidelineSummaryView" class="kv-dl">
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelGuideline">說明內容狀態</span>
-        <span class="kv-dl-value" id="valueGuidelineStatus"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelGuidelineFilesSummary">附件清單</span>
-        <span class="kv-dl-value" id="valueGuidelineFilesSummary"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
-        <span class="kv-dl-value" id="valueForceGuideline"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelGuidelineContentSummary">說明內容摘要</span>
-        <span class="kv-dl-value" id="valueGuidelineContentSummary"></span>
+    <div id="guidelineSummaryView" class="guideline-role-stack">
+      <section class="guideline-role-card" aria-labelledby="guidelineAnnotatorTitle">
+        <h3 class="guideline-role-heading" id="guidelineAnnotatorTitle">提供給標記員</h3>
+        <div class="kv-dl">
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelAnnotatorGuideline">說明內容狀態</span>
+            <span class="kv-dl-value" id="valueAnnotatorGuidelineStatus"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelAnnotatorGuidelineFilesSummary">附件清單</span>
+            <span class="kv-dl-value" id="valueAnnotatorGuidelineFilesSummary"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelAnnotatorGuidelineContentSummary">說明內容摘要</span>
+            <span class="kv-dl-value" id="valueAnnotatorGuidelineContentSummary"></span>
+          </div>
+        </div>
+      </section>
+      <section class="guideline-role-card" aria-labelledby="guidelineReviewerTitle">
+        <h3 class="guideline-role-heading" id="guidelineReviewerTitle">提供給審核員</h3>
+        <div class="kv-dl">
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelReviewerGuideline">說明內容狀態</span>
+            <span class="kv-dl-value" id="valueReviewerGuidelineStatus"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelReviewerGuidelineFilesSummary">附件清單</span>
+            <span class="kv-dl-value" id="valueReviewerGuidelineFilesSummary"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelReviewerGuidelineContentSummary">說明內容摘要</span>
+            <span class="kv-dl-value" id="valueReviewerGuidelineContentSummary"></span>
+          </div>
+        </div>
+      </section>
+      <div class="kv-dl">
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
+          <span class="kv-dl-value" id="valueForceGuideline"></span>
+        </div>
       </div>
     </div>
 
     <div class="guideline-edit-form hidden" id="guidelineEditForm">
-      <div class="field-group">
-        <label class="field-label" id="editGuidelineLabel" for="editGuidelineTextInput">說明內容</label>
-        <textarea class="input-textarea" id="editGuidelineTextInput" rows="6" placeholder="輸入給標記員看的任務說明、判斷準則與注意事項"></textarea>
-      </div>
+      <div class="guideline-role-stack">
+        <section class="guideline-role-card" aria-labelledby="editAnnotatorGuidelineTitle">
+          <h3 class="guideline-role-heading" id="editAnnotatorGuidelineTitle">提供給標記員</h3>
+          <div class="field-group">
+            <label class="field-label" id="editAnnotatorGuidelineLabel" for="editAnnotatorGuidelineTextInput">標記說明內容</label>
+            <textarea class="input-textarea" id="editAnnotatorGuidelineTextInput" rows="6" placeholder="輸入提供給標記員的任務說明、判斷準則與注意事項"></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="editAnnotatorGuidelineFilesLabel" for="editAnnotatorGuidelineFileInput">上傳檔案</label>
+            <div class="upload-multi-zone" id="annotatorGuidelineUploadZone" role="button" tabindex="0" onclick="window.handleGuidelineUploadZoneClick && window.handleGuidelineUploadZoneClick('annotator')" onkeydown="window.handleGuidelineUploadZoneKeydown && window.handleGuidelineUploadZoneKeydown(event, 'annotator')">
+              <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="upload-multi-zone-label" id="annotatorGuidelineUploadLabel">上傳檔案</div>
+              <div class="upload-multi-zone-hint" id="annotatorGuidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+              <input class="hidden" type="file" id="editAnnotatorGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" oninput="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('annotator', this)" onchange="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('annotator', this)" />
+            </div>
+            <div class="guideline-list" id="editAnnotatorGuidelineFileList"></div>
+          </div>
+        </section>
 
-      <div class="field-group">
-        <label class="field-label" id="editGuidelineFilesLabel" for="editGuidelineFileInput">上傳檔案</label>
-        <div class="upload-multi-zone" id="guidelineUploadZone" role="button" tabindex="0">
-          <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <div class="upload-multi-zone-label" id="guidelineUploadLabel">上傳檔案</div>
-          <div class="upload-multi-zone-hint" id="guidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
-          <input class="hidden" type="file" id="editGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" />
-        </div>
-        <div class="guideline-list" id="editGuidelineFileList"></div>
+        <section class="guideline-role-card" aria-labelledby="editReviewerGuidelineTitle">
+          <h3 class="guideline-role-heading" id="editReviewerGuidelineTitle">提供給審核員</h3>
+          <div class="field-group">
+            <label class="field-label" id="editReviewerGuidelineLabel" for="editReviewerGuidelineTextInput">審核說明內容</label>
+            <textarea class="input-textarea" id="editReviewerGuidelineTextInput" rows="6" placeholder="輸入提供給審核員的審核原則、退回條件與注意事項"></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="editReviewerGuidelineFilesLabel" for="editReviewerGuidelineFileInput">上傳檔案</label>
+            <div class="upload-multi-zone" id="reviewerGuidelineUploadZone" role="button" tabindex="0" onclick="window.handleGuidelineUploadZoneClick && window.handleGuidelineUploadZoneClick('reviewer')" onkeydown="window.handleGuidelineUploadZoneKeydown && window.handleGuidelineUploadZoneKeydown(event, 'reviewer')">
+              <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="upload-multi-zone-label" id="reviewerGuidelineUploadLabel">上傳檔案</div>
+              <div class="upload-multi-zone-hint" id="reviewerGuidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+              <input class="hidden" type="file" id="editReviewerGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" oninput="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('reviewer', this)" onchange="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('reviewer', this)" />
+            </div>
+            <div class="guideline-list" id="editReviewerGuidelineFileList"></div>
+          </div>
+        </section>
       </div>
 
       <div class="field-group">

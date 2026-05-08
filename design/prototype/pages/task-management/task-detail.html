@@ -1217,6 +1217,23 @@
       flex-direction: column;
       gap: 12px;
     }
+    .guideline-role-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .guideline-role-card {
+      padding: 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-slate-50);
+    }
+    .guideline-role-heading {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
     .notice-info {
       display: flex;
       align-items: flex-start;
@@ -2429,18 +2446,30 @@
       labelConfigTaskType: '標記類型',
       labelConfigLabels: '標籤清單',
       labelConfigAllowMultiple: '允許多選',
-      labelGuideline: '說明內容狀態',
-      labelGuidelineFilesSummary: '附件清單',
-      labelGuidelineContentSummary: '說明內容摘要',
+      guidelineAnnotatorTitle: '提供給標記員',
+      guidelineReviewerTitle: '提供給審核員',
+      labelAnnotatorGuideline: '說明內容狀態',
+      labelAnnotatorGuidelineFilesSummary: '附件清單',
+      labelAnnotatorGuidelineContentSummary: '說明內容摘要',
+      labelReviewerGuideline: '說明內容狀態',
+      labelReviewerGuidelineFilesSummary: '附件清單',
+      labelReviewerGuidelineContentSummary: '說明內容摘要',
       labelForceGuideline: '開始標記前強制顯示',
       guidelineEditBtn: '編輯',
       guidelineSaveBtn: '儲存',
       guidelineCancelBtn: '取消',
       guidelineReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記說明。',
       guidelineOptionalNoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
-      guidelineUploadLabel: '上傳檔案',
-      guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
-      guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
+      annotatorGuidelineUploadLabel: '上傳檔案',
+      reviewerGuidelineUploadLabel: '上傳檔案',
+      annotatorGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      reviewerGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      annotatorGuidelineTextPlaceholder: '輸入提供給標記員的任務說明、判斷準則與注意事項',
+      reviewerGuidelineTextPlaceholder: '輸入提供給審核員的審核原則、退回條件與注意事項',
+      editAnnotatorGuidelineLabel: '標記說明內容',
+      editAnnotatorGuidelineFilesLabel: '上傳檔案',
+      editReviewerGuidelineLabel: '審核說明內容',
+      editReviewerGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineDesc: '啟用後，標記員進入作業前必須先閱讀說明',
       guidelineSaveSuccess: '標記說明已更新',
       guidelineLeaveConfirm: '你有尚未儲存的標記說明變更，確定要離開編輯模式嗎？',
@@ -2844,19 +2873,31 @@
       labelConfigTaskType: 'Task type',
       labelConfigLabels: 'Labels',
       labelConfigAllowMultiple: 'Allow multiple labels',
-      labelGuideline: 'Guideline status',
-      labelGuidelineFilesSummary: 'Attachment list',
-      labelGuidelineContentSummary: 'Guideline summary',
+      guidelineAnnotatorTitle: 'For annotators',
+      guidelineReviewerTitle: 'For reviewers',
+      labelAnnotatorGuideline: 'Guideline status',
+      labelAnnotatorGuidelineFilesSummary: 'Attachment list',
+      labelAnnotatorGuidelineContentSummary: 'Guideline summary',
+      labelReviewerGuideline: 'Guideline status',
+      labelReviewerGuidelineFilesSummary: 'Attachment list',
+      labelReviewerGuidelineContentSummary: 'Guideline summary',
       labelForceGuideline: 'Force show before annotation',
       guidelineEditBtn: 'Edit',
       guidelineSaveBtn: 'Save',
       guidelineCancelBtn: 'Cancel',
       guidelineReadonlyRoleOnly: 'Read-only role. Only project leader can edit guideline.',
       guidelineOptionalNoticeText: 'This step is optional. You can create the task without uploading guidelines.',
-      guidelineUploadLabel: 'Upload files',
-      guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
-      guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+      annotatorGuidelineUploadLabel: 'Upload files',
+      reviewerGuidelineUploadLabel: 'Upload files',
+      annotatorGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      reviewerGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      annotatorGuidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+      reviewerGuidelineTextPlaceholder: 'Enter review rules, rejection criteria, and cautions for reviewers',
       editForceGuidelineDesc: 'Annotators must read the guideline before starting work',
+      editAnnotatorGuidelineLabel: 'Annotation guideline content',
+      editAnnotatorGuidelineFilesLabel: 'Upload files',
+      editReviewerGuidelineLabel: 'Review guideline content',
+      editReviewerGuidelineFilesLabel: 'Upload files',
       guidelineSaveSuccess: 'Guideline updated',
       guidelineLeaveConfirm: 'You have unsaved guideline changes. Leave edit mode?',
       guidelineFileTypeInvalid: 'Only PDF / PNG / JPG / JPEG / WEBP / Markdown are supported',
@@ -4323,16 +4364,25 @@ function interpolate(template, payload) {
     setText('labelConfigTaskType', t('labelConfigTaskType'));
     setText('labelConfigLabels', t('labelConfigLabels'));
     setText('labelConfigAllowMultiple', t('labelConfigAllowMultiple'));
-    setText('labelGuideline', t('labelGuideline'));
-    setText('labelGuidelineFilesSummary', t('labelGuidelineFilesSummary'));
-    setText('labelGuidelineContentSummary', t('labelGuidelineContentSummary'));
+    setText('guidelineAnnotatorTitle', t('guidelineAnnotatorTitle'));
+    setText('guidelineReviewerTitle', t('guidelineReviewerTitle'));
+    setText('labelAnnotatorGuideline', t('labelAnnotatorGuideline'));
+    setText('labelAnnotatorGuidelineFilesSummary', t('labelAnnotatorGuidelineFilesSummary'));
+    setText('labelAnnotatorGuidelineContentSummary', t('labelAnnotatorGuidelineContentSummary'));
+    setText('labelReviewerGuideline', t('labelReviewerGuideline'));
+    setText('labelReviewerGuidelineFilesSummary', t('labelReviewerGuidelineFilesSummary'));
+    setText('labelReviewerGuidelineContentSummary', t('labelReviewerGuidelineContentSummary'));
     setText('labelForceGuideline', t('labelForceGuideline'));
     setText('guidelineEditBtn', t('guidelineEditBtn'));
     setText('guidelineSaveBtn', t('guidelineSaveBtn'));
     setText('guidelineCancelBtn', t('guidelineCancelBtn'));
     setText('guidelineOptionalNoticeText', t('guidelineOptionalNoticeText'));
-    setText('guidelineUploadLabel', t('guidelineUploadLabel'));
-    setText('guidelineUploadHint', t('guidelineUploadHint'));
+    setText('editAnnotatorGuidelineTitle', t('guidelineAnnotatorTitle'));
+    setText('editReviewerGuidelineTitle', t('guidelineReviewerTitle'));
+    setText('annotatorGuidelineUploadLabel', t('annotatorGuidelineUploadLabel'));
+    setText('annotatorGuidelineUploadHint', t('annotatorGuidelineUploadHint'));
+    setText('reviewerGuidelineUploadLabel', t('reviewerGuidelineUploadLabel'));
+    setText('reviewerGuidelineUploadHint', t('reviewerGuidelineUploadHint'));
     setText('overviewEditTitle', t('overviewEditTitle'));
     setText('overviewEditBtn', t('overviewEditBtn'));
     setText('overviewSaveBtn', t('overviewSaveBtn'));
@@ -4349,8 +4399,10 @@ function interpolate(template, payload) {
     setRequiredLabel('editTaskTypeLabel', t('editTaskTypeLabel'));
     setRequiredLabel('editDatasetLabel', t('editDatasetLabel'));
     setText('editConfigLabel', t('editConfigLabel'));
-    setText('editGuidelineLabel', t('editGuidelineLabel'));
-    setText('editGuidelineFilesLabel', t('editGuidelineFilesLabel'));
+    setText('editAnnotatorGuidelineLabel', t('editAnnotatorGuidelineLabel'));
+    setText('editAnnotatorGuidelineFilesLabel', t('editAnnotatorGuidelineFilesLabel'));
+    setText('editReviewerGuidelineLabel', t('editReviewerGuidelineLabel'));
+    setText('editReviewerGuidelineFilesLabel', t('editReviewerGuidelineFilesLabel'));
     setText('editForceGuidelineLabel', t('editForceGuidelineLabel'));
     setText('editForceGuidelineDesc', t('editForceGuidelineDesc'));
     setText('basicDatasetDropTitle', t('basicDatasetDropTitle'));
@@ -4490,8 +4542,10 @@ function interpolate(template, payload) {
     setText('memberActionModalBody', t('memberActionModalBodyEnable'));
     setText('memberActionCancelBtn', t('memberActionCancelBtn'));
     setText('memberActionConfirmBtn', t('memberActionConfirmBtn'));
-    var guidelineTextInput = document.getElementById('editGuidelineTextInput');
-    if (guidelineTextInput) guidelineTextInput.placeholder = t('guidelineTextPlaceholder');
+    var annotatorGuidelineTextInput = document.getElementById('editAnnotatorGuidelineTextInput');
+    var reviewerGuidelineTextInput = document.getElementById('editReviewerGuidelineTextInput');
+    if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.placeholder = t('annotatorGuidelineTextPlaceholder');
+    if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.placeholder = t('reviewerGuidelineTextPlaceholder');
 
     renderSettingsTemplateBtns();
 
@@ -5458,17 +5512,52 @@ function getTaskTypeLabel(taskTypeKey) {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
 
-  function getTaskGuidelineText() {
-    if (state.lang === 'zh') return (TASK_DATA.guidelineTextZh || TASK_DATA.guidelineText || '').trim();
-    return (TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim();
+  function getGuidelineRoleFieldName(role, field) {
+    var prefix = role === 'reviewer' ? 'reviewer' : 'annotator';
+    return prefix + field;
+  }
+
+  function getTaskGuidelineRoleText(role) {
+    var zhField = getGuidelineRoleFieldName(role, 'GuidelineTextZh');
+    var enField = getGuidelineRoleFieldName(role, 'GuidelineTextEn');
+    var baseField = getGuidelineRoleFieldName(role, 'GuidelineText');
+    if (state.lang === 'zh') {
+      if (TASK_DATA[zhField]) return String(TASK_DATA[zhField]).trim();
+      if (role !== 'reviewer' && TASK_DATA.guidelineTextZh) return String(TASK_DATA.guidelineTextZh).trim();
+    } else {
+      if (TASK_DATA[enField]) return String(TASK_DATA[enField]).trim();
+      if (role !== 'reviewer' && TASK_DATA.guidelineTextEn) return String(TASK_DATA.guidelineTextEn).trim();
+    }
+    if (TASK_DATA[baseField]) return String(TASK_DATA[baseField]).trim();
+    if (role !== 'reviewer' && TASK_DATA.guidelineText) return String(TASK_DATA.guidelineText).trim();
+    return '';
+  }
+
+  function getTaskGuidelineRoleFiles(role) {
+    var field = getGuidelineRoleFieldName(role, 'GuidelineFiles');
+    if (Array.isArray(TASK_DATA[field])) {
+      return TASK_DATA[field].map(function(file) {
+        return { name: file.name, type: file.type };
+      });
+    }
+    if (role !== 'reviewer' && Array.isArray(TASK_DATA.guidelineFiles)) {
+      return TASK_DATA.guidelineFiles.map(function(file) {
+        return { name: file.name, type: file.type };
+      });
+    }
+    return [];
+  }
+
+  function hasTaskGuidelineRoleContent(role) {
+    return Boolean(getTaskGuidelineRoleText(role) || getTaskGuidelineRoleFiles(role).length);
   }
 
   function createGuidelineDraft() {
     return {
-      guidelineText: getTaskGuidelineText(),
-      guidelineFiles: (TASK_DATA.guidelineFiles || []).map(function(file) {
-        return { name: file.name, type: file.type };
-      }),
+      annotatorGuidelineText: getTaskGuidelineRoleText('annotator'),
+      annotatorGuidelineFiles: getTaskGuidelineRoleFiles('annotator'),
+      reviewerGuidelineText: getTaskGuidelineRoleText('reviewer'),
+      reviewerGuidelineFiles: getTaskGuidelineRoleFiles('reviewer'),
       forceGuideline: Boolean(TASK_DATA.forceGuideline),
     };
   }
@@ -5493,14 +5582,53 @@ function getTaskTypeLabel(taskTypeKey) {
     return ext;
   }
 
-  function renderGuidelineFileList() {
-    var list = document.getElementById('editGuidelineFileList');
+  function makeGuidelineFileSvg() {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'guideline-item-icon');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    poly.setAttribute('points', '14 2 14 8 20 8');
+    svg.appendChild(path);
+    svg.appendChild(poly);
+    return svg;
+  }
+
+  function createGuidelineUploadedFileItem(file) {
+    var item = document.createElement('div');
+    item.className = 'guideline-item';
+
+    item.appendChild(makeGuidelineFileSvg());
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'guideline-item-name';
+    nameSpan.textContent = file.name || '';
+    item.appendChild(nameSpan);
+
+    var typeSpan = document.createElement('span');
+    typeSpan.className = 'guideline-item-type';
+    typeSpan.textContent = String(file.type || getGuidelineFileType(file.name));
+    item.appendChild(typeSpan);
+
+    return item;
+  }
+
+  function renderGuidelineFileList(role) {
+    var list = document.getElementById(role === 'reviewer' ? 'editReviewerGuidelineFileList' : 'editAnnotatorGuidelineFileList');
+    var filesKey = role === 'reviewer' ? 'reviewerGuidelineFiles' : 'annotatorGuidelineFiles';
     if (!list) return;
     list.innerHTML = '';
-    if (!state.guidelineDraft || !state.guidelineDraft.guidelineFiles.length) return;
+    if (!state.guidelineDraft || !state.guidelineDraft[filesKey].length) return;
 
-    state.guidelineDraft.guidelineFiles.forEach(function(file, index) {
-      var item = createUploadedFileItem(file);
+    state.guidelineDraft[filesKey].forEach(function(file, index) {
+      var item = createGuidelineUploadedFileItem(file);
 
       var removeBtn = document.createElement('button');
       removeBtn.className = 'guideline-item-remove';
@@ -5509,8 +5637,8 @@ function getTaskTypeLabel(taskTypeKey) {
       removeBtn.textContent = '×';
       removeBtn.addEventListener('click', function() {
         if (!state.guidelineDraft) return;
-        state.guidelineDraft.guidelineFiles.splice(index, 1);
-        renderGuidelineFileList();
+        state.guidelineDraft[filesKey].splice(index, 1);
+        renderGuidelineFileList(role);
         markGuidelineDirty();
       });
       item.appendChild(removeBtn);
@@ -5521,12 +5649,15 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function fillGuidelineEditForm() {
     if (!state.guidelineDraft) return;
-    var guidelineTextInput = document.getElementById('editGuidelineTextInput');
+    var annotatorGuidelineTextInput = document.getElementById('editAnnotatorGuidelineTextInput');
+    var reviewerGuidelineTextInput = document.getElementById('editReviewerGuidelineTextInput');
     var forceToggle = document.getElementById('editForceGuidelineToggle');
-    if (guidelineTextInput) guidelineTextInput.value = state.guidelineDraft.guidelineText;
+    if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.value = state.guidelineDraft.annotatorGuidelineText;
+    if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.value = state.guidelineDraft.reviewerGuidelineText;
     if (forceToggle) forceToggle.checked = state.guidelineDraft.forceGuideline;
     setGuidelineEditError('');
-    renderGuidelineFileList();
+    renderGuidelineFileList('annotator');
+    renderGuidelineFileList('reviewer');
   }
 
   function renderGuidelineEditState() {
@@ -5567,7 +5698,8 @@ function getTaskTypeLabel(taskTypeKey) {
     state.guidelineDirty = true;
   }
 
-  function addGuidelineDraftFiles(fileList) {
+  function addGuidelineDraftFiles(role, fileList) {
+    var filesKey = role === 'reviewer' ? 'reviewerGuidelineFiles' : 'annotatorGuidelineFiles';
     if (!state.guidelineDraft || !fileList || !fileList.length) return;
     setGuidelineEditError('');
     var allow = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'md'];
@@ -5577,10 +5709,10 @@ function getTaskTypeLabel(taskTypeKey) {
         setGuidelineEditError(t('guidelineFileTypeInvalid'));
         return;
       }
-      state.guidelineDraft.guidelineFiles.push({ name: file.name, type: type });
+      state.guidelineDraft[filesKey].push({ name: file.name, type: type });
       markGuidelineDirty();
     });
-    renderGuidelineFileList();
+    renderGuidelineFileList(role);
   }
 
   function startGuidelineEdit() {
@@ -5589,6 +5721,7 @@ function getTaskTypeLabel(taskTypeKey) {
     state.guidelineDirty = false;
     state.guidelineDraft = createGuidelineDraft();
     renderGuidelineEditState();
+    bindGuidelineEditEvents();
     trackEvent('prototype_guideline_edit_started');
   }
 
@@ -5604,15 +5737,29 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function saveGuidelineEdit() {
     if (!isGuidelineEditable() || !state.guidelineDraft) return;
-    var nextGuidelineText = (state.guidelineDraft.guidelineText || '').trim();
-    if (state.lang === 'zh') TASK_DATA.guidelineTextZh = nextGuidelineText;
-    else TASK_DATA.guidelineTextEn = nextGuidelineText;
-    TASK_DATA.guidelineText = nextGuidelineText;
-    TASK_DATA.guidelineFiles = state.guidelineDraft.guidelineFiles.map(function(file) {
+    var nextAnnotatorGuidelineText = (state.guidelineDraft.annotatorGuidelineText || '').trim();
+    var nextReviewerGuidelineText = (state.guidelineDraft.reviewerGuidelineText || '').trim();
+    if (state.lang === 'zh') {
+      TASK_DATA.annotatorGuidelineTextZh = nextAnnotatorGuidelineText;
+      TASK_DATA.reviewerGuidelineTextZh = nextReviewerGuidelineText;
+    } else {
+      TASK_DATA.annotatorGuidelineTextEn = nextAnnotatorGuidelineText;
+      TASK_DATA.reviewerGuidelineTextEn = nextReviewerGuidelineText;
+    }
+    TASK_DATA.annotatorGuidelineText = nextAnnotatorGuidelineText;
+    TASK_DATA.reviewerGuidelineText = nextReviewerGuidelineText;
+    TASK_DATA.annotatorGuidelineFiles = state.guidelineDraft.annotatorGuidelineFiles.map(function(file) {
       return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
     });
+    TASK_DATA.reviewerGuidelineFiles = state.guidelineDraft.reviewerGuidelineFiles.map(function(file) {
+      return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
+    });
+    TASK_DATA.guidelineText = nextAnnotatorGuidelineText;
+    TASK_DATA.guidelineFiles = TASK_DATA.annotatorGuidelineFiles.map(function(file) {
+      return { name: file.name, type: file.type };
+    });
     TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
-    TASK_DATA.guidelineUploaded = Boolean((TASK_DATA.guidelineTextZh || TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim() || TASK_DATA.guidelineFiles.length);
+    TASK_DATA.guidelineUploaded = hasTaskGuidelineRoleContent('annotator') || hasTaskGuidelineRoleContent('reviewer');
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
@@ -5621,6 +5768,66 @@ function getTaskTypeLabel(taskTypeKey) {
     renderOverview();
     trackEvent('prototype_guideline_edit_saved');
   }
+
+  function bindGuidelineEditEvents() {
+    [
+      {
+        role: 'annotator',
+        uploadZoneId: 'annotatorGuidelineUploadZone',
+        inputId: 'editAnnotatorGuidelineFileInput',
+        textInputId: 'editAnnotatorGuidelineTextInput',
+        textKey: 'annotatorGuidelineText',
+      },
+      {
+        role: 'reviewer',
+        uploadZoneId: 'reviewerGuidelineUploadZone',
+        inputId: 'editReviewerGuidelineFileInput',
+        textInputId: 'editReviewerGuidelineTextInput',
+        textKey: 'reviewerGuidelineText',
+      }
+    ].forEach(function(config) {
+      var textInput = document.getElementById(config.textInputId);
+
+      if (textInput && !textInput.dataset.guidelineBound) {
+        textInput.addEventListener('input', function(event) {
+          if (!state.guidelineDraft) return;
+          state.guidelineDraft[config.textKey] = event.target.value;
+          markGuidelineDirty();
+        });
+        textInput.dataset.guidelineBound = 'true';
+      }
+    });
+
+    var forceToggle = document.getElementById('editForceGuidelineToggle');
+    if (forceToggle && !forceToggle.dataset.guidelineBound) {
+      forceToggle.addEventListener('change', function(event) {
+        if (!state.guidelineDraft) return;
+        state.guidelineDraft.forceGuideline = event.target.checked;
+        markGuidelineDirty();
+      });
+      forceToggle.dataset.guidelineBound = 'true';
+    }
+  }
+
+  window.handleGuidelineUploadZoneClick = function(role) {
+    if (!state.guidelineEditMode) return;
+    var input = document.getElementById(role === 'reviewer' ? 'editReviewerGuidelineFileInput' : 'editAnnotatorGuidelineFileInput');
+    if (input) input.click();
+  };
+
+  window.handleGuidelineUploadZoneKeydown = function(event, role) {
+    if (!state.guidelineEditMode) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      window.handleGuidelineUploadZoneClick(role);
+    }
+  };
+
+  window.handleGuidelineFileInputChange = function(role, input) {
+    if (!input || !input.files || !input.files.length) return;
+    addGuidelineDraftFiles(role, input.files);
+    input.value = '';
+  };
 
   function isSettingsEditable() {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
@@ -7060,10 +7267,14 @@ function getTaskTypeLabel(taskTypeKey) {
     var taskName = getCurrentTaskName();
     var datasetSummary = TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items');
     var settingsSummary = getSettingsSummary();
-    var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
-    var guidelineFilesText = guidelineFiles.length ? guidelineFiles.join(', ') : t('guidelineFilesNone');
-    var guidelineContent = getTaskGuidelineText();
-    var guidelineContentText = guidelineContent || t('guidelineContentEmpty');
+    var annotatorGuidelineFiles = getTaskGuidelineRoleFiles('annotator').map(function(file) { return file.name; });
+    var reviewerGuidelineFiles = getTaskGuidelineRoleFiles('reviewer').map(function(file) { return file.name; });
+    var annotatorGuidelineFilesText = annotatorGuidelineFiles.length ? annotatorGuidelineFiles.join(', ') : t('guidelineFilesNone');
+    var reviewerGuidelineFilesText = reviewerGuidelineFiles.length ? reviewerGuidelineFiles.join(', ') : t('guidelineFilesNone');
+    var annotatorGuidelineContent = getTaskGuidelineRoleText('annotator');
+    var reviewerGuidelineContent = getTaskGuidelineRoleText('reviewer');
+    var annotatorGuidelineContentText = annotatorGuidelineContent || t('guidelineContentEmpty');
+    var reviewerGuidelineContentText = reviewerGuidelineContent || t('guidelineContentEmpty');
 
     renderBreadcrumbCurrent();
     setText('valueTaskName', taskName);
@@ -7072,10 +7283,13 @@ function getTaskTypeLabel(taskTypeKey) {
     setText('valueConfigVersion', settingsSummary.configFileName);
     setText('valueConfigTaskType', settingsSummary.taskTypeLabel);
     renderSettingsSummaryRows(settingsSummary.summaryRows);
-    setText('valueGuidelineStatus', TASK_DATA.guidelineUploaded ? t('guidelineUploaded') : t('guidelineEmpty'));
-    setText('valueGuidelineFilesSummary', guidelineFilesText);
+    setText('valueAnnotatorGuidelineStatus', hasTaskGuidelineRoleContent('annotator') ? t('guidelineUploaded') : t('guidelineEmpty'));
+    setText('valueAnnotatorGuidelineFilesSummary', annotatorGuidelineFilesText);
+    setText('valueAnnotatorGuidelineContentSummary', annotatorGuidelineContentText);
+    setText('valueReviewerGuidelineStatus', hasTaskGuidelineRoleContent('reviewer') ? t('guidelineUploaded') : t('guidelineEmpty'));
+    setText('valueReviewerGuidelineFilesSummary', reviewerGuidelineFilesText);
+    setText('valueReviewerGuidelineContentSummary', reviewerGuidelineContentText);
     setText('valueForceGuideline', TASK_DATA.forceGuideline ? t('yes') : t('no'));
-    setText('valueGuidelineContentSummary', guidelineContentText);
 
     renderStatus();
     renderPublishActions();
@@ -8510,9 +8724,12 @@ function getTaskTypeLabel(taskTypeKey) {
     var guidelineEditBtn = document.getElementById('guidelineEditBtn');
     var guidelineSaveBtn = document.getElementById('guidelineSaveBtn');
     var guidelineCancelBtn = document.getElementById('guidelineCancelBtn');
-    var guidelineUploadZone = document.getElementById('guidelineUploadZone');
-    var editGuidelineFileInput = document.getElementById('editGuidelineFileInput');
-    var editGuidelineTextInput = document.getElementById('editGuidelineTextInput');
+    var annotatorGuidelineUploadZone = document.getElementById('annotatorGuidelineUploadZone');
+    var reviewerGuidelineUploadZone = document.getElementById('reviewerGuidelineUploadZone');
+    var editAnnotatorGuidelineFileInput = document.getElementById('editAnnotatorGuidelineFileInput');
+    var editReviewerGuidelineFileInput = document.getElementById('editReviewerGuidelineFileInput');
+    var editAnnotatorGuidelineTextInput = document.getElementById('editAnnotatorGuidelineTextInput');
+    var editReviewerGuidelineTextInput = document.getElementById('editReviewerGuidelineTextInput');
     var editForceGuidelineToggle = document.getElementById('editForceGuidelineToggle');
     var settingsEditBtn = document.getElementById('settingsEditBtn');
     var settingsSaveBtn = document.getElementById('settingsSaveBtn');
@@ -8638,43 +8855,7 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (guidelineUploadZone && editGuidelineFileInput) {
-      guidelineUploadZone.addEventListener('click', function() {
-        if (!state.guidelineEditMode) return;
-        editGuidelineFileInput.click();
-      });
-      guidelineUploadZone.addEventListener('keydown', function(event) {
-        if (!state.guidelineEditMode) return;
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          editGuidelineFileInput.click();
-        }
-      });
-    }
-
-    if (editGuidelineFileInput) {
-      editGuidelineFileInput.addEventListener('change', function() {
-        if (!this.files || !this.files.length) return;
-        addGuidelineDraftFiles(this.files);
-        this.value = '';
-      });
-    }
-
-    if (editGuidelineTextInput) {
-      editGuidelineTextInput.addEventListener('input', function(event) {
-        if (!state.guidelineDraft) return;
-        state.guidelineDraft.guidelineText = event.target.value;
-        markGuidelineDirty();
-      });
-    }
-
-    if (editForceGuidelineToggle) {
-      editForceGuidelineToggle.addEventListener('change', function(event) {
-        if (!state.guidelineDraft) return;
-        state.guidelineDraft.forceGuideline = event.target.checked;
-        markGuidelineDirty();
-      });
-    }
+    bindGuidelineEditEvents();
 
     if (settingsEditBtn) {
       settingsEditBtn.addEventListener('click', function() {

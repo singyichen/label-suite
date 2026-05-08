@@ -44,7 +44,7 @@ test.describe('Task new VA scoring template', () => {
       win.showStep(4);
     });
 
-    await expect(page.locator('#guidelineList')).toContainText('VA_emj.png');
-    await expect(page.locator('#guidelineList')).toContainText('Image');
+    await expect(page.locator('#annotatorGuidelineList')).toContainText('VA_emj.png');
+    await expect(page.locator('#annotatorGuidelineList')).toContainText('Image');
   });
 });
