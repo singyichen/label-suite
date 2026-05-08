@@ -22,23 +22,53 @@
     </div>
   </section>
 
-  <section class="panel" aria-labelledby="candidateListTitle">
-    <h2 class="panel-title" id="candidateListTitle">可加入成員名單</h2>
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="member-table" role="table" aria-label="Candidate users table">
-          <thead>
-            <tr>
-              <th id="thCandidateName">姓名</th>
-              <th id="thCandidateEmail">Email</th>
-              <th id="thCandidateTaskCount">目前已在任務數量</th>
-              <th id="thCandidateAssignRole">指派任務角色</th>
-              <th id="thCandidateActions">操作</th>
-            </tr>
-          </thead>
-          <tbody id="candidateTableBody"></tbody>
-        </table>
-      </div>
+  <section class="panel" aria-labelledby="memberAddTitle">
+    <h2 class="panel-title" id="memberAddTitle">加入成員</h2>
+    <p class="panel-subtitle" id="memberAddSubtitle">可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。</p>
+
+    <div class="member-entry-grid">
+      <section class="member-entry-card" aria-labelledby="memberSearchTitle">
+        <h3 class="member-entry-title" id="memberSearchTitle">搜尋平台成員</h3>
+        <p class="member-entry-hint" id="memberSearchSubtitle">支援以帳號、姓名或 Email 搜尋目前平台成員。</p>
+        <div class="member-entry-row">
+          <input class="input-text" id="memberSearchInput" type="text" placeholder="輸入帳號、姓名或 Email" />
+          <select class="role-select-inline" id="memberSearchRoleSelect">
+            <option value="annotator">標記員</option>
+            <option value="reviewer">審核員</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="member-table" role="table" aria-label="Search platform users table">
+              <thead>
+                <tr>
+                  <th id="thSearchAccount">帳號</th>
+                  <th id="thSearchName">姓名</th>
+                  <th id="thSearchEmail">Email</th>
+                  <th id="thSearchTaskCount">目前已在任務數量</th>
+                  <th id="thSearchActions">操作</th>
+                </tr>
+              </thead>
+              <tbody id="memberSearchResultsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="member-entry-card" aria-labelledby="memberInviteTitle">
+        <h3 class="member-entry-title" id="memberInviteTitle">Email 邀請</h3>
+        <p class="member-entry-hint" id="memberInviteSubtitle">填寫對方 Email 並指定任務角色後，寄送邀請加入任務。</p>
+        <div class="member-entry-stack">
+          <input class="input-text" id="memberInviteEmailInput" type="email" placeholder="輸入邀請 Email" />
+          <div class="member-entry-row">
+            <select class="role-select-inline" id="memberInviteRoleSelect">
+              <option value="annotator">標記員</option>
+              <option value="reviewer">審核員</option>
+            </select>
+            <button class="mini-btn mini-btn-primary" id="memberInviteSendBtn" type="button">寄送邀請</button>
+          </div>
+        </div>
+      </section>
     </div>
   </section>
 </div>

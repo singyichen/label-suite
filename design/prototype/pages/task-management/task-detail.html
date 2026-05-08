@@ -704,6 +704,52 @@
     .member-table tbody tr:last-child td { border-bottom: none; }
     .member-name { font-weight: 700; }
     .member-email { color: var(--color-text-soft); }
+    .member-entry-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+      gap: var(--space-md);
+    }
+    .member-entry-card {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-slate-50);
+      padding: var(--space-md);
+    }
+    .member-entry-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .member-entry-hint {
+      margin: 0 0 var(--space-sm);
+      font-size: 13px;
+      color: var(--color-text-soft);
+      line-height: 1.6;
+    }
+    .member-entry-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: var(--space-sm);
+    }
+    .member-entry-row .input-text { flex: 1; }
+    .member-entry-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .member-account {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .member-search-empty {
+      text-align: center;
+      color: var(--color-text-soft);
+      font-size: 13px;
+      padding: 18px 12px;
+    }
     .role-select-inline {
       width: 130px;
       border: 1px solid var(--color-border);
@@ -1216,6 +1262,23 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+    }
+    .guideline-role-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .guideline-role-card {
+      padding: 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-slate-50);
+    }
+    .guideline-role-heading {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-ink);
     }
     .notice-info {
       display: flex;
@@ -1782,7 +1845,7 @@
     .status-stepper {
       display: flex;
       align-items: flex-start;
-      min-width: 520px;
+      min-width: 420px;
     }
     .step {
       display: flex;
@@ -1847,7 +1910,7 @@
       margin-bottom: var(--space-md);
     }
     .exec-info { flex: 1; min-width: 0; }
-    .exec-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+    .exec-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 0; }
     .exec-isolation-audit { font-size: 11px; }
     .exec-actions { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
     .run-control-tabs {
@@ -1882,6 +1945,64 @@
       gap: 10px;
       margin-bottom: 12px;
     }
+    .exec-stage-banner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      padding: 14px 16px;
+      border: 1px solid rgba(99,102,241,0.18);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 42%),
+        linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);
+    }
+    .exec-stage-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .exec-stage-eyebrow,
+    .round-decision-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+    }
+    .exec-stage-title,
+    .round-decision-title {
+      font-size: 20px;
+      line-height: 1.2;
+      color: var(--color-ink);
+    }
+    .exec-stage-desc,
+    .round-decision-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      max-width: 720px;
+    }
+    .exec-stage-pill,
+    .round-history-summary {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .exec-stage-pill-accent {
+      border-color: rgba(16,185,129,0.25);
+      background: rgba(16,185,129,0.08);
+      color: #047857;
+    }
     .exec-round-item {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -1903,13 +2024,28 @@
     .exec-stop-row {
       margin-bottom: var(--space-md);
       display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .exec-stop-main {
+      display: flex;
       flex-direction: column;
       gap: 8px;
+      min-width: 0;
+      flex: 1;
     }
     .exec-stop-pills {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+    .exec-stop-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-shrink: 0;
     }
     .stop-pill {
       display: inline-flex;
@@ -1927,6 +2063,155 @@
       border-color: var(--color-success-border);
       color: var(--color-success);
       background: var(--color-success-bg);
+    }
+    .round-history-panel {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-white);
+      padding: 16px;
+      margin-bottom: var(--space-md);
+    }
+    .round-history-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .round-timeline {
+      display: grid;
+      gap: 12px;
+    }
+    .round-timeline-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: start;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    }
+    .round-timeline-index,
+    .round-timeline-body,
+    .round-timeline-side {
+      position: relative;
+      z-index: 1;
+    }
+    .round-timeline-index {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .round-timeline-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid var(--color-white);
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.16);
+      background: var(--color-primary);
+      flex-shrink: 0;
+    }
+    .round-timeline-dot.failed {
+      background: #DC2626;
+      box-shadow: 0 0 0 2px rgba(220,38,38,0.12);
+    }
+    .round-timeline-dot.passed {
+      background: #10B981;
+      box-shadow: 0 0 0 2px rgba(16,185,129,0.14);
+    }
+    .round-timeline-label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .round-timeline-round {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+    .round-timeline-date {
+      font-size: 11px;
+      color: var(--color-text-soft);
+      white-space: nowrap;
+    }
+    .round-timeline-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+    .round-timeline-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .round-metric-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-soft);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .round-timeline-note {
+      font-size: 13px;
+      color: var(--color-ink);
+      line-height: 1.6;
+    }
+    .round-timeline-side {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .round-status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .round-status-badge.failed {
+      color: #B91C1C;
+      background: #FEF2F2;
+      border-color: #FECACA;
+    }
+    .round-status-badge.passed {
+      color: #047857;
+      background: #ECFDF5;
+      border-color: #A7F3D0;
+    }
+    .round-status-badge.in-progress {
+      color: #6D28D9;
+      background: #F5F3FF;
+      border-color: #DDD6FE;
+    }
+    .round-decision-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      margin-bottom: var(--space-md);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(16,185,129,0.22);
+      background:
+        linear-gradient(135deg, rgba(16,185,129,0.10), rgba(99,102,241,0.04)),
+        #FFFFFF;
+    }
+    .round-decision-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
     }
 
     .panel-divider {
@@ -1948,9 +2233,19 @@
       align-items: end;
       margin-bottom: var(--space-md);
     }
+    .sampling-fields-primary {
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+    }
+    .sampling-fields-primary .field-group {
+      height: 100%;
+    }
     .sampling-fields-advanced {
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       align-items: start;
+    }
+    .field-hint-placeholder {
+      visibility: hidden;
     }
     .sampling-mode-inline {
       display: flex;
@@ -1990,43 +2285,76 @@
     .strategy-seed { font-size: 11px; color: var(--color-ink-muted); }
 
     .data-split-viz { margin-bottom: var(--space-sm); }
+    .exec-data-split-viz {
+      padding: 14px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      margin-bottom: var(--space-md);
+    }
+    .split-viz-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
     .split-bar {
       display: flex;
       height: 28px;
       border-radius: var(--radius-md);
       overflow: hidden;
       margin-bottom: 10px;
+      background: #E5E7EB;
     }
     .split-seg {
       min-width: 0;
       transition: width var(--dur-normal) var(--ease-standard);
+      box-shadow: inset -1px 0 0 rgba(255,255,255,0.92);
     }
+    .split-seg:first-child { border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md); }
+    .split-seg:last-child { border-top-right-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); }
     .split-dry { background: var(--color-primary); }
     .split-official { background: var(--color-cta); }
     .split-legend { display: flex; gap: var(--space-md); flex-wrap: wrap; }
     .split-legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+    .split-legend-item strong { color: var(--color-ink); }
     .split-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .split-dot-total { background: var(--color-ink-muted); }
     .split-dot-dry { background: var(--color-primary); }
     .split-dot-official { background: var(--color-cta); }
     .split-legend-key { color: var(--color-text-soft); }
     .split-legend-value { color: var(--color-ink); font-weight: 600; }
-
-    .sampling-footer {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+    .split-legend-dynamic .split-legend-item {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
     }
+
+    .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
 
 @media (max-width: 768px) {
       .overview-info-row { grid-template-columns: 1fr; }
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
       .settings-schema-field-grid { grid-template-columns: 1fr; }
+      .member-entry-grid { grid-template-columns: 1fr; }
+      .member-entry-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .member-entry-row .role-select-inline,
+      .member-entry-row .mini-btn { width: 100%; }
       .sampling-fields { grid-template-columns: 1fr; }
       .sampling-fields-advanced { grid-template-columns: 1fr; }
+      .exec-stage-banner { flex-direction: column; }
+      .round-timeline-side { justify-content: flex-start; }
+      .exec-stop-row,
+      .exec-stop-actions { align-items: flex-start; }
+      .round-timeline-item {
+        grid-template-columns: 1fr;
+      }
       .exec-control-row { flex-direction: column; }
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
@@ -2068,10 +2396,10 @@
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
-        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
-        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
-        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
         <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
+        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
+        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
+        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
       </div>
 
       <div id="loadingSkeleton" class="skeleton-stack" aria-live="polite" aria-busy="true">
@@ -2166,23 +2494,35 @@
       labelCreatedBy: '建立者',
       labelCreatedAt: '建立時間',
       labelUpdatedAt: '最近更新',
-      labelDatasetSummary: '資料集摘要',
+      labelDatasetSummary: '資料集',
       labelConfigVersion: '設定檔版本',
       labelConfigTaskType: '標記類型',
       labelConfigLabels: '標籤清單',
       labelConfigAllowMultiple: '允許多選',
-      labelGuideline: '說明內容狀態',
-      labelGuidelineFilesSummary: '附件清單',
-      labelGuidelineContentSummary: '說明內容摘要',
+      guidelineAnnotatorTitle: '提供給標記員',
+      guidelineReviewerTitle: '提供給審核員',
+      labelAnnotatorGuideline: '說明內容狀態',
+      labelAnnotatorGuidelineFilesSummary: '附件清單',
+      labelAnnotatorGuidelineContentSummary: '說明內容摘要',
+      labelReviewerGuideline: '說明內容狀態',
+      labelReviewerGuidelineFilesSummary: '附件清單',
+      labelReviewerGuidelineContentSummary: '說明內容摘要',
       labelForceGuideline: '開始標記前強制顯示',
       guidelineEditBtn: '編輯',
       guidelineSaveBtn: '儲存',
       guidelineCancelBtn: '取消',
       guidelineReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記說明。',
       guidelineOptionalNoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
-      guidelineUploadLabel: '上傳檔案',
-      guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
-      guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
+      annotatorGuidelineUploadLabel: '上傳檔案',
+      reviewerGuidelineUploadLabel: '上傳檔案',
+      annotatorGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      reviewerGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      annotatorGuidelineTextPlaceholder: '輸入提供給標記員的任務說明、判斷準則與注意事項',
+      reviewerGuidelineTextPlaceholder: '輸入提供給審核員的審核原則、退回條件與注意事項',
+      editAnnotatorGuidelineLabel: '標記說明內容',
+      editAnnotatorGuidelineFilesLabel: '上傳檔案',
+      editReviewerGuidelineLabel: '審核說明內容',
+      editReviewerGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineDesc: '啟用後，標記員進入作業前必須先閱讀說明',
       guidelineSaveSuccess: '標記說明已更新',
       guidelineLeaveConfirm: '你有尚未儲存的標記說明變更，確定要離開編輯模式嗎？',
@@ -2280,55 +2620,50 @@
       samplingSaveSuccess: '抽樣設定已更新',
       samplingLeaveConfirm: '你有尚未儲存的抽樣設定變更，確定要離開編輯模式嗎？',
       trialRoundLabel: '試標回合',
+      trialRoundsUsedLabel: '已完成試標回合',
       targetAgreementLabel: '目標 IAA',
-      currentAgreementLabel: '目前 IAA',
+      currentAgreementLabel: '最新回合 IAA',
       currentStdLabel: '目前標準差',
+      officialPoolLabel: '正式標記池',
       stopConditionTitle: '達標條件',
-      labelSamplingModeControl: '抽樣方式',
-      labelSamplingValueControl: '抽樣數值',
-      labelTrialRoundControl: '試標回合',
-      labelSamplingStrategyControl: '抽樣策略',
-      labelStratifyByControl: '分層依據',
-      labelStopConditionControl: '停止條件',
-      labelSplitControl: '試標 / 正式資料配比',
+      labelSamplingValueControl: '每回合抽樣筆數',
+      labelRoundOutcomeControl: '目前判定',
+      labelIaaMethodControl: 'IAA 計算方式',
+      labelTargetAgreementControl: '目標 IAA',
+      labelMinAnnotatorsControl: '最少標記者數',
+      labelSplitControl: '已用試標 / 可進正式',
       totalSamplesLabel: '總筆數',
       labelIsolationControl: '資料隔離狀態',
       labelIsolationAuditControl: '隔離異動',
-      samplingModeLabel: '抽樣方式',
-      samplingValueLabel: '抽樣數值',
-      samplingStrategyLabel: '抽樣策略',
-      samplingSeedLabel: '隨機種子',
-      samplingRoundLabel: '試標回合',
-      samplingStratifyLabel: '分層依據',
-      stratifyByLabelText: '標籤',
-      stratifyByDomainText: '領域',
-      stratifyByDifficultyText: '難度',
-      samplingStrategyOptionStratified: '分層隨機抽樣',
-      samplingStrategyOptionDisagreement: '高分歧樣本優先',
-      samplingStrategyOptionEdgeCases: '邊界樣本優先',
+      samplingValueLabel: '每回合抽樣筆數',
+      samplingValueHint: '筆數需 >= 1 且 < 資料集總筆數',
+      iaaMethodLabel: 'IAA 計算方式',
+      iaaMethodOptKrippendorff: "Krippendorff's Alpha（nominal）",
+      iaaMethodOptCohens: "Cohen's Kappa",
+      iaaMethodOptFleiss: "Fleiss' Kappa",
+      iaaMethodOptIcc: 'ICC（組內相關係數）',
+      iaaMethodOptPairwiseStrict: 'Pairwise F1（嚴格）',
+      iaaMethodOptPairwisePartial: 'Pairwise F1（部分重疊）',
+      iaaMethodOptTriple: 'Pairwise Triple-level F1',
+      targetAgreementHintTpl: '建議值：{value}',
       targetAgreementInputLabel: '目標 IAA',
-      targetStdInputLabel: '標準差上限',
-      minAnnotatorsInputLabel: '最少標註者數',
+      minAnnotatorsInputLabel: '最少標記者數',
       sampleUsageLabel: '試標',
       officialReserveLabel: '正式',
-      samplingModeCount: '筆數',
-      samplingModePercent: '百分比',
-      samplingHelp: '百分比採 floor(total * percent / 100)，且正式標記至少保留 1 筆。',
-      resampleBtn: '重算抽樣',
-      resampleHintDraft: '僅草稿階段可重算；進入試標後需建立新的執行批次。',
-      resampleHintLocked: '目前狀態不可重算。請建立新的執行批次。',
+      executionSplitTitle: '樣本池分配',
       isolationToggleTitle: '是否啟用資料隔離（試標 / 正式）',
       isolationToggleDesc: '啟用時可避免試標結果污染正式標記資料。',
       isolationRiskMsg: '已關閉資料隔離。發布前需完成風險二次確認，且操作將寫入審計紀錄。',
-      publishDryRun: '開始試標 Round',
-      publishOfficialRun: '發布 Official Run',
+      publishDryRun: '新增試標回合',
+      publishOfficialRun: '開始正式標記',
+      publishComplete: '標記完成',
       noPublishAction: '此狀態不提供發布操作。',
       reviewerHint: '僅 project leader 可操作',
-      dryRunDisabled: '發布 Dry Run（唯讀）',
-      officialRunDisabled: '發布 Official Run（唯讀）',
-      statusHintDraft: '目前任務處於 draft，可發布 Dry Run。',
-      statusHintDry: 'Dry Run 進行中，等待所有 active annotator 完成。',
-      statusHintIaa: '所有試標已完成，可發布 Official Run。',
+      dryRunDisabled: '新增試標回合（唯讀）',
+      officialRunDisabled: '開始正式標記（唯讀）',
+      statusHintDraft: '目前任務仍在草稿，可建立第一個試標回合。',
+      statusHintDry: '目前處於試標階段，可依結果持續建立下一個試標回合。',
+      statusHintIaa: '已有試標回合達標，可用剩餘樣本啟動正式標記。',
       statusHintOfficial: 'Official Run 進行中。',
       statusHintCompleted: '任務已完成。',
       statusLabel: {
@@ -2340,8 +2675,8 @@
       },
       statusStepLabel: {
         draft: '草稿',
-        dry_run_in_progress: '試標進行中',
-        waiting_iaa_confirmation: '待 IAA 確認',
+        dry_run_in_progress: '試標階段',
+        waiting_iaa_confirmation: '試標階段',
         official_run_in_progress: '正式標記中',
         completed: '已完成'
       },
@@ -2356,46 +2691,73 @@
       isolationOff: '未隔離',
       isolationAuditTpl: '最後異動：{actor} · {time}',
       toastRoleDenied: 'annotator 無權限檢視任務詳情，已導回任務列表。',
-      toastPublishedDry: '已發布 Dry Run',
-      toastPublishedOfficial: '已發布 Official Run',
+      toastPublishedDry: '已建立試標回合',
+      toastPublishedOfficial: '已啟動正式標記',
+      toastPublishedComplete: '任務已標記完成',
       toastPublishBlocked: '抽樣設定不合法，無法發布。',
-      toastResampled: '抽樣已重算',
       yes: '是',
       no: '否',
       guidelineUploaded: '已上傳',
       guidelineEmpty: '未上傳',
       guidelineFilesNone: '無附件',
       guidelineContentEmpty: '尚無說明內容',
-      samplingValueCountTpl: '{value} 筆',
-      samplingValuePercentTpl: '{value}%（約 {count} 筆）',
-      trialRoundTpl: '第 {round} 回合',
-      splitSummaryTpl: '總筆數 {total} / 試標 {sample} / 正式 {reserve}',
-      samplingStrategySummaryTpl: '{strategy} · 隨機種子 {seed}',
-      stratifyBySummaryTpl: '{items}',
-      stopConditionSummaryTpl: 'IAA ≥ {agreement}，標準差 ≤ {std}，標註者 ≥ {annotators}',
-      stopConditionNoStdTpl: 'IAA ≥ {agreement}，標註者 ≥ {annotators}',
+      samplingValueCountTpl: '每回合 {value} 筆',
+      splitSummaryTpl: '已用試標 {sample} / 可進正式 {reserve} / 總筆數 {total}',
+      roundOutcomePassed: '已有回合達標，可進入正式標記',
+      roundOutcomeFailed: '最近回合未達標，建議追加下一回合試標',
+      roundOutcomeInProgress: '目前回合進行中，待所有標記員完成後再判定',
+      executionStageEyebrow: '目前任務階段',
+      executionStageTrial: '試標階段',
+      executionStageOfficial: '正式標記中',
+      executionStageDraft: '尚未開始試標',
+      executionStageCompleted: '已完成',
+      executionStageDescTrial: '目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。',
+      executionStageDescOfficial: '正式標記已啟動，作業範圍為未進入任何試標回合的剩餘樣本。',
+      executionStageDescDraft: '先建立第一個試標回合，確認一致性門檻與樣本使用策略。',
+      executionStageDescCompleted: '所有試標與正式標記都已完成，可回顧回合歷程與輸出結果。',
+      executionStagePillTpl: '已用 {rounds} 個回合',
+      executionOfficialPoolPillTpl: '正式池 {count} 筆',
+      roundHistoryTitle: '試標回合歷程',
+      roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
+      roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
+      roundDecisionEyebrow: '正式標記判定',
+      roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
+      roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
+      roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
+      roundDecisionDescFailedTpl: '目前僅使用了 {used} 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。',
+      roundDecisionTitleOfficialTpl: '正式標記進行中，共 {count} 筆',
+      roundDecisionDescOfficialTpl: '正式標記池已從未參與試標的剩餘樣本建立，持續完成後即可結束任務。',
+      roundDecisionTitleCompletedTpl: '正式標記已完成，共 {count} 筆',
+      roundDecisionDescCompletedTpl: '此任務已走完整個草稿、試標、正式標記流程，可回顧所有回合與正式標記結果。',
+      roundMetricSampleTpl: '{count} 筆樣本',
+      roundMetricIaaTpl: 'IAA {value}',
+      roundMetricAnnotatorsTpl: '{count} 位標記者',
+      roundMetricStdTpl: 'Std {value}',
+      roundStatusPassed: '已通過',
+      roundStatusFailed: '未通過',
+      roundStatusInProgress: '進行中',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: '標準差 ≤ {target}',
       stopAnnotatorPillTpl: '標註者 ≥ {target}',
-      stratifyByNone: '未設定',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: '確認停用資料隔離',
       riskModalBody: '你已選擇停用資料隔離。此設定可能導致 Dry Run 與 Official Run 資料混用，風險不可逆。是否確認並繼續發布？',
       riskCancelBtn: '取消',
       riskConfirmBtn: '確認停用並發布',
-      samplingErrorPercent: '百分比僅允許 1..99。',
       samplingErrorCount: '筆數需 >= 1 且 < 資料集總筆數。',
-      samplingErrorFloor: '百分比換算後小於 1 筆，請提高百分比或改用固定筆數。',
-      samplingErrorReserve: '正式標記至少需保留 1 筆資料。',
-      samplingErrorStratify: '請至少選擇 1 個分層依據。',
       samplingErrorAgreement: '目標 IAA 需介於 0..1。',
-      samplingErrorStd: '標準差上限需介於 0..1。',
-      samplingErrorAnnotators: '最少標註者數需 >= 2。',
-      samplingErrorRound: '試標回合需 >= 1。',
+      samplingErrorAnnotators: '最少標記者數需 >= 2。',
       memberListTitle: '目前成員清單',
       memberListSubtitle: '任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。',
-      candidateListTitle: '可加入成員名單',
+      memberAddTitle: '加入成員',
+      memberAddSubtitle: '可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。',
+      memberSearchTitle: '搜尋平台成員',
+      memberSearchSubtitle: '支援以帳號、姓名或 Email 搜尋目前平台成員。',
+      memberSearchPlaceholder: '輸入帳號、姓名或 Email',
+      memberInviteTitle: 'Email 邀請',
+      memberInviteSubtitle: '填寫對方 Email 並指定任務角色後，寄送邀請加入任務。',
+      memberInvitePlaceholder: '輸入邀請 Email',
       thMemberName: '姓名',
       thMemberEmail: 'Email',
       thMemberTaskRole: '任務角色',
@@ -2403,19 +2765,26 @@
       thMemberJoinedAt: '加入時間',
       thMemberLastActive: '最後活動',
       thMemberActions: '操作',
-      thCandidateName: '姓名',
-      thCandidateEmail: 'Email',
-      thCandidateTaskCount: '目前已在任務數量',
-      thCandidateAssignRole: '指派任務角色',
-      thCandidateActions: '操作',
+      thSearchAccount: '帳號',
+      thSearchName: '姓名',
+      thSearchEmail: 'Email',
+      thSearchTaskCount: '目前已在任務數量',
+      thSearchActions: '操作',
       memberStatusActive: '啟用',
       memberStatusDisabled: '停用',
+      memberStatusInvited: '邀請中',
       taskRoleReviewer: '審核員',
       taskRoleAnnotator: '標記員',
       actionRemove: '移除',
       actionDisable: '停用',
       actionEnable: '啟用',
       actionAdd: '加入任務',
+      actionSendInvite: '寄送邀請',
+      memberSearchIdle: '請先輸入帳號、姓名或 Email 再開始搜尋',
+      memberSearchEmpty: '沒有符合條件、且尚未加入此任務的平台成員',
+      errMemberInviteEmail: '請輸入有效的 Email',
+      errMemberDuplicate: '此成員已在任務中或已寄出邀請',
+      errPermissionDenied: '您沒有執行此操作的權限',
       progressSummaryTitle: '整體進度摘要',
       progressStageDry: '試標',
       progressStageOfficial: '正式標記',
@@ -2483,6 +2852,7 @@
       progressStageMetaTpl: '{completed}/{total}（{rate}%）',
       reviewerTabBlocked: 'reviewer 無權限檢視成員管理，已導回任務概覽。',
       toastMemberUpdated: '成員設定已更新',
+      toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
       memberActionModalBodyRemove: '是否移除 {name}（{role}）？此操作會立即生效。',
       memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再提交標記。',
@@ -2566,24 +2936,36 @@
       labelCreatedBy: 'Created by',
       labelCreatedAt: 'Created at',
       labelUpdatedAt: 'Last updated',
-      labelDatasetSummary: 'Dataset summary',
+      labelDatasetSummary: 'Dataset',
       labelConfigVersion: 'Config version',
       labelConfigTaskType: 'Task type',
       labelConfigLabels: 'Labels',
       labelConfigAllowMultiple: 'Allow multiple labels',
-      labelGuideline: 'Guideline status',
-      labelGuidelineFilesSummary: 'Attachment list',
-      labelGuidelineContentSummary: 'Guideline summary',
+      guidelineAnnotatorTitle: 'For annotators',
+      guidelineReviewerTitle: 'For reviewers',
+      labelAnnotatorGuideline: 'Guideline status',
+      labelAnnotatorGuidelineFilesSummary: 'Attachment list',
+      labelAnnotatorGuidelineContentSummary: 'Guideline summary',
+      labelReviewerGuideline: 'Guideline status',
+      labelReviewerGuidelineFilesSummary: 'Attachment list',
+      labelReviewerGuidelineContentSummary: 'Guideline summary',
       labelForceGuideline: 'Force show before annotation',
       guidelineEditBtn: 'Edit',
       guidelineSaveBtn: 'Save',
       guidelineCancelBtn: 'Cancel',
       guidelineReadonlyRoleOnly: 'Read-only role. Only project leader can edit guideline.',
       guidelineOptionalNoticeText: 'This step is optional. You can create the task without uploading guidelines.',
-      guidelineUploadLabel: 'Upload files',
-      guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
-      guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+      annotatorGuidelineUploadLabel: 'Upload files',
+      reviewerGuidelineUploadLabel: 'Upload files',
+      annotatorGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      reviewerGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+      annotatorGuidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+      reviewerGuidelineTextPlaceholder: 'Enter review rules, rejection criteria, and cautions for reviewers',
       editForceGuidelineDesc: 'Annotators must read the guideline before starting work',
+      editAnnotatorGuidelineLabel: 'Annotation guideline content',
+      editAnnotatorGuidelineFilesLabel: 'Upload files',
+      editReviewerGuidelineLabel: 'Review guideline content',
+      editReviewerGuidelineFilesLabel: 'Upload files',
       guidelineSaveSuccess: 'Guideline updated',
       guidelineLeaveConfirm: 'You have unsaved guideline changes. Leave edit mode?',
       guidelineFileTypeInvalid: 'Only PDF / PNG / JPG / JPEG / WEBP / Markdown are supported',
@@ -2680,55 +3062,50 @@
       samplingSaveSuccess: 'Sampling settings updated',
       samplingLeaveConfirm: 'You have unsaved sampling changes. Leave edit mode?',
       trialRoundLabel: 'Trial round',
+      trialRoundsUsedLabel: 'Trial rounds used',
       targetAgreementLabel: 'Target IAA',
-      currentAgreementLabel: 'Current IAA',
+      currentAgreementLabel: 'Latest round IAA',
       currentStdLabel: 'Current standard deviation',
+      officialPoolLabel: 'Official pool',
       stopConditionTitle: 'Stop conditions',
-      labelSamplingModeControl: 'Sampling mode',
-      labelSamplingValueControl: 'Sampling value',
-      labelTrialRoundControl: 'Trial round',
-      labelSamplingStrategyControl: 'Sampling strategy',
-      labelStratifyByControl: 'Stratify by',
-      labelStopConditionControl: 'Stop conditions',
-      labelSplitControl: 'Dry / Official split',
+      labelSamplingValueControl: 'Per-round sample count',
+      labelRoundOutcomeControl: 'Current decision',
+      labelIaaMethodControl: 'IAA method',
+      labelTargetAgreementControl: 'Target IAA',
+      labelMinAnnotatorsControl: 'Minimum annotators',
+      labelSplitControl: 'Used in trial / Ready for official',
       totalSamplesLabel: 'Total',
       labelIsolationControl: 'Data isolation status',
       labelIsolationAuditControl: 'Isolation changed at',
-      samplingModeLabel: 'Sampling mode',
-      samplingValueLabel: 'Sampling value',
-      samplingStrategyLabel: 'Sampling strategy',
-      samplingSeedLabel: 'Random seed',
-      samplingRoundLabel: 'Trial round',
-      samplingStratifyLabel: 'Stratify by',
-      stratifyByLabelText: 'Label',
-      stratifyByDomainText: 'Domain',
-      stratifyByDifficultyText: 'Difficulty',
-      samplingStrategyOptionStratified: 'Stratified random',
-      samplingStrategyOptionDisagreement: 'High disagreement',
-      samplingStrategyOptionEdgeCases: 'Edge cases',
+      samplingValueLabel: 'Per-round sample count',
+      samplingValueHint: 'Count must be >= 1 and < total dataset size',
+      iaaMethodLabel: 'IAA method',
+      iaaMethodOptKrippendorff: "Krippendorff's Alpha (nominal)",
+      iaaMethodOptCohens: "Cohen's Kappa",
+      iaaMethodOptFleiss: "Fleiss' Kappa",
+      iaaMethodOptIcc: 'ICC (Intraclass Correlation)',
+      iaaMethodOptPairwiseStrict: 'Pairwise F1 (strict)',
+      iaaMethodOptPairwisePartial: 'Pairwise F1 (partial)',
+      iaaMethodOptTriple: 'Pairwise Triple-level F1',
+      targetAgreementHintTpl: 'Suggested: {value}',
       targetAgreementInputLabel: 'Target IAA',
-      targetStdInputLabel: 'Standard deviation limit',
       minAnnotatorsInputLabel: 'Minimum annotators',
       sampleUsageLabel: 'Dry',
       officialReserveLabel: 'Official',
-      samplingModeCount: 'By count',
-      samplingModePercent: 'By percentage',
-      samplingHelp: 'Percentage uses floor(total * percent / 100); keep at least 1 item for official run.',
-      resampleBtn: 'Resample',
-      resampleHintDraft: 'Resample is allowed only in draft. Create a new run batch after dry run starts.',
-      resampleHintLocked: 'Resample is locked in current status. Create a new run batch.',
+      executionSplitTitle: 'Sample pool split',
       isolationToggleTitle: 'Enable data isolation (dry / official)',
       isolationToggleDesc: 'Isolation prevents dry-run results from contaminating official data.',
       isolationRiskMsg: 'Isolation is off. Risk confirmation is required before publishing and will be audited.',
-      publishDryRun: 'Publish Dry Run',
-      publishOfficialRun: 'Publish Official Run',
+      publishDryRun: 'Add trial round',
+      publishOfficialRun: 'Start official run',
+      publishComplete: 'Mark complete',
       noPublishAction: 'No publish action is available in this status.',
       reviewerHint: 'Only project leader can perform this action',
-      dryRunDisabled: 'Publish Dry Run (Read-only)',
-      officialRunDisabled: 'Publish Official Run (Read-only)',
-      statusHintDraft: 'Task is in draft. Dry run can be published.',
-      statusHintDry: 'Dry run is in progress, waiting all active annotators to complete.',
-      statusHintIaa: 'Dry run is complete. Official run can be published.',
+      dryRunDisabled: 'Add trial round (Read-only)',
+      officialRunDisabled: 'Start official run (Read-only)',
+      statusHintDraft: 'The task is still in draft. Create the first trial round to start validation.',
+      statusHintDry: 'The task is in the trial stage. You can continue with another round based on the latest outcome.',
+      statusHintIaa: 'At least one trial round passed. The remaining pool can now enter official work.',
       statusHintOfficial: 'Official run is in progress.',
       statusHintCompleted: 'Task is completed.',
       statusLabel: {
@@ -2740,8 +3117,8 @@
       },
       statusStepLabel: {
         draft: 'Draft',
-        dry_run_in_progress: 'Dry run in progress',
-        waiting_iaa_confirmation: 'Waiting IAA confirmation',
+        dry_run_in_progress: 'Trial stage',
+        waiting_iaa_confirmation: 'Trial stage',
         official_run_in_progress: 'Official run in progress',
         completed: 'Completed'
       },
@@ -2756,10 +3133,10 @@
       isolationOff: 'non-isolated',
       isolationAuditTpl: 'Last changed by {actor} · {time}',
       toastRoleDenied: 'Annotator is not allowed to access task detail. Redirected to task list.',
-      toastPublishedDry: 'Dry run published',
-      toastPublishedOfficial: 'Official run published',
+      toastPublishedDry: 'Trial round created',
+      toastPublishedOfficial: 'Official run started',
+      toastPublishedComplete: 'Task marked as completed',
       toastPublishBlocked: 'Cannot publish due to invalid sampling setting.',
-      toastResampled: 'Sampling recalculated',
       yes: 'Yes',
       no: 'No',
       guidelineUploaded: 'Uploaded',
@@ -2767,28 +3144,62 @@
       guidelineFilesNone: 'No attachments',
       guidelineContentEmpty: 'No guideline text',
       samplingValueCountTpl: '{value} items',
-      samplingValuePercentTpl: '{value}% (~{count} items)',
-      splitSummaryTpl: 'Total {total} / Dry {sample} / Official {reserve}',
-      samplingStrategySummaryTpl: '{strategy} · seed {seed}',
-      stopConditionSummaryTpl: 'IAA ≥ {agreement} · Std ≤ {std} · annotators ≥ {annotators}',
-      stopConditionNoStdTpl: 'IAA ≥ {agreement} · annotators ≥ {annotators}',
+      splitSummaryTpl: 'Used in trial {sample} / Ready for official {reserve} / Total {total}',
+      roundOutcomePassed: 'A trial round has passed and official work can start',
+      roundOutcomeFailed: 'The latest round did not pass. Consider creating the next trial round',
+      roundOutcomeInProgress: 'The current round is still in progress and awaits completion',
+      executionStageEyebrow: 'Current task stage',
+      executionStageTrial: 'Trial stage',
+      executionStageOfficial: 'Official run in progress',
+      executionStageDraft: 'Trial not started',
+      executionStageCompleted: 'Completed',
+      executionStageDescTrial: 'The task is validating agreement through multiple trial rounds. Any passing round can unlock official work.',
+      executionStageDescOfficial: 'Official work has started on the remaining samples that were never used in any trial round.',
+      executionStageDescDraft: 'Create the first trial round to validate agreement thresholds and sample usage rules.',
+      executionStageDescCompleted: 'All trial and official work is finished. Review the round history and export results as needed.',
+      executionStagePillTpl: '{rounds} rounds used',
+      executionOfficialPoolPillTpl: 'Official pool {count}',
+      roundHistoryTitle: 'Trial round history',
+      roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
+      roundHistorySummaryTpl: '{used} / {total} items used in trial',
+      roundDecisionEyebrow: 'Official run decision',
+      roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
+      roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
+      roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
+      roundDecisionDescFailedTpl: 'Only {used} items have been consumed by trials so far. You can still draw the next round from unused data.',
+      roundDecisionTitleOfficialTpl: 'Official run in progress with {count} items',
+      roundDecisionDescOfficialTpl: 'The official pool was created from the remaining items that never entered a trial round.',
+      roundDecisionTitleCompletedTpl: 'Official run completed with {count} items',
+      roundDecisionDescCompletedTpl: 'This task has completed the full draft, trial, and official flow. Review the rounds and final output as needed.',
+      roundMetricSampleTpl: '{count} items',
+      roundMetricIaaTpl: 'IAA {value}',
+      roundMetricAnnotatorsTpl: '{count} annotators',
+      roundMetricStdTpl: 'Std {value}',
+      roundStatusPassed: 'Passed',
+      roundStatusFailed: 'Failed',
+      roundStatusInProgress: 'In progress',
       stopAgreementPillTpl: 'IAA ≥ {target}',
       stopStdPillTpl: 'Std ≤ {target}',
       stopAnnotatorPillTpl: 'annotators ≥ {target}',
-      stratifyByNone: 'Not set',
       roleLabel: { project_leader: 'Project Leader', reviewer: 'Reviewer' },
       userName: { project_leader: 'Mandy Chen', reviewer: 'Avery Lin' },
       riskModalTitle: 'Confirm disabling data isolation',
       riskModalBody: 'Disabling isolation may mix dry-run and official data, and the risk is irreversible. Confirm and continue publishing?',
       riskCancelBtn: 'Cancel',
       riskConfirmBtn: 'Confirm and publish',
-      samplingErrorPercent: 'Percentage must be between 1 and 99.',
       samplingErrorCount: 'Count must be >= 1 and less than total dataset size.',
-      samplingErrorFloor: 'Percentage result is less than 1 item. Increase percentage or use fixed count.',
-      samplingErrorReserve: 'Official run must reserve at least 1 item.',
+      samplingErrorAgreement: 'Target IAA must be between 0 and 1.',
+      samplingErrorAnnotators: 'Minimum annotators must be >= 2.',
       memberListTitle: 'Current members',
       memberListSubtitle: 'Task role is fixed at join time. Existing members cannot switch role mid-task; remove and re-add to change role.',
-      candidateListTitle: 'Available users to add',
+      memberAddTitle: 'Add members',
+      memberAddSubtitle: 'Search existing platform members or send an email invitation to join this task.',
+      memberSearchTitle: 'Search platform members',
+      memberSearchSubtitle: 'Search current platform members by account, name, or email.',
+      memberSearchPlaceholder: 'Enter account, name, or email',
+      memberInviteTitle: 'Email invite',
+      memberInviteSubtitle: 'Send an invitation email after assigning the task role.',
+      memberInvitePlaceholder: 'Enter invitation email',
       thMemberName: 'Name',
       thMemberEmail: 'Email',
       thMemberTaskRole: 'Task role',
@@ -2796,19 +3207,26 @@
       thMemberJoinedAt: 'Joined at',
       thMemberLastActive: 'Last active',
       thMemberActions: 'Actions',
-      thCandidateName: 'Name',
-      thCandidateEmail: 'Email',
-      thCandidateTaskCount: 'Current task count',
-      thCandidateAssignRole: 'Assign task role',
-      thCandidateActions: 'Actions',
+      thSearchAccount: 'Account',
+      thSearchName: 'Name',
+      thSearchEmail: 'Email',
+      thSearchTaskCount: 'Current task count',
+      thSearchActions: 'Actions',
       memberStatusActive: 'active',
       memberStatusDisabled: 'disabled',
+      memberStatusInvited: 'invited',
       taskRoleReviewer: 'Reviewer',
       taskRoleAnnotator: 'Annotator',
       actionRemove: 'Remove',
       actionDisable: 'Disable',
       actionEnable: 'Enable',
       actionAdd: 'Add to task',
+      actionSendInvite: 'Send invite',
+      memberSearchIdle: 'Enter an account, name, or email to start searching',
+      memberSearchEmpty: 'No matching platform members are available to add',
+      errMemberInviteEmail: 'Please enter a valid email',
+      errMemberDuplicate: 'This member is already in the task or already invited',
+      errPermissionDenied: 'You do not have permission to perform this action',
       progressSummaryTitle: 'Progress summary',
       progressStageDry: 'Dry Run',
       progressStageOfficial: 'Official Run',
@@ -2876,6 +3294,7 @@
       progressStageMetaTpl: '{completed}/{total} ({rate}%)',
       reviewerTabBlocked: 'Reviewer cannot access member management. Redirected to overview.',
       toastMemberUpdated: 'Member setting updated',
+      toastMemberInvited: 'Invitation sent. The member will join after accepting it',
       memberActionModalTitle: 'Confirm member action',
       memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? This takes effect immediately.',
       memberActionModalBodyDisable: 'Disable {name} ({role})? Disabled members cannot submit annotations.',
@@ -2963,27 +3382,51 @@
     ],
     forceGuideline: true,
     status: 'draft',
-    samplingMode: 'by_percentage',
-    samplingValue: 15,
-    samplingStrategy: 'stratified_random',
-    trialRound: 1,
-    randomSeed: 248931,
-    stratifyBy: ['label'],
-    targetAgreement: 0.75,
-    currentAgreement: 0.62,
-    targetStd: 0.10,
-    currentStd: 0.16,
-    minAnnotators: 5,
+    samplingMode: 'by_count',
+    samplingValue: 10,
+    iaaMethod: 'krippendorff_alpha_nominal',
+    trialRound: 2,
+    targetAgreement: 0.8,
+    currentAgreement: 0.81,
+    minAnnotators: 3,
     currentAnnotators: 3,
+    currentStd: 0.08,
     isolationEnabled: true,
     isolationLastActor: 'Mandy Chen',
     isolationLastUpdated: '2026-04-20 19:42',
+    trialRounds: [
+      {
+        round: 1,
+        sampleCount: 10,
+        agreement: 0.68,
+        annotators: 3,
+        std: 0.15,
+        result: 'failed',
+        usedSamples: 10,
+        date: '2026-05-01',
+        noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
+        noteEn: 'Round 1 showed large disagreement on borderline sentiment cases and did not pass.'
+      },
+      {
+        round: 2,
+        sampleCount: 10,
+        agreement: 0.81,
+        annotators: 3,
+        std: 0.08,
+        result: 'passed',
+        usedSamples: 10,
+        date: '2026-05-03',
+        noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
+        noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+      }
+    ],
     exportHistory: [
       { exportedAt: '2026-05-01 14:32', exportType: 'full', stage: 'official', count: 1240, scope: '__all__', exportedBy: 'Mandy', format: 'JSON' },
       { exportedAt: '2026-05-01 10:15', exportType: 'filtered', stage: 'dry', count: 320, scope: 'ASP-001~010', exportedBy: 'Mandy', format: 'JSON-MIN' },
       { exportedAt: '2026-04-30 18:20', exportType: 'full', stage: 'all', count: 1560, scope: '__all__', exportedBy: 'System', format: 'JSON' }
     ]
   };
+  var DEFAULT_TASK_DATA = JSON.parse(JSON.stringify(TASK_DATA));
 
   var TASK_PROFILE_MAP = {
     T001: {
@@ -3004,6 +3447,19 @@
       guidelineText: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
       guidelineFiles: [{ name: 'headline_taxonomy.pdf', type: 'pdf' }],
       forceGuideline: true,
+      samplingMode: 'by_count',
+      samplingValue: 10,
+      iaaMethod: 'krippendorff_alpha_nominal',
+      trialRound: 0,
+      targetAgreement: 0.8,
+      currentAgreement: 0,
+      minAnnotators: 3,
+      currentAnnotators: 0,
+      currentStd: 0,
+      isolationEnabled: true,
+      isolationLastActor: 'Mandy Chen',
+      isolationLastUpdated: '2026-05-07 09:00',
+      trialRounds: [],
       status: 'draft',
     },
     T002: {
@@ -3124,9 +3580,9 @@
   ];
 
   var PLATFORM_USERS = [
-    { name: 'Rachel Su', email: 'rachel.su@labelsuite.io', activeTaskCount: 1 },
-    { name: 'Steven Kao', email: 'steven.kao@labelsuite.io', activeTaskCount: 3 },
-    { name: 'Nina Wu', email: 'nina.wu@labelsuite.io', activeTaskCount: 5 },
+    { account: 'alex.wang', name: 'Alex Wang', email: 'alex.wang@labelsuite.io', activeTaskCount: 1 },
+    { account: 'olivia.lin', name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', activeTaskCount: 2 },
+    { account: 'jason.h', name: 'Jason Huang', email: 'jason.h@labelsuite.io', activeTaskCount: 3 },
   ];
 
   var ROLE_SELF_EMAIL = {
@@ -3859,7 +4315,7 @@
     if (!mount) return Promise.resolve(false);
     mount.innerHTML = '';
 
-    var order = ['overview', 'annotation-results', 'annotation-progress', 'work-log', 'member-management'];
+    var order = ['overview', 'member-management', 'annotation-progress', 'annotation-results', 'work-log'];
     return order.reduce(function(promise, tabName) {
       return promise.then(function() {
         return appendPanelPartial(TAB_PANEL_PATHS[tabName]);
@@ -3875,6 +4331,19 @@ function interpolate(template, payload) {
     });
   }
 
+  function cloneData(data) {
+    return JSON.parse(JSON.stringify(data));
+  }
+
+  function resetTaskData(taskId) {
+    TASK_DATA = cloneData(DEFAULT_TASK_DATA);
+    if (taskId && TASK_PROFILE_MAP[taskId]) {
+      Object.assign(TASK_DATA, cloneData(TASK_PROFILE_MAP[taskId]));
+    } else if (taskId) {
+      TASK_DATA.taskId = taskId;
+    }
+  }
+
   function parseRole() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('task_role') || params.get('role') || 'project_leader';
@@ -3885,11 +4354,9 @@ function interpolate(template, payload) {
       role = 'project_leader';
     }
     state.taskRole = role;
+    resetTaskData(taskId && taskId.trim() ? taskId.trim() : '');
     if (taskId && taskId.trim()) {
       TASK_DATA.taskId = taskId.trim();
-      if (TASK_PROFILE_MAP[TASK_DATA.taskId]) {
-        Object.assign(TASK_DATA, JSON.parse(JSON.stringify(TASK_PROFILE_MAP[TASK_DATA.taskId])));
-      }
     }
     applySamplingDefaultsToTaskData();
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
@@ -3980,16 +4447,25 @@ function interpolate(template, payload) {
     setText('labelConfigTaskType', t('labelConfigTaskType'));
     setText('labelConfigLabels', t('labelConfigLabels'));
     setText('labelConfigAllowMultiple', t('labelConfigAllowMultiple'));
-    setText('labelGuideline', t('labelGuideline'));
-    setText('labelGuidelineFilesSummary', t('labelGuidelineFilesSummary'));
-    setText('labelGuidelineContentSummary', t('labelGuidelineContentSummary'));
+    setText('guidelineAnnotatorTitle', t('guidelineAnnotatorTitle'));
+    setText('guidelineReviewerTitle', t('guidelineReviewerTitle'));
+    setText('labelAnnotatorGuideline', t('labelAnnotatorGuideline'));
+    setText('labelAnnotatorGuidelineFilesSummary', t('labelAnnotatorGuidelineFilesSummary'));
+    setText('labelAnnotatorGuidelineContentSummary', t('labelAnnotatorGuidelineContentSummary'));
+    setText('labelReviewerGuideline', t('labelReviewerGuideline'));
+    setText('labelReviewerGuidelineFilesSummary', t('labelReviewerGuidelineFilesSummary'));
+    setText('labelReviewerGuidelineContentSummary', t('labelReviewerGuidelineContentSummary'));
     setText('labelForceGuideline', t('labelForceGuideline'));
     setText('guidelineEditBtn', t('guidelineEditBtn'));
     setText('guidelineSaveBtn', t('guidelineSaveBtn'));
     setText('guidelineCancelBtn', t('guidelineCancelBtn'));
     setText('guidelineOptionalNoticeText', t('guidelineOptionalNoticeText'));
-    setText('guidelineUploadLabel', t('guidelineUploadLabel'));
-    setText('guidelineUploadHint', t('guidelineUploadHint'));
+    setText('editAnnotatorGuidelineTitle', t('guidelineAnnotatorTitle'));
+    setText('editReviewerGuidelineTitle', t('guidelineReviewerTitle'));
+    setText('annotatorGuidelineUploadLabel', t('annotatorGuidelineUploadLabel'));
+    setText('annotatorGuidelineUploadHint', t('annotatorGuidelineUploadHint'));
+    setText('reviewerGuidelineUploadLabel', t('reviewerGuidelineUploadLabel'));
+    setText('reviewerGuidelineUploadHint', t('reviewerGuidelineUploadHint'));
     setText('overviewEditTitle', t('overviewEditTitle'));
     setText('overviewEditBtn', t('overviewEditBtn'));
     setText('overviewSaveBtn', t('overviewSaveBtn'));
@@ -4006,8 +4482,10 @@ function interpolate(template, payload) {
     setRequiredLabel('editTaskTypeLabel', t('editTaskTypeLabel'));
     setRequiredLabel('editDatasetLabel', t('editDatasetLabel'));
     setText('editConfigLabel', t('editConfigLabel'));
-    setText('editGuidelineLabel', t('editGuidelineLabel'));
-    setText('editGuidelineFilesLabel', t('editGuidelineFilesLabel'));
+    setText('editAnnotatorGuidelineLabel', t('editAnnotatorGuidelineLabel'));
+    setText('editAnnotatorGuidelineFilesLabel', t('editAnnotatorGuidelineFilesLabel'));
+    setText('editReviewerGuidelineLabel', t('editReviewerGuidelineLabel'));
+    setText('editReviewerGuidelineFilesLabel', t('editReviewerGuidelineFilesLabel'));
     setText('editForceGuidelineLabel', t('editForceGuidelineLabel'));
     setText('editForceGuidelineDesc', t('editForceGuidelineDesc'));
     setText('basicDatasetDropTitle', t('basicDatasetDropTitle'));
@@ -4017,41 +4495,37 @@ function interpolate(template, payload) {
     setText('samplingSaveBtn', t('samplingSaveBtn'));
     setText('samplingCancelBtn', t('samplingCancelBtn'));
     setText('trialRoundLabel', t('trialRoundLabel'));
+    setText('trialRoundsUsedLabel', t('trialRoundsUsedLabel'));
     setText('targetAgreementLabel', t('targetAgreementLabel'));
     setText('currentAgreementLabel', t('currentAgreementLabel'));
     setText('currentStdLabel', t('currentStdLabel'));
+    setText('officialPoolLabel', t('officialPoolLabel'));
     setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
-    setRequiredLabel('labelSamplingModeControl', t('labelSamplingModeControl'));
-    setRequiredLabel('labelSamplingValueControl', t('labelSamplingValueControl'));
-    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
-    setText('labelSamplingStrategyControl', t('labelSamplingStrategyControl'));
-    setText('labelStratifyByControl', t('labelStratifyByControl'));
-    setText('labelStopConditionControl', t('labelStopConditionControl'));
+    setText('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setText('labelRoundOutcomeControl', t('labelRoundOutcomeControl'));
+    setText('labelIaaMethodControl', t('labelIaaMethodControl'));
+    setText('labelTargetAgreementControl', t('labelTargetAgreementControl'));
+    setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
     setText('labelSplitControl', t('labelSplitControl'));
     setText('totalSamplesLabel', t('totalSamplesLabel'));
     setText('labelIsolationControl', t('labelIsolationControl'));
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
-    setRequiredLabel('samplingModeLabel', t('samplingModeLabel'));
-    setText('samplingModePercentLabel', t('samplingModePercent'));
-    setText('samplingModeCountLabel', t('samplingModeCount'));
     setRequiredLabel('samplingValueLabel', t('samplingValueLabel'));
-    setText('samplingStrategyLabel', t('samplingStrategyLabel'));
-    setText('samplingStrategyOptionStratified', t('samplingStrategyOptionStratified'));
-    setText('samplingStrategyOptionDisagreement', t('samplingStrategyOptionDisagreement'));
-    setText('samplingStrategyOptionEdgeCases', t('samplingStrategyOptionEdgeCases'));
-    setText('samplingSeedLabel', t('samplingSeedLabel'));
-    setText('samplingRoundLabel', t('samplingRoundLabel'));
-    setText('samplingStratifyLabel', t('samplingStratifyLabel'));
-    setText('stratifyByLabelText', t('stratifyByLabelText'));
-    setText('stratifyByDomainText', t('stratifyByDomainText'));
-    setText('stratifyByDifficultyText', t('stratifyByDifficultyText'));
+    setText('samplingValueHint', t('samplingValueHint'));
+    setText('iaaMethodLabel', t('iaaMethodLabel'));
+    setText('iaaOptKrippendorff', t('iaaMethodOptKrippendorff'));
+    setText('iaaOptCohensKappa', t('iaaMethodOptCohens'));
+    setText('iaaOptFleissKappa', t('iaaMethodOptFleiss'));
+    setText('iaaOptIcc', t('iaaMethodOptIcc'));
+    setText('iaaOptPairwiseF1Strict', t('iaaMethodOptPairwiseStrict'));
+    setText('iaaOptPairwiseF1Partial', t('iaaMethodOptPairwisePartial'));
+    setText('iaaOptPairwiseTripleF1', t('iaaMethodOptTriple'));
     setText('targetAgreementInputLabel', t('targetAgreementInputLabel'));
-    setText('targetStdInputLabel', t('targetStdInputLabel'));
     setText('minAnnotatorsInputLabel', t('minAnnotatorsInputLabel'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
     setText('officialReserveLabel', t('officialReserveLabel'));
-    setText('resampleBtn', t('resampleBtn'));
+    setText('executionSplitTitle', t('executionSplitTitle'));
     setText('isolationToggleTitle', t('isolationToggleTitle'));
     setText('isolationToggleDesc', t('isolationToggleDesc'));
     setText('isolationRiskMsg', t('isolationRiskMsg'));
@@ -4061,7 +4535,12 @@ function interpolate(template, payload) {
     setText('riskConfirmBtn', t('riskConfirmBtn'));
     setText('memberListTitle', t('memberListTitle'));
     setText('memberListSubtitle', t('memberListSubtitle'));
-    setText('candidateListTitle', t('candidateListTitle'));
+    setText('memberAddTitle', t('memberAddTitle'));
+    setText('memberAddSubtitle', t('memberAddSubtitle'));
+    setText('memberSearchTitle', t('memberSearchTitle'));
+    setText('memberSearchSubtitle', t('memberSearchSubtitle'));
+    setText('memberInviteTitle', t('memberInviteTitle'));
+    setText('memberInviteSubtitle', t('memberInviteSubtitle'));
     setText('thMemberName', t('thMemberName'));
     setText('thMemberEmail', t('thMemberEmail'));
     setText('thMemberTaskRole', t('thMemberTaskRole'));
@@ -4069,11 +4548,23 @@ function interpolate(template, payload) {
     setText('thMemberJoinedAt', t('thMemberJoinedAt'));
     setText('thMemberLastActive', t('thMemberLastActive'));
     setText('thMemberActions', t('thMemberActions'));
-    setText('thCandidateName', t('thCandidateName'));
-    setText('thCandidateEmail', t('thCandidateEmail'));
-    setText('thCandidateTaskCount', t('thCandidateTaskCount'));
-    setText('thCandidateAssignRole', t('thCandidateAssignRole'));
-    setText('thCandidateActions', t('thCandidateActions'));
+    setText('thSearchAccount', t('thSearchAccount'));
+    setText('thSearchName', t('thSearchName'));
+    setText('thSearchEmail', t('thSearchEmail'));
+    setText('thSearchTaskCount', t('thSearchTaskCount'));
+    setText('thSearchActions', t('thSearchActions'));
+    var memberSearchInput = document.getElementById('memberSearchInput');
+    if (memberSearchInput) memberSearchInput.placeholder = t('memberSearchPlaceholder');
+    var memberInviteEmailInput = document.getElementById('memberInviteEmailInput');
+    if (memberInviteEmailInput) memberInviteEmailInput.placeholder = t('memberInvitePlaceholder');
+    setText('memberInviteSendBtn', t('actionSendInvite'));
+    ['memberSearchRoleSelect', 'memberInviteRoleSelect'].forEach(function(id) {
+      var select = document.getElementById(id);
+      if (select && select.options.length >= 2) {
+        select.options[0].textContent = t('taskRoleAnnotator');
+        select.options[1].textContent = t('taskRoleReviewer');
+      }
+    });
     setText('progressSummaryTitle', t('progressSummaryTitle'));
     setText('progressStageDryBtn', t('progressStageDry'));
     setText('progressStageOfficialBtn', t('progressStageOfficial'));
@@ -4151,8 +4642,10 @@ function interpolate(template, payload) {
     setText('memberActionModalBody', t('memberActionModalBodyEnable'));
     setText('memberActionCancelBtn', t('memberActionCancelBtn'));
     setText('memberActionConfirmBtn', t('memberActionConfirmBtn'));
-    var guidelineTextInput = document.getElementById('editGuidelineTextInput');
-    if (guidelineTextInput) guidelineTextInput.placeholder = t('guidelineTextPlaceholder');
+    var annotatorGuidelineTextInput = document.getElementById('editAnnotatorGuidelineTextInput');
+    var reviewerGuidelineTextInput = document.getElementById('editReviewerGuidelineTextInput');
+    if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.placeholder = t('annotatorGuidelineTextPlaceholder');
+    if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.placeholder = t('reviewerGuidelineTextPlaceholder');
 
     renderSettingsTemplateBtns();
 
@@ -4183,17 +4676,19 @@ function interpolate(template, payload) {
   function applySamplingDefaultsToTaskData() {
     var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey];
     if (!defs) return;
-    TASK_DATA.samplingMode = 'by_percentage';
-    TASK_DATA.samplingValue = defs.trialPercent;
-    TASK_DATA.targetAgreement = defs.targetIAA;
-    TASK_DATA.targetStd = defs.targetStd;
-    TASK_DATA.minAnnotators = defs.minAnnotators;
+    TASK_DATA.samplingMode = 'by_count';
+    if (!Number.isFinite(Number(TASK_DATA.samplingValue)) || Number(TASK_DATA.samplingValue) < 1) {
+      TASK_DATA.samplingValue = Math.round(TASK_DATA.datasetTotal * defs.trialPercent / 100);
+    }
+    if (!Number.isFinite(Number(TASK_DATA.targetAgreement))) {
+      TASK_DATA.targetAgreement = defs.targetIAA;
+    }
+    if (!Number.isFinite(Number(TASK_DATA.minAnnotators)) || Number(TASK_DATA.minAnnotators) < 2) {
+      TASK_DATA.minAnnotators = defs.minAnnotators;
+    }
   }
 
   function getSampleCountFromData(data) {
-    if (data.samplingMode === 'by_percentage') {
-      return Math.floor(TASK_DATA.datasetTotal * data.samplingValue / 100);
-    }
     return data.samplingValue;
   }
 
@@ -4201,63 +4696,223 @@ function interpolate(template, payload) {
     return getSampleCountFromData(TASK_DATA);
   }
 
-  function formatStratifyBy(items) {
-    var list = Array.isArray(items) ? items : [];
-    if (!list.length) return t('stratifyByNone');
-    var mapped = list.map(function(item) {
-      if (item === 'label') return t('stratifyByLabelText');
-      if (item === 'domain') return t('stratifyByDomainText');
-      if (item === 'difficulty') return t('stratifyByDifficultyText');
-      return item;
-    });
-    return interpolate(t('stratifyBySummaryTpl'), { items: mapped.join(' / ') });
+  function getTrialRounds() {
+    if (Array.isArray(TASK_DATA.trialRounds) && TASK_DATA.trialRounds.length) {
+      return TASK_DATA.trialRounds.slice();
+    }
+    if (TASK_DATA.status === 'draft') {
+      return [];
+    }
+    return [{
+      round: Number(TASK_DATA.trialRound) || 1,
+      sampleCount: Number(TASK_DATA.samplingValue) || 0,
+      agreement: Number(TASK_DATA.currentAgreement) || 0,
+      annotators: Number(TASK_DATA.currentAnnotators) || 0,
+      std: Number(TASK_DATA.currentStd) || 0,
+      result: TASK_DATA.status === 'waiting_iaa_confirmation' ? 'passed' : (TASK_DATA.status === 'dry_run_in_progress' ? 'in_progress' : 'failed'),
+      usedSamples: Number(TASK_DATA.samplingValue) || 0,
+      date: TASK_DATA.updatedAt ? String(TASK_DATA.updatedAt).slice(0, 10) : '',
+      noteZh: '此回合資料為 prototype 自動推導。',
+      noteEn: 'This round is auto-derived for the prototype.'
+    }];
   }
 
-  function getSamplingStrategyLabel(strategy) {
-    if (strategy === 'stratified_random') return t('samplingStrategyOptionStratified');
-    if (strategy === 'high_disagreement') return t('samplingStrategyOptionDisagreement');
-    if (strategy === 'edge_cases') return t('samplingStrategyOptionEdgeCases');
-    return strategy;
+  function getCurrentTrialRound() {
+    var rounds = getTrialRounds();
+    return rounds.length ? rounds[rounds.length - 1] : null;
   }
+
+  function getUsedTrialSampleCount() {
+    return getTrialRounds().reduce(function(sum, round) {
+      return sum + Number(round.usedSamples || round.sampleCount || 0);
+    }, 0);
+  }
+
+  function getOfficialRunCount() {
+    return Math.max(Number(TASK_DATA.datasetTotal || 0) - getUsedTrialSampleCount(), 0);
+  }
+
+  function getOfficialPoolCount() {
+    return getOfficialRunCount();
+  }
+
+  function hasPassedTrialRound() {
+    return getTrialRounds().some(function(round) { return round.result === 'passed'; });
+  }
+
+  function getTaskStageKey() {
+    if (TASK_DATA.status === 'official_run_in_progress') return 'official';
+    if (TASK_DATA.status === 'completed') return 'completed';
+    if (TASK_DATA.status === 'draft') return 'draft';
+    return 'trial';
+  }
+
+  function getRoundOutcomeKey() {
+    var currentRound = getCurrentTrialRound();
+    if (!currentRound) return 'in_progress';
+    if (currentRound.result === 'passed') return 'passed';
+    if (currentRound.result === 'failed') return 'failed';
+    return 'in_progress';
+  }
+
+  function getTrialRoundScenario(roundNumber) {
+    var scenarios = [
+      {
+        agreement: 0.68,
+        std: 0.15,
+        result: 'failed',
+        date: '2026-05-01',
+        noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
+        noteEn: 'Round 1 showed larger disagreement on borderline cases and did not pass.'
+      },
+      {
+        agreement: 0.81,
+        std: 0.08,
+        result: 'passed',
+        date: '2026-05-03',
+        noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
+        noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+      }
+    ];
+    return scenarios[roundNumber - 1] || {
+      agreement: Number(TASK_DATA.targetAgreement || 0.8),
+      std: 0.08,
+      result: 'passed',
+      date: '2026-05-05',
+      noteZh: '此回合已達標，可直接沿用剩餘樣本進入正式標記。',
+      noteEn: 'This round passed and the remaining sample pool is ready for official work.'
+    };
+  }
+
+  function getRoundColor(roundNumber) {
+    var palette = ['#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9'];
+    return palette[(Math.max(roundNumber, 1) - 1) % palette.length];
+  }
+
+  function renderSplitVisualization(segments, totalCount) {
+    var bar = document.getElementById('dataSplitBar');
+    var legend = document.getElementById('splitLegendDynamic');
+    if (!bar || !legend) return;
+    clearChildren(bar);
+    clearChildren(legend);
+
+    var total = Math.max(Number(totalCount) || 0, 0);
+    if (!segments.length || total <= 0) {
+      return;
+    }
+
+    segments.forEach(function(segment) {
+      var segmentEl = document.createElement('div');
+      segmentEl.className = 'split-seg';
+      segmentEl.style.width = (Math.max(segment.count, 0) / total * 100).toFixed(3) + '%';
+      segmentEl.style.background = segment.color;
+      bar.appendChild(segmentEl);
+
+      var legendItem = document.createElement('div');
+      legendItem.className = 'split-legend-item';
+      var dot = document.createElement('span');
+      dot.className = 'split-dot';
+      dot.style.background = segment.color;
+      dot.setAttribute('aria-hidden', 'true');
+      var label = document.createElement('span');
+      label.className = 'split-legend-key';
+      label.textContent = segment.label + ' ';
+      var value = document.createElement('strong');
+      value.className = 'split-legend-value';
+      value.textContent = segment.valueText;
+      legendItem.appendChild(dot);
+      legendItem.appendChild(label);
+      legendItem.appendChild(value);
+      legend.appendChild(legendItem);
+    });
+  }
+
+  function renderTrialRoundTimeline() {
+    var mount = document.getElementById('trialRoundTimeline');
+    if (!mount) return;
+    clearChildren(mount);
+    var rounds = getTrialRounds();
+    if (!rounds.length) {
+      var empty = document.createElement('p');
+      empty.className = 'status-hint';
+      empty.textContent = state.lang === 'zh'
+        ? '尚未建立任何試標回合。先建立 R1 再開始追蹤一致性。'
+        : 'No trial rounds yet. Create R1 first to start tracking agreement.';
+      mount.appendChild(empty);
+      return;
+    }
+
+    rounds.forEach(function(round) {
+      var item = document.createElement('article');
+      item.className = 'round-timeline-item';
+      item.style.setProperty('--round-accent', getRoundColor(round.round));
+
+      var index = document.createElement('div');
+      index.className = 'round-timeline-index';
+      var dot = document.createElement('span');
+      dot.className = 'round-timeline-dot ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : '');
+      dot.style.background = getRoundColor(round.round);
+      index.appendChild(dot);
+      var label = document.createElement('div');
+      label.className = 'round-timeline-label';
+      var roundName = document.createElement('strong');
+      roundName.className = 'round-timeline-round';
+      roundName.textContent = 'R' + round.round;
+      var date = document.createElement('span');
+      date.className = 'round-timeline-date';
+      date.textContent = round.date || '-';
+      label.appendChild(roundName);
+      label.appendChild(date);
+      index.appendChild(label);
+
+      var body = document.createElement('div');
+      body.className = 'round-timeline-body';
+      var metrics = document.createElement('div');
+      metrics.className = 'round-timeline-metrics';
+      [
+        interpolate(t('roundMetricSampleTpl'), { count: round.sampleCount }),
+        interpolate(t('roundMetricIaaTpl'), { value: Number(round.agreement || 0).toFixed(2) }),
+        interpolate(t('roundMetricAnnotatorsTpl'), { count: round.annotators }),
+        interpolate(t('roundMetricStdTpl'), { value: Number(round.std || 0).toFixed(2) })
+      ].forEach(function(text) {
+        var chip = document.createElement('span');
+        chip.className = 'round-metric-chip';
+        chip.textContent = text;
+        metrics.appendChild(chip);
+      });
+      var note = document.createElement('p');
+      note.className = 'round-timeline-note';
+      note.textContent = state.lang === 'zh' ? (round.noteZh || '') : (round.noteEn || '');
+      body.appendChild(metrics);
+      body.appendChild(note);
+
+      var side = document.createElement('div');
+      side.className = 'round-timeline-side';
+      var badge = document.createElement('span');
+      var statusKey = round.result === 'passed' ? 'Passed' : round.result === 'failed' ? 'Failed' : 'InProgress';
+      badge.className = 'round-status-badge ' + (round.result === 'passed' ? 'passed' : round.result === 'failed' ? 'failed' : 'in-progress');
+      badge.textContent = t('roundStatus' + statusKey);
+      side.appendChild(badge);
+
+      item.appendChild(index);
+      item.appendChild(body);
+      item.appendChild(side);
+      mount.appendChild(item);
+    });
+  }
+
 
   function validateSamplingData(data) {
-    var sampleCount = getSampleCountFromData(data);
-
-    if (data.samplingMode === 'by_percentage') {
-      if (data.samplingValue < 1 || data.samplingValue > 99) {
-        return { valid: false, message: t('samplingErrorPercent') };
-      }
-      if (sampleCount < 1) {
-        return { valid: false, message: t('samplingErrorFloor') };
-      }
-    } else {
-      if (data.samplingValue < 1 || data.samplingValue >= TASK_DATA.datasetTotal) {
-        return { valid: false, message: t('samplingErrorCount') };
-      }
-    }
-
-    if (TASK_DATA.datasetTotal - sampleCount < 1) {
-      return { valid: false, message: t('samplingErrorReserve') };
-    }
-
-    if (data.samplingStrategy === 'stratified_random' && (!Array.isArray(data.stratifyBy) || data.stratifyBy.length < 1)) {
-      return { valid: false, message: t('samplingErrorStratify') };
+    if (data.samplingValue < 1 || data.samplingValue >= TASK_DATA.datasetTotal) {
+      return { valid: false, message: t('samplingErrorCount') };
     }
 
     if (data.targetAgreement < 0 || data.targetAgreement > 1) {
       return { valid: false, message: t('samplingErrorAgreement') };
     }
 
-    if (data.targetStd !== null && data.targetStd !== undefined && (data.targetStd < 0 || data.targetStd > 1)) {
-      return { valid: false, message: t('samplingErrorStd') };
-    }
-
     if (data.minAnnotators < 2) {
       return { valid: false, message: t('samplingErrorAnnotators') };
-    }
-
-    if (data.trialRound < 1) {
-      return { valid: false, message: t('samplingErrorRound') };
     }
 
     return { valid: true, message: '' };
@@ -4274,40 +4929,48 @@ function interpolate(template, payload) {
     return TASK_DATA;
   }
 
+  function getIaaMethodLabel(method) {
+    var map = {
+      krippendorff_alpha_nominal: t('iaaMethodOptKrippendorff'),
+      cohens_kappa: t('iaaMethodOptCohens'),
+      fleiss_kappa: t('iaaMethodOptFleiss'),
+      icc: t('iaaMethodOptIcc'),
+      pairwise_f1_strict: t('iaaMethodOptPairwiseStrict'),
+      pairwise_f1_partial: t('iaaMethodOptPairwisePartial'),
+      pairwise_triple_f1: t('iaaMethodOptTriple'),
+    };
+    return map[method] || method;
+  }
+
+  var IAA_METHOD_DEFAULTS = {
+    krippendorff_alpha_nominal: 0.80,
+    cohens_kappa: 0.80,
+    fleiss_kappa: 0.80,
+    icc: 0.75,
+    pairwise_f1_strict: 0.80,
+    pairwise_f1_partial: 0.70,
+    pairwise_triple_f1: 0.75,
+  };
+
   function renderSamplingSummaryState() {
-    var sampleCount = getSampleCount();
-    var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
-    var samplingModeText = TASK_DATA.samplingMode === 'by_percentage' ? t('samplingModePercent') : t('samplingModeCount');
-    var samplingValueText = TASK_DATA.samplingMode === 'by_percentage'
-      ? interpolate(t('samplingValuePercentTpl'), { value: TASK_DATA.samplingValue, count: sampleCount })
-      : interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue });
+    var usedTrialCount = getUsedTrialSampleCount();
+    var reserveCount = getOfficialPoolCount();
     var unitText = state.lang === 'zh' ? '筆' : ' items';
     var splitSummaryText = interpolate(t('splitSummaryTpl'), {
       total: TASK_DATA.datasetTotal + unitText,
-      sample: sampleCount + unitText,
+      sample: usedTrialCount + unitText,
       reserve: reserveCount + unitText,
     });
+    var currentRound = getCurrentTrialRound();
+    var roundCount = getTrialRounds().length;
+    var taskStageKey = getTaskStageKey();
+    var roundOutcomeKey = getRoundOutcomeKey();
 
-    setText('valueSamplingModeControl', samplingModeText);
-    setText('valueSamplingValueControl', samplingValueText);
-    setText('valueTrialRoundControl', interpolate(t('trialRoundTpl'), { round: TASK_DATA.trialRound }));
-    setText('valueSamplingStrategyControl', interpolate(t('samplingStrategySummaryTpl'), {
-      strategy: getSamplingStrategyLabel(TASK_DATA.samplingStrategy),
-      seed: TASK_DATA.randomSeed,
-    }));
-    setText('valueStratifyByControl', formatStratifyBy(TASK_DATA.stratifyBy));
-    var hasStd = TASK_DATA.targetStd !== null && TASK_DATA.targetStd !== undefined;
-    setText('valueStopConditionControl', hasStd
-      ? interpolate(t('stopConditionSummaryTpl'), {
-          agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
-          std: Number(TASK_DATA.targetStd).toFixed(2),
-          annotators: TASK_DATA.minAnnotators,
-        })
-      : interpolate(t('stopConditionNoStdTpl'), {
-          agreement: Number(TASK_DATA.targetAgreement).toFixed(2),
-          annotators: TASK_DATA.minAnnotators,
-        })
-    );
+    setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
+    setText('valueRoundOutcomeControl', t('roundOutcome' + (roundOutcomeKey === 'passed' ? 'Passed' : roundOutcomeKey === 'failed' ? 'Failed' : 'InProgress')));
+    setText('valueIaaMethodControl', getIaaMethodLabel(TASK_DATA.iaaMethod));
+    setText('valueTargetAgreementControl', Number(TASK_DATA.targetAgreement).toFixed(2));
+    setText('valueMinAnnotatorsControl', String(TASK_DATA.minAnnotators));
     setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
     setText(
@@ -4318,10 +4981,49 @@ function interpolate(template, payload) {
       })
     );
 
-    setText('trialRoundValue', 'R' + TASK_DATA.trialRound);
+    setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
+    setText('trialRoundsUsedValue', String(roundCount));
     setText('targetAgreementValue', Number(TASK_DATA.targetAgreement).toFixed(2));
-    setText('currentAgreementValue', Number(TASK_DATA.currentAgreement).toFixed(2));
-    setText('currentStdValue', Number(TASK_DATA.currentStd).toFixed(2));
+    setText('currentAgreementValue', currentRound ? Number(currentRound.agreement || 0).toFixed(2) : Number(TASK_DATA.currentAgreement).toFixed(2));
+    setText('officialPoolValue', String(reserveCount));
+    setText('executionStageEyebrow', t('executionStageEyebrow'));
+    setText('executionStageTitle', t(
+      taskStageKey === 'official' ? 'executionStageOfficial'
+        : taskStageKey === 'completed' ? 'executionStageCompleted'
+        : taskStageKey === 'draft' ? 'executionStageDraft'
+        : 'executionStageTrial'
+    ));
+    setText('executionStageDesc', t(
+      taskStageKey === 'official' ? 'executionStageDescOfficial'
+        : taskStageKey === 'completed' ? 'executionStageDescCompleted'
+        : taskStageKey === 'draft' ? 'executionStageDescDraft'
+        : 'executionStageDescTrial'
+    ));
+    setText('executionStagePill', interpolate(t('executionStagePillTpl'), { rounds: roundCount }));
+    setText('executionOfficialPoolPill', interpolate(t('executionOfficialPoolPillTpl'), { count: reserveCount }));
+    setText('roundHistoryTitle', t('roundHistoryTitle'));
+    setText('roundHistoryHint', t('roundHistoryHint'));
+    setText('roundHistorySummary', interpolate(t('roundHistorySummaryTpl'), { used: usedTrialCount, total: TASK_DATA.datasetTotal }));
+    setText('trialDecisionEyebrow', t('roundDecisionEyebrow'));
+
+    if (taskStageKey === 'official') {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleOfficialTpl'), { count: getOfficialRunCount() }));
+      setText('trialDecisionDesc', t('roundDecisionDescOfficialTpl'));
+    } else if (taskStageKey === 'completed') {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleCompletedTpl'), { count: getOfficialRunCount() }));
+      setText('trialDecisionDesc', t('roundDecisionDescCompletedTpl'));
+    } else if (currentRound && currentRound.result === 'passed') {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitlePassedTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', interpolate(t('roundDecisionDescPassedTpl'), { count: reserveCount }));
+    } else if (currentRound) {
+      setText('trialDecisionTitle', interpolate(t('roundDecisionTitleFailedTpl'), { round: currentRound.round }));
+      setText('trialDecisionDesc', interpolate(t('roundDecisionDescFailedTpl'), { used: usedTrialCount }));
+    } else {
+      setText('trialDecisionTitle', state.lang === 'zh' ? '尚未建立試標回合' : 'No trial round created yet');
+      setText('trialDecisionDesc', state.lang === 'zh'
+        ? '先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。'
+        : 'Create the first trial round to validate agreement before deciding whether to start official work.');
+    }
 
     setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(TASK_DATA.targetAgreement).toFixed(2) }));
     setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
@@ -4330,73 +5032,80 @@ function interpolate(template, payload) {
     var stopStdPill = document.getElementById('stopStdPill');
     var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
     if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
-    if (stopStdPill) {
-      var stdActive = TASK_DATA.targetStd !== null && TASK_DATA.targetStd !== undefined;
-      stopStdPill.classList.toggle('hidden', !stdActive);
-      if (stdActive) {
-        setText('stopStdPill', interpolate(t('stopStdPillTpl'), { target: Number(TASK_DATA.targetStd).toFixed(2) }));
-        stopStdPill.classList.toggle('passed', Number(TASK_DATA.currentStd) <= Number(TASK_DATA.targetStd));
-      }
-    }
+    if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
+    renderSplitVisualization(
+      (function() {
+        var rounds = getTrialRounds();
+        if (!rounds.length) {
+          return [{
+            label: t('totalSamplesLabel'),
+            valueText: TASK_DATA.datasetTotal + unitText,
+            count: Number(TASK_DATA.datasetTotal) || 0,
+            color: '#94A3B8'
+          }];
+        }
+        var segments = rounds.map(function(round) {
+          return {
+            label: 'R' + round.round,
+            valueText: String(round.sampleCount) + unitText,
+            count: Number(round.sampleCount) || 0,
+            color: getRoundColor(round.round)
+          };
+        });
+        if (reserveCount > 0) {
+          segments.push({
+            label: t('officialReserveLabel'),
+            valueText: String(reserveCount) + unitText,
+            count: reserveCount,
+            color: '#58B88B'
+          });
+        }
+        return segments;
+      }()),
+      TASK_DATA.datasetTotal
+    );
+    renderTrialRoundTimeline();
   }
 
   function renderSamplingState() {
     var data = getSamplingRenderData();
-    var sampleCount = getSampleCountFromData(data);
+    var numericSamplingValue = Number(data.samplingValue);
+    var numericTargetAgreement = Number(data.targetAgreement);
+    var numericMinAnnotators = Number(data.minAnnotators);
+    var sampleCount = Number.isFinite(numericSamplingValue) ? numericSamplingValue : 0;
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
 
-    setText('totalSamplesValue', TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items'));
-    setText('sampleUsageValue', sampleCount + (state.lang === 'zh' ? ' 筆' : ' items'));
-    setText('officialReserveValue', reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'));
-
-    var total = TASK_DATA.datasetTotal;
-    var dryPct = total > 0 ? sampleCount / total * 100 : 0;
-    var dryEl = document.getElementById('splitDryBar');
-    var offEl = document.getElementById('splitOfficialBar');
-    if (dryEl && offEl) {
-      var dw = Math.max(0.5, Math.min(99.5, dryPct));
-      dryEl.style.width = dw.toFixed(1) + '%';
-      offEl.style.width = (100 - dw).toFixed(1) + '%';
+    if (state.samplingEditMode) {
+      renderSplitVisualization([
+        {
+          label: t('sampleUsageLabel'),
+          valueText: sampleCount + (state.lang === 'zh' ? ' 筆' : ' items'),
+          count: sampleCount,
+          color: getRoundColor(1)
+        },
+        {
+          label: t('officialReserveLabel'),
+          valueText: reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'),
+          count: reserveCount,
+          color: '#58B88B'
+        }
+      ], TASK_DATA.datasetTotal);
     }
-    setText('samplingStrategyText', data.samplingStrategy + ' (fallback: random(seed))');
-    setText('samplingSeedText', 'random_seed: ' + data.randomSeed);
-
-    var strategySelect = document.getElementById('samplingStrategySelect');
-    if (strategySelect) strategySelect.value = data.samplingStrategy;
-    var seedInput = document.getElementById('samplingSeedInput');
-    if (seedInput) seedInput.value = String(data.randomSeed);
-    var roundInput = document.getElementById('samplingRoundInput');
-    if (roundInput) roundInput.value = String(data.trialRound);
+    var iaaMethodSelect = document.getElementById('iaaMethodSelect');
+    if (iaaMethodSelect) iaaMethodSelect.value = data.iaaMethod || 'krippendorff_alpha_nominal';
     var targetAgreementInput = document.getElementById('targetAgreementInput');
-    if (targetAgreementInput) targetAgreementInput.value = Number(data.targetAgreement).toFixed(2);
-    var targetStdInput = document.getElementById('targetStdInput');
-    if (targetStdInput) {
-      var stdVal = data.targetStd !== null && data.targetStd !== undefined;
-      targetStdInput.value = stdVal ? Number(data.targetStd).toFixed(2) : '';
-      targetStdInput.placeholder = stdVal ? '' : (state.lang === 'zh' ? '不適用' : 'N/A');
-    }
+    if (targetAgreementInput) targetAgreementInput.value = Number.isFinite(numericTargetAgreement) ? numericTargetAgreement.toFixed(2) : '';
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
-    if (minAnnotatorsInput) minAnnotatorsInput.value = String(data.minAnnotators);
-    var stratifyLabelInput = document.getElementById('stratifyByLabel');
-    var stratifyDomainInput = document.getElementById('stratifyByDomain');
-    var stratifyDifficultyInput = document.getElementById('stratifyByDifficulty');
-    if (stratifyLabelInput) stratifyLabelInput.checked = (data.stratifyBy || []).indexOf('label') >= 0;
-    if (stratifyDomainInput) stratifyDomainInput.checked = (data.stratifyBy || []).indexOf('domain') >= 0;
-    if (stratifyDifficultyInput) stratifyDifficultyInput.checked = (data.stratifyBy || []).indexOf('difficulty') >= 0;
+    if (minAnnotatorsInput) minAnnotatorsInput.value = Number.isFinite(numericMinAnnotators) ? String(Math.floor(numericMinAnnotators)) : '';
 
-    var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
-    modeRadios.forEach(function(node) {
-      node.checked = node.value === data.samplingMode;
-    });
+    var suggestedVal = IAA_METHOD_DEFAULTS[data.iaaMethod || 'krippendorff_alpha_nominal'];
+    var hintEl = document.getElementById('targetAgreementHint');
+    if (hintEl) hintEl.textContent = suggestedVal !== undefined ? interpolate(t('targetAgreementHintTpl'), { value: suggestedVal.toFixed(2) }) : '';
 
     var samplingInput = document.getElementById('samplingValue');
     var samplingError = document.getElementById('samplingError');
-    if (samplingInput) {
-      samplingInput.value = String(data.samplingValue);
-      if (data.samplingMode === 'by_percentage') samplingInput.max = '99';
-      else samplingInput.removeAttribute('max');
-    }
+    if (samplingInput) samplingInput.value = Number.isFinite(numericSamplingValue) ? String(Math.floor(numericSamplingValue)) : '';
     var result = validateSamplingData(data);
 
     if (samplingInput && samplingError && !result.valid) {
@@ -4414,52 +5123,44 @@ function interpolate(template, payload) {
     var editable = editAllowed && editing;
     var isolationToggle = document.getElementById('isolationToggle');
     var risk = document.getElementById('isolationRiskMsg');
-    modeRadios.forEach(function(node) {
-      node.disabled = !editable;
-    });
     if (samplingInput) samplingInput.disabled = !editable;
-    if (strategySelect) strategySelect.disabled = !editable;
-    if (seedInput) seedInput.disabled = !editable;
-    if (roundInput) roundInput.disabled = !editable;
+    if (iaaMethodSelect) iaaMethodSelect.disabled = !editable;
     if (targetAgreementInput) targetAgreementInput.disabled = !editable;
-    if (targetStdInput) targetStdInput.disabled = !editable;
     if (minAnnotatorsInput) minAnnotatorsInput.disabled = !editable;
-    if (stratifyLabelInput) stratifyLabelInput.disabled = !editable;
-    if (stratifyDomainInput) stratifyDomainInput.disabled = !editable;
-    if (stratifyDifficultyInput) stratifyDifficultyInput.disabled = !editable;
-    var isStratified = data.samplingStrategy === 'stratified_random';
-    var stratifyFieldGroup = document.getElementById('stratifyByFieldGroup');
-    var stratifyKvRow = document.getElementById('stratifyByKvRow');
-    if (stratifyFieldGroup) stratifyFieldGroup.classList.toggle('hidden', !isStratified);
-    if (stratifyKvRow) stratifyKvRow.classList.toggle('hidden', !isStratified);
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
       isolationToggle.disabled = !editable;
     }
     if (risk) risk.classList.toggle('hidden', Boolean(data.isolationEnabled));
-    var resampleBtn = document.getElementById('resampleBtn');
-    if (resampleBtn) resampleBtn.disabled = !editable;
-    setText('resampleHint', editable ? t('resampleHintDraft') : t('resampleHintLocked'));
   }
 
   function renderPublishActions() {
     var actionRow = document.getElementById('publishActionRow');
     if (!actionRow) return;
+    var nextRound = getTrialRounds().length + 1;
 
     if (state.taskRole === 'reviewer') {
-      actionRow.innerHTML = '' +
-        '<button class="btn btn-cta" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>' +
-        '<button class="btn btn-secondary" type="button" disabled title="' + t('reviewerHint') + '">' + t('officialRunDisabled') + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" disabled title="' + t('reviewerHint') + '">' + t('dryRunDisabled') + '</button>';
       return;
     }
 
     if (TASK_DATA.status === 'draft') {
-      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + TASK_DATA.trialRound + '</button>';
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R1</button>';
+      return;
+    }
+
+    if (TASK_DATA.status === 'dry_run_in_progress') {
+      actionRow.innerHTML = '<button class="btn btn-cta" type="button" id="publishDryRunBtn">' + t('publishDryRun') + ' R' + nextRound + '</button>';
       return;
     }
 
     if (TASK_DATA.status === 'waiting_iaa_confirmation') {
       actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishOfficialRunBtn">' + t('publishOfficialRun') + '</button>';
+      return;
+    }
+
+    if (TASK_DATA.status === 'official_run_in_progress') {
+      actionRow.innerHTML = '<button class="btn btn-primary" type="button" id="publishCompleteBtn">' + t('publishComplete') + '</button>';
       return;
     }
 
@@ -4484,7 +5185,7 @@ function interpolate(template, payload) {
   }
 
   function updateStatusStepper() {
-    var currentIdx = STATUS_ORDER.indexOf(TASK_DATA.status);
+    var currentIdx = getTaskStageKey() === 'draft' ? 0 : getTaskStageKey() === 'trial' ? 1 : getTaskStageKey() === 'official' ? 2 : 3;
     var stepper = document.getElementById('statusStepper');
     if (!stepper) return;
     stepper.querySelectorAll('.step').forEach(function(el, i) {
@@ -4507,8 +5208,7 @@ function interpolate(template, payload) {
   function renderStatusStepperLabels() {
     var stepLabels = I18N[state.lang].statusStepLabel || I18N.zh.statusStepLabel || {};
     setText('statusStepDraft', stepLabels.draft || 'draft');
-    setText('statusStepDryRun', stepLabels.dry_run_in_progress || 'dry_run_in_progress');
-    setText('statusStepWaitingIaa', stepLabels.waiting_iaa_confirmation || 'waiting_iaa_confirmation');
+    setText('statusStepTrialStage', stepLabels.dry_run_in_progress || 'dry_run_in_progress');
     setText('statusStepOfficialRun', stepLabels.official_run_in_progress || 'official_run_in_progress');
     setText('statusStepCompleted', stepLabels.completed || 'completed');
   }
@@ -4534,8 +5234,10 @@ function interpolate(template, payload) {
   function renderStatus() {
     var statusBadge = document.getElementById('statusBadge');
     var statusCls = (I18N[state.lang].statusCls || I18N.zh.statusCls)[TASK_DATA.status] || 'badge-draft';
-    statusBadge.className = 'badge ' + statusCls;
-    statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
+    if (statusBadge) {
+      statusBadge.className = 'badge ' + statusCls;
+      statusBadge.textContent = (I18N[state.lang].statusLabel || I18N.zh.statusLabel)[TASK_DATA.status] || TASK_DATA.status;
+    }
     setText('statusHint', getStatusHint());
     updateStatusStepper();
   }
@@ -4551,6 +5253,13 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function createOverviewDraft() {
+    var existingName = TASK_DATA.datasetSourceZh || '';
+    var existingFiles = [];
+    if (existingName) {
+      var names = existingName.split(' + ');
+      var perFileBytes = Math.floor((TASK_DATA.datasetSizeBytes || 0) / names.length);
+      names.forEach(function(n) { existingFiles.push({ name: n.trim(), sizeBytes: perFileBytes }); });
+    }
     return {
       taskNameZh: TASK_DATA.taskNameZh,
       taskNameEn: TASK_DATA.taskNameEn,
@@ -4558,6 +5267,7 @@ function getTaskTypeLabel(taskTypeKey) {
       datasetSourceZh: TASK_DATA.datasetSourceZh,
       datasetSourceEn: TASK_DATA.datasetSourceEn,
       datasetSizeBytes: TASK_DATA.datasetSizeBytes || 0,
+      datasetFiles: existingFiles,
     };
   }
 
@@ -4607,18 +5317,20 @@ function getTaskTypeLabel(taskTypeKey) {
     if (list) list.classList.toggle('hidden', !hasFile);
   }
 
-  function clearOverviewDatasetFile() {
+  function clearOverviewDatasetFile(idx) {
     if (!state.overviewDraft) return;
-    state.overviewDraft.datasetSourceZh = '';
-    state.overviewDraft.datasetSourceEn = '';
-    state.overviewDraft.datasetSizeBytes = 0;
+    if (typeof idx === 'number') {
+      state.overviewDraft.datasetFiles.splice(idx, 1);
+    } else {
+      state.overviewDraft.datasetFiles = [];
+    }
     var input = document.getElementById('editDatasetFileInput');
     if (input) input.value = '';
     renderOverviewDatasetFileList();
     markOverviewDirty();
   }
 
-  function createOverviewDatasetFileItem(file) {
+  function createOverviewDatasetFileItem(file, idx) {
     var item = document.createElement('div');
     item.className = 'overview-upload-file-preview';
     item.setAttribute('role', 'button');
@@ -4679,7 +5391,7 @@ function getTaskTypeLabel(taskTypeKey) {
     removeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     removeBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      clearOverviewDatasetFile();
+      clearOverviewDatasetFile(idx);
     });
     item.appendChild(removeBtn);
 
@@ -4689,18 +5401,14 @@ function getTaskTypeLabel(taskTypeKey) {
   function renderOverviewDatasetFileList() {
     var list = document.getElementById('editDatasetFileList');
     if (!list) return;
-    list.innerHTML = '';
-    if (!state.overviewDraft) {
+    while (list.firstChild) list.removeChild(list.firstChild);
+    if (!state.overviewDraft || !state.overviewDraft.datasetFiles || !state.overviewDraft.datasetFiles.length) {
       syncOverviewDatasetUploadState(false);
       return;
     }
-
-    var fileName = state.lang === 'zh' ? state.overviewDraft.datasetSourceZh : state.overviewDraft.datasetSourceEn;
-    if (!fileName) {
-      syncOverviewDatasetUploadState(false);
-      return;
-    }
-    list.appendChild(createOverviewDatasetFileItem({ name: fileName, sizeBytes: state.overviewDraft.datasetSizeBytes || 0 }));
+    state.overviewDraft.datasetFiles.forEach(function(file, idx) {
+      list.appendChild(createOverviewDatasetFileItem(file, idx));
+    });
     syncOverviewDatasetUploadState(true);
   }
 
@@ -4782,9 +5490,10 @@ function getTaskTypeLabel(taskTypeKey) {
     TASK_DATA.taskNameZh = state.overviewDraft.taskNameZh;
     TASK_DATA.taskNameEn = state.overviewDraft.taskNameEn;
     TASK_DATA.taskTypeKey = taskTypeSelect ? taskTypeSelect.value : TASK_DATA.taskTypeKey;
-    TASK_DATA.datasetSourceZh = state.overviewDraft.datasetSourceZh;
-    TASK_DATA.datasetSourceEn = state.overviewDraft.datasetSourceEn;
-    TASK_DATA.datasetSizeBytes = state.overviewDraft.datasetSizeBytes || 0;
+    var draftFiles = state.overviewDraft.datasetFiles || [];
+    TASK_DATA.datasetSourceZh = draftFiles.map(function(f) { return f.name; }).join(' + ') || '';
+    TASK_DATA.datasetSourceEn = TASK_DATA.datasetSourceZh;
+    TASK_DATA.datasetSizeBytes = draftFiles.reduce(function(sum, f) { return sum + (f.sizeBytes || 0); }, 0);
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
     state.overviewEditMode = false;
@@ -4801,15 +5510,11 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function createSamplingDraft() {
     return {
-      samplingMode: TASK_DATA.samplingMode,
-      samplingValue: TASK_DATA.samplingValue,
-      samplingStrategy: TASK_DATA.samplingStrategy,
-      trialRound: TASK_DATA.trialRound,
-      randomSeed: TASK_DATA.randomSeed,
-      stratifyBy: (TASK_DATA.stratifyBy || []).slice(),
-      targetAgreement: TASK_DATA.targetAgreement,
-      targetStd: TASK_DATA.targetStd,
-      minAnnotators: TASK_DATA.minAnnotators,
+      samplingMode: 'by_count',
+      samplingValue: Number.isFinite(Number(TASK_DATA.samplingValue)) ? Number(TASK_DATA.samplingValue) : 10,
+      iaaMethod: TASK_DATA.iaaMethod || 'krippendorff_alpha_nominal',
+      targetAgreement: Number.isFinite(Number(TASK_DATA.targetAgreement)) ? Number(TASK_DATA.targetAgreement) : 0.8,
+      minAnnotators: Number.isFinite(Number(TASK_DATA.minAnnotators)) ? Number(TASK_DATA.minAnnotators) : 3,
       isolationEnabled: TASK_DATA.isolationEnabled,
       isolationLastActor: TASK_DATA.isolationLastActor,
       isolationLastUpdated: TASK_DATA.isolationLastUpdated,
@@ -4884,14 +5589,10 @@ function getTaskTypeLabel(taskTypeKey) {
       return;
     }
 
-    TASK_DATA.samplingMode = state.samplingDraft.samplingMode;
+    TASK_DATA.samplingMode = 'by_count';
     TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
-    TASK_DATA.samplingStrategy = state.samplingDraft.samplingStrategy;
-    TASK_DATA.trialRound = state.samplingDraft.trialRound;
-    TASK_DATA.randomSeed = state.samplingDraft.randomSeed;
-    TASK_DATA.stratifyBy = (state.samplingDraft.stratifyBy || []).slice();
+    TASK_DATA.iaaMethod = state.samplingDraft.iaaMethod;
     TASK_DATA.targetAgreement = state.samplingDraft.targetAgreement;
-    TASK_DATA.targetStd = state.samplingDraft.targetStd;
     TASK_DATA.minAnnotators = state.samplingDraft.minAnnotators;
     TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
     TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
@@ -4911,17 +5612,52 @@ function getTaskTypeLabel(taskTypeKey) {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
 
-  function getTaskGuidelineText() {
-    if (state.lang === 'zh') return (TASK_DATA.guidelineTextZh || TASK_DATA.guidelineText || '').trim();
-    return (TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim();
+  function getGuidelineRoleFieldName(role, field) {
+    var prefix = role === 'reviewer' ? 'reviewer' : 'annotator';
+    return prefix + field;
+  }
+
+  function getTaskGuidelineRoleText(role) {
+    var zhField = getGuidelineRoleFieldName(role, 'GuidelineTextZh');
+    var enField = getGuidelineRoleFieldName(role, 'GuidelineTextEn');
+    var baseField = getGuidelineRoleFieldName(role, 'GuidelineText');
+    if (state.lang === 'zh') {
+      if (TASK_DATA[zhField]) return String(TASK_DATA[zhField]).trim();
+      if (role !== 'reviewer' && TASK_DATA.guidelineTextZh) return String(TASK_DATA.guidelineTextZh).trim();
+    } else {
+      if (TASK_DATA[enField]) return String(TASK_DATA[enField]).trim();
+      if (role !== 'reviewer' && TASK_DATA.guidelineTextEn) return String(TASK_DATA.guidelineTextEn).trim();
+    }
+    if (TASK_DATA[baseField]) return String(TASK_DATA[baseField]).trim();
+    if (role !== 'reviewer' && TASK_DATA.guidelineText) return String(TASK_DATA.guidelineText).trim();
+    return '';
+  }
+
+  function getTaskGuidelineRoleFiles(role) {
+    var field = getGuidelineRoleFieldName(role, 'GuidelineFiles');
+    if (Array.isArray(TASK_DATA[field])) {
+      return TASK_DATA[field].map(function(file) {
+        return { name: file.name, type: file.type };
+      });
+    }
+    if (role !== 'reviewer' && Array.isArray(TASK_DATA.guidelineFiles)) {
+      return TASK_DATA.guidelineFiles.map(function(file) {
+        return { name: file.name, type: file.type };
+      });
+    }
+    return [];
+  }
+
+  function hasTaskGuidelineRoleContent(role) {
+    return Boolean(getTaskGuidelineRoleText(role) || getTaskGuidelineRoleFiles(role).length);
   }
 
   function createGuidelineDraft() {
     return {
-      guidelineText: getTaskGuidelineText(),
-      guidelineFiles: (TASK_DATA.guidelineFiles || []).map(function(file) {
-        return { name: file.name, type: file.type };
-      }),
+      annotatorGuidelineText: getTaskGuidelineRoleText('annotator'),
+      annotatorGuidelineFiles: getTaskGuidelineRoleFiles('annotator'),
+      reviewerGuidelineText: getTaskGuidelineRoleText('reviewer'),
+      reviewerGuidelineFiles: getTaskGuidelineRoleFiles('reviewer'),
       forceGuideline: Boolean(TASK_DATA.forceGuideline),
     };
   }
@@ -4946,14 +5682,53 @@ function getTaskTypeLabel(taskTypeKey) {
     return ext;
   }
 
-  function renderGuidelineFileList() {
-    var list = document.getElementById('editGuidelineFileList');
+  function makeGuidelineFileSvg() {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'guideline-item-icon');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+    var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    poly.setAttribute('points', '14 2 14 8 20 8');
+    svg.appendChild(path);
+    svg.appendChild(poly);
+    return svg;
+  }
+
+  function createGuidelineUploadedFileItem(file) {
+    var item = document.createElement('div');
+    item.className = 'guideline-item';
+
+    item.appendChild(makeGuidelineFileSvg());
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'guideline-item-name';
+    nameSpan.textContent = file.name || '';
+    item.appendChild(nameSpan);
+
+    var typeSpan = document.createElement('span');
+    typeSpan.className = 'guideline-item-type';
+    typeSpan.textContent = String(file.type || getGuidelineFileType(file.name));
+    item.appendChild(typeSpan);
+
+    return item;
+  }
+
+  function renderGuidelineFileList(role) {
+    var list = document.getElementById(role === 'reviewer' ? 'editReviewerGuidelineFileList' : 'editAnnotatorGuidelineFileList');
+    var filesKey = role === 'reviewer' ? 'reviewerGuidelineFiles' : 'annotatorGuidelineFiles';
     if (!list) return;
     list.innerHTML = '';
-    if (!state.guidelineDraft || !state.guidelineDraft.guidelineFiles.length) return;
+    if (!state.guidelineDraft || !state.guidelineDraft[filesKey].length) return;
 
-    state.guidelineDraft.guidelineFiles.forEach(function(file, index) {
-      var item = createUploadedFileItem(file);
+    state.guidelineDraft[filesKey].forEach(function(file, index) {
+      var item = createGuidelineUploadedFileItem(file);
 
       var removeBtn = document.createElement('button');
       removeBtn.className = 'guideline-item-remove';
@@ -4962,8 +5737,8 @@ function getTaskTypeLabel(taskTypeKey) {
       removeBtn.textContent = '×';
       removeBtn.addEventListener('click', function() {
         if (!state.guidelineDraft) return;
-        state.guidelineDraft.guidelineFiles.splice(index, 1);
-        renderGuidelineFileList();
+        state.guidelineDraft[filesKey].splice(index, 1);
+        renderGuidelineFileList(role);
         markGuidelineDirty();
       });
       item.appendChild(removeBtn);
@@ -4974,12 +5749,15 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function fillGuidelineEditForm() {
     if (!state.guidelineDraft) return;
-    var guidelineTextInput = document.getElementById('editGuidelineTextInput');
+    var annotatorGuidelineTextInput = document.getElementById('editAnnotatorGuidelineTextInput');
+    var reviewerGuidelineTextInput = document.getElementById('editReviewerGuidelineTextInput');
     var forceToggle = document.getElementById('editForceGuidelineToggle');
-    if (guidelineTextInput) guidelineTextInput.value = state.guidelineDraft.guidelineText;
+    if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.value = state.guidelineDraft.annotatorGuidelineText;
+    if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.value = state.guidelineDraft.reviewerGuidelineText;
     if (forceToggle) forceToggle.checked = state.guidelineDraft.forceGuideline;
     setGuidelineEditError('');
-    renderGuidelineFileList();
+    renderGuidelineFileList('annotator');
+    renderGuidelineFileList('reviewer');
   }
 
   function renderGuidelineEditState() {
@@ -5020,7 +5798,8 @@ function getTaskTypeLabel(taskTypeKey) {
     state.guidelineDirty = true;
   }
 
-  function addGuidelineDraftFiles(fileList) {
+  function addGuidelineDraftFiles(role, fileList) {
+    var filesKey = role === 'reviewer' ? 'reviewerGuidelineFiles' : 'annotatorGuidelineFiles';
     if (!state.guidelineDraft || !fileList || !fileList.length) return;
     setGuidelineEditError('');
     var allow = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'md'];
@@ -5030,10 +5809,10 @@ function getTaskTypeLabel(taskTypeKey) {
         setGuidelineEditError(t('guidelineFileTypeInvalid'));
         return;
       }
-      state.guidelineDraft.guidelineFiles.push({ name: file.name, type: type });
+      state.guidelineDraft[filesKey].push({ name: file.name, type: type });
       markGuidelineDirty();
     });
-    renderGuidelineFileList();
+    renderGuidelineFileList(role);
   }
 
   function startGuidelineEdit() {
@@ -5042,6 +5821,7 @@ function getTaskTypeLabel(taskTypeKey) {
     state.guidelineDirty = false;
     state.guidelineDraft = createGuidelineDraft();
     renderGuidelineEditState();
+    bindGuidelineEditEvents();
     trackEvent('prototype_guideline_edit_started');
   }
 
@@ -5057,15 +5837,29 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function saveGuidelineEdit() {
     if (!isGuidelineEditable() || !state.guidelineDraft) return;
-    var nextGuidelineText = (state.guidelineDraft.guidelineText || '').trim();
-    if (state.lang === 'zh') TASK_DATA.guidelineTextZh = nextGuidelineText;
-    else TASK_DATA.guidelineTextEn = nextGuidelineText;
-    TASK_DATA.guidelineText = nextGuidelineText;
-    TASK_DATA.guidelineFiles = state.guidelineDraft.guidelineFiles.map(function(file) {
+    var nextAnnotatorGuidelineText = (state.guidelineDraft.annotatorGuidelineText || '').trim();
+    var nextReviewerGuidelineText = (state.guidelineDraft.reviewerGuidelineText || '').trim();
+    if (state.lang === 'zh') {
+      TASK_DATA.annotatorGuidelineTextZh = nextAnnotatorGuidelineText;
+      TASK_DATA.reviewerGuidelineTextZh = nextReviewerGuidelineText;
+    } else {
+      TASK_DATA.annotatorGuidelineTextEn = nextAnnotatorGuidelineText;
+      TASK_DATA.reviewerGuidelineTextEn = nextReviewerGuidelineText;
+    }
+    TASK_DATA.annotatorGuidelineText = nextAnnotatorGuidelineText;
+    TASK_DATA.reviewerGuidelineText = nextReviewerGuidelineText;
+    TASK_DATA.annotatorGuidelineFiles = state.guidelineDraft.annotatorGuidelineFiles.map(function(file) {
       return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
     });
+    TASK_DATA.reviewerGuidelineFiles = state.guidelineDraft.reviewerGuidelineFiles.map(function(file) {
+      return { name: file.name, type: file.type || getGuidelineFileType(file.name) };
+    });
+    TASK_DATA.guidelineText = nextAnnotatorGuidelineText;
+    TASK_DATA.guidelineFiles = TASK_DATA.annotatorGuidelineFiles.map(function(file) {
+      return { name: file.name, type: file.type };
+    });
     TASK_DATA.forceGuideline = Boolean(state.guidelineDraft.forceGuideline);
-    TASK_DATA.guidelineUploaded = Boolean((TASK_DATA.guidelineTextZh || TASK_DATA.guidelineTextEn || TASK_DATA.guidelineText || '').trim() || TASK_DATA.guidelineFiles.length);
+    TASK_DATA.guidelineUploaded = hasTaskGuidelineRoleContent('annotator') || hasTaskGuidelineRoleContent('reviewer');
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     state.guidelineEditMode = false;
     state.guidelineDirty = false;
@@ -5074,6 +5868,66 @@ function getTaskTypeLabel(taskTypeKey) {
     renderOverview();
     trackEvent('prototype_guideline_edit_saved');
   }
+
+  function bindGuidelineEditEvents() {
+    [
+      {
+        role: 'annotator',
+        uploadZoneId: 'annotatorGuidelineUploadZone',
+        inputId: 'editAnnotatorGuidelineFileInput',
+        textInputId: 'editAnnotatorGuidelineTextInput',
+        textKey: 'annotatorGuidelineText',
+      },
+      {
+        role: 'reviewer',
+        uploadZoneId: 'reviewerGuidelineUploadZone',
+        inputId: 'editReviewerGuidelineFileInput',
+        textInputId: 'editReviewerGuidelineTextInput',
+        textKey: 'reviewerGuidelineText',
+      }
+    ].forEach(function(config) {
+      var textInput = document.getElementById(config.textInputId);
+
+      if (textInput && !textInput.dataset.guidelineBound) {
+        textInput.addEventListener('input', function(event) {
+          if (!state.guidelineDraft) return;
+          state.guidelineDraft[config.textKey] = event.target.value;
+          markGuidelineDirty();
+        });
+        textInput.dataset.guidelineBound = 'true';
+      }
+    });
+
+    var forceToggle = document.getElementById('editForceGuidelineToggle');
+    if (forceToggle && !forceToggle.dataset.guidelineBound) {
+      forceToggle.addEventListener('change', function(event) {
+        if (!state.guidelineDraft) return;
+        state.guidelineDraft.forceGuideline = event.target.checked;
+        markGuidelineDirty();
+      });
+      forceToggle.dataset.guidelineBound = 'true';
+    }
+  }
+
+  window.handleGuidelineUploadZoneClick = function(role) {
+    if (!state.guidelineEditMode) return;
+    var input = document.getElementById(role === 'reviewer' ? 'editReviewerGuidelineFileInput' : 'editAnnotatorGuidelineFileInput');
+    if (input) input.click();
+  };
+
+  window.handleGuidelineUploadZoneKeydown = function(event, role) {
+    if (!state.guidelineEditMode) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      window.handleGuidelineUploadZoneClick(role);
+    }
+  };
+
+  window.handleGuidelineFileInputChange = function(role, input) {
+    if (!input || !input.files || !input.files.length) return;
+    addGuidelineDraftFiles(role, input.files);
+    input.value = '';
+  };
 
   function isSettingsEditable() {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
@@ -6511,12 +7365,16 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function renderOverview() {
     var taskName = getCurrentTaskName();
-    var datasetSummary = TASK_DATA.datasetTotal + ' · ' + (state.lang === 'zh' ? TASK_DATA.datasetSourceZh : TASK_DATA.datasetSourceEn);
+    var datasetSummary = TASK_DATA.datasetTotal + (state.lang === 'zh' ? ' 筆' : ' items');
     var settingsSummary = getSettingsSummary();
-    var guidelineFiles = (TASK_DATA.guidelineFiles || []).map(function(file) { return file.name; });
-    var guidelineFilesText = guidelineFiles.length ? guidelineFiles.join(', ') : t('guidelineFilesNone');
-    var guidelineContent = getTaskGuidelineText();
-    var guidelineContentText = guidelineContent || t('guidelineContentEmpty');
+    var annotatorGuidelineFiles = getTaskGuidelineRoleFiles('annotator').map(function(file) { return file.name; });
+    var reviewerGuidelineFiles = getTaskGuidelineRoleFiles('reviewer').map(function(file) { return file.name; });
+    var annotatorGuidelineFilesText = annotatorGuidelineFiles.length ? annotatorGuidelineFiles.join(', ') : t('guidelineFilesNone');
+    var reviewerGuidelineFilesText = reviewerGuidelineFiles.length ? reviewerGuidelineFiles.join(', ') : t('guidelineFilesNone');
+    var annotatorGuidelineContent = getTaskGuidelineRoleText('annotator');
+    var reviewerGuidelineContent = getTaskGuidelineRoleText('reviewer');
+    var annotatorGuidelineContentText = annotatorGuidelineContent || t('guidelineContentEmpty');
+    var reviewerGuidelineContentText = reviewerGuidelineContent || t('guidelineContentEmpty');
 
     renderBreadcrumbCurrent();
     setText('valueTaskName', taskName);
@@ -6525,10 +7383,13 @@ function getTaskTypeLabel(taskTypeKey) {
     setText('valueConfigVersion', settingsSummary.configFileName);
     setText('valueConfigTaskType', settingsSummary.taskTypeLabel);
     renderSettingsSummaryRows(settingsSummary.summaryRows);
-    setText('valueGuidelineStatus', TASK_DATA.guidelineUploaded ? t('guidelineUploaded') : t('guidelineEmpty'));
-    setText('valueGuidelineFilesSummary', guidelineFilesText);
+    setText('valueAnnotatorGuidelineStatus', hasTaskGuidelineRoleContent('annotator') ? t('guidelineUploaded') : t('guidelineEmpty'));
+    setText('valueAnnotatorGuidelineFilesSummary', annotatorGuidelineFilesText);
+    setText('valueAnnotatorGuidelineContentSummary', annotatorGuidelineContentText);
+    setText('valueReviewerGuidelineStatus', hasTaskGuidelineRoleContent('reviewer') ? t('guidelineUploaded') : t('guidelineEmpty'));
+    setText('valueReviewerGuidelineFilesSummary', reviewerGuidelineFilesText);
+    setText('valueReviewerGuidelineContentSummary', reviewerGuidelineContentText);
     setText('valueForceGuideline', TASK_DATA.forceGuideline ? t('yes') : t('no'));
-    setText('valueGuidelineContentSummary', guidelineContentText);
 
     renderStatus();
     renderPublishActions();
@@ -6546,7 +7407,9 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function getMemberStatusBadgeClass(status) {
-    return status === 'active' ? 'badge-member-active' : 'badge-member-disabled';
+    if (status === 'active') return 'badge-member-active';
+    if (status === 'invited') return 'badge-draft';
+    return 'badge-member-disabled';
   }
 
   function getTaskRoleBadgeClass(role) {
@@ -6637,7 +7500,11 @@ function getTaskTypeLabel(taskTypeKey) {
       var tdStatus = document.createElement('td');
       var statusBadge = document.createElement('span');
       statusBadge.className = 'badge ' + getMemberStatusBadgeClass(member.status);
-      statusBadge.textContent = member.status === 'active' ? t('memberStatusActive') : t('memberStatusDisabled');
+      statusBadge.textContent = member.status === 'active'
+        ? t('memberStatusActive')
+        : member.status === 'invited'
+          ? t('memberStatusInvited')
+          : t('memberStatusDisabled');
       tdStatus.appendChild(statusBadge);
       tr.appendChild(tdStatus);
       tr.appendChild(tdWithClass(member.joinedAt));
@@ -6661,37 +7528,91 @@ function getTaskTypeLabel(taskTypeKey) {
         });
       });
 
-      var toggleBtn = document.createElement('button');
-      toggleBtn.className = member.status === 'active' ? 'mini-btn mini-btn-warning' : 'mini-btn mini-btn-success';
-      toggleBtn.type = 'button';
-      toggleBtn.disabled = state.taskRole !== 'project_leader';
-      toggleBtn.textContent = member.status === 'active' ? t('actionDisable') : t('actionEnable');
-      toggleBtn.addEventListener('click', function() {
-        openMemberActionModal({
-          type: member.status === 'active' ? 'disable' : 'enable',
-          index: idx,
-          title: t('memberActionModalTitle'),
-          message: interpolate(
-            member.status === 'active' ? t('memberActionModalBodyDisable') : t('memberActionModalBodyEnable'),
-            { name: member.name, role: getTaskRoleLabel(member.taskRole) }
-          ),
-        });
-      });
-
       wrap.appendChild(removeBtn);
-      wrap.appendChild(toggleBtn);
+      if (member.status !== 'invited') {
+        var toggleBtn = document.createElement('button');
+        toggleBtn.className = member.status === 'active' ? 'mini-btn mini-btn-warning' : 'mini-btn mini-btn-success';
+        toggleBtn.type = 'button';
+        toggleBtn.disabled = state.taskRole !== 'project_leader';
+        toggleBtn.textContent = member.status === 'active' ? t('actionDisable') : t('actionEnable');
+        toggleBtn.addEventListener('click', function() {
+          openMemberActionModal({
+            type: member.status === 'active' ? 'disable' : 'enable',
+            index: idx,
+            title: t('memberActionModalTitle'),
+            message: interpolate(
+              member.status === 'active' ? t('memberActionModalBodyDisable') : t('memberActionModalBodyEnable'),
+              { name: member.name, role: getTaskRoleLabel(member.taskRole) }
+            ),
+          });
+        });
+        wrap.appendChild(toggleBtn);
+      }
       tdActions.appendChild(wrap);
       tr.appendChild(tdActions);
       tbody.appendChild(tr);
     });
   }
 
-  function renderCandidateTable() {
-    var tbody = document.getElementById('candidateTableBody');
-    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-
-    PLATFORM_USERS.forEach(function(user) {
+  function getAvailablePlatformUsers(query) {
+    var needle = String(query || '').trim().toLowerCase();
+    if (!needle) return [];
+    return PLATFORM_USERS.filter(function(user) {
       var inTask = TASK_MEMBERS.some(function(member) { return member.email === user.email; });
+      if (inTask) return false;
+      return [user.account, user.name, user.email].some(function(value) {
+        return String(value || '').toLowerCase().indexOf(needle) >= 0;
+      });
+    });
+  }
+
+  function addPlatformUserToTask(user, role) {
+    if (!user || TASK_MEMBERS.some(function(member) { return member.email === user.email; })) return;
+    TASK_MEMBERS.push({
+      name: user.name,
+      email: user.email,
+      taskRole: role,
+      status: 'active',
+      joinedAt: '2026-04-21 10:25',
+      lastActive: '-',
+    });
+    user.activeTaskCount = (user.activeTaskCount || 0) + 1;
+    showToast(t('toastMemberUpdated'));
+    trackEvent('prototype_member_added', { member_email: user.email, role: role, source: 'platform_search' });
+    renderMemberManagement();
+  }
+
+  function renderMemberSearchResults() {
+    var tbody = document.getElementById('memberSearchResultsBody');
+    if (!tbody) return;
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    var input = document.getElementById('memberSearchInput');
+    var roleSelect = document.getElementById('memberSearchRoleSelect');
+    var query = input ? input.value : '';
+    var normalizedQuery = String(query || '').trim();
+    var available = getAvailablePlatformUsers(query);
+    if (!normalizedQuery) {
+      var idleTr = document.createElement('tr');
+      var idleTd = document.createElement('td');
+      idleTd.colSpan = 5;
+      idleTd.className = 'member-search-empty';
+      idleTd.textContent = t('memberSearchIdle');
+      idleTr.appendChild(idleTd);
+      tbody.appendChild(idleTr);
+      return;
+    }
+    if (!available.length) {
+      var emptyTr = document.createElement('tr');
+      var emptyTd = document.createElement('td');
+      emptyTd.colSpan = 5;
+      emptyTd.className = 'member-search-empty';
+      emptyTd.textContent = t('memberSearchEmpty');
+      emptyTr.appendChild(emptyTd);
+      tbody.appendChild(emptyTr);
+      return;
+    }
+
+    available.forEach(function(user) {
       var tr = document.createElement('tr');
 
       function td(text, cls) {
@@ -6701,49 +7622,55 @@ function getTaskTypeLabel(taskTypeKey) {
         return node;
       }
 
+      tr.appendChild(td(user.account || '-', 'member-account'));
       tr.appendChild(td(user.name, 'member-name'));
       tr.appendChild(td(user.email, 'member-email'));
       tr.appendChild(td(String(user.activeTaskCount || 0)));
-
-      var tdAssign = document.createElement('td');
-      var assignSelect = document.createElement('select');
-      assignSelect.className = 'role-select-inline';
-      assignSelect.disabled = state.taskRole !== 'project_leader' || inTask;
-      ['annotator', 'reviewer'].forEach(function(role) {
-        var opt = document.createElement('option');
-        opt.value = role;
-        opt.textContent = getTaskRoleLabel(role);
-        assignSelect.appendChild(opt);
-      });
-      tdAssign.appendChild(assignSelect);
-      tr.appendChild(tdAssign);
 
       var tdAction = document.createElement('td');
       var addBtn = document.createElement('button');
       addBtn.className = 'mini-btn mini-btn-primary';
       addBtn.type = 'button';
-      addBtn.disabled = state.taskRole !== 'project_leader' || inTask;
+      addBtn.disabled = state.taskRole !== 'project_leader';
       addBtn.textContent = t('actionAdd');
       addBtn.addEventListener('click', function() {
-        if (inTask) return;
-        TASK_MEMBERS.push({
-          name: user.name,
-          email: user.email,
-          taskRole: assignSelect.value,
-          status: 'active',
-          joinedAt: '2026-04-21 10:25',
-          lastActive: '-',
-        });
-        user.activeTaskCount = (user.activeTaskCount || 0) + 1;
-        showToast(t('toastMemberUpdated'));
-        trackEvent('prototype_member_added', { member_email: user.email, role: assignSelect.value });
-        renderMemberTable();
-        renderCandidateTable();
+        addPlatformUserToTask(user, roleSelect ? roleSelect.value : 'annotator');
       });
       tdAction.appendChild(addBtn);
       tr.appendChild(tdAction);
       tbody.appendChild(tr);
     });
+  }
+
+  function inviteMemberByEmail() {
+    if (state.taskRole !== 'project_leader') {
+      showToast(t('errPermissionDenied'), true);
+      return;
+    }
+    var input = document.getElementById('memberInviteEmailInput');
+    var roleSelect = document.getElementById('memberInviteRoleSelect');
+    if (!input || !roleSelect) return;
+    var email = String(input.value || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showToast(t('errMemberInviteEmail'), true);
+      return;
+    }
+    if (TASK_MEMBERS.some(function(member) { return String(member.email || '').toLowerCase() === email; })) {
+      showToast(t('errMemberDuplicate'), true);
+      return;
+    }
+    TASK_MEMBERS.push({
+      name: email,
+      email: email,
+      taskRole: roleSelect.value,
+      status: 'invited',
+      joinedAt: '2026-04-21 10:30',
+      lastActive: '-',
+    });
+    input.value = '';
+    showToast(t('toastMemberInvited'));
+    trackEvent('prototype_member_added', { member_email: email, role: roleSelect.value, source: 'email_invite' });
+    renderMemberManagement();
   }
 
   function openMemberActionModal(action) {
@@ -6781,13 +7708,19 @@ function getTaskTypeLabel(taskTypeKey) {
     showToast(t('toastMemberUpdated'));
     trackEvent('prototype_member_action_confirmed', { action_type: action.type, member_email: target.email || '' });
     closeMemberActionModal();
-    renderMemberTable();
-    renderCandidateTable();
+    renderMemberManagement();
   }
 
   function renderMemberManagement() {
     renderMemberTable();
-    renderCandidateTable();
+    renderMemberSearchResults();
+    var isLeader = state.taskRole === 'project_leader';
+    var sendBtn = document.getElementById('memberInviteSendBtn');
+    if (sendBtn) sendBtn.disabled = !isLeader;
+    var emailInput = document.getElementById('memberInviteEmailInput');
+    if (emailInput) emailInput.disabled = !isLeader;
+    var roleSelect = document.getElementById('memberInviteRoleSelect');
+    if (roleSelect) roleSelect.disabled = !isLeader;
   }
 
   function getProgressStageData() {
@@ -7610,7 +8543,7 @@ function getTaskTypeLabel(taskTypeKey) {
         isolation_enabled: TASK_DATA.isolationEnabled,
         sampling_mode: TASK_DATA.samplingMode,
         sampling_value: TASK_DATA.samplingValue,
-        sampling_strategy: TASK_DATA.samplingStrategy,
+        iaa_method: TASK_DATA.iaaMethod,
         sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
         applied_filters: {
           run_stage: state.arStage,
@@ -7903,24 +8836,50 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function publishDryRun() {
     if (!canPublish()) return;
-    TASK_DATA.status = 'dry_run_in_progress';
-    TASK_DATA.updatedAt = '2026-04-21 10:07';
+    var nextRound = getTrialRounds().length + 1;
+    var scenario = getTrialRoundScenario(nextRound);
+    if (!Array.isArray(TASK_DATA.trialRounds)) TASK_DATA.trialRounds = [];
+    TASK_DATA.trialRounds.push({
+      round: nextRound,
+      sampleCount: Number(TASK_DATA.samplingValue) || 0,
+      agreement: scenario.agreement,
+      annotators: Number(TASK_DATA.minAnnotators) || 0,
+      std: scenario.std,
+      result: scenario.result,
+      usedSamples: Number(TASK_DATA.samplingValue) || 0,
+      date: scenario.date,
+      noteZh: scenario.noteZh,
+      noteEn: scenario.noteEn
+    });
+    TASK_DATA.trialRound = nextRound;
+    TASK_DATA.currentAgreement = scenario.agreement;
+    TASK_DATA.currentAnnotators = Number(TASK_DATA.minAnnotators) || 0;
+    TASK_DATA.currentStd = scenario.std;
+    TASK_DATA.status = scenario.result === 'passed' ? 'waiting_iaa_confirmation' : 'dry_run_in_progress';
+    TASK_DATA.updatedAt = scenario.date + ' 10:07';
     showToast(t('toastPublishedDry'));
-    trackEvent('prototype_publish_success', { target_status: 'dry_run_in_progress' });
+    trackEvent('prototype_publish_success', { target_status: TASK_DATA.status });
     renderOverview();
   }
 
   function publishOfficialRun() {
     if (!canPublish()) return;
     TASK_DATA.status = 'official_run_in_progress';
-    TASK_DATA.updatedAt = '2026-04-21 10:11';
+    TASK_DATA.updatedAt = '2026-05-04 11:20';
     showToast(t('toastPublishedOfficial'));
     trackEvent('prototype_publish_success', { target_status: 'official_run_in_progress' });
     renderOverview();
   }
 
+  function publishComplete() {
+    TASK_DATA.status = 'completed';
+    TASK_DATA.updatedAt = '2026-05-06 18:20';
+    showToast(t('toastPublishedComplete'));
+    trackEvent('prototype_publish_success', { target_status: 'completed' });
+    renderOverview();
+  }
+
   function bindEvents() {
-    var modeRadios = document.querySelectorAll('input[name="samplingMode"]');
     var valueInput = document.getElementById('samplingValue');
     var isolationToggle = document.getElementById('isolationToggle');
     var samplingEditBtn = document.getElementById('samplingEditBtn');
@@ -7928,25 +8887,21 @@ function getTaskTypeLabel(taskTypeKey) {
     var samplingCancelBtn = document.getElementById('samplingCancelBtn');
     var runControlTabExecution = document.getElementById('runControlTabExecution');
     var runControlTabTrial = document.getElementById('runControlTabTrial');
-    var strategySelect = document.getElementById('samplingStrategySelect');
-    var seedInput = document.getElementById('samplingSeedInput');
-    var roundInput = document.getElementById('samplingRoundInput');
+    var iaaMethodSelect = document.getElementById('iaaMethodSelect');
     var targetAgreementInput = document.getElementById('targetAgreementInput');
-    var targetStdInput = document.getElementById('targetStdInput');
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
-    var stratifyByLabel = document.getElementById('stratifyByLabel');
-    var stratifyByDomain = document.getElementById('stratifyByDomain');
-    var stratifyByDifficulty = document.getElementById('stratifyByDifficulty');
-    var resampleBtn = document.getElementById('resampleBtn');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
     var overviewSaveBtn = document.getElementById('overviewSaveBtn');
     var overviewCancelBtn = document.getElementById('overviewCancelBtn');
     var guidelineEditBtn = document.getElementById('guidelineEditBtn');
     var guidelineSaveBtn = document.getElementById('guidelineSaveBtn');
     var guidelineCancelBtn = document.getElementById('guidelineCancelBtn');
-    var guidelineUploadZone = document.getElementById('guidelineUploadZone');
-    var editGuidelineFileInput = document.getElementById('editGuidelineFileInput');
-    var editGuidelineTextInput = document.getElementById('editGuidelineTextInput');
+    var annotatorGuidelineUploadZone = document.getElementById('annotatorGuidelineUploadZone');
+    var reviewerGuidelineUploadZone = document.getElementById('reviewerGuidelineUploadZone');
+    var editAnnotatorGuidelineFileInput = document.getElementById('editAnnotatorGuidelineFileInput');
+    var editReviewerGuidelineFileInput = document.getElementById('editReviewerGuidelineFileInput');
+    var editAnnotatorGuidelineTextInput = document.getElementById('editAnnotatorGuidelineTextInput');
+    var editReviewerGuidelineTextInput = document.getElementById('editReviewerGuidelineTextInput');
     var editForceGuidelineToggle = document.getElementById('editForceGuidelineToggle');
     var settingsEditBtn = document.getElementById('settingsEditBtn');
     var settingsSaveBtn = document.getElementById('settingsSaveBtn');
@@ -8072,43 +9027,7 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (guidelineUploadZone && editGuidelineFileInput) {
-      guidelineUploadZone.addEventListener('click', function() {
-        if (!state.guidelineEditMode) return;
-        editGuidelineFileInput.click();
-      });
-      guidelineUploadZone.addEventListener('keydown', function(event) {
-        if (!state.guidelineEditMode) return;
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          editGuidelineFileInput.click();
-        }
-      });
-    }
-
-    if (editGuidelineFileInput) {
-      editGuidelineFileInput.addEventListener('change', function() {
-        if (!this.files || !this.files.length) return;
-        addGuidelineDraftFiles(this.files);
-        this.value = '';
-      });
-    }
-
-    if (editGuidelineTextInput) {
-      editGuidelineTextInput.addEventListener('input', function(event) {
-        if (!state.guidelineDraft) return;
-        state.guidelineDraft.guidelineText = event.target.value;
-        markGuidelineDirty();
-      });
-    }
-
-    if (editForceGuidelineToggle) {
-      editForceGuidelineToggle.addEventListener('change', function(event) {
-        if (!state.guidelineDraft) return;
-        state.guidelineDraft.forceGuideline = event.target.checked;
-        markGuidelineDirty();
-      });
-    }
+    bindGuidelineEditEvents();
 
     if (settingsEditBtn) {
       settingsEditBtn.addEventListener('click', function() {
@@ -8187,13 +9106,13 @@ function getTaskTypeLabel(taskTypeKey) {
 
     if (editDatasetFileInput) {
       editDatasetFileInput.addEventListener('change', function() {
-        if (!state.overviewDraft || !this.files || !this.files[0]) return;
-        state.overviewDraft.datasetSourceZh = this.files[0].name;
-        state.overviewDraft.datasetSourceEn = this.files[0].name;
-        state.overviewDraft.datasetSizeBytes = this.files[0].size || 0;
-        fillOverviewEditForm();
+        if (!state.overviewDraft || !this.files || !this.files.length) return;
+        Array.prototype.forEach.call(this.files, function(file) {
+          state.overviewDraft.datasetFiles.push({ name: file.name, sizeBytes: file.size || 0 });
+        });
+        renderOverviewDatasetFileList();
         markOverviewDirty();
-        this.value = '';
+        editDatasetFileInput.value = '';
       });
     }
 
@@ -8218,65 +9137,34 @@ function getTaskTypeLabel(taskTypeKey) {
       overviewDatasetUploadZone.addEventListener('drop', function(e) {
         e.preventDefault();
         overviewDatasetUploadZone.classList.remove('dragover');
-        if (!state.overviewDraft || !e.dataTransfer.files || !e.dataTransfer.files[0]) return;
-        var file = e.dataTransfer.files[0];
-        state.overviewDraft.datasetSourceZh = file.name;
-        state.overviewDraft.datasetSourceEn = file.name;
-        state.overviewDraft.datasetSizeBytes = file.size || 0;
-        fillOverviewEditForm();
+        if (!state.overviewDraft || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+        Array.prototype.forEach.call(e.dataTransfer.files, function(file) {
+          state.overviewDraft.datasetFiles.push({ name: file.name, sizeBytes: file.size || 0 });
+        });
+        renderOverviewDatasetFileList();
         markOverviewDirty();
       });
     }
 
-    if (modeRadios.length && valueInput) {
-      modeRadios.forEach(function(modeRadio) {
-        modeRadio.addEventListener('change', function(e) {
-          if (!e.target.checked) return;
-          if (!state.samplingEditMode || !state.samplingDraft) return;
-          state.samplingDraft.samplingMode = e.target.value;
-          if (state.samplingDraft.samplingMode === 'by_percentage') {
-            state.samplingDraft.samplingValue = Math.max(1, Math.min(99, state.samplingDraft.samplingValue));
-            valueInput.max = '99';
-          } else {
-            state.samplingDraft.samplingValue = Math.max(1, Math.min(TASK_DATA.datasetTotal - 1, state.samplingDraft.samplingValue));
-            valueInput.removeAttribute('max');
-          }
-          valueInput.value = String(state.samplingDraft.samplingValue);
-          markSamplingDirty();
-          renderSamplingState();
-        });
-      });
-
+    if (valueInput) {
       valueInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.samplingValue = Number(e.target.value || 0);
+        var digits = String(e.target.value || '').replace(/[^\d]/g, '');
+        e.target.value = digits;
+        state.samplingDraft.samplingValue = digits === '' ? NaN : Number(digits);
         markSamplingDirty();
-        renderSamplingState();
       });
     }
 
-    if (strategySelect) {
-      strategySelect.addEventListener('change', function(e) {
+    if (iaaMethodSelect) {
+      iaaMethodSelect.addEventListener('change', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.samplingStrategy = e.target.value;
-        markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    if (seedInput) {
-      seedInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.randomSeed = Math.max(1, Math.floor(Number(e.target.value || 0)));
-        markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    if (roundInput) {
-      roundInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.trialRound = Math.max(1, Math.floor(Number(e.target.value || 0)));
+        state.samplingDraft.iaaMethod = e.target.value;
+        var suggested = IAA_METHOD_DEFAULTS[e.target.value];
+        if (suggested !== undefined) {
+          state.samplingDraft.targetAgreement = suggested;
+          if (targetAgreementInput) targetAgreementInput.value = suggested.toFixed(2);
+        }
         markSamplingDirty();
         renderSamplingState();
       });
@@ -8285,53 +9173,24 @@ function getTaskTypeLabel(taskTypeKey) {
     if (targetAgreementInput) {
       targetAgreementInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.targetAgreement = Number(e.target.value || 0);
+        var normalized = String(e.target.value || '').replace(/[^0-9.]/g, '');
+        var firstDot = normalized.indexOf('.');
+        if (firstDot >= 0) {
+          normalized = normalized.slice(0, firstDot + 1) + normalized.slice(firstDot + 1).replace(/\./g, '');
+        }
+        e.target.value = normalized;
+        state.samplingDraft.targetAgreement = normalized === '' ? NaN : Number(normalized);
         markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    if (targetStdInput) {
-      targetStdInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.targetStd = e.target.value.trim() === '' ? null : Number(e.target.value);
-        markSamplingDirty();
-        renderSamplingState();
       });
     }
 
     if (minAnnotatorsInput) {
       minAnnotatorsInput.addEventListener('input', function(e) {
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.minAnnotators = Math.max(2, Math.floor(Number(e.target.value || 0)));
+        var digits = String(e.target.value || '').replace(/[^\d]/g, '');
+        e.target.value = digits;
+        state.samplingDraft.minAnnotators = digits === '' ? NaN : Math.max(2, Math.floor(Number(digits)));
         markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    function updateStratifyByDraft() {
-      if (!state.samplingEditMode || !state.samplingDraft) return;
-      var next = [];
-      if (stratifyByLabel && stratifyByLabel.checked) next.push('label');
-      if (stratifyByDomain && stratifyByDomain.checked) next.push('domain');
-      if (stratifyByDifficulty && stratifyByDifficulty.checked) next.push('difficulty');
-      state.samplingDraft.stratifyBy = next;
-      markSamplingDirty();
-      renderSamplingState();
-    }
-
-    if (stratifyByLabel) stratifyByLabel.addEventListener('change', updateStratifyByDraft);
-    if (stratifyByDomain) stratifyByDomain.addEventListener('change', updateStratifyByDraft);
-    if (stratifyByDifficulty) stratifyByDifficulty.addEventListener('change', updateStratifyByDraft);
-
-    if (resampleBtn) {
-      resampleBtn.addEventListener('click', function() {
-        if (!state.samplingEditMode || !state.samplingDraft || !isSamplingEditable()) return;
-        state.samplingDraft.randomSeed = Math.floor(Math.random() * 900000 + 100000);
-        markSamplingDirty();
-        showToast(t('toastResampled'));
-        trackEvent('prototype_resample_clicked');
-        renderSamplingState();
       });
     }
 
@@ -8364,6 +9223,11 @@ function getTaskTypeLabel(taskTypeKey) {
         }
         publishOfficialRun();
       }
+
+      if (e.target.id === 'publishCompleteBtn') {
+        trackEvent('prototype_cta_clicked', { cta: 'publish_complete' });
+        publishComplete();
+      }
     });
 
     document.getElementById('riskCancelBtn').addEventListener('click', function() {
@@ -8385,10 +9249,6 @@ function getTaskTypeLabel(taskTypeKey) {
       }
     });
 
-    var datasetSummaryPreviewBtn = document.getElementById('datasetSummaryPreviewBtn');
-    if (datasetSummaryPreviewBtn) {
-      datasetSummaryPreviewBtn.addEventListener('click', showDatasetPreviewModal);
-    }
     var datasetPreviewCloseBtn = document.getElementById('datasetPreviewCloseBtn');
     if (datasetPreviewCloseBtn) {
       datasetPreviewCloseBtn.addEventListener('click', hideDatasetPreviewModal);
@@ -8413,6 +9273,37 @@ function getTaskTypeLabel(taskTypeKey) {
         closeMemberActionModal();
       }
     });
+
+    var memberSearchInput = document.getElementById('memberSearchInput');
+    if (memberSearchInput) {
+      memberSearchInput.addEventListener('input', function() {
+        renderMemberSearchResults();
+      });
+    }
+
+    var memberSearchRoleSelect = document.getElementById('memberSearchRoleSelect');
+    if (memberSearchRoleSelect) {
+      memberSearchRoleSelect.addEventListener('change', function() {
+        renderMemberSearchResults();
+      });
+    }
+
+    var memberInviteSendBtn = document.getElementById('memberInviteSendBtn');
+    if (memberInviteSendBtn) {
+      memberInviteSendBtn.addEventListener('click', function() {
+        inviteMemberByEmail();
+      });
+    }
+
+    var memberInviteEmailInput = document.getElementById('memberInviteEmailInput');
+    if (memberInviteEmailInput) {
+      memberInviteEmailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inviteMemberByEmail();
+        }
+      });
+    }
 
 document.getElementById('progressStageDryBtn').addEventListener('click', function() {
       state.progressStage = 'dry';

@@ -20,13 +20,8 @@
         <span class="kv-dl-value" id="valueTaskType"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelDatasetSummary">資料集摘要</span>
-        <span class="kv-dl-value">
-          <button class="dataset-preview-trigger" id="datasetSummaryPreviewBtn" type="button" aria-label="預覽資料集">
-            <span id="valueDatasetSummary"></span>
-            <svg class="dataset-preview-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </span>
+        <span class="kv-dl-key" id="labelDatasetSummary">資料集</span>
+        <span class="kv-dl-value" id="valueDatasetSummary"></span>
       </div>
     </div>
 
@@ -52,7 +47,7 @@
           <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
           <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
         </div>
-        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" />
+        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" multiple />
         <div class="overview-dataset-file-list hidden" id="editDatasetFileList"></div>
       </div>
 
@@ -137,42 +132,90 @@
     </div>
     <p class="status-hint" id="guidelineReadonlyHint"></p>
 
-    <div id="guidelineSummaryView" class="kv-dl">
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelGuideline">說明內容狀態</span>
-        <span class="kv-dl-value" id="valueGuidelineStatus"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelGuidelineFilesSummary">附件清單</span>
-        <span class="kv-dl-value" id="valueGuidelineFilesSummary"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
-        <span class="kv-dl-value" id="valueForceGuideline"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelGuidelineContentSummary">說明內容摘要</span>
-        <span class="kv-dl-value" id="valueGuidelineContentSummary"></span>
+    <div id="guidelineSummaryView" class="guideline-role-stack">
+      <section class="guideline-role-card" aria-labelledby="guidelineAnnotatorTitle">
+        <h3 class="guideline-role-heading" id="guidelineAnnotatorTitle">提供給標記員</h3>
+        <div class="kv-dl">
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelAnnotatorGuideline">說明內容狀態</span>
+            <span class="kv-dl-value" id="valueAnnotatorGuidelineStatus"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelAnnotatorGuidelineFilesSummary">附件清單</span>
+            <span class="kv-dl-value" id="valueAnnotatorGuidelineFilesSummary"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelAnnotatorGuidelineContentSummary">說明內容摘要</span>
+            <span class="kv-dl-value" id="valueAnnotatorGuidelineContentSummary"></span>
+          </div>
+        </div>
+      </section>
+      <section class="guideline-role-card" aria-labelledby="guidelineReviewerTitle">
+        <h3 class="guideline-role-heading" id="guidelineReviewerTitle">提供給審核員</h3>
+        <div class="kv-dl">
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelReviewerGuideline">說明內容狀態</span>
+            <span class="kv-dl-value" id="valueReviewerGuidelineStatus"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelReviewerGuidelineFilesSummary">附件清單</span>
+            <span class="kv-dl-value" id="valueReviewerGuidelineFilesSummary"></span>
+          </div>
+          <div class="kv-dl-row">
+            <span class="kv-dl-key" id="labelReviewerGuidelineContentSummary">說明內容摘要</span>
+            <span class="kv-dl-value" id="valueReviewerGuidelineContentSummary"></span>
+          </div>
+        </div>
+      </section>
+      <div class="kv-dl">
+        <div class="kv-dl-row">
+          <span class="kv-dl-key" id="labelForceGuideline">開始標記前強制顯示</span>
+          <span class="kv-dl-value" id="valueForceGuideline"></span>
+        </div>
       </div>
     </div>
 
     <div class="guideline-edit-form hidden" id="guidelineEditForm">
-      <div class="field-group">
-        <label class="field-label" id="editGuidelineLabel" for="editGuidelineTextInput">說明內容</label>
-        <textarea class="input-textarea" id="editGuidelineTextInput" rows="6" placeholder="輸入給標記員看的任務說明、判斷準則與注意事項"></textarea>
-      </div>
+      <div class="guideline-role-stack">
+        <section class="guideline-role-card" aria-labelledby="editAnnotatorGuidelineTitle">
+          <h3 class="guideline-role-heading" id="editAnnotatorGuidelineTitle">提供給標記員</h3>
+          <div class="field-group">
+            <label class="field-label" id="editAnnotatorGuidelineLabel" for="editAnnotatorGuidelineTextInput">標記說明內容</label>
+            <textarea class="input-textarea" id="editAnnotatorGuidelineTextInput" rows="6" placeholder="輸入提供給標記員的任務說明、判斷準則與注意事項"></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="editAnnotatorGuidelineFilesLabel" for="editAnnotatorGuidelineFileInput">上傳檔案</label>
+            <div class="upload-multi-zone" id="annotatorGuidelineUploadZone" role="button" tabindex="0" onclick="window.handleGuidelineUploadZoneClick && window.handleGuidelineUploadZoneClick('annotator')" onkeydown="window.handleGuidelineUploadZoneKeydown && window.handleGuidelineUploadZoneKeydown(event, 'annotator')">
+              <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="upload-multi-zone-label" id="annotatorGuidelineUploadLabel">上傳檔案</div>
+              <div class="upload-multi-zone-hint" id="annotatorGuidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+              <input class="hidden" type="file" id="editAnnotatorGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" oninput="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('annotator', this)" onchange="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('annotator', this)" />
+            </div>
+            <div class="guideline-list" id="editAnnotatorGuidelineFileList"></div>
+          </div>
+        </section>
 
-      <div class="field-group">
-        <label class="field-label" id="editGuidelineFilesLabel" for="editGuidelineFileInput">上傳檔案</label>
-        <div class="upload-multi-zone" id="guidelineUploadZone" role="button" tabindex="0">
-          <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <div class="upload-multi-zone-label" id="guidelineUploadLabel">上傳檔案</div>
-          <div class="upload-multi-zone-hint" id="guidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
-          <input class="hidden" type="file" id="editGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" />
-        </div>
-        <div class="guideline-list" id="editGuidelineFileList"></div>
+        <section class="guideline-role-card" aria-labelledby="editReviewerGuidelineTitle">
+          <h3 class="guideline-role-heading" id="editReviewerGuidelineTitle">提供給審核員</h3>
+          <div class="field-group">
+            <label class="field-label" id="editReviewerGuidelineLabel" for="editReviewerGuidelineTextInput">審核說明內容</label>
+            <textarea class="input-textarea" id="editReviewerGuidelineTextInput" rows="6" placeholder="輸入提供給審核員的審核原則、退回條件與注意事項"></textarea>
+          </div>
+          <div class="field-group">
+            <label class="field-label" id="editReviewerGuidelineFilesLabel" for="editReviewerGuidelineFileInput">上傳檔案</label>
+            <div class="upload-multi-zone" id="reviewerGuidelineUploadZone" role="button" tabindex="0" onclick="window.handleGuidelineUploadZoneClick && window.handleGuidelineUploadZoneClick('reviewer')" onkeydown="window.handleGuidelineUploadZoneKeydown && window.handleGuidelineUploadZoneKeydown(event, 'reviewer')">
+              <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <div class="upload-multi-zone-label" id="reviewerGuidelineUploadLabel">上傳檔案</div>
+              <div class="upload-multi-zone-hint" id="reviewerGuidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+              <input class="hidden" type="file" id="editReviewerGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple aria-hidden="true" oninput="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('reviewer', this)" onchange="window.handleGuidelineFileInputChange && window.handleGuidelineFileInputChange('reviewer', this)" />
+            </div>
+            <div class="guideline-list" id="editReviewerGuidelineFileList"></div>
+          </div>
+        </section>
       </div>
 
       <div class="field-group">
@@ -205,31 +248,27 @@
 
     <div id="samplingSummaryView" class="kv-dl">
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
-        <span class="kv-dl-value" id="valueTrialRoundControl"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSamplingModeControl">抽樣方式</span>
-        <span class="kv-dl-value" id="valueSamplingModeControl"></span>
-      </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSamplingValueControl">抽樣數值</span>
+        <span class="kv-dl-key" id="labelSamplingValueControl">抽樣筆數</span>
         <span class="kv-dl-value" id="valueSamplingValueControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSamplingStrategyControl">抽樣策略</span>
-        <span class="kv-dl-value mono" id="valueSamplingStrategyControl"></span>
-      </div>
-      <div class="kv-dl-row" id="stratifyByKvRow">
-        <span class="kv-dl-key" id="labelStratifyByControl">分層依據</span>
-        <span class="kv-dl-value" id="valueStratifyByControl"></span>
+        <span class="kv-dl-key" id="labelIaaMethodControl">IAA 計算方式</span>
+        <span class="kv-dl-value" id="valueIaaMethodControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelStopConditionControl">停止條件</span>
-        <span class="kv-dl-value" id="valueStopConditionControl"></span>
+        <span class="kv-dl-key" id="labelRoundOutcomeControl">目前判定</span>
+        <span class="kv-dl-value" id="valueRoundOutcomeControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelSplitControl">試標 / 正式資料配比</span>
+        <span class="kv-dl-key" id="labelTargetAgreementControl">目標 IAA</span>
+        <span class="kv-dl-value" id="valueTargetAgreementControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelMinAnnotatorsControl">最少標記者數</span>
+        <span class="kv-dl-value" id="valueMinAnnotatorsControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelSplitControl">已用試標 / 可進正式</span>
         <span class="kv-dl-value" id="valueSplitControl"></span>
       </div>
       <div class="kv-dl-row">
@@ -243,106 +282,44 @@
     </div>
 
     <div class="sampling-edit-form hidden" id="samplingEditForm">
-      <div class="sampling-fields">
+      <div class="sampling-fields sampling-fields-primary">
         <div class="field-group">
-          <span class="field-label" id="samplingModeLabel">抽樣方式</span>
-          <div class="sampling-mode-inline" role="radiogroup" aria-labelledby="samplingModeLabel">
-            <label>
-              <input type="radio" name="samplingMode" id="samplingModePercent" value="by_percentage" />
-              <span id="samplingModePercentLabel">百分比</span>
-            </label>
-            <label>
-              <input type="radio" name="samplingMode" id="samplingModeCount" value="by_count" />
-              <span id="samplingModeCountLabel">筆數</span>
-            </label>
-          </div>
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="samplingValueLabel" for="samplingValue">抽樣數值</label>
-          <input class="input-number" id="samplingValue" type="number" min="1" value="120" />
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="samplingStrategyLabel">抽樣策略</label>
-          <select class="input-select" id="samplingStrategySelect">
-            <option id="samplingStrategyOptionStratified" value="stratified_random">分層隨機抽樣</option>
-            <option id="samplingStrategyOptionDisagreement" value="high_disagreement">高分歧樣本優先</option>
-            <option id="samplingStrategyOptionEdgeCases" value="edge_cases">邊界樣本優先</option>
-          </select>
-        </div>
-      </div>
-      <div class="sampling-fields sampling-fields-advanced">
-        <div class="field-group">
-          <label class="field-label" id="samplingSeedLabel" for="samplingSeedInput">Random Seed</label>
-          <input class="input-number" id="samplingSeedInput" type="number" min="1" step="1" value="248931" />
+          <label class="field-label" id="samplingValueLabel" for="samplingValue">每回合抽樣筆數</label>
+          <input class="input-number" id="samplingValue" type="text" inputmode="numeric" pattern="[0-9]*" value="10" />
+          <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
         </div>
         <div class="field-group">
           <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
-          <input class="input-number" id="samplingRoundInput" type="number" min="1" step="1" value="1" />
-        </div>
-        <div class="field-group" id="stratifyByFieldGroup">
-          <span class="field-label" id="samplingStratifyLabel">分層依據</span>
-          <div class="sampling-mode-inline" role="group" aria-labelledby="samplingStratifyLabel">
-            <label>
-              <input type="checkbox" id="stratifyByLabel" />
-              <span id="stratifyByLabelText">label</span>
-            </label>
-            <label>
-              <input type="checkbox" id="stratifyByDomain" />
-              <span id="stratifyByDomainText">domain</span>
-            </label>
-            <label>
-              <input type="checkbox" id="stratifyByDifficulty" />
-              <span id="stratifyByDifficultyText">difficulty</span>
-            </label>
-          </div>
+          <input class="input-number" id="samplingRoundInput" type="text" inputmode="numeric" pattern="[0-9]*" value="1" />
+          <p class="field-hint field-hint-placeholder" aria-hidden="true"></p>
         </div>
       </div>
 
       <div class="sampling-fields sampling-fields-advanced">
         <div class="field-group">
+          <label class="field-label" id="iaaMethodLabel" for="iaaMethodSelect">IAA 計算方式</label>
+          <select class="input-select" id="iaaMethodSelect">
+            <option id="iaaOptKrippendorff" value="krippendorff_alpha_nominal">Krippendorff's Alpha（nominal）</option>
+            <option id="iaaOptCohensKappa" value="cohens_kappa">Cohen's Kappa</option>
+            <option id="iaaOptFleissKappa" value="fleiss_kappa">Fleiss' Kappa</option>
+            <option id="iaaOptIcc" value="icc">ICC（組內相關係數）</option>
+            <option id="iaaOptPairwiseF1Strict" value="pairwise_f1_strict">Pairwise F1（嚴格）</option>
+            <option id="iaaOptPairwiseF1Partial" value="pairwise_f1_partial">Pairwise F1（部分重疊）</option>
+            <option id="iaaOptPairwiseTripleF1" value="pairwise_triple_f1">Pairwise Triple-level F1</option>
+          </select>
+        </div>
+        <div class="field-group">
           <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
-          <input class="input-number" id="targetAgreementInput" type="number" min="0" max="1" step="0.01" value="0.80" />
+          <input class="input-number" id="targetAgreementInput" type="text" inputmode="decimal" value="0.80" />
+          <p class="field-hint" id="targetAgreementHint"></p>
         </div>
         <div class="field-group">
-          <label class="field-label" id="targetStdInputLabel" for="targetStdInput">標準差上限</label>
-          <input class="input-number" id="targetStdInput" type="number" min="0" max="1" step="0.01" value="0.10" />
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標註者數</label>
-          <input class="input-number" id="minAnnotatorsInput" type="number" min="2" step="1" value="3" />
-        </div>
-      </div>
-
-      <div class="data-split-viz">
-        <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例">
-          <div class="split-seg split-dry" id="splitDryBar" style="width:9.4%"></div>
-          <div class="split-seg split-official" id="splitOfficialBar" style="width:90.6%"></div>
-        </div>
-        <div class="split-legend">
-          <div class="split-legend-item">
-            <span class="split-dot split-dot-total" aria-hidden="true"></span>
-            <span class="split-legend-key" id="totalSamplesLabel">總筆數</span>
-            <strong class="split-legend-value" id="totalSamplesValue">—</strong>
-          </div>
-          <div class="split-legend-item">
-            <span class="split-dot split-dot-dry" aria-hidden="true"></span>
-            <span class="split-legend-key" id="sampleUsageLabel">試標使用量</span>
-            <strong class="split-legend-value" id="sampleUsageValue">—</strong>
-          </div>
-          <div class="split-legend-item">
-            <span class="split-dot split-dot-official" aria-hidden="true"></span>
-            <span class="split-legend-key" id="officialReserveLabel">正式標記預留量</span>
-            <strong class="split-legend-value" id="officialReserveValue">—</strong>
-          </div>
+          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標記者數</label>
+          <input class="input-number" id="minAnnotatorsInput" type="text" inputmode="numeric" pattern="[0-9]*" value="3" />
         </div>
       </div>
 
       <p class="inline-error" id="samplingError"></p>
-
-      <div class="sampling-footer">
-        <button class="btn btn-secondary" type="button" id="resampleBtn">重算抽樣</button>
-        <span class="status-hint" id="resampleHint">僅草稿階段可重算；進入試標後需建立新的執行批次。</span>
-      </div>
 
       <hr class="panel-divider" />
 
@@ -377,14 +354,9 @@
             <span class="step-label-wrap" id="statusStepDraft">草稿</span>
           </div>
           <div class="step-connector"></div>
-          <div class="step" data-step="dry_run_in_progress">
+          <div class="step" data-step="trial_stage">
             <div class="step-node"></div>
-            <span class="step-label-wrap" id="statusStepDryRun">試標進行中</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step" data-step="waiting_iaa_confirmation">
-            <div class="step-node"></div>
-            <span class="step-label-wrap" id="statusStepWaitingIaa">待 IAA 確認</span>
+            <span class="step-label-wrap" id="statusStepTrialStage">試標階段</span>
           </div>
           <div class="step-connector"></div>
           <div class="step" data-step="official_run_in_progress">
@@ -399,44 +371,80 @@
         </div>
       </div>
 
+      <div class="exec-stage-banner">
+        <div class="exec-stage-copy">
+          <span class="exec-stage-eyebrow" id="executionStageEyebrow">目前任務階段</span>
+          <strong class="exec-stage-title" id="executionStageTitle">試標階段</strong>
+          <p class="exec-stage-desc" id="executionStageDesc">目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。</p>
+        </div>
+      </div>
+
       <div class="exec-round-grid">
         <div class="exec-round-item">
-          <span class="exec-round-key" id="trialRoundLabel">Trial Round</span>
-          <strong class="exec-round-value" id="trialRoundValue">R1</strong>
+          <span class="exec-round-key" id="trialRoundLabel">目前回合</span>
+          <strong class="exec-round-value" id="trialRoundValue">R2</strong>
         </div>
         <div class="exec-round-item">
-          <span class="exec-round-key" id="targetAgreementLabel">目標 IAA</span>
-          <strong class="exec-round-value" id="targetAgreementValue">0.80</strong>
+          <span class="exec-round-key" id="trialRoundsUsedLabel">已完成試標回合</span>
+          <strong class="exec-round-value" id="trialRoundsUsedValue">2</strong>
         </div>
         <div class="exec-round-item">
-          <span class="exec-round-key" id="currentAgreementLabel">目前 IAA</span>
-          <strong class="exec-round-value" id="currentAgreementValue">0.62</strong>
+          <span class="exec-round-key" id="currentAgreementLabel">最新回合 IAA</span>
+          <strong class="exec-round-value" id="currentAgreementValue">0.81</strong>
         </div>
         <div class="exec-round-item">
-          <span class="exec-round-key" id="currentStdLabel">目前標準差</span>
-          <strong class="exec-round-value" id="currentStdValue">0.16</strong>
+          <span class="exec-round-key" id="officialPoolLabel">正式標記池</span>
+          <strong class="exec-round-value" id="officialPoolValue">80</strong>
         </div>
       </div>
 
-      <div class="exec-stop-row">
-        <span class="status-hint" id="stopConditionTitle">達標條件</span>
-        <div class="exec-stop-pills" id="execStopPills">
-          <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
-          <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
-          <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標註者</span>
+      <div class="data-split-viz exec-data-split-viz">
+        <div class="split-viz-head">
+          <span class="status-hint" id="executionSplitTitle">樣本池分配</span>
+        </div>
+        <div class="split-bar" id="dataSplitBar" role="img" aria-label="資料分配比例"></div>
+        <div class="split-legend split-legend-dynamic" id="splitLegendDynamic"></div>
+      </div>
+
+      <div class="exec-stop-row" id="execStopRow">
+        <div class="exec-stop-main">
+          <span class="status-hint" id="stopConditionTitle">達標條件</span>
+          <div class="exec-stop-pills" id="execStopPills">
+            <span class="stop-pill" id="stopAgreementPill">IAA ≥ 0.80</span>
+            <span class="stop-pill" id="stopStdPill">Std ≤ 0.10</span>
+            <span class="stop-pill" id="stopAnnotatorPill">至少 3 位標註者</span>
+          </div>
+        </div>
+        <div class="exec-stop-actions">
+          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
         </div>
       </div>
 
-      <!-- 狀態 badge + 發布操作 -->
       <div class="exec-control-row">
         <div class="exec-info">
           <div class="exec-badges hidden">
-            <span id="statusBadge" class="badge badge-draft">draft</span>
-            <span class="badge badge-isolated" id="isolationBadge">isolated</span>
+            <span id="statusBadge" class="badge badge-draft">草稿</span>
+            <span class="badge badge-isolated hidden" id="isolationBadge">isolated</span>
           </div>
         </div>
-        <div class="exec-actions">
-          <div class="action-row" id="publishActionRow" style="margin:0;"></div>
+      </div>
+
+      <section class="round-history-panel" aria-labelledby="roundHistoryTitle">
+        <div class="round-history-head">
+          <div>
+            <h3 class="sub-panel-title" id="roundHistoryTitle">試標回合歷程</h3>
+            <p class="status-hint" id="roundHistoryHint">每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。</p>
+          </div>
+          <span class="round-history-summary" id="roundHistorySummary">已用 20 / 100 筆試標</span>
+        </div>
+        <div class="round-timeline" id="trialRoundTimeline"></div>
+      </section>
+
+      <div class="round-decision-card" id="trialDecisionCard">
+        <div class="round-decision-copy">
+          <span class="round-decision-eyebrow" id="trialDecisionEyebrow">正式標記判定</span>
+          <strong class="round-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
+          <p class="round-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
         </div>
       </div>
     </div>

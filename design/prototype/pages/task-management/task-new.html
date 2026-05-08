@@ -362,6 +362,7 @@
 
     /* ── Step 3: Startup settings ── */
     .startup-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .startup-layout-single { grid-template-columns: 1fr; }
     .startup-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-slate-50); }
     .startup-section-title { font-size: 14px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
     .member-source-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-sm); }
@@ -381,11 +382,22 @@
     .member-item-role { font-size: 11px; color: var(--color-text-soft); }
     .member-item-meta { font-size: 11px; color: var(--color-text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .member-empty { font-size: 12px; color: var(--color-text-soft); }
-    .inline-radio { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
-    .inline-radio label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-ink); }
     .startup-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 6px; }
+    .sampling-dist-wrap { margin: 12px 0 16px; }
+    .sampling-dist-bar { height: 14px; border-radius: 7px; overflow: hidden; display: flex; background: var(--color-border); }
+    .sampling-dist-trial { background: #6366f1; transition: width 0.2s ease; min-width: 0; }
+    .sampling-dist-official { background: #22c55e; transition: width 0.2s ease; flex: 1; }
+    .sampling-dist-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 12px; color: var(--color-text-soft); flex-wrap: wrap; }
+    .sampling-dist-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .legend-dot-total { background: #94a3b8; }
+    .legend-dot-trial { background: #6366f1; }
+    .legend-dot-official { background: #22c55e; }
 
     /* ── Guideline list ── */
+    .guideline-role-grid { display: flex; flex-direction: column; gap: var(--space-md); }
+    .guideline-role-section { padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-slate-50); }
+    .guideline-role-title { font-size: 15px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-md); }
     .guideline-list { margin-top: var(--space-sm); display: flex; flex-direction: column; gap: 6px; }
     .guideline-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     .guideline-item-icon { width: 16px; height: 16px; color: var(--color-primary); flex-shrink: 0; }
@@ -584,19 +596,9 @@
             </svg>
             <div class="upload-zone-label" id="uploadZoneLabel">點擊或拖曳上傳資料集</div>
             <div class="upload-zone-hint" id="uploadZoneHint">支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆</div>
-            <input type="file" id="datasetFileInput" accept=".txt,.csv,.tsv,.json" style="display:none" aria-hidden="true" />
+            <input type="file" id="datasetFileInput" accept=".txt,.csv,.tsv,.json" multiple style="display:none" aria-hidden="true" />
           </div>
-          <div id="datasetFilePreview" class="upload-file-preview hidden">
-            <svg class="upload-file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span class="upload-file-name" id="datasetFileName"></span>
-            <span class="upload-file-size" id="datasetFileSize"></span>
-            <button class="upload-file-preview-btn" id="datasetPreviewBtn" aria-label="預覽資料集">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-            <button class="upload-file-remove" id="datasetRemoveBtn" aria-label="移除檔案">
-              <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
+          <div id="datasetFileList"></div>
           <div class="field-error-msg" id="errDataset"></div>
         </div>
       </div>
@@ -655,51 +657,28 @@
 
         <div class="notice-info" id="s3Notice">
           <svg style="width:14px;height:14px;flex-shrink:0;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span id="s3NoticeText">先完成成員與抽樣方式，建立後可直接進入執行狀態。</span>
+          <span id="s3NoticeText">完成任務建立後，再邀請標記員與審核員加入任務。</span>
         </div>
 
-        <div class="startup-layout">
-          <section class="startup-section" aria-labelledby="startupMemberTitle">
-            <div class="startup-section-title" id="startupMemberTitle">成員管理</div>
-            <div class="member-source-tabs" role="tablist" aria-label="Member source tabs">
-              <button class="member-source-tab active" id="memberSourceSystemTab" type="button" role="tab" aria-selected="true">平台使用者</button>
-              <button class="member-source-tab" id="memberSourceInviteTab" type="button" role="tab" aria-selected="false">Email 邀請</button>
-            </div>
-
-            <div class="member-add-row" id="memberSourceSystemPanel">
-              <select class="input-select" id="memberUserSelect">
-                <option value="">選擇使用者</option>
-              </select>
-              <select class="input-select" id="memberRoleSelect" style="max-width:140px;">
-                <option value="annotator">Annotator</option>
-                <option value="reviewer">Reviewer</option>
-              </select>
-              <button class="btn btn-secondary" id="addMemberFromSystemBtn" type="button" style="padding:8px 12px;">加入</button>
-            </div>
-
-            <div class="member-add-row hidden" id="memberSourceInvitePanel">
-              <input type="email" class="input-text" id="memberInviteEmailInput" placeholder="輸入邀請 Email" />
-              <select class="input-select" id="memberInviteRoleSelect" style="max-width:140px;">
-                <option value="annotator">Annotator</option>
-                <option value="reviewer">Reviewer</option>
-              </select>
-              <button class="btn btn-secondary" id="sendInviteBtn" type="button" style="padding:8px 12px;">寄送邀請連結</button>
-            </div>
-            <div class="member-list" id="memberList"></div>
-            <div class="member-empty hidden" id="memberEmpty">尚未加入任何成員</div>
-            <div class="field-error-msg" id="errStartupMembers"></div>
-          </section>
+        <div class="startup-layout startup-layout-single">
 
           <section class="startup-section" aria-labelledby="startupRunTitle">
-            <div class="startup-section-title" id="startupRunTitle">抽樣方式</div>
-            <div class="inline-radio">
-              <label><input type="radio" name="samplingMode" value="by_percentage" checked /> <span id="samplingModePercentLabel">百分比</span></label>
-              <label><input type="radio" name="samplingMode" value="by_count" /> <span id="samplingModeCountLabel">筆數</span></label>
-            </div>
+            <div class="startup-section-title" id="startupRunTitle">抽樣設定</div>
             <div class="form-field" style="margin-bottom:8px;">
-              <label class="field-label" id="samplingValueLabel" for="samplingValueInput">試標抽樣值</label>
-              <input type="number" class="input-text" id="samplingValueInput" min="1" max="99" value="20" />
-              <div class="startup-hint" id="samplingHint">百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數</div>
+              <label class="field-label" id="samplingValueLabel" for="samplingValueInput">每回合抽樣筆數</label>
+              <input type="number" class="input-text" id="samplingValueInput" min="1" value="100" />
+              <div class="startup-hint" id="samplingHint">筆數需 >= 1 且 < 資料集總筆數</div>
+            </div>
+            <div class="sampling-dist-wrap hidden" id="samplingDistWrap" aria-hidden="true">
+              <div class="sampling-dist-bar">
+                <div class="sampling-dist-trial" id="samplingBarTrial" style="width:1%"></div>
+                <div class="sampling-dist-official" id="samplingBarOfficial"></div>
+              </div>
+              <div class="sampling-dist-legend">
+                <span><span class="legend-dot legend-dot-total"></span><span id="samplingLegendTotal"></span></span>
+                <span><span class="legend-dot legend-dot-trial"></span><span id="samplingLegendTrial"></span></span>
+                <span><span class="legend-dot legend-dot-official"></span><span id="samplingLegendOfficial"></span></span>
+              </div>
             </div>
             <div class="toggle-row">
               <div class="toggle-info">
@@ -727,22 +706,46 @@
           <span id="s4NoticeText">此步驟為選填。不上傳說明，仍可完成任務建立。</span>
         </div>
 
-        <div class="form-field">
-          <label class="field-label" id="labelGuideline">說明內容</label>
-          <textarea class="input-textarea" id="guidelineTextInput" rows="6" placeholder="輸入給標記員看的任務說明、判斷準則與注意事項"></textarea>
-        </div>
+        <div class="guideline-role-grid">
+          <section class="guideline-role-section" aria-labelledby="annotatorGuidelineSectionTitle">
+            <div class="guideline-role-title" id="annotatorGuidelineSectionTitle">提供給標記員</div>
+            <div class="form-field">
+              <label class="field-label" id="labelAnnotatorGuideline" for="annotatorGuidelineTextInput">標記說明內容</label>
+              <textarea class="input-textarea" id="annotatorGuidelineTextInput" rows="6" placeholder="輸入提供給標記員的任務說明、判斷準則與注意事項"></textarea>
+            </div>
+            <div class="form-field">
+              <label class="field-label" id="labelAnnotatorGuidelineUpload">上傳檔案</label>
+              <div class="upload-multi-zone" id="annotatorGuidelineUploadZone" role="button" tabindex="0">
+                <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <div style="font-size:14px;font-weight:500;color:var(--color-ink);margin-bottom:4px;" id="annotatorGuidelineUploadLabel">上傳檔案</div>
+                <div style="font-size:12px;color:var(--color-text-soft);" id="annotatorGuidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+                <input type="file" id="annotatorGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple style="display:none" aria-hidden="true" />
+              </div>
+              <div class="guideline-list" id="annotatorGuidelineList"></div>
+            </div>
+          </section>
 
-        <div class="form-field">
-          <label class="field-label" id="labelGuidelineUpload">上傳檔案</label>
-          <div class="upload-multi-zone" id="guidelineUploadZone" role="button" tabindex="0">
-            <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <div style="font-size:14px;font-weight:500;color:var(--color-ink);margin-bottom:4px;" id="guidelineUploadLabel">上傳檔案</div>
-            <div style="font-size:12px;color:var(--color-text-soft);" id="guidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
-            <input type="file" id="guidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple style="display:none" aria-hidden="true" />
-          </div>
-          <div class="guideline-list" id="guidelineList"></div>
+          <section class="guideline-role-section" aria-labelledby="reviewerGuidelineSectionTitle">
+            <div class="guideline-role-title" id="reviewerGuidelineSectionTitle">提供給審核員</div>
+            <div class="form-field">
+              <label class="field-label" id="labelReviewerGuideline" for="reviewerGuidelineTextInput">審核說明內容</label>
+              <textarea class="input-textarea" id="reviewerGuidelineTextInput" rows="6" placeholder="輸入提供給審核員的審核原則、退回條件與注意事項"></textarea>
+            </div>
+            <div class="form-field">
+              <label class="field-label" id="labelReviewerGuidelineUpload">上傳檔案</label>
+              <div class="upload-multi-zone" id="reviewerGuidelineUploadZone" role="button" tabindex="0">
+                <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 8px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <div style="font-size:14px;font-weight:500;color:var(--color-ink);margin-bottom:4px;" id="reviewerGuidelineUploadLabel">上傳檔案</div>
+                <div style="font-size:12px;color:var(--color-text-soft);" id="reviewerGuidelineUploadHint">PDF · PNG / JPG / JPEG / WEBP · Markdown</div>
+                <input type="file" id="reviewerGuidelineFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp,.md" multiple style="display:none" aria-hidden="true" />
+              </div>
+              <div class="guideline-list" id="reviewerGuidelineList"></div>
+            </div>
+          </section>
         </div>
 
         <div class="form-field" style="margin-top:var(--space-md);">
@@ -941,35 +944,32 @@ var I18N = {
     navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
     s1Label: '基本資料', s2Label: '標記設定檔', s3Label: '啟動設定', s4Label: '標記說明',
     s1CardTitle: '基本資料', s2CardTitle: '標記設定檔', s3CardTitle: '啟動設定', s4CardTitle: '標記說明',
-    labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集', labelGuideline: '說明內容',
+    labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集',
     optTaskTypeDefault: '請選擇任務類型',
     uploadZoneLabel: '點擊或拖曳上傳資料集',
     uploadZoneHint: '支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆',
-    labelGuidelineUpload: '上傳檔案',
-    guidelineUploadLabel: '上傳檔案',
+    annotatorGuidelineSectionTitle: '提供給標記員',
+    reviewerGuidelineSectionTitle: '提供給審核員',
+    labelAnnotatorGuideline: '標記說明內容',
+    labelReviewerGuideline: '審核說明內容',
+    labelAnnotatorGuidelineUpload: '上傳檔案',
+    labelReviewerGuidelineUpload: '上傳檔案',
+    annotatorGuidelineUploadLabel: '上傳檔案',
+    reviewerGuidelineUploadLabel: '上傳檔案',
     guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
-    guidelineTextPlaceholder: '輸入給標記員看的任務說明、判斷準則與注意事項',
+    annotatorGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    reviewerGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    annotatorGuidelineTextPlaceholder: '輸入提供給標記員的任務說明、判斷準則與注意事項',
+    reviewerGuidelineTextPlaceholder: '輸入提供給審核員的審核原則、退回條件與注意事項',
     forceToggleLabel: '開始標記前強制顯示',
     forceToggleDesc: '啟用後，標記員進入作業前必須先閱讀說明',
-    s3NoticeText: '先完成成員與抽樣方式，建立後可直接進入執行狀態。',
+    s3NoticeText: '完成任務建立後，再邀請標記員與審核員加入任務。',
     s4NoticeText: '此步驟為選填。不上傳說明，仍可完成任務建立。',
-    startupMemberTitle: '成員管理',
-    startupRunTitle: '抽樣方式',
-    memberSourceSystemTab: '平台使用者',
-    memberSourceInviteTab: 'Email 邀請',
-    memberSystemPlaceholder: '選擇使用者',
-    memberInvitePlaceholder: '輸入邀請 Email',
-    addMemberFromSystemBtnLabel: '加入',
-    sendInviteBtnLabel: '寄送邀請連結',
-    memberEmpty: '尚未加入任何成員',
-    samplingModePercentLabel: '百分比',
-    samplingModeCountLabel: '筆數',
-    samplingValueLabel: '試標抽樣值',
-    samplingHint: '百分比僅允許 1..99；筆數需 >= 1 且 < 資料集總筆數',
+    startupRunTitle: '抽樣設定',
+    samplingValueLabel: '每回合抽樣筆數',
+    samplingHint: '筆數需 >= 1 且 < 資料集總筆數',
     isolationToggleLabel: '資料隔離',
     isolationToggleDesc: '預設啟用，避免試標與正式標記資料混用',
-    memberRoleAnnotator: '標記員',
-    memberRoleReviewer: '審核員',
     s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     annotationPreviewLabel: '標記預覽',
@@ -1017,6 +1017,8 @@ var I18N = {
     leaveModalStay: '繼續編輯', leaveModalLeave: '離開',
     datasetPreviewTitle: '資料集預覽',
     datasetPreviewHint: '顯示前 10 筆・僅供確認用途',
+    datasetPreviewAriaLabel: '預覽資料集',
+    datasetRemoveAriaLabel: '移除檔案',
     errTaskName: '請輸入任務名稱', errTaskType: '請選擇任務類型',
     errDataset: '請上傳有效的資料集檔案',
     errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
@@ -1026,7 +1028,7 @@ var I18N = {
     errStartupMemberPickUser: '請先選擇一位平台使用者',
     errStartupMemberDuplicate: '此成員已在任務名單中',
     errStartupInviteEmail: '請輸入有效的 Email',
-    errStartupSampling: '請輸入有效抽樣值：百分比 1..99；筆數 >= 1 且 < 資料集總筆數',
+    errStartupSampling: '請輸入有效抽樣筆數：需 >= 1 且 < 資料集總筆數',
     toastInviteSent: '邀請連結已寄出，成員已加入待啟用名單',
     errCodeUnsaved: '請先儲存 Code 內容',
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
@@ -1045,35 +1047,32 @@ var I18N = {
     navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
     s1Label: 'Basic info', s2Label: 'Label config', s3Label: 'Startup settings', s4Label: 'Guidelines',
     s1CardTitle: 'Basic info', s2CardTitle: 'Label configuration', s3CardTitle: 'Startup settings', s4CardTitle: 'Annotation guidelines',
-    labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset', labelGuideline: 'Guideline content',
+    labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset',
     optTaskTypeDefault: 'Select task type',
     uploadZoneLabel: 'Click or drag to upload dataset',
     uploadZoneHint: 'TXT / CSV / TSV / JSON · max 200 MB · UTF-8 · up to 1,000,000 rows',
-    labelGuidelineUpload: 'Upload files',
-    guidelineUploadLabel: 'Upload files',
+    annotatorGuidelineSectionTitle: 'For annotators',
+    reviewerGuidelineSectionTitle: 'For reviewers',
+    labelAnnotatorGuideline: 'Annotation guideline content',
+    labelReviewerGuideline: 'Review guideline content',
+    labelAnnotatorGuidelineUpload: 'Upload files',
+    labelReviewerGuidelineUpload: 'Upload files',
+    annotatorGuidelineUploadLabel: 'Upload files',
+    reviewerGuidelineUploadLabel: 'Upload files',
     guidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
-    guidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+    annotatorGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    reviewerGuidelineUploadHint: 'PDF · PNG / JPG / JPEG / WEBP · Markdown',
+    annotatorGuidelineTextPlaceholder: 'Enter instructions, criteria, and cautions for annotators',
+    reviewerGuidelineTextPlaceholder: 'Enter review rules, rejection criteria, and cautions for reviewers',
     forceToggleLabel: 'Force display before annotation',
     forceToggleDesc: 'Annotators must read the guideline before starting work',
-    s3NoticeText: 'Complete members and sampling settings first so the task is execution-ready.',
+    s3NoticeText: 'Create the task first, then invite annotators and reviewers to join it.',
     s4NoticeText: 'This step is optional. You can create the task without uploading guidelines.',
-    startupMemberTitle: 'Member management',
     startupRunTitle: 'Sampling settings',
-    memberSourceSystemTab: 'Platform users',
-    memberSourceInviteTab: 'Email invite',
-    memberSystemPlaceholder: 'Select user',
-    memberInvitePlaceholder: 'Enter invitation email',
-    addMemberFromSystemBtnLabel: 'Add',
-    sendInviteBtnLabel: 'Send invite link',
-    memberEmpty: 'No members added yet',
-    samplingModePercentLabel: 'Percentage',
-    samplingModeCountLabel: 'Count',
-    samplingValueLabel: 'Draft sampling value',
-    samplingHint: 'Percentage must be 1..99; count must be >= 1 and < dataset_total',
+    samplingValueLabel: 'Sample count per round',
+    samplingHint: 'Count must be >= 1 and < total dataset rows',
     isolationToggleLabel: 'Data isolation',
     isolationToggleDesc: 'Enabled by default to prevent Dry/Official data mixing',
-    memberRoleAnnotator: 'Annotator',
-    memberRoleReviewer: 'Reviewer',
     s2TemplateSectionTitle: 'Start from template or upload config',
     uploadConfigBtn: 'Upload config (YAML / JSON)',
     annotationPreviewLabel: 'Annotation preview',
@@ -1121,6 +1120,8 @@ var I18N = {
     leaveModalStay: 'Keep editing', leaveModalLeave: 'Leave',
     datasetPreviewTitle: 'Dataset Preview',
     datasetPreviewHint: 'Showing first 10 rows — for verification only',
+    datasetPreviewAriaLabel: 'Preview dataset',
+    datasetRemoveAriaLabel: 'Remove file',
     errTaskName: 'Task name is required', errTaskType: 'Please select a task type',
     errDataset: 'Please upload a valid dataset file',
     errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
@@ -1130,7 +1131,7 @@ var I18N = {
     errStartupMemberPickUser: 'Please select a platform user first',
     errStartupMemberDuplicate: 'This member is already in the task member list',
     errStartupInviteEmail: 'Please enter a valid email',
-    errStartupSampling: 'Invalid sampling value: percent 1..99; count >= 1 and < dataset_total',
+    errStartupSampling: 'Invalid trial count: must be >= 1 and < total dataset rows',
     toastInviteSent: 'Invite link sent. Member added to pending list',
     errCodeUnsaved: 'Please save code changes before continuing',
     errCodeInvalid: 'Invalid code format. Please fix and save again',
@@ -1147,13 +1148,16 @@ var I18N = {
 /* ── State ───────────────────────────────────────────────────── */
 var state = {
   lang: 'zh', step: 1,
-  taskName: '', datasetFile: null, taskType: '',
+  taskName: '', datasetFiles: [], taskType: '',
   codeFormat: 'yaml', configData: {},
   memberSource: 'system',
   initialMembers: [],
-  runInit: { samplingMode: 'by_percentage', samplingValue: 20, isolationEnabled: true },
-  guidelineText: '',
-  guidelineFiles: [], forceGuideline: false,
+  runInit: { samplingMode: 'by_count', samplingValue: 100, isolationEnabled: true },
+  annotatorGuidelineText: '',
+  annotatorGuidelineFiles: [],
+  reviewerGuidelineText: '',
+  reviewerGuidelineFiles: [],
+  forceGuideline: false,
   codeDraftDirty: false,
   nerAdvancedOpen: false,
   isDirty: false, isSubmitting: false, leaveCallback: null,
@@ -1435,7 +1439,7 @@ function validateStep1(showErrors) {
     if (showErrors) showFieldError('errTaskType', true, t('errTaskType'));
     ok = false;
   } else { showFieldError('errTaskType', false); }
-  if (!state.datasetFile) {
+  if (!state.datasetFiles.length) {
     if (showErrors) showFieldError('errDataset', true, t('errDataset'));
     ok = false;
   } else { showFieldError('errDataset', false); }
@@ -1484,21 +1488,13 @@ function getDatasetTotalEstimate() {
   return 10000;
 }
 function validateStep3(showErrors) {
-  var hasAnnotator = state.initialMembers.some(function(member) { return member.role === 'annotator'; });
-  var mode = state.runInit.samplingMode;
   var val = Number(state.runInit.samplingValue);
   var total = getDatasetTotalEstimate();
-  var validSampling = false;
-  if (mode === 'by_percentage') {
-    validSampling = Number.isFinite(val) && val >= 1 && val <= 99;
-  } else {
-    validSampling = Number.isFinite(val) && val >= 1 && val < total;
-  }
+  var validSampling = Number.isFinite(val) && val >= 1 && val < total;
   if (showErrors) {
-    showFieldError('errStartupMembers', !hasAnnotator, t('errStartupMemberRequired'));
     showFieldError('errStartupRun', !validSampling, t('errStartupSampling'));
   }
-  return hasAnnotator && validSampling;
+  return validSampling;
 }
 function revalidateCurrentStep() {
   var btn = el('nextBtn');
@@ -2577,35 +2573,106 @@ function formatBytes(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-function setDatasetFile(file) {
-  var ALLOWED = ['.txt', '.csv', '.tsv', '.json'];
-  var name = file.name.toLowerCase();
-  var ext = name.slice(name.lastIndexOf('.'));
-  if (ALLOWED.indexOf(ext) === -1) {
-    showFieldError('errDataset', true, t('errDatasetFormat'));
-    el('datasetUploadZone').classList.add('error');
-    return;
+var DATASET_ALLOWED = ['.txt', '.csv', '.tsv', '.json'];
+
+function addDatasetFiles(files) {
+  var hadError = false;
+  Array.prototype.forEach.call(files, function(file) {
+    var name = file.name.toLowerCase();
+    var ext = name.slice(name.lastIndexOf('.'));
+    if (DATASET_ALLOWED.indexOf(ext) === -1) {
+      showFieldError('errDataset', true, t('errDatasetFormat'));
+      el('datasetUploadZone').classList.add('error');
+      hadError = true;
+      return;
+    }
+    if (file.size > 200 * 1048576) {
+      showFieldError('errDataset', true, t('errDatasetSize'));
+      el('datasetUploadZone').classList.add('error');
+      hadError = true;
+      return;
+    }
+    state.datasetFiles.push(file);
+    track('prototype_task_new_dataset_uploaded', { ext: ext, size: file.size });
+  });
+  if (!hadError) {
+    el('datasetUploadZone').classList.remove('error');
+    showFieldError('errDataset', false);
   }
-  if (file.size > 200 * 1048576) {
-    showFieldError('errDataset', true, t('errDatasetSize'));
-    el('datasetUploadZone').classList.add('error');
-    return;
-  }
-  state.datasetFile = file;
-  el('datasetUploadZone').classList.remove('error');
-  showFieldError('errDataset', false);
-  setText('datasetFileName', file.name);
-  setText('datasetFileSize', formatBytes(file.size));
-  el('datasetFilePreview').classList.remove('hidden');
+  renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
-  track('prototype_task_new_dataset_uploaded', { ext: ext, size: file.size });
 }
 
-function clearDatasetFile() {
-  state.datasetFile = null;
+function removeDatasetFile(idx) {
+  state.datasetFiles.splice(idx, 1);
   el('datasetFileInput').value = '';
-  el('datasetFilePreview').classList.add('hidden');
+  renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
+}
+
+function makeDatasetFileItem(file, idx) {
+  var item = document.createElement('div');
+  item.className = 'upload-file-preview';
+  item.style.marginTop = '8px';
+
+  var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('class', 'upload-file-icon');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('fill', 'none');
+  icon.setAttribute('stroke', 'currentColor');
+  icon.setAttribute('stroke-width', '2');
+  icon.setAttribute('stroke-linecap', 'round');
+  icon.setAttribute('stroke-linejoin', 'round');
+  icon.setAttribute('aria-hidden', 'true');
+  var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
+  var pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  pl.setAttribute('points', '14 2 14 8 20 8');
+  icon.appendChild(p); icon.appendChild(pl);
+  item.appendChild(icon);
+
+  var nameSpan = document.createElement('span');
+  nameSpan.className = 'upload-file-name';
+  nameSpan.textContent = file.name;
+  item.appendChild(nameSpan);
+
+  var sizeSpan = document.createElement('span');
+  sizeSpan.className = 'upload-file-size';
+  sizeSpan.textContent = formatBytes(file.size);
+  item.appendChild(sizeSpan);
+
+  var previewBtn = document.createElement('button');
+  previewBtn.type = 'button';
+  previewBtn.className = 'upload-file-preview-btn';
+  previewBtn.setAttribute('aria-label', t('datasetPreviewAriaLabel'));
+  previewBtn.setAttribute('title', t('datasetPreviewTitle'));
+  previewBtn.appendChild(makePreviewSvg());
+  previewBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    showDatasetPreviewModal();
+  });
+  item.appendChild(previewBtn);
+
+  var removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'upload-file-remove';
+  removeBtn.setAttribute('aria-label', t('datasetRemoveAriaLabel'));
+  removeBtn.appendChild(makeRemoveSvg());
+  removeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    removeDatasetFile(idx);
+  });
+  item.appendChild(removeBtn);
+
+  return item;
+}
+
+function renderDatasetFileList() {
+  var list = el('datasetFileList');
+  while (list.firstChild) list.removeChild(list.firstChild);
+  state.datasetFiles.forEach(function(file, idx) {
+    list.appendChild(makeDatasetFileItem(file, idx));
+  });
 }
 
 /* ── Dataset preview modal ───────────────────────────────────── */
@@ -2783,39 +2850,61 @@ function addMemberByInviteEmail() {
 }
 
 function syncRunInitFromControls() {
-  var modeNode = document.querySelector('input[name="samplingMode"]:checked');
-  state.runInit.samplingMode = modeNode ? modeNode.value : 'by_percentage';
+  state.runInit.samplingMode = 'by_count';
   state.runInit.samplingValue = Number(el('samplingValueInput').value || 0);
   state.runInit.isolationEnabled = !!el('isolationToggle').checked;
   showFieldError('errStartupRun', false);
+  renderSamplingBar();
   markDirty();
   revalidateCurrentStep();
 }
 
 function syncStep3SamplingControls() {
-  var modePercent = el('samplingModePercent');
-  var modeCount = el('samplingModeCount');
   var valueInput = el('samplingValueInput');
-  if (modePercent) modePercent.checked = state.runInit.samplingMode === 'by_percentage';
-  if (modeCount) modeCount.checked = state.runInit.samplingMode === 'by_count';
-  if (valueInput) {
-    valueInput.value = String(state.runInit.samplingValue);
-    valueInput.max = state.runInit.samplingMode === 'by_percentage' ? '99' : '';
-  }
+  if (valueInput) valueInput.value = String(state.runInit.samplingValue);
+  renderSamplingBar();
+}
+
+function renderSamplingBar() {
+  var total = getDatasetTotalEstimate();
+  var trial = Math.max(0, Math.min(Number(state.runInit.samplingValue) || 0, total - 1));
+  var official = total - trial;
+  var trialPct = total > 0 ? (trial / total * 100) : 0;
+  var trialBar = el('samplingBarTrial');
+  if (trialBar) trialBar.style.width = trialPct.toFixed(1) + '%';
+  var isZh = state.lang !== 'en';
+  var fmtTotal = isZh ? ('總筆數 ' + total + ' 筆') : ('Total: ' + total + ' rows');
+  var fmtTrial = isZh ? ('試標 ' + trial + ' 筆') : ('Trial: ' + trial + ' rows');
+  var fmtOfficial = isZh ? ('正式 ' + official + ' 筆') : ('Official: ' + official + ' rows');
+  var eTotal = el('samplingLegendTotal');
+  var eTrial = el('samplingLegendTrial');
+  var eOfficial = el('samplingLegendOfficial');
+  if (eTotal) eTotal.textContent = fmtTotal;
+  if (eTrial) eTrial.textContent = fmtTrial;
+  if (eOfficial) eOfficial.textContent = fmtOfficial;
 }
 
 /* ── Guideline upload (DOM-safe, no user data in innerHTML) ──── */
-function addGuidelineFiles(files) {
+function getGuidelineFilesStateKey(role) {
+  return role === 'reviewer' ? 'reviewerGuidelineFiles' : 'annotatorGuidelineFiles';
+}
+
+function getGuidelineListId(role) {
+  return role === 'reviewer' ? 'reviewerGuidelineList' : 'annotatorGuidelineList';
+}
+
+function addGuidelineFiles(role, files) {
   var ALLOWED_G = ['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.md'];
+  var filesKey = getGuidelineFilesStateKey(role);
   Array.prototype.forEach.call(files, function(file) {
     var name = file.name.toLowerCase();
     var ext = name.slice(name.lastIndexOf('.'));
     if (ALLOWED_G.indexOf(ext) === -1) { showToast(t('guidelineUploadHint'), 'error'); return; }
     var typeLabel = ext === '.pdf' ? 'PDF' : ext === '.md' ? 'Markdown' : 'Image';
-    state.guidelineFiles.push({ name: file.name, type: typeLabel, size: file.size });
-    renderGuidelineList();
+    state[filesKey].push({ name: file.name, type: typeLabel, size: file.size });
+    renderGuidelineList(role);
     markDirty();
-    track('prototype_task_new_guideline_uploaded', { type: typeLabel });
+    track('prototype_task_new_guideline_uploaded', { role: role, type: typeLabel });
   });
 }
 
@@ -2837,6 +2926,24 @@ function makeFileSvg() {
   return svg;
 }
 
+function makePreviewSvg() {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.width = '14px'; svg.style.height = '14px';
+  var ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  ellipse.setAttribute('cx', '12'); ellipse.setAttribute('cy', '12'); ellipse.setAttribute('rx', '10'); ellipse.setAttribute('ry', '6');
+  var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '3');
+  svg.appendChild(ellipse); svg.appendChild(circle);
+  return svg;
+}
+
 function makeRemoveSvg() {
   var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');
@@ -2855,11 +2962,12 @@ function makeRemoveSvg() {
   return svg;
 }
 
-function renderGuidelineList() {
-  var list = el('guidelineList');
+function renderGuidelineList(role) {
+  var list = el(getGuidelineListId(role));
+  var files = state[getGuidelineFilesStateKey(role)];
   while (list.firstChild) list.removeChild(list.firstChild);
 
-  state.guidelineFiles.forEach(function(gf, i) {
+  files.forEach(function(gf, i) {
     var item = document.createElement('div');
     item.className = 'guideline-item';
 
@@ -2883,8 +2991,8 @@ function renderGuidelineList() {
     rmBtn.appendChild(makeRemoveSvg());
     (function(idx) {
       rmBtn.addEventListener('click', function() {
-        state.guidelineFiles.splice(idx, 1);
-        renderGuidelineList();
+        files.splice(idx, 1);
+        renderGuidelineList(role);
         markDirty();
       });
     }(i));
@@ -2894,11 +3002,11 @@ function renderGuidelineList() {
 }
 
 function applyDefaultGuidelineFiles(taskType) {
-  if (!taskType || state.guidelineFiles.length > 0) return;
+  if (!taskType || state.annotatorGuidelineFiles.length > 0) return;
   var defaults = DEFAULT_GUIDELINE_FILES_BY_TASK_TYPE[taskType];
   if (!defaults || !defaults.length) return;
-  state.guidelineFiles = JSON.parse(JSON.stringify(defaults));
-  renderGuidelineList();
+  state.annotatorGuidelineFiles = JSON.parse(JSON.stringify(defaults));
+  renderGuidelineList('annotator');
 }
 
 /* ── Leave confirm ───────────────────────────────────────────── */
@@ -2950,8 +3058,8 @@ function onTaskTypeChange() {
     state.codeDraftDirty = false;
     var defs = SAMPLING_DEFAULTS_BY_TYPE[val];
     if (defs) {
-      state.runInit.samplingMode = 'by_percentage';
-      state.runInit.samplingValue = defs.trialPercent;
+      state.runInit.samplingMode = 'by_count';
+      state.runInit.samplingValue = Math.round(getDatasetTotalEstimate() * defs.trialPercent / 100);
     }
   }
   applyDefaultGuidelineFiles(state.taskType);
@@ -2968,10 +3076,15 @@ function applyLang(l) {
   var ids = [
     'pageTitle','pageSubtitle','s1CardTitle','s2CardTitle','s3CardTitle','s4CardTitle',
     'navDashboard','navTaskManagement','navAnnotation','navDataset','navAdmin','navProfile',
-    'labelTaskName','labelTaskType','labelDataset','labelGuideline','labelGuidelineUpload',
-    'uploadZoneLabel','uploadZoneHint','guidelineUploadLabel','guidelineUploadHint',
+    'labelTaskName','labelTaskType','labelDataset',
+    'uploadZoneLabel','uploadZoneHint',
+    'annotatorGuidelineSectionTitle','reviewerGuidelineSectionTitle',
+    'labelAnnotatorGuideline','labelReviewerGuideline',
+    'labelAnnotatorGuidelineUpload','labelReviewerGuidelineUpload',
+    'annotatorGuidelineUploadLabel','reviewerGuidelineUploadLabel',
+    'annotatorGuidelineUploadHint','reviewerGuidelineUploadHint',
     'forceToggleLabel','forceToggleDesc','s3NoticeText','s4NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
-    'startupMemberTitle','startupRunTitle','samplingModePercentLabel','samplingModeCountLabel','samplingValueLabel',
+    'startupRunTitle','samplingValueLabel',
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
   ];
@@ -2982,26 +3095,10 @@ function applyLang(l) {
   setText('datasetPreviewModalTitle', t('datasetPreviewTitle'));
   setText('datasetPreviewModalHint', t('datasetPreviewHint'));
   setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
-  el('guidelineTextInput').placeholder = t('guidelineTextPlaceholder');
-  setText('memberSourceSystemTab', t('memberSourceSystemTab'));
-  setText('memberSourceInviteTab', t('memberSourceInviteTab'));
-  el('memberInviteEmailInput').placeholder = t('memberInvitePlaceholder');
-  setText('addMemberFromSystemBtn', t('addMemberFromSystemBtnLabel'));
-  setText('sendInviteBtn', t('sendInviteBtnLabel'));
-  setText('memberEmpty', t('memberEmpty'));
-  var roleSel = el('memberRoleSelect');
-  if (roleSel && roleSel.options.length >= 2) {
-    roleSel.options[0].textContent = t('memberRoleAnnotator');
-    roleSel.options[1].textContent = t('memberRoleReviewer');
-  }
-  var inviteRoleSel = el('memberInviteRoleSelect');
-  if (inviteRoleSel && inviteRoleSel.options.length >= 2) {
-    inviteRoleSel.options[0].textContent = t('memberRoleAnnotator');
-    inviteRoleSel.options[1].textContent = t('memberRoleReviewer');
-  }
-  renderSystemUserSelect();
-  switchMemberSource(state.memberSource);
-  renderMemberList();
+  el('annotatorGuidelineTextInput').placeholder = t('annotatorGuidelineTextPlaceholder');
+  el('reviewerGuidelineTextInput').placeholder = t('reviewerGuidelineTextPlaceholder');
+  renderGuidelineList('annotator');
+  renderGuidelineList('reviewer');
 
   /* Task type options — safe: textContent only */
   var sel = el('taskTypeSelect');
@@ -3028,6 +3125,7 @@ function applyLang(l) {
     renderTemplateBtns();
     renderSchemaFields();
   }
+  renderSamplingBar();
 }
 
 function handleLangToggle(source) {
@@ -3062,52 +3160,32 @@ el('datasetUploadZone').addEventListener('click', function() { el('datasetFileIn
 el('datasetUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('datasetFileInput').click(); } });
 el('datasetUploadZone').addEventListener('dragover', function(e) { e.preventDefault(); el('datasetUploadZone').classList.add('dragover'); });
 el('datasetUploadZone').addEventListener('dragleave', function() { el('datasetUploadZone').classList.remove('dragover'); });
-el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(); el('datasetUploadZone').classList.remove('dragover'); if (e.dataTransfer.files[0]) setDatasetFile(e.dataTransfer.files[0]); });
-el('datasetFileInput').addEventListener('change', function() { if (this.files[0]) setDatasetFile(this.files[0]); });
-el('datasetRemoveBtn').addEventListener('click', function(e) { e.stopPropagation(); clearDatasetFile(); });
-el('datasetFilePreview').addEventListener('click', showDatasetPreviewModal);
+el('datasetUploadZone').addEventListener('drop', function(e) { e.preventDefault(); el('datasetUploadZone').classList.remove('dragover'); if (e.dataTransfer.files.length) addDatasetFiles(e.dataTransfer.files); });
+el('datasetFileInput').addEventListener('change', function() { if (this.files.length) { addDatasetFiles(this.files); this.value = ''; } });
 el('datasetPreviewCloseBtn').addEventListener('click', hideDatasetPreviewModal);
 el('datasetPreviewModal').addEventListener('click', function(e) { if (e.target === el('datasetPreviewModal')) hideDatasetPreviewModal(); });
 
-el('memberSourceSystemTab').addEventListener('click', function() { switchMemberSource('system'); });
-el('memberSourceInviteTab').addEventListener('click', function() { switchMemberSource('invite'); });
-el('addMemberFromSystemBtn').addEventListener('click', addMemberFromSystemUser);
-el('sendInviteBtn').addEventListener('click', addMemberByInviteEmail);
-el('memberInviteEmailInput').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    addMemberByInviteEmail();
-  }
-});
-el('memberRoleSelect').addEventListener('change', function() {
-  markDirty();
-});
-el('memberInviteRoleSelect').addEventListener('change', function() {
-  markDirty();
-});
-document.querySelectorAll('input[name="samplingMode"]').forEach(function(node) {
-  node.addEventListener('change', function() {
-    var mode = this.value;
-    var input = el('samplingValueInput');
-    if (mode === 'by_percentage') {
-      input.min = '1';
-      input.max = '99';
-      if (Number(input.value) > 99) input.value = '99';
-    } else {
-      input.min = '1';
-      input.removeAttribute('max');
-    }
-    syncRunInitFromControls();
-  });
-});
 el('samplingValueInput').addEventListener('input', syncRunInitFromControls);
 el('isolationToggle').addEventListener('change', syncRunInitFromControls);
 
-el('guidelineUploadZone').addEventListener('click', function() { el('guidelineFileInput').click(); });
-el('guidelineUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('guidelineFileInput').click(); } });
-el('guidelineFileInput').addEventListener('change', function() { if (this.files.length) addGuidelineFiles(this.files); });
-el('guidelineTextInput').addEventListener('input', function(e) {
-  state.guidelineText = e.target.value;
+el('annotatorGuidelineUploadZone').addEventListener('click', function() { el('annotatorGuidelineFileInput').click(); });
+el('annotatorGuidelineUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('annotatorGuidelineFileInput').click(); } });
+el('annotatorGuidelineFileInput').addEventListener('change', function() {
+  if (this.files.length) addGuidelineFiles('annotator', this.files);
+  this.value = '';
+});
+el('annotatorGuidelineTextInput').addEventListener('input', function(e) {
+  state.annotatorGuidelineText = e.target.value;
+  markDirty();
+});
+el('reviewerGuidelineUploadZone').addEventListener('click', function() { el('reviewerGuidelineFileInput').click(); });
+el('reviewerGuidelineUploadZone').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('reviewerGuidelineFileInput').click(); } });
+el('reviewerGuidelineFileInput').addEventListener('change', function() {
+  if (this.files.length) addGuidelineFiles('reviewer', this.files);
+  this.value = '';
+});
+el('reviewerGuidelineTextInput').addEventListener('input', function(e) {
+  state.reviewerGuidelineText = e.target.value;
   markDirty();
 });
 
@@ -3145,8 +3223,7 @@ el('nextBtn').addEventListener('click', function() {
     track('prototype_task_new_step_next', { from: 2 });
   } else if (state.step === 3) {
     if (!validateStep3(true)) {
-      if (!state.initialMembers.some(function(member) { return member.role === 'annotator'; })) showBannerError(t('errStartupMemberRequired'));
-      else showBannerError(t('errStartupSampling'));
+      showBannerError(t('errStartupSampling'));
       return;
     }
     showStep(4);

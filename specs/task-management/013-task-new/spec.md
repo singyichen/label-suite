@@ -2,7 +2,7 @@
 
 **功能分支**：`013-task-new`
 **建立日期**：2026-04-20
-**版本**：1.9.7
+**版本**：2.0.3
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
@@ -26,13 +26,12 @@
 - `DATASET_ENCODING = utf-8`
 - `GUIDELINE_FORMATS = pdf | image | markdown`
 - `GUIDELINE_IMAGE_FORMATS = png | jpg | jpeg | webp`
-- `RUN_INIT_SAMPLING_MODES = by_count | by_percentage`
-- `RUN_INIT_PERCENT_RANGE = 1..99`
+- `RUN_INIT_SAMPLING_MODE = by_count`
 - `RUN_INIT_COUNT_MIN = 1`
 - `RUN_ISOLATION_DEFAULT = enabled`
 - `SAMPLING_DEFAULTS_BY_TYPE` — 各任務類型的試標預設參數表（見下方）
 
-| 任務類型 | 建議 IAA | Std 上限 | 最少標記者數 | 試標抽樣比例 |
+| 任務類型 | 建議 IAA | Std 上限 | 最少標記者數 | 試標比例參數（用於換算預設筆數） |
 | --- | --- | --- | --- | --- |
 | `single_sentence_classification` | 0.75 | — | 3 | 12% |
 | `single_sentence_va_scoring` | 0.75 | 0.10 | 5 | 15% |
@@ -40,8 +39,8 @@
 | `relation_extraction` | 0.78 | — | 3 | 18% |
 | `sentence_pairs` | 0.76 | 0.15 | 3 | 12% |
 
-- `INITIAL_MEMBER_SOURCES = platform-users | email-invite`
-- `PLATFORM_MEMBER_ROLE_FILTER = system_role == user`
+> **注意**：`試標比例參數` 僅作為系統換算預設抽樣筆數之用（`round(dataset_total × trialPercent / 100)`），UI 不暴露百分比模式，使用者僅輸入筆數。
+
 - `IDEMPOTENCY_WINDOW_HOURS = 24`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
@@ -67,7 +66,7 @@ sequenceDiagram
     UI-->>U: 上方顯示標記預覽；下方左側顯示「範本/上傳設定檔 + schema 欄位」、右側顯示 YAML/JSON code 區
 
     U->>UI: 進入 Step 3（啟動設定）
-    U->>UI: 設定成員管理與抽樣方式（試標抽樣、資料隔離）
+    U->>UI: 設定試標抽樣筆數（含資料隔離）
 
     U->>UI: 進入 Step 4（標記說明）
     U->>UI: 上傳說明 / 設定是否強制顯示
@@ -76,7 +75,6 @@ sequenceDiagram
     UI->>API: 提交任務 payload（含 startup settings）
     API->>DB: 建立 Task
     API->>DB: 建立 task_membership (creator -> project_leader)
-    API->>DB: 建立初始任務成員（reviewer/annotator）
     API->>DB: 寫入初始執行設定（試標抽樣、資料隔離）
     DB-->>API: 建立成功
     API-->>UI: 回傳 task_id
@@ -88,9 +86,9 @@ sequenceDiagram
 | 1 | `user` / `super_admin` | 進入 `/task-new` | 顯示 Step 1 基本資料 |
 | 2 | `user` / `super_admin` | 選擇 `task_type` | 載入對應 schema 與 Step 2 設定介面 |
 | 3 | `user` / `super_admin` | 完成 Step 2 標記設定檔 | 產生可提交的 config |
-| 4 | `user` / `super_admin` | 完成 Step 3 啟動設定 | 記錄初始成員與抽樣方式設定 |
+| 4 | `user` / `super_admin` | 完成 Step 3 啟動設定 | 記錄初始抽樣方式設定 |
 | 5 | `user` / `super_admin` | 完成 Step 4 標記說明設定（可略過） | 記錄說明資產與強制顯示設定 |
-| 6 | `user` / `super_admin` | 建立任務 | 建立 task、creator 的 `project_leader` membership、初始成員、初始執行設定 |
+| 6 | `user` / `super_admin` | 建立任務 | 建立 task、creator 的 `project_leader` membership、初始執行設定 |
 | 7 | `user` / `super_admin` | 取消建立流程 | 導回 `/task-list` |
 
 ---
@@ -114,7 +112,7 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（顯示檔名/大小/格式）、`task_type` 下拉選單
+  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 下拉選單
 - Step 2：`標記設定檔`
   - 必要元素：task-type 模板入口、設定檔上傳入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
   - 畫面元素：上方預覽區、下方左側「範本/上傳設定檔」區塊 + schema 設定區、下方右側 code 區、欄位級錯誤訊息
@@ -125,36 +123,31 @@ sequenceDiagram
     - `relation_extraction`（Entity + Relation + Triple，可擴充五元組）
   - 延伸任務型別（第二層）：`sentence_pairs`（相似度 / 蘊含）
 - Step 3：`啟動設定`
-  - 必要元素：成員管理（至少可加入 `reviewer` / `annotator`）、抽樣方式（試標抽樣 + 資料隔離）
-  - 畫面元素：成員來源切換 tabs（`平台使用者` / `Email 邀請`）、目前成員清單、可加入成員名單、角色指派控制、抽樣模式切換（筆數/百分比）、抽樣數值輸入、資料隔離開關與說明
-  - 成員來源 A（`平台使用者`）：下拉選單只顯示可加入使用者（`PLATFORM_MEMBER_ROLE_FILTER`），placeholder 為「選擇使用者」
-  - 成員來源 B（`Email 邀請`）：輸入 email 並寄送邀請連結，邀請成功後加入初始成員清單（待啟用）
+  - 必要元素：試標抽樣筆數設定 + 資料隔離
+  - 畫面元素：提示文案（任務建立後再至 task-detail 邀請標記員與審核員）、`每回合抽樣筆數` 輸入、資料隔離開關與說明
 - Step 4：`標記說明`
-  - 必要元素：可直接編輯之說明內容區塊、上傳檔案區塊（PDF/圖片/Markdown）、`開始標記前強制顯示` 開關
-  - 畫面元素：說明內容 textarea、上傳列表（可移除）、強制顯示 toggle
+  - 必要元素：`標記員說明` 區塊、`審核員說明` 區塊、`開始標記前強制顯示` 開關
+  - 畫面元素：`標記說明內容` textarea、`審核說明內容` textarea、兩組各自獨立的多檔上傳列表（可移除）、強制顯示 toggle
 - 操作列：`上一步`、`下一步`、`取消`、`建立任務`
 
 **行為規則**：
 
 - 僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 並提交建立任務。
 - 未完成當前步驟必要欄位不得進入下一步。
-- Step 3 必須完成首次啟動設定（成員管理、抽樣方式）才可進入 Step 4。
+- Step 3 必須完成首次啟動設定（抽樣方式）才可進入 Step 4。
 - 建立成功前不得寫入正式任務資料。
 - 建立成功後導向 `task-detail`，L0 active 保持「任務管理」。
 
 **Prototype 互動規格（本版必做）**：
 
 - Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已選 `task_type`、dataset 檔案通過格式/大小/編碼檢查後 enabled。
-- Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可直接再次上傳取代目前檔案，並同時保留下方的成功檔案列。
+- Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可繼續追加多個資料集檔案；每個已上傳檔案在下方獨立一列顯示，各列含移除按鈕可單獨刪除；所有上傳檔案視為同一資料集的集合。
 - Step 2 `下一步` 按鈕預設 disabled；schema 必填欄位通過且無 parser/schema error 才 enabled。
 - Step 2 在 code 有未儲存變更時，`下一步` 必須維持 disabled 並提示先儲存；不得自動覆寫/自動儲存 code。
-- Step 3 `下一步` 按鈕預設 disabled；至少需有 1 位 `annotator` 且試標初始化設定通過驗證才 enabled。
-- Step 3 成員管理需支援 `INITIAL_MEMBER_SOURCES` 兩種來源，且來源切換不應清空已加入成員。
-- Step 3 成員管理需阻擋重複加入（同一 email 不得重複出現在初始成員清單）。
+- Step 3 `下一步` 按鈕預設 disabled；試標初始化設定通過驗證後才 enabled。
 - Step 4 的 `建立任務` 按鈕永遠可見；Step 4 為選填，未上傳說明也可提交。
 - 任一步驟點擊 `取消` 或離開頁面（側欄跳轉、重新整理、關閉分頁）時，若已有變更需顯示「離開將遺失未儲存內容」確認視窗。
 - 驗證錯誤顯示採欄位下方 inline message + 頁首 toast；訊息需指出欄位名稱與修正方向。
-- 在 `375px` viewport 下，Step 3 成員輸入列需採垂直堆疊（欄位與按鈕滿寬）以避免擁擠。
 
 ---
 
@@ -234,53 +227,50 @@ Step 2 必須由 `task_type registry` 與 schema 驅動，不得把任務類型�
 
 ### User Story 3 — 啟動設定前置於任務建立（優先級：P1）
 
-Project Leader 在建立任務時必須先完成啟動設定，包含成員管理與抽樣方式，確保任務建立後可直接進入可執行狀態。
+Project Leader 在建立任務時必須先完成啟動設定中的抽樣與資料隔離，成員邀請改於任務建立後在 task-detail 進行。
 
 **此優先級原因**：避免建立完成後仍缺關鍵啟動條件，造成任務狀態與操作入口割裂。  
-**獨立測試方式**：於 Step 3 完成成員與抽樣方式後建立任務，驗證任務詳情可直接讀取初始設定。
+**獨立測試方式**：於 Step 3 完成抽樣與資料隔離後建立任務，驗證任務詳情可直接讀取初始設定。
 
 **驗收情境**：
 
-1. **Given** 位於 Step 3，**When** 加入成員並指定任務角色，**Then** 建立後可在 task-detail member-management 看到相同初始成員。
-2. **Given** 位於 Step 3，**When** 設定試標抽樣（筆數或百分比）與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣方式設定。
-3. **Given** 位於 Step 3，**When** 未指派任何 `annotator` 或抽樣設定無效，**Then** 不可進入 Step 4 並顯示可修正錯誤訊息。
+1. **Given** 位於 Step 3，**When** 設定每回合抽樣筆數與資料隔離，**Then** 建立後可在 task-detail overview 看到一致的抽樣設定。
+2. **Given** 位於 Step 3，**When** 抽樣設定無效，**Then** 不可進入 Step 4 並顯示可修正錯誤訊息。
+3. **Given** 位於 Step 3，**When** 使用者查看啟動設定提示，**Then** 系統需明確說明成員邀請將在任務建立後於 task-detail 執行。
 
 **行為規則**：
 
-- Step 3 必須提供任務內成員指派功能（可加入 `reviewer`、`annotator`）。
-- 成員來源需支援：
-  - `platform-users`：來源為「使用者管理」名單，且僅限 `PLATFORM_MEMBER_ROLE_FILTER`。
-  - `email-invite`：輸入有效 email 後可寄送邀請連結，並加入初始成員清單。
-- `platform-users` 來源的「選擇使用者」下拉選單不得顯示 system role 文案（僅顯示使用者資訊）。
-- 已加入成員必須從 `platform-users` 可選名單中排除；移除成員後需重新可選。
-- `email-invite` 必須驗證 email 格式，格式錯誤需阻擋加入並顯示可修正訊息。
-- 任一來源皆需阻擋重複成員（同 email）。
-- Step 3 完成條件至少包含 1 位 `annotator` 為 `active`。
 - Step 3 必須提供試標初始化：
-  - 抽樣模式：`by_count` 或 `by_percentage`
-  - 抽樣驗證：百分比僅允許 `RUN_INIT_PERCENT_RANGE`；筆數需 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
-  - 百分比換算筆數採 `floor(total * percent / 100)`；若結果 `< 1` 必須阻擋前進
+  - 抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`），UI 僅暴露筆數輸入
+  - 抽樣驗證：筆數需 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
+  - 選定任務類型後，預設值由 `round(dataset_total × trialPercent / 100)` 自動帶入
+  - 欄位文案必須明確為 `每回合抽樣筆數`
+  - UI 不顯示抽樣分佈進度條，避免與 task-detail Overview「抽樣設定」的固定筆數模式不一致
 - Step 3 資料隔離開關預設 `RUN_ISOLATION_DEFAULT`。
-- Step 3 僅做首次初始化；後續調整由 `task-detail` 負責。
+- Step 3 僅做首次初始化；成員邀請與後續調整由 `task-detail` 負責。
 
 ---
 
 ### User Story 4 — 標記說明與強制顯示設定（優先級：P2）
 
-Project Leader 在建立任務時可設定標記說明資產，並決定 annotator 進入作業前是否強制顯示。
+Project Leader 在建立任務時可分別設定提供給標記員與審核員的說明資產，並決定 annotator 進入作業前是否強制顯示。
 
 **此優先級原因**：可降低任務啟動時的學習成本與操作錯誤。  
-**獨立測試方式**：上傳說明資產並啟用強制顯示，驗證設定儲存到任務並可供 annotation 模組使用。
+**獨立測試方式**：分別上傳標記員/審核員說明資產並啟用強制顯示，驗證設定儲存到任務並可供 annotation 模組使用。
 
 **驗收情境**：
 
-1. **Given** 位於 Step 4，**When** 上傳說明文件並完成建立，**Then** 任務保存對應說明資產。
+1. **Given** 位於 Step 4，**When** 分別填寫標記員或審核員說明並完成建立，**Then** 任務保存對應角色的說明內容與附件。
 2. **Given** 位於 Step 4，**When** 啟用 `開始標記前強制顯示`，**Then** 任務設定需紀錄此旗標供 annotation-workspace 讀取。
 
 **行為規則**：
 
-- Step 4 應提供可直接編輯的說明內容文字區塊（textarea），並可與上傳檔案並行使用。
+- Step 4 應提供兩組角色分流的說明設定：
+  - `標記員`：`標記說明內容` textarea + 獨立附件列表
+  - `審核員`：`審核說明內容` textarea + 獨立附件列表
+- 兩個角色區塊皆可單獨只填文字、只上傳檔案，或文字與檔案並行使用。
 - 支援 `GUIDELINE_FORMATS`，其中 `image` 僅允許 `GUIDELINE_IMAGE_FORMATS`；超出格式需阻擋並提示。
+- 兩個角色的附件上傳皆必須支援多檔。
 - Step 4 為選填，不填仍可建立任務。
 - 強制顯示設定預設為關閉。
 - 當任務啟用 `開始標記前強制顯示` 時，annotation-workspace 應在「同一使用者首次進入該任務標記介面」時顯示任務說明彈窗；後續同任務 page reload 或再次進入不應重複彈出（除非已讀狀態被重置）。
@@ -296,11 +286,8 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB`、非 `DATASET_ENCODING` 或超過 `DATASET_MAX_ROWS`：阻擋進下一步並顯示可定位錯誤。
 - 切換 `task_type` 後已填 Step 2 設定不相容：提示重置或轉換失敗欄位。
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
-- Step 3 未加入任何 `annotator`：阻擋進入 Step 4。
-- Step 3 `platform-users` 未選擇任何使用者即點擊加入：顯示錯誤並維持原狀。
-- Step 3 `email-invite` 輸入無效 email：阻擋寄送邀請連結並提示有效格式。
-- Step 3 嘗試加入已存在成員（同 email）：阻擋加入並顯示重複提示。
-- Step 3 抽樣輸入為 `0%`、`100%`、`0 筆`、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
+- Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
+- Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
 - `sequence_labeling.subtype = aspect_list` 且未設定必要欄位名稱、Aspect List 輸出欄位或驗證規則：阻擋進入 Step 3 並顯示可定位錯誤。
 - `sequence_labeling.subtype = aspect_list` 設定 `require_exact_match_in_sentence = true`，但預覽或 code 範例中的 aspect 無法在句子中找到完全一致片段：顯示 schema/preview 驗證提示，不得視為有效設定。
 - `task_type = sentence_pairs` 但缺少 `sentence_1_field` 或 `sentence_2_field`：阻擋進入 Step 3 並顯示可定位錯誤。
@@ -320,9 +307,9 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、資料集、`task_type`。
-- **FR-002a**：資料集上傳必須限制於 `DATASET_UPLOAD_FORMATS`，且符合 `DATASET_MAX_FILE_SIZE_MB`、`DATASET_MAX_ROWS`、`DATASET_ENCODING`。
-- **FR-002b**：資料集上傳成功後，已上傳檔案列須顯示眼睛圖示；點擊該列（× 移除按鈕除外）開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列），供使用者確認是否上傳正確資料集；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。
+- **FR-002a**：每個資料集檔案必須限制於 `DATASET_UPLOAD_FORMATS`，且各自符合 `DATASET_MAX_FILE_SIZE_MB`；不符合規格的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
+- **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-003**：Step 2 標記設定檔必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
 - **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 欄位。
@@ -351,32 +338,27 @@ Project Leader 在建立任務時可設定標記說明資產，並決定 annotat
 - **FR-003g**：Step 2 上方必須提供實際標記預覽區，顯示示例文本與可標記選項，且在設定變更時即時同步更新。
 - **FR-003h**：Step 2 必須支援上傳 `CONFIG_UPLOAD_FORMATS` 設定檔，載入至 code 區並由使用者手動儲存套用。
 - **FR-003i**：Step 2 預設模板需支援 i18n（至少 zh/en）；切換語言時，若使用中為預設 labels，需同步轉換為對應語言 labels。
-- **FR-004**：Step 3 必須支援啟動設定，包含成員管理與抽樣方式。
-- **FR-004a**：Step 3 必須允許加入任務成員並指派 `reviewer` 或 `annotator`。
-- **FR-004a-1**：Step 3 成員管理必須支援 `INITIAL_MEMBER_SOURCES` 兩種來源：`platform-users` 與 `email-invite`。
-- **FR-004a-2**：`platform-users` 來源必須只顯示符合 `PLATFORM_MEMBER_ROLE_FILTER` 的使用者，且已加入成員不可再次被選取。
-- **FR-004a-3**：`email-invite` 來源必須支援 email 格式驗證、寄送邀請連結與加入初始成員清單。
-- **FR-004a-4**：成員加入必須以 email 作為唯一鍵，阻擋重複成員。
-- **FR-004b**：Step 3 完成條件至少需包含 1 位 `active annotator`。
-- **FR-004c**：Step 3 必須提供試標初始化，支援 `RUN_INIT_SAMPLING_MODES`；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入。
-- **FR-004c-1**：選擇任務類型後，Step 3 的試標抽樣值必須自動預填為該類型的 `trialPercent`（百分比模式）、目標 IAA 與最少標記者數。
-- **FR-004d**：試標抽樣驗證必須明確：百分比 `RUN_INIT_PERCENT_RANGE`；筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
+- **FR-004**：Step 3 必須支援啟動設定，包含抽樣方式與資料隔離。
+- **FR-004a**：Step 3 不提供任務成員加入功能；介面必須明確提示使用者於任務建立後到 `task-detail` 進行成員邀請。
+- **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`。
+- **FR-004c-1**：選擇任務類型後，Step 3 的 `每回合抽樣筆數` 必須自動預填換算後的預設筆數。
+- **FR-004d**：試標抽樣驗證：筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
+- **FR-004d-1**：Step 3 抽樣設定欄位文案必須明確為 `每回合抽樣筆數`，且 UI 不提供抽樣分佈進度條或百分比分配視覺化。
 - **FR-004e**：Step 3 必須提供資料隔離開關，預設值為 `RUN_ISOLATION_DEFAULT`。
 - **FR-005**：Step 4 必須支援標記說明資產上傳與強制顯示設定。
 - **FR-005a**：Step 4 指南格式必須支援 `GUIDELINE_FORMATS`，其中 `image` 受限於 `GUIDELINE_IMAGE_FORMATS`。
-- **FR-005b**：Step 4 必須提供可直接編輯的說明內容欄位，且此欄位應可獨立於上傳檔案存在。
+- **FR-005b**：Step 4 必須提供 `標記說明內容` 與 `審核說明內容` 兩個可直接編輯的說明欄位，且各自皆可獨立於上傳檔案存在。
+- **FR-005b-1**：Step 4 必須提供兩組彼此獨立的附件上傳區塊：`標記員附件` 與 `審核員附件`；兩組皆支援多檔上傳、逐檔移除與各自獨立清單。
 - **FR-005c**：當 `force_guideline = true` 時，annotation-workspace 僅在同一使用者首次進入該任務時顯示說明彈窗；已確認閱讀後不得於每次 page load 重複顯示。
 - **FR-005d**：annotation-workspace 的「說明與檔案」面板中，點擊圖片檔案之 `預覽` 後，系統必須在檔案列表下方預覽區塊顯示該圖片。
 - **FR-006**：提交成功後，系統必須建立任務並導向 `/task-detail`。
 - **FR-006a**：任務建立成功時，系統必須自動建立一筆 `task_membership`，並將建立者設為 `project_leader`。
-- **FR-006b**：若 Step 3 已設定初始成員，系統必須一併建立對應 `task_membership`。
 - **FR-006c**：若 Step 3 已設定抽樣方式，系統必須於任務建立時一併保存。
 - **FR-006d**：建立任務 API 必須支援 `Idempotency-Key`；同一 key 在 `IDEMPOTENCY_WINDOW_HOURS` 內重送時回傳同一 `task_id`。
 - **FR-007**：取消建立流程時，系統必須導回 `/task-list` 且不寫入任務。
 - **FR-007a**：使用者在任一步驟已有未儲存變更時，離頁前必須顯示確認視窗（含取消建立、側欄跳頁、重新整理、關閉分頁）。
 - **FR-008**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成四步流程。
-- **FR-008a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 編輯與驗證、Step 3 成員與抽樣方式、Step 4 上傳或略過、建立成功導頁、取消返回。
-- **FR-008b**：在 `375px` 下，Step 3 成員輸入列必須採垂直堆疊與滿寬控制項，避免輸入框與按鈕擁擠或截斷。
+- **FR-008a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 編輯與驗證、Step 3 抽樣與資料隔離設定、Step 4 上傳或略過、建立成功導頁、取消返回。
 - **FR-008c**：在 mobile viewport 下，annotation-workspace 右側說明區塊收合後，主內容區必須維持單欄滿寬佈局，不得因收合狀態套用桌面欄位寬度造成跑版。
 - **FR-009**：任務型別模板需覆蓋研究生現行任務情境（MultiLabel、VA 雙維度評分、Aspect List 抽取 / 校正、Entity/Relation/Triple）。
 
@@ -412,14 +394,15 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`initial_members`、`run_init`、`guideline_assets`、`force_guideline`。
+- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **TaskTypeRegistryItem**：任務類型定義。欄位：`task_type`、`display_name`、`schema`、`default_templates`。
 - **TaskConfig**：schema 驗證後設定內容（供 annotation/dataset 模組使用）。
 - **SequenceLabelingTaskConfig**：`sequence_labeling` 專用設定。欄位：`subtype`（`ner` / `aspect_list`）、`schema`、`validation_rules`、`preview_sample`。
 - **AspectListTaskConfig**：`sequence_labeling.subtype = aspect_list` 專用設定。欄位：`input_field`、`aspect_list_field`、`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`min_aspects`、`max_aspects`、`require_sentiment_context_check`。
 - **SentencePairsTaskConfig**：`sentence_pairs` 專用設定。欄位：`pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`label_options[]?`、`score_min?`、`score_max?`、`score_step?`、`allow_unsure`、`note_enabled`。
-- **TaskMembership**：建立者自動加入的任務角色關係，及 Step 3 指派的初始成員關係。
-- **RunInitConfig**：首次啟動設定。欄位：`sampling_mode`、`sampling_value`、`isolation_enabled`。
+- **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
+- **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
+- **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 
 ---
 
@@ -437,7 +420,7 @@ flowchart LR
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| 014 | Task Detail | 建立成功後導向與初始任務資料（含成員與抽樣方式），並以初始成員作為 Dry Run 完成條件基準（所有 `active annotator` 完成各自全部試標樣本後才可進入 `waiting_iaa_confirmation`） |
+| 014 | Task Detail | 建立成功後導向與初始任務資料（含抽樣與資料隔離方式）；成員邀請改於 task-detail member-management 執行 |
 | 015 | Annotation Workspace | 讀取 task config 與標記說明設定；`sequence_labeling.subtype = aspect_list` 時需呈現句子校正、Aspect List 編輯控制項與 reviewer 直接修正 / diff 追溯；`sentence_pairs` 時需依 `pair_mode / response_format` 呈現句對介面與提交 payload |
 | 016 | Dataset Stats | 依 `task_type` 與 config 呈現統計 |
 | 017 | Dataset Quality | 依 `task_type` 與 config 計算品質指標，`sentence_pairs` 需依 `pair_mode / response_format` 分流 |
@@ -448,9 +431,9 @@ flowchart LR
 
 - **SC-001**：使用者可在同一流程完成 Step 1~4 並成功建立任務。
 - **SC-002**：任務建立成功後，自動建立 creator 的 `project_leader` membership。
-- **SC-002a**：Step 3 設定的初始成員可於建立後在 task-detail member-management 正確呈現。
 - **SC-002b**：Step 3 設定的抽樣方式可於建立後在 task-detail overview 正確呈現。
-- **SC-002c**：Step 3 可透過 `platform-users` 或 `email-invite` 兩種來源新增成員，建立後皆可在 task-detail 正確呈現。
+- **SC-002c**：Step 3 會明確提示成員邀請需於 task-detail 執行，建立後可在 member-management 看到對應入口。
+- **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
 - **SC-003**：Step 2 可依 registry/schema 產生設定介面，且 schema 設定區與 code 區內容一致。
 - **SC-003a**：Step 2 上方預覽可呈現接近實際標記介面，並可反映當前 labels/entities/scoring 設定。
 - **SC-003b**：Step 2 預覽可勾選標記選項；單選情境一次僅可勾選一個。
@@ -467,8 +450,7 @@ flowchart LR
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
 - **SC-004c**：上傳 `.yaml/.yml/.json` 設定檔後，code 區可載入內容並等待使用者手動儲存套用。
 - **SC-004d**：切換 zh/en 時，新增任務頁 sidebar 與 Step 2 預設模板 labels 皆可正確切換語系。
-- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 驗證、Step 3 成員與抽樣方式、Step 4 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
-- **SC-005a**：在 `375px` 下，Step 3 的 `email-invite` 成員輸入區不擁擠（欄位垂直排列且控制項可完整輸入/點擊）。
+- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 驗證、Step 3 抽樣與資料隔離設定、Step 4 上傳或略過、建立成功導頁、取消返回，且驗證錯誤可被清楚定位。
 - **SC-005b**：在 mobile viewport 中，即使 annotation-workspace 右側說明區塊為收合狀態，主內容區仍維持單欄滿寬顯示，且無水平擠壓或異常留白。
 - **SC-006**：非 `TASK_CREATOR_SYSTEM_ROLES` 不可建立任務；同一 `Idempotency-Key` 於 `IDEMPOTENCY_WINDOW_HOURS` 內重送不會重複建立任務。
 - **SC-006a**：啟用 `開始標記前強制顯示` 的任務中，同一使用者首次進入 annotation-workspace 會看到任務說明彈窗；完成確認後重新整理或再次進入不會重複彈出。
@@ -480,7 +462,10 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.9.7 | 2026-04-29 | 補齊 `sentence_pairs` task config 契約：新增 `pair_mode / response_format / sentence_1_field / sentence_2_field / label_options / score_*` 規格、Step 2 預覽與驗證規則，並同步下游 workspace / analysis 相依 |
+| 2.0.3 | 2026-05-08 | 同步最新 prototype：Step 3 移除成員管理，改為僅設定抽樣與資料隔離，並明確規範成員邀請改於 task-detail 執行；更新流程、FR、SC、edge cases 與跨規格依賴 |
+| 2.0.2 | 2026-05-08 | 同步新增任務最新原型：Step 3 文案改為「每回合抽樣筆數」並移除抽樣分佈進度條；Step 4 改為標記員/審核員雙角色說明內容與獨立多檔附件區塊；新增 `TaskGuidelineConfig` 與對應 FR/SC |
+| 2.0.1 | 2026-05-07 | Step 3 抽樣設定統一改為筆數模式：移除 `by_percentage`、`RUN_INIT_SAMPLING_MODES`、`RUN_INIT_PERCENT_RANGE`；`RunInitConfig` 移除 `sampling_mode` 欄位；抽樣比例參數改為僅供內部換算預設筆數；新增抽樣分佈進度條規格（FR-004d-1）；更新介面定義、行為規則、Edge Cases 與 SAMPLING_DEFAULTS_BY_TYPE 欄位說明 |
+| 2.0.0 | 2026-05-07 | 補齊 `sentence_pairs` task config 契約：新增 `pair_mode / response_format / sentence_1_field / sentence_2_field / label_options / score_*` 規格、Step 2 預覽與驗證規則，並同步下游 workspace / analysis 相依 |
 | 1.9.6 | 2026-04-29 | 補充 relation_extraction 細規：新增 FR-003d-9（schema 欄位：entity_types / relation_types / tuple_mode）、FR-003d-10（Step 2 預覽：實體類型按鈕、實體清單、關係建構器、Triple 清單）、SC-003g（驗收標準） |
 | 1.9.5 | 2026-04-29 | 統一 NER schema 與 task-detail：`sequence_labeling.subtype = ner` 改為核心設定 + 進階設定的漸進揭露；統一 key 為 `entities` / `scheme` / `allow_overlapping`，並保留進階欄位於收合區塊 |
 | 1.9.4 | 2026-04-28 | 同步 Aspect List reviewer 直接修正需求：Reviewer 可新增、刪除、修改標記員提交的 aspect，並保留原始提交與 correction diff |
@@ -507,3 +492,4 @@ flowchart LR
 | 1.7.0 | 2026-04-21 | 流程改為四步：新增 Step 3 啟動設定（成員管理 + Run 初始化），原標記說明改為 Step 4；同步更新流程圖、FR、SC、關鍵實體與導覽 |
 | 1.7.1 | 2026-04-21 | 同步用詞本地化：將 Step 3 相關描述由 Run/Draft/dataset_total/Dry Run/Official Run 改為「執行初始化／試標抽樣／資料集總筆數／試標與正式標記」 |
 | 1.8.0 | 2026-04-21 | 同步 Step 3 成員管理雙來源：新增 `platform-users`（僅 system role=user）與 `email-invite`（寄送邀請連結）規格；補充重複成員阻擋、email 驗證、mobile（375px）輸入列堆疊規則與對應 FR/SC |
+| 2.0.0 | 2026-05-07 | 資料集上傳改支援多檔：Step 1 upload zone 支援同時選取/拖曳多個資料集檔案；每個已上傳檔案獨立一列；各檔案可獨立移除；所有上傳檔案合併為一個資料集；更新 FR-002/FR-002a/FR-002b 與 Prototype 互動規格 |
