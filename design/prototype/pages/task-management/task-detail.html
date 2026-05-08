@@ -2784,6 +2784,7 @@
       memberSearchEmpty: '沒有符合條件、且尚未加入此任務的平台成員',
       errMemberInviteEmail: '請輸入有效的 Email',
       errMemberDuplicate: '此成員已在任務中或已寄出邀請',
+      errPermissionDenied: '您沒有執行此操作的權限',
       progressSummaryTitle: '整體進度摘要',
       progressStageDry: '試標',
       progressStageOfficial: '正式標記',
@@ -3225,6 +3226,7 @@
       memberSearchEmpty: 'No matching platform members are available to add',
       errMemberInviteEmail: 'Please enter a valid email',
       errMemberDuplicate: 'This member is already in the task or already invited',
+      errPermissionDenied: 'You do not have permission to perform this action',
       progressSummaryTitle: 'Progress summary',
       progressStageDry: 'Dry Run',
       progressStageOfficial: 'Official Run',
@@ -7641,6 +7643,10 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function inviteMemberByEmail() {
+    if (state.taskRole !== 'project_leader') {
+      showToast(t('errPermissionDenied'), true);
+      return;
+    }
     var input = document.getElementById('memberInviteEmailInput');
     var roleSelect = document.getElementById('memberInviteRoleSelect');
     if (!input || !roleSelect) return;
@@ -7708,6 +7714,13 @@ function getTaskTypeLabel(taskTypeKey) {
   function renderMemberManagement() {
     renderMemberTable();
     renderMemberSearchResults();
+    var isLeader = state.taskRole === 'project_leader';
+    var sendBtn = document.getElementById('memberInviteSendBtn');
+    if (sendBtn) sendBtn.disabled = !isLeader;
+    var emailInput = document.getElementById('memberInviteEmailInput');
+    if (emailInput) emailInput.disabled = !isLeader;
+    var roleSelect = document.getElementById('memberInviteRoleSelect');
+    if (roleSelect) roleSelect.disabled = !isLeader;
   }
 
   function getProgressStageData() {

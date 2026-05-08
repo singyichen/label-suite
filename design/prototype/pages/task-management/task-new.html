@@ -1017,6 +1017,8 @@ var I18N = {
     leaveModalStay: '繼續編輯', leaveModalLeave: '離開',
     datasetPreviewTitle: '資料集預覽',
     datasetPreviewHint: '顯示前 10 筆・僅供確認用途',
+    datasetPreviewAriaLabel: '預覽資料集',
+    datasetRemoveAriaLabel: '移除檔案',
     errTaskName: '請輸入任務名稱', errTaskType: '請選擇任務類型',
     errDataset: '請上傳有效的資料集檔案',
     errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
@@ -1118,6 +1120,8 @@ var I18N = {
     leaveModalStay: 'Keep editing', leaveModalLeave: 'Leave',
     datasetPreviewTitle: 'Dataset Preview',
     datasetPreviewHint: 'Showing first 10 rows — for verification only',
+    datasetPreviewAriaLabel: 'Preview dataset',
+    datasetRemoveAriaLabel: 'Remove file',
     errTaskName: 'Task name is required', errTaskType: 'Please select a task type',
     errDataset: 'Please upload a valid dataset file',
     errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
@@ -2640,9 +2644,9 @@ function makeDatasetFileItem(file, idx) {
   var previewBtn = document.createElement('button');
   previewBtn.type = 'button';
   previewBtn.className = 'upload-file-preview-btn';
-  previewBtn.setAttribute('aria-label', '預覽資料集');
-  previewBtn.setAttribute('title', '預覽');
-  previewBtn.textContent = '👁';
+  previewBtn.setAttribute('aria-label', t('datasetPreviewAriaLabel'));
+  previewBtn.setAttribute('title', t('datasetPreviewTitle'));
+  previewBtn.appendChild(makePreviewSvg());
   previewBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     showDatasetPreviewModal();
@@ -2652,8 +2656,8 @@ function makeDatasetFileItem(file, idx) {
   var removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'upload-file-remove';
-  removeBtn.setAttribute('aria-label', '移除檔案');
-  removeBtn.textContent = '✕';
+  removeBtn.setAttribute('aria-label', t('datasetRemoveAriaLabel'));
+  removeBtn.appendChild(makeRemoveSvg());
   removeBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     removeDatasetFile(idx);
@@ -2919,6 +2923,24 @@ function makeFileSvg() {
   var poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
   poly.setAttribute('points', '14 2 14 8 20 8');
   svg.appendChild(path); svg.appendChild(poly);
+  return svg;
+}
+
+function makePreviewSvg() {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.style.width = '14px'; svg.style.height = '14px';
+  var ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  ellipse.setAttribute('cx', '12'); ellipse.setAttribute('cy', '12'); ellipse.setAttribute('rx', '10'); ellipse.setAttribute('ry', '6');
+  var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '3');
+  svg.appendChild(ellipse); svg.appendChild(circle);
   return svg;
 }
 
