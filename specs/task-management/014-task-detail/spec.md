@@ -51,7 +51,7 @@ sequenceDiagram
     API->>DB: 查詢 task + membership
     DB-->>API: 回傳任務資料與角色
     Note over UI,API: 讀取 task-new 已建立的 creator membership 與初始抽樣/隔離設定
-    API-->>UI: 顯示 4 tabs（預設 overview）
+    API-->>UI: 顯示 5 tabs（預設 overview）
 
     PL->>UI: 在 member-management 以搜尋或 Email 邀請新增成員，並可移除/停用既有成員
     UI->>API: 更新 task_membership
@@ -165,7 +165,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 編輯入口：各區塊 `編輯` 按鈕；退出方式：各區塊 `儲存` / `取消`
     - 不在本版範圍：成員設定仍在 `member-management` tab，Overview 不提供成員異動
     - 非可編輯條件（非 `draft` 或非 `project_leader`）：顯示唯讀(隱藏編輯按鈕)與不可編輯原因提示
-- Tab B：`標記結果`
+- Tab D：`標記結果`
   - 區塊 1：`篩選列`
     - 篩選維度：標記階段（試標 / 正式標記）、提交狀態（全部 / 已提交 / 草稿 / 待處理）、標記員多選篩選
     - `project_leader` 與 `reviewer` 皆可使用全部篩選維度
@@ -224,7 +224,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
       - 匯出欄位顯示必須依 `task_type` 差異化；例如分類任務顯示 labels，VA 顯示 valence/arousal，NER 顯示 entities，Aspect List 顯示 aspects，Sentence Pairs 顯示 pair mode 與 label/score
   - 角色可見性：`project_leader` 與 `reviewer` 皆可存取，全部唯讀；`annotator` 無此 tab（已被擋在 `/task-detail` 外）
   - 空狀態：尚無任何標記提交時顯示「尚無標記結果」並提供引導文案，不得顯示空表格
-- Tab E：`成員管理`
+- Tab B：`成員管理`
   - 區塊 1：`目前成員清單`
     - 欄位：姓名、Email、任務角色、狀態（active/disabled/invited）、加入時間、最後活動時間、操作
     - 任務角色顯示：以有色標籤區隔（`reviewer` 與 `annotator` 使用不同色彩），樣式對齊 task-list「標記階段」badge 規格（輕量標籤尺寸與邊框）
@@ -254,7 +254,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - 區塊 3：`階段分段進度`
     - 呈現：`試標` 與 `正式標記` 分開進度條與統計，不可混算（英文介面對應 `Dry Run` / `Official Run`）
   - 空狀態：尚未開始標記時顯示「尚無進度資料」，並提供回到 `任務概覽` 的 CTA
-- Tab D：`工時紀錄`
+- Tab E：`工時紀錄`
   - 區塊 1：`工時篩選列`
     - 篩選：日期區間、標記階段（Annotation stage：Dry Run / Official Run）
     - `project_leader` 額外可用：成員篩選
@@ -438,7 +438,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-001**：系統必須提供 `/task-detail` 並以 `task_id` 建立任務上下文。
 - **FR-002**：僅 `project_leader` 與 `reviewer` 可進入 `/task-detail`。
 - **FR-002a**：無權限角色（含 `annotator`）造訪 `/task-detail` 時，系統必須導回 `TASK_DETAIL_UNAUTHORIZED_REDIRECT` 並顯示無權限提示。
-- **FR-003**：頁面必須提供五個 tabs：`overview`、`annotation-results`、`annotation-progress`、`work-log`、`member-management`，且預設為 `overview`。
+- **FR-003**：頁面必須提供五個 tabs：`overview`、`member-management`、`annotation-progress`、`annotation-results`、`work-log`，且預設為 `overview`。
 - **FR-004**：tab 切換必須為頁內行為，不觸發路由跳轉。
 - **FR-005**：`project_leader` 必須可於 `member-management` 執行成員新增、移除/停用；新加入時可指派角色。
 - **FR-005a**：`member-management` 必須先顯示任務既有成員（至少包含由 `task-new` 建立時帶入的 `project_leader` membership）；既有成員角色為唯讀，若需變更必須移除後重新加入。

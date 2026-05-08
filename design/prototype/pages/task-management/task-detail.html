@@ -2396,10 +2396,10 @@
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
-        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
-        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
-        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
         <button class="admin-tab" id="tabMemberManagement" type="button" role="tab" aria-selected="false">成員管理</button>
+        <button class="admin-tab" id="tabAnnotationProgress" type="button" role="tab" aria-selected="false">標記進度</button>
+        <button class="admin-tab" id="tabAnnotationResults" type="button" role="tab" aria-selected="false">標記結果</button>
+        <button class="admin-tab" id="tabWorkLog" type="button" role="tab" aria-selected="false">工時紀錄</button>
       </div>
 
       <div id="loadingSkeleton" class="skeleton-stack" aria-live="polite" aria-busy="true">
@@ -4313,7 +4313,7 @@
     if (!mount) return Promise.resolve(false);
     mount.innerHTML = '';
 
-    var order = ['overview', 'annotation-results', 'annotation-progress', 'work-log', 'member-management'];
+    var order = ['overview', 'member-management', 'annotation-progress', 'annotation-results', 'work-log'];
     return order.reduce(function(promise, tabName) {
       return promise.then(function() {
         return appendPanelPartial(TAB_PANEL_PATHS[tabName]);
