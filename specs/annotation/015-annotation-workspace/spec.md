@@ -2,7 +2,7 @@
 
 **功能分支**：`015-annotation-workspace`  
 **建立日期**：2026-04-23  
-**版本**：1.4.9  
+**版本**：1.4.10  
 **狀態**：Draft  
 **需求來源**：IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
 
@@ -26,6 +26,7 @@
 - `GUIDELINE_MODAL_BEHAVIOR = show-on-entry-per-page-load`
 - `GUIDELINE_PANEL_COLLAPSE = desktop-toggleable`
 - `SAMPLE_SOURCE_CONTRACT = sample_snapshot_id`
+- `ANNOTATION_LIST_SOURCE = materialized AnnotationListItem from task-detail run publish events`
 - `SUBMIT_DEFAULT_ACTION = go-to-next-sample`
 - `SUBMIT_ALL_DONE_ACTION = redirect-to-annotation-list`
 - `AUTOSAVE_TRIGGERS = on-sample-switch | on-save-click | heartbeat`
@@ -137,6 +138,9 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 - dashboard 任務列 `快速繼續/快速審核` 必須直接導向 `annotation-workspace`，不經 `annotation-list`。
 - navbar 進入標記作業時，仍以 `annotation-list` 為入口頁。
 - 清單與工作區間必須以 `task_id/sample_id/run_type/role/task_type` 建立明確導頁契約；當 `task_type = sequence_labeling` 時，若任務屬於 subtype-sensitive flow，還需保留 `sub_type`。
+- `annotation-list` 必須讀取 task-detail 在 run 發布事件中建立完成的 `AnnotationListItem`，不得以任務原始資料集全量即時計算或預先生出清單。
+- `run_type = dry_run` 時，`annotation-list` 只顯示指定 `trial_round` 已建立的試標清單；例如 R1 發布 10 筆時清單為 10 筆，R2 發布 10 筆時清單為該回合另一組 10 筆。
+- `run_type = official_run` 時，`annotation-list` 只顯示 `開始正式標記` 時建立的正式標記清單，筆數為扣除所有已建立試標回合後的剩餘樣本總數。
 - `annotation-workspace` 初始化時，若 query 含有效 `sample_id`，必須以該樣本作為當前作用中項目；不得回退到固定預設索引。
 - 「最新未完成 sample」判定規則：優先取最後一筆 `pending`，若無則取最後一筆 `saved`，若仍無則回退該任務最後一筆。
 - 返回清單時需還原同一 `task_id` / `run_type` 上下文，並保留捲動定位。
@@ -499,7 +503,7 @@ flowchart LR
 ### Key Entities *(必填)*
 
 - **TaskContext（Prototype）**: 任務上下文，至少包含 `task_id`、`role`、`run_type`、`task_type`。
-- **AnnotationListItem**: 清單中的單筆任務資料，包含 `sample_id`、完成狀態、鎖定狀態、摘要資訊。
+- **AnnotationListItem**: 清單中的單筆任務資料，由 task-detail run 發布事件建立；包含 `task_id`、`sample_id`、`run_type`、`trial_round?`、`sample_snapshot_id`、完成狀態、鎖定狀態、摘要資訊。任務建立時不得預先產生此資料。
 - **AnnotationListViewState**: 清單視圖狀態，包含篩選條件、排序、關鍵字、捲動位置。
 - **AnnotationRecord**: 標記結果資料，包含樣本識別、標記內容、狀態（draft/submitted）、操作者與時間戳。
 - **AspectListAnnotationRecord**: `sequence_labeling.subtype = aspect_list` 標記結果。欄位：`sample_id`、`original_sentence`、`corrected_sentence`、`aspects[]`、`validation_status`、`note`、`version`、`status`、`annotator_id`、`submitted_at`。
@@ -562,6 +566,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.4.10 | 2026-05-10 | Clarified annotation-list data source: list items are materialized only by task-detail run publish events; dry run lists show the current trial round item count, while official run lists show the remaining samples created when official labeling starts |
 | 1.4.9 | 2026-05-06 | Synced annotation-list footer pagination with prototype: both annotator and reviewer list views now require task-list-style pagination (total/page info, page-size switcher, prev/next, numbered pages), plus reset-to-page-1 behavior after filter/search changes |
 | 1.4.7 | 2026-05-06 | Synced reviewer annotation-list relation extraction stats with prototype: `relation_extraction` distribution summary now renders one relation/triple per line in monospace text instead of compressing multiple metrics into a single ` · `-joined line |
 | 1.4.6 | 2026-05-06 | Synced Aspect List reviewer correction UI with prototype: removed inline add/delete/edit audit copy from the review card, clarified that reviewer-added rows are distinguished by simple highlight color, and kept correction diff retention in payload/history only |

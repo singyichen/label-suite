@@ -3480,7 +3480,42 @@
       guidelineText: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
       guidelineFiles: [{ name: 'VA_emj.png', type: 'png' }],
       forceGuideline: true,
-      status: 'draft',
+      status: 'waiting_iaa_confirmation',
+      samplingMode: 'by_count',
+      samplingValue: 10,
+      iaaMethod: 'krippendorff_alpha_nominal',
+      trialRound: 2,
+      targetAgreement: 0.8,
+      currentAgreement: 0.81,
+      minAnnotators: 3,
+      currentAnnotators: 3,
+      currentStd: 0.08,
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 10,
+          agreement: 0.68,
+          annotators: 3,
+          std: 0.15,
+          result: 'failed',
+          usedSamples: 10,
+          date: '2026-05-01',
+          noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
+          noteEn: 'Round 1 showed large disagreement on borderline sentiment cases and did not pass.'
+        },
+        {
+          round: 2,
+          sampleCount: 10,
+          agreement: 0.81,
+          annotators: 3,
+          std: 0.08,
+          result: 'passed',
+          usedSamples: 10,
+          date: '2026-05-03',
+          noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
+          noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
+        }
+      ],
     },
     T003: {
       taskId: 'T003',
@@ -3561,6 +3596,135 @@
       guidelineFiles: [{ name: 'ner_guidelines.pdf', type: 'pdf' }],
       forceGuideline: true,
       status: 'draft',
+    },
+    T007: {
+      taskId: 'T007',
+      taskNameZh: '商品評論分類 v2',
+      taskNameEn: 'Product Review Classification v2',
+      taskTypeKey: 'single_sentence_classification',
+      datasetTotal: 1750,
+      datasetSourceZh: 'product_review_classification_v2.csv',
+      datasetSourceEn: 'product_review_classification_v2.csv',
+      datasetSizeBytes: 462,
+      configVersion: 'cfg-t007-v2.0.0',
+      configFileName: '',
+      configContent: 'labels:\n  - 好評\n  - 普通\n  - 差評\nallow_multiple: false',
+      guidelineUploaded: true,
+      guidelineTextZh: '依商品評論整體語氣標記好評、普通或差評。',
+      guidelineTextEn: 'Classify each product review as positive, neutral, or negative.',
+      guidelineText: '依商品評論整體語氣標記好評、普通或差評。',
+      guidelineFiles: [{ name: 'product_review_taxonomy.pdf', type: 'pdf' }],
+      forceGuideline: true,
+      status: 'official_run_in_progress',
+      samplingMode: 'by_count',
+      samplingValue: 10,
+      iaaMethod: 'krippendorff_alpha_nominal',
+      trialRound: 1,
+      targetAgreement: 0.8,
+      currentAgreement: 0.84,
+      minAnnotators: 3,
+      currentAnnotators: 3,
+      currentStd: 0.06,
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 10,
+          agreement: 0.84,
+          annotators: 3,
+          std: 0.06,
+          result: 'passed',
+          usedSamples: 10,
+          date: '2026-04-24',
+          noteZh: '商品評論分類試標已達標，已進入正式標記。',
+          noteEn: 'The product review classification trial passed and moved to official work.'
+        }
+      ],
+    },
+    T009: {
+      taskId: 'T009',
+      taskNameZh: '對話意圖標記',
+      taskNameEn: 'Dialogue Intent Labeling',
+      taskTypeKey: 'single_sentence_classification',
+      datasetTotal: 640,
+      datasetSourceZh: 'dialogue_intent_v1.csv',
+      datasetSourceEn: 'dialogue_intent_v1.csv',
+      datasetSizeBytes: 318,
+      configVersion: 'cfg-t009-v1.1.0',
+      configFileName: '',
+      configContent: 'labels:\n  - 查詢\n  - 申請\n  - 取消\n  - 客訴\nallow_multiple: false',
+      guidelineUploaded: true,
+      guidelineTextZh: '根據使用者訊息判斷主要對話意圖。',
+      guidelineTextEn: 'Label the primary intent of each user message.',
+      guidelineText: '根據使用者訊息判斷主要對話意圖。',
+      guidelineFiles: [{ name: 'dialogue_intent_guide.pdf', type: 'pdf' }],
+      forceGuideline: false,
+      status: 'dry_run_in_progress',
+      samplingMode: 'by_count',
+      samplingValue: 10,
+      iaaMethod: 'krippendorff_alpha_nominal',
+      trialRound: 1,
+      targetAgreement: 0.8,
+      currentAgreement: 0.62,
+      minAnnotators: 3,
+      currentAnnotators: 3,
+      currentStd: 0.18,
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 10,
+          agreement: 0.62,
+          annotators: 3,
+          std: 0.18,
+          result: 'failed',
+          usedSamples: 10,
+          date: '2026-04-23',
+          noteZh: '第一回合意圖邊界仍不一致，需新增 R2 試標回合。',
+          noteEn: 'Round 1 did not align on intent boundaries, so R2 is needed.'
+        }
+      ],
+    },
+    T010: {
+      taskId: 'T010',
+      taskNameZh: '醫療文本 NER',
+      taskNameEn: 'Medical NER',
+      taskTypeKey: 'sequence_labeling',
+      datasetTotal: 1800,
+      datasetSourceZh: 'medical_ner_corpus.csv',
+      datasetSourceEn: 'medical_ner_corpus.csv',
+      datasetSizeBytes: 912,
+      configVersion: 'cfg-t010-v1.6.0',
+      configFileName: '',
+      configContent: 'subtype: ner\nentities:\n  - name: DRUG\n    color: "#6366F1"\n  - name: DISEASE\n    color: "#10B981"\n  - name: SYMPTOM\n    color: "#F59E0B"\nscheme: IOB2\nallow_overlapping: false',
+      guidelineUploaded: true,
+      guidelineTextZh: '標記醫療文本中的藥物、疾病與症狀實體。',
+      guidelineTextEn: 'Mark drug, disease, and symptom entities in medical text.',
+      guidelineText: '標記醫療文本中的藥物、疾病與症狀實體。',
+      guidelineFiles: [{ name: 'medical_ner_guidelines.pdf', type: 'pdf' }],
+      forceGuideline: true,
+      status: 'completed',
+      samplingMode: 'by_count',
+      samplingValue: 10,
+      iaaMethod: 'pairwise_f1_strict',
+      trialRound: 1,
+      targetAgreement: 0.82,
+      currentAgreement: 0.87,
+      minAnnotators: 3,
+      currentAnnotators: 3,
+      currentStd: 0.04,
+      trialRounds: [
+        {
+          round: 1,
+          sampleCount: 10,
+          agreement: 0.87,
+          annotators: 3,
+          std: 0.04,
+          result: 'passed',
+          usedSamples: 10,
+          date: '2026-04-25',
+          noteZh: '醫療 NER 試標已達標，正式標記已完成。',
+          noteEn: 'The medical NER trial passed and the official work is complete.'
+        }
+      ],
     },
   };
 
@@ -4335,10 +4499,32 @@ function interpolate(template, payload) {
     return JSON.parse(JSON.stringify(data));
   }
 
+  function resetRunProgressData() {
+    TASK_DATA.trialRound = 0;
+    TASK_DATA.currentAgreement = 0;
+    TASK_DATA.currentAnnotators = 0;
+    TASK_DATA.currentStd = 0;
+    TASK_DATA.trialRounds = [];
+  }
+
+  function normalizeTaskRunState() {
+    if (TASK_DATA.status === 'draft') {
+      resetRunProgressData();
+      return;
+    }
+    if (!Array.isArray(TASK_DATA.trialRounds)) {
+      TASK_DATA.trialRounds = [];
+    }
+  }
+
   function resetTaskData(taskId) {
     TASK_DATA = cloneData(DEFAULT_TASK_DATA);
     if (taskId && TASK_PROFILE_MAP[taskId]) {
-      Object.assign(TASK_DATA, cloneData(TASK_PROFILE_MAP[taskId]));
+      var taskProfile = cloneData(TASK_PROFILE_MAP[taskId]);
+      Object.assign(TASK_DATA, taskProfile);
+      if (!Object.prototype.hasOwnProperty.call(taskProfile, 'trialRounds')) {
+        resetRunProgressData();
+      }
     } else if (taskId) {
       TASK_DATA.taskId = taskId;
     }
@@ -4360,6 +4546,7 @@ function interpolate(template, payload) {
     }
     applySamplingDefaultsToTaskData();
     if (urlStatus && STATUS_ORDER.indexOf(urlStatus) >= 0) TASK_DATA.status = urlStatus;
+    normalizeTaskRunState();
 
     if (state.taskRole === 'annotator') {
       if (window.LabelSuiteAnalytics) {

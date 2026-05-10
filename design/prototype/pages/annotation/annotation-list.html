@@ -682,6 +682,21 @@
     sentence_pairs: { text: '句對任務（相似度 / 蘊含）', badgeClass: 'badge-task-type-pairs' }
   };
 
+  var MATERIALIZED_RUN_CONTEXT = {
+    'TASK-015-A1': { round: null, total: 3180 },
+    'TASK-015-A2': { round: 2, total: 10 },
+    'TASK-015-A3': { round: null, total: 840 },
+    'TASK-015-A4': { round: null, total: 1400 },
+    'TASK-015-A5': { round: 1, total: 10 },
+    'TASK-015-A6': { round: null, total: 930 },
+    'TASK-015-R1': { round: null, total: 3180 },
+    'TASK-015-R2': { round: 2, total: 10 },
+    'TASK-015-R3': { round: null, total: 840 },
+    'TASK-015-R4': { round: null, total: 1400 },
+    'TASK-015-R5': { round: 1, total: 10 },
+    'TASK-015-R6': { round: null, total: 930 }
+  };
+
   var TASKS_BY_ROLE = {
     annotator: [
       {
@@ -1561,6 +1576,22 @@
     return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
   }
 
+  function getMaterializedRunContext(task) {
+    var meta = MATERIALIZED_RUN_CONTEXT[task.taskId] || {};
+    var total = Number(meta.total) || (Array.isArray(task.samples) ? task.samples.length : 0);
+    if (task.runType === 'dry_run') {
+      var round = Number(meta.round) || 1;
+      return {
+        label: CURRENT_LANG === 'en' ? ('Trial round R' + round) : ('試標回合 R' + round),
+        countLabel: CURRENT_LANG === 'en' ? ('This round list: ' + total + ' items') : ('本回合清單 ' + total + ' 筆')
+      };
+    }
+    return {
+      label: CURRENT_LANG === 'en' ? 'Official annotation list' : '正式標記清單',
+      countLabel: CURRENT_LANG === 'en' ? ('Official list: ' + total + ' items') : ('正式清單 ' + total + ' 筆')
+    };
+  }
+
   function taskTypeBadgeClass(taskType) {
     return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
   }
@@ -1607,7 +1638,8 @@
     var statusClass = task.dashboardStatusClass || 'badge-info';
 
     title.textContent = task.title;
-    detail.textContent = task.dashboardDetail || '-';
+    var runContext = getMaterializedRunContext(task);
+    detail.textContent = [task.dashboardDetail || '-', runContext.label, runContext.countLabel].filter(Boolean).join(' · ');
     taskType.textContent = task.dashboardTaskTypeText || (TASK_TYPE_META[task.taskType] && TASK_TYPE_META[task.taskType].text) || task.taskType;
     taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
     runType.textContent = runTypeLabel(task.runType);

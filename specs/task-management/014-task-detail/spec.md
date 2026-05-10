@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.7.3
+**版本**：1.7.4
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -29,6 +29,7 @@
 - `IAA_METHOD_ENUM = krippendorff_alpha_nominal | cohens_kappa | fleiss_kappa | icc | pairwise_f1_strict | pairwise_f1_partial | pairwise_triple_f1`
 - `IAA_METHOD_DEFAULTS = krippendorff_alpha_nominal:0.80 | cohens_kappa:0.80 | fleiss_kappa:0.80 | icc:0.75 | pairwise_f1_strict:0.80 | pairwise_f1_partial:0.70 | pairwise_triple_f1:0.75`
 - `SAMPLE_SNAPSHOT_LOCK_EVENT = publish_dry_run`
+- `ANNOTATION_LIST_MATERIALIZATION_EVENTS = add_trial_round | start_official_run`
 - `OVERVIEW_EDITABLE_STATUS = draft`
 - `OVERVIEW_EDITABLE_ROLE = project_leader`
 - `OVERVIEW_EDITABLE_FIELDS = task_name | task_type | dataset | config | config_file_name | sampling_value | iaa_method | target_agreement | min_annotators | isolation_enabled | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
@@ -62,6 +63,7 @@ sequenceDiagram
     PL->>UI: 開始試標回合
     UI->>API: 驗證抽樣設定 + 建立 sample snapshot
     API->>DB: 鎖定 dry_sample_ids / official_reserve_ids
+    API->>DB: 建立該回合 AnnotationListItem（筆數 = sampling_value）
     DB-->>API: 成功
     UI->>API: 變更任務狀態
     API->>DB: draft -> dry_run_in_progress
@@ -75,7 +77,8 @@ sequenceDiagram
     API-->>UI: 顯示待確認狀態
 
     PL->>UI: 開始正式標記
-    UI->>API: 變更任務狀態
+    UI->>API: 建立 official run 標記清單 + 變更任務狀態
+    API->>DB: 以 official_reserve_ids 建立 AnnotationListItem
     API->>DB: waiting_iaa_confirmation -> official_run_in_progress
     DB-->>API: 成功
     API-->>UI: 更新狀態
@@ -384,6 +387,9 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - 系統必須保證 Official Run 至少保留 1 筆資料（即 `sampling_value < dataset_total`）。
 - Official Run 預設使用「扣除 Draft Run 後的剩餘資料」作為正式標記資料集。
 - 系統需在 `SAMPLE_SNAPSHOT_LOCK_EVENT` 產生不可變 `sample_snapshot_id`，凍結 Dry/Official 資料切分。
+- 任務建立成功時只建立任務資料、設定、creator membership 與初始抽樣/隔離設定，不得建立 `AnnotationListItem` 或標記 assignment。
+- 每次點擊 `新增試標回合 R{n}` 並成功發布時，系統才為該回合建立標記清單資料；清單筆數必須等於當下 `sampling_value`。例如 `R1 = 10 筆` 只建立 10 筆試標清單，`R2 = 10 筆` 再建立另一組 10 筆試標清單。
+- 點擊 `開始正式標記` 並成功發布時，系統才以尚未進入任何試標回合的剩餘樣本建立正式標記清單；清單筆數必須等於 `dataset_total - 已用試標總筆數`。
 - 匯出請求必須指定標記階段（Annotation stage：Dry Run / Official Run）；啟用資料隔離時必須保證 Dry/Official 資料不混用。
 - 匯出檔案 metadata 必須包含：`run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`。
 - 匯出格式規劃需參考 Label Studio 的兩層定位：`JSON` 保留完整結構，`JSON-MIN` 提供扁平化結果列；但最終 schema 必須對齊 Label Suite 的 task / sample / annotation / review domain model。
@@ -459,6 +465,9 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010d**：試標抽樣輸入驗證規則：筆數 `>= 1` 且 `< 資料集總筆數`，不符時阻擋發布並顯示可修正提示。
 - **FR-010e**：系統必須保證 Official Run 至少保留 1 筆資料（即 `sampling_value < dataset_total`）。
 - **FR-010f**：系統必須在發布 Dry Run 時建立不可變 `sample_snapshot_id`，並凍結 Dry/Official 對應資料 id 清單。
+- **FR-010f-1**：任務建立時不得預先建立標記清單資料；系統必須只在 `ANNOTATION_LIST_MATERIALIZATION_EVENTS` 發生時建立對應 `AnnotationListItem` / assignment。
+- **FR-010f-2**：每次 `新增試標回合 R{n}` 成功時，系統必須建立該回合獨立的試標清單，筆數等於 `sampling_value`，且不得重用前一回合已建立的清單資料。
+- **FR-010f-3**：`開始正式標記` 成功時，系統必須以扣除所有已建立試標回合後的剩餘樣本建立正式標記清單，筆數等於 `dataset_total - sum(trial_round.sampling_value)`。
 - **FR-010h**：Overview 必須顯示資料隔離狀態（`已隔離`/`未隔離`）與最後變更資訊。
 - **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`。
 - **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。
@@ -564,6 +573,7 @@ flowchart LR
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`iaa_method`、`trial_round`、`target_agreement`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
+- **AnnotationListMaterialization**：標記清單建立事件。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`sample_snapshot_id`、`source_sample_ids_ref`、`item_count`、`created_by`、`created_at`。`dry_run` 的 `item_count = sampling_value`；`official_run` 的 `item_count = dataset_total - 已用試標總筆數`。
 - **IsolationAuditLog**：資料隔離設定審計。欄位：`task_id`、`from_isolation_enabled`、`to_isolation_enabled`、`changed_by`、`changed_at`、`reason`。
 
 ---
@@ -637,6 +647,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.4 | 2026-05-10 | 明確規範標記清單資料建立時機：任務建立時不得預建清單；每次 `新增試標回合 R{n}` 才建立該回合 `sampling_value` 筆試標清單；`開始正式標記` 時才以剩餘樣本建立正式標記清單 |
 | 1.7.3 | 2026-05-08 | 同步 member-management 最新 prototype：移除「可加入成員名單」，改為「搜尋平台成員 + Email 邀請」雙入口；新增 `invited` 狀態、搜尋前不得預載平台成員資料的隱私限制，以及 idle / search / invite 流程對應 FR/SC |
 | 1.7.2 | 2026-05-08 | 同步 `013-task-new` 最新說明結構：Overview「說明文件上傳」改為標記員/審核員雙角色區塊；`OVERVIEW_EDITABLE_FIELDS`、關鍵實體與成功標準同步改為分離的 guideline text / assets 欄位 |
 | 1.7.1 | 2026-05-07 | 同步任務狀態與執行控制 UI 精簡：stage flow 明確維持 `draft → 試標階段 → 正式標記中 → 已完成`；樣本池分配改為依回合動態分色並逐一顯示 `R1 / R2 / 正式` 圖例；試標回合歷程日期改為單行且移除 R1/R2 間垂直連接線；移除 stage banner 的 `已用回合 / 正式池` meta pills 與達標條件下方的 `草稿 / 已隔離` badges；同步更新 FR-010p、FR-010p-1、SC-019 與 Prototype 互動規格 |

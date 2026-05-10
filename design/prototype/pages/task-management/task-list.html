@@ -249,6 +249,7 @@
     .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     .badge-run-dry         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
     .badge-run-official    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
 
     /* ── Pagination ──────────────────────────────────────────── */
     .pagination {
@@ -488,6 +489,7 @@
       ],
       runTypeOptions: [
         { value: '', label: '全部標記階段' },
+        { value: 'unmaterialized', label: '未建立清單' },
         { value: 'dry_run', label: '試標' },
         { value: 'official_run', label: '正式標記' },
       ],
@@ -517,7 +519,7 @@
         waiting_iaa_confirmation: '待 IAA 確認',
         official_run_in_progress: '正式標記中', completed: '已完成',
       },
-      runBadge: { dry_run: '試標', official_run: '正式標記' },
+      runBadge: { unmaterialized: '未建立清單', dry_run: '試標', official_run: '正式標記' },
       taskTypeLabel: {
         single_sentence_classification: '單句分類（含多標籤）',
         single_sentence_va_scoring: '單句 VA 雙維度評分（Valence / Arousal）',
@@ -555,6 +557,7 @@
       ],
       runTypeOptions: [
         { value: '', label: 'All annotation stages' },
+        { value: 'unmaterialized', label: 'No list yet' },
         { value: 'dry_run', label: 'Dry Run' },
         { value: 'official_run', label: 'Official' },
       ],
@@ -584,7 +587,7 @@
         waiting_iaa_confirmation: 'Pending IAA',
         official_run_in_progress: 'Official Run', completed: 'Completed',
       },
-      runBadge: { dry_run: 'Dry Run', official_run: 'Official' },
+      runBadge: { unmaterialized: 'No list yet', dry_run: 'Dry Run', official_run: 'Official' },
       taskTypeLabel: {
         single_sentence_classification: 'Single Sentence Classification (Multi-label)',
         single_sentence_va_scoring: 'Single-sentence VA Scoring (Valence / Arousal)',
@@ -599,7 +602,7 @@
   var TASKS = [];
   var CREATED_TASKS_SEED = [
     { id: 'T001', nameZh: '新聞標題多標籤分類',       nameEn: 'News Headline Multi-label Classification',      taskType: 'single_sentence_classification', runType: 'official_run', status: 'draft', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T002', nameZh: '情感 VA 雙維度評分',        nameEn: 'Sentiment VA Dual-axis Scoring',               taskType: 'single_sentence_va_scoring',      runType: 'official_run', status: 'draft', updatedAt: '2026-04-18', canViewDetail: true,  isMine: true, deletedAt: ''  },
+    { id: 'T002', nameZh: '情感 VA 雙維度評分',        nameEn: 'Sentiment VA Dual-axis Scoring',               taskType: 'single_sentence_va_scoring',      runType: 'dry_run', status: 'waiting_iaa_confirmation', updatedAt: '2026-05-03', canViewDetail: true,  isMine: true, deletedAt: ''  },
     { id: 'T003', nameZh: '產品評論序列標註（NER / Aspect）', nameEn: 'Product Review Sequence Labeling (NER / Aspect)', taskType: 'sequence_labeling', runType: 'dry_run',      status: 'draft', updatedAt: '2026-04-17', canViewDetail: true,  isMine: true, deletedAt: ''  },
     { id: 'T004', nameZh: '醫療關係抽取（Entity / Triple）',   nameEn: 'Medical Relation Extraction (Entity / Triple)',   taskType: 'relation_extraction',  runType: 'official_run', status: 'draft',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true, deletedAt: ''  },
     { id: 'T005', nameZh: '句對相似度 / 蘊含判定',      nameEn: 'Sentence Pair Similarity / Entailment',        taskType: 'sentence_pairs',      runType: 'dry_run',      status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: true, deletedAt: '' },
@@ -633,7 +636,7 @@
     official_run_in_progress: 'badge-in-progress',
     completed: 'badge-completed',
   };
-  var RUN_BADGE_CLS = { dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
+  var RUN_BADGE_CLS = { unmaterialized: 'badge-run-unmaterialized', dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
   var TASK_TYPE_BADGE_CLS = {
     single_sentence_classification: 'badge-task-type-single',
     single_sentence_va_scoring: 'badge-task-type-scoring',
@@ -672,11 +675,16 @@
     return normalizeTaskRole(pageTaskRole);
   }
 
+  function getTaskRunStage(task) {
+    return task.status === 'draft' ? 'unmaterialized' : task.runType;
+  }
+
   function getTaskSearchText(task) {
     var zhType = (I18N.zh.taskTypeLabel && I18N.zh.taskTypeLabel[task.taskType]) || '';
     var enType = (I18N.en.taskTypeLabel && I18N.en.taskTypeLabel[task.taskType]) || '';
-    var zhRun = (I18N.zh.runBadge && I18N.zh.runBadge[task.runType]) || '';
-    var enRun = (I18N.en.runBadge && I18N.en.runBadge[task.runType]) || '';
+    var runStage = getTaskRunStage(task);
+    var zhRun = (I18N.zh.runBadge && I18N.zh.runBadge[runStage]) || '';
+    var enRun = (I18N.en.runBadge && I18N.en.runBadge[runStage]) || '';
     var zhStatus = (I18N.zh.statusBadge && I18N.zh.statusBadge[task.status]) || '';
     var enStatus = (I18N.en.statusBadge && I18N.en.statusBadge[task.status]) || '';
     return [
@@ -686,7 +694,7 @@
       task.taskType,
       zhType,
       enType,
-      task.runType,
+      runStage,
       zhRun,
       enRun,
       task.status,
@@ -706,7 +714,7 @@
       tasks = tasks.filter(function(tk) { return tk.taskType === state.taskType; });
     }
     if (state.runType) {
-      tasks = tasks.filter(function(tk) { return tk.runType === state.runType; });
+      tasks = tasks.filter(function(tk) { return getTaskRunStage(tk) === state.runType; });
     }
     if (state.status) {
       tasks = tasks.filter(function(tk) { return tk.status === state.status; });
@@ -829,11 +837,12 @@
     var runInfo = I18N[state.lang].runBadge;
     var typeInfo = I18N[state.lang].taskTypeLabel || {};
     var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
+    var runStage = getTaskRunStage(task);
     var statusLabel = statusInfo[task.status] || task.status;
-    var runLabel = runInfo[task.runType] || task.runType;
+    var runLabel = runInfo[runStage] || runStage;
     var typeLabel = typeInfo[task.taskType] || task.taskType;
     var statusCls = STATUS_BADGE_CLS[task.status] || 'badge-draft';
-    var runCls = RUN_BADGE_CLS[task.runType] || 'badge-run-dry';
+    var runCls = RUN_BADGE_CLS[runStage] || 'badge-run-dry';
     var typeCls = TASK_TYPE_BADGE_CLS[task.taskType] || 'badge-task-type-default';
 
     // Task name cell
