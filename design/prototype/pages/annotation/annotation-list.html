@@ -649,17 +649,31 @@
       pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
       submitReviewLabel: '送出審核',
       toastReviewSubmitted: '審核結果已送出。',
-      toastSelectDecision: '請完成每位標記員的審核決策'
+      toastSelectDecision: '請完成每位標記員的審核決策',
+      trialRoundLabelTpl: '試標回合 R{round}',
+      trialListCountTpl: '本回合清單 {total} 筆',
+      officialListLabel: '正式標記清單',
+      officialListCountTpl: '正式清單 {total} 筆'
     },
     en: {
       pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
       pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
       submitReviewLabel: 'Submit review',
       toastReviewSubmitted: 'Review submitted.',
-      toastSelectDecision: 'Please complete a review decision for each annotator'
+      toastSelectDecision: 'Please complete a review decision for each annotator',
+      trialRoundLabelTpl: 'Trial round R{round}',
+      trialListCountTpl: 'This round list: {total} items',
+      officialListLabel: 'Official annotation list',
+      officialListCountTpl: 'Official list: {total} items'
     }
   };
-  function t(key) { return (I18N[CURRENT_LANG] || I18N.zh)[key] || key; }
+  function t(key, vars) {
+    var str = (I18N[CURRENT_LANG] || I18N.zh)[key] || key;
+    if (vars) {
+      Object.keys(vars).forEach(function(k) { str = str.replace('{' + k + '}', String(vars[k])); });
+    }
+    return str;
+  }
 
   var toastTimer = null;
   function showToast(msg, type) {
@@ -680,6 +694,21 @@
     sequence_labeling: { text: '序列標記（含 Aspect / NER）', badgeClass: 'badge-task-type-sequence' },
     relation_extraction: { text: '關係抽取（Entity + Relation + Triple）', badgeClass: 'badge-task-type-relation' },
     sentence_pairs: { text: '句對任務（相似度 / 蘊含）', badgeClass: 'badge-task-type-pairs' }
+  };
+
+  var MATERIALIZED_RUN_CONTEXT = {
+    'TASK-015-A1': { round: null, total: 3180 },
+    'TASK-015-A2': { round: 2, total: 10 },
+    'TASK-015-A3': { round: null, total: 840 },
+    'TASK-015-A4': { round: null, total: 1400 },
+    'TASK-015-A5': { round: 1, total: 10 },
+    'TASK-015-A6': { round: null, total: 930 },
+    'TASK-015-R1': { round: null, total: 3180 },
+    'TASK-015-R2': { round: 2, total: 10 },
+    'TASK-015-R3': { round: null, total: 840 },
+    'TASK-015-R4': { round: null, total: 1400 },
+    'TASK-015-R5': { round: 1, total: 10 },
+    'TASK-015-R6': { round: null, total: 930 }
   };
 
   var TASKS_BY_ROLE = {
@@ -1561,6 +1590,22 @@
     return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
   }
 
+  function getMaterializedRunContext(task) {
+    var meta = MATERIALIZED_RUN_CONTEXT[task.taskId] || {};
+    var total = (meta.total !== undefined && meta.total !== null) ? Number(meta.total) : (Array.isArray(task.samples) ? task.samples.length : 0);
+    if (task.runType === 'dry_run') {
+      var round = Number(meta.round) || 1;
+      return {
+        label: t('trialRoundLabelTpl', { round: round }),
+        countLabel: t('trialListCountTpl', { total: total })
+      };
+    }
+    return {
+      label: t('officialListLabel'),
+      countLabel: t('officialListCountTpl', { total: total })
+    };
+  }
+
   function taskTypeBadgeClass(taskType) {
     return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
   }
@@ -1607,7 +1652,8 @@
     var statusClass = task.dashboardStatusClass || 'badge-info';
 
     title.textContent = task.title;
-    detail.textContent = task.dashboardDetail || '-';
+    var runContext = getMaterializedRunContext(task);
+    detail.textContent = [task.dashboardDetail || '-', runContext.label, runContext.countLabel].filter(Boolean).join(' · ');
     taskType.textContent = task.dashboardTaskTypeText || (TASK_TYPE_META[task.taskType] && TASK_TYPE_META[task.taskType].text) || task.taskType;
     taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
     runType.textContent = runTypeLabel(task.runType);

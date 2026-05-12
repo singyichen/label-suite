@@ -3420,6 +3420,37 @@ var TASK_SAMPLE_CONTEXTS = {
   ]
 };
 
+var MATERIALIZED_RUN_CONTEXT = {
+  'TASK-015-A1': { round: null, total: 3180 },
+  'TASK-015-A2': { round: 2, total: 10 },
+  'TASK-015-A3': { round: null, total: 840 },
+  'TASK-015-A4': { round: null, total: 1400 },
+  'TASK-015-A5': { round: 1, total: 10 },
+  'TASK-015-A6': { round: null, total: 930 },
+  'TASK-015-R1': { round: null, total: 3180 },
+  'TASK-015-R2': { round: 2, total: 10 },
+  'TASK-015-R3': { round: null, total: 840 },
+  'TASK-015-R4': { round: null, total: 1400 },
+  'TASK-015-R5': { round: 1, total: 10 },
+  'TASK-015-R6': { round: null, total: 930 }
+};
+
+function getMaterializedRunContext() {
+  var meta = MATERIALIZED_RUN_CONTEXT[state.taskId] || {};
+  var total = (meta.total !== undefined && meta.total !== null) ? Number(meta.total) : SAMPLES.length;
+  if (state.runType === 'dry_run') {
+    var round = Number(meta.round) || 1;
+    return {
+      label: state.lang === 'en' ? ('Trial round R' + round) : ('試標回合 R' + round),
+      total: total
+    };
+  }
+  return {
+    label: state.lang === 'en' ? 'Official list' : '正式標記清單',
+    total: total
+  };
+}
+
 function applyTaskSampleContext() {
   var contextSamples = TASK_SAMPLE_CONTEXTS[state.taskId];
   if (!Array.isArray(contextSamples) || !contextSamples.length) return;
@@ -3718,6 +3749,12 @@ function renderSampleList() {
     btn.addEventListener('click', function() { selectSample(idx); });
     list.appendChild(btn);
   });
+}
+
+function renderSampleListHeader() {
+  var context = getMaterializedRunContext();
+  setText('sampleListTitle', t('sampleListTitle') + ' · ' + context.label);
+  setText('sampleListCount', t('sampleListCount', { n: context.total }));
 }
 
 function renderHistoryPanel() {
@@ -4224,7 +4261,7 @@ function applyLang(lang) {
     modalClose.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
   }
 
-  setText('sampleListCount', t('sampleListCount', { n: SAMPLES.length }));
+  renderSampleListHeader();
 
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(lang);

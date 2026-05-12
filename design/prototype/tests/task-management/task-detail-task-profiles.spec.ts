@@ -9,6 +9,16 @@ type TaskProfile = {
   listName?: string;
   type: string;
   datasetSummary: string;
+  listStatus: string;
+  detailStatus: string;
+  editable: boolean;
+  runControl: {
+    activeStepLabel: string;
+    roundCount: number;
+    actionButton: string;
+    actionText: string;
+    absentButton?: string;
+  };
   settings: string[];
   editPreview: string[];
 };
@@ -19,6 +29,15 @@ const TASK_PROFILES: TaskProfile[] = [
     name: '新聞標題多標籤分類',
     type: '單句分類（含多標籤）',
     datasetSummary: '3200 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
+    runControl: {
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+    },
     settings: ['標籤清單', '政治, 社會, 娛樂, 體育, 科技', '允許多選', '是'],
     editPreview: ['政治', '社會', '娛樂', '體育', '科技'],
   },
@@ -27,6 +46,16 @@ const TASK_PROFILES: TaskProfile[] = [
     name: '情感 VA 雙維度評分',
     type: '單句 VA 雙維度評分（Valence / Arousal）',
     datasetSummary: '1280 筆',
+    listStatus: '待 IAA 確認',
+    detailStatus: '待 IAA 確認',
+    editable: false,
+    runControl: {
+      activeStepLabel: '試標階段',
+      roundCount: 2,
+      actionButton: '#publishOfficialRunBtn',
+      actionText: '開始正式標記',
+      absentButton: '#publishDryRunBtn',
+    },
     settings: ['Valence', '1 ~ 9', 'Arousal', '1 ~ 9'],
     editPreview: ['Valence 評分', 'Arousal 評分'],
   },
@@ -36,6 +65,15 @@ const TASK_PROFILES: TaskProfile[] = [
     listName: '產品評論序列標註（NER / Aspect）',
     type: '序列標記（含 Aspect / NER）',
     datasetSummary: '860 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
+    runControl: {
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+    },
     settings: ['子類型', 'Aspect List 抽取／校正', '輸入欄位名稱', 'sentence', '輸出欄位名稱', 'aspects'],
     editPreview: ['欄位對應', 'Aspect 編輯規則', '數量限制', 'Aspect List'],
   },
@@ -44,6 +82,15 @@ const TASK_PROFILES: TaskProfile[] = [
     name: '醫療關係抽取（Entity / Triple）',
     type: '關係抽取（Entity + Relation + Triple）',
     datasetSummary: '1420 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
+    runControl: {
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+    },
     settings: ['實體類型', 'DRUG, DISEASE, SYMPTOM', '關係類型', 'treats, causes, indicates'],
     editPreview: ['treats', 'causes', 'indicates', 'triple'],
   },
@@ -52,24 +99,121 @@ const TASK_PROFILES: TaskProfile[] = [
     name: '句對相似度 / 蘊含判定',
     type: '句對任務（相似度 / 蘊含）',
     datasetSummary: '2100 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
+    runControl: {
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+    },
     settings: ['關係標籤', '蘊含, 矛盾, 中立'],
     editPreview: ['句子 A', '句子 B', '蘊含', '矛盾'],
+  },
+  {
+    id: 'T006',
+    name: 'NER 命名實體辨識',
+    type: '序列標記（含 Aspect / NER）',
+    datasetSummary: '950 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
+    runControl: {
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+    },
+    settings: ['子類型', 'NER 命名實體辨識', '實體類型', 'PER, ORG, LOC'],
+    editPreview: ['PER', 'ORG', 'LOC', 'IOB2'],
+  },
+];
+
+const RUN_CONTROL_TASKS: TaskProfile[] = [
+  ...TASK_PROFILES,
+  {
+    id: 'T007',
+    name: '商品評論分類 v2',
+    type: '單句分類（含多標籤）',
+    datasetSummary: '1750 筆',
+    listStatus: '正式標記中',
+    detailStatus: '正式標記進行中',
+    editable: false,
+    runControl: {
+      activeStepLabel: '正式標記中',
+      roundCount: 1,
+      actionButton: '#publishCompleteBtn',
+      actionText: '標記完成',
+    },
+    settings: [],
+    editPreview: [],
+  },
+  {
+    id: 'T009',
+    name: '對話意圖標記',
+    type: '單句分類（含多標籤）',
+    datasetSummary: '640 筆',
+    listStatus: '試標進行中',
+    detailStatus: '試標進行中',
+    editable: false,
+    runControl: {
+      activeStepLabel: '試標階段',
+      roundCount: 1,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R2',
+    },
+    settings: [],
+    editPreview: [],
+  },
+  {
+    id: 'T010',
+    name: '醫療文本 NER',
+    type: '序列標記（含 Aspect / NER）',
+    datasetSummary: '1800 筆',
+    listStatus: '已完成',
+    detailStatus: '已完成',
+    editable: false,
+    runControl: {
+      activeStepLabel: '已完成',
+      roundCount: 1,
+      actionButton: '#publishActionRow',
+      actionText: '此狀態不提供發布操作。',
+    },
+    settings: [],
+    editPreview: [],
   },
 ];
 
 test.describe('Task detail profile mapping', () => {
-  test('project leader task list rows all stay draft and open task detail', async ({ page }) => {
+  test('project leader task list rows show each task status and open task detail', async ({ page }) => {
     await page.goto(TASK_LIST_URL);
 
     for (const task of TASK_PROFILES) {
       const listName = task.listName ?? task.name;
       await page.locator('#searchInput').fill(listName);
       const row = page.locator('tbody tr').filter({ hasText: listName }).first();
-      await expect(row).toContainText('草稿');
+      await expect(row).toContainText(task.listStatus);
       await row.click();
       await expect(page).toHaveURL(new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=${task.id}$`));
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=project_leader/);
+      await page.locator('#searchInput').fill('');
+    }
+  });
+
+  test('super admin task list rows keep run-control status across every seeded task', async ({ page }) => {
+    await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
+
+    for (const task of RUN_CONTROL_TASKS) {
+      const listName = task.listName ?? task.name;
+      await page.locator('#searchInput').fill(listName);
+      const row = page.locator('tbody tr').filter({ hasText: listName }).first();
+      await expect(row).toContainText(task.listStatus);
+      await row.click();
+      await expect(page).toHaveURL(new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=${task.id}$`));
+      await page.goBack();
+      await expect(page).toHaveURL(/task-list\.html\?task_role=super_admin/);
       await page.locator('#searchInput').fill('');
     }
   });
@@ -89,14 +233,37 @@ test.describe('Task detail profile mapping', () => {
         await expect(page.locator('#settingsConfigView')).toContainText(text);
       }
     });
+  }
 
-    test(`allows editing task-specific settings for ${task.id}`, async ({ page }) => {
+  for (const task of RUN_CONTROL_TASKS) {
+    test(`renders coherent run-control state for ${task.id}`, async ({ page }) => {
+      await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
+
+      await expect(page.locator('#statusBadge')).toContainText(task.detailStatus);
+      await expect(page.locator('#executionStageTitle')).toHaveCount(0);
+      await expect(page.locator('#executionStageDesc')).toHaveCount(0);
+      await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText(task.runControl.activeStepLabel);
+      await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(task.runControl.roundCount);
+      await expect(page.locator(task.runControl.actionButton)).toHaveText(task.runControl.actionText);
+      if (task.runControl.absentButton) {
+        await expect(page.locator(task.runControl.absentButton)).toHaveCount(0);
+      }
+    });
+  }
+
+  for (const task of TASK_PROFILES) {
+    test(`respects settings edit availability for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
       const editBtn = page.locator('#settingsEditBtn');
-      await expect(page.locator('#statusBadge')).toContainText('草稿');
-      await expect(editBtn).toBeEnabled();
+      await expect(page.locator('#statusBadge')).toContainText(task.detailStatus);
+      if (!task.editable) {
+        await expect(editBtn).toBeDisabled();
+        await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
+        return;
+      }
 
+      await expect(editBtn).toBeEnabled();
       await editBtn.click();
 
       await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);

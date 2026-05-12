@@ -22,7 +22,6 @@
 - `TASK_CREATOR_SYSTEM_ROLES = user | super_admin`
 - `DATASET_UPLOAD_FORMATS = txt | csv | tsv | json`
 - `DATASET_MAX_FILE_SIZE_MB = 200`
-- `DATASET_MAX_ROWS = 1000000`
 - `DATASET_ENCODING = utf-8`
 - `GUIDELINE_FORMATS = pdf | image | markdown`
 - `GUIDELINE_IMAGE_FORMATS = png | jpg | jpeg | webp`
@@ -283,7 +282,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 - 非 `TASK_CREATOR_SYSTEM_ROLES` 造訪 `/task-new`：導回允許入口並顯示無權限提示。
 - 上傳資料集格式不在 `DATASET_UPLOAD_FORMATS`：阻擋進下一步並顯示錯誤。
-- 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB`、非 `DATASET_ENCODING` 或超過 `DATASET_MAX_ROWS`：阻擋進下一步並顯示可定位錯誤。
+- 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB` 或非 `DATASET_ENCODING`：阻擋進下一步並顯示可定位錯誤。
 - 切換 `task_type` 後已填 Step 2 設定不相容：提示重置或轉換失敗欄位。
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
