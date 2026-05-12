@@ -373,9 +373,10 @@
 
       <div class="exec-stage-banner">
         <div class="exec-stage-copy">
-          <span class="exec-stage-eyebrow" id="executionStageEyebrow">目前任務階段</span>
-          <strong class="exec-stage-title" id="executionStageTitle">試標階段</strong>
-          <p class="exec-stage-desc" id="executionStageDesc">目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。</p>
+          <div class="exec-stage-decision" aria-live="polite">
+            <strong class="exec-stage-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
+            <p class="exec-stage-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
+          </div>
         </div>
       </div>
 
@@ -439,14 +440,6 @@
         </div>
         <div class="round-timeline" id="trialRoundTimeline"></div>
       </section>
-
-      <div class="round-decision-card" id="trialDecisionCard">
-        <div class="round-decision-copy">
-          <span class="round-decision-eyebrow" id="trialDecisionEyebrow">正式標記判定</span>
-          <strong class="round-decision-title" id="trialDecisionTitle">R2 已達標，可啟動正式標記</strong>
-          <p class="round-decision-desc" id="trialDecisionDesc">系統將以尚未進入試標的剩餘樣本建立正式標記池，避免與前兩回合混用。</p>
-        </div>
-      </div>
     </div>
   </section>
 </div>

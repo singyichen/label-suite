@@ -1964,28 +1964,23 @@
       gap: 4px;
       min-width: 0;
     }
-    .exec-stage-eyebrow,
-    .round-decision-eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--color-primary);
-    }
-    .exec-stage-title,
-    .round-decision-title {
-      font-size: 20px;
-      line-height: 1.2;
-      color: var(--color-ink);
-    }
-    .exec-stage-desc,
-    .round-decision-desc {
+    .exec-stage-decision-desc {
       font-size: 13px;
       line-height: 1.6;
       color: var(--color-text-soft);
       max-width: 720px;
     }
-    .exec-stage-pill,
+    .exec-stage-decision {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 760px;
+    }
+    .exec-stage-decision-title {
+      font-size: 18px;
+      line-height: 1.25;
+      color: var(--color-ink);
+    }
     .round-history-summary {
       display: inline-flex;
       align-items: center;
@@ -1997,11 +1992,6 @@
       font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
-    }
-    .exec-stage-pill-accent {
-      border-color: rgba(16,185,129,0.25);
-      background: rgba(16,185,129,0.08);
-      color: #047857;
     }
     .exec-round-item {
       border: 1px solid var(--color-border);
@@ -2195,25 +2185,6 @@
       background: #F5F3FF;
       border-color: #DDD6FE;
     }
-    .round-decision-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 16px;
-      margin-bottom: var(--space-md);
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(16,185,129,0.22);
-      background:
-        linear-gradient(135deg, rgba(16,185,129,0.10), rgba(99,102,241,0.04)),
-        #FFFFFF;
-    }
-    .round-decision-copy {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-
     .panel-divider {
       border: none;
       border-top: 1px solid var(--color-border-muted);
@@ -2706,21 +2677,9 @@
       roundOutcomePassed: '已有回合達標，可進入正式標記',
       roundOutcomeFailed: '最近回合未達標，建議追加下一回合試標',
       roundOutcomeInProgress: '目前回合進行中，待所有標記員完成後再判定',
-      executionStageEyebrow: '目前任務階段',
-      executionStageTrial: '試標階段',
-      executionStageOfficial: '正式標記中',
-      executionStageDraft: '尚未開始試標',
-      executionStageCompleted: '已完成',
-      executionStageDescTrial: '目前以多回合試標方式驗證一致性，任一回合達標後即可啟動正式標記。',
-      executionStageDescOfficial: '正式標記已啟動，作業範圍為未進入任何試標回合的剩餘樣本。',
-      executionStageDescDraft: '先建立第一個試標回合，確認一致性門檻與樣本使用策略。',
-      executionStageDescCompleted: '所有試標與正式標記都已完成，可回顧回合歷程與輸出結果。',
-      executionStagePillTpl: '已用 {rounds} 個回合',
-      executionOfficialPoolPillTpl: '正式池 {count} 筆',
       roundHistoryTitle: '試標回合歷程',
       roundHistoryHint: '每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。',
       roundHistorySummaryTpl: '已用 {used} / {total} 筆試標',
-      roundDecisionEyebrow: '正式標記判定',
       roundDecisionTitlePassedTpl: 'R{round} 已達標，可啟動正式標記',
       roundDecisionTitleFailedTpl: 'R{round} 未達標，建議新增下一個試標回合',
       roundDecisionDescPassedTpl: '系統將以尚未進入試標的剩餘 {count} 筆樣本建立正式標記池，避免與前面回合混用。',
@@ -3148,21 +3107,9 @@
       roundOutcomePassed: 'A trial round has passed and official work can start',
       roundOutcomeFailed: 'The latest round did not pass. Consider creating the next trial round',
       roundOutcomeInProgress: 'The current round is still in progress and awaits completion',
-      executionStageEyebrow: 'Current task stage',
-      executionStageTrial: 'Trial stage',
-      executionStageOfficial: 'Official run in progress',
-      executionStageDraft: 'Trial not started',
-      executionStageCompleted: 'Completed',
-      executionStageDescTrial: 'The task is validating agreement through multiple trial rounds. Any passing round can unlock official work.',
-      executionStageDescOfficial: 'Official work has started on the remaining samples that were never used in any trial round.',
-      executionStageDescDraft: 'Create the first trial round to validate agreement thresholds and sample usage rules.',
-      executionStageDescCompleted: 'All trial and official work is finished. Review the round history and export results as needed.',
-      executionStagePillTpl: '{rounds} rounds used',
-      executionOfficialPoolPillTpl: 'Official pool {count}',
       roundHistoryTitle: 'Trial round history',
       roundHistoryHint: 'Each round uses a fresh sample slice. A passed round unlocks official work.',
       roundHistorySummaryTpl: '{used} / {total} items used in trial',
-      roundDecisionEyebrow: 'Official run decision',
       roundDecisionTitlePassedTpl: 'R{round} passed and official work can start',
       roundDecisionTitleFailedTpl: 'R{round} did not pass. Add the next trial round',
       roundDecisionDescPassedTpl: 'The system will build the official pool from the remaining {count} unused items to avoid mixing with previous rounds.',
@@ -5173,26 +5120,9 @@ function interpolate(template, payload) {
     setText('targetAgreementValue', Number(TASK_DATA.targetAgreement).toFixed(2));
     setText('currentAgreementValue', currentRound ? Number(currentRound.agreement || 0).toFixed(2) : Number(TASK_DATA.currentAgreement).toFixed(2));
     setText('officialPoolValue', String(reserveCount));
-    setText('executionStageEyebrow', t('executionStageEyebrow'));
-    setText('executionStageTitle', t(
-      taskStageKey === 'official' ? 'executionStageOfficial'
-        : taskStageKey === 'completed' ? 'executionStageCompleted'
-        : taskStageKey === 'draft' ? 'executionStageDraft'
-        : 'executionStageTrial'
-    ));
-    setText('executionStageDesc', t(
-      taskStageKey === 'official' ? 'executionStageDescOfficial'
-        : taskStageKey === 'completed' ? 'executionStageDescCompleted'
-        : taskStageKey === 'draft' ? 'executionStageDescDraft'
-        : 'executionStageDescTrial'
-    ));
-    setText('executionStagePill', interpolate(t('executionStagePillTpl'), { rounds: roundCount }));
-    setText('executionOfficialPoolPill', interpolate(t('executionOfficialPoolPillTpl'), { count: reserveCount }));
     setText('roundHistoryTitle', t('roundHistoryTitle'));
     setText('roundHistoryHint', t('roundHistoryHint'));
     setText('roundHistorySummary', interpolate(t('roundHistorySummaryTpl'), { used: usedTrialCount, total: TASK_DATA.datasetTotal }));
-    setText('trialDecisionEyebrow', t('roundDecisionEyebrow'));
-
     if (taskStageKey === 'official') {
       setText('trialDecisionTitle', interpolate(t('roundDecisionTitleOfficialTpl'), { count: getOfficialRunCount() }));
       setText('trialDecisionDesc', t('roundDecisionDescOfficialTpl'));

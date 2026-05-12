@@ -16,8 +16,11 @@ test('keeps the 4-stage stepper while showing a complete trial-to-official flow'
   await expect(page.locator('#roundHistoryTitle')).toHaveText('試標回合歷程');
   await expect(page.locator('#roundHistoryHint')).toHaveText('每個回合使用新的抽樣樣本；通過的回合會解鎖正式標記。');
   await expect(page.locator('#trialRoundTimeline')).toContainText('尚未建立任何試標回合');
-  await expect(page.locator('#trialDecisionTitle')).toHaveText('尚未建立試標回合');
-  await expect(page.locator('#trialDecisionDesc')).toHaveText('先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。');
+  await expect(page.locator('#trialDecisionCard')).toHaveCount(0);
+  await expect(page.locator('#executionStageTitle')).toHaveCount(0);
+  await expect(page.locator('#executionStageDesc')).toHaveCount(0);
+  await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('尚未建立試標回合');
+  await expect(page.locator('.exec-stage-banner #trialDecisionDesc')).toHaveText('先建立第一個試標回合，確認一致性門檻是否合理，再決定是否進入正式標記。');
 
   const stopRow = page.locator('#execStopRow');
   const dryRunBtn = page.locator('#publishDryRunBtn');
@@ -26,7 +29,9 @@ test('keeps the 4-stage stepper while showing a complete trial-to-official flow'
 
   await dryRunBtn.click();
 
-  await expect(page.locator('#executionStageTitle')).toHaveText('試標階段');
+  await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('試標階段');
+  await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('R1 未達標，建議新增下一個試標回合');
+  await expect(page.locator('.exec-stage-banner #trialDecisionDesc')).toHaveText('目前僅使用了 10 筆試標樣本，仍可從未使用資料中抽新樣本進行下一回合。');
   await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
   await expect(page.locator('#trialRoundTimeline .round-timeline-item').first()).toContainText('R1');
   await expect(page.locator('#trialRoundTimeline .round-status-badge').first()).toHaveText('未通過');
@@ -45,12 +50,12 @@ test('keeps the 4-stage stepper while showing a complete trial-to-official flow'
 
   await page.locator('#publishOfficialRunBtn').click();
 
-  await expect(page.locator('#executionStageTitle')).toHaveText('正式標記中');
-  await expect(page.locator('#trialDecisionTitle')).toHaveText('正式標記進行中，共 3180 筆');
+  await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('正式標記中');
+  await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('正式標記進行中，共 3180 筆');
   await expect(page.locator('#publishCompleteBtn')).toHaveText('標記完成');
 
   await page.locator('#publishCompleteBtn').click();
 
-  await expect(page.locator('#executionStageTitle')).toHaveText('已完成');
-  await expect(page.locator('#trialDecisionTitle')).toHaveText('正式標記已完成，共 3180 筆');
+  await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText('已完成');
+  await expect(page.locator('.exec-stage-banner #trialDecisionTitle')).toHaveText('正式標記已完成，共 3180 筆');
 });

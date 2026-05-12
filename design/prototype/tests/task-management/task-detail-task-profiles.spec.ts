@@ -13,7 +13,7 @@ type TaskProfile = {
   detailStatus: string;
   editable: boolean;
   runControl: {
-    stageTitle: string;
+    activeStepLabel: string;
     roundCount: number;
     actionButton: string;
     actionText: string;
@@ -33,7 +33,7 @@ const TASK_PROFILES: TaskProfile[] = [
     detailStatus: '草稿',
     editable: true,
     runControl: {
-      stageTitle: '尚未開始試標',
+      activeStepLabel: '草稿',
       roundCount: 0,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
@@ -50,7 +50,7 @@ const TASK_PROFILES: TaskProfile[] = [
     detailStatus: '待 IAA 確認',
     editable: false,
     runControl: {
-      stageTitle: '試標階段',
+      activeStepLabel: '試標階段',
       roundCount: 2,
       actionButton: '#publishOfficialRunBtn',
       actionText: '開始正式標記',
@@ -69,7 +69,7 @@ const TASK_PROFILES: TaskProfile[] = [
     detailStatus: '草稿',
     editable: true,
     runControl: {
-      stageTitle: '尚未開始試標',
+      activeStepLabel: '草稿',
       roundCount: 0,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
@@ -86,7 +86,7 @@ const TASK_PROFILES: TaskProfile[] = [
     detailStatus: '草稿',
     editable: true,
     runControl: {
-      stageTitle: '尚未開始試標',
+      activeStepLabel: '草稿',
       roundCount: 0,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
@@ -103,7 +103,7 @@ const TASK_PROFILES: TaskProfile[] = [
     detailStatus: '草稿',
     editable: true,
     runControl: {
-      stageTitle: '尚未開始試標',
+      activeStepLabel: '草稿',
       roundCount: 0,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
@@ -120,7 +120,7 @@ const TASK_PROFILES: TaskProfile[] = [
     detailStatus: '草稿',
     editable: true,
     runControl: {
-      stageTitle: '尚未開始試標',
+      activeStepLabel: '草稿',
       roundCount: 0,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
@@ -141,7 +141,7 @@ const RUN_CONTROL_TASKS: TaskProfile[] = [
     detailStatus: '正式標記進行中',
     editable: false,
     runControl: {
-      stageTitle: '正式標記中',
+      activeStepLabel: '正式標記中',
       roundCount: 1,
       actionButton: '#publishCompleteBtn',
       actionText: '標記完成',
@@ -158,7 +158,7 @@ const RUN_CONTROL_TASKS: TaskProfile[] = [
     detailStatus: '試標進行中',
     editable: false,
     runControl: {
-      stageTitle: '試標階段',
+      activeStepLabel: '試標階段',
       roundCount: 1,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R2',
@@ -175,7 +175,7 @@ const RUN_CONTROL_TASKS: TaskProfile[] = [
     detailStatus: '已完成',
     editable: false,
     runControl: {
-      stageTitle: '已完成',
+      activeStepLabel: '已完成',
       roundCount: 1,
       actionButton: '#publishActionRow',
       actionText: '此狀態不提供發布操作。',
@@ -240,7 +240,9 @@ test.describe('Task detail profile mapping', () => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
       await expect(page.locator('#statusBadge')).toContainText(task.detailStatus);
-      await expect(page.locator('#executionStageTitle')).toHaveText(task.runControl.stageTitle);
+      await expect(page.locator('#executionStageTitle')).toHaveCount(0);
+      await expect(page.locator('#executionStageDesc')).toHaveCount(0);
+      await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText(task.runControl.activeStepLabel);
       await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(task.runControl.roundCount);
       await expect(page.locator(task.runControl.actionButton)).toHaveText(task.runControl.actionText);
       if (task.runControl.absentButton) {
