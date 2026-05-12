@@ -288,9 +288,12 @@
     <div class="sampling-edit-form hidden" id="samplingEditForm">
       <div class="sampling-fields sampling-fields-primary">
         <div class="field-group">
-          <label class="field-label" id="samplingValueLabel" for="samplingValue">每回合抽樣筆數</label>
+          <div class="field-label-row">
+            <label class="field-label" id="samplingValueLabel" for="samplingValue">每回合抽樣筆數</label>
+            <button class="field-help-tooltip" id="samplingValueHelp" type="button" aria-label="抽樣筆數規則" aria-describedby="samplingValueHint">i</button>
+            <p class="tooltip-bubble" id="samplingValueHint" role="tooltip">筆數需 >= 1 且 &lt; 資料集總筆數</p>
+          </div>
           <input class="input-number" id="samplingValue" type="text" inputmode="numeric" pattern="[0-9]*" value="10" />
-          <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
         </div>
         <div class="field-group">
           <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標記者數</label>

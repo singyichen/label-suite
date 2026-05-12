@@ -40,6 +40,12 @@ test.describe('Task detail sampling edit state', () => {
     await expect(firstRowFields).toHaveCount(2);
     await expect(firstRowFields.nth(0).locator('label')).toContainText('抽樣筆數');
     await expect(firstRowFields.nth(1).locator('label')).toContainText('最少標記者數');
+    await expect(page.locator('#samplingValueHint')).toHaveClass(/tooltip-bubble/);
+    await expect(page.locator('#samplingValueHint')).toHaveText('筆數需 >= 1 且 < 資料集總筆數');
+    await expect(page.locator('#samplingValueHint')).toBeHidden();
+
+    await page.locator('#samplingValueHelp').hover();
+    await expect(page.locator('#samplingValueHint')).toBeVisible();
 
     const secondRowFields = page.locator('#samplingEditForm .sampling-fields-advanced').first().locator('.field-group');
     await expect(secondRowFields).toHaveCount(2);
