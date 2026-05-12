@@ -2,7 +2,7 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.1.5
+**版本**：1.2.0
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
@@ -17,6 +17,9 @@
 - `SUPPORTED_PAGES = /dashboard, /task-list, /task-new, /task-detail, /annotation-workspace, /dataset-stats, /dataset-quality, /user-management, /role-settings, /profile`
 - `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
 - `SIDEBAR_COLLAPSED_STORAGE_KEY = labelsuite.sidebarCollapsed`
+- `APPEARANCE_STORAGE_KEY = labelsuite.theme`
+- `APPEARANCE_MODES = light | dark | system`
+- `APPEARANCE_DEFAULT_RESOLVED = light`（`system` 固定解析為 `light`，不跟隨 OS `prefers-color-scheme`）
 
 ## Process Flow
 
@@ -52,6 +55,7 @@ sequenceDiagram
 | 3 | 使用者 | 點擊 L0 導覽項 | 符合權限則導頁；不符則導回 Landing 並顯示提示 |
 | 4 | 使用者 | 點擊語言切換 | Sidebar 與右側目前模組頁文案、可存取屬性同步更新 |
 | 5 | 使用者 | 點擊登出 | 導向 `../account/login.html`（原型導頁） |
+| 6 | 使用者 | 點擊外觀切換（Appearance） | 套用 `light` / `dark` / `system` 模式，更新 `html[data-theme]`，持久化至 `APPEARANCE_STORAGE_KEY` |
 
 ---
 
@@ -171,12 +175,40 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
+### User Story 6 — Appearance 外觀模式切換（優先級：P2）
+
+登入後使用者可透過 Sidebar 的 Appearance 控制項，在淺色（light）、深色（dark）與跟隨系統（system）三種外觀模式間切換，切換後立即生效且跨頁保持一致。
+
+**此優先級原因**：外觀偏好為全站橫切功能，Sidebar 是唯一操作入口；若切頁後狀態遺失或 FOUC 閃白，會明顯影響使用體驗。
+
+**獨立測試方式**：切換三種模式，確認 `html[data-theme]` 即時更新；導向其他 `SUPPORTED_PAGES` 後重整，確認狀態從 `APPEARANCE_STORAGE_KEY` 恢復且無 FOUC。
+
+**驗收情境**：
+
+1. **Given** 使用者在任一登入後頁面，**When** 點擊 Sidebar Appearance 控制項選擇 `dark`，**Then** `html[data-theme="dark"]` 即時套用，全頁 CSS token 切換為深色。
+2. **Given** 使用者選擇 `light`，**When** 導向任一其他 `SUPPORTED_PAGES`，**Then** 新頁面載入後維持 `html[data-theme="light"]`，不出現閃白（FOUC）。
+3. **Given** 使用者選擇 `system`，**When** 任何 OS 設定，**Then** 頁面固定套用 `data-theme="light"`（`system` = app 預設 = light，不跟隨 OS）。
+4. **Given** 重新整理或重開分頁，**When** 頁面載入，**Then** 從 `APPEARANCE_STORAGE_KEY` 恢復最後一次的 mode，且在首次繪製前完成 `data-theme` 設定。
+5. **Given** `APPEARANCE_STORAGE_KEY` 不存在或值無效，**When** 頁面載入，**Then** 預設以 `system` mode 處理。
+
+**Appearance 控制項行為規則**：
+
+- 三種 mode：`light`（固定淺色）、`dark`（固定深色）、`system`（跟隨 `prefers-color-scheme`）。
+- 切換後立即更新 `html[data-theme]`（`light` 或 `dark`），不需重新整理。
+- 狀態持久化至 `APPEARANCE_STORAGE_KEY`（`localStorage`）。
+- 頁面 `<head>` 必須在 CSS 載入前執行同步 JS 讀取 `APPEARANCE_STORAGE_KEY` 並設定 `data-theme`，防止 FOUC（實作於 `design/prototype/assets/theme-fouc.js`）。
+- `system` 模式下需監聽 `window.matchMedia('(prefers-color-scheme: dark)').onchange`，OS 切換時即時同步 `data-theme`（不寫入 localStorage）。
+
+---
+
 ### 邊界情況
 
 - zh/en 長度差異不得造成 L0 文字截斷到不可辨識。
 - 行動版底部導覽不得遮擋頁面主要 CTA。
 - i18n key 缺漏時需 fallback 文案，不得中斷導覽互動。
 - 超長使用者姓名不得擠壓語言按鈕與登出按鈕可點擊區域。
+- `APPEARANCE_STORAGE_KEY` 值無效（非 `light`/`dark`/`system`）時，fallback 為 `system`，不拋出例外。
+- `prefers-color-scheme` 不支援的舊瀏覽器，`system` mode 應 fallback 為 `light`。
 
 ---
 
@@ -205,6 +237,11 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-014A**：Desktop 收合觸發必須為 sidebar 非互動空白區；互動元素（`a`、`button`、`input/select/textarea`、含語意按鈕角色元素）不得觸發收合。
 - **FR-014B**：Sidebar 收合狀態必須持久化於 `SIDEBAR_COLLAPSED_STORAGE_KEY`，並在 `SUPPORTED_PAGES` 間保持一致。
 - **FR-014C**：Mobile（`<= MOBILE_BP`）不得啟用 mini/icon-only 收合互動，避免與 bottom nav 操作衝突。
+- **FR-015**：Sidebar 必須提供 Appearance 切換控制項，支援 `APPEARANCE_MODES` 三態（`light` / `dark` / `system`）。
+- **FR-015A**：`light` → `html[data-theme="light"]`；`dark` → `html[data-theme="dark"]`；`system` → 固定解析為 `html[data-theme="light"]`（app 預設；不跟隨 OS `prefers-color-scheme`）。
+- **FR-015B**：Appearance 選擇後必須立即套用，並持久化至 `APPEARANCE_STORAGE_KEY`，在所有 `SUPPORTED_PAGES` 間保持一致。
+- **FR-015C**：每個 `SUPPORTED_PAGES` 的 `<head>` 必須在樣式表載入前執行同步 JS（`theme-fouc.js`），讀取 `APPEARANCE_STORAGE_KEY` 並設定 `html[data-theme]`，防止 FOUC。
+- **FR-015D**：`APPEARANCE_STORAGE_KEY` 不存在或值無效時，預設 mode 為 `system`。
 
 ### User Flow & Navigation
 
@@ -250,6 +287,10 @@ flowchart LR
   - `collapsed`: `true` / `false`
   - `storage_key`: `labelsuite.sidebarCollapsed`
   - `desktop_only`: 僅在 `> MOBILE_BP` 生效
+- `AppearanceState`
+  - `mode`: `light` | `dark` | `system`（使用者的選擇，持久化值）
+  - `resolved_theme`: `light` | `dark`（實際套用至 `html[data-theme]` 的值；`mode=dark` → `dark`，其餘皆 → `light`）
+  - `storage_key`: `labelsuite.theme`
 
 ---
 
@@ -293,6 +334,10 @@ flowchart LR
 - **SC-007A**：點擊 sidebar 非互動空白區會觸發收合；點擊 nav link / 語言切換 / 登出不會觸發收合。
 - **SC-007B**：`SIDEBAR_COLLAPSED_STORAGE_KEY` 在重整與跨頁後可還原最後收合狀態。
 - **SC-007C**：Mobile viewport 下收合互動不生效，且 top+bottom nav 操作不受影響。
+- **SC-008**：Appearance 切換後，`html[data-theme]` 即時更新，全頁 CSS token（`tokens.css` dark override）正確套用。
+- **SC-008A**：重新整理或切換至任一 `SUPPORTED_PAGES`，Appearance 從 `APPEARANCE_STORAGE_KEY` 恢復，首次繪製不出現 FOUC。
+- **SC-008B**：`system` 模式下，無論 OS `prefers-color-scheme` 為何，`html[data-theme]` 固定為 `light`。
+- **SC-008C**：`APPEARANCE_STORAGE_KEY` 不存在或無效時，系統預設為 `system` mode，且不拋出 JS 例外。
 
 ### 驗證建議
 
@@ -305,6 +350,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.0 | 2026-05-12 | 新增 Appearance 外觀模式切換規格：`APPEARANCE_STORAGE_KEY`、三態 mode（light/dark/system）、FOUC 防護（`theme-fouc.js`）、OS 即時跟隨、FR-015 群、AppearanceState 實體、SC-008 群 |
 | 1.1.5 | 2026-04-23 | 補充 Shared Sidebar 收合規格：新增 Desktop `Mini / Icon-only`、空白區觸發排除互動元件、`labelsuite.sidebarCollapsed` 狀態持久化、Mobile 不啟用收合，並明確化共用 `shared/sidebar.css` 契約 |
 | 1.1.4 | 2026-04-23 | 同步 shared sidebar：新增 `labelsuite.activeTaskType` 導頁契約，點擊「標記作業」時附帶 `task_type` query |
 | 1.1.3 | 2026-04-16 | 新增語言持久化機制規範（FR-009B / LanguageState / SC-006A），明確定義 `labelsuite.lang` 跨頁與重載一致性 |
