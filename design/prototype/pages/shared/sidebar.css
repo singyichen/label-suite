@@ -98,7 +98,7 @@
 
 .nav-link.active {
   color: var(--color-primary);
-  background: var(--color-surface);
+  background: var(--nav-active-bg, var(--color-surface));
   font-weight: 600;
 }
 

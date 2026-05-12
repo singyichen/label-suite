@@ -6,6 +6,7 @@
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
       --navbar-mobile-height: 84px;
@@ -97,7 +98,7 @@
     }
     .skeleton-line {
       border-radius: var(--radius-sm);
-      background: #E2E8F0;
+      background: var(--color-border);
       animation: pulse var(--dur-normal) var(--ease-standard) infinite alternate;
     }
     .skeleton-line.title { width: 220px; height: 20px; margin-bottom: 14px; }
@@ -169,17 +170,17 @@
       line-height: 1.4;
       white-space: nowrap;
     }
-    .badge-draft { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
-    .badge-dry-run { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-draft { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-dry-run { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-iaa { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-official { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
     .badge-completed { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-isolated { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
     .badge-non-isolated { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
-    .badge-member-active { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
-    .badge-member-disabled { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
-    .badge-run-dry { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
-    .badge-run-official { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-member-active { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
+    .badge-member-disabled { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-run-dry { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .badge-run-official { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
 
     .status-row {
       display: flex;
@@ -656,7 +657,7 @@
       border-top: 1px solid var(--color-border);
       background: var(--color-white);
     }
-    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
     .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
     .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
     .page-btn {
@@ -775,14 +776,14 @@
       white-space: nowrap;
     }
     .role-badge-reviewer {
-      color: #5B21B6;
-      background: #EDE9FE;
-      border-color: #DDD6FE;
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-info-border);
     }
     .role-badge-annotator {
-      color: #0E7490;
-      background: #ECFEFF;
-      border-color: #A5F3FC;
+      color: var(--color-info);
+      background: var(--color-info-bg);
+      border-color: var(--color-info-border);
     }
     .inline-actions { display: inline-flex; gap: 8px; }
     .mini-btn {
@@ -1014,7 +1015,7 @@
       white-space: nowrap;
     }
     .reviewer-stats {
-      font-size: 12px; color: #6B7280; font-family: monospace;
+      font-size: 12px; color: var(--color-ink-muted); font-family: monospace;
       display: block;
       min-width: 240px;
       white-space: pre-line;
@@ -1024,21 +1025,21 @@
       min-width: 240px;
       width: 240px;
     }
-    .annotator-detail-row { background: #F8FAFC; }
+    .annotator-detail-row { background: var(--color-slate-50); }
     .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
     .annotator-detail-inner {
       padding: 8px 48px 8px 52px;
-      border-top: 1px solid #E2E8F0;
+      border-top: 1px solid var(--color-border);
     }
     .annotator-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 7px 0; border-bottom: 1px solid #EAECF0;
+      padding: 7px 0; border-bottom: 1px solid var(--color-border);
     }
     .annotator-row:last-child { border-bottom: none; }
     .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
     .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: #EEF2FF;
-      border: 1px solid #C7D2FE; border-radius: var(--radius-md);
+      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-info-border); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
     .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
@@ -1071,7 +1072,7 @@
     .badge-ar-returned { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
     .badge-ar-pending-review { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
     .badge-ar-submitted { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
-    .badge-ar-draft { color: #4B5563; background: #F9FAFB; border-color: #E5E7EB; }
+    .badge-ar-draft { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .badge-ar-pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
     .ar-export-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
     .ar-export-table-wrap { margin-top: var(--space-sm); }
@@ -1250,10 +1251,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1.5px solid #94A3B8;
+      border: 1.5px solid var(--color-ink-muted);
       border-radius: 50%;
       background: transparent;
-      color: #64748B;
+      color: var(--color-text-soft);
       font-size: 12px;
       line-height: 1;
       font-weight: 700;
@@ -1263,9 +1264,9 @@
     }
     .field-help-tooltip:hover,
     .field-help-tooltip:focus {
-      border-color: #64748B;
+      border-color: var(--color-text-soft);
       background: rgba(15, 23, 42, 0.04);
-      color: #334155;
+      color: var(--color-ink);
     }
     .field-help-tooltip:focus {
       outline: none;
@@ -1345,11 +1346,11 @@
       align-items: flex-start;
       gap: 8px;
       padding: 10px 12px;
-      background: #EFF6FF;
-      border: 1px solid #BFDBFE;
+      background: var(--color-info-bg);
+      border: 1px solid var(--color-info-border);
       border-radius: var(--radius-md);
       font-size: 12px;
-      color: #1D4ED8;
+      color: var(--color-info);
     }
     .settings-editor-layout {
       display: grid;
@@ -2016,7 +2017,7 @@
       border-radius: var(--radius-lg);
       background:
         radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 42%),
-        linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 100%);
+        var(--color-white);
     }
     .exec-stage-copy {
       display: flex;
@@ -2142,7 +2143,7 @@
       padding: 14px;
       border-radius: var(--radius-md);
       border: 1px solid var(--color-border);
-      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      background: var(--color-white);
     }
     .round-timeline-index,
     .round-timeline-body,
@@ -2320,7 +2321,7 @@
       padding: 14px 16px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
-      background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+      background: var(--color-white);
       margin-bottom: var(--space-md);
     }
     .split-viz-head {
@@ -2336,7 +2337,7 @@
       border-radius: var(--radius-md);
       overflow: hidden;
       margin-bottom: 10px;
-      background: #E5E7EB;
+      background: var(--color-border);
     }
     .split-seg {
       min-width: 0;
@@ -2500,6 +2501,7 @@
   </div>
 </div>
 
+<script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
 <script>
   var I18N = {

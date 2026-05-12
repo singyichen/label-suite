@@ -118,7 +118,79 @@
   --fg-3:       var(--color-text-muted);
   --bg-page:    var(--color-surface);
   --bg-surface: var(--color-white);
+
+  /* Nav-active background — overridden in dark mode so the active pill
+     reads as "raised" (lighter than navbar) instead of fading into bg. */
+  --nav-active-bg: var(--color-surface);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Dark Theme — applied via <html data-theme="dark">
+   Strategy: re-map the same token names so every page that already
+   uses var(--color-*) flips automatically. No HTML changes needed.
+
+   Specificity note: existing prototype pages redefine these tokens
+   inside inline <style>{ :root { ... } } blocks. `:root` has
+   specificity (0,1,0); `html[data-theme="dark"]` has (0,1,1), so the
+   dark overrides win regardless of source order.
+   ═══════════════════════════════════════════════════════════════ */
+html[data-theme="dark"] {
+  /* ── Core palette ─────────────────────────────────────────── */
+  --color-primary:          #818CF8;   /* indigo-400, brighter on dark */
+  --color-secondary:        #A5B4FC;   /* indigo-300 */
+  --color-cta:              #34D399;   /* emerald-400 */
+  --color-cta-hover:        #10B981;
+  --color-surface:          #0B0B12;   /* page bg, near-black */
+  --color-white:            #16161F;   /* card / sidebar bg, raised 1 step */
+  --color-ink:              #E2E8F0;   /* slate-200, primary text */
+  --color-primary-soft-bg:  #1E1B4B;   /* indigo-950 */
+
+  /* ── Supporting ───────────────────────────────────────────── */
+  --color-border:           #2A2A35;
+  --color-border-muted:     #1F1F28;
+  --color-text-muted:       #71717A;   /* zinc-500 */
+  --color-text-soft:        #A1A1AA;   /* zinc-400 */
+  --color-slate-50:         #1F1F28;   /* hover bg in dark */
+
+  /* Aliases */
+  --color-ink-muted:        #71717A;
+
+  /* ── Semantic state — desaturated for dark backgrounds ────── */
+  --color-error:            #F87171;
+  --color-error-bg:         #2A1414;
+  --color-error-border:     #5B2222;
+  --color-error-soft-bg:    #2A1414;
+  --color-error-soft-border:#5B2222;
+
+  --color-success:          #4ADE80;
+  --color-success-bg:       #0F2A18;
+  --color-success-border:   #1F5132;
+  --color-success-soft-bg:  #0F2A18;
+  --color-success-soft-border: #1F5132;
+
+  --color-warning:          #FACC15;
+  --color-warning-bg:       #2A2210;
+  --color-warning-border:   #5C4A1A;
+  --color-warning-soft-bg:  #2A2210;
+  --color-warning-soft-border: #5C4A1A;
+
+  --color-info:             #60A5FA;
+  --color-info-bg:          #0F1F33;
+  --color-info-border:      #1E3A66;
+
+  /* ── Shadows — much subtler on dark, mostly ring-style ────── */
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.45);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.50);
+  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 0 0 1px rgba(129, 140, 248, 0.10), 0 4px 24px rgba(0, 0, 0, 0.40);
+
+  /* Nav-active pill: lighter than --color-white (#16161F) so it reads as raised */
+  --nav-active-bg: #2A2A35;
+}
+
+/* `data-theme` is always resolved to "light" or "dark" by theme.js.
+   The "system" choice is resolved client-side using matchMedia. */
 
 /* ── Semantic type rules ──────────────────────────────────── */
 html[lang="zh-TW"] body,

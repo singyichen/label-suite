@@ -6,6 +6,7 @@
   <title>Label Suite — 使用者管理</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
       --navbar-mobile-height: 84px;
@@ -40,13 +41,13 @@
       font-family: 'Crimson Pro', 'Noto Serif TC', serif;
       font-size: 28px; line-height: 1.3; font-weight: 700; color: var(--color-ink); margin: 0 0 4px;
     }
-    .page-main-subtitle { font-size: 14px; color: #64748B; margin: 0; }
+    .page-main-subtitle { font-size: 14px; color: var(--color-text-soft); margin: 0; }
     .page-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; }
 
     /* ── Admin Tabs ─────────────────────────────────────────────── */
-    .admin-tabs { display: flex; border-bottom: 2px solid #E2E8F0; margin-bottom: var(--space-lg); }
+    .admin-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-lg); }
     .admin-tab {
-      padding: 10px 20px; font-size: 14px; font-weight: 500; color: #64748B;
+      padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-soft);
       border-bottom: 2px solid transparent; margin-bottom: -2px;
       cursor: pointer; transition: color 150ms, border-color 150ms;
       text-decoration: none; display: inline-block;
@@ -79,7 +80,7 @@
       font-size: 14px; font-weight: 500;
       transition: color 150ms, background 150ms; cursor: pointer;
     }
-    .btn-ghost:hover { color: var(--color-ink); background: #F8FAFC; }
+    .btn-ghost:hover { color: var(--color-ink); background: var(--color-slate-50); }
     .btn-danger {
       display: inline-flex; align-items: center; gap: 6px;
       background: transparent; color: var(--color-error);
@@ -136,13 +137,13 @@
     }
     .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     table { width: 100%; text-align: left; border-collapse: collapse; font-size: 14px; white-space: nowrap; min-width: 640px; }
-    thead tr { background: #F8FAFC; }
+    thead tr { background: var(--color-slate-50); }
     th { padding: 12px 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
-    tbody tr { border-bottom: 1px solid #F1F5F9; transition: background var(--dur-fast); }
+    tbody tr { border-bottom: 1px solid var(--color-border-muted); transition: background var(--dur-fast); }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: #F8FAFC; }
+    tbody tr:hover { background: var(--color-slate-50); }
     td { padding: 14px 20px; color: var(--color-ink); vertical-align: middle; }
-    td.td-muted { color: #64748B; }
+    td.td-muted { color: var(--color-text-soft); }
     td.td-actions { display: flex; align-items: center; gap: var(--space-xs); padding-top: 10px; padding-bottom: 10px; }
 
     /* ── Badges ─────────────────────────────────────────────────── */
@@ -152,10 +153,10 @@
       font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
       border: 1px solid transparent;
     }
-    .badge-active   { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
-    .badge-disabled { background: #F8FAFC; color: #64748B; border-color: #E2E8F0; }
-    .badge-admin    { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
-    .badge-user     { background: #F0FDF4; color: #15803D; border-color: #BBF7D0; }
+    .badge-active   { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .badge-disabled { background: var(--color-slate-50); color: var(--color-text-soft); border-color: var(--color-border); }
+    .badge-admin    { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-info-border); }
+    .badge-user     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
 
     /* ── Mini action buttons (aligned with task-list) ────────── */
     .mini-btn {
@@ -170,9 +171,9 @@
     .mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: white; }
     .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; color: white; }
     .mini-btn-danger { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
-    .mini-btn-danger:hover:not(:disabled) { background: #FEE2E2; border-color: #FECACA; color: var(--color-error); }
+    .mini-btn-danger:hover:not(:disabled) { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
     .mini-btn-success { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); color: var(--color-success); }
-    .mini-btn-success:hover:not(:disabled) { background: #DCFCE7; border-color: #86EFAC; }
+    .mini-btn-success:hover:not(:disabled) { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
 
     /* ── Pagination ─────────────────────────────────────────────── */
     .pagination {
@@ -181,7 +182,7 @@
       padding: var(--space-md) var(--space-lg);
       border-top: 1px solid var(--color-border);
     }
-    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
     .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
     .page-btn {
       display: inline-flex; align-items: center; justify-content: center;
@@ -203,12 +204,12 @@
     /* ── Empty State ─────────────────────────────────────────────── */
     .empty-state { padding: var(--space-2xl) var(--space-lg); text-align: center; }
     .empty-state-icon {
-      width: 48px; height: 48px; border-radius: 50%; background: #F1F5F9;
+      width: 48px; height: 48px; border-radius: 50%; background: var(--color-border-muted);
       display: inline-flex; align-items: center; justify-content: center;
       margin-bottom: var(--space-md); color: var(--color-ink-muted);
     }
     .empty-state-title { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-    .empty-state-desc { font-size: 13px; color: #64748B; margin-bottom: var(--space-lg); }
+    .empty-state-desc { font-size: 13px; color: var(--color-text-soft); margin-bottom: var(--space-lg); }
 
     /* ── Modal ──────────────────────────────────────────────────── */
     .modal-overlay {
@@ -236,7 +237,7 @@
       border: 1px solid var(--color-border); background: transparent;
       color: var(--color-ink-muted); cursor: pointer; flex-shrink: 0; transition: all 150ms;
     }
-    .modal-close:hover { background: #F8FAFC; color: var(--color-ink); }
+    .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
     .modal-footer {
       display: flex; justify-content: flex-end; gap: var(--space-sm);
       margin-top: var(--space-lg); padding-top: var(--space-lg);
@@ -263,7 +264,7 @@
       transition: border-color 150ms; cursor: pointer;
     }
     .form-select:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .form-hint { margin-top: 5px; font-size: 12px; color: #64748B; }
+    .form-hint { margin-top: 5px; font-size: 12px; color: var(--color-text-soft); }
 
     /* ── Alert Banner ──────────────────────────────────────────── */
     .alert-banner {
@@ -675,7 +676,7 @@
         </svg>
         <span id="disableWarningText">停用帳號後，該使用者將立即無法登入，所有活躍 session/token 也會被撤銷。</span>
       </div>
-      <p id="disableConfirmText" style="font-size:14px;color:#334155;margin-top:var(--space-md)">
+      <p id="disableConfirmText" style="font-size:14px;color:var(--color-ink);margin-top:var(--space-md)">
         確定要停用 <strong id="disableTargetName">Alex Wang</strong> 的帳號嗎？
       </p>
       <div class="modal-footer">
@@ -721,6 +722,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- SCRIPTS                                                    -->
   <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
   <script>
     /* ── i18n ──────────────────────────────────────────────────── */

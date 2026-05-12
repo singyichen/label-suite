@@ -6,6 +6,7 @@
   <title>Label Suite — 角色設定</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
       --color-task-soft-bg:        #F0FDFA;
@@ -54,9 +55,9 @@
     .banner-reload-btn:hover { background: var(--color-error-soft-bg); }
 
     /* ── Admin Tabs ─────────────────────────────────────────────── */
-    .admin-tabs { display: flex; border-bottom: 2px solid #E2E8F0; margin-bottom: var(--space-md); }
+    .admin-tabs { display: flex; border-bottom: 2px solid var(--color-border); margin-bottom: var(--space-md); }
     .admin-tab {
-      padding: 10px 20px; font-size: 14px; font-weight: 500; color: #64748B;
+      padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--color-text-soft);
       border-bottom: 2px solid transparent; margin-bottom: -2px;
       cursor: pointer; transition: color 150ms, border-color 150ms;
       text-decoration: none; display: inline-block;
@@ -78,7 +79,7 @@
       border: 1px solid var(--color-border); background: var(--color-white); color: var(--color-ink);
       transition: background 150ms, border-color 150ms;
     }
-    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; }
+    .btn-ghost:hover { background: var(--color-slate-50); border-color: var(--color-border); }
     .btn-cta {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
@@ -103,8 +104,8 @@
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-task-badge {
       display: inline-flex; align-items: center; gap: 2px;
-      font-size: 10px; font-weight: 700; color: #92400E;
-      background: #FEF3C7; border: 1px solid #FDE68A;
+      font-size: 10px; font-weight: 700; color: var(--color-warning);
+      background: var(--color-warning-soft-bg); border: 1px solid var(--color-warning-soft-border);
       border-radius: var(--radius-full); padding: 1px 8px;
     }
 
@@ -141,14 +142,14 @@
       border-bottom: 1px solid var(--color-border); border-right: 1px solid var(--color-border);
       white-space: nowrap; vertical-align: middle;
     }
-    .col-role-header.sys-col  { background: #FAFAFE; color: var(--color-primary); }
+    .col-role-header.sys-col  { background: var(--color-primary-soft-bg); color: var(--color-primary); }
     .col-role-header.sa-col   { border-right: 2px solid var(--color-border); }
-    .col-role-header.task-col { background: #F8FFFE; color: var(--color-task-header); }
+    .col-role-header.task-col { background: var(--color-task-soft-bg); color: var(--color-task-header); }
     .col-role-header.last-col { border-right: none; }
 
     /* Module header rows */
     .module-row td {
-      background: #F8FAFC; padding: 6px var(--space-md);
+      background: var(--color-slate-50); padding: 6px var(--space-md);
       font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
       color: var(--color-ink-muted);
       border-top: 2px solid var(--color-border); border-bottom: 1px solid var(--color-border);
@@ -157,7 +158,7 @@
     /* Permission rows */
     .perm-row td { border-bottom: 1px solid var(--color-border); vertical-align: middle; }
     .perm-row:last-child td { border-bottom: none; }
-    .perm-row:hover td { background: #FAFAFE; }
+    .perm-row:hover td { background: var(--color-primary-soft-bg); }
 
     /* Sticky permission label column */
     .perm-cell {
@@ -165,7 +166,7 @@
       position: sticky; left: 0; background: var(--color-white);
       border-right: 1px solid var(--color-border); min-width: 250px; z-index: 5;
     }
-    .perm-row:hover .perm-cell { background: #FAFAFE; }
+    .perm-row:hover .perm-cell { background: var(--color-primary-soft-bg); }
     .perm-key {
       display: block; font-family: 'Atkinson Hyperlegible', monospace;
       font-size: 12px; font-weight: 600; color: var(--color-primary); line-height: 1.4;
@@ -192,7 +193,7 @@
     .matrix-checkbox.task-check { accent-color: var(--color-task-header); }
 
     /* Locked cells (super_admin base permissions) */
-    .locked-cell { background: #F9FAFB !important; cursor: not-allowed; }
+    .locked-cell { background: var(--color-slate-50) !important; cursor: not-allowed; }
     .locked-wrapper { display: inline-flex; align-items: center; justify-content: center; gap: 3px; color: var(--color-ink-muted); }
 
     /* Admin-locked cells (super_admin admin permissions — FR-008a) */
@@ -202,8 +203,8 @@
     /* Task-role badge (⛔) */
     .task-role-badge {
       display: inline-flex; align-items: center; gap: 3px;
-      font-size: 10px; font-weight: 700; color: #92400E;
-      background: #FEF3C7; border: 1px solid #FDE68A;
+      font-size: 10px; font-weight: 700; color: var(--color-warning);
+      background: var(--color-warning-soft-bg); border: 1px solid var(--color-warning-soft-border);
       border-radius: var(--radius-full); padding: 3px 8px; white-space: nowrap;
     }
 
@@ -731,6 +732,7 @@
 
   <!-- ─── Scripts ─────────────────────────────────────────────────── -->
   <script src="../shared/sidebar.js"></script>
+  <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
   <script>
     /* ── i18n ──────────────────────────────────────────────────────── */

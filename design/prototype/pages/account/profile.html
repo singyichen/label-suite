@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <style>
     /* ── Design Tokens ─────────────────────────────────────────── */
     :root {
@@ -92,6 +94,67 @@
 
     .section-title { font-size: 16px; font-weight: 600; color: var(--color-ink); margin-bottom: 4px; }
     .section-desc  { font-size: 13px; color: #64748B; margin-bottom: 20px; }
+
+    /* ── Preferences row ──────────────────────────────────────────── */
+    .preference-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+    }
+
+    .preference-row + .preference-row {
+      border-top: 1px solid var(--color-border);
+    }
+
+    .preference-label { font-size: 14px; font-weight: 500; color: var(--color-ink); }
+
+    /* Three-icon appearance toggle */
+    .appearance-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px;
+      background: transparent;
+      border-radius: var(--radius-md);
+    }
+
+    .appearance-toggle button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--color-text-soft, #64748B);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background var(--dur-fast, 150ms), color var(--dur-fast, 150ms), opacity var(--dur-fast, 150ms);
+    }
+
+    .appearance-toggle button:hover { opacity: 0.7; }
+
+    .appearance-toggle button[aria-pressed="true"] {
+      background: var(--color-slate-50, #F1F5F9);
+      color: var(--color-ink);
+    }
+
+    .appearance-toggle button:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    .appearance-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
 
     /* ── Avatar ──────────────────────────────────────────────────── */
     .avatar-area { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 24px; }
@@ -629,7 +692,47 @@
           </div>
         </section>
 
-        <!-- Section 2: 密碼設定 -->
+        <!-- Section 2: 偏好設定 -->
+        <section class="section-card" id="preferences-section" aria-labelledby="prefSectionTitle">
+          <h2 class="section-title" id="prefSectionTitle">偏好設定</h2>
+          <p class="section-desc" id="prefSectionDesc">調整介面外觀</p>
+
+          <div class="preference-row">
+            <span class="preference-label" id="prefAppearance">外觀</span>
+            <div class="appearance-toggle" role="group" aria-labelledby="prefAppearance">
+              <button type="button" data-theme-choice="system" aria-pressed="false"
+                      id="apSystem" aria-label="跟隨系統">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </button>
+              <button type="button" data-theme-choice="light" aria-pressed="false"
+                      id="apLight" aria-label="淺色">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="12" y1="2" x2="12" y2="4"></line>
+                  <line x1="12" y1="20" x2="12" y2="22"></line>
+                  <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+                  <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+                  <line x1="2" y1="12" x2="4" y2="12"></line>
+                  <line x1="20" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+                  <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+                </svg>
+              </button>
+              <button type="button" data-theme-choice="dark" aria-pressed="false"
+                      id="apDark" aria-label="深色">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 3: 密碼設定 -->
         <section class="section-card" id="password-section" aria-labelledby="pwSectionTitle">
           <h2 class="section-title" id="pwSectionTitle">密碼設定</h2>
           <p class="section-desc" id="pwSectionDesc">定期更新密碼以維護帳號安全</p>
@@ -831,6 +934,12 @@
         navProfile:              '個人設定',
         profileSectionTitle:     '個人資料',
         profileSectionDesc:      '修改您的姓名與聯絡方式',
+        prefSectionTitle:        '偏好設定',
+        prefSectionDesc:         '調整介面外觀',
+        prefAppearance:          '外觀',
+        prefApSystemAria:        '跟隨系統',
+        prefApLightAria:         '淺色',
+        prefApDarkAria:          '深色',
         labelName:               '姓名',
         labelContact:            '聯絡方式',
         labelEmail:              '電子郵件',
@@ -895,6 +1004,12 @@
         navProfile:              'Profile',
         profileSectionTitle:     'Profile',
         profileSectionDesc:      'Update your name and contact information',
+        prefSectionTitle:        'Preferences',
+        prefSectionDesc:         'Customize how the interface looks',
+        prefAppearance:          'Appearance',
+        prefApSystemAria:        'Follow system',
+        prefApLightAria:         'Light',
+        prefApDarkAria:          'Dark',
         labelName:               'Name',
         labelContact:            'Contact Info',
         labelEmail:              'Email',
@@ -960,6 +1075,7 @@
         'navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile',
         'pageTitle', 'pageSubtitle',
         'profileSectionTitle', 'profileSectionDesc',
+        'prefSectionTitle', 'prefSectionDesc', 'prefAppearance',
         'labelName', 'labelContact', 'labelEmail', 'labelEmailChange',
         'avatarHintText', 'contactHint', 'saveProfileLabel',
         'pwSectionTitle', 'pwSectionDesc', 'ssoBannerText',
@@ -980,6 +1096,9 @@
       document.getElementById('logoutBtn').setAttribute('title', t('logoutTitle'));
       document.getElementById('mobileLogoutBtn').setAttribute('aria-label', t('logoutAria'));
       document.getElementById('mobileLogoutBtn').setAttribute('title', t('logoutTitle'));
+      document.getElementById('apSystem').setAttribute('aria-label', t('prefApSystemAria'));
+      document.getElementById('apLight').setAttribute('aria-label', t('prefApLightAria'));
+      document.getElementById('apDark').setAttribute('aria-label', t('prefApDarkAria'));
       document.getElementById('savePwLabel').textContent =
         currentState === 'sso' ? t('savePwLabelSSO') : t('savePwLabel');
     }
@@ -1282,6 +1401,30 @@
     /* ── Init ───────────────────────────────────────────────────── */
     applyLang(window.LabelSuiteSharedSidebar.getStoredLang());
     setState('email');
+  </script>
+
+  <!-- ── Theme toggle ──────────────────────────────────────────── -->
+  <script src="../../assets/theme.js"></script>
+  <script>
+    (function wireAppearanceToggle() {
+      const buttons = document.querySelectorAll('.appearance-toggle button[data-theme-choice]');
+      function syncPressed(choice) {
+        buttons.forEach((btn) => {
+          btn.setAttribute('aria-pressed', btn.dataset.themeChoice === choice ? 'true' : 'false');
+        });
+      }
+      syncPressed(window.LabelSuiteTheme.getStoredChoice());
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const choice = btn.dataset.themeChoice;
+          window.LabelSuiteTheme.setChoice(choice);
+          syncPressed(choice);
+          if (window.LabelSuiteAnalytics && typeof LabelSuiteAnalytics.track === 'function') {
+            LabelSuiteAnalytics.track('prototype_theme_changed', { choice: choice });
+          }
+        });
+      });
+    })();
   </script>
 
   <!-- ── Analytics ─────────────────────────────────────────────── -->

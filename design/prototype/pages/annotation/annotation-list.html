@@ -6,6 +6,7 @@
   <title>Label Suite — 標記清單</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
       --navbar-mobile-height: 84px;
@@ -50,7 +51,7 @@
     }
     .list-item:hover {
       border-color: var(--color-primary);
-      background: #F9FAFB;
+      background: var(--color-slate-50);
     }
     .list-item-title {
       display: block;
@@ -142,14 +143,14 @@
       line-height: 1.4;
     }
     .badge-info {
-      color: #1D4ED8;
-      background: #EFF6FF;
-      border-color: #BFDBFE;
+      color: var(--color-info);
+      background: var(--color-info-bg);
+      border-color: var(--color-info-border);
     }
     .badge-warning {
       color: var(--color-warning);
-      background: #FEFCE8;
-      border-color: #FEF08A;
+      background: var(--color-warning-soft-bg);
+      border-color: var(--color-warning-soft-border);
     }
     .badge-dry-run {
       color: #6B7280;
@@ -170,7 +171,7 @@
     .progress {
       height: 6px;
       border-radius: var(--radius-full);
-      background: #E2E8F0;
+      background: var(--color-border);
       overflow: hidden;
     }
     .progress > span {
@@ -283,11 +284,11 @@
       color: var(--color-ink-muted);
       border-bottom: 1px solid var(--color-border);
       white-space: nowrap;
-      background: #F8FAFC;
+      background: var(--color-slate-50);
     }
     .task-table td {
       padding: 14px 20px;
-      border-bottom: 1px solid #F1F5F9;
+      border-bottom: 1px solid var(--color-border-muted);
       vertical-align: middle;
     }
     .task-table tbody tr:last-child td { border-bottom: none; }
@@ -295,7 +296,7 @@
       cursor: pointer;
       transition: background var(--dur-fast);
     }
-    #sampleRows tr:hover { background: #F8FAFC; }
+    #sampleRows tr:hover { background: var(--color-slate-50); }
     #sampleRows tr:focus-visible {
       outline: 2px solid var(--color-primary);
       outline-offset: -2px;
@@ -317,9 +318,9 @@
       font-size: 12px;
       font-weight: 700;
     }
-    .status-submitted { color: var(--color-success); background: #DCFCE7; }
-    .status-saved { color: var(--color-warning); background: #FEF3C7; }
-    .status-pending { color: var(--color-ink-muted); background: #E2E8F0; }
+    .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
+    .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
+    .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
     .mini-btn {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -358,7 +359,7 @@
       padding: var(--space-md) var(--space-lg);
       border-top: 1px solid var(--color-border);
     }
-    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
     .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
     .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
     .page-btn {
@@ -378,7 +379,7 @@
     }
     .page-btn:hover:not(:disabled):not(.active) {
       border-color: var(--color-primary);
-      background: #EEF2FF;
+      background: var(--color-primary-soft-bg);
       color: var(--color-primary);
     }
     .page-btn.active {
@@ -411,7 +412,7 @@
     .expand-btn svg { transition: transform 0.15s ease; }
     .expand-btn.open svg { transform: rotate(90deg); }
     .reviewer-stats {
-      font-size: 12px; color: #6B7280; font-family: monospace;
+      font-size: 12px; color: var(--color-text-soft); font-family: monospace;
       display: block;
       min-width: 240px;
       white-space: pre-line;
@@ -428,18 +429,18 @@
     .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
     .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
     .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
-    .annotator-detail-row { background: #F8FAFC; }
+    .annotator-detail-row { background: var(--color-slate-50); }
     .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
-    .annotator-detail-inner { padding: 8px 20px 8px 52px; border-top: 1px solid #E2E8F0; }
+    .annotator-detail-inner { padding: 8px 20px 8px 52px; border-top: 1px solid var(--color-border); }
     .annotator-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 7px 0; border-bottom: 1px solid #EAECF0;
+      padding: 7px 0; border-bottom: 1px solid var(--color-border-muted);
     }
     .annotator-row:last-child { border-bottom: none; }
     .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
     .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: #EEF2FF;
-      border: 1px solid #C7D2FE; border-radius: var(--radius-md);
+      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-primary-soft-bg); border-radius: var(--radius-md);
       padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
     }
     .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
@@ -639,6 +640,7 @@
   <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
 </div>
 
+<script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────────── */
