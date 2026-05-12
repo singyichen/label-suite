@@ -649,17 +649,31 @@
       pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
       submitReviewLabel: '送出審核',
       toastReviewSubmitted: '審核結果已送出。',
-      toastSelectDecision: '請完成每位標記員的審核決策'
+      toastSelectDecision: '請完成每位標記員的審核決策',
+      trialRoundLabelTpl: '試標回合 R{round}',
+      trialListCountTpl: '本回合清單 {total} 筆',
+      officialListLabel: '正式標記清單',
+      officialListCountTpl: '正式清單 {total} 筆'
     },
     en: {
       pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
       pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
       submitReviewLabel: 'Submit review',
       toastReviewSubmitted: 'Review submitted.',
-      toastSelectDecision: 'Please complete a review decision for each annotator'
+      toastSelectDecision: 'Please complete a review decision for each annotator',
+      trialRoundLabelTpl: 'Trial round R{round}',
+      trialListCountTpl: 'This round list: {total} items',
+      officialListLabel: 'Official annotation list',
+      officialListCountTpl: 'Official list: {total} items'
     }
   };
-  function t(key) { return (I18N[CURRENT_LANG] || I18N.zh)[key] || key; }
+  function t(key, vars) {
+    var str = (I18N[CURRENT_LANG] || I18N.zh)[key] || key;
+    if (vars) {
+      Object.keys(vars).forEach(function(k) { str = str.replace('{' + k + '}', String(vars[k])); });
+    }
+    return str;
+  }
 
   var toastTimer = null;
   function showToast(msg, type) {
@@ -1578,17 +1592,17 @@
 
   function getMaterializedRunContext(task) {
     var meta = MATERIALIZED_RUN_CONTEXT[task.taskId] || {};
-    var total = Number(meta.total) || (Array.isArray(task.samples) ? task.samples.length : 0);
+    var total = (meta.total !== undefined && meta.total !== null) ? Number(meta.total) : (Array.isArray(task.samples) ? task.samples.length : 0);
     if (task.runType === 'dry_run') {
       var round = Number(meta.round) || 1;
       return {
-        label: CURRENT_LANG === 'en' ? ('Trial round R' + round) : ('試標回合 R' + round),
-        countLabel: CURRENT_LANG === 'en' ? ('This round list: ' + total + ' items') : ('本回合清單 ' + total + ' 筆')
+        label: t('trialRoundLabelTpl', { round: round }),
+        countLabel: t('trialListCountTpl', { total: total })
       };
     }
     return {
-      label: CURRENT_LANG === 'en' ? 'Official annotation list' : '正式標記清單',
-      countLabel: CURRENT_LANG === 'en' ? ('Official list: ' + total + ' items') : ('正式清單 ' + total + ' 筆')
+      label: t('officialListLabel'),
+      countLabel: t('officialListCountTpl', { total: total })
     };
   }
 

@@ -25,4 +25,37 @@ test.describe('Run materialization cues', () => {
     await expect(page.locator('#sampleListCount')).toHaveText('10 筆');
     await expect(page.locator('#sampleList .sample-item')).toHaveCount(5);
   });
+
+  test('annotation list respects a materialized zero-count context', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+
+    await page.evaluate(() => {
+      type AnnotationListWindow = Window & {
+        MATERIALIZED_RUN_CONTEXT: Record<string, { round: number | null; total: number }>;
+        parseContext: () => { role: string; runType: string; taskId: string; taskType: string; subType: string };
+        renderTaskInfo: (context: { role: string; runType: string; taskId: string; taskType: string; subType: string }) => void;
+      };
+      const annotationWindow = window as unknown as AnnotationListWindow;
+      annotationWindow.MATERIALIZED_RUN_CONTEXT['TASK-015-A2'].total = 0;
+      annotationWindow.renderTaskInfo(annotationWindow.parseContext());
+    });
+
+    await expect(page.locator('#taskInfoCard')).toContainText('本回合清單 0 筆');
+  });
+
+  test('workspace sample list respects a materialized zero-count context', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring&sample_id=A2-001');
+
+    await page.evaluate(() => {
+      type AnnotationWorkspaceWindow = Window & {
+        MATERIALIZED_RUN_CONTEXT: Record<string, { round: number | null; total: number }>;
+        renderSampleListHeader: () => void;
+      };
+      const workspaceWindow = window as unknown as AnnotationWorkspaceWindow;
+      workspaceWindow.MATERIALIZED_RUN_CONTEXT['TASK-015-A2'].total = 0;
+      workspaceWindow.renderSampleListHeader();
+    });
+
+    await expect(page.locator('#sampleListCount')).toHaveText('0 筆');
+  });
 });

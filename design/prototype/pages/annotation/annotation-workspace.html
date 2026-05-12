@@ -3437,7 +3437,7 @@ var MATERIALIZED_RUN_CONTEXT = {
 
 function getMaterializedRunContext() {
   var meta = MATERIALIZED_RUN_CONTEXT[state.taskId] || {};
-  var total = Number(meta.total) || SAMPLES.length;
+  var total = (meta.total !== undefined && meta.total !== null) ? Number(meta.total) : SAMPLES.length;
   if (state.runType === 'dry_run') {
     var round = Number(meta.round) || 1;
     return {
