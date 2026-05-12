@@ -2,7 +2,7 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.2.0
+**版本**：1.3.0
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
@@ -17,9 +17,11 @@
 - `SUPPORTED_PAGES = /dashboard, /task-list, /task-new, /task-detail, /annotation-workspace, /dataset-stats, /dataset-quality, /user-management, /role-settings, /profile`
 - `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
 - `SIDEBAR_COLLAPSED_STORAGE_KEY = labelsuite.sidebarCollapsed`
-- `APPEARANCE_STORAGE_KEY = labelsuite.theme`
+- `APPEARANCE_STORAGE_KEY = label-suite-theme`
 - `APPEARANCE_MODES = light | dark | system`
 - `APPEARANCE_DEFAULT_RESOLVED = light`（`system` 固定解析為 `light`，不跟隨 OS `prefers-color-scheme`）
+- `SIDEBAR_UTILITY_ACTIONS = shortcut_help | appearance_toggle`
+- `SHORTCUT_HELP_SCOPE = current_page_common_shortcuts`
 
 ## Process Flow
 
@@ -46,6 +48,12 @@ sequenceDiagram
     navbar->>i18n: 切換語系
     i18n-->>navbar: 更新所有 navbar 文案與可存取屬性
     i18n-->>頁面: 同步更新右側目前模組頁內容文案
+
+    使用者->>navbar: 點擊快捷鍵 icon
+    navbar-->>使用者: 顯示目前頁面可用快捷鍵總覽 modal
+
+    使用者->>navbar: 點擊外觀 icon
+    navbar-->>頁面: 在 light / dark resolved theme 間切換並持久化
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
@@ -55,7 +63,8 @@ sequenceDiagram
 | 3 | 使用者 | 點擊 L0 導覽項 | 符合權限則導頁；不符則導回 Landing 並顯示提示 |
 | 4 | 使用者 | 點擊語言切換 | Sidebar 與右側目前模組頁文案、可存取屬性同步更新 |
 | 5 | 使用者 | 點擊登出 | 導向 `../account/login.html`（原型導頁） |
-| 6 | 使用者 | 點擊外觀切換（Appearance） | 套用 `light` / `dark` / `system` 模式，更新 `html[data-theme]`，持久化至 `APPEARANCE_STORAGE_KEY` |
+| 6 | 使用者 | 點擊外觀切換（Appearance） | Sidebar 單鍵在 `light` / `dark` resolved theme 間切換，更新 `html[data-theme]`，持久化至 `APPEARANCE_STORAGE_KEY` |
+| 7 | 使用者 | 點擊快捷鍵 icon 或按 `?` | 開啟目前頁面可用快捷鍵總覽；不包含 task-specific 作答快捷鍵 |
 
 ---
 
@@ -154,8 +163,8 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** viewport `> MOBILE_BP`，**When** 載入頁面，**Then** 顯示左側固定 Sidebar（含品牌、L0、actions）。
-2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列 + 下方主導覽。
+1. **Given** viewport `> MOBILE_BP`，**When** 載入頁面，**Then** 顯示左側固定 Sidebar（含品牌、L0、底部 utility actions、user chip）。
+2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列（含語言、快捷鍵、外觀與登出控制）+ 下方主導覽。
 3. **Given** 行動版，**When** 操作 L0 導覽，**Then** 主要內容不被遮擋且導覽可點擊。
 
 ### User Story 5 — Desktop Sidebar Mini / Icon-only 可收合（優先級：P2）
@@ -175,29 +184,59 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
-### User Story 6 — Appearance 外觀模式切換（優先級：P2）
+### User Story 6 — Sidebar Utility 外觀模式切換（優先級：P2）
 
-登入後使用者可透過 Sidebar 的 Appearance 控制項，在淺色（light）、深色（dark）與跟隨系統（system）三種外觀模式間切換，切換後立即生效且跨頁保持一致。
+登入後使用者可透過 Sidebar 底部 utility icon 或 mobile top bar icon，在淺色（light）與深色（dark）resolved theme 間快速切換，切換後立即生效且跨頁保持一致。完整外觀偏好（包含 `system`）仍可在個人設定中呈現；Sidebar 僅提供單鍵快速切換。
 
-**此優先級原因**：外觀偏好為全站橫切功能，Sidebar 是唯一操作入口；若切頁後狀態遺失或 FOUC 閃白，會明顯影響使用體驗。
+**此優先級原因**：外觀偏好為全站橫切功能，Sidebar 是常駐快速操作入口；若切頁後狀態遺失或 FOUC 閃白，會明顯影響使用體驗。
 
-**獨立測試方式**：切換三種模式，確認 `html[data-theme]` 即時更新；導向其他 `SUPPORTED_PAGES` 後重整，確認狀態從 `APPEARANCE_STORAGE_KEY` 恢復且無 FOUC。
+**獨立測試方式**：透過 Sidebar utility icon 切換 light/dark，確認 `html[data-theme]` 即時更新；導向其他 `SUPPORTED_PAGES` 後重整，確認狀態從 `APPEARANCE_STORAGE_KEY` 恢復且無 FOUC。
 
 **驗收情境**：
 
-1. **Given** 使用者在任一登入後頁面，**When** 點擊 Sidebar Appearance 控制項選擇 `dark`，**Then** `html[data-theme="dark"]` 即時套用，全頁 CSS token 切換為深色。
-2. **Given** 使用者選擇 `light`，**When** 導向任一其他 `SUPPORTED_PAGES`，**Then** 新頁面載入後維持 `html[data-theme="light"]`，不出現閃白（FOUC）。
+1. **Given** 使用者在任一登入後頁面且目前為 `light`，**When** 點擊 Sidebar Appearance icon（月亮），**Then** `html[data-theme="dark"]` 即時套用，全頁 CSS token 切換為深色，icon 改顯示太陽。
+2. **Given** 使用者目前為 `dark`，**When** 點擊 Sidebar Appearance icon（太陽），**Then** `html[data-theme="light"]` 即時套用，icon 改顯示月亮。
 3. **Given** 使用者選擇 `system`，**When** 任何 OS 設定，**Then** 頁面固定套用 `data-theme="light"`（`system` = app 預設 = light，不跟隨 OS）。
 4. **Given** 重新整理或重開分頁，**When** 頁面載入，**Then** 從 `APPEARANCE_STORAGE_KEY` 恢復最後一次的 mode，且在首次繪製前完成 `data-theme` 設定。
 5. **Given** `APPEARANCE_STORAGE_KEY` 不存在或值無效，**When** 頁面載入，**Then** 預設以 `system` mode 處理。
+6. **Given** 使用者切換 zh/en，**When** 檢查 Appearance icon，**Then** `aria-label` / `title` 同步顯示「切換為深色/淺色模式」或 `Switch to dark/light mode`。
 
 **Appearance 控制項行為規則**：
 
-- 三種 mode：`light`（固定淺色）、`dark`（固定深色）、`system`（跟隨 `prefers-color-scheme`）。
+- 持久化 mode 仍允許三種值：`light`（固定淺色）、`dark`（固定深色）、`system`（app 預設淺色）。
+- Sidebar utility Appearance 控制項為單一 icon button：目前 `light` 時顯示月亮（下一步切至 `dark`）；目前 `dark` 時顯示太陽（下一步切至 `light`）。不得同時顯示多個外觀 icon。
 - 切換後立即更新 `html[data-theme]`（`light` 或 `dark`），不需重新整理。
 - 狀態持久化至 `APPEARANCE_STORAGE_KEY`（`localStorage`）。
 - 頁面 `<head>` 必須在 CSS 載入前執行同步 JS 讀取 `APPEARANCE_STORAGE_KEY` 並設定 `data-theme`，防止 FOUC（實作於 `design/prototype/assets/theme-fouc.js`）。
-- `system` 模式下需監聽 `window.matchMedia('(prefers-color-scheme: dark)').onchange`，OS 切換時即時同步 `data-theme`（不寫入 localStorage）。
+- `system` 模式解析為 `light`；Sidebar utility 第一次點擊時應切換並持久化為 `dark`。
+
+---
+
+### User Story 7 — 快捷鍵總覽入口（優先級：P2）
+
+登入後使用者可從 Sidebar utility icon 或 `?` 開啟快捷鍵總覽，查看目前頁面可用的跨任務共用快捷鍵。
+
+**此優先級原因**：快捷鍵是輔助操作，不應成為主導覽項，但使用者在標記/審核作業中需能快速查詢。
+
+**獨立測試方式**：在 desktop / mobile 開啟快捷鍵 modal，切換 zh/en，確認入口、modal 標題、section 與 keycap 顯示皆正確。
+
+**驗收情境**：
+
+1. **Given** viewport `> MOBILE_BP`，**When** 使用者查看 Sidebar 底部 utility row，**Then** 顯示 icon-only keyboard button，不顯示「快捷鍵」文字。
+2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** mobile top bar 顯示 keyboard icon 入口。
+3. **Given** 使用者點擊 keyboard icon 或按 `?`，**When** 開啟 modal，**Then** 顯示目前頁面可用快捷鍵總覽。
+4. **Given** 快捷鍵含多個按鍵，**When** 顯示於 modal，**Then** 每個按鍵必須以獨立 keycap 呈現，不得以 `Ctrl / Cmd + S` 這類連續文字呈現。
+5. **Given** 使用者切換 zh/en，**When** 檢查快捷鍵入口與 modal，**Then** `aria-label`、標題、說明與 section 文案同步切換。
+6. **Given** 快捷鍵總覽列出多個方向或決策動作，**When** 使用者檢視清單，**Then** 每個 action 必須獨立成列；例如 `上一筆` 與 `下一筆` 不得合併成 `上一筆 / 下一筆`，`通過目前結果` 與 `退回目前結果` 也不得合併。
+
+**快捷鍵總覽行為規則**：
+
+- `shortcut_help` 不屬於 L0 主導覽，不新增 sidebar nav item。
+- Desktop 入口位於 Sidebar 底部 utility row；Mobile 入口位於 top brand bar。
+- Modal 只顯示跨任務共用快捷鍵；不得納入 task-specific 作答快捷鍵（例如 label `1-9`、NER entity type、relation type、VA scoring）。
+- Keycap 使用獨立元素呈現，例如 `CTRL`、`CMD`、`S` 三個 keycap，而不是單一文字字串。
+- 一個 shortcut action 必須對應一列；不得將兩個 action 合併為同一列，即使它們使用相近的 modifier key。
+- `Esc` 可關閉快捷鍵 modal；點擊 backdrop 可關閉 modal。
 
 ---
 
@@ -209,6 +248,8 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - 超長使用者姓名不得擠壓語言按鈕與登出按鈕可點擊區域。
 - `APPEARANCE_STORAGE_KEY` 值無效（非 `light`/`dark`/`system`）時，fallback 為 `system`，不拋出例外。
 - `prefers-color-scheme` 不支援的舊瀏覽器，`system` mode 應 fallback 為 `light`。
+- Sidebar utility actions 為 icon-only 時，必須保留 `aria-label` 與 `title`，且 zh/en 切換後同步更新。
+- 快捷鍵 modal 在窄螢幕不得讓 keycap 擠壓或覆蓋 action 名稱。
 
 ---
 
@@ -237,11 +278,19 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-014A**：Desktop 收合觸發必須為 sidebar 非互動空白區；互動元素（`a`、`button`、`input/select/textarea`、含語意按鈕角色元素）不得觸發收合。
 - **FR-014B**：Sidebar 收合狀態必須持久化於 `SIDEBAR_COLLAPSED_STORAGE_KEY`，並在 `SUPPORTED_PAGES` 間保持一致。
 - **FR-014C**：Mobile（`<= MOBILE_BP`）不得啟用 mini/icon-only 收合互動，避免與 bottom nav 操作衝突。
-- **FR-015**：Sidebar 必須提供 Appearance 切換控制項，支援 `APPEARANCE_MODES` 三態（`light` / `dark` / `system`）。
+- **FR-015**：Sidebar 必須提供 icon-only Appearance 快速切換控制項，在 `light` / `dark` resolved theme 間切換。
 - **FR-015A**：`light` → `html[data-theme="light"]`；`dark` → `html[data-theme="dark"]`；`system` → 固定解析為 `html[data-theme="light"]`（app 預設；不跟隨 OS `prefers-color-scheme`）。
 - **FR-015B**：Appearance 選擇後必須立即套用，並持久化至 `APPEARANCE_STORAGE_KEY`，在所有 `SUPPORTED_PAGES` 間保持一致。
 - **FR-015C**：每個 `SUPPORTED_PAGES` 的 `<head>` 必須在樣式表載入前執行同步 JS（`theme-fouc.js`），讀取 `APPEARANCE_STORAGE_KEY` 並設定 `html[data-theme]`，防止 FOUC。
 - **FR-015D**：`APPEARANCE_STORAGE_KEY` 不存在或值無效時，預設 mode 為 `system`。
+- **FR-015E**：Appearance icon 必須一次只顯示一個狀態提示 icon：`light` 顯示月亮（可切 dark）、`dark` 顯示太陽（可切 light）。
+- **FR-015F**：Appearance icon 的 `aria-label` / `title` 必須支援 zh/en，並依下一步動作顯示「切換為深色/淺色模式」。
+- **FR-016**：Sidebar 必須提供 icon-only 快捷鍵總覽入口；Desktop 位於 Sidebar 底部 utility row，Mobile 位於 top brand bar。
+- **FR-016A**：快捷鍵入口必須可由 `?` 開啟，並可由 `Esc` 或 backdrop 關閉。
+- **FR-016B**：快捷鍵總覽 modal 必須支援 zh/en，並同步更新 `aria-label`、標題、說明與 section 文案。
+- **FR-016C**：快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
+- **FR-016D**：快捷鍵總覽第一版僅顯示跨任務共用快捷鍵，不得納入 task-specific 作答快捷鍵。
+- **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果`、`全部通過 / 全部退回` 作為單一列）。
 
 ### User Flow & Navigation
 
@@ -269,12 +318,14 @@ flowchart LR
 | 任一登入後頁 | 點擊「資料集分析」 | `/dataset-stats`（需 task role/context） |
 | 任一登入後頁 | 點擊「系統管理」 | `/user-management`（僅 super_admin） |
 | 任一登入後頁 | 點擊「個人設定」 | `/profile` |
+| 任一登入後頁 | 點擊 keyboard icon / 按 `?` | 開啟快捷鍵總覽 modal |
+| 任一登入後頁 | 點擊 Appearance icon | 切換 `html[data-theme]` light/dark，不導頁 |
 
 ### 關鍵實體
 
 - `SharedNavbarContract`
   - `sections`: `brand-section`, `navbar-center`, `nav-actions`
-  - `interactiveIds`: `langToggle`, `mobileLangToggle`, `logoutBtn`, `mobileLogoutBtn`
+  - `interactiveIds`: `langToggle`, `mobileLangToggle`, `shortcutHelpBtn`, `mobileShortcutHelpBtn`, `sidebarThemeToggleBtn`, `mobileThemeToggleBtn`, `logoutBtn`, `mobileLogoutBtn`
   - `userIds`: `userName`, `mobileUserName`, `roleIndicator`, `userAvatar`
   - `navIds`: `navDashboard`, `navTaskManagement`, `navAnnotation`, `navDataset`, `navAdmin`, `navProfile`
 - `LanguageState`
@@ -290,7 +341,13 @@ flowchart LR
 - `AppearanceState`
   - `mode`: `light` | `dark` | `system`（使用者的選擇，持久化值）
   - `resolved_theme`: `light` | `dark`（實際套用至 `html[data-theme]` 的值；`mode=dark` → `dark`，其餘皆 → `light`）
-  - `storage_key`: `labelsuite.theme`
+  - `storage_key`: `label-suite-theme`
+  - `sidebar_toggle`: 單鍵 light/dark 快速切換；目前 `light` 顯示 moon icon，下一步為 `dark`；目前 `dark` 顯示 sun icon，下一步為 `light`
+- `ShortcutHelpState`
+  - `is_open`: `true` / `false`
+  - `scope`: `current_page_common_shortcuts`
+  - `entry_points`: `shortcutHelpBtn` / `mobileShortcutHelpBtn` / `?`
+  - `excluded_shortcuts`: task-specific 作答快捷鍵（label hotkeys、NER/relation/aspect/score hotkeys）
 
 ---
 
@@ -338,11 +395,19 @@ flowchart LR
 - **SC-008A**：重新整理或切換至任一 `SUPPORTED_PAGES`，Appearance 從 `APPEARANCE_STORAGE_KEY` 恢復，首次繪製不出現 FOUC。
 - **SC-008B**：`system` 模式下，無論 OS `prefers-color-scheme` 為何，`html[data-theme]` 固定為 `light`。
 - **SC-008C**：`APPEARANCE_STORAGE_KEY` 不存在或無效時，系統預設為 `system` mode，且不拋出 JS 例外。
+- **SC-008D**：Sidebar Appearance icon 在 `light` 時顯示月亮且點擊後切至 `dark`；在 `dark` 時顯示太陽且點擊後切至 `light`；同一時間不得同時顯示太陽與月亮。
+- **SC-008E**：Sidebar Appearance icon 的 `aria-label` / `title` 隨 zh/en 與下一步動作同步更新。
+- **SC-009**：Desktop Sidebar 底部 utility row 顯示 icon-only keyboard 入口；Mobile top bar 顯示 keyboard 入口。
+- **SC-009A**：點擊 keyboard icon 或按 `?` 可開啟快捷鍵總覽 modal；按 `Esc` 或點擊 backdrop 可關閉。
+- **SC-009B**：快捷鍵總覽 modal 的 zh/en 文案、section 與可存取屬性同步切換。
+- **SC-009C**：快捷鍵總覽中的複合快捷鍵以獨立 keycap 呈現，例如 `CTRL`、`CMD`、`S` 為三個元素。
+- **SC-009D**：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果`、`全部通過`、`全部退回` 各自獨立顯示。
 
 ### 驗證建議
 
 - 建立 navbar contract 測試：逐頁驗證 L0 順序、active、`aria-current`、role visibility。
 - 加入 gating smoke test：覆蓋無 task context 與無 membership 的導回行為。
+- 加入 utility smoke test：驗證 keyboard icon、Appearance icon、快捷鍵 modal i18n 與 keycap 呈現。
 
 ---
 
@@ -350,7 +415,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.2.0 | 2026-05-12 | 新增 Appearance 外觀模式切換規格：`APPEARANCE_STORAGE_KEY`、三態 mode（light/dark/system）、FOUC 防護（`theme-fouc.js`）、OS 即時跟隨、FR-015 群、AppearanceState 實體、SC-008 群 |
+| 1.3.0 | 2026-05-12 | 同步 Sidebar utility：新增 icon-only 快捷鍵總覽入口、快捷鍵 modal i18n、獨立 keycap 與一 action 一列呈現；Sidebar Appearance 改為單鍵 light/dark icon toggle，Desktop/Mobile 入口同步，並更新 `APPEARANCE_STORAGE_KEY = label-suite-theme` |
+| 1.2.0 | 2026-05-12 | 新增 Appearance 外觀模式切換規格：`APPEARANCE_STORAGE_KEY`、三態 mode（light/dark/system）、FOUC 防護（`theme-fouc.js`）、FR-015 群、AppearanceState 實體、SC-008 群 |
 | 1.1.5 | 2026-04-23 | 補充 Shared Sidebar 收合規格：新增 Desktop `Mini / Icon-only`、空白區觸發排除互動元件、`labelsuite.sidebarCollapsed` 狀態持久化、Mobile 不啟用收合，並明確化共用 `shared/sidebar.css` 契約 |
 | 1.1.4 | 2026-04-23 | 同步 shared sidebar：新增 `labelsuite.activeTaskType` 導頁契約，點擊「標記作業」時附帶 `task_type` query |
 | 1.1.3 | 2026-04-16 | 新增語言持久化機制規範（FR-009B / LanguageState / SC-006A），明確定義 `labelsuite.lang` 跨頁與重載一致性 |

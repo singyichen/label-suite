@@ -1,0 +1,74 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('Shared sidebar shortcut entry', () => {
+  test('shows a desktop utility keyboard button that opens page shortcuts', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/pages/dashboard/dashboard.html');
+
+    const button = page.getByTestId('shortcut-help-button');
+    await expect(button).toBeVisible();
+    await expect(button).toHaveAttribute('aria-label', '快捷鍵');
+    await expect(button).toHaveText('');
+
+    await button.click();
+    await expect(page.getByRole('dialog', { name: '快捷鍵' })).toBeVisible();
+    await expect(page.getByText('目前頁面可用快捷鍵')).toBeVisible();
+    await expect(page.locator('[data-testid="shortcut-keycap"]').filter({ hasText: 'CTRL' }).first()).toBeVisible();
+    await expect(page.locator('[data-testid="shortcut-keycap"]').filter({ hasText: 'CMD' }).first()).toBeVisible();
+    await expect(page.locator('[data-testid="shortcut-keycap"]').filter({ hasText: 'S' }).first()).toBeVisible();
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '上一筆' })).toBeVisible();
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '下一筆' })).toBeVisible();
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '上一筆 / 下一筆' })).toHaveCount(0);
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '通過 / 退回目前結果' })).toHaveCount(0);
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部通過 / 全部退回' })).toHaveCount(0);
+  });
+
+  test('translates shortcut entry and modal through the shared language toggle', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/pages/dashboard/dashboard.html');
+
+    await page.locator('#langToggle').click();
+
+    const button = page.getByTestId('shortcut-help-button');
+    await expect(button).toHaveAttribute('aria-label', 'Keyboard shortcuts');
+    await expect(button).toHaveText('');
+
+    await button.click();
+    await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible();
+    await expect(page.getByText('Available shortcuts for this page')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Global' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Annotation workspace' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
+  });
+
+  test('keeps the keyboard shortcut entry available in the mobile top bar', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/pages/dashboard/dashboard.html');
+
+    const button = page.getByTestId('mobile-shortcut-help-button');
+    await expect(button).toBeVisible();
+
+    await button.click();
+    await expect(page.getByRole('dialog', { name: '快捷鍵' })).toBeVisible();
+  });
+
+  test('shows a single icon global theme toggle next to shortcut help', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript(() => {
+      window.localStorage.setItem('label-suite-theme', 'light');
+    });
+    await page.goto('/pages/dashboard/dashboard.html');
+
+    const toggle = page.getByTestId('sidebar-theme-toggle');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-label', '切換為深色模式');
+    await expect(toggle.locator('[data-theme-toggle-icon="moon"]')).toBeVisible();
+    await expect(toggle.locator('[data-theme-toggle-icon="sun"]')).toBeHidden();
+
+    await toggle.click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(toggle).toHaveAttribute('aria-label', '切換為淺色模式');
+    await expect(toggle.locator('[data-theme-toggle-icon="sun"]')).toBeVisible();
+    await expect(toggle.locator('[data-theme-toggle-icon="moon"]')).toBeHidden();
+  });
+});
