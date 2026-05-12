@@ -2212,7 +2212,7 @@
       height: 100%;
     }
     .sampling-fields-advanced {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: 1fr 1fr;
       align-items: start;
     }
     .field-hint-placeholder {
@@ -2598,6 +2598,7 @@
       officialPoolLabel: '正式標記池',
       stopConditionTitle: '達標條件',
       labelSamplingValueControl: '每回合抽樣筆數',
+      labelTrialRoundControl: '試標回合',
       labelRoundOutcomeControl: '目前判定',
       labelIaaMethodControl: 'IAA 計算方式',
       labelTargetAgreementControl: '目標 IAA',
@@ -3028,6 +3029,7 @@
       officialPoolLabel: 'Official pool',
       stopConditionTitle: 'Stop conditions',
       labelSamplingValueControl: 'Per-round sample count',
+      labelTrialRoundControl: 'Trial round',
       labelRoundOutcomeControl: 'Current decision',
       labelIaaMethodControl: 'IAA method',
       labelTargetAgreementControl: 'Target IAA',
@@ -4637,6 +4639,7 @@ function interpolate(template, payload) {
     setText('stopConditionTitle', t('stopConditionTitle'));
     renderStatusStepperLabels();
     setText('labelSamplingValueControl', t('labelSamplingValueControl'));
+    setText('labelTrialRoundControl', t('labelTrialRoundControl'));
     setText('labelRoundOutcomeControl', t('labelRoundOutcomeControl'));
     setText('labelIaaMethodControl', t('labelIaaMethodControl'));
     setText('labelTargetAgreementControl', t('labelTargetAgreementControl'));
@@ -5101,6 +5104,7 @@ function interpolate(template, payload) {
     var roundOutcomeKey = getRoundOutcomeKey();
 
     setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
+    setText('valueTrialRoundControl', currentRound ? 'R' + currentRound.round : '-');
     setText('valueRoundOutcomeControl', t('roundOutcome' + (roundOutcomeKey === 'passed' ? 'Passed' : roundOutcomeKey === 'failed' ? 'Failed' : 'InProgress')));
     setText('valueIaaMethodControl', getIaaMethodLabel(TASK_DATA.iaaMethod));
     setText('valueTargetAgreementControl', Number(TASK_DATA.targetAgreement).toFixed(2));

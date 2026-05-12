@@ -252,6 +252,10 @@
         <span class="kv-dl-value" id="valueSamplingValueControl"></span>
       </div>
       <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelTrialRoundControl">試標回合</span>
+        <span class="kv-dl-value" id="valueTrialRoundControl"></span>
+      </div>
+      <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelIaaMethodControl">IAA 計算方式</span>
         <span class="kv-dl-value" id="valueIaaMethodControl"></span>
       </div>
@@ -289,8 +293,8 @@
           <p class="field-hint" id="samplingValueHint">筆數需 >= 1 且 &lt; 資料集總筆數</p>
         </div>
         <div class="field-group">
-          <label class="field-label" id="samplingRoundLabel" for="samplingRoundInput">試標回合</label>
-          <input class="input-number" id="samplingRoundInput" type="text" inputmode="numeric" pattern="[0-9]*" value="1" />
+          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標記者數</label>
+          <input class="input-number" id="minAnnotatorsInput" type="text" inputmode="numeric" pattern="[0-9]*" value="3" />
           <p class="field-hint field-hint-placeholder" aria-hidden="true"></p>
         </div>
       </div>
@@ -312,10 +316,6 @@
           <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
           <input class="input-number" id="targetAgreementInput" type="text" inputmode="decimal" value="0.80" />
           <p class="field-hint" id="targetAgreementHint"></p>
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="minAnnotatorsInputLabel" for="minAnnotatorsInput">最少標記者數</label>
-          <input class="input-number" id="minAnnotatorsInput" type="text" inputmode="numeric" pattern="[0-9]*" value="3" />
         </div>
       </div>
 
