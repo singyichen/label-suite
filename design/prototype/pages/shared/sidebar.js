@@ -272,8 +272,10 @@
   }
 
   function isInteractiveSidebarTarget(target) {
-    if (!target || !target.closest) return false;
-    return !!target.closest('a, button, input, select, textarea, label, [role="button"], [data-no-sidebar-toggle="true"]');
+    if (!target) return false;
+    var element = target.nodeType === 1 ? target : target.parentElement;
+    if (!element || !element.closest) return false;
+    return !!element.closest('a, button, input, select, textarea, label, [contenteditable="true"], [role="button"], [data-no-sidebar-toggle="true"]');
   }
 
   function shouldHideAdminByRole(systemRole) {

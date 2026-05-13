@@ -52,6 +52,27 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(page.getByRole('dialog', { name: '快捷鍵' })).toBeVisible();
   });
 
+  test('does not open shortcut help while typing in editable content', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/pages/dashboard/dashboard.html');
+
+    await page.evaluate(() => {
+      const editable = document.createElement('div');
+      editable.id = 'shortcut-editable-target';
+      editable.setAttribute('contenteditable', 'true');
+      editable.style.position = 'fixed';
+      editable.style.left = '24px';
+      editable.style.top = '24px';
+      editable.textContent = 'editable';
+      document.body.appendChild(editable);
+      editable.focus();
+    });
+
+    await page.keyboard.press('?');
+
+    await expect(page.getByRole('dialog', { name: '快捷鍵' })).toBeHidden();
+  });
+
   test('shows a single icon global theme toggle next to shortcut help', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.addInitScript(() => {

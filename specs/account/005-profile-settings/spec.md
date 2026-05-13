@@ -14,7 +14,7 @@
 - `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES = 30`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
-- `APPEARANCE_STORAGE_KEY = labelsuite.theme`（client-side only；參照 spec 008）
+- `APPEARANCE_STORAGE_KEY = label-suite-theme`（client-side only；參照 spec 008）
 
 ## Process Flow
 
@@ -386,7 +386,7 @@ flowchart LR
 - **EmailChangeRequest**：`user_id`、`pending_email`、`verification_token`、`expires_at`、`verified_at`
 - **Session**：多裝置登入 session 狀態（密碼更新後需失效其他裝置）
 - **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
-- **AppearanceState**：外觀偏好。關鍵欄位：`mode`（`light` / `dark` / `system`）、`storage_key = labelsuite.theme`（client-side）；詳細定義見 spec 008。
+- **AppearanceState**：外觀偏好。關鍵欄位：`mode`（`light` / `dark` / `system`）、`storage_key = label-suite-theme`（client-side）；詳細定義見 spec 008。
 
 ---
 
