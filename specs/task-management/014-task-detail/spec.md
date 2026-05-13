@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.7.9
+**版本**：1.7.11
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -218,6 +218,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 每筆匯出記錄都必須保存當次匯出條件快照，至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會影響匯出結果集合的條件；若當次匯出綁定 sample snapshot / dataset version / config version，也必須一併保存，確保可追溯與可重現
     - 操作：`匯出 JSON`、`匯出 JSON-MIN`
     - 下載按鈕樣式：`操作` 欄中的 `下載` 必須採用與 `task-list` 頁面 `編輯` 按鈕一致的主要操作按鈕視覺語言；需對齊按鈕尺寸、padding、圓角、字重、主色背景與 hover / focus 狀態，不得使用純文字連結樣式
+    - 分頁列：表格底部必須顯示與 `task-list` 相同樣式的分頁列，包含總筆數 / 目前頁數、每頁筆數下拉、上一頁 / 下一頁與頁碼按鈕；匯出記錄表的分頁狀態與標記結果表獨立，兩者不得共用同一組 `page` / `pageSize` 狀態
     - 格式說明：
       - `JSON`：供系統交換、備份與完整追溯使用；格式需參考 Label Studio 完整 JSON 的精神，保留 `source_data + annotations + reviews + export manifest` 的完整巢狀結構，但欄位命名與內容需以 Label Suite domain model 為主，不直接複製 Label Studio key
       - `JSON-MIN`：供分析、二次處理、下游 ETL 與表格工具使用；格式需參考 Label Studio `JSON-MIN` 的精神，採扁平化列資料（flat rows），只保留共通欄位與當前 `task_type` 必要結果欄位
@@ -523,6 +524,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015d-1**：展開列 `提交時間` 與 `審核狀態` 必須在 desktop / tablet 維持右側獨立 meta 群組；任何 `task_type`、字串長度或 viewport 不得導致審核狀態 badge 被截斷或完全不可見。
 - **FR-015d-2**：展開列在 `<= MOBILE_BP` 時必須改為垂直堆疊，右側 meta 群組需移至內容下方並左對齊；result tag 可換行但不得被拉伸為整列寬度色塊。
 - **FR-015d-3**：展開列的可見範圍判定必須以 `annotation-results` 的橫向捲動容器為準，而非以 table 本體寬度為準；table 發生 overflow 時，`審核狀態` badge 與整列內容仍需完整落在 scroll container 內。
+- **FR-015e-1**：`匯出記錄表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態必須與 `標記結果表` 分頁狀態完全獨立，兩表換頁不得互相干擾。
 - **FR-015e**：`annotation-results` tab 必須提供匯出功能（格式至少含 `EXPORT_FORMATS`），需指定標記階段（Dry Run / Official Run）；`<= EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻採背景工作並通知下載連結；匯出 metadata 規格對齊 FR-010i。
 - **FR-015f**：`annotation-results` tab 空狀態（尚無任何標記提交）必須顯示引導文案，不得顯示空表格。
 - **FR-015g**：`JSON` 匯出必須採 `EXPORT_JSON_SHAPE`，頂層包含 `manifest` 與 `items[]`；每個 `item` 至少包含 `sample_id`、`source_data`、`annotations[]`、`reviews[]` 與當前 sample 聚合狀態，不得退化為純扁平列。
@@ -648,6 +650,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.11 | 2026-05-13 | 補齊匯出記錄表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範匯出記錄表分頁狀態（`arExportPage` / `arExportPageSize`）與標記結果表分頁狀態完全獨立；新增 FR-015e-1 |
 | 1.7.10 | 2026-05-13 | 重構 `annotation-progress` Tab C：移除獨立「階段分段進度」區塊；「整體進度摘要」新增 IAA 指標（共 6 項單行排列）、新增選中回合進度條（位於 metric grid 上方）；回合切換改為動態 pills（各試標回合 R1/R2/... + 正式標記），切換後進度條與 6 項指標同步更新 |
 | 1.7.9 | 2026-05-13 | 補齊 member-management「目前成員清單」表格底部分頁列，樣式與 `task-list` 分頁列一致；同步 prototype 渲染邏輯與 Playwright 回歸測試 |
 | 1.7.8 | 2026-05-13 | 調整 member-management 版面順序：`加入成員` 移至 `目前成員清單` 上方，讓新增/邀請入口優先呈現；同步 prototype 與 Playwright 回歸測試 |

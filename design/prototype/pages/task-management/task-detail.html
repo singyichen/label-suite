@@ -3893,7 +3893,9 @@
     arPage: 1,
     arPageSize: 20,
     arAnnotator: 'all',
-    arExpandedRows: {}
+    arExpandedRows: {},
+    arExportPage: 1,
+    arExportPageSize: 20
   };
 
   var TASK_TYPE_OPTIONS = [
@@ -9049,10 +9051,16 @@ function getTaskTypeLabel(taskTypeKey) {
     while (body.firstChild) body.removeChild(body.firstChild);
     if (history.length === 0) {
       if (empty) empty.classList.remove('hidden');
+      renderArExportPagination(0);
       return;
     }
     if (empty) empty.classList.add('hidden');
-    history.forEach(function(record) {
+    var totalPages = Math.max(1, Math.ceil(history.length / state.arExportPageSize));
+    if (state.arExportPage > totalPages) state.arExportPage = totalPages;
+    var start = (state.arExportPage - 1) * state.arExportPageSize;
+    var pageRecords = history.slice(start, start + state.arExportPageSize);
+    renderArExportPagination(history.length);
+    pageRecords.forEach(function(record) {
       var tr = document.createElement('tr');
       var typeLabel = record.exportType === 'filtered' ? t('arExportTypeFiltered') : t('arExportTypeFull');
       var stageLabel = getArExportStageLabel(record.stage);
@@ -9078,6 +9086,71 @@ function getTaskTypeLabel(taskTypeKey) {
       tr.appendChild(opsTd);
       body.appendChild(tr);
     });
+  }
+
+  function renderArExportPagination(total) {
+    var bar = document.getElementById('arExportPaginationBar');
+    if (!bar) return;
+    bar.classList.toggle('hidden', total === 0);
+    if (total === 0) return;
+
+    var totalPages = Math.max(1, Math.ceil(total / state.arExportPageSize));
+
+    var info = document.getElementById('arExportPaginationInfo');
+    if (info) {
+      info.textContent = t('arPaginationTpl')
+        .replace('{total}', total)
+        .replace('{page}', state.arExportPage)
+        .replace('{totalPages}', totalPages);
+    }
+
+    var pageSizeSelect = document.getElementById('arExportPageSizeSelect');
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(state.arExportPageSize);
+      Array.prototype.forEach.call(pageSizeSelect.options, function(opt) {
+        opt.textContent = opt.value + t('arPageSizeLabel');
+      });
+    }
+
+    var prevBtn = document.getElementById('arExportPrevPageBtn');
+    var nextBtn = document.getElementById('arExportNextPageBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.arExportPage <= 1;
+      prevBtn.setAttribute('aria-label', t('arPrevPageAria'));
+    }
+    if (nextBtn) {
+      nextBtn.disabled = state.arExportPage >= totalPages;
+      nextBtn.setAttribute('aria-label', t('arNextPageAria'));
+    }
+
+    var controls = document.getElementById('arExportPaginationControls');
+    if (!controls || !nextBtn) return;
+
+    Array.prototype.forEach.call(controls.querySelectorAll('[data-page]'), function(btn) {
+      btn.remove();
+    });
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, state.arExportPage - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (var pageNum = startPage; pageNum <= endPage; pageNum++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pg === state.arExportPage ? ' active' : '');
+        btn.dataset.page = String(pg);
+        btn.type = 'button';
+        btn.textContent = String(pg);
+        btn.addEventListener('click', function() {
+          state.arExportPage = pg;
+          renderArExportHistory();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', btn);
+      }(pageNum));
+    }
   }
 
   function renderArPagination(total) {
@@ -9838,6 +9911,28 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       state.arPageSize = parseInt(e.target.value, 10) || 20;
       state.arPage = 1;
       renderAnnotationResults();
+    });
+
+    document.getElementById('arExportPrevPageBtn').addEventListener('click', function() {
+      if (state.arExportPage > 1) {
+        state.arExportPage--;
+        renderArExportHistory();
+      }
+    });
+
+    document.getElementById('arExportNextPageBtn').addEventListener('click', function() {
+      var total = (TASK_DATA.exportHistory || []).length;
+      var totalPages = Math.max(1, Math.ceil(total / state.arExportPageSize));
+      if (state.arExportPage < totalPages) {
+        state.arExportPage++;
+        renderArExportHistory();
+      }
+    });
+
+    document.getElementById('arExportPageSizeSelect').addEventListener('change', function(e) {
+      state.arExportPageSize = parseInt(e.target.value, 10) || 20;
+      state.arExportPage = 1;
+      renderArExportHistory();
     });
 
     document.getElementById('workLogDateFrom').addEventListener('change', function(e) {
