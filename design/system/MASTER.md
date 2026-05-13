@@ -20,7 +20,7 @@
 
 ## Contents
 
-**Foundation** — [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
+**Foundation** — [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Dark Mode Tokens](#dark-mode-tokens) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
 
 **Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link)
 
@@ -102,6 +102,126 @@ Used for status badges, error banners, alerts, and feedback messages.
 | Not Started | Info | `bg-blue-50 text-blue-700 border-blue-200` |
 | Submitted / Completed | Success | `bg-green-50 text-green-700 border-green-200` |
 | Error / Rejected | Error | `bg-red-50 text-red-700 border-red-200` |
+
+## Dark Mode Tokens
+
+Activated via `<html data-theme="dark">`. All tokens in `design/prototype/assets/tokens.css` under `html[data-theme="dark"]` — re-mapped from the same CSS variable names so every page flips automatically without HTML changes.
+
+**Specificity note:** `html[data-theme="dark"]` has specificity `(0,1,1)`, which overrides `:root` `(0,1,0)` regardless of source order.
+
+### Core Palette (Dark Overrides)
+
+| Role | Light | Dark | CSS Variable |
+| ------ | ------- | ------ | -------------- |
+| Primary | `#6366F1` | `#818CF8` (indigo-400) | `--color-primary` |
+| Secondary | `#818CF8` | `#A5B4FC` (indigo-300) | `--color-secondary` |
+| CTA/Accent | `#10B981` | `#34D399` (emerald-400) | `--color-cta` |
+| Surface (page bg) | `#F5F3FF` | `#0B0B12` (near-black) | `--color-surface` |
+| Card / sidebar bg | `#FFFFFF` | `#16161F` | `--color-white` |
+| Ink (primary text) | `#1E1B4B` | `#E2E8F0` (slate-200) | `--color-ink` |
+| Primary soft bg | `#EEF2FF` | `#1E1B4B` (indigo-950) | `--color-primary-soft-bg` |
+| Primary border | `#C7D2FE` | `#3730A3` (indigo-800) | `--color-primary-border` |
+| Border | `#E2E8F0` | `#2A2A35` | `--color-border` |
+| Border muted | `#F1F5F9` | `#1F1F28` | `--color-border-muted` |
+| Text muted | `#94A3B8` | `#9CA3AF` (raised for WCAG AA) | `--color-text-muted` |
+| Text soft | `#64748B` | `#A1A1AA` (zinc-400) | `--color-text-soft` |
+| Hover bg (slate-50) | `#F8FAFC` | `#1F1F28` | `--color-slate-50` |
+| Nav active pill | `--color-surface` | `#2A2A35` (lighter than card bg) | `--nav-active-bg` |
+
+### Semantic State Colors (Dark Overrides)
+
+Desaturated for readability on dark backgrounds.
+
+| Role | Text | Background | Border |
+|------|------|------------|--------|
+| Error | `#F87171` | `#2A1414` | `#5B2222` |
+| Success | `#4ADE80` | `#0F2A18` | `#1F5132` |
+| Warning | `#FACC15` | `#2A2210` | `#5C4A1A` |
+| Info | `#60A5FA` | `#0F1F33` | `#1E3A66` |
+
+### Shadows (Dark Overrides)
+
+Dark mode shadows are mostly ring-style (higher opacity, no glow).
+
+| Token | Value |
+|-------|-------|
+| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.40)` |
+| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.45)` |
+| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.50)` |
+| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.55)` |
+| `--shadow-card` | `0 0 0 1px rgba(129,140,248,0.10), 0 4px 24px rgba(0,0,0,0.40)` |
+
+### Implementation Rules
+
+#### 1. Theme switching
+
+```js
+// theme.js — resolves "system" to "light"/"dark" via matchMedia
+document.documentElement.setAttribute('data-theme', resolvedTheme);
+```
+
+#### 2. `<img>` SVG icons
+
+SVGs loaded via `<img>` do NOT inherit CSS `color` / `currentColor` from the HTML document. Apply the filter below inside the dark mode block:
+
+```css
+html[data-theme="dark"] .your-icon-container img {
+  filter: brightness(0) invert(1);
+}
+```
+
+`brightness(0)` collapses all pixels to black; `invert(1)` flips to white. Use only when the icon is a single-color glyph on a solid background.
+
+**Dashboard example** — all three selector groups need the filter:
+
+```css
+html[data-theme="dark"] .step-icon img,
+html[data-theme="dark"] .role-avatar img,
+html[data-theme="dark"] .workflow-step-connector img {
+  filter: brightness(0) invert(1);
+}
+```
+
+White icons read heavier than black icons on a matching background, so connector `opacity` should be reduced (e.g. `0.45`) rather than raised when inverting.
+
+#### 3. CTA button contrast
+
+Bright CTA backgrounds (`#34D399`, `#818CF8`, `#A5B4FC`) require **dark text** in dark mode to maintain 4.5:1 contrast — opposite of light mode.
+
+```css
+html[data-theme="dark"] .btn-cta {
+  color: #0F172A;  /* slate-900 */
+}
+```
+
+#### 4. Brand-tinted near-whites (icon color on solid dark bg)
+
+When you need an icon or text that reads as "white" but carries a brand hue, use these instead of pure `#FFFFFF`:
+
+| Hue | Value | Use case |
+| ----- | ------- | ---------- |
+| Emerald tint | `#D1FAE5` | Green-family cards |
+| Violet tint | `#EDE9FE` | Violet-family cards |
+| Indigo tint | `#E0E7FF` | Indigo/primary cards |
+
+#### 5. Badge dark overrides
+
+**Semantic state badges** (`badge-info`, `badge-success`, `badge-warning`, `badge-error`) rely on `--color-*` CSS variable tokens — they flip automatically **only** when the dark block re-maps the variables. Any badge using hardcoded light hex values (e.g. `background: #FEFCE8`) will appear as a jarring light box in dark mode and needs an explicit override.
+
+**Task-type / role-type badges** always require an explicit dark block because their colors are not mapped to semantic tokens. Keep text colors in the `*-200` to `*-400` range for consistent visual weight (avoid cyan-300 `#67E8F9` — use cyan-200 `#A5F3FC` instead).
+
+Reference values for task-type badges in dark mode:
+
+| Badge | Text | Background | Border |
+| ----- | ---- | ---------- | ------ |
+| `badge-warning` | `#FACC15` (yellow-400) | `#2A2210` | `#5C4A1A` |
+| `badge-task-type-single` | `#A5F3FC` (cyan-200) | `#0C2230` | `#155E75` |
+| `badge-task-type-sequence` | `#FB923C` (orange-400) | `#2A1805` | `#7C3A16` |
+| `badge-task-type-relation` | `#A5F3FC` (cyan-200) | `#0C2230` | `#155E75` |
+| `badge-task-type-pairs` | `#4ADE80` (green-400) | `#0F2A18` | `#1F5132` |
+| `badge-task-type-scoring` | `#C084FC` (purple-400) | `#1A0A2E` | `#4C1D95` |
+| `badge-official` | `#A78BFA` (violet-400) | `#1E1B4B` | `#3730A3` |
+| `badge-dry-run` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
 
 ### Typography
 
@@ -1414,3 +1534,7 @@ Before delivering any UI code, verify:
 - [ ] `lang` attribute set on `<html>` for bilingual pages
 - [ ] Chinese body text uses `line-height: 1.8`
 - [ ] Z-index values follow the Z-index Scale table
+- [ ] Dark mode: toggle `data-theme="dark"` and verify all text meets 4.5:1 contrast
+- [ ] Dark mode: SVG icons loaded via `<img>` have `filter: brightness(0) invert(1)` in dark block
+- [ ] Dark mode: CTA buttons use dark text (not white) on bright backgrounds
+- [ ] Dark mode: no hardcoded `#000000` or `#FFFFFF` — all colors via CSS variables

@@ -150,12 +150,12 @@ html[data-theme="dark"] {
   /* ── Supporting ───────────────────────────────────────────── */
   --color-border:           #2A2A35;
   --color-border-muted:     #1F1F28;
-  --color-text-muted:       #71717A;   /* zinc-500 */
+  --color-text-muted:       #9CA3AF;   /* slate-400 — raised from zinc-500 for WCAG AA */
   --color-text-soft:        #A1A1AA;   /* zinc-400 */
   --color-slate-50:         #1F1F28;   /* hover bg in dark */
 
   /* Aliases */
-  --color-ink-muted:        #71717A;
+  --color-ink-muted:        #9CA3AF;   /* = --color-text-muted */
 
   /* ── Semantic state — desaturated for dark backgrounds ────── */
   --color-error:            #F87171;

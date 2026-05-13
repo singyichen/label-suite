@@ -570,6 +570,23 @@ body.sidebar-collapsed .logout-btn {
   background: var(--color-white);
 }
 
+/* ── Dark mode overrides ──────────────────────────────────── */
+html[data-theme="dark"] .navbar {
+  border-right-color: #3A3A4A;
+}
+
+html[data-theme="dark"] .shortcut-keycap {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .shortcut-help-backdrop {
+  background: rgba(0, 0, 0, 0.60);
+}
+
+html[data-theme="dark"] .shortcut-help-dialog {
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
 @media (max-width: 768px) {
   body {
     flex-direction: column;
