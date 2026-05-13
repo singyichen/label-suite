@@ -251,13 +251,12 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - 角色可見性：`reviewer` 不顯示此 tab；若以直連方式進入，導回 `overview` 並提示無權限
 - Tab C：`標記進度`
   - 區塊 1：`整體進度摘要`
-    - 指標：總樣本數、已完成數、完成率、平均速度、剩餘估計時間
-    - 階段切換：`試標` / `正式標記`（英文介面對應 `Dry Run` / `Official Run`）
+    - 回合切換 pills（標題同列右側）：各試標回合（`R1 ✗` / `R2 · 進行中` / ...）與 `正式標記`；切換後整個區塊同步顯示對應回合資料
+    - 選中回合進度條：顯示該回合 `completed/total（rate%）` 與進度條，位於 metric grid 上方
+    - 指標（6 項，單行排列）：總樣本數、已完成數、完成率、平均速度、剩餘估計時間、IAA
   - 區塊 2：`成員進度表`
     - 欄位：成員姓名、角色、已完成數、待完成數、總數量、平均速度、個人進度條、最後提交時間、品質旗標
     - 排序：預設依已完成數降冪，可切換依速度/最後提交排序
-  - 區塊 3：`階段分段進度`
-    - 呈現：`試標` 與 `正式標記` 分開進度條與統計，不可混算（英文介面對應 `Dry Run` / `Official Run`）
   - 空狀態：尚未開始標記時顯示「尚無進度資料」，並提供回到 `任務概覽` 的 CTA
 - Tab E：`工時紀錄`
   - 區塊 1：`工時篩選列`
@@ -329,7 +328,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - `member-management` 的搜尋結果區在 idle state 必須顯示「請先輸入帳號、姓名或 Email 再開始搜尋」或等價提示，不得顯示空白表格或預載名單。
 - `annotation-results` 的表格在窄 viewport 必須保留橫向捲動能力與 touch scrolling；基準最小寬度需控制在約 `640px` 等級，避免沿用過寬桌面設定造成手機 viewport 幾乎無法閱讀。
 - `annotation-progress` 與 `work-log` 的表格在 mobile 使用橫向捲動容器，不壓縮到欄位重疊。
-- `annotation-progress` 的階段切換按鈕需與「整體進度摘要」標題同列顯示（左標題、右切換）。
+- `annotation-progress` 的回合切換 pills 需與「整體進度摘要」標題同列顯示（左標題、右 pills）；pills 依序列出每個試標回合（`R{n} ✓` / `R{n} ✗` / `R{n} · 進行中`）與 `正式標記`，不得使用固定的 `試標` / `正式標記` 二分法。
 - 當語言切換為中文時，`member-management` 中成員狀態與搜尋結果欄位標題需使用中文（例如：`active/disabled/invited` 顯示為 `啟用/停用/邀請中`，`active task count` 顯示為 `目前已在任務數量`）。
 - `member-management` 的列內操作按鈕需使用語意色階：`加入任務=primary`、`啟用=success`、`停用=warning`、`移除=danger`，以降低誤操作。
 - 列內操作按鈕必須定義 `default / hover / focus-visible / disabled` 狀態，且 `focus-visible` 需有可見外框。
@@ -649,6 +648,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.10 | 2026-05-13 | 重構 `annotation-progress` Tab C：移除獨立「階段分段進度」區塊；「整體進度摘要」新增 IAA 指標（共 6 項單行排列）、新增選中回合進度條（位於 metric grid 上方）；回合切換改為動態 pills（各試標回合 R1/R2/... + 正式標記），切換後進度條與 6 項指標同步更新 |
 | 1.7.9 | 2026-05-13 | 補齊 member-management「目前成員清單」表格底部分頁列，樣式與 `task-list` 分頁列一致；同步 prototype 渲染邏輯與 Playwright 回歸測試 |
 | 1.7.8 | 2026-05-13 | 調整 member-management 版面順序：`加入成員` 移至 `目前成員清單` 上方，讓新增/邀請入口優先呈現；同步 prototype 與 Playwright 回歸測試 |
 | 1.7.7 | 2026-05-12 | 調整 Overview「抽樣設定」抽樣筆數說明呈現：`每回合抽樣筆數` 保留必填星號，驗證規則改由 label 旁 info tooltip 顯示，移除輸入框下方常駐 hint |

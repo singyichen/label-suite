@@ -415,8 +415,9 @@
     }
     .progress-metric-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 10px;
+      margin-top: 16px;
     }
     .progress-metric-item {
       border: 1px solid var(--color-border);
@@ -547,6 +548,19 @@
     }
     .stage-split-fill.dry { background: var(--color-primary); }
     .stage-split-fill.official { background: var(--color-cta); }
+    .phase-flow { display: flex; flex-direction: column; gap: 10px; }
+    .phase-item { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: 14px; }
+    .phase-item--active { border-color: var(--color-primary); }
+    .phase-item--pending { opacity: 0.55; }
+    .phase-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .phase-round-label { font-size: 14px; font-weight: 700; color: var(--color-ink); }
+    .phase-status-tag { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid transparent; }
+    .phase-status-tag--active { color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .phase-status-tag--passed { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+    .phase-status-tag--failed { color: var(--color-error); background: var(--color-error-bg); border-color: var(--color-error-border); }
+    .phase-status-tag--pending { color: var(--color-ink-muted); background: var(--color-slate-50); border-color: var(--color-border); }
+    .phase-iaa-text { margin-left: auto; font-size: 12px; color: var(--color-ink-muted); font-weight: 600; }
+    .phase-meta { font-size: 13px; color: var(--color-text-soft); margin-top: 8px; }
     .progress-empty-state {
       border: 1px dashed var(--color-border);
       border-radius: var(--radius-md);
@@ -2819,6 +2833,7 @@
       progressMetricRateLabel: '完成率',
       progressMetricSpeedLabel: '平均速度',
       progressMetricEtaLabel: '剩餘估計時間',
+      progressMetricIAALabel: 'IAA',
       memberProgressTitle: '成員進度表',
       progressSortLabel: '排序',
       progressSortCompleted: '依已完成數（高到低）',
@@ -2833,9 +2848,12 @@
       thProgressBar: '個人進度條',
       thProgressLastSubmitted: '最後提交時間',
       thProgressQuality: '品質旗標',
-      stageProgressTitle: '階段分段進度',
       stageDryTitle: '試標',
       stageOfficialTitle: '正式標記',
+      phaseStatusActive: '進行中',
+      phaseStatusPassed: '通過',
+      phaseStatusFailed: '未通過',
+      phaseStatusPending: '未開始',
       progressEmptyTitle: '尚無成員進度資料',
       progressBackToOverviewBtn: '回到任務概覽',
       workLogFilterTitle: '工時篩選列',
@@ -3254,6 +3272,7 @@
       progressMetricRateLabel: 'Completion rate',
       progressMetricSpeedLabel: 'Average speed',
       progressMetricEtaLabel: 'Remaining ETA',
+      progressMetricIAALabel: 'IAA',
       memberProgressTitle: 'Member progress',
       progressSortLabel: 'Sort by',
       progressSortCompleted: 'Completed (high to low)',
@@ -3268,9 +3287,12 @@
       thProgressBar: 'Personal progress',
       thProgressLastSubmitted: 'Last submitted',
       thProgressQuality: 'Quality flag',
-      stageProgressTitle: 'Stage breakdown',
       stageDryTitle: 'Dry Run',
       stageOfficialTitle: 'Official Run',
+      phaseStatusActive: 'In Progress',
+      phaseStatusPassed: 'Passed',
+      phaseStatusFailed: 'Failed',
+      phaseStatusPending: 'Not Started',
       progressEmptyTitle: 'No member progress data yet',
       progressBackToOverviewBtn: 'Back to task overview',
       workLogFilterTitle: 'Work log filters',
@@ -3774,19 +3796,47 @@
   };
 
   var ANNOTATION_PROGRESS = {
-    dry: {
-      totalSamples: 120,
-      completedSamples: 84,
-      avgSpeed: 22.4,
-      remainingEta: '1天 8小時',
-      remainingEtaEn: '1d 8h',
-      members: [
-        { name: 'Alex Wang', role: 'annotator', completed: 30, pending: 10, avgSpeed: 24.2, lastSubmitted: '2026-04-21 09:45', quality: 'good' },
-        { name: 'Olivia Lin', role: 'annotator', completed: 28, pending: 12, avgSpeed: 21.7, lastSubmitted: '2026-04-21 09:36', quality: 'watch' },
-        { name: 'Mandy Chen', role: 'reviewer', completed: 26, pending: 14, avgSpeed: 20.8, lastSubmitted: '2026-04-21 09:20', quality: 'good' },
-      ],
-    },
+    rounds: [
+      {
+        id: 'r1',
+        roundNum: 1,
+        status: 'completed',
+        result: 'failed',
+        iaa: 0.68,
+        totalSamples: 40,
+        completedSamples: 40,
+        avgSpeed: 19.5,
+        remainingEta: '-',
+        remainingEtaEn: '-',
+        members: [
+          { name: 'Alex Wang', role: 'annotator', completed: 14, pending: 0, avgSpeed: 20.1, lastSubmitted: '2026-05-01 14:22', quality: 'watch' },
+          { name: 'Olivia Lin', role: 'annotator', completed: 13, pending: 0, avgSpeed: 18.8, lastSubmitted: '2026-05-01 13:45', quality: 'watch' },
+          { name: 'Mandy Chen', role: 'reviewer', completed: 13, pending: 0, avgSpeed: 19.5, lastSubmitted: '2026-05-01 14:10', quality: 'watch' },
+        ],
+      },
+      {
+        id: 'r2',
+        roundNum: 2,
+        status: 'active',
+        result: 'passed',
+        iaa: 0.81,
+        totalSamples: 120,
+        completedSamples: 84,
+        avgSpeed: 22.4,
+        remainingEta: '1天 8小時',
+        remainingEtaEn: '1d 8h',
+        members: [
+          { name: 'Alex Wang', role: 'annotator', completed: 30, pending: 10, avgSpeed: 24.2, lastSubmitted: '2026-04-21 09:45', quality: 'good' },
+          { name: 'Olivia Lin', role: 'annotator', completed: 28, pending: 12, avgSpeed: 21.7, lastSubmitted: '2026-04-21 09:36', quality: 'watch' },
+          { name: 'Mandy Chen', role: 'reviewer', completed: 26, pending: 14, avgSpeed: 20.8, lastSubmitted: '2026-04-21 09:20', quality: 'good' },
+        ],
+      },
+    ],
     official: {
+      id: 'official',
+      status: 'pending',
+      result: null,
+      iaa: null,
       totalSamples: 1160,
       completedSamples: 0,
       avgSpeed: 0,
@@ -3811,7 +3861,7 @@
     taskRole: 'project_leader',
     activeTab: 'overview',
     activeRunControlTab: 'execution',
-    progressStage: 'dry',
+    progressStage: 'r2',
     progressSort: 'completed_desc',
     workLogDateFrom: '',
     workLogDateTo: '',
@@ -4775,13 +4825,13 @@ function interpolate(template, payload) {
       }
     });
     setText('progressSummaryTitle', t('progressSummaryTitle'));
-    setText('progressStageDryBtn', t('progressStageDry'));
-    setText('progressStageOfficialBtn', t('progressStageOfficial'));
+
     setText('progressMetricTotalLabel', t('progressMetricTotalLabel'));
     setText('progressMetricCompletedLabel', t('progressMetricCompletedLabel'));
     setText('progressMetricRateLabel', t('progressMetricRateLabel'));
     setText('progressMetricSpeedLabel', t('progressMetricSpeedLabel'));
     setText('progressMetricEtaLabel', t('progressMetricEtaLabel'));
+    setText('progressMetricIAALabel', t('progressMetricIAALabel'));
     setText('memberProgressTitle', t('memberProgressTitle'));
     setText('progressSortLabel', t('progressSortLabel'));
     setText('progressSortCompleted', t('progressSortCompleted'));
@@ -4796,7 +4846,6 @@ function interpolate(template, payload) {
     setText('thProgressBar', t('thProgressBar'));
     setText('thProgressLastSubmitted', t('thProgressLastSubmitted'));
     setText('thProgressQuality', t('thProgressQuality'));
-    setText('stageProgressTitle', t('stageProgressTitle'));
     setText('stageDryTitle', t('stageDryTitle'));
     setText('stageOfficialTitle', t('stageOfficialTitle'));
     setText('progressEmptyTitle', t('progressEmptyTitle'));
@@ -7994,7 +8043,9 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function getProgressStageData() {
-    return state.progressStage === 'official' ? ANNOTATION_PROGRESS.official : ANNOTATION_PROGRESS.dry;
+    if (state.progressStage === 'official') return ANNOTATION_PROGRESS.official;
+    var found = ANNOTATION_PROGRESS.rounds.filter(function(r) { return r.id === state.progressStage; });
+    return found.length ? found[0] : ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1];
   }
 
   function getProgressRate(completed, total) {
@@ -8032,12 +8083,40 @@ function getTaskTypeLabel(taskTypeKey) {
     return cloned;
   }
 
-  function renderProgressStageButtons() {
-    var isDry = state.progressStage === 'dry';
-    var dryBtn = document.getElementById('progressStageDryBtn');
-    var officialBtn = document.getElementById('progressStageOfficialBtn');
-    dryBtn.classList.toggle('active', isDry);
-    officialBtn.classList.toggle('active', !isDry);
+  function renderProgressRoundPills() {
+    var container = document.getElementById('progressRoundPills');
+    if (!container) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+
+    ANNOTATION_PROGRESS.rounds.forEach(function(round) {
+      var btn = document.createElement('button');
+      btn.className = 'stage-btn' + (state.progressStage === round.id ? ' active' : '');
+      btn.type = 'button';
+      var label = 'R' + round.roundNum;
+      if (round.status === 'active') {
+        label += state.lang === 'zh' ? ' · 進行中' : ' · Active';
+      } else if (round.result === 'passed') {
+        label += ' ✓';
+      } else if (round.result === 'failed') {
+        label += ' ✗';
+      }
+      btn.textContent = label;
+      btn.addEventListener('click', function() {
+        state.progressStage = round.id;
+        renderAnnotationProgress();
+      });
+      container.appendChild(btn);
+    });
+
+    var officialBtn = document.createElement('button');
+    officialBtn.className = 'stage-btn' + (state.progressStage === 'official' ? ' active' : '');
+    officialBtn.type = 'button';
+    officialBtn.textContent = t('stageOfficialTitle');
+    officialBtn.addEventListener('click', function() {
+      state.progressStage = 'official';
+      renderAnnotationProgress();
+    });
+    container.appendChild(officialBtn);
   }
 
   function renderProgressSummary() {
@@ -8049,6 +8128,7 @@ function getTaskTypeLabel(taskTypeKey) {
     setText('progressMetricRateValue', rate + '%');
     setText('progressMetricSpeedValue', formatProgressSpeed(stageData.avgSpeed));
     setText('progressMetricEtaValue', state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn);
+    setText('progressMetricIAAValue', stageData.iaa != null ? stageData.iaa.toFixed(2) : '-');
   }
 
   function renderMemberProgressTable() {
@@ -8106,27 +8186,84 @@ function getTaskTypeLabel(taskTypeKey) {
     });
   }
 
-  function renderStageBreakdown() {
-    var dryRate = getProgressRate(ANNOTATION_PROGRESS.dry.completedSamples, ANNOTATION_PROGRESS.dry.totalSamples);
-    var officialRate = getProgressRate(ANNOTATION_PROGRESS.official.completedSamples, ANNOTATION_PROGRESS.official.totalSamples);
-    document.getElementById('stageDryFill').style.width = dryRate + '%';
-    document.getElementById('stageOfficialFill').style.width = officialRate + '%';
-    setText(
-      'stageDryMeta',
-      interpolate(t('progressStageMetaTpl'), {
-        completed: ANNOTATION_PROGRESS.dry.completedSamples,
-        total: ANNOTATION_PROGRESS.dry.totalSamples,
-        rate: dryRate,
-      })
-    );
-    setText(
-      'stageOfficialMeta',
-      interpolate(t('progressStageMetaTpl'), {
-        completed: ANNOTATION_PROGRESS.official.completedSamples,
-        total: ANNOTATION_PROGRESS.official.totalSamples,
-        rate: officialRate,
-      })
-    );
+  function renderRoundProgressList() {
+    var container = document.getElementById('roundProgressList');
+    if (!container) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+
+    function makePhaseItem(roundLabel, statusTagClass, statusTagText, fillClass, fillWidth, iaaText, metaText, itemClass) {
+      var item = document.createElement('div');
+      item.className = 'phase-item' + (itemClass ? ' ' + itemClass : '');
+
+      var head = document.createElement('div');
+      head.className = 'phase-item-head';
+
+      var label = document.createElement('span');
+      label.className = 'phase-round-label';
+      label.textContent = roundLabel;
+      head.appendChild(label);
+
+      var tag = document.createElement('span');
+      tag.className = 'phase-status-tag ' + statusTagClass;
+      tag.textContent = statusTagText;
+      head.appendChild(tag);
+
+      if (iaaText) {
+        var iaa = document.createElement('span');
+        iaa.className = 'phase-iaa-text';
+        iaa.textContent = iaaText;
+        head.appendChild(iaa);
+      }
+      item.appendChild(head);
+
+      var track = document.createElement('div');
+      track.className = 'stage-split-track';
+      track.setAttribute('aria-hidden', 'true');
+      var fill = document.createElement('div');
+      fill.className = 'stage-split-fill ' + fillClass;
+      fill.style.width = fillWidth + '%';
+      track.appendChild(fill);
+      item.appendChild(track);
+
+      var meta = document.createElement('p');
+      meta.className = 'phase-meta';
+      meta.textContent = metaText;
+      item.appendChild(meta);
+
+      return item;
+    }
+
+    var stageData = getProgressStageData();
+    var rate = getProgressRate(stageData.completedSamples, stageData.totalSamples);
+    var isOfficial = state.progressStage === 'official';
+    var roundLabel, statusTagClass, statusTagText, fillClass, itemClass;
+
+    if (isOfficial) {
+      roundLabel = t('stageOfficialTitle');
+      fillClass = 'official';
+      statusTagClass = stageData.status === 'active' ? 'phase-status-tag--active' : 'phase-status-tag--pending';
+      statusTagText = stageData.status === 'active' ? t('phaseStatusActive') : t('phaseStatusPending');
+      itemClass = stageData.status === 'active' ? 'phase-item--active' : 'phase-item--pending';
+    } else {
+      roundLabel = 'R' + stageData.roundNum;
+      fillClass = 'dry';
+      if (stageData.status === 'active') {
+        statusTagClass = 'phase-status-tag--active';
+        statusTagText = t('phaseStatusActive');
+        itemClass = 'phase-item--active';
+      } else if (stageData.result === 'passed') {
+        statusTagClass = 'phase-status-tag--passed';
+        statusTagText = t('phaseStatusPassed');
+        itemClass = '';
+      } else {
+        statusTagClass = 'phase-status-tag--failed';
+        statusTagText = t('phaseStatusFailed');
+        itemClass = '';
+      }
+    }
+
+    var meta = interpolate(t('progressStageMetaTpl'), { completed: stageData.completedSamples, total: stageData.totalSamples, rate: rate });
+    container.appendChild(makePhaseItem(roundLabel, statusTagClass, statusTagText, fillClass, rate, null, meta, itemClass));
   }
 
   function renderProgressEmptyState() {
@@ -8134,14 +8271,13 @@ function getTaskTypeLabel(taskTypeKey) {
     var empty = !stageData.totalSamples || !stageData.members.length;
     document.getElementById('progressEmptyState').classList.toggle('hidden', !empty);
     document.getElementById('memberProgressSection').classList.toggle('hidden', empty);
-    document.getElementById('stageProgressSection').classList.remove('hidden');
   }
 
   function renderAnnotationProgress() {
-    renderProgressStageButtons();
+    renderProgressRoundPills();
     renderProgressSummary();
     renderMemberProgressTable();
-    renderStageBreakdown();
+    renderRoundProgressList();
     renderProgressEmptyState();
   }
 
@@ -9605,19 +9741,7 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-document.getElementById('progressStageDryBtn').addEventListener('click', function() {
-      state.progressStage = 'dry';
-      renderAnnotationProgress();
-      trackEvent('prototype_progress_stage_switched', { run_stage: 'dry' });
-    });
-
-    document.getElementById('progressStageOfficialBtn').addEventListener('click', function() {
-      state.progressStage = 'official';
-      renderAnnotationProgress();
-      trackEvent('prototype_progress_stage_switched', { run_stage: 'official' });
-    });
-
-    document.getElementById('memberProgressSort').addEventListener('change', function(e) {
+document.getElementById('memberProgressSort').addEventListener('change', function(e) {
       state.progressSort = e.target.value;
       renderAnnotationProgress();
       trackEvent('prototype_progress_sort_changed', { sort_by: state.progressSort });
