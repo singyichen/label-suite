@@ -9,6 +9,15 @@ test.describe('Task detail member management add flows', () => {
     await page.locator('#tabMemberManagement').click();
     await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
 
+    await expect(page.locator('#memberManagementPanel > section').first().locator('h2')).toHaveText('加入成員');
+    await expect(page.locator('#memberManagementPanel > section').nth(1).locator('h2')).toHaveText('目前成員清單');
+    await expect(page.locator('#memberPaginationBar')).toBeVisible();
+    await expect(page.locator('#memberPaginationInfo')).toHaveText('共 4 筆 · 第 1 / 1 頁');
+    await expect(page.locator('#memberPageSizeSelect')).toHaveClass(/page-size-select/);
+    await expect(page.locator('#memberPaginationControls .page-btn.active')).toHaveText('1');
+    await expect(page.locator('#memberPrevPageBtn')).toBeDisabled();
+    await expect(page.locator('#memberNextPageBtn')).toBeDisabled();
+
     await expect(page.locator('#candidateListTitle')).toHaveCount(0);
     await expect(page.locator('#memberSearchTitle')).toHaveText('搜尋平台成員');
     await expect(page.locator('#memberInviteTitle')).toHaveText('Email 邀請');

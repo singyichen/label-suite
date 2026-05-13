@@ -2804,6 +2804,10 @@
       actionSendInvite: '寄送邀請',
       memberSearchIdle: '請先輸入帳號、姓名或 Email 再開始搜尋',
       memberSearchEmpty: '沒有符合條件、且尚未加入此任務的平台成員',
+      memberPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      memberPageSizeLabel: ' 筆/頁',
+      memberPrevPageAria: '上一頁',
+      memberNextPageAria: '下一頁',
       errMemberInviteEmail: '請輸入有效的 Email',
       errMemberDuplicate: '此成員已在任務中或已寄出邀請',
       errPermissionDenied: '您沒有執行此操作的權限',
@@ -3235,6 +3239,10 @@
       actionSendInvite: 'Send invite',
       memberSearchIdle: 'Enter an account, name, or email to start searching',
       memberSearchEmpty: 'No matching platform members are available to add',
+      memberPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      memberPageSizeLabel: ' / page',
+      memberPrevPageAria: 'Previous page',
+      memberNextPageAria: 'Next page',
       errMemberInviteEmail: 'Please enter a valid email',
       errMemberDuplicate: 'This member is already in the task or already invited',
       errPermissionDenied: 'You do not have permission to perform this action',
@@ -3828,6 +3836,8 @@
     samplingEditMode: false,
     samplingDirty: false,
     samplingDraft: null,
+    memberPage: 1,
+    memberPageSize: 20,
     arStage: 'all',
     arStatus: 'all',
     arPage: 1,
@@ -7658,9 +7668,20 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function renderMemberTable() {
     var tbody = document.getElementById('memberTableBody');
+    if (!tbody) return;
     while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
-    TASK_MEMBERS.forEach(function(member, idx) {
+    var total = TASK_MEMBERS.length;
+    var totalPages = Math.max(1, Math.ceil(total / state.memberPageSize));
+    if (state.memberPage > totalPages) state.memberPage = totalPages;
+
+    var startIndex = (state.memberPage - 1) * state.memberPageSize;
+    var pageMembers = TASK_MEMBERS.map(function(member, index) {
+      return { member: member, index: index };
+    }).slice(startIndex, startIndex + state.memberPageSize);
+
+    pageMembers.forEach(function(item) {
+      var member = item.member;
       var tr = document.createElement('tr');
 
       function tdWithClass(text, cls) {
@@ -7705,7 +7726,7 @@ function getTaskTypeLabel(taskTypeKey) {
       removeBtn.addEventListener('click', function() {
         openMemberActionModal({
           type: 'remove',
-          index: idx,
+          index: item.index,
           title: t('memberActionModalTitle'),
           message: interpolate(t('memberActionModalBodyRemove'), { name: member.name, role: getTaskRoleLabel(member.taskRole) }),
         });
@@ -7721,7 +7742,7 @@ function getTaskTypeLabel(taskTypeKey) {
         toggleBtn.addEventListener('click', function() {
           openMemberActionModal({
             type: member.status === 'active' ? 'disable' : 'enable',
-            index: idx,
+            index: item.index,
             title: t('memberActionModalTitle'),
             message: interpolate(
               member.status === 'active' ? t('memberActionModalBodyDisable') : t('memberActionModalBodyEnable'),
@@ -7735,6 +7756,72 @@ function getTaskTypeLabel(taskTypeKey) {
       tr.appendChild(tdActions);
       tbody.appendChild(tr);
     });
+
+    renderMemberPagination(total);
+  }
+
+  function renderMemberPagination(total) {
+    var bar = document.getElementById('memberPaginationBar');
+    if (!bar) return;
+
+    var totalPages = Math.max(1, Math.ceil(total / state.memberPageSize));
+    if (state.memberPage > totalPages) state.memberPage = totalPages;
+
+    var info = document.getElementById('memberPaginationInfo');
+    if (info) {
+      info.textContent = t('memberPaginationTpl')
+        .replace('{total}', total)
+        .replace('{page}', state.memberPage)
+        .replace('{totalPages}', totalPages);
+    }
+
+    var pageSizeSelect = document.getElementById('memberPageSizeSelect');
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(state.memberPageSize);
+      Array.prototype.forEach.call(pageSizeSelect.options, function(opt) {
+        opt.textContent = opt.value + t('memberPageSizeLabel');
+      });
+    }
+
+    var prevBtn = document.getElementById('memberPrevPageBtn');
+    var nextBtn = document.getElementById('memberNextPageBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.memberPage <= 1;
+      prevBtn.setAttribute('aria-label', t('memberPrevPageAria'));
+    }
+    if (nextBtn) {
+      nextBtn.disabled = state.memberPage >= totalPages;
+      nextBtn.setAttribute('aria-label', t('memberNextPageAria'));
+    }
+
+    var controls = document.getElementById('memberPaginationControls');
+    if (!controls || !nextBtn) return;
+
+    Array.prototype.forEach.call(controls.querySelectorAll('[data-page]'), function(btn) {
+      btn.remove();
+    });
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, state.memberPage - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (var pageNum = startPage; pageNum <= endPage; pageNum++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pg === state.memberPage ? ' active' : '');
+        btn.dataset.page = String(pg);
+        btn.type = 'button';
+        btn.textContent = String(pg);
+        btn.addEventListener('click', function() {
+          state.memberPage = pg;
+          renderMemberManagement();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', btn);
+      }(pageNum));
+    }
   }
 
   function getAvailablePlatformUsers(query) {
@@ -9485,6 +9572,36 @@ function getTaskTypeLabel(taskTypeKey) {
           e.preventDefault();
           inviteMemberByEmail();
         }
+      });
+    }
+
+    var memberPrevPageBtn = document.getElementById('memberPrevPageBtn');
+    if (memberPrevPageBtn) {
+      memberPrevPageBtn.addEventListener('click', function() {
+        if (state.memberPage > 1) {
+          state.memberPage--;
+          renderMemberManagement();
+        }
+      });
+    }
+
+    var memberNextPageBtn = document.getElementById('memberNextPageBtn');
+    if (memberNextPageBtn) {
+      memberNextPageBtn.addEventListener('click', function() {
+        var totalPages = Math.max(1, Math.ceil(TASK_MEMBERS.length / state.memberPageSize));
+        if (state.memberPage < totalPages) {
+          state.memberPage++;
+          renderMemberManagement();
+        }
+      });
+    }
+
+    var memberPageSizeSelect = document.getElementById('memberPageSizeSelect');
+    if (memberPageSizeSelect) {
+      memberPageSizeSelect.addEventListener('change', function(e) {
+        state.memberPageSize = parseInt(e.target.value, 10) || 20;
+        state.memberPage = 1;
+        renderMemberManagement();
       });
     }
 

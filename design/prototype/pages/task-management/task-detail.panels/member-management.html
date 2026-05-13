@@ -1,27 +1,4 @@
 <div id="memberManagementPanel" class="hidden" aria-live="polite">
-  <section class="panel" aria-labelledby="memberListTitle">
-    <h2 class="panel-title" id="memberListTitle">目前成員清單</h2>
-    <p class="panel-subtitle" id="memberListSubtitle">任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。</p>
-    <div class="table-wrap">
-      <div class="table-scroll">
-        <table class="member-table" role="table" aria-label="Task members table">
-          <thead>
-            <tr>
-              <th id="thMemberName">姓名</th>
-              <th id="thMemberEmail">Email</th>
-              <th id="thMemberTaskRole">任務角色</th>
-              <th id="thMemberStatus">狀態</th>
-              <th id="thMemberJoinedAt">加入時間</th>
-              <th id="thMemberLastActive">最後活動</th>
-              <th id="thMemberActions">操作</th>
-            </tr>
-          </thead>
-          <tbody id="memberTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
   <section class="panel" aria-labelledby="memberAddTitle">
     <h2 class="panel-title" id="memberAddTitle">加入成員</h2>
     <p class="panel-subtitle" id="memberAddSubtitle">可透過搜尋平台現有成員，或直接填寫 Email 寄送邀請加入任務。</p>
@@ -69,6 +46,47 @@
           </div>
         </div>
       </section>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="memberListTitle">
+    <h2 class="panel-title" id="memberListTitle">目前成員清單</h2>
+    <p class="panel-subtitle" id="memberListSubtitle">任務角色在加入時決定，既有成員不可中途改角色；如需變更請移除後重新加入。</p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Task members table">
+          <thead>
+            <tr>
+              <th id="thMemberName">姓名</th>
+              <th id="thMemberEmail">Email</th>
+              <th id="thMemberTaskRole">任務角色</th>
+              <th id="thMemberStatus">狀態</th>
+              <th id="thMemberJoinedAt">加入時間</th>
+              <th id="thMemberLastActive">最後活動</th>
+              <th id="thMemberActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination" id="memberPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="memberPaginationInfo"></span>
+          <select class="page-size-select" id="memberPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 / 頁</option>
+            <option value="50">50 / 頁</option>
+            <option value="100">100 / 頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="memberPaginationControls">
+          <button class="page-btn" id="memberPrevPageBtn" aria-label="上一頁" disabled type="button">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" id="memberNextPageBtn" aria-label="下一頁" disabled type="button">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 </div>
