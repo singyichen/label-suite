@@ -323,7 +323,6 @@
     var datasetHref = opts.datasetHref || '../dataset/dataset-analysis-list.html';
     var adminHref = opts.adminHref || '#';
     var brandHref = opts.brandHref || dashboardHref;
-    var mobileUserName = opts.mobileUserName || 'Mandy Chen';
     var userName = opts.userName || 'Mandy Chen';
     var roleIndicator = opts.roleIndicator || '一般使用者';
 
@@ -393,7 +392,6 @@
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
             '<span id="langLabel" data-testid="lang-label">ZH</span>' +
           '</button>' +
-          '<span id="mobileUserName" class="mobile-user-name">' + mobileUserName + '</span>' +
           '<button id="mobileLangToggle" class="mobile-lang-toggle" aria-label="切換語言">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
             '<span id="mobileLangLabel">ZH</span>' +
@@ -572,9 +570,7 @@
     var opts = options || {};
     if (typeof opts.userName === 'string') {
       var desktopName = document.getElementById('userName');
-      var mobileName = document.getElementById('mobileUserName');
       if (desktopName) desktopName.textContent = opts.userName;
-      if (mobileName) mobileName.textContent = opts.userName;
     }
     if (typeof opts.roleLabel === 'string') {
       var roleIndicator = document.getElementById('roleIndicator');

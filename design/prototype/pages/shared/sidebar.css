@@ -493,19 +493,6 @@
   white-space: nowrap;
 }
 
-.mobile-user-name {
-  display: none;
-  margin-left: auto;
-  max-width: 110px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-ink);
-  line-height: 1.2;
-}
-
 .mobile-lang-toggle {
   display: none;
   align-items: center;
@@ -572,11 +559,15 @@ body.sidebar-collapsed .user-chip {
 }
 
 body.sidebar-collapsed .user-chip-profile {
-  justify-content: center;
+  display: none;
 }
 
 body.sidebar-collapsed .logout-btn {
-  display: none;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
 }
 
 @media (max-width: 768px) {
@@ -624,12 +615,6 @@ body.sidebar-collapsed .logout-btn {
 
   .navbar-wordmark {
     font-size: 14px;
-  }
-
-  .mobile-user-name {
-    display: inline-block;
-    max-width: 72px;
-    font-size: 12px;
   }
 
   .brand-section .lang-toggle {

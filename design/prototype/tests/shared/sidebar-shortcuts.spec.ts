@@ -92,4 +92,18 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(toggle.locator('[data-theme-toggle-icon="sun"]')).toBeVisible();
     await expect(toggle.locator('[data-theme-toggle-icon="moon"]')).toBeHidden();
   });
+
+  test('shows logout instead of user identity in the icon-only sidebar footer', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.sidebarCollapsed', 'true');
+    });
+    await page.goto('/pages/dashboard/dashboard.html');
+
+    await expect(page.locator('body')).toHaveClass(/sidebar-collapsed/);
+    await expect(page.locator('#logoutBtn')).toBeVisible();
+    await expect(page.locator('#logoutBtn')).toHaveAttribute('aria-label', '登出');
+    await expect(page.locator('#userName')).toBeHidden();
+    await expect(page.locator('#userAvatar')).toBeHidden();
+  });
 });

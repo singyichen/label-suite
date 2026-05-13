@@ -919,7 +919,6 @@
         pageTitle:               '個人設定',
         pageSubtitle:            '管理您的個人資料與帳號安全',
         userName:                'Mandy Chen',
-        mobileUserName:          'Mandy Chen',
         roleIndicator:           '一般使用者',
         langLabel:               'ZH',
         mobileLangLabel:         'ZH',
@@ -989,7 +988,6 @@
         pageTitle:               'Profile Settings',
         pageSubtitle:            'Manage your profile and account security',
         userName:                'Mandy Chen',
-        mobileUserName:          'Mandy Chen',
         roleIndicator:           'User',
         langLabel:               'EN',
         mobileLangLabel:         'EN',
@@ -1215,7 +1213,6 @@
 
       window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_attempted');
       document.getElementById('userName').textContent       = name;
-      document.getElementById('mobileUserName').textContent = name;
       showToast('success', t('toastSaveSuccess'), t('toastSaveSuccessDesc'));
       window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_profile_info_saved');
     }

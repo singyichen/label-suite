@@ -164,7 +164,7 @@ sequenceDiagram
 **驗收情境**：
 
 1. **Given** viewport `> MOBILE_BP`，**When** 載入頁面，**Then** 顯示左側固定 Sidebar（含品牌、L0、底部 utility actions、user chip）。
-2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列（含語言、快捷鍵、外觀與登出控制）+ 下方主導覽。
+2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列（含語言、快捷鍵、外觀與登出控制，不顯示使用者姓名）+ 下方主導覽。
 3. **Given** 行動版，**When** 操作 L0 導覽，**Then** 主要內容不被遮擋且導覽可點擊。
 
 ### User Story 5 — Desktop Sidebar Mini / Icon-only 可收合（優先級：P2）
@@ -245,7 +245,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - zh/en 長度差異不得造成 L0 文字截斷到不可辨識。
 - 行動版底部導覽不得遮擋頁面主要 CTA。
 - i18n key 缺漏時需 fallback 文案，不得中斷導覽互動。
-- 超長使用者姓名不得擠壓語言按鈕與登出按鈕可點擊區域。
+- 行動版 top brand bar 不得呈現使用者姓名；最下方 icon-only sidebar footer 必須優先呈現登出按鈕，不得以使用者姓名或頭像取代登出控制。
 - `APPEARANCE_STORAGE_KEY` 值無效（非 `light`/`dark`/`system`）時，fallback 為 `system`，不拋出例外。
 - `prefers-color-scheme` 不支援的舊瀏覽器，`system` mode 應 fallback 為 `light`。
 - Sidebar utility actions 為 icon-only 時，必須保留 `aria-label` 與 `title`，且 zh/en 切換後同步更新。
@@ -271,6 +271,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-009A**：使用者點擊語言切換後，右側內容區不論目前顯示 `dashboard / task-management / annotation / dataset / admin / account` 任一模組頁，皆必須同步切換為相同語系，不可僅更新 Sidebar。
 - **FR-009B**：語言狀態必須跨頁持久化；導向任一 `SUPPORTED_PAGES` 後需維持同語系（建議實作：`localStorage`，key：`labelsuite.lang`）。
 - **FR-010**：Navbar 必須提供桌面與行動版登出控制項。
+- **FR-010A**：Mobile / icon-only sidebar footer 必須顯示登出按鈕；使用者姓名不得佔用該位置。
 - **FR-011**：`> MOBILE_BP` 使用左側固定 Sidebar；`<= MOBILE_BP` 使用上方品牌列 + 下方主導覽。
 - **FR-012**：在 `RWD_VIEWPORTS` 下不得出現重疊、不可點擊、內容被導覽遮擋。
 - **FR-013**：Shared Sidebar 樣式必須集中於 `design/prototype/pages/shared/sidebar.css`，使用共用 Sidebar 的頁面不得再頁內重複定義同一套 sidebar 規則。
@@ -326,7 +327,7 @@ flowchart LR
 - `SharedNavbarContract`
   - `sections`: `brand-section`, `navbar-center`, `nav-actions`
   - `interactiveIds`: `langToggle`, `mobileLangToggle`, `shortcutHelpBtn`, `mobileShortcutHelpBtn`, `sidebarThemeToggleBtn`, `mobileThemeToggleBtn`, `logoutBtn`, `mobileLogoutBtn`
-  - `userIds`: `userName`, `mobileUserName`, `roleIndicator`, `userAvatar`
+  - `userIds`: `userName`, `roleIndicator`, `userAvatar`
   - `navIds`: `navDashboard`, `navTaskManagement`, `navAnnotation`, `navDataset`, `navAdmin`, `navProfile`
 - `LanguageState`
   - `lang`: `zh` / `en`
@@ -391,6 +392,7 @@ flowchart LR
 - **SC-007A**：點擊 sidebar 非互動空白區會觸發收合；點擊 nav link / 語言切換 / 登出不會觸發收合。
 - **SC-007B**：`SIDEBAR_COLLAPSED_STORAGE_KEY` 在重整與跨頁後可還原最後收合狀態。
 - **SC-007C**：Mobile viewport 下收合互動不生效，且 top+bottom nav 操作不受影響。
+- **SC-007D**：icon-only sidebar footer 顯示 `logoutBtn` 並隱藏使用者姓名/頭像，使用者可直接登出。
 - **SC-008**：Appearance 切換後，`html[data-theme]` 即時更新，全頁 CSS token（`tokens.css` dark override）正確套用。
 - **SC-008A**：重新整理或切換至任一 `SUPPORTED_PAGES`，Appearance 從 `APPEARANCE_STORAGE_KEY` 恢復，首次繪製不出現 FOUC。
 - **SC-008B**：`system` 模式下，無論 OS `prefers-color-scheme` 為何，`html[data-theme]` 固定為 `light`。
@@ -415,6 +417,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.1 | 2026-05-13 | 調整 Mobile / icon-only sidebar footer：最下方呈現登出按鈕，不再以使用者姓名或頭像取代登出控制；移除 `mobileUserName` contract |
 | 1.3.0 | 2026-05-12 | 同步 Sidebar utility：新增 icon-only 快捷鍵總覽入口、快捷鍵 modal i18n、獨立 keycap 與一 action 一列呈現；Sidebar Appearance 改為單鍵 light/dark icon toggle，Desktop/Mobile 入口同步，並更新 `APPEARANCE_STORAGE_KEY = label-suite-theme` |
 | 1.2.0 | 2026-05-12 | 新增 Appearance 外觀模式切換規格：`APPEARANCE_STORAGE_KEY`、三態 mode（light/dark/system）、FOUC 防護（`theme-fouc.js`）、FR-015 群、AppearanceState 實體、SC-008 群 |
 | 1.1.5 | 2026-04-23 | 補充 Shared Sidebar 收合規格：新增 Desktop `Mini / Icon-only`、空白區觸發排除互動元件、`labelsuite.sidebarCollapsed` 狀態持久化、Mobile 不啟用收合，並明確化共用 `shared/sidebar.css` 契約 |
