@@ -456,6 +456,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-005e**：Email 邀請必須驗證 email 格式並阻擋重複；寄送成功後該成員需以 `invited` 狀態出現在目前成員清單。
 - **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
+- **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
 - **FR-008a**：當任務內每一位 `active annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。
 - **FR-009**：系統必須支援在 `annotation-results` 匯出結果，格式至少含 `EXPORT_FORMATS`。
@@ -650,6 +651,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.12 | 2026-05-13 | 補齊工時明細表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範分頁狀態（`wlPage` / `wlPageSize`）獨立；篩選條件變更重設至第 1 頁；匯總卡片與異常提醒仍依完整篩選結果計算；新增 FR-007a |
 | 1.7.11 | 2026-05-13 | 補齊匯出記錄表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範匯出記錄表分頁狀態（`arExportPage` / `arExportPageSize`）與標記結果表分頁狀態完全獨立；新增 FR-015e-1 |
 | 1.7.10 | 2026-05-13 | 重構 `annotation-progress` Tab C：移除獨立「階段分段進度」區塊；「整體進度摘要」新增 IAA 指標（共 6 項單行排列）、新增選中回合進度條（位於 metric grid 上方）；回合切換改為動態 pills（各試標回合 R1/R2/... + 正式標記），切換後進度條與 6 項指標同步更新 |
 | 1.7.9 | 2026-05-13 | 補齊 member-management「目前成員清單」表格底部分頁列，樣式與 `task-list` 分頁列一致；同步 prototype 渲染邏輯與 Playwright 回歸測試 |

@@ -2933,6 +2933,10 @@
       arPageSizeLabel: ' 筆/頁',
       arPrevPageAria: '上一頁',
       arNextPageAria: '下一頁',
+      wlPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      wlPageSizeLabel: ' 筆/頁',
+      wlPrevPageAria: '上一頁',
+      wlNextPageAria: '下一頁',
       arStatusBadgeSubmitted: '已提交',
       arStatusBadgeDraft: '草稿',
       arStatusBadgePending: '待處理',
@@ -3372,6 +3376,10 @@
       arPageSizeLabel: ' / page',
       arPrevPageAria: 'Previous page',
       arNextPageAria: 'Next page',
+      wlPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      wlPageSizeLabel: ' / page',
+      wlPrevPageAria: 'Previous page',
+      wlNextPageAria: 'Next page',
       arStatusBadgeSubmitted: 'Submitted',
       arStatusBadgeDraft: 'Draft',
       arStatusBadgePending: 'Pending',
@@ -3895,7 +3903,9 @@
     arAnnotator: 'all',
     arExpandedRows: {},
     arExportPage: 1,
-    arExportPageSize: 20
+    arExportPageSize: 20,
+    wlPage: 1,
+    wlPageSize: 20
   };
 
   var TASK_TYPE_OPTIONS = [
@@ -8478,16 +8488,85 @@ function getTaskTypeLabel(taskTypeKey) {
     document.getElementById('workLogAlertSection').classList.toggle('hidden', empty);
   }
 
+  function renderWorkLogPagination(total) {
+    var bar = document.getElementById('wlPaginationBar');
+    if (!bar) return;
+
+    var totalPages = Math.max(1, Math.ceil(total / state.wlPageSize));
+    if (state.wlPage > totalPages) state.wlPage = totalPages;
+
+    bar.classList.toggle('hidden', total === 0);
+
+    var info = document.getElementById('wlPaginationInfo');
+    if (info) {
+      info.textContent = t('wlPaginationTpl')
+        .replace('{total}', total)
+        .replace('{page}', state.wlPage)
+        .replace('{totalPages}', totalPages);
+    }
+
+    var pageSizeSelect = document.getElementById('wlPageSizeSelect');
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(state.wlPageSize);
+      Array.prototype.forEach.call(pageSizeSelect.options, function(opt) {
+        opt.textContent = opt.value + t('wlPageSizeLabel');
+      });
+    }
+
+    var prevBtn = document.getElementById('wlPrevPageBtn');
+    var nextBtn = document.getElementById('wlNextPageBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.wlPage <= 1;
+      prevBtn.setAttribute('aria-label', t('wlPrevPageAria'));
+    }
+    if (nextBtn) {
+      nextBtn.disabled = state.wlPage >= totalPages;
+      nextBtn.setAttribute('aria-label', t('wlNextPageAria'));
+    }
+
+    var controls = document.getElementById('wlPaginationControls');
+    if (!controls || !nextBtn) return;
+
+    Array.prototype.forEach.call(controls.querySelectorAll('[data-page]'), function(btn) {
+      btn.remove();
+    });
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, state.wlPage - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (var pageNum = startPage; pageNum <= endPage; pageNum++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pg === state.wlPage ? ' active' : '');
+        btn.dataset.page = String(pg);
+        btn.type = 'button';
+        btn.textContent = String(pg);
+        btn.addEventListener('click', function() {
+          state.wlPage = pg;
+          renderWorkLog();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', btn);
+      }(pageNum));
+    }
+  }
+
   function renderWorkLog() {
     document.getElementById('workLogDateFrom').value = state.workLogDateFrom;
     document.getElementById('workLogDateTo').value = state.workLogDateTo;
     document.getElementById('workLogStageSelect').value = state.workLogStage;
     renderWorkLogMemberOptions();
     var entries = getFilteredWorkLogEntries();
-    renderWorkLogTable(entries);
+    var startIndex = (state.wlPage - 1) * state.wlPageSize;
+    var pageEntries = entries.slice(startIndex, startIndex + state.wlPageSize);
+    renderWorkLogTable(pageEntries);
     renderWorkLogSummary(entries);
     renderWorkLogAlerts(entries);
     renderWorkLogEmptyState(entries);
+    renderWorkLogPagination(entries.length);
   }
 
   function getAnnotationResultsData() {
@@ -9937,27 +10016,62 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
 
     document.getElementById('workLogDateFrom').addEventListener('change', function(e) {
       state.workLogDateFrom = e.target.value || '';
+      state.wlPage = 1;
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'date_from' });
     });
 
     document.getElementById('workLogDateTo').addEventListener('change', function(e) {
       state.workLogDateTo = e.target.value || '';
+      state.wlPage = 1;
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'date_to' });
     });
 
     document.getElementById('workLogStageSelect').addEventListener('change', function(e) {
       state.workLogStage = e.target.value || 'all';
+      state.wlPage = 1;
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'run_stage', value: state.workLogStage });
     });
 
     document.getElementById('workLogMemberSelect').addEventListener('change', function(e) {
       state.workLogMember = e.target.value || 'all';
+      state.wlPage = 1;
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'member', value: state.workLogMember });
     });
+
+    var wlPrevPageBtn = document.getElementById('wlPrevPageBtn');
+    if (wlPrevPageBtn) {
+      wlPrevPageBtn.addEventListener('click', function() {
+        if (state.wlPage > 1) {
+          state.wlPage--;
+          renderWorkLog();
+        }
+      });
+    }
+
+    var wlNextPageBtn = document.getElementById('wlNextPageBtn');
+    if (wlNextPageBtn) {
+      wlNextPageBtn.addEventListener('click', function() {
+        var total = getFilteredWorkLogEntries().length;
+        var totalPages = Math.max(1, Math.ceil(total / state.wlPageSize));
+        if (state.wlPage < totalPages) {
+          state.wlPage++;
+          renderWorkLog();
+        }
+      });
+    }
+
+    var wlPageSizeSelect = document.getElementById('wlPageSizeSelect');
+    if (wlPageSizeSelect) {
+      wlPageSizeSelect.addEventListener('change', function(e) {
+        state.wlPageSize = parseInt(e.target.value, 10) || 20;
+        state.wlPage = 1;
+        renderWorkLog();
+      });
+    }
 
     var langToggle = document.getElementById('langToggle');
     var mobileLangToggle = document.getElementById('mobileLangToggle');
