@@ -708,6 +708,10 @@
       quickContinueBtnReviewer: '快速審核',
       editBtnLabel: '編輯',
       expandBtnLabel: '展開',
+      approveBtnLabel: '通過',
+      rejectBtnLabel: '退回',
+      approveAllBtnLabel: '全部通過',
+      rejectAllBtnLabel: '全部退回',
       searchPlaceholder: '搜尋',
       searchAriaLabel: '搜尋',
       statusFilterAll: '全部完成狀態',
@@ -750,6 +754,10 @@
       quickContinueBtnReviewer: 'Quick Review',
       editBtnLabel: 'Edit',
       expandBtnLabel: 'Expand',
+      approveBtnLabel: 'Approve',
+      rejectBtnLabel: 'Reject',
+      approveAllBtnLabel: 'Approve all',
+      rejectAllBtnLabel: 'Reject all',
       searchPlaceholder: 'Search',
       searchAriaLabel: 'Search',
       statusFilterAll: 'All statuses',
@@ -1430,12 +1438,12 @@
       var approveBtn = document.createElement('button');
       approveBtn.type = 'button';
       approveBtn.className = 'mini-btn mini-btn-approve';
-      approveBtn.textContent = '✓ 通過';
+      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
 
       var rejectBtn = document.createElement('button');
       rejectBtn.type = 'button';
       rejectBtn.className = 'mini-btn mini-btn-reject';
-      rejectBtn.textContent = '✕ 退回';
+      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
 
       updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
 
@@ -1902,12 +1910,12 @@
       var approveAllBtn = document.createElement('button');
       approveAllBtn.type = 'button';
       approveAllBtn.className = 'mini-btn mini-btn-approve';
-      approveAllBtn.textContent = '✓ 全部通過';
+      approveAllBtn.textContent = '✓ ' + t('approveAllBtnLabel');
       approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
       var rejectAllBtn = document.createElement('button');
       rejectAllBtn.type = 'button';
       rejectAllBtn.className = 'mini-btn mini-btn-reject';
-      rejectAllBtn.textContent = '✕ 全部退回';
+      rejectAllBtn.textContent = '✕ ' + t('rejectAllBtnLabel');
       rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
 
       updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));

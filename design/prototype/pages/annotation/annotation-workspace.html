@@ -1575,6 +1575,7 @@ var I18N = {
     taskName: '新聞標題多標籤分類 ｜ NLP 語料標記任務',
     backBtnLabel: '返回',
     phaseDryRun: 'Dry Run', phaseOfficial: 'Official Run',
+    roleUser: '一般使用者',
     roleAnnotator: 'Annotator', roleReviewer: 'Reviewer',
     progressText: '{done} / {total} 已提交',
     sampleListTitle: '標記清單', sampleListCount: '{n} 筆',
@@ -1598,6 +1599,7 @@ var I18N = {
     vaArousalMin: '平靜',
     vaArousalMax: '激動',
     annotationNoteLabel: '備註（選填）',
+    annotationNotePlaceholder: '若有特殊情況可在此說明…',
     saveDraftLabel: '儲存草稿', submitLabel: '提交',
     autosaveLabel: '草稿已自動儲存', autosaveSavingLabel: '儲存中…',
     reviewCardTitle: '審查結果', reviewerRoleSmall: 'Reviewer',
@@ -1733,6 +1735,7 @@ var I18N = {
     taskName: 'News Headline Multi-label Classification | NLP Annotation Task',
     backBtnLabel: 'Back',
     phaseDryRun: 'Dry Run', phaseOfficial: 'Official Run',
+    roleUser: 'User',
     roleAnnotator: 'Annotator', roleReviewer: 'Reviewer',
     progressText: '{done} / {total} submitted',
     sampleListTitle: 'Annotation List', sampleListCount: '{n} items',
@@ -1756,6 +1759,7 @@ var I18N = {
     vaArousalMin: 'Calm',
     vaArousalMax: 'Excited',
     annotationNoteLabel: 'Notes (optional)',
+    annotationNotePlaceholder: 'Describe special cases here...',
     saveDraftLabel: 'Save draft', submitLabel: 'Submit',
     autosaveLabel: 'Draft autosaved', autosaveSavingLabel: 'Saving…',
     reviewCardTitle: 'Review result', reviewerRoleSmall: 'Reviewer',
@@ -1894,6 +1898,7 @@ var VA_SAMPLE_FIXTURES = [
     id: 1,
     sampleId: 'R2-001',
     text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
+    textEn: 'Overall service was excellent; staff were patient and thorough, making me feel genuinely valued.',
     status: 'submitted', labels: null, va: { valence: 5, arousal: 3 },
     reviewerData: {
       statsSummary: 'mean : [7.33, 7.17] , std : [1.07, 1.43], ±1.5std V : 5.725~8.935, ±1.5std A : 5.025~9.315',
@@ -1912,6 +1917,7 @@ var VA_SAMPLE_FIXTURES = [
     id: 2,
     sampleId: 'R2-002',
     text: '等了快一個小時才上菜，服務生態度冷漠，食物還是涼的，完全不值得。',
+    textEn: 'Waited nearly an hour for food, cold and indifferent service, lukewarm dishes — completely not worth it.',
     status: 'submitted', labels: null, va: { valence: 1, arousal: 4 },
     reviewerData: {
       statsSummary: 'mean : [4.33, 5.25] , std : [0.99, 1.55], ±1.5std V : 2.845~5.815, ±1.5std A : 2.925~7.575',
@@ -1933,6 +1939,7 @@ var VA_SAMPLE_FIXTURES = [
     id: 3,
     sampleId: 'R2-003',
     text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
+    textEn: 'This phone truly exceeded my expectations — the display is crystal clear and the battery lasts well.',
     status: 'saved', labels: null, va: { valence: 6, arousal: 5 },
     history: [{ actor: 'Annotator A', time: '04-22 15:20', action: 'saved', from: null, to: 'V=6 / A=5' }]
   },
@@ -1940,12 +1947,14 @@ var VA_SAMPLE_FIXTURES = [
     id: 4,
     sampleId: 'R2-004',
     text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
+    textEn: 'Nice sunny day; went for a walk outside, came back and had lunch.',
     status: 'todo', labels: null, va: null, history: []
   },
   {
     id: 5,
     sampleId: 'R2-005',
     text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
+    textEn: 'The product manual was extremely thorough; installation went smoothly step by step with no issues at all.',
     status: 'todo', labels: null, va: null, history: []
   }
 ];
@@ -1955,6 +1964,7 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
     id: 1,
     sampleId: 'R2-001',
     text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案',
+    textEn: 'Legislature passes tech industry transformation act; government announces expanded R&D subsidies.',
     status: 'submitted', labels: ['politics', 'technology'], va: null,
     reviewerData: {
       statsSummary: '政治×4 · 科技×5',
@@ -1970,6 +1980,7 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
     id: 2,
     sampleId: 'R2-002',
     text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育',
+    textEn: 'Star athlete joins charity concert as sports and entertainment communities unite to fundraise for children\'s education.',
     status: 'submitted', labels: ['sports', 'entertainment', 'society'], va: null,
     reviewerData: {
       statsSummary: '體育×4 · 娛樂×4 · 社會×3',
@@ -1988,6 +1999,7 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
     id: 3,
     sampleId: 'R2-003',
     text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制',
+    textEn: 'Approaching typhoon triggers work and school shutdowns; central and local governments activate disaster response.',
     status: 'saved', labels: null, va: null,
     reviewerData: {
       statsSummary: '社會×5 · 政治×3',
@@ -2003,6 +2015,7 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
     id: 4,
     sampleId: 'R2-004',
     text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題',
+    textEn: 'International film festival reveals nominees; Taiwanese director\'s new work addresses social issues.',
     status: 'todo', labels: null, va: null,
     reviewerData: {
       statsSummary: '娛樂×5 · 社會×4',
@@ -2018,6 +2031,7 @@ var CLASSIFICATION_SAMPLE_FIXTURES = [
     id: 5,
     sampleId: 'R2-005',
     text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚',
+    textEn: 'Chipmaker announces mass production schedule for new chips, boosting Taiwan tech stocks.',
     status: 'todo', labels: null, va: null,
     reviewerData: {
       statsSummary: '科技×5 · 財經×3',
@@ -2055,8 +2069,11 @@ var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
   {
     id: 1, sampleId: 'SP-001',
     text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+    textEn: 'The film\'s visual effects are breathtaking and the plot is tightly paced. | The special effects are spectacular, the story flows well — worth watching.',
     sentence_1: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。',
+    sentence_1_en: 'The film\'s visual effects are breathtaking and the plot is tightly paced.',
     sentence_2: '這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+    sentence_2_en: 'The special effects are spectacular, the story flows well — worth watching.',
     status: 'submitted',
     spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'equivalent', score: null, unsure: false, version: 1 },
     reviewerData: {
@@ -2074,8 +2091,11 @@ var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
   {
     id: 2, sampleId: 'SP-002',
     text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。',
+    textEn: 'Government announces electricity rate hike of approximately 8% starting next week. | Electricity prices rise next week; official adjustment is 8%.',
     sentence_1: '政府宣布下週起調漲電費，幅度約為 8%。',
+    sentence_1_en: 'Government announces electricity rate hike of approximately 8% starting next week.',
     sentence_2: '下週電費將上漲，政府公告調幅 8%。',
+    sentence_2_en: 'Electricity prices rise next week; official adjustment is 8%.',
     status: 'submitted',
     spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'equivalent', score: null, unsure: false, version: 1 },
     reviewerData: {
@@ -2093,8 +2113,11 @@ var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
   {
     id: 3, sampleId: 'SP-003',
     text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。',
+    textEn: 'TSMC releases Q1 earnings with revenue at an all-time high. | Tech stocks show notable volatility this quarter due to global developments.',
     sentence_1: '台積電公布第一季財報，營收創歷史新高。',
+    sentence_1_en: 'TSMC releases Q1 earnings with revenue at an all-time high.',
     sentence_2: '本季科技類股受國際情勢影響出現明顯震盪。',
+    sentence_2_en: 'Tech stocks show notable volatility this quarter due to global developments.',
     status: 'saved',
     spAnnotation: { pair_mode: 'similarity', response_format: 'classification', label: 'unrelated', score: null, unsure: false, version: 1 },
     history: [{ actor: 'Annotator A', time: '04-28 10:30', action: 'saved', from: null, to: '語意無關（草稿）' }]
@@ -2102,8 +2125,11 @@ var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
   {
     id: 4, sampleId: 'SP-004',
     text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。',
+    textEn: 'Typhoon warning lifted; transport links resuming across counties. | Meteorological bureau issues typhoon warning, landfall expected tomorrow.',
     sentence_1: '颱風警報解除，各縣市陸續恢復對外交通。',
+    sentence_1_en: 'Typhoon warning lifted; transport links resuming across counties.',
     sentence_2: '氣象局發布颱風警報，預計明天登陸。',
+    sentence_2_en: 'Meteorological bureau issues typhoon warning, landfall expected tomorrow.',
     status: 'todo',
     spAnnotation: null,
     history: []
@@ -2111,8 +2137,11 @@ var SENTENCE_PAIRS_SAMPLE_FIXTURES = [
   {
     id: 5, sampleId: 'SP-005',
     text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。',
+    textEn: 'Research shows prolonged sitting negatively impacts cardiovascular health. | Regular exercise effectively reduces the risk of heart disease.',
     sentence_1: '研究指出長期久坐對心血管健康有負面影響。',
+    sentence_1_en: 'Research shows prolonged sitting negatively impacts cardiovascular health.',
     sentence_2: '定期運動能有效降低心臟病風險。',
+    sentence_2_en: 'Regular exercise effectively reduces the risk of heart disease.',
     status: 'todo',
     spAnnotation: null,
     history: []
@@ -2136,8 +2165,11 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
   {
     id: 1, sampleId: 'AL-001',
     text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+    textEn: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.',
     sentence: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+    sentenceEn: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.',
     aspects: ['螢幕', '電池續航力', '整體設計'],
+    aspectsEn: ['display', 'battery life', 'overall design'],
     status: 'submitted',
     aspectAnnotation: {
       original_sentence: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
@@ -2146,6 +2178,15 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
         { id: 'a1', text: '螢幕', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
         { id: 'a2', text: '電池續航力', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
         { id: 'a3', text: '整體設計', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
+      ]
+    },
+    aspectAnnotationEn: {
+      original_sentence: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.',
+      corrected_sentence: null,
+      aspects: [
+        { id: 'a1e', text: 'display', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'a2e', text: 'battery life', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'a3e', text: 'overall design', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
       ]
     },
     reviewerData: {
@@ -2168,8 +2209,11 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
   {
     id: 2, sampleId: 'AL-002',
     text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+    textEn: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.',
     sentence: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+    sentenceEn: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.',
     aspects: ['環境', '菜色選擇', '服務員的態度'],
+    aspectsEn: ['ambiance', 'menu', 'staff attitude'],
     status: 'submitted',
     aspectAnnotation: {
       original_sentence: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
@@ -2178,6 +2222,15 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
         { id: 'b1', text: '環境', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
         { id: 'b2', text: '菜色選擇', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
         { id: 'b3', text: '服務員的態度', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
+      ]
+    },
+    aspectAnnotationEn: {
+      original_sentence: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.',
+      corrected_sentence: null,
+      aspects: [
+        { id: 'b1e', text: 'ambiance', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'b2e', text: 'menu', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
+        { id: 'b3e', text: 'staff attitude', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' }
       ]
     },
     reviewerData: {
@@ -2200,8 +2253,11 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
   {
     id: 3, sampleId: 'AL-003',
     text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+    textEn: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.',
     sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+    sentenceEn: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.',
     aspects: ['早餐品質', '停車場', '隔音效果'],
+    aspectsEn: ['breakfast quality', 'parking', 'soundproofing'],
     status: 'saved',
     aspectAnnotation: {
       original_sentence: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
@@ -2212,18 +2268,31 @@ var ASPECT_LIST_SAMPLE_FIXTURES = [
         { id: 'c3', text: '隔音效果', exact_match_status: 'invalid', sentiment_context_checked: false, operation: 'kept' }
       ]
     },
+    aspectAnnotationEn: {
+      original_sentence: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.',
+      corrected_sentence: 'The hotel\'s breakfast quality is excellent, parking is ample, and the room soundproofing is solid.',
+      aspects: [
+        { id: 'c1e', text: 'breakfast quality', exact_match_status: 'valid', sentiment_context_checked: true, operation: 'kept' },
+        { id: 'c2e', text: 'parking', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' },
+        { id: 'c3e', text: 'soundproofing', exact_match_status: 'valid', sentiment_context_checked: false, operation: 'kept' }
+      ]
+    },
     history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '3 aspects (draft)' }]
   },
   {
     id: 4, sampleId: 'AL-004',
     text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+    textEn: 'The software UI is clean and intuitive with smooth workflows, though customer support response is a bit slow.',
     sentence: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+    sentenceEn: 'The software UI is clean and intuitive with smooth workflows, though customer support response is a bit slow.',
     aspects: [], status: 'todo', aspectAnnotation: null, history: []
   },
   {
     id: 5, sampleId: 'AL-005',
     text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+    textEn: 'These headphones deliver outstanding audio quality, a comfortable fit, and highly effective active noise cancellation.',
     sentence: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+    sentenceEn: 'These headphones deliver outstanding audio quality, a comfortable fit, and highly effective active noise cancellation.',
     aspects: [], status: 'todo', aspectAnnotation: null, history: []
   }
 ];
@@ -2232,6 +2301,7 @@ var RE_SAMPLE_FIXTURES = [
   {
     id: 1, sampleId: 'RE-001',
     text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。',
+    textEn: 'Aspirin can relieve headaches, but long-term use may cause gastrointestinal discomfort.',
     status: 'submitted',
     reAnnotation: {
       entities: [
@@ -2242,6 +2312,17 @@ var RE_SAMPLE_FIXTURES = [
       triples: [
         { id: 'rt1', e1Id: 're1', relation: 'treats', e2Id: 're2' },
         { id: 'rt2', e1Id: 're1', relation: 'causes', e2Id: 're3' }
+      ]
+    },
+    reAnnotationEn: {
+      entities: [
+        { id: 're1e', text: 'Aspirin', type: 'DRUG', start: 0, end: 7 },
+        { id: 're2e', text: 'headaches', type: 'SYMP', start: 20, end: 29 },
+        { id: 're3e', text: 'gastrointestinal discomfort', type: 'SYMP', start: 65, end: 92 }
+      ],
+      triples: [
+        { id: 'rt1e', e1Id: 're1e', relation: 'treats', e2Id: 're2e' },
+        { id: 'rt2e', e1Id: 're1e', relation: 'causes', e2Id: 're3e' }
       ]
     },
     reviewerData: {
@@ -2256,6 +2337,7 @@ var RE_SAMPLE_FIXTURES = [
   {
     id: 2, sampleId: 'RE-002',
     text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。',
+    textEn: 'Breast pain is largely associated with hormonal changes during the menstrual cycle.',
     status: 'submitted',
     reAnnotation: {
       entities: [
@@ -2267,6 +2349,18 @@ var RE_SAMPLE_FIXTURES = [
       triples: [
         { id: 'rt1', e1Id: 're2', relation: 'associated_with', e2Id: 're3' },
         { id: 'rt2', e1Id: 're2', relation: 'associated_with', e2Id: 're4' }
+      ]
+    },
+    reAnnotationEn: {
+      entities: [
+        { id: 're1e', text: 'Breast', type: 'BODY', start: 0, end: 6 },
+        { id: 're2e', text: 'pain', type: 'SYMP', start: 7, end: 11 },
+        { id: 're3e', text: 'menstrual cycle', type: 'TIME', start: 65, end: 80 },
+        { id: 're4e', text: 'hormonal changes', type: 'BODY', start: 43, end: 59 }
+      ],
+      triples: [
+        { id: 'rt1e', e1Id: 're2e', relation: 'associated_with', e2Id: 're3e' },
+        { id: 'rt2e', e1Id: 're2e', relation: 'associated_with', e2Id: 're4e' }
       ]
     },
     reviewerData: {
@@ -2281,6 +2375,7 @@ var RE_SAMPLE_FIXTURES = [
   {
     id: 3, sampleId: 'RE-003',
     text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。',
+    textEn: 'Ultrasound can diagnose gallstones and is typically performed in cases of abdominal pain.',
     status: 'saved',
     reAnnotation: {
       entities: [
@@ -2290,16 +2385,26 @@ var RE_SAMPLE_FIXTURES = [
       ],
       triples: [{ id: 'rt1', e1Id: 're1', relation: 'diagnoses', e2Id: 're2' }]
     },
+    reAnnotationEn: {
+      entities: [
+        { id: 're1e', text: 'Ultrasound', type: 'EXAM', start: 0, end: 10 },
+        { id: 're2e', text: 'gallstones', type: 'DISE', start: 24, end: 34 },
+        { id: 're3e', text: 'abdominal pain', type: 'SYMP', start: 75, end: 89 }
+      ],
+      triples: [{ id: 'rt1e', e1Id: 're1e', relation: 'diagnoses', e2Id: 're2e' }]
+    },
     history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '1 triple (draft)' }]
   },
   {
     id: 4, sampleId: 'RE-004',
     text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。',
+    textEn: 'Chemotherapy drugs inhibit tumor cell growth but may cause side effects including nausea and hair loss.',
     status: 'todo', reAnnotation: null, history: []
   },
   {
     id: 5, sampleId: 'RE-005',
     text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。',
+    textEn: 'Patients with hypertension should monitor blood pressure regularly and take prescribed antihypertensives.',
     status: 'todo', reAnnotation: null, history: []
   }
 ];
@@ -2343,6 +2448,7 @@ var NER_SAMPLE_FIXTURES = [
   {
     id: 1, sampleId: 'NER-001',
     text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。',
+    textEn: 'TSMC founder Morris Chang attended the 2024 Semiconductor Industry Forum in Taipei.',
     status: 'submitted',
     nerAnnotation: {
       entities: [
@@ -2350,6 +2456,14 @@ var NER_SAMPLE_FIXTURES = [
         { id: 'n2', text: '張忠謀', type: 'PER', start: 5, end: 8 },
         { id: 'n3', text: '台北', type: 'LOC', start: 9, end: 11 },
         { id: 'n4', text: '2024年', type: 'DATE', start: 12, end: 17 }
+      ]
+    },
+    nerAnnotationEn: {
+      entities: [
+        { id: 'n1e', text: 'TSMC', type: 'ORG', start: 0, end: 4 },
+        { id: 'n2e', text: 'Morris Chang', type: 'PER', start: 13, end: 25 },
+        { id: 'n3e', text: 'Taipei', type: 'LOC', start: 76, end: 82 },
+        { id: 'n4e', text: '2024', type: 'DATE', start: 39, end: 43 }
       ]
     },
     reviewerData: {
@@ -2371,6 +2485,7 @@ var NER_SAMPLE_FIXTURES = [
   {
     id: 2, sampleId: 'NER-002',
     text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。',
+    textEn: 'Foxconn announced a new factory in Ho Chi Minh City, Vietnam, expected to complete in 2025.',
     status: 'submitted',
     nerAnnotation: {
       entities: [
@@ -2378,6 +2493,14 @@ var NER_SAMPLE_FIXTURES = [
         { id: 'n6', text: '越南', type: 'LOC', start: 8, end: 10 },
         { id: 'n7', text: '胡志明市', type: 'LOC', start: 10, end: 14 },
         { id: 'n8', text: '2025年', type: 'DATE', start: 18, end: 23 }
+      ]
+    },
+    nerAnnotationEn: {
+      entities: [
+        { id: 'n5e', text: 'Foxconn', type: 'ORG', start: 0, end: 7 },
+        { id: 'n6e', text: 'Vietnam', type: 'LOC', start: 53, end: 60 },
+        { id: 'n7e', text: 'Ho Chi Minh City', type: 'LOC', start: 35, end: 51 },
+        { id: 'n8e', text: '2025', type: 'DATE', start: 86, end: 90 }
       ]
     },
     reviewerData: {
@@ -2399,6 +2522,7 @@ var NER_SAMPLE_FIXTURES = [
   {
     id: 3, sampleId: 'NER-003',
     text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+    textEn: 'Ministry of Health and Welfare Minister Hsueh Jui-yuan attended the World Health Assembly to promote Taiwan health policies.',
     status: 'saved',
     nerAnnotation: {
       entities: [
@@ -2406,16 +2530,24 @@ var NER_SAMPLE_FIXTURES = [
         { id: 'n10', text: '薛瑞元', type: 'PER', start: 6, end: 9 }
       ]
     },
+    nerAnnotationEn: {
+      entities: [
+        { id: 'n9e', text: 'Ministry of Health and Welfare', type: 'ORG', start: 0, end: 30 },
+        { id: 'n10e', text: 'Hsueh Jui-yuan', type: 'PER', start: 40, end: 54 }
+      ]
+    },
     history: [{ actor: 'Annotator A', time: '04-28 11:00', action: 'saved', from: null, to: '2 entities (draft)' }]
   },
   {
     id: 4, sampleId: 'NER-004',
     text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+    textEn: 'The US Federal Reserve announced it will hold rates steady; Chair Powell said it will continue monitoring inflation.',
     status: 'todo', nerAnnotation: null, history: []
   },
   {
     id: 5, sampleId: 'NER-005',
     text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+    textEn: 'The EU Parliament passed the updated AI Act, expected to take effect across Europe next year.',
     status: 'todo', nerAnnotation: null, history: []
   }
 ];
@@ -2714,8 +2846,14 @@ function renderSentencePairSource(prefix, config, sample) {
   var s2Key = pairMode === 'entailment' ? 'spSentence2LabelEntailment' : 'spSentence2LabelSimilarity';
   var s1Label = config.sentence_1_label || t(s1Key);
   var s2Label = config.sentence_2_label || t(s2Key);
-  var s1Text = sample[config.sentence_1_field] || sample.sentence_1 || '';
-  var s2Text = sample[config.sentence_2_field] || sample.sentence_2 || '';
+  var s1Field = config.sentence_1_field || 'sentence_1';
+  var s2Field = config.sentence_2_field || 'sentence_2';
+  var s1Text = state.lang === 'en'
+    ? (sample[s1Field + '_en'] || sample.sentence_1_en || sample[s1Field] || sample.sentence_1 || '')
+    : (sample[s1Field] || sample.sentence_1 || '');
+  var s2Text = state.lang === 'en'
+    ? (sample[s2Field + '_en'] || sample.sentence_2_en || sample[s2Field] || sample.sentence_2 || '')
+    : (sample[s2Field] || sample.sentence_2 || '');
 
   setText(prefix + 'Sentence1Label', s1Label);
   setText(prefix + 'Sentence2Label', s2Label);
@@ -2783,8 +2921,10 @@ function revalidateAspectRows() {
 }
 
 function initAspectListState(sample) {
-  var annotation = sample.aspectAnnotation;
-  aspectListState.originalSentence = sample.sentence || sample.text || '';
+  var annotation = (state.lang === 'en' && sample.aspectAnnotationEn) ? sample.aspectAnnotationEn : sample.aspectAnnotation;
+  aspectListState.originalSentence = state.lang === 'en'
+    ? (sample.sentenceEn || sample.textEn || sample.sentence || sample.text || '')
+    : (sample.sentence || sample.text || '');
   if (annotation && sample.status !== 'todo') {
     aspectListState.correctedSentence = annotation.corrected_sentence || '';
     aspectListState.rows = (annotation.aspects || []).map(function(a) {
@@ -2793,7 +2933,8 @@ function initAspectListState(sample) {
     });
   } else {
     aspectListState.correctedSentence = '';
-    aspectListState.rows = (Array.isArray(sample.aspects) ? sample.aspects : []).map(function(asp) {
+    var fallbackAspects = state.lang === 'en' && Array.isArray(sample.aspectsEn) ? sample.aspectsEn : sample.aspects;
+    aspectListState.rows = (Array.isArray(fallbackAspects) ? fallbackAspects : []).map(function(asp) {
       var text = typeof asp === 'string' ? asp : (asp.text || '');
       return { id: generateAspectId(), text: text,
         exactMatchStatus: checkExactMatch(text, aspectListState.originalSentence), sentimentChecked: false };
@@ -2954,9 +3095,10 @@ function generateNerId() {
 }
 
 function initNerState(sample) {
-  nerState.originalText = sample.text || '';
-  if (sample.nerAnnotation && sample.status !== 'todo') {
-    nerState.entities = (sample.nerAnnotation.entities || []).map(function(e) {
+  var annotation = (state.lang === 'en' && sample.nerAnnotationEn) ? sample.nerAnnotationEn : sample.nerAnnotation;
+  nerState.originalText = getLocalizedSampleText(sample);
+  if (annotation && sample.status !== 'todo') {
+    nerState.entities = (annotation.entities || []).map(function(e) {
       var et = NER_CONFIG.entities.find(function(t) { return t.name === e.type; });
       return { id: e.id || generateNerId(), text: e.text, type: e.type, start: e.start, end: e.end, color: et ? et.color : '#94A3B8' };
     });
@@ -3067,7 +3209,7 @@ function validateNerAnnotation() {
 
 /* ── Relation Extraction ──────────────────────────────────────── */
 function initRelationState(sample) {
-  var annotation = sample.reAnnotation;
+  var annotation = (state.lang === 'en' && sample.reAnnotationEn) ? sample.reAnnotationEn : sample.reAnnotation;
   if (annotation && sample.status !== 'todo') {
     reState.entities = (annotation.entities || []).map(function(e) {
       var et = RE_CONFIG.entity_types.find(function(x) { return x.name === e.type; });
@@ -3283,6 +3425,11 @@ function el(id) { return document.getElementById(id); }
 function setText(id, value) {
   var node = el(id);
   if (node) node.textContent = value;
+}
+
+function getLocalizedSampleText(sample) {
+  if (!sample) return '';
+  return state.lang === 'en' && sample.textEn ? sample.textEn : (sample.text || '');
 }
 
 var toastTimer = null;
@@ -3787,7 +3934,7 @@ function renderSampleList() {
 
     var snippet = document.createElement('p');
     snippet.className = 'sample-snippet';
-    snippet.textContent = sample.text;
+    snippet.textContent = getLocalizedSampleText(sample);
 
     var statusSpan = document.createElement('span');
     statusSpan.className = 'sample-status-label status-color-' + sample.status;
@@ -4103,7 +4250,7 @@ function renderSampleContent() {
   var sample = SAMPLES[state.currentIdx];
   setText('sampleSourceLabel', t('sampleSourceLabel'));
   if (!isNerTaskType() && !isSentencePairsTaskType()) {
-    setText('sampleText', sample.text);
+    setText('sampleText', getLocalizedSampleText(sample));
   }
 
   el('prevBtn').disabled = state.currentIdx === 0;
@@ -4312,11 +4459,17 @@ function applyLang(lang) {
   if (modalClose) {
     modalClose.setAttribute('aria-label', t('guidelineImageModalCloseAria'));
   }
+  var annotationNote = el('annotationNote');
+  if (annotationNote) {
+    annotationNote.setAttribute('placeholder', t('annotationNotePlaceholder'));
+  }
 
   renderSampleListHeader();
 
   if (window.LabelSuiteSharedSidebar) {
-    window.LabelSuiteSharedSidebar.applyGlobalLanguage(lang);
+    window.LabelSuiteSharedSidebar.applyGlobalLanguage(lang, {
+      roleLabel: t('roleUser')
+    });
     ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.textContent = t(id);

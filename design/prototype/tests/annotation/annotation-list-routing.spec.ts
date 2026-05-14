@@ -291,6 +291,24 @@ test.describe('Annotation list routing', () => {
     await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
   });
 
+  test('reviewer decision controls follow English language mode', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const firstSummaryRow = page.locator('#sampleRows tr').first();
+    await firstSummaryRow.click();
+
+    await expect(page.locator('[data-bulk-reject-for="R2-001"]')).toHaveText('✕ Reject all');
+    await expect(page.locator('[data-bulk-approve-for="R2-001"]')).toHaveText('✓ Approve all');
+    await expect(page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first().getByRole('button', { name: '✕ Reject' })).toBeVisible();
+    await expect(page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first().getByRole('button', { name: '✓ Approve' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '✕ 全部退回' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '✓ 全部通過' })).toHaveCount(0);
+  });
+
   test('reviewer bulk buttons show active filled state after click', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

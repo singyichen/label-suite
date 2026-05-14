@@ -909,11 +909,13 @@ var I18N = {
   zh: {
     docTitle: '新增任務 — Label Suite（原型）',
     pageTitle: '新增任務', pageSubtitle: '依序完成四個步驟以建立標記任務',
+    roleUser: '一般使用者',
     navDashboard: '儀表板', navTaskManagement: '任務管理',
     navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
     s1Label: '基本資料', s2Label: '標記設定檔', s3Label: '啟動設定', s4Label: '標記說明',
     s1CardTitle: '基本資料', s2CardTitle: '標記設定檔', s3CardTitle: '啟動設定', s4CardTitle: '標記說明',
     labelTaskName: '任務名稱', labelTaskType: '任務類型', labelDataset: '資料集',
+    taskNamePlaceholder: '例：新聞標題情感分類',
     optTaskTypeDefault: '請選擇任務類型',
     uploadZoneLabel: '點擊或拖曳上傳資料集',
     uploadZoneHint: '支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆',
@@ -1012,11 +1014,13 @@ var I18N = {
   en: {
     docTitle: 'New task — Label Suite (Prototype)',
     pageTitle: 'New task', pageSubtitle: 'Complete four steps to create an annotation task',
+    roleUser: 'User',
     navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
     navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
     s1Label: 'Basic info', s2Label: 'Label config', s3Label: 'Startup settings', s4Label: 'Guidelines',
     s1CardTitle: 'Basic info', s2CardTitle: 'Label configuration', s3CardTitle: 'Startup settings', s4CardTitle: 'Annotation guidelines',
     labelTaskName: 'Task name', labelTaskType: 'Task type', labelDataset: 'Dataset',
+    taskNamePlaceholder: 'Example: News headline sentiment classification',
     optTaskTypeDefault: 'Select task type',
     uploadZoneLabel: 'Click or drag to upload dataset',
     uploadZoneHint: 'TXT / CSV / TSV / JSON · max 200 MB · UTF-8 · up to 1,000,000 rows',
@@ -3064,6 +3068,7 @@ function applyLang(l) {
   setText('datasetPreviewModalTitle', t('datasetPreviewTitle'));
   setText('datasetPreviewModalHint', t('datasetPreviewHint'));
   setText('nextBtnLabel', state.step === 4 ? t('submitBtnLabel') : t('nextBtnLabel'));
+  el('taskNameInput').placeholder = t('taskNamePlaceholder');
   el('annotatorGuidelineTextInput').placeholder = t('annotatorGuidelineTextPlaceholder');
   el('reviewerGuidelineTextInput').placeholder = t('reviewerGuidelineTextPlaceholder');
   renderGuidelineList('annotator');
@@ -3087,6 +3092,7 @@ function applyLang(l) {
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
       langToggleAria: state.lang === 'en' ? 'Switch language' : '切換語言',
+      roleLabel: t('roleUser'),
     });
   }
   if (state.taskType) {
