@@ -222,6 +222,69 @@ Reference values for task-type badges in dark mode:
 | `badge-task-type-scoring` | `#C084FC` (purple-400) | `#1A0A2E` | `#4C1D95` |
 | `badge-official` | `#A78BFA` (violet-400) | `#1E1B4B` | `#3730A3` |
 | `badge-dry-run` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
+| `badge-draft` / `badge-run-dry` / `badge-run-unmaterialized` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
+
+#### 6. Reviewer action buttons dark overrides
+
+Buttons used in reviewer list rows (`mini-btn-approve` / `mini-btn-reject`) use hardcoded light semantic colors — override in every page that includes them:
+
+```css
+html[data-theme="dark"] {
+  .mini-btn-approve { background: #0F2A18; border-color: #1F5132; color: #4ADE80; }
+  .mini-btn-approve:hover:not(:disabled) { background: #1F5132; border-color: #4ADE80; color: #86EFAC; }
+  .mini-btn-reject  { background: #2A1414; border-color: #5B2222; color: #F87171; }
+  .mini-btn-reject:hover:not(:disabled)  { background: #3D1A1A; border-color: #F87171; color: #FCA5A5; }
+}
+```
+
+#### 7. Result tags dark overrides
+
+Tags applied to annotation results (`result-tag-green` / `result-tag-blue` / `result-tag-red`) carry `!important` and require a matching-specificity dark override:
+
+```css
+html[data-theme="dark"] {
+  .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+  .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+  .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
+}
+```
+
+#### 8. VA / classification chips dark overrides
+
+VA scoring chips (`ar-va-chip-normal` / `ar-va-chip-outlier`) and classification chips (`ar-classif-chip`) in task-detail:
+
+```css
+html[data-theme="dark"] {
+  .ar-va-chip-normal  { background: #0F2A18; color: #4ADE80; border-color: #1F5132; }
+  .ar-va-chip-outlier { background: #2A1414; color: #F87171; border-color: #5B2222; }
+  .ar-classif-chip    { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
+}
+```
+
+#### 9. Standalone auth pages (no tokens.css)
+
+Pages in `account/` that do not import `tokens.css` (**login, register, forgot-password, reset-password**) define their own `:root` tokens. Each must include a `html[data-theme="dark"]` block that re-maps the local token names:
+
+```css
+html[data-theme="dark"] {
+  --color-background:    #0B0B12;
+  --color-surface:       #16161F;
+  --color-border:        #2A2A35;
+  --color-border-focus:  #818CF8;
+  --color-text:          #E2E8F0;
+  --color-text-muted:    #9CA3AF;
+  --color-link:          #818CF8;
+  --color-primary:       #818CF8;
+  --color-primary-light: #1E1B4B;
+  --color-error:         #F87171;
+  --color-error-bg:      #2A1414;
+  --color-error-border:  #5B2222;
+  --shadow-card:         0 0 0 1px rgba(129,140,248,0.10), 0 4px 24px rgba(0,0,0,0.40);
+
+  /* CTA button — dark text on bright emerald for WCAG 4.5:1 */
+  .submit-btn, .login-btn { color: #064E3B; background: #34D399; }
+}
+```
 
 ### Typography
 

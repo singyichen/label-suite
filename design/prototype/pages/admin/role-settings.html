@@ -239,6 +239,16 @@
       .page-actions .btn-cta { flex: 1; justify-content: center; }
       .matrix-checkbox { pointer-events: none; }
     }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Teal task column — replace light mint with dark teal */
+      --color-task-soft-bg:  #0C2A27;
+      --color-task-header:   #2DD4BF;
+
+      /* CTA button */
+      .btn-cta { color: #064E3B; background: #34D399; }
+    }
   </style>
 </head>
 <body>

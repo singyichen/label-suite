@@ -544,6 +544,42 @@
       .btn-primary, .btn-secondary { width: 100%; text-align: center; }
       #saveProfileBtn, #savePwBtn { margin-left: 0; }
     }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Hardcoded text-soft colors throughout this file */
+      .page-subheading  { color: var(--color-text-muted); }
+      .section-desc     { color: var(--color-text-muted); }
+      .field-label      { color: var(--color-ink); }
+      .field-hint       { color: var(--color-text-muted); }
+      .avatar-hint      { color: var(--color-text-muted); }
+      .sent-desc        { color: var(--color-text-muted); }
+      .back-link        { color: var(--color-text-muted); }
+      .back-link:hover  { background: var(--color-slate-50); }
+
+      /* Email row — hardcoded #F8FAFC bg */
+      .email-row { background: var(--color-border-muted); }
+
+      /* Info banner — hardcoded light blue */
+      .info-banner {
+        background: var(--color-info-bg);
+        border-color: var(--color-info-border);
+        color: var(--color-info);
+      }
+
+      /* Eye toggle */
+      .eye-toggle { color: var(--color-text-muted); }
+      .eye-toggle:hover { color: var(--color-ink); }
+
+      /* CTA button */
+      .btn-primary { color: #064E3B; background: #34D399; }
+      .btn-primary:hover { opacity: 0.9; }
+
+      /* Skeleton gradient */
+      .skeleton {
+        background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
+      }
+    }
   </style>
 </head>
 <body>

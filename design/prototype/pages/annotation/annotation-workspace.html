@@ -1235,6 +1235,40 @@
       color: var(--color-ink); cursor: pointer; user-select: none; }
     .sp-unsure-label input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--color-primary); cursor: pointer; }
     .result-tag-neutral { background: var(--color-border-muted); color: var(--color-text-soft); border-radius: 4px; padding: 2px 8px; }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Task-type badges */
+      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
+      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
+      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
+
+      /* Reviewer action mini-buttons */
+      .mini-btn-approve { background: #0F2A18; border-color: #1F5132; color: #4ADE80; }
+      .mini-btn-approve:hover:not(:disabled) { background: #1F5132; border-color: #4ADE80; color: #86EFAC; }
+      .mini-btn-reject  { background: #2A1414; border-color: #5B2222; color: #F87171; }
+      .mini-btn-reject:hover:not(:disabled)  { background: #3D1A1A; border-color: #F87171; color: #FCA5A5; }
+
+      /* Result score pills */
+      .rv-score-pill.result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+      .rv-score-pill.result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+      .rv-score-pill.result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
+
+      /* rv-summary-chip — teal on dark */
+      .rv-summary-chip { background: rgba(45,212,191,0.12); color: #2DD4BF; }
+
+      /* Guideline md icon */
+      .guideline-file-icon.md { background: var(--color-primary-soft-bg); color: #A78BFA; }
+
+      /* Aspect sentence modified state */
+      .aspect-sentence-edit.modified { border-color: #A78BFA; background: #1E1B4B; }
+
+      /* btn-primary hover for submit/save */
+      .btn-primary:hover { background: #4F46E5; }
+    }
   </style>
 </head>
 <body>

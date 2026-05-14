@@ -317,6 +317,35 @@
       .toolbar-right .btn { width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Table header and row hover — hardcoded #F8FAFC */
+      .task-table th { background: var(--color-border-muted); }
+      .task-table td { border-bottom-color: var(--color-border-muted); }
+      .task-table tbody tr:hover { background: var(--color-slate-50); }
+
+      /* Empty state desc */
+      .empty-row-desc { color: var(--color-text-soft); }
+
+      /* Pagination info */
+      .pagination-info { color: var(--color-text-soft); }
+
+      /* Status / run-phase badges */
+      .badge-draft          { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-dry-run-status { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-run-dry        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-run-official   { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
+      .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+
+      /* Task-type badges */
+      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
+      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
+      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
+    }
   </style>
 </head>
 

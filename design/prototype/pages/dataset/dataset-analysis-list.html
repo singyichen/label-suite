@@ -280,6 +280,17 @@
       .toast { max-width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Task-type badges */
+      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
+      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
+      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
+    }
   </style>
 </head>
 

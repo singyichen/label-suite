@@ -2405,6 +2405,26 @@
       .exec-actions { align-items: flex-start; }
       .run-control-tabs { width: 100%; justify-content: flex-start; overflow-x: auto; }
     }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Result tags (with !important in base CSS) */
+      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
+
+      /* VA scoring chips */
+      .ar-va-chip-normal  { background: #0F2A18; color: #4ADE80; border-color: #1F5132; }
+      .ar-va-chip-outlier { background: #2A1414; color: #F87171; border-color: #5B2222; }
+
+      /* Classification chip */
+      .ar-classif-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
+
+      /* Round status badges */
+      .round-status-badge.failed      { color: #F87171; background: #2A1414; border-color: #5B2222; }
+      .round-status-badge.passed      { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+      .round-status-badge.in-progress { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
+    }
   </style>
 </head>
 <body>
