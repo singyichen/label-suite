@@ -679,6 +679,12 @@ var I18N = {
       conflict189: 'CP值 ↔ 產品品質（boundary overlap）',
       conflict521: '功能性 span 邊界一致性低',
     },
+    navDashboard: '儀表板',
+    navTaskManagement: '任務管理',
+    navAnnotation: '標記作業',
+    navDataset: '資料集分析',
+    navAdmin: '系統管理',
+    navProfile: '個人設定',
   },
   en: {
     docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
@@ -954,6 +960,12 @@ var I18N = {
       conflict189: 'Value for Money ↔ Product Quality (boundary overlap)',
       conflict521: 'Low span-boundary consistency for Functionality',
     },
+    navDashboard: 'Dashboard',
+    navTaskManagement: 'Task Management',
+    navAnnotation: 'Annotation',
+    navDataset: 'Dataset Analytics',
+    navAdmin: 'System Administration',
+    navProfile: 'Profile',
   },
 };
 
@@ -1189,6 +1201,15 @@ function applyLang(l) {
   document.getElementById('tabQuality').textContent = t('tabQuality');
   applyTypeContent();
   applyQualityState();
+  if (window.LabelSuiteSharedSidebar) {
+    window.LabelSuiteSharedSidebar.applyGlobalLanguage(l, {
+      langToggleAria: l === 'zh' ? '切換語言' : 'Switch language',
+    });
+    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = t(id);
+    });
+  }
   if (window.LabelSuiteAnalytics) {
     window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang: l });
   }
@@ -1435,8 +1456,12 @@ function applyRouteTask(taskId) {
     });
   }
 
-  document.addEventListener('labelsuite:langchange', function(e) {
-    applyLang(e.detail && e.detail.lang ? e.detail.lang : 'zh');
+  ['langToggle', 'mobileLangToggle'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      applyLang(S.lang === 'zh' ? 'en' : 'zh');
+    });
   });
 })();
 </script>

@@ -1721,6 +1721,12 @@ var I18N = {
     spErrNoLabel: '請選擇判定結果',
     spErrNoScore: '請選擇評分',
     rvSpReviewNote: '通過：此筆句對標記有效。退回：標記員需重新判定。',
+    navDashboard: '儀表板',
+    navTaskManagement: '任務管理',
+    navAnnotation: '標記作業',
+    navDataset: '資料集分析',
+    navAdmin: '系統管理',
+    navProfile: '個人設定',
   },
   en: {
     docTitle: 'Annotation Workspace — Label Suite (Prototype)',
@@ -1873,6 +1879,12 @@ var I18N = {
     spErrNoLabel: 'Please select a judgement',
     spErrNoScore: 'Please select a score',
     rvSpReviewNote: 'Approve: mark this sentence-pair annotation as valid. Reject: returns it to the annotator.',
+    navDashboard: 'Dashboard',
+    navTaskManagement: 'Task Management',
+    navAnnotation: 'Annotation',
+    navDataset: 'Dataset Analytics',
+    navAdmin: 'System Administration',
+    navProfile: 'Profile',
   }
 };
 
@@ -4305,6 +4317,10 @@ function applyLang(lang) {
 
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(lang);
+    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = t(id);
+    });
   }
 
   renderGuidelineCollapseState();
@@ -4658,8 +4674,12 @@ function bindEvents() {
     mobileHandle.setAttribute('aria-expanded', String(state.mobileDrawerOpen));
   });
 
-  document.addEventListener('labelsuite:langchange', function(e) {
-    if (e.detail && e.detail.lang) { applyLang(e.detail.lang); }
+  ['langToggle', 'mobileLangToggle'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      applyLang(state.lang === 'zh' ? 'en' : 'zh');
+    });
   });
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {

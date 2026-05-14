@@ -676,6 +676,7 @@
   var CURRENT_LANG = 'zh';
   var I18N = {
     zh: {
+      pageTitle: '標記清單',
       pageSubtitleAnnotator: '請先選擇要處理的資料筆次，再進入標記作業頁。',
       pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
       submitReviewLabel: '送出審核',
@@ -684,18 +685,79 @@
       trialRoundLabelTpl: '試標回合 R{round}',
       trialListCountTpl: '本回合清單 {total} 筆',
       officialListLabel: '正式標記清單',
-      officialListCountTpl: '正式清單 {total} 筆'
+      officialListCountTpl: '正式清單 {total} 筆',
+      langToggleAria: '切換語言',
+      navDashboard: '儀表板',
+      navTaskManagement: '任務管理',
+      navAnnotation: '標記作業',
+      navDataset: '資料集分析',
+      navAdmin: '系統管理',
+      navProfile: '個人設定',
+      thStatus: '完成狀態',
+      thCompletedAt: '完成時間',
+      thAnnotator: '標記者',
+      thTextSummary: '文本摘要',
+      thActions: '操作',
+      thLabelStats: '標記分布統計',
+      runTypeLabelOfficial: '正式標記',
+      runTypeLabelDry: '試標',
+      statusSubmitted: '已提交',
+      statusSaved: '草稿',
+      statusPending: '待處理',
+      quickContinueBtnAnnotator: '快速繼續',
+      quickContinueBtnReviewer: '快速審核',
+      editBtnLabel: '編輯',
+      expandBtnLabel: '展開',
+      searchPlaceholder: '搜尋',
+      searchAriaLabel: '搜尋',
+      statusFilterAll: '全部完成狀態',
+      clearFiltersLabel: '清除篩選',
+      paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      pageSizeTpl: '{size} / 頁',
+      roleLabelAnnotator: '標記員',
+      roleLabelReviewer: '審核員',
     },
     en: {
+      pageTitle: 'Annotation List',
       pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
       pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
       submitReviewLabel: 'Submit review',
       toastReviewSubmitted: 'Review submitted.',
       toastSelectDecision: 'Please complete a review decision for each annotator',
       trialRoundLabelTpl: 'Trial round R{round}',
-      trialListCountTpl: 'This round list: {total} items',
+      trialListCountTpl: 'This round: {total} items',
       officialListLabel: 'Official annotation list',
-      officialListCountTpl: 'Official list: {total} items'
+      officialListCountTpl: 'Official list: {total} items',
+      langToggleAria: 'Switch language',
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
+      thStatus: 'Status',
+      thCompletedAt: 'Completed At',
+      thAnnotator: 'Annotator',
+      thTextSummary: 'Text Summary',
+      thActions: 'Actions',
+      thLabelStats: 'Label Stats',
+      runTypeLabelOfficial: 'Official',
+      runTypeLabelDry: 'Trial',
+      statusSubmitted: 'Submitted',
+      statusSaved: 'Draft',
+      statusPending: 'Pending',
+      quickContinueBtnAnnotator: 'Quick Resume',
+      quickContinueBtnReviewer: 'Quick Review',
+      editBtnLabel: 'Edit',
+      expandBtnLabel: 'Expand',
+      searchPlaceholder: 'Search',
+      searchAriaLabel: 'Search',
+      statusFilterAll: 'All statuses',
+      clearFiltersLabel: 'Clear filters',
+      paginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      pageSizeTpl: '{size} / page',
+      roleLabelAnnotator: 'Annotator',
+      roleLabelReviewer: 'Reviewer',
     }
   };
   function t(key, vars) {
@@ -704,6 +766,9 @@
       Object.keys(vars).forEach(function(k) { str = str.replace('{' + k + '}', String(vars[k])); });
     }
     return str;
+  }
+  function getSampleText(sample) {
+    return CURRENT_LANG === 'en' && sample.textEn ? sample.textEn : sample.text;
   }
 
   var toastTimer = null;
@@ -720,11 +785,11 @@
   var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
   var TASK_TYPE_META = {
-    single_sentence_classification: { text: '單句分類（含多標籤）', badgeClass: 'badge-task-type-single' },
-    single_sentence_va_scoring: { text: '單句 VA 雙維度評分（Valence / Arousal）', badgeClass: 'badge-task-type-scoring' },
-    sequence_labeling: { text: '序列標記（含 Aspect / NER）', badgeClass: 'badge-task-type-sequence' },
-    relation_extraction: { text: '關係抽取（Entity + Relation + Triple）', badgeClass: 'badge-task-type-relation' },
-    sentence_pairs: { text: '句對任務（相似度 / 蘊含）', badgeClass: 'badge-task-type-pairs' }
+    single_sentence_classification: { text: '單句分類（含多標籤）', textEn: 'Single Sentence Classification (Multi-label)', badgeClass: 'badge-task-type-single' },
+    single_sentence_va_scoring: { text: '單句 VA 雙維度評分（Valence / Arousal）', textEn: 'Single-sentence VA Scoring (Valence / Arousal)', badgeClass: 'badge-task-type-scoring' },
+    sequence_labeling: { text: '序列標記（含 Aspect / NER）', textEn: 'Sequence Labeling (Aspect / NER)', badgeClass: 'badge-task-type-sequence' },
+    relation_extraction: { text: '關係抽取（Entity + Relation + Triple）', textEn: 'Relation Extraction (Entity + Relation + Triple)', badgeClass: 'badge-task-type-relation' },
+    sentence_pairs: { text: '句對任務（相似度 / 蘊含）', textEn: 'Sentence Pairs (Similarity / Entailment)', badgeClass: 'badge-task-type-pairs' }
   };
 
   var MATERIALIZED_RUN_CONTEXT = {
@@ -747,111 +812,129 @@
       {
         taskId: 'TASK-015-A1',
         title: '新聞標題多標籤分類',
+        titleEn: 'News Headline Multi-label Classification',
         taskType: 'single_sentence_classification',
         runType: 'official_run',
         dashboardTaskTypeText: '單句分類（含多標籤）',
         dashboardDetail: '已完成 89% · 今日 53 筆 · 平均速度 3.0',
+        dashboardDetailEn: 'Completed 89% · Today 53 items · Avg speed 3.0',
         dashboardProgress: 89,
         dashboardStatusText: '繼續中',
+        dashboardStatusTextEn: 'Ongoing',
         dashboardStatusClass: 'badge-info',
         samples: [
-          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。' },
-          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。' },
-          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。' },
-          { sampleId: 'A1-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。' },
-          { sampleId: 'A1-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。' }
+          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。', textEn: 'Legislature passes tech industry transformation act; government announces expanded R&D subsidies.' },
+          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。', textEn: 'Star athlete joins charity concert as sports and entertainment communities unite to fundraise for children\'s education.' },
+          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。', textEn: 'Approaching typhoon triggers work and school shutdowns; central and local governments activate disaster response.' },
+          { sampleId: 'A1-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。', textEn: 'International film festival reveals nominees; Taiwanese director\'s new work addresses social issues.' },
+          { sampleId: 'A1-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。', textEn: 'Chipmaker announces mass production schedule for new chips, boosting Taiwan tech stocks.' }
         ]
       },
       {
         taskId: 'TASK-015-A2',
         title: '情感 VA 雙維度評分',
+        titleEn: 'Sentiment VA Dual-axis Scoring',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
         dashboardDetail: '已完成 42% · 今日 18 筆 · 平均速度 4.2',
+        dashboardDetailEn: 'Completed 42% · Today 18 items · Avg speed 4.2',
         dashboardProgress: 42,
         dashboardStatusText: '待繼續',
+        dashboardStatusTextEn: 'Resume',
         dashboardStatusClass: 'badge-warning',
         samples: [
-          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。' },
-          { sampleId: 'A2-002', status: 'submitted', completedAt: '2026-04-23 09:16', annotatedBy: 'Mandy', text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。' },
-          { sampleId: 'A2-003', status: 'saved', completedAt: '2026-04-23 09:22', annotatedBy: 'Mandy', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。' },
-          { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。' },
-          { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。' }
+          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。', textEn: 'Overall service was excellent; staff were patient and thorough, making me feel genuinely valued.' },
+          { sampleId: 'A2-002', status: 'submitted', completedAt: '2026-04-23 09:16', annotatedBy: 'Mandy', text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。', textEn: 'Waited nearly an hour for food, cold and indifferent service, lukewarm dishes — completely not worth it.' },
+          { sampleId: 'A2-003', status: 'saved', completedAt: '2026-04-23 09:22', annotatedBy: 'Mandy', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。', textEn: 'This phone truly exceeded my expectations — the display is crystal clear and the battery lasts well.' },
+          { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。', textEn: 'Nice sunny day; went for a walk outside, came back and had lunch.' },
+          { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。', textEn: 'The product manual was extremely thorough; installation went smoothly step by step with no issues at all.' }
         ]
       },
       {
         taskId: 'TASK-015-A3',
         title: '產品評論序列標註（NER / Aspect）',
+        titleEn: 'Product Review Sequence Labeling (NER / Aspect)',
         taskType: 'sequence_labeling',
         subType: 'aspect_list',
         runType: 'official_run',
         dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '已完成 64% · 今日 31 筆 · 平均速度 2.8',
+        dashboardDetailEn: 'Completed 64% · Today 31 items · Avg speed 2.8',
         dashboardProgress: 64,
         dashboardStatusText: '進行中',
+        dashboardStatusTextEn: 'In Progress',
         dashboardStatusClass: 'badge-info',
         samples: [
-          { sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 10:30', annotatedBy: 'Mandy', text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。' },
-          { sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 10:45', annotatedBy: 'Mandy', text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。' },
-          { sampleId: 'AL-003', status: 'saved', completedAt: '2026-04-23 11:00', annotatedBy: 'Mandy', text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。' },
-          { sampleId: 'AL-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。' },
-          { sampleId: 'AL-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。' }
+          { sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 10:30', annotatedBy: 'Mandy', text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。', textEn: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.' },
+          { sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 10:45', annotatedBy: 'Mandy', text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。', textEn: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.' },
+          { sampleId: 'AL-003', status: 'saved', completedAt: '2026-04-23 11:00', annotatedBy: 'Mandy', text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。', textEn: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.' },
+          { sampleId: 'AL-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。', textEn: 'The software UI is clean and intuitive with smooth workflows, though customer support response is a bit slow.' },
+          { sampleId: 'AL-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。', textEn: 'These headphones deliver outstanding audio quality, a comfortable fit, and highly effective active noise cancellation.' }
         ]
       },
       {
         taskId: 'TASK-015-A5',
         title: '句對相似度 / 蘊含判定',
+        titleEn: 'Sentence Pair Similarity / Entailment',
         taskType: 'sentence_pairs',
         runType: 'dry_run',
         dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
         dashboardDetail: '已完成 58% · 今日 25 筆 · 平均速度 3.4',
+        dashboardDetailEn: 'Completed 58% · Today 25 items · Avg speed 3.4',
         dashboardProgress: 58,
         dashboardStatusText: '進行中',
+        dashboardStatusTextEn: 'In Progress',
         dashboardStatusClass: 'badge-info',
         samples: [
-          { sampleId: 'A5-001', status: 'submitted', completedAt: '2026-04-28 10:00', annotatedBy: 'Mandy', text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。' },
-          { sampleId: 'A5-002', status: 'submitted', completedAt: '2026-04-28 10:15', annotatedBy: 'Mandy', text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。' },
-          { sampleId: 'A5-003', status: 'saved', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。' },
-          { sampleId: 'A5-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。' },
-          { sampleId: 'A5-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。' }
+          { sampleId: 'A5-001', status: 'submitted', completedAt: '2026-04-28 10:00', annotatedBy: 'Mandy', text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。', textEn: 'The film\'s visual effects are breathtaking and the plot is tightly paced. | The special effects are spectacular, the story flows well — worth watching.' },
+          { sampleId: 'A5-002', status: 'submitted', completedAt: '2026-04-28 10:15', annotatedBy: 'Mandy', text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。', textEn: 'Government announces electricity rate hike of approximately 8% starting next week. | Electricity prices rise next week; official adjustment is 8%.' },
+          { sampleId: 'A5-003', status: 'saved', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。', textEn: 'TSMC releases Q1 earnings with revenue at an all-time high. | Tech stocks show notable volatility this quarter due to global developments.' },
+          { sampleId: 'A5-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。', textEn: 'Typhoon warning lifted; transport links resuming across counties. | Meteorological bureau issues typhoon warning, landfall expected tomorrow.' },
+          { sampleId: 'A5-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。', textEn: 'Research shows prolonged sitting negatively impacts cardiovascular health. | Regular exercise effectively reduces the risk of heart disease.' }
         ]
       },
       {
         taskId: 'TASK-015-A6',
         title: 'NER 命名實體辨識',
+        titleEn: 'NER Named Entity Recognition',
         taskType: 'sequence_labeling',
         subType: 'ner',
         runType: 'official_run',
         dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '已完成 28% · 今日 12 筆 · 平均速度 2.5',
+        dashboardDetailEn: 'Completed 28% · Today 12 items · Avg speed 2.5',
         dashboardProgress: 28,
         dashboardStatusText: '進行中',
+        dashboardStatusTextEn: 'In Progress',
         dashboardStatusClass: 'badge-info',
         samples: [
-          { sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。' },
-          { sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。' },
-          { sampleId: 'NER-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。' },
-          { sampleId: 'NER-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。' },
-          { sampleId: 'NER-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。' }
+          { sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。', textEn: 'TSMC founder Morris Chang attended the 2024 Semiconductor Industry Forum in Taipei.' },
+          { sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。', textEn: 'Foxconn announced a new factory in Ho Chi Minh City, Vietnam, expected to complete in 2025.' },
+          { sampleId: 'NER-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。', textEn: 'Minister of Health Hsueh Jui-yuan attended the World Health Assembly to promote Taiwan\'s health policies.' },
+          { sampleId: 'NER-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。', textEn: 'The US Federal Reserve announced it will hold rates steady; Chair Powell said it will continue monitoring inflation.' },
+          { sampleId: 'NER-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。', textEn: 'The EU Parliament passed the updated AI Act, expected to take effect across Europe next year.' }
         ]
       },
       {
         taskId: 'TASK-015-A4',
         title: '醫療關係抽取（Entity / Triple）',
+        titleEn: 'Medical Relation Extraction (Entity / Triple)',
         taskType: 'relation_extraction',
         runType: 'official_run',
         dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
         dashboardDetail: '已完成 37% · 今日 14 筆 · 平均速度 5.1',
+        dashboardDetailEn: 'Completed 37% · Today 14 items · Avg speed 5.1',
         dashboardProgress: 37,
         dashboardStatusText: '待繼續',
+        dashboardStatusTextEn: 'Resume',
         dashboardStatusClass: 'badge-warning',
         samples: [
-          { sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。' },
-          { sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。' },
-          { sampleId: 'RE-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。' },
-          { sampleId: 'RE-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。' },
-          { sampleId: 'RE-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。' }
+          { sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。', textEn: 'Aspirin can relieve headaches, but long-term use may cause gastrointestinal discomfort.' },
+          { sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。', textEn: 'Breast pain is largely associated with hormonal changes during the menstrual cycle.' },
+          { sampleId: 'RE-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。', textEn: 'Ultrasound can diagnose gallstones and is typically performed in cases of abdominal pain.' },
+          { sampleId: 'RE-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。', textEn: 'Chemotherapy drugs inhibit tumor cell growth but may cause side effects including nausea and hair loss.' },
+          { sampleId: 'RE-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。', textEn: 'Patients with hypertension should monitor blood pressure regularly and take prescribed antihypertensives.' }
         ]
       }
     ],
@@ -859,17 +942,20 @@
       {
         taskId: 'TASK-015-R1',
         title: '新聞標題多標籤分類',
+        titleEn: 'News Headline Multi-label Classification',
         taskType: 'single_sentence_classification',
         runType: 'official_run',
         dashboardTaskTypeText: '單句分類（含多標籤）',
         dashboardDetail: '待審 12 筆 · 進度 67% · IAA 0.81',
+        dashboardDetailEn: 'Pending review 12 · Progress 67% · IAA 0.81',
         dashboardProgress: 67,
         dashboardStatusText: '待審查',
+        dashboardStatusTextEn: 'Pending Review',
         dashboardStatusClass: 'badge-warning',
         samples: [
           {
             sampleId: 'R1-001', status: 'pending', completedAt: '-',
-            text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。',
+            text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。', textEn: 'Legislature passes tech industry transformation act; government announces expanded R&D subsidies.',
             labelStats: '政治×4 · 科技×5',
             annotators: [
               { username: 'kioleemg12', result: '政治, 科技', reviewStatus: null },
@@ -879,7 +965,7 @@
           },
           {
             sampleId: 'R1-002', status: 'saved', completedAt: '2026-04-23 08:58',
-            text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。',
+            text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。', textEn: 'Star athlete joins charity concert as sports and entertainment communities unite to fundraise for children\'s education.',
             labelStats: '體育×4 · 娛樂×4 · 社會×3',
             annotators: [
               { username: 'kioleemg12', result: '體育, 娛樂', reviewStatus: 'approved' },
@@ -889,7 +975,7 @@
           },
           {
             sampleId: 'R1-003', status: 'pending', completedAt: '-',
-            text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。',
+            text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。', textEn: 'Approaching typhoon triggers work and school shutdowns; central and local governments activate disaster response.',
             labelStats: '社會×5 · 政治×3',
             annotators: [
               { username: 'kioleemg12', result: '社會, 政治', reviewStatus: null },
@@ -899,7 +985,7 @@
           },
           {
             sampleId: 'R1-004', status: 'pending', completedAt: '-',
-            text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。',
+            text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。', textEn: 'International film festival reveals nominees; Taiwanese director\'s new work addresses social issues.',
             labelStats: '娛樂×5 · 社會×4',
             annotators: [
               { username: 'kioleemg12', result: '娛樂, 社會', reviewStatus: null },
@@ -909,7 +995,7 @@
           },
           {
             sampleId: 'R1-005', status: 'pending', completedAt: '-',
-            text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。',
+            text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。', textEn: 'Chipmaker announces mass production schedule for new chips, boosting Taiwan tech stocks.',
             labelStats: '科技×5 · 財經×3',
             annotators: [
               { username: 'kioleemg12', result: '科技', reviewStatus: null },
@@ -923,17 +1009,20 @@
         taskId: 'TASK-015-R2',
         taskAliases: ['TASK-015-A2'],
         title: '情感 VA 雙維度評分',
+        titleEn: 'Sentiment VA Dual-axis Scoring',
         taskType: 'single_sentence_va_scoring',
         runType: 'dry_run',
         dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
         dashboardDetail: '待審 8 筆 · 進度 52% · IAA 0.78',
+        dashboardDetailEn: 'Pending review 8 · Progress 52% · IAA 0.78',
         dashboardProgress: 52,
         dashboardStatusText: '進行中',
+        dashboardStatusTextEn: 'In Progress',
         dashboardStatusClass: 'badge-info',
         samples: [
           {
             sampleId: 'R2-001', status: 'submitted', completedAt: '2026-04-23 11:02',
-            text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
+            text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。', textEn: 'Overall service was excellent; staff were patient and thorough, making me feel genuinely valued.',
             labelStats: 'mean [4.33, 5.25]\nstd [0.99, 1.55]\n±1.5std V : 2.845~5.815\n ±1.5std A : 2.925~7.575',
             vaRange: { loV: 2.845, hiV: 5.815, loA: 2.925, hiA: 7.575 },
             annotators: [
@@ -946,7 +1035,7 @@
           },
           {
             sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:08',
-            text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。',
+            text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。', textEn: 'Waited nearly an hour for food, cold and indifferent service, lukewarm dishes — completely not worth it.',
             labelStats: 'mean [1.83, 1.5]\nstd [0.24, 0.44]\n±1.5std V : 1.470~2.190\n ±1.5std A : 0.840~2.160',
             vaRange: { loV: 1.470, hiV: 2.190, loA: 0.840, hiA: 2.160 },
             annotators: [
@@ -957,7 +1046,7 @@
           },
           {
             sampleId: 'R2-003', status: 'saved', completedAt: '2026-04-23 11:15',
-            text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。',
+            text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。', textEn: 'This phone truly exceeded my expectations — the display is crystal clear and the battery lasts well.',
             labelStats: 'mean [6.40, 5.75]\nstd [0.43, 0.25]\n±1.5std V : 5.755~7.045\n ±1.5std A : 5.375~6.125',
             vaRange: { loV: 5.755, hiV: 7.045, loA: 5.375, hiA: 6.125 },
             annotators: [
@@ -969,7 +1058,7 @@
           },
           {
             sampleId: 'R2-004', status: 'pending', completedAt: '-',
-            text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。',
+            text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。', textEn: 'Nice sunny day; went for a walk outside, came back and had lunch.',
             labelStats: 'mean [4.50, 4.83]\nstd [0.50, 0.47]\n±1.5std V : 3.750~5.250\n ±1.5std A : 4.125~5.535',
             vaRange: { loV: 3.750, hiV: 5.250, loA: 4.125, hiA: 5.535 },
             annotators: [
@@ -980,7 +1069,7 @@
           },
           {
             sampleId: 'R2-005', status: 'pending', completedAt: '-',
-            text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。',
+            text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。', textEn: 'The product manual was extremely thorough; installation went smoothly step by step with no issues at all.',
             labelStats: 'mean [6.67, 5.33]\nstd [0.24, 0.24]\n±1.5std V : 6.310~7.030\n ±1.5std A : 4.970~5.690',
             vaRange: { loV: 6.310, hiV: 7.030, loA: 4.970, hiA: 5.690 },
             annotators: [
@@ -995,18 +1084,21 @@
         taskId: 'TASK-015-R3',
         taskAliases: ['TASK-015-A3'],
         title: '產品評論序列標註（NER / Aspect）',
+        titleEn: 'Product Review Sequence Labeling (NER / Aspect)',
         taskType: 'sequence_labeling',
         subType: 'aspect_list',
         runType: 'official_run',
         dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '待審 15 筆 · 進度 61% · IAA 0.83',
+        dashboardDetailEn: 'Pending review 15 · Progress 61% · IAA 0.83',
         dashboardProgress: 61,
         dashboardStatusText: '待審查',
+        dashboardStatusTextEn: 'Pending Review',
         dashboardStatusClass: 'badge-warning',
         samples: [
           {
             sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 11:30',
-            text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。',
+            text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。', textEn: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.',
             labelStats: '螢幕×3 · 電池續航力×2 · 整體設計×2',
             vaRange: null,
             annotators: [
@@ -1017,7 +1109,7 @@
           },
           {
             sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 11:45',
-            text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。',
+            text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。', textEn: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.',
             labelStats: '環境×3 · 菜色選擇×2 · 服務員的態度×2',
             vaRange: null,
             annotators: [
@@ -1028,7 +1120,7 @@
           },
           {
             sampleId: 'AL-003', status: 'pending', completedAt: '-',
-            text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。',
+            text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。', textEn: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.',
             labelStats: '早餐品質×3 · 停車場×2 · 隔音效果×2',
             vaRange: null,
             annotators: [
@@ -1039,7 +1131,7 @@
           },
           {
             sampleId: 'AL-004', status: 'pending', completedAt: '-',
-            text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。',
+            text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。', textEn: 'The software UI is clean and intuitive with smooth workflows, though customer support response is a bit slow.',
             labelStats: '介面設計×3 · 操作流程×3 · 客戶支援×2',
             vaRange: null,
             annotators: [
@@ -1050,7 +1142,7 @@
           },
           {
             sampleId: 'AL-005', status: 'pending', completedAt: '-',
-            text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。',
+            text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。', textEn: 'These headphones deliver outstanding audio quality, a comfortable fit, and highly effective active noise cancellation.',
             labelStats: '音質×3 · 佩戴舒適度×3 · 降噪功能×3',
             vaRange: null,
             annotators: [
@@ -1065,17 +1157,20 @@
         taskId: 'TASK-015-R5',
         taskAliases: ['TASK-015-A5'],
         title: '句對相似度 / 蘊含判定',
+        titleEn: 'Sentence Pair Similarity / Entailment',
         taskType: 'sentence_pairs',
         runType: 'dry_run',
         dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
         dashboardDetail: '待審 11 筆 · 進度 56% · IAA 0.82',
+        dashboardDetailEn: 'Pending review 11 · Progress 56% · IAA 0.82',
         dashboardProgress: 56,
         dashboardStatusText: '待審查',
+        dashboardStatusTextEn: 'Pending Review',
         dashboardStatusClass: 'badge-warning',
         samples: [
           {
             sampleId: 'R5-001', status: 'submitted', completedAt: '2026-04-28 10:00',
-            text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。',
+            text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。', textEn: 'The film\'s visual effects are breathtaking and the plot is tightly paced. | The special effects are spectacular, the story flows well — worth watching.',
             labelStats: '等價×3 · 相關×2',
             annotators: [
               { username: 'kioleemg12', result: '等價', reviewStatus: null },
@@ -1087,7 +1182,7 @@
           },
           {
             sampleId: 'R5-002', status: 'submitted', completedAt: '2026-04-28 10:15',
-            text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。',
+            text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。', textEn: 'Government announces electricity rate hike of approximately 8% starting next week. | Electricity prices rise next week; official adjustment is 8%.',
             labelStats: '等價×4 · 相關×1',
             annotators: [
               { username: 'kioleemg12', result: '等價', reviewStatus: null },
@@ -1099,7 +1194,7 @@
           },
           {
             sampleId: 'R5-003', status: 'saved', completedAt: '2026-04-28 10:30',
-            text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。',
+            text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。', textEn: 'TSMC releases Q1 earnings with revenue at an all-time high. | Tech stocks show notable volatility this quarter due to global developments.',
             labelStats: '無關×3 · 相關×1',
             annotators: [
               { username: 'kioleemg12', result: '無關', reviewStatus: null },
@@ -1110,13 +1205,13 @@
           },
           {
             sampleId: 'R5-004', status: 'pending', completedAt: '-',
-            text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。',
+            text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。', textEn: 'Typhoon warning lifted; transport links resuming across counties. | Meteorological bureau issues typhoon warning, landfall expected tomorrow.',
             labelStats: '-',
             annotators: []
           },
           {
             sampleId: 'R5-005', status: 'pending', completedAt: '-',
-            text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。',
+            text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。', textEn: 'Research shows prolonged sitting negatively impacts cardiovascular health. | Regular exercise effectively reduces the risk of heart disease.',
             labelStats: '-',
             annotators: []
           }
@@ -1126,18 +1221,21 @@
         taskId: 'TASK-015-R6',
         taskAliases: ['TASK-015-A6'],
         title: 'NER 命名實體辨識',
+        titleEn: 'NER Named Entity Recognition',
         taskType: 'sequence_labeling',
         subType: 'ner',
         runType: 'official_run',
         dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
         dashboardDetail: '待審 10 筆 · 進度 28% · IAA 0.79',
+        dashboardDetailEn: 'Pending review 10 · Progress 28% · IAA 0.79',
         dashboardProgress: 28,
         dashboardStatusText: '待審查',
+        dashboardStatusTextEn: 'Pending Review',
         dashboardStatusClass: 'badge-warning',
         samples: [
           {
             sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30',
-            text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。',
+            text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。', textEn: 'TSMC founder Morris Chang attended the 2024 Semiconductor Industry Forum in Taipei.',
             labelStats: 'ORG×3 · PER×3 · LOC×3 · DATE×2',
             vaRange: null,
             annotators: [
@@ -1148,7 +1246,7 @@
           },
           {
             sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45',
-            text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。',
+            text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。', textEn: 'Foxconn announced a new factory in Ho Chi Minh City, Vietnam, expected to complete in 2025.',
             labelStats: 'ORG×3 · LOC×3 · DATE×3',
             vaRange: null,
             annotators: [
@@ -1159,7 +1257,7 @@
           },
           {
             sampleId: 'NER-003', status: 'saved', completedAt: '2026-04-28 11:00',
-            text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。',
+            text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。', textEn: 'Minister of Health Hsueh Jui-yuan attended the World Health Assembly to promote Taiwan\'s health policies.',
             labelStats: 'ORG×2 · PER×2',
             vaRange: null,
             annotators: [
@@ -1168,12 +1266,12 @@
           },
           {
             sampleId: 'NER-004', status: 'pending', completedAt: '-',
-            text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。',
+            text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。', textEn: 'The US Federal Reserve announced it will hold rates steady; Chair Powell said it will continue monitoring inflation.',
             labelStats: '-', vaRange: null, annotators: []
           },
           {
             sampleId: 'NER-005', status: 'pending', completedAt: '-',
-            text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。',
+            text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。', textEn: 'The EU Parliament passed the updated AI Act, expected to take effect across Europe next year.',
             labelStats: '-', vaRange: null, annotators: []
           }
         ]
@@ -1182,17 +1280,20 @@
         taskId: 'TASK-015-R4',
         taskAliases: ['TASK-015-A4'],
         title: '醫療關係抽取（Entity / Triple）',
+        titleEn: 'Medical Relation Extraction (Entity / Triple)',
         taskType: 'relation_extraction',
         runType: 'official_run',
         dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
         dashboardDetail: '待審 9 筆 · 進度 44% · IAA 0.79',
+        dashboardDetailEn: 'Pending review 9 · Progress 44% · IAA 0.79',
         dashboardProgress: 44,
         dashboardStatusText: '進行中',
+        dashboardStatusTextEn: 'In Progress',
         dashboardStatusClass: 'badge-info',
         samples: [
           {
             sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30',
-            text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。',
+            text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。', textEn: 'Aspirin can relieve headaches, but long-term use may cause gastrointestinal discomfort.',
             labelStats: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛) ×2 · (DRUG:阿司匹靈)→causes→(SYMP:胃部不適) ×2',
             vaRange: null,
             annotators: [
@@ -1202,7 +1303,7 @@
           },
           {
             sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45',
-            text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。',
+            text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。', textEn: 'Breast pain is largely associated with hormonal changes during the menstrual cycle.',
             labelStats: '(SYMP:疼痛)→associated_with→(TIME:月經週期) ×2 · (SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化) ×2',
             vaRange: null,
             annotators: [
@@ -1212,7 +1313,7 @@
           },
           {
             sampleId: 'RE-003', status: 'saved', completedAt: '2026-04-28 11:00',
-            text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。',
+            text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。', textEn: 'Ultrasound can diagnose gallstones and is typically performed in cases of abdominal pain.',
             labelStats: '(EXAM:超音波檢查)→diagnoses→(DISE:膽囊結石) ×1（草稿）',
             vaRange: null,
             annotators: [
@@ -1221,12 +1322,12 @@
           },
           {
             sampleId: 'RE-004', status: 'pending', completedAt: '-',
-            text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。',
+            text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。', textEn: 'Chemotherapy drugs inhibit tumor cell growth but may cause side effects including nausea and hair loss.',
             labelStats: '-', vaRange: null, annotators: []
           },
           {
             sampleId: 'RE-005', status: 'pending', completedAt: '-',
-            text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。',
+            text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。', textEn: 'Patients with hypertension should monitor blood pressure regularly and take prescribed antihypertensives.',
             labelStats: '-', vaRange: null, annotators: []
           }
         ]
@@ -1386,18 +1487,18 @@
     if (role === 'reviewer') {
       thead.appendChild(makeTh('', '32px'));
       thead.appendChild(makeTh('ID'));
-      thead.appendChild(makeTh('完成狀態'));
-      thead.appendChild(makeTh('完成時間'));
-      thead.appendChild(makeTh('文本摘要'));
-      thead.appendChild(makeTh('標記分布統計', '280px'));
-      thead.appendChild(makeTh('操作'));
+      thead.appendChild(makeTh(t('thStatus')));
+      thead.appendChild(makeTh(t('thCompletedAt')));
+      thead.appendChild(makeTh(t('thTextSummary')));
+      thead.appendChild(makeTh(t('thLabelStats'), '280px'));
+      thead.appendChild(makeTh(t('thActions')));
     } else {
       thead.appendChild(makeTh('ID'));
-      thead.appendChild(makeTh('完成狀態'));
-      thead.appendChild(makeTh('完成時間'));
-      thead.appendChild(makeTh('標記者'));
-      thead.appendChild(makeTh('文本摘要'));
-      thead.appendChild(makeTh('操作'));
+      thead.appendChild(makeTh(t('thStatus')));
+      thead.appendChild(makeTh(t('thCompletedAt')));
+      thead.appendChild(makeTh(t('thAnnotator')));
+      thead.appendChild(makeTh(t('thTextSummary')));
+      thead.appendChild(makeTh(t('thActions')));
     }
   }
 
@@ -1491,9 +1592,9 @@
   }
 
   function statusText(status) {
-    if (status === 'submitted') return '已提交';
-    if (status === 'saved') return '草稿';
-    return '待處理';
+    if (status === 'submitted') return t('statusSubmitted');
+    if (status === 'saved') return t('statusSaved');
+    return t('statusPending');
   }
 
   function updateClearFilterState() {
@@ -1514,7 +1615,7 @@
     var pageSizeSelect = document.getElementById('pageSizeSelect');
     if (!pageSizeSelect) return;
     Array.prototype.forEach.call(pageSizeSelect.options, function (opt) {
-      opt.textContent = opt.value + ' / 頁';
+      opt.textContent = t('pageSizeTpl', { size: opt.value });
     });
   }
 
@@ -1544,7 +1645,7 @@
     if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
 
     paginationBar.classList.remove('hidden');
-    paginationInfo.textContent = '共 ' + totalCount + ' 筆 · 第 ' + PAGINATION_STATE.page + ' / ' + totalPages + ' 頁';
+    paginationInfo.textContent = t('paginationTpl', { total: totalCount, page: PAGINATION_STATE.page, totalPages: totalPages });
     prevPageBtn.disabled = PAGINATION_STATE.page <= 1;
     nextPageBtn.disabled = PAGINATION_STATE.page >= totalPages;
 
@@ -1582,7 +1683,7 @@
         status.indexOf(query) !== -1 ||
         item.sample.completedAt.toLowerCase().indexOf(query) !== -1 ||
         (item.sample.annotatedBy || '').toLowerCase().indexOf(query) !== -1 ||
-        item.sample.text.toLowerCase().indexOf(query) !== -1
+        getSampleText(item.sample).toLowerCase().indexOf(query) !== -1
       );
     });
   }
@@ -1614,7 +1715,7 @@
   }
 
   function runTypeLabel(runType) {
-    return runType === 'official_run' ? '正式標記' : '試標';
+    return runType === 'official_run' ? t('runTypeLabelOfficial') : t('runTypeLabelDry');
   }
 
   function runTypeBadgeClass(runType) {
@@ -1682,19 +1783,22 @@
     var progress = typeof task.dashboardProgress === 'number' ? task.dashboardProgress : 0;
     var statusClass = task.dashboardStatusClass || 'badge-info';
 
-    title.textContent = task.title;
+    var isEn = CURRENT_LANG === 'en';
+    title.textContent = (isEn && task.titleEn) ? task.titleEn : task.title;
     var runContext = getMaterializedRunContext(task);
-    detail.textContent = [task.dashboardDetail || '-', runContext.label, runContext.countLabel].filter(Boolean).join(' · ');
-    taskType.textContent = task.dashboardTaskTypeText || (TASK_TYPE_META[task.taskType] && TASK_TYPE_META[task.taskType].text) || task.taskType;
+    var detailStr = isEn ? (task.dashboardDetailEn || task.dashboardDetail || '-') : (task.dashboardDetail || '-');
+    detail.textContent = [detailStr, runContext.label, runContext.countLabel].filter(Boolean).join(' · ');
+    var meta = TASK_TYPE_META[task.taskType];
+    taskType.textContent = (isEn && meta && meta.textEn) ? meta.textEn : (task.dashboardTaskTypeText || (meta && meta.text) || task.taskType);
     taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
     runType.textContent = runTypeLabel(task.runType);
     runType.className = 'badge ' + runTypeBadgeClass(task.runType);
-    status.textContent = task.dashboardStatusText || '進行中';
+    status.textContent = (isEn && task.dashboardStatusTextEn) ? task.dashboardStatusTextEn : (task.dashboardStatusText || t('statusPending'));
     status.className = 'badge ' + statusClass;
     progressBar.style.width = String(progress) + '%';
 
     if (quickBtn) {
-      quickBtn.textContent = context.role === 'reviewer' ? '快速審核' : '快速繼續';
+      quickBtn.textContent = context.role === 'reviewer' ? t('quickContinueBtnReviewer') : t('quickContinueBtnAnnotator');
       quickBtn.onclick = function () {
         var sampleId = findFirstNonSubmittedSampleId(task);
         if (!sampleId) return;
@@ -1742,7 +1846,7 @@
       // Expand button (chevron)
       var expandBtn = document.createElement('button');
       expandBtn.className = 'expand-btn';
-      expandBtn.setAttribute('aria-label', '展開');
+      expandBtn.setAttribute('aria-label', t('expandBtnLabel'));
       var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
       chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
@@ -1789,7 +1893,7 @@
       var editBtn = document.createElement('button');
       editBtn.className = 'mini-btn mini-btn-primary';
       editBtn.type = 'button';
-      editBtn.textContent = '編輯';
+      editBtn.textContent = t('editBtnLabel');
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
       actionsDiv.appendChild(editBtn);
 
@@ -1840,7 +1944,7 @@
 
       var textTd = document.createElement('td');
       textTd.className = 'text-snippet';
-      textTd.textContent = sample.text;
+      textTd.textContent = getSampleText(sample);
 
       summaryTr.appendChild(expandTd);
       summaryTr.appendChild(makeTd(sample.sampleId));
@@ -1875,12 +1979,12 @@
       var editBtn = document.createElement('button');
       editBtn.className = 'mini-btn mini-btn-primary';
       editBtn.type = 'button';
-      editBtn.textContent = '編輯';
+      editBtn.textContent = t('editBtnLabel');
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
 
       var textTd = document.createElement('td');
       textTd.className = 'text-snippet';
-      textTd.textContent = item.sample.text;
+      textTd.textContent = getSampleText(item.sample);
 
       tr.appendChild(makeTd(item.sample.sampleId));
       tr.appendChild(makeTd(statusSpan));
@@ -2004,8 +2108,24 @@
   }
 
   function renderContext(context) {
+    document.getElementById('pageTitle').textContent = t('pageTitle');
     document.getElementById('pageSubtitle').textContent =
       context.role === 'reviewer' ? t('pageSubtitleReviewer') : t('pageSubtitleAnnotator');
+
+    var searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.placeholder = t('searchPlaceholder');
+      searchInput.setAttribute('aria-label', t('searchAriaLabel'));
+    }
+    var statusFilter = document.getElementById('statusFilter');
+    if (statusFilter && statusFilter.options.length > 0) {
+      statusFilter.options[0].textContent = t('statusFilterAll');
+    }
+    var clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) clearFiltersBtn.setAttribute('aria-label', t('clearFiltersLabel'));
+
+    renderTableHeader(context.role);
+    renderTaskInfo(context);
 
     var submitReviewBtn = document.getElementById('submitReviewBtn');
     if (!submitReviewBtn) return;
@@ -2030,12 +2150,18 @@
     }
   }
 
+  function applyNavLabels() {
+    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = t(id);
+    });
+  }
+
   function init() {
     var context = parseContext();
     setStoredActiveTaskType(context.taskType);
+    CURRENT_LANG = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
     renderContext(context);
-    renderTableHeader(context.role);
-    renderTaskInfo(context);
     bindPagination(context);
     bindFilters(context);
     updateClearFilterState();
@@ -2052,11 +2178,29 @@
       });
     }
 
-    document.addEventListener('labelsuite:langchange', function (e) {
-      if (e.detail && e.detail.lang) {
-        CURRENT_LANG = e.detail.lang;
+    if (window.LabelSuiteSharedSidebar) {
+      window.LabelSuiteSharedSidebar.applyGlobalLanguage(CURRENT_LANG, {
+        langToggleAria: t('langToggleAria'),
+        roleLabel: context.role === 'reviewer' ? t('roleLabelReviewer') : t('roleLabelAnnotator'),
+      });
+    }
+    applyNavLabels();
+
+    ['langToggle', 'mobileLangToggle'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        CURRENT_LANG = CURRENT_LANG === 'zh' ? 'en' : 'zh';
+        if (window.LabelSuiteSharedSidebar) {
+          window.LabelSuiteSharedSidebar.applyGlobalLanguage(CURRENT_LANG, {
+            langToggleAria: t('langToggleAria'),
+            roleLabel: context.role === 'reviewer' ? t('roleLabelReviewer') : t('roleLabelAnnotator'),
+          });
+        }
+        applyNavLabels();
         renderContext(context);
-      }
+        renderRows(context);
+      });
     });
   }
 

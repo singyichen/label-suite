@@ -438,6 +438,12 @@
       emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
       toastNavigating: '前往分析詳情…',
       langToggleAria: '切換語言',
+      navDashboard: '儀表板',
+      navTaskManagement: '任務管理',
+      navAnnotation: '標記作業',
+      navDataset: '資料集分析',
+      navAdmin: '系統管理',
+      navProfile: '個人設定',
       iaaBadge: {
         pass: '通過',
         fail: '未通過',
@@ -455,6 +461,7 @@
         project_leader: '專案負責人',
         reviewer: '審核員',
       },
+      roleIndicatorLabel: '專案負責人',
     },
     en: {
       docTitle: 'Dataset Analysis — Label Suite (Prototype)',
@@ -493,6 +500,12 @@
       emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
       toastNavigating: 'Opening analysis detail…',
       langToggleAria: 'Switch language',
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
       iaaBadge: {
         pass: 'Pass',
         fail: 'Fail',
@@ -506,6 +519,7 @@
         relation_extraction: 'Relation Extraction (Entity + Relation + Triple)',
         sentence_pairs: 'Sentence Pairs (Similarity / Entailment)',
       },
+      roleIndicatorLabel: 'Project Leader',
       roleLabel: {
         project_leader: 'Project Leader',
         reviewer: 'Reviewer',
@@ -925,9 +939,14 @@
     setTextContent('thIaaStatus', t('thIaaStatus'));
     setTextContent('thRole', t('thRole'));
 
+    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
+      setTextContent(id, t(id));
+    });
+
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
         langToggleAria: t('langToggleAria'),
+        roleLabel: t('roleIndicatorLabel'),
       });
     }
 

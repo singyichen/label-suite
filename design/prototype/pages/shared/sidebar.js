@@ -216,6 +216,11 @@
 
     updateShortcutHelpLanguage(normalizedLang);
 
+    if (typeof opts.roleLabel === 'string') {
+      var roleEl = document.getElementById('roleIndicator');
+      if (roleEl) roleEl.textContent = opts.roleLabel;
+    }
+
     return normalizedLang;
   }
 
