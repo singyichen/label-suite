@@ -6,6 +6,7 @@
   <title>Label Suite — 資料集分析</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
@@ -147,7 +148,7 @@
     }
     .task-table td {
       padding: 14px 20px;
-      border-bottom: 1px solid #F1F5F9;
+      border-bottom: 1px solid var(--color-border-muted);
       vertical-align: middle;
     }
     .task-table tbody tr {
@@ -206,13 +207,13 @@
     .badge-task-type-scoring  { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
     .badge-task-type-default  { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
     /* IAA status badges */
-    .badge-iaa-pass        { color: #15803D; background: #F0FDF4; border-color: #BBF7D0; }
-    .badge-iaa-fail        { color: #B91C1C; background: #FEF2F2; border-color: #FECACA; }
-    .badge-iaa-pending     { color: #A16207; background: #FEFCE8; border-color: #FEF08A; }
-    .badge-iaa-not-started { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
+    .badge-iaa-pass        { color: var(--color-success);      background: var(--color-success-bg);      border-color: var(--color-success-border); }
+    .badge-iaa-fail        { color: var(--color-error);        background: var(--color-error-bg);        border-color: var(--color-error-border);   }
+    .badge-iaa-pending     { color: var(--color-warning);      background: var(--color-warning-bg);      border-color: var(--color-warning-border);  }
+    .badge-iaa-not-started { color: var(--color-text-soft);    background: var(--color-slate-50);        border-color: var(--color-border);          }
     /* Role badge */
-    .badge-role-pl    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
-    .badge-role-rev   { color: #0369A1; background: #E0F2FE; border-color: #BAE6FD; }
+    .badge-role-pl    { color: var(--color-primary);  background: var(--color-primary-soft-bg); border-color: var(--color-info-border); }
+    .badge-role-rev   { color: var(--color-info);     background: var(--color-info-bg);         border-color: var(--color-info-border); }
 
     /* ── Empty state ─────────────────────────────────────────── */
     .empty-row { cursor: default !important; }
@@ -234,7 +235,7 @@
       border-top: 1px solid var(--color-border);
     }
     .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
-    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
     .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
     .page-btn {
       width: 32px; height: 32px; padding: 0 8px;
@@ -279,6 +280,17 @@
       .toast { max-width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Task-type badges */
+      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
+      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
+      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
+    }
   </style>
 </head>
 
@@ -384,6 +396,7 @@
   </div>
 </div>
 
+<script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────── */
@@ -425,6 +438,12 @@
       emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
       toastNavigating: '前往分析詳情…',
       langToggleAria: '切換語言',
+      navDashboard: '儀表板',
+      navTaskManagement: '任務管理',
+      navAnnotation: '標記作業',
+      navDataset: '資料集分析',
+      navAdmin: '系統管理',
+      navProfile: '個人設定',
       iaaBadge: {
         pass: '通過',
         fail: '未通過',
@@ -442,6 +461,7 @@
         project_leader: '專案負責人',
         reviewer: '審核員',
       },
+      roleIndicatorLabel: '專案負責人',
     },
     en: {
       docTitle: 'Dataset Analysis — Label Suite (Prototype)',
@@ -480,6 +500,12 @@
       emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
       toastNavigating: 'Opening analysis detail…',
       langToggleAria: 'Switch language',
+      navDashboard: 'Dashboard',
+      navTaskManagement: 'Task Management',
+      navAnnotation: 'Annotation',
+      navDataset: 'Dataset Analytics',
+      navAdmin: 'System Administration',
+      navProfile: 'Profile',
       iaaBadge: {
         pass: 'Pass',
         fail: 'Fail',
@@ -493,6 +519,7 @@
         relation_extraction: 'Relation Extraction (Entity + Relation + Triple)',
         sentence_pairs: 'Sentence Pairs (Similarity / Entailment)',
       },
+      roleIndicatorLabel: 'Project Leader',
       roleLabel: {
         project_leader: 'Project Leader',
         reviewer: 'Reviewer',
@@ -912,9 +939,14 @@
     setTextContent('thIaaStatus', t('thIaaStatus'));
     setTextContent('thRole', t('thRole'));
 
+    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function (id) {
+      setTextContent(id, t(id));
+    });
+
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
         langToggleAria: t('langToggleAria'),
+        roleLabel: t('roleIndicatorLabel'),
       });
     }
 

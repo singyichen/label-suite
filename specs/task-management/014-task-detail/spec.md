@@ -2,7 +2,7 @@
 
 **功能分支**：`014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.7.6
+**版本**：1.7.11
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
@@ -218,6 +218,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 每筆匯出記錄都必須保存當次匯出條件快照，至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會影響匯出結果集合的條件；若當次匯出綁定 sample snapshot / dataset version / config version，也必須一併保存，確保可追溯與可重現
     - 操作：`匯出 JSON`、`匯出 JSON-MIN`
     - 下載按鈕樣式：`操作` 欄中的 `下載` 必須採用與 `task-list` 頁面 `編輯` 按鈕一致的主要操作按鈕視覺語言；需對齊按鈕尺寸、padding、圓角、字重、主色背景與 hover / focus 狀態，不得使用純文字連結樣式
+    - 分頁列：表格底部必須顯示與 `task-list` 相同樣式的分頁列，包含總筆數 / 目前頁數、每頁筆數下拉、上一頁 / 下一頁與頁碼按鈕；匯出記錄表的分頁狀態與標記結果表獨立，兩者不得共用同一組 `page` / `pageSize` 狀態
     - 格式說明：
       - `JSON`：供系統交換、備份與完整追溯使用；格式需參考 Label Studio 完整 JSON 的精神，保留 `source_data + annotations + reviews + export manifest` 的完整巢狀結構，但欄位命名與內容需以 Label Suite domain model 為主，不直接複製 Label Studio key
       - `JSON-MIN`：供分析、二次處理、下游 ETL 與表格工具使用；格式需參考 Label Studio `JSON-MIN` 的精神，採扁平化列資料（flat rows），只保留共通欄位與當前 `task_type` 必要結果欄位
@@ -229,14 +230,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - 角色可見性：`project_leader` 與 `reviewer` 皆可存取，全部唯讀；`annotator` 無此 tab（已被擋在 `/task-detail` 外）
   - 空狀態：尚無任何標記提交時顯示「尚無標記結果」並提供引導文案，不得顯示空表格
 - Tab B：`成員管理`
-  - 區塊 1：`目前成員清單`
-    - 欄位：姓名、Email、任務角色、狀態（active/disabled/invited）、加入時間、最後活動時間、操作
-    - 任務角色顯示：以有色標籤區隔（`reviewer` 與 `annotator` 使用不同色彩），樣式對齊 task-list「標記階段」badge 規格（輕量標籤尺寸與邊框）
-    - 成員狀態顯示：`啟用/停用/邀請中` 需以 badge 呈現，樣式對齊 task-list「標記階段」badge 規格
-    - 操作：移除成員、停用成員（僅 `project_leader`）；既有成員角色唯讀不可編輯；`invited` 狀態僅允許移除，不顯示停用/啟用
-    - 操作欄順序：`移除` 固定在左側，`停用/啟用` 固定在右側
-    - RWD 規則：窄 viewport 可使用橫向捲動容器，但表格基準寬度需控制在可用手機寬度附近；一般文字儲存格允許換行，不得依賴全列 `nowrap` 導致過度橫向延展
-  - 區塊 2：`加入成員`
+  - 區塊 1：`加入成員`
     - 子區塊 A：`搜尋平台成員`
       - 欄位：搜尋輸入框、欲指派任務角色下拉、搜尋結果表
       - 搜尋條件：支援以 `帳號 / 姓名 / Email` 查詢目前平台成員
@@ -247,16 +241,23 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 子區塊 B：`Email 邀請`
       - 欄位：Email 輸入框、欲指派任務角色下拉、寄送邀請按鈕
       - 操作：寄送邀請後，該成員需以 `invited` 狀態出現在目前成員清單
+  - 區塊 2：`目前成員清單`
+    - 欄位：姓名、Email、任務角色、狀態（active/disabled/invited）、加入時間、最後活動時間、操作
+    - 任務角色顯示：以有色標籤區隔（`reviewer` 與 `annotator` 使用不同色彩），樣式對齊 task-list「標記階段」badge 規格（輕量標籤尺寸與邊框）
+    - 成員狀態顯示：`啟用/停用/邀請中` 需以 badge 呈現，樣式對齊 task-list「標記階段」badge 規格
+    - 操作：移除成員、停用成員（僅 `project_leader`）；既有成員角色唯讀不可編輯；`invited` 狀態僅允許移除，不顯示停用/啟用
+    - 操作欄順序：`移除` 固定在左側，`停用/啟用` 固定在右側
+    - 分頁列：表格底部必須顯示與 `task-list` 相同樣式的分頁列，包含總筆數 / 目前頁數、每頁筆數下拉、上一頁 / 下一頁與頁碼按鈕
+    - RWD 規則：窄 viewport 可使用橫向捲動容器，但表格基準寬度需控制在可用手機寬度附近；一般文字儲存格允許換行，不得依賴全列 `nowrap` 導致過度橫向延展
   - 角色可見性：`reviewer` 不顯示此 tab；若以直連方式進入，導回 `overview` 並提示無權限
 - Tab C：`標記進度`
   - 區塊 1：`整體進度摘要`
-    - 指標：總樣本數、已完成數、完成率、平均速度、剩餘估計時間
-    - 階段切換：`試標` / `正式標記`（英文介面對應 `Dry Run` / `Official Run`）
+    - 回合切換 pills（標題同列右側）：各試標回合（`R1 ✗` / `R2 · 進行中` / ...）與 `正式標記`；切換後整個區塊同步顯示對應回合資料
+    - 選中回合進度條：顯示該回合 `completed/total（rate%）` 與進度條，位於 metric grid 上方
+    - 指標（6 項，單行排列）：總樣本數、已完成數、完成率、平均速度、剩餘估計時間、IAA
   - 區塊 2：`成員進度表`
     - 欄位：成員姓名、角色、已完成數、待完成數、總數量、平均速度、個人進度條、最後提交時間、品質旗標
     - 排序：預設依已完成數降冪，可切換依速度/最後提交排序
-  - 區塊 3：`階段分段進度`
-    - 呈現：`試標` 與 `正式標記` 分開進度條與統計，不可混算（英文介面對應 `Dry Run` / `Official Run`）
   - 空狀態：尚未開始標記時顯示「尚無進度資料」，並提供回到 `任務概覽` 的 CTA
 - Tab E：`工時紀錄`
   - 區塊 1：`工時篩選列`
@@ -268,7 +269,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - `登入／登出時間`：顯示實際登入時間與實際登出時間
     - `上線時長`：由實際登入時間與實際登出時間計算出的時間差，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
     - `工作時長`：計算實際標記總時數，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
-    - 角色顯示：使用與既有介面一致的角色 badge 樣式（`reviewer` / `annotator` 色彩區分）
+    - 角色顯示：以 badge 呈現任務角色，`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：`color-primary` / `color-primary-soft-bg` / `color-primary-border`），`annotator`（標記員）使用綠色（`role-badge-annotator`：`color-success` / `color-success-bg` / `color-success-border`）；兩色須明確可區分，成員管理與工時明細表沿用同一套 CSS class
     - 標記階段顯示：以 badge 呈現，樣式對齊 task-list「標記階段」badge（`試標` / `正式標記`；英文：`Dry Run` / `Official Run`）
     - 匯總：當前篩選條件下總工時、總完成筆數、加權平均速度；其中 `總工時` 顯示格式需與 `工作時長` / `上線時長` 一致，使用「小時 + 分」呈現
   - 區塊 3：`異常提醒`
@@ -328,7 +329,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - `member-management` 的搜尋結果區在 idle state 必須顯示「請先輸入帳號、姓名或 Email 再開始搜尋」或等價提示，不得顯示空白表格或預載名單。
 - `annotation-results` 的表格在窄 viewport 必須保留橫向捲動能力與 touch scrolling；基準最小寬度需控制在約 `640px` 等級，避免沿用過寬桌面設定造成手機 viewport 幾乎無法閱讀。
 - `annotation-progress` 與 `work-log` 的表格在 mobile 使用橫向捲動容器，不壓縮到欄位重疊。
-- `annotation-progress` 的階段切換按鈕需與「整體進度摘要」標題同列顯示（左標題、右切換）。
+- `annotation-progress` 的回合切換 pills 需與「整體進度摘要」標題同列顯示（左標題、右 pills）；pills 依序列出每個試標回合（`R{n} ✓` / `R{n} ✗` / `R{n} · 進行中`）與 `正式標記`，不得使用固定的 `試標` / `正式標記` 二分法。
 - 當語言切換為中文時，`member-management` 中成員狀態與搜尋結果欄位標題需使用中文（例如：`active/disabled/invited` 顯示為 `啟用/停用/邀請中`，`active task count` 顯示為 `目前已在任務數量`）。
 - `member-management` 的列內操作按鈕需使用語意色階：`加入任務=primary`、`啟用=success`、`停用=warning`、`移除=danger`，以降低誤操作。
 - 列內操作按鈕必須定義 `default / hover / focus-visible / disabled` 狀態，且 `focus-visible` 需有可見外框。
@@ -455,6 +456,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-005e**：Email 邀請必須驗證 email 格式並阻擋重複；寄送成功後該成員需以 `invited` 狀態出現在目前成員清單。
 - **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
+- **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
 - **FR-008a**：當任務內每一位 `active annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。
 - **FR-009**：系統必須支援在 `annotation-results` 匯出結果，格式至少含 `EXPORT_FORMATS`。
@@ -523,6 +525,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015d-1**：展開列 `提交時間` 與 `審核狀態` 必須在 desktop / tablet 維持右側獨立 meta 群組；任何 `task_type`、字串長度或 viewport 不得導致審核狀態 badge 被截斷或完全不可見。
 - **FR-015d-2**：展開列在 `<= MOBILE_BP` 時必須改為垂直堆疊，右側 meta 群組需移至內容下方並左對齊；result tag 可換行但不得被拉伸為整列寬度色塊。
 - **FR-015d-3**：展開列的可見範圍判定必須以 `annotation-results` 的橫向捲動容器為準，而非以 table 本體寬度為準；table 發生 overflow 時，`審核狀態` badge 與整列內容仍需完整落在 scroll container 內。
+- **FR-015e-1**：`匯出記錄表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態必須與 `標記結果表` 分頁狀態完全獨立，兩表換頁不得互相干擾。
 - **FR-015e**：`annotation-results` tab 必須提供匯出功能（格式至少含 `EXPORT_FORMATS`），需指定標記階段（Dry Run / Official Run）；`<= EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻採背景工作並通知下載連結；匯出 metadata 規格對齊 FR-010i。
 - **FR-015f**：`annotation-results` tab 空狀態（尚無任何標記提交）必須顯示引導文案，不得顯示空表格。
 - **FR-015g**：`JSON` 匯出必須採 `EXPORT_JSON_SHAPE`，頂層包含 `manifest` 與 `items[]`；每個 `item` 至少包含 `sample_id`、`source_data`、`annotations[]`、`reviews[]` 與當前 sample 聚合狀態，不得退化為純扁平列。
@@ -648,6 +651,12 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.13 | 2026-05-13 | 明確規範角色 badge 配色：`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：primary token 系列），`annotator`（標記員）使用綠色（`role-badge-annotator`：success token 系列）；補充 `tokens.css` 缺少的 `--color-primary-border`（light: #C7D2FE，dark: #3730A3）；成員管理與工時明細表沿用同一 CSS class |
+| 1.7.12 | 2026-05-13 | 補齊工時明細表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範分頁狀態（`wlPage` / `wlPageSize`）獨立；篩選條件變更重設至第 1 頁；匯總卡片與異常提醒仍依完整篩選結果計算；新增 FR-007a |
+| 1.7.11 | 2026-05-13 | 補齊匯出記錄表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範匯出記錄表分頁狀態（`arExportPage` / `arExportPageSize`）與標記結果表分頁狀態完全獨立；新增 FR-015e-1 |
+| 1.7.10 | 2026-05-13 | 重構 `annotation-progress` Tab C：移除獨立「階段分段進度」區塊；「整體進度摘要」新增 IAA 指標（共 6 項單行排列）、新增選中回合進度條（位於 metric grid 上方）；回合切換改為動態 pills（各試標回合 R1/R2/... + 正式標記），切換後進度條與 6 項指標同步更新 |
+| 1.7.9 | 2026-05-13 | 補齊 member-management「目前成員清單」表格底部分頁列，樣式與 `task-list` 分頁列一致；同步 prototype 渲染邏輯與 Playwright 回歸測試 |
+| 1.7.8 | 2026-05-13 | 調整 member-management 版面順序：`加入成員` 移至 `目前成員清單` 上方，讓新增/邀請入口優先呈現；同步 prototype 與 Playwright 回歸測試 |
 | 1.7.7 | 2026-05-12 | 調整 Overview「抽樣設定」抽樣筆數說明呈現：`每回合抽樣筆數` 保留必填星號，驗證規則改由 label 旁 info tooltip 顯示，移除輸入框下方常駐 hint |
 | 1.7.6 | 2026-05-12 | 進一步精簡 Overview「任務狀態與執行控制」stage banner：移除額外的「目前任務階段」標題與描述，任務階段僅由 stepper 表示，banner 僅保留判定標題與下一步說明 |
 | 1.7.5 | 2026-05-11 | 統整「目前任務階段」與「正式標記判定」資訊架構：回合判定與下一步說明併入單一 stage banner，移除獨立正式標記判定卡；同步更新 Overview 區塊 5、SC-019 與 prototype 測試 |

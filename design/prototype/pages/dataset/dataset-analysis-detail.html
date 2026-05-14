@@ -6,6 +6,7 @@
   <title>Label Suite — 資料集分析詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -236,7 +237,7 @@
     .stats-comatrix-table th{background:var(--color-slate-50);border:1px solid var(--color-border);padding:7px 12px;font-weight:600;color:var(--color-ink-muted)}
     .stats-comatrix-table td{border:1px solid var(--color-border);padding:7px 12px;text-align:center;font-family:var(--font-mono);font-size:12px}
     .stats-comatrix-diag{background:var(--color-primary-soft-bg);color:var(--color-primary);font-weight:700}
-    .stats-comatrix-hi{background:#EEF2FF;color:var(--color-ink)}
+    .stats-comatrix-hi{background:var(--color-primary-soft-bg);color:var(--color-ink)}
     .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
     .stats-comatrix-low{color:var(--color-ink-muted)}
     .stats-inline-card{display:inline-flex;align-items:center;gap:var(--space-md);padding:16px 24px;background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md)}
@@ -259,6 +260,17 @@
     }
     @media(prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+    }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* Task-type badges */
+      .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
+      .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
+      .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
+      .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
+      .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
     }
   </style>
 </head>
@@ -388,6 +400,7 @@
   <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
 </div>
 
+<script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
 <script>
 /* ── i18n ──────────────────────────────────────────────────────────── */
@@ -666,6 +679,12 @@ var I18N = {
       conflict189: 'CP值 ↔ 產品品質（boundary overlap）',
       conflict521: '功能性 span 邊界一致性低',
     },
+    navDashboard: '儀表板',
+    navTaskManagement: '任務管理',
+    navAnnotation: '標記作業',
+    navDataset: '資料集分析',
+    navAdmin: '系統管理',
+    navProfile: '個人設定',
   },
   en: {
     docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
@@ -941,6 +960,12 @@ var I18N = {
       conflict189: 'Value for Money ↔ Product Quality (boundary overlap)',
       conflict521: 'Low span-boundary consistency for Functionality',
     },
+    navDashboard: 'Dashboard',
+    navTaskManagement: 'Task Management',
+    navAnnotation: 'Annotation',
+    navDataset: 'Dataset Analytics',
+    navAdmin: 'System Administration',
+    navProfile: 'Profile',
   },
 };
 
@@ -1176,6 +1201,15 @@ function applyLang(l) {
   document.getElementById('tabQuality').textContent = t('tabQuality');
   applyTypeContent();
   applyQualityState();
+  if (window.LabelSuiteSharedSidebar) {
+    window.LabelSuiteSharedSidebar.applyGlobalLanguage(l, {
+      langToggleAria: l === 'zh' ? '切換語言' : 'Switch language',
+    });
+    ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = t(id);
+    });
+  }
   if (window.LabelSuiteAnalytics) {
     window.LabelSuiteAnalytics.track('prototype_lang_switched', { lang: l });
   }
@@ -1422,8 +1456,12 @@ function applyRouteTask(taskId) {
     });
   }
 
-  document.addEventListener('labelsuite:langchange', function(e) {
-    applyLang(e.detail && e.detail.lang ? e.detail.lang : 'zh');
+  ['langToggle', 'mobileLangToggle'].forEach(function(id) {
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      applyLang(S.lang === 'zh' ? 'en' : 'zh');
+    });
   });
 })();
 </script>

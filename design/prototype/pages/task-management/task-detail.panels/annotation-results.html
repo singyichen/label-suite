@@ -96,6 +96,24 @@
         </table>
       </div>
       <p class="ar-export-empty hidden" id="arExportHistoryEmpty">尚未執行過匯出</p>
+      <div class="pagination hidden" id="arExportPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="arExportPaginationInfo"></span>
+          <select class="page-size-select" id="arExportPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="arExportPaginationControls">
+          <button class="page-btn" type="button" id="arExportPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" type="button" id="arExportNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 

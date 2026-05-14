@@ -2,7 +2,7 @@
 
 **功能分支**：`005-profile-settings`  
 **建立日期**：2026-04-05  
-**版本**：1.2.4  
+**版本**：1.2.5  
 **狀態**：Clarified  
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
 
@@ -14,6 +14,7 @@
 - `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES = 30`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
+- `APPEARANCE_STORAGE_KEY = label-suite-theme`（client-side only；參照 spec 008）
 
 ## Process Flow
 
@@ -241,6 +242,23 @@ sequenceDiagram
 
 ---
 
+### User Story 6 — 外觀模式偏好（優先級：P3）
+
+使用者可透過 `/profile` 頁上的共用 Sidebar 切換外觀模式（淺色 / 深色 / 跟隨系統），偏好以 `localStorage` 持久化，跨頁保持一致。
+
+**此優先級原因**：外觀偏好屬於個人設定範疇，但目前為純前端 client-side 儲存；後端持久化為未來擴充項。
+
+**實作歸屬**：切換行為與 FOUC 防護由 **spec 008（Shared Sidebar）** 定義；本 User Story 記錄 `/profile` 的涵蓋範圍與未來後端路徑。
+
+**獨立測試方式**：在 `/profile` 透過 Sidebar Appearance 切換模式，驗證 `html[data-theme]` 即時更新；重整 `/profile` 後確認 Appearance 狀態從 `APPEARANCE_STORAGE_KEY` 恢復。
+
+**驗收情境**：
+
+1. **Given** 使用者在 `/profile`，**When** 透過 Sidebar Appearance 選擇 `dark`，**Then** `/profile` 頁面即時套用深色外觀，與全站其他頁一致。
+2. **Given** 使用者在 `/profile` 選擇 Appearance mode，**When** 重整或返回 `/profile`，**Then** Appearance 從 `APPEARANCE_STORAGE_KEY` 恢復且無閃白（FOUC）。
+
+---
+
 ### 邊界情況
 
 - 新 Email 已被其他帳號使用？→ 拒絕請求並回傳「Email 已被使用」。
@@ -282,6 +300,8 @@ sequenceDiagram
 - **FR-011B**：在 `<= MOBILE_BP` 時，兩個主要區塊（個人資料 / 密碼）必須單欄堆疊，避免欄位或按鈕被截斷。
 - **FR-011C**：在任一 `RWD_VIEWPORTS` 下，`/profile` 各狀態畫面（主表單 / 變更 Email / 已寄信提示）不得出現水平捲軸、文字重疊、按鈕遮擋或元件溢出容器。
 - **FR-012**：`/profile` 語言狀態必須跨頁持久化；導向 `/dashboard` 與 account 其他頁面後需維持同語系。
+- **FR-013**：`/profile` 頁面的外觀模式由共用 Sidebar Appearance 控制項管理（實作詳見 spec 008 FR-015 群）；`/profile` 本身必須正確套用 `html[data-theme]` 所對應的 CSS token。
+- **FR-013A**：外觀偏好目前以 `APPEARANCE_STORAGE_KEY`（`localStorage`）持久化（client-side only）；若未來需跨裝置同步，應透過 `PATCH /users/me/preferences` 後端持久化，`appearance_mode` 欄位值域對齊 `APPEARANCE_MODES`。
 
 ### User Flow & Navigation
 
@@ -366,6 +386,7 @@ flowchart LR
 - **EmailChangeRequest**：`user_id`、`pending_email`、`verification_token`、`expires_at`、`verified_at`
 - **Session**：多裝置登入 session 狀態（密碼更新後需失效其他裝置）
 - **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
+- **AppearanceState**：外觀偏好。關鍵欄位：`mode`（`light` / `dark` / `system`）、`storage_key = label-suite-theme`（client-side）；詳細定義見 spec 008。
 
 ---
 
@@ -399,6 +420,7 @@ flowchart LR
 - **SC-006**：新 Email 驗證成功後，使用者可用新 Email 登入，舊 Email 登入必須失敗。
 - **SC-007**：新 Email 未驗證或驗證 token 失效時，系統不得更新帳號主 Email。
 - **SC-008**：`/profile` 切換語言後導向 `/dashboard` 或 account 其他頁再返回，語系需保持一致。
+- **SC-009**：`/profile` 頁面正確套用 `html[data-theme]` 對應的 CSS token；重整後 Appearance 狀態從 `APPEARANCE_STORAGE_KEY` 恢復，不出現 FOUC。
 
 ---
 
@@ -406,6 +428,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.5 | 2026-05-12 | 新增 Appearance 外觀偏好規格：`APPEARANCE_STORAGE_KEY` 常數、User Story 6、FR-013 群、AppearanceState 實體、SC-009；記錄未來後端持久化路徑（`PATCH /users/me/preferences`） |
 | 1.2.4 | 2026-04-16 | 新增跨頁語言持久化規範（User Story / FR / SC / 關鍵實體），並引用 shared 008 契約 |
 | 1.2.3 | 2026-04-16 | 補齊 `/profile` 頁首標題規範：將主標題「個人設定」與副標題「管理您的個人資料與帳號安全」納入區塊定義與功能需求（FR-001A） |
 | 1.2.2 | 2026-04-16 | 依 `profile.html` 同步規格：移除路由式 `/profile/email-change` 描述、改為同頁狀態切換（`emailChangeState`/`emailSentState`）；補齊頭像格式與大小限制、聯絡方式即時計數，並註記已移除頁首 Prototype 狀態切換導引列 |

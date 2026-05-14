@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <script src="../../assets/theme-fouc.js"></script>
   <style>
     /* ── Design Tokens (MASTER.md) ───────────────────────────────── */
     :root {
@@ -127,7 +129,7 @@
     .page-main-subtitle {
       font-size: 14px;
       line-height: 1.8;
-      color: #64748B;
+      color: var(--color-text-soft);
       margin: 0;
     }
 
@@ -752,6 +754,107 @@
         width: 100%;
       }
     }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* CTA role buttons — dark text on bright bg for contrast */
+      .btn-emerald {
+        color: #064E3B;
+        background: #34D399;
+        border-color: #34D399;
+      }
+      .btn-violet {
+        color: #2E1065;
+        background: #A78BFA;
+        border-color: #A78BFA;
+      }
+      .btn-indigo {
+        color: #1E1B4B;
+        background: #818CF8;
+        border-color: #818CF8;
+      }
+
+      /* Step icons — solid: keep same vibrant hue; non-solid: match brightness with lighter icon */
+      .step-icon--emerald-solid { background: #047857; }
+      .step-icon--emerald       { background: #059669; color: #D1FAE5; }
+      .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }
+      .step-icon--indigo        { background: #4338CA; color: #E0E7FF; }
+
+      /* Role avatars — same vibrant treatment */
+      .role-avatar--emerald { background: #059669; color: #D1FAE5; }
+      .role-avatar--violet  { background: #6D28D9; color: #EDE9FE; }
+      .role-avatar--indigo  { background: #4338CA; color: #E0E7FF; }
+
+      /* Workflow connector — invert to white; opacity pulled back since white reads heavier */
+      .workflow-step-connector { opacity: 0.45; }
+      .workflow-step-connector img { filter: brightness(0) invert(1); }
+
+      /* Badges — replace hardcoded light-bg with dark equivalents */
+      .badge-info {
+        color: var(--color-info);
+        background: var(--color-info-bg);
+        border-color: var(--color-info-border);
+      }
+      .badge-success {
+        color: var(--color-success);
+        background: var(--color-success-soft-bg);
+        border-color: var(--color-success-soft-border);
+      }
+      .badge-dry-run {
+        color: #9CA3AF;
+        background: #1F1F28;
+        border-color: #2A2A35;
+      }
+      .badge-official {
+        color: #A78BFA;
+        background: #1E1B4B;
+        border-color: #3730A3;
+      }
+      .badge-task-type-single {
+        color: #A5F3FC;
+        background: #0C2230;
+        border-color: #155E75;
+      }
+      .badge-task-type-sequence {
+        color: #FB923C;
+        background: #2A1805;
+        border-color: #7C3A16;
+      }
+      .badge-task-type-relation {
+        color: #A5F3FC;
+        background: #0C2230;
+        border-color: #155E75;
+      }
+      .badge-task-type-pairs {
+        color: #4ADE80;
+        background: #0F2A18;
+        border-color: #1F5132;
+      }
+      .badge-task-type-scoring {
+        color: #C084FC;
+        background: #1A0A2E;
+        border-color: #4C1D95;
+      }
+      .badge-task-type-default {
+        color: #94A3B8;
+        background: #1F1F28;
+        border-color: #2A2A35;
+      }
+      .badge-warning {
+        color: #FACC15;
+        background: #2A2210;
+        border-color: #5C4A1A;
+      }
+
+      /* <img> SVG icons — invert to white (currentColor not inherited by <img>) */
+      .step-icon img, .role-avatar img { filter: brightness(0) invert(1); }
+
+      /* List item hover — use dark hover bg token */
+      .list-item:hover { background: var(--color-slate-50); }
+
+      /* Progress track */
+      .progress { background: var(--color-border); }
+    }
   </style>
 </head>
 
@@ -1255,6 +1358,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- INTERACTIVITY SCRIPT                                        -->
   <!-- ═══════════════════════════════════════════════════════════ -->
+  <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
   <script>
     window.LabelSuiteAnalytics.init({

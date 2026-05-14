@@ -12,6 +12,14 @@ test.describe('Task new startup and guideline roles', () => {
     });
 
     await expect(page.locator('#samplingValueLabel')).toHaveText('每回合抽樣筆數');
+    await expect(page.locator('#samplingValueInput')).toHaveAttribute('type', 'number');
+    await expect(page.locator('#samplingValueInput')).toHaveAttribute('inputmode', 'numeric');
+    await expect(page.locator('#samplingHint')).toHaveClass(/tooltip-bubble/);
+    await expect(page.locator('#samplingHint')).toHaveText('筆數需 >= 1 且 < 資料集總筆數');
+    await expect(page.locator('#samplingHint')).toBeHidden();
+    await expect(page.locator('#samplingValueHelp')).toHaveAttribute('aria-describedby', 'samplingHint');
+    await page.locator('#samplingValueHelp').hover();
+    await expect(page.locator('#samplingHint')).toBeVisible();
     await expect(page.locator('#samplingDistWrap')).toBeHidden();
 
     await page.evaluate(() => {

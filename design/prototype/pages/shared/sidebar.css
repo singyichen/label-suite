@@ -98,7 +98,7 @@
 
 .nav-link.active {
   color: var(--color-primary);
-  background: var(--color-surface);
+  background: var(--nav-active-bg, var(--color-surface));
   font-weight: 600;
 }
 
@@ -113,6 +113,64 @@
   border-top: 1px solid var(--color-border);
   padding-top: var(--space-lg);
   margin-top: auto;
+}
+
+.sidebar-utility-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.sidebar-utility-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.sidebar-utility-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.sidebar-utility-btn:focus-visible,
+.mobile-shortcut-help-btn:focus-visible,
+.mobile-theme-toggle-btn:focus-visible,
+.shortcut-help-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+.sidebar-utility-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-theme-toggle-btn [data-theme-toggle-icon="sun"],
+.mobile-theme-toggle-btn [data-theme-toggle-icon="sun"] {
+  display: none;
+}
+
+.sidebar-theme-toggle-btn.is-dark [data-theme-toggle-icon="moon"],
+.mobile-theme-toggle-btn.is-dark [data-theme-toggle-icon="moon"] {
+  display: none;
+}
+
+.sidebar-theme-toggle-btn.is-dark [data-theme-toggle-icon="sun"],
+.mobile-theme-toggle-btn.is-dark [data-theme-toggle-icon="sun"] {
+  display: block;
 }
 
 .lang-toggle {
@@ -235,17 +293,204 @@
   background: var(--color-error-soft-bg);
 }
 
-.mobile-user-name {
+.mobile-shortcut-help-btn {
   display: none;
-  margin-left: auto;
-  max-width: 110px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 13px;
-  font-weight: 600;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-shortcut-help-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.mobile-theme-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.mobile-theme-toggle-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.shortcut-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(30, 27, 75, 0.36);
+}
+
+.shortcut-help-backdrop.hidden {
+  display: none;
+}
+
+.shortcut-help-dialog {
+  width: min(760px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  box-shadow: 0 24px 48px rgba(30, 27, 75, 0.18);
+  padding: 24px;
+}
+
+.shortcut-help-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 18px;
+}
+
+.shortcut-help-header h2 {
+  margin: 0 0 4px;
   color: var(--color-ink);
-  line-height: 1.2;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.shortcut-help-header p {
+  margin: 0;
+  color: var(--color-text-soft, #64748B);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.shortcut-help-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
+}
+
+.shortcut-help-close:hover {
+  color: var(--color-ink);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+
+.shortcut-help-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.shortcut-help-section {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.shortcut-help-section + .shortcut-help-section {
+  margin-top: 20px;
+}
+
+.shortcut-help-section-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+.shortcut-help-section h3 {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.shortcut-help-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 18px 20px 20px;
+}
+
+.shortcut-help-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 24px;
+  padding: 12px 0;
+}
+
+.shortcut-help-row + .shortcut-help-row {
+  border-top: 1px solid transparent;
+}
+
+.shortcut-help-list dt {
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.shortcut-help-list dt strong {
+  display: block;
+  font-weight: 700;
+}
+
+.shortcut-key-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  min-width: 180px;
+  flex-wrap: wrap;
+}
+
+.shortcut-keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 2px 0 rgba(30, 27, 75, 0.10), 0 1px 4px rgba(30, 27, 75, 0.08);
+  font-family: var(--font-sans, -apple-system, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .mobile-lang-toggle {
@@ -299,6 +544,14 @@ body.sidebar-collapsed .nav-actions {
   padding-top: var(--space-md);
 }
 
+body.sidebar-collapsed .sidebar-utility-row {
+  justify-content: center;
+}
+
+body.sidebar-collapsed .sidebar-utility-btn {
+  width: 40px;
+}
+
 body.sidebar-collapsed .user-chip {
   justify-content: center;
   padding: 8px 0;
@@ -306,11 +559,32 @@ body.sidebar-collapsed .user-chip {
 }
 
 body.sidebar-collapsed .user-chip-profile {
-  justify-content: center;
+  display: none;
 }
 
 body.sidebar-collapsed .logout-btn {
-  display: none;
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+}
+
+/* ── Dark mode overrides ──────────────────────────────────── */
+html[data-theme="dark"] .navbar {
+  border-right-color: #3A3A4A;
+}
+
+html[data-theme="dark"] .shortcut-keycap {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .shortcut-help-backdrop {
+  background: rgba(0, 0, 0, 0.60);
+}
+
+html[data-theme="dark"] .shortcut-help-dialog {
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
 }
 
 @media (max-width: 768px) {
@@ -360,17 +634,19 @@ body.sidebar-collapsed .logout-btn {
     font-size: 14px;
   }
 
-  .mobile-user-name {
-    display: inline-block;
-    max-width: 72px;
-    font-size: 12px;
-  }
-
   .brand-section .lang-toggle {
     display: none;
   }
 
   .mobile-lang-toggle {
+    display: inline-flex;
+  }
+
+  .mobile-shortcut-help-btn {
+    display: inline-flex;
+  }
+
+  .mobile-theme-toggle-btn {
     display: inline-flex;
   }
 
