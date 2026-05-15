@@ -3,6 +3,102 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail settings edit state', () => {
+  const EN_EDIT_EXPECTATIONS = [
+    {
+      name: 'single sentence classification',
+      url: `${TASK_DETAIL_URL}?task_id=T001`,
+      previewTexts: ['Politics', 'Society', 'Entertainment', 'Sports', 'Technology'],
+      formTexts: ['Politics', 'Society', 'Entertainment', 'Sports', 'Technology'],
+      codeTexts: ['- Politics', '- Society', '- Entertainment', '- Sports', '- Technology'],
+      blockedTexts: ['政治', '社會', '娛樂', '體育', '科技'],
+    },
+    {
+      name: 'VA scoring',
+      url: TASK_DETAIL_URL,
+      previewTexts: ['Valence', 'Arousal', '1', '9'],
+      formTexts: ['Min', 'Max', 'Step'],
+      codeTexts: ['valence:', 'arousal:'],
+      blockedTexts: ['最小值', '最大值', '間距'],
+    },
+    {
+      name: 'aspect list',
+      url: `${TASK_DETAIL_URL}?task_id=T003`,
+      previewTexts: ['Sentence', 'Aspect List'],
+      previewInputValues: ['service attitude', 'cleanliness', 'food quality'],
+      formTexts: ['Field mapping', 'Aspect editing rules', 'Quantity limits'],
+      codeTexts: ['subtype: aspect_list', 'input_field: sentence', 'aspect_list_field: aspects'],
+      blockedTexts: ['欄位對應', 'Aspect 編輯規則', '數量限制', '服務態度', '環境整潔', '餐點品質'],
+    },
+    {
+      name: 'relation extraction',
+      url: `${TASK_DETAIL_URL}?task_id=T004`,
+      previewTexts: ['Mark relations', 'treats', 'causes', 'indicates'],
+      formTexts: ['Entity types', 'Relation types', 'Tuple mode'],
+      codeTexts: ['- treats', '- causes', '- indicates'],
+      blockedTexts: ['標記關係', '實體類型', '關係類型', '結構模式'],
+    },
+    {
+      name: 'sentence pairs',
+      url: `${TASK_DETAIL_URL}?task_id=T005`,
+      previewTexts: ['Sentence A', 'Sentence B', 'Entailment', 'Contradiction', 'Neutral'],
+      formTexts: ['Relation labels', 'Entailment', 'Contradiction', 'Neutral'],
+      codeTexts: ['- Entailment', '- Contradiction', '- Neutral'],
+      blockedTexts: ['句子 A', '句子 B', '蘊含', '矛盾', '中立'],
+    },
+    {
+      name: 'NER',
+      url: `${TASK_DETAIL_URL}?task_id=T006`,
+      previewTexts: ['Mark entities', 'PER', 'ORG', 'LOC'],
+      formTexts: ['Subtype', 'Entity types', 'Labeling scheme'],
+      codeTexts: ['subtype: ner', 'name: PER', 'name: ORG', 'name: LOC'],
+      blockedTexts: ['請標記實體', '子類型', '實體類型', '標記格式'],
+    },
+  ];
+
+  for (const item of EN_EDIT_EXPECTATIONS) {
+    test(`renders English settings edit mode for ${item.name}`, async ({ page }) => {
+      await page.addInitScript(() => {
+        window.localStorage.setItem('labelsuite.lang', 'en');
+      });
+      await page.goto(item.url);
+      const langLabel = page.locator('#langLabel');
+      await langLabel.waitFor({ state: 'attached', timeout: 5000 });
+      if ((await langLabel.textContent()) !== 'EN') {
+        await page.locator('#langToggle').click();
+      }
+      await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+      const editBtn = page.locator('#settingsEditBtn');
+      await expect(editBtn).toBeEnabled();
+      await editBtn.click();
+
+      const preview = page.locator('#settingsAnnotationPreview');
+      const form = page.locator('#settingsEditForm');
+      const codeEditor = page.locator('#settingsCodeEditor');
+
+      for (const text of item.previewTexts) {
+        await expect(preview).toContainText(text);
+      }
+      if ('previewInputValues' in item) {
+        const inputValues = await preview.locator('input').evaluateAll((inputs) =>
+          inputs.map((input) => input instanceof HTMLInputElement ? input.value : '')
+        );
+        for (const value of item.previewInputValues) {
+          expect(inputValues).toContain(value);
+        }
+      }
+      for (const text of item.formTexts) {
+        await expect(form).toContainText(text);
+      }
+      for (const text of item.codeTexts) {
+        await expect(codeEditor).toHaveValue(new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+      }
+      for (const text of item.blockedTexts) {
+        await expect(form).not.toContainText(text);
+      }
+    });
+  }
+
   test('renders VA dimensions summary and dual-row preview for single_sentence_va_scoring', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 

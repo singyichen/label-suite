@@ -185,6 +185,18 @@ const RUN_CONTROL_TASKS: TaskProfile[] = [
   },
 ];
 
+const EN_SETTINGS_BY_TASK: Record<string, string[]> = {
+  T001: ['Labels', 'Politics, Society, Entertainment, Sports, Technology', 'Allow multiple labels', 'Yes'],
+  T002: ['Valence', '1 ~ 9 (step 1)', 'Arousal', '1 ~ 9 (step 1)'],
+  T003: ['Subtype', 'Aspect List extraction / correction', 'Input field name', 'sentence', 'Aspect list field name', 'aspects'],
+  T004: ['Entity types', 'DRUG, DISEASE, SYMPTOM', 'Relation types', 'treats, causes, indicates'],
+  T005: ['Relation labels', 'Entailment, Contradiction, Neutral'],
+  T006: ['Subtype', 'NER (Named Entity Recognition)', 'Entity types', 'PER, ORG, LOC'],
+  T007: ['Labels', 'Positive, Neutral, Negative', 'Allow multiple labels', 'No'],
+  T009: ['Labels', 'Query, Application, Cancellation, Complaint', 'Allow multiple labels', 'No'],
+  T010: ['Subtype', 'NER (Named Entity Recognition)', 'Entity types', 'DRUG, DISEASE, SYMPTOM'],
+};
+
 test.describe('Task detail profile mapping', () => {
   test('project leader task list rows show each task status and open task detail', async ({ page }) => {
     await page.goto(TASK_LIST_URL);
@@ -232,6 +244,21 @@ test.describe('Task detail profile mapping', () => {
       for (const text of task.settings) {
         await expect(page.locator('#settingsConfigView')).toContainText(text);
       }
+    });
+  }
+
+  for (const [taskId, expectedSettings] of Object.entries(EN_SETTINGS_BY_TASK)) {
+    test(`renders English label settings summary for ${taskId}`, async ({ page }) => {
+      await page.addInitScript(() => {
+        window.localStorage.setItem('labelsuite.lang', 'en');
+      });
+      await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
+
+      await expect(page.locator('#settingsSummaryTitle')).toHaveText('Label settings');
+      for (const text of expectedSettings) {
+        await expect(page.locator('#settingsConfigView')).toContainText(text);
+      }
+      await expect(page.locator('#settingsConfigView')).not.toContainText(/[政治社會娛樂體育科技蘊含矛盾好評普通差評查詢申請取消客訴]/);
     });
   }
 

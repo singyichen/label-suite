@@ -117,6 +117,40 @@ test.describe('Task detail annotation results', () => {
     expect(annotatorMetrics).toEqual(stageMetrics);
   });
 
+  test('uses token-driven inline chevrons for annotation result row expansion', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('label-suite-theme', 'dark');
+    });
+
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+    const expandButton = page.locator('#arResultTableBody tr.ar-summary-row').first().locator('.ar-expand-btn');
+    await expect(expandButton.locator('img')).toHaveCount(0);
+    await expect(expandButton.locator('svg')).toHaveCount(1);
+
+    const chevronStyle = await expandButton.evaluate((button) => {
+      const svg = button.querySelector('svg');
+      const polyline = button.querySelector('polyline');
+      if (!(svg instanceof SVGElement) || !(polyline instanceof SVGElement)) {
+        return null;
+      }
+
+      return {
+        buttonColor: window.getComputedStyle(button).color,
+        svgStroke: svg.getAttribute('stroke'),
+        polylinePoints: polyline.getAttribute('points'),
+      };
+    });
+
+    expect(chevronStyle).toEqual({
+      buttonColor: 'rgb(156, 163, 175)',
+      svgStroke: 'currentColor',
+      polylinePoints: '9 18 15 12 9 6',
+    });
+  });
+
   test('uses reviewer-style VA color coding for per-annotator result tags', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible();

@@ -643,7 +643,7 @@
         <tbody id="sampleRows"></tbody>
       </table>
     </div>
-    <div class="empty hidden" id="emptyState">找不到符合條件的資料。</div>
+    <div class="empty hidden" id="emptyState"></div>
     <div class="pagination hidden" id="paginationBar">
       <div class="pagination-left">
         <span class="pagination-info" id="paginationInfo"></span>
@@ -716,6 +716,7 @@
       searchAriaLabel: '搜尋',
       statusFilterAll: '全部完成狀態',
       clearFiltersLabel: '清除篩選',
+      emptyNoResults: '找不到符合條件的資料。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -762,6 +763,7 @@
       searchAriaLabel: 'Search',
       statusFilterAll: 'All statuses',
       clearFiltersLabel: 'Clear filters',
+      emptyNoResults: 'No matching data.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -2131,6 +2133,8 @@
     }
     var clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) clearFiltersBtn.setAttribute('aria-label', t('clearFiltersLabel'));
+    var emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.textContent = t('emptyNoResults');
 
     renderTableHeader(context.role);
     renderTaskInfo(context);

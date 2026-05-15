@@ -125,8 +125,8 @@
     /* ── Entity list ── */
     .entity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .entity-color-dot { width: 20px; height: 20px; border-radius: var(--radius-sm); flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
-    .entity-name-input { flex: 1; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; outline: none; transition: border-color var(--dur-fast); }
-    .entity-name-input:focus { border-color: var(--color-primary); }
+    .entity-name-input { flex: 1; padding: 6px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .entity-name-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
     .entity-remove-btn { width: 24px; height: 24px; border: none; background: none; color: var(--color-ink-muted); cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: color var(--dur-fast), background var(--dur-fast); }
     .entity-remove-btn:hover { color: var(--color-error); background: var(--color-error-soft-bg); }
     .add-row-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px dashed var(--color-border); border-radius: var(--radius-md); font-size: 12px; color: var(--color-text-soft); background: transparent; transition: border-color var(--dur-fast), color var(--dur-fast); }
@@ -243,7 +243,7 @@
     .re-preview-entity-text { font-size: 12px; color: var(--color-ink); }
     .re-preview-relation-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 6px; }
     .re-preview-role-label { font-size: 9px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
-    .re-preview-select { width: 100%; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--color-border); background: white; font-size: 11px; color: var(--color-ink); }
+    .re-preview-select { width: 100%; padding: 4px 6px; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-white); font-size: 11px; color: var(--color-ink); }
     .re-preview-triple-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 4px 8px; border-radius: 6px; background: white; border: 1px solid var(--color-border); font-size: 11px; }
     .re-preview-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #EEF2FF; color: #6366F1; border: 1px solid rgba(99,102,241,0.3); }
     .aspect-list-preview-hint { font-size: 12px; color: var(--color-text-soft); background: var(--color-warning-bg); border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); padding: 8px 10px; line-height: 1.5; }
@@ -451,10 +451,25 @@
       /* Code editor — shift hardcoded indigo bg to true dark surface */
       .code-editor { background: #0D0D14; border-color: var(--color-border); }
 
+      /* Generated Step 2 form controls */
+      .entity-color-dot,
+      .annotation-preview-color {
+        border-color: rgba(226,232,240,0.18);
+      }
+      .tag-pill {
+        background: #1E1B4B;
+        color: #A5B4FC;
+        border-color: #3730A3;
+      }
+      .schema-toggle-card.is-on {
+        border-color: #3730A3;
+        background: #1E1B4B;
+      }
+
       /* Notice info — hardcoded light blue → dark blue */
       .notice-info { background: #0C1E3B; border-color: #1E3A5F; color: #93C5FD; }
 
-      /* RE preview: entity/triple rows use hardcoded white */
+      /* RE preview: entity/triple rows and selects must stay on form surfaces */
       .re-preview-entity-row  { background: var(--color-white); }
       .re-preview-triple-row  { background: var(--color-white); }
       .re-preview-select      { background: var(--color-white); }

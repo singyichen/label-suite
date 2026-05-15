@@ -309,6 +309,20 @@ test.describe('Annotation list routing', () => {
     await expect(page.getByRole('button', { name: '✓ 全部通過' })).toHaveCount(0);
   });
 
+  test('empty state follows English language mode', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.locator('#searchInput').fill('no-such-sample');
+
+    await expect(page.locator('#emptyState')).toBeVisible();
+    await expect(page.locator('#emptyState')).toHaveText('No matching data.');
+    await expect(page.getByText('找不到符合條件的資料。')).toHaveCount(0);
+  });
+
   test('reviewer bulk buttons show active filled state after click', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
