@@ -15,6 +15,13 @@
   transition: width var(--dur-normal, 200ms), padding var(--dur-normal, 200ms);
 }
 
+.navbar a,
+.navbar a:hover,
+.navbar a:focus,
+.navbar a:active {
+  text-decoration: none;
+}
+
 .brand-section {
   display: flex;
   align-items: center;
@@ -498,6 +505,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-height: 36px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 6px 10px;
@@ -627,11 +635,13 @@ html[data-theme="dark"] .shortcut-help-dialog {
   }
 
   .navbar-brand {
-    width: 100%;
+    width: auto;
+    flex: 1;
+    min-width: 0;
   }
 
   .navbar-wordmark {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .brand-section .lang-toggle {
@@ -640,18 +650,23 @@ html[data-theme="dark"] .shortcut-help-dialog {
 
   .mobile-lang-toggle {
     display: inline-flex;
+    flex-shrink: 0;
+    padding: 6px 8px;
   }
 
   .mobile-shortcut-help-btn {
     display: inline-flex;
+    flex-shrink: 0;
   }
 
   .mobile-theme-toggle-btn {
     display: inline-flex;
+    flex-shrink: 0;
   }
 
   .mobile-top-logout {
     display: inline-flex;
+    flex-shrink: 0;
   }
 
   .navbar-center {

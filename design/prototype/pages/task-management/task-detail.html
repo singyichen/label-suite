@@ -31,7 +31,7 @@
     .hidden { display: none !important; }
 
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-    .layout { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+    .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
 
     /* Breadcrumb */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
@@ -57,6 +57,7 @@
     }
     .page-main-subtitle {
       font-size: 14px;
+      line-height: 1.8;
       color: var(--color-text-soft);
       margin: 0;
     }
@@ -1165,9 +1166,6 @@
 
     @media (max-width: 420px) {
       .mobile-user-name { display: inline-block; max-width: 56px; font-size: 11px; }
-      .navbar-brand { width: auto; flex: 1; min-width: 0; }
-      .navbar-wordmark { font-size: 13px; }
-      .mobile-lang-toggle { padding: 6px 8px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2470,19 +2468,19 @@
 <main>
   <div class="layout">
     <section>
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb" aria-label="breadcrumb">
-        <a href="./task-list.html" id="bcRoot">任務管理</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <span id="bcCurrent">任務詳情</span>
-      </nav>
-
       <header class="page-header">
         <div>
           <h1 class="page-main-title" id="pageTitle">任務詳情</h1>
           <p class="page-main-subtitle" id="pageSubtitle">檢視任務概覽、執行控制與匯出結果</p>
         </div>
       </header>
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="./task-list.html" id="bcRoot">任務管理</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span id="bcCurrent">任務詳情</span>
+      </nav>
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>

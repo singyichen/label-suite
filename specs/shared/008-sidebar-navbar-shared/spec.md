@@ -2,7 +2,7 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.3.0
+**版本**：1.3.4
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
@@ -246,6 +246,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - 行動版底部導覽不得遮擋頁面主要 CTA。
 - i18n key 缺漏時需 fallback 文案，不得中斷導覽互動。
 - 行動版 top brand bar 不得呈現使用者姓名；最下方 icon-only sidebar footer 必須優先呈現登出按鈕，不得以使用者姓名或頭像取代登出控制。
+- 各模組頁若有頁內或全域 anchor 樣式，仍不得讓 Shared Sidebar 的品牌連結或 L0 導覽連結出現文字底線。
 - `APPEARANCE_STORAGE_KEY` 值無效（非 `light`/`dark`/`system`）時，fallback 為 `system`，不拋出例外。
 - `prefers-color-scheme` 不支援的舊瀏覽器，`system` mode 應 fallback 為 `light`。
 - Sidebar utility actions 為 icon-only 時，必須保留 `aria-label` 與 `title`，且 zh/en 切換後同步更新。
@@ -273,8 +274,10 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-010**：Navbar 必須提供桌面與行動版登出控制項。
 - **FR-010A**：Mobile / icon-only sidebar footer 必須顯示登出按鈕；使用者姓名不得佔用該位置。
 - **FR-011**：`> MOBILE_BP` 使用左側固定 Sidebar；`<= MOBILE_BP` 使用上方品牌列 + 下方主導覽。
+- **FR-011A**：Mobile top brand bar 的右側工具列（語言、快捷鍵、外觀、登出）在 `dashboard / task-management / annotation / dataset / admin / account` 模組必須共用一致尺寸、間距、圓角與不可壓縮行為；品牌區需以 `flex: 1` 讓位，避免 icon button 被擠壓。
 - **FR-012**：在 `RWD_VIEWPORTS` 下不得出現重疊、不可點擊、內容被導覽遮擋。
 - **FR-013**：Shared Sidebar 樣式必須集中於 `design/prototype/pages/shared/sidebar.css`，使用共用 Sidebar 的頁面不得再頁內重複定義同一套 sidebar 規則。
+- **FR-013A**：Shared Sidebar 範圍內的品牌連結與 L0 模組導覽連結在 default / hover / focus / active 狀態皆不得顯示文字底線；此規則不得影響頁面主要內容區的一般文字連結。
 - **FR-014**：Desktop（`> MOBILE_BP`）必須支援 `Mini / Icon-only` 收合 Sidebar，收合寬度為 `SIDEBAR_COLLAPSED_WIDTH`。
 - **FR-014A**：Desktop 收合觸發必須為 sidebar 非互動空白區；互動元素（`a`、`button`、`input/select/textarea`、含語意按鈕角色元素）不得觸發收合。
 - **FR-014B**：Sidebar 收合狀態必須持久化於 `SIDEBAR_COLLAPSED_STORAGE_KEY`，並在 `SUPPORTED_PAGES` 間保持一致。
@@ -292,6 +295,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-016C**：快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
 - **FR-016D**：快捷鍵總覽第一版僅顯示跨任務共用快捷鍵，不得納入 task-specific 作答快捷鍵。
 - **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果`、`全部通過 / 全部退回` 作為單一列）。
+- **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
 
 ### User Flow & Navigation
 
@@ -386,6 +390,8 @@ flowchart LR
 - **SC-004**：缺少任務角色或上下文時，`標記作業`/`資料集分析` 會導回 Landing 並顯示提示。
 - **SC-004A**：點擊 `標記作業` 且存在 `labelsuite.activeTaskType` 時，導頁 URL 需包含 `task_type=<stored_value>`。
 - **SC-005**：`RWD_VIEWPORTS` 下 navbar 無破版、無重疊、無不可點擊控制項。
+- **SC-005A**：在 `375px` mobile viewport 下，所有共用 Sidebar 模組頁的 top brand bar 工具列視覺尺寸必須與 Task Management baseline 一致，icon-only 按鈕不得被壓縮。
+- **SC-005B**：在 `dashboard / task-management / annotation / dataset / admin / account` 共用 Sidebar 模組頁，`.navbar-brand` 與 `.navbar-center .nav-link` 的 computed `text-decoration-line` 必須為 `none`。
 - **SC-006**：在任一 `SUPPORTED_PAGES` 點擊語言切換後，Sidebar 與右側模組內容語系一致，且切頁後保持同一語系狀態。
 - **SC-006A**：重新載入任一 `SUPPORTED_PAGES` 後，仍可恢復最後一次語言狀態（`zh` / `en`）。
 - **SC-007**：Desktop 可在 `SIDEBAR_WIDTH` / `SIDEBAR_COLLAPSED_WIDTH` 間切換，且收合後保留 icon 導覽可辨識與 active 狀態可見。
@@ -404,12 +410,14 @@ flowchart LR
 - **SC-009B**：快捷鍵總覽 modal 的 zh/en 文案、section 與可存取屬性同步切換。
 - **SC-009C**：快捷鍵總覽中的複合快捷鍵以獨立 keycap 呈現，例如 `CTRL`、`CMD`、`S` 為三個元素。
 - **SC-009D**：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果`、`全部通過`、`全部退回` 各自獨立顯示。
+- **SC-010**：在 `1440px` desktop viewport 下，`dashboard / task-management / annotation / dataset / admin / account` 主要模組頁的最上層 heading block 與 Dashboard baseline 的計算位置與 typography 相符。
 
 ### 驗證建議
 
 - 建立 navbar contract 測試：逐頁驗證 L0 順序、active、`aria-current`、role visibility。
 - 加入 gating smoke test：覆蓋無 task context 與無 membership 的導回行為。
 - 加入 utility smoke test：驗證 keyboard icon、Appearance icon、快捷鍵 modal i18n 與 keycap 呈現。
+- 加入 sidebar link decoration smoke test：逐頁驗證品牌與 L0 模組導覽連結不被頁內 anchor 樣式套用底線。
 
 ---
 
@@ -417,6 +425,9 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.4 | 2026-05-15 | 同步 Shared Sidebar 連結樣式 contract：品牌與 L0 模組導覽連結在 default / hover / focus / active 狀態不得顯示文字底線，並補充跨模組驗收標準 |
+| 1.3.3 | 2026-05-15 | 新增跨模組頁首 heading baseline：所有登入後主要頁面的最上層主標題、副標題位置與 typography 對齊 Dashboard |
+| 1.3.2 | 2026-05-15 | 統一 mobile top brand bar 右側工具列樣式，將 Task Management 的手機版工具列尺寸與品牌區讓位規則收斂至 shared sidebar contract |
 | 1.3.1 | 2026-05-13 | 調整 Mobile / icon-only sidebar footer：最下方呈現登出按鈕，不再以使用者姓名或頭像取代登出控制；移除 `mobileUserName` contract |
 | 1.3.0 | 2026-05-12 | 同步 Sidebar utility：新增 icon-only 快捷鍵總覽入口、快捷鍵 modal i18n、獨立 keycap 與一 action 一列呈現；Sidebar Appearance 改為單鍵 light/dark icon toggle，Desktop/Mobile 入口同步，並更新 `APPEARANCE_STORAGE_KEY = label-suite-theme` |
 | 1.2.0 | 2026-05-12 | 新增 Appearance 外觀模式切換規格：`APPEARANCE_STORAGE_KEY`、三態 mode（light/dark/system）、FOUC 防護（`theme-fouc.js`）、FR-015 群、AppearanceState 實體、SC-008 群 |
