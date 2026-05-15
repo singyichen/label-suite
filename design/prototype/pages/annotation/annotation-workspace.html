@@ -3952,7 +3952,7 @@ function renderSampleList() {
 
 function renderSampleListHeader() {
   var context = getMaterializedRunContext();
-  setText('sampleListTitle', t('sampleListTitle') + ' · ' + context.label);
+  setText('sampleListTitle', t('sampleListTitle'));
   setText('sampleListCount', t('sampleListCount', { n: context.total }));
 }
 
