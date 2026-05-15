@@ -787,6 +787,95 @@
     return CURRENT_LANG === 'en' && sample.textEn ? sample.textEn : sample.text;
   }
 
+  var REVIEWER_RESULT_TRANSLATIONS = {
+    '電池續航力': 'battery life',
+    '服務員的態度': 'staff attitude',
+    '操作流程順暢': 'smooth workflow',
+    '客服回應速度': 'support response speed',
+    '半導體產業論壇': 'Semiconductor Industry Forum',
+    '創辦人張忠謀': 'founder Morris Chang',
+    '鴻海精密工業': 'Foxconn',
+    '越南胡志明市': 'Ho Chi Minh City, Vietnam',
+    '超音波檢查': 'ultrasound exam',
+    '賀爾蒙變化': 'hormonal changes',
+    '胃部不適': 'gastrointestinal discomfort',
+    '整體設計': 'overall design',
+    '菜色選擇': 'menu options',
+    '服務態度': 'service attitude',
+    '用餐體驗': 'dining experience',
+    '停車空間': 'parking space',
+    '房間隔音': 'room soundproofing',
+    '介面設計': 'interface design',
+    '操作流程': 'workflow',
+    '客戶支援': 'customer support',
+    '佩戴舒適度': 'wearing comfort',
+    '主動降噪功能': 'active noise cancellation',
+    '主動降噪': 'active noise cancellation',
+    '降噪功能': 'noise cancellation',
+    '音質表現': 'audio quality',
+    '服務員': 'staff',
+    '早餐品質': 'breakfast quality',
+    '停車場': 'parking',
+    '隔音效果': 'soundproofing',
+    '電池壽命': 'battery life',
+    '高效能': 'high performance',
+    '未完全出現在句子中': 'not an exact sentence match',
+    '已刪除': 'deleted',
+    '螢幕': 'screen',
+    '價格': 'price',
+    '環境': 'ambiance',
+    '介面': 'interface',
+    '音質': 'audio quality',
+    '舒適度': 'comfort',
+    '隔音': 'soundproofing',
+    '體育': 'Sports',
+    '娛樂': 'Entertainment',
+    '社會': 'Society',
+    '政治': 'Politics',
+    '科技': 'Technology',
+    '財經': 'Finance',
+    '等價': 'Equivalent',
+    '相關': 'Related',
+    '無關': 'Unrelated',
+    '阿司匹靈': 'Aspirin',
+    '頭痛': 'headache',
+    '乳房': 'breast',
+    '疼痛': 'pain',
+    '月經週期': 'menstrual cycle',
+    '超音波': 'ultrasound',
+    '膽囊結石': 'gallstones',
+    '腹部疼痛': 'abdominal pain',
+    '台積電': 'TSMC',
+    '張忠謀': 'Morris Chang',
+    '台北': 'Taipei',
+    '鴻海': 'Foxconn',
+    '越南': 'Vietnam',
+    '胡志明市': 'Ho Chi Minh City',
+    '衛生福利部': 'Ministry of Health and Welfare',
+    '薛瑞元': 'Hsueh Jui-yuan',
+    '2025年': '2025',
+    '草稿': 'draft'
+  };
+
+  function localizeReviewerText(text) {
+    var output = String(text || '');
+    if (CURRENT_LANG !== 'en' || output === '-') return output;
+    Object.keys(REVIEWER_RESULT_TRANSLATIONS)
+      .sort(function (a, b) { return b.length - a.length; })
+      .forEach(function (source) {
+        output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
+      });
+    return output
+      .replace(/、/g, ', ')
+      .replace(/（/g, ' (')
+      .replace(/）/g, ')')
+      .replace(/原：/g, 'original: ')
+      .replace(/\s+,/g, ',')
+      .replace(/,\s*/g, ', ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
   var toastTimer = null;
   function showToast(msg, type) {
     var toast = document.getElementById('toast');
@@ -1441,7 +1530,7 @@
       var resultSpan = document.createElement('span');
       var colorClass = getVaColorClass(ann.result, vaRange);
       resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
-      resultSpan.textContent = ann.result;
+      resultSpan.textContent = localizeReviewerText(ann.result);
 
       var approveBtn = document.createElement('button');
       approveBtn.type = 'button';
@@ -1835,7 +1924,7 @@
   }
 
   function formatReviewerLabelStats(sample, taskType) {
-    var statsText = sample && sample.labelStats ? String(sample.labelStats) : '-';
+    var statsText = sample && sample.labelStats ? localizeReviewerText(sample.labelStats) : '-';
     if (taskType !== 'relation_extraction') return statsText;
     return statsText.replace(/\s·\s/g, '\n');
   }
