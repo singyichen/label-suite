@@ -8809,17 +8809,26 @@ function getTaskTypeLabel(taskTypeKey) {
     return labelEntry[state.lang] || labelEntry.zh || labelText;
   }
 
+  var SORTED_RESULT_LABEL_KEYS = Object.keys(RESULT_LABEL_I18N).sort(function(a, b) {
+    return b.length - a.length;
+  });
+
   function localizeResultText(text) {
     var output = String(text || '');
-    if (state.lang !== 'en') return output;
-    Object.keys(RESULT_LABEL_I18N)
-      .sort(function(a, b) { return b.length - a.length; })
-      .forEach(function(label) {
-        var labelEntry = RESULT_LABEL_I18N[label];
-        var translated = labelEntry && labelEntry.en ? labelEntry.en : label;
-        output = output.split(label).join(translated);
-      });
-    return output;
+    if (state.lang !== 'en' || output === '-' || !output) return output;
+    SORTED_RESULT_LABEL_KEYS.forEach(function(label) {
+      var labelEntry = RESULT_LABEL_I18N[label];
+      var translated = labelEntry && labelEntry.en ? labelEntry.en : label;
+      output = output.split(label).join(translated);
+    });
+    return output
+      .replace(/、/g, ', ')
+      .replace(/（/g, ' (')
+      .replace(/）/g, ')')
+      .replace(/\s+,/g, ',')
+      .replace(/,\s*/g, ', ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
   function getAnnotationResultDisplay(annotation) {

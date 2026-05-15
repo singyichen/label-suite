@@ -79,7 +79,7 @@ test.describe('Task detail settings edit state', () => {
       for (const text of item.previewTexts) {
         await expect(preview).toContainText(text);
       }
-      if ('previewInputValues' in item) {
+      if (item.previewInputValues) {
         const inputValues = await preview.locator('input').evaluateAll((inputs) =>
           inputs.map((input) => input instanceof HTMLInputElement ? input.value : '')
         );

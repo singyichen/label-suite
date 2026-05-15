@@ -3592,14 +3592,16 @@ var REVIEWER_RESULT_TRANSLATIONS = {
   '草稿': 'draft'
 };
 
+var SORTED_REVIEWER_TRANSLATION_KEYS = Object.keys(REVIEWER_RESULT_TRANSLATIONS).sort(function(a, b) {
+  return b.length - a.length;
+});
+
 function localizeReviewerText(text) {
   var output = String(text || '');
   if (state.lang !== 'en' || output === '-') return output;
-  Object.keys(REVIEWER_RESULT_TRANSLATIONS)
-    .sort(function(a, b) { return b.length - a.length; })
-    .forEach(function(source) {
-      output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
-    });
+  SORTED_REVIEWER_TRANSLATION_KEYS.forEach(function(source) {
+    output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
+  });
   return output
     .replace(/、/g, ', ')
     .replace(/（/g, ' (')
@@ -4039,7 +4041,9 @@ function renderSampleList() {
 
 function renderSampleListHeader() {
   var context = getMaterializedRunContext();
-  setText('sampleListTitle', t('sampleListTitle'));
+  var title = t('sampleListTitle');
+  if (state.runType === 'dry_run') title += ' · ' + context.label;
+  setText('sampleListTitle', title);
   setText('sampleListCount', t('sampleListCount', { n: context.total }));
 }
 
@@ -5155,6 +5159,7 @@ function init() {
   var matchedSampleIdx = findSampleIndexByQuerySampleId(pendingSampleId);
   if (matchedSampleIdx >= 0) state.currentIdx = matchedSampleIdx;
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
+  document.documentElement.lang = state.lang === 'zh' ? 'zh-TW' : 'en';
 
   loadAllAnnotationPanels().then(function() {
     applyLang(state.lang);

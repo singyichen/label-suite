@@ -857,14 +857,16 @@
     '草稿': 'draft'
   };
 
+  var SORTED_REVIEWER_TRANSLATION_KEYS = Object.keys(REVIEWER_RESULT_TRANSLATIONS).sort(function (a, b) {
+    return b.length - a.length;
+  });
+
   function localizeReviewerText(text) {
     var output = String(text || '');
     if (CURRENT_LANG !== 'en' || output === '-') return output;
-    Object.keys(REVIEWER_RESULT_TRANSLATIONS)
-      .sort(function (a, b) { return b.length - a.length; })
-      .forEach(function (source) {
-        output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
-      });
+    SORTED_REVIEWER_TRANSLATION_KEYS.forEach(function (source) {
+      output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
+    });
     return output
       .replace(/、/g, ', ')
       .replace(/（/g, ' (')
