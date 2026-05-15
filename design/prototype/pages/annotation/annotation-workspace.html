@@ -5160,6 +5160,11 @@ function init() {
   if (matchedSampleIdx >= 0) state.currentIdx = matchedSampleIdx;
   state.lang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
   document.documentElement.lang = state.lang === 'zh' ? 'zh-TW' : 'en';
+  var earlyLangCode = state.lang === 'en' ? 'EN' : 'ZH';
+  ['langLabel', 'mobileLangLabel'].forEach(function(lid) {
+    var langEl = document.getElementById(lid);
+    if (langEl) langEl.textContent = earlyLangCode;
+  });
 
   loadAllAnnotationPanels().then(function() {
     applyLang(state.lang);
