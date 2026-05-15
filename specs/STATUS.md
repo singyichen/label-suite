@@ -31,6 +31,7 @@
 | admin-007 | Role & Permission Settings | admin | `spec-ready` | — | IA v7 重建完成（`specs/admin/007-role-settings/spec.md`） |
 | dashboard-012 | Dashboard | dashboard | `in-progress` | `feat/dashboard-012-spec-simplify` | spec 與 IA 對齊進行中；wireframe 已完成（PR #27） |
 | shared-008 | Shared Sidebar Navbar | shared | `in-progress` | `feat/design-system-pen-sync` | shared navbar spec 已建立並與 IA 對齊 |
+| shared-018 | Help Button — 平台說明入口 | shared | `spec-ready` | — | Brainstorm session 1445-1778808850；步驟引導流程 out of scope |
 | annotation-015 | Annotation Workspace | annotation | `spec-ready` | — | IA v1.3.1 重建完成（`specs/annotation/015-annotation-workspace/spec.md`） |
 | task-management-010 | Task List | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/010-task-list/spec.md`） |
 | task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `docs/admin-tab-navigation` | IA 重建完成（`specs/task-management/013-task-new/spec.md`） |
@@ -52,6 +53,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-05-15 | 新增 `shared-018` Help Button spec（`specs/shared/018-help-button/spec.md`）；狀態設為 `spec-ready`。 |
 | 2026-05-12 | `task-management-014` spec 更新至 v1.7.6；Overview「任務狀態與執行控制」移除 stage banner 內額外的目前任務階段標題與描述，僅保留判定列。 |
 | 2026-05-11 | `task-management-014` spec 更新至 v1.7.5；Overview「任務狀態與執行控制」統整目前任務階段與正式標記判定資訊架構，prototype 同步移除獨立正式標記判定卡。 |
 | 2026-05-06 | `task-management-014` 狀態更新為 `in-progress`，分支為 `fix/task-detail-annotation-results-layout`；spec 同步目前 `annotation-results` prototype 的摘要頂對齊、detail row metadata 群組與 scroll container 邊界規則。 |
