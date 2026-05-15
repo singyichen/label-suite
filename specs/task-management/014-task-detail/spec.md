@@ -564,7 +564,7 @@ flowchart LR
 **Entry points**：`/task-list` 任務列。  
 **Exit points**：返回 `/task-list` 或切換到其他 L0 模組。
 
-**麵包屑導航**：頁面頂端顯示 `任務管理 › {task_name}`，`任務管理` 為可點擊連結，導向 `/task-list`；第二段必須顯示當前任務名稱而非固定文案。語言切換後同步更新為當前語系的任務名稱（zh 例如：`任務管理 › 新聞標題多標籤分類`；en 例如：`Task Management › News Headline Multi-label Classification`）。
+**麵包屑導航**：頁首標題區塊下方顯示 `任務管理 › {task_name}`，`任務管理` 為可點擊連結，導向 `/task-list`；第二段必須顯示當前任務名稱而非固定文案。頁首 `h1` 與副標題位置需維持 shared Dashboard heading baseline，breadcrumb 不得置於 `h1` 前方造成頁首下移。語言切換後同步更新為當前語系的任務名稱（zh 例如：`任務管理 › 新聞標題多標籤分類`；en 例如：`Task Management › News Headline Multi-label Classification`）。
 
 ### 關鍵實體
 
@@ -651,6 +651,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.14 | 2026-05-15 | 調整 detail 頁首與 shared Dashboard heading baseline 對齊：breadcrumb 改置於頁首標題區塊下方，避免推移最上層主標題位置 |
 | 1.7.13 | 2026-05-13 | 明確規範角色 badge 配色：`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：primary token 系列），`annotator`（標記員）使用綠色（`role-badge-annotator`：success token 系列）；補充 `tokens.css` 缺少的 `--color-primary-border`（light: #C7D2FE，dark: #3730A3）；成員管理與工時明細表沿用同一 CSS class |
 | 1.7.12 | 2026-05-13 | 補齊工時明細表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範分頁狀態（`wlPage` / `wlPageSize`）獨立；篩選條件變更重設至第 1 頁；匯總卡片與異常提醒仍依完整篩選結果計算；新增 FR-007a |
 | 1.7.11 | 2026-05-13 | 補齊匯出記錄表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範匯出記錄表分頁狀態（`arExportPage` / `arExportPageSize`）與標記結果表分頁狀態完全獨立；新增 FR-015e-1 |

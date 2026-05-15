@@ -58,7 +58,7 @@
     .hidden{display:none !important}
 
     main{flex:1;display:flex;flex-direction:column;overflow-y:auto}
-    .layout{max-width:1200px;width:100%;margin:0 auto;padding:var(--space-lg)}
+    .layout{max-width:1280px;width:100%;margin:0 auto;padding:var(--space-lg)}
 
     /* Breadcrumb */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
@@ -68,8 +68,8 @@
 
     /* Page header */
     .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-md);margin-bottom:var(--space-lg);flex-wrap:wrap}
-    .page-main-title{font-family:var(--font-serif-display);font-size:26px;line-height:1.3;font-weight:700;color:var(--color-ink);margin:0 0 6px}
-    .page-main-subtitle{font-size:14px;color:var(--color-text-soft);margin:0}
+    .page-main-title{font-family:var(--font-serif-display);font-size:28px;line-height:1.3;font-weight:700;color:var(--color-ink);margin:0 0 4px}
+    .page-main-subtitle{font-size:14px;line-height:1.8;color:var(--color-text-soft);margin:0}
 
     /* Tabs */
     .admin-tabs{display:flex;border-bottom:2px solid var(--color-border);margin-bottom:var(--space-lg)}
@@ -297,13 +297,6 @@
 <main id="detailMain">
 <div class="layout">
 
-  <!-- Breadcrumb -->
-  <nav class="breadcrumb" aria-label="breadcrumb">
-    <a href="./dataset-analysis-list.html" id="bcRoot">資料集分析</a>
-    <span class="breadcrumb-sep" aria-hidden="true">›</span>
-    <span id="bcCurrent">產品評論序列標註（NER / Aspect）</span>
-  </nav>
-
   <!-- Page header -->
   <header class="page-header">
     <div>
@@ -311,6 +304,13 @@
       <p class="page-main-subtitle" id="pageSubtitle">檢視統計總覽與品質監控</p>
     </div>
   </header>
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="./dataset-analysis-list.html" id="bcRoot">資料集分析</a>
+    <span class="breadcrumb-sep" aria-hidden="true">›</span>
+    <span id="bcCurrent">產品評論序列標註（NER / Aspect）</span>
+  </nav>
 
   <!-- Tabs -->
   <div class="admin-tabs" role="tablist">
@@ -423,9 +423,12 @@ var I18N = {
     statsVAHistTitle:'Valence / Arousal 分佈直方圖',
     statsVAHistDesc:'標記員在 1–7 評分量表上的分佈情形（共 412 筆有效標記）',
     statsVALblValence:'Valence（V）',statsVALblArousal:'Arousal（A）',
+    statsVAValenceAria:'Valence 分佈直方圖',
+    statsVAArousalAria:'Arousal 分佈直方圖',
     statsLblMean:'Mean',statsLblStd:'SD',statsLblMedian:'Median',statsLblMin:'Min',statsLblMax:'Max',
     statsVAScatterTitle:'V-A 二維分佈',
     statsVAScatterDesc:'每筆標記在 Valence × Arousal 空間的分佈，紅點為 high_divergence 旗標樣本',
+    statsVAScatterAria:'V-A 二維分佈 scatter plot',
     statsVALegendMain:'主要標記群',statsVALegendOutlier:'高分歧旗標',statsVALegendLow:'低頻分佈',
     statsClsDistTitle:'標籤分佈',
     statsClsDistDesc:'各標籤在提交標記中的次數與比例（共 1,248 筆標記，多標籤任務）',
@@ -433,8 +436,22 @@ var I18N = {
     statsClsCooccTitle:'多標籤共現矩陣',
     statsClsCooccDesc:'兩個標籤同時出現的次數。對角線為各標籤單獨出現的樣本數。',
     statsClsCooccNote:'顏色深度反映共現頻率高低；白色格子代表極少共現。',
+    classificationLabels: {
+      politics: '政治',
+      technology: '科技',
+      finance: '財經',
+      sports: '體育',
+      entertainment: '娛樂',
+    },
     statsSeqEntityDistTitle:'實體類型分佈',
     statsSeqEntityDistDesc:'各實體類型在所有提交標記中的出現次數（共 3,994 個已標記實體）',
+    sequenceEntityLabels: {
+      per: 'PER（人名）',
+      org: 'ORG（組織）',
+      loc: 'LOC（地點）',
+      misc: 'MISC（其他）',
+    },
+    statsSeqSpanLenAria:'Span 長度分佈直方圖',
     statsSeqAvgEntityTitle:'每句平均實體數',statsSeqAvgLabel:'平均實體數 / 句',
     statsSeqTotalSentLabel:'總句子數',statsSeqTotalEntityLabel:'總實體標記數',
     statsSeqZeroEntityLabel:'無實體句子比例',statsSeqMaxEntityLabel:'單句最多實體數',
@@ -443,6 +460,19 @@ var I18N = {
     statsSeqSpanLenXLabel:'Span 長度（token 數）',
     statsRelEntityDistTitle:'實體類型分佈',statsRelEntityDistDesc:'各實體類型在已標記三元組中的出現次數',
     statsRelRelDistTitle:'關係類型分佈',statsRelRelDistDesc:'各關係類型的三元組標記次數',
+    relationEntityLabels: {
+      drug: 'Drug（藥物）',
+      disease: 'Disease（疾病）',
+      gene: 'Gene（基因）',
+      chemical: 'Chemical（化合物）',
+    },
+    relationTypeLabels: {
+      treats: 'treats（治療）',
+      causes: 'causes（導致）',
+      inhibits: 'inhibits（抑制）',
+      binds: 'binds（結合）',
+      regulates: 'regulates（調控）',
+    },
     statsRelTripleTitle:'Triple 統計摘要',
     statsRelTripleDesc:'三元組（Subject, Relation, Object）層級的聚合統計',
     statsRelTotalTripleLabel:'Triple 總數',statsRelTotalTripleDesc:'所有標記員提交的 triple 總計',
@@ -454,6 +484,17 @@ var I18N = {
     statsSpDistTitle:'分佈統計',
     statsSpLblDistTitle:'各標籤在提交標記中的次數與比例（共 983 筆有效標記）',
     statsSpScoreDistTitle:'評分分數（0–1）在提交標記中的分佈（共 983 筆有效標記）',
+    statsSpToggleAria:'子類型切換',
+    statsSpClsButton:'分類型',
+    statsSpScoreButton:'評分型',
+    sentencePairLabels: {
+      similar: '相似 / Similar',
+      dissimilar: '不相似 / Dissimilar',
+      entailment: '蘊含 / Entailment',
+      contradiction: '矛盾 / Contradiction',
+    },
+    sentencePairDominantSimilar:'相似',
+    statsSpScoreAria:'評分分佈直方圖',
     statsSpClsLabelCount:'標籤類別數',statsSpClsSampleCount:'有效標記句對數',
     statsSpClsDominantLabel:'最常見標籤',
     statsSpScoreSummaryHead:'評分統計摘要',statsSpScoreQuartileHead:'四分位數',
@@ -526,6 +567,21 @@ var I18N = {
     anomClsSpeedTitle:'標記速度異常', anomClsSpeedEmpty:'無速度異常',
     anomClsOutlierTitle:'高分歧樣本',
     anomClsOut1Title:'樣本 #23 — high_divergence 樣本旗標', anomClsOut1Detail:'Jordan Wu 選擇「中立」，其餘標記員集中於「正向」；樣本獨立標示，不直接提升其個人風險。',
+    classificationRiskTableLabel: '標記員分析（分類）',
+    classificationRiskHeaderAnnotator: '標記員',
+    classificationRiskHeaderSpeed: '平均速度',
+    classificationRiskHeaderLevel: '風險等級',
+    classificationRiskHeaderCause: '異常原因',
+    classificationRiskHeaderSamples: '樣本數',
+    classificationRiskHeaderAction: '建議行動',
+    classificationRiskSpeed1: '28s / 句',
+    classificationRiskSpeed2: '35s / 句',
+    classificationRiskSpeed3: '31s / 句',
+    classificationCauseNone: '無異常原因',
+    classificationCauseInsufficient: '8 / 10，暫不評估',
+    classificationCauseSystematic: '系統性偏差',
+    classificationActionReview: '審核標記',
+    classificationLeaderOnly: '僅 Project Leader 可執行',
     anomSeqSpeedTitle:'標記速度異常', anomSeqOutlierTitle:'高分歧樣本',
     anomSeqSpd1Title:'Jordan Wu — 標記速度過快', anomSeqSpd1Detail:'平均 22s／句（門檻：≥ 30s），共 38 筆提交紀錄',
     anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
@@ -540,6 +596,44 @@ var I18N = {
       sequence_aspect:'Aspect 標記以可對齊的 span（aspect taxonomy 類別相符）作為比較母體；boundary high_divergence 樣本維持獨立 sample-level 旗標。',
       relation:'關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。',
       sentence_pairs:'句對任務以可重疊比較的句對結果為母體；適合觀察群體偏離頻率，不單獨作為處置依據。',
+    },
+    qualityRisk: {
+      vaTableLabel: '標記員分析（VA 評分）',
+      sequenceTableLabel: '標記員分析（序列標記）',
+      relationTableLabel: '標記員分析（關係抽取）',
+      sentencePairsTableLabel: '標記員分析（句對任務）',
+      headerAnnotator: '標記員',
+      headerSpeed: '平均速度',
+      headerF1Strict: 'F1（strict）',
+      headerLevel: '風險等級',
+      headerCause: '異常原因',
+      headerSamples: '樣本數',
+      headerAction: '建議行動',
+      speedFlagLabel: '速度異常',
+      vaSpeed1: '38s / 句',
+      vaSpeed2: '42s / 句',
+      vaSpeed3: '18s / 句',
+      seqSpeed1: '52s / 句',
+      seqSpeed2: '60s / 句',
+      seqSpeed3: '22s / 句',
+      relSpeed1: '65s / 句',
+      relSpeed2: '72s / 句',
+      relSpeed3: '25s / 句',
+      spSpeed1: '33s / 句',
+      spSpeed2: '38s / 句',
+      spSpeed3: '41s / 句',
+      causeNone: '無異常原因',
+      causeSystematic: '系統性偏差',
+      causeTooFast: '標記過快',
+      causeTooSlow: '標記過慢',
+      causeInsufficient7: '7 / 10，暫不評估',
+      vaCauseVHigh: '<strong>V</strong> 系統性偏高',
+      vaCauseASlow: '<strong>A</strong> 標記過慢',
+      vaCauseVLow: '<strong>V</strong> 系統性偏低',
+      vaCauseAFast: '<strong>A</strong> 標記過快',
+      actionReview: '審核標記',
+      actionAdjust: '調整參與狀態',
+      leaderOnly: '僅 Project Leader 可執行',
     },
     emptyStateMsgs: {
       dry_run_in_progress: ['Dry Run 進行中', 'Dry Run 仍在執行中，等待所有標記員完成提交。'],
@@ -585,9 +679,11 @@ var I18N = {
       spanLenTitle: 'Aspect Span 長度分佈',
       spanLenDesc: '以 token 數計算的 span 長度分佈（長度 ≥ 5 合併為「5+」）',
       spanLenXLabel: 'Span 長度（token 數）',
+      spanLenAria: 'Aspect Span 長度分佈直方圖',
       spanLenExample: '代表例：「高品質」(1)、「耐用性強」(2)、「外觀設計精美」(3)、「整體性價比相當高」(4)',
       cooccTitle: 'Aspect 共現矩陣',
       cooccDesc: '同一句內兩個不同 Aspect 共同出現的次數；矩陣對稱，對角線不顯示自共現',
+      cooccAria: 'Aspect 共現矩陣',
       cooccNote: '外觀 × 包裝共現頻率偏高（184 次），反映評論中同時討論視覺與包裝的傾向。',
       sentimentTitle: 'Aspect × Sentiment 分佈',
       sentimentDesc: '各 Aspect 的正面 / 中立 / 負面標記比例（sentiment 資料存在時顯示）',
@@ -685,6 +781,7 @@ var I18N = {
     navDataset: '資料集分析',
     navAdmin: '系統管理',
     navProfile: '個人設定',
+    roleUser: '一般使用者',
   },
   en: {
     docTitle: 'Dataset Analysis Detail — Label Suite (Prototype)',
@@ -704,9 +801,12 @@ var I18N = {
     statsVAHistTitle:'Valence / Arousal Distribution',
     statsVAHistDesc:'Annotator distribution on the 1–7 rating scale (412 valid annotations)',
     statsVALblValence:'Valence (V)',statsVALblArousal:'Arousal (A)',
+    statsVAValenceAria:'Valence histogram',
+    statsVAArousalAria:'Arousal histogram',
     statsLblMean:'Mean',statsLblStd:'SD',statsLblMedian:'Median',statsLblMin:'Min',statsLblMax:'Max',
     statsVAScatterTitle:'V-A 2D Distribution',
     statsVAScatterDesc:'Distribution of all annotations in the V × A space. Red dots are high-divergence flagged samples.',
+    statsVAScatterAria:'V-A 2D scatter plot',
     statsVALegendMain:'Main cluster',statsVALegendOutlier:'High-divergence',statsVALegendLow:'Low-frequency',
     statsClsDistTitle:'Label Distribution',
     statsClsDistDesc:'Frequency and proportion of each label in submitted annotations (1,248 total, multi-label)',
@@ -714,8 +814,22 @@ var I18N = {
     statsClsCooccTitle:'Multi-label Co-occurrence Matrix',
     statsClsCooccDesc:'Number of co-occurrences for any two labels. Diagonal = solo-label sample count.',
     statsClsCooccNote:'Color depth reflects co-occurrence frequency; white cells indicate rare co-occurrence.',
+    classificationLabels: {
+      politics: 'Politics',
+      technology: 'Technology',
+      finance: 'Finance',
+      sports: 'Sports',
+      entertainment: 'Entertainment',
+    },
     statsSeqEntityDistTitle:'Entity Type Distribution',
     statsSeqEntityDistDesc:'Count of each entity type across all submitted annotations (3,994 total)',
+    sequenceEntityLabels: {
+      per: 'PER',
+      org: 'ORG',
+      loc: 'LOC',
+      misc: 'MISC',
+    },
+    statsSeqSpanLenAria:'Entity span length histogram',
     statsSeqAvgEntityTitle:'Avg Entities per Sentence',statsSeqAvgLabel:'Avg entities / sentence',
     statsSeqTotalSentLabel:'Total sentences',statsSeqTotalEntityLabel:'Total entity labels',
     statsSeqZeroEntityLabel:'Zero-entity sentences',statsSeqMaxEntityLabel:'Max entities / sentence',
@@ -724,6 +838,19 @@ var I18N = {
     statsSeqSpanLenXLabel:'Span length (tokens)',
     statsRelEntityDistTitle:'Entity Type Distribution',statsRelEntityDistDesc:'Count of each entity type in labeled triples',
     statsRelRelDistTitle:'Relation Type Distribution',statsRelRelDistDesc:'Triple annotation count per relation type',
+    relationEntityLabels: {
+      drug: 'Drug',
+      disease: 'Disease',
+      gene: 'Gene',
+      chemical: 'Chemical',
+    },
+    relationTypeLabels: {
+      treats: 'treats',
+      causes: 'causes',
+      inhibits: 'inhibits',
+      binds: 'binds',
+      regulates: 'regulates',
+    },
     statsRelTripleTitle:'Triple Count Summary',
     statsRelTripleDesc:'Aggregated statistics at the triple (Subject, Relation, Object) level',
     statsRelTotalTripleLabel:'Total triples',statsRelTotalTripleDesc:'Total triples submitted by all annotators',
@@ -735,6 +862,17 @@ var I18N = {
     statsSpDistTitle:'Distribution Statistics',
     statsSpLblDistTitle:'Frequency and proportion of each label (983 valid annotations)',
     statsSpScoreDistTitle:'Score distribution (0–1) in submitted annotations (983 valid)',
+    statsSpToggleAria:'Subtype toggle',
+    statsSpClsButton:'Classification',
+    statsSpScoreButton:'Scoring',
+    sentencePairLabels: {
+      similar: 'Similar',
+      dissimilar: 'Dissimilar',
+      entailment: 'Entailment',
+      contradiction: 'Contradiction',
+    },
+    sentencePairDominantSimilar:'Similar',
+    statsSpScoreAria:'Score distribution histogram',
     statsSpClsLabelCount:'Label classes',statsSpClsSampleCount:'Valid sentence pairs',
     statsSpClsDominantLabel:'Most common label',
     statsSpScoreSummaryHead:'Score summary',statsSpScoreQuartileHead:'Quartiles',
@@ -807,6 +945,21 @@ var I18N = {
     anomClsSpeedTitle:'Speed Anomalies', anomClsSpeedEmpty:'No speed anomalies',
     anomClsOutlierTitle:'High-divergence Samples',
     anomClsOut1Title:'Sample #23 — high-divergence sample flag', anomClsOut1Detail:'Jordan Wu chose "Neutral" while the remaining annotators converged on "Positive"; this sample is separated from annotator risk.',
+    classificationRiskTableLabel: 'Classification annotator risk assessment',
+    classificationRiskHeaderAnnotator: 'Annotator',
+    classificationRiskHeaderSpeed: 'Avg Speed',
+    classificationRiskHeaderLevel: 'Risk Level',
+    classificationRiskHeaderCause: 'Cause',
+    classificationRiskHeaderSamples: 'Sample Count',
+    classificationRiskHeaderAction: 'Recommended Action',
+    classificationRiskSpeed1: '28s / sent',
+    classificationRiskSpeed2: '35s / sent',
+    classificationRiskSpeed3: '31s / sent',
+    classificationCauseNone: 'No anomaly cause',
+    classificationCauseInsufficient: '8 / 10, not evaluated yet',
+    classificationCauseSystematic: 'Systematic bias',
+    classificationActionReview: 'Review annotations',
+    classificationLeaderOnly: 'Project Leader only',
     anomSeqSpeedTitle:'Speed Anomalies', anomSeqOutlierTitle:'High-divergence Samples',
     anomSeqSpd1Title:'Jordan Wu — Annotation speed too fast', anomSeqSpd1Detail:'Avg 22s/sent (threshold: ≥ 30s), 38 submissions',
     anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
@@ -821,6 +974,44 @@ var I18N = {
       sequence_aspect:'For aspect labeling, aligned spans with matching aspect taxonomy form the comparison pool. Boundary high_divergence samples remain separate sample-level flags.',
       relation:'For relation extraction, only triples with enough repeated annotations enter the comparison pool. This block shows group deviation, not final risk decisions.',
       sentence_pairs:'For sentence-pair tasks, comparable pair results form the base. Use this to observe deviation frequency, not as a standalone action trigger.',
+    },
+    qualityRisk: {
+      vaTableLabel: 'Annotator analysis (VA scoring)',
+      sequenceTableLabel: 'Annotator analysis (sequence labeling)',
+      relationTableLabel: 'Annotator analysis (relation extraction)',
+      sentencePairsTableLabel: 'Annotator analysis (sentence-pair task)',
+      headerAnnotator: 'Annotator',
+      headerSpeed: 'Avg Speed',
+      headerF1Strict: 'F1 (strict)',
+      headerLevel: 'Risk Level',
+      headerCause: 'Cause',
+      headerSamples: 'Sample Count',
+      headerAction: 'Recommended Action',
+      speedFlagLabel: 'Speed anomaly',
+      vaSpeed1: '38s / sent',
+      vaSpeed2: '42s / sent',
+      vaSpeed3: '18s / sent',
+      seqSpeed1: '52s / sent',
+      seqSpeed2: '60s / sent',
+      seqSpeed3: '22s / sent',
+      relSpeed1: '65s / sent',
+      relSpeed2: '72s / sent',
+      relSpeed3: '25s / sent',
+      spSpeed1: '33s / sent',
+      spSpeed2: '38s / sent',
+      spSpeed3: '41s / sent',
+      causeNone: 'No anomaly cause',
+      causeSystematic: 'Systematic bias',
+      causeTooFast: 'Too fast',
+      causeTooSlow: 'Too slow',
+      causeInsufficient7: '7 / 10, not evaluated yet',
+      vaCauseVHigh: '<strong>V</strong> Systematically high',
+      vaCauseASlow: '<strong>A</strong> Too slow',
+      vaCauseVLow: '<strong>V</strong> Systematically low',
+      vaCauseAFast: '<strong>A</strong> Too fast',
+      actionReview: 'Review annotations',
+      actionAdjust: 'Adjust participation',
+      leaderOnly: 'Project Leader only',
     },
     emptyStateMsgs: {
       dry_run_in_progress: ['Dry Run in progress', 'Waiting for all annotators to submit.'],
@@ -866,9 +1057,11 @@ var I18N = {
       spanLenTitle: 'Aspect Span Length Distribution',
       spanLenDesc: 'Span length distribution in tokens (length ≥ 5 collapsed into "5+")',
       spanLenXLabel: 'Span length (tokens)',
+      spanLenAria: 'Aspect span length histogram',
       spanLenExample: 'Examples: "High quality" (1), "Very durable" (2), "Elegant exterior design" (3), "Overall excellent value" (4)',
       cooccTitle: 'Aspect Co-occurrence Matrix',
       cooccDesc: 'Counts of two different aspects appearing in the same sentence; the matrix is symmetric and hides self-co-occurrence on the diagonal',
+      cooccAria: 'Aspect co-occurrence matrix',
       cooccNote: 'Appearance × Packaging co-occurs frequently (184), suggesting reviews often discuss visual design and packaging together.',
       sentimentTitle: 'Aspect × Sentiment Distribution',
       sentimentDesc: 'Positive / neutral / negative label ratios for each aspect (shown when sentiment data is available)',
@@ -966,6 +1159,7 @@ var I18N = {
     navDataset: 'Dataset Analytics',
     navAdmin: 'System Administration',
     navProfile: 'Profile',
+    roleUser: 'User',
   },
 };
 
@@ -1056,6 +1250,10 @@ function applyDataI18n(root) {
   Array.prototype.forEach.call(root.querySelectorAll('[data-i18n-html]'), function(el) {
     var value = tPath(el.getAttribute('data-i18n-html'));
     if (typeof value === 'string') el.innerHTML = value;
+  });
+  Array.prototype.forEach.call(root.querySelectorAll('[data-i18n-aria-label]'), function(el) {
+    var value = tPath(el.getAttribute('data-i18n-aria-label'));
+    if (typeof value === 'string') el.setAttribute('aria-label', value);
   });
   Array.prototype.forEach.call(root.querySelectorAll('[data-aspect-label]'), function(el) {
     var value = tPath('aspectTaxonomyLabels.' + el.getAttribute('data-aspect-label'));
@@ -1204,6 +1402,7 @@ function applyLang(l) {
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(l, {
       langToggleAria: l === 'zh' ? '切換語言' : 'Switch language',
+      roleLabel: t('roleUser'),
     });
     ['navDashboard', 'navTaskManagement', 'navAnnotation', 'navDataset', 'navAdmin', 'navProfile'].forEach(function(id) {
       var el = document.getElementById(id);

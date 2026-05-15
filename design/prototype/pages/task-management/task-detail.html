@@ -31,7 +31,7 @@
     .hidden { display: none !important; }
 
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
-    .layout { max-width: 1200px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
+    .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
 
     /* Breadcrumb */
     .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-soft);margin-bottom:12px}
@@ -57,6 +57,7 @@
     }
     .page-main-subtitle {
       font-size: 14px;
+      line-height: 1.8;
       color: var(--color-text-soft);
       margin: 0;
     }
@@ -581,6 +582,30 @@
       gap: 10px;
       align-items: end;
     }
+    .worklog-date-field {
+      position: relative;
+    }
+    .worklog-date-input {
+      position: relative;
+      z-index: 1;
+    }
+    .worklog-date-field:not(.has-value) .worklog-date-input {
+      color: transparent;
+    }
+    .worklog-date-placeholder {
+      position: absolute;
+      z-index: 2;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-ink);
+      font-size: 14px;
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .worklog-date-field.has-value .worklog-date-placeholder {
+      display: none;
+    }
     .worklog-summary-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1008,8 +1033,8 @@
       border-radius: 4px; transition: color var(--dur-fast);
     }
     .ar-expand-btn:hover { color: var(--color-ink); }
-    .ar-expand-btn img { width: 16px; height: 16px; transition: transform 0.15s ease; }
-    .ar-expand-btn.expanded img { transform: rotate(90deg); }
+    .ar-expand-btn svg { width: 14px; height: 14px; transition: transform 0.15s ease; }
+    .ar-expand-btn.expanded svg { transform: rotate(90deg); }
     .ar-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
     .ar-completed-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; }
     .ar-summary-row .ar-summary-cell { vertical-align: top; }
@@ -1141,9 +1166,6 @@
 
     @media (max-width: 420px) {
       .mobile-user-name { display: inline-block; max-width: 56px; font-size: 11px; }
-      .navbar-brand { width: auto; flex: 1; min-width: 0; }
-      .navbar-wordmark { font-size: 13px; }
-      .mobile-lang-toggle { padding: 6px 8px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2446,19 +2468,19 @@
 <main>
   <div class="layout">
     <section>
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb" aria-label="breadcrumb">
-        <a href="./task-list.html" id="bcRoot">任務管理</a>
-        <span class="breadcrumb-sep" aria-hidden="true">›</span>
-        <span id="bcCurrent">任務詳情</span>
-      </nav>
-
       <header class="page-header">
         <div>
           <h1 class="page-main-title" id="pageTitle">任務詳情</h1>
           <p class="page-main-subtitle" id="pageSubtitle">檢視任務概覽、執行控制與匯出結果</p>
         </div>
       </header>
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="./task-list.html" id="bcRoot">任務管理</a>
+        <span class="breadcrumb-sep" aria-hidden="true">›</span>
+        <span id="bcCurrent">任務詳情</span>
+      </nav>
 
       <div class="admin-tabs" role="tablist" aria-label="Task detail tabs">
         <button class="admin-tab active" id="tabOverview" type="button" role="tab" aria-selected="true">任務概覽</button>
@@ -2879,6 +2901,7 @@
       workLogFilterTitle: '工時篩選列',
       workLogDateFromLabel: '起始日期',
       workLogDateToLabel: '結束日期',
+      workLogDatePlaceholder: '年 / 月 / 日',
       workLogStageLabel: '任務階段',
       workLogMemberLabel: '成員',
       workLogStageAll: '全部',
@@ -3328,6 +3351,7 @@
       workLogFilterTitle: 'Work log filters',
       workLogDateFromLabel: 'Date from',
       workLogDateToLabel: 'Date to',
+      workLogDatePlaceholder: 'YYYY-MM-DD',
       workLogStageLabel: 'Run stage',
       workLogMemberLabel: 'Member',
       workLogStageAll: 'All',
@@ -4020,6 +4044,88 @@
     }
   };
   var SETTINGS_ENTITY_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9', '#F97316', '#14B8A6'];
+  var RESULT_LABEL_I18N = {
+    '政治': { zh: '政治', en: 'Politics' },
+    '社會': { zh: '社會', en: 'Society' },
+    '娛樂': { zh: '娛樂', en: 'Entertainment' },
+    '體育': { zh: '體育', en: 'Sports' },
+    '科技': { zh: '科技', en: 'Technology' },
+    '財經': { zh: '財經', en: 'Finance' },
+    '健康': { zh: '健康', en: 'Health' },
+    '正向': { zh: '正向', en: 'Positive' },
+    '負向': { zh: '負向', en: 'Negative' },
+    '中立': { zh: '中立', en: 'Neutral' },
+    '蘊含': { zh: '蘊含', en: 'Entailment' },
+    '矛盾': { zh: '矛盾', en: 'Contradiction' },
+    '好評': { zh: '好評', en: 'Positive' },
+    '普通': { zh: '普通', en: 'Neutral' },
+    '差評': { zh: '差評', en: 'Negative' },
+    '查詢': { zh: '查詢', en: 'Query' },
+    '申請': { zh: '申請', en: 'Application' },
+    '取消': { zh: '取消', en: 'Cancellation' },
+    '客訴': { zh: '客訴', en: 'Complaint' },
+    '螢幕': { zh: '螢幕', en: 'Display' },
+    '電池': { zh: '電池', en: 'Battery' },
+    '客服': { zh: '客服', en: 'Customer service' },
+    '退款流程': { zh: '退款流程', en: 'Refund process' },
+    '鍵盤': { zh: '鍵盤', en: 'Keyboard' },
+    '觸控板': { zh: '觸控板', en: 'Touchpad' },
+    '散熱': { zh: '散熱', en: 'Cooling' },
+    '包裝': { zh: '包裝', en: 'Packaging' },
+    '外盒': { zh: '外盒', en: 'Outer box' },
+    '送貨速度': { zh: '送貨速度', en: 'Delivery speed' },
+    '司機聯繫': { zh: '司機聯繫', en: 'Driver contact' },
+    '噪音': { zh: '噪音', en: 'Noise' },
+    '出風': { zh: '出風', en: 'Airflow' },
+    '安裝預約': { zh: '安裝預約', en: 'Installation appointment' },
+    '平均 V/A': { zh: '平均 V/A', en: 'Average V/A' },
+    '分布區間': { zh: '分布區間', en: 'Distribution range' },
+    '阿司匹靈': { zh: '阿司匹靈', en: 'Aspirin' },
+    '發燒': { zh: '發燒', en: 'fever' },
+    '醫師': { zh: '醫師', en: 'doctor' },
+    '補水': { zh: '補水', en: 'hydration' },
+    '抗生素': { zh: '抗生素', en: 'antibiotics' },
+    '腹瀉': { zh: '腹瀉', en: 'diarrhea' },
+    '腸胃疾病': { zh: '腸胃疾病', en: 'GI disease' },
+    '流感疫苗': { zh: '流感疫苗', en: 'flu vaccine' },
+    '重症風險': { zh: '重症風險', en: 'severe risk' },
+    '高燒': { zh: '高燒', en: 'high fever' },
+    '追蹤': { zh: '追蹤', en: 'follow-up' },
+    '止痛藥': { zh: '止痛藥', en: 'painkiller' },
+    '術後疼痛': { zh: '術後疼痛', en: 'postoperative pain' },
+    '噁心': { zh: '噁心', en: 'nausea' },
+    '胰島素': { zh: '胰島素', en: 'insulin' },
+    '血糖': { zh: '血糖', en: 'blood sugar' },
+    '止咳藥': { zh: '止咳藥', en: 'cough medicine' },
+    '夜間咳嗽': { zh: '夜間咳嗽', en: 'nighttime cough' },
+    '喉嚨乾癢': { zh: '喉嚨乾癢', en: 'throat irritation' },
+    '台積電': { zh: '台積電', en: 'TSMC' },
+    '張忠謀': { zh: '張忠謀', en: 'Morris Chang' },
+    '創辦人張忠謀': { zh: '創辦人張忠謀', en: 'founder Morris Chang' },
+    '台北': { zh: '台北', en: 'Taipei' },
+    '半導體產業論壇': { zh: '半導體產業論壇', en: 'semiconductor forum' },
+    '鴻海精密工業': { zh: '鴻海精密工業', en: 'Hon Hai' },
+    '鴻海': { zh: '鴻海', en: 'Hon Hai' },
+    '越南': { zh: '越南', en: 'Vietnam' },
+    '胡志明市': { zh: '胡志明市', en: 'Ho Chi Minh City' },
+    '越南胡志明市': { zh: '越南胡志明市', en: 'Ho Chi Minh City, Vietnam' },
+    '2025 年': { zh: '2025 年', en: '2025' },
+    '衛生福利部': { zh: '衛生福利部', en: 'Ministry of Health and Welfare' },
+    '薛瑞元': { zh: '薛瑞元', en: 'Hsueh Jui-yuan' },
+    '世界衛生大會': { zh: '世界衛生大會', en: 'World Health Assembly' },
+    '台灣': { zh: '台灣', en: 'Taiwan' },
+    '美國': { zh: '美國', en: 'United States' },
+    '聯準會': { zh: '聯準會', en: 'Federal Reserve' },
+    '鮑威爾': { zh: '鮑威爾', en: 'Jerome Powell' },
+    '歐盟議會': { zh: '歐盟議會', en: 'European Parliament' },
+    '歐盟': { zh: '歐盟', en: 'European Union' },
+    '人工智慧法案': { zh: '人工智慧法案', en: 'AI Act' },
+    '明年': { zh: '明年', en: 'next year' },
+    '歐洲全境': { zh: '歐洲全境', en: 'across Europe' },
+    '歐洲': { zh: '歐洲', en: 'Europe' },
+    '加州山景城': { zh: '加州山景城', en: 'Mountain View, California' },
+    '執行長 Sundar Pichai': { zh: '執行長 Sundar Pichai', en: 'CEO Sundar Pichai' }
+  };
 
   var ANNOTATION_RESULTS_BY_TASK = {
     T001: [
@@ -4515,6 +4621,11 @@
     if (el) el.textContent = value;
   }
 
+  function updateWorkLogDatePlaceholderState(input) {
+    if (!input || !input.parentElement) return;
+    input.parentElement.classList.toggle('has-value', Boolean(input.value));
+  }
+
   function setRequiredLabel(id, value) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -4926,6 +5037,12 @@ function interpolate(template, payload) {
     setText('workLogFilterTitle', t('workLogFilterTitle'));
     setText('workLogDateFromLabel', t('workLogDateFromLabel'));
     setText('workLogDateToLabel', t('workLogDateToLabel'));
+    var workLogDateFrom = document.getElementById('workLogDateFrom');
+    var workLogDateTo = document.getElementById('workLogDateTo');
+    setText('workLogDateFromPlaceholder', t('workLogDatePlaceholder'));
+    setText('workLogDateToPlaceholder', t('workLogDatePlaceholder'));
+    updateWorkLogDatePlaceholderState(workLogDateFrom);
+    updateWorkLogDatePlaceholderState(workLogDateTo);
     setText('workLogStageLabel', t('workLogStageLabel'));
     setText('workLogMemberLabel', t('workLogMemberLabel'));
     setText('workLogTableTitle', t('workLogTableTitle'));
@@ -6480,12 +6597,33 @@ function getTaskTypeLabel(taskTypeKey) {
         }
       });
     }
+    localizeSettingsDraftConfigForCurrentLang(merged, schema);
     return {
       taskTypeKey: TASK_DATA.taskTypeKey,
       configData: merged,
       codeFormat: codeFormat,
       uploadedConfigName: TASK_DATA.configFileName || '',
     };
+  }
+
+  function localizeSettingsDraftConfigForCurrentLang(config, schema) {
+    if (state.lang !== 'en' || !config || !schema || !Array.isArray(schema.fields)) return;
+    schema.fields.forEach(function(field) {
+      if (!settingsFieldVisibleForConfig(field, config)) return;
+      if (field.type === 'tag-list' && Array.isArray(config[field.key])) {
+        config[field.key] = config[field.key].map(localizeResultLabel);
+      }
+      if (field.type === 'entity-list' && Array.isArray(config[field.key])) {
+        config[field.key] = config[field.key].map(function(entity) {
+          if (entity && typeof entity === 'object') {
+            var nextEntity = cloneObject(entity);
+            nextEntity.name = localizeResultLabel(nextEntity.name);
+            return nextEntity;
+          }
+          return localizeResultLabel(entity);
+        });
+      }
+    });
   }
 
   function setSettingsEditError(message) {
@@ -7594,13 +7732,13 @@ function getTaskTypeLabel(taskTypeKey) {
         var text = '-';
         if (field.type === 'tag-list') {
           var tags = Array.isArray(rawValue) ? rawValue.filter(function(item) { return String(item || '').trim(); }) : [];
-          text = tags.length ? tags.join(', ') : '-';
+          text = tags.length ? tags.map(localizeResultLabel).join(', ') : '-';
         } else if (field.type === 'entity-list') {
           var names = Array.isArray(rawValue) ? rawValue.map(function(entity) {
             if (entity && typeof entity === 'object') return String(entity.name || '').trim();
             return String(entity || '').trim();
           }).filter(function(name) { return name; }) : [];
-          text = names.length ? names.join(', ') : '-';
+          text = names.length ? names.map(localizeResultLabel).join(', ') : '-';
         } else if (field.type === 'boolean') {
           text = rawValue ? t('yes') : t('no');
         } else if (field.type === 'subtype-select') {
@@ -8593,6 +8731,8 @@ function getTaskTypeLabel(taskTypeKey) {
   function renderWorkLog() {
     document.getElementById('workLogDateFrom').value = state.workLogDateFrom;
     document.getElementById('workLogDateTo').value = state.workLogDateTo;
+    updateWorkLogDatePlaceholderState(document.getElementById('workLogDateFrom'));
+    updateWorkLogDatePlaceholderState(document.getElementById('workLogDateTo'));
     document.getElementById('workLogStageSelect').value = state.workLogStage;
     renderWorkLogMemberOptions();
     var entries = getFilteredWorkLogEntries();
@@ -8655,31 +8795,60 @@ function getTaskTypeLabel(taskTypeKey) {
       ].join('\n');
     }
     var sep = TASK_DATA.taskTypeKey === 'relation_extraction' ? '\n' : ' · ';
-    if (sample.labelStatsText) return sample.labelStatsText.replace(/\s·\s/g, sep);
+    if (sample.labelStatsText) return localizeResultText(sample.labelStatsText).replace(/\s·\s/g, sep);
     if (!sample.summaryStats || sample.summaryStats.length === 0) return '-';
     return sample.summaryStats.map(function(stat) {
-      return stat.label + (stat.value ? stat.value : '');
+      return localizeResultLabel(stat.label) + (stat.value ? stat.value : '');
     }).join(sep);
+  }
+
+  function localizeResultLabel(label) {
+    var labelText = String(label || '');
+    var labelEntry = RESULT_LABEL_I18N[labelText];
+    if (!labelEntry) return labelText;
+    return labelEntry[state.lang] || labelEntry.zh || labelText;
+  }
+
+  var SORTED_RESULT_LABEL_KEYS = Object.keys(RESULT_LABEL_I18N).sort(function(a, b) {
+    return b.length - a.length;
+  });
+
+  function localizeResultText(text) {
+    var output = String(text || '');
+    if (state.lang !== 'en' || output === '-' || !output) return output;
+    SORTED_RESULT_LABEL_KEYS.forEach(function(label) {
+      var labelEntry = RESULT_LABEL_I18N[label];
+      var translated = labelEntry && labelEntry.en ? labelEntry.en : label;
+      output = output.split(label).join(translated);
+    });
+    return output
+      .replace(/、/g, ', ')
+      .replace(/（/g, ' (')
+      .replace(/）/g, ')')
+      .replace(/\s+,/g, ',')
+      .replace(/,\s*/g, ', ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
   function getAnnotationResultDisplay(annotation) {
     var v = annotation.value;
     if (!v) return { tags: ['-'], colorClass: '' };
     if (v.resultText) {
-      return { tags: [v.resultText], colorClass: '' };
+      return { tags: [localizeResultText(v.resultText)], colorClass: '' };
     }
     if (v.valence !== undefined && v.arousal !== undefined) {
       return { tags: ['[' + v.valence + ', ' + v.arousal + ']'], colorClass: '' };
     }
     if (v.labels && v.labels.length > 0) {
-      return { tags: [v.labels.join(', ')], colorClass: '' };
+      return { tags: [v.labels.map(localizeResultLabel).join(', ')], colorClass: '' };
     }
     if (v.aspects && v.aspects.length > 0) {
-      return { tags: [v.aspects.join(', ')], colorClass: '' };
+      return { tags: [v.aspects.map(localizeResultLabel).join(', ')], colorClass: '' };
     }
     if (v.entities && v.entities.length > 0) {
       return {
-        tags: [v.entities.map(function(entity) { return entity.type + ':' + entity.text; }).join(', ')],
+        tags: [v.entities.map(function(entity) { return entity.type + ':' + localizeResultText(entity.text); }).join(', ')],
         colorClass: ''
       };
     }
@@ -8687,7 +8856,7 @@ function getTaskTypeLabel(taskTypeKey) {
       return { tags: [v.triples.join(' | ')], colorClass: '' };
     }
     if (v.label) {
-      return { tags: [v.label], colorClass: '' };
+      return { tags: [localizeResultLabel(v.label)], colorClass: '' };
     }
     return { tags: ['-'], colorClass: '' };
   }
@@ -8779,11 +8948,18 @@ function getTaskTypeLabel(taskTypeKey) {
       expandBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       expandBtn.setAttribute('aria-label', expanded ? '收合' : '展開');
       expandBtn.type = 'button';
-      var chevronImg = document.createElement('img');
-      chevronImg.src = '../../assets/icons/chevron-right.svg';
-      chevronImg.alt = '';
-      chevronImg.setAttribute('aria-hidden', 'true');
-      expandBtn.appendChild(chevronImg);
+      var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevronSvg.setAttribute('viewBox', '0 0 24 24');
+      chevronSvg.setAttribute('fill', 'none');
+      chevronSvg.setAttribute('stroke', 'currentColor');
+      chevronSvg.setAttribute('stroke-width', '2.5');
+      chevronSvg.setAttribute('stroke-linecap', 'round');
+      chevronSvg.setAttribute('stroke-linejoin', 'round');
+      chevronSvg.setAttribute('aria-hidden', 'true');
+      var chevronPolyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      chevronPolyline.setAttribute('points', '9 18 15 12 9 6');
+      chevronSvg.appendChild(chevronPolyline);
+      expandBtn.appendChild(chevronSvg);
       expandBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         state.arExpandedRows[sample.sampleId] = !state.arExpandedRows[sample.sampleId];
@@ -10053,6 +10229,7 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
     document.getElementById('workLogDateFrom').addEventListener('change', function(e) {
       state.workLogDateFrom = e.target.value || '';
       state.wlPage = 1;
+      updateWorkLogDatePlaceholderState(e.target);
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'date_from' });
     });
@@ -10060,6 +10237,7 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
     document.getElementById('workLogDateTo').addEventListener('change', function(e) {
       state.workLogDateTo = e.target.value || '';
       state.wlPage = 1;
+      updateWorkLogDatePlaceholderState(e.target);
       renderWorkLog();
       trackEvent('prototype_work_log_filter_changed', { filter: 'date_to' });
     });

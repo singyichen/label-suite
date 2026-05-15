@@ -140,9 +140,10 @@ sequenceDiagram
 - detail shell 為 stats / quality 共用，不因 tab 切換而重建任務上下文。
 - `?tab=` 僅控制 active tab，不可覆寫 `task_type` 或 `task_id`。
 - 未帶 `?tab=` 時一律落在 `DEFAULT_TAB`。
-- 麵包屑格式固定為 `資料集分析 › {task_name}`；語系切換時第二段需同步顯示當前語系的任務名稱。
+- 麵包屑格式固定為 `資料集分析 › {task_name}`，並置於頁首標題區塊下方；語系切換時第二段需同步顯示當前語系的任務名稱。
 - 頁首 `h1` 固定顯示 `任務詳情`（en：`Task detail`），不得以任務名稱取代。
 - 頁首副標題固定顯示資料集分析 detail 的頁面用途說明（zh：`檢視統計總覽與品質監控`；en：`Review statistics and quality monitoring`），語系切換時需同步更新。
+- 頁首 `h1` 與副標題位置需維持 shared Dashboard heading baseline；breadcrumb 不得置於 `h1` 前方造成頁首下移。
 
 ---
 
@@ -476,6 +477,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 1.4.4 | 2026-05-15 | Align detail heading with shared Dashboard heading baseline: breadcrumb now sits below the page title/subtitle so the top-level heading position stays consistent across modules |
 | 1.4.3 | 2026-05-04 | 補齊 detail header 副標題：在 `任務詳情 / Task detail` 下方固定顯示頁面用途說明 `檢視統計總覽與品質監控 / Review statistics and quality monitoring`，prototype 與測試同步更新 |
 | 1.4.2 | 2026-05-04 | 調整 detail header 文案責任：breadcrumb 第二段改為顯示當前 `task_name`，頁首標題固定為 `任務詳情 / Task detail`；prototype 與測試同步更新 |
 | 1.4.1 | 2026-04-29 | 對齊 `sentence_pairs` 上游 config：stats / quality 改明確依 `pair_mode / response_format` 分流，新增句對分析設定與評分型統計實體，避免僅以 task_type 猜測分析模式 |

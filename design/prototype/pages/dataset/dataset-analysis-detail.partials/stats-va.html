@@ -10,7 +10,7 @@
     <div>
       <div class="stats-chart-label" id="statsVALblValence">Valence（V）</div>
       <!-- V data: [15,22,45,89,112,87,42], max=112, bar heights=[13,20,40,79,100,78,37], bottom=115 -->
-      <svg viewBox="0 0 230 145" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Valence 分佈直方圖">
+      <svg viewBox="0 0 230 145" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Valence 分佈直方圖" data-i18n-aria-label="statsVAValenceAria">
         <g transform="translate(8,5)">
           <line x1="0" y1="0" x2="0" y2="115" stroke="var(--color-border)" stroke-width="1"/>
           <rect x="0"   y="102" width="22" height="13"  fill="var(--color-primary)" opacity="0.5"  rx="2"/>
@@ -35,7 +35,7 @@
     <div>
       <div class="stats-chart-label" id="statsVALblArousal">Arousal（A）</div>
       <!-- A data: [8,31,67,95,98,71,42], max=98, bar heights=[8,32,68,97,100,72,43], bottom=115 -->
-      <svg viewBox="0 0 230 145" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Arousal 分佈直方圖">
+      <svg viewBox="0 0 230 145" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="Arousal 分佈直方圖" data-i18n-aria-label="statsVAArousalAria">
         <g transform="translate(8,5)">
           <line x1="0" y1="0" x2="0" y2="115" stroke="var(--color-border)" stroke-width="1"/>
           <rect x="0"   y="107" width="22" height="8"   fill="var(--color-cta)" opacity="0.5"  rx="2"/>
@@ -123,7 +123,7 @@
   <div class="stats-scatter-wrap">
     <!-- Chart area translate(45,15), width=240px, height=200px -->
     <!-- Scale: V 1→7 → x=(V-1)/6*240; A 1→7 → y=200-(A-1)/6*200 -->
-    <svg viewBox="0 0 320 280" style="width:100%;max-width:440px;height:auto;display:block" role="img" aria-label="V-A 二維分佈 scatter plot">
+    <svg viewBox="0 0 320 280" style="width:100%;max-width:440px;height:auto;display:block" role="img" aria-label="V-A 二維分佈 scatter plot" data-i18n-aria-label="statsVAScatterAria">
       <defs>
         <pattern id="vaGrid" width="40" height="33.3" patternUnits="userSpaceOnUse" patternTransform="translate(45,15)">
           <path d="M 40 0 L 0 0 0 33.3" fill="none" stroke="var(--color-border)" stroke-width="0.5"/>

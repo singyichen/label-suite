@@ -21,3 +21,22 @@ test('ner entity delete button matches relation extraction style', async ({ page
   await expect(deleteButton).toHaveCSS('height', '20px');
   await expect(deleteButton).toHaveCSS('border-top-width', '1px');
 });
+
+test('ner workspace translates sample text and tagged entities in English mode', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.lang', 'en');
+    window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+  });
+
+  await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A6&run_type=official_run&task_type=sequence_labeling&sub_type=ner&sample_id=NER-003');
+
+  await expect(page.locator('#sampleList .sample-item').nth(2)).toContainText('Ministry of Health and Welfare');
+  await expect(page.locator('#sampleText')).toContainText('Ministry of Health and Welfare');
+  await expect(page.locator('#sampleText')).toContainText('Minister Hsueh Jui-yuan');
+  await expect(page.locator('#sampleText .ner-entity-type-badge')).toHaveText(['ORG', 'PER']);
+  await expect(page.locator('#nerEntityList')).toContainText('Ministry of Health');
+  await expect(page.locator('#nerEntityList')).toContainText('Hsueh Jui-yuan');
+  await expect(page.locator('#sampleList')).not.toContainText('衛生福利部長薛瑞元');
+  await expect(page.locator('#sampleText')).not.toContainText('衛生福利部長薛瑞元');
+  await expect(page.locator('#nerEntityList')).not.toContainText('衛生福利部');
+});

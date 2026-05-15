@@ -34,6 +34,36 @@ test.describe('Dataset analysis detail sequence_aspect i18n', () => {
     await expect(page.locator('#statsAspCoverageDesc')).toHaveText('各 Aspect taxonomy 的樣本覆蓋率；低於目標分佈最小樣本數時標示偏斜警告');
   });
 
+  test('renders sequence_aspect stats panel in en', async ({ page }) => {
+    await gotoWithLang(page, 'en', 'stats');
+
+    const aspectDistribution = page.locator('section[aria-labelledby="statsAspDistTitle"]');
+
+    await expect(page.locator('#bcCurrent')).toHaveText('Product Review Sequence Labeling (NER / Aspect)');
+    await expect(page.locator('#pageTitle')).toHaveText('Task detail');
+    await expect(page.locator('#pageSubtitle')).toHaveText('Review statistics and quality monitoring');
+    await expect(page.locator('#statsAspDistTitle')).toHaveText('Aspect Type Distribution');
+    await expect(aspectDistribution.locator('.stats-hbar-label')).toHaveText([
+      'Product Quality',
+      'Value for Money',
+      'Appearance Design',
+      'Customer Service',
+      'Packaging Quality',
+      'Functionality',
+    ]);
+    await expect(aspectDistribution).not.toContainText(/[產品品質性價比外觀設計客戶服務包裝功能性]/);
+    await expect(page.locator('svg[data-i18n-aria-label="sequenceAspectStats.spanLenAria"]')).toHaveAttribute(
+      'aria-label',
+      'Aspect span length histogram'
+    );
+    await expect(page.locator('table[data-i18n-aria-label="sequenceAspectStats.cooccAria"]')).toHaveAttribute(
+      'aria-label',
+      'Aspect co-occurrence matrix'
+    );
+    await expect(page.locator('#statsAspCoverageTitle')).toHaveText('Aspect Coverage Analysis');
+    await expect(page.locator('#statsAspCoverageDesc')).toHaveText('Sample coverage of each aspect taxonomy; show a skew warning when the count falls below the target minimum');
+  });
+
   test('renders sequence_aspect quality panel in en', async ({ page }) => {
     await gotoWithLang(page, 'en', 'quality');
 

@@ -291,6 +291,96 @@ test.describe('Annotation list routing', () => {
     await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
   });
 
+  test('reviewer decision controls follow English language mode', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    const firstSummaryRow = page.locator('#sampleRows tr').first();
+    await firstSummaryRow.click();
+
+    await expect(page.locator('[data-bulk-reject-for="R2-001"]')).toHaveText('✕ Reject all');
+    await expect(page.locator('[data-bulk-approve-for="R2-001"]')).toHaveText('✓ Approve all');
+    await expect(page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first().getByRole('button', { name: '✕ Reject' })).toBeVisible();
+    await expect(page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first().getByRole('button', { name: '✓ Approve' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '✕ 全部退回' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '✓ 全部通過' })).toHaveCount(0);
+  });
+
+  test('reviewer list localizes label stats and annotator results in English mode across task types', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+
+    const cases = [
+      {
+        url: '/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R1&run_type=official_run&task_type=single_sentence_classification',
+        expectedStats: 'Politics×4 · Technology×5',
+        expectedResult: 'Politics, Technology',
+        forbidden: ['政治', '科技'],
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring',
+        expectedStats: 'mean [4.33, 5.25]',
+        expectedResult: '[3.5, 5.5]',
+        forbidden: [],
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R3&run_type=official_run&task_type=sequence_labeling&sub_type=aspect_list',
+        expectedStats: 'screen×3 · battery life×2 · overall design×2',
+        expectedResult: 'screen, battery life, price',
+        forbidden: ['螢幕', '電池續航力', '價格'],
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R5&run_type=dry_run&task_type=sentence_pairs',
+        expectedStats: 'Equivalent×3 · Related×2',
+        expectedResult: 'Equivalent',
+        forbidden: ['等價', '相關'],
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R6&run_type=official_run&task_type=sequence_labeling&sub_type=ner',
+        expectedStats: 'ORG×3 · PER×3 · LOC×3 · DATE×2',
+        expectedResult: 'ORG:TSMC, PER:Morris Chang, LOC:Taipei',
+        forbidden: ['台積電', '張忠謀', '台北'],
+      },
+      {
+        url: '/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R4&run_type=official_run&task_type=relation_extraction',
+        expectedStats: '(DRUG:Aspirin)→treats→(SYMP:headache) ×2',
+        expectedResult: '(DRUG:Aspirin)→treats→(SYMP:headache)',
+        forbidden: ['阿司匹靈', '頭痛'],
+      },
+    ];
+
+    for (const item of cases) {
+      await page.goto(item.url);
+      await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+      const firstSummaryRow = page.locator('#sampleRows tr').first();
+      await expect(firstSummaryRow.locator('.reviewer-stats')).toContainText(item.expectedStats);
+      await firstSummaryRow.click();
+      await expect(page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first()).toContainText(item.expectedResult);
+      for (const forbiddenText of item.forbidden) {
+        await expect(firstSummaryRow.locator('.reviewer-stats')).not.toContainText(forbiddenText);
+        await expect(page.locator('.annotator-detail-row:not(.hidden) .annotator-row').first()).not.toContainText(forbiddenText);
+      }
+    }
+  });
+
+  test('empty state follows English language mode', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
+
+    await page.locator('#searchInput').fill('no-such-sample');
+
+    await expect(page.locator('#emptyState')).toBeVisible();
+    await expect(page.locator('#emptyState')).toHaveText('No matching data.');
+    await expect(page.getByText('找不到符合條件的資料。')).toHaveCount(0);
+  });
+
   test('reviewer bulk buttons show active filled state after click', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring');
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();

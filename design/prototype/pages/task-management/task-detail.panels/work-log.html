@@ -4,11 +4,17 @@
     <div class="worklog-filter-grid">
       <div>
         <label class="field-label" id="workLogDateFromLabel" for="workLogDateFrom">起始日期</label>
-        <input class="input-number" type="date" id="workLogDateFrom" />
+        <div class="worklog-date-field">
+          <input class="input-number worklog-date-input" type="date" id="workLogDateFrom" />
+          <span class="worklog-date-placeholder" id="workLogDateFromPlaceholder" aria-hidden="true">年 / 月 / 日</span>
+        </div>
       </div>
       <div>
         <label class="field-label" id="workLogDateToLabel" for="workLogDateTo">結束日期</label>
-        <input class="input-number" type="date" id="workLogDateTo" />
+        <div class="worklog-date-field">
+          <input class="input-number worklog-date-input" type="date" id="workLogDateTo" />
+          <span class="worklog-date-placeholder" id="workLogDateToPlaceholder" aria-hidden="true">年 / 月 / 日</span>
+        </div>
       </div>
       <div>
         <label class="field-label" id="workLogStageLabel" for="workLogStageSelect">任務階段</label>

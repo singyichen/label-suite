@@ -5,9 +5,9 @@
       <h2 class="panel-title" id="statsSpDistTitle">分佈統計</h2>
     </div>
     <!-- Subtype toggle -->
-    <div class="sp-toggle" role="group" aria-label="子類型切換">
-      <button class="sp-btn active" id="spBtnCls" type="button">分類型</button>
-      <button class="sp-btn"        id="spBtnScore" type="button">評分型</button>
+    <div class="sp-toggle" role="group" aria-label="子類型切換" data-i18n-aria-label="statsSpToggleAria">
+      <button class="sp-btn active" id="spBtnCls" type="button" data-i18n="statsSpClsButton">分類型</button>
+      <button class="sp-btn"        id="spBtnScore" type="button" data-i18n="statsSpScoreButton">評分型</button>
     </div>
   </div>
 
@@ -16,22 +16,22 @@
     <p class="panel-subtitle" id="statsSpLblDistTitle" style="margin-bottom:var(--space-md)">各標籤在提交標記中的次數與比例（共 983 筆有效標記）</p>
     <div class="stats-hbar-chart">
       <div class="stats-hbar-row">
-        <div class="stats-hbar-label">相似 / Similar</div>
+        <div class="stats-hbar-label" data-i18n="sentencePairLabels.similar">相似 / Similar</div>
         <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:80%"></div></div>
         <div class="stats-hbar-value">42% · 413</div>
       </div>
       <div class="stats-hbar-row">
-        <div class="stats-hbar-label">不相似 / Dissimilar</div>
+        <div class="stats-hbar-label" data-i18n="sentencePairLabels.dissimilar">不相似 / Dissimilar</div>
         <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:53%;opacity:.85"></div></div>
         <div class="stats-hbar-value">28% · 275</div>
       </div>
       <div class="stats-hbar-row">
-        <div class="stats-hbar-label">蘊含 / Entailment</div>
+        <div class="stats-hbar-label" data-i18n="sentencePairLabels.entailment">蘊含 / Entailment</div>
         <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:34%;opacity:.7"></div></div>
         <div class="stats-hbar-value">18% · 177</div>
       </div>
       <div class="stats-hbar-row">
-        <div class="stats-hbar-label">矛盾 / Contradiction</div>
+        <div class="stats-hbar-label" data-i18n="sentencePairLabels.contradiction">矛盾 / Contradiction</div>
         <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:23%;opacity:.55"></div></div>
         <div class="stats-hbar-value">12% · 118</div>
       </div>
@@ -47,7 +47,7 @@
       </div>
       <div class="stats-metric-card">
         <div class="stats-metric-label" id="statsSpClsDominantLabel">最常見標籤</div>
-        <div class="stats-metric-value" style="font-size:20px;padding-top:4px">相似</div>
+        <div class="stats-metric-value" style="font-size:20px;padding-top:4px" data-i18n="sentencePairDominantSimilar">相似</div>
         <div class="stats-metric-desc">42%</div>
       </div>
     </div>
@@ -59,7 +59,7 @@
     <!-- Score histogram: bins [0.0-0.1, 0.1-0.2, ..., 0.9-1.0] -->
     <!-- Data: [18,24,38,65,120,148,180,195,142,53], max=195 -->
     <!-- Heights (of 100px): [9,12,19,33,62,76,92,100,73,27] -->
-    <svg viewBox="0 0 340 155" style="width:100%;max-width:500px;height:auto;display:block;overflow:visible" role="img" aria-label="評分分佈直方圖">
+    <svg viewBox="0 0 340 155" style="width:100%;max-width:500px;height:auto;display:block;overflow:visible" role="img" aria-label="評分分佈直方圖" data-i18n-aria-label="statsSpScoreAria">
       <g transform="translate(12,5)">
         <line x1="0" y1="0" x2="0" y2="115" stroke="var(--color-border)" stroke-width="1"/>
         <!-- bar width=24, gap=4 → 10 bars = 10*24+9*4=276px -->

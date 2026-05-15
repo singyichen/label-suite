@@ -32,3 +32,18 @@ test('reviewer workspace shows IAA summary, annotator results, and bulk controls
   await expect(annotatorList).toHaveCSS('background-color', 'rgb(248, 250, 252)');
   await expect(rows.first()).toHaveCSS('border-bottom-color', 'rgb(234, 236, 240)');
 });
+
+test('reviewer workspace translates sample text and sidebar user role in English mode', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('labelsuite.lang', 'en');
+    window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+  });
+
+  await page.goto('/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring&sample_id=R2-003');
+
+  await expect(page.locator('#roleIndicator')).toHaveText('User');
+  await expect(page.locator('#sampleList .sample-item').nth(2)).toContainText('This phone truly exceeded my expectations');
+  await expect(page.locator('#sampleText')).toContainText('This phone truly exceeded my expectations');
+  await expect(page.locator('#sampleList')).not.toContainText('這款手機真的超出我的預期');
+  await expect(page.locator('#sampleText')).not.toContainText('這款手機真的超出我的預期');
+});

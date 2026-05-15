@@ -9,27 +9,27 @@
   <!-- Horizontal bar chart: label, bar, percentage, count -->
   <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">政治 / Politics</div>
+      <div class="stats-hbar-label" data-i18n="classificationLabels.politics">政治</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:72%"></div></div>
       <div class="stats-hbar-value">38% · 474</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">科技 / Technology</div>
+      <div class="stats-hbar-label" data-i18n="classificationLabels.technology">科技</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:46%;background:var(--color-primary);opacity:.8"></div></div>
       <div class="stats-hbar-value">24% · 299</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">財經 / Finance</div>
+      <div class="stats-hbar-label" data-i18n="classificationLabels.finance">財經</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:35%;background:var(--color-primary);opacity:.7"></div></div>
       <div class="stats-hbar-value">18% · 225</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">體育 / Sports</div>
+      <div class="stats-hbar-label" data-i18n="classificationLabels.sports">體育</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:23%;background:var(--color-primary);opacity:.6"></div></div>
       <div class="stats-hbar-value">12% · 150</div>
     </div>
     <div class="stats-hbar-row">
-      <div class="stats-hbar-label">娛樂 / Entertainment</div>
+      <div class="stats-hbar-label" data-i18n="classificationLabels.entertainment">娛樂</div>
       <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:15%;background:var(--color-primary);opacity:.5"></div></div>
       <div class="stats-hbar-value">8% · 100</div>
     </div>
@@ -45,20 +45,20 @@
     </div>
   </div>
   <div class="stats-comatrix">
-    <table class="stats-comatrix-table" aria-label="多標籤共現矩陣">
+    <table class="stats-comatrix-table" aria-label="多標籤共現矩陣" data-i18n-aria-label="statsClsCooccTitle">
       <thead>
         <tr>
           <th></th>
-          <th>政治</th>
-          <th>科技</th>
-          <th>財經</th>
-          <th>體育</th>
-          <th>娛樂</th>
+          <th data-i18n="classificationLabels.politics">政治</th>
+          <th data-i18n="classificationLabels.technology">科技</th>
+          <th data-i18n="classificationLabels.finance">財經</th>
+          <th data-i18n="classificationLabels.sports">體育</th>
+          <th data-i18n="classificationLabels.entertainment">娛樂</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <th>政治</th>
+          <th data-i18n="classificationLabels.politics">政治</th>
           <td class="stats-comatrix-diag">474</td>
           <td class="stats-comatrix-hi">126</td>
           <td class="stats-comatrix-hi">98</td>
@@ -66,7 +66,7 @@
           <td class="stats-comatrix-low">18</td>
         </tr>
         <tr>
-          <th>科技</th>
+          <th data-i18n="classificationLabels.technology">科技</th>
           <td class="stats-comatrix-hi">126</td>
           <td class="stats-comatrix-diag">299</td>
           <td class="stats-comatrix-hi">112</td>
@@ -74,7 +74,7 @@
           <td class="stats-comatrix-low">31</td>
         </tr>
         <tr>
-          <th>財經</th>
+          <th data-i18n="classificationLabels.finance">財經</th>
           <td class="stats-comatrix-hi">98</td>
           <td class="stats-comatrix-hi">112</td>
           <td class="stats-comatrix-diag">225</td>
@@ -82,7 +82,7 @@
           <td class="stats-comatrix-low">22</td>
         </tr>
         <tr>
-          <th>體育</th>
+          <th data-i18n="classificationLabels.sports">體育</th>
           <td class="stats-comatrix-mid">42</td>
           <td class="stats-comatrix-low">24</td>
           <td class="stats-comatrix-low">19</td>
@@ -90,7 +90,7 @@
           <td class="stats-comatrix-low">38</td>
         </tr>
         <tr>
-          <th>娛樂</th>
+          <th data-i18n="classificationLabels.entertainment">娛樂</th>
           <td class="stats-comatrix-low">18</td>
           <td class="stats-comatrix-low">31</td>
           <td class="stats-comatrix-low">22</td>

@@ -26,15 +26,25 @@
 
     .layout {
       flex: 1;
-      padding: var(--space-xl);
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--space-lg);
       display: flex;
       flex-direction: column;
       gap: var(--space-lg);
       min-width: 0;
     }
-    .page-header { display: flex; align-items: flex-start; gap: var(--space-md); }
-    .page-title { font-size: 28px; line-height: 1.2; font-weight: 700; }
-    .page-subtitle { font-size: 14px; color: var(--color-ink-muted); margin-top: 6px; }
+    .page-header { display: flex; align-items: flex-start; gap: var(--space-md); margin-bottom: 24px; }
+    .page-title {
+      font-family: var(--font-serif-display);
+      font-size: 28px;
+      line-height: 1.3;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin: 0 0 4px;
+    }
+    .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
     .list {
       display: grid;
       gap: var(--space-sm);
@@ -450,7 +460,6 @@
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
-      .page-title { font-size: 22px; }
       .task-item-header {
         flex-direction: column;
         align-items: flex-start;
@@ -500,9 +509,6 @@
     }
     @media (max-width: 420px) {
       .mobile-user-name { max-width: 56px; font-size: 11px; }
-      .navbar-brand { width: auto; flex: 1; min-width: 0; }
-      .navbar-wordmark { font-size: 13px; }
-      .mobile-lang-toggle { padding: 6px 8px; }
     }
     .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
     .toast {
@@ -643,7 +649,7 @@
         <tbody id="sampleRows"></tbody>
       </table>
     </div>
-    <div class="empty hidden" id="emptyState">找不到符合條件的資料。</div>
+    <div class="empty hidden" id="emptyState"></div>
     <div class="pagination hidden" id="paginationBar">
       <div class="pagination-left">
         <span class="pagination-info" id="paginationInfo"></span>
@@ -708,10 +714,15 @@
       quickContinueBtnReviewer: '快速審核',
       editBtnLabel: '編輯',
       expandBtnLabel: '展開',
+      approveBtnLabel: '通過',
+      rejectBtnLabel: '退回',
+      approveAllBtnLabel: '全部通過',
+      rejectAllBtnLabel: '全部退回',
       searchPlaceholder: '搜尋',
       searchAriaLabel: '搜尋',
       statusFilterAll: '全部完成狀態',
       clearFiltersLabel: '清除篩選',
+      emptyNoResults: '找不到符合條件的資料。',
       paginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
@@ -750,10 +761,15 @@
       quickContinueBtnReviewer: 'Quick Review',
       editBtnLabel: 'Edit',
       expandBtnLabel: 'Expand',
+      approveBtnLabel: 'Approve',
+      rejectBtnLabel: 'Reject',
+      approveAllBtnLabel: 'Approve all',
+      rejectAllBtnLabel: 'Reject all',
       searchPlaceholder: 'Search',
       searchAriaLabel: 'Search',
       statusFilterAll: 'All statuses',
       clearFiltersLabel: 'Clear filters',
+      emptyNoResults: 'No matching data.',
       paginationTpl: 'Total {total} · Page {page} / {totalPages}',
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
@@ -769,6 +785,97 @@
   }
   function getSampleText(sample) {
     return CURRENT_LANG === 'en' && sample.textEn ? sample.textEn : sample.text;
+  }
+
+  var REVIEWER_RESULT_TRANSLATIONS = {
+    '電池續航力': 'battery life',
+    '服務員的態度': 'staff attitude',
+    '操作流程順暢': 'smooth workflow',
+    '客服回應速度': 'support response speed',
+    '半導體產業論壇': 'Semiconductor Industry Forum',
+    '創辦人張忠謀': 'founder Morris Chang',
+    '鴻海精密工業': 'Foxconn',
+    '越南胡志明市': 'Ho Chi Minh City, Vietnam',
+    '超音波檢查': 'ultrasound exam',
+    '賀爾蒙變化': 'hormonal changes',
+    '胃部不適': 'gastrointestinal discomfort',
+    '整體設計': 'overall design',
+    '菜色選擇': 'menu options',
+    '服務態度': 'service attitude',
+    '用餐體驗': 'dining experience',
+    '停車空間': 'parking space',
+    '房間隔音': 'room soundproofing',
+    '介面設計': 'interface design',
+    '操作流程': 'workflow',
+    '客戶支援': 'customer support',
+    '佩戴舒適度': 'wearing comfort',
+    '主動降噪功能': 'active noise cancellation',
+    '主動降噪': 'active noise cancellation',
+    '降噪功能': 'noise cancellation',
+    '音質表現': 'audio quality',
+    '服務員': 'staff',
+    '早餐品質': 'breakfast quality',
+    '停車場': 'parking',
+    '隔音效果': 'soundproofing',
+    '電池壽命': 'battery life',
+    '高效能': 'high performance',
+    '未完全出現在句子中': 'not an exact sentence match',
+    '已刪除': 'deleted',
+    '螢幕': 'screen',
+    '價格': 'price',
+    '環境': 'ambiance',
+    '介面': 'interface',
+    '音質': 'audio quality',
+    '舒適度': 'comfort',
+    '隔音': 'soundproofing',
+    '體育': 'Sports',
+    '娛樂': 'Entertainment',
+    '社會': 'Society',
+    '政治': 'Politics',
+    '科技': 'Technology',
+    '財經': 'Finance',
+    '等價': 'Equivalent',
+    '相關': 'Related',
+    '無關': 'Unrelated',
+    '阿司匹靈': 'Aspirin',
+    '頭痛': 'headache',
+    '乳房': 'breast',
+    '疼痛': 'pain',
+    '月經週期': 'menstrual cycle',
+    '超音波': 'ultrasound',
+    '膽囊結石': 'gallstones',
+    '腹部疼痛': 'abdominal pain',
+    '台積電': 'TSMC',
+    '張忠謀': 'Morris Chang',
+    '台北': 'Taipei',
+    '鴻海': 'Foxconn',
+    '越南': 'Vietnam',
+    '胡志明市': 'Ho Chi Minh City',
+    '衛生福利部': 'Ministry of Health and Welfare',
+    '薛瑞元': 'Hsueh Jui-yuan',
+    '2025年': '2025',
+    '草稿': 'draft'
+  };
+
+  var SORTED_REVIEWER_TRANSLATION_KEYS = Object.keys(REVIEWER_RESULT_TRANSLATIONS).sort(function (a, b) {
+    return b.length - a.length;
+  });
+
+  function localizeReviewerText(text) {
+    var output = String(text || '');
+    if (CURRENT_LANG !== 'en' || output === '-') return output;
+    SORTED_REVIEWER_TRANSLATION_KEYS.forEach(function (source) {
+      output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
+    });
+    return output
+      .replace(/、/g, ', ')
+      .replace(/（/g, ' (')
+      .replace(/）/g, ')')
+      .replace(/原：/g, 'original: ')
+      .replace(/\s+,/g, ',')
+      .replace(/,\s*/g, ', ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
   var toastTimer = null;
@@ -1425,17 +1532,17 @@
       var resultSpan = document.createElement('span');
       var colorClass = getVaColorClass(ann.result, vaRange);
       resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
-      resultSpan.textContent = ann.result;
+      resultSpan.textContent = localizeReviewerText(ann.result);
 
       var approveBtn = document.createElement('button');
       approveBtn.type = 'button';
       approveBtn.className = 'mini-btn mini-btn-approve';
-      approveBtn.textContent = '✓ 通過';
+      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
 
       var rejectBtn = document.createElement('button');
       rejectBtn.type = 'button';
       rejectBtn.className = 'mini-btn mini-btn-reject';
-      rejectBtn.textContent = '✕ 退回';
+      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
 
       updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
 
@@ -1819,7 +1926,7 @@
   }
 
   function formatReviewerLabelStats(sample, taskType) {
-    var statsText = sample && sample.labelStats ? String(sample.labelStats) : '-';
+    var statsText = sample && sample.labelStats ? localizeReviewerText(sample.labelStats) : '-';
     if (taskType !== 'relation_extraction') return statsText;
     return statsText.replace(/\s·\s/g, '\n');
   }
@@ -1902,12 +2009,12 @@
       var approveAllBtn = document.createElement('button');
       approveAllBtn.type = 'button';
       approveAllBtn.className = 'mini-btn mini-btn-approve';
-      approveAllBtn.textContent = '✓ 全部通過';
+      approveAllBtn.textContent = '✓ ' + t('approveAllBtnLabel');
       approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
       var rejectAllBtn = document.createElement('button');
       rejectAllBtn.type = 'button';
       rejectAllBtn.className = 'mini-btn mini-btn-reject';
-      rejectAllBtn.textContent = '✕ 全部退回';
+      rejectAllBtn.textContent = '✕ ' + t('rejectAllBtnLabel');
       rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
 
       updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
@@ -2123,6 +2230,8 @@
     }
     var clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) clearFiltersBtn.setAttribute('aria-label', t('clearFiltersLabel'));
+    var emptyState = document.getElementById('emptyState');
+    if (emptyState) emptyState.textContent = t('emptyNoResults');
 
     renderTableHeader(context.role);
     renderTaskInfo(context);

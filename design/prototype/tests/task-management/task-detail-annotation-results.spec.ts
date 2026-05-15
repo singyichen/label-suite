@@ -12,7 +12,72 @@ const TASK_RESULT_EXPECTATIONS = [
   { taskId: 'T006', statTexts: ['ORG×3', 'PER×3', 'LOC×3'] },
 ];
 
+const EN_RESULT_EXPECTATIONS = [
+  {
+    taskId: 'T001',
+    summaryTexts: ['Politics×2', 'Technology×3'],
+    detailTexts: ['Politics, Technology', 'Technology'],
+    hiddenTexts: ['政治', '科技'],
+  },
+  {
+    taskId: 'T002',
+    summaryTexts: ['mean [7.33, 7.17]', 'std [1.07, 1.43]'],
+    detailTexts: ['[6, 5.5]', '[9, 9]'],
+    hiddenTexts: [],
+  },
+  {
+    taskId: 'T003',
+    summaryTexts: ['Display×3', 'Battery×2'],
+    detailTexts: ['Display, Battery', 'Display'],
+    hiddenTexts: ['螢幕', '電池'],
+  },
+  {
+    taskId: 'T004',
+    summaryTexts: ['(DRUG:Aspirin)→treats→(SYMP:fever) ×2', '(DOCTOR:doctor)→indicates→(TREATMENT:hydration) ×2'],
+    detailTexts: ['(DRUG:Aspirin)→treats→(SYMP:fever)', '(DOCTOR:doctor)→indicates→(TREATMENT:hydration)'],
+    hiddenTexts: ['阿司匹靈', '發燒', '醫師', '補水'],
+  },
+  {
+    taskId: 'T005',
+    summaryTexts: ['Entailment×2', 'Neutral×1'],
+    detailTexts: ['Entailment', 'Neutral'],
+    hiddenTexts: ['蘊含', '中立'],
+  },
+  {
+    taskId: 'T006',
+    summaryTexts: ['ORG×3', 'PER×3', 'LOC×3'],
+    detailTexts: ['ORG:TSMC, PER:Morris Chang, LOC:Taipei', 'MISC:semiconductor forum'],
+    hiddenTexts: ['台積電', '張忠謀', '台北', '半導體產業論壇'],
+  },
+];
+
 test.describe('Task detail annotation results', () => {
+  test('translates result summaries and expanded result values in English mode', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+
+    for (const expectation of EN_RESULT_EXPECTATIONS) {
+      await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
+      await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+      await expect(page.locator('#arTableSection')).toBeVisible();
+
+      const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
+      for (const summaryText of expectation.summaryTexts) {
+        await expect(firstRow).toContainText(summaryText);
+      }
+      await firstRow.click();
+
+      const resultTableBody = page.locator('#arResultTableBody');
+      for (const detailText of expectation.detailTexts) {
+        await expect(resultTableBody).toContainText(detailText);
+      }
+      for (const hiddenText of expectation.hiddenTexts) {
+        await expect(resultTableBody).not.toContainText(hiddenText);
+      }
+    }
+  });
+
   test('matches annotator select style with adjacent filter selects', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
     await expect(page.locator('#arTableSection')).toBeVisible();
@@ -50,6 +115,40 @@ test.describe('Task detail annotation results', () => {
     });
 
     expect(annotatorMetrics).toEqual(stageMetrics);
+  });
+
+  test('uses token-driven inline chevrons for annotation result row expansion', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('label-suite-theme', 'dark');
+    });
+
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+    const expandButton = page.locator('#arResultTableBody tr.ar-summary-row').first().locator('.ar-expand-btn');
+    await expect(expandButton.locator('img')).toHaveCount(0);
+    await expect(expandButton.locator('svg')).toHaveCount(1);
+
+    const chevronStyle = await expandButton.evaluate((button) => {
+      const svg = button.querySelector('svg');
+      const polyline = button.querySelector('polyline');
+      if (!(svg instanceof SVGElement) || !(polyline instanceof SVGElement)) {
+        return null;
+      }
+
+      return {
+        buttonColor: window.getComputedStyle(button).color,
+        svgStroke: svg.getAttribute('stroke'),
+        polylinePoints: polyline.getAttribute('points'),
+      };
+    });
+
+    expect(chevronStyle).toEqual({
+      buttonColor: 'rgb(156, 163, 175)',
+      svgStroke: 'currentColor',
+      polylinePoints: '9 18 15 12 9 6',
+    });
   });
 
   test('uses reviewer-style VA color coding for per-annotator result tags', async ({ page }) => {
