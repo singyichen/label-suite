@@ -2,7 +2,7 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.3.4
+**版本**：1.3.5
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
@@ -295,6 +295,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-016C**：快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
 - **FR-016D**：快捷鍵總覽第一版僅顯示跨任務共用快捷鍵，不得納入 task-specific 作答快捷鍵。
 - **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果`、`全部通過 / 全部退回` 作為單一列）。
+- **FR-016F**：快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
 - **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
 
 ### User Flow & Navigation
@@ -425,6 +426,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.5 | 2026-05-19 | 快捷鍵 modal 視覺密度收斂：新增 FR-016F，規範 section 標題小寫全大寫、列間無分隔線、按鍵標籤緊湊尺寸 |
 | 1.3.4 | 2026-05-15 | 同步 Shared Sidebar 連結樣式 contract：品牌與 L0 模組導覽連結在 default / hover / focus / active 狀態不得顯示文字底線，並補充跨模組驗收標準 |
 | 1.3.3 | 2026-05-15 | 新增跨模組頁首 heading baseline：所有登入後主要頁面的最上層主標題、副標題位置與 typography 對齊 Dashboard |
 | 1.3.2 | 2026-05-15 | 統一 mobile top brand bar 右側工具列樣式，將 Task Management 的手機版工具列尺寸與品牌區讓位規則收斂至 shared sidebar contract |
