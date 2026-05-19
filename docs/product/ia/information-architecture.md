@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.3.2（2026-04-24）
+> **版本：** 1.4.0（2026-05-19）
 
 ---
 
@@ -40,17 +40,17 @@
 | `register` | 自行註冊頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；填寫名稱、Email、密碼，建立後立即取得 `user` 系統角色 |
 | `forgot-password` | 忘記密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；填寫 Email，系統寄送重設連結（Resend）|
 | `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；prototype 預設 `valid` 並可切換 `expired/used` 狀態，錯誤時引導回 `forgot-password` |
-| `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | |
+| `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | 個人資料、偏好設定、密碼設定；Email 變更為同頁狀態切換 |
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
 | `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 預設顯示全平台任務；每列含「操作」欄（編輯 / 刪除） |
-| `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 建立後自動成為任務 `project_leader` |
-| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「成員管理」、「標記進度」、「工時紀錄」四個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 `annotation-list` |
+| `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 四步驟建立流程；建立後自動成為任務 `project_leader` |
+| `task-detail` | 任務詳情頁 | 任務管理模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 含「任務概覽」、「標記結果」、「標記進度」、「工時紀錄」、「成員管理」五個 tab，預設停留在「任務概覽」tab；`annotator` 不得進入，只能從 dashboard 進入 `annotation-list` |
 | `annotation-list` | 標記清單頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務） | 標記模組入口頁；顯示可執行任務與資料筆次清單，點擊單筆後進入 `annotation-workspace` |
 | `annotation-workspace` | 標記作業頁 | 標記任務模組 | ✅ | ✅ | `annotator` 或 `reviewer`（任務）| 單筆標記工作區；模式依任務角色切換 |
-| `dataset-analysis-list` | 資料集分析任務列表頁（模組入口） | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | 模組 L1 入口；`annotator` 導回 `dashboard` |
-| `/dataset-analysis-detail/:task_id` | 任務分析詳情頁（統計總覽 / 品質監控雙 Tab） | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | Tab 由 `?tab=stats`/`?tab=quality` 標示；task_id 無效導回 `dataset-analysis-list` |
-| `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理；含「使用者管理」與「角色設定」兩個 tab，預設停留在「使用者管理」tab |
-| `role-settings` | 角色權限設定頁（`user-management` 內 tab） | 系統管理模組 | ❌ | ✅ | — | 不獨立為路由；透過 `user-management` 頁內 tab 切換進入 |
+| `dataset-analysis-list` (`/dataset-analysis`) | 資料集分析任務列表頁（模組入口） | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | Prototype 檔案為 `dataset-analysis-list.html`；產品路由為 `/dataset-analysis`；`annotator` 導回 `dashboard` |
+| `/dataset-analysis-detail/:task_id` | 任務分析詳情頁（統計總覽 / 品質監控雙 Tab） | 資料集分析模組 | ✅ | ✅ | `project_leader` 或 `reviewer`（任務） | Tab 由 `?tab=stats`/`?tab=quality` 標示；task_id 無效導回 `/dataset-analysis` |
+| `user-management` | 使用者管理頁 | 系統管理模組 | ❌ | ✅ | — | 平台級系統角色管理；頁首 admin tabs 可導向 `role-settings` |
+| `role-settings` | 角色權限設定頁 | 系統管理模組 | ❌ | ✅ | — | Prototype 為獨立頁 `role-settings.html`；與 `user-management` 透過 admin tabs 互相連結 |
 
 ---
 
@@ -63,8 +63,8 @@
 | 層級 | 說明 | 例子 |
 |------|------|------|
 | L0 | 全域主導覽（Sidebar Navbar） | 儀表板、任務管理、標記作業、資料集分析、系統管理、個人設定 |
-| L1 | 模組入口頁（Landing） | `task-list`、`annotation-list`、`dataset-analysis-list`、`user-management` |
-| L2 | 模組內次層頁（Contextual Navigation） | `task-new` / `task-detail`（含 4 個 tab）、`annotation-workspace`、`/dataset-analysis-detail/:task_id`（含雙 Tab） |
+| L1 | 模組入口頁（Landing） | `task-list`、`annotation-list`、`dataset-analysis-list` (`/dataset-analysis`)、`user-management` |
+| L2 | 模組內次層頁（Contextual Navigation） | `task-new`（4 steps）/ `task-detail`（含 5 個 tab）、`annotation-workspace`、`/dataset-analysis-detail/:task_id`（含雙 Tab）、`role-settings` |
 
 ### B. L0 主導覽群組（Sidebar）
 
@@ -73,7 +73,7 @@
 | Core | 儀表板 | `dashboard` | dashboard |
 | Work | 任務管理 | `task-list` | task-management |
 | Work | 標記作業 | `annotation-list` | annotation |
-| Work | 資料集分析 | `dataset-analysis-list` | dataset |
+| Work | 資料集分析 | `dataset-analysis-list` (`/dataset-analysis`) | dataset |
 | Admin | 系統管理 | `user-management` | admin |
 | Account | 個人設定 | `profile` | account |
 
@@ -95,16 +95,17 @@
 | 目前頁面 | L0 Active 項 | L2 / 頁內次導覽規則 |
 |----------|-------------|----------------------|
 | `dashboard` | 儀表板 | 依角色顯示對應區塊（User / PL / Annotator / Reviewer / Super Admin） |
-| `profile` | 個人設定 | 個人資料 / 密碼設定 / 角色資訊（頁內錨點） |
+| `profile` | 個人設定 | 個人資料 / 偏好設定 / 密碼設定；Email 變更為同頁狀態 |
 | `task-list` | 任務管理 | 任務列表篩選（狀態 / 搜尋） |
-| `task-new` | 任務管理 | Step 1 / Step 2 / Step 3 精靈導覽 |
-| `task-detail` | 任務管理 | 任務概覽 tab（預設）/ 成員管理 tab / 標記進度 tab / 工時紀錄 tab |
+| `task-new` | 任務管理 | Step 1 基本資料 / Step 2 標記設定檔 / Step 3 啟動設定 / Step 4 標記說明 |
+| `task-detail` | 任務管理 | 任務概覽 tab（預設）/ 標記結果 tab / 標記進度 tab / 工時紀錄 tab / 成員管理 tab |
 | `annotation-list` | 標記作業 | 標記任務清單（篩選 / 搜尋 / 完成狀態） |
 | `annotation-workspace` | 標記作業 | 單筆作業操作區（Annotator / Reviewer 模式切換） |
-| `dataset-analysis-list` | 資料集分析 | 任務列表（依角色篩選） |
+| `dataset-analysis-list` (`/dataset-analysis`) | 資料集分析 | 任務列表（依角色篩選） |
 | `/dataset-analysis-detail/:task_id?tab=stats` | 資料集分析 | 共用指標 + task_type 特定指標 |
 | `/dataset-analysis-detail/:task_id?tab=quality` | 資料集分析 | IAA / 異常偵測 / 標記一致性偏離分析 / 速度統計 |
-| `user-management` | 系統管理 | 使用者管理 tab（預設）/ 角色設定 tab |
+| `user-management` | 系統管理 | 使用者管理頁；admin tab 可導向 `role-settings` |
+| `role-settings` | 系統管理 | 角色權限設定頁；admin tab 可返回 `user-management` |
 
 ### E. Desktop / Mobile 導覽 IA
 
@@ -119,12 +120,12 @@
 
 | 模組 | L0 責任 | L2 / 內部導覽責任 |
 |------|---------|--------------------|
-| account | 提供 `profile` 入口與一致 user chip | profile 頁內分段（個人資料 / 密碼 / 角色） |
+| account | 提供 `profile` 入口與一致 user chip | profile 頁內分段（個人資料 / 偏好設定 / 密碼設定）與 Email 變更狀態 |
 | dashboard | 提供全站入口與角色落地 | 角色視圖切換（由資料驅動，不新增 L0 項） |
-| task-management | 任務主流程入口（`task-list`） | 新增任務精靈（L2 獨立頁）、任務詳情 tab 切換（任務概覽 / 成員管理 / 標記進度 / 工時紀錄） |
+| task-management | 任務主流程入口（`task-list`） | 新增任務四步驟精靈（L2 獨立頁）、任務詳情 tab 切換（任務概覽 / 標記結果 / 標記進度 / 工時紀錄 / 成員管理） |
 | annotation | 標記/審查入口（需任務上下文） | `annotation-list` 清單導向與 `annotation-workspace` 單筆作業提交路徑 |
 | dataset | 分析模組入口（`/dataset-analysis` 任務列表） | `?tab=stats` ↔ `?tab=quality` 雙 Tab 頁內切換（`/dataset-analysis-detail/:task_id`） |
-| admin | 平台管理入口（僅 super_admin） | 使用者管理 ↔ 角色權限設定 |
+| admin | 平台管理入口（僅 super_admin） | `user-management.html` ↔ `role-settings.html` 透過 admin tabs 切換 |
 
 ### G. 一致性原則（Navbar IA Contract）
 
@@ -163,14 +164,14 @@ flowchart TD
   end
 
   subgraph 資料集分析模組["資料集分析模組（任務角色：project_leader / reviewer）"]
-    DA_LIST["dataset-analysis-list\n任務列表頁（模組入口）"]
+    DA_LIST["dataset-analysis-list\n/dataset-analysis\n任務列表頁（模組入口）"]
     STATS["/dataset-analysis-detail/:task_id?tab=stats\n統計總覽 Tab"]
     QUALITY["/dataset-analysis-detail/:task_id?tab=quality\n品質監控 Tab\n（IAA / 異常偵測 / 標記一致性偏離分析）"]
   end
 
   subgraph 系統管理模組["系統管理模組（Super Admin）"]
     USERS["user-management\n使用者管理頁"]
-    ROLES["role-settings\n角色權限設定頁"]
+    ROLES["role-settings\n角色權限設定頁\n（獨立 prototype 頁）"]
   end
 
   LOGIN -->|"登入成功"| DASH
@@ -196,7 +197,8 @@ flowchart TD
   ANNOT -->|Dry Run 全員完成\n→ Dashboard badge 通知| DASH
   ANNOT -->|Official Run 完成標記| TDETAIL
 
-  USERS --> ROLES
+  USERS -->|Admin tab| ROLES
+  ROLES -->|Admin tab| USERS
 
   STATS <-->|Tab 切換| QUALITY
 ```
@@ -233,9 +235,14 @@ flowchart TD
 
 #### `profile` 個人設定頁
 - **進入方式：** Navbar 使用者頭像 → `profile`
-- **功能：** 修改姓名、修改聯絡方式、修改密碼、查看角色
+- **功能：** 修改姓名、修改聯絡方式、上傳大頭照、遮罩顯示 Email 並同頁執行 Email 變更流程、調整外觀偏好、修改或設定密碼
+- **頁內結構（依最新 prototype）：**
+  - **個人資料：** 大頭照、姓名、聯絡方式、Email 遮罩顯示與「變更」入口
+  - **偏好設定：** 外觀三態切換（跟隨系統 / 淺色 / 深色）
+  - **密碼設定：** Email / Password 帳號顯示現有密碼 + 新密碼 + 確認密碼；Google SSO 帳號顯示設定密碼流程
+- **Email 變更：** 留在 `/profile`，以 `emailChangeState` / `emailSentState` 呈現輸入新 Email 與寄送驗證信狀態
 - **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
-- **離開方式：** 儲存成功 → 停留；取消 → `dashboard`
+- **離開方式：** 儲存成功 → 停留；Navbar Logo → `dashboard`；Email 驗證成功 → `login`
 
 ---
 
@@ -300,7 +307,7 @@ flowchart TD
 
 #### `task-new` 新增任務頁
 - **進入方式：** `task-list` → 新增任務
-- **流程：** 分三步驟完成（Step 1 → Step 2 → Step 3）
+- **流程：** 分四步驟完成（Step 1 → Step 2 → Step 3 → Step 4）
 - **Step 1 — 基本資料：**
   - 填寫任務名稱
   - 上傳資料集（txt / csv / tsv / json）
@@ -315,14 +322,19 @@ flowchart TD
     - **關係抽取型（示例）：** 設定實體類型清單（同 NER）+ 關係類型清單（Relation Name + 說明），標記介面呈現 Entity List / Relation Type / Triple List 三區（可擴充至五元組流程）
     - **句對型（示例，非當前研究主力）：** 選擇關係類型（相似度 / 蘊含 / 自訂），設定評分或分類標籤
   - **Code 模式（進階）：** 直接檢視 / 編輯系統產生的 YAML/JSON config 原始碼，供技術人員驗證或手動調整；Visual 與 Code 模式可互相切換
-- **Step 3 — 標記說明（選填）：**
-  - 上傳標記範本 / 說明文件（PDF / 圖片 / 文字），顯示於 `annotation-workspace` 的「說明與範例」區
-  - 可設定「開始標記前強制顯示」：Annotator 每次進入任務時先跳出說明 modal，確認後才進入標記介面
+- **Step 3 — 啟動設定：**
+  - 設定每回合試標抽樣筆數
+  - 設定資料隔離開關；預設啟用，停用需在任務詳情調整時二次確認並留下審計紀錄
+  - 此步驟不處理成員邀請；成員加入與角色指派於任務建立後在 `task-detail` 的成員管理 tab 完成
+- **Step 4 — 標記說明（選填）：**
+  - 分別維護「提供給標記員」與「提供給審核員」的說明內容與附件
+  - 上傳標記範本 / 說明文件（PDF / 圖片 / Markdown），顯示於 `annotation-workspace` 的「說明與檔案」區
+  - 可設定「開始標記前強制顯示」：Annotator 首次進入該任務標記介面時先跳出說明 modal，確認後才進入標記介面；同一使用者已確認後不因重新整理重複彈出
 - **任務類型（`task_type`）：**
   - 由 `task_type` registry 決定可選型別與對應 config schema
   - **研究情境必備預設（第一層）：** 單句分類（含多標籤）、單句評分 / 回歸、序列標記（含 Aspect 抽取）、關係抽取（含 Triple / 可擴充五元組）
   - **延伸預設（第二層）：** 句對任務（相似度 / 蘊含）
-  - 新增任務類型時應透過 registry / schema 擴充，不修改核心流程（Step 1–3）、核心路由或權限框架
+  - 新增任務類型時應透過 registry / schema 擴充，不修改核心流程（Step 1–4）、核心路由或權限框架
   - **研究生目前使用情境覆蓋檢核：**
     - MultiLabel 勾選分類 → 單句分類（已覆蓋）
     - VA 分數標記 → 單句評分 / 回歸（已覆蓋）
@@ -332,35 +344,36 @@ flowchart TD
 - **任務建立完成：** 系統自動在 `task_membership` 建立一筆紀錄，任務建立者的任務角色設為 `project_leader`
 - **離開方式：** 建立成功 → `task-detail`；取消 → `task-list`
 
-#### `task-detail` 任務詳情頁（含 4 個 tab）
+#### `task-detail` 任務詳情頁（含 5 個 tab）
 
 - **進入方式：** `task-list` 點選任務（僅任務 `project_leader` 或 `reviewer` 可進入）
 - **Tab 結構：**
-  - **任務概覽 tab（預設）：** 查看任務設定與任務類型、任務狀態、發布試標（Dry Run）/ 正式標記（Official Run）控制、標記進度總覽（各標記員完成數 / 速度）、匯出標記結果（JSON / JSON-MIN）
-  - **成員管理 tab：** 檢視成員清單（含角色與狀態）、從平台 `user` 名單加入成員、指派 / 調整任務角色（`reviewer` / `annotator`）、移除或停用成員；僅該任務 `project_leader` 可編輯
+  - **任務概覽 tab（預設）：** 查看與編輯任務基本資料、標記設定、雙角色說明文件、抽樣設定、任務狀態與執行控制
+  - **標記結果 tab：** 逐筆查看標記員提交內容與審核決定；提供標記階段 / 提交狀態 / 標記員篩選、結果表分頁、匯出記錄與 JSON / JSON-MIN 匯出
   - **標記進度 tab：** 各標記員完成數、速度、Dry Run / Official Run 分階段進度
   - **工時紀錄 tab：** 工時與標記活動紀錄（日期、時長、完成筆數、平均速度）
     - `project_leader`：可依成員、日期區間、任務階段篩選
     - `reviewer`：僅可檢視自己資料，可依日期區間、任務階段篩選
+  - **成員管理 tab：** 檢視成員清單（含角色與狀態）、搜尋平台成員或以 Email 邀請加入、指派任務角色（`reviewer` / `annotator`）、移除或停用成員；僅該任務 `project_leader` 可編輯
 - **Tab 切換：** 頁內切換，不觸發路由跳轉
 - **試標抽樣設定契約（任務概覽）：**
-  - Dry Run 抽樣由任務概覽設定決定（`固定百分比` 或 `固定筆數`），不得在 annotation-workspace 端重算
-  - 抽樣設定變更後需即時反映「總筆數 / 試標使用量 / 正式標記預留量」
-  - `重算抽樣` 僅允許在 `草稿` 狀態；進入 Dry Run 後若需重切分，必須建立新的 run 批次
+  - Dry Run 抽樣由任務概覽的 `每回合抽樣筆數` 決定，不得在 annotation-workspace 端重算
+  - 抽樣設定變更後需即時反映「總筆數 / 已用試標 / 可進正式」
+  - 進入 Dry Run 後若需新增試標資料，必須建立新的試標回合 R{n}，不得覆寫既有回合清單
   - 發布 Dry Run 時需凍結 sample snapshot（不可變 `sample_snapshot_id`），後續以同一快照作為 Dry/Official 切分依據
 - **任務狀態轉換：**
   - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
   - **Dry Run 完成通知：** 所有標記員完成後自動切換至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
 - **角色可見性：**
-  - `project_leader`：四個 tab 均可存取，成員管理 tab 可編輯
-  - `reviewer`：任務概覽（唯讀）/ 標記進度 / 工時紀錄（僅自己）可見；成員管理 tab 操作按鈕隱藏
+  - `project_leader`：五個 tab 均可存取；成員管理 tab 可編輯；概覽可在符合狀態條件時編輯
+  - `reviewer`：任務概覽（唯讀）/ 標記結果（唯讀）/ 標記進度 / 工時紀錄（僅自己）可見；不可見成員管理 tab
   - `annotator`：不可進入任務詳情，僅能從 dashboard 進入 `annotation-list`，再點選單筆進入 `annotation-workspace`
 - **限制：** `project_leader` 僅能管理自己所屬任務的成員，不得跨任務異動；成員角色為任務層級，不影響系統角色
 - **資料隔離原則：**
   - 預設啟用資料隔離（Dry Run / Official Run）
   - 啟用時 Dry Run 資料與 Official Run 資料不得混入正式標記集
   - 若關閉資料隔離，發布前需二次風險確認並留下審計紀錄（操作者 / 時間 / 設定值）
-- **離開方式：** 返回 → `task-list`；匯出為頁面內操作（Toast 提示下載），不觸發頁面跳轉
+- **離開方式：** 返回 → `task-list`；匯出為 `annotation-results` tab 內操作（Toast 提示下載），不觸發頁面跳轉
 
 ---
 
@@ -397,13 +410,13 @@ flowchart TD
   - 切換到下一筆/上一筆時，右欄 `說明與檔案` 內容必須持續可見，不可因翻筆被收起或清空
   - 說明檔案至少支援快速預覽（圖片/Markdown）與新分頁開啟（PDF）
 - **功能（Annotator）：** 標記操作區、說明與範例、進度指示器（即時顯示完成數）、儲存 / 提交
-  - **標記說明強制顯示：** 若 Project Leader 在任務設定中啟用，Annotator 每次進入任務時先顯示一次說明 modal；進入後右欄仍持續顯示說明與檔案
+  - **標記說明強制顯示：** 若 Project Leader 在任務設定中啟用，Annotator 首次進入該任務時先顯示一次說明 modal；確認後不因重新整理重複彈出，進入後右欄仍持續顯示說明與檔案
 - **功能（Reviewer）：** 審查模式，可通過 / 退回標記結果、直接修改或刪除錯誤標記、協助產出 Dry Run 標準答案（多數決或手動確認）
 - **標記歷程（History）：** 每筆資料的所有標記修改紀錄（誰、何時、改成什麼），Reviewer 可追溯標記變更歷程
 - **介面骨架（Mobile，`<= MOBILE_BP`）：**
   - 保留上方任務目標列（精簡版）與中欄主操作區
-  - `說明與檔案` 改為底部抽屜（預設展開），每次切筆後維持可見；`History` 以分頁切換
-- **離開方式：** 提交 → 停留（下一筆）或返回 `dashboard`；中途離開 → 自動儲存草稿
+  - `說明與檔案` 改為底部抽屜（預設收合，可展開），每次切筆後維持目前開合狀態；`History` 以分頁切換
+- **離開方式：** 提交 → 停留並載入下一筆；全部完成 → 返回 `annotation-list`；中途離開 → 自動儲存草稿
 
 ---
 
@@ -411,12 +424,13 @@ flowchart TD
 
 > 本模組依任務類型動態調整顯示內容。使用者進入模組後先選取任務，再於雙 Tab 介面查看統計總覽與品質監控。所有分析視角均以當前任務的 `task_type` 作為切換依據。
 
-#### `dataset-analysis-list` 任務列表頁（模組入口）
+#### `dataset-analysis-list` 任務列表頁（模組入口；產品路由 `/dataset-analysis`）
 
 - **進入方式：** Navbar → 資料集分析
-- **顯示：** 列出使用者具 `project_leader` 或 `reviewer` 角色的所有任務（含任務名稱、任務類型、完成率、IAA 狀態徽章）
+- **顯示：** 列出使用者具 `project_leader` 或 `reviewer` 角色的所有任務（含任務名稱、任務類型、完成率、IAA 狀態徽章、成員角色）
+- **操作：** 關鍵字搜尋、任務類型篩選、IAA 狀態篩選、分頁；查詢條件以 URL query 保留
 - **空狀態（無任務）：** 說明文字「尚無可分析的任務」
-- **離開方式：** 點擊任務卡片 → `/dataset-analysis-detail/:task_id`（預設進入統計總覽 tab）
+- **離開方式：** 點擊任務列 → `/dataset-analysis-detail/:task_id?tab=stats`
 
 #### `/dataset-analysis-detail/:task_id` 任務分析詳情頁（雙 Tab）
 
@@ -452,14 +466,19 @@ flowchart TD
 
 > 本模組僅 `super_admin` 可存取。`project_leader` 的任務成員異動在 `task-detail` 的「任務成員管理」內進行。
 
-#### `user-management` 使用者管理頁（含角色設定 tab）
+#### `user-management` 使用者管理頁
 
-- **進入方式：** Navbar → 系統管理；預設停留於「使用者管理」tab
-- **Tab 結構：**
-  - **使用者管理 tab（預設）：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`user` / `super_admin`）；`project_leader` / `reviewer` / `annotator` 為任務角色，於 `task-detail` 管理，不在此頁指派
-  - **角色設定 tab：** 檢視並維護角色權限矩陣；系統角色為 `user` / `super_admin`，任務角色為 `project_leader` / `reviewer` / `annotator`
-- **Tab 切換：** 頁內切換，不觸發路由跳轉
+- **進入方式：** Navbar → 系統管理；進入 `user-management.html`
+- **功能：** 查看所有平台使用者（跨專案）、新增 / 編輯 / 停用帳號、指派**系統**角色（`user` / `super_admin`）；`project_leader` / `reviewer` / `annotator` 為任務角色，於 `task-detail` 管理，不在此頁指派
+- **Admin tabs：** 頁首提供「使用者管理」與「角色設定」兩個 tab；點擊「角色設定」會導向 `role-settings.html`
 - **離開方式：** Navbar 導覽至其他模組
+
+#### `role-settings` 角色權限設定頁
+
+- **進入方式：** `user-management.html` → 「角色設定」tab；或直接開啟 `role-settings.html`（僅 `super_admin`）
+- **功能：** 檢視並維護角色權限矩陣；系統角色為 `user` / `super_admin`，任務角色為 `project_leader` / `reviewer` / `annotator`
+- **Admin tabs：** 點擊「使用者管理」tab 會導向 `user-management.html`
+- **離開方式：** Navbar 導覽至其他模組，或 admin tab 返回 `user-management`
 
 ---
 
@@ -519,7 +538,7 @@ sequenceDiagram
     AW-->>AN: 自動儲存 + 即時更新完成數
   end
   AN->>AW: 全部完成 → 提交
-  AW-->>D: 跳轉回儀表板，任務狀態更新為 Submitted
+  AW-->>AL: 全部完成後回到標記清單，樣本狀態更新為已提交
 ```
 
 ### 旅程 C — 審核員審查並查看品質報告
@@ -553,7 +572,7 @@ sequenceDiagram
   SA->>UM: 查看所有使用者帳號
   SA->>UM: 新增平台成員帳號（user）
   SA->>UM: 指派系統角色（user / super_admin）
-  SA->>RS: 調整角色功能存取範圍
+  SA->>RS: 透過 admin tab 進入 role-settings.html，調整角色功能存取範圍
   Note over SA: 任務成員（annotator/reviewer）由 Project Leader 在 task-detail 內管理
 ```
 
@@ -599,6 +618,7 @@ sequenceDiagram
 | # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
 | --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
 | 008 | Sidebar Navbar 共用規格 | 所有登入後頁面（shared layout） | shared | ★★☆☆☆ | P1 | 🔄 進行中 |
+| 018 | Help Button — 平台說明入口 | deferred；最新 prototype 尚未提供 Help 按鈕 | shared | ★☆☆☆☆ | P1 | ⬜ 待做 |
 
 #### account
 
@@ -608,7 +628,7 @@ sequenceDiagram
 | 002 | 登入 — Google SSO 整合 | `login` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
 | 003 | 自行註冊（Email/Password） | `register` | account | ★☆☆☆☆ | P1 | 🔄 進行中 |
 | 004 | 忘記密碼 / 重設密碼（Resend） | `forgot-password` · `reset-password` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
-| 005 | 個人設定（資料編輯 + 修改密碼） | `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
+| 005 | 個人設定（資料編輯 + Email 變更 + 偏好設定 + 修改密碼） | `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
 
 #### dashboard
 
@@ -621,8 +641,8 @@ sequenceDiagram
 | # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
 | --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
 | 010 | 任務列表（搜尋、篩選、空狀態） | `task-list` | task-management | ★★☆☆☆ | P2 | ⬜ 待做 |
-| 013 | 新增任務（Step 1–3 + 標記設定檔 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
-| 014 | 任務詳情（成員管理 / 可加入成員名單 / Dry Run / Official Run / 工時紀錄 / 匯出） | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
+| 013 | 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型） | `task-new` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
+| 014 | 任務詳情（5 tabs：概覽 / 標記結果 / 標記進度 / 工時 / 成員管理） | `task-detail` | task-management | ★★★★☆ | P2 | ⬜ 待做 |
 
 #### annotation
 
@@ -634,15 +654,15 @@ sequenceDiagram
 
 | # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
 | --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 016 | 資料集分析列表 + 統計總覽（任務列表入口 + 共用指標 + 任務類型特定） | `dataset-analysis-list` + `/dataset-analysis-detail/:task_id?tab=stats` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
+| 016 | 資料集分析列表 + 統計總覽（任務列表入口 + 共用指標 + 任務類型特定） | `dataset-analysis-list` (`/dataset-analysis`) + `/dataset-analysis-detail/:task_id?tab=stats` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
 | 017 | 品質監控（IAA / 異常偵測 / 速度統計，全任務類型） | `/dataset-analysis-detail/:task_id?tab=quality` | dataset | ★★★★☆ | P2 | ⬜ 待做 |
 
 #### admin
 
 | # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
 | --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
-| 006 | 使用者列表與管理 | `user-management` | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
-| 007 | 角色權限設定 | `role-settings` | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
+| 006 | 使用者列表與管理 | `user-management`（Admin tab 連到 `role-settings`） | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
+| 007 | 角色權限設定 | `role-settings`（獨立 prototype 頁） | admin | ★★☆☆☆ | P1 | ⬜ 待做 |
 
 > 狀態標示：⬜ 待做 · 🔄 進行中 · ✅ 完成　　批次：P1 基礎建設 · P2 核心功能
 
@@ -652,6 +672,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.0 | 2026-05-19 | 以最新 prototype 為準同步 IA：`task-new` 改 4 steps、`task-detail` 改 5 tabs 並補 `annotation-results`、`profile` 補偏好設定與 Email 變更狀態、dataset 入口統一為 `/dataset-analysis`、admin `role-settings` 改為獨立 prototype 頁、Help Button 標記為 deferred |
 | 1.3.2 | 2026-04-24 | 資料集分析模組改採任務列表入口（`dataset-analysis-list`）+ 雙 Tab 詳情頁架構（`/dataset-analysis-detail/:task_id`）；同步更新 §2 頁面矩陣、§2.1 各節（Sidebar 目標頁、角色矩陣、Active 規則、層級模型、模組分工）、§3 流程圖、§5 旅程 A/C、§7 Spec 清單 |
 | 1.3.1 | 2026-04-23 | 標記模組 IA 調整為「先 `annotation-list` 清單頁，再進入 `annotation-workspace` 單筆作業頁」；同步更新導覽層級、流程圖、旅程與 spec 範圍 |
 | 1.3.0 | 2026-04-22 | `task-list` 補充每列「操作」欄位（`編輯` / `刪除`）；`編輯` 導向 `task-detail`，`刪除` 定義為軟刪除（soft delete）並自預設列表隱藏 |

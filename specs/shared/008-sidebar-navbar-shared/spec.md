@@ -14,7 +14,7 @@
 - `MOBILE_TOP_HEIGHT = 64px`
 - `MOBILE_BOTTOM_NAV_HEIGHT = 84px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
-- `SUPPORTED_PAGES = /dashboard, /task-list, /task-new, /task-detail, /annotation-workspace, /dataset-stats, /dataset-quality, /user-management, /role-settings, /profile`
+- `SUPPORTED_PAGES = /dashboard, /task-list, /task-new, /task-detail, /annotation-list, /annotation-workspace, /dataset-analysis, /dataset-analysis-detail/:task_id, /user-management, /role-settings, /profile`
 - `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
 - `SIDEBAR_COLLAPSED_STORAGE_KEY = labelsuite.sidebarCollapsed`
 - `APPEARANCE_STORAGE_KEY = label-suite-theme`
@@ -88,8 +88,8 @@ sequenceDiagram
 
 - Core：`儀表板` → `dashboard`
 - Work：`任務管理` → `task-list`
-- Work：`標記作業` → `annotation-workspace`
-- Work：`資料集分析` → `dataset-stats`
+- Work：`標記作業` → `annotation-list`
+- Work：`資料集分析` → `dataset-analysis-list`（產品路由 `/dataset-analysis`；prototype 檔案 `dataset-analysis-list.html`）
 - Admin：`系統管理` → `user-management`（僅 `super_admin` 可見）
 - Account：`個人設定` → `profile`
 
@@ -115,15 +115,15 @@ sequenceDiagram
 **驗收情境**：
 
 1. **Given** 位於 `task-new` 或 `task-detail`，**When** 檢查 L0，**Then** `任務管理` 為 active。
-2. **Given** 位於 `dataset-quality`，**When** 檢查 L0，**Then** `資料集分析` 為 active。
+2. **Given** 位於 `dataset-analysis-list` 或 `dataset-analysis-detail`，**When** 檢查 L0，**Then** `資料集分析` 為 active。
 3. **Given** 位於 `role-settings`，**When** 檢查 L0，**Then** `系統管理` 為 active。
 
 **L0 Active 映射規則**：
 
 - `dashboard` → 儀表板
 - `task-list` / `task-new` / `task-detail` → 任務管理
-- `annotation-workspace` → 標記作業
-- `dataset-stats` / `dataset-quality` → 資料集分析
+- `annotation-list` / `annotation-workspace` → 標記作業
+- `dataset-analysis-list` / `dataset-analysis-detail` → 資料集分析
 - `user-management` / `role-settings` → 系統管理
 - `profile` → 個人設定
 
@@ -263,10 +263,10 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-003**：`系統管理` 僅 `super_admin` 可見，不得渲染給 `user`。
 - **FR-003A**：`user` 的 L0 可見項目數必須為 `5`；`super_admin` 的 L0 可見項目數必須為 `6`（多出 `系統管理`）。
 - **FR-004**：`task-new`、`task-detail` 必須映射為 `任務管理` active。
-- **FR-005**：`dataset-quality` 必須映射為 `資料集分析` active。
+- **FR-005**：`dataset-analysis-list` 與 `dataset-analysis-detail` 必須映射為 `資料集分析` active。
 - **FR-006**：`role-settings` 必須映射為 `系統管理` active。
 - **FR-007**：每頁僅允許一個 L0 active 項，且必須同時包含 active 樣式與 `aria-current="page"`。
-- **FR-008**：`標記作業`、`資料集分析` 必須驗證任務角色與任務上下文，不符時導回 Landing 並提示。
+- **FR-008**：`標記作業`、`資料集分析` 必須驗證任務角色與任務上下文；不符時導回對應 Landing（標記作業為 `annotation-list` 或 `dashboard`，資料集分析為 `dataset-analysis-list` / `/dataset-analysis` 或 `dashboard`）並提示。
 - **FR-008A**：點擊 `標記作業` 時，若存在 `ACTIVE_TASK_TYPE_STORAGE_KEY`，導頁 URL 必須附帶 `task_type` query（避免覆蓋既有 query 參數）。
 - **FR-009**：Navbar 必須支援 zh/en 切換，切換後同步更新文案、`aria-label`、`title`。
 - **FR-009A**：使用者點擊語言切換後，右側內容區不論目前顯示 `dashboard / task-management / annotation / dataset / admin / account` 任一模組頁，皆必須同步切換為相同語系，不可僅更新 Sidebar。
@@ -304,14 +304,14 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 flowchart LR
     dashboard[/dashboard/]
     taskList[/task-list/]
-    annotation[/annotation-workspace/]
-    datasetStats[/dataset-stats/]
+    annotation[/annotation-list/]
+    datasetList[/dataset-analysis/]
     adminUsers[/user-management/]
     profile[/profile/]
 
     dashboard --> taskList
     dashboard --> annotation
-    dashboard --> datasetStats
+    dashboard --> datasetList
     dashboard --> profile
     dashboard --> adminUsers
 ```
@@ -320,8 +320,8 @@ flowchart LR
 |------|---------|-----|
 | 任一登入後頁 | 點擊「儀表板」 | `/dashboard` |
 | 任一登入後頁 | 點擊「任務管理」 | `/task-list` |
-| 任一登入後頁 | 點擊「標記作業」 | `/annotation-workspace`（需 task role/context） |
-| 任一登入後頁 | 點擊「資料集分析」 | `/dataset-stats`（需 task role/context） |
+| 任一登入後頁 | 點擊「標記作業」 | `/annotation-list`（prototype: `../annotation/annotation-list.html`；需 task role/context） |
+| 任一登入後頁 | 點擊「資料集分析」 | `/dataset-analysis`（prototype: `../dataset/dataset-analysis-list.html`；需 task role/context） |
 | 任一登入後頁 | 點擊「系統管理」 | `/user-management`（僅 super_admin） |
 | 任一登入後頁 | 點擊「個人設定」 | `/profile` |
 | 任一登入後頁 | 點擊 keyboard icon / 按 `?` | 開啟快捷鍵總覽 modal |
@@ -426,6 +426,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.6 | 2026-05-19 | 以最新 prototype 同步 supported pages 與 dataset 導覽：加入 `annotation-list`、`dataset-analysis`、`dataset-analysis-detail/:task_id`，移除舊 `dataset-stats` / `dataset-quality` 導覽命名 |
 | 1.3.5 | 2026-05-19 | 快捷鍵 modal 視覺密度收斂：新增 FR-016F，規範 section 標題小寫全大寫、列間無分隔線、按鍵標籤緊湊尺寸 |
 | 1.3.4 | 2026-05-15 | 同步 Shared Sidebar 連結樣式 contract：品牌與 L0 模組導覽連結在 default / hover / focus / active 狀態不得顯示文字底線，並補充跨模組驗收標準 |
 | 1.3.3 | 2026-05-15 | 新增跨模組頁首 heading baseline：所有登入後主要頁面的最上層主標題、副標題位置與 typography 對齊 Dashboard |

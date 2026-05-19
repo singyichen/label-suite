@@ -2,7 +2,7 @@
 
 **功能分支**：`007-role-settings`
 **建立日期**：2026-04-16
-**版本**：1.1.2
+**版本**：1.1.3
 **狀態**：Draft
 **需求來源**：IA v7 Spec 清單 #007 — 角色權限設定（`role-settings`）
 
@@ -24,9 +24,9 @@ sequenceDiagram
     participant API as Admin API
     participant DB as Database
 
-    SA->>UM: 進入 /user-management（使用者管理 tab）
+    SA->>UM: 進入 user-management.html（使用者管理 tab）
     SA->>UM: 點擊「角色設定」tab
-    UM-->>RS: 頁內切換至角色設定 tab（不觸發路由跳轉）
+    UM-->>RS: 導向 role-settings.html
     RS->>API: 驗證 system role = super_admin
 
     alt 具權限
@@ -47,10 +47,10 @@ sequenceDiagram
 
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
-| 1 | `super_admin` | 在 `/user-management` 點擊「角色設定」tab | 頁內切換至角色設定 tab，載入角色權限矩陣 |
+| 1 | `super_admin` | 在 `user-management.html` 點擊「角色設定」tab | 導向 `role-settings.html`，載入角色權限矩陣 |
 | 2 | `super_admin` | 調整角色權限 | 驗證後更新權限配置 |
 | 3 | `super_admin` | 儲存設定 | 顯示儲存成功 toast，維持在角色設定 tab |
-| 4 | 非 `super_admin` | 嘗試存取 `/user-management` | 拒絕存取並導回 `/dashboard` |
+| 4 | 非 `super_admin` | 嘗試存取 `user-management.html` 或 `role-settings.html` | 拒絕存取並導回 `/dashboard` |
 
 ---
 
@@ -65,7 +65,7 @@ Super Admin 可在角色設定頁看到完整角色矩陣，清楚區分 system 
 
 **驗收情境**：
 
-1. **Given** `system role = super_admin`，**When** 在 `/user-management` 點擊「角色設定」tab，**Then** 顯示角色權限矩陣。
+1. **Given** `system role = super_admin`，**When** 在 `user-management.html` 點擊「角色設定」tab，**Then** 導向 `role-settings.html` 並顯示角色權限矩陣。
 2. **Given** 位於 `/role-settings`，**When** 檢視角色類別，**Then** 能區分 system role（`user` / `super_admin`）與 task role（`project_leader` / `reviewer` / `annotator`）。
 3. **Given** 位於 `/role-settings`，**When** 切換語言，**Then** 權限項目標題與說明文字即時更新。
 
@@ -101,7 +101,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 1. **Given** `super_admin` 在 `/role-settings`，**When** 調整角色權限並儲存，**Then** 顯示儲存成功且設定持久化。
 2. **Given** 已修改但未儲存，**When** 點擊取消，**Then** 放棄修改並恢復最後一次已儲存狀態。
-3. **Given** 權限配置儲存成功，**When** 點擊「使用者管理」tab，**Then** 可正常繼續在使用者管理 tab 管理使用者。
+3. **Given** 權限配置儲存成功，**When** 點擊「使用者管理」tab，**Then** 導向 `user-management.html` 並可正常管理使用者。
 
 **行為規則**：
 
@@ -121,13 +121,13 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 **驗收情境**：
 
-1. **Given** `system role = user`，**When** 直接開啟 `/user-management`，**Then** 系統拒絕存取並導回 `/dashboard`（角色設定 tab 同樣受到保護）。
-2. **Given** 未登入，**When** 開啟 `/user-management`，**Then** 系統導向 `/login`。
+1. **Given** `system role = user`，**When** 直接開啟 `user-management.html` 或 `role-settings.html`，**Then** 系統拒絕存取並導回 `/dashboard`。
+2. **Given** 未登入，**When** 開啟 `user-management.html` 或 `role-settings.html`，**Then** 系統導向 `/login`。
 3. **Given** `super_admin`，**When** 點擊「角色設定」tab，**Then** 顯示可編輯權限矩陣。
 
 **行為規則**：
 
-- `/user-management` 必須有 RoleGuard，僅允許 `super_admin`；角色設定 tab 內容同受此守門保護。
+- `user-management.html` 與 `role-settings.html` 必須都有 RoleGuard，僅允許 `super_admin`；兩頁同屬 admin 模組且 L0 active 皆為「系統管理」。
 - 無權限使用者不得讀取權限矩陣資料 API 回應。
 - 頁面入口與保存操作都必須在服務端再次驗證角色，不能只靠前端控制。
 - `super_admin` 的關鍵管理權限不得被全部關閉，需有保護規則避免平台失去管理能力。
@@ -222,8 +222,8 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 - **FR-005**：系統必須支援取消未儲存變更並回復已儲存版本。
 - **FR-005a**：取消未儲存變更後，系統必須維持在 `/role-settings`（不自動導頁）。
 - **FR-005b**：儲存必須使用 `version` 或 `etag` 樂觀鎖驗證；版本不一致時必須拒絕並提示衝突。
-- **FR-006**：角色設定 tab 必須在 `/user-management` 頁面內，透過 tab 切換進入；儲存成功後維持在角色設定 tab，使用者可透過點擊「使用者管理」tab 返回。
-- **FR-007**：無權限存取 `/user-management` 時，系統必須拒絕存取並導向安全頁（未登入→`/login`，一般使用者→`/dashboard`）；角色設定 tab 同受保護。
+- **FR-006**：角色設定必須由 `role-settings.html` 承載；`user-management.html` 與 `role-settings.html` 以 admin tabs 互相連結。儲存成功後維持在 `role-settings.html`，使用者可透過點擊「使用者管理」tab 返回 `user-management.html`。
+- **FR-007**：無權限存取 `user-management.html` 或 `role-settings.html` 時，系統必須拒絕存取並導向安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
 - **FR-008**：系統必須在服務端驗證角色權限，避免僅前端控管。
 - **FR-008a**：系統必須保護 `super_admin` 關鍵管理權限，不可被配置為全數關閉。
 - **FR-008b**：系統初次建立的超級管理員（seeder 建置帳號）永遠不可被移除（刪除/停用/降級）。
@@ -234,24 +234,24 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 ```mermaid
 flowchart LR
-    um["使用者管理 tab（/user-management）"] -->|點擊角色設定 tab| rs["角色設定 tab（頁內切換）"]
+    um["user-management.html"] -->|點擊角色設定 tab| rs["role-settings.html"]
     rs -->|點擊使用者管理 tab| um
     rs -->|取消（回復未儲存變更）| rs
-    userBlocked["system role = user"] -->|開啟 /user-management| dashboard["/dashboard"]
-    guestBlocked["未登入"] -->|開啟 /user-management| login["/login"]
+    userBlocked["system role = user"] -->|開啟 admin pages| dashboard["/dashboard"]
+    guestBlocked["未登入"] -->|開啟 admin pages| login["/login"]
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
-| 使用者管理 tab | 點擊「角色設定」tab | 角色設定 tab（頁內，不跳轉路由） |
-| 角色設定 tab | 儲存成功 | 角色設定 tab（顯示 toast，留在同 tab） |
-| 角色設定 tab | 點擊「使用者管理」tab | 使用者管理 tab（頁內，不跳轉路由） |
-| 角色設定 tab | 取消編輯（回復未儲存變更） | 角色設定 tab（維持在同 tab） |
-| 任何頁面 | `user` 直接造訪 `/user-management` | `/dashboard` |
-| 任何頁面 | 未登入造訪 `/user-management` | `/login` |
+| `user-management.html` | 點擊「角色設定」tab | `role-settings.html` |
+| `role-settings.html` | 儲存成功 | `role-settings.html`（顯示 toast，留在同頁） |
+| `role-settings.html` | 點擊「使用者管理」tab | `user-management.html` |
+| `role-settings.html` | 取消編輯（回復未儲存變更） | `role-settings.html`（維持在同頁） |
+| 任何頁面 | `user` 直接造訪 `user-management.html` 或 `role-settings.html` | `/dashboard` |
+| 任何頁面 | 未登入造訪 `user-management.html` 或 `role-settings.html` | `/login` |
 
-**Entry points**：使用者管理 tab 的「角色設定」tab。  
-**Exit points**：使用者管理 tab（tab 切換）。
+**Entry points**：`user-management.html` 的「角色設定」tab。
+**Exit points**：`user-management.html`（admin tab 導航）。
 
 ### 關鍵實體
 
@@ -269,7 +269,7 @@ flowchart LR
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
 | 001 | Login — Email / Password | 已登入狀態與路由守門基礎 |
-| 006 | User Management | `user-management` 頁面與 tab 切換的入口脈絡 |
+| 006 | User Management | `user-management.html` 與 `role-settings.html` 的 admin tab 導航脈絡 |
 
 ### 下游（依賴本規格的規格）
 
@@ -281,10 +281,10 @@ flowchart LR
 
 ## 成功標準 *(必填)*
 
-- **SC-001**：`super_admin` 可在 `/user-management` 點擊「角色設定」tab 並成功載入矩陣。
+- **SC-001**：`super_admin` 可在 `user-management.html` 點擊「角色設定」tab，導向 `role-settings.html` 並成功載入矩陣。
 - **SC-002**：角色矩陣可清楚區分 system roles 與 task roles，命名與 IA 一致。
 - **SC-003**：修改後儲存成功，重整頁面後仍維持最新設定。
-- **SC-004**：取消未儲存變更後，矩陣回復至最後已儲存狀態，且維持在 `/role-settings`。
+- **SC-004**：取消未儲存變更後，矩陣回復至最後已儲存狀態，且維持在 `role-settings.html`。
 - **SC-005**：`user` 與未登入使用者無法存取角色設定內容。
 - **SC-006**：頁面在 `RWD_VIEWPORTS` 下可完整檢視矩陣且無內容重疊；`<= MOBILE_BP` 仍可進行編輯操作。
 - **SC-007**：多人同時編輯時，版本衝突儲存會被拒絕並提示重新載入，不發生靜默覆蓋。
@@ -298,6 +298,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.3 | 2026-05-19 | 依最新 prototype 同步 admin tabs：`role-settings.html` 為獨立頁，與 `user-management.html` 透過 tabs 互相導覽 |
 | 1.1.2 | 2026-05-19 | Prototype 同步：移除矩陣圖例（圖例）UI 區塊；符號說明改由欄位 tooltip 或 header 承接，spec 行為面不受影響 |
 | 1.1.1 | 2026-04-17 | Prototype 同步：儲存成功後維持在 `/role-settings`（不自動跳轉），改為手動返回 `/user-management` |
 | 1.1.0 | 2026-04-17 | 補齊 IA 對應的可實作權限定義：新增 permission key 白名單（V1）、角色×權限預設矩陣（V1）、授權判斷規則、FR/SC 可驗收條款與審計要求 |
