@@ -33,7 +33,6 @@ async function openStep2ForTask(page: Page, taskType: (typeof TASK_TYPES)[number
     win.state.taskType = selectedTaskType;
     win.state.lang = 'zh';
     win.state.configData = win.getDefaultTemplateForLang(selectedTaskType, 'zh');
-    (win.el('taskTypeSelect') as HTMLSelectElement).value = selectedTaskType;
     win.renderTemplateBtns();
     win.renderSchemaFields();
     win.showStep(2);
