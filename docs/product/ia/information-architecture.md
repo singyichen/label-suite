@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.4.0（2026-05-19）
+> **版本：** 1.4.1（2026-05-19）
 
 ---
 
@@ -348,7 +348,7 @@ flowchart TD
 
 - **進入方式：** `task-list` 點選任務（僅任務 `project_leader` 或 `reviewer` 可進入）
 - **Tab 結構：**
-  - **任務概覽 tab（預設）：** 查看與編輯任務基本資料、標記設定、雙角色說明文件、抽樣設定、任務狀態與執行控制
+  - **任務概覽 tab（預設）：** 查看與編輯任務基本資料、標記設定、雙角色說明文件、抽樣設定、任務狀態與執行控制；Overview 固定為 5 區塊，不再承載匯出功能
   - **標記結果 tab：** 逐筆查看標記員提交內容與審核決定；提供標記階段 / 提交狀態 / 標記員篩選、結果表分頁、匯出記錄與 JSON / JSON-MIN 匯出
   - **標記進度 tab：** 各標記員完成數、速度、Dry Run / Official Run 分階段進度
   - **工時紀錄 tab：** 工時與標記活動紀錄（日期、時長、完成筆數、平均速度）
@@ -356,14 +356,42 @@ flowchart TD
     - `reviewer`：僅可檢視自己資料，可依日期區間、任務階段篩選
   - **成員管理 tab：** 檢視成員清單（含角色與狀態）、搜尋平台成員或以 Email 邀請加入、指派任務角色（`reviewer` / `annotator`）、移除或停用成員；僅該任務 `project_leader` 可編輯
 - **Tab 切換：** 頁內切換，不觸發路由跳轉
+- **Overview IA 結構：**
+  - `基本資料`：任務名稱、任務類型、資料集總筆數、建立者、建立/更新時間；資料集檔案清單只在編輯模式揭露
+  - `標記設定`：依 `task_type` registry / schema 動態顯示摘要與編輯欄位，不顯示與目前任務類型無關的固定欄位
+  - `說明文件上傳`：分為 `提供給標記員` 與 `提供給審核員` 兩個角色區塊，並共用「開始標記前強制顯示」狀態
+  - `抽樣設定`：管理每回合抽樣筆數、IAA 計算方式、目標 IAA、最少標記者數與資料隔離；固定筆數模式，不提供百分比抽樣
+  - `任務狀態與執行控制`：顯示任務階段、試標回合、樣本池分配、達標條件、回合歷程與下一步操作
+- **Overview 編輯入口：**
+  - 僅 `task_role = project_leader` 且 `task_status = draft` 可編輯 Overview 可編輯欄位
+  - 非 `draft` 或非 `project_leader` 時，Overview 顯示唯讀狀態並提供不可編輯原因提示
+  - 成員異動維持在 `member-management` tab；Overview 不提供成員調整
 - **試標抽樣設定契約（任務概覽）：**
   - Dry Run 抽樣由任務概覽的 `每回合抽樣筆數` 決定，不得在 annotation-workspace 端重算
   - 抽樣設定變更後需即時反映「總筆數 / 已用試標 / 可進正式」
-  - 進入 Dry Run 後若需新增試標資料，必須建立新的試標回合 R{n}，不得覆寫既有回合清單
-  - 發布 Dry Run 時需凍結 sample snapshot（不可變 `sample_snapshot_id`），後續以同一快照作為 Dry/Official 切分依據
+  - 任務建立時不得預建標記清單；每次 `新增試標回合 R{n}` 才建立該回合 `sampling_value` 筆 Dry Run 清單
+  - `開始正式標記` 時才以扣除所有試標回合後的剩餘樣本建立 Official Run 清單
+  - 首次發布 Dry Run 時需凍結 sample snapshot（不可變 `sample_snapshot_id`），後續以同一快照作為 Dry/Official 切分依據
 - **任務狀態轉換：**
-  - `草稿` → `Dry Run 進行中` → `等待 IAA 確認` → `Official Run 進行中` → `已完成`
-  - **Dry Run 完成通知：** 所有標記員完成後自動切換至「等待 IAA 確認」，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
+  - 系統狀態機：`draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`
+  - IA 顯示階段：stepper 維持 `draft` → `trial stage` → `official_run_in_progress` → `completed`；`dry_run_in_progress` 與 `waiting_iaa_confirmation` 皆屬 `trial stage`
+  - **Dry Run 完成通知：** 僅當任務內每位 `active annotator` 都滿足 `assigned_count == completed_count`，系統才可自動切換至 `waiting_iaa_confirmation`，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
+  - 任務狀態轉換需留下 `RunStateTransition` 紀錄，至少包含 `from_status`、`to_status`、`triggered_by`、`triggered_at`
+- **任務狀態與執行控制（Overview 區塊）：**
+  - 頂層階段只由 stepper 表示，不另以 `草稿` / `已隔離` badge 或 stage meta pills 重複呈現
+  - 單一執行判定 banner 僅顯示最近試標回合或正式標記的判定標題與下一步說明；不得再顯示額外「目前任務階段」標題/描述，也不得另設獨立「正式標記判定」卡
+  - 試標回合摘要需包含目前回合、已完成試標回合、最新回合 IAA 與正式標記池資訊；判定依據由摘要卡、達標條件 pills 與試標回合歷程共同承載
+  - 樣本池分配摘要固定呈現 `總筆數 / 已用試標 / 可進正式`；進度條依回合動態切分，每個試標回合與正式標記池使用可區分顏色，圖例需呈現如 `R1 10 筆`、`R2 10 筆`、`正式 3180 筆`
+  - `draft` 狀態僅顯示資料集總筆數，不預先占用任何試標區段，且不顯示試標歷程 item
+  - 試標回合歷程從建立 `R1` 後才開始累積；timeline item 之間不使用垂直連接線，日期維持單行
+  - 達標條件 pills 至少承載 IAA、標準差、最少標註者；主操作按鈕需與達標條件位於同一操作列，desktop 右對齊，mobile 可換行但仍屬同一區塊
+- **執行控制按鈕規則：**
+  - `draft`：顯示 `新增試標回合 R1`
+  - `dry_run_in_progress`：顯示 `新增試標回合 R{n}`，用於建立下一個獨立試標回合
+  - `waiting_iaa_confirmation`：顯示 `開始正式標記`
+  - `official_run_in_progress`：顯示 `標記完成`
+  - `completed`：不提供推進狀態的主操作
+  - 同一時間不得顯示語意衝突的執行操作；`reviewer` 一律只能看到唯讀/disabled 狀態
 - **角色可見性：**
   - `project_leader`：五個 tab 均可存取；成員管理 tab 可編輯；概覽可在符合狀態條件時編輯
   - `reviewer`：任務概覽（唯讀）/ 標記結果（唯讀）/ 標記進度 / 工時紀錄（僅自己）可見；不可見成員管理 tab
@@ -672,6 +700,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.1 | 2026-05-19 | 依 `014-task-detail` 最新規格同步 `task-detail` IA：補齊 Overview 5 區塊、`draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed` 狀態機、stepper 顯示階段、單一執行判定 banner、樣本池分配、試標回合歷程、執行控制按鈕對應與標記清單建立時機 |
 | 1.4.0 | 2026-05-19 | 以最新 prototype 為準同步 IA：`task-new` 改 4 steps、`task-detail` 改 5 tabs 並補 `annotation-results`、`profile` 補偏好設定與 Email 變更狀態、dataset 入口統一為 `/dataset-analysis`、admin `role-settings` 改為獨立 prototype 頁、Help Button 標記為 deferred |
 | 1.3.2 | 2026-04-24 | 資料集分析模組改採任務列表入口（`dataset-analysis-list`）+ 雙 Tab 詳情頁架構（`/dataset-analysis-detail/:task_id`）；同步更新 §2 頁面矩陣、§2.1 各節（Sidebar 目標頁、角色矩陣、Active 規則、層級模型、模組分工）、§3 流程圖、§5 旅程 A/C、§7 Spec 清單 |
 | 1.3.1 | 2026-04-23 | 標記模組 IA 調整為「先 `annotation-list` 清單頁，再進入 `annotation-workspace` 單筆作業頁」；同步更新導覽層級、流程圖、旅程與 spec 範圍 |
