@@ -974,7 +974,7 @@ var TASK_TAXONOMY = {
       sentence_pair: {
         zh: '句子對', en: 'Sentence pair',
         subtypes: {
-          similarity: { registryKey: null, zh: '相似度分數', en: 'Similarity Score' },
+          similarity: { registryKey: 'sentence_pairs', zh: '相似度分數', en: 'Similarity Score' },
         },
       },
       document: {
@@ -2692,6 +2692,9 @@ function removeDatasetFile(idx) {
   if (state.datasetFiles.length === 0) {
     state.detectedGranularity = null;
     state.granularityOverridden = false;
+    state.taskGranularity = '';
+    var granSel = el('taskGranularitySelect');
+    if (granSel) granSel.value = '';
     updateGranularityBadge();
   }
   renderDatasetFileList();
@@ -3192,8 +3195,7 @@ function populateSubtypeSelect(category, granularity) {
   // Auto-select when only one option
   if (sel.options.length === 2) {
     sel.selectedIndex = 1;
-    state.taskSubtype = sel.options[1].value;
-    deriveTaskType();
+    onSubtypeChange();
   }
 }
 
@@ -3202,7 +3204,7 @@ function updateGranularityBadge() {
   var badge = el('granularityDetectBadge');
   var hint = el('granularityDetectHint');
   if (!badge) return;
-  if (!state.detectedGranularity) {
+  if (!state.detectedGranularity || !state.taskCategory) {
     badge.style.display = 'none';
     if (hint) hint.style.display = 'none';
     return;
@@ -3273,7 +3275,9 @@ function runGranularityDetection(file) {
         : { value: 'single_sentence', confidence: 'medium' });
     };
     reader.onerror = function() {
-      applyGranularityDetection({ value: 'single_sentence', confidence: 'medium' });
+      // File read failed — do not store a detection result
+      state.detectedGranularity = null;
+      updateGranularityBadge();
     };
     reader.readAsText(file.slice(0, 2048));
   } else {
@@ -3304,7 +3308,7 @@ function onCategoryChange() {
     subtypeWrap.classList.add('hidden');
   }
   updateGranularityBadge();
-  markDirty(); revalidateCurrentStep();
+  renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
 
 function onGranularityChange(skipOverrideFlag) {
@@ -3327,7 +3331,7 @@ function onGranularityChange(skipOverrideFlag) {
     subtypeWrap.classList.add('hidden');
   }
   updateGranularityBadge();
-  markDirty(); revalidateCurrentStep();
+  renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
 
 function onSubtypeChange() {
@@ -3343,7 +3347,7 @@ function onSubtypeChange() {
     }
     applyDefaultGuidelineFiles(state.taskType);
   }
-  markDirty(); revalidateCurrentStep();
+  renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
 }
 
 /* ── Apply language ──────────────────────────────────────────── */
