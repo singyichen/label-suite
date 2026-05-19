@@ -2,7 +2,7 @@
 
 **功能分支**：`008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
-**版本**：1.3.5
+**版本**：1.3.8
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
@@ -20,8 +20,9 @@
 - `APPEARANCE_STORAGE_KEY = label-suite-theme`
 - `APPEARANCE_MODES = light | dark | system`
 - `APPEARANCE_DEFAULT_RESOLVED = light`（`system` 固定解析為 `light`，不跟隨 OS `prefers-color-scheme`）
-- `SIDEBAR_UTILITY_ACTIONS = shortcut_help | appearance_toggle`
+- `SIDEBAR_UTILITY_ACTIONS = shortcut_help | appearance_toggle | notification_bell`
 - `SHORTCUT_HELP_SCOPE = current_page_common_shortcuts`
+- `NOTIFICATION_BADGE_MAX_DISPLAY = 9+`（未讀數超過 9 顯示 `9+`）
 
 ## Process Flow
 
@@ -282,6 +283,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-014A**：Desktop 收合觸發必須為 sidebar 非互動空白區；互動元素（`a`、`button`、`input/select/textarea`、含語意按鈕角色元素）不得觸發收合。
 - **FR-014B**：Sidebar 收合狀態必須持久化於 `SIDEBAR_COLLAPSED_STORAGE_KEY`，並在 `SUPPORTED_PAGES` 間保持一致。
 - **FR-014C**：Mobile（`<= MOBILE_BP`）不得啟用 mini/icon-only 收合互動，避免與 bottom nav 操作衝突。
+- **FR-014D**：Desktop 收合狀態（`SIDEBAR_COLLAPSED_WIDTH`）下，`shortcut_help` 入口（`shortcutHelpBtn`）必須隱藏；`appearance_toggle`（`sidebarThemeToggleBtn`）與 `notification_bell`（`notificationBellBtn`）維持可見。
 - **FR-015**：Sidebar 必須提供 icon-only Appearance 快速切換控制項，在 `light` / `dark` resolved theme 間切換。
 - **FR-015A**：`light` → `html[data-theme="light"]`；`dark` → `html[data-theme="dark"]`；`system` → 固定解析為 `html[data-theme="light"]`（app 預設；不跟隨 OS `prefers-color-scheme`）。
 - **FR-015B**：Appearance 選擇後必須立即套用，並持久化至 `APPEARANCE_STORAGE_KEY`，在所有 `SUPPORTED_PAGES` 間保持一致。
@@ -297,6 +299,13 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果`、`全部通過 / 全部退回` 作為單一列）。
 - **FR-016F**：快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
 - **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
+- **FR-018**：Sidebar 必須提供通知鈴鐺（`notification_bell`）入口；Desktop 位於 Sidebar 底部 utility row（`notificationBellBtn`），Mobile 位於 top brand bar（`mobileNotificationBellBtn`）。
+- **FR-018A**：未讀通知數必須以紅色 badge 顯示於鈴鐺右上角；未讀數為 0 時不顯示 badge；超過 9 顯示 `NOTIFICATION_BADGE_MAX_DISPLAY`。
+- **FR-018B**：Desktop `notificationBellBtn` 與 Mobile `mobileNotificationBellBtn` 的 badge 顯示與 `aria-expanded` 狀態必須同步。
+- **FR-018C**：點擊鈴鐺開啟通知 dropdown（含通知列表與「全部標為已讀」操作）；再次點擊或點擊空白處關閉。
+- **FR-018C1**：通知 dropdown 內容必須完整支援語系切換；標題、操作文案、通知事件句型、任務名稱、行為者顯示名稱與相對時間皆需依目前語系呈現，不得中英混用。
+- **FR-018D**：通知 dropdown 定位規則：Desktop 展開時 `left: SIDEBAR_WIDTH`；Desktop 收合時 `left: SIDEBAR_COLLAPSED_WIDTH`；Mobile 時 `top: MOBILE_TOP_HEIGHT`，靠右對齊。
+- **FR-018E**：通知 dropdown 不提供跳轉「通知設定」連結；通知偏好設定位於 `/profile` 通知設定區塊（見 spec 005 FR-013B）。
 
 ### User Flow & Navigation
 
@@ -331,7 +340,7 @@ flowchart LR
 
 - `SharedNavbarContract`
   - `sections`: `brand-section`, `navbar-center`, `nav-actions`
-  - `interactiveIds`: `langToggle`, `mobileLangToggle`, `shortcutHelpBtn`, `mobileShortcutHelpBtn`, `sidebarThemeToggleBtn`, `mobileThemeToggleBtn`, `logoutBtn`, `mobileLogoutBtn`
+  - `interactiveIds`: `langToggle`, `mobileLangToggle`, `shortcutHelpBtn`, `mobileShortcutHelpBtn`, `sidebarThemeToggleBtn`, `mobileThemeToggleBtn`, `notificationBellBtn`, `mobileNotificationBellBtn`, `logoutBtn`, `mobileLogoutBtn`
   - `userIds`: `userName`, `roleIndicator`, `userAvatar`
   - `navIds`: `navDashboard`, `navTaskManagement`, `navAnnotation`, `navDataset`, `navAdmin`, `navProfile`
 - `LanguageState`
@@ -406,12 +415,17 @@ flowchart LR
 - **SC-008C**：`APPEARANCE_STORAGE_KEY` 不存在或無效時，系統預設為 `system` mode，且不拋出 JS 例外。
 - **SC-008D**：Sidebar Appearance icon 在 `light` 時顯示月亮且點擊後切至 `dark`；在 `dark` 時顯示太陽且點擊後切至 `light`；同一時間不得同時顯示太陽與月亮。
 - **SC-008E**：Sidebar Appearance icon 的 `aria-label` / `title` 隨 zh/en 與下一步動作同步更新。
-- **SC-009**：Desktop Sidebar 底部 utility row 顯示 icon-only keyboard 入口；Mobile top bar 顯示 keyboard 入口。
+- **SC-009**：Desktop Sidebar 底部 utility row 在展開狀態顯示 keyboard、appearance、notification bell 三個 icon-only 入口；收合時 keyboard 入口隱藏，appearance 與 notification bell 維持可見。Mobile top bar 顯示 appearance 與 notification bell 入口（keyboard 在 mobile 上不顯示）。
 - **SC-009A**：點擊 keyboard icon 或按 `?` 可開啟快捷鍵總覽 modal；按 `Esc` 或點擊 backdrop 可關閉。
 - **SC-009B**：快捷鍵總覽 modal 的 zh/en 文案、section 與可存取屬性同步切換。
 - **SC-009C**：快捷鍵總覽中的複合快捷鍵以獨立 keycap 呈現，例如 `CTRL`、`CMD`、`S` 為三個元素。
 - **SC-009D**：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果`、`全部通過`、`全部退回` 各自獨立顯示。
 - **SC-010**：在 `1440px` desktop viewport 下，`dashboard / task-management / annotation / dataset / admin / account` 主要模組頁的最上層 heading block 與 Dashboard baseline 的計算位置與 typography 相符。
+- **SC-011**：Desktop `notificationBellBtn` 與 Mobile `mobileNotificationBellBtn` 的 badge 未讀數與 `aria-expanded` 在 dropdown 開關時同步一致。
+- **SC-011A**：未讀數 = 0 時 badge 不顯示；1–9 顯示實際數字；>9 顯示 `9+`。
+- **SC-011B**：Mobile 通知鈴鐺（`mobileNotificationBellBtn`）視覺樣式與 `mobileThemeToggleBtn` 一致（34×34、`border: 1px solid var(--color-border)`、白底、hover 切 primary）。
+- **SC-011C**：通知 dropdown 不包含「通知設定」跳轉連結；通知偏好設定入口位於 `/profile`（spec 005）。
+- **SC-011D**：語系為 `en` 時，通知 dropdown 不得顯示中文任務名稱或中文相對時間；語系為 `zh` 時，通知 dropdown 不得顯示英文事件句型。
 
 ### 驗證建議
 
@@ -426,6 +440,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.8 | 2026-05-19 | 補齊 notification dropdown i18n 規格：事件句型、行為者、任務名稱與相對時間皆依目前語系呈現；新增 SC-011D |
+| 1.3.7 | 2026-05-19 | 新增 notification bell 規格：FR-014D（收合時 keyboard 隱藏、bell + appearance 保留）、FR-018 群（bell 入口、badge、dropdown 定位與無設定連結規則）、SC-011 群；更新 `SIDEBAR_UTILITY_ACTIONS`、`interactiveIds`、SC-009；明確通知設定入口移至 `/profile`（spec 005 FR-013B） |
 | 1.3.6 | 2026-05-19 | 以最新 prototype 同步 supported pages 與 dataset 導覽：加入 `annotation-list`、`dataset-analysis`、`dataset-analysis-detail/:task_id`，移除舊 `dataset-stats` / `dataset-quality` 導覽命名 |
 | 1.3.5 | 2026-05-19 | 快捷鍵 modal 視覺密度收斂：新增 FR-016F，規範 section 標題小寫全大寫、列間無分隔線、按鍵標籤緊湊尺寸 |
 | 1.3.4 | 2026-05-15 | 同步 Shared Sidebar 連結樣式 contract：品牌與 L0 模組導覽連結在 default / hover / focus / active 狀態不得顯示文字底線，並補充跨模組驗收標準 |

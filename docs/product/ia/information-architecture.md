@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.4.1（2026-05-19）
+> **版本：** 1.4.2（2026-05-19）
 
 ---
 
@@ -40,7 +40,7 @@
 | `register` | 自行註冊頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；填寫名稱、Email、密碼，建立後立即取得 `user` 系統角色 |
 | `forgot-password` | 忘記密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；填寫 Email，系統寄送重設連結（Resend）|
 | `reset-password` | 重設密碼頁 | 帳號模組 | ✅ | ✅ | — | 未登入可進入；prototype 預設 `valid` 並可切換 `expired/used` 狀態，錯誤時引導回 `forgot-password` |
-| `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | 個人資料、偏好設定、密碼設定；Email 變更為同頁狀態切換 |
+| `profile` | 個人設定頁 | 帳號模組 | ✅ | ✅ | — | 個人資料、偏好設定、密碼設定、通知設定；Email 變更為同頁狀態切換 |
 | `dashboard` | 儀表板 | — | ✅ | ✅ | — | 內容依任務角色動態調整 |
 | `task-list` | 任務列表頁 | 任務管理模組 | ✅ | ✅ | — | `user` 僅顯示自己有成員資格的任務；`super_admin` 預設顯示全平台任務；每列含「操作」欄（編輯 / 刪除） |
 | `task-new` | 新增任務頁 | 任務管理模組 | ✅ | ✅ | — | 四步驟建立流程；建立後自動成為任務 `project_leader` |
@@ -95,7 +95,7 @@
 | 目前頁面 | L0 Active 項 | L2 / 頁內次導覽規則 |
 |----------|-------------|----------------------|
 | `dashboard` | 儀表板 | 依角色顯示對應區塊（User / PL / Annotator / Reviewer / Super Admin） |
-| `profile` | 個人設定 | 個人資料 / 偏好設定 / 密碼設定；Email 變更為同頁狀態 |
+| `profile` | 個人設定 | 個人資料 / 偏好設定 / 密碼設定 / 通知設定；Email 變更為同頁狀態 |
 | `task-list` | 任務管理 | 任務列表篩選（狀態 / 搜尋） |
 | `task-new` | 任務管理 | Step 1 基本資料 / Step 2 標記設定檔 / Step 3 啟動設定 / Step 4 標記說明 |
 | `task-detail` | 任務管理 | 任務概覽 tab（預設）/ 標記結果 tab / 標記進度 tab / 工時紀錄 tab / 成員管理 tab |
@@ -120,7 +120,7 @@
 
 | 模組 | L0 責任 | L2 / 內部導覽責任 |
 |------|---------|--------------------|
-| account | 提供 `profile` 入口與一致 user chip | profile 頁內分段（個人資料 / 偏好設定 / 密碼設定）與 Email 變更狀態 |
+| account | 提供 `profile` 入口與一致 user chip | profile 頁內分段（個人資料 / 偏好設定 / 密碼設定 / 通知設定）與 Email 變更狀態 |
 | dashboard | 提供全站入口與角色落地 | 角色視圖切換（由資料驅動，不新增 L0 項） |
 | task-management | 任務主流程入口（`task-list`） | 新增任務四步驟精靈（L2 獨立頁）、任務詳情 tab 切換（任務概覽 / 標記結果 / 標記進度 / 工時紀錄 / 成員管理） |
 | annotation | 標記/審查入口（需任務上下文） | `annotation-list` 清單導向與 `annotation-workspace` 單筆作業提交路徑 |
@@ -195,7 +195,7 @@ flowchart TD
   TDETAIL -->|指派 Official Run| ALIST
   ALIST -->|點擊單筆資料| ANNOT
   ANNOT -->|Dry Run 全員完成\n→ Dashboard badge 通知| DASH
-  ANNOT -->|Official Run 完成標記| TDETAIL
+  ANNOT -->|Official Run 全員完成\n→ 通知 project_leader| TDETAIL
 
   USERS -->|Admin tab| ROLES
   ROLES -->|Admin tab| USERS
@@ -235,11 +235,13 @@ flowchart TD
 
 #### `profile` 個人設定頁
 - **進入方式：** Navbar 使用者頭像 → `profile`
-- **功能：** 修改姓名、修改聯絡方式、上傳大頭照、遮罩顯示 Email 並同頁執行 Email 變更流程、調整外觀偏好、修改或設定密碼
+- **功能：** 修改姓名、修改聯絡方式、上傳大頭照、遮罩顯示 Email 並同頁執行 Email 變更流程、調整外觀偏好、修改或設定密碼、調整通知偏好
 - **頁內結構（依最新 prototype）：**
   - **個人資料：** 大頭照、姓名、聯絡方式、Email 遮罩顯示與「變更」入口
   - **偏好設定：** 外觀三態切換（跟隨系統 / 淺色 / 深色）
   - **密碼設定：** Email / Password 帳號顯示現有密碼 + 新密碼 + 確認密碼；Google SSO 帳號顯示設定密碼流程
+  - **通知設定：** 以表格列出通知事件，欄位為 `事件` / `站內通知` / `電子郵件`，每個事件各有兩個 toggle
+- **通知事件：** `標記員完成標記作業`、`審核員完成審核`、`試標全員完成`、`正式標記全員完成`、`你被分配標記清單`、`你被分配審核清單`
 - **Email 變更：** 留在 `/profile`，以 `emailChangeState` / `emailSentState` 呈現輸入新 Email 與寄送驗證信狀態
 - **語言切換：** 導覽列語言按鈕採單一語言代碼顯示（`ZH` 或 `EN`），切換後即時更新文案與 `aria-label`
 - **離開方式：** 儲存成功 → 停留；Navbar Logo → `dashboard`；Email 驗證成功 → `login`
@@ -376,6 +378,7 @@ flowchart TD
   - 系統狀態機：`draft` → `dry_run_in_progress` → `waiting_iaa_confirmation` → `official_run_in_progress` → `completed`
   - IA 顯示階段：stepper 維持 `draft` → `trial stage` → `official_run_in_progress` → `completed`；`dry_run_in_progress` 與 `waiting_iaa_confirmation` 皆屬 `trial stage`
   - **Dry Run 完成通知：** 僅當任務內每位 `active annotator` 都滿足 `assigned_count == completed_count`，系統才可自動切換至 `waiting_iaa_confirmation`，並在 Dashboard 待處理事項區新增 badge 提醒任務 `project_leader`
+  - **Official Run 完成通知：** 僅當任務內每位 `active annotator` 都完成正式標記清單，系統才可切換至 `completed`，並通知任務 `project_leader`「正式標記全員完成」
   - 任務狀態轉換需留下 `RunStateTransition` 紀錄，至少包含 `from_status`、`to_status`、`triggered_by`、`triggered_at`
 - **任務狀態與執行控制（Overview 區塊）：**
   - 頂層階段只由 stepper 表示，不另以 `草稿` / `已隔離` badge 或 stage meta pills 重複呈現
@@ -656,7 +659,7 @@ sequenceDiagram
 | 002 | 登入 — Google SSO 整合 | `login` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
 | 003 | 自行註冊（Email/Password） | `register` | account | ★☆☆☆☆ | P1 | 🔄 進行中 |
 | 004 | 忘記密碼 / 重設密碼（Resend） | `forgot-password` · `reset-password` | account | ★★☆☆☆ | P1 | 🔄 進行中 |
-| 005 | 個人設定（資料編輯 + Email 變更 + 偏好設定 + 修改密碼） | `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
+| 005 | 個人設定（資料編輯 + Email 變更 + 偏好設定 + 修改密碼 + 通知設定） | `profile` | account | ★☆☆☆☆ | P1 | ⬜ 待做 |
 
 #### dashboard
 
@@ -700,6 +703,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.2 | 2026-05-19 | 同步通知設定 IA：`profile` 納入通知設定區塊，通知欄位改為「電子郵件」，事件增為六項並新增「正式標記全員完成」；Official Run 全員完成時通知 `project_leader` |
 | 1.4.1 | 2026-05-19 | 依 `014-task-detail` 最新規格同步 `task-detail` IA：補齊 Overview 5 區塊、`draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed` 狀態機、stepper 顯示階段、單一執行判定 banner、樣本池分配、試標回合歷程、執行控制按鈕對應與標記清單建立時機 |
 | 1.4.0 | 2026-05-19 | 以最新 prototype 為準同步 IA：`task-new` 改 4 steps、`task-detail` 改 5 tabs 並補 `annotation-results`、`profile` 補偏好設定與 Email 變更狀態、dataset 入口統一為 `/dataset-analysis`、admin `role-settings` 改為獨立 prototype 頁、Help Button 標記為 deferred |
 | 1.3.2 | 2026-04-24 | 資料集分析模組改採任務列表入口（`dataset-analysis-list`）+ 雙 Tab 詳情頁架構（`/dataset-analysis-detail/:task_id`）；同步更新 §2 頁面矩陣、§2.1 各節（Sidebar 目標頁、角色矩陣、Active 規則、層級模型、模組分工）、§3 流程圖、§5 旅程 A/C、§7 Spec 清單 |
