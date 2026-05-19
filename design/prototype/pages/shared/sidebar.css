@@ -845,7 +845,8 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
   }
 
   .mobile-shortcut-help-btn {
-    display: none;
+    display: inline-flex;
+    flex-shrink: 0;
   }
 
   .mobile-notification-bell-btn {
