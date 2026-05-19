@@ -595,19 +595,19 @@
               <option value="regression" id="optRegression">迴歸（Regression）</option>
             </select>
 
-            <!-- Level 2: 輸入粒度（上傳檔案後帶入偵測值） -->
+            <!-- Level 2: 輸入類型（上傳檔案後帶入偵測值） -->
             <div id="taskGranularityWrap" class="hidden">
               <select id="taskGranularitySelect" class="input-select">
-                <option value="" id="optTaskGranularityDefault">請選擇輸入粒度</option>
+                <option value="" id="optTaskGranularityDefault">請選擇輸入類型</option>
               </select>
               <div id="granularityDetectBadge" class="detect-badge detect-badge-medium" style="display:none;margin-top:4px;"></div>
               <div id="granularityDetectHint" class="field-hint" style="display:none;margin-top:2px;"></div>
             </div>
 
-            <!-- Level 3: 標記類型 -->
+            <!-- Level 3: 標記粒度 -->
             <div id="taskSubtypeWrap" class="hidden">
               <select id="taskSubtypeSelect" class="input-select">
-                <option value="" id="optTaskSubtypeDefault">請選擇標記類型</option>
+                <option value="" id="optTaskSubtypeDefault">請選擇標記粒度</option>
               </select>
             </div>
           </div>
@@ -939,27 +939,23 @@ var TASK_TAXONOMY = {
       single_sentence: {
         zh: '單一句子', en: 'Single sentence',
         subtypes: {
-          binary:     { registryKey: 'single_sentence_classification', zh: '二元分類（Binary）', en: 'Binary Classification' },
-          multiclass: { registryKey: 'single_sentence_classification', zh: '多類分類（Multi-class）', en: 'Multi-class Classification' },
-          multilabel: { registryKey: 'single_sentence_classification', zh: '多標籤分類（Multi-label）', en: 'Multi-label Classification' },
-          span:       { registryKey: 'sequence_labeling',              zh: '序列標記（NER / Aspect 詞抽取）', en: 'Sequence Labeling (NER / Aspect)' },
-          relation:   { registryKey: 'relation_extraction',            zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction' },
+          whole:    { registryKey: 'single_sentence_classification', zh: '整體（二元 / 多類 / 多標籤）', en: 'Whole (Binary / Multi-class / Multi-label)' },
+          span:     { registryKey: 'sequence_labeling',              zh: '片段（序列標記：NER / Aspect 詞抽取）', en: 'Span (Sequence Labeling: NER / Aspect)' },
+          relation: { registryKey: 'relation_extraction',            zh: '實體關係（關係抽取）', en: 'Relation (Entity + Relation + Triple)' },
         },
       },
       sentence_pair: {
         zh: '句子對', en: 'Sentence pair',
         subtypes: {
-          whole: { registryKey: 'sentence_pairs', zh: '相似度 / 蘊含', en: 'Similarity / Entailment' },
+          whole: { registryKey: 'sentence_pairs', zh: '整體（二元 / NLI / 相似度 / 蘊含）', en: 'Whole (Binary / NLI / Similarity / Entailment)' },
         },
       },
       document: {
         zh: '整篇文章', en: 'Document',
         subtypes: {
-          binary:     { registryKey: 'single_sentence_classification', zh: '二元分類（Binary）', en: 'Binary Classification' },
-          multiclass: { registryKey: 'single_sentence_classification', zh: '多類分類（Multi-class）', en: 'Multi-class Classification' },
-          multilabel: { registryKey: 'single_sentence_classification', zh: '多標籤分類（Multi-label）', en: 'Multi-label Classification' },
-          span:       { registryKey: 'sequence_labeling',              zh: '序列標記（NER / Aspect 詞抽取，跨句）', en: 'Sequence Labeling (NER / Aspect, cross-sentence)' },
-          relation:   { registryKey: 'relation_extraction',            zh: '關係抽取（文件級）', en: 'Relation Extraction (document-level)' },
+          whole:    { registryKey: 'single_sentence_classification', zh: '整體（二元 / 多類 / 多標籤）', en: 'Whole (Binary / Multi-class / Multi-label)' },
+          span:     { registryKey: 'sequence_labeling',              zh: '片段（序列標記：NER / Aspect，跨句）', en: 'Span (Sequence Labeling: NER / Aspect, cross-sentence)' },
+          relation: { registryKey: 'relation_extraction',            zh: '實體關係（關係抽取，文件級）', en: 'Relation (Relation Extraction, document-level)' },
         },
       },
     },
@@ -970,8 +966,9 @@ var TASK_TAXONOMY = {
       single_sentence: {
         zh: '單一句子', en: 'Single sentence',
         subtypes: {
-          single_dim: { registryKey: 'single_sentence_va_scoring', zh: '單維度評分', en: 'Single-dimension Scoring' },
-          multi_dim:  { registryKey: 'single_sentence_va_scoring', zh: '多維度評分（VA 雙軸 / Aspect 情感評分）', en: 'Multi-dimension Scoring (VA / Aspect)' },
+          single_dim:    { registryKey: 'single_sentence_va_scoring', zh: '單維度評分', en: 'Single-dimension Scoring' },
+          multi_dim_va:  { registryKey: 'single_sentence_va_scoring', zh: '多維度評分 VA 雙軸（Valence / Arousal）', en: 'Multi-dimension Scoring (VA: Valence / Arousal)' },
+          multi_dim_asp: { registryKey: 'single_sentence_va_scoring', zh: '多維度評分 Aspect 情感', en: 'Multi-dimension Scoring (Aspect Sentiment)' },
         },
       },
       sentence_pair: {
@@ -983,8 +980,9 @@ var TASK_TAXONOMY = {
       document: {
         zh: '整篇文章', en: 'Document',
         subtypes: {
-          single_dim: { registryKey: 'single_sentence_va_scoring', zh: '單維度評分', en: 'Single-dimension Scoring' },
-          multi_dim:  { registryKey: 'single_sentence_va_scoring', zh: '多維度評分（可讀性 / 品質 / Aspect 評分）', en: 'Multi-dimension Scoring (readability / quality / Aspect)' },
+          single_dim:     { registryKey: 'single_sentence_va_scoring', zh: '單維度評分', en: 'Single-dimension Scoring' },
+          multi_dim_qual: { registryKey: 'single_sentence_va_scoring', zh: '多維度評分（可讀性 / 品質）', en: 'Multi-dimension Scoring (Readability / Quality)' },
+          multi_dim_asp:  { registryKey: 'single_sentence_va_scoring', zh: '多維度評分 Aspect', en: 'Multi-dimension Scoring (Aspect)' },
         },
       },
     },
@@ -3160,7 +3158,7 @@ function populateGranularitySelect(category) {
   var def = document.createElement('option');
   def.value = '';
   def.id = 'optTaskGranularityDefault';
-  def.textContent = state.lang === 'en' ? 'Select input type' : '請選擇輸入粒度';
+  def.textContent = state.lang === 'en' ? 'Select input type' : '請選擇輸入類型';
   sel.appendChild(def);
   if (!category || !TASK_TAXONOMY[category]) return;
   var grans = TASK_TAXONOMY[category].granularities;
@@ -3179,7 +3177,7 @@ function populateSubtypeSelect(category, granularity) {
   var def = document.createElement('option');
   def.value = '';
   def.id = 'optTaskSubtypeDefault';
-  def.textContent = state.lang === 'en' ? 'Select annotation type' : '請選擇標記類型';
+  def.textContent = state.lang === 'en' ? 'Select annotation granularity' : '請選擇標記粒度';
   sel.appendChild(def);
   if (!category || !granularity) return;
   var catDef = TASK_TAXONOMY[category];
