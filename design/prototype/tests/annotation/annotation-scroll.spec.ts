@@ -14,8 +14,6 @@ test('middle annotation area can scroll to note section', async ({ page }) => {
       canScroll: el.scrollHeight > el.clientHeight,
     };
   });
-  console.log('before', before);
-
   expect(before).not.toBeNull();
   expect(before!.canScroll).toBeTruthy();
 
@@ -37,8 +35,6 @@ test('middle annotation area can scroll to note section', async ({ page }) => {
       maxScrollTop: el.scrollHeight - el.clientHeight,
     };
   });
-  console.log('after', after);
-
   expect(after).not.toBeNull();
   expect(after!.scrollTop).toBeGreaterThan(0);
 

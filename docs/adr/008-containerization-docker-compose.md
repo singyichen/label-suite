@@ -60,6 +60,25 @@ services:
 - **Frontend**: Multi-stage Dockerfile. `builder` stage runs `pnpm build`; `runtime` stage is `nginx:alpine` serving `/dist`.
 - **PostgreSQL + Redis**: Official Docker Hub images with pinned major versions (`postgres:16`, `redis:7-alpine`).
 
+### NLP Worker Dependencies
+
+The `worker` service uses the **same Docker image** as `backend`. NLP evaluation packages (`krippendorff`, `seqeval`, `scipy`) are required by Celery scoring tasks but not by the FastAPI API layer. They must be declared in `pyproject.toml` so they are present in the shared image:
+
+```toml
+# pyproject.toml
+[project.optional-dependencies]
+nlp = ["krippendorff", "seqeval", "scipy"]
+```
+
+Include them in the image build:
+
+```dockerfile
+# Dockerfile — builder stage
+RUN uv sync --extra nlp
+```
+
+Do **not** split into a separate worker Dockerfile — keeping one image eliminates a second build artifact to maintain and ensures the API and worker run identical Python environments.
+
 ## Consequences
 
 ### Easier
