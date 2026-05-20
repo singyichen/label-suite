@@ -239,7 +239,6 @@
       .page-actions { width: 100%; }
       .page-actions .btn-ghost,
       .page-actions .btn-cta { flex: 1; justify-content: center; }
-      .matrix-checkbox { pointer-events: none; }
     }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
@@ -287,7 +286,7 @@
           <p class="banner-desc" id="conflictDesc">請重新載入最新設定後再進行編輯，以避免覆蓋他人變更</p>
         </div>
         <div class="banner-action">
-          <button class="banner-reload-btn" onclick="reloadMatrix()">
+          <button class="banner-reload-btn" id="reloadBtn" onclick="reloadMatrix()">
             <span id="reloadBtnLabel">重新載入</span>
           </button>
         </div>
@@ -313,7 +312,7 @@
             <p class="section-desc" id="matrixSectionDesc">設定各角色對平台功能的存取權限。⛔ 表示需透過任務角色授權，不由系統角色直接控制。🔒 表示核心管理權限，不可關閉。</p>
           </div>
           <div class="page-actions">
-            <button class="btn-ghost" onclick="cancelEdit()">
+            <button class="btn-ghost" id="cancelBtn" onclick="cancelEdit()">
               <span id="cancelBtnLabel">取消</span>
             </button>
             <button class="btn-cta" id="saveBtn" onclick="saveMatrix()">
@@ -461,14 +460,14 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.detail.view" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - task.detail.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - task.detail.view" />
                   <span class="readonly-note" id="readonlyNote_task_detail_view">（唯讀）</span>
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - task.detail.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.detail.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.detail.view" />
                 </td>
               </tr>
               <tr class="perm-row">
@@ -483,13 +482,13 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - task.members.manage" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - task.members.manage" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="rev" onchange="onCheckboxChange()" aria-label="reviewer - task.members.manage" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - task.members.manage" />
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - task.members.manage" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="task.members.manage" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - task.members.manage" />
                 </td>
               </tr>
 
@@ -509,13 +508,13 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="pl" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.annotate" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="project_leader" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.annotate" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="rev" onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.annotate" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.annotate" />
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="ann" checked onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.annotate" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.annotate" data-role="annotator" checked onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.annotate" />
                 </td>
               </tr>
               <tr class="perm-row">
@@ -530,13 +529,13 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="pl" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.review" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="project_leader" onchange="onCheckboxChange()" aria-label="project_leader - annotation.workspace.review" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.review" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - annotation.workspace.review" />
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.review" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="annotation.workspace.review" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - annotation.workspace.review" />
                 </td>
               </tr>
 
@@ -556,13 +555,13 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.stats.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.stats.view" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.stats.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.stats.view" />
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - dataset.stats.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.stats.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - dataset.stats.view" />
                 </td>
               </tr>
               <tr class="perm-row">
@@ -577,13 +576,13 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.quality.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.quality.view" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="rev" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.quality.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="reviewer" checked onchange="onCheckboxChange()" aria-label="reviewer - dataset.quality.view" />
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - dataset.quality.view" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.quality.view" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - dataset.quality.view" />
                 </td>
               </tr>
               <tr class="perm-row">
@@ -598,13 +597,13 @@
                   <span class="task-role-badge">⛔ <span class="trb-text">需任務角色</span></span>
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="pl" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.export" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="project_leader" checked onchange="onCheckboxChange()" aria-label="project_leader - dataset.export" />
                 </td>
                 <td class="check-cell task-bg">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="rev" onchange="onCheckboxChange()" aria-label="reviewer - dataset.export" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="reviewer" onchange="onCheckboxChange()" aria-label="reviewer - dataset.export" />
                 </td>
                 <td class="check-cell task-bg last-col">
-                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="ann" onchange="onCheckboxChange()" aria-label="annotator - dataset.export" />
+                  <input type="checkbox" class="matrix-checkbox task-check" data-key="dataset.export" data-role="annotator" onchange="onCheckboxChange()" aria-label="annotator - dataset.export" />
                 </td>
               </tr>
 
@@ -749,6 +748,7 @@
         conflictDesc:            '請重新載入最新設定後再進行編輯，以避免覆蓋他人變更',
         reloadBtnLabel:          '重新載入',
         toastSaved:              '角色權限設定已儲存',
+        toastConflict:           '版本衝突，請重新載入最新設定',
         readonlyNote:            '（唯讀）',
         langToggleAria:          '切換語言',
         moduleHeader_account:    '帳號（Account）',
@@ -774,11 +774,11 @@
         permDesc_admin_role_settings_view:          '進入角色權限設定頁',
         permDesc_admin_role_settings_manage:        '編輯並儲存角色權限矩陣',
         readonlyNote_task_detail_view:              '（唯讀）',
-        thRoleUser:                                 '一般使用者',
-        thRoleSuperAdmin:                           '超級管理員',
-        thRoleProjectLeader:                        '專案負責人',
-        thRoleReviewer:                             '審核員',
-        thRoleAnnotator:                            '標記員',
+        thRoleUser:                                 'user',
+        thRoleSuperAdmin:                           'super_admin',
+        thRoleProjectLeader:                        'project_leader',
+        thRoleReviewer:                             'reviewer',
+        thRoleAnnotator:                            'annotator',
         roleIndicatorLabel:                         '系統管理員',
       },
       en: {
@@ -806,6 +806,7 @@
         conflictDesc:            'Reload the latest settings before editing to avoid overwriting others\' changes',
         reloadBtnLabel:          'Reload',
         toastSaved:              'Role permissions saved',
+        toastConflict:           'Version conflict. Reload latest settings',
         readonlyNote:            '(read-only)',
         langToggleAria:          'Switch language',
         moduleHeader_account:    'Account',
@@ -831,11 +832,11 @@
         permDesc_admin_role_settings_view:          'Access role settings page',
         permDesc_admin_role_settings_manage:        'Edit and save role permission matrix',
         readonlyNote_task_detail_view:              '(read-only)',
-        thRoleUser:                                 'User',
-        thRoleSuperAdmin:                           'Super Admin',
-        thRoleProjectLeader:                        'Project Leader',
-        thRoleReviewer:                             'Reviewer',
-        thRoleAnnotator:                            'Annotator',
+        thRoleUser:                                 'user',
+        thRoleSuperAdmin:                           'super_admin',
+        thRoleProjectLeader:                        'project_leader',
+        thRoleReviewer:                             'reviewer',
+        thRoleAnnotator:                            'annotator',
         roleIndicatorLabel:                         'Super Admin',
       },
     };
@@ -857,7 +858,25 @@
       navProfile: 'Profile',
     });
 
+    const MATRIX_STORAGE_KEY = 'labelsuite.roleSettings.matrix';
+    const MATRIX_VERSION_KEY = 'labelsuite.roleSettings.version';
+    const DEFAULT_MATRIX = {
+      'account.profile.view__user': true, 'account.profile.edit__user': true,
+      'dashboard.view__user': true,
+      'task.list.view__user': true, 'task.create__user': true,
+      'task.detail.view__project_leader': true, 'task.detail.view__reviewer': true, 'task.detail.view__annotator': false,
+      'task.members.manage__project_leader': true, 'task.members.manage__reviewer': false, 'task.members.manage__annotator': false,
+      'annotation.workspace.annotate__project_leader': false, 'annotation.workspace.annotate__reviewer': false, 'annotation.workspace.annotate__annotator': true,
+      'annotation.workspace.review__project_leader': false, 'annotation.workspace.review__reviewer': true, 'annotation.workspace.review__annotator': false,
+      'dataset.stats.view__project_leader': true, 'dataset.stats.view__reviewer': true, 'dataset.stats.view__annotator': false,
+      'dataset.quality.view__project_leader': true, 'dataset.quality.view__reviewer': true, 'dataset.quality.view__annotator': false,
+      'dataset.export__project_leader': true, 'dataset.export__reviewer': false, 'dataset.export__annotator': false,
+      'admin.user_management.view__user': false, 'admin.user_management.manage__user': false,
+      'admin.role_settings.view__user': false, 'admin.role_settings.manage__user': false,
+    };
+
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+    let matrixVersion = Number(window.localStorage.getItem(MATRIX_VERSION_KEY) || '1');
 
     /* ── IDs requiring i18n text updates ──────────────────────────── */
     const TEXT_IDS = [
@@ -908,10 +927,47 @@
     /* ── Original checkbox state (for cancel / dirty detection) ────── */
     let originalState = {};
 
+    function getStorageVersion() {
+      return Number(window.localStorage.getItem(MATRIX_VERSION_KEY) || '1');
+    }
+
+    function getCheckboxKey(cb) {
+      return cb.dataset.key + '__' + cb.dataset.role;
+    }
+
+    function getCurrentMatrixState() {
+      const state = {};
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        state[getCheckboxKey(cb)] = cb.checked;
+      });
+      return state;
+    }
+
+    function applyMatrixState(state) {
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = getCheckboxKey(cb);
+        if (state[k] !== undefined) cb.checked = Boolean(state[k]);
+      });
+    }
+
+    function getStoredMatrixState() {
+      try {
+        return JSON.parse(window.localStorage.getItem(MATRIX_STORAGE_KEY) || '{}');
+      } catch (_error) {
+        return {};
+      }
+    }
+
+    function loadPersistedMatrix() {
+      applyMatrixState(DEFAULT_MATRIX);
+      applyMatrixState(getStoredMatrixState());
+      matrixVersion = getStorageVersion();
+    }
+
     function captureOriginalState() {
       originalState = {};
       document.querySelectorAll('.matrix-checkbox').forEach(cb => {
-        originalState[cb.dataset.key + '__' + cb.dataset.role] = cb.checked;
+        originalState[getCheckboxKey(cb)] = cb.checked;
       });
     }
 
@@ -921,7 +977,7 @@
     function onCheckboxChange() {
       let dirty = false;
       document.querySelectorAll('.matrix-checkbox').forEach(cb => {
-        const k = cb.dataset.key + '__' + cb.dataset.role;
+        const k = getCheckboxKey(cb);
         if (originalState[k] !== undefined && originalState[k] !== cb.checked) dirty = true;
       });
       setDirty(dirty);
@@ -936,7 +992,7 @@
     /* ── Cancel: revert to original state ──────────────────────────── */
     function cancelEdit() {
       document.querySelectorAll('.matrix-checkbox').forEach(cb => {
-        const k = cb.dataset.key + '__' + cb.dataset.role;
+        const k = getCheckboxKey(cb);
         if (originalState[k] !== undefined) cb.checked = originalState[k];
       });
       setDirty(false);
@@ -949,6 +1005,17 @@
     function saveMatrix() {
       const t = i18n[lang];
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_attempted', { page: 'role-settings' });
+      if (getStorageVersion() !== matrixVersion) {
+        document.getElementById('conflictBanner').classList.remove('hidden');
+        document.getElementById('saveBtn').disabled = true;
+        showToast('error', t.toastConflict);
+        return;
+      }
+
+      const nextVersion = matrixVersion + 1;
+      window.localStorage.setItem(MATRIX_STORAGE_KEY, JSON.stringify(getCurrentMatrixState()));
+      window.localStorage.setItem(MATRIX_VERSION_KEY, String(nextVersion));
+      matrixVersion = nextVersion;
       showToast('success', t.toastSaved);
       setDirty(false);
       captureOriginalState();
@@ -957,25 +1024,7 @@
 
     /* ── Reload (conflict resolution) ──────────────────────────────── */
     function reloadMatrix() {
-      /* Reset all checkboxes to default values */
-      const DEFAULTS = {
-        'account.profile.view__user': true,  'account.profile.edit__user': true,
-        'dashboard.view__user': true,
-        'task.list.view__user': true, 'task.create__user': true,
-        'task.detail.view__pl': true, 'task.detail.view__rev': true, 'task.detail.view__ann': false,
-        'task.members.manage__pl': true, 'task.members.manage__rev': false, 'task.members.manage__ann': false,
-        'annotation.workspace.annotate__pl': false, 'annotation.workspace.annotate__rev': false, 'annotation.workspace.annotate__ann': true,
-        'annotation.workspace.review__pl': false, 'annotation.workspace.review__rev': true, 'annotation.workspace.review__ann': false,
-        'dataset.stats.view__pl': true, 'dataset.stats.view__rev': true, 'dataset.stats.view__ann': false,
-        'dataset.quality.view__pl': true, 'dataset.quality.view__rev': true, 'dataset.quality.view__ann': false,
-        'dataset.export__pl': true, 'dataset.export__rev': false, 'dataset.export__ann': false,
-        'admin.user_management.view__user': false, 'admin.user_management.manage__user': false,
-        'admin.role_settings.view__user': false, 'admin.role_settings.manage__user': false,
-      };
-      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
-        const k = cb.dataset.key + '__' + cb.dataset.role;
-        if (DEFAULTS[k] !== undefined) cb.checked = DEFAULTS[k];
-      });
+      loadPersistedMatrix();
       captureOriginalState();
       setDirty(false);
       document.getElementById('conflictBanner').classList.add('hidden');
@@ -1034,6 +1083,7 @@
 
     /* ── Init ──────────────────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {
+      loadPersistedMatrix();
       captureOriginalState();
       initSidebar();
       applyLang(lang);
