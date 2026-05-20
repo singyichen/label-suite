@@ -44,7 +44,7 @@ sequenceDiagram
     end
 
     SA->>UI: 點擊「角色設定」tab
-    UI-->>SA: 切換至角色設定 tab（頁內，不觸發路由跳轉）
+    UI-->>SA: 導向 role-settings.html
 ```
 
 | 步驟 | 角色 | 動作 | 系統回應 |
@@ -55,7 +55,7 @@ sequenceDiagram
 | 4 | `super_admin` | 停用帳號 | 帳號狀態更新為停用 |
 | 5 | `super_admin` | 指派 `system role` | 僅可指派 `user` 或 `super_admin` |
 | 6 | 非 `super_admin` | 直接嘗試開啟 `/user-management` | 拒絕存取並導回 `/dashboard` |
-| 7 | `super_admin` | 點擊「角色設定」tab | 切換至角色設定 tab（頁內，不觸發路由跳轉） |
+| 7 | `super_admin` | 點擊「角色設定」tab | 導向 `role-settings.html` |
 
 ---
 
@@ -150,13 +150,13 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 
 1. **Given** `system role = user`，**When** 直接開啟 `/user-management`，**Then** 系統拒絕存取並導回 `/dashboard`。
 2. **Given** 未登入狀態，**When** 開啟 `/user-management`，**Then** 系統導向 `/login`。
-3. **Given** `system role = super_admin`，**When** 點擊「角色設定」tab，**Then** 成功切換至角色設定 tab（頁內，不觸發路由跳轉）。
+3. **Given** `system role = super_admin`，**When** 點擊「角色設定」tab，**Then** 成功導向 `role-settings.html`，且 L0 active 維持「系統管理」。
 
 **行為規則**：
 
 - `/user-management` 路由需有角色守門，僅允許 `super_admin`。
 - 無權限存取不得回傳可操作的管理資料。
-- 「角色設定」tab 僅在 `super_admin` 可見且可點擊。
+- 「角色設定」tab 僅在 `super_admin` 可見且可點擊，prototype 以 `<a href="role-settings.html">` 導向獨立頁。
 
 ---
 
@@ -188,7 +188,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-008**：系統必須支援停用使用者帳號。
 - **FR-008a**：停用使用者成功後，系統必須立即撤銷該帳號所有 active session/token。
 - **FR-009**：本頁只可管理 system role（`user` / `super_admin`），不得指派任務角色。
-- **FR-010**：頁面必須提供「使用者管理」與「角色設定」兩個 tab，預設停留於「使用者管理」tab；tab 切換為頁內行為，不觸發路由跳轉。
+- **FR-010**：頁面必須提供「使用者管理」與「角色設定」兩個 admin tabs，預設停留於「使用者管理」tab；點擊「角色設定」必須導向 `role-settings.html`。
 - **FR-011**：無權限角色存取本頁時，系統必須拒絕並導回安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
 - **FR-012**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 時仍可完成查詢與帳號管理操作。
 
@@ -197,7 +197,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 ```mermaid
 flowchart LR
     dashboard["/dashboard"] --> um["/user-management（使用者管理 tab）"]
-    um -->|點擊角色設定 tab| rs["角色設定 tab（頁內切換）"]
+    um -->|點擊角色設定 tab| rs["role-settings.html"]
     rs -->|點擊使用者管理 tab| um
     userBlocked["system role = user"] -->|開啟 /user-management| dashboard
     guestBlocked["未登入"] -->|開啟 /user-management| login["/login"]
@@ -206,8 +206,8 @@ flowchart LR
 | From | Trigger | To |
 |------|---------|-----|
 | `/dashboard` | 點擊「系統管理」 | `/user-management`（使用者管理 tab） |
-| 使用者管理 tab | 點擊「角色設定」tab | 角色設定 tab（頁內，不跳轉路由） |
-| 角色設定 tab | 點擊「使用者管理」tab | 使用者管理 tab（頁內，不跳轉路由） |
+| `user-management.html` | 點擊「角色設定」tab | `role-settings.html` |
+| `role-settings.html` | 點擊「使用者管理」tab | `user-management.html` |
 | 任何頁面 | `user` 直接造訪 `/user-management` | `/dashboard` |
 | 任何頁面 | 未登入造訪 `/user-management` | `/login` |
 
@@ -235,7 +235,7 @@ flowchart LR
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
-| 007 | Role & Permission Settings | 由 `user-management` 進入 `role-settings` 的導覽與管理脈絡 |
+| 007 | Role & Permission Settings | 由 `user-management.html` 進入 `role-settings.html` 的導覽與管理脈絡 |
 
 ---
 
@@ -254,6 +254,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.0.5 | 2026-05-19 | 依最新 prototype 同步 admin tabs：`user-management.html` 點擊「角色設定」導向獨立 `role-settings.html`，不再描述為同頁 tab 切換 |
 | 1.0.4 | 2026-04-27 | Prototype 同步：停用帳號 modal 確認按鈕文字改為「確認」／「Confirm」（移除動詞冗餘） |
 | 1.0.3 | 2026-04-27 | Prototype 同步：操作欄按鈕順序調整為「停用／啟用」靠左、「編輯」靠右；修正主要按鈕 hover 時文字消失的視覺 bug |
 | 1.0.2 | 2026-04-17 | Prototype 同步：`新增使用者` CTA 移至搜尋篩選列同列靠右 |

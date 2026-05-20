@@ -17,7 +17,6 @@ test.describe('Task new VA scoring template', () => {
       };
       win.state.taskType = 'single_sentence_va_scoring';
       win.state.configData = win.getDefaultTemplateForLang('single_sentence_va_scoring', 'zh');
-      (win.el('taskTypeSelect') as HTMLSelectElement).value = 'single_sentence_va_scoring';
       win.renderTemplateBtns();
       win.renderSchemaFields();
       win.showStep(2);
@@ -37,7 +36,11 @@ test.describe('Task new VA scoring template', () => {
   test('loads default guideline file for VA task type', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    await page.selectOption('#taskTypeSelect', 'single_sentence_va_scoring');
+    await page.selectOption('#taskCategorySelect', 'regression');
+    await page.waitForSelector('#taskGranularityWrap:not(.hidden)');
+    await page.selectOption('#taskGranularitySelect', 'single_sentence');
+    await page.waitForSelector('#taskSubtypeWrap:not(.hidden)');
+    await page.selectOption('#taskSubtypeSelect', 'multi_dim_va');
 
     await page.evaluate(() => {
       const win = window as typeof window & { showStep: (step: number) => void };

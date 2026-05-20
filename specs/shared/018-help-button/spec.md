@@ -2,9 +2,11 @@
 
 **功能分支**：`018-help-button`
 **建立日期**：2026-05-15
-**版本**：1.0.0
-**狀態**：spec-ready
+**版本**：1.1.0
+**狀態**：Deferred（latest prototype baseline does not include Help button）
 **需求來源**：Brainstorm session 1445-1778808850 — 評估平台是否需要 FAQ/說明入口
+
+> **Prototype baseline（2026-05-19）**：最新 `design/prototype/pages/shared/sidebar.js` 僅提供語言切換、快捷鍵總覽、外觀切換與登出；尚未提供 `helpBtn` / `mobileHelpBtn` 或 `#help-modal`。本 spec 保留為後續候選需求，但不屬於目前 IA / prototype 對齊範圍，實作前需先更新 prototype。
 
 ---
 
@@ -29,7 +31,17 @@ Dashboard 的「一般使用者」視圖已有 onboarding 三卡區塊，引導�
 
 ## 範疇
 
+### Current Prototype Scope
+
+- 不新增 Help 按鈕
+- 不新增 Help Modal
+- Sidebar utility row 維持最新 prototype：`shortcutHelpBtn` + `sidebarThemeToggleBtn`
+- Mobile top bar 維持最新 prototype：`mobileLangToggle` + `mobileShortcutHelpBtn` + `mobileThemeToggleBtn` + `mobileLogoutBtn`
+
 ### In Scope
+
+> Deferred until prototype reintroduces Help entry.
+
 - 桌面版 sidebar utility row 加入 `?` Help 按鈕
 - 行動版頂部工具列加入 `?` Help 按鈕
 - 點擊後顯示 Help Modal，內容為現有 onboarding 三卡區塊
@@ -177,4 +189,5 @@ Modal 內容完整複製 Dashboard 「一般使用者」視圖的 onboarding 三
 
 | 版本 | 日期 | 說明 |
 |------|------|------|
+| 1.1.0 | 2026-05-19 | 依最新 prototype baseline 標記為 Deferred：目前 sidebar 無 `helpBtn` / `mobileHelpBtn` / `help-modal`，不納入現行 IA 導覽契約 |
 | 1.0.0 | 2026-05-15 | 初版建立（Brainstorm session 1445-1778808850） |

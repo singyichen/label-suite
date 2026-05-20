@@ -65,6 +65,20 @@ Key configuration:
 - Result expiry: 24 hours in Redis result backend.
 - `celery-beat` (future): scheduled leaderboard snapshots, stale submission cleanup.
 
+## FastAPI Async Integration
+
+Calling `task.delay()` inside a FastAPI `async def` route performs a synchronous Redis publish. For the Redis broker, this is sub-millisecond and does not meaningfully block the event loop. The chosen pattern is **direct `.delay()` call** — no executor bridge required.
+
+```python
+# Correct: direct call inside async route (Redis publish is fast enough)
+@router.post("/submissions")
+async def submit(payload: SubmissionCreate, db: AsyncSession = Depends(get_db)):
+    task = score_submission.delay(submission_id=submission.id)
+    return {"task_id": task.id}
+```
+
+**Do not use** `asyncio.get_event_loop().run_in_executor()` for `.delay()` — it adds complexity without benefit for a sub-millisecond call. If a future use case requires slow synchronous broker I/O (e.g., RabbitMQ with connection overhead), revisit this decision and add an executor bridge at that point.
+
 ## Consequences
 
 ### Easier

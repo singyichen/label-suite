@@ -138,11 +138,19 @@ One logic, one place.
 - Never hardcode API keys or tokens in code; use environment variables
 - CORS must not use `allow_origins=["*"]`; explicitly list allowed origins
 
+### Conflicting Patterns
+
+When the codebase has contradictory conventions: pick one (prefer newer or better-tested), state the reason, flag the other for future cleanup. Never pick silently.
+
+### Fail Loudly
+
+If any step cannot be fully verified — file existence, API behavior, test intent — report the uncertainty explicitly. Silent failures are not allowed.
+
 ### AI Agent Non-Negotiables
 
 - Use `uv add` (not pip) for backend packages; `pnpm add` for frontend
 - All backend commands must be run via `uv run`
-- Read relevant files before making changes
+- Before adding code: read existing exports, caller functions, and shared utilities in the affected area first
 - Remove debug `print` / `console.log` before finishing
 - Do not modify version numbers in `pyproject.toml` or `package.json` unless explicitly asked
 
@@ -157,6 +165,8 @@ One logic, one place.
 - Unrequested code gen > 300 LoC → halt first
 
 **Context management**: compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
+
+**Checkpoint reporting**: For multi-step tasks, report at each checkpoint: completed · verified · remaining. If unable to describe current state, stop immediately.
 
 **Source-Verify gate**: any cited number / benchmark / verbatim quote must be locatable via `grep -i <term> <source>`. If not found → remove or correct; never approximate.
 

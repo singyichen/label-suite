@@ -341,7 +341,7 @@
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-primary:focus { outline: 2px solid var(--color-cta); outline-offset: 3px; }
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-    #saveProfileBtn, #savePwBtn { margin-left: auto; }
+    #saveProfileBtn, #savePwBtn, #saveNotifBtn { margin-left: auto; }
 
     .btn-secondary {
       background: transparent;
@@ -533,6 +533,69 @@
     .skel-line   { height: 14px; }
     .skel-input  { height: 42px; width: 100%; margin-top: 6px; }
     .skel-btn    { height: 40px; width: 90px; }
+
+    /* ── Notification section ───────────────────────────────────── */
+    .notif-pref-table { width: 100%; border-collapse: collapse; }
+
+    .notif-pref-table thead tr { border-bottom: 1px solid var(--color-border); }
+
+    .notif-pref-table th {
+      padding: 10px 0;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: left;
+    }
+
+    .notif-pref-table th.col-ch { text-align: center; width: 90px; }
+
+    .notif-pref-table tbody tr { border-bottom: 1px solid var(--color-border); }
+    .notif-pref-table tbody tr:last-child { border-bottom: none; }
+
+    .notif-pref-table td { padding: 14px 0; vertical-align: middle; }
+    .notif-pref-table td.col-ch { text-align: center; }
+
+    .event-name { font-size: 14px; font-weight: 500; color: var(--color-ink); margin: 0 0 4px; }
+
+    .event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .event-trigger { font-size: 12px; color: var(--color-text-muted); }
+
+    .toggle-wrap { display: flex; align-items: center; justify-content: center; }
+
+    .toggle-switch {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 40px;
+      height: 22px;
+      border-radius: 9999px;
+      background: var(--color-border);
+      position: relative;
+      cursor: pointer;
+      transition: background 200ms;
+      flex-shrink: 0;
+      outline: none;
+    }
+
+    .toggle-switch:checked { background: var(--color-primary); }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      top: 3px;
+      left: 3px;
+      transition: transform 200ms;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .toggle-switch:checked::after { transform: translateX(18px); }
+    .toggle-switch:focus-visible { box-shadow: 0 0 0 3px rgba(99,102,241,0.25); }
 
     /* ── Responsive ──────────────────────────────────────────────── */
     @media (max-width: 767px) {
@@ -848,6 +911,90 @@
           </div>
         </section>
 
+        <!-- Section 4: 通知設定 -->
+        <section class="section-card" id="notification-section" aria-labelledby="notifSectionTitle">
+          <h2 class="section-title" id="notifSectionTitle">通知設定</h2>
+          <p class="section-desc" id="notifSectionDesc">為每個事件選擇接收通知的方式</p>
+
+          <table class="notif-pref-table" aria-label="通知偏好設定">
+            <thead>
+              <tr>
+                <th id="notifThEvent">事件</th>
+                <th class="col-ch" id="notifThInApp">站內通知</th>
+                <th class="col-ch" id="notifThEmail">電子郵件</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE1Name">標記員完成標記作業</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE1Trigger">有人完成所有標記項目時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne1-inapp" checked aria-label="標記員完成標記作業 — 站內通知" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne1-email" checked aria-label="標記員完成標記作業 — Email" /></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE2Name">審核員完成審核</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE2Trigger">有人完成所有審核項目時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne2-inapp" checked aria-label="審核員完成審核 — 站內通知" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne2-email" checked aria-label="審核員完成審核 — Email" /></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE3Name">試標全員完成</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE3Trigger">所有參與者完成試標時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne3-inapp" checked aria-label="試標全員完成 — 站內通知" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne3-email" checked aria-label="試標全員完成 — Email" /></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE4Name">正式標記全員完成</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE4Trigger">所有參與者完成正式標記時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne4-inapp" checked aria-label="正式標記全員完成 — 站內通知" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne4-email" checked aria-label="正式標記全員完成 — Email" /></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE5Name">你被分配標記清單</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE5Trigger">有新的標記清單指派給我時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne5-inapp" checked aria-label="你被分配標記清單 — 站內通知" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne5-email" checked aria-label="你被分配標記清單 — Email" /></div></td>
+              </tr>
+              <tr>
+                <td>
+                  <p class="event-name" id="notifE6Name">你被分配審核清單</p>
+                  <div class="event-meta">
+                    <span class="event-trigger" id="notifE6Trigger">有新的審核清單指派給我時通知我</span>
+                  </div>
+                </td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne6-inapp" checked aria-label="你被分配審核清單 — 站內通知" /></div></td>
+                <td class="col-ch"><div class="toggle-wrap"><input type="checkbox" class="toggle-switch" id="ne6-email" checked aria-label="你被分配審核清單 — Email" /></div></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="saveNotifBtn" type="button" onclick="handleSaveNotif()">
+              <span id="saveNotifLabel">儲存設定</span>
+            </button>
+          </div>
+        </section>
+
       </div><!-- /liveState -->
 
       <!-- ──────────────────────────────────────────────────────── -->
@@ -1010,6 +1157,25 @@
         toastPwSetSuccessDesc:   '您現在可使用 Email / Password 登入',
         toastResendSuccess:      '驗證信已重新寄送',
         toastResendSuccessDesc:  '請前往信箱完成驗證',
+        notifSectionTitle:       '通知設定',
+        notifSectionDesc:        '為每個事件選擇接收通知的方式',
+        notifThEvent:            '事件',
+        notifThInApp:            '站內通知',
+        notifThEmail:            '電子郵件',
+        notifE1Name:             '標記員完成標記作業',
+        notifE1Trigger:          '有人完成所有標記項目時通知我',
+        notifE2Name:             '審核員完成審核',
+        notifE2Trigger:          '有人完成所有審核項目時通知我',
+        notifE3Name:             '試標全員完成',
+        notifE3Trigger:          '所有參與者完成試標時通知我',
+        notifE4Name:             '正式標記全員完成',
+        notifE4Trigger:          '所有參與者完成正式標記時通知我',
+        notifE5Name:             '你被分配標記清單',
+        notifE5Trigger:          '有新的標記清單指派給我時通知我',
+        notifE6Name:             '你被分配審核清單',
+        notifE6Trigger:          '有新的審核清單指派給我時通知我',
+        saveNotifLabel:          '儲存設定',
+        toastNotifSuccess:       '通知設定已儲存',
         errNameRequired:         '姓名為必填欄位',
         errContactTooLong:       '聯絡方式不能超過 255 個字元',
         errCurrentPwWrong:       '現有密碼錯誤',
@@ -1079,6 +1245,25 @@
         toastPwSetSuccessDesc:   'You can now sign in with Email / Password',
         toastResendSuccess:      'Email Resent',
         toastResendSuccessDesc:  'Check your inbox to complete verification',
+        notifSectionTitle:       'Notification settings',
+        notifSectionDesc:        'Choose how you want to be notified for each event',
+        notifThEvent:            'Event',
+        notifThInApp:            'In-app',
+        notifThEmail:            'Email',
+        notifE1Name:             'Annotator completes annotation',
+        notifE1Trigger:          'Notify me when someone finishes all annotation items',
+        notifE2Name:             'Reviewer completes review',
+        notifE2Trigger:          'Notify me when someone finishes all review items',
+        notifE3Name:             'All annotators complete dry run',
+        notifE3Trigger:          'Notify me when everyone finishes the dry run',
+        notifE4Name:             'All annotators complete formal annotation',
+        notifE4Trigger:          'Notify me when everyone finishes formal annotation',
+        notifE5Name:             'You are assigned an annotation list',
+        notifE5Trigger:          'Notify me when a new annotation list is assigned to me',
+        notifE6Name:             'You are assigned a review list',
+        notifE6Trigger:          'Notify me when a new review list is assigned to me',
+        saveNotifLabel:          'Save settings',
+        toastNotifSuccess:       'Notification settings saved',
         errNameRequired:         'Name is required',
         errContactTooLong:       'Contact info must be 255 characters or fewer',
         errCurrentPwWrong:       'Current password is incorrect',
@@ -1119,6 +1304,15 @@
         'labelNewEmail', 'emailChangeNextLabel',
         'emailSentTitle', 'emailSentDescPre', 'emailSentHint',
         'backToProfileBtn', 'resendLabel',
+        'notifSectionTitle', 'notifSectionDesc',
+        'notifThEvent', 'notifThInApp', 'notifThEmail',
+        'notifE1Name', 'notifE1Trigger',
+        'notifE2Name', 'notifE2Trigger',
+        'notifE3Name', 'notifE3Trigger',
+        'notifE4Name', 'notifE4Trigger',
+        'notifE5Name', 'notifE5Trigger',
+        'notifE6Name', 'notifE6Trigger',
+        'saveNotifLabel',
       ];
 
       ids.forEach(id => {
@@ -1325,6 +1519,11 @@
     function handleResendVerification() {
       showToast('success', t('toastResendSuccess'), t('toastResendSuccessDesc'));
       window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_email_change_resent');
+    }
+
+    function handleSaveNotif() {
+      showToast('success', t('toastNotifSuccess'), '');
+      window.LabelSuiteAnalytics && LabelSuiteAnalytics.track('prototype_cta_clicked', { cta: 'save_notification_settings' });
     }
 
     /* ── Helpers ────────────────────────────────────────────────── */

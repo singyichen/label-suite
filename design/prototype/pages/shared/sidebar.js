@@ -73,6 +73,33 @@
     }
   };
 
+  var notificationI18n = {
+    zh: {
+      bellAriaLabel: '通知',
+      dropdownTitle: '通知',
+      markAllRead: '全部標為已讀',
+      emptyText: '目前沒有通知',
+      eventAnnotationComplete: function (actor, task) { return actor + ' 已完成「' + task + '」的標記作業'; },
+      eventReviewComplete: function (actor, task) { return actor + ' 已完成「' + task + '」的審核'; },
+      eventDryRunAllDone: function (task) { return '「' + task + '」的試標已全部完成，可進入正式標記'; },
+      eventFormalAnnotationAllDone: function (task) { return '「' + task + '」的正式標記已全部完成'; },
+      eventAssignmentAnnotator: function (task) { return '你已被分配「' + task + '」的標記清單'; },
+      eventAssignmentReviewer: function (task) { return '你已被分配「' + task + '」的審核清單'; }
+    },
+    en: {
+      bellAriaLabel: 'Notifications',
+      dropdownTitle: 'Notifications',
+      markAllRead: 'Mark all as read',
+      emptyText: 'No notifications',
+      eventAnnotationComplete: function (actor, task) { return actor + ' completed annotation for "' + task + '"'; },
+      eventReviewComplete: function (actor, task) { return actor + ' completed review for "' + task + '"'; },
+      eventDryRunAllDone: function (task) { return 'All annotators completed dry run for "' + task + '"'; },
+      eventFormalAnnotationAllDone: function (task) { return 'All annotators completed formal annotation for "' + task + '"'; },
+      eventAssignmentAnnotator: function (task) { return 'You have been assigned an annotation list for "' + task + '"'; },
+      eventAssignmentReviewer: function (task) { return 'You have been assigned a review list for "' + task + '"'; }
+    }
+  };
+
   function setTextById(id, text) {
     var el = document.getElementById(id);
     if (el) el.textContent = text;
@@ -375,7 +402,7 @@
         labelId: 'navProfile',
         defaultLabel: '個人設定',
         icon: '<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-      }
+      },
     ];
 
     var userChipHref = activeNav === 'profile' ? '#' : profileHref;
@@ -408,6 +435,12 @@
             '<svg data-theme-toggle-icon="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>' +
             '<svg data-theme-toggle-icon="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' +
           '</button>' +
+          '<button id="mobileNotificationBellBtn" class="mobile-notification-bell-btn" type="button" aria-label="通知" title="通知" aria-haspopup="true" aria-expanded="false">' +
+            '<span class="notif-bell-wrap">' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>' +
+              '<span id="mobileNotificationBadge" class="notif-badge hidden" aria-hidden="true"></span>' +
+            '</span>' +
+          '</button>' +
           '<button id="mobileLogoutBtn" class="mobile-top-logout" aria-label="登出" title="登出">' +
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>' +
           '</button>' +
@@ -425,6 +458,12 @@
             '<button id="sidebarThemeToggleBtn" class="sidebar-utility-btn sidebar-theme-toggle-btn" data-testid="sidebar-theme-toggle" type="button" aria-label="切換為深色模式" title="切換為深色模式">' +
               '<svg class="sidebar-utility-icon" data-theme-toggle-icon="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>' +
               '<svg class="sidebar-utility-icon" data-theme-toggle-icon="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' +
+            '</button>' +
+            '<button id="notificationBellBtn" class="sidebar-utility-btn" type="button" aria-label="通知" title="通知" aria-haspopup="true" aria-expanded="false">' +
+              '<span class="notif-bell-wrap">' +
+                '<svg class="sidebar-utility-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>' +
+                '<span id="notificationBadge" class="notif-badge hidden" aria-hidden="true"></span>' +
+              '</span>' +
             '</button>' +
           '</div>' +
           '<div class="user-chip">' +
@@ -534,6 +573,225 @@
         setThemeChoice(btn.dataset.nextTheme === 'light' ? 'light' : 'dark');
       });
     });
+    // ── Notification bell ────────────────────────────────────────
+    var existingDropdown = document.getElementById('notificationDropdown');
+    if (existingDropdown) existingDropdown.parentNode.removeChild(existingDropdown);
+
+    var notifDropdownEl = document.createElement('div');
+    notifDropdownEl.id = 'notificationDropdown';
+    notifDropdownEl.className = 'notif-dropdown hidden';
+
+    var notifHeaderDiv = document.createElement('div');
+    notifHeaderDiv.className = 'notif-dropdown-header';
+    var notifTitleSpan = document.createElement('span');
+    notifTitleSpan.className = 'notif-dropdown-title';
+    notifTitleSpan.id = 'notifDropdownTitle';
+    notifTitleSpan.textContent = '通知';
+    notifHeaderDiv.appendChild(notifTitleSpan);
+    var notifMarkAllBtnEl = document.createElement('button');
+    notifMarkAllBtnEl.id = 'notifMarkAllBtn';
+    notifMarkAllBtnEl.className = 'notif-mark-all-btn';
+    notifMarkAllBtnEl.type = 'button';
+    notifMarkAllBtnEl.textContent = '全部標為已讀';
+    notifHeaderDiv.appendChild(notifMarkAllBtnEl);
+    notifDropdownEl.appendChild(notifHeaderDiv);
+
+    var notifListDiv = document.createElement('div');
+    notifListDiv.id = 'notificationList';
+    notifListDiv.className = 'notif-list';
+    notifDropdownEl.appendChild(notifListDiv);
+
+    document.body.appendChild(notifDropdownEl);
+
+    var notifBellBtn = document.getElementById('notificationBellBtn');
+    var notifDropdown = document.getElementById('notificationDropdown');
+    var notifBadge = document.getElementById('notificationBadge');
+    var notifList = document.getElementById('notificationList');
+
+    var mockNotifs = [
+      {
+        id: '1',
+        type: 'annotation_complete',
+        actorName: { zh: '陳小明', en: 'Alex Chen' },
+        taskName: { zh: '任務 A', en: 'Task A' },
+        time: { zh: '2 分鐘前', en: '2 minutes ago' },
+        read: false
+      },
+      {
+        id: '2',
+        type: 'review_complete',
+        actorName: { zh: '王大偉', en: 'David Wang' },
+        taskName: { zh: '任務 A', en: 'Task A' },
+        time: { zh: '15 分鐘前', en: '15 minutes ago' },
+        read: false
+      },
+      {
+        id: '3',
+        type: 'dry_run_all_done',
+        actorName: null,
+        taskName: { zh: '任務 B', en: 'Task B' },
+        time: { zh: '1 小時前', en: '1 hour ago' },
+        read: false
+      },
+      {
+        id: '4',
+        type: 'formal_annotation_all_done',
+        actorName: null,
+        taskName: { zh: '任務 C', en: 'Task C' },
+        time: { zh: '2 小時前', en: '2 hours ago' },
+        read: true
+      },
+      {
+        id: '5',
+        type: 'assignment_created_annotator',
+        actorName: null,
+        taskName: { zh: '任務 D', en: 'Task D' },
+        time: { zh: '3 小時前', en: '3 hours ago' },
+        read: true
+      },
+      {
+        id: '6',
+        type: 'assignment_created_reviewer',
+        actorName: null,
+        taskName: { zh: '任務 E', en: 'Task E' },
+        time: { zh: '4 小時前', en: '4 hours ago' },
+        read: true
+      }
+    ];
+
+    function getLocalizedValue(value, lang) {
+      var normalizedLang = normalizeLang(lang);
+      if (value && typeof value === 'object') {
+        return value[normalizedLang] || value.zh || value.en || '';
+      }
+      return value || '';
+    }
+
+    function getNotifMessage(notif, lang) {
+      var t = notificationI18n[normalizeLang(lang)];
+      var actorName = getLocalizedValue(notif.actorName, lang);
+      var taskName = getLocalizedValue(notif.taskName, lang);
+      switch (notif.type) {
+        case 'annotation_complete': return t.eventAnnotationComplete(actorName, taskName);
+        case 'review_complete': return t.eventReviewComplete(actorName, taskName);
+        case 'dry_run_all_done': return t.eventDryRunAllDone(taskName);
+        case 'formal_annotation_all_done': return t.eventFormalAnnotationAllDone(taskName);
+        case 'assignment_created_annotator': return t.eventAssignmentAnnotator(taskName);
+        case 'assignment_created_reviewer': return t.eventAssignmentReviewer(taskName);
+        default: return taskName;
+      }
+    }
+
+    function renderNotifList(lang) {
+      if (!notifList) return;
+      while (notifList.firstChild) notifList.removeChild(notifList.firstChild);
+      if (mockNotifs.length === 0) {
+        var emptyDiv = document.createElement('div');
+        emptyDiv.className = 'notif-empty';
+        emptyDiv.textContent = notificationI18n[normalizeLang(lang)].emptyText;
+        notifList.appendChild(emptyDiv);
+        return;
+      }
+      mockNotifs.forEach(function (n) {
+        var isAssign = n.type === 'assignment_created_annotator' || n.type === 'assignment_created_reviewer';
+        var itemDiv = document.createElement('div');
+        itemDiv.className = 'notif-item' + (n.read ? ' is-read' : '');
+
+        var iconSpan = document.createElement('span');
+        iconSpan.className = 'notif-item-icon' + (isAssign ? ' notif-icon-assign' : ' notif-icon-check');
+        itemDiv.appendChild(iconSpan);
+
+        var bodyDiv = document.createElement('div');
+        bodyDiv.className = 'notif-item-body';
+        var textP = document.createElement('p');
+        textP.className = 'notif-item-text';
+        textP.textContent = getNotifMessage(n, lang);
+        bodyDiv.appendChild(textP);
+        var timeSpan = document.createElement('span');
+        timeSpan.className = 'notif-item-time';
+        timeSpan.textContent = getLocalizedValue(n.time, lang);
+        bodyDiv.appendChild(timeSpan);
+        itemDiv.appendChild(bodyDiv);
+
+        if (!n.read) {
+          var dotSpan = document.createElement('span');
+          dotSpan.className = 'notif-item-dot';
+          dotSpan.setAttribute('aria-hidden', 'true');
+          itemDiv.appendChild(dotSpan);
+        }
+        notifList.appendChild(itemDiv);
+      });
+    }
+
+    function updateNotifBadge() {
+      var unread = mockNotifs.filter(function (n) { return !n.read; }).length;
+      var badgeText = unread > 9 ? '9+' : String(unread);
+      [notifBadge, document.getElementById('mobileNotificationBadge')].forEach(function (el) {
+        if (!el) return;
+        if (unread > 0) {
+          el.textContent = badgeText;
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    }
+
+    function setNotifBellsExpanded(expanded) {
+      [notifBellBtn, document.getElementById('mobileNotificationBellBtn')].forEach(function (btn) {
+        if (btn) btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      });
+    }
+
+    function openNotifDropdown() {
+      if (!notifDropdown || !notifBellBtn) return;
+      var lang = readStoredLang();
+      var t = notificationI18n[normalizeLang(lang)];
+      var titleEl = document.getElementById('notifDropdownTitle');
+      if (titleEl) titleEl.textContent = t.dropdownTitle;
+      var markAllEl = document.getElementById('notifMarkAllBtn');
+      if (markAllEl) markAllEl.textContent = t.markAllRead;
+      renderNotifList(lang);
+      notifDropdown.classList.remove('hidden');
+      setNotifBellsExpanded(true);
+    }
+
+    function closeNotifDropdown() {
+      if (!notifDropdown || !notifBellBtn) return;
+      notifDropdown.classList.add('hidden');
+      setNotifBellsExpanded(false);
+    }
+
+    [notifBellBtn, document.getElementById('mobileNotificationBellBtn')].forEach(function (btn) {
+      if (!btn) return;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
+          closeNotifDropdown();
+        } else {
+          openNotifDropdown();
+        }
+      });
+    });
+
+    if (notifMarkAllBtnEl) {
+      notifMarkAllBtnEl.addEventListener('click', function () {
+        mockNotifs.forEach(function (n) { n.read = true; });
+        renderNotifList(readStoredLang());
+        updateNotifBadge();
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      if (!notifDropdown || notifDropdown.classList.contains('hidden')) return;
+      if (notifBellBtn && notifBellBtn.contains(e.target)) return;
+      if (notifDropdown.contains(e.target)) return;
+      closeNotifDropdown();
+    });
+
+    updateNotifBadge();
+    // ── End notification bell ────────────────────────────────────
+
     if (window.LabelSuiteTheme && typeof window.LabelSuiteTheme.onChange === 'function') {
       window.LabelSuiteTheme.onChange(syncSidebarThemeToggle);
     }

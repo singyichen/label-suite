@@ -12,9 +12,9 @@
 ---
 
 **Project:** Label Suite
-**Updated:** 2026-04-21
+**Updated:** 2026-05-20
 **Category:** Micro SaaS (Tool-based Web App)
-**Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-04-15 15:13 +0800)
+**Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-05-20)
 
 ---
 
@@ -22,9 +22,9 @@
 
 **Foundation** — [Color Palette](#color-palette) · [Semantic State Colors](#semantic-state-colors) · [Dark Mode Tokens](#dark-mode-tokens) · [Typography](#typography) · [Bilingual Typography](#bilingual-typography) · [Spacing](#spacing-variables) · [Border Radius](#border-radius-scale) · [Z-index](#z-index-scale) · [Shadows](#shadow-depths)
 
-**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link)
+**Components** — [Buttons](#buttons) · [Cards](#cards) · [Inputs](#inputs) · [Modals](#modals) · [Status Badges](#status-badges) · [Alert Banner](#error--alert-banner) · [Toast](#toast) · [Navbar](#navbar) · [Sidebar](#sidebar) · [Desktop Content Tabs](#desktop-content-tabs) · [Table](#table) · [Avatar](#avatar) · [Tooltip](#tooltip) · [Mobile Tab Bar](#mobile-bottom-tab-bar) · [State Panel](#state-panel) · [Prototype Switcher](#prototype-only-state-switcher) · [Divider](#divider) · [List](#list-activity-list) · [Link](#link) · [Toolbar](#toolbar) · [Step Indicator](#step-indicator) · [Upload Zone](#upload-zone) · [Tag Input](#tag-input--tag-pill) · [Toggle Switch](#toggle-switch) · [Code Editor](#code-editor-schema)
 
-**Guidelines** — [Style / Flat Design](#style-guidelines) · [Page Shells](#page-shell-patterns) · [Anti-Patterns](#anti-patterns-do-not-use) · [Pre-Delivery Checklist](#pre-delivery-checklist)
+**Guidelines** — [Style / Flat Design](#style-guidelines) · [Page Shells](#page-shell-patterns) · [Anti-Patterns](#anti-patterns-do-not-use) · [Pre-Delivery Checklist](#pre-delivery-checklist) · [Changelog](#changelog)
 
 ---
 
@@ -60,10 +60,22 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 | State | `color-success` / `color-success-bg` / `color-success-border` | `#15803D` / `#F0FDF4` / `#BBF7D0` |
 | State | `color-warning` / `color-warning-bg` / `color-warning-border` | `#A16207` / `#FEFCE8` / `#FEF08A` |
 | State | `color-info` / `color-info-bg` / `color-info-border` | `#1D4ED8` / `#EFF6FF` / `#BFDBFE` |
+| Extended | `color-cta-hover` | `#059669` |
+| Extended | `color-primary-soft-bg` | `#EEF2FF` |
+| Extended | `color-primary-border` | `#C7D2FE` |
+| Extended | `color-border-muted` | `#F1F5F9` |
+| Extended | `color-text-soft` | `#64748B` |
+| Extended | `color-slate-50` | `#F8FAFC` |
+| Alias | `color-ink-muted` | `#94A3B8` (= `color-text-muted`) |
+| Alias | `color-error-soft-bg` / `color-error-soft-border` | `#FEF2F2` / `#FECACA` (= error bg/border) |
+| Alias | `color-success-soft-bg` / `color-success-soft-border` | `#F0FDF4` / `#BBF7D0` |
+| Alias | `color-warning-soft-bg` / `color-warning-soft-border` | `#FEFCE8` / `#FEF08A` |
 | Alias (legacy in pen) | `color-background` | `#F5F3FF` |
 | Alias (legacy in pen) | `color-text` | `#1E1B4B` |
 | Radius | `radius-sm` / `radius-md` / `radius-lg` / `radius-xl` / `radius-full` | `4 / 8 / 12 / 16 / 9999` |
 | Spacing | `space-xs` / `space-sm` / `space-md` / `space-lg` / `space-xl` / `space-2xl` / `space-3xl` | `4 / 8 / 16 / 24 / 32 / 48 / 64` |
+| Motion | `dur-fast` / `dur-normal` | `150ms` / `200ms` |
+| Motion | `ease-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` |
 
 ### Pen Typography Snapshot (Canonical)
 
@@ -96,12 +108,40 @@ Used for status badges, error banners, alerts, and feedback messages.
 
 **Task Status Badge Mapping:**
 
-| Status | Color Role | Example |
-|--------|-----------|---------|
-| In Progress | Warning | `bg-yellow-50 text-yellow-700 border-yellow-200` |
-| Not Started | Info | `bg-blue-50 text-blue-700 border-blue-200` |
-| Submitted / Completed | Success | `bg-green-50 text-green-700 border-green-200` |
-| Error / Rejected | Error | `bg-red-50 text-red-700 border-red-200` |
+| Status | CSS Class | Text | Background | Border |
+|--------|-----------|------|------------|--------|
+| Draft | `badge-draft` | `#4B5563` | `#F9FAFB` | `#E5E7EB` |
+| Dry Run | `badge-dry-run-status` | `#6B7280` | `#F3F4F6` | `#D1D5DB` |
+| IAA / In Review | `badge-iaa` | `--color-warning` | `--color-warning-bg` | `--color-warning-border` |
+| In Progress | `badge-in-progress` | `--color-info` | `--color-info-bg` | `--color-info-border` |
+| Completed | `badge-completed` | `--color-success` | `--color-success-bg` | `--color-success-border` |
+| Error / Rejected | — | `--color-error` | `--color-error-bg` | `--color-error-border` |
+
+**Task Type Badge Mapping (light mode):**
+
+| Type | CSS Class | Text | Background | Border |
+|------|-----------|------|------------|--------|
+| Single | `badge-task-type-single` | `#0E7490` (cyan-700) | `#ECFEFF` (cyan-50) | `#A5F3FC` (cyan-200) |
+| Sequence | `badge-task-type-sequence` | `#7C2D12` (orange-900) | `#FFF7ED` (orange-50) | `#FDBA74` (orange-300) |
+| Relation | `badge-task-type-relation` | `#155E75` (cyan-800) | `#ECFEFF` (cyan-50) | `#67E8F9` (cyan-300) |
+| Pairs | `badge-task-type-pairs` | `#065F46` (emerald-800) | `#ECFDF5` (emerald-50) | `#A7F3D0` (emerald-200) |
+| Scoring | `badge-task-type-scoring` | `#7E22CE` (purple-700) | `#FAF5FF` (purple-50) | `#E9D5FF` (purple-200) |
+
+**Base badge CSS:**
+
+```css
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+```
 
 ## Dark Mode Tokens
 
@@ -290,14 +330,19 @@ html[data-theme="dark"] {
 
 ### Typography
 
-- **Heading Font:** Crimson Pro
-- **Body Font:** Inter
+- **Heading Font:** Crimson Pro (`--font-serif-display`)
+- **Body Font:** Inter (`--font-sans`)
+- **Reading / Accessibility Font:** Atkinson Hyperlegible (`--font-sans-reading`) — for text-heavy annotation reading panels
+- **Code / Mono Font:** JetBrains Mono (`--font-mono`) — for schema editor, code blocks
 - **Mood:** academic, research, scholarly, accessible, readable, educational
-- **Google Fonts:** [Crimson Pro + Inter](https://fonts.google.com/share?selection.family=Crimson+Pro:wght@400;500;600;700|Inter:wght@400;500;600;700)
+- **Google Fonts:** Crimson Pro + Inter + Atkinson Hyperlegible + JetBrains Mono
 
-**CSS Import:**
+**CSS Variables:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+--font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
+--font-sans:          'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
+--font-sans-reading:  'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+--font-mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 ```
 
 **Chinese Fallback:**
@@ -311,15 +356,27 @@ font-family: 'Inter', 'Noto Sans TC', 'PingFang TC', sans-serif;
 
 ### Typography Scale
 
-| Level | Font | Size | Weight | Line-Height | Usage |
-|-------|------|------|--------|-------------|-------|
-| Display | Crimson Pro | 48px / `text-5xl` | 700 | 1.2 | Hero titles |
-| H1 | Crimson Pro | 36px / `text-4xl` | 700 | 1.3 | Page titles |
-| H2 | Crimson Pro | 24px / `text-2xl` | 600 | 1.4 | Section headings |
-| H3 | Inter | 18px / `text-xl` | 600 | 1.5 | Card titles, subsections |
-| Body | Inter | 16px / `text-base` | 400 | 1.6 (EN) / 1.8 (ZH) | Default body text |
-| Caption | Inter | 14px / `text-sm` | 400 | 1.5 | Supporting text, metadata |
-| Label | Inter | 12px / `text-xs` | 500 | 1.4 | Tags, badges, form labels |
+| Level | Font | Size | Weight | Line-Height | CSS Variable | Usage |
+|-------|------|------|--------|-------------|--------------|-------|
+| Display | Crimson Pro | 48px / `text-5xl` | 700 | 1.2 | `--text-display` | Hero titles |
+| H1 | Crimson Pro | 36px / `text-4xl` | 700 | 1.3 | `--text-h1` | Page titles |
+| Page Title | Crimson Pro | 28px | 700 | 1.3 | — | Module page header (`.page-main-title`) |
+| H2 | Crimson Pro | 24px / `text-2xl` | 600 | 1.4 | `--text-h2` | Section headings |
+| H3 | Inter | 18px / `text-xl` | 600 | 1.5 | `--text-h3` | Card titles, subsections |
+| Body | Inter | 16px / `text-base` | 400 | 1.6 (EN) / 1.8 (ZH) | `--text-body` | Default body text |
+| Caption | Inter | 14px / `text-sm` | 400 | 1.5 | `--text-caption` | Supporting text, metadata |
+| Label | Inter | 12px / `text-xs` | 500 | 1.4 | `--text-label` | Tags, badges, form labels |
+
+**Line-height CSS Variables:**
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--leading-tight` | `1.2` | Display |
+| `--leading-snug` | `1.3` | H1 |
+| `--leading-normal` | `1.4` | H2 |
+| `--leading-relaxed` | `1.5` | H3, captions |
+| `--leading-body` | `1.6` | Body (EN) |
+| `--leading-body-zh` | `1.8` | Body (ZH) |
 
 ### Bilingual Typography
 
@@ -373,6 +430,28 @@ Label Suite supports zh-TW / EN. Apply these rules when building bilingual pages
 | `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
 | `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
 | `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+| `--shadow-card` | `0 4px 24px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.06)` | Indigo-tinted card glow (toast, floating panels) |
+
+**Motion Tokens:**
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--dur-fast` | `150ms` | Hover state changes, focus ring |
+| `--dur-normal` | `200ms` | Component entry/exit, icon transitions |
+| `--ease-standard` | `cubic-bezier(0.4, 0, 0.2, 1)` | Default easing for all transitions |
+
+### Semantic Aliases (tokens.css)
+
+Semantic aliases map role names to token values, allowing role-based targeting without repeating hex values:
+
+| Alias | Maps to | Usage |
+|-------|---------|-------|
+| `--fg-1` | `--color-ink` | Primary text |
+| `--fg-2` | `--color-text-soft` | Secondary/subdued text |
+| `--fg-3` | `--color-text-muted` | Placeholder, disabled text |
+| `--bg-page` | `--color-surface` | Page background |
+| `--bg-surface` | `--color-white` | Card / panel background |
+| `--nav-active-bg` | `--color-surface` (light) / `#2A2A35` (dark) | Active nav item pill background |
 
 ---
 
@@ -1509,6 +1588,216 @@ Text-based navigation/action element. Use semantic `<a>` for navigation targets 
 
 ---
 
+### Toolbar
+
+Used at the top of list/table pages to provide search + filter controls. Appears in task-list, dataset-analysis-list, and annotation-list.
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Container | `display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-lg)` |
+| Left group | `display: flex; align-items: center; gap: var(--space-sm); flex: 1; flex-wrap: wrap` |
+| Right group | `display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; margin-left: auto` |
+| Search input | Leading search icon, `min-width: 220px; width: 280px`, padding `9px 12px 9px 36px` |
+| Filter select | Custom arrow via SVG background-image, `min-width: 140px`, `appearance: none` |
+| Clear button | `border border-slate-200 rounded-md text-sm text-muted` → `hover: border-primary text-ink` |
+
+**HTML structure:**
+```html
+<div class="toolbar">
+  <div class="toolbar-left">
+    <!-- Search input with leading icon -->
+    <div class="search-wrap">
+      <!-- SVG search icon absolute-positioned -->
+      <input type="search" class="search-input" placeholder="搜尋...">
+    </div>
+    <!-- Filter selects -->
+    <select class="filter-select">...</select>
+  </div>
+  <div class="toolbar-right">
+    <button class="clear-btn">清除篩選</button>
+    <button class="btn btn-primary">新增任務</button>
+  </div>
+</div>
+```
+
+---
+
+### Step Indicator
+
+Used in multi-step forms (e.g. task creation wizard). Shows progress through discrete steps.
+
+**Specs:**
+
+| Element | Value |
+|---------|-------|
+| Container | `display: flex; align-items: center; margin-bottom: var(--space-lg)` |
+| Step circle | `32px`, `border-radius: 50%`, `border: 2px solid var(--color-border)` |
+| Active circle | `border-color: var(--color-primary); background: var(--color-primary); color: white` |
+| Done circle | `border-color: var(--color-cta); background: var(--color-cta); color: white` |
+| Connector | `flex: 1; height: 2px; background: var(--color-border)` |
+| Done connector | `background: var(--color-cta)` |
+
+**CSS:**
+```css
+.step-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; border: 2px solid var(--color-border); background: var(--color-white); color: var(--color-ink-muted); transition: all var(--dur-fast); }
+.step-circle.active { border-color: var(--color-primary); background: var(--color-primary); color: white; }
+.step-circle.done   { border-color: var(--color-cta); background: var(--color-cta); color: white; }
+.step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 8px; margin-bottom: 18px; transition: background var(--dur-fast); }
+.step-connector.done { background: var(--color-cta); }
+.step-label { font-size: 12px; font-weight: 500; color: var(--color-ink-muted); }
+.step-label.active { color: var(--color-primary); font-weight: 600; }
+.step-label.done   { color: var(--color-cta); }
+```
+
+---
+
+### Upload Zone
+
+Drag-and-drop file upload area used in task creation (dataset upload).
+
+**Specs:**
+
+| State | Border | Background |
+|-------|--------|------------|
+| Default | `2px dashed var(--color-border)` | `var(--color-slate-50)` |
+| Hover / Dragover | `2px dashed var(--color-primary)` | `var(--color-primary-soft-bg)` |
+| Error | `2px dashed var(--color-error)` | `var(--color-slate-50)` |
+
+**CSS:**
+```css
+.upload-zone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 32px var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  background: var(--color-slate-50);
+  transition: border-color var(--dur-fast), background var(--dur-fast);
+}
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+}
+```
+
+**File preview row** (shown after successful upload):
+```css
+.upload-file-preview {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius-md);
+  background: var(--color-success-bg);
+}
+```
+
+---
+
+### Tag Input / Tag Pill
+
+Multi-value tag input used in task creation (e.g. label list, annotator assignment).
+
+**CSS:**
+```css
+.tag-input-wrap {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 8px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-white); min-height: 44px;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.tag-input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.tag-pill {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft-bg);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: 12px; font-weight: 500;
+}
+.tag-pill-remove { width: 14px; height: 14px; border: none; background: none; color: currentColor; cursor: pointer; opacity: 0.7; }
+.tag-pill-remove:hover { opacity: 1; }
+```
+
+---
+
+### Toggle Switch
+
+Binary on/off control used in task schema settings (e.g. enable dry-run, allow skip).
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Track size | `40px × 22px`, `border-radius: var(--radius-full)` |
+| Thumb size | `16px × 16px`, `border-radius: 50%` |
+| Off state | `background: var(--color-border)` |
+| On state | `background: var(--color-primary)` |
+| Thumb translate | `translateX(18px)` when checked |
+
+**CSS:**
+```css
+.toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--dur-fast); }
+.toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; border-radius: 50%; background: white; transition: transform var(--dur-fast); }
+.toggle-switch input:checked + .toggle-slider { background: var(--color-primary); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+```
+
+**HTML:**
+```html
+<div class="toggle-row">
+  <div class="toggle-info">
+    <span class="toggle-label-text">Dry-run mode</span>
+    <span class="toggle-desc">Run without materializing results</span>
+  </div>
+  <label class="toggle-switch" aria-label="Toggle dry-run mode">
+    <input type="checkbox">
+    <span class="toggle-slider"></span>
+  </label>
+</div>
+```
+
+---
+
+### Code Editor (Schema)
+
+Monospace textarea used for JSON/YAML schema editing in task-new. Uses `--font-mono` and a dark ink background for contrast.
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Font | `var(--font-mono)` (JetBrains Mono) |
+| Font size | `13px` |
+| Background | `var(--color-ink)` (`#1E1B4B`) |
+| Text color | `#E2E8F0` (slate-200) |
+| Border | `1px solid var(--color-border)` |
+| Padding | `var(--space-md)` |
+| Min height | `320px`, `resize: vertical` |
+| Focus ring | `border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12)` |
+
+```css
+.code-editor {
+  width: 100%; min-height: 320px; padding: var(--space-md);
+  font-family: var(--font-mono); font-size: 13px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-ink); color: #E2E8F0;
+  outline: none; resize: vertical;
+  transition: border-color var(--dur-fast);
+}
+```
+
+**When NOT to use:**
+- ❌ Non-code text input → use `.input-textarea` instead
+- ❌ Read-only code display → use a `<pre><code>` block with appropriate token highlighting
+
+---
+
 ## Style Guidelines
 
 **Style:** Flat Design
@@ -1604,3 +1893,21 @@ Before delivering any UI code, verify:
 - [ ] Dark mode: SVG icons loaded via `<img>` have `filter: brightness(0) invert(1)` in dark block
 - [ ] Dark mode: CTA buttons use dark text (not white) on bright backgrounds
 - [ ] Dark mode: no hardcoded `#000000` or `#FFFFFF` — all colors via CSS variables
+
+---
+
+## Changelog
+
+| 版本 | 日期 | 更新摘要 |
+|------|------|---------|
+| v1.0 | 2026-03-27 | 建立 `design/system/` 設計系統結構；確立核心色票、字型、間距、圓角、z-index、陰影 |
+| v1.1 | 2026-03-30 | 根據資深 UX/UI 審查意見調整設計規範；更新 Dashboard prototype；新增 Profile 頁面規格 |
+| v1.2 | 2026-03-31 | 補充 P1–P4 元件規格：Toast、Button 變體（Danger/Ghost/Loading/Disabled）、Input Readonly、Navbar、Sidebar、Table、Avatar、Tooltip、Mobile Bottom Tab Bar、Divider、List |
+| v1.3 | 2026-04-01 | 規格內容全面英文化；修正 Navbar 高度不一致問題；修正 Mobile Tab Bar 斷點（`640px` → `768px`）|
+| v1.4 | 2026-04-16 | 將 `design-system.pen` 變數快照同步至 MASTER.md；對齊 Token 名稱與 Pencil 來源值 |
+| v1.5 | 2026-04-21 | 新增 Desktop Content Tabs 規格；Button 章節補充密集列操作對應表；釐清成員操作按鈕層級 |
+| v1.5.1 | 2026-04-22 | 修正 PR #36 審查意見：Input 子模式表格、Readonly vs Disabled 區分說明、Modal 無障礙備註 |
+| v1.6 | 2026-05-13 | 新增 Dark Mode Tokens 章節：核心色票覆寫、語義狀態深色變體、陰影覆寫、實作規則（SVG icon filter、CTA 對比、品牌色近白） |
+| v1.6.1 | 2026-05-14 | 深色模式套用至所有 prototype 頁面；補充深色模式規則：Badge 覆寫、審核員操作按鈕、結果標籤、VA/分類 chip、獨立 auth 頁面 |
+| v1.6.2 | 2026-05-15 | 修正 annotation results 深色模式 `--color-ink-muted` 對應錯誤；修正 i18n 審核結果文字顯示 |
+| v1.7 | 2026-05-20 | **Token 缺口補齊** — 新增 10 個 extended/alias token（`--color-cta-hover`、`--color-primary-soft-bg`、`--color-text-soft`、soft-bg/soft-border aliases）、Motion tokens（`--dur-fast/--dur-normal/--ease-standard`）、Semantic aliases（`--fg-1/2/3`、`--bg-page`、`--bg-surface`）、`--shadow-card` 亮模式值；**字型** — 新增 `Atkinson Hyperlegible`（閱讀用）與 `JetBrains Mono`（程式碼），補充 `--font-*` CSS 變數與 line-height 變數表，新增 Page Title 28px 層級；**Badge** — 擴充 8 種新類型（draft、iaa、task-type-single/sequence/relation/pairs/scoring）；**新元件** — Toolbar、Step Indicator、Upload Zone、Tag Input/Pill、Toggle Switch、Code Editor |

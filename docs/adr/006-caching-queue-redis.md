@@ -55,6 +55,20 @@ Use **Redis 7** as both the **Celery message broker** and **application cache**.
 | Task config | 10 minutes | Changes only on admin update |
 | User session | 24 hours | Standard session lifetime |
 
+## Eviction Policy Isolation
+
+`allkeys-lru` is a Redis **instance-level** setting, not per-DB. If `maxmemory` is set on the shared Redis instance, LRU eviction applies to all DBs including broker (DB 0) and result backend (DB 1) — this can silently drop unprocessed task messages.
+
+**Decision**: Do **not** set `maxmemory` on the shared Redis instance. Instead, enforce cache bounds through explicit TTL on every cache key (see TTL Strategy table above). This makes eviction predictable and per-key rather than LRU-global.
+
+```conf
+# redis.conf — do NOT set maxmemory for the shared instance
+# maxmemory 256mb        ← commented out intentionally
+# maxmemory-policy allkeys-lru  ← not applied
+```
+
+If memory pressure becomes a concern in production, isolate the application cache into a **separate Redis instance** (`redis://redis-cache:6379/0`) with its own `maxmemory` config, leaving the broker instance unrestricted.
+
 ## Consequences
 
 ### Easier

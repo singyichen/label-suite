@@ -2,7 +2,7 @@
 
 **功能分支**：`005-profile-settings`  
 **建立日期**：2026-04-05  
-**版本**：1.2.5  
+**版本**：1.2.7  
 **狀態**：Clarified  
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
 
@@ -210,7 +210,31 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — 響應式版面（優先級：P2）
+### User Story 4 — 通知設定偏好（優先級：P2）
+
+已登入使用者可在 `/profile` 通知設定區塊，針對各通知事件分別開關站內通知與電子郵件，儲存後以 toast 確認。
+
+**此優先級原因**：通知偏好屬於個人設定範疇，整合於 `/profile` 避免額外路由，降低操作跳轉成本。
+
+**獨立測試方式**：進入 `/profile`，捲動至通知設定區塊，切換開關後點擊儲存，確認 toast 出現；切換語言後確認文案同步。
+
+**驗收情境**：
+
+1. **Given** 已登入使用者在 `/profile`，**When** 捲動至通知設定區塊，**Then** 顯示支援的通知事件列表，每個事件有站內通知與電子郵件兩欄開關。
+2. **Given** 使用者切換任一通知開關並點擊「儲存設定」，**When** 儲存成功，**Then** 顯示 toast「設定已儲存」，不跳頁。
+3. **Given** `/profile` 切換語言為 `en`，**When** 顯示通知設定區塊，**Then** 所有事件名稱、觸發說明與按鈕文案同步切換為英文。
+
+**通知設定區塊定義（需與原型一致）**：
+
+- 區塊標題：`通知設定`，副標題：`為每個事件選擇接收通知的方式`
+- 表格欄位：`事件`（含觸發說明）、`站內通知`、`電子郵件`
+- 支援事件（六項）：`annotation_complete`、`review_complete`、`dry_run_all_done`、`formal_annotation_all_done`、`assignment_created_annotator`、`assignment_created_reviewer`
+- 每個事件 × 每個頻道 = 一個 toggle switch（`checkbox`）
+- 儲存按鈕：`儲存設定`（主要）；成功後顯示 toast，不跳頁
+
+---
+
+### User Story 5 — 響應式版面（優先級：P2）
 
 使用者在不同裝置寬度存取 `/profile` 時，頁面需維持可讀、可操作且不破版。
 
@@ -226,7 +250,7 @@ sequenceDiagram
 
 ---
 
-### User Story 5 — 跨頁語言持久化（優先級：P2）
+### User Story 6 — 跨頁語言持久化（優先級：P2）
 
 使用者在 `/profile` 切換語言後，導向其他頁面再返回時，語系必須維持一致。
 
@@ -242,7 +266,7 @@ sequenceDiagram
 
 ---
 
-### User Story 6 — 外觀模式偏好（優先級：P3）
+### User Story 7 — 外觀模式偏好（優先級：P3）
 
 使用者可透過 `/profile` 頁上的共用 Sidebar 切換外觀模式（淺色 / 深色 / 跟隨系統），偏好以 `localStorage` 持久化，跨頁保持一致。
 
@@ -302,6 +326,8 @@ sequenceDiagram
 - **FR-012**：`/profile` 語言狀態必須跨頁持久化；導向 `/dashboard` 與 account 其他頁面後需維持同語系。
 - **FR-013**：`/profile` 頁面的外觀模式由共用 Sidebar Appearance 控制項管理（實作詳見 spec 008 FR-015 群）；`/profile` 本身必須正確套用 `html[data-theme]` 所對應的 CSS token。
 - **FR-013A**：外觀偏好目前以 `APPEARANCE_STORAGE_KEY`（`localStorage`）持久化（client-side only）；若未來需跨裝置同步，應透過 `PATCH /users/me/preferences` 後端持久化，`appearance_mode` 欄位值域對齊 `APPEARANCE_MODES`。
+- **FR-013B**：`/profile` 必須提供通知設定區塊（第四區塊），以表格形式呈現各通知事件（含觸發說明）與站內通知、電子郵件兩欄 toggle switch。
+- **FR-013C**：通知設定儲存成功後顯示 toast，不跳頁；通知設定區塊不提供跳轉至獨立「通知設定」頁面的連結。
 
 ### User Flow & Navigation
 
@@ -421,6 +447,7 @@ flowchart LR
 - **SC-007**：新 Email 未驗證或驗證 token 失效時，系統不得更新帳號主 Email。
 - **SC-008**：`/profile` 切換語言後導向 `/dashboard` 或 account 其他頁再返回，語系需保持一致。
 - **SC-009**：`/profile` 頁面正確套用 `html[data-theme]` 對應的 CSS token；重整後 Appearance 狀態從 `APPEARANCE_STORAGE_KEY` 恢復，不出現 FOUC。
+- **SC-010**：`/profile` 通知設定區塊顯示全部六項通知事件，每項事件各有站內通知與電子郵件兩個 toggle；儲存後顯示 toast，頁面不跳轉。
 
 ---
 
@@ -428,6 +455,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.7 | 2026-05-19 | 調整通知設定欄位文案為「電子郵件」，新增 `formal_annotation_all_done` 正式標記全員完成事件；通知事件總數更新為六項 |
+| 1.2.6 | 2026-05-19 | 新增通知設定區塊規格：User Story 4（原 US4–6 順延為 US5–7）、FR-013B/C、SC-010；移除 `/account/notification-settings.html` 獨立頁面，通知偏好設定整合至 `/profile` 第四區塊 |
 | 1.2.5 | 2026-05-12 | 新增 Appearance 外觀偏好規格：`APPEARANCE_STORAGE_KEY` 常數、User Story 6、FR-013 群、AppearanceState 實體、SC-009；記錄未來後端持久化路徑（`PATCH /users/me/preferences`） |
 | 1.2.4 | 2026-04-16 | 新增跨頁語言持久化規範（User Story / FR / SC / 關鍵實體），並引用 shared 008 契約 |
 | 1.2.3 | 2026-04-16 | 補齊 `/profile` 頁首標題規範：將主標題「個人設定」與副標題「管理您的個人資料與帳號安全」納入區塊定義與功能需求（FR-001A） |
