@@ -3,8 +3,8 @@
 > **用途：** 記錄所有 prototype 頁面中出現的 UI elements，對照 MASTER.md 的定義狀態，作為 design system 擴充的依據。
 >
 > **掃描範圍：** `design/prototype/` 所有頁面
-> **最後掃描：** 2026-04-21
-> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html
+> **最後掃描：** 2026-05-20
+> **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、annotation/annotation-workspace.panels/*、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
 
 ---
@@ -326,6 +326,71 @@
 
 ---
 
+### ✅ Toolbar
+
+**MASTER.md 狀態：** 已定義（search input + filter select + clear button 組合）
+
+| 元素 | 說明 | MASTER.md |
+|------|------|-----------|
+| Search input（含 leading icon） | `min-width: 220px`，搜尋框 | ✅ |
+| Filter select（custom arrow） | `min-width: 140px`，`appearance: none` | ✅ |
+| Clear button | border style，visibility hidden 隱藏而非 display:none | ✅ |
+
+**出現頁面：** task-management/task-list.html、dataset/dataset-analysis-list.html、annotation/annotation-list.html
+
+---
+
+### ✅ Step Indicator
+
+**MASTER.md 狀態：** 已定義（step circle + connector + label，含 active/done 狀態）
+
+| 元素 | MASTER.md |
+|------|-----------|
+| Step circle (default / active / done) | ✅ |
+| Connector (default / done) | ✅ |
+| Step label | ✅ |
+
+**出現頁面：** task-management/task-new.html
+
+---
+
+### ✅ Upload Zone
+
+**MASTER.md 狀態：** 已定義（drag-and-drop 上傳區，含 default/hover/dragover/error 狀態 + file preview row）
+
+| 元素 | MASTER.md |
+|------|-----------|
+| Upload zone (default / hover / error) | ✅ |
+| File preview row（含 remove + preview button） | ✅ |
+
+**出現頁面：** task-management/task-new.html
+
+---
+
+### ✅ Tag Input / Tag Pill
+
+**MASTER.md 狀態：** 已定義（multi-value tag input 含 focus-within ring + pill 含 remove button）
+
+**出現頁面：** task-management/task-new.html
+
+---
+
+### ✅ Toggle Switch
+
+**MASTER.md 狀態：** 已定義（40×22px track + 16px thumb，primary 色 on 狀態）
+
+**出現頁面：** task-management/task-new.html
+
+---
+
+### ✅ Code Editor (Schema)
+
+**MASTER.md 狀態：** 已定義（`--font-mono`、dark ink bg、`resize: vertical`）
+
+**出現頁面：** task-management/task-new.html
+
+---
+
 ## MASTER.md 補充歷程
 
 記錄各 component 加入 MASTER.md 的順序與原因，供追蹤設計系統擴充脈絡。
@@ -348,3 +413,11 @@
 | P4 | **Input — Leading Icon / Eye Toggle / Field Hint/Error** | account flow 已使用 | ✅ 已補充至 MASTER.md |
 | P4 | **State Panel** | forgot/reset 成功與失敗狀態展示 | ✅ 已補充至 MASTER.md |
 | P4 | **Link** | 多頁面已使用，需要一致語意與樣式規範 | ✅ 已補充至 MASTER.md |
+| P2 | **Token gap sync** | tokens.css 領先 MASTER.md：motion tokens、semantic aliases、extended colors、font stacks | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P2 | **Badge — Task Status / Task Type** | task-list.html 新增 draft/iaa/task-type-* 等 8 種新 badge | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P2 | **Toolbar** | task-list、dataset-list 使用，為新 list page pattern | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P2 | **Step Indicator** | task-new.html wizard 使用 | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P2 | **Upload Zone** | task-new.html dataset 上傳 | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P3 | **Tag Input / Tag Pill** | task-new.html label 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P3 | **Toggle Switch** | task-new.html schema 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P3 | **Code Editor (Schema)** | task-new.html JSON schema 編輯 | ✅ 已補充至 MASTER.md (2026-05-20) |
