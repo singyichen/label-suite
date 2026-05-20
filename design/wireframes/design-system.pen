@@ -2931,7 +2931,8 @@
                       "fill": "$color-primary",
                       "content": "Terms and Privacy",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -4683,6 +4684,58 @@
     "radius-full": {
       "type": "number",
       "value": 9999
+    },
+    "color-border-muted": {
+      "type": "color",
+      "value": "#F1F5F9"
+    },
+    "color-cta-hover": {
+      "type": "color",
+      "value": "#059669"
+    },
+    "color-error-soft-bg": {
+      "type": "color",
+      "value": "#FEF2F2"
+    },
+    "color-error-soft-border": {
+      "type": "color",
+      "value": "#FECACA"
+    },
+    "color-ink-muted": {
+      "type": "color",
+      "value": "#94A3B8"
+    },
+    "color-primary-border": {
+      "type": "color",
+      "value": "#C7D2FE"
+    },
+    "color-primary-soft-bg": {
+      "type": "color",
+      "value": "#EEF2FF"
+    },
+    "color-slate-50": {
+      "type": "color",
+      "value": "#F8FAFC"
+    },
+    "color-success-soft-bg": {
+      "type": "color",
+      "value": "#F0FDF4"
+    },
+    "color-success-soft-border": {
+      "type": "color",
+      "value": "#BBF7D0"
+    },
+    "color-text-soft": {
+      "type": "color",
+      "value": "#64748B"
+    },
+    "color-warning-soft-bg": {
+      "type": "color",
+      "value": "#FEFCE8"
+    },
+    "color-warning-soft-border": {
+      "type": "color",
+      "value": "#FEF08A"
     }
   }
 }

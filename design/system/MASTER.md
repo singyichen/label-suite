@@ -14,7 +14,7 @@
 **Project:** Label Suite
 **Updated:** 2026-05-20
 **Category:** Micro SaaS (Tool-based Web App)
-**Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-04-15 15:13 +0800)
+**Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-05-20)
 
 ---
 
