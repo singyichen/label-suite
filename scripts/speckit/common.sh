@@ -67,8 +67,8 @@ speckit_current_ref() {
 
 speckit_parse_feature_ref() {
     local ref="$1"
-    FEATURE_MODULE=""
-    FEATURE_NAME=""
+    declare -g FEATURE_MODULE=""
+    declare -g FEATURE_NAME=""
 
     if [[ "$ref" =~ ^feat/([^/]+)/([0-9]{3}-.+)$ ]]; then
         FEATURE_MODULE="${BASH_REMATCH[1]}"
@@ -117,6 +117,7 @@ speckit_next_feature_name() {
             [[ -d "$dir" ]] || continue
             base="$(basename "$dir")"
             number="${base%%-*}"
+            [[ "$number" =~ ^[0-9]+$ ]] || continue
             number=$((10#$number))
             if (( number > highest )); then
                 highest="$number"

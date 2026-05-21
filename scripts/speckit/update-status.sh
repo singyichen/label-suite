@@ -82,6 +82,7 @@ TODAY="$(date +%Y-%m-%d)"
 CHANGE_NOTE="Update $ID status to \`$STATUS\`."
 
 tmp_file="$(mktemp "${TMPDIR:-/tmp}/status.XXXXXX")"
+trap 'rm -f "$tmp_file"' EXIT
 found=false
 inserted=false
 in_feature_table=false
@@ -106,7 +107,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     if $in_feature_table && [[ "$line" == "---" ]]; then
         if ! $found && ! $inserted; then
-            printf '%s\n' "$NEW_ROW" >> "$tmp_file"
+            printf '%s' "$NEW_ROW" >> "$tmp_file"
             inserted=true
         fi
         in_feature_table=false
@@ -116,7 +117,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 
     if $in_feature_table && [[ "$line" == "## "* ]]; then
         if ! $found && ! $inserted; then
-            printf '%s\n' "$NEW_ROW" >> "$tmp_file"
+            printf '%s' "$NEW_ROW" >> "$tmp_file"
             inserted=true
         fi
         in_feature_table=false

@@ -34,7 +34,7 @@ speckit_is_valid_module "$MODULE" || speckit_die "Invalid module: $MODULE"
 [[ -n "$DESCRIPTION" ]] || speckit_die "Feature description is required"
 
 if [[ -z "$SHORT_NAME" ]]; then
-    SHORT_NAME="$(speckit_slugify "$DESCRIPTION" | tr '-' '\n' | grep -v '^$' | head -4 | tr '\n' '-' | sed 's/-$//')"
+    SHORT_NAME="$(speckit_slugify "$DESCRIPTION" | tr '-' '\n' | grep -v '^$' | head -n 4 | tr '\n' '-' | sed 's/-$//')"
 fi
 SHORT_NAME="$(speckit_slugify "$SHORT_NAME")"
 [[ -n "$SHORT_NAME" ]] || speckit_die "Could not derive short name"
@@ -55,6 +55,9 @@ fi
 if git -C "$REPO_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
     if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$FEATURE_BRANCH"; then
         speckit_die "Branch already exists: $FEATURE_BRANCH"
+    fi
+    if git -C "$REPO_ROOT" status --porcelain | grep -q .; then
+        speckit_die "Uncommitted changes detected. Commit or stash before creating a new feature."
     fi
     git -C "$REPO_ROOT" checkout -b "$FEATURE_BRANCH" >/dev/null
 fi

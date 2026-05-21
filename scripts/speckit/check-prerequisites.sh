@@ -55,11 +55,9 @@ if $INCLUDE_TASKS && [[ -f "$TASKS" ]]; then
     docs+=("tasks.md")
 fi
 
-set +u
-
 if $JSON_MODE; then
     json_docs="["
-    for doc in "${docs[@]}"; do
+    for doc in "${docs[@]+"${docs[@]}"}"; do
         json_docs+="\"$(speckit_json_escape "$doc")\","
     done
     json_docs="${json_docs%,}]"
@@ -86,6 +84,6 @@ else
     echo "FEATURE_SPEC: $FEATURE_SPEC"
     echo "IMPL_PLAN: $IMPL_PLAN"
     echo "TASKS: $TASKS"
-    docs_text="${docs[*]}"
+    docs_text="${docs[*]+${docs[*]}}"
     echo "AVAILABLE_DOCS: $docs_text"
 fi
