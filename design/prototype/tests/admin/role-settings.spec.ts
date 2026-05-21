@@ -2,6 +2,25 @@ import { test, expect } from '@playwright/test';
 
 const ROLE_SETTINGS_URL = '/pages/admin/role-settings.html';
 
+const EXPECTED_PERMISSION_KEYS = [
+  'account.profile.view',
+  'account.profile.edit',
+  'dashboard.view',
+  'task.list.view',
+  'task.create',
+  'task.detail.view',
+  'task.members.manage',
+  'annotation.workspace.annotate',
+  'annotation.workspace.review',
+  'dataset.stats.view',
+  'dataset.quality.view',
+  'dataset.export',
+  'admin.user_management.view',
+  'admin.user_management.manage',
+  'admin.role_settings.view',
+  'admin.role_settings.manage',
+];
+
 test.describe('Admin role settings mobile sidebar layout', () => {
   test('keeps shared sidebar fixed at bottom and brand section fixed at top on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
@@ -66,5 +85,93 @@ test.describe('Admin role settings mobile sidebar layout', () => {
     await page.click('#langToggle');
     await expect(page.locator('#langLabel')).toHaveText('EN');
     await expect(page.locator('#mobileLangLabel')).toHaveText('EN');
+  });
+});
+
+test.describe('Admin role settings matrix behavior', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(ROLE_SETTINGS_URL);
+  });
+
+  test('renders the complete whitelist and canonical role keys', async ({ page }) => {
+    await expect(page.locator('.perm-key')).toHaveText(EXPECTED_PERMISSION_KEYS);
+
+    await expect(page.locator('#thRoleUser')).toHaveAttribute('data-role', 'user');
+    await expect(page.locator('#thRoleSuperAdmin')).toHaveAttribute('data-role', 'super_admin');
+    await expect(page.locator('#thRoleProjectLeader')).toHaveAttribute('data-role', 'project_leader');
+    await expect(page.locator('#thRoleReviewer')).toHaveAttribute('data-role', 'reviewer');
+    await expect(page.locator('#thRoleAnnotator')).toHaveAttribute('data-role', 'annotator');
+
+    const roleKeys = await page.locator('.matrix-checkbox').evaluateAll((nodes) =>
+      [...new Set(nodes.map((node) => (node as HTMLInputElement).dataset.role))].sort()
+    );
+    expect(roleKeys).toEqual(['annotator', 'project_leader', 'reviewer', 'user']);
+  });
+
+  test('shows dirty state and cancel restores the saved matrix in place', async ({ page }) => {
+    const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
+    await expect(taskCreateUser).toBeChecked();
+
+    await taskCreateUser.uncheck();
+    await expect(page.locator('#dirtyBanner')).toBeVisible();
+
+    await page.locator('#cancelBtn').click();
+    await expect(page).toHaveURL(/role-settings\.html/);
+    await expect(taskCreateUser).toBeChecked();
+    await expect(page.locator('#dirtyBanner')).toBeHidden();
+  });
+
+  test('saves role matrix changes and reloads the persisted state', async ({ page }) => {
+    const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
+    await taskCreateUser.uncheck();
+    await page.locator('#saveBtn').click();
+
+    await expect(page.locator('#toast')).toBeVisible();
+    await expect(page.locator('#dirtyBanner')).toBeHidden();
+
+    await page.reload();
+    await expect(page.locator('[data-key="task.create"][data-role="user"]')).not.toBeChecked();
+  });
+
+  test('keeps the matrix editable on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.reload();
+
+    const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
+    await taskCreateUser.uncheck();
+
+    await expect(taskCreateUser).not.toBeChecked();
+    await expect(page.locator('#dirtyBanner')).toBeVisible();
+  });
+
+  test('rejects stale saves and reloads the latest matrix version', async ({ page }) => {
+    // localStorage is patched AFTER page load so matrixVersion (in-memory) stays at 1,
+    // while storage jumps to 2 — this triggers the stale-save conflict path.
+    // If this evaluate were moved to addInitScript (before load), matrixVersion would init
+    // to 2 and no conflict would fire.
+    await page.evaluate(() => {
+      window.localStorage.setItem('labelsuite.roleSettings.version', '2');
+      window.localStorage.setItem(
+        'labelsuite.roleSettings.matrix',
+        JSON.stringify({ 'task.create__user': false })
+      );
+    });
+
+    await page.locator('[data-key="task.list.view"][data-role="user"]').uncheck();
+    await page.locator('#saveBtn').click();
+
+    await expect(page.locator('#conflictBanner')).toBeVisible();
+    await expect(page.locator('#toastInner')).toHaveClass(/error/);
+    await expect(page.locator('#saveBtn')).toBeDisabled();
+
+    await page.locator('#reloadBtn').click();
+    await expect(page.locator('#conflictBanner')).toBeHidden();
+    await expect(page.locator('[data-key="task.create"][data-role="user"]')).not.toBeChecked();
+    await expect(page.locator('[data-key="task.list.view"][data-role="user"]')).toBeChecked();
+  });
+
+  test('user management tab returns to the user management page', async ({ page }) => {
+    await page.locator('#tabUsers').click();
+    await expect(page).toHaveURL(/user-management\.html/);
   });
 });

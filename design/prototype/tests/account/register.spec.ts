@@ -27,8 +27,8 @@ async function fillValidForm(
 ) {
   await page.getByTestId('name-input').fill('Test User');
   await page.getByTestId('email-input').fill(overrides.email ?? 'newuser@example.com');
-  await page.getByTestId('password-input').fill('password123');
-  await page.getByTestId('confirm-password-input').fill('password123');
+  await page.getByTestId('password-input').fill('Password123');
+  await page.getByTestId('confirm-password-input').fill('Password123');
 }
 
 test.describe('Register page — successful registration (spec 003 US1.1)', () => {
@@ -43,13 +43,10 @@ test.describe('Register page — successful registration (spec 003 US1.1)', () =
   test('redirects to dashboard.html after successful registration', async ({ page }) => {
     await page.goto(REGISTER_URL);
     await fillValidForm(page);
-    const [response] = await Promise.all([
-      page.waitForResponse(res => res.url().includes('/pages/dashboard/dashboard.html'), { timeout: 5000 }),
-      page.getByTestId('submit-btn').click(),
-    ]);
-    // Prototype simulates 2-second redirect; assert page exists (not 404)
-    expect(response.status()).toBe(200);
-    await expect(page).toHaveURL(/pages\/dashboard\/dashboard\.html/);
+    await page.getByTestId('submit-btn').click();
+    await expect(page.getByTestId('success-banner')).toBeVisible();
+    // Prototype delays redirect by 2 seconds; waitForURL waits for navigation commit
+    await page.waitForURL(/pages\/dashboard\/dashboard\.html/, { timeout: 5000 });
   });
 });
 
@@ -74,10 +71,17 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
     await expect(page.locator('#passwordHint')).toHaveText('至少 8 個字元，含大寫英文、小寫英文與數字');
   });
 
+  test('shows full English password hint text with uppercase, lowercase, and number requirements', async ({ page }) => {
+    await page.getByTestId('lang-toggle').click();
+    await expect(page.locator('#passwordHint')).toHaveText(
+      'At least 8 characters with uppercase, lowercase, and a number'
+    );
+  });
+
   test('US2.1 shows name required error when name is empty', async ({ page }) => {
     await page.getByTestId('email-input').fill('user@example.com');
-    await page.getByTestId('password-input').fill('password123');
-    await page.getByTestId('confirm-password-input').fill('password123');
+    await page.getByTestId('password-input').fill('Password123');
+    await page.getByTestId('confirm-password-input').fill('Password123');
     await page.getByTestId('submit-btn').click();
 
     const nameError = page.getByTestId('name-error');
@@ -87,8 +91,8 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
 
   test('US2.1 shows email required error when email is empty', async ({ page }) => {
     await page.getByTestId('name-input').fill('Test User');
-    await page.getByTestId('password-input').fill('password123');
-    await page.getByTestId('confirm-password-input').fill('password123');
+    await page.getByTestId('password-input').fill('Password123');
+    await page.getByTestId('confirm-password-input').fill('Password123');
     await page.getByTestId('submit-btn').click();
 
     const emailError = page.getByTestId('email-error');
@@ -109,7 +113,7 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
   test('US2.1 shows confirm-password required error when confirm-password is empty', async ({ page }) => {
     await page.getByTestId('name-input').fill('Test User');
     await page.getByTestId('email-input').fill('user@example.com');
-    await page.getByTestId('password-input').fill('password123');
+    await page.getByTestId('password-input').fill('Password123');
     // confirm-password left empty
     await page.getByTestId('submit-btn').click();
 
@@ -126,13 +130,24 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
   test('US2.2 shows mismatch error when passwords do not match', async ({ page }) => {
     await page.getByTestId('name-input').fill('Test User');
     await page.getByTestId('email-input').fill('user@example.com');
-    await page.getByTestId('password-input').fill('password123');
-    await page.getByTestId('confirm-password-input').fill('different456');
+    await page.getByTestId('password-input').fill('Password123');
+    await page.getByTestId('confirm-password-input').fill('Different456');
     await page.getByTestId('submit-btn').click();
 
     const confirmError = page.getByTestId('confirm-password-error');
     await expect(confirmError).toBeVisible();
     await expect(confirmError).not.toBeEmpty();
+  });
+
+  test('US2.2 shows both password rule error and mismatch error when base password is invalid and confirm differs', async ({ page }) => {
+    await page.getByTestId('name-input').fill('Test User');
+    await page.getByTestId('email-input').fill('user@example.com');
+    await page.getByTestId('password-input').fill('short');
+    await page.getByTestId('confirm-password-input').fill('different');
+    await page.getByTestId('submit-btn').click();
+
+    await expect(page.getByTestId('password-error')).toBeVisible();
+    await expect(page.getByTestId('confirm-password-error')).toBeVisible();
   });
 
   test('US2.3 shows too-short error when password has fewer than 8 characters', async ({ page }) => {
@@ -145,6 +160,26 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
     const passwordError = page.getByTestId('password-error');
     await expect(passwordError).toBeVisible();
     await expect(passwordError).not.toBeEmpty();
+  });
+
+  test('US2.3 shows password rule error when password lacks uppercase, lowercase, or number', async ({ page }) => {
+    const invalidPasswords = ['password123', 'PASSWORD123', 'PasswordOnly'];
+
+    for (const password of invalidPasswords) {
+      await page.getByTestId('name-input').fill('Test User');
+      await page.getByTestId('email-input').fill('user@example.com');
+      await page.getByTestId('password-input').fill(password);
+      await page.getByTestId('confirm-password-input').fill(password);
+      await page.getByTestId('submit-btn').click();
+
+      const passwordError = page.getByTestId('password-error');
+      await expect(passwordError).toBeVisible();
+      await expect(passwordError).toContainText(/大寫英文、小寫英文與數字|uppercase, lowercase, and a number/i);
+      await expect(page).toHaveURL(/register\.html/);
+
+      await page.getByTestId('password-input').fill('');
+      await page.getByTestId('confirm-password-input').fill('');
+    }
   });
 
   test('US2.4 shows server error when email is already taken (simulated)', async ({ page }) => {

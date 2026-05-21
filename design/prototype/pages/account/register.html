@@ -368,7 +368,7 @@
 <body>
 
   <!-- ── Navbar ─────────────────────────────────────────────────── -->
-  <nav class="navbar" role="banner">
+  <header class="navbar">
     <a class="navbar-brand" href="#" aria-label="Label Suite 首頁">
       <div class="navbar-logo" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -388,7 +388,7 @@
       </svg>
       <span id="langLabel" data-testid="lang-label">ZH</span>
     </button>
-  </nav>
+  </header>
 
   <!-- ── Main ───────────────────────────────────────────────────── -->
   <main class="main" role="main">
@@ -591,7 +591,7 @@
         emailRequired:          '請輸入電子郵件',
         emailInvalid:           '請輸入有效的電子郵件格式',
         passwordRequired:       '請輸入密碼',
-        passwordTooShort:       '密碼至少需 8 個字元',
+        passwordTooShort:       '密碼至少需 8 個字元，含大寫英文、小寫英文與數字',
         confirmPasswordRequired:'請再次輸入密碼',
         passwordMismatch:       '密碼不一致，請重新確認',
         emailTaken:             '此 Email 已被使用，請改用其他 Email 或直接登入',
@@ -616,7 +616,7 @@
         emailPlaceholder:       'name@example.com',
         passwordLabel:          'Password',
         passwordPlaceholder:    '••••••••',
-        passwordHint:           'At least 8 characters',
+        passwordHint:           'At least 8 characters with uppercase, lowercase, and a number',
         confirmPasswordLabel:   'Confirm Password',
         confirmPasswordPlaceholder: '••••••••',
         submitBtnText:          'Create Account',
@@ -769,10 +769,11 @@
         hasError = true;
       }
 
+      const passwordRuleRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
       if (!password) {
         setFieldError('password', 'passwordError', t.passwordRequired);
         hasError = true;
-      } else if (password.length < 8) {
+      } else if (!passwordRuleRegex.test(password)) {
         setFieldError('password', 'passwordError', t.passwordTooShort);
         hasError = true;
       }

@@ -144,7 +144,7 @@
     tbody tr:hover { background: var(--color-slate-50); }
     td { padding: 14px 20px; color: var(--color-ink); vertical-align: middle; }
     td.td-muted { color: var(--color-text-soft); }
-    td.td-actions { display: flex; align-items: center; gap: var(--space-xs); padding-top: 10px; padding-bottom: 10px; }
+    .td-actions { display: inline-flex; gap: 8px; align-items: center; }
 
     /* ── Badges ─────────────────────────────────────────────────── */
     .badge {
@@ -160,18 +160,26 @@
 
     /* ── Mini action buttons (aligned with task-list) ────────── */
     .mini-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md);
-      background: var(--color-white); color: var(--color-ink);
-      font-size: 12px; font-weight: 600; padding: 6px 10px; cursor: pointer;
-      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
     }
     .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
     .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-    .mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: white; }
-    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; color: white; }
+    .mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:hover:not(:disabled) { opacity: 0.9; border-color: var(--color-primary); color: var(--color-white); }
+    .mini-btn-primary:focus-visible { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
     .mini-btn-danger { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
-    .mini-btn-danger:hover:not(:disabled) { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
+    .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-soft-border); background: var(--color-error-soft-bg); color: var(--color-error); }
     .mini-btn-success { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); color: var(--color-success); }
     .mini-btn-success:hover:not(:disabled) { background: var(--color-success-soft-bg); border-color: var(--color-success-soft-border); }
 
@@ -311,7 +319,7 @@
       .page-header { flex-direction: column; }
       .filter-bar { flex-direction: column; align-items: stretch; }
       .search-wrap { max-width: 100%; }
-      td.td-actions { flex-wrap: wrap; }
+      .td-actions { flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -418,7 +426,7 @@
                     <button class="mini-btn mini-btn-danger" disabled id="seederDisableBtn" title="Seeder 超管不可停用" aria-label="Seeder 超管不可停用">
                       <span class="disable-btn-text">停用</span>
                     </button>
-                    <button class="mini-btn mini-btn-primary" onclick="openEditModal(0)">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-001')">
                       <span class="edit-btn-text">編輯</span>
                     </button>
                   </div>
@@ -433,10 +441,10 @@
                 <td class="td-muted">2026-01-18</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal(1)">
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-002')">
                       <span class="disable-btn-text">停用</span>
                     </button>
-                    <button class="mini-btn mini-btn-primary" onclick="openEditModal(1)">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-002')">
                       <span class="edit-btn-text">編輯</span>
                     </button>
                   </div>
@@ -451,10 +459,10 @@
                 <td class="td-muted">2026-02-03</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal(2)">
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-003')">
                       <span class="disable-btn-text">停用</span>
                     </button>
-                    <button class="mini-btn mini-btn-primary" onclick="openEditModal(2)">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-003')">
                       <span class="edit-btn-text">編輯</span>
                     </button>
                   </div>
@@ -469,10 +477,10 @@
                 <td class="td-muted">2026-02-20</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-success" onclick="handleReEnable('Jason Huang')">
+                    <button class="mini-btn mini-btn-success" onclick="handleReEnable('u-004')">
                       <span class="enable-btn-text">啟用</span>
                     </button>
-                    <button class="mini-btn mini-btn-primary" onclick="openEditModal(3)">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-004')">
                       <span class="edit-btn-text">編輯</span>
                     </button>
                   </div>
@@ -487,10 +495,10 @@
                 <td class="td-muted">2026-03-01</td>
                 <td>
                   <div class="td-actions">
-                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal(4)">
+                    <button class="mini-btn mini-btn-danger" onclick="openDisableModal('u-005')">
                       <span class="disable-btn-text">停用</span>
                     </button>
-                    <button class="mini-btn mini-btn-primary" onclick="openEditModal(4)">
+                    <button class="mini-btn mini-btn-primary" onclick="openEditModal('u-005')">
                       <span class="edit-btn-text">編輯</span>
                     </button>
                   </div>
@@ -503,7 +511,7 @@
         <div class="pagination">
           <div style="display:flex;align-items:center;gap:var(--space-md)">
             <span id="paginationInfo" class="pagination-info">共 24 筆 · 第 1 / 2 頁</span>
-            <select class="page-size-select" aria-label="每頁顯示">
+            <select class="page-size-select" id="pageSizeSelect" aria-label="每頁顯示">
               <option value="20">20 筆/頁</option>
               <option value="50">50 筆/頁</option>
               <option value="100">100 筆/頁</option>
@@ -579,6 +587,15 @@
             <option value="super_admin">super_admin</option>
           </select>
           <p class="form-hint" id="addRoleHint">任務角色（標記員、審核員等）在任務詳情頁個別指派</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addStatus">
+            <span id="addStatusLabel">帳號狀態</span><span class="required-indicator" aria-hidden="true">*</span>
+          </label>
+          <select id="addStatus" class="form-select" required>
+            <option value="active" id="addStatusActive">啟用</option>
+            <option value="disabled" id="addStatusDisabled">停用</option>
+          </select>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-ghost" onclick="closeModal('addModal')" id="addCancelBtn">取消</button>
@@ -754,6 +771,9 @@
         addEmailHint:          '建立帳號後將寄送設定密碼信至此信箱',
         addRoleLabel:          '系統角色',
         addRoleHint:           '任務角色（標記員、審核員等）在任務詳情頁個別指派',
+        addStatusLabel:        '帳號狀態',
+        addStatusActive:       '啟用',
+        addStatusDisabled:     '停用',
         addCancelBtn:          '取消',
         addSaveBtnLabel:       '儲存',
         editModalTitle:        '編輯使用者',
@@ -782,6 +802,8 @@
         toastDisabled:         '帳號已停用',
         toastSessionRevoked:   '所有活躍 session 已立即撤銷',
         toastReEnabled:        '帳號已重新啟用',
+        toastDuplicateEmail:   'Email 已存在',
+        toastMissingRequired:  '請填寫姓名與有效 Email',
       },
       en: {
         pageTitle:             'User Management',
@@ -810,6 +832,9 @@
         addEmailHint:          'A password setup email will be sent to this address',
         addRoleLabel:          'System Role',
         addRoleHint:           'Task roles (annotator, reviewer, etc.) are assigned in the task detail page',
+        addStatusLabel:        'Account Status',
+        addStatusActive:       'Active',
+        addStatusDisabled:     'Disabled',
         addCancelBtn:          'Cancel',
         addSaveBtnLabel:       'Save',
         editModalTitle:        'Edit User',
@@ -838,6 +863,8 @@
         toastDisabled:         'Account disabled',
         toastSessionRevoked:   'All active sessions have been revoked',
         toastReEnabled:        'Account re-enabled',
+        toastDuplicateEmail:   'Email already exists',
+        toastMissingRequired:  'Enter a name and valid email',
       },
     };
 
@@ -861,6 +888,10 @@
     });
 
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
+    let currentPage = 1;
+    let pageSize = 20;
+    let editingUserId = null;
+    let disablingUserId = null;
 
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
@@ -877,7 +908,8 @@
         'colName','colEmail','colRole','colStatus','colCreatedAt','colActions',
         'paginationInfo','emptyTitle','emptyDesc','clearFiltersBtn',
         'addModalTitle','addNameLabel','addEmailLabel','addEmailHint',
-        'addRoleLabel','addRoleHint','addCancelBtn','addSaveBtnLabel',
+        'addRoleLabel','addRoleHint','addStatusLabel','addStatusActive','addStatusDisabled',
+        'addCancelBtn','addSaveBtnLabel',
         'editModalTitle','editNameLabel','editEmailLabel','editRoleLabel',
         'editStatusLabel','editStatusActive','editStatusDisabled',
         'editCancelBtn','editSaveBtnLabel',
@@ -909,28 +941,199 @@
 
       // Update user chip role label
       window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+      renderUsers();
     }
 
     /* ── Sample data ────────────────────────────────────────────── */
     const sampleUsers = [
-      { name: 'Mandy Chen',  email: 'mandy@labelsuite.io',     role: 'super_admin', status: 'active' },
-      { name: 'Alex Wang',   email: 'alex.wang@labelsuite.io', role: 'user',        status: 'active' },
-      { name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active' },
-      { name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled' },
-      { name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active' },
+      { id: 'u-001', name: 'Mandy Chen',  email: 'mandy@labelsuite.io',     role: 'super_admin', status: 'active',   createdAt: '2026-01-05', isSeeder: true },
+      { id: 'u-002', name: 'Alex Wang',   email: 'alex.wang@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-01-18' },
+      { id: 'u-003', name: 'Olivia Lin',  email: 'olivia.lin@labelsuite.io',role: 'user',        status: 'active',   createdAt: '2026-02-03' },
+      { id: 'u-004', name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled', createdAt: '2026-02-20' },
+      { id: 'u-005', name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-03-01' },
     ];
 
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    function getFilteredUsers() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      const role = document.getElementById('roleFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      return sampleUsers
+        .filter(user => {
+          const matchesKeyword = !keyword ||
+            user.name.toLowerCase().includes(keyword) ||
+            user.email.toLowerCase().includes(keyword);
+          const matchesRole = !role || user.role === role;
+          const matchesStatus = !status || user.status === status;
+          return matchesKeyword && matchesRole && matchesStatus;
+        })
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    }
+
+    function makeCell(text, className) {
+      const td = document.createElement('td');
+      if (className) td.className = className;
+      td.textContent = text;
+      return td;
+    }
+
+    function renderUsers() {
+      const t = i18n[lang];
+      const filteredUsers = getFilteredUsers();
+      const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * pageSize;
+      const pageUsers = filteredUsers.slice(start, start + pageSize);
+      const tbody = document.getElementById('userTableBody');
+      tbody.textContent = '';
+
+      pageUsers.forEach(user => {
+        const row = document.createElement('tr');
+        row.dataset.userId = user.id;
+
+        const nameCell = document.createElement('td');
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = user.name;
+        nameCell.appendChild(nameStrong);
+        row.appendChild(nameCell);
+
+        row.appendChild(makeCell(user.email, 'td-muted'));
+
+        const roleCell = document.createElement('td');
+        const roleBadge = document.createElement('span');
+        roleBadge.className = 'badge ' + (user.role === 'super_admin' ? 'badge-admin' : 'badge-user');
+        roleBadge.textContent = user.role;
+        roleCell.appendChild(roleBadge);
+        row.appendChild(roleCell);
+
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'badge ' + (user.status === 'active' ? 'badge-active' : 'badge-disabled');
+        statusBadge.textContent = user.status === 'active' ? t.statusBadgeActive : t.statusBadgeDisabled;
+        statusCell.appendChild(statusBadge);
+        row.appendChild(statusCell);
+
+        row.appendChild(makeCell(user.createdAt, 'td-muted'));
+
+        const actionCell = document.createElement('td');
+        const actions = document.createElement('div');
+        actions.className = 'td-actions';
+
+        if (user.status === 'active') {
+          const disableBtn = document.createElement('button');
+          disableBtn.className = 'mini-btn mini-btn-danger';
+          disableBtn.type = 'button';
+          if (user.isSeeder) {
+            disableBtn.disabled = true;
+            disableBtn.id = 'seederDisableBtn';
+            disableBtn.title = t.seederDisableTitle;
+            disableBtn.setAttribute('aria-label', t.seederDisableTitle);
+          } else {
+            disableBtn.addEventListener('click', () => openDisableModal(user.id));
+          }
+          const disableText = document.createElement('span');
+          disableText.className = 'disable-btn-text';
+          disableText.textContent = t.disableBtnText;
+          disableBtn.appendChild(disableText);
+          actions.appendChild(disableBtn);
+        } else {
+          const enableBtn = document.createElement('button');
+          enableBtn.className = 'mini-btn mini-btn-success';
+          enableBtn.type = 'button';
+          enableBtn.addEventListener('click', () => handleReEnable(user.id));
+          const enableText = document.createElement('span');
+          enableText.className = 'enable-btn-text';
+          enableText.textContent = t.enableBtnText;
+          enableBtn.appendChild(enableText);
+          actions.appendChild(enableBtn);
+        }
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'mini-btn mini-btn-primary';
+        editBtn.type = 'button';
+        editBtn.addEventListener('click', () => openEditModal(user.id));
+        const editText = document.createElement('span');
+        editText.className = 'edit-btn-text';
+        editText.textContent = t.editBtnText;
+        editBtn.appendChild(editText);
+        actions.appendChild(editBtn);
+
+        actionCell.appendChild(actions);
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+      });
+
+      document.getElementById('userTableWrap').classList.toggle('hidden', filteredUsers.length === 0);
+      document.getElementById('emptyState').classList.toggle('hidden', filteredUsers.length !== 0);
+      document.getElementById('paginationInfo').textContent =
+        lang === 'zh'
+          ? `共 ${filteredUsers.length} 筆 · 第 ${currentPage} / ${totalPages} 頁`
+          : `${filteredUsers.length} records · Page ${currentPage} / ${totalPages}`;
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      const controls = document.querySelector('.pagination-controls');
+      controls.textContent = '';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'page-btn';
+      prevBtn.type = 'button';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.setAttribute('aria-label', lang === 'zh' ? '上一頁' : 'Previous page');
+      prevBtn.textContent = '<';
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderUsers();
+        }
+      });
+      controls.appendChild(prevBtn);
+
+      for (let page = 1; page <= totalPages; page += 1) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = 'page-btn' + (page === currentPage ? ' active' : '');
+        pageBtn.type = 'button';
+        if (page === currentPage) pageBtn.setAttribute('aria-current', 'page');
+        pageBtn.textContent = String(page);
+        pageBtn.addEventListener('click', () => {
+          currentPage = page;
+          renderUsers();
+        });
+        controls.appendChild(pageBtn);
+      }
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'page-btn';
+      nextBtn.type = 'button';
+      nextBtn.disabled = currentPage >= totalPages;
+      nextBtn.setAttribute('aria-label', lang === 'zh' ? '下一頁' : 'Next page');
+      nextBtn.textContent = '>';
+      nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage += 1;
+          renderUsers();
+        }
+      });
+      controls.appendChild(nextBtn);
+    }
 
     /* ── Modal helpers ─────────────────────────────────────────── */
     function openAddModal() {
       document.getElementById('addName').value  = '';
       document.getElementById('addEmail').value = '';
       document.getElementById('addRole').value  = 'user';
+      document.getElementById('addStatus').value = 'active';
       openModal('addModal');
     }
 
-    function openEditModal(idx) {
-      const u = sampleUsers[idx] || sampleUsers[1];
+    function openEditModal(userId) {
+      const u = sampleUsers.find(user => user.id === userId) || sampleUsers[1];
+      editingUserId = u.id;
       document.getElementById('editName').value   = u.name;
       document.getElementById('editEmail').value  = u.email;
       document.getElementById('editRole').value   = u.role;
@@ -938,8 +1141,9 @@
       openModal('editModal');
     }
 
-    function openDisableModal(idx) {
-      const u = sampleUsers[idx] || sampleUsers[1];
+    function openDisableModal(userId) {
+      const u = sampleUsers.find(user => user.id === userId) || sampleUsers[1];
+      disablingUserId = u.id;
       document.getElementById('disableTargetName').textContent = u.name;
       openModal('disableModal');
     }
@@ -963,29 +1167,81 @@
     });
 
     function submitAdd() {
-      closeModal('addModal');
       const t = i18n[lang];
+      const name = document.getElementById('addName').value.trim();
+      const email = document.getElementById('addEmail').value.trim().toLowerCase();
+      const role = document.getElementById('addRole').value;
+      const status = document.getElementById('addStatus').value;
+
+      if (!name || !isValidEmail(email)) {
+        showToast('error', t.toastMissingRequired, '');
+        return;
+      }
+      if (sampleUsers.some(user => user.email.toLowerCase() === email)) {
+        showToast('error', t.toastDuplicateEmail, email);
+        return;
+      }
+
+      sampleUsers.push({
+        id: 'u-' + Date.now(),
+        name,
+        email,
+        role,
+        status,
+        createdAt: new Date().toISOString().slice(0, 10),
+      });
+      currentPage = 1;
+      renderUsers();
+      closeModal('addModal');
       showToast('success', t.toastUserCreated, t.toastPasswordSent);
       window.LabelSuiteAnalytics.track('prototype_user_add_succeeded', { lang });
     }
 
     function submitEdit() {
-      closeModal('editModal');
       const t = i18n[lang];
+      const user = sampleUsers.find(item => item.id === editingUserId);
+      const name = document.getElementById('editName').value.trim();
+      const email = document.getElementById('editEmail').value.trim().toLowerCase();
+
+      if (!user || !name || !isValidEmail(email)) {
+        showToast('error', t.toastMissingRequired, '');
+        return;
+      }
+      if (sampleUsers.some(item => item.id !== user.id && item.email.toLowerCase() === email)) {
+        showToast('error', t.toastDuplicateEmail, email);
+        return;
+      }
+
+      user.name = name;
+      user.email = email;
+      user.role = document.getElementById('editRole').value;
+      user.status = document.getElementById('editStatus').value;
+      renderUsers();
+      closeModal('editModal');
       showToast('success', t.toastUpdated, '');
       window.LabelSuiteAnalytics.track('prototype_user_edit_succeeded', { lang });
     }
 
     function confirmDisable() {
-      closeModal('disableModal');
       const t = i18n[lang];
+      const user = sampleUsers.find(item => item.id === disablingUserId);
+      if (user && !user.isSeeder) {
+        user.status = 'disabled';
+        renderUsers();
+      }
+      closeModal('disableModal');
       showToast('success', t.toastDisabled, t.toastSessionRevoked);
       window.LabelSuiteAnalytics.track('prototype_user_disable_succeeded', { lang });
     }
 
-    function handleReEnable(name) {
+    function handleReEnable(userId) {
       const t = i18n[lang];
-      showToast('success', t.toastReEnabled, name);
+      const user = sampleUsers.find(item => item.id === userId);
+      if (user) {
+        user.status = 'active';
+        renderUsers();
+        showToast('success', t.toastReEnabled, user.name);
+      }
       window.LabelSuiteAnalytics.track('prototype_user_enable_succeeded', { lang });
     }
 
@@ -993,8 +1249,8 @@
       document.getElementById('searchInput').value   = '';
       document.getElementById('roleFilter').value    = '';
       document.getElementById('statusFilter').value  = '';
-      document.getElementById('userTableWrap').classList.remove('hidden');
-      document.getElementById('emptyState').classList.add('hidden');
+      currentPage = 1;
+      renderUsers();
     }
 
     /* ── Toast ──────────────────────────────────────────────────── */
@@ -1022,10 +1278,29 @@
       window.LabelSuiteAnalytics.track('prototype_lang_switched',
         { source, from_lang: prev, to_lang: lang });
     }
-    document.getElementById('langToggle').addEventListener('click',
-      () => handleLangToggle('desktop'));
-    document.getElementById('mobileLangToggle').addEventListener('click',
-      () => handleLangToggle('mobile'));
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('langToggle').addEventListener('click',
+        () => handleLangToggle('desktop'));
+      document.getElementById('mobileLangToggle').addEventListener('click',
+        () => handleLangToggle('mobile'));
+    });
+    document.getElementById('searchInput').addEventListener('input', () => {
+      currentPage = 1;
+      renderUsers();
+    });
+    document.getElementById('roleFilter').addEventListener('change', () => {
+      currentPage = 1;
+      renderUsers();
+    });
+    document.getElementById('statusFilter').addEventListener('change', () => {
+      currentPage = 1;
+      renderUsers();
+    });
+    document.getElementById('pageSizeSelect').addEventListener('change', (event) => {
+      pageSize = Number(event.target.value) || 20;
+      currentPage = 1;
+      renderUsers();
+    });
 
     /* ── Analytics & Init ──────────────────────────────────────── */
     const getCtx = () => ({ lang });
