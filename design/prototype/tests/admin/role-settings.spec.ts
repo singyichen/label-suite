@@ -145,6 +145,10 @@ test.describe('Admin role settings matrix behavior', () => {
   });
 
   test('rejects stale saves and reloads the latest matrix version', async ({ page }) => {
+    // localStorage is patched AFTER page load so matrixVersion (in-memory) stays at 1,
+    // while storage jumps to 2 — this triggers the stale-save conflict path.
+    // If this evaluate were moved to addInitScript (before load), matrixVersion would init
+    // to 2 and no conflict would fire.
     await page.evaluate(() => {
       window.localStorage.setItem('labelsuite.roleSettings.version', '2');
       window.localStorage.setItem(

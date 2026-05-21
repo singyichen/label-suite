@@ -43,13 +43,10 @@ test.describe('Register page — successful registration (spec 003 US1.1)', () =
   test('redirects to dashboard.html after successful registration', async ({ page }) => {
     await page.goto(REGISTER_URL);
     await fillValidForm(page);
-    const [response] = await Promise.all([
-      page.waitForResponse(res => res.url().includes('/pages/dashboard/dashboard.html'), { timeout: 5000 }),
-      page.getByTestId('submit-btn').click(),
-    ]);
-    // Prototype simulates 2-second redirect; assert page exists (not 404)
-    expect(response.status()).toBe(200);
-    await expect(page).toHaveURL(/pages\/dashboard\/dashboard\.html/);
+    await page.getByTestId('submit-btn').click();
+    await expect(page.getByTestId('success-banner')).toBeVisible();
+    // Prototype delays redirect by 2 seconds; waitForURL waits for navigation commit
+    await page.waitForURL(/pages\/dashboard\/dashboard\.html/, { timeout: 5000 });
   });
 });
 
@@ -140,6 +137,17 @@ test.describe('Register page — form validation (spec 003 US2)', () => {
     const confirmError = page.getByTestId('confirm-password-error');
     await expect(confirmError).toBeVisible();
     await expect(confirmError).not.toBeEmpty();
+  });
+
+  test('US2.2 shows both password rule error and mismatch error when base password is invalid and confirm differs', async ({ page }) => {
+    await page.getByTestId('name-input').fill('Test User');
+    await page.getByTestId('email-input').fill('user@example.com');
+    await page.getByTestId('password-input').fill('short');
+    await page.getByTestId('confirm-password-input').fill('different');
+    await page.getByTestId('submit-btn').click();
+
+    await expect(page.getByTestId('password-error')).toBeVisible();
+    await expect(page.getByTestId('confirm-password-error')).toBeVisible();
   });
 
   test('US2.3 shows too-short error when password has fewer than 8 characters', async ({ page }) => {
