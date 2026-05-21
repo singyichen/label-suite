@@ -43,16 +43,40 @@ Evaluation results must be fair and reproducible.
 - E2E: Playwright covers core user flows (labeling, submission, review)
 - Tests must be written and confirmed to fail before implementation begins
 
-### V. Simplicity
+### V. Code Quality & Simplicity (RECOMMENDED)
+
+Code must be simple, readable, and consistently styled.
+
 - YAGNI: do not build features for hypothetical future needs
 - KISS: prefer the simplest viable solution
 - Avoid premature abstraction; three similar lines of code beats an over-engineered abstraction
+- All Python functions must have complete type hints; TypeScript strict mode is enforced — no `any` types
+- Code must pass the project linter before merging (Python: ruff; TypeScript: ESLint)
+- No debug `print` / `console.log` statements in committed code
 
 ### VI. English-First
 - Code, comments, docstrings, commit messages, and variable/function names are always written in English
 - Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md` to accelerate research documentation and UI iteration
 - `design/system/MASTER.md` must be written in English only — it is consumed by AI agents and requires accurate token parsing
 - The only fully Chinese file outside those directories is `README.zh-TW.md`
+
+### VII. Design Consistency (RECOMMENDED)
+
+UI must be consistent across modules and follow the established design system.
+
+- All UI components must use design tokens defined in `design/system/MASTER.md`; hardcoded colors, spacing, or font sizes are not permitted
+- Component states (loading, error, empty, disabled) must be implemented consistently across all modules
+- Prototype screens in `design/prototype/pages/` are the source of truth for layout and interaction behavior; any deviation requires a spec update
+- New UI features must reuse existing shared components before introducing new ones
+
+### VIII. Performance Baseline (RECOMMENDED)
+
+Core user flows must meet minimum performance thresholds.
+
+- API P95 response time ≤ 500ms for core labeling and annotation operations
+- All list-view endpoints must implement pagination (max page size: 100); unbounded queries are not permitted
+- No N+1 query patterns in service-layer code
+- Frontend Lighthouse Performance score ≥ 70 on desktop for core pages
 
 ## Governance
 
@@ -68,7 +92,18 @@ Constitution principles take precedence over all other conventions.
 - **MAJOR**: Backward-incompatible removal or redefinition of a principle
 - **MINOR**: New principle or section added
 - **PATCH**: Clarification, wording fix, or non-semantic refinement
+- Changelog entries must be written in descending version order, with the newest version first (for example, `1.4.0` before `1.3.2`).
+- Changelog entries in `.specify/templates/` must use Chinese change summaries.
 
-**Compliance Review**: All PRs must verify compliance with all six principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all eight principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.3.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-04-13
+**Version**: 1.4.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-21
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.4.0 | 2026-05-21 | 新增 Principle VII（設計一致性）與 Principle VIII（效能基準）；擴充 Principle V 加入明確的程式品質規則（型別強制、linter、禁止 debug 輸出）；合規審查更新為涵蓋八條原則 |
+| 1.3.2 | 2026-05-21 | 要求 templates 中的 Changelog 變更摘要使用中文 |
+| 1.3.1 | 2026-05-21 | 要求 Changelog 條目依版本號降序撰寫 |
+| 1.3.0 | 2026-04-13 | Changelog 追蹤前的 Constitution 基準版本 |

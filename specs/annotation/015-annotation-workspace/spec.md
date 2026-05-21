@@ -1,10 +1,28 @@
 # 功能規格：Annotation List + Workspace — 標記清單與標記作業（Annotator / Reviewer）
 
-**功能分支**：`015-annotation-workspace`  
-**建立日期**：2026-04-23  
-**版本**：1.4.11  
-**狀態**：Draft  
+**功能分支**：`feat/annotation/015-annotation-workspace`
+**建立日期**：2026-04-23
+**版本**：1.4.11
+**狀態**：Draft
 **需求來源**：IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 Annotation List + Workspace 的標記/審核清單與工作區流程、task config 驅動畫面、提交 payload、安全邊界與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：IA v1.3.1（2026-04-23）標記任務模組規範（annotation-list → annotation-workspace）。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -85,7 +103,7 @@ sequenceDiagram
 
 Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任務列可直接進入 `annotation-workspace`；navbar 入口則先進 `annotation-list` 再選筆次進入。
 
-**此優先級原因**：需同時滿足 dashboard 的快速續作路徑與 annotation-list 的檢索/篩選操作。  
+**此優先級原因**：需同時滿足 dashboard 的快速續作路徑與 annotation-list 的檢索/篩選操作。
 **獨立測試方式**：分別由 dashboard 與 navbar 進入標記模組，驗證快速入口可直達工作區，清單入口可由單筆與任務資訊卡導向工作區。
 
 **驗收情境**：
@@ -157,7 +175,7 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 
 Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標記並提交結果。
 
-**此優先級原因**：標記作業是核心產出流程。  
+**此優先級原因**：標記作業是核心產出流程。
 **獨立測試方式**：以 `annotator` 身分分別進入 Dry Run 與 Official Run 任務，驗證標記、儲存、提交與進度更新。
 
 **驗收情境**：
@@ -222,7 +240,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 
 Annotator 可在 `sequence_labeling.subtype = aspect_list` 任務中，依句子內容校正原句並維護 Aspect List。
 
-**此優先級原因**：Aspect List 是序列標記中的研究情境必要子模式，僅提供一般 NER span 標註不足以完成實際任務。  
+**此優先級原因**：Aspect List 是序列標記中的研究情境必要子模式，僅提供一般 NER span 標註不足以完成實際任務。
 **獨立測試方式**：以 `task_type=sequence_labeling` 且 task config `subtype=aspect_list` 進入工作區，驗證句子校正、aspect 新增/刪除/修改、驗證阻擋、儲存與提交。
 
 **驗收情境**：
@@ -241,7 +259,7 @@ Annotator 可在 `sequence_labeling.subtype = aspect_list` 任務中，依句子
 
 Annotator 可在 `task_type = sentence_pairs` 任務中，依兩句文本與 task config 指定的作答模式，完成相似度或蘊含判定。
 
-**此優先級原因**：句對任務已列為核心 task type，若缺少 workspace 規格，task-new / task-detail 的 sentence-pairs config 無法落地。  
+**此優先級原因**：句對任務已列為核心 task type，若缺少 workspace 規格，task-new / task-detail 的 sentence-pairs config 無法落地。
 **獨立測試方式**：以 `task_type=sentence_pairs` 分別進入 `similarity + classification`、`similarity + scoring`、`entailment + classification` 三種 config，驗證雙句呈現、作答控制項、儲存與提交。
 
 **驗收情境**：
@@ -259,7 +277,7 @@ Annotator 可在 `task_type = sentence_pairs` 任務中，依兩句文本與 tas
 
 Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布統計與各標記員結果，再以通過 / 退回完成逐列或批次審核，並追溯每筆決策歷程。Aspect List 任務中，Reviewer 可直接修正標記員提交的 Aspect List 後通過，或選擇退回由標記員重做。
 
-**此優先級原因**：Dry Run 一致性與正式資料品質依賴 reviewer 決策。  
+**此優先級原因**：Dry Run 一致性與正式資料品質依賴 reviewer 決策。
 **獨立測試方式**：以 `reviewer` 身分進入待審任務，驗證審查操作與 History 追溯欄位。
 
 **驗收情境**：
@@ -316,7 +334,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 
 清單與工作區都由路由參數決定啟動上下文；`role`、`run_type`、`task_type` 缺值時需套用預設與回退邏輯。
 
-**此優先級原因**：確保 dashboard/sidebar 進入清單與工作區時可還原正確模式。  
+**此優先級原因**：確保 dashboard/sidebar 進入清單與工作區時可還原正確模式。
 **獨立測試方式**：模擬清單與工作區的 query 組合與缺值案例，驗證畫面模式、語意與 fallback。
 
 **驗收情境**：
@@ -338,7 +356,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 
 使用者在 Desktop 與 Mobile 標記流程中都能持續查看說明內容，不因翻筆或版型切換遺失任務指引。
 
-**此優先級原因**：降低標記偏差與操作中斷。  
+**此優先級原因**：降低標記偏差與操作中斷。
 **獨立測試方式**：在 `375px`、`768px`、`1440px` 驗證翻筆、切換 panel、切換階段時說明區持續可見。
 
 **驗收情境**：
@@ -498,7 +516,7 @@ flowchart LR
 | `annotation-workspace` | 返回清單 | `annotation-list`（保留篩選與捲動） |
 | `annotation-list` | Sidebar 導覽切換 | `dashboard` |
 
-**Entry points**: `dashboard` Annotator/Reviewer 任務列表（卡片本體進 `annotation-list`、快速繼續/快速審核直達 `annotation-workspace`）、Navbar 標記作業（先進 `annotation-list`）。  
+**Entry points**: `dashboard` Annotator/Reviewer 任務列表（卡片本體進 `annotation-list`、快速繼續/快速審核直達 `annotation-workspace`）、Navbar 標記作業（先進 `annotation-list`）。
 **Exit points**: `annotation-workspace` 返回 `annotation-list`、`annotation-workspace` 最後一筆提交後自動返回 `annotation-list`、`annotation-list` 透過 Sidebar 切換至 `dashboard`。
 
 ### Key Entities *(必填)*
@@ -563,10 +581,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.4.11 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.4.10 | 2026-05-10 | Clarified annotation-list data source: list items are materialized only by task-detail run publish events; dry run lists show the current trial round item count, while official run lists show the remaining samples created when official labeling starts |
 | 1.4.9 | 2026-05-06 | Synced annotation-list footer pagination with prototype: both annotator and reviewer list views now require task-list-style pagination (total/page info, page-size switcher, prev/next, numbered pages), plus reset-to-page-1 behavior after filter/search changes |
 | 1.4.7 | 2026-05-06 | Synced reviewer annotation-list relation extraction stats with prototype: `relation_extraction` distribution summary now renders one relation/triple per line in monospace text instead of compressing multiple metrics into a single ` · `-joined line |

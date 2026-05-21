@@ -1,10 +1,28 @@
 # 功能規格：Role & Permission Settings — 角色權限矩陣設定
 
-**功能分支**：`007-role-settings`
+**功能分支**：`feat/admin/007-role-settings`
 **建立日期**：2026-04-16
-**版本**：1.1.3
+**版本**：1.1.4
 **狀態**：Draft
 **需求來源**：IA v7 Spec 清單 #007 — 角色權限設定（`role-settings`）
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 Role & Permission Settings 的系統管理流程、權限守門、列表/矩陣互動、審計與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：IA v7 Spec 清單 #007 — 角色權限設定（role-settings）。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -60,7 +78,7 @@ sequenceDiagram
 
 Super Admin 可在角色設定頁看到完整角色矩陣，清楚區分 system role 與 task role 的職責邊界。
 
-**此優先級原因**：權限矩陣是管理操作的基準，未可視化則無法安全維護。  
+**此優先級原因**：權限矩陣是管理操作的基準，未可視化則無法安全維護。
 **獨立測試方式**：以 `super_admin` 進入 `/role-settings`，驗證矩陣內容包含 system/task 兩類角色。
 
 **驗收情境**：
@@ -94,7 +112,7 @@ Super Admin 可在角色設定頁看到完整角色矩陣，清楚區分 system 
 
 Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續授權判斷基準。
 
-**此優先級原因**：若無可維護的權限設定，系統無法隨組織需求調整。  
+**此優先級原因**：若無可維護的權限設定，系統無法隨組織需求調整。
 **獨立測試方式**：在矩陣中修改任一權限，儲存後重整頁面確認設定持久化。
 
 **驗收情境**：
@@ -116,7 +134,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 只有 Super Admin 可維護角色設定；一般使用者不可查看或修改矩陣內容。
 
-**此優先級原因**：權限矩陣屬最高風險管理配置，必須受到最嚴格角色控管。  
+**此優先級原因**：權限矩陣屬最高風險管理配置，必須受到最嚴格角色控管。
 **獨立測試方式**：以 `user`、未登入狀態嘗試直連 `/role-settings`，驗證阻擋與導頁邏輯。
 
 **驗收情境**：
@@ -294,10 +312,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 本規格不新增 task type 邏輯；若後續接觸任務行為，需回到 config-driven task architecture 檢查。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.4 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.1.3 | 2026-05-19 | 依最新 prototype 同步 admin tabs：`role-settings.html` 為獨立頁，與 `user-management.html` 透過 tabs 互相導覽 |
 | 1.1.2 | 2026-05-19 | Prototype 同步：移除矩陣圖例（圖例）UI 區塊；符號說明改由欄位 tooltip 或 header 承接，spec 行為面不受影響 |
 | 1.1.1 | 2026-04-17 | Prototype 同步：儲存成功後維持在 `/role-settings`（不自動跳轉），改為手動返回 `/user-management` |

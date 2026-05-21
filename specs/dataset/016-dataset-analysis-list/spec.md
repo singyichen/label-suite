@@ -1,10 +1,28 @@
 # 功能規格：Dataset Analysis List — 任務列表頁（模組入口）
 
-**功能分支**：`016-dataset-analysis-list`  
-**建立日期**：2026-04-24  
-**版本**：1.3.0  
-**狀態**：In Progress  
+**功能分支**：`feat/dataset/016-dataset-analysis-list`
+**建立日期**：2026-04-24
+**版本**：1.3.1
+**狀態**：In Progress
 **需求來源**：IA v1.3.2（2026-04-24）`dataset-analysis-list` 任務列表頁（模組入口）
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 Dataset Analysis List 的資料集分析入口、統計/品質監控、task config 驅動指標、權限與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：IA v1.3.2（2026-04-24）dataset-analysis-list 任務列表頁（模組入口）。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -52,7 +70,7 @@ sequenceDiagram
 
 使用者由 Navbar 進入資料集分析模組後，可看到自己具 `TASK_ROLES_ALLOWED` 成員資格的任務列表，作為後續進入 analysis detail 的主要入口；Dashboard badge deep link 為合法次入口。
 
-**此優先級原因**：本頁是資料集分析模組的 L1 landing；若沒有此頁，使用者無法選擇分析任務。  
+**此優先級原因**：本頁是資料集分析模組的 L1 landing；若沒有此頁，使用者無法選擇分析任務。
 **獨立測試方式**：以具多個 `TASK_ROLES_ALLOWED` membership 的帳號進入頁面，驗證列表資料、搜尋、任務類型/IAA 狀態篩選、分頁、IAA 狀態徽章與導向行為正確。
 
 **驗收情境**：
@@ -134,7 +152,7 @@ flowchart LR
 | `Sidebar Navbar` | 點擊「資料集分析」 | `/dataset-analysis` |
 | `dataset-analysis-list` | 點擊任務列 | `/dataset-analysis-detail/:task_id?tab=stats` |
 
-**Entry points**: Sidebar Navbar「資料集分析」。  
+**Entry points**: Sidebar Navbar「資料集分析」。
 **Exit points**: 點擊任務列進入 analysis detail。
 
 ### Key Entities *(必填)*
@@ -175,10 +193,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 1.3.1 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.0 | 2026-04-30 | Sync with current prototype: 列表入口改為對齊 task-list 的 table layout；新增 task type / IAA status / keyword filters、footer pagination、URL query 保留、空結果清除篩選、membership role 欄位 |
 | 1.2.1 | 2026-04-24 | Clarify entry/permission/badge semantics: 列表頁改為主要入口而非唯一入口；權限以 task membership role 為準；補入 IAA badge state enum（pass/fail/pending/not_started） |
 | 1.2.0 | 2026-04-24 | Narrow scope to pure IA planning for `dataset-analysis-list`: 移除 stats/detail 詳細規格，僅保留列表入口、空狀態與導向 detail 行為 |

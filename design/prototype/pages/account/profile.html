@@ -23,7 +23,6 @@
       --color-border:          #E2E8F0;
       --color-ink:             #1E1B4B;
       --color-ink-muted:       #94A3B8;
-      --color-text-muted:      #94A3B8;
       --color-error:           #B91C1C;
       --color-error-bg:        #FEF2F2;
       --color-error-border:    #FECACA;
@@ -43,13 +42,14 @@
       --space-xl: 32px;
       --navbar-mobile-height:     84px;
       --navbar-mobile-top-height: 64px;
+      --font-sans:                'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, sans-serif;
     }
 
     /* ── Reset ─────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; scroll-behavior: smooth; }
     body {
-      font-family: 'Inter', 'Noto Sans TC', 'PingFang TC', sans-serif;
+      font-family: var(--font-sans);
       background: var(--color-surface);
       color: var(--color-ink);
       min-height: 100vh;
@@ -256,7 +256,7 @@
     .email-masked {
       flex: 1;
       font-size: 15px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       font-family: 'Inter', 'Noto Sans TC', sans-serif;
     }
 
@@ -430,7 +430,7 @@
 
     .sent-hint {
       font-size: 13px;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       margin-bottom: 28px;
       margin-top: 4px;
     }
@@ -543,7 +543,7 @@
       padding: 10px 0;
       font-size: 11px;
       font-weight: 600;
-      color: var(--color-text-muted);
+      color: var(--color-ink-muted);
       text-transform: uppercase;
       letter-spacing: 0.06em;
       text-align: left;
@@ -561,7 +561,7 @@
 
     .event-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-    .event-trigger { font-size: 12px; color: var(--color-text-muted); }
+    .event-trigger { font-size: 12px; color: var(--color-ink-muted); }
 
     .toggle-wrap { display: flex; align-items: center; justify-content: center; }
 
@@ -611,13 +611,13 @@
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
       /* Hardcoded text-soft colors throughout this file */
-      .page-subheading  { color: var(--color-text-muted); }
-      .section-desc     { color: var(--color-text-muted); }
+      .page-subheading  { color: var(--color-ink-muted); }
+      .section-desc     { color: var(--color-ink-muted); }
       .field-label      { color: var(--color-ink); }
-      .field-hint       { color: var(--color-text-muted); }
-      .avatar-hint      { color: var(--color-text-muted); }
-      .sent-desc        { color: var(--color-text-muted); }
-      .back-link        { color: var(--color-text-muted); }
+      .field-hint       { color: var(--color-ink-muted); }
+      .avatar-hint      { color: var(--color-ink-muted); }
+      .sent-desc        { color: var(--color-ink-muted); }
+      .back-link        { color: var(--color-ink-muted); }
       .back-link:hover  { background: var(--color-slate-50); }
 
       /* Email row — hardcoded #F8FAFC bg */
@@ -631,7 +631,7 @@
       }
 
       /* Eye toggle */
-      .eye-toggle { color: var(--color-text-muted); }
+      .eye-toggle { color: var(--color-ink-muted); }
       .eye-toggle:hover { color: var(--color-ink); }
 
       /* CTA button */

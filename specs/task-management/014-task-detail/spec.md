@@ -1,10 +1,28 @@
 # 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
 
-**功能分支**：`014-task-detail`
+**功能分支**：`feat/task-management/014-task-detail`
 **建立日期**：2026-04-20
-**版本**：1.7.11
+**版本**：1.7.15
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 Task Detail 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（task-detail）。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -105,7 +123,7 @@ sequenceDiagram
 
 Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、執行發布與查看／匯出標記結果。
 
-**此優先級原因**：任務推進與協作的核心控制面板。  
+**此優先級原因**：任務推進與協作的核心控制面板。
 **獨立測試方式**：以 `project_leader` 登入，驗證四個 tab、成員管理、狀態切換與匯出操作。
 
 **驗收情境**：
@@ -342,7 +360,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 
 Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理與其他越權操作。
 
-**此優先級原因**：確保審核角色有足夠資訊但不破壞職責邊界。  
+**此優先級原因**：確保審核角色有足夠資訊但不破壞職責邊界。
 **獨立測試方式**：以 `reviewer` 登入，驗證 tab 可見性、唯讀限制、work-log 資料範圍。
 
 **驗收情境**：
@@ -366,7 +384,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 
 任務需遵守固定狀態機，並在承接 `task-new` 初始設定後支援調整試標抽樣比例/筆數，且可選擇是否啟用試標與正式標記資料隔離。
 
-**此優先級原因**：讓團隊可控地切分試標資料，同時避免（或明確承擔）測試資料污染正式成果風險。  
+**此優先級原因**：讓團隊可控地切分試標資料，同時避免（或明確承擔）測試資料污染正式成果風險。
 **獨立測試方式**：模擬完整狀態轉換，驗證轉換條件、初始抽樣載入、試標抽樣調整計算、正式標記剩餘資料分配、隔離設定行為。
 
 **驗收情境**：
@@ -561,7 +579,7 @@ flowchart LR
 | `/task-detail` | 點擊返回 | `/task-list` |
 | `annotator` 直接造訪 `/task-detail` | 路由守門 | `/task-list` 並顯示無權限提示 |
 
-**Entry points**：`/task-list` 任務列。  
+**Entry points**：`/task-list` 任務列。
 **Exit points**：返回 `/task-list` 或切換到其他 L0 模組。
 
 **麵包屑導航**：頁首標題區塊下方顯示 `任務管理 › {task_name}`，`任務管理` 為可點擊連結，導向 `/task-list`；第二段必須顯示當前任務名稱而非固定文案。頁首 `h1` 與副標題位置需維持 shared Dashboard heading baseline，breadcrumb 不得置於 `h1` 前方造成頁首下移。語言切換後同步更新為當前語系的任務名稱（zh 例如：`任務管理 › 新聞標題多標籤分類`；en 例如：`Task Management › News Headline Multi-label Classification`）。
@@ -647,10 +665,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.15 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.7.14 | 2026-05-15 | 調整 detail 頁首與 shared Dashboard heading baseline 對齊：breadcrumb 改置於頁首標題區塊下方，避免推移最上層主標題位置 |
 | 1.7.13 | 2026-05-13 | 明確規範角色 badge 配色：`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：primary token 系列），`annotator`（標記員）使用綠色（`role-badge-annotator`：success token 系列）；補充 `tokens.css` 缺少的 `--color-primary-border`（light: #C7D2FE，dark: #3730A3）；成員管理與工時明細表沿用同一 CSS class |
 | 1.7.12 | 2026-05-13 | 補齊工時明細表底部分頁列，樣式與 `task-list` 分頁列一致；明確規範分頁狀態（`wlPage` / `wlPageSize`）獨立；篩選條件變更重設至第 1 頁；匯總卡片與異常提醒仍依完整篩選結果計算；新增 FR-007a |

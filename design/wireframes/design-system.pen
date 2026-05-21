@@ -1242,8 +1242,8 @@
                       "fill": "$color-cta",
                       "cornerRadius": "$radius-md",
                       "padding": [
-                        12,
-                        24
+                        10,
+                        20
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1266,12 +1266,12 @@
                       "cornerRadius": "$radius-md",
                       "stroke": {
                         "align": "inside",
-                        "thickness": 2,
-                        "fill": "$color-primary"
+                        "thickness": 1,
+                        "fill": "#E2E8F0"
                       },
                       "padding": [
-                        12,
-                        24
+                        10,
+                        20
                       ],
                       "alignItems": "center",
                       "children": [

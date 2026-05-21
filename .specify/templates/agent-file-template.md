@@ -41,19 +41,19 @@ To update these files, handle them manually.
 New feature development must follow this process:
 
 ```
-/speckit.specify <feature description>  → specs/NNN-feature/spec.md
+/speckit.specify <feature description>  → specs/[module]/NNN-feature/spec.md
 /ui-ux-pro-max                          → design/prototype/pages/[module]/[page].html + design/system/ (recommended, after specify)
 /pencil-wireframe                       → design/wireframes/pages/[module]/[page].pen (optional, after prototype)
 /speckit.clarify                        → clarify spec ambiguities (optional)
-/speckit.plan                           → specs/NNN-feature/plan.md
-/speckit.tasks                          → specs/NNN-feature/tasks.md
+/speckit.plan                           → specs/[module]/NNN-feature/plan.md
+/speckit.tasks                          → specs/[module]/NNN-feature/tasks.md
 /speckit.analyze                        → consistency check (optional)
 /speckit.implement                      → execute implementation
-/speckit.checklist                      → specs/NNN-feature/checklists/
+/speckit.checklist                      → specs/[module]/NNN-feature/checklists/
 ```
 
 **Key Rules**:
-- Feature branches must be named `feat/NNN-feature` matching the spec directory
+- Feature branches must be named `feat/[module]/NNN-feature` matching the spec directory
 - Each spec directory contains: `spec.md`, `plan.md`, `tasks.md`, `checklists/`
 - Implement User Stories in priority order (P1 → P2 → P3)
 
@@ -78,3 +78,10 @@ All development must comply with [constitution.md](.specify/memory/constitution.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.1 | 2026-05-21 | Align SDD workflow paths with module-based spec directories |
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |

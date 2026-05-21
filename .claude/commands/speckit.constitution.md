@@ -33,17 +33,53 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Each Principle section must have: a concise name, non-negotiable rules, and rationale
    - Governance section must cover: amendment procedure, versioning policy, compliance review
 
-4. **Consistency propagation** — check and update dependent files:
+4. **Consistency propagation** — actively read and update each dependent file:
    - `.specify/templates/plan-template.md` — ensure Constitution Check section reflects updated principles
    - `.specify/templates/spec-template.md` — ensure scope/requirements alignment
    - `.specify/templates/tasks-template.md` — ensure task categorization matches principles
    - `.specify/templates/checklist-template.md` — ensure checklist items reflect updated principles
-   - `.claude/commands/speckit.*.md` — verify no outdated principle references
+   - `.claude/commands/speckit.*.md` — read each file and verify no outdated principle names or removed rule references remain
 
-5. **Write the updated constitution**
-   - Overwrite `.specify/memory/constitution.md`
+5. **Generate Sync Impact Report**
 
-6. **Report to the user**
+   Produce the following report and prepend it to `.specify/memory/constitution.md` as an HTML comment (so it doesn't render in Markdown but is preserved in the file):
+
+   ```html
+   <!--
+   Sync Impact Report — constitution vX.Y.Z
+   Generated: YYYY-MM-DD
+
+   Version change: vOLD → vNEW
+   Bump type: MAJOR | MINOR | PATCH — [reason]
+
+   Changed principles:
+   - [Old Title] → [New Title] (or: removed / added)
+
+   New sections: (if any)
+   Removed sections: (if any)
+
+   Templates sync status:
+   - .specify/templates/plan-template.md: ✅ Updated | ⚠ Needs manual review
+   - .specify/templates/spec-template.md: ✅ Updated | ⚠ Needs manual review
+   - .specify/templates/tasks-template.md: ✅ Updated | ⚠ Needs manual review
+   - .specify/templates/checklist-template.md: ✅ Updated | ⚠ Needs manual review
+   - .claude/commands/speckit.*.md: ✅ Updated | ⚠ Needs manual review
+
+   Deferred TODOs: (if any placeholder was intentionally left)
+   -->
+   ```
+
+6. **Output validation** — before writing, verify:
+   - No unexplained bracketed tokens remain (e.g., `[PROJECT_NAME]`, `[PRINCIPLE_1_NAME]`)
+   - Version number line in the document matches the Sync Impact Report
+   - All dates use ISO format `YYYY-MM-DD`
+   - Each Principle section is declarative and testable (avoid "should" — use MUST/SHOULD with explicit rationale)
+   - Governance section covers: amendment procedure, versioning policy, compliance review
+
+7. **Write the updated constitution**
+   - Overwrite `.specify/memory/constitution.md` (with the Sync Impact Report HTML comment prepended)
+
+8. **Report to the user**
    - New version and bump rationale
    - List of changed principles
    - Files updated as part of propagation

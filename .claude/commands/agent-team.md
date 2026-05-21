@@ -20,6 +20,7 @@ Add to `~/.claude/settings.json`:
 ```
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
 /speckit.specify
+  → specs/[module]/NNN-feature/spec.md
   → [/ui-ux-pro-max]             Generate HTML prototype + design system
   → [/pencil-wireframe]          Draw 6 frames in design/wireframes/pages/[module]/[page].pen  (optional, after prototype)
   → [senior-uiux review]         Review prototype: fidelity, a11y, ZH/EN/mobile symmetry
