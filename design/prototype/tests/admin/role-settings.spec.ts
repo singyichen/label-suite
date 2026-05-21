@@ -96,11 +96,11 @@ test.describe('Admin role settings matrix behavior', () => {
   test('renders the complete whitelist and canonical role keys', async ({ page }) => {
     await expect(page.locator('.perm-key')).toHaveText(EXPECTED_PERMISSION_KEYS);
 
-    await expect(page.locator('#thRoleUser')).toContainText('user');
-    await expect(page.locator('#thRoleSuperAdmin')).toContainText('super_admin');
-    await expect(page.locator('#thRoleProjectLeader')).toContainText('project_leader');
-    await expect(page.locator('#thRoleReviewer')).toContainText('reviewer');
-    await expect(page.locator('#thRoleAnnotator')).toContainText('annotator');
+    await expect(page.locator('#thRoleUser')).toHaveAttribute('data-role', 'user');
+    await expect(page.locator('#thRoleSuperAdmin')).toHaveAttribute('data-role', 'super_admin');
+    await expect(page.locator('#thRoleProjectLeader')).toHaveAttribute('data-role', 'project_leader');
+    await expect(page.locator('#thRoleReviewer')).toHaveAttribute('data-role', 'reviewer');
+    await expect(page.locator('#thRoleAnnotator')).toHaveAttribute('data-role', 'annotator');
 
     const roleKeys = await page.locator('.matrix-checkbox').evaluateAll((nodes) =>
       [...new Set(nodes.map((node) => (node as HTMLInputElement).dataset.role))].sort()
