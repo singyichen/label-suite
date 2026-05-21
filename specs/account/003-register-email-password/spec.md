@@ -1,10 +1,28 @@
 # 功能規格：Register — Email / Password
 
-**功能分支**：`003-register-email-password`
+**功能分支**：`feat/account/003-register-email-password`
 **建立日期**：2026-04-05
-**版本**：1.2.2
+**版本**：1.2.3
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 Register 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：最新原型 [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html)。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -229,10 +247,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 本規格不新增 task type 邏輯；若後續接觸任務行為，需回到 config-driven task architecture 檢查。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.3 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.2 | 2026-05-06 | 同步 register prototype 密碼說明文案：新增 `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`，並明確要求註冊頁顯示該規則 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：register 切換語言後導向 login/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |

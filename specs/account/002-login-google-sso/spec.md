@@ -1,10 +1,28 @@
 # 功能規格：Login — Google SSO 入口與整合預留
 
-**功能分支**：`002-login-google-sso`
+**功能分支**：`feat/account/002-login-google-sso`
 **建立日期**：2026-04-05
-**版本**：1.2.1
+**版本**：1.2.2
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
+
+## Input & Generation Rules
+
+**輸入描述**：登入頁需提供 Google SSO 入口，現階段與 Email / Password 登入並列呈現，並保留後續 OAuth 正式整合的入口契約。
+
+**產生規格時必須遵守**：
+
+1. 先確認此規格範圍僅涵蓋 Google SSO 按鈕入口、i18n、可存取屬性、原型 no-op 行為與後續整合預留；真實 OAuth redirect、callback、token exchange、account linking 與 session 建立不在本版範圍內。
+2. 若新增或改動 Google SSO 的 OAuth 流程、callback route、provider profile mapping、錯誤狀態或帳號綁定行為，必須另行更新對應 auth / profile 規格，並同步檢查下游規格。
+3. 若需求描述缺少 OAuth 模式、callback 行為、錯誤處理、語言行為或 provider 資料欄位，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為與驗收條件，不描述 OAuth client 實作、token 儲存方式或後端框架。
+5. 本規格若與最新 login prototype 不一致，必須明確記錄差異並更新 changelog。
+
+**已釐清事項**：
+
+- 本版 Google SSO 按鈕為原型入口：可點擊但不導頁、不呼叫 OAuth callback、不建立登入狀態。
+- Google SSO 的按鈕位置、文字、圖示與 `aria-label` 需與 `001` 登入頁框架保持一致。
+- 後續正式 OAuth 整合可替換 click 行為，但不得破壞既有入口語意、i18n 與可存取屬性。
 
 ## 規格常數
 
@@ -164,10 +182,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦 Google SSO 入口的使用者可觀察行為，未引入 OAuth token、callback 或 session 實作細節。
+- [x] 所有必填章節已完成，且真實 OAuth 流程已明確排除於本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 本規格不新增跨 feature import 或架構耦合需求。
+- [x] 本規格不涉及 task type 邏輯，因此不影響 config-driven task architecture。
+- [x] 本規格不回傳或顯示 test-set answer / ground-truth 資料。
+- [x] Prototype source of truth 已列於需求來源，prototype no-op 行為已於已釐清事項中說明。
+- [x] 上下游規格相依性已列出，需變更登入頁框架、語言契約或 provider 顯示來源時可追蹤影響範圍。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：返回 login 頁時 SSO 文案/aria 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕描述改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 login 原型現況（Google SSO 入口與 no-op 行為） |

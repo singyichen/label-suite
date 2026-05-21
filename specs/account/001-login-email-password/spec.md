@@ -1,10 +1,28 @@
 # 功能規格：登入 — Email / Password + 頁面 UI
 
-**功能分支**：`001-login-email-password`
+**功能分支**：`feat/account/001-login-email-password`
 **建立日期**：2026-04-05
-**版本**：1.2.1
+**版本**：1.2.2
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
+
+## Input & Generation Rules
+
+**輸入描述**：使用者需能透過 Email / Password 登入入口進入 Label Suite，並可由登入頁前往註冊、忘記密碼與 dashboard 原型流程。
+
+**產生規格時必須遵守**：
+
+1. 先確認此規格範圍僅涵蓋登入頁 UI、表單互動、原型導頁、i18n 與 RWD；真實身分驗證、JWT、session 與後端 API 契約不在本版範圍內。
+2. 若新增或改動驗證規則、導頁目標、語言持久化、Google SSO 行為，必須同步檢查下游規格。
+3. 若需求描述缺少角色、錯誤處理、導頁目標、語言行為或響應式邊界，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為與驗收條件，不描述前端框架、API 實作或持久化技術。
+5. 本規格若與最新 prototype 不一致，必須明確記錄差異並更新 changelog。
+
+**已釐清事項**：
+
+- 本版成功登入為原型行為：Email / Password 皆非空即可進入 loading，約 800ms 後導向 dashboard 原型頁。
+- Google 按鈕在本規格中僅要求可點擊且 no-op；完整 Google SSO 行為由下游規格 `002` 定義。
+- 語言狀態需跨登入、註冊、忘記密碼與 dashboard 原型頁持久化。
 
 ## 規格常數
 
@@ -230,10 +248,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為與業務需求，未引入前端框架、API 或資料庫實作細節。
+- [x] 所有必填章節已完成，且不適用的後端驗證 / session 行為已明確排除於本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 本規格不新增跨 feature import 或架構耦合需求。
+- [x] 本規格不涉及 task type 邏輯，因此不影響 config-driven task architecture。
+- [x] 本規格不回傳或顯示 test-set answer / ground-truth 資料。
+- [x] Prototype source of truth 已列於需求來源，prototype 行為與規格差異已於已釐清事項中說明。
+- [x] 上下游規格相依性已列出，需變更登入入口、Google 按鈕或跨頁語言契約時可追蹤影響範圍。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：登入頁切換語言後，導向 register/forgot-password/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕規格改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；全面對齊最新 login 原型（i18n、欄位驗證、密碼顯示切換、原型導頁路徑） |

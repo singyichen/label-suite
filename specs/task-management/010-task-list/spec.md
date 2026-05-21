@@ -1,10 +1,28 @@
 # 功能規格：Task List — 任務列表
 
-**功能分支**：`010-task-list`
+**功能分支**：`feat/task-management/010-task-list`
 **建立日期**：2026-04-20
-**版本**：1.3.7
+**版本**：1.3.8
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 Task List 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（task-list）。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -87,7 +105,7 @@ sequenceDiagram
 
 登入使用者可在任務列表頁快速找到自己要處理的任務，並透過搜尋與篩選定位目標。
 
-**此優先級原因**：任務管理模組入口能力，後續建立任務與任務詳情都依賴此頁。  
+**此優先級原因**：任務管理模組入口能力，後續建立任務與任務詳情都依賴此頁。
 **獨立測試方式**：以 `user` 與 `super_admin` 各自登入，驗證列表資料範圍、搜尋、篩選與分頁正確性。
 
 **驗收情境**：
@@ -147,7 +165,7 @@ sequenceDiagram
 
 使用者可從任務列表直接進入任務詳情或新增任務流程，且導覽 active 狀態維持在任務管理模組。
 
-**此優先級原因**：是 task-management 模組的主導航起點。  
+**此優先級原因**：是 task-management 模組的主導航起點。
 **獨立測試方式**：驗證任務列點擊導向 `/task-detail`、新增任務導向 `/task-new`，並檢查 L0 active 狀態。
 
 **驗收情境**：
@@ -237,7 +255,7 @@ flowchart LR
 | `/task-detail` | 點擊返回 | `/task-list` |
 | `/task-new` | 點擊取消 | `/task-list` |
 
-**Entry points**：Sidebar「任務管理」。  
+**Entry points**：Sidebar「任務管理」。
 **Exit points**：`/task-new`、`/task-detail`、其他 L0 模組導覽。
 
 ### 關鍵實體
@@ -286,10 +304,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.7 | 2026-04-23 | 同步原型：`TASK_TYPE_ENUM` 以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression`，並新增 `labelsuite.activeTaskType` 持久化契約供 annotation-workspace 啟動 fallback |
 | 1.3.6 | 2026-04-22 | 任務類型對齊 `task-new` 下拉實際選項：`TASK_TYPE_ENUM` 改為 `single_sentence_classification / single_sentence_scoring_regression / sequence_labeling / relation_extraction / sentence_pairs`（不含生成式標記） |
 | 1.3.5 | 2026-04-22 | 與 `013-task-new` 對齊：兩份 spec 共同定義 `TASK_TYPE_ENUM = Single Sentence | Sequence Labeling | Sentence Pairs | Generative Labeling`，並保留 registry 來源約束 |

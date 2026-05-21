@@ -1,10 +1,28 @@
 # 功能規格：User Management — 使用者列表與帳號管理
 
-**功能分支**：`006-user-management`
+**功能分支**：`feat/admin/006-user-management`
 **建立日期**：2026-04-16
-**版本**：1.0.0
+**版本**：1.0.6
 **狀態**：Draft
 **需求來源**：IA v7 Spec 清單 #006 — 使用者列表與管理（`user-management`）
+
+## Input & Generation Rules
+
+**輸入描述**：本規格需定義 User Management 的系統管理流程、權限守門、列表/矩陣互動、審計與 RWD 行為。
+
+**產生規格時必須遵守**：
+
+1. 先確認本規格範圍與需求來源一致：IA v7 Spec 清單 #006 — 使用者列表與管理（user-management）。
+2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
+3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
+4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
+5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
+
+**已釐清事項**：
+
+- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
+- 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
 ## 規格常數
 
@@ -65,7 +83,7 @@ sequenceDiagram
 
 Super Admin 可在 `/user-management` 查看全平台使用者，並以關鍵字與角色篩選快速定位目標帳號。
 
-**此優先級原因**：系統管理模組的基礎入口，其他管理操作皆依賴清單可見性。  
+**此優先級原因**：系統管理模組的基礎入口，其他管理操作皆依賴清單可見性。
 **獨立測試方式**：以 `super_admin` 登入後開啟頁面，驗證列表、搜尋、篩選、分頁是否獨立可運作。
 
 **驗收情境**：
@@ -103,7 +121,7 @@ Super Admin 可在 `/user-management` 查看全平台使用者，並以關鍵字
 
 Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，並停用不再使用的帳號。
 
-**此優先級原因**：帳號生命週期管理是平台運維核心能力。  
+**此優先級原因**：帳號生命週期管理是平台運維核心能力。
 **獨立測試方式**：分別驗證新增、編輯、停用三個動作可獨立完成並反映在列表（手機版允許新增/編輯於 modal 或次頁流程）。
 
 **驗收情境**：
@@ -143,7 +161,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 
 只有 Super Admin 可進入使用者管理頁；非授權角色需被阻擋並導回安全入口頁。
 
-**此優先級原因**：管理功能涉及平台級權限，需先確保授權正確性。  
+**此優先級原因**：管理功能涉及平台級權限，需先確保授權正確性。
 **獨立測試方式**：以 `user` 與未登入狀態直接造訪 `/user-management`，驗證阻擋與導頁行為。
 
 **驗收情境**：
@@ -211,7 +229,7 @@ flowchart LR
 | 任何頁面 | `user` 直接造訪 `/user-management` | `/dashboard` |
 | 任何頁面 | 未登入造訪 `/user-management` | `/login` |
 
-**Entry points**：`/dashboard` 的「系統管理」導覽項。  
+**Entry points**：`/dashboard` 的「系統管理」導覽項。
 **Exit points**：Navbar 導覽至其他模組。
 
 ### 關鍵實體
@@ -250,10 +268,41 @@ flowchart LR
 
 ---
 
+## Review & Acceptance Checklist
+
+### Content Quality
+
+- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
+- [x] 無未解決的待釐清標記殘留。
+- [x] 需求、驗收情境與成功標準皆可測試。
+
+### Label Suite Compliance
+
+- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
+- [x] 本規格不新增 task type 邏輯；若後續接觸任務行為，需回到 config-driven task architecture 檢查。
+- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
+- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
+- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
+
+### Execution Status
+
+- [x] 輸入描述已解析。
+- [x] 角色、互動、資料狀態與限制已萃取。
+- [x] 模糊點已釐清或明確排除於本版範圍。
+- [x] 使用者情境已定義。
+- [x] 功能需求已定義。
+- [x] 關鍵實體或狀態模型已定義。
+- [x] Review checklist 已通過。
+
+---
+
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.0.6 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.0.5 | 2026-05-19 | 依最新 prototype 同步 admin tabs：`user-management.html` 點擊「角色設定」導向獨立 `role-settings.html`，不再描述為同頁 tab 切換 |
 | 1.0.4 | 2026-04-27 | Prototype 同步：停用帳號 modal 確認按鈕文字改為「確認」／「Confirm」（移除動詞冗餘） |
 | 1.0.3 | 2026-04-27 | Prototype 同步：操作欄按鈕順序調整為「停用／啟用」靠左、「編輯」靠右；修正主要按鈕 hover 時文字消失的視覺 bug |
