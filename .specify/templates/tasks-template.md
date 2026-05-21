@@ -37,6 +37,25 @@
 
 ---
 
+<!--
+  ============================================================================
+  IMPORTANT: The tasks below are EXAMPLES for illustration only.
+
+  /speckit.tasks MUST generate real tasks that replace these examples, based on:
+  - User Stories from spec.md (with their priorities P1, P2, P3…)
+  - Feature requirements from plan.md
+  - Entities from spec.md data models
+  - Endpoints from spec.md API contracts
+
+  Tasks MUST be grouped by User Story so each story can be:
+  - Implemented independently
+  - Tested independently
+  - Delivered as an MVP increment
+
+  The generated tasks.md MUST NOT retain any of these example tasks.
+  ============================================================================
+-->
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [ ] T001 Create feature directory structure (per plan.md)
@@ -53,6 +72,8 @@
 - [ ] T005 [P] Create Pydantic schemas (`backend/app/schemas/[feature].py`)
 - [ ] T006 [P] Create API route skeleton (`backend/app/api/routes/[feature].py`)
 - [ ] T007 Create frontend service layer (`frontend/src/features/[module]/services/[feature].ts`)
+- [ ] T008 [P] Configure error handling and logging infrastructure (`backend/app/core/errors.py`)
+- [ ] T009 [P] Configure environment and settings management (`backend/app/core/config.py`)
 
 **Checkpoint**: Foundation complete — User Story implementation can begin
 
@@ -116,10 +137,26 @@
 
 ## Dependencies
 
-- T004–T007 (Foundational) must complete before any Phase 3+ task
-- Tests (T010–T011) block implementation (T012–T016) within each User Story
-- T012 (model) blocks T013 (service), T013 blocks T014 (endpoint)
-- User Story phases are sequential; implementation within a phase may be parallel [P]
+### Phase dependencies
+
+- **Setup (Phase 1)**: no dependencies — start immediately
+- **Foundational (Phase 2)**: depends on Phase 1 — blocks all User Stories
+- **User Stories (Phase 3+)**: all depend on Phase 2; stories may run in parallel if team allows, or P1 → P2 → P3 sequentially
+- **Polish (Phase N)**: depends on all target User Stories complete
+
+### Intra-User Story ordering
+
+- Tests MUST be written and failing before any implementation starts
+- Model tasks [P] first → service layer → API endpoint → frontend component → page
+- Complete core implementation before integration with other stories
+
+### Parallel opportunities
+
+- All [P]-marked Phase 1 tasks can run in parallel
+- All [P]-marked Phase 2 tasks can run in parallel within the phase
+- All [P]-marked tests within a User Story can run in parallel
+- All [P]-marked model tasks within a User Story can run in parallel
+- Different User Stories can be developed in parallel by different team members
 
 ## Parallel Example
 
@@ -132,6 +169,37 @@ Task: "Create API route skeleton in backend/app/api/routes/[feature].py"
 Task: "Backend unit tests in backend/tests/unit/test_[feature].py"
 Task: "Playwright E2E tests in frontend/tests/[module]/[feature].spec.ts"
 ```
+
+## Implementation Strategy
+
+### MVP first (User Story 1 only)
+
+1. Complete Phase 1: Setup
+2. Complete Phase 2: Foundational (**critical** — blocks all User Stories)
+3. Complete Phase 3: User Story 1
+4. **Stop and verify**: independently test User Story 1
+5. Deploy / demo if ready
+
+### Incremental delivery
+
+1. Setup + Foundational → base ready
+2. Add User Story 1 → independent test → deploy / demo (MVP!)
+3. Add User Story 2 → independent test → deploy / demo
+4. Add User Story 3 → independent test → deploy / demo
+5. Each story adds value without breaking the previous one
+
+### Team parallel strategy
+
+When multiple developers are available:
+
+1. Team completes Setup + Foundational together
+2. Once Foundational is done, split by User Story:
+   - Developer A: User Story 1
+   - Developer B: User Story 2
+   - Developer C: User Story 3
+3. Each story is completed and integrated independently
+
+---
 
 ## Task Generation Rules
 
@@ -165,6 +233,7 @@ Task: "Playwright E2E tests in frontend/tests/[module]/[feature].spec.ts"
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.2.0 | 2026-05-21 | Add HTML meta-comment, T008/T009 foundational tasks, intra-US ordering rules, parallel opportunities, Implementation Strategy section |
 | 1.1.0 | 2026-05-21 | Add Execution Flow, Dependencies, Parallel Example, Task Generation Rules, Validation Checklist; strengthen TDD gate language |
 | 1.0.1 | 2026-05-21 | Align task paths with module-based SDD directory structure |
 | 1.0.0 | — | Initial spec |
