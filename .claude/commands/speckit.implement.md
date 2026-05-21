@@ -1,9 +1,9 @@
 ---
 description: Execute the implementation plan by processing and executing all tasks defined in tasks.md.
 handoffs:
-  - label: Run Quality Checklist
-    agent: speckit.checklist
-    prompt: Run the quality checklist for the implemented feature
+  - label: Analyze For Consistency
+    agent: speckit.analyze
+    prompt: Run the required consistency analysis before completion
     send: true
 ---
 
@@ -41,6 +41,8 @@ $ARGUMENTS
    - Start from Phase 1 and complete tasks sequentially
    - Tasks marked `[P]` can be run in parallel
    - Pause at each Checkpoint to verify the User Story works independently
+   - After each completed task, update `tasks.md` by changing that task from `[ ]` to `[X]`
+   - If a task cannot be completed, leave it unchecked and record the blocker before stopping
 
 5. **Test-first (REQUIRED — no exceptions)**
    - Write the test first; confirm it **fails** before writing any implementation code
@@ -53,7 +55,8 @@ $ARGUMENTS
 
 7. **Clean up on completion**
    - Remove debug statements (`print` / `console.log`)
-   - Run `/speckit.checklist` to validate quality
+   - Run the relevant project validation commands from `tasks.md` or the implementation plan
+   - Do not use `/speckit.checklist` as an implementation QA gate; it validates requirement quality and is expected before implementation
 
 8. **Run consistency analysis (REQUIRED gate — must pass before marking complete)**
    - Run `/speckit.analyze` and read the full output
