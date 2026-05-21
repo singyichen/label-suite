@@ -17,7 +17,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 16px; }
     body {
-      font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+      font-family: var(--font-sans);
       background: var(--color-surface); color: var(--color-ink);
       line-height: 1.8; min-height: 100vh; display: flex;
     }
@@ -66,13 +66,13 @@
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-secondary {
       display: inline-flex; align-items: center; gap: 6px;
-      background: transparent; color: var(--color-primary);
-      border: 2px solid var(--color-primary);
+      background: var(--color-white); color: var(--color-ink);
+      border-color: var(--color-border);
       padding: 9px 18px; border-radius: var(--radius-md);
       font-size: 14px; font-weight: 600;
-      transition: background 150ms; cursor: pointer;
+      transition: background 150ms, border-color 150ms, color 150ms; cursor: pointer;
     }
-    .btn-secondary:hover { background: var(--color-primary-soft-bg); }
+    .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); }
     .btn-ghost {
       display: inline-flex; align-items: center; gap: 6px;
       background: transparent; color: var(--color-ink-muted); border: none;

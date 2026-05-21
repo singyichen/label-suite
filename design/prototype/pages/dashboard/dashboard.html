@@ -67,7 +67,7 @@
     }
 
     body {
-      font-family: 'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
+      font-family: var(--font-sans);
       background: var(--color-surface);
       color: var(--color-ink);
       line-height: 1.8;
@@ -262,7 +262,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 12px 24px;
+      padding: 10px 20px;
       border-radius: var(--radius-md);
       border: 1px solid transparent;
       font-weight: 600;
@@ -283,9 +283,9 @@
     }
 
     .btn-secondary {
-      color: var(--color-primary);
-      background: transparent;
-      border: 2px solid var(--color-primary);
+      color: var(--color-ink);
+      background: var(--color-white);
+      border-color: var(--color-border);
     }
 
     .btn-secondary.slim {
@@ -294,7 +294,8 @@
     }
 
     .btn-secondary:hover {
-      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
       transform: translateY(-1px);
     }
 

@@ -54,7 +54,7 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 | Core | `color-surface` | `#F5F3FF` |
 | Core | `color-ink` | `#1E1B4B` |
 | Supporting | `color-border` | `#E2E8F0` |
-| Supporting | `color-text-muted` | `#94A3B8` |
+| Supporting | `color-ink-muted` | `#94A3B8` |
 | Supporting | `color-white` | `#FFFFFF` |
 | State | `color-error` / `color-error-bg` / `color-error-border` | `#B91C1C` / `#FEF2F2` / `#FECACA` |
 | State | `color-success` / `color-success-bg` / `color-success-border` | `#15803D` / `#F0FDF4` / `#BBF7D0` |
@@ -66,7 +66,7 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 | Extended | `color-border-muted` | `#F1F5F9` |
 | Extended | `color-text-soft` | `#64748B` |
 | Extended | `color-slate-50` | `#F8FAFC` |
-| Alias | `color-ink-muted` | `#94A3B8` (= `color-text-muted`) |
+| Alias (deprecated) | `color-text-muted` | `#94A3B8` (= `color-ink-muted` — 已棄用，改用 `color-ink-muted`) |
 | Alias | `color-error-soft-bg` / `color-error-soft-border` | `#FEF2F2` / `#FECACA` (= error bg/border) |
 | Alias | `color-success-soft-bg` / `color-success-soft-border` | `#F0FDF4` / `#BBF7D0` |
 | Alias | `color-warning-soft-bg` / `color-warning-soft-border` | `#FEFCE8` / `#FEF08A` |
@@ -127,6 +127,13 @@ Used for status badges, error banners, alerts, and feedback messages.
 | Pairs | `badge-task-type-pairs` | `#065F46` (emerald-800) | `#ECFDF5` (emerald-50) | `#A7F3D0` (emerald-200) |
 | Scoring | `badge-task-type-scoring` | `#7E22CE` (purple-700) | `#FAF5FF` (purple-50) | `#E9D5FF` (purple-200) |
 
+**Run Mode Badge Mapping (light mode):**
+
+| Mode | CSS Class | Text | Background | Border |
+|------|-----------|------|------------|--------|
+| Official Run | `badge-official` | `#5B21B6` (indigo-800) | `#EDE9FE` (violet-100) | `#DDD6FE` (violet-200) |
+| Dry Run | `badge-dry-run` | `#6B7280` (gray-500) | `#F3F4F6` (gray-100) | `#D1D5DB` (gray-300) |
+
 **Base badge CSS:**
 
 ```css
@@ -163,7 +170,7 @@ Activated via `<html data-theme="dark">`. All tokens in `design/prototype/assets
 | Primary border | `#C7D2FE` | `#3730A3` (indigo-800) | `--color-primary-border` |
 | Border | `#E2E8F0` | `#2A2A35` | `--color-border` |
 | Border muted | `#F1F5F9` | `#1F1F28` | `--color-border-muted` |
-| Text muted | `#94A3B8` | `#9CA3AF` (raised for WCAG AA) | `--color-text-muted` |
+| Text muted | `#94A3B8` | `#9CA3AF` (raised for WCAG AA) | `--color-ink-muted` |
 | Text soft | `#64748B` | `#A1A1AA` (zinc-400) | `--color-text-soft` |
 | Hover bg (slate-50) | `#F8FAFC` | `#1F1F28` | `--color-slate-50` |
 | Nav active pill | `--color-surface` | `#2A2A35` (lighter than card bg) | `--nav-active-bg` |
@@ -484,7 +491,7 @@ Direct read from `design-system.pen` (`reusable: true`, total `45`):
 .btn-primary {
   background: var(--color-cta);
   color: white;
-  padding: 12px 24px;
+  padding: 10px 20px;
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: all 200ms ease;
@@ -500,8 +507,8 @@ Direct read from `design-system.pen` (`reusable: true`, total `45`):
 .btn-secondary {
   background: transparent;
   color: var(--color-primary);
-  border: 2px solid var(--color-primary);
-  padding: 12px 24px;
+  border: 1px solid var(--color-border);
+  padding: 10px 20px;
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: all 200ms ease;
@@ -1911,3 +1918,4 @@ Before delivering any UI code, verify:
 | v1.6.1 | 2026-05-14 | 深色模式套用至所有 prototype 頁面；補充深色模式規則：Badge 覆寫、審核員操作按鈕、結果標籤、VA/分類 chip、獨立 auth 頁面 |
 | v1.6.2 | 2026-05-15 | 修正 annotation results 深色模式 `--color-ink-muted` 對應錯誤；修正 i18n 審核結果文字顯示 |
 | v1.7 | 2026-05-20 | **Token 缺口補齊** — 新增 10 個 extended/alias token（`--color-cta-hover`、`--color-primary-soft-bg`、`--color-text-soft`、soft-bg/soft-border aliases）、Motion tokens（`--dur-fast/--dur-normal/--ease-standard`）、Semantic aliases（`--fg-1/2/3`、`--bg-page`、`--bg-surface`）、`--shadow-card` 亮模式值；**字型** — 新增 `Atkinson Hyperlegible`（閱讀用）與 `JetBrains Mono`（程式碼），補充 `--font-*` CSS 變數與 line-height 變數表，新增 Page Title 28px 層級；**Badge** — 擴充 8 種新類型（draft、iaa、task-type-single/sequence/relation/pairs/scoring）；**新元件** — Toolbar、Step Indicator、Upload Zone、Tag Input/Pill、Toggle Switch、Code Editor |
+| v1.7.1 | 2026-05-21 | **Spec drift 修正** — Button padding 統一：`.btn-primary` / `.btn-secondary` 由 `12px 24px` 改為 `10px 20px`（對齊 CTA 實作值）；`.btn-secondary` border 由 `2px solid --color-primary` 改為 `1px solid --color-border`；Token canonical name 修正：`--color-ink-muted` 升為 Supporting token，`--color-text-muted` 降為 deprecated alias；新增 **Run Mode Badge Mapping（light mode）** 章節（badge-official indigo 色板、badge-dry-run gray 色板）；同步修正 `design-system.pen` Button/Primary 與 Button/Secondary 的 padding 與 stroke 屬性 |
