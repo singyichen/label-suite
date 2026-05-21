@@ -16,7 +16,7 @@ $ARGUMENTS
 ## Steps
 
 1. **Read spec.md**
-   - Load the spec from `specs/[###-feature-name]/spec.md`
+   - Load the spec from `specs/[module]/NNN-feature/spec.md`
 
 2. **Identify ambiguities**, focusing on:
    - Are the User Story acceptance scenarios specific and testable?

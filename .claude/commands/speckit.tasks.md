@@ -23,8 +23,8 @@ $ARGUMENTS
 ## Steps
 
 1. **Read design documents**
-   - `specs/[###-feature-name]/spec.md`
-   - `specs/[###-feature-name]/plan.md`
+   - `specs/[module]/NNN-feature/spec.md`
+   - `specs/[module]/NNN-feature/plan.md`
 
 2. **Break down tasks by User Story**
    - Each User Story maps to one Phase
@@ -32,7 +32,7 @@ $ARGUMENTS
    - Include exact file paths in task descriptions
 
 3. **Create tasks.md**
-   - Path: `specs/[###-feature-name]/tasks.md`
+   - Path: `specs/[module]/NNN-feature/tasks.md`
    - Copy `.specify/templates/tasks-template.md` and fill in actual tasks
 
 4. **Verify task independence**

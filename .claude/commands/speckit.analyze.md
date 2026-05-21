@@ -16,9 +16,9 @@ $ARGUMENTS
 ## Steps
 
 1. **Read all design documents**
-   - `specs/[###-feature-name]/spec.md`
-   - `specs/[###-feature-name]/plan.md`
-   - `specs/[###-feature-name]/tasks.md`
+   - `specs/[module]/NNN-feature/spec.md`
+   - `specs/[module]/NNN-feature/plan.md`
+   - `specs/[module]/NNN-feature/tasks.md`
 
 2. **Consistency check**
    - Does every User Story in spec.md map to a Phase in tasks.md?

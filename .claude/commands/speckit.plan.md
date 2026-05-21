@@ -19,7 +19,7 @@ $ARGUMENTS
 ## Steps
 
 1. **Read spec.md**
-   - Load the spec from `specs/[###-feature-name]/spec.md`
+   - Load the spec from `specs/[module]/NNN-feature/spec.md`
 
 2. **Run Constitution Check**
    - Validate against all six principles in `.specify/memory/constitution.md`
@@ -31,7 +31,7 @@ $ARGUMENTS
    - Confirm API contract requirements
 
 4. **Create plan.md**
-   - Path: `specs/[###-feature-name]/plan.md`
+   - Path: `specs/[module]/NNN-feature/plan.md`
    - Copy `.specify/templates/plan-template.md` and fill in the content
    - Complete Technical Context, Project Structure, and Complexity Tracking
 

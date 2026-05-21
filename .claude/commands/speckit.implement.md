@@ -16,10 +16,10 @@ $ARGUMENTS
 ## Steps
 
 1. **Read the task list**
-   - Load `specs/[###-feature-name]/tasks.md`
+   - Load `specs/[module]/NNN-feature/tasks.md`
 
 2. **Verify the branch**
-   - Confirm the current branch is the correct feature branch (`feat/[###-feature-name]`)
+   - Confirm the current branch is the correct feature branch (`feat/NNN-feature`)
    - If not, remind the user to create and switch to the correct branch
 
 3. **Execute tasks in order**
@@ -47,5 +47,5 @@ $ARGUMENTS
    - You MUST NOT open a PR or mark complete while findings remain
 
 8. **Mark as complete**
-   - `touch specs/[feature-dir]/.completed`
+   - `touch specs/[module]/NNN-feature/.completed`
    - Note: `specs/STATUS.md` status remains `in-progress` until a PR is opened; `/pr-flow` will update it to `review` on PR open and `done` after merge to `main`

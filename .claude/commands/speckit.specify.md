@@ -26,12 +26,13 @@ Only run `/speckit.specify` when the change will make the system behave **differ
 1. **Generate a short feature name** (2-4 words in kebab-case)
    - Example: "add labeling task config UI" → `labeling-task-config`
 
-2. **Find the next available number**
-   - Scan the `specs/` directory and take the current highest number + 1
+2. **Choose the feature module and find the next available number**
+   - Module must be one of: `account`, `dashboard`, `task-management`, `annotation`, `dataset`, `annotator-management`, `admin`
+   - Scan `specs/[module]/` and take the current highest number + 1
    - Format: three digits (e.g., `001`, `002`)
 
 3. **Create the feature directory and spec.md**
-   - Path: `specs/[###-feature-name]/spec.md`
+   - Path: `specs/[module]/NNN-feature/spec.md`
    - Copy `.specify/templates/spec-template.md` and fill in the content
 
 4. **Fill in spec.md based on the user description**

@@ -13,7 +13,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Steps
 
 1. **Read the task list**
-   - Load `specs/[###-feature-name]/tasks.md`
+   - Load `specs/[module]/NNN-feature/tasks.md`
    - If tasks.md does not exist, ask the user to run `/speckit.tasks` first
 
 2. **Get the GitHub remote**
@@ -22,14 +22,14 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **CAUTION**: Never create issues in repositories that do not match the remote URL
 
 3. **Read supporting context**
-   - Load `specs/[###-feature-name]/spec.md` for User Story descriptions
-   - Load `specs/[###-feature-name]/plan.md` for technical context (if available)
+   - Load `specs/[module]/NNN-feature/spec.md` for User Story descriptions
+   - Load `specs/[module]/NNN-feature/plan.md` for technical context (if available)
 
 4. **For each task in tasks.md, prepare a GitHub Issue**:
    - **Title**: concise task description (from tasks.md)
    - **Body** includes:
      - User Story reference (e.g., `Implements US-01 (P1)`)
-     - Spec reference: `specs/[###-feature-name]/spec.md`
+     - Spec reference: `specs/[module]/NNN-feature/spec.md`
      - Task ID from tasks.md (e.g., `TASK-003`)
      - Acceptance Criteria (from spec.md AC linked to this task)
      - Technical notes (from plan.md if relevant)

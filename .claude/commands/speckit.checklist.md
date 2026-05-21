@@ -14,7 +14,7 @@ $ARGUMENTS
    - Understand the feature's requirements and technical decisions
 
 2. **Create checklist.md**
-   - Path: `specs/[###-feature-name]/checklists/checklist.md`
+   - Path: `specs/[module]/NNN-feature/checklists/checklist.md`
    - Copy `.specify/templates/checklist-template.md` and adapt to the feature's specifics
 
 3. **Run through each check**
