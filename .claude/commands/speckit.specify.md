@@ -28,12 +28,12 @@ Only run `/speckit.specify` when the change will make the system behave **differ
 
 2. **Choose the feature module and find the next available number**
    - Module must be one of: `account`, `dashboard`, `task-management`, `annotation`, `dataset`, `annotator-management`, `admin`
-   - Scan `specs/[module]/` and take the current highest number + 1
-   - Format: three digits (e.g., `001`, `002`)
+   - The create script scans `specs/[module]/` and assigns the next three-digit number
 
 3. **Create the feature directory and spec.md**
-   - Path: `specs/[module]/NNN-feature/spec.md`
-   - Copy `.specify/templates/spec-template.md` and fill in the content
+   - Run `scripts/speckit/create-new-feature.sh --module [module] --short-name [short-feature-name] --json "$ARGUMENTS"` from the repo root
+   - Parse FEATURE_MODULE, FEATURE_NAME, BRANCH, FEATURE_DIR, and SPEC_FILE from the JSON output
+   - The script creates branch `feat/[module]/NNN-feature`, creates `specs/[module]/NNN-feature/spec.md`, and updates `specs/STATUS.md` to `spec-ready`
 
 4. **Fill in spec.md based on the user description**
    - Include at least 2 User Stories (P1 is required)

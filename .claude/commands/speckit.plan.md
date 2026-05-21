@@ -1,5 +1,7 @@
 ---
 description: Build a technical implementation plan (plan.md) from spec.md.
+scripts:
+  sh: scripts/speckit/setup-plan.sh --json
 handoffs:
   - label: Create Tasks
     agent: speckit.tasks
@@ -18,8 +20,9 @@ $ARGUMENTS
 
 ## Steps
 
-1. **Read spec.md**
-   - Load the spec from `specs/[module]/NNN-feature/spec.md`
+1. **Initialize plan context**
+   - Run `{SCRIPT}` from the repo root once and parse FEATURE_MODULE, FEATURE_NAME, FEATURE_SPEC, IMPL_PLAN, FEATURE_DIR, and BRANCH
+   - Load `FEATURE_SPEC`
 
 2. **Run Constitution Check**
    - Validate against all six principles in `.specify/memory/constitution.md`
@@ -31,8 +34,9 @@ $ARGUMENTS
    - Confirm API contract requirements
 
 4. **Create plan.md**
-   - Path: `specs/[module]/NNN-feature/plan.md`
-   - Copy `.specify/templates/plan-template.md` and fill in the content
+   - Path: `IMPL_PLAN`
+   - The script creates `IMPL_PLAN` from `.specify/templates/plan-template.md` if it does not already exist and updates `specs/STATUS.md` to `plan-ready`
+   - Fill in the content
    - Complete Technical Context, Project Structure, and Complexity Tracking
 
 5. **Report completion** and suggest next steps:

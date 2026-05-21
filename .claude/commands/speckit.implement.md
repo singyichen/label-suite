@@ -1,5 +1,7 @@
 ---
 description: Execute the implementation plan by processing and executing all tasks defined in tasks.md.
+scripts:
+  sh: scripts/speckit/check-prerequisites.sh --json --require-tasks --include-tasks
 handoffs:
   - label: Analyze For Consistency
     agent: speckit.analyze
@@ -15,11 +17,12 @@ $ARGUMENTS
 
 ## Steps
 
-1. **Read the task list**
-   - Load `specs/[module]/NNN-feature/tasks.md`
+1. **Initialize implementation context**
+   - Run `{SCRIPT}` from the repo root once and parse FEATURE_MODULE, FEATURE_NAME, FEATURE_DIR, FEATURE_SPEC, IMPL_PLAN, TASKS, and AVAILABLE_DOCS
+   - Load `TASKS`
 
 2. **Check checklist status (pre-implementation gate)**
-   - Scan `specs/[module]/NNN-feature/checklists/` for all checklist files (if the directory exists)
+   - Scan `FEATURE_DIR/checklists/` for all checklist files (if the directory exists)
    - For each file, count: total items (`- [ ]` + `- [x]` + `- [X]`), completed (`- [x]` or `- [X]`), incomplete (`- [ ]`)
    - Display a status table:
 
@@ -34,7 +37,7 @@ $ARGUMENTS
    - **If all checklists pass** (or no `checklists/` directory exists): proceed automatically
 
 3. **Verify the branch**
-   - Confirm the current branch is the correct feature branch (`feat/NNN-feature`)
+   - Confirm the current branch is the correct feature branch (`feat/[module]/NNN-feature`)
    - If not, remind the user to create and switch to the correct branch
 
 4. **Execute tasks in order**

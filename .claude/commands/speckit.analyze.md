@@ -1,5 +1,7 @@
 ---
 description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
+scripts:
+  sh: scripts/speckit/check-prerequisites.sh --json --require-tasks --include-tasks
 handoffs:
   - label: Implement Project
     agent: speckit.implement
@@ -29,13 +31,16 @@ Before implementation, find inconsistencies, duplicates, ambiguities, and under-
 
 ### 1. Initialize Analysis Context
 
-Locate the feature directory:
-- Scan `specs/` to find the current feature under `specs/[module]/NNN-feature/`
-- If multiple in-progress features exist and no argument is provided, ask the user which one to analyze
-- Derive absolute paths:
-  - SPEC = `specs/[module]/NNN-feature/spec.md`
-  - PLAN = `specs/[module]/NNN-feature/plan.md`
-  - TASKS = `specs/[module]/NNN-feature/tasks.md`
+Run `{SCRIPT}` from the repo root once and parse the JSON payload:
+- FEATURE_MODULE
+- FEATURE_NAME
+- FEATURE_DIR
+- FEATURE_SPEC
+- IMPL_PLAN
+- TASKS
+- AVAILABLE_DOCS
+
+The script resolves the current feature from `feat/[module]/NNN-feature` or `SPECIFY_FEATURE=module/NNN-feature`.
 
 If any required file is missing, abort with an error message directing the user to run the missing prerequisite command.
 
