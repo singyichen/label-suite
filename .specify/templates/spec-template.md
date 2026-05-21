@@ -1,6 +1,6 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
+**Feature Branch**: `feat/[module]/NNN-feature`
 **Created**: [YYYY-MM-DD]  
 **Version**: 1.0.0  
 **Status**: Draft  
@@ -186,4 +186,5 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.0.1 | 2026-05-21 | Align feature branch format with module-based SDD directory structure |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

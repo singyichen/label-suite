@@ -1,6 +1,6 @@
 # Tasks: [FEATURE NAME]
 
-**Input**: Design documents under `/specs/[###-feature-name]/`
+**Input**: Design documents under `specs/[module]/NNN-feature/`
 **Prerequisites**: plan.md (required), spec.md (required)
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -26,7 +26,7 @@
 - [ ] T004 Create database schema and migration
 - [ ] T005 [P] Create Pydantic schemas (`backend/app/schemas/[feature].py`)
 - [ ] T006 [P] Create API route skeleton (`backend/app/api/routes/[feature].py`)
-- [ ] T007 Create frontend service layer (`frontend/src/services/[feature].ts`)
+- [ ] T007 Create frontend service layer (`frontend/src/features/[module]/services/[feature].ts`)
 
 **Checkpoint**: Foundation complete — User Story implementation can begin
 
@@ -41,15 +41,15 @@
 ### Tests (optional) ⚠️ Tests must be written and confirmed to fail before implementation
 
 - [ ] T010 [P] [US1] Backend unit tests (`backend/tests/unit/test_[feature].py`)
-- [ ] T011 [P] [US1] Playwright E2E tests (`frontend/tests/[feature].spec.ts`)
+- [ ] T011 [P] [US1] Playwright E2E tests (`frontend/tests/[module]/[feature].spec.ts`)
 
 ### Implementation
 
 - [ ] T012 [P] [US1] Create data model (`backend/app/models/[feature].py`)
 - [ ] T013 [US1] Implement service layer (`backend/app/services/[feature].py`)
 - [ ] T014 [US1] Implement API endpoint (`backend/app/api/routes/[feature].py`)
-- [ ] T015 [US1] Create frontend component (`frontend/src/components/[feature]/`)
-- [ ] T016 [US1] Implement frontend page (`frontend/src/pages/[feature]/`)
+- [ ] T015 [US1] Create frontend component (`frontend/src/features/[module]/components/[feature]/`)
+- [ ] T016 [US1] Implement frontend page (`frontend/src/features/[module]/pages/[feature]/`)
 
 **Checkpoint**: User Story 1 can be independently verified
 
@@ -79,14 +79,16 @@
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-- [ ] TXXX [P] Update documentation
-- [ ] TXXX Code cleanup (remove debug `print` / `console.log`)
-- [ ] TXXX Performance optimization
-- [ ] TXXX Security hardening
-- [ ] TXXX Run `touch specs/[feature-dir]/.completed`
+- [ ] TXXX [P] Update documentation `[Principle: I]`
+- [ ] TXXX Code cleanup — remove debug `print` / `console.log` `[Principle: V]`
+- [ ] TXXX UI consistency review against MASTER.md tokens and prototype screens `[Principle: VII]`
+- [ ] TXXX Verify API P95 ≤ 500ms and no unbounded queries `[Principle: VIII]`
+- [ ] TXXX Security hardening — validate inputs, check CORS config
+- [ ] TXXX Run `touch specs/[module]/NNN-feature/.completed`
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.0.1 | 2026-05-21 | Align task paths with module-based SDD directory structure |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

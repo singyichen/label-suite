@@ -6,7 +6,7 @@
 ### [PRINCIPLE_1_NAME]
 <!-- Example: I. Spec-First Development -->
 [PRINCIPLE_1_DESCRIPTION]
-<!-- Example: New features begin with a spec in specs/NNN-feature/spec.md; Bug fixes may skip spec at discretion; Features progress: requirements → spec → plan → tasks → implementation -->
+<!-- Example: New features begin with a spec in specs/[module]/NNN-feature/spec.md; Bug fixes may skip spec at discretion; Features progress: requirements → spec → plan → tasks → implementation -->
 
 ### [PRINCIPLE_2_NAME]
 <!-- Example: II. Generalization-First (Config-Driven) -->
@@ -52,4 +52,5 @@
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.0.1 | 2026-05-21 | Align example spec path with module-based SDD directory structure |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

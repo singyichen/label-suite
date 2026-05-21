@@ -1,7 +1,7 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `feat/[module]/NNN-feature` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `specs/[module]/NNN-feature/spec.md`
 
 ## Summary
 
@@ -23,18 +23,23 @@
 - [ ] II. Generalization-First: Does the design support multiple NLP task types?
 - [ ] III. Data Fairness: Does this involve test sets? If so, leakage prevention is planned
 - [ ] IV. Test-First: Test plan is listed
-- [ ] V. Simplicity: Any signs of over-engineering?
+- [ ] V. Code Quality & Simplicity: Any signs of over-engineering? Type hints, linter, no debug output addressed?
 - [ ] VI. English-First: Code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md`; `design/system/MASTER.md` must be English only
+- [ ] VII. Design Consistency: UI uses MASTER.md tokens; prototype screens followed; shared components reused
+- [ ] VIII. Performance Baseline: List-view endpoints paginated; no unbounded queries; API P95 ≤ 500ms target confirmed
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/[module]/NNN-feature/
 ├── spec.md
 ├── plan.md
 ├── tasks.md
+├── checklists/
+│   ├── ac-checklist.md
+│   └── security-checklist.md
 ├── research.md        (optional)
 ├── data-model.md      (optional)
 └── contracts/         (optional)
@@ -45,9 +50,11 @@ specs/[###-feature]/
 ```text
 frontend/
 ├── src/
-│   ├── components/[feature]/
-│   ├── pages/[feature]/
-│   └── services/[feature].ts
+│   ├── features/[module]/
+│   │   ├── components/[feature]/
+│   │   ├── pages/[feature]/
+│   │   └── services/[feature].ts
+│   └── shared/        (only when used by 2+ feature modules)
 
 backend/
 ├── app/
@@ -89,7 +96,7 @@ sequenceDiagram
 
 | Layer | Component | Responsibility |
 |-------|-----------|---------------|
-| Frontend | `pages/[feature]` | Form state, API call, display result |
+| Frontend | `features/[module]/pages/[feature]` | Form state, API call, display result |
 | API | `api/routes/[feature].py` | Request validation, auth check, delegate to service |
 | Service | `services/[feature].py` | Business logic, DB interaction |
 | DB | `models/[feature].py` | Persistence |
@@ -108,4 +115,5 @@ sequenceDiagram
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.0.1 | 2026-05-21 | Align spec paths with module-based SDD directory structure |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |
