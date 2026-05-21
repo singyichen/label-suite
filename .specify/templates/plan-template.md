@@ -67,6 +67,12 @@ specs/[module]/NNN-feature/
 
 ### Source Code
 
+<!--
+  Replace [module] with the feature module name (e.g., task-management, annotation)
+  and [feature] with the feature name (e.g., batch-import, auto-label).
+  The generated plan.md must not retain any placeholder brackets.
+-->
+
 ```text
 frontend/
 ├── src/
@@ -120,6 +126,74 @@ sequenceDiagram
 | API | `api/routes/[feature].py` | Request validation, auth check, delegate to service |
 | Service | `services/[feature].py` | Business logic, DB interaction |
 | DB | `models/[feature].py` | Persistence |
+
+---
+
+## Phase 0: Research
+
+> Prerequisites: Technical Context filled. Skip this phase if no NEEDS CLARIFICATION items exist.
+
+1. **Extract unknowns** from Technical Context — each `NEEDS CLARIFICATION` → one research task
+2. **Dispatch research** for each unknown:
+
+   ```text
+   For each unknown:        Task "Research {unknown} for {feature context}"
+   For each new dependency: Task "Find best practices for {dep} in label-suite stack"
+   ```
+
+3. **Consolidate findings** in `research.md`:
+   - Decision: [what was chosen]
+   - Rationale: [why chosen]
+   - Alternatives considered: [what else was evaluated]
+
+**Output**: `research.md` — all NEEDS CLARIFICATION resolved before Phase 1 begins
+
+---
+
+## Phase 1: Design & Contracts
+
+> Prerequisites: research.md complete (or Phase 0 skipped if no unknowns)
+
+1. **Extract entities** from spec.md → `data-model.md`
+   - Entity name, fields, relationships, validation rules
+   - State transitions if applicable
+
+2. **Generate API contracts** from functional requirements → `contracts/`
+   - Each user action → REST endpoint
+   - Request/response schemas (OpenAPI-compatible)
+
+3. **Update System Flow diagram** in this plan
+   - Trace data path: Frontend → API → Service → DB
+   - Add error paths and async flows (Celery, WebSocket) where relevant
+
+4. **Extract test scenarios** from User Stories
+   - Each story → integration test scenario outline
+
+**Output**: `data-model.md`, `contracts/`, System Flow updated, test scenarios outlined
+
+---
+
+## Phase 2: Task Planning Approach
+
+*This section describes what `/speckit.tasks` will do — DO NOT execute during `/speckit.plan`*
+
+**Task generation strategy**:
+
+- Load `.specify/templates/tasks-template.md` as base
+- Generate one Phase per User Story (from spec.md)
+- Each API contract → backend unit test task [P] + implementation task
+- Each entity → model creation task [P]
+- Each User Story → Playwright E2E test task [P] + frontend tasks
+
+**Ordering strategy**:
+
+- TDD order: tests before implementation (MUST FAIL first)
+- Dependency order: model → service → endpoint → frontend component → page
+- Mark [P] for parallel execution (independent files only)
+
+**Estimated output**: [N] numbered, ordered tasks in `tasks.md`
+
+**IMPORTANT**: This phase is executed by `/speckit.tasks`, not by `/speckit.plan`
 
 ---
 
