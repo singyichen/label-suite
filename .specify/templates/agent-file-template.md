@@ -78,3 +78,9 @@ All development must comply with [constitution.md](.specify/memory/constitution.
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |

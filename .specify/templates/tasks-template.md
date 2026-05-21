@@ -84,3 +84,9 @@
 - [ ] TXXX Performance optimization
 - [ ] TXXX Security hardening
 - [ ] TXXX Run `touch specs/[feature-dir]/.completed`
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |

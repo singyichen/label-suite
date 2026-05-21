@@ -68,7 +68,17 @@ Constitution principles take precedence over all other conventions.
 - **MAJOR**: Backward-incompatible removal or redefinition of a principle
 - **MINOR**: New principle or section added
 - **PATCH**: Clarification, wording fix, or non-semantic refinement
+- Changelog entries must be written in descending version order, with the newest version first (for example, `1.3.1` before `1.3.0`).
+- Changelog entries in `.specify/templates/` must use Chinese change summaries.
 
 **Compliance Review**: All PRs must verify compliance with all six principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.3.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-04-13
+**Version**: 1.3.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-21
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.3.2 | 2026-05-21 | 要求 templates 中的 Changelog 變更摘要使用中文 |
+| 1.3.1 | 2026-05-21 | 要求 Changelog 條目依版本號降序撰寫 |
+| 1.3.0 | 2026-04-13 | Changelog 追蹤前的 Constitution 基準版本 |

@@ -38,3 +38,9 @@
 
 - Check off completed items: `[x]`
 - Add inline comments for any findings or issues
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |

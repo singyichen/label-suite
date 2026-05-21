@@ -47,3 +47,9 @@
 
 **Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
 <!-- Example: Version: 1.1.0 | Ratified: 2026-03-18 | Last Amended: 2026-03-18 -->
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |

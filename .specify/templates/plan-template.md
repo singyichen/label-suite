@@ -103,3 +103,9 @@ sequenceDiagram
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |---|---|---|
 | [e.g., adding a third-party package] | [current need] | [why existing tools are insufficient] |
+
+## Changelog
+
+| Version | Date | Change Summary |
+|---------|------|----------------|
+| 1.0.0 | [YYYY-MM-DD] | Initial spec |
