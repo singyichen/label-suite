@@ -1,10 +1,11 @@
-# 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
 ---
 功能分支: feat/task-management/014-task-detail
 建立日期: 2026-04-20
 版本: 1.7.15
 狀態: Draft
 ---
+
+# 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
 
 **需求來源**: IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 

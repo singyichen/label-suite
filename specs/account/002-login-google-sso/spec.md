@@ -1,10 +1,11 @@
-# 功能規格：Login — Google SSO 入口與整合預留
 ---
 功能分支: feat/account/002-login-google-sso
 建立日期: 2026-04-05
 版本: 1.2.2
 狀態: Clarified
 ---
+
+# 功能規格：Login — Google SSO 入口與整合預留
 
 **需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 

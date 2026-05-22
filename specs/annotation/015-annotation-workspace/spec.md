@@ -1,10 +1,11 @@
-# 功能規格：Annotation List + Workspace — 標記清單與標記作業（Annotator / Reviewer）
 ---
 功能分支: feat/annotation/015-annotation-workspace
 建立日期: 2026-04-23
 版本: 1.4.11
 狀態: Draft
 ---
+
+# 功能規格：Annotation List + Workspace — 標記清單與標記作業（Annotator / Reviewer）
 
 **需求來源**: IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
 
