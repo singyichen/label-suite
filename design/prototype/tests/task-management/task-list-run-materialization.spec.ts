@@ -59,3 +59,38 @@ test.describe('Run materialization cues', () => {
     await expect(page.locator('#sampleListCount')).toHaveText('0 筆');
   });
 });
+
+test.describe('Task list clarified behavior', () => {
+  test('delete action is only available to leaders/admins on draft tasks', async ({ page }) => {
+    await page.goto('/pages/task-management/task-list.html?task_role=project_leader');
+
+    const draftRow = page.locator('tbody tr').filter({ hasText: '新聞標題多標籤分類' }).first();
+    await expect(draftRow.getByRole('button', { name: '刪除' })).toBeVisible();
+
+    const inProgressRow = page.locator('tbody tr').filter({ hasText: '情感 VA 雙維度評分' }).first();
+    await expect(inProgressRow.getByRole('button', { name: '刪除' })).toHaveCount(0);
+
+    await page.goto('/pages/task-management/task-list.html');
+    const userDraftRow = page.locator('tbody tr').filter({ hasText: '新聞標題多標籤分類' }).first();
+    await expect(userDraftRow.getByRole('button', { name: '刪除' })).toHaveCount(0);
+  });
+
+  test('invalid query values are normalized out of the URL', async ({ page }) => {
+    await page.goto('/pages/task-management/task-list.html?task_type=bad_type&run_stage=bad_stage&status=bad_status&page=-1&page_size=999');
+
+    await expect(page).toHaveURL(/task-list\.html$/);
+    await expect(page.locator('#taskTypeFilter')).toHaveValue('');
+    await expect(page.locator('#runTypeFilter')).toHaveValue('');
+    await expect(page.locator('#statusFilter')).toHaveValue('');
+    await expect(page.locator('#pageSizeSelect')).toHaveValue('20');
+  });
+
+  test('load failure keeps the table header and shows retry action', async ({ page }) => {
+    await page.goto('/pages/task-management/task-list.html?view=error');
+
+    await expect(page.locator('#thTaskName')).toBeVisible();
+    const errorRow = page.locator('#taskTableBody tr.error-row');
+    await expect(errorRow).toContainText('任務列表載入失敗');
+    await expect(errorRow.getByRole('button', { name: '重試' })).toBeVisible();
+  });
+});
