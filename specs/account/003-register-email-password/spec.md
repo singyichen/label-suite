@@ -11,7 +11,7 @@ scripts:
 **建立日期**:2026-04-05
 **版本**:1.2.3
 **狀態**:Clarified
-**需求來源**:最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
+**需求來源**:最新原型 [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html)
 
 ## 輸入與生成規則
 

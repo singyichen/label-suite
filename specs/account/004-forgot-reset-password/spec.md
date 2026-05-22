@@ -11,7 +11,7 @@ scripts:
 **建立日期**:2026-04-05
 **版本**:1.1.2
 **狀態**:Clarified
-**需求來源**:最新原型 [`design/prototype/pages/account/forgot-password.html`](../../../design/prototype/pages/account/forgot-password.html) / [`design/prototype/pages/account/reset-password.html`](../../../design/prototype/pages/account/reset-password.html)
+**需求來源**:最新原型 [design/prototype/pages/account/forgot-password.html](../../../design/prototype/pages/account/forgot-password.html) / [design/prototype/pages/account/reset-password.html](../../../design/prototype/pages/account/reset-password.html)
 
 ## 輸入與生成規則
 

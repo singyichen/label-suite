@@ -3,7 +3,7 @@
 建立日期: 2026-04-05
 版本: 1.2.2
 狀態: Clarified
-需求來源: 最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
+需求來源: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 ---
 
 # 功能規格：登入 — Email / Password + 頁面 UI
