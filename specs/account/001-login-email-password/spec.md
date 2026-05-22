@@ -27,6 +27,14 @@
 - Google 按鈕在本規格中僅要求可點擊且 no-op；完整 Google SSO 行為由下游規格 `002` 定義。
 - 語言狀態需跨登入、註冊、忘記密碼與 dashboard 原型頁持久化。
 
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 語言狀態 `labelsuite.lang` 應儲存於哪種 Web Storage？ → A: `localStorage`（跨頁、跨 session 持久化）
+- Q: 登入頁載入時語言初始化邏輯為何？ → A: 優先讀取 `localStorage['labelsuite.lang']`，無值時 fallback 到 `zh`
+- Q: 800ms loading 期間，頁面其他元件是否可互動？ → A: 全頁不可互動（pointer-events 停用或 overlay 覆蓋）
+
 ## 規格常數
 
 - `MOBILE_BP = 767px`
@@ -171,15 +179,15 @@ sequenceDiagram
 
 - **FR-001**：系統必須提供 `/account/login.html` 登入頁，包含導覽列、登入卡片、Google 按鈕、Email/Password 表單與導流連結。
 - **FR-002**：導覽列必須包含品牌區塊（Logo + Label Suite）與語言切換按鈕（單一語言代碼：`ZH` 或 `EN`）。
-- **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。
+- **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。頁面載入時優先讀取 `localStorage['labelsuite.lang']`，無值時 fallback 到 `zh`。
 - **FR-004**：語言切換時，必須同步更新文字節點與可存取屬性（至少包含 `aria-label` 與 `document.title`）。
-- **FR-004A**：語言狀態必須跨頁持久化；自登入頁導向 `register`、`forgot-password`、`dashboard` 時，目標頁需沿用相同語系。
+- **FR-004A**：語言狀態必須跨頁持久化，使用 `localStorage` 以 `labelsuite.lang` 為 key 儲存；自登入頁導向 `register`、`forgot-password`、`dashboard` 時，目標頁需沿用相同語系。
 - **FR-005**：表單送出前必須驗證 Email 與 Password 為必填。
 - **FR-006**：Email 驗證必須以 `trim()` 後結果判定是否為空。
 - **FR-007**：欄位驗證失敗時，必須在對應欄位顯示錯誤訊息與錯誤樣式。
 - **FR-008**：使用者於錯誤欄位重新輸入時，系統必須即時清除該欄位錯誤狀態。
 - **FR-009**：Password 欄位必須提供顯示/隱藏切換按鈕，且按鈕 `aria-label` 必須依狀態切換。
-- **FR-010**：表單驗證通過後，登入按鈕必須進入 disabled + spinner 的 loading 狀態。
+- **FR-010**：表單驗證通過後，登入按鈕必須進入 disabled + spinner 的 loading 狀態，且整頁其餘元件同步不可互動（全頁 pointer-events 停用或等效 overlay）。
 - **FR-011**：原型模式下，表單驗證通過後必須於約 800ms 內導向 `../dashboard/dashboard.html`。
 - **FR-012**：Google 按鈕在原型模式必須可點擊且不報錯，但不觸發導頁（no-op）。
 - **FR-013**：忘記密碼連結必須導向 `./forgot-password.html`。
@@ -214,7 +222,7 @@ flowchart LR
 ### 關鍵實體
 
 - **LoginFormState**：登入表單狀態。關鍵欄位：`email`、`password`、`emailError`、`passwordError`、`isSubmitting`。
-- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`、`storage_type = localStorage`、`default = zh`（初始化時優先讀取 localStorage，無值時 fallback 到 `zh`）。
 - **I18nDictionary**：語系字典。關鍵欄位：`pageTitle`、欄位文案、按鈕文案、錯誤訊息、`aria-label` 文案。
 - **PrototypeRedirectState**：原型導頁狀態。關鍵欄位：`targetPath = ../dashboard/dashboard.html`、`delayMs = 800`。
 
