@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dashboard/012-dashboard
 建立日期: 2026-04-05
-版本: 1.3.33
+版本: 1.3.34
 狀態: Clarified
 ---
 
@@ -522,7 +522,7 @@ flowchart LR
 - **SC-014**：Dashboard 頁首區塊固定顯示於所有角色視圖上方，並正確顯示主標「儀表板」與副標「掌握任務進度與團隊協作狀態」。
 - **SC-015**：Annotator/Reviewer 視圖點擊任務列 `快速繼續/快速審核` 後，若任務有非 `已提交` sample，必須導向 `annotation-workspace` 並帶入正確 `task_id`、`role`、`sample_id`；若所有 sample 均已提交，必須導向 `annotation-list`（不帶 `sample_id`），按鈕保持可見可點擊。
 - **SC-016**：Annotator/Reviewer 視圖點擊任務列非 `快速繼續/快速審核` 區域後，必須導向對應任務的 `annotation-list`，且帶入正確 `task_id`、`role`、`run_type`、`task_type` query。
-- **SC-017**：進入 `/dashboard` 後，在 `task_membership` API 回應前，頁面必須顯示 Skeleton 佔位塊（指標卡區域與任務列表區域各有灰色佔位），不得出現空白頁或未樣式化的裸 DOM。
+- **SC-017**：進入 `/dashboard` 後，在 `task_membership` API 回應前，頁面必須顯示 Skeleton 佔位塊（主要內容區域有灰色佔位），不得出現空白頁或未樣式化的裸 DOM。
 - **SC-018**：`task_membership` API 回傳 5xx 或逾時時，Skeleton 必須結束並顯示 i18n 錯誤訊息與可操作的重試按鈕；不得顯示一般使用者視圖，不得清除 session。
 
 ---
@@ -561,6 +561,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.34 | 2026-05-22 | 修正流程圖多角色優先順序：sequenceDiagram 中 reviewer/annotator else 分支順序與文字規則不符，調整為 project_leader > reviewer > annotator；更新 FR-018 與 SC-017 Skeleton 描述為更泛用的「主要內容區域」，避免 General User Dashboard（無指標卡/任務列表）造成誤導 |
 | 1.3.33 | 2026-05-22 | 釐清全部 sample 已提交時快速操作行為：fallback 至 annotation-list，按鈕保持可見；更新 FR-010C、FR-011C、SC-015、邊界情況 |
 | 1.3.32 | 2026-05-22 | 釐清 `task_membership` API 錯誤狀態：結束 Skeleton 顯示 i18n 錯誤訊息 + 重試按鈕，不 fallback；新增 FR-019、SC-018、邊界情況 |
 | 1.3.31 | 2026-05-22 | 釐清「最近提醒」空狀態：清單為空顯示 i18n 文字佔位；更新 FR-008C、系統管理員行為規則 |
