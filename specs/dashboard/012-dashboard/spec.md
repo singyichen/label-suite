@@ -2,7 +2,7 @@
 
 **功能分支**：`feat/dashboard/012-dashboard`
 **建立日期**：2026-04-05
-**版本**：1.3.28
+**版本**：1.3.31
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/dashboard/dashboard.html`](../../../design/prototype/pages/dashboard/dashboard.html)
 
@@ -23,6 +23,14 @@
 - 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 當 `role = user` 同時具有多種任務角色時，應優先顯示哪個視圖？ → A: 以 `project_leader` > `reviewer` > `annotator` 優先順序顯示對應單一主視圖。
+- Q: `task_membership` 資料載入中時，使用者應看到什麼狀態？ → A: 顯示 Skeleton（骨架屏）：頁面結構可見，資料區以灰色佔位塊呈現，避免空白頁閃動。
+- Q: Super Admin「最近提醒」清單為空時應顯示什麼？ → A: 顯示「目前沒有提醒」i18n 文字佔位，不顯示空白區塊。
 
 ## 規格常數
 
@@ -198,6 +206,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - `查看全部` 為任務列表主操作按鈕，文字必須可 i18n 切換。
 - 點擊 `查看全部` 時，系統必須導向 `/task-list`，並以登入者身分套用對應任務可見範圍：`super_admin` 顯示全平台任務，`user` 顯示自己具 `task_membership` 的任務。
 - 語言切換時，區塊標題/副標、提醒文字、任務列表標題與按鈕、badge 文字都必須即時切換。
+- `最近提醒` 清單為空時，必須顯示 i18n 文字佔位（例如「目前沒有提醒」），不得顯示空白區塊。
 
 ---
 
@@ -334,7 +343,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 ### 邊界情況
 
 - 角色值不存在或不在允許清單時？→ 導向 `/login`。
-- `role = user` 且同時有多種任務角色時？→ 依產品規則決定優先顯示順序（本版先以單一主視圖呈現）。
+- `role = user` 且同時有多種任務角色時？→ 以 `project_leader` > `reviewer` > `annotator` 優先順序顯示對應單一主視圖。
 - 某文字 key 在 i18n 缺漏時？→ 保留原本 DOM 文字，不中斷頁面互動。
 - 行動版（`<= MOBILE_BP`）時導覽列如何呈現？→ 由側邊欄轉為底部橫向導覽。
 
@@ -346,6 +355,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 - **FR-001**：系統必須依登入者 `system role` 與任務關係渲染對應 Dashboard。
 - **FR-001A**：`/dashboard` 必須顯示頁首標題區塊，包含主標題「儀表板」與副標題「掌握任務進度與團隊協作狀態」，並置於場景模式控制區之前。
+- **FR-001B**：`role = user` 且同時具有多種任務角色時，系統必須依 `project_leader` > `reviewer` > `annotator` 優先順序顯示唯一的對應主視圖。
 - **FR-002**：`super_admin` 必須顯示 Super Admin Dashboard。
 - **FR-003**：`user` 且尚無任務關係時，必須顯示一般使用者 Dashboard。
 - **FR-004**：`user` 建立任務後（具 `project_leader` 任務關係）必須顯示 Project Leader Dashboard。
@@ -361,7 +371,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-008**：Super Admin Dashboard 必須包含：平台使用者統計、任務概況、最近提醒、任務列表。
 - **FR-008A**：Super Admin Dashboard 的「平台使用者統計」必須包含 4 張指標卡：總用戶（人）、專案負責人（人）、標記員（人）、審核員（人）；各卡標籤顯示於數值上方。
 - **FR-008B**：Super Admin Dashboard 的「任務概況」必須包含 4 張指標卡：總任務（個）、進行中（個）、等待 IAA 確認（個）、速度異常（個）；各卡標籤顯示於數值上方。
-- **FR-008C**：Super Admin Dashboard 的「最近提醒」必須以清單呈現，且每項包含提醒標題與提醒內容。
+- **FR-008C**：Super Admin Dashboard 的「最近提醒」必須以清單呈現，且每項包含提醒標題與提醒內容；清單為空時必須顯示 i18n 文字佔位（如「目前沒有提醒」），不得呈現空白區塊。
 - **FR-008D**：Super Admin Dashboard 的「任務列表」必須顯示「查看全部」按鈕，且每列包含名稱、摘要、3 種 badge 與 progress bar。
 - **FR-008E**：Super Admin Dashboard 點擊「查看全部」時，系統必須導向 `/task-list`，並以 `super_admin` 權限顯示全平台任務。
 - **FR-009**：Project Leader Dashboard 必須包含：任務概況、任務列表。
@@ -399,6 +409,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-017I**：在 `<= MOBILE_BP` 時，Reviewer 任務列表單列的 badge 群組與 `快速審核` CTA 必須改為垂直堆疊，badge 不得超出卡片右邊界。
 - **FR-017J**：在 `<= MOBILE_BP` 時，Super Admin 的 `平台使用者統計` 與 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
 - **FR-017K**：在 `<= MOBILE_BP` 時，Project Leader 的 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
+- **FR-018**：進入 `/dashboard` 後，在 `task_membership` API 回應返回前，系統必須顯示 Skeleton（骨架屏）：頁面結構可見，指標卡與任務列表區域以灰色佔位塊呈現；API 回應後無縫切換為實際內容，不得出現空白頁閃動。
 
 ### User Flow & Navigation
 
@@ -495,6 +506,7 @@ flowchart LR
 - **SC-014**：Dashboard 頁首區塊固定顯示於所有角色視圖上方，並正確顯示主標「儀表板」與副標「掌握任務進度與團隊協作狀態」。
 - **SC-015**：Annotator/Reviewer 視圖點擊任務列 `快速繼續/快速審核` 後，必須導向對應任務的 `annotation-workspace`，且帶入正確 `task_id`、`role`、`sample_id` query（`sample_id` 為該任務第一筆非 `已提交` sample）。
 - **SC-016**：Annotator/Reviewer 視圖點擊任務列非 `快速繼續/快速審核` 區域後，必須導向對應任務的 `annotation-list`，且帶入正確 `task_id`、`role`、`run_type`、`task_type` query。
+- **SC-017**：進入 `/dashboard` 後，在 `task_membership` API 回應前，頁面必須顯示 Skeleton 佔位塊（指標卡區域與任務列表區域各有灰色佔位），不得出現空白頁或未樣式化的裸 DOM。
 
 ---
 
@@ -532,6 +544,9 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.31 | 2026-05-22 | 釐清「最近提醒」空狀態：清單為空顯示 i18n 文字佔位；更新 FR-008C、系統管理員行為規則 |
+| 1.3.30 | 2026-05-22 | 釐清 loading state：`task_membership` 載入中顯示 Skeleton 骨架屏；新增 FR-018、SC-017 |
+| 1.3.29 | 2026-05-22 | 釐清多任務角色分流優先順序：`project_leader` > `reviewer` > `annotator`；新增 FR-001B、更新邊界情況 |
 | 1.3.28 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.27 | 2026-04-30 | 同步手機版 summary metrics 密度規則：Super Admin 的 `平台使用者統計 / 任務概況` 與 Project Leader 的 `任務概況` 需優先維持兩欄卡片排列，避免單欄直排過於冗長；更新行為規則、FR-017J/K、SC-012C |
 | 1.3.26 | 2026-04-30 | 同步最新原型 RWD 修正：補充桌面收合 sidebar 時 Super Admin 指標卡需維持可讀寬度；新增 Annotator / Reviewer 手機任務卡 badge 與 CTA 垂直堆疊規範，更新行為規則、FR-017G/H/I、SC-012A/B |
