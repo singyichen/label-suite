@@ -1,7 +1,7 @@
 ---
 功能分支: feat/account/004-forgot-reset-password
 建立日期: 2026-04-05
-版本: 1.1.2
+版本: 1.1.3
 狀態: Clarified
 ---
 
@@ -26,6 +26,13 @@
 - 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+- 2026-05-22 釐清後，forgot/reset 送出後的 loading 期間必須全頁不可互動；若現有 prototype 僅停用送出按鈕，需同步更新 prototype 以符合本規格。
+
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: Forgot / Reset Password 在 `1200ms` loading 期間，頁面其他元件是否可互動？ → A: 全頁不可互動（包含語言切換、返回登入等連結）
 
 ## 規格常數
 
@@ -49,7 +56,7 @@ sequenceDiagram
     alt Email 空白
         forgot-->>使用者: 顯示欄位錯誤
     else 驗證通過
-        forgot-->>使用者: 顯示 loading（1200ms）
+        forgot-->>使用者: 顯示 loading（1200ms）且全頁不可互動
         forgot-->>使用者: 隱藏表單，顯示成功面板
     end
 
@@ -60,7 +67,7 @@ sequenceDiagram
     alt state = valid
         使用者->>reset: 填寫新密碼 + 確認密碼並送出
         reset->>reset: 驗證必填與密碼一致
-        reset-->>使用者: 顯示 loading（1200ms）後顯示成功面板
+        reset-->>使用者: 顯示 loading（1200ms）且全頁不可互動，完成後顯示成功面板
     else state = expired or used
         reset-->>使用者: 隱藏表單，顯示 token 錯誤面板
     end
@@ -69,10 +76,10 @@ sequenceDiagram
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
 | 1 | 使用者 | 開啟 `/account/forgot-password.html` | 顯示 Email 欄位與送出按鈕 |
-| 2 | 使用者 | 送出 forgot 表單 | Email 為空顯示錯誤；非空則 1200ms 後顯示成功面板 |
+| 2 | 使用者 | 送出 forgot 表單 | Email 為空顯示錯誤；非空則全頁進入不可互動 loading，1200ms 後顯示成功面板 |
 | 3 | 使用者 | 開啟 `/account/reset-password.html` | 預設 `valid token` 狀態 |
 | 4 | 使用者 | 切換 `expired` 或 `used` | 顯示 token 錯誤面板（隱藏表單） |
-| 5 | 使用者 | 在 `valid` 狀態送出 reset 表單 | 驗證通過後 1200ms 顯示成功面板 |
+| 5 | 使用者 | 在 `valid` 狀態送出 reset 表單 | 驗證通過後全頁進入不可互動 loading，1200ms 後顯示成功面板 |
 
 ---
 
@@ -89,7 +96,7 @@ sequenceDiagram
 **驗收情境**：
 
 1. **Given** 使用者在 forgot 頁，**When** Email 為空送出，**Then** 顯示 `Email is required` / `請輸入電子郵件` 錯誤。
-2. **Given** 使用者在 forgot 頁，**When** Email 非空送出，**Then** 送出按鈕進入 loading 狀態。
+2. **Given** 使用者在 forgot 頁，**When** Email 非空送出，**Then** 頁面進入 loading 狀態且全頁不可互動。
 3. **Given** forgot 送出完成，**When** 約 `1200ms` 後，**Then** 隱藏表單並顯示成功面板與返回登入連結。
 
 ---
@@ -106,7 +113,7 @@ sequenceDiagram
 
 1. **Given** reset 頁為 `valid` 狀態，**When** 新密碼為空，**Then** 顯示新密碼必填錯誤。
 2. **Given** reset 頁為 `valid` 狀態，**When** 確認密碼為空或與新密碼不一致，**Then** 顯示對應欄位錯誤。
-3. **Given** reset 頁為 `valid` 狀態且表單合法，**When** 送出，**Then** 顯示 loading 並於約 `1200ms` 後顯示成功面板。
+3. **Given** reset 頁為 `valid` 狀態且表單合法，**When** 送出，**Then** 顯示 loading、全頁不可互動，並於約 `1200ms` 後顯示成功面板。
 
 ---
 
@@ -173,12 +180,12 @@ forgot/reset 頁在手機與桌機均需可讀可操作。
 
 - **FR-001**：系統必須提供 `/account/forgot-password.html`，包含 Email 欄位、送出按鈕、返回登入連結。
 - **FR-002**：forgot 表單送出前必須驗證 Email 必填；空值顯示欄位錯誤。
-- **FR-003**：forgot 表單驗證通過後必須進入 loading，並於約 `1200ms` 顯示成功面板。
+- **FR-003**：forgot 表單驗證通過後必須進入 loading，loading 期間全頁不可互動，並於約 `1200ms` 顯示成功面板。
 - **FR-004**：forgot 成功面板文案必須為不揭露帳號存在性的通用提示。
 - **FR-005**：系統必須提供 `/account/reset-password.html`，包含新密碼、確認密碼欄位與送出按鈕。
 - **FR-006**：reset 頁必須支援 `RESET_TOKEN_STATES` 三種 prototype 狀態切換。
 - **FR-007**：reset 在 `valid` 狀態下，送出前必須驗證新密碼與確認密碼必填且一致。
-- **FR-008**：reset 在 `valid` 狀態送出成功後，必須於約 `1200ms` 顯示成功面板。
+- **FR-008**：reset 在 `valid` 狀態送出成功後，必須進入 loading，loading 期間全頁不可互動，並於約 `1200ms` 顯示成功面板。
 - **FR-009**：reset 在 `expired` / `used` 狀態時，必須隱藏表單並顯示 token 錯誤面板。
 - **FR-010**：token 錯誤面板中的「重新申請」連結必須導向 `./forgot-password.html`。
 - **FR-011**：forgot/reset 頁面必須支援 `zh` / `en` 即時切換，並同步更新 `document.title` 與 `aria-label`。
@@ -216,8 +223,8 @@ flowchart LR
 
 ### 關鍵實體
 
-- **ForgotFormState**：forgot 表單狀態。關鍵欄位：`email`、`emailError`、`isSubmitting`、`successVisible`。
-- **ResetFormState**：reset 表單狀態。關鍵欄位：`newPassword`、`confirmPassword`、`errors`、`isSubmitting`。
+- **ForgotFormState**：forgot 表單狀態。關鍵欄位：`email`、`emailError`、`isSubmitting`、`isPageInteractionDisabled`、`successVisible`。
+- **ResetFormState**：reset 表單狀態。關鍵欄位：`newPassword`、`confirmPassword`、`errors`、`isSubmitting`、`isPageInteractionDisabled`。
 - **ResetPrototypeTokenState**：reset token 狀態。允許值：`valid`、`expired`、`used`。
 - **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 
@@ -248,7 +255,8 @@ flowchart LR
 - **SC-004**：reset 在 `expired` / `used` 狀態可正確顯示對應 token 錯誤文案。
 - **SC-005**：`zh` / `en` 切換可在 1 秒內更新主要文案與 `aria-label`。
 - **SC-005A**：切換語言後由 forgot/reset 導向 login 或互相切頁時，語系需維持一致。
-- **SC-006**：在 `RWD_VIEWPORTS` 下無破版、無遮擋、無水平捲軸。
+- **SC-006**：forgot/reset 送出後的 `1200ms` loading 期間，全頁互動元素不可被操作。
+- **SC-007**：在 `RWD_VIEWPORTS` 下無破版、無遮擋、無水平捲軸。
 
 ---
 
@@ -286,6 +294,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.3 | 2026-05-22 | 釐清 forgot/reset 送出後 loading 期間全頁不可互動，並同步更新流程、FR、狀態模型與成功標準 |
 | 1.1.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.1.1 | 2026-04-16 | 新增跨頁語言持久化規範：forgot/reset 與 login 導頁後必須維持同語系 |
 | 1.1.0 | 2026-04-15 | 參照 dashboard 規格寫法重整章節；對齊 forgot/reset 原型（loading、success panel、token state 切換） |
