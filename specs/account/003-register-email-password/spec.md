@@ -1,12 +1,12 @@
 # 功能規格：Register — Email / Password
-
+---
 **功能分支**：`feat/account/003-register-email-password`
 **建立日期**：2026-04-05
 **版本**：1.2.3
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Register 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -31,7 +31,7 @@
 - `PASSWORD_MIN_LENGTH = 8`
 - `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -74,7 +74,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 註冊頁完整呈現（優先級：P1）
+### 使用者故事 1 — 註冊頁完整呈現（優先級：P1）
 
 註冊頁必須提供完整欄位與清楚導流，支援使用者完成建帳。
 
@@ -90,7 +90,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 前端驗證與錯誤提示（優先級：P1）
+### 使用者故事 2 — 前端驗證與錯誤提示（優先級：P1）
 
 送出前必須完成欄位驗證，錯誤需顯示於對應欄位。
 
@@ -108,7 +108,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 註冊送出結果（優先級：P1）
+### 使用者故事 3 — 註冊送出結果（優先級：P1）
 
 原型需呈現兩種送出結果：重複 Email 失敗與成功導頁。
 
@@ -124,7 +124,7 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — i18n 與可存取屬性同步（優先級：P2）
+### 使用者故事 4 — i18n 與可存取屬性同步（優先級：P2）
 
 註冊頁所有核心文案與 `aria-label` 需支援即時語言切換。
 
@@ -141,7 +141,7 @@ sequenceDiagram
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 註冊頁於手機、平板、桌機均須可讀且可操作。
 
@@ -186,7 +186,7 @@ sequenceDiagram
 - **FR-013**：頁面必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-013A**：在 `<= MOBILE_BP` 時導覽列需切換為 56px 高與 16px 左右內距。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -247,16 +247,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -265,7 +265,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

@@ -1,12 +1,12 @@
 # 功能規格：Shared Sidebar Navbar（共用側欄導覽）
-
+---
 **功能分支**：`feat/shared/008-sidebar-navbar-shared`
 **建立日期**：2026-04-16
 **版本**：1.3.9
 **狀態**：Clarified
 **需求來源**：資訊架構 [`docs/product/ia/information-architecture.md`](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Shared Sidebar Navbar 的跨頁共用 UI 契約、導覽/工具入口、狀態持久化、i18n、可存取屬性與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -42,7 +42,7 @@
 - `SHORTCUT_HELP_SCOPE = current_page_common_shortcuts`
 - `NOTIFICATION_BADGE_MAX_DISPLAY = 9+`（未讀數超過 9 顯示 `9+`）
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -89,7 +89,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — L0 導覽需對齊 IA 模組（優先級：P1）
+### 使用者故事 1 — L0 導覽需對齊 IA 模組（優先級：P1）
 
 登入後使用者在任一模組頁面皆看到同一份 IA 定義的 L0 導覽骨架與順序。
 
@@ -123,7 +123,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — Active 與模組內頁映射正確（優先級：P1）
+### 使用者故事 2 — Active 與模組內頁映射正確（優先級：P1）
 
 使用者在模組 Landing 與次層頁切換時，active 項必須維持 IA 定義的 L0 映射。
 
@@ -148,7 +148,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 權限與任務上下文 gating 一致（優先級：P1）
+### 使用者故事 3 — 權限與任務上下文 gating 一致（優先級：P1）
 
 使用者點擊具任務上下文需求的 L0 項目時，系統需一致處理授權與導回。
 
@@ -172,7 +172,7 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — Desktop / Mobile 導覽可用性（優先級：P2）
+### 使用者故事 4 — Desktop / Mobile 導覽可用性（優先級：P2）
 
 在不同 viewport，使用者可保持同樣導覽能力與可存取語意。
 
@@ -186,7 +186,7 @@ sequenceDiagram
 2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列（含語言、快捷鍵、外觀與登出控制，不顯示使用者姓名）+ 下方主導覽。
 3. **Given** 行動版，**When** 操作 L0 導覽，**Then** 主要內容不被遮擋且導覽可點擊。
 
-### User Story 5 — Desktop Sidebar Mini / Icon-only 可收合（優先級：P2）
+### 使用者故事 5 — Desktop Sidebar Mini / Icon-only 可收合（優先級：P2）
 
 Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容寬度，且不影響導覽可用性。
 
@@ -203,7 +203,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
-### User Story 6 — Sidebar Utility 外觀模式切換（優先級：P2）
+### 使用者故事 6 — Sidebar Utility 外觀模式切換（優先級：P2）
 
 登入後使用者可透過 Sidebar 底部 utility icon 或 mobile top bar icon，在淺色（light）與深色（dark）resolved theme 間快速切換，切換後立即生效且跨頁保持一致。完整外觀偏好（包含 `system`）仍可在個人設定中呈現；Sidebar 僅提供單鍵快速切換。
 
@@ -231,7 +231,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ---
 
-### User Story 7 — 快捷鍵總覽入口（優先級：P2）
+### 使用者故事 7 — 快捷鍵總覽入口（優先級：P2）
 
 登入後使用者可從 Sidebar utility icon 或 `?` 開啟快捷鍵總覽，查看目前頁面可用的跨任務共用快捷鍵。
 
@@ -325,7 +325,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-018D**：通知 dropdown 定位規則：Desktop 展開時 `left: SIDEBAR_WIDTH`；Desktop 收合時 `left: SIDEBAR_COLLAPSED_WIDTH`；Mobile 時 `top: MOBILE_TOP_HEIGHT`，靠右對齊。
 - **FR-018E**：通知 dropdown 不提供跳轉「通知設定」連結；通知偏好設定位於 `/profile` 通知設定區塊（見 spec 005 FR-013B）。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -454,16 +454,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -472,7 +472,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

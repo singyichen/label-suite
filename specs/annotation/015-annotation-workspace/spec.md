@@ -1,12 +1,12 @@
 # 功能規格：Annotation List + Workspace — 標記清單與標記作業（Annotator / Reviewer）
-
+---
 **功能分支**：`feat/annotation/015-annotation-workspace`
 **建立日期**：2026-04-23
 **版本**：1.4.11
 **狀態**：Draft
 **需求來源**：IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Annotation List + Workspace 的標記/審核清單與工作區流程、task config 驅動畫面、提交 payload、安全邊界與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -54,7 +54,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -99,7 +99,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 快速入口與清單入口並存（優先級：P1）
+### 使用者故事 1 — 快速入口與清單入口並存（優先級：P1）
 
 Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任務列可直接進入 `annotation-workspace`；navbar 入口則先進 `annotation-list` 再選筆次進入。
 
@@ -171,7 +171,7 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 
 ---
 
-### User Story 2 — Annotator 完成 Dry Run / Official Run 標記（優先級：P1）
+### 使用者故事 2 — Annotator 完成 Dry Run / Official Run 標記（優先級：P1）
 
 Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標記並提交結果。
 
@@ -236,7 +236,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 - `task_type = sentence_pairs` 的提交 payload 必須保留 `pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field` 的 snapshot 語意，以及 `label` 或 `score`、`unsure`、`note`、`version`；不得覆寫原始資料集文本欄位。
 - 中欄主卡 header 必須優先使用 `task_id` 對應的實際任務名稱；此規則同時適用於 annotator 的標記卡、reviewer 的審查卡，以及 reviewer 句對來源卡。僅在缺少任務上下文時，才可退回 task-type 級別的預設文案。
 
-### User Story 2A — Annotator 完成 Aspect List 抽取 / 校正（優先級：P1）
+### 使用者故事 2A — Annotator 完成 Aspect List 抽取 / 校正（優先級：P1）
 
 Annotator 可在 `sequence_labeling.subtype = aspect_list` 任務中，依句子內容校正原句並維護 Aspect List。
 
@@ -255,7 +255,7 @@ Annotator 可在 `sequence_labeling.subtype = aspect_list` 任務中，依句子
 
 ---
 
-### User Story 2B — Annotator 完成句對任務（相似度 / 蘊含）（優先級：P1）
+### 使用者故事 2B — Annotator 完成句對任務（相似度 / 蘊含）（優先級：P1）
 
 Annotator 可在 `task_type = sentence_pairs` 任務中，依兩句文本與 task config 指定的作答模式，完成相似度或蘊含判定。
 
@@ -273,7 +273,7 @@ Annotator 可在 `task_type = sentence_pairs` 任務中，依兩句文本與 tas
 
 ---
 
-### User Story 3 — Reviewer 審查與追溯歷程（優先級：P1）
+### 使用者故事 3 — Reviewer 審查與追溯歷程（優先級：P1）
 
 Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布統計與各標記員結果，再以通過 / 退回完成逐列或批次審核，並追溯每筆決策歷程。Aspect List 任務中，Reviewer 可直接修正標記員提交的 Aspect List 後通過，或選擇退回由標記員重做。
 
@@ -330,7 +330,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 
 ---
 
-### User Story 4 — 路由上下文解析與進入控制（優先級：P1）
+### 使用者故事 4 — 路由上下文解析與進入控制（優先級：P1）
 
 清單與工作區都由路由參數決定啟動上下文；`role`、`run_type`、`task_type` 缺值時需套用預設與回退邏輯。
 
@@ -352,7 +352,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 
 ---
 
-### User Story 5 — 說明與檔案常駐 + 響應式體驗（優先級：P2）
+### 使用者故事 5 — 說明與檔案常駐 + 響應式體驗（優先級：P2）
 
 使用者在 Desktop 與 Mobile 標記流程中都能持續查看說明內容，不因翻筆或版型切換遺失任務指引。
 
@@ -373,7 +373,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 
 ---
 
-### Edge Cases
+### 邊界情況
 
 - `annotation-list` 缺少 `task_id` 時，不可進入空白清單；需顯示錯誤提示並提供返回 `dashboard`。
 - `annotation-workspace` 缺少 `sample_id` 時，不可載入作業區；需導回 `annotation-list`。
@@ -398,9 +398,9 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - 清單中樣本鎖定狀態變更（未鎖定→鎖定）時，點擊進入需即時阻擋並提示。
 - 說明檔案連結失效時，不影響標記主流程，但需顯示可追蹤錯誤訊息。
 
-## Requirements *(必填)*
+## 需求規格 *(必填)*
 
-### Functional Requirements
+### 功能需求
 
 - **FR-001**: 系統必須提供 `annotation-list` 作為 Navbar 進入標記模組時的入口頁（L1）。
 - **FR-0010**: 系統必須支援 dashboard 任務列中除 `快速繼續/快速審核` 以外的區域導向 `annotation-list`，並保留被點擊任務上下文（`task_id`、`role`、`run_type`、`task_type`）。
@@ -482,7 +482,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - **FR-028**: `annotation-list` 頁面必須支援 `labelsuite:langchange` 事件，接收到語言切換後需重新套用 i18n strings（至少包含：頁面副標題、`送出審核` 按鈕文字）。
 - **FR-029**: `annotation-list` 的 `送出審核` 按鈕點擊時，必須驗證當前任務所有樣本中每位標記員皆已完成審核決策（`approved` 或 `rejected`）；若有任一標記員決策為 `null`，顯示 `toastSelectDecision` 錯誤 toast 並中止提交；全部完成後方顯示 `toastReviewSubmitted` 成功 toast。此行為與 `annotation-workspace` 的 `rvSaveBtn` 邏輯一致。
 
-### User Flow & Navigation *(必填)*
+### 使用者流程與導頁 *(必填)*
 
 ```mermaid
 flowchart LR
@@ -519,7 +519,7 @@ flowchart LR
 **Entry points**: `dashboard` Annotator/Reviewer 任務列表（卡片本體進 `annotation-list`、快速繼續/快速審核直達 `annotation-workspace`）、Navbar 標記作業（先進 `annotation-list`）。
 **Exit points**: `annotation-workspace` 返回 `annotation-list`、`annotation-workspace` 最後一筆提交後自動返回 `annotation-list`、`annotation-list` 透過 Sidebar 切換至 `dashboard`。
 
-### Key Entities *(必填)*
+### 關鍵實體 *(必填)*
 
 - **TaskContext（Prototype）**: 任務上下文，至少包含 `task_id`、`role`、`run_type`、`task_type`。
 - **AnnotationListItem**: 清單中的單筆任務資料，由 task-detail run 發布事件建立；包含 `task_id`、`sample_id`、`run_type`、`trial_round?`、`sample_snapshot_id`、完成狀態、鎖定狀態、摘要資訊。任務建立時不得預先產生此資料。
@@ -536,9 +536,9 @@ flowchart LR
 
 ---
 
-## Spec Dependencies *(必填)*
+## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
-### Upstream（本 spec 依賴）
+### 上游（本規格依賴的規格）
 
 | Spec # | Feature | What this spec needs from it |
 |--------|---------|------------------------------|
@@ -547,7 +547,7 @@ flowchart LR
 | task-management-013 | New Task | 任務類型設定、`sequence_labeling.subtype` 與 Aspect List config、`sentence_pairs` config、說明檔案、初始成員與 run 初始化 |
 | task-management-014 | Task Detail | Dry/Official 狀態管理、`sample_snapshot_id` 凍結與發布流程、`sentence_pairs` config 凍結與摘要 |
 
-### Downstream（依賴本 spec）
+### 下游（依賴本規格的規格）
 
 | Spec # | Feature | What they rely on from this spec |
 |--------|---------|----------------------------------|
@@ -556,7 +556,7 @@ flowchart LR
 
 ---
 
-## Success Criteria *(必填)*
+## 成功標準 *(必填)*
 
 - **SC-001**: `annotation-list` 與 `annotation-workspace` 的 query 解析正確率達 100%，缺值時 fallback 行為符合規格常數。
 - **SC-002**: Dashboard 入口點擊 `快速繼續/快速審核` 可直達 `annotation-workspace`；Navbar 入口可先進 `annotation-list` 再導向工作區，導頁成功率達 100%。
@@ -581,16 +581,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -599,7 +599,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

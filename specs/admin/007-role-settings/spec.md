@@ -1,12 +1,12 @@
 # 功能規格：Role & Permission Settings — 角色權限矩陣設定
-
+---
 **功能分支**：`feat/admin/007-role-settings`
 **建立日期**：2026-04-16
 **版本**：1.1.4
 **狀態**：Draft
 **需求來源**：IA v7 Spec 清單 #007 — 角色權限設定（`role-settings`）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Role & Permission Settings 的系統管理流程、權限守門、列表/矩陣互動、審計與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -32,7 +32,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -74,7 +74,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 檢視角色權限矩陣（優先級：P1）
+### 使用者故事 1 — 檢視角色權限矩陣（優先級：P1）
 
 Super Admin 可在角色設定頁看到完整角色矩陣，清楚區分 system role 與 task role 的職責邊界。
 
@@ -108,7 +108,7 @@ Super Admin 可在角色設定頁看到完整角色矩陣，清楚區分 system 
 
 ---
 
-### User Story 2 — 維護角色權限配置（優先級：P1）
+### 使用者故事 2 — 維護角色權限配置（優先級：P1）
 
 Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續授權判斷基準。
 
@@ -130,7 +130,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 ---
 
-### User Story 3 — 權限守門與安全邊界（優先級：P1）
+### 使用者故事 3 — 權限守門與安全邊界（優先級：P1）
 
 只有 Super Admin 可維護角色設定；一般使用者不可查看或修改矩陣內容。
 
@@ -189,7 +189,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 
 ### 角色 × 權限預設矩陣（V1）
 
-#### System Roles（平台層級）
+#### 系統角色（平台層級）
 
 | permission_key | `user` | `super_admin` |
 |----------------|--------|---------------|
@@ -210,7 +210,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 | `admin.role_settings.view` | ❌ | ✅ |
 | `admin.role_settings.manage` | ❌ | ✅ |
 
-#### Task Roles（任務層級）
+#### 任務角色（任務層級）
 
 | permission_key | `project_leader` | `reviewer` | `annotator` |
 |----------------|------------------|------------|-------------|
@@ -248,7 +248,7 @@ Super Admin 可調整角色權限後儲存，並讓新配置成為平台後續�
 - **FR-009**：頁面必須支援 `RWD_VIEWPORTS`；在 `<= MOBILE_BP` 時可完整檢視與編輯矩陣，且互動可用。
 - **FR-010**：角色權限儲存後，系統必須保留審計資訊（操作者、時間、變更前後 diff）。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -312,16 +312,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -330,7 +330,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

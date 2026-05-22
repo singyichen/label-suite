@@ -1,12 +1,12 @@
 # 功能規格：New Task — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔）
-
+---
 **功能分支**：`feat/task-management/013-task-new`
 **建立日期**：2026-04-20
 **版本**：2.0.4
 **狀態**：Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 New Task 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -62,7 +62,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -112,7 +112,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 完成 4 步驟任務建立流程（優先級：P1）
+### 使用者故事 1 — 完成 4 步驟任務建立流程（優先級：P1）
 
 使用者可透過 Step 1 → Step 2 → Step 3 → Step 4 完成任務建立，並在成功後進入任務詳情頁。
 
@@ -168,7 +168,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 標記設定檔以 registry/schema 驅動（優先級：P1）
+### 使用者故事 2 — 標記設定檔以 registry/schema 驅動（優先級：P1）
 
 Step 2 必須由 `task_type registry` 與 schema 驅動，不得把任務類型寫死在核心流程。
 
@@ -242,7 +242,7 @@ Step 2 必須由 `task_type registry` 與 schema 驅動，不得把任務類型�
 
 ---
 
-### User Story 3 — 啟動設定前置於任務建立（優先級：P1）
+### 使用者故事 3 — 啟動設定前置於任務建立（優先級：P1）
 
 Project Leader 在建立任務時必須先完成啟動設定中的抽樣與資料隔離，成員邀請改於任務建立後在 task-detail 進行。
 
@@ -268,7 +268,7 @@ Project Leader 在建立任務時必須先完成啟動設定中的抽樣與資�
 
 ---
 
-### User Story 4 — 標記說明與強制顯示設定（優先級：P2）
+### 使用者故事 4 — 標記說明與強制顯示設定（優先級：P2）
 
 Project Leader 在建立任務時可分別設定提供給標記員與審核員的說明資產，並決定 annotator 進入作業前是否強制顯示。
 
@@ -296,7 +296,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 ---
 
-### Edge Cases
+### 邊界情況
 
 - 非 `TASK_CREATOR_SYSTEM_ROLES` 造訪 `/task-new`：導回允許入口並顯示無權限提示。
 - 上傳資料集格式不在 `DATASET_UPLOAD_FORMATS`：阻擋進下一步並顯示錯誤。
@@ -379,7 +379,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-008c**：在 mobile viewport 下，annotation-workspace 右側說明區塊收合後，主內容區必須維持單欄滿寬佈局，不得因收合狀態套用桌面欄位寬度造成跑版。
 - **FR-009**：任務型別模板需覆蓋研究生現行任務情境（MultiLabel、VA 雙維度評分、Aspect List 抽取 / 校正、Entity/Relation/Triple）。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -475,16 +475,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -493,7 +493,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

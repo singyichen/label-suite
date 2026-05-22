@@ -1,12 +1,12 @@
 # 功能規格：Forgot / Reset Password（Prototype）
-
+---
 **功能分支**：`feat/account/004-forgot-reset-password`
 **建立日期**：2026-04-05
 **版本**：1.1.2
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/forgot-password.html`](../../../design/prototype/pages/account/forgot-password.html) / [`design/prototype/pages/account/reset-password.html`](../../../design/prototype/pages/account/reset-password.html)
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Forgot / Reset Password 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -30,7 +30,7 @@
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `RESET_TOKEN_STATES = valid / expired / used`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -75,7 +75,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — Forgot Password 表單（優先級：P1）
+### 使用者故事 1 — Forgot Password 表單（優先級：P1）
 
 使用者可在 forgot 頁面輸入 Email 申請重設，並得到通用成功提示。
 
@@ -91,7 +91,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — Reset Password（valid token）（優先級：P1）
+### 使用者故事 2 — Reset Password（valid token）（優先級：P1）
 
 在 valid token 狀態下，使用者可完成新密碼重設並看到成功結果。
 
@@ -107,7 +107,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — Reset Password（expired / used token）（優先級：P1）
+### 使用者故事 3 — Reset Password（expired / used token）（優先級：P1）
 
 reset 頁需能展示 token 失效與已使用兩種錯誤狀態。
 
@@ -123,7 +123,7 @@ reset 頁需能展示 token 失效與已使用兩種錯誤狀態。
 
 ---
 
-### User Story 4 — i18n 與可存取屬性（優先級：P2）
+### 使用者故事 4 — i18n 與可存取屬性（優先級：P2）
 
 forgot/reset 兩頁的文案與可存取屬性需支援即時語言切換。
 
@@ -140,7 +140,7 @@ forgot/reset 兩頁的文案與可存取屬性需支援即時語言切換。
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 forgot/reset 頁在手機與桌機均需可讀可操作。
 
@@ -184,7 +184,7 @@ forgot/reset 頁在手機與桌機均需可讀可操作。
 - **FR-013**：forgot/reset 頁面必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-013A**：在 `<= MOBILE_BP` 時導覽列需改為 56px 並使用 16px 左右內距。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -249,16 +249,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -267,7 +267,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

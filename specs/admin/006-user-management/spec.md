@@ -1,12 +1,12 @@
 # 功能規格：User Management — 使用者列表與帳號管理
-
+---
 **功能分支**：`feat/admin/006-user-management`
 **建立日期**：2026-04-16
 **版本**：1.0.6
 **狀態**：Draft
 **需求來源**：IA v7 Spec 清單 #006 — 使用者列表與管理（`user-management`）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 User Management 的系統管理流程、權限守門、列表/矩陣互動、審計與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -33,7 +33,7 @@
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `DEFAULT_SORT = created_at desc`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -79,7 +79,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 檢視與搜尋平台使用者（優先級：P1）
+### 使用者故事 1 — 檢視與搜尋平台使用者（優先級：P1）
 
 Super Admin 可在 `/user-management` 查看全平台使用者，並以關鍵字與角色篩選快速定位目標帳號。
 
@@ -117,7 +117,7 @@ Super Admin 可在 `/user-management` 查看全平台使用者，並以關鍵字
 
 ---
 
-### User Story 2 — 新增、編輯與停用帳號（優先級：P1）
+### 使用者故事 2 — 新增、編輯與停用帳號（優先級：P1）
 
 Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，並停用不再使用的帳號。
 
@@ -157,7 +157,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 
 ---
 
-### User Story 3 — 權限守門與跨頁導覽（優先級：P1）
+### 使用者故事 3 — 權限守門與跨頁導覽（優先級：P1）
 
 只有 Super Admin 可進入使用者管理頁；非授權角色需被阻擋並導回安全入口頁。
 
@@ -210,7 +210,7 @@ Super Admin 可在使用者管理頁新增帳號、更新帳號基本資訊，�
 - **FR-011**：無權限角色存取本頁時，系統必須拒絕並導回安全頁（未登入→`/login`，一般使用者→`/dashboard`）。
 - **FR-012**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 時仍可完成查詢與帳號管理操作。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -268,16 +268,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -286,7 +286,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

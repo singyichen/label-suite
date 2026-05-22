@@ -1,12 +1,12 @@
 # 功能規格：Profile Settings — 個人設定（資料編輯 + 變更 Email + 修改密碼）
-
+---
 **功能分支**：`feat/account/005-profile-settings`
 **建立日期**：2026-04-05
 **版本**：1.2.8
 **狀態**：Clarified
 **需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Profile Settings 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -34,7 +34,7 @@
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `APPEARANCE_STORAGE_KEY = label-suite-theme`（client-side only；參照 spec 008）
 
-## Process Flow
+## 流程圖
 
 ### 個人資料儲存流程
 
@@ -134,7 +134,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 修改個人資料（優先級：P1）
+### 使用者故事 1 — 修改個人資料（優先級：P1）
 
 已登入使用者在 `/profile` 修改姓名或聯絡方式，送出後系統更新資料並顯示成功提示。
 
@@ -167,7 +167,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 變更 Email 與驗證（優先級：P1）
+### 使用者故事 2 — 變更 Email 與驗證（優先級：P1）
 
 已登入使用者可在 `/profile` 點擊「變更」進入 Email 變更流程；系統需寄送驗證信至新 Email，驗證成功後才切換登入帳號 Email。
 
@@ -198,7 +198,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 修改密碼 / 設定密碼（優先級：P1）
+### 使用者故事 3 — 修改密碼 / 設定密碼（優先級：P1）
 
 已登入使用者可在 `/profile` 修改密碼；Google SSO 帳號（無既有密碼）可在同區塊直接設定新密碼。
 
@@ -228,7 +228,7 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — 通知設定偏好（優先級：P2）
+### 使用者故事 4 — 通知設定偏好（優先級：P2）
 
 已登入使用者可在 `/profile` 通知設定區塊，針對各通知事件分別開關站內通知與電子郵件，儲存後以 toast 確認。
 
@@ -252,7 +252,7 @@ sequenceDiagram
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 使用者在不同裝置寬度存取 `/profile` 時，頁面需維持可讀、可操作且不破版。
 
@@ -268,7 +268,7 @@ sequenceDiagram
 
 ---
 
-### User Story 6 — 跨頁語言持久化（優先級：P2）
+### 使用者故事 6 — 跨頁語言持久化（優先級：P2）
 
 使用者在 `/profile` 切換語言後，導向其他頁面再返回時，語系必須維持一致。
 
@@ -284,7 +284,7 @@ sequenceDiagram
 
 ---
 
-### User Story 7 — 外觀模式偏好（優先級：P3）
+### 使用者故事 7 — 外觀模式偏好（優先級：P3）
 
 使用者可透過 `/profile` 頁上的共用 Sidebar 切換外觀模式（淺色 / 深色 / 跟隨系統），偏好以 `localStorage` 持久化，跨頁保持一致。
 
@@ -347,7 +347,7 @@ sequenceDiagram
 - **FR-013B**：`/profile` 必須提供通知設定區塊（第四區塊），以表格形式呈現各通知事件（含觸發說明）與站內通知、電子郵件兩欄 toggle switch。
 - **FR-013C**：通知設定儲存成功後顯示 toast，不跳頁；通知設定區塊不提供跳轉至獨立「通知設定」頁面的連結。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -469,16 +469,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -487,7 +487,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

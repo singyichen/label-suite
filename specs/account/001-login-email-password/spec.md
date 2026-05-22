@@ -1,12 +1,12 @@
 # 功能規格：登入 — Email / Password + 頁面 UI
-
+---
 **功能分支**：`feat/account/001-login-email-password`
 **建立日期**：2026-04-05
 **版本**：1.2.2
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：使用者需能透過 Email / Password 登入入口進入 Label Suite，並可由登入頁前往註冊、忘記密碼與 dashboard 原型流程。
 
@@ -29,7 +29,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -71,7 +71,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 登入頁完整呈現（優先級：P1）
+### 使用者故事 1 — 登入頁完整呈現（優先級：P1）
 
 未登入使用者進入 `/account/login.html` 時，頁面必須完整呈現登入所需元件與導覽連結。
 
@@ -87,7 +87,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 表單互動與錯誤顯示（優先級：P1）
+### 使用者故事 2 — 表單互動與錯誤顯示（優先級：P1）
 
 使用者送出表單時，系統先驗證必填欄位，並在欄位層級顯示錯誤。
 
@@ -104,7 +104,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 登入送出與導頁（優先級：P1）
+### 使用者故事 3 — 登入送出與導頁（優先級：P1）
 
 使用者填妥 Email/Password 後送出，系統顯示 loading 後導向 dashboard 原型頁。
 
@@ -120,7 +120,7 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — i18n 與可存取屬性同步（優先級：P2）
+### 使用者故事 4 — i18n 與可存取屬性同步（優先級：P2）
 
 登入頁支援 zh / en 切換，且同步更新畫面文字與輔助屬性。
 
@@ -137,7 +137,7 @@ sequenceDiagram
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 登入頁在手機、平板、桌機皆維持可讀且可操作。
 
@@ -185,7 +185,7 @@ sequenceDiagram
 - **FR-015A**：在 `<= MOBILE_BP` 時，導覽列必須改為 56px 高並使用 16px 左右內距。
 - **FR-015B**：在 `<= MOBILE_BP` 時，登入卡片必須套用手機內距與尺寸設定，避免欄位、按鈕與文字擠壓。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -248,16 +248,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為與業務需求，未引入前端框架、API 或資料庫實作細節。
 - [x] 所有必填章節已完成，且不適用的後端驗證 / session 行為已明確排除於本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 本規格不新增跨 feature import 或架構耦合需求。
@@ -266,7 +266,7 @@ flowchart LR
 - [x] Prototype source of truth 已列於需求來源，prototype 行為與規格差異已於已釐清事項中說明。
 - [x] 上下游規格相依性已列出，需變更登入入口、Google 按鈕或跨頁語言契約時可追蹤影響範圍。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

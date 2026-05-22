@@ -1,12 +1,12 @@
 # 功能規格：Login — Google SSO 入口與整合預留
-
+---
 **功能分支**：`feat/account/002-login-google-sso`
 **建立日期**：2026-04-05
 **版本**：1.2.2
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：登入頁需提供 Google SSO 入口，現階段與 Email / Password 登入並列呈現，並保留後續 OAuth 正式整合的入口契約。
 
@@ -29,7 +29,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -60,7 +60,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — Google SSO 入口可見且可互動（優先級：P1）
+### 使用者故事 1 — Google SSO 入口可見且可互動（優先級：P1）
 
 登入頁必須提供清楚的 Google SSO 入口，讓使用者知道可用第三方登入。
 
@@ -76,7 +76,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — SSO 入口 i18n 同步（優先級：P1）
+### 使用者故事 2 — SSO 入口 i18n 同步（優先級：P1）
 
 SSO 入口文字與可存取屬性需隨語言切換即時更新。
 
@@ -93,7 +93,7 @@ SSO 入口文字與可存取屬性需隨語言切換即時更新。
 
 ---
 
-### User Story 3 — OAuth 正式整合預留（優先級：P2）
+### 使用者故事 3 — OAuth 正式整合預留（優先級：P2）
 
 目前原型不執行 OAuth，規格需保留後續串接入口契約。
 
@@ -128,7 +128,7 @@ SSO 入口文字與可存取屬性需隨語言切換即時更新。
 - **FR-005**：原型模式下，Google SSO 按鈕 click 行為必須為 no-op，且不得造成前端錯誤。
 - **FR-006**：本規格必須保留後續 OAuth 2.0 Authorization Code Flow 的整合入口，不變更既有按鈕 ID 與語意。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -182,16 +182,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦 Google SSO 入口的使用者可觀察行為，未引入 OAuth token、callback 或 session 實作細節。
 - [x] 所有必填章節已完成，且真實 OAuth 流程已明確排除於本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 本規格不新增跨 feature import 或架構耦合需求。
@@ -200,7 +200,7 @@ flowchart LR
 - [x] Prototype source of truth 已列於需求來源，prototype no-op 行為已於已釐清事項中說明。
 - [x] 上下游規格相依性已列出，需變更登入頁框架、語言契約或 provider 顯示來源時可追蹤影響範圍。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

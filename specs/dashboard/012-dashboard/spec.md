@@ -1,13 +1,13 @@
 # 功能規格：Dashboard — 儀表板
-
+---
 **功能分支**：`feat/dashboard/012-dashboard`
 **建立日期**：2026-04-05
 **版本**：1.3.31
 **狀態**：Clarified
 **需求來源**：最新原型 [`design/prototype/pages/dashboard/dashboard.html`](../../../design/prototype/pages/dashboard/dashboard.html)
-
-## Input & Generation Rules
-
+---
+## 輸入與生成規則
+---
 **輸入描述**：本規格需定義 Dashboard 的登入後首頁分流、角色視圖、任務入口、指標呈現、i18n 與 RWD 行為。
 
 **產生規格時必須遵守**：
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -37,7 +37,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -100,7 +100,7 @@ sequenceDiagram
 - 頁首區塊不隨角色視圖切換而隱藏，於所有 Dashboard 視圖固定顯示。
 - 語言切換時，主標題與副標題必須即時切換（zh-TW / en）。
 
-### User Story 1 — 一般使用者儀表板（優先級：P1）
+### 使用者故事 1 — 一般使用者儀表板（優先級：P1）
 
 `user` 登入後，若尚未建立任務且未被指派任務，顯示一般使用者視圖。
 
@@ -153,7 +153,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — Super Admin 儀表板（優先級：P1）
+### 使用者故事 2 — Super Admin 儀表板（優先級：P1）
 
 Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任務與風險提醒。
 
@@ -210,7 +210,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 ---
 
-### User Story 3 — Project Leader 儀表板（優先級：P1）
+### 使用者故事 3 — Project Leader 儀表板（優先級：P1）
 
 `user` 在任務中建立任務後成為 Project Leader，登入後看到任務管理導向儀表板。
 
@@ -252,7 +252,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 ---
 
-### User Story 4 — Annotator 儀表板（優先級：P1）
+### 使用者故事 4 — Annotator 儀表板（優先級：P1）
 
 `user` 被指派為標記員後，登入時看到個人作業導向儀表板。
 
@@ -296,7 +296,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 ---
 
-### User Story 5 — Reviewer 儀表板（優先級：P1）
+### 使用者故事 5 — Reviewer 儀表板（優先級：P1）
 
 `user` 被指派為審核員後，登入時看到審查導向儀表板。
 
@@ -411,7 +411,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-017K**：在 `<= MOBILE_BP` 時，Project Leader 的 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
 - **FR-018**：進入 `/dashboard` 後，在 `task_membership` API 回應返回前，系統必須顯示 Skeleton（骨架屏）：頁面結構可見，指標卡與任務列表區域以灰色佔位塊呈現；API 回應後無縫切換為實際內容，不得出現空白頁閃動。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -510,16 +510,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -528,7 +528,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

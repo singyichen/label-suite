@@ -1,12 +1,12 @@
 # 功能規格：Dataset Analysis Detail — 統計總覽 + 品質監控雙 Tab
-
+---
 **功能分支**：`feat/dataset/017-dataset-analysis-detail`
 **建立日期**：2026-04-24
 **版本**：1.4.5
 **狀態**：Draft
 **需求來源**：IA v1.3.2（2026-04-24）資料集分析模組規範（雙 Tab 架構）
-
-## Input & Generation Rules
+---
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Dataset Analysis Detail 的資料集分析入口、統計/品質監控、task config 驅動指標、權限與 RWD 行為。
 
@@ -20,7 +20,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -88,7 +88,7 @@
 - `DISAGREEMENT_SAMPLE_SORT = disagreement_score_desc`
 - `ASPECT_COVERAGE_ALERT_THRESHOLD = configurable`（預設以目標 label distribution / 最低樣本數檢查，無固定全域常數）
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -130,7 +130,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 進入任務分析詳情頁並載入共用 Detail Shell（優先級：P1）
+### 使用者故事 1 — 進入任務分析詳情頁並載入共用 Detail Shell（優先級：P1）
 
 使用者由任務列表主要入口或 Dashboard badge 合法次入口進入任務分析詳情頁後，系統需先解析任務上下文並渲染共用 detail shell，包含麵包屑、任務基本資訊與雙 Tab 導覽。
 
@@ -165,7 +165,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 查看統計總覽與任務類型特定指標（優先級：P1）
+### 使用者故事 2 — 查看統計總覽與任務類型特定指標（優先級：P1）
 
 使用者在統計總覽 tab 可查看當前任務的共用指標與依 `task_type` 動態渲染的特定統計圖表，作為進一步檢視品質監控前的基礎分析。
 
@@ -228,7 +228,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 查看 IAA 報告與品質監控內容（優先級：P1）
+### 使用者故事 3 — 查看 IAA 報告與品質監控內容（優先級：P1）
 
 使用者在品質監控 tab 可查看 Dry Run 完成後依 `task_type` 選定的主要 IAA 指標、與閾值的比較結果，以及異常偵測、標記一致性偏離分析與標記員個別分析；其中 `sentence_pairs` 的分類型與評分型皆需被支援。
 
@@ -289,7 +289,7 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — 在同一 Detail 頁中切換雙 Tab（優先級：P1）
+### 使用者故事 4 — 在同一 Detail 頁中切換雙 Tab（優先級：P1）
 
 使用者可在同一個 detail page 中於統計總覽與品質監控之間切換，並保留任務上下文與各自的捲動位置。
 
@@ -309,7 +309,7 @@ sequenceDiagram
 
 ---
 
-### Edge Cases
+### 邊界情況
 
 - `/dataset-analysis-detail/:task_id` 的 `task_id` 不存在或無成員資格時，導回 `/dataset-analysis` 並顯示錯誤提示。
 - `task_type` 無法從 API 取得時，stats 與 quality 皆顯示錯誤狀態，不可靜默回退為預設類型。
@@ -320,9 +320,9 @@ sequenceDiagram
 - 手機版（`<= MOBILE_BP`）scatter plot、co-occurrence matrix、IAA 表格、標記一致性偏離分析表格與標記員分析表格需支援橫向捲動。
 - Tab 切換時，各 tab 的捲動位置相互獨立，切換後不重置捲動位置。
 
-## Requirements *(必填)*
+## 需求規格 *(必填)*
 
-### Functional Requirements
+### 功能需求
 
 - **FR-001**: 系統必須提供 `DATASET_ANALYSIS_DETAIL_ROUTE`（`/dataset-analysis-detail/:task_id`）作為資料集分析模組的 detail 頁，承載 `TAB_STATS` 與 `TAB_QUALITY`。
 - **FR-002**: detail 頁必須先驗證 `task_id` 與成員資格；當 `INVALID_TASK_TRIGGER` 觸發時，導回 `/dataset-analysis` 並顯示錯誤提示。
@@ -383,7 +383,7 @@ sequenceDiagram
 - **FR-032**: `sequence_labeling.analysis_profile = aspect` 時，系統必須支援以句子為單位產製 Aspect 共現矩陣，不得跨句串接共現。
 - **FR-033**: `sequence_labeling.analysis_profile = aspect` 時，系統必須將 sentiment 視為 optional dimension；資料不存在時不得阻擋報告產生。
 
-### User Flow & Navigation *(必填)*
+### 使用者流程與導頁 *(必填)*
 
 ```mermaid
 flowchart LR
@@ -409,7 +409,7 @@ flowchart LR
 **Entry points**: `dataset-analysis-list` 任務卡片；Dashboard「IAA 待確認」badge deep link。
 **Exit points**: 雙 Tab 頁內切換；麵包屑返回任務列表；空狀態按鈕跳轉至 `task-detail`。
 
-### Key Entities *(必填)*
+### 關鍵實體 *(必填)*
 
 - **TaskContext**: 任務上下文，至少包含 `task_id`、`task_name`、`task_type`、`membership_role`。
 - **TaskAnalysisProfile**: 任務分析設定，至少包含 `analysis_profile`；`sequence_labeling` 可為 `ner | aspect`。
@@ -441,9 +441,9 @@ flowchart LR
 
 ---
 
-## Spec Dependencies *(必填)*
+## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
-### Upstream（本 spec 依賴）
+### 上游（本規格依賴的規格）
 
 | Spec # | Feature | What this spec needs from it |
 |--------|---------|------------------------------|
@@ -453,7 +453,7 @@ flowchart LR
 | dataset-016 | Dataset Analysis List | 模組入口任務列表、task card 導向 detail 頁規格 |
 | dashboard-012 | Dashboard | IAA 待確認 badge deep link 規格與通知機制 |
 
-### Downstream（依賴本 spec）
+### 下游（依賴本規格的規格）
 
 | Spec # | Feature | What they rely on from this spec |
 |--------|---------|----------------------------------|
@@ -461,7 +461,7 @@ flowchart LR
 
 ---
 
-## Success Criteria *(必填)*
+## 成功標準 *(必填)*
 
 - **SC-001**: 進入 `/dataset-analysis-detail/:task_id` 時，detail shell 正確顯示任務上下文、麵包屑與雙 Tab 導覽。
 - **SC-002**: 未帶 `?tab=` 時，頁面預設進入統計總覽 tab；帶 `?tab=quality` 時可正確進入品質監控 tab。
@@ -491,16 +491,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -509,7 +509,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。
