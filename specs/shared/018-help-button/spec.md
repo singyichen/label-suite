@@ -1,10 +1,10 @@
 # 功能規格：Help Button — 平台說明入口
 ---
-**功能分支**：`feat/shared/018-help-button`
-**建立日期**：2026-05-15
-**版本**：1.1.1
-**狀態**：Deferred（latest prototype baseline does not include Help button）
-**需求來源**：Brainstorm session 1445-1778808850 — 評估平台是否需要 FAQ/說明入口
+**功能分支**:`feat/shared/018-help-button`
+**建立日期**:2026-05-15
+**版本**:1.1.1
+**狀態**:Deferred（latest prototype baseline does not include Help button）
+**需求來源**:Brainstorm session 1445-1778808850 — 評估平台是否需要 FAQ/說明入口
 
 > **Prototype baseline（2026-05-19）**：最新 `design/prototype/pages/shared/sidebar.js` 僅提供語言切換、快捷鍵總覽、外觀切換與登出；尚未提供 `helpBtn` / `mobileHelpBtn` 或 `#help-modal`。本 spec 保留為後續候選需求，但不屬於目前 IA / prototype 對齊範圍，實作前需先更新 prototype。
 
