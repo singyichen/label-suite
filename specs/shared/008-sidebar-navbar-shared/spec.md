@@ -13,6 +13,8 @@
 狀態: Clarified
 ---
 
+# 功能規格：Shared Sidebar Navbar（共用側欄導覽）
+
 **需求來源**: 資訊架構 [docs/product/ia/information-architecture.md](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
 ## 輸入與生成規則

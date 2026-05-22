@@ -13,6 +13,8 @@
 狀態: Draft
 ---
 
+# 功能規格：User Management — 使用者列表與帳號管理
+
 **需求來源**: IA v7 Spec 清單 #006 — 使用者列表與管理（`user-management`）
 
 ## 輸入與生成規則

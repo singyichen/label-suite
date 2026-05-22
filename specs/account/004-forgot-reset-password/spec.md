@@ -13,6 +13,8 @@
 狀態: Clarified
 ---
 
+# 功能規格：Forgot / Reset Password（Prototype）
+
 **需求來源**: 最新原型 [design/prototype/pages/account/forgot-password.html](../../../design/prototype/pages/account/forgot-password.html) / [design/prototype/pages/account/reset-password.html](../../../design/prototype/pages/account/reset-password.html)
 
 ## 輸入與生成規則

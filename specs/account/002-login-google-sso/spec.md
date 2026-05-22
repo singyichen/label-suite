@@ -13,6 +13,8 @@
 狀態: Clarified
 ---
 
+# 功能規格：Login — Google SSO 入口與整合預留
+
 **需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 
 ## 輸入與生成規則

@@ -13,6 +13,8 @@
 狀態: Draft
 ---
 
+# 功能規格：Role & Permission Settings — 角色權限矩陣設定
+
 **需求來源**: IA v7 Spec 清單 #007 — 角色權限設定（`role-settings`）
 
 ## 輸入與生成規則

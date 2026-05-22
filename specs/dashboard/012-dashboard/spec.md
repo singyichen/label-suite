@@ -13,6 +13,8 @@
 狀態: Clarified
 ---
 
+# 功能規格：Dashboard — 儀表板
+
 **需求來源**: 最新原型 [design/prototype/pages/dashboard/dashboard.html](../../../design/prototype/pages/dashboard/dashboard.html)
 
 ## 輸入與生成規則

@@ -1,10 +1,11 @@
-# 功能規格：登入 — Email / Password + 頁面 UI
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-04-05
 版本: 1.2.2
 狀態: Clarified
 ---
+
+# 功能規格：登入 — Email / Password + 頁面 UI
 
 **需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 

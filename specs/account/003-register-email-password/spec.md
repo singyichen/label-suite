@@ -13,6 +13,8 @@
 狀態: Clarified
 ---
 
+# 功能規格：Register — Email / Password
+
 **需求來源**: 最新原型 [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html)
 
 ## 輸入與生成規則
