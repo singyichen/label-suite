@@ -6,6 +6,12 @@
 ---
 
 # 功能規格：Dashboard — 儀表板
+---
+功能分支: feat/dashboard/012-dashboard
+建立日期: 2026-04-05
+版本: 1.3.31
+狀態: Clarified
+---
 
 **需求來源**: 最新原型 [design/prototype/pages/dashboard/dashboard.html](../../../design/prototype/pages/dashboard/dashboard.html)
 

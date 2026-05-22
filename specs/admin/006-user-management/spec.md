@@ -6,6 +6,12 @@
 ---
 
 # 功能規格：User Management — 使用者列表與帳號管理
+---
+功能分支: feat/admin/006-user-management
+建立日期: 2026-04-16
+版本: 1.0.6
+狀態: Draft
+---
 
 **需求來源**: IA v7 Spec 清單 #006 — 使用者列表與管理（`user-management`）
 
