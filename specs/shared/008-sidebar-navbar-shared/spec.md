@@ -1,17 +1,12 @@
----
-description: 本規格需定義 Shared Sidebar Navbar 的跨頁共用 UI 契約、導覽/工具入口、狀態持久化、i18n、可存取屬性與 RWD 行為。
-scripts:
-   sh: scripts/bash/check-prerequisites.sh --json --paths-only
-   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
----
-
 # 功能規格：Shared Sidebar Navbar（共用側欄導覽）
+---
+功能分支: feat/shared/008-sidebar-navbar-shared
+建立日期: 2026-04-16
+版本: 1.3.9
+狀態: Clarified
+---
 
-**功能分支**:`feat/shared/008-sidebar-navbar-shared`
-**建立日期**:2026-04-16
-**版本**:1.3.9
-**狀態**:Clarified
-**需求來源**:資訊架構 [docs/product/ia/information-architecture.md](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
+**需求來源**: 資訊架構 [docs/product/ia/information-architecture.md](../../../docs/product/ia/information-architecture.md) §2.1 Sidebar Navbar（跨模組共用）
 
 ## 輸入與生成規則
 

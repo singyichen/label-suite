@@ -1,17 +1,12 @@
----
-description: 本規格需定義 Profile Settings 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
-scripts:
-   sh: scripts/bash/check-prerequisites.sh --json --paths-only
-   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
----
-
 # 功能規格：Profile Settings — 個人設定（資料編輯 + 變更 Email + 修改密碼）
+---
+功能分支: feat/account/005-profile-settings
+建立日期: 2026-04-05
+版本: 1.2.8
+狀態: Clarified
+---
 
-**功能分支**:`feat/account/005-profile-settings`
-**建立日期**:2026-04-05
-**版本**:1.2.8
-**狀態**:Clarified
-**需求來源**:IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
+**需求來源**: IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
 
 ## 輸入與生成規則
 
