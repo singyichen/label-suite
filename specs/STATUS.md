@@ -28,7 +28,7 @@
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.3；規格狀態：Clarified |
 | account-004 | Forgot / Reset Password | account | `spec-ready` | `feat/account/004-forgot-reset-password` | spec v1.1.2；規格狀態：Clarified |
 | account-005 | Profile Settings | account | `spec-ready` | `feat/account/005-profile-settings` | spec v1.2.9；規格狀態：Clarified |
-| admin-006 | User Management | admin | `spec-ready` | `feat/admin/006-user-management` | spec v1.0.6；規格狀態：Draft |
+| admin-006 | User Management | admin | `spec-ready` | `feat/admin/006-user-management` | spec v1.0.8；規格狀態：Clarified |
 | admin-007 | Role & Permission Settings | admin | `spec-ready` | `feat/admin/007-role-settings` | spec v1.1.4；規格狀態：Draft |
 | dashboard-012 | Dashboard | dashboard | `spec-ready` | `feat/dashboard/012-dashboard` | spec v1.3.28；規格狀態：Clarified |
 | shared-008 | Shared Sidebar Navbar | shared | `spec-ready` | `feat/shared/008-sidebar-navbar-shared` | spec v1.3.9；規格狀態：Clarified |
@@ -54,6 +54,8 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-05-22 | `admin-006` User Management spec 更新至 v1.0.8；同步最新 prototype 的列內「異動紀錄」icon、目標帳號異動紀錄 drawer、空狀態、i18n 與行動版 bottom sheet 行為。 |
+| 2026-05-22 | `admin-006` User Management 經 `/speckit.clarify` 更新至 spec v1.0.7；補齊啟用帳號、seeder/最後 active super_admin 保護、自停用導頁、帳號管理審計與設定密碼信寄送失敗不建立帳號規則。 |
 | 2026-05-22 | `account-005` Profile Settings 經 `/speckit.clarify` 更新至 spec v1.2.9；補齊頭像、通知偏好、Email 驗證 session、驗證信重送與 pending Email 規則。 |
 | 2026-05-21 | 依各 `spec.md` 檔頭同步 `STATUS.md`：更新功能分支為 `feat/[module]/NNN-feature` 格式、補齊 spec 版本與規格狀態；`shared-018` 標記為 `deferred`，`dataset-016` 保持 `in-progress`。 |
 | 2026-05-19 | 依最新 prototype 同步 IA 與相關 spec：task-new 4 steps、task-detail 5 tabs、dataset `/dataset-analysis` 入口、admin `role-settings.html` 獨立頁；shared-018 標記為 deferred。 |
