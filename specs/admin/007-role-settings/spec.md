@@ -1,11 +1,18 @@
-# 功能規格：Role & Permission Settings — 角色權限矩陣設定
 ---
+description: 本規格需定義 Role & Permission Settings 的系統管理流程、權限守門、列表/矩陣互動、審計與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Role & Permission Settings — 角色權限矩陣設定
+
 **功能分支**:`feat/admin/007-role-settings`
 **建立日期**:2026-04-16
 **版本**:1.1.4
 **狀態**:Draft
 **需求來源**:IA v7 Spec 清單 #007 — 角色權限設定（`role-settings`）
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Role & Permission Settings 的系統管理流程、權限守門、列表/矩陣互動、審計與 RWD 行為。

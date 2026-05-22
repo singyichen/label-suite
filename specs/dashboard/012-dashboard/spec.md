@@ -1,11 +1,18 @@
-# 功能規格：Dashboard — 儀表板
 ---
+description: 本規格需定義 Dashboard 的登入後首頁分流、角色視圖、任務入口、指標呈現、i18n 與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Dashboard — 儀表板
+
 **功能分支**:`feat/dashboard/012-dashboard`
 **建立日期**:2026-04-05
 **版本**:1.3.31
 **狀態**:Clarified
 **需求來源**:最新原型 [`design/prototype/pages/dashboard/dashboard.html`](../../../design/prototype/pages/dashboard/dashboard.html)
----
+
 ## 輸入與生成規則
 ---
 **輸入描述**：本規格需定義 Dashboard 的登入後首頁分流、角色視圖、任務入口、指標呈現、i18n 與 RWD 行為。

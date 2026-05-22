@@ -1,5 +1,12 @@
-# 功能規格：Help Button — 平台說明入口
 ---
+description: 本規格需定義 Help Button 的跨頁共用 UI 契約、導覽/工具入口、狀態持久化、i18n、可存取屬性與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Help Button — 平台說明入口
+
 **功能分支**:`feat/shared/018-help-button`
 **建立日期**:2026-05-15
 **版本**:1.1.1

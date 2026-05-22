@@ -1,11 +1,18 @@
-# 功能規格：Annotation List + Workspace — 標記清單與標記作業（Annotator / Reviewer）
 ---
+description: 本規格需定義 Annotation List + Workspace 的標記/審核清單與工作區流程、task config 驅動畫面、提交 payload、安全邊界與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Annotation List + Workspace — 標記清單與標記作業（Annotator / Reviewer）
+
 **功能分支**:`feat/annotation/015-annotation-workspace`
 **建立日期**:2026-04-23
 **版本**:1.4.11
 **狀態**:Draft
 **需求來源**:IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Annotation List + Workspace 的標記/審核清單與工作區流程、task config 驅動畫面、提交 payload、安全邊界與 RWD 行為。

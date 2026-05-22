@@ -1,11 +1,18 @@
-# 功能規格：Login — Google SSO 入口與整合預留
 ---
+description: 登入頁需提供 Google SSO 入口，現階段與 Email / Password 登入並列呈現，並保留後續 OAuth 正式整合的入口契約。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Login — Google SSO 入口與整合預留
+
 **功能分支**:`feat/account/002-login-google-sso`
 **建立日期**:2026-04-05
 **版本**:1.2.2
 **狀態**:Clarified
 **需求來源**:最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
----
+
 ## 輸入與生成規則
 
 **輸入描述**：登入頁需提供 Google SSO 入口，現階段與 Email / Password 登入並列呈現，並保留後續 OAuth 正式整合的入口契約。

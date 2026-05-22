@@ -1,11 +1,18 @@
-# 功能規格：登入 — Email / Password + 頁面 UI
 ---
+description: 使用者需能透過 Email / Password 登入入口進入 Label Suite，並可由登入頁前往註冊、忘記密碼與 dashboard 原型流程。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：登入 — Email / Password + 頁面 UI
+
 **功能分支**:`feat/account/001-login-email-password`
 **建立日期**:2026-04-05
 **版本**:1.2.2
 **狀態**:Clarified
 **需求來源**:最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
----
+
 ## 輸入與生成規則
 
 **輸入描述**：使用者需能透過 Email / Password 登入入口進入 Label Suite，並可由登入頁前往註冊、忘記密碼與 dashboard 原型流程。

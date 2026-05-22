@@ -1,11 +1,18 @@
-# 功能規格：New Task — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔）
 ---
+description: 本規格需定義 New Task 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：New Task — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔）
+
 **功能分支**:`feat/task-management/013-task-new`
 **建立日期**:2026-04-20
 **版本**:2.0.4
 **狀態**:Draft
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 New Task 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。

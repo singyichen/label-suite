@@ -1,11 +1,18 @@
-# 功能規格：Dataset Analysis Detail — 統計總覽 + 品質監控雙 Tab
 ---
+description: 本規格需定義 Dataset Analysis Detail 的資料集分析入口、統計/品質監控、task config 驅動指標、權限與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Dataset Analysis Detail — 統計總覽 + 品質監控雙 Tab
+
 **功能分支**:`feat/dataset/017-dataset-analysis-detail`
 **建立日期**:2026-04-24
 **版本**:1.4.5
 **狀態**:Draft
 **需求來源**:IA v1.3.2（2026-04-24）資料集分析模組規範（雙 Tab 架構）
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Dataset Analysis Detail 的資料集分析入口、統計/品質監控、task config 驅動指標、權限與 RWD 行為。

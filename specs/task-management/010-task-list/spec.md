@@ -1,11 +1,18 @@
-# 功能規格：Task List — 任務列表
 ---
+description: 本規格需定義 Task List 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Task List — 任務列表
+
 **功能分支**:`feat/task-management/010-task-list`
 **建立日期**:2026-04-20
 **版本**:1.3.8
 **狀態**:Draft
 **需求來源**:IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Task List 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。

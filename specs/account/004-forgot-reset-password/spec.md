@@ -1,11 +1,18 @@
-# 功能規格：Forgot / Reset Password（Prototype）
 ---
+description: 本規格需定義 Forgot / Reset Password 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Forgot / Reset Password（Prototype）
+
 **功能分支**:`feat/account/004-forgot-reset-password`
 **建立日期**:2026-04-05
 **版本**:1.1.2
 **狀態**:Clarified
 **需求來源**:最新原型 [`design/prototype/pages/account/forgot-password.html`](../../../design/prototype/pages/account/forgot-password.html) / [`design/prototype/pages/account/reset-password.html`](../../../design/prototype/pages/account/reset-password.html)
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Forgot / Reset Password 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。

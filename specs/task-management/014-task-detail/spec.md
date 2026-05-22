@@ -1,11 +1,18 @@
-# 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
 ---
+description: 本規格需定義 Task Detail 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
+scripts:
+   sh: scripts/bash/check-prerequisites.sh --json --paths-only
+   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
+---
+
+# 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
+
 **功能分支**: feat/task-management/014-task-detail
 **建立日期**: 2026-04-20
 **版本**: 1.7.15
 **狀態**: Draft
 **需求來源**: IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
----
+
 ## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Task Detail 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
