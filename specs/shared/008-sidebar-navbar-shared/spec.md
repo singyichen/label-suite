@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.3.9
+版本: 1.3.10
 狀態: Clarified
 ---
 
@@ -27,6 +27,14 @@
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: Mobile 版是否要顯示快捷鍵總覽入口？ → A: Mobile 完全不支援快捷鍵總覽入口與 `?`。
+- Q: 使用者點擊 L0 `標記作業` / `資料集分析` 但缺少對應任務角色或 task context 時，應導回哪裡？ → A: `標記作業` 導回 `/dashboard`；`資料集分析` 導回 `/task-list`。
+- Q: 通知 dropdown 的通知資料來源在本規格中應如何界定？ → A: 僅定義前端展示契約，通知資料由頁面或 prototype mock 提供。
+
 ## 規格常數
 
 - `SIDEBAR_WIDTH = 240px`
@@ -44,6 +52,7 @@
 - `SIDEBAR_UTILITY_ACTIONS = shortcut_help | appearance_toggle | notification_bell`
 - `SHORTCUT_HELP_SCOPE = current_page_common_shortcuts`
 - `NOTIFICATION_BADGE_MAX_DISPLAY = 9+`（未讀數超過 9 顯示 `9+`）
+- `NOTIFICATION_DATA_SOURCE = page_or_prototype_mock`（本規格僅定義前端展示契約，不定義通知 API 或後端事件模型）
 
 ## 流程圖
 
@@ -71,7 +80,7 @@ sequenceDiagram
     i18n-->>navbar: 更新所有 navbar 文案與可存取屬性
     i18n-->>頁面: 同步更新右側目前模組頁內容文案
 
-    使用者->>navbar: 點擊快捷鍵 icon
+    使用者->>navbar: 在 Desktop 點擊快捷鍵 icon 或按 `?`
     navbar-->>使用者: 顯示目前頁面可用快捷鍵總覽 modal
 
     使用者->>navbar: 點擊外觀 icon
@@ -86,7 +95,7 @@ sequenceDiagram
 | 4 | 使用者 | 點擊語言切換 | Sidebar 與右側目前模組頁文案、可存取屬性同步更新 |
 | 5 | 使用者 | 點擊登出 | 導向 `../account/login.html`（原型導頁） |
 | 6 | 使用者 | 點擊外觀切換（Appearance） | Sidebar 單鍵在 `light` / `dark` resolved theme 間切換，更新 `html[data-theme]`，持久化至 `APPEARANCE_STORAGE_KEY` |
-| 7 | 使用者 | 點擊快捷鍵 icon 或按 `?` | 開啟目前頁面可用快捷鍵總覽；不包含 task-specific 作答快捷鍵 |
+| 7 | 使用者 | 在 Desktop 點擊快捷鍵 icon 或按 `?` | 開啟目前頁面可用快捷鍵總覽；不包含 task-specific 作答快捷鍵 |
 
 ---
 
@@ -171,7 +180,7 @@ sequenceDiagram
 - `標記作業`：需當前任務 `annotator` 或 `reviewer`。
 - `標記作業` 導頁時，若 `ACTIVE_TASK_TYPE_STORAGE_KEY` 有值，需附帶 `task_type` query 參數。
 - `資料集分析`：需當前任務 `project_leader` 或 `reviewer`。
-- 任務上下文頁缺 `task_id / membership`：導回模組 Landing（`dashboard` 或 `task-list`）並提示。
+- 任務上下文頁缺 `task_id / membership`：`標記作業` 導回 `/dashboard`，`資料集分析` 導回 `/task-list`，並顯示提示。
 
 ---
 
@@ -186,7 +195,7 @@ sequenceDiagram
 **驗收情境**：
 
 1. **Given** viewport `> MOBILE_BP`，**When** 載入頁面，**Then** 顯示左側固定 Sidebar（含品牌、L0、底部 utility actions、user chip）。
-2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列（含語言、快捷鍵、外觀與登出控制，不顯示使用者姓名）+ 下方主導覽。
+2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** 顯示上方品牌列（含語言、外觀與登出控制，不顯示使用者姓名與快捷鍵入口）+ 下方主導覽。
 3. **Given** 行動版，**When** 操作 L0 導覽，**Then** 主要內容不被遮擋且導覽可點擊。
 
 ### 使用者故事 5 — Desktop Sidebar Mini / Icon-only 可收合（優先級：P2）
@@ -236,17 +245,17 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 
 ### 使用者故事 7 — 快捷鍵總覽入口（優先級：P2）
 
-登入後使用者可從 Sidebar utility icon 或 `?` 開啟快捷鍵總覽，查看目前頁面可用的跨任務共用快捷鍵。
+登入後 Desktop 使用者可從 Sidebar utility icon 或 `?` 開啟快捷鍵總覽，查看目前頁面可用的跨任務共用快捷鍵；Mobile 不提供快捷鍵總覽入口，也不支援以 `?` 開啟。
 
 **此優先級原因**：快捷鍵是輔助操作，不應成為主導覽項，但使用者在標記/審核作業中需能快速查詢。
 
-**獨立測試方式**：在 desktop / mobile 開啟快捷鍵 modal，切換 zh/en，確認入口、modal 標題、section 與 keycap 顯示皆正確。
+**獨立測試方式**：在 desktop 開啟快捷鍵 modal，切換 zh/en，確認入口、modal 標題、section 與 keycap 顯示皆正確；在 mobile 驗證 keyboard 入口不存在且 `?` 不觸發 modal。
 
 **驗收情境**：
 
 1. **Given** viewport `> MOBILE_BP`，**When** 使用者查看 Sidebar 底部 utility row，**Then** 顯示 icon-only keyboard button，不顯示「快捷鍵」文字。
-2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** mobile top bar 顯示 keyboard icon 入口。
-3. **Given** 使用者點擊 keyboard icon 或按 `?`，**When** 開啟 modal，**Then** 顯示目前頁面可用快捷鍵總覽。
+2. **Given** viewport `<= MOBILE_BP`，**When** 載入頁面，**Then** mobile top bar 不顯示 keyboard icon 入口，且按 `?` 不開啟快捷鍵總覽。
+3. **Given** viewport `> MOBILE_BP`，**When** 使用者點擊 keyboard icon 或按 `?`，**Then** 開啟 modal 並顯示目前頁面可用快捷鍵總覽。
 4. **Given** 快捷鍵含多個按鍵，**When** 顯示於 modal，**Then** 每個按鍵必須以獨立 keycap 呈現，不得以 `Ctrl / Cmd + S` 這類連續文字呈現。
 5. **Given** 使用者切換 zh/en，**When** 檢查快捷鍵入口與 modal，**Then** `aria-label`、標題、說明與 section 文案同步切換。
 6. **Given** 快捷鍵總覽列出多個方向或決策動作，**When** 使用者檢視清單，**Then** 每個 action 必須獨立成列；例如 `上一筆` 與 `下一筆` 不得合併成 `上一筆 / 下一筆`，`通過目前結果` 與 `退回目前結果` 也不得合併。
@@ -254,7 +263,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 **快捷鍵總覽行為規則**：
 
 - `shortcut_help` 不屬於 L0 主導覽，不新增 sidebar nav item。
-- Desktop 入口位於 Sidebar 底部 utility row；Mobile 入口位於 top brand bar。
+- Desktop 入口位於 Sidebar 底部 utility row；Mobile 不提供入口，且 `?` 不觸發快捷鍵總覽。
 - Modal 只顯示跨任務共用快捷鍵；不得納入 task-specific 作答快捷鍵（例如 label `1-9`、NER entity type、relation type、VA scoring）。
 - Keycap 使用獨立元素呈現，例如 `CTRL`、`CMD`、`S` 三個 keycap，而不是單一文字字串。
 - 一個 shortcut action 必須對應一列；不得將兩個 action 合併為同一列，即使它們使用相近的 modifier key。
@@ -272,7 +281,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - `APPEARANCE_STORAGE_KEY` 值無效（非 `light`/`dark`/`system`）時，fallback 為 `system`，不拋出例外。
 - `prefers-color-scheme` 不支援的舊瀏覽器，`system` mode 應 fallback 為 `light`。
 - Sidebar utility actions 為 icon-only 時，必須保留 `aria-label` 與 `title`，且 zh/en 切換後同步更新。
-- 快捷鍵 modal 在窄螢幕不得讓 keycap 擠壓或覆蓋 action 名稱。
+- Desktop 快捷鍵 modal 在較窄 viewport 不得讓 keycap 擠壓或覆蓋 action 名稱。
 
 ---
 
@@ -288,7 +297,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-005**：`dataset-analysis-list` 與 `dataset-analysis-detail` 必須映射為 `資料集分析` active。
 - **FR-006**：`role-settings` 必須映射為 `系統管理` active。
 - **FR-007**：每頁僅允許一個 L0 active 項，且必須同時包含 active 樣式與 `aria-current="page"`。
-- **FR-008**：`標記作業`、`資料集分析` 必須驗證任務角色與任務上下文；不符時導回對應 Landing（標記作業為 `annotation-list` 或 `dashboard`，資料集分析為 `dataset-analysis-list` / `/dataset-analysis` 或 `dashboard`）並提示。
+- **FR-008**：`標記作業`、`資料集分析` 必須驗證任務角色與任務上下文；不符時 `標記作業` 導回 `/dashboard`，`資料集分析` 導回 `/task-list`，並顯示提示。
 - **FR-008A**：點擊 `標記作業` 時，若存在 `ACTIVE_TASK_TYPE_STORAGE_KEY`，導頁 URL 必須附帶 `task_type` query（避免覆蓋既有 query 參數）。
 - **FR-009**：Navbar 必須支援 zh/en 切換，切換後同步更新文案、`aria-label`、`title`。
 - **FR-009A**：使用者點擊語言切換後，右側內容區不論目前顯示 `dashboard / task-management / annotation / dataset / admin / account` 任一模組頁，皆必須同步切換為相同語系，不可僅更新 Sidebar。
@@ -296,7 +305,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-010**：Navbar 必須提供桌面與行動版登出控制項。
 - **FR-010A**：Mobile / icon-only sidebar footer 必須顯示登出按鈕；使用者姓名不得佔用該位置。
 - **FR-011**：`> MOBILE_BP` 使用左側固定 Sidebar；`<= MOBILE_BP` 使用上方品牌列 + 下方主導覽。
-- **FR-011A**：Mobile top brand bar 的右側工具列（語言、快捷鍵、外觀、登出）在 `dashboard / task-management / annotation / dataset / admin / account` 模組必須共用一致尺寸、間距、圓角與不可壓縮行為；品牌區需以 `flex: 1` 讓位，避免 icon button 被擠壓。
+- **FR-011A**：Mobile top brand bar 的右側工具列（語言、外觀、通知、登出）在 `dashboard / task-management / annotation / dataset / admin / account` 模組必須共用一致尺寸、間距、圓角與不可壓縮行為；品牌區需以 `flex: 1` 讓位，避免 icon button 被擠壓。
 - **FR-012**：在 `RWD_VIEWPORTS` 下不得出現重疊、不可點擊、內容被導覽遮擋。
 - **FR-013**：Shared Sidebar 樣式必須集中於 `design/prototype/pages/shared/sidebar.css`，使用共用 Sidebar 的頁面不得再頁內重複定義同一套 sidebar 規則。
 - **FR-013A**：Shared Sidebar 範圍內的品牌連結與 L0 模組導覽連結在 default / hover / focus / active 狀態皆不得顯示文字底線；此規則不得影響頁面主要內容區的一般文字連結。
@@ -312,13 +321,13 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-015D**：`APPEARANCE_STORAGE_KEY` 不存在或值無效時，預設 mode 為 `system`。
 - **FR-015E**：Appearance icon 必須一次只顯示一個狀態提示 icon：`light` 顯示月亮（可切 dark）、`dark` 顯示太陽（可切 light）。
 - **FR-015F**：Appearance icon 的 `aria-label` / `title` 必須支援 zh/en，並依下一步動作顯示「切換為深色/淺色模式」。
-- **FR-016**：Sidebar 必須提供 icon-only 快捷鍵總覽入口；Desktop 位於 Sidebar 底部 utility row，Mobile 位於 top brand bar。
-- **FR-016A**：快捷鍵入口必須可由 `?` 開啟，並可由 `Esc` 或 backdrop 關閉。
-- **FR-016B**：快捷鍵總覽 modal 必須支援 zh/en，並同步更新 `aria-label`、標題、說明與 section 文案。
-- **FR-016C**：快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
+- **FR-016**：Sidebar 必須在 Desktop 提供 icon-only 快捷鍵總覽入口，位於 Sidebar 底部 utility row；Mobile 不得顯示快捷鍵總覽入口。
+- **FR-016A**：Desktop 快捷鍵入口必須可由 `?` 開啟，並可由 `Esc` 或 backdrop 關閉；Mobile 按 `?` 不得開啟快捷鍵總覽。
+- **FR-016B**：Desktop 快捷鍵總覽 modal 必須支援 zh/en，並同步更新 `aria-label`、標題、說明與 section 文案。
+- **FR-016C**：Desktop 快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
 - **FR-016D**：快捷鍵總覽第一版僅顯示跨任務共用快捷鍵，不得納入 task-specific 作答快捷鍵。
 - **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果`、`全部通過 / 全部退回` 作為單一列）。
-- **FR-016F**：快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
+- **FR-016F**：Desktop 快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
 - **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
 - **FR-018**：Sidebar 必須提供通知鈴鐺（`notification_bell`）入口；Desktop 位於 Sidebar 底部 utility row（`notificationBellBtn`），Mobile 位於 top brand bar（`mobileNotificationBellBtn`）。
 - **FR-018A**：未讀通知數必須以紅色 badge 顯示於鈴鐺右上角；未讀數為 0 時不顯示 badge；超過 9 顯示 `NOTIFICATION_BADGE_MAX_DISPLAY`。
@@ -327,6 +336,7 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-018C1**：通知 dropdown 內容必須完整支援語系切換；標題、操作文案、通知事件句型、任務名稱、行為者顯示名稱與相對時間皆需依目前語系呈現，不得中英混用。
 - **FR-018D**：通知 dropdown 定位規則：Desktop 展開時 `left: SIDEBAR_WIDTH`；Desktop 收合時 `left: SIDEBAR_COLLAPSED_WIDTH`；Mobile 時 `top: MOBILE_TOP_HEIGHT`，靠右對齊。
 - **FR-018E**：通知 dropdown 不提供跳轉「通知設定」連結；通知偏好設定位於 `/profile` 通知設定區塊（見 spec 005 FR-013B）。
+- **FR-018F**：通知資料來源由目前頁面或 prototype mock 提供；本規格僅定義 Shared Navbar 前端展示契約，不新增通知 API、後端事件模型或跨模組資料擁有權。
 
 ### 使用者流程與導頁
 
@@ -354,14 +364,14 @@ flowchart LR
 | 任一登入後頁 | 點擊「資料集分析」 | `/dataset-analysis`（prototype: `../dataset/dataset-analysis-list.html`；需 task role/context） |
 | 任一登入後頁 | 點擊「系統管理」 | `/user-management`（僅 super_admin） |
 | 任一登入後頁 | 點擊「個人設定」 | `/profile` |
-| 任一登入後頁 | 點擊 keyboard icon / 按 `?` | 開啟快捷鍵總覽 modal |
+| 任一登入後頁（Desktop） | 點擊 keyboard icon / 按 `?` | 開啟快捷鍵總覽 modal |
 | 任一登入後頁 | 點擊 Appearance icon | 切換 `html[data-theme]` light/dark，不導頁 |
 
 ### 關鍵實體
 
 - `SharedNavbarContract`
   - `sections`: `brand-section`, `navbar-center`, `nav-actions`
-  - `interactiveIds`: `langToggle`, `mobileLangToggle`, `shortcutHelpBtn`, `mobileShortcutHelpBtn`, `sidebarThemeToggleBtn`, `mobileThemeToggleBtn`, `notificationBellBtn`, `mobileNotificationBellBtn`, `logoutBtn`, `mobileLogoutBtn`
+  - `interactiveIds`: `langToggle`, `mobileLangToggle`, `shortcutHelpBtn`, `sidebarThemeToggleBtn`, `mobileThemeToggleBtn`, `notificationBellBtn`, `mobileNotificationBellBtn`, `logoutBtn`, `mobileLogoutBtn`
   - `userIds`: `userName`, `roleIndicator`, `userAvatar`
   - `navIds`: `navDashboard`, `navTaskManagement`, `navAnnotation`, `navDataset`, `navAdmin`, `navProfile`
 - `LanguageState`
@@ -382,8 +392,13 @@ flowchart LR
 - `ShortcutHelpState`
   - `is_open`: `true` / `false`
   - `scope`: `current_page_common_shortcuts`
-  - `entry_points`: `shortcutHelpBtn` / `mobileShortcutHelpBtn` / `?`
+  - `entry_points`: `shortcutHelpBtn` / `?`（Desktop only）
   - `excluded_shortcuts`: task-specific 作答快捷鍵（label hotkeys、NER/relation/aspect/score hotkeys）
+- `NotificationDisplayState`
+  - `unread_count`: `0` 或正整數；大於 `9` 時 badge 顯示 `9+`
+  - `is_open`: `true` / `false`
+  - `source`: `page_or_prototype_mock`
+  - `contract_scope`: 前端展示狀態；不包含通知 API 或後端事件模型
 
 ---
 
@@ -418,7 +433,7 @@ flowchart LR
 - **SC-002**：L1/L2 頁面的 L0 active 映射正確，且每頁僅一個 `aria-current="page"`。
 - **SC-003**：`super_admin` 與 `user` 的 L0 可見性符合矩陣（僅 `super_admin` 可見 `系統管理`）。
 - **SC-003A**：L0 可見項目數驗證通過：`user = 5`、`super_admin = 6`（Desktop / Mobile 皆一致）。
-- **SC-004**：缺少任務角色或上下文時，`標記作業`/`資料集分析` 會導回 Landing 並顯示提示。
+- **SC-004**：缺少任務角色或上下文時，`標記作業` 會導回 `/dashboard`，`資料集分析` 會導回 `/task-list`，並顯示提示。
 - **SC-004A**：點擊 `標記作業` 且存在 `labelsuite.activeTaskType` 時，導頁 URL 需包含 `task_type=<stored_value>`。
 - **SC-005**：`RWD_VIEWPORTS` 下 navbar 無破版、無重疊、無不可點擊控制項。
 - **SC-005A**：在 `375px` mobile viewport 下，所有共用 Sidebar 模組頁的 top brand bar 工具列視覺尺寸必須與 Task Management baseline 一致，icon-only 按鈕不得被壓縮。
@@ -437,7 +452,7 @@ flowchart LR
 - **SC-008D**：Sidebar Appearance icon 在 `light` 時顯示月亮且點擊後切至 `dark`；在 `dark` 時顯示太陽且點擊後切至 `light`；同一時間不得同時顯示太陽與月亮。
 - **SC-008E**：Sidebar Appearance icon 的 `aria-label` / `title` 隨 zh/en 與下一步動作同步更新。
 - **SC-009**：Desktop Sidebar 底部 utility row 在展開狀態顯示 keyboard、appearance、notification bell 三個 icon-only 入口；收合時 keyboard 入口隱藏，appearance 與 notification bell 維持可見。Mobile top bar 顯示 appearance 與 notification bell 入口（keyboard 在 mobile 上不顯示）。
-- **SC-009A**：點擊 keyboard icon 或按 `?` 可開啟快捷鍵總覽 modal；按 `Esc` 或點擊 backdrop 可關閉。
+- **SC-009A**：Desktop 點擊 keyboard icon 或按 `?` 可開啟快捷鍵總覽 modal；按 `Esc` 或點擊 backdrop 可關閉。Mobile 不顯示 keyboard icon，且按 `?` 不開啟快捷鍵總覽。
 - **SC-009B**：快捷鍵總覽 modal 的 zh/en 文案、section 與可存取屬性同步切換。
 - **SC-009C**：快捷鍵總覽中的複合快捷鍵以獨立 keycap 呈現，例如 `CTRL`、`CMD`、`S` 為三個元素。
 - **SC-009D**：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果`、`全部通過`、`全部退回` 各自獨立顯示。
@@ -447,12 +462,13 @@ flowchart LR
 - **SC-011B**：Mobile 通知鈴鐺（`mobileNotificationBellBtn`）視覺樣式與 `mobileThemeToggleBtn` 一致（34×34、`border: 1px solid var(--color-border)`、白底、hover 切 primary）。
 - **SC-011C**：通知 dropdown 不包含「通知設定」跳轉連結；通知偏好設定入口位於 `/profile`（spec 005）。
 - **SC-011D**：語系為 `en` 時，通知 dropdown 不得顯示中文任務名稱或中文相對時間；語系為 `zh` 時，通知 dropdown 不得顯示英文事件句型。
+- **SC-011E**：Shared Navbar 可使用頁面或 prototype mock 提供的通知資料渲染 badge 與 dropdown；驗收不得要求本規格提供通知 API 或後端事件模型。
 
 ### 驗證建議
 
 - 建立 navbar contract 測試：逐頁驗證 L0 順序、active、`aria-current`、role visibility。
 - 加入 gating smoke test：覆蓋無 task context 與無 membership 的導回行為。
-- 加入 utility smoke test：驗證 keyboard icon、Appearance icon、快捷鍵 modal i18n 與 keycap 呈現。
+- 加入 utility smoke test：驗證 Desktop keyboard icon、快捷鍵 modal i18n 與 keycap 呈現；驗證 Mobile 不顯示 keyboard icon 且 `?` 不觸發 modal；驗證 Appearance icon。
 - 加入 sidebar link decoration smoke test：逐頁驗證品牌與 L0 模組導覽連結不被頁內 anchor 樣式套用底線。
 
 ---
@@ -491,6 +507,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.10 | 2026-05-22 | 釐清 Mobile 不支援快捷鍵總覽入口與 `?` 開啟行為；將快捷鍵 modal 入口與驗收收斂為 Desktop-only；固定缺少任務角色或上下文時的 gating fallback：標記作業導回 `/dashboard`、資料集分析導回 `/task-list`；界定通知 dropdown 僅為前端展示契約，資料由頁面或 prototype mock 提供 |
 | 1.3.9 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.8 | 2026-05-19 | 補齊 notification dropdown i18n 規格：事件句型、行為者、任務名稱與相對時間皆依目前語系呈現；新增 SC-011D |
 | 1.3.7 | 2026-05-19 | 新增 notification bell 規格：FR-014D（收合時 keyboard 隱藏、bell + appearance 保留）、FR-018 群（bell 入口、badge、dropdown 定位與無設定連結規則）、SC-011 群；更新 `SIDEBAR_UTILITY_ACTIONS`、`interactiveIds`、SC-009；明確通知設定入口移至 `/profile`（spec 005 FR-013B） |

@@ -107,10 +107,7 @@
 
   function updateShortcutHelpLanguage(lang) {
     var t = shortcutI18n[normalizeLang(lang)];
-    [
-      'shortcutHelpBtn',
-      'mobileShortcutHelpBtn'
-    ].forEach(function (id) {
+    ['shortcutHelpBtn'].forEach(function (id) {
       var btn = document.getElementById(id);
       if (!btn) return;
       btn.setAttribute('aria-label', t.shortcutLabel);
@@ -296,6 +293,11 @@
     return window.matchMedia('(min-width: 769px)').matches;
   }
 
+  function isDesktopViewport() {
+    if (!window || !window.matchMedia) return false;
+    return window.matchMedia('(min-width: 768px)').matches;
+  }
+
   function applySidebarCollapsed(collapsed) {
     var isCollapsed = normalizeSidebarCollapsed(collapsed) && shouldEnableDesktopSidebarCollapse();
     if (document && document.body) {
@@ -428,9 +430,6 @@
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>' +
             '<span id="mobileLangLabel">ZH</span>' +
           '</button>' +
-          '<button id="mobileShortcutHelpBtn" class="mobile-shortcut-help-btn" data-testid="mobile-shortcut-help-button" aria-label="快捷鍵" title="快捷鍵">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01"/><path d="M10 9h.01"/><path d="M14 9h.01"/><path d="M18 9h.01"/><path d="M8 13h8"/></svg>' +
-          '</button>' +
           '<button id="mobileThemeToggleBtn" class="mobile-theme-toggle-btn" data-testid="mobile-theme-toggle" type="button" aria-label="切換為深色模式" title="切換為深色模式">' +
             '<svg data-theme-toggle-icon="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>' +
             '<svg data-theme-toggle-icon="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>' +
@@ -561,7 +560,7 @@
       shortcutModal.classList.add('hidden');
     }
 
-    ['shortcutHelpBtn', 'mobileShortcutHelpBtn'].forEach(function (id) {
+    ['shortcutHelpBtn'].forEach(function (id) {
       var btn = document.getElementById(id);
       if (!btn) return;
       btn.addEventListener('click', openShortcutHelp);
@@ -802,7 +801,7 @@
       });
     }
     document.addEventListener('keydown', function (event) {
-      if (event.key === '?' && !isInteractiveSidebarTarget(event.target)) {
+      if (event.key === '?' && isDesktopViewport() && !isInteractiveSidebarTarget(event.target)) {
         event.preventDefault();
         openShortcutHelp();
       }
