@@ -442,7 +442,7 @@
       font-size: 17px;
       line-height: 1.3;
       font-weight: 700;
-      white-space: nowrap;
+      word-break: break-word;
     }
     .sort-row {
       display: flex;
@@ -1131,6 +1131,15 @@
     .ar-va-chip-default { background: var(--color-surface); color: var(--color-ink); border-color: var(--color-border); }
     .ar-classif-chips { display: flex; flex-wrap: wrap; gap: 4px; }
     .ar-classif-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+    .member-detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-sm); }
+    .member-detail-empty { font-size: 13px; color: var(--color-text-soft); text-align: center; padding: var(--space-lg) 0; margin: 0; }
+    .md-id-cell { font-family: var(--font-mono); font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .md-text-cell { font-size: 13px; max-width: 280px; }
+    .md-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .md-chip { display: inline-block; padding: 2px 10px; border-radius: 9999px; font-size: 12px; background: #EDE9FE; color: #5B21B6; border: 1px solid #DDD6FE; white-space: nowrap; }
+    .md-time-cell { font-size: 12px; color: var(--color-text-soft); white-space: nowrap; font-family: var(--font-mono); }
+    .btn-view-detail { padding: 2px 10px; font-size: 12px; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-primary); cursor: pointer; white-space: nowrap; }
+    .btn-view-detail:hover { background: var(--color-surface-raised); }
 
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
@@ -2441,6 +2450,7 @@
 
       /* Classification chip */
       .ar-classif-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
+      .md-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
 
       /* Round status badges */
       .round-status-badge.failed      { color: #F87171; background: #2A1414; border-color: #5B2222; }
@@ -2876,6 +2886,24 @@
       progressMetricSpeedLabel: '平均速度',
       progressMetricEtaLabel: '剩餘估計時間',
       progressMetricIAALabel: 'IAA',
+      unassignedAnnotationTitle: '未指派標記作業',
+      unassignedAnnotationSubtitle: '未指派試標作業會阻擋進入待 IAA 確認；正式標記未指派作業會影響完成率。請重新指派給啟用中的標記員，或排除並保留原因。',
+      thUnassignedStage: '階段 / 回合',
+      thUnassignedSamples: '樣本',
+      thUnassignedSource: '來源成員',
+      thUnassignedReason: '原因',
+      thUnassignedAssignTo: '指派給',
+      thUnassignedActions: '操作',
+      unassignedSamplesTpl: '{count} 筆 · {sampleIds}',
+      unassignedFromRemovedMember: '成員移除產生',
+      unassignedStageTrialTpl: '試標 R{round}',
+      unassignedStageOfficial: '正式標記',
+      unassignedAssignBtn: '重新指派',
+      unassignedExcludeBtn: '排除',
+      unassignedNoActiveAnnotator: '沒有可指派的啟用中標記員',
+      unassignedIaaBlocked: '待處理',
+      unassignedRateSuffixTpl: '（未指派 {unassigned}，排除 {excluded}）',
+      excludedMetadataReason: 'PL 明確排除',
       memberProgressTitle: '成員進度表',
       progressSortLabel: '排序',
       progressSortCompleted: '依已完成數（高到低）',
@@ -2890,6 +2918,14 @@
       thProgressBar: '個人進度條',
       thProgressLastSubmitted: '最後提交時間',
       thProgressQuality: '品質旗標',
+      thProgressDetails: '操作',
+      memberDetailViewBtn: '查看細項',
+      thDetailSampleId: '樣本 ID',
+      thDetailTextPreview: '文本摘要',
+      thDetailLabelResult: '標記結果',
+      thDetailSubmittedAt: '提交時間',
+      thDetailReviewStatus: '審核狀態',
+      memberDetailEmpty: '此成員尚無標記資料',
       stageDryTitle: '試標',
       stageOfficialTitle: '正式標記',
       phaseStatusActive: '進行中',
@@ -2941,7 +2977,7 @@
       toastMemberUpdated: '成員設定已更新',
       toastMemberInvited: '邀請已寄出，等待對方接受後加入任務',
       memberActionModalTitle: '確認成員操作',
-      memberActionModalBodyRemove: '是否移除 {name}（{role}）？此操作會立即生效。',
+      memberActionModalBodyRemove: '是否移除 {name}（{role}）？已完成提交與歷史統計會保留；未完成標記作業會改為未指派狀態，需由 project leader 重新指派或排除。',
       memberActionModalBodyDisable: '是否停用 {name}（{role}）？停用後不可再提交標記。',
       memberActionModalBodyEnable: '是否啟用 {name}（{role}）？',
       memberActionCancelBtn: '取消',
@@ -2976,6 +3012,10 @@
       arPageSizeLabel: ' 筆/頁',
       arPrevPageAria: '上一頁',
       arNextPageAria: '下一頁',
+      mdPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
+      mdPageSizeLabel: ' 筆/頁',
+      mdPrevPageAria: '上一頁',
+      mdNextPageAria: '下一頁',
       wlPaginationTpl: '共 {total} 筆 · 第 {page} / {totalPages} 頁',
       wlPageSizeLabel: ' 筆/頁',
       wlPrevPageAria: '上一頁',
@@ -3326,6 +3366,24 @@
       progressMetricSpeedLabel: 'Average speed',
       progressMetricEtaLabel: 'Remaining ETA',
       progressMetricIAALabel: 'IAA',
+      unassignedAnnotationTitle: 'Unassigned annotation assignments',
+      unassignedAnnotationSubtitle: 'Unassigned trial work blocks Waiting IAA confirmation; unassigned official work affects completion rate. Reassign it to an active annotator, or exclude it with an audit reason.',
+      thUnassignedStage: 'Stage / round',
+      thUnassignedSamples: 'Samples',
+      thUnassignedSource: 'Source member',
+      thUnassignedReason: 'Reason',
+      thUnassignedAssignTo: 'Assign to',
+      thUnassignedActions: 'Actions',
+      unassignedSamplesTpl: '{count} items · {sampleIds}',
+      unassignedFromRemovedMember: 'Created by member removal',
+      unassignedStageTrialTpl: 'Trial R{round}',
+      unassignedStageOfficial: 'Official Run',
+      unassignedAssignBtn: 'Reassign',
+      unassignedExcludeBtn: 'Exclude',
+      unassignedNoActiveAnnotator: 'No active annotator available',
+      unassignedIaaBlocked: 'Blocked',
+      unassignedRateSuffixTpl: ' (unassigned {unassigned}, excluded {excluded})',
+      excludedMetadataReason: 'Explicitly excluded by PL',
       memberProgressTitle: 'Member progress',
       progressSortLabel: 'Sort by',
       progressSortCompleted: 'Completed (high to low)',
@@ -3340,6 +3398,14 @@
       thProgressBar: 'Personal progress',
       thProgressLastSubmitted: 'Last submitted',
       thProgressQuality: 'Quality flag',
+      thProgressDetails: 'Actions',
+      memberDetailViewBtn: 'View details',
+      thDetailSampleId: 'Sample ID',
+      thDetailTextPreview: 'Text preview',
+      thDetailLabelResult: 'Label result',
+      thDetailSubmittedAt: 'Submitted at',
+      thDetailReviewStatus: 'Review status',
+      memberDetailEmpty: 'No annotation data for this member',
       stageDryTitle: 'Dry Run',
       stageOfficialTitle: 'Official Run',
       phaseStatusActive: 'In Progress',
@@ -3391,7 +3457,7 @@
       toastMemberUpdated: 'Member setting updated',
       toastMemberInvited: 'Invitation sent. The member will join after accepting it',
       memberActionModalTitle: 'Confirm member action',
-      memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? This takes effect immediately.',
+      memberActionModalBodyRemove: 'Remove {name} ({role}) from this task? Completed submissions and history remain. Unfinished annotation work becomes unassigned and must be reassigned or excluded by the project leader.',
       memberActionModalBodyDisable: 'Disable {name} ({role})? Disabled members cannot submit annotations.',
       memberActionModalBodyEnable: 'Enable {name} ({role})?',
       memberActionCancelBtn: 'Cancel',
@@ -3426,6 +3492,10 @@
       arPageSizeLabel: ' / page',
       arPrevPageAria: 'Previous page',
       arNextPageAria: 'Next page',
+      mdPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
+      mdPageSizeLabel: ' / page',
+      mdPrevPageAria: 'Previous page',
+      mdNextPageAria: 'Next page',
       wlPaginationTpl: 'Total {total} · Page {page} / {totalPages}',
       wlPageSizeLabel: ' / page',
       wlPrevPageAria: 'Previous page',
@@ -3884,7 +3954,7 @@
         status: 'active',
         result: 'passed',
         iaa: 0.81,
-        totalSamples: 120,
+        totalSamples: 124,
         completedSamples: 84,
         avgSpeed: 22.4,
         remainingEta: '1天 8小時',
@@ -3909,6 +3979,33 @@
       members: [],
     },
   };
+
+  var UNASSIGNED_ANNOTATION_ASSIGNMENTS = [
+    {
+      assignmentId: 'unassigned-r2-asp-041-044',
+      stage: 'dry',
+      roundId: 'r2',
+      roundNum: 2,
+      sampleIds: ['ASP-041', 'ASP-042', 'ASP-043', 'ASP-044'],
+      sourceMemberName: 'Jason Huang',
+      sourceMemberEmail: 'jason.h@labelsuite.io',
+      reasonKey: 'unassignedFromRemovedMember',
+      createdAt: '2026-05-22 10:12'
+    },
+    {
+      assignmentId: 'unassigned-official-asp-1201-1203',
+      stage: 'official',
+      roundId: 'official',
+      roundNum: null,
+      sampleIds: ['ASP-1201', 'ASP-1202', 'ASP-1203'],
+      sourceMemberName: 'Jason Huang',
+      sourceMemberEmail: 'jason.h@labelsuite.io',
+      reasonKey: 'unassignedFromRemovedMember',
+      createdAt: '2026-05-22 10:18'
+    }
+  ];
+
+  var EXCLUDED_ANNOTATION_ASSIGNMENTS = [];
 
   var WORK_LOG_ENTRIES = [
     { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:02', logoutAt: '12:28', durationHours: 3.2, completedCount: 72, stage: 'dry' },
@@ -3960,6 +4057,9 @@
     arExpandedRows: {},
     arExportPage: 1,
     arExportPageSize: 20,
+    mdPage: 1,
+    mdPageSize: 20,
+    mdRows: [],
     wlPage: 1,
     wlPageSize: 20
   };
@@ -4577,6 +4677,13 @@
     ]
   };
 
+  var MEMBER_ANNOTATOR_MAP = {
+    T001: { 'Alex Wang': 'kioleemg12', 'Olivia Lin': '113450022', 'Mandy Chen': 'tony0950127' },
+    T002: { 'Alex Wang': 'kioleemg12', 'Olivia Lin': '113450022', 'Mandy Chen': 'tony0950127' },
+    T003: { 'Alex Wang': 'kioleemg12', 'Olivia Lin': '113450022', 'Mandy Chen': 'tony0950127' },
+    T004: { 'Alex Wang': 'kioleemg12', 'Olivia Lin': '113450022', 'Mandy Chen': 'tony0950127' }
+  };
+
   var TAB_PANEL_PATHS = {
     overview: './task-detail.panels/overview.html',
     'annotation-results': './task-detail.panels/annotation-results.html',
@@ -4991,6 +5098,14 @@ function interpolate(template, payload) {
     setText('progressMetricSpeedLabel', t('progressMetricSpeedLabel'));
     setText('progressMetricEtaLabel', t('progressMetricEtaLabel'));
     setText('progressMetricIAALabel', t('progressMetricIAALabel'));
+    setText('unassignedAnnotationTitle', t('unassignedAnnotationTitle'));
+    setText('unassignedAnnotationSubtitle', t('unassignedAnnotationSubtitle'));
+    setText('thUnassignedStage', t('thUnassignedStage'));
+    setText('thUnassignedSamples', t('thUnassignedSamples'));
+    setText('thUnassignedSource', t('thUnassignedSource'));
+    setText('thUnassignedReason', t('thUnassignedReason'));
+    setText('thUnassignedAssignTo', t('thUnassignedAssignTo'));
+    setText('thUnassignedActions', t('thUnassignedActions'));
     setText('memberProgressTitle', t('memberProgressTitle'));
     setText('progressSortLabel', t('progressSortLabel'));
     setText('progressSortCompleted', t('progressSortCompleted'));
@@ -5005,6 +5120,13 @@ function interpolate(template, payload) {
     setText('thProgressBar', t('thProgressBar'));
     setText('thProgressLastSubmitted', t('thProgressLastSubmitted'));
     setText('thProgressQuality', t('thProgressQuality'));
+    setText('thProgressDetails', t('thProgressDetails'));
+    setText('thDetailSampleId', t('thDetailSampleId'));
+    setText('thDetailTextPreview', t('thDetailTextPreview'));
+    setText('thDetailLabelResult', t('thDetailLabelResult'));
+    setText('thDetailSubmittedAt', t('thDetailSubmittedAt'));
+    setText('thDetailReviewStatus', t('thDetailReviewStatus'));
+    setText('memberDetailEmpty', t('memberDetailEmpty'));
     setText('stageDryTitle', t('stageDryTitle'));
     setText('stageOfficialTitle', t('stageOfficialTitle'));
     setText('progressEmptyTitle', t('progressEmptyTitle'));
@@ -8204,6 +8326,7 @@ function getTaskTypeLabel(taskTypeKey) {
     }
 
     if (action.type === 'remove') {
+      createUnassignedAssignmentsForRemovedMember(target);
       TASK_MEMBERS.splice(action.index, 1);
     } else if (action.type === 'disable') {
       target.status = 'disabled';
@@ -8214,6 +8337,7 @@ function getTaskTypeLabel(taskTypeKey) {
     trackEvent('prototype_member_action_confirmed', { action_type: action.type, member_email: target.email || '' });
     closeMemberActionModal();
     renderMemberManagement();
+    renderAnnotationProgress();
   }
 
   function renderMemberManagement() {
@@ -8232,6 +8356,102 @@ function getTaskTypeLabel(taskTypeKey) {
     if (state.progressStage === 'official') return ANNOTATION_PROGRESS.official;
     var found = ANNOTATION_PROGRESS.rounds.filter(function(r) { return r.id === state.progressStage; });
     return found.length ? found[0] : ANNOTATION_PROGRESS.rounds[ANNOTATION_PROGRESS.rounds.length - 1];
+  }
+
+  function getActiveAnnotatorMembers() {
+    return TASK_MEMBERS.filter(function(member) {
+      return member.taskRole === 'annotator' && member.status === 'active';
+    });
+  }
+
+  function getAssignmentCount(records, roundId) {
+    return records
+      .filter(function(item) { return !roundId || item.roundId === roundId; })
+      .reduce(function(sum, item) { return sum + item.sampleIds.length; }, 0);
+  }
+
+  function getUnassignedForStage(stageId) {
+    return UNASSIGNED_ANNOTATION_ASSIGNMENTS.filter(function(item) {
+      return item.roundId === stageId;
+    });
+  }
+
+  function getExcludedForStage(stageId) {
+    return EXCLUDED_ANNOTATION_ASSIGNMENTS.filter(function(item) {
+      return item.roundId === stageId;
+    });
+  }
+
+  function getProgressMemberByName(stageData, name) {
+    return (stageData.members || []).filter(function(member) {
+      return member.name === name;
+    })[0] || null;
+  }
+
+  function getProgressMemberByEmail(stageData, email) {
+    var member = TASK_MEMBERS.filter(function(item) { return item.email === email; })[0];
+    return member ? getProgressMemberByName(stageData, member.name) : null;
+  }
+
+  function createUnassignedAssignmentsForRemovedMember(target) {
+    ANNOTATION_PROGRESS.rounds.forEach(function(round) {
+      var progressMember = getProgressMemberByName(round, target.name);
+      if (!progressMember || progressMember.pending <= 0) return;
+      var sampleIds = [];
+      for (var i = 1; i <= progressMember.pending; i++) {
+        sampleIds.push('R' + round.roundNum + '-UNASSIGNED-' + String(i).padStart(3, '0'));
+      }
+      UNASSIGNED_ANNOTATION_ASSIGNMENTS.push({
+        assignmentId: 'unassigned-' + round.id + '-' + getAnnotatorId(target.email) + '-' + Date.now(),
+        stage: 'dry',
+        roundId: round.id,
+        roundNum: round.roundNum,
+        sampleIds: sampleIds,
+        sourceMemberName: target.name,
+        sourceMemberEmail: target.email,
+        reasonKey: 'unassignedFromRemovedMember',
+        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+      });
+      progressMember.pending = 0;
+    });
+    var officialMember = getProgressMemberByName(ANNOTATION_PROGRESS.official, target.name);
+    if (officialMember && officialMember.pending > 0) {
+      var officialSampleIds = [];
+      for (var j = 1; j <= officialMember.pending; j++) {
+        officialSampleIds.push('OFFICIAL-UNASSIGNED-' + String(j).padStart(3, '0'));
+      }
+      UNASSIGNED_ANNOTATION_ASSIGNMENTS.push({
+        assignmentId: 'unassigned-official-' + getAnnotatorId(target.email) + '-' + Date.now(),
+        stage: 'official',
+        roundId: 'official',
+        roundNum: null,
+        sampleIds: officialSampleIds,
+        sourceMemberName: target.name,
+        sourceMemberEmail: target.email,
+        reasonKey: 'unassignedFromRemovedMember',
+        createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+      });
+      officialMember.pending = 0;
+    }
+  }
+
+  function getExcludedExportMetadata(stage) {
+    var records = EXCLUDED_ANNOTATION_ASSIGNMENTS.filter(function(item) {
+      return stage === 'all' || item.stage === stage || item.roundId === stage;
+    });
+    return records.map(function(item) {
+      return {
+        assignment_id: item.assignmentId,
+        run_stage: item.stage,
+        trial_round: item.stage === 'dry' ? item.roundNum : null,
+        sample_ids: item.sampleIds.slice(),
+        sample_count: item.sampleIds.length,
+        excluded_by: item.excludedBy || getExportedById(),
+        excluded_at: item.excludedAt || null,
+        reason: item.reason || t('excludedMetadataReason'),
+        source_member_email: item.sourceMemberEmail || null
+      };
+    });
   }
 
   function getProgressRate(completed, total) {
@@ -8307,14 +8527,23 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function renderProgressSummary() {
     var stageData = getProgressStageData();
-    var rate = getProgressRate(stageData.completedSamples, stageData.totalSamples);
+    var unassignedCount = getAssignmentCount(getUnassignedForStage(state.progressStage));
+    var excludedCount = getAssignmentCount(getExcludedForStage(state.progressStage));
+    var effectiveTotal = Math.max(0, stageData.totalSamples - excludedCount);
+    var rate = getProgressRate(stageData.completedSamples, effectiveTotal);
+    var rateText = rate + '%';
+    if (unassignedCount || excludedCount) {
+      rateText += t('unassignedRateSuffixTpl')
+        .replace('{unassigned}', unassignedCount)
+        .replace('{excluded}', excludedCount);
+    }
 
-    setText('progressMetricTotalValue', String(stageData.totalSamples));
+    setText('progressMetricTotalValue', String(effectiveTotal));
     setText('progressMetricCompletedValue', String(stageData.completedSamples));
-    setText('progressMetricRateValue', rate + '%');
+    setText('progressMetricRateValue', rateText);
     setText('progressMetricSpeedValue', formatProgressSpeed(stageData.avgSpeed));
     setText('progressMetricEtaValue', state.lang === 'zh' ? stageData.remainingEta : stageData.remainingEtaEn);
-    setText('progressMetricIAAValue', stageData.iaa != null ? stageData.iaa.toFixed(2) : '-');
+    setText('progressMetricIAAValue', (state.progressStage !== 'official' && unassignedCount) ? t('unassignedIaaBlocked') : (stageData.iaa != null ? stageData.iaa.toFixed(2) : '-'));
   }
 
   function renderMemberProgressTable() {
@@ -8368,8 +8597,309 @@ function getTaskTypeLabel(taskTypeKey) {
       tdQuality.appendChild(qualityFlag);
       tr.appendChild(tdQuality);
 
+      var tdDetails = document.createElement('td');
+      var viewBtn = document.createElement('button');
+      viewBtn.className = 'btn-view-detail';
+      viewBtn.textContent = t('memberDetailViewBtn');
+      viewBtn.setAttribute('aria-label', t('memberDetailViewBtn') + ': ' + member.name);
+      (function(name) {
+        viewBtn.addEventListener('click', function() { renderMemberAnnotationDetail(name); });
+      }(member.name));
+      tdDetails.appendChild(viewBtn);
+      tr.appendChild(tdDetails);
+
       tbody.appendChild(tr);
     });
+  }
+
+  function renderUnassignedAnnotationAssignments() {
+    var section = document.getElementById('unassignedAnnotationSection');
+    var tbody = document.getElementById('unassignedAnnotationBody');
+    if (!section || !tbody) return;
+    var assignments = getUnassignedForStage(state.progressStage);
+    section.classList.toggle('hidden', !assignments.length);
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    if (!assignments.length) return;
+
+    var activeAnnotators = getActiveAnnotatorMembers();
+    assignments.forEach(function(item) {
+      var tr = document.createElement('tr');
+
+      function td(text) {
+        var cell = document.createElement('td');
+        cell.textContent = text;
+        return cell;
+      }
+
+      tr.appendChild(td(item.stage === 'official' ? t('unassignedStageOfficial') : interpolate(t('unassignedStageTrialTpl'), { round: item.roundNum })));
+      tr.appendChild(td(interpolate(t('unassignedSamplesTpl'), {
+        count: item.sampleIds.length,
+        sampleIds: item.sampleIds.join(', ')
+      })));
+      tr.appendChild(td(item.sourceMemberName || '-'));
+      tr.appendChild(td(t(item.reasonKey || 'unassignedFromRemovedMember')));
+
+      var assignTd = document.createElement('td');
+      var select = document.createElement('select');
+      select.className = 'sort-select';
+      select.disabled = state.taskRole !== 'project_leader' || !activeAnnotators.length;
+      activeAnnotators.forEach(function(member) {
+        var option = document.createElement('option');
+        option.value = member.email;
+        option.textContent = member.name;
+        select.appendChild(option);
+      });
+      if (!activeAnnotators.length) {
+        var emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = t('unassignedNoActiveAnnotator');
+        select.appendChild(emptyOption);
+      }
+      assignTd.appendChild(select);
+      tr.appendChild(assignTd);
+
+      var actionsTd = document.createElement('td');
+      var actions = document.createElement('div');
+      actions.className = 'inline-actions';
+
+      var assignBtn = document.createElement('button');
+      assignBtn.type = 'button';
+      assignBtn.className = 'mini-btn mini-btn-primary';
+      assignBtn.textContent = t('unassignedAssignBtn');
+      assignBtn.disabled = state.taskRole !== 'project_leader' || !activeAnnotators.length;
+      assignBtn.addEventListener('click', function() {
+        reassignAnnotationAssignment(item.assignmentId, select.value);
+      });
+      actions.appendChild(assignBtn);
+
+      var excludeBtn = document.createElement('button');
+      excludeBtn.type = 'button';
+      excludeBtn.className = 'mini-btn mini-btn-warning';
+      excludeBtn.textContent = t('unassignedExcludeBtn');
+      excludeBtn.disabled = state.taskRole !== 'project_leader';
+      excludeBtn.addEventListener('click', function() {
+        excludeAnnotationAssignment(item.assignmentId);
+      });
+      actions.appendChild(excludeBtn);
+
+      actionsTd.appendChild(actions);
+      tr.appendChild(actionsTd);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function removeUnassignedAssignment(assignmentId) {
+    var found = null;
+    UNASSIGNED_ANNOTATION_ASSIGNMENTS = UNASSIGNED_ANNOTATION_ASSIGNMENTS.filter(function(item) {
+      if (item.assignmentId === assignmentId) {
+        found = item;
+        return false;
+      }
+      return true;
+    });
+    return found;
+  }
+
+  function reassignAnnotationAssignment(assignmentId, memberEmail) {
+    var item = removeUnassignedAssignment(assignmentId);
+    if (!item) return;
+    var stageData = item.stage === 'official'
+      ? ANNOTATION_PROGRESS.official
+      : ANNOTATION_PROGRESS.rounds.filter(function(round) { return round.id === item.roundId; })[0];
+    var target = getProgressMemberByEmail(stageData, memberEmail);
+    if (!target && stageData) {
+      var member = TASK_MEMBERS.filter(function(item) { return item.email === memberEmail; })[0];
+      if (member) {
+        target = {
+          name: member.name,
+          role: 'annotator',
+          completed: 0,
+          pending: 0,
+          avgSpeed: 0,
+          lastSubmitted: '-',
+          quality: 'good'
+        };
+        stageData.members.push(target);
+      }
+    }
+    if (target) {
+      target.pending += item.sampleIds.length;
+    }
+    showToast(t('toastMemberUpdated'));
+    renderAnnotationProgress();
+  }
+
+  function excludeAnnotationAssignment(assignmentId) {
+    var item = removeUnassignedAssignment(assignmentId);
+    if (!item) return;
+    item.excludedBy = getExportedById();
+    item.excludedAt = new Date().toISOString();
+    item.reason = t('excludedMetadataReason');
+    EXCLUDED_ANNOTATION_ASSIGNMENTS.push(item);
+    showToast(t('toastMemberUpdated'));
+    renderAnnotationProgress();
+  }
+
+  function renderMemberAnnotationDetail(memberName) {
+    var section = document.getElementById('memberDetailSection');
+    var titleEl = document.getElementById('memberDetailTitle');
+
+    titleEl.textContent = memberName + (state.lang === 'zh' ? ' 的標記細項' : "'s annotation details");
+
+    var taskResults = getAnnotationResultsData();
+    var taskMap = MEMBER_ANNOTATOR_MAP[TASK_DATA.taskId] || {};
+    var annotatorId = taskMap[memberName];
+
+    state.mdRows = [];
+    taskResults.forEach(function(sample) {
+      if (!annotatorId) return;
+      sample.annotations.forEach(function(ann) {
+        if (ann.annotator !== annotatorId) return;
+        state.mdRows.push({ sample: sample, ann: ann });
+      });
+    });
+
+    state.mdPage = 1;
+    renderMdDetailPage();
+
+    section.classList.remove('hidden');
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderMdDetailPage() {
+    var tbody = document.getElementById('memberDetailTableBody');
+    var emptyEl = document.getElementById('memberDetailEmpty');
+    if (!tbody) return;
+
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
+    var total = state.mdRows.length;
+    var totalPages = Math.max(1, Math.ceil(total / state.mdPageSize));
+    if (state.mdPage > totalPages) state.mdPage = totalPages;
+    var pageRows = state.mdRows.slice((state.mdPage - 1) * state.mdPageSize, state.mdPage * state.mdPageSize);
+
+    emptyEl.classList.toggle('hidden', total > 0);
+    document.getElementById('memberDetailTable').classList.toggle('hidden', total === 0);
+
+    pageRows.forEach(function(row) {
+      var sample = row.sample;
+      var ann = row.ann;
+      var tr = document.createElement('tr');
+
+      var tdId = document.createElement('td');
+      tdId.className = 'md-id-cell';
+      tdId.textContent = sample.sampleId;
+      tr.appendChild(tdId);
+
+      var tdText = document.createElement('td');
+      tdText.className = 'md-text-cell';
+      tdText.textContent = state.lang === 'zh' ? sample.textZh : (sample.textEn || sample.textZh);
+      tr.appendChild(tdText);
+
+      var tdResult = document.createElement('td');
+      if (ann.value && ann.value.labels) {
+        var chips = document.createElement('div');
+        chips.className = 'md-chips';
+        ann.value.labels.forEach(function(lbl) {
+          var chip = document.createElement('span');
+          chip.className = 'md-chip';
+          chip.textContent = lbl;
+          chips.appendChild(chip);
+        });
+        tdResult.appendChild(chips);
+      } else if (ann.value && ann.value.valence !== undefined) {
+        tdResult.textContent = 'V:' + ann.value.valence + ' A:' + ann.value.arousal;
+        tdResult.style.fontFamily = 'var(--font-mono)';
+        tdResult.style.fontSize = '12px';
+      } else {
+        tdResult.textContent = '-';
+        tdResult.style.color = 'var(--color-text-soft)';
+      }
+      tr.appendChild(tdResult);
+
+      var tdTime = document.createElement('td');
+      tdTime.className = 'md-time-cell';
+      tdTime.textContent = ann.submittedAt || '-';
+      tr.appendChild(tdTime);
+
+      var tdStatus = document.createElement('td');
+      var statusBadge = document.createElement('span');
+      var reviewBadge = getArReviewBadge(ann.reviewStatus);
+      statusBadge.className = 'ar-review-badge ' + reviewBadge.cls;
+      statusBadge.textContent = reviewBadge.label;
+      tdStatus.appendChild(statusBadge);
+      tr.appendChild(tdStatus);
+
+      tbody.appendChild(tr);
+    });
+
+    renderMdPagination(total);
+  }
+
+  function renderMdPagination(total) {
+    var bar = document.getElementById('mdPaginationBar');
+    if (!bar) return;
+
+    var totalPages = Math.max(1, Math.ceil(total / state.mdPageSize));
+    if (state.mdPage > totalPages) state.mdPage = totalPages;
+
+    bar.classList.toggle('hidden', total === 0);
+
+    var info = document.getElementById('mdPaginationInfo');
+    if (info) {
+      info.textContent = t('mdPaginationTpl')
+        .replace('{total}', total)
+        .replace('{page}', state.mdPage)
+        .replace('{totalPages}', totalPages);
+    }
+
+    var pageSizeSelect = document.getElementById('mdPageSizeSelect');
+    if (pageSizeSelect) {
+      pageSizeSelect.value = String(state.mdPageSize);
+      Array.prototype.forEach.call(pageSizeSelect.options, function(opt) {
+        opt.textContent = opt.value + t('mdPageSizeLabel');
+      });
+    }
+
+    var prevBtn = document.getElementById('mdPrevPageBtn');
+    var nextBtn = document.getElementById('mdNextPageBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.mdPage <= 1;
+      prevBtn.setAttribute('aria-label', t('mdPrevPageAria'));
+    }
+    if (nextBtn) {
+      nextBtn.disabled = state.mdPage >= totalPages;
+      nextBtn.setAttribute('aria-label', t('mdNextPageAria'));
+    }
+
+    var controls = document.getElementById('mdPaginationControls');
+    if (!controls || !nextBtn) return;
+
+    Array.prototype.forEach.call(controls.querySelectorAll('[data-page]'), function(btn) {
+      btn.remove();
+    });
+
+    var maxVisible = 5;
+    var startPage = Math.max(1, state.mdPage - 2);
+    var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (var pageNum = startPage; pageNum <= endPage; pageNum++) {
+      (function(pg) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (pg === state.mdPage ? ' active' : '');
+        btn.dataset.page = String(pg);
+        btn.type = 'button';
+        btn.textContent = String(pg);
+        btn.addEventListener('click', function() {
+          state.mdPage = pg;
+          renderMdDetailPage();
+        });
+        nextBtn.insertAdjacentElement('beforebegin', btn);
+      }(pageNum));
+    }
   }
 
   function renderRoundProgressList() {
@@ -8420,7 +8950,8 @@ function getTaskTypeLabel(taskTypeKey) {
     }
 
     var stageData = getProgressStageData();
-    var rate = getProgressRate(stageData.completedSamples, stageData.totalSamples);
+    var roundEffectiveTotal = Math.max(0, stageData.totalSamples - getAssignmentCount(getExcludedForStage(state.progressStage)));
+    var rate = getProgressRate(stageData.completedSamples, roundEffectiveTotal);
     var isOfficial = state.progressStage === 'official';
     var roundLabel, statusTagClass, statusTagText, fillClass, itemClass;
 
@@ -8448,7 +8979,7 @@ function getTaskTypeLabel(taskTypeKey) {
       }
     }
 
-    var meta = interpolate(t('progressStageMetaTpl'), { completed: stageData.completedSamples, total: stageData.totalSamples, rate: rate });
+    var meta = interpolate(t('progressStageMetaTpl'), { completed: stageData.completedSamples, total: roundEffectiveTotal, rate: rate });
     container.appendChild(makePhaseItem(roundLabel, statusTagClass, statusTagText, fillClass, rate, null, meta, itemClass));
   }
 
@@ -8462,6 +8993,7 @@ function getTaskTypeLabel(taskTypeKey) {
   function renderAnnotationProgress() {
     renderProgressRoundPills();
     renderProgressSummary();
+    renderUnassignedAnnotationAssignments();
     renderMemberProgressTable();
     renderRoundProgressList();
     renderProgressEmptyState();
@@ -9244,6 +9776,7 @@ function getTaskTypeLabel(taskTypeKey) {
         sampling_value: TASK_DATA.samplingValue,
         iaa_method: TASK_DATA.iaaMethod,
         sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
+        excluded_annotation_assignments: getExcludedExportMetadata(state.arStage),
         applied_filters: {
           run_stage: state.arStage,
           submission_status: state.arStatus,
@@ -9276,6 +9809,7 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function buildJsonMinExportPayload(samples) {
     var config = getExportConfigData();
+    var excludedMetadata = getExcludedExportMetadata(state.arStage);
     var rows = [];
     samples.forEach(function(sample) {
       sample.annotations.forEach(function(annotation, annotationIndex) {
@@ -9303,7 +9837,9 @@ function getTaskTypeLabel(taskTypeKey) {
           reviewer_name: reviewData.reviewer_name,
           reviewed_at: reviewData.reviewed_at,
           decision: reviewData.decision,
-          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }).tags[0] : null
+          corrected_result_summary: reviewData.corrected_result ? getAnnotationResultDisplay({ value: reviewData.corrected_result }).tags[0] : null,
+          excluded_annotation_assignments_count: excludedMetadata.reduce(function(sum, item) { return sum + item.sample_count; }, 0),
+          excluded_annotation_assignments_ref: excludedMetadata.map(function(item) { return item.assignment_id; }).join(',')
         }, taskFields));
       });
     });
@@ -10111,6 +10647,25 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
       trackEvent('prototype_progress_sort_changed', { sort_by: state.progressSort });
     });
 
+    document.getElementById('memberDetailCloseBtn').addEventListener('click', function() {
+      document.getElementById('memberDetailSection').classList.add('hidden');
+    });
+
+    document.getElementById('mdPrevPageBtn').addEventListener('click', function() {
+      if (state.mdPage > 1) { state.mdPage--; renderMdDetailPage(); }
+    });
+
+    document.getElementById('mdNextPageBtn').addEventListener('click', function() {
+      var totalPages = Math.max(1, Math.ceil(state.mdRows.length / state.mdPageSize));
+      if (state.mdPage < totalPages) { state.mdPage++; renderMdDetailPage(); }
+    });
+
+    document.getElementById('mdPageSizeSelect').addEventListener('change', function(e) {
+      state.mdPageSize = parseInt(e.target.value, 10) || 20;
+      state.mdPage = 1;
+      renderMdDetailPage();
+    });
+
     document.getElementById('progressBackToOverviewBtn').addEventListener('click', function() {
       setTabByRole('overview');
       renderTabs();
@@ -10156,7 +10711,14 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
         count: samples.length,
         scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
         exportedBy: 'Mandy',
-        format: 'JSON'
+        format: 'JSON',
+        conditionsSnapshot: {
+          export_format: 'json',
+          run_stage: state.arStage,
+          submission_status: state.arStatus,
+          annotator_scope: state.arAnnotator,
+          excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
+        }
       });
       renderArExportHistory();
       showToast(t('toastExportJson'));
@@ -10175,7 +10737,14 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
         count: samples.length,
         scope: state.arAnnotator === 'all' ? '__all__' : state.arAnnotator,
         exportedBy: 'Mandy',
-        format: 'JSON-MIN'
+        format: 'JSON-MIN',
+        conditionsSnapshot: {
+          export_format: 'json-min',
+          run_stage: state.arStage,
+          submission_status: state.arStatus,
+          annotator_scope: state.arAnnotator,
+          excluded_annotation_assignments: getExcludedExportMetadata(state.arStage)
+        }
       });
       renderArExportHistory();
       showToast(t('toastExportJsonMin'));
