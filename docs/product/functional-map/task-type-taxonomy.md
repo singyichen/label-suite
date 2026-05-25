@@ -70,7 +70,6 @@
 | 關係三元組（`relation_triple`） | 實體 + 關係 + Triple | OpenIE、Relation Extraction（NER+RE） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) | `entity_types[]: { name, color }`, `relation_types[]: { name, color }` |
 
 > 同一任務因標注介面設計不同，可對應不同 `output_type`。
-
 > `entity_relation` vs `relation_triple` 的使用場景區分
 | 對照項目 | `entity_relation` | `relation_triple` |
 |----------|-------------------|-------------------|
