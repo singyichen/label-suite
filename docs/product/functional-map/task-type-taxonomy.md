@@ -22,7 +22,7 @@
 |------------------------|------|----------|----------|----------|-------------|
 | 單一標籤（`single_label`） | 從選項中選一個，含二元 | 文本分類、情感分析、主題分類 | 「蘋果發表了新款 iPhone。」 | 科技 | `label_options[]` |
 | 多標籤（`multi_label`） | 可同時選多個 | 多標籤文本分類、內容標記 | 「這部電影有暴力和恐怖情節。」 | [暴力, 恐怖] | `label_options[]` |
-| 實體關係標籤（`entity_relation`） | 對預標記實體對分類關係 | 實體關係分類（Relation Classification） | 「[台積電] 創辦人是 [張忠謀]。」 | 創辦關係 | `label_options[]`, `entity_markers` |
+| 實體關係標籤（`entity_relation`） | 對預標記實體對分類關係；輸入為含實體標記的單一文本，非兩段獨立文本（與 `item_pair` 的區別） | 實體關係分類（Relation Classification） | 「[台積電] 創辦人是 [張忠謀]。」 | 創辦關係 | `label_options[]`, `entity_markers` |
 
 ### 項目對（`item_pair`）
 
@@ -95,7 +95,7 @@
 |--------------------------|----------------------|------------------------|----------|-------------|
 | 分類（classification） | 單一項目（single_item） | 單一標籤（single_label） | 文本分類、情感分析、主題分類 | `label_options[]` |
 | 分類（classification） | 單一項目（single_item） | 多標籤（multi_label） | 多標籤文本分類、內容標記 | `label_options[]` |
-| 分類（classification） | 單一項目（single_item） | 實體關係標籤（entity_relation） | 實體關係分類（Relation Classification） | `label_options[]`, `entity_markers` |
+| 分類（classification） | 單一項目（single_item） | 實體關係標籤（entity_relation） | 實體關係分類（含實體標記的單一文本） | `label_options[]`, `entity_markers` |
 | 分類（classification） | 項目對（item_pair） | 單一標籤（single_label） | NLI、文本蘊含識別 | `label_options[]` |
 | 分類（classification） | 項目對（item_pair） | 多標籤（multi_label） | 句對 MLTC（多標籤分類） | `label_options[]` |
 | 回歸（regression） | 單一項目（single_item） | 單維度（single_dim） | 情感強度評估、可讀性評分 | `dimension: { name, min, max, step }` |
