@@ -8602,9 +8602,7 @@ function getTaskTypeLabel(taskTypeKey) {
       viewBtn.className = 'btn-view-detail';
       viewBtn.textContent = t('memberDetailViewBtn');
       viewBtn.setAttribute('aria-label', t('memberDetailViewBtn') + ': ' + member.name);
-      (function(name) {
-        viewBtn.addEventListener('click', function() { renderMemberAnnotationDetail(name); });
-      }(member.name));
+      viewBtn.addEventListener('click', function() { renderMemberAnnotationDetail(member.name); });
       tdDetails.appendChild(viewBtn);
       tr.appendChild(tdDetails);
 
@@ -8706,8 +8704,9 @@ function getTaskTypeLabel(taskTypeKey) {
     var stageData = item.stage === 'official'
       ? ANNOTATION_PROGRESS.official
       : ANNOTATION_PROGRESS.rounds.filter(function(round) { return round.id === item.roundId; })[0];
+    if (!stageData) return;
     var target = getProgressMemberByEmail(stageData, memberEmail);
-    if (!target && stageData) {
+    if (!target) {
       var member = TASK_MEMBERS.filter(function(item) { return item.email === memberEmail; })[0];
       if (member) {
         target = {
@@ -8743,17 +8742,25 @@ function getTaskTypeLabel(taskTypeKey) {
   function renderMemberAnnotationDetail(memberName) {
     var section = document.getElementById('memberDetailSection');
     var titleEl = document.getElementById('memberDetailTitle');
+    if (!section || !titleEl) return;
 
     titleEl.textContent = memberName + (state.lang === 'zh' ? ' 的標記細項' : "'s annotation details");
 
-    var taskResults = getAnnotationResultsData();
+    var taskResults = getAnnotationResultsData() || [];
     var taskMap = MEMBER_ANNOTATOR_MAP[TASK_DATA.taskId] || {};
     var annotatorId = taskMap[memberName];
 
     state.mdRows = [];
+    if (!annotatorId) {
+      state.mdPage = 1;
+      renderMdDetailPage();
+      section.classList.remove('hidden');
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
     taskResults.forEach(function(sample) {
-      if (!annotatorId) return;
-      sample.annotations.forEach(function(ann) {
+      (sample.annotations || []).forEach(function(ann) {
         if (ann.annotator !== annotatorId) return;
         state.mdRows.push({ sample: sample, ann: ann });
       });
@@ -8847,10 +8854,11 @@ function getTaskTypeLabel(taskTypeKey) {
 
     var info = document.getElementById('mdPaginationInfo');
     if (info) {
-      info.textContent = t('mdPaginationTpl')
-        .replace('{total}', total)
-        .replace('{page}', state.mdPage)
-        .replace('{totalPages}', totalPages);
+      info.textContent = interpolate(t('mdPaginationTpl'), {
+        total: total,
+        page: state.mdPage,
+        totalPages: totalPages
+      });
     }
 
     var pageSizeSelect = document.getElementById('mdPageSizeSelect');

@@ -1463,7 +1463,7 @@
       document.getElementById('auditDrawerOverlay').classList.add('open');
       document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
     }
 
     function closeAuditDrawer() {
