@@ -582,20 +582,21 @@
           <div class="field-error-msg" id="errDataset"></div>
         </div>
 
-        <!-- 任務類型（三層 cascade） -->
+        <!-- Task type taxonomy cascade -->
         <div class="form-field">
           <label class="field-label">
             <span id="labelTaskType">任務類型</span><span class="required">*</span>
           </label>
           <div class="cascade-group">
-            <!-- Level 1: 大分類 -->
             <select id="taskCategorySelect" class="input-select" aria-required="true">
               <option value="" id="optTaskCategoryDefault">請選擇大分類</option>
               <option value="classification" id="optClassification">分類（Classification）</option>
-              <option value="regression" id="optRegression">迴歸（Regression）</option>
+              <option value="regression" id="optRegression">回歸（Regression）</option>
+              <option value="sequence" id="optSequence">序列（Sequence）</option>
+              <option value="generation" id="optGeneration">生成（Generation）</option>
+              <option value="mixed" id="optMixed">混合（Mixed）</option>
             </select>
 
-            <!-- Level 2: 輸入類型（上傳檔案後帶入偵測值） -->
             <div id="taskGranularityWrap" class="hidden">
               <select id="taskGranularitySelect" class="input-select">
                 <option value="" id="optTaskGranularityDefault">請選擇輸入類型</option>
@@ -604,10 +605,9 @@
               <div id="granularityDetectHint" class="field-hint" style="display:none;margin-top:2px;"></div>
             </div>
 
-            <!-- Level 3: 標記粒度 -->
             <div id="taskSubtypeWrap" class="hidden">
               <select id="taskSubtypeSelect" class="input-select">
-                <option value="" id="optTaskSubtypeDefault">請選擇標記粒度</option>
+                <option value="" id="optTaskSubtypeDefault">請選擇輸出類型</option>
               </select>
             </div>
           </div>
@@ -922,6 +922,19 @@ var REGISTRY = {
       en: { labels: ['Entailment', 'Contradiction', 'Neutral'] },
     },
   },
+  generation_single_item_free_text: {
+    zh: '自由文字生成', en: 'Free Text Generation',
+    fields: [
+      { key: 'max_length', type: 'number', zh: '最大長度', en: 'Max length', required: true, defaultValue: 512 },
+      { key: 'show_reference_to_annotator', type: 'boolean', zh: '標注者可見參考輸出', en: 'Show reference to annotator', required: false, defaultValue: false },
+      { key: 'evaluation_reference_required', type: 'boolean', zh: '系統評估需要參考輸出', en: 'Evaluation reference required', required: false, defaultValue: true },
+    ],
+    defaultTemplate: {
+      max_length: 512,
+      show_reference_to_annotator: false,
+      evaluation_reference_required: true,
+    },
+  },
 };
 var TASK_TYPE_ORDER = [
   'single_sentence_classification',
@@ -931,61 +944,77 @@ var TASK_TYPE_ORDER = [
   'sentence_pairs',
 ];
 
-/* ── Task taxonomy (multi-dimensional cascade) ───────────────── */
+/* ── Task taxonomy cascade ───────────────────────────────────── */
 var TASK_TAXONOMY = {
   classification: {
     zh: '分類（Classification）', en: 'Classification',
     granularities: {
-      single_sentence: {
-        zh: '單一句子', en: 'Single sentence',
+      single_item: {
+        zh: '單一項目', en: 'Single item',
         subtypes: {
-          whole:    { registryKey: 'single_sentence_classification', zh: '整體（二元 / 多類 / 多標籤）', en: 'Whole (Binary / Multi-class / Multi-label)' },
-          span:     { registryKey: 'sequence_labeling',              zh: '片段（序列標記：NER / Aspect 詞抽取）', en: 'Span (Sequence Labeling: NER / Aspect)' },
-          relation: { registryKey: 'relation_extraction',            zh: '實體關係（關係抽取）', en: 'Relation (Entity + Relation + Triple)' },
+          single_label:    { registryKey: 'single_sentence_classification', zh: '單一標籤', en: 'Single label' },
+          multi_label:     { registryKey: 'single_sentence_classification', zh: '多標籤', en: 'Multi-label' },
+          entity_relation: { registryKey: 'sentence_pairs', zh: '實體關係標籤', en: 'Entity relation label' },
         },
       },
-      sentence_pair: {
-        zh: '句子對', en: 'Sentence pair',
+      item_pair: {
+        zh: '項目對', en: 'Item pair',
         subtypes: {
-          whole: { registryKey: 'sentence_pairs', zh: '整體（二元 / NLI / 相似度 / 蘊含）', en: 'Whole (Binary / NLI / Similarity / Entailment)' },
-        },
-      },
-      document: {
-        zh: '整篇文章', en: 'Document',
-        subtypes: {
-          whole:    { registryKey: 'single_sentence_classification', zh: '整體（二元 / 多類 / 多標籤）', en: 'Whole (Binary / Multi-class / Multi-label)' },
-          span:     { registryKey: 'sequence_labeling',              zh: '片段（序列標記：NER / Aspect，跨句）', en: 'Span (Sequence Labeling: NER / Aspect, cross-sentence)' },
-          relation: { registryKey: 'relation_extraction',            zh: '實體關係（關係抽取，文件級）', en: 'Relation (Relation Extraction, document-level)' },
+          single_label: { registryKey: 'sentence_pairs', zh: '單一標籤', en: 'Single label' },
+          multi_label:  { registryKey: 'sentence_pairs', zh: '多標籤', en: 'Multi-label' },
         },
       },
     },
   },
   regression: {
-    zh: '迴歸（Regression）', en: 'Regression',
+    zh: '回歸（Regression）', en: 'Regression',
     granularities: {
-      single_sentence: {
-        zh: '單一句子', en: 'Single sentence',
+      single_item: {
+        zh: '單一項目', en: 'Single item',
         subtypes: {
-          single_dim:    { registryKey: 'single_sentence_va_scoring', zh: '單維度評分', en: 'Single-dimension Scoring' },
-          multi_dim_va:  { registryKey: 'single_sentence_va_scoring', zh: '多維度評分 VA 雙軸（Valence / Arousal）', en: 'Multi-dimension Scoring (VA: Valence / Arousal)' },
-          multi_dim_asp: { registryKey: 'single_sentence_va_scoring', zh: '多維度評分 Aspect 情感', en: 'Multi-dimension Scoring (Aspect Sentiment)' },
+          single_dim: { registryKey: 'single_sentence_va_scoring', zh: '單維度', en: 'Single dimension' },
+          multi_dim:  { registryKey: 'single_sentence_va_scoring', zh: '多維度', en: 'Multi-dimension' },
         },
       },
-      sentence_pair: {
-        zh: '句子對', en: 'Sentence pair',
+      item_pair: {
+        zh: '項目對', en: 'Item pair',
         subtypes: {
-          similarity: { registryKey: 'sentence_pairs', zh: '相似度分數', en: 'Similarity Score' },
-        },
-      },
-      document: {
-        zh: '整篇文章', en: 'Document',
-        subtypes: {
-          single_dim:     { registryKey: 'single_sentence_va_scoring', zh: '單維度評分', en: 'Single-dimension Scoring' },
-          multi_dim_qual: { registryKey: 'single_sentence_va_scoring', zh: '多維度評分（可讀性 / 品質）', en: 'Multi-dimension Scoring (Readability / Quality)' },
-          multi_dim_asp:  { registryKey: 'single_sentence_va_scoring', zh: '多維度評分 Aspect', en: 'Multi-dimension Scoring (Aspect)' },
+          single_dim: { registryKey: 'single_sentence_va_scoring', zh: '單維度', en: 'Single dimension' },
+          multi_dim:  { registryKey: 'single_sentence_va_scoring', zh: '多維度', en: 'Multi-dimension' },
         },
       },
     },
+  },
+  sequence: {
+    zh: '序列（Sequence）', en: 'Sequence',
+    granularities: {
+      single_item: {
+        zh: '單一項目', en: 'Single item',
+        subtypes: {
+          token_class:        { registryKey: 'sequence_labeling', zh: 'Token 分類', en: 'Token classification' },
+          boundary:           { registryKey: 'sequence_labeling', zh: '邊界偵測', en: 'Boundary detection' },
+          multi_type_span:    { registryKey: 'sequence_labeling', zh: '多類型標記區間', en: 'Multi-type span' },
+          single_type_span:   { registryKey: 'sequence_labeling', zh: '單類型標記區間', en: 'Single-type span' },
+          span_with_polarity: { registryKey: 'sequence_labeling', zh: '區間加極性', en: 'Span with polarity' },
+          relation_triple:    { registryKey: 'relation_extraction', zh: '關係三元組', en: 'Relation triple' },
+        },
+      },
+    },
+  },
+  generation: {
+    zh: '生成（Generation）', en: 'Generation',
+    granularities: {
+      single_item: {
+        zh: '單一項目', en: 'Single item',
+        subtypes: {
+          free_text: { registryKey: 'generation_single_item_free_text', zh: '自由文字', en: 'Free text' },
+        },
+      },
+    },
+  },
+  mixed: {
+    zh: '混合（Mixed）', en: 'Mixed',
+    granularities: {},
   },
 };
 var SAMPLING_DEFAULTS_BY_TYPE = {
@@ -3180,7 +3209,7 @@ function populateSubtypeSelect(category, granularity) {
   var def = document.createElement('option');
   def.value = '';
   def.id = 'optTaskSubtypeDefault';
-  def.textContent = state.lang === 'en' ? 'Select annotation granularity' : '請選擇標記粒度';
+  def.textContent = state.lang === 'en' ? 'Select output type' : '請選擇輸出類型';
   sel.appendChild(def);
   if (!category || !granularity) return;
   var catDef = TASK_TAXONOMY[category];
@@ -3248,11 +3277,11 @@ function runGranularityDetection(file) {
   // Fast name-based detection
   if (name.indexOf('pair') >= 0 || name.indexOf('nli') >= 0 ||
       name.indexOf('entail') >= 0 || name.indexOf('similar') >= 0) {
-    applyGranularityDetection({ value: 'sentence_pair', confidence: 'high' });
+    applyGranularityDetection({ value: 'item_pair', confidence: 'high' });
     return;
   }
   if (name.indexOf('doc') >= 0 || name.indexOf('article') >= 0 || name.indexOf('passage') >= 0) {
-    applyGranularityDetection({ value: 'document', confidence: 'medium' });
+    applyGranularityDetection({ value: 'single_item', confidence: 'medium' });
     return;
   }
   // CSV/TSV: read headers to detect pair columns
@@ -3271,8 +3300,8 @@ function runGranularityDetection(file) {
                c === 'sentence_a' || c === 'sentence_b';
       });
       applyGranularityDetection(hasPairCols
-        ? { value: 'sentence_pair', confidence: 'high' }
-        : { value: 'single_sentence', confidence: 'medium' });
+        ? { value: 'item_pair', confidence: 'high' }
+        : { value: 'single_item', confidence: 'medium' });
     };
     reader.onerror = function() {
       // File read failed — do not store a detection result
@@ -3281,7 +3310,7 @@ function runGranularityDetection(file) {
     };
     reader.readAsText(file.slice(0, 2048));
   } else {
-    applyGranularityDetection({ value: 'single_sentence', confidence: 'medium' });
+    applyGranularityDetection({ value: 'single_item', confidence: 'medium' });
   }
 }
 
@@ -3389,8 +3418,16 @@ function applyLang(l) {
   var catSel = el('taskCategorySelect');
   if (catSel) {
     setText('optTaskCategoryDefault', state.lang === 'en' ? 'Select category' : '請選擇大分類');
-    setText('optClassification', TASK_TAXONOMY.classification[state.lang] || TASK_TAXONOMY.classification.zh);
-    setText('optRegression', TASK_TAXONOMY.regression[state.lang] || TASK_TAXONOMY.regression.zh);
+    ['classification', 'regression', 'sequence', 'generation', 'mixed'].forEach(function(key) {
+      var optionId = {
+        classification: 'optClassification',
+        regression: 'optRegression',
+        sequence: 'optSequence',
+        generation: 'optGeneration',
+        mixed: 'optMixed',
+      }[key];
+      setText(optionId, TASK_TAXONOMY[key][state.lang] || TASK_TAXONOMY[key].zh);
+    });
   }
   /* Cascade Level 2 and 3: repopulate with current lang if selections exist */
   if (state.taskCategory) {

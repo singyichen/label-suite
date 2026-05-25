@@ -38,9 +38,9 @@ test.describe('Task new VA scoring template', () => {
 
     await page.selectOption('#taskCategorySelect', 'regression');
     await page.waitForSelector('#taskGranularityWrap:not(.hidden)');
-    await page.selectOption('#taskGranularitySelect', 'single_sentence');
+    await page.selectOption('#taskGranularitySelect', 'single_item');
     await page.waitForSelector('#taskSubtypeWrap:not(.hidden)');
-    await page.selectOption('#taskSubtypeSelect', 'multi_dim_va');
+    await page.selectOption('#taskSubtypeSelect', 'multi_dim');
 
     await page.evaluate(() => {
       const win = window as typeof window & { showStep: (step: number) => void };
