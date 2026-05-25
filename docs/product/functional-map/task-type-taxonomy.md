@@ -64,8 +64,8 @@
 | Token 分類（`token_class`） | Token 級標籤 | POS tagging、Chunking（BIO 格式）、NER（token-level, IOB2 標記格式） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（決定合法 tag 集合，為介面標注格式） |
 | 邊界偵測（`boundary`） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 多類型標記區間（`multi_type_span`） | Span + 多類型標籤 | NER（span-level, 直接標記起訖位置）、Trigger Detection | 「台積電創辦人張忠謀宣布退休。」 | [台積電→ORG, 張忠謀→PER] | `entity_types[]: { name, color }`, `scheme: IOB2\|BIOES`（用於資料匯出格式，非介面操作格式） |
-| 單類型標記區間（`single_type_span`） | 只標 span 位置 | Aspect Term Extraction、Keyword Extraction、Claim Span | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] | `span_label_field`, `allow_span_add/delete` |
-| 區間加極性（`span_with_polarity`） | Span + 情感標籤 | ABSA（Aspect-Based Sentiment Analysis） | 「這家餐廳服務很差，但環境不錯。」 | [(服務, 負面), (環境, 正面)] | `span_label_field`, `allow_span_add/delete`, `polarity_options[]: { name, color? }` |
+| 單類型標記區間（`single_type_span`） | 只標 span 位置 | Aspect Term Extraction、Keyword Extraction、Claim Span | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] | `span_label_field`, `allow_span_add`, `allow_span_delete` |
+| 區間加極性（`span_with_polarity`） | Span + 情感標籤 | ABSA（Aspect-Based Sentiment Analysis） | 「這家餐廳服務很差，但環境不錯。」 | [(服務, 負面), (環境, 正面)] | `span_label_field`, `allow_span_add`, `allow_span_delete`, `polarity_options[]: { name, color? }` |
 | 關係三元組（`relation_triple`） | 實體 + 關係 + Triple | OpenIE、Relation Extraction（NER+RE） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) | `entity_types[]: { name, color }`, `relation_types[]: { name, color }` |
 
 > 同一任務因標注介面設計不同，可對應不同 `output_type`。
@@ -107,7 +107,7 @@
 | 序列（sequence） | 單一項目（single_item） | Token 分類（token_class） | POS tagging、Chunking（BIO 格式）、NER（token-level, IOB2 標記格式） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（決定合法 tag 集合，為介面標注格式） |
 | 序列（sequence） | 單一項目（single_item） | 邊界偵測（boundary） | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 序列（sequence） | 單一項目（single_item） | 多類型標記區間（multi_type_span） | NER（span-level, 直接標記起訖位置）、Event Detection | `entity_types[]: { name, color }`, `scheme: IOB2\|BIOES`（用於資料匯出格式，非介面操作格式） |
-| 序列（sequence） | 單一項目（single_item） | 單類型標記區間（single_type_span） | Aspect Term Extraction、Keyword Extraction、Claim Span | `span_label_field`, `allow_span_add/delete` |
-| 序列（sequence） | 單一項目（single_item） | 區間加極性（span_with_polarity） | ABSA | `span_label_field`, `allow_span_add/delete`, `polarity_options[]: { name, color? }` |
+| 序列（sequence） | 單一項目（single_item） | 單類型標記區間（single_type_span） | Aspect Term Extraction、Keyword Extraction、Claim Span | `span_label_field`, `allow_span_add`, `allow_span_delete` |
+| 序列（sequence） | 單一項目（single_item） | 區間加極性（span_with_polarity） | ABSA | `span_label_field`, `allow_span_add`, `allow_span_delete`, `polarity_options[]: { name, color? }` |
 | 序列（sequence） | 單一項目（single_item） | 關係三元組（relation_triple） | OpenIE、Relation Extraction | `entity_types[]: { name, color }`, `relation_types[]: { name, color }` |
 | 生成（generation） | 單一項目（single_item） | 自由文字（free_text） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |
