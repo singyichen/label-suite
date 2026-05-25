@@ -71,6 +71,7 @@
 
 > 同一任務因標注介面設計不同，可對應不同 `output_type`。
 > `entity_relation` vs `relation_triple` 的使用場景區分
+
 | 對照項目 | `entity_relation` | `relation_triple` |
 |----------|-------------------|-------------------|
 | 起點 | 實體已預標記 | 從零開始標 |
