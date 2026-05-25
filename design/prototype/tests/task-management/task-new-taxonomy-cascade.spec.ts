@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 
-async function optionValues(page, selector: string) {
-  return page.locator(selector).locator('option').evaluateAll((options) =>
-    options.map((option) => (option as HTMLOptionElement).value)
+async function optionValues(page: Page, selector: string) {
+  return page.locator(selector).locator('option').evaluateAll((options: Element[]) =>
+    options.map((option: Element) => (option as HTMLOptionElement).value)
   );
 }
 
