@@ -63,10 +63,10 @@ sequenceDiagram
             瀏覽器-->>使用者: 顯示一般使用者 Dashboard
         else 有 project_leader 任務
             瀏覽器-->>使用者: 顯示 Project Leader Dashboard
-        else 有 annotator 任務
-            瀏覽器-->>使用者: 顯示 Annotator Dashboard
         else 有 reviewer 任務
             瀏覽器-->>使用者: 顯示 Reviewer Dashboard
+        else 有 annotator 任務
+            瀏覽器-->>使用者: 顯示 Annotator Dashboard
         end
     else role 無效
         authStore-->>瀏覽器: 導向 /login
@@ -416,7 +416,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-017I**：在 `<= MOBILE_BP` 時，Reviewer 任務列表單列的 badge 群組與 `快速審核` CTA 必須改為垂直堆疊，badge 不得超出卡片右邊界。
 - **FR-017J**：在 `<= MOBILE_BP` 時，Super Admin 的 `平台使用者統計` 與 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
 - **FR-017K**：在 `<= MOBILE_BP` 時，Project Leader 的 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
-- **FR-018**：進入 `/dashboard` 後，在 `task_membership` API 回應返回前，系統必須顯示 Skeleton（骨架屏）：頁面結構可見，指標卡與任務列表區域以灰色佔位塊呈現；API 回應後無縫切換為實際內容，不得出現空白頁閃動。
+- **FR-018**：進入 `/dashboard` 後，在 `task_membership` API 回應返回前，系統必須顯示 Skeleton（骨架屏）：頁面結構可見，以指標卡與任務列表佔位塊為預設佈局（對應最常見的有任務角色視圖）；若 API 回應後確認為一般使用者 Dashboard，則直接切換為對應佈局，接受此預設 Skeleton 與最終版面的視覺差異；API 回應後無縫切換為實際內容，不得出現空白頁閃動。
 - **FR-019**：`task_membership` API 回傳錯誤（5xx 或網路逾時）時，系統必須結束 Skeleton 並顯示 i18n 錯誤訊息與重試按鈕；不得靜默 fallback 至一般使用者視圖，亦不得清除 session 或導向 `/login`。
 
 ### 使用者流程與導頁
