@@ -32,6 +32,7 @@
 | 多標籤（`multi_label`） | 可同時選多個 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | [主題相似, 情感相同, 語氣相同] | `label_options[]: { name, color? }` |
 
 > `entity_markers` 定義預標記實體的起訖標記，例如 `{ start: "[", end: "]" }`；也可用 XML tag、括號或其他明確成對標記格式。
+> `entity_types` 的 `color` 為必填，因 span 標注需視覺區分不同實體類型；`label_options` 的 `color` 為選填。
 
 ---
 
