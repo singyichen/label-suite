@@ -6,6 +6,14 @@
 ---
 
 # 功能規格：Task List — 任務列表
+---
+功能分支: feat/task-management/010-task-list
+建立日期: 2026-04-20
+版本: 1.3.8
+狀態: Draft
+---
+
+# 功能規格：Task List — 任務列表
 
 **需求來源**: IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
 
@@ -26,6 +34,16 @@
 - 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 刪除任務的權限應該限定給哪些角色？ → A: 僅 `project_leader` 與 `super_admin` 可刪除。
+- Q: 搜尋「所有欄位」時，enum 欄位應該比對哪一種文字？ → A: 同時比對 raw enum 值與目前語系顯示文案。
+- Q: URL query 出現無效的 `page`、`page_size` 或 enum 值時應如何處理？ → A: 忽略無效值，使用預設值並更新 URL。
+- Q: 任務列表資料載入失敗時，畫面應如何呈現？ → A: 保留表頭，在 `tbody` 顯示錯誤列與重試操作。
+- Q: 刪除任務是否應受任務狀態限制？ → A: 僅 `draft` 可刪除。
 
 ## 規格常數
 
@@ -130,6 +148,7 @@ sequenceDiagram
     - 狀態篩選器（顯示文案對應 `TASK_STATUS_ENUM`）
     - 空資料時保留表頭（`thead`）與欄位語意
     - 空資料 / 空結果內容以 `tbody` 單列 empty row 呈現（`colspan` 全欄）
+    - 載入失敗時保留表頭，並以 `tbody` 單列 error row 呈現錯誤訊息與重試操作（`colspan` 全欄）
     - 分頁控制
     - 任務列欄位（任務名稱、任務類型、標記階段（Annotation stage）、狀態、更新時間、操作）
     - 操作欄位：`刪除`、`編輯`（由左至右）
@@ -147,12 +166,16 @@ sequenceDiagram
 - 狀態篩選器查詢值必須使用 `TASK_STATUS_ENUM`；顯示文案由 i18n 映射，不可作為 API 契約值。
 - `super_admin` 進入 `/task-list` 預設即為全平台任務視角，且不提供「我的任務 / 全平台任務」切換。
 - 搜尋條件採 `contains`，不分大小寫，作用於任務列表所有欄位（任務名稱、任務類型、標記階段、狀態、更新時間）。
+- 搜尋 enum 欄位（任務類型、標記階段、狀態）時，必須同時比對 raw enum 值與目前語系的 i18n 顯示文案。
 - 列表預設排序 `DEFAULT_SORT`，分頁預設 `PAGE_SIZE_DEFAULT`。
 - 查詢條件（`keyword`、`task_type`、`run_stage`、`status`、`page`、`page_size`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
+- URL query 中的無效 `page`、`page_size` 或 enum 值必須忽略，改用對應預設值或無篩選狀態，並以正規化後的 query 更新 URL。
 - 任務列點擊時若使用者無 `/task-detail` 存取權，系統需顯示「無權限檢視任務詳情」提示，且不得導頁。
 - `編輯` 操作需與點擊任務列同語意，導向 `/task-detail?task_id=...`。
 - 任務列點擊（含 `編輯`）導向 `/task-detail` 前，需先把該列 `task_type` 寫入 `ACTIVE_TASK_TYPE_STORAGE_KEY`，供 `annotation-workspace` 預設 task type 使用。
 - `刪除` 操作必須為軟刪除（`TASK_DELETE_MODE`），不得物理刪除資料。
+- `刪除` 操作僅允許 `project_leader` 與 `super_admin` 執行；其他角色不得看到可用刪除操作，若直接呼叫刪除動作需收到無權限提示且不得變更任務。
+- `刪除` 操作僅允許套用於 `status = draft` 的任務；非 `draft` 任務不得顯示可用刪除操作，若直接觸發刪除需被拒絕且不得變更任務。
 - `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 既有共用 modal（`modal-backdrop` / `modal` / `modal-actions`）。
 - 軟刪除後任務不應出現在預設任務列表；資料保留供審計與復原。
 - 任務類型 badge 需依 `task_type` 類型套用不同色彩樣式（不可全部同色）。
@@ -160,6 +183,7 @@ sequenceDiagram
 - 標記階段 `official_run` 的中文顯示文案需為 `正式標記`。
 - 「尚無任務」狀態不顯示第二顆 `新增任務` 按鈕；新增入口維持頁面主操作區（搜尋列同列）單一 `新增任務` CTA。
 - 「空結果（篩選後）」需顯示清除篩選操作（例如 `清除所有篩選`）。
+- 任務列表載入失敗時不得顯示為空資料；需保留表頭並在 `tbody` 顯示錯誤列與重試操作。
 - 語言切換時，列表欄位、篩選器與按鈕文字需即時更新。
 
 ---
@@ -193,8 +217,12 @@ sequenceDiagram
 - `super_admin` 在全平台任務無資料：顯示表格內空狀態（保留表頭），不顯示錯誤頁。
 - 以失效 `task_id` 嘗試進入 `/task-detail`：導回 `/task-list` 並顯示「任務不存在或無存取權限」。
 - 高篩選條件組合導致無結果：顯示空結果狀態，保留一鍵清除篩選。
+- URL query 含無效 `page`、`page_size` 或 enum 值：使用預設值或無篩選狀態載入列表，並更新為正規化後的 URL query。
+- 任務列表資料載入失敗：保留表格表頭，於 `tbody` error row 顯示錯誤訊息與重試操作。
 - 任務可見但無 `/task-detail` 存取權（如 `annotator`）：點擊任務列後停留原頁並顯示無權限提示。
 - 任務已被軟刪除：不顯示於預設列表；以舊連結直連時需回應「任務不存在或無存取權限」。
+- 無刪除權限的角色（非 `project_leader` 且非 `super_admin`）嘗試刪除任務：不得變更任務，並顯示無權限提示。
+- 非 `draft` 狀態任務嘗試刪除：不得變更任務，並顯示狀態不允許刪除的提示。
 - 行動版欄位不足時：可採橫向捲動或卡片化，但不得資訊重疊。
 
 ---
@@ -208,6 +236,7 @@ sequenceDiagram
 - **FR-003**：`super_admin` 在 `/task-list` 必須預設載入全平台任務，且不得提供「我的任務 / 全平台任務」切換。
 - **FR-004**：系統必須支援任務列表搜尋（所有欄位）、任務類型篩選、標記階段篩選、狀態篩選與分頁。
 - **FR-004a**：搜尋需為 `contains` 且不分大小寫，作用於列表所有欄位。
+- **FR-004ad**：搜尋 enum 欄位時，系統必須同時比對 raw enum 值與目前語系的 i18n 顯示文案。
 - **FR-004aa**：任務類型篩選查詢值必須使用 `TASK_TYPE_ENUM`，且與顯示文案分離。
 - **FR-004aaa**：任務類型選項來源必須來自 `TASK_TYPE_SOURCE`（registry），且回傳值需對齊 `TASK_TYPE_ENUM`。
 - **FR-004ab**：標記階段篩選查詢值必須使用 `RUN_STAGE_ENUM`，且與顯示文案分離。
@@ -215,6 +244,7 @@ sequenceDiagram
 - **FR-004b**：列表預設排序必須為 `DEFAULT_SORT`。
 - **FR-004c**：分頁預設為 `PAGE_SIZE_DEFAULT`，可切換 `PAGE_SIZE_OPTIONS`。
 - **FR-004d**：查詢條件（`keyword`、`task_type`、`run_stage`、`status`、`page`、`page_size`）必須序列化於 URL query，並於重整與返回頁面時還原。
+- **FR-004e**：URL query 中的無效 `page`、`page_size` 或 enum 值必須被正規化為預設值或無篩選狀態，且 URL 必須更新為正規化後的 query。
 - **FR-005**：列表每列必須包含 `task_id` 導航資訊，供導向 `/task-detail`。
 - **FR-005a**：當點擊任務列但無 `/task-detail` 存取權時，系統必須停留 `/task-list` 並顯示無權限提示。
 - **FR-006**：頁面必須提供 `新增任務` CTA 並導向 `/task-new`。
@@ -222,6 +252,7 @@ sequenceDiagram
 - **FR-008**：任務列表在無資料與空結果時，必須保留表頭並以 `tbody` empty row 呈現狀態內容。
 - **FR-008a**：`尚無任務` empty row 不得顯示第二顆 `新增任務` 按鈕；新增入口以頁面主 `新增任務` CTA 為唯一主路徑。
 - **FR-008b**：`空結果（篩選後）` empty row 必須提供清除篩選操作，且清除後返回無篩選列表狀態。
+- **FR-008c**：任務列表資料載入失敗時，必須保留表頭並以 `tbody` error row 顯示錯誤訊息與重試操作，不得顯示為空資料。
 - **FR-009**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成搜尋、篩選、導頁操作。
 - **FR-009a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成操作：搜尋、狀態篩選、分頁切換、點擊任務列、點擊 `新增任務`，且不得發生資訊重疊。
 - **FR-010**：任務列表每列必須提供操作欄，至少包含 `刪除` 與 `編輯`，且順序為左 `刪除`、右 `編輯`。
@@ -229,6 +260,8 @@ sequenceDiagram
 - **FR-010b**：點擊 `刪除` 時，系統必須執行軟刪除（設定 `deleted_at` 與刪除操作者），且不得物理刪除資料。
 - **FR-010c**：軟刪除任務不得出現在預設 `/task-list` 結果中。
 - **FR-010d**：刪除確認流程必須使用 task-management 共用 modal 樣式，不得使用瀏覽器原生 `confirm`。
+- **FR-010e**：刪除任務僅允許 `project_leader` 與 `super_admin`；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。
+- **FR-010f**：刪除任務僅允許 `status = draft`；非 `draft` 任務不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示狀態不允許刪除的提示。
 - **FR-011**：任務類型 badge 必須依 `task_type` 使用不同視覺色彩，不得全部使用同一 badge 色彩。
 - **FR-011a**：當語系為 `zh` 時，任務類型 badge 文案必須顯示中文映射；語系為 `en` 時顯示英文文案。
 - **FR-011b**：標記階段 `official_run` 在中文文案必須顯示為 `正式標記`。
@@ -304,6 +337,7 @@ flowchart LR
 - **SC-008**：`尚無任務` 狀態僅保留頁面主 `新增任務` CTA；`空結果` 狀態可直接清除篩選返回列表。
 - **SC-009**：點擊任務列 `編輯` 可導向 `/task-detail`；點擊 `刪除` 後任務會軟刪除並從列表隱藏。
 - **SC-010**：點擊任務列或 `編輯` 導頁後，`labelsuite.activeTaskType` 必須更新為該任務的 `task_type`。
+- **SC-011**：任務列表載入失敗時，頁面保留表頭並顯示錯誤列與重試操作，不得誤呈現為無資料或空結果。
 
 ---
 
@@ -341,6 +375,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.9 | 2026-05-22 | 釐清並同步 task-list 原型：刪除權限限 `project_leader` / `super_admin` 且僅 `draft` 可刪；搜尋 enum 比對 raw value 與目前語系文案；無效 URL query 正規化；載入失敗以表格 error row 與重試操作呈現 |
 | 1.3.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.7 | 2026-04-23 | 同步原型：`TASK_TYPE_ENUM` 以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression`，並新增 `labelsuite.activeTaskType` 持久化契約供 annotation-workspace 啟動 fallback |
 | 1.3.6 | 2026-04-22 | 任務類型對齊 `task-new` 下拉實際選項：`TASK_TYPE_ENUM` 改為 `single_sentence_classification / single_sentence_scoring_regression / sequence_labeling / relation_extraction / sentence_pairs`（不含生成式標記） |

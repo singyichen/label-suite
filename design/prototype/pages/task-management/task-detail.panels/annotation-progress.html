@@ -15,6 +15,28 @@
     </div>
   </section>
 
+  <section class="panel hidden" aria-labelledby="unassignedAnnotationTitle" id="unassignedAnnotationSection">
+    <h2 class="panel-title" id="unassignedAnnotationTitle">未指派標記作業</h2>
+    <p class="panel-subtitle" id="unassignedAnnotationSubtitle">未指派試標作業會阻擋進入待 IAA 確認；正式標記未指派作業會影響完成率。請重新指派給啟用中的標記員，或排除並保留原因。</p>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Unassigned dry run assignments table">
+          <thead>
+            <tr>
+              <th id="thUnassignedStage">階段 / 回合</th>
+              <th id="thUnassignedSamples">樣本</th>
+              <th id="thUnassignedSource">來源成員</th>
+              <th id="thUnassignedReason">原因</th>
+              <th id="thUnassignedAssignTo">指派給</th>
+              <th id="thUnassignedActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="unassignedAnnotationBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section class="panel" aria-labelledby="memberProgressTitle" id="memberProgressSection">
     <h2 class="panel-title" id="memberProgressTitle">成員進度表</h2>
     <div class="sort-row">
@@ -39,12 +61,57 @@
               <th id="thProgressBar">個人進度條</th>
               <th id="thProgressLastSubmitted">最後提交時間</th>
               <th id="thProgressQuality">品質旗標</th>
+              <th id="thProgressDetails">操作</th>
             </tr>
           </thead>
           <tbody id="memberProgressTableBody"></tbody>
         </table>
       </div>
     </div>
+  </section>
+
+  <section class="panel hidden" aria-labelledby="memberDetailTitle" id="memberDetailSection">
+    <div class="member-detail-header">
+      <h2 class="panel-title" id="memberDetailTitle"></h2>
+      <button class="modal-close-btn" type="button" id="memberDetailCloseBtn" aria-label="關閉">
+        <svg class="modal-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" id="memberDetailTable" role="table" aria-labelledby="memberDetailTitle">
+          <thead>
+            <tr>
+              <th id="thDetailSampleId">樣本 ID</th>
+              <th id="thDetailTextPreview">文本摘要</th>
+              <th id="thDetailLabelResult">標記結果</th>
+              <th id="thDetailSubmittedAt">提交時間</th>
+              <th id="thDetailReviewStatus">審核狀態</th>
+            </tr>
+          </thead>
+          <tbody id="memberDetailTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination hidden" id="mdPaginationBar">
+        <div class="pagination-left">
+          <span class="pagination-info" id="mdPaginationInfo"></span>
+          <select class="page-size-select" id="mdPageSizeSelect" aria-label="每頁筆數">
+            <option value="20" selected>20 筆/頁</option>
+            <option value="50">50 筆/頁</option>
+            <option value="100">100 筆/頁</option>
+          </select>
+        </div>
+        <div class="pagination-controls" id="mdPaginationControls">
+          <button class="page-btn" type="button" id="mdPrevPageBtn" aria-label="上一頁" disabled>
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="page-btn" type="button" id="mdNextPageBtn" aria-label="下一頁">
+            <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="member-detail-empty hidden" id="memberDetailEmpty"></p>
   </section>
 
   <section class="panel hidden" aria-labelledby="progressEmptyTitle" id="progressEmptyState">

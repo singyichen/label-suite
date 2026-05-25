@@ -1389,7 +1389,7 @@
       renderUsers();
       closeModal('addModal');
       showToast('success', t.toastUserCreated, t.toastPasswordSent);
-      window.LabelSuiteAnalytics.track('prototype_user_add_succeeded', { lang });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_add_succeeded', { lang });
     }
 
     function submitEdit() {
@@ -1414,7 +1414,7 @@
       renderUsers();
       closeModal('editModal');
       showToast('success', t.toastUpdated, '');
-      window.LabelSuiteAnalytics.track('prototype_user_edit_succeeded', { lang });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_edit_succeeded', { lang });
     }
 
     function confirmDisable() {
@@ -1426,7 +1426,7 @@
       }
       closeModal('disableModal');
       showToast('success', t.toastDisabled, t.toastSessionRevoked);
-      window.LabelSuiteAnalytics.track('prototype_user_disable_succeeded', { lang });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_disable_succeeded', { lang });
     }
 
     function handleReEnable(userId) {
@@ -1437,7 +1437,7 @@
         renderUsers();
         showToast('success', t.toastReEnabled, user.name);
       }
-      window.LabelSuiteAnalytics.track('prototype_user_enable_succeeded', { lang });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_user_enable_succeeded', { lang });
     }
 
     function clearFilters() {
@@ -1463,7 +1463,7 @@
       document.getElementById('auditDrawerOverlay').classList.add('open');
       document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
     }
 
     function closeAuditDrawer() {
@@ -1559,7 +1559,7 @@
       const prev = lang;
       lang = lang === 'zh' ? 'en' : 'zh';
       applyLang(lang);
-      window.LabelSuiteAnalytics.track('prototype_lang_switched',
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_lang_switched',
         { source, from_lang: prev, to_lang: lang });
     }
     document.addEventListener('DOMContentLoaded', () => {
@@ -1588,11 +1588,13 @@
 
     /* ── Analytics & Init ──────────────────────────────────────── */
     const getCtx = () => ({ lang });
-    window.LabelSuiteAnalytics.init({ page: 'user-management' });
-    window.LabelSuiteAnalytics.bindClickTracks([
-      { id: 'addUserBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'add_user' } },
-    ], getCtx);
-    window.LabelSuiteAnalytics.trackPageView('user-management', getCtx);
+    if (window.LabelSuiteAnalytics) {
+      window.LabelSuiteAnalytics.init({ page: 'user-management' });
+      window.LabelSuiteAnalytics.bindClickTracks([
+        { id: 'addUserBtn', eventName: 'prototype_cta_clicked', extra: { cta: 'add_user' } },
+      ], getCtx);
+      window.LabelSuiteAnalytics.trackPageView('user-management', getCtx);
+    }
     window.LabelSuiteSharedSidebar.setSystemRole('super_admin');
     window.LabelSuiteSharedSidebar.updateUserChip({
       userName:    'Mandy Chen',

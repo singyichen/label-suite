@@ -9,6 +9,8 @@
 
 **需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 
+**需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
+
 ## 輸入與生成規則
 
 **輸入描述**：使用者需能透過 Email / Password 登入入口進入 Label Suite，並可由登入頁前往註冊、忘記密碼與 dashboard 原型流程。

@@ -6,6 +6,14 @@
 ---
 
 # 功能規格：Dataset Analysis List — 任務列表頁（模組入口）
+---
+功能分支: feat/dataset/016-dataset-analysis-list
+建立日期: 2026-04-24
+版本: 1.3.1
+狀態: In Progress
+---
+
+# 功能規格：Dataset Analysis List — 任務列表頁（模組入口）
 
 **需求來源**: IA v1.3.2（2026-04-24）`dataset-analysis-list` 任務列表頁（模組入口）
 

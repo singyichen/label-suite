@@ -1,6 +1,14 @@
 ---
 功能分支: feat/task-management/014-task-detail
 建立日期: 2026-04-20
+版本: 1.7.16
+狀態: Draft
+---
+
+# 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
+---
+功能分支: feat/task-management/014-task-detail
+建立日期: 2026-04-20
 版本: 1.7.15
 狀態: Draft
 ---
@@ -27,10 +35,20 @@
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 當 `project_leader` 對「仍有未完成作業」的成員執行移除時，系統應採用哪個規則？ → A: 允許移除，未完成作業改為未指派狀態，待 PL 手動處理
+- Q: 五個 tabs 的顯示順序應以哪個為準？ → A: `overview → member-management → annotation-progress → annotation-results → work-log`
+- Q: Dry Run 中存在「未指派作業」時，是否允許自動轉為 `waiting_iaa_confirmation`？ → A: 不允許；需先重新指派並完成或由 PL 明確排除
+- Q: 被 PL 明確排除的 Dry Run 作業，後續應如何出現在統計與匯出中？ → A: 不計入完成率與 IAA；匯出只保留排除紀錄 metadata
+- Q: 未指派作業是否只限 Dry Run？ → A: 否；應為未指派標記作業，Dry Run 與 Official Run 都可重新指派
+
 ## 規格常數
 
 - `TASK_ROLES = project_leader | reviewer | annotator`
-- `TASK_TABS = overview | annotation-results | annotation-progress | work-log | member-management`
+- `TASK_TABS = overview | member-management | annotation-progress | annotation-results | work-log`
 - `TASK_TYPE_ENUM = single_sentence_classification | single_sentence_va_scoring | sequence_labeling | relation_extraction | sentence_pairs`
 - `SEQUENCE_LABELING_SUBTYPES = ner | aspect_list`
 - `SENTENCE_PAIRS_MODES = similarity | entailment`
@@ -45,7 +63,7 @@
 - `EXPORT_DYNAMIC_RESULT_FIELDS = task_type-driven`
 - `EXPORT_SYNC_MAX_ROWS = 10000`
 - `TASK_DETAIL_UNAUTHORIZED_REDIRECT = /task-list`
-- `DRY_RUN_COMPLETION_RULE = all active annotators: assigned_count == completed_count`
+- `DRY_RUN_COMPLETION_RULE = no unassigned dry-run assignments AND all membership_status=active annotators: assigned_count == completed_count`
 - `DRAFT_SAMPLING_COUNT_MIN = 1`
 - `IAA_METHOD_ENUM = krippendorff_alpha_nominal | cohens_kappa | fleiss_kappa | icc | pairwise_f1_strict | pairwise_f1_partial | pairwise_triple_f1`
 - `IAA_METHOD_DEFAULTS = krippendorff_alpha_nominal:0.80 | cohens_kappa:0.80 | fleiss_kappa:0.80 | icc:0.75 | pairwise_f1_strict:0.80 | pairwise_f1_partial:0.70 | pairwise_triple_f1:0.75`
@@ -113,7 +131,7 @@ sequenceDiagram
 | 1 | `project_leader` / `reviewer` | 進入 `/task-detail` | 驗證 task context 後顯示頁面，預設 `overview` tab |
 | 2 | `project_leader` | 管理成員 | 可新增、移除/停用任務成員；既有成員角色唯讀（承接 task-new 初始值） |
 | 3 | `project_leader` | 開始試標回合 | 狀態轉為 `dry_run_in_progress` |
-| 4 | 系統 | 所有 `active annotator` 完成各自被指派的 Dry Run 全部樣本 | 自動轉為 `waiting_iaa_confirmation` 並產生提醒 |
+| 4 | 系統 | 無未指派 Dry Run 標記作業，且所有 `membership_status = active` 的 `annotator` 完成各自被指派的 Dry Run 全部樣本 | 自動轉為 `waiting_iaa_confirmation` 並產生提醒 |
 | 5 | `project_leader` | 開始正式標記 | 狀態轉為 `official_run_in_progress` |
 | 6 | `reviewer` | 查看任務詳情 | 僅可唯讀可見授權 tab，且 work-log 僅自己的資料 |
 | 7 | `annotator` | 嘗試進入 `/task-detail` | 阻擋存取並導回 `/task-list`，顯示無權限提示 |
@@ -127,7 +145,7 @@ sequenceDiagram
 Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、執行發布與查看／匯出標記結果。
 
 **此優先級原因**：任務推進與協作的核心控制面板。
-**獨立測試方式**：以 `project_leader` 登入，驗證四個 tab、成員管理、狀態切換與匯出操作。
+**獨立測試方式**：以 `project_leader` 登入，驗證五個 tab、成員管理、狀態切換與匯出操作。
 
 **驗收情境**：
 
@@ -277,8 +295,15 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 選中回合進度條：顯示該回合 `completed/total（rate%）` 與進度條，位於 metric grid 上方
     - 指標（6 項，單行排列）：總樣本數、已完成數、完成率、平均速度、剩餘估計時間、IAA
   - 區塊 2：`成員進度表`
-    - 欄位：成員姓名、角色、已完成數、待完成數、總數量、平均速度、個人進度條、最後提交時間、品質旗標
+    - 欄位：成員姓名、角色、已完成數、待完成數、總數量、平均速度、個人進度條、最後提交時間、品質旗標、操作（查看細項）
     - 排序：預設依已完成數降冪，可切換依速度/最後提交排序
+    - 每列末尾提供「查看細項」按鈕；點擊後在成員進度表下方顯示該成員標記細項區塊
+  - 區塊 3：`成員標記細項`（點擊「查看細項」後展開，預設隱藏）
+    - 標題顯示成員姓名，含關閉按鈕可收起區塊
+    - 欄位：樣本 ID、文本摘要、標記結果、提交時間、審核狀態
+    - 標記結果以 chip 呈現（分類任務）或文字呈現（VA 評分任務）
+    - 底部需提供與 `task-list` 相同樣式的分頁列，含總筆數 / 目前頁數、每頁筆數切換（20 / 50 / 100）、上一頁 / 下一頁 / 頁碼按鈕；分頁狀態（`mdPage` / `mdPageSize`）獨立，不得與其他 tab 分頁狀態共用
+    - 切換至不同成員時，分頁重設為第 1 頁
   - 空狀態：尚未開始標記時顯示「尚無進度資料」，並提供回到 `任務概覽` 的 CTA
 - Tab E：`工時紀錄`
   - 區塊 1：`工時篩選列`
@@ -306,6 +331,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - prototype 實作需採「單一殼頁 + tab partial」結構：`task-detail.html` 僅負責 shared layout、tab header 與狀態管理；五個 tab 內容拆分為獨立 partial 檔案載入，避免單檔維護過大。
 - `project_leader` 可編輯 member-management 中的新增/停用/移除；既有成員角色維持唯讀，其他角色不得有編輯權。
 - `project_leader` 僅可管理自己所屬任務的成員，不可跨任務異動。
+- `project_leader` 移除仍有未完成作業的成員時，系統需先顯示二次確認；確認後該成員未完成的作業改為未指派狀態，已完成提交與歷史統計保留，後續由 `project_leader` 手動重新指派或處理。
 - `member-management` 搜尋區在未輸入查詢關鍵字前，不得顯示任何平台成員資料，避免 project leader 直接瀏覽全站使用者 Email。
 - `member-management` 搜尋結果必須排除已在當前任務中的成員；被移除後才可再次被搜尋與加入。
 - `member-management` 的 Email 邀請必須驗證 email 格式，並阻擋與既有任務成員或既有邀請重複的 email。
@@ -393,7 +419,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 **驗收情境**：
 
 1. **Given** 任務為 `draft`，**When** 開始試標回合，**Then** 狀態只能轉為 `dry_run_in_progress`。
-2. **Given** 任務內每一位 `active annotator` 皆達到 `assigned_count == completed_count`（代表每人都完成自己被指派的全部試標內容），**When** 系統檢查完成條件，**Then** 自動轉為 `waiting_iaa_confirmation` 並對 `project_leader` 發送提醒。
+2. **Given** 任務內沒有未指派 Dry Run 標記作業，且每一位 `membership_status = active` 的 `annotator` 皆達到 `assigned_count == completed_count`（代表每人都完成自己被指派的全部試標內容），**When** 系統檢查完成條件，**Then** 自動轉為 `waiting_iaa_confirmation` 並對 `project_leader` 發送提醒。
 3. **Given** 任務為 `waiting_iaa_confirmation`，**When** 開始正式標記，**Then** 狀態轉為 `official_run_in_progress`。
 4. **Given** 任務資料含 Dry 與 Official 兩階段且已啟用資料隔離，**When** 查詢匯出資料，**Then** 系統不得混入不同階段的資料集。
 5. **Given** 任務為 `draft`，**When** 使用者調整每回合試標抽樣為 `N 筆`，**Then** 系統需更新後續回合使用規則；總筆數 / 已用試標 / 可進正式 的分配摘要則顯示於「任務狀態與執行控制」區塊。
@@ -403,8 +429,10 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 
 - 狀態轉換必須符合 `TASK_STATUSES` 順序，不允許跳階。
 - 任務建立後，task-detail 必須先顯示由 `task-new` 帶入的 creator membership、抽樣與資料隔離設定，再允許後續成員調整。
-- Dry Run 完成條件採 `DRY_RUN_COMPLETION_RULE`，僅計入 `membership_status = active` 的 annotator。
-- 只要仍有任一位 `active annotator` 未完成其被指派的 Dry Run 樣本，任務狀態不得由 `dry_run_in_progress` 轉為 `waiting_iaa_confirmation`。
+- Dry Run 完成條件採 `DRY_RUN_COMPLETION_RULE`；成員完成度僅計入 `membership_status = active` 的 `annotator`，但未指派 Dry Run 標記作業也必須清零。
+- 只要仍有任一位 `membership_status = active` 的 `annotator` 未完成其被指派的 Dry Run 樣本，或仍存在未指派 Dry Run 標記作業，任務狀態不得由 `dry_run_in_progress` 轉為 `waiting_iaa_confirmation`。
+- 未指派標記作業可出現在 Dry Run 或 Official Run；`project_leader` 需可將其重新指派給啟用中的標記員（`membership_status = active` 且 `task_role = annotator`），或明確排除並保存原因。
+- 被 `project_leader` 明確排除的標記作業不得計入完成率或標記分布統計；若排除作業屬 Dry Run，亦不得計入 IAA。系統需保留排除者、排除時間、排除原因與原作業識別資訊，供匯出 metadata 與審計追溯使用。
 - Dry Run 完成通知需在 dashboard 待處理區顯示 badge。
 - Draft Run 必須以固定筆數（`>= DRAFT_SAMPLING_COUNT_MIN` 且 `< 資料集總筆數`）指定每回合試標資料量，不提供百分比模式。
 - 系統必須保證 Official Run 至少保留 1 筆資料（即 `sampling_value < dataset_total`）。
@@ -414,7 +442,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - 每次點擊 `新增試標回合 R{n}` 並成功發布時，系統才為該回合建立標記清單資料；清單筆數必須等於當下 `sampling_value`。例如 `R1 = 10 筆` 只建立 10 筆試標清單，`R2 = 10 筆` 再建立另一組 10 筆試標清單。
 - 點擊 `開始正式標記` 並成功發布時，系統才以尚未進入任何試標回合的剩餘樣本建立正式標記清單；清單筆數必須等於 `dataset_total - 已用試標總筆數`。
 - 匯出請求必須指定標記階段（Annotation stage：Dry Run / Official Run）；啟用資料隔離時必須保證 Dry/Official 資料不混用。
-- 匯出檔案 metadata 必須包含：`run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`。
+- 匯出檔案 metadata 必須包含：`run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`；若該範圍含已排除標記作業，metadata 需保留排除紀錄摘要，不得把排除作業輸出為一般 annotation result。
 - 匯出格式規劃需參考 Label Studio 的兩層定位：`JSON` 保留完整結構，`JSON-MIN` 提供扁平化結果列；但最終 schema 必須對齊 Label Suite 的 task / sample / annotation / review domain model。
 - 匯出欄位分為「固定共通欄位」與「task_type 動態欄位」兩層；不同任務類型必須顯示不同結果欄位，未使用的任務欄位不得混入同一筆資料。
 - `JSON` 匯出頂層必須為 `manifest + items[]`；`manifest` 需描述任務、匯出時間、匯出格式、run stage、filters 與 schema version，`items[]` 則逐筆保存 sample、annotations 與 reviews。
@@ -438,7 +466,10 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - `annotator` 或無權限角色直接進入 `/task-detail`：導回 `TASK_DETAIL_UNAUTHORIZED_REDIRECT` 並顯示無權限提示。
 - reviewer 嘗試呼叫成員管理 API：回傳拒絕，且不可修改任何資料。
 - reviewer 嘗試直連 `member-management`：導回 `overview` 並顯示無權限提示。
-- 成員移除後仍有未完成作業：需有阻擋或警告流程，避免統計中斷。
+- 成員移除時仍有未完成作業：二次確認後允許移除；未完成作業改為未指派狀態，已完成提交與歷史統計保留，並提示 `project_leader` 需手動重新指派或處理。
+- Dry Run 中存在未指派標記作業：不得自動轉為 `waiting_iaa_confirmation`；系統需提示 `project_leader` 重新指派並完成，或明確排除該作業後再檢查完成條件。
+- Official Run 中存在未指派標記作業：系統需提示 `project_leader` 重新指派或排除；未處理前不得將任務標記為 `completed`。
+- 已排除標記作業：不得計入完成率或標記分布統計；若屬 Dry Run 亦不得計入 IAA。匯出時僅可在 metadata 中保留排除紀錄摘要，不得出現在一般結果列或 annotations 陣列中。
 - Dry Run 未滿足完成條件前嘗試開始正式標記：系統拒絕並回傳原因。
 - Draft Run 抽樣輸入為 `0 筆` 或 `>= 資料集總數`：系統阻擋發布並顯示可修正提示。
 - 資料集在 Draft Run 發布後新增/刪除資料：不影響既有 `sample_snapshot_id`；若需重切分，`draft` 可修改抽樣值後重新發布，其餘狀態僅可建立新 run 批次。
@@ -475,11 +506,14 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-005c**：搜尋平台成員功能必須支援以 `帳號 / 姓名 / Email` 查詢；未輸入查詢關鍵字前不得顯示任何平台成員資料。
 - **FR-005d**：搜尋結果必須排除已在當前任務中的成員，且加入後需立即自搜尋結果消失。
 - **FR-005e**：Email 邀請必須驗證 email 格式並阻擋重複；寄送成功後該成員需以 `invited` 狀態出現在目前成員清單。
+- **FR-005f**：移除仍有未完成作業的成員時，系統必須顯示二次確認；確認後保留該成員已完成提交與歷史統計，並將未完成標記作業改為未指派狀態，等待 `project_leader` 手動重新指派或處理。
+- **FR-005g**：`project_leader` 必須可在 `annotation-progress` 查看 Dry Run 與 Official Run 的未指派標記作業，並將其重新指派給啟用中的標記員（`membership_status = active` 且 `task_role = annotator`）。
+- **FR-005h**：`project_leader` 明確排除未指派標記作業時，系統必須保存排除者、排除時間、排除原因、run stage 與原作業識別資訊；被排除作業不得計入完成率或標記分布統計，Dry Run 排除作業亦不得計入 IAA。
 - **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
-- **FR-008a**：當任務內每一位 `active annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。
+- **FR-008a**：當任務內沒有未指派 Dry Run 標記作業，且每一位 `membership_status = active` 的 `annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。
 - **FR-009**：系統必須支援在 `annotation-results` 匯出結果，格式至少含 `EXPORT_FORMATS`。
 - **FR-009a**：匯出時必須指定標記階段（Annotation stage：Dry Run / Official Run）；`<= EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻改為背景工作並通知下載連結。
 - **FR-010**：系統必須提供試標抽樣設定調整，以固定筆數指定每回合試標使用資料量（不提供百分比模式）。
@@ -493,7 +527,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010f-2**：每次 `新增試標回合 R{n}` 成功時，系統必須建立該回合獨立的試標清單，筆數等於 `sampling_value`，且不得重用前一回合已建立的清單資料。
 - **FR-010f-3**：`開始正式標記` 成功時，系統必須以扣除所有已建立試標回合後的剩餘樣本建立正式標記清單，筆數等於 `dataset_total - sum(trial_round.sampling_value)`。
 - **FR-010h**：Overview 必須顯示資料隔離狀態（`已隔離`/`未隔離`）與最後變更資訊。
-- **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`。
+- **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`，以及該匯出範圍內被排除標記作業的摘要紀錄（若有）。
 - **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。
 - **FR-010i-2**：匯出記錄表中的每筆紀錄必須保存 `re-download` 所需的條件快照；重新下載時必須以該快照為唯一依據重建匯出結果，不得讀取使用者當前頁面 filter state。條件快照至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會改變結果集合的版本/快照識別資訊。
 - **FR-010o**：Overview「抽樣設定」必須提供 `sampling_value`、`iaa_method`、`target_agreement`、`min_annotators` 的檢視與編輯能力，並在非編輯摘要顯示唯讀 `trial_round`；其中 `sampling_value` 文案必須明確為「每回合抽樣筆數」。
@@ -547,6 +581,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015d-2**：展開列在 `<= MOBILE_BP` 時必須改為垂直堆疊，右側 meta 群組需移至內容下方並左對齊；result tag 可換行但不得被拉伸為整列寬度色塊。
 - **FR-015d-3**：展開列的可見範圍判定必須以 `annotation-results` 的橫向捲動容器為準，而非以 table 本體寬度為準；table 發生 overflow 時，`審核狀態` badge 與整列內容仍需完整落在 scroll container 內。
 - **FR-015e-1**：`匯出記錄表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態必須與 `標記結果表` 分頁狀態完全獨立，兩表換頁不得互相干擾。
+- **FR-016a**：`annotation-progress` tab 的 `成員進度表` 每列末尾必須顯示「查看細項」按鈕；點擊後在成員進度表下方呈現該成員的標記細項區塊（`memberDetailSection`），包含樣本 ID、文本摘要、標記結果、提交時間、審核狀態。
+- **FR-016b**：`成員標記細項` 區塊底部必須提供與 `task-list` 一致的 footer pagination，至少含總筆數 / 目前頁數、每頁筆數切換（20 / 50 / 100）、上一頁 / 下一頁 / 頁碼按鈕；分頁狀態（`mdPage` / `mdPageSize`）必須完全獨立，不得與其他 tab 分頁狀態共用；切換至不同成員時 `mdPage` 必須重設為 `1`。
 - **FR-015e**：`annotation-results` tab 必須提供匯出功能（格式至少含 `EXPORT_FORMATS`），需指定標記階段（Dry Run / Official Run）；`<= EXPORT_SYNC_MAX_ROWS` 同步回應，超過門檻採背景工作並通知下載連結；匯出 metadata 規格對齊 FR-010i。
 - **FR-015f**：`annotation-results` tab 空狀態（尚無任何標記提交）必須顯示引導文案，不得顯示空表格。
 - **FR-015g**：`JSON` 匯出必須採 `EXPORT_JSON_SHAPE`，頂層包含 `manifest` 與 `items[]`；每個 `item` 至少包含 `sample_id`、`source_data`、`annotations[]`、`reviews[]` 與當前 sample 聚合狀態，不得退化為純扁平列。
@@ -560,6 +596,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015i-6**：`sentence_pairs` 匯出結果欄位必須至少包含 `pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`，以及 `label` 或 `score`；若 `allow_unsure = true`，需保留 `unsure`。
 - **FR-015j**：匯出檔案的共通欄位至少必須覆蓋 task context、sample context、annotation context、review context 與 run context；task-specific 欄位則僅在對應 task type 出現。
 - **FR-015k**：`JSON-MIN` 的扁平化策略必須以「可被試算表與 BI 工具直接讀取」為優先，但不得犧牲結果可理解性；結構型結果可用 summary string、JSON-encoded string 或等價可解析欄位表達。
+- **FR-015l**：被排除的標記作業不得出現在 `JSON` 的 `items[].annotations[]` 或 `JSON-MIN` 的一般結果列中；若匯出範圍包含排除紀錄，只能以 metadata / manifest 中的排除摘要呈現。
 
 ### 使用者流程與導頁
 
@@ -567,10 +604,10 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 flowchart LR
     tasklist["/task-list"] --> taskdetail["/task-detail?task_id="]
     taskdetail --> overview["overview tab"]
-    taskdetail --> results["annotation-results tab"]
-    taskdetail --> progress["annotation-progress tab"]
-    taskdetail --> worklog["work-log tab"]
     taskdetail --> member["member-management tab"]
+    taskdetail --> progress["annotation-progress tab"]
+    taskdetail --> results["annotation-results tab"]
+    taskdetail --> worklog["work-log tab"]
     taskdetail -->|返回| tasklist
     annotatorBlocked["annotator 直接進入 /task-detail"] --> tasklist["/task-list"]
 ```
@@ -599,6 +636,7 @@ flowchart LR
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`iaa_method`、`trial_round`、`target_agreement`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
 - **AnnotationListMaterialization**：標記清單建立事件。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`sample_snapshot_id`、`source_sample_ids_ref`、`item_count`、`created_by`、`created_at`。`dry_run` 的 `item_count = sampling_value`；`official_run` 的 `item_count = dataset_total - 已用試標總筆數`。
+- **ExcludedAnnotationAssignment**：被明確排除的標記作業紀錄。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`assignment_id`、`sample_id`、`excluded_by`、`excluded_at`、`reason`。排除紀錄僅供完成條件解除、metadata 與審計追溯使用，不計入完成率、標記分布統計或一般匯出結果列；`run_stage = dry_run` 時亦不計入 IAA。
 - **IsolationAuditLog**：資料隔離設定審計。欄位：`task_id`、`from_isolation_enabled`、`to_isolation_enabled`、`changed_by`、`changed_at`、`reason`。
 
 ---
@@ -631,7 +669,8 @@ flowchart LR
 - **SC-001c**：`member-management` 可同時支援「搜尋平台成員加入」與「Email 邀請加入」兩種流程；Email 邀請成功後，新成員會以 `invited` 狀態顯示於目前成員清單。
 - **SC-002**：`reviewer` 可唯讀存取授權內容，且 `work-log` 僅顯示本人資料。
 - **SC-003**：`annotator` 不能進入 `/task-detail`，會被導向 `/task-list` 並顯示無權限提示。
-- **SC-004**：任務狀態轉換遵循定義順序，且僅在所有 `active annotator` 完成各自全部試標樣本後才可由 `dry_run_in_progress` 自動進入 `waiting_iaa_confirmation` 並產生提醒。
+- **SC-004**：任務狀態轉換遵循定義順序，且僅在沒有未指派 Dry Run 標記作業、所有 `membership_status = active` 的 `annotator` 完成各自全部試標樣本後，才可由 `dry_run_in_progress` 自動進入 `waiting_iaa_confirmation` 並產生提醒。
+- **SC-004a**：被 `project_leader` 明確排除的標記作業不會影響完成率或標記分布統計；若屬 Dry Run 亦不影響 IAA。匯出時僅在 metadata 中保留排除摘要，供審計追溯。
 - **SC-005**：當 `isolation_enabled = true` 時，匯出與查詢結果中 Dry Run / Official Run 資料不會混入；當 `isolation_enabled = false` 時，系統可清楚揭露風險狀態與審計紀錄。
 - **SC-006**：`reviewer` 不可見 `member-management`，且直連嘗試會導回 `overview`。
 - **SC-007**：在 `375px`、`768px`、`1440px` 下可完成進入詳情、tab 切換、執行權限顯示、成員管理（PL）、work-log 篩選、匯出操作，且無資訊重疊。
@@ -702,6 +741,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.16 | 2026-05-22 | 新增 `annotation-progress` 成員標記細項功能：成員進度表增加「操作」欄與「查看細項」按鈕；點擊後展開成員標記細項區塊（樣本 ID、文本摘要、標記結果、提交時間、審核狀態）；底部分頁列與 `task-list` 樣式一致，分頁狀態（`mdPage` / `mdPageSize`）獨立；新增 FR-016a、FR-016b |
 | 1.7.15 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.7.14 | 2026-05-15 | 調整 detail 頁首與 shared Dashboard heading baseline 對齊：breadcrumb 改置於頁首標題區塊下方，避免推移最上層主標題位置 |
 | 1.7.13 | 2026-05-13 | 明確規範角色 badge 配色：`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：primary token 系列），`annotator`（標記員）使用綠色（`role-badge-annotator`：success token 系列）；補充 `tokens.css` 缺少的 `--color-primary-border`（light: #C7D2FE，dark: #3730A3）；成員管理與工時明細表沿用同一 CSS class |

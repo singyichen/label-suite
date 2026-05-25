@@ -220,10 +220,13 @@
     }
     .empty-row { cursor: default !important; }
     .empty-row:hover { background: transparent !important; }
+    .error-row { cursor: default !important; }
+    .error-row:hover { background: transparent !important; }
     .empty-row-cell { padding: 40px 20px !important; }
     .empty-row-wrap { text-align: center; max-width: 520px; margin: 0 auto; }
     .empty-row-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
     .empty-row-desc { font-size: 14px; color: #64748B; margin: 0 0 16px; }
+    .error-row .empty-row-title { color: var(--color-error); }
 
     /* ── Badges ──────────────────────────────────────────────── */
     .badge {
@@ -499,6 +502,9 @@
       emptyNoResultsTitle: '找不到符合條件的任務',
       emptyNoResultsDesc: '請調整搜尋條件或清除篩選，重新查詢。',
       emptyClearBtnLabel: '清除所有篩選',
+      errorLoadTitle: '任務列表載入失敗',
+      errorLoadDesc: '請重試或稍後再回到任務列表。',
+      errorRetryLabel: '重試',
       searchPlaceholder: '搜尋',
       searchAriaLabel: '搜尋（所有欄位）',
       taskTypeOptions: [
@@ -528,6 +534,8 @@
       toastNoPermission: '無權限檢視任務詳情',
       toastNavigating: '前往任務詳情…',
       toastTaskSoftDeleted: '任務已移至封存（軟刪除）',
+      toastDeleteNotAllowed: '此任務狀態不允許刪除',
+      toastDeleteForbidden: '無權限刪除任務',
       toastNewTask: '已建立新任務',
       deleteModalTitle: '確認刪除任務',
       deleteModalBodyDefault: '確認將任務軟刪除？此操作可由管理端復原。',
@@ -567,6 +575,9 @@
       emptyNoResultsTitle: 'No matching tasks',
       emptyNoResultsDesc: 'Try adjusting your search or clearing the filters.',
       emptyClearBtnLabel: 'Clear all filters',
+      errorLoadTitle: 'Task list failed to load',
+      errorLoadDesc: 'Retry or return to the task list later.',
+      errorRetryLabel: 'Retry',
       searchPlaceholder: 'Search',
       searchAriaLabel: 'Search (all columns)',
       taskTypeOptions: [
@@ -596,6 +607,8 @@
       toastNoPermission: 'No permission to view task detail',
       toastNavigating: 'Navigating to task detail…',
       toastTaskSoftDeleted: 'Task moved to archive (soft deleted)',
+      toastDeleteNotAllowed: 'This task status cannot be deleted',
+      toastDeleteForbidden: 'No permission to delete task',
       toastNewTask: 'Task created',
       deleteModalTitle: 'Confirm task deletion',
       deleteModalBodyDefault: 'Soft delete this task? This action can be restored by admin.',
@@ -668,7 +681,7 @@
   };
 
   /* ── State ───────────────────────────────────────────────────── */
-  var state = { lang: 'zh', keyword: '', taskType: '', runType: '', status: '', page: 1, pageSize: 20 };
+  var state = { lang: 'zh', keyword: '', taskType: '', runType: '', status: '', page: 1, pageSize: 20, loadFailed: false };
   var pendingDeleteTaskId = null;
   var toastTimer = null;
   var pageTaskRole = 'user';
@@ -702,26 +715,21 @@
   }
 
   function getTaskSearchText(task) {
-    var zhType = (I18N.zh.taskTypeLabel && I18N.zh.taskTypeLabel[task.taskType]) || '';
-    var enType = (I18N.en.taskTypeLabel && I18N.en.taskTypeLabel[task.taskType]) || '';
+    var langMap = I18N[state.lang] || I18N.zh;
+    var typeLabel = (langMap.taskTypeLabel && langMap.taskTypeLabel[task.taskType]) || '';
     var runStage = getTaskRunStage(task);
-    var zhRun = (I18N.zh.runBadge && I18N.zh.runBadge[runStage]) || '';
-    var enRun = (I18N.en.runBadge && I18N.en.runBadge[runStage]) || '';
-    var zhStatus = (I18N.zh.statusBadge && I18N.zh.statusBadge[task.status]) || '';
-    var enStatus = (I18N.en.statusBadge && I18N.en.statusBadge[task.status]) || '';
+    var runLabel = (langMap.runBadge && langMap.runBadge[runStage]) || '';
+    var statusLabel = (langMap.statusBadge && langMap.statusBadge[task.status]) || '';
     return [
       task.id,
       task.nameZh,
       task.nameEn,
       task.taskType,
-      zhType,
-      enType,
+      typeLabel,
       runStage,
-      zhRun,
-      enRun,
+      runLabel,
       task.status,
-      zhStatus,
-      enStatus,
+      statusLabel,
       task.updatedAt
     ].filter(Boolean).join(' ').toLowerCase();
   }
@@ -794,6 +802,7 @@
 
   function syncUrl() {
     var p = new URLSearchParams();
+    if (state.loadFailed) p.set('view', 'error');
     if (getDisplayedTaskRole() !== 'user') p.set('task_role', getDisplayedTaskRole());
     if (state.keyword) p.set('keyword', state.keyword);
     if (state.taskType) p.set('task_type', state.taskType);
@@ -819,6 +828,14 @@
   }
 
   function softDeleteTask(task) {
+    if (getDisplayedTaskRole() !== 'super_admin' && getDisplayedTaskRole() !== 'project_leader') {
+      showToast(t('toastDeleteForbidden'), true);
+      return;
+    }
+    if (task.status !== 'draft') {
+      showToast(t('toastDeleteNotAllowed'), true);
+      return;
+    }
     task.deletedAt = new Date().toISOString();
     state.page = 1;
     trackAnalytics('prototype_task_soft_deleted', { task_id: task.id });
@@ -827,6 +844,14 @@
   }
 
   function openDeleteModal(task) {
+    if (getDisplayedTaskRole() !== 'super_admin' && getDisplayedTaskRole() !== 'project_leader') {
+      showToast(t('toastDeleteForbidden'), true);
+      return;
+    }
+    if (task.status !== 'draft') {
+      showToast(t('toastDeleteNotAllowed'), true);
+      return;
+    }
     pendingDeleteTaskId = task.id;
     var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
     document.getElementById('deleteTaskModalBody').textContent = t('deleteModalBodyTpl').replace('{name}', taskName);
@@ -917,18 +942,20 @@
     });
 
     var deleteBtn = document.createElement('button');
-    deleteBtn.className = 'mini-btn mini-btn-danger';
-    deleteBtn.type = 'button';
-    deleteBtn.textContent = t('actionDelete');
-    deleteBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      openDeleteModal(task);
-    });
-    deleteBtn.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
-    });
-
-    actionWrap.appendChild(deleteBtn);
+    var canDelete = (getDisplayedTaskRole() === 'super_admin' || getDisplayedTaskRole() === 'project_leader') && task.status === 'draft';
+    if (canDelete) {
+      deleteBtn.className = 'mini-btn mini-btn-danger';
+      deleteBtn.type = 'button';
+      deleteBtn.textContent = t('actionDelete');
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        openDeleteModal(task);
+      });
+      deleteBtn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+      });
+      actionWrap.appendChild(deleteBtn);
+    }
     actionWrap.appendChild(editBtn);
     tdActions.appendChild(actionWrap);
 
@@ -983,9 +1010,45 @@
     return tr;
   }
 
+  function createErrorRow() {
+    var tr = document.createElement('tr');
+    tr.className = 'error-row';
+
+    var td = document.createElement('td');
+    td.className = 'empty-row-cell';
+    td.colSpan = 6;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'empty-row-wrap';
+
+    var title = document.createElement('p');
+    title.className = 'empty-row-title';
+    title.textContent = t('errorLoadTitle');
+
+    var desc = document.createElement('p');
+    desc.className = 'empty-row-desc';
+    desc.textContent = t('errorLoadDesc');
+
+    var retryBtn = document.createElement('button');
+    retryBtn.className = 'clear-btn';
+    retryBtn.type = 'button';
+    retryBtn.textContent = t('errorRetryLabel');
+    retryBtn.addEventListener('click', function () {
+      state.loadFailed = false;
+      render();
+    });
+
+    wrap.appendChild(title);
+    wrap.appendChild(desc);
+    wrap.appendChild(retryBtn);
+    td.appendChild(wrap);
+    tr.appendChild(td);
+    return tr;
+  }
+
   /* ── Main render ─────────────────────────────────────────────── */
   function render() {
-    var filtered = getFilteredTasks();
+    var filtered = state.loadFailed ? [] : getFilteredTasks();
     var total = filtered.length;
     var totalPages = Math.max(1, Math.ceil(total / state.pageSize));
     if (state.page > totalPages) state.page = totalPages;
@@ -997,7 +1060,12 @@
     var showEmpty = total === 0 && !state.keyword && !state.taskType && !state.runType && !state.status;
     var showNoResults = total === 0 && (state.keyword || state.taskType || state.runType || state.status);
 
-    if (showEmpty) {
+    if (state.loadFailed) {
+      tableWrap.classList.remove('hidden');
+      paginationBar.classList.add('hidden');
+      while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+      tbody.appendChild(createErrorRow());
+    } else if (showEmpty) {
       tableWrap.classList.remove('hidden');
       paginationBar.classList.add('hidden');
       while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
@@ -1262,13 +1330,17 @@
     var page = parseInt(q.get('page') || '', 10);
     var pageSize = parseInt(q.get('page_size') || '', 10);
     pageTaskRole = taskRole;
+    var validTaskTypes = I18N.zh.taskTypeOptions.map(function(item) { return item.value; });
+    var validRunStages = I18N.zh.runTypeOptions.map(function(item) { return item.value; });
+    var validStatuses = I18N.zh.statusOptions.map(function(item) { return item.value; });
+    state.loadFailed = view === 'error';
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.setSystemRole(taskRole === 'super_admin' ? 'super_admin' : 'user');
     }
     if (keyword) state.keyword = keyword;
-    if (taskType) state.taskType = taskType;
-    if (runStage) state.runType = runStage;
-    if (status) state.status = status;
+    if (taskType && validTaskTypes.indexOf(taskType) !== -1) state.taskType = taskType;
+    if (runStage && validRunStages.indexOf(runStage) !== -1) state.runType = runStage;
+    if (status && validStatuses.indexOf(status) !== -1) state.status = status;
     if (!isNaN(page) && page > 0) state.page = page;
     if (!isNaN(pageSize) && [20, 50, 100].indexOf(pageSize) !== -1) state.pageSize = pageSize;
   }());
