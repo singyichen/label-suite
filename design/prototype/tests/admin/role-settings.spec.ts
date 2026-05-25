@@ -112,6 +112,7 @@ test.describe('Admin role settings matrix behavior', () => {
     const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
     await expect(taskCreateUser).toBeChecked();
 
+    await page.locator('#editBtn').click();
     await taskCreateUser.uncheck();
     await expect(page.locator('#dirtyBanner')).toBeVisible();
 
@@ -123,6 +124,7 @@ test.describe('Admin role settings matrix behavior', () => {
 
   test('saves role matrix changes and reloads the persisted state', async ({ page }) => {
     const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
+    await page.locator('#editBtn').click();
     await taskCreateUser.uncheck();
     await page.locator('#saveBtn').click();
 
@@ -138,6 +140,7 @@ test.describe('Admin role settings matrix behavior', () => {
     await page.reload();
 
     const taskCreateUser = page.locator('[data-key="task.create"][data-role="user"]');
+    await page.locator('#editBtn').click();
     await taskCreateUser.uncheck();
 
     await expect(taskCreateUser).not.toBeChecked();
@@ -157,6 +160,7 @@ test.describe('Admin role settings matrix behavior', () => {
       );
     });
 
+    await page.locator('#editBtn').click();
     await page.locator('[data-key="task.list.view"][data-role="user"]').uncheck();
     await page.locator('#saveBtn').click();
 
