@@ -76,9 +76,10 @@
 
 | 輸出類型（output_type） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
-| 自由文字（`free_text`） | 開放式文字輸出 | Summarization（摘要）、Question Answering（問答）、Translation（翻譯）、Paraphrase（改寫） | 「台積電今日宣布與輝達合作，共同開發下一代 AI 晶片，預計明年量產。」 | 台積電與輝達合作開發 AI 晶片，明年量產。 | `max_length`, `allow_reference` |
+| 自由文字（`free_text`） | 開放式文字輸出 | Summarization（摘要）、Question Answering（問答）、Translation（翻譯）、Paraphrase（改寫） | 「台積電今日宣布與輝達合作，共同開發下一代 AI 晶片，預計明年量產。」 | 台積電與輝達合作開發 AI 晶片，明年量產。 | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |
 
 > 生成任務的「評估」通常需搭配另一個標注任務（e.g. 人工評分回歸）或自動指標（ROUGE / BERTScore）。
+> `show_reference_to_annotator` 控制標注者是否可見參考輸出；`evaluation_reference_required` 控制系統評估是否需要 reference。
 
 ---
 
@@ -107,4 +108,4 @@
 | 序列（sequence） | 單一項目（single_item） | 單類型標記區間（single_type_span） | Aspect Term Extraction、Keyword Extraction、Claim Span | `span_label_field`, `allow_span_add/delete` |
 | 序列（sequence） | 單一項目（single_item） | 區間加極性（span_with_polarity） | ABSA | 同上 + `polarity_options[]` |
 | 序列（sequence） | 單一項目（single_item） | 關係三元組（relation_triple） | OpenIE、Relation Extraction | `entity_types[]`, `relation_types[]` |
-| 生成（generation） | 單一項目（single_item） | 自由文字（free_text） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `allow_reference` |
+| 生成（generation） | 單一項目（single_item） | 自由文字（free_text） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |
