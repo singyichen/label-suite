@@ -49,6 +49,7 @@
 | 輸出類型（output_type） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
 | 單維度（`single_dim`） | 相似度分數 | 語義相似度（STS）、文本相關性評分 | S1:「央行宣布升息」 S2:「銀行調高利率」 | 相似度: 0.92 | `dimension: { name, min, max, step }` |
+| 多維度（`multi_dim`） | 多個獨立句對評分軸 | 多維度句對相似度評估 | S1:「央行宣布升息」 S2:「銀行調高利率」 | 語義: 0.92, 句法: 0.65, 主題: 0.88 | `dimensions[]: { name, min, max, step }` |
 
 ---
 
@@ -97,6 +98,7 @@
 | 回歸（regression） | 單一項目（single_item） | 單維度（single_dim） | 情感強度評估、可讀性評分 | `dimension: { name, min, max, step }` |
 | 回歸（regression） | 單一項目（single_item） | 多維度（multi_dim） | 情感維度評估（Valence-Arousal）、多維度品質評估 | `dimensions[]: { name, min, max, step }` |
 | 回歸（regression） | 項目對（item_pair） | 單維度（single_dim） | 語義相似度（STS）、文本相關性評分 | `dimension: { name, min, max, step }` |
+| 回歸（regression） | 項目對（item_pair） | 多維度（multi_dim） | 語義相似度 + 句法相似度 + 主題一致性評估 | `dimensions[]: { name, min, max, step }` |
 | 序列（sequence） | 單一項目（single_item） | Token 分類（token_class） | POS tagging、Chunking | `tag_options[]` |
 | 序列（sequence） | 單一項目（single_item） | 邊界偵測（boundary） | Segmentation（斷詞／斷句） | `boundary_type: sentence\|word` |
 | 序列（sequence） | 單一項目（single_item） | 多類型標記區間（multi_type_span） | NER、Event Detection | `entity_types[]: { name, color }`, `scheme: IOB2\|BIOES` |
