@@ -1,249 +1,226 @@
-# Feature Specification: [FEATURE NAME]
+---
+功能分支: feat/[module]/NNN-feature
+建立日期: YYYY-MM-DD
+版本: 1.0.0
+狀態: Draft
+---
 
-**Feature Branch**: `feat/[module]/NNN-feature`
-**Created**: [YYYY-MM-DD]
-**Version**: 1.1.0
-**Status**: Draft
-**Requirement Source**: [Prototype / PRD / Existing Spec / Stakeholder Request]
+# 功能規格：[功能名稱]
 
-## Input & Generation Rules
+**需求來源**: [原型 / PRD / 現有規格 / 利害關係人需求]
+
+## 輸入與生成規則
 
 <!--
-  Define how this spec was generated and where its scope boundaries are.
-  Use pending clarification markers for unclear requirements; do not guess.
-  Remove any optional content that does not apply instead of leaving "N/A".
+  定義本規格的產生依據與範圍邊界。
+  對不清楚的需求使用待釐清標記，不得自行假設。
+  不適用的可選段落請直接刪除，不留 "N/A"。
 -->
 
-**Input Description**: [User / stakeholder / prototype input summarized in one sentence.]
+**輸入描述**：[以一句話說明使用者 / 利害關係人 / 原型的輸入摘要。]
 
-**Generation Rules**:
+**產生規格時必須遵守**：
 
-1. Confirm this spec scope matches the Requirement Source before writing requirements.
-2. If role permissions, navigation, data source, error behavior, i18n, a11y, responsive boundaries, performance targets, or downstream impact are unclear, mark the concrete question with a pending clarification marker.
-3. Describe user-observable behavior, business rules, and acceptance criteria; avoid framework, API, database, or file-structure details unless they are part of the product contract.
-4. If this spec adds or changes task type behavior, requirements MUST be config-driven through registry/schema/frozen task config; adding a new task type MUST NOT require modifying core code.
-5. Annotator-facing API responses and UI MUST NOT expose test-set answers, ground truth, scoring keys, hidden labels, answer file paths, or equivalent privileged data.
-6. If the spec diverges from prototype, IA, or upstream specs, document the difference, update Spec Dependencies, and add a Changelog row.
+1. 確認本規格範圍與需求來源一致後再撰寫需求。
+2. 若角色權限、導頁、資料來源、錯誤行為、i18n、a11y、響應式邊界、效能目標或下游影響不明確，需以待釐清標記記錄具體問題。
+3. 描述使用者可觀察行為、業務規則與驗收條件，不描述框架、API、資料庫或檔案結構細節（除非屬於產品契約的一部分）。
+4. 若本規格新增或改動 task type 行為，需求必須透過 registry / schema / frozen task config 以 config-driven 方式實現；新增 task type 不得修改核心程式碼。
+5. 標注者端（Annotator）的 API 回應與 UI 絕對不得暴露 test-set 答案、ground truth、評分鍵、隱藏標籤、答案檔案路徑或等效的特殊權限資料。
+6. 若本規格與原型、IA 或上游規格不一致，需記錄差異、更新規格相依性，並新增 Changelog 項目。
 
-**Clarifications**:
+**已釐清事項**：
 
-- [Clarified scope boundary / non-goal.]
-- [Clarified upstream dependency or prototype behavior.]
-- [Clarified security, data, role, or task-config constraint.]
+- [已釐清的範圍邊界 / 非目標。]
+- [已釐清的上游相依性或原型行為。]
+- [已釐清的安全性、資料、角色或 task config 限制。]
 
-## Spec Constants
+## 規格常數
 
 <!--
-  Define reusable constants once, then reference them across FR/SC sections.
-  Typical examples: breakpoints, supported viewport sets, SLA thresholds, limits.
+  在此定義可重複使用的常數，並在 FR / SC 章節中引用。
+  常見範例：斷點、支援的視窗尺寸集合、SLA 閾值、限制值。
 -->
 
-- `[CONSTANT_NAME] = [value]`
-- `[CONSTANT_NAME] = [value]`
+- `[常數名稱] = [值]`
+- `[常數名稱] = [值]`
 
-## Process Flow *(required for multi-step, role-based, or cross-system behavior)*
+## 流程圖 *(多步驟、角色分工或跨系統行為時必填)*
 
 <!--
-  Describe the end-to-end business process BEFORE splitting into user stories.
-  Focus on WHO does WHAT and in what ORDER (business behavior, not implementation detail).
+  在拆分使用者故事之前，先描述端對端的業務流程。
+  聚焦於「誰做了什麼」以及「以何種順序」（業務行為，非實作細節）。
 -->
 
 ```mermaid
 sequenceDiagram
-    actor User
-    participant ProductSurface as Product Surface
-    participant SystemPolicy as System Policy / State
-    participant DataSource as Data Source
+    actor 使用者
+    participant 產品介面 as 產品介面
+    participant 系統規則 as 系統規則 / 狀態
+    participant 資料來源 as 資料來源
 
-    User->>ProductSurface: [Trigger action]
-    ProductSurface->>SystemPolicy: [Validate role / state / rules]
-    SystemPolicy->>DataSource: [Read / write product data]
-    DataSource-->>SystemPolicy: [Result]
-    SystemPolicy-->>ProductSurface: [Allowed response / blocked state]
-    ProductSurface-->>User: [Observable result]
+    使用者->>產品介面: [觸發動作]
+    產品介面->>系統規則: [驗證角色 / 狀態 / 規則]
+    系統規則->>資料來源: [讀取 / 寫入產品資料]
+    資料來源-->>系統規則: [結果]
+    系統規則-->>產品介面: [允許的回應 / 封鎖狀態]
+    產品介面-->>使用者: [可觀察的結果]
 ```
 
-| Step | Role | Action | System Response |
-|------|------|--------|----------------|
-| 1 | [Role] | [Action] | [Response] |
-| 2 | [Role] | [Action] | [Response] |
+| 步驟 | 角色 | 動作 | 系統回應 |
+|------|------|------|---------|
+| 1 | [角色] | [動作] | [回應] |
+| 2 | [角色] | [動作] | [回應] |
 
 ---
 
-## User Scenarios & Testing *(required)*
+## 使用者情境與測試 *(必填)*
 
 <!--
-  User stories must be independently testable.
-  Prioritize by business value: P1 > P2 > P3.
+  使用者故事必須可獨立測試。
+  依商業價值排序：P1 > P2 > P3。
 -->
 
-### User Story 1 — [Title] (Priority: P1)
+### 使用者故事 1 — [標題]（優先級：P1）
 
-[Describe this user journey in plain language.]
+[以白話文描述此使用者旅程。]
 
-**Why this priority**: [Why this must be delivered at this priority.]
-**Independent Test**: [How to validate this story in isolation.]
+**此優先級原因**：[說明此功能必須以此優先級交付的原因。]
+**獨立測試方式**：[說明如何獨立驗證此故事。]
 
-**Acceptance Scenarios**:
+**驗收情境**：
 
-1. **Given** [initial context], **When** [action], **Then** [expected outcome]
-2. **Given** [initial context], **When** [action], **Then** [expected outcome]
-
-**Interface Definition (must match prototype where applicable)**:
-
-- Section A: `[Section title]`
-  - Subtitle: `[Subtitle]`
-  - Required elements:
-    - `[Element / metric / field / CTA]`
-    - `[Element / metric / field / CTA]`
-- Section B: `[Section title]`
-  - Required elements:
-    - `[Element / metric / field / CTA]`
-
-**Behavior Rules**:
-
-- [Visibility / state / transition rule]
-- [i18n / a11y / role-based rendering rule]
-- [Action trigger and expected result]
+1. **Given** [初始條件]，**When** [動作]，**Then** [預期結果]
+2. **Given** [初始條件]，**When** [動作]，**Then** [預期結果]
 
 ---
 
-### User Story 2 — [Title] (Priority: P2)
+### 使用者故事 2 — [標題]（優先級：P2）
 
-[Describe this user journey in plain language.]
+[以白話文描述此使用者旅程。]
 
-**Why this priority**: [Reason.]
-**Independent Test**: [Isolated validation approach.]
+**此優先級原因**：[原因。]
+**獨立測試方式**：[獨立驗證方式。]
 
-**Acceptance Scenarios**:
+**驗收情境**：
 
-1. **Given** [initial context], **When** [action], **Then** [expected outcome]
-
-**Interface Definition (if applicable)**:
-
-- Section A: `[Section title]`
-  - Required elements:
-    - `[Element / field / CTA]`
-
-**Behavior Rules**:
-
-- [Rule]
+1. **Given** [初始條件]，**When** [動作]，**Then** [預期結果]
 
 ---
 
-### Edge Cases
+### 邊界情況
 
-- What happens when [invalid role / missing data / malformed state]?
-- What happens when [conflicting conditions]?
-- What happens when [i18n key missing / non-critical dependency unavailable]?
-- What happens at [responsive boundary / threshold limit]?
+- [不合法角色 / 缺失資料 / 狀態異常] 時會發生什麼？
+- [衝突條件] 時會發生什麼？
+- [i18n key 缺失 / 非關鍵相依性不可用] 時會發生什麼？
+- [響應式邊界 / 閾值限制] 時會發生什麼？
 
-## Requirements *(required)*
+## 需求規格 *(必填)*
 
-### Functional Requirements
+### 功能需求
 
 <!--
-  Use stable requirement IDs: FR-001, FR-001A, FR-001B...
-  Include role constraints explicitly where applicable.
+  使用穩定的需求 ID：FR-001、FR-001A、FR-001B...
+  需明確指出角色限制（若適用）。
 -->
 
-- **FR-001**: The system MUST [capability].
-- **FR-001A**: The system MUST [sub-capability refinement].
-- **FR-002**: The system MUST [capability].
-- **FR-003**: Only [explicit roles] MUST be able to [action / page].
+- **FR-001**：系統必須 [能力]。
+- **FR-001A**：系統必須 [子能力細化]。
+- **FR-002**：系統必須 [能力]。
+- **FR-003**：僅 [明確角色] 才可 [動作 / 頁面]。
 
-### User Flow & Navigation *(required)*
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
     Entry["/entry"] --> Feature["/feature"]
-    Feature --> StateA["State A"]
-    Feature --> StateB["State B"]
+    Feature --> StateA["狀態 A"]
+    Feature --> StateB["狀態 B"]
     StateA --> Exit["/exit"]
     StateB --> Exit
 ```
 
 | From | Trigger | To |
 |------|---------|-----|
-| [Route / State] | [User/system trigger] | [Route / State] |
-| [Route / State] | [User/system trigger] | [Route / State] |
+| [路由 / 狀態] | [使用者 / 系統觸發] | [路由 / 狀態] |
+| [路由 / 狀態] | [使用者 / 系統觸發] | [路由 / 狀態] |
 
-**Entry points**: [How users enter this feature.]
-**Exit points**: [Where users can leave this feature.]
+**Entry points**：[使用者如何進入此功能。]
+**Exit points**：[使用者可從何處離開此功能。]
 
-### Key Entities *(required when feature includes data or state modeling)*
+### 關鍵實體 *(功能涉及資料或狀態建模時必填)*
 
-- **[EntityName]**: [Definition, key attributes, constraints.]
-- **[EntityName]**: [Definition, relationship to other entities.]
-
----
-
-## Spec Dependencies *(required — use “—” rows if none)*
-
-### Upstream (this spec depends on)
-
-| Spec # | Feature | What this spec needs from it |
-|--------|---------|------------------------------|
-| — | — | — |
-
-### Downstream (specs that depend on this)
-
-| Spec # | Feature | What they rely on from this spec |
-|--------|---------|----------------------------------|
-| — | — | — |
+- **[實體名稱]**：[定義、關鍵屬性、限制。]
+- **[實體名稱]**：[定義、與其他實體的關係。]
 
 ---
 
-## Success Criteria *(required)*
+## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
+
+### 上游（本規格依賴的規格）
+
+| 規格編號 | 功能 | 本規格需要的內容 |
+|---------|------|----------------|
+| — | — | — |
+
+### 下游（依賴本規格的規格）
+
+| 規格編號 | 功能 | 依賴本規格的內容 |
+|---------|------|----------------|
+| — | — | — |
+
+---
+
+## 成功標準 *(必填)*
 
 <!--
-  Success criteria should be observable and testable.
-  Use SC IDs and reference constants when relevant.
+  成功標準必須可觀察且可測試。
+  使用 SC ID，並在適當時引用常數。
 -->
 
-- **SC-001**: [Measurable behavioral outcome.]
-- **SC-002**: [Measurable rendering / response / quality outcome.]
-- **SC-003**: [Cross-role / cross-state correctness outcome.]
+- **SC-001**：[可量化的行為結果。]
+- **SC-002**：[可量化的渲染 / 回應 / 品質結果。]
+- **SC-003**：[跨角色 / 跨狀態的正確性結果。]
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
-- [ ] Spec focuses on user-observable behavior, business rules, and acceptance criteria.
-- [ ] All required sections are completed; optional non-applicable sections are removed.
-- [ ] No pending clarification markers remain.
-- [ ] Requirements, acceptance scenarios, and success criteria are testable and unambiguous.
-- [ ] Success criteria are measurable.
-- [ ] Scope is clearly bounded.
+- [ ] 規格聚焦使用者可觀察行為與業務需求，未引入框架、API 或資料庫實作細節。
+- [ ] 所有必填章節已完成；不適用的可選章節已移除。
+- [ ] 無未解決的待釐清標記殘留。
+- [ ] 需求、驗收情境與成功標準皆可測試且明確。
+- [ ] 成功標準可量化。
+- [ ] 範圍已明確界定。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
-- [ ] Feature branch format follows `feat/[module]/NNN-feature`.
-- [ ] No cross-feature import requirement is introduced; shared behavior is tracked through shared contracts or Spec Dependencies.
-- [ ] Task behavior is config-driven where applicable; no hardcoded task type logic is required.
-- [ ] Annotator-facing API / UI does not expose test-set answers, ground truth, or equivalent privileged data.
-- [ ] Prototype / IA / upstream spec source of truth is listed and any divergence is documented.
-- [ ] Upstream and downstream Spec Dependencies are complete.
-- [ ] Relevant performance baseline, pagination, or responsive constraints are captured.
+- [ ] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [ ] 本規格不新增跨 feature import 或架構耦合需求；共用行為透過共用契約或規格相依性追蹤。
+- [ ] task 行為以 config-driven 方式實現（若適用）；不需要修改硬編碼的 task type 邏輯。
+- [ ] 標注者端 API / UI 不暴露 test-set 答案、ground truth 或等效的特殊權限資料。
+- [ ] 原型 / IA / 上游規格的 source of truth 已列出，且任何差異皆已記錄。
+- [ ] 上游與下游規格相依性已完整填寫。
+- [ ] 相關效能基準、分頁或響應式限制已記錄。
 
-### Execution Status
+### 執行狀態
 
-- [ ] Input description parsed.
-- [ ] Actors, interactions, data states, and constraints extracted.
-- [ ] Ambiguities marked and resolved.
-- [ ] User scenarios defined.
-- [ ] Functional requirements defined.
-- [ ] Key entities or state models defined.
-- [ ] Review checklist passed.
+- [ ] 輸入描述已解析。
+- [ ] 角色、互動、資料狀態與限制已萃取。
+- [ ] 模糊點已釐清或明確排除於本版範圍。
+- [ ] 使用者情境已定義。
+- [ ] 功能需求已定義。
+- [ ] 關鍵實體已定義。
+- [ ] Review checklist 已通過。
 
 ---
 
 ## Changelog
 
-| Version | Date | Change Summary |
-|---------|------|----------------|
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.2.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + H1，章節標題與清單項目全面中文化 |
 | 1.1.0 | 2026-05-21 | 新增輸入與產生規則、審查清單與執行狀態；補強 config-driven 與 ground-truth 安全檢查 |
 | 1.0.1 | 2026-05-21 | 對齊模組化 SDD 目錄結構的 feature branch 格式 |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

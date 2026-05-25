@@ -81,7 +81,8 @@ All development must comply with [constitution.md](.specify/memory/constitution.
 
 ## Changelog
 
-| Version | Date | Change Summary |
-|---------|------|----------------|
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.0.2 | 2026-05-22 | Changelog table headers aligned to Traditional Chinese |
 | 1.0.1 | 2026-05-21 | Align SDD workflow paths with module-based spec directories |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

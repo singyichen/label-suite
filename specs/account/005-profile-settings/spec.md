@@ -1,12 +1,15 @@
-# 功能規格：Profile Settings — 個人設定（資料編輯 + 變更 Email + 修改密碼）
+---
+功能分支: feat/account/005-profile-settings
+建立日期: 2026-04-05
+版本: 1.2.9
+狀態: Clarified
+---
 
-**功能分支**：`feat/account/005-profile-settings`
-**建立日期**：2026-04-05
-**版本**：1.2.8
-**狀態**：Clarified
-**需求來源**：IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
+# 功能規格：Profile Settings — 個人設定（資料編輯 + 變更 Email + 修改密碼
 
-## Input & Generation Rules
+**需求來源**: IA v7 Spec 清單 #005 — 個人設定（資料編輯 + 變更 Email + 修改密碼）
+
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Profile Settings 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
 
@@ -20,9 +23,19 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 頭像上傳是否屬於本版實作範圍？ → A: 納入本版範圍，需補齊持久化、預覽、移除、錯誤狀態與驗收標準。
+- Q: 通知設定要如何持久化？ → A: 後端持久化到使用者通知偏好；跨裝置、重新登入後仍保留。
+- Q: Email 驗證成功後，既有登入 session 要如何處理？ → A: Email 驗證成功後失效所有 sessions，導向 `/login` 重新登入。
+- Q: Email 驗證信重新寄送要不要限制頻率？ → A: 同一使用者每 60 秒最多重送一次；未過 cooldown 時顯示剩餘等待時間。
+- Q: 同一使用者可否同時存在多個 pending Email 變更請求？ → A: 每位使用者只允許一個 pending Email；新請求覆蓋舊 pending，舊 token 立即失效。
 
 ## 規格常數
 
@@ -30,11 +43,14 @@
 - `CONTACT_INFO_MAX_LENGTH = 255`
 - `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`
 - `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES = 30`
+- `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS = 60`
+- `AVATAR_MAX_SIZE_MB = 5`
+- `AVATAR_ALLOWED_TYPES = JPG / PNG / WebP`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 - `APPEARANCE_STORAGE_KEY = label-suite-theme`（client-side only；參照 spec 008）
 
-## Process Flow
+## 流程圖
 
 ### 個人資料儲存流程
 
@@ -64,6 +80,7 @@ sequenceDiagram
     participant 後端API as 後端 API
     participant 郵件服務 as Mail Service
     participant 資料庫
+    participant session as Session Store
 
     使用者->>瀏覽器: 在 /profile 點擊「變更 Email」
     瀏覽器->>瀏覽器: 顯示變更 Email 表單（新 Email）
@@ -79,7 +96,8 @@ sequenceDiagram
     後端API->>資料庫: 驗證 token 是否存在且未過期
     alt token 有效
         後端API->>資料庫: email = pending_email；清除 pending_email/token
-        後端API-->>使用者: 驗證成功
+        後端API->>session: 失效該使用者所有 sessions
+        後端API-->>使用者: 驗證成功並導向 /login
     else token 無效或過期
         後端API-->>使用者: 驗證失敗（token invalid/expired）
     end
@@ -124,7 +142,7 @@ sequenceDiagram
 | 1 | 使用者 | 編輯姓名或聯絡方式並送出 | 前端驗證後送出更新請求 |
 | 2 | 系統 | 更新個人資料成功 | 回傳新資料並同步 `authStore`，Navbar 即時更新 |
 | 3 | 使用者 | 點擊「變更 Email」並送出新 Email | 系統建立 email 變更請求並寄送驗證信至新 Email |
-| 4 | 系統 | 新 Email 驗證連結被點擊且 token 有效 | 將 `email` 切換為新 Email，清除 pending 狀態 |
+| 4 | 系統 | 新 Email 驗證連結被點擊且 token 有效 | 將 `email` 切換為新 Email，清除 pending 狀態，失效所有 sessions 並導向 `/login` |
 | 5 | 使用者 | 送出密碼變更 | 前端先驗證強度與確認密碼一致 |
 | 6a | 系統 | Email / Password 帳號且現有密碼錯誤 | 回傳 401 + 錯誤訊息，不更新密碼 |
 | 6b | 系統 | 密碼更新成功 | 寫入 bcrypt 雜湊，保留目前裝置 session，其他裝置失效 |
@@ -134,25 +152,29 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 修改個人資料（優先級：P1）
+### 使用者故事 1 — 修改個人資料（優先級：P1）
 
-已登入使用者在 `/profile` 修改姓名或聯絡方式，送出後系統更新資料並顯示成功提示。
+已登入使用者在 `/profile` 修改姓名、聯絡方式或頭像，送出後系統更新資料並顯示成功提示。
 
 **此優先級原因**：屬於基本帳號維護能力，必須優先可用。
 
-**獨立測試方式**：登入後進入 `/profile`，修改姓名與聯絡方式，驗證 API 回寫成功、畫面顯示成功訊息，且 Navbar 名稱即時更新。
+**獨立測試方式**：登入後進入 `/profile`，修改姓名、聯絡方式與頭像，驗證 API 回寫成功、畫面顯示成功訊息，且 Navbar 名稱與頭像即時更新。
 
 **驗收情境**：
 
 1. **Given** 已登入使用者在 `/profile`，**When** 修改姓名並送出，**Then** 資料庫更新 `name`，表單顯示新值且頁面顯示「儲存成功」。
 2. **Given** 已登入使用者在 `/profile`，**When** 修改聯絡方式並送出，**Then** 資料庫更新 `contact_info` 且頁面顯示「儲存成功」。
 3. **Given** 已登入使用者在 `/profile`，**When** 清空姓名欄位送出，**Then** 前端顯示必填錯誤並阻止送出。
+4. **Given** 已登入使用者在 `/profile`，**When** 選擇合法頭像檔案並送出，**Then** 系統持久化新頭像，表單與 Navbar 頭像即時更新，並顯示「儲存成功」。
+5. **Given** 已登入使用者在 `/profile`，**When** 移除既有頭像並送出，**Then** 系統清除自訂頭像並顯示預設頭像。
+6. **Given** 已登入使用者選擇不支援格式或超過大小上限的頭像檔案，**When** 檔案被選取或送出，**Then** 前端顯示檔案限制錯誤並阻止送出。
 
 **個人資料區塊定義（需與原型一致）**：
 
 - 頁首：主標題 `個人設定`，副標題 `管理您的個人資料與帳號安全`
 - 欄位：`name`（必填）、`contact_info`（可空，單一自由文字，顯示即時計數 `N / 255`）、`email`（遮罩顯示，含「變更」入口）
-- 頭像上傳：接受 `JPG/PNG/WebP`，檔案大小上限 5 MB
+- 頭像上傳：接受 `AVATAR_ALLOWED_TYPES`，檔案大小上限 `AVATAR_MAX_SIZE_MB`，選取後顯示本地預覽
+- 頭像移除：已有自訂頭像時顯示移除入口；移除後預覽切回預設頭像
 - 按鈕：`儲存`（主要）
 - 回饋：儲存成功顯示 toast，不跳頁
 
@@ -162,12 +184,15 @@ sequenceDiagram
 - `contact_info` 長度上限 `CONTACT_INFO_MAX_LENGTH`，可為空字串。
 - `contact_info` 輸入時需顯示即時字數計數（`目前字數 / CONTACT_INFO_MAX_LENGTH`）。
 - `email` 欄位為唯讀遮罩顯示，不可直接編輯；須透過「變更」流程更新。
-- 頭像僅接受 `JPG/PNG/WebP` 且檔案大小 <= 5 MB。
-- 更新成功後必須同步 `authStore`，Navbar 顯示名稱即時更新。
+- 頭像僅接受 `AVATAR_ALLOWED_TYPES` 且檔案大小 <= `AVATAR_MAX_SIZE_MB`。
+- 頭像檔案選取後需先顯示預覽；未送出前重新整理或離開頁面不得持久化變更。
+- 頭像移除需在使用者送出儲存後才持久化；成功後顯示預設頭像。
+- 頭像驗證失敗時不得送出更新請求，並需顯示可理解的格式或大小錯誤。
+- 更新成功後必須同步 `authStore`，Navbar 顯示名稱與頭像即時更新。
 
 ---
 
-### User Story 2 — 變更 Email 與驗證（優先級：P1）
+### 使用者故事 2 — 變更 Email 與驗證（優先級：P1）
 
 已登入使用者可在 `/profile` 點擊「變更」進入 Email 變更流程；系統需寄送驗證信至新 Email，驗證成功後才切換登入帳號 Email。
 
@@ -182,6 +207,9 @@ sequenceDiagram
 3. **Given** 新 Email 尚未驗證，**When** 使用者嘗試以新 Email 登入，**Then** 登入失敗；舊 Email 仍可登入。
 4. **Given** 使用者點擊未過期且有效的驗證連結，**When** 驗證通過，**Then** 系統將帳號主 Email 切換為新 Email。
 5. **Given** Email 已切換完成，**When** 使用者登入，**Then** 僅新 Email 可登入，舊 Email 不可再用於登入。
+6. **Given** Email 驗證成功，**When** 使用者回到任何已登入頁面或其他裝置呼叫 API，**Then** 既有 sessions 全部失效並需以新 Email 重新登入。
+7. **Given** 使用者已送出 Email 變更請求，**When** 在 `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS` 內點擊重新寄送，**Then** 系統不得再次寄信，並顯示剩餘等待時間。
+8. **Given** 使用者已有未驗證的 pending Email，**When** 使用者送出另一個合法且未被使用的新 Email，**Then** 系統以新 pending Email 覆蓋舊請求，舊驗證 token 立即失效。
 
 **變更 Email 區塊定義（需與原型一致）**：
 
@@ -193,12 +221,16 @@ sequenceDiagram
 
 - 新 Email 必須通過格式檢查，且不得與現有帳號重複。
 - 變更請求建立後，不立即覆蓋 `email`，需先寫入 `pending_email` 並等待驗證成功。
+- 每位使用者同時間只能有一筆 pending Email 變更請求；新的合法變更請求會覆蓋舊 `pending_email`、token 與期限。
+- 舊 pending Email 的驗證連結在被新請求覆蓋後必須立即失效，即使原 token 尚未過期。
 - 驗證 token 有效期限為 `EMAIL_VERIFICATION_TOKEN_TTL_MINUTES`。
 - 驗證成功後才更新 `email`，並清除 `pending_email` 與 token。
+- 驗證成功後必須失效該使用者所有既有 sessions，並導向 `/login` 要求以新 Email 重新登入。
+- 重新寄送驗證信需受 `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS` 限制；cooldown 未結束前不得再次寄送，且 UI 需顯示剩餘等待時間。
 
 ---
 
-### User Story 3 — 修改密碼 / 設定密碼（優先級：P1）
+### 使用者故事 3 — 修改密碼 / 設定密碼（優先級：P1）
 
 已登入使用者可在 `/profile` 修改密碼；Google SSO 帳號（無既有密碼）可在同區塊直接設定新密碼。
 
@@ -228,19 +260,20 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — 通知設定偏好（優先級：P2）
+### 使用者故事 4 — 通知設定偏好（優先級：P2）
 
-已登入使用者可在 `/profile` 通知設定區塊，針對各通知事件分別開關站內通知與電子郵件，儲存後以 toast 確認。
+已登入使用者可在 `/profile` 通知設定區塊，針對各通知事件分別開關站內通知與電子郵件；儲存後偏好需寫入帳號層級後端狀態，跨裝置與重新登入後仍保留。
 
 **此優先級原因**：通知偏好屬於個人設定範疇，整合於 `/profile` 避免額外路由，降低操作跳轉成本。
 
-**獨立測試方式**：進入 `/profile`，捲動至通知設定區塊，切換開關後點擊儲存，確認 toast 出現；切換語言後確認文案同步。
+**獨立測試方式**：進入 `/profile`，捲動至通知設定區塊，切換開關後點擊儲存，確認 toast 出現且重新登入後維持相同設定；切換語言後確認文案同步。
 
 **驗收情境**：
 
 1. **Given** 已登入使用者在 `/profile`，**When** 捲動至通知設定區塊，**Then** 顯示支援的通知事件列表，每個事件有站內通知與電子郵件兩欄開關。
 2. **Given** 使用者切換任一通知開關並點擊「儲存設定」，**When** 儲存成功，**Then** 顯示 toast「設定已儲存」，不跳頁。
 3. **Given** `/profile` 切換語言為 `en`，**When** 顯示通知設定區塊，**Then** 所有事件名稱、觸發說明與按鈕文案同步切換為英文。
+4. **Given** 使用者已儲存通知設定，**When** 使用者重新登入或在另一裝置開啟 `/profile`，**Then** 通知設定區塊顯示最後儲存的帳號偏好。
 
 **通知設定區塊定義（需與原型一致）**：
 
@@ -249,10 +282,11 @@ sequenceDiagram
 - 支援事件（六項）：`annotation_complete`、`review_complete`、`dry_run_all_done`、`formal_annotation_all_done`、`assignment_created_annotator`、`assignment_created_reviewer`
 - 每個事件 × 每個頻道 = 一個 toggle switch（`checkbox`）
 - 儲存按鈕：`儲存設定`（主要）；成功後顯示 toast，不跳頁
+- 持久化：通知偏好為帳號層級後端狀態，不使用僅限單瀏覽器的 client-side 儲存作為 source of truth
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 使用者在不同裝置寬度存取 `/profile` 時，頁面需維持可讀、可操作且不破版。
 
@@ -268,7 +302,7 @@ sequenceDiagram
 
 ---
 
-### User Story 6 — 跨頁語言持久化（優先級：P2）
+### 使用者故事 6 — 跨頁語言持久化（優先級：P2）
 
 使用者在 `/profile` 切換語言後，導向其他頁面再返回時，語系必須維持一致。
 
@@ -284,7 +318,7 @@ sequenceDiagram
 
 ---
 
-### User Story 7 — 外觀模式偏好（優先級：P3）
+### 使用者故事 7 — 外觀模式偏好（優先級：P3）
 
 使用者可透過 `/profile` 頁上的共用 Sidebar 切換外觀模式（淺色 / 深色 / 跟隨系統），偏好以 `localStorage` 持久化，跨頁保持一致。
 
@@ -304,11 +338,18 @@ sequenceDiagram
 ### 邊界情況
 
 - 新 Email 已被其他帳號使用？→ 拒絕請求並回傳「Email 已被使用」。
+- 使用者在 Email 尚未驗證前再次送出另一個新 Email？→ 新請求覆蓋舊 pending Email，舊 token 立即失效。
 - 變更 Email 驗證連結逾期或無效？→ 顯示失敗訊息，使用者可重新發送驗證信。
+- 使用者連續點擊重新寄送驗證信？→ 同一使用者每 `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS` 最多寄送一次；未過 cooldown 時顯示剩餘等待時間。
 - 新 Email 尚未驗證時可否登入？→ 不可，仍僅允許舊 Email 登入。
 - 驗證成功後舊 Email 是否仍可登入？→ 不可，僅新 Email 可登入。
+- Email 驗證成功後既有 sessions 是否仍有效？→ 否，所有 sessions 必須失效並重新登入。
 - Google SSO 帳號進入密碼區塊時？→ 不顯示現有密碼欄位，改為設定新密碼流程。
 - 使用者姓名更新後 Navbar 是否即時反映？→ 是，透過 `authStore` 同步即時更新。
+- 使用者頭像更新或移除後 Navbar 是否即時反映？→ 是，透過 `authStore` 同步即時更新。
+- 頭像檔案格式不支援或超過大小上限？→ 顯示檔案限制錯誤，不送出更新請求。
+- 頭像選取後尚未儲存即離開頁面？→ 不持久化變更；下次進入仍顯示最後已儲存頭像。
+- 通知設定儲存後重新登入或換裝置是否保留？→ 是，通知偏好需由後端帳號狀態恢復。
 - `contact_info` 欄位可否為空？→ 可以，空字串合法；超過 `CONTACT_INFO_MAX_LENGTH` 視為驗證失敗。
 - 現有密碼連續輸入錯誤是否鎖定？→ 不鎖定；每次皆回傳 401。
 - 行動版（`<= MOBILE_BP`）時內容區或 Email 變更表單是否可能被擠壓或遮擋？→ 不可；需維持單欄可閱讀與可操作。
@@ -319,11 +360,14 @@ sequenceDiagram
 
 ### 功能需求
 
-- **FR-001**：`/profile` 必須提供個人資料區塊（姓名、聯絡方式、Email 顯示與變更入口）與儲存操作。
+- **FR-001**：`/profile` 必須提供個人資料區塊（姓名、聯絡方式、頭像、Email 顯示與變更入口）與儲存操作。
 - **FR-001A**：`/profile` 必須顯示頁首標題區，包含主標題「個人設定」與副標題「管理您的個人資料與帳號安全」。
 - **FR-002**：`name` 必須為必填欄位，空值不得送出。
 - **FR-003**：`contact_info` 必須為單一自由文字欄位，可為空字串，長度上限 `CONTACT_INFO_MAX_LENGTH`。
 - **FR-004**：個人資料更新成功後，前端必須同步更新 `authStore`，使 Navbar 顯示名稱即時反映。
+- **FR-004H**：`/profile` 必須支援頭像上傳、預覽與移除；頭像檔案僅接受 `AVATAR_ALLOWED_TYPES` 且大小不得超過 `AVATAR_MAX_SIZE_MB`。
+- **FR-004I**：頭像選取或移除在使用者送出儲存前不得持久化；儲存成功後必須同步 `authStore`，使 Navbar 頭像即時反映。
+- **FR-004J**：頭像格式或大小驗證失敗時，系統必須顯示錯誤並阻止送出更新請求。
 - **FR-004A**：`/profile` 的 Email 區塊必須顯示遮罩後 Email 與「變更」入口。
 - **FR-004B**：點擊「變更」後，系統必須在同一路由 `/profile` 內切換至 Email 變更狀態，並提供 `new_email` 輸入與「下一步」按鈕。
 - **FR-004C**：送出新 Email 後，系統必須建立 email 變更請求（`pending_email` + `verification_token` + `expires_at`）並寄送驗證信至新 Email。
@@ -331,6 +375,9 @@ sequenceDiagram
 - **FR-004E**：使用者點擊有效驗證連結後，系統必須將 `email` 更新為 `pending_email` 並清除 pending/token。
 - **FR-004F**：Email 驗證成功後，僅新 Email 可用於登入；舊 Email 不得再登入。
 - **FR-004G**：驗證 token 失效或無效時，系統必須拒絕更新 Email 並提供重新寄送驗證信機制。
+- **FR-004K**：Email 驗證成功後，系統必須失效該使用者所有既有 sessions，並導向 `/login` 要求以新 Email 重新登入。
+- **FR-004L**：重新寄送 Email 驗證信必須套用 `EMAIL_VERIFICATION_RESEND_COOLDOWN_SECONDS`；cooldown 未結束前，系統不得再次寄送並必須顯示剩餘等待時間。
+- **FR-004M**：每位使用者同時間只能有一筆 pending Email 變更請求；新的合法變更請求必須覆蓋舊 `pending_email`、token 與期限，舊 token 必須立即失效。
 - **FR-005**：`/profile` 必須提供密碼修改區塊，依帳號類型顯示對應欄位。
 - **FR-006**：Email / Password 帳號修改密碼前必須驗證 `current_password`（bcrypt 比對）。
 - **FR-007**：新密碼必須以 bcrypt 雜湊儲存，並符合 `PASSWORD_MIN_LENGTH` 與 `PASSWORD_RULE`。
@@ -346,8 +393,10 @@ sequenceDiagram
 - **FR-013A**：外觀偏好目前以 `APPEARANCE_STORAGE_KEY`（`localStorage`）持久化（client-side only）；若未來需跨裝置同步，應透過 `PATCH /users/me/preferences` 後端持久化，`appearance_mode` 欄位值域對齊 `APPEARANCE_MODES`。
 - **FR-013B**：`/profile` 必須提供通知設定區塊（第四區塊），以表格形式呈現各通知事件（含觸發說明）與站內通知、電子郵件兩欄 toggle switch。
 - **FR-013C**：通知設定儲存成功後顯示 toast，不跳頁；通知設定區塊不提供跳轉至獨立「通知設定」頁面的連結。
+- **FR-013D**：通知設定必須以帳號層級後端狀態持久化；使用者重新登入或於另一裝置開啟 `/profile` 時，必須顯示最後儲存的通知偏好。
+- **FR-013E**：每項通知偏好必須以事件 key 與頻道（站內通知 / 電子郵件）的組合儲存；未支援的事件 key 或頻道不得被接受為有效設定。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -426,11 +475,12 @@ flowchart LR
 
 ### 關鍵實體
 
-- **User**：`name`、`contact_info`、`hashed_password`、`email`（可更新）
-- **EmailChangeRequest**：`user_id`、`pending_email`、`verification_token`、`expires_at`、`verified_at`
-- **Session**：多裝置登入 session 狀態（密碼更新後需失效其他裝置）
+- **User**：`name`、`contact_info`、`avatar_url`、`hashed_password`、`email`（可更新）
+- **EmailChangeRequest**：`user_id`、`pending_email`、`verification_token`、`expires_at`、`last_sent_at`、`verified_at`；每位使用者同時間最多一筆 active request。
+- **Session**：多裝置登入 session 狀態（密碼更新後需失效其他裝置；Email 驗證成功後需失效所有裝置）
 - **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
 - **AppearanceState**：外觀偏好。關鍵欄位：`mode`（`light` / `dark` / `system`）、`storage_key = label-suite-theme`（client-side）；詳細定義見 spec 008。
+- **NotificationPreference**：帳號層級通知偏好。關鍵欄位：`user_id`、`event_key`、`in_app_enabled`、`email_enabled`；`event_key` 僅可為本規格列出的六項支援事件。
 
 ---
 
@@ -457,28 +507,33 @@ flowchart LR
 ## 成功標準 *(必填)*
 
 - **SC-001**：個人資料更新成功後，Navbar 名稱必須在同頁即時更新，無需重新整理。
+- **SC-001A**：頭像更新或移除成功後，`/profile` 與 Navbar 頭像必須在同頁即時更新，無需重新整理；不合法檔案不得送出。
 - **SC-002**：密碼更新後，舊密碼登入失敗且新密碼登入成功。
 - **SC-003**：密碼更新成功後，目前裝置維持登入；其他裝置在下一次 API 請求時被拒絕並要求重新登入。
 - **SC-004**：所有密碼欄位皆以 `password input type` 呈現，不得明文顯示。
 - **SC-005**：在 `RWD_VIEWPORTS` 下，`/profile` 無破版、無遮擋、無水平捲軸。
 - **SC-006**：新 Email 驗證成功後，使用者可用新 Email 登入，舊 Email 登入必須失敗。
 - **SC-007**：新 Email 未驗證或驗證 token 失效時，系統不得更新帳號主 Email。
+- **SC-007A**：新 Email 驗證成功後，該使用者所有既有 sessions 在下一次受保護頁面載入或 API 請求時必須被拒絕，並要求重新登入。
+- **SC-007B**：重新寄送驗證信在 cooldown 未結束時不得發送新郵件，且畫面必須顯示剩餘等待時間；cooldown 結束後可再次寄送。
+- **SC-007C**：使用者提交新的 pending Email 後，舊 pending Email 的驗證連結即使仍在 TTL 內也必須驗證失敗，且不得更新帳號主 Email。
 - **SC-008**：`/profile` 切換語言後導向 `/dashboard` 或 account 其他頁再返回，語系需保持一致。
 - **SC-009**：`/profile` 頁面正確套用 `html[data-theme]` 對應的 CSS token；重整後 Appearance 狀態從 `APPEARANCE_STORAGE_KEY` 恢復，不出現 FOUC。
 - **SC-010**：`/profile` 通知設定區塊顯示全部六項通知事件，每項事件各有站內通知與電子郵件兩個 toggle；儲存後顯示 toast，頁面不跳轉。
+- **SC-011**：通知設定儲存成功後，使用者重新登入或於另一裝置開啟 `/profile` 時，六項事件的站內通知與電子郵件開關狀態皆必須與最後儲存值一致。
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -487,7 +542,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。
@@ -503,6 +558,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.9 | 2026-05-22 | `/speckit.clarify` 補齊五項決策：頭像上傳納入本版、通知設定後端持久化、Email 驗證成功後失效所有 sessions、驗證信重送 cooldown、單一 pending Email 覆蓋規則 |
 | 1.2.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.7 | 2026-05-19 | 調整通知設定欄位文案為「電子郵件」，新增 `formal_annotation_all_done` 正式標記全員完成事件；通知事件總數更新為六項 |
 | 1.2.6 | 2026-05-19 | 新增通知設定區塊規格：User Story 4（原 US4–6 順延為 US5–7）、FR-013B/C、SC-010；移除 `/account/notification-settings.html` 獨立頁面，通知偏好設定整合至 `/profile` 第四區塊 |

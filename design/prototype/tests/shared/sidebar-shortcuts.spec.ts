@@ -41,15 +41,15 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
   });
 
-  test('keeps the keyboard shortcut entry available in the mobile top bar', async ({ page }) => {
+  test('does not expose or open shortcut help on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/pages/dashboard/dashboard.html');
 
     const button = page.getByTestId('mobile-shortcut-help-button');
-    await expect(button).toBeVisible();
+    await expect(button).toHaveCount(0);
 
-    await button.click();
-    await expect(page.getByRole('dialog', { name: '快捷鍵' })).toBeVisible();
+    await page.keyboard.press('?');
+    await expect(page.getByRole('dialog', { name: '快捷鍵' })).toBeHidden();
   });
 
   test('does not open shortcut help while typing in editable content', async ({ page }) => {

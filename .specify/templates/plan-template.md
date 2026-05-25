@@ -1,56 +1,63 @@
-# Implementation Plan: [FEATURE]
+---
+功能分支: feat/[module]/NNN-feature
+建立日期: YYYY-MM-DD
+版本: 1.0.0
+狀態: Draft
+---
 
-**Branch**: `feat/[module]/NNN-feature` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `specs/[module]/NNN-feature/spec.md`
+# 實作計畫：[功能名稱]
 
-## Execution Flow (/speckit.plan scope)
+**規格**: [連結至 `specs/[module]/NNN-feature/spec.md`]
+**輸入**: `specs/[module]/NNN-feature/spec.md`
+
+## 執行流程（/speckit.plan 範圍）
 
 ```text
-1. Load feature spec from Input path
-   → If not found: ERROR "No feature spec at {path}"
-2. Fill Technical Context
-3. Evaluate Constitution Check below
-   → If violations exist: Document in Complexity Tracking
-   → If no justification possible: ERROR "Simplify approach first"
-4. Execute Phase 0 → research (if unknowns exist)
-   → If NEEDS CLARIFICATION remain: ERROR "Resolve unknowns before proceeding"
-5. Execute Phase 1 → contracts, data-model, system flow
-6. Re-evaluate Constitution Check
-   → If new violations: Refactor design, return to Phase 1
-7. Describe task generation approach (DO NOT create tasks.md)
-8. STOP — ready for /speckit.tasks
+1. 從輸入路徑載入功能規格
+   → 若未找到：ERROR "No feature spec at {path}"
+2. 填寫技術脈絡
+3. 評估下方憲章檢查
+   → 若存在違反項目：記錄至複雜度追蹤
+   → 若無正當理由：ERROR "Simplify approach first"
+4. 執行 Phase 0 → 研究（若有未知事項）
+   → 若仍有 NEEDS CLARIFICATION：ERROR "Resolve unknowns before proceeding"
+5. 執行 Phase 1 → 契約、資料模型、系統流程
+6. 重新評估憲章檢查
+   → 若發現新違反：重構設計，返回 Phase 1
+7. 描述任務產生方式（不得建立 tasks.md）
+8. 停止 — 準備好進入 /speckit.tasks
 ```
 
-**IMPORTANT**: /speckit.plan stops at step 7. Task creation is done by /speckit.tasks.
+**重要**：/speckit.plan 在第 7 步停止。任務建立由 /speckit.tasks 負責。
 
-## Summary
+## 摘要
 
-[Extract from spec: primary requirement + technical approach]
+[從規格萃取：主要需求 + 技術方向]
 
-## Technical Context
+## 技術脈絡
 
-**Language/Version**: Python 3.12+ / TypeScript 5+
-**Primary Dependencies**: FastAPI / React + Vite
-**Storage**: PostgreSQL + Redis
-**Testing**: pytest + Playwright
-**Target Platform**: Web (Browser + REST API)
-**Performance Goals**: [e.g., API p95 < 500ms]
-**Constraints**: [e.g., Config-driven, no hardcoded task logic]
+**語言 / 版本**: Python 3.12+ / TypeScript 5+
+**主要相依套件**: FastAPI / React + Vite
+**儲存**: PostgreSQL + Redis
+**測試**: pytest + Playwright
+**目標平台**: Web（瀏覽器 + REST API）
+**效能目標**: [例：API p95 < 500ms]
+**限制**: [例：Config-driven，不得硬編碼 task 邏輯]
 
-## Constitution Check
+## 憲章檢查
 
-- [ ] I. Spec-First: Spec is complete and reviewed
-- [ ] II. Generalization-First: Does the design support multiple NLP task types?
-- [ ] III. Data Fairness: Does this involve test sets? If so, leakage prevention is planned
-- [ ] IV. Test-First: Test plan is listed
-- [ ] V. Code Quality & Simplicity: Any signs of over-engineering? Type hints, linter, no debug output addressed?
-- [ ] VI. English-First: Code, comments, and commit messages in English; Traditional Chinese allowed in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md`; `design/system/MASTER.md` must be English only
-- [ ] VII. Design Consistency: UI uses MASTER.md tokens; prototype screens followed; shared components reused
-- [ ] VIII. Performance Baseline: List-view endpoints paginated; no unbounded queries; API P95 ≤ 500ms target confirmed
+- [ ] I. Spec-First：規格已完成並審查
+- [ ] II. Generalization-First：設計是否支援多種 NLP task type？
+- [ ] III. Data Fairness：是否涉及 test set？若是，已規劃防止資料洩露
+- [ ] IV. Test-First：測試計畫已列出
+- [ ] V. Code Quality & Simplicity：是否有過度工程的跡象？型別提示、linter、無 debug 輸出已處理？
+- [ ] VI. English-First：程式碼、注釋與 commit message 使用英文；`docs/`、`specs/`、`design/prototype/`、`design/wireframes/` 與 `design/system/inventory.md` 允許繁體中文；`design/system/MASTER.md` 必須純英文
+- [ ] VII. Design Consistency：UI 使用 MASTER.md tokens；prototype 畫面已遵循；共用元件已重用
+- [ ] VIII. Performance Baseline：列表端點已分頁；無無界查詢；API P95 ≤ 500ms 目標已確認
 
-## Project Structure
+## 專案結構
 
-### Documentation (this feature)
+### 文件（本功能）
 
 ```text
 specs/[module]/NNN-feature/
@@ -65,12 +72,12 @@ specs/[module]/NNN-feature/
 └── contracts/         (optional)
 ```
 
-### Source Code
+### 原始碼
 
 <!--
-  Replace [module] with the feature module name (e.g., task-management, annotation)
-  and [feature] with the feature name (e.g., batch-import, auto-label).
-  The generated plan.md must not retain any placeholder brackets.
+  將 [module] 替換為功能模組名稱（例：task-management、annotation）
+  將 [feature] 替換為功能名稱（例：batch-import、auto-label）。
+  產生的 plan.md 不得保留任何佔位符括號。
 -->
 
 ```text
@@ -93,12 +100,12 @@ backend/
     └── integration/test_[feature].py
 ```
 
-## System Flow & Data Flow *(include if feature involves API calls, async tasks, or multi-layer data processing)*
+## 系統流程與資料流 *(功能涉及 API 呼叫、非同步任務或多層資料處理時必填)*
 
 <!--
-  Show how data moves through the system layers: Frontend → API → Service → DB.
-  Include error paths and async flows (Celery tasks, WebSocket, etc.) where relevant.
-  Renders natively on GitHub — no extra tooling needed.
+  描述資料如何在系統層間流動：Frontend → API → Service → DB。
+  包含相關的錯誤路徑與非同步流程（Celery tasks、WebSocket 等）。
+  在 GitHub 上可原生渲染，無需額外工具。
 -->
 
 ```mermaid
@@ -120,113 +127,114 @@ sequenceDiagram
     API-->>Frontend: 4xx / 5xx {detail: "..."}
 ```
 
-| Layer | Component | Responsibility |
-|-------|-----------|---------------|
-| Frontend | `features/[module]/pages/[feature]` | Form state, API call, display result |
-| API | `api/routes/[feature].py` | Request validation, auth check, delegate to service |
-| Service | `services/[feature].py` | Business logic, DB interaction |
-| DB | `models/[feature].py` | Persistence |
+| 層 | 元件 | 職責 |
+|----|------|------|
+| Frontend | `features/[module]/pages/[feature]` | 表單狀態、API 呼叫、結果顯示 |
+| API | `api/routes/[feature].py` | 請求驗證、權限檢查、委派至 service |
+| Service | `services/[feature].py` | 業務邏輯、DB 操作 |
+| DB | `models/[feature].py` | 持久化 |
 
 ---
 
-## Phase 0: Research
+## Phase 0：研究
 
-> Prerequisites: Technical Context filled. Skip this phase if no NEEDS CLARIFICATION items exist.
+> 前置條件：技術脈絡已填寫。若無 NEEDS CLARIFICATION 項目，可跳過此階段。
 
-1. **Extract unknowns** from Technical Context — each `NEEDS CLARIFICATION` → one research task
-2. **Dispatch research** for each unknown:
+1. **萃取未知事項** 從技術脈絡 — 每個 `NEEDS CLARIFICATION` → 一個研究任務
+2. **派送研究任務** 給每個未知事項：
 
    ```text
    For each unknown:        Task "Research {unknown} for {feature context}"
    For each new dependency: Task "Find best practices for {dep} in label-suite stack"
    ```
 
-3. **Consolidate findings** in `research.md`:
-   - Decision: [what was chosen]
-   - Rationale: [why chosen]
-   - Alternatives considered: [what else was evaluated]
+3. **整合發現** 至 `research.md`：
+   - 決策：[選擇了什麼]
+   - 理由：[為何選擇]
+   - 考慮過的替代方案：[評估了哪些其他選項]
 
-**Output**: `research.md` — all NEEDS CLARIFICATION resolved before Phase 1 begins
-
----
-
-## Phase 1: Design & Contracts
-
-> Prerequisites: research.md complete (or Phase 0 skipped if no unknowns)
-
-1. **Extract entities** from spec.md → `data-model.md`
-   - Entity name, fields, relationships, validation rules
-   - State transitions if applicable
-
-2. **Generate API contracts** from functional requirements → `contracts/`
-   - Each user action → REST endpoint
-   - Request/response schemas (OpenAPI-compatible)
-
-3. **Update System Flow diagram** in this plan
-   - Trace data path: Frontend → API → Service → DB
-   - Add error paths and async flows (Celery, WebSocket) where relevant
-
-4. **Extract test scenarios** from User Stories
-   - Each story → integration test scenario outline
-
-**Output**: `data-model.md`, `contracts/`, System Flow updated, test scenarios outlined
+**產出**：`research.md` — 所有 NEEDS CLARIFICATION 在 Phase 1 開始前已解決
 
 ---
 
-## Phase 2: Task Planning Approach
+## Phase 1：設計與契約
 
-*This section describes what `/speckit.tasks` will do — DO NOT execute during `/speckit.plan`*
+> 前置條件：research.md 已完成（或若無未知事項則跳過 Phase 0）
 
-**Task generation strategy**:
+1. **萃取實體** 從 spec.md → `data-model.md`
+   - 實體名稱、欄位、關係、驗證規則
+   - 狀態轉換（若適用）
 
-- Load `.specify/templates/tasks-template.md` as base
-- Generate one Phase per User Story (from spec.md)
-- Each API contract → backend unit test task [P] + implementation task
-- Each entity → model creation task [P]
-- Each User Story → Playwright E2E test task [P] + frontend tasks
+2. **產生 API 契約** 從功能需求 → `contracts/`
+   - 每個使用者動作 → REST endpoint
+   - 請求 / 回應 schema（OpenAPI 相容）
 
-**Ordering strategy**:
+3. **更新系統流程圖** 在本計畫中
+   - 追蹤資料路徑：Frontend → API → Service → DB
+   - 加入相關的錯誤路徑與非同步流程（Celery、WebSocket）
 
-- TDD order: tests before implementation (MUST FAIL first)
-- Dependency order: model → service → endpoint → frontend component → page
-- Mark [P] for parallel execution (independent files only)
+4. **萃取測試情境** 從使用者故事
+   - 每個故事 → 整合測試情境大綱
 
-**Estimated output**: [N] numbered, ordered tasks in `tasks.md`
-
-**IMPORTANT**: This phase is executed by `/speckit.tasks`, not by `/speckit.plan`
+**產出**：`data-model.md`、`contracts/`、系統流程圖已更新、測試情境已概述
 
 ---
 
-## Complexity Tracking
+## Phase 2：任務規劃方式
 
-> Only fill in when a Constitution principle is violated and justification is required
+*本節描述 `/speckit.tasks` 將執行的內容 — 不得在 `/speckit.plan` 期間執行*
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|---|---|---|
-| [e.g., adding a third-party package] | [current need] | [why existing tools are insufficient] |
+**任務產生策略**：
 
-## Progress Tracking
+- 以 `.specify/templates/tasks-template.md` 為基礎
+- 每個使用者故事（來自 spec.md）→ 一個 Phase
+- 每個 API 契約 → 後端單元測試任務 [P] + 實作任務
+- 每個實體 → 模型建立任務 [P]
+- 每個使用者故事 → Playwright E2E 測試任務 [P] + 前端任務
 
-**Phase Status**:
+**排序策略**：
 
-- [ ] Phase 0: Research complete (unknowns resolved)
-- [ ] Phase 1: Design complete (contracts, data-model, system flow)
-- [ ] Phase 2: Task planning described
-- [ ] Phase 3: Tasks generated (`/speckit.tasks`)
-- [ ] Phase 4: Implementation complete (`/speckit.implement`)
-- [ ] Phase 5: Validation passed (`/speckit.analyze` zero findings)
+- TDD 順序：測試在實作前（必須先失敗）
+- 相依順序：model → service → endpoint → frontend component → page
+- 標記 [P] 用於平行執行（僅限獨立檔案）
 
-**Gate Status**:
+**預估產出**：`tasks.md` 中 [N] 個有序任務
 
-- [ ] Initial Constitution Check: PASS
-- [ ] Post-Design Constitution Check: PASS
-- [ ] All NEEDS CLARIFICATION resolved
-- [ ] Complexity deviations documented
+**重要**：此階段由 `/speckit.tasks` 執行，不由 `/speckit.plan` 執行
+
+---
+
+## 複雜度追蹤
+
+> 僅在違反憲章原則且需要正當理由時填寫
+
+| 違反項目 | 需要原因 | 拒絕更簡單替代方案的理由 |
+|---------|---------|----------------------|
+| [例：新增第三方套件] | [當前需求] | [現有工具不足的原因] |
+
+## 進度追蹤
+
+**階段狀態**：
+
+- [ ] Phase 0：研究完成（未知事項已解決）
+- [ ] Phase 1：設計完成（契約、資料模型、系統流程）
+- [ ] Phase 2：任務規劃方式已描述
+- [ ] Phase 3：任務已產生（`/speckit.tasks`）
+- [ ] Phase 4：實作完成（`/speckit.implement`）
+- [ ] Phase 5：驗證通過（`/speckit.analyze` 零發現）
+
+**把關狀態**：
+
+- [ ] 初始憲章檢查：PASS
+- [ ] 設計後憲章檢查：PASS
+- [ ] 所有 NEEDS CLARIFICATION 已解決
+- [ ] 複雜度偏差已記錄
 
 ## Changelog
 
-| Version | Date | Change Summary |
-|---------|------|----------------|
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.1.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + 中文 H1，全面中文化章節標題與說明文字 |
 | 1.0.2 | 2026-05-21 | Add Execution Flow and Progress Tracking sections |
 | 1.0.1 | 2026-05-21 | Align spec paths with module-based SDD directory structure |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

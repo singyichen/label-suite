@@ -1,12 +1,15 @@
+---
+功能分支: feat/dataset/016-dataset-analysis-list
+建立日期: 2026-04-24
+版本: 1.3.1
+狀態: In Progress
+---
+
 # 功能規格：Dataset Analysis List — 任務列表頁（模組入口）
 
-**功能分支**：`feat/dataset/016-dataset-analysis-list`
-**建立日期**：2026-04-24
-**版本**：1.3.1
-**狀態**：In Progress
-**需求來源**：IA v1.3.2（2026-04-24）`dataset-analysis-list` 任務列表頁（模組入口）
+**需求來源**: IA v1.3.2（2026-04-24）`dataset-analysis-list` 任務列表頁（模組入口）
 
-## Input & Generation Rules
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Dataset Analysis List 的資料集分析入口、統計/品質監控、task config 驅動指標、權限與 RWD 行為。
 
@@ -20,7 +23,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -38,7 +41,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -66,7 +69,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 進入資料集分析模組入口（優先級：P1）
+### 使用者故事 1 — 進入資料集分析模組入口（優先級：P1）
 
 使用者由 Navbar 進入資料集分析模組後，可看到自己具 `TASK_ROLES_ALLOWED` 成員資格的任務列表，作為後續進入 analysis detail 的主要入口；Dashboard badge deep link 為合法次入口。
 
@@ -111,7 +114,7 @@ sequenceDiagram
 
 ---
 
-### Edge Cases
+### 邊界情況
 
 - 使用者沒有任何符合 `TASK_ROLES_ALLOWED` 的任務 membership：顯示空狀態，不顯示錯誤頁。
 - 使用者僅具 `annotator` membership、無任何 `TASK_ROLES_ALLOWED` membership：顯示空狀態，不導回其他頁面。
@@ -120,9 +123,9 @@ sequenceDiagram
 - URL query 夾帶不支援的 `page_size`：回退至 `PAGE_SIZE_DEFAULT`。
 - 手機版（`<= MOBILE_BP`）表格、篩選列與分頁需可完整操作，不可發生資訊重疊。
 
-## Requirements *(必填)*
+## 需求規格 *(必填)*
 
-### Functional Requirements
+### 功能需求
 
 - **FR-001**: 系統必須提供 `DATASET_ANALYSIS_LIST_ROUTE`（`/dataset-analysis`）作為資料集分析模組的入口頁（L1）。
 - **FR-002**: 系統必須以 task membership role 作為列表資料過濾依據；僅具 `TASK_ROLES_ALLOWED` membership 的任務可出現在頁面上。
@@ -139,7 +142,7 @@ sequenceDiagram
 - **FR-006**: 點擊任務列必須導向 `DATASET_ANALYSIS_DETAIL_ROUTE`（`/dataset-analysis-detail/:task_id`），預設進入 `?tab=stats`。
 - **FR-007**: 頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成搜尋、篩選、分頁、任務選取與導頁操作。
 
-### User Flow & Navigation *(必填)*
+### 使用者流程與導頁 *(必填)*
 
 ```mermaid
 flowchart LR
@@ -155,7 +158,7 @@ flowchart LR
 **Entry points**: Sidebar Navbar「資料集分析」。
 **Exit points**: 點擊任務列進入 analysis detail。
 
-### Key Entities *(必填)*
+### 關鍵實體 *(必填)*
 
 - **TaskSummaryRow**: 任務列表資料列，至少包含 `task_id`、`task_name`、`task_type`、`overall_completion_rate`、`membership_role`、`iaa_status`。
 - **IAAStatusSummary**: quality 結果摘要狀態，列舉值為 `pass | fail | pending | not_started`；供列表頁資料列徽章顯示使用。
@@ -163,15 +166,15 @@ flowchart LR
 
 ---
 
-## Spec Dependencies *(必填)*
+## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
 
-### Upstream（本 spec 依賴）
+### 上游（本規格依賴的規格）
 
 | Spec # | Feature | What this spec needs from it |
 |--------|---------|------------------------------|
 | shared-008 | Shared Sidebar Navbar | 登入後共用導覽結構與 active 規則（資料集分析 L0 項） |
 
-### Downstream（依賴本 spec）
+### 下游（依賴本規格的規格）
 
 | Spec # | Feature | What they rely on from this spec |
 |--------|---------|----------------------------------|
@@ -179,7 +182,7 @@ flowchart LR
 
 ---
 
-## Success Criteria *(必填)*
+## 成功標準 *(必填)*
 
 - **SC-001**: 進入 `/dataset-analysis` 時，任務列表正確顯示使用者具成員資格的任務。
 - **SC-002**: 每列任務皆正確顯示任務名稱、任務類型、完成率、IAA 狀態徽章、成員角色，且徽章值僅為 `pass | fail | pending | not_started` 之一。
@@ -193,16 +196,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -211,7 +214,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

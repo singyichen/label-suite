@@ -1,12 +1,15 @@
+---
+功能分支: feat/task-management/014-task-detail
+建立日期: 2026-04-20
+版本: 1.7.15
+狀態: Draft
+---
+
 # 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
 
-**功能分支**：`feat/task-management/014-task-detail`
-**建立日期**：2026-04-20
-**版本**：1.7.15
-**狀態**：Draft
-**需求來源**：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
+**需求來源**: IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
-## Input & Generation Rules
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Task Detail 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
 
@@ -20,7 +23,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -54,7 +57,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -119,7 +122,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — Project Leader 管理任務與成員（優先級：P1）
+### 使用者故事 1 — Project Leader 管理任務與成員（優先級：P1）
 
 Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、執行發布與查看／匯出標記結果。
 
@@ -356,7 +359,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 
 ---
 
-### User Story 2 — Reviewer 的唯讀存取邊界（優先級：P1）
+### 使用者故事 2 — Reviewer 的唯讀存取邊界（優先級：P1）
 
 Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理與其他越權操作。
 
@@ -380,7 +383,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 
 ---
 
-### User Story 3 — 任務狀態轉換、執行設定調整與資料隔離（優先級：P1）
+### 使用者故事 3 — 任務狀態轉換、執行設定調整與資料隔離（優先級：P1）
 
 任務需遵守固定狀態機，並在承接 `task-new` 初始設定後支援調整試標抽樣比例/筆數，且可選擇是否啟用試標與正式標記資料隔離。
 
@@ -429,7 +432,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 
 ---
 
-### Edge Cases
+### 邊界情況
 
 - `task_id` 不存在或使用者無 membership：導回 `/task-list` 並顯示提示。
 - `annotator` 或無權限角色直接進入 `/task-detail`：導回 `TASK_DETAIL_UNAUTHORIZED_REDIRECT` 並顯示無權限提示。
@@ -558,7 +561,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015j**：匯出檔案的共通欄位至少必須覆蓋 task context、sample context、annotation context、review context 與 run context；task-specific 欄位則僅在對應 task type 出現。
 - **FR-015k**：`JSON-MIN` 的扁平化策略必須以「可被試算表與 BI 工具直接讀取」為優先，但不得犧牲結果可理解性；結構型結果可用 summary string、JSON-encoded string 或等價可解析欄位表達。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -665,16 +668,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -683,7 +686,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

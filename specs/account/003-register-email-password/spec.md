@@ -1,12 +1,15 @@
+---
+功能分支: feat/account/003-register-email-password
+建立日期: 2026-04-05
+版本: 1.2.6
+狀態: Clarified
+---
+
 # 功能規格：Register — Email / Password
 
-**功能分支**：`feat/account/003-register-email-password`
-**建立日期**：2026-04-05
-**版本**：1.2.3
-**狀態**：Clarified
-**需求來源**：最新原型 [`design/prototype/pages/account/register.html`](../../../design/prototype/pages/account/register.html)
+**需求來源**: 最新原型 [design/prototype/pages/account/register.html](../../../design/prototype/pages/account/register.html)
 
-## Input & Generation Rules
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Register 的帳號流程、表單狀態、導頁、i18n、可存取屬性與 RWD 行為。
 
@@ -20,9 +23,17 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: `name` 欄位驗證行為（trim 與最小長度） → A: 必填 + `trim()` 後非空；`trim()` 後為空觸發必填錯誤，不加長度上限。
+- Q: 送出按鈕在 `isSubmitting = true` 時的行為 → A: 切換為 `disabled`，防止重複送出。
+- Q: 錯誤 banner 關閉行為 → A: 無手動關閉按鈕；使用者重新輸入任何欄位時自動清除。
 
 ## 規格常數
 
@@ -31,7 +42,7 @@
 - `PASSWORD_MIN_LENGTH = 8`
 - `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -74,7 +85,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 註冊頁完整呈現（優先級：P1）
+### 使用者故事 1 — 註冊頁完整呈現（優先級：P1）
 
 註冊頁必須提供完整欄位與清楚導流，支援使用者完成建帳。
 
@@ -90,7 +101,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 前端驗證與錯誤提示（優先級：P1）
+### 使用者故事 2 — 前端驗證與錯誤提示（優先級：P1）
 
 送出前必須完成欄位驗證，錯誤需顯示於對應欄位。
 
@@ -108,7 +119,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 註冊送出結果（優先級：P1）
+### 使用者故事 3 — 註冊送出結果（優先級：P1）
 
 原型需呈現兩種送出結果：重複 Email 失敗與成功導頁。
 
@@ -121,10 +132,12 @@ sequenceDiagram
 1. **Given** Email 為 `taken@example.com`，**When** 驗證通過後送出，**Then** 顯示重複 Email 錯誤 banner 並停留在原頁。
 2. **Given** Email 非 `taken@example.com` 且欄位合法，**When** 送出，**Then** 顯示成功 banner。
 3. **Given** 註冊成功，**When** 顯示成功訊息後，**Then** 於約 `2000ms` 導向 `../dashboard/dashboard.html`（原型行為）。
+4. **Given** 使用者點擊送出，**When** `isSubmitting = true`，**Then** 送出按鈕切換為 `disabled` 直到流程結束。
+5. **Given** 錯誤 banner 顯示中，**When** 使用者重新輸入任何欄位，**Then** banner 自動清除（無手動關閉按鈕）。
 
 ---
 
-### User Story 4 — i18n 與可存取屬性同步（優先級：P2）
+### 使用者故事 4 — i18n 與可存取屬性同步（優先級：P2）
 
 註冊頁所有核心文案與 `aria-label` 需支援即時語言切換。
 
@@ -141,7 +154,7 @@ sequenceDiagram
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 註冊頁於手機、平板、桌機均須可讀且可操作。
 
@@ -159,6 +172,7 @@ sequenceDiagram
 
 ### 邊界情況
 
+- `name` 前後有空白字元？→ 送出前會 `trim()` 後再驗證；`trim()` 後為空視為必填未填。
 - Email 前後有空白字元？→ 送出前會 `trim()` 後再驗證。
 - 成功送出後是否可再編輯欄位？→ 成功後輸入欄位會被 disabled，等待導頁。
 - 目前原型是否已串接真實 `/auth/register` API？→ 尚未；僅模擬前端驗證與結果。
@@ -175,18 +189,21 @@ sequenceDiagram
 - **FR-004**：語言切換時必須同步更新文字節點與可存取屬性（含 `document.title`、`aria-label`）。
 - **FR-004A**：語言狀態必須跨頁持久化；由 register 導向 login / dashboard 時需維持同語系。
 - **FR-005**：送出前必須驗證姓名、Email、密碼、確認密碼皆為必填。
+- **FR-005A**：`name` 欄位送出前必須 `trim()`；`trim()` 後為空時視為未填，觸發必填錯誤。
 - **FR-006**：Email 必須驗證格式合法（含基本 `@` 與網域格式）。
 - **FR-007**：密碼長度必須至少 `PASSWORD_MIN_LENGTH`。
 - **FR-007A**：密碼說明文案必須明確顯示 `PASSWORD_RULE`。
 - **FR-008**：確認密碼必須與密碼完全一致。
 - **FR-009**：密碼與確認密碼欄位必須提供顯示/隱藏切換，且 `aria-label` 需同步。
 - **FR-010**：驗證失敗時必須顯示對應欄位錯誤，不送出成功流程。
+- **FR-010A**：送出期間（`isSubmitting = true`）送出按鈕必須切換為 `disabled` 狀態，防止重複送出。
 - **FR-011**：原型模式下，Email 為 `taken@example.com` 時必須顯示重複 Email 錯誤 banner。
+- **FR-011A**：錯誤 banner 無手動關閉按鈕；使用者重新輸入任何欄位時自動清除 banner。
 - **FR-012**：原型模式下，註冊成功時必須顯示成功 banner 並於約 `2000ms` 導向 `../dashboard/dashboard.html`。
 - **FR-013**：頁面必須具備響應式設計，至少支援 `RWD_VIEWPORTS`。
 - **FR-013A**：在 `<= MOBILE_BP` 時導覽列需切換為 56px 高與 16px 左右內距。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -247,16 +264,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -265,7 +282,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。
@@ -281,6 +298,9 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.6 | 2026-05-22 | 釐清錯誤 banner 關閉行為：新增 FR-011A（重新輸入自動清除）與 US-3 驗收情境 5 |
+| 1.2.5 | 2026-05-22 | 釐清 isSubmitting 按鈕行為：新增 FR-010A（disabled 防重複送出）與 US-3 驗收情境 4 |
+| 1.2.4 | 2026-05-22 | 釐清 name 欄位驗證行為：新增 FR-005A（trim 後非空）與對應邊界情況 |
 | 1.2.3 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.2 | 2026-05-06 | 同步 register prototype 密碼說明文案：新增 `PASSWORD_RULE = 至少 8 個字元，含大寫英文、小寫英文與數字`，並明確要求註冊頁顯示該規則 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：register 切換語言後導向 login/dashboard 必須維持同語系 |

@@ -1,12 +1,15 @@
+---
+功能分支: feat/task-management/010-task-list
+建立日期: 2026-04-20
+版本: 1.3.8
+狀態: Draft
+---
+
 # 功能規格：Task List — 任務列表
 
-**功能分支**：`feat/task-management/010-task-list`
-**建立日期**：2026-04-20
-**版本**：1.3.8
-**狀態**：Draft
-**需求來源**：IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
+**需求來源**: IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
 
-## Input & Generation Rules
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Task List 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
 
@@ -20,7 +23,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -40,7 +43,7 @@
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -101,7 +104,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 檢視任務列表與搜尋篩選（優先級：P1）
+### 使用者故事 1 — 檢視任務列表與搜尋篩選（優先級：P1）
 
 登入使用者可在任務列表頁快速找到自己要處理的任務，並透過搜尋與篩選定位目標。
 
@@ -161,7 +164,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 從任務列表進入核心流程（優先級：P1）
+### 使用者故事 2 — 從任務列表進入核心流程（優先級：P1）
 
 使用者可從任務列表直接進入任務詳情或新增任務流程，且導覽 active 狀態維持在任務管理模組。
 
@@ -184,7 +187,7 @@ sequenceDiagram
 
 ---
 
-### Edge Cases
+### 邊界情況
 
 - 使用者沒有任何任務 membership：顯示表格內空狀態（保留表頭），不顯示錯誤頁。
 - `super_admin` 在全平台任務無資料：顯示表格內空狀態（保留表頭），不顯示錯誤頁。
@@ -231,7 +234,7 @@ sequenceDiagram
 - **FR-011b**：標記階段 `official_run` 在中文文案必須顯示為 `正式標記`。
 - **FR-012**：點擊任務列或 `編輯` 導向 `/task-detail` 前，系統必須持久化該任務 `task_type` 至 `ACTIVE_TASK_TYPE_STORAGE_KEY`。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -304,16 +307,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -322,7 +325,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

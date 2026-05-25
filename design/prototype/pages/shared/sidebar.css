@@ -152,7 +152,6 @@
 }
 
 .sidebar-utility-btn:focus-visible,
-.mobile-shortcut-help-btn:focus-visible,
 .mobile-theme-toggle-btn:focus-visible,
 .shortcut-help-close:focus-visible {
   outline: none;
@@ -298,25 +297,6 @@
   color: var(--color-error);
   border-color: var(--color-error-soft-border);
   background: var(--color-error-soft-bg);
-}
-
-.mobile-shortcut-help-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-white);
-  color: var(--color-ink-muted);
-  transition: color var(--dur-fast, 150ms), border-color var(--dur-fast, 150ms), background var(--dur-fast, 150ms);
-}
-
-.mobile-shortcut-help-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft-bg);
 }
 
 .mobile-theme-toggle-btn {
@@ -842,11 +822,6 @@ body.sidebar-collapsed .notif-dropdown { left: 88px; }
     display: inline-flex;
     flex-shrink: 0;
     padding: 6px 8px;
-  }
-
-  .mobile-shortcut-help-btn {
-    display: inline-flex;
-    flex-shrink: 0;
   }
 
   .mobile-notification-bell-btn {

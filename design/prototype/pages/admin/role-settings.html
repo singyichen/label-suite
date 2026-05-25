@@ -74,6 +74,24 @@
     .page-subtitle { font-size: 14px; line-height: 1.8; color: var(--color-text-soft); margin: 0; }
     .page-actions { display: flex; align-items: center; gap: var(--space-sm); flex-shrink: 0; }
 
+    /* ── Mini buttons (matching user-management) ───────────────── */
+    .mini-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 30px; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); background: var(--color-white);
+      color: var(--color-ink); font-size: 12px; font-weight: 600; padding: 0 10px;
+      transition: background-color 150ms, border-color 150ms, color 150ms;
+    }
+    .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .mini-btn-log {
+      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
+    }
+    .mini-btn-log:hover:not(:disabled) {
+      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
+    }
+    .mini-btn-icon { padding: 0 6px; }
+
     /* ── Buttons ─────────────────────────────────────────────────── */
     .btn-ghost {
       display: inline-flex; align-items: center; gap: 6px;
@@ -95,21 +113,6 @@
     .matrix-section { display: flex; flex-direction: column; gap: var(--space-lg); }
     .section-title { font-family: 'Crimson Pro', 'Noto Serif TC', serif; font-weight: 600; font-size: 18px; color: var(--color-ink); }
     .section-desc { font-size: 13px; color: var(--color-ink-muted); line-height: 1.6; margin-top: var(--space-xs); }
-
-    /* ── Legend ──────────────────────────────────────────────────── */
-    .matrix-legend {
-      display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center;
-      padding: var(--space-md) var(--space-lg); background: var(--color-white);
-      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      font-size: 12px; color: var(--color-ink-muted);
-    }
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-task-badge {
-      display: inline-flex; align-items: center; gap: 2px;
-      font-size: 10px; font-weight: 700; color: var(--color-warning);
-      background: var(--color-warning-soft-bg); border: 1px solid var(--color-warning-soft-border);
-      border-radius: var(--radius-full); padding: 1px 8px;
-    }
 
     /* ── Matrix Table ────────────────────────────────────────────── */
     .matrix-scroll-wrapper { overflow-x: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
@@ -241,6 +244,113 @@
       .page-actions .btn-cta { flex: 1; justify-content: center; }
     }
 
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.4);
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--space-md);
+    }
+    .modal-card {
+      background: var(--color-white); border-radius: var(--radius-xl);
+      padding: var(--space-xl); max-width: 400px; width: 100%;
+      box-shadow: var(--shadow-xl); text-align: center;
+    }
+    .modal-icon {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--color-warning-soft-bg); color: var(--color-warning);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto var(--space-md);
+    }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--color-ink); margin-bottom: var(--space-sm); }
+    .modal-desc { font-size: 14px; color: var(--color-text-soft); line-height: 1.6; margin-bottom: var(--space-lg); }
+    .modal-actions { display: flex; gap: var(--space-sm); justify-content: center; }
+    .btn-danger {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
+      border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
+    }
+    .btn-danger:hover { opacity: 0.9; }
+
+    /* ── Modal close button ─────────────────────────────── */
+    .modal-close {
+      display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: var(--radius-md);
+      border: 1px solid var(--color-border); background: transparent;
+      color: var(--color-ink-muted); cursor: pointer; flex-shrink: 0; transition: all 150ms;
+    }
+    .modal-close:hover { background: var(--color-slate-50); color: var(--color-ink); }
+
+    /* ── Audit Drawer ───────────────────────────────────── */
+    .audit-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 250;
+      opacity: 0; pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+    .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+    .audit-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
+      background: var(--color-white); z-index: 260;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 200ms ease;
+      border-left: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xl);
+    }
+    .audit-drawer.open { transform: translateX(0); }
+    .audit-drawer-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-md); padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .audit-drawer-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
+    }
+    .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
+    .audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
+    .audit-log-list { display: flex; flex-direction: column; gap: 12px; }
+    .audit-log-entry {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-md);
+    }
+    .audit-log-entry-top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-sm); margin-bottom: 8px;
+    }
+    .audit-log-time { font-size: 12px; color: var(--color-text-soft); font-family: var(--font-mono); flex-shrink: 0; }
+    .audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
+    .audit-log-actor strong { color: var(--color-ink); }
+    .audit-log-diff {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
+      border-radius: var(--radius-sm); padding: 6px 10px;
+      color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
+    }
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: var(--radius-sm);
+      font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .audit-badge-perm_update { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+    .audit-drawer-empty {
+      text-align: center; padding: var(--space-2xl) var(--space-lg);
+      color: var(--color-text-soft); font-size: 13px;
+    }
+    @media (max-width: 767px) {
+      .audit-drawer {
+        top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
+        border-left: none; border-top: 1px solid var(--color-border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        transform: translateY(100%);
+      }
+      .audit-drawer.open { transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
+    }
+
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
       /* Teal task column — replace light mint with dark teal */
@@ -260,17 +370,15 @@
   <div class="page-wrapper">
     <main class="main-content">
 
-      <!-- Dirty State Banner -->
+      <!-- Dirty Banner -->
       <div id="dirtyBanner" class="banner dirty-banner hidden" role="alert">
         <span class="banner-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </span>
         <div class="banner-body">
-          <p class="banner-title" id="dirtyTitle">有未儲存的變更</p>
-          <p class="banner-desc" id="dirtyDesc">點擊「儲存」確認變更，或點擊「取消」放棄所有修改</p>
+          <p class="banner-title" id="dirtyBannerTitle">有未儲存的變更</p>
         </div>
       </div>
 
@@ -294,8 +402,12 @@
 
       <!-- Page Header -->
       <div class="page-header">
-        <h1 class="page-title" id="pageTitle">角色設定</h1>
-        <p class="page-subtitle" id="pageSubtitle">設定系統角色與任務角色的功能存取權限</p>
+        <div class="page-header-main">
+          <div>
+            <h1 class="page-title" id="pageTitle">角色設定</h1>
+            <p class="page-subtitle" id="pageSubtitle">設定系統角色與任務角色的功能存取權限</p>
+          </div>
+        </div>
       </div>
 
       <!-- Admin Tabs -->
@@ -312,10 +424,25 @@
             <p class="section-desc" id="matrixSectionDesc">設定各角色對平台功能的存取權限。⛔ 表示需透過任務角色授權，不由系統角色直接控制。🔒 表示核心管理權限，不可關閉。</p>
           </div>
           <div class="page-actions">
-            <button class="btn-ghost" id="cancelBtn" onclick="cancelEdit()">
+            <button class="btn-ghost" id="editBtn" onclick="enterEditMode()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              <span id="editBtnLabel">編輯</span>
+            </button>
+            <button class="mini-btn mini-btn-log mini-btn-icon" id="auditLogBtn"
+                    onclick="openAuditDrawer()" title="操作紀錄" aria-label="操作紀錄">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+                <path d="M12 7v5l4 2"/>
+              </svg>
+            </button>
+            <button class="btn-ghost hidden" id="cancelBtn" onclick="cancelEdit()">
               <span id="cancelBtnLabel">取消</span>
             </button>
-            <button class="btn-cta" id="saveBtn" onclick="saveMatrix()">
+            <button class="btn-cta hidden" id="saveBtn" onclick="saveMatrix()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                 <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
@@ -693,6 +820,53 @@
     </main>
   </div><!-- /page-wrapper -->
 
+  <!-- ─── Audit Log Drawer ────────────────────────────────────────── -->
+  <div class="audit-drawer-overlay" id="auditDrawerOverlay"
+       aria-hidden="true" onclick="closeAuditDrawer()"></div>
+  <aside class="audit-drawer" id="auditDrawer"
+         role="complementary" aria-labelledby="auditDrawerTitle" aria-hidden="true">
+    <div class="audit-drawer-header">
+      <div>
+        <h2 id="auditDrawerTitle" class="audit-drawer-title">操作紀錄</h2>
+        <p id="auditDrawerSubtitle" class="audit-drawer-subtitle">角色權限矩陣</p>
+      </div>
+      <button class="modal-close" onclick="closeAuditDrawer()"
+              id="auditDrawerCloseBtn" aria-label="關閉">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="audit-drawer-body">
+      <div id="auditLogList" class="audit-log-list" role="list"></div>
+      <div id="auditDrawerEmpty" class="audit-drawer-empty hidden">
+        <p id="auditDrawerEmptyText">尚無操作紀錄</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── Unsaved Changes Modal ────────────────────────────────────── -->
+  <div id="dirtyModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="dirtyModalTitle">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h3 class="modal-title" id="dirtyModalTitle">有未儲存的變更</h3>
+      <p class="modal-desc" id="dirtyModalDesc">確定要放棄目前的修改？取消後所有變更將遺失。</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="hideDirtyModal()">
+          <span id="dirtyModalKeepLabel">繼續編輯</span>
+        </button>
+        <button class="btn-danger" onclick="confirmDiscardChanges()">
+          <span id="dirtyModalDiscardLabel">放棄變更</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Toast ──────────────────────────────────────────────────── -->
   <div id="toast" class="hidden" aria-live="polite" aria-atomic="true">
     <div class="toast-inner success" id="toastInner">
@@ -728,6 +902,7 @@
         pageSubtitle:            '設定系統角色與任務角色的功能存取權限',
         tabUsers:                '使用者管理',
         tabRoles:                '角色設定',
+        editBtnLabel:            '編輯',
         cancelBtnLabel:          '取消',
         saveBtnLabel:            '儲存',
         matrixSectionTitle:      '角色權限矩陣',
@@ -735,15 +910,18 @@
         thPermission:            '功能權限',
         thSystemRoles:           '系統角色',
         thTaskRoles:             '任務角色',
-        legendTitle:             '圖例：',
-        legendOn:                '已啟用（可編輯）',
-        legendOff:               '未啟用（可編輯）',
         legendTaskBadgeText:     '需任務角色',
-        legendTaskRoleDesc:      '由任務角色控制',
-        legendLocked:            '鎖定（不可更改）',
-        legendNA:                '不適用',
-        dirtyTitle:              '有未儲存的變更',
-        dirtyDesc:               '點擊「儲存」確認變更，或點擊「取消」放棄所有修改',
+        auditLogBtnLabel:        '操作紀錄',
+        auditDrawerTitle:        '操作紀錄',
+        auditDrawerSubtitle:     '角色權限矩陣',
+        auditDrawerCloseBtn:     '關閉',
+        auditDrawerEmptyText:    '尚無操作紀錄',
+        auditActorPrefix:        '操作者：',
+        auditActionPermUpdate:   '權限更新',
+        dirtyModalTitle:         '有未儲存的變更',
+        dirtyModalDesc:          '確定要放棄目前的修改？取消後所有變更將遺失。',
+        dirtyModalKeepLabel:     '繼續編輯',
+        dirtyModalDiscardLabel:  '放棄變更',
         conflictTitle:           '版本衝突：設定已被其他管理員修改',
         conflictDesc:            '請重新載入最新設定後再進行編輯，以避免覆蓋他人變更',
         reloadBtnLabel:          '重新載入',
@@ -786,6 +964,7 @@
         pageSubtitle:            'Configure access permissions for system roles and task roles',
         tabUsers:                'User Management',
         tabRoles:                'Role Settings',
+        editBtnLabel:            'Edit',
         cancelBtnLabel:          'Cancel',
         saveBtnLabel:            'Save',
         matrixSectionTitle:      'Role Permission Matrix',
@@ -793,15 +972,18 @@
         thPermission:            'Permission',
         thSystemRoles:           'System Roles',
         thTaskRoles:             'Task Roles',
-        legendTitle:             'Legend:',
-        legendOn:                'Enabled (editable)',
-        legendOff:               'Disabled (editable)',
         legendTaskBadgeText:     'Task role required',
-        legendTaskRoleDesc:      'Controlled by task role',
-        legendLocked:            'Locked (cannot change)',
-        legendNA:                'Not applicable',
-        dirtyTitle:              'You have unsaved changes',
-        dirtyDesc:               'Click "Save" to apply changes, or "Cancel" to discard all edits',
+        auditLogBtnLabel:        'Change History',
+        auditDrawerTitle:        'Change History',
+        auditDrawerSubtitle:     'Role Permission Matrix',
+        auditDrawerCloseBtn:     'Close',
+        auditDrawerEmptyText:    'No changes recorded',
+        auditActorPrefix:        'By: ',
+        auditActionPermUpdate:   'Permission Update',
+        dirtyModalTitle:         'Unsaved Changes',
+        dirtyModalDesc:          'Discard your current edits? All changes will be lost.',
+        dirtyModalKeepLabel:     'Keep Editing',
+        dirtyModalDiscardLabel:  'Discard Changes',
         conflictTitle:           'Version conflict: settings were modified by another admin',
         conflictDesc:            'Reload the latest settings before editing to avoid overwriting others\' changes',
         reloadBtnLabel:          'Reload',
@@ -875,18 +1057,39 @@
       'admin.role_settings.view__user': false, 'admin.role_settings.manage__user': false,
     };
 
+    const ROLE_AUDIT_LOGS = [
+      {
+        id: 3,
+        createdAt: '2026-05-19 14:32',
+        actorName: '陳欣怡',
+        diff: 'reviewer · dataset.export              OFF → ON\nannotator · task.detail.view           ON  → OFF',
+      },
+      {
+        id: 2,
+        createdAt: '2026-05-10 09:15',
+        actorName: '系統管理員 A',
+        diff: 'annotator · task.members.manage        OFF → ON',
+      },
+      {
+        id: 1,
+        createdAt: '2026-04-28 16:47',
+        actorName: '陳欣怡',
+        diff: 'project_leader · annotation.workspace.annotate  OFF → ON\nreviewer · annotation.workspace.annotate         OFF → ON',
+      },
+    ];
+
     let lang = window.LabelSuiteSharedSidebar.getStoredLang();
     let matrixVersion = Number(window.localStorage.getItem(MATRIX_VERSION_KEY) || '1');
 
     /* ── IDs requiring i18n text updates ──────────────────────────── */
     const TEXT_IDS = [
       'pageTitle', 'pageSubtitle', 'tabUsers', 'tabRoles',
-      'cancelBtnLabel', 'saveBtnLabel',
+      'auditDrawerTitle', 'auditDrawerSubtitle', 'auditDrawerEmptyText',
+      'editBtnLabel', 'cancelBtnLabel', 'saveBtnLabel',
       'matrixSectionTitle', 'matrixSectionDesc',
       'thPermission', 'thSystemRoles', 'thTaskRoles',
-      'legendTitle', 'legendOn', 'legendOff', 'legendTaskBadgeText',
-      'legendTaskRoleDesc', 'legendLocked', 'legendNA',
-      'dirtyTitle', 'dirtyDesc', 'conflictTitle', 'conflictDesc', 'reloadBtnLabel',
+      'dirtyModalTitle', 'dirtyModalDesc', 'dirtyModalKeepLabel', 'dirtyModalDiscardLabel',
+      'conflictTitle', 'conflictDesc', 'reloadBtnLabel',
       'moduleHeader_account', 'moduleHeader_dashboard', 'moduleHeader_taskMgmt',
       'moduleHeader_annotation', 'moduleHeader_dataset', 'moduleHeader_admin',
       'permDesc_account_profile_view', 'permDesc_account_profile_edit',
@@ -910,6 +1113,12 @@
       });
       document.title = 'Label Suite — ' + t.pageTitle;
 
+      const auditBtn = document.getElementById('auditLogBtn');
+      if (auditBtn && t.auditLogBtnLabel) {
+        auditBtn.title = t.auditLogBtnLabel;
+        auditBtn.setAttribute('aria-label', t.auditLogBtnLabel);
+      }
+
       /* Update all task-role badge texts (class selector, not innerHTML) */
       document.querySelectorAll('.trb-text').forEach(el => {
         el.textContent = t.legendTaskBadgeText;
@@ -922,6 +1131,27 @@
       });
 
       window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+    }
+
+    /* ── Edit mode state ───────────────────────────────────────────── */
+    let isEditMode = false;
+
+    function enterEditMode() {
+      isEditMode = true;
+      captureOriginalState();
+      document.getElementById('editBtn').classList.add('hidden');
+      document.getElementById('cancelBtn').classList.remove('hidden');
+      document.getElementById('saveBtn').classList.remove('hidden');
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = false; });
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_enter_edit', { page: 'role-settings' });
+    }
+
+    function exitEditMode() {
+      isEditMode = false;
+      document.getElementById('editBtn').classList.remove('hidden');
+      document.getElementById('cancelBtn').classList.add('hidden');
+      document.getElementById('saveBtn').classList.add('hidden');
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = true; });
     }
 
     /* ── Original checkbox state (for cancel / dirty detection) ────── */
@@ -975,6 +1205,7 @@
     let isDirty = false;
 
     function onCheckboxChange() {
+      if (!isEditMode) return;
       let dirty = false;
       document.querySelectorAll('.matrix-checkbox').forEach(cb => {
         const k = getCheckboxKey(cb);
@@ -989,8 +1220,25 @@
       document.getElementById('dirtyBanner').classList.toggle('hidden', !dirty);
     }
 
-    /* ── Cancel: revert to original state ──────────────────────────── */
+    /* ── Cancel: revert all changes and exit edit mode ──── */
     function cancelEdit() {
+      doExitCancel();
+    }
+
+    function showDirtyModal() {
+      document.getElementById('dirtyModal').classList.remove('hidden');
+    }
+
+    function hideDirtyModal() {
+      document.getElementById('dirtyModal').classList.add('hidden');
+    }
+
+    function confirmDiscardChanges() {
+      hideDirtyModal();
+      doExitCancel();
+    }
+
+    function doExitCancel() {
       document.querySelectorAll('.matrix-checkbox').forEach(cb => {
         const k = getCheckboxKey(cb);
         if (originalState[k] !== undefined) cb.checked = originalState[k];
@@ -998,6 +1246,7 @@
       setDirty(false);
       document.getElementById('conflictBanner').classList.add('hidden');
       document.getElementById('saveBtn').disabled = false;
+      exitEditMode();
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_cancel', { page: 'role-settings' });
     }
 
@@ -1012,13 +1261,23 @@
         return;
       }
 
+      const diff = buildDiff();
       const nextVersion = matrixVersion + 1;
       window.localStorage.setItem(MATRIX_STORAGE_KEY, JSON.stringify(getCurrentMatrixState()));
       window.localStorage.setItem(MATRIX_VERSION_KEY, String(nextVersion));
       matrixVersion = nextVersion;
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      ROLE_AUDIT_LOGS.unshift({
+        id: Date.now(),
+        createdAt: `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`,
+        actorName: '管理員 A',
+        diff,
+      });
       showToast('success', t.toastSaved);
       setDirty(false);
       captureOriginalState();
+      exitEditMode();
       window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_role_settings_save_succeeded', { page: 'role-settings' });
     }
 
@@ -1048,6 +1307,93 @@
 
     function hideToast() { document.getElementById('toast').classList.add('hidden'); }
 
+    /* ── Audit drawer ──────────────────────────────────────────────── */
+    function buildDiff() {
+      const lines = [];
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => {
+        const k = getCheckboxKey(cb);
+        if (originalState[k] !== undefined && originalState[k] !== cb.checked) {
+          const from = originalState[k] ? 'ON ' : 'OFF';
+          const to   = cb.checked       ? 'ON'  : 'OFF';
+          lines.push(`${cb.dataset.role} · ${cb.dataset.key}  ${from} → ${to}`);
+        }
+      });
+      return lines.join('\n') || '—';
+    }
+
+    function openAuditDrawer() {
+      const t = i18n[lang];
+      document.getElementById('auditDrawerTitle').textContent    = t.auditDrawerTitle;
+      document.getElementById('auditDrawerSubtitle').textContent = t.auditDrawerSubtitle;
+      document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
+      renderAuditLog();
+      document.getElementById('auditDrawer').classList.add('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('auditDrawerOverlay').classList.add('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      window.LabelSuiteAnalytics && window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { page: 'role-settings', lang });
+    }
+
+    function closeAuditDrawer() {
+      document.getElementById('auditDrawer').classList.remove('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'true');
+      document.getElementById('auditDrawerOverlay').classList.remove('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    function renderAuditLog() {
+      const t = i18n[lang];
+      const list  = document.getElementById('auditLogList');
+      const empty = document.getElementById('auditDrawerEmpty');
+      list.textContent = '';
+
+      if (ROLE_AUDIT_LOGS.length === 0) {
+        list.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('auditDrawerEmptyText').textContent = t.auditDrawerEmptyText;
+        return;
+      }
+      list.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      ROLE_AUDIT_LOGS.forEach(log => {
+        const entry = document.createElement('div');
+        entry.className = 'audit-log-entry';
+        entry.setAttribute('role', 'listitem');
+
+        const top = document.createElement('div');
+        top.className = 'audit-log-entry-top';
+
+        const time = document.createElement('span');
+        time.className = 'audit-log-time';
+        time.textContent = log.createdAt;
+
+        const badge = document.createElement('span');
+        badge.className = 'badge audit-badge-perm_update';
+        badge.textContent = t.auditActionPermUpdate;
+
+        top.appendChild(time);
+        top.appendChild(badge);
+
+        const actor = document.createElement('p');
+        actor.className = 'audit-log-actor';
+        actor.appendChild(document.createTextNode(t.auditActorPrefix));
+        const strong = document.createElement('strong');
+        strong.textContent = log.actorName;
+        actor.appendChild(strong);
+
+        const diff = document.createElement('pre');
+        diff.className = 'audit-log-diff';
+        diff.textContent = log.diff;
+
+        entry.appendChild(top);
+        entry.appendChild(actor);
+        entry.appendChild(diff);
+        list.appendChild(entry);
+      });
+    }
 
     /* ── Language toggle wiring ────────────────────────────────────── */
     function wireLangToggle(id) {
@@ -1085,6 +1431,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadPersistedMatrix();
       captureOriginalState();
+      document.querySelectorAll('.matrix-checkbox').forEach(cb => { cb.disabled = true; });
       initSidebar();
       applyLang(lang);
       wireLangToggle('mobileLangToggle');

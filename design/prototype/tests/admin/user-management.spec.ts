@@ -122,9 +122,8 @@ test.describe('Admin user management list interactions', () => {
     await expect(actions).toHaveCSS('gap', '8px');
     await expect(dangerButton).toHaveCSS('font-size', '12px');
     await expect(dangerButton).toHaveCSS('font-weight', '600');
-    await expect(dangerButton).toHaveCSS('padding-top', '6px');
+    await expect(dangerButton).toHaveCSS('height', '30px');
     await expect(dangerButton).toHaveCSS('padding-right', '10px');
-    await expect(dangerButton).toHaveCSS('padding-bottom', '6px');
     await expect(dangerButton).toHaveCSS('padding-left', '10px');
     await expect(editButton).toHaveCSS('background-color', 'rgb(99, 102, 241)');
   });

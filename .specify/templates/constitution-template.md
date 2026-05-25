@@ -50,7 +50,8 @@
 
 ## Changelog
 
-| Version | Date | Change Summary |
-|---------|------|----------------|
+| 版本 | 日期 | 變更摘要 |
+|------|------|---------|
+| 1.0.2 | 2026-05-22 | Changelog table headers aligned to Traditional Chinese |
 | 1.0.1 | 2026-05-21 | Align example spec path with module-based SDD directory structure |
 | 1.0.0 | [YYYY-MM-DD] | Initial spec |

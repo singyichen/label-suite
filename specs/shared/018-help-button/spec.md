@@ -1,14 +1,17 @@
+---
+功能分支: feat/shared/018-help-button
+建立日期: 2026-05-15
+版本: 1.1.1
+狀態: Deferred（latest prototype baseline does not include Help button）
+---
+
 # 功能規格：Help Button — 平台說明入口
 
-**功能分支**：`feat/shared/018-help-button`
-**建立日期**：2026-05-15
-**版本**：1.1.1
-**狀態**：Deferred（latest prototype baseline does not include Help button）
-**需求來源**：Brainstorm session 1445-1778808850 — 評估平台是否需要 FAQ/說明入口
+**需求來源**:Brainstorm session 1445-1778808850 — 評估平台是否需要 FAQ/說明入口
 
 > **Prototype baseline（2026-05-19）**：最新 `design/prototype/pages/shared/sidebar.js` 僅提供語言切換、快捷鍵總覽、外觀切換與登出；尚未提供 `helpBtn` / `mobileHelpBtn` 或 `#help-modal`。本 spec 保留為後續候選需求，但不屬於目前 IA / prototype 對齊範圍，實作前需先更新 prototype。
 
-## Input & Generation Rules
+## 輸入與生成規則
 
 **輸入描述**：本規格需定義 Help Button 的跨頁共用 UI 契約、導覽/工具入口、狀態持久化、i18n、可存取屬性與 RWD 行為。
 
@@ -22,7 +25,7 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 
@@ -49,14 +52,14 @@ Dashboard 的「一般使用者」視圖已有 onboarding 三卡區塊，引導�
 
 ## 範疇
 
-### Current Prototype Scope
+### 目前 Prototype 範圍
 
 - 不新增 Help 按鈕
 - 不新增 Help Modal
 - Sidebar utility row 維持最新 prototype：`shortcutHelpBtn` + `sidebarThemeToggleBtn`
 - Mobile top bar 維持最新 prototype：`mobileLangToggle` + `mobileShortcutHelpBtn` + `mobileThemeToggleBtn` + `mobileLogoutBtn`
 
-### In Scope
+### 範圍內
 
 > Deferred until prototype reintroduces Help entry.
 
@@ -65,7 +68,7 @@ Dashboard 的「一般使用者」視圖已有 onboarding 三卡區塊，引導�
 - 點擊後顯示 Help Modal，內容為現有 onboarding 三卡區塊
 - Modal 內三卡按鈕行為（導向對應頁面）
 
-### Out of Scope（另行排期）
+### 範圍外（另行排期）
 - 步驟引導流程（Onboarding Walkthrough / Tour）
 - 角色感知的客製化說明內容（目前三卡對所有角色顯示相同內容）
 - 「已看過」flag 記錄（首次自動彈出）
@@ -203,16 +206,16 @@ Modal 內容完整複製 Dashboard 「一般使用者」視圖的 onboarding 三
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -221,7 +224,7 @@ Modal 內容完整複製 Dashboard 「一般使用者」視圖的 onboarding 三
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

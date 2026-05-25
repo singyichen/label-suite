@@ -1,13 +1,16 @@
+---
+功能分支: feat/dashboard/012-dashboard
+建立日期: 2026-04-05
+版本: 1.3.33
+狀態: Clarified
+---
+
 # 功能規格：Dashboard — 儀表板
 
-**功能分支**：`feat/dashboard/012-dashboard`
-**建立日期**：2026-04-05
-**版本**：1.3.28
-**狀態**：Clarified
-**需求來源**：最新原型 [`design/prototype/pages/dashboard/dashboard.html`](../../../design/prototype/pages/dashboard/dashboard.html)
+**需求來源**: 最新原型 [design/prototype/pages/dashboard/dashboard.html](../../../design/prototype/pages/dashboard/dashboard.html)
 
-## Input & Generation Rules
-
+## 輸入與生成規則
+---
 **輸入描述**：本規格需定義 Dashboard 的登入後首頁分流、角色視圖、任務入口、指標呈現、i18n 與 RWD 行為。
 
 **產生規格時必須遵守**：
@@ -20,16 +23,26 @@
 
 **已釐清事項**：
 
-- 本版以既有需求來源與本文件中的 Process Flow、User Stories、Functional Requirements、Success Criteria 作為 scope baseline。
+- 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 當 `role = user` 同時具有多種任務角色時，應優先顯示哪個視圖？ → A: 以 `project_leader` > `reviewer` > `annotator` 優先順序顯示對應單一主視圖。
+- Q: `task_membership` 資料載入中時，使用者應看到什麼狀態？ → A: 顯示 Skeleton（骨架屏）：頁面結構可見，資料區以灰色佔位塊呈現，避免空白頁閃動。
+- Q: Super Admin「最近提醒」清單為空時應顯示什麼？ → A: 顯示「目前沒有提醒」i18n 文字佔位，不顯示空白區塊。
+- Q: `task_membership` API 失敗（500／逾時）時，使用者應看到什麼？ → A: 結束 Skeleton，顯示 i18n 錯誤文字 + 重試按鈕；不得靜默 fallback 至一般使用者視圖，不清除 session。
+- Q: 某任務所有 sample 均已提交時，`快速繼續/快速審核` 應如何處理？ → A: 導向該任務的 `annotation-list`（不帶 `sample_id`），讓使用者自行瀏覽任務狀態；按鈕仍保持可見可點擊。
 
 ## 規格常數
 
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -50,10 +63,10 @@ sequenceDiagram
             瀏覽器-->>使用者: 顯示一般使用者 Dashboard
         else 有 project_leader 任務
             瀏覽器-->>使用者: 顯示 Project Leader Dashboard
-        else 有 annotator 任務
-            瀏覽器-->>使用者: 顯示 Annotator Dashboard
         else 有 reviewer 任務
             瀏覽器-->>使用者: 顯示 Reviewer Dashboard
+        else 有 annotator 任務
+            瀏覽器-->>使用者: 顯示 Annotator Dashboard
         end
     else role 無效
         authStore-->>瀏覽器: 導向 /login
@@ -92,7 +105,7 @@ sequenceDiagram
 - 頁首區塊不隨角色視圖切換而隱藏，於所有 Dashboard 視圖固定顯示。
 - 語言切換時，主標題與副標題必須即時切換（zh-TW / en）。
 
-### User Story 1 — 一般使用者儀表板（優先級：P1）
+### 使用者故事 1 — 一般使用者儀表板（優先級：P1）
 
 `user` 登入後，若尚未建立任務且未被指派任務，顯示一般使用者視圖。
 
@@ -145,7 +158,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — Super Admin 儀表板（優先級：P1）
+### 使用者故事 2 — Super Admin 儀表板（優先級：P1）
 
 Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任務與風險提醒。
 
@@ -198,10 +211,11 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - `查看全部` 為任務列表主操作按鈕，文字必須可 i18n 切換。
 - 點擊 `查看全部` 時，系統必須導向 `/task-list`，並以登入者身分套用對應任務可見範圍：`super_admin` 顯示全平台任務，`user` 顯示自己具 `task_membership` 的任務。
 - 語言切換時，區塊標題/副標、提醒文字、任務列表標題與按鈕、badge 文字都必須即時切換。
+- `最近提醒` 清單為空時，必須顯示 i18n 文字佔位（例如「目前沒有提醒」），不得顯示空白區塊。
 
 ---
 
-### User Story 3 — Project Leader 儀表板（優先級：P1）
+### 使用者故事 3 — Project Leader 儀表板（優先級：P1）
 
 `user` 在任務中建立任務後成為 Project Leader，登入後看到任務管理導向儀表板。
 
@@ -243,7 +257,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 ---
 
-### User Story 4 — Annotator 儀表板（優先級：P1）
+### 使用者故事 4 — Annotator 儀表板（優先級：P1）
 
 `user` 被指派為標記員後，登入時看到個人作業導向儀表板。
 
@@ -287,7 +301,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 ---
 
-### User Story 5 — Reviewer 儀表板（優先級：P1）
+### 使用者故事 5 — Reviewer 儀表板（優先級：P1）
 
 `user` 被指派為審核員後，登入時看到審查導向儀表板。
 
@@ -334,7 +348,9 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 ### 邊界情況
 
 - 角色值不存在或不在允許清單時？→ 導向 `/login`。
-- `role = user` 且同時有多種任務角色時？→ 依產品規則決定優先顯示順序（本版先以單一主視圖呈現）。
+- `task_membership` API 回傳錯誤（5xx／逾時）時？→ 結束 Skeleton，顯示 i18n 錯誤文字 + 重試按鈕；不靜默 fallback 至一般使用者視圖，不清除 session。
+- Annotator／Reviewer 任務中所有 sample 均已提交時？→ `快速繼續/快速審核` 仍可見可點擊，導向該任務 `annotation-list`（不帶 `sample_id`），讓使用者自行確認任務狀態。
+- `role = user` 且同時有多種任務角色時？→ 以 `project_leader` > `reviewer` > `annotator` 優先順序顯示對應單一主視圖。
 - 某文字 key 在 i18n 缺漏時？→ 保留原本 DOM 文字，不中斷頁面互動。
 - 行動版（`<= MOBILE_BP`）時導覽列如何呈現？→ 由側邊欄轉為底部橫向導覽。
 
@@ -346,6 +362,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 
 - **FR-001**：系統必須依登入者 `system role` 與任務關係渲染對應 Dashboard。
 - **FR-001A**：`/dashboard` 必須顯示頁首標題區塊，包含主標題「儀表板」與副標題「掌握任務進度與團隊協作狀態」，並置於場景模式控制區之前。
+- **FR-001B**：`role = user` 且同時具有多種任務角色時，系統必須依 `project_leader` > `reviewer` > `annotator` 優先順序顯示唯一的對應主視圖。
 - **FR-002**：`super_admin` 必須顯示 Super Admin Dashboard。
 - **FR-003**：`user` 且尚無任務關係時，必須顯示一般使用者 Dashboard。
 - **FR-004**：`user` 建立任務後（具 `project_leader` 任務關係）必須顯示 Project Leader Dashboard。
@@ -361,7 +378,7 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-008**：Super Admin Dashboard 必須包含：平台使用者統計、任務概況、最近提醒、任務列表。
 - **FR-008A**：Super Admin Dashboard 的「平台使用者統計」必須包含 4 張指標卡：總用戶（人）、專案負責人（人）、標記員（人）、審核員（人）；各卡標籤顯示於數值上方。
 - **FR-008B**：Super Admin Dashboard 的「任務概況」必須包含 4 張指標卡：總任務（個）、進行中（個）、等待 IAA 確認（個）、速度異常（個）；各卡標籤顯示於數值上方。
-- **FR-008C**：Super Admin Dashboard 的「最近提醒」必須以清單呈現，且每項包含提醒標題與提醒內容。
+- **FR-008C**：Super Admin Dashboard 的「最近提醒」必須以清單呈現，且每項包含提醒標題與提醒內容；清單為空時必須顯示 i18n 文字佔位（如「目前沒有提醒」），不得呈現空白區塊。
 - **FR-008D**：Super Admin Dashboard 的「任務列表」必須顯示「查看全部」按鈕，且每列包含名稱、摘要、3 種 badge 與 progress bar。
 - **FR-008E**：Super Admin Dashboard 點擊「查看全部」時，系統必須導向 `/task-list`，並以 `super_admin` 權限顯示全平台任務。
 - **FR-009**：Project Leader Dashboard 必須包含：任務概況、任務列表。
@@ -373,12 +390,12 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-010A**：Annotator Dashboard 的「標記概況」必須包含 3 張指標卡：待標記（筆）、今日完成（筆）、平均速度（分/筆）；各卡標籤顯示於數值上方。
 - **FR-010B**：Annotator Dashboard 的任務列表每列必須包含進度摘要、`快速繼續` 按鈕、3 種 badge 與 progress bar。
 - **FR-010B1**：點擊 Annotator 任務列中除 `快速繼續` 按鈕以外的區域時，系統必須以該列任務上下文導向 `annotation-list`（至少包含 `task_id`、`role=annotator`、`run_type`、`task_type`）。
-- **FR-010C**：點擊 Annotator 任務列 `快速繼續` 時，系統必須以該列任務上下文導向 `annotation-workspace`（至少包含 `task_id`、`role=annotator`、該任務第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待標記`）。
+- **FR-010C**：點擊 Annotator 任務列 `快速繼續` 時，若任務存在非 `已提交` sample，系統必須導向 `annotation-workspace`（帶入 `task_id`、`role=annotator`、第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待標記`）；若所有 sample 均已提交，則導向該任務 `annotation-list`（不帶 `sample_id`）。
 - **FR-011**：Reviewer Dashboard 必須包含：審核概況、任務列表、快速審核按鈕。
 - **FR-011A**：Reviewer Dashboard 的「審核概況」必須包含 3 張指標卡：待審總數（筆）、今日已審（筆）、IAA 摘要（無單位，0–1 係數）；各卡標籤顯示於數值上方。
 - **FR-011B**：Reviewer Dashboard 的任務列表每列必須包含審查摘要、`快速審核` 按鈕、3 種 badge 與 progress bar。
 - **FR-011B1**：點擊 Reviewer 任務列中除 `快速審核` 按鈕以外的區域時，系統必須以該列任務上下文導向 `annotation-list`（至少包含 `task_id`、`role=reviewer`、`run_type`、`task_type`）。
-- **FR-011C**：點擊 Reviewer 任務列 `快速審核` 時，系統必須以該列任務上下文導向 `annotation-workspace`（至少包含 `task_id`、`role=reviewer`、該任務第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待審核`）。
+- **FR-011C**：點擊 Reviewer 任務列 `快速審核` 時，若任務存在非 `已提交` sample，系統必須導向 `annotation-workspace`（帶入 `task_id`、`role=reviewer`、第一筆非 `已提交` sample 的 `sample_id`；可為 `已儲存` 或 `待審核`）；若所有 sample 均已提交，則導向該任務 `annotation-list`（不帶 `sample_id`）。
 - **FR-012**：所有任務列表列項都必須包含 badge（Task Type / Annotation Stage / 狀態）與 progress bar。
 - **FR-013**：頁面必須支援 zh-TW / en 語言切換，且切換不需重載。
 - **FR-014**：語言切換後必須同步更新文字節點與可存取屬性（如 `aria-label`、`title`）。
@@ -399,8 +416,10 @@ Super Admin 登入後看到平台層級總覽，用於掌握整體人員、任�
 - **FR-017I**：在 `<= MOBILE_BP` 時，Reviewer 任務列表單列的 badge 群組與 `快速審核` CTA 必須改為垂直堆疊，badge 不得超出卡片右邊界。
 - **FR-017J**：在 `<= MOBILE_BP` 時，Super Admin 的 `平台使用者統計` 與 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
 - **FR-017K**：在 `<= MOBILE_BP` 時，Project Leader 的 `任務概況` 指標區塊必須優先使用兩欄卡片排列，不得退化為 4 張單欄直向堆疊。
+- **FR-018**：進入 `/dashboard` 後，在 `task_membership` API 回應返回前，系統必須顯示 Skeleton（骨架屏）：頁面結構可見，以指標卡與任務列表佔位塊為預設佈局（對應最常見的有任務角色視圖）；若 API 回應後確認為一般使用者 Dashboard，則直接切換為對應佈局，接受此預設 Skeleton 與最終版面的視覺差異；API 回應後無縫切換為實際內容，不得出現空白頁閃動。
+- **FR-019**：`task_membership` API 回傳錯誤（5xx 或網路逾時）時，系統必須結束 Skeleton 並顯示 i18n 錯誤訊息與重試按鈕；不得靜默 fallback 至一般使用者視圖，亦不得清除 session 或導向 `/login`。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -493,21 +512,23 @@ flowchart LR
 - **SC-012C**：在手機版（`<= MOBILE_BP`）檢視 Super Admin 與 Project Leader 的指標區塊時，`平台使用者統計 / 任務概況` 必須維持兩欄卡片排列，前兩張指標卡應落在同一列，不得退化為逐張直排。
 - **SC-013**：在桌面版（`> MOBILE_BP`）檢視時，主導覽維持左側側邊欄，且不出現底部導覽覆蓋內容的情況。
 - **SC-014**：Dashboard 頁首區塊固定顯示於所有角色視圖上方，並正確顯示主標「儀表板」與副標「掌握任務進度與團隊協作狀態」。
-- **SC-015**：Annotator/Reviewer 視圖點擊任務列 `快速繼續/快速審核` 後，必須導向對應任務的 `annotation-workspace`，且帶入正確 `task_id`、`role`、`sample_id` query（`sample_id` 為該任務第一筆非 `已提交` sample）。
+- **SC-015**：Annotator/Reviewer 視圖點擊任務列 `快速繼續/快速審核` 後，若任務有非 `已提交` sample，必須導向 `annotation-workspace` 並帶入正確 `task_id`、`role`、`sample_id`；若所有 sample 均已提交，必須導向 `annotation-list`（不帶 `sample_id`），按鈕保持可見可點擊。
 - **SC-016**：Annotator/Reviewer 視圖點擊任務列非 `快速繼續/快速審核` 區域後，必須導向對應任務的 `annotation-list`，且帶入正確 `task_id`、`role`、`run_type`、`task_type` query。
+- **SC-017**：進入 `/dashboard` 後，在 `task_membership` API 回應前，頁面必須顯示 Skeleton 佔位塊（指標卡區域與任務列表區域各有灰色佔位），不得出現空白頁或未樣式化的裸 DOM。
+- **SC-018**：`task_membership` API 回傳 5xx 或逾時時，Skeleton 必須結束並顯示 i18n 錯誤訊息與可操作的重試按鈕；不得顯示一般使用者視圖，不得清除 session。
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
@@ -516,7 +537,7 @@ flowchart LR
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。
@@ -532,6 +553,11 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.33 | 2026-05-22 | 釐清全部 sample 已提交時快速操作行為：fallback 至 annotation-list，按鈕保持可見；更新 FR-010C、FR-011C、SC-015、邊界情況 |
+| 1.3.32 | 2026-05-22 | 釐清 `task_membership` API 錯誤狀態：結束 Skeleton 顯示 i18n 錯誤訊息 + 重試按鈕，不 fallback；新增 FR-019、SC-018、邊界情況 |
+| 1.3.31 | 2026-05-22 | 釐清「最近提醒」空狀態：清單為空顯示 i18n 文字佔位；更新 FR-008C、系統管理員行為規則 |
+| 1.3.30 | 2026-05-22 | 釐清 loading state：`task_membership` 載入中顯示 Skeleton 骨架屏；新增 FR-018、SC-017 |
+| 1.3.29 | 2026-05-22 | 釐清多任務角色分流優先順序：`project_leader` > `reviewer` > `annotator`；新增 FR-001B、更新邊界情況 |
 | 1.3.28 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.27 | 2026-04-30 | 同步手機版 summary metrics 密度規則：Super Admin 的 `平台使用者統計 / 任務概況` 與 Project Leader 的 `任務概況` 需優先維持兩欄卡片排列，避免單欄直排過於冗長；更新行為規則、FR-017J/K、SC-012C |
 | 1.3.26 | 2026-04-30 | 同步最新原型 RWD 修正：補充桌面收合 sidebar 時 Super Admin 指標卡需維持可讀寬度；新增 Annotator / Reviewer 手機任務卡 badge 與 CTA 垂直堆疊規範，更新行為規則、FR-017G/H/I、SC-012A/B |

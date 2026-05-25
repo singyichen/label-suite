@@ -160,13 +160,15 @@
 
     /* ── Mini action buttons (aligned with task-list) ────────── */
     .mini-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 30px;
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
       background: var(--color-white);
       color: var(--color-ink);
       font-size: 12px;
       font-weight: 600;
-      padding: 6px 10px;
+      padding: 0 10px;
       transition: background-color var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
     }
     .mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
@@ -320,6 +322,93 @@
       .filter-bar { flex-direction: column; align-items: stretch; }
       .search-wrap { max-width: 100%; }
       .td-actions { flex-wrap: wrap; }
+    }
+
+    /* ── Audit Log icon button ──────────────────────────────────── */
+    .mini-btn-log {
+      background: var(--color-info-bg); border-color: var(--color-info-border); color: var(--color-info);
+    }
+    .mini-btn-log:hover:not(:disabled) {
+      border-color: var(--color-info); color: var(--color-info); background: var(--color-info-bg);
+    }
+    .mini-btn-icon { padding: 0 6px; }
+
+    /* ── Audit Drawer ───────────────────────────────────────────── */
+    .audit-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 250;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--dur-normal) var(--ease-standard);
+    }
+    .audit-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .audit-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 480px;
+      background: var(--color-white); z-index: 260;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform var(--dur-normal) var(--ease-standard);
+      border-left: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xl);
+    }
+    .audit-drawer.open { transform: translateX(0); }
+
+    .audit-drawer-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-md); padding: var(--space-lg);
+      border-bottom: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .audit-drawer-title {
+      font-family: 'Crimson Pro', 'Noto Serif TC', serif;
+      font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 2px;
+    }
+    .audit-drawer-subtitle { font-size: 13px; color: var(--color-text-soft); margin: 0; }
+
+    .audit-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-lg); }
+    .audit-log-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .audit-log-entry {
+      background: var(--color-white); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: var(--space-md);
+    }
+    .audit-log-entry-top {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-sm); margin-bottom: 8px;
+    }
+    .audit-log-time {
+      font-size: 12px; color: var(--color-text-soft);
+      font-family: var(--font-mono); flex-shrink: 0;
+    }
+    .audit-log-actor { font-size: 13px; color: var(--color-text-soft); margin-bottom: 6px; }
+    .audit-log-actor strong { color: var(--color-ink); }
+    .audit-log-diff {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--color-slate-50); border: 1px solid var(--color-border-muted);
+      border-radius: var(--radius-sm); padding: 6px 10px;
+      color: var(--color-ink); word-break: break-all; margin: 0; white-space: pre-wrap;
+    }
+
+    .audit-badge-create     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .audit-badge-edit       { background: var(--color-info-bg); color: var(--color-info); border-color: var(--color-info-border); }
+    .audit-badge-disable    { background: var(--color-error-soft-bg); color: var(--color-error); border-color: var(--color-error-soft-border); }
+    .audit-badge-enable     { background: var(--color-success-soft-bg); color: var(--color-success); border-color: var(--color-success-border); }
+    .audit-badge-role_change { background: var(--color-primary-soft-bg); color: var(--color-primary); border-color: var(--color-primary-border); }
+
+    .audit-drawer-empty {
+      text-align: center; padding: var(--space-2xl) var(--space-lg);
+      color: var(--color-text-soft); font-size: 13px;
+    }
+
+    @media (max-width: 767px) {
+      .audit-drawer {
+        top: auto; right: 0; left: 0; bottom: 0; width: 100%; height: 72vh;
+        border-left: none; border-top: 1px solid var(--color-border);
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        transform: translateY(100%);
+      }
+      .audit-drawer.open { transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .audit-drawer, .audit-drawer-overlay { transition-duration: 0.01ms; }
     }
   </style>
 </head>
@@ -712,6 +801,33 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- AUDIT LOG DRAWER                                           -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="audit-drawer-overlay" id="auditDrawerOverlay"
+       aria-hidden="true" onclick="closeAuditDrawer()"></div>
+  <aside class="audit-drawer" id="auditDrawer"
+         role="complementary" aria-label="異動紀錄" aria-hidden="true">
+    <div class="audit-drawer-header">
+      <div>
+        <h2 id="auditDrawerTitle" class="audit-drawer-title">異動紀錄</h2>
+        <p id="auditDrawerSubtitle" class="audit-drawer-subtitle"></p>
+      </div>
+      <button class="modal-close" onclick="closeAuditDrawer()"
+              id="auditDrawerCloseBtn" aria-label="關閉">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="audit-drawer-body">
+      <div id="auditLogList" class="audit-log-list" role="list"></div>
+      <div id="auditDrawerEmpty" class="audit-drawer-empty hidden">
+        <p id="auditDrawerEmptyText">尚無異動紀錄</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- TOAST                                                      -->
   <!-- ═══════════════════════════════════════════════════════════ -->
   <div id="toast" class="hidden" aria-live="polite" aria-atomic="true">
@@ -804,6 +920,17 @@
         toastReEnabled:        '帳號已重新啟用',
         toastDuplicateEmail:   'Email 已存在',
         toastMissingRequired:  '請填寫姓名與有效 Email',
+        auditDrawerTitle:      '異動紀錄',
+        auditDrawerCloseBtn:   '關閉',
+        auditDrawerEmptyText:  '尚無異動紀錄',
+        auditBtnLabel:         '查看異動紀錄',
+        auditActorPrefix:      '操作者：',
+        auditActionCreate:     '新增',
+        auditActionEdit:       '編輯',
+        auditActionDisable:    '停用',
+        auditActionEnable:     '啟用',
+        auditActionRoleChange: '角色變更',
+        auditDrawerSubtitlePrefix: '目標帳號：',
       },
       en: {
         pageTitle:             'User Management',
@@ -865,6 +992,17 @@
         toastReEnabled:        'Account re-enabled',
         toastDuplicateEmail:   'Email already exists',
         toastMissingRequired:  'Enter a name and valid email',
+        auditDrawerTitle:      'Change History',
+        auditDrawerCloseBtn:   'Close',
+        auditDrawerEmptyText:  'No changes recorded',
+        auditBtnLabel:         'View change history',
+        auditActorPrefix:      'By: ',
+        auditActionCreate:     'Created',
+        auditActionEdit:       'Edited',
+        auditActionDisable:    'Disabled',
+        auditActionEnable:     'Enabled',
+        auditActionRoleChange: 'Role Changed',
+        auditDrawerSubtitlePrefix: 'Target: ',
       },
     };
 
@@ -892,6 +1030,7 @@
     let pageSize = 20;
     let editingUserId = null;
     let disablingUserId = null;
+    let auditUserId = null;
 
     function applyLang(l) {
       const nextLang = l === 'en' ? 'en' : 'zh';
@@ -941,6 +1080,17 @@
 
       // Update user chip role label
       window.LabelSuiteSharedSidebar.updateUserChip({ roleLabel: t.roleIndicatorLabel });
+
+      // Re-render audit drawer content if currently open
+      if (auditUserId) {
+        document.getElementById('auditDrawerTitle').textContent = t.auditDrawerTitle;
+        const auditUser = sampleUsers.find(u => u.id === auditUserId);
+        document.getElementById('auditDrawerSubtitle').textContent =
+          t.auditDrawerSubtitlePrefix + (auditUser ? auditUser.name : '');
+        document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
+        renderAuditLog(auditUserId);
+      }
+
       renderUsers();
     }
 
@@ -952,6 +1102,29 @@
       { id: 'u-004', name: 'Jason Huang', email: 'jason.h@labelsuite.io',   role: 'user',        status: 'disabled', createdAt: '2026-02-20' },
       { id: 'u-005', name: 'Rachel Su',   email: 'rachel.su@labelsuite.io', role: 'user',        status: 'active',   createdAt: '2026-03-01' },
     ];
+
+    /* ── Sample audit log data ─────────────────────────────────── */
+    const sampleAuditLogs = {
+      'u-001': [
+        { actorName: 'System', actionType: 'create', diff: 'system_role: — → super_admin\nstatus: — → active', createdAt: '2026-01-05 09:00' },
+      ],
+      'u-002': [
+        { actorName: 'System',     actionType: 'create',      diff: 'system_role: — → user\nstatus: — → active',         createdAt: '2026-01-18 10:23' },
+        { actorName: 'Mandy Chen', actionType: 'role_change', diff: 'system_role: user → super_admin',                   createdAt: '2026-03-10 14:55' },
+        { actorName: 'Mandy Chen', actionType: 'role_change', diff: 'system_role: super_admin → user',                   createdAt: '2026-04-02 11:30' },
+      ],
+      'u-003': [
+        { actorName: 'System',     actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-02-03 15:10' },
+        { actorName: 'Mandy Chen', actionType: 'edit',   diff: 'name: "Olivia" → "Olivia Lin"',             createdAt: '2026-02-15 09:42' },
+      ],
+      'u-004': [
+        { actorName: 'System',     actionType: 'create',  diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-02-20 14:00' },
+        { actorName: 'Mandy Chen', actionType: 'disable', diff: 'status: active → disabled',                 createdAt: '2026-04-18 16:45' },
+      ],
+      'u-005': [
+        { actorName: 'System', actionType: 'create', diff: 'system_role: — → user\nstatus: — → active', createdAt: '2026-03-01 11:20' },
+      ],
+    };
 
     function isValidEmail(value) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -1062,6 +1235,25 @@
         editBtn.appendChild(editText);
         actions.appendChild(editBtn);
 
+        const logBtn = document.createElement('button');
+        logBtn.className = 'mini-btn mini-btn-log mini-btn-icon';
+        logBtn.type = 'button';
+        logBtn.setAttribute('aria-label', t.auditBtnLabel);
+        logBtn.title = t.auditBtnLabel;
+        logBtn.addEventListener('click', () => openAuditDrawer(user.id));
+        // Lucide 'history' icon — static SVG, no user data
+        const logSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        logSvg.setAttribute('width', '16'); logSvg.setAttribute('height', '16');
+        logSvg.setAttribute('viewBox', '0 0 24 24'); logSvg.setAttribute('fill', 'none');
+        logSvg.setAttribute('stroke', 'currentColor'); logSvg.setAttribute('stroke-width', '2');
+        logSvg.setAttribute('aria-hidden', 'true');
+        ['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5', 'M12 7v5l4 2'].forEach(d => {
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          p.setAttribute('d', d); logSvg.appendChild(p);
+        });
+        logBtn.appendChild(logSvg);
+        actions.appendChild(logBtn);
+
         actionCell.appendChild(actions);
         row.appendChild(actionCell);
         tbody.appendChild(row);
@@ -1163,7 +1355,10 @@
       });
     });
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { ['addModal','editModal','disableModal'].forEach(closeModal); }
+      if (e.key === 'Escape') {
+        ['addModal','editModal','disableModal'].forEach(closeModal);
+        closeAuditDrawer();
+      }
     });
 
     function submitAdd() {
@@ -1251,6 +1446,95 @@
       document.getElementById('statusFilter').value  = '';
       currentPage = 1;
       renderUsers();
+    }
+
+    /* ── Audit Drawer ──────────────────────────────────────────── */
+    function openAuditDrawer(userId) {
+      const t = i18n[lang];
+      auditUserId = userId;
+      const user = sampleUsers.find(u => u.id === userId);
+      document.getElementById('auditDrawerTitle').textContent = t.auditDrawerTitle;
+      document.getElementById('auditDrawerSubtitle').textContent =
+        t.auditDrawerSubtitlePrefix + (user ? user.name : '');
+      document.getElementById('auditDrawerCloseBtn').setAttribute('aria-label', t.auditDrawerCloseBtn);
+      renderAuditLog(userId);
+      document.getElementById('auditDrawer').classList.add('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'false');
+      document.getElementById('auditDrawerOverlay').classList.add('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      window.LabelSuiteAnalytics.track('prototype_audit_drawer_opened', { userId, lang });
+    }
+
+    function closeAuditDrawer() {
+      document.getElementById('auditDrawer').classList.remove('open');
+      document.getElementById('auditDrawer').setAttribute('aria-hidden', 'true');
+      document.getElementById('auditDrawerOverlay').classList.remove('open');
+      document.getElementById('auditDrawerOverlay').setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      auditUserId = null;
+    }
+
+    function renderAuditLog(userId) {
+      const t = i18n[lang];
+      const logs = (sampleAuditLogs[userId] || []).slice().reverse();
+      const list = document.getElementById('auditLogList');
+      const empty = document.getElementById('auditDrawerEmpty');
+      list.textContent = '';
+
+      if (logs.length === 0) {
+        list.classList.add('hidden');
+        empty.classList.remove('hidden');
+        document.getElementById('auditDrawerEmptyText').textContent = t.auditDrawerEmptyText;
+        return;
+      }
+      list.classList.remove('hidden');
+      empty.classList.add('hidden');
+
+      const actionLabels = {
+        create:      t.auditActionCreate,
+        edit:        t.auditActionEdit,
+        disable:     t.auditActionDisable,
+        enable:      t.auditActionEnable,
+        role_change: t.auditActionRoleChange,
+      };
+
+      logs.forEach(log => {
+        const entry = document.createElement('div');
+        entry.className = 'audit-log-entry';
+        entry.setAttribute('role', 'listitem');
+
+        const top = document.createElement('div');
+        top.className = 'audit-log-entry-top';
+
+        const time = document.createElement('span');
+        time.className = 'audit-log-time';
+        time.textContent = log.createdAt;
+
+        const badge = document.createElement('span');
+        badge.className = `badge audit-badge-${log.actionType}`;
+        badge.textContent = actionLabels[log.actionType] || log.actionType;
+
+        top.appendChild(time);
+        top.appendChild(badge);
+
+        const actor = document.createElement('p');
+        actor.className = 'audit-log-actor';
+        const actorLabel = document.createTextNode(t.auditActorPrefix);
+        const actorStrong = document.createElement('strong');
+        actorStrong.textContent = log.actorName;
+        actor.appendChild(actorLabel);
+        actor.appendChild(actorStrong);
+
+        const diff = document.createElement('pre');
+        diff.className = 'audit-log-diff';
+        diff.textContent = log.diff;
+
+        entry.appendChild(top);
+        entry.appendChild(actor);
+        entry.appendChild(diff);
+        list.appendChild(entry);
+      });
     }
 
     /* ── Toast ──────────────────────────────────────────────────── */

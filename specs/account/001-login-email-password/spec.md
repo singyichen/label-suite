@@ -1,12 +1,15 @@
+---
+功能分支: feat/account/001-login-email-password
+建立日期: 2026-04-05
+版本: 1.2.2
+狀態: Clarified
+---
+
 # 功能規格：登入 — Email / Password + 頁面 UI
 
-**功能分支**：`feat/account/001-login-email-password`
-**建立日期**：2026-04-05
-**版本**：1.2.2
-**狀態**：Clarified
-**需求來源**：最新原型 [`design/prototype/pages/account/login.html`](../../../design/prototype/pages/account/login.html)
+**需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 
-## Input & Generation Rules
+## 輸入與生成規則
 
 **輸入描述**：使用者需能透過 Email / Password 登入入口進入 Label Suite，並可由登入頁前往註冊、忘記密碼與 dashboard 原型流程。
 
@@ -24,12 +27,20 @@
 - Google 按鈕在本規格中僅要求可點擊且 no-op；完整 Google SSO 行為由下游規格 `002` 定義。
 - 語言狀態需跨登入、註冊、忘記密碼與 dashboard 原型頁持久化。
 
+## Clarifications
+
+### Session 2026-05-22
+
+- Q: 語言狀態 `labelsuite.lang` 應儲存於哪種 Web Storage？ → A: `localStorage`（跨頁、跨 session 持久化）
+- Q: 登入頁載入時語言初始化邏輯為何？ → A: 優先讀取 `localStorage['labelsuite.lang']`，無值時 fallback 到 `zh`
+- Q: 800ms loading 期間，頁面其他元件是否可互動？ → A: 全頁不可互動（pointer-events 停用或 overlay 覆蓋）
+
 ## 規格常數
 
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
-## Process Flow
+## 流程圖
 
 ```mermaid
 sequenceDiagram
@@ -71,7 +82,7 @@ sequenceDiagram
 
 ## 使用者情境與測試 *(必填)*
 
-### User Story 1 — 登入頁完整呈現（優先級：P1）
+### 使用者故事 1 — 登入頁完整呈現（優先級：P1）
 
 未登入使用者進入 `/account/login.html` 時，頁面必須完整呈現登入所需元件與導覽連結。
 
@@ -87,7 +98,7 @@ sequenceDiagram
 
 ---
 
-### User Story 2 — 表單互動與錯誤顯示（優先級：P1）
+### 使用者故事 2 — 表單互動與錯誤顯示（優先級：P1）
 
 使用者送出表單時，系統先驗證必填欄位，並在欄位層級顯示錯誤。
 
@@ -104,7 +115,7 @@ sequenceDiagram
 
 ---
 
-### User Story 3 — 登入送出與導頁（優先級：P1）
+### 使用者故事 3 — 登入送出與導頁（優先級：P1）
 
 使用者填妥 Email/Password 後送出，系統顯示 loading 後導向 dashboard 原型頁。
 
@@ -120,7 +131,7 @@ sequenceDiagram
 
 ---
 
-### User Story 4 — i18n 與可存取屬性同步（優先級：P2）
+### 使用者故事 4 — i18n 與可存取屬性同步（優先級：P2）
 
 登入頁支援 zh / en 切換，且同步更新畫面文字與輔助屬性。
 
@@ -137,7 +148,7 @@ sequenceDiagram
 
 ---
 
-### User Story 5 — 響應式版面（優先級：P2）
+### 使用者故事 5 — 響應式版面（優先級：P2）
 
 登入頁在手機、平板、桌機皆維持可讀且可操作。
 
@@ -168,15 +179,15 @@ sequenceDiagram
 
 - **FR-001**：系統必須提供 `/account/login.html` 登入頁，包含導覽列、登入卡片、Google 按鈕、Email/Password 表單與導流連結。
 - **FR-002**：導覽列必須包含品牌區塊（Logo + Label Suite）與語言切換按鈕（單一語言代碼：`ZH` 或 `EN`）。
-- **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。
+- **FR-003**：頁面必須支援 `zh` / `en` 雙語切換，且不需重新整理頁面。頁面載入時優先讀取 `localStorage['labelsuite.lang']`，無值時 fallback 到 `zh`。
 - **FR-004**：語言切換時，必須同步更新文字節點與可存取屬性（至少包含 `aria-label` 與 `document.title`）。
-- **FR-004A**：語言狀態必須跨頁持久化；自登入頁導向 `register`、`forgot-password`、`dashboard` 時，目標頁需沿用相同語系。
+- **FR-004A**：語言狀態必須跨頁持久化，使用 `localStorage` 以 `labelsuite.lang` 為 key 儲存；自登入頁導向 `register`、`forgot-password`、`dashboard` 時，目標頁需沿用相同語系。
 - **FR-005**：表單送出前必須驗證 Email 與 Password 為必填。
 - **FR-006**：Email 驗證必須以 `trim()` 後結果判定是否為空。
 - **FR-007**：欄位驗證失敗時，必須在對應欄位顯示錯誤訊息與錯誤樣式。
 - **FR-008**：使用者於錯誤欄位重新輸入時，系統必須即時清除該欄位錯誤狀態。
 - **FR-009**：Password 欄位必須提供顯示/隱藏切換按鈕，且按鈕 `aria-label` 必須依狀態切換。
-- **FR-010**：表單驗證通過後，登入按鈕必須進入 disabled + spinner 的 loading 狀態。
+- **FR-010**：表單驗證通過後，登入按鈕必須進入 disabled + spinner 的 loading 狀態，且整頁其餘元件同步不可互動（全頁 pointer-events 停用或等效 overlay）。
 - **FR-011**：原型模式下，表單驗證通過後必須於約 800ms 內導向 `../dashboard/dashboard.html`。
 - **FR-012**：Google 按鈕在原型模式必須可點擊且不報錯，但不觸發導頁（no-op）。
 - **FR-013**：忘記密碼連結必須導向 `./forgot-password.html`。
@@ -185,7 +196,7 @@ sequenceDiagram
 - **FR-015A**：在 `<= MOBILE_BP` 時，導覽列必須改為 56px 高並使用 16px 左右內距。
 - **FR-015B**：在 `<= MOBILE_BP` 時，登入卡片必須套用手機內距與尺寸設定，避免欄位、按鈕與文字擠壓。
 
-### User Flow & Navigation
+### 使用者流程與導頁
 
 ```mermaid
 flowchart LR
@@ -211,7 +222,7 @@ flowchart LR
 ### 關鍵實體
 
 - **LoginFormState**：登入表單狀態。關鍵欄位：`email`、`password`、`emailError`、`passwordError`、`isSubmitting`。
-- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`。
+- **LanguageState**：語言狀態。關鍵欄位：`lang`（`zh` / `en`）、`storage_key = labelsuite.lang`、`storage_type = localStorage`、`default = zh`（初始化時優先讀取 localStorage，無值時 fallback 到 `zh`）。
 - **I18nDictionary**：語系字典。關鍵欄位：`pageTitle`、欄位文案、按鈕文案、錯誤訊息、`aria-label` 文案。
 - **PrototypeRedirectState**：原型導頁狀態。關鍵欄位：`targetPath = ../dashboard/dashboard.html`、`delayMs = 800`。
 
@@ -248,16 +259,16 @@ flowchart LR
 
 ---
 
-## Review & Acceptance Checklist
+## 審查與驗收清單
 
-### Content Quality
+### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為與業務需求，未引入前端框架、API 或資料庫實作細節。
 - [x] 所有必填章節已完成，且不適用的後端驗證 / session 行為已明確排除於本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
 
-### Label Suite Compliance
+### Label Suite 合規性
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 本規格不新增跨 feature import 或架構耦合需求。
@@ -266,7 +277,7 @@ flowchart LR
 - [x] Prototype source of truth 已列於需求來源，prototype 行為與規格差異已於已釐清事項中說明。
 - [x] 上下游規格相依性已列出，需變更登入入口、Google 按鈕或跨頁語言契約時可追蹤影響範圍。
 
-### Execution Status
+### 執行狀態
 
 - [x] 輸入描述已解析。
 - [x] 角色、互動、資料狀態與限制已萃取。

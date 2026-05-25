@@ -12,8 +12,8 @@ const sidebarModulePages = [
 
 const actionSelectors = [
   '#mobileLangToggle',
-  '#mobileShortcutHelpBtn',
   '#mobileThemeToggleBtn',
+  '#mobileNotificationBellBtn',
   '#mobileLogoutBtn',
 ];
 
