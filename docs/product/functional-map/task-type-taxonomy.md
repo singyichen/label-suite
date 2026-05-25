@@ -61,7 +61,7 @@
 
 | 輸出類型（output_type） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
-| Token 分類（`token_class`） | Token 級標籤 | POS tagging、Chunking（BIO 格式）、NER（token-level, IOB2 標記格式） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES` |
+| Token 分類（`token_class`） | Token 級標籤 | POS tagging、Chunking（BIO 格式）、NER（token-level, IOB2 標記格式） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（決定合法 tag 集合，為介面標注格式） |
 | 邊界偵測（`boundary`） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 多類型標記區間（`multi_type_span`） | Span + 多類型標籤 | NER（span-level, 直接標記起訖位置）、Trigger Detection | 「台積電創辦人張忠謀宣布退休。」 | [台積電→ORG, 張忠謀→PER] | `entity_types[]: { name, color }`, `scheme: IOB2\|BIOES`（用於資料匯出格式，非介面操作格式） |
 | 單類型標記區間（`single_type_span`） | 只標 span 位置 | Aspect Term Extraction、Keyword Extraction、Claim Span | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] | `span_label_field`, `allow_span_add/delete` |
@@ -104,7 +104,7 @@
 | 回歸（regression） | 單一項目（single_item） | 多維度（multi_dim） | 情感維度評估（Valence-Arousal）、多維度品質評估 | `dimensions[]: { name, min, max, step }` |
 | 回歸（regression） | 項目對（item_pair） | 單維度（single_dim） | 語義相似度（STS）、文本相關性評分 | `dimension: { name, min, max, step }` |
 | 回歸（regression） | 項目對（item_pair） | 多維度（multi_dim） | 語義相似度 + 句法相似度 + 主題一致性評估 | `dimensions[]: { name, min, max, step }` |
-| 序列（sequence） | 單一項目（single_item） | Token 分類（token_class） | POS tagging、Chunking（BIO 格式）、NER（token-level, IOB2 標記格式） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES` |
+| 序列（sequence） | 單一項目（single_item） | Token 分類（token_class） | POS tagging、Chunking（BIO 格式）、NER（token-level, IOB2 標記格式） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（決定合法 tag 集合，為介面標注格式） |
 | 序列（sequence） | 單一項目（single_item） | 邊界偵測（boundary） | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 序列（sequence） | 單一項目（single_item） | 多類型標記區間（multi_type_span） | NER（span-level, 直接標記起訖位置）、Event Detection | `entity_types[]: { name, color }`, `scheme: IOB2\|BIOES`（用於資料匯出格式，非介面操作格式） |
 | 序列（sequence） | 單一項目（single_item） | 單類型標記區間（single_type_span） | Aspect Term Extraction、Keyword Extraction、Claim Span | `span_label_field`, `allow_span_add/delete` |
