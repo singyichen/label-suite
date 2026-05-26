@@ -1,6 +1,6 @@
 # Label Suite — Agent Rules
 
-> Full context: [CLAUDE.md](CLAUDE.md) · Constitution: [.specify/memory/constitution.md](.specify/memory/constitution.md)
+> Full context: [CLAUDE.md](CLAUDE.md) · [CODEX.md](CODEX.md) · Constitution: [.specify/memory/constitution.md](.specify/memory/constitution.md)
 
 ## Architecture Boundaries
 
