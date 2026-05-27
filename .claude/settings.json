@@ -1,4 +1,18 @@
 {
+  "permissions": {
+    "deny": [
+      "Write(**/.env.*)",
+      "Edit(**/.env.*)",
+      "Write(*.pem)",
+      "Edit(*.pem)",
+      "Write(*.key)",
+      "Edit(*.key)",
+      "Write(*id_rsa*)",
+      "Edit(*id_rsa*)",
+      "Write(*credentials.json)",
+      "Edit(*credentials.json)"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -26,6 +40,16 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/block-sensitive.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/audit-log.sh"
           }
         ]
       }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# block-sensitive.sh — Block Claude Code tool calls that access production/staging .env files.
+# block-sensitive.sh — Block Claude Code tool calls that access sensitive files or paths.
 #
 # Trigger:
 #   Registered as a PreToolUse hook in .claude/settings.json for file-touching tools:
@@ -11,42 +11,59 @@
 #   Exit 2 = block the tool call and surface the error to Claude.
 #   Exit 0 = allow the tool call to proceed.
 #
-# How it works:
-#   Reads the JSON tool-call payload from stdin, extracts the file path or Bash
-#   command, and blocks any access matching the pattern \.env\.(production|staging|prod).
+# What is blocked:
+#   - Production/staging .env files (write-anywhere, read-anywhere)
+#   - TLS/SSL certificate and private key files (.pem, .key, .p12, .pfx)
+#   - SSH private key files (id_rsa, id_ed25519, id_ecdsa, id_dsa)
+#   - Cloud credential files (credentials.json, service-account*.json)
+#   - System secret directories: ~/.ssh/, ~/.aws/, ~/.gnupg/
 set -uo pipefail
 
 INPUT=$(cat)
 TOOL_NAME=$(printf '%s\n' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
 
-SENSITIVE_PATTERN='\.env\.(production|staging|prod)'
+# Patterns that block reads AND writes via file-operation tools (Read/Write/Edit/Grep/Glob)
+FULL_BLOCK_PATTERN='\.env\.(production|staging|prod)(\.local)?$|\.pem$|\.p12$|\.pfx$|/(\.ssh|\.aws|\.gnupg)/'
+
+# Patterns that block writes only via file-operation tools (Write/Edit)
+WRITE_BLOCK_PATTERN='\.key$|id_rsa$|id_ed25519$|id_ecdsa$|id_dsa$|credentials\.json$|service-account.*\.json$'
+
+check_path() {
+  local file_path="$1"
+  local allow_read="${2:-false}"
+  [ -z "$file_path" ] && return 0
+
+  if echo "$file_path" | grep -qE "$FULL_BLOCK_PATTERN"; then
+    echo "❌ Blocked: 禁止存取敏感檔案或目錄 '$file_path'" >&2
+    exit 2
+  fi
+
+  if [ "$allow_read" = "false" ] && echo "$file_path" | grep -qE "$WRITE_BLOCK_PATTERN"; then
+    echo "❌ Blocked: 禁止寫入憑證或金鑰檔案 '$file_path'" >&2
+    exit 2
+  fi
+}
 
 case "$TOOL_NAME" in
-  Read|Edit|Write|NotebookEdit)
+  Write|Edit|NotebookEdit)
     FILE_PATH=$(printf '%s\n' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || echo "")
+    check_path "$FILE_PATH" "false"
+    ;;
+  Read)
+    FILE_PATH=$(printf '%s\n' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || echo "")
+    check_path "$FILE_PATH" "true"
     ;;
   Grep)
     FILE_PATH=$(printf '%s\n' "$INPUT" | jq -r '.tool_input.path // empty' 2>/dev/null || echo "")
+    check_path "$FILE_PATH" "true"
     ;;
   Glob)
     FILE_PATH=$(printf '%s\n' "$INPUT" | jq -r '.tool_input.pattern // empty' 2>/dev/null || echo "")
-    ;;
-  Bash)
-    COMMAND=$(printf '%s\n' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
-    if echo "$COMMAND" | grep -qE "$SENSITIVE_PATTERN"; then
-      echo "❌ Blocked: Bash 指令引用了敏感檔案路徑" >&2
-      exit 2
-    fi
-    exit 0
+    check_path "$FILE_PATH" "true"
     ;;
   *)
     exit 0
     ;;
 esac
-
-if [ -n "$FILE_PATH" ] && echo "$FILE_PATH" | grep -qE "$SENSITIVE_PATTERN"; then
-  echo "❌ Blocked: 禁止存取敏感檔案 '$FILE_PATH'" >&2
-  exit 2
-fi
 
 exit 0

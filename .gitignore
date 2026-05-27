@@ -55,6 +55,8 @@ test-results/
 
 # Claude Code local settings (personal dev environment)
 .claude/settings.local.json
+# Audit log — tool invocation history, local only (post-incident analysis)
+.claude/audit.log
 # Multi-session task progress tracker (session-specific, not shared)
 /claude-progress.md
 # Per-sprint acceptance layer (generated per task, not shared)
