@@ -37,9 +37,13 @@ Label Suite — A configurable, general-purpose NLP data labeling and automated 
 
 **Context management**: compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
 
+**Context anchoring** (proactive): After each SDD stage transition or escalation gate resolution, save confirmed decisions to MEMORY.md. When switching modules, re-read the relevant spec before proceeding.
+
 **Checkpoint reporting**: For multi-step tasks, report at each checkpoint: completed · verified · remaining. If unable to describe current state, stop immediately.
 
-**Cross-session tasks**: Create `claude-progress.md` at project root to track progress across sessions (file is gitignored). Format: task name, checklist of steps with `[x]` / `[ ]`, last updated date.
+**Error recovery**: Verification command fails → fix before proceeding; never skip or continue past a red gate. Tool call fails ≥ 2 attempts → surface exact error to user before retrying. Ambiguous file state (conflict, missing, unexpected content) → investigate before overwriting; never assume.
+
+**Cross-session tasks**: Create `claude-progress.md` **before starting** when any trigger applies: task spans ≥ 2 SDD pipeline stages · task touches ≥ 5 files · task type ∈ {feature implementation · refactor · migration}. Format: task name, checklist of steps with `[x]` / `[ ]`, last updated date. File is gitignored.
 
 **Source-Verify gate**: any cited number / benchmark / verbatim quote must be locatable via `grep -i <term> <source>`. If not found → remove or correct; never approximate.
 

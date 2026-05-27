@@ -24,6 +24,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 6. **No test-set answer exposure** — API responses accessible to annotators must never include ground-truth answers (Constitution III — NON-NEGOTIABLE).
 7. **No `any` in TypeScript** — strict mode is enforced.
 8. **No `allow_origins=["*"]`** — list CORS origins explicitly.
+9. **No unconfirmed destructive Bash** — `rm`, `git reset --hard`, `git push --force`, `git branch -D` require explicit user confirmation in the same turn before executing.
 
 ## Required Behaviors
 
@@ -33,6 +34,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
 - Run `/speckit.analyze` and resolve all findings before opening a PR
 - Read relevant files before making any changes
 - Remove all debug `print` / `console.log` before finishing
+- Surface exact error to user when any tool call fails twice; never silently retry a third time
 
 ## When SDD Is Required
 
