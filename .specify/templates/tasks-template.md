@@ -225,9 +225,29 @@ Task: "在 frontend/tests/[module]/[feature].spec.ts 撰寫 Playwright E2E 測�
    - 設置 → 基礎建設 → 每個 US（測試 → 實作）→ 優化
    - 相依性阻塞平行執行
 
+## 定義完成（適用所有任務）
+
+任務標記完成前，以下所有指令必須通過（exit 0）：
+
+```bash
+# Backend（從 backend/ 執行）
+uv run pytest tests/ -q
+uv run mypy app/ --strict
+uv run ruff check . && uv run ruff format --check .
+
+# Frontend（從 frontend/ 執行）
+pnpm tsc --noEmit
+pnpm lint
+pnpm test
+```
+
+加上：`/speckit.analyze` 回報零發現。
+
+---
+
 ## 驗證清單
 
-*在標記任務完成前進行驗證*
+在標記任務完成前進行驗證：
 
 - [ ] 所有使用者故事都有對應的 Phase，包含測試 + 實作
 - [ ] 所有測試都列在對應的實作任務之前
@@ -240,6 +260,7 @@ Task: "在 frontend/tests/[module]/[feature].spec.ts 撰寫 Playwright E2E 測�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.0 | 2026-05-27 | Add global Definition of Done section with verification commands before validation checklist |
 | 1.3.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + 中文 H1，全面中文化章節標題與說明文字 |
 | 1.2.0 | 2026-05-21 | Add HTML meta-comment, T008/T009 foundational tasks, intra-US ordering rules, parallel opportunities, Implementation Strategy section |
 | 1.1.0 | 2026-05-21 | Add Execution Flow, Dependencies, Parallel Example, Task Generation Rules, Validation Checklist; strengthen TDD gate language |
