@@ -11,7 +11,12 @@
   - `single-item-entity-relation.md` - 單一項目 + 實體關係標籤。
   - `item-pair-single-label.md` - 項目對 + 單一標籤。
   - `item-pair-multi-label.md` - 項目對 + 多標籤。
-- `regression-scoring.md` - 回歸、評分與連續量表。
+- `regression.md` - 回歸、評分與連續量表總覽、共用概念與細項索引。
+- `regression/` - 回歸任務細項筆記。
+  - `single-item-single-dim.md` - 單一項目 + 單維度。
+  - `single-item-multi-dim.md` - 單一項目 + 多維度。
+  - `item-pair-single-dim.md` - 項目對 + 單維度。
+  - `item-pair-multi-dim.md` - 項目對 + 多維度。
 - `sequence-labeling.md` - Token、span、NER、斷詞與邊界偵測。
 - `relation-extraction.md` - 關係分類、關係三元組與 OpenIE。
 - `generation.md` - 摘要、問答、翻譯與改寫。
