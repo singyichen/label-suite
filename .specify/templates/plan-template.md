@@ -164,6 +164,13 @@ sequenceDiagram
 1. **萃取實體** 從 spec.md → `data-model.md`
    - 實體名稱、欄位、關係、驗證規則
    - 狀態轉換（若適用）
+   - **DB Index 分析**：列出每個查詢所需的 index，標記潛在的 N+1 或全表掃描風險
+
+   | 查詢 | 篩選欄位 | Index 策略 | 風險 |
+   |------|---------|-----------|------|
+   | 列表（分頁） | `task_id`, `status` | composite index | — |
+   | 單筆查詢 | `id` | primary key | — |
+   | ... | | | |
 
 2. **後端 API 清單** 從功能需求列出所有需要的端點
 
@@ -200,6 +207,25 @@ sequenceDiagram
    - 標記哪些元件進 `shared/`（需被 2+ 個 feature module 使用才符合資格）
    - 標記哪些元件需要 Zustand（全域 UI 狀態）vs. TanStack Query（server state）vs. `useState`（local）
 
+   **路由分析**：列出本功能新增或修改的路由
+
+   | Path | 元件 | 是否需要 Route Guard | 重導向規則 |
+   |------|------|-------------------|-----------|
+   | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login` |
+   | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | 無權限 → 404 |
+   | ... | | | |
+
+   **i18n Key 清單**：列出本功能所有需要翻譯的字串（namespace: `[module]`）
+
+   | Key | 中文預設值 | 出現位置 |
+   |-----|----------|---------|
+   | `[feature].title` | `[功能標題]` | `[Feature]Page` header |
+   | `[feature].empty_state` | `尚無資料` | `[Feature]List` empty |
+   | `[feature].actions.create` | `建立` | `[Feature]Actions` button |
+   | ... | | |
+
+   > i18n 檔案路徑：`frontend/locales/zh-TW/[module].json` 與 `frontend/locales/en/[module].json`
+
 4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
    - 加入相關的錯誤路徑與非同步流程（Celery、WebSocket）
@@ -207,7 +233,7 @@ sequenceDiagram
 5. **萃取測試情境** 從使用者故事
    - 每個故事 → 整合測試情境大綱
 
-**產出**：`data-model.md`、`contracts/`、API 清單、切版元件層次、系統流程圖已更新、測試情境已概述
+**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
 
 ---
 
@@ -220,15 +246,17 @@ sequenceDiagram
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
 - **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）
-- **後端**：每個實體 → 模型建立任務 [P]
+- **後端**：每個實體 → 模型建立任務 [P] + migration 任務（含 DB index）
+- **前端**：路由分析 → route 註冊任務（含 route guard 設定）
 - **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
 - **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務（page 層不寫 story）
+- **前端**：i18n key 清單 → `locales/zh-TW/[module].json` + `locales/en/[module].json` 更新任務
 - 共用元件（shared/）→ 獨立任務，先於依賴它的 feature 任務
 
 **排序策略**：
 
 - TDD 順序：測試在實作前（必須先失敗）
-- 相依順序：model → schema → service → endpoint → shared component → feature component → page
+- 相依順序：model + migration → schema → service → endpoint → route → shared component → feature component + story + i18n → page
 - 標記 [P] 用於平行執行（僅限獨立檔案，前後端可同時進行）
 
 **預估產出**：`tasks.md` 中 [N] 個有序任務
@@ -267,6 +295,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.0 | 2026-05-27 | Phase 1 加入 DB index 分析（實體步驟）、路由分析表、i18n key 清單表；Phase 2 任務策略加入對應任務；產出摘要更新 |
 | 1.3.0 | 2026-05-27 | Phase 1 加入前端切版分析（元件層次表 + Stories 欄位）與後端 API 清單表；技術脈絡加入 Storybook；Phase 2 任務策略對應切版輸出 |
 | 1.2.0 | 2026-05-27 | Phase 1 加入後端 API 清單與前端切版分析步驟；Phase 2 任務策略分拆前後端任務產生規則 |
 | 1.1.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + 中文 H1，全面中文化章節標題與說明文字 |

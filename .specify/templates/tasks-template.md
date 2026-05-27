@@ -75,12 +75,14 @@
 
 **⚠️ 必須在任何使用者故事實作開始前完成**
 
-- [ ] T004 建立資料庫 schema 與 migration
+- [ ] T004 建立資料庫 schema 與 migration（含 plan.md DB index 分析所列的 index）
 - [ ] T005 [P] 建立 Pydantic schemas（`backend/app/schemas/[feature].py`）
 - [ ] T006 [P] 建立 API route skeleton（`backend/app/api/routes/[feature].py`）
-- [ ] T007 建立前端 service 層（`frontend/src/features/[module]/services/[feature].ts`）
-- [ ] T008 [P] 設定錯誤處理與日誌基礎設施（`backend/app/core/errors.py`）
-- [ ] T009 [P] 設定環境與設定管理（`backend/app/core/config.py`）
+- [ ] T007 [P] 建立前端 service 層（`frontend/src/features/[module]/services/[feature].ts`）
+- [ ] T008 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
+- [ ] T009 [P] 新增 i18n keys（`frontend/locales/zh-TW/[module].json` + `locales/en/[module].json` — 依 plan.md i18n key 清單）
+- [ ] T010 [P] 設定錯誤處理與日誌基礎設施（`backend/app/core/errors.py`）
+- [ ] T011 [P] 設定環境與設定管理（`backend/app/core/config.py`）
 
 **檢查點**：基礎建設完成 — 可開始實作使用者故事
 
@@ -229,8 +231,19 @@ Task: "在 frontend/tests/[module]/[feature].spec.ts 撰寫 Playwright E2E 測�
    - Page 層元件 → 僅頁面組裝任務，不產生 story 任務
    - Story 任務需標記 [P]（與元件實作觸及不同檔案，可平行）
 
-5. **排序規則**
-   - 設置 → 基礎建設 → 每個 US（測試 → 實作 + story）→ 優化
+5. **從 plan.md 路由分析**
+   - 每組新路由 → route 註冊任務（Phase 2，含 route guard 設定）
+
+6. **從 plan.md i18n key 清單**
+   - 每個 namespace → 一個 locales JSON 更新任務 [P]（zh-TW + en 各一，Phase 2）
+   - 各元件實作任務相依此任務（key 必須先存在才能在元件中使用）
+
+7. **從 plan.md DB index 分析**
+   - 每個新 index → 在 migration 任務中一併處理（不另立任務）
+   - 若有複合 index 或部分 index 等非常規策略 → 加入 Phase 2 備註說明理由
+
+8. **排序規則**
+   - 設置 → 基礎建設（含 migration + route + i18n）→ 每個 US（測試 → 實作 + story）→ 優化
    - 相依性阻塞平行執行
 
 ## 定義完成（適用所有任務）
@@ -262,6 +275,9 @@ pnpm test
 - [ ] 標記 [P] 的平行任務確實觸及不同檔案
 - [ ] 每個任務都指定了確切的檔案路徑
 - [ ] 所有基礎建設任務（Phase 2）都標記為阻塞
+- [ ] Migration 任務包含 plan.md DB index 分析所列的所有 index
+- [ ] 路由分析的每組路由都有對應的 route 註冊任務（含 route guard）
+- [ ] i18n key 清單的每個 namespace 都有 locales JSON 更新任務（zh-TW + en）
 - [ ] 每個非 page 前端元件都有對應的 `.stories.tsx` 任務（Page 層除外）
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能檢查
@@ -270,6 +286,7 @@ pnpm test
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.0 | 2026-05-27 | Phase 2 加入 route 註冊任務與 i18n JSON 任務；任務產生規則新增第 5–8 條（路由、i18n、DB index、排序）；驗證清單加入 migration index、route、i18n 三項檢查 |
 | 1.5.0 | 2026-05-27 | Phase 3/4 加入 Storybook story 任務（[P]，.stories.tsx）；任務產生規則新增第 4 條（切版分析 → story 任務）；驗證清單加入 story 完整性檢查 |
 | 1.4.0 | 2026-05-27 | Add global Definition of Done section with verification commands before validation checklist |
 | 1.3.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + 中文 H1，全面中文化章節標題與說明文字 |
