@@ -1,6 +1,19 @@
-#!/bin/bash
-# Generate PNG files from SVG logo assets
-# Usage: ./generate-png.sh
+#!/usr/bin/env bash
+# generate-png.sh — Generate PNG icon and logo assets from SVG source files.
+#
+# Usage (from assets/logo/):
+#   ./generate-png.sh
+#
+# IMPORTANT — when to use this script:
+#   Use whenever SVG source files (icon-colored.svg, logo-horizontal.svg,
+#   social-preview.svg) are updated and the exported PNG assets need to be
+#   regenerated. Requires one of: Inkscape, librsvg (rsvg-convert), or
+#   ImageMagick (magick / convert).
+#
+# How it works:
+#   Auto-detects the available SVG-to-PNG conversion tool, then exports a full
+#   set of icon sizes (16, 32, 64, 128, 256, 512 px), logo-horizontal.png
+#   (400 px wide), and social-preview.png (1280×640 px).
 
 set -e
 

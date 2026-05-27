@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
-# Environment bootstrap for new contributors.
-# Run once after cloning: bash scripts/init.sh
+# init.sh — Bootstrap the Label Suite development environment for new contributors.
+#
+# Usage (from project root):
+#   bash scripts/init.sh
+#
+# IMPORTANT — when to use this script:
+#   Run once after cloning the repository. Safe to re-run — it skips steps that
+#   are already complete (existing .env, installed deps). Do NOT use as a daily
+#   dev startup command; use 'uv run uvicorn ...' / 'pnpm dev' directly instead.
+#
+# How it works:
+#   Copies .env.example → .env if .env is absent, verifies uv and pnpm are
+#   installed, then runs 'uv sync' in backend/ and 'pnpm install' in frontend/
+#   if the respective package manifests exist.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

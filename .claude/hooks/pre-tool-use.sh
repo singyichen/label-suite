@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
-# Blocks dangerous Bash commands before execution.
-# Exit 2 = block and return error to Claude; exit 0 = allow.
+# pre-tool-use.sh — Block dangerous Bash commands before Claude Code executes them.
+#
+# Trigger:
+#   Registered as a PreToolUse hook in .claude/settings.json for the Bash tool.
+#
+# IMPORTANT — when this hook fires:
+#   Automatically invoked by the Claude Code harness before every Bash tool call.
+#   Never run manually.
+#   Exit 2 = block the command and surface the error to Claude.
+#   Exit 0 = allow the command to proceed.
+#
+# How it works:
+#   Reads the JSON tool-call payload from stdin and extracts the command string.
+#   Blocks: direct push to main/master, force push, pip/npm install,
+#   destructive rm -rf on root/home paths, and other dangerous patterns
+#   (DROP TABLE, terraform destroy, dd, mkfs, fork bombs, chmod 777 /).
 set -uo pipefail
 
 INPUT=$(cat)
@@ -36,5 +50,23 @@ if echo "$COMMAND" | grep -qE 'rm\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|-[a-zA-Z]*f[
   echo "❌ Blocked: destructive rm -rf on root/home paths." >&2
   exit 2
 fi
+
+# Block: additional destructive commands
+NORMALIZED=$(echo "$COMMAND" | tr -s ' \t' ' ')
+EXTRA_PATTERNS=(
+  "DROP (TABLE|DATABASE)"
+  "terraform destroy"
+  "dd.*of=/dev/"
+  "mkfs\."
+  ":\(\)\{.*\};"
+  "find.*-delete"
+  "chmod -R 777 /"
+)
+for p in "${EXTRA_PATTERNS[@]}"; do
+  if echo "$NORMALIZED" | grep -qiE "$p"; then
+    echo "❌ Blocked: dangerous command detected — $p" >&2
+    exit 2
+  fi
+done
 
 exit 0
