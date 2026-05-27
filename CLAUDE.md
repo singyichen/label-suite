@@ -54,15 +54,7 @@ label-suite/
 
 ### Frontend Architecture Principles
 
-> **Decision:** Vertical feature slicing — see [ADR-011](docs/adr/011-frontend-source-structure.md).
-
-**`shared/` admission rule:** A file belongs in `shared/` only if directly imported by **two or more different feature modules**.
-
-**State management:** TanStack Query for all API/server state; Zustand for auth token/user/role and UI globals (never API response data); `useState` for local component state.
-
-**Role model:** Two-layer. **System role** (JWT): `user` | `super_admin` | `null`. **Task role** (from `task_membership` API per task): `project_leader` | `reviewer` | `annotator` — not stored in JWT. `DashboardPage` dispatches with explicit `role ===` checks; unknown role clears session and redirects to `/login`. Task pages additionally check membership via `useTaskRole(taskId)`.
-
-**Localization:** Namespaced per module — e.g. `t('task-management:config_builder.label_name')`. Files at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
+@.claude/rules/frontend.md
 
 ## Communication
 
@@ -72,16 +64,10 @@ label-suite/
 
 ## Code Style
 
-### Python (Backend)
+Path-scoped rules load automatically when Claude accesses files in those directories:
 
-- All functions must have docstrings in English (`Args:`, `Returns:`, `Raises:`) with complete type hints
-- Use pytest, not unittest; prefer f-strings over format()
-
-### TypeScript (Frontend)
-
-- No `any` types (strict mode enforced)
-- Use `interface` for props, `type` for union/intersection types
-- Prefer functional components + hooks
+- Frontend (React / TypeScript): @.claude/rules/frontend.md
+- Backend (FastAPI / Python): @.claude/rules/backend.md
 
 ## General Coding Rules
 
@@ -168,6 +154,8 @@ If any step cannot be fully verified — file existence, API behavior, test inte
 
 **Checkpoint reporting**: For multi-step tasks, report at each checkpoint: completed · verified · remaining. If unable to describe current state, stop immediately.
 
+**Cross-session tasks**: Create `claude-progress.md` at project root to track progress across sessions (file is gitignored). Format: task name, checklist of steps with `[x]` / `[ ]`, last updated date.
+
 **Source-Verify gate**: any cited number / benchmark / verbatim quote must be locatable via `grep -i <term> <source>`. If not found → remove or correct; never approximate.
 
 ## Git Workflow
@@ -219,6 +207,39 @@ Full pipeline — each stage is a hard gate:
 All development must follow the six core principles in [constitution.md](.specify/memory/constitution.md).
 
 NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logic) · **Data Fairness** (prevent test-set answer leakage).
+
+## Verification Commands
+
+Run after every change. Task is NOT complete until all pass.
+
+```bash
+# Backend (run from backend/)
+uv run pytest tests/ -q
+uv run mypy app/ --strict
+uv run ruff check . && uv run ruff format --check .
+
+# Frontend (run from frontend/)
+pnpm tsc --noEmit
+pnpm lint
+pnpm test
+```
+
+Definition of Done: all commands above exit 0 + `/speckit.analyze` reports zero findings.
+
+## Prohibitions
+
+Each rule traces to a specific incident (Ratchet Principle — Mitchell Hashimoto).
+
+- ❌ Direct commit or push to `main`
+  - Reason: 2026-04 — violated twice; PreToolUse hook now blocks `git push origin main`
+- ❌ `pip install` or `npm install`
+  - Reason: lockfile divergence causes silent CI failures; use `uv add` / `pnpm add`
+- ❌ Chinese text in commit messages or PR descriptions
+  - Reason: 2026-04 — PR description contained Chinese; breaks English-only contract
+- ❌ `allow_origins=["*"]` in CORS config
+  - Reason: security boundary; explicitly list allowed origins
+- ❌ Hardcoded API keys or secrets in source files
+  - Reason: secret exposure risk; use environment variables only
 
 ## Workflow Quick Reference
 
