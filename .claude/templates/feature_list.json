@@ -1,0 +1,34 @@
+{
+  "task": "<task-name>",
+  "module": "<module-name>",
+  "spec": "specs/<module>/NNN-feature/",
+  "updated": "<YYYY-MM-DD>",
+  "features": [
+    {
+      "id": "F-001",
+      "title": "<feature title>",
+      "status": "pending",
+      "validation": {
+        "test": "<test file path>",
+        "command": "<pytest / pnpm test command>",
+        "evidence": ""
+      }
+    },
+    {
+      "id": "F-002",
+      "title": "<feature title>",
+      "status": "done",
+      "validation": {
+        "test": "<test file path>",
+        "command": "<pytest / pnpm test command>",
+        "evidence": "All 12 tests pass; coverage 94%"
+      }
+    }
+  ],
+  "acceptance_criteria": [
+    "All features status == done",
+    "uv run pytest tests/ -q exits 0",
+    "pnpm tsc --noEmit exits 0",
+    "/speckit.analyze reports zero findings"
+  ]
+}
