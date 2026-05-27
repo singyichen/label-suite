@@ -75,14 +75,17 @@
 
 **⚠️ 必須在任何使用者故事實作開始前完成**
 
-- [ ] T004 建立資料庫 schema 與 migration（含 plan.md DB index 分析所列的 index）
-- [ ] T005 [P] 建立 Pydantic schemas（`backend/app/schemas/[feature].py`）
-- [ ] T006 [P] 建立 API route skeleton（`backend/app/api/routes/[feature].py`）
-- [ ] T007 [P] 建立前端 service 層（`frontend/src/features/[module]/services/[feature].ts`）
-- [ ] T008 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
-- [ ] T009 [P] 新增 i18n keys（`frontend/locales/zh-TW/[module].json` + `locales/en/[module].json` — 依 plan.md i18n key 清單）
-- [ ] T010 [P] 設定錯誤處理與日誌基礎設施（`backend/app/core/errors.py`）
-- [ ] T011 [P] 設定環境與設定管理（`backend/app/core/config.py`）
+- [ ] T004a 撰寫 Alembic migration `upgrade()`（含 plan.md DB index 分析所列的所有 index）
+- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）
+- [ ] T004c 驗證 migration 可循環：`alembic upgrade head && alembic downgrade -1 && alembic upgrade head`
+- [ ] T005 [P] 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/schemas/[feature].py`，依 plan.md schema 層次設計）
+- [ ] T006 [P] 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+- [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
+- [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
+- [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
+- [ ] T010 [P] 新增 i18n keys（`frontend/locales/zh-TW/[module].json` + `locales/en/[module].json` — 依 plan.md i18n key 清單）
+- [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
+- [ ] T012 [P] 設定環境與設定管理（`backend/app/core/config.py`）
 
 **檢查點**：基礎建設完成 — 可開始實作使用者故事
 
@@ -96,17 +99,20 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T010 [P] [US1] 後端單元測試（`backend/tests/unit/test_[feature].py`）
-- [ ] T011 [P] [US1] Playwright E2E 測試（`frontend/tests/[module]/[feature].spec.ts`）
+- [ ] T013a [P] [US1] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`
+- [ ] T013b [P] [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`
+- [ ] T013c [P] [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— 同上檔案
+- [ ] T014 [P] [US1] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
+- [ ] T015 [P] [US1] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
 
 ### 實作（僅在測試失敗後進行）
 
-- [ ] T012 [P] [US1] 建立資料模型（`backend/app/models/[feature].py`）
-- [ ] T013 [US1] 實作 service 層（`backend/app/services/[feature].py`）
-- [ ] T014 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）
-- [ ] T015 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/`）
-- [ ] T016 [P] [US1] 建立 Storybook stories（`frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`）— Default + 邊界狀態（Empty / Loading / Error）
-- [ ] T017 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）— Page 層不寫 story
+- [ ] T016 [P] [US1] 建立資料模型（`backend/app/models/[feature].py`）— 含 relationship 與 Loading Strategy
+- [ ] T017 [US1] 實作 service 層（`backend/app/services/[feature].py`）— 明確指定 `selectinload`/`joinedload`
+- [ ] T018 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）— 含 auth dependency
+- [ ] T019 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/`）— 含 ARIA role、響應式
+- [ ] T020 [P] [US1] 建立 Storybook stories（`frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`）— Default + 邊界狀態，args/argTypes/MSW decorator 齊備
+- [ ] T021 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）— Page 層不寫 story
 
 **檢查點**：使用者故事 1 可獨立驗證
 
@@ -125,11 +131,11 @@
 
 ### 實作（僅在測試失敗後進行）
 
-- [ ] T022 [P] [US2] 建立相關模型
-- [ ] T023 [US2] 實作 service 層
-- [ ] T024 [US2] 實作 API endpoint
-- [ ] T025 [US2] 建立前端元件
-- [ ] T026 [P] [US2] 建立 Storybook stories（`.stories.tsx`）— Default + 邊界狀態
+- [ ] T022 [P] [US2] 建立相關模型（含 Loading Strategy）
+- [ ] T023 [US2] 實作 service 層（明確指定 relationship loading）
+- [ ] T024 [US2] 實作 API endpoint（含 auth dependency）
+- [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）
+- [ ] T026 [P] [US2] 建立 Storybook stories（`.stories.tsx`）— Default + 邊界狀態，MSW decorator
 - [ ] T027 [US2] 實作前端頁面
 
 **檢查點**：使用者故事 1 與 2 皆可獨立驗證
@@ -141,7 +147,7 @@
 - [ ] TXXX [P] 更新文件 `[Principle: I]`
 - [ ] TXXX 程式碼清理 — 移除 debug `print` / `console.log` `[Principle: V]`
 - [ ] TXXX UI 一致性審查（對照 MASTER.md tokens 與 prototype 畫面）`[Principle: VII]`
-- [ ] TXXX 驗證 API P95 ≤ 500ms 且無無界查詢 `[Principle: VIII]`
+- [ ] TXXX 驗證 API P95 ≤ 500ms（`uv run locust -f tests/load/[feature].py --headless -u 50 -r 5 --run-time 30s`）且無無界查詢 `[Principle: VIII]`
 - [ ] TXXX 安全性強化 — 驗證輸入、檢查 CORS 設定
 - [ ] TXXX 執行 `touch specs/[module]/NNN-feature/.completed`
 
@@ -275,17 +281,21 @@ pnpm test
 - [ ] 標記 [P] 的平行任務確實觸及不同檔案
 - [ ] 每個任務都指定了確切的檔案路徑
 - [ ] 所有基礎建設任務（Phase 2）都標記為阻塞
-- [ ] Migration 任務包含 plan.md DB index 分析所列的所有 index
+- [ ] Migration 任務含 T004a / T004b（downgrade）/ T004c（循環驗證）三項
+- [ ] Phase 2 有 MSW handler 任務（Storybook + Vitest 共用）
 - [ ] 路由分析的每組路由都有對應的 route 註冊任務（含 route guard）
 - [ ] i18n key 清單的每個 namespace 都有 locales JSON 更新任務（zh-TW + en）
-- [ ] 每個非 page 前端元件都有對應的 `.stories.tsx` 任務（Page 層除外）
+- [ ] 每個 US 的後端測試含 service 單元 / route 整合 / permission negative 三層
+- [ ] 每個 US 有前端 Vitest 元件測試任務（`.test.tsx`）
+- [ ] 每個非 page 前端元件都有對應的 `.stories.tsx` 任務（含 MSW decorator 需求）
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
-- [ ] 優化階段包含文件、清理、安全性與效能檢查
+- [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.0 | 2026-05-27 | senior-backend + senior-frontend 評估後補全：T004 拆為 T004a/b/c（downgrade + 循環驗證）；加入 T008 MSW handler 任務、T011 Exception class 任務；Phase 3 測試拆為 service / route / permission negative / Vitest 四層；實作任務加入 Loading Strategy 和 ARIA 說明；Storybook 任務標注 MSW decorator 需求；Phase N P95 驗證加工具；驗證清單加 5 項新檢查 |
 | 1.6.0 | 2026-05-27 | Phase 2 加入 route 註冊任務與 i18n JSON 任務；任務產生規則新增第 5–8 條（路由、i18n、DB index、排序）；驗證清單加入 migration index、route、i18n 三項檢查 |
 | 1.5.0 | 2026-05-27 | Phase 3/4 加入 Storybook story 任務（[P]，.stories.tsx）；任務產生規則新增第 4 條（切版分析 → story 任務）；驗證清單加入 story 完整性檢查 |
 | 1.4.0 | 2026-05-27 | Add global Definition of Done section with verification commands before validation checklist |
