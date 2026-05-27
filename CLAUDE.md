@@ -14,6 +14,10 @@ Label Suite — A configurable, general-purpose NLP data labeling and automated 
 
 @.claude/rules/backend.md
 
+@.claude/rules/api.md
+
+@.claude/rules/testing.md
+
 ## Communication
 
 - **English:** code, comments, commit messages, API contracts, `design/system/MASTER.md`

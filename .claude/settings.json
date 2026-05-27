@@ -13,8 +13,12 @@
     ],
     "PreCompact": [
       {
-        "type": "command",
-        "command": "bash .claude/hooks/pre-compact.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-compact.sh"
+          }
+        ]
       }
     ]
   }
