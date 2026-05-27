@@ -13,4 +13,5 @@
 #   Writes a warning to stderr reminding the agent to update relevant memory/ entries
 #   before the context window is compressed and prior messages are summarised.
 echo "⚠️  Pre-compact: update any relevant entries in memory/ before context is compressed." >&2
+echo "⚠️  Generator phase rule: if currently implementing a spec item, use /clear (full reset) instead of /compact — summaries corrupt Generator context." >&2
 exit 0

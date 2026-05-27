@@ -37,7 +37,7 @@ Path-scoped rules — loaded only when working in the respective directory:
 - Task type ∈ {Architecture · Counter-factual · Security threat modeling} → Opus or `advisor()`
 - Unrequested code gen > 300 LoC → halt first
 
-**Context management**: compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
+**Context management**: **Generator phase** → `/compact` is forbidden; on context limit → full `/clear`, then re-read spec from disk before continuing. All other phases → compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
 
 **Context anchoring** (proactive): After each SDD stage transition or escalation gate resolution, save confirmed decisions to MEMORY.md. When switching modules, re-read the relevant spec before proceeding.
 
@@ -62,6 +62,24 @@ Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` �
 ### Branch Naming
 
 Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `feat/labeling-ui` · `fix/score-calculation`
+
+## Three-Layer Sprint Architecture
+
+Every implementation sprint follows a strict **Planner → Generator → Evaluator** pipeline.
+
+| Layer | Responsibility | Input | Output |
+|-------|---------------|-------|--------|
+| **Planner** | Task decomposition, spec generation | User brief (may be vague) | Atomic, executable spec items |
+| **Generator** | Implementation | One spec item | Code change (impl + test) |
+| **Evaluator** | Validation | Code changes | Pass / Fail + exact error details |
+
+**Planner**: Convert vague briefs into fine-grained atomic items before any code is written. Scope is locked once Generator starts — no additions mid-sprint.
+
+**Generator**: Implement exactly one spec item per invocation. On context limit → full `/clear` reset, re-read spec from disk. Never rely on `/compact` summary.
+
+**Evaluator**: External tools only — pytest, mypy, ruff, tsc, Playwright. No self-assessment. **Hard threshold**: any single failure = sprint failure; stop and surface to user.
+
+> SDD mapping: Planner ≈ `speckit.specify → speckit.plan → speckit.tasks` · Generator ≈ `speckit.implement` · Evaluator ≈ `speckit.analyze → speckit.checklist`
 
 ## Spec-Driven Development (SDD)
 
