@@ -3,12 +3,14 @@
 # Run once after cloning: bash scripts/init.sh
 set -euo pipefail
 
+cd "$(dirname "$0")/.."
+
 echo "=== Label Suite — Environment Setup ==="
 
 # 1. .env
 if [ ! -f .env ]; then
   cp .env.example .env
-  echo "✅ Created .env from .env.example — update values before running"
+  echo "⚠️  Created .env from .env.example — REVIEW AND UPDATE all values (SECRET_KEY, DATABASE_URL, etc.) before running" >&2
 else
   echo "✅ .env already exists"
 fi
