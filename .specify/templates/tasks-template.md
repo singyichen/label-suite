@@ -103,7 +103,8 @@
 - [ ] T013 [US1] 實作 service 層（`backend/app/services/[feature].py`）
 - [ ] T014 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）
 - [ ] T015 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/`）
-- [ ] T016 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）
+- [ ] T016 [P] [US1] 建立 Storybook stories（`frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`）— Default + 邊界狀態（Empty / Loading / Error）
+- [ ] T017 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）— Page 層不寫 story
 
 **檢查點**：使用者故事 1 可獨立驗證
 
@@ -125,7 +126,9 @@
 - [ ] T022 [P] [US2] 建立相關模型
 - [ ] T023 [US2] 實作 service 層
 - [ ] T024 [US2] 實作 API endpoint
-- [ ] T025 [US2] 建立前端元件與頁面
+- [ ] T025 [US2] 建立前端元件
+- [ ] T026 [P] [US2] 建立 Storybook stories（`.stories.tsx`）— Default + 邊界狀態
+- [ ] T027 [US2] 實作前端頁面
 
 **檢查點**：使用者故事 1 與 2 皆可獨立驗證
 
@@ -221,8 +224,13 @@ Task: "在 frontend/tests/[module]/[feature].spec.ts 撰寫 Playwright E2E 測�
    - 每個實體 → 一個模型建立任務 [P]
    - 關係 → service 層任務（循序）
 
-4. **排序規則**
-   - 設置 → 基礎建設 → 每個 US（測試 → 實作）→ 優化
+4. **從 plan.md 切版分析**
+   - 每個非 page 元件 → 元件實作任務 + Storybook story 任務 [P]（`.stories.tsx`）
+   - Page 層元件 → 僅頁面組裝任務，不產生 story 任務
+   - Story 任務需標記 [P]（與元件實作觸及不同檔案，可平行）
+
+5. **排序規則**
+   - 設置 → 基礎建設 → 每個 US（測試 → 實作 + story）→ 優化
    - 相依性阻塞平行執行
 
 ## 定義完成（適用所有任務）
@@ -254,6 +262,8 @@ pnpm test
 - [ ] 標記 [P] 的平行任務確實觸及不同檔案
 - [ ] 每個任務都指定了確切的檔案路徑
 - [ ] 所有基礎建設任務（Phase 2）都標記為阻塞
+- [ ] 每個非 page 前端元件都有對應的 `.stories.tsx` 任務（Page 層除外）
+- [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能檢查
 
 ## Changelog
