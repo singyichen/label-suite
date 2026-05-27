@@ -55,4 +55,16 @@ mkdir -p "$(dirname "$LOG_FILE")"
 
 printf '%s\t%s\t%s\n' "$TIMESTAMP" "$TOOL_NAME" "${ARG:-}" >> "$LOG_FILE"
 
+# Rotation: keep only the last 2000 lines when file exceeds 5000 lines.
+# Runs after append so the newest entry is always preserved.
+MAX_LINES=5000
+KEEP_LINES=2000
+if [ -f "$LOG_FILE" ]; then
+  LINE_COUNT=$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)
+  if [ "$LINE_COUNT" -gt "$MAX_LINES" ]; then
+    TMP="${LOG_FILE}.tmp"
+    tail -n "$KEEP_LINES" "$LOG_FILE" > "$TMP" && mv "$TMP" "$LOG_FILE"
+  fi
+fi
+
 exit 0
