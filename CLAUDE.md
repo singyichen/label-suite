@@ -10,13 +10,11 @@ Label Suite — A configurable, general-purpose NLP data labeling and automated 
 
 > **Decision:** Modular Monorepo. All architectural decisions in [docs/adr/](docs/adr/).
 
-@.claude/rules/frontend.md
+Path-scoped rules — loaded only when working in the respective directory:
 
-@.claude/rules/backend.md
-
-@.claude/rules/api.md
-
-@.claude/rules/testing.md
+- `frontend/` → [frontend/CLAUDE.md](frontend/CLAUDE.md) (`frontend.md`, `testing-frontend.md`)
+- `backend/` → [backend/CLAUDE.md](backend/CLAUDE.md) (`backend.md`, `api.md`, `testing-backend.md`)
+- `e2e/` → [e2e/CLAUDE.md](e2e/CLAUDE.md) (`testing-e2e.md`)
 
 ## Communication
 
