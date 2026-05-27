@@ -63,16 +63,20 @@ EOF
   fi
 fi
 
-# Build and emit systemMessage
+# Build and emit systemMessage — use python3 to ensure valid JSON output
+emit_json() {
+  python3 -c "import json, sys; print(json.dumps({'systemMessage': sys.argv[1]}))" "$1"
+}
+
 if [ ${#WARNINGS[@]} -gt 0 ]; then
   WARN_MSG=$(printf '%s；' "${WARNINGS[@]}")
   WARN_MSG="${WARN_MSG%；}"
   if [ ${#CONTEXT_PARTS[@]} -gt 0 ]; then
     CTX_MSG=$(printf '%s | ' "${CONTEXT_PARTS[@]}")
     CTX_MSG="${CTX_MSG% | }"
-    printf '{"systemMessage": "⚠️ 環境未就緒：%s | %s"}\n' "$WARN_MSG" "$CTX_MSG"
+    emit_json "⚠️ 環境未就緒：${WARN_MSG} | ${CTX_MSG}"
   else
-    printf '{"systemMessage": "⚠️ 環境未就緒：%s"}\n' "$WARN_MSG"
+    emit_json "⚠️ 環境未就緒：${WARN_MSG}"
   fi
   exit 1
 fi
@@ -80,8 +84,8 @@ fi
 if [ ${#CONTEXT_PARTS[@]} -gt 0 ]; then
   CTX_MSG=$(printf '%s | ' "${CONTEXT_PARTS[@]}")
   CTX_MSG="${CTX_MSG% | }"
-  printf '{"systemMessage": "✓ 環境檢查通過 | %s"}\n' "$CTX_MSG"
+  emit_json "✓ 環境檢查通過 | ${CTX_MSG}"
 else
-  echo '{"systemMessage": "✓ 環境檢查通過"}'
+  emit_json "✓ 環境檢查通過"
 fi
 exit 0
