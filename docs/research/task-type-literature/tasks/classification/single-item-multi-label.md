@@ -142,20 +142,20 @@
 
 ### 與單標籤任務的關鍵差異
 
-多標籤任務的標註輸出是一個標籤集合（set），
-標註者間的比較必須從「是否選同一個」升級為「集合的重疊程度」。
+多標籤任務的標記輸出是一個標籤集合（set），
+標記者間的比較必須從「是否選同一個」升級為「集合的重疊程度」。
 
 ---
 
-### 標註者間一致性（ Inter-Annotator Agreement, IAA ）
+### 標記者間一致性（ Inter-Annotator Agreement, IAA ）
 
 #### 主要指標
 
 | 指標 | 適用情境 | 說明 |
 |------|----------|------|
-| **Krippendorff's Alpha** | 多位標註者、允許缺漏 | 支援名目尺度的多標籤情境，為此任務首選 |
-| **Multi-label Kappa** | 兩位標註者 | 將每個標籤視為獨立二元變數，逐標籤計算 κ 後取平均（Macro-Kappa）|
-| **Jaccard Similarity（每筆樣本）** | 直觀集合比較 | 兩位標註者在同一筆樣本上選出標籤集合的交集 / 聯集 |
+| **Krippendorff's Alpha** | 多位標記者、允許缺漏 | 支援名目尺度的多標籤情境，為此任務首選 |
+| **Multi-label Kappa** | 兩位標記者 | 將每個標籤視為獨立二元變數，逐標籤計算 κ 後取平均（Macro-Kappa）|
+| **Jaccard Similarity（每筆樣本）** | 直觀集合比較 | 兩位標記者在同一筆樣本上選出標籤集合的交集 / 聯集 |
 | **Hamming Agreement** | 集合完全一致率 | 標籤向量完全相同才算同意，標準較嚴格 |
 
 #### Jaccard Similarity 計算方式
@@ -164,8 +164,8 @@
 Jaccard(A, B) = |A ∩ B| / |A ∪ B|
 
 範例：
-  標註者 A 選：{科技, 財經}
-  標註者 B 選：{科技, 政治}
+  標記者 A 選：{科技, 財經}
+  標記者 B 選：{科技, 政治}
   Jaccard = |{科技}| / |{科技, 財經, 政治}| = 1 / 3 ≈ 0.33
 ```
 
@@ -185,7 +185,7 @@ Jaccard(A, B) = |A ∩ B| / |A ∪ B|
 
 | 指標 | 說明 |
 |------|------|
-| **Per-label Agreement Rate** | 各標籤單獨的標註者同意率（視為二元分類） |
+| **Per-label Agreement Rate** | 各標籤單獨的標記者同意率（視為二元分類） |
 | **Per-label Cohen's Kappa** | 各標籤的 κ 值，找出定義模糊的標籤 |
 | **Co-occurrence Matrix** | 哪些標籤經常被同時選取，輔助判斷標籤邊界是否清楚 |
 | **Label Frequency Distribution** | 各標籤被選取的頻率，偵測標籤過於籠統或過於細緻 |
@@ -195,9 +195,9 @@ Jaccard(A, B) = |A ∩ B| / |A ∪ B|
 | 指標 | 說明 |
 |------|------|
 | **Avg Labels per Sample** | 每筆樣本平均選幾個標籤，反映任務難度與標籤粒度 |
-| **Exact Match Rate** | 標註者完全選相同標籤集合的樣本比例 |
+| **Exact Match Rate** | 標記者完全選相同標籤集合的樣本比例 |
 | **Partial Match Rate** | 至少有一個標籤重疊的樣本比例 |
-| **Empty Label Rate** | 標註者選擇零標籤的比例，監控是否濫用 allow_none |
+| **Empty Label Rate** | 標記者選擇零標籤的比例，監控是否濫用 allow_none |
 
 ---
 
@@ -218,9 +218,9 @@ Jaccard(A, B) = |A ∩ B| / |A ∪ B|
 
 | 時間點 | 動作 |
 |--------|------|
-| 標註開始前 | Pilot round → 確認 Mean Jaccard ≥ 0.60、檢視共現矩陣是否合理 |
-| 標註進行中 | 監控 Empty Label Rate 異常（可能標註者疲乏或跳過）|
-| 標註完成後 | 計算 Per-label Kappa，對 κ < 0.40 的標籤進行定義修訂或合併 |
+| 標記開始前 | Pilot round → 確認 Mean Jaccard ≥ 0.60、檢視共現矩陣是否合理 |
+| 標記進行中 | 監控 Empty Label Rate 異常（可能標記者疲乏或跳過）|
+| 標記完成後 | 計算 Per-label Kappa，對 κ < 0.40 的標籤進行定義修訂或合併 |
 
 ## 品質控管（ Quality Control ）
 

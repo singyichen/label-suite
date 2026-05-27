@@ -117,12 +117,14 @@
 
 ---
 
-### 標註者間一致性（ Inter-Annotator Agreement, IAA ）
+### 標記者間一致性（ Inter-Annotator Agreement, IAA ）
 
 #### 兩階段指標策略
 
-Stage 1（標注階段）：衡量標注者之間的一致性
-→ ICC（2,1）絕對一致、Pearson、Spearman、MADStage 2（Benchmark 評估階段）：衡量系統輸出與 gold score 的一致性
+Stage 1（標記階段）：衡量標記者之間的一致性
+→ ICC（2,1）絕對一致、Pearson、Spearman、MAD
+
+Stage 2（Benchmark 評估階段）：衡量系統輸出與 gold score 的一致性
 → Pearson correlation（STS shared task 標準用法）
 → 兩個階段使用同名指標，但比較對象不同，需明確區分
 
@@ -130,32 +132,32 @@ Stage 1（標注階段）：衡量標注者之間的一致性
 
 | 指標 | 適用情境 | 說明 |
 |------|----------|------|
-| **ICC（2,1）絕對一致** | 多位標注者、人工標注階段 | 要求分數絕對接近，為標注品質的首選指標 |
+| **ICC（2,1）絕對一致** | 多位標記者、人工標記階段 | 要求分數絕對接近，為標記品質的首選指標 |
 | **Pearson Correlation** | STS 類連續分數 | 衡量線性同向變動；Benchmark 評估的標準指標 |
 | **Spearman Correlation** | 排序一致性重要 | 衡量相對排序是否一致，適合離散量表（如 1–5）|
-| **MAD（Mean Absolute Difference）** | 快速監控 | 直觀反映標注者間平均分歧幅度 |
+| **MAD（Mean Absolute Difference）** | 快速監控 | 直觀反映標記者間平均分歧幅度 |
 
 #### 對稱性假設的影響
 
 多數相似度任務假設 similarity(A, B) = similarity(B, A)
-→ 標注者應不受文本順序影響若任務具方向性（如翻譯品質、問題答案匹配）：
+→ 標記者應不受文本順序影響若任務具方向性（如翻譯品質、問題答案匹配）：
 → 需在 guideline 明確定義 text_a 與 text_b 的角色
-→ 可設計 order-swap 驗證題，偵測標注者是否受順序影響建議做法：Pilot round 中插入同一句對的正反順序版本，
+→ 可設計 order-swap 驗證題，偵測標記者是否受順序影響建議做法：Pilot round 中插入同一句對的正反順序版本，
 計算 |score(A→B) - score(B→A)| 的分佈，
 若平均差距 > 5% 量表範圍，需加強 guideline 說明。
 
 #### 中間分數模糊帶（The Hard Middle Problem）
 
 相似度任務的分歧通常集中在中間區段：
-高相似（0.8–1.0）：標注者通常一致
-低相似（0.0–0.2）：標注者通常一致
+高相似（0.8–1.0）：標記者通常一致
+低相似（0.0–0.2）：標記者通常一致
 中間區段（0.3–0.7）：最容易發生概念混用
 常見混用情形：
 
-Topical Relatedness vs Semantic Equivalence
-「手機電池」vs「充電速度」→ 主題相關但語義不等價
-Lexical Overlap vs Meaning Similarity
-字面相似但事實相反的句對
+- **Topical Relatedness vs Semantic Equivalence**
+  - 「手機電池」vs「充電速度」→ 主題相關但語義不等價
+- **Lexical Overlap vs Meaning Similarity**
+  - 字面相似但事實相反的句對
 
 建議做法：在中間區段準備更多錨點範例，並在 guideline
 明確說明「主題相關但事實不同」應對應的分數區間。
@@ -165,7 +167,7 @@ Lexical Overlap vs Meaning Similarity
 | 指標 | 建議門檻 |
 |------|---------|
 | ICC（2,1）絕對一致 | ≥ 0.75 |
-| Pearson Correlation（標注者間） | ≥ 0.80（STS 任務標準較高）|
+| Pearson Correlation（標記者間） | ≥ 0.80（STS 任務標準較高）|
 | Spearman Correlation | ≥ 0.75 |
 | MAD（相對量表範圍） | ≤ 10%（如量表 0–1，MAD ≤ 0.10）|
 | Middle-range MAD（0.3–0.7 區段）| 應單獨計算，預期高於整體 MAD |
@@ -174,14 +176,14 @@ Lexical Overlap vs Meaning Similarity
 
 ### 標籤品質指標（ Label Quality Metrics ）
 
-#### 標注者層級指標
+#### 標記者層級指標
 
 | 指標 | 說明 |
 |------|------|
-| **Per-annotator Mean Score** | 各標注者的平均分數，偵測系統性偏高或偏低 |
-| **Per-annotator Score SD** | 各標注者的分數標準差，偵測量表壓縮效應 |
+| **Per-annotator Mean Score** | 各標記者的平均分數，偵測系統性偏高或偏低 |
+| **Per-annotator Score SD** | 各標記者的分數標準差，偵測量表壓縮效應 |
 | **Per-annotator Score Distribution** | 分數直方圖，識別是否集中於特定區段 |
-| **Annotator Bias** | 個別標注者與所有標注者平均的系統性差距 |
+| **Annotator Bias** | 個別標記者與所有標記者平均的系統性差距 |
 | **Order Sensitivity Score** | Pilot 階段正反順序句對的分數差異，偵測方向性理解問題 |
 
 #### 資料集層級指標
@@ -197,16 +199,16 @@ Lexical Overlap vs Meaning Similarity
 
 ### 視覺化建議（ Visualization ）
 
-- **標注者分數散佈圖（Scatter Plot）**：
-  X 軸為標注者 A 的分數，Y 軸為標注者 B 的分數，
+- **標記者分數散佈圖（Scatter Plot）**：
+  X 軸為標記者 A 的分數，Y 軸為標記者 B 的分數，
   對角線為完美一致；中間區段的點雲分散程度反映模糊帶問題
 - **分數分佈直方圖（含中間區段標示）**：
   標示 0.3–0.7 區段，對比高低相似度區段的分佈密度
 - **Bland-Altman Plot**：
-  X 軸為兩標注者平均分數，Y 軸為差值，
+  X 軸為兩標記者平均分數，Y 軸為差值，
   識別中間區段是否有系統性分歧擴大現象
 - **High-Disagreement 句對列表**：
-  按 MAD 排序，附上兩標注者分數與差值，輔助人工複審
+  按 MAD 排序，附上兩標記者分數與差值，輔助人工複審
 
 ---
 
@@ -214,9 +216,9 @@ Lexical Overlap vs Meaning Similarity
 
 | 時間點 | 動作 |
 |--------|------|
-| 標注開始前 | Pilot round → 計算 Order Sensitivity Score；在中間區段加強錨點驗證；確認標注者對 topical vs semantic 的區分一致 |
-| 標注進行中 | 監控 Middle-range Disagreement Rate；偵測 Per-annotator Bias 漂移 |
-| 標注完成後 | 計算完整 ICC 與 Pearson；對中間區段高分歧句對進行仲裁；確認 gold score 計算方式（平均 vs 多數決）|
+| 標記開始前 | Pilot round → 計算 Order Sensitivity Score；在中間區段加強錨點驗證；確認標記者對 topical vs semantic 的區分一致 |
+| 標記進行中 | 監控 Middle-range Disagreement Rate；偵測 Per-annotator Bias 漂移 |
+| 標記完成後 | 計算完整 ICC 與 Pearson；對中間區段高分歧句對進行仲裁；確認 gold score 計算方式（平均 vs 多數決）|
 
 ## 品質控管（ Quality Control ）
 

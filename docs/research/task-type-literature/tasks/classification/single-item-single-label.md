@@ -139,7 +139,7 @@
 
 ## IAA 與品質指標（ IAA and Quality Metrics ）
 
-### 標註者間一致性（ Inter-Annotator Agreement, IAA ）
+### 標記者間一致性（ Inter-Annotator Agreement, IAA ）
 
 單一標籤分類任務適用以下指標：
 
@@ -147,10 +147,10 @@
 
 | 指標 | 適用情境 | 說明 |
 |------|----------|------|
-| **Cohen's Kappa（κ）** | 兩位標註者 | 排除隨機一致性後的真實一致程度，為此任務的首選指標 |
-| **Fleiss' Kappa** | 三位以上標註者 | 多人標註時的 Kappa 延伸版本 |
+| **Cohen's Kappa（κ）** | 兩位標記者 | 排除隨機一致性後的真實一致程度，為此任務的首選指標 |
+| **Fleiss' Kappa** | 三位以上標記者 | 多人標記時的 Kappa 延伸版本 |
 | **Percent Agreement** | 快速初步檢查 | 簡單計算同意比例，但不排除隨機因素，僅作輔助參考 |
-| **Krippendorff's Alpha** | 標註者數量不固定 | 適合允許部分缺漏標註的情境 |
+| **Krippendorff's Alpha** | 標記者數量不固定 | 適合允許部分缺漏標記的情境 |
 
 #### Kappa 判讀標準（Landis & Koch）
 
@@ -180,17 +180,17 @@
 
 | 指標 | 說明 |
 |------|------|
-| **Overall Agreement Rate** | 所有樣本中標註者完全同意的比例 |
-| **Majority Vote Coverage** | 多數決可決定標籤的樣本比例（適用 ≥ 3 位標註者）|
+| **Overall Agreement Rate** | 所有樣本中標記者完全同意的比例 |
+| **Majority Vote Coverage** | 多數決可決定標籤的樣本比例（適用 ≥ 3 位標記者）|
 | **Ambiguous Sample Rate** | 無法由多數決決定的樣本比例，需人工複審 |
 
 ---
 
 ### 視覺化建議（ Visualization ）
 
-- **混淆矩陣（Confusion Matrix）**：呈現標註者兩兩之間的標籤交叉分佈
-- **Kappa 熱力圖**：以 Annotator × Annotator 矩陣呈現所有標註者配對的 κ 值
-- **標籤分佈長條圖**：比較各標註者的標籤使用頻率是否一致
+- **混淆矩陣（Confusion Matrix）**：呈現標記者兩兩之間的標籤交叉分佈
+- **Kappa 熱力圖**：以 Annotator × Annotator 矩陣呈現所有標記者配對的 κ 值
+- **標籤分佈長條圖**：比較各標記者的標籤使用頻率是否一致
 
 ---
 
@@ -198,9 +198,9 @@
 
 | 時間點 | 動作 |
 |--------|------|
-| 標註開始前 | Pilot round（小批量）→ 確認 κ ≥ 0.60 再全量標註 |
-| 標註進行中 | 每 N 筆觸發一次計算，即時監控品質漂移 |
-| 標註完成後 | 最終報告，決定是否需要重新標註模糊樣本 |
+| 標記開始前 | Pilot round（小批量）→ 確認 κ ≥ 0.60 再全量標記 |
+| 標記進行中 | 每 N 筆觸發一次計算，即時監控品質漂移 |
+| 標記完成後 | 最終報告，決定是否需要重新標記模糊樣本 |
 
 ## 品質控管（ Quality Control ）
 

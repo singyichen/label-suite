@@ -129,7 +129,7 @@
 
 ---
 
-### 標註者間一致性（ Inter-Annotator Agreement, IAA ）
+### 標記者間一致性（ Inter-Annotator Agreement, IAA ）
 
 #### 三層指標策略
 
@@ -159,8 +159,8 @@ Layer 3：維度 × 句對交叉（哪個維度在哪類句對上最容易分歧
 範例（混合量表）：
   semantic_similarity：min=0, max=1  → 直接使用
   meaning_preservation：min=1, max=5 → (score - 1) / 4
-  標注者 A：{semantic: 0.92, syntactic: 0.65, topic: 0.88}
-  標注者 B：{semantic: 0.88, syntactic: 0.70, topic: 0.75}
+  標記者 A：{semantic: 0.92, syntactic: 0.65, topic: 0.88}
+  標記者 B：{semantic: 0.88, syntactic: 0.70, topic: 0.75}
   Euclidean = √((0.92-0.88)² + (0.65-0.70)² + (0.88-0.75)²)
   = √(0.0016 + 0.0025 + 0.0169) ≈ 0.147
   → topic_consistency 是主要分歧來源，應優先修訂其定義
@@ -194,19 +194,19 @@ Layer 3：維度 × 句對交叉（哪個維度在哪類句對上最容易分歧
 | 指標 | 說明 |
 |------|------|
 | **Per-dimension ICC** | 各維度一致性，定位定義不清的維度 |
-| **維度間相關矩陣（Dimension Correlation Matrix）** | 所有維度兩兩 Pearson 相關；r > 0.80 代表標注者無法有效區分兩維度 |
+| **維度間相關矩陣（Dimension Correlation Matrix）** | 所有維度兩兩 Pearson 相關；r > 0.80 代表標記者無法有效區分兩維度 |
 | **光環效應指標（Halo Effect Index）** | 某維度分數是否系統性影響其他維度；在句對任務中尤需警惕整體印象壓過個別維度判斷 |
 | **Per-dimension 中間區段 MAD** | 各維度在中間分數句對上的 MAD，定位模糊帶問題 |
 | **Per-dimension 方向性敏感度** | 各維度正反順序句對的分數差異，識別隱性方向性 |
 
-#### 標注者層級指標
+#### 標記者層級指標
 
 | 指標 | 說明 |
 |------|------|
-| **Per-annotator Per-dimension Mean** | 各標注者在各維度的平均分數，偵測維度特定的個人偏差 |
-| **Per-annotator Per-dimension SD** | 各標注者在各維度的分數標準差，偵測壓縮效應 |
-| **Dimension Drift（逐維）** | 長期追蹤各維度的標注者平均分變化，偵測定義理解漂移 |
-| **維度間評分相關性（個人）** | 同一標注者不同維度分數的相關性；過高代表光環效應 |
+| **Per-annotator Per-dimension Mean** | 各標記者在各維度的平均分數，偵測維度特定的個人偏差 |
+| **Per-annotator Per-dimension SD** | 各標記者在各維度的分數標準差，偵測壓縮效應 |
+| **Dimension Drift（逐維）** | 長期追蹤各維度的標記者平均分變化，偵測定義理解漂移 |
+| **維度間評分相關性（個人）** | 同一標記者不同維度分數的相關性；過高代表光環效應 |
 
 #### 資料集層級指標
 
@@ -229,10 +229,10 @@ Layer 3：維度 × 句對交叉（哪個維度在哪類句對上最容易分歧
   橫軸為維度，縱軸為句對類型（高 / 中 / 低相似度），
   格子內為各組合的平均 MAD，找出哪個維度在哪類句對上最容易分歧
 - **Per-annotator Per-dimension 散佈矩陣**：
-  每對維度一張散佈圖，觀察標注者間一致程度與光環效應
+  每對維度一張散佈圖，觀察標記者間一致程度與光環效應
 - **Dimension Drift 折線圖**：
-  橫軸為標注批次，縱軸為各維度平均分，
-  監控長期標注過程中的定義理解漂移
+  橫軸為標記批次，縱軸為各維度平均分，
+  監控長期標記過程中的定義理解漂移
 
 ---
 
@@ -240,9 +240,9 @@ Layer 3：維度 × 句對交叉（哪個維度在哪類句對上最容易分歧
 
 | 時間點 | 動作 |
 |--------|------|
-| 標注開始前 | Pilot round → 逐維計算方向性敏感度；計算維度間相關矩陣，確認維度可被有效區分；在中間區段加強錨點驗證 |
-| 標注進行中 | 監控 Per-dimension Dimension Drift；偵測光環效應指標是否上升；追蹤中間區段的 Per-dimension MAD |
-| 標注完成後 | 完整計算三層指標；r > 0.80 的維度對評估是否合併；ICC < 0.60 的維度優先修訂 guideline；確認 gold score 計算方式 |
+| 標記開始前 | Pilot round → 逐維計算方向性敏感度；計算維度間相關矩陣，確認維度可被有效區分；在中間區段加強錨點驗證 |
+| 標記進行中 | 監控 Per-dimension Dimension Drift；偵測光環效應指標是否上升；追蹤中間區段的 Per-dimension MAD |
+| 標記完成後 | 完整計算三層指標；r > 0.80 的維度對評估是否合併；ICC < 0.60 的維度優先修訂 guideline；確認 gold score 計算方式 |
 
 ## 品質控管（ Quality Control ）
 

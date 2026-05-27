@@ -131,16 +131,16 @@
 
 ---
 
-### 標註者間一致性（ Inter-Annotator Agreement, IAA ）
+### 標記者間一致性（ Inter-Annotator Agreement, IAA ）
 
 #### 主要指標
 
 | 指標 | 適用情境 | 說明 |
 |------|----------|------|
-| **Krippendorff's Alpha** | 多位標注者、允許缺漏 | 支援名目尺度的多標籤情境，為此任務首選 |
-| **Mean Jaccard Similarity** | 直觀集合比較 | 每筆樣本計算兩標注者選出標籤集合的交集 / 聯集後取平均 |
+| **Krippendorff's Alpha** | 多位標記者、允許缺漏 | 支援名目尺度的多標籤情境，為此任務首選 |
+| **Mean Jaccard Similarity** | 直觀集合比較 | 每筆樣本計算兩標記者選出標籤集合的交集 / 聯集後取平均 |
 | **Per-label Cohen's Kappa** | 各維度獨立評估 | 將每個標籤視為獨立二元變數，逐標籤計算 κ 後取 Macro-Kappa |
-| **Exact Match Rate** | 嚴格一致性 | 兩標注者完全選相同標籤集合的樣本比例 |
+| **Exact Match Rate** | 嚴格一致性 | 兩標記者完全選相同標籤集合的樣本比例 |
 
 #### Jaccard Similarity 計算方式
 
@@ -148,8 +148,8 @@
 Jaccard(A, B) = |A ∩ B| / |A ∪ B|
 
 範例（語意屬性任務）：
-  標注者 A 選：{same_meaning, same_sentiment, same_tone}
-  標注者 B 選：{same_meaning, same_sentiment, same_formality}
+  標記者 A 選：{same_meaning, same_sentiment, same_tone}
+  標記者 B 選：{same_meaning, same_sentiment, same_formality}
   Jaccard = |{same_meaning, same_sentiment}| /
 |{same_meaning, same_sentiment, same_tone, same_formality}|
 = 2 / 4 = 0.50
@@ -159,8 +159,8 @@ Jaccard(A, B) = |A ∩ B| / |A ∪ B|
 
 Jaccard 反映整體集合相似度，但無法區分：
 
-哪個維度是分歧來源
-哪個維度標注者高度一致
+- 哪個維度是分歧來源
+- 哪個維度標記者高度一致
 
 範例：
   same_meaning κ = 0.82（高）→ 定義清楚
@@ -188,16 +188,16 @@ Jaccard 反映整體集合相似度，但無法區分：
 | **Per-label Kappa** | 各維度標籤的個別 κ 值，定位定義模糊的維度 |
 | **維度間共現矩陣** | 哪些標籤經常被同時選取，偵測維度間語意重疊 |
 | **維度間矛盾率** | 邏輯上不相容的標籤被同時選取的比例（如 same_meaning + different_claim）|
-| **Per-label 使用率差異** | 各標注者在同一標籤的選取頻率差異，偵測個人標準不一致 |
+| **Per-label 使用率差異** | 各標記者在同一標籤的選取頻率差異，偵測個人標準不一致 |
 
 #### 資料集層級指標
 
 | 指標 | 說明 |
 |------|------|
 | **Avg Labels per Sample** | 每筆樣本平均選幾個標籤，反映任務難度與標籤粒度 |
-| **Exact Match Rate** | 標注者完全選相同標籤集合的樣本比例 |
+| **Exact Match Rate** | 標記者完全選相同標籤集合的樣本比例 |
 | **Partial Match Rate** | 至少有一個標籤重疊的樣本比例 |
-| **Empty Label Rate** | 標注者選擇零標籤的比例，監控是否濫用 allow_none |
+| **Empty Label Rate** | 標記者選擇零標籤的比例，監控是否濫用 allow_none |
 | **Hard Sample Rate** | Jaccard < 0.40 的樣本比例，標記為待審樣本 |
 
 ---
@@ -212,7 +212,7 @@ Jaccard 反映整體集合相似度，但無法區分：
 - **Jaccard 分佈直方圖**：
   呈現所有樣本的 Jaccard 分佈，找出大量低一致性樣本的集中區間
 - **Per-annotator Label Distribution 熱力圖**：
-  標注者 × 標籤的選取頻率矩陣，偵測系統性個人偏差
+  標記者 × 標籤的選取頻率矩陣，偵測系統性個人偏差
 
 ---
 
@@ -220,9 +220,9 @@ Jaccard 反映整體集合相似度，但無法區分：
 
 | 時間點 | 動作 |
 |--------|------|
-| 標注開始前 | Pilot round → 確認每個維度定義獨立清楚、方向性標籤理解一致；檢視維度間共現矩陣是否有邏輯矛盾 |
-| 標注進行中 | 監控 Hard Sample Rate 與 Empty Label Rate，偵測標注者疲乏或跳過行為 |
-| 標注完成後 | Per-label Kappa 全面檢視；κ < 0.40 的維度優先修訂 Guideline 或考慮合併 / 拆分 |
+| 標記開始前 | Pilot round → 確認每個維度定義獨立清楚、方向性標籤理解一致；檢視維度間共現矩陣是否有邏輯矛盾 |
+| 標記進行中 | 監控 Hard Sample Rate 與 Empty Label Rate，偵測標記者疲乏或跳過行為 |
+| 標記完成後 | Per-label Kappa 全面檢視；κ < 0.40 的維度優先修訂 Guideline 或考慮合併 / 拆分 |
 
 ## 品質控管（ Quality Control ）
 

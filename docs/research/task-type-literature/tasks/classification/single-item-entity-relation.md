@@ -146,21 +146,21 @@
 
 ---
 
-### 標註者間一致性（ Inter-Annotator Agreement, IAA ）
+### 標記者間一致性（ Inter-Annotator Agreement, IAA ）
 
 #### 主要指標
 
 | 指標 | 適用情境 | 說明 |
 |------|----------|------|
-| **Cohen's Kappa（κ）** | 兩位標註者 | 排除隨機一致性，為此任務主指標 |
-| **Fleiss' Kappa** | 三位以上標註者 | 多人版本 |
+| **Cohen's Kappa（κ）** | 兩位標記者 | 排除隨機一致性，為此任務主指標 |
+| **Fleiss' Kappa** | 三位以上標記者 | 多人版本 |
 | **Macro-F1（排除 no_relation）** | 評估有意義關係的品質 | 排除 no_relation 後計算，避免多數類別掩蓋問題 |
 | **Percent Agreement** | 快速初步檢查 | 輔助參考，不排除隨機因素 |
 
 #### 為何需要排除 no_relation？
 
 假設資料集中 80% 為 no_relation：
-兩位標註者即使隨機標記，no_relation 的同意率仍很高
+兩位標記者即使隨機標記，no_relation 的同意率仍很高
 → Percent Agreement 會虛高，但有意義的關係品質可能很差
 建議同時報告：
 (1) 含 no_relation 的整體 κ
@@ -202,7 +202,7 @@
 - **Annotator × Annotator 混淆矩陣**：
   呈現兩位標記者在各關係類別上的交叉分佈，找出高頻混淆對
 - **Per-relation Kappa 長條圖**：
-  快速定位 κ 偏低的關係類別，優先修訂標注指引
+  快速定位 κ 偏低的關係類別，優先修訂標記指引
 - **no_relation 排除前後 Kappa 對比**：
   呈現排除 no_relation 後 κ 的變化幅度，量化其影響
 
@@ -212,9 +212,9 @@
 
 | 時間點 | 動作 |
 |--------|------|
-| 標注開始前 | Pilot round → 重點確認方向性關係定義一致、no_relation 判斷標準一致 |
-| 標注進行中 | 監控 no_relation 誤判率，及早發現標記者對模糊關係的處理策略不同 |
-| 標注完成後 | 計算 Macro-F1（排除 no_relation），對混淆對高的關係修訂 Guideline |
+| 標記開始前 | Pilot round → 重點確認方向性關係定義一致、no_relation 判斷標準一致 |
+| 標記進行中 | 監控 no_relation 誤判率，及早發現標記者對模糊關係的處理策略不同 |
+| 標記完成後 | 計算 Macro-F1（排除 no_relation），對混淆對高的關係修訂 Guideline |
 
 ## 品質控管（ Quality Control ）
 
