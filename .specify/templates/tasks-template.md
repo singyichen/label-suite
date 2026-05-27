@@ -270,6 +270,7 @@ pnpm test
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.0 | 2026-05-27 | Phase 3/4 加入 Storybook story 任務（[P]，.stories.tsx）；任務產生規則新增第 4 條（切版分析 → story 任務）；驗證清單加入 story 完整性檢查 |
 | 1.4.0 | 2026-05-27 | Add global Definition of Done section with verification commands before validation checklist |
 | 1.3.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + 中文 H1，全面中文化章節標題與說明文字 |
 | 1.2.0 | 2026-05-21 | Add HTML meta-comment, T008/T009 foundational tasks, intra-US ordering rules, parallel opportunities, Implementation Strategy section |
