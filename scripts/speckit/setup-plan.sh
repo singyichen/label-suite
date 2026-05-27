@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+# setup-plan.sh - Create or refresh plan.md for the active Label Suite feature.
+#
+# Usage:
+#   ./scripts/speckit/setup-plan.sh
+#   ./scripts/speckit/setup-plan.sh --json
+#   ./scripts/speckit/setup-plan.sh --force
+#
+# IMPORTANT - when to use this script:
+#   Use after a feature spec is ready and the current branch or SPECIFY_FEATURE
+#   points at feat/[module]/NNN-feature. It creates the implementation plan from
+#   .specify/templates/plan-template.md and moves the feature to plan-ready in
+#   specs/STATUS.md.
+#
+# How it works:
+#   The script resolves the active feature through common.sh, verifies the spec
+#   prerequisites, writes plan.md unless it already exists, and updates
+#   specs/STATUS.md through update-status.sh.
 
 set -euo pipefail
 
