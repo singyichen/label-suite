@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
+# common.sh - Shared shell helpers for Label Suite speckit scripts.
+#
+# Usage:
+#   source ./scripts/speckit/common.sh
+#
+# IMPORTANT - when to use this script:
+#   Source this file from other scripts/speckit/*.sh files instead of running it
+#   directly. It centralizes repository discovery, feature branch parsing,
+#   module validation, JSON escaping, slug generation, and STATUS.md paths.
+#
+# How it works:
+#   Helpers derive the repository root, parse feat/[module]/NNN-feature or
+#   SPECIFY_FEATURE references, validate known modules, and export common path
+#   variables used by create-new-feature.sh, setup-plan.sh,
+#   check-prerequisites.sh, and update-status.sh.
 
 set -euo pipefail
 
@@ -67,8 +82,8 @@ speckit_current_ref() {
 
 speckit_parse_feature_ref() {
     local ref="$1"
-    declare -g FEATURE_MODULE=""
-    declare -g FEATURE_NAME=""
+    FEATURE_MODULE=""
+    FEATURE_NAME=""
 
     if [[ "$ref" =~ ^feat/([^/]+)/([0-9]{3}-.+)$ ]]; then
         FEATURE_MODULE="${BASH_REMATCH[1]}"

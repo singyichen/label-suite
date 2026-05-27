@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+# update-status.sh - Insert or update a feature row in specs/STATUS.md.
+#
+# Usage:
+#   ./scripts/speckit/update-status.sh --module dataset --feature 016-dataset-analysis-list --status in-progress
+#   ./scripts/speckit/update-status.sh --module task-management --feature 013-task-new --status plan-ready --branch feat/task-management/013-task-new
+#
+# IMPORTANT - when to use this script:
+#   Use whenever the SDD pipeline state changes for a module-scoped feature:
+#   spec-ready, plan-ready, tasks-ready, in-progress, review, done, archived, or
+#   deferred. Prefer this script over hand-editing STATUS.md when automation can
+#   supply the module, feature name, status, branch, title, and note.
+#
+# How it works:
+#   The script validates module/status values, derives the feature ID from the
+#   module and NNN-feature name, updates an existing STATUS.md row or inserts a
+#   new one, and appends a dated changelog entry.
 
 set -euo pipefail
 

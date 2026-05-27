@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+# create-new-feature.sh - Create a module-scoped spec folder and feature branch.
+#
+# Usage:
+#   ./scripts/speckit/create-new-feature.sh --module dataset --short-name quality-export "Dataset quality export"
+#   ./scripts/speckit/create-new-feature.sh --module annotation --json "Annotation workspace"
+#
+# IMPORTANT - when to use this script:
+#   Use when starting a new SDD feature that needs a specs/[module]/NNN-feature
+#   directory, spec.md from the project template, a feat/[module]/NNN-feature
+#   branch, and a STATUS.md row.
+#   The script refuses to run in a dirty git worktree to avoid mixing unrelated
+#   user changes into the new feature setup.
+#
+# How it works:
+#   The script derives the next numeric feature ID for the selected module,
+#   creates the feature branch and spec directory, copies the spec template, and
+#   delegates STATUS.md insertion to update-status.sh.
 
 set -euo pipefail
 

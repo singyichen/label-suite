@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+# check-prerequisites.sh - Resolve the active Label Suite feature and required spec artifacts.
+#
+# Usage:
+#   ./scripts/speckit/check-prerequisites.sh
+#   ./scripts/speckit/check-prerequisites.sh --json --require-tasks --include-tasks
+#   SPECIFY_FEATURE=task-management/013-task-new ./scripts/speckit/check-prerequisites.sh --paths-only
+#
+# IMPORTANT - when to use this script:
+#   Use before implementation commands that need to know the current feature
+#   module, feature directory, spec path, plan path, and task list path.
+#   It supports both the current git branch format feat/[module]/NNN-feature
+#   and explicit SPECIFY_FEATURE=[module]/NNN-feature overrides.
+#
+# How it works:
+#   The script loads common speckit helpers, resolves the active feature, checks
+#   that required files exist unless --paths-only is used, and prints either
+#   human-readable paths or JSON for automation.
 
 set -euo pipefail
 
