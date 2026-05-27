@@ -165,18 +165,47 @@ sequenceDiagram
    - 實體名稱、欄位、關係、驗證規則
    - 狀態轉換（若適用）
 
-2. **產生 API 契約** 從功能需求 → `contracts/`
-   - 每個使用者動作 → REST endpoint
-   - 請求 / 回應 schema（OpenAPI 相容）
+2. **後端 API 清單** 從功能需求列出所有需要的端點
 
-3. **更新系統流程圖** 在本計畫中
+   | Method | Path | 權限 | 說明 |
+   |--------|------|------|------|
+   | GET | `/api/v1/[module]/[resource]` | authenticated | 取得列表（分頁） |
+   | POST | `/api/v1/[module]/[resource]` | project_leader | 建立 |
+   | GET | `/api/v1/[module]/[resource]/{id}` | authenticated | 取得單筆 |
+   | PATCH | `/api/v1/[module]/[resource]/{id}` | project_leader | 更新 |
+   | DELETE | `/api/v1/[module]/[resource]/{id}` | project_leader | 刪除 |
+
+   接著產生完整 API 契約 → `contracts/`（請求 / 回應 schema，OpenAPI 相容）
+
+3. **前端切版分析** 從 wireframe / spec 分析畫面如何切成元件
+
+   | 區塊 | 元件名稱 | 職責 | 資料來源 |
+   |------|---------|------|---------|
+   | 頁面容器 | `[Feature]Page` | 路由入口、資料取得 | TanStack Query |
+   | 主要內容 | `[Feature]List` | 列表渲染 | props |
+   | ... | | | |
+
+   **元件層次**：
+   ```
+   [Feature]Page
+   ├── [Feature]Header
+   │   └── [Feature]Actions (按鈕群組)
+   ├── [Feature]List
+   │   └── [Feature]Item (×N)
+   └── [Feature]Pagination
+   ```
+
+   - 標記哪些元件進 `shared/`（需被 2+ 個 feature module 使用才符合資格）
+   - 標記哪些元件需要 Zustand（全域 UI 狀態）vs. TanStack Query（server state）vs. `useState`（local）
+
+4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
    - 加入相關的錯誤路徑與非同步流程（Celery、WebSocket）
 
-4. **萃取測試情境** 從使用者故事
+5. **萃取測試情境** 從使用者故事
    - 每個故事 → 整合測試情境大綱
 
-**產出**：`data-model.md`、`contracts/`、系統流程圖已更新、測試情境已概述
+**產出**：`data-model.md`、`contracts/`、API 清單、切版元件層次、系統流程圖已更新、測試情境已概述
 
 ---
 
@@ -188,15 +217,17 @@ sequenceDiagram
 
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
-- 每個 API 契約 → 後端單元測試任務 [P] + 實作任務
-- 每個實體 → 模型建立任務 [P]
-- 每個使用者故事 → Playwright E2E 測試任務 [P] + 前端任務
+- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）
+- **後端**：每個實體 → 模型建立任務 [P]
+- **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務
+- **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務
+- 共用元件（shared/）→ 獨立任務，先於依賴它的 feature 任務
 
 **排序策略**：
 
 - TDD 順序：測試在實作前（必須先失敗）
-- 相依順序：model → service → endpoint → frontend component → page
-- 標記 [P] 用於平行執行（僅限獨立檔案）
+- 相依順序：model → schema → service → endpoint → shared component → feature component → page
+- 標記 [P] 用於平行執行（僅限獨立檔案，前後端可同時進行）
 
 **預估產出**：`tasks.md` 中 [N] 個有序任務
 
