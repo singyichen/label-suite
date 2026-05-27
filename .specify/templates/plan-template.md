@@ -39,7 +39,7 @@
 **語言 / 版本**: Python 3.12+ / TypeScript 5+
 **主要相依套件**: FastAPI / React + Vite
 **儲存**: PostgreSQL + Redis
-**測試**: pytest + Playwright
+**測試**: pytest + Vitest + Playwright + Storybook
 **目標平台**: Web（瀏覽器 + REST API）
 **效能目標**: [例：API p95 < 500ms]
 **限制**: [例：Config-driven，不得硬編碼 task 邏輯]
@@ -179,11 +179,13 @@ sequenceDiagram
 
 3. **前端切版分析** 從 wireframe / spec 分析畫面如何切成元件
 
-   | 區塊 | 元件名稱 | 職責 | 資料來源 |
-   |------|---------|------|---------|
-   | 頁面容器 | `[Feature]Page` | 路由入口、資料取得 | TanStack Query |
-   | 主要內容 | `[Feature]List` | 列表渲染 | props |
-   | ... | | | |
+   | 區塊 | 元件名稱 | 職責 | 資料來源 | Stories 狀態 |
+   |------|---------|------|---------|------------|
+   | 頁面容器 | `[Feature]Page` | 路由入口、資料取得 | TanStack Query | — (page 層不寫 story) |
+   | 主要內容 | `[Feature]List` | 列表渲染 | props | Default, Empty, Loading |
+   | ... | | | | |
+
+   > **Stories 規則**：Page 層不寫 story（太重，依賴路由）；其他所有元件都要寫。每個元件至少涵蓋 Default + 邊界狀態（Empty / Loading / Error / Disabled）。
 
    **元件層次**：
    ```
@@ -219,8 +221,8 @@ sequenceDiagram
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
 - **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）
 - **後端**：每個實體 → 模型建立任務 [P]
-- **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務
-- **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務
+- **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
+- **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務（page 層不寫 story）
 - 共用元件（shared/）→ 獨立任務，先於依賴它的 feature 任務
 
 **排序策略**：
