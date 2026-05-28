@@ -1,3 +1,27 @@
+<!--
+Sync Impact Report — constitution v1.5.3
+Generated: 2026-05-28
+
+Version change: v1.5.0 → v1.5.3
+Bump type: PATCH (×3) — renamed ## Feature Goal → ## 功能目標; renamed **Story Goal** → **故事目標**; converted constitution changelog to English; updated Versioning Policy language rule
+
+Changed principles:
+- I. Spec-First Development — Goal Declaration sub-rule: ## Feature Goal → ## 功能目標; **Story Goal** → **故事目標**
+- Governance — Feature Goal Alignment Gate: ## Feature Goal → ## 功能目標; Versioning Policy: clarified English-only rule for constitution changelog
+
+New sections: none
+Removed sections: none
+
+Templates sync status:
+- .specify/templates/plan-template.md: ✅ Updated (v1.6.1)
+- .specify/templates/spec-template.md: ✅ Updated (v1.3.1)
+- .specify/templates/tasks-template.md: ✅ Updated (v1.8.1)
+- .specify/templates/checklist-template.md: ✅ Updated (v1.5.1)
+- .claude/commands/speckit.analyze.md: ✅ Updated
+
+Deferred TODOs: none
+-->
+
 # Label Suite Constitution
 
 ## Core Principles
@@ -11,6 +35,10 @@ New features should begin with a spec. The deciding question for skipping SDD is
 - **Iteration rule**: adding a new User Story to an existing feature → update that spec with a version bump; independent new behavior in the same module → new spec
 - **Spec versioning** (semantic): PATCH = clarification/wording; MINOR = new/changed User Story; MAJOR = breaking change to existing story or API contract
 - **Downstream impact**: when a spec is versioned up, every spec listed in its `## Spec Dependencies → Downstream` section must be reviewed and updated if affected
+- **Goal Declaration (required for all planning artifacts)**: Every spec, plan, and tasks file must state a clear, verifiable feature goal before any requirements or tasks are written. The goal answers: who benefits, what outcome is produced, and why this is worth building now. It is not a summary of features.
+  - **spec.md**: Include a `## 功能目標` section immediately after the H1 title. One to three sentences. Example: "Enable annotators to submit partial labels on mobile, reducing drop-off on small screens. This is the minimum required for the pilot with Partner X."
+  - **plan.md**: The `## 功能目標` must be copied or refined from spec.md. It must not change between spec and plan without a spec version bump. Follow with a `## Technical Approach` paragraph bridging the goal to the implementation.
+  - **tasks.md**: Each User Story Phase must include a `**故事目標**` line that traces to one or more SC-IDs from spec.md. A Phase goal that cannot be traced to any SC-ID signals scope drift.
 
 **Skip SDD and modify code directly for**:
 - Bug fixes — making code match existing specs, not changing specs
@@ -92,18 +120,24 @@ Constitution principles take precedence over all other conventions.
 - **MAJOR**: Backward-incompatible removal or redefinition of a principle
 - **MINOR**: New principle or section added
 - **PATCH**: Clarification, wording fix, or non-semantic refinement
-- Changelog entries must be written in descending version order, with the newest version first (for example, `1.4.0` before `1.3.2`).
-- Changelog entries in `.specify/templates/` must use Chinese change summaries.
+- Changelog entries must be written in descending version order, with the newest version first (for example, `1.5.0` before `1.4.0`).
+- Constitution changelog entries use English summaries; changelog entries in `.specify/templates/` use Chinese summaries.
+
+**Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
 **Compliance Review**: All PRs must verify compliance with all eight principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.4.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-21
+**Version**: 1.5.3 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
-| 1.4.0 | 2026-05-21 | 新增 Principle VII（設計一致性）與 Principle VIII（效能基準）；擴充 Principle V 加入明確的程式品質規則（型別強制、linter、禁止 debug 輸出）；合規審查更新為涵蓋八條原則 |
-| 1.3.2 | 2026-05-21 | 要求 templates 中的 Changelog 變更摘要使用中文 |
-| 1.3.1 | 2026-05-21 | 要求 Changelog 條目依版本號降序撰寫 |
-| 1.3.0 | 2026-04-13 | Changelog 追蹤前的 Constitution 基準版本 |
+| 1.5.3 | 2026-05-28 | Convert constitution changelog to English; update Versioning Policy to clarify language rules (constitution uses English, templates use Chinese); apply `## 功能目標` and `**故事目標**` localization to constitution body |
+| 1.5.2 | 2026-05-28 | Rename `**Story Goal**` to `**故事目標**` in Principle I Goal Declaration |
+| 1.5.1 | 2026-05-28 | Rename `## Feature Goal` to `## 功能目標` in Principle I Goal Declaration and Governance Alignment Gate |
+| 1.5.0 | 2026-05-28 | Add Goal Declaration sub-rule to Principle I (all planning artifacts must state a clear feature goal); add Feature Goal Alignment Gate to Governance |
+| 1.4.0 | 2026-05-21 | Add Principle VII (Design Consistency) and Principle VIII (Performance Baseline); expand Principle V with explicit code quality rules (type enforcement, linter, no debug output); update Compliance Review to cover all eight principles |
+| 1.3.2 | 2026-05-21 | Require Chinese change summaries in `.specify/templates/` changelogs |
+| 1.3.1 | 2026-05-21 | Require changelog entries in descending version order |
+| 1.3.0 | 2026-04-13 | Baseline version prior to changelog tracking |

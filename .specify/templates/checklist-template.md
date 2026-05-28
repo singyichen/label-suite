@@ -69,6 +69,7 @@
 - [ ] CHK019 上下游相依性與假設是否附有驗證期望？[Assumption, Spec §已釐清事項]
 - [ ] CHK020 範圍外項目或延後決定是否明確列出，以免被誤認為需求？[Completeness, Gap]
 - [ ] CHK021 需求是否具備足夠的可追蹤性，使任務可對應回使用者故事或 FR ID？[Traceability, Spec §功能需求]
+- [ ] CHK022 功能目標是否已在 spec.md 中明確陳述，且 plan.md 的功能目標與其一致？[Traceability, Spec §功能目標]
 
 ## 備註
 
@@ -83,6 +84,8 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.1 | 2026-05-28 | CHK022 用詞改為功能目標（配合 spec/plan 章節名稱中文化） |
+| 1.5.0 | 2026-05-28 | 新增 CHK022：Feature Goal 陳述與 spec/plan 一致性追蹤 |
 | 1.4.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + H1，章節標題與清單項目全面中文化 |
 | 1.3.0 | 2026-05-21 | Align checklist template with requirement-quality checklist semantics |
 | 1.2.0 | 2026-05-21 | Add HTML meta-comment and two Notes rules |

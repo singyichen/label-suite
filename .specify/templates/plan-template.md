@@ -30,9 +30,15 @@
 
 **重要**：/speckit.plan 在第 7 步停止。任務建立由 /speckit.tasks 負責。
 
-## 摘要
+## 功能目標
 
-[從規格萃取：主要需求 + 技術方向]
+> 從 `spec.md § 功能目標` 複製或精煉。若在 spec 與 plan 之間有修改，必須同步觸發 spec 版本升級。
+
+[在此貼上或精煉來自 spec.md 的功能目標。]
+
+## Technical Approach
+
+[一段話。說明觸及哪些層（前端 / 後端 / 兩者）、核心技術決策，以及為何此方案能達成功能目標。不描述實作細節——這是目標與任務之間的橋樑。]
 
 ## 技術脈絡
 
@@ -46,6 +52,7 @@
 
 ## 憲章檢查
 
+- [ ] 功能目標：本計畫的功能目標與 spec.md 一致（若有修改，已觸發 spec 版本升級）
 - [ ] I. Spec-First：規格已完成並審查
 - [ ] II. Generalization-First：設計是否支援多種 NLP task type？
 - [ ] III. Data Fairness：是否涉及 test set？若是，已規劃防止資料洩露
@@ -360,6 +367,8 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.1 | 2026-05-28 | 將 ## Feature Goal 章節名稱改為 ## 功能目標；同步更新憲章檢查用詞 |
+| 1.6.0 | 2026-05-28 | 將 ## 摘要 改為 ## Feature Goal（複製自 spec）+ ## Technical Approach；憲章檢查加入 Feature Goal 一致性項目 |
 | 1.5.0 | 2026-05-27 | senior-backend + senior-frontend 評估後補全：Phase 0 加 Exception 設計表；DB index 表加 Loading Strategy 欄；API 清單欄位拆分為 System Role / Task Role / Auth Dependency；新增步驟 2b（Pydantic schema 層次）；切版分析表加 ARIA 和響應式欄；新增前端技術決策小節（queryKey / 表單 / 型別 / error mapping / loading）；系統流程圖加 Celery 分析；測試情境依層分類 |
 | 1.4.0 | 2026-05-27 | Phase 1 加入 DB index 分析（實體步驟）、路由分析表、i18n key 清單表；Phase 2 任務策略加入對應任務；產出摘要更新 |
 | 1.3.0 | 2026-05-27 | Phase 1 加入前端切版分析（元件層次表 + Stories 欄位）與後端 API 清單表；技術脈絡加入 Storybook；Phase 2 任務策略對應切版輸出 |
