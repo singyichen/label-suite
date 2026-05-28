@@ -7,7 +7,7 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.10.0 (2026-05-28) -->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.14.0 (2026-05-28) -->
 
 ## Label Suite Constitution
 
@@ -141,6 +141,43 @@ Every non-trivial change must be traceable to its origin, intent, and verificati
 - AI agents must preserve enough context in commit messages or PR descriptions for reviewers to understand why the change was made
 - Critical backend state transitions (task status changes, scoring events, annotation submissions) must be logged or auditable
 
+### XIII. Label Quality & Reviewability (RECOMMENDED)
+
+Annotation quality must be measurable, traceable, and improvable.
+
+- Gold/test items must be indistinguishable from regular items in the UI; their identity must not be inferable from item order, batch name, or any displayed metadata
+- Tasks that assign the same item to multiple annotators must support calculating inter-annotator agreement (e.g., Cohen's kappa, Krippendorff's alpha)
+- Every task must declare a review flow in its task config (review, adjudication, or disagreement resolution); the chosen flow must be enforced by the system
+- Annotator quality must be traceable to individual items, tasks, batches, and time periods
+- Low-quality annotations must follow a defined lifecycle: quarantine → rework or reject → optional appeal; annotations must not be silently discarded
+
+### XIV. Dataset Lineage & Schema Versioning (RECOMMENDED)
+
+Dataset provenance and label schema evolution must be tracked and preserved.
+
+- Every dataset item must record its import source, import batch, and preprocessing version
+- Label schemas (task configs) must be versioned; a breaking change to a schema must not be silently applied to annotations produced under a prior version
+- Every annotation must record the schema version under which it was created; scoring, review, and export must operate under the schema version the annotation was produced with
+- Sampling, train/dev/test splits, and annotator assignment must be reproducible given the same seed and dataset version
+
+### XV. Role-Based Access Control (NON-NEGOTIABLE)
+
+Access to annotations, datasets, and system actions must be governed by roles with annotation-workflow-specific boundaries.
+
+- Annotators must not see peer annotations unless the task config explicitly enables consensus visibility
+- Reviewers' access to source metadata must be limited to what is required for their specific review task
+- Destructive admin actions (bulk reject, schema publish, assignment override) must be restricted to authorized roles and produce an audit log entry
+- Role assignments and revocations must be audited; access must be revoked immediately on role removal
+
+### XVI. Export Reproducibility & Integrity (RECOMMENDED)
+
+Annotation exports must be deterministic, versioned, and validated before delivery.
+
+- Exports must be deterministic given the same dataset version, schema version, task config version, and export timestamp
+- Every export artifact must include metadata: dataset version, schema version, task config version, export timestamp, and the requesting user
+- Breaking changes to export format must increment the export format version; consumers must not be silently broken
+- Before an export completes, the system must validate for missing labels, out-of-range values, conflicting adjudication results, and schema violations; validation failures must abort the export — not silently skip affected items
+
 ## Governance
 
 Constitution principles take precedence over all other conventions.
@@ -167,14 +204,18 @@ Constitution principles take precedence over all other conventions.
 
 **Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
 
-**Compliance Review**: All PRs must verify compliance with all twelve principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all sixteen principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.10.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.14.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.14.0 | 2026-05-28 | Add Principle XVI (Export Reproducibility & Integrity — RECOMMENDED): deterministic exports; export metadata requirements; format version on breaking changes; pre-export validation gate |
+| 1.13.0 | 2026-05-28 | Add Principle XV (Role-Based Access Control — NON-NEGOTIABLE): annotator peer annotation isolation; reviewer metadata scoping; admin action audit log; immediate access revocation on role removal |
+| 1.12.0 | 2026-05-28 | Add Principle XIV (Dataset Lineage & Schema Versioning — RECOMMENDED): item provenance tracking; schema versioned and breaking changes prohibited on prior annotations; annotation records schema version; reproducible sampling/splits |
+| 1.11.0 | 2026-05-28 | Add Principle XIII (Label Quality & Reviewability — RECOMMENDED): gold item indistinguishability; inter-annotator agreement support; task config review flow declaration; annotator quality traceability; quarantine/rework/reject/appeal lifecycle |
 | 1.10.0 | 2026-05-28 | Add Principle XII (Traceability & Auditability — RECOMMENDED): non-trivial changes must reference spec/issue/request; SC-ID tracing; bug fix documentation; AI agent context preservation; backend state auditability |
 | 1.9.1 | 2026-05-28 | Strengthen Principle XI: add log/error message security rule; add prohibition on exposing test-set answers or scoring metadata via API or frontend state |
 | 1.9.0 | 2026-05-28 | Add Source of Truth section to Governance |
