@@ -1,24 +1,23 @@
 <!--
-Sync Impact Report — constitution v1.6.2
+Sync Impact Report — constitution v1.9.0
 Generated: 2026-05-28
 
-Version change: v1.6.1 → v1.6.2
-Bump type: PATCH — strengthen Principle VII (add WCAG 2.1 AA); strengthen Principle VIII (add FCP ≤ 3s, interaction ≤ 100ms, code splitting; raise Lighthouse ≥ 70 → ≥ 80); add Dependency Governance note
+Version change: v1.6.2 → v1.9.0
+Bump type: MINOR (×2) + PATCH (×1) + MINOR (×1) — add Principle X (Change Scope Discipline); add Principle XI (Security & Privacy Baseline); strengthen Principle IX (add structured log/audit requirement); add Source of Truth section to Governance
 
 Changed principles:
-- VII. Design Consistency — added WCAG 2.1 AA accessibility rule
-- VIII. Performance Baseline — added FCP ≤ 3s, user interaction ≤ 100ms, code splitting requirement; raised Lighthouse from ≥ 70 to ≥ 80
+- IX. No Silent Failure — added structured log/audit event requirement for critical actions and async workflows (PATCH → v1.8.1)
+- X. Change Scope Discipline — new principle (MINOR → v1.7.0)
+- XI. Security & Privacy Baseline — new NON-NEGOTIABLE principle (MINOR → v1.8.0)
 
-New sections: Dependency Governance (under Governance)
+New sections: Source of Truth (under Governance) (MINOR → v1.9.0)
 Removed sections: none
 
-Language conflict note: User-proposed draft required Chinese code comments. Principle VI (English-First) is preserved unchanged — AI agent tooling requires accurate English token parsing.
-
 Templates sync status:
-- .specify/templates/plan-template.md: ✅ Updated (v1.6.2)
+- .specify/templates/plan-template.md: ✅ No changes required
 - .specify/templates/spec-template.md: ✅ No changes required
 - .specify/templates/tasks-template.md: ✅ No changes required
-- .specify/templates/checklist-template.md: ✅ Updated (v1.5.2)
+- .specify/templates/checklist-template.md: ✅ No changes required
 - .claude/commands/speckit.*.md: ✅ No changes required
 
 Deferred TODOs: none
@@ -121,6 +120,25 @@ Errors must be visible, traceable, and handled at the appropriate layer.
 - Every error must either be handled with a meaningful response or propagated to a layer that can handle it
 - A single point of failure must not cause system-wide collapse; failures must be isolated
 - User-facing error messages must be understandable; internal error details must be logged
+- Critical user actions and backend state transitions must emit structured logs or audit events where appropriate; background jobs must expose status, retry count, and failure reason
+
+### X. Change Scope Discipline (RECOMMENDED)
+
+Changes must be confined to the requested feature, bug, or spec scope.
+
+- Opportunistic refactors, formatting sweeps, or unrelated renames are not permitted unless required to complete the change safely
+- If adjacent code is problematic, flag it — do not fix it silently
+- Large changes must be split into independently reviewable units; a single PR must not mix unrelated concerns
+- Unrelated dead code may be flagged but must not be removed unless explicitly requested
+
+### XI. Security & Privacy Baseline (NON-NEGOTIABLE)
+
+User data and system secrets must be protected at every layer.
+
+- Secrets, tokens, credentials, and private keys must never be committed to the repository or exposed to clients
+- User data must be returned only to authorized roles; API responses must not leak internal identifiers or sensitive metadata unless explicitly required
+- All user inputs must be validated and sanitized; raw user content must not be stored or rendered without escaping
+- Security-sensitive flows (auth, permission checks, data access) require tests covering unauthorized access paths
 
 ## Governance
 
@@ -142,16 +160,22 @@ Constitution principles take precedence over all other conventions.
 
 **Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
+**Source of Truth**: Requirements, API contracts, task definitions, and UI behavior specifications must each have exactly one source of truth. Derived files, generated files, and tool caches must clearly declare their source and sync process. Agents must not amend cache or derived files directly unless explicitly syncing from the authoritative source.
+
 **Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
 
-**Compliance Review**: All PRs must verify compliance with all nine principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all eleven principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.6.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.9.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.9.0 | 2026-05-28 | Add Source of Truth section to Governance |
+| 1.8.1 | 2026-05-28 | Strengthen Principle IX: add structured log/audit event requirement for critical user actions and async workflows |
+| 1.8.0 | 2026-05-28 | Add Principle XI (Security & Privacy Baseline — NON-NEGOTIABLE): secrets, data authorization, input sanitization, security path tests |
+| 1.7.0 | 2026-05-28 | Add Principle X (Change Scope Discipline): confine changes to requested scope; ban opportunistic refactors; require independently reviewable PRs |
 | 1.6.2 | 2026-05-28 | Strengthen Principle VII (add WCAG 2.1 AA rule); strengthen Principle VIII (add FCP ≤ 3s, interaction ≤ 100ms, code splitting; raise Lighthouse ≥ 70 → ≥ 80); add Dependency Governance note |
 | 1.6.1 | 2026-05-28 | Strengthen Principle V: overdesign is a defect; any unjustified abstraction must be removed before merging |
 | 1.6.0 | 2026-05-28 | Add Principle IX (No Silent Failure); strengthen Principle IV with design-for-testability rule |
