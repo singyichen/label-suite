@@ -1,17 +1,18 @@
 <!--
-Sync Impact Report — constitution v1.22.0
+Sync Impact Report — constitution v1.28.0
 Generated: 2026-05-28
 
-Version change: v1.17.0 → v1.22.0
-Bump type: MINOR (×5) — add Principles XX–XXIV (code quality, frontend safety, API contracts, backend consistency)
+Version change: v1.22.0 → v1.28.0
+Bump type: MINOR (×6) — add Principles XXV–XXX (observability, DB integrity, data lifecycle, canonical states, cache safety, test isolation)
 
 Changed principles: none
 New principles:
-- XX. Code Comment Policy — new RECOMMENDED principle (MINOR → v1.18.0)
-- XXI. Frontend Runtime Safety — new RECOMMENDED principle (MINOR → v1.19.0)
-- XXII. API Contract Completeness — new RECOMMENDED principle (MINOR → v1.20.0)
-- XXIII. Frontend-Backend Contract Governance — new RECOMMENDED principle (MINOR → v1.21.0)
-- XXIV. Backend Consistency & Idempotency — new RECOMMENDED principle (MINOR → v1.22.0)
+- XXV. Cross-Layer Correlation & Observability — new RECOMMENDED principle (MINOR → v1.23.0)
+- XXVI. Database-Enforced Integrity — new RECOMMENDED principle (MINOR → v1.24.0)
+- XXVII. Data Classification, Retention & Deletion — new RECOMMENDED principle (MINOR → v1.25.0)
+- XXVIII. Canonical Domain Lifecycle — new RECOMMENDED principle (MINOR → v1.26.0)
+- XXIX. Cache Safety & Invalidation — new RECOMMENDED principle (MINOR → v1.27.0)
+- XXX. Test Data Isolation — new NON-NEGOTIABLE principle (MINOR → v1.28.0)
 
 New sections: none
 Removed sections: none
@@ -269,6 +270,64 @@ Backend operations must remain correct under retries, concurrent requests, and p
 - Partial failures must leave data in a valid, recoverable state — not in an intermediate or inconsistent state
 - Race-prone backend flows must include tests covering duplicate requests, concurrent updates, and retry scenarios
 
+### XXV. Cross-Layer Correlation & Observability (RECOMMENDED)
+
+Every request, background job, and critical workflow must carry a traceable correlation identifier.
+
+- Every HTTP request must generate or propagate a `request_id` or `correlation_id`; this identifier must appear in all log entries for that request
+- Structured logs (not free-text) are required for: annotation submission, assignment, review, scoring, import/export, auth failure, job retry, and job failure
+- Background jobs must record attempt history with: attempt number, start time, status, error (if any), and duration
+- Long-running operations must be queryable by correlation ID to support post-incident debugging and traceability
+- Correlation identifiers must be included in API error responses to enable client-side support escalation
+
+### XXVI. Database-Enforced Integrity (RECOMMENDED)
+
+Critical system invariants must be enforced at the database layer, not only in service code.
+
+- Foreign key constraints must exist for all relationships between core entities (assignments, annotations, scoring, roles, datasets, schema versions, export records)
+- Uniqueness invariants (e.g., one submission per annotator per item) must be enforced by database unique constraints, not only by application checks
+- Multi-step mutations that must succeed or fail as a unit must execute within a database transaction
+- Conflicting concurrent updates to shared state must be prevented by optimistic or pessimistic locks, not left to application-level checks
+- Migrations that add new constraints must include a data validation step or backfill strategy to prevent constraint violations on existing data
+
+### XXVII. Data Classification, Retention & Deletion (RECOMMENDED)
+
+Data assets must be classified, retained, and deleted according to defined policies.
+
+- Before ingestion, dataset fields must be reviewed for PII or sensitive content; identified PII must be redacted or minimized before annotator exposure
+- Each data category (datasets, annotations, exports, audit logs, job artifacts) must have a defined retention policy
+- Deletion of a primary resource must define whether derived resources (annotations, exports, audit logs) are cascaded, anonymized, or retained under a separate policy; no implicit cascade or silent discard is permitted
+- Users must not receive deleted or expired data through caches, exports, or API responses after a delete or expiry event
+- Soft-delete patterns must be accompanied by a hard-delete or anonymization path; indefinite retention of soft-deleted PII is not permitted
+
+### XXVIII. Canonical Domain Lifecycle (RECOMMENDED)
+
+Core domain entities must have canonical state machines with explicitly defined transitions.
+
+- The following entities must have documented canonical states and valid state transitions: task, batch, annotation item, annotation, review, adjudication, export, dataset version
+- Invalid state transitions must be rejected at the service layer; UI button visibility is not a substitute for server-side enforcement
+- Each state transition must document: permitted actors, authorization requirements, side effects (notifications, derived state updates), audit log event, and rollback or retry behavior
+- State transitions must be covered by tests; invalid transition attempts must be verified to be rejected
+
+### XXIX. Cache Safety & Invalidation (RECOMMENDED)
+
+Cached data must be scoped to its authorization boundary and invalidated at the correct lifecycle events.
+
+- Cache keys for user-scoped, role-scoped, task-scoped, dataset-scoped, or schema-scoped data must include those boundary identifiers as part of the cache key
+- Test-set answers, scoring internals, and private dataset fields must not enter any shared or client-visible cache layer
+- The following events must invalidate or bypass affected cache entries: logout, role change, schema publish, annotation submission, review completion, assignment change, import completion, export completion
+- Permission-sensitive responses must not be served from a cache without validating against live authorization state or using a short TTL with a defined invalidation trigger
+- Cache behavior (what is cached, for how long, and when invalidated) must be documented for any cached resource
+
+### XXX. Test Data Isolation (NON-NEGOTIABLE)
+
+Tests must never use production data, real user data, or genuine annotation ground truth.
+
+- Test fixtures, CI datasets, Playwright traces, screenshots, seed data, and test logs must not contain production database dumps, real user PII, private metadata, or real answer keys
+- Test data must be synthetic, anonymized, or sourced from an approved scrubbed dataset
+- Annotator-facing test scenarios must use clearly fictional entities, labels, and content
+- Tests that require realistic label distributions or scoring scenarios must generate or reference approved synthetic datasets — not import or copy from the production database
+
 ## Governance
 
 Constitution principles take precedence over all other conventions.
@@ -293,14 +352,20 @@ Constitution principles take precedence over all other conventions.
 
 **Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
 
-**Compliance Review**: All PRs must verify compliance with all twenty-four principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all thirty principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.22.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.28.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.28.0 | 2026-05-28 | Add Principle XXX (Test Data Isolation — NON-NEGOTIABLE): no production/PII/real answer-key data in tests; synthetic or approved-scrubbed datasets only; fictional annotator-facing scenarios; approved synthetic datasets for scoring tests |
+| 1.27.0 | 2026-05-28 | Add Principle XXIX (Cache Safety & Invalidation — RECOMMENDED): boundary-scoped cache keys; no test-set answers or scoring internals in cache; invalidation triggers on auth/lifecycle events; live auth validation or short TTL for permission-sensitive responses; documented cache behavior |
+| 1.26.0 | 2026-05-28 | Add Principle XXVIII (Canonical Domain Lifecycle — RECOMMENDED): canonical states and valid transitions for task/batch/annotation/review/adjudication/export/dataset version; service-layer rejection of invalid transitions; documented actor/authorization/side-effects/audit/rollback per transition; transition coverage in tests |
+| 1.25.0 | 2026-05-28 | Add Principle XXVII (Data Classification, Retention & Deletion — RECOMMENDED): pre-ingestion PII review and minimization; defined retention policy per data category; explicit cascade/anonymize/retain policy on primary resource deletion; no stale data after delete/expiry; hard-delete or anonymization path required for soft-delete |
+| 1.24.0 | 2026-05-28 | Add Principle XXVI (Database-Enforced Integrity — RECOMMENDED): FK constraints on core entity relationships; DB unique constraints for uniqueness invariants; transactions for multi-step mutations; optimistic/pessimistic locks for concurrent state; migration data validation or backfill strategy |
+| 1.23.0 | 2026-05-28 | Add Principle XXV (Cross-Layer Correlation & Observability — RECOMMENDED): request_id/correlation_id on all HTTP requests and log entries; structured logs for annotation/assignment/review/scoring/import-export/auth/job events; background job attempt history; queryable by correlation ID; correlation ID in API error responses |
 | 1.22.0 | 2026-05-28 | Add Principle XXIV (Backend Consistency & Idempotency — RECOMMENDED): idempotency and conflict behavior declarations; concurrent state protection; retryable/resumable jobs; partial failure recovery; race-condition tests |
 | 1.21.0 | 2026-05-28 | Add Principle XXIII (Frontend-Backend Contract Governance — RECOMMENDED): centrally documented shared enums/states/error codes; backward-compatible contract changes; breaking changes require coordinated updates; no conflicting mock shapes; generated types or contract tests |
 | 1.20.0 | 2026-05-28 | Add Principle XXII (API Contract Completeness — RECOMMENDED): all public endpoints in OpenAPI/Swagger; full parameter and error documentation; enum/nullable/pagination/validation constraints; contract updates required with behavior changes; no reliance on undocumented fields |
