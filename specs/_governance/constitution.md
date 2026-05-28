@@ -1,16 +1,15 @@
 <!--
-Sync Impact Report — constitution v1.9.0
+Sync Impact Report — constitution v1.10.0
 Generated: 2026-05-28
 
-Version change: v1.6.2 → v1.9.0
-Bump type: MINOR (×2) + PATCH (×1) + MINOR (×1) — add Principle X (Change Scope Discipline); add Principle XI (Security & Privacy Baseline); strengthen Principle IX (add structured log/audit requirement); add Source of Truth section to Governance
+Version change: v1.9.0 → v1.10.0
+Bump type: PATCH (×1) + MINOR (×1) — strengthen Principle XI (add log/error security rule and test-set metadata exposure prohibition); add Principle XII (Traceability & Auditability)
 
 Changed principles:
-- IX. No Silent Failure — added structured log/audit event requirement for critical actions and async workflows (PATCH → v1.8.1)
-- X. Change Scope Discipline — new principle (MINOR → v1.7.0)
-- XI. Security & Privacy Baseline — new NON-NEGOTIABLE principle (MINOR → v1.8.0)
+- XI. Security & Privacy Baseline — added log/error message security rule; added prohibition on exposing test-set answers or scoring metadata via API or frontend state (PATCH → v1.9.1)
+- XII. Traceability & Auditability — new RECOMMENDED principle (MINOR → v1.10.0)
 
-New sections: Source of Truth (under Governance) (MINOR → v1.9.0)
+New sections: none
 Removed sections: none
 
 Templates sync status:
@@ -139,6 +138,18 @@ User data and system secrets must be protected at every layer.
 - User data must be returned only to authorized roles; API responses must not leak internal identifiers or sensitive metadata unless explicitly required
 - All user inputs must be validated and sanitized; raw user content must not be stored or rendered without escaping
 - Security-sensitive flows (auth, permission checks, data access) require tests covering unauthorized access paths
+- Test-set answers, internal scoring metadata, and private dataset fields must never be exposed to annotators via API responses or frontend state
+- Error messages and logs must not include secrets, credentials, raw JWT tokens, or sensitive user data
+
+### XII. Traceability & Auditability (RECOMMENDED)
+
+Every non-trivial change must be traceable to its origin, intent, and verification path.
+
+- Non-trivial code changes must reference the related spec, issue, task, bug report, or explicit user request
+- Spec-driven implementation must trace code, tests, and PR descriptions back to SC-IDs from spec.md
+- Bug fixes must document the reproduction path, root cause, and verification performed
+- AI agents must preserve enough context in commit messages or PR descriptions for reviewers to understand why the change was made
+- Critical backend state transitions (task status changes, scoring events, annotation submissions) must be logged or auditable
 
 ## Governance
 
@@ -164,14 +175,16 @@ Constitution principles take precedence over all other conventions.
 
 **Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
 
-**Compliance Review**: All PRs must verify compliance with all eleven principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all twelve principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.9.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.10.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.10.0 | 2026-05-28 | Add Principle XII (Traceability & Auditability — RECOMMENDED): non-trivial changes must reference spec/issue/request; SC-ID tracing; bug fix documentation; AI agent context preservation; backend state auditability |
+| 1.9.1 | 2026-05-28 | Strengthen Principle XI: add log/error message security rule; add prohibition on exposing test-set answers or scoring metadata via API or frontend state |
 | 1.9.0 | 2026-05-28 | Add Source of Truth section to Governance |
 | 1.8.1 | 2026-05-28 | Strengthen Principle IX: add structured log/audit event requirement for critical user actions and async workflows |
 | 1.8.0 | 2026-05-28 | Add Principle XI (Security & Privacy Baseline — NON-NEGOTIABLE): secrets, data authorization, input sanitization, security path tests |
