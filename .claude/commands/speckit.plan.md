@@ -21,6 +21,7 @@ $ARGUMENTS
 ## Steps
 
 1. **Initialize plan context**
+   - **前置條件**：必須先切換至正確的功能分支 `feat/[module]/NNN-feature`，或於執行前設定 `SPECIFY_FEATURE=[module]/NNN-feature`，否則 `{SCRIPT}` 無法解析功能模組
    - Run `{SCRIPT}` from the repo root once and parse FEATURE_MODULE, FEATURE_NAME, FEATURE_SPEC, IMPL_PLAN, FEATURE_DIR, and BRANCH
    - Load `FEATURE_SPEC`
 

@@ -1,0 +1,78 @@
+{
+  "permissions": {
+    "deny": [
+      "Write(**/.env.*)",
+      "Edit(**/.env.*)",
+      "Write(*.pem)",
+      "Edit(*.pem)",
+      "Write(*.key)",
+      "Edit(*.key)",
+      "Write(*id_rsa*)",
+      "Edit(*id_rsa*)",
+      "Write(*credentials.json)",
+      "Edit(*credentials.json)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-init.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-tool-use.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|Grep|Glob|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/block-sensitive.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/audit-log.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-compact.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/memory-reminder.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
-# serve-prototype.sh - Serve the design/prototype directory as a static site.
+# serve-prototype.sh — Serve the design/prototype directory as a local static site.
 #
 # Usage (from project root):
 #   ./scripts/serve-prototype.sh          # default port 8888
 #   ./scripts/serve-prototype.sh 9000     # custom port
 #
-# Then open: http://localhost:8888
+# IMPORTANT — when to use this script:
+#   Use during design review to browse prototype HTML pages in a browser at
+#   http://localhost:<port>. Do not use in CI or as a production server — this
+#   is a plain Python HTTP server for local developer preview only.
+#
+# How it works:
+#   Resolves the project root relative to this script's location, then starts
+#   Python's built-in http.server module pointed at design/prototype/. Supports
+#   python3, python, and the Windows py launcher. Press Ctrl+C to stop.
 
 set -euo pipefail
 

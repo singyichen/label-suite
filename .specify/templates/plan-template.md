@@ -39,7 +39,7 @@
 **語言 / 版本**: Python 3.12+ / TypeScript 5+
 **主要相依套件**: FastAPI / React + Vite
 **儲存**: PostgreSQL + Redis
-**測試**: pytest + Playwright
+**測試**: pytest + Vitest + Playwright + Storybook
 **目標平台**: Web（瀏覽器 + REST API）
 **效能目標**: [例：API p95 < 500ms]
 **限制**: [例：Config-driven，不得硬編碼 task 邏輯]
@@ -153,7 +153,15 @@ sequenceDiagram
    - 理由：[為何選擇]
    - 考慮過的替代方案：[評估了哪些其他選項]
 
-**產出**：`research.md` — 所有 NEEDS CLARIFICATION 在 Phase 1 開始前已解決
+4. **Exception 設計**（若功能涉及多個 error case）：確認 `app/core/errors.py` 是否已有對應 class，若無則列入 Phase 2
+
+   | 操作 | Error 情境 | Exception Class | HTTP Status | Response body |
+   |------|-----------|----------------|-------------|---------------|
+   | 建立 [resource] | [entity] 不存在 | `ResourceNotFound` | 404 | `{detail: "..."}` |
+   | 更新 [resource] | 無操作權限 | `PermissionDenied` | 403/404 | `{detail: "..."}` |
+   | ... | | | | |
+
+**產出**：`research.md`（含 Exception 設計決策）— 所有 NEEDS CLARIFICATION 在 Phase 1 開始前已解決
 
 ---
 
@@ -164,19 +172,133 @@ sequenceDiagram
 1. **萃取實體** 從 spec.md → `data-model.md`
    - 實體名稱、欄位、關係、驗證規則
    - 狀態轉換（若適用）
+   - **DB Index 分析**：列出每個查詢所需的 index，標記潛在的 N+1 或全表掃描風險
 
-2. **產生 API 契約** 從功能需求 → `contracts/`
-   - 每個使用者動作 → REST endpoint
-   - 請求 / 回應 schema（OpenAPI 相容）
+   | 查詢 | 篩選欄位 | Index 策略 | Loading Strategy | 風險 |
+   |------|---------|-----------|-----------------|------|
+   | 列表（分頁） | `task_id`, `status` | composite index | `selectinload(rel)` | — |
+   | 單筆查詢 | `id` | primary key | `joinedload(rel)` | — |
+   | ... | | | | |
 
-3. **更新系統流程圖** 在本計畫中
+   > **Loading Strategy 規則**：relationship 欄位必須明確指定（`selectinload` / `joinedload` / `lazy="raise"`）；禁止依賴預設 `lazy="select"` 以防止隱性 N+1。
+
+2. **後端 API 清單** 從功能需求列出所有需要的端點
+
+   | Method | Path | System Role | Task Role | Auth Dependency | 說明 |
+   |--------|------|-------------|-----------|----------------|------|
+   | GET | `/api/v1/[module]/[resource]` | user | annotator+ | `get_current_user` | 取得列表（分頁） |
+   | POST | `/api/v1/[module]/[resource]` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 建立 |
+   | GET | `/api/v1/[module]/[resource]/{id}` | user | annotator+ | `get_current_user` | 取得單筆（無權限回 404） |
+   | PATCH | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 更新 |
+   | DELETE | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 刪除 |
+
+   > **Auth 規則**：task-scoped endpoint 必須驗證 `task_membership`；無權限時回 404（不洩漏資源存在）。`super_admin` 可bypass task role check。
+
+   接著產生完整 API 契約 → `contracts/`（請求 / 回應 schema，OpenAPI 相容）
+
+2b. **Pydantic Schema 層次設計** 為每個實體決定 schema 繼承結構
+
+   | Schema | 繼承自 | 用途 | 需排除的敏感欄位 |
+   |--------|-------|------|----------------|
+   | `[Entity]Base` | `BaseModel` | 共用欄位 | — |
+   | `[Entity]Create` | `[Entity]Base` | POST body，所有必填欄位 | — |
+   | `[Entity]Update` | `BaseModel` | PATCH body，所有欄位 `Optional` | — |
+   | `[Entity]Response` | `[Entity]Base` | 回應，含 `id` / `created_at` | `answer_key`, `hashed_password` 等 |
+
+   - 標記需要 `Field(...)` constraint 或 custom validator 的欄位
+   - annotator-facing response 與 admin response 若有不同欄位，分拆為兩個 Response schema
+
+3. **前端切版分析** 從 wireframe / spec 分析畫面如何切成元件
+
+   | 區塊 | 元件名稱 | 職責 | 資料來源 | Stories 狀態 | ARIA / 鍵盤需求 | 響應式行為 |
+   |------|---------|------|---------|------------|----------------|----------|
+   | 頁面容器 | `[Feature]Page` | 路由入口、資料取得 | TanStack Query | — (page 層不寫 story) | — | — |
+   | 主要內容 | `[Feature]List` | 列表渲染 | props | Default, Empty, Loading | `role="list"` | mobile: single column |
+   | ... | | | | | | |
+
+   > **Stories 規則**：Page 層不寫 story（太重，依賴路由）；其他所有元件都要寫。每個元件至少涵蓋 Default + 邊界狀態（Empty / Loading / Error / Disabled）。
+
+   **元件層次**：
+   ```
+   [Feature]Page
+   ├── [Feature]Header
+   │   └── [Feature]Actions (按鈕群組)
+   ├── [Feature]List
+   │   └── [Feature]Item (×N)
+   └── [Feature]Pagination
+   ```
+
+   - 標記哪些元件進 `shared/`（需被 2+ 個 feature module 使用才符合資格）
+   - 標記哪些元件需要 Zustand（全域 UI 狀態）vs. TanStack Query（server state）vs. `useState`（local）
+
+   **前端技術決策**（在切版分析後立即決定，避免 Generator 自行猜測）
+
+   ```
+   型別策略（擇一）：
+   - [ ] 手寫 interface（src/features/[module]/types/[feature].ts）
+   - [ ] openapi-typescript 自動生成（pnpm openapi-ts）
+   - [ ] zod schema 推導（z.infer<typeof Schema>，同時做 runtime validation）
+
+   表單策略（擇一）：
+   - [ ] react-hook-form + zod（欄位 > 3 個或需複雜驗證）
+   - [ ] controlled component（欄位 ≤ 3 個的簡單表單）
+
+   TanStack Query 策略：
+   - queryKey 格式：['[module]', '[resource]', params]（例：['annotation', 'list', { taskId }]）
+   - 每個 mutation 對應 invalidate 目標：[列出 mutationFn → invalidateQueries key 的對應]
+   - 需要 optimistic update 的操作：[列出，若無則標記「本功能無 optimistic update」]
+
+   API 錯誤處理策略：
+   - 4xx user error → toast（`useToast` hook）
+   - 5xx server error → Error Boundary（頁面層）
+   - 422 validation error → form field error（react-hook-form `setError`）
+   - 403/404 → 導向 `/not-found` 或顯示 inline 訊息（擇一並說明原因）
+
+   Loading 策略：
+   - 首次載入大量資料 → skeleton screen
+   - mutation 進行中 → button disabled + spinner
+   - 背景 refetch → 不顯示 loading（stale-while-revalidate）
+   ```
+
+   **路由分析**：列出本功能新增或修改的路由
+
+   | Path | 元件 | 是否需要 Route Guard | 重導向規則 |
+   |------|------|-------------------|-----------|
+   | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login` |
+   | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | 無權限 → 404 |
+   | ... | | | |
+
+   **i18n Key 清單**：列出本功能所有需要翻譯的字串（namespace: `[module]`）
+
+   | Key | 中文預設值 | 出現位置 |
+   |-----|----------|---------|
+   | `[feature].title` | `[功能標題]` | `[Feature]Page` header |
+   | `[feature].empty_state` | `尚無資料` | `[Feature]List` empty |
+   | `[feature].actions.create` | `建立` | `[Feature]Actions` button |
+   | ... | | |
+
+   > i18n 檔案路徑：`frontend/locales/zh-TW/[module].json` 與 `frontend/locales/en/[module].json`
+
+4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
-   - 加入相關的錯誤路徑與非同步流程（Celery、WebSocket）
+   - 明確列出每個操作的 error case 與對應 HTTP status（不可只寫「4xx / 5xx」）
+   - **Celery 分析**：若任何操作預期處理時間 > 1 秒，或涉及評分 / 統計計算，必須加入 Celery worker 節點；若無，明確標記「本功能無非同步任務需求」
 
-4. **萃取測試情境** 從使用者故事
-   - 每個故事 → 整合測試情境大綱
+   | Celery Task | 觸發端點 | retry 策略 | idempotency guard | 狀態查詢方式 |
+   |------------|---------|-----------|-----------------|------------|
+   | `score_submission` | `POST /submissions` | `max_retries=3, countdown=5` | `submission_id` unique check | polling `GET /submissions/{id}/status` |
+   | ... | | | | |
 
-**產出**：`data-model.md`、`contracts/`、系統流程圖已更新、測試情境已概述
+5. **萃取測試情境** 從使用者故事，依測試層分類
+
+   | 情境 | 測試層 | 工具 | 路徑 |
+   |------|-------|------|------|
+   | service 層業務邏輯分支 | 單元測試 | pytest（mock DB） | `tests/unit/test_[feature].py` |
+   | API auth / status code / permission | 整合測試 | pytest + httpx（real test DB） | `tests/integration/test_[feature].py` |
+   | 元件渲染 / 互動 / 邊界狀態 | 元件測試 | Vitest + Testing Library | `src/features/[module]/__tests__/[Feature].test.tsx` |
+   | 完整用戶流程 | E2E | Playwright | `e2e/[module]/[feature].spec.ts` |
+
+**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
 
 ---
 
@@ -188,15 +310,19 @@ sequenceDiagram
 
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
-- 每個 API 契約 → 後端單元測試任務 [P] + 實作任務
-- 每個實體 → 模型建立任務 [P]
-- 每個使用者故事 → Playwright E2E 測試任務 [P] + 前端任務
+- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）
+- **後端**：每個實體 → 模型建立任務 [P] + migration 任務（含 DB index）
+- **前端**：路由分析 → route 註冊任務（含 route guard 設定）
+- **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
+- **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務（page 層不寫 story）
+- **前端**：i18n key 清單 → `locales/zh-TW/[module].json` + `locales/en/[module].json` 更新任務
+- 共用元件（shared/）→ 獨立任務，先於依賴它的 feature 任務
 
 **排序策略**：
 
 - TDD 順序：測試在實作前（必須先失敗）
-- 相依順序：model → service → endpoint → frontend component → page
-- 標記 [P] 用於平行執行（僅限獨立檔案）
+- 相依順序：model + migration → schema → service → endpoint → route → shared component → feature component + story + i18n → page
+- 標記 [P] 用於平行執行（僅限獨立檔案，前後端可同時進行）
 
 **預估產出**：`tasks.md` 中 [N] 個有序任務
 
@@ -234,6 +360,10 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.0 | 2026-05-27 | senior-backend + senior-frontend 評估後補全：Phase 0 加 Exception 設計表；DB index 表加 Loading Strategy 欄；API 清單欄位拆分為 System Role / Task Role / Auth Dependency；新增步驟 2b（Pydantic schema 層次）；切版分析表加 ARIA 和響應式欄；新增前端技術決策小節（queryKey / 表單 / 型別 / error mapping / loading）；系統流程圖加 Celery 分析；測試情境依層分類 |
+| 1.4.0 | 2026-05-27 | Phase 1 加入 DB index 分析（實體步驟）、路由分析表、i18n key 清單表；Phase 2 任務策略加入對應任務；產出摘要更新 |
+| 1.3.0 | 2026-05-27 | Phase 1 加入前端切版分析（元件層次表 + Stories 欄位）與後端 API 清單表；技術脈絡加入 Storybook；Phase 2 任務策略對應切版輸出 |
+| 1.2.0 | 2026-05-27 | Phase 1 加入後端 API 清單與前端切版分析步驟；Phase 2 任務策略分拆前後端任務產生規則 |
 | 1.1.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + 中文 H1，全面中文化章節標題與說明文字 |
 | 1.0.2 | 2026-05-21 | Add Execution Flow and Progress Tracking sections |
 | 1.0.1 | 2026-05-21 | Align spec paths with module-based SDD directory structure |

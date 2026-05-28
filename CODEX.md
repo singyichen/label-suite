@@ -1,5 +1,6 @@
 # CODEX.md
 
+Claude will review your output once you are done.
 This file provides Codex-specific guidance when working in this repository.
 
 ## Canonical Rules

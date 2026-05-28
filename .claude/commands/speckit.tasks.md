@@ -1,5 +1,7 @@
 ---
 description: Generate an executable task list (tasks.md) from spec.md and plan.md.
+scripts:
+  sh: scripts/speckit/check-prerequisites.sh --json
 handoffs:
   - label: Analyze For Consistency
     agent: speckit.analyze
@@ -22,9 +24,10 @@ $ARGUMENTS
 
 ## Steps
 
-1. **Read design documents**
-   - `specs/[module]/NNN-feature/spec.md`
-   - `specs/[module]/NNN-feature/plan.md`
+1. **Initialize task context**
+   - **前置條件**：必須先切換至正確的功能分支 `feat/[module]/NNN-feature`，或於執行前設定 `SPECIFY_FEATURE=[module]/NNN-feature`，否則 `{SCRIPT}` 無法解析功能模組
+   - Run `{SCRIPT}` from the repo root once and parse FEATURE_MODULE, FEATURE_NAME, FEATURE_DIR, FEATURE_SPEC, IMPL_PLAN, and AVAILABLE_DOCS
+   - Load `FEATURE_SPEC` and `IMPL_PLAN`
 
 2. **Break down tasks by User Story**
 
