@@ -7,36 +7,14 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.5.3 (2026-05-28) -->
-<!--
-Sync Impact Report — constitution v1.5.3
-Generated: 2026-05-28
-
-Version change: v1.5.0 → v1.5.3
-Bump type: PATCH (×3) — renamed ## Feature Goal → ## 功能目標; renamed **Story Goal** → **故事目標**; converted constitution changelog to English; updated Versioning Policy language rule
-
-Changed principles:
-- I. Spec-First Development — Goal Declaration sub-rule: ## Feature Goal → ## 功能目標; **Story Goal** → **故事目標**
-- Governance — Feature Goal Alignment Gate: ## Feature Goal → ## 功能目標; Versioning Policy: clarified English-only rule for constitution changelog
-
-New sections: none
-Removed sections: none
-
-Templates sync status:
-- .specify/templates/plan-template.md: ✅ Updated (v1.6.1)
-- .specify/templates/spec-template.md: ✅ Updated (v1.3.1)
-- .specify/templates/tasks-template.md: ✅ Updated (v1.8.1)
-- .specify/templates/checklist-template.md: ✅ Updated (v1.5.1)
-- .claude/commands/speckit.analyze.md: ✅ Updated
-
-Deferred TODOs: none
--->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.6.0 (2026-05-28) -->
 
 ## Label Suite Constitution
 
 ## Core Principles
 
 ### I. Spec-First Development (RECOMMENDED)
+
 New features should begin with a spec. The deciding question for skipping SDD is: **will this change make the system behave differently from what the specs define?** If yes, open a spec. If no, modify code directly.
 
 - Features progress in order: requirements → spec → plan → tasks → implementation
@@ -51,6 +29,7 @@ New features should begin with a spec. The deciding question for skipping SDD is
   - **tasks.md**: Each User Story Phase must include a `**故事目標**` line that traces to one or more SC-IDs from spec.md. A Phase goal that cannot be traced to any SC-ID signals scope drift.
 
 **Skip SDD and modify code directly for**:
+
 - Bug fixes — making code match existing specs, not changing specs
 - Typo, formatting, or comment changes — no behavior change
 - Non-breaking dependency updates — no API or behavior change
@@ -58,12 +37,14 @@ New features should begin with a spec. The deciding question for skipping SDD is
 - Adding tests for existing behavior — spec is already defined
 
 **Must go through SDD for**:
+
 - New features — behavior not currently defined in any spec
 - Behavior changes — modifying what an existing endpoint or flow does
 - Breaking changes — removing fields, changing API contracts
 - Architectural changes — new services, data models, or async flows
 
 ### II. Generalization-First (NON-NEGOTIABLE)
+
 System design must support multiple NLP task types without hardcoding task-specific logic.
 
 - Task configuration is defined via Config (YAML/JSON); task logic must not be hardcoded
@@ -71,15 +52,18 @@ System design must support multiple NLP task types without hardcoding task-speci
 - All labeling templates must be reusable
 
 ### III. Data Fairness (NON-NEGOTIABLE)
+
 Evaluation results must be fair and reproducible.
 
 - Test-set answers must never be exposed to annotators
 - Scoring logic must be transparent and covered by tests
 
 ### IV. Test-First (RECOMMENDED)
+
 - Backend: pytest coverage target ≥ 80%
 - E2E: Playwright covers core user flows (labeling, submission, review)
 - Tests must be written and confirmed to fail before implementation begins
+- If a design makes testing difficult, refactor the design — never weaken the test to fit the implementation
 
 ### V. Code Quality & Simplicity (RECOMMENDED)
 
@@ -93,6 +77,7 @@ Code must be simple, readable, and consistently styled.
 - No debug `print` / `console.log` statements in committed code
 
 ### VI. English-First
+
 - Code, comments, docstrings, commit messages, and variable/function names are always written in English
 - Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md` to accelerate research documentation and UI iteration
 - `design/system/MASTER.md` must be written in English only — it is consumed by AI agents and requires accurate token parsing
@@ -116,6 +101,15 @@ Core user flows must meet minimum performance thresholds.
 - No N+1 query patterns in service-layer code
 - Frontend Lighthouse Performance score ≥ 70 on desktop for core pages
 
+### IX. No Silent Failure (RECOMMENDED)
+
+Errors must be visible, traceable, and handled at the appropriate layer.
+
+- Silent failures (swallowed exceptions, empty catch blocks, unchecked nulls) are not permitted
+- Every error must either be handled with a meaningful response or propagated to a layer that can handle it
+- A single point of failure must not cause system-wide collapse; failures must be isolated
+- User-facing error messages must be understandable; internal error details must be logged
+
 ## Governance
 
 Constitution principles take precedence over all other conventions.
@@ -129,6 +123,7 @@ Constitution principles take precedence over all other conventions.
 - Use `/speckit.constitution` to automate propagation checks
 
 **Versioning Policy** (semantic versioning):
+
 - **MAJOR**: Backward-incompatible removal or redefinition of a principle
 - **MINOR**: New principle or section added
 - **PATCH**: Clarification, wording fix, or non-semantic refinement
@@ -137,14 +132,15 @@ Constitution principles take precedence over all other conventions.
 
 **Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
-**Compliance Review**: All PRs must verify compliance with all eight principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all nine principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.5.3 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.6.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.6.0 | 2026-05-28 | Add Principle IX (No Silent Failure); strengthen Principle IV with design-for-testability rule |
 | 1.5.3 | 2026-05-28 | Convert constitution changelog to English; update Versioning Policy to clarify language rules (constitution uses English, templates use Chinese); apply `## 功能目標` and `**故事目標**` localization to constitution body |
 | 1.5.2 | 2026-05-28 | Rename `**Story Goal**` to `**故事目標**` in Principle I Goal Declaration |
 | 1.5.1 | 2026-05-28 | Rename `## Feature Goal` to `## 功能目標` in Principle I Goal Declaration and Governance Alignment Gate |

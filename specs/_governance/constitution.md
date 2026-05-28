@@ -70,6 +70,7 @@ Evaluation results must be fair and reproducible.
 - Backend: pytest coverage target ≥ 80%
 - E2E: Playwright covers core user flows (labeling, submission, review)
 - Tests must be written and confirmed to fail before implementation begins
+- If a design makes testing difficult, refactor the design — never weaken the test to fit the implementation
 
 ### V. Code Quality & Simplicity (RECOMMENDED)
 
@@ -106,6 +107,15 @@ Core user flows must meet minimum performance thresholds.
 - No N+1 query patterns in service-layer code
 - Frontend Lighthouse Performance score ≥ 70 on desktop for core pages
 
+### IX. No Silent Failure (RECOMMENDED)
+
+Errors must be visible, traceable, and handled at the appropriate layer.
+
+- Silent failures (swallowed exceptions, empty catch blocks, unchecked nulls) are not permitted
+- Every error must either be handled with a meaningful response or propagated to a layer that can handle it
+- A single point of failure must not cause system-wide collapse; failures must be isolated
+- User-facing error messages must be understandable; internal error details must be logged
+
 ## Governance
 
 Constitution principles take precedence over all other conventions.
@@ -126,14 +136,15 @@ Constitution principles take precedence over all other conventions.
 
 **Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
-**Compliance Review**: All PRs must verify compliance with all eight principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all nine principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.5.3 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.6.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.6.0 | 2026-05-28 | Add Principle IX (No Silent Failure); strengthen Principle IV with design-for-testability rule |
 | 1.5.3 | 2026-05-28 | Convert constitution changelog to English; update Versioning Policy to clarify language rules (constitution uses English, templates use Chinese); apply `## 功能目標` and `**故事目標**` localization to constitution body |
 | 1.5.2 | 2026-05-28 | Rename `**Story Goal**` to `**故事目標**` in Principle I Goal Declaration |
 | 1.5.1 | 2026-05-28 | Rename `## Feature Goal` to `## 功能目標` in Principle I Goal Declaration and Governance Alignment Gate |
