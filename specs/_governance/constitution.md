@@ -1,13 +1,15 @@
 <!--
-Sync Impact Report — constitution v1.10.0
+Sync Impact Report — constitution v1.17.0
 Generated: 2026-05-28
 
-Version change: v1.9.0 → v1.10.0
-Bump type: PATCH (×1) + MINOR (×1) — strengthen Principle XI (add log/error security rule and test-set metadata exposure prohibition); add Principle XII (Traceability & Auditability)
+Version change: v1.14.0 → v1.17.0
+Bump type: MINOR (×3) — add Principles XVII, XVIII, XIX (DevOps safety baseline)
 
-Changed principles:
-- XI. Security & Privacy Baseline — added log/error message security rule; added prohibition on exposing test-set answers or scoring metadata via API or frontend state (PATCH → v1.9.1)
-- XII. Traceability & Auditability — new RECOMMENDED principle (MINOR → v1.10.0)
+Changed principles: none
+New principles:
+- XVII. CI/CD Quality Gates — new RECOMMENDED principle (MINOR → v1.15.0)
+- XVIII. Deployment Safety & Rollback — new RECOMMENDED principle (MINOR → v1.16.0)
+- XIX. Environment & Configuration Integrity — new RECOMMENDED principle (MINOR → v1.17.0)
 
 New sections: none
 Removed sections: none
@@ -188,6 +190,33 @@ Annotation exports must be deterministic, versioned, and validated before delive
 - Breaking changes to export format must increment the export format version; consumers must not be silently broken
 - Before an export completes, the system must validate for missing labels, out-of-range values, conflicting adjudication results, and schema violations; validation failures must abort the export — not silently skip affected items
 
+### XVII. CI/CD Quality Gates (RECOMMENDED)
+
+Every pull request must pass automated quality checks before merging.
+
+- Pull requests must pass all automated tests, type checks, lint checks, and build checks before merge
+- Failing CI must not be bypassed without documented approval and a follow-up issue
+- Security-sensitive changes (auth, permissions, data access, secret handling) must include regression tests covering denial paths
+- Generated artifacts must be reproducible from source; build outputs must not be committed to version control
+
+### XVIII. Deployment Safety & Rollback (RECOMMENDED)
+
+Deployments and schema changes must be reversible or have an explicit recovery plan.
+
+- Every deployment must have a documented rollback path
+- Database migrations must be backward-compatible where possible; breaking migrations require an explicit rollout plan and a documented rollback procedure
+- Long-running background jobs (imports, exports, scoring) must be retryable or resumable — not silently abandoned on failure
+- Deployment failures must not leave the system in a partially migrated state; migrations must be atomic or gated behind a feature flag
+
+### XIX. Environment & Configuration Integrity (RECOMMENDED)
+
+Runtime environments must be predictable, validated, and consistent across development, CI, staging, and production.
+
+- Required environment variables must be validated at startup; missing or invalid values must cause an immediate, explicit startup failure
+- Environment-specific behavior must be controlled by explicit configuration, never by code branches or in-process conditionals
+- Development, staging, and production must run the same test and build commands; environment-specific shortcuts in CI are not permitted
+- Default development credentials must not be valid in staging or production environments
+
 ## Governance
 
 Constitution principles take precedence over all other conventions.
@@ -212,14 +241,17 @@ Constitution principles take precedence over all other conventions.
 
 **Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
 
-**Compliance Review**: All PRs must verify compliance with all sixteen principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all nineteen principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.14.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.17.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.17.0 | 2026-05-28 | Add Principle XIX (Environment & Configuration Integrity — RECOMMENDED): startup env var validation; config-driven env behavior; consistent CI commands; dev credentials invalid in staging/prod |
+| 1.16.0 | 2026-05-28 | Add Principle XVIII (Deployment Safety & Rollback — RECOMMENDED): documented rollback path; backward-compatible migrations with rollback plan; retryable background jobs; atomic or gated migrations |
+| 1.15.0 | 2026-05-28 | Add Principle XVII (CI/CD Quality Gates — RECOMMENDED): PR must pass tests/type/lint/build; no CI bypass without documented approval; security-sensitive changes require denial-path tests; reproducible artifacts |
 | 1.14.0 | 2026-05-28 | Add Principle XVI (Export Reproducibility & Integrity — RECOMMENDED): deterministic exports; export metadata requirements; format version on breaking changes; pre-export validation gate |
 | 1.13.0 | 2026-05-28 | Add Principle XV (Role-Based Access Control — NON-NEGOTIABLE): annotator peer annotation isolation; reviewer metadata scoping; admin action audit log; immediate access revocation on role removal |
 | 1.12.0 | 2026-05-28 | Add Principle XIV (Dataset Lineage & Schema Versioning — RECOMMENDED): item provenance tracking; schema versioned and breaking changes prohibited on prior annotations; annotation records schema version; reproducible sampling/splits |
