@@ -1,13 +1,3 @@
-# Label Suite Constitution — Tool Cache
-
-> **⚠️ This file is a tool cache, NOT the source of truth.**
->
-> Single Source of Truth: `specs/_governance/constitution.md`
->
-> When amending the constitution, always edit `specs/_governance/constitution.md` first,
-> then copy the full content here to keep agents in sync.
-
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.5.3 (2026-05-28) -->
 <!--
 Sync Impact Report — constitution v1.5.3
 Generated: 2026-05-28
@@ -32,7 +22,7 @@ Templates sync status:
 Deferred TODOs: none
 -->
 
-## Label Suite Constitution
+# Label Suite Constitution
 
 ## Core Principles
 
@@ -121,7 +111,6 @@ Core user flows must meet minimum performance thresholds.
 Constitution principles take precedence over all other conventions.
 
 **Amendment Procedure**:
-
 - Update `specs/_governance/constitution.md` (Single Source of Truth) with the change
 - Sync the change to `.specify/memory/constitution.md` (tool cache) to keep agents aware
 - Propagate amendments to dependent templates (`.specify/templates/`) and commands (`.claude/commands/speckit.*.md`)
@@ -153,5 +142,3 @@ Constitution principles take precedence over all other conventions.
 | 1.3.2 | 2026-05-21 | Require Chinese change summaries in `.specify/templates/` changelogs |
 | 1.3.1 | 2026-05-21 | Require changelog entries in descending version order |
 | 1.3.0 | 2026-04-13 | Baseline version prior to changelog tracking |
-
-<!-- END CACHE -->

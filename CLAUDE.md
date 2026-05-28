@@ -110,7 +110,7 @@ Full pipeline — each stage is a hard gate:
 
 ## Constitution
 
-All development must follow the six core principles in [constitution.md](.specify/memory/constitution.md).
+All development must follow the six core principles in [constitution.md](specs/_governance/constitution.md).
 
 NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logic) · **Data Fairness** (prevent test-set answer leakage).
 
