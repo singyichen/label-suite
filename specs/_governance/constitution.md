@@ -1,15 +1,17 @@
 <!--
-Sync Impact Report — constitution v1.17.0
+Sync Impact Report — constitution v1.22.0
 Generated: 2026-05-28
 
-Version change: v1.14.0 → v1.17.0
-Bump type: MINOR (×3) — add Principles XVII, XVIII, XIX (DevOps safety baseline)
+Version change: v1.17.0 → v1.22.0
+Bump type: MINOR (×5) — add Principles XX–XXIV (code quality, frontend safety, API contracts, backend consistency)
 
 Changed principles: none
 New principles:
-- XVII. CI/CD Quality Gates — new RECOMMENDED principle (MINOR → v1.15.0)
-- XVIII. Deployment Safety & Rollback — new RECOMMENDED principle (MINOR → v1.16.0)
-- XIX. Environment & Configuration Integrity — new RECOMMENDED principle (MINOR → v1.17.0)
+- XX. Code Comment Policy — new RECOMMENDED principle (MINOR → v1.18.0)
+- XXI. Frontend Runtime Safety — new RECOMMENDED principle (MINOR → v1.19.0)
+- XXII. API Contract Completeness — new RECOMMENDED principle (MINOR → v1.20.0)
+- XXIII. Frontend-Backend Contract Governance — new RECOMMENDED principle (MINOR → v1.21.0)
+- XXIV. Backend Consistency & Idempotency — new RECOMMENDED principle (MINOR → v1.22.0)
 
 New sections: none
 Removed sections: none
@@ -217,6 +219,56 @@ Runtime environments must be predictable, validated, and consistent across devel
 - Development, staging, and production must run the same test and build commands; environment-specific shortcuts in CI are not permitted
 - Default development credentials must not be valid in staging or production environments
 
+### XX. Code Comment Policy (RECOMMENDED)
+
+Comments must explain intent, constraints, tradeoffs, or non-obvious domain reasoning — not restate what the code mechanically does.
+
+- Comments must explain why code exists, not paraphrase the next line of code
+- Required comments include: security-sensitive logic, race-condition prevention, lifecycle cleanup, non-obvious performance tradeoffs, and domain-specific business rules
+- If code requires a comment because it is too complex, simplify the code first unless the complexity is required by the domain
+- Multi-paragraph docstrings and multi-line comment blocks are not permitted; one short line is the maximum for inline comments
+
+### XXI. Frontend Runtime Safety (RECOMMENDED)
+
+Frontend code must be safe under repeated navigation, concurrent requests, and long-running sessions.
+
+- Async effects must guard against race conditions, stale responses, and updates after unmount
+- Network requests started by a component must be cancellable or safely ignored when the component is no longer active
+- Timers, subscriptions, observers, event listeners, workers, and object URLs must be cleaned up in the component's cleanup phase
+- Long-lived pages must not allow unbounded memory growth from caches, arrays, maps, logs, closures, or retained DOM references
+- Components that fetch or subscribe to data must define loading, error, empty, retry, and cleanup behavior
+- Race-prone flows must include tests or documented verification covering rapid navigation, repeated actions, and overlapping requests
+
+### XXII. API Contract Completeness (RECOMMENDED)
+
+Backend APIs must be documented as stable contracts, not only as implemented behavior.
+
+- Every public backend endpoint must be represented in OpenAPI/Swagger
+- Request bodies, response bodies, query parameters, path parameters, headers, auth requirements, and error responses must be documented
+- API contracts must define enum values, nullable fields, default values, validation constraints, pagination shape, and error schema
+- API behavior changes require contract updates in the same change
+- Frontend code must consume documented API contracts and must not rely on undocumented response fields
+
+### XXIII. Frontend-Backend Contract Governance (RECOMMENDED)
+
+Frontend and backend must share explicit contracts for all cross-boundary data.
+
+- Shared enums, status values, task types, role names, error codes, and workflow states must be centrally documented
+- Contract changes must be backward-compatible unless explicitly declared breaking
+- Breaking contract changes require coordinated frontend, backend, migration, and test updates in a single change
+- Mock data, fixtures, and prototypes must not define enum values or API shapes that conflict with the canonical contract
+- Generated types or contract tests must be used where practical to prevent silent drift
+
+### XXIV. Backend Consistency & Idempotency (RECOMMENDED)
+
+Backend operations must remain correct under retries, concurrent requests, and partial failures.
+
+- Mutating endpoints must define idempotency, duplicate-submit behavior, or conflict behavior explicitly
+- Concurrent updates to assignments, submissions, reviews, and scoring state must be protected by transactions, pessimistic or optimistic locks, or explicit conflict checks
+- Long-running jobs must be retryable or resumable without corrupting state
+- Partial failures must leave data in a valid, recoverable state — not in an intermediate or inconsistent state
+- Race-prone backend flows must include tests covering duplicate requests, concurrent updates, and retry scenarios
+
 ## Governance
 
 Constitution principles take precedence over all other conventions.
@@ -241,14 +293,19 @@ Constitution principles take precedence over all other conventions.
 
 **Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
 
-**Compliance Review**: All PRs must verify compliance with all nineteen principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
+**Compliance Review**: All PRs must verify compliance with all twenty-four principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.17.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.22.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.22.0 | 2026-05-28 | Add Principle XXIV (Backend Consistency & Idempotency — RECOMMENDED): idempotency and conflict behavior declarations; concurrent state protection; retryable/resumable jobs; partial failure recovery; race-condition tests |
+| 1.21.0 | 2026-05-28 | Add Principle XXIII (Frontend-Backend Contract Governance — RECOMMENDED): centrally documented shared enums/states/error codes; backward-compatible contract changes; breaking changes require coordinated updates; no conflicting mock shapes; generated types or contract tests |
+| 1.20.0 | 2026-05-28 | Add Principle XXII (API Contract Completeness — RECOMMENDED): all public endpoints in OpenAPI/Swagger; full parameter and error documentation; enum/nullable/pagination/validation constraints; contract updates required with behavior changes; no reliance on undocumented fields |
+| 1.19.0 | 2026-05-28 | Add Principle XXI (Frontend Runtime Safety — RECOMMENDED): async race/stale/unmount guards; cancellable network requests; cleanup for timers/subscriptions/listeners/workers/URLs; bounded memory growth; loading/error/empty/retry/cleanup states; tests for rapid navigation and overlapping requests |
+| 1.18.0 | 2026-05-28 | Add Principle XX (Code Comment Policy — RECOMMENDED): comments explain why not what; no line-paraphrase comments; required for security/race/lifecycle/performance/domain logic; simplify before commenting; no multi-line comment blocks |
 | 1.17.0 | 2026-05-28 | Add Principle XIX (Environment & Configuration Integrity — RECOMMENDED): startup env var validation; config-driven env behavior; consistent CI commands; dev credentials invalid in staging/prod |
 | 1.16.0 | 2026-05-28 | Add Principle XVIII (Deployment Safety & Rollback — RECOMMENDED): documented rollback path; backward-compatible migrations with rollback plan; retryable background jobs; atomic or gated migrations |
 | 1.15.0 | 2026-05-28 | Add Principle XVII (CI/CD Quality Gates — RECOMMENDED): PR must pass tests/type/lint/build; no CI bypass without documented approval; security-sensitive changes require denial-path tests; reproducible artifacts |
