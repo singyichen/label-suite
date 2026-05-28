@@ -7,7 +7,7 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.6.1 (2026-05-28) -->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.6.2 (2026-05-28) -->
 
 ## Label Suite Constitution
 
@@ -44,7 +44,6 @@ New features should begin with a spec. The deciding question for skipping SDD is
 - Architectural changes — new services, data models, or async flows
 
 ### II. Generalization-First (NON-NEGOTIABLE)
-
 System design must support multiple NLP task types without hardcoding task-specific logic.
 
 - Task configuration is defined via Config (YAML/JSON); task logic must not be hardcoded
@@ -52,14 +51,12 @@ System design must support multiple NLP task types without hardcoding task-speci
 - All labeling templates must be reusable
 
 ### III. Data Fairness (NON-NEGOTIABLE)
-
 Evaluation results must be fair and reproducible.
 
 - Test-set answers must never be exposed to annotators
 - Scoring logic must be transparent and covered by tests
 
 ### IV. Test-First (RECOMMENDED)
-
 - Backend: pytest coverage target ≥ 80%
 - E2E: Playwright covers core user flows (labeling, submission, review)
 - Tests must be written and confirmed to fail before implementation begins
@@ -77,7 +74,6 @@ Code must be simple, readable, and consistently styled. **Overdesign is a defect
 - No debug `print` / `console.log` statements in committed code
 
 ### VI. English-First
-
 - Code, comments, docstrings, commit messages, and variable/function names are always written in English
 - Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md` to accelerate research documentation and UI iteration
 - `design/system/MASTER.md` must be written in English only — it is consumed by AI agents and requires accurate token parsing
@@ -91,6 +87,7 @@ UI must be consistent across modules and follow the established design system.
 - Component states (loading, error, empty, disabled) must be implemented consistently across all modules
 - Prototype screens in `design/prototype/pages/` are the source of truth for layout and interaction behavior; any deviation requires a spec update
 - New UI features must reuse existing shared components before introducing new ones
+- Accessibility must conform to WCAG 2.1 AA; all interactive elements must be keyboard-navigable and announced correctly by screen readers
 
 ### VIII. Performance Baseline (RECOMMENDED)
 
@@ -99,7 +96,10 @@ Core user flows must meet minimum performance thresholds.
 - API P95 response time ≤ 500ms for core labeling and annotation operations
 - All list-view endpoints must implement pagination (max page size: 100); unbounded queries are not permitted
 - No N+1 query patterns in service-layer code
-- Frontend Lighthouse Performance score ≥ 70 on desktop for core pages
+- Frontend Lighthouse Performance score ≥ 80 on desktop for core pages
+- Page First Contentful Paint (FCP) must not exceed 3s on a standard connection
+- User interaction must produce visible feedback within 100ms; operations exceeding that threshold must show an immediate loading state
+- Non-critical routes must use code splitting and lazy loading; the initial bundle must not load all modules upfront
 
 ### IX. No Silent Failure (RECOMMENDED)
 
@@ -132,14 +132,17 @@ Constitution principles take precedence over all other conventions.
 
 **Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
+**Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
+
 **Compliance Review**: All PRs must verify compliance with all nine principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.6.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.6.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.6.2 | 2026-05-28 | Strengthen Principle VII (add WCAG 2.1 AA rule); strengthen Principle VIII (add FCP ≤ 3s, interaction ≤ 100ms, code splitting; raise Lighthouse ≥ 70 → ≥ 80); add Dependency Governance note |
 | 1.6.1 | 2026-05-28 | Strengthen Principle V: overdesign is a defect; any unjustified abstraction must be removed before merging |
 | 1.6.0 | 2026-05-28 | Add Principle IX (No Silent Failure); strengthen Principle IV with design-for-testability rule |
 | 1.5.3 | 2026-05-28 | Convert constitution changelog to English; update Versioning Policy to clarify language rules (constitution uses English, templates use Chinese); apply `## 功能目標` and `**故事目標**` localization to constitution body |

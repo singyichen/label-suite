@@ -63,6 +63,7 @@
 - [ ] CHK016 若 task type 行為有變動，規格是否要求以 config-driven registry/schema/frozen task config 實現，而非硬編碼 task 邏輯？[Principle: II, Spec §需求規格]
 - [ ] CHK017 若標注者端資料受影響，規格是否明確禁止暴露 ground-truth、評分鍵、答案路徑或隱藏標籤？[Principle: III, Spec §需求規格]
 - [ ] CHK018 若 UI 受影響，規格是否參照了已核可的設計 token / 原型期望，並記錄任何有意的偏差？[Principle: VII, Spec §輸入與生成規則]
+- [ ] CHK023 若 UI 受影響，互動元件的無障礙期望（鍵盤操作、螢幕閱讀器標記）是否納入規格的邊界情況或成功標準？[Principle: VII, Spec §邊界情況]
 
 ## 相依性與假設
 
@@ -84,6 +85,7 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.5.2 | 2026-05-28 | 新增 CHK023：WCAG 2.1 AA 無障礙期望納入規格驗證（配合憲章 v1.6.2） |
 | 1.5.1 | 2026-05-28 | CHK022 用詞改為功能目標（配合 spec/plan 章節名稱中文化） |
 | 1.5.0 | 2026-05-28 | 新增 CHK022：Feature Goal 陳述與 spec/plan 一致性追蹤 |
 | 1.4.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + H1，章節標題與清單項目全面中文化 |

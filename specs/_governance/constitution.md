@@ -1,23 +1,25 @@
 <!--
-Sync Impact Report — constitution v1.5.3
+Sync Impact Report — constitution v1.6.2
 Generated: 2026-05-28
 
-Version change: v1.5.0 → v1.5.3
-Bump type: PATCH (×3) — renamed ## Feature Goal → ## 功能目標; renamed **Story Goal** → **故事目標**; converted constitution changelog to English; updated Versioning Policy language rule
+Version change: v1.6.1 → v1.6.2
+Bump type: PATCH — strengthen Principle VII (add WCAG 2.1 AA); strengthen Principle VIII (add FCP ≤ 3s, interaction ≤ 100ms, code splitting; raise Lighthouse ≥ 70 → ≥ 80); add Dependency Governance note
 
 Changed principles:
-- I. Spec-First Development — Goal Declaration sub-rule: ## Feature Goal → ## 功能目標; **Story Goal** → **故事目標**
-- Governance — Feature Goal Alignment Gate: ## Feature Goal → ## 功能目標; Versioning Policy: clarified English-only rule for constitution changelog
+- VII. Design Consistency — added WCAG 2.1 AA accessibility rule
+- VIII. Performance Baseline — added FCP ≤ 3s, user interaction ≤ 100ms, code splitting requirement; raised Lighthouse from ≥ 70 to ≥ 80
 
-New sections: none
+New sections: Dependency Governance (under Governance)
 Removed sections: none
 
+Language conflict note: User-proposed draft required Chinese code comments. Principle VI (English-First) is preserved unchanged — AI agent tooling requires accurate English token parsing.
+
 Templates sync status:
-- .specify/templates/plan-template.md: ✅ Updated (v1.6.1)
-- .specify/templates/spec-template.md: ✅ Updated (v1.3.1)
-- .specify/templates/tasks-template.md: ✅ Updated (v1.8.1)
-- .specify/templates/checklist-template.md: ✅ Updated (v1.5.1)
-- .claude/commands/speckit.analyze.md: ✅ Updated
+- .specify/templates/plan-template.md: ✅ Updated (v1.6.2)
+- .specify/templates/spec-template.md: ✅ No changes required
+- .specify/templates/tasks-template.md: ✅ No changes required
+- .specify/templates/checklist-template.md: ✅ Updated (v1.5.2)
+- .claude/commands/speckit.*.md: ✅ No changes required
 
 Deferred TODOs: none
 -->
@@ -97,6 +99,7 @@ UI must be consistent across modules and follow the established design system.
 - Component states (loading, error, empty, disabled) must be implemented consistently across all modules
 - Prototype screens in `design/prototype/pages/` are the source of truth for layout and interaction behavior; any deviation requires a spec update
 - New UI features must reuse existing shared components before introducing new ones
+- Accessibility must conform to WCAG 2.1 AA; all interactive elements must be keyboard-navigable and announced correctly by screen readers
 
 ### VIII. Performance Baseline (RECOMMENDED)
 
@@ -105,7 +108,10 @@ Core user flows must meet minimum performance thresholds.
 - API P95 response time ≤ 500ms for core labeling and annotation operations
 - All list-view endpoints must implement pagination (max page size: 100); unbounded queries are not permitted
 - No N+1 query patterns in service-layer code
-- Frontend Lighthouse Performance score ≥ 70 on desktop for core pages
+- Frontend Lighthouse Performance score ≥ 80 on desktop for core pages
+- Page First Contentful Paint (FCP) must not exceed 3s on a standard connection
+- User interaction must produce visible feedback within 100ms; operations exceeding that threshold must show an immediate loading state
+- Non-critical routes must use code splitting and lazy loading; the initial bundle must not load all modules upfront
 
 ### IX. No Silent Failure (RECOMMENDED)
 
@@ -136,14 +142,17 @@ Constitution principles take precedence over all other conventions.
 
 **Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
+**Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
+
 **Compliance Review**: All PRs must verify compliance with all nine principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.6.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.6.2 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.6.2 | 2026-05-28 | Strengthen Principle VII (add WCAG 2.1 AA rule); strengthen Principle VIII (add FCP ≤ 3s, interaction ≤ 100ms, code splitting; raise Lighthouse ≥ 70 → ≥ 80); add Dependency Governance note |
 | 1.6.1 | 2026-05-28 | Strengthen Principle V: overdesign is a defect; any unjustified abstraction must be removed before merging |
 | 1.6.0 | 2026-05-28 | Add Principle IX (No Silent Failure); strengthen Principle IV with design-for-testability rule |
 | 1.5.3 | 2026-05-28 | Convert constitution changelog to English; update Versioning Policy to clarify language rules (constitution uses English, templates use Chinese); apply `## 功能目標` and `**故事目標**` localization to constitution body |
