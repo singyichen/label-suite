@@ -74,7 +74,7 @@ Evaluation results must be fair and reproducible.
 
 ### V. Code Quality & Simplicity (RECOMMENDED)
 
-Code must be simple, readable, and consistently styled.
+Code must be simple, readable, and consistently styled. **Overdesign is a defect**: any abstraction, pattern, or layer that cannot be justified by a current, concrete requirement must be removed before merging.
 
 - YAGNI: do not build features for hypothetical future needs
 - KISS: prefer the simplest viable solution
@@ -138,12 +138,13 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all nine principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.6.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.6.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.6.1 | 2026-05-28 | Strengthen Principle V: overdesign is a defect; any unjustified abstraction must be removed before merging |
 | 1.6.0 | 2026-05-28 | Add Principle IX (No Silent Failure); strengthen Principle IV with design-for-testability rule |
 | 1.5.3 | 2026-05-28 | Convert constitution changelog to English; update Versioning Policy to clarify language rules (constitution uses English, templates use Chinese); apply `## 功能目標` and `**故事目標**` localization to constitution body |
 | 1.5.2 | 2026-05-28 | Rename `**Story Goal**` to `**故事目標**` in Principle I Goal Declaration |
