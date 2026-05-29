@@ -23,7 +23,7 @@
 
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
-| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `spec-ready` | `chore/add-independent-review-skill` | spec v1.0.0；20 項約束 FR-001~058；ADR-021/022 同步建立 |
+| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `spec-ready` | `chore/add-independent-review-skill` | spec v1.1.0；22 項約束 FR-001~065；ADR-021/022 同步建立 |
 | account-001 | Login — Email / Password | account | `plan-ready` | `feat/account/001-login-email-password` | spec v1.2.2；規格狀態：Clarified |
 | account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.2；規格狀態：Clarified |
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.3；規格狀態：Clarified |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-05-29 | Update foundation-000 to spec v1.1.0: add F-21 Backend Layering (FR-060~062), F-22 Frontend Vertical Slice (FR-063~065), Filtering/Sorting convention (FR-059), SC-009/010. |
 | 2026-05-29 | Add foundation-000 Foundation Spec v1.0.0 (spec-ready); 20 constraints FR-001~058; ADR-021/022 created. |
 | 2026-05-28 | Update account-001 status to `plan-ready`. |
 | 2026-05-22 | `admin-006` User Management spec 更新至 v1.0.8；同步最新 prototype 的列內「異動紀錄」icon、目標帳號異動紀錄 drawer、空狀態、i18n 與行動版 bottom sheet 行為。 |

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.0.0
+版本: 1.1.0
 狀態: Draft
 ---
 
@@ -71,12 +71,18 @@
 1. **Given** 任何新 API 端點，**When** 命名路由，**Then** 路徑格式必須為 `{API_VERSION_PREFIX}/[module]/[resource]`，resource 使用複數名詞。
 2. **Given** 權限不足的請求，**When** 資源存在但使用者無權，**Then** 回傳 `404 Not Found`（不得洩漏資源存在）。
 
+**約束情境 3 — Filtering / Sorting**：
+
+1. **Given** 任何支援排序的 list 端點，**When** 客戶端傳入 `?sort=[field]&order=[asc|desc]`，**Then** 系統依指定欄位排序；傳入不支援的 field 時回傳 `400 Bad Request`，body 包含 `detail` 說明不支援的欄位名稱。
+2. **Given** 任何支援篩選的 list 端點，**When** 客戶端傳入 `?[field]=[value]`，**Then** 系統依指定欄位值篩選；不支援的篩選 key 回傳 `400`，不得 silently 忽略。
+
 ### 功能需求
 
 - **FR-001**：所有 API 端點的 request body 必須以 Pydantic schema（`app/schemas/`）驗證。
 - **FR-002**：所有 API 端點必須聲明 `response_model=`；不得直接回傳 ORM 物件。
 - **FR-003**：所有 list 端點必須支援 `page` 與 `page_size` 查詢參數，預設值分別為 `1` 與 `PAGINATION_DEFAULT_PAGE_SIZE`，上限為 `PAGINATION_MAX_PAGE_SIZE`。
 - **FR-004**：所有路由必須透過 `APIRouter` 以 module prefix 與 tags 組織；不得在 `main.py` 直接定義業務路由。
+- **FR-059**：支援排序的 list 端點接受 `?sort=[field]&order=[asc|desc]`（`order` 預設 `asc`）；支援篩選的端點以 `?[field]=[value]` 接受；不支援的 key 回傳 `400`，允許的欄位清單由各 module 的 `ALLOWED_SORT_FIELDS` / `ALLOWED_FILTER_FIELDS` 常數定義。
 
 ---
 
@@ -311,6 +317,49 @@
 
 ---
 
+### F-21：Backend 分層架構（P1）
+
+**目標**：確保 backend 各層職責清晰分離，讓任何模組的 route、service、CRUD helper 均可獨立測試，且業務邏輯不散落於 HTTP 層或 DB 操作層。
+
+**約束情境 1 — 層次職責**：
+
+1. **Given** 任何 API route handler，**When** 實作業務邏輯，**Then** route handler 只能做：parse request → 呼叫 `current_user` dependency → 呼叫 service function → 回傳 response schema；不得在 route handler 中直接呼叫 `db.query()` 或持有業務判斷邏輯。
+2. **Given** 任何 CRUD helper（`app/crud/`），**When** 實作資料操作，**Then** 只能執行單一資源的 DB CRUD；不得包含業務規則、權限判斷或 side effects（Celery、通知）。
+
+**約束情境 2 — Schema 分離**：
+
+1. **Given** 任何資源的 create 或 update 操作，**When** 定義 Pydantic schema，**Then** input schema（`Create[Entity]Request` / `Update[Entity]Request`）與 output schema（`[Entity]Response`）必須分開定義，不得共用同一 class。
+2. **Given** ORM model 需要對外回傳，**When** 路由指定 `response_model=`，**Then** 必須使用 response schema，不得直接以 ORM model class 作為 response_model。
+
+### 功能需求
+
+- **FR-060**：Route handler 職責限定為：parse → authorize（`current_user`）→ delegate to service → serialize response。不得在 `app/routers/` 中出現直接的 `db.execute()` / `db.get()` 呼叫。
+- **FR-061**：業務邏輯統一在 `app/services/[module].py` 中實作；`app/crud/[model].py` 只做單一資源的 DB CRUD，不含業務判斷或 side effects。
+- **FR-062**：Request schema 與 response schema 分開定義於 `app/schemas/[module].py`；共用欄位以繼承 `BaseModel` 或 mixin 提取，不以共用 class 充當 input/output 兩用。
+
+---
+
+### F-22：Frontend Vertical Slice 結構（P1）
+
+**目標**：強制前端以 feature module 為邊界隔離程式碼，讓每個 module 可獨立開發與測試，同時防止 `shared/` 成為無邊界的垃圾桶。
+
+**約束情境 1 — Module 目錄結構**：
+
+1. **Given** 任何 feature module 新增檔案，**When** 決定放置路徑，**Then** 必須落在 `src/[module]/{components/,hooks/,pages/,__tests__/,types/}` 其中一個子目錄；不得在 module 根目錄直接放置 `.tsx` 檔案。
+
+**約束情境 2 — 跨模組邊界**：
+
+1. **Given** 任何 feature module 需要使用另一 feature module 的邏輯，**When** 決定 import 路徑，**Then** 不得直接 import `src/[otherModule]/` 的內部路徑；必須先將共用邏輯提升至 `shared/` 並滿足入場規則。
+2. **Given** 候選 `shared/` 元件，**When** 評估是否進入 `shared/`，**Then** 必須同時滿足：（a）已被 ≥ 2 個不同 feature module 直接 import，（b）與任何特定 domain 無強耦合；否則保留在當前 module 目錄下。
+
+### 功能需求
+
+- **FR-063**：每個 feature module 目錄結構遵循 `src/[module]/{components/,hooks/,pages/,__tests__/,types/}`；新增 module 時必須一併建立這五個子目錄（即使初始為空）。
+- **FR-064**：跨 feature module 的直接 import 禁止（`src/moduleA/` 不得 import `src/moduleB/` 的任何內部路徑）；違規由 ESLint `import/no-internal-modules` rule 或等效 CI check 偵測。
+- **FR-065**：`shared/` 入場規則：必須被 ≥ 2 個不同 feature module 直接 import 才可移入 `shared/`；單一 module 的共用邏輯保留在該 module 目錄下。
+
+---
+
 ## P2 — 補充性約束（不阻擋 P0/P1 實作）
 
 ### F-13：統一錯誤格式（P2）
@@ -431,6 +480,8 @@
 - **SC-006**：`MOBILE_BP` 在 `shared/constants/breakpoints.ts` 外不得出現數值 `767`（由 grep CI check 驗證）。
 - **SC-007**：`refresh_tokens` 資料表存在，且 `token_hash` 有 unique index（由 Alembic migration 驗證）。
 - **SC-008**：`ALLOWED_TRANSITIONS` dict 在 `task_service.py` 中定義，覆蓋所有 5 個狀態節點（由 unit test 驗證）。
+- **SC-009**：`app/routers/` 下不得出現直接的 `db.execute()` / `db.get()` 呼叫（由 `grep -r "db\.execute\|db\.get" app/routers/` CI check 驗證，exit non-zero 視為失敗）。
+- **SC-010**：`src/[module]/` 之間無直接 import（由 ESLint `import/no-internal-modules` rule 或等效 CI check 驗證，zero violations）。
 
 ---
 
@@ -466,4 +517,5 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.0 | 2026-05-29 | 補全三處缺口：F-01 新增 Filtering/Sorting 約定（FR-059）；F-21 Backend 分層架構（FR-060~062）；F-22 Frontend Vertical Slice 結構（FR-063~065）；新增 SC-009/SC-010 |
 | 1.0.0 | 2026-05-29 | Initial spec：20 項評估結果（P0×6 + P1×6 + P2×8）轉為 58 個功能需求；同步新增 ADR-021 / ADR-022 |
