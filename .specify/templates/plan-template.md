@@ -61,6 +61,13 @@
 - [ ] VI. English-First：程式碼、注釋與 commit message 使用英文；`docs/`、`specs/`、`design/prototype/`、`design/wireframes/` 與 `design/system/inventory.md` 允許繁體中文；`design/system/MASTER.md` 必須純英文
 - [ ] VII. Design Consistency：UI 使用 MASTER.md tokens；prototype 畫面已遵循；共用元件已重用；互動元件符合 WCAG 2.1 AA（鍵盤可操作、螢幕閱讀器可存取）
 - [ ] VIII. Performance Baseline：列表端點已分頁；無無界查詢；API P95 ≤ 500ms 目標已確認；前端 FCP ≤ 3s；互動反饋 ≤ 100ms；非核心路由使用 code splitting
+- [ ] IX. No Silent Failure：所有 error case 是否定義對應處理路徑？例外不可靜默吞噬；背景 job 必須暴露狀態、重試次數與失敗原因
+- [ ] XI. Security & Privacy Baseline：是否涉及驗證流程、角色權限或使用者資料？若是，已規劃拒絕路徑測試；API response 不洩漏內部識別碼或敏感 metadata
+- [ ] XXI. Frontend Runtime Safety：若前端受影響，async 競態、unmount 後 stale response、timer / subscription / listener cleanup 是否已納入元件設計？
+- [ ] XXII. API Contract Completeness：所有新增端點是否都計畫更新 OpenAPI 文件？含 enum 值、nullable 欄位、pagination shape、error schema
+- [ ] XXIV. Backend Consistency & Idempotency：mutating 端點是否定義 idempotency 或衝突行為？concurrent update 是否以 transaction / lock 保護？
+- [ ] XXVI. Database-Enforced Integrity：是否設計 FK constraint、unique constraint；multi-step mutation 是否包在 transaction 內；migration 是否含 backfill 或資料驗證步驟？
+- [ ] XXVIII. Canonical Domain Lifecycle：若涉及實體狀態機，是否定義合法轉換清單？非法轉換須在 service 層拒絕，不得僅靠 UI button 可見性控制
 
 ## 專案結構
 
@@ -367,6 +374,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.0 | 2026-05-29 | 憲章檢查補齊 IX、XI、XXI、XXII、XXIV、XXVI、XXVIII（配合憲章 v1.28.0，補足設計期相關原則） |
 | 1.6.2 | 2026-05-28 | 憲章檢查 VII 加入 WCAG 2.1 AA 無障礙規則；VIII 加入 FCP ≤ 3s、互動反饋 ≤ 100ms、code splitting（配合憲章 v1.6.2） |
 | 1.6.1 | 2026-05-28 | 將 ## Feature Goal 章節名稱改為 ## 功能目標；同步更新憲章檢查用詞 |
 | 1.6.0 | 2026-05-28 | 將 ## 摘要 改為 ## Feature Goal（複製自 spec）+ ## Technical Approach；憲章檢查加入 Feature Goal 一致性項目 |
