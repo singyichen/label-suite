@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.7.0
+版本: 1.8.0
 狀態: Draft
 ---
 
@@ -81,18 +81,35 @@ FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不�
 
 ### Backend
 
+Backend 採用 FastAPI，但保留 NestJS 的 module/controller/service/repository 分工精神。對應關係如下：
+
+| NestJS 概念 | FastAPI / Python 對應 | 基準位置 |
+|-------------|------------------------|----------|
+| `@Module()` | `APIRouter` module registration、prefix、tags | `app/routers/[module].py` + `app/api/v1/router.py` |
+| `@Controller()` | 一個 module 一個 router file；route handler 只處理 HTTP 邊界 | `app/routers/[module].py` |
+| `@Injectable()` service | class-based service；由 dependency factory 注入 DB/session 或協作者 | `app/services/[module].py` |
+| `@Entity()` / TypeORM model | SQLAlchemy ORM model | `app/models/[model].py` |
+| DTO + `class-validator` | Pydantic request / response / config schema | `app/schemas/[module].py` |
+| `Repository<T>` | Generic CRUD base + resource-specific CRUD helper | `app/crud/base.py`、`app/crud/[model].py` |
+| `@UseGuards()` | `Depends()` dependency；可用 class-based callable 實作 guard | `app/dependencies/permissions.py` |
+| `@Interceptor()` | FastAPI middleware、exception handler 或 response hook | `app/middleware/`、`app/core/exceptions.py` |
+| Bull Queue / processor | ARQ、Celery 或 ADR 指定的 background worker function | `app/jobs/[job_name].py`、`app/jobs/registry.py` |
+| `@Schedule()` | APScheduler 或 ADR 指定 scheduler | `app/jobs/scheduler.py` |
+| `ConfigModule` | Pydantic Settings 與 startup validation | `app/core/config.py` |
+
 ```text
 backend/
 ├── app/
 │   ├── main.py                    # FastAPI 應用建立與啟動入口
 │   ├── api/                       # API 版本組裝與路由註冊
 │   │   └── v1/
-│   │       └── router.py          # /api/v1 路由彙整入口
+│   │       └── router.py          # /api/v1 路由彙整入口；include_router([module].router)
 │   ├── middleware/                # 跨模組 HTTP middleware；不得塞進 main.py
 │   │   ├── correlation.py         # X-Correlation-ID 注入與傳遞
 │   │   ├── logging.py             # Request/response 結構化日誌
-│   │   └── timing.py              # HTTP request 耗時統計
-│   ├── routers/                   # HTTP 路由層；只負責解析、授權、委派與序列化
+│   │   ├── timing.py              # HTTP request 耗時統計
+│   │   └── response.py            # 跨 route response hook；對應 interceptor 類職責
+│   ├── routers/                   # HTTP 路由層；一個 module 一個 router/controller
 │   │   ├── account.py             # 帳號模組路由
 │   │   ├── dashboard.py           # 儀表板模組路由
 │   │   ├── task_management.py     # 任務管理模組路由
@@ -100,35 +117,38 @@ backend/
 │   │   ├── dataset.py             # 資料集模組路由
 │   │   ├── annotator_management.py # 標記者管理模組路由
 │   │   └── admin.py               # 管理員模組路由
-│   ├── services/                  # 業務協調、交易邊界、權限協調與副作用派送
-│   │   └── [module].py            # 每個 feature boundary 對應一個 service 模組或 package
-│   ├── crud/                      # 單一資源資料存取 helper；不得放業務規則
-│   │   ├── base.py                # 共用 CRUD base、分頁、soft-delete helper（可選）
-│   │   └── [model].py             # 依 model/resource 組織 DB 讀寫 helper
-│   ├── schemas/                   # Pydantic request、response、config schema
+│   ├── services/                  # class-based services；業務協調、交易邊界、權限協調與副作用派送
+│   │   └── [module].py            # 每個 feature boundary 對應一個 service class 或 package
+│   ├── crud/                      # Repository<T> 對應層；單一資源資料存取 helper，不放業務規則
+│   │   ├── base.py                # Generic CRUDBase[Model, CreateSchema, UpdateSchema]、分頁、soft-delete helper（可選）
+│   │   └── [model].py             # resource-specific CRUD helper；只加特殊查詢
+│   ├── schemas/                   # Pydantic DTO；request、response、config schema
 │   │   ├── common.py              # ErrorResponse、PaginatedResponse 等共用 schema
 │   │   └── [module].py            # 模組自有 input/output schema
-│   ├── models/                    # SQLAlchemy ORM model
+│   ├── models/                    # SQLAlchemy ORM model；對應 TypeORM Entity
 │   │   └── [model].py             # DB table mapping
-│   ├── core/                      # 應用設定、安全、日誌與啟動驗證
-│   │   ├── config.py              # 環境變數解析與設定驗證
+│   ├── core/                      # 應用設定、安全、日誌、例外 mapping 與啟動驗證
+│   │   ├── config.py              # Pydantic Settings；環境變數解析與設定驗證
 │   │   ├── exceptions.py          # 自定義例外與 ErrorResponse mapping
 │   │   ├── security.py            # 認證、密碼、token、cookie helper
 │   │   └── logging.py             # 結構化日誌與 correlation context
 │   ├── db/                        # DB session 與 metadata wiring
 │   │   ├── base.py                # Declarative base 與 model 註冊
 │   │   └── session.py             # Session factory 與 dependency
-│   ├── dependencies/              # 多個 router 共用的 FastAPI dependencies
-│   │   ├── auth.py                # current_user 與 session dependencies
-│   │   └── permissions.py         # 資源權限 dependencies
+│   ├── dependencies/              # 多個 router 共用的 FastAPI dependencies；對應 guards/providers
+│   │   ├── auth.py                # current_user dependencies
+│   │   ├── db.py                  # get_db / session dependencies re-export（可選）
+│   │   └── permissions.py         # RoleChecker、resource permission dependencies
 │   ├── metrics/                   # Registry-based metric 擴充點
 │   │   └── registry.py            # metric key 到實作的對應表
 │   ├── notifications/             # 通知傳輸與派送邊界
 │   │   ├── dispatcher.py          # 通知事件派送入口
 │   │   └── channels/              # email、in-app、webhook 等 transport 實作
-│   ├── jobs/                      # 背景工作定義與 job status 整合
+│   ├── jobs/                      # 背景工作、worker registry、scheduled task 與 job status 整合
 │   │   ├── registry.py            # job name 到 handler 的對應表
-│   │   └── [job_name].py          # 單一背景工作定義
+│   │   ├── scheduler.py           # APScheduler 或 ADR 指定 scheduler wiring
+│   │   ├── worker.py              # ARQ/Celery worker settings 與 shared context
+│   │   └── [job_name].py          # 單一背景工作 handler；對應 Bull Processor method
 │   └── utils/                     # 不依賴 domain 的 backend 工具
 ├── alembic/
 │   ├── env.py                     # Alembic 執行環境設定
@@ -147,6 +167,14 @@ backend/
 ├── pyproject.toml                 # Python 專案設定與依賴宣告
 └── uv.lock                        # Python 依賴鎖定檔
 ```
+
+Backend module 實作時必須維持下列基準：
+
+1. `app/routers/[module].py` 必須宣告 `router = APIRouter(prefix="/[resources]", tags=["[module]"])`，並透過 `Depends()` 取得 current user、permission guard 與 service。
+2. `app/services/[module].py` 必須以 class-based service 承接業務流程；route 不得直接建立 CRUD helper、組合 SQL 或承載資料存取流程。
+3. `app/crud/base.py` 必須提供可型別化的 generic CRUD base；resource-specific CRUD 只放查詢封裝，不放權限、workflow 或 side effect。
+4. `app/dependencies/permissions.py` 可用 class-based callable dependency 實作 NestJS guard 類角色，例如 `RoleChecker("admin")`。
+5. Background job infrastructure 必須由 ADR 或 owning feature spec 指定 ARQ、Celery 或其他 worker；不論選型，job handler 必須註冊於 `app/jobs/registry.py` 或等效 registry。
 
 ### Frontend
 
@@ -609,6 +637,7 @@ frontend/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.0 | 2026-05-29 | 依 NestJS 到 FastAPI 架構對應補強 backend 基準目錄結構：明確 module/router/service/schema/model/crud/dependency/middleware/jobs/scheduler/config 對應與實作基準 |
 | 1.7.0 | 2026-05-29 | 新增架構背景：補充 SRP、OCP、LSP、ISP、DIP、CARP、LKP 與 Foundation 約束的對應關係，作為 onboarding 與 review 導覽 |
 | 1.6.0 | 2026-05-29 | 補齊目錄結構缺口：backend middleware、core exceptions、tests conftest/core、notifications/jobs 內部結構、crud base；frontend shared stores、API client/auth services、routes paths、src/testing 命名與其他 feature 結構說明 |
 | 1.5.0 | 2026-05-29 | 修正歷史 changelog 中失效的 section/FR 引用；新增 FR 追加制說明；補上 design/system/MASTER.md 上游依賴；明確 sliding refresh token 行為與 access token 強制失效邊界；為架構常數補型別；補充 background job 基礎設施選型由 ADR 或 owning feature spec 決定 |
