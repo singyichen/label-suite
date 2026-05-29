@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.10.0
+版本: 1.10.1
 狀態: Draft
 ---
 
@@ -13,7 +13,7 @@
 
 本規格不定義單一 domain flow、頁面旅程、狀態節點、演算法選型或資料生命週期。這些內容必須由各 feature spec 或 ADR 定義，並只能依本規格提供的工程邊界實作。
 
-**需求來源**：Information Architecture v1.4.3 §6.1 Foundation Spec 關係；Constitution v1.29.1；REST API design best practices（resource naming、versioning、filtering、pagination、cacheability、security、idempotence、input validation）。
+**需求來源**：Information Architecture v1.4.3 §6.1 Foundation Spec 關係；Constitution v1.29.1；REST API design best practices（resource naming、versioning、filtering、pagination、cacheability、security、idempotence、input validation）；React design patterns and best practices（function components、custom hooks、Context boundary、type-safe components/hooks、Vite、utility-first styling、design systems）。
 
 ---
 
@@ -72,6 +72,7 @@ FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不�
 | DIP — 依賴反轉原則 | F-02 Backend 分層、F-04 Auth / Permission、`app/dependencies/` | Route 與 service 透過 FastAPI dependencies、session provider、permission dependency 或抽象協作者取得依賴；不得在高層應用協調中直接建立具體 DB session、notifier 或外部 client。 |
 | CARP — 合成/聚合複用原則 | F-03 Frontend Vertical Slice、F-02 Schema 分離 | UI 行為以 component composition、props、hooks 與 feature-local helpers 組裝；共用 schema 欄位只以 base class 或 mixin 提取，避免深繼承鏈。 |
 | LKP — 最少知識原則 | F-03 跨模組邊界、FR-012、shared admission rule | Feature module 只依賴自己的內部檔案、shared domain-neutral contract 或 API boundary；不得直接深入其他 feature 的 hooks、stores、types 或 component internals。 |
+| Modern React composition | F-03 Frontend Vertical Slice、F-09 Frontend 型別 | UI 必須以 function components、custom hooks、typed props、generic reusable primitives 與 route-level composition 拆分；class components、render props / HOC chains 或巨型 page component 僅能在 feature spec 記錄相容性理由後使用。 |
 
 ---
 
@@ -237,6 +238,15 @@ frontend/
 └── eslint.config.js               # ESLint 與 module-boundary rules
 ```
 
+Frontend module 實作時必須維持下列基準：
+
+1. Route-level page 必須只做 layout、provider 與 feature-local component composition；資料讀取、mutation、表單狀態與 derived state 必須拆入 feature-local hook 或 service。
+2. React UI 必須使用 function components 與 hooks；不得新增 class component，除非第三方相容性限制已在 feature spec 或 ADR 記錄。
+3. Reusable interaction logic 必須以 custom hook 封裝，並與 component rendering 分離；hook 必須有明確輸入、輸出與錯誤/載入狀態型別。
+4. 可跨資料型別重用的 component（例如 selector、table、list、combobox）必須使用 TypeScript generics 或明確 union props 維持型別安全；不得以 `any` 或 loosely typed record 消除差異。
+5. Context 只可承載 theme、session、i18n、feature flag、route layout 等 application-wide state；server state、resource-scoped permission 與 domain entity data 必須留在 TanStack Query 或 feature service boundary。
+6. Styling 必須優先使用 design tokens、Tailwind utilities 或 design system component API；新增全域 CSS class 必須限於 reset、tokens、layout shell 或明確跨 feature pattern。
+
 ---
 
 ## 架構常數
@@ -351,6 +361,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 1. **Given** 任何 page component，**When** 它承載互動、資料讀取或複雜條件渲染，**Then** 系統必須拆分為 feature-local components、hooks、services 與 types；page 不得成為不可測的巨型元件。
 2. **Given** component 需要在多個狀態下呈現，**When** 實作 UI，**Then** 系統必須明確處理 Default、Loading、Empty、Error、Disabled 等適用狀態。
 3. **Given** component 接收資料或事件，**When** 定義 props，**Then** 系統必須使用明確型別描述資料流；不得透過隱式全域變數或跨 feature store 傳遞。
+4. **Given** component 內出現可重用互動邏輯，**When** 相同邏輯被同一 feature 兩個以上 component 使用，**Then** 系統必須提取為 feature-local custom hook；只有被兩個以上 feature 使用且 domain-neutral 時才可移入 `shared/hooks/`。
+5. **Given** component 只做資料型別不同但互動模式相同的選擇、列表、表格或輸入控制，**When** 抽出 reusable primitive，**Then** 系統必須使用 TypeScript generic props 或 discriminated union 保留輸入/輸出型別，不得退回 `any`。
 
 ### 功能需求
 
@@ -360,6 +372,9 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-015**：系統必須讓 shared UI component 具備 Storybook story，至少涵蓋 Default 與適用的 Empty、Loading、Error、Disabled 狀態。
 - **FR-056**：系統必須讓 page component 只負責 route-level composition；可重用 UI、資料轉換、事件處理與 server interaction 必須拆入 feature-local component、hook 或 service。
 - **FR-057**：系統必須讓 component props、event handlers 與 derived state 具備明確 TypeScript 型別，不得以 loosely typed object 傳遞跨層資料。
+- **FR-108**：系統必須使用 function components + hooks 作為 React component 基準；不得新增 class component，除非 feature spec 或 ADR 記錄第三方相容性理由與移除計畫。
+- **FR-109**：系統必須將可重用 stateful UI logic 提取為 custom hook；hook 必須回傳 typed state、typed actions 與明確 loading/error branch，並可獨立於 component rendering 測試。
+- **FR-110**：系統必須讓 reusable primitive component 使用 generic props、discriminated union 或明確 interface 維持型別安全；不得以 `Record<string, unknown>` 或 `unknown` 作為 component contract 取代 domain type，除非有 runtime schema validation。
 
 ---
 
@@ -495,6 +510,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 5. **Given** 前端需要發送 HTTP request，**When** 呼叫 API，**Then** 系統必須透過 feature service 或 shared API client；不得在 component 中散落 raw `fetch` / Axios 呼叫。
 6. **Given** API request 失敗，**When** frontend 處理錯誤，**Then** 系統必須解析標準 `ErrorResponse`，並保留 retry、loading、empty 與 unauthorized 狀態的可測試分支。
 7. **Given** state 只屬於單一互動元件，**When** 決定存放位置，**Then** 系統必須優先使用 component-local state；只有跨 route、跨 feature 或 session-level state 才可進入全域 store。
+8. **Given** 前端需要跨 application scope 分享狀態，**When** 評估 Context、global store 或 TanStack Query，**Then** 系統必須只將 theme、session、i18n、feature flag 或 layout chrome 放入 Context；server state、domain entity 與 resource-scoped permission 不得放入 Context。
+9. **Given** custom hook 或 shared hook 操作 localStorage、server state 或 browser API，**When** 定義 hook contract，**Then** 系統必須提供 generic 或明確型別回傳值，並處理 unavailable browser API、parse failure、loading 與 error 狀態。
 
 ### 功能需求
 
@@ -508,6 +525,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-084**：系統必須在 `frontend/src/shared/constants/query-keys.ts` 定義統一的 TanStack Query queryKey factory，採 `[module, resource, id?, subresource?]` 階層格式；feature service 必須引用此 factory；不得在 component 或 hook 中使用 inline string array 作為 queryKey，以確保跨 feature 的 cache invalidation 可靠執行。
 - **FR-085**：系統必須讓 `shared/services/api-client.ts` 的 401 interceptor 在 refresh token 過期或 refresh 本身失敗後，向上傳遞明確的 auth failure 標記；`QueryClient` 的 `retry` callback 必須對 auth error 回傳 `false`，防止 TanStack Query 預設 retry 與 refresh flow 產生競爭（最多 6 次冗餘請求）。
 - **FR-086**：系統必須讓前端對涉及 background job 的 mutation 提供進度感知機制，透過 polling `GET /api/v1/jobs/{job_id}` 或 SSE 訂閱取得完成通知；不得在 mutation `onSuccess` 時直接顯示完成，而 job 實際仍在執行中。
+- **FR-111**：系統必須將 Context 限定於 application-wide client state；不得將 server state、domain entity cache、resource-scoped permission 或 background job result 存入 Context。
+- **FR-112**：系統必須讓 custom hook 的輸入、回傳值、action 與 error 型別可由 TypeScript 推導或明確宣告；hook 不得回傳未命名 tuple 或 loosely typed object 造成呼叫端誤用。
 
 ---
 
@@ -640,6 +659,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 5. **Given** feature 使用圖片、重資源或非首屏 route，**When** 實作載入策略，**Then** 系統必須使用 lazy loading、code splitting 或合理 preload；不得讓非必要資源阻塞核心互動。
 6. **Given** UI 使用 transition 或 animation，**When** 動效被加入，**Then** 系統必須保持可中斷、低延遲，並尊重 `prefers-reduced-motion`。
 7. **Given** 前端處理使用者輸入或外部資料，**When** 渲染或送出資料，**Then** 系統必須保留 XSS、CSRF、敏感資料外洩與 client-side validation 的防護；client validation 不得取代 server validation。
+8. **Given** feature 使用 Tailwind utility 或 design system component，**When** 實作視覺樣式，**Then** 系統必須透過 token、component variant 或 documented utility pattern 表達；不得新增與 design system 衝突的一次性視覺樣式。
+9. **Given** feature route 非首屏必要內容，**When** 設計 route tree，**Then** 系統必須使用 Vite 支援的 dynamic import / lazy route composition，並提供 route-level loading fallback；不得讓單一 feature 使全部 feature code 進入 initial bundle。
 
 ### 功能需求
 
@@ -650,6 +671,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-065**：系統必須讓 route-level code splitting、image lazy loading、bundle budget 與 loading state 納入 frontend review；不得為單一 feature 載入全部 modules。
 - **FR-066**：系統必須讓 animation / transition 尊重 `prefers-reduced-motion`，且不得阻塞主要互動或造成 layout shift。
 - **FR-067**：系統必須讓 frontend security review 覆蓋 XSS、CSRF-sensitive request、token handling、sensitive data in client state 與 unsafe DOM APIs。
+- **FR-113**：系統必須讓 Tailwind utilities、CSS modules 或 global CSS 的使用受 design system token 約束；新增 utility pattern 或 component variant 必須在 design system、Storybook 或 owning feature spec 中記錄。
+- **FR-114**：系統必須讓 Vite route-level lazy import 成為非首屏 route 的預設載入策略；shared provider、router shell 與 critical chrome 以外的 feature code 不得進入 initial bundle，除非 bundle review 記錄理由。
 
 ---
 
@@ -668,6 +691,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 | [ADR-021](../../../docs/adr/021-jwt-refresh-token-auth.md) | JWT + Refresh Token 策略 |
 | [Design System Master](../../../design/system/MASTER.md) | Frontend design tokens、component states、interaction pattern |
 | [IA v1.4.3](../../../docs/product/ia/information-architecture.md) | §6.1 Foundation Spec 關係 |
+| [React Design Patterns and Best Practices for 2025](https://www.telerik.com/blogs/react-design-patterns-best-practices) | Function components、custom hooks、Context state boundary、type-safe props/hooks、Vite、utility-first styling、design system baseline |
 
 ### 下游（依賴本規格的規格）
 
@@ -716,6 +740,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-029**：backend module boundary check 必須阻擋 `app/modules/A/` 直接 import `app/modules/B/service.py`、`repository.py`、`schemas.py`、`models.py` 或其他 internal path；允許的跨模組 shared contract 必須有 ADR 或 owning spec 記錄。
 - **SC-030**：`app/schemas/base.py` 必須存在並定義 `AppBaseModel` 或等效 base schema；module-local schemas 必須繼承此 base 或在測試/審查中列出豁免。
 - **SC-031**：`app/db/base.py` 必須定義 SQLAlchemy metadata naming convention，`alembic.ini` 必須設定 date + slug migration file template；migration 檔案不得包含未命名 constraint。
+- **SC-032**：frontend lint 或 code review checklist 必須阻擋新增 class component、untyped custom hook return、component-level raw API call、Context 承載 server state，以及 reusable component 使用 `any`。
+- **SC-033**：frontend bundle review 必須驗證 non-critical feature routes 使用 lazy import，且 initial bundle 僅包含 router shell、shared providers、critical chrome 與當前首屏必要 code。
 
 ---
 
@@ -746,6 +772,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.10.1 | 2026-05-29 | 參考 Telerik React design patterns 補強 frontend foundation：新增 function components + hooks 基準、custom hook 提取與型別化 contract、Context state boundary、generic reusable component、Tailwind / design system styling 約束、Vite lazy route baseline；新增 FR-108~FR-114 與 SC-032~SC-033 |
 | 1.10.0 | 2026-05-29 | 依 senior-devops 評估補強 Prometheus + Grafana + Sentry observability baseline：新增 F-17、FR-091~FR-100 與 SC-021~SC-028；明確 FastAPI / Celery metrics、low-cardinality label 與 sensitive-data 禁止規則、Docker Compose monitoring stack、Prometheus rules、Grafana dashboards、Sentry frontend/backend/worker 初始化、event scrubbing、PII/request body 限制、frontend source map policy、AI workflow exception 與 ADR-019 的 redacted context 邊界；補充 ADR-018/019/020 上游相依性與 Sentry / metrics 架構常數 |
 | 1.9.0 | 2026-05-29 | 依 senior-backend + senior-full-stack 雙向評估結果補強：新增 FR-068~FR-090（23 項）與 SC-014~SC-020（7 項）；涵蓋 PaginatedResponse 欄位補全、分頁邊界驗證、OpenAPI CI gate、SQLAlchemy async transaction boundary + lazy load 防護、Alembic async env.py、refresh token race condition 策略、absolute max TTL、access token 強制失效 P1 化、CSRF subdomain 評估、rate limiting、password hash 演算法、restricted-client safe schema allowlist 設計、Celery UPSERT 冪等性、TanStack Query queryKey factory、401 retry 防競爭、job polling contract、test DB SAVEPOINT isolation、ErrorDetail schema 完整定義、Celery sync DB session 邊界分離；補充 resource-scoped permission 應由 API capability 回傳的約束情境；新增架構常數 REFRESH_TOKEN_ABSOLUTE_MAX_TTL 與 REFRESH_TOKEN_GRACE_PERIOD |
 | 1.8.0 | 2026-05-29 | 依 NestJS 到 FastAPI 架構對應補強 backend 基準目錄結構：明確 module/router/service/schema/model/crud/dependency/middleware/jobs/scheduler/config 對應與實作基準 |
