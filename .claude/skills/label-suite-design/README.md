@@ -1,6 +1,6 @@
 # Label Suite — Design System
 
-A living design system extracted from the **Label Suite** product — a config-driven NLP annotation platform with integrated annotator management, designed for academic research labs.
+A living design system extracted from the **Label Suite** product — a config-driven NLP annotation platform with built-in dataset analytics, designed for academic research labs.
 
 > **Source repository:** `singyichen/label-suite` (GitHub)
 > **Canonical design doc:** `design/system/MASTER.md` in the source repo (46 KB, 2026-04-16)
@@ -13,12 +13,12 @@ This design system was derived from real product HTML, not screenshots. Every to
 
 ## What is Label Suite?
 
-Label Suite is an open-source, lightweight alternative to [Label Studio](https://labelstud.io/), purpose-built for academic NLP research teams. It replaces the fragmented "spreadsheet + ad-hoc scripts + external annotator management" workflow most labs inherit.
+Label Suite is an open-source, lightweight alternative to [Label Studio](https://labelstud.io/), purpose-built for academic NLP research teams. It replaces the fragmented "spreadsheet + ad-hoc scripts + external analysis" workflow most labs inherit.
 
 **Core product claims:**
 
 1. **Config-driven task launch.** NLP annotation tasks (Single Sentence, Sentence Pairs, Sequence Labeling, Generative Labeling) are defined via YAML/JSON — no custom code.
-2. **Integrated annotator management.** Built-in account lifecycle, working-hours tracking, and salary estimation for part-time research assistants.
+2. **Integrated task workflow.** Task setup, member collaboration, dry-run validation, official labeling, and dataset analysis stay in one portal.
 3. **Dry Run / Official Run isolation.** Interfaces and configs can be validated in a sandboxed mode before formal data collection.
 4. **Built-in dataset analytics.** #Sentence, #Token, #Label statistics computed automatically.
 5. **Bilingual UI (zh-TW / EN).** Primary audience: Taiwan-based research labs; secondary: international collaborators.

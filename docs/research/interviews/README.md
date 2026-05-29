@@ -10,7 +10,7 @@
 |------|------|---------|
 | 標記員受訪者（Annotator） | 執行標記任務的大學生或研究生 | [annotator/interview-guide.md](annotator/interview-guide.md) |
 | 研究員受訪者（Researcher） | 設計並指派標記任務的研究人員 | [researcher/interview-guide.md](researcher/interview-guide.md) |
-| 管理員受訪者（Admin） | 負責帳號、工時與薪資管理的實驗室人員 | [admin/interview-guide.md](admin/interview-guide.md) |
+| 管理員受訪者（Admin） | 負責帳號、權限與平台治理的實驗室人員 | [admin/interview-guide.md](admin/interview-guide.md) |
 
 ## 訪談格式
 
@@ -25,7 +25,6 @@
 | 設計決策 | 對應問題 | 說明 |
 |---------|---------|------|
 | Config YAML vs. 視覺化介面 | R02、R15–R17 | 評估研究員對設定檔的接受度 |
-| 工時自動記錄 vs. 手動回報 | A14、AD09–AD13 | 確認雙方認知一致，避免設計衝突 |
 | 帳號邀請制 vs. 開放註冊 | AD24 | 影響 SSO 登入後的角色指派流程 |
 | 任務指派 vs. 標記員自選 | R06 | 決定任務分配流程設計 |
 | 任務可見性與存取控制 | AD19–AD21 | RBAC 權限矩陣設計依據 |

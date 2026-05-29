@@ -130,7 +130,6 @@ backend/
 │   │   ├── task_management/       # 結構同 account/
 │   │   ├── annotation/            # 結構同 account/
 │   │   ├── dataset/               # 結構同 account/
-│   │   ├── annotator_management/  # 結構同 account/
 │   │   └── admin/                 # 結構同 account/
 │   ├── schemas/                   # 跨模組共用 Pydantic base/common schema；不得放 module DTO
 │   │   ├── base.py                # AppBaseModel / BaseSchema；統一序列化與 model_config
@@ -172,7 +171,6 @@ backend/
 │   ├── task_management/
 │   ├── annotation/
 │   ├── dataset/
-│   ├── annotator_management/
 │   └── admin/
 ├── pyproject.toml                 # Python 專案設定與依賴宣告
 └── uv.lock                        # Python 依賴鎖定檔
@@ -702,7 +700,6 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 | task-management | F-01 REST API、F-02 Backend 分層、F-06 Config-driven、F-08 Persistence、F-17 Worker Metrics |
 | annotation | F-03 Frontend Vertical Slice、F-06 Config-driven、F-07 Data Safety、F-10 Testing、F-16 Frontend Experience、F-17 Metrics / Sentry data safety |
 | dataset | F-01 REST API、F-08 Persistence、F-14 Performance、F-16 Frontend Experience、F-17 Metrics / Sentry data safety |
-| annotator-management | F-04 Permission、F-05 Security、F-13 Audit、F-17 Error Tracking |
 | admin | F-04 Permission、F-05 Security、F-13 Audit、F-16 Frontend Experience、F-17 Observability |
 
 ---

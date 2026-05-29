@@ -17,7 +17,7 @@ label-suite spec.md 的撰寫規範。所有大標題必須用**繁體中文**�
 specs/[module]/[###-feature-name]/spec.md
 ```
 
-模組名稱對應 `features/` 目錄：`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
+模組名稱對應 `features/` 目錄：`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
 ---
 

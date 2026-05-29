@@ -1,8 +1,8 @@
 # 論文大綱 — Label Suite
 
-**論文名稱（中文）：** Label Suite：具整合式標記員管理之配置驅動 NLP 標記平台設計與實作
+**論文名稱（中文）：** Label Suite：具內建資料集分析之配置驅動 NLP 標記平台設計與實作
 
-**論文名稱（英文）：** Label Suite：A Config-Driven NLP Annotation Platform with Integrated Annotator Management
+**論文名稱（英文）：** Label Suite：A Config-Driven NLP Annotation Platform with Built-in Dataset Analytics
 
 **類型：** Demo Paper（碩士論文）
 
@@ -26,7 +26,6 @@
 
 - **現有工具之摩擦 (Friction in Existing Tools)：** 現有的 **Label Studio** 架設伺服器過程極為繁瑣且耗時，導致不具備工程背景的研究團隊學習曲線過陡。
 - **低效的工作流 (Inefficient Workflows)：** 研究團隊常因缺乏通用工具而被迫使用 Excel 標記，或針對特定任務「重複造輪子」開發一次性系統，造成工程資源浪費。
-- **缺乏標記員管理機制 (Lack of Annotator Management)：** 現有工具均不支援實驗室規模的標記員管理（如工讀生帳號、工時追蹤、薪資試算），研究團隊被迫透過外部試算表管理人力，增加行政負擔與出錯風險。
 - **缺乏資料集品質可視性 (Absence of Dataset Quality Visibility)：** 現有標記工具未提供內建的資料集統計功能（如句子數量、詞元分布、標籤平衡），研究人員每次標記後都需撰寫臨時分析腳本，才能了解資料品質與分布狀況。
 - **碎片化且斷裂的工作流 (Fragmented and Disconnected Workflows)：** 標記流程從任務配置、標記執行到資料匯出，分散於各個獨立工具之間，研究人員必須頻繁手動轉換資料格式、管理多套系統，大幅增加錯誤風險與時間成本。
 
@@ -34,14 +33,12 @@
 
 - **開發通用型標記平台 (Developing a General-Purpose Annotation Platform)：** 建立一個名為 **`Label Suite`** 的輕量化平台，以學術 NLP 實驗室為目標，透過簡單設定檔即可快速部署多様化標記任務。
 - **配置化啟動 (Config-driven Launch)：** 實現透過簡單設定檔 (Config file) 即可快速啟動標記伺服器的機制，取代傳統繁雜的系統開發流程。
-- **標記員全生命週期管理 (Annotator Lifecycle Management)：** 提供涵蓋帳號管理、工時追蹤與薪資試算的端到端標記員管理功能，簡化實驗室行政作業。
 - **資料集品質可視性 (Dataset Quality Visibility)：** 提供即時資料集統計指標（#Sentence、#Token、#Label），協助研究人員無需外部腳本即可快速掌握資料集特性與標記品質。
 - **整合一體化標記工作流 (Integrating a Unified Annotation Workflow)：** 將任務配置、資料標記與資料集分析整合於單一門戶，消除管理多個獨立工具之間的摩擦。
 
 ### 1.4 研究貢獻 (Research Contributions)
 
 - **降低進入門檻 (Lowering Entry Barriers)：** 大幅簡化標記的部署流程，讓不具備深厚工程背景的研究員也能快速啟動標記環境，使研究人員能專注於領域任務。
-- **以標記員為中心的實驗室管理 (Annotator-centered Lab Management)：** 首創將標記員帳號管理、工時追蹤與薪資試算整合於 NLP 標記門戶中，解決學術實驗室的行政管理需求。
 - **整合標記工作流 (Integrated Annotation Workflow)：** 將「任務配置」、「資料標記」與「資料集分析」整合於單一門戶系統，取代碎片化的多工具流程。
 - **內建資料集分析功能 (Built-in Dataset Analytics)：** 無需事後撰寫分析腳本，系統於標記過程中自動計算並即時呈現 #Sentence、#Token 與 #Label 統計，讓研究人員在標記階段即可持續監控資料品質與分布。
 
@@ -57,14 +54,14 @@
 
 ### 2.2 標記平台與工具調研 (Survey of Labeling Platforms & Tools)
 
-- **Label Studio 分析 (Label Studio Analysis)：** 以 Apache 2.0 授權開源，獲 NVIDIA、Meta、IBM 等企業採用。核心強項為多模態支援（圖像、音頻、文本、影片）與 LLM 微調資料準備。然而伺服器架設對非工程背景研究員過於繁瑣，且不具備標記員管理與內建資料集統計功能。
-- **Label Suite 的差異化定位 (Differentiated Positioning)：** 以 Label Studio 為參考標的，`Label Suite` 針對學術 NLP 實驗室進行差異化：(1) 配置驅動快速部署，無需工程背景；(2) 新增 Label Studio 所缺乏的標記員全生命週期管理（帳號管理、工時追蹤、薪資試算）；(3) 整合內建資料集統計（#Sentence、#Token、#Label）以支援即時品質監控。
+- **Label Studio 分析 (Label Studio Analysis)：** 以 Apache 2.0 授權開源，獲 NVIDIA、Meta、IBM 等企業採用。核心強項為多模態支援（圖像、音頻、文本、影片）與 LLM 微調資料準備。然而伺服器架設對非工程背景研究員過於繁瑣，且缺乏針對學術 NLP 工作流的內建資料集統計功能。
+- **Label Suite 的差異化定位 (Differentiated Positioning)：** 以 Label Studio 為參考標的，`Label Suite` 針對學術 NLP 實驗室進行差異化：(1) 配置驅動快速部署，無需工程背景；(2) 將任務設定、Dry Run 驗證、正式標記與資料集分析整合為單一流程；(3) 整合內建資料集統計（#Sentence、#Token、#Label）以支援即時品質監控。
 
 ### 2.3 盤點現有流程的痛點 (Survey of Current Workflow Pain Points)
 
 - **低效的標記現狀 (Inefficient Labeling Practices)：** 許多團隊因工具門檻高而退回使用 Excel 或 Word 進行標記，導致標記過程缺乏自動化與版本控管。
 - **重複開發資源浪費 (Waste of Resources in "Reinventing the Wheel")：** 由於缺乏「一般化」工具，研究生常為單一任務開發「一次性系統」，這些工具無法在不同研究間重用，造成工程資源重複投入且缺乏一般化能力。
-- **標記員管理斷裂 (Disconnected Annotator Management)：** 研究實驗室通常透過外部試算表管理工讀生工時與薪資，引入人工錯誤與行政負擔，這些本可在標記系統內部自動化。
+- **品質檢查斷裂 (Disconnected Quality Inspection)：** 研究實驗室通常在標記後透過外部腳本檢查資料集品質，引入人工錯誤並拖慢迭代，這些本可在標記系統內部完成。
 
 ### 2.4 中文資料標記研究 (Research on Chinese Data Annotation)
 
@@ -80,10 +77,10 @@
 - **配置驅動架構 (Config-driven Architecture)：** 系統核心採用「配置取代程式碼 (Config over Code)」的理念。使用者僅需撰寫簡單的 YAML 或 JSON 設定檔，即可定義不同類型的 NLP 任務，實現快速部署與公板化。
 - **多任務支援 (Multi-task Support)：** 支援四類通用 NLP 任務範本：單一句子 (Single Sentence)、句子對 (Sentence Pairs)、序列標記 (Sequence Labeling)、生成標記 (Generative Labeling)，以滿足不同領域與不同輸入格式的研究需求。
 
-### 3.2 標記員管理模組 (Annotator Management Module)
+### 3.2 任務管理模組 (Task Management Module)
 
-- **帳號管理 (Account Management)：** 支援標記員帳號的新增、修改、刪除，並依角色（`super_admin` / `project_leader` / `annotator`）設定不同存取權限。
-- **工時統計與薪資試算 (Working Hours & Salary Calculation)：** 自動記錄每位標記員的工作時數並提供薪資試算功能，簡化研究團隊的人力管理流程。
+- **任務配置 (Task Configuration)：** 支援配置驅動的任務建立、任務成員指派與執行狀態控制，讓專案負責人不需客製工程即可管理標記流程。
+- **角色協作 (Role-Based Collaboration)：** 透過任務層級角色（`project_leader` / `reviewer` / `annotator`）維持任務設定、標記、審查與結果存取的資料邊界。
 
 ### 3.3 標記模組設計 (Labeling Module Design)
 
@@ -110,18 +107,18 @@
 ### 4.2 系統介面展示與 UX 優化 (System Interface Showcase and UX Optimization)
 
 - **直覺式設計 (Intuitive Design)：** 針對 Label Studio 介面設置繁瑣的痛點，展示 **`Label Suite`** 如何簡化任務管理與標記流程。
-- **可視化對比 (Visual Comparison)：** 以截圖形式對比本系統與 **Label Studio** 在執行同一標記任務時的步驟差異，強調本系統的「快速啟動」、「標記員管理」與「內建分析」優勢。
+- **可視化對比 (Visual Comparison)：** 以截圖形式對比本系統與 **Label Studio** 在執行同一標記任務時的步驟差異，強調本系統的「快速啟動」、「工作流整合」與「內建分析」優勢。
 
 ### 4.3 核心模組實作 (Implementation of Core Modules)
 
-- **標記員管理實作 (Annotator Management Implementation)：** 說明帳號生命週期、角色權限執行、工時記錄機制與薪資試算計算邏輯。
+- **任務管理實作 (Task Management Implementation)：** 說明任務生命週期、任務成員指派、角色權限執行與執行狀態控制。
 - **動態標記介面生成 (Dynamic Annotation Interface Generation)：** 說明系統如何解析上傳的 Config 檔，動態渲染 NLP 標記模板（單一句子、句子對、序列標記、生成標記）。
 - **Dry Run / Official Run 資料隔離 (Dry Run / Official Run Data Isolation)：** 詳述資料分區策略，確保 Dry Run 資料不污染 Official Run 資料集。
 - **資料集統計管線 (Dataset Statistics Pipeline)：** 說明 #Sentence、#Token 與 #Label 統計如何即時計算並呈現。
 
 ### 4.4 完整工作流整合 (Integration of Full Workflow)
 
-- **一體化標記門戶實作 (Implementation of Unified Annotation Portal)：** 呈現完整工作流——「標記員入職 → 任務配置 → Dry Run → 正式標記 → 資料集分析 → 匯出」——如何整合於單一系統，取代過往碎片化的多工具流程。
+- **一體化標記門戶實作 (Implementation of Unified Annotation Portal)：** 呈現完整工作流——「任務配置 → Dry Run → 正式標記 → 資料集分析 → 匯出」——如何整合於單一系統，取代過往碎片化的多工具流程。
 
 ---
 
@@ -138,7 +135,7 @@
 ### 5.3 使用者研究與滿意度分析 (User Study and Satisfaction Analysis)
 
 - **五點量表問卷 (Five-point Likert Scale)：** 參考 **Co-DETECT** 問卷格式，針對系統易用性、任務清晰度與導覽直覺性設計量化指標。
-- **實驗室成員試用 (Lab Member Pilot Study)：** 邀請 5–10 位具有標記經驗的實驗室成員參與測試。收集其對於 Config 配置機制、標記員管理功能與內建資料集分析的反饋。
+- **實驗室成員試用 (Lab Member Pilot Study)：** 邀請 5–10 位具有標記經驗的實驗室成員參與測試。收集其對於 Config 配置機制、工作流整合與內建資料集分析的反饋。
 
 ### 5.4 資料集分析功能驗證 (Dataset Analysis Validation)
 
@@ -151,13 +148,12 @@
 
 ### 6.1 研究結論 (Conclusion)
 
-- **貢獻總結 (Summary of Contributions)：** 總結 **`Label Suite`** 如何解決標記流程斷裂、「重複造輪子」、實驗室標記員管理負擔與缺乏內建資料集品質可視性等實務痛點。
-- **Demo Paper 價值體現 (Realization of Demo Paper Value)：** 強調系統作為學術研究團隊以配置驅動、以標記員為中心之 Label Studio 替代方案的開源重用價值。
+- **貢獻總結 (Summary of Contributions)：** 總結 **`Label Suite`** 如何解決標記流程斷裂、「重複造輪子」與缺乏內建資料集品質可視性等實務痛點。
+- **Demo Paper 價值體現 (Realization of Demo Paper Value)：** 強調系統作為學術研究團隊以配置驅動、以工作流為中心之 Label Studio 替代方案的開源重用價值。
 
 ### 6.2 研究限制 (Research Limitations) (New Section)
 
 - **生成標記介面之複雜性 (Complexity of Generative Labeling Interface)：** 生成標記任務的介面設計與品質監控較其他任務類型複雜，目前僅提供基礎支援，尚未針對所有生成式場景進行完整優化。
-- **薪資計算範疇之限制 (Salary Calculation Scope)：** 目前薪資試算僅涵蓋基本時薪計算，不處理完整薪資合規事項（如勞健保、所得稅扣除），適用範疇為實驗室預算粗估而非正式薪資核發。
 - **使用者研究規模 (Small-scale User Study)：** 受限於樣本數，目前 User Study 的參與者主要來自特定實驗室，可能存在場景侷限性。
 - **系統壓力測試 (Lack of Stress Testing)：** 系統尚未在大規模高並發（Large-scale concurrent usage）的環境下進行效能壓力測試。
 
@@ -173,7 +169,7 @@
 
 ### 7.1 資料隱私與保護說明 (Data Privacy and Protection Statement)
 
-- **標記員資料保護 (Annotator Data Protection)：** 標記員帳號資訊與工時記錄以適當存取控制安全儲存，確保個人資料僅授權管理員可存取。
+- **受試者資料保護 (Participant Data Protection)：** 使用者帳號資訊與研究回饋以適當存取控制安全儲存，確保個人資料僅授權管理員可存取。
 - **敏感領域資料處理 (Sensitive Domain Data Handling)：** 針對系統驗證中所涉及的醫療與心理領域資料，系統僅處理去識別化後的文本，並確保所有資料傳輸符合隱私保護規範。
 
 ### 7.2 使用者研究與知情同意 (User Study and Informed Consent)

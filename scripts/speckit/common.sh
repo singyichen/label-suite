@@ -47,7 +47,7 @@ speckit_repo_root() {
 
 speckit_is_valid_module() {
     case "$1" in
-        account|dashboard|task-management|annotation|dataset|annotator-management|admin|shared)
+        account|dashboard|task-management|annotation|dataset|admin|shared)
             return 0
             ;;
         *)

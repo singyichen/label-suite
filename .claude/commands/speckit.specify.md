@@ -27,7 +27,7 @@ Only run `/speckit.specify` when the change will make the system behave **differ
    - Example: "add labeling task config UI" → `labeling-task-config`
 
 2. **Choose the feature module and find the next available number**
-   - Module must be one of: `account`, `dashboard`, `task-management`, `annotation`, `dataset`, `annotator-management`, `admin`
+   - Module must be one of: `account`, `dashboard`, `task-management`, `annotation`, `dataset`, `admin`
    - The create script scans `specs/[module]/` and assigns the next three-digit number
 
 3. **Create the feature directory and spec.md**
