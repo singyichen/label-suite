@@ -34,3 +34,7 @@ Each ADR follows this structure:
 | [013](013-email-service-resend.md) | Email Service — Resend | Accepted | 2026-04-05 |
 | [014](014-prototype-playwright-testing.md) | Prototype-Layer Playwright Testing — Static HTML as Spec Validation | Accepted | 2026-04-07 |
 | [015](015-role-based-progressive-onboarding.md) | Role-Based Progressive Onboarding | Accepted | 2026-04-14 |
+| [016](016-frontend-component-library-shadcn-storybook.md) | Use shadcn/ui + Storybook for Frontend Component Library | Accepted | 2026-05-19 |
+| [017](017-three-layer-agent-architecture.md) | Three-Layer Agent Architecture (Planner / Generator / Evaluator) | Accepted | 2026-05-27 |
+| [018](018-observability-prometheus-grafana.md) | Observability Stack — Prometheus + Grafana | Accepted | 2026-05-29 |
+| [019](019-ai-traceability-audit-logging.md) | AI Traceability and Audit Logging | Accepted | 2026-05-29 |
