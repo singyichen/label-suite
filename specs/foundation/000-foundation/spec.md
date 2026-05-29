@@ -23,7 +23,7 @@
 
 1. 前後端專案目錄與模組邊界。
 2. REST API 合約、錯誤格式、版本與 HTTP 語意。
-3. Backend route / service / CRUD / schema / migration 分層。
+3. Backend domain package、route / service / repository / schema / migration 分層。
 4. Frontend feature vertical slice、shared admission rule、型別、狀態管理、UI/UX、A11y、i18n、responsive、performance 與 motion 基準。
 5. Auth、permission hook、CORS、secret、input validation、安全回應。
 6. Config-driven extensibility 的工程契約。
@@ -65,7 +65,7 @@ FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不�
 
 | 原則 | Foundation 對應 | 實作判準 |
 |------|-----------------|----------|
-| SRP — 單一職責原則 | F-02 Backend 分層架構 | Router 只處理 HTTP 邊界；service 承接應用協調與 transaction boundary；CRUD helper 只處理單一資源資料存取。 |
+| SRP — 單一職責原則 | F-02 Backend 分層架構 | Router 只處理 HTTP 邊界；service 承接應用協調與 transaction boundary；repository helper 只處理單一 module 的資料存取。 |
 | OCP — 開閉原則 | F-06 Config-driven Extensibility | 新增可變行為、UI variant、metric 或流程擴充點時，透過 config schema、registry、strategy map 或 plugin boundary 擴充；不得修改核心 route/service 分支。 |
 | LSP — 里氏替換原則 | F-06 registry / strategy extension points | Registry 中的 calculator、widget、job handler 或 notifier 實作必須履行 base contract；替換實作不得改變呼叫端預期的輸入、輸出與錯誤語意。 |
 | ISP — 介面隔離原則 | F-02 Schema 分離、F-09 Frontend 型別 | Request schema、response schema、create schema、update schema 與 component props 必須各自只暴露使用者需要的欄位；不得用單一寬介面逼迫呼叫端提供無關資料。 |
@@ -81,17 +81,21 @@ FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不�
 
 ### Backend
 
-Backend 採用 FastAPI，但保留 NestJS 的 module/controller/service/repository 分工精神。對應關係如下：
+Backend 採用 FastAPI，並以 domain package-first 組織大型 monolith。每個 domain module 內 co-locate router、schema、model、dependency、service、repository、constants、exceptions 與 module-local config；跨模組基礎設施才放在 `core/`、`db/`、`middleware/`、`jobs/` 或 `shared/` 類 boundary。
+
+本規格不採用 `app/routers/`、`app/services/`、`app/schemas/`、`app/models/` 這類純 layer-first 目錄作為主要結構。Layer-first 可用於小型服務，但在 Label Suite 這種多 domain monolith 中，會讓單一 feature 的 route、schema、model 與 service 分散於多個頂層資料夾，降低 module ownership 與 review locality。
+
+對應關係如下：
 
 | NestJS 概念 | FastAPI / Python 對應 | 基準位置 |
 |-------------|------------------------|----------|
-| `@Module()` | `APIRouter` module registration、prefix、tags | `app/routers/[module].py` + `app/api/v1/router.py` |
-| `@Controller()` | 一個 module 一個 router file；route handler 只處理 HTTP 邊界 | `app/routers/[module].py` |
-| `@Injectable()` service | class-based service；由 dependency factory 注入 DB/session 或協作者 | `app/services/[module].py` |
-| `@Entity()` / TypeORM model | SQLAlchemy ORM model | `app/models/[model].py` |
-| DTO + `class-validator` | Pydantic request / response / config schema | `app/schemas/[module].py` |
-| `Repository<T>` | Generic CRUD base + resource-specific CRUD helper | `app/crud/base.py`、`app/crud/[model].py` |
-| `@UseGuards()` | `Depends()` dependency；可用 class-based callable 實作 guard | `app/dependencies/permissions.py` |
+| `@Module()` | Domain package + `APIRouter` registration、prefix、tags | `app/modules/[module]/` + `app/api/v1/router.py` |
+| `@Controller()` | Module-local router file；route handler 只處理 HTTP 邊界 | `app/modules/[module]/router.py` |
+| `@Injectable()` service | class-based service；由 dependency factory 注入 DB/session 或協作者 | `app/modules/[module]/service.py` |
+| `@Entity()` / TypeORM model | SQLAlchemy ORM model | `app/modules/[module]/models.py` 或 module-local `models/` package |
+| DTO + `class-validator` | Pydantic request / response / config schema | `app/modules/[module]/schemas.py` 或 module-local `schemas/` package |
+| `Repository<T>` | Resource-specific repository/query helper；共用 base helper 僅在移除真實重複時加入 | `app/modules/[module]/repository.py`、`app/repositories/base.py`（可選） |
+| `@UseGuards()` | `Depends()` dependency；可用 class-based callable 實作 guard | `app/modules/[module]/dependencies.py`、`app/dependencies/permissions.py` |
 | `@Interceptor()` | FastAPI middleware、exception handler 或 response hook | `app/middleware/`、`app/core/exceptions.py` |
 | Bull Queue / processor | ARQ、Celery 或 ADR 指定的 background worker function | `app/jobs/[job_name].py`、`app/jobs/registry.py` |
 | `@Schedule()` | APScheduler 或 ADR 指定 scheduler | `app/jobs/scheduler.py` |
@@ -109,32 +113,38 @@ backend/
 │   │   ├── logging.py             # Request/response 結構化日誌
 │   │   ├── timing.py              # HTTP request 耗時統計
 │   │   └── response.py            # 跨 route response hook；對應 interceptor 類職責
-│   ├── routers/                   # HTTP 路由層；一個 module 一個 router/controller
-│   │   ├── account.py             # 帳號模組路由
-│   │   ├── dashboard.py           # 儀表板模組路由
-│   │   ├── task_management.py     # 任務管理模組路由
-│   │   ├── annotation.py          # 標記工作模組路由
-│   │   ├── dataset.py             # 資料集模組路由
-│   │   └── admin.py               # 管理員模組路由
-│   ├── services/                  # class-based services；應用協調、交易邊界、權限協調與副作用派送
-│   │   └── [module].py            # 每個 feature boundary 對應一個 service class 或 package
-│   ├── crud/                      # Repository<T> 對應層；單一資源資料存取 helper，不放應用規則
-│   │   ├── base.py                # Generic CRUDBase[Model, CreateSchema, UpdateSchema]、分頁、soft-delete helper（可選）
-│   │   └── [model].py             # resource-specific CRUD helper；只加特殊查詢
-│   ├── schemas/                   # Pydantic DTO；request、response、config schema
-│   │   ├── common.py              # ErrorResponse、PaginatedResponse 等共用 schema
-│   │   └── [module].py            # 模組自有 input/output schema
-│   ├── models/                    # SQLAlchemy ORM model；對應 TypeORM Entity
-│   │   └── [model].py             # DB table mapping
+│   ├── modules/                   # Domain packages；backend feature boundary
+│   │   ├── account/
+│   │   │   ├── router.py          # 帳號模組路由；宣告 module APIRouter
+│   │   │   ├── schemas.py         # Pydantic request / response / config schema
+│   │   │   ├── models.py          # SQLAlchemy ORM model
+│   │   │   ├── dependencies.py    # module-local Depends chain 與 permission hooks
+│   │   │   ├── service.py         # 應用協調、transaction boundary、side effect dispatch
+│   │   │   ├── repository.py      # module-local DB query/helper；不放權限或 workflow
+│   │   │   ├── constants.py       # module-local constants 與 error codes
+│   │   │   ├── exceptions.py      # module-specific exceptions
+│   │   │   ├── config.py          # module-local settings（需要時）
+│   │   │   └── utils.py           # module-local non-business helpers（需要時）
+│   │   ├── dashboard/             # 結構同 account/
+│   │   ├── task_management/       # 結構同 account/
+│   │   ├── annotation/            # 結構同 account/
+│   │   ├── dataset/               # 結構同 account/
+│   │   ├── annotator_management/  # 結構同 account/
+│   │   └── admin/                 # 結構同 account/
+│   ├── schemas/                   # 跨模組共用 Pydantic base/common schema；不得放 module DTO
+│   │   ├── base.py                # AppBaseModel / BaseSchema；統一序列化與 model_config
+│   │   └── common.py              # ErrorResponse、PaginatedResponse 等共用 schema
+│   ├── repositories/              # 跨模組 repository helper；僅在 2+ modules 需要時加入
+│   │   └── base.py                # 可選：分頁、soft-delete、typed query helper；不得強迫所有 module 繼承
 │   ├── core/                      # 應用設定、安全、日誌、例外 mapping 與啟動驗證
 │   │   ├── config.py              # Pydantic Settings；環境變數解析與設定驗證
 │   │   ├── exceptions.py          # 自定義例外與 ErrorResponse mapping
 │   │   ├── security.py            # 認證、密碼、token、cookie helper
 │   │   └── logging.py             # 結構化日誌與 correlation context
-│   ├── db/                        # DB session 與 metadata wiring
-│   │   ├── base.py                # Declarative base 與 model 註冊
+│   ├── db/                        # DB session、metadata naming convention 與 model registration
+│   │   ├── base.py                # Declarative base；集中 SQLAlchemy metadata naming convention
 │   │   └── session.py             # Session factory 與 dependency
-│   ├── dependencies/              # 多個 router 共用的 FastAPI dependencies；對應 guards/providers
+│   ├── dependencies/              # 跨多個 modules 共用的 FastAPI dependencies；對應 guards/providers
 │   │   ├── auth.py                # current_user dependencies
 │   │   ├── db.py                  # get_db / session dependencies re-export（可選）
 │   │   └── permissions.py         # RoleChecker、resource permission dependencies
@@ -169,11 +179,13 @@ backend/
 
 Backend module 實作時必須維持下列基準：
 
-1. `app/routers/[module].py` 必須宣告 `router = APIRouter(prefix="/[resources]", tags=["[module]"])`，並透過 `Depends()` 取得 current user、permission guard 與 service。
-2. `app/services/[module].py` 必須以 class-based service 承接應用協調；route 不得直接建立 CRUD helper、組合 SQL 或承載資料存取流程。
-3. `app/crud/base.py` 必須提供可型別化的 generic CRUD base；resource-specific CRUD 只放查詢封裝，不放權限、workflow 或 side effect。
-4. `app/dependencies/permissions.py` 可用 class-based callable dependency 實作 NestJS guard 類角色，例如 `RoleChecker("admin")`。
-5. Background job infrastructure 必須由 ADR 或 owning feature spec 指定 ARQ、Celery 或其他 worker；不論選型，job handler 必須註冊於 `app/jobs/registry.py` 或等效 registry。
+1. `app/modules/[module]/router.py` 必須宣告 `router = APIRouter(prefix="/[resources]", tags=["[module]"])`，並透過 `Depends()` 取得 current user、permission guard 與 service。
+2. `app/modules/[module]/service.py` 必須以 class-based service 承接應用協調；route 不得直接建立 repository、組合 SQL 或承載資料存取流程。
+3. `app/modules/[module]/repository.py` 只放單一 module 的資料查詢與 persistence helper；不得包含權限、workflow、background job dispatch 或 side effect。
+4. `app/repositories/base.py` 或等效共用 repository helper 為可選；只有當 2+ modules 出現相同且穩定的資料存取樣板時才可加入，不得為了套用 generic CRUD 而犧牲 query clarity。
+5. `app/modules/[module]/dependencies.py` 應封裝 module-local dependency chain，例如 resource existence、membership、capability checks；跨多個 modules 共用的 guard 才放入 `app/dependencies/`。
+6. `app/dependencies/permissions.py` 可用 class-based callable dependency 實作 NestJS guard 類角色，例如 `RoleChecker("admin")`。
+7. Background job infrastructure 必須由 ADR 或 owning feature spec 指定 ARQ、Celery 或其他 worker；不論選型，job handler 必須註冊於 `app/jobs/registry.py` 或等效 registry。
 
 ### Frontend
 
@@ -275,7 +287,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ### 功能需求
 
-- **FR-001**：系統必須讓所有 API request body 以 Pydantic schema（`app/schemas/`）驗證。
+- **FR-001**：系統必須讓所有 API request body 以 Pydantic schema（`app/modules/[module]/schemas.py` 或 module-local `schemas/` package）驗證；跨模組共用 schema 只能放在 `app/schemas/`。
 - **FR-002**：系統必須讓所有 API route 聲明 `response_model=`；不得直接回傳 ORM 物件。
 - **FR-003**：系統必須讓所有 list 端點支援 `page` 與 `page_size`，預設值為 `1` 與 `PAGINATION_DEFAULT_PAGE_SIZE`，上限為 `PAGINATION_MAX_PAGE_SIZE`。
 - **FR-004**：系統必須透過 `APIRouter` 以 module prefix 與 tags 組織路由；不得在 `main.py` 直接定義資源路由。
@@ -290,14 +302,14 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ### F-02：Backend 分層架構（P0）
 
-**目標**：確保 backend 各層職責清晰分離，讓 route、service、CRUD helper、schema 均可獨立測試，並避免應用規則散落於 HTTP 層或 DB 操作層。
+**目標**：確保 backend 各層職責清晰分離，讓 route、service、repository helper、schema 均可獨立測試，並避免應用規則散落於 HTTP 層或 DB 操作層。
 
 **約束情境 1 — 層次職責**：
 
 1. **Given** 任何 API route handler，**When** 實作行為，**Then** 系統必須將 route handler 限定為：parse request → authorize dependency → call service → serialize response。
 2. **Given** 任何 route handler，**When** 需要資料存取，**Then** 系統不得在 route handler 中直接呼叫 `db.execute()`、`db.get()`、`db.query()` 或組合 SQL。
-3. **Given** 任何 CRUD helper，**When** 實作資料操作，**Then** 系統必須限制它只處理單一資源的 DB CRUD；不得包含權限判斷、跨資源 workflow、background job dispatch 或 side effect。
-4. **Given** 任何跨資源規則、狀態變更或 side effect，**When** 實作位置被決定，**Then** 系統必須放在 `app/services/[module].py` 或明確命名的 service package。
+3. **Given** 任何 repository helper，**When** 實作資料操作，**Then** 系統必須限制它只處理 owning module 的 DB query 與 persistence；不得包含權限判斷、跨資源 workflow、background job dispatch 或 side effect。
+4. **Given** 任何跨資源規則、狀態變更或 side effect，**When** 實作位置被決定，**Then** 系統必須放在 `app/modules/[module]/service.py` 或 module-local service package。
 
 **約束情境 2 — Schema 分離**：
 
@@ -306,11 +318,14 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ### 功能需求
 
-- **FR-007**：系統必須遵循 `app/routers/`、`app/services/`、`app/crud/`、`app/schemas/`、`app/models/`、`app/core/` 的 backend 分層。
+- **FR-007**：系統必須遵循 `app/modules/[module]/` 的 backend domain package-first 結構；module-local `router.py`、`service.py`、`repository.py`、`schemas.py`、`models.py`、`dependencies.py` 必須 co-locate 在 owning module 內，跨模組共用基礎設施才可放入 `app/core/`、`app/db/`、`app/dependencies/`、`app/schemas/` 或 `app/repositories/`。
 - **FR-008**：系統必須讓 route handler 只負責 HTTP 邊界，不得承載應用規則或資料存取細節。
 - **FR-009**：系統必須讓 service 層成為跨資源規則、權限協調、transaction boundary、side effect dispatch 的唯一入口。
-- **FR-010**：系統必須讓 CRUD helper 不含應用判斷、權限判斷或 side effects。
+- **FR-010**：系統必須讓 repository / query helper 不含應用判斷、權限判斷或 side effects；共用 repository base 僅可封裝穩定重複的低階資料存取樣板，不得取代 module-specific query clarity。
 - **FR-011**：系統必須將 request schema 與 response schema 分開定義；共用欄位只能以 base class 或 mixin 提取。
+- **FR-101**：系統必須禁止 backend module-to-module internal imports；`app/modules/A/` 不得直接 import `app/modules/B/service.py`、`repository.py`、`schemas.py`、`models.py` 或其他 internal path。跨模組互動必須透過公開 dependency/service interface、domain event、background job、API boundary 或明確 ADR 核准的 shared contract。
+- **FR-102**：系統必須讓 module-local dependencies 使用 FastAPI `Depends()` chain 封裝 resource existence、membership 與 capability checks；可重用 dependency 應保持 `async`，並在 tests 透過 `app.dependency_overrides` 替換，不得 monkeypatch service internals。
+- **FR-103**：系統必須提供 `AppBaseModel` 或等效 Pydantic base schema，集中 `model_config`、datetime serialization、alias / `from_attributes` 等全域 schema 行為；module schema 必須繼承此 base 或明確記錄豁免理由。
 - **FR-072**：系統必須讓 service 層使用 `async with db.begin()` 顯式控制 transaction boundary，或由 `get_db` dependency 統一負責 begin / commit / rollback；同一 route handler 中呼叫多個 service 方法時，必須共享同一 DB transaction 以確保原子性。
 - **FR-073**：系統必須讓 service 層在回傳資料前完成所有關聯屬性的 eager load（`selectinload`、`joinedload` 或等效 projection query）；route handler 或 response schema 序列化時不得依賴 SQLAlchemy lazy load，以避免 async context 下的 `MissingGreenlet` 或 `DetachedInstanceError`。
 - **FR-074**：系統必須讓 `alembic/env.py` 的 `run_migrations_online` 使用 `connection.run_sync(do_run_migrations)` 模式以支援 async engine；不得在 async context 下直接執行 migration 而不透過 `run_sync` 包裝。
@@ -371,7 +386,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 - **FR-016**：系統必須維護 `refresh_tokens` 資料表或等效 persistence，欄位至少包含 `user_id`、`token_hash`、`expires_at`、`revoked_at`；每次 refresh 成功必須寫入新 token row，並以當下時間加上 `REFRESH_TOKEN_TTL` 計算新的 `expires_at`。
 - **FR-017**：系統必須讓 frontend auth store 僅保存非敏感 session state；不得將 raw token 持久化至 localStorage。
-- **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；CRUD helper 不得內嵌權限邏輯。
+- **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；repository / query helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
 - **FR-075**：系統必須明確定義 refresh token concurrent refresh 的處理策略，擇一實作：（A）grace period 策略：已 revoke 但在 `REFRESH_TOKEN_GRACE_PERIOD` 內的 token 可視為有效並重新核發，不觸發全量撤銷；（B）mutex 策略：使用 `SELECT ... FOR UPDATE`（不加 `SKIP LOCKED`）鎖定 token row，確保 concurrent Transaction B 等待 Transaction A commit 後讀取已更新狀態（revoked/rotated），再安全回傳 `409 Conflict` 或觸發 reuse 偵測；不得使用 `SKIP LOCKED`，否則 concurrent request 將因 row 被跳過而得到空結果集，導致誤判為 401/404 而非 409。所選策略必須在 ADR-021 記錄，並補充 concurrent refresh 情境的測試。
 - **FR-076**：系統必須讓 sliding refresh token 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；session 自首次登入起超過 absolute max 後必須強制重新登入，不得無限 sliding 延期；若安全策略允許不同上限，須在 ADR 明確說明理由。
@@ -451,6 +466,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 2. **Given** 任何外鍵關係，**When** migration 被建立，**Then** 系統必須顯式聲明 foreign key、index 與 delete behavior。
 3. **Given** 任何唯一性不變式，**When** 重複資料被寫入，**Then** 系統必須以 DB unique constraint 或 partial unique index 攔截，不只依賴 application check。
 4. **Given** 欄位需要 nullable，**When** migration 與 model 被定義，**Then** feature spec 或 migration comment 必須說明原因。
+5. **Given** 任一 table、index、constraint 或 foreign key 被新增，**When** migration 被建立，**Then** 系統必須遵循 SQLAlchemy metadata naming convention 與 DB naming rule，避免依賴資料庫或 SQLAlchemy 自動命名。
+6. **Given** Alembic revision 被建立，**When** migration file 命名，**Then** 系統必須使用 human-readable date + slug file template；slug 必須描述 schema 變更，不得只使用自動產生的 opaque id。
 
 ### 功能需求
 
@@ -458,6 +475,10 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-030**：系統必須讓所有 foreign keys 在 migration 中顯式聲明。
 - **FR-031**：系統必須讓測試環境使用真實 PostgreSQL 或與 production 行為一致的 DB 測試容器；不得以 mock 取代 ORM integration tests。
 - **FR-083**：系統必須讓所有 background job 的 DB write 使用 PostgreSQL 層級的 atomic UPSERT，即 SQLAlchemy `insert().on_conflict_do_update()` 或 `on_conflict_do_nothing()`；不得以 SQLAlchemy ORM `session.merge()`（底層為 SELECT + INSERT/UPDATE 兩步驟，高並發下可引發 `IntegrityError`）或 check-then-act pattern（先 SELECT 再 INSERT）替代，以確保 Celery retry 在任何 crash point 後重新執行時不產生 race condition 或重複資料。
+- **FR-104**：系統必須在 `app/db/base.py` 或等效 metadata 初始化處定義 SQLAlchemy naming convention，至少覆蓋 `ix`、`uq`、`ck`、`fk`、`pk`；migration 不得產生未命名 constraint。
+- **FR-105**：系統必須讓 DB table 與 column 使用 `lower_case_snake`；table name 預設使用 singular form，join table 或 module-owned table 應以前綴表達 domain ownership，例如 `task_assignment`、`dataset_item`。
+- **FR-106**：系統必須讓 datetime 欄位使用 `_at` suffix、date 欄位使用 `_date` suffix；外鍵欄位命名必須穩定一致，例如同一概念在各表使用相同 `{entity}_id`。
+- **FR-107**：系統必須在 `alembic.ini` 設定 human-readable migration file template（例如 `%%(year)d-%%(month).2d-%%(day).2d_%%(slug)s`）；migration slug 必須可讀並描述變更。
 
 ---
 
@@ -670,7 +691,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-004**：`pnpm tsc --noEmit` exit 0；`any` 型別為零。
 - **SC-005**：`pnpm lint` exit 0；frontend module boundary 無違規。
 - **SC-006**：所有 list API response 使用 `PaginatedResponse[T]` 或 feature spec 明確核准的 cursor response。
-- **SC-007**：`app/routers/` 下不得出現直接 `db.execute()`、`db.get()`、`db.query()` 呼叫。
+- **SC-007**：`app/modules/*/router.py` 下不得出現直接 `db.execute()`、`db.get()`、`db.query()` 呼叫。
 - **SC-008**：核心 route/service 不得出現 hardcoded domain variation 分支，例如 `if variation_type == ...` 或 `switch (variationType)`。
 - **SC-009**：restricted-client response schema 不得包含 `ground_truth`、`score_key`、`answer`、`*_key`、`*_truth`、`*_answer` 等敏感欄位。
 - **SC-010**：`MOBILE_BP` 在 `frontend/src/shared/constants/breakpoints.ts` 外不得重新宣告數值 `767`。
@@ -678,7 +699,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-012**：frontend interactive components 必須通過 Testing Library 或 Playwright 的 keyboard navigation / accessible name 驗證；critical pages 不得有明顯 WCAG 2.1 AA 違規。
 - **SC-013**：frontend route-level bundle、lazy loading 與 loading state 必須由 `pnpm build`、bundle analyzer 或 feature review 驗證；非關鍵 route 不得進入 initial bundle。
 - **SC-014**：`app/core/security.py` 必須使用 bcrypt 或 argon2id 實作密碼 hash；CI 或 grep 驗證不得存在 `hashlib.md5`、`hashlib.sha1`、`hashlib.sha256` 用於密碼 hash 的呼叫。
-- **SC-015**：`/auth/login` 與 `/auth/refresh` 端點必須有速率限制裝飾子或 middleware；可透過 `grep -r "limiter\|RateLimiter\|Throttle" backend/app/routers/` 驗證相關實作存在。
+- **SC-015**：`/auth/login` 與 `/auth/refresh` 端點必須有速率限制裝飾子或 middleware；可透過 `grep -r "limiter\|RateLimiter\|Throttle" backend/app/modules/ backend/app/middleware/` 驗證相關實作存在。
 - **SC-016**：`RestrictedClientSafeBaseSchema` 的 allowlist 必須有對應測試：向 restricted-client response schema 新增欄位時，若未顯式加入 allowlist，測試必須失敗；此測試歸屬 `tests/core/` 或各 feature 的 schema test。
 - **SC-017**：`tests/conftest.py` 的 DB session fixture 必須包含 `begin_nested()` + rollback 模式；不得出現 `TRUNCATE`、`DROP TABLE` 或 `CREATE TABLE` 作為 test 清理手段。
 - **SC-018**：CI 必須執行 OpenAPI schema export 並驗證 `openapi.json` 可生成；frontend type codegen 或一致性驗證腳本必須在 CI 中通過，確保 `shared/types/` 中的 API 型別與 backend schema 一致。
@@ -692,6 +713,9 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-026**：Sentry scrubbing 測試必須覆蓋 token、cookie、authorization header、raw request body、annotation text、hidden answer、dataset row、prompt、model response 與 database URL 欄位。
 - **SC-027**：frontend production build artifact 不得公開包含 `.js.map` 檔，除非 static server 明確 deny public access；CI 必須驗證 Sentry source map upload token 只從 secret storage 取得，且不得出現在 repository tracked files。
 - **SC-028**：PR quality gate 必須在 pull request 上執行完整 lint、type check、test、OpenAPI、observability 與 Sentry validation；deploy workflow 不得繞過 protected branch 或直接以未審查 commit 發布 production。
+- **SC-029**：backend module boundary check 必須阻擋 `app/modules/A/` 直接 import `app/modules/B/service.py`、`repository.py`、`schemas.py`、`models.py` 或其他 internal path；允許的跨模組 shared contract 必須有 ADR 或 owning spec 記錄。
+- **SC-030**：`app/schemas/base.py` 必須存在並定義 `AppBaseModel` 或等效 base schema；module-local schemas 必須繼承此 base 或在測試/審查中列出豁免。
+- **SC-031**：`app/db/base.py` 必須定義 SQLAlchemy metadata naming convention，`alembic.ini` 必須設定 date + slug migration file template；migration 檔案不得包含未命名 constraint。
 
 ---
 
