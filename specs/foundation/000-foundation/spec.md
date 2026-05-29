@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.3.0
+版本: 1.6.0
 狀態: Draft
 ---
 
@@ -53,15 +53,147 @@
 
 ---
 
+## 編號與追蹤規則
+
+FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不重新排序既有 FR，以維持 feature spec、tasks、tests、PR description 與歷史審查紀錄的 traceability。因此同一 section 內可能出現非連續 FR 編號；若未來需要統一重新排號，必須以 major version 更新並提供對照表。
+
+---
+
+## 基準目錄結構
+
+本節描述前後端專案的目標目錄形狀。實際 feature 可新增 module-local 子資料夾，但不得破壞本規格定義的分層與 feature boundary。
+
+### Backend
+
+```text
+backend/
+├── app/
+│   ├── main.py                    # FastAPI 應用建立與啟動入口
+│   ├── api/                       # API 版本組裝與路由註冊
+│   │   └── v1/
+│   │       └── router.py          # /api/v1 路由彙整入口
+│   ├── middleware/                # 跨模組 HTTP middleware；不得塞進 main.py
+│   │   ├── correlation.py         # X-Correlation-ID 注入與傳遞
+│   │   ├── logging.py             # Request/response 結構化日誌
+│   │   └── timing.py              # HTTP request 耗時統計
+│   ├── routers/                   # HTTP 路由層；只負責解析、授權、委派與序列化
+│   │   ├── account.py             # 帳號模組路由
+│   │   ├── dashboard.py           # 儀表板模組路由
+│   │   ├── task_management.py     # 任務管理模組路由
+│   │   ├── annotation.py          # 標記工作模組路由
+│   │   ├── dataset.py             # 資料集模組路由
+│   │   ├── annotator_management.py # 標記者管理模組路由
+│   │   └── admin.py               # 管理員模組路由
+│   ├── services/                  # 業務協調、交易邊界、權限協調與副作用派送
+│   │   └── [module].py            # 每個 feature boundary 對應一個 service 模組或 package
+│   ├── crud/                      # 單一資源資料存取 helper；不得放業務規則
+│   │   ├── base.py                # 共用 CRUD base、分頁、soft-delete helper（可選）
+│   │   └── [model].py             # 依 model/resource 組織 DB 讀寫 helper
+│   ├── schemas/                   # Pydantic request、response、config schema
+│   │   ├── common.py              # ErrorResponse、PaginatedResponse 等共用 schema
+│   │   └── [module].py            # 模組自有 input/output schema
+│   ├── models/                    # SQLAlchemy ORM model
+│   │   └── [model].py             # DB table mapping
+│   ├── core/                      # 應用設定、安全、日誌與啟動驗證
+│   │   ├── config.py              # 環境變數解析與設定驗證
+│   │   ├── exceptions.py          # 自定義例外與 ErrorResponse mapping
+│   │   ├── security.py            # 認證、密碼、token、cookie helper
+│   │   └── logging.py             # 結構化日誌與 correlation context
+│   ├── db/                        # DB session 與 metadata wiring
+│   │   ├── base.py                # Declarative base 與 model 註冊
+│   │   └── session.py             # Session factory 與 dependency
+│   ├── dependencies/              # 多個 router 共用的 FastAPI dependencies
+│   │   ├── auth.py                # current_user 與 session dependencies
+│   │   └── permissions.py         # 資源權限 dependencies
+│   ├── metrics/                   # Registry-based metric 擴充點
+│   │   └── registry.py            # metric key 到實作的對應表
+│   ├── notifications/             # 通知傳輸與派送邊界
+│   │   ├── dispatcher.py          # 通知事件派送入口
+│   │   └── channels/              # email、in-app、webhook 等 transport 實作
+│   ├── jobs/                      # 背景工作定義與 job status 整合
+│   │   ├── registry.py            # job name 到 handler 的對應表
+│   │   └── [job_name].py          # 單一背景工作定義
+│   └── utils/                     # 不依賴 domain 的 backend 工具
+├── alembic/
+│   ├── env.py                     # Alembic 執行環境設定
+│   └── versions/                  # Migration 檔案；所有 schema 變更都在這裡
+├── tests/
+│   ├── conftest.py                # pytest fixtures：DB session、client、factory wiring
+│   ├── core/                      # config validation、security helper、startup checks 測試
+│   ├── factories/                 # 測試資料 factory
+│   ├── account/                   # Backend 測試鏡射 module boundary
+│   ├── dashboard/
+│   ├── task_management/
+│   ├── annotation/
+│   ├── dataset/
+│   ├── annotator_management/
+│   └── admin/
+├── pyproject.toml                 # Python 專案設定與依賴宣告
+└── uv.lock                        # Python 依賴鎖定檔
+```
+
+### Frontend
+
+```text
+frontend/
+├── public/
+│   └── index.html                 # Vite 提供的靜態 HTML 外殼
+├── src/
+│   ├── main.tsx                   # React 啟動與 root 掛載入口
+│   ├── App.tsx                    # 應用層 providers 與 route outlet
+│   ├── routes/                    # 路由定義與 lazy route composition
+│   │   ├── index.tsx              # 中央 route tree；feature pages 以 lazy import 載入
+│   │   └── paths.ts               # 集中 route path 常數，避免路徑散落在 Link 中
+│   ├── features/                  # Vertical slices；feature modules 之間不得直接 import
+│   │   ├── account/
+│   │   │   ├── pages/             # Route-level page 組合層
+│   │   │   ├── components/        # Feature 自有 UI components
+│   │   │   ├── hooks/             # Feature 自有 React hooks
+│   │   │   ├── services/          # Feature API 呼叫與 server-state adapters
+│   │   │   ├── types/             # Feature 自有 TypeScript types
+│   │   │   └── __tests__/         # 此 feature 的 unit/component tests
+│   │   ├── dashboard/             # 結構同 account/
+│   │   ├── task-management/       # 結構同 account/
+│   │   ├── annotation/            # 結構同 account/
+│   │   ├── dataset/               # 結構同 account/
+│   │   ├── annotator-management/  # 結構同 account/
+│   │   └── admin/                 # 結構同 account/
+│   ├── shared/                    # 被 2+ feature modules 使用、且不依賴 domain 的共用程式碼
+│   │   ├── components/            # 共用 UI components，需搭配 Storybook stories
+│   │   ├── hooks/                 # 不依賴 feature 的共用 hooks
+│   │   ├── services/              # 共用 API client 與跨 feature 基礎設施
+│   │   │   ├── api-client.ts      # fetch/axios instance、credentials、ErrorResponse parsing
+│   │   │   └── auth.ts            # 401 refresh handling 與 session API helper
+│   │   ├── stores/                # Zustand/Jotai 等全域 client state
+│   │   │   ├── ui.ts              # sidebar、modal、layout 等 UI state
+│   │   │   └── session.ts         # non-sensitive session state；不得存 raw token
+│   │   ├── constants/             # Breakpoints、storage keys、route constants
+│   │   ├── types/                 # 共用 TypeScript primitives
+│   │   ├── utils/                 # 不依賴 domain 的工具函式
+│   │   ├── styles/                # Global CSS、reset、design token imports
+│   │   └── i18n/                  # i18n 初始化與 common namespace
+│   ├── assets/                    # 應用程式 import 的靜態資源
+│   └── testing/                   # Frontend test setup、MSW handlers、test utilities
+├── e2e/                           # 依 module 或 user journey 組織的 Playwright specs
+├── components.json                # shadcn/ui registry 設定；啟用時才需要
+├── package.json                   # Frontend scripts 與依賴宣告
+├── pnpm-lock.yaml                 # Frontend 依賴鎖定檔
+├── vite.config.ts                 # Vite 設定
+├── tsconfig.json                  # TypeScript 專案設定
+└── eslint.config.js               # ESLint 與 module-boundary rules
+```
+
+---
+
 ## 架構常數
 
-- `API_VERSION_PREFIX = /api/v1`
-- `PAGINATION_DEFAULT_PAGE_SIZE = 20`
-- `PAGINATION_MAX_PAGE_SIZE = 100`
-- `ACCESS_TOKEN_TTL = 15 分鐘`
-- `REFRESH_TOKEN_TTL = 7 天（sliding）`
-- `MOBILE_BP = 767px`
-- `LOCALSTORAGE_LANG_KEY = labelsuite.lang`
+- `API_VERSION_PREFIX: string = /api/v1`
+- `PAGINATION_DEFAULT_PAGE_SIZE: integer = 20`
+- `PAGINATION_MAX_PAGE_SIZE: integer = 100`
+- `ACCESS_TOKEN_TTL: duration = 15 分鐘`
+- `REFRESH_TOKEN_TTL: duration = 7 天（sliding）`
+- `MOBILE_BP: CSS px value = 767px`
+- `LOCALSTORAGE_LANG_KEY: string = labelsuite.lang`
 
 業務常數不得放入本節。任務狀態、演算法、run type、匯出保留時間、通知事件名稱等，由 owning feature spec 或 ADR 定義。
 
@@ -169,8 +301,9 @@
 
 1. **Given** 登入成功，**When** 系統核發 token，**Then** 系統必須以 `httpOnly; Secure; SameSite=Lax` cookie 傳送 access token 與 refresh token。
 2. **Given** JWT payload 被建立，**When** 系統寫入 claims，**Then** payload 只能包含認證必要 claims，例如 `sub`、system-level `role`、`iat`、`exp`；不得包含 resource-scoped permission 或 task-scoped role。
-3. **Given** refresh token 使用一次，**When** `/auth/refresh` 成功，**Then** 系統必須旋轉 refresh token 並立即作廢舊 token。
+3. **Given** refresh token 使用一次，**When** `/auth/refresh` 成功，**Then** 系統必須旋轉 refresh token、立即作廢舊 token，並依 `REFRESH_TOKEN_TTL` 延長新 refresh token 的 `expires_at`。
 4. **Given** refresh token reuse 被偵測，**When** 已作廢 token 再次被使用，**Then** 系統必須撤銷該使用者仍有效的 refresh tokens。
+5. **Given** 系統需要立即撤銷尚未過期的 access token，**When** feature spec 或 ADR 要求強制登出、帳號停權或高風險事件處理，**Then** 系統必須定義 `jti` deny list、token version 或等效 access-token invalidation mechanism；未定義前，access token 在 `ACCESS_TOKEN_TTL` 內仍可能有效。
 
 **約束情境 2 — Permission Boundary**：
 
@@ -180,7 +313,7 @@
 
 ### 功能需求
 
-- **FR-016**：系統必須維護 `refresh_tokens` 資料表或等效 persistence，欄位至少包含 `user_id`、`token_hash`、`expires_at`、`revoked_at`。
+- **FR-016**：系統必須維護 `refresh_tokens` 資料表或等效 persistence，欄位至少包含 `user_id`、`token_hash`、`expires_at`、`revoked_at`；每次 refresh 成功必須寫入新 token row，並以當下時間加上 `REFRESH_TOKEN_TTL` 計算新的 `expires_at`。
 - **FR-017**：系統必須讓 frontend auth store 僅保存非敏感 session state；不得將 raw token 持久化至 localStorage。
 - **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；CRUD helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
@@ -323,6 +456,8 @@
 
 ### F-12：Background Job 合約（P2）
 
+**邊界說明**：本規格只定義 background job 的工程合約。具體使用 Celery、ARQ、Dramatiq、RQ、Cloud Tasks 或其他執行基礎設施，必須由 ADR 或 owning feature spec 決定。
+
 ### 功能需求
 
 - **FR-043**：系統必須讓每個 background job 宣告 stable name、retry policy、timeout、idempotency key 與 failure handling strategy。
@@ -398,6 +533,7 @@
 | [ADR-010](../../../docs/adr/010-config-driven-architecture.md) | Config-driven task architecture |
 | [ADR-011](../../../docs/adr/011-frontend-source-structure.md) | Vertical feature slicing、shared/ admission rule |
 | [ADR-021](../../../docs/adr/021-jwt-refresh-token-auth.md) | JWT + Refresh Token 策略 |
+| [Design System Master](../../../design/system/MASTER.md) | Frontend design tokens、component states、interaction pattern |
 | [IA v1.4.3](../../../docs/product/ia/information-architecture.md) | §6.1 Foundation Spec 關係 |
 
 ### 下游（依賴本規格的規格）
@@ -457,7 +593,10 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.6.0 | 2026-05-29 | 補齊目錄結構缺口：backend middleware、core exceptions、tests conftest/core、notifications/jobs 內部結構、crud base；frontend shared stores、API client/auth services、routes paths、src/testing 命名與其他 feature 結構說明 |
+| 1.5.0 | 2026-05-29 | 修正歷史 changelog 中失效的 section/FR 引用；新增 FR 追加制說明；補上 design/system/MASTER.md 上游依賴；明確 sliding refresh token 行為與 access token 強制失效邊界；為架構常數補型別；補充 background job 基礎設施選型由 ADR 或 owning feature spec 決定 |
+| 1.4.0 | 2026-05-29 | 新增前後端基準目錄結構圖與各資料夾職責說明，作為 backend 分層與 frontend vertical slice 的共同參照 |
 | 1.3.0 | 2026-05-29 | 補強 frontend engineering baseline：UI/UX、state management、HTTP/API interaction、componentization、responsive compatibility、performance、A11y、security、i18n/l10n、motion；新增 FR-056~067 與 SC-011~013 |
 | 1.2.0 | 2026-05-29 | 將 foundation spec 重構為純工程架構基準；移除 Dry Run、IAA、sample snapshot、task state machine、匯出流程與通知事件等業務規範；補強 REST API design principles、backend/frontend architecture、config-driven extensibility、data safety、testing、observability、performance、cache safety |
-| 1.1.0 | 2026-05-29 | 補全三處缺口：F-01 新增 Filtering/Sorting 約定（FR-059）；F-21 Backend 分層架構（FR-060~062）；F-22 Frontend Vertical Slice 結構（FR-063~065）；新增 SC-009/SC-010 |
-| 1.0.0 | 2026-05-29 | Initial spec：20 項評估結果（P0×6 + P1×6 + P2×8）轉為 58 個功能需求；同步新增 ADR-021 / ADR-022 |
+| 1.1.0 | 2026-05-29 | 補強 API filtering/sorting、backend 分層與 frontend vertical slice 相關約束；此版本的 section / FR 編號已在 v1.2.0 重構後重新映射，歷史實作追蹤以當時 commit diff 為準 |
+| 1.0.0 | 2026-05-29 | Initial spec：將早期評估結果轉為工程需求；同步引用既有 ADR 決策 |
