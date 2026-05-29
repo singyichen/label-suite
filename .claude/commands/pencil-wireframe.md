@@ -11,7 +11,7 @@ design/wireframes/pages/[module]/[page-name].pen
 Examples: `account/login.pen`, `task-management/task-new.pen`
 
 Module names mirror `frontend/src/features/`:
-`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
 > `design/wireframes/index.pen` is for overview only — never place page frames inside it.
 

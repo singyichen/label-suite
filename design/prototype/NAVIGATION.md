@@ -30,8 +30,6 @@
 | 005 | 個人資料設定 | `account/profile` | account | ★★☆☆☆ | ✅ 完成 |
 | 006 | 使用者管理 | `admin/user-management` | admin | ★★★☆☆ | ✅ 完成 |
 | 007 | 角色設定 | `admin/role-settings` | admin | ★★☆☆☆ | ✅ 完成 |
-| 008 | 標記員列表 | `annotator-management/annotator-list` | annotator-management | ★★★☆☆ | ⬜ 待建置 |
-| 009 | 工時紀錄 | `annotator-management/work-log` | annotator-management | ★★★☆☆ | ⬜ 待建置 |
 | 010 | 任務列表 | `task-management/task-list` | task-management | ★★★☆☆ | ✅ 完成 |
 | 012 | 儀表板 | `dashboard/dashboard` | dashboard | ★★★★☆ | ✅ 完成 |
 | 013 | 新增任務（多步驟） | `task-management/task-new` | task-management | ★★★★★ | ✅ 完成 |
@@ -74,11 +72,6 @@ flowchart LR
     rolesettings["/admin/role-settings ✅"]
   end
 
-  subgraph annotmgmt["Annotator Mgmt 模組"]
-    annotatorlist["/annotator-management/annotator-list ⬜"]
-    worklog["/annotator-management/work-log ⬜"]
-  end
-
   subgraph tasks["Task Management 模組"]
     tasklist["/task-management/task-list ✅"]
     tasknew["/task-management/task-new ✅"]
@@ -118,11 +111,6 @@ flowchart LR
   %% Admin
   usermgmt   -->|"角色設定 tab"| rolesettings
   rolesettings -->|"使用者管理 tab"| usermgmt
-
-  %% Annotator Management pending
-  annotatorlist -->|"點選成員"| worklog
-  worklog    -->|"返回（PL）"| annotatorlist
-  worklog    -->|"返回（Annotator）"| dashboard
 
   %% Task Management
   tasklist   -->|"點擊任務"| taskdetail
@@ -242,30 +230,6 @@ flowchart LR
 | Outgoing | 使用者 chip | `/account/profile` |
 | Outgoing | 登出 | `/account/login` |
 | Inline | 權限矩陣調整 / 儲存 / 還原 | 停留，顯示 dirty state、conflict 或 Toast |
-
----
-
-## Annotator Management 模組
-
-> 目前 `design/prototype/pages/annotator-management/` 尚未建置；相關導覽仍保留為規劃節點。
-
-### `/annotator-management/annotator-list` ⬜
-
-| 方向 | 觸發條件 | 目標 |
-|------|---------|------|
-| Incoming | Navbar / sidebar → 標記員管理 | — |
-| Incoming | `/annotator-management/work-log` 返回（PL 視角） | — |
-| Outgoing | 點選成員 | `/annotator-management/work-log` |
-| Inline | 邀請成員加入任務 | 停留（彈窗 / 下拉選單） |
-
-### `/annotator-management/work-log` ⬜
-
-| 方向 | 觸發條件 | 目標 |
-|------|---------|------|
-| Incoming | Navbar / sidebar → 工時紀錄（Annotator 看自己） | — |
-| Incoming | `/annotator-management/annotator-list` 點選成員（PL 看成員） | — |
-| Outgoing | 返回按鈕（PL 視角） | `/annotator-management/annotator-list` |
-| Outgoing | 返回按鈕（Annotator 視角） | `/dashboard/dashboard` |
 
 ---
 

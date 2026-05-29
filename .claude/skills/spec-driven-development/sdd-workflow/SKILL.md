@@ -46,7 +46,7 @@ Each stage is a **hard gate** — do not advance until the current stage is comp
 
 Align with `frontend/src/features/` and `specs/[module]/`:
 
-`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
 ---
 

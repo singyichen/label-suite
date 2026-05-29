@@ -110,13 +110,6 @@ frontend/
 │   │   │   ├── components/           # stats/ charts, quality/ IAA + anomaly components
 │   │   │   ├── hooks/
 │   │   │   └── services/             # datasetApi.ts
-│   │   ├── annotator-management/
-│   │   │   ├── AnnotatorListPage.tsx
-│   │   │   ├── AnnotatorNewPage.tsx
-│   │   │   ├── WorkLogPage.tsx
-│   │   │   ├── components/
-│   │   │   ├── hooks/
-│   │   │   └── services/             # annotatorApi.ts
 │   │   └── admin/
 │   │       ├── UserManagementPage.tsx
 │   │       ├── RoleSettingsPage.tsx
@@ -149,7 +142,6 @@ frontend/
 │   │   │   ├── task-management.json
 │   │   │   ├── annotation.json
 │   │   │   ├── dataset.json
-│   │   │   ├── annotator-management.json
 │   │   │   └── admin.json
 │   │   └── en/
 │   │       └── (same structure)

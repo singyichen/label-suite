@@ -12,7 +12,7 @@ design/wireframes/pages/[module]/  ← Pencil wireframes (.pen files)
 design/prototype/pages/[module]/   ← HTML prototypes
 ```
 
-**Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
+**Feature modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
 ## Hard Rules
 

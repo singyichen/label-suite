@@ -96,7 +96,7 @@ Full pipeline — each stage is a hard gate:
 **Pre-PR gate (REQUIRED)**: `/speckit.analyze` must report zero findings before every PR.
 
 **Module names** (align with `features/` and `specs/[module]/`):
-`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `annotator-management` · `admin`
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
 **Design artifact paths:**
 

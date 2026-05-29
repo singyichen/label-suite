@@ -442,10 +442,9 @@ Pages requiring empty state tests:
 | `dashboard` (leader) | No tasks | → `task-new` |
 | `dashboard` (annotator) | No assigned tasks | → `profile` |
 | `dashboard` (reviewer) | No pending reviews | → `dataset-stats` |
-| `annotator-list` | No annotators | → `annotator-new` |
 | `dataset-stats` | No annotation data | → `task-detail` |
 | `dataset-quality` | Dry Run incomplete | → `task-detail` |
-| `work-log` | No log entries | No CTA |
+| `task-detail` work-log tab | No log entries | No CTA |
 
 ### Instruction Modal Testing
 

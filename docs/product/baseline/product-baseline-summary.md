@@ -54,12 +54,10 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 | 任務管理模組 | `task-list`、`task-new`、`task-detail` | `project_leader`、`reviewer` |
 | 標記任務模組 | `annotation-workspace` | `annotator`、`reviewer` |
 | 資料集分析模組 | `dataset-stats`、`dataset-quality` | `project_leader`、`reviewer` |
-| 標記員管理模組 | `annotator-list`、`work-log` | `project_leader`、全平台成員、`super_admin` |
 | 系統管理模組 | `user-management`、`role-settings` | `super_admin` |
 
 補充原則：
-- `annotator-list` 用於挑選平台成員加入任務，不負責系統角色指派
-- `work-log` 為工時與工作量紀錄頁，不負責薪資計算
+- 任務成員挑選與工時/工作量紀錄由 `task-detail` 的成員管理與工時紀錄面板承接
 - `user-management` 只管理系統角色與平台帳號狀態
 
 ---
@@ -87,7 +85,7 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 ### 協作流程
 
 1. `project_leader` 建立任務並完成 Config Builder 設定
-2. `project_leader` 從 `annotator-list` 挑選平台成員加入任務，指派 `annotator` / `reviewer`
+2. `project_leader` 在任務詳情中挑選平台成員加入任務，指派 `annotator` / `reviewer`
 3. 發布 Dry Run，讓所有標記員標記相同樣本
 4. 系統產生 IAA 與品質報告，由 `project_leader` / `reviewer` 確認
 5. 達標後發布 Official Run，分配正式資料進行標記
@@ -186,7 +184,7 @@ Label Suite 是一套**可配置、通用型 NLP 標記與自動評估平台**�
 - 新功能不得破壞雙層角色模型
 - 任務角色不得回寫成系統角色
 - 新任務類型必須可由 config 擴充，不可要求修改核心流程
-- `annotator-list` / `work-log` 不應被重新歸類為系統管理功能
+- 任務成員指派與工時/工作量紀錄應留在任務管理脈絡，不應被重新歸類為系統管理功能
 - `user-management` 不應承擔任務角色指派責任
 - Story、IA、Impact Map 三者若有變更，應同步維護
 
