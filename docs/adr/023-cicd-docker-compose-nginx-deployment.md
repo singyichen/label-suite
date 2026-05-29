@@ -139,8 +139,8 @@ Recommended server roles:
 
 | Host | Role | Rationale |
 |------|------|-----------|
-| `dell-7820` (`140.113.30.205`) | Primary application and data server | 192 GB RAM and 7.3 TB `/data` disk are better suited for PostgreSQL, Redis persistence, uploads, backups, and the core Compose stack. |
-| `as-1` (`140.113.30.220`) | Optional GPU worker server | NVIDIA L40S 46 GB x 2 is valuable for AI evaluator, local model, embedding, or batch NLP workloads. It should not be the default primary data server because its available disk is smaller. |
+| `dell-7820` (`<primary-server-ip>`) | Primary application and data server | 192 GB RAM and 7.3 TB `/data` disk are better suited for PostgreSQL, Redis persistence, uploads, backups, and the core Compose stack. |
+| `as-1` (`<gpu-worker-ip>`) | Optional GPU worker server | NVIDIA L40S 46 GB x 2 is valuable for AI evaluator, local model, embedding, or batch NLP workloads. It should not be the default primary data server because its available disk is smaller. |
 | `msi` / `asus` | Optional staging or additional worker hosts | Useful later if staging must be physically separated from production or if non-critical worker capacity is needed. |
 
 The initial production deployment should use `dell-7820` as the main server. `as-1` should be added only when GPU-backed workflows are needed. GPU workers should connect to the same Redis broker using a dedicated queue, for example:

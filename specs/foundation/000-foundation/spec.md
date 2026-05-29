@@ -373,7 +373,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-017**：系統必須讓 frontend auth store 僅保存非敏感 session state；不得將 raw token 持久化至 localStorage。
 - **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；CRUD helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
-- **FR-075**：系統必須明確定義 refresh token concurrent refresh 的處理策略，擇一實作：（A）grace period 策略：已 revoke 但在 `REFRESH_TOKEN_GRACE_PERIOD` 內的 token 可視為有效並重新核發，不觸發全量撤銷；（B）mutex 策略：使用 `SELECT ... FOR UPDATE SKIP LOCKED` 確保只有第一個 refresh 成功，其餘回傳 `409 Conflict`。所選策略必須在 ADR-021 記錄，並補充 concurrent refresh 情境的測試。
+- **FR-075**：系統必須明確定義 refresh token concurrent refresh 的處理策略，擇一實作：（A）grace period 策略：已 revoke 但在 `REFRESH_TOKEN_GRACE_PERIOD` 內的 token 可視為有效並重新核發，不觸發全量撤銷；（B）mutex 策略：使用 `SELECT ... FOR UPDATE`（不加 `SKIP LOCKED`）鎖定 token row，確保 concurrent Transaction B 等待 Transaction A commit 後讀取已更新狀態（revoked/rotated），再安全回傳 `409 Conflict` 或觸發 reuse 偵測；不得使用 `SKIP LOCKED`，否則 concurrent request 將因 row 被跳過而得到空結果集，導致誤判為 401/404 而非 409。所選策略必須在 ADR-021 記錄，並補充 concurrent refresh 情境的測試。
 - **FR-076**：系統必須讓 sliding refresh token 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；session 自首次登入起超過 absolute max 後必須強制重新登入，不得無限 sliding 延期；若安全策略允許不同上限，須在 ADR 明確說明理由。
 - **FR-077**：系統必須讓高風險安全事件能立即作廢尚未過期的 access token，透過 jti deny list（儲存於 Redis，entry TTL 等於剩餘 `ACCESS_TOKEN_TTL`）或 token_version bump 實作；此機制為 **P1 強制要求**，由 auth/security owning spec 指定 `app/core/security.py` 中的具體實作並補充測試；「未定義」不得作為永久的豁免狀態。
 - **FR-078**：若系統部署環境包含同一 eTLD+1 的多個 subdomain（如 `api.lab.edu` 與 `app.lab.edu`），系統必須在 POST / PUT / DELETE / PATCH 端點額外驗證 `Origin` header 在 `ALLOWED_ORIGINS` 中，作為 `SameSite=Lax` 不覆蓋 same-site subdomain 的補充 CSRF 防護；feature spec 的 security review 必須顯式評估此風險並記錄豁免或啟用決定。
@@ -457,7 +457,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-029**：系統必須讓所有 DB schema changes 經 Alembic migration。
 - **FR-030**：系統必須讓所有 foreign keys 在 migration 中顯式聲明。
 - **FR-031**：系統必須讓測試環境使用真實 PostgreSQL 或與 production 行為一致的 DB 測試容器；不得以 mock 取代 ORM integration tests。
-- **FR-083**：系統必須讓所有 background job 的 DB write 使用 UPSERT 語意（`INSERT ... ON CONFLICT DO UPDATE` 或等效 ORM merge 操作）；不得使用 check-then-act pattern（先 SELECT 再 INSERT），以確保 Celery retry 在任何 crash point 後重新執行時不會產生重複資料。
+- **FR-083**：系統必須讓所有 background job 的 DB write 使用 PostgreSQL 層級的 atomic UPSERT，即 SQLAlchemy `insert().on_conflict_do_update()` 或 `on_conflict_do_nothing()`；不得以 SQLAlchemy ORM `session.merge()`（底層為 SELECT + INSERT/UPDATE 兩步驟，高並發下可引發 `IntegrityError`）或 check-then-act pattern（先 SELECT 再 INSERT）替代，以確保 Celery retry 在任何 crash point 後重新執行時不產生 race condition 或重複資料。
 
 ---
 

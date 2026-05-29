@@ -85,7 +85,7 @@ Implement task state machine logic exclusively in the **service layer** (`app/se
 | `draft` | `dry_run_in_progress` | ≥ 2 annotators assigned; config validated; sample snapshot locked |
 | `dry_run_in_progress` | `waiting_iaa_confirmation` | All dry-run annotations submitted; IAA calculated |
 | `waiting_iaa_confirmation` | `official_run_in_progress` | Project leader confirms IAA; `confirmed_by` recorded |
-| `waiting_iaa_confirmation` | `draft` | Project leader rejects IAA; `sample_snapshot_id` preserved |
+| `waiting_iaa_confirmation` | `draft` | Project leader rejects IAA; `sample_snapshot_id` cleared to allow re-dry-run |
 | `official_run_in_progress` | `completed` | All official-run annotations submitted; final scores calculated |
 
 Reverse transitions (other than `waiting_iaa_confirmation → draft`) are **not permitted**. Any attempt raises `InvalidTransitionError`.
@@ -126,11 +126,14 @@ class RunStateTransition(Base):
 
 ### `sample_snapshot_id` Invariant
 
-`sample_snapshot_id` on the `Task` record is set once when first transitioning to `dry_run_in_progress` and is **never overwritten** thereafter. The service layer enforces this:
+`sample_snapshot_id` is set when first transitioning to `dry_run_in_progress` (if not already set) and is cleared when the task returns to `draft` from `waiting_iaa_confirmation` (IAA rejection). This allows the project leader to modify configuration or dataset before initiating a new dry run. The service layer enforces this:
 
 ```python
 if target_status == TaskStatus.DRY_RUN_IN_PROGRESS and task.sample_snapshot_id is None:
     task.sample_snapshot_id = await create_sample_snapshot(db, task)
+
+if target_status == TaskStatus.DRAFT and from_status == TaskStatus.WAITING_IAA_CONFIRMATION:
+    task.sample_snapshot_id = None  # cleared so a new dry run generates a fresh snapshot
 ```
 
 ## Consequences
@@ -139,7 +142,7 @@ if target_status == TaskStatus.DRY_RUN_IN_PROGRESS and task.sample_snapshot_id i
 
 - State machine logic is unit-testable with a mock DB session and no HTTP client.
 - Audit trail (`RunStateTransition`) is always written in the same transaction as the status change — no partial updates.
-- `sample_snapshot_id` immutability is enforced in one place; no feature can bypass it.
+- `sample_snapshot_id` lifecycle (set on dry-run start, cleared on IAA rejection back to draft) is enforced in one place; no feature can bypass it.
 - Side effects (Celery dispatch, notifications) are isolated in `dispatch_side_effects` — can be swapped for test doubles in unit tests.
 - All routes that trigger transitions call the same service function — no duplicated validation logic.
 
