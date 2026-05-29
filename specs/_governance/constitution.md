@@ -1,20 +1,31 @@
-# Label Suite Constitution — Tool Cache
+<!--
+Sync Impact Report — constitution v1.29.0
+Generated: 2026-05-29
 
-> **⚠️ This file is a tool cache, NOT the source of truth.**
->
-> Single Source of Truth: `specs/_governance/constitution.md`
->
-> When amending the constitution, always edit `specs/_governance/constitution.md` first,
-> then copy the full content here to keep agents in sync.
+Version change: v1.28.0 → v1.29.0
+Bump type: MINOR — extend Principle V with Human Handoff Readiness requirement
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.29.0 (2026-05-29) -->
+Changed principles:
+- V. Code Quality & Simplicity — added Human Handoff Readiness bullet (intent-stating names, two-call-level entry point reachability, one-indirection main path, no readability-sacrificing compression)
 
-## Label Suite Constitution
+New sections: none
+Removed sections: none
+
+Templates sync status:
+- .specify/templates/plan-template.md: ✅ Updated — Principle V checklist item extended
+- .specify/templates/spec-template.md: ✅ No changes required
+- .specify/templates/tasks-template.md: ✅ No changes required
+- .specify/templates/checklist-template.md: ✅ No changes required
+- .claude/commands/speckit.*.md: ✅ No changes required
+
+Deferred TODOs: none
+-->
+
+# Label Suite Constitution
 
 ## Core Principles
 
 ### I. Spec-First Development (RECOMMENDED)
-
 New features should begin with a spec. The deciding question for skipping SDD is: **will this change make the system behave differently from what the specs define?** If yes, open a spec. If no, modify code directly.
 
 - Features progress in order: requirements → spec → plan → tasks → implementation
@@ -29,7 +40,6 @@ New features should begin with a spec. The deciding question for skipping SDD is
   - **tasks.md**: Each User Story Phase must include a `**故事目標**` line that traces to one or more SC-IDs from spec.md. A Phase goal that cannot be traced to any SC-ID signals scope drift.
 
 **Skip SDD and modify code directly for**:
-
 - Bug fixes — making code match existing specs, not changing specs
 - Typo, formatting, or comment changes — no behavior change
 - Non-breaking dependency updates — no API or behavior change
@@ -37,7 +47,6 @@ New features should begin with a spec. The deciding question for skipping SDD is
 - Adding tests for existing behavior — spec is already defined
 
 **Must go through SDD for**:
-
 - New features — behavior not currently defined in any spec
 - Behavior changes — modifying what an existing endpoint or flow does
 - Breaking changes — removing fields, changing API contracts
@@ -319,7 +328,6 @@ Tests must never use production data, real user data, or genuine annotation grou
 Constitution principles take precedence over all other conventions.
 
 **Amendment Procedure**:
-
 - Update `specs/_governance/constitution.md` (Single Source of Truth) with the change
 - Sync the change to `.specify/memory/constitution.md` (tool cache) to keep agents aware
 - Propagate amendments to dependent templates (`.specify/templates/`) and commands (`.claude/commands/speckit.*.md`)
@@ -327,7 +335,6 @@ Constitution principles take precedence over all other conventions.
 - Use `/speckit.constitution` to automate propagation checks
 
 **Versioning Policy** (semantic versioning):
-
 - **MAJOR**: Backward-incompatible removal or redefinition of a principle
 - **MINOR**: New principle or section added
 - **PATCH**: Clarification, wording fix, or non-semantic refinement
@@ -384,5 +391,3 @@ Constitution principles take precedence over all other conventions.
 | 1.3.2 | 2026-05-21 | Require Chinese change summaries in `.specify/templates/` changelogs |
 | 1.3.1 | 2026-05-21 | Require changelog entries in descending version order |
 | 1.3.0 | 2026-04-13 | Baseline version prior to changelog tracking |
-
-<!-- END CACHE -->

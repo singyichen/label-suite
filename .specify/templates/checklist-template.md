@@ -63,12 +63,21 @@
 - [ ] CHK016 若 task type 行為有變動，規格是否要求以 config-driven registry/schema/frozen task config 實現，而非硬編碼 task 邏輯？[Principle: II, Spec §需求規格]
 - [ ] CHK017 若標注者端資料受影響，規格是否明確禁止暴露 ground-truth、評分鍵、答案路徑或隱藏標籤？[Principle: III, Spec §需求規格]
 - [ ] CHK018 若 UI 受影響，規格是否參照了已核可的設計 token / 原型期望，並記錄任何有意的偏差？[Principle: VII, Spec §輸入與生成規則]
+- [ ] CHK023 若 UI 受影響，互動元件的無障礙期望（鍵盤操作、螢幕閱讀器標記）是否納入規格的邊界情況或成功標準？[Principle: VII, Spec §邊界情況]
+- [ ] CHK024 若功能涉及驗證流程、角色權限或使用者私密資料，規格是否定義未授權存取的預期行為，並要求相應的安全路徑測試情境？[Principle: XI, Spec §功能需求]
+- [ ] CHK025 規格的需求範圍是否僅涵蓋請求功能本身，無預期外的重構、格式調整或相鄰功能變更？[Principle: X, Gap]
+- [ ] CHK026 規格是否定義所有 error case 的使用者可見結果（錯誤訊息格式、失敗後導頁、重試選項），而非僅描述正向路徑？[Principle: IX, Gap]
+- [ ] CHK027 若前端受影響，規格是否定義 async 操作的 loading、error、empty 與 cleanup 行為，而非僅描述成功情境？[Principle: XXI, Spec §邊界情況]
+- [ ] CHK028 若功能新增 API 端點，規格是否要求文件化 enum 值、nullable 欄位、error response schema 與 pagination shape？[Principle: XXII, Spec §需求規格]
+- [ ] CHK029 若功能涉及核心實體狀態（task、annotation、batch、export），規格是否定義合法轉換清單與非法轉換的拒絕行為？[Principle: XXVIII, Spec §使用者情境與測試]
+- [ ] CHK030 規格或測試計畫是否明確說明測試資料策略（使用合成資料或已核可的清洗資料集，不使用 production 資料）？[Principle: XXX, Gap]
 
 ## 相依性與假設
 
 - [ ] CHK019 上下游相依性與假設是否附有驗證期望？[Assumption, Spec §已釐清事項]
 - [ ] CHK020 範圍外項目或延後決定是否明確列出，以免被誤認為需求？[Completeness, Gap]
 - [ ] CHK021 需求是否具備足夠的可追蹤性，使任務可對應回使用者故事或 FR ID？[Traceability, Spec §功能需求]
+- [ ] CHK022 功能目標是否已在 spec.md 中明確陳述，且 plan.md 的功能目標與其一致？[Traceability, Spec §功能目標]
 
 ## 備註
 
@@ -83,6 +92,11 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.0 | 2026-05-29 | 新增 CHK026-CHK030：補齊 Principle IX（error case 可見結果）、XXI（async 邊界行為）、XXII（API 文件需求）、XXVIII（狀態機轉換定義）、XXX（測試資料策略）（配合憲章 v1.28.0） |
+| 1.6.0 | 2026-05-28 | 新增 CHK024（Principle XI）：安全路徑測試情境驗證；新增 CHK025（Principle X）：需求範圍邊界確認（配合憲章 v1.9.0） |
+| 1.5.2 | 2026-05-28 | 新增 CHK023：WCAG 2.1 AA 無障礙期望納入規格驗證（配合憲章 v1.6.2） |
+| 1.5.1 | 2026-05-28 | CHK022 用詞改為功能目標（配合 spec/plan 章節名稱中文化） |
+| 1.5.0 | 2026-05-28 | 新增 CHK022：Feature Goal 陳述與 spec/plan 一致性追蹤 |
 | 1.4.0 | 2026-05-22 | 對齊 spec 實例格式：改為 --- frontmatter + H1，章節標題與清單項目全面中文化 |
 | 1.3.0 | 2026-05-21 | Align checklist template with requirement-quality checklist semantics |
 | 1.2.0 | 2026-05-21 | Add HTML meta-comment and two Notes rules |

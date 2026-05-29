@@ -8,52 +8,40 @@
 # 實作計畫：[功能名稱]
 
 **規格**: [連結至 `specs/[module]/NNN-feature/spec.md`]
-**輸入**: `specs/[module]/NNN-feature/spec.md`
 
-## 執行流程（/speckit.plan 範圍）
+## 功能目標
 
-```text
-1. 從輸入路徑載入功能規格
-   → 若未找到：ERROR "No feature spec at {path}"
-2. 填寫技術脈絡
-3. 評估下方憲章檢查
-   → 若存在違反項目：記錄至複雜度追蹤
-   → 若無正當理由：ERROR "Simplify approach first"
-4. 執行 Phase 0 → 研究（若有未知事項）
-   → 若仍有 NEEDS CLARIFICATION：ERROR "Resolve unknowns before proceeding"
-5. 執行 Phase 1 → 契約、資料模型、系統流程
-6. 重新評估憲章檢查
-   → 若發現新違反：重構設計，返回 Phase 1
-7. 描述任務產生方式（不得建立 tasks.md）
-8. 停止 — 準備好進入 /speckit.tasks
-```
+> 從 `spec.md § 功能目標` 複製或精煉。若在 spec 與 plan 之間有修改，必須同步觸發 spec 版本升級。
 
-**重要**：/speckit.plan 在第 7 步停止。任務建立由 /speckit.tasks 負責。
+[在此貼上或精煉來自 spec.md 的功能目標。]
 
-## 摘要
+## Technical Approach
 
-[從規格萃取：主要需求 + 技術方向]
+[一段話。說明觸及哪些層（前端 / 後端 / 兩者）、核心技術決策，以及為何此方案能達成功能目標。不描述實作細節——這是目標與任務之間的橋樑。]
 
 ## 技術脈絡
 
-**語言 / 版本**: Python 3.12+ / TypeScript 5+
-**主要相依套件**: FastAPI / React + Vite
-**儲存**: PostgreSQL + Redis
-**測試**: pytest + Vitest + Playwright + Storybook
-**目標平台**: Web（瀏覽器 + REST API）
 **效能目標**: [例：API p95 < 500ms]
 **限制**: [例：Config-driven，不得硬編碼 task 邏輯]
 
 ## 憲章檢查
 
+- [ ] 功能目標：本計畫的功能目標與 spec.md 一致（若有修改，已觸發 spec 版本升級）
 - [ ] I. Spec-First：規格已完成並審查
 - [ ] II. Generalization-First：設計是否支援多種 NLP task type？
 - [ ] III. Data Fairness：是否涉及 test set？若是，已規劃防止資料洩露
 - [ ] IV. Test-First：測試計畫已列出
-- [ ] V. Code Quality & Simplicity：是否有過度工程的跡象？型別提示、linter、無 debug 輸出已處理？
+- [ ] V. Code Quality & Simplicity：是否有過度工程的跡象？型別提示、linter、無 debug 輸出已處理？命名是否自說明、不需看呼叫端才能理解意圖？功能入口點能否在兩層呼叫內從 router/endpoint/page component 定位？
 - [ ] VI. English-First：程式碼、注釋與 commit message 使用英文；`docs/`、`specs/`、`design/prototype/`、`design/wireframes/` 與 `design/system/inventory.md` 允許繁體中文；`design/system/MASTER.md` 必須純英文
-- [ ] VII. Design Consistency：UI 使用 MASTER.md tokens；prototype 畫面已遵循；共用元件已重用
-- [ ] VIII. Performance Baseline：列表端點已分頁；無無界查詢；API P95 ≤ 500ms 目標已確認
+- [ ] VII. Design Consistency：UI 使用 MASTER.md tokens；prototype 畫面已遵循；共用元件已重用；互動元件符合 WCAG 2.1 AA（鍵盤可操作、螢幕閱讀器可存取）
+- [ ] VIII. Performance Baseline：列表端點已分頁；無無界查詢；API P95 ≤ 500ms 目標已確認；前端 FCP ≤ 3s；互動反饋 ≤ 100ms；非核心路由使用 code splitting
+- [ ] IX. No Silent Failure：所有 error case 是否定義對應處理路徑？例外不可靜默吞噬；背景 job 必須暴露狀態、重試次數與失敗原因
+- [ ] XI. Security & Privacy Baseline：是否涉及驗證流程、角色權限或使用者資料？若是，已規劃拒絕路徑測試；API response 不洩漏內部識別碼或敏感 metadata
+- [ ] XXI. Frontend Runtime Safety：若前端受影響，async 競態、unmount 後 stale response、timer / subscription / listener cleanup 是否已納入元件設計？
+- [ ] XXII. API Contract Completeness：所有新增端點是否都計畫更新 OpenAPI 文件？含 enum 值、nullable 欄位、pagination shape、error schema
+- [ ] XXIV. Backend Consistency & Idempotency：mutating 端點是否定義 idempotency 或衝突行為？concurrent update 是否以 transaction / lock 保護？
+- [ ] XXVI. Database-Enforced Integrity：是否設計 FK constraint、unique constraint；multi-step mutation 是否包在 transaction 內；migration 是否含 backfill 或資料驗證步驟？
+- [ ] XXVIII. Canonical Domain Lifecycle：若涉及實體狀態機，是否定義合法轉換清單？非法轉換須在 service 層拒絕，不得僅靠 UI button 可見性控制
 
 ## 專案結構
 
@@ -360,6 +348,11 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.1 | 2026-05-29 | 憲章檢查 V 補充 Human Handoff Readiness：命名自說明、入口點兩層內可定位（配合憲章 v1.29.0） |
+| 1.7.0 | 2026-05-29 | 憲章檢查補齊 IX、XI、XXI、XXII、XXIV、XXVI、XXVIII（配合憲章 v1.28.0，補足設計期相關原則） |
+| 1.6.2 | 2026-05-28 | 憲章檢查 VII 加入 WCAG 2.1 AA 無障礙規則；VIII 加入 FCP ≤ 3s、互動反饋 ≤ 100ms、code splitting（配合憲章 v1.6.2） |
+| 1.6.1 | 2026-05-28 | 將 ## Feature Goal 章節名稱改為 ## 功能目標；同步更新憲章檢查用詞 |
+| 1.6.0 | 2026-05-28 | 將 ## 摘要 改為 ## Feature Goal（複製自 spec）+ ## Technical Approach；憲章檢查加入 Feature Goal 一致性項目 |
 | 1.5.0 | 2026-05-27 | senior-backend + senior-frontend 評估後補全：Phase 0 加 Exception 設計表；DB index 表加 Loading Strategy 欄；API 清單欄位拆分為 System Role / Task Role / Auth Dependency；新增步驟 2b（Pydantic schema 層次）；切版分析表加 ARIA 和響應式欄；新增前端技術決策小節（queryKey / 表單 / 型別 / error mapping / loading）；系統流程圖加 Celery 分析；測試情境依層分類 |
 | 1.4.0 | 2026-05-27 | Phase 1 加入 DB index 分析（實體步驟）、路由分析表、i18n key 清單表；Phase 2 任務策略加入對應任務；產出摘要更新 |
 | 1.3.0 | 2026-05-27 | Phase 1 加入前端切版分析（元件層次表 + Stories 欄位）與後端 API 清單表；技術脈絡加入 Storybook；Phase 2 任務策略對應切版輸出 |

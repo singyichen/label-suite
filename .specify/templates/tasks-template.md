@@ -93,7 +93,7 @@
 
 ## Phase 3：使用者故事 1 — [標題]（優先級：P1）🎯 MVP
 
-**目標**：[此故事交付的內容]
+**故事目標**：[此故事為使用者交付的價值。] → 追蹤至 [SC-XXX]（來自 spec.md 成功標準）
 
 **獨立測試方式**：[如何獨立驗證此故事]
 
@@ -120,7 +120,7 @@
 
 ## Phase 4：使用者故事 2 — [標題]（優先級：P2）
 
-**目標**：[此故事交付的內容]
+**故事目標**：[此故事為使用者交付的價值。] → 追蹤至 [SC-XXX]（來自 spec.md 成功標準）
 
 **獨立測試方式**：[如何獨立驗證此故事]
 
@@ -290,11 +290,14 @@ pnpm test
 - [ ] 每個非 page 前端元件都有對應的 `.stories.tsx` 任務（含 MSW decorator 需求）
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
+- [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.1 | 2026-05-28 | 將 **Story Goal** 改為 **故事目標**（中文化）；驗證清單用詞同步 |
+| 1.8.0 | 2026-05-28 | 每個 Phase 的「目標」改為「Story Goal → 追蹤至 SC-XXX」格式；驗證清單加入 SC-ID 追蹤性檢查 |
 | 1.7.0 | 2026-05-27 | senior-backend + senior-frontend 評估後補全：T004 拆為 T004a/b/c（downgrade + 循環驗證）；加入 T008 MSW handler 任務、T011 Exception class 任務；Phase 3 測試拆為 service / route / permission negative / Vitest 四層；實作任務加入 Loading Strategy 和 ARIA 說明；Storybook 任務標注 MSW decorator 需求；Phase N P95 驗證加工具；驗證清單加 5 項新檢查 |
 | 1.6.0 | 2026-05-27 | Phase 2 加入 route 註冊任務與 i18n JSON 任務；任務產生規則新增第 5–8 條（路由、i18n、DB index、排序）；驗證清單加入 migration index、route、i18n 三項檢查 |
 | 1.5.0 | 2026-05-27 | Phase 3/4 加入 Storybook story 任務（[P]，.stories.tsx）；任務產生規則新增第 4 條（切版分析 → story 任務）；驗證清單加入 story 完整性檢查 |
