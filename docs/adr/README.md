@@ -39,3 +39,6 @@ Each ADR follows this structure:
 | [018](018-observability-prometheus-grafana.md) | Observability Stack — Prometheus + Grafana | Accepted | 2026-05-29 |
 | [019](019-ai-traceability-audit-logging.md) | AI Traceability and Audit Logging | Accepted | 2026-05-29 |
 | [020](020-application-error-tracking-sentry.md) | Application Error Tracking — Sentry | Accepted | 2026-05-29 |
+| [021](021-jwt-refresh-token-auth.md) | JWT Authentication and Refresh Token Strategy | Accepted | 2026-05-29 |
+| [022](022-task-state-machine-location.md) | Task State Machine Implementation Location | Accepted | 2026-05-29 |
+| [023](023-cicd-docker-compose-nginx-deployment.md) | CI/CD Deployment with Docker Compose and Nginx | Accepted | 2026-05-29 |
