@@ -189,7 +189,7 @@ https://staging.<domain>
 https://<domain>
 ```
 
-Nginx should route by hostname to the correct Compose network. Cloudflare should define separate DNS records and cache rules for staging and production. Staging should be access-restricted through Cloudflare Access, campus VPN, HTTP basic auth, or another explicit control.
+A single **host-level Nginx** (installed directly on `dell-7820`, not inside any Compose stack) binds to host ports 80 and 443 and routes by `server_name` to the respective Compose stack's internal port (e.g., staging Compose exposes port 8080, production Compose exposes port 8081 — both bound to `127.0.0.1` only). This avoids port conflicts: only one process owns the public ports, and each Compose stack's Nginx listens on a distinct loopback port. Cloudflare should define separate DNS records and cache rules for staging and production. Staging should be access-restricted through Cloudflare Access, campus VPN, HTTP basic auth, or another explicit control.
 
 The release flow is:
 

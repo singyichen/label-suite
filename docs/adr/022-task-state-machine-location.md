@@ -90,6 +90,8 @@ Implement task state machine logic exclusively in the **service layer** (`app/se
 
 Reverse transitions (other than `waiting_iaa_confirmation → draft`) are **not permitted**. Any attempt raises `InvalidTransitionError`.
 
+> **Design note — `dry_run_in_progress → draft` is intentionally excluded.** Allowing this transition would require cancelling all in-progress dry-run annotations and deciding how to handle already-submitted ones, which creates orphaned annotation data and complicates the cleanup path. The intended recovery flow for configuration errors discovered during a dry run is to have annotators complete (or abandon by submitting placeholder annotations) the current dry run, advance to `waiting_iaa_confirmation`, reject the IAA, and return to `draft` — at which point `sample_snapshot_id` is cleared and a fresh configuration and dry run can begin. This keeps cleanup logic in one transition (`waiting_iaa_confirmation → draft`) rather than two.
+
 ### `validate_transition` Implementation
 
 A static allowlist — no dynamic graph traversal:

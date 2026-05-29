@@ -74,7 +74,7 @@ Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL)
 
 - On `401` response: frontend middleware calls `/auth/refresh` once silently, then retries the original request.
 - On refresh failure (expired, revoked): redirect to `/login`.
-- `useAuthStore` (Zustand) holds decoded JWT claims in memory only — not persisted to `localStorage`.
+- `useAuthStore` (Zustand) holds `userId` and `role` in memory only — not persisted to `localStorage`. Because the Access Token is stored in an `httpOnly` cookie (inaccessible to JavaScript), the `/login` and `/refresh` endpoints return `{ user_id, role }` in the JSON response body so the frontend can populate the store without decoding the cookie.
 - `SameSite=Lax` permits cookie on top-level navigations (e.g., link from email to task) while blocking cross-site POSTs.
 
 ## Consequences
@@ -92,7 +92,7 @@ Refresh tokens are stored server-side in the `refresh_tokens` table (PostgreSQL)
 - Server must maintain the `refresh_tokens` table — introduces one stateful component.
 - CORS configuration must include `credentials: true`; frontend `fetch`/`axios` calls must set `credentials: 'include'`.
 - In local development, backend and frontend run on different ports — requires `SameSite=None; Secure` with HTTPS or a dev proxy (Vite proxy to same origin is the recommended approach).
-- Refresh token reuse detection (rotation abuse) requires careful implementation to avoid false positives from concurrent tab refreshes.
+- Refresh token reuse detection (rotation abuse) requires careful implementation to avoid false positives from concurrent tab refreshes. **Chosen strategy (FR-075): grace period.** A revoked refresh token that falls within `REFRESH_TOKEN_GRACE_PERIOD` (default 30 s) is treated as valid and re-issues a new token without triggering full revocation. This prevents false-positive session termination when two browser tabs race to refresh simultaneously — the typical pattern for a research portal with long annotation sessions. The mutex strategy (`SELECT ... FOR UPDATE`) was considered but rejected because blocking concurrent requests adds latency and the grace window is short enough to limit the exposure of a stolen refresh token.
 
 ## Referenced by
 
