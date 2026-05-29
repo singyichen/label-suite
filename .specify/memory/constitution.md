@@ -7,7 +7,7 @@
 > When amending the constitution, always edit `specs/_governance/constitution.md` first,
 > then copy the full content here to keep agents in sync.
 
-<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.28.0 (2026-05-28) -->
+<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ v1.29.0 (2026-05-29) -->
 
 ## Label Suite Constitution
 
@@ -72,6 +72,7 @@ Code must be simple, readable, and consistently styled. **Overdesign is a defect
 - All Python functions must have complete type hints; TypeScript strict mode is enforced — no `any` types
 - Code must pass the project linter before merging (Python: ruff; TypeScript: ESLint)
 - No debug `print` / `console.log` statements in committed code
+- **Human Handoff Readiness**: Code must be immediately actionable for a developer unfamiliar with the change. Function and variable names must state intent without requiring caller context; feature entry points must be reachable within two call levels from the router, endpoint, or page component; logic must not require more than one indirection level to trace the main path; patterns that compress logic at the cost of readability are not permitted.
 
 ### VI. English-First
 - Code, comments, docstrings, commit messages, and variable/function names are always written in English
@@ -341,12 +342,13 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all thirty principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.28.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-28
+**Version**: 1.29.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-29
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.29.0 | 2026-05-29 | Extend Principle V (Code Quality & Simplicity) with Human Handoff Readiness: intent-stating names, two-call-level entry point reachability, one-indirection main path, no readability-sacrificing compression |
 | 1.28.0 | 2026-05-28 | Add Principle XXX (Test Data Isolation — NON-NEGOTIABLE): no production/PII/real answer-key data in tests; synthetic or approved-scrubbed datasets only; fictional annotator-facing scenarios; approved synthetic datasets for scoring tests |
 | 1.27.0 | 2026-05-28 | Add Principle XXIX (Cache Safety & Invalidation — RECOMMENDED): boundary-scoped cache keys; no test-set answers or scoring internals in cache; invalidation triggers on auth/lifecycle events; live auth validation or short TTL for permission-sensitive responses; documented cache behavior |
 | 1.26.0 | 2026-05-28 | Add Principle XXVIII (Canonical Domain Lifecycle — RECOMMENDED): canonical states and valid transitions for task/batch/annotation/review/adjudication/export/dataset version; service-layer rejection of invalid transitions; documented actor/authorization/side-effects/audit/rollback per transition; transition coverage in tests |
