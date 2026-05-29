@@ -120,7 +120,7 @@ Focus on high-signal findings. List at most 50 findings; summarize any overflow 
 - Data entities mentioned in plan but not defined in spec (or vice versa)
 - Task ordering contradictions (e.g., integration task before setup task, no dependency noted)
 - Conflicting requirements (e.g., one section requires Next.js, another specifies Vue)
-- **Feature Goal mismatch**: if both spec.md and plan.md exist, their Feature Goal sections (`## Feature Goal`) must be consistent — a divergence is a CRITICAL finding (constitution Principle I, Goal Declaration)
+- **Feature Goal mismatch**: if both spec.md and plan.md exist, their Feature Goal sections (## 功能目標) must be consistent — a divergence is a CRITICAL finding (constitution Principle I, Goal Declaration)
 
 ### 5. Severity Classification
 
