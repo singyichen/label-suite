@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.2.0
+版本: 1.3.0
 狀態: Draft
 ---
 
@@ -24,7 +24,7 @@
 1. 前後端專案目錄與模組邊界。
 2. REST API 合約、錯誤格式、版本與 HTTP 語意。
 3. Backend route / service / CRUD / schema / migration 分層。
-4. Frontend feature vertical slice、shared admission rule、型別與狀態管理基準。
+4. Frontend feature vertical slice、shared admission rule、型別、狀態管理、UI/UX、A11y、i18n、responsive、performance 與 motion 基準。
 5. Auth、permission hook、CORS、secret、input validation、安全回應。
 6. Config-driven extensibility 的工程契約。
 7. 測試策略、CI quality gates、可觀測性與背景任務通用規則。
@@ -130,9 +130,9 @@
 
 ---
 
-### F-03：Frontend Vertical Slice 架構（P0）
+### F-03：Frontend Vertical Slice 與組件化架構（P0）
 
-**目標**：強制前端以 feature module 為邊界隔離程式碼，讓每個 module 可獨立開發、測試與替換，同時防止 `shared/` 成為無邊界依賴區。
+**目標**：強制前端以 feature module 為邊界隔離程式碼，讓每個 module 可獨立開發、測試與替換；同時要求 UI 以小型可組合元件實作，防止 `shared/` 成為無邊界依賴區。
 
 **約束情境 1 — Module 目錄結構**：
 
@@ -144,12 +144,20 @@
 1. **Given** 任何 feature module 需要使用另一 feature module 的邏輯，**When** 決定 import 路徑，**Then** 系統不得直接 import `features/[otherModule]/` 內部路徑。
 2. **Given** 候選 `shared/` 元件或 helper，**When** 評估是否移入 `shared/`，**Then** 系統必須確認它已被至少兩個不同 feature module 直接使用，且不依賴特定 domain。
 
+**約束情境 3 — Component Boundary**：
+
+1. **Given** 任何 page component，**When** 它承載互動、資料讀取或複雜條件渲染，**Then** 系統必須拆分為 feature-local components、hooks、services 與 types；page 不得成為不可測的巨型元件。
+2. **Given** component 需要在多個狀態下呈現，**When** 實作 UI，**Then** 系統必須明確處理 Default、Loading、Empty、Error、Disabled 等適用狀態。
+3. **Given** component 接收資料或事件，**When** 定義 props，**Then** 系統必須使用明確型別描述資料流；不得透過隱式全域變數或跨 feature store 傳遞。
+
 ### 功能需求
 
 - **FR-012**：系統必須禁止 feature-to-feature direct imports。
 - **FR-013**：系統必須讓 `shared/` 僅包含跨兩個以上 feature module 使用且 domain-neutral 的程式碼。
 - **FR-014**：系統必須以 ESLint rule、dependency-cruiser 或等效 CI check 驗證 frontend module boundary。
 - **FR-015**：系統必須讓 shared UI component 具備 Storybook story，至少涵蓋 Default 與適用的 Empty、Loading、Error、Disabled 狀態。
+- **FR-056**：系統必須讓 page component 只負責 route-level composition；可重用 UI、資料轉換、事件處理與 server interaction 必須拆入 feature-local component、hook 或 service。
+- **FR-057**：系統必須讓 component props、event handlers 與 derived state 具備明確 TypeScript 型別，不得以 loosely typed object 傳遞跨層資料。
 
 ---
 
@@ -255,9 +263,9 @@
 
 ---
 
-### F-09：Frontend 型別、狀態與資料取得基準（P1）
+### F-09：Frontend 型別、狀態與 API 交互基準（P1）
 
-**目標**：確保 frontend 型別、local state、server state 與 localStorage 有一致 source of truth。
+**目標**：確保 frontend 型別、local state、server state、HTTP request、API error 與 localStorage 有一致 source of truth，避免資料流分裂並提升擴展與除錯能力。
 
 **約束情境**：
 
@@ -265,6 +273,9 @@
 2. **Given** 前端需要讀寫 localStorage，**When** 操作 persisted preference，**Then** 系統必須透過 shared helper 封裝；不得在 feature code 直接散落 raw key。
 3. **Given** 前端處理 server state，**When** 需要 cache、refetch、mutation，**Then** 系統必須使用 TanStack Query 或指定 data fetching boundary，不得以多個 feature-local stores 複製 server data。
 4. **Given** TypeScript 型別被定義，**When** code review 或 CI 執行，**Then** 系統不得出現 `any`。
+5. **Given** 前端需要發送 HTTP request，**When** 呼叫 API，**Then** 系統必須透過 feature service 或 shared API client；不得在 component 中散落 raw `fetch` / Axios 呼叫。
+6. **Given** API request 失敗，**When** frontend 處理錯誤，**Then** 系統必須解析標準 `ErrorResponse`，並保留 retry、loading、empty 與 unauthorized 狀態的可測試分支。
+7. **Given** state 只屬於單一互動元件，**When** 決定存放位置，**Then** 系統必須優先使用 component-local state；只有跨 route、跨 feature 或 session-level state 才可進入全域 store。
 
 ### 功能需求
 
@@ -272,6 +283,9 @@
 - **FR-033**：系統必須將 `LOCALSTORAGE_LANG_KEY` 定義於 `frontend/src/shared/constants/storage-keys.ts`，並透過 helper 使用。
 - **FR-034**：系統必須開啟 TypeScript strict mode；不得使用 `any` 型別。
 - **FR-035**：系統必須使用 `interface` 定義 component props，使用 `type` 定義 union / intersection。
+- **FR-058**：系統必須集中 API client 設定，包括 base URL、credentials、headers、request timeout、401 refresh handling 與 `ErrorResponse` parsing。
+- **FR-059**：系統必須以 TanStack Query 或等效 server-state boundary 管理 API cache、refetch、mutation、retry 與 invalidation；不得以全域 client store 複製 server state。
+- **FR-060**：系統必須讓每個 mutation path 明確定義 optimistic update、pending state、success invalidation 與 failure rollback 或 failure display strategy。
 
 ---
 
@@ -348,6 +362,32 @@
 
 ---
 
+### F-16：Frontend Experience Baseline（P2）
+
+**目標**：將 UI/UX、響應式、跨裝置兼容、A11y、i18n/l10n、前端效能、安全與動效納入共同工程品質基準，但具體畫面與互動仍由 owning feature spec、prototype 或 design system 定義。
+
+**約束情境**：
+
+1. **Given** feature 建立或修改使用者可見 UI，**When** 實作 layout、component 或 interaction，**Then** 系統必須遵循 `design/system/MASTER.md` 的 design tokens、component states 與 interaction pattern；不得 hardcode color、spacing、font size 或任意建立視覺語言。
+2. **Given** UI 需要支援不同裝置，**When** 實作 layout，**Then** 系統必須以 responsive constraints、container-aware layout 或共用 breakpoint 處理 mobile / desktop；不得只針對單一 viewport 寫死尺寸。
+3. **Given** component 可互動，**When** 使用鍵盤、screen reader 或 pointer 操作，**Then** 系統必須提供可見 focus state、語意化 HTML、ARIA 僅在必要時補強，並符合 WCAG 2.1 AA。
+4. **Given** feature 顯示使用者可見文字、日期、數字或地區格式，**When** 實作 UI，**Then** 系統必須透過 i18n/l10n boundary 管理；不得在 component 中硬編碼可翻譯字串或 locale-specific formatting。
+5. **Given** feature 使用圖片、重資源或非首屏 route，**When** 實作載入策略，**Then** 系統必須使用 lazy loading、code splitting 或合理 preload；不得讓非必要資源阻塞核心互動。
+6. **Given** UI 使用 transition 或 animation，**When** 動效被加入，**Then** 系統必須保持可中斷、低延遲，並尊重 `prefers-reduced-motion`。
+7. **Given** 前端處理使用者輸入或外部資料，**When** 渲染或送出資料，**Then** 系統必須保留 XSS、CSRF、敏感資料外洩與 client-side validation 的防護；client validation 不得取代 server validation。
+
+### 功能需求
+
+- **FR-061**：系統必須讓所有 user-facing UI 使用 design tokens 與既有 component pattern；新增 pattern 必須由 design system 或 feature spec 記錄。
+- **FR-062**：系統必須讓每個 user-facing page 至少驗證 mobile 與 desktop viewport；layout 不得出現文字重疊、截斷不可讀、互動元素不可達或水平溢出。
+- **FR-063**：系統必須讓互動元件可鍵盤操作，並提供可見 focus state、accessible name 與必要的 ARIA state。
+- **FR-064**：系統必須讓 user-facing text 透過 module i18n namespace 管理；日期、時間、數字與貨幣格式必須使用 locale-aware formatter。
+- **FR-065**：系統必須讓 route-level code splitting、image lazy loading、bundle budget 與 loading state 納入 frontend review；不得為單一 feature 載入全部 modules。
+- **FR-066**：系統必須讓 animation / transition 尊重 `prefers-reduced-motion`，且不得阻塞主要互動或造成 layout shift。
+- **FR-067**：系統必須讓 frontend security review 覆蓋 XSS、CSRF-sensitive request、token handling、sensitive data in client state 與 unsafe DOM APIs。
+
+---
+
 ## 規格相依性
 
 ### 上游（本規格依賴的規格）
@@ -367,10 +407,10 @@
 | account | F-01 REST API、F-04 Auth、F-05 Security、F-09 Frontend 型別 |
 | dashboard | F-03 Frontend Vertical Slice、F-04 Permission、F-09 Frontend state |
 | task-management | F-01 REST API、F-02 Backend 分層、F-06 Config-driven、F-08 Persistence |
-| annotation | F-03 Frontend Vertical Slice、F-06 Config-driven、F-07 Data Safety、F-10 Testing |
-| dataset | F-01 REST API、F-08 Persistence、F-14 Performance |
+| annotation | F-03 Frontend Vertical Slice、F-06 Config-driven、F-07 Data Safety、F-10 Testing、F-16 Frontend Experience |
+| dataset | F-01 REST API、F-08 Persistence、F-14 Performance、F-16 Frontend Experience |
 | annotator-management | F-04 Permission、F-05 Security、F-13 Audit |
-| admin | F-04 Permission、F-05 Security、F-13 Audit |
+| admin | F-04 Permission、F-05 Security、F-13 Audit、F-16 Frontend Experience |
 
 ---
 
@@ -386,6 +426,9 @@
 - **SC-008**：核心 route/service 不得出現 hardcoded domain type 分支，例如 `if task_type == ...` 或 `switch (taskType)`。
 - **SC-009**：annotator-facing response schema 不得包含 `ground_truth`、`score_key`、`answer`、`label_answer`、`*_key`、`*_truth`、`*_answer`。
 - **SC-010**：`MOBILE_BP` 在 `frontend/src/shared/constants/breakpoints.ts` 外不得重新宣告數值 `767`。
+- **SC-011**：frontend user-facing pages 必須通過 mobile / desktop viewport smoke test，且無水平溢出、主要文字重疊或不可操作的核心控制項。
+- **SC-012**：frontend interactive components 必須通過 Testing Library 或 Playwright 的 keyboard navigation / accessible name 驗證；critical pages 不得有明顯 WCAG 2.1 AA 違規。
+- **SC-013**：frontend route-level bundle、lazy loading 與 loading state 必須由 `pnpm build`、bundle analyzer 或 feature review 驗證；非關鍵 route 不得進入 initial bundle。
 
 ---
 
@@ -405,6 +448,7 @@
 - [x] backend route/service/crud/schema 分層清楚。
 - [x] task/domain variation 以 config / registry 擴展，禁止核心硬編碼。
 - [x] annotator-facing API 不得暴露答案或評分鍵。
+- [x] frontend engineering baseline 覆蓋 UI/UX、狀態管理、API 交互、組件化、響應式、效能、A11y、安全、i18n/l10n、動效。
 - [x] security、testing、CI gates 與 Constitution 一致。
 
 ---
@@ -413,6 +457,7 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.3.0 | 2026-05-29 | 補強 frontend engineering baseline：UI/UX、state management、HTTP/API interaction、componentization、responsive compatibility、performance、A11y、security、i18n/l10n、motion；新增 FR-056~067 與 SC-011~013 |
 | 1.2.0 | 2026-05-29 | 將 foundation spec 重構為純工程架構基準；移除 Dry Run、IAA、sample snapshot、task state machine、匯出流程與通知事件等業務規範；補強 REST API design principles、backend/frontend architecture、config-driven extensibility、data safety、testing、observability、performance、cache safety |
 | 1.1.0 | 2026-05-29 | 補全三處缺口：F-01 新增 Filtering/Sorting 約定（FR-059）；F-21 Backend 分層架構（FR-060~062）；F-22 Frontend Vertical Slice 結構（FR-063~065）；新增 SC-009/SC-010 |
 | 1.0.0 | 2026-05-29 | Initial spec：20 項評估結果（P0×6 + P1×6 + P2×8）轉為 58 個功能需求；同步新增 ADR-021 / ADR-022 |
