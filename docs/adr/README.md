@@ -38,3 +38,4 @@ Each ADR follows this structure:
 | [017](017-three-layer-agent-architecture.md) | Three-Layer Agent Architecture (Planner / Generator / Evaluator) | Accepted | 2026-05-27 |
 | [018](018-observability-prometheus-grafana.md) | Observability Stack — Prometheus + Grafana | Accepted | 2026-05-29 |
 | [019](019-ai-traceability-audit-logging.md) | AI Traceability and Audit Logging | Accepted | 2026-05-29 |
+| [020](020-application-error-tracking-sentry.md) | Application Error Tracking — Sentry | Accepted | 2026-05-29 |
