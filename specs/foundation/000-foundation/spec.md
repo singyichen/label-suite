@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.6.0
+版本: 1.7.0
 狀態: Draft
 ---
 
@@ -56,6 +56,22 @@
 ## 編號與追蹤規則
 
 FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不重新排序既有 FR，以維持 feature spec、tasks、tests、PR description 與歷史審查紀錄的 traceability。因此同一 section 內可能出現非連續 FR 編號；若未來需要統一重新排號，必須以 major version 更新並提供對照表。
+
+---
+
+## 架構背景：設計原則對應
+
+本規格以工程約束而非口號描述架構原則；下列對應用於 onboarding、spec review 與 implementation review，協助 reviewer 將常見設計原則落到可驗證的 Foundation 約束。
+
+| 原則 | Foundation 對應 | 實作判準 |
+|------|-----------------|----------|
+| SRP — 單一職責原則 | F-02 Backend 分層架構 | Router 只處理 HTTP 邊界；service 承接業務協調與 transaction boundary；CRUD helper 只處理單一資源資料存取。 |
+| OCP — 開閉原則 | F-06 Config-driven Extensibility | 新增 task type、widget、metric 或 review flow 時，透過 config schema、registry、strategy map 或 plugin boundary 擴充；不得修改核心 route/service 分支。 |
+| LSP — 里氏替換原則 | F-06 registry / strategy extension points | Registry 中的 calculator、widget、job handler 或 notifier 實作必須履行 base contract；替換實作不得改變呼叫端預期的輸入、輸出與錯誤語意。 |
+| ISP — 介面隔離原則 | F-02 Schema 分離、F-09 Frontend 型別 | Request schema、response schema、create schema、update schema 與 component props 必須各自只暴露使用者需要的欄位；不得用單一寬介面逼迫呼叫端提供無關資料。 |
+| DIP — 依賴反轉原則 | F-02 Backend 分層、F-04 Auth / Permission、`app/dependencies/` | Route 與 service 透過 FastAPI dependencies、session provider、permission dependency 或抽象協作者取得依賴；不得在高層流程直接建立具體 DB session、notifier 或外部 client。 |
+| CARP — 合成/聚合複用原則 | F-03 Frontend Vertical Slice、F-02 Schema 分離 | UI 行為以 component composition、props、hooks 與 feature-local helpers 組裝；共用 schema 欄位只以 base class 或 mixin 提取，避免深繼承鏈。 |
+| LKP — 最少知識原則 | F-03 跨模組邊界、FR-012、shared admission rule | Feature module 只依賴自己的內部檔案、shared domain-neutral contract 或 API boundary；不得直接深入其他 feature 的 hooks、stores、types 或 component internals。 |
 
 ---
 
@@ -593,6 +609,7 @@ frontend/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.7.0 | 2026-05-29 | 新增架構背景：補充 SRP、OCP、LSP、ISP、DIP、CARP、LKP 與 Foundation 約束的對應關係，作為 onboarding 與 review 導覽 |
 | 1.6.0 | 2026-05-29 | 補齊目錄結構缺口：backend middleware、core exceptions、tests conftest/core、notifications/jobs 內部結構、crud base；frontend shared stores、API client/auth services、routes paths、src/testing 命名與其他 feature 結構說明 |
 | 1.5.0 | 2026-05-29 | 修正歷史 changelog 中失效的 section/FR 引用；新增 FR 追加制說明；補上 design/system/MASTER.md 上游依賴；明確 sliding refresh token 行為與 access token 強制失效邊界；為架構常數補型別；補充 background job 基礎設施選型由 ADR 或 owning feature spec 決定 |
 | 1.4.0 | 2026-05-29 | 新增前後端基準目錄結構圖與各資料夾職責說明，作為 backend 分層與 frontend vertical slice 的共同參照 |
