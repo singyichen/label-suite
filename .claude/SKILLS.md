@@ -57,7 +57,8 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   │   └── test-report/
 │   ├── xmind-import/                # Fetch XMind share URL → Mermaid
 │   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
-│   └── ui-ux-pro-max/               # UI/UX Design Intelligence
+│   ├── ui-ux-pro-max/               # UI/UX Design Intelligence
+│   └── react-best-practices/        # React/Next.js performance optimization (Vercel)
 ├── agents/                      # AI Agent definitions (25 agents)
 └── SKILLS.md                    # This file
 ```
@@ -161,6 +162,23 @@ Skills for UI design systems, component styling, and UX best practices.
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
 | `/ui-ux-pro-max` | Generate complete design systems (style, color, typography, UX guidelines) for any product type | `/ui-ux-pro-max Build a dashboard for annotation analytics` |
+
+### React Best Practices (1 skill)
+
+70 React/Next.js performance optimization rules from Vercel Engineering, organized by impact priority.
+
+| Skill | Purpose | Example Usage |
+|-------|---------|---------------|
+| `/react-best-practices` | Apply React/Next.js performance patterns when writing, reviewing, or refactoring components | `/react-best-practices` |
+
+**Rule Categories:**
+
+- **CRITICAL**: Eliminating Waterfalls (`async-*`), Bundle Size (`bundle-*`)
+- **HIGH**: Server-Side Performance (`server-*`)
+- **MEDIUM**: Client-Side Data Fetching (`client-*`), Re-render Optimization (`rerender-*`), Rendering Performance (`rendering-*`)
+- **LOW**: JavaScript Performance (`js-*`), Advanced Patterns (`advanced-*`)
+
+**Source:** [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices) — MIT License
 
 **Capabilities:**
 - 67 UI styles (Glassmorphism, Brutalism, Bento Grid, Minimalism, etc.)
