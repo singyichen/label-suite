@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.9.0
+版本: 1.10.0
 狀態: Draft
 ---
 
@@ -27,7 +27,7 @@
 4. Frontend feature vertical slice、shared admission rule、型別、狀態管理、UI/UX、A11y、i18n、responsive、performance 與 motion 基準。
 5. Auth、permission hook、CORS、secret、input validation、安全回應。
 6. Config-driven extensibility 的工程契約。
-7. 測試策略、CI quality gates、可觀測性與背景任務通用規則。
+7. 測試策略、CI quality gates、Prometheus / Grafana / Sentry 可觀測性與背景任務通用規則。
 
 ### 本規格不負責
 
@@ -238,6 +238,10 @@ frontend/
 - `REFRESH_TOKEN_GRACE_PERIOD: duration = 30 秒（concurrent refresh 容忍視窗；若選擇 grace period 策略）`
 - `MOBILE_BP: CSS px value = 767px`
 - `LOCALSTORAGE_LANG_KEY: string = labelsuite.lang`
+- `METRICS_ENABLED: boolean env = true in non-test runtime`
+- `SENTRY_DSN: secret env | empty = empty disables Sentry outside production`
+- `SENTRY_ENVIRONMENT: string env = local | test | staging | production`
+- `SENTRY_RELEASE: string env = git SHA or semantic deployment identifier`
 
 Domain 常數不得放入本節。狀態節點、演算法、執行類型、保留時間、事件名稱等，由 owning feature spec 或 ADR 定義。
 
@@ -507,6 +511,43 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ---
 
+### F-17：Observability / Metrics / Error Tracking Baseline（P1；FR-091~093 為 P0）
+
+**目標**：將 ADR-018 的 Prometheus / Grafana metrics baseline 與 ADR-020 的 Sentry error tracking baseline 轉為所有 feature 與 infrastructure task 必須遵守的可驗證工程契約。Metrics 用於 aggregate service health；Sentry 用於 exception triage；AI run lineage 與 audit record 仍由 ADR-019 與 F-13 定義。
+
+**約束情境 1 — Prometheus metrics boundary**：
+
+1. **Given** FastAPI 處理 HTTP request，**When** request 完成或失敗，**Then** 系統必須產生低基數、非敏感的 Prometheus metrics，至少涵蓋 request count、latency histogram、status-code count、unhandled exception count 與 readiness / health probe status。
+2. **Given** Celery worker 執行 background job，**When** job 進入 queued / running / succeeded / failed / retried / timed out 狀態，**Then** 系統必須產生或匯出 task metrics，至少涵蓋 task count by state、task duration、retry count、failure count 與 queue depth。
+3. **Given** 任一 metric 新增 label，**When** code review、test 或 analyzer 檢查，**Then** label 必須是低基數 allowlist 值；不得包含 user input、per-row identifier、annotation content、hidden answer 或 token 類敏感資料。
+
+**約束情境 2 — Grafana dashboards and Prometheus alerts**：
+
+1. **Given** deployment config 準備啟動 application stack，**When** 使用 Docker Compose 或等效 orchestration，**Then** 系統必須包含 Prometheus、Grafana、PostgreSQL exporter 與 Redis exporter，並為 backend、worker、database 與 Redis 提供 healthcheck 或 readiness probe。
+2. **Given** monitoring artifact 被新增或修改，**When** PR 進入 review，**Then** Prometheus scrape config、alert rules 與 Grafana dashboard / provisioning files 必須以版本化檔案納入 repository。
+3. **Given** alert rule 被定義，**When** rule 觸發，**Then** alert 必須代表可行動症狀；不得為單一 transient request failure 或非操作性資訊建立 paging alert。
+
+**約束情境 3 — Sentry error tracking boundary**：
+
+1. **Given** frontend、backend 或 worker 發生 unhandled exception，**When** runtime environment 啟用 Sentry，**Then** 系統必須捕捉 exception、stack trace、release、environment 與 service metadata，並避免 raw payload 洩漏。
+2. **Given** Sentry event 即將送出，**When** event processor / `before_send` 執行，**Then** 系統必須 scrub sensitive payload，並停用或嚴格限制 request body、PII 與 payload-heavy breadcrumbs。
+3. **Given** frontend production build 產生 source map，**When** source map 用於 Sentry release，**Then** source map 必須只上傳到 Sentry release artifact 或等效受控位置；部署後不得公開提供 `.js.map` 檔。
+
+### 功能需求
+
+- **FR-091**：系統必須依 ADR-018 使用 Prometheus 作為 metrics baseline；FastAPI 必須暴露 metrics endpoint，至少包含 request count、latency histogram、status-code count、unhandled exception count 與 readiness / health probe status。
+- **FR-092**：系統必須讓 Celery worker 暴露或匯出 task metrics，至少包含 task count by state、task duration、retry count、failure count 與 queue depth。
+- **FR-093**：系統必須禁止 Prometheus metric label 包含 annotation text、dataset rows、hidden answers、raw payload、access token、user ID、task ID、dataset ID、submission ID、`ai_run_id` 或任意使用者輸入；若需關聯個別事件，必須使用 structured logs、audit tables 或 Sentry redacted context，而不是 Prometheus label。
+- **FR-094**：系統必須在 Docker Compose 或等效 deployment config 中定義 Prometheus、Grafana、PostgreSQL exporter 與 Redis exporter，並為 backend、worker、database 與 Redis 設定 healthcheck 或 readiness probe。
+- **FR-095**：系統必須將 Prometheus scrape config、alert rules、Grafana dashboards 與 provisioning files 以版本化檔案納入 repository；alerts 至少覆蓋 API unavailable、5xx error spike、p95 latency regression、Celery backlog、Celery failure spike、PostgreSQL saturation / disk pressure、Redis memory pressure / eviction spike。
+- **FR-096**：系統必須依 ADR-020 使用 Sentry 作為 frontend、backend 與 worker 的 application error tracking layer；三者必須設定 `environment`、`release` 與 `service` metadata。
+- **FR-097**：系統必須在 Sentry `before_send` 或等效 event processor 中 scrub sensitive payload；不得送出 hidden answers、annotation text、dataset rows、user labels / free text、raw prompts、full AI model responses、tokens、cookies、auth headers、raw request / response bodies、database URLs 或 connection strings。
+- **FR-098**：系統必須停用或嚴格限制 Sentry request body capture、PII capture 與 payload-heavy breadcrumbs；production 啟用前必須先在 staging 驗證 event payload。
+- **FR-099**：frontend production source maps 必須只上傳至 Sentry release artifacts 或等效受控位置；部署後不得公開提供 `.js.map` 檔，除非 static server 明確 deny public access。
+- **FR-100**：AI workflow exception 可在 Sentry context 中包含 redacted `ai_run_id` 以關聯 ADR-019 audit record，但不得把 prompt、tool output、hidden answers、annotation content 或 audit snapshot 寫入 Sentry。
+
+---
+
 ## P2 — 補充性工程約束
 
 ### F-11：統一錯誤與前端錯誤處理（P2）
@@ -600,6 +641,9 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 | [Constitution](../../_governance/constitution.md) | Generalization-First、Data Fairness、Security、Code Quality、CI/CD |
 | [ADR-010](../../../docs/adr/010-config-driven-architecture.md) | Config-driven task architecture |
 | [ADR-011](../../../docs/adr/011-frontend-source-structure.md) | Vertical feature slicing、shared/ admission rule |
+| [ADR-018](../../../docs/adr/018-observability-prometheus-grafana.md) | Prometheus + Grafana observability baseline |
+| [ADR-019](../../../docs/adr/019-ai-traceability-audit-logging.md) | AI traceability and audit logging boundary |
+| [ADR-020](../../../docs/adr/020-application-error-tracking-sentry.md) | Sentry application error tracking baseline |
 | [ADR-021](../../../docs/adr/021-jwt-refresh-token-auth.md) | JWT + Refresh Token 策略 |
 | [Design System Master](../../../design/system/MASTER.md) | Frontend design tokens、component states、interaction pattern |
 | [IA v1.4.3](../../../docs/product/ia/information-architecture.md) | §6.1 Foundation Spec 關係 |
@@ -608,13 +652,13 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 規格類型 | 依賴的 Foundation 約束 |
 |---------|----------------------|
-| account | F-01 REST API、F-04 Auth、F-05 Security、F-09 Frontend 型別 |
-| dashboard | F-03 Frontend Vertical Slice、F-04 Permission、F-09 Frontend state |
-| task-management | F-01 REST API、F-02 Backend 分層、F-06 Config-driven、F-08 Persistence |
-| annotation | F-03 Frontend Vertical Slice、F-06 Config-driven、F-07 Data Safety、F-10 Testing、F-16 Frontend Experience |
-| dataset | F-01 REST API、F-08 Persistence、F-14 Performance、F-16 Frontend Experience |
-| annotator-management | F-04 Permission、F-05 Security、F-13 Audit |
-| admin | F-04 Permission、F-05 Security、F-13 Audit、F-16 Frontend Experience |
+| account | F-01 REST API、F-04 Auth、F-05 Security、F-09 Frontend 型別、F-17 Error Tracking |
+| dashboard | F-03 Frontend Vertical Slice、F-04 Permission、F-09 Frontend state、F-17 Metrics |
+| task-management | F-01 REST API、F-02 Backend 分層、F-06 Config-driven、F-08 Persistence、F-17 Worker Metrics |
+| annotation | F-03 Frontend Vertical Slice、F-06 Config-driven、F-07 Data Safety、F-10 Testing、F-16 Frontend Experience、F-17 Metrics / Sentry data safety |
+| dataset | F-01 REST API、F-08 Persistence、F-14 Performance、F-16 Frontend Experience、F-17 Metrics / Sentry data safety |
+| annotator-management | F-04 Permission、F-05 Security、F-13 Audit、F-17 Error Tracking |
+| admin | F-04 Permission、F-05 Security、F-13 Audit、F-16 Frontend Experience、F-17 Observability |
 
 ---
 
@@ -640,6 +684,14 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-018**：CI 必須執行 OpenAPI schema export 並驗證 `openapi.json` 可生成；frontend type codegen 或一致性驗證腳本必須在 CI 中通過，確保 `shared/types/` 中的 API 型別與 backend schema 一致。
 - **SC-019**：`frontend/src/shared/constants/query-keys.ts` 必須存在；feature service 中的 `useQuery` / `useMutation` / `useInfiniteQuery` 呼叫不得使用 inline string array 作為 queryKey（可透過 ESLint rule 或 grep 驗證）。
 - **SC-020**：`QueryClient` 的 `retry` callback 必須有單元測試驗證 auth error（HTTP 401）不觸發 retry；`shared/services/api-client.ts` 的 401 interceptor 必須有 refresh 失敗情境的整合測試。
+- **SC-021**：CI 或 backend integration test 必須驗證 metrics endpoint 可回傳 Prometheus text format，且包含 HTTP request counter 與 latency histogram。
+- **SC-022**：CI analyzer 或 grep rule 必須檢查 Prometheus metric label allowlist；不得出現 `user_id`、`task_id`、`dataset_id`、`submission_id`、`ai_run_id`、`sample_id`、`annotation_text`、`answer`、`ground_truth` 等高基數或敏感 label。
+- **SC-023**：Docker Compose 或等效 deployment config 必須包含 `prometheus`、`grafana`、`postgres-exporter`、`redis-exporter`，並為 backend、worker、database 與 Redis 定義 healthcheck 或 readiness probe。
+- **SC-024**：Prometheus scrape config、alert rule 檔案與 Grafana dashboard / provisioning 檔案必須存在並通過格式檢查；alert rules 必須至少覆蓋 FR-095 定義的可行動症狀。
+- **SC-025**：backend、frontend 與 worker 必須有 Sentry initialization test 或 config validation；production 缺少 `SENTRY_DSN` 時必須 fail fast，非 production 缺少 `SENTRY_DSN` 時必須明確停用並記錄結構化 warning。
+- **SC-026**：Sentry scrubbing 測試必須覆蓋 token、cookie、authorization header、raw request body、annotation text、hidden answer、dataset row、prompt、model response 與 database URL 欄位。
+- **SC-027**：frontend production build artifact 不得公開包含 `.js.map` 檔，除非 static server 明確 deny public access；CI 必須驗證 Sentry source map upload token 只從 secret storage 取得，且不得出現在 repository tracked files。
+- **SC-028**：PR quality gate 必須在 pull request 上執行完整 lint、type check、test、OpenAPI、observability 與 Sentry validation；deploy workflow 不得繞過 protected branch 或直接以未審查 commit 發布 production。
 
 ---
 
@@ -651,6 +703,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - [x] 已移除具體 domain flow、狀態節點、演算法、資料生命週期、事件名稱與輸出流程步驟。
 - [x] 已保留 Constitution 要求的 config-driven extensibility 與 restricted-client data-safety contract。
 - [x] 已納入 REST API resource naming、versioning、filtering、pagination、cacheability、security、idempotence、input validation 原則。
+- [x] 已將 ADR-018 Prometheus / Grafana 與 ADR-020 Sentry 轉為可驗證的 Foundation FR / SC。
 - [x] 所有 FR-* 與 SC-* 可測試且明確。
 
 ### Label Suite 合規性
@@ -660,6 +713,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - [x] domain variation 以 config / registry 擴展，禁止核心硬編碼。
 - [x] restricted-client API 不得暴露敏感答案、評分鍵或內部評估資料。
 - [x] frontend engineering baseline 覆蓋 UI/UX、狀態管理、API 交互、組件化、響應式、效能、A11y、安全、i18n/l10n、動效。
+- [x] observability baseline 覆蓋 Prometheus metrics、Grafana dashboards、alert rules、Sentry event scrubbing 與 source map policy。
 - [x] security、testing、CI gates 與 Constitution 一致。
 
 ---
@@ -668,6 +722,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.10.0 | 2026-05-29 | 依 senior-devops 評估補強 Prometheus + Grafana + Sentry observability baseline：新增 F-17、FR-091~FR-100 與 SC-021~SC-028；明確 FastAPI / Celery metrics、low-cardinality label 與 sensitive-data 禁止規則、Docker Compose monitoring stack、Prometheus rules、Grafana dashboards、Sentry frontend/backend/worker 初始化、event scrubbing、PII/request body 限制、frontend source map policy、AI workflow exception 與 ADR-019 的 redacted context 邊界；補充 ADR-018/019/020 上游相依性與 Sentry / metrics 架構常數 |
 | 1.9.0 | 2026-05-29 | 依 senior-backend + senior-full-stack 雙向評估結果補強：新增 FR-068~FR-090（23 項）與 SC-014~SC-020（7 項）；涵蓋 PaginatedResponse 欄位補全、分頁邊界驗證、OpenAPI CI gate、SQLAlchemy async transaction boundary + lazy load 防護、Alembic async env.py、refresh token race condition 策略、absolute max TTL、access token 強制失效 P1 化、CSRF subdomain 評估、rate limiting、password hash 演算法、restricted-client safe schema allowlist 設計、Celery UPSERT 冪等性、TanStack Query queryKey factory、401 retry 防競爭、job polling contract、test DB SAVEPOINT isolation、ErrorDetail schema 完整定義、Celery sync DB session 邊界分離；補充 resource-scoped permission 應由 API capability 回傳的約束情境；新增架構常數 REFRESH_TOKEN_ABSOLUTE_MAX_TTL 與 REFRESH_TOKEN_GRACE_PERIOD |
 | 1.8.0 | 2026-05-29 | 依 NestJS 到 FastAPI 架構對應補強 backend 基準目錄結構：明確 module/router/service/schema/model/crud/dependency/middleware/jobs/scheduler/config 對應與實作基準 |
 | 1.7.0 | 2026-05-29 | 新增架構背景：補充 SRP、OCP、LSP、ISP、DIP、CARP、LKP 與 Foundation 約束的對應關係，作為 onboarding 與 review 導覽 |
