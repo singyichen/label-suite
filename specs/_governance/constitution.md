@@ -1,18 +1,20 @@
 <!--
-Sync Impact Report — constitution v1.29.0
+Sync Impact Report — constitution v1.29.1
 Generated: 2026-05-29
 
-Version change: v1.28.0 → v1.29.0
-Bump type: MINOR — extend Principle V with Human Handoff Readiness requirement
+Version change: v1.29.0 → v1.29.1
+Bump type: PATCH — strengthen three existing principles to close ADR coverage gaps
 
 Changed principles:
-- V. Code Quality & Simplicity — added Human Handoff Readiness bullet (intent-stating names, two-call-level entry point reachability, one-indirection main path, no readability-sacrificing compression)
+- VII. Design Consistency — add Storybook story requirement for non-page components (closes ADR-016 gap)
+- XXIII. Frontend-Backend Contract Governance — add prototype↔React data-testid contract binding rule (closes ADR-014 gap)
+- XXIX. Cache Safety & Invalidation — add universal explicit-TTL requirement for all cache entries (closes ADR-006 gap)
 
 New sections: none
 Removed sections: none
 
 Templates sync status:
-- .specify/templates/plan-template.md: ✅ Updated — Principle V checklist item extended
+- .specify/templates/plan-template.md: ✅ Updated — Principle VII checklist item extended with Storybook requirement
 - .specify/templates/spec-template.md: ✅ No changes required
 - .specify/templates/tasks-template.md: ✅ No changes required
 - .specify/templates/checklist-template.md: ✅ No changes required
@@ -97,6 +99,7 @@ UI must be consistent across modules and follow the established design system.
 - Component states (loading, error, empty, disabled) must be implemented consistently across all modules
 - Prototype screens in `design/prototype/pages/` are the source of truth for layout and interaction behavior; any deviation requires a spec update
 - New UI features must reuse existing shared components before introducing new ones
+- Every non-page UI component must have a Storybook story covering at minimum the Default state and applicable boundary states (Empty, Loading, Error, Disabled); stories must be kept in sync with the component and may not be omitted after initial creation
 - Accessibility must conform to WCAG 2.1 AA; all interactive elements must be keyboard-navigable and announced correctly by screen readers
 
 ### VIII. Performance Baseline (RECOMMENDED)
@@ -254,6 +257,7 @@ Frontend and backend must share explicit contracts for all cross-boundary data.
 - Breaking contract changes require coordinated frontend, backend, migration, and test updates in a single change
 - Mock data, fixtures, and prototypes must not define enum values or API shapes that conflict with the canonical contract
 - Generated types or contract tests must be used where practical to prevent silent drift
+- Prototype HTML and its corresponding React implementation must share a consistent `data-testid` attribute contract where semantic selectors (role, label, text) are insufficient; `data-testid` values established in prototype specs are binding on the React implementation unless the deviation is explicitly documented
 
 ### XXIV. Backend Consistency & Idempotency (RECOMMENDED)
 
@@ -313,6 +317,7 @@ Cached data must be scoped to its authorization boundary and invalidated at the 
 - The following events must invalidate or bypass affected cache entries: logout, role change, schema publish, annotation submission, review completion, assignment change, import completion, export completion
 - Permission-sensitive responses must not be served from a cache without validating against live authorization state or using a short TTL with a defined invalidation trigger
 - Cache behavior (what is cached, for how long, and when invalidated) must be documented for any cached resource
+- All cache entries must declare an explicit TTL at write time; an entry stored without an explicit TTL must be accompanied by a documented justification; unbounded cache entries are not permitted
 
 ### XXX. Test Data Isolation (NON-NEGOTIABLE)
 
@@ -349,12 +354,13 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all thirty principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.29.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-29
+**Version**: 1.29.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-29
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.29.1 | 2026-05-29 | Strengthen Principle VII (add Storybook story requirement for non-page components); Principle XXIII (add prototype↔React data-testid contract binding rule); Principle XXIX (add universal explicit-TTL requirement for all cache entries) |
 | 1.29.0 | 2026-05-29 | Extend Principle V (Code Quality & Simplicity) with Human Handoff Readiness: intent-stating names, two-call-level entry point reachability, one-indirection main path, no readability-sacrificing compression |
 | 1.28.0 | 2026-05-28 | Add Principle XXX (Test Data Isolation — NON-NEGOTIABLE): no production/PII/real answer-key data in tests; synthetic or approved-scrubbed datasets only; fictional annotator-facing scenarios; approved synthetic datasets for scoring tests |
 | 1.27.0 | 2026-05-28 | Add Principle XXIX (Cache Safety & Invalidation — RECOMMENDED): boundary-scoped cache keys; no test-set answers or scoring internals in cache; invalidation triggers on auth/lifecycle events; live auth validation or short TTL for permission-sensitive responses; documented cache behavior |
