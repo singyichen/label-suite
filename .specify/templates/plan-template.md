@@ -8,27 +8,6 @@
 # 實作計畫：[功能名稱]
 
 **規格**: [連結至 `specs/[module]/NNN-feature/spec.md`]
-**輸入**: `specs/[module]/NNN-feature/spec.md`
-
-## 執行流程（/speckit.plan 範圍）
-
-```text
-1. 從輸入路徑載入功能規格
-   → 若未找到：ERROR "No feature spec at {path}"
-2. 填寫技術脈絡
-3. 評估下方憲章檢查
-   → 若存在違反項目：記錄至複雜度追蹤
-   → 若無正當理由：ERROR "Simplify approach first"
-4. 執行 Phase 0 → 研究（若有未知事項）
-   → 若仍有 NEEDS CLARIFICATION：ERROR "Resolve unknowns before proceeding"
-5. 執行 Phase 1 → 契約、資料模型、系統流程
-6. 重新評估憲章檢查
-   → 若發現新違反：重構設計，返回 Phase 1
-7. 描述任務產生方式（不得建立 tasks.md）
-8. 停止 — 準備好進入 /speckit.tasks
-```
-
-**重要**：/speckit.plan 在第 7 步停止。任務建立由 /speckit.tasks 負責。
 
 ## 功能目標
 
@@ -42,11 +21,6 @@
 
 ## 技術脈絡
 
-**語言 / 版本**: Python 3.12+ / TypeScript 5+
-**主要相依套件**: FastAPI / React + Vite
-**儲存**: PostgreSQL + Redis
-**測試**: pytest + Vitest + Playwright + Storybook
-**目標平台**: Web（瀏覽器 + REST API）
 **效能目標**: [例：API p95 < 500ms]
 **限制**: [例：Config-driven，不得硬編碼 task 邏輯]
 
