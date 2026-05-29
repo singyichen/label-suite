@@ -3,7 +3,7 @@
 > **用途：** 作為 SDD 開發的參考基準。每份 `spec.md` 撰寫前，應先對照本文件確認頁面歸屬、使用者角色、進入條件與導覽關係。
 >
 > **基礎來源：** [`functional-map.md`](../functional-map/functional-map.md)
-> **版本：** 1.4.2（2026-05-19）
+> **版本：** 1.4.3（2026-05-29）
 
 ---
 
@@ -621,6 +621,27 @@ sequenceDiagram
 | 完成後去哪裡？ | § 4 各頁面「離開方式」 |
 | 這個功能跑完整 user journey 是什麼？ | § 5 核心使用者旅程 |
 | 有沒有跨模組的資料依賴？ | § 3 頁面導覽結構圖 |
+| 有沒有共同工程基準或架構約束？ | § 6.1 Foundation Spec 關係 |
+
+---
+
+## 6.1 Foundation Spec 關係
+
+Foundation Spec 是所有功能 spec 的上游工程基準，不取代本 IA，也不定義單一使用者頁面。
+
+| 文件 | 責任範圍 |
+|------|----------|
+| 本 IA | 定義產品資訊架構：角色、頁面、導覽、進入條件、模組歸屬與 user journey |
+| Foundation Spec | 定義工程基準：架構邊界、API 慣例、錯誤格式、測試策略、task config extensibility、安全約束 |
+| Feature Spec | 定義單一功能或操作流程，且必須同時符合本 IA 與 Foundation Spec |
+
+產製任何 feature spec 前，應先確認 Foundation Spec 是否已覆蓋該功能需要的共同約束；若缺少共同約束，應先補 Foundation Spec，再產製 feature spec。若本 IA、Foundation Spec 與 Constitution 之間出現衝突，應以 Constitution 為最高準則，並更新衝突文件使規則一致。
+
+建議 Foundation Spec 位置：
+
+```text
+specs/foundation/000-foundation/
+```
 
 ---
 
@@ -639,10 +660,17 @@ sequenceDiagram
 
 **開發批次：**
 
+- **P0 — Foundation**（000）：所有功能 spec 的工程基準與共同約束
 - **P1 — 基礎建設**（001–007 + 012 + Shared）：帳號系統、角色管理、共用導覽、儀表板，所有功能的前提
 - **P2 — 核心功能**（010 + 013–017）：任務建立到標記完整流程、資料集分析
 
 ### Spec 清單
+
+#### foundation
+
+| # | Spec 名稱 | 頁面 / 範圍 | 模組 | 複雜度 | 批次 | 狀態 |
+| --- | ----------- | ------------ | ------ | -------- | ------ | ------ |
+| 000 | Foundation — 工程基準與共同約束 | 全 codebase；非單一頁面 | foundation | ★★★☆☆ | P0 | ⬜ 待做 |
 
 #### shared
 
@@ -703,6 +731,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.3 | 2026-05-29 | 補充 Foundation Spec 與 IA / SDD 的關係：Foundation 作為所有 feature spec 的上游工程基準，新增 P0 Foundation 開發批次與 `000-foundation` spec 條目 |
 | 1.4.2 | 2026-05-19 | 同步通知設定 IA：`profile` 納入通知設定區塊，通知欄位改為「電子郵件」，事件增為六項並新增「正式標記全員完成」；Official Run 全員完成時通知 `project_leader` |
 | 1.4.1 | 2026-05-19 | 依 `014-task-detail` 最新規格同步 `task-detail` IA：補齊 Overview 5 區塊、`draft → dry_run_in_progress → waiting_iaa_confirmation → official_run_in_progress → completed` 狀態機、stepper 顯示階段、單一執行判定 banner、樣本池分配、試標回合歷程、執行控制按鈕對應與標記清單建立時機 |
 | 1.4.0 | 2026-05-19 | 以最新 prototype 為準同步 IA：`task-new` 改 4 steps、`task-detail` 改 5 tabs 並補 `annotation-results`、`profile` 補偏好設定與 Email 變更狀態、dataset 入口統一為 `/dataset-analysis`、admin `role-settings` 改為獨立 prototype 頁、Help Button 標記為 deferred |
