@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.8.0
+版本: 1.9.0
 狀態: Draft
 ---
 
@@ -11,7 +11,7 @@
 
 本規格定義 Label Suite 所有功能模組必須遵守的工程架構基準。它服務 backend、frontend、QA 與 reviewer，使任何 feature spec 在進入實作前，都能依同一套 API、分層架構、型別、安全、測試與可觀測性規則設計。
 
-本規格不定義單一業務流程、頁面旅程、任務狀態、演算法選型或資料生命週期。這些內容必須由各 feature spec 或 ADR 定義，並只能依本規格提供的工程邊界實作。
+本規格不定義單一 domain flow、頁面旅程、狀態節點、演算法選型或資料生命週期。這些內容必須由各 feature spec 或 ADR 定義，並只能依本規格提供的工程邊界實作。
 
 **需求來源**：Information Architecture v1.4.3 §6.1 Foundation Spec 關係；Constitution v1.29.1；REST API design best practices（resource naming、versioning、filtering、pagination、cacheability、security、idempotence、input validation）。
 
@@ -31,10 +31,10 @@
 
 ### 本規格不負責
 
-1. 具體任務狀態節點與轉換，例如 dry run、official run、IAA confirmation。
-2. 具體資料生命週期，例如 sample snapshot 建立、保留、不可變規則。
-3. 具體演算法選型，例如 IAA / scoring algorithm。
-4. 具體通知事件名稱、匯出流程步驟、dashboard 分派邏輯。
+1. 具體 domain state 節點與轉換。
+2. 具體資料生命週期、保留政策或不可變規則。
+3. 具體演算法、評估方式或執行策略選型。
+4. 具體事件名稱、輸出流程步驟或頁面分派邏輯。
 5. 單一頁面 UX、wireframe、prototype 或文案。
 
 上述內容若需要規範，必須放在對應 module spec，例如 `task-management`、`annotation`、`dataset`、`admin` 或獨立 ADR。
@@ -46,7 +46,7 @@
 **產生 feature spec 時必須遵守**：
 
 1. Feature spec 不得覆寫本規格的工程邊界；若有衝突，必須先更新 foundation 或 ADR。
-2. Feature spec 可定義業務流程，但必須以本規格的 route/service/schema/test/security 契約落地。
+2. Feature spec 可定義 domain flow，但必須以本規格的 route/service/schema/test/security 契約落地。
 3. 每項工程約束均標記優先級（P0/P1/P2）與可驗證方式。
 4. 所有 FR-* 以「系統必須」開頭；SC-* 必須可透過 pytest / mypy / tsc / ruff / ESLint / Playwright / CI script 或明確整合測試驗證。
 5. 本規格與 Constitution 衝突時，Constitution 為最高準則。
@@ -65,11 +65,11 @@ FR 編號採追加制。後續版本新增需求時使用新的 FR 編號，不�
 
 | 原則 | Foundation 對應 | 實作判準 |
 |------|-----------------|----------|
-| SRP — 單一職責原則 | F-02 Backend 分層架構 | Router 只處理 HTTP 邊界；service 承接業務協調與 transaction boundary；CRUD helper 只處理單一資源資料存取。 |
-| OCP — 開閉原則 | F-06 Config-driven Extensibility | 新增 task type、widget、metric 或 review flow 時，透過 config schema、registry、strategy map 或 plugin boundary 擴充；不得修改核心 route/service 分支。 |
+| SRP — 單一職責原則 | F-02 Backend 分層架構 | Router 只處理 HTTP 邊界；service 承接應用協調與 transaction boundary；CRUD helper 只處理單一資源資料存取。 |
+| OCP — 開閉原則 | F-06 Config-driven Extensibility | 新增可變行為、UI variant、metric 或流程擴充點時，透過 config schema、registry、strategy map 或 plugin boundary 擴充；不得修改核心 route/service 分支。 |
 | LSP — 里氏替換原則 | F-06 registry / strategy extension points | Registry 中的 calculator、widget、job handler 或 notifier 實作必須履行 base contract；替換實作不得改變呼叫端預期的輸入、輸出與錯誤語意。 |
 | ISP — 介面隔離原則 | F-02 Schema 分離、F-09 Frontend 型別 | Request schema、response schema、create schema、update schema 與 component props 必須各自只暴露使用者需要的欄位；不得用單一寬介面逼迫呼叫端提供無關資料。 |
-| DIP — 依賴反轉原則 | F-02 Backend 分層、F-04 Auth / Permission、`app/dependencies/` | Route 與 service 透過 FastAPI dependencies、session provider、permission dependency 或抽象協作者取得依賴；不得在高層流程直接建立具體 DB session、notifier 或外部 client。 |
+| DIP — 依賴反轉原則 | F-02 Backend 分層、F-04 Auth / Permission、`app/dependencies/` | Route 與 service 透過 FastAPI dependencies、session provider、permission dependency 或抽象協作者取得依賴；不得在高層應用協調中直接建立具體 DB session、notifier 或外部 client。 |
 | CARP — 合成/聚合複用原則 | F-03 Frontend Vertical Slice、F-02 Schema 分離 | UI 行為以 component composition、props、hooks 與 feature-local helpers 組裝；共用 schema 欄位只以 base class 或 mixin 提取，避免深繼承鏈。 |
 | LKP — 最少知識原則 | F-03 跨模組邊界、FR-012、shared admission rule | Feature module 只依賴自己的內部檔案、shared domain-neutral contract 或 API boundary；不得直接深入其他 feature 的 hooks、stores、types 或 component internals。 |
 
@@ -115,11 +115,10 @@ backend/
 │   │   ├── task_management.py     # 任務管理模組路由
 │   │   ├── annotation.py          # 標記工作模組路由
 │   │   ├── dataset.py             # 資料集模組路由
-│   │   ├── annotator_management.py # 標記者管理模組路由
 │   │   └── admin.py               # 管理員模組路由
-│   ├── services/                  # class-based services；業務協調、交易邊界、權限協調與副作用派送
+│   ├── services/                  # class-based services；應用協調、交易邊界、權限協調與副作用派送
 │   │   └── [module].py            # 每個 feature boundary 對應一個 service class 或 package
-│   ├── crud/                      # Repository<T> 對應層；單一資源資料存取 helper，不放業務規則
+│   ├── crud/                      # Repository<T> 對應層；單一資源資料存取 helper，不放應用規則
 │   │   ├── base.py                # Generic CRUDBase[Model, CreateSchema, UpdateSchema]、分頁、soft-delete helper（可選）
 │   │   └── [model].py             # resource-specific CRUD helper；只加特殊查詢
 │   ├── schemas/                   # Pydantic DTO；request、response、config schema
@@ -142,7 +141,7 @@ backend/
 │   ├── metrics/                   # Registry-based metric 擴充點
 │   │   └── registry.py            # metric key 到實作的對應表
 │   ├── notifications/             # 通知傳輸與派送邊界
-│   │   ├── dispatcher.py          # 通知事件派送入口
+│   │   ├── dispatcher.py          # message / event 派送入口
 │   │   └── channels/              # email、in-app、webhook 等 transport 實作
 │   ├── jobs/                      # 背景工作、worker registry、scheduled task 與 job status 整合
 │   │   ├── registry.py            # job name 到 handler 的對應表
@@ -171,7 +170,7 @@ backend/
 Backend module 實作時必須維持下列基準：
 
 1. `app/routers/[module].py` 必須宣告 `router = APIRouter(prefix="/[resources]", tags=["[module]"])`，並透過 `Depends()` 取得 current user、permission guard 與 service。
-2. `app/services/[module].py` 必須以 class-based service 承接業務流程；route 不得直接建立 CRUD helper、組合 SQL 或承載資料存取流程。
+2. `app/services/[module].py` 必須以 class-based service 承接應用協調；route 不得直接建立 CRUD helper、組合 SQL 或承載資料存取流程。
 3. `app/crud/base.py` 必須提供可型別化的 generic CRUD base；resource-specific CRUD 只放查詢封裝，不放權限、workflow 或 side effect。
 4. `app/dependencies/permissions.py` 可用 class-based callable dependency 實作 NestJS guard 類角色，例如 `RoleChecker("admin")`。
 5. Background job infrastructure 必須由 ADR 或 owning feature spec 指定 ARQ、Celery 或其他 worker；不論選型，job handler 必須註冊於 `app/jobs/registry.py` 或等效 registry。
@@ -200,7 +199,6 @@ frontend/
 │   │   ├── task-management/       # 結構同 account/
 │   │   ├── annotation/            # 結構同 account/
 │   │   ├── dataset/               # 結構同 account/
-│   │   ├── annotator-management/  # 結構同 account/
 │   │   └── admin/                 # 結構同 account/
 │   ├── shared/                    # 被 2+ feature modules 使用、且不依賴 domain 的共用程式碼
 │   │   ├── components/            # 共用 UI components，需搭配 Storybook stories
@@ -236,10 +234,12 @@ frontend/
 - `PAGINATION_MAX_PAGE_SIZE: integer = 100`
 - `ACCESS_TOKEN_TTL: duration = 15 分鐘`
 - `REFRESH_TOKEN_TTL: duration = 7 天（sliding）`
+- `REFRESH_TOKEN_ABSOLUTE_MAX_TTL: duration = 90 天`
+- `REFRESH_TOKEN_GRACE_PERIOD: duration = 30 秒（concurrent refresh 容忍視窗；若選擇 grace period 策略）`
 - `MOBILE_BP: CSS px value = 767px`
 - `LOCALSTORAGE_LANG_KEY: string = labelsuite.lang`
 
-業務常數不得放入本節。任務狀態、演算法、run type、匯出保留時間、通知事件名稱等，由 owning feature spec 或 ADR 定義。
+Domain 常數不得放入本節。狀態節點、演算法、執行類型、保留時間、事件名稱等，由 owning feature spec 或 ADR 定義。
 
 ---
 
@@ -252,7 +252,7 @@ frontend/
 **約束情境 1 — Resource-based URI**：
 
 1. **Given** 任何新 API 端點，**When** 命名路由，**Then** 系統必須使用 `{API_VERSION_PREFIX}/[module]/[resources]` 格式，resource 使用複數名詞。
-2. **Given** 任何 API 端點，**When** route 表達業務動作，**Then** 系統必須優先使用 HTTP method 和 resource state 表達，不得以動詞式 URI 取代資源設計，除非 feature spec 記錄理由。
+2. **Given** 任何 API 端點，**When** route 表達狀態變更或操作意圖，**Then** 系統必須優先使用 HTTP method 和 resource state 表達，不得以動詞式 URI 取代資源設計，除非 feature spec 記錄理由。
 3. **Given** API contract 需要 breaking change，**When** 舊 client 會被破壞，**Then** 系統必須新增 API version 或提供明確 migration path，不得 silently 改變既有 response shape。
 
 **約束情境 2 — Request / Response**：
@@ -274,21 +274,25 @@ frontend/
 - **FR-001**：系統必須讓所有 API request body 以 Pydantic schema（`app/schemas/`）驗證。
 - **FR-002**：系統必須讓所有 API route 聲明 `response_model=`；不得直接回傳 ORM 物件。
 - **FR-003**：系統必須讓所有 list 端點支援 `page` 與 `page_size`，預設值為 `1` 與 `PAGINATION_DEFAULT_PAGE_SIZE`，上限為 `PAGINATION_MAX_PAGE_SIZE`。
-- **FR-004**：系統必須透過 `APIRouter` 以 module prefix 與 tags 組織路由；不得在 `main.py` 直接定義業務路由。
+- **FR-004**：系統必須透過 `APIRouter` 以 module prefix 與 tags 組織路由；不得在 `main.py` 直接定義資源路由。
 - **FR-005**：系統必須以 `ALLOWED_SORT_FIELDS` / `ALLOWED_FILTER_FIELDS` 或等效 schema 明確宣告每個 list 端點允許的排序與篩選欄位。
-- **FR-006**：系統必須在 API response 中使用正確 HTTP status code；`400` 表示 request 語意或業務規則錯誤，`401` 表示未認證，`403` 表示已認證但不可授權且不需隱藏資源存在，`404` 表示不存在或必須隱藏存在性，`422` 表示 schema validation 錯誤。
+- **FR-006**：系統必須在 API response 中使用正確 HTTP status code；`400` 表示 request 語意或應用規則錯誤，`401` 表示未認證，`403` 表示已認證但不可授權且不需隱藏資源存在，`404` 表示不存在或必須隱藏存在性，`422` 表示 schema validation 錯誤。
+- **FR-068**：系統必須讓 `PaginatedResponse[T]` 包含 `has_more: bool` 與 `total_pages: int` 欄位，使 frontend 無需自行計算分頁邊界；欄位應從 `total` 與 `page_size` 衍生，不得要求 DB 額外查詢。
+- **FR-069**：系統必須讓 list 端點的分頁參數在 Pydantic schema 層以 `page: int = Field(ge=1)` 與 `page_size: int = Field(ge=1, le=PAGINATION_MAX_PAGE_SIZE)` 限制；`page` 超過總頁數時回傳空 `items` 陣列與 `has_more: false`，不得回傳 `404`。
+- **FR-070**：系統必須讓開發環境啟用 FastAPI `/docs` 與 `/redoc`；production 環境必須透過環境變數（如 `ENABLE_OPENAPI_DOCS`）控制是否暴露，預設 disabled，以避免 API 文件對外洩漏。
+- **FR-071**：系統必須讓 CI pipeline 在 backend test 後自動 export `openapi.json`；frontend 的 API response 相關型別（`shared/types/` 中）必須從 OpenAPI schema 自動生成（如 `openapi-typescript`）或透過 CI script 驗證與 `openapi.json` 一致，型別漂移必須在 CI 層阻擋。
 
 ---
 
 ### F-02：Backend 分層架構（P0）
 
-**目標**：確保 backend 各層職責清晰分離，讓 route、service、CRUD helper、schema 均可獨立測試，並避免業務規則散落於 HTTP 層或 DB 操作層。
+**目標**：確保 backend 各層職責清晰分離，讓 route、service、CRUD helper、schema 均可獨立測試，並避免應用規則散落於 HTTP 層或 DB 操作層。
 
 **約束情境 1 — 層次職責**：
 
 1. **Given** 任何 API route handler，**When** 實作行為，**Then** 系統必須將 route handler 限定為：parse request → authorize dependency → call service → serialize response。
 2. **Given** 任何 route handler，**When** 需要資料存取，**Then** 系統不得在 route handler 中直接呼叫 `db.execute()`、`db.get()`、`db.query()` 或組合 SQL。
-3. **Given** 任何 CRUD helper，**When** 實作資料操作，**Then** 系統必須限制它只處理單一資源的 DB CRUD；不得包含權限判斷、跨資源 workflow、background job dispatch 或通知。
+3. **Given** 任何 CRUD helper，**When** 實作資料操作，**Then** 系統必須限制它只處理單一資源的 DB CRUD；不得包含權限判斷、跨資源 workflow、background job dispatch 或 side effect。
 4. **Given** 任何跨資源規則、狀態變更或 side effect，**When** 實作位置被決定，**Then** 系統必須放在 `app/services/[module].py` 或明確命名的 service package。
 
 **約束情境 2 — Schema 分離**：
@@ -299,10 +303,13 @@ frontend/
 ### 功能需求
 
 - **FR-007**：系統必須遵循 `app/routers/`、`app/services/`、`app/crud/`、`app/schemas/`、`app/models/`、`app/core/` 的 backend 分層。
-- **FR-008**：系統必須讓 route handler 只負責 HTTP 邊界，不得承載業務規則或資料存取細節。
+- **FR-008**：系統必須讓 route handler 只負責 HTTP 邊界，不得承載應用規則或資料存取細節。
 - **FR-009**：系統必須讓 service 層成為跨資源規則、權限協調、transaction boundary、side effect dispatch 的唯一入口。
-- **FR-010**：系統必須讓 CRUD helper 不含業務判斷、權限判斷或 side effects。
+- **FR-010**：系統必須讓 CRUD helper 不含應用判斷、權限判斷或 side effects。
 - **FR-011**：系統必須將 request schema 與 response schema 分開定義；共用欄位只能以 base class 或 mixin 提取。
+- **FR-072**：系統必須讓 service 層使用 `async with db.begin()` 顯式控制 transaction boundary，或由 `get_db` dependency 統一負責 begin / commit / rollback；同一 route handler 中呼叫多個 service 方法時，必須共享同一 DB transaction 以確保原子性。
+- **FR-073**：系統必須讓 service 層在回傳資料前完成所有關聯屬性的 eager load（`selectinload`、`joinedload` 或等效 projection query）；route handler 或 response schema 序列化時不得依賴 SQLAlchemy lazy load，以避免 async context 下的 `MissingGreenlet` 或 `DetachedInstanceError`。
+- **FR-074**：系統必須讓 `alembic/env.py` 的 `run_migrations_online` 使用 `connection.run_sync(do_run_migrations)` 模式以支援 async engine；不得在 async context 下直接執行 migration 而不透過 `run_sync` 包裝。
 
 ---
 
@@ -344,7 +351,7 @@ frontend/
 **約束情境 1 — JWT 與 Refresh Token**：
 
 1. **Given** 登入成功，**When** 系統核發 token，**Then** 系統必須以 `httpOnly; Secure; SameSite=Lax` cookie 傳送 access token 與 refresh token。
-2. **Given** JWT payload 被建立，**When** 系統寫入 claims，**Then** payload 只能包含認證必要 claims，例如 `sub`、system-level `role`、`iat`、`exp`；不得包含 resource-scoped permission 或 task-scoped role。
+2. **Given** JWT payload 被建立，**When** 系統寫入 claims，**Then** payload 只能包含認證必要 claims，例如 `sub`、system-level `role`、`iat`、`exp`；不得包含 resource-scoped permission 或 module-specific role。
 3. **Given** refresh token 使用一次，**When** `/auth/refresh` 成功，**Then** 系統必須旋轉 refresh token、立即作廢舊 token，並依 `REFRESH_TOKEN_TTL` 延長新 refresh token 的 `expires_at`。
 4. **Given** refresh token reuse 被偵測，**When** 已作廢 token 再次被使用，**Then** 系統必須撤銷該使用者仍有效的 refresh tokens。
 5. **Given** 系統需要立即撤銷尚未過期的 access token，**When** feature spec 或 ADR 要求強制登出、帳號停權或高風險事件處理，**Then** 系統必須定義 `jti` deny list、token version 或等效 access-token invalidation mechanism；未定義前，access token 在 `ACCESS_TOKEN_TTL` 內仍可能有效。
@@ -354,6 +361,7 @@ frontend/
 1. **Given** 任何受保護 API route，**When** request 進入，**Then** 系統必須透過 authentication dependency 注入 current user，不得繞過。
 2. **Given** 任何 resource-scoped operation，**When** 後端執行授權，**Then** 系統必須在 route dependency 或 service 層驗證該 resource 的 membership / permission，不得只依賴 system role。
 3. **Given** 前端需要判斷 resource-scoped permission，**When** 渲染功能入口，**Then** 系統必須透過 API 取得 permission，不得從 JWT 或 localStorage 推斷。
+4. **Given** 前端需要依權限渲染功能入口，**When** 權限資訊具備 resource scope，**Then** 系統必須由 API 回傳可用 action 或 capability；不得從 JWT、localStorage 或全域 auth store 推導 resource-scoped 權限。
 
 ### 功能需求
 
@@ -361,6 +369,10 @@ frontend/
 - **FR-017**：系統必須讓 frontend auth store 僅保存非敏感 session state；不得將 raw token 持久化至 localStorage。
 - **FR-018**：系統必須讓 resource permission checks 位於 route dependency 或 service 層；CRUD helper 不得內嵌權限邏輯。
 - **FR-019**：系統必須對 unauthorized、forbidden、resource-hidden 三種情境撰寫測試。
+- **FR-075**：系統必須明確定義 refresh token concurrent refresh 的處理策略，擇一實作：（A）grace period 策略：已 revoke 但在 `REFRESH_TOKEN_GRACE_PERIOD` 內的 token 可視為有效並重新核發，不觸發全量撤銷；（B）mutex 策略：使用 `SELECT ... FOR UPDATE SKIP LOCKED` 確保只有第一個 refresh 成功，其餘回傳 `409 Conflict`。所選策略必須在 ADR-021 記錄，並補充 concurrent refresh 情境的測試。
+- **FR-076**：系統必須讓 sliding refresh token 受 `REFRESH_TOKEN_ABSOLUTE_MAX_TTL` 約束；session 自首次登入起超過 absolute max 後必須強制重新登入，不得無限 sliding 延期；若安全策略允許不同上限，須在 ADR 明確說明理由。
+- **FR-077**：系統必須讓高風險安全事件能立即作廢尚未過期的 access token，透過 jti deny list（儲存於 Redis，entry TTL 等於剩餘 `ACCESS_TOKEN_TTL`）或 token_version bump 實作；此機制為 **P1 強制要求**，由 auth/security owning spec 指定 `app/core/security.py` 中的具體實作並補充測試；「未定義」不得作為永久的豁免狀態。
+- **FR-078**：若系統部署環境包含同一 eTLD+1 的多個 subdomain（如 `api.lab.edu` 與 `app.lab.edu`），系統必須在 POST / PUT / DELETE / PATCH 端點額外驗證 `Origin` header 在 `ALLOWED_ORIGINS` 中，作為 `SameSite=Lax` 不覆蓋 same-site subdomain 的補充 CSRF 防護；feature spec 的 security review 必須顯式評估此風險並記錄豁免或啟用決定。
 
 ---
 
@@ -382,16 +394,18 @@ frontend/
 - **FR-021**：系統必須以 `ALLOWED_ORIGINS` 設定 CORS；`ALLOWED_ORIGINS=*` 在 production 視為 CI 或 startup failure。
 - **FR-022**：系統必須在 startup validation 檢查必要環境變數；缺失或非法值必須 fail fast。
 - **FR-023**：系統必須禁止 committed debug `print` / `console.log`。
+- **FR-079**：系統必須對 `/auth/login`、`/auth/refresh` 等認證端點實施速率限制；超過限制必須回傳 `429 Too Many Requests`；具體閾值由 auth/security owning spec 或 ADR 定義，但不得為 unlimited；rate limiting 實作必須在 `app/middleware/` 或 route-level dependency 中集中管理。
+- **FR-080**：系統必須使用 bcrypt（cost factor ≥ 12）或 argon2id 儲存密碼 hash；`app/core/security.py` 必須集中所有密碼 hash / verify 邏輯；不得使用 MD5、SHA-1 或未加鹽的 SHA-256 直接 hash 密碼。
 
 ---
 
 ### F-06：Config-driven Extensibility（P0）
 
-**目標**：確保平台新增 task type、label widget、metric、review flow 或其他 domain variation 時，優先透過 config / registry 擴展，不修改核心流程分支。
+**目標**：確保平台新增可變行為、UI variant、metric、workflow extension 或其他 domain variation 時，優先透過 config / registry 擴展，不修改核心流程分支。
 
 **約束情境**：
 
-1. **Given** feature spec 新增 domain variation，**When** 核心服務需要依 variation 決定行為，**Then** 系統必須使用 config schema、registry、strategy map 或 plugin boundary，不得在核心 route/service 寫入 `if [domain_type] == ...` 分支。
+1. **Given** feature spec 新增 domain variation，**When** 核心服務需要依 variation 決定行為，**Then** 系統必須使用 config schema、registry、strategy map 或 plugin boundary，不得在核心 route/service 寫入 `if [variation_type] == ...` 分支。
 2. **Given** config 引用 registry key，**When** 建立或更新資源，**Then** 系統必須驗證該 key 存在；找不到則回傳 `422`。
 3. **Given** frontend 需要依 config 渲染不同 UI，**When** 選擇 component，**Then** 系統必須使用 widget registry 或 mapping；不得以 feature-local `if/switch` 硬編碼 domain type。
 
@@ -405,19 +419,21 @@ frontend/
 
 ## P1 — 跨模組品質與可維護性約束
 
-### F-07：資料安全與 Annotator-safe Contract（P1）
+### F-07：資料安全與 Restricted-client Contract（P1）
 
-**目標**：把 Constitution 的資料公平性轉為可驗證的 API 安全契約，但不在 foundation 定義具體標記流程。
+**目標**：把 Constitution 的敏感資料隔離要求轉為可驗證的 API 安全契約，但不在 foundation 定義具體流程。
 
 **約束情境**：
 
-1. **Given** API response 會被 annotator-facing client 使用，**When** schema 被定義，**Then** 系統不得包含 ground truth、answer key、internal scoring metadata 或可推導 test item identity 的欄位。
-2. **Given** response schema 新增 sensitive 欄位，**When** 該 schema 可能被 annotator-facing endpoint 使用，**Then** 系統必須在 owning feature spec 記錄 exclusion rule 並新增 regression test。
+1. **Given** API response 會被低權限或外部協作者 client 使用，**When** schema 被定義，**Then** 系統不得包含 ground truth、answer key、internal evaluation metadata 或可推導 restricted item identity 的欄位。
+2. **Given** response schema 新增 sensitive 欄位，**When** 該 schema 可能被低權限或外部協作者 endpoint 使用，**Then** 系統必須在 owning feature spec 記錄 exclusion rule 並新增 regression test。
 
 ### 功能需求
 
-- **FR-027**：系統必須提供 `AnnotatorSafeBaseSchema` 或等效 schema boundary，供 annotator-facing response model 使用。
-- **FR-028**：系統必須以 tests 或 analyzer 掃描 annotator-facing response schema，阻擋 `ground_truth`、`score_key`、`answer`、`label_answer`、`*_key`、`*_truth`、`*_answer` 等欄位。
+- **FR-027**：系統必須提供 `RestrictedClientSafeBaseSchema` 或等效 schema boundary，供低權限或外部協作者 response model 使用。
+- **FR-028**：系統必須以 tests 或 analyzer 掃描 restricted-client response schema，阻擋 `ground_truth`、`score_key`、`answer`、`*_key`、`*_truth`、`*_answer` 等敏感欄位。
+- **FR-081**：系統必須讓 `RestrictedClientSafeBaseSchema` 採用 **allowlist** 設計：透過 Pydantic `model_config` 的欄位可見性控制或顯式宣告允許欄位集合；不得僅依賴欄位名稱 blocklist，以防止語意等價但命名不同的敏感欄位繞過掃描。
+- **FR-082**：系統必須讓 restricted-client API router 使用明確 OpenAPI tag 或等效標示；使前端開發者能從 API 文件辨識 restricted-client-safe boundary，不得誤用高權限端點的 response schema。
 
 ---
 
@@ -437,6 +453,7 @@ frontend/
 - **FR-029**：系統必須讓所有 DB schema changes 經 Alembic migration。
 - **FR-030**：系統必須讓所有 foreign keys 在 migration 中顯式聲明。
 - **FR-031**：系統必須讓測試環境使用真實 PostgreSQL 或與 production 行為一致的 DB 測試容器；不得以 mock 取代 ORM integration tests。
+- **FR-083**：系統必須讓所有 background job 的 DB write 使用 UPSERT 語意（`INSERT ... ON CONFLICT DO UPDATE` 或等效 ORM merge 操作）；不得使用 check-then-act pattern（先 SELECT 再 INSERT），以確保 Celery retry 在任何 crash point 後重新執行時不會產生重複資料。
 
 ---
 
@@ -463,6 +480,9 @@ frontend/
 - **FR-058**：系統必須集中 API client 設定，包括 base URL、credentials、headers、request timeout、401 refresh handling 與 `ErrorResponse` parsing。
 - **FR-059**：系統必須以 TanStack Query 或等效 server-state boundary 管理 API cache、refetch、mutation、retry 與 invalidation；不得以全域 client store 複製 server state。
 - **FR-060**：系統必須讓每個 mutation path 明確定義 optimistic update、pending state、success invalidation 與 failure rollback 或 failure display strategy。
+- **FR-084**：系統必須在 `frontend/src/shared/constants/query-keys.ts` 定義統一的 TanStack Query queryKey factory，採 `[module, resource, id?, subresource?]` 階層格式；feature service 必須引用此 factory；不得在 component 或 hook 中使用 inline string array 作為 queryKey，以確保跨 feature 的 cache invalidation 可靠執行。
+- **FR-085**：系統必須讓 `shared/services/api-client.ts` 的 401 interceptor 在 refresh token 過期或 refresh 本身失敗後，向上傳遞明確的 auth failure 標記；`QueryClient` 的 `retry` callback 必須對 auth error 回傳 `false`，防止 TanStack Query 預設 retry 與 refresh flow 產生競爭（最多 6 次冗餘請求）。
+- **FR-086**：系統必須讓前端對涉及 background job 的 mutation 提供進度感知機制，透過 polling `GET /api/v1/jobs/{job_id}` 或 SSE 訂閱取得完成通知；不得在 mutation `onSuccess` 時直接顯示完成，而 job 實際仍在執行中。
 
 ---
 
@@ -483,6 +503,7 @@ frontend/
 - **FR-037**：系統必須禁止 frontend snapshot tests。
 - **FR-038**：系統必須以 `@pytest.mark.integration` 標記 backend integration tests。
 - **FR-039**：系統必須將 factory helpers 定義於 `tests/factories/` 或 feature-local test factory；不得在 test body 內大量手寫資料。
+- **FR-087**：系統必須讓 backend integration test 的 DB session fixture 使用 `begin_nested()`（SAVEPOINT）並在每個 test 結束後 rollback，確保 test 之間完全隔離；不得使用 `TRUNCATE` 或重建 schema 作為清理手段，以維持 CI 執行效率。
 
 ---
 
@@ -495,6 +516,7 @@ frontend/
 - **FR-040**：系統必須讓所有 API 錯誤回應使用 `ErrorResponse` schema：`{ "detail": string | ErrorDetail[] }`。
 - **FR-041**：系統必須讓 frontend error boundary 或 TanStack Query error handler 解析 `ErrorResponse.detail`，不得顯示 raw stack trace、raw SQL error 或未處理的 HTTP client object。
 - **FR-042**：系統必須記錄 internal error detail 至 server log，但 user-facing response 不得洩漏 secret、token、SQL、filesystem path 或 sensitive payload。
+- **FR-088**：系統必須讓 `ErrorDetail` schema（定義於 `app/schemas/common.py`）包含以下欄位：`loc: list[str | int] | None`（Pydantic 欄位路徑，schema validation error 專用）、`msg: str`（人類可讀錯誤訊息）、`type: str`（機器可讀錯誤類型，如 `validation_error`、`application_rule`、`auth`、`not_found`）、`error_code: str | None`（應用錯誤碼，供 frontend 差異化處理）；frontend 的 error handler 必須能依 `type` 欄位區分 schema validation、application rule 與 auth 錯誤，並分別觸發欄位 highlight、Toast 或 redirect 行為。
 
 ---
 
@@ -507,6 +529,8 @@ frontend/
 - **FR-043**：系統必須讓每個 background job 宣告 stable name、retry policy、timeout、idempotency key 與 failure handling strategy。
 - **FR-044**：系統必須讓 background job 的 side effects 可重試或可恢復；重複執行不得產生重複資料或重複通知。
 - **FR-045**：系統必須讓 background job status 可觀測，至少包含 `queued`、`running`、`succeeded`、`failed` 或 owning feature spec 定義的等效狀態。
+- **FR-089**：系統必須讓 background job handler（Celery task）使用獨立的 sync SQLAlchemy engine 與 `Session`，不得複用 FastAPI 的 async session factory 或 `get_db` dependency；job handler 必須以 `with Session(sync_engine) as db:` 管理自身的 DB session lifecycle，確保 Celery sync worker 與 FastAPI async context 的 session 邊界完全分離。
+- **FR-090**：系統必須提供 `GET /api/v1/jobs/{job_id}` 端點，response 格式為 `{ id: string, status: "queued"|"running"|"succeeded"|"failed", result: T | null, error: string | null, created_at: datetime, updated_at: datetime }`；background job 觸發後前端必須透過 polling 此端點或 SSE 訂閱取得完成通知，不得以 mutation response 作為 job 完成的依據。
 
 ---
 
@@ -536,7 +560,7 @@ frontend/
 ### 功能需求
 
 - **FR-053**：系統必須讓 Redis 或其他 cache key 使用命名空間格式：`{app}:{module}:{entity_id}:{field}` 或 owning service 定義的等效格式。
-- **FR-054**：系統必須讓含個人資料、標記結果或權限結果的 cache 設定短 TTL，且不得超過 access token TTL，除非 feature spec 提供安全理由。
+- **FR-054**：系統必須讓含個人資料、restricted domain result 或權限結果的 cache 設定短 TTL，且不得超過 access token TTL，除非 feature spec 提供安全理由。
 - **FR-055**：系統必須讓 cache invalidation 位於 service 層或 background job boundary，不得依賴 frontend 觸發。
 
 ---
@@ -603,12 +627,19 @@ frontend/
 - **SC-005**：`pnpm lint` exit 0；frontend module boundary 無違規。
 - **SC-006**：所有 list API response 使用 `PaginatedResponse[T]` 或 feature spec 明確核准的 cursor response。
 - **SC-007**：`app/routers/` 下不得出現直接 `db.execute()`、`db.get()`、`db.query()` 呼叫。
-- **SC-008**：核心 route/service 不得出現 hardcoded domain type 分支，例如 `if task_type == ...` 或 `switch (taskType)`。
-- **SC-009**：annotator-facing response schema 不得包含 `ground_truth`、`score_key`、`answer`、`label_answer`、`*_key`、`*_truth`、`*_answer`。
+- **SC-008**：核心 route/service 不得出現 hardcoded domain variation 分支，例如 `if variation_type == ...` 或 `switch (variationType)`。
+- **SC-009**：restricted-client response schema 不得包含 `ground_truth`、`score_key`、`answer`、`*_key`、`*_truth`、`*_answer` 等敏感欄位。
 - **SC-010**：`MOBILE_BP` 在 `frontend/src/shared/constants/breakpoints.ts` 外不得重新宣告數值 `767`。
 - **SC-011**：frontend user-facing pages 必須通過 mobile / desktop viewport smoke test，且無水平溢出、主要文字重疊或不可操作的核心控制項。
 - **SC-012**：frontend interactive components 必須通過 Testing Library 或 Playwright 的 keyboard navigation / accessible name 驗證；critical pages 不得有明顯 WCAG 2.1 AA 違規。
 - **SC-013**：frontend route-level bundle、lazy loading 與 loading state 必須由 `pnpm build`、bundle analyzer 或 feature review 驗證；非關鍵 route 不得進入 initial bundle。
+- **SC-014**：`app/core/security.py` 必須使用 bcrypt 或 argon2id 實作密碼 hash；CI 或 grep 驗證不得存在 `hashlib.md5`、`hashlib.sha1`、`hashlib.sha256` 用於密碼 hash 的呼叫。
+- **SC-015**：`/auth/login` 與 `/auth/refresh` 端點必須有速率限制裝飾子或 middleware；可透過 `grep -r "limiter\|RateLimiter\|Throttle" backend/app/routers/` 驗證相關實作存在。
+- **SC-016**：`RestrictedClientSafeBaseSchema` 的 allowlist 必須有對應測試：向 restricted-client response schema 新增欄位時，若未顯式加入 allowlist，測試必須失敗；此測試歸屬 `tests/core/` 或各 feature 的 schema test。
+- **SC-017**：`tests/conftest.py` 的 DB session fixture 必須包含 `begin_nested()` + rollback 模式；不得出現 `TRUNCATE`、`DROP TABLE` 或 `CREATE TABLE` 作為 test 清理手段。
+- **SC-018**：CI 必須執行 OpenAPI schema export 並驗證 `openapi.json` 可生成；frontend type codegen 或一致性驗證腳本必須在 CI 中通過，確保 `shared/types/` 中的 API 型別與 backend schema 一致。
+- **SC-019**：`frontend/src/shared/constants/query-keys.ts` 必須存在；feature service 中的 `useQuery` / `useMutation` / `useInfiniteQuery` 呼叫不得使用 inline string array 作為 queryKey（可透過 ESLint rule 或 grep 驗證）。
+- **SC-020**：`QueryClient` 的 `retry` callback 必須有單元測試驗證 auth error（HTTP 401）不觸發 retry；`shared/services/api-client.ts` 的 401 interceptor 必須有 refresh 失敗情境的整合測試。
 
 ---
 
@@ -617,8 +648,8 @@ frontend/
 ### 內容品質
 
 - [x] 功能目標已明確陳述為工程架構基準。
-- [x] 已移除具體業務流程、任務狀態、IAA 演算法、sample snapshot lifecycle、通知事件與匯出步驟。
-- [x] 已保留 Constitution 要求的 config-driven extensibility 與 annotator-safe data contract。
+- [x] 已移除具體 domain flow、狀態節點、演算法、資料生命週期、事件名稱與輸出流程步驟。
+- [x] 已保留 Constitution 要求的 config-driven extensibility 與 restricted-client data-safety contract。
 - [x] 已納入 REST API resource naming、versioning、filtering、pagination、cacheability、security、idempotence、input validation 原則。
 - [x] 所有 FR-* 與 SC-* 可測試且明確。
 
@@ -626,8 +657,8 @@ frontend/
 
 - [x] feature module 邊界清楚，禁止跨 feature imports。
 - [x] backend route/service/crud/schema 分層清楚。
-- [x] task/domain variation 以 config / registry 擴展，禁止核心硬編碼。
-- [x] annotator-facing API 不得暴露答案或評分鍵。
+- [x] domain variation 以 config / registry 擴展，禁止核心硬編碼。
+- [x] restricted-client API 不得暴露敏感答案、評分鍵或內部評估資料。
 - [x] frontend engineering baseline 覆蓋 UI/UX、狀態管理、API 交互、組件化、響應式、效能、A11y、安全、i18n/l10n、動效。
 - [x] security、testing、CI gates 與 Constitution 一致。
 
@@ -637,12 +668,13 @@ frontend/
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.0 | 2026-05-29 | 依 senior-backend + senior-full-stack 雙向評估結果補強：新增 FR-068~FR-090（23 項）與 SC-014~SC-020（7 項）；涵蓋 PaginatedResponse 欄位補全、分頁邊界驗證、OpenAPI CI gate、SQLAlchemy async transaction boundary + lazy load 防護、Alembic async env.py、refresh token race condition 策略、absolute max TTL、access token 強制失效 P1 化、CSRF subdomain 評估、rate limiting、password hash 演算法、restricted-client safe schema allowlist 設計、Celery UPSERT 冪等性、TanStack Query queryKey factory、401 retry 防競爭、job polling contract、test DB SAVEPOINT isolation、ErrorDetail schema 完整定義、Celery sync DB session 邊界分離；補充 resource-scoped permission 應由 API capability 回傳的約束情境；新增架構常數 REFRESH_TOKEN_ABSOLUTE_MAX_TTL 與 REFRESH_TOKEN_GRACE_PERIOD |
 | 1.8.0 | 2026-05-29 | 依 NestJS 到 FastAPI 架構對應補強 backend 基準目錄結構：明確 module/router/service/schema/model/crud/dependency/middleware/jobs/scheduler/config 對應與實作基準 |
 | 1.7.0 | 2026-05-29 | 新增架構背景：補充 SRP、OCP、LSP、ISP、DIP、CARP、LKP 與 Foundation 約束的對應關係，作為 onboarding 與 review 導覽 |
 | 1.6.0 | 2026-05-29 | 補齊目錄結構缺口：backend middleware、core exceptions、tests conftest/core、notifications/jobs 內部結構、crud base；frontend shared stores、API client/auth services、routes paths、src/testing 命名與其他 feature 結構說明 |
 | 1.5.0 | 2026-05-29 | 修正歷史 changelog 中失效的 section/FR 引用；新增 FR 追加制說明；補上 design/system/MASTER.md 上游依賴；明確 sliding refresh token 行為與 access token 強制失效邊界；為架構常數補型別；補充 background job 基礎設施選型由 ADR 或 owning feature spec 決定 |
 | 1.4.0 | 2026-05-29 | 新增前後端基準目錄結構圖與各資料夾職責說明，作為 backend 分層與 frontend vertical slice 的共同參照 |
 | 1.3.0 | 2026-05-29 | 補強 frontend engineering baseline：UI/UX、state management、HTTP/API interaction、componentization、responsive compatibility、performance、A11y、security、i18n/l10n、motion；新增 FR-056~067 與 SC-011~013 |
-| 1.2.0 | 2026-05-29 | 將 foundation spec 重構為純工程架構基準；移除 Dry Run、IAA、sample snapshot、task state machine、匯出流程與通知事件等業務規範；補強 REST API design principles、backend/frontend architecture、config-driven extensibility、data safety、testing、observability、performance、cache safety |
+| 1.2.0 | 2026-05-29 | 將 foundation spec 重構為純工程架構基準；移除具體 domain flow、狀態節點、資料生命週期、輸出流程與事件名稱等 domain 規範；補強 REST API design principles、backend/frontend architecture、config-driven extensibility、data safety、testing、observability、performance、cache safety |
 | 1.1.0 | 2026-05-29 | 補強 API filtering/sorting、backend 分層與 frontend vertical slice 相關約束；此版本的 section / FR 編號已在 v1.2.0 重構後重新映射，歷史實作追蹤以當時 commit diff 為準 |
 | 1.0.0 | 2026-05-29 | Initial spec：將早期評估結果轉為工程需求；同步引用既有 ADR 決策 |
