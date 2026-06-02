@@ -114,7 +114,15 @@ Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN
 | `senior-i18n` | zh-TW / en strings to externalize | Any UI text |
 | `nlp-research-advisor` | Annotation schema, IAA metrics, Demo Paper framing | NLP task design |
 
-#### Phase 2A — Implementation (parallel, after API contract is locked)
+#### Phase 2A — Test Definition (TDD Red phase, before implementation)
+
+| Agent | Owns |
+|---|---|
+| `senior-qa` | `backend/tests/`, `frontend/tests/` |
+
+> All tests must fail (red) before implementation proceeds. Confirm failing tests before starting Phase 2B.
+
+#### Phase 2B — Implementation (parallel, after failing tests confirmed)
 
 | Agent | Owns | Model |
 |---|---|---|
@@ -125,17 +133,11 @@ Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN
 
 > ⚠️ **User checkpoint required** before any DB schema or API contract change proceeds.
 
-#### Phase 2B — DB Migrations (after BackendAgent models confirmed)
+#### Phase 2C — DB Migrations (after Phase 2B models confirmed)
 
 | Agent | Owns |
 |---|---|
 | `senior-dba` | `backend/migrations/` |
-
-#### Phase 2C — Tests (after 2A complete)
-
-| Agent | Owns |
-|---|---|
-| `senior-qa` | `backend/tests/`, `frontend/tests/` |
 
 #### Phase 3 — Review (parallel, after all impl complete)
 
@@ -149,7 +151,7 @@ Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN
 
 | Agent | When to Spawn |
 |---|---|
-| `senior-error-resolver` | Implementation teammate fails ≥ 3 quality gate retries |
+| `senior-error-resolver` | Implementation teammate fails 3 quality gate attempts (2 retries exhausted) |
 | `senior-debugger` | pytest / Vitest / Playwright failures that block progress |
 | `senior-technical-writer` | After PR merge — update README / API docs / thesis chapter |
 | `senior-full-stack` | Cross-boundary integration task that cannot be split |
