@@ -1,24 +1,25 @@
 <!--
-Sync Impact Report — constitution v1.29.1
-Generated: 2026-05-29
+Sync Impact Report — constitution v1.30.0
+Generated: 2026-06-02
 
-Version change: v1.29.0 → v1.29.1
-Bump type: PATCH — strengthen three existing principles to close ADR coverage gaps
+Version change: v1.29.1 → v1.30.0
+Bump type: MINOR — strengthen Principles I, X, XVIII with task granularity, PR size/layer/independence rules, and migration PR isolation
 
 Changed principles:
-- VII. Design Consistency — add Storybook story requirement for non-page components (closes ADR-016 gap)
-- XXIII. Frontend-Backend Contract Governance — add prototype↔React data-testid contract binding rule (closes ADR-014 gap)
-- XXIX. Cache Safety & Invalidation — add universal explicit-TTL requirement for all cache entries (closes ADR-006 gap)
+- I. Spec-First Development — add task granularity rules (one file per task, TDD task separation, Storybook task separation, migration decomposition)
+- X. Change Scope Discipline — add PR size limit (≤ 5 files / ≤ 300 lines), backend/frontend layer PR separation, BE/FE independence rule
+- XVIII. Deployment Safety & Rollback — add migration PR isolation rule and Rollback Plan requirement in PR description
 
 New sections: none
 Removed sections: none
 
 Templates sync status:
-- .specify/templates/plan-template.md: ✅ Updated — Principle VII checklist item extended with Storybook requirement
+- .specify/templates/tasks-template.md: ✅ Updated — Phase 2 split into BE/FE PR groups; PR boundary markers added per Phase; validation checklist extended
+- .specify/templates/plan-template.md: ✅ No changes required
 - .specify/templates/spec-template.md: ✅ No changes required
-- .specify/templates/tasks-template.md: ✅ No changes required
 - .specify/templates/checklist-template.md: ✅ No changes required
 - .claude/commands/speckit.*.md: ✅ No changes required
+- CLAUDE.md: ✅ Updated — PR size gate added to Escalation gates
 
 Deferred TODOs: none
 -->
@@ -32,6 +33,10 @@ New features should begin with a spec. The deciding question for skipping SDD is
 
 - Features progress in order: requirements → spec → plan → tasks → implementation
 - Each User Story must be independently implementable, testable, and deliverable
+- **Task granularity**: Each task must touch exactly one file; tasks with sequential dependencies must be ordered, not merged into a single task
+- **TDD task separation**: Test tasks and implementation tasks must always be separate; a test task must be committed and confirmed failing before its paired implementation task may begin
+- **Storybook task separation**: Storybook stories for non-page components are always a separate parallel task (`[P]`) from the component implementation task
+- **Migration task decomposition**: Database migration tasks must be split into three sequential tasks: `upgrade()`, `downgrade()` (no `pass`), and roundtrip verification
 - Mark completed specs with a `.completed` file in the feature directory
 - **Iteration rule**: adding a new User Story to an existing feature → update that spec with a version bump; independent new behavior in the same module → new spec
 - **Spec versioning** (semantic): PATCH = clarification/wording; MINOR = new/changed User Story; MAJOR = breaking change to existing story or API contract
@@ -131,6 +136,10 @@ Changes must be confined to the requested feature, bug, or spec scope.
 - Opportunistic refactors, formatting sweeps, or unrelated renames are not permitted unless required to complete the change safely
 - If adjacent code is problematic, flag it — do not fix it silently
 - Large changes must be split into independently reviewable units; a single PR must not mix unrelated concerns
+- A single PR must not touch more than 5 files or exceed 300 lines of diff (excluding tests); PRs exceeding either threshold must be split before opening
+- Backend layer concerns must be in separate PRs: Pydantic schemas, ORM models, service logic, and API routes are each a distinct PR; database migrations are always a standalone PR
+- Frontend layer concerns must be in separate PRs: TypeScript types with i18n keys, API service with MSW handlers, components with tests and Storybook stories, and page assembly are each a distinct PR
+- Backend and frontend PRs must be independent when no breaking API contract change is involved; when a breaking change does occur, both PRs must cross-reference each other in their descriptions
 - Unrelated dead code may be flagged but must not be removed unless explicitly requested
 
 ### XI. Security & Privacy Baseline (NON-NEGOTIABLE)
@@ -206,6 +215,8 @@ Deployments and schema changes must be reversible or have an explicit recovery p
 
 - Every deployment must have a documented rollback path
 - Database migrations must be backward-compatible where possible; breaking migrations require an explicit rollout plan and a documented rollback procedure
+- Database migration PRs must be independent from application code PRs; a migration must never be bundled with route, service, schema, or frontend changes
+- Every migration PR description must include a Rollback Plan section documenting the expected state before and after rollback
 - Long-running background jobs (imports, exports, scoring) must be retryable or resumable — not silently abandoned on failure
 - Deployment failures must not leave the system in a partially migrated state; migrations must be atomic or gated behind a feature flag
 
@@ -354,12 +365,13 @@ Constitution principles take precedence over all other conventions.
 
 **Compliance Review**: All PRs must verify compliance with all thirty principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
 
-**Version**: 1.29.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-05-29
+**Version**: 1.30.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-06-02
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.30.0 | 2026-06-02 | Strengthen Principle I (add task granularity: one file per task, TDD task separation, Storybook task separation, migration decomposition into upgrade/downgrade/roundtrip); strengthen Principle X (add PR size limit ≤ 5 files / ≤ 300 lines, backend layer PR separation, frontend layer PR separation, BE/FE independence rule); strengthen Principle XVIII (migration PRs must be standalone, every migration PR requires a Rollback Plan section) |
 | 1.29.1 | 2026-05-29 | Strengthen Principle VII (add Storybook story requirement for non-page components); Principle XXIII (add prototype↔React data-testid contract binding rule); Principle XXIX (add universal explicit-TTL requirement for all cache entries) |
 | 1.29.0 | 2026-05-29 | Extend Principle V (Code Quality & Simplicity) with Human Handoff Readiness: intent-stating names, two-call-level entry point reachability, one-indirection main path, no readability-sacrificing compression |
 | 1.28.0 | 2026-05-28 | Add Principle XXX (Test Data Isolation — NON-NEGOTIABLE): no production/PII/real answer-key data in tests; synthetic or approved-scrubbed datasets only; fictional annotator-facing scenarios; approved synthetic datasets for scoring tests |

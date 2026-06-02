@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.0.0
+版本: 1.9.0
 狀態: Draft
 ---
 
@@ -9,32 +9,6 @@
 
 **輸入**: `specs/[module]/NNN-feature/` 下的設計文件
 **前置條件**: plan.md（必填）、spec.md（必填）
-
-## 執行流程
-
-```
-1. 從功能規格目錄載入 plan.md
-   → 若未找到：ERROR "No implementation plan found"
-   → 萃取：技術堆疊、架構層、受影響檔案
-2. 載入 spec.md
-   → 萃取：使用者故事 → 對應至 Phase 3/4/...
-   → 萃取：API 契約 → 契約測試任務
-   → 萃取：資料模型 → model/schema 任務
-3. 依類別產生任務：
-   → Phase 1：設置（共用基礎設施、套件）
-   → Phase 2：基礎建設（schema、routes skeleton、service 層）
-   → Phase 3+：每個使用者故事一個 phase（測試優先，再實作）
-   → Phase N：優化（文件、清理、安全性、效能）
-4. 套用任務規則：
-   → 不同檔案 = 標記 [P] 平行執行
-   → 相同檔案 = 循序執行（不標記 [P]）
-   → 測試必須在實作前（TDD）
-   → 每個任務以 [USN] 標記對應的使用者故事
-5. 循序編號任務（T001, T002…）
-6. 產生相依性圖
-7. 驗證任務完整性（見驗證清單）
-8. 返回：SUCCESS（任務準備好進入 /speckit.implement）
-```
 
 ## 格式：`[ID] [P?] [Story] 描述`
 
@@ -75,17 +49,31 @@
 
 **⚠️ 必須在任何使用者故事實作開始前完成**
 
-- [ ] T004a 撰寫 Alembic migration `upgrade()`（含 plan.md DB index 分析所列的所有 index）
-- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）
+### PR-FOUND-MIGRATION：資料庫 Migration（獨立 PR，最先合併）
+
+- [ ] T004a 撰寫 Alembic migration `upgrade()`（含 plan.md DB index 分析所列的所有 index）— `backend/migrations/versions/xxxx_[feature].py`
+- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）— 同上檔案
 - [ ] T004c 驗證 migration 可循環：`alembic upgrade head && alembic downgrade -1 && alembic upgrade head`
+
+> **PR 邊界**：T004a/b/c 合併為獨立 `PR-FOUND-MIGRATION`，PR description 必須含 Rollback Plan 欄位，不得與任何應用程式碼合併。`[Principle: XVIII]`
+
+### PR-FOUND-BE：後端基礎建設（依賴 PR-FOUND-MIGRATION merged）
+
 - [ ] T005 [P] 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/schemas/[feature].py`，依 plan.md schema 層次設計）
 - [ ] T006 [P] 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+- [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
+- [ ] T012 [P] 設定環境與設定管理（`backend/app/core/config.py`）
+
+> **PR 邊界**：T005/T006/T011/T012 合併為獨立 `PR-FOUND-BE`。`[Principle: X]`
+
+### PR-FOUND-FE：前端基礎建設（可與 PR-FOUND-BE 並行）
+
 - [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
 - [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
 - [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
 - [ ] T010 [P] 新增 i18n keys（`frontend/locales/zh-TW/[module].json` + `locales/en/[module].json` — 依 plan.md i18n key 清單）
-- [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
-- [ ] T012 [P] 設定環境與設定管理（`backend/app/core/config.py`）
+
+> **PR 邊界**：T007/T008/T009/T010 合併為獨立 `PR-FOUND-FE`，與 `PR-FOUND-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
 
 **檢查點**：基礎建設完成 — 可開始實作使用者故事
 
@@ -107,12 +95,21 @@
 
 ### 實作（僅在測試失敗後進行）
 
+#### PR-US1-BE：後端實作（含後端測試）
+
 - [ ] T016 [P] [US1] 建立資料模型（`backend/app/models/[feature].py`）— 含 relationship 與 Loading Strategy
 - [ ] T017 [US1] 實作 service 層（`backend/app/services/[feature].py`）— 明確指定 `selectinload`/`joinedload`
 - [ ] T018 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）— 含 auth dependency
+
+> **PR 邊界**：T013a/b/c（後端測試）+ T016/T017/T018（後端實作）合併為獨立 `PR-US1-BE`。`[Principle: X]`
+
+#### PR-US1-FE：前端實作（含前端測試，可與 PR-US1-BE 並行）
+
 - [ ] T019 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/`）— 含 ARIA role、響應式
 - [ ] T020 [P] [US1] 建立 Storybook stories（`frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`）— Default + 邊界狀態，args/argTypes/MSW decorator 齊備
 - [ ] T021 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）— Page 層不寫 story
+
+> **PR 邊界**：T014（Vitest）+ T015（E2E）+ T019/T020/T021（前端實作）合併為獨立 `PR-US1-FE`，與 `PR-US1-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
 
 **檢查點**：使用者故事 1 可獨立驗證
 
@@ -131,12 +128,21 @@
 
 ### 實作（僅在測試失敗後進行）
 
-- [ ] T022 [P] [US2] 建立相關模型（含 Loading Strategy）
-- [ ] T023 [US2] 實作 service 層（明確指定 relationship loading）
-- [ ] T024 [US2] 實作 API endpoint（含 auth dependency）
-- [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）
+#### PR-US2-BE：後端實作（含後端測試）
+
+- [ ] T022 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
+- [ ] T023 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
+- [ ] T024 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
+
+> **PR 邊界**：後端測試 + T022/T023/T024 合併為獨立 `PR-US2-BE`。`[Principle: X]`
+
+#### PR-US2-FE：前端實作（含前端測試，可與 PR-US2-BE 並行）
+
+- [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/`
 - [ ] T026 [P] [US2] 建立 Storybook stories（`.stories.tsx`）— Default + 邊界狀態，MSW decorator
-- [ ] T027 [US2] 實作前端頁面
+- [ ] T027 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/`
+
+> **PR 邊界**：前端測試 + T025/T026/T027 合併為獨立 `PR-US2-FE`，與 `PR-US2-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
 
 **檢查點**：使用者故事 1 與 2 皆可獨立驗證
 
@@ -291,11 +297,16 @@ pnpm test
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE 三個獨立 PR 邊界
+- [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
+- [ ] 每個 US Phase 的實作區塊含 PR-USN-BE 與 PR-USN-FE 兩個獨立 PR 邊界標記
+- [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.0 | 2026-06-02 | Phase 2 拆分為三個獨立 PR 邊界（PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE）；Phase 3/4 實作區塊加入 PR-USN-BE / PR-USN-FE 邊界標記；驗證清單新增四項 PR 粒度檢查；對齊 constitution v1.30.0 Principle I、X、XVIII |
 | 1.8.1 | 2026-05-28 | 將 **Story Goal** 改為 **故事目標**（中文化）；驗證清單用詞同步 |
 | 1.8.0 | 2026-05-28 | 每個 Phase 的「目標」改為「Story Goal → 追蹤至 SC-XXX」格式；驗證清單加入 SC-ID 追蹤性檢查 |
 | 1.7.0 | 2026-05-27 | senior-backend + senior-frontend 評估後補全：T004 拆為 T004a/b/c（downgrade + 循環驗證）；加入 T008 MSW handler 任務、T011 Exception class 任務；Phase 3 測試拆為 service / route / permission negative / Vitest 四層；實作任務加入 Loading Strategy 和 ARIA 說明；Storybook 任務標注 MSW decorator 需求；Phase N P95 驗證加工具；驗證清單加 5 項新檢查 |

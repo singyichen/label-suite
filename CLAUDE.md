@@ -36,6 +36,7 @@ Path-scoped rules — loaded only when working in the respective directory:
 - Task touches ≥ 10 files
 - Task type ∈ {Architecture · Counter-factual · Security threat modeling} → Opus or `advisor()`
 - Unrequested code gen > 300 LoC → halt first
+- Single PR diff > 5 files or > 300 lines (excluding tests) → halt, split into separate PRs before opening `[Principle: X]`
 
 **Context management**: **Generator phase** → `/compact` is forbidden; on context limit → full `/clear`, then re-read spec from disk before continuing. All other phases → compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
 
