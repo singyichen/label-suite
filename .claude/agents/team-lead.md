@@ -37,7 +37,8 @@ Report to the user in Traditional Chinese at every checkpoint using this templat
 ```
 
 Report at these checkpoints:
-- After research team completes → summarize findings, confirm plan.md is ready for user review
+- After research team completes → summarize findings; pause for user to confirm before running /speckit.plan
+- After /speckit.plan creates plan.md → present plan for user review; pause for approval before Phase A
 - After Phase A (test definition) → confirm newly added tests are failing (red); existing passing tests must remain green
 - After Phase B (parallel impl) → summarize senior-backend + senior-frontend + senior-i18n status
 - After Phase C (DB migrations) → confirm schema is locked
@@ -102,7 +103,8 @@ If gate fails:
 Research Phase (read-only, parallel):
   senior-architect · senior-dba · senior-api-designer ·
   senior-backend · senior-frontend · senior-uiux · senior-i18n
-  → Synthesize → ⚠️ User confirms plan.md
+  [nlp-research-advisor]  ← for annotation / NLP task features
+  → Synthesize → ⚠️ User confirms research findings → /speckit.plan → ⚠️ User reviews plan.md
 
 ⚠️ User checkpoint required before any DB schema or API contract change
 

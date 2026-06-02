@@ -46,7 +46,7 @@ Add to `~/.claude/settings.json`:
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
 
   Step A — Test Definition (TDD Red phase, before implementation):
-  └──→ [senior-qa]      owns: backend/tests/ + frontend/tests/  (write failing tests first)
+  └──→ [senior-qa]      owns: backend/tests/ + frontend/tests/ + e2e/  (write failing tests first)
        ↓ Confirm newly added tests fail (red); existing passing tests must remain green
 
   Step B — parallel (after failing tests confirmed):
@@ -62,8 +62,8 @@ Add to `~/.claude/settings.json`:
   └──→ [senior-qa]      re-runs full test suite; all tests must pass before review
 
   TaskCompleted hook — auto quality gate after each task:
-    backend task  → uv run ruff check . && uv run mypy .
-    frontend task → pnpm tsc --noEmit && pnpm lint
+    backend task  → cd backend && uv run ruff check . && uv run mypy .
+    frontend task → cd frontend && pnpm tsc --noEmit && pnpm lint
     if fails      → teammate retries (max 2), then escalates to Team Lead
     if retry > 2  → [senior-error-resolver] takes over for root-cause debugging
 
@@ -101,6 +101,7 @@ Run /pr-flow
 | FrontendResearchAgent | `senior-frontend` | Identify reusable components, UI integration points |
 | UXAgent | `senior-uiux` | Assess annotation interface UX feasibility |
 | I18nAgent | `senior-i18n` | UI strings needing zh-TW / en externalization |
+| NLPAdvisorAgent _(annotation features)_ | `nlp-research-advisor` | Annotation schema, IAA metrics, Demo Paper framing |
 
 ### Phase 2 — Implementation Agents
 
@@ -110,7 +111,7 @@ Run /pr-flow
 | FrontendAgent | `senior-frontend` | `frontend/src/` | React components, pages, hooks, API services |
 | I18nAgent | `senior-i18n` | `frontend/src/locales/` | zh-TW / en translation strings |
 | DBAgent | `senior-dba` | `backend/migrations/` | Schema migrations, index strategy |
-| TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/` | pytest + Playwright E2E |
+| TestAgent | `senior-qa` | `backend/tests/`, `frontend/tests/`, `e2e/` | pytest + Playwright E2E |
 | DevOpsAgent _(optional)_ | `senior-devops` | `docker-compose.yml`, `.github/` | Docker, CI/CD |
 
 ### Phase 2 — Review Agents (parallel, after implementation)
@@ -163,6 +164,7 @@ Step B — parallel implementation (after failing tests confirmed):
   - senior-backend: backend tasks, owns backend/app/
   - senior-frontend: frontend tasks, owns frontend/src/
   - senior-i18n: translation strings, owns frontend/src/locales/
+  - senior-devops (optional): Docker/CI tasks, owns docker-compose.yml, .github/workflows/
 Step C — senior-dba: migrations after senior-backend models confirmed, owns backend/migrations/
 Step D — senior-qa: re-run full test suite; all tests must be green before review
 Require plan approval before any DB schema or API contract changes.
