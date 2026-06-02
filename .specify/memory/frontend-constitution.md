@@ -21,7 +21,7 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 ## III. TypeScript Strictness
 
 - TypeScript strict mode must remain enabled.
-- `any` is prohibited. Use precise types, generics, discriminated unions, or `unknown` with narrowing.
+- `any` is prohibited (see main constitution Principle V). Use precise types, generics, discriminated unions, or `unknown` with narrowing.
 - Frontend domain types must mirror backend API contracts.
 - No committed `console.log`, debug traces, or dead experimental code.
 
@@ -54,8 +54,10 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - shadcn/ui components live in `frontend/src/shared/ui/`.
 - Tailwind CSS must use project design tokens; hardcoded colors, spacing, and typography scales are not allowed when a token exists.
 - New shared primitives require meaningful variants and accessibility states.
+- Every non-page UI component must have a Storybook story covering at minimum the Default state and applicable boundary states: Empty, Loading, Error, and Disabled.
 - Storybook stories are required for shared UI primitives with variants and annotation widgets with meaningful visual states.
 - Stories are co-located as `Component.stories.tsx`.
+- Storybook stories must be kept in sync with the component and may not be omitted after initial creation.
 
 ## VIII. Accessibility
 
@@ -78,6 +80,8 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - `data-testid` values are a cross-layer selector contract across prototype HTML, React implementation, and Playwright tests.
 - Names must be kebab-case and describe purpose or element type, such as `email-input`, `submit-btn`, or `error-banner`.
 - Do not rename or remove a test id without updating prototype tests, React tests, and E2E tests together.
+- Prototype HTML and its corresponding React implementation must share a consistent `data-testid` contract where semantic selectors are insufficient.
+- `data-testid` values established in prototype specs are binding on the React implementation unless the deviation is explicitly documented.
 - Prefer accessible locators in tests where possible; use `data-testid` for stable app-specific targets.
 
 ## XI. Testing And TDD
@@ -98,16 +102,43 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - Annotator-facing UI must never expose test-set answers, ground truth, or privileged evaluation data.
 - Onboarding must be contextual, role-based, optional, and recoverable.
 
-## XIII. Performance
+## XIII. Frontend Runtime Safety
+
+- Async effects must guard against race conditions, stale responses, and updates after unmount.
+- Network requests started by a component must be cancellable or safely ignored when the component is no longer active.
+- Timers, subscriptions, observers, event listeners, workers, and object URLs must be cleaned up in the component cleanup phase.
+- Long-lived pages must not allow unbounded memory growth from caches, arrays, maps, logs, closures, or retained DOM references.
+- Components that fetch or subscribe to data must define loading, error, empty, retry, and cleanup behavior.
+- Race-prone flows must include tests or documented verification covering rapid navigation, repeated actions, and overlapping requests.
+
+## XIV. API Contract Consumption
+
+- Frontend code must consume documented API contracts and must not rely on undocumented response fields.
+- Frontend domain types must stay aligned with backend enums, status values, task types, role names, error codes, and workflow states.
+- Contract changes must be backward-compatible unless explicitly declared breaking.
+- Breaking contract changes require coordinated frontend, backend, migration, and test updates.
+- Mock data, fixtures, prototypes, and MSW handlers must not define enum values or API shapes that conflict with the canonical contract.
+- Generated types or contract tests must be used where practical to prevent silent drift.
+
+## XV. Performance
 
 - Use route-level lazy loading for feature pages where practical.
 - Avoid unnecessary global state updates and broad re-renders.
 - Use TanStack Query cache controls intentionally; do not refetch blindly.
 - Large lists must be paginated or virtualized.
-- Core pages must maintain Lighthouse Performance score of at least 70 on desktop.
+- Core pages must maintain Lighthouse Performance score of at least 80 on desktop.
+- Page First Contentful Paint must not exceed 3s on a standard connection.
+- User interaction must produce visible feedback within 100ms; longer operations must show an immediate loading state.
+- Non-critical routes must use code splitting and lazy loading; the initial bundle must not load all modules upfront.
 - Annotation workspace interactions must remain responsive under realistic task payloads.
 
-## XIV. Commands
+## XVI. PR Boundaries
+
+- Frontend layer concerns must be split into separate PRs: TypeScript types with i18n keys, API service with MSW handlers, components with tests and Storybook stories, and page assembly are each distinct review units.
+- Backend and frontend PRs must be independent when no breaking API contract change is involved.
+- When a breaking API contract change does occur, backend and frontend PRs must cross-reference each other.
+
+## XVII. Commands
 
 All frontend commands must run from `frontend/` and use `pnpm`.
 
@@ -127,6 +158,6 @@ pnpm dlx shadcn@latest add <component>
 
 Do not use `npm install`. Do not modify dependency versions unless explicitly requested.
 
-## XV. Governance
+## XVIII. Governance
 
 This frontend constitution refines but does not override `.specify/memory/constitution.md`. If this file conflicts with the main constitution, the main constitution wins. Changes to frontend architecture, framework, state management, component library, or testing strategy require an ADR or an amendment to an existing ADR before implementation.

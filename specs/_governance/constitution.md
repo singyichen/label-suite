@@ -1,25 +1,31 @@
 <!--
-Sync Impact Report — constitution v1.30.0
+Sync Impact Report — constitution v1.31.0
 Generated: 2026-06-02
 
-Version change: v1.29.1 → v1.30.0
-Bump type: MINOR — strengthen Principles I, X, XVIII with task granularity, PR size/layer/independence rules, and migration PR isolation
+Version change: v1.30.0 → v1.31.0
+Bump type: MINOR — split domain-specific governance into backend, frontend, and testing constitutions while keeping the main constitution focused on project-wide authority
 
 Changed principles:
-- I. Spec-First Development — add task granularity rules (one file per task, TDD task separation, Storybook task separation, migration decomposition)
-- X. Change Scope Discipline — add PR size limit (≤ 5 files / ≤ 300 lines), backend/frontend layer PR separation, BE/FE independence rule
-- XVIII. Deployment Safety & Rollback — add migration PR isolation rule and Rollback Plan requirement in PR description
+- I. Spec-First Development — keep project-wide SDD rules and move detailed task decomposition rules to testing/backend/frontend constitutions
+- IV. Test-First — keep TDD as a project-wide rule and delegate coverage/tooling details to testing constitution
+- VII. Design Consistency — keep design-system authority and delegate React/runtime details to frontend constitution
+- VIII. Performance Baseline — keep project-wide performance expectations and delegate implementation details to backend/frontend constitutions
+- X. Change Scope Discipline — keep PR scope rules and delegate layer-specific PR guidance to backend/frontend constitutions
+- XVII. CI/CD Quality Gates — keep global merge gate and delegate command details to testing constitution
+- XVIII. Deployment Safety & Rollback — keep rollback requirement and delegate migration detail to backend constitution
+- XXI-XXIX domain-specific principles — moved into applicable backend/frontend/testing constitutions where they are loaded by task scope
 
-New sections: none
-Removed sections: none
+New sections:
+- Domain Constitutions
+
+Removed sections:
+- None semantically; domain-specific implementation rules now live in `.specify/memory/backend-constitution.md`, `.specify/memory/frontend-constitution.md`, and `.specify/memory/testing-constitution.md`
 
 Templates sync status:
-- .specify/templates/tasks-template.md: ✅ Updated — Phase 2 split into BE/FE PR groups; PR boundary markers added per Phase; validation checklist extended
-- .specify/templates/plan-template.md: ✅ No changes required
-- .specify/templates/spec-template.md: ✅ No changes required
-- .specify/templates/checklist-template.md: ✅ No changes required
-- .claude/commands/speckit.*.md: ✅ No changes required
-- CLAUDE.md: ✅ Updated — PR size gate added to Escalation gates
+- .claude/commands/speckit.plan.md: Updated — load applicable domain constitutions by affected scope
+- .claude/commands/speckit.analyze.md: Updated — include applicable domain constitutions in the ruleset
+- AGENTS.md: Updated — document required domain constitution loading
+- .specify/templates/: No changes required
 
 Deferred TODOs: none
 -->
@@ -29,22 +35,17 @@ Deferred TODOs: none
 ## Core Principles
 
 ### I. Spec-First Development (RECOMMENDED)
+
 New features should begin with a spec. The deciding question for skipping SDD is: **will this change make the system behave differently from what the specs define?** If yes, open a spec. If no, modify code directly.
 
 - Features progress in order: requirements → spec → plan → tasks → implementation
 - Each User Story must be independently implementable, testable, and deliverable
-- **Task granularity**: Each task must touch exactly one file; tasks with sequential dependencies must be ordered, not merged into a single task
-- **TDD task separation**: Test tasks and implementation tasks must always be separate; a test task must be committed and confirmed failing before its paired implementation task may begin
-- **Storybook task separation**: Storybook stories for non-page components are always a separate parallel task (`[P]`) from the component implementation task
-- **Migration task decomposition**: Database migration tasks must be split into three sequential tasks: `upgrade()`, `downgrade()` (no `pass`), and roundtrip verification
 - Mark completed specs with a `.completed` file in the feature directory
-- **Iteration rule**: adding a new User Story to an existing feature → update that spec with a version bump; independent new behavior in the same module → new spec
-- **Spec versioning** (semantic): PATCH = clarification/wording; MINOR = new/changed User Story; MAJOR = breaking change to existing story or API contract
-- **Downstream impact**: when a spec is versioned up, every spec listed in its `## Spec Dependencies → Downstream` section must be reviewed and updated if affected
-- **Goal Declaration (required for all planning artifacts)**: Every spec, plan, and tasks file must state a clear, verifiable feature goal before any requirements or tasks are written. The goal answers: who benefits, what outcome is produced, and why this is worth building now. It is not a summary of features.
-  - **spec.md**: Include a `## 功能目標` section immediately after the H1 title. One to three sentences. Example: "Enable annotators to submit partial labels on mobile, reducing drop-off on small screens. This is the minimum required for the pilot with Partner X."
-  - **plan.md**: The `## 功能目標` must be copied or refined from spec.md. It must not change between spec and plan without a spec version bump. Follow with a `## Technical Approach` paragraph bridging the goal to the implementation.
-  - **tasks.md**: Each User Story Phase must include a `**故事目標**` line that traces to one or more SC-IDs from spec.md. A Phase goal that cannot be traced to any SC-ID signals scope drift.
+- Adding a new User Story to an existing feature requires a spec version bump; independent new behavior in the same module requires a new spec
+- Spec versions follow semantic meaning: PATCH = clarification/wording; MINOR = new/changed User Story; MAJOR = breaking change to an existing story or API contract
+- When a spec version changes, every spec listed in its `## Spec Dependencies → Downstream` section must be reviewed and updated if affected
+- Every spec, plan, and tasks file must state a clear, verifiable feature goal before requirements or tasks are written
+- `spec.md` and `plan.md` must include a `## 功能目標` section; `tasks.md` must include `**故事目標**` for each User Story phase
 
 **Skip SDD and modify code directly for**:
 - Bug fixes — making code match existing specs, not changing specs
@@ -56,101 +57,102 @@ New features should begin with a spec. The deciding question for skipping SDD is
 **Must go through SDD for**:
 - New features — behavior not currently defined in any spec
 - Behavior changes — modifying what an existing endpoint or flow does
-- Breaking changes — removing fields, changing API contracts
+- Breaking changes — removing fields or changing API contracts
 - Architectural changes — new services, data models, or async flows
 
 ### II. Generalization-First (NON-NEGOTIABLE)
+
 System design must support multiple NLP task types without hardcoding task-specific logic.
 
-- Task configuration is defined via Config (YAML/JSON); task logic must not be hardcoded
+- Task configuration is defined through validated config, not task-specific branches in core code
 - Adding a new task type must not require modifying core system code
-- All labeling templates must be reusable
+- Labeling templates, scoring choices, and annotation widgets must be reusable through config-driven registries or equivalent config-derived dispatch
 
 ### III. Data Fairness (NON-NEGOTIABLE)
+
 Evaluation results must be fair and reproducible.
 
 - Test-set answers must never be exposed to annotators
+- Gold/test items must be indistinguishable from regular items in annotator-facing UI and metadata
+- Sampling, train/dev/test splits, assignment, scoring, review, and export behavior must be reproducible from declared dataset, schema, task config, and seed/version inputs
 - Scoring logic must be transparent and covered by tests
 
 ### IV. Test-First (RECOMMENDED)
-- Backend: pytest coverage target ≥ 80%
-- E2E: Playwright covers core user flows (labeling, submission, review)
+
+All behavior changes follow Red-Green-Refactor.
+
 - Tests must be written and confirmed to fail before implementation begins
-- If a design makes testing difficult, refactor the design — never weaken the test to fit the implementation
+- If a design makes testing difficult, refactor the design; do not weaken the test to fit the implementation
+- Backend, frontend, prototype, security, and E2E test details are governed by `.specify/memory/testing-constitution.md`
 
 ### V. Code Quality & Simplicity (RECOMMENDED)
 
-Code must be simple, readable, and consistently styled. **Overdesign is a defect**: any abstraction, pattern, or layer that cannot be justified by a current, concrete requirement must be removed before merging.
+Code must be simple, readable, and consistently styled. **Overdesign is a defect**.
 
 - YAGNI: do not build features for hypothetical future needs
 - KISS: prefer the simplest viable solution
-- Avoid premature abstraction; three similar lines of code beats an over-engineered abstraction
-- All Python functions must have complete type hints; TypeScript strict mode is enforced — no `any` types
-- Code must pass the project linter before merging (Python: ruff; TypeScript: ESLint)
-- No debug `print` / `console.log` statements in committed code
-- **Human Handoff Readiness**: Code must be immediately actionable for a developer unfamiliar with the change. Function and variable names must state intent without requiring caller context; feature entry points must be reachable within two call levels from the router, endpoint, or page component; logic must not require more than one indirection level to trace the main path; patterns that compress logic at the cost of readability are not permitted.
+- Avoid premature abstraction; repeated real use must justify shared layers or generalized patterns
+- All Python functions must have complete type hints
+- TypeScript strict mode is enforced; `any` is prohibited
+- Code must pass project linters before merging
+- Debug `print` and `console.log` statements are not permitted in committed code
+- Names and entry points must make the main behavior traceable without excessive indirection
 
 ### VI. English-First
-- Code, comments, docstrings, commit messages, and variable/function names are always written in English
-- Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md` to accelerate research documentation and UI iteration
-- `design/system/MASTER.md` must be written in English only — it is consumed by AI agents and requires accurate token parsing
+
+- Code, comments, docstrings, commit messages, API contracts, and variable/function names are always written in English
+- Traditional Chinese is permitted in `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, and `design/system/inventory.md`
+- `design/system/MASTER.md` must be written in English only
 - The only fully Chinese file outside those directories is `README.zh-TW.md`
 
 ### VII. Design Consistency (RECOMMENDED)
 
 UI must be consistent across modules and follow the established design system.
 
-- All UI components must use design tokens defined in `design/system/MASTER.md`; hardcoded colors, spacing, or font sizes are not permitted
-- Component states (loading, error, empty, disabled) must be implemented consistently across all modules
-- Prototype screens in `design/prototype/pages/` are the source of truth for layout and interaction behavior; any deviation requires a spec update
+- UI components must use design tokens defined in `design/system/MASTER.md`
+- Prototype screens in `design/prototype/pages/` are the source of truth for layout and interaction behavior; deviations require a spec update
 - New UI features must reuse existing shared components before introducing new ones
-- Every non-page UI component must have a Storybook story covering at minimum the Default state and applicable boundary states (Empty, Loading, Error, Disabled); stories must be kept in sync with the component and may not be omitted after initial creation
-- Accessibility must conform to WCAG 2.1 AA; all interactive elements must be keyboard-navigable and announced correctly by screen readers
+- Accessibility must conform to WCAG 2.1 AA
+- Frontend-specific UI, runtime, Storybook, and selector-contract rules are governed by `.specify/memory/frontend-constitution.md`
 
 ### VIII. Performance Baseline (RECOMMENDED)
 
 Core user flows must meet minimum performance thresholds.
 
-- API P95 response time ≤ 500ms for core labeling and annotation operations
-- All list-view endpoints must implement pagination (max page size: 100); unbounded queries are not permitted
-- No N+1 query patterns in service-layer code
-- Frontend Lighthouse Performance score ≥ 80 on desktop for core pages
-- Page First Contentful Paint (FCP) must not exceed 3s on a standard connection
-- User interaction must produce visible feedback within 100ms; operations exceeding that threshold must show an immediate loading state
-- Non-critical routes must use code splitting and lazy loading; the initial bundle must not load all modules upfront
+- Core labeling and annotation APIs target P95 response time ≤ 500ms
+- List endpoints must be paginated with bounded page sizes
+- User interaction must produce visible feedback within 100ms or show an immediate loading state
+- Core frontend pages must meet the project Lighthouse target defined in the frontend constitution
+- Backend and frontend performance implementation rules are governed by their applicable domain constitutions
 
 ### IX. No Silent Failure (RECOMMENDED)
 
 Errors must be visible, traceable, and handled at the appropriate layer.
 
-- Silent failures (swallowed exceptions, empty catch blocks, unchecked nulls) are not permitted
-- Every error must either be handled with a meaningful response or propagated to a layer that can handle it
-- A single point of failure must not cause system-wide collapse; failures must be isolated
-- User-facing error messages must be understandable; internal error details must be logged
-- Critical user actions and backend state transitions must emit structured logs or audit events where appropriate; background jobs must expose status, retry count, and failure reason
+- Silent failures, swallowed exceptions, empty catch blocks, and unchecked null paths are not permitted
+- Every error must be handled with a meaningful response or propagated to a layer that can handle it
+- User-facing error messages must be understandable; internal details must be logged without leaking sensitive data
+- Critical user actions and backend state transitions must emit structured logs or audit events where appropriate
 
 ### X. Change Scope Discipline (RECOMMENDED)
 
 Changes must be confined to the requested feature, bug, or spec scope.
 
-- Opportunistic refactors, formatting sweeps, or unrelated renames are not permitted unless required to complete the change safely
-- If adjacent code is problematic, flag it — do not fix it silently
-- Large changes must be split into independently reviewable units; a single PR must not mix unrelated concerns
-- A single PR must not touch more than 5 files or exceed 300 lines of diff (excluding tests); PRs exceeding either threshold must be split before opening
-- Backend layer concerns must be in separate PRs: Pydantic schemas, ORM models, service logic, and API routes are each a distinct PR; database migrations are always a standalone PR
-- Frontend layer concerns must be in separate PRs: TypeScript types with i18n keys, API service with MSW handlers, components with tests and Storybook stories, and page assembly are each a distinct PR
-- Backend and frontend PRs must be independent when no breaking API contract change is involved; when a breaking change does occur, both PRs must cross-reference each other in their descriptions
-- Unrelated dead code may be flagged but must not be removed unless explicitly requested
+- Opportunistic refactors, formatting sweeps, and unrelated renames are not permitted unless required to complete the change safely
+- If adjacent code is problematic, flag it rather than silently fixing unrelated scope
+- Large changes must be split into independently reviewable units
+- A single PR must not touch more than 5 files or exceed 300 lines of diff excluding tests; PRs exceeding either threshold must be split before opening
+- Backend/frontend layer split details are governed by applicable domain constitutions
 
 ### XI. Security & Privacy Baseline (NON-NEGOTIABLE)
 
 User data and system secrets must be protected at every layer.
 
-- Secrets, tokens, credentials, and private keys must never be committed to the repository or exposed to clients
-- User data must be returned only to authorized roles; API responses must not leak internal identifiers or sensitive metadata unless explicitly required
-- All user inputs must be validated and sanitized; raw user content must not be stored or rendered without escaping
-- Security-sensitive flows (auth, permission checks, data access) require tests covering unauthorized access paths
-- Test-set answers, internal scoring metadata, and private dataset fields must never be exposed to annotators via API responses or frontend state
+- Secrets, tokens, credentials, and private keys must never be committed or exposed to clients
+- User data must be returned only to authorized roles
+- All user inputs must be validated and sanitized
+- Security-sensitive flows require tests covering unauthorized access paths
+- Test-set answers, internal scoring metadata, and private dataset fields must never be exposed to annotators via API responses, frontend state, logs, caches, traces, screenshots, or fixtures
 - Error messages and logs must not include secrets, credentials, raw JWT tokens, or sensitive user data
 
 ### XII. Traceability & Auditability (RECOMMENDED)
@@ -158,219 +160,143 @@ User data and system secrets must be protected at every layer.
 Every non-trivial change must be traceable to its origin, intent, and verification path.
 
 - Non-trivial code changes must reference the related spec, issue, task, bug report, or explicit user request
-- Spec-driven implementation must trace code, tests, and PR descriptions back to SC-IDs from spec.md
+- Spec-driven implementation must trace code, tests, and PR descriptions back to SC-IDs from `spec.md`
 - Bug fixes must document the reproduction path, root cause, and verification performed
-- AI agents must preserve enough context in commit messages or PR descriptions for reviewers to understand why the change was made
-- Critical backend state transitions (task status changes, scoring events, annotation submissions) must be logged or auditable
+- Critical backend state transitions must be logged or auditable
 
 ### XIII. Label Quality & Reviewability (RECOMMENDED)
 
 Annotation quality must be measurable, traceable, and improvable.
 
-- Gold/test items must be indistinguishable from regular items in the UI; their identity must not be inferable from item order, batch name, or any displayed metadata
-- Tasks that assign the same item to multiple annotators must support calculating inter-annotator agreement (e.g., Cohen's kappa, Krippendorff's alpha)
-- Every task must declare a review flow in its task config (review, adjudication, or disagreement resolution); the chosen flow must be enforced by the system
+- Tasks that assign the same item to multiple annotators must support inter-annotator agreement where applicable
+- Every task must declare a review, adjudication, or disagreement-resolution flow in task config
 - Annotator quality must be traceable to individual items, tasks, batches, and time periods
-- Low-quality annotations must follow a defined lifecycle: quarantine → rework or reject → optional appeal; annotations must not be silently discarded
+- Low-quality annotations must follow a defined lifecycle and must not be silently discarded
 
 ### XIV. Dataset Lineage & Schema Versioning (RECOMMENDED)
 
 Dataset provenance and label schema evolution must be tracked and preserved.
 
-- Every dataset item must record its import source, import batch, and preprocessing version
-- Label schemas (task configs) must be versioned; a breaking change to a schema must not be silently applied to annotations produced under a prior version
-- Every annotation must record the schema version under which it was created; scoring, review, and export must operate under the schema version the annotation was produced with
-- Sampling, train/dev/test splits, and annotator assignment must be reproducible given the same seed and dataset version
+- Every dataset item must record import source, import batch, and preprocessing version
+- Label schemas and task configs must be versioned
+- Every annotation must record the schema version under which it was created
+- Breaking schema changes must not be silently applied to annotations produced under prior versions
 
 ### XV. Role-Based Access Control (NON-NEGOTIABLE)
 
-Access to annotations, datasets, and system actions must be governed by roles with annotation-workflow-specific boundaries.
+Access to annotations, datasets, and system actions must be governed by explicit roles.
 
-- Annotators must not see peer annotations unless the task config explicitly enables consensus visibility
-- Reviewers' access to source metadata must be limited to what is required for their specific review task
-- Destructive admin actions (bulk reject, schema publish, assignment override) must be restricted to authorized roles and produce an audit log entry
+- Annotators must not see peer annotations unless task config explicitly enables consensus visibility
+- Reviewers' access to source metadata must be limited to what is required for review
+- Destructive admin actions must be restricted to authorized roles and produce audit logs
 - Role assignments and revocations must be audited; access must be revoked immediately on role removal
 
 ### XVI. Export Reproducibility & Integrity (RECOMMENDED)
 
 Annotation exports must be deterministic, versioned, and validated before delivery.
 
-- Exports must be deterministic given the same dataset version, schema version, task config version, and export timestamp
-- Every export artifact must include metadata: dataset version, schema version, task config version, export timestamp, and the requesting user
-- Breaking changes to export format must increment the export format version; consumers must not be silently broken
-- Before an export completes, the system must validate for missing labels, out-of-range values, conflicting adjudication results, and schema violations; validation failures must abort the export — not silently skip affected items
+- Exports must be deterministic from declared dataset version, schema version, task config version, and export timestamp
+- Export artifacts must include metadata identifying the versions and requesting user
+- Breaking export-format changes require an export format version increment
+- Export validation failures must abort the export rather than silently skipping affected items
 
 ### XVII. CI/CD Quality Gates (RECOMMENDED)
 
 Every pull request must pass automated quality checks before merging.
 
-- Pull requests must pass all automated tests, type checks, lint checks, and build checks before merge
+- Pull requests must pass required tests, type checks, lint checks, and build checks before merge
 - Failing CI must not be bypassed without documented approval and a follow-up issue
-- Security-sensitive changes (auth, permissions, data access, secret handling) must include regression tests covering denial paths
-- Generated artifacts must be reproducible from source; build outputs must not be committed to version control
+- Security-sensitive changes require regression tests covering denial paths
+- Generated artifacts must be reproducible from source
+- Command and coverage details are governed by `.specify/memory/testing-constitution.md`
 
 ### XVIII. Deployment Safety & Rollback (RECOMMENDED)
 
 Deployments and schema changes must be reversible or have an explicit recovery plan.
 
 - Every deployment must have a documented rollback path
-- Database migrations must be backward-compatible where possible; breaking migrations require an explicit rollout plan and a documented rollback procedure
-- Database migration PRs must be independent from application code PRs; a migration must never be bundled with route, service, schema, or frontend changes
-- Every migration PR description must include a Rollback Plan section documenting the expected state before and after rollback
-- Long-running background jobs (imports, exports, scoring) must be retryable or resumable — not silently abandoned on failure
-- Deployment failures must not leave the system in a partially migrated state; migrations must be atomic or gated behind a feature flag
+- Database migrations must be backward-compatible where possible; breaking migrations require a rollout and rollback plan
+- Long-running background jobs must be retryable or resumable
+- Deployment failures must not leave the system in a partially migrated state
+- Migration details are governed by `.specify/memory/backend-constitution.md`
 
 ### XIX. Environment & Configuration Integrity (RECOMMENDED)
 
-Runtime environments must be predictable, validated, and consistent across development, CI, staging, and production.
+Runtime environments must be predictable, validated, and consistent.
 
-- Required environment variables must be validated at startup; missing or invalid values must cause an immediate, explicit startup failure
-- Environment-specific behavior must be controlled by explicit configuration, never by code branches or in-process conditionals
-- Development, staging, and production must run the same test and build commands; environment-specific shortcuts in CI are not permitted
-- Default development credentials must not be valid in staging or production environments
+- Required environment variables must be validated at startup
+- Environment-specific behavior must be controlled by explicit configuration, never hidden code branches
+- Development, staging, and production must run the same test and build commands unless an ADR documents the exception
+- Default development credentials must not be valid in staging or production
 
-### XX. Code Comment Policy (RECOMMENDED)
+### XX. Source of Truth & Contract Governance (RECOMMENDED)
 
-Comments must explain intent, constraints, tradeoffs, or non-obvious domain reasoning — not restate what the code mechanically does.
+Requirements, API contracts, task definitions, UI behavior, and shared domain values must each have exactly one source of truth.
 
-- Comments must explain why code exists, not paraphrase the next line of code
-- Required comments include: security-sensitive logic, race-condition prevention, lifecycle cleanup, non-obvious performance tradeoffs, and domain-specific business rules
-- If code requires a comment because it is too complex, simplify the code first unless the complexity is required by the domain
-- Multi-paragraph docstrings and multi-line comment blocks are not permitted; one short line is the maximum for inline comments
-
-### XXI. Frontend Runtime Safety (RECOMMENDED)
-
-Frontend code must be safe under repeated navigation, concurrent requests, and long-running sessions.
-
-- Async effects must guard against race conditions, stale responses, and updates after unmount
-- Network requests started by a component must be cancellable or safely ignored when the component is no longer active
-- Timers, subscriptions, observers, event listeners, workers, and object URLs must be cleaned up in the component's cleanup phase
-- Long-lived pages must not allow unbounded memory growth from caches, arrays, maps, logs, closures, or retained DOM references
-- Components that fetch or subscribe to data must define loading, error, empty, retry, and cleanup behavior
-- Race-prone flows must include tests or documented verification covering rapid navigation, repeated actions, and overlapping requests
-
-### XXII. API Contract Completeness (RECOMMENDED)
-
-Backend APIs must be documented as stable contracts, not only as implemented behavior.
-
-- Every public backend endpoint must be represented in OpenAPI/Swagger
-- Request bodies, response bodies, query parameters, path parameters, headers, auth requirements, and error responses must be documented
-- API contracts must define enum values, nullable fields, default values, validation constraints, pagination shape, and error schema
+- Derived files, generated files, and tool caches must clearly declare their source and sync process
 - API behavior changes require contract updates in the same change
-- Frontend code must consume documented API contracts and must not rely on undocumented response fields
-
-### XXIII. Frontend-Backend Contract Governance (RECOMMENDED)
-
-Frontend and backend must share explicit contracts for all cross-boundary data.
-
 - Shared enums, status values, task types, role names, error codes, and workflow states must be centrally documented
-- Contract changes must be backward-compatible unless explicitly declared breaking
-- Breaking contract changes require coordinated frontend, backend, migration, and test updates in a single change
-- Mock data, fixtures, and prototypes must not define enum values or API shapes that conflict with the canonical contract
+- Mock data, fixtures, and prototypes must not conflict with the canonical contract
 - Generated types or contract tests must be used where practical to prevent silent drift
-- Prototype HTML and its corresponding React implementation must share a consistent `data-testid` attribute contract where semantic selectors (role, label, text) are insufficient; `data-testid` values established in prototype specs are binding on the React implementation unless the deviation is explicitly documented
 
-### XXIV. Backend Consistency & Idempotency (RECOMMENDED)
-
-Backend operations must remain correct under retries, concurrent requests, and partial failures.
-
-- Mutating endpoints must define idempotency, duplicate-submit behavior, or conflict behavior explicitly
-- Concurrent updates to assignments, submissions, reviews, and scoring state must be protected by transactions, pessimistic or optimistic locks, or explicit conflict checks
-- Long-running jobs must be retryable or resumable without corrupting state
-- Partial failures must leave data in a valid, recoverable state — not in an intermediate or inconsistent state
-- Race-prone backend flows must include tests covering duplicate requests, concurrent updates, and retry scenarios
-
-### XXV. Cross-Layer Correlation & Observability (RECOMMENDED)
-
-Every request, background job, and critical workflow must carry a traceable correlation identifier.
-
-- Every HTTP request must generate or propagate a `request_id` or `correlation_id`; this identifier must appear in all log entries for that request
-- Structured logs (not free-text) are required for: annotation submission, assignment, review, scoring, import/export, auth failure, job retry, and job failure
-- Background jobs must record attempt history with: attempt number, start time, status, error (if any), and duration
-- Long-running operations must be queryable by correlation ID to support post-incident debugging and traceability
-- Correlation identifiers must be included in API error responses to enable client-side support escalation
-
-### XXVI. Database-Enforced Integrity (RECOMMENDED)
-
-Critical system invariants must be enforced at the database layer, not only in service code.
-
-- Foreign key constraints must exist for all relationships between core entities (assignments, annotations, scoring, roles, datasets, schema versions, export records)
-- Uniqueness invariants (e.g., one submission per annotator per item) must be enforced by database unique constraints, not only by application checks
-- Multi-step mutations that must succeed or fail as a unit must execute within a database transaction
-- Conflicting concurrent updates to shared state must be prevented by optimistic or pessimistic locks, not left to application-level checks
-- Migrations that add new constraints must include a data validation step or backfill strategy to prevent constraint violations on existing data
-
-### XXVII. Data Classification, Retention & Deletion (RECOMMENDED)
+### XXI. Data Classification, Retention & Deletion (RECOMMENDED)
 
 Data assets must be classified, retained, and deleted according to defined policies.
 
-- Before ingestion, dataset fields must be reviewed for PII or sensitive content; identified PII must be redacted or minimized before annotator exposure
-- Each data category (datasets, annotations, exports, audit logs, job artifacts) must have a defined retention policy
-- Deletion of a primary resource must define whether derived resources (annotations, exports, audit logs) are cascaded, anonymized, or retained under a separate policy; no implicit cascade or silent discard is permitted
-- Users must not receive deleted or expired data through caches, exports, or API responses after a delete or expiry event
-- Soft-delete patterns must be accompanied by a hard-delete or anonymization path; indefinite retention of soft-deleted PII is not permitted
+- Dataset fields must be reviewed for PII or sensitive content before ingestion
+- Each data category must have a defined retention policy
+- Deletion behavior for derived resources must be explicit
+- Users must not receive deleted or expired data through caches, exports, or API responses
+- Soft-delete patterns require a hard-delete or anonymization path for sensitive data
 
-### XXVIII. Canonical Domain Lifecycle (RECOMMENDED)
+## Domain Constitutions
 
-Core domain entities must have canonical state machines with explicitly defined transitions.
+The main constitution is intentionally limited to project-wide rules. Domain constitutions are mandatory when their scope applies:
 
-- The following entities must have documented canonical states and valid state transitions: task, batch, annotation item, annotation, review, adjudication, export, dataset version
-- Invalid state transitions must be rejected at the service layer; UI button visibility is not a substitute for server-side enforcement
-- Each state transition must document: permitted actors, authorization requirements, side effects (notifications, derived state updates), audit log event, and rollback or retry behavior
-- State transitions must be covered by tests; invalid transition attempts must be verified to be rejected
+- Load `.specify/memory/backend-constitution.md` for backend code, API routes, schemas, services, database models, migrations, Redis, Celery, OpenAPI, backend security, backend performance, or backend deployment work
+- Load `.specify/memory/frontend-constitution.md` for React code, prototypes that bind to React behavior, frontend routing, shared UI, i18n, Storybook, accessibility, frontend state, selector contracts, or frontend performance work
+- Load `.specify/memory/testing-constitution.md` for all behavior changes, bug fixes with regression tests, test strategy, coverage, fixtures, CI checks, Playwright, Vitest, pytest, or security leakage tests — because "all behavior changes" encompasses most implementation work, the testing constitution is effectively always in scope
 
-### XXIX. Cache Safety & Invalidation (RECOMMENDED)
-
-Cached data must be scoped to its authorization boundary and invalidated at the correct lifecycle events.
-
-- Cache keys for user-scoped, role-scoped, task-scoped, dataset-scoped, or schema-scoped data must include those boundary identifiers as part of the cache key
-- Test-set answers, scoring internals, and private dataset fields must not enter any shared or client-visible cache layer
-- The following events must invalidate or bypass affected cache entries: logout, role change, schema publish, annotation submission, review completion, assignment change, import completion, export completion
-- Permission-sensitive responses must not be served from a cache without validating against live authorization state or using a short TTL with a defined invalidation trigger
-- Cache behavior (what is cached, for how long, and when invalidated) must be documented for any cached resource
-- All cache entries must declare an explicit TTL at write time; an entry stored without an explicit TTL must be accompanied by a documented justification; unbounded cache entries are not permitted
-
-### XXX. Test Data Isolation (NON-NEGOTIABLE)
-
-Tests must never use production data, real user data, or genuine annotation ground truth.
-
-- Test fixtures, CI datasets, Playwright traces, screenshots, seed data, and test logs must not contain production database dumps, real user PII, private metadata, or real answer keys
-- Test data must be synthetic, anonymized, or sourced from an approved scrubbed dataset
-- Annotator-facing test scenarios must use clearly fictional entities, labels, and content
-- Tests that require realistic label distributions or scoring scenarios must generate or reference approved synthetic datasets — not import or copy from the production database
+If a domain constitution conflicts with this main constitution, this main constitution wins. If a domain constitution conflicts with an accepted ADR, use the stricter rule unless the ADR explicitly supersedes that domain constitution.
 
 ## Governance
 
 Constitution principles take precedence over all other conventions.
 
 **Amendment Procedure**:
-- Update `specs/_governance/constitution.md` (Single Source of Truth) with the change
-- Sync the change to `.specify/memory/constitution.md` (tool cache) to keep agents aware
-- Propagate amendments to dependent templates (`.specify/templates/`) and commands (`.claude/commands/speckit.*.md`)
+- Update `specs/_governance/constitution.md` first
+- Sync the full content to `.specify/memory/constitution.md` as the tool cache
+- Propagate amendments to dependent domain constitutions, templates, and `.claude/commands/speckit.*.md`
 - Explain the reason in the commit message: `docs: amend constitution to vX.Y.Z ([reason])`
-- Use `/speckit.constitution` to automate propagation checks
+- Use `/speckit.constitution` to automate propagation checks when possible
 
-**Versioning Policy** (semantic versioning):
+**Domain Constitution Amendment Procedure**:
+
+- Source of truth for domain constitutions lives in `specs/_governance/`: `backend-constitution.md`, `frontend-constitution.md`, `testing-constitution.md`
+- Edit the source file in `specs/_governance/` first, then sync the full content to the corresponding `.specify/memory/` tool cache
+- Domain constitution changes that affect project-wide rules must also amend the main constitution
+- Commit message format: `docs: amend [backend|frontend|testing]-constitution ([reason])`
+
+**Versioning Policy**:
 - **MAJOR**: Backward-incompatible removal or redefinition of a principle
 - **MINOR**: New principle or section added
 - **PATCH**: Clarification, wording fix, or non-semantic refinement
-- Changelog entries must be written in descending version order, with the newest version first (for example, `1.5.0` before `1.4.0`).
-- Constitution changelog entries use English summaries; changelog entries in `.specify/templates/` use Chinese summaries.
+- Changelog entries must be written in descending version order, with the newest version first
+- Constitution changelog entries use English summaries; changelog entries in `.specify/templates/` use Chinese summaries
 
 **Feature Goal Alignment Gate**: During PR review, the reviewer must confirm that the plan's `## 功能目標` matches the spec's `## 功能目標`. A mismatch is a blocking finding. Use `/speckit.analyze` to flag Feature Goal divergence as an alignment error.
 
-**Source of Truth**: Requirements, API contracts, task definitions, and UI behavior specifications must each have exactly one source of truth. Derived files, generated files, and tool caches must clearly declare their source and sync process. Agents must not amend cache or derived files directly unless explicitly syncing from the authoritative source.
+**Dependency Governance**: New external dependencies must be evaluated for security, maintenance activity, and bundle-size impact before being added. Use `uv add` for backend and `pnpm add` for frontend; never `pip install` or `npm install`.
 
-**Dependency Governance**: New external dependencies must be evaluated for security (known CVEs), maintenance activity, and bundle-size impact before being added. Prefer actively maintained packages with strong community support. Use `uv add` (backend) or `pnpm add` (frontend); never `pip install` or `npm install`.
+**Compliance Review**: All PRs must verify compliance with the main constitution and every applicable domain constitution before merging. Use `/speckit.analyze` to check cross-artifact consistency and constitution alignment.
 
-**Compliance Review**: All PRs must verify compliance with all thirty principles before merging. Use `/speckit.analyze` to check cross-artifact consistency and Constitution alignment.
-
-**Version**: 1.30.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-06-02
+**Version**: 1.31.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-06-02
 
 ## Changelog
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.31.0 | 2026-06-02 | Split detailed backend, frontend, and testing governance out of the main constitution into mandatory domain constitutions; add Domain Constitutions loading rules; update compliance review to cover applicable domain constitutions |
 | 1.30.0 | 2026-06-02 | Strengthen Principle I (add task granularity: one file per task, TDD task separation, Storybook task separation, migration decomposition into upgrade/downgrade/roundtrip); strengthen Principle X (add PR size limit ≤ 5 files / ≤ 300 lines, backend layer PR separation, frontend layer PR separation, BE/FE independence rule); strengthen Principle XVIII (migration PRs must be standalone, every migration PR requires a Rollback Plan section) |
 | 1.29.1 | 2026-05-29 | Strengthen Principle VII (add Storybook story requirement for non-page components); Principle XXIII (add prototype↔React data-testid contract binding rule); Principle XXIX (add universal explicit-TTL requirement for all cache entries) |
 | 1.29.0 | 2026-05-29 | Extend Principle V (Code Quality & Simplicity) with Human Handoff Readiness: intent-stating names, two-call-level entry point reachability, one-indirection main path, no readability-sacrificing compression |

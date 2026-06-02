@@ -28,6 +28,9 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - Routes must use FastAPI dependency injection for database sessions, authentication, authorization, and settings.
 - Endpoints must follow REST semantics: correct HTTP methods, stable resource names, explicit status codes, and structured error responses.
 - OpenAPI output is an API contract. Public schema changes must be intentional, reviewed, and tested.
+- Every public endpoint must be represented in OpenAPI/Swagger with request bodies, response bodies, query parameters, path parameters, headers, auth requirements, and error responses.
+- API contracts must define enum values, nullable fields, default values, validation constraints, pagination shape, and error schema.
+- API behavior changes require contract updates in the same change.
 - Annotator-facing API responses must never expose test-set answers, ground truth, hidden labels, scoring keys, answer file paths, or equivalent privileged data.
 
 ## IV. Pydantic Contracts
@@ -52,6 +55,14 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - Use async SQLAlchemy 2.0 sessions and PostgreSQL-native capabilities where appropriate.
 - Writes that affect submissions, scoring, or leaderboard state must be transactional.
 - Alembic migrations are required for schema changes.
+- Database migration tasks must be split into three sequential tasks: `upgrade()`, `downgrade()` with no `pass`, and roundtrip verification.
+- Database migration PRs must be independent from application code PRs. A migration must never be bundled with route, service, schema, or frontend changes.
+- Every migration PR description must include a Rollback Plan section documenting expected state before and after rollback.
+- Foreign key constraints must exist for relationships between core entities.
+- Uniqueness invariants, such as one submission per annotator per item, must be enforced by database unique constraints.
+- Multi-step mutations that must succeed or fail as a unit must execute within a database transaction.
+- Conflicting concurrent updates must be prevented by optimistic or pessimistic locks or explicit conflict checks.
+- Migrations that add constraints must include validation or a backfill strategy for existing data.
 - Test-set answers must be stored separately from annotator-facing task data and protected by access control.
 - List endpoints must be paginated with a maximum page size of 100.
 - Service-layer code must avoid N+1 queries and unbounded database scans.
@@ -62,10 +73,17 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - Celery handles scoring, leaderboard refresh, cleanup, and other work that must not block API responses.
 - FastAPI routes may enqueue Celery tasks directly with `.delay()` for Redis-backed dispatch.
 - Celery tasks must define retry policy, timeout, idempotency expectations, and observable status.
+- Long-running jobs must be retryable or resumable without corrupting state.
+- Background jobs must record attempt history with attempt number, start time, status, error if any, and duration.
 - Scoring workers may access hidden test-set answers; API routes must not return them.
 - Redis DB usage must remain logically separated: broker, result backend, and application cache.
 - Shared Redis must not rely on global `maxmemory` eviction for cache control; every cache key must have an explicit TTL.
 - Cache misses and Redis outages must degrade gracefully to database-backed behavior where feasible.
+- Cache keys for user-scoped, role-scoped, task-scoped, dataset-scoped, or schema-scoped data must include those boundary identifiers.
+- Test-set answers, scoring internals, and private dataset fields must not enter any shared or client-visible cache layer.
+- Logout, role change, schema publish, annotation submission, review completion, assignment change, import completion, and export completion must invalidate or bypass affected cache entries.
+- Permission-sensitive responses must not be served from cache without live authorization validation or a short TTL with a defined invalidation trigger.
+- Cache behavior must be documented for cached resources.
 
 ## VIII. Security
 
@@ -80,7 +98,9 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 ## IX. Logging And Observability
 
 - Use structured logging for API requests, Celery tasks, scoring lifecycle events, cache failures, and external email delivery failures.
-- Logs must include correlation identifiers where available.
+- Every HTTP request must generate or propagate a `request_id` or `correlation_id`; this identifier must appear in logs for that request.
+- Correlation identifiers must be included in API error responses to enable client-side support escalation.
+- Long-running operations must be queryable by correlation ID where practical.
 - Exceptions must be logged with actionable context without leaking sensitive payloads.
 - Debug `print()` statements are forbidden in committed backend code.
 - Celery task failures must be visible through logs and task status APIs.
@@ -105,7 +125,23 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - Service-layer queries must be reviewed for N+1 patterns, missing indexes, and excessive JSONB scans.
 - Config-driven flexibility must not permit unbounded metric execution, unlimited payload sizes, or uncontrolled worker runtime.
 
-## XII. Commands
+## XII. Backend Consistency And Domain Lifecycle
+
+- Mutating endpoints must define idempotency, duplicate-submit behavior, or conflict behavior explicitly.
+- Partial failures must leave data in a valid, recoverable state.
+- Race-prone backend flows must include tests covering duplicate requests, concurrent updates, and retries.
+- The following entities must have documented canonical states and valid transitions: task, batch, annotation item, annotation, review, adjudication, export, and dataset version.
+- Invalid state transitions must be rejected at the service layer; UI button visibility is not a substitute for server-side enforcement.
+- Each state transition must document permitted actors, authorization requirements, side effects, audit log event, and rollback or retry behavior.
+
+## XIII. PR Boundaries
+
+- Backend layer concerns must be split into separate PRs: Pydantic schemas, ORM models, service logic, and API routes are each distinct review units.
+- Database migrations are always standalone PRs.
+- Backend and frontend PRs must be independent when no breaking API contract change is involved.
+- When a breaking API contract change does occur, backend and frontend PRs must cross-reference each other.
+
+## XIV. Commands
 
 All backend Python commands must run through `uv` from `backend/`.
 
@@ -124,6 +160,6 @@ uv add --dev <package>
 
 Do not use `pip install`. Do not modify package versions unless explicitly requested. Use Docker Compose when PostgreSQL, Redis, backend, and worker coordination is required.
 
-## XIII. Governance
+## XV. Governance
 
 This backend constitution refines but does not override `.specify/memory/constitution.md`. If this file conflicts with the main constitution, the main constitution wins. Backend architectural changes require SDD unless they are bug fixes matching existing specs. ADRs are binding until superseded by a newer accepted ADR.
