@@ -43,35 +43,39 @@ Add to `~/.claude/settings.json`:
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
 [Team Lead] reads tasks.md and spawns teammates:
 
-  Step A — parallel (no inter-dependency):
-  ├──→ [BackendAgent]   owns: backend/app/              (FastAPI routes / models / services)
-  ├──→ [FrontendAgent]  owns: frontend/src/             (React components / pages / services)
-  ├──→ [I18nAgent]      owns: frontend/src/locales/     (zh-TW / en translation strings)
-  └──→ [DevOpsAgent]    owns: docker-compose.yml, .github/workflows/  (optional)
-
   ⚠️  Human Review checkpoint — required before any DB schema or API contract change
-      Tell Team Lead: "Require plan approval before BackendAgent makes schema changes"
 
-  Step B — after BackendAgent models are confirmed:
-  └──→ [DBAgent]        owns: backend/migrations/       (Alembic migrations, index strategy)
+  Step A — Test Definition (TDD Red phase, before implementation):
+  └──→ [senior-qa]      owns: backend/tests/ + frontend/tests/  (write failing tests first)
+       ↓ Confirm all tests fail (red) before proceeding to Step B
 
-  Step C — after BackendAgent + FrontendAgent complete:
-  └──→ [TestAgent]      owns: backend/tests/ + frontend/tests/  (pytest + Playwright E2E)
+  Step B — parallel (after failing tests confirmed):
+  ├──→ [senior-backend]   owns: backend/app/              (FastAPI routes / models / services)
+  ├──→ [senior-frontend]  owns: frontend/src/             (React components / pages / services)
+  ├──→ [senior-i18n]      owns: frontend/src/locales/     (zh-TW / en translation strings)
+  └──→ [senior-devops]    owns: docker-compose.yml, .github/workflows/  (optional)
+
+  Step C — after senior-backend models are confirmed:
+  └──→ [senior-dba]     owns: backend/migrations/       (Alembic migrations, index strategy)
+
+  Step D — Test Validation (TDD Green phase, after all implementation complete):
+  └──→ [senior-qa]      re-runs full test suite; all tests must pass before review
 
   TaskCompleted hook — auto quality gate after each task:
     backend task  → uv run ruff check . && uv run mypy .
     frontend task → pnpm tsc --noEmit && pnpm lint
     if fails      → teammate retries (max 2), then escalates to Team Lead
-    if retry > 2  → [ErrorResolverAgent] takes over for root-cause debugging
+    if retry > 2  → [senior-error-resolver] takes over for root-cause debugging
 
-  TeammateIdle hook — when all implementation teammates idle, Team Lead spawns review team:
-  ├──→ [ReviewAgent]      code quality, type safety, logic correctness
-  ├──→ [SecurityAgent]    RBAC, JWT handling, input validation, data leakage
-  └──→ [PerformanceAgent] API p95 latency, DB query efficiency, annotation write throughput
+  TeammateIdle hook — when Step D passes, Team Lead spawns review team:
+  ├──→ [senior-code-reviewer]  code quality, type safety, logic correctness
+  ├──→ [senior-security]       RBAC, JWT handling, input validation, data leakage
+  └──→ [senior-performance]    API p95 latency, DB query efficiency, annotation write throughput
 
   ⚠️  Human Review interrupt — approve before proceeding to PR
       Review team posts consolidated findings; you confirm or redirect
 
+  /speckit.analyze
   /speckit.checklist
 
 ── Phase 3: PR Flow ──────────────────────────────────────────────────────────
@@ -121,7 +125,7 @@ Run /pr-flow
 
 | Teammate | Agent Type | When to Spawn |
 |---|---|---|
-| ErrorResolverAgent | `senior-error-resolver` | TaskCompleted retry > 2 times |
+| `senior-error-resolver` | `senior-error-resolver` | TaskCompleted retry > 2 times (3 attempts exhausted) |
 | TechWriterAgent | `senior-technical-writer` | After PR merge, update README / API docs |
 | NLPAdvisorAgent | `nlp-research-advisor` | NLP task config or annotation schema decisions |
 
@@ -152,11 +156,14 @@ All agents are read-only — no file edits. Synthesize findings for plan.md.
 
 ```
 Create an agent team to implement [feature] based on specs/[module]/NNN-feature/tasks.md.
-Spawn:
-- BackendAgent (senior-backend): backend tasks, owns backend/app/
-- FrontendAgent (senior-frontend): frontend tasks, owns frontend/src/ [parallel with backend]
-- I18nAgent (senior-i18n): translation strings, owns frontend/src/locales/ [parallel]
-- DBAgent (senior-dba): migrations, owns backend/migrations/
-- TestAgent (senior-qa): tests after API contract is confirmed
+Spawn in this order (TDD):
+Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/)
+          ↓ confirm all tests fail before Step B
+Step B — parallel implementation (after failing tests confirmed):
+  - senior-backend: backend tasks, owns backend/app/
+  - senior-frontend: frontend tasks, owns frontend/src/
+  - senior-i18n: translation strings, owns frontend/src/locales/
+Step C — senior-dba: migrations after senior-backend models confirmed, owns backend/migrations/
+Step D — senior-qa: re-run full test suite; all tests must be green before review
 Require plan approval before any DB schema or API contract changes.
 ```

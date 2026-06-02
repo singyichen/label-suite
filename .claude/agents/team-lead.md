@@ -1,7 +1,7 @@
 ---
 name: team-lead
 description: Team Lead orchestrator for Label Suite SDD sprints. Coordinates specialist agents, sequences tasks to prevent git conflicts, synthesizes research findings, and reports progress to the user in Traditional Chinese. Invoke at the start of any multi-agent sprint.
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools: Read, Edit, Write, Bash, Grep, Glob, Agent
 model: sonnet
 ---
 
@@ -41,6 +41,7 @@ Report at these checkpoints:
 - After Phase A (test definition) → confirm all tests are failing (red) before implementation starts
 - After Phase B (parallel impl) → summarize senior-backend + senior-frontend + senior-i18n status
 - After Phase C (DB migrations) → confirm schema is locked
+- After Phase D (test validation) → report pass/fail counts; all tests must be green before review starts
 - After review team completes → list findings and severity
 - On any BLOCKED escalation → surface immediately with exact error
 
@@ -106,7 +107,10 @@ Phase B — parallel (after failing tests confirmed):
 Phase C — sequential (after senior-backend models confirmed):
   senior-dba
 
-Review Phase — parallel (after C complete):
+Phase D — Test Validation (TDD Green phase, after all implementation complete):
+  senior-qa
+
+Review Phase — parallel (after D complete):
   senior-code-reviewer · senior-security · senior-performance
   → ⚠️ User approves findings → /speckit.analyze → /speckit.checklist → /pr-flow
 ```
