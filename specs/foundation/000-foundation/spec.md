@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.11.1
+版本: 1.11.2
 狀態: Draft
 ---
 
@@ -614,7 +614,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 ### 功能需求
 
-- **FR-040**：（`ErrorResponse` schema 定義職責已移至 FR-115（P0）；本條款為 frontend 顯示與 internal logging 補充行為，不重複 schema 定義。）系統必須讓所有 API 錯誤回應使用 FR-115 定義的 `ErrorResponse` schema；本節補充 frontend 顯示與 internal logging 行為。
+- **FR-040**：（`ErrorResponse` schema 定義職責已移至 FR-115（P0）；本條款補充 frontend 顯示與 internal logging 行為，schema 定義見 FR-115。）系統必須讓所有 API 錯誤回應符合 FR-115 定義的 `ErrorResponse` schema；本節補充 frontend 顯示與 internal logging 行為。
 - **FR-041**：系統必須讓 frontend error boundary 或 TanStack Query error handler 解析 `ErrorResponse.detail`，不得顯示 raw stack trace、raw SQL error 或未處理的 HTTP client object。
 - **FR-042**：系統必須記錄 internal error detail 至 server log，但 user-facing response 不得洩漏 secret、token、SQL、filesystem path 或 sensitive payload。
 - **FR-088**：系統必須讓 frontend 的 error handler 使用 FR-116 定義的 `ErrorDetail.type` 區分 schema validation、application rule 與 auth 錯誤，並分別觸發欄位 highlight、Toast 或 redirect 行為。
@@ -720,6 +720,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 | [ADR-019](../../../docs/adr/019-ai-traceability-audit-logging.md) | AI traceability and audit logging boundary |
 | [ADR-020](../../../docs/adr/020-application-error-tracking-sentry.md) | Sentry application error tracking baseline |
 | [ADR-021](../../../docs/adr/021-jwt-refresh-token-auth.md) | JWT + Refresh Token 策略 |
+| [ADR-022](../../../docs/adr/022-task-state-machine-location.md) | Task state machine 位置約束 |
 | [Design System Master](../../../design/system/MASTER.md) | Frontend design tokens、component states、interaction pattern |
 | [IA v1.4.3](../../../docs/product/ia/information-architecture.md) | §6.1 Foundation Spec 關係 |
 | [React Design Patterns and Best Practices for 2025](https://www.telerik.com/blogs/react-design-patterns-best-practices) | Function components、custom hooks、Context state boundary、type-safe props/hooks、Vite、utility-first styling、design system baseline |
@@ -814,9 +815,11 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.11.2 | 2026-06-02 | 依 PR code review 修正：FR-040 parenthetical 改為「schema 定義見 FR-115」移除自我矛盾措辭、補充 ADR-022 上游依賴、補記 SC-029~031 changelog 歸屬、更新 front matter 功能分支至 feat/foundation-spec-review-fixes |
 | 1.11.1 | 2026-06-01 | 依 independent-review 一致性/可測試性雙向審查修正：FR-116 移除與 FR-088 重疊的 frontend 行為描述、FR-040 加 supersede 說明、FR-117/FR-078 補充 CSRF 並存關係、FR-120 補顯式 `operation_id=` 設定指引、SC-018 補 operationId diff 偵測機制、SC-022 補 metrics naming grep pattern 與 instrumentator 設定、SC-034 修正 mobile/tablet/desktop 三 project 與 SC-041 對齊、SC-036 補 backend integration test + production settings fixture 指引、SC-039 補 Celery headers dict assert pattern、SC-045 補 CI shell check 與 scripts/ 路徑約束 |
 | 1.11.0 | 2026-06-01 | 依 senior-backend、senior-full-stack、senior-frontend 三方評估補強 Foundation：將 ErrorResponse / ErrorDetail contract 提升為 P0、明確 Celery 為 ADR-007 background job baseline、一般化 cookie-auth CSRF 防護、將 restricted-client data safety 升為 P0、補 API versioning / operationId / idempotency / cursor pagination 例外、non-CRUD REST pattern、resource-scoped repository query、frontend `shared/api-types/` 例外、module-boundary matrix、QueryClient baseline、correlation propagation、metrics naming convention、bundle budget、A11y 自動化、responsive/i18n gate、feature-critical UI coverage 與 local bootstrap contract；新增 FR-115~130 與 SC-034~045 |
 | 1.10.1 | 2026-05-29 | 參考 Telerik React design patterns 補強 frontend foundation：新增 function components + hooks 基準、custom hook 提取與型別化 contract、Context state boundary、generic reusable component、Tailwind / design system styling 約束、Vite lazy route baseline；新增 FR-108~FR-114 與 SC-032~SC-033 |
+| 1.10.0-補遺 | 2026-05-29 | 補記 SC-029/030/031 歸屬（backend module boundary check、AppBaseModel base schema、SQLAlchemy naming convention），原與 v1.10.0 同批引入但未列入 changelog |
 | 1.10.0 | 2026-05-29 | 依 senior-devops 評估補強 Prometheus + Grafana + Sentry observability baseline：新增 F-17、FR-091~FR-100 與 SC-021~SC-028；明確 FastAPI / Celery metrics、low-cardinality label 與 sensitive-data 禁止規則、Docker Compose monitoring stack、Prometheus rules、Grafana dashboards、Sentry frontend/backend/worker 初始化、event scrubbing、PII/request body 限制、frontend source map policy、AI workflow exception 與 ADR-019 的 redacted context 邊界；補充 ADR-018/019/020 上游相依性與 Sentry / metrics 架構常數 |
 | 1.9.0 | 2026-05-29 | 依 senior-backend + senior-full-stack 雙向評估結果補強：新增 FR-068~FR-090（23 項）與 SC-014~SC-020（7 項）；涵蓋 PaginatedResponse 欄位補全、分頁邊界驗證、OpenAPI CI gate、SQLAlchemy async transaction boundary + lazy load 防護、Alembic async env.py、refresh token race condition 策略、absolute max TTL、access token 強制失效 P1 化、CSRF subdomain 評估、rate limiting、password hash 演算法、restricted-client safe schema allowlist 設計、Celery UPSERT 冪等性、TanStack Query queryKey factory、401 retry 防競爭、job polling contract、test DB SAVEPOINT isolation、ErrorDetail schema 完整定義、Celery sync DB session 邊界分離；補充 resource-scoped permission 應由 API capability 回傳的約束情境；新增架構常數 REFRESH_TOKEN_ABSOLUTE_MAX_TTL 與 REFRESH_TOKEN_GRACE_PERIOD |
 | 1.8.0 | 2026-05-29 | 依 NestJS 到 FastAPI 架構對應補強 backend 基準目錄結構：明確 module/router/service/schema/model/crud/dependency/middleware/jobs/scheduler/config 對應與實作基準 |
