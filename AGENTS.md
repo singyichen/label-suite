@@ -82,5 +82,92 @@ Do not modify without explicit instruction:
 
 ## Sub-agents
 
-25 specialist agents available (backend, frontend, QA, security, NLP, etc.).
-Run `/agents` to list all, or see `.claude/agents/` for definitions.
+26 specialist agents available. See `.claude/agents/` for full definitions.
+Multi-agent workflow: `/agent-team` command · `.claude/commands/agent-team.md` for full spawn templates.
+
+---
+
+## Agent Team
+
+### Team Lead
+
+`team-lead` is the orchestrator — the only agent that talks directly to you. It sequences all other agents, enforces file ownership, and reports progress in Traditional Chinese at every checkpoint.
+
+Invoke at the start of any multi-agent sprint:
+
+```text
+Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN-feature/tasks.md
+```
+
+### Phase Mapping
+
+#### Phase 1 — Research (read-only, before `/speckit.plan`)
+
+| Agent | Role | When |
+|---|---|---|
+| `senior-architect` | Codebase structure, ADR conflicts, naming conventions | Complex / cross-cutting features |
+| `senior-dba` | Existing schema review, migration strategy | Any DB change |
+| `senior-api-designer` | API contract review, OpenAPI consistency | Any API change |
+| `senior-backend` | Service boundaries in `backend/app/services/` | New backend module |
+| `senior-frontend` | Reusable components in `frontend/src/shared/` | New frontend module |
+| `senior-uiux` | Annotation interface UX feasibility | Any labeling UI |
+| `senior-i18n` | zh-TW / en strings to externalize | Any UI text |
+| `nlp-research-advisor` | Annotation schema, IAA metrics, Demo Paper framing | NLP task design |
+
+#### Phase 2A — Implementation (parallel, after API contract is locked)
+
+| Agent | Owns | Model |
+|---|---|---|
+| `senior-backend` | `backend/app/` | Sonnet 4.6 |
+| `senior-frontend` | `frontend/src/` | Sonnet 4.6 |
+| `senior-i18n` | `frontend/src/locales/` | Haiku 4.5 |
+| `senior-devops` _(optional)_ | `docker-compose.yml`, `.github/` | Haiku 4.5 |
+
+> ⚠️ **User checkpoint required** before any DB schema or API contract change proceeds.
+
+#### Phase 2B — DB Migrations (after BackendAgent models confirmed)
+
+| Agent | Owns |
+|---|---|
+| `senior-dba` | `backend/migrations/` |
+
+#### Phase 2C — Tests (after 2A complete)
+
+| Agent | Owns |
+|---|---|
+| `senior-qa` | `backend/tests/`, `frontend/tests/` |
+
+#### Phase 3 — Review (parallel, after all impl complete)
+
+| Agent | Focus | Stage |
+|---|---|---|
+| `senior-code-reviewer` | Code quality, type safety, logic | Stage 1 (always) |
+| `senior-security` | RBAC, JWT, input validation, test-set leakage | Stage 2 (always) |
+| `senior-performance` | API latency, DB query efficiency | Stage 3 (milestone 2+) |
+
+#### On-Demand
+
+| Agent | When to Spawn |
+|---|---|
+| `senior-error-resolver` | Implementation teammate fails ≥ 3 quality gate retries |
+| `senior-debugger` | pytest / Vitest / Playwright failures that block progress |
+| `senior-technical-writer` | After PR merge — update README / API docs / thesis chapter |
+| `senior-full-stack` | Cross-boundary integration task that cannot be split |
+| `senior-tech-lead` | ADR decisions, constitution compliance review, cross-cutting concerns |
+| `senior-sa` | Technical specification writing for new modules |
+| `user-researcher` | New module requires user journey research |
+| `senior-ba` | Requirements unclear — needs structured analysis before specifying |
+
+### Inter-Agent Communication Protocol
+
+Agents do not read files autonomously — the Team Lead provides full context in each spawn prompt:
+
+```text
+1. Full task text (copied from tasks.md)
+2. API contract (if crossing BE/FE boundary)
+3. File ownership boundary (what they own / must not touch)
+4. Quality gate command to run after completion
+```
+
+Agents report back with one of four statuses: `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` · `BLOCKED`.
+Team Lead handles each per the escalation rules in `.claude/agents/team-lead.md`.
