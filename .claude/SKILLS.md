@@ -59,7 +59,7 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
 │   ├── ui-ux-pro-max/               # UI/UX Design Intelligence
 │   └── react-best-practices/        # React/Next.js performance optimization (Vercel)
-├── agents/                      # AI Agent definitions (25 agents)
+├── agents/                      # AI Agent definitions (26 agents)
 └── SKILLS.md                    # This file
 ```
 
@@ -283,7 +283,7 @@ For the Label Suite project, these skills enforce additional constraints for the
 ## Related Documentation
 
 - **[CLAUDE.md](../CLAUDE.md)**: Project coding standards and conventions
-- **[AGENTS.md](../AGENTS.md)**: Reference for all 25 AI agents
+- **[AGENTS.md](../AGENTS.md)**: Reference for all 26 AI agents and agent team structure
 - **[CODE_REVIEW_GUIDE.md](skills/code-quality/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
 - **[Constitution](./../.specify/memory/constitution.md)**: Six core development principles
 
