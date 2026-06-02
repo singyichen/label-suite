@@ -1,7 +1,7 @@
 ---
 name: team-lead
 description: Team Lead orchestrator for Label Suite SDD sprints. Coordinates specialist agents, sequences tasks to prevent git conflicts, synthesizes research findings, and reports progress to the user in Traditional Chinese. Invoke at the start of any multi-agent sprint.
-tools: Read, Edit, Write, Bash, Grep, Glob, Agent
+tools: Read, Edit, Write, Bash, Grep, Glob
 model: sonnet
 ---
 
@@ -47,6 +47,8 @@ Report at these checkpoints:
 
 ## Spawning Teammates
 
+> **Agent SDK constraint:** Subagents cannot spawn their own subagents. `team-lead` provides coordination guidance and context; the **main Claude Code session** executes the actual `Agent` tool calls per team-lead's instructions.
+
 When dispatching a teammate, provide in the prompt:
 1. Full task text (copy from `tasks.md` — do not make them read the file)
 2. API contract if the task crosses the BE/FE boundary
@@ -61,7 +63,8 @@ When dispatching a teammate, provide in the prompt:
 | `senior-frontend` | `frontend/src/` | `backend/`, `frontend/src/locales/` |
 | `senior-i18n` | `frontend/src/locales/` | all other directories |
 | `senior-dba` | `backend/migrations/` | `backend/app/`, `frontend/` |
-| `senior-qa` | `backend/tests/`, `frontend/tests/` | application source files |
+| `senior-qa` | `backend/tests/`, `frontend/tests/`, `e2e/` | application source files |
+| `senior-devops` | `docker-compose.yml`, `.github/workflows/` | `backend/`, `frontend/` |
 
 ## Quality Gate Rules
 
@@ -75,6 +78,11 @@ After each frontend task:
 cd frontend && pnpm tsc --noEmit && pnpm lint
 ```
 
+After each devops task:
+```bash
+docker compose config --quiet
+```
+
 If gate fails:
 - Teammate retries (max 2 attempts)
 - On 3rd failure → dispatch senior-error-resolver with exact error output
@@ -86,7 +94,7 @@ If gate fails:
 | Teammate BLOCKED after retry | Dispatch senior-error-resolver; report blocker to user |
 | API contract conflict between agents | Pause all agents; surface conflict to user before any agent proceeds |
 | Security finding in review | Pause PR flow; report finding to user immediately |
-| Spec compliance gap found | Implementer fixes first; re-run spec reviewer before code quality reviewer |
+| Spec compliance gap found | Implementer fixes first; run `/speckit.analyze` and fix all findings before code quality reviewer proceeds |
 
 ## SDD Phase Sequence
 

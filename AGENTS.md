@@ -118,7 +118,7 @@ Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN
 
 | Agent | Owns |
 |---|---|
-| `senior-qa` | `backend/tests/`, `frontend/tests/` |
+| `senior-qa` | `backend/tests/`, `frontend/tests/`, `e2e/` |
 
 > Newly added tests must fail (red); existing passing tests must remain green. Confirm new tests are red before starting Phase 2B.
 

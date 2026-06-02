@@ -158,7 +158,7 @@ All agents are read-only — no file edits. Synthesize findings for plan.md.
 Create an agent team to implement [feature] based on specs/[module]/NNN-feature/tasks.md.
 Spawn in this order (TDD):
 Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/)
-          ↓ confirm all tests fail before Step B
+          ↓ confirm newly added tests fail (red); existing passing tests must remain green
 Step B — parallel implementation (after failing tests confirmed):
   - senior-backend: backend tasks, owns backend/app/
   - senior-frontend: frontend tasks, owns frontend/src/
