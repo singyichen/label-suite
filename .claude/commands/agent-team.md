@@ -34,11 +34,12 @@ Add to `~/.claude/settings.json`:
   ├──→ [BackendResearchAgent]   service boundaries in backend/app/services/      ← no overlap with APIDesign
   ├──→ [FrontendResearchAgent]  reusable components, UI integration points
   ├──→ [UXAgent]                annotation interface UX feasibility
-  └──→ [I18nAgent]              UI strings needing zh-TW/en externalization
+  ├──→ [I18nAgent]              UI strings needing zh-TW/en externalization
+  └──→ [NLPAdvisorAgent]        annotation schema / IAA review for annotation or NLP task features
        ↓ Team Lead synthesizes findings
   ⚠️  Human Review — confirm research findings before writing plan
 
-/speckit.plan → /speckit.tasks
+/speckit.plan → /speckit.checklist → /speckit.tasks
 
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
 [Team Lead] reads tasks.md and spawns teammates:
@@ -63,7 +64,9 @@ Add to `~/.claude/settings.json`:
 
   TaskCompleted hook — auto quality gate after each task:
     backend task  → cd backend && uv run ruff check . && uv run mypy .
-    frontend task → cd frontend && pnpm tsc --noEmit && pnpm lint
+    frontend task → if frontend/package.json exists: cd frontend && pnpm tsc --noEmit && pnpm lint
+    devops task   → if compose file exists: docker compose config --quiet
+                    always run: git diff --check -- .github/workflows/ docker-compose.yml docker-compose.yaml compose.yml compose.yaml
     if fails      → teammate retries (max 2), then escalates to Team Lead
     if retry > 2  → [senior-error-resolver] takes over for root-cause debugging
 
@@ -76,7 +79,7 @@ Add to `~/.claude/settings.json`:
       Review team posts consolidated findings; you confirm or redirect
 
   /speckit.analyze
-  /speckit.checklist
+      Fix every analyze finding and rerun /speckit.analyze until clear before PR flow
 
 ── Phase 3: PR Flow ──────────────────────────────────────────────────────────
 Run /pr-flow
@@ -150,6 +153,8 @@ Before writing the plan for [feature], spawn a read-only research team:
 - FrontendResearchAgent (senior-frontend): identify reusable components in frontend/src/
 - UXAgent (senior-uiux): assess annotation interface UX feasibility
 - I18nAgent (senior-i18n): identify UI strings needing zh-TW/en translation
+- NLPAdvisorAgent (nlp-research-advisor): for annotation or NLP task features, review annotation
+  schema, IAA metrics, and Demo Paper framing
 All agents are read-only — no file edits. Synthesize findings for plan.md.
 ```
 
@@ -158,7 +163,9 @@ All agents are read-only — no file edits. Synthesize findings for plan.md.
 ```
 Create an agent team to implement [feature] based on specs/[module]/NNN-feature/tasks.md.
 Spawn in this order (TDD):
-Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/)
+Before Step A — verify current branch is not main, run /speckit.checklist if not already complete,
+and confirm specs/[module]/NNN-feature/tasks.md exists.
+Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/, e2e/)
           ↓ confirm newly added tests fail (red); existing passing tests must remain green
 Step B — parallel implementation (after failing tests confirmed):
   - senior-backend: backend tasks, owns backend/app/
@@ -168,4 +175,5 @@ Step B — parallel implementation (after failing tests confirmed):
 Step C — senior-dba: migrations after senior-backend models confirmed, owns backend/migrations/
 Step D — senior-qa: re-run full test suite; all tests must be green before review
 Require plan approval before any DB schema or API contract changes.
+After each task quality gate passes, mark completed task IDs in tasks.md as [X].
 ```

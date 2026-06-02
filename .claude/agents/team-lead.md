@@ -38,7 +38,8 @@ Report to the user in Traditional Chinese at every checkpoint using this templat
 
 Report at these checkpoints:
 - After research team completes → summarize findings; pause for user to confirm before running /speckit.plan
-- After /speckit.plan creates plan.md → present plan for user review; pause for approval before Phase A
+- After /speckit.plan creates plan.md → present plan for user review; pause for approval before checklist/tasks generation
+- After /speckit.checklist and /speckit.tasks complete → confirm task list is ready before Phase A
 - After Phase A (test definition) → confirm newly added tests are failing (red); existing passing tests must remain green
 - After Phase B (parallel impl) → summarize senior-backend + senior-frontend + senior-i18n status
 - After Phase C (DB migrations) → confirm schema is locked
@@ -55,6 +56,7 @@ When dispatching a teammate, provide in the prompt:
 2. API contract if the task crosses the BE/FE boundary
 3. File ownership boundary (what they own, what they must not touch)
 4. Quality gate command to run after completing each task
+5. Requirement to mark completed task IDs in `tasks.md` as `[X]` after the quality gate passes
 
 ### File Ownership (enforce strictly to prevent git conflicts)
 
@@ -76,12 +78,13 @@ cd backend && uv run ruff check . && uv run mypy .
 
 After each frontend task:
 ```bash
-cd frontend && pnpm tsc --noEmit && pnpm lint
+if [ -f frontend/package.json ]; then cd frontend && pnpm tsc --noEmit && pnpm lint; else echo "Skip frontend gate: frontend/package.json does not exist yet"; fi
 ```
 
 After each devops task:
 ```bash
-docker compose config --quiet
+if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ] || [ -f compose.yml ] || [ -f compose.yaml ]; then docker compose config --quiet; fi
+git diff --check -- .github/workflows/ docker-compose.yml docker-compose.yaml compose.yml compose.yaml
 ```
 
 If gate fails:
@@ -105,8 +108,10 @@ Research Phase (read-only, parallel):
   senior-backend · senior-frontend · senior-uiux · senior-i18n
   [nlp-research-advisor]  ← for annotation / NLP task features
   → Synthesize → ⚠️ User confirms research findings → /speckit.plan → ⚠️ User reviews plan.md
+  → /speckit.checklist → /speckit.tasks
 
 ⚠️ User checkpoint required before any DB schema or API contract change
+⚠️ Verify current branch is `feat/*`, `fix/*`, or another non-`main` feature branch before Phase A
 
 Phase A — Test Definition (TDD Red phase):
   senior-qa
@@ -122,7 +127,9 @@ Phase D — Test Validation (TDD Green phase, after all implementation complete)
 
 Review Phase — parallel (after D complete):
   senior-code-reviewer · senior-security · senior-performance
-  → ⚠️ User approves findings → /speckit.analyze → /speckit.checklist → /pr-flow
+  → ⚠️ User approves findings → /speckit.analyze
+  → fix every analyze finding and rerun /speckit.analyze until clear
+  → /pr-flow
 ```
 
 ## Project Context
