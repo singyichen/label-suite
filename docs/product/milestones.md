@@ -57,7 +57,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **總預估：** 29 週（約 7.5 個月）
 **建議開始日期：** 2026-12-01（對應 README Research Roadmap Phase 3 — Project infrastructure & CI 啟動時間）
-**建議 Demo-Ready 日期：** 2027-12 ~ 2028-01（符合 Phase 4 論文寫作啟動需求）
+**建議 Demo-Ready 日期：** 2027-08 ~ 2027-09（符合 Phase 4 論文寫作啟動需求）
 
 ---
 
@@ -395,9 +395,9 @@ M0 Foundation
 2027-03  M3 New Task / Config Builder（4 週，最高複雜度之一）
 2027-04  M4 Annotation Workspace（4 週）
 2027-05  M5 Task Detail / 狀態機（4 週）
-2027-07  M6 Dataset Analytics（4 週）/ M7 Admin & 帳號完整（3 週，並行）
-2027-09  [緩衝 / 整合修正]
-2027-10  M8 Demo-Ready（3 週）
+2027-06  M6 Dataset Analytics（4 週）/ M7 Admin & 帳號完整（3 週，並行）
+2027-07  [緩衝 / 整合修正]
+2027-08  M8 Demo-Ready（3 週）
 2027-12  Demo Paper 可展示截止目標
 2028-01  論文撰寫啟動（Phase 4）
 2028-04  Advisor review 結束 / 論文提交

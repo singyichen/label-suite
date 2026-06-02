@@ -52,7 +52,7 @@ Test tasks and implementation tasks must always be separate. A test task must be
 
 ## VI. Frontend E2E Tests
 
-- Frontend E2E tests must use Playwright under `frontend/tests/`.
+- Frontend E2E tests must use Playwright under `e2e/[module]/`.
 - Required coverage includes account login/profile flows, project leader task lifecycle, annotator dry-run and official annotation flows, reviewer audit and quality report flows, super admin user management, role-based access denial, direct URL access boundaries, empty states, and task status machine transitions.
 - E2E tests should use role fixtures and deterministic API routing or seeded data.
 - E2E tests must assert observable user behavior, not implementation details.

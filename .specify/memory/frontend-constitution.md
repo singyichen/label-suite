@@ -1,6 +1,12 @@
-# Frontend Constitution
+# Frontend Constitution — Tool Cache
 
-Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/011-frontend-source-structure.md`, `docs/adr/012-frontend-testing-strategy.md`, `docs/adr/014-prototype-playwright-testing.md`, `docs/adr/015-role-based-progressive-onboarding.md`, and `docs/adr/016-frontend-component-library-shadcn-storybook.md`.
+> **This file is a tool cache, NOT the source of truth.**
+>
+> Source of truth: `specs/_governance/constitution.md` and `specs/_governance/frontend-constitution.md`
+>
+> When amending, always edit the source file in `specs/_governance/` first, then copy the full content here.
+
+Source of truth: `specs/_governance/constitution.md`, `specs/_governance/frontend-constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/011-frontend-source-structure.md`, `docs/adr/012-frontend-testing-strategy.md`, `docs/adr/014-prototype-playwright-testing.md`, `docs/adr/015-role-based-progressive-onboarding.md`, and `docs/adr/016-frontend-component-library-shadcn-storybook.md`.
 
 ## I. React 18 And Vite SPA
 
@@ -89,7 +95,7 @@ Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-struc
 - Frontend work follows Red-Green-Refactor: write the failing test before implementation.
 - Component and hook tests use Vitest and React Testing Library and are co-located with source.
 - API interactions in component tests use MSW at the network boundary.
-- E2E tests use Playwright under `frontend/tests/`.
+- E2E tests use Playwright under `e2e/[module]/`.
 - Core journeys, role guards, empty states, task status transitions, and annotation flows require Playwright coverage.
 - Tests must use fresh QueryClient instances and isolated auth/store state.
 - Prototype Playwright tests under `design/prototype/tests/` validate design-layer acceptance criteria and selector contracts.

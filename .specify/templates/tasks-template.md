@@ -71,7 +71,7 @@
 - [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
 - [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
 - [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
-- [ ] T010 [P] 新增 i18n keys（`frontend/locales/zh-TW/[module].json` + `locales/en/[module].json` — 依 plan.md i18n key 清單）
+- [ ] T010 [P] 新增 i18n keys（`frontend/src/locales/zh-TW/[module].json` + `frontend/src/locales/en/[module].json` — 依 plan.md i18n key 清單）
 
 > **PR 邊界**：T007/T008/T009/T010 合併為獨立 `PR-FOUND-FE`，與 `PR-FOUND-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
 
@@ -191,7 +191,7 @@ Task: "在 backend/app/api/routes/[feature].py 建立 API route skeleton"
 
 # 在實作前一起啟動 US1 測試：
 Task: "在 backend/tests/unit/test_[feature].py 撰寫後端單元測試"
-Task: "在 frontend/tests/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試"
+Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試"
 ```
 
 ## 實作策略
@@ -265,13 +265,16 @@ Task: "在 frontend/tests/[module]/[feature].spec.ts 撰寫 Playwright E2E 測�
 ```bash
 # Backend（從 backend/ 執行）
 uv run pytest tests/ -q
+uv run pytest --cov=app tests/ -q        # coverage check
 uv run mypy app/ --strict
 uv run ruff check . && uv run ruff format --check .
+# 含 @pytest.mark.security 標記的安全洩漏測試必須全數通過
 
 # Frontend（從 frontend/ 執行）
 pnpm tsc --noEmit
 pnpm lint
 pnpm test
+pnpm exec playwright test                # E2E gate
 ```
 
 加上：`/speckit.analyze` 回報零發現。

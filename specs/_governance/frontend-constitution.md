@@ -89,7 +89,7 @@ Source of truth: `specs/_governance/constitution.md`, `docs/adr/001-monorepo-str
 - Frontend work follows Red-Green-Refactor: write the failing test before implementation.
 - Component and hook tests use Vitest and React Testing Library and are co-located with source.
 - API interactions in component tests use MSW at the network boundary.
-- E2E tests use Playwright under `frontend/tests/`.
+- E2E tests use Playwright under `e2e/[module]/`.
 - Core journeys, role guards, empty states, task status transitions, and annotation flows require Playwright coverage.
 - Tests must use fresh QueryClient instances and isolated auth/store state.
 - Prototype Playwright tests under `design/prototype/tests/` validate design-layer acceptance criteria and selector contracts.

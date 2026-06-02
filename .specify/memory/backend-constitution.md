@@ -1,6 +1,12 @@
-# Backend Constitution
+# Backend Constitution — Tool Cache
 
-Source of truth: `.specify/memory/constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/008-containerization-docker-compose.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, and `docs/adr/013-email-service-resend.md`.
+> **This file is a tool cache, NOT the source of truth.**
+>
+> Source of truth: `specs/_governance/constitution.md` and `specs/_governance/backend-constitution.md`
+>
+> When amending, always edit the source file in `specs/_governance/` first, then copy the full content here.
+
+Source of truth: `specs/_governance/constitution.md`, `specs/_governance/backend-constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/008-containerization-docker-compose.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, and `docs/adr/013-email-service-resend.md`.
 
 ## I. Backend Stack
 

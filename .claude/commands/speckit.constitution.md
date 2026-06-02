@@ -17,7 +17,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Steps
 
 1. **Load the existing constitution**
-   - Read `.specify/memory/constitution.md`
+   - Read `specs/_governance/constitution.md` (source of truth)
    - If it does not exist, copy from `.specify/templates/constitution-template.md` first
 
 2. **Collect values for any placeholder tokens** (`[ALL_CAPS_IDENTIFIER]`)
@@ -77,7 +77,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Governance section covers: amendment procedure, versioning policy, compliance review
 
 7. **Write the updated constitution**
-   - Overwrite `.specify/memory/constitution.md` (with the Sync Impact Report HTML comment prepended)
+   - Write to `specs/_governance/constitution.md` first (source of truth, with the Sync Impact Report HTML comment prepended)
+   - Then copy the full content to `.specify/memory/constitution.md` to keep the tool cache in sync
 
 8. **Report to the user**
    - New version and bump rationale

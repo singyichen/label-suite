@@ -1,6 +1,12 @@
-# Testing Constitution
+# Testing Constitution — Tool Cache
 
-Source of truth: `.specify/memory/constitution.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/012-frontend-testing-strategy.md`, and `docs/adr/014-prototype-playwright-testing.md`.
+> **This file is a tool cache, NOT the source of truth.**
+>
+> Source of truth: `specs/_governance/constitution.md` and `specs/_governance/testing-constitution.md`
+>
+> When amending, always edit the source file in `specs/_governance/` first, then copy the full content here.
+
+Source of truth: `specs/_governance/constitution.md`, `specs/_governance/testing-constitution.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/012-frontend-testing-strategy.md`, and `docs/adr/014-prototype-playwright-testing.md`.
 
 ## I. Mandatory TDD
 
@@ -52,7 +58,7 @@ Test tasks and implementation tasks must always be separate. A test task must be
 
 ## VI. Frontend E2E Tests
 
-- Frontend E2E tests must use Playwright under `frontend/tests/`.
+- Frontend E2E tests must use Playwright under `e2e/[module]/`.
 - Required coverage includes account login/profile flows, project leader task lifecycle, annotator dry-run and official annotation flows, reviewer audit and quality report flows, super admin user management, role-based access denial, direct URL access boundaries, empty states, and task status machine transitions.
 - E2E tests should use role fixtures and deterministic API routing or seeded data.
 - E2E tests must assert observable user behavior, not implementation details.
