@@ -47,7 +47,7 @@ Add to `~/.claude/settings.json`:
 
   Step A — Test Definition (TDD Red phase, before implementation):
   └──→ [senior-qa]      owns: backend/tests/ + frontend/tests/  (write failing tests first)
-       ↓ Confirm all tests fail (red) before proceeding to Step B
+       ↓ Confirm newly added tests fail (red); existing passing tests must remain green
 
   Step B — parallel (after failing tests confirmed):
   ├──→ [senior-backend]   owns: backend/app/              (FastAPI routes / models / services)

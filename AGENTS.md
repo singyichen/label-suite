@@ -120,7 +120,7 @@ Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN
 |---|---|
 | `senior-qa` | `backend/tests/`, `frontend/tests/` |
 
-> All tests must fail (red) before implementation proceeds. Confirm failing tests before starting Phase 2B.
+> Newly added tests must fail (red); existing passing tests must remain green. Confirm new tests are red before starting Phase 2B.
 
 #### Phase 2B — Implementation (parallel, after failing tests confirmed)
 
@@ -162,7 +162,7 @@ Use team-lead to orchestrate implementation of [feature] from specs/[module]/NNN
 
 ### Inter-Agent Communication Protocol
 
-Agents do not read files autonomously — the Team Lead provides full context in each spawn prompt:
+Phase 1 research agents read files directly — that is their primary function. For Phase 2 implementation agents, the Team Lead provides full task context rather than expecting agents to read files autonomously:
 
 ```text
 1. Full task text (copied from tasks.md)

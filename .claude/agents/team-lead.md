@@ -38,7 +38,7 @@ Report to the user in Traditional Chinese at every checkpoint using this templat
 
 Report at these checkpoints:
 - After research team completes → summarize findings, confirm plan.md is ready for user review
-- After Phase A (test definition) → confirm all tests are failing (red) before implementation starts
+- After Phase A (test definition) → confirm newly added tests are failing (red); existing passing tests must remain green
 - After Phase B (parallel impl) → summarize senior-backend + senior-frontend + senior-i18n status
 - After Phase C (DB migrations) → confirm schema is locked
 - After Phase D (test validation) → report pass/fail counts; all tests must be green before review starts
