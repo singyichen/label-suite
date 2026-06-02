@@ -8,6 +8,8 @@
 
 | 文件 | 路徑 | 用途 |
 |------|------|------|
+| Product Requirements Document | [`prd.md`](./prd.md) | 產品層需求總結，彙整目標、角色旅程、功能需求、NFR、架構約束與開放問題 |
+| Milestone Plan | [`milestones.md`](./milestones.md) | 產品交付里程碑規劃，依 PRD、story map 與 `specs/STATUS.md` 彙整 release 順序與進入條件 |
 | Product Baseline Summary | [`baseline/product-baseline-summary.md`](./baseline/product-baseline-summary.md) | 後續撰寫 spec 時優先參考的產品基線摘要 |
 | Functional Map | [`functional-map/functional-map.md`](./functional-map/functional-map.md) | 功能全景盤點，作為 IA 與 spec 的上游來源 |
 | Information Architecture | [`ia/information-architecture.md`](./ia/information-architecture.md) | 定義角色模型、模組歸屬、頁面結構、導覽與核心使用者旅程 |
@@ -19,15 +21,26 @@
 
 ## 建議閱讀順序
 
-1. [`baseline/product-baseline-summary.md`](./baseline/product-baseline-summary.md)
-2. [`impact-map/impact-map.md`](./impact-map/impact-map.md)
-3. [`story-map/story-map.md`](./story-map/story-map.md)
-4. [`ia/information-architecture.md`](./ia/information-architecture.md)
-5. [`functional-map/functional-map.md`](./functional-map/functional-map.md)
+1. [`prd.md`](./prd.md)
+2. [`baseline/product-baseline-summary.md`](./baseline/product-baseline-summary.md)
+3. [`impact-map/impact-map.md`](./impact-map/impact-map.md)
+4. [`story-map/story-map.md`](./story-map/story-map.md)
+5. [`ia/information-architecture.md`](./ia/information-architecture.md)
+6. [`functional-map/functional-map.md`](./functional-map/functional-map.md)
+7. [`milestones.md`](./milestones.md)
 
 ---
 
 ## 各文件責任邊界
+
+### `prd.md`
+
+產品層需求總結，用來對齊產品目標、成功指標、角色旅程、功能需求、非功能需求、架構約束、範疇外與開放問題。
+
+適合用在：
+- 對齊整體產品方向
+- 確認功能是否仍符合 Demo Paper 範圍
+- 在進入 spec 或 milestone 規劃前確認目前產品共識
 
 ### `product-baseline-summary.md`
 
@@ -59,6 +72,15 @@
 - MVP / Demo 範圍切分
 - 確認功能落點屬於哪個 backbone 活動
 
+### `milestones.md`
+
+回答「以目前 PRD 與 spec 狀態，應該如何分階段交付」。
+
+適合用在：
+- 規劃 R1 / R2 / R3 的工程交付順序
+- 確認里程碑依賴、Definition of Done 與進入條件
+- 在 `specs/STATUS.md` 或 PRD 有重大變更後重新評估時程
+
 ### `information-architecture.md`
 
 回答「系統怎麼被組織」。
@@ -80,6 +102,8 @@
 
 ## 使用原則
 
+- `prd.md` 是產品層總結文件；`specs/STATUS.md` 與各 `spec.md` 仍是實作狀態與規格細節的單一真實來源
+- `milestones.md` 是由 PRD、story map 與 `specs/STATUS.md` 彙整出的規劃文件；當上游文件重大變更時需同步檢查
 - 若要撰寫新 spec，先以 `product-baseline-summary.md` 為準，再對照 `story-map.md` 與 `information-architecture.md`
 - 若調整角色、模組歸屬、頁面責任或 release 切片，應同步更新 `baseline / impact-map / story-map / ia`
 - 若只是擴充功能細節，但不改變產品基線，可只更新對應文件與 spec
@@ -96,3 +120,5 @@
 - 新增主要頁面或模組
 - 重新切分 R1 / R2 / R3 範圍
 - 修改任務生命週期或資料隔離原則
+- PRD 的 P0/P1/P2 範圍、Out of Scope 或 Open Questions 有重大變更
+- `specs/STATUS.md` 的狀態、里程碑依賴或交付順序有重大變更
