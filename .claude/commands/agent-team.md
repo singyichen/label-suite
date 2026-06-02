@@ -21,7 +21,7 @@ Add to `~/.claude/settings.json`:
 ── Phase 1: Spec ─────────────────────────────────────────────────────────────
 /speckit.specify
   → specs/[module]/NNN-feature/spec.md
-  → [/ui-ux-pro-max]             Generate HTML prototype + design system
+  → [/label-suite-design]         Generate Label Suite HTML prototype + design system
   → [/pencil-wireframe]          Draw 6 frames in design/wireframes/pages/[module]/[page].pen  (optional, after prototype)
   → [senior-uiux review]         Review prototype: fidelity, a11y, ZH/EN/mobile symmetry
   → /speckit.clarify (optional)  Prototype + optional wireframe make ambiguities concrete
@@ -39,7 +39,8 @@ Add to `~/.claude/settings.json`:
        ↓ Team Lead synthesizes findings
   ⚠️  Human Review — confirm research findings before writing plan
 
-/speckit.plan → /speckit.checklist → /speckit.tasks
+/speckit.plan → /speckit.checklist → /speckit.tasks → /speckit.analyze
+  → Fix every analyze finding and rerun /speckit.analyze until clear before Phase 2
 
 ── Phase 2: Agent Team Implementation ────────────────────────────────────────
 [Team Lead] reads tasks.md and spawns teammates:
@@ -77,9 +78,6 @@ Add to `~/.claude/settings.json`:
 
   ⚠️  Human Review interrupt — approve before proceeding to PR
       Review team posts consolidated findings; you confirm or redirect
-
-  /speckit.analyze
-      Fix every analyze finding and rerun /speckit.analyze until clear before PR flow
 
 ── Phase 3: PR Flow ──────────────────────────────────────────────────────────
 Run /pr-flow
@@ -164,7 +162,7 @@ All agents are read-only — no file edits. Synthesize findings for plan.md.
 Create an agent team to implement [feature] based on specs/[module]/NNN-feature/tasks.md.
 Spawn in this order (TDD):
 Before Step A — verify current branch is not main, run /speckit.checklist if not already complete,
-and confirm specs/[module]/NNN-feature/tasks.md exists.
+confirm specs/[module]/NNN-feature/tasks.md exists, and run /speckit.analyze until clear.
 Step A — senior-qa: write failing tests first (own backend/tests/, frontend/tests/, e2e/)
           ↓ confirm newly added tests fail (red); existing passing tests must remain green
 Step B — parallel implementation (after failing tests confirmed):
@@ -175,5 +173,6 @@ Step B — parallel implementation (after failing tests confirmed):
 Step C — senior-dba: migrations after senior-backend models confirmed, owns backend/migrations/
 Step D — senior-qa: re-run full test suite; all tests must be green before review
 Require plan approval before any DB schema or API contract changes.
-After each task quality gate passes, mark completed task IDs in tasks.md as [X].
+After each task quality gate passes, teammates report completed task IDs to Team Lead.
+Team Lead serially marks completed task IDs in tasks.md as [X] to avoid parallel write conflicts.
 ```

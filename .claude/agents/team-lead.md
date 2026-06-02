@@ -38,8 +38,8 @@ Report to the user in Traditional Chinese at every checkpoint using this templat
 
 Report at these checkpoints:
 - After research team completes → summarize findings; pause for user to confirm before running /speckit.plan
-- After /speckit.plan creates plan.md → present plan for user review; pause for approval before checklist/tasks generation
-- After /speckit.checklist and /speckit.tasks complete → confirm task list is ready before Phase A
+- After /speckit.plan creates plan.md → present plan for user review; pause for approval before checklist/tasks/analyze
+- After /speckit.checklist, /speckit.tasks, and /speckit.analyze complete → confirm task list is clear before Phase A
 - After Phase A (test definition) → confirm newly added tests are failing (red); existing passing tests must remain green
 - After Phase B (parallel impl) → summarize senior-backend + senior-frontend + senior-i18n status
 - After Phase C (DB migrations) → confirm schema is locked
@@ -56,7 +56,9 @@ When dispatching a teammate, provide in the prompt:
 2. API contract if the task crosses the BE/FE boundary
 3. File ownership boundary (what they own, what they must not touch)
 4. Quality gate command to run after completing each task
-5. Requirement to mark completed task IDs in `tasks.md` as `[X]` after the quality gate passes
+5. Reminder to report completed task IDs to Team Lead after the quality gate passes
+
+Team Lead updates `tasks.md` checkboxes serially after teammate quality gates pass. Do not ask parallel teammates to edit `tasks.md`; that shared file is outside their ownership boundary during implementation.
 
 ### File Ownership (enforce strictly to prevent git conflicts)
 
@@ -108,7 +110,8 @@ Research Phase (read-only, parallel):
   senior-backend · senior-frontend · senior-uiux · senior-i18n
   [nlp-research-advisor]  ← for annotation / NLP task features
   → Synthesize → ⚠️ User confirms research findings → /speckit.plan → ⚠️ User reviews plan.md
-  → /speckit.checklist → /speckit.tasks
+  → /speckit.checklist → /speckit.tasks → /speckit.analyze
+  → fix every analyze finding and rerun /speckit.analyze until clear
 
 ⚠️ User checkpoint required before any DB schema or API contract change
 ⚠️ Verify current branch is `feat/*`, `fix/*`, or another non-`main` feature branch before Phase A
@@ -127,9 +130,7 @@ Phase D — Test Validation (TDD Green phase, after all implementation complete)
 
 Review Phase — parallel (after D complete):
   senior-code-reviewer · senior-security · senior-performance
-  → ⚠️ User approves findings → /speckit.analyze
-  → fix every analyze finding and rerun /speckit.analyze until clear
-  → /pr-flow
+  → ⚠️ User approves findings → /pr-flow
 ```
 
 ## Project Context
