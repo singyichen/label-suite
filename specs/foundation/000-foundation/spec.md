@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.11.2
+版本: 1.11.3
 狀態: Draft
 ---
 
@@ -775,7 +775,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-033**：frontend bundle review 必須驗證 non-critical feature routes 使用 lazy import，且 initial bundle 僅包含 router shell、shared providers、critical chrome 與當前首屏必要 code。
 - **SC-034**：CI 必須執行 `pnpm build`、frontend unit/component test script（例如 `pnpm test` 或專案指定等效 script）與 `pnpm playwright test`；Playwright 至少覆蓋核心 journey，並在 mobile / tablet / desktop project 各跑一次（對應 SC-041 定義的 `375x812`、`768x1024`、`1440x900` 三個 viewport）。SC-034 具體化 SC-028 的 frontend CI 要求；SC-028 通過仍需滿足本條的三 project 覆蓋要求。
 - **SC-035**：API integration tests 必須驗證 Pydantic validation error、auth error、application rule error 與 not-found/resource-hidden error 均符合 `ErrorResponse` / `ErrorDetail` schema；OpenAPI responses 必須宣告 400/401/403/404/422 的 `ErrorResponse`。
-- **SC-036**：production cookie-auth protected unsafe methods 必須有 CSRF 防護測試，驗證缺少或不受信任 `Origin` / `Referer` 時拒絕請求；local/dev 豁免不得在 production settings 啟用。此 test 以 backend integration test（`TestClient`）搭配 `override_settings(ENVIRONMENT="production")` 或等效 settings fixture 執行；Playwright E2E 不適合驗 Origin 缺失情境（瀏覽器自動帶 Origin），不得作為唯一 CSRF 驗收手段。
+- **SC-036**：production cookie-auth protected unsafe methods 必須有 CSRF 防護測試，驗證缺少或不受信任 `Origin` / `Referer` 時拒絕請求；local/dev 豁免不得在 production settings 啟用。此 test 以 backend integration test（`TestClient`）搭配 settings 覆蓋（pytest `monkeypatch` 設定 `ENVIRONMENT="production"`，或 `app.dependency_overrides` 注入 production 設定）執行；Playwright E2E 不適合驗 Origin 缺失情境（瀏覽器自動帶 Origin），不得作為唯一 CSRF 驗收手段。
 - **SC-037**：受保護 endpoint 的 repository query tests 必須覆蓋 resource scope constraint；不得讓低權限使用者透過 list/get broad fetch 取得其他 organization/project/resource scope 的資料。
 - **SC-038**：OpenAPI generated API types 必須輸出到 `frontend/src/shared/api-types/` 或等效 API boundary path；`shared/types/` 不得混入 generated domain-specific contract types。
 - **SC-039**：frontend API client 測試必須驗證 `X-Correlation-ID` 會被附加到 normalized API error；backend / worker tests 必須驗證 background job enqueue 或 worker log 保留 correlation context。`correlation_id` 以 Celery task headers dict 傳遞；backend test 透過 mock `apply_async` 並 assert `call_args.kwargs["headers"]["correlation_id"]` 或等效 Celery task inspector 驗證 enqueue payload 含 correlation context。
@@ -815,7 +815,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.11.2 | 2026-06-02 | 依 PR code review 修正：FR-040 parenthetical 改為「schema 定義見 FR-115」移除自我矛盾措辭、補充 ADR-022 上游依賴、補記 SC-029~031 changelog 歸屬、更新 front matter 功能分支至 feat/foundation-spec-review-fixes |
+| 1.11.3 | 2026-06-02 | 依 PR review-resolve 修正：SC-036 移除 Django 固有的 `override_settings` 改為 FastAPI 適用的 pytest monkeypatch / dependency_overrides 說明；對齊分支命名慣例，STATUS.md 功能分支欄位改回 `feat/foundation/000-foundation` |
+| 1.11.2 | 2026-06-02 | 依 PR code review 修正：FR-040 parenthetical 改為「schema 定義見 FR-115」移除自我矛盾措辭、補充 ADR-022 上游依賴、補記 SC-029~031 changelog 歸屬 |
 | 1.11.1 | 2026-06-01 | 依 independent-review 一致性/可測試性雙向審查修正：FR-116 移除與 FR-088 重疊的 frontend 行為描述、FR-040 加 supersede 說明、FR-117/FR-078 補充 CSRF 並存關係、FR-120 補顯式 `operation_id=` 設定指引、SC-018 補 operationId diff 偵測機制、SC-022 補 metrics naming grep pattern 與 instrumentator 設定、SC-034 修正 mobile/tablet/desktop 三 project 與 SC-041 對齊、SC-036 補 backend integration test + production settings fixture 指引、SC-039 補 Celery headers dict assert pattern、SC-045 補 CI shell check 與 scripts/ 路徑約束 |
 | 1.11.0 | 2026-06-01 | 依 senior-backend、senior-full-stack、senior-frontend 三方評估補強 Foundation：將 ErrorResponse / ErrorDetail contract 提升為 P0、明確 Celery 為 ADR-007 background job baseline、一般化 cookie-auth CSRF 防護、將 restricted-client data safety 升為 P0、補 API versioning / operationId / idempotency / cursor pagination 例外、non-CRUD REST pattern、resource-scoped repository query、frontend `shared/api-types/` 例外、module-boundary matrix、QueryClient baseline、correlation propagation、metrics naming convention、bundle budget、A11y 自動化、responsive/i18n gate、feature-critical UI coverage 與 local bootstrap contract；新增 FR-115~130 與 SC-034~045 |
 | 1.10.1 | 2026-05-29 | 參考 Telerik React design patterns 補強 frontend foundation：新增 function components + hooks 基準、custom hook 提取與型別化 contract、Context state boundary、generic reusable component、Tailwind / design system styling 約束、Vite lazy route baseline；新增 FR-108~FR-114 與 SC-032~SC-033 |
