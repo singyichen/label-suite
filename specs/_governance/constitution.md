@@ -27,7 +27,8 @@ Templates sync status:
 - .claude/commands/speckit.constitution.md: Updated — propagate main-constitution amendments through domain constitution sources and memory caches
 - AGENTS.md: Updated — document required domain constitution loading
 - .specify/templates/plan-template.md: Updated — replaced stale XXI/XXII/XXIV/XXVI/XXVIII principle checkboxes with Domain Constitution Loading section, corrected frontend i18n paths to `frontend/src/locales/{zh-TW,en}/`, and bumped to v1.8.1
-- .specify/templates/tasks-template.md: Updated — split T010 into T010a (zh-TW) and T010b (en), split frontend foundation into constitution-compliant PR boundaries, and bumped to v1.11.0
+- .specify/templates/tasks-template.md: Updated — split T010 into T010a/T010b, split frontend foundation, split backend/user-story PR boundaries, added command-only verification support, switched component tasks to file-level paths, and bumped to v1.13.0
+- .claude/commands/speckit.tasks.md: Updated — allow command-only verification tasks without file paths when exact commands are listed
 - .specify/templates/checklist-template.md: Updated — replaced stale XXI/XXII/XXVIII/XXX principle citations with applicable domain constitution citations and bumped to v1.8.0
 
 Deferred TODOs: none

@@ -40,27 +40,30 @@ $ARGUMENTS
    **Strict task format — every task must follow exactly:**
 
    ```text
-   - [ ] T001 [P] [US1] Description with exact file path
+   - [ ] T001 [P] [US1] Description with exact file path or command-only verification command
    ```
+
+   Command-only verification tasks may omit the file path only when they are explicitly labeled as verification and list the exact command to run.
 
    Format components:
    1. `- [ ]` — Markdown checkbox (required)
    2. `T001` — Sequential ID in execution order (T001, T002, T003…)
    3. `[P]` — Include only if the task can run in parallel (different file, no unfinished dependency)
    4. `[US1]` — Include only for User Story phase tasks (`[US1]`, `[US2]`, etc.); omit for Setup/Foundational/Polish
-   5. Description with an exact file path
+   5. Description with an exact file path, except command-only verification tasks that list the exact command to run
 
    **Valid examples:**
    - `- [ ] T001 Create project structure per implementation plan`
    - `- [ ] T005 [P] Implement authentication middleware in backend/app/core/auth.py`
    - `- [ ] T012 [P] [US1] Create User model in backend/app/models/user.py`
    - `- [ ] T014 [US1] Implement UserService in backend/app/services/user_service.py`
+   - `- [ ] T004c Verify migration roundtrip with command: uv run alembic upgrade head && uv run alembic downgrade -1 && uv run alembic upgrade head`
 
    **Invalid examples (do not produce):**
    - `- [ ] Create User model` — missing ID and Story label
    - `T001 [US1] Create model` — missing checkbox
    - `- [ ] [US1] Create User model` — missing task ID
-   - `- [ ] T001 [US1] Create model` — missing file path
+   - `- [ ] T001 [US1] Create model` — missing file path and not a command-only verification task
 
    **TDD (REQUIRED — no exceptions)**: Write test tasks before implementation tasks for every User Story. A test task must appear before the implementation task it covers. (Project policy: TDD is mandatory regardless of feature complexity.)
 

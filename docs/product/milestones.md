@@ -128,7 +128,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **風險**
 
-- Google SSO（spec 002）在 M1 不在範圍；M7 需實作 OAuth login，M1 架構不可與 Email/Password auth 強耦合
+- Google SSO（spec 002）在 M1 不在範圍；M7 僅交付 Google SSO 入口與 no-op 整合預留，真實 OAuth redirect / callback / token exchange / account linking 需另開或修訂 auth spec 後才可排入實作
 - 本地開發的 CORS / cookie SameSite 設定通常容易出錯，需早期驗證
 
 ---
@@ -274,12 +274,13 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 - [ ] `/dataset-analysis` 任務列表（依角色篩選、URL query 保留篩選條件）
 - [ ] `/dataset-analysis-detail/:task_id?tab=stats`：共用指標 + 各 task_type 特定統計圖表
-- [ ] `/dataset-analysis-detail/:task_id?tab=quality`：IAA 計算（四種演算法對應四種 task_type）
+- [ ] `/dataset-analysis-detail/:task_id?tab=quality`：IAA 計算（五種 task_type，含 `sentence_pairs`）
 - [ ] IAA 計算：
   - 分類任務：Krippendorff's Alpha（nominal）
   - VA 評分：ICC + Krippendorff's Alpha（interval）
   - 序列標記：Pairwise Entity-level F1（strict + partial overlap）
   - 關係抽取：Pairwise Triple-level F1
+  - 句對任務：分類型使用 Krippendorff's Alpha（nominal）；評分型使用 ICC
 - [ ] 異常偵測：標記速度異常、離群值（1.5x STD / 2x STD）
 - [ ] 空狀態：Dry Run 未完成時顯示說明文字與導向按鈕
 - [ ] IAA 結果不透過 API 暴露 ground truth 答案（Data Fairness）
@@ -301,11 +302,11 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **目標描述**
 
-補齊 Reviewer 審核模式、帳號模組完整功能（Google OAuth / Register / Forgot Password / Profile Settings），以及系統管理（User Management / Role Settings）。
+補齊 Reviewer 審核模式、帳號模組完整功能（Google SSO 入口預留 / Register / Forgot Password / Profile Settings），以及系統管理（User Management / Role Settings）。
 
 **涵蓋 Spec：**
 - annotation-015（Reviewer flow）
-- account-002（Google OAuth Login）
+- account-002（Google SSO entrypoint / no-op integration reservation）
 - account-003（Register Email/Password）
 - account-004（Forgot/Reset Password）
 - account-005（Profile Settings）
@@ -322,7 +323,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 - [ ] Profile Settings：修改姓名 / 大頭照 / Email 變更（含驗證信）/ 密碼設定 / 外觀偏好 / 通知偏好
 - [ ] `user-management`：`super_admin` 可查看所有使用者、建立 / 停用帳號、指派系統角色
 - [ ] `role-settings`：顯示系統角色 / 任務角色功能矩陣（唯讀展示）
-- [ ] Google OAuth 2.0 登入（spec 002）：使用者可透過 Google SSO 登入並建立 / 綁定平台帳號
+- [ ] Google SSO 入口（spec 002）：登入頁保留可存取、可國際化的 Google SSO 入口；維持 prototype no-op，不實作 OAuth redirect / callback / token exchange / account linking
 
 **關鍵技術決策**
 
@@ -343,7 +344,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **Definition of Done**
 
-- [ ] 完整 E2E Playwright 測試：R1 / R2 核心流程全通過（登入 → 建立任務 → 標記 → IAA → 匯出）
+- [ ] 完整 E2E Playwright 測試：R1 / R2 / R3 核心流程全通過（登入 → 建立任務 → 標記 → IAA → 匯出 → reviewer audit → quality report → super-admin user management → role-based denial）
 - [ ] SUS 問卷：5~10 位實驗室成員完成測試，彙整結果（目標分數 ≥ 75）
 - [ ] Label Studio 對比實驗：量化同一任務的操作步驟數與初始化時間
 - [ ] 統計精確性驗證：#Sentence / #Token / #Label 與真實值誤差 = 0（至少兩個領域資料集）

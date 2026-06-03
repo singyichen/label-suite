@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.12.0
+版本: 1.13.0
 狀態: Draft
 ---
 
@@ -136,14 +136,14 @@
 
 #### PR-US1-FE-COMPONENT：前端元件實作（含 component test + Storybook）
 
-- [ ] T019 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/`）— 含 ARIA role、響應式
+- [ ] T019 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/[Feature].tsx`）— 含 ARIA role、響應式
 - [ ] T020 [P] [US1] 建立 Storybook stories（`frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`）— Default + 邊界狀態，args/argTypes/MSW decorator 齊備
 
 > **PR 邊界**：T014（Vitest component test）+ T019/T020 合併為獨立 `PR-US1-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
 
 #### PR-US1-FE-PAGE：前端頁面組裝（含 E2E）
 
-- [ ] T021 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）— Page 層不寫 story
+- [ ] T021 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/[Feature]Page.tsx`）— Page 層不寫 story
 
 > **PR 邊界**：T015（Playwright E2E）+ T021 合併為獨立 `PR-US1-FE-PAGE`，與 `PR-US1-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
 
@@ -159,8 +159,8 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T020 [P] [US2] 後端單元測試
-- [ ] T021 [P] [US2] Playwright E2E 測試
+- [ ] T020 [P] [US2] 後端單元測試 — `backend/tests/unit/test_[feature].py`
+- [ ] T021 [P] [US2] Playwright E2E 測試 — `e2e/[module]/[feature].spec.ts`
 
 ### 實作（僅在測試失敗後進行）
 
@@ -184,14 +184,14 @@
 
 #### PR-US2-FE-COMPONENT：前端元件實作（含 Storybook）
 
-- [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/`
-- [ ] T026 [P] [US2] 建立 Storybook stories（`.stories.tsx`）— Default + 邊界狀態，MSW decorator
+- [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/[Feature].tsx`
+- [ ] T026 [P] [US2] 建立 Storybook stories — `frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`（Default + 邊界狀態，MSW decorator）
 
 > **PR 邊界**：T025/T026 合併為獨立 `PR-US2-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
 
 #### PR-US2-FE-PAGE：前端頁面組裝（含 E2E）
 
-- [ ] T027 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/`
+- [ ] T027 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/[Feature]Page.tsx`
 
 > **PR 邊界**：T021（Playwright E2E）+ T027 合併為獨立 `PR-US2-FE-PAGE`，與 `PR-US2-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
 
@@ -360,6 +360,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.13.0 | 2026-06-03 | 將 user-story 前端 component/page/story/test 任務由目錄或泛稱改為具體檔案路徑，對齊 testing-constitution Rule II 的 one-file task 要求 |
 | 1.12.0 | 2026-06-03 | 拆分後端 foundation 與 user-story PR 邊界（schema/model/service/API route 分離），拆分前端 user-story PR 邊界（component+test+Storybook 與 page+E2E 分離），並允許 command-only verification 任務不觸及檔案 |
 | 1.11.0 | 2026-06-03 | 將 PR-FOUND-FE 拆分為 PR-FOUND-FE-API、PR-FOUND-FE-ROUTING、PR-FOUND-FE-I18N，避免 service/MSW/router/i18n 基礎建設合併到同一 review unit，對齊 frontend-constitution Rule XVI |
 | 1.10.0 | 2026-06-03 | T010 拆為 T010a（zh-TW）與 T010b（en）兩個獨立任務（各觸及一個檔案），對齊 testing-constitution Rule II（Task Decomposition For Testability）；更新 PR-FOUND-FE 邊界清單、任務產生規則 §6、驗證清單 |
