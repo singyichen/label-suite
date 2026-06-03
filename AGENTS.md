@@ -33,6 +33,10 @@ design/prototype/pages/[module]/   ← HTML prototypes
 - Write a failing test before writing implementation — no exceptions (TDD)
 - Run `/speckit.analyze` and resolve all findings before opening a PR
 - Read relevant files before making any changes
+- Always read the main constitution plus every applicable domain constitution before planning, analyzing, implementing, or reviewing work:
+  - `.specify/memory/backend-constitution.md` for backend/API/schema/service/database/migration/Redis/Celery/OpenAPI/backend security/backend performance/backend deployment work
+  - `.specify/memory/frontend-constitution.md` for React/prototype-to-React/frontend routing/shared UI/i18n/Storybook/accessibility/frontend state/selector/frontend performance work
+  - `.specify/memory/testing-constitution.md` for all behavior changes, bug fixes with regression tests, test strategy, coverage, fixtures, CI checks, Playwright, Vitest, pytest, or security leakage tests
 - Remove all debug `print` / `console.log` before finishing
 - Surface exact error to user when any tool call fails twice; never silently retry a third time
 

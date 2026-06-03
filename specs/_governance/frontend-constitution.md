@@ -1,12 +1,6 @@
-# Frontend Constitution — Tool Cache
+# Frontend Constitution
 
-> **This file is a tool cache, NOT the source of truth.**
->
-> Source of truth: `specs/_governance/constitution.md` and `specs/_governance/frontend-constitution.md`
->
-> When amending, always edit the source file in `specs/_governance/` first, then copy the full content here.
-
-Source of truth: `specs/_governance/constitution.md`, `specs/_governance/frontend-constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/011-frontend-source-structure.md`, `docs/adr/012-frontend-testing-strategy.md`, `docs/adr/014-prototype-playwright-testing.md`, `docs/adr/015-role-based-progressive-onboarding.md`, and `docs/adr/016-frontend-component-library-shadcn-storybook.md`.
+Source of truth: `specs/_governance/constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/011-frontend-source-structure.md`, `docs/adr/012-frontend-testing-strategy.md`, `docs/adr/014-prototype-playwright-testing.md`, `docs/adr/015-role-based-progressive-onboarding.md`, and `docs/adr/016-frontend-component-library-shadcn-storybook.md`.
 
 ## I. React 18 And Vite SPA
 
@@ -166,4 +160,4 @@ Do not use `npm install`. Do not modify dependency versions unless explicitly re
 
 ## XVIII. Governance
 
-This frontend constitution refines but does not override `.specify/memory/constitution.md`. If this file conflicts with the main constitution, the main constitution wins. Changes to frontend architecture, framework, state management, component library, or testing strategy require an ADR or an amendment to an existing ADR before implementation.
+This frontend constitution refines but does not override `specs/_governance/constitution.md`. If this file conflicts with the main constitution, the main constitution wins. Changes to frontend architecture, framework, state management, component library, or testing strategy require an ADR or an amendment to an existing ADR before implementation.

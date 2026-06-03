@@ -17,7 +17,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 ## Steps
 
 1. **Load the existing constitution**
-   - Read `.specify/memory/constitution.md`
+   - Read `specs/_governance/constitution.md` (source of truth)
    - If it does not exist, copy from `.specify/templates/constitution-template.md` first
 
 2. **Collect values for any placeholder tokens** (`[ALL_CAPS_IDENTIFIER]`)
@@ -34,6 +34,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Governance section must cover: amendment procedure, versioning policy, compliance review
 
 4. **Consistency propagation** — actively read and update each dependent file:
+   - `specs/_governance/backend-constitution.md` — ensure backend domain rules reflect any affected main-constitution changes
+   - `specs/_governance/frontend-constitution.md` — ensure frontend domain rules reflect any affected main-constitution changes
+   - `specs/_governance/testing-constitution.md` — ensure testing domain rules reflect any affected main-constitution changes
+   - `.specify/memory/backend-constitution.md` — sync from the backend domain source after any backend-domain update
+   - `.specify/memory/frontend-constitution.md` — sync from the frontend domain source after any frontend-domain update
+   - `.specify/memory/testing-constitution.md` — sync from the testing domain source after any testing-domain update
    - `.specify/templates/plan-template.md` — ensure Constitution Check section reflects updated principles
    - `.specify/templates/spec-template.md` — ensure scope/requirements alignment
    - `.specify/templates/tasks-template.md` — ensure task categorization matches principles
@@ -42,7 +48,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 5. **Generate Sync Impact Report**
 
-   Produce the following report and prepend it to `.specify/memory/constitution.md` as an HTML comment (so it doesn't render in Markdown but is preserved in the file):
+   Produce the following report and prepend it to `specs/_governance/constitution.md` as an HTML comment (so it doesn't render in Markdown but is preserved in the file). Step 7 then copies the full content to `.specify/memory/constitution.md` to keep the tool cache in sync.
 
    ```html
    <!--
@@ -59,6 +65,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    Removed sections: (if any)
 
    Templates sync status:
+   - specs/_governance/backend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - specs/_governance/frontend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - specs/_governance/testing-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - .specify/memory/backend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - .specify/memory/frontend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - .specify/memory/testing-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
    - .specify/templates/plan-template.md: ✅ Updated | ⚠ Needs manual review
    - .specify/templates/spec-template.md: ✅ Updated | ⚠ Needs manual review
    - .specify/templates/tasks-template.md: ✅ Updated | ⚠ Needs manual review
@@ -77,7 +89,8 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Governance section covers: amendment procedure, versioning policy, compliance review
 
 7. **Write the updated constitution**
-   - Overwrite `.specify/memory/constitution.md` (with the Sync Impact Report HTML comment prepended)
+   - Write to `specs/_governance/constitution.md` first (source of truth, with the Sync Impact Report HTML comment prepended)
+   - Then write to `.specify/memory/constitution.md`, preserving the tool-cache wrapper: keep the header block before `<!-- BEGIN CACHE -->` unchanged, update the version and date in the `<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ vX.Y.Z (YYYY-MM-DD) -->` marker, then paste the full source file content after it
 
 8. **Report to the user**
    - New version and bump rationale

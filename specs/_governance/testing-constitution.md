@@ -1,12 +1,6 @@
-# Testing Constitution — Tool Cache
+# Testing Constitution
 
-> **This file is a tool cache, NOT the source of truth.**
->
-> Source of truth: `specs/_governance/constitution.md` and `specs/_governance/testing-constitution.md`
->
-> When amending, always edit the source file in `specs/_governance/` first, then copy the full content here.
-
-Source of truth: `specs/_governance/constitution.md`, `specs/_governance/testing-constitution.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/012-frontend-testing-strategy.md`, and `docs/adr/014-prototype-playwright-testing.md`.
+Source of truth: `specs/_governance/constitution.md`, `docs/adr/003-backend-framework-fastapi.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/005-database-postgresql.md`, `docs/adr/006-caching-queue-redis.md`, `docs/adr/007-async-tasks-celery.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/012-frontend-testing-strategy.md`, and `docs/adr/014-prototype-playwright-testing.md`.
 
 ## I. Mandatory TDD
 
@@ -159,4 +153,4 @@ pnpm playwright test --headed
 
 A change is test-complete only when Red-Green-Refactor evidence exists in local or PR history, all relevant backend/frontend/prototype/security/E2E tests pass, coverage thresholds are met, no debug `print` or `console.log` remains, and `/speckit.analyze` findings are resolved before PR creation.
 
-All PRs must verify compliance with `.specify/memory/constitution.md` and every applicable domain constitution before merging.
+All PRs must verify compliance with `specs/_governance/constitution.md` and every applicable domain constitution before merging.

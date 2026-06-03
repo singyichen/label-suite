@@ -25,7 +25,7 @@ Before implementation, find inconsistencies, duplicates, ambiguities, and under-
 
 **Strictly read-only**: Do **not** modify any file. Output only a structured analysis report. Optionally offer correction suggestions — only apply them after explicit user approval.
 
-**Constitution authority**: The project constitution (`.specify/memory/constitution.md`) is **non-negotiable** within this analysis. Any constitution conflict is automatically CRITICAL severity. If a principle needs changing, update the constitution separately via `/speckit.constitution` — never dilute or silently ignore it here.
+**Constitution authority**: The project constitution (`.specify/memory/constitution.md`) and every applicable domain constitution are **non-negotiable** within this analysis. Any constitution conflict is automatically CRITICAL severity. If a principle needs changing, update the constitution separately via `/speckit.constitution` — never dilute or silently ignore it here.
 
 ## Steps
 
@@ -73,7 +73,11 @@ Load only the minimum necessary context from each artifact:
 
 **From constitution:**
 
-- Load `.specify/memory/constitution.md` for principle validation
+- Load `.specify/memory/constitution.md` for project-wide principle validation
+- Determine affected scopes from `FEATURE_MODULE`, `FEATURE_SPEC`, `IMPL_PLAN`, and `TASKS`
+- Load `.specify/memory/backend-constitution.md` if backend code, API routes, schemas, services, database models, migrations, Redis, Celery, OpenAPI, backend security, backend performance, or backend deployment are in scope
+- Load `.specify/memory/frontend-constitution.md` if React code, prototypes binding to React behavior, frontend routing, shared UI, i18n, Storybook, accessibility, frontend state, selector contracts, or frontend performance are in scope
+- Load `.specify/memory/testing-constitution.md` for all behavior changes, bug fixes with regression tests, test strategy, coverage, fixtures, CI checks, Playwright, Vitest, pytest, or security leakage tests
 
 ### 3. Build Semantic Model
 
@@ -81,7 +85,7 @@ Build an internal representation (**do not** include raw artifact content in out
 - **Requirements list**: Each functional and non-functional requirement with a stable slug key (e.g., "User can upload file" → `user-can-upload-file`)
 - **User story / action list**: Independent user behaviors with their acceptance criteria
 - **Task coverage map**: Map each task to one or more requirements or stories (infer from keywords or explicit references like IDs or key phrases)
-- **Constitution ruleset**: Extract principle names and MUST/SHOULD normative statements
+- **Constitution ruleset**: Extract principle names and MUST/SHOULD normative statements from the main constitution and every loaded domain constitution
 
 ### 4. Detection Pass (Token-Efficient Analysis)
 
