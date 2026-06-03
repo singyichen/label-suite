@@ -1,7 +1,7 @@
 # Label Suite — 里程碑規劃（Milestone Plan）
 
-**版本：** 1.0.0
-**日期：** 2026-06-02
+**版本：** 1.0.1
+**日期：** 2026-06-03
 **可追溯來源：**
 - `docs/product/prd.md` v1.0.0
 - `docs/product/story-map/story-map.md` v1.3.0（R1 / R2 / R3 切片定義）
@@ -55,7 +55,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 | **M7** | Reviewer 審核 + 帳號完整 + Admin | annotation（015 — Reviewer flow）、account（003/004/005）、admin（006/007） | Reviewer 審核模式、帳號模組完整、使用者管理、角色設定 | 3 週 | M5 |
 | **M8** | Demo-Ready — 整合 + User Study | — | SUS 問卷、demo video、Label Studio 對比實驗、系統截圖 | 3 週 | M6 + M7 |
 
-**總預估：** 29 週（約 7.5 個月）
+**總預估：** 33 週（約 8 個月，含 1 個月整合緩衝）
 **建議開始日期：** 2026-12-01（對應 README Research Roadmap Phase 3 — Project infrastructure & CI 啟動時間）
 **建議 Demo-Ready 日期：** 2027-08 ~ 2027-09（符合 Phase 4 論文寫作啟動需求）
 
@@ -148,7 +148,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 - [ ] Dry Run 全員完成時 Dashboard badge 通知邏輯（即使在 M5 才有完整狀態機，此處先以 mock 示範）
 - [ ] 任務列表：`GET /api/v1/tasks`（含分頁、狀態篩選、關鍵字搜尋）
 - [ ] `user`（系統角色）只看自己有成員資格的任務；`super_admin` 看全平台
-- [ ] 任務刪除（軟刪除）：`DELETE /api/v1/tasks/{task_id}`
+- [ ] 任務刪除（軟刪除）：`DELETE /api/v1/tasks/{task_id}`（僅 `project_leader` 與 `super_admin` 可執行；僅允許 `status = draft` 的任務；非 `draft` 或無權限的直接呼叫必須被拒絕）
 - [ ] i18n 語言切換（ZH / EN）即時生效
 - [ ] 前端 tsc / ESLint 通過；後端 ruff / mypy 通過
 
@@ -243,7 +243,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 - [ ] 任務狀態機五個狀態的 service layer 實作（`task_service.py`）
 - [ ] 每次狀態轉換寫入 `run_state_transitions` 審計紀錄
 - [ ] Dry Run 全員完成 → 自動切換至 `waiting_iaa_confirmation` → Dashboard badge 通知
-- [ ] 樣本快照（`sample_snapshot_id`）在首次 Dry Run 時鎖定，IAA 拒絕時清除
+- [ ] 樣本快照（`sample_snapshot_id`）在首次 Dry Run 時鎖定並不可變（`SAMPLE_SNAPSHOT_LOCK_EVENT = publish_dry_run`）；IAA 拒絕後保留原快照，需另建新 run 批次，不得清除既有快照（清除會破壞 Dry/Official 切分可重現性與匯出追溯性）
 - [ ] 成員管理 tab：搜尋 + Email 邀請、指派任務角色
 - [ ] 標記結果 tab：JSON / JSON-MIN 匯出，記錄匯出歷程
 - [ ] 工時紀錄：`project_leader` 可依成員 / 日期 / 階段篩選；`reviewer` 只看自己
@@ -317,8 +317,8 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 - [ ] annotation-workspace Reviewer 模式：通過 / 退回 / 修改 / 刪除標記結果
 - [ ] History panel：每筆標記的修改歷程追溯
-- [ ] `POST /api/v1/auth/register`：Email 自行註冊，建立後自動取得 `user` 角色
-- [ ] Forgot Password（Resend API 整合）：`POST /api/v1/auth/forgot-password`
+- [ ] `POST /api/v1/auth/register`：Email 自行註冊，建立後自動取得 `user` 角色（**前置條件：** `specs/account/003-register-email-password/spec.md` 目前僅為前端互動原型，真實 `/auth/register` 尚未串接，進入 M7 前須先完成 spec 003 的 implementation-layer 升級）
+- [ ] Forgot Password（Resend API 整合）：`POST /api/v1/auth/forgot-password`（**前置條件：** `specs/account/004-forgot-reset-password/spec.md` 目前為前端互動原型，真實 API 與 token 驗證尚未串接，進入 M7 前須先完成 spec 004 的 implementation-layer 升級）
 - [ ] Reset Password：`POST /api/v1/auth/reset-password`（token 驗證 valid / expired / used 三狀態）
 - [ ] Profile Settings：修改姓名 / 大頭照 / Email 變更（含驗證信）/ 密碼設定 / 外觀偏好 / 通知偏好
 - [ ] `user-management`：`super_admin` 可查看所有使用者、建立 / 停用帳號、指派系統角色
@@ -429,4 +429,5 @@ M0 Foundation
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.0.1 | 2026-06-03 | 修正總週數為 33 週（加計 1 個月緩衝）對齊詳細時間軸；M2 DELETE 任務補齊 project_leader/super_admin + draft 限制；M5 sample_snapshot_id 改為不可變（IAA 拒絕後保留快照建新批次）；M7 register / forgot-password 加入 spec 003/004 implementation-layer 升級前置條件 |
 | 1.0.0 | 2026-06-02 | 初始版本；依 research phase 綜合結果建立，基於 story-map R1/R2/R3 切片、specs/STATUS.md 現況、README Research Roadmap 時程 |

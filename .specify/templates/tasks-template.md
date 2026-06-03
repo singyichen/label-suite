@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.14.0
+版本: 1.15.0
 狀態: Draft
 ---
 
@@ -59,7 +59,7 @@
 
 ### PR-FOUND-BE-SCHEMA：後端 Schema 基礎建設（依賴 PR-FOUND-MIGRATION merged）
 
-- [ ] T005 [P] 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/schemas/[feature].py`，依 plan.md schema 層次設計）
+- [ ] T005 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/schemas/[feature].py`，依 plan.md schema 層次設計）
 
 > **PR 邊界**：T005 作為獨立 `PR-FOUND-BE-SCHEMA`。`[Principle: X; Backend Constitution XIII]`
 
@@ -89,6 +89,12 @@
 
 > **PR 邊界**：T010a/T010b 合併為獨立 `PR-FOUND-FE-I18N`（i18n namespace files）。`[Principle: X; Frontend Constitution XVI; Testing Constitution II]`
 
+### PR-FOUND-FE-TYPES：前端 TypeScript 型別合約（可與 PR-FOUND-FE-API 並行）
+
+- [ ] T010c [P] 建立前端 TypeScript 型別合約（`frontend/src/features/[module]/types/[feature].ts`，依 plan.md 前端型別策略）
+
+> **PR 邊界**：T010c 作為獨立 `PR-FOUND-FE-TYPES`（TypeScript type contracts — hand-written 或 generated API types，視 plan.md 前端型別策略決定）。`[Principle: X; Frontend Constitution XVI]`
+
 ### PR-FOUND-BE-CORE：後端 Core 基礎建設（可與 PR-FOUND-FE-* 並行）
 
 - [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
@@ -110,7 +116,7 @@
 
 - [ ] T013a [P] [US1] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`
 - [ ] T013b [P] [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`
-- [ ] T013c [P] [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`
+- [ ] T013c [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`
 - [ ] T014 [P] [US1] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
 - [ ] T015 [P] [US1] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
 
@@ -289,24 +295,28 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試"
    - 每個實體 → 一個模型建立任務 [P]
    - 關係 → service 層任務（循序）
 
-4. **從 plan.md 切版分析**
+4. **從 plan.md 前端型別策略**
+   - 有前端功能的 spec → 一個 TypeScript 型別合約任務 [P]（`frontend/src/features/[module]/types/[feature].ts`，手寫或 generated API types）
+   - 此任務列於 Phase 2 `PR-FOUND-FE-TYPES`，早於 service / component 任務（確保型別先存在）
+
+5. **從 plan.md 切版分析**
    - 每個非 page 元件 → 元件實作任務 + Storybook story 任務 [P]（`.stories.tsx`）
    - Page 層元件 → 僅頁面組裝任務，不產生 story 任務
    - Story 任務需標記 [P]（與元件實作觸及不同檔案，可平行）
 
-5. **從 plan.md 路由分析**
+6. **從 plan.md 路由分析**
    - 每組新路由 → route 註冊任務（Phase 2，含 route guard 設定）
 
-6. **從 plan.md i18n key 清單**
+7. **從 plan.md i18n key 清單**
    - 每個 namespace → 兩個獨立 locales JSON 更新任務 [P]（T010a zh-TW + T010b en，各觸及一個檔案，Phase 2）
    - 各元件實作任務相依此任務（key 必須先存在才能在元件中使用）
 
-7. **從 plan.md DB index 分析**
+8. **從 plan.md DB index 分析**
    - 每個新 index → 在 migration 任務中一併處理（不另立任務）
    - 若有複合 index 或部分 index 等非常規策略 → 加入 Phase 2 備註說明理由
 
-8. **排序規則**
-   - 設置 → 基礎建設（含 migration + route + i18n）→ 每個 US（測試 → 實作 + story）→ 優化
+9. **排序規則**
+   - 設置 → 基礎建設（含 migration + route + i18n + types）→ 每個 US（測試 → 實作 + story）→ 優化
    - 相依性阻塞平行執行
 
 ## 定義完成（適用所有任務）
@@ -351,7 +361,8 @@ pnpm exec playwright test                # E2E gate
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
-- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N 七個獨立 PR 邊界
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-FE-TYPES 八個獨立 PR 邊界
+- [ ] Phase 2 有前端 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`），且其 PR 邊界（PR-FOUND-FE-TYPES）早於 services / components 任務
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
@@ -360,6 +371,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.15.0 | 2026-06-03 | 移除 T005（PR-FOUND-BE-SCHEMA）的 [P] marker（依賴 migration PR 合併，有未完成相依性）；加入 PR-FOUND-FE-TYPES 邊界（T010c）建立前端 TypeScript 型別合約，Task Generation Rule §4 補充型別策略，驗證清單補齊；移除 T013c 的 [P] marker（與 T013b 同檔案，不可平行） |
 | 1.14.0 | 2026-06-03 | 修正 Phase 2 與 US2 任務編號順序，移除 schema-dependent API task 的 parallel marker，補齊 migration downgrade 與 routing 任務的具體檔案路徑 |
 | 1.13.0 | 2026-06-03 | 將 user-story 前端 component/page/story/test 任務由目錄或泛稱改為具體檔案路徑，對齊 testing-constitution Rule II 的 one-file task 要求 |
 | 1.12.0 | 2026-06-03 | 拆分後端 foundation 與 user-story PR 邊界（schema/model/service/API route 分離），拆分前端 user-story PR 邊界（component+test+Storybook 與 page+E2E 分離），並允許 command-only verification 任務不觸及檔案 |

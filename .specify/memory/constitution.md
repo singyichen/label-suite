@@ -292,7 +292,7 @@ Constitution principles take precedence over all other conventions.
 **Amendment Procedure**:
 - Update `specs/_governance/constitution.md` first
 - Sync the full content to `.specify/memory/constitution.md` as the tool cache
-- Propagate amendments to dependent domain constitutions, templates, and `.claude/commands/speckit.*.md`
+- Propagate amendments to dependent domain constitutions in `specs/_governance/`, their `.specify/memory/` tool caches, affected `.specify/templates/`, and `.claude/commands/speckit.*.md`
 - Explain the reason in the commit message: `docs: amend constitution to vX.Y.Z ([reason])`
 - Use `/speckit.constitution` to automate propagation checks when possible
 
