@@ -153,8 +153,8 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | FR-A01 | 使用者可透過 Email + Password 登入；登入成功後系統發放 access token（httpOnly cookie，15 分鐘）與 refresh token（httpOnly cookie，7 天滑動） | P0 | spec 001；ADR-021 |
 | FR-A02 | Access token 過期時，前端自動靜默呼叫 `/auth/refresh` 重新取得 token，不中斷使用者操作 | P0 | spec 001；ADR-021 |
 | FR-A03 | Login 頁提供可存取、可國際化的 Google SSO 入口；本版 spec 002 為 prototype no-op 與後續整合預留，不包含 OAuth redirect / callback / token exchange / account linking / session creation | P2 | spec 002 |
-| FR-A04 | 使用者可以 Email + Password 自行註冊；建立後立即取得 `user` 系統角色，無需審核 | P1 | spec 003 |
-| FR-A05 | 使用者可申請忘記密碼；系統透過 Resend 寄送重設連結（不揭露 Email 是否存在） | P2 | spec 004 |
+| FR-A04 | 使用者可以 Email + Password 自行註冊；建立後立即取得 `user` 系統角色，無需審核；本版 spec 003 為前端互動 prototype，不含真實後端 API 與 DB 寫入；完整實作推遲至 M7 | P1 | spec 003 |
+| FR-A05 | 使用者可申請忘記密碼；系統透過 Resend 寄送重設連結（不揭露 Email 是否存在）；本版 spec 004 為前端互動 prototype，不含真實 Resend 寄信與 token 驗證；完整實作推遲至 M7 | P2 | spec 004 |
 | FR-A06 | 使用者可在個人設定頁修改姓名、上傳頭像、變更 Email（含驗證流程）、修改密碼、設定外觀偏好（跟隨系統 / 淺色 / 深色）及通知偏好 | P2 | spec 005 |
 | FR-A07 | 使用者登出時，後端立即撤銷 refresh token，清除 cookie | P0 | ADR-021 |
 | FR-A08 | 系統角色（`user` / `super_admin`）儲存於 JWT payload；任務角色（`project_leader` / `reviewer` / `annotator`）不儲存於 JWT，由 `task_membership` 表決定 | P0 | ADR-021；IA §1 |

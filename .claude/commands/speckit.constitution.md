@@ -90,7 +90,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 7. **Write the updated constitution**
    - Write to `specs/_governance/constitution.md` first (source of truth, with the Sync Impact Report HTML comment prepended)
-   - Then copy the full content to `.specify/memory/constitution.md` to keep the tool cache in sync
+   - Then write to `.specify/memory/constitution.md`, preserving the tool-cache wrapper: keep the header block before `<!-- BEGIN CACHE -->` unchanged, update the version and date in the `<!-- BEGIN CACHE — synced from specs/_governance/constitution.md @ vX.Y.Z (YYYY-MM-DD) -->` marker, then paste the full source file content after it
 
 8. **Report to the user**
    - New version and bump rationale

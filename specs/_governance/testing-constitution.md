@@ -16,7 +16,7 @@ Test tasks and implementation tasks must always be separate. A test task must be
 
 ## II. Task Decomposition For Testability
 
-- Each implementation or artifact-producing task in `tasks.md` must touch exactly one file. Package-manager tasks (`pnpm add` / `uv add`) are exempt from this rule because they always update both the manifest (`package.json` / `pyproject.toml`) and the lockfile (`pnpm-lock.yaml` / `uv.lock`).
+- Each implementation or artifact-producing task in `tasks.md` must touch exactly one file. Package-manager tasks (`pnpm add` / `uv add`) are exempt from this rule because they always update both the manifest (`package.json` / `pyproject.toml`) and the lockfile (`pnpm-lock.yaml` / `uv.lock`). Scaffold and initial-setup tasks (such as creating a module directory structure, bootstrapping configuration, or updating documentation across multiple files) are also exempt when they explicitly list every file they produce.
 - Command-only verification tasks may touch no files when they are explicitly labeled as verification and list the exact command to run.
 - Tasks with sequential dependencies must be ordered, not merged into a single task.
 - Storybook stories for non-page components are always a separate parallel task (`[P]`) from the component implementation task.

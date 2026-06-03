@@ -165,11 +165,11 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T022a [P] [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`
-- [ ] T022b [P] [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`
-- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`
-- [ ] T023 [P] [US2] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
-- [ ] T024 [P] [US2] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
+- [ ] T022a [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`（擴充 US1 同檔案；不可與 T013a 並行）
+- [ ] T022b [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`（擴充 US1 同檔案；不可與 T013b 並行）
+- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`（擴充 US1 同檔案）
+- [ ] T023 [US2] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`（擴充 US1 同檔案；不可與 T014 並行）
+- [ ] T024 [US2] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`（擴充 US1 同檔案；不可與 T015 並行）
 
 ### 實作（僅在測試失敗後進行）
 

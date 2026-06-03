@@ -146,7 +146,7 @@ Changes must be confined to the requested feature, bug, or spec scope.
 - Opportunistic refactors, formatting sweeps, and unrelated renames are not permitted unless required to complete the change safely
 - If adjacent code is problematic, flag it rather than silently fixing unrelated scope
 - Large changes must be split into independently reviewable units
-- A single PR must not touch more than 5 files or exceed 300 lines of diff excluding tests; PRs exceeding either threshold must be split before opening
+- A single PR must not touch more than 5 files or exceed 300 lines of diff excluding tests; PRs exceeding either threshold must be split before opening. Governance PRs that propagate a constitution amendment (source + caches + templates + commands) are exempt from the file count limit; all propagation files must be included in a single governance PR to prevent temporary inconsistency.
 - Backend/frontend layer split details are governed by applicable domain constitutions
 
 ### XI. Security & Privacy Baseline (NON-NEGOTIABLE)
