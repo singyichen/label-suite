@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.13.0
+版本: 1.14.0
 狀態: Draft
 ---
 
@@ -52,8 +52,8 @@
 ### PR-FOUND-MIGRATION：資料庫 Migration（獨立 PR，最先合併）
 
 - [ ] T004a 撰寫 Alembic migration `upgrade()`（含 plan.md DB index 分析所列的所有 index）— `backend/migrations/versions/xxxx_[feature].py`
-- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）— 同上檔案
-- [ ] T004c 驗證 migration 可循環：`alembic upgrade head && alembic downgrade -1 && alembic upgrade head`
+- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）— `backend/migrations/versions/xxxx_[feature].py`
+- [ ] T004c 驗證 migration 可循環：`uv run alembic upgrade head && uv run alembic downgrade -1 && uv run alembic upgrade head`
 
 > **PR 邊界**：T004a/b/c 合併為獨立 `PR-FOUND-MIGRATION`，PR description 必須含 Rollback Plan 欄位，不得與任何應用程式碼合併。`[Principle: XVIII]`
 
@@ -65,16 +65,9 @@
 
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
-- [ ] T006 [P] 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
 
 > **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII]`
-
-### PR-FOUND-BE-CORE：後端 Core 基礎建設（可與 PR-FOUND-BE-SCHEMA 並行）
-
-- [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
-- [ ] T012 [P] 設定環境與設定管理（`backend/app/core/config.py`）
-
-> **PR 邊界**：T011/T012 合併為獨立 `PR-FOUND-BE-CORE`。`[Principle: X]`
 
 ### PR-FOUND-FE-API：前端 API 基礎建設（可與 PR-FOUND-BE-* 並行）
 
@@ -85,7 +78,7 @@
 
 ### PR-FOUND-FE-ROUTING：前端路由基礎建設（可與 PR-FOUND-FE-API 並行）
 
-- [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
+- [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/index.tsx` — 依 plan.md 路由分析）
 
 > **PR 邊界**：T009 作為獨立 `PR-FOUND-FE-ROUTING`（router registration + route guard）。`[Principle: X; Frontend Constitution XVI]`
 
@@ -95,6 +88,13 @@
 - [ ] T010b [P] 新增 i18n keys — en（`frontend/src/locales/en/[module].json` — 依 plan.md i18n key 清單）
 
 > **PR 邊界**：T010a/T010b 合併為獨立 `PR-FOUND-FE-I18N`（i18n namespace files）。`[Principle: X; Frontend Constitution XVI; Testing Constitution II]`
+
+### PR-FOUND-BE-CORE：後端 Core 基礎建設（可與 PR-FOUND-FE-* 並行）
+
+- [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
+- [ ] T012 [P] 設定環境與設定管理（`backend/app/core/config.py`）
+
+> **PR 邊界**：T011/T012 合併為獨立 `PR-FOUND-BE-CORE`。`[Principle: X]`
 
 **檢查點**：基礎建設完成 — 可開始實作使用者故事
 
@@ -110,7 +110,7 @@
 
 - [ ] T013a [P] [US1] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`
 - [ ] T013b [P] [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`
-- [ ] T013c [P] [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— 同上檔案
+- [ ] T013c [P] [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`
 - [ ] T014 [P] [US1] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
 - [ ] T015 [P] [US1] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
 
@@ -159,41 +159,41 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T020 [P] [US2] 後端單元測試 — `backend/tests/unit/test_[feature].py`
-- [ ] T021 [P] [US2] Playwright E2E 測試 — `e2e/[module]/[feature].spec.ts`
+- [ ] T022 [P] [US2] 後端單元測試 — `backend/tests/unit/test_[feature].py`
+- [ ] T023 [P] [US2] Playwright E2E 測試 — `e2e/[module]/[feature].spec.ts`
 
 ### 實作（僅在測試失敗後進行）
 
 #### PR-US2-BE-MODEL：後端資料模型實作
 
-- [ ] T022 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
+- [ ] T024 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
 
-> **PR 邊界**：T022 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T024 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-SERVICE：後端 Service 實作（含後端單元測試）
 
-- [ ] T023 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
+- [ ] T025 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
 
-> **PR 邊界**：T020（後端單元測試）+ T023 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T022（後端單元測試）+ T025 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-API：後端 API 實作
 
-- [ ] T024 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
+- [ ] T026 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
 
-> **PR 邊界**：T024 作為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T026 作為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-FE-COMPONENT：前端元件實作（含 Storybook）
 
-- [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/[Feature].tsx`
-- [ ] T026 [P] [US2] 建立 Storybook stories — `frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`（Default + 邊界狀態，MSW decorator）
+- [ ] T027 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/[Feature].tsx`
+- [ ] T028 [P] [US2] 建立 Storybook stories — `frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`（Default + 邊界狀態，MSW decorator）
 
-> **PR 邊界**：T025/T026 合併為獨立 `PR-US2-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
+> **PR 邊界**：T027/T028 合併為獨立 `PR-US2-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
 
 #### PR-US2-FE-PAGE：前端頁面組裝（含 E2E）
 
-- [ ] T027 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/[Feature]Page.tsx`
+- [ ] T029 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/[Feature]Page.tsx`
 
-> **PR 邊界**：T021（Playwright E2E）+ T027 合併為獨立 `PR-US2-FE-PAGE`，與 `PR-US2-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
+> **PR 邊界**：T023（Playwright E2E）+ T029 合併為獨立 `PR-US2-FE-PAGE`，與 `PR-US2-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
 
 **檢查點**：使用者故事 1 與 2 皆可獨立驗證
 
@@ -360,6 +360,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.14.0 | 2026-06-03 | 修正 Phase 2 與 US2 任務編號順序，移除 schema-dependent API task 的 parallel marker，補齊 migration downgrade 與 routing 任務的具體檔案路徑 |
 | 1.13.0 | 2026-06-03 | 將 user-story 前端 component/page/story/test 任務由目錄或泛稱改為具體檔案路徑，對齊 testing-constitution Rule II 的 one-file task 要求 |
 | 1.12.0 | 2026-06-03 | 拆分後端 foundation 與 user-story PR 邊界（schema/model/service/API route 分離），拆分前端 user-story PR 邊界（component+test+Storybook 與 page+E2E 分離），並允許 command-only verification 任務不觸及檔案 |
 | 1.11.0 | 2026-06-03 | 將 PR-FOUND-FE 拆分為 PR-FOUND-FE-API、PR-FOUND-FE-ROUTING、PR-FOUND-FE-I18N，避免 service/MSW/router/i18n 基礎建設合併到同一 review unit，對齊 frontend-constitution Rule XVI |
