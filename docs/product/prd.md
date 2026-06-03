@@ -22,7 +22,7 @@
 
 Label Suite 是一套**以設定檔驅動（Config-Driven）的通用型 NLP 資料標記與自動評估平台**，以學術 NLP 實驗室為主要目標群體。本系統作為碩士論文 Demo Paper 的核心研究成果，旨在解決現有標記工具（如 Label Studio）對非工程背景研究人員門檻過高、工作流程碎片化，以及缺乏內建資料集品質可視性等痛點。
 
-Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單的 YAML/JSON 設定檔，即可在不修改任何核心程式碼的情況下，啟動涵蓋分類、回歸、序列標記、關係抽取及生成標記等多種 NLP 任務類型的標記流程。同時，系統將任務配置、Dry Run 驗證、正式標記、審核協作，以及資料集統計分析整合於單一入口，取代過往研究團隊需手動串接多個工具的低效流程。
+Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單的 YAML/JSON 設定檔，即可在不修改任何核心程式碼的情況下，啟動涵蓋分類、VA 評分、序列標記、關係抽取及句對任務等多種 NLP 任務類型的標記流程。同時，系統將任務配置、Dry Run 驗證、正式標記、審核協作，以及資料集統計分析整合於單一入口，取代過往研究團隊需手動串接多個工具的低效流程。
 
 本論文的學術貢獻聚焦於三個面向：（1）配置驅動架構使標記任務的通用性與可重複使用性成為可能；（2）Dry Run / Official Run 機制確保標記流程的可重現性與資料公平性；（3）內建資料集分析（#Sentence、#Token、#Label 統計與 IAA 指標）讓研究人員在標記階段即可持續監控資料品質，無需另行撰寫分析腳本。
 
@@ -310,9 +310,9 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | C-AR04 | Frontend vertical slice 架構：feature module 不得直接引用其他 feature 的內部 hooks / stores / types | ADR-011 |
 | C-AR05 | `shared/` admission rule：只有被 ≥ 2 個不同 feature module 引用的檔案才可放入 `shared/` | ADR-011 |
 | C-AR06 | Task Role 授權使用 `useTaskRole(taskId)`（TanStack Query 從 API 取得），不依賴 JWT 繼承 | ADR-021；frontend/CLAUDE.md |
-| C-AR07 | 資料庫禁止無外鍵約束；唯一性約束（如「每位 annotator 每筆 item 只能一份提交」）必須由 DB unique constraint 強制，不只靠 application 檢查 | constitution 原則 XXVI |
-| C-AR08 | 所有 cache 條目必須在寫入時宣告明確 TTL；無 TTL 的 cache 條目不允許 | constitution 原則 XXIX |
-| C-AR09 | 測試絕對禁止使用生產資料、真實使用者資料或真實標記 ground truth | constitution 原則 XXX / NON-NEGOTIABLE |
+| C-AR07 | 資料庫禁止無外鍵約束；唯一性約束（如「每位 annotator 每筆 item 只能一份提交」）必須由 DB unique constraint 強制，不只靠 application 檢查 | Backend Constitution VI |
+| C-AR08 | 所有 cache 條目必須在寫入時宣告明確 TTL；無 TTL 的 cache 條目不允許 | Backend Constitution VII |
+| C-AR09 | 測試絕對禁止使用生產資料、真實使用者資料或真實標記 ground truth | Testing Constitution XI / NON-NEGOTIABLE |
 
 ### 6.3 開發流程約束
 
@@ -350,7 +350,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | QID | 問題 | 影響範圍 | 需確認對象 |
 |-----|------|---------|-----------|
 | Q-01 | Help Button（spec 018）目前標記為 `deferred`，是否確認排除於 Demo Paper 範疇？ | shared 模組 | 論文作者 |
-| Q-02 | 生成標記（Generation task type）在 Demo Paper 是否需要完整支援？目前 task-type-taxonomy §4 有定義 config，但 thesis outline 僅在研究限制中提到「尚未完整優化」 | spec 013 / 015 | 論文作者 |
+| Q-02 | 句對任務（`sentence_pairs`）的 demo dataset 與使用情境是否已確定？目前 spec 013 / 015 / 017 已將句對納入 config、workspace 與品質分析範圍 | spec 013 / 015 / 017 | 論文作者 |
 | Q-03 | 資料集匯入目前僅支援 txt / csv / tsv / json（spec 013）。是否有其他格式需求（如 JSONL）？ | spec 013 | 論文作者 |
 | Q-04 | SUS 問卷的受試者招募策略（5~10 位實驗室成員），目前 user study 的計畫時程是否確定？ | R2/R3 驗收 | 指導教授 / 論文作者 |
 | Q-05 | `annotation-workspace` 中「標記說明強制顯示」（spec 013/015）的確認狀態是否需要持久化至 DB？若使用者換瀏覽器，應重新顯示還是跳過？ | spec 015 | 論文作者 |

@@ -128,7 +128,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **風險**
 
-- Google SSO（spec 002）在 M1 不在範圍，但架構需預留 OAuth 接入點，不可與 Email/Password auth 強耦合
+- Google SSO（spec 002）在 M1 不在範圍；M7 需實作 OAuth login，M1 架構不可與 Email/Password auth 強耦合
 - 本地開發的 CORS / cookie SameSite 設定通常容易出錯，需早期驗證
 
 ---
@@ -301,10 +301,11 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **目標描述**
 
-補齊 Reviewer 審核模式、帳號模組完整功能（Register / Forgot Password / Profile Settings），以及系統管理（User Management / Role Settings）。
+補齊 Reviewer 審核模式、帳號模組完整功能（Google OAuth / Register / Forgot Password / Profile Settings），以及系統管理（User Management / Role Settings）。
 
 **涵蓋 Spec：**
 - annotation-015（Reviewer flow）
+- account-002（Google OAuth Login）
 - account-003（Register Email/Password）
 - account-004（Forgot/Reset Password）
 - account-005（Profile Settings）
@@ -321,7 +322,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 - [ ] Profile Settings：修改姓名 / 大頭照 / Email 變更（含驗證信）/ 密碼設定 / 外觀偏好 / 通知偏好
 - [ ] `user-management`：`super_admin` 可查看所有使用者、建立 / 停用帳號、指派系統角色
 - [ ] `role-settings`：顯示系統角色 / 任務角色功能矩陣（唯讀展示）
-- [ ] Google SSO 預留接入點（spec 002 deferred to later, 但架構不可阻塞）
+- [ ] Google OAuth 2.0 登入（spec 002）：使用者可透過 Google SSO 登入並建立 / 綁定平台帳號
 
 **關鍵技術決策**
 

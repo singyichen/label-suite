@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.11.0
+版本: 1.12.0
 狀態: Draft
 ---
 
@@ -57,16 +57,26 @@
 
 > **PR 邊界**：T004a/b/c 合併為獨立 `PR-FOUND-MIGRATION`，PR description 必須含 Rollback Plan 欄位，不得與任何應用程式碼合併。`[Principle: XVIII]`
 
-### PR-FOUND-BE：後端基礎建設（依賴 PR-FOUND-MIGRATION merged）
+### PR-FOUND-BE-SCHEMA：後端 Schema 基礎建設（依賴 PR-FOUND-MIGRATION merged）
 
 - [ ] T005 [P] 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/schemas/[feature].py`，依 plan.md schema 層次設計）
+
+> **PR 邊界**：T005 作為獨立 `PR-FOUND-BE-SCHEMA`。`[Principle: X; Backend Constitution XIII]`
+
+### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
+
 - [ ] T006 [P] 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+
+> **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII]`
+
+### PR-FOUND-BE-CORE：後端 Core 基礎建設（可與 PR-FOUND-BE-SCHEMA 並行）
+
 - [ ] T011 [P] 確認 Exception class 已存在或建立（`backend/app/core/errors.py` — 依 plan.md Phase 0 Exception 設計）
 - [ ] T012 [P] 設定環境與設定管理（`backend/app/core/config.py`）
 
-> **PR 邊界**：T005/T006/T011/T012 合併為獨立 `PR-FOUND-BE`。`[Principle: X]`
+> **PR 邊界**：T011/T012 合併為獨立 `PR-FOUND-BE-CORE`。`[Principle: X]`
 
-### PR-FOUND-FE-API：前端 API 基礎建設（可與 PR-FOUND-BE 並行）
+### PR-FOUND-FE-API：前端 API 基礎建設（可與 PR-FOUND-BE-* 並行）
 
 - [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
 - [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
@@ -106,21 +116,36 @@
 
 ### 實作（僅在測試失敗後進行）
 
-#### PR-US1-BE：後端實作（含後端測試）
+#### PR-US1-BE-MODEL：後端資料模型實作
 
 - [ ] T016 [P] [US1] 建立資料模型（`backend/app/models/[feature].py`）— 含 relationship 與 Loading Strategy
+
+> **PR 邊界**：T016 作為獨立 `PR-US1-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
+
+#### PR-US1-BE-SERVICE：後端 Service 實作（含 service 測試）
+
 - [ ] T017 [US1] 實作 service 層（`backend/app/services/[feature].py`）— 明確指定 `selectinload`/`joinedload`
+
+> **PR 邊界**：T013a（service 單元測試）+ T017 合併為獨立 `PR-US1-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
+
+#### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
+
 - [ ] T018 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）— 含 auth dependency
 
-> **PR 邊界**：T013a/b/c（後端測試）+ T016/T017/T018（後端實作）合併為獨立 `PR-US1-BE`。`[Principle: X]`
+> **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII]`
 
-#### PR-US1-FE：前端實作（含前端測試，可與 PR-US1-BE 並行）
+#### PR-US1-FE-COMPONENT：前端元件實作（含 component test + Storybook）
 
 - [ ] T019 [US1] 建立前端元件（`frontend/src/features/[module]/components/[feature]/`）— 含 ARIA role、響應式
 - [ ] T020 [P] [US1] 建立 Storybook stories（`frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`）— Default + 邊界狀態，args/argTypes/MSW decorator 齊備
+
+> **PR 邊界**：T014（Vitest component test）+ T019/T020 合併為獨立 `PR-US1-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
+
+#### PR-US1-FE-PAGE：前端頁面組裝（含 E2E）
+
 - [ ] T021 [US1] 實作前端頁面（`frontend/src/features/[module]/pages/[feature]/`）— Page 層不寫 story
 
-> **PR 邊界**：T014（Vitest）+ T015（E2E）+ T019/T020/T021（前端實作）合併為獨立 `PR-US1-FE`，與 `PR-US1-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
+> **PR 邊界**：T015（Playwright E2E）+ T021 合併為獨立 `PR-US1-FE-PAGE`，與 `PR-US1-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
 
 **檢查點**：使用者故事 1 可獨立驗證
 
@@ -139,21 +164,36 @@
 
 ### 實作（僅在測試失敗後進行）
 
-#### PR-US2-BE：後端實作（含後端測試）
+#### PR-US2-BE-MODEL：後端資料模型實作
 
 - [ ] T022 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
+
+> **PR 邊界**：T022 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
+
+#### PR-US2-BE-SERVICE：後端 Service 實作（含後端單元測試）
+
 - [ ] T023 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
+
+> **PR 邊界**：T020（後端單元測試）+ T023 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
+
+#### PR-US2-BE-API：後端 API 實作
+
 - [ ] T024 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
 
-> **PR 邊界**：後端測試 + T022/T023/T024 合併為獨立 `PR-US2-BE`。`[Principle: X]`
+> **PR 邊界**：T024 作為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII]`
 
-#### PR-US2-FE：前端實作（含前端測試，可與 PR-US2-BE 並行）
+#### PR-US2-FE-COMPONENT：前端元件實作（含 Storybook）
 
 - [ ] T025 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/`
 - [ ] T026 [P] [US2] 建立 Storybook stories（`.stories.tsx`）— Default + 邊界狀態，MSW decorator
+
+> **PR 邊界**：T025/T026 合併為獨立 `PR-US2-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
+
+#### PR-US2-FE-PAGE：前端頁面組裝（含 E2E）
+
 - [ ] T027 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/`
 
-> **PR 邊界**：前端測試 + T025/T026/T027 合併為獨立 `PR-US2-FE`，與 `PR-US2-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
+> **PR 邊界**：T021（Playwright E2E）+ T027 合併為獨立 `PR-US2-FE-PAGE`，與 `PR-US2-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
 
 **檢查點**：使用者故事 1 與 2 皆可獨立驗證
 
@@ -299,7 +339,7 @@ pnpm exec playwright test                # E2E gate
 - [ ] 所有使用者故事都有對應的 Phase，包含測試 + 實作
 - [ ] 所有測試都列在對應的實作任務之前
 - [ ] 標記 [P] 的平行任務確實觸及不同檔案
-- [ ] 每個任務都指定了確切的檔案路徑
+- [ ] 每個 artifact-producing 任務都指定了確切的檔案路徑；command-only verification 任務需標明驗證命令且可不觸及檔案
 - [ ] 所有基礎建設任務（Phase 2）都標記為阻塞
 - [ ] Migration 任務含 T004a / T004b（downgrade）/ T004c（循環驗證）三項
 - [ ] Phase 2 有 MSW handler 任務（Storybook + Vitest 共用）
@@ -311,15 +351,16 @@ pnpm exec playwright test                # E2E gate
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
-- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N 五個獨立 PR 邊界
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N 七個獨立 PR 邊界
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
-- [ ] 每個 US Phase 的實作區塊含 PR-USN-BE 與 PR-USN-FE 兩個獨立 PR 邊界標記
+- [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.12.0 | 2026-06-03 | 拆分後端 foundation 與 user-story PR 邊界（schema/model/service/API route 分離），拆分前端 user-story PR 邊界（component+test+Storybook 與 page+E2E 分離），並允許 command-only verification 任務不觸及檔案 |
 | 1.11.0 | 2026-06-03 | 將 PR-FOUND-FE 拆分為 PR-FOUND-FE-API、PR-FOUND-FE-ROUTING、PR-FOUND-FE-I18N，避免 service/MSW/router/i18n 基礎建設合併到同一 review unit，對齊 frontend-constitution Rule XVI |
 | 1.10.0 | 2026-06-03 | T010 拆為 T010a（zh-TW）與 T010b（en）兩個獨立任務（各觸及一個檔案），對齊 testing-constitution Rule II（Task Decomposition For Testability）；更新 PR-FOUND-FE 邊界清單、任務產生規則 §6、驗證清單 |
 | 1.9.0 | 2026-06-02 | Phase 2 拆分為三個獨立 PR 邊界（PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE）；Phase 3/4 實作區塊加入 PR-USN-BE / PR-USN-FE 邊界標記；驗證清單新增四項 PR 粒度檢查；對齊 constitution v1.30.0 Principle I、X、XVIII |
