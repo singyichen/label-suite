@@ -102,6 +102,10 @@ If gate fails:
 | Security finding in review | Pause PR flow; report finding to user immediately |
 | Spec compliance gap found | Implementer fixes first; run `/speckit.analyze` and fix all findings before code quality reviewer proceeds |
 
+## Issue Reporting Protocol
+
+@.claude/rules/issue-reporting.md
+
 ## SDD Phase Sequence
 
 ```
