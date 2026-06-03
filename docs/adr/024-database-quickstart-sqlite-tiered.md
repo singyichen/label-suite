@@ -3,6 +3,7 @@
 **Status**: Accepted
 **Date**: 2026-06-03
 **Amends**: ADR-005 — quick-start scope only; ADR-005 PostgreSQL requirement remains binding for production deployments
+**Amends**: ADR-008 — local `docker-compose.yml` default changes from PostgreSQL to SQLite; `docker-compose.prod.yml` preserves the ADR-008 full PostgreSQL stack
 
 ## Context
 
@@ -41,7 +42,7 @@ The application detects which tier to use based on the `DATABASE_URL` environmen
 ### Easier
 
 - New users reach a working system with a single command — no database provisioning required.
-- CI can run lightweight tests against SQLite without spinning up a PostgreSQL service container (unit/integration split).
+- CI can run lightweight *unit* tests against SQLite without spinning up a PostgreSQL service container. Integration tests (covering ORM behaviour, Alembic migrations, concurrent writes) must still use real PostgreSQL per foundation spec FR-031 — the two test tiers are complementary, not replacements for each other.
 - Thesis Demo runs entirely from `docker compose up` — no infrastructure prerequisites for the professor.
 - Open-source contributors can evaluate and submit PRs without a local PostgreSQL setup.
 
@@ -51,6 +52,13 @@ The application detects which tier to use based on the `DATABASE_URL` environmen
 - Two docker-compose files to maintain.
 - Migration tooling (Alembic) must be tested against both dialects, utilizing batch operations (`with op.batch_alter_table`) to accommodate SQLite's limited `ALTER TABLE` capabilities; set `render_as_batch=True` in `env.py`.
 - SQLite's lack of concurrent write support means the quick-start tier is explicitly **not recommended for multi-user production use** — this must be documented clearly in README.
+
+### PostgreSQL-Only Paths (Unchanged)
+
+The following features are explicitly **PostgreSQL-only** in both tiers. The SQLite quick-start tier accepts these limitations because it targets single-user evaluation, not full-feature production use:
+
+- **Atomic upsert (FR-083):** Celery background-job DB writes that require `insert().on_conflict_do_update()` remain PostgreSQL-only. In the SQLite quick-start tier, the single-user context eliminates race conditions, so a simple `session.merge()` is acceptable. Implementation must use dialect detection to switch strategies.
+- **JSONB task configs (ADR-010):** The implementation must use SQLAlchemy's `sa.JSON` type (not `sa.JSONB`) so that it maps to `TEXT` on SQLite and `JSONB` on PostgreSQL transparently. JSONB-specific operators (e.g., `@>`, `#>>`) must be avoided in any code path that runs against the SQLite tier.
 
 ### Out of Scope
 
