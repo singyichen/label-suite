@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.0.0
+版本: 1.8.0
 狀態: Draft
 ---
 
@@ -37,11 +37,12 @@
 - [ ] VIII. Performance Baseline：列表端點已分頁；無無界查詢；API P95 ≤ 500ms 目標已確認；前端 FCP ≤ 3s；互動反饋 ≤ 100ms；非核心路由使用 code splitting
 - [ ] IX. No Silent Failure：所有 error case 是否定義對應處理路徑？例外不可靜默吞噬；背景 job 必須暴露狀態、重試次數與失敗原因
 - [ ] XI. Security & Privacy Baseline：是否涉及驗證流程、角色權限或使用者資料？若是，已規劃拒絕路徑測試；API response 不洩漏內部識別碼或敏感 metadata
-- [ ] XXI. Frontend Runtime Safety：若前端受影響，async 競態、unmount 後 stale response、timer / subscription / listener cleanup 是否已納入元件設計？
-- [ ] XXII. API Contract Completeness：所有新增端點是否都計畫更新 OpenAPI 文件？含 enum 值、nullable 欄位、pagination shape、error schema
-- [ ] XXIV. Backend Consistency & Idempotency：mutating 端點是否定義 idempotency 或衝突行為？concurrent update 是否以 transaction / lock 保護？
-- [ ] XXVI. Database-Enforced Integrity：是否設計 FK constraint、unique constraint；multi-step mutation 是否包在 transaction 內；migration 是否含 backfill 或資料驗證步驟？
-- [ ] XXVIII. Canonical Domain Lifecycle：若涉及實體狀態機，是否定義合法轉換清單？非法轉換須在 service 層拒絕，不得僅靠 UI button 可見性控制
+
+### Domain Constitution Loading（依觸及範圍勾選；未觸及的範圍可跳過）
+
+- [ ] 後端（touches `backend/`）：已讀取 `.specify/memory/backend-constitution.md`；本 plan 符合其所有適用規則
+- [ ] 前端（touches `frontend/`）：已讀取 `.specify/memory/frontend-constitution.md`；本 plan 符合其所有適用規則
+- [ ] 測試（所有 task）：已讀取 `.specify/memory/testing-constitution.md`；本 plan 符合其所有適用規則
 
 ## 專案結構
 
@@ -303,7 +304,7 @@ sequenceDiagram
 - **前端**：路由分析 → route 註冊任務（含 route guard 設定）
 - **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
 - **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務（page 層不寫 story）
-- **前端**：i18n key 清單 → `locales/zh-TW/[module].json` + `locales/en/[module].json` 更新任務
+- **前端**：i18n key 清單 → `locales/zh-TW/[module].json` 與 `locales/en/[module].json` 兩個獨立更新任務（各觸及一個檔案）
 - 共用元件（shared/）→ 獨立任務，先於依賴它的 feature 任務
 
 **排序策略**：
@@ -348,6 +349,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.0 | 2026-06-03 | 移除已廢棄的 XXI/XXII/XXIV/XXVI/XXVIII 原則 checkboxes（已移入 domain constitutions）；新增 Domain Constitution Loading 小節（後端/前端/測試各一個 checkbox），對齊 constitution v1.31.0；Phase 2 i18n 任務描述改為兩個獨立任務 |
 | 1.7.2 | 2026-05-29 | 憲章檢查 VII 加入 Storybook story 要求：所有非 page 元件需規劃 Default + 邊界狀態 story（配合憲章 v1.29.1） |
 | 1.7.1 | 2026-05-29 | 憲章檢查 V 補充 Human Handoff Readiness：命名自說明、入口點兩層內可定位（配合憲章 v1.29.0） |
 | 1.7.0 | 2026-05-29 | 憲章檢查補齊 IX、XI、XXI、XXII、XXIV、XXVI、XXVIII（配合憲章 v1.28.0，補足設計期相關原則） |

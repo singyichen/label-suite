@@ -71,9 +71,10 @@
 - [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
 - [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
 - [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
-- [ ] T010 [P] 新增 i18n keys（`frontend/src/locales/zh-TW/[module].json` + `frontend/src/locales/en/[module].json` — 依 plan.md i18n key 清單）
+- [ ] T010a [P] 新增 i18n keys — zh-TW（`frontend/src/locales/zh-TW/[module].json` — 依 plan.md i18n key 清單）
+- [ ] T010b [P] 新增 i18n keys — en（`frontend/src/locales/en/[module].json` — 依 plan.md i18n key 清單）
 
-> **PR 邊界**：T007/T008/T009/T010 合併為獨立 `PR-FOUND-FE`，與 `PR-FOUND-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
+> **PR 邊界**：T007/T008/T009/T010a/T010b 合併為獨立 `PR-FOUND-FE`，與 `PR-FOUND-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
 
 **檢查點**：基礎建設完成 — 可開始實作使用者故事
 
@@ -247,7 +248,7 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試"
    - 每組新路由 → route 註冊任務（Phase 2，含 route guard 設定）
 
 6. **從 plan.md i18n key 清單**
-   - 每個 namespace → 一個 locales JSON 更新任務 [P]（zh-TW + en 各一，Phase 2）
+   - 每個 namespace → 兩個獨立 locales JSON 更新任務 [P]（T010a zh-TW + T010b en，各觸及一個檔案，Phase 2）
    - 各元件實作任務相依此任務（key 必須先存在才能在元件中使用）
 
 7. **從 plan.md DB index 分析**
@@ -293,7 +294,7 @@ pnpm exec playwright test                # E2E gate
 - [ ] Migration 任務含 T004a / T004b（downgrade）/ T004c（循環驗證）三項
 - [ ] Phase 2 有 MSW handler 任務（Storybook + Vitest 共用）
 - [ ] 路由分析的每組路由都有對應的 route 註冊任務（含 route guard）
-- [ ] i18n key 清單的每個 namespace 都有 locales JSON 更新任務（zh-TW + en）
+- [ ] i18n key 清單的每個 namespace 都有兩個獨立 locales JSON 更新任務（T010a zh-TW + T010b en，各觸及一個檔案）
 - [ ] 每個 US 的後端測試含 service 單元 / route 整合 / permission negative 三層
 - [ ] 每個 US 有前端 Vitest 元件測試任務（`.test.tsx`）
 - [ ] 每個非 page 前端元件都有對應的 `.stories.tsx` 任務（含 MSW decorator 需求）
@@ -309,6 +310,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.10.0 | 2026-06-03 | T010 拆為 T010a（zh-TW）與 T010b（en）兩個獨立任務（各觸及一個檔案），對齊 testing-constitution Rule II（Task Decomposition For Testability）；更新 PR-FOUND-FE 邊界清單、任務產生規則 §6、驗證清單 |
 | 1.9.0 | 2026-06-02 | Phase 2 拆分為三個獨立 PR 邊界（PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE）；Phase 3/4 實作區塊加入 PR-USN-BE / PR-USN-FE 邊界標記；驗證清單新增四項 PR 粒度檢查；對齊 constitution v1.30.0 Principle I、X、XVIII |
 | 1.8.1 | 2026-05-28 | 將 **Story Goal** 改為 **故事目標**（中文化）；驗證清單用詞同步 |
 | 1.8.0 | 2026-05-28 | 每個 Phase 的「目標」改為「Story Goal → 追蹤至 SC-XXX」格式；驗證清單加入 SC-ID 追蹤性檢查 |

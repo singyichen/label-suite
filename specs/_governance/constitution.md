@@ -25,7 +25,8 @@ Templates sync status:
 - .claude/commands/speckit.plan.md: Updated — load applicable domain constitutions by affected scope
 - .claude/commands/speckit.analyze.md: Updated — include applicable domain constitutions in the ruleset
 - AGENTS.md: Updated — document required domain constitution loading
-- .specify/templates/: No changes required
+- .specify/templates/plan-template.md: Updated — replaced stale XXI/XXII/XXIV/XXVI/XXVIII principle checkboxes with Domain Constitution Loading section; bumped to v1.8.0
+- .specify/templates/tasks-template.md: Updated — split T010 into T010a (zh-TW) and T010b (en) to comply with testing-constitution Rule II (one file per task); bumped to v1.10.0
 
 Deferred TODOs: none
 -->
