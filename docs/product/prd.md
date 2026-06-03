@@ -289,7 +289,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 |------|------|-----|
 | Frontend | React + TypeScript + Vite | ADR-004 |
 | Backend | FastAPI（Python）+ uv | ADR-003；ADR-002 |
-| Database | PostgreSQL | ADR-005 |
+| Database | SQLite（快速啟動）/ PostgreSQL（正式環境） | ADR-005；ADR-024 |
 | Cache / Queue | Redis | ADR-006 |
 | Async Tasks | Celery | ADR-007 |
 | Container | Docker Compose | ADR-008 |

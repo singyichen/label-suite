@@ -16,6 +16,12 @@ node_modules/
 .env.*
 !.env.example
 
+# Local database files
+/data/
+*.db
+*.sqlite
+*.sqlite3
+
 # OS
 .DS_Store
 Thumbs.db

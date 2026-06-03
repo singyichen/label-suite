@@ -72,12 +72,14 @@
 |---|---|
 | **前端** | React + TypeScript + Vite |
 | **後端** | FastAPI（Python） |
-| **資料庫** | PostgreSQL |
+| **資料庫** | SQLite（快速啟動）/ PostgreSQL（正式環境） |
 | **快取 / 佇列** | Redis |
 | **非同步任務** | Celery |
 | **測試** | Playwright（E2E）+ pytest |
 
 > **註：** 此技術選型反映當前設計決策；實作進度追蹤於第三階段。
+>
+> **SQLite 快速啟動警告：** 預設的 SQLite 層級僅適用於單人本地示範與評估，**不支援並發寫入**，**不建議用於多人正式環境部署**。請設定 `DATABASE_URL=postgresql+asyncpg://...` 以切換至正式環境的 PostgreSQL 層級（詳見 ADR-024）。
 
 ---
 

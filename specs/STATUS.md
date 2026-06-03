@@ -23,7 +23,7 @@
 
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
-| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `in-progress` | `feat/foundation/000-foundation` | spec v1.11.3；PR review-resolve 修正：SC-036 移除 Django override_settings 改為 FastAPI monkeypatch/dependency_overrides、對齊分支命名慣例；FR-001~130；SC-001~045 |
+| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `in-progress` | `feat/foundation/000-foundation` | spec v1.11.5；FR-001~130；SC-001~045 |
 | account-001 | Login — Email / Password | account | `plan-ready` | `feat/account/001-login-email-password` | spec v1.2.2；規格狀態：Clarified |
 | account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.2；規格狀態：Clarified |
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.3；規格狀態：Clarified |
@@ -55,6 +55,8 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-06-03 | Update foundation-000 to spec v1.11.5: SC-045 naming change applied. |
+| 2026-06-03 | Update foundation-000 to spec v1.11.4: add ADR-024 upstream dependency (tiered database strategy — SQLite quick start / PostgreSQL production). |
 | 2026-06-02 | Update foundation-000 to spec v1.11.3: address PR review-resolve findings — replace Django-specific override_settings in SC-036 with FastAPI-compatible pytest monkeypatch / dependency_overrides; realign branch field to feat/foundation/000-foundation per naming convention. |
 | 2026-06-02 | Update foundation-000 to spec v1.11.2: address PR code review findings — fix FR-040 parenthetical self-contradiction, add ADR-022 upstream dependency, backfill SC-029~031 changelog attribution. |
 | 2026-06-01 | Update foundation-000 to spec v1.11.1: apply independent-review corrections — clarify FR-117/FR-078 CSRF coexistence, add explicit operation_id= guidance to FR-120, add FR-040/FR-088 supersede notes, fix SC-034/SC-041 three-viewport contradiction, add CSRF test attribution to SC-036, add metrics grep pattern to SC-022, add Celery headers assert to SC-039, add bootstrap CI check path to SC-045. |
