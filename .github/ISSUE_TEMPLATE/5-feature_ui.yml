@@ -15,7 +15,7 @@ body:
     attributes:
       label: "🎯 需求說明"
       description: "說明目前問題與希望調整的方向"
-      value: |
+      placeholder: |
         - 現況/問題：
         - 希望調整方向：
         - 參考依據（若有）：
@@ -27,7 +27,7 @@ body:
     attributes:
       label: "📋 調整項目"
       description: "列出要調整的細項（可用 checklist）"
-      value: |
+      placeholder: |
         - [ ] 調整項目 1
         - [ ] 調整項目 2
         - [ ] 調整項目 3
@@ -39,7 +39,7 @@ body:
     attributes:
       label: "📝 備註（選填）"
       description: "補充說明或相關連結/截圖"
-      value: |
+      placeholder: |
         - 補充說明：
         - 原始畫面/截圖：
         - 修改後期望畫面/mock：

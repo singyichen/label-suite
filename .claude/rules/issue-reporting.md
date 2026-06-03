@@ -2,12 +2,14 @@
 
 ## Scenario → Issue Type Mapping
 
-Any agent that hits a condition below must open a GitHub issue using `gh issue create` via Bash **before** reporting to team-lead.
+Any agent that hits a condition below must report it to team-lead using the mapped issue type before continuing. Team-lead or the main session owns GitHub issue creation with `gh issue create`, because not every specialist agent has Bash access.
+
+Critical or High security vulnerabilities are the exception: do **not** create a public GitHub issue with exploit details. Report `SECURITY ESCALATION REQUIRED` to team-lead/main session and wait for the repository owner's private disclosure path or security advisory workflow.
 
 | Condition | Issue Type | Label | Title prefix |
 |-----------|-----------|-------|--------------|
 | Bug / test failure / unresolvable error after 2 retries | Bug Report | `錯誤回報` | `[Bug]` |
-| Security vulnerability (Critical or High) | Bug Report | `錯誤回報` | `[Bug]` |
+| Security vulnerability (Critical or High) | Private security escalation | N/A | N/A |
 | Performance regression beyond target threshold | Bug Report | `錯誤回報` | `[Bug]` |
 | CI/CD pipeline failure after 2 retries | Bug Report | `錯誤回報` | `[Bug]` |
 | New feature request or new workflow/page/module | Feature Add | `功能新增` | `[功能新增]` |
@@ -215,7 +217,7 @@ EOF
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[Incident][<severity>][<tracking-id>] <short description>" \
+  --title "[Incident] <short description>" \
   --label "線上事故" \
   --body-file -
 ## 🔥 嚴重度
@@ -240,5 +242,15 @@ EOF
 ## After Opening an Issue
 
 1. Include the issue URL in your output report.
-2. Tell team-lead: `ISSUE OPENED: <url> — <one-line summary>`
-3. Team-lead includes the URL in the next Progress Report under `⚠️ Needs Your Confirmation`.
+2. Tell team-lead: `ISSUE OPENED: <url> — <one-line summary>`.
+3. If the originating specialist could not create the issue directly, team-lead/main session opens it and reports the URL back to that specialist.
+4. Team-lead includes the URL in the next Progress Report under `⚠️ Needs Your Confirmation`.
+
+## Security Escalation
+
+For Critical or High security vulnerabilities:
+
+1. Do not run `gh issue create`.
+2. Report `SECURITY ESCALATION REQUIRED` to team-lead/main session with only high-level impact, affected area, and urgency.
+3. Keep exploit steps, credentials, tokens, raw logs, and proof-of-concept details out of public issues and normal progress reports.
+4. Wait for the repository owner's private disclosure path or GitHub Security Advisory instructions before documenting details.
