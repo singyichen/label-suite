@@ -704,7 +704,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 ### 功能需求
 
 - **FR-130**：系統必須提供可重現的 local bootstrap contract，至少包含 `.env.example`、Docker Compose local profile 或等效服務啟動方式、seed data 策略、OpenAPI export / frontend type generation command，以及 one-command verification 或清楚列出的本機驗證命令。
-- **FR-131**：任何修改 `backend/app/api/routes/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth header 與 example response）；PR diff 中出現 `routes/` 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`。（參見 ADR-025）
+- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/api/routes/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`。（參見 ADR-025、ADR-021）
 
 ---
 

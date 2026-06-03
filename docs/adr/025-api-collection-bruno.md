@@ -52,15 +52,11 @@ meta {
 [method] {
   url: {{baseUrl}}/api/v1/[module]/[resource]
   body: json
-  auth: bearer
+  auth: none
 }
 
 headers {
   Content-Type: application/json
-}
-
-auth:bearer {
-  token: {{accessToken}}
 }
 
 body:json {
@@ -71,6 +67,10 @@ body:json {
 
 docs {
   [Brief description of what the endpoint does and the required system/task role.]
+
+  Auth: httpOnly cookie session (ADR-021). Call POST /api/v1/auth/login first;
+  Bruno stores the session cookie automatically and sends it on all subsequent requests.
+  No Authorization header or token variable required.
 }
 ```
 
@@ -78,7 +78,7 @@ docs {
 
 Foundation Spec FR-131 makes the Bruno update a hard pre-PR gate:
 
-> A PR that modifies any file under `backend/app/api/routes/` must include a corresponding `.bru` file update under `backend/bruno/[module]/`. A PR diff that shows `routes/` changes without matching `bruno/` changes fails the gate.
+> A PR that modifies any file under `backend/app/modules/*/router.py` or `backend/app/api/routes/` must include a corresponding `.bru` file update under `backend/bruno/[module]/`. A PR diff that shows route changes without matching `bruno/` changes fails the gate.
 
 The tasks template (`tasks-template.md`) includes:
 

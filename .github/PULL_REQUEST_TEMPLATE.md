@@ -29,6 +29,18 @@
 - [ ] API 欄位結構有異動
 - [ ] 第三方服務整合有異動
 
+## Rollback Plan（Migration PR 適用）
+
+<!-- 僅當此 PR 包含資料庫 migration 時填寫，否則刪除此區塊 -->
+
+**Before state**：<!-- migration 執行前的 schema / 資料狀態 -->
+
+**After state**：<!-- migration 執行後的 schema / 資料狀態 -->
+
+**Rollback procedure**：
+1. <!-- 執行 `uv run alembic downgrade -1` 或具體指令 -->
+2. <!-- 任何額外的資料復原步驟 -->
+
 ## 影響範圍
 
 <!-- 勾選本次 PR 影響的範圍 -->

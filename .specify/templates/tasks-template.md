@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.17.0
+版本: 1.18.0
 狀態: Draft
 ---
 
@@ -66,9 +66,10 @@
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
 - [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
-- [ ] T006b [P] 建立本功能的 Bruno 請求草稿（`backend/bruno/[module]/`）— skeleton only，依 plan.md API 清單 Bruno 檔案欄；若 `backend/bruno/` 尚未存在則一併建立 `bruno.json` 與 `environments/`
+- [ ] T006b [P] 建立 Bruno 集合根目錄初始化檔案（僅首次建立時執行，已存在則略過）— `backend/bruno/bruno.json`、`backend/bruno/environments/local.bru`、`backend/bruno/environments/staging.bru`
+- [ ] T006c [P] 為本功能各規劃端點建立 Bruno 請求 skeleton（依 plan.md API 清單逐一列出每個檔案，例如：`backend/bruno/[module]/[endpoint1].bru`、`backend/bruno/[module]/[endpoint2].bru`…）— skeleton only，每個 endpoint 對應一個 .bru 檔案
 
-> **PR 邊界**：T006/T006b 合併為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
+> **PR 邊界**：T006/T006b/T006c 合併為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 ### PR-FOUND-FE-API：前端 API 基礎建設（依賴 PR-FOUND-FE-TYPES merged；可與 PR-FOUND-BE-* 並行）
 
@@ -375,12 +376,14 @@ pnpm exec playwright test                # E2E gate
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
-- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BE-API` 含 T006b Bruno skeleton 任務
+- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BE-API` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.18.0 | 2026-06-03 | 拆分 T006b 為 T006b（集合初始化，明列 bruno.json + environments/*.bru）與 T006c（endpoint skeleton，每個 .bru 逐一明列）；更新 PR-FOUND-BE-API 邊界與驗證清單，對齊 testing-constitution Rule II（每個 artifact-producing 任務必須列出所有產出檔案） |
+| 1.17.0 | 2026-06-03 | （版本號保留，與 1.16.0 合併）|
 | 1.16.0 | 2026-06-03 | 移除 T010c 的 [P] marker（PR-FOUND-FE-TYPES 必須在 PR-FOUND-FE-API 之前合併，service 層依賴型別先存在）；更新 PR-FOUND-FE-API 標頭明示依賴 FE-TYPES；修正平行執行範例（移除誤導性的 schema+API route 並行示範）；補齊 US2 完整測試層（T022a service / T022b route / T022c permission / T023 FE component）並重新編號 US2 實作任務（T025–T030）；更新 Task Generation Rule §4 說明 |
 | 1.15.0 | 2026-06-03 | 移除 T005（PR-FOUND-BE-SCHEMA）的 [P] marker（依賴 migration PR 合併，有未完成相依性）；加入 PR-FOUND-FE-TYPES 邊界（T010c）建立前端 TypeScript 型別合約，Task Generation Rule §4 補充型別策略，驗證清單補齊；移除 T013c 的 [P] marker（與 T013b 同檔案，不可平行） |
 | 1.14.0 | 2026-06-03 | 修正 Phase 2 與 US2 任務編號順序，移除 schema-dependent API task 的 parallel marker，補齊 migration downgrade 與 routing 任務的具體檔案路徑 |

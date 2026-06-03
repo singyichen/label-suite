@@ -64,7 +64,7 @@ Team Lead updates `tasks.md` checkboxes serially after teammate quality gates pa
 
 | Teammate | Owns | Must Not Touch |
 |---|---|---|
-| `senior-backend` | `backend/app/` | `frontend/`, `backend/migrations/` |
+| `senior-backend` | `backend/app/`, `backend/bruno/` | `frontend/`, `backend/migrations/` |
 | `senior-frontend` | `frontend/src/` | `backend/`, `frontend/src/locales/` |
 | `senior-i18n` | `frontend/src/locales/` | all other directories |
 | `senior-dba` | `backend/migrations/` | `backend/app/`, `frontend/` |
