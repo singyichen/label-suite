@@ -40,6 +40,30 @@ The application detects which tier to use based on the `DATABASE_URL` environmen
 
 `.env.example` will document both options with inline comments (to be updated in the implementation PR alongside `docker-compose.yml`).
 
+## Repo Directory Structure
+
+The following repo-root layout ships with this tiered strategy. Implementation PRs must create these files before `docker compose up` can be used as the bootstrap command.
+
+```text
+label-suite/
+├── backend/
+│   ├── Dockerfile              # FastAPI production image
+│   ├── Dockerfile.dev          # Development image with hot reload
+│   └── app/                    # FastAPI source (created during implementation)
+├── frontend/
+│   ├── Dockerfile              # React production image (build + nginx static serving)
+│   ├── Dockerfile.dev          # Development image (Vite dev server)
+│   └── src/                    # React source (created during implementation)
+├── nginx/
+│   └── nginx.conf              # Reverse proxy: / → frontend, /api → backend
+├── data/                       # SQLite database mount point (gitignored)
+├── docker-compose.yml          # Quick start: SQLite, single command bootstrap
+├── docker-compose.prod.yml     # Production: PostgreSQL + Redis
+├── docker-compose.dev.yml      # Development: hot reload, source code mounts
+├── .env.example                # Environment variable template with inline comments
+└── README.md                   # Quick start instructions
+```
+
 ## Consequences
 
 ### Easier

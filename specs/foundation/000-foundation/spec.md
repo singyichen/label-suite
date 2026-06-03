@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.11.4
+版本: 1.11.5
 狀態: Draft
 ---
 
@@ -785,7 +785,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **SC-042**：i18n CI 或 review checklist 必須檢查 module namespace、fallback language、missing key 與 hardcoded user-facing strings；日期、時間、數字與貨幣格式不得手寫 locale-specific formatting。
 - **SC-043**：non-CRUD workflow endpoint 必須在 feature spec 或 OpenAPI example 中標示使用 subresource、state-transition resource 或 command resource pattern；動詞式 URI 必須有明確豁免理由。
 - **SC-044**：feature-critical complex UI 必須有 interaction story、component test 或 Playwright component-equivalent coverage；review checklist 必須確認 Default、Loading、Error、Disabled 與至少一條主要互動路徑。
-- **SC-045**：local bootstrap verification 必須確認 `.env.example`、local service profile、seed data 策略、OpenAPI export / type generation command 與 one-command verification 或等效命令文件存在且可執行。CI 驗證以 `test -f .env.example && test -f docker-compose.local.yml` 或 `scripts/verify-bootstrap.sh` 等效 shell check 執行；bootstrap script 統一放於 `scripts/` 目錄，不得只依賴文件描述作為 CI 通過依據。
+- **SC-045**：local bootstrap verification 必須確認 `.env.example`、local service profile、seed data 策略、OpenAPI export / type generation command 與 one-command verification 或等效命令文件存在且可執行。CI 驗證以 `test -f .env.example && test -f docker-compose.yml` 或 `scripts/verify-bootstrap.sh` 等效 shell check 執行；bootstrap script 統一放於 `scripts/` 目錄，不得只依賴文件描述作為 CI 通過依據。
 
 ---
 
@@ -816,6 +816,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.11.5 | 2026-06-03 | 修正 SC-045 命名衝突：將 `docker-compose.local.yml` 改為 `docker-compose.yml`，對齊 ADR-024 zero-friction quick-start 決定 |
 | 1.11.4 | 2026-06-03 | 補充上游相依性：新增 ADR-024（SQLite / PostgreSQL 分層資料庫策略），對應既有 FR-130 與 SC-045 bootstrap contract |
 | 1.11.3 | 2026-06-02 | 依 PR review-resolve 修正：SC-036 移除 Django 固有的 `override_settings` 改為 FastAPI 適用的 pytest monkeypatch / dependency_overrides 說明；對齊分支命名慣例，STATUS.md 功能分支欄位改回 `feat/foundation/000-foundation` |
 | 1.11.2 | 2026-06-02 | 依 PR code review 修正：FR-040 parenthetical 改為「schema 定義見 FR-115」移除自我矛盾措辭、補充 ADR-022 上游依賴、補記 SC-029~031 changelog 歸屬 |
