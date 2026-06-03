@@ -3,6 +3,7 @@
 **Status**: Accepted
 **Date**: 2026-06-03
 **Amends**: ADR-005 — quick-start scope only; ADR-005 PostgreSQL requirement remains binding for production deployments
+**Amends**: ADR-001 — root `docker-compose.yml` no longer starts PostgreSQL by default; the ADR-001 single-compose full-stack model is preserved in `docker-compose.prod.yml`
 **Amends**: ADR-008 — local `docker-compose.yml` default changes from PostgreSQL to SQLite; `docker-compose.prod.yml` preserves the ADR-008 full PostgreSQL stack
 
 ## Context
@@ -12,6 +13,7 @@ ADR-005 established PostgreSQL as the primary database for production use. Howev
 The project will be open-sourced. A core open-source DX goal is: **clone → `docker compose up` → working system in under 3 minutes**, with zero manual database setup.
 
 Key tension:
+
 - PostgreSQL (ADR-005): correct for production, concurrent multi-user, JSONB, ACID
 - SQLite: zero-config, file-based, ideal for single-user demo and quick evaluation
 
@@ -85,7 +87,7 @@ label-suite/
 The following features are explicitly **PostgreSQL-only** in both tiers. The SQLite quick-start tier accepts these limitations because it targets single-user evaluation, not full-feature production use:
 
 - **Atomic upsert (FR-083):** Celery background-job DB writes that require `insert().on_conflict_do_update()` remain PostgreSQL-only. In the SQLite quick-start tier, the single-user context eliminates race conditions, so a simple `session.merge()` is acceptable. Implementation must use dialect detection to switch strategies.
-- **JSONB task configs (ADR-010):** Declare the task config column with `sa.JSON.with_variant(sa.JSONB(), 'postgresql')`. On PostgreSQL this preserves JSONB storage and operators as required by ADR-010; on SQLite it maps to `TEXT`. JSONB-specific operators (e.g., `@>`, `#>>`) must be avoided in any code path that runs against the SQLite tier — use SQLAlchemy's dialect-agnostic JSON accessors instead.
+- **JSONB task configs (ADR-010):** Declare the task config column with `JSON().with_variant(JSONB(), 'postgresql')` where `JSON` is from `sqlalchemy` and `JSONB` is from `sqlalchemy.dialects.postgresql`. On PostgreSQL this preserves JSONB storage and operators as required by ADR-010; on SQLite it maps to `TEXT`. JSONB-specific operators (e.g., `@>`, `#>>`) must be avoided in any code path that runs against the SQLite tier — use SQLAlchemy's dialect-agnostic JSON accessors instead.
 
 ### Out of Scope
 
