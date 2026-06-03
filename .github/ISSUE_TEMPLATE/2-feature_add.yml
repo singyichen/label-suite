@@ -1,0 +1,45 @@
+name: "✨ Feature Add / 功能新增"
+description: "提出全新功能需求與規格"
+title: "[功能新增] "
+labels: ["功能新增"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ✨ Feature Add / 功能新增
+        用於「新增全新功能 / 新流程 / 新頁面」。請填必要資訊，其餘視情況補充。
+
+  - type: textarea
+    id: user_scenario
+    attributes:
+      label: "👤 使用情境 / 功能範圍"
+      description: "誰會用？在什麼情境下用？要完成什麼？要做哪些/不做哪些，避免需求膨脹"
+      placeholder: |
+        As a ___
+        I want to ___
+        So that ___
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: "✅ 任務項目"
+      description: "待完成事項清單"
+      value: |
+        - [ ] 
+        - [ ] 
+    validations:
+      required: false
+
+  - type: textarea
+    id: refs
+    attributes:
+      label: "🖼️ Mock / 參考資料（選填）"
+      description: "有 wireframe、流程圖、參考連結再貼"
+      value: |
+        - Mock / Wireframe：
+        - 流程圖：
+        - 相關連結：
+    validations:
+      required: false

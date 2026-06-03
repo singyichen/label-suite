@@ -1,0 +1,57 @@
+name: "📚 Documentation（文件需求/修正）"
+description: "新增、補齊或修正文件（README / Spec / API Doc / SOP 等）"
+title: "[Docs] "
+labels: ["文件需求/修正"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📚 Documentation
+        用於文件新增/修正，避免口耳相傳到最後變都市傳說。
+
+
+  - type: textarea
+    id: location
+    attributes:
+      label: "📍 文件位置 / 連結"
+      description: "請貼文件連結或路徑"
+      value: |
+        - 文件連結：
+        - 位置（repo path / Notion / Drive）：
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "🔎 現況問題"
+      description: "現在文件缺什麼/哪裡不對/哪裡過期？"
+      placeholder: |
+        - 缺漏/錯誤點：
+        - 造成的影響：
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_update
+    attributes:
+      label: "✅ 預期補充/修正內容"
+      description: "希望補哪些段落/圖/範例？"
+      placeholder: |
+        - 需要新增：
+        - 需要修正：
+        - 需要刪除/更新：
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "🧩 參考資料（選填）"
+      description: "任何能幫助寫文件的資料"
+      placeholder: |
+        - 相關 issue/PR：
+        - 截圖/流程圖：
+        - 其他連結：
+    validations:
+      required: false

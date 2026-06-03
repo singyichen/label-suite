@@ -1,0 +1,72 @@
+name: "✨ Feature Change / 功能修改"
+description: "提出既有功能的調整需求"
+title: "[功能修改] "
+labels: ["功能修改"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ✨ Feature Change / 功能修改
+        用於「既有功能的行為／流程／畫面調整」。
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: "🎯 修改目的"
+      description: "簡述此次修改的目標與背景"
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: "✅ 任務項目"
+      description: "待完成事項清單"
+      value: |
+        - [ ] 
+        - [ ] 
+    validations:
+      required: false
+
+  - type: textarea
+    id: feature_desc
+    attributes:
+      label: "📖 功能說明"
+      description: "說明功能運作方式與使用情境"
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected_output
+    attributes:
+      label: "📤 預期輸出"
+      description: "說明修改後預期達成的結果"
+    validations:
+      required: false
+
+  - type: textarea
+    id: before_screenshot
+    attributes:
+      label: "🖼️ 原始畫面"
+      description: "附上相關截圖"
+      placeholder: "拖拉圖片上來或貼連結"
+    validations:
+      required: false
+
+  - type: textarea
+    id: after_screenshot
+    attributes:
+      label: "🆕 修改後畫面"
+      description: "附上相關截圖"
+      placeholder: "拖拉圖片上來或貼連結"
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: "📝 備註"
+      description: "補充說明或相關連結"
+    validations:
+      required: false

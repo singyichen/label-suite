@@ -1,0 +1,53 @@
+name: "❓ Support / Question（支援/提問）"
+description: "非 bug/需求的提問、卡關求救、使用支援"
+title: "[Question] "
+labels: ["提問"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ❓ Support / Question
+        不是你笨，是問題太會躲。把你看到的都寫出來，我們一起抓它。
+
+  - type: textarea
+    id: question
+    attributes:
+      label: "📌 問題 / 想問的事"
+      description: "請清楚描述你卡在哪裡"
+      placeholder: "例如：為什麼 staging 的 GA 匯入會少一欄？"
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: "🧩 背景 / 你在做什麼"
+      description: "提供情境，方便理解"
+      value: |
+        - 我在做：
+        - 目標是：
+    validations:
+      required: false
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: "🔁 已嘗試過的方式"
+      description: "讓別人不要重複你走過的冤枉路"
+      value: |
+        - 我試過：
+        - 結果：
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "🖼️ 相關截圖/Log/連結（選填）"
+      description: "有圖有真相，有 log 有方向"
+      placeholder: |
+        - 截圖 / 錄影：
+        - Console / API log：
+        - 相關連結：
+    validations:
+      required: false

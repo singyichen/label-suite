@@ -1,0 +1,66 @@
+name: "🐛 Bug Report / 錯誤回報"
+description: "回報系統異常、錯誤或不符合預期的行為"
+title: "[Bug] "
+labels: ["錯誤回報"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Bug Report / 錯誤回報
+        請盡量提供「可重現」的資訊，方便快速定位問題。
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "📌 問題描述"
+      description: "簡短說明你遇到的問題是什麼"
+      placeholder: "例如：登入後跳回首頁，且顯示未授權"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "🔁 重現步驟"
+      description: "請提供可以重現問題的操作流程"
+      placeholder: |
+        1. 前往 ...
+        2. 點擊 ...
+        3. 輸入 ...
+        4. 發生錯誤
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected_vs_actual
+    attributes:
+      label: "✅ 預期結果 vs ❌ 實際結果"
+      description: "你原本以為會發生什麼？實際上發生了什麼？"
+      value: |
+        **預期結果：**
+        （應該看到什麼/做到什麼）
+
+        **實際結果：**
+        （實際看到什麼/報什麼錯）
+    validations:
+      required: false
+
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "🧾 錯誤訊息 / Console / Log（選填）"
+      description: "貼上錯誤訊息、console log 或 API 回應"
+      placeholder: "可貼文字或截圖"
+    validations:
+      required: false
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: "🖼️ 截圖 / 錄影（選填）"
+      description: "有畫面或操作錄影更好"
+      placeholder: "拖拉圖片上來或貼連結"
+    validations:
+      required: false
+
