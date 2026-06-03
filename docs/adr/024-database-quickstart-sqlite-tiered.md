@@ -38,6 +38,11 @@ The application detects which tier to use based on the `DATABASE_URL` environmen
   - The `./data` directory must be mounted as a persistent Docker volume; both the `backend` and `worker` containers must mount the same volume path so writes from the Celery worker are visible to API reads
 - Set to `postgresql+asyncpg://...` → PostgreSQL (ADR-005 behavior); the worker derives `postgresql+psycopg2://...` the same way
 
+Implementation PRs must add the required runtime drivers with the database configuration change:
+
+- `aiosqlite` for the FastAPI async SQLite engine.
+- `psycopg2`/`psycopg2-binary` for the synchronous PostgreSQL worker engine. ADR-005's existing `asyncpg` dependency remains required for the FastAPI async PostgreSQL engine.
+
 `docker-compose.yml` will ship with SQLite as default (to be created in the implementation PR). A separate `docker-compose.prod.yml` will provide the full PostgreSQL stack with managed volumes and PostgreSQL monitoring (postgres-exporter, saturation alerts per foundation spec). The SQLite quick-start compose file substitutes a filesystem health check for the database — PostgreSQL monitoring requirements from the foundation spec apply to the production profile (`docker-compose.prod.yml`) only.
 
 `.env.example` will document both options with inline comments (to be updated in the implementation PR alongside `docker-compose.yml`).
@@ -82,11 +87,11 @@ label-suite/
 - Migration tooling (Alembic) must be tested against both dialects, utilizing batch operations (`with op.batch_alter_table`) to accommodate SQLite's limited `ALTER TABLE` capabilities; set `render_as_batch=True` in `env.py`.
 - SQLite's lack of concurrent write support means the quick-start tier is explicitly **not recommended for multi-user production use** — this must be documented clearly in README.
 
-### PostgreSQL-Only Paths (Unchanged)
+### Dialect-Specific Paths
 
-The following features are explicitly **PostgreSQL-only** in both tiers. The SQLite quick-start tier accepts these limitations because it targets single-user evaluation, not full-feature production use:
+The following behaviors require explicit dialect-aware implementation. The SQLite quick-start tier accepts limited feature coverage because it targets single-user evaluation, not full-feature production use, but it must not weaken the foundation spec's data-integrity guarantees for background-job writes:
 
-- **Atomic upsert (FR-083):** Celery background-job DB writes that require `insert().on_conflict_do_update()` remain PostgreSQL-only. In the SQLite quick-start tier, the single-user context eliminates race conditions, so a simple `session.merge()` is acceptable. Implementation must use dialect detection to switch strategies.
+- **Atomic upsert (FR-083):** Celery background-job DB writes must remain atomic in both tiers. Use SQLAlchemy dialect detection to choose PostgreSQL `sqlalchemy.dialects.postgresql.insert().on_conflict_do_update()` / `on_conflict_do_nothing()` or SQLite `sqlalchemy.dialects.sqlite.insert().on_conflict_do_update()` / `on_conflict_do_nothing()`. Do not use `session.merge()` or check-then-act patterns in either tier.
 - **JSONB task configs (ADR-010):** Declare the task config column with `JSON().with_variant(JSONB(), 'postgresql')` where `JSON` is from `sqlalchemy` and `JSONB` is from `sqlalchemy.dialects.postgresql`. On PostgreSQL this preserves JSONB storage and operators as required by ADR-010; on SQLite it maps to `TEXT`. JSONB-specific operators (e.g., `@>`, `#>>`) must be avoided in any code path that runs against the SQLite tier — use SQLAlchemy's dialect-agnostic JSON accessors instead.
 
 ### Out of Scope
