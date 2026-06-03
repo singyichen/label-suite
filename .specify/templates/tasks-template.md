@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.16.0
+版本: 1.17.0
 狀態: Draft
 ---
 
@@ -66,8 +66,9 @@
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
 - [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+- [ ] T006b [P] 建立本功能的 Bruno 請求草稿（`backend/bruno/[module]/`）— skeleton only，依 plan.md API 清單 Bruno 檔案欄；若 `backend/bruno/` 尚未存在則一併建立 `bruno.json` 與 `environments/`
 
-> **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T006/T006b 合併為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 ### PR-FOUND-FE-API：前端 API 基礎建設（依賴 PR-FOUND-FE-TYPES merged；可與 PR-FOUND-BE-* 並行）
 
@@ -137,8 +138,9 @@
 #### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
 
 - [ ] T018 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）— 含 auth dependency
+- [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth header 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
 
-> **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018/T018b 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 #### PR-US1-FE-COMPONENT：前端元件實作（含 component test + Storybook）
 
@@ -188,8 +190,9 @@
 #### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
 - [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
+- [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth header 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
 
-> **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027/T027b 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 #### PR-US2-FE-COMPONENT：前端元件實作（含 component test + Storybook）
 
@@ -372,6 +375,7 @@ pnpm exec playwright test                # E2E gate
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
+- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BE-API` 含 T006b Bruno skeleton 任務
 
 ## Changelog
 

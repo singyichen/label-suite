@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.8.1
+版本: 1.8.2
 狀態: Draft
 ---
 
@@ -173,13 +173,13 @@ sequenceDiagram
 
 2. **後端 API 清單** 從功能需求列出所有需要的端點
 
-   | Method | Path | System Role | Task Role | Auth Dependency | 說明 |
-   |--------|------|-------------|-----------|----------------|------|
-   | GET | `/api/v1/[module]/[resource]` | user | annotator+ | `get_current_user` | 取得列表（分頁） |
-   | POST | `/api/v1/[module]/[resource]` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 建立 |
-   | GET | `/api/v1/[module]/[resource]/{id}` | user | annotator+ | `get_current_user` | 取得單筆（無權限回 404） |
-   | PATCH | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 更新 |
-   | DELETE | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 刪除 |
+   | Method | Path | System Role | Task Role | Auth Dependency | 說明 | Bruno 檔案 |
+   |--------|------|-------------|-----------|----------------|------|-----------|
+   | GET | `/api/v1/[module]/[resource]` | user | annotator+ | `get_current_user` | 取得列表（分頁） | `backend/bruno/[module]/list-[resource].bru` |
+   | POST | `/api/v1/[module]/[resource]` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 建立 | `backend/bruno/[module]/create-[resource].bru` |
+   | GET | `/api/v1/[module]/[resource]/{id}` | user | annotator+ | `get_current_user` | 取得單筆（無權限回 404） | `backend/bruno/[module]/get-[resource].bru` |
+   | PATCH | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 更新 | `backend/bruno/[module]/update-[resource].bru` |
+   | DELETE | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 刪除 | `backend/bruno/[module]/delete-[resource].bru` |
 
    > **Auth 規則**：task-scoped endpoint 必須驗證 `task_membership`；無權限時回 404（不洩漏資源存在）。`super_admin` 可bypass task role check。
 
@@ -287,7 +287,7 @@ sequenceDiagram
    | 元件渲染 / 互動 / 邊界狀態 | 元件測試 | Vitest + Testing Library | `src/features/[module]/__tests__/[Feature].test.tsx` |
    | 完整用戶流程 | E2E | Playwright | `e2e/[module]/[feature].spec.ts` |
 
-**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
+**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單（含 Bruno 檔案欄）、`backend/bruno/[module]/` Bruno 請求草稿（skeleton — 對應 API 清單所有 endpoint）、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
 
 ---
 
@@ -299,7 +299,7 @@ sequenceDiagram
 
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
-- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）
+- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）+ Bruno `.bru` 更新任務（`PR-USN-BE-API`，依 FR-131）
 - **後端**：每個實體 → 模型建立任務 [P] + migration 任務（含 DB index）
 - **前端**：路由分析 → route 註冊任務（含 route guard 設定）
 - **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）

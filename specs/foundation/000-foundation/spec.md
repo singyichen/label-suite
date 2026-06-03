@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.11.5
+版本: 1.11.6
 狀態: Draft
 ---
 
@@ -704,6 +704,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 ### 功能需求
 
 - **FR-130**：系統必須提供可重現的 local bootstrap contract，至少包含 `.env.example`、Docker Compose local profile 或等效服務啟動方式、seed data 策略、OpenAPI export / frontend type generation command，以及 one-command verification 或清楚列出的本機驗證命令。
+- **FR-131**：任何修改 `backend/app/api/routes/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth header 與 example response）；PR diff 中出現 `routes/` 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`。（參見 ADR-025）
 
 ---
 
@@ -722,6 +723,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 | [ADR-021](../../../docs/adr/021-jwt-refresh-token-auth.md) | JWT + Refresh Token 策略 |
 | [ADR-022](../../../docs/adr/022-task-state-machine-location.md) | Task state machine 位置約束 |
 | [ADR-024](../../../docs/adr/024-database-quickstart-sqlite-tiered.md) | Tiered database strategy — SQLite quick start、PostgreSQL production（FR-130、SC-045 bootstrap contract） |
+| [ADR-025](../../../docs/adr/025-api-collection-bruno.md) | API collection tool — Bruno `.bru` files、git-friendly per-endpoint requests（FR-131） |
 | [Design System Master](../../../design/system/MASTER.md) | Frontend design tokens、component states、interaction pattern |
 | [IA v1.4.3](../../../docs/product/ia/information-architecture.md) | §6.1 Foundation Spec 關係 |
 | [React Design Patterns and Best Practices for 2025](https://www.telerik.com/blogs/react-design-patterns-best-practices) | Function components、custom hooks、Context state boundary、type-safe props/hooks、Vite、utility-first styling、design system baseline |
@@ -816,6 +818,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.11.6 | 2026-06-03 | 新增 F-18 FR-131（Bruno API collection gate）與 ADR-025 上游相依性；補充 Bruno collection 路徑約束與 PR gate 規則 |
 | 1.11.5 | 2026-06-03 | 修正 SC-045 命名衝突：將 `docker-compose.local.yml` 改為 `docker-compose.yml`，對齊 ADR-024 zero-friction quick-start 決定 |
 | 1.11.4 | 2026-06-03 | 補充上游相依性：新增 ADR-024（SQLite / PostgreSQL 分層資料庫策略），對應既有 FR-130 與 SC-045 bootstrap contract |
 | 1.11.3 | 2026-06-02 | 依 PR review-resolve 修正：SC-036 移除 Django 固有的 `override_settings` 改為 FastAPI 適用的 pytest monkeypatch / dependency_overrides 說明；對齊分支命名慣例，STATUS.md 功能分支欄位改回 `feat/foundation/000-foundation` |
