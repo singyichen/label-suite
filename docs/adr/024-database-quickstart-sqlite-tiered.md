@@ -30,10 +30,13 @@ Support two database tiers via environment configuration:
 
 The application detects which tier to use based on the `DATABASE_URL` environment variable:
 
-- Not set → SQLite (`sqlite+aiosqlite:///./data/label_suite.db` — the `./data` directory must be mounted as a persistent Docker volume; both the `backend` and `worker` containers must mount the same volume path so writes from the Celery worker are visible to API reads)
-- Set to `postgresql+asyncpg://...` → PostgreSQL (ADR-005 behavior)
+- Not set → SQLite:
+  - **FastAPI (async):** `sqlite+aiosqlite:///./data/label_suite.db`
+  - **Celery worker (sync):** `sqlite:///./data/label_suite.db` — the worker derives a sync URL by stripping the `+aiosqlite` scheme prefix, because Celery runs in synchronous Python threads and cannot use an async engine (foundation spec constraint)
+  - The `./data` directory must be mounted as a persistent Docker volume; both the `backend` and `worker` containers must mount the same volume path so writes from the Celery worker are visible to API reads
+- Set to `postgresql+asyncpg://...` → PostgreSQL (ADR-005 behavior); the worker derives `postgresql+psycopg2://...` the same way
 
-`docker-compose.yml` will ship with SQLite as default (to be created in the implementation PR). A separate `docker-compose.prod.yml` will provide the full PostgreSQL stack with managed volumes.
+`docker-compose.yml` will ship with SQLite as default (to be created in the implementation PR). A separate `docker-compose.prod.yml` will provide the full PostgreSQL stack with managed volumes and PostgreSQL monitoring (postgres-exporter, saturation alerts per foundation spec). The SQLite quick-start compose file substitutes a filesystem health check for the database — PostgreSQL monitoring requirements from the foundation spec apply to the production profile (`docker-compose.prod.yml`) only.
 
 `.env.example` will document both options with inline comments (to be updated in the implementation PR alongside `docker-compose.yml`).
 
