@@ -206,7 +206,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | FR-DS01 | 資料集分析模組入口（`/dataset-analysis`）列出使用者具 `project_leader` 或 `reviewer` 角色的任務 | P1 | spec 016 |
 | FR-DS02 | 統計總覽 tab（`?tab=stats`）顯示共用指標：Sentence 數量、Token 數量、整體完成率 | P1 | spec 016 |
 | FR-DS03 | 統計總覽依 `task_type` 動態顯示特定指標（分類：標籤分佈 + 共現矩陣；VA 評分：Valence/Arousal 分佈；序列標記：Entity 類型分佈；關係抽取：Triple 統計；句對：分佈統計） | P1 | spec 016；functional-map |
-| FR-DS04 | 品質監控 tab（`?tab=quality`）依 `task_type` 顯示對應 IAA 指標：分類任務使用 Krippendorff's Alpha（nominal）；VA 評分使用 ICC；序列標記使用 Pairwise Entity-level F1；關係抽取使用 Pairwise Triple-level F1 | P1 | spec 017；IA §4 |
+| FR-DS04 | 品質監控 tab（`?tab=quality`）依 `task_type` 顯示對應 IAA 指標：分類任務使用 Krippendorff's Alpha（nominal）；VA 評分使用 ICC；序列標記使用 Pairwise Entity-level F1；關係抽取使用 Pairwise Triple-level F1；句對任務使用 sentence-pair agreement metrics | P1 | spec 017；IA §4 |
 | FR-DS05 | 品質監控 tab 提供異常偵測（標記速度異常、離群標記值）、標記一致性偏離分析（1.5x STD / 2x STD）、標記員個別速度與 IAA 比較 | P2 | spec 017 |
 
 ### 4.7 模組：admin（系統管理模組）
@@ -266,7 +266,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | NFR-ID | 描述 | 來源 |
 |--------|------|------|
 | NFR-I01 | 前端使用 i18n namespace 管理翻譯（例：`t('task-management:config_builder.label_name')`） | frontend/CLAUDE.md |
-| NFR-I02 | 每個模組各自維護翻譯檔（`locales/zh-TW/[module].json` 與 `locales/en/[module].json`） | frontend/CLAUDE.md |
+| NFR-I02 | 每個模組各自維護翻譯檔（`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`） | frontend/CLAUDE.md |
 | NFR-I03 | UI 語言目前支援 Traditional Chinese（ZH）與 English（EN）；Demo 以 ZH 為主要展示語言 | impact-map；story-map |
 
 ### 5.5 可靠性（Reliability）

@@ -34,6 +34,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    - Governance section must cover: amendment procedure, versioning policy, compliance review
 
 4. **Consistency propagation** — actively read and update each dependent file:
+   - `specs/_governance/backend-constitution.md` — ensure backend domain rules reflect any affected main-constitution changes
+   - `specs/_governance/frontend-constitution.md` — ensure frontend domain rules reflect any affected main-constitution changes
+   - `specs/_governance/testing-constitution.md` — ensure testing domain rules reflect any affected main-constitution changes
+   - `.specify/memory/backend-constitution.md` — sync from the backend domain source after any backend-domain update
+   - `.specify/memory/frontend-constitution.md` — sync from the frontend domain source after any frontend-domain update
+   - `.specify/memory/testing-constitution.md` — sync from the testing domain source after any testing-domain update
    - `.specify/templates/plan-template.md` — ensure Constitution Check section reflects updated principles
    - `.specify/templates/spec-template.md` — ensure scope/requirements alignment
    - `.specify/templates/tasks-template.md` — ensure task categorization matches principles
@@ -59,6 +65,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    Removed sections: (if any)
 
    Templates sync status:
+   - specs/_governance/backend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - specs/_governance/frontend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - specs/_governance/testing-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - .specify/memory/backend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - .specify/memory/frontend-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
+   - .specify/memory/testing-constitution.md: ✅ Updated | ⚠ Needs manual review | N/A
    - .specify/templates/plan-template.md: ✅ Updated | ⚠ Needs manual review
    - .specify/templates/spec-template.md: ✅ Updated | ⚠ Needs manual review
    - .specify/templates/tasks-template.md: ✅ Updated | ⚠ Needs manual review

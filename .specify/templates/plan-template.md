@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.8.0
+版本: 1.8.1
 狀態: Draft
 ---
 
@@ -266,7 +266,7 @@ sequenceDiagram
    | `[feature].actions.create` | `建立` | `[Feature]Actions` button |
    | ... | | |
 
-   > i18n 檔案路徑：`frontend/locales/zh-TW/[module].json` 與 `frontend/locales/en/[module].json`
+   > i18n 檔案路徑：`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`
 
 4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
@@ -304,7 +304,7 @@ sequenceDiagram
 - **前端**：路由分析 → route 註冊任務（含 route guard 設定）
 - **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
 - **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務（page 層不寫 story）
-- **前端**：i18n key 清單 → `locales/zh-TW/[module].json` 與 `locales/en/[module].json` 兩個獨立更新任務（各觸及一個檔案）
+- **前端**：i18n key 清單 → `frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json` 兩個獨立更新任務（各觸及一個檔案）
 - 共用元件（shared/）→ 獨立任務，先於依賴它的 feature 任務
 
 **排序策略**：
@@ -349,6 +349,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.8.1 | 2026-06-03 | 修正 i18n key 清單與任務產生策略中的 locales 路徑為 `frontend/src/locales/{zh-TW,en}/[module].json`，對齊 frontend-constitution Rule IX |
 | 1.8.0 | 2026-06-03 | 移除已廢棄的 XXI/XXII/XXIV/XXVI/XXVIII 原則 checkboxes（已移入 domain constitutions）；新增 Domain Constitution Loading 小節（後端/前端/測試各一個 checkbox），對齊 constitution v1.31.0；Phase 2 i18n 任務描述改為兩個獨立任務 |
 | 1.7.2 | 2026-05-29 | 憲章檢查 VII 加入 Storybook story 要求：所有非 page 元件需規劃 Default + 邊界狀態 story（配合憲章 v1.29.1） |
 | 1.7.1 | 2026-05-29 | 憲章檢查 V 補充 Human Handoff Readiness：命名自說明、入口點兩層內可定位（配合憲章 v1.29.0） |

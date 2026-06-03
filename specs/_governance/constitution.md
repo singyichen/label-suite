@@ -24,9 +24,11 @@ Removed sections:
 Templates sync status:
 - .claude/commands/speckit.plan.md: Updated — load applicable domain constitutions by affected scope
 - .claude/commands/speckit.analyze.md: Updated — include applicable domain constitutions in the ruleset
+- .claude/commands/speckit.constitution.md: Updated — propagate main-constitution amendments through domain constitution sources and memory caches
 - AGENTS.md: Updated — document required domain constitution loading
-- .specify/templates/plan-template.md: Updated — replaced stale XXI/XXII/XXIV/XXVI/XXVIII principle checkboxes with Domain Constitution Loading section; bumped to v1.8.0
-- .specify/templates/tasks-template.md: Updated — split T010 into T010a (zh-TW) and T010b (en) to comply with testing-constitution Rule II (one file per task); bumped to v1.10.0
+- .specify/templates/plan-template.md: Updated — replaced stale XXI/XXII/XXIV/XXVI/XXVIII principle checkboxes with Domain Constitution Loading section, corrected frontend i18n paths to `frontend/src/locales/{zh-TW,en}/`, and bumped to v1.8.1
+- .specify/templates/tasks-template.md: Updated — split T010 into T010a (zh-TW) and T010b (en), split frontend foundation into constitution-compliant PR boundaries, and bumped to v1.11.0
+- .specify/templates/checklist-template.md: Updated — replaced stale XXI/XXII/XXVIII/XXX principle citations with applicable domain constitution citations and bumped to v1.8.0
 
 Deferred TODOs: none
 -->
@@ -267,7 +269,7 @@ Constitution principles take precedence over all other conventions.
 **Amendment Procedure**:
 - Update `specs/_governance/constitution.md` first
 - Sync the full content to `.specify/memory/constitution.md` as the tool cache
-- Propagate amendments to dependent domain constitutions, templates, and `.claude/commands/speckit.*.md`
+- Propagate amendments to dependent domain constitutions in `specs/_governance/`, their `.specify/memory/` tool caches, affected `.specify/templates/`, and `.claude/commands/speckit.*.md`
 - Explain the reason in the commit message: `docs: amend constitution to vX.Y.Z ([reason])`
 - Use `/speckit.constitution` to automate propagation checks when possible
 

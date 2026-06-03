@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.9.0
+版本: 1.11.0
 狀態: Draft
 ---
 
@@ -66,15 +66,25 @@
 
 > **PR 邊界**：T005/T006/T011/T012 合併為獨立 `PR-FOUND-BE`。`[Principle: X]`
 
-### PR-FOUND-FE：前端基礎建設（可與 PR-FOUND-BE 並行）
+### PR-FOUND-FE-API：前端 API 基礎建設（可與 PR-FOUND-BE 並行）
 
 - [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
 - [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
+
+> **PR 邊界**：T007/T008 合併為獨立 `PR-FOUND-FE-API`（API service/query keys + MSW handlers）。`[Principle: X; Frontend Constitution XVI]`
+
+### PR-FOUND-FE-ROUTING：前端路由基礎建設（可與 PR-FOUND-FE-API 並行）
+
 - [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/` — 依 plan.md 路由分析）
+
+> **PR 邊界**：T009 作為獨立 `PR-FOUND-FE-ROUTING`（router registration + route guard）。`[Principle: X; Frontend Constitution XVI]`
+
+### PR-FOUND-FE-I18N：前端 i18n 基礎建設（可與 PR-FOUND-FE-API 並行）
+
 - [ ] T010a [P] 新增 i18n keys — zh-TW（`frontend/src/locales/zh-TW/[module].json` — 依 plan.md i18n key 清單）
 - [ ] T010b [P] 新增 i18n keys — en（`frontend/src/locales/en/[module].json` — 依 plan.md i18n key 清單）
 
-> **PR 邊界**：T007/T008/T009/T010a/T010b 合併為獨立 `PR-FOUND-FE`，與 `PR-FOUND-BE` 完全並行（無 breaking contract change 時）。`[Principle: X]`
+> **PR 邊界**：T010a/T010b 合併為獨立 `PR-FOUND-FE-I18N`（i18n namespace files）。`[Principle: X; Frontend Constitution XVI; Testing Constitution II]`
 
 **檢查點**：基礎建設完成 — 可開始實作使用者故事
 
@@ -301,7 +311,7 @@ pnpm exec playwright test                # E2E gate
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
-- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE 三個獨立 PR 邊界
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N 五個獨立 PR 邊界
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE 與 PR-USN-FE 兩個獨立 PR 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
@@ -310,6 +320,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.11.0 | 2026-06-03 | 將 PR-FOUND-FE 拆分為 PR-FOUND-FE-API、PR-FOUND-FE-ROUTING、PR-FOUND-FE-I18N，避免 service/MSW/router/i18n 基礎建設合併到同一 review unit，對齊 frontend-constitution Rule XVI |
 | 1.10.0 | 2026-06-03 | T010 拆為 T010a（zh-TW）與 T010b（en）兩個獨立任務（各觸及一個檔案），對齊 testing-constitution Rule II（Task Decomposition For Testability）；更新 PR-FOUND-FE 邊界清單、任務產生規則 §6、驗證清單 |
 | 1.9.0 | 2026-06-02 | Phase 2 拆分為三個獨立 PR 邊界（PR-FOUND-MIGRATION / PR-FOUND-BE / PR-FOUND-FE）；Phase 3/4 實作區塊加入 PR-USN-BE / PR-USN-FE 邊界標記；驗證清單新增四項 PR 粒度檢查；對齊 constitution v1.30.0 Principle I、X、XVIII |
 | 1.8.1 | 2026-05-28 | 將 **Story Goal** 改為 **故事目標**（中文化）；驗證清單用詞同步 |
