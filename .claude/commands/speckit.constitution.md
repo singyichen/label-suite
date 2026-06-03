@@ -48,7 +48,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 5. **Generate Sync Impact Report**
 
-   Produce the following report and prepend it to `.specify/memory/constitution.md` as an HTML comment (so it doesn't render in Markdown but is preserved in the file):
+   Produce the following report and prepend it to `specs/_governance/constitution.md` as an HTML comment (so it doesn't render in Markdown but is preserved in the file). Step 7 then copies the full content to `.specify/memory/constitution.md` to keep the tool cache in sync.
 
    ```html
    <!--

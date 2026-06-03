@@ -53,7 +53,7 @@ $ARGUMENTS
    5. Description with an exact file path, except command-only verification tasks that list the exact command to run
 
    **Valid examples:**
-   - `- [ ] T001 Initialize backend module directory at backend/app/[module]/`
+   - `- [ ] T001 Create backend module package at backend/app/[module]/__init__.py`
    - `- [ ] T005 [P] Implement authentication middleware in backend/app/core/auth.py`
    - `- [ ] T012 [P] [US1] Create User model in backend/app/models/user.py`
    - `- [ ] T014 [US1] Implement UserService in backend/app/services/user_service.py`

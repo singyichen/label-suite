@@ -134,7 +134,7 @@ Source of truth: `specs/_governance/constitution.md`, `docs/adr/001-monorepo-str
 
 ## XVI. PR Boundaries
 
-- Frontend layer concerns must be split into separate PRs: TypeScript types with i18n keys, API service with MSW handlers, components with tests and Storybook stories, and page assembly are each distinct review units.
+- Frontend layer concerns must be split into separate PRs: TypeScript type contracts, i18n namespace files, API service with MSW handlers, components with tests and Storybook stories, and page assembly are each distinct review units. TypeScript types must be merged before the API service layer so that service code can import from the type contract.
 - Backend and frontend PRs must be independent when no breaking API contract change is involved.
 - When a breaking API contract change does occur, backend and frontend PRs must cross-reference each other.
 

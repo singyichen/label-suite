@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.15.0
+版本: 1.16.0
 狀態: Draft
 ---
 
@@ -69,7 +69,7 @@
 
 > **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII]`
 
-### PR-FOUND-FE-API：前端 API 基礎建設（可與 PR-FOUND-BE-* 並行）
+### PR-FOUND-FE-API：前端 API 基礎建設（依賴 PR-FOUND-FE-TYPES merged；可與 PR-FOUND-BE-* 並行）
 
 - [ ] T007 [P] 建立前端 service 層與 queryKey factory（`frontend/src/features/[module]/services/[feature].ts`，依 plan.md TanStack Query 策略）
 - [ ] T008 [P] 建立 MSW handler（`frontend/src/mocks/handlers/[feature].ts`）— Storybook、Vitest、本地開發共用
@@ -89,9 +89,9 @@
 
 > **PR 邊界**：T010a/T010b 合併為獨立 `PR-FOUND-FE-I18N`（i18n namespace files）。`[Principle: X; Frontend Constitution XVI; Testing Constitution II]`
 
-### PR-FOUND-FE-TYPES：前端 TypeScript 型別合約（可與 PR-FOUND-FE-API 並行）
+### PR-FOUND-FE-TYPES：前端 TypeScript 型別合約（需在 PR-FOUND-FE-API 之前合併）
 
-- [ ] T010c [P] 建立前端 TypeScript 型別合約（`frontend/src/features/[module]/types/[feature].ts`，依 plan.md 前端型別策略）
+- [ ] T010c 建立前端 TypeScript 型別合約（`frontend/src/features/[module]/types/[feature].ts`，依 plan.md 前端型別策略）
 
 > **PR 邊界**：T010c 作為獨立 `PR-FOUND-FE-TYPES`（TypeScript type contracts — hand-written 或 generated API types，視 plan.md 前端型別策略決定）。`[Principle: X; Frontend Constitution XVI]`
 
@@ -165,41 +165,44 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T022 [P] [US2] 後端單元測試 — `backend/tests/unit/test_[feature].py`
-- [ ] T023 [P] [US2] Playwright E2E 測試 — `e2e/[module]/[feature].spec.ts`
+- [ ] T022a [P] [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`
+- [ ] T022b [P] [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`
+- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`
+- [ ] T023 [P] [US2] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
+- [ ] T024 [P] [US2] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
 
 ### 實作（僅在測試失敗後進行）
 
 #### PR-US2-BE-MODEL：後端資料模型實作
 
-- [ ] T024 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
+- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
 
-> **PR 邊界**：T024 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T025 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
-#### PR-US2-BE-SERVICE：後端 Service 實作（含後端單元測試）
+#### PR-US2-BE-SERVICE：後端 Service 實作（含 service 單元測試）
 
-- [ ] T025 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
+- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
 
-> **PR 邊界**：T022（後端單元測試）+ T025 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T022a（service 單元測試）+ T026 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
 
-#### PR-US2-BE-API：後端 API 實作
+#### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T026 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
+- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
 
-> **PR 邊界**：T026 作為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII]`
 
-#### PR-US2-FE-COMPONENT：前端元件實作（含 Storybook）
+#### PR-US2-FE-COMPONENT：前端元件實作（含 component test + Storybook）
 
-- [ ] T027 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/[Feature].tsx`
-- [ ] T028 [P] [US2] 建立 Storybook stories — `frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`（Default + 邊界狀態，MSW decorator）
+- [ ] T028 [US2] 建立前端元件（含 ARIA role、響應式）— `frontend/src/features/[module]/components/[feature]/[Feature].tsx`
+- [ ] T029 [P] [US2] 建立 Storybook stories — `frontend/src/features/[module]/components/[feature]/[Feature].stories.tsx`（Default + 邊界狀態，MSW decorator）
 
-> **PR 邊界**：T027/T028 合併為獨立 `PR-US2-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
+> **PR 邊界**：T023（Vitest component test）+ T028/T029 合併為獨立 `PR-US2-FE-COMPONENT`。`[Principle: X; Frontend Constitution XVI]`
 
 #### PR-US2-FE-PAGE：前端頁面組裝（含 E2E）
 
-- [ ] T029 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/[Feature]Page.tsx`
+- [ ] T030 [US2] 實作前端頁面 — `frontend/src/features/[module]/pages/[feature]/[Feature]Page.tsx`
 
-> **PR 邊界**：T023（Playwright E2E）+ T029 合併為獨立 `PR-US2-FE-PAGE`，與 `PR-US2-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
+> **PR 邊界**：T024（Playwright E2E）+ T030 合併為獨立 `PR-US2-FE-PAGE`，與 `PR-US2-BE-*` 完全並行（無 breaking contract change 時）。`[Principle: X; Frontend Constitution XVI]`
 
 **檢查點**：使用者故事 1 與 2 皆可獨立驗證
 
@@ -242,13 +245,16 @@
 ## 平行執行範例
 
 ```
-# 一起啟動基礎建設任務（Phase 2）：
-Task: "在 backend/app/schemas/[feature].py 建立 Pydantic schemas"
-Task: "在 backend/app/api/routes/[feature].py 建立 API route skeleton"
+# 一起啟動可並行的基礎建設任務（Phase 2）：
+Task: "在 frontend/src/locales/zh-TW/[module].json 新增 i18n keys（T010a）"
+Task: "在 frontend/src/locales/en/[module].json 新增 i18n keys（T010b）"
+# 注意：PR-FOUND-BE-SCHEMA（T005）必須在 PR-FOUND-BE-API（T006）之前合併
+# 注意：PR-FOUND-FE-TYPES（T010c）必須在 PR-FOUND-FE-API（T007/T008）之前合併
 
-# 在實作前一起啟動 US1 測試：
-Task: "在 backend/tests/unit/test_[feature].py 撰寫後端單元測試"
-Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試"
+# 在實作前一起啟動 US1 測試（同故事，不同檔案）：
+Task: "在 backend/tests/unit/test_[feature].py 撰寫 service 層單元測試（T013a）"
+Task: "在 frontend/src/features/[module]/__tests__/[Feature].test.tsx 撰寫前端元件測試（T014）"
+Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試（T015）"
 ```
 
 ## 實作策略
@@ -296,8 +302,8 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試"
    - 關係 → service 層任務（循序）
 
 4. **從 plan.md 前端型別策略**
-   - 有前端功能的 spec → 一個 TypeScript 型別合約任務 [P]（`frontend/src/features/[module]/types/[feature].ts`，手寫或 generated API types）
-   - 此任務列於 Phase 2 `PR-FOUND-FE-TYPES`，早於 service / component 任務（確保型別先存在）
+   - 有前端功能的 spec → 一個 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`，手寫或 generated API types）
+   - 此任務列於 Phase 2 `PR-FOUND-FE-TYPES`，不標記 [P]（PR-FOUND-FE-API 依賴此 PR 合併後才可開始；型別必須先存在，service 層才能 import）
 
 5. **從 plan.md 切版分析**
    - 每個非 page 元件 → 元件實作任務 + Storybook story 任務 [P]（`.stories.tsx`）
@@ -371,6 +377,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.16.0 | 2026-06-03 | 移除 T010c 的 [P] marker（PR-FOUND-FE-TYPES 必須在 PR-FOUND-FE-API 之前合併，service 層依賴型別先存在）；更新 PR-FOUND-FE-API 標頭明示依賴 FE-TYPES；修正平行執行範例（移除誤導性的 schema+API route 並行示範）；補齊 US2 完整測試層（T022a service / T022b route / T022c permission / T023 FE component）並重新編號 US2 實作任務（T025–T030）；更新 Task Generation Rule §4 說明 |
 | 1.15.0 | 2026-06-03 | 移除 T005（PR-FOUND-BE-SCHEMA）的 [P] marker（依賴 migration PR 合併，有未完成相依性）；加入 PR-FOUND-FE-TYPES 邊界（T010c）建立前端 TypeScript 型別合約，Task Generation Rule §4 補充型別策略，驗證清單補齊；移除 T013c 的 [P] marker（與 T013b 同檔案，不可平行） |
 | 1.14.0 | 2026-06-03 | 修正 Phase 2 與 US2 任務編號順序，移除 schema-dependent API task 的 parallel marker，補齊 migration downgrade 與 routing 任務的具體檔案路徑 |
 | 1.13.0 | 2026-06-03 | 將 user-story 前端 component/page/story/test 任務由目錄或泛稱改為具體檔案路徑，對齊 testing-constitution Rule II 的 one-file task 要求 |
