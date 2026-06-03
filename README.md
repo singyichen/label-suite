@@ -78,12 +78,14 @@ This project is positioned as a **Demo Paper**, with its core value in:
 |---|---|
 | **Frontend** | React + TypeScript + Vite |
 | **Backend** | FastAPI (Python) |
-| **Database** | PostgreSQL |
+| **Database** | SQLite (quick start) / PostgreSQL (production) |
 | **Cache / Queue** | Redis |
 | **Async Tasks** | Celery |
 | **Testing** | Playwright (E2E) + pytest |
 
 > **Note:** This tech stack reflects the current design decision; implementation is tracked in Phase 3.
+>
+> **SQLite quick-start warning:** The default SQLite tier is intended for single-user local demos and evaluation only. It does **not** support concurrent writes and is **not recommended for multi-user production deployments**. Set `DATABASE_URL=postgresql+asyncpg://...` to switch to the production-grade PostgreSQL tier (see ADR-024).
 
 ---
 
