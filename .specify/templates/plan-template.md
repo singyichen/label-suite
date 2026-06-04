@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.8.2
+版本: 1.9.0
 狀態: Draft
 ---
 
@@ -220,6 +220,16 @@ sequenceDiagram
    - 標記哪些元件進 `shared/`（需被 2+ 個 feature module 使用才符合資格）
    - 標記哪些元件需要 Zustand（全域 UI 狀態）vs. TanStack Query（server state）vs. `useState`（local）
 
+   **畫面 × API 對應**（必填）：列出每個畫面 / 元件觸發的 API 呼叫
+
+   | 畫面 / 元件 | 觸發時機 | Method | Endpoint | TanStack Query key |
+   |------------|---------|--------|----------|--------------------|
+   | `[Feature]Page` 掛載 | 頁面初始化 | GET | `/api/v1/[module]/[resource]` | `['[module]', '[resource]', params]` |
+   | `[Feature]Form` 送出 | 使用者操作 | POST | `/api/v1/[module]/[resource]` | — (mutation，invalidates list key) |
+   | ... | | | | |
+
+   > **填寫規則**：Endpoint 欄直接引用上方 API 清單的 Path，不另創名稱；Query key 格式必須與下方前端技術決策小節一致。此表讓 Reviewer 在 Phase 1 即可驗證「API 清單 ↔ 畫面覆蓋」完全對應，Generator 實作 service 層時以此為輸入依據。
+
    **前端技術決策**（在切版分析後立即決定，避免 Generator 自行猜測）
 
    ```
@@ -349,6 +359,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.0 | 2026-06-04 | Phase 1 步驟 3 新增必填「畫面 × API 對應」表（畫面/元件 → 觸發時機 → Method → Endpoint → TanStack Query key），橋接 API 清單與切版分析，讓 Reviewer 在 Phase 1 即可驗證兩者覆蓋一致 |
 | 1.8.1 | 2026-06-03 | 修正 i18n key 清單與任務產生策略中的 locales 路徑為 `frontend/src/locales/{zh-TW,en}/[module].json`，對齊 frontend-constitution Rule IX |
 | 1.8.0 | 2026-06-03 | 移除已廢棄的 XXI/XXII/XXIV/XXVI/XXVIII 原則 checkboxes（已移入 domain constitutions）；新增 Domain Constitution Loading 小節（後端/前端/測試各一個 checkbox），對齊 constitution v1.31.0；Phase 2 i18n 任務描述改為兩個獨立任務 |
 | 1.7.2 | 2026-05-29 | 憲章檢查 VII 加入 Storybook story 要求：所有非 page 元件需規劃 Default + 邊界狀態 story（配合憲章 v1.29.1） |
