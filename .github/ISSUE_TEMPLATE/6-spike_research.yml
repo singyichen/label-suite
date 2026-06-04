@@ -1,0 +1,68 @@
+name: "🔍 研究/試作"
+description: "用於技術/需求不確定時的探索、PoC、估工前研究"
+title: "[Spike] "
+labels: ["技術調研"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🔍  研究 / 試作 
+        用於「先研究再決定做不做/怎麼做」。請填必要資訊即可。
+
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: "🎯 研究目標 / 想釐清的問題"
+      description: "這次 spike 要回答哪些問題？"
+      placeholder: |
+        - 想釐清：
+        - 為什麼重要：
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: "🧩 探索範圍（含不做項目）"
+      description: "研究哪些方向？哪些先不做？"
+      placeholder: |
+        - 會研究：
+        - 不研究（Out of scope）：
+    validations:
+      required: false
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: "🔧 方法 / 可能方案（選填）"
+      description: "你預計怎麼研究？有哪些候選方案？"
+      placeholder: |
+        - 方法：
+        - 候選方案 A/B/C：
+    validations:
+      required: false
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: "📦 產出物 / Done Definition"
+      description: "研究做到什麼程度算完成？"
+      placeholder: |
+        - 產出（文件/PoC/結論/估工）：
+        - 完成標準：
+    validations:
+      required: true
+
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: "📝 備註（選填）"
+      description: "相關連結、參考資料、風險等"
+      placeholder: |
+        - 參考連結：
+        - 其他補充：
+    validations:
+      required: false

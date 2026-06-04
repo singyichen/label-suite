@@ -64,7 +64,7 @@ Team Lead updates `tasks.md` checkboxes serially after teammate quality gates pa
 
 | Teammate | Owns | Must Not Touch |
 |---|---|---|
-| `senior-backend` | `backend/app/` | `frontend/`, `backend/migrations/` |
+| `senior-backend` | `backend/app/`, `backend/bruno/` | `frontend/`, `backend/migrations/` |
 | `senior-frontend` | `frontend/src/` | `backend/`, `frontend/src/locales/` |
 | `senior-i18n` | `frontend/src/locales/` | all other directories |
 | `senior-dba` | `backend/migrations/` | `backend/app/`, `frontend/` |
@@ -76,6 +76,30 @@ Team Lead updates `tasks.md` checkboxes serially after teammate quality gates pa
 After each backend task:
 ```bash
 cd backend && uv run ruff check . && uv run mypy .
+```
+
+For tasks touching `backend/bruno/` or `backend/app/*/router.py`: also run this `.bru` gate:
+```bash
+_repo_root=$(git rev-parse --show-toplevel)
+_changed=$( { git diff --cached --name-only 2>/dev/null; git diff --name-only 2>/dev/null; } | sort -u)
+_bru_files=$(echo "$_changed" | grep '\.bru$' | grep -v '/environments/')
+_route_files=$(echo "$_changed" | grep -E '(backend/app/api/routes/|backend/app/modules/.*/router\.py)')
+# FR-131: route changes must include a matching Bruno update
+if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
+  echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or mark PR with FR-131-exempt: skeleton-only route"
+  exit 1
+fi
+# Validate structure of each touched endpoint .bru file (paths anchored at repo root)
+if [ -n "$_bru_files" ]; then
+  for _f in $_bru_files; do
+    _abs="$_repo_root/$_f"
+    if [ -f "$_abs" ]; then
+      grep -q 'meta {' "$_abs" && grep -qE '^\s*(get|post|put|patch|delete|head) \{' "$_abs" \
+        || { echo "Bruno structure error: $_f missing meta or method block"; exit 1; }
+    fi
+  done
+  echo "Bruno .bru structure check passed"
+fi
 ```
 
 After each frontend task:
@@ -101,6 +125,10 @@ If gate fails:
 | API contract conflict between agents | Pause all agents; surface conflict to user before any agent proceeds |
 | Security finding in review | Pause PR flow; report finding to user immediately |
 | Spec compliance gap found | Implementer fixes first; run `/speckit.analyze` and fix all findings before code quality reviewer proceeds |
+
+## Issue Reporting Protocol
+
+@.claude/rules/issue-reporting.md
 
 ## SDD Phase Sequence
 
