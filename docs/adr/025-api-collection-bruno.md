@@ -34,8 +34,8 @@ backend/
 └── bruno/
     ├── bruno.json                     # Collection config (name, version)
     ├── environments/
-    │   ├── local.bru                  # baseUrl = http://localhost:8000
-    │   └── staging.bru                # baseUrl = https://staging.example.com
+    │   ├── local.bru                  # baseUrl = http://localhost:8000; frontendOrigin = http://localhost:5173
+    │   └── staging.bru                # baseUrl = https://api.staging.example.com; frontendOrigin = https://staging.example.com
     └── [module]/                      # One folder per feature module
         └── [endpoint].bru             # One file per endpoint
 ```
@@ -61,9 +61,11 @@ headers {
 
 # For unsafe methods (POST / PATCH / DELETE): add the Origin header to satisfy the
 # CSRF trusted-origin check (Foundation Spec §Security). Remove for GET / HEAD.
+# Use {{frontendOrigin}} (e.g. http://localhost:5173), NOT {{baseUrl}} — ALLOWED_ORIGINS
+# contains frontend origins, not the API server URL.
 # headers {
 #   Content-Type: application/json
-#   Origin: {{baseUrl}}
+#   Origin: {{frontendOrigin}}
 # }
 
 body:json {
@@ -80,7 +82,9 @@ docs {
   No Authorization header or token variable required.
 
   CSRF: POST / PATCH / DELETE requests must include the Origin header (see above)
-  to pass the trusted-origin check on production-like CSRF settings.
+  to pass the trusted-origin check on production-like CSRF settings. Use
+  {{frontendOrigin}} (set in the environment file), not {{baseUrl}}; ALLOWED_ORIGINS
+  contains frontend origins (e.g. http://localhost:5173), not the API server URL.
 }
 ```
 

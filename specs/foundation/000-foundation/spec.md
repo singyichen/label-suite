@@ -704,7 +704,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 ### 功能需求
 
 - **FR-130**：系統必須提供可重現的 local bootstrap contract，至少包含 `.env.example`、Docker Compose local profile 或等效服務啟動方式、seed data 策略、OpenAPI export / frontend type generation command，以及 one-command verification 或清楚列出的本機驗證命令。
-- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/api/routes/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`。（參見 ADR-025、ADR-021）
+- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/api/routes/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。**例外**：skeleton-only route PR（無實際業務邏輯的佔位 endpoint）可延後至後續 `PR-FOUND-BRUNO` 建立 `.bru` skeleton；PR description 須標註 `FR-131-exempt: skeleton-only route`。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`。（參見 ADR-025、ADR-021）
 
 ---
 
@@ -818,6 +818,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.11.7 | 2026-06-04 | FR-131 補充 skeleton-only route 例外條款：skeleton-only PR 可延後至 PR-FOUND-BRUNO 建立 .bru，PR description 須標註 FR-131-exempt: skeleton-only route |
 | 1.11.6 | 2026-06-03 | 新增 F-18 FR-131（Bruno API collection gate）與 ADR-025 上游相依性；補充 Bruno collection 路徑約束與 PR gate 規則 |
 | 1.11.5 | 2026-06-03 | 修正 SC-045 命名衝突：將 `docker-compose.local.yml` 改為 `docker-compose.yml`，對齊 ADR-024 zero-friction quick-start 決定 |
 | 1.11.4 | 2026-06-03 | 補充上游相依性：新增 ADR-024（SQLite / PostgreSQL 分層資料庫策略），對應既有 FR-130 與 SC-045 bootstrap contract |

@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.18.0
+版本: 1.20.0
 狀態: Draft
 ---
 
@@ -304,7 +304,7 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試（T015）
    - 所有任務標記 [USN]
 
 2. **從 spec.md API 契約**
-   - 每個 endpoint → 一個後端單元測試任務 [P] + 一個實作任務
+   - 每個 endpoint → 一個後端單元測試任務 [P] + 一個實作任務 + 一個 Bruno collection update 任務（Foundation FR-131）
 
 3. **從 spec.md 資料模型**
    - 每個實體 → 一個模型建立任務 [P]
@@ -387,6 +387,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.20.0 | 2026-06-04 | 任務產生規則 §2 加入 Bruno collection update 任務（每個 endpoint → 後端測試 + 實作 + Bruno update，Foundation FR-131） |
 | 1.19.0 | 2026-06-04 | 將 T006b/T006c 從 PR-FOUND-BE-API 拆出為獨立 PR-FOUND-BRUNO 邊界，避免突破 ≤5 files gate；T018b/T027b 的 auth 描述由 auth header 改為 auth cookie/session (ADR-021) |
 | 1.18.0 | 2026-06-03 | 拆分 T006b 為 T006b（集合初始化，明列 bruno.json + environments/*.bru）與 T006c（endpoint skeleton，每個 .bru 逐一明列）；更新 PR-FOUND-BE-API 邊界與驗證清單，對齊 testing-constitution Rule II（每個 artifact-producing 任務必須列出所有產出檔案） |
 | 1.17.0 | 2026-06-03 | （版本號保留，與 1.16.0 合併）|
