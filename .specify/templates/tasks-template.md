@@ -66,10 +66,15 @@
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
 - [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+
+> **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII]`
+
+### PR-FOUND-BRUNO：Bruno Collection 初始化與 Endpoint Skeleton（依賴 PR-FOUND-BE-API merged）
+
 - [ ] T006b [P] 建立 Bruno 集合根目錄初始化檔案（僅首次建立時執行，已存在則略過）— `backend/bruno/bruno.json`、`backend/bruno/environments/local.bru`、`backend/bruno/environments/staging.bru`
 - [ ] T006c [P] 為本功能各規劃端點建立 Bruno 請求 skeleton（依 plan.md API 清單逐一列出每個檔案，例如：`backend/bruno/[module]/[endpoint1].bru`、`backend/bruno/[module]/[endpoint2].bru`…）— skeleton only，每個 endpoint 對應一個 .bru 檔案
 
-> **PR 邊界**：T006/T006b/T006c 合併為獨立 `PR-FOUND-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
+> **PR 邊界**：T006b/T006c 合併為獨立 `PR-FOUND-BRUNO`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 ### PR-FOUND-FE-API：前端 API 基礎建設（依賴 PR-FOUND-FE-TYPES merged；可與 PR-FOUND-BE-* 並行）
 
@@ -139,7 +144,7 @@
 #### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
 
 - [ ] T018 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）— 含 auth dependency
-- [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth header 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
+- [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018/T018b 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
@@ -191,7 +196,7 @@
 #### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
 - [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
-- [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth header 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
+- [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027/T027b 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
@@ -371,17 +376,18 @@ pnpm exec playwright test                # E2E gate
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
-- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-FE-TYPES 八個獨立 PR 邊界
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BRUNO / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-FE-TYPES 九個獨立 PR 邊界
 - [ ] Phase 2 有前端 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`），且其 PR 邊界（PR-FOUND-FE-TYPES）早於 services / components 任務
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
-- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BE-API` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務
+- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BRUNO` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務，且與 `PR-FOUND-BE-API`（T006 route skeleton）分為兩個獨立 PR 邊界
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.19.0 | 2026-06-04 | 將 T006b/T006c 從 PR-FOUND-BE-API 拆出為獨立 PR-FOUND-BRUNO 邊界，避免突破 ≤5 files gate；T018b/T027b 的 auth 描述由 auth header 改為 auth cookie/session (ADR-021) |
 | 1.18.0 | 2026-06-03 | 拆分 T006b 為 T006b（集合初始化，明列 bruno.json + environments/*.bru）與 T006c（endpoint skeleton，每個 .bru 逐一明列）；更新 PR-FOUND-BE-API 邊界與驗證清單，對齊 testing-constitution Rule II（每個 artifact-producing 任務必須列出所有產出檔案） |
 | 1.17.0 | 2026-06-03 | （版本號保留，與 1.16.0 合併）|
 | 1.16.0 | 2026-06-03 | 移除 T010c 的 [P] marker（PR-FOUND-FE-TYPES 必須在 PR-FOUND-FE-API 之前合併，service 層依賴型別先存在）；更新 PR-FOUND-FE-API 標頭明示依賴 FE-TYPES；修正平行執行範例（移除誤導性的 schema+API route 並行示範）；補齊 US2 完整測試層（T022a service / T022b route / T022c permission / T023 FE component）並重新編號 US2 實作任務（T025–T030）；更新 Task Generation Rule §4 說明 |

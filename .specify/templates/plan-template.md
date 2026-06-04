@@ -287,7 +287,7 @@ sequenceDiagram
    | 元件渲染 / 互動 / 邊界狀態 | 元件測試 | Vitest + Testing Library | `src/features/[module]/__tests__/[Feature].test.tsx` |
    | 完整用戶流程 | E2E | Playwright | `e2e/[module]/[feature].spec.ts` |
 
-**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單（含 Bruno 檔案欄）、`backend/bruno/[module]/` Bruno 請求草稿（skeleton — 對應 API 清單所有 endpoint）、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
+**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單（含 Bruno 檔案欄 — `backend/bruno/[module]/` 路徑規劃，.bru skeleton 建立留至 `/speckit.tasks`）、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
 
 ---
 

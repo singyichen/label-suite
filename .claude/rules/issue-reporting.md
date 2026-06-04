@@ -4,12 +4,13 @@
 
 Any agent that hits a condition below must report it to team-lead using the mapped issue type before continuing. Team-lead or the main session owns GitHub issue creation with `gh issue create`, because not every specialist agent has Bash access.
 
-Critical or High security vulnerabilities are the exception: do **not** create a public GitHub issue with exploit details. Report `SECURITY ESCALATION REQUIRED` to team-lead/main session and wait for the repository owner's private disclosure path or security advisory workflow.
+Critical or High security vulnerabilities are the exception: do **not** create a public GitHub issue with exploit details. Report `SECURITY ESCALATION REQUIRED` to team-lead/main session and wait for the repository owner's private disclosure path or security advisory workflow. Medium or Low severity findings are safe to track publicly as Bug Reports.
 
 | Condition | Issue Type | Label | Title prefix |
 |-----------|-----------|-------|--------------|
 | Bug / test failure / unresolvable error after 2 retries | Bug Report | `錯誤回報` | `[Bug]` |
 | Security vulnerability (Critical or High) | Private security escalation | N/A | N/A |
+| Security vulnerability (Medium or Low) | Bug Report | `錯誤回報` | `[Bug]` |
 | Performance regression beyond target threshold | Bug Report | `錯誤回報` | `[Bug]` |
 | CI/CD pipeline failure after 2 retries | Bug Report | `錯誤回報` | `[Bug]` |
 | New feature request or new workflow/page/module | Feature Add | `功能新增` | `[功能新增]` |

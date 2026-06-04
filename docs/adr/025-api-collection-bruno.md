@@ -59,6 +59,13 @@ headers {
   Content-Type: application/json
 }
 
+# For unsafe methods (POST / PATCH / DELETE): add the Origin header to satisfy the
+# CSRF trusted-origin check (Foundation Spec §Security). Remove for GET / HEAD.
+# headers {
+#   Content-Type: application/json
+#   Origin: {{baseUrl}}
+# }
+
 body:json {
   {
     "field": "value"
@@ -71,6 +78,9 @@ docs {
   Auth: httpOnly cookie session (ADR-021). Call POST /api/v1/auth/login first;
   Bruno stores the session cookie automatically and sends it on all subsequent requests.
   No Authorization header or token variable required.
+
+  CSRF: POST / PATCH / DELETE requests must include the Origin header (see above)
+  to pass the trusted-origin check on production-like CSRF settings.
 }
 ```
 
@@ -82,8 +92,8 @@ Foundation Spec FR-131 makes the Bruno update a hard pre-PR gate:
 
 The tasks template (`tasks-template.md`) includes:
 
-- **T006b** in `PR-FOUND-BE-API`: Bruno skeleton for all planned endpoints
-- **T018b / T027b / …** in each `PR-USN-BE-API`: full Bruno update (body, auth header, example response) for every implemented endpoint
+- **T006b / T006c** in `PR-FOUND-BRUNO` (separate from `PR-FOUND-BE-API`): Bruno collection init + skeleton for all planned endpoints
+- **T018b / T027b / …** in each `PR-USN-BE-API`: full Bruno update (body, auth cookie/session, example response) for every implemented endpoint
 
 ## Consequences
 
