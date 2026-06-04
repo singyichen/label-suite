@@ -106,6 +106,7 @@ sequenceDiagram
     participant DB
 
     Frontend->>API: [METHOD] /api/[resource] (cookie auth)
+    Note over API: Unsafe methods (POST/PUT/PATCH/DELETE): validate CSRF token or Origin/Referer before auth (FR-117, SC-036)
     API->>Auth: get_current_user(token)
     alt token invalid / expired
         Auth-->>API: raise HTTP 401
@@ -316,7 +317,7 @@ sequenceDiagram
 
    | Path | 元件 | 是否需要 Route Guard | 重導向規則 | Guard 失敗行為 |
    |------|------|-------------------|-----------|--------------|
-   | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login?redirect_to=...` | 保留 redirect_to，登入後返回 |
+   | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login?redirect_to=...` | 驗證 redirect_to 必須為 app 本地路徑（path-only，拒絕外部 URL 防止 open redirect）；非法值 fallback 到預設首頁 |
    | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | — | → `/not-found`（隱藏資源存在；task-role guard 失敗必須回 404） |
    | ... | | | | |
 
