@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.20.0
+版本: 1.21.0
 狀態: Draft
 ---
 
@@ -74,7 +74,7 @@
 - [ ] T006b [P] 建立 Bruno 集合根目錄初始化檔案（僅首次建立時執行，已存在則略過）— `backend/bruno/bruno.json`、`backend/bruno/environments/local.bru`、`backend/bruno/environments/staging.bru`
 - [ ] T006c [P] 為本功能各規劃端點建立 Bruno 請求 skeleton（依 plan.md API 清單逐一列出每個檔案，例如：`backend/bruno/[module]/[endpoint1].bru`、`backend/bruno/[module]/[endpoint2].bru`…）— skeleton only，每個 endpoint 對應一個 .bru 檔案
 
-> **PR 邊界**：T006b/T006c 合併為獨立 `PR-FOUND-BRUNO`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
+> **PR 邊界**：T006b/T006c 合計檔案數 = 3（bootstrap）+ N（endpoint 數量）。N ≤ 2 時合併為單一 `PR-FOUND-BRUNO`（3+2=5，恰好達 ≤5 files gate 上限）；N > 2 時拆為 `PR-FOUND-BRUNO-INIT`（T006b，3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（T006c，N 個 .bru skeleton）兩個獨立 PR。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
 ### PR-FOUND-FE-API：前端 API 基礎建設（依賴 PR-FOUND-FE-TYPES merged；可與 PR-FOUND-BE-* 並行）
 
@@ -381,12 +381,13 @@ pnpm exec playwright test                # E2E gate
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
-- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BRUNO` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務，且與 `PR-FOUND-BE-API`（T006 route skeleton）分為兩個獨立 PR 邊界
+- [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BRUNO` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務，且與 `PR-FOUND-BE-API`（T006 route skeleton）分為兩個獨立 PR 邊界；若功能端點數 N > 2，T006b/T006c 進一步拆為 `PR-FOUND-BRUNO-INIT`（3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（N 個 .bru skeleton）
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.21.0 | 2026-06-04 | PR-FOUND-BRUNO 邊界規則加入端點數 N > 2 時的拆分策略（BRUNO-INIT/BRUNO-SKEL），避免超出 ≤5 files gate |
 | 1.20.0 | 2026-06-04 | 任務產生規則 §2 加入 Bruno collection update 任務（每個 endpoint → 後端測試 + 實作 + Bruno update，Foundation FR-131） |
 | 1.19.0 | 2026-06-04 | 將 T006b/T006c 從 PR-FOUND-BE-API 拆出為獨立 PR-FOUND-BRUNO 邊界，避免突破 ≤5 files gate；T018b/T027b 的 auth 描述由 auth header 改為 auth cookie/session (ADR-021) |
 | 1.18.0 | 2026-06-03 | 拆分 T006b 為 T006b（集合初始化，明列 bruno.json + environments/*.bru）與 T006c（endpoint skeleton，每個 .bru 逐一明列）；更新 PR-FOUND-BE-API 邊界與驗證清單，對齊 testing-constitution Rule II（每個 artifact-producing 任務必須列出所有產出檔案） |
