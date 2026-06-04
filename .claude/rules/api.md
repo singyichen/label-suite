@@ -10,7 +10,7 @@
 
 - All request bodies must be validated via Pydantic schemas (`app/schemas/`)
 - Response schemas must be explicit — never return raw ORM models
-- Paginated list responses use the shared `PaginatedResponse[T]` wrapper
+- Paginated list responses use the shared `PaginatedResponse[T]` wrapper; query params are `limit: int` (default `PAGINATION_DEFAULT_LIMIT`, max `PAGINATION_MAX_LIMIT`) and `offset: int` (default `0`); response includes `next_offset: int | None` so frontend never needs to compute the next offset
 - Error responses follow the shared `ErrorResponse` schema with `detail` field; the `detail` string is localized by the backend based on the request `Accept-Language` header (see ADR-026) — frontend renders it directly without re-mapping
 
 ## Status Codes
