@@ -110,6 +110,7 @@ sequenceDiagram
     alt token invalid / expired
         Auth-->>API: raise HTTP 401
         API-->>Frontend: 401 {detail: "Not authenticated"}
+        Note over Frontend: If only access token expired: call /auth/refresh then retry (ADR-021); second 401 triggers logout
     else task-scoped: user lacks task role (and is not super_admin)
         API->>Auth: require_task_role(role, task_id)
         Auth->>DB: SELECT task_membership WHERE user_id AND task_id AND required_role
@@ -173,7 +174,7 @@ sequenceDiagram
 
 1. **萃取實體** 從 spec.md → `data-model.md`
    - 實體名稱、欄位、關係、驗證規則
-   - 狀態轉換（若適用）：有複雜狀態機時（狀態數 ≥ 3 或有 guard condition），必須補充以下格式
+   - 狀態轉換（若適用）：有複雜狀態機時（狀態數 ≥ 3 或有 guard condition），**或功能觸及以下 canonical lifecycle 實體（無論狀態數量）**，必須補充以下格式：task · batch · annotation · annotation item · review · adjudication · export · dataset version
 
      ```mermaid
      stateDiagram-v2
@@ -189,7 +190,7 @@ sequenceDiagram
      | `active → closed` | `POST /[resource]/close` | project_leader | `require_task_role(PROJECT_LEADER, task_id)` | — | `score_submission.delay(id)` | `[resource].closed` | retry Celery task on failure |
      | ... | | | | | | | |
 
-     > 若無複雜狀態機，標記「本功能無多狀態實體」。
+     > 若無複雜狀態機**且本功能不涉及上方 canonical lifecycle 實體**，標記「本功能無多狀態實體」。
 
    - **DB Index 分析**：列出每個查詢所需的 index，標記潛在的 N+1 或全表掃描風險
 
@@ -316,7 +317,7 @@ sequenceDiagram
    | Path | 元件 | 是否需要 Route Guard | 重導向規則 | Guard 失敗行為 |
    |------|------|-------------------|-----------|--------------|
    | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login?redirect_to=...` | 保留 redirect_to，登入後返回 |
-   | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | — | 停留同頁 + inline 無權限提示 |
+   | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | — | → `/not-found`（隱藏資源存在；task-role guard 失敗必須回 404） |
    | ... | | | | |
 
    **i18n Key 清單**：列出本功能所有需要翻譯的字串（namespace: `[module]`）
