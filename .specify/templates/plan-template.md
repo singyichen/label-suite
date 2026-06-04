@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.8.2
+版本: 1.10.0
 狀態: Draft
 ---
 
@@ -100,18 +100,33 @@ backend/
 ```mermaid
 sequenceDiagram
     participant Frontend
+    participant Auth as Auth Middleware
     participant API
     participant Service
     participant DB
 
-    Frontend->>API: POST /api/[resource] {payload}
-    API->>Service: [function_name](dto)
-    Service->>DB: INSERT / UPDATE [table]
-    DB-->>Service: return [entity]
-    Service-->>API: [ResponseSchema]
-    API-->>Frontend: 200 [ResponseDTO]
+    Frontend->>API: [METHOD] /api/[resource] {Bearer token}
+    API->>Auth: get_current_user(token)
+    alt token invalid / expired
+        Auth-->>API: raise HTTP 401
+        API-->>Frontend: 401 {detail: "Not authenticated"}
+    else task-scoped: user lacks task role
+        API->>Auth: require_task_role(role, task_id)
+        Auth->>DB: SELECT task_membership WHERE user_id AND task_id
+        DB-->>Auth: None
+        Auth-->>API: raise HTTP 404 (hide resource existence)
+        API-->>Frontend: 404 {detail: "..."}
+    else super_admin bypass
+        Note over API,Auth: super_admin skips task role check
+    else authorized
+        API->>Service: [function_name](dto)
+        Service->>DB: INSERT / UPDATE [table]
+        DB-->>Service: return [entity]
+        Service-->>API: [ResponseSchema]
+        API-->>Frontend: 200 [ResponseDTO]
+    end
 
-    Note over Service,API: Error path
+    Note over Service,API: Business error path
     Service-->>API: raise [Exception] {detail: "..."}
     API-->>Frontend: 4xx / 5xx {detail: "..."}
 ```
@@ -160,7 +175,24 @@ sequenceDiagram
 
 1. **萃取實體** 從 spec.md → `data-model.md`
    - 實體名稱、欄位、關係、驗證規則
-   - 狀態轉換（若適用）
+   - 狀態轉換（若適用）：有複雜狀態機時（狀態數 ≥ 3 或有 guard condition），必須補充以下格式
+
+     ```mermaid
+     stateDiagram-v2
+         [*] --> pending: 觸發條件（哪個 API call）
+         pending --> active: API endpoint / guard condition
+         active --> [*]: 終態
+         note right of active: side effect（例：觸發 Celery task）
+     ```
+
+     | 狀態轉換 | 觸發 API | Guard Condition | Side Effect |
+     |---------|---------|----------------|------------|
+     | `pending → active` | `POST /[resource]/activate` | `status == 'pending'` | — |
+     | `active → closed` | `POST /[resource]/close` | — | `score_submission.delay(id)` |
+     | ... | | | |
+
+     > 若無複雜狀態機，標記「本功能無多狀態實體」。
+
    - **DB Index 分析**：列出每個查詢所需的 index，標記潛在的 N+1 或全表掃描風險
 
    | 查詢 | 篩選欄位 | Index 策略 | Loading Strategy | 風險 |
@@ -182,6 +214,13 @@ sequenceDiagram
    | DELETE | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 刪除 | `backend/bruno/[module]/delete-[resource].bru` |
 
    > **Auth 規則**：task-scoped endpoint 必須驗證 `task_membership`；無權限時回 404（不洩漏資源存在）。`super_admin` 可bypass task role check。
+
+   **事務邊界設計**（端點含多個寫入操作需原子性時必填；單一 DB 寫入標記「本端點無複合事務」）：
+
+   | 端點 | 事務邊界 | 原子操作集合 | 失敗 Rollback 策略 |
+   |------|---------|------------|-----------------|
+   | `POST /[resource]` | `async with db.begin()` | `create_[a]` + `create_[b]` + `init_[c]` | 整體回滾，不允許孤兒資料 |
+   | ... | | | |
 
    接著產生完整 API 契約 → `contracts/`（請求 / 回應 schema，OpenAPI 相容）
 
@@ -220,6 +259,30 @@ sequenceDiagram
    - 標記哪些元件進 `shared/`（需被 2+ 個 feature module 使用才符合資格）
    - 標記哪些元件需要 Zustand（全域 UI 狀態）vs. TanStack Query（server state）vs. `useState`（local）
 
+   **畫面狀態轉換**（功能含 modal / multi-step submit / inline error / 提交後停留同頁時必填）：
+
+   | 當前畫面狀態 | 觸發條件 | 下一狀態 | UI 呈現 |
+   |------------|---------|---------|--------|
+   | 列表 Loading | `useQuery` 成功 | 列表 Default | skeleton → 資料列 |
+   | 列表 Default | 點擊「刪除」 | 確認 Modal 開啟 | modal overlay |
+   | 確認 Modal | 點擊取消 | 列表 Default | modal 關閉 |
+   | 確認 Modal | 點擊確認 | 列表 Mutating | modal 關閉 + button spinner |
+   | 列表 Mutating | mutation 成功 | 列表 Default（已更新） | success toast + list refetch |
+   | 列表 Mutating | mutation 失敗 | 列表 Default + error toast | — |
+   | ... | | | |
+
+   > 若功能為純路由跳轉、無 modal 或 multi-step 互動，標記「本功能無同頁狀態轉換」。
+
+   **畫面 × API 對應**（必填）：列出每個畫面 / 元件觸發的 API 呼叫
+
+   | 畫面 / 元件 | 觸發時機 | Method | Endpoint | TanStack Query key |
+   |------------|---------|--------|----------|--------------------|
+   | `[Feature]Page` 掛載 | 頁面初始化 | GET | `/api/v1/[module]/[resource]` | `['[module]', '[resource]', params]` |
+   | `[Feature]Form` 送出 | 使用者操作 | POST | `/api/v1/[module]/[resource]` | — (mutation，invalidates list key) |
+   | ... | | | | |
+
+   > **填寫規則**：Endpoint 欄直接引用上方 API 清單的 Path，不另創名稱；Query key 格式必須與下方前端技術決策小節一致。此表讓 Reviewer 在 Phase 1 即可驗證「API 清單 ↔ 畫面覆蓋」完全對應，Generator 實作 service 層時以此為輸入依據。
+
    **前端技術決策**（在切版分析後立即決定，避免 Generator 自行猜測）
 
    ```
@@ -243,19 +306,20 @@ sequenceDiagram
    - 422 validation error → form field error（react-hook-form `setError`）
    - 403/404 → 導向 `/not-found` 或顯示 inline 訊息（擇一並說明原因）
 
-   Loading 策略：
-   - 首次載入大量資料 → skeleton screen
-   - mutation 進行中 → button disabled + spinner
-   - 背景 refetch → 不顯示 loading（stale-while-revalidate）
+   Loading 策略（對應 TanStack Query 狀態欄位）：
+   - `isLoading && !data` → skeleton screen（首次載入，無快取資料）
+   - `isFetching && data` → 不顯示 loading（stale-while-revalidate，保留舊資料）
+   - `mutation.isPending` → button disabled + spinner
+   - `isError && !data` → Error Boundary（頁面層）或 inline error row
    ```
 
    **路由分析**：列出本功能新增或修改的路由
 
-   | Path | 元件 | 是否需要 Route Guard | 重導向規則 |
-   |------|------|-------------------|-----------|
-   | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login` |
-   | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | 無權限 → 404 |
-   | ... | | | |
+   | Path | 元件 | 是否需要 Route Guard | 重導向規則 | Guard 失敗行為 |
+   |------|------|-------------------|-----------|--------------|
+   | `/[module]/[feature]` | `[Feature]Page` | ✅ authenticated | 未登入 → `/login?redirect_to=...` | 保留 redirect_to，登入後返回 |
+   | `/[module]/[feature]/:id` | `[Feature]DetailPage` | ✅ project_leader | — | 停留同頁 + inline 無權限提示 |
+   | ... | | | | |
 
    **i18n Key 清單**：列出本功能所有需要翻譯的字串（namespace: `[module]`）
 
@@ -266,17 +330,30 @@ sequenceDiagram
    | `[feature].actions.create` | `建立` | `[Feature]Actions` button |
    | ... | | |
 
-   > i18n 檔案路徑：`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`
+   > 前端 i18n 檔案路徑：`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`
+   >
+   > **i18n 邊界（ADR-026）**：此表僅記錄前端 UI 字串（標籤、標題、按鈕文字、空狀態、客戶端驗證訊息）。後端 API response 的 `detail` 訊息由後端依 `Accept-Language` header 回傳，**不得**放入前端 locale 檔；前端元件直接顯示 `error.response?.data?.detail`，不做額外 key 對映。
+
+   **後端 i18n Key 清單**（若本功能新增 API response 訊息，必填；無則標記「本功能無新增後端訊息」）
+
+   | Key | zh-TW 預設值 | en 值 | 出現端點 |
+   |-----|------------|------|---------|
+   | `[module].[resource].not_found` | `[resource] 不存在` | `[Resource] not found` | `GET/PATCH/DELETE /[resource]/{id}` |
+   | `[module].[resource].created` | `[resource] 已建立` | `[Resource] created successfully` | `POST /[resource]` |
+   | ... | | | |
+
+   > 後端 i18n 檔案路徑：`backend/app/i18n/zh_TW/[module].py` 與 `backend/app/i18n/en/[module].py`
 
 4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
    - 明確列出每個操作的 error case 與對應 HTTP status（不可只寫「4xx / 5xx」）
+   - **Permission Check 分支**：task-scoped 端點必須在 sequenceDiagram 中補充 401 / 404 / super_admin bypass 分支（參考上方「系統流程與資料流」章節的 Auth Middleware 骨架）
    - **Celery 分析**：若任何操作預期處理時間 > 1 秒，或涉及評分 / 統計計算，必須加入 Celery worker 節點；若無，明確標記「本功能無非同步任務需求」
 
-   | Celery Task | 觸發端點 | retry 策略 | idempotency guard | 狀態查詢方式 |
-   |------------|---------|-----------|-----------------|------------|
-   | `score_submission` | `POST /submissions` | `max_retries=3, countdown=5` | `submission_id` unique check | polling `GET /submissions/{id}/status` |
-   | ... | | | | |
+   | Celery Task | 觸發端點 | retry 策略 | idempotency guard | 狀態查詢方式 | Worker 成功 DB 操作 | Worker 失敗 DB 操作 |
+   |------------|---------|-----------|-----------------|------------|------------------|------------------|
+   | `score_submission` | `POST /submissions` | `max_retries=3, countdown=5` | `submission_id` unique check | polling `GET /submissions/{id}/status` | `status='scored', score=...` | `status='scoring_failed', error=...` |
+   | ... | | | | | | |
 
 5. **萃取測試情境** 從使用者故事，依測試層分類
 
@@ -349,6 +426,8 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.10.0 | 2026-06-04 | 補齊前後端開發者所需流程圖：sequenceDiagram 骨架加入 Auth Middleware permission check alt 分支（401/404/super_admin bypass）；Phase 1 步驟 1 新增條件必填 stateDiagram-v2（狀態數 ≥ 3 或有 guard condition）；步驟 2 新增事務邊界設計表；步驟 3 新增畫面狀態轉換表（modal/multi-step 必填）；Loading 策略改為 TanStack Query 狀態欄位格式；路由分析表新增 Guard 失敗行為欄；步驟 4 Celery 表新增 Worker 成功/失敗 DB 操作欄 |
+| 1.9.0 | 2026-06-04 | Phase 1 步驟 3 新增必填「畫面 × API 對應」表（畫面/元件 → 觸發時機 → Method → Endpoint → TanStack Query key），橋接 API 清單與切版分析，讓 Reviewer 在 Phase 1 即可驗證兩者覆蓋一致 |
 | 1.8.1 | 2026-06-03 | 修正 i18n key 清單與任務產生策略中的 locales 路徑為 `frontend/src/locales/{zh-TW,en}/[module].json`，對齊 frontend-constitution Rule IX |
 | 1.8.0 | 2026-06-03 | 移除已廢棄的 XXI/XXII/XXIV/XXVI/XXVIII 原則 checkboxes（已移入 domain constitutions）；新增 Domain Constitution Loading 小節（後端/前端/測試各一個 checkbox），對齊 constitution v1.31.0；Phase 2 i18n 任務描述改為兩個獨立任務 |
 | 1.7.2 | 2026-05-29 | 憲章檢查 VII 加入 Storybook story 要求：所有非 page 元件需規劃 Default + 邊界狀態 story（配合憲章 v1.29.1） |

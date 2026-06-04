@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.21.0
+版本: 1.22.0
 狀態: Draft
 ---
 
@@ -95,6 +95,13 @@
 - [ ] T010b [P] 新增 i18n keys — en（`frontend/src/locales/en/[module].json` — 依 plan.md i18n key 清單）
 
 > **PR 邊界**：T010a/T010b 合併為獨立 `PR-FOUND-FE-I18N`（i18n namespace files）。`[Principle: X; Frontend Constitution XVI; Testing Constitution II]`
+
+### PR-FOUND-BE-I18N：後端 i18n 訊息基礎建設（可與 PR-FOUND-FE-I18N 並行；若本功能無新增後端訊息則跳過）
+
+- [ ] T010d [P] 新增後端 i18n keys — zh-TW（`backend/app/i18n/zh_TW/[module].py` — 依 plan.md 後端 i18n key 清單）
+- [ ] T010e [P] 新增後端 i18n keys — en（`backend/app/i18n/en/[module].py` — 依 plan.md 後端 i18n key 清單）
+
+> **PR 邊界**：T010d/T010e 合併為獨立 `PR-FOUND-BE-I18N`（backend i18n message dict files）。各 API route 實作任務相依此 PR（訊息 key 必須先存在才能在 route handler 中引用）。`[Principle: X; ADR-026; Backend Constitution i18n]`
 
 ### PR-FOUND-FE-TYPES：前端 TypeScript 型別合約（需在 PR-FOUND-FE-API 之前合併）
 
@@ -326,11 +333,15 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試（T015）
    - 每個 namespace → 兩個獨立 locales JSON 更新任務 [P]（T010a zh-TW + T010b en，各觸及一個檔案，Phase 2）
    - 各元件實作任務相依此任務（key 必須先存在才能在元件中使用）
 
-8. **從 plan.md DB index 分析**
+8. **從 plan.md 後端 i18n key 清單**（若有新增後端 response 訊息）
+   - 每個 module → 兩個獨立 Python dict 更新任務 [P]（T010d zh-TW + T010e en，各觸及一個檔案，Phase 2）
+   - 各 API route 實作任務相依此任務（訊息 key 必須先存在才能在 route handler 中引用）
+
+9. **從 plan.md DB index 分析**
    - 每個新 index → 在 migration 任務中一併處理（不另立任務）
    - 若有複合 index 或部分 index 等非常規策略 → 加入 Phase 2 備註說明理由
 
-9. **排序規則**
+10. **排序規則**
    - 設置 → 基礎建設（含 migration + route + i18n + types）→ 每個 US（測試 → 實作 + story）→ 優化
    - 相依性阻塞平行執行
 

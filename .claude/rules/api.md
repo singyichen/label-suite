@@ -11,7 +11,7 @@
 - All request bodies must be validated via Pydantic schemas (`app/schemas/`)
 - Response schemas must be explicit — never return raw ORM models
 - Paginated list responses use the shared `PaginatedResponse[T]` wrapper
-- Error responses follow the shared `ErrorResponse` schema with `detail` field
+- Error responses follow the shared `ErrorResponse` schema with `detail` field; the `detail` string is localized by the backend based on the request `Accept-Language` header (see ADR-026) — frontend renders it directly without re-mapping
 
 ## Status Codes
 

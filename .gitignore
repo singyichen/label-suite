@@ -70,3 +70,4 @@ test-results/
 
 # Prototype analytics local config (contains dev token)
 design/prototype/assets/analytics.config.local.json
+.worktrees/
