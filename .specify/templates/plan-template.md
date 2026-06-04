@@ -15,7 +15,7 @@
 
 [在此貼上或精煉來自 spec.md 的功能目標。]
 
-## Technical Approach
+## 技術方向
 
 [一段話。說明觸及哪些層（前端 / 後端 / 兩者）、核心技術決策，以及為何此方案能達成功能目標。不描述實作細節——這是目標與任務之間的橋樑。]
 
@@ -38,7 +38,7 @@
 - [ ] IX. No Silent Failure：所有 error case 是否定義對應處理路徑？例外不可靜默吞噬；背景 job 必須暴露狀態、重試次數與失敗原因
 - [ ] XI. Security & Privacy Baseline：是否涉及驗證流程、角色權限或使用者資料？若是，已規劃拒絕路徑測試；API response 不洩漏內部識別碼或敏感 metadata
 
-### Domain Constitution Loading（依觸及範圍勾選；未觸及的範圍可跳過）
+### 領域憲章載入（依觸及範圍勾選；未觸及的範圍可跳過）
 
 - [ ] 後端（touches `backend/`）：已讀取 `.specify/memory/backend-constitution.md`；本 plan 符合其所有適用規則
 - [ ] 前端（touches `frontend/`）：已讀取 `.specify/memory/frontend-constitution.md`；本 plan 符合其所有適用規則
