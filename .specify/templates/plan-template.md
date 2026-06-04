@@ -330,9 +330,19 @@ sequenceDiagram
    | `[feature].actions.create` | `建立` | `[Feature]Actions` button |
    | ... | | |
 
-   > i18n 檔案路徑：`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`
+   > 前端 i18n 檔案路徑：`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`
    >
    > **i18n 邊界（ADR-026）**：此表僅記錄前端 UI 字串（標籤、標題、按鈕文字、空狀態、客戶端驗證訊息）。後端 API response 的 `detail` 訊息由後端依 `Accept-Language` header 回傳，**不得**放入前端 locale 檔；前端元件直接顯示 `error.response?.data?.detail`，不做額外 key 對映。
+
+   **後端 i18n Key 清單**（若本功能新增 API response 訊息，必填；無則標記「本功能無新增後端訊息」）
+
+   | Key | zh-TW 預設值 | en 值 | 出現端點 |
+   |-----|------------|------|---------|
+   | `[module].[resource].not_found` | `[resource] 不存在` | `[Resource] not found` | `GET/PATCH/DELETE /[resource]/{id}` |
+   | `[module].[resource].created` | `[resource] 已建立` | `[Resource] created successfully` | `POST /[resource]` |
+   | ... | | | |
+
+   > 後端 i18n 檔案路徑：`backend/app/i18n/zh_TW/[module].py` 與 `backend/app/i18n/en/[module].py`
 
 4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
