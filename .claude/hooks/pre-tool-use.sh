@@ -34,7 +34,10 @@ if echo "$COMMAND" | grep -qE 'git push[^|&]*(\s|^|:)(main|master)(\s|$)'; then
 fi
 
 # Block: force push (requires explicit user confirmation)
-if echo "$COMMAND" | grep -qE 'git push.*(^|\s)(--force|-f)\b'; then
+# --force-with-lease is allowed (safer: checks remote hasn't diverged)
+if echo "$COMMAND" | grep -qE 'git push' && \
+   echo "$COMMAND" | grep -qE '(^|\s)(--force|-f)\b' && \
+   ! echo "$COMMAND" | grep -qE '(^|\s)--force-with-lease'; then
   echo "❌ Blocked: force push requires explicit user confirmation." >&2
   exit 2
 fi
