@@ -105,20 +105,18 @@ sequenceDiagram
     participant Service
     participant DB
 
-    Frontend->>API: [METHOD] /api/[resource] {Bearer token}
+    Frontend->>API: [METHOD] /api/[resource] (cookie auth)
     API->>Auth: get_current_user(token)
     alt token invalid / expired
         Auth-->>API: raise HTTP 401
         API-->>Frontend: 401 {detail: "Not authenticated"}
-    else task-scoped: user lacks task role
+    else task-scoped: user lacks task role (and is not super_admin)
         API->>Auth: require_task_role(role, task_id)
-        Auth->>DB: SELECT task_membership WHERE user_id AND task_id
+        Auth->>DB: SELECT task_membership WHERE user_id AND task_id AND required_role
         DB-->>Auth: None
         Auth-->>API: raise HTTP 404 (hide resource existence)
         API-->>Frontend: 404 {detail: "..."}
-    else super_admin bypass
-        Note over API,Auth: super_admin skips task role check
-    else authorized
+    else authorized (or super_admin bypass)
         API->>Service: [function_name](dto)
         Service->>DB: INSERT / UPDATE [table]
         DB-->>Service: return [entity]
@@ -185,11 +183,11 @@ sequenceDiagram
          note right of active: side effect（例：觸發 Celery task）
      ```
 
-     | 狀態轉換 | 觸發 API | Guard Condition | Side Effect |
-     |---------|---------|----------------|------------|
-     | `pending → active` | `POST /[resource]/activate` | `status == 'pending'` | — |
-     | `active → closed` | `POST /[resource]/close` | — | `score_submission.delay(id)` |
-     | ... | | | |
+     | 狀態轉換 | 觸發 API | Actor | 權限要求 | Guard Condition | Side Effect | Audit Log 事件 | Rollback / Retry |
+     |---------|---------|-------|---------|----------------|------------|--------------|-----------------|
+     | `pending → active` | `POST /[resource]/activate` | project_leader | `require_task_role(PROJECT_LEADER, task_id)` | `status == 'pending'` | — | `[resource].activated` | — |
+     | `active → closed` | `POST /[resource]/close` | project_leader | `require_task_role(PROJECT_LEADER, task_id)` | — | `score_submission.delay(id)` | `[resource].closed` | retry Celery task on failure |
+     | ... | | | | | | | |
 
      > 若無複雜狀態機，標記「本功能無多狀態實體」。
 
@@ -277,7 +275,7 @@ sequenceDiagram
 
    | 畫面 / 元件 | 觸發時機 | Method | Endpoint | TanStack Query key |
    |------------|---------|--------|----------|--------------------|
-   | `[Feature]Page` 掛載 | 頁面初始化 | GET | `/api/v1/[module]/[resource]` | `['[module]', '[resource]', params]` |
+   | `[Feature]Page` 掛載 | 頁面初始化 | GET | `/api/v1/[module]/[resource]` | `queryKeys.[module].[resource].list(params)` |
    | `[Feature]Form` 送出 | 使用者操作 | POST | `/api/v1/[module]/[resource]` | — (mutation，invalidates list key) |
    | ... | | | | |
 
@@ -296,7 +294,7 @@ sequenceDiagram
    - [ ] controlled component（欄位 ≤ 3 個的簡單表單）
 
    TanStack Query 策略：
-   - queryKey 格式：['[module]', '[resource]', params]（例：['annotation', 'list', { taskId }]）
+   - queryKey 格式：使用 `frontend/src/shared/constants/query-keys.ts` 工廠函式（例：`queryKeys.annotation.list({ taskId })`）；禁止在元件或 hook 中直接使用 inline string array（FR-084）
    - 每個 mutation 對應 invalidate 目標：[列出 mutationFn → invalidateQueries key 的對應]
    - 需要 optimistic update 的操作：[列出，若無則標記「本功能無 optimistic update」]
 
