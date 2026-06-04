@@ -62,7 +62,7 @@ headers {
   Content-Type: application/json
 }
 
-# For unsafe methods (POST / PATCH / DELETE): add the Origin header to satisfy the
+# For unsafe methods (POST / PUT / PATCH / DELETE): add the Origin header to satisfy the
 # CSRF trusted-origin check (Foundation Spec §Security). Remove for GET / HEAD.
 # Use {{frontendOrigin}} (e.g. http://localhost:5173), NOT {{baseUrl}} — ALLOWED_ORIGINS
 # contains frontend origins, not the API server URL.
@@ -85,7 +85,7 @@ docs {
   Bruno stores the session cookie automatically and sends it on all subsequent requests.
   No Authorization header or token variable required.
 
-  CSRF: POST / PATCH / DELETE requests must include the Origin header (see above)
+  CSRF: POST / PUT / PATCH / DELETE requests must include the Origin header (see above)
   to pass the trusted-origin check on production-like CSRF settings. Use
   {{frontendOrigin}} (set in the environment file), not {{baseUrl}}; ALLOWED_ORIGINS
   contains frontend origins (e.g. http://localhost:5173), not the API server URL.

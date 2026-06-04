@@ -80,7 +80,8 @@ cd backend && uv run ruff check . && uv run mypy .
 
 For tasks touching `backend/bruno/`: also run this `.bru` structure check:
 ```bash
-_bru_files=$(git diff --cached --name-only 2>/dev/null | grep '\.bru$')
+_bru_files=$( { git diff --cached --name-only 2>/dev/null; git diff --name-only 2>/dev/null; } \
+  | grep '\.bru$' | grep -v '/environments/' | sort -u)
 if [ -n "$_bru_files" ]; then
   for _f in $_bru_files; do
     if [ -f "$_f" ]; then
