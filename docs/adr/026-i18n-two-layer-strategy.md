@@ -35,10 +35,10 @@ Apply a **two-layer i18n strategy**:
 
 ### Layer 2 — Backend Response Messages (Accept-Language)
 
-- Scope: The `detail` field in `ErrorResponse` and any user-facing string returned in API response bodies.
+- Scope: The `detail` field in `ErrorResponse` and any user-facing string returned in API response bodies. FastAPI's default 422 `RequestValidationError` responses are excluded from this contract — they produce Pydantic error objects with English `msg` values; register a custom localized `RequestValidationError` handler if 422 messages also need localization.
 - Implementation: Backend reads the `Accept-Language` header on every request and selects the appropriate message string.
 - Message strings are stored in a dedicated `app/i18n/` directory, organized by language code (`app/i18n/zh_TW/` and `app/i18n/en/`), as Python dict constants or `.json` files loaded at startup.
-- Supported languages: `zh-TW` (default fallback) and `en`. Unknown or missing header falls back to `zh-TW`.
+- Supported languages: `zh-TW` (default fallback) and `en`. The backend normalizes the header value before matching: strip quality values (`;q=…`), use the primary subtag (e.g. `en-US` → `en`), and replace hyphens with underscores to match directory names (e.g. `zh-TW` → `zh_TW`). Unknown or missing header falls back to `zh-TW`.
 - Rule: Business logic must **never** hardcode human-readable message strings inline. All user-facing strings must reference a key from `app/i18n/`.
 
 ### Frontend Rendering Contract
@@ -65,5 +65,5 @@ toast.error(t(`errors.${error.response?.data?.code}`))
 ### Harder
 
 - Backend developers must remember to add strings to `app/i18n/` rather than inlining them — enforced by `.claude/rules/backend.md`.
-- The `Accept-Language` header must be forwarded correctly by the frontend `axios` instance; missing header falls back to `zh-TW` but may surface unexpected language to en-only users if the header is omitted.
+- The frontend `axios` instance must read the current `react-i18next` language and send it as the `Accept-Language` header on every request; relying on the browser's ambient header can cause a mismatch between the UI locale and the language of backend error messages (e.g. a user who switches the UI to English while the browser sends `zh-TW`).
 - Integration tests for backend i18n must assert `detail` content in both `zh-TW` and `en` for critical error paths.
