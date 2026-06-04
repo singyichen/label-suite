@@ -44,3 +44,4 @@ Each ADR follows this structure:
 | [023](023-cicd-docker-compose-nginx-deployment.md) | CI/CD Deployment with Docker Compose and Nginx | Accepted | 2026-05-29 |
 | [024](024-database-quickstart-sqlite-tiered.md) | Tiered Database Strategy — SQLite for Quick Start, PostgreSQL for Production | Accepted | 2026-06-03 |
 | [025](025-api-collection-bruno.md) | API Collection Tool — Bruno | Accepted | 2026-06-03 |
+| [026](026-i18n-two-layer-strategy.md) | Two-Layer i18n Strategy — Frontend UI vs. Backend Response | Accepted | 2026-06-04 |

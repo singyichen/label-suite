@@ -10,7 +10,7 @@
 
 **Role model:** Two-layer. **System role** (JWT): `user` | `super_admin` | `null`. **Task role** (from `task_membership` API per task): `project_leader` | `reviewer` | `annotator` — not stored in JWT. `DashboardPage` dispatches with explicit `role ===` checks; unknown role clears session and redirects to `/login`. Task pages additionally check membership via `useTaskRole(taskId)`.
 
-**Localization:** Namespaced per module — e.g. `t('task-management:config_builder.label_name')`. Files at `locales/zh-TW/[module].json` and `locales/en/[module].json`.
+**Localization:** Namespaced per module — e.g. `t('task-management:config_builder.label_name')`. Files at `locales/zh-TW/[module].json` and `locales/en/[module].json`. Scope: UI strings only (labels, titles, button text, empty states, client-side validation). **Do not** add backend `detail` strings to locale files — backend response messages are pre-localized via `Accept-Language` (ADR-026); render `error.response?.data?.detail` directly.
 
 ## TypeScript Code Style
 

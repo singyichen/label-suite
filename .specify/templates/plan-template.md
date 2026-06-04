@@ -331,6 +331,8 @@ sequenceDiagram
    | ... | | |
 
    > i18n 檔案路徑：`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`
+   >
+   > **i18n 邊界（ADR-026）**：此表僅記錄前端 UI 字串（標籤、標題、按鈕文字、空狀態、客戶端驗證訊息）。後端 API response 的 `detail` 訊息由後端依 `Accept-Language` header 回傳，**不得**放入前端 locale 檔；前端元件直接顯示 `error.response?.data?.detail`，不做額外 key 對映。
 
 4. **更新系統流程圖** 在本計畫中
    - 追蹤資料路徑：Frontend → API → Service → DB
