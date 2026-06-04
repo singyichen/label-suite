@@ -90,9 +90,9 @@ body:
     id: logs
     attributes:
       label: "🧾 Log / 相關連結（選填）"
-      description: "PR、error log、dashboard 連結等"
+      description: "PR、error log、dashboard 連結等。⚠️ 貼上之前請先確認已移除 token、密碼、PII、request body 中的敏感欄位；如有無法公開的證據，請改用私有頻道（email / Slack DM）回報。"
       placeholder: |
-        - Log：
+        - Log（已去除敏感資訊）：
         - Dashboard：
         - 相關 PR/issue：
     validations:
