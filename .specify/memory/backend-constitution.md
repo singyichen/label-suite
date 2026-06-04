@@ -70,7 +70,7 @@ Source of truth: `specs/_governance/constitution.md`, `specs/_governance/backend
 - Conflicting concurrent updates must be prevented by optimistic or pessimistic locks or explicit conflict checks.
 - Migrations that add constraints must include validation or a backfill strategy for existing data.
 - Test-set answers must be stored separately from annotator-facing task data and protected by access control.
-- List endpoints must be paginated with a maximum page size of 100.
+- List endpoints must be paginated with a maximum limit of 100.
 - Service-layer code must avoid N+1 queries and unbounded database scans.
 - Add indexes for filtering, joining, leaderboard ranking, task lookup, and JSONB access patterns when required by query behavior.
 
@@ -127,7 +127,7 @@ Source of truth: `specs/_governance/constitution.md`, `specs/_governance/backend
 - Core labeling and annotation API operations must target P95 response time of 500ms or less.
 - Expensive scoring must run in Celery, not synchronously in API requests.
 - Leaderboard and scoring-result reads should use bounded Redis caching with explicit TTLs.
-- All list endpoints require pagination and bounded page sizes.
+- All list endpoints require pagination and bounded limit values.
 - Service-layer queries must be reviewed for N+1 patterns, missing indexes, and excessive JSONB scans.
 - Config-driven flexibility must not permit unbounded metric execution, unlimited payload sizes, or uncontrolled worker runtime.
 

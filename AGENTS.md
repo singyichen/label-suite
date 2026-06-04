@@ -40,6 +40,20 @@ design/prototype/pages/[module]/   ← HTML prototypes
 - Remove all debug `print` / `console.log` before finishing
 - Surface exact error to user when any tool call fails twice; never silently retry a third time
 
+## Review Guidelines
+
+When assisting with code review, keep the review narrow, actionable, and tied to the requested scope:
+
+- Prioritize correctness, security, data leakage, type safety, architecture-boundary violations, regression risk, and missing tests.
+- Only report issues that are directly supported by the changed code, surrounding code, failing checks, or project rules.
+- Do not expand into unrelated refactors, style preferences, speculative edge cases, or broad architecture redesigns unless they create a concrete bug or policy violation.
+- Treat unchanged code as context, not review scope. Mention unchanged-code concerns only when the PR makes the risk worse.
+- Prefer a small number of high-signal findings over exhaustive commentary. If there are no blocking findings, say that clearly and list residual test or verification gaps separately.
+- Each finding must include the impacted file/line, the observable risk, and the smallest practical fix direction.
+- Separate blocking findings from non-blocking suggestions. Do not request changes for minor polish, naming, or formatting if existing tooling can handle it.
+- Verify project-specific constraints before flagging them: no cross-feature imports, config-driven task types, no annotator access to ground-truth answers, no `any`, explicit CORS origins, and required tests.
+- If review context is incomplete, state the limitation once and continue with the available diff instead of broadening the review.
+
 ## When SDD Is Required
 
 New features, behavior changes, breaking API changes, and architectural changes must go through:

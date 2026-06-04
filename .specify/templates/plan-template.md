@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.10.0
+版本: 1.11.0
 狀態: Draft
 ---
 
@@ -15,7 +15,7 @@
 
 [在此貼上或精煉來自 spec.md 的功能目標。]
 
-## Technical Approach
+## 技術方向
 
 [一段話。說明觸及哪些層（前端 / 後端 / 兩者）、核心技術決策，以及為何此方案能達成功能目標。不描述實作細節——這是目標與任務之間的橋樑。]
 
@@ -38,7 +38,7 @@
 - [ ] IX. No Silent Failure：所有 error case 是否定義對應處理路徑？例外不可靜默吞噬；背景 job 必須暴露狀態、重試次數與失敗原因
 - [ ] XI. Security & Privacy Baseline：是否涉及驗證流程、角色權限或使用者資料？若是，已規劃拒絕路徑測試；API response 不洩漏內部識別碼或敏感 metadata
 
-### Domain Constitution Loading（依觸及範圍勾選；未觸及的範圍可跳過）
+### 領域憲章載入（依觸及範圍勾選；未觸及的範圍可跳過）
 
 - [ ] 後端（touches `backend/`）：已讀取 `.specify/memory/backend-constitution.md`；本 plan 符合其所有適用規則
 - [ ] 前端（touches `frontend/`）：已讀取 `.specify/memory/frontend-constitution.md`；本 plan 符合其所有適用規則
@@ -426,6 +426,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.11.0 | 2026-06-04 | 新增後端 i18n Key 清單表（依 ADR-026），列出本功能新增 API response 訊息的 key、zh-TW/en 值及對應端點；若無新增後端訊息則標記「本功能無新增後端訊息」；前端 i18n 邊界說明補充 ADR-026 參照 |
 | 1.10.0 | 2026-06-04 | 補齊前後端開發者所需流程圖：sequenceDiagram 骨架加入 Auth Middleware permission check alt 分支（401/404/super_admin bypass）；Phase 1 步驟 1 新增條件必填 stateDiagram-v2（狀態數 ≥ 3 或有 guard condition）；步驟 2 新增事務邊界設計表；步驟 3 新增畫面狀態轉換表（modal/multi-step 必填）；Loading 策略改為 TanStack Query 狀態欄位格式；路由分析表新增 Guard 失敗行為欄；步驟 4 Celery 表新增 Worker 成功/失敗 DB 操作欄 |
 | 1.9.0 | 2026-06-04 | Phase 1 步驟 3 新增必填「畫面 × API 對應」表（畫面/元件 → 觸發時機 → Method → Endpoint → TanStack Query key），橋接 API 清單與切版分析，讓 Reviewer 在 Phase 1 即可驗證兩者覆蓋一致 |
 | 1.8.1 | 2026-06-03 | 修正 i18n key 清單與任務產生策略中的 locales 路徑為 `frontend/src/locales/{zh-TW,en}/[module].json`，對齊 frontend-constitution Rule IX |
