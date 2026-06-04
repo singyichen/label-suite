@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.11.7
+版本: 1.12.0
 狀態: Draft
 ---
 
@@ -303,11 +303,12 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 - **FR-001**：系統必須讓所有 API request body 以 Pydantic schema（`app/modules/[module]/schemas.py` 或 module-local `schemas/` package）驗證；跨模組共用 schema 只能放在 `app/schemas/`。
 - **FR-002**：系統必須讓所有 API route 聲明 `response_model=`；不得直接回傳 ORM 物件。
 - **FR-003**：系統必須讓一般 list 端點支援 `limit` 與 `offset`，預設值為 `PAGINATION_DEFAULT_LIMIT` 與 `0`，`limit` 上限為 `PAGINATION_MAX_LIMIT`；採 cursor pagination 的端點必須由 feature spec 記錄理由、response schema、stable sort key 與測試。
+  > **待移轉（2026-06-04）：** `specs/task-management/010-task-list/spec.md` 與 `specs/dataset/016-dataset-analysis-list/spec.md` 目前仍使用 `page`/`page_size` 參數，視為暫時例外，必須在進入實作前完成移轉至 `limit`/`offset`。
 - **FR-004**：系統必須透過 `APIRouter` 以 module prefix 與 tags 組織路由；不得在 `main.py` 直接定義資源路由。
 - **FR-005**：系統必須以 `ALLOWED_SORT_FIELDS` / `ALLOWED_FILTER_FIELDS` 或等效 schema 明確宣告每個 list 端點允許的排序與篩選欄位。
 - **FR-006**：系統必須在 API response 中使用正確 HTTP status code；`400` 表示 request 語意或應用規則錯誤，`401` 表示未認證，`403` 表示已認證但不可授權且不需隱藏資源存在，`404` 表示不存在或必須隱藏存在性，`422` 表示 schema validation 錯誤。
 - **FR-068**：系統必須讓 `PaginatedResponse[T]` 包含 `has_more: bool`、`total_pages: int` 與 `next_offset: Optional[int]` 欄位，使 frontend 無需自行計算翻頁參數；欄位應從 `total`、`limit` 與 `offset` 衍生，不得要求 DB 額外查詢。
-- **FR-069**：系統必須讓 list 端點的分頁參數在 Pydantic schema 層以 `limit: int = Field(ge=1, le=PAGINATION_MAX_LIMIT)` 與 `offset: int = Field(ge=0)` 限制；`offset` 超過 `total` 時回傳空 `items` 陣列與 `has_more: false`，不得回傳 `404`。
+- **FR-069**：系統必須讓 list 端點的分頁參數在 Pydantic schema 層以 `limit: int = Field(ge=1, le=PAGINATION_MAX_LIMIT)` 與 `offset: int = Field(ge=0)` 限制；`offset` 大於或等於 `total` 時回傳空 `items` 陣列與 `has_more: false`，不得回傳 `404`。
 - **FR-070**：系統必須讓開發環境啟用 FastAPI `/docs` 與 `/redoc`；production 環境必須透過環境變數（如 `ENABLE_OPENAPI_DOCS`）控制是否暴露，預設 disabled，以避免 API 文件對外洩漏。
 - **FR-071**：系統必須讓 CI pipeline 在 backend test 後自動 export versioned OpenAPI artifact（例如 `openapi.v1.json`）；frontend 的 API response 相關型別（`shared/api-types/` 中）必須從 OpenAPI schema 自動生成（如 `openapi-typescript`）或透過 CI script 驗證與 OpenAPI artifact 一致，型別漂移必須在 CI 層阻擋。Generated API contract types 屬於 API boundary exception，不受 `shared/` domain-neutral admission rule 限制，但不得包含手寫 domain 邏輯。
 - **FR-115**：系統必須讓所有 API 錯誤回應使用 `ErrorResponse` schema：`{ "detail": string | ErrorDetail[] }`；FastAPI exception handler、Pydantic validation error、auth error 與 application error 必須輸出同一 schema。
@@ -818,11 +819,11 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.12.0 | 2026-06-04 | 將分頁參數由 `page`/`page_size` 改為 `limit`/`offset`；架構常數更名為 `PAGINATION_DEFAULT_LIMIT`/`PAGINATION_MAX_LIMIT`；`PaginatedResponse[T]` 新增 `next_offset: int \| None` 欄位（後端衍生，frontend 無需計算翻頁偏移量）；更新 FR-003、FR-068、FR-069；FR-069 邊界條件改為「大於或等於 total」；FR-003 標注 task-list 與 dataset-analysis-list spec 待移轉 |
 | 1.11.7 | 2026-06-04 | FR-131 補充 skeleton-only route 例外條款：skeleton-only PR 可延後至 PR-FOUND-BRUNO 建立 .bru，PR description 須標註 FR-131-exempt: skeleton-only route |
 | 1.11.6 | 2026-06-03 | 新增 F-18 FR-131（Bruno API collection gate）與 ADR-025 上游相依性；補充 Bruno collection 路徑約束與 PR gate 規則 |
 | 1.11.5 | 2026-06-03 | 修正 SC-045 命名衝突：將 `docker-compose.local.yml` 改為 `docker-compose.yml`，對齊 ADR-024 zero-friction quick-start 決定 |
 | 1.11.4 | 2026-06-03 | 補充上游相依性：新增 ADR-024（SQLite / PostgreSQL 分層資料庫策略），對應既有 FR-130 與 SC-045 bootstrap contract |
-| 1.12.0 | 2026-06-04 | 將分頁參數由 `page`/`page_size` 改為 `limit`/`offset`；架構常數更名為 `PAGINATION_DEFAULT_LIMIT`/`PAGINATION_MAX_LIMIT`；`PaginatedResponse[T]` 新增 `next_offset: int \| None` 欄位（後端衍生，frontend 無需計算翻頁偏移量）；更新 FR-003、FR-068、FR-069 |
 | 1.11.3 | 2026-06-02 | 依 PR review-resolve 修正：SC-036 移除 Django 固有的 `override_settings` 改為 FastAPI 適用的 pytest monkeypatch / dependency_overrides 說明；對齊分支命名慣例，STATUS.md 功能分支欄位改回 `feat/foundation/000-foundation` |
 | 1.11.2 | 2026-06-02 | 依 PR code review 修正：FR-040 parenthetical 改為「schema 定義見 FR-115」移除自我矛盾措辭、補充 ADR-022 上游依賴、補記 SC-029~031 changelog 歸屬 |
 | 1.11.1 | 2026-06-01 | 依 independent-review 一致性/可測試性雙向審查修正：FR-116 移除與 FR-088 重疊的 frontend 行為描述、FR-040 加 supersede 說明、FR-117/FR-078 補充 CSRF 並存關係、FR-120 補顯式 `operation_id=` 設定指引、SC-018 補 operationId diff 偵測機制、SC-022 補 metrics naming grep pattern 與 instrumentator 設定、SC-034 修正 mobile/tablet/desktop 三 project 與 SC-041 對齊、SC-036 補 backend integration test + production settings fixture 指引、SC-039 補 Celery headers dict assert pattern、SC-045 補 CI shell check 與 scripts/ 路徑約束 |
