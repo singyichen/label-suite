@@ -50,8 +50,8 @@ body:
     id: logs
     attributes:
       label: "🧾 錯誤訊息 / Console / Log（選填）"
-      description: "貼上錯誤訊息、console log 或 API 回應"
-      placeholder: "可貼文字或截圖"
+      description: "貼上錯誤訊息、console log 或 API 回應。⚠️ 貼上之前請先確認已移除 token、密碼、PII、request body 中的敏感欄位；如有無法公開的證據，請改用私有頻道（email / Slack DM）回報。"
+      placeholder: "可貼文字或截圖（已去除敏感資訊）"
     validations:
       required: false
 
