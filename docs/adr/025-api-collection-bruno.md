@@ -42,6 +42,8 @@ backend/
 
 ### `.bru` File Convention
 
+> **Method-specific adjustment:** For **GET / HEAD** requests, omit `body: json` from the method block and omit the `body:json {}` section entirely. Both are required only for **POST / PATCH / PUT / DELETE** (write) requests.
+
 ```bru
 meta {
   name: [Endpoint Description]
@@ -49,6 +51,7 @@ meta {
   seq: [sequence number within module]
 }
 
+# GET / HEAD: remove `body: json` from the block below.
 [method] {
   url: {{baseUrl}}/api/v1/[module]/[resource]
   body: json
@@ -68,6 +71,7 @@ headers {
 #   Origin: {{frontendOrigin}}
 # }
 
+# POST / PATCH / PUT / DELETE only — omit this entire block for GET / HEAD:
 body:json {
   {
     "field": "value"

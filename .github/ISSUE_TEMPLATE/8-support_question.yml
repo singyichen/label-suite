@@ -44,10 +44,7 @@ body:
     id: evidence
     attributes:
       label: "🖼️ 相關截圖/Log/連結（選填）"
-      description: "有圖有真相，有 log 有方向"
-      placeholder: |
-        - 截圖 / 錄影：
-        - Console / API log：
-        - 相關連結：
+      description: "有圖有真相，有 log 有方向。⚠️ 貼上之前請先確認已移除 token、密碼、PII、request body 中的敏感欄位；如有無法公開的證據，請改用私有頻道（email / Slack DM）回報。"
+      placeholder: "可貼文字或截圖（已去除敏感資訊）"
     validations:
       required: false

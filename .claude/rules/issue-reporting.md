@@ -44,7 +44,8 @@ cat <<'EOF' | gh issue create \
 **實際結果：** <actual>
 
 ## 🧾 錯誤訊息
-<error log or code snippet>
+⚠️ Remove tokens, cookies, env values, request bodies, and PII before pasting. If evidence cannot be made public, report via private channel instead.
+<error log or code snippet — sensitive data removed>
 
 ## 🤖 Opened by
 Agent: <agent-name> | Context: <phase or trigger>

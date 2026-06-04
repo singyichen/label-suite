@@ -78,6 +78,20 @@ After each backend task:
 cd backend && uv run ruff check . && uv run mypy .
 ```
 
+For tasks touching `backend/bruno/`: also run this `.bru` structure check:
+```bash
+_bru_files=$(git diff --cached --name-only 2>/dev/null | grep '\.bru$')
+if [ -n "$_bru_files" ]; then
+  for _f in $_bru_files; do
+    if [ -f "$_f" ]; then
+      grep -q 'meta {' "$_f" && grep -qE '^\s*(get|post|put|patch|delete|head) \{' "$_f" \
+        || { echo "Bruno structure error: $_f missing meta or method block"; exit 1; }
+    fi
+  done
+  echo "Bruno .bru structure check passed"
+fi
+```
+
 After each frontend task:
 ```bash
 if [ -f frontend/package.json ]; then cd frontend && pnpm tsc --noEmit && pnpm lint; else echo "Skip frontend gate: frontend/package.json does not exist yet"; fi
