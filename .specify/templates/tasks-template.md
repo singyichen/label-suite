@@ -387,7 +387,7 @@ pnpm exec playwright test                # E2E gate
 - [ ] Story 任務涵蓋 Default + 邊界狀態（Empty / Loading / Error）
 - [ ] 優化階段包含文件、清理、安全性與效能（含 P95 量測工具）檢查
 - [ ] 每個使用者故事 Phase 的故事目標皆追蹤至至少一個 SC-ID（來自 spec.md 成功標準）
-- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BRUNO / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-FE-TYPES 九個獨立 PR 邊界
+- [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BRUNO / PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-BE-I18N（條件性，若本功能有新增後端訊息）/ PR-FOUND-FE-TYPES 九至十個獨立 PR 邊界
 - [ ] Phase 2 有前端 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`），且其 PR 邊界（PR-FOUND-FE-TYPES）早於 services / components 任務
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
 - [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
@@ -398,6 +398,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.22.0 | 2026-06-04 | 新增 PR-FOUND-BE-I18N Phase 2 邊界（T010d zh-TW + T010e en），確保後端 app/i18n/ 訊息檔案在功能新增 API response 訊息時由 /speckit.tasks 產出；任務產生規則新增第 8 條（後端 i18n key 清單 → 兩個獨立任務）；驗證清單更新至九至十個邊界（PR-FOUND-BE-I18N 為條件性）；對齊 ADR-026 |
 | 1.21.0 | 2026-06-04 | PR-FOUND-BRUNO 邊界規則加入端點數 N > 2 時的拆分策略（BRUNO-INIT/BRUNO-SKEL），避免超出 ≤5 files gate |
 | 1.20.0 | 2026-06-04 | 任務產生規則 §2 加入 Bruno collection update 任務（每個 endpoint → 後端測試 + 實作 + Bruno update，Foundation FR-131） |
 | 1.19.0 | 2026-06-04 | 將 T006b/T006c 從 PR-FOUND-BE-API 拆出為獨立 PR-FOUND-BRUNO 邊界，避免突破 ≤5 files gate；T018b/T027b 的 auth 描述由 auth header 改為 auth cookie/session (ADR-021) |
