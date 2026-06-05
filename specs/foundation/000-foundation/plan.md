@@ -1,8 +1,8 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-06-05
-版本: 1.0.2
-狀態: Draft
+版本: 1.0.3
+狀態: plan-ready
 ---
 
 # 實作計畫：Foundation — Core Infrastructure
@@ -13,7 +13,7 @@
 
 建立 Label Suite 所有功能模組共享的工程骨架，使任何後續 feature PR 可直接落地實作，而不必自行建立基礎設施。
 
-骨架包含：FastAPI 後端（module-first 目錄結構、`AppBaseModel`/`ErrorResponse`/`PaginatedResponse` 共用 schema、async SQLAlchemy DB session、Pydantic Settings 環境驗證、Correlation ID middleware、bcrypt security helper）、React 前端（TypeScript strict、shared API client 含 `X-Correlation-ID` 傳遞、TanStack Query `QueryClient` baseline、Zustand session store、shared constants）、Docker Compose 本地環境（backend / postgres / redis）、bootstrap contract（`.env.example`、`scripts/verify-bootstrap.sh`），以及前後端整合驗證端點（`GET /api/v1/health`）。
+骨架包含：FastAPI 後端（module-first 目錄結構、`AppBaseModel`/`ErrorResponse`/`PaginatedResponse` 共用 schema、async SQLAlchemy DB session、Pydantic Settings 環境驗證、Correlation ID middleware、bcrypt security helper）、React 前端（TypeScript strict、shared API client 含 `X-Correlation-ID` 傳遞、TanStack Query `QueryClient` baseline、Zustand session store、shared constants）、Docker Compose 本地環境（backend / postgres / redis）、bootstrap contract（`.env.example`、seed data 策略（`scripts/seed.sh`）、OpenAPI export / frontend type-generation command（FR-071、SC-018）、`scripts/verify-bootstrap.sh`），以及前後端整合驗證端點（`GET /api/v1/health`）。
 
 **範圍界定（Foundation-Core）**：本計畫涵蓋 Foundation Spec P0/P1 核心工程約束（F-01~F-10、F-13、F-16、F-18），不包含 Prometheus/Grafana/Sentry（F-17）、Celery（F-12）、bundle budget 監控（FR-126）。上述延後項目由後續 Foundation-Observability 計畫實作。
 
@@ -76,6 +76,11 @@ backend/
 ├── alembic/
 │   ├── env.py                               # async migration（run_sync 包裝）
 │   └── versions/                            # empty；每個 feature PR 新增 migration
+├── bruno/                                   # Bruno API collection (ADR-025)
+│   ├── bruno.json
+│   └── environments/
+│       ├── local.bru
+│       └── staging.bru
 ├── app/
 │   ├── main.py                              # FastAPI app、middleware、router include
 │   ├── api/
@@ -153,7 +158,8 @@ frontend/
 ├── docker-compose.yml                      # backend + postgres + redis
 ├── .env.example                            # 所有必要環境變數範例（無預設 secret）
 └── scripts/
-    └── verify-bootstrap.sh                 # SC-045 one-command 本地驗證
+    ├── verify-bootstrap.sh                 # SC-045 one-command 本地驗證
+    └── seed.sh                             # FR-130 seed data 策略（dev 環境初始資料）
 ```
 
 ## 系統流程與資料流
@@ -375,7 +381,7 @@ Loading 策略：
 | Phase FE-1 | Frontend Project Scaffold | package.json、vite.config.ts、tsconfig.json、eslint.config.js |
 | Phase FE-2 | Frontend Shared Infrastructure | api-client、session store、constants、query-keys |
 | Phase FE-3 | Frontend Health Check Page | HealthCheckPage + tests |
-| Phase DevOps | Bootstrap & Verification | docker-compose.yml、.env.example、verify-bootstrap.sh |
+| Phase DevOps | Bootstrap & Verification | docker-compose.yml、.env.example、seed.sh、verify-bootstrap.sh（FR-130 全契約） |
 
 **TDD 排序**：
 - 每個 task 先寫 failing test（`[P]` 標記可平行）

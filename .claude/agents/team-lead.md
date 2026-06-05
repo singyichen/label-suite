@@ -83,11 +83,15 @@ For tasks touching `backend/bruno/` or `backend/app/*/router.py`: also run this 
 _repo_root=$(git rev-parse --show-toplevel)
 _changed=$( { git diff --cached --name-only 2>/dev/null; git diff --name-only 2>/dev/null; } | sort -u)
 _bru_files=$(echo "$_changed" | grep '\.bru$' | grep -v '/environments/')
-_route_files=$(echo "$_changed" | grep -E '(backend/app/api/routes/|backend/app/modules/.*/router\.py)')
+_route_files=$(echo "$_changed" | grep -E '^backend/app/modules/[^/]+/router(\.py|/.*\.py)$')
 # FR-131: route changes must include a matching Bruno update
 if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
-  echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or mark PR with FR-131-exempt: skeleton-only route"
-  exit 1
+  if git log -1 --pretty=%B 2>/dev/null | grep -q "FR-131-exempt"; then
+    echo "FR-131 gate: Route changes detected without Bruno updates, but exemption marker found. Bypassing."
+  else
+    echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or mark PR with FR-131-exempt: skeleton-only route"
+    exit 1
+  fi
 fi
 # Validate structure of each touched endpoint .bru file (paths anchored at repo root)
 if [ -n "$_bru_files" ]; then

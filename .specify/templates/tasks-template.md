@@ -59,13 +59,13 @@
 
 ### PR-FOUND-BE-SCHEMA：後端 Schema 基礎建設（依賴 PR-FOUND-MIGRATION merged）
 
-- [ ] T005 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/modules/[module]/schemas/[feature].py`，依 plan.md schema 層次設計）
+- [ ] T005 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/modules/[module]/schemas.py` 或 `schemas/[feature].py`，依 plan.md schema 層次與拆分慣例）
 
 > **PR 邊界**：T005 作為獨立 `PR-FOUND-BE-SCHEMA`。`[Principle: X; Backend Constitution XIII]`
 
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
-- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/modules/[module]/router/[feature].py`，依 plan.md Auth Dependency 欄）
+- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/modules/[module]/router.py` 或 `router/[feature].py`，依 plan.md Auth Dependency 欄與拆分慣例）
 
 > **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。FR-131 豁免：T006 是 skeleton-only（無實際業務邏輯）placeholder；.bru skeleton 由後續 PR-FOUND-BRUNO 補齊，PR description 須標註 `FR-131-exempt: skeleton-only route`。`[Principle: X; Backend Constitution XIII]`
 
@@ -128,9 +128,9 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T013a [P] [US1] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`
-- [ ] T013b [P] [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`
-- [ ] T013c [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`
+- [ ] T013a [P] [US1] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/[module]/test_[feature].py`
+- [ ] T013b [P] [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/[module]/test_[feature].py`
+- [ ] T013c [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/[module]/test_[feature].py`
 - [ ] T014 [P] [US1] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
 - [ ] T015 [P] [US1] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
 
@@ -138,19 +138,19 @@
 
 #### PR-US1-BE-MODEL：後端資料模型實作
 
-- [ ] T016 [P] [US1] 建立資料模型（`backend/app/modules/[module]/models/[feature].py`）— 含 relationship 與 Loading Strategy
+- [ ] T016 [P] [US1] 建立資料模型（`backend/app/modules/[module]/models.py` 或 `models/[feature].py`，依 plan.md 拆分慣例）— 含 relationship 與 Loading Strategy
 
 > **PR 邊界**：T016 作為獨立 `PR-US1-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US1-BE-SERVICE：後端 Service 實作（含 service 測試）
 
-- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service/[feature].py`）— 明確指定 `selectinload`/`joinedload`
+- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service.py` 或 `service/[feature].py`，依 plan.md 拆分慣例）— 明確指定 `selectinload`/`joinedload`
 
 > **PR 邊界**：T013a（service 單元測試）+ T017 合併為獨立 `PR-US1-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T018 [US1] 實作 API endpoint（`backend/app/modules/[module]/router/[feature].py`）— 含 auth dependency
+- [ ] T018 [US1] 實作 API endpoint（`backend/app/modules/[module]/router.py` 或 `router/[feature].py`，依 plan.md 拆分慣例）— 含 auth dependency
 - [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[feature]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018/T018b 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
@@ -180,9 +180,9 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T022a [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/unit/test_[feature].py`（擴充 US1 同檔案；不可與 T013a 並行）
-- [ ] T022b [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/integration/test_[feature].py`（擴充 US1 同檔案；不可與 T013b 並行）
-- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/integration/test_[feature].py`（擴充 US1 同檔案）
+- [ ] T022a [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可與 T013a 並行）
+- [ ] T022b [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可與 T013b 並行）
+- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案）
 - [ ] T023 [US2] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`（擴充 US1 同檔案；不可與 T014 並行）
 - [ ] T024 [US2] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`（擴充 US1 同檔案；不可與 T015 並行）
 
@@ -190,19 +190,19 @@
 
 #### PR-US2-BE-MODEL：後端資料模型實作
 
-- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models/[feature].py`
+- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models.py` 或 `models/[feature].py`（依 plan.md 拆分慣例）
 
 > **PR 邊界**：T025 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-SERVICE：後端 Service 實作（含 service 單元測試）
 
-- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/modules/[module]/service/[feature].py`
+- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/modules/[module]/service.py` 或 `service/[feature].py`（依 plan.md 拆分慣例）
 
 > **PR 邊界**：T022a（service 單元測試）+ T026 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/modules/[module]/router/[feature].py`
+- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/modules/[module]/router.py` 或 `router/[feature].py`（依 plan.md 拆分慣例）
 - [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[feature]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027/T027b 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
