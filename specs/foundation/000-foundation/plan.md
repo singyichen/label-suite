@@ -155,7 +155,7 @@ frontend/
         └── setup.ts                        # Vitest setup（jest-dom、MSW server）
 
 # Root / DevOps
-├── docker-compose.yml                      # backend + postgres + redis
+├── docker-compose.yml                      # CI/Docker 路徑：backend + postgres + redis（ADR-024 quick-start 使用 SQLite，無需 DATABASE_URL）
 ├── .env.example                            # 所有必要環境變數範例（無預設 secret）
 └── scripts/
     ├── verify-bootstrap.sh                 # SC-045 one-command 本地驗證
@@ -306,7 +306,7 @@ HealthCheckPage
 **前端技術決策**：
 
 ```
-型別策略：手寫 interface（src/shared/types/api.ts + HealthCheckPage 本地 type）
+型別策略：Foundation-Core 的 `HealthResponse` 採手寫 interface（`src/shared/types/api.ts`）作為佔位；`shared/api-types/` 暫時留空，待 account/001 PR 建立 OpenAPI export 後改由 CI codegen 填入，並以 SC-018 consistency check 驗證不漂移（FR-071）
 
 表單策略：無表單（health check 只有 GET）
 
@@ -333,9 +333,9 @@ Loading 策略：
 
 **i18n Key 清單**：
 
-> HealthCheckPage 為開發驗證工具，不需 i18n。Foundation-Core 無新增用戶可見字串。
+> HealthCheckPage 為 Foundation-only 內部工程驗證工具，非正式使用者介面。其顯示字串（`status: "ok"`、error text）為技術識別符而非 UI copy，符合 frontend-constitution §IX「stable technical identifier」豁免條件。此元件在系統穩定後移除，無需建立 i18n namespace。
 >
-> 標記：「本功能無前端 i18n 需求」
+> 標記：「本功能無前端 i18n 需求 — Foundation-only 工程驗證元件，適用技術識別符豁免」
 
 **後端 i18n Key 清單**：
 
@@ -358,9 +358,12 @@ Loading 策略：
 | Config 非法值（如 ALLOWED_ORIGINS=*）被拒絕 | 單元測試 | pytest | `tests/core/test_config.py` |
 | `GET /api/v1/health` 回傳 200 + `HealthResponse` | 整合測試 | pytest + httpx | `tests/core/test_health.py` |
 | health response 包含 `X-Correlation-ID` header | 整合測試 | pytest + httpx | `tests/core/test_health.py` |
+| 驗證錯誤（422）回傳 `ErrorResponse` schema（SC-035） | 整合測試 | pytest + httpx | `tests/core/test_health.py` |
+| 自定義例外 handler 回傳 `ErrorResponse` 而非 FastAPI 預設格式（SC-035） | 整合測試 | pytest + httpx | `tests/core/test_schemas.py` |
 | `HealthCheckPage` 掛載後呼叫 health API 並渲染 status | 元件測試 | Vitest + Testing Library + MSW | `src/features/health/__tests__/HealthCheckPage.test.tsx` |
 | `HealthCheckPage` 網路錯誤時顯示 error 訊息 | 元件測試 | Vitest + Testing Library + MSW | `src/features/health/__tests__/HealthCheckPage.test.tsx` |
 | `api-client` 從 response header 讀取 `X-Correlation-ID` | 單元測試 | Vitest | `src/shared/__tests__/api-client.test.ts` |
+| `QueryClient` 收到 HTTP 401 不觸發 retry（SC-020） | 單元測試 | Vitest | `src/shared/__tests__/query-client.test.ts` |
 
 **產出**：API 清單（含 Bruno 路徑）、Pydantic schema 層次、路由分析、測試情境已概述
 
