@@ -94,6 +94,8 @@ if [ -n "$_bru_files" ]; then
   for _f in $_bru_files; do
     _abs="$_repo_root/$_f"
     if [ -f "$_abs" ]; then
+      echo "$_f" | grep -qE '^backend/bruno/[^/]+/[^/]+/[^/]+\.bru$' \
+        || { echo "Bruno path error: $_f must be backend/bruno/<module>/<feature>/<api>.bru"; exit 1; }
       grep -q 'meta {' "$_abs" && grep -qE '^\s*(get|post|put|patch|delete|head) \{' "$_abs" \
         || { echo "Bruno structure error: $_f missing meta or method block"; exit 1; }
     fi

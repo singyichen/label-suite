@@ -25,7 +25,7 @@ The project needs an API collection tool that:
 
 ## Decision
 
-Use **Bruno** as the project API collection tool. Each endpoint has a dedicated `.bru` file committed under `backend/bruno/[module]/`.
+Use **Bruno** as the project API collection tool. Each endpoint has a dedicated `.bru` file committed under `backend/bruno/[module]/[feature]/[api].bru`.
 
 ### Collection Structure
 
@@ -36,8 +36,9 @@ backend/
     ├── environments/
     │   ├── local.bru                  # baseUrl = http://localhost:8000; frontendOrigin = http://localhost:5173
     │   └── staging.bru                # baseUrl = https://api.staging.example.com; frontendOrigin = https://staging.example.com
-    └── [module]/                      # One folder per feature module
-        └── [endpoint].bru             # One file per endpoint
+    └── [module]/                      # One folder per product module
+        └── [feature]/                 # One folder per SDD feature
+            └── [endpoint].bru         # One file per endpoint
 ```
 
 ### `.bru` File Convention
@@ -96,14 +97,14 @@ docs {
 
 Foundation Spec FR-131 makes the Bruno update a hard pre-PR gate:
 
-> A PR that modifies any file under `backend/app/modules/*/router.py` or `backend/app/api/routes/` must include a corresponding `.bru` file update under `backend/bruno/[module]/`. A PR diff that shows route changes without matching `bruno/` changes fails the gate. **Exception:** skeleton-only route PRs (placeholder endpoints with no business logic) may defer `.bru` creation to the subsequent `PR-FOUND-BRUNO` boundary; the PR description must carry the marker `FR-131-exempt: skeleton-only route`.
+> A PR that modifies any file under `backend/app/modules/*/router.py` or `backend/app/api/routes/` must include a corresponding `.bru` file update under `backend/bruno/[module]/[feature]/`. A PR diff that shows route changes without matching `bruno/` changes fails the gate. **Exception:** skeleton-only route PRs (placeholder endpoints with no business logic) may defer `.bru` creation to the subsequent `PR-FOUND-BRUNO` boundary; the PR description must carry the marker `FR-131-exempt: skeleton-only route`.
 >
 > **Schema/service contract changes:** A PR that modifies request or response shapes in `backend/app/schemas/` or service return types that alter the API contract should also update the corresponding `.bru` body/example-response blocks, even if no router file changed. This is a reviewer checklist item, not a hard automated gate.
 
 The tasks template (`tasks-template.md`) includes:
 
-- **T006b / T006c** in `PR-FOUND-BRUNO` (separate from `PR-FOUND-BE-API`): Bruno collection init + skeleton for all planned endpoints
-- **T018b / T027b / …** in each `PR-USN-BE-API`: full Bruno update (body, auth cookie/session, example response) for every implemented endpoint
+- **T006b / T006c** in `PR-FOUND-BRUNO` (separate from `PR-FOUND-BE-API`): Bruno collection init + skeleton for all planned endpoints, each listed as `backend/bruno/[module]/[feature]/[api].bru`
+- **T018b / T027b / …** in each `PR-USN-BE-API`: full Bruno update (body, auth cookie/session, example response) for every implemented endpoint under `backend/bruno/[module]/[feature]/`
 
 ## Consequences
 
@@ -119,4 +120,4 @@ The tasks template (`tasks-template.md`) includes:
 
 - Team members must keep `.bru` files updated alongside every route change — enforced by FR-131 and code review.
 - AI agents generating `.bru` files must follow the DSL convention strictly; malformed `.bru` files fail silently in the Bruno GUI.
-- A new module requires creating its subfolder under `backend/bruno/` and registering it in `bruno.json`.
+- A new module requires creating its subfolder under `backend/bruno/`; each feature creates its own feature subfolder, and endpoint files live under `backend/bruno/[module]/[feature]/`.

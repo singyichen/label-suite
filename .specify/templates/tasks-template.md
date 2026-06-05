@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.22.1
+版本: 1.22.3
 狀態: Draft
 ---
 
@@ -59,20 +59,20 @@
 
 ### PR-FOUND-BE-SCHEMA：後端 Schema 基礎建設（依賴 PR-FOUND-MIGRATION merged）
 
-- [ ] T005 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/schemas/[feature].py`，依 plan.md schema 層次設計）
+- [ ] T005 建立 Pydantic schemas — Base / Create / Update / Response（`backend/app/modules/[module]/schemas/[feature].py`，依 plan.md schema 層次設計）
 
 > **PR 邊界**：T005 作為獨立 `PR-FOUND-BE-SCHEMA`。`[Principle: X; Backend Constitution XIII]`
 
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
-- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/api/routes/[feature].py`，依 plan.md Auth Dependency 欄）
+- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/modules/[module]/router/[feature].py`，依 plan.md Auth Dependency 欄）
 
 > **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。FR-131 豁免：T006 是 skeleton-only（無實際業務邏輯）placeholder；.bru skeleton 由後續 PR-FOUND-BRUNO 補齊，PR description 須標註 `FR-131-exempt: skeleton-only route`。`[Principle: X; Backend Constitution XIII]`
 
 ### PR-FOUND-BRUNO：Bruno Collection 初始化與 Endpoint Skeleton（依賴 PR-FOUND-BE-API merged）
 
 - [ ] T006b [P] 建立 Bruno 集合根目錄初始化檔案（僅首次建立時執行，已存在則略過）— `backend/bruno/bruno.json`、`backend/bruno/environments/local.bru`、`backend/bruno/environments/staging.bru`
-- [ ] T006c [P] 為本功能各規劃端點建立 Bruno 請求 skeleton（依 plan.md API 清單逐一列出每個檔案，例如：`backend/bruno/[module]/[endpoint1].bru`、`backend/bruno/[module]/[endpoint2].bru`…）— skeleton only，每個 endpoint 對應一個 .bru 檔案
+- [ ] T006c [P] 為本功能各規劃端點建立 Bruno 請求 skeleton（依 plan.md API 清單逐一列出每個檔案，例如：`backend/bruno/[module]/[feature]/[endpoint1].bru`、`backend/bruno/[module]/[feature]/[endpoint2].bru`…）— skeleton only，每個 endpoint 對應一個 .bru 檔案
 
 > **PR 邊界**：T006b/T006c 合計檔案數 = 3（bootstrap）+ N（endpoint 數量）。N ≤ 2 時合併為單一 `PR-FOUND-BRUNO`（3+2=5，恰好達 ≤5 files gate 上限）；N > 2 時拆為 `PR-FOUND-BRUNO-INIT`（T006b，3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（T006c，N 個 .bru skeleton）兩個獨立 PR。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
@@ -138,20 +138,20 @@
 
 #### PR-US1-BE-MODEL：後端資料模型實作
 
-- [ ] T016 [P] [US1] 建立資料模型（`backend/app/models/[feature].py`）— 含 relationship 與 Loading Strategy
+- [ ] T016 [P] [US1] 建立資料模型（`backend/app/modules/[module]/models/[feature].py`）— 含 relationship 與 Loading Strategy
 
 > **PR 邊界**：T016 作為獨立 `PR-US1-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US1-BE-SERVICE：後端 Service 實作（含 service 測試）
 
-- [ ] T017 [US1] 實作 service 層（`backend/app/services/[feature].py`）— 明確指定 `selectinload`/`joinedload`
+- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service/[feature].py`）— 明確指定 `selectinload`/`joinedload`
 
 > **PR 邊界**：T013a（service 單元測試）+ T017 合併為獨立 `PR-US1-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T018 [US1] 實作 API endpoint（`backend/app/api/routes/[feature].py`）— 含 auth dependency
-- [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
+- [ ] T018 [US1] 實作 API endpoint（`backend/app/modules/[module]/router/[feature].py`）— 含 auth dependency
+- [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[feature]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018/T018b 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
@@ -190,20 +190,20 @@
 
 #### PR-US2-BE-MODEL：後端資料模型實作
 
-- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/models/[feature].py`
+- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models/[feature].py`
 
 > **PR 邊界**：T025 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-SERVICE：後端 Service 實作（含 service 單元測試）
 
-- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/services/[feature].py`
+- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/modules/[module]/service/[feature].py`
 
 > **PR 邊界**：T022a（service 單元測試）+ T026 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/api/routes/[feature].py`
-- [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
+- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/modules/[module]/router/[feature].py`
+- [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[feature]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027/T027b 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
 
@@ -398,6 +398,8 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.22.3 | 2026-06-05 | 後端 schema、route、model、service 任務路徑改為 `backend/app/modules/[module]/{schemas,router,models,service}/[feature].py`，對齊 module-first 與 feature 分檔規則 |
+| 1.22.2 | 2026-06-05 | Bruno skeleton 與 update 任務路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
 | 1.22.1 | 2026-06-04 | 修正 Phase 2 邊界數量驗證文字，納入 PR-FOUND-BRUNO 於端點數 N > 2 時拆為 PR-FOUND-BRUNO-INIT / PR-FOUND-BRUNO-SKEL 的條件性增加，總數由九至十個調整為九至十一個 |
 | 1.22.0 | 2026-06-04 | 新增 PR-FOUND-BE-I18N Phase 2 邊界（T010d zh-TW + T010e en），確保後端 app/i18n/ 訊息檔案在功能新增 API response 訊息時由 /speckit.tasks 產出；任務產生規則新增第 8 條（後端 i18n key 清單 → 兩個獨立任務）；驗證清單更新至九至十個邊界（PR-FOUND-BE-I18N 為條件性）；對齊 ADR-026 |
 | 1.21.0 | 2026-06-04 | PR-FOUND-BRUNO 邊界規則加入端點數 N > 2 時的拆分策略（BRUNO-INIT/BRUNO-SKEL），避免超出 ≤5 files gate |

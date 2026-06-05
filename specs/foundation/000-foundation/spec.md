@@ -1,7 +1,7 @@
 ---
 功能分支: feat/foundation/000-foundation
 建立日期: 2026-05-29
-版本: 1.12.0
+版本: 1.12.2
 狀態: Draft
 ---
 
@@ -705,7 +705,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 ### 功能需求
 
 - **FR-130**：系統必須提供可重現的 local bootstrap contract，至少包含 `.env.example`、Docker Compose local profile 或等效服務啟動方式、seed data 策略、OpenAPI export / frontend type generation command，以及 one-command verification 或清楚列出的本機驗證命令。
-- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/api/routes/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。**例外**：skeleton-only route PR（無實際業務邏輯的佔位 endpoint）可延後至後續 `PR-FOUND-BRUNO` 建立 `.bru` skeleton；PR description 須標註 `FR-131-exempt: skeleton-only route`。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`。（參見 ADR-025、ADR-021）
+- **FR-131**：任何修改 `backend/app/modules/*/router.py` 或 `backend/app/modules/*/router/` 下檔案的 PR，必須在同一 PR 中同步更新 `backend/bruno/[module]/[feature]/` 下對應的 `.bru` 請求檔案（含完整 request body、auth cookie 說明與 example response）；PR diff 中出現上述路徑的 route 變更但無對應 `bruno/` 變更，視為 pre-PR gate 不通過。**例外**：skeleton-only route PR（無實際業務邏輯的佔位 endpoint）可延後至後續 `PR-FOUND-BRUNO` 建立 `.bru` skeleton；PR description 須標註 `FR-131-exempt: skeleton-only route`。Bruno collection 根目錄為 `backend/bruno/`，集合設定檔為 `backend/bruno/bruno.json`，環境設定檔為 `backend/bruno/environments/{local,staging}.bru`；API 請求檔案依模組 → 功能 → API 分層放置。（參見 ADR-025、ADR-021）
 
 ---
 
@@ -819,6 +819,8 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.12.2 | 2026-06-05 | FR-131 route gate 移除舊 `backend/app/api/routes/` 例外路徑，改為只追蹤 `backend/app/modules/*/router.py` 與 `backend/app/modules/*/router/` |
+| 1.12.1 | 2026-06-05 | FR-131 Bruno API 請求檔案路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
 | 1.12.0 | 2026-06-04 | 將分頁參數由 `page`/`page_size` 改為 `limit`/`offset`；架構常數更名為 `PAGINATION_DEFAULT_LIMIT`/`PAGINATION_MAX_LIMIT`；`PaginatedResponse[T]` 新增 `next_offset: int \| None` 欄位（後端衍生，frontend 無需計算翻頁偏移量）；更新 FR-003、FR-068、FR-069；FR-069 邊界條件改為「大於或等於 total」；FR-003 標注 task-list 與 dataset-analysis-list spec 待移轉 |
 | 1.11.7 | 2026-06-04 | FR-131 補充 skeleton-only route 例外條款：skeleton-only PR 可延後至 PR-FOUND-BRUNO 建立 .bru，PR description 須標註 FR-131-exempt: skeleton-only route |
 | 1.11.6 | 2026-06-03 | 新增 F-18 FR-131（Bruno API collection gate）與 ADR-025 上游相依性；補充 Bruno collection 路徑約束與 PR gate 規則 |

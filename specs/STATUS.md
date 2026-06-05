@@ -23,7 +23,7 @@
 
 | ID | 功能 | 模組 | 狀態 | 分支 | 備註 |
 | --- | --- | --- | --- | --- | --- |
-| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `in-progress` | `feat/foundation/000-foundation` | spec v1.11.5；FR-001~130；SC-001~045 |
+| foundation-000 | Foundation — 工程基準與共同約束 | foundation | `plan-ready` | `feat/foundation/000-foundation` | spec v1.12.0；FR-001~131；SC-001~045；plan v1.0.0（Foundation-Core）；Observability 延後 |
 | account-001 | Login — Email / Password | account | `plan-ready` | `feat/account/001-login-email-password` | spec v1.2.2；規格狀態：Clarified |
 | account-002 | Login — Google SSO | account | `spec-ready` | `feat/account/002-login-google-sso` | spec v1.2.2；規格狀態：Clarified |
 | account-003 | Register — Email / Password | account | `spec-ready` | `feat/account/003-register-email-password` | spec v1.2.3；規格狀態：Clarified |
@@ -55,6 +55,8 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-06-05 | foundation-000 plan v1.0.0 created (Foundation-Core): plan-ready; scope F-01~F-10, F-13, F-16, F-18; Observability/Celery deferred; health check endpoint added. |
+| 2026-06-04 | Update foundation-000 to spec v1.12.0: pagination switched from page/page_size to limit/offset; PaginatedResponse next_offset added. |
 | 2026-06-03 | Update foundation-000 to spec v1.11.5: SC-045 naming change applied. |
 | 2026-06-03 | Update foundation-000 to spec v1.11.4: add ADR-024 upstream dependency (tiered database strategy — SQLite quick start / PostgreSQL production). |
 | 2026-06-02 | Update foundation-000 to spec v1.11.3: address PR review-resolve findings — replace Django-specific override_settings in SC-036 with FastAPI-compatible pytest monkeypatch / dependency_overrides; realign branch field to feat/foundation/000-foundation per naming convention. |
