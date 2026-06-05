@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.11.0
+版本: 1.13.6
 狀態: Draft
 ---
 
@@ -75,24 +75,65 @@ frontend/
 │   ├── features/[module]/
 │   │   ├── components/[feature]/
 │   │   ├── pages/[feature]/
-│   │   └── services/[feature].ts
-│   └── shared/        (only when used by 2+ feature modules)
+│   │   ├── hooks/
+│   │   ├── services/          # feature-local API 呼叫；每個 feature 一個 [feature].ts
+│   │   ├── types/
+│   │   └── __tests__/
+│   ├── shared/        (only when used by 2+ feature modules；Foundation 已建立 components/, hooks/, services/api-client.ts, services/auth.ts, stores/, constants/, types/, api-types/, utils/, styles/, i18n/)
+│   └── testing/       (Vitest setup；僅 Foundation 建立，feature PR 不需重建)
 
 backend/
 ├── app/
-│   ├── api/routes/[feature].py
-│   ├── models/[feature].py
-│   ├── schemas/[feature].py
-│   └── services/[feature].py
+│   └── modules/[module]/      # [module] 在 Python 包名中必須使用底線（task_management），前端目錄使用原始 slug（task-management）
+│       ├── router.py
+│       ├── schemas.py
+│       ├── models.py
+│       ├── dependencies.py
+│       ├── service.py
+│       ├── repository.py
+│       ├── constants.py
+│       ├── exceptions.py
+│       ├── config.py           (optional)
+│       └── utils.py            (optional)
 └── tests/
-    ├── unit/test_[feature].py
-    └── integration/test_[feature].py
+    ├── conftest.py        # Foundation 已建立，勿重建
+    ├── factories/         # 測試 factory helpers；Foundation 已建立目錄
+    ├── core/              # app/core/ 骨架層專用（特例）
+    │   └── test_[file].py
+    └── [module]/          # domain module 測試
+        └── test_[feature].py
 ```
+
+> **拆分慣例（單檔超過 300 行時）：** 所有模組檔案均適用同一規則——超過 300 行時改為同名子目錄並按 feature 分檔，`__init__.py` 負責彙總對外介面，呼叫端 import 路徑不變。FR-131 路由異動偵測已擴展至涵蓋 `app/modules/*/router/` 目錄下的所有子檔案，與 `router.py` 單檔一致。
+>
+> ```text
+> modules/[module]/
+> ├── router/
+> │   ├── __init__.py   # router.include_router(...) 彙總
+> │   ├── [feature-a].py
+> │   └── [feature-b].py
+> ├── schemas/
+> │   ├── __init__.py
+> │   ├── [feature-a].py
+> │   └── [feature-b].py
+> ├── models/
+> │   ├── __init__.py   # re-export 所有 Model（Alembic 自動發現需要）
+> │   ├── [feature-a].py
+> │   └── [feature-b].py
+> ├── service/
+> │   ├── __init__.py
+> │   ├── [feature-a].py
+> │   └── [feature-b].py
+> └── repository/
+>     ├── __init__.py
+>     ├── [feature-a].py
+>     └── [feature-b].py
+> ```
 
 ## 系統流程與資料流 *(功能涉及 API 呼叫、非同步任務或多層資料處理時必填)*
 
 <!--
-  描述資料如何在系統層間流動：Frontend → API → Service → DB。
+  描述資料如何在系統層間流動：Frontend → Route → Controller boundary → Service → Repository → Model → DB。
   包含相關的錯誤路徑與非同步流程（Celery tasks、WebSocket 等）。
   在 GitHub 上可原生渲染，無需額外工具。
 -->
@@ -101,42 +142,54 @@ backend/
 sequenceDiagram
     participant Frontend
     participant Auth as Auth Middleware
-    participant API
+    participant Route as Route<br/>app/api/v1/router.py
+    participant Controller as Controller boundary<br/>app/modules/[module]/router.py
     participant Service
+    participant Repository
+    participant Model as Model (SQLAlchemy)
     participant DB
 
-    Frontend->>API: [METHOD] /api/[resource] {Bearer token}
-    API->>Auth: get_current_user(token)
+    Frontend->>Route: [METHOD] /api/v1/[module]/[resource] {session cookie}
+    Route->>Controller: dispatch to module router
+    Controller->>Auth: get_current_user(session)
     alt token invalid / expired
-        Auth-->>API: raise HTTP 401
-        API-->>Frontend: 401 {detail: "Not authenticated"}
+        Auth-->>Controller: raise HTTP 401
+        Controller-->>Frontend: 401 {detail: "Not authenticated"}
     else task-scoped: user lacks task role
-        API->>Auth: require_task_role(role, task_id)
+        Controller->>Auth: require_task_role(role, task_id)
         Auth->>DB: SELECT task_membership WHERE user_id AND task_id
         DB-->>Auth: None
-        Auth-->>API: raise HTTP 404 (hide resource existence)
-        API-->>Frontend: 404 {detail: "..."}
+        Auth-->>Controller: raise HTTP 404 (hide resource existence)
+        Controller-->>Frontend: 404 {detail: "..."}
     else super_admin bypass
-        Note over API,Auth: super_admin skips task role check
+        Note over Controller,Auth: super_admin skips task role check
     else authorized
-        API->>Service: [function_name](dto)
-        Service->>DB: INSERT / UPDATE [table]
-        DB-->>Service: return [entity]
-        Service-->>API: [ResponseSchema]
-        API-->>Frontend: 200 [ResponseDTO]
+        Controller->>Service: [business_method](dto)
+        Service->>Repository: query_or_persist(...)
+        Repository->>Model: operate through ORM model
+        Model->>DB: SELECT / INSERT / UPDATE [table]
+        DB-->>Model: return query or write result
+        Model-->>Repository: return persistence result
+        Repository-->>Service: return data or execution result
+        Service-->>Controller: [ResponseSchema]
+        Controller-->>Route: typed HTTP response
+        Route-->>Frontend: 200 [ResponseDTO]
     end
 
-    Note over Service,API: Business error path
-    Service-->>API: raise [Exception] {detail: "..."}
-    API-->>Frontend: 4xx / 5xx {detail: "..."}
+    Note over Service,Controller: Business error path
+    Service-->>Controller: raise [Exception] {detail: "..."}
+    Controller-->>Frontend: 4xx / 5xx {detail: "..."}
 ```
 
 | 層 | 元件 | 職責 |
 |----|------|------|
 | Frontend | `features/[module]/pages/[feature]` | 表單狀態、API 呼叫、結果顯示 |
-| API | `api/routes/[feature].py` | 請求驗證、權限檢查、委派至 service |
-| Service | `services/[feature].py` | 業務邏輯、DB 操作 |
-| DB | `models/[feature].py` | 持久化 |
+| Route | `app/api/v1/router.py` | API version 路由彙整與 module router registration |
+| Controller boundary | `app/modules/[module]/router.py` | 請求驗證、權限檢查、委派至 service、包裝 HTTP response |
+| Service | `app/modules/[module]/service.py` | 業務邏輯、transaction boundary |
+| Repository | `app/modules/[module]/repository.py` | DB query/helper；不含業務邏輯與權限 |
+| Model | `app/modules/[module]/models.py` | SQLAlchemy ORM schema、欄位與關聯定義 |
+| DB | PostgreSQL / SQLite（依環境） | 持久化 |
 
 ---
 
@@ -207,11 +260,11 @@ sequenceDiagram
 
    | Method | Path | System Role | Task Role | Auth Dependency | 說明 | Bruno 檔案 |
    |--------|------|-------------|-----------|----------------|------|-----------|
-   | GET | `/api/v1/[module]/[resource]` | user | annotator+ | `get_current_user` | 取得列表（分頁） | `backend/bruno/[module]/list-[resource].bru` |
-   | POST | `/api/v1/[module]/[resource]` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 建立 | `backend/bruno/[module]/create-[resource].bru` |
-   | GET | `/api/v1/[module]/[resource]/{id}` | user | annotator+ | `get_current_user` | 取得單筆（無權限回 404） | `backend/bruno/[module]/get-[resource].bru` |
-   | PATCH | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 更新 | `backend/bruno/[module]/update-[resource].bru` |
-   | DELETE | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 刪除 | `backend/bruno/[module]/delete-[resource].bru` |
+   | GET | `/api/v1/[module]/[resource]` | user | annotator+ | `get_current_user` | 取得列表（分頁） | `backend/bruno/[module]/[feature]/list-[resource].bru` |
+   | POST | `/api/v1/[module]/[resource]` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 建立 | `backend/bruno/[module]/[feature]/create-[resource].bru` |
+   | GET | `/api/v1/[module]/[resource]/{id}` | user | annotator+ | `get_current_user` | 取得單筆（無權限回 404） | `backend/bruno/[module]/[feature]/get-[resource].bru` |
+   | PATCH | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 更新 | `backend/bruno/[module]/[feature]/update-[resource].bru` |
+   | DELETE | `/api/v1/[module]/[resource]/{id}` | user | project_leader | `require_task_role(TaskRole.PROJECT_LEADER, task_id)` | 刪除 | `backend/bruno/[module]/[feature]/delete-[resource].bru` |
 
    > **Auth 規則**：task-scoped endpoint 必須驗證 `task_membership`；無權限時回 404（不洩漏資源存在）。`super_admin` 可bypass task role check。
 
@@ -345,7 +398,7 @@ sequenceDiagram
    > 後端 i18n 檔案路徑：`backend/app/i18n/zh_TW/[module].py` 與 `backend/app/i18n/en/[module].py`
 
 4. **更新系統流程圖** 在本計畫中
-   - 追蹤資料路徑：Frontend → API → Service → DB
+   - 追蹤資料路徑：Frontend → Route → Controller boundary → Service → Repository → Model → DB
    - 明確列出每個操作的 error case 與對應 HTTP status（不可只寫「4xx / 5xx」）
    - **Permission Check 分支**：task-scoped 端點必須在 sequenceDiagram 中補充 401 / 404 / super_admin bypass 分支（參考上方「系統流程與資料流」章節的 Auth Middleware 骨架）
    - **Celery 分析**：若任何操作預期處理時間 > 1 秒，或涉及評分 / 統計計算，必須加入 Celery worker 節點；若無，明確標記「本功能無非同步任務需求」
@@ -359,12 +412,12 @@ sequenceDiagram
 
    | 情境 | 測試層 | 工具 | 路徑 |
    |------|-------|------|------|
-   | service 層業務邏輯分支 | 單元測試 | pytest（mock DB） | `tests/unit/test_[feature].py` |
-   | API auth / status code / permission | 整合測試 | pytest + httpx（real test DB） | `tests/integration/test_[feature].py` |
+   | service 層業務邏輯分支 | 單元測試 | pytest（mock DB） | `tests/[module]/test_[feature].py` |
+   | API auth / status code / permission | 整合測試 | pytest + httpx（real test DB） | `tests/[module]/test_[feature].py` |
    | 元件渲染 / 互動 / 邊界狀態 | 元件測試 | Vitest + Testing Library | `src/features/[module]/__tests__/[Feature].test.tsx` |
    | 完整用戶流程 | E2E | Playwright | `e2e/[module]/[feature].spec.ts` |
 
-**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單（含 Bruno 檔案欄 — `backend/bruno/[module]/` 路徑規劃，.bru skeleton 建立留至 `/speckit.tasks`）、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
+**產出**：`data-model.md`（含 DB index 分析）、`contracts/`、API 清單（含 Bruno 檔案欄 — `backend/bruno/[module]/[feature]/` 路徑規劃，.bru skeleton 建立留至 `/speckit.tasks`）、路由分析、切版元件層次（含 Stories 欄位）、i18n key 清單、系統流程圖已更新、測試情境已概述
 
 ---
 
@@ -376,8 +429,8 @@ sequenceDiagram
 
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
-- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → schema）+ Bruno `.bru` 更新任務（`PR-USN-BE-API`，依 FR-131）
-- **後端**：每個實體 → 模型建立任務 [P] + migration 任務（含 DB index）
+- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（schema → repository → service → route）+ Bruno `.bru` 更新任務（`PR-USN-BE-API`，依 FR-131）
+- **後端**：每個實體 → 模型建立任務 [P] + repository 任務 + migration 任務（含 DB index）
 - **前端**：路由分析 → route 註冊任務（含 route guard 設定）
 - **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
 - **前端**：每個頁面 → Playwright E2E 測試任務 [P] + page 組裝任務（page 層不寫 story）
@@ -387,7 +440,7 @@ sequenceDiagram
 **排序策略**：
 
 - TDD 順序：測試在實作前（必須先失敗）
-- 相依順序：model + migration → schema → service → endpoint → route → shared component → feature component + story + i18n → page
+- 相依順序：model + migration → schema → repository → service → endpoint → route → shared component → feature component + story + i18n → page
 - 標記 [P] 用於平行執行（僅限獨立檔案，前後端可同時進行）
 
 **預估產出**：`tasks.md` 中 [N] 個有序任務
@@ -426,6 +479,14 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.13.6 | 2026-06-05 | 系統流程圖補齊 Route → Controller boundary → Service → Repository → SQLAlchemy Model → DB，對齊 Foundation backend component responsibility |
+| 1.13.5 | 2026-06-05 | 後端模組拆分慣例擴充至全部五個檔案：`router`、`schemas`、`models`、`service`、`repository` 超過 300 行時均按 feature 拆子目錄；`models/__init__.py` 需 re-export 所有 Model 供 Alembic 自動發現 |
+| 1.13.4 | 2026-06-05 | 後端模組拆分慣例說明：`router/`、`schemas/` 超過 300 行時按 feature 拆子目錄；`models.py`、`service.py`、`repository.py` 保持單一檔案 |
+| 1.13.3 | 2026-06-05 | 補齊前端 `src/testing/`（Vitest setup 骨架層）；後端測試目錄區分 `tests/core/`（骨架層特例）與 `tests/[module]/`（domain module） |
+| 1.13.2 | 2026-06-05 | 前端 `features/[module]/` 子目錄補齊 `__tests__/`，對齊 testing-frontend.md 與 foundation plan 實際路徑 |
+| 1.13.1 | 2026-06-05 | Bruno API 檔案路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
+| 1.13.0 | 2026-06-05 | 補齊 `modules/[module]/` 完整子檔案：加入 `dependencies.py`、`repository.py`、`constants.py`、`exceptions.py`（+ optional `config.py`、`utils.py`）；系統流程表新增 Repository 層；Phase 2 任務策略與排序加入 repository 任務 |
+| 1.12.0 | 2026-06-05 | 對齊 Foundation Spec module-first 架構：後端原始碼 section 改為 `app/modules/[module]/router.py`、`models.py`、`schemas.py`、`service.py`；測試目錄改為 `tests/[module]/test_[feature].py`；系統流程圖表格路徑同步更新；前端 feature 子目錄補齊 `hooks/`、`types/` |
 | 1.11.0 | 2026-06-04 | 新增後端 i18n Key 清單表（依 ADR-026），列出本功能新增 API response 訊息的 key、zh-TW/en 值及對應端點；若無新增後端訊息則標記「本功能無新增後端訊息」；前端 i18n 邊界說明補充 ADR-026 參照 |
 | 1.10.0 | 2026-06-04 | 補齊前後端開發者所需流程圖：sequenceDiagram 骨架加入 Auth Middleware permission check alt 分支（401/404/super_admin bypass）；Phase 1 步驟 1 新增條件必填 stateDiagram-v2（狀態數 ≥ 3 或有 guard condition）；步驟 2 新增事務邊界設計表；步驟 3 新增畫面狀態轉換表（modal/multi-step 必填）；Loading 策略改為 TanStack Query 狀態欄位格式；路由分析表新增 Guard 失敗行為欄；步驟 4 Celery 表新增 Worker 成功/失敗 DB 操作欄 |
 | 1.9.0 | 2026-06-04 | Phase 1 步驟 3 新增必填「畫面 × API 對應」表（畫面/元件 → 觸發時機 → Method → Endpoint → TanStack Query key），橋接 API 清單與切版分析，讓 Reviewer 在 Phase 1 即可驗證兩者覆蓋一致 |
