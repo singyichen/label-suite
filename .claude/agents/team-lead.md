@@ -64,12 +64,12 @@ Team Lead updates `tasks.md` checkboxes serially after teammate quality gates pa
 
 | Teammate | Owns | Must Not Touch |
 |---|---|---|
-| `senior-backend` | `backend/app/`, `backend/bruno/` | `frontend/`, `backend/migrations/` |
+| `senior-backend` | `backend/app/`, `backend/bruno/` | `frontend/`, `backend/alembic/` |
 | `senior-frontend` | `frontend/src/` | `backend/`, `frontend/src/locales/` |
 | `senior-i18n` | `frontend/src/locales/` | all other directories |
-| `senior-dba` | `backend/migrations/` | `backend/app/`, `frontend/` |
-| `senior-qa` | `backend/tests/`, `frontend/tests/`, `e2e/` | application source files |
-| `senior-devops` | `docker-compose.yml`, `.github/workflows/` | `backend/`, `frontend/` |
+| `senior-dba` | `backend/alembic/` | `backend/app/`, `frontend/` |
+| `senior-qa` | `backend/tests/`, `frontend/src/**/__tests__/`, `e2e/` | application source files (non-test) |
+| `senior-devops` | `docker-compose.yml`, `.github/workflows/`, `.env.example`, `scripts/` | `backend/`, `frontend/` |
 
 ## Quality Gate Rules
 
@@ -84,7 +84,7 @@ _repo_root=$(git rev-parse --show-toplevel)
 _changed=$( { git diff --cached --name-only 2>/dev/null; git diff --name-only 2>/dev/null; } | sort -u)
 _bru_files=$(echo "$_changed" | grep '\.bru$' | grep -v '/environments/')
 _route_files=$(echo "$_changed" | grep -E '^backend/app/modules/[^/]+/router(\.py|/.*\.py)$')
-# FR-131: route changes must include a matching Bruno update
+# FR-131: route changes must include a matching Bruno update for the same module
 if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
   if git log -1 --pretty=%B 2>/dev/null | grep -q "FR-131-exempt"; then
     echo "FR-131 gate: Route changes detected without Bruno updates, but exemption marker found in commit message. Bypassing."
@@ -92,6 +92,16 @@ if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
     echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or include 'FR-131-exempt: skeleton-only route' in the commit message"
     exit 1
   fi
+fi
+# FR-131: verify .bru updates belong to the same module as changed route files
+if [ -n "$_route_files" ] && [ -n "$_bru_files" ]; then
+  _route_modules=$(echo "$_route_files" | grep -oE '^backend/app/modules/[^/]+' | sed 's|backend/app/modules/||' | sort -u)
+  for _mod in $_route_modules; do
+    if ! echo "$_bru_files" | grep -q "^backend/bruno/$_mod/"; then
+      echo "FR-131 gate: route changed in module '$_mod' but no matching backend/bruno/$_mod/ update found"
+      exit 1
+    fi
+  done
 fi
 # Validate structure of each touched endpoint .bru file (paths anchored at repo root)
 if [ -n "$_bru_files" ]; then

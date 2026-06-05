@@ -99,7 +99,7 @@ Foundation Spec FR-131 makes the Bruno update a hard pre-PR gate:
 
 > A PR that modifies any file under `backend/app/modules/*/router.py` or `backend/app/modules/*/router/*.py` must include a corresponding `.bru` file update under `backend/bruno/[module]/[feature]/`. A PR diff that shows route changes without matching `bruno/` changes fails the gate. **Exception:** skeleton-only route PRs (placeholder endpoints with no business logic) may defer `.bru` creation to the subsequent `PR-FOUND-BRUNO` boundary; the **commit message** must contain the marker `FR-131-exempt: skeleton-only route` (the pre-PR gate checks `git log -1 --pretty=%B`, not the PR description).
 >
-> **Schema/service contract changes:** A PR that modifies request or response shapes in `backend/app/schemas/` or service return types that alter the API contract should also update the corresponding `.bru` body/example-response blocks, even if no router file changed. This is a reviewer checklist item, not a hard automated gate.
+> **Schema/service contract changes:** A PR that modifies request or response shapes in `backend/app/schemas/`, `backend/app/modules/*/schemas.py`, `backend/app/modules/*/schemas/`, or service return types that alter the API contract should also update the corresponding `.bru` body/example-response blocks, even if no router file changed. This is a reviewer checklist item, not a hard automated gate.
 
 The tasks template (`tasks-template.md`) includes:
 

@@ -65,7 +65,7 @@
 
 ### PR-FOUND-BE-API：後端 API Skeleton 基礎建設（依賴 PR-FOUND-BE-SCHEMA merged）
 
-- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/modules/[module]/router.py` 或 `router/[feature].py`，依 plan.md Auth Dependency 欄與拆分慣例）
+- [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/modules/[module]/router.py`；若採拆分格式，需同步建立 `router/__init__.py` 集約器與 `router/[feature].py`，依 plan.md Auth Dependency 欄與拆分慣例）
 
 > **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。FR-131 豁免：T006 是 skeleton-only（無實際業務邏輯）placeholder；.bru skeleton 由後續 PR-FOUND-BRUNO 補齊，**commit message 須包含** `FR-131-exempt: skeleton-only route`（pre-PR gate 以 commit message 偵測，非 PR description）。`[Principle: X; Backend Constitution XIII]`
 
@@ -85,7 +85,7 @@
 
 ### PR-FOUND-FE-ROUTING：前端路由基礎建設（可與 PR-FOUND-FE-API 並行）
 
-- [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/router/index.tsx` — 依 plan.md 路由分析）
+- [ ] T009 [P] 註冊路由並設定 route guard（`frontend/src/routes/index.tsx` — 依 plan.md 路由分析；路徑常數定義於 `frontend/src/routes/paths.ts`）
 
 > **PR 邊界**：T009 作為獨立 `PR-FOUND-FE-ROUTING`（router registration + route guard）。`[Principle: X; Frontend Constitution XVI]`
 
@@ -156,7 +156,7 @@
 
 #### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T018 [US1] 實作 API endpoint（`backend/app/modules/[module]/router.py` 或 `router/[feature].py`，依 plan.md 拆分慣例）— 含 auth dependency
+- [ ] T018 [US1] 實作 API endpoint（`backend/app/modules/[module]/router.py`；若採拆分格式，需同步維護 `router/__init__.py` 集約器，依 plan.md 拆分慣例）— 含 auth dependency
 - [ ] T018b [US1] 更新 Bruno collection（`backend/bruno/[module]/[feature]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T018 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T013b/T013c（route integration + permission negative tests）+ T018/T018b 合併為獨立 `PR-US1-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
@@ -196,7 +196,7 @@
 
 #### PR-US2-BE-MODEL：後端資料模型實作
 
-- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models.py`
+- [ ] T025 [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models.py`（與 T016 共用同一檔案，不可並行）
 
 > **PR 邊界**：T025 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
@@ -214,7 +214,7 @@
 
 #### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
-- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/modules/[module]/router.py` 或 `router/[feature].py`（依 plan.md 拆分慣例）
+- [ ] T027 [US2] 實作 API endpoint（含 auth dependency）— `backend/app/modules/[module]/router.py`；若採拆分格式，需同步維護 `router/__init__.py` 集約器（依 plan.md 拆分慣例）
 - [ ] T027b [US2] 更新 Bruno collection（`backend/bruno/[module]/[feature]/[endpoint].bru`）— 含完整 body、auth cookie/session (ADR-021) 與 example response，對應 T027 實作的 endpoint（Foundation FR-131）
 
 > **PR 邊界**：T022b/T022c（route integration + permission negative tests）+ T027/T027b 合併為獨立 `PR-US2-BE-API`。`[Principle: X; Backend Constitution XIII; Foundation FR-131]`
