@@ -356,6 +356,8 @@ Loading 策略：
 | `PaginatedResponse[T]` `next_offset` / `has_more` / `total_pages` 計算 | 單元測試 | pytest | `tests/core/test_schemas.py` |
 | Config 缺失必要環境變數時 fail fast | 單元測試 | pytest | `tests/core/test_config.py` |
 | Config 非法值（如 ALLOWED_ORIGINS=*）被拒絕 | 單元測試 | pytest | `tests/core/test_config.py` |
+| `bcrypt_hash` 產生可驗證的 hash；`bcrypt_verify` 正確比對 | 單元測試 | pytest | `tests/core/test_security.py` |
+| `bcrypt_verify` 拒絕錯誤密碼（negative test） | 單元測試 | pytest | `tests/core/test_security.py` |
 | `GET /api/v1/health` 回傳 200 + `HealthResponse` | 整合測試 | pytest + httpx | `tests/core/test_health.py` |
 | health response 包含 `X-Correlation-ID` header | 整合測試 | pytest + httpx | `tests/core/test_health.py` |
 | 驗證錯誤（422）回傳 `ErrorResponse` schema（SC-035） | 整合測試 | pytest + httpx | `tests/core/test_health.py` |

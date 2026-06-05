@@ -84,7 +84,7 @@ frontend/
 
 backend/
 ├── app/
-│   └── modules/[module]/
+│   └── modules/[module]/      # [module] 在 Python 包名中必須使用底線（task_management），前端目錄使用原始 slug（task-management）
 │       ├── router.py
 │       ├── schemas.py
 │       ├── models.py

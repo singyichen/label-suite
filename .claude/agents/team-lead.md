@@ -86,7 +86,7 @@ _bru_files=$(echo "$_changed" | grep '\.bru$' | grep -v '/environments/')
 _route_files=$(echo "$_changed" | grep -E '^backend/app/modules/[^/]+/router(\.py|/.*\.py)$')
 # FR-131: route changes must include a matching Bruno update for the same module
 if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
-  if git log -1 --pretty=%B 2>/dev/null | grep -q "FR-131-exempt"; then
+  if git log -1 --pretty=%B 2>/dev/null | grep -qF "FR-131-exempt: skeleton-only route"; then
     echo "FR-131 gate: Route changes detected without Bruno updates, but exemption marker found in commit message. Bypassing."
   else
     echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or include 'FR-131-exempt: skeleton-only route' in the commit message"
@@ -94,12 +94,24 @@ if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
   fi
 fi
 # FR-131: verify .bru updates belong to the same module as changed route files
+# For split routers (backend/app/modules/<mod>/router/<feature>.py), require
+# backend/bruno/<mod>/<feature>/... to be updated (not just any file in <mod>)
 if [ -n "$_route_files" ] && [ -n "$_bru_files" ]; then
-  _route_modules=$(echo "$_route_files" | grep -oE '^backend/app/modules/[^/]+' | sed 's|backend/app/modules/||' | sort -u)
-  for _mod in $_route_modules; do
-    if ! echo "$_bru_files" | grep -q "^backend/bruno/$_mod/"; then
-      echo "FR-131 gate: route changed in module '$_mod' but no matching backend/bruno/$_mod/ update found"
-      exit 1
+  echo "$_route_files" | while IFS= read -r _rf; do
+    _mod=$(echo "$_rf" | sed -n 's|^backend/app/modules/\([^/]*\)/.*|\1|p')
+    _feature=$(echo "$_rf" | sed -n 's|^backend/app/modules/[^/]*/router/\([^.]*\)\.py$|\1|p')
+    if [ -n "$_feature" ]; then
+      # split router: require bruno/<mod>/<feature>/ match
+      if ! echo "$_bru_files" | grep -q "^backend/bruno/$_mod/$_feature/"; then
+        echo "FR-131 gate: route changed in module '$_mod/$_feature' but no matching backend/bruno/$_mod/$_feature/ update found"
+        exit 1
+      fi
+    else
+      # single router.py: require any bruno/<mod>/ update
+      if ! echo "$_bru_files" | grep -q "^backend/bruno/$_mod/"; then
+        echo "FR-131 gate: route changed in module '$_mod' but no matching backend/bruno/$_mod/ update found"
+        exit 1
+      fi
     fi
   done
 fi

@@ -144,13 +144,13 @@
 
 #### PR-US1-BE-REPO：後端 Repository 實作
 
-- [ ] T016b [US1] 實作 repository 層（`backend/app/modules/[module]/repository.py`）— 封裝所有 DB query，service 層透過 repository 存取資料
+- [ ] T016b [US1] 實作 repository 層（`backend/app/modules/[module]/repository.py`；超過 300 行時改為 `repository/__init__.py` + `repository/[feature].py`）— 封裝所有 DB query，在此明確指定 `selectinload`/`joinedload` loading strategy；service 層透過 repository 存取資料，不直接操作 ORM
 
 > **PR 邊界**：T016b 作為獨立 `PR-US1-BE-REPO`（依賴 PR-US1-BE-MODEL merged）。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US1-BE-SERVICE：後端 Service 實作（含 service 測試）
 
-- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service.py`）— 明確指定 `selectinload`/`joinedload`
+- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service.py`）— 呼叫 repository 方法，不直接操作 ORM 或指定 loading strategy（loading strategy 屬 repository 責任）
 
 > **PR 邊界**：T013a（service 單元測試）+ T017 合併為獨立 `PR-US1-BE-SERVICE`（依賴 PR-US1-BE-REPO merged）。`[Principle: X; Backend Constitution XIII]`
 
@@ -202,13 +202,13 @@
 
 #### PR-US2-BE-REPO：後端 Repository 實作
 
-- [ ] T025b [US2] 擴充 repository 層（`backend/app/modules/[module]/repository.py`）— 新增 US2 所需 DB query 方法
+- [ ] T025b [US2] 擴充 repository 層（`backend/app/modules/[module]/repository.py`；超過 300 行時改為 `repository/__init__.py` + `repository/[feature].py`）— 新增 US2 所需 DB query 方法，明確指定 loading strategy
 
 > **PR 邊界**：T025b 作為獨立 `PR-US2-BE-REPO`（依賴 PR-US2-BE-MODEL merged）。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-SERVICE：後端 Service 實作（含 service 單元測試）
 
-- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/modules/[module]/service.py`
+- [ ] T026 [US2] 實作 service 層（呼叫 repository 方法，不直接操作 ORM）— `backend/app/modules/[module]/service.py`
 
 > **PR 邊界**：T022a（service 單元測試）+ T026 合併為獨立 `PR-US2-BE-SERVICE`（依賴 PR-US2-BE-REPO merged）。`[Principle: X; Backend Constitution XIII]`
 
