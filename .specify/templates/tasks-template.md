@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.22.3
+版本: 1.22.4
 狀態: Draft
 ---
 
@@ -259,7 +259,7 @@
 ### 使用者故事內部排序
 
 - 測試必須在任何實作開始前先撰寫且處於失敗狀態
-- Model 任務 [P] 優先 → service 層 → API endpoint → 前端元件 → 頁面
+- Model 任務 [P] 優先 → repository 層 → service 層 → API endpoint → 前端元件 → 頁面
 - 在與其他故事整合前完成核心實作
 
 ### 平行化機會
@@ -327,7 +327,8 @@ Task: "在 e2e/[module]/[feature].spec.ts 撰寫 Playwright E2E 測試（T015）
 
 3. **從 spec.md 資料模型**
    - 每個實體 → 一個模型建立任務 [P]
-   - 關係 → service 層任務（循序）
+   - 查詢與關係 loading → repository 層任務（循序）
+   - 業務規則與流程協調 → service 層任務（循序）
 
 4. **從 plan.md 前端型別策略**
    - 有前端功能的 spec → 一個 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`，手寫或 generated API types）
@@ -402,7 +403,7 @@ pnpm exec playwright test                # E2E gate
 - [ ] Phase 2 拆分為 PR-FOUND-MIGRATION / PR-FOUND-BE-SCHEMA / PR-FOUND-BE-API / PR-FOUND-BRUNO（或 N > 2 時拆為 PR-FOUND-BRUNO-INIT + PR-FOUND-BRUNO-SKEL）/ PR-FOUND-BE-CORE / PR-FOUND-FE-API / PR-FOUND-FE-ROUTING / PR-FOUND-FE-I18N / PR-FOUND-BE-I18N（條件性，若本功能有新增後端訊息）/ PR-FOUND-FE-TYPES 九至十一個獨立 PR 邊界
 - [ ] Phase 2 有前端 TypeScript 型別合約任務（`frontend/src/features/[module]/types/[feature].ts`），且其 PR 邊界（PR-FOUND-FE-TYPES）早於 services / components 任務
 - [ ] Migration PR 邊界（PR-FOUND-MIGRATION）不含任何應用程式碼，且 PR description 模板含 Rollback Plan 欄位
-- [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
+- [ ] 每個 US Phase 的實作區塊含 PR-USN-BE-MODEL / PR-USN-BE-REPO / PR-USN-BE-SERVICE / PR-USN-BE-API 以及 PR-USN-FE-COMPONENT / PR-USN-FE-PAGE 邊界標記
 - [ ] 每個 PR 邊界觸及檔案數 ≤ 5 個（不含測試時 diff ≤ 300 行）
 - [ ] 每個 `PR-USN-BE-API` 含對應的 Bruno `.bru` 更新任務（Foundation FR-131）；`PR-FOUND-BRUNO` 含 T006b（集合初始化）與 T006c（endpoint skeleton，每個 .bru 檔案逐一明列）兩項 Bruno 任務，且與 `PR-FOUND-BE-API`（T006 route skeleton）分為兩個獨立 PR 邊界；若功能端點數 N > 2，T006b/T006c 進一步拆為 `PR-FOUND-BRUNO-INIT`（3 個 bootstrap 檔案）與 `PR-FOUND-BRUNO-SKEL`（N 個 .bru skeleton）
 
@@ -410,6 +411,7 @@ pnpm exec playwright test                # E2E gate
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.22.4 | 2026-06-05 | 任務相依順序與驗證清單補齊 Repository 層：Model → Repository → Service → API，並要求每個 US Phase 含 PR-USN-BE-REPO |
 | 1.22.3 | 2026-06-05 | 後端 schema、route、model、service 任務路徑改為 `backend/app/modules/[module]/{schemas,router,models,service}/[feature].py`，對齊 module-first 與 feature 分檔規則 |
 | 1.22.2 | 2026-06-05 | Bruno skeleton 與 update 任務路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
 | 1.22.1 | 2026-06-04 | 修正 Phase 2 邊界數量驗證文字，納入 PR-FOUND-BRUNO 於端點數 N > 2 時拆為 PR-FOUND-BRUNO-INIT / PR-FOUND-BRUNO-SKEL 的條件性增加，總數由九至十個調整為九至十一個 |

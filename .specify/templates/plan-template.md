@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.13.5
+版本: 1.13.6
 狀態: Draft
 ---
 
@@ -133,7 +133,7 @@ backend/
 ## 系統流程與資料流 *(功能涉及 API 呼叫、非同步任務或多層資料處理時必填)*
 
 <!--
-  描述資料如何在系統層間流動：Frontend → API → Service → DB。
+  描述資料如何在系統層間流動：Frontend → Route → Controller boundary → Service → Repository → Model → DB。
   包含相關的錯誤路徑與非同步流程（Celery tasks、WebSocket 等）。
   在 GitHub 上可原生渲染，無需額外工具。
 -->
@@ -142,43 +142,54 @@ backend/
 sequenceDiagram
     participant Frontend
     participant Auth as Auth Middleware
-    participant API
+    participant Route as Route<br/>app/api/v1/router.py
+    participant Controller as Controller boundary<br/>app/modules/[module]/router.py
     participant Service
+    participant Repository
+    participant Model as Model (SQLAlchemy)
     participant DB
 
-    Frontend->>API: [METHOD] /api/[resource] {Bearer token}
-    API->>Auth: get_current_user(token)
+    Frontend->>Route: [METHOD] /api/v1/[module]/[resource] {session cookie}
+    Route->>Controller: dispatch to module router
+    Controller->>Auth: get_current_user(session)
     alt token invalid / expired
-        Auth-->>API: raise HTTP 401
-        API-->>Frontend: 401 {detail: "Not authenticated"}
+        Auth-->>Controller: raise HTTP 401
+        Controller-->>Frontend: 401 {detail: "Not authenticated"}
     else task-scoped: user lacks task role
-        API->>Auth: require_task_role(role, task_id)
+        Controller->>Auth: require_task_role(role, task_id)
         Auth->>DB: SELECT task_membership WHERE user_id AND task_id
         DB-->>Auth: None
-        Auth-->>API: raise HTTP 404 (hide resource existence)
-        API-->>Frontend: 404 {detail: "..."}
+        Auth-->>Controller: raise HTTP 404 (hide resource existence)
+        Controller-->>Frontend: 404 {detail: "..."}
     else super_admin bypass
-        Note over API,Auth: super_admin skips task role check
+        Note over Controller,Auth: super_admin skips task role check
     else authorized
-        API->>Service: [function_name](dto)
-        Service->>DB: INSERT / UPDATE [table]
-        DB-->>Service: return [entity]
-        Service-->>API: [ResponseSchema]
-        API-->>Frontend: 200 [ResponseDTO]
+        Controller->>Service: [business_method](dto)
+        Service->>Repository: query_or_persist(...)
+        Repository->>Model: operate through ORM model
+        Model->>DB: SELECT / INSERT / UPDATE [table]
+        DB-->>Model: return query or write result
+        Model-->>Repository: return persistence result
+        Repository-->>Service: return data or execution result
+        Service-->>Controller: [ResponseSchema]
+        Controller-->>Route: typed HTTP response
+        Route-->>Frontend: 200 [ResponseDTO]
     end
 
-    Note over Service,API: Business error path
-    Service-->>API: raise [Exception] {detail: "..."}
-    API-->>Frontend: 4xx / 5xx {detail: "..."}
+    Note over Service,Controller: Business error path
+    Service-->>Controller: raise [Exception] {detail: "..."}
+    Controller-->>Frontend: 4xx / 5xx {detail: "..."}
 ```
 
 | 層 | 元件 | 職責 |
 |----|------|------|
 | Frontend | `features/[module]/pages/[feature]` | 表單狀態、API 呼叫、結果顯示 |
-| API | `app/modules/[module]/router.py` | 請求驗證、權限檢查、委派至 service |
+| Route | `app/api/v1/router.py` | API version 路由彙整與 module router registration |
+| Controller boundary | `app/modules/[module]/router.py` | 請求驗證、權限檢查、委派至 service、包裝 HTTP response |
 | Service | `app/modules/[module]/service.py` | 業務邏輯、transaction boundary |
 | Repository | `app/modules/[module]/repository.py` | DB query/helper；不含業務邏輯與權限 |
-| DB | `app/modules/[module]/models.py` | 持久化 |
+| Model | `app/modules/[module]/models.py` | SQLAlchemy ORM schema、欄位與關聯定義 |
+| DB | PostgreSQL / SQLite（依環境） | 持久化 |
 
 ---
 
@@ -387,7 +398,7 @@ sequenceDiagram
    > 後端 i18n 檔案路徑：`backend/app/i18n/zh_TW/[module].py` 與 `backend/app/i18n/en/[module].py`
 
 4. **更新系統流程圖** 在本計畫中
-   - 追蹤資料路徑：Frontend → API → Service → DB
+   - 追蹤資料路徑：Frontend → Route → Controller boundary → Service → Repository → Model → DB
    - 明確列出每個操作的 error case 與對應 HTTP status（不可只寫「4xx / 5xx」）
    - **Permission Check 分支**：task-scoped 端點必須在 sequenceDiagram 中補充 401 / 404 / super_admin bypass 分支（參考上方「系統流程與資料流」章節的 Auth Middleware 骨架）
    - **Celery 分析**：若任何操作預期處理時間 > 1 秒，或涉及評分 / 統計計算，必須加入 Celery worker 節點；若無，明確標記「本功能無非同步任務需求」
@@ -418,7 +429,7 @@ sequenceDiagram
 
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - 每個使用者故事（來自 spec.md）→ 一個 Phase
-- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（route → service → repository → schema）+ Bruno `.bru` 更新任務（`PR-USN-BE-API`，依 FR-131）
+- **後端**：每個 API 清單項目 → 單元測試任務 [P] + 實作任務（schema → repository → service → route）+ Bruno `.bru` 更新任務（`PR-USN-BE-API`，依 FR-131）
 - **後端**：每個實體 → 模型建立任務 [P] + repository 任務 + migration 任務（含 DB index）
 - **前端**：路由分析 → route 註冊任務（含 route guard 設定）
 - **前端**：每個切版元件 → 元件測試任務 [P] + 實作任務 + Storybook story 任務（`.stories.tsx`）
@@ -468,6 +479,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.13.6 | 2026-06-05 | 系統流程圖補齊 Route → Controller boundary → Service → Repository → SQLAlchemy Model → DB，對齊 Foundation backend component responsibility |
 | 1.13.5 | 2026-06-05 | 後端模組拆分慣例擴充至全部五個檔案：`router`、`schemas`、`models`、`service`、`repository` 超過 300 行時均按 feature 拆子目錄；`models/__init__.py` 需 re-export 所有 Model 供 Alembic 自動發現 |
 | 1.13.4 | 2026-06-05 | 後端模組拆分慣例說明：`router/`、`schemas/` 超過 300 行時按 feature 拆子目錄；`models.py`、`service.py`、`repository.py` 保持單一檔案 |
 | 1.13.3 | 2026-06-05 | 補齊前端 `src/testing/`（Vitest setup 骨架層）；後端測試目錄區分 `tests/core/`（骨架層特例）與 `tests/[module]/`（domain module） |

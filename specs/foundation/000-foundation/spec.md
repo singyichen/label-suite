@@ -102,6 +102,32 @@ Backend 採用 FastAPI，並以 domain package-first 組織大型 monolith。每
 | `@Schedule()` | APScheduler 或 ADR 指定 scheduler | `app/jobs/scheduler.py` |
 | `ConfigModule` | Pydantic Settings 與 startup validation | `app/core/config.py` |
 
+典型 request flow 必須維持下列方向；上層只協調下一層，不反向依賴，也不得把資料庫 CRUD、HTTP response 包裝或 ORM schema 定義混入錯誤層級：
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Route as Route<br/>app/api/v1/router.py
+    participant Controller as Controller boundary<br/>app/modules/[module]/router.py
+    participant Service as Service<br/>app/modules/[module]/service.py
+    participant Repository as Repository<br/>app/modules/[module]/repository.py
+    participant Model as Model (SQLAlchemy)<br/>app/modules/[module]/models.py
+    participant Database
+
+    User->>Route: Send HTTP request<br/>POST /api/v1/users
+    Route->>Controller: Dispatch to module handler<br/>register()
+    Controller->>Service: Call business method<br/>register_user()
+    Service->>Repository: Query or persist data<br/>find_by_email() / create_user()
+    Repository->>Model: Operate through ORM model
+    Model->>Database: Query / insert / update data
+    Database-->>Model: Return query or write result
+    Model-->>Repository: Return persistence result
+    Repository-->>Service: Return data or execution result
+    Service-->>Controller: Return business result
+    Controller-->>Route: Build typed HTTP response
+    Route-->>User: Return API response<br/>201 Created
+```
+
 ```text
 backend/
 ├── app/
