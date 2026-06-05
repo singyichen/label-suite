@@ -128,7 +128,7 @@ frontend/
     │   ├── index.tsx                        # 中央 route tree（lazy import feature pages）
     │   └── paths.ts                         # route path 常數
     ├── features/
-    │   └── health/                          # 臨時驗證 feature
+    │   └── health/                          # Foundation-only 臨時基礎設施驗證模組（不在標準 module 列表內；系統穩定後移除）
     │       ├── pages/
     │       │   └── HealthCheckPage.tsx      # 呼叫 /api/v1/health 並顯示回應
     │       └── __tests__/
@@ -301,7 +301,7 @@ HealthCheckPage
 
 | 畫面 / 元件 | 觸發時機 | Method | Endpoint | TanStack Query key |
 |------------|---------|--------|----------|--------------------|
-| `HealthCheckPage` 掛載 | 頁面初始化 | GET | `/api/v1/health` | `['health', 'status']` |
+| `HealthCheckPage` 掛載 | 頁面初始化 | GET | `/api/v1/health` | `QUERY_KEYS.health.status`（`shared/constants/query-keys.ts`） |
 
 **前端技術決策**：
 
@@ -311,7 +311,7 @@ HealthCheckPage
 表單策略：無表單（health check 只有 GET）
 
 TanStack Query 策略：
-- queryKey 格式：['health', 'status']
+- queryKey 格式：`QUERY_KEYS.health.status`（定義於 `shared/constants/query-keys.ts`，不得使用 inline string array — SC-019）
 - 無 mutation，無 invalidate 需求
 - 無 optimistic update
 

@@ -67,7 +67,7 @@
 
 - [ ] T006 建立 API route skeleton 含 auth dependency（`backend/app/modules/[module]/router.py` 或 `router/[feature].py`，依 plan.md Auth Dependency 欄與拆分慣例）
 
-> **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。FR-131 豁免：T006 是 skeleton-only（無實際業務邏輯）placeholder；.bru skeleton 由後續 PR-FOUND-BRUNO 補齊，PR description 須標註 `FR-131-exempt: skeleton-only route`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T006 作為獨立 `PR-FOUND-BE-API`。FR-131 豁免：T006 是 skeleton-only（無實際業務邏輯）placeholder；.bru skeleton 由後續 PR-FOUND-BRUNO 補齊，**commit message 須包含** `FR-131-exempt: skeleton-only route`（pre-PR gate 以 commit message 偵測，非 PR description）。`[Principle: X; Backend Constitution XIII]`
 
 ### PR-FOUND-BRUNO：Bruno Collection 初始化與 Endpoint Skeleton（依賴 PR-FOUND-BE-API merged）
 
@@ -129,8 +129,8 @@
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
 - [ ] T013a [P] [US1] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/[module]/test_[feature].py`
-- [ ] T013b [P] [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/[module]/test_[feature].py`
-- [ ] T013c [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/[module]/test_[feature].py`
+- [ ] T013b [US1] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/[module]/test_[feature].py`（與 T013a 共用同一測試檔案，不可並行）
+- [ ] T013c [US1] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/[module]/test_[feature].py`（與 T013a/T013b 共用同一測試檔案，不可並行）
 - [ ] T014 [P] [US1] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`
 - [ ] T015 [P] [US1] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`
 
@@ -186,9 +186,9 @@
 
 ### 測試 ⚠️ 必須在任何實作前先撰寫且必須失敗
 
-- [ ] T022a [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可與 T013a 並行）
-- [ ] T022b [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可與 T013b 並行）
-- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案）
+- [ ] T022a [US2] Service 層單元測試（mock DB session，測試業務邏輯分支）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可與任何 T013/T022 並行）
+- [ ] T022b [US2] Route 層整合測試（httpx AsyncClient + real test DB，測試 auth / status code）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可並行）
+- [ ] T022c [US2] Permission negative test（未授權角色嘗試存取，驗證回 403 或 404）— `backend/tests/[module]/test_[feature].py`（擴充 US1 同檔案；不可並行）
 - [ ] T023 [US2] 前端元件測試（Testing Library，依 MSW handler mock API）— `frontend/src/features/[module]/__tests__/[Feature].test.tsx`（擴充 US1 同檔案；不可與 T014 並行）
 - [ ] T024 [US2] Playwright E2E 測試（完整用戶流程）— `e2e/[module]/[feature].spec.ts`（擴充 US1 同檔案；不可與 T015 並行）
 

@@ -87,9 +87,9 @@ _route_files=$(echo "$_changed" | grep -E '^backend/app/modules/[^/]+/router(\.p
 # FR-131: route changes must include a matching Bruno update
 if [ -n "$_route_files" ] && [ -z "$_bru_files" ]; then
   if git log -1 --pretty=%B 2>/dev/null | grep -q "FR-131-exempt"; then
-    echo "FR-131 gate: Route changes detected without Bruno updates, but exemption marker found. Bypassing."
+    echo "FR-131 gate: Route changes detected without Bruno updates, but exemption marker found in commit message. Bypassing."
   else
-    echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or mark PR with FR-131-exempt: skeleton-only route"
+    echo "FR-131 gate: route files changed without backend/bruno/ update. Add .bru update or include 'FR-131-exempt: skeleton-only route' in the commit message"
     exit 1
   fi
 fi
