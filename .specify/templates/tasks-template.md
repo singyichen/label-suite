@@ -51,8 +51,8 @@
 
 ### PR-FOUND-MIGRATION：資料庫 Migration（獨立 PR，最先合併）
 
-- [ ] T004a 撰寫 Alembic migration `upgrade()`（含 plan.md DB index 分析所列的所有 index）— `backend/migrations/versions/xxxx_[feature].py`
-- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）— `backend/migrations/versions/xxxx_[feature].py`
+- [ ] T004a 撰寫 Alembic migration `upgrade()`（含 plan.md DB index 分析所列的所有 index）— `backend/alembic/versions/xxxx_[feature].py`
+- [ ] T004b 撰寫對應 `downgrade()`（不允許 `pass`，必須可逆）— `backend/alembic/versions/xxxx_[feature].py`
 - [ ] T004c 驗證 migration 可循環：`uv run alembic upgrade head && uv run alembic downgrade -1 && uv run alembic upgrade head`
 
 > **PR 邊界**：T004a/b/c 合併為獨立 `PR-FOUND-MIGRATION`，PR description 必須含 Rollback Plan 欄位，不得與任何應用程式碼合併。`[Principle: XVIII]`
@@ -138,15 +138,21 @@
 
 #### PR-US1-BE-MODEL：後端資料模型實作
 
-- [ ] T016 [P] [US1] 建立資料模型（`backend/app/modules/[module]/models.py` 或 `models/[feature].py`，依 plan.md 拆分慣例）— 含 relationship 與 Loading Strategy
+- [ ] T016 [P] [US1] 建立資料模型（`backend/app/modules/[module]/models.py`）— 含 relationship 與 Loading Strategy
 
 > **PR 邊界**：T016 作為獨立 `PR-US1-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
+#### PR-US1-BE-REPO：後端 Repository 實作
+
+- [ ] T016b [US1] 實作 repository 層（`backend/app/modules/[module]/repository.py`）— 封裝所有 DB query，service 層透過 repository 存取資料
+
+> **PR 邊界**：T016b 作為獨立 `PR-US1-BE-REPO`（依賴 PR-US1-BE-MODEL merged）。`[Principle: X; Backend Constitution XIII]`
+
 #### PR-US1-BE-SERVICE：後端 Service 實作（含 service 測試）
 
-- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service.py` 或 `service/[feature].py`，依 plan.md 拆分慣例）— 明確指定 `selectinload`/`joinedload`
+- [ ] T017 [US1] 實作 service 層（`backend/app/modules/[module]/service.py`）— 明確指定 `selectinload`/`joinedload`
 
-> **PR 邊界**：T013a（service 單元測試）+ T017 合併為獨立 `PR-US1-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T013a（service 單元測試）+ T017 合併為獨立 `PR-US1-BE-SERVICE`（依賴 PR-US1-BE-REPO merged）。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US1-BE-API：後端 API 實作（含 route / permission 測試）
 
@@ -190,15 +196,21 @@
 
 #### PR-US2-BE-MODEL：後端資料模型實作
 
-- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models.py` 或 `models/[feature].py`（依 plan.md 拆分慣例）
+- [ ] T025 [P] [US2] 建立相關模型（含 Loading Strategy）— `backend/app/modules/[module]/models.py`
 
 > **PR 邊界**：T025 作為獨立 `PR-US2-BE-MODEL`。`[Principle: X; Backend Constitution XIII]`
 
+#### PR-US2-BE-REPO：後端 Repository 實作
+
+- [ ] T025b [US2] 擴充 repository 層（`backend/app/modules/[module]/repository.py`）— 新增 US2 所需 DB query 方法
+
+> **PR 邊界**：T025b 作為獨立 `PR-US2-BE-REPO`（依賴 PR-US2-BE-MODEL merged）。`[Principle: X; Backend Constitution XIII]`
+
 #### PR-US2-BE-SERVICE：後端 Service 實作（含 service 單元測試）
 
-- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/modules/[module]/service.py` 或 `service/[feature].py`（依 plan.md 拆分慣例）
+- [ ] T026 [US2] 實作 service 層（明確指定 relationship loading）— `backend/app/modules/[module]/service.py`
 
-> **PR 邊界**：T022a（service 單元測試）+ T026 合併為獨立 `PR-US2-BE-SERVICE`。`[Principle: X; Backend Constitution XIII]`
+> **PR 邊界**：T022a（service 單元測試）+ T026 合併為獨立 `PR-US2-BE-SERVICE`（依賴 PR-US2-BE-REPO merged）。`[Principle: X; Backend Constitution XIII]`
 
 #### PR-US2-BE-API：後端 API 實作（含 route / permission 測試）
 
