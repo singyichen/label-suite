@@ -76,10 +76,10 @@ frontend/
 │   │   ├── components/[feature]/
 │   │   ├── pages/[feature]/
 │   │   ├── hooks/
-│   │   ├── services/[feature].ts
+│   │   ├── services/          # feature-local API 呼叫；每個 feature 一個 [feature].ts
 │   │   ├── types/
 │   │   └── __tests__/
-│   ├── shared/        (only when used by 2+ feature modules)
+│   ├── shared/        (only when used by 2+ feature modules；Foundation 已建立 components/, hooks/, services/api-client.ts, services/auth.ts, stores/, constants/, types/, api-types/, utils/, styles/, i18n/)
 │   └── testing/       (Vitest setup；僅 Foundation 建立，feature PR 不需重建)
 
 backend/
@@ -96,6 +96,8 @@ backend/
 │       ├── config.py           (optional)
 │       └── utils.py            (optional)
 └── tests/
+    ├── conftest.py        # Foundation 已建立，勿重建
+    ├── factories/         # 測試 factory helpers；Foundation 已建立目錄
     ├── core/              # app/core/ 骨架層專用（特例）
     │   └── test_[file].py
     └── [module]/          # domain module 測試
