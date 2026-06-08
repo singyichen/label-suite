@@ -116,8 +116,9 @@ Full pipeline — each stage is a hard gate:
 3. Resume pipeline from `/speckit.clarify` (skip brainstorm + specify)
 4. Re-archive after the modification PR merges
 
-**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 files changed · no new API endpoint · pure bug fix or docs-only change.
-Lightweight sequence: **TDD → implement → `/speckit.analyze` → `/pr-flow`**
+**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 files changed · no new API endpoint · minor behavior change requiring a spec update.
+Lightweight sequence: **TDD → implement → spec consistency review → `/pr-flow`**
+(Spec consistency review: verify spec version bump and Changelog entry, confirm no downstream specs affected, confirm no new API contracts.)
 If any condition is uncertain, default to the full pipeline.
 
 ## Constitution
