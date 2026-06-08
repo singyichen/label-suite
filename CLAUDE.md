@@ -112,13 +112,14 @@ Full pipeline — each stage is a hard gate:
 **Modify Existing Feature**: When changing an already-merged feature, do NOT create a new spec from scratch:
 
 1. `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive
-2. Bump spec version + record change in spec Changelog
-3. Resume pipeline from `/speckit.clarify` (skip brainstorm + specify)
-4. Re-archive after the modification PR merges
+2. `git checkout -b feat/[module]/NNN-feature` — create/switch to feature branch (Speckit scripts resolve from branch name; running from `main` aborts the pipeline)
+3. Bump spec version + record change in spec Changelog
+4. Resume pipeline from `/speckit.clarify` (skip brainstorm + specify)
+5. Re-archive after the modification PR merges
 
-**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 files changed · no new API endpoint · minor behavior change requiring a spec update.
+**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 production code files changed (spec and test files excluded) · no API contract changes · minor behavior change requiring a spec update.
 Lightweight sequence: **TDD → implement → spec consistency review → `/pr-flow`**
-(Spec consistency review: verify spec version bump and Changelog entry, confirm no downstream specs affected, confirm no new API contracts.)
+(Spec consistency review: verify spec version bump and Changelog entry, confirm no downstream specs affected, confirm no API contracts changed.)
 If any condition is uncertain, default to the full pipeline.
 
 ## Constitution

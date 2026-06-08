@@ -229,6 +229,7 @@ Spec versions follow semantic versioning — update `**Version**` in frontmatter
 When a spec that is already `plan-ready` or beyond is changed:
 
 0. **If spec is archived**: `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive before editing; re-archive after the modification PR merges
+0a. **Create/switch to the feature branch**: `git checkout -b feat/[module]/NNN-feature` (or `git checkout feat/[module]/NNN-feature` if it exists) — Speckit scripts resolve the active feature from the current branch name or `SPECIFY_FEATURE`; running from `main` aborts the pipeline
 1. Bump the version in frontmatter (`**Version**`)
 2. Add a row to `## Changelog` with date and summary
 3. Open `## Spec Dependencies → Downstream` — review every listed spec for impact
@@ -269,8 +270,8 @@ Every spec has a `## Spec Dependencies` section. Fill it in at `/speckit.specify
 Use this when a change is too small for the full pipeline but still modifies expected behaviour.
 
 **Triggers — ALL must be true:**
-- ≤ 2 files changed
-- No new API endpoint
+- ≤ 2 production code files changed (spec and test files are not counted toward this limit)
+- No API contract changes (no new endpoints, no changes to existing endpoint response shape, status codes, or semantics)
 - Minor behavior change requiring a spec update
 
 **Sequence:** TDD → implement → spec consistency review → `/pr-flow`
