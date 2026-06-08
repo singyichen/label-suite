@@ -235,7 +235,7 @@ When a spec that is already `plan-ready` or beyond is changed:
 4. If `plan.md` exists: assess whether the plan needs updating and re-version it
 5. If `tasks.md` exists: assess whether tasks need updating
 6. Update `specs/STATUS.md` notes column (e.g., `v1.1.0 — added Story 3`)
-7. **Post-implementation write-back**: if implementation decisions deviated from the spec during coding (any FR / SC changed), bump spec version again and record the reason in `## Changelog` before PR merge (see CHK031 in checklist-template)
+7. **Post-implementation write-back**: if implementation decisions deviated from the spec during coding (any FR / SC changed), bump spec version again and record the reason in `## Changelog` before PR merge
 
 ---
 
@@ -271,11 +271,16 @@ Use this when a change is too small for the full pipeline but still modifies exp
 **Triggers — ALL must be true:**
 - ≤ 2 files changed
 - No new API endpoint
-- Pure bug fix or docs-only change
+- Minor behavior change requiring a spec update
 
-**Sequence:** TDD → implement → `/speckit.analyze` → `/pr-flow`
+**Sequence:** TDD → implement → spec consistency review → `/pr-flow`
 
-Skip: brainstorm, specify, plan, wireframe, checklist.
+**Spec consistency review** (replaces `/speckit.analyze`, which requires `tasks.md`):
+- Verify spec version was bumped and Changelog entry matches the change
+- Confirm no downstream specs reference the changed behavior without an update
+- Confirm no new API contracts were introduced beyond the trigger scope
+
+Skip: brainstorm, specify, plan, wireframe, tasks, checklist.
 
 > If any trigger condition is uncertain, default to the full pipeline.
 
