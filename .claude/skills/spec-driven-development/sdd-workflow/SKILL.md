@@ -228,12 +228,14 @@ Spec versions follow semantic versioning — update `**Version**` in frontmatter
 
 When a spec that is already `plan-ready` or beyond is changed:
 
+0. **If spec is archived**: `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive before editing; re-archive after the modification PR merges
 1. Bump the version in frontmatter (`**Version**`)
 2. Add a row to `## Changelog` with date and summary
 3. Open `## Spec Dependencies → Downstream` — review every listed spec for impact
 4. If `plan.md` exists: assess whether the plan needs updating and re-version it
 5. If `tasks.md` exists: assess whether tasks need updating
 6. Update `specs/STATUS.md` notes column (e.g., `v1.1.0 — added Story 3`)
+7. **Post-implementation write-back**: if implementation decisions deviated from the spec during coding (any FR / SC changed), bump spec version again and record the reason in `## Changelog` before PR merge (see CHK031 in checklist-template)
 
 ---
 
@@ -259,6 +261,23 @@ Every spec has a `## Spec Dependencies` section. Fill it in at `/speckit.specify
 
 - All upstream specs listed in `## Spec Dependencies` are `plan-ready` or implemented
 - No downstream spec references a capability that this spec has removed or changed without a corresponding update
+
+---
+
+## Lightweight Path
+
+Use this when a change is too small for the full pipeline but still modifies expected behaviour.
+
+**Triggers — ALL must be true:**
+- ≤ 2 files changed
+- No new API endpoint
+- Pure bug fix or docs-only change
+
+**Sequence:** TDD → implement → `/speckit.analyze` → `/pr-flow`
+
+Skip: brainstorm, specify, plan, wireframe, checklist.
+
+> If any trigger condition is uncertain, default to the full pipeline.
 
 ---
 

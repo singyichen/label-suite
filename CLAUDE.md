@@ -109,6 +109,17 @@ Full pipeline — each stage is a hard gate:
 
 **Archive**: After PR merged → `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md`.
 
+**Modify Existing Feature**: When changing an already-merged feature, do NOT create a new spec from scratch:
+
+1. `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive
+2. Bump spec version + record change in spec Changelog
+3. Resume pipeline from `/speckit.clarify` (skip brainstorm + specify)
+4. Re-archive after the modification PR merges
+
+**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 files changed · no new API endpoint · pure bug fix or docs-only change.
+Lightweight sequence: **TDD → implement → `/speckit.analyze` → `/pr-flow`**
+If any condition is uncertain, default to the full pipeline.
+
 ## Constitution
 
 All development must follow the eight core principles in [constitution.md](specs/_governance/constitution.md).

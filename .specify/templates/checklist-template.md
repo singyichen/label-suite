@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.8.0
+版本: 1.9.0
 狀態: Draft
 ---
 
@@ -79,6 +79,10 @@
 - [ ] CHK021 需求是否具備足夠的可追蹤性，使任務可對應回使用者故事或 FR ID？[Traceability, Spec §功能需求]
 - [ ] CHK022 功能目標是否已在 spec.md 中明確陳述，且 plan.md 的功能目標與其一致？[Traceability, Spec §功能目標]
 
+## 規格回寫確認
+
+- [ ] CHK031 若實作決策偏離 spec（任何 FR / SC 有變動），是否已更新 spec.md 版號並在 spec Changelog 記錄變更原因？[Spec-Anchored, Gap]
+
 ## 備註
 
 - 勾選已完成項目：`[x]`
@@ -92,6 +96,7 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.0 | 2026-06-08 | 新增「規格回寫確認」節與 CHK031：實作偏離 spec 時強制要求版號 bump 及 Changelog 記錄，對齊 spec-anchored 原則 |
 | 1.8.0 | 2026-06-03 | 將 CHK027-CHK030 從舊憲章 Principle XXI/XXII/XXVIII/XXX 引用改為對應 domain constitution 引用，對齊 constitution v1.31.0 |
 | 1.7.0 | 2026-05-29 | 新增 CHK026-CHK030：補齊 Principle IX（error case 可見結果）、XXI（async 邊界行為）、XXII（API 文件需求）、XXVIII（狀態機轉換定義）、XXX（測試資料策略）（配合憲章 v1.28.0） |
 | 1.6.0 | 2026-05-28 | 新增 CHK024（Principle XI）：安全路徑測試情境驗證；新增 CHK025（Principle X）：需求範圍邊界確認（配合憲章 v1.9.0） |
