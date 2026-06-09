@@ -8,7 +8,7 @@
 #   Use whenever SVG source files (icon-colored.svg, logo-horizontal.svg,
 #   social-preview.svg) are updated and the exported PNG assets need to be
 #   regenerated. Requires one of: Inkscape, librsvg (rsvg-convert),
-#   ImageMagick (magick / convert), or sips (macOS built-in).
+#   or ImageMagick (magick / convert).
 #
 # How it works:
 #   Auto-detects the available SVG-to-PNG conversion tool, then exports a full
@@ -35,9 +35,6 @@ elif command -v magick &> /dev/null; then
 elif command -v convert &> /dev/null; then
     TOOL="convert"
     echo "✓ Using ImageMagick (convert)"
-elif command -v sips &> /dev/null; then
-    TOOL="sips"
-    echo "✓ Using sips (macOS built-in)"
 else
     echo "❌ Error: No SVG to PNG conversion tool found."
     echo ""
@@ -45,7 +42,6 @@ else
     echo "  - Inkscape:     brew install inkscape"
     echo "  - librsvg:      brew install librsvg"
     echo "  - ImageMagick:  brew install imagemagick"
-    echo "  - sips:         built-in on macOS (no install needed)"
     exit 1
 fi
 
@@ -87,18 +83,6 @@ case "$TOOL" in
         $CMD -background none icon-colored.svg -resize 512x512 icon-512.png
         $CMD -background none logo-horizontal.svg -resize 400x logo-horizontal.png
         $CMD -background none social-preview.svg -resize 1280x640 social-preview.png
-        ;;
-    sips)
-        # sips is macOS built-in; preserves SVG transparency correctly
-        sips -s format png --resampleWidth 512 icon-colored.svg --out icon-colored.png
-        sips -s format png --resampleWidth 16  icon-colored.svg --out icon-16.png
-        sips -s format png --resampleWidth 32  icon-colored.svg --out icon-32.png
-        sips -s format png --resampleWidth 64  icon-colored.svg --out icon-64.png
-        sips -s format png --resampleWidth 128 icon-colored.svg --out icon-128.png
-        sips -s format png --resampleWidth 256 icon-colored.svg --out icon-256.png
-        sips -s format png --resampleWidth 512 icon-colored.svg --out icon-512.png
-        sips -s format png --resampleWidth 400 logo-horizontal.svg --out logo-horizontal.png
-        sips -s format png --resampleWidth 1280 social-preview.svg --out social-preview.png
         ;;
 esac
 
