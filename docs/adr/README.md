@@ -45,3 +45,4 @@ Each ADR follows this structure:
 | [024](024-database-quickstart-sqlite-tiered.md) | Tiered Database Strategy — SQLite for Quick Start, PostgreSQL for Production | Accepted | 2026-06-03 |
 | [025](025-api-collection-bruno.md) | API Collection Tool — Bruno | Accepted | 2026-06-03 |
 | [026](026-i18n-two-layer-strategy.md) | Two-Layer i18n Strategy — Frontend UI vs. Backend Response | Accepted | 2026-06-04 |
+| [027](027-project-management-github-projects.md) | Project Management Tool — GitHub Projects | Accepted | 2026-06-09 |
