@@ -7,13 +7,14 @@
 # IMPORTANT — when to use this script:
 #   Use whenever SVG source files (icon-colored.svg, logo-horizontal.svg,
 #   social-preview.svg) are updated and the exported PNG assets need to be
-#   regenerated. Requires one of: Inkscape, librsvg (rsvg-convert), or
-#   ImageMagick (magick / convert).
+#   regenerated. Requires one of: Inkscape, librsvg (rsvg-convert),
+#   ImageMagick (magick / convert), or sips (macOS built-in).
 #
 # How it works:
 #   Auto-detects the available SVG-to-PNG conversion tool, then exports a full
-#   set of icon sizes (16, 32, 64, 128, 256, 512 px), logo-horizontal.png
-#   (400 px wide), and social-preview.png (1280×640 px).
+#   set of icon sizes (16, 32, 64, 128, 256, 512 px) plus icon-colored.png
+#   (512 px, transparent background — for GitHub profile picture upload),
+#   logo-horizontal.png (400 px wide), and social-preview.png (1280×640 px).
 
 set -e
 
@@ -34,6 +35,9 @@ elif command -v magick &> /dev/null; then
 elif command -v convert &> /dev/null; then
     TOOL="convert"
     echo "✓ Using ImageMagick (convert)"
+elif command -v sips &> /dev/null; then
+    TOOL="sips"
+    echo "✓ Using sips (macOS built-in)"
 else
     echo "❌ Error: No SVG to PNG conversion tool found."
     echo ""
@@ -41,6 +45,7 @@ else
     echo "  - Inkscape:     brew install inkscape"
     echo "  - librsvg:      brew install librsvg"
     echo "  - ImageMagick:  brew install imagemagick"
+    echo "  - sips:         built-in on macOS (no install needed)"
     exit 1
 fi
 
@@ -50,6 +55,7 @@ echo "Generating PNG files..."
 # Generate icon sizes
 case "$TOOL" in
     inkscape)
+        inkscape icon-colored.svg --export-filename=icon-colored.png --export-width=512
         inkscape icon-colored.svg --export-filename=icon-16.png --export-width=16
         inkscape icon-colored.svg --export-filename=icon-32.png --export-width=32
         inkscape icon-colored.svg --export-filename=icon-64.png --export-width=64
@@ -60,6 +66,7 @@ case "$TOOL" in
         inkscape social-preview.svg --export-filename=social-preview.png --export-width=1280
         ;;
     rsvg-convert)
+        rsvg-convert -w 512 -h 512 icon-colored.svg -o icon-colored.png
         rsvg-convert -w 16 -h 16 icon-colored.svg -o icon-16.png
         rsvg-convert -w 32 -h 32 icon-colored.svg -o icon-32.png
         rsvg-convert -w 64 -h 64 icon-colored.svg -o icon-64.png
@@ -71,6 +78,7 @@ case "$TOOL" in
         ;;
     magick|convert)
         CMD="$TOOL"
+        $CMD -background none icon-colored.svg -resize 512x512 icon-colored.png
         $CMD -background none icon-colored.svg -resize 16x16 icon-16.png
         $CMD -background none icon-colored.svg -resize 32x32 icon-32.png
         $CMD -background none icon-colored.svg -resize 64x64 icon-64.png
@@ -79,6 +87,18 @@ case "$TOOL" in
         $CMD -background none icon-colored.svg -resize 512x512 icon-512.png
         $CMD -background none logo-horizontal.svg -resize 400x logo-horizontal.png
         $CMD -background none social-preview.svg -resize 1280x640 social-preview.png
+        ;;
+    sips)
+        # sips is macOS built-in; preserves SVG transparency correctly
+        sips -s format png --resampleWidth 512 icon-colored.svg --out icon-colored.png
+        sips -s format png --resampleWidth 16  icon-colored.svg --out icon-16.png
+        sips -s format png --resampleWidth 32  icon-colored.svg --out icon-32.png
+        sips -s format png --resampleWidth 64  icon-colored.svg --out icon-64.png
+        sips -s format png --resampleWidth 128 icon-colored.svg --out icon-128.png
+        sips -s format png --resampleWidth 256 icon-colored.svg --out icon-256.png
+        sips -s format png --resampleWidth 512 icon-colored.svg --out icon-512.png
+        sips -s format png --resampleWidth 400 logo-horizontal.svg --out logo-horizontal.png
+        sips -s format png --resampleWidth 1280 social-preview.svg --out social-preview.png
         ;;
 esac
 
