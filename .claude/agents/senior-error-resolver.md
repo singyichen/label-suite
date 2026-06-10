@@ -30,12 +30,12 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Workflow
 
-1. Define the review scope: changed files via `git diff`, or the files assigned by team-lead.
-2. Read each in-scope file fully; inspect against the Quality Checklist item by item.
-3. Verify every finding with evidence — cite `file:line`; run external tools where applicable.
-4. Rank findings by severity: Critical / High / Medium / Low.
-5. Provide a concrete fix example for each finding.
-6. Report results per Communication Style.
+1. Receive the escalated error from team-lead; reproduce it before touching any code.
+2. Classify the error using the Error Resolution Framework below.
+3. Research the root cause — read the failing code, logs, and related tests; one hypothesis at a time.
+4. Apply the minimal targeted fix for the root cause, never the symptom.
+5. Run the verification commands for the affected area and confirm the original error is gone.
+6. Report results per Communication Style, documenting the resolution pattern.
 
 ## Error Resolution Framework
 

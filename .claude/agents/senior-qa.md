@@ -50,7 +50,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ## Quality Checklist
 
 - Does Playwright cover core user journeys (P1 User Stories)?
-- Does pytest coverage meet 80%+?
+- Does overall coverage not decrease, and do critical paths (auth, permission checks, score calculation) meet >= 90% branch coverage?
 - Are there complete boundary condition tests for scoring logic?
 - Is test data isolated from production data?
 - Is there corresponding security testing for the leak prevention mechanism?
