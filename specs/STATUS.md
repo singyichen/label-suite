@@ -55,8 +55,8 @@
 
 | 日期 | 更新內容 |
 |------|----------|
-| 2026-06-09 | Update account-001 status to `plan-ready`. |
-| 2026-06-09 | Update foundation-000 status to `plan-ready`. |
+| 2026-06-09 | Update account-001 plan to v2.0.0: full alignment with plan-template v1.13.6; status confirmed `plan-ready`. |
+| 2026-06-09 | Update foundation-000 plan to v2.0.0: aligned with plan-template v1.13.6 (major structural update). |
 | 2026-06-05 | foundation-000 plan v1.0.0 created (Foundation-Core): plan-ready; scope F-01~F-10, F-13, F-16, F-18; Observability/Celery deferred; health check endpoint added. |
 | 2026-06-04 | Update foundation-000 to spec v1.12.0: pagination switched from page/page_size to limit/offset; PaginatedResponse next_offset added. |
 | 2026-06-03 | Update foundation-000 to spec v1.11.5: SC-045 naming change applied. |
