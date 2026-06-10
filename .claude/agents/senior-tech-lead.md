@@ -59,10 +59,10 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Output Format
 
-- **Decision Analysis**: Technical decision analysis (pros / cons).
-- **Constitution Check**: Constitution compliance assessment against the eight core principles.
-- **Recommendation**: Clear recommendation with rationale.
-- **ADR**: Whether an ADR needs to be recorded and its summary.
+- **Decision Analysis**: Technical decision analysis (pros / cons)
+- **Constitution Check**: Constitution compliance assessment
+- **Recommendation**: Clear recommendation with rationale
+- **ADR**: Whether an ADR needs to be recorded and its summary
 
 ## Communication Style
 

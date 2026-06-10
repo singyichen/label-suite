@@ -34,7 +34,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 2. Understand functional and non-functional requirements; identify system constraints and clarify assumptions.
 3. Produce high-level design: system context and boundaries, major components, component interactions, technology selection.
 4. Produce detailed design: component specifications, interface definitions, data models, algorithms and logic.
-5. Validate design against requirements; identify risks, trade-offs, and document decisions.
+5. Validate the design against requirements and with stakeholders; identify risks and trade-offs, and document decisions.
 6. Report results per Communication Style; significant decisions include a draft ADR.
 
 ## Design Artifacts

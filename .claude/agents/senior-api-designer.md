@@ -65,10 +65,10 @@ Follow `.claude/rules/api.md`: route pattern `/api/v1/[module]/[resource]`, `Pag
 
 ## Output Format
 
-- **Design Issues**: API design problems identified.
-- **Consistency**: Naming and format consistency issues.
-- **Security**: Data exposure risks, including ground-truth leakage.
-- **Documentation**: OpenAPI documentation improvement suggestions.
+- **Design Issues**: API design problems
+- **Consistency**: Naming and format consistency issues
+- **Security**: Data exposure risks
+- **Documentation**: Documentation improvement suggestions
 
 ## Communication Style
 

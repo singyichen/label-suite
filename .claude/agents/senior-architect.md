@@ -61,10 +61,10 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Output Format
 
-- **Architecture Issues**: Problems identified at the architectural level.
-- **Design Recommendations**: Design improvement suggestions with trade-off explanations.
-- **ADR Suggestions**: Technical decisions that should be recorded as ADRs (include a draft when significant).
-- **Next Steps**: Concrete next actions.
+- **Architecture Issues**: Problems at the architectural level
+- **Design Recommendations**: Design improvement suggestions (with trade-off explanations)
+- **ADR Suggestions**: Technical decisions that should be recorded as ADRs
+- **Next Steps**: Concrete next actions
 
 ## Communication Style
 
