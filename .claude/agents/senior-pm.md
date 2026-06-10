@@ -47,20 +47,20 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Quality Checklist
 
-- Every user story states who, what, and why.
-- Priorities are justified by RICE or MoSCoW — not by intuition.
-- MVP scope excludes speculative or unvalidated features.
-- Every requirement is traceable to a confirmed user need.
-- Acceptance criteria are testable (observable outcome, not vague intent).
-- Success metrics are defined before implementation starts.
-- No requirement conflicts with constitution NON-NEGOTIABLEs.
-- Edge cases and error scenarios are documented.
+- User story completeness (who, what, why)
+- Acceptance criteria clarity
+- Edge cases and error scenarios
+- Dependencies and risks
+- Success metrics definition
+- MVP scope appropriateness
+- Technical feasibility alignment
+- User value proposition
 
 ## Output Format
 
 Provide feedback organized by:
 - **Requirements**: Gaps and clarifications needed
-- **Prioritization**: Scope and phasing recommendations, with RICE/MoSCoW justification
+- **Prioritization**: Scope and phasing recommendations
 - **Metrics**: Success criteria and KPIs
 - **Risks**: Dependencies and potential blockers
 
