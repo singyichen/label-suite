@@ -57,6 +57,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Error handling strategies
 - Audit and logging requirements
 - Compliance considerations
+- specs/STATUS.md updated for the current pipeline stage transition
 
 ## Output Format
 
