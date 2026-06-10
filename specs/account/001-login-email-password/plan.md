@@ -274,8 +274,8 @@ sequenceDiagram
 | `hashed_password` | `String` NOT NULL | bcrypt hash；不得出現於任何 response schema |
 | `role` | `Enum('user', 'super_admin')` DEFAULT `'user'` | 系統角色 |
 | `is_active` | `Boolean` DEFAULT `True` | 帳號啟用狀態 |
-| `created_at` | `DateTime(timezone=True)` | 建立時間（auto utcnow） |
-| `updated_at` | `DateTime(timezone=True)` | 更新時間（auto utcnow onupdate） |
+| `created_at` | `DateTime(timezone=True)` | 建立時間（auto `func.now()`，timezone-aware） |
+| `updated_at` | `DateTime(timezone=True)` | 更新時間（auto `func.now()` onupdate，timezone-aware） |
 
 **狀態轉換**：本功能無多狀態實體。User `is_active` 僅 True/False，由 admin-006 管理，不在本 spec 範圍。
 
@@ -485,7 +485,7 @@ Loading 策略（對應 TanStack Query 狀態欄位）：
 - 以 `.specify/templates/tasks-template.md` 為基礎
 - **前置確認**：列出需確認 Foundation-Core 骨架已完成的 verification task（不重複建立已有任務）
 - **Phase 1 — Auth Backend Core（對應 US3）**：
-  - `app/core/security.py`（bcrypt hash/verify + JWT create/decode）→ 單元測試 [P] + 實作
+  - `app/core/security.py`（新增 JWT create/decode；bcrypt hash/verify 已由 Foundation-Core 建立，不重複實作）→ 單元測試 [P] + 實作
   - `app/modules/auth/models.py`（User model + UserRole enum）→ 模型任務 [P]
   - Alembic migration：upgrade() / downgrade() / roundtrip 三個嚴格順序任務
   - `app/modules/auth/repository.py`（get_user_by_email / get_user_by_id）→ 整合測試 [P] + 實作
