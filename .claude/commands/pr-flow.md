@@ -13,6 +13,8 @@ git add <files>
 git commit -m "<type>: <description>"
 ```
 
+> Follow the [Commit Convention](../../CLAUDE.md#commit-convention): body bullets (the *why*) are required for `feat`/`refactor` commits or any diff touching ≥ 3 files.
+
 ## Step 2 — Code Review
 
 Run a code review and fix all findings before proceeding:
