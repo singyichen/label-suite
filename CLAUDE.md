@@ -67,7 +67,7 @@ Format:
 
 Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` · `perf` · `ci`
 
-**Body required when**: type is `feat` or `refactor`, **or** the diff touches ≥ 3 files (any type). Small commits of any other type (`fix` · `docs` · `chore` · `test` · `style` · `perf` · `ci`) may be subject-only.
+**Body required**: always — every commit must include at least one body bullet explaining the why, regardless of type or size. No subject-only commits.
 
 ### Branch Naming
 

@@ -10,10 +10,10 @@ Execute after development is complete. Steps 1–6 are automated; **Step 7 (Merg
 
 ```bash
 git add <files>
-git commit -m "<type>: <description>"
+git commit -m "<type>: <subject>" -m "- <why this change was needed>"
 ```
 
-> Follow the [Commit Convention](../../CLAUDE.md#commit-convention): body bullets (the *why*) are required for `feat`/`refactor` commits or any diff touching ≥ 3 files.
+> Follow the [Commit Convention](../../CLAUDE.md#commit-convention): every commit must include body bullets explaining the *why* — no subject-only commits.
 
 ## Step 2 — Code Review
 
@@ -65,7 +65,7 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments \
 
 ```bash
 git add <files>
-git commit -m "fix: <what was actually fixed> (qodo review)"
+git commit -m "fix: <what was actually fixed> (qodo review)" -m "- <which finding this addresses and why the fix is correct>"
 git push origin <branch-name>
 ```
 
