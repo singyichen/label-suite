@@ -54,11 +54,20 @@ Path-scoped rules — loaded only when working in the respective directory:
 
 ### Commit Convention
 
-Commit frequently — after every logical group of changes.
+Commit frequently — after every logical group of changes. One logical change per commit — do not bundle unrelated changes (e.g. new tooling + doc version bump = two commits).
 
-Format: `<type>: <description>`
+Format:
+
+```text
+<type>: <subject in English, imperative mood, ≤ 72 chars>
+
+- <why this change was needed — motivation, constraint, or tradeoff>
+- <one bullet per logical aspect; do NOT restate the diff file-by-file>
+```
 
 Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` · `perf` · `ci`
+
+**Body required**: always — every commit must include at least one body bullet explaining the why, regardless of type or size. No subject-only commits.
 
 ### Branch Naming
 
