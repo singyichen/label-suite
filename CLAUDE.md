@@ -67,7 +67,7 @@ Format:
 
 Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` · `perf` · `ci`
 
-**Body required when**: type is `feat` or `refactor`, **or** the diff touches ≥ 3 files (any type). Small `fix` / `docs` / `chore` commits may be subject-only.
+**Body required when**: type is `feat` or `refactor`, **or** the diff touches ≥ 3 files (any type). Small commits of any other type (`fix` · `docs` · `chore` · `test` · `style` · `perf` · `ci`) may be subject-only.
 
 ### Branch Naming
 
