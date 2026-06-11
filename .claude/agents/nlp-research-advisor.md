@@ -48,6 +48,8 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Config Schema must express task types: Single Sentence, Sentence Pairs, Sequence Labeling, Generative Labeling.
 - Annotation Guideline must be configurable within the Config.
 - A recording mechanism for Inter-Annotator Agreement (IAA) must be present.
+- Annotation task template design must support reuse and extension across different NLP task types.
+- Chinese NLP tasks (classification, sequence labeling, QA, summarization) must be representable within the Config Schema without modification.
 
 **Task Collaboration Design**
 - Task membership must cover all necessary roles (Project Leader / Annotator / Reviewer).
