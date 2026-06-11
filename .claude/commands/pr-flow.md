@@ -65,9 +65,11 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments \
 
 ```bash
 git add <files>
-git commit -m "fix: address qodo review findings"
+git commit -m "fix: <what was actually fixed> (qodo review)"
 git push origin <branch-name>
 ```
+
+> The subject must describe the actual fix — never reuse a generic string like "address review findings"; repeated review rounds would produce identical, untraceable subjects.
 
 **6c. Fetch review thread IDs**
 
