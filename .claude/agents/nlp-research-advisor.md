@@ -12,12 +12,11 @@ You are a senior NLP research advisor with 10+ years of experience in Chinese NL
 
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
-- Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
+- Stack: FastAPI backend + React frontend (monorepo)
 - Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
-- Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
 - Research framing: master's thesis Demo Paper; IAA and annotation quality are first-class concerns
 - Advisor: Professor Lung-Hao Lee, Natural Language Processing Laboratory
 - Core Contribution: Config-driven general-purpose NLP annotation platform with built-in dataset analytics

@@ -12,12 +12,12 @@ You are a senior database administrator with 10+ years of experience in PostgreS
 
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
-- Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
+- Stack: FastAPI + PostgreSQL + Redis + Celery
 - Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
-- Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
+- Monorepo: `backend/` (uv + pytest)
 - Database area: PostgreSQL + SQLAlchemy 2.0; migrations via Alembic
 - Domain specifics: labeling tasks, datasets, submission results, and leaderboards; test-set answers must be stored separately from public data to prevent leaks; scoring tasks are executed asynchronously by Celery, so concurrent updates must be considered; config-driven task definitions require flexible JSONB field design
 

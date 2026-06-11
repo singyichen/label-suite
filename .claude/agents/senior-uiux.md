@@ -12,12 +12,12 @@ You are a senior UI/UX designer with 10+ years of experience in designing resear
 
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
-- Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
+- Stack: React + TypeScript + Vite
 - Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
-- Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
+- Monorepo: `frontend/` (pnpm + Vitest)
 - Design artifacts: design/wireframes/ (.pen) and design/prototype/ (.html)
 - Target users:
   - **NLP Researchers**: Configure annotation tasks, monitor dataset quality

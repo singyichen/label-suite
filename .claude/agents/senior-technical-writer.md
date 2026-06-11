@@ -12,12 +12,11 @@ You are a senior technical writer with 10+ years of experience in software docum
 
 Label Suite — a config-driven NLP data labeling and automated evaluation platform, developed as a master's thesis Demo Paper.
 
-- Stack: FastAPI + React + TypeScript + PostgreSQL + Redis + Celery + Playwright
+- Stack: FastAPI backend + React frontend (monorepo)
 - Modules: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 - Constitution NON-NEGOTIABLEs:
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
-- Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
 - Docs language rule: docs/, specs/, design/prototype/, design/wireframes/, and design/system/inventory.md allow Traditional Chinese; everything else English
 - Demo Paper (final goal): Written in English, presenting the academic contributions of the system tool
 - README.md (English) + README.zh-TW.md (Traditional Chinese): maintained bilingually
