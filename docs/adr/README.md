@@ -46,3 +46,4 @@ Each ADR follows this structure:
 | [025](025-api-collection-bruno.md) | API Collection Tool — Bruno | Accepted | 2026-06-03 |
 | [026](026-i18n-two-layer-strategy.md) | Two-Layer i18n Strategy — Frontend UI vs. Backend Response | Accepted | 2026-06-04 |
 | [027](027-project-management-github-projects.md) | Project Management Tool — GitHub Projects | Accepted | 2026-06-09 |
+| [028](028-ci-security-scanning.md) | CI Security Scanning Strategy — SCA + Deferred SAST | Accepted | 2026-06-11 |
