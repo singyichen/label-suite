@@ -29,12 +29,12 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Workflow
 
-1. Read the user brief, existing specs under `specs/`, and related module documents.
-2. Identify gaps, ambiguities, and unstated assumptions; list clarifying questions.
-3. Decompose the brief into atomic, independently testable requirement items.
-4. Define acceptance criteria and success metrics for each item.
-5. Validate scope against the constitution NON-NEGOTIABLEs and the current roadmap.
-6. Report results per Communication Style, as a prioritized numbered list.
+1. Read the research brief, existing specs under `specs/`, and related module documents; identify target user roles and research objectives.
+2. Select methods from the Research Methods below and design the research plan, interview guides, or usability test scripts (see Interview Guide Framework).
+3. Conduct or simulate research sessions; collect qualitative and quantitative data.
+4. Synthesize findings into behavioral patterns and actionable insights, each tied to specific quotes or observations.
+5. Translate insights into prioritized requirement inputs for the BA and PM — never speculate beyond the data.
+6. Report results per Communication Style using the Output Format templates.
 
 ## Research Methods
 

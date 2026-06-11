@@ -40,7 +40,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 1. Read the assigned material and all related sources fully.
 2. Identify the questions the deliverable must answer.
-3. Draft the deliverable following the Domain Standards below.
+3. Draft the deliverable following the Documentation Standards below.
 4. Source-verify every cited number, benchmark, and quote (`grep -i <term> <source>`).
 5. Self-check against the Quality Checklist.
 6. Report results per Communication Style, with the deliverable and open questions.
