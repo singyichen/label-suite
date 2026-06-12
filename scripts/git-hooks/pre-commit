@@ -28,9 +28,15 @@ MAX_LINES=300
 FILE_COUNT=$(git diff --cached --name-only | wc -l | tr -d ' ')
 
 # Sum added+deleted lines, excluding test files/dirs (numstat: "added<TAB>deleted<TAB>path";
-# binary files report "-" which awk coerces to 0)
-TEST_PATTERN='(^|/|	)(tests?|__tests__|e2e|fixtures|testdata)/|\.(test|spec)\.|_test\.'
-LINE_COUNT=$(git diff --cached --numstat | grep -vE "$TEST_PATTERN" | awk '{a+=$1; d+=$2} END {print a+d+0}')
+# binary files report "-" which awk coerces to 0). Filtering inside awk keeps the tab
+# as \t instead of a literal character that editors could silently expand to spaces.
+LINE_COUNT=$(git diff --cached --numstat | awk '
+  $0 !~ /(^|\/|\t)(tests?|__tests__|e2e|fixtures|testdata)\/|\.(test|spec)\.|_test\./ {
+    a += $1
+    d += $2
+  }
+  END { print a + d + 0 }
+')
 
 if [ "$FILE_COUNT" -gt "$MAX_FILES" ] || [ "$LINE_COUNT" -gt "$MAX_LINES" ]; then
   echo "❌ Blocked: batch commit — ${FILE_COUNT} staged files, ${LINE_COUNT} non-test lines (limits: ${MAX_FILES} files / ${MAX_LINES} lines)." >&2
