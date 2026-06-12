@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# pre-commit — Block large batch commits (single-purpose-per-commit rule).
+#
+# Trigger:
+#   Native git pre-commit hook. Activated via `git config core.hooksPath scripts/git-hooks`,
+#   which .claude/hooks/session-init.sh sets automatically at session start.
+#
+# Rule (CLAUDE.md → Commit Convention):
+#   Every commit must serve exactly one change purpose. As a mechanical proxy,
+#   staged changes exceeding 10 files OR 300 non-test lines are blocked.
+#
+# Exemptions:
+#   - Merge commits (MERGE_HEAD present) pass through.
+#   - ALLOW_BATCH_COMMIT=1 bypasses the guard — requires explicit user approval first.
+set -uo pipefail
+
+GIT_DIR=$(git rev-parse --git-dir)
+[ -f "$GIT_DIR/MERGE_HEAD" ] && exit 0
+
+if [ "${ALLOW_BATCH_COMMIT:-0}" = "1" ]; then
+  echo "⚠️  ALLOW_BATCH_COMMIT=1 — batch commit guard bypassed (requires prior user approval)."
+  exit 0
+fi
+
+MAX_FILES=10
+MAX_LINES=300
+
+FILE_COUNT=$(git diff --cached --name-only | wc -l | tr -d ' ')
+
+# Sum added+deleted lines, excluding test files/dirs (numstat: "added<TAB>deleted<TAB>path";
+# binary files report "-" which awk coerces to 0)
+TEST_PATTERN='(^|/|	)(tests?|__tests__|e2e|fixtures|testdata)/|\.(test|spec)\.|_test\.'
+LINE_COUNT=$(git diff --cached --numstat | grep -vE "$TEST_PATTERN" | awk '{a+=$1; d+=$2} END {print a+d+0}')
+
+if [ "$FILE_COUNT" -gt "$MAX_FILES" ] || [ "$LINE_COUNT" -gt "$MAX_LINES" ]; then
+  echo "❌ Blocked: batch commit — ${FILE_COUNT} staged files, ${LINE_COUNT} non-test lines (limits: ${MAX_FILES} files / ${MAX_LINES} lines)." >&2
+  echo "   One purpose per commit: unstage with 'git restore --staged <file>' and split into smaller commits." >&2
+  echo "   Bypass only with explicit user approval: ALLOW_BATCH_COMMIT=1 git commit ..." >&2
+  exit 1
+fi
+
+exit 0
