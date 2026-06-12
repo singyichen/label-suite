@@ -13,6 +13,7 @@
 #   1. Verifies that .env exists in the project root.
 #   2. If claude-progress.md exists, extracts its task name and pending checklist items.
 #   3. If feature_list.json exists, counts pending vs. done features.
+#   4. Sets git core.hooksPath to scripts/git-hooks so the commit batch guard is active.
 #   Emits either a pass or a warning systemMessage so Claude knows the environment
 #   and in-progress task state before starting work.
 set -uo pipefail
@@ -61,6 +62,11 @@ EOF
 )
     CONTEXT_PARTS+=("$FL_SUMMARY")
   fi
+fi
+
+# 4. Ensure git hooks path points at the committed hooks (commit batch guard)
+if [ -d "scripts/git-hooks" ] && [ "$(git config core.hooksPath 2>/dev/null || true)" != "scripts/git-hooks" ]; then
+  git config core.hooksPath scripts/git-hooks
 fi
 
 # Build and emit systemMessage — use python3 to ensure valid JSON output

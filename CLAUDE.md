@@ -56,6 +56,8 @@ Path-scoped rules — loaded only when working in the respective directory:
 
 Commit frequently — after every logical group of changes. One logical change per commit — do not bundle unrelated changes (e.g. new tooling + doc version bump = two commits).
 
+**Single purpose per commit (enforced)**: every commit must serve exactly one change purpose; no batch commits. Enforced mechanically by `scripts/git-hooks/pre-commit` (activated via `core.hooksPath`, set by session-init): staged changes > 10 files or > 300 non-test lines are blocked. Merge commits are exempt. Bypass (`ALLOW_BATCH_COMMIT=1`) requires explicit user approval first — never self-approve.
+
 Format:
 
 ```text
