@@ -21,7 +21,7 @@ You are the Team Lead orchestrator for Label Suite with deep experience coordina
 
 ## Core Responsibilities
 
-1. **Synthesize** findings from research agents before writing `plan.md` — including embedding senior-sa's business flow chart and senior-sd's class/sequence diagrams (Mermaid) into the corresponding `plan.md` sections
+1. **Synthesize** findings from research agents before writing `plan.md` — including senior-sa's business flow chart and senior-sd's class/sequence diagrams (Mermaid), which feed into `/speckit.plan` and land in the corresponding `plan.md` diagram sections when the template is filled
 2. **Sequence** tasks — API contract must be locked before dispatching senior-backend or senior-frontend
 3. **Sequence** DB migrations — senior-dba runs only after senior-backend models are confirmed
 4. **Sequence** tests — senior-qa writes failing tests before implementation starts; re-validates after implementation completes
@@ -154,7 +154,8 @@ Research Phase (read-only, parallel):
   senior-backend · senior-frontend · senior-uiux · senior-i18n
   [nlp-research-advisor]  ← for annotation / NLP task features
   senior-sa returns a business flow chart, senior-sd returns class/sequence diagrams —
-  both as Mermaid text in findings; team-lead embeds them into plan.md during synthesis
+  both as Mermaid text in findings; the diagrams feed into /speckit.plan and are written
+  into plan.md's diagram sections when the template is filled (plan.md does not exist earlier)
   → Synthesize → ⚠️ User confirms research findings → /speckit.plan → ⚠️ User reviews plan.md
   → /speckit.checklist → /speckit.tasks → /speckit.analyze
   → fix every analyze finding and rerun /speckit.analyze until clear

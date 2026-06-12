@@ -162,7 +162,8 @@ Before writing the plan for [feature], spawn a read-only research team:
 - NLPAdvisorAgent (nlp-research-advisor): for annotation or NLP task features, review annotation
   schema, IAA metrics, and Demo Paper framing
 All agents are read-only — no file edits. SAAgent and SDAgent return diagrams as Mermaid text in their
-findings; Team Lead embeds them into plan.md during synthesis. Synthesize all findings for plan.md.
+findings; the diagrams feed into /speckit.plan and are written into plan.md's diagram sections when the
+template is filled (plan.md does not exist before /speckit.plan runs). Synthesize all findings for plan.md.
 ```
 
 ### Implementation Team
