@@ -29,6 +29,8 @@ Add to `~/.claude/settings.json`:
   [Optional: Research Agents] — spawn before /speckit.plan for complex features
 
   ├──→ [ArchitectAgent]         overall structure, cross-cutting integration points, naming conventions
+  ├──→ [SAAgent]                business flow analysis → Mermaid flowchart   ← from spec.md scenarios, not codebase
+  ├──→ [SDAgent]                UML class / sequence diagrams (Mermaid)      ← new feature design, not existing code
   ├──→ [DBResearchAgent]        existing DB schema, migration strategy
   ├──→ [APIDesignAgent]         existing API contracts, REST naming consistency  ← no overlap with Architect
   ├──→ [BackendResearchAgent]   service boundaries in backend/app/services/      ← no overlap with APIDesign
@@ -96,6 +98,8 @@ Run /pr-flow
 | Teammate | Agent Type | Responsible For |
 |---|---|---|
 | ArchitectAgent | `senior-architect` | Overall structure, cross-cutting integration points, naming conventions |
+| SAAgent | `senior-sa` | Business flow analysis from `spec.md` user scenarios → Mermaid flowchart, embedded in `plan.md` |
+| SDAgent | `senior-sd` | UML class / sequence diagrams (Mermaid) for the planned feature, embedded in `plan.md` |
 | DBResearchAgent | `senior-dba` | Review DB schema, identify migration strategy |
 | APIDesignAgent | `senior-api-designer` | Existing API contracts, REST naming, OpenAPI conflicts |
 | BackendResearchAgent | `senior-backend` | Service boundaries in `backend/app/services/` |
@@ -143,6 +147,10 @@ Run /pr-flow
 Before writing the plan for [feature], spawn a read-only research team:
 - ArchitectAgent (senior-architect): scan overall codebase structure, cross-cutting integration points,
   naming conventions, and architectural conflicts (do NOT duplicate backend-specific API review)
+- SAAgent (senior-sa): analyze business processes from spec.md user scenarios and produce a Mermaid
+  flowchart of the end-to-end business flow (scope: spec scenarios, not codebase structure)
+- SDAgent (senior-sd): design Mermaid class and sequence diagrams for the planned feature's components
+  and interactions (scope: new feature design, not existing API contracts — that is APIDesignAgent's scope)
 - DBResearchAgent (senior-dba): review existing DB schema and propose migration strategy
 - APIDesignAgent (senior-api-designer): review existing API contracts, REST naming consistency,
   and OpenAPI spec for conflicts with the planned feature
@@ -153,7 +161,8 @@ Before writing the plan for [feature], spawn a read-only research team:
 - I18nAgent (senior-i18n): identify UI strings needing zh-TW/en translation
 - NLPAdvisorAgent (nlp-research-advisor): for annotation or NLP task features, review annotation
   schema, IAA metrics, and Demo Paper framing
-All agents are read-only — no file edits. Synthesize findings for plan.md.
+All agents are read-only — no file edits. SAAgent and SDAgent return diagrams as Mermaid text in their
+findings; Team Lead embeds them into plan.md during synthesis. Synthesize all findings for plan.md.
 ```
 
 ### Implementation Team
