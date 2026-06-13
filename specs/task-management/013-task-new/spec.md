@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 2.1.2
+版本: 2.1.3
 狀態: Draft
 ---
 
@@ -132,7 +132,7 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 下拉選單
+  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）
 - Step 2：`標記設定檔`
   - 必要元素：task-type 模板入口、設定檔上傳入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
   - 畫面元素：上方預覽區、下方左側「範本/上傳設定檔」區塊 + schema 設定區、下方右側 code 區、欄位級錯誤訊息
@@ -517,6 +517,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.3 | 2026-06-13 | 修正 Step 1 畫面元素描述：`task_type` 由「下拉選單」改為「三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）」，與 prototype 現況一致 |
 | 2.1.2 | 2026-06-13 | 移除 TASK_TAXONOMY 中 `mixed`（混合）大分類：大分類已開放多選，「混合」選項語意重複且 granularities 為空，故從 prototype TASK_TAXONOMY 移除 |
 | 2.1.1 | 2026-06-13 | 調整任務類型選擇器語意：輸入類型改為單選（role="radio"，互斥）；大分類與輸出類型維持多選（role="checkbox"）；更新 FR-002、FR-002e；prototype 加入 radio chip CSS 圓形指示器 |
 | 2.1.0 | 2026-06-13 | 更新 FR-002 與 Prototype 互動規格：task_type 選擇改為三組 chip（大分類、輸入類型、輸出類型）同時顯示、無 cascade 依賴，由 deriveTaskType() 推算 registry key；新增 FR-002e 正式記載此行為；補充 initTaskTypeChips() 初始化呼叫確保 prototype 啟動時 chips 正確渲染 |
