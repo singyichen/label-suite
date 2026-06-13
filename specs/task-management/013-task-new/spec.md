@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 2.0.8
+版本: 2.1.2
 狀態: Draft
 ---
 
@@ -160,7 +160,7 @@ sequenceDiagram
 
 **Prototype 互動規格（本版必做）**：
 
-- Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已選 `task_type`、dataset 檔案通過格式/大小/編碼檢查後 enabled。
+- Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已從三組 chip 推算出 `task_type`（`deriveTaskType()` 回傳非空值）、dataset 檔案通過格式/大小/編碼檢查後 enabled。
 - Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可繼續追加多個資料集檔案；每個已上傳檔案在下方獨立一列顯示，各列含移除按鈕可單獨刪除；所有上傳檔案視為同一資料集的集合。
 - Step 2 `下一步` 按鈕預設 disabled；schema 必填欄位通過且無 parser/schema error 才 enabled。
 - Step 2 在 code 有未儲存變更時，`下一步` 必須維持 disabled 並提示先儲存；不得自動覆寫/自動儲存 code。
@@ -328,7 +328,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。`task_type` 由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型可多選），三組同時顯示、無 cascade 依賴；選擇結果透過 `deriveTaskType()` 推算出對應的 registry key。
+- **FR-002e**：Step 1 任務類型選擇器必須由 `TASK_TAXONOMY` 動態萃取三組 chip，三組同時可見且無 cascade 聯動。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（可多選，`role="checkbox"`）。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新；系統依選中的三組值透過 `deriveTaskType()` 推算出唯一的 registry key 作為 `state.taskType`。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭為 JSON 物件的 key 名稱（取自第一個成功解析的 JSON 物件），每一橫列對應一筆 JSON 物件；若多個上傳檔案已合併，以合併後資料集的前 2 筆為準。**表格欄位標頭包含勾選框**，使用者可逐欄勾選決定該欄位是否納入 config 設定：勾選（預設）表示此欄位需要進入 config；取消勾選表示此欄位不需要進入 config（僅作為資料集附帶欄位，不在 annotation-workspace 中顯示）。此表格目的為讓使用者在選擇 `task_type` 前掌握資料欄位結構，並標記哪些欄位是標記所需的。
@@ -516,6 +517,9 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.2 | 2026-06-13 | 移除 TASK_TAXONOMY 中 `mixed`（混合）大分類：大分類已開放多選，「混合」選項語意重複且 granularities 為空，故從 prototype TASK_TAXONOMY 移除 |
+| 2.1.1 | 2026-06-13 | 調整任務類型選擇器語意：輸入類型改為單選（role="radio"，互斥）；大分類與輸出類型維持多選（role="checkbox"）；更新 FR-002、FR-002e；prototype 加入 radio chip CSS 圓形指示器 |
+| 2.1.0 | 2026-06-13 | 更新 FR-002 與 Prototype 互動規格：task_type 選擇改為三組 chip（大分類、輸入類型、輸出類型）同時顯示、無 cascade 依賴，由 deriveTaskType() 推算 registry key；新增 FR-002e 正式記載此行為；補充 initTaskTypeChips() 初始化呼叫確保 prototype 啟動時 chips 正確渲染 |
 | 2.0.8 | 2026-06-13 | 新增 FR-002d：追加上傳時驗證 JSON key 集合一致性，不一致阻擋加入；嵌入式預覽表格每次上傳成功後即時刷新顯示最新檔案前 2 筆；補充對應邊界情況 |
 | 2.0.7 | 2026-06-13 | 簡化欄位勾選描述：移除 DATASET_FIELD_ROLES 常數與 background 術語，改為「勾選 = 進入 config；未勾選 = 不需進入 config」的直白說法；更新 FR-002c、FR-002c-1 與 TaskDraftInput |
 | 2.0.6 | 2026-06-13 | 新增 FR-002c-1：嵌入式預覽表格欄位標頭加入勾選框，使用者可逐欄標記 config / background 角色；background 欄位不進入 config 亦不在 annotation-workspace 顯示；Step 2 欄位映射下拉選單僅列 config_fields；TaskDraftInput 新增 config_fields 欄位；新增 DATASET_FIELD_ROLES 常數 |
