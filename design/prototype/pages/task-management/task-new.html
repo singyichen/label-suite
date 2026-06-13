@@ -631,17 +631,17 @@
             <!-- Group A: Task category (multi-select chips) -->
             <div class="task-type-group">
               <div class="task-type-group-label" id="taskCategoryGroupLabel">大分類（可多選）</div>
-              <div class="task-type-chip-grid" id="taskCategoryChips" role="group" aria-label="大分類"></div>
+              <div class="task-type-chip-grid" id="taskCategoryChips" role="group" aria-label="大分類（可多選）"></div>
             </div>
-            <!-- Group B: Input type (multi-select chips) -->
+            <!-- Group B: Input type (single-select chips) -->
             <div class="task-type-group">
               <div class="task-type-group-label" id="taskInputTypeGroupLabel">輸入類型（單選）</div>
-              <div class="task-type-chip-grid" id="taskInputTypeChips" role="group" aria-label="輸入類型"></div>
+              <div class="task-type-chip-grid" id="taskInputTypeChips" role="group" aria-label="輸入類型（單選）"></div>
             </div>
             <!-- Group C: Output type (multi-select chips) -->
             <div class="task-type-group">
               <div class="task-type-group-label" id="taskOutputTypeGroupLabel">輸出類型（可多選）</div>
-              <div class="task-type-chip-grid" id="taskOutputTypeChips" role="group" aria-label="輸出類型"></div>
+              <div class="task-type-chip-grid" id="taskOutputTypeChips" role="group" aria-label="輸出類型（可多選）"></div>
             </div>
           </div>
           <div class="field-error-msg" id="errTaskType"></div>
@@ -1175,6 +1175,9 @@ var I18N = {
     inlinePreviewTitle: '欄位預覽・指定欄位角色',
     inlinePreviewHint: '前 2 筆資料・為每個欄位指定 Evidence / Input / Output 角色',
     inlinePreviewColError: '至少須為一個欄位指定角色。',
+    taskCategoryGroupLabel: '大分類（可多選）',
+    taskInputTypeGroupLabel: '輸入類型（單選）',
+    taskOutputTypeGroupLabel: '輸出類型（可多選）',
     toastCreated: '任務建立成功，正在前往任務詳情…',
     toastCodeSaved: 'Code 設定已同步',
     toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
@@ -1283,6 +1286,9 @@ var I18N = {
     inlinePreviewTitle: 'Column preview · assign field roles',
     inlinePreviewHint: 'First 2 rows · assign Evidence / Input / Output role to each field',
     inlinePreviewColError: 'At least one field must have a role assigned.',
+    taskCategoryGroupLabel: 'Category (multi-select)',
+    taskInputTypeGroupLabel: 'Input type (single-select)',
+    taskOutputTypeGroupLabel: 'Output type (multi-select)',
     toastCreated: 'Task created — opening task detail…',
     toastCodeSaved: 'Code configuration synced',
     toastConfigLoaded: 'Config loaded. Click Save to apply',
@@ -3591,6 +3597,7 @@ function applyLang(l) {
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
     'inlinePreviewTitle','inlinePreviewHint',
+    'taskCategoryGroupLabel','taskInputTypeGroupLabel','taskOutputTypeGroupLabel',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
@@ -3610,6 +3617,9 @@ function applyLang(l) {
   updateChipLabels('taskCategoryChips',   items.categories);
   updateChipLabels('taskInputTypeChips',  items.inputTypes);
   updateChipLabels('taskOutputTypeChips', items.outputTypes);
+  el('taskCategoryChips').setAttribute('aria-label', t('taskCategoryGroupLabel'));
+  el('taskInputTypeChips').setAttribute('aria-label', t('taskInputTypeGroupLabel'));
+  el('taskOutputTypeChips').setAttribute('aria-label', t('taskOutputTypeGroupLabel'));
 
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
