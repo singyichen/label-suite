@@ -1,0 +1,32 @@
+[
+  {
+    "ID": "00183",
+    "Title": "麻醉科",
+    "Premise": "運動員可能出現每分鐘小於60跳的心搏過緩；但若心跳每分鐘僅30跳以下，術前仍需由心臟內科醫師確認心臟生理…（畫面截斷）",
+    "Hypothesis": "每分鐘30跳以下的心搏過緩在術前可按運動員生理性心搏過緩處理，適合直接接受脊椎手術，心臟內科安全性…（畫面截斷）",
+    "Label": "contradiction",
+    "Evidence": "運動員有可能有\"心搏過緩\"(每分鐘小於60跳)的狀態。但是如每分鐘僅有30跳以下，術前仍有必要請心臟內科醫師…（畫面截斷）",
+    "Source ID": "32895f62",
+    "Source URL": "https://sp1.hso.mohw.gov.tw/doctor/All/ShowDetail.php?q_no=151387"
+  },
+  {
+    "ID": "00184",
+    "Title": "心臟科",
+    "Premise": "阿斯匹靈可抑制血小板凝集，常用於預防心肌梗塞與中風，但長期服用可能增加胃腸道出血風險，需定期追蹤。",
+    "Hypothesis": "阿斯匹靈對所有心血管疾病患者均無副作用，可長期安全服用，不需醫師監控。",
+    "Label": "contradiction",
+    "Evidence": "長期服用阿斯匹靈可能增加胃腸道出血風險，因此需在醫師指導下定期追蹤，而非任意自行長期服用。",
+    "Source ID": "48a1c9e3",
+    "Source URL": "https://sp1.hso.mohw.gov.tw/doctor/All/ShowDetail.php?q_no=203451"
+  },
+  {
+    "ID": "00185",
+    "Title": "腎臟科",
+    "Premise": "慢性腎臟病患者應限制蛋白質攝取，以減少含氮廢物堆積；但同時需維持足夠熱量，避免營養不良。",
+    "Hypothesis": "慢性腎臟病患者在限制蛋白質攝取的同時，必須確保充足的熱量供應以避免肌肉消耗。",
+    "Label": "entailment",
+    "Evidence": "限制蛋白質攝取須搭配足夠熱量，否則身體會分解肌肉蛋白質產生能量，反而加重腎臟負擔。",
+    "Source ID": "71f3d2b8",
+    "Source URL": "https://sp1.hso.mohw.gov.tw/doctor/All/ShowDetail.php?q_no=318762"
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "gold_triplets": [
+    {
+      "target_utt_id": 0,
+      "target_text": "Note 10 plus",
+      "aspect_utt_id": 0,
+      "aspect_text": "過熱問題",
+      "opinion_utt_id": 0,
+      "opinion_text": "嚴重",
+      "cross_utterance": false,
+      "evidence_utt_ids": [0],
+      "notes": ""
+    },
+    {
+      "target_utt_id": 0,
+      "target_text": "Note 10 plus",
+      "aspect_utt_id": 0,
+      "aspect_text": "過熱問題",
+      "opinion_utt_id": 3,
+      "opinion_text": "沒有這個問題",
+      "cross_utterance": true,
+      "evidence_utt_ids": [0, 3],
+      "notes": ""
+    }
+  ],
+  "incomplete_annotations": [
+    {
+      "completeness": "missing_aspect",
+      "target_utt_id": 0,
+      "target_text": "Note 10 plus",
+      "aspect_utt_id": null,
+      "aspect_text": "",
+      "opinion_utt_id": 0,
+      "opinion_text": "差評",
+      "cross_utterance": false,
+      "evidence_utt_ids": [0],
+      "notes": ""
+    }
+  ]
+}
