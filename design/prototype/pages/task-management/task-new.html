@@ -2938,6 +2938,12 @@ function renderDatasetFileList() {
 /* ── Inline dataset preview (FR-002c / FR-002c-1) ─────────────── */
 
 function getSelectedColumns() {
+  var hasAnyRole = state.datasetParsedColumns.some(function(col) {
+    return !!state.fieldRoleMap[col];
+  });
+  if (!hasAnyRole) {
+    return state.datasetParsedColumns;
+  }
   return state.datasetParsedColumns.filter(function(col) {
     return !!state.fieldRoleMap[col];
   });
@@ -3620,6 +3626,7 @@ function applyLang(l) {
   el('taskCategoryChips').setAttribute('aria-label', t('taskCategoryGroupLabel'));
   el('taskInputTypeChips').setAttribute('aria-label', t('taskInputTypeGroupLabel'));
   el('taskOutputTypeChips').setAttribute('aria-label', t('taskOutputTypeGroupLabel'));
+  renderInlineDatasetPreview();
 
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
