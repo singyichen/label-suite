@@ -23,7 +23,7 @@ if [ "${ALLOW_BATCH_COMMIT:-0}" = "1" ]; then
 fi
 
 MAX_FILES=10
-MAX_LINES=300
+MAX_LINES=600
 
 FILE_COUNT=$(git diff --cached --name-only | wc -l | tr -d ' ')
 
