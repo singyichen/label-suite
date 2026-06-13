@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 2.1.3
+版本: 2.2.0
 狀態: Draft
 ---
 
@@ -44,6 +44,7 @@
 - `DATASET_UPLOAD_FORMATS = json`
 - `DATASET_MAX_FILE_SIZE_MB = 200`
 - `DATASET_ENCODING = utf-8`
+- `FIELD_ROLES = evidence | input | output`（欄位角色；未指定角色的欄位不納入 config）
 - `GUIDELINE_FORMATS = pdf | image | markdown`
 - `GUIDELINE_IMAGE_FORMATS = png | jpg | jpeg | webp`
 - `RUN_INIT_SAMPLING_MODE = by_count`
@@ -332,8 +333,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-002e**：Step 1 任務類型選擇器必須由 `TASK_TAXONOMY` 動態萃取三組 chip，三組同時可見且無 cascade 聯動。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（可多選，`role="checkbox"`）。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新；系統依選中的三組值透過 `deriveTaskType()` 推算出唯一的 registry key 作為 `state.taskType`。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
-- **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭為 JSON 物件的 key 名稱（取自第一個成功解析的 JSON 物件），每一橫列對應一筆 JSON 物件；若多個上傳檔案已合併，以合併後資料集的前 2 筆為準。**表格欄位標頭包含勾選框**，使用者可逐欄勾選決定該欄位是否納入 config 設定：勾選（預設）表示此欄位需要進入 config；取消勾選表示此欄位不需要進入 config（僅作為資料集附帶欄位，不在 annotation-workspace 中顯示）。此表格目的為讓使用者在選擇 `task_type` 前掌握資料欄位結構，並標記哪些欄位是標記所需的。
-- **FR-002c-1**：欄位勾選的行為規則：預設全部欄位皆勾選；使用者必須至少保留一個欄位勾選，否則系統阻擋並提示；重新上傳或移除檔案後，勾選狀態重設為全勾選；最終勾選結果以 `config_fields: string[]` 傳入建立任務 payload，未勾選欄位不列入。Step 2 中所有欄位映射下拉選單（如 `input_field`、`sentence_1_field`、`aspect_list_field` 等）僅列出 `config_fields` 中的欄位。
+- **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭顯示原始 JSON key 名稱；**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。角色語意：`evidence` = 僅供標記員參考的背景資料；`input` = 標記的核心輸入對象（如 Premise / Hypothesis）；`output` = 預設第三方標記結果欄位（如 GPT 初標 Label）。欄位標頭直接顯示 JSON key 原始名稱（不做中文轉換），讓標記員對照說明文件時更直覺。
+- **FR-002c-1**：欄位角色指定行為規則：預設全部欄位角色為「不使用」；重新上傳或移除檔案後，所有欄位角色重設為「不使用」；最終角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload（僅包含已指定角色的欄位；未指定角色欄位不列入）。Step 2 中所有欄位映射下拉選單（如 `input_field`、`sentence_1_field`、`aspect_list_field` 等）僅列出 `field_role_map` 中有角色的欄位。欄位角色為 optional，全部留空代表不特別標記角色，所有欄位照常納入 config。
 - **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案的頂層 JSON key 集合與已上傳檔案完全一致；不一致時阻擋加入並顯示欄位不一致提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理，顯示最新上傳檔案的前 2 筆資料。
 - **FR-003**：Step 2 標記設定檔必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
@@ -419,7 +420,8 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`config_fields: string[]`（Step 1 預覽表格中使用者勾選需進入 config 的欄位名稱清單；未勾選欄位不列入）、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`field_role_map: Record<string, FieldRole>`（Step 1 預覽表格中使用者為欄位指定的角色映射；key 為 JSON 欄位名稱，value 為 `evidence | input | output`；未指定角色的欄位不列入）、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **FieldRole**：`'evidence' | 'input' | 'output'`。
 - **TaskTypeRegistryItem**：任務類型定義。欄位：`task_type`、`display_name`、`schema`、`default_templates`。
 - **TaskConfig**：schema 驗證後設定內容（供 annotation/dataset 模組使用）。
 - **SequenceLabelingTaskConfig**：`sequence_labeling` 專用設定。欄位：`subtype`（`ner` / `aspect_list`）、`schema`、`validation_rules`、`preview_sample`。
@@ -517,6 +519,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.0 | 2026-06-13 | Step 1 欄位預覽表格改為角色映射（checkbox → role dropdown）：每欄可指定 Evidence / Input / Output 角色；新增 FIELD_ROLES 常數與 FieldRole 型別；TaskDraftInput 將 config_fields: string[] 改為 field_role_map: Record<string, FieldRole>；更新 FR-002c、FR-002c-1；欄位標頭直接顯示原始 JSON key 名稱 |
 | 2.1.3 | 2026-06-13 | 修正 Step 1 畫面元素描述：`task_type` 由「下拉選單」改為「三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）」，與 prototype 現況一致 |
 | 2.1.2 | 2026-06-13 | 移除 TASK_TAXONOMY 中 `mixed`（混合）大分類：大分類已開放多選，「混合」選項語意重複且 granularities 為空，故從 prototype TASK_TAXONOMY 移除 |
 | 2.1.1 | 2026-06-13 | 調整任務類型選擇器語意：輸入類型改為單選（role="radio"，互斥）；大分類與輸出類型維持多選（role="checkbox"）；更新 FR-002、FR-002e；prototype 加入 radio chip CSS 圓形指示器 |
