@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -400,7 +400,26 @@
     .toast.toast-error { background: var(--color-error); }
     .toast.toast-success { background: var(--color-success); }
 
-    /* ── Responsive ── */
+    /* ── Inline dataset preview table (FR-002c) ── */
+    .inline-dataset-preview { margin-top: 12px; }
+    .inline-dataset-preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .inline-dataset-preview-title { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+    .inline-dataset-preview-hint { font-size: 11px; color: var(--color-ink-muted); }
+    .inline-dataset-preview-wrap { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: auto; background: var(--color-white); }
+    .inline-preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .inline-preview-table th { background: var(--color-slate-50); padding: 8px 12px; text-align: left; font-weight: 600; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; font-size: 12px; }
+    .inline-preview-table td { padding: 8px 12px; border-bottom: 1px solid var(--color-border); color: var(--color-ink); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .inline-preview-table tr:last-child td { border-bottom: none; }
+    .inline-preview-table tr:hover td { background: var(--color-slate-50); }
+    .inline-preview-col-header { display: flex; align-items: center; gap: 6px; }
+    .inline-preview-col-checkbox { width: 15px; height: 15px; accent-color: var(--color-primary); cursor: pointer; flex-shrink: 0; }
+    .inline-preview-col-label { transition: color var(--dur-fast); }
+    .inline-preview-col-label.deselected { color: var(--color-ink-muted); text-decoration: line-through; }
+    .inline-preview-col-error { font-size: 12px; color: var(--color-error); margin-top: 6px; display: none; }
+    .inline-preview-col-error.show { display: block; }
+    html[data-theme="dark"] .inline-dataset-preview-wrap { background: var(--color-white); }
+
+        /* ── Responsive ── */
     @media (max-width: 768px) {
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
@@ -422,12 +441,21 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
     .char-count { font-size: 11px; color: var(--color-ink-muted); text-align: right; margin-top: 2px; }
 
-    /* ── Task type cascade ── */
-    .cascade-group { display: flex; flex-direction: column; gap: 8px; }
-    .detect-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; width: fit-content; }
-    .detect-badge-high { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
-    .detect-badge-medium { background: var(--color-warning-bg); color: var(--color-warning); border: 1px solid var(--color-warning-border); }
-    .detect-badge-override { background: var(--color-slate-50); color: var(--color-text-soft); border: 1px solid var(--color-border); }
+    /* ── Task type flat selector ── */
+    .task-type-selector { display: flex; flex-direction: column; gap: 14px; }
+    .task-type-group { padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
+    .task-type-group-label { font-size: 11px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .task-type-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .task-type-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-full); font-size: 13px; font-weight: 500; color: var(--color-ink); background: var(--color-white); cursor: pointer; transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast); user-select: none; }
+    .task-type-chip:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .task-type-chip.selected { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
+    .task-type-chip input[type=checkbox] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    .task-type-chip-check { width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .task-type-chip.selected .task-type-chip-check { background: var(--color-primary); border-color: var(--color-primary); }
+    .task-type-chip.selected .task-type-chip-check::after { content: ""; display: block; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg) translate(1px,-1px); }
+    /* radio-style (single-select) chip */
+    .task-type-chip[role="radio"] .task-type-chip-check { border-radius: 50%; }
+    .task-type-chip[role="radio"].selected .task-type-chip-check::after { width: 6px; height: 6px; border: none; border-radius: 50%; background: white; transform: none; }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
@@ -575,40 +603,45 @@
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
             <div class="upload-zone-label" id="uploadZoneLabel">點擊或拖曳上傳資料集</div>
-            <div class="upload-zone-hint" id="uploadZoneHint">支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8</div>
-            <input type="file" id="datasetFileInput" accept=".txt,.csv,.tsv,.json" multiple style="display:none" aria-hidden="true" />
+            <div class="upload-zone-hint" id="uploadZoneHint">僅支援 JSON · 最大 200 MB · UTF-8</div>
+            <input type="file" id="datasetFileInput" accept=".json" multiple style="display:none" aria-hidden="true" />
           </div>
           <div id="datasetFileList"></div>
+          <!-- Inline dataset preview table (FR-002c) — auto-shown after upload -->
+          <div id="inlineDatasetPreview" class="inline-dataset-preview hidden" role="region" aria-label="資料集欄位預覽">
+            <div class="inline-dataset-preview-header">
+              <span class="inline-dataset-preview-title" id="inlinePreviewTitle">欄位預覽・選擇納入 config 的欄位</span>
+              <span class="inline-dataset-preview-hint" id="inlinePreviewHint">前 2 筆資料・標頭勾選框決定是否納入 config</span>
+            </div>
+            <div class="inline-dataset-preview-wrap">
+              <!-- table built by renderInlineDatasetPreview() -->
+            </div>
+            <div class="inline-preview-col-error" id="inlinePreviewColError" role="alert"></div>
+          </div>
+          <div class="field-error-msg" id="errDatasetCompat" role="alert"></div>
           <div class="field-error-msg" id="errDataset"></div>
         </div>
 
-        <!-- Task type taxonomy cascade -->
+        <!-- Task type flat multi-select (categories / input types / output types) -->
         <div class="form-field">
           <label class="field-label">
             <span id="labelTaskType">任務類型</span><span class="required">*</span>
           </label>
-          <div class="cascade-group">
-            <select id="taskCategorySelect" class="input-select" aria-required="true">
-              <option value="" id="optTaskCategoryDefault">請選擇大分類</option>
-              <option value="classification" id="optClassification">分類（Classification）</option>
-              <option value="regression" id="optRegression">回歸（Regression）</option>
-              <option value="sequence" id="optSequence">序列（Sequence）</option>
-              <option value="generation" id="optGeneration">生成（Generation）</option>
-              <option value="mixed" id="optMixed">混合（Mixed）</option>
-            </select>
-
-            <div id="taskGranularityWrap" class="hidden">
-              <select id="taskGranularitySelect" class="input-select">
-                <option value="" id="optTaskGranularityDefault">請選擇輸入類型</option>
-              </select>
-              <div id="granularityDetectBadge" class="detect-badge detect-badge-medium" style="display:none;margin-top:4px;"></div>
-              <div id="granularityDetectHint" class="field-hint" style="display:none;margin-top:2px;"></div>
+          <div class="task-type-selector" id="taskTypeSelector" role="group" aria-labelledby="labelTaskType">
+            <!-- Group A: Task category (multi-select chips) -->
+            <div class="task-type-group">
+              <div class="task-type-group-label" id="taskCategoryGroupLabel">大分類（可多選）</div>
+              <div class="task-type-chip-grid" id="taskCategoryChips" role="group" aria-label="大分類"></div>
             </div>
-
-            <div id="taskSubtypeWrap" class="hidden">
-              <select id="taskSubtypeSelect" class="input-select">
-                <option value="" id="optTaskSubtypeDefault">請選擇輸出類型</option>
-              </select>
+            <!-- Group B: Input type (multi-select chips) -->
+            <div class="task-type-group">
+              <div class="task-type-group-label" id="taskInputTypeGroupLabel">輸入類型（單選）</div>
+              <div class="task-type-chip-grid" id="taskInputTypeChips" role="group" aria-label="輸入類型"></div>
+            </div>
+            <!-- Group C: Output type (multi-select chips) -->
+            <div class="task-type-group">
+              <div class="task-type-group-label" id="taskOutputTypeGroupLabel">輸出類型（可多選）</div>
+              <div class="task-type-chip-grid" id="taskOutputTypeChips" role="group" aria-label="輸出類型"></div>
             </div>
           </div>
           <div class="field-error-msg" id="errTaskType"></div>
@@ -1012,10 +1045,6 @@ var TASK_TAXONOMY = {
       },
     },
   },
-  mixed: {
-    zh: '混合（Mixed）', en: 'Mixed',
-    granularities: {},
-  },
 };
 var SAMPLING_DEFAULTS_BY_TYPE = {
   single_sentence_classification: { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 12 },
@@ -1051,7 +1080,7 @@ var I18N = {
     taskNamePlaceholder: '例：新聞標題情感分類',
     optTaskTypeDefault: '請選擇任務類型',
     uploadZoneLabel: '點擊或拖曳上傳資料集',
-    uploadZoneHint: '支援 TXT / CSV / TSV / JSON · 最大 200 MB · UTF-8 · 最多 100 萬筆',
+    uploadZoneHint: '僅支援 JSON · 最大 200 MB · UTF-8',
     annotatorGuidelineSectionTitle: '提供給標記員',
     reviewerGuidelineSectionTitle: '提供給審核員',
     labelAnnotatorGuideline: '標記說明內容',
@@ -1125,7 +1154,7 @@ var I18N = {
     datasetRemoveAriaLabel: '移除檔案',
     errTaskName: '請輸入任務名稱', errTaskType: '請選擇任務類型',
     errDataset: '請上傳有效的資料集檔案',
-    errDatasetFormat: '不支援此格式，請上傳 TXT / CSV / TSV / JSON',
+    errDatasetFormat: '不支援此格式，請上傳 JSON 檔案（.json）',
     errDatasetSize: '檔案超過 200 MB 上限',
     errSchemaRequired: '請完成所有必填欄位',
     errStartupMemberRequired: '至少需加入 1 位 annotator',
@@ -1138,6 +1167,9 @@ var I18N = {
     errCodeInvalid: 'Code 內容格式錯誤，請修正後再儲存',
     errConfigFormat: '設定檔格式錯誤，請上傳 YAML / YML / JSON',
     errConfigRead: '讀取設定檔失敗，請重試',
+    inlinePreviewTitle: '欄位預覽・選擇納入 config 的欄位',
+    inlinePreviewHint: '前 2 筆資料・標頭勾選框決定是否納入 config',
+    inlinePreviewColError: '至少必須保留一個欄位勾選。',
     toastCreated: '任務建立成功，正在前往任務詳情…',
     toastCodeSaved: 'Code 設定已同步',
     toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
@@ -1156,7 +1188,7 @@ var I18N = {
     taskNamePlaceholder: 'Example: News headline sentiment classification',
     optTaskTypeDefault: 'Select task type',
     uploadZoneLabel: 'Click or drag to upload dataset',
-    uploadZoneHint: 'TXT / CSV / TSV / JSON · max 200 MB · UTF-8 · up to 1,000,000 rows',
+    uploadZoneHint: 'JSON only · max 200 MB · UTF-8',
     annotatorGuidelineSectionTitle: 'For annotators',
     reviewerGuidelineSectionTitle: 'For reviewers',
     labelAnnotatorGuideline: 'Annotation guideline content',
@@ -1230,7 +1262,7 @@ var I18N = {
     datasetRemoveAriaLabel: 'Remove file',
     errTaskName: 'Task name is required', errTaskType: 'Please select a task type',
     errDataset: 'Please upload a valid dataset file',
-    errDatasetFormat: 'Unsupported format — use TXT, CSV, TSV, or JSON',
+    errDatasetFormat: 'Unsupported format — only .json files are accepted',
     errDatasetSize: 'File exceeds the 200 MB limit',
     errSchemaRequired: 'Please complete all required fields',
     errStartupMemberRequired: 'At least 1 annotator is required',
@@ -1243,6 +1275,9 @@ var I18N = {
     errCodeInvalid: 'Invalid code format. Please fix and save again',
     errConfigFormat: 'Invalid config file type. Upload YAML / YML / JSON',
     errConfigRead: 'Failed to read config file. Please try again',
+    inlinePreviewTitle: 'Column preview · select fields for config',
+    inlinePreviewHint: 'First 2 rows · header checkboxes control which fields enter config',
+    inlinePreviewColError: 'At least one column must remain selected.',
     toastCreated: 'Task created — opening task detail…',
     toastCodeSaved: 'Code configuration synced',
     toastConfigLoaded: 'Config loaded. Click Save to apply',
@@ -1254,9 +1289,9 @@ var I18N = {
 /* ── State ───────────────────────────────────────────────────── */
 var state = {
   lang: 'zh', step: 1,
-  taskName: '', datasetFiles: [],
-  taskCategory: '', taskGranularity: '', taskSubtype: '', taskType: '',
-  detectedGranularity: null, granularityOverridden: false,
+  taskName: '', datasetFiles: [], datasetColumnSelection: {},
+  datasetParsedColumns: [], datasetParsedRows: [],
+  taskCategories: [], taskInputTypes: [], taskOutputTypes: [], taskType: '',
   codeFormat: 'yaml', configData: {},
   memberSource: 'system',
   initialMembers: [],
@@ -1800,6 +1835,17 @@ function appendSchemaField(container, field) {
         markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
       });
       wrap.appendChild(inp);
+      // Step 2 field-mapping hint: show selected columns from dataset (FR-002c-1)
+      var fieldMappingKeys = ['input_field', 'entity_field', 'aspect_list_field', 'sentence_1_field', 'sentence_2_field'];
+      if (fieldMappingKeys.indexOf(field.key) >= 0 && state.datasetFiles.length > 0) {
+        var selectedCols = getSelectedColumns();
+        if (selectedCols.length > 0) {
+          var colHint = document.createElement('div');
+          colHint.className = 'field-hint';
+          colHint.textContent = (state.lang === 'en' ? 'Available columns: ' : '可用欄位：') + selectedCols.join(', ');
+          wrap.appendChild(colHint);
+        }
+      }
     }
     container.appendChild(wrap);
 }
@@ -2681,50 +2727,133 @@ function formatBytes(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB';
 }
 
-var DATASET_ALLOWED = ['.txt', '.csv', '.tsv', '.json'];
+var DATASET_ALLOWED = ['.json'];
+
+function previewCellValue(val) {
+  if (val === undefined || val === null) return '';
+  if (Array.isArray(val)) {
+    return (state.lang === 'en' ? 'Array · ' : '陣列 · ') + val.length + (state.lang === 'en' ? ' items' : ' 筆');
+  }
+  if (typeof val === 'object') {
+    var keys = Object.keys(val);
+    return '{' + keys.slice(0, 3).join(', ') + (keys.length > 3 ? ', …' : '') + '}';
+  }
+  return String(val);
+}
+
+function parseJsonDataset(file, onSuccess, onError) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      var columns, rows;
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          onError(state.lang === 'en' ? 'The JSON file is empty.' : '檔案內容為空的 JSON 陣列。');
+          return;
+        }
+        if (data[0] === null || typeof data[0] !== 'object') {
+          onError(state.lang === 'en' ? 'Invalid JSON format: array elements must be objects.' : 'JSON 格式不正確：陣列元素必須是物件。');
+          return;
+        }
+        columns = Object.keys(data[0]);
+        rows = data.slice(0, 2).map(function(row) {
+          return columns.map(function(col) { return previewCellValue(row[col]); });
+        });
+      } else if (data && typeof data === 'object') {
+        columns = Object.keys(data);
+        rows = [columns.map(function(col) { return previewCellValue(data[col]); })];
+      } else {
+        onError(state.lang === 'en' ? 'Invalid JSON format.' : 'JSON 格式不正確，請確認檔案內容。');
+        return;
+      }
+      if (columns.length === 0) {
+        onError(state.lang === 'en' ? 'No columns found in JSON.' : '找不到任何欄位，請確認 JSON 格式。');
+        return;
+      }
+      onSuccess({ columns: columns, rows: rows });
+    } catch (ex) {
+      onError(state.lang === 'en' ? 'Failed to parse JSON.' : '無法解析 JSON，請確認檔案格式正確（UTF-8 編碼）。');
+    }
+  };
+  reader.onerror = function() {
+    onError(state.lang === 'en' ? 'Failed to read file.' : '讀取檔案失敗。');
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function processFileQueue(queue, idx) {
+  if (idx >= queue.length) {
+    renderDatasetFileList();
+    renderInlineDatasetPreview();
+    markDirty(); revalidateCurrentStep();
+    return;
+  }
+  var file = queue[idx];
+  parseJsonDataset(file, function(parsed) {
+    if (state.datasetParsedColumns.length > 0) {
+      var newCols = parsed.columns.slice().sort().join('|');
+      var existCols = state.datasetParsedColumns.slice().sort().join('|');
+      if (newCols !== existCols) {
+        showFieldError('errDatasetCompat', true,
+          state.lang === 'en'
+            ? 'Column mismatch: "' + file.name + '" has different columns. All files must have identical columns.'
+            : '欄位不一致：「' + file.name + '」的欄位與已上傳的檔案不同，請確認所有檔案欄位相同。');
+        el('datasetUploadZone').classList.add('error');
+        processFileQueue(queue, idx + 1);
+        return;
+      }
+      state.datasetParsedRows = parsed.rows;
+    } else {
+      state.datasetParsedColumns = parsed.columns;
+      state.datasetParsedRows = parsed.rows;
+      state.datasetColumnSelection = {};
+    }
+    state.datasetFiles.push(file);
+    track('prototype_task_new_dataset_uploaded', { name: file.name, size: file.size });
+    el('datasetUploadZone').classList.remove('error');
+    showFieldError('errDatasetCompat', false);
+    showFieldError('errDataset', false);
+    if (state.datasetFiles.length === 1) {
+      runGranularityDetection(state.datasetFiles[0]);
+    }
+    processFileQueue(queue, idx + 1);
+  }, function(errMsg) {
+    showFieldError('errDatasetCompat', true, errMsg);
+    el('datasetUploadZone').classList.add('error');
+    processFileQueue(queue, idx + 1);
+  });
+}
 
 function addDatasetFiles(files) {
-  var hadError = false;
+  var queue = [];
   Array.prototype.forEach.call(files, function(file) {
     var name = file.name.toLowerCase();
     var ext = name.slice(name.lastIndexOf('.'));
     if (DATASET_ALLOWED.indexOf(ext) === -1) {
       showFieldError('errDataset', true, t('errDatasetFormat'));
       el('datasetUploadZone').classList.add('error');
-      hadError = true;
       return;
     }
     if (file.size > 200 * 1048576) {
       showFieldError('errDataset', true, t('errDatasetSize'));
       el('datasetUploadZone').classList.add('error');
-      hadError = true;
       return;
     }
-    state.datasetFiles.push(file);
-    track('prototype_task_new_dataset_uploaded', { ext: ext, size: file.size });
+    queue.push(file);
   });
-  if (!hadError) {
-    el('datasetUploadZone').classList.remove('error');
-    showFieldError('errDataset', false);
-    // Trigger granularity detection on first uploaded file
-    if (state.datasetFiles.length > 0) {
-      runGranularityDetection(state.datasetFiles[0]);
-    }
+  if (queue.length > 0) {
+    processFileQueue(queue, 0);
   }
-  renderDatasetFileList();
-  markDirty(); revalidateCurrentStep();
 }
 
 function removeDatasetFile(idx) {
   state.datasetFiles.splice(idx, 1);
   el('datasetFileInput').value = '';
   if (state.datasetFiles.length === 0) {
-    state.detectedGranularity = null;
-    state.granularityOverridden = false;
-    state.taskGranularity = '';
-    var granSel = el('taskGranularitySelect');
-    if (granSel) granSel.value = '';
-    updateGranularityBadge();
+    resetInlinePreviewSelection();
+  } else {
+    renderInlineDatasetPreview();
   }
   renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
@@ -2793,6 +2922,128 @@ function renderDatasetFileList() {
   state.datasetFiles.forEach(function(file, idx) {
     list.appendChild(makeDatasetFileItem(file, idx));
   });
+}
+
+/* ── Inline dataset preview (FR-002c / FR-002c-1) ─────────────── */
+
+function getSelectedColumns() {
+  return state.datasetParsedColumns.filter(function(col) {
+    return state.datasetColumnSelection[col] !== false;
+  });
+}
+
+function renderInlineDatasetPreview() {
+  var container = el('inlineDatasetPreview');
+  if (!container) return;
+
+  if (state.datasetFiles.length === 0 || state.datasetParsedColumns.length === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+
+  var cols = state.datasetParsedColumns;
+
+  // Init column selection for any new columns not yet in state
+  cols.forEach(function(col) {
+    if (state.datasetColumnSelection[col] === undefined) {
+      state.datasetColumnSelection[col] = true;
+    }
+  });
+
+  var wrap = container.querySelector('.inline-dataset-preview-wrap');
+  if (!wrap) return;
+
+  var errEl = container.querySelector('.inline-preview-col-error');
+
+  // Rebuild table
+  var oldTable = wrap.querySelector('table');
+  if (oldTable) wrap.removeChild(oldTable);
+
+  var table = document.createElement('table');
+  table.className = 'inline-preview-table';
+  table.setAttribute('role', 'table');
+
+  var thead = document.createElement('thead');
+  var headRow = document.createElement('tr');
+  cols.forEach(function(col, ci) {
+    var th = document.createElement('th');
+    var inner = document.createElement('div');
+    inner.className = 'inline-preview-col-header';
+
+    var safeId = col.replace(/[^a-zA-Z0-9_]/g, '_') + '_' + ci;
+    var chkId = 'colChk_' + safeId;
+    var chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.className = 'inline-preview-col-checkbox';
+    chk.checked = state.datasetColumnSelection[col] !== false;
+    chk.setAttribute('aria-label', (state.lang === 'en' ? 'Include column: ' : '納入欄位：') + col);
+    chk.id = chkId;
+
+    var lbl = document.createElement('label');
+    lbl.setAttribute('for', chkId);
+    lbl.className = 'inline-preview-col-label' + (chk.checked ? '' : ' deselected');
+    lbl.textContent = col;
+    lbl.style.cursor = 'pointer';
+
+    (function(colName, labelEl) {
+      chk.addEventListener('change', function() {
+        var willCheck = chk.checked;
+        var selectedCount = cols.filter(function(k) {
+          return k === colName ? willCheck : state.datasetColumnSelection[k] !== false;
+        }).length;
+        if (!willCheck && selectedCount === 0) {
+          chk.checked = true;
+          if (errEl) {
+            errEl.textContent = state.lang === 'en'
+              ? 'At least one column must remain selected.'
+              : '至少必須保留一個欄位勾選。';
+            errEl.classList.add('show');
+            setTimeout(function() { errEl.classList.remove('show'); }, 3000);
+          }
+          return;
+        }
+        state.datasetColumnSelection[colName] = willCheck;
+        labelEl.className = 'inline-preview-col-label' + (willCheck ? '' : ' deselected');
+        if (errEl) errEl.classList.remove('show');
+        var rows = wrap.querySelectorAll('tbody tr');
+        var colIdx = cols.indexOf(colName);
+        rows.forEach(function(row) {
+          var td = row.querySelectorAll('td')[colIdx];
+          if (td) td.style.opacity = willCheck ? '' : '0.35';
+        });
+        markDirty();
+      });
+    }(col, lbl));
+
+    inner.appendChild(chk);
+    inner.appendChild(lbl);
+    th.appendChild(inner);
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  state.datasetParsedRows.forEach(function(row) {
+    var tr = document.createElement('tr');
+    cols.forEach(function(col, ci) {
+      var td = document.createElement('td');
+      td.textContent = row[ci] !== undefined ? row[ci] : '';
+      if (state.datasetColumnSelection[col] === false) td.style.opacity = '0.35';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+function resetInlinePreviewSelection() {
+  state.datasetColumnSelection = {};
+  state.datasetParsedColumns = [];
+  state.datasetParsedRows = [];
+  renderInlineDatasetPreview();
 }
 
 /* ── Dataset preview modal ───────────────────────────────────── */
@@ -3169,202 +3420,144 @@ function submitTask() {
   }, 900);
 }
 
-/* ── Cascade: derive taskType from selections ────────────────── */
+/* ── Flat chip: extract items from TASK_TAXONOMY ────────────── */
+function extractTaxonomyItems() {
+  var categories = [];
+  var inputTypesMap = {};
+  var outputTypesMap = {};
+
+  Object.keys(TASK_TAXONOMY).forEach(function(catKey) {
+    var catDef = TASK_TAXONOMY[catKey];
+    categories.push({ key: catKey, zh: catDef.zh, en: catDef.en });
+    Object.keys(catDef.granularities).forEach(function(granKey) {
+      var granDef = catDef.granularities[granKey];
+      if (!inputTypesMap[granKey]) {
+        inputTypesMap[granKey] = { key: granKey, zh: granDef.zh, en: granDef.en };
+      }
+      Object.keys(granDef.subtypes).forEach(function(subKey) {
+        var subDef = granDef.subtypes[subKey];
+        if (!outputTypesMap[subKey]) {
+          outputTypesMap[subKey] = { key: subKey, zh: subDef.zh, en: subDef.en };
+        }
+      });
+    });
+  });
+
+  return {
+    categories: categories,
+    inputTypes: Object.keys(inputTypesMap).map(function(k) { return inputTypesMap[k]; }),
+    outputTypes: Object.keys(outputTypesMap).map(function(k) { return outputTypesMap[k]; }),
+  };
+}
+
+/* ── Flat chip: build chips into a container ─────────────────── */
+function buildChips(containerId, items, stateKey, singleSelect) {
+  var container = el(containerId);
+  if (!container) return;
+  while (container.firstChild) container.removeChild(container.firstChild);
+  var role = singleSelect ? 'radio' : 'checkbox';
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'task-type-chip';
+    btn.setAttribute('data-key', item.key);
+    btn.setAttribute('data-state-key', stateKey);
+    btn.setAttribute('role', role);
+    btn.setAttribute('aria-checked', 'false');
+
+    var check = document.createElement('span');
+    check.className = 'task-type-chip-check';
+    btn.appendChild(check);
+
+    var label = document.createElement('span');
+    label.className = 'task-type-chip-label';
+    label.textContent = item[state.lang] || item.zh;
+    btn.appendChild(label);
+
+    btn.addEventListener('click', function() {
+      var key = btn.getAttribute('data-key');
+      var sk = btn.getAttribute('data-state-key');
+      if (singleSelect) {
+        // deselect all siblings first
+        container.querySelectorAll('.task-type-chip').forEach(function(b) {
+          b.classList.remove('selected');
+          b.setAttribute('aria-checked', 'false');
+        });
+        state[sk] = [key];
+        btn.classList.add('selected');
+        btn.setAttribute('aria-checked', 'true');
+      } else {
+        var arr = state[sk];
+        var idx = arr.indexOf(key);
+        if (idx >= 0) {
+          arr.splice(idx, 1);
+          btn.classList.remove('selected');
+          btn.setAttribute('aria-checked', 'false');
+        } else {
+          arr.push(key);
+          btn.classList.add('selected');
+          btn.setAttribute('aria-checked', 'true');
+        }
+      }
+      onChipSelectionChange();
+    });
+
+    container.appendChild(btn);
+  });
+}
+
+/* ── Flat chip: update chip labels when language changes ─────── */
+function updateChipLabels(containerId, items) {
+  var container = el(containerId);
+  if (!container) return;
+  items.forEach(function(item) {
+    var btn = container.querySelector('[data-key="' + item.key + '"]');
+    if (!btn) return;
+    var labelEl = btn.querySelector('.task-type-chip-label');
+    if (labelEl) labelEl.textContent = item[state.lang] || item.zh;
+  });
+}
+
+/* ── Flat chip: initialise all three groups ──────────────────── */
+var _taxonomyItems = null;
+function getTaxonomyItems() {
+  if (!_taxonomyItems) _taxonomyItems = extractTaxonomyItems();
+  return _taxonomyItems;
+}
+function initTaskTypeChips() {
+  var items = getTaxonomyItems();
+  buildChips('taskCategoryChips',   items.categories,  'taskCategories');
+  buildChips('taskInputTypeChips',  items.inputTypes,  'taskInputTypes', true);
+  buildChips('taskOutputTypeChips', items.outputTypes,  'taskOutputTypes');
+}
+
+/* ── Flat chip: derive taskType from multi-select state ──────── */
 function deriveTaskType() {
-  var cat = state.taskCategory;
-  var gran = state.taskGranularity;
-  var sub = state.taskSubtype;
-  if (!cat || !gran || !sub) { state.taskType = ''; return; }
-  var catDef = TASK_TAXONOMY[cat];
-  if (!catDef) { state.taskType = ''; return; }
-  var granDef = catDef.granularities[gran];
-  if (!granDef) { state.taskType = ''; return; }
-  var subtypeDef = granDef.subtypes[sub];
-  state.taskType = (subtypeDef && subtypeDef.registryKey) ? subtypeDef.registryKey : '';
-}
+  var cats   = state.taskCategories;
+  var inputs = state.taskInputTypes;
+  var outputs = state.taskOutputTypes;
+  var keys = {};
 
-/* ── Cascade: populate Level 2 (granularity) ─────────────────── */
-function populateGranularitySelect(category) {
-  var sel = el('taskGranularitySelect');
-  while (sel.firstChild) sel.removeChild(sel.firstChild);
-  var def = document.createElement('option');
-  def.value = '';
-  def.id = 'optTaskGranularityDefault';
-  def.textContent = state.lang === 'en' ? 'Select input type' : '請選擇輸入類型';
-  sel.appendChild(def);
-  if (!category || !TASK_TAXONOMY[category]) return;
-  var grans = TASK_TAXONOMY[category].granularities;
-  Object.keys(grans).forEach(function(key) {
-    var opt = document.createElement('option');
-    opt.value = key;
-    opt.textContent = grans[key][state.lang] || grans[key].zh;
-    sel.appendChild(opt);
-  });
-}
-
-/* ── Cascade: populate Level 3 (subtype) ────────────────────── */
-function populateSubtypeSelect(category, granularity) {
-  var sel = el('taskSubtypeSelect');
-  while (sel.firstChild) sel.removeChild(sel.firstChild);
-  var def = document.createElement('option');
-  def.value = '';
-  def.id = 'optTaskSubtypeDefault';
-  def.textContent = state.lang === 'en' ? 'Select output type' : '請選擇輸出類型';
-  sel.appendChild(def);
-  if (!category || !granularity) return;
-  var catDef = TASK_TAXONOMY[category];
-  var granDef = catDef && catDef.granularities[granularity];
-  if (!granDef) return;
-  Object.keys(granDef.subtypes).forEach(function(key) {
-    var opt = document.createElement('option');
-    opt.value = key;
-    opt.textContent = granDef.subtypes[key][state.lang] || granDef.subtypes[key].zh;
-    sel.appendChild(opt);
-  });
-  // Auto-select when only one option
-  if (sel.options.length === 2) {
-    sel.selectedIndex = 1;
-    onSubtypeChange();
-  }
-}
-
-/* ── Cascade: detection badge ────────────────────────────────── */
-function updateGranularityBadge() {
-  var badge = el('granularityDetectBadge');
-  var hint = el('granularityDetectHint');
-  if (!badge) return;
-  if (!state.detectedGranularity || !state.taskCategory) {
-    badge.style.display = 'none';
-    if (hint) hint.style.display = 'none';
-    return;
-  }
-  badge.style.display = 'inline-flex';
-  if (state.granularityOverridden) {
-    badge.className = 'detect-badge detect-badge-override';
-    badge.textContent = state.lang === 'en' ? '✎ Manual override' : '✎ 已手動修改';
-    if (hint) hint.style.display = 'none';
-  } else if (state.detectedGranularity.confidence === 'high') {
-    badge.className = 'detect-badge detect-badge-high';
-    badge.textContent = state.lang === 'en' ? '🔍 Auto-detected' : '🔍 自動偵測';
-    if (hint) hint.style.display = 'none';
-  } else {
-    badge.className = 'detect-badge detect-badge-medium';
-    badge.textContent = state.lang === 'en' ? '⚠ Suggested' : '⚠ 建議';
-    if (hint) {
-      hint.style.display = 'block';
-      hint.textContent = state.lang === 'en'
-        ? 'Detected from file content — change if needed.'
-        : '根據檔案內容偵測，如有需要可手動修改。';
-    }
-  }
-}
-
-/* ── Cascade: apply detection result ────────────────────────── */
-function applyGranularityDetection(result) {
-  state.detectedGranularity = result;
-  state.granularityOverridden = false;
-  if (state.taskCategory) {
-    var sel = el('taskGranularitySelect');
-    sel.value = result.value;
-    onGranularityChange(true);
-  }
-  updateGranularityBadge();
-}
-
-/* ── Cascade: detect granularity from uploaded file ─────────── */
-function runGranularityDetection(file) {
-  var name = (file.name || '').toLowerCase();
-  // Fast name-based detection
-  if (name.indexOf('pair') >= 0 || name.indexOf('nli') >= 0 ||
-      name.indexOf('entail') >= 0 || name.indexOf('similar') >= 0) {
-    applyGranularityDetection({ value: 'item_pair', confidence: 'high' });
-    return;
-  }
-  if (name.indexOf('doc') >= 0 || name.indexOf('article') >= 0 || name.indexOf('passage') >= 0) {
-    applyGranularityDetection({ value: 'single_item', confidence: 'medium' });
-    return;
-  }
-  // CSV/TSV: read headers to detect pair columns
-  if (file.name.slice(-4) === '.csv' || file.name.slice(-4) === '.tsv') {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var text = e.target.result || '';
-      var firstLine = text.split('\n')[0] || '';
-      var sep = file.name.slice(-4) === '.tsv' ? '\t' : ',';
-      var cols = firstLine.split(sep).map(function(c) {
-        return c.trim().toLowerCase().replace(/^["']|["']$/g, '');
+  Object.keys(TASK_TAXONOMY).forEach(function(catKey) {
+    if (cats.length && cats.indexOf(catKey) < 0) return;
+    var catDef = TASK_TAXONOMY[catKey];
+    Object.keys(catDef.granularities).forEach(function(granKey) {
+      if (inputs.length && inputs.indexOf(granKey) < 0) return;
+      var granDef = catDef.granularities[granKey];
+      Object.keys(granDef.subtypes).forEach(function(subKey) {
+        if (outputs.length && outputs.indexOf(subKey) < 0) return;
+        var rk = granDef.subtypes[subKey].registryKey;
+        if (rk) keys[rk] = true;
       });
-      var hasPairCols = cols.some(function(c) {
-        return c === 'text_a' || c === 'text_b' || c === 'premise' ||
-               c === 'hypothesis' || c === 'sentence1' || c === 'sentence2' ||
-               c === 'sentence_a' || c === 'sentence_b';
-      });
-      applyGranularityDetection(hasPairCols
-        ? { value: 'item_pair', confidence: 'high' }
-        : { value: 'single_item', confidence: 'medium' });
-    };
-    reader.onerror = function() {
-      // File read failed — do not store a detection result
-      state.detectedGranularity = null;
-      updateGranularityBadge();
-    };
-    reader.readAsText(file.slice(0, 2048));
-  } else {
-    applyGranularityDetection({ value: 'single_item', confidence: 'medium' });
-  }
+    });
+  });
+
+  var resolved = Object.keys(keys);
+  state.taskType = resolved.length ? resolved[0] : '';
 }
 
-/* ── Cascade change handlers ─────────────────────────────────── */
-function onCategoryChange() {
-  state.taskCategory = el('taskCategorySelect').value;
-  state.taskGranularity = '';
-  state.taskSubtype = '';
-  state.taskType = '';
-  state.configData = {};
-  state.codeDraftDirty = false;
-  var granWrap = el('taskGranularityWrap');
-  var subtypeWrap = el('taskSubtypeWrap');
-  if (state.taskCategory) {
-    granWrap.classList.remove('hidden');
-    populateGranularitySelect(state.taskCategory);
-    // Apply detection result if available
-    if (state.detectedGranularity && !state.granularityOverridden) {
-      el('taskGranularitySelect').value = state.detectedGranularity.value;
-      onGranularityChange(true);
-    }
-  } else {
-    granWrap.classList.add('hidden');
-    subtypeWrap.classList.add('hidden');
-  }
-  updateGranularityBadge();
-  renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
-}
-
-function onGranularityChange(skipOverrideFlag) {
-  var val = el('taskGranularitySelect').value;
-  if (!skipOverrideFlag && state.detectedGranularity && val && val !== state.detectedGranularity.value) {
-    state.granularityOverridden = true;
-  } else if (!skipOverrideFlag && state.detectedGranularity && val === state.detectedGranularity.value) {
-    state.granularityOverridden = false;
-  }
-  state.taskGranularity = val;
-  state.taskSubtype = '';
-  state.taskType = '';
-  state.configData = {};
-  state.codeDraftDirty = false;
-  var subtypeWrap = el('taskSubtypeWrap');
-  if (val && state.taskCategory) {
-    subtypeWrap.classList.remove('hidden');
-    populateSubtypeSelect(state.taskCategory, val);
-  } else {
-    subtypeWrap.classList.add('hidden');
-  }
-  updateGranularityBadge();
-  renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
-}
-
-function onSubtypeChange() {
-  state.taskSubtype = el('taskSubtypeSelect').value;
+/* ── Flat chip: called after any chip toggle ─────────────────── */
+function onChipSelectionChange() {
   state.configData = {};
   state.codeDraftDirty = false;
   deriveTaskType();
@@ -3377,6 +3570,12 @@ function onSubtypeChange() {
     applyDefaultGuidelineFiles(state.taskType);
   }
   renderTemplateBtns(); renderSchemaFields(); markDirty(); revalidateCurrentStep();
+}
+
+/* ── Cascade: detect granularity from uploaded file ─────────── */
+function runGranularityDetection(file) {
+  // Granularity auto-detection removed — chip selection is now manual.
+  // This stub is kept so existing callers (addDatasetFiles) do not error.
 }
 
 /* ── Apply language ──────────────────────────────────────────── */
@@ -3400,6 +3599,7 @@ function applyLang(l) {
     'startupRunTitle','samplingValueLabel',
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
     'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
+    'inlinePreviewTitle','inlinePreviewHint',
   ];
   ids.forEach(function(id) { setText(id, t(id)); });
   setText('sl1', t('s1Label')); setText('sl2', t('s2Label')); setText('sl3', t('s3Label')); setText('sl4', t('s4Label'));
@@ -3414,33 +3614,11 @@ function applyLang(l) {
   renderGuidelineList('annotator');
   renderGuidelineList('reviewer');
 
-  /* Cascade Level 1: category labels */
-  var catSel = el('taskCategorySelect');
-  if (catSel) {
-    setText('optTaskCategoryDefault', state.lang === 'en' ? 'Select category' : '請選擇大分類');
-    ['classification', 'regression', 'sequence', 'generation', 'mixed'].forEach(function(key) {
-      var optionId = {
-        classification: 'optClassification',
-        regression: 'optRegression',
-        sequence: 'optSequence',
-        generation: 'optGeneration',
-        mixed: 'optMixed',
-      }[key];
-      setText(optionId, TASK_TAXONOMY[key][state.lang] || TASK_TAXONOMY[key].zh);
-    });
-  }
-  /* Cascade Level 2 and 3: repopulate with current lang if selections exist */
-  if (state.taskCategory) {
-    populateGranularitySelect(state.taskCategory);
-    if (state.taskGranularity) {
-      el('taskGranularitySelect').value = state.taskGranularity;
-      if (state.taskSubtype) {
-        populateSubtypeSelect(state.taskCategory, state.taskGranularity);
-        el('taskSubtypeSelect').value = state.taskSubtype;
-      }
-    }
-    updateGranularityBadge();
-  }
+  /* Chip labels: update all three groups to current language */
+  var items = getTaxonomyItems();
+  updateChipLabels('taskCategoryChips',   items.categories);
+  updateChipLabels('taskInputTypeChips',  items.inputTypes);
+  updateChipLabels('taskOutputTypeChips', items.outputTypes);
 
   if (window.LabelSuiteSharedSidebar) {
     window.LabelSuiteSharedSidebar.applyGlobalLanguage(state.lang, {
@@ -3471,9 +3649,6 @@ el('taskNameInput').addEventListener('input', function(e) {
 });
 el('langToggle').addEventListener('click', function() { handleLangToggle('desktop'); });
 el('mobileLangToggle').addEventListener('click', function() { handleLangToggle('mobile'); });
-el('taskCategorySelect').addEventListener('change', onCategoryChange);
-el('taskGranularitySelect').addEventListener('change', function() { onGranularityChange(false); });
-el('taskSubtypeSelect').addEventListener('change', onSubtypeChange);
 el('codeEditor').addEventListener('input', function() {
   state.codeDraftDirty = true;
   el('saveCodeBtn').disabled = false;
@@ -3571,6 +3746,7 @@ window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.pre
 /* ── Init ────────────────────────────────────────────────────── */
 var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
 applyLang(initLang);
+initTaskTypeChips();
 showStep(1);
 el('codeEditor').readOnly = false;
 el('codeEditor').disabled = false;

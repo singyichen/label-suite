@@ -36,11 +36,9 @@ test.describe('Task new VA scoring template', () => {
   test('loads default guideline file for VA task type', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    await page.selectOption('#taskCategorySelect', 'regression');
-    await page.waitForSelector('#taskGranularityWrap:not(.hidden)');
-    await page.selectOption('#taskGranularitySelect', 'single_item');
-    await page.waitForSelector('#taskSubtypeWrap:not(.hidden)');
-    await page.selectOption('#taskSubtypeSelect', 'multi_dim');
+    await page.click('#taskCategoryChips [data-key="regression"]');
+    await page.click('#taskInputTypeChips [data-key="single_item"]');
+    await page.click('#taskOutputTypeChips [data-key="multi_dim"]');
 
     await page.evaluate(() => {
       const win = window as typeof window & { showStep: (step: number) => void };

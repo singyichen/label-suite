@@ -1,45 +1,33 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
-
-async function optionValues(page: Page, selector: string) {
-  return page.locator(selector).locator('option').evaluateAll((options: Element[]) =>
-    options.map((option: Element) => (option as HTMLOptionElement).value)
-  );
-}
 
 test.describe('Task new taxonomy cascade', () => {
   test('uses task category, input type, and output type from the taxonomy', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    await expect(page.locator('#taskCategorySelect')).toContainText('分類（Classification）');
-    await expect(page.locator('#taskCategorySelect')).toContainText('回歸（Regression）');
-    await expect(page.locator('#taskCategorySelect')).toContainText('序列（Sequence）');
-    await expect(page.locator('#taskCategorySelect')).toContainText('生成（Generation）');
-    await expect(page.locator('#taskCategorySelect')).toContainText('混合（Mixed）');
+    // Category chips render all 4 categories from TASK_TAXONOMY
+    await expect(page.locator('#taskCategoryChips [data-key="classification"]')).toContainText('分類（Classification）');
+    await expect(page.locator('#taskCategoryChips [data-key="regression"]')).toContainText('回歸（Regression）');
+    await expect(page.locator('#taskCategoryChips [data-key="sequence"]')).toContainText('序列（Sequence）');
+    await expect(page.locator('#taskCategoryChips [data-key="generation"]')).toContainText('生成（Generation）');
 
-    await page.selectOption('#taskCategorySelect', 'classification');
-    await expect(page.locator('#taskGranularityWrap')).not.toHaveClass(/hidden/);
-    await expect(await optionValues(page, '#taskGranularitySelect')).toEqual(['', 'single_item', 'item_pair']);
+    // Input type chips render the taxonomy granularities
+    await expect(page.locator('#taskInputTypeChips [data-key="single_item"]')).toBeVisible();
+    await expect(page.locator('#taskInputTypeChips [data-key="item_pair"]')).toBeVisible();
 
-    await page.selectOption('#taskGranularitySelect', 'single_item');
-    await expect(await optionValues(page, '#taskSubtypeSelect')).toEqual([
-      '',
-      'single_label',
-      'multi_label',
-      'entity_relation',
-    ]);
-
-    await page.selectOption('#taskGranularitySelect', 'item_pair');
-    await expect(await optionValues(page, '#taskSubtypeSelect')).toEqual(['', 'single_label', 'multi_label']);
+    // Output type chips render the taxonomy subtypes
+    await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).toBeVisible();
+    await expect(page.locator('#taskOutputTypeChips [data-key="multi_label"]')).toBeVisible();
+    await expect(page.locator('#taskOutputTypeChips [data-key="free_text"]')).toBeVisible();
   });
 
   test('resolves selected taxonomy combination to the matching config schema', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
-    await page.selectOption('#taskCategorySelect', 'generation');
-    await page.selectOption('#taskGranularitySelect', 'single_item');
-    await page.selectOption('#taskSubtypeSelect', 'free_text');
+    await page.click('#taskCategoryChips [data-key="generation"]');
+    await page.click('#taskInputTypeChips [data-key="single_item"]');
+    await page.click('#taskOutputTypeChips [data-key="free_text"]');
 
     const taskState = await page.evaluate(() => {
       const win = window as typeof window & { state: { taskType: string } };

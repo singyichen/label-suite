@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 2.0.4
+版本: 2.1.3
 狀態: Draft
 ---
 
@@ -41,7 +41,7 @@
 - `CONFIG_FORMATS = yaml | json`
 - `CONFIG_UPLOAD_FORMATS = yaml | yml | json`
 - `TASK_CREATOR_SYSTEM_ROLES = user | super_admin`
-- `DATASET_UPLOAD_FORMATS = txt | csv | tsv | json`
+- `DATASET_UPLOAD_FORMATS = json`
 - `DATASET_MAX_FILE_SIZE_MB = 200`
 - `DATASET_ENCODING = utf-8`
 - `GUIDELINE_FORMATS = pdf | image | markdown`
@@ -132,7 +132,7 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 下拉選單
+  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）
 - Step 2：`標記設定檔`
   - 必要元素：task-type 模板入口、設定檔上傳入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
   - 畫面元素：上方預覽區、下方左側「範本/上傳設定檔」區塊 + schema 設定區、下方右側 code 區、欄位級錯誤訊息
@@ -160,7 +160,7 @@ sequenceDiagram
 
 **Prototype 互動規格（本版必做）**：
 
-- Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已選 `task_type`、dataset 檔案通過格式/大小/編碼檢查後 enabled。
+- Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已從三組 chip 推算出 `task_type`（`deriveTaskType()` 回傳非空值）、dataset 檔案通過格式/大小/編碼檢查後 enabled。
 - Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可繼續追加多個資料集檔案；每個已上傳檔案在下方獨立一列顯示，各列含移除按鈕可單獨刪除；所有上傳檔案視為同一資料集的集合。
 - Step 2 `下一步` 按鈕預設 disabled；schema 必填欄位通過且無 parser/schema error 才 enabled。
 - Step 2 在 code 有未儲存變更時，`下一步` 必須維持 disabled 並提示先儲存；不得自動覆寫/自動儲存 code。
@@ -302,8 +302,9 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 ### 邊界情況
 
 - 非 `TASK_CREATOR_SYSTEM_ROLES` 造訪 `/task-new`：導回允許入口並顯示無權限提示。
-- 上傳資料集格式不在 `DATASET_UPLOAD_FORMATS`：阻擋進下一步並顯示錯誤。
+- 上傳資料集格式不是 `.json`（`DATASET_UPLOAD_FORMATS` 僅允許 JSON）：阻擋加入並顯示格式錯誤提示。
 - 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB` 或非 `DATASET_ENCODING`：阻擋進下一步並顯示可定位錯誤。
+- 追加上傳的資料集檔案與已上傳檔案的頂層 JSON key 集合不一致：阻擋該檔案加入並顯示欄位不一致提示；已通過驗證的其他檔案不受影響。
 - 切換 `task_type` 後已填 Step 2 設定不相容：提示重置或轉換失敗欄位。
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
@@ -327,9 +328,13 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。
-- **FR-002a**：每個資料集檔案必須限制於 `DATASET_UPLOAD_FORMATS`，且各自符合 `DATASET_MAX_FILE_SIZE_MB`；不符合規格的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。`task_type` 由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型可多選），三組同時顯示、無 cascade 依賴；選擇結果透過 `deriveTaskType()` 推算出對應的 registry key。
+- **FR-002e**：Step 1 任務類型選擇器必須由 `TASK_TAXONOMY` 動態萃取三組 chip，三組同時可見且無 cascade 聯動。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（可多選，`role="checkbox"`）。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新；系統依選中的三組值透過 `deriveTaskType()` 推算出唯一的 registry key 作為 `state.taskType`。
+- **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
+- **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭為 JSON 物件的 key 名稱（取自第一個成功解析的 JSON 物件），每一橫列對應一筆 JSON 物件；若多個上傳檔案已合併，以合併後資料集的前 2 筆為準。**表格欄位標頭包含勾選框**，使用者可逐欄勾選決定該欄位是否納入 config 設定：勾選（預設）表示此欄位需要進入 config；取消勾選表示此欄位不需要進入 config（僅作為資料集附帶欄位，不在 annotation-workspace 中顯示）。此表格目的為讓使用者在選擇 `task_type` 前掌握資料欄位結構，並標記哪些欄位是標記所需的。
+- **FR-002c-1**：欄位勾選的行為規則：預設全部欄位皆勾選；使用者必須至少保留一個欄位勾選，否則系統阻擋並提示；重新上傳或移除檔案後，勾選狀態重設為全勾選；最終勾選結果以 `config_fields: string[]` 傳入建立任務 payload，未勾選欄位不列入。Step 2 中所有欄位映射下拉選單（如 `input_field`、`sentence_1_field`、`aspect_list_field` 等）僅列出 `config_fields` 中的欄位。
+- **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案的頂層 JSON key 集合與已上傳檔案完全一致；不一致時阻擋加入並顯示欄位不一致提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理，顯示最新上傳檔案的前 2 筆資料。
 - **FR-003**：Step 2 標記設定檔必須由 `task_type registry` 與 schema 驅動。
 - **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
 - **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 欄位。
@@ -414,7 +419,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`config_fields: string[]`（Step 1 預覽表格中使用者勾選需進入 config 的欄位名稱清單；未勾選欄位不列入）、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **TaskTypeRegistryItem**：任務類型定義。欄位：`task_type`、`display_name`、`schema`、`default_templates`。
 - **TaskConfig**：schema 驗證後設定內容（供 annotation/dataset 模組使用）。
 - **SequenceLabelingTaskConfig**：`sequence_labeling` 專用設定。欄位：`subtype`（`ner` / `aspect_list`）、`schema`、`validation_rules`、`preview_sample`。
@@ -512,6 +517,14 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.3 | 2026-06-13 | 修正 Step 1 畫面元素描述：`task_type` 由「下拉選單」改為「三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）」，與 prototype 現況一致 |
+| 2.1.2 | 2026-06-13 | 移除 TASK_TAXONOMY 中 `mixed`（混合）大分類：大分類已開放多選，「混合」選項語意重複且 granularities 為空，故從 prototype TASK_TAXONOMY 移除 |
+| 2.1.1 | 2026-06-13 | 調整任務類型選擇器語意：輸入類型改為單選（role="radio"，互斥）；大分類與輸出類型維持多選（role="checkbox"）；更新 FR-002、FR-002e；prototype 加入 radio chip CSS 圓形指示器 |
+| 2.1.0 | 2026-06-13 | 更新 FR-002 與 Prototype 互動規格：task_type 選擇改為三組 chip（大分類、輸入類型、輸出類型）同時顯示、無 cascade 依賴，由 deriveTaskType() 推算 registry key；新增 FR-002e 正式記載此行為；補充 initTaskTypeChips() 初始化呼叫確保 prototype 啟動時 chips 正確渲染 |
+| 2.0.8 | 2026-06-13 | 新增 FR-002d：追加上傳時驗證 JSON key 集合一致性，不一致阻擋加入；嵌入式預覽表格每次上傳成功後即時刷新顯示最新檔案前 2 筆；補充對應邊界情況 |
+| 2.0.7 | 2026-06-13 | 簡化欄位勾選描述：移除 DATASET_FIELD_ROLES 常數與 background 術語，改為「勾選 = 進入 config；未勾選 = 不需進入 config」的直白說法；更新 FR-002c、FR-002c-1 與 TaskDraftInput |
+| 2.0.6 | 2026-06-13 | 新增 FR-002c-1：嵌入式預覽表格欄位標頭加入勾選框，使用者可逐欄標記 config / background 角色；background 欄位不進入 config 亦不在 annotation-workspace 顯示；Step 2 欄位映射下拉選單僅列 config_fields；TaskDraftInput 新增 config_fields 欄位；新增 DATASET_FIELD_ROLES 常數 |
+| 2.0.5 | 2026-06-13 | 資料集上傳格式限縮為僅支援 JSON（`DATASET_UPLOAD_FORMATS = json`）；新增 FR-002c：資料集上傳成功後在 Step 1 即時顯示嵌入式資料預覽表格（前 2 筆資料 + JSON key 欄位標頭），讓使用者在選擇 task_type 前掌握資料欄位結構；同步更新 FR-002a 格式描述與邊界情況說明 |
 | 2.0.4 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 2.0.3 | 2026-05-08 | 同步最新 prototype：Step 3 移除成員管理，改為僅設定抽樣與資料隔離，並明確規範成員邀請改於 task-detail 執行；更新流程、FR、SC、edge cases 與跨規格依賴 |
 | 2.0.2 | 2026-05-08 | 同步新增任務最新原型：Step 3 文案改為「每回合抽樣筆數」並移除抽樣分佈進度條；Step 4 改為標記員/審核員雙角色說明內容與獨立多檔附件區塊；新增 `TaskGuidelineConfig` 與對應 FR/SC |
