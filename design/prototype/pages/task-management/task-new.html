@@ -2755,6 +2755,10 @@ function parseJsonDataset(file, onSuccess, onError) {
           onError(state.lang === 'en' ? 'The JSON file is empty.' : '檔案內容為空的 JSON 陣列。');
           return;
         }
+        if (data[0] === null || typeof data[0] !== 'object') {
+          onError(state.lang === 'en' ? 'Invalid JSON format: array elements must be objects.' : 'JSON 格式不正確：陣列元素必須是物件。');
+          return;
+        }
         columns = Object.keys(data[0]);
         rows = data.slice(0, 2).map(function(row) {
           return columns.map(function(col) { return previewCellValue(row[col]); });
@@ -2971,12 +2975,12 @@ function renderInlineDatasetPreview() {
 
   var thead = document.createElement('thead');
   var headRow = document.createElement('tr');
-  cols.forEach(function(col) {
+  cols.forEach(function(col, ci) {
     var th = document.createElement('th');
     var inner = document.createElement('div');
     inner.className = 'inline-preview-col-header';
 
-    var safeId = col.replace(/[^a-zA-Z0-9_]/g, '_');
+    var safeId = col.replace(/[^a-zA-Z0-9_]/g, '_') + '_' + ci;
     var chkId = 'colChk_' + safeId;
     var chk = document.createElement('input');
     chk.type = 'checkbox';
