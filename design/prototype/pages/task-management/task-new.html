@@ -3538,13 +3538,27 @@ function initTaskTypeChips() {
   rebuildOutputChips();
 }
 
+var _lastOutputCatsKey = undefined;
 /* ── Cascade: rebuild output chips based on selected categories ── */
 function rebuildOutputChips() {
   var container = el('taskOutputTypeChips');
   if (!container) return;
+
+  var cats = state.taskCategories || [];
+  var catsKey = state.lang + ':' + cats.slice().sort().join(',');
+  if (_lastOutputCatsKey === catsKey) {
+    container.querySelectorAll('.task-type-chip').forEach(function(btn) {
+      var key = btn.getAttribute('data-key');
+      var isSelected = state.taskOutputTypes.indexOf(key) >= 0;
+      btn.classList.toggle('selected', isSelected);
+      btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+    });
+    return;
+  }
+  _lastOutputCatsKey = catsKey;
+
   while (container.firstChild) container.removeChild(container.firstChild);
 
-  var cats = state.taskCategories;
   if (!cats.length) {
     var p = document.createElement('p');
     p.className = 'task-type-placeholder';
@@ -3564,12 +3578,14 @@ function rebuildOutputChips() {
     var outputsMap = {};
     Object.keys(catDef.granularities).forEach(function(granKey) {
       var granDef = catDef.granularities[granKey];
-      Object.keys(granDef.subtypes).forEach(function(subKey) {
-        if (!outputsMap[subKey]) {
-          var subDef = granDef.subtypes[subKey];
-          outputsMap[subKey] = { key: subKey, zh: subDef.zh, en: subDef.en };
-        }
-      });
+      if (granDef && granDef.subtypes) {
+        Object.keys(granDef.subtypes).forEach(function(subKey) {
+          if (!outputsMap[subKey]) {
+            var subDef = granDef.subtypes[subKey];
+            outputsMap[subKey] = { key: subKey, zh: subDef.zh, en: subDef.en };
+          }
+        });
+      }
     });
     groups.push({
       catKey: catKey,
@@ -3634,22 +3650,11 @@ function rebuildOutputChips() {
         var idx = arr.indexOf(key);
 
         if (idx >= 0) {
-          // deselect (toggle off)
           arr.splice(idx, 1);
-          btn.classList.remove('selected');
-          btn.setAttribute('aria-checked', 'false');
         } else {
-          // single-select within this category: remove any sibling from same category
           var ownedKeys = catOwnership[cat] || {};
           state.taskOutputTypes = arr.filter(function(k) { return !ownedKeys[k]; });
           state.taskOutputTypes.push(key);
-          // update UI: deselect siblings in same grid
-          grid.querySelectorAll('.task-type-chip').forEach(function(b) {
-            b.classList.remove('selected');
-            b.setAttribute('aria-checked', 'false');
-          });
-          btn.classList.add('selected');
-          btn.setAttribute('aria-checked', 'true');
         }
         onChipSelectionChange();
       });
