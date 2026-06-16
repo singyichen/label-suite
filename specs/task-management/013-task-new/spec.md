@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 2.2.0
+版本: 2.3.0
 狀態: Draft
 ---
 
@@ -133,7 +133,7 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）
+  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 三組 chip（大分類多選、輸入類型單選、輸出類型組內單選跨組可多選；輸出類型依大分類 cascade 過濾，僅顯示已選大分類對應的輸出類型，多個大分類時依分類分組顯示）
 - Step 2：`標記設定檔`
   - 必要元素：task-type 模板入口、設定檔上傳入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
   - 畫面元素：上方預覽區、下方左側「範本/上傳設定檔」區塊 + schema 設定區、下方右側 code 區、欄位級錯誤訊息
@@ -329,8 +329,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。`task_type` 由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型可多選），三組同時顯示、無 cascade 依賴；選擇結果透過 `deriveTaskType()` 推算出對應的 registry key。
-- **FR-002e**：Step 1 任務類型選擇器必須由 `TASK_TAXONOMY` 動態萃取三組 chip，三組同時可見且無 cascade 聯動。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（可多選，`role="checkbox"`）。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新；系統依選中的三組值透過 `deriveTaskType()` 推算出唯一的 registry key 作為 `state.taskType`。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。`task_type` 由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型可多選）；輸出類型依大分類 cascade 過濾（見 FR-002e）；選擇結果透過 `deriveTaskType()` 推算出對應的 registry key。
+- **FR-002e**：Step 1 任務類型選擇器必須由 `TASK_TAXONOMY` 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（cascade 過濾，**組內單選、跨組可多選**，`role="radio"`）。大分類與輸入類型始終可見；**輸出類型依大分類 cascade 過濾**：未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應的輸出類型（不加分組標題），同組內互斥（單選）；選擇 2 個以上大分類時，輸出類型依已選大分類**分組顯示**，每組加分類名稱作為子標題，**每組內互斥（單選），但跨組可各選一個**；取消某個大分類時，該組輸出類型消失且已選的該組項目自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新；系統依選中的三組值透過 `deriveTaskType()` 推算出唯一的 registry key 作為 `state.taskType`。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭顯示原始 JSON key 名稱；**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。角色語意：`evidence` = 僅供標記員參考的背景資料；`input` = 標記的核心輸入對象（如 Premise / Hypothesis）；`output` = 預設第三方標記結果欄位（如 GPT 初標 Label）。欄位標頭直接顯示 JSON key 原始名稱（不做中文轉換），讓標記員對照說明文件時更直覺。
@@ -519,6 +519,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.0 | 2026-06-16 | Step 1 輸出類型兩項變更：(1) 依大分類 cascade 過濾（未選時顯示提示、選 1 個直接顯示、選 2+ 個分組顯示、取消大分類自動清除已選）；(2) 組內互斥改為單選（radio）、跨組可多選。Sequence output_type 合併 multi_type_span/single_type_span/span_with_polarity → span，與 task-type-taxonomy.md 對齊。更新 FR-002、FR-002e、介面定義 |
 | 2.2.0 | 2026-06-13 | Step 1 欄位預覽表格改為角色映射（checkbox → role dropdown）：每欄可指定 Evidence / Input / Output 角色；新增 FIELD_ROLES 常數與 FieldRole 型別；TaskDraftInput 將 config_fields: string[] 改為 field_role_map: Record<string, FieldRole>；更新 FR-002c、FR-002c-1；欄位標頭直接顯示原始 JSON key 名稱 |
 | 2.1.3 | 2026-06-13 | 修正 Step 1 畫面元素描述：`task_type` 由「下拉選單」改為「三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）」，與 prototype 現況一致 |
 | 2.1.2 | 2026-06-13 | 移除 TASK_TAXONOMY 中 `mixed`（混合）大分類：大分類已開放多選，「混合」選項語意重複且 granularities 為空，故從 prototype TASK_TAXONOMY 移除 |

@@ -64,12 +64,29 @@
 |------------------------|------|----------|----------|----------|-------------|
 | Token 分類（ `token_class` ） | Token 級標籤 | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 邊界偵測（ `boundary` ） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
-| 多類型標記區間（ `multi_type_span` ） | Span + 多類型標籤 | NER（ span-level, 直接標記起訖位置 ）、Trigger Detection | 「台積電創辦人張忠謀宣布退休。」 | [台積電→ORG, 張忠謀→PER] | `entities[]: { name, color }`, `allow_overlapping: bool`, `scheme: IOB2\|BIOES`（用於資料匯出格式，非介面操作格式） |
-| 單類型標記區間（ `single_type_span` ） | 只標 span 位置 | Aspect Term Extraction、Keyword Extraction、Claim Span | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] | `span_type_name: string`, `allow_span_add`, `allow_span_delete` |
-| 區間加極性（ `span_with_polarity` ） | Span + 情感標籤 | ABSA（ Aspect-Based Sentiment Analysis ） | 「這家餐廳服務很差，但環境不錯。」 | [(服務, 負面), (環境, 正面)] | `span_type_name: string`, `allow_span_add`, `allow_span_delete`, `polarity_options[]: { name, color? }` |
+| 區間標記（ `span` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `span` Config 說明 |
 | 關係三元組（ `relation_triple` ） | 實體 + 關係 + Triple | OpenIE、Relation Extraction（ NER+RE ） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) | `entity_types[]: { name, color }`, `relation_types[]: string` |
 
-> 同一任務因標記介面設計不同，可對應不同 `output_type`。
+#### `span` Config 說明
+
+`span` 統一了三種原本獨立的 output_type，透過 config 欄位組合決定標注行為：
+
+| Config 欄位 | 型別 | 說明 |
+|------------|------|------|
+| `entities[]` | `{ name, color }[]` | 可標記的實體／區間類型清單。只有 1 項時為單類型標記，多項時為多類型標記。**與 `polarity_options` 互斥，不可同時設定。** |
+| `polarity_options[]` | `{ name, color? }[]` | 極性標籤清單（ e.g. 正面／負面／中立 ）。設定後，每個 span 必須選擇一個極性。**與 `entities` 互斥，不可同時設定。** |
+| `allow_overlapping` | `bool` | 是否允許 span 重疊（ 僅 `entities` 模式適用 ） |
+| `scheme` | `IOB2 \| BIOES` | 資料匯出格式（ 非介面操作格式，僅 `entities` 模式適用 ） |
+
+**Config 組合與對應場景：**
+
+| 設定方式 | 等效舊 output_type | 典型任務 | 範例輸出 |
+|---------|-------------------|----------|----------|
+| `entities` 有 1 項 | `single_type_span` | Aspect Term Extraction、Keyword Extraction、Claim Span | [服務, 環境] |
+| `entities` 有多項 | `multi_type_span` | NER（ span-level ）、Trigger Detection | [台積電→ORG, 張忠謀→PER] |
+| `polarity_options` 存在 | `span_with_polarity` | ABSA（ Aspect-Based Sentiment Analysis ） | [(服務, 負面), (環境, 正面)] |
+
+> 同一任務因標記介面設計不同，可對應不同 `output_type`（ e.g. NER 可選 `token_class` 或 `span` ）。
 > `entity_relation` vs `relation_triple` 的使用場景區分
 
 | 對照項目 | `entity_relation` | `relation_triple` |
@@ -114,8 +131,6 @@
 | 回歸（ regression ） | 項目對（ item_pair ） | 多維度（ multi_dim ） | 語義相似度 + 句法相似度 + 主題一致性評估 | `va_dimensions[]: { name, min, max, step }` |
 | 序列（ sequence ） | 單一項目（ single_item ） | Token 分類（ token_class ） | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | 邊界偵測（ boundary ） | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | `boundary_type: sentence\|word\|phrase\|paragraph` |
-| 序列（ sequence ） | 單一項目（ single_item ） | 多類型標記區間（ multi_type_span ） | NER（ span-level, 直接標記起訖位置 ）、Event Detection | `entities[]: { name, color }`, `allow_overlapping: bool`, `scheme: IOB2\|BIOES`（用於資料匯出格式，非介面操作格式） |
-| 序列（ sequence ） | 單一項目（ single_item ） | 單類型標記區間（ single_type_span ） | Aspect Term Extraction、Keyword Extraction、Claim Span | `span_type_name: string`, `allow_span_add`, `allow_span_delete` |
-| 序列（ sequence ） | 單一項目（ single_item ） | 區間加極性（ span_with_polarity ） | ABSA | `span_type_name: string`, `allow_span_add`, `allow_span_delete`, `polarity_options[]: { name, color? }` |
+| 序列（ sequence ） | 單一項目（ single_item ） | 區間標記（ `span` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `span` Config 說明 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | 關係三元組（ relation_triple ） | OpenIE、Relation Extraction | `entity_types[]: { name, color }`, `relation_types[]: string` |
 | 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |
