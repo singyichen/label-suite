@@ -446,6 +446,8 @@
     .task-type-group { padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .task-type-group-label { font-size: 11px; font-weight: 700; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
     .task-type-chip-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .task-type-placeholder { color: #94a3b8; font-size: 0.875rem; margin: 0.25rem 0; }
+    .task-type-subgroup-label { font-size: 10px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.04em; margin: 10px 0 6px; width: 100%; }
     .task-type-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-full); font-size: 13px; font-weight: 500; color: var(--color-ink); background: var(--color-white); cursor: pointer; transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast); user-select: none; }
     .task-type-chip:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); }
     .task-type-chip.selected { border-color: var(--color-primary); background: var(--color-primary-soft-bg); color: var(--color-primary); font-weight: 600; }
@@ -638,10 +640,12 @@
               <div class="task-type-group-label" id="taskInputTypeGroupLabel">輸入類型（單選）</div>
               <div class="task-type-chip-grid" id="taskInputTypeChips" role="group" aria-label="輸入類型（單選）"></div>
             </div>
-            <!-- Group C: Output type (multi-select chips) -->
+            <!-- Group C: Output type (multi-select chips, cascade filtered by category) -->
             <div class="task-type-group">
               <div class="task-type-group-label" id="taskOutputTypeGroupLabel">輸出類型（可多選）</div>
-              <div class="task-type-chip-grid" id="taskOutputTypeChips" role="group" aria-label="輸出類型（可多選）"></div>
+              <div id="taskOutputTypeChips" role="group" aria-label="輸出類型（可多選）">
+                <p class="task-type-placeholder" id="outputTypePlaceholder">請先選擇大分類</p>
+              </div>
             </div>
           </div>
           <div class="field-error-msg" id="errTaskType"></div>
@@ -899,11 +903,11 @@ var REGISTRY = {
     },
   },
   sequence_labeling: {
-    zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)',
+    zh: '序列標記（含 Aspect / NER / Span）', en: 'Sequence Labeling (Aspect / NER / Span)',
     fields: [
       { key: 'subtype', type: 'subtype-select', zh: '子類型', en: 'Subtype', required: true,
-        options: ['ner', 'aspect_list'],
-        optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction' } },
+        options: ['ner', 'aspect_list', 'span'],
+        optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正', span: 'Span 區間標記' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction', span: 'Span annotation' } },
         defaultValue: 'ner' },
       /* NER-only fields */
       { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'ner' },
@@ -926,9 +930,21 @@ var REGISTRY = {
       { key: 'min_aspects', type: 'number', zh: '最少 Aspect 數量', en: 'Min aspects', required: false, defaultValue: 1, showWhen: 'aspect_list' },
       { key: 'max_aspects', type: 'number', zh: '最多 Aspect 數量', en: 'Max aspects', required: false, defaultValue: 10, showWhen: 'aspect_list' },
       { key: 'require_sentiment_context_check', type: 'boolean', zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', required: false, defaultValue: false, showWhen: 'aspect_list' },
+      /* span-only fields */
+      { key: 'span_mode', type: 'select', zh: '標記模式', en: 'Annotation mode', required: true,
+        options: ['entity_based', 'polarity_based'],
+        optionLabels: { zh: { entity_based: '實體／區間類型', polarity_based: '極性標籤（ABSA）' }, en: { entity_based: 'Entity / span types', polarity_based: 'Polarity labels (ABSA)' } },
+        defaultValue: 'entity_based', showWhen: 'span' },
+      { key: 'entities', type: 'entity-list', zh: '區間類型', en: 'Span types', required: true, showWhen: 'span' },
+      { key: 'polarity_options', type: 'tag-list', zh: '極性標籤', en: 'Polarity labels', required: true, hint_zh: '輸入極性標籤後按 Enter（如：正面、負面、中立）', hint_en: 'Type polarity label and press Enter (e.g. Positive, Negative, Neutral)', showWhen: 'span' },
+      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'span' },
+      { key: 'scheme', type: 'select', zh: '匯出格式', en: 'Export scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'span' },
     ],
     nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
     aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
+    spanEntityTemplate: { subtype: 'span', span_mode: 'entity_based', entities: [{ name: 'ASPECT', color: '#6366F1' }], allow_overlapping: false, scheme: 'IOB2' },
+    spanPolarityTemplate: { subtype: 'span', span_mode: 'polarity_based', polarity_options: ['正面', '負面', '中立'] },
+    spanPolarityTemplateI18n: { zh: { polarity_options: ['正面', '負面', '中立'] }, en: { polarity_options: ['Positive', 'Negative', 'Neutral'] } },
     defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
   },
   relation_extraction: {
@@ -1024,12 +1040,10 @@ var TASK_TAXONOMY = {
       single_item: {
         zh: '單一項目', en: 'Single item',
         subtypes: {
-          token_class:        { registryKey: 'sequence_labeling', zh: 'Token 分類', en: 'Token classification' },
-          boundary:           { registryKey: 'sequence_labeling', zh: '邊界偵測', en: 'Boundary detection' },
-          multi_type_span:    { registryKey: 'sequence_labeling', zh: '多類型標記區間', en: 'Multi-type span' },
-          single_type_span:   { registryKey: 'sequence_labeling', zh: '單類型標記區間', en: 'Single-type span' },
-          span_with_polarity: { registryKey: 'sequence_labeling', zh: '區間加極性', en: 'Span with polarity' },
-          relation_triple:    { registryKey: 'relation_extraction', zh: '關係三元組', en: 'Relation triple' },
+          token_class:     { registryKey: 'sequence_labeling', zh: 'Token 分類', en: 'Token classification' },
+          boundary:        { registryKey: 'sequence_labeling', zh: '邊界偵測', en: 'Boundary detection' },
+          span:            { registryKey: 'sequence_labeling', zh: '區間標記', en: 'Span' },
+          relation_triple: { registryKey: 'relation_extraction', zh: '關係三元組', en: 'Relation triple' },
         },
       },
     },
@@ -1178,11 +1192,23 @@ var I18N = {
     taskCategoryGroupLabel: '大分類（可多選）',
     taskInputTypeGroupLabel: '輸入類型（單選）',
     taskOutputTypeGroupLabel: '輸出類型（可多選）',
+    outputTypePlaceholder: '請先選擇大分類',
     toastCreated: '任務建立成功，正在前往任務詳情…',
     toastCodeSaved: 'Code 設定已同步',
     toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
     applyTemplate: '套用預設範本：',
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
+    templateBtnSpanEntity: '套用範本：Span 實體標記',
+    templateBtnSpanPolarity: '套用範本：Span 極性標記（ABSA）',
+    spanModeSectionTitle: '標記模式',
+    spanModeSectionDesc: '選擇區間標記的模式：實體類型標記或極性標籤標記（兩者互斥）。',
+    spanEntitySectionTitle: '區間類型設定',
+    spanEntitySectionDesc: '定義可標記的區間類型，並設定重疊與匯出格式。',
+    spanPolaritySectionTitle: '極性標籤設定',
+    spanPolaritySectionDesc: '定義每個標記區間需選擇的極性標籤（如正面／負面／中立）。',
+    previewSampleSentenceSpan: '這家餐廳服務很差，但環境不錯。',
+    previewSpanPolarityTitle: '標記區間並選擇極性',
+    addPolarityOption: '新增極性標籤',
   },
   en: {
     docTitle: 'New task — Label Suite (Prototype)',
@@ -1289,11 +1315,23 @@ var I18N = {
     taskCategoryGroupLabel: 'Category (multi-select)',
     taskInputTypeGroupLabel: 'Input type (single-select)',
     taskOutputTypeGroupLabel: 'Output type (multi-select)',
+    outputTypePlaceholder: 'Please select a category first',
     toastCreated: 'Task created — opening task detail…',
     toastCodeSaved: 'Code configuration synced',
     toastConfigLoaded: 'Config loaded. Click Save to apply',
     applyTemplate: 'Apply default template: ',
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
+    templateBtnSpanEntity: 'Apply template: Span entity annotation',
+    templateBtnSpanPolarity: 'Apply template: Span polarity annotation (ABSA)',
+    spanModeSectionTitle: 'Annotation mode',
+    spanModeSectionDesc: 'Choose span annotation mode: entity type labeling or polarity labeling (mutually exclusive).',
+    spanEntitySectionTitle: 'Span type settings',
+    spanEntitySectionDesc: 'Define span types, overlapping behavior, and export scheme.',
+    spanPolaritySectionTitle: 'Polarity label settings',
+    spanPolaritySectionDesc: 'Define the polarity labels each span must be assigned (e.g. Positive / Negative / Neutral).',
+    previewSampleSentenceSpan: 'The service at this restaurant was poor, but the ambiance was nice.',
+    previewSpanPolarityTitle: 'Mark spans and choose polarity',
+    addPolarityOption: 'Add polarity label',
   },
 };
 
@@ -1665,7 +1703,13 @@ function currentSubtype() {
 
 function fieldVisible(field) {
   if (!field.showWhen) return true;
-  return currentSubtype() === field.showWhen;
+  if (currentSubtype() !== field.showWhen) return false;
+  if (field.showWhen === 'span') {
+    var spanMode = state.configData.span_mode || 'entity_based';
+    if (field.key === 'entities' || field.key === 'allow_overlapping' || field.key === 'scheme') return spanMode === 'entity_based';
+    if (field.key === 'polarity_options') return spanMode === 'polarity_based';
+  }
+  return true;
 }
 
 function buildSchemaSection(title, desc) {
@@ -1805,15 +1849,20 @@ function appendSchemaField(container, field) {
       var sel = document.createElement('select');
       sel.className = 'input-select';
       var curVal = state.configData[field.key] !== undefined ? state.configData[field.key] : field.defaultValue;
+      var selLabels = (field.optionLabels && field.optionLabels[state.lang]) || {};
       field.options.forEach(function(opt) {
         var o = document.createElement('option');
-        o.value = opt; o.textContent = opt;
+        o.value = opt; o.textContent = selLabels[opt] || opt;
         if (opt === curVal) o.selected = true;
         sel.appendChild(o);
       });
       sel.addEventListener('change', function() {
         state.configData[field.key] = sel.value;
-        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        if (field.key === 'span_mode') {
+          markDirty(); renderSchemaFields(); revalidateCurrentStep();
+        } else {
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        }
       });
       wrap.appendChild(sel);
     } else if (field.type === 'number') {
@@ -1922,6 +1971,32 @@ function renderSchemaFields() {
       appendSchemaField(advancedSection.body, nerFieldByKey[key]);
     });
     container.appendChild(advancedSection.section);
+
+    updateAnnotationPreview();
+    return;
+  }
+
+  if (state.taskType === 'sequence_labeling' && currentSubtype() === 'span') {
+    var spanFieldByKey = {};
+    schema.fields.forEach(function(field) { spanFieldByKey[field.key] = field; });
+    appendSchemaField(container, spanFieldByKey.subtype);
+
+    var modeSection = buildSchemaSection(t('spanModeSectionTitle'), t('spanModeSectionDesc'));
+    appendSchemaField(modeSection, spanFieldByKey.span_mode);
+    container.appendChild(modeSection);
+
+    var spanMode = state.configData.span_mode || 'entity_based';
+    if (spanMode === 'entity_based') {
+      var entitySection = buildSchemaSection(t('spanEntitySectionTitle'), t('spanEntitySectionDesc'));
+      appendSchemaField(entitySection, spanFieldByKey.entities);
+      appendSchemaField(entitySection, spanFieldByKey.allow_overlapping);
+      appendSchemaField(entitySection, spanFieldByKey.scheme);
+      container.appendChild(entitySection);
+    } else {
+      var polaritySection = buildSchemaSection(t('spanPolaritySectionTitle'), t('spanPolaritySectionDesc'));
+      appendSchemaField(polaritySection, spanFieldByKey.polarity_options);
+      container.appendChild(polaritySection);
+    }
 
     updateAnnotationPreview();
     return;
@@ -2443,6 +2518,19 @@ function updateAnnotationPreview() {
   } else if (taskType === 'relation_extraction') {
     renderRelationExtractionPreview(preview, config);
     return;
+  } else if (taskType === 'sequence_labeling' && currentSubtype() === 'span') {
+    var spanMode = config.span_mode || 'entity_based';
+    if (spanMode === 'polarity_based') {
+      titleText = t('previewSpanPolarityTitle');
+      options = Array.isArray(config.polarity_options) ? config.polarity_options.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
+        return { text: tag.trim(), color: null };
+      }) : [];
+    } else {
+      titleText = t('previewTaskEntity');
+      options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
+        return { text: ent.name.trim(), color: ent.color || null };
+      }) : [];
+    }
   } else if (taskType === 'sequence_labeling') {
     titleText = t('previewTaskEntity');
     options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
@@ -2490,9 +2578,9 @@ function updateAnnotationPreview() {
   } else {
     var sampleTextKey = 'previewSampleSentence';
     if (taskType === 'single_sentence_va_scoring') sampleTextKey = 'previewSampleSentenceVA';
+    else if (taskType === 'sequence_labeling' && currentSubtype() === 'span') sampleTextKey = 'previewSampleSentenceSpan';
     else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
     else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
-    /* aspect_list branch exits early above, so this case is only NER */
     var sample = document.createElement('div');
     sample.className = 'annotation-preview-sample';
     sample.textContent = t(sampleTextKey);
@@ -2619,6 +2707,12 @@ function renderTemplateBtns() {
   if (state.taskType === 'sequence_labeling') {
     makeTemplateBtn(t('templateBtnNer'), schema.nerTemplate);
     makeTemplateBtn(t('templateBtnAspectList'), schema.aspectListTemplate);
+    var spanPolTpl = cloneObject(schema.spanPolarityTemplate);
+    if (schema.spanPolarityTemplateI18n && schema.spanPolarityTemplateI18n[state.lang]) {
+      Object.keys(schema.spanPolarityTemplateI18n[state.lang]).forEach(function(k) { spanPolTpl[k] = cloneObject(schema.spanPolarityTemplateI18n[state.lang][k]); });
+    }
+    makeTemplateBtn(t('templateBtnSpanEntity'), schema.spanEntityTemplate);
+    makeTemplateBtn(t('templateBtnSpanPolarity'), spanPolTpl);
   } else {
     makeTemplateBtn(t('applyTemplate') + (schema[state.lang] || schema.zh), getDefaultTemplateForLang(state.taskType, state.lang));
   }
@@ -3521,7 +3615,7 @@ function updateChipLabels(containerId, items) {
   });
 }
 
-/* ── Flat chip: initialise all three groups ──────────────────── */
+/* ── Flat chip: initialise category + input groups; output is cascade ── */
 var _taxonomyItems = null;
 function getTaxonomyItems() {
   if (!_taxonomyItems) _taxonomyItems = extractTaxonomyItems();
@@ -3531,7 +3625,132 @@ function initTaskTypeChips() {
   var items = getTaxonomyItems();
   buildChips('taskCategoryChips',   items.categories,  'taskCategories');
   buildChips('taskInputTypeChips',  items.inputTypes,  'taskInputTypes', true);
-  buildChips('taskOutputTypeChips', items.outputTypes,  'taskOutputTypes');
+  rebuildOutputChips();
+}
+
+var _lastOutputCatsKey = undefined;
+/* ── Cascade: rebuild output chips based on selected categories ── */
+function rebuildOutputChips() {
+  var container = el('taskOutputTypeChips');
+  if (!container) return;
+
+  var cats = state.taskCategories || [];
+  var catsKey = state.lang + ':' + cats.slice().sort().join(',');
+  if (_lastOutputCatsKey === catsKey) {
+    container.querySelectorAll('.task-type-chip').forEach(function(btn) {
+      var key = btn.getAttribute('data-key');
+      var isSelected = state.taskOutputTypes.indexOf(key) >= 0;
+      btn.classList.toggle('selected', isSelected);
+      btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+    });
+    return;
+  }
+  _lastOutputCatsKey = catsKey;
+
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  if (!cats.length) {
+    var p = document.createElement('p');
+    p.className = 'task-type-placeholder';
+    p.id = 'outputTypePlaceholder';
+    p.textContent = t('outputTypePlaceholder');
+    container.appendChild(p);
+    // clear any previously selected outputs from removed categories
+    state.taskOutputTypes = [];
+    return;
+  }
+
+  // collect output types grouped by selected category
+  var groups = [];
+  cats.forEach(function(catKey) {
+    var catDef = TASK_TAXONOMY[catKey];
+    if (!catDef) return;
+    var outputsMap = {};
+    Object.keys(catDef.granularities).forEach(function(granKey) {
+      var granDef = catDef.granularities[granKey];
+      if (granDef && granDef.subtypes) {
+        Object.keys(granDef.subtypes).forEach(function(subKey) {
+          if (!outputsMap[subKey]) {
+            var subDef = granDef.subtypes[subKey];
+            outputsMap[subKey] = { key: subKey, zh: subDef.zh, en: subDef.en };
+          }
+        });
+      }
+    });
+    groups.push({
+      catKey: catKey,
+      label: catDef[state.lang] || catDef.zh,
+      outputs: Object.keys(outputsMap).map(function(k) { return outputsMap[k]; }),
+    });
+  });
+
+  // build set of all valid output keys across selected categories
+  var validKeys = {};
+  groups.forEach(function(g) { g.outputs.forEach(function(o) { validKeys[o.key] = true; }); });
+
+  // build set of output keys owned by each category (for intra-group exclusion)
+  var catOwnership = {};
+  groups.forEach(function(g) {
+    var keys = {};
+    g.outputs.forEach(function(o) { keys[o.key] = true; });
+    catOwnership[g.catKey] = keys;
+  });
+
+  // prune outputs that no longer belong to any selected category
+  state.taskOutputTypes = state.taskOutputTypes.filter(function(k) { return validKeys[k]; });
+
+  var showSubheaders = groups.length > 1;
+  groups.forEach(function(group) {
+    if (showSubheaders) {
+      var subLabel = document.createElement('div');
+      subLabel.className = 'task-type-subgroup-label';
+      subLabel.setAttribute('data-cat', group.catKey);
+      subLabel.textContent = group.label;
+      container.appendChild(subLabel);
+    }
+    var grid = document.createElement('div');
+    grid.className = 'task-type-chip-grid';
+    grid.setAttribute('data-cat', group.catKey);
+    var groupCatKey = group.catKey;
+    group.outputs.forEach(function(item) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'task-type-chip';
+      btn.setAttribute('data-key', item.key);
+      btn.setAttribute('data-cat', groupCatKey);
+      btn.setAttribute('role', 'radio');
+      var isPreselected = state.taskOutputTypes.indexOf(item.key) >= 0;
+      btn.setAttribute('aria-checked', isPreselected ? 'true' : 'false');
+      if (isPreselected) btn.classList.add('selected');
+
+      var check = document.createElement('span');
+      check.className = 'task-type-chip-check';
+      btn.appendChild(check);
+
+      var label = document.createElement('span');
+      label.className = 'task-type-chip-label';
+      label.textContent = item[state.lang] || item.zh;
+      btn.appendChild(label);
+
+      btn.addEventListener('click', function() {
+        var key = btn.getAttribute('data-key');
+        var cat = btn.getAttribute('data-cat');
+        var arr = state.taskOutputTypes;
+        var idx = arr.indexOf(key);
+
+        if (idx >= 0) {
+          arr.splice(idx, 1);
+        } else {
+          var ownedKeys = catOwnership[cat] || {};
+          state.taskOutputTypes = arr.filter(function(k) { return !ownedKeys[k]; });
+          state.taskOutputTypes.push(key);
+        }
+        onChipSelectionChange();
+      });
+      grid.appendChild(btn);
+    });
+    container.appendChild(grid);
+  });
 }
 
 /* ── Flat chip: derive taskType from multi-select state ──────── */
@@ -3539,10 +3758,16 @@ function deriveTaskType() {
   var cats   = state.taskCategories;
   var inputs = state.taskInputTypes;
   var outputs = state.taskOutputTypes;
+
+  if (!cats.length || !outputs.length) {
+    state.taskType = '';
+    return;
+  }
+
   var keys = {};
 
   Object.keys(TASK_TAXONOMY).forEach(function(catKey) {
-    if (cats.length && cats.indexOf(catKey) < 0) return;
+    if (cats.indexOf(catKey) < 0) return;
     var catDef = TASK_TAXONOMY[catKey];
     Object.keys(catDef.granularities).forEach(function(granKey) {
       if (inputs.length && inputs.indexOf(granKey) < 0) return;
@@ -3563,6 +3788,7 @@ function deriveTaskType() {
 function onChipSelectionChange() {
   state.configData = {};
   state.codeDraftDirty = false;
+  rebuildOutputChips();
   deriveTaskType();
   if (state.taskType) {
     var defs = SAMPLING_DEFAULTS_BY_TYPE[state.taskType];
@@ -3622,7 +3848,7 @@ function applyLang(l) {
   var items = getTaxonomyItems();
   updateChipLabels('taskCategoryChips',   items.categories);
   updateChipLabels('taskInputTypeChips',  items.inputTypes);
-  updateChipLabels('taskOutputTypeChips', items.outputTypes);
+  rebuildOutputChips();
   el('taskCategoryChips').setAttribute('aria-label', t('taskCategoryGroupLabel'));
   el('taskInputTypeChips').setAttribute('aria-label', t('taskInputTypeGroupLabel'));
   el('taskOutputTypeChips').setAttribute('aria-label', t('taskOutputTypeGroupLabel'));

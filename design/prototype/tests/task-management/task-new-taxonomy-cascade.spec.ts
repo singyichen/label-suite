@@ -16,10 +16,21 @@ test.describe('Task new taxonomy cascade', () => {
     await expect(page.locator('#taskInputTypeChips [data-key="single_item"]')).toBeVisible();
     await expect(page.locator('#taskInputTypeChips [data-key="item_pair"]')).toBeVisible();
 
-    // Output type chips render the taxonomy subtypes
+    // Output type chips are hidden until a category is selected (cascade)
+    await expect(page.locator('#outputTypePlaceholder')).toBeVisible();
+
+    // Select classification → output chips appear for that category
+    await page.click('#taskCategoryChips [data-key="classification"]');
     await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).toBeVisible();
     await expect(page.locator('#taskOutputTypeChips [data-key="multi_label"]')).toBeVisible();
+    // free_text belongs to generation, not classification — should not be visible
+    await expect(page.locator('#taskOutputTypeChips [data-key="free_text"]')).not.toBeVisible();
+
+    // Deselect classification, select generation → free_text appears
+    await page.click('#taskCategoryChips [data-key="classification"]');
+    await page.click('#taskCategoryChips [data-key="generation"]');
     await expect(page.locator('#taskOutputTypeChips [data-key="free_text"]')).toBeVisible();
+    await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).not.toBeVisible();
   });
 
   test('resolves selected taxonomy combination to the matching config schema', async ({ page }) => {
