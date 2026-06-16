@@ -3626,13 +3626,12 @@ function rebuildOutputChips() {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'task-type-chip';
-      if (state.taskOutputTypes.indexOf(item.key) >= 0) {
-        btn.classList.add('selected');
-        btn.setAttribute('aria-checked', 'true');
-      }
       btn.setAttribute('data-key', item.key);
       btn.setAttribute('data-cat', groupCatKey);
       btn.setAttribute('role', 'radio');
+      var isPreselected = state.taskOutputTypes.indexOf(item.key) >= 0;
+      btn.setAttribute('aria-checked', isPreselected ? 'true' : 'false');
+      if (isPreselected) btn.classList.add('selected');
 
       var check = document.createElement('span');
       check.className = 'task-type-chip-check';
@@ -3669,10 +3668,16 @@ function deriveTaskType() {
   var cats   = state.taskCategories;
   var inputs = state.taskInputTypes;
   var outputs = state.taskOutputTypes;
+
+  if (!cats.length || !outputs.length) {
+    state.taskType = '';
+    return;
+  }
+
   var keys = {};
 
   Object.keys(TASK_TAXONOMY).forEach(function(catKey) {
-    if (cats.length && cats.indexOf(catKey) < 0) return;
+    if (cats.indexOf(catKey) < 0) return;
     var catDef = TASK_TAXONOMY[catKey];
     Object.keys(catDef.granularities).forEach(function(granKey) {
       if (inputs.length && inputs.indexOf(granKey) < 0) return;
