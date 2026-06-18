@@ -1,7 +1,7 @@
 name: "✨ Feature Add / 功能新增"
 description: "提出全新功能需求與規格"
-title: "[功能新增] "
-labels: ["功能新增"]
+title: "[Feature] "
+labels: ["feature"]
 body:
   - type: markdown
     attributes:

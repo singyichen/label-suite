@@ -1,7 +1,7 @@
 name: "🐛 Bug Report / 錯誤回報"
 description: "回報系統異常、錯誤或不符合預期的行為"
 title: "[Bug] "
-labels: ["錯誤回報"]
+labels: ["bug"]
 body:
   - type: markdown
     attributes:

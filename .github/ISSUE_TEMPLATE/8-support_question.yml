@@ -1,7 +1,7 @@
 name: "❓ Support / Question（支援/提問）"
 description: "非 bug/需求的提問、卡關求救、使用支援"
 title: "[Question] "
-labels: ["提問"]
+labels: ["question"]
 body:
   - type: markdown
     attributes:

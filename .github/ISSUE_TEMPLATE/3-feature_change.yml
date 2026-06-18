@@ -1,7 +1,7 @@
 name: "✨ Feature Change / 功能修改"
 description: "提出既有功能的調整需求"
-title: "[功能修改] "
-labels: ["功能修改"]
+title: "[Enhancement] "
+labels: ["enhancement"]
 
 body:
   - type: markdown

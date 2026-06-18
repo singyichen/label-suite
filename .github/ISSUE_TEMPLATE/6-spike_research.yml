@@ -1,7 +1,7 @@
 name: "🔍 研究/試作"
 description: "用於技術/需求不確定時的探索、PoC、估工前研究"
 title: "[Spike] "
-labels: ["技術調研"]
+labels: ["spike"]
 
 body:
   - type: markdown
