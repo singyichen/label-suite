@@ -74,8 +74,9 @@ Every PR must carry at least one **type label** (from branch prefix) and zero or
 gh pr create \
   --title "<type>: <description>" \
   --base main --head <branch-name> \
-  --label "<type-label>" --label "<scope-label-1>" --label "<scope-label-2>" \
+  --label "<type-label>" \
   --body "..."
+# Append --label "scope:frontend" --label "scope:backend" etc. only for matching scopes
 ```
 
 **PR body requirements**:

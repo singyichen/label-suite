@@ -5,7 +5,14 @@ set -euo pipefail
 # Chinese names are preserved as label descriptions.
 # Run once: bash scripts/migrate-labels.sh
 
-REPO="singyichen/label-suite"
+REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null || echo "singyichen/label-suite")
+
+echo "⚠️  This script will modify labels for repository: $REPO"
+read -p "Continue? (yes/no): " confirm
+if [[ "$confirm" != "yes" ]]; then
+  echo "Aborted."
+  exit 1
+fi
 
 echo "=== Phase 1: Rename existing Chinese labels to English ==="
 
