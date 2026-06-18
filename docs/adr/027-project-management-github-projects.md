@@ -19,7 +19,7 @@
 
 The project has accumulated multiple sources of work tracking:
 
-- **GitHub Issues** with nine pre-defined labels (`錯誤回報`, `功能新增`, `功能修改`, `任務追蹤`, `樣式調整`, `技術調研`, `文件需求/修正`, `提問`, `線上事故`) opened by both humans and AI agents (`.claude/rules/issue-reporting.md`).
+- **GitHub Issues** with nine pre-defined labels (`bug`, `feature`, `enhancement`, `task`, `ui`, `spike`, `docs`, `question`, `incident`) opened by both humans and AI agents (`.claude/rules/issue-reporting.md`).
 - **`specs/STATUS.md`** tracking spec lifecycle across the eight-stage SDD pipeline (brainstorm → specify → plan → tasks → implement → analyze → checklist → pr-flow).
 - **`docs/product/milestones.md`** holding thesis-level milestones (Demo Paper submission, oral defense).
 - **`claude-progress.md`** per-session checkpoint files for cross-session tasks.
@@ -99,7 +99,7 @@ All issues and PRs in the repository are added to the Project with `Status = Bac
 | Trigger | Action |
 |---------|--------|
 | Issue opened | Add to Project, set `Status = Backlog` |
-| Issue label `錯誤回報` or `線上事故` added | Set `Issue Type = Bug` / `Incident` |
+| Issue label `bug` or `incident` added | Set `Issue Type = Bug` / `Incident` |
 | PR opened | Add to Project, set `Status = In Review` |
 | PR merged | Set `Status = Done` |
 | Issue closed | Set `Status = Done` |
@@ -108,15 +108,15 @@ All issues and PRs in the repository are added to the Project with `Status = Bac
 Label → `Issue Type` mapping is one-to-one with `.claude/rules/issue-reporting.md`:
 
 ```text
-錯誤回報         → Bug
-功能新增         → Feature Add
-功能修改         → Feature Change
-任務追蹤         → Task
-樣式調整         → UI
-技術調研         → Spike
-文件需求/修正    → Docs
-提問             → Question
-線上事故         → Incident
+bug              → Bug
+feature          → Feature Add
+enhancement      → Feature Change
+task             → Task
+ui               → UI
+spike            → Spike
+docs             → Docs
+question         → Question
+incident         → Incident
 ```
 
 `Status` transitions through SDD stages (Brainstorming → … → In Review) are **manual**, performed by the developer or team-lead agent. Auto-workflows only handle the unambiguous endpoints (Backlog on open, Done on close).
@@ -195,7 +195,7 @@ jobs:
         with:
           project-url: https://github.com/users/<owner>/projects/<N>
           github-token: ${{ secrets.PROJECT_TOKEN }}
-          labeled: 錯誤回報,功能新增,功能修改,任務追蹤,樣式調整,技術調研,文件需求/修正,提問,線上事故
+          labeled: bug,feature,enhancement,task,ui,spike,docs,question,incident
           label-operator: OR
 ```
 

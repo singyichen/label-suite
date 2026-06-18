@@ -62,13 +62,22 @@ RENAME_COLOR=(
 )
 
 for i in "${!RENAME_OLD[@]}"; do
-  echo "  Renaming: '${RENAME_OLD[$i]}' → '${RENAME_NEW[$i]}'"
-  gh label edit "${RENAME_OLD[$i]}" \
-    --repo "$REPO" \
-    --name "${RENAME_NEW[$i]}" \
-    --description "${RENAME_DESC[$i]}" \
-    --color "${RENAME_COLOR[$i]}" \
-    || echo "  ⚠️  Failed to rename '${RENAME_OLD[$i]}' (may not exist or already renamed)"
+  old="${RENAME_OLD[$i]}"
+  new="${RENAME_NEW[$i]}"
+  desc="${RENAME_DESC[$i]}"
+  color="${RENAME_COLOR[$i]}"
+  echo "  Renaming: '$old' → '$new'"
+  if gh label edit "$old" --repo "$REPO" --name "$new" --description "$desc" --color "$color" 2>/dev/null; then
+    continue
+  fi
+  # Rename failed — if the English label already exists, delete the Chinese one and update the English one
+  if gh label edit "$new" --repo "$REPO" --description "$desc" --color "$color" 2>/dev/null; then
+    echo "    '$new' already exists — updated description/color, deleting old '$old'"
+    gh label delete "$old" --repo "$REPO" --yes 2>/dev/null || true
+  else
+    echo "  ❌ Failed to rename '$old' → '$new' and could not update existing '$new'"
+    exit 1
+  fi
 done
 
 echo ""
@@ -101,6 +110,19 @@ for i in "${!SCOPE_NAMES[@]}"; do
     --description "${SCOPE_DESCS[$i]}" \
     --color "$SCOPE_COLOR" \
     || echo "  ⚠️  '${SCOPE_NAMES[$i]}' may already exist"
+done
+
+echo ""
+echo "=== Phase 4: Delete stale GitHub default labels ==="
+
+STALE_DEFAULTS=("documentation" "duplicate" "good first issue" "help wanted" "invalid" "wontfix" "Amazon Q development agent")
+
+for name in "${STALE_DEFAULTS[@]}"; do
+  if gh label delete "$name" --repo "$REPO" --yes 2>/dev/null; then
+    echo "  Deleted: '$name'"
+  else
+    echo "  Skipped: '$name' (not found)"
+  fi
 done
 
 echo ""
