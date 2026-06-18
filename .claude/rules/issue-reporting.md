@@ -8,19 +8,19 @@ Critical or High security vulnerabilities are the exception: do **not** create a
 
 | Condition | Issue Type | Label | Title prefix |
 |-----------|-----------|-------|--------------|
-| Bug / test failure / unresolvable error after 2 retries | Bug Report | `錯誤回報` | `[Bug]` |
+| Bug / test failure / unresolvable error after 2 retries | Bug Report | `bug` | `[Bug]` |
 | Security vulnerability (Critical or High) | Private security escalation | N/A | N/A |
-| Security vulnerability (Medium or Low) | Bug Report | `錯誤回報` | `[Bug]` |
-| Performance regression beyond target threshold | Bug Report | `錯誤回報` | `[Bug]` |
-| CI/CD pipeline failure after 2 retries | Bug Report | `錯誤回報` | `[Bug]` |
-| New feature request or new workflow/page/module | Feature Add | `功能新增` | `[功能新增]` |
-| Existing feature behavior / flow / screen change | Feature Change | `功能修改` | `[功能修改]` |
-| Task blocked by unclear / missing requirement | Task | `任務追蹤` | `[Task]` |
-| UI / styling defect | Feature (UI) | `樣式調整` | `[樣式調整]` |
-| Technical uncertainty blocking implementation | Spike | `技術調研` | `[Spike]` |
-| Missing or incorrect documentation | Documentation | `文件需求/修正` | `[Docs]` |
-| Support question / usage question / non-bug help request | Support / Question | `提問` | `[Question]` |
-| Production or staging incident, outage, or service degradation | Incident / Production Issue | `線上事故` | `[Incident]` |
+| Security vulnerability (Medium or Low) | Bug Report | `bug` | `[Bug]` |
+| Performance regression beyond target threshold | Bug Report | `bug` | `[Bug]` |
+| CI/CD pipeline failure after 2 retries | Bug Report | `bug` | `[Bug]` |
+| New feature request or new workflow/page/module | Feature Add | `feature` | `[Feature]` |
+| Existing feature behavior / flow / screen change | Feature Change | `enhancement` | `[Enhancement]` |
+| Task blocked by unclear / missing requirement | Task | `task` | `[Task]` |
+| UI / styling defect | Feature (UI) | `ui` | `[UI]` |
+| Technical uncertainty blocking implementation | Spike | `spike` | `[Spike]` |
+| Missing or incorrect documentation | Documentation | `docs` | `[Docs]` |
+| Support question / usage question / non-bug help request | Support / Question | `question` | `[Question]` |
+| Production or staging incident, outage, or service degradation | Incident / Production Issue | `incident` | `[Incident]` |
 
 ---
 
@@ -31,7 +31,7 @@ Critical or High security vulnerabilities are the exception: do **not** create a
 ```bash
 cat <<'EOF' | gh issue create \
   --title "[Bug] <component>: <one-line description>" \
-  --label "錯誤回報" \
+  --label "bug" \
   --body-file -
 ## 📌 問題描述
 <description>
@@ -54,12 +54,12 @@ EOF
 
 ---
 
-### Feature Add — `[功能新增]`
+### Feature Add — `[Feature]`
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[功能新增] <module/page>: <short description>" \
-  --label "功能新增" \
+  --title "[Feature] <module/page>: <short description>" \
+  --label "feature" \
   --body-file -
 ## 👤 使用情境 / 功能範圍
 <who needs this, when, and what should be included/excluded>
@@ -78,12 +78,12 @@ EOF
 
 ---
 
-### Feature Change — `[功能修改]`
+### Feature Change — `[Enhancement]`
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[功能修改] <module/page>: <short description>" \
-  --label "功能修改" \
+  --title "[Enhancement] <module/page>: <short description>" \
+  --label "enhancement" \
   --body-file -
 ## 🎯 修改目的
 <why the existing behavior needs to change>
@@ -106,7 +106,7 @@ EOF
 ```bash
 cat <<'EOF' | gh issue create \
   --title "[Task] <short description>" \
-  --label "任務追蹤" \
+  --label "task" \
   --body-file -
 ## 🎯 目的
 <why this task is needed>
@@ -126,12 +126,12 @@ EOF
 
 ---
 
-### Feature (UI) — `[樣式調整]`
+### Feature (UI) — `[UI]`
 
 ```bash
 cat <<'EOF' | gh issue create \
-  --title "[樣式調整] <component>: <short description>" \
-  --label "樣式調整" \
+  --title "[UI] <component>: <short description>" \
+  --label "ui" \
   --body-file -
 ## 📌 問題描述
 <UI / styling issue>
@@ -155,7 +155,7 @@ EOF
 ```bash
 cat <<'EOF' | gh issue create \
   --title "[Spike] <research topic>" \
-  --label "技術調研" \
+  --label "spike" \
   --body-file -
 ## 🎯 研究目標
 <what needs to be understood>
@@ -179,7 +179,7 @@ EOF
 ```bash
 cat <<'EOF' | gh issue create \
   --title "[Docs] <short description>" \
-  --label "文件需求/修正" \
+  --label "docs" \
   --body-file -
 ## 📌 問題描述
 <what documentation is missing or incorrect>
@@ -200,7 +200,7 @@ EOF
 ```bash
 cat <<'EOF' | gh issue create \
   --title "[Question] <short description>" \
-  --label "提問" \
+  --label "question" \
   --body-file -
 ## 📌 問題 / 想問的事
 <question or support request>
@@ -220,7 +220,7 @@ EOF
 ```bash
 cat <<'EOF' | gh issue create \
   --title "[Incident] <short description>" \
-  --label "線上事故" \
+  --label "incident" \
   --body-file -
 ## 🔥 嚴重度
 <P0/P1/P2/P3>
