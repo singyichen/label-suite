@@ -56,11 +56,12 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 1. **Locate inputs** — read the assigned spec item; find existing models in `backend/app/modules/[module]/models.py` and existing migrations in `backend/alembic/`.
 2. **Load context** — mandatory reads: `.claude/rules/backend.md` (database sections), all affected model files, the most recent migration file.
 3. **Design schema changes** — decide normalization, constraints, JSONB usage, data fairness isolation at schema level.
-4. **Verify failing test** (TDD Red) — confirm the QA-written schema test fails before touching migration files.
-5. **Write migration** with `upgrade()` and `downgrade()` (TDD Green) — minimal implementation that makes the test pass.
-6. **Validate** — run migration forward, verify rollback works, confirm index coverage meets Database Standards.
-7. **Persist** — migration file lives in `backend/alembic/versions/`; never modify an already-deployed migration.
-8. **Handoff** — notify team-lead that schema is locked; Phase C gate satisfied.
+4. **Persist findings or migration** — when dispatched as **read-only research** (team-lead research phase): return schema analysis and design recommendations in your report without writing files; when dispatched for **full migration authoring** (post-user-checkpoint Phase C): proceed to steps 5–8.
+5. **Verify failing test** (TDD Red) — confirm the QA-written schema test fails before touching migration files.
+6. **Write migration** with `upgrade()` and `downgrade()` (TDD Green) — minimal implementation that makes the test pass.
+7. **Validate** — run migration forward, verify rollback works, confirm index coverage meets Database Standards.
+8. **Persist** — migration file lives in `backend/alembic/versions/`; never modify an already-deployed migration.
+9. **Handoff** — notify team-lead that schema is locked; Phase C gate satisfied.
 
 ## Exception Handling
 

@@ -87,7 +87,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 Failure modes — stop and report to team-lead when any of the following occur:
 
 1. API contract not yet frozen — cannot implement API integration without a locked contract
-2. Required shared component doesn't exist and would serve only this feature (violates `shared/` admission rule)
+2. Required shared component doesn't exist — if it would serve only this feature, place it under the feature module directory instead of `shared/` (per `shared/` admission rule: two or more importers required); only escalate if the component genuinely needs cross-feature coordination
 3. Implementation would violate constitution NON-NEGOTIABLEs
 4. Wireframe/prototype reference is missing for a UI-heavy feature
 5. Quality gate fails after 2 retry attempts — escalate via team-lead

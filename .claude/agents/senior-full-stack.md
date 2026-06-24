@@ -41,7 +41,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Respect file-ownership boundaries set by team-lead — when both senior-backend and senior-frontend are dispatched separately, do not duplicate their work
 
 **File Ownership**:
-- **Owns**: `backend/app/` and `frontend/src/` (when dispatched as full-stack — respects team-lead boundaries)
+- **Owns**: `backend/app/`, `backend/bruno/`, and `frontend/src/` (when dispatched as full-stack — respects team-lead boundaries)
 - **Must Not Touch**: `backend/alembic/`, `frontend/src/locales/`, `e2e/`, `backend/tests/`, `frontend/src/**/__tests__/`
 
 **Role Differentiation**:

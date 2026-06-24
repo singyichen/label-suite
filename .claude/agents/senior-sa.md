@@ -84,7 +84,8 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
   - [ ] Identify cross-module impacts and confirm dependent specs exist.
 
 - [ ] **Phase 5 — Persist spec document**
-  - [ ] Write the completed spec to `specs/[module]/NNN-feature/spec.md` using the Output Template below.
+  - [ ] When dispatched as **read-only research** (team-lead research phase): return business flow analysis and requirement findings in your report without writing files; skip to Phase 6 handoff.
+  - [ ] When dispatched for **full specification** (post-user-checkpoint): write the completed spec to `specs/[module]/NNN-feature/spec.md` using the Output Template below.
   - [ ] If `spec.md` already exists: ask the user before overwriting; bump the version and add a Changelog entry.
   - [ ] Update `specs/STATUS.md` to reflect the current pipeline stage transition.
 
@@ -176,7 +177,7 @@ author: senior-sa
 |---------|------|--------|
 | 1.0.0 | [YYYY-MM-DD] | Initial specification |
 
-## Feature Goal
+## 功能目標
 
 [Beneficiary, deliverable, reason for prioritizing now]
 

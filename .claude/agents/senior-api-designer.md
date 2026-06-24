@@ -53,7 +53,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ## Workflow
 
 1. **Locate inputs** — read the spec (`specs/[module]/NNN-feature/`), any existing API contracts, and `.claude/rules/api.md`.
-2. **Load context** — mandatory reads: `docs/adr/` (affected ADRs), existing module route files under `backend/app/modules/[module]/router.py`, existing module schema files under `backend/app/modules/[module]/schemas.py`, and shared schemas under `backend/app/schemas/`.
+2. **Load context** — mandatory reads: `docs/adr/` (affected ADRs), existing module route files under `backend/app/modules/[module]/router.py` (or `router/__init__.py` + `router/[feature].py` if split), existing module schema files under `backend/app/modules/[module]/schemas.py` (or `schemas/[feature].py` if split), and shared schemas under `backend/app/schemas/`.
 3. **Design endpoints** — resource naming, HTTP methods, URL patterns following `/api/v1/[module]/[resource]`.
 4. **Define request/response schemas** — Pydantic model names, field types, validation rules, error format per `ErrorResponse`.
 5. **Define pagination** — `limit`/`offset`/`next_offset` pattern per project convention.

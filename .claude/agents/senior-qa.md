@@ -55,8 +55,16 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ### Phase D — TDD Green
 
-- [ ] Run all backend verification commands: `uv run pytest tests/ -q`, `uv run mypy app/ --strict`, `uv run ruff check . && uv run ruff format --check .`
-- [ ] Run all frontend verification commands: `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test`
+- [ ] Run all backend verification commands from `backend/`:
+  - [ ] `uv run pytest`
+  - [ ] `uv run pytest -m security`
+  - [ ] `uv run pytest --cov=app --cov-report=term-missing`
+  - [ ] `uv run ruff check .`
+  - [ ] `uv run mypy .`
+- [ ] Run all frontend verification commands from `frontend/`:
+  - [ ] `pnpm tsc --noEmit`
+  - [ ] `pnpm lint`
+  - [ ] `pnpm test`
 - [ ] Run E2E tests if applicable: `pnpm exec playwright test`
 - [ ] Verify ALL tests pass (new + existing)
 - [ ] Check coverage — new code must not decrease overall coverage
