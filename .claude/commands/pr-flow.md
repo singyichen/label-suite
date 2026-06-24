@@ -41,8 +41,42 @@ git push origin <branch-name>
 
 ## Step 5 — Create PR
 
+### 5a. Determine labels
+
+Every PR must carry at least one **type label** (from branch prefix) and zero or more **scope labels** (from changed file paths).
+
+**Type label** — derive from branch name prefix:
+
+| Branch prefix | Label |
+|---|---|
+| `feat/` | `feature` |
+| `fix/` | `bug` |
+| `docs/` | `docs` |
+| `refactor/` | `refactor` |
+| `style/` | `ui` |
+| `test/` | `test` |
+| `perf/` | `performance` |
+| `chore/` | `task` |
+| `ci/` | `ci-cd` |
+
+**Scope labels** — derive from `git diff --name-only main...HEAD`:
+
+| Path prefix | Label |
+|---|---|
+| `frontend/` | `scope:frontend` |
+| `backend/` | `scope:backend` |
+| `e2e/` | `scope:e2e` |
+| `.github/workflows/`, `scripts/`, `docker-compose*`, `Dockerfile*` | `scope:infra` |
+
+### 5b. Create the PR
+
 ```bash
-gh pr create --title "<type>: <description>" --base main --head <branch-name> --body "..."
+gh pr create \
+  --title "<type>: <description>" \
+  --base main --head <branch-name> \
+  --label "<type-label>" \
+  --body "..."
+# Append --label "scope:frontend" --label "scope:backend" etc. only for matching scopes
 ```
 
 **PR body requirements**:

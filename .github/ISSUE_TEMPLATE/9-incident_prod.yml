@@ -1,7 +1,7 @@
 name: "🚨 Incident / Production Issue（線上事故）"
 description: "追蹤線上事故、重大異常或服務退化"
 title: "[Incident] "
-labels: ["線上事故"]
+labels: ["incident"]
 body:
   - type: markdown
     attributes:

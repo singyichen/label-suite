@@ -1,7 +1,7 @@
 name: "🛠️ Task / 任務追蹤"
 description: "用於追蹤明確可執行的任務或待辦"
 title: "[Task] "
-labels: ["任務追蹤"]
+labels: ["task"]
 body:
   - type: markdown
     attributes:

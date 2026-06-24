@@ -1,7 +1,7 @@
 name: "🎨 Feature Request / 版型樣式調整"
 description: "提出版型、UI、樣式或視覺調整需求"
-title: "[樣式調整] "
-labels: ["樣式調整"]
+title: "[UI] "
+labels: ["ui"]
 body:
   - type: markdown
     attributes:
