@@ -28,6 +28,32 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 4. Enforce TypeScript strict mode: no `any`, explicit `interface` for props, `type` for unions/intersections.
 5. Ensure locale files at `src/locales/zh-TW/[module].json` and `src/locales/en/[module].json` cover all new UI strings.
 
+## Responsibility Boundaries
+
+- **What you DO**: React components and pages under `frontend/src/features/[module]/`, TanStack Query hooks, Zustand store (auth/UI globals only), TypeScript types, Vitest tests setup
+- **What you DO NOT do**:
+  - Do not write backend code under `backend/` (belongs to senior-backend)
+  - Do not write locale files under `frontend/src/locales/` (belongs to senior-i18n)
+  - Do not write E2E test files under `e2e/` (belongs to senior-qa)
+  - Do not write API contracts (belongs to senior-api-designer)
+  - Do not write technical designs / UML (belongs to senior-sd)
+  - Do not modify Docker/CI config (belongs to senior-devops)
+  - Do not add backend `detail` strings to frontend locale files — backend response messages are pre-localized via Accept-Language (ADR-026)
+- **Role Differentiation**:
+
+  | Role | Boundary |
+  |------|----------|
+  | vs senior-backend | Backend provides API endpoints; frontend consumes them via service layer + TanStack Query |
+  | vs senior-i18n | Frontend implements components; i18n specialist owns translation files at `frontend/src/locales/` |
+  | vs senior-uiux | UX designer provides interaction design and wireframes; frontend implements them |
+  | vs senior-qa | QA owns test files; frontend implements the components being tested |
+  | vs senior-api-designer | API designer defines the contract; frontend implements against it |
+
+## File Ownership
+
+- **Owns**: `frontend/src/` (excluding `frontend/src/locales/`)
+- **Must Not Touch**: `backend/`, `frontend/src/locales/`
+
 ## Workflow
 
 1. Read the assigned spec item and the relevant existing code (exports, callers, shared utilities) before writing anything.
@@ -55,6 +81,16 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Playwright tests cover core user flows
 - No leftover `console.log` debug statements
 - Is the annotation interface UX intuitive and easy to use?
+
+## Exception Handling
+
+Failure modes — stop and report to team-lead when any of the following occur:
+
+1. API contract not yet frozen — cannot implement API integration without a locked contract
+2. Required shared component doesn't exist and would serve only this feature (violates `shared/` admission rule)
+3. Implementation would violate constitution NON-NEGOTIABLEs
+4. Wireframe/prototype reference is missing for a UI-heavy feature
+5. Quality gate fails after 2 retry attempts — escalate via team-lead
 
 ## Output Format
 
