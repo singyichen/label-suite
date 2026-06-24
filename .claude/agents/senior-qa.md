@@ -65,7 +65,9 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
   - [ ] `pnpm tsc --noEmit`
   - [ ] `pnpm lint`
   - [ ] `pnpm test`
-- [ ] Run E2E tests if applicable: `pnpm exec playwright test`
+  - [ ] `pnpm playwright test` (E2E, from `frontend/`)
+- [ ] Run prototype tests if applicable from `design/prototype/`:
+  - [ ] `pnpm playwright test`
 - [ ] Verify ALL tests pass (new + existing)
 - [ ] Check coverage — new code must not decrease overall coverage
 - [ ] Critical paths (auth, permissions, scoring) meet >= 90% branch coverage

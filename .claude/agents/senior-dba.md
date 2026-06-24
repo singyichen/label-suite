@@ -49,7 +49,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 | senior-backend | Backend writes SQLAlchemy models in `app/models/` and CRUD in `app/crud/`; DBA owns Alembic migrations in `alembic/` and schema design decisions |
 | senior-architect | Architect defines overall data architecture; DBA implements schema within those boundaries |
 | senior-sd | SD designs conceptual data model (ERD); DBA implements the physical schema with indexes, constraints, and performance tuning |
-| senior-performance | Performance identifies slow queries; DBA diagnoses root cause and applies fixes (indexes, query rewrite) |
+| senior-performance | Performance identifies slow queries; DBA diagnoses root cause and applies index/migration fixes under `backend/alembic/`; repository query rewrites in `backend/app/` must be handed off to senior-backend |
 
 ## Workflow Checklist
 

@@ -41,7 +41,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Do not make architecture-level decisions (belongs to senior-architect)
 
 **File Ownership**:
-- **Owns**: `docker-compose.yml`, `.github/workflows/`, `.env.example`, `scripts/`
+- **Owns**: `docker-compose.yml`, `Dockerfile*`, `.github/workflows/`, `.env.example`, `scripts/`
 - **Must Not Touch**: `backend/app/`, `frontend/src/`, `backend/alembic/`
 
 **Role Differentiation**:

@@ -90,7 +90,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 Failure modes where you must stop and report to team-lead before continuing:
 
 1. API contract not yet frozen — cannot implement endpoint without a locked contract
-2. SQLAlchemy model change requires a migration that would touch `backend/alembic/` (must hand off to senior-dba)
+2. SQLAlchemy model change requires a migration — update model files in `backend/app/modules/[module]/models.py` (your ownership), then hand off migration file authoring under `backend/alembic/` to senior-dba
 3. Implementation would violate constitution NON-NEGOTIABLEs (hardcoded task logic or data fairness breach)
 4. Spec requirement is ambiguous — multiple valid implementations exist with different trade-offs
 5. Quality gate fails after 2 retry attempts — escalate to senior-error-resolver via team-lead

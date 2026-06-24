@@ -197,18 +197,6 @@ Persist the following structure to `specs/[module]/NNN-feature/spec.md`:
 | NFR-001 | Performance | [requirement] | [e.g. p99 < 200 ms] |
 | NFR-002 | Security | [requirement] | [e.g. all inputs validated via Pydantic] |
 
-## Data Model
-
-[Entity relationships and data flows relevant to this feature. Reference existing models where applicable.]
-
-## Integration Interfaces
-
-[API contracts this feature exposes or depends on. Reference OpenAPI docs or existing endpoints.]
-
-## Error Handling
-
-[How failures are surfaced — error codes, user-facing messages, retry behavior.]
-
 ## User Stories and Test Scenarios
 
 | ID | Given | When | Then |
