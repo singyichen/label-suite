@@ -138,9 +138,9 @@ Returns `PaginatedResponse[[ResourceName]Response]` with `items`, `total`, `limi
 
 | Status | Condition | ErrorResponse.detail (pre-localized via Accept-Language per ADR-026) |
 |--------|-----------|----------------------------------------------------------------------|
-| 404    | Resource not found | "Resource not found" (localized at runtime) |
-| 422    | Validation failure | "Validation failed" (localized at runtime) |
-| 403    | Permission denied | "Permission denied" (localized at runtime) |
+| 404    | Resource not found | `string` — "Resource not found" (localized at runtime) |
+| 422    | Validation failure | `ErrorDetail[]` — per-field `loc/msg/type/error_code` (FR-116) |
+| 403    | Permission denied | `string` — "Permission denied" (localized at runtime) |
 
 ## Auth Requirements
 

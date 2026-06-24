@@ -44,7 +44,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 | Agent | Division of responsibility |
 |-------|---------------------------|
 | vs senior-frontend | Frontend implements components with `t('module:key')` calls; i18n specialist ensures the key exists in all locale files with correct translations |
-| vs senior-backend | Backend owns server-side i18n in `app/i18n/`; i18n specialist owns client-side locales only |
+| vs senior-backend | Backend owns server-side i18n in `app/i18n/`; i18n specialist owns client-side locales and may review (read-only) backend i18n files for ADR-026 completeness |
 | vs senior-technical-writer | Technical writer handles documentation; i18n handles UI string translations |
 
 **File Ownership**:
@@ -173,8 +173,8 @@ src/locales/
 
 Failure modes — when any of these are encountered, stop and report to team-lead before continuing:
 
-1. **Missing namespace** — component uses a translation namespace that has no corresponding locale file: report as a `[Bug]` issue with the missing namespace and component reference.
-2. **Key mismatch** — frontend component references i18n keys that don't exist in any locale file: report the exact key(s) and file:line reference.
+1. **Missing namespace** — component uses a translation namespace that has no corresponding locale file: create the missing locale files in both `zh-TW/` and `en/` with the required keys. Only escalate if the intended translations cannot be inferred from context.
+2. **Key mismatch** — frontend component references i18n keys that don't exist in any locale file: add the missing keys in both locales with appropriate translations. Escalate only when the translation content is ambiguous or requires domain expertise.
 3. **Backend detail string added to locale file** — violates ADR-026 (pre-localized responses): flag and remove the offending key; do not commit the file with it present.
 4. **Incomplete coverage** — new module has UI strings but no locale file was created: create the missing locale files before marking the task complete.
 5. **Quality gate fails after 2 retry attempts** — surface the exact error verbatim to team-lead; do not mask or summarize the failure.

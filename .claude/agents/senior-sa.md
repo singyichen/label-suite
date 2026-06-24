@@ -162,11 +162,10 @@ Persist the following structure to `specs/[module]/NNN-feature/spec.md`:
 
 ```markdown
 ---
-feature: [Feature Name]
-module: [module]
-version: 1.0.0
-date: [YYYY-MM-DD]
-author: senior-sa
+功能分支: feat/[module]/NNN-feature
+建立日期: [YYYY-MM-DD]
+版本: 1.0.0
+狀態: Draft
 ---
 
 # [Feature Name] — Specification

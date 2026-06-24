@@ -54,7 +54,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ## Workflow Checklist
 
 1. **Locate inputs** — read the assigned spec item; find existing models in `backend/app/modules/[module]/models.py` and existing migrations in `backend/alembic/`.
-2. **Load context** — mandatory reads: `.claude/rules/backend.md` (database sections), all affected model files, the most recent migration file.
+2. **Load context** — mandatory reads: `.claude/rules/backend.md` (database sections), `.specify/memory/backend-constitution.md` (migration gates: downgrade/roundtrip, migration-PR constraints), `.specify/memory/testing-constitution.md` (schema test requirements), all affected model files, the most recent migration file.
 3. **Design schema changes** — decide normalization, constraints, JSONB usage, data fairness isolation at schema level.
 4. **Persist findings or migration** — when dispatched as **read-only research** (team-lead research phase): return schema analysis and design recommendations in your report without writing files; when dispatched for **full migration authoring** (post-user-checkpoint Phase C): proceed to steps 5–8.
 5. **Verify failing test** (TDD Red) — confirm the QA-written schema test fails before touching migration files.

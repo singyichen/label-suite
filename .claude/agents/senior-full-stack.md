@@ -42,7 +42,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 **File Ownership**:
 - **Owns**: `backend/app/`, `backend/bruno/`, and `frontend/src/` (when dispatched as full-stack — respects team-lead boundaries)
-- **Must Not Touch**: `backend/alembic/`, `frontend/src/locales/`, `e2e/`, `backend/tests/`, `frontend/src/**/__tests__/`
+- **Must Not Touch**: `backend/alembic/`, `frontend/src/locales/`, `e2e/`, `backend/tests/`, `frontend/src/**/__tests__/`, `frontend/src/**/*.test.ts(x)`
 
 **Role Differentiation**:
 
