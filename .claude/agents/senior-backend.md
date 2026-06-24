@@ -59,7 +59,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ## Workflow
 
 1. Read the assigned spec item and the relevant existing code (exports, callers, shared utilities) before writing anything.
-2. Write a failing test that captures the expected behavior (Red).
+2. Verify the QA-written failing test captures the expected behavior (Red) — do not write test files yourself.
 3. Write the minimal implementation that makes the test pass (Green).
 4. Refactor while keeping all tests green.
 5. Run the verification commands for your area (see Quality Checklist).

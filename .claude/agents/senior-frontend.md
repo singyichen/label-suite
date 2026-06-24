@@ -51,7 +51,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## File Ownership
 
-- **Owns**: `frontend/src/` (excluding `frontend/src/locales/`)
+- **Owns**: `frontend/src/` (excluding `frontend/src/locales/` and `frontend/src/**/__tests__/`)
 - **Must Not Touch**: `backend/`, `frontend/src/locales/`
 
 ## Workflow

@@ -53,12 +53,12 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ## Workflow
 
 1. **Locate inputs** — read the spec (`specs/[module]/NNN-feature/`), any existing API contracts, and `.claude/rules/api.md`.
-2. **Load context** — mandatory reads: `docs/adr/` (affected ADRs), existing route files under `backend/app/routers/`, existing schema files under `backend/app/schemas/`.
+2. **Load context** — mandatory reads: `docs/adr/` (affected ADRs), existing module route files under `backend/app/modules/[module]/router.py`, existing module schema files under `backend/app/modules/[module]/schemas.py`, and shared schemas under `backend/app/schemas/`.
 3. **Design endpoints** — resource naming, HTTP methods, URL patterns following `/api/v1/[module]/[resource]`.
 4. **Define request/response schemas** — Pydantic model names, field types, validation rules, error format per `ErrorResponse`.
 5. **Define pagination** — `limit`/`offset`/`next_offset` pattern per project convention.
 6. **Validate** — check against `.claude/rules/api.md` rules and constitution NON-NEGOTIABLEs; specifically confirm Data Fairness: no ground-truth answers can appear in any annotator-facing response field.
-7. **Persist API contract** — write the OpenAPI spec or contract document to `specs/[module]/NNN-feature/api-contract.md`.
+7. **Persist API contract** — write the OpenAPI spec or contract document to `specs/[module]/NNN-feature/contracts/api-contract.md`.
 8. **Handoff** — issue contract freeze notification to team-lead, backend, and frontend using the Downstream Handoff Protocol below.
 
 ## Exception Handling
@@ -88,7 +88,7 @@ Follow `.claude/rules/api.md`: route pattern `/api/v1/[module]/[resource]`, `Pag
 
 ## Project-Specific Output Template
 
-API contract documents are persisted at `specs/[module]/NNN-feature/api-contract.md` using the following structure:
+API contract documents are persisted at `specs/[module]/NNN-feature/contracts/api-contract.md` using the following structure:
 
 ```markdown
 # API Contract — [Feature Name]
@@ -132,15 +132,15 @@ class [ResourceName]Response(BaseModel):
 ```
 
 ### Paginated List
-Returns `PaginatedResponse[[ResourceName]Response]` with `limit`, `offset`, `next_offset`, `total`.
+Returns `PaginatedResponse[[ResourceName]Response]` with `items`, `total`, `limit`, `offset`, `next_offset`, `has_more`, `total_pages`.
 
 ## Error Responses
 
-| Status | Condition | ErrorResponse.detail (i18n key) |
-|--------|-----------|----------------------------------|
-| 404    | Resource not found | errors.not_found |
-| 422    | Validation failure | errors.validation_failed |
-| 403    | Permission denied | errors.forbidden |
+| Status | Condition | ErrorResponse.detail (pre-localized via Accept-Language per ADR-026) |
+|--------|-----------|----------------------------------------------------------------------|
+| 404    | Resource not found | "Resource not found" (localized at runtime) |
+| 422    | Validation failure | "Validation failed" (localized at runtime) |
+| 403    | Permission denied | "Permission denied" (localized at runtime) |
 
 ## Auth Requirements
 
@@ -179,13 +179,14 @@ After the API contract is persisted and the Quality Checklist passes, issue the 
 
 ```
 API Contract designed and persisted at:
-  specs/[module]/NNN-feature/api-contract.md (or OpenAPI spec path)
+  specs/[module]/NNN-feature/contracts/api-contract.md (or OpenAPI spec path)
 
-Contract freeze: Backend and frontend may now implement against this contract.
+Contract status: DRAFT — requires team-lead/user checkpoint before freeze.
+Once frozen, backend and frontend may implement against this contract.
 Breaking changes require re-design and user approval.
 
 Downstream must read:
-  - API contract: specs/[module]/NNN-feature/api-contract.md
+  - API contract: specs/[module]/NNN-feature/contracts/api-contract.md
   - Related spec: specs/[module]/NNN-feature/spec.md
   - API rules: .claude/rules/api.md
 ```

@@ -55,7 +55,9 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ### Phase D — TDD Green
 
-- [ ] Run all verification commands (pytest, tsc, lint, Playwright)
+- [ ] Run all backend verification commands: `uv run pytest tests/ -q`, `uv run mypy app/ --strict`, `uv run ruff check . && uv run ruff format --check .`
+- [ ] Run all frontend verification commands: `pnpm tsc --noEmit`, `pnpm lint`, `pnpm test`
+- [ ] Run E2E tests if applicable: `pnpm exec playwright test`
 - [ ] Verify ALL tests pass (new + existing)
 - [ ] Check coverage — new code must not decrease overall coverage
 - [ ] Critical paths (auth, permissions, scoring) meet >= 90% branch coverage

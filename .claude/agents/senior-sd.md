@@ -116,7 +116,8 @@ Map the feature to the layered architecture:
 
 ### 7. Persist design document
 
-- [ ] Write to `specs/[module]/NNN-feature/system-design.md` using the output template below
+- [ ] When dispatched as **read-only research** (e.g. team-lead research phase): return design findings in your report — do not write files; file persistence is deferred to a later approved phase
+- [ ] When dispatched for **full design** (post-user-checkpoint): write to `specs/[module]/NNN-feature/system-design.md` using the output template below
 - [ ] If the file already exists, **ask the user** before overwriting
 - [ ] Report the file path to the user after writing
 

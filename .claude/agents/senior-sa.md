@@ -176,6 +176,10 @@ author: senior-sa
 |---------|------|--------|
 | 1.0.0 | [YYYY-MM-DD] | Initial specification |
 
+## Feature Goal
+
+[Beneficiary, deliverable, reason for prioritizing now]
+
 ## System Overview
 
 [High-level description of what this feature does and why it exists. Scope in/out.]
