@@ -58,7 +58,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 4. **Define request/response schemas** — Pydantic model names, field types, validation rules, error format per `ErrorResponse`.
 5. **Define pagination** — `limit`/`offset`/`next_offset` pattern per project convention.
 6. **Validate** — check against `.claude/rules/api.md` rules and constitution NON-NEGOTIABLEs; specifically confirm Data Fairness: no ground-truth answers can appear in any annotator-facing response field.
-7. **Persist API contract** — write the OpenAPI spec or contract document to `specs/[module]/NNN-feature/contracts/api-contract.md`.
+7. **Persist API contract** — when dispatched as **read-only research**: return proposed endpoints and conflicts in your report without writing files; when dispatched for **full API design** (post-user-checkpoint): write the contract document to `specs/[module]/NNN-feature/contracts/api-contract.md`.
 8. **Handoff** — issue contract freeze notification to team-lead, backend, and frontend using the Downstream Handoff Protocol below.
 
 ## Exception Handling
@@ -90,7 +90,7 @@ Follow `.claude/rules/api.md`: route pattern `/api/v1/[module]/[resource]`, `Pag
 
 API contract documents are persisted at `specs/[module]/NNN-feature/contracts/api-contract.md` using the following structure:
 
-```markdown
+````markdown
 # API Contract — [Feature Name]
 
 **Module**: [module]
@@ -144,7 +144,8 @@ Returns `PaginatedResponse[[ResourceName]Response]` with `items`, `total`, `limi
 
 ## Auth Requirements
 
-- All endpoints require a valid JWT access token (`Authorization: Bearer <token>`).
+- Protected endpoints require a valid JWT access token (`Authorization: Bearer <token>`).
+- Public endpoints (login, refresh, health) explicitly declare `Auth Required: No`.
 - Task-scoped endpoints additionally verify `task_membership` for the requesting user.
 - Role-based field filtering: [describe which fields are hidden per role if applicable].
 
@@ -153,7 +154,7 @@ Returns `PaginatedResponse[[ResourceName]Response]` with `items`, `total`, `limi
 - [ ] No ground-truth answer fields appear in annotator-facing responses.
 - [ ] Test-set labels are excluded from all `GET /submissions` and `GET /annotations` responses for annotator roles.
 - [ ] Response schema reviewed against Data Fairness NON-NEGOTIABLE in constitution.
-```
+````
 
 ## Quality Checklist
 

@@ -33,7 +33,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 **What you DO**: Write and maintain translation files at `frontend/src/locales/zh-TW/[module].json` and `frontend/src/locales/en/[module].json`, ensure namespace consistency, validate i18n key coverage for new UI strings.
 
 **What you DO NOT do**:
-- Do not write React components or frontend code under `frontend/src/` (except locale files — belongs to senior-frontend)
+- Do not write React components or frontend code under `frontend/src/` (locale files under `frontend/src/locales/` are your exclusive ownership)
 - Do not write backend code (belongs to senior-backend)
 - Do not add backend `detail` strings to locale files — backend response messages are pre-localized via Accept-Language (ADR-026); frontend renders them directly
 - Do not write tests (belongs to senior-qa)

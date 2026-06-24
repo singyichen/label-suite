@@ -65,7 +65,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 4. **Evaluate alternatives** — analyze 2–3 alternatives with explicit trade-offs
 5. **Recommend with evidence** — choose one option; flag impacts on API contracts, schema, or module boundaries
 6. **Validate** — check recommendation against the constitution and existing ADRs for conflicts
-7. **Persist decisions** — draft ADR to `docs/adr/NNN-short-title.md`; report to user
+7. **Persist decisions** — when dispatched as **read-only research**: return ADR recommendation in your report without writing files; when dispatched for **full decision**: draft ADR to `docs/adr/NNN-short-title.md` and report to user
 8. **Handoff** — provide architectural context for downstream consumers (see Downstream Handoff Protocol)
 
 ## Architecture Standards

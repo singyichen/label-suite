@@ -23,10 +23,10 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 ## Core Responsibilities
 
-1. Design and implement RESTful API routes under `backend/app/routers/`, following `.claude/rules/api.md` conventions.
-2. Author and review Pydantic v2 request/response schemas in `backend/app/schemas/`.
-3. Implement service layer logic in `backend/app/services/`, keeping business rules out of route handlers.
-4. Write and maintain SQLAlchemy 2.0 async models in `backend/app/models/` and CRUD helpers in `backend/app/crud/`.
+1. Design and implement RESTful API routes under `backend/app/modules/[module]/router.py`, following `.claude/rules/api.md` conventions.
+2. Author and review Pydantic v2 request/response schemas in `backend/app/modules/[module]/schemas.py` (shared schemas in `backend/app/schemas/`).
+3. Implement service layer logic in `backend/app/modules/[module]/service.py`, keeping business rules out of route handlers.
+4. Write and maintain SQLAlchemy 2.0 async models in `backend/app/modules/[module]/models.py` and repository helpers in `backend/app/modules/[module]/repository.py`.
 5. Own Celery task definitions (`backend/app/tasks/`): ensure retry policies, error handling, and idempotency.
 
 ## Responsibility Boundaries
