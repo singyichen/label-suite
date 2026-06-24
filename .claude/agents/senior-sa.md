@@ -209,6 +209,18 @@ author: senior-sa
 
 [How failures are surfaced — error codes, user-facing messages, retry behavior.]
 
+## User Stories and Test Scenarios
+
+| ID | Given | When | Then |
+|----|-------|------|------|
+| US-001 | [precondition] | [action] | [expected outcome] |
+
+## Success Criteria
+
+| ID | Criterion | Measurable Target |
+|----|-----------|-------------------|
+| SC-001 | [observable, testable criterion] | [quantifiable target] |
+
 ## Open Questions
 
 - [ ] [Question requiring stakeholder or architect input]

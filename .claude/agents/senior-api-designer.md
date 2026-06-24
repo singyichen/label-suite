@@ -100,13 +100,13 @@ API contract documents are persisted at `specs/[module]/NNN-feature/contracts/ap
 
 ## Endpoints
 
-| Method | Path | Description | Auth Required |
-|--------|------|-------------|---------------|
-| GET    | /api/v1/[module]/[resource] | List [resource]s | Yes |
-| POST   | /api/v1/[module]/[resource] | Create [resource] | Yes |
-| GET    | /api/v1/[module]/[resource]/{id} | Get [resource] by ID | Yes |
-| PATCH  | /api/v1/[module]/[resource]/{id} | Update [resource] | Yes |
-| DELETE | /api/v1/[module]/[resource]/{id} | Delete [resource] | Yes |
+| Method | Path | operationId | Description | Auth | Idempotency |
+|--------|------|-------------|-------------|------|-------------|
+| GET    | /api/v1/[module]/[resource] | list_[resource]s | List [resource]s | Yes | N/A (safe) |
+| POST   | /api/v1/[module]/[resource] | create_[resource] | Create [resource] | Yes | [strategy or exempt] |
+| GET    | /api/v1/[module]/[resource]/{id} | get_[resource] | Get [resource] by ID | Yes | N/A (safe) |
+| PATCH  | /api/v1/[module]/[resource]/{id} | update_[resource] | Update [resource] | Yes | N/A (idempotent) |
+| DELETE | /api/v1/[module]/[resource]/{id} | delete_[resource] | Delete [resource] | Yes | N/A (idempotent) |
 
 ## Request Schemas
 

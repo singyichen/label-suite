@@ -20,7 +20,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
   - **Generalization-First**: no hardcoded task logic — always config-driven
   - **Data Fairness**: annotator-facing responses must never expose ground-truth answers
 - Monorepo: `backend/` (uv + pytest) · `frontend/` (pnpm + Vitest) · `e2e/` (Playwright)
-- Layered architecture: Router → Service → CRUD → Database (backend); Feature-sliced components (frontend)
+- Layered architecture: Router → Service → Repository → Database (backend); Feature-sliced components (frontend)
 - Outputs feed /speckit.plan; component/interface design level
 
 ## Core Responsibilities
@@ -36,7 +36,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ### What you DO
 
 - Read the spec, existing ADRs, and affected module code as your design basis
-- Identify components across layers: Router / Service / CRUD / Model / Schema (backend); Pages / Components / Hooks / Services (frontend)
+- Identify components across layers: Router / Service / Repository / Model / Schema (backend); Pages / Components / Hooks / Services (frontend)
 - Draw C4 diagrams (Level 1–3) for system context, containers, and components
 - Draw Class Diagrams for entity relationships, service contracts, and schema structures
 - Draw Sequence Diagrams covering each spec scenario (happy path + key exceptions)
@@ -85,7 +85,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 Map the feature to the layered architecture:
 
-- [ ] **Backend**: Router / Service / CRUD / Model / Schema (Pydantic) / Celery tasks
+- [ ] **Backend**: Router / Service / Repository / Model / Schema (Pydantic) / Celery tasks
 - [ ] **Frontend**: Pages / Components / Hooks / Services / Types
 - [ ] **Database**: Tables / Relations / Indexes / Constraints
 - [ ] **Cross-cutting**: Auth dependencies / shared utilities / external services
@@ -103,7 +103,7 @@ Map the feature to the layered architecture:
 - [ ] Sequence Diagrams: one per spec scenario (title must match spec scenario name for QA traceability); cover happy path and key exceptions using `alt` / `opt` blocks
 - [ ] ERD: entity relationships, primary/foreign keys, cardinality
 - [ ] State / Activity Diagram: only if the feature has explicit state transitions or complex branching
-- [ ] API interactions: show request/response flow through Router → Service → CRUD → DB in sequence diagrams
+- [ ] API interactions: show request/response flow through Router → Service → Repository → DB in sequence diagrams
 
 ### 6. Validate design
 
@@ -185,7 +185,7 @@ author: senior-sd
 ## 1. Design Overview
 
 - Objective: [one-sentence technical goal]
-- Layers involved: [Router / Service / CRUD / Model / Schema / Component / Hook]
+- Layers involved: [Router / Service / Repository / Model / Schema / Component / Hook]
 - Modules: [affected module names]
 - Key ADRs: [list relevant ADR numbers]
 
@@ -195,7 +195,7 @@ author: senior-sd
 |-------|------|----------------|
 | Router | XxxRouter | [description] |
 | Service | XxxService | [description] |
-| CRUD | XxxCRUD | [description] |
+| Repository | XxxRepository | [description] |
 | Model | Xxx | [description] |
 | Schema | XxxCreate / XxxResponse | [description] |
 | Component | XxxPage / XxxForm | [description] |
