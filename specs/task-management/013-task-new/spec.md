@@ -133,23 +133,71 @@ sequenceDiagram
 
 - Step 1：`基本資料`
   - 必要欄位：`task_name`、`dataset_file`、`task_type`
-  - 畫面元素：`task_name` 單行輸入、`dataset_file` 上傳區（支援多檔選取與拖曳，每個已上傳檔案獨立一列顯示檔名/大小/預覽/移除）、`task_type` 三組 chip（大分類多選、輸入類型單選、輸出類型組內單選跨組可多選；輸出類型依大分類 cascade 過濾，僅顯示已選大分類對應的輸出類型，多個大分類時依分類分組顯示）
+  - `task_name`：
+    - 單行文字輸入框，附字數計數器（上限 100 字）
+  - `dataset_file`：
+    - 上傳區：拖曳或點擊上傳，僅支援 `.json`（`DATASET_UPLOAD_FORMATS`），單檔上限 `DATASET_MAX_FILE_SIZE_MB`（200 MB），編碼 `DATASET_ENCODING`（UTF-8）
+    - 支援多檔選取與拖曳；上傳成功後 upload zone 持續可見，可繼續追加檔案
+    - 每個已上傳檔案獨立一列，顯示：檔名 · 檔案大小 · 預覽按鈕（眼睛圖示） · 移除按鈕（×）
+    - 點擊預覽按鈕或檔案列開啟 Modal，顯示前 10 筆原始資料（唯讀）；Modal 可由關閉按鈕或 overlay 關閉
+    - 追加檔案時須驗證 JSON key 集合與已上傳一致，不一致則阻擋並顯示提示（FR-002d）
+    - **嵌入式欄位預覽表格**（上傳成功後即時顯示，無需點擊觸發）：
+      - 顯示前 2 筆資料列，欄位標頭為原始 JSON key 名稱（不做中文轉換）
+      - 每個欄位標頭下方提供角色下拉選單：`Evidence（背景）` · `Input（輸入）` · `Output（輸出）` · `— 不使用 —`
+      - 預設全部欄位為「不使用」；重新上傳或移除檔案後角色重設為「不使用」
+      - 角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload；僅含已指定角色的欄位
+  - `task_type`：三組 chip
+    - 大分類（可多選，`role="checkbox"`）
+      - `分類 Classification`
+      - `回歸 Regression`
+      - `序列 Sequence`
+      - `生成 Generation`
+    - 輸入類型（單選，`role="radio"`，互斥）
+      - `單一項目`
+      - `項目對`
+    - 輸出類型（cascade 過濾，組內單選 `role="radio"`，跨組可多選）
+
+      | 大分類 | 輸出類型 |
+      |--------|----------|
+      | 分類 | `單一標籤` · `多標籤` · `實體關係標籤` |
+      | 回歸 | `單維度` · `多維度` |
+      | 序列 | `Token 分類` · `邊界偵測` · `區間標記` · `關係三元組` |
+      | 生成 | `自由文字` |
+
+    - cascade 行為：未選大分類 → 顯示「請先選擇大分類」；選 1 個 → 直接顯示輸出類型（無分組標題）；選 2+ 個 → 依大分類分組顯示並加子標題；取消大分類 → 該組輸出類型消失且已選項自動取消
+  - `下一步` 啟用條件：`task_name` 非空 ∧ `deriveTaskType()` 回傳非空 ∧ dataset 檔案通過格式/大小/編碼檢查
 - Step 2：`標記設定檔`
-  - 必要元素：task-type 模板入口、設定檔上傳入口、schema 驅動設定面板、YAML/JSON 切換與 code 編輯區、實際標記預覽區
-  - 畫面元素：上方預覽區、下方左側「範本/上傳設定檔」區塊 + schema 設定區、下方右側 code 區、欄位級錯誤訊息
+  - 佈局：上方標記預覽區、下方左側「範本/上傳設定檔 + schema 設定區」、下方右側 code 區
+  - 範本/上傳設定檔區塊：
+    - 範本按鈕：依 `task_type` 提供預設模板，點擊即載入
+    - 上傳設定檔：支援 `CONFIG_UPLOAD_FORMATS`（yaml / yml / json），載入至 code 區由使用者手動儲存套用
+  - schema 設定區：由 `task_type registry` 動態生成欄位；欄位映射下拉選單僅列出 Step 1 已指定角色的欄位
+  - code 區：可編輯 YAML/JSON，提供格式切換與 `儲存` 按鈕；schema 設定與 code 區同步同一份 config
+  - 標記預覽區：顯示示例文本與可標記選項，設定變更時即時同步
   - 研究情境必備任務型別（第一層）：
     - `single_sentence_classification`（含多標籤）
     - `single_sentence_va_scoring`（VA 雙維度評分：Valence + Arousal）
     - `sequence_labeling`（含 `ner` 與 `aspect_list` 子模式）
     - `relation_extraction`（Entity + Relation + Triple，可擴充五元組）
   - 延伸任務型別（第二層）：`sentence_pairs`（相似度 / 蘊含）
+  - `下一步` 啟用條件：schema 必填欄位全部通過 ∧ 無 parser/schema error ∧ code 區無未儲存變更
 - Step 3：`啟動設定`
-  - 必要元素：試標抽樣筆數設定 + 資料隔離
-  - 畫面元素：提示文案（任務建立後再至 task-detail 邀請標記員與審核員）、`每回合抽樣筆數` 輸入、資料隔離開關與說明
-- Step 4：`標記說明`
-  - 必要元素：`標記員說明` 區塊、`審核員說明` 區塊、`開始標記前強制顯示` 開關
-  - 畫面元素：`標記說明內容` textarea、`審核說明內容` textarea、兩組各自獨立的多檔上傳列表（可移除）、強制顯示 toggle
-- 操作列：`上一步`、`下一步`、`取消`、`建立任務`
+  - 提示文案：「任務建立後再至 task-detail 邀請標記員與審核員」（本步驟不提供成員管理）
+  - `每回合抽樣筆數`：數字輸入框，抽樣模式固定 `by_count`；初始值依 `SAMPLING_DEFAULTS_BY_TYPE` 自動帶入（`round(dataset_total × trialPercent / 100)`）；驗證：`≥ RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
+  - 資料隔離開關：toggle，預設 `RUN_ISOLATION_DEFAULT`（enabled），附說明文字
+  - `下一步` 啟用條件：抽樣筆數通過驗證
+- Step 4：`標記說明`（選填，未填寫亦可提交）
+  - `標記員說明` 區塊：
+    - `標記說明內容` textarea（可獨立於附件存在）
+    - 附件上傳：支援多檔（`GUIDELINE_FORMATS`：pdf / image / markdown），逐檔移除
+  - `審核員說明` 區塊：
+    - `審核說明內容` textarea（可獨立於附件存在）
+    - 附件上傳：與標記員附件獨立，同樣支援多檔與逐檔移除
+  - `開始標記前強制顯示` toggle：啟用時 annotation-workspace 於同一使用者首次進入該任務時顯示說明彈窗（確認後不重複顯示）
+  - `建立任務` 按鈕：永遠可見（Step 4 為選填）
+- 操作列：`上一步` · `下一步` · `取消` · `建立任務`（僅 Step 4 顯示）
+  - 任一步驟點擊 `取消` 或離頁（側欄跳轉、重新整理、關閉分頁），若已有變更需顯示「離開將遺失未儲存內容」確認視窗
+  - 驗證錯誤：欄位下方 inline message + 頁首 toast，訊息指出欄位名稱與修正方向
 
 **行為規則**：
 
