@@ -68,6 +68,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 - [ ] **Phase 2 — Load context (mandatory reads)**
   - [ ] Read the existing spec document (if present).
+  - [ ] Read `.specify/memory/constitution.md` and any applicable domain constitution (e.g. `backend-constitution.md`, `frontend-constitution.md`).
   - [ ] Read all ADRs that touch the affected module or cross-cutting concerns.
   - [ ] Read affected module source files to understand current implementation boundaries.
   - [ ] Note prototype or wireframe references at `design/wireframes/pages/[module]/[page].pen` (if applicable).
@@ -184,13 +185,15 @@ Persist the following structure to `specs/[module]/NNN-feature/spec.md`:
 
 [High-level description of what this feature does and why it exists. Scope in/out.]
 
-## Functional Requirements
+## 需求規格
+
+### 功能需求
 
 | ID | Requirement | Priority | Acceptance Criteria |
 |----|-------------|----------|---------------------|
 | FR-001 | [requirement] | Must / Should / Nice-to-have | [testable criterion] |
 
-## Non-Functional Requirements
+### Non-Functional Requirements
 
 | ID | Category | Requirement | Measurable Target |
 |----|----------|-------------|-------------------|

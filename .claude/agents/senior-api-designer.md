@@ -145,7 +145,7 @@ Returns `PaginatedResponse[[ResourceName]Response]` with `items`, `total`, `limi
 ## Auth Requirements
 
 - Protected endpoints use httpOnly cookie session auth (ADR-021); both access and refresh tokens are delivered via httpOnly cookies, not `Authorization: Bearer` headers.
-- Public endpoints (login, refresh, health) explicitly declare `Auth Required: No`.
+- Public endpoints (login, health) explicitly declare `Auth Required: No`; the refresh endpoint requires a valid refresh-token cookie (ADR-021) and must declare `Auth: refresh-token cookie`.
 - Task-scoped endpoints additionally verify `task_membership` for the requesting user.
 - Role-based field filtering: [describe which fields are hidden per role if applicable].
 
