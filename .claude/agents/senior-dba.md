@@ -133,7 +133,7 @@ Schema changes completed:
 Phase C gate: SATISFIED — models and migrations are consistent.
 
 Downstream impact:
-  - senior-backend: Models at backend/app/models/ may need update to match new schema
+  - senior-backend: Models at backend/app/modules/[module]/models.py may need update to match new schema
   - senior-sd: ERD in system-design.md may need update
   - senior-qa: Test fixtures may need update for new/changed columns
 

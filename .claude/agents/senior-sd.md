@@ -76,8 +76,9 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 ### 2. Load context (mandatory reads — never skip)
 
 - [ ] Target feature spec (full text)
+- [ ] `.specify/memory/constitution.md` and any applicable domain constitutions (e.g. `backend-constitution.md`, `frontend-constitution.md`)
 - [ ] Related ADRs that affect this feature
-- [ ] Affected module code (routers, services, models, schemas in scope)
+- [ ] Affected module code (routers, services, models, repository helpers, schemas in scope)
 - [ ] Existing design documents for the same feature (if any)
 - [ ] Prototype / wireframe references mentioned in the spec (if any)
 

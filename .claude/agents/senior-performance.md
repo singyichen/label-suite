@@ -47,7 +47,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 | Role | Boundary |
 |------|----------|
 | vs senior-code-reviewer | Performance focuses on query efficiency, bundle size, response times; code reviewer focuses on logic and style |
-| vs senior-dba | Performance identifies slow queries; DBA diagnoses and applies fixes (indexes, query rewrite) |
+| vs senior-dba | Performance identifies slow queries; DBA diagnoses and applies index/migration fixes under `backend/alembic/`; repository query rewrites in `backend/app/modules/[module]/repository.py` must be handed off to senior-backend |
 | vs senior-backend | Performance reviews for N+1, blocking I/O; backend implements the fixes |
 
 ## Workflow

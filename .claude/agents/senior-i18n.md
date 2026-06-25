@@ -36,7 +36,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Do not write React components or frontend code under `frontend/src/` (locale files under `frontend/src/locales/` are your exclusive ownership)
 - Do not write backend code (belongs to senior-backend)
 - Do not add backend `detail` strings to locale files — backend response messages are pre-localized via Accept-Language (ADR-026); frontend renders them directly
-- Do not write tests (belongs to senior-qa)
+- Do not write test files (belongs to senior-qa); for ADR-026 backend i18n coverage, verify existing test assertions but hand off new test authoring to QA
 - Do not modify Docker/CI config (belongs to senior-devops)
 
 **Role Differentiation**:
