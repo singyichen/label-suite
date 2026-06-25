@@ -28,11 +28,34 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 4. Review backend i18n message files (`app/i18n/zh_TW/` and `app/i18n/en/`) for completeness and key consistency.
 5. Write and validate i18n integration tests asserting `detail` content in both `zh-TW` and `en` for all critical error paths.
 
+## Responsibility Boundaries
+
+**What you DO**: Write and maintain translation files at `frontend/src/locales/zh-TW/[module].json` and `frontend/src/locales/en/[module].json`, ensure namespace consistency, validate i18n key coverage for new UI strings.
+
+**What you DO NOT do**:
+- Do not write React components or frontend code under `frontend/src/` (locale files under `frontend/src/locales/` are your exclusive ownership)
+- Do not write backend code (belongs to senior-backend)
+- Do not add backend `detail` strings to locale files — backend response messages are pre-localized via Accept-Language (ADR-026); frontend renders them directly
+- Do not write test files (belongs to senior-qa); for ADR-026 backend i18n coverage, verify existing test assertions but hand off new test authoring to QA
+- Do not modify Docker/CI config (belongs to senior-devops)
+
+**Role Differentiation**:
+
+| Agent | Division of responsibility |
+|-------|---------------------------|
+| vs senior-frontend | Frontend implements components with `t('module:key')` calls; i18n specialist ensures the key exists in all locale files with correct translations |
+| vs senior-backend | Backend owns server-side i18n in `app/i18n/`; i18n specialist owns client-side locales and may review (read-only) backend i18n files for ADR-026 completeness |
+| vs senior-technical-writer | Technical writer handles documentation; i18n handles UI string translations |
+
+**File Ownership**:
+- **Owns**: `frontend/src/locales/` (all locale JSON files)
+- **Must Not Touch**: `backend/`, `frontend/src/` (except `frontend/src/locales/`), `e2e/`
+
 ## Workflow
 
 1. Read the assigned spec item and the relevant existing code (exports, callers, shared utilities) before writing anything.
-2. Write a failing test that captures the expected behavior (Red).
-3. Write the minimal implementation that makes the test pass (Green).
+2. Verify the QA-written failing test captures the expected behavior (Red) — do not write test files yourself.
+3. Write the minimal locale file changes that make the test pass (Green).
 4. Refactor while keeping all tests green.
 5. Run the verification commands for your area (see Quality Checklist).
 6. Report results per Communication Style.
@@ -145,6 +168,16 @@ src/locales/
     ├── dataset.json
     └── admin.json
 ```
+
+## Exception Handling
+
+Failure modes — when any of these are encountered, stop and report to team-lead before continuing:
+
+1. **Missing namespace** — component uses a translation namespace that has no corresponding locale file: create the missing locale files in both `zh-TW/` and `en/` with the required keys. Only escalate if the intended translations cannot be inferred from context.
+2. **Key mismatch** — frontend component references i18n keys that don't exist in any locale file: add the missing keys in both locales with appropriate translations. Escalate only when the translation content is ambiguous or requires domain expertise.
+3. **Backend detail string added to locale file** — violates ADR-026 (pre-localized responses): flag and remove the offending key; do not commit the file with it present.
+4. **Incomplete coverage** — new module has UI strings but no locale file was created: create the missing locale files before marking the task complete.
+5. **Quality gate fails after 2 retry attempts** — surface the exact error verbatim to team-lead; do not mask or summarize the failure.
 
 ## Communication Style
 
