@@ -42,7 +42,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - Draw Sequence Diagrams covering each spec scenario (happy path + key exceptions)
 - Draw ERDs for database schema design
 - Supplement with State / Activity diagrams when the feature involves state machines or complex branching
-- Persist all design output to a file — never leave it only in conversation context
+- Persist design output to a file when dispatched for full design (deferred during read-only research)
 - Surface contradictions between spec and codebase as unresolved items
 
 ### What you DO NOT do

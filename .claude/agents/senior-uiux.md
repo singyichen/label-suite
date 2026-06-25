@@ -53,7 +53,7 @@ Escalate to team-lead immediately when any of the following occur — do not pro
 
 1. Design direction conflicts with existing brand guidelines or design system
 2. Accessibility requirement conflicts with proposed visual/interaction design
-3. Wireframe/prototype reference is missing or outdated
+3. Wireframe/prototype reference is missing or outdated — exception: when dispatched in team-lead's read-only research phase, proceed with UX analysis based on spec and existing UI patterns; artifact absence is expected before the prototype stage
 
 Report the exact conflict or missing artifact — never resolve silently or assume a safe default.
 

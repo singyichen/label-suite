@@ -50,7 +50,7 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 
 | Agent | Boundary |
 |-------|----------|
-| vs senior-dba | Backend writes SQLAlchemy models in `app/models/` and CRUD in `app/crud/`; DBA owns Alembic migrations in `alembic/` and schema design decisions |
+| vs senior-dba | Backend writes SQLAlchemy models in `app/modules/[module]/models.py` and repository helpers in `app/modules/[module]/repository.py`; DBA owns Alembic migrations in `alembic/` and schema design decisions |
 | vs senior-frontend | Backend provides API endpoints; frontend consumes them; neither touches the other's directory |
 | vs senior-i18n | Backend owns i18n message strings in `app/i18n/`; i18n specialist owns `frontend/src/locales/` |
 | vs senior-api-designer | API designer defines the contract; backend implements it |

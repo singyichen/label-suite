@@ -144,7 +144,7 @@ Returns `PaginatedResponse[[ResourceName]Response]` with `items`, `total`, `limi
 
 ## Auth Requirements
 
-- Protected endpoints require a valid JWT access token (`Authorization: Bearer <token>`).
+- Protected endpoints use httpOnly cookie session auth (ADR-021); both access and refresh tokens are delivered via httpOnly cookies, not `Authorization: Bearer` headers.
 - Public endpoints (login, refresh, health) explicitly declare `Auth Required: No`.
 - Task-scoped endpoints additionally verify `task_membership` for the requesting user.
 - Role-based field filtering: [describe which fields are hidden per role if applicable].
