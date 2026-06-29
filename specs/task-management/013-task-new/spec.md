@@ -500,7 +500,7 @@ flowchart LR
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件）。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
-- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（相依的輸出類型或 null）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en）、`defaultConfig`（預設值物件）。
+- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（相依的輸出類型或 null）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。

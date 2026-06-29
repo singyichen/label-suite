@@ -1,9 +1,14 @@
 {
   "task_category": "generation",
   "input_type": "single_item",
-  "output_type": "free_text",
   "typical_tasks": ["Question Answering（問答）", "Summarization（摘要）"],
-  "max_length": 512,
-  "show_reference_to_annotator": false,
-  "evaluation_reference_required": true
+  "outputs": [
+    {
+      "type": "free_text",
+      "config": {
+        "max_length": 512,
+        "show_reference": false
+      }
+    }
+  ]
 }

@@ -101,14 +101,14 @@ Each output type is a self-contained unit with its own config fragment schema, a
 |-------------|----------------|---------------|-----------------|
 | `single_label` | `label_options[]: {name, color?}` | Radio/button group | accuracy, f1_macro, cohen_kappa |
 | `multi_label` | `label_options[]: {name, color?}` | Checkbox group | f1_micro, f1_macro, hamming_loss |
-| `single_dim` | `dimensions[]: {name, min, max, step}` (1 element) | Slider | pearson_r, spearman_rho, mse |
+| `single_dim` | `dimension_name`, `min`, `max`, `step` | Slider | pearson_r, spearman_rho, mse |
 | `multi_dim` | `dimensions[]: {name, min, max, step}` | Multiple sliders | pearson_r (per dim), mean_mse |
 | `token_class` | `tag_options[]: {name, color?}`, `scheme` | Token-level tagging | token_f1, token_accuracy |
-| `boundary` | `boundary_type` | Boundary markers | boundary_f1 |
+| `boundary` | `boundary_types[]` | Boundary markers | boundary_f1 |
 | `span` | `entities[]` or `polarity_options[]`, `allow_overlapping`, `scheme` | Span selection + label | entity_f1, span_f1 |
-| `relation_triple` | `entity_types[]`, `relation_types[]` | Entity + relation drawing | triple_f1 |
-| `entity_relation` | `label_options[]`, `entity_markers` | Relation classification on pre-marked entities | f1_macro |
-| `free_text` | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` | Text area | ROUGE, BERTScore, BLEU |
+| `relation_triple` | `relation_types[]`, `source_output` | Entity + relation drawing | triple_f1 |
+| `entity_relation` | `label_options[]` | Relation classification on pre-marked entities | f1_macro |
+| `free_text` | `max_length`, `show_reference` | Text area | ROUGE, BERTScore, BLEU |
 
 #### 3. Output Dependencies
 

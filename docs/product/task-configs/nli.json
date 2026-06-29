@@ -1,11 +1,17 @@
 {
   "task_category": "classification",
   "input_type": "item_pair",
-  "output_type": "single_label",
   "typical_tasks": ["NLI（自然語言推斷）", "文本蘊含識別"],
-  "label_options": [
-    { "name": "entailment", "color": "#2ECC71" },
-    { "name": "neutral", "color": "#F39C12" },
-    { "name": "contradiction", "color": "#E74C3C" }
+  "outputs": [
+    {
+      "type": "single_label",
+      "config": {
+        "label_options": [
+          { "name": "entailment", "color": "#2ECC71" },
+          { "name": "neutral", "color": "#F39C12" },
+          { "name": "contradiction", "color": "#E74C3C" }
+        ]
+      }
+    }
   ]
 }

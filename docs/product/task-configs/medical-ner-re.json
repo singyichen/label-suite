@@ -1,30 +1,43 @@
 {
   "task_category": "sequence",
   "input_type": "single_item",
-  "output_type": "relation_triple",
   "typical_tasks": ["NER + Relation Extraction（醫學命名實體辨識與關係抽取）"],
-  "entity_types": [
-    { "name": "BODY", "color": "#4A90D9" },
-    { "name": "DISE", "color": "#E74C3C" },
-    { "name": "SYMP", "color": "#F39C12" },
-    { "name": "DRUG", "color": "#2ECC71" },
-    { "name": "INST", "color": "#9B59B6" },
-    { "name": "SUPP", "color": "#1ABC9C" },
-    { "name": "EXAM", "color": "#E67E22" },
-    { "name": "TREAT", "color": "#3498DB" },
-    { "name": "CHEM", "color": "#95A5A6" },
-    { "name": "TIME", "color": "#34495E" }
-  ],
-  "relation_types": [
-    "位於",
-    "產生",
-    "形成",
-    "流至",
-    "造成",
-    "治療",
-    "使用",
-    "檢查",
-    "診斷",
-    "屬於"
+  "outputs": [
+    {
+      "type": "span",
+      "config": {
+        "entities": [
+          { "name": "BODY", "color": "#4A90D9" },
+          { "name": "DISE", "color": "#E74C3C" },
+          { "name": "SYMP", "color": "#F39C12" },
+          { "name": "DRUG", "color": "#2ECC71" },
+          { "name": "INST", "color": "#9B59B6" },
+          { "name": "SUPP", "color": "#1ABC9C" },
+          { "name": "EXAM", "color": "#E67E22" },
+          { "name": "TREAT", "color": "#3498DB" },
+          { "name": "CHEM", "color": "#95A5A6" },
+          { "name": "TIME", "color": "#34495E" }
+        ],
+        "allow_overlapping": false
+      }
+    },
+    {
+      "type": "relation_triple",
+      "config": {
+        "relation_types": [
+          "位於",
+          "產生",
+          "形成",
+          "流至",
+          "造成",
+          "治療",
+          "使用",
+          "檢查",
+          "診斷",
+          "屬於"
+        ],
+        "source_output": "span"
+      }
+    }
   ]
 }

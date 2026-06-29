@@ -1,5 +1,5 @@
 {
-  "task_category": "mixed",
+  "task_category": "sequence",
   "typical_tasks": ["跨句 ABSA + 情緒回歸（YouTube 留言情感分析）"],
   "input_format": {
     "type": "dialogue_sequence",
@@ -29,7 +29,7 @@
     {
       "type": "multi_dim",
       "config": {
-        "va_dimensions": [
+        "dimensions": [
           { "name": "valence", "min": 1, "max": 9, "step": 1 },
           { "name": "arousal", "min": 1, "max": 9, "step": 1 }
         ]
