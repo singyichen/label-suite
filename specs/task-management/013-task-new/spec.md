@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 2.3.0
+版本: 3.0.1
 狀態: Draft
 ---
 
@@ -26,17 +26,26 @@
 - 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+- **v3.0.0 架構轉型**：本版依 ADR-029 將固定 `TASK_TYPE_ENUM` 替換為可組合的 `outputs[]` 模型。任務不再對應單一固定型別，而是由使用者從 `OUTPUT_TYPE_REGISTRY` 中選擇一至多個輸出類型組合而成。
 
 ## 規格常數
 
 - `SYSTEM_ROLES = user | super_admin`
 - `TASK_ROLES = project_leader | reviewer | annotator`
 - `TASK_CREATION_STEPS = step-1-basic | step-2-config-builder | step-3-startup-settings | step-4-guideline`
-- `TASK_TYPE_ENUM = single_sentence_classification | single_sentence_va_scoring | sequence_labeling | relation_extraction | sentence_pairs`
-- `SEQUENCE_LABELING_SUBTYPES = ner | aspect_list`
-- `SENTENCE_PAIRS_MODES = similarity | entailment`
-- `SENTENCE_PAIRS_RESPONSE_FORMATS = classification | scoring`
-- `SENTENCE_PAIRS_CONFIG_FIELDS = pair_mode | response_format | sentence_1_field | sentence_2_field | sentence_1_label | sentence_2_label | label_options | score_min | score_max | score_step | allow_unsure | note_enabled`
+- `TASK_CATEGORIES = classification | regression | sequence | generation`
+- `TASK_INPUT_TYPES = single_item | item_pair`
+- `OUTPUT_TYPE_KEYS = token_class | boundary | span | relation_triple | single_label | multi_label | entity_relation | single_dim | multi_dim | free_text`
+
+  | 大分類 | 對應輸出類型 |
+  |--------|-------------|
+  | `classification` | `single_label` · `multi_label` · `entity_relation` |
+  | `regression` | `single_dim` · `multi_dim` |
+  | `sequence` | `token_class` · `boundary` · `span` · `relation_triple` |
+  | `generation` | `free_text` |
+
+- `OUTPUT_TYPE_DEPENDENCIES`：`relation_triple` 依賴 `span`（當兩者同時被選取時，預覽與 config 須合併為整合模式）
+- `OUTPUT_TYPE_FIELD_TYPES = entity-list | tag-list | select | number | text | boolean | va-dimensions`
 - `TASK_CONFIG_MODES = visual | code`
 - `CONFIG_FORMATS = yaml | json`
 - `CONFIG_UPLOAD_FORMATS = yaml | yml | json`
@@ -50,17 +59,16 @@
 - `RUN_INIT_SAMPLING_MODE = by_count`
 - `RUN_INIT_COUNT_MIN = 1`
 - `RUN_ISOLATION_DEFAULT = enabled`
-- `SAMPLING_DEFAULTS_BY_TYPE` — 各任務類型的試標預設參數表（見下方）
+- `SAMPLING_DEFAULTS_BY_CATEGORY` — 各大分類的試標預設參數表（見下方）
 
-| 任務類型 | 建議 IAA | Std 上限 | 最少標記者數 | 試標比例參數（用於換算預設筆數） |
+| 大分類 | 建議 IAA | Std 上限 | 最少標記者數 | 試標比例參數（用於換算預設筆數） |
 | --- | --- | --- | --- | --- |
-| `single_sentence_classification` | 0.75 | — | 3 | 12% |
-| `single_sentence_va_scoring` | 0.75 | 0.10 | 5 | 15% |
-| `sequence_labeling` | 0.82 | — | 3 | 15% |
-| `relation_extraction` | 0.78 | — | 3 | 18% |
-| `sentence_pairs` | 0.76 | 0.15 | 3 | 12% |
+| `classification` | 0.75 | — | 3 | 12% |
+| `regression` | 0.75 | 0.10 | 5 | 15% |
+| `sequence` | 0.82 | — | 3 | 15% |
+| `generation` | 0.70 | — | 3 | 18% |
 
-> **注意**：`試標比例參數` 僅作為系統換算預設抽樣筆數之用（`round(dataset_total × trialPercent / 100)`），UI 不暴露百分比模式，使用者僅輸入筆數。
+> **注意**：`試標比例參數` 僅作為系統換算預設抽樣筆數之用（`round(dataset_total × trialPercent / 100)`），UI 不暴露百分比模式，使用者僅輸入筆數。當使用者選擇多個大分類時，取最高試標比例參數。
 
 - `IDEMPOTENCY_WINDOW_HOURS = 24`
 - `MOBILE_BP = 767px`
@@ -73,18 +81,18 @@ sequenceDiagram
     actor U as User / Super Admin
     participant UI as task-new
     participant API as Task API
-    participant Registry as task_type registry
+    participant Registry as OUTPUT_TYPE_REGISTRY
     participant DB as Database
 
     U->>UI: 進入 /task-new
     UI-->>U: 顯示 Step 1（基本資料）
 
-    U->>UI: 填寫任務名稱、上傳資料集、選擇 task_type
-    UI->>Registry: 載入該 task_type schema
-    Registry-->>UI: 回傳 schema
+    U->>UI: 填寫任務名稱、上傳資料集、選擇大分類+輸入類型+輸出類型
+    UI->>Registry: 依已選 output types 載入各自 schema
+    Registry-->>UI: 回傳各 output type 的 fields + defaultConfig
 
     U->>UI: 進入 Step 2（標記設定檔）
-    UI-->>U: 上方顯示標記預覽；下方左側顯示「範本/上傳設定檔 + schema 欄位」、右側顯示 YAML/JSON code 區
+    UI-->>U: 上方顯示標記預覽；下方左側顯示「範本/上傳設定檔 + schema 欄位（手風琴）」、右側顯示 YAML/JSON code 區
 
     U->>UI: 進入 Step 3（啟動設定）
     U->>UI: 設定試標抽樣筆數（含資料隔離）
@@ -93,7 +101,7 @@ sequenceDiagram
     U->>UI: 上傳說明 / 設定是否強制顯示
 
     U->>UI: 點擊建立任務
-    UI->>API: 提交任務 payload（含 startup settings）
+    UI->>API: 提交任務 payload（含 outputs[] config + startup settings）
     API->>DB: 建立 Task
     API->>DB: 建立 task_membership (creator -> project_leader)
     API->>DB: 寫入初始執行設定（試標抽樣、資料隔離）
@@ -105,8 +113,8 @@ sequenceDiagram
 | 步驟 | 角色 | 動作 | 系統回應 |
 |------|------|------|---------|
 | 1 | `user` / `super_admin` | 進入 `/task-new` | 顯示 Step 1 基本資料 |
-| 2 | `user` / `super_admin` | 選擇 `task_type` | 載入對應 schema 與 Step 2 設定介面 |
-| 3 | `user` / `super_admin` | 完成 Step 2 標記設定檔 | 產生可提交的 config |
+| 2 | `user` / `super_admin` | 選擇大分類、輸入類型與輸出類型 | 依 `OUTPUT_TYPE_REGISTRY` 載入各輸出類型的 schema |
+| 3 | `user` / `super_admin` | 完成 Step 2 標記設定檔 | 產生可提交的 `outputs[]` config |
 | 4 | `user` / `super_admin` | 完成 Step 3 啟動設定 | 記錄初始抽樣方式設定 |
 | 5 | `user` / `super_admin` | 完成 Step 4 標記說明設定（可略過） | 記錄說明資產與強制顯示設定 |
 | 6 | `user` / `super_admin` | 建立任務 | 建立 task、creator 的 `project_leader` membership、初始執行設定 |
@@ -132,7 +140,7 @@ sequenceDiagram
 **介面定義（需與 IA 導覽語意一致）**：
 
 - Step 1：`基本資料`
-  - 必要欄位：`task_name`、`dataset_file`、`task_type`
+  - 必要欄位：`task_name`、`dataset_file`、`task_type`（三組 chip）
   - `task_name`：
     - 單行文字輸入框，附字數計數器（上限 100 字）
   - `dataset_file`：
@@ -165,25 +173,27 @@ sequenceDiagram
       | 生成 | `自由文字` |
 
     - cascade 行為：未選大分類 → 顯示「請先選擇大分類」；選 1 個 → 直接顯示輸出類型（無分組標題）；選 2+ 個 → 依大分類分組顯示並加子標題；取消大分類 → 該組輸出類型消失且已選項自動取消
-  - `下一步` 啟用條件：`task_name` 非空 ∧ `deriveTaskType()` 回傳非空 ∧ dataset 檔案通過格式/大小/編碼檢查
+  - `下一步` 啟用條件：`task_name` 非空 ∧ 至少選擇一個輸出類型 ∧ dataset 檔案通過格式/大小/編碼檢查
 - Step 2：`標記設定檔`
   - 佈局：上方標記預覽區、下方左側「範本/上傳設定檔 + schema 設定區」、下方右側 code 區
   - 範本/上傳設定檔區塊：
-    - 範本按鈕：依 `task_type` 提供預設模板，點擊即載入
+    - 範本按鈕：依已選 output types 提供預設模板，點擊即載入
     - 上傳設定檔：支援 `CONFIG_UPLOAD_FORMATS`（yaml / yml / json），載入至 code 區由使用者手動儲存套用
-  - schema 設定區：由 `task_type registry` 動態生成欄位；欄位映射下拉選單僅列出 Step 1 已指定角色的欄位
+  - schema 設定區（手風琴佈局）：
+    - 無論選擇單一或多個輸出類型，每個輸出類型均以**手風琴面板**呈現，面板標題顯示序號與輸出類型名稱
+    - 手風琴面板可展開/收合；面板內部由 `OUTPUT_TYPE_REGISTRY` 動態生成對應的設定欄位
+    - 存在相依關係的輸出類型（如 `relation_triple` 依賴 `span`），面板標題附帶相依提示
+    - 各輸出類型設定欄位的 `entity-list` 新增按鈕文字需依語境顯示（如「新增標籤」、「新增實體類型」、「新增關係標籤」）
   - code 區：可編輯 YAML/JSON，提供格式切換與 `儲存` 按鈕；schema 設定與 code 區同步同一份 config
-  - 標記預覽區：顯示示例文本與可標記選項，設定變更時即時同步
-  - 研究情境必備任務型別（第一層）：
-    - `single_sentence_classification`（含多標籤）
-    - `single_sentence_va_scoring`（VA 雙維度評分：Valence + Arousal）
-    - `sequence_labeling`（含 `ner` 與 `aspect_list` 子模式）
-    - `relation_extraction`（Entity + Relation + Triple，可擴充五元組）
-  - 延伸任務型別（第二層）：`sentence_pairs`（相似度 / 蘊含）
-  - `下一步` 啟用條件：schema 必填欄位全部通過 ∧ 無 parser/schema error ∧ code 區無未儲存變更
+  - 標記預覽區：
+    - 已上傳資料集時，預覽顯示資料集的實際文字內容；未上傳時顯示預設範例文字
+    - 每個輸出類型必須有獨立的互動式預覽，使用者可直接操作體驗標記方式（見 FR-003g）
+    - 存在相依關係的輸出類型（如 `span` + `relation_triple`）合併為整合預覽
+    - 獨立輸出類型之間以分隔線區隔
+  - `下一步` 啟用條件：所有輸出類型的 schema 必填欄位全部通過 ∧ 無 parser/schema error ∧ code 區無未儲存變更
 - Step 3：`啟動設定`
   - 提示文案：「任務建立後再至 task-detail 邀請標記員與審核員」（本步驟不提供成員管理）
-  - `每回合抽樣筆數`：數字輸入框，抽樣模式固定 `by_count`；初始值依 `SAMPLING_DEFAULTS_BY_TYPE` 自動帶入（`round(dataset_total × trialPercent / 100)`）；驗證：`≥ RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
+  - `每回合抽樣筆數`：數字輸入框，抽樣模式固定 `by_count`；初始值依 `SAMPLING_DEFAULTS_BY_CATEGORY` 自動帶入（`round(dataset_total × trialPercent / 100)`）；驗證：`≥ RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
   - 資料隔離開關：toggle，預設 `RUN_ISOLATION_DEFAULT`（enabled），附說明文字
   - `下一步` 啟用條件：抽樣筆數通過驗證
 - Step 4：`標記說明`（選填，未填寫亦可提交）
@@ -209,88 +219,110 @@ sequenceDiagram
 
 **Prototype 互動規格（本版必做）**：
 
-- Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、已從三組 chip 推算出 `task_type`（`deriveTaskType()` 回傳非空值）、dataset 檔案通過格式/大小/編碼檢查後 enabled。
+- Step 1 `下一步` 按鈕預設 disabled；當且僅當 `task_name` 非空、至少選擇一個輸出類型、dataset 檔案通過格式/大小/編碼檢查後 enabled。
 - Step 1 dataset 上傳成功後不得隱藏 upload zone；upload zone 需持續可見，讓使用者可繼續追加多個資料集檔案；每個已上傳檔案在下方獨立一列顯示，各列含移除按鈕可單獨刪除；所有上傳檔案視為同一資料集的集合。
-- Step 2 `下一步` 按鈕預設 disabled；schema 必填欄位通過且無 parser/schema error 才 enabled。
+- Step 2 `下一步` 按鈕預設 disabled；所有輸出類型的 schema 必填欄位通過且無 parser/schema error 才 enabled。
 - Step 2 在 code 有未儲存變更時，`下一步` 必須維持 disabled 並提示先儲存；不得自動覆寫/自動儲存 code。
 - Step 3 `下一步` 按鈕預設 disabled；試標初始化設定通過驗證後才 enabled。
-- Step 4 的 `建立任務` 按鈕永遠可見；Step 4 為選填，未上傳說明也可提交。
+- Step 4 時操作列的 `下一步` 按鈕文字自動改為 `建立任務`（箭頭圖示隱藏），此按鈕永遠啟用；Step 4 為選填，未上傳說明也可提交。
 - 任一步驟點擊 `取消` 或離開頁面（側欄跳轉、重新整理、關閉分頁）時，若已有變更需顯示「離開將遺失未儲存內容」確認視窗。
 - 驗證錯誤顯示採欄位下方 inline message + 頁首 toast；訊息需指出欄位名稱與修正方向。
 
 ---
 
-### 使用者故事 2 — 標記設定檔以 registry/schema 驅動（優先級：P1）
+### 使用者故事 2 — 標記設定檔以 OUTPUT_TYPE_REGISTRY 驅動（優先級：P1）
 
-Step 2 必須由 `task_type registry` 與 schema 驅動，不得把任務類型寫死在核心流程。
+Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 中定義自己的 `fields`、`defaultConfig` 與欄位類型（`OUTPUT_TYPE_FIELD_TYPES`），不得把特定輸出類型的設定寫死在核心流程。
 
-**此優先級原因**：符合架構要求「新增 task type 不需修改核心流程」。
-**獨立測試方式**：切換不同 `task_type`，驗證 UI 與校驗規則由 schema 自動生成；左側 schema 與右側 code 內容一致。
+**此優先級原因**：符合架構要求「新增 output type 不需修改核心流程」（ADR-029）。
+**獨立測試方式**：選擇不同輸出類型組合，驗證 UI 欄位與預覽由 registry 自動生成；左側 schema 與右側 code 內容一致。
 
 **驗收情境**：
 
-1. **Given** 在 Step 2 且已選擇 `task_type`，**When** 載入頁面，**Then** 以對應 schema 產生設定欄位。
-2. **Given** 在 Step 2，**When** 調整 schema 欄位，**Then** 右側 code 區需即時呈現等價 YAML/JSON config。
-3. **Given** 在右側 code 區手動修改設定，**When** 點擊 `儲存`，**Then** 能映射欄位需同步更新；無效設定需顯示錯誤。
-4. **Given** 平台新增一種 task type 到 registry，**When** 使用者進入 Step 1/Step 2，**Then** 可選到新型別並看到對應設定，無需變更核心流程。
+1. **Given** 在 Step 2 且已選擇一個或多個輸出類型，**When** 載入頁面，**Then** 每個輸出類型以手風琴面板呈現各自的 schema 設定欄位。
+2. **Given** 在 Step 2，**When** 調整任一輸出類型的 schema 欄位，**Then** 右側 code 區需即時呈現等價 `outputs[]` 格式的 YAML/JSON config。
+3. **Given** 在右側 code 區手動修改設定，**When** 點擊 `儲存`，**Then** 左側 schema 欄位需同步更新；無效設定需顯示錯誤。
+4. **Given** 平台新增一種 output type 到 registry，**When** 使用者進入 Step 1/Step 2，**Then** 可選到該輸出類型並看到對應設定，無需變更核心流程。
 5. **Given** 使用者在 Step 2 上傳 `.yaml/.yml/.json` 設定檔，**When** 讀取成功，**Then** code 區應載入檔案內容、切換對應格式並要求使用者按儲存套用。
 6. **Given** 使用者切換語言（zh/en），**When** 當前 labels 仍為預設模板值，**Then** Step 2 預覽、schema 標籤與 code labels 應同步切換為對應語系文案。
 
 **介面定義**：
 
 - 區塊 A：`標記預覽（上方）`
-  - 必要元素：示例文本、可選標記/實體預覽（非 YAML 純文字）
+  - 每個輸出類型有各自的互動式預覽區塊，使用者可直接操作體驗標記方式
+  - 已上傳資料集時，預覽顯示資料集實際文字內容；未上傳時顯示預設範例文字
+  - 存在相依關係的輸出類型合併為整合預覽（如 `span` + `relation_triple` 合併為含圈選文字、實體列表、關係建構器的統一介面）
+  - 各輸出類型的預覽互動方式：
+
+    | 輸出類型 | 預覽互動方式 |
+    |----------|-------------|
+    | `token_class` | 標籤類型按鈕列 + 可點擊 token 網格（點擊 token 上 BIO 標記）+ 標記方案顯示 |
+    | `boundary` | 邊界類型選擇器 + 文段間隙可點擊插入/移除邊界標記（✂） |
+    | `span` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除） |
+    | `relation_triple` | 文字顯示 + E1/Relation/E2 下拉選單建構器 + 三元組列表（含刪除） |
+    | `single_label` | 文字顯示 + radio 風格可點選標籤 chip（單選） |
+    | `multi_label` | 文字顯示 + checkbox 風格可點選標籤 chip（多選）+ 已選顯示 |
+    | `entity_relation` | 實體配對卡片（E1 ↔ E2）+ 可點選關係標籤 chip |
+    | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿（含 min/max/當前值） |
+    | `multi_dim` | 文字顯示 + 多維度各自獨立滑桿 |
+    | `free_text` | 文字顯示 + 可編輯 textarea（含字數計數器）；啟用參考答案時顯示參考區塊 |
+
 - 區塊 B：`設定區（下方左側）`
-  - 必要元素：`從範本開始或者上傳設定檔` 區塊、schema 驅動欄位、即時校驗訊息
-  - 當 `sequence_labeling.subtype = ner` 時，schema 設定區需採漸進揭露：
-    - `核心設定`：包含 `entities`、`scheme`、`allow_overlapping`；建立任務時預設展開。
-    - `進階設定`：包含 `input_field`、`entity_field`、`allow_custom_entity_type`、`require_entity_type`、`allow_nested_entities`、`min_entity_length`、`max_entity_length`；預設收合，僅在需要客製資料欄位映射或進階限制時展開。
-    - `entities` 必須採 `{ name, color }[]` 結構，Visual 預覽與 code 區需共用同一份帶色彩資訊的 config source-of-truth。
-  - 當 `sequence_labeling.subtype = aspect_list` 時，schema 設定區需將欄位以三個視覺群組呈現：
-    - `欄位對應`：包含 `input_field` 與 `aspect_list_field` 兩個文字輸入欄位；桌面可雙欄並排，mobile 需改為單欄。
-    - `Aspect 編輯規則`：包含 `allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`require_sentiment_context_check`；每一項需以 toggle card 呈現，並清楚顯示啟用 / 停用狀態。
-    - `數量限制`：包含 `min_aspects` 與 `max_aspects` number input；桌面可雙欄並排，mobile 需改為單欄。
-  - 當 `task_type = sentence_pairs` 時，schema 設定區需至少呈現四個視覺群組：
-    - `任務模式`：包含 `pair_mode`（`similarity | entailment`）與 `response_format`（`classification | scoring`）；其中 `pair_mode = entailment` 時，`response_format` 僅允許 `classification`
-    - `欄位對應`：包含 `sentence_1_field`、`sentence_2_field`
-    - `顯示文案`：包含 `sentence_1_label`、`sentence_2_label`（例如 `Sentence A / Sentence B` 或 `Premise / Hypothesis`）
-    - `作答設定`：分類型顯示 `label_options[]`；評分型顯示 `score_min / score_max / score_step`；兩者皆可設定 `allow_unsure` 與 `note_enabled`
-  - 必要預設模板：
-    - 多標籤分類模板（對應 MultiLabel 實務）
-    - 單句 VA 雙維度評分模板（Valence / Arousal）
-    - 序列標記模板（至少包含 NER 與 Aspect List 抽取 / 校正兩種子模板）
-    - 關係抽取模板（對應 Entity + Relation + Triple 實務）
+  - 「從範本開始或者上傳設定檔」區塊置於最上方
+  - 每個輸出類型以手風琴面板呈現，面板標題含序號與輸出類型名稱，可展開/收合
+  - 面板內由 registry 動態生成欄位，支援 7 種欄位類型（`OUTPUT_TYPE_FIELD_TYPES`）：
+    - `entity-list`：可新增/刪除的 `{ name, color }[]` 列表，每列含色點、名稱輸入框與移除按鈕；新增按鈕文字依語境顯示
+    - `tag-list`：可輸入的標籤列表，按 Enter 新增，各標籤可個別移除
+    - `select`：下拉選單
+    - `number`：數字輸入框（含 min/max 限制）
+    - `text`：單行文字輸入框
+    - `boolean`：toggle 開關
+    - `va-dimensions`：維度卡片列表，每張卡片含維度名稱 + min/max/step 三欄，可新增/刪除維度
+  - 各輸出類型的 registry 欄位定義：
+
+    | 輸出類型 | 欄位 | 類型 | 必填 |
+    |----------|------|------|------|
+    | `token_class` | `entities`（標籤類型） | `entity-list` | 是 |
+    | `token_class` | `tagging_scheme`（標記方案） | `select`（BIO/BIOES/IOB2） | 是 |
+    | `boundary` | `boundary_types`（邊界類型） | `tag-list` | 是 |
+    | `span` | `entities`（實體類型） | `entity-list` | 是 |
+    | `span` | `allow_overlapping`（允許重疊標記） | `boolean` | 否 |
+    | `relation_triple` | `relation_types`（關係類型） | `tag-list` | 是 |
+    | `single_label` | `label_options`（標籤選項） | `entity-list` | 是 |
+    | `multi_label` | `label_options`（標籤選項） | `entity-list` | 是 |
+    | `multi_label` | `max_selections`（最多可選數量） | `number` | 否 |
+    | `entity_relation` | `label_options`（關係標籤） | `entity-list` | 是 |
+    | `single_dim` | `dimension_name`（維度名稱） | `text` | 是 |
+    | `single_dim` | `min` / `max` / `step` | `number` | 是 |
+    | `multi_dim` | `dimensions`（維度列表） | `va-dimensions` | 是 |
+    | `free_text` | `max_length`（最大字數） | `number` | 否 |
+    | `free_text` | `show_reference`（顯示參考答案） | `boolean` | 否 |
+
 - 區塊 C：`Code 區（下方右側）`
   - 必要元素：YAML/JSON 切換、可編輯區、`儲存` 按鈕、格式與 schema 驗證結果
+  - code 輸出格式遵循 ADR-029 `outputs[]` 結構：
+
+    ```yaml
+    input_type: single_item
+    outputs:
+      - type: <output_type_key>
+        config:
+          <field_key>: <value>
+    ```
 
 **行為規則**：
 
-- `task_type` 選項來源必須為 registry，而非前端硬編碼清單。
+- 輸出類型選項來源必須為 `OUTPUT_TYPE_REGISTRY`，而非前端硬編碼清單。
 - 左側 schema 欄位與右側 code 區需共享同一份結構化 config source-of-truth。
-- 提交前需通過 schema 驗證；失敗不得進入任務建立 API。
-- schema 欄位變更時，右側 code 區需輸出最新 YAML/JSON（由同一 source-of-truth 產生）。
-- 上方預覽需呈現「可操作的標記樣式」（示例文本 + 可選標籤/實體），並隨 schema 欄位變更即時更新。
-- 上方預覽之「可選標記」checkbox 必須可實際勾選；單選任務（評分、句對、單句分類且不允許多選）應限制一次一個選項。
-- `sequence_labeling` 必須提供 `subtype` 設定，以區分標準 `ner` span 標註與 `aspect_list` 抽取 / 校正流程；不同 subtype 的 schema 欄位、預覽與驗證規則必須由 registry/config 驅動。
-- `sequence_labeling.subtype = aspect_list` 的 Step 2 schema 必須可設定：輸入欄位名稱（預設 `sentence`）、輸出欄位名稱（預設 `aspects`）、是否允許修改原句、是否允許新增 aspect、是否允許刪除 aspect、是否要求 aspect 必須完全出現在句子中、最少 / 最多 aspect 數量、是否檢查 aspect 前後文情緒描述。
-- `sequence_labeling.subtype = aspect_list` 的 Step 2 schema 欄位仍需共享同一份 config source-of-truth；視覺上的分組與 toggle card 僅改變呈現方式，不得改變 config key、code 輸出或驗證語意。
-- `sequence_labeling.subtype = aspect_list` 的 Step 2 預覽必須呈現「句子 + 可編輯 Aspect List rows」的實際標記樣式，至少包含新增、刪除與文字編輯狀態；不得只顯示 NER entity type 選項。
-- `single_sentence_va_scoring` 必須為雙維度設定：`valence` 與 `arousal` 皆為必填，且需可各自配置分數範圍與步進（例如 `1..9`、`0.5`）。
-- `single_sentence_va_scoring` 上方預覽必須同時呈現兩列可操作評分元件（Valence 一列、Arousal 一列）。
-- `sentence_pairs` 的 Step 2 schema 必須支援 `pair_mode`（`similarity | entailment`）與 `response_format`（`classification | scoring`）；其中 `entailment` 只允許分類型，`similarity` 可為分類型或評分型。
-- `sentence_pairs` 的 Step 2 schema 必須可設定 `sentence_1_field`、`sentence_2_field`，供 annotation-workspace 讀取兩句文本；不得依賴固定欄位名稱硬編碼。
-- `sentence_pairs` 的 Step 2 schema 必須可設定 `sentence_1_label`、`sentence_2_label`，供 workspace 決定顯示 `Sentence A / Sentence B` 或 `Premise / Hypothesis` 等語意標籤。
-- `sentence_pairs` 的 `response_format = classification` 時，schema 必須支援 `label_options[]`；`pair_mode = entailment` 時，預設模板至少提供 `entailment / contradiction / neutral` 或等價三分類集合，且不得為空。
-- `sentence_pairs` 的 `response_format = scoring` 時，schema 必須支援 `score_min`、`score_max`、`score_step`；`score_min < score_max` 且 `score_step > 0` 為必填驗證。
-- `sentence_pairs` 的 Step 2 預覽必須呈現雙句卡片與對應作答控制項：分類型顯示單選標籤列，評分型顯示單列分數選擇器；不得只顯示單句分類標籤。
-- `sentence_pairs` 的標記結果 payload 必須可區分 `classification` 與 `scoring` 兩種輸出：分類型輸出 `label`，評分型輸出 `score`；兩者皆可依 config 選擇是否帶入 `note` 與 `unsure` 狀態。
+- 提交前需通過所有輸出類型的 schema 驗證；任一失敗不得進入任務建立 API。
+- schema 欄位變更時，右側 code 區需輸出最新 `outputs[]` 格式的 YAML/JSON。
+- 上方預覽需呈現每個輸出類型的互動式標記體驗，並隨 schema 欄位變更即時更新。
+- 預覽互動必須支援使用者實際操作（點擊、圈選、拖曳、輸入等），非僅靜態展示。
+- `entity-list` 欄位的新增按鈕文字必須依語境顯示（如 `single_label` 顯示「新增標籤」、`span` 顯示「新增實體類型」、`entity_relation` 顯示「新增關係標籤」、`token_class` 顯示「新增標籤類型」）。
+- `multi_dim` 的維度設定為通用模式，使用者可自訂任意維度名稱與 min/max/step，不限於特定維度（如 VA）。
+- 存在 `OUTPUT_TYPE_DEPENDENCIES` 的輸出類型（如 `span` + `relation_triple`）同時被選取時，預覽須合併為整合模式（含圈選文字建立實體、實體列表、關係建構器、三元組列表）。
 - code 內容儲存成功後，左側 schema 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤且保留使用者輸入。
-- 預覽示例文本需依任務型別切換（分類/VA 雙維度評分/序列標記/關係抽取/句對）。
-- 研究生目前實際任務需可直接對應至既有模板：
-  - MultiLabel 勾選分類 -> `single_sentence_classification`
-  - VA 分數標記 -> `single_sentence_va_scoring`
-  - Aspect 抽取 / 校正 -> `sequence_labeling` + `subtype = aspect_list`
-  - Entity + Relation + Triple（五元組流程）-> `relation_extraction`
+- 預覽文字來源：已上傳資料集時讀取實際欄位內容（依 `field_role_map` 中 `input` 角色的欄位），未上傳時顯示預設範例文字。
 
 ---
 
@@ -312,7 +344,7 @@ Project Leader 在建立任務時必須先完成啟動設定中的抽樣與資�
 - Step 3 必須提供試標初始化：
   - 抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`），UI 僅暴露筆數輸入
   - 抽樣驗證：筆數需 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`
-  - 選定任務類型後，預設值由 `round(dataset_total × trialPercent / 100)` 自動帶入
+  - 選定輸出類型後，預設值由 `round(dataset_total × trialPercent / 100)` 自動帶入（多個大分類時取最高比例）
   - 欄位文案必須明確為 `每回合抽樣筆數`
   - UI 不顯示抽樣分佈進度條，避免與 task-detail Overview「抽樣設定」的固定筆數模式不一致
 - Step 3 資料隔離開關預設 `RUN_ISOLATION_DEFAULT`。
@@ -354,16 +386,13 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - 上傳資料集格式不是 `.json`（`DATASET_UPLOAD_FORMATS` 僅允許 JSON）：阻擋加入並顯示格式錯誤提示。
 - 上傳資料集超過 `DATASET_MAX_FILE_SIZE_MB` 或非 `DATASET_ENCODING`：阻擋進下一步並顯示可定位錯誤。
 - 追加上傳的資料集檔案與已上傳檔案的頂層 JSON key 集合不一致：阻擋該檔案加入並顯示欄位不一致提示；已通過驗證的其他檔案不受影響。
-- 切換 `task_type` 後已填 Step 2 設定不相容：提示重置或轉換失敗欄位。
+- 變更輸出類型選擇後已填 Step 2 設定不相容：移除已被取消選擇的輸出類型之 config，保留仍選中的輸出類型之 config。
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
-- `sequence_labeling.subtype = aspect_list` 且未設定必要欄位名稱、Aspect List 輸出欄位或驗證規則：阻擋進入 Step 3 並顯示可定位錯誤。
-- `sequence_labeling.subtype = aspect_list` 設定 `require_exact_match_in_sentence = true`，但預覽或 code 範例中的 aspect 無法在句子中找到完全一致片段：顯示 schema/preview 驗證提示，不得視為有效設定。
-- `task_type = sentence_pairs` 但缺少 `sentence_1_field` 或 `sentence_2_field`：阻擋進入 Step 3 並顯示可定位錯誤。
-- `task_type = sentence_pairs` 且 `response_format = classification` 但 `label_options` 為空：阻擋進入 Step 3 並顯示可定位錯誤。
-- `task_type = sentence_pairs` 且 `pair_mode = entailment` 但 `response_format = scoring`：視為非法組合，阻擋進入 Step 3。
-- `task_type = sentence_pairs` 且 `response_format = scoring`，若 `score_min >= score_max`、`score_step <= 0` 或步進無法落在區間內：阻擋進入 Step 3 並顯示修正提示。
+- 任一輸出類型的 `entity-list` 或 `tag-list` 必填欄位為空或含空白項目：阻擋進入 Step 3 並顯示可定位錯誤。
+- `multi_label` 設定 `max_selections` 大於 `label_options` 數量：顯示提示但不阻擋（視為「不限」語意）。
+- `single_dim` 或 `multi_dim` 設定 `min >= max` 或 `step <= 0`：阻擋進入 Step 3 並顯示修正提示。
 - 使用者在 Step 1~4 有變更後直接離頁：需先跳確認視窗，選擇「離開」才可導頁。
 - 建立中（submit pending）重複點擊 `建立任務`：按鈕進入 loading 並禁止重複提交。
 - 建立任務 API 成功但 membership 建立失敗：整體交易需回滾，避免孤兒任務。
@@ -377,45 +406,43 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、`task_type`；未上傳任何資料集時不得進入下一步。`task_type` 由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型可多選）；輸出類型依大分類 cascade 過濾（見 FR-002e）；選擇結果透過 `deriveTaskType()` 推算出對應的 registry key。
-- **FR-002e**：Step 1 任務類型選擇器必須由 `TASK_TAXONOMY` 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（cascade 過濾，**組內單選、跨組可多選**，`role="radio"`）。大分類與輸入類型始終可見；**輸出類型依大分類 cascade 過濾**：未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應的輸出類型（不加分組標題），同組內互斥（單選）；選擇 2 個以上大分類時，輸出類型依已選大分類**分組顯示**，每組加分類名稱作為子標題，**每組內互斥（單選），但跨組可各選一個**；取消某個大分類時，該組輸出類型消失且已選的該組項目自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新；系統依選中的三組值透過 `deriveTaskType()` 推算出唯一的 registry key 作為 `state.taskType`。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、至少一個輸出類型；未上傳任何資料集時不得進入下一步。輸出類型由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型依大分類 cascade 過濾且跨組可多選）；選擇結果存為 `selectedOutputTypes[]`。
+- **FR-002e**：Step 1 任務類型選擇器必須由 `OUTPUT_TYPE_REGISTRY` 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（cascade 過濾，**組內單選、跨組可多選**，`role="radio"`）。大分類與輸入類型始終可見；**輸出類型依大分類 cascade 過濾**：未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應的輸出類型（不加分組標題），同組內互斥（單選）；選擇 2 個以上大分類時，輸出類型依已選大分類**分組顯示**，每組加分類名稱作為子標題，**每組內互斥（單選），但跨組可各選一個**；取消某個大分類時，該組輸出類型消失且已選的該組項目自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示前 10 筆原始資料預覽（欄位名稱 + 資料列）；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
-- **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭顯示原始 JSON key 名稱；**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。角色語意：`evidence` = 僅供標記員參考的背景資料；`input` = 標記的核心輸入對象（如 Premise / Hypothesis）；`output` = 預設第三方標記結果欄位（如 GPT 初標 Label）。欄位標頭直接顯示 JSON key 原始名稱（不做中文轉換），讓標記員對照說明文件時更直覺。
-- **FR-002c-1**：欄位角色指定行為規則：預設全部欄位角色為「不使用」；重新上傳或移除檔案後，所有欄位角色重設為「不使用」；最終角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload（僅包含已指定角色的欄位；未指定角色欄位不列入）。Step 2 中所有欄位映射下拉選單（如 `input_field`、`sentence_1_field`、`aspect_list_field` 等）僅列出 `field_role_map` 中有角色的欄位。欄位角色為 optional，全部留空代表不特別標記角色，所有欄位照常納入 config。
+- **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現已上傳 JSON 資料的**前 2 筆資料列**，表格欄位標頭顯示原始 JSON key 名稱；**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。欄位標頭直接顯示 JSON key 原始名稱（不做中文轉換）。
+- **FR-002c-1**：欄位角色指定行為規則：預設全部欄位角色為「不使用」；重新上傳或移除檔案後，所有欄位角色重設為「不使用」；最終角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload（僅包含已指定角色的欄位；未指定角色欄位不列入）。欄位角色為 optional，全部留空代表不特別標記角色，所有欄位照常納入 config。
 - **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案的頂層 JSON key 集合與已上傳檔案完全一致；不一致時阻擋加入並顯示欄位不一致提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理，顯示最新上傳檔案的前 2 筆資料。
-- **FR-003**：Step 2 標記設定檔必須由 `task_type registry` 與 schema 驅動。
+- **FR-003**：Step 2 標記設定檔必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型的 schema 欄位由 registry 定義。
 - **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
-- **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 欄位。
-- **FR-003a-2**：當 `sequence_labeling.subtype = aspect_list` 時，Step 2 左側 schema 欄位必須依序分為 `欄位對應`、`Aspect 編輯規則`、`數量限制` 三個視覺群組；boolean 規則需以 toggle card 呈現並顯示啟用 / 停用狀態；欄位與數量群組在 desktop 可雙欄並排，在 mobile viewport 必須單欄排列且不得水平 overflow。
-- **FR-003a-3**：當 `sequence_labeling.subtype = ner` 時，Step 2 左側 schema 欄位必須分為 `核心設定` 與 `進階設定`；`核心設定` 預設展開，`進階設定` 預設收合，且不得建立只存在於 `task-new` 的專用 config key。
-- **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過 schema 驗證。
-- **FR-003c**：新增 task type 應可透過 registry/schema 擴充，不修改核心流程（Step 1–4）。
-- **FR-003d**：系統預設必須至少提供研究情境第一層任務型別：`single_sentence_classification`、`single_sentence_va_scoring`、`sequence_labeling`、`relation_extraction`。
-- **FR-003d-1**：`single_sentence_va_scoring` 的 schema 必須包含兩個必填維度 `valence`、`arousal`，且可分別設定 `min/max/step`。
-- **FR-003d-2**：`single_sentence_va_scoring` 的標記結果 payload 必須同時包含兩個分數欄位：`valence`、`arousal`。
-- **FR-003d-3**：`sequence_labeling` 的 schema 必須包含 `subtype`，值域為 `SEQUENCE_LABELING_SUBTYPES`；當 `subtype = ner` 時，核心 schema 至少需支援 `entities`（`{ name, color }[]`）、`scheme`（`IOB2 | BIOES`）、`allow_overlapping`，並可透過進階設定補充 `input_field`、`entity_field`、`allow_custom_entity_type`、`require_entity_type`、`allow_nested_entities`、`min_entity_length`、`max_entity_length`。
-- **FR-003d-3a**：`sequence_labeling.subtype = ner` 的 code/source-of-truth key 必須統一使用 `entities`、`scheme`、`allow_overlapping`；若載入舊版 config 使用 `entity_types`、`span_scheme`、`allow_overlapping_spans`，系統可做相容轉換，但儲存後輸出必須回寫為統一 key。
-- **FR-003d-4**：當 `sequence_labeling.subtype = aspect_list` 時，schema 必須支援 Aspect List 抽取 / 校正設定，至少包含 `input_field`、`aspect_list_field`、`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`min_aspects`、`max_aspects`、`require_sentiment_context_check`。`require_sentiment_context_check = true` 時，annotation-workspace 應於每個 aspect row 旁顯示情緒描述提示文字，供標記者自行判斷；此為**軟性指引**（不觸發系統硬性攔截），與 `require_exact_match_in_sentence` 的硬性阻擋行為不同。
-- **FR-003d-5**：當 `sequence_labeling.subtype = aspect_list` 時，Step 2 預覽必須呈現可編輯句子與 Aspect List rows，且新增、刪除、修改 aspect 的狀態需反映到同一份 config/preview source-of-truth。Aspect List rows 的輸入機制為**自由文字輸入框（text input）**，每列代表一個 aspect 文字片段；不採用 NER 式的句子 span 拖拉選取。
-- **FR-003d-6**：當 `sequence_labeling.subtype = aspect_list` 且 `require_exact_match_in_sentence = true` 時，系統必須提供 aspect 完全出現在句子中的驗證規則；驗證失敗時不得允許進入下一步。
-- **FR-003d-7**：當 `sequence_labeling.subtype = aspect_list` 且 `allow_sentence_edit = true` 時，標記結果 payload 必須能區分原始句子、修正後句子與 Aspect List，避免覆寫資料集原文。
-- **FR-003d-8**：當 `sequence_labeling.subtype = aspect_list` 任務進入 reviewer 審核流程時，annotation-workspace 必須可使用同一份 task config / Aspect List schema 產生 reviewer-corrected result；Reviewer 可新增、刪除、修改 aspect，且系統必須保留 annotator 原始提交與 reviewer 修正 diff。
-- **FR-003d-9**：`relation_extraction` 的 schema 必須支援 `entity_types`（`{ name, color }[]`）、`relation_types`（`{ name }[]`）與 `tuple_mode`（`triple | five_tuple`）；Step 2 schema 設定區需呈現可編輯的實體類型清單與關係類型清單。
-- **FR-003d-10**：`relation_extraction` 的 Step 2 預覽必須呈現：實體類型按鈕列、實體清單、關係建構器（E1 / Relation / E2 三欄下拉選單）與 Triple 清單；不得只顯示一般分類標籤。
-- **FR-003d-11**：當 `task_type = sentence_pairs` 時，schema 必須支援 `pair_mode`（`similarity | entailment`）、`response_format`（`classification | scoring`）、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`allow_unsure`、`note_enabled`。
-- **FR-003d-12**：當 `task_type = sentence_pairs` 且 `response_format = classification` 時，schema 必須支援 `label_options[]`；`pair_mode = entailment` 時僅允許分類型，且 `label_options[]` 不得為空。
-- **FR-003d-13**：當 `task_type = sentence_pairs` 且 `response_format = scoring` 時，schema 必須支援 `score_min`、`score_max`、`score_step`；其值需可直接供 annotation-workspace 與 dataset-analysis 共用，不得在下游重算。
-- **FR-003d-14**：`sentence_pairs` 的 Step 2 預覽必須呈現兩句文本卡片與實際作答控制項；`pair_mode = entailment` 時預設使用 `Premise / Hypothesis` 語意標籤，`pair_mode = similarity` 時預設使用 `Sentence A / Sentence B`，但皆可由 `sentence_1_label / sentence_2_label` 覆寫。
+- **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 設定欄位。
+- **FR-003a-2**：Step 2 左側 schema 設定區必須採手風琴佈局，無論選擇單一或多個輸出類型，每個輸出類型均以獨立手風琴面板呈現，面板標題顯示序號與輸出類型名稱。
+- **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過所有輸出類型的 schema 驗證。
+- **FR-003c**：新增 output type 應可透過 registry 擴充，不修改核心流程（Step 1–4）。
+- **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須至少包含 10 種輸出類型：`token_class`、`boundary`、`span`、`relation_triple`、`single_label`、`multi_label`、`entity_relation`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱。
+- **FR-003d-1**：`token_class` 必須支援 `entities`（`{ name, color }[]`）與 `tagging_scheme`（`BIO | BIOES | IOB2`）。預覽：標籤類型按鈕列（含 `O` 標籤）+ 可點擊 token 網格，點擊 token 依當前選中標籤推斷 `B-`/`I-` 前綴。驗證：`entities` 不得為空且不得含空白項目。
+- **FR-003d-2**：`boundary` 必須支援 `boundary_types`（string[]）。預覽：邊界類型選擇列 + 文段間隙可點擊按鈕（插入/移除邊界標記），底部顯示已標記數量。驗證：`boundary_types` 不得為空且不得含空白項目。
+- **FR-003d-3**：`span` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。驗證：`entities` 不得為空且不得含空白項目。
+- **FR-003d-4**：`relation_triple` 必須支援 `relation_types`（string[]），並宣告依賴 `span`（`OUTPUT_TYPE_DEPENDENCIES`）。預覽：三欄下拉選單（E1/Arg1、Relation、E2/Arg2）+ Add 按鈕 + 三元組列表（Subject → Relation badge → Object，含刪除按鈕）。驗證：`relation_types` 不得為空且不得含空白項目。
+- **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
+- **FR-003d-6**：`multi_label` 必須支援 `label_options`（`{ name, color }[]`）與 `max_selections`（number，0 = 不限）。預覽：文字區塊 + checkbox 風格 chip 按鈕（可多選），下方顯示已選數量。驗證：`label_options` 不得為空且不得含空白項目。
+- **FR-003d-7**：`entity_relation` 必須支援 `label_options`（`{ name, color }[]`）。預覽：兩張實體卡片（E1 ↔ E2，含雙向箭頭）+ 關係標籤 chip 按鈕（互斥單選）。驗證：`label_options` 不得為空且不得含空白項目。
+- **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider（含 min/max/當前值標籤）。驗證：`min` < `max`、`step` > `0`。
+- **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。預覽：每個維度以獨立區塊呈現維度名稱與 range slider；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`。
+- **FR-003d-10**：`free_text` 必須支援 `max_length`（number）與 `show_reference`（boolean）。預覽：文字區塊 + textarea（含字元計數 `N / max_length`）；`show_reference = true` 時額外顯示參考答案提示區。驗證：`max_length` > `0`。
+- **FR-003d-11**：當 `selectedOutputTypes` 同時包含具依賴關係的輸出類型（如 `span` + `relation_triple`）時，預覽區必須以統一模式呈現：共用同一份文本，使用者在文本上圈選產生 span 實體，下方建立 relation triple；實體列表與三元組列表合併呈現。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
+- **FR-003d-12**：Step 2 左側 schema 設定區每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題可點擊切換展開/收合。有依賴關係時，面板標題下方必須顯示依賴提示。
+- **FR-003d-13**：輸出類型依賴處理規則：新增 `relation_triple` 時若 `span` 未被選中，系統必須自動將 `span` 加入 `selectedOutputTypes`；取消選擇 `span` 時，必須一併取消依賴 `span` 的所有輸出類型（如 `relation_triple`）。
 - **FR-003e**：code 區必須支援可編輯 YAML/JSON，並提供 `儲存` 操作以套用回 schema 設定欄位。
 - **FR-003f**：當 code 區有未儲存變更且使用者嘗試進入下一步時，系統必須阻擋前進並提示先儲存；不得自動儲存。
-- **FR-003g**：Step 2 上方必須提供實際標記預覽區，顯示示例文本與可標記選項，且在設定變更時即時同步更新。
+- **FR-003g**：Step 2 上方必須提供每個輸出類型的互動式標記預覽區，使用者可實際操作體驗標記方式（點擊、圈選、拖曳、輸入等），且在設定變更時即時同步更新。
+- **FR-003g-1**：預覽文字來源：已上傳資料集時讀取 `field_role_map` 中 `input` 角色欄位的實際內容；未上傳時顯示各輸出類型的預設範例文字。
 - **FR-003h**：Step 2 必須支援上傳 `CONFIG_UPLOAD_FORMATS` 設定檔，載入至 code 區並由使用者手動儲存套用。
-- **FR-003i**：Step 2 預設模板需支援 i18n（至少 zh/en）；切換語言時，若使用中為預設 labels，需同步轉換為對應語言 labels。
+- **FR-003i**：Step 2 預設模板需支援 i18n（至少 zh/en）；切換語言時，若 code 區無未儲存變更（`codeDraftDirty = false`）且使用中為預設 labels，需同步轉換為對應語言 labels；若有未儲存變更則不自動覆寫，保留使用者手動修改。
 - **FR-004**：Step 3 必須支援啟動設定，包含抽樣方式與資料隔離。
 - **FR-004a**：Step 3 不提供任務成員加入功能；介面必須明確提示使用者於任務建立後到 `task-detail` 進行成員邀請。
-- **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_TYPE` 對應任務類型自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`。
-- **FR-004c-1**：選擇任務類型後，Step 3 的 `每回合抽樣筆數` 必須自動預填換算後的預設筆數。
+- **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_CATEGORY` 對應大分類自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`；多個大分類時取最高比例。
+- **FR-004c-1**：選擇輸出類型後，Step 3 的 `每回合抽樣筆數` 必須自動預填換算後的預設筆數。
 - **FR-004d**：試標抽樣驗證：筆數 `>= RUN_INIT_COUNT_MIN` 且 `< 資料集總筆數`。
 - **FR-004d-1**：Step 3 抽樣設定欄位文案必須明確為 `每回合抽樣筆數`，且 UI 不提供抽樣分佈進度條或百分比分配視覺化。
 - **FR-004e**：Step 3 必須提供資料隔離開關，預設值為 `RUN_ISOLATION_DEFAULT`。
@@ -434,7 +461,9 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-008**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成四步流程。
 - **FR-008a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 編輯與驗證、Step 3 抽樣與資料隔離設定、Step 4 上傳或略過、建立成功導頁、取消返回。
 - **FR-008c**：在 mobile viewport 下，annotation-workspace 右側說明區塊收合後，主內容區必須維持單欄滿寬佈局，不得因收合狀態套用桌面欄位寬度造成跑版。
-- **FR-009**：任務型別模板需覆蓋研究生現行任務情境（MultiLabel、VA 雙維度評分、Aspect List 抽取 / 校正、Entity/Relation/Triple）。
+- **FR-008d**：頁面必須支援 `prefers-reduced-motion: reduce`，啟用時所有過渡動畫降至最低。
+- **FR-008e**：頁面必須支援深色模式（`data-theme="dark"`），所有表單元素、卡片、預覽區域、步驟指示器皆須正確適配暗色配色。
+- **FR-009**：輸出類型組合需覆蓋研究生現行任務情境：情感分類（`single_label`）、多標籤分類（`multi_label`）、多維度評分（`multi_dim`）、區間標記（`span`）、關係抽取（`span` + `relation_triple`）、自由文字（`free_text`）。
 
 ### 使用者流程與導頁
 
@@ -468,13 +497,11 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`task_type`、`config`、`field_role_map: Record<string, FieldRole>`（Step 1 預覽表格中使用者為欄位指定的角色映射；key 為 JSON 欄位名稱，value 為 `evidence | input | output`；未指定角色的欄位不列入）、`initial_members`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件）。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
-- **TaskTypeRegistryItem**：任務類型定義。欄位：`task_type`、`display_name`、`schema`、`default_templates`。
-- **TaskConfig**：schema 驗證後設定內容（供 annotation/dataset 模組使用）。
-- **SequenceLabelingTaskConfig**：`sequence_labeling` 專用設定。欄位：`subtype`（`ner` / `aspect_list`）、`schema`、`validation_rules`、`preview_sample`。
-- **AspectListTaskConfig**：`sequence_labeling.subtype = aspect_list` 專用設定。欄位：`input_field`、`aspect_list_field`、`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`min_aspects`、`max_aspects`、`require_sentiment_context_check`。
-- **SentencePairsTaskConfig**：`sentence_pairs` 專用設定。欄位：`pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`label_options[]?`、`score_min?`、`score_max?`、`score_step?`、`allow_unsure`、`note_enabled`。
+- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（相依的輸出類型或 null）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en）、`defaultConfig`（預設值物件）。
+- **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
 - **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
@@ -496,9 +523,9 @@ flowchart LR
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
 | 014 | Task Detail | 建立成功後導向與初始任務資料（含抽樣與資料隔離方式）；成員邀請改於 task-detail member-management 執行 |
-| 015 | Annotation Workspace | 讀取 task config 與標記說明設定；`sequence_labeling.subtype = aspect_list` 時需呈現句子校正、Aspect List 編輯控制項與 reviewer 直接修正 / diff 追溯；`sentence_pairs` 時需依 `pair_mode / response_format` 呈現句對介面與提交 payload |
-| 016 | Dataset Stats | 依 `task_type` 與 config 呈現統計 |
-| 017 | Dataset Quality | 依 `task_type` 與 config 計算品質指標，`sentence_pairs` 需依 `pair_mode / response_format` 分流 |
+| 015 | Annotation Workspace | 讀取 `outputs[]` config 驅動標記介面；依各 output type 的 schema 呈現對應標記控制項 |
+| 016 | Dataset Stats | 依 `outputs[]` config 呈現統計 |
+| 017 | Dataset Quality | 依 `outputs[]` config 計算品質指標 |
 
 ---
 
@@ -509,19 +536,16 @@ flowchart LR
 - **SC-002b**：Step 3 設定的抽樣方式可於建立後在 task-detail overview 正確呈現。
 - **SC-002c**：Step 3 會明確提示成員邀請需於 task-detail 執行，建立後可在 member-management 看到對應入口。
 - **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
-- **SC-003**：Step 2 可依 registry/schema 產生設定介面，且 schema 設定區與 code 區內容一致。
-- **SC-003a**：Step 2 上方預覽可呈現接近實際標記介面，並可反映當前 labels/entities/scoring 設定。
-- **SC-003b**：Step 2 預覽可勾選標記選項；單選情境一次僅可勾選一個。
-- **SC-003c**：Step 2 預覽示例文字會依任務型別切換，不同任務看到對應語意情境。
-- **SC-003d**：`single_sentence_va_scoring` 在 Step 2 可同時完成 Valence 與 Arousal 兩軸設定，且預覽同頁呈現兩列評分元件。
-- **SC-003e**：`sequence_labeling.subtype = aspect_list` 在 Step 2 可完成 Aspect List 專用設定，且預覽同頁呈現句子與可編輯 Aspect List rows。
-- **SC-003e-1**：`sequence_labeling.subtype = aspect_list` 在 Step 2 的 schema 設定區會顯示 `欄位對應`、`Aspect 編輯規則`、`數量限制` 三個群組；五個 boolean 規則以 toggle card 呈現，切換後 code 區與預覽同步更新。
-- **SC-003f**：`sequence_labeling.subtype = aspect_list` 啟用 exact match 驗證時，不存在於句子中的 aspect 會被標示為錯誤並阻擋進入下一步。
-- **SC-003g**：`relation_extraction` 在 Step 2 可完成 entity_types 與 relation_types 設定，且預覽同頁呈現實體類型按鈕列與關係建構器（E1 / Relation / E2 三欄下拉選單）。
-- **SC-003h**：`sentence_pairs` 在 Step 2 可完成 `pair_mode`、`response_format`、兩句欄位對應與作答設定；分類型同頁呈現單選標籤列，評分型同頁呈現分數選擇器。
-- **SC-003i**：`sentence_pairs` 設為 `pair_mode = entailment` 時，系統會阻擋 `response_format = scoring` 等非法組合；缺少 `sentence_1_field` / `sentence_2_field` 或分類標籤為空時皆不得進入下一步。
-- **SC-004**：新增 task type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
-- **SC-004a**：研究生現行四種任務情境（MultiLabel、VA 雙維度評分、Aspect List 抽取 / 校正、Entity/Relation/Triple）可在 `task-new` 以預設模板完成設定。
+- **SC-003**：Step 2 可依 `OUTPUT_TYPE_REGISTRY` 產生設定介面，且 schema 設定區與 code 區內容一致。
+- **SC-003a**：Step 2 上方預覽可呈現每個輸出類型的互動式標記體驗，並可反映當前設定。
+- **SC-003b**：Step 2 預覽支援使用者實際操作（點擊 token 上標、圈選文字、拖曳滑桿、選取標籤等）。
+- **SC-003c**：Step 2 預覽文字在已上傳資料集時顯示資料集實際內容，未上傳時顯示預設範例文字。
+- **SC-003d**：10 種輸出類型均可在 Step 2 完成 schema 設定與預覽互動。
+- **SC-003e**：`span` + `relation_triple` 同時選取時，預覽合併為整合模式（圈選文字 + 實體列表 + 關係建構器 + 三元組列表）。
+- **SC-003f**：`multi_dim` 可設定任意數量與名稱的維度，不限於特定維度。
+- **SC-003g**：`entity-list` 欄位的新增按鈕文字依輸出類型語境正確顯示。
+- **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
+- **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、區間標記、關係抽取、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
 - **SC-004c**：上傳 `.yaml/.yml/.json` 設定檔後，code 區可載入內容並等待使用者手動儲存套用。
 - **SC-004d**：切換 zh/en 時，新增任務頁 sidebar 與 Step 2 預設模板 labels 皆可正確切換語系。
@@ -546,7 +570,7 @@ flowchart LR
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
-- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] 涉及 output type 的行為皆要求由 `OUTPUT_TYPE_REGISTRY` 驅動，不以硬編任務邏輯定義。
 - [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
@@ -567,6 +591,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 3.0.1 | 2026-06-29 | **prototype sync**：(1) FR-003d-1~10 補充每種輸出類型的預覽行為描述與驗證規則；(2) 新增 FR-003d-11（ABSA 統一預覽互動規則）、FR-003d-12（手風琴展開/收合行為與依賴提示）、FR-003d-13（輸出類型依賴自動處理規則：relation_triple ↔ span）；(3) 修正 Step 4 按鈕描述為共用「下一步」按鈕文字改為「建立任務」；(4) 新增 FR-008d（prefers-reduced-motion 支援）、FR-008e（深色模式支援）；(5) FR-003i 補充 codeDraftDirty 判斷條件 |
+| 3.0.0 | 2026-06-29 | **架構轉型（ADR-029）**：將固定 `TASK_TYPE_ENUM` 替換為可組合 `outputs[]` 模型。(1) 移除 `TASK_TYPE_ENUM`、`SEQUENCE_LABELING_SUBTYPES`、`SENTENCE_PAIRS_*` 常數，新增 `TASK_CATEGORIES`、`TASK_INPUT_TYPES`、`OUTPUT_TYPE_KEYS`（10 種）、`OUTPUT_TYPE_DEPENDENCIES`、`OUTPUT_TYPE_FIELD_TYPES`（7 種）；(2) Step 2 schema 設定區改為手風琴佈局，單一或多個輸出類型均以獨立面板呈現；(3) Step 2 預覽改為每個輸出類型各自的互動式標記體驗（10 種互動方式）；(4) `entity-list` 新增按鈕文字依輸出類型語境化；(5) `multi_dim` 去除 VA 品牌，改為通用維度設定；(6) 預覽支援顯示上傳資料集的實際文字內容；(7) FR-003d 系列重寫為 10 個 output type 各自的 schema 需求；(8) 關鍵實體改為 `OutputConfig`、`OutputTypeRegistryItem`，移除 `SequenceLabelingTaskConfig`、`AspectListTaskConfig`、`SentencePairsTaskConfig`；(9) `SAMPLING_DEFAULTS_BY_TYPE` 改為 `SAMPLING_DEFAULTS_BY_CATEGORY`；(10) code 輸出格式改為 ADR-029 `outputs[]` 結構 |
 | 2.3.0 | 2026-06-16 | Step 1 輸出類型兩項變更：(1) 依大分類 cascade 過濾（未選時顯示提示、選 1 個直接顯示、選 2+ 個分組顯示、取消大分類自動清除已選）；(2) 組內互斥改為單選（radio）、跨組可多選。Sequence output_type 合併 multi_type_span/single_type_span/span_with_polarity → span，與 task-type-taxonomy.md 對齊。更新 FR-002、FR-002e、介面定義 |
 | 2.2.0 | 2026-06-13 | Step 1 欄位預覽表格改為角色映射（checkbox → role dropdown）：每欄可指定 Evidence / Input / Output 角色；新增 FIELD_ROLES 常數與 FieldRole 型別；TaskDraftInput 將 config_fields: string[] 改為 field_role_map: Record<string, FieldRole>；更新 FR-002c、FR-002c-1；欄位標頭直接顯示原始 JSON key 名稱 |
 | 2.1.3 | 2026-06-13 | 修正 Step 1 畫面元素描述：`task_type` 由「下拉選單」改為「三組 chip（大分類多選、輸入類型單選、輸出類型多選，同時顯示、無 cascade 依賴）」，與 prototype 現況一致 |
@@ -584,28 +610,8 @@ flowchart LR
 | 2.0.0 | 2026-05-07 | 補齊 `sentence_pairs` task config 契約：新增 `pair_mode / response_format / sentence_1_field / sentence_2_field / label_options / score_*` 規格、Step 2 預覽與驗證規則，並同步下游 workspace / analysis 相依 |
 | 1.9.6 | 2026-04-29 | 補充 relation_extraction 細規：新增 FR-003d-9（schema 欄位：entity_types / relation_types / tuple_mode）、FR-003d-10（Step 2 預覽：實體類型按鈕、實體清單、關係建構器、Triple 清單）、SC-003g（驗收標準） |
 | 1.9.5 | 2026-04-29 | 統一 NER schema 與 task-detail：`sequence_labeling.subtype = ner` 改為核心設定 + 進階設定的漸進揭露；統一 key 為 `entities` / `scheme` / `allow_overlapping`，並保留進階欄位於收合區塊 |
-| 1.9.4 | 2026-04-28 | 同步 Aspect List reviewer 直接修正需求：Reviewer 可新增、刪除、修改標記員提交的 aspect，並保留原始提交與 correction diff |
-| 1.9.3 | 2026-04-28 | 同步 Aspect List Step 2 視覺排版：schema 設定區分為欄位對應、Aspect 編輯規則、數量限制；boolean 規則改以 toggle card 呈現並補充 mobile 單欄要求 |
-| 1.9.2 | 2026-04-28 | 補強 FR-003d-4/5：明確 `require_sentiment_context_check` 為軟性指引（非硬性攔截）；明確 Aspect List rows 採自由文字輸入框，非 NER 式 span 選取 |
-| 1.9.1 | 2026-04-28 | 補強 `sequence_labeling` 規格：新增 `SEQUENCE_LABELING_SUBTYPES = ner | aspect_list`；定義 Aspect List 抽取 / 校正的 schema 欄位、預覽、驗證規則、payload 原則與下游 annotation-workspace 相依 |
-| 1.9.0 | 2026-04-28 | 新增 `SAMPLING_DEFAULTS_BY_TYPE`：各任務類型的試標預設參數（IAA、Std 上限、最少標記者數、試標比例）；Step 3 選定任務類型後自動帶入預設值；task-detail 抽樣設定區塊依任務類型動態顯示；`targetStd: null` 明確代表不適用（新增 FR-004c-1） |
-| 1.8.9 | 2026-04-23 | 補充跨規格相依說明：Task Detail 的 Dry Run 轉態門檻為所有 `active annotator` 完成各自全部試標樣本後，方可由 `dry_run_in_progress` 進入 `waiting_iaa_confirmation` |
-| 1.8.8 | 2026-04-23 | 同步 annotation-workspace mobile 收合行為：右側說明區塊收合後，主內容區仍維持單欄滿寬，避免跑版（新增 FR-008c、SC-005b） |
-| 1.8.7 | 2026-04-23 | 同步 annotation-workspace 圖片檔案預覽行為：在「說明與檔案」點擊圖片 `預覽` 後，於檔案列表下方顯示圖片預覽區塊（新增 FR-005d、SC-006b） |
-| 1.8.6 | 2026-04-23 | 同步 annotation-workspace 行為：`開始標記前強制顯示` 改為同一使用者首次進入任務時顯示一次；確認閱讀後不會在每次 page load 重複彈窗（新增 FR-005c、SC-006a） |
-| 1.8.5 | 2026-04-22 | VA 任務型別調整：以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression` 作為研究情境預設；新增 Valence/Arousal 雙維度必填、雙列預覽與 payload 欄位要求（FR-003d-1/2、SC-003d） |
-| 1.8.4 | 2026-04-22 | Step 3 用詞同步：將「執行初始化」統一改為「抽樣方式」（含流程、介面定義、FR/SC 與跨規格依賴描述） |
-| 1.8.3 | 2026-04-22 | 同步 prototype 建立成功導向：Step 4 點擊 `建立任務` 成功後，改為導向 `task-detail?task_id=...`（不再返回 task-list） |
-| 1.8.2 | 2026-04-22 | `TASK_TYPE_ENUM` 改為與 Step 1 任務類型下拉實際 value 完全一致：`single_sentence_classification / single_sentence_va_scoring / sequence_labeling / relation_extraction / sentence_pairs`（不含生成式標記） |
-| 1.8.1 | 2026-04-22 | 補充共用常數：`TASK_TYPE_ENUM = Single Sentence | Sequence Labeling | Sentence Pairs | Generative Labeling`，與 `010-task-list` 對齊 |
-| 1.0.0 | 2026-04-20 | 初版建立：依 IA 重建 `task-new` 規格（三步流程、registry-driven 標記設定檔、說明設定） |
-| 1.1.0 | 2026-04-20 | 補強 prototype 導向規格：步驟按鈕啟用條件、離頁確認、Visual/Code 同步策略、空/有資料狀態與錯誤呈現規則 |
-| 1.2.0 | 2026-04-20 | 同步 IA：新增研究情境任務型別覆蓋（MultiLabel/VA/Aspect/Relation）；將 FR-008 改為任務覆蓋要求 |
-| 1.3.0 | 2026-04-20 | 同步 Code 編輯需求：新增 `儲存到 Visual` 行為、Code->Visual 儲存失敗停留規則、對應 FR/SC |
-| 1.4.0 | 2026-04-20 | Step 2 Visual 預覽由 YAML 改為實際標記介面預覽（示例文本 + 可選標記），並新增對應 FR/SC |
-| 1.5.0 | 2026-04-20 | Step 2 版面重排：移除 Visual/Code 切頁，改為上方預覽 + 下方左設定右 code，並將範本區移至任務說明下方 |
-| 1.6.0 | 2026-04-21 | 同步 prototype 最新行為：範本/上傳設定檔移回 Step 2 左側；新增 config 檔上傳（YAML/YML/JSON）；code 未儲存阻擋下一步；預覽可勾選與任務別示例文本；Step 3 改為說明內容可編輯 + 上傳檔案分離；新增任務頁 sidebar i18n 補齊 |
-| 1.7.0 | 2026-04-21 | 流程改為四步：新增 Step 3 啟動設定（成員管理 + Run 初始化），原標記說明改為 Step 4；同步更新流程圖、FR、SC、關鍵實體與導覽 |
-| 1.7.1 | 2026-04-21 | 同步用詞本地化：將 Step 3 相關描述由 Run/Draft/dataset_total/Dry Run/Official Run 改為「執行初始化／試標抽樣／資料集總筆數／試標與正式標記」 |
-| 1.8.0 | 2026-04-21 | 同步 Step 3 成員管理雙來源：新增 `platform-users`（僅 system role=user）與 `email-invite`（寄送邀請連結）規格；補充重複成員阻擋、email 驗證、mobile（375px）輸入列堆疊規則與對應 FR/SC |
-| 2.0.0 | 2026-05-07 | 資料集上傳改支援多檔：Step 1 upload zone 支援同時選取/拖曳多個資料集檔案；每個已上傳檔案獨立一列；各檔案可獨立移除；所有上傳檔案合併為一個資料集；更新 FR-002/FR-002a/FR-002b 與 Prototype 互動規格 |
+| 1.9.4 | 2026-04-28 | 同步 Aspect List reviewer 直接修正需求 |
+| 1.9.3 | 2026-04-28 | 同步 Aspect List Step 2 視覺排版 |
+| 1.9.2 | 2026-04-28 | 補強 FR-003d-4/5 |
+| 1.9.1 | 2026-04-28 | 補強 `sequence_labeling` 規格 |
+| 1.9.0 | 2026-04-28 | 新增 `SAMPLING_DEFAULTS_BY_TYPE` |
