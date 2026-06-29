@@ -1,0 +1,47 @@
+[
+  {
+    "id": "er-001",
+    "entity1": "Metformin",
+    "entity1_type": "DRUG",
+    "entity2": "第二型糖尿病",
+    "entity2_type": "DISE",
+    "context": "Metformin 是第二型糖尿病的第一線口服降血糖藥物，可改善胰島素阻抗。",
+    "gold_relation": "treats"
+  },
+  {
+    "id": "er-002",
+    "entity1": "吸菸",
+    "entity1_type": "RISK",
+    "entity2": "肺癌",
+    "entity2_type": "DISE",
+    "context": "長期吸菸是肺癌最主要的危險因子，戒菸可顯著降低肺癌發生率。",
+    "gold_relation": "causes"
+  },
+  {
+    "id": "er-003",
+    "entity1": "阿斯匹靈",
+    "entity1_type": "DRUG",
+    "entity2": "心肌梗塞",
+    "entity2_type": "DISE",
+    "context": "低劑量阿斯匹靈可抑制血小板凝集，常用於預防心肌梗塞再次發作。",
+    "gold_relation": "prevents"
+  },
+  {
+    "id": "er-004",
+    "entity1": "糖尿病",
+    "entity1_type": "DISE",
+    "entity2": "視網膜病變",
+    "entity2_type": "DISE",
+    "context": "糖尿病若血糖控制不佳，會導致微血管病變，其中視網膜病變是最常見的眼部併發症。",
+    "gold_relation": "causes"
+  },
+  {
+    "id": "er-005",
+    "entity1": "疫苗接種",
+    "entity1_type": "TREAT",
+    "entity2": "流感",
+    "entity2_type": "DISE",
+    "context": "每年施打流感疫苗可有效預防季節性流感，特別建議高風險族群接種。",
+    "gold_relation": "prevents"
+  }
+]

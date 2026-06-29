@@ -1,0 +1,32 @@
+[
+  {
+    "id": "bnd-001",
+    "text": "慢性腎臟病的早期症狀通常不明顯患者可能僅有輕微疲勞或食慾下降隨著病程進展可能出現水腫高血壓及貧血等問題定期健康檢查有助於早期發現及時介入治療可延緩腎功能惡化",
+    "gold_boundaries": [
+      { "position": 13, "type": "sentence" },
+      { "position": 26, "type": "sentence" },
+      { "position": 44, "type": "sentence" },
+      { "position": 55, "type": "sentence" }
+    ]
+  },
+  {
+    "id": "bnd-002",
+    "text": "第二型糖尿病是一種慢性代謝疾病主要特徵是胰島素阻抗與相對不足的胰島素分泌風險因子包括肥胖缺乏運動家族遺傳及年齡增長治療方式涵蓋飲食控制規律運動及口服降血糖藥物必要時需搭配胰島素注射",
+    "gold_boundaries": [
+      { "position": 16, "type": "sentence" },
+      { "position": 33, "type": "sentence" },
+      { "position": 49, "type": "sentence" },
+      { "position": 65, "type": "sentence" }
+    ]
+  },
+  {
+    "id": "bnd-003",
+    "text": "心房顫動是最常見的心律不整之一可導致血栓形成增加中風風險患者常見症狀包括心悸呼吸困難胸悶及頭暈部分患者可能完全無症狀僅在例行心電圖檢查時才被發現治療目標包括控制心率預防血栓及恢復正常心律",
+    "gold_boundaries": [
+      { "position": 12, "type": "sentence" },
+      { "position": 23, "type": "sentence" },
+      { "position": 39, "type": "sentence" },
+      { "position": 56, "type": "sentence" }
+    ]
+  }
+]

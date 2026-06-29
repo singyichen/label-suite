@@ -1,0 +1,52 @@
+[
+  {
+    "id": "rel-001",
+    "text": "高血壓若未妥善控制，可能導致動脈硬化，進而引發冠狀動脈心臟病或腦中風。長期服用降壓藥物如 Amlodipine 有助於控制血壓，降低併發症風險。",
+    "entities": [
+      { "text": "高血壓", "type": "DISE", "start": 0, "end": 2 },
+      { "text": "動脈硬化", "type": "SYMP", "start": 12, "end": 15 },
+      { "text": "冠狀動脈心臟病", "type": "DISE", "start": 20, "end": 26 },
+      { "text": "腦中風", "type": "DISE", "start": 28, "end": 30 },
+      { "text": "Amlodipine", "type": "DRUG", "start": 46, "end": 55 }
+    ],
+    "gold_triples": [
+      { "subj": "高血壓", "rel": "causes", "obj": "動脈硬化" },
+      { "subj": "動脈硬化", "rel": "causes", "obj": "冠狀動脈心臟病" },
+      { "subj": "動脈硬化", "rel": "causes", "obj": "腦中風" },
+      { "subj": "Amlodipine", "rel": "treats", "obj": "高血壓" }
+    ]
+  },
+  {
+    "id": "rel-002",
+    "text": "糖尿病視網膜病變是糖尿病的常見併發症，好發於眼底視網膜微血管。定期眼底鏡檢查可早期診斷，雷射光凝固術可有效防止病變惡化。",
+    "entities": [
+      { "text": "糖尿病視網膜病變", "type": "DISE", "start": 0, "end": 7 },
+      { "text": "糖尿病", "type": "DISE", "start": 9, "end": 11 },
+      { "text": "視網膜微血管", "type": "BODY", "start": 20, "end": 25 },
+      { "text": "眼底鏡檢查", "type": "EXAM", "start": 28, "end": 32 },
+      { "text": "雷射光凝固術", "type": "TREAT", "start": 39, "end": 44 }
+    ],
+    "gold_triples": [
+      { "subj": "糖尿病", "rel": "causes", "obj": "糖尿病視網膜病變" },
+      { "subj": "糖尿病視網膜病變", "rel": "located_in", "obj": "視網膜微血管" },
+      { "subj": "眼底鏡檢查", "rel": "diagnoses", "obj": "糖尿病視網膜病變" },
+      { "subj": "雷射光凝固術", "rel": "treats", "obj": "糖尿病視網膜病變" }
+    ]
+  },
+  {
+    "id": "rel-003",
+    "text": "氣喘患者吸入過敏原後，支氣管平滑肌會痙攣收縮，導致呼吸困難。吸入型類固醇如 Budesonide 可抑制氣道發炎，預防氣喘發作。",
+    "entities": [
+      { "text": "氣喘", "type": "DISE", "start": 0, "end": 1 },
+      { "text": "支氣管平滑肌", "type": "BODY", "start": 11, "end": 16 },
+      { "text": "呼吸困難", "type": "SYMP", "start": 23, "end": 26 },
+      { "text": "Budesonide", "type": "DRUG", "start": 37, "end": 46 }
+    ],
+    "gold_triples": [
+      { "subj": "氣喘", "rel": "located_in", "obj": "支氣管平滑肌" },
+      { "subj": "氣喘", "rel": "causes", "obj": "呼吸困難" },
+      { "subj": "Budesonide", "rel": "treats", "obj": "氣喘" },
+      { "subj": "Budesonide", "rel": "prevents", "obj": "氣喘" }
+    ]
+  }
+]

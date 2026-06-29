@@ -1,0 +1,38 @@
+[
+  {
+    "id": "span-001",
+    "text": "這款筆電的螢幕解析度非常高，色彩還原度也很好，但鍵盤手感偏硬，打字久了手指會痠。",
+    "gold_spans": [
+      { "text": "筆電", "type": "target", "start": 2, "end": 3 },
+      { "text": "螢幕解析度", "type": "aspect", "start": 5, "end": 9 },
+      { "text": "非常高", "type": "opinion", "start": 10, "end": 12 },
+      { "text": "色彩還原度", "type": "aspect", "start": 14, "end": 18 },
+      { "text": "很好", "type": "opinion", "start": 20, "end": 21 },
+      { "text": "鍵盤手感", "type": "aspect", "start": 24, "end": 27 },
+      { "text": "偏硬", "type": "opinion", "start": 28, "end": 29 }
+    ]
+  },
+  {
+    "id": "span-002",
+    "text": "飯店的地理位置絕佳，步行五分鐘就到捷運站，房間乾淨但隔音效果差，半夜都能聽到走廊的聲音。",
+    "gold_spans": [
+      { "text": "飯店", "type": "target", "start": 0, "end": 1 },
+      { "text": "地理位置", "type": "aspect", "start": 3, "end": 6 },
+      { "text": "絕佳", "type": "opinion", "start": 7, "end": 8 },
+      { "text": "房間", "type": "target", "start": 20, "end": 21 },
+      { "text": "隔音效果", "type": "aspect", "start": 25, "end": 28 },
+      { "text": "差", "type": "opinion", "start": 29, "end": 29 }
+    ]
+  },
+  {
+    "id": "span-003",
+    "text": "這家餐廳的牛排煎得恰到好處，外酥內嫩，但服務速度太慢，等了四十分鐘才上菜。",
+    "gold_spans": [
+      { "text": "餐廳", "type": "target", "start": 2, "end": 3 },
+      { "text": "牛排", "type": "aspect", "start": 5, "end": 6 },
+      { "text": "恰到好處", "type": "opinion", "start": 9, "end": 12 },
+      { "text": "服務速度", "type": "aspect", "start": 20, "end": 23 },
+      { "text": "太慢", "type": "opinion", "start": 24, "end": 25 }
+    ]
+  }
+]
