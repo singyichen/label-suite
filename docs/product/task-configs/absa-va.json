@@ -1,0 +1,39 @@
+{
+  "task_category": "mixed",
+  "typical_tasks": ["跨句 ABSA + 情緒回歸（YouTube 留言情感分析）"],
+  "input_format": {
+    "type": "dialogue_sequence",
+    "description": "對話序列，需呈現留言者的互動順序"
+  },
+  "cross_utterance": true,
+  "input_type": "single_item",
+  "outputs": [
+    {
+      "type": "span",
+      "config": {
+        "entities": [
+          { "name": "Target", "color": "#3498DB" },
+          { "name": "Aspect", "color": "#2ECC71" },
+          { "name": "Opinion", "color": "#E74C3C" }
+        ],
+        "allow_overlapping": true
+      }
+    },
+    {
+      "type": "relation_triple",
+      "config": {
+        "relation_types": ["has_aspect", "has_opinion"],
+        "source_output": "span"
+      }
+    },
+    {
+      "type": "multi_dim",
+      "config": {
+        "va_dimensions": [
+          { "name": "valence", "min": 1, "max": 9, "step": 1 },
+          { "name": "arousal", "min": 1, "max": 9, "step": 1 }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "task_category": "regression",
+  "input_type": "single_item",
+  "typical_tasks": ["Multi-Dimensional Rating（多維度評分）", "Fluency + Adequacy Scoring"],
+  "outputs": [
+    {
+      "type": "multi_dim",
+      "config": {
+        "dimensions": [
+          { "name": "fluency", "min": 1, "max": 5, "step": 1 },
+          { "name": "adequacy", "min": 1, "max": 5, "step": 1 },
+          { "name": "coherence", "min": 1, "max": 5, "step": 1 }
+        ]
+      }
+    }
+  ]
+}

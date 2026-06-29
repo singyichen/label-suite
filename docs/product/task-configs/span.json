@@ -1,0 +1,18 @@
+{
+  "task_category": "sequence",
+  "input_type": "single_item",
+  "typical_tasks": ["Span Extraction（區間標記）", "Aspect Term Extraction"],
+  "outputs": [
+    {
+      "type": "span",
+      "config": {
+        "entities": [
+          { "name": "target", "color": "#3498DB" },
+          { "name": "aspect", "color": "#2ECC71" },
+          { "name": "opinion", "color": "#E74C3C" }
+        ],
+        "allow_overlapping": false
+      }
+    }
+  ]
+}

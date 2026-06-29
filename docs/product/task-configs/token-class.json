@@ -1,0 +1,19 @@
+{
+  "task_category": "sequence",
+  "input_type": "single_item",
+  "typical_tasks": ["NER Token Classification（命名實體辨識）"],
+  "outputs": [
+    {
+      "type": "token_class",
+      "config": {
+        "entities": [
+          { "name": "PER", "color": "#E74C3C" },
+          { "name": "ORG", "color": "#3498DB" },
+          { "name": "LOC", "color": "#2ECC71" },
+          { "name": "TIME", "color": "#F39C12" }
+        ],
+        "tagging_scheme": "BIO"
+      }
+    }
+  ]
+}

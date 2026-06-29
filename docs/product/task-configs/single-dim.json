@@ -1,0 +1,16 @@
+{
+  "task_category": "regression",
+  "input_type": "single_item",
+  "typical_tasks": ["Readability Scoring（可讀性評分）", "Quality Rating"],
+  "outputs": [
+    {
+      "type": "single_dim",
+      "config": {
+        "dimension_name": "readability",
+        "min": 1,
+        "max": 5,
+        "step": 1
+      }
+    }
+  ]
+}

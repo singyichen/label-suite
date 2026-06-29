@@ -1,0 +1,13 @@
+{
+  "task_category": "sequence",
+  "input_type": "single_item",
+  "typical_tasks": ["Relation Extraction（關係抽取）"],
+  "outputs": [
+    {
+      "type": "relation_triple",
+      "config": {
+        "relation_types": ["causes", "treats", "prevents", "diagnoses", "located_in"]
+      }
+    }
+  ]
+}
