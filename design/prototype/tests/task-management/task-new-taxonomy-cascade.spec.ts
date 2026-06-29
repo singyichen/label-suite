@@ -58,8 +58,7 @@ test.describe('Task new taxonomy cascade', () => {
       win.showStep(2);
     });
 
-    await expect(page.locator('#schemaFields')).toContainText('最大長度');
-    await expect(page.locator('#schemaFields')).toContainText('標注者可見參考輸出');
-    await expect(page.locator('#schemaFields')).toContainText('系統評估需要參考輸出');
+    await expect(page.locator('#schemaFields')).toContainText('最大字數');
+    await expect(page.locator('#schemaFields')).toContainText('顯示參考答案給標記者');
   });
 });

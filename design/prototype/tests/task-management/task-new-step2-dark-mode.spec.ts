@@ -43,8 +43,11 @@ async function openStep2ForTask(page: Page, taskType: (typeof TASK_TYPES)[number
 }
 
 async function expectDarkFormSurface(locator: Locator) {
-  await expect(locator).toHaveCSS('background-color', 'rgb(22, 22, 31)');
-  await expect(locator).toHaveCSS('color', 'rgb(226, 232, 240)');
+  const isReadonly = await locator.evaluate((el) => (el as HTMLInputElement).readOnly === true);
+  const expectedBg = isReadonly ? 'rgb(31, 31, 40)' : 'rgb(22, 22, 31)';
+  const expectedColor = isReadonly ? 'rgb(156, 163, 175)' : 'rgb(226, 232, 240)';
+  await expect(locator).toHaveCSS('background-color', expectedBg);
+  await expect(locator).toHaveCSS('color', expectedColor);
 }
 
 test.describe('Task new step 2 dark mode', () => {
