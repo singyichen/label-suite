@@ -103,7 +103,7 @@ Each output type is a self-contained unit with its own config fragment schema, a
 | `multi_label` | `label_options[]: {name, color?}` | Checkbox group | f1_micro, f1_macro, hamming_loss |
 | `single_dim` | `dimension_name`, `min`, `max`, `step` | Slider | pearson_r, spearman_rho, mse |
 | `multi_dim` | `dimensions[]: {name, min, max, step}` | Multiple sliders | pearson_r (per dim), mean_mse |
-| `token_class` | `tag_options[]: {name, color?}`, `scheme` | Token-level tagging | token_f1, token_accuracy |
+| `token_class` | `entities[]: {name, color?}`, `tagging_scheme` | Token-level tagging | token_f1, token_accuracy |
 | `boundary` | `boundary_types[]` | Boundary markers | boundary_f1 |
 | `span` | `entities[]` or `polarity_options[]`, `allow_overlapping`, `scheme` | Span selection + label | entity_f1, span_f1 |
 | `relation_triple` | `relation_types[]`, `source_output` | Entity + relation drawing | triple_f1 |
@@ -178,8 +178,7 @@ task:
     - type: free_text
       config:
         max_length: 500
-        show_reference_to_annotator: false
-        evaluation_reference_required: true
+        show_reference: false
   field_role_map:
     instruction: input
     background: input

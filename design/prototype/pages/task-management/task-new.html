@@ -1173,10 +1173,10 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '多維度回歸', en: 'Multi-dimensional regression',
     source_output: null,
     fields: [
-      { key: 'va_dimensions', type: 'va-dimensions', zh: '維度設定', en: 'Dimension settings', required: true },
+      { key: 'dimensions', type: 'va-dimensions', zh: '維度設定', en: 'Dimension settings', required: true },
     ],
     defaultConfig: {
-      va_dimensions: [
+      dimensions: [
         { name: 'valence', min: 1, max: 9, step: 1 },
         { name: 'arousal', min: 1, max: 9, step: 1 },
       ],
@@ -1227,7 +1227,7 @@ var ABSA_MULTI_OUTPUT_TEMPLATE = {
     {
       type: 'multi_dim',
       config: {
-        va_dimensions: [
+        dimensions: [
           { name: 'valence', min: 1, max: 9, step: 1 },
           { name: 'arousal', min: 1, max: 9, step: 1 },
         ],
@@ -2686,7 +2686,7 @@ function getDatasetPairTexts() {
 
 /* ── Multi-dim (VA regression) preview ── */
 function renderMultiDimPreview(container, config) {
-  var dims = Array.isArray(config.va_dimensions) ? config.va_dimensions : [];
+  var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
   if (dims.length === 0) {
     var empty = document.createElement('div');
     empty.className = 'annotation-preview-empty';
@@ -3505,7 +3505,12 @@ function renderRelationTripleOnlyPreview(container, outKey) {
     state.previewTriples.forEach(function(triple, i) {
       var row = document.createElement('div'); row.className = 'absa-relation-row'; row.style.display = 'flex'; row.style.alignItems = 'center';
       var content = document.createElement('span'); content.style.flex = '1';
-      content.innerHTML = '<span style="font-weight:600;font-size:11px">' + triple.subj + '</span> <span class="absa-arrow">→</span> <span class="absa-relation-badge">' + triple.rel + '</span> <span class="absa-arrow">→</span> <span style="font-weight:600;font-size:11px">' + triple.obj + '</span>';
+      var subjSpan = document.createElement('span'); subjSpan.style.cssText = 'font-weight:600;font-size:11px'; subjSpan.textContent = triple.subj;
+      var arrow1 = document.createElement('span'); arrow1.className = 'absa-arrow'; arrow1.textContent = '→';
+      var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
+      var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = '→';
+      var objSpan = document.createElement('span'); objSpan.style.cssText = 'font-weight:600;font-size:11px'; objSpan.textContent = triple.obj;
+      content.appendChild(subjSpan); content.appendChild(document.createTextNode(' ')); content.appendChild(arrow1); content.appendChild(document.createTextNode(' ')); content.appendChild(relBadge); content.appendChild(document.createTextNode(' ')); content.appendChild(arrow2); content.appendChild(document.createTextNode(' ')); content.appendChild(objSpan);
       row.appendChild(content);
       var delBtn = document.createElement('button'); delBtn.type = 'button';
       delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;margin-left:8px;';

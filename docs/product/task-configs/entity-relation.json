@@ -1,6 +1,6 @@
 {
   "task_category": "classification",
-  "input_type": "item_pair",
+  "input_type": "single_item",
   "typical_tasks": ["Entity Relation Classification（實體關係分類）"],
   "outputs": [
     {
