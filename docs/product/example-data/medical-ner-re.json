@@ -1,0 +1,133 @@
+[
+  {
+    "id": "med-001",
+    "text": "而左心耳位於左心房前外側，是一個囊袋狀、突起的小空腔，容易在心房顫動時於左心耳內產生淤滯，形成血栓，血栓脫落流至腦部或其他器官時，即會造成腦中風或甚至全身性栓塞。",
+    "entities": [
+      { "text": "左心耳", "type": "BODY", "start": 1, "end": 3 },
+      { "text": "左心房", "type": "BODY", "start": 6, "end": 8 },
+      { "text": "心房", "type": "BODY", "start": 30, "end": 31 },
+      { "text": "左心耳", "type": "BODY", "start": 36, "end": 38 },
+      { "text": "淤滯", "type": "SYMP", "start": 42, "end": 43 },
+      { "text": "血栓", "type": "SYMP", "start": 47, "end": 48 },
+      { "text": "血栓", "type": "SYMP", "start": 50, "end": 51 },
+      { "text": "腦部", "type": "BODY", "start": 56, "end": 57 },
+      { "text": "器官", "type": "BODY", "start": 61, "end": 62 },
+      { "text": "腦中風", "type": "DISE", "start": 69, "end": 71 },
+      { "text": "全身性栓塞", "type": "DISE", "start": 75, "end": 79 }
+    ],
+    "triples": [
+      {
+        "entity1": { "text": "左心耳", "start": 1, "end": 3 },
+        "relation": { "text": "位於", "start": 4, "end": 5 },
+        "entity2": { "text": "左心房", "start": 6, "end": 8 }
+      },
+      {
+        "entity1": { "text": "左心耳", "start": 1, "end": 3 },
+        "relation": { "text": "產生", "start": 40, "end": 41 },
+        "entity2": { "text": "淤滯", "start": 42, "end": 43 }
+      },
+      {
+        "entity1": { "text": "左心耳", "start": 1, "end": 3 },
+        "relation": { "text": "形成", "start": 45, "end": 46 },
+        "entity2": { "text": "血栓", "start": 47, "end": 48 }
+      },
+      {
+        "entity1": { "text": "淤滯", "start": 42, "end": 43 },
+        "relation": { "text": "形成", "start": 45, "end": 46 },
+        "entity2": { "text": "血栓", "start": 47, "end": 48 }
+      },
+      {
+        "entity1": { "text": "血栓", "start": 50, "end": 51 },
+        "relation": { "text": "流至", "start": 54, "end": 55 },
+        "entity2": { "text": "腦部", "start": 56, "end": 57 }
+      },
+      {
+        "entity1": { "text": "血栓", "start": 50, "end": 51 },
+        "relation": { "text": "流至", "start": 54, "end": 55 },
+        "entity2": { "text": "器官", "start": 61, "end": 62 }
+      },
+      {
+        "entity1": { "text": "血栓", "start": 50, "end": 51 },
+        "relation": { "text": "造成", "start": 67, "end": 68 },
+        "entity2": { "text": "腦中風", "start": 69, "end": 71 }
+      },
+      {
+        "entity1": { "text": "血栓", "start": 50, "end": 51 },
+        "relation": { "text": "造成", "start": 67, "end": 68 },
+        "entity2": { "text": "全身性栓塞", "start": 75, "end": 79 }
+      }
+    ]
+  },
+  {
+    "id": "med-002",
+    "text": "患者因胸痛至急診就醫，經心電圖檢查發現ST段上升，診斷為急性心肌梗塞，醫師立即給予阿斯匹靈及肝素治療，並安排心導管介入手術。",
+    "entities": [
+      { "text": "胸痛", "type": "SYMP", "start": 3, "end": 4 },
+      { "text": "急診", "type": "INST", "start": 6, "end": 7 },
+      { "text": "心電圖", "type": "EXAM", "start": 12, "end": 14 },
+      { "text": "ST段上升", "type": "SYMP", "start": 19, "end": 23 },
+      { "text": "急性心肌梗塞", "type": "DISE", "start": 28, "end": 33 },
+      { "text": "阿斯匹靈", "type": "DRUG", "start": 41, "end": 44 },
+      { "text": "肝素", "type": "DRUG", "start": 46, "end": 47 },
+      { "text": "心導管介入手術", "type": "TREAT", "start": 54, "end": 60 }
+    ],
+    "triples": [
+      {
+        "entity1": { "text": "心電圖", "start": 12, "end": 14 },
+        "relation": { "text": "發現", "start": 17, "end": 18 },
+        "entity2": { "text": "ST段上升", "start": 19, "end": 23 }
+      },
+      {
+        "entity1": { "text": "ST段上升", "start": 19, "end": 23 },
+        "relation": { "text": "診斷", "start": 25, "end": 26 },
+        "entity2": { "text": "急性心肌梗塞", "start": 28, "end": 33 }
+      },
+      {
+        "entity1": { "text": "阿斯匹靈", "start": 41, "end": 44 },
+        "relation": { "text": "治療", "start": 48, "end": 49 },
+        "entity2": { "text": "急性心肌梗塞", "start": 28, "end": 33 }
+      },
+      {
+        "entity1": { "text": "肝素", "start": 46, "end": 47 },
+        "relation": { "text": "治療", "start": 48, "end": 49 },
+        "entity2": { "text": "急性心肌梗塞", "start": 28, "end": 33 }
+      }
+    ]
+  },
+  {
+    "id": "med-003",
+    "text": "糖尿病患者長期血糖控制不佳，容易引發視網膜病變及腎病變，需定期至眼科進行眼底檢查，並使用Metformin控制血糖。",
+    "entities": [
+      { "text": "糖尿病", "type": "DISE", "start": 0, "end": 2 },
+      { "text": "血糖控制不佳", "type": "SYMP", "start": 7, "end": 12 },
+      { "text": "視網膜病變", "type": "DISE", "start": 18, "end": 22 },
+      { "text": "腎病變", "type": "DISE", "start": 24, "end": 26 },
+      { "text": "眼科", "type": "INST", "start": 32, "end": 33 },
+      { "text": "眼底檢查", "type": "EXAM", "start": 36, "end": 39 },
+      { "text": "Metformin", "type": "DRUG", "start": 44, "end": 52 }
+    ],
+    "triples": [
+      {
+        "entity1": { "text": "糖尿病", "start": 0, "end": 2 },
+        "relation": { "text": "引發", "start": 16, "end": 17 },
+        "entity2": { "text": "視網膜病變", "start": 18, "end": 22 }
+      },
+      {
+        "entity1": { "text": "糖尿病", "start": 0, "end": 2 },
+        "relation": { "text": "引發", "start": 16, "end": 17 },
+        "entity2": { "text": "腎病變", "start": 24, "end": 26 }
+      },
+      {
+        "entity1": { "text": "眼底檢查", "start": 36, "end": 39 },
+        "relation": { "text": "檢查", "start": 38, "end": 39 },
+        "entity2": { "text": "視網膜病變", "start": 18, "end": 22 }
+      },
+      {
+        "entity1": { "text": "Metformin", "start": 44, "end": 52 },
+        "relation": { "text": "使用", "start": 42, "end": 43 },
+        "entity2": { "text": "糖尿病", "start": 0, "end": 2 }
+      }
+    ]
+  }
+]
+

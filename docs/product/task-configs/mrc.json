@@ -1,0 +1,14 @@
+{
+  "task_category": "generation",
+  "input_type": "single_item",
+  "typical_tasks": ["Question Answering（問答）", "Summarization（摘要）"],
+  "outputs": [
+    {
+      "type": "free_text",
+      "config": {
+        "max_length": 512,
+        "show_reference": false
+      }
+    }
+  ]
+}

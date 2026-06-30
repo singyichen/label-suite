@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mt-001",
+    "source": "Chronic kidney disease (CKD) is defined as abnormalities of kidney structure or function, present for more than 3 months, with implications for health.",
+    "translation": "慢性腎臟病（CKD）定義為腎臟結構或功能異常，持續超過三個月，且對健康有影響。",
+    "gold_scores": { "fluency": 5, "adequacy": 5, "coherence": 5 }
+  },
+  {
+    "id": "mt-002",
+    "source": "The patient presented with acute onset of chest pain radiating to the left arm, associated with diaphoresis and dyspnea.",
+    "translation": "病人出現急性胸痛放射到左手臂，伴隨流汗和呼吸困難的表現。",
+    "gold_scores": { "fluency": 3, "adequacy": 4, "coherence": 3 }
+  },
+  {
+    "id": "mt-003",
+    "source": "Randomized controlled trials provide the highest level of evidence for evaluating treatment efficacy.",
+    "translation": "隨機控制試驗提供了評估治療效果的最高等級證據。",
+    "gold_scores": { "fluency": 5, "adequacy": 5, "coherence": 5 }
+  },
+  {
+    "id": "mt-004",
+    "source": "Immunoglobulin E–mediated hypersensitivity reactions can manifest as urticaria, angioedema, or anaphylaxis.",
+    "translation": "免疫球蛋白E介導的過敏反應可以表現為蕁麻疹、血管性水腫或過敏性休克。",
+    "gold_scores": { "fluency": 4, "adequacy": 5, "coherence": 4 }
+  },
+  {
+    "id": "mt-005",
+    "source": "Early ambulation after surgery reduces the risk of deep vein thrombosis and promotes faster recovery.",
+    "translation": "手術後早點下床走路可以減少深層靜脈血栓的風險，而且恢復也會比較快。",
+    "gold_scores": { "fluency": 5, "adequacy": 4, "coherence": 5 }
+  }
+]

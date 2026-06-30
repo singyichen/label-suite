@@ -65,6 +65,7 @@
     .field-error-msg { font-size: 12px; color: var(--color-error); margin-top: 4px; display: none; }
     .field-error-msg.show { display: block; }
     .input-text { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white); outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+    .input-text:read-only { background: var(--color-slate-50); color: var(--color-ink-muted); cursor: default; }
     .input-text:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
     .input-text.error { border-color: var(--color-error); }
     .input-select { width: 100%; padding: 9px 32px 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 14px; color: var(--color-ink); background: var(--color-white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 10px center; outline: none; appearance: none; -webkit-appearance: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
@@ -155,6 +156,10 @@
       border-radius: var(--radius-md);
       background: var(--color-slate-50);
     }
+    .config-tab-bar { display: flex; gap: 0; border-bottom: 2px solid var(--color-border); margin-bottom: 16px; }
+    .config-tab { padding: 8px 20px; font-size: 0.85rem; color: var(--color-text-soft); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s, border-color 0.15s; font-family: inherit; white-space: nowrap; }
+    .config-tab:hover { color: var(--color-ink); }
+    .config-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
     .schema-section-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
     .schema-section-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
     .schema-section-desc { font-size: 12px; line-height: 1.5; color: var(--color-text-soft); }
@@ -255,6 +260,36 @@
     .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
     #annotationPreviewLabel { font-size: 13px; font-weight: 600; color: var(--color-ink); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
     .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
+
+    /* ── Output Accordion (Step 2 multi-output) ── */
+    .output-accordion { border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 12px; overflow: hidden; }
+    .output-accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--color-slate-50); cursor: pointer; user-select: none; border-bottom: 1px solid var(--color-border); }
+    .output-accordion-header:hover { background: #EEF2FF; }
+    .output-accordion-title { font-size: 14px; font-weight: 600; color: var(--color-ink); display: flex; align-items: center; gap: 8px; }
+    .output-accordion-chevron { transition: transform 0.2s; font-size: 16px; color: var(--color-text-soft); }
+    .output-accordion.collapsed .output-accordion-chevron { transform: rotate(-90deg); }
+    .output-accordion.collapsed .output-accordion-body { display: none; }
+    .output-accordion-body { padding: 16px; }
+    .output-accordion-dep { font-size: 12px; color: var(--color-text-soft); margin-top: 2px; }
+    .output-accordion-dep::before { content: '⤷ '; }
+    /* Multi-output preview */
+    .preview-multi { display: flex; gap: 16px; }
+    .preview-card { flex: 1; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: white; }
+    .preview-unified { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: white; }
+    /* ABSA unified preview */
+    .absa-preview-text { font-size: 14px; line-height: 2; color: var(--color-ink); padding: 10px 12px; background: var(--color-slate-50); border-radius: var(--radius-md); margin-bottom: 12px; }
+    .absa-span-highlight { display: inline; padding: 1px 4px; border-radius: 3px; font-weight: 500; white-space: nowrap; }
+    .absa-relation-list { display: flex; flex-direction: column; gap: 6px; }
+    .absa-relation-row { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .absa-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #EEF2FF; color: #6366F1; border: 1px solid rgba(99,102,241,0.3); }
+    .absa-arrow { color: var(--color-text-soft); font-size: 12px; }
+    .output-type-index-badge { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    html[data-theme="dark"] .output-accordion-header:hover { background: var(--color-primary-soft-bg); }
+    html[data-theme="dark"] .preview-card { background: var(--color-white); }
+    html[data-theme="dark"] .preview-unified { background: var(--color-white); }
+    html[data-theme="dark"] .absa-preview-text { background: var(--color-slate-50); }
+    html[data-theme="dark"] .absa-relation-row { background: var(--color-white); }
+    html[data-theme="dark"] .absa-relation-badge { background: #1E1B4B; color: #818CF8; border-color: rgba(129,140,248,0.3); }
 
     /* ── Step 3: Startup settings ── */
     .startup-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
@@ -910,7 +945,7 @@ var REGISTRY = {
         optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正', span: 'Span 區間標記' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction', span: 'Span annotation' } },
         defaultValue: 'ner' },
       /* NER-only fields */
-      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'ner' },
+      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'ner', addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
       { key: 'scheme', type: 'select', zh: '標記格式', en: 'Labeling scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'ner' },
       { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'ner' },
       { key: 'input_field', type: 'text', zh: '輸入欄位名稱', en: 'Input field name', required: true, defaultValue: 'text', placeholder_zh: '預設：text', placeholder_en: 'Default: text', showWhen: 'ner', advanced: true },
@@ -935,7 +970,7 @@ var REGISTRY = {
         options: ['entity_based', 'polarity_based'],
         optionLabels: { zh: { entity_based: '實體／區間類型', polarity_based: '極性標籤（ABSA）' }, en: { entity_based: 'Entity / span types', polarity_based: 'Polarity labels (ABSA)' } },
         defaultValue: 'entity_based', showWhen: 'span' },
-      { key: 'entities', type: 'entity-list', zh: '區間類型', en: 'Span types', required: true, showWhen: 'span' },
+      { key: 'entities', type: 'entity-list', zh: '區間類型', en: 'Span types', required: true, showWhen: 'span', addLabel_zh: '新增區間類型', addLabel_en: 'Add span type' },
       { key: 'polarity_options', type: 'tag-list', zh: '極性標籤', en: 'Polarity labels', required: true, hint_zh: '輸入極性標籤後按 Enter（如：正面、負面、中立）', hint_en: 'Type polarity label and press Enter (e.g. Positive, Negative, Neutral)', showWhen: 'span' },
       { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'span' },
       { key: 'scheme', type: 'select', zh: '匯出格式', en: 'Export scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'span' },
@@ -950,7 +985,7 @@ var REGISTRY = {
   relation_extraction: {
     zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)',
     fields: [
-      { key: 'entity_types', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true },
+      { key: 'entity_types', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
       { key: 'relation_types', type: 'tag-list', zh: '關係類型', en: 'Relation types', required: true, hint_zh: '輸入關係類型後按 Enter', hint_en: 'Type relation and press Enter' },
       { key: 'tuple_mode', type: 'select', zh: '結構模式', en: 'Tuple mode', required: true, options: ['triple', 'five_tuple'], defaultValue: 'triple' },
     ],
@@ -963,12 +998,35 @@ var REGISTRY = {
   sentence_pairs: {
     zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)',
     fields: [
-      { key: 'labels', type: 'tag-list', zh: '關係標籤', en: 'Relation labels', required: true, hint_zh: '輸入標籤後按 Enter', hint_en: 'Type and press Enter' },
+      { key: 'pair_mode', type: 'select', zh: '任務模式', en: 'Task mode', required: true,
+        options: ['entailment', 'similarity'],
+        optionLabels: { zh: { entailment: '蘊含（Entailment）', similarity: '相似度（Similarity）' }, en: { entailment: 'Entailment', similarity: 'Similarity' } },
+        defaultValue: 'entailment' },
+      { key: 'response_format', type: 'select', zh: '回應格式', en: 'Response format', required: true,
+        options: ['classification', 'scoring'],
+        optionLabels: { zh: { classification: '分類（Classification）', scoring: '評分（Scoring）' }, en: { classification: 'Classification', scoring: 'Scoring' } },
+        defaultValue: 'classification' },
+      { key: 'sentence_1_field', type: 'text', zh: '句子 1 欄位', en: 'Sentence 1 field', required: true, placeholder_zh: '如 Premise', placeholder_en: 'e.g. Premise' },
+      { key: 'sentence_2_field', type: 'text', zh: '句子 2 欄位', en: 'Sentence 2 field', required: true, placeholder_zh: '如 Hypothesis', placeholder_en: 'e.g. Hypothesis' },
+      { key: 'sentence_1_label', type: 'text', zh: '句子 1 顯示名', en: 'Sentence 1 display label', required: false, placeholder_zh: '預設使用欄位名', placeholder_en: 'Defaults to field name' },
+      { key: 'sentence_2_label', type: 'text', zh: '句子 2 顯示名', en: 'Sentence 2 display label', required: false, placeholder_zh: '預設使用欄位名', placeholder_en: 'Defaults to field name' },
+      { key: 'label_options', type: 'tag-list', zh: '標籤選項', en: 'Label options', required: true, hint_zh: '輸入標籤後按 Enter', hint_en: 'Type label and press Enter', spShowWhen: 'classification' },
+      { key: 'score_min', type: 'number', zh: '最小分數', en: 'Min score', required: true, defaultValue: 1, spShowWhen: 'scoring' },
+      { key: 'score_max', type: 'number', zh: '最大分數', en: 'Max score', required: true, defaultValue: 5, spShowWhen: 'scoring' },
+      { key: 'score_step', type: 'number', zh: '分數步進', en: 'Score step', required: true, defaultValue: 1, spShowWhen: 'scoring' },
+      { key: 'allow_unsure', type: 'boolean', zh: '允許「不確定」選項', en: 'Allow "Unsure" option', required: false, defaultValue: false },
+      { key: 'note_enabled', type: 'boolean', zh: '啟用備註欄', en: 'Enable note field', required: false, defaultValue: false },
     ],
-    defaultTemplate: { labels: ['蘊含', '矛盾', '中立'] },
+    defaultTemplate: {
+      pair_mode: 'entailment', response_format: 'classification',
+      sentence_1_field: '', sentence_2_field: '',
+      sentence_1_label: '', sentence_2_label: '',
+      label_options: ['蘊含', '矛盾', '中立'],
+      allow_unsure: false, note_enabled: false,
+    },
     defaultTemplateI18n: {
-      zh: { labels: ['蘊含', '矛盾', '中立'] },
-      en: { labels: ['Entailment', 'Contradiction', 'Neutral'] },
+      zh: { label_options: ['蘊含', '矛盾', '中立'] },
+      en: { label_options: ['Entailment', 'Contradiction', 'Neutral'] },
     },
   },
   generation_single_item_free_text: {
@@ -992,6 +1050,191 @@ var TASK_TYPE_ORDER = [
   'relation_extraction',
   'sentence_pairs',
 ];
+
+/* ── Output-type registry (ADR-029 composition model) ─────────── */
+/* Each entry maps an output_type key to its config schema fields  */
+var OUTPUT_TYPE_REGISTRY = {
+  /* ── Sequence ── */
+  token_class: {
+    zh: 'Token 分類', en: 'Token classification',
+    source_output: null,
+    fields: [
+      { key: 'entities', type: 'entity-list', zh: '標籤類型', en: 'Label types', required: true, addLabel_zh: '新增標籤類型', addLabel_en: 'Add label type' },
+      { key: 'tagging_scheme', type: 'select', zh: '標記方案', en: 'Tagging scheme', required: true, options: ['BIO', 'BIOES', 'IOB2'], defaultValue: 'BIO' },
+    ],
+    defaultConfig: {
+      entities: [
+        { name: 'PER', color: '#FF6B6B' },
+        { name: 'ORG', color: '#4ECDC4' },
+        { name: 'LOC', color: '#45B7D1' },
+      ],
+      tagging_scheme: 'BIO',
+    },
+  },
+  boundary: {
+    zh: '邊界偵測', en: 'Boundary detection',
+    source_output: null,
+    fields: [
+      { key: 'boundary_types', type: 'tag-list', zh: '邊界類型', en: 'Boundary types', required: true, hint_zh: '輸入邊界類型後按 Enter', hint_en: 'Type boundary type and press Enter' },
+    ],
+    defaultConfig: {
+      boundary_types: ['sentence', 'paragraph'],
+    },
+  },
+  span: {
+    zh: 'Span 區間標記', en: 'Span annotation',
+    source_output: null,
+    fields: [
+      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
+      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false },
+    ],
+    defaultConfig: {
+      entities: [
+        { name: 'target', color: '#FF6B6B' },
+        { name: 'aspect', color: '#4ECDC4' },
+        { name: 'opinion', color: '#45B7D1' },
+      ],
+      allow_overlapping: true,
+    },
+  },
+  relation_triple: {
+    zh: '關係三元組', en: 'Relation triple',
+    source_output: 'span',
+    fields: [
+      { key: 'relation_types', type: 'tag-list', zh: '關係類型', en: 'Relation types', required: true, hint_zh: '輸入關係類型後按 Enter', hint_en: 'Type relation type and press Enter' },
+    ],
+    defaultConfig: {
+      relation_types: ['has_aspect', 'has_opinion'],
+      source_output: 'span',
+    },
+  },
+  /* ── Classification ── */
+  single_label: {
+    zh: '單一標籤', en: 'Single label',
+    source_output: null,
+    fields: [
+      { key: 'label_options', type: 'entity-list', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增標籤', addLabel_en: 'Add label' },
+    ],
+    defaultConfig: {
+      label_options: [
+        { name: 'positive', color: '#2ECC71' },
+        { name: 'neutral', color: '#F39C12' },
+        { name: 'negative', color: '#E74C3C' },
+      ],
+    },
+  },
+  multi_label: {
+    zh: '多標籤', en: 'Multi-label',
+    source_output: null,
+    fields: [
+      { key: 'label_options', type: 'entity-list', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增標籤', addLabel_en: 'Add label' },
+      { key: 'max_selections', type: 'number', zh: '最多可選數量（0 = 不限）', en: 'Max selections (0 = unlimited)', required: false, defaultValue: 0, min: 0 },
+    ],
+    defaultConfig: {
+      label_options: [
+        { name: 'happy', color: '#2ECC71' },
+        { name: 'sad', color: '#3498DB' },
+        { name: 'angry', color: '#E74C3C' },
+        { name: 'surprise', color: '#F39C12' },
+      ],
+      max_selections: 0,
+    },
+  },
+  entity_relation: {
+    zh: '實體關係標籤', en: 'Entity relation label',
+    source_output: null,
+    fields: [
+      { key: 'label_options', type: 'entity-list', zh: '關係標籤', en: 'Relation labels', required: true, addLabel_zh: '新增關係標籤', addLabel_en: 'Add relation label' },
+    ],
+    defaultConfig: {
+      label_options: [
+        { name: 'causes', color: '#E74C3C' },
+        { name: 'treats', color: '#2ECC71' },
+        { name: 'prevents', color: '#3498DB' },
+      ],
+    },
+  },
+  /* ── Regression ── */
+  single_dim: {
+    zh: '單維度回歸', en: 'Single-dimensional regression',
+    source_output: null,
+    fields: [
+      { key: 'dimension_name', type: 'text', zh: '維度名稱', en: 'Dimension name', required: true, defaultValue: 'score' },
+      { key: 'min', type: 'number', zh: '最小值', en: 'Min value', required: true, defaultValue: 1, min: -100 },
+      { key: 'max', type: 'number', zh: '最大值', en: 'Max value', required: true, defaultValue: 5, min: -100 },
+      { key: 'step', type: 'number', zh: '間距', en: 'Step', required: true, defaultValue: 1, min: 0.01 },
+    ],
+    defaultConfig: {
+      dimension_name: 'score',
+      min: 1, max: 5, step: 1,
+    },
+  },
+  multi_dim: {
+    zh: '多維度回歸', en: 'Multi-dimensional regression',
+    source_output: null,
+    fields: [
+      { key: 'dimensions', type: 'va-dimensions', zh: '維度設定', en: 'Dimension settings', required: true },
+    ],
+    defaultConfig: {
+      dimensions: [
+        { name: 'valence', min: 1, max: 9, step: 1 },
+        { name: 'arousal', min: 1, max: 9, step: 1 },
+      ],
+    },
+  },
+  /* ── Generation ── */
+  free_text: {
+    zh: '自由文字', en: 'Free text',
+    source_output: null,
+    fields: [
+      { key: 'max_length', type: 'number', zh: '最大字數', en: 'Max length', required: false, defaultValue: 512, min: 1 },
+      { key: 'show_reference', type: 'boolean', zh: '顯示參考答案給標記者', en: 'Show reference to annotator', required: false, defaultValue: false },
+    ],
+    defaultConfig: {
+      max_length: 512,
+      show_reference: false,
+    },
+  },
+};
+
+/* Known output-type dependencies: which output type depends on which source */
+var OUTPUT_TYPE_DEPS = {
+  relation_triple: 'span',
+};
+
+/* Canonical ABSA multi-output template (ADR-029 §Example: ABSA) */
+var ABSA_MULTI_OUTPUT_TEMPLATE = {
+  input_type: 'single_item',
+  outputs: [
+    {
+      type: 'span',
+      config: {
+        entities: [
+          { name: 'target', color: '#FF6B6B' },
+          { name: 'aspect', color: '#4ECDC4' },
+          { name: 'opinion', color: '#45B7D1' },
+        ],
+        allow_overlapping: true,
+      },
+    },
+    {
+      type: 'relation_triple',
+      config: {
+        relation_types: ['has_aspect', 'has_opinion'],
+        source_output: 'span',
+      },
+    },
+    {
+      type: 'multi_dim',
+      config: {
+        dimensions: [
+          { name: 'valence', min: 1, max: 9, step: 1 },
+          { name: 'arousal', min: 1, max: 9, step: 1 },
+        ],
+      },
+    },
+  ],
+};
 
 /* ── Task taxonomy cascade ───────────────────────────────────── */
 var TASK_TAXONOMY = {
@@ -1198,6 +1441,10 @@ var I18N = {
     toastConfigLoaded: '設定檔已載入，請按「儲存」套用',
     applyTemplate: '套用預設範本：',
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
+    accordionDependsOn: '依賴：',
+    previewUnifiedTitle: '整合預覽（Span + 關係三元組）',
+    previewSampleSentenceAbsa: '這家餐廳服務很差，但環境還不錯，食物也挺美味的。',
+    absa_template_btn: '套用範本：ABSA（Span + 關係三元組）',
     templateBtnSpanEntity: '套用範本：Span 實體標記',
     templateBtnSpanPolarity: '套用範本：Span 極性標記（ABSA）',
     spanModeSectionTitle: '標記模式',
@@ -1209,6 +1456,16 @@ var I18N = {
     previewSampleSentenceSpan: '這家餐廳服務很差，但環境不錯。',
     previewSpanPolarityTitle: '標記區間並選擇極性',
     addPolarityOption: '新增極性標籤',
+    spTaskModeSectionTitle: '任務模式',
+    spTaskModeSectionDesc: '選擇句對比較模式與回應格式。',
+    spFieldMappingSectionTitle: '欄位對應',
+    spFieldMappingSectionDesc: '確認資料集欄位與標記角色的對應關係。欄位來自第一步驟選擇，顯示名稱可自訂。',
+    spEvidenceFieldsLabel: '背景資料欄位',
+    spOutputSectionTitle: '輸出設定',
+    spOutputSectionDesc: '標籤選項已從資料集自動抽取，可自行新增或刪除。',
+    spAnnotationSectionTitle: '作答設定',
+    spAnnotationSectionDesc: '控制標記介面的額外選項。',
+    templateBtnSentencePairs: '套用預設範本：句對標記（NLI）',
   },
   en: {
     docTitle: 'New task — Label Suite (Prototype)',
@@ -1321,6 +1578,10 @@ var I18N = {
     toastConfigLoaded: 'Config loaded. Click Save to apply',
     applyTemplate: 'Apply default template: ',
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
+    accordionDependsOn: 'Depends on: ',
+    previewUnifiedTitle: 'Unified preview (Span + Relation triple)',
+    previewSampleSentenceAbsa: 'The restaurant service was poor, but the ambiance was nice, and the food was delicious.',
+    absa_template_btn: 'Apply template: ABSA (Span + Relation triple)',
     templateBtnSpanEntity: 'Apply template: Span entity annotation',
     templateBtnSpanPolarity: 'Apply template: Span polarity annotation (ABSA)',
     spanModeSectionTitle: 'Annotation mode',
@@ -1332,6 +1593,16 @@ var I18N = {
     previewSampleSentenceSpan: 'The service at this restaurant was poor, but the ambiance was nice.',
     previewSpanPolarityTitle: 'Mark spans and choose polarity',
     addPolarityOption: 'Add polarity label',
+    spTaskModeSectionTitle: 'Task mode',
+    spTaskModeSectionDesc: 'Choose sentence pair comparison mode and response format.',
+    spFieldMappingSectionTitle: 'Field mapping',
+    spFieldMappingSectionDesc: 'Confirm dataset field to annotation role mapping. Fields come from Step 1; display labels are editable.',
+    spEvidenceFieldsLabel: 'Evidence fields',
+    spOutputSectionTitle: 'Output settings',
+    spOutputSectionDesc: 'Label options were auto-extracted from the dataset. You can add or remove them.',
+    spAnnotationSectionTitle: 'Annotation settings',
+    spAnnotationSectionDesc: 'Configure additional annotation interface options.',
+    templateBtnSentencePairs: 'Apply template: Sentence pairs (NLI)',
   },
 };
 
@@ -1339,8 +1610,18 @@ var I18N = {
 var state = {
   lang: 'zh', step: 1,
   taskName: '', datasetFiles: [], fieldRoleMap: {},
-  datasetParsedColumns: [], datasetParsedRows: [],
+  datasetParsedColumns: [], datasetParsedRows: [], datasetRawFirstRow: {}, datasetColumnUniqueValues: {},
   taskCategories: [], taskInputTypes: [], taskOutputTypes: [], taskType: '',
+  resolvedTaskTypes: [], configDataMap: {},
+  /* ADR-029: multi-output composition support */
+  selectedOutputTypes: [],   /* ordered array of output_type keys, e.g. ['span', 'relation_triple'] */
+  outputConfigs: {},         /* keyed by output_type key, holds each output's config fragment */
+  /* Interactive preview annotation state */
+  previewEntities: [],       /* [{text, type, start, end, color}] — user-annotated or loaded from data */
+  previewTriples: [],        /* [{subj, rel, obj}] — same format as rendered triples */
+  activeEntityType: null,    /* currently selected entity type for text selection */
+  previewInited: false,      /* whether preview annotation state was initialized from data */
+  previewState: {},          /* per-output-type interactive state, keyed by output type key */
   codeFormat: 'yaml', configData: {},
   memberSource: 'system',
   initialMembers: [],
@@ -1437,6 +1718,56 @@ function toYaml(obj, indent) {
   return lines.join('\n');
 }
 function configToCode() {
+  /* ADR-029: output-type composition — always produce unified outputs[] config */
+  if (state.selectedOutputTypes.length >= 1) {
+    var unifiedConfig = {
+      input_type: (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item',
+      outputs: state.selectedOutputTypes.map(function(outKey) {
+        var cfg = state.outputConfigs[outKey] || {};
+        var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+        var finalCfg = {};
+        if (outReg && outReg.defaultConfig) {
+          Object.keys(outReg.defaultConfig).forEach(function(k) {
+            finalCfg[k] = cfg[k] !== undefined ? cfg[k] : outReg.defaultConfig[k];
+          });
+        }
+        Object.keys(cfg).forEach(function(k) { finalCfg[k] = cfg[k]; });
+        return { type: outKey, config: finalCfg };
+      }),
+    };
+    if (state.codeFormat === 'json') return JSON.stringify(unifiedConfig, null, 2);
+    /* Hand-craft YAML for outputs[] array-of-objects with nested config */
+    var lines = [];
+    lines.push('input_type: ' + yamlScalar(unifiedConfig.input_type));
+    lines.push('outputs:');
+    unifiedConfig.outputs.forEach(function(out) {
+      lines.push('  - type: ' + yamlScalar(out.type));
+      lines.push('    config:');
+      Object.keys(out.config).forEach(function(k) {
+        var v = out.config[k];
+        if (Array.isArray(v)) {
+          if (v.length === 0) { lines.push('      ' + k + ': []'); return; }
+          if (typeof v[0] === 'object') {
+            lines.push('      ' + k + ':');
+            v.forEach(function(item) {
+              var first = true;
+              Object.keys(item).forEach(function(ik) {
+                lines.push('      ' + (first ? '  - ' : '    ') + ik + ': ' + yamlScalar(item[ik]));
+                first = false;
+              });
+            });
+          } else {
+            lines.push('      ' + k + ':');
+            v.forEach(function(sv) { lines.push('        - ' + yamlScalar(sv)); });
+          }
+        } else {
+          lines.push('      ' + k + ': ' + yamlScalar(v));
+        }
+      });
+    });
+    return lines.join('\n');
+  }
+  /* Single-output: backward compatible */
   if (state.codeFormat === 'json') return JSON.stringify(state.configData, null, 2);
   return toYaml(state.configData);
 }
@@ -1638,8 +1969,6 @@ function validateStep1(showErrors) {
   return ok;
 }
 function validateStep2(showErrors) {
-  var schema = state.taskType ? REGISTRY[state.taskType] : null;
-  if (!schema) return false;
   if (state.codeDraftDirty) {
     if (showErrors) {
       el('codeErrorBar').classList.remove('hidden');
@@ -1647,6 +1976,28 @@ function validateStep2(showErrors) {
     }
     return false;
   }
+
+  /* ADR-029: validate each output type's required fields */
+  if (state.selectedOutputTypes.length >= 1) {
+    var ok = true;
+    state.selectedOutputTypes.forEach(function(outKey) {
+      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+      if (!outReg) return;
+      var cfg = state.outputConfigs[outKey] || {};
+      outReg.fields.forEach(function(f) {
+        if (!f.required) return;
+        var val = cfg[f.key];
+        if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
+        else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
+      });
+    });
+    if (!ok && showErrors) showFieldError('errSchema', true, t('errSchemaRequired'));
+    if (ok) showFieldError('errSchema', false);
+    return ok;
+  }
+
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return false;
   var ok = true;
   schema.fields.forEach(function(f) {
     if (!f.required) return;
@@ -1858,7 +2209,7 @@ function appendSchemaField(container, field) {
       });
       sel.addEventListener('change', function() {
         state.configData[field.key] = sel.value;
-        if (field.key === 'span_mode') {
+        if (field.key === 'span_mode' || field.key === 'response_format') {
           markDirty(); renderSchemaFields(); revalidateCurrentStep();
         } else {
           markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
@@ -1890,14 +2241,18 @@ function appendSchemaField(container, field) {
       inp.type = 'text'; inp.className = 'input-text';
       inp.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
       inp.value = state.configData[field.key] || '';
-      inp.addEventListener('input', function() {
-        state.configData[field.key] = inp.value;
-        markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
-      });
+      if (field.readOnly) {
+        inp.readOnly = true;
+      } else {
+        inp.addEventListener('input', function() {
+          state.configData[field.key] = inp.value;
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }
       wrap.appendChild(inp);
       // Step 2 field-mapping hint: show selected columns from dataset (FR-002c-1)
       var fieldMappingKeys = ['input_field', 'entity_field', 'aspect_list_field', 'sentence_1_field', 'sentence_2_field'];
-      if (fieldMappingKeys.indexOf(field.key) >= 0 && state.datasetFiles.length > 0) {
+      if (!field.readOnly && fieldMappingKeys.indexOf(field.key) >= 0 && state.datasetFiles.length > 0) {
         var selectedCols = getSelectedColumns();
         if (selectedCols.length > 0) {
           var colHint = document.createElement('div');
@@ -1910,9 +2265,1317 @@ function appendSchemaField(container, field) {
     container.appendChild(wrap);
 }
 
+function getFieldsByRole(role) {
+  var result = [];
+  state.datasetParsedColumns.forEach(function(col) {
+    if (state.fieldRoleMap[col] === role) result.push(col);
+  });
+  return result;
+}
+
+function autoPopulateSentencePairsConfig() {
+  var inputFields = getFieldsByRole('input');
+  var outputFields = getFieldsByRole('output');
+  var evidenceFields = getFieldsByRole('evidence');
+  var cfg = state.configData;
+  if (!cfg.pair_mode) cfg.pair_mode = 'entailment';
+  if (!cfg.response_format) cfg.response_format = 'classification';
+  cfg.sentence_1_field = inputFields[0] || '';
+  cfg.sentence_2_field = inputFields[1] || '';
+  if (!cfg.sentence_1_label) cfg.sentence_1_label = cfg.sentence_1_field;
+  if (!cfg.sentence_2_label) cfg.sentence_2_label = cfg.sentence_2_field;
+  cfg.evidence_fields = evidenceFields;
+  if (outputFields.length > 0 && (!Array.isArray(cfg.label_options) || cfg.label_options.length === 0)) {
+    var uniqueVals = state.datasetColumnUniqueValues[outputFields[0]] || [];
+    cfg.label_options = uniqueVals.length > 0 ? uniqueVals.slice() : [];
+  }
+  if (cfg.allow_unsure === undefined) cfg.allow_unsure = false;
+  if (cfg.note_enabled === undefined) cfg.note_enabled = false;
+}
+
+/* ── Multi-output accordion builder (ADR-029) ─────────────────── */
+function buildOutputAccordion(outKey, outReg, isCollapsed) {
+  var accordion = document.createElement('div');
+  accordion.className = 'output-accordion' + (isCollapsed ? ' collapsed' : '');
+  accordion.setAttribute('data-output-key', outKey);
+
+  var header = document.createElement('div');
+  header.className = 'output-accordion-header';
+
+  var titleWrap = document.createElement('div');
+
+  var titleRow = document.createElement('div');
+  titleRow.className = 'output-accordion-title';
+
+  var badge = document.createElement('span');
+  badge.className = 'output-type-index-badge';
+  badge.textContent = String(state.selectedOutputTypes.indexOf(outKey) + 1);
+  titleRow.appendChild(badge);
+
+  var titleText = document.createTextNode(outReg[state.lang] || outReg.zh || outKey);
+  titleRow.appendChild(titleText);
+  titleWrap.appendChild(titleRow);
+
+  /* Dependency badge if this output type has a source */
+  var sourceKey = OUTPUT_TYPE_DEPS[outKey] || (outReg && outReg.source_output);
+  if (sourceKey && state.selectedOutputTypes.indexOf(sourceKey) >= 0) {
+    var depSourceReg = OUTPUT_TYPE_REGISTRY[sourceKey];
+    var depName = depSourceReg ? (depSourceReg[state.lang] || depSourceReg.zh) : sourceKey;
+    var depBadge = document.createElement('div');
+    depBadge.className = 'output-accordion-dep';
+    depBadge.textContent = t('accordionDependsOn') + depName;
+    titleWrap.appendChild(depBadge);
+  }
+
+  var chevron = document.createElement('span');
+  chevron.className = 'output-accordion-chevron';
+  chevron.textContent = '▾';
+
+  header.appendChild(titleWrap);
+  header.appendChild(chevron);
+  accordion.appendChild(header);
+
+  var body = document.createElement('div');
+  body.className = 'output-accordion-body';
+  accordion.appendChild(body);
+
+  header.addEventListener('click', function() {
+    accordion.classList.toggle('collapsed');
+  });
+
+  return { accordion: accordion, body: body };
+}
+
+/* ── Render schema fields for a single output type into a container ── */
+function renderOutputTypeFields(container, outKey) {
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  if (!outReg) return;
+
+  /* Ensure outputConfigs[outKey] exists */
+  if (!state.outputConfigs[outKey]) {
+    state.outputConfigs[outKey] = outReg.defaultConfig ? JSON.parse(JSON.stringify(outReg.defaultConfig)) : {};
+  }
+  var cfg = state.outputConfigs[outKey];
+
+  outReg.fields.forEach(function(field) {
+    var wrap = document.createElement('div');
+    wrap.className = 'form-field';
+    if (field.type !== 'boolean') {
+      var lbl = document.createElement('label');
+      lbl.className = 'field-label';
+      lbl.textContent = field[state.lang] || field.zh;
+      if (field.required) {
+        var req = document.createElement('span');
+        req.className = 'required'; req.textContent = '*';
+        lbl.appendChild(req);
+      }
+      wrap.appendChild(lbl);
+    }
+
+    if (field.type === 'entity-list') {
+      /* Build entity list scoped to this output type's config */
+      var entities = Array.isArray(cfg[field.key]) ? cfg[field.key] : [];
+      cfg[field.key] = entities;
+      var entityWrap = document.createElement('div');
+      var REMOVE_SVG = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      var ADD_SVG = '<svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      (function(ents, capturedKey, capturedWrap) {
+        function renderEntityRows() {
+          while (capturedWrap.firstChild) capturedWrap.removeChild(capturedWrap.firstChild);
+          ents.forEach(function(ent, i) {
+            var row = document.createElement('div');
+            row.className = 'entity-row';
+            var dot = document.createElement('div');
+            dot.className = 'entity-color-dot';
+            dot.style.background = ent.color || ENTITY_COLORS[i % ENTITY_COLORS.length];
+            var nameInp = document.createElement('input');
+            nameInp.type = 'text'; nameInp.className = 'entity-name-input';
+            nameInp.value = ent.name;
+            nameInp.placeholder = state.lang === 'en' ? 'Entity name' : '實體名稱';
+            (function(idx) {
+              nameInp.addEventListener('input', function() {
+                ents[idx].name = nameInp.value;
+                markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+              });
+            }(i));
+            var rmBtn = document.createElement('button');
+            rmBtn.className = 'entity-remove-btn';
+            rmBtn.setAttribute('aria-label', '移除');
+            rmBtn.setAttribute('type', 'button');
+            rmBtn.innerHTML = REMOVE_SVG;
+            (function(idx) {
+              rmBtn.addEventListener('click', function() {
+                ents.splice(idx, 1);
+                renderEntityRows(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+              });
+            }(i));
+            row.appendChild(dot); row.appendChild(nameInp); row.appendChild(rmBtn);
+            capturedWrap.appendChild(row);
+          });
+          var addBtn = document.createElement('button');
+          addBtn.className = 'add-row-btn';
+          addBtn.setAttribute('type', 'button');
+          addBtn.innerHTML = ADD_SVG;
+          addBtn.appendChild(document.createTextNode(' ' + (field['addLabel_' + state.lang] || t('addEntity'))));
+          addBtn.addEventListener('click', function() {
+            ents.push({ name: '', color: ENTITY_COLORS[ents.length % ENTITY_COLORS.length] });
+            renderEntityRows(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+          });
+          capturedWrap.appendChild(addBtn);
+        }
+        renderEntityRows();
+      }(entities, field.key, entityWrap));
+      wrap.appendChild(entityWrap);
+    } else if (field.type === 'tag-list') {
+      /* Build tag list scoped to this output type's config */
+      var tags = Array.isArray(cfg[field.key]) ? cfg[field.key].slice() : [];
+      cfg[field.key] = tags;
+      var isComposing = false;
+      var tagWrap = document.createElement('div');
+      tagWrap.className = 'tag-input-wrap';
+      (function(tagsArr, tw) {
+        function renderTags() {
+          while (tw.firstChild) tw.removeChild(tw.firstChild);
+          tagsArr.forEach(function(tag, i) {
+            var pill = document.createElement('span');
+            pill.className = 'tag-pill';
+            pill.appendChild(document.createTextNode(tag));
+            var rm = document.createElement('button');
+            rm.className = 'tag-pill-remove';
+            rm.setAttribute('aria-label', '移除');
+            rm.setAttribute('type', 'button');
+            rm.innerHTML = '<svg style="width:10px;height:10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            (function(idx) {
+              rm.addEventListener('click', function() {
+                tagsArr.splice(idx, 1);
+                renderTags(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+              });
+            }(i));
+            pill.appendChild(rm);
+            tw.appendChild(pill);
+          });
+          var inp = document.createElement('input');
+          inp.type = 'text'; inp.className = 'tag-new-input';
+          inp.placeholder = field['hint_' + state.lang] || '';
+          inp.addEventListener('compositionstart', function() { isComposing = true; });
+          inp.addEventListener('compositionend', function() { isComposing = false; });
+          inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+              if (e.isComposing || isComposing || e.keyCode === 229) return;
+              e.preventDefault();
+              var val = inp.value.trim();
+              if (val && tagsArr.indexOf(val) === -1) {
+                tagsArr.push(val);
+                inp.value = '';
+                renderTags();
+                setTimeout(function() { var ni = tw.querySelector('.tag-new-input'); if (ni) ni.focus(); }, 0);
+                markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+              }
+            }
+          });
+          tw.appendChild(inp);
+        }
+        renderTags();
+      }(tags, tagWrap));
+      if (field['hint_' + state.lang]) {
+        var hint = document.createElement('div');
+        hint.className = 'field-hint';
+        hint.textContent = field['hint_' + state.lang];
+        wrap.appendChild(tagWrap);
+        wrap.appendChild(hint);
+        container.appendChild(wrap);
+        return;
+      }
+      wrap.appendChild(tagWrap);
+    } else if (field.type === 'va-dimensions') {
+      var dims = Array.isArray(cfg[field.key]) ? cfg[field.key] : [];
+      cfg[field.key] = dims;
+      var dimWrap = document.createElement('div');
+      dimWrap.className = 'va-dim-list';
+      var REMOVE_SVG_D = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      var ADD_SVG_D = '<svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      var dimLabels = {
+        name: { zh: '維度名稱', en: 'Dimension name' },
+        min:  { zh: '最小值', en: 'Min value' },
+        max:  { zh: '最大值', en: 'Max value' },
+        step: { zh: '間距', en: 'Step' },
+      };
+      (function(dimArr, dw) {
+        function makeLabeledInput(labelObj, inputType, value, placeholder, required) {
+          var ff = document.createElement('div');
+          ff.className = 'form-field';
+          var lbl = document.createElement('label');
+          lbl.className = 'field-label';
+          lbl.textContent = labelObj[state.lang] || labelObj.zh;
+          if (required) { var req = document.createElement('span'); req.className = 'required'; req.textContent = '*'; lbl.appendChild(req); }
+          ff.appendChild(lbl);
+          var inp = document.createElement('input');
+          inp.type = inputType; inp.className = 'entity-name-input';
+          inp.style.cssText = 'width:100%;padding:8px 12px;';
+          inp.value = value != null ? value : '';
+          if (placeholder) inp.placeholder = placeholder;
+          ff.appendChild(inp);
+          return { wrapper: ff, input: inp };
+        }
+        function renderDimRows() {
+          while (dw.firstChild) dw.removeChild(dw.firstChild);
+          dimArr.forEach(function(dim, i) {
+            var card = document.createElement('div');
+            card.style.cssText = 'border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:12px;position:relative;background:var(--color-slate-50);';
+            var rmBtn = document.createElement('button');
+            rmBtn.className = 'entity-remove-btn';
+            rmBtn.setAttribute('aria-label', '移除');
+            rmBtn.setAttribute('type', 'button');
+            rmBtn.style.cssText = 'position:absolute;top:8px;right:8px;';
+            rmBtn.innerHTML = REMOVE_SVG_D;
+            (function(idx) { rmBtn.addEventListener('click', function() { dimArr.splice(idx, 1); renderDimRows(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep(); }); }(i));
+            card.appendChild(rmBtn);
+            var nameF = makeLabeledInput(dimLabels.name, 'text', dim.name, '', true);
+            var minF  = makeLabeledInput(dimLabels.min, 'number', dim.min != null ? dim.min : 1, '', true);
+            var maxF  = makeLabeledInput(dimLabels.max, 'number', dim.max != null ? dim.max : 9, '', true);
+            var stepF = makeLabeledInput(dimLabels.step, 'number', dim.step != null ? dim.step : 1, '', true);
+            (function(idx) {
+              function sync() { dimArr[idx] = { name: nameF.input.value, min: +minF.input.value, max: +maxF.input.value, step: +stepF.input.value }; markDirty(); updateAnnotationPreview(); revalidateCurrentStep(); }
+              nameF.input.addEventListener('input', sync);
+              minF.input.addEventListener('input', sync);
+              maxF.input.addEventListener('input', sync);
+              stepF.input.addEventListener('input', sync);
+            }(i));
+            card.appendChild(nameF.wrapper);
+            var numRow = document.createElement('div');
+            numRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;';
+            numRow.appendChild(minF.wrapper); numRow.appendChild(maxF.wrapper); numRow.appendChild(stepF.wrapper);
+            card.appendChild(numRow);
+            dw.appendChild(card);
+          });
+          var addBtn = document.createElement('button');
+          addBtn.className = 'add-row-btn';
+          addBtn.setAttribute('type', 'button');
+          addBtn.innerHTML = ADD_SVG_D;
+          addBtn.appendChild(document.createTextNode(' ' + (state.lang === 'en' ? 'Add dimension' : '新增維度')));
+          addBtn.addEventListener('click', function() {
+            dimArr.push({ name: '', min: 1, max: 9, step: 1 });
+            renderDimRows(); markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+          });
+          dw.appendChild(addBtn);
+        }
+        renderDimRows();
+      }(dims, dimWrap));
+      wrap.appendChild(dimWrap);
+    } else if (field.type === 'select') {
+      var sel = document.createElement('select');
+      sel.className = 'select-field';
+      sel.style.cssText = 'width:100%;padding:8px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;';
+      (field.options || []).forEach(function(opt) {
+        var option = document.createElement('option');
+        option.value = opt; option.textContent = opt;
+        if ((cfg[field.key] || field.defaultValue) === opt) option.selected = true;
+        sel.appendChild(option);
+      });
+      (function(capturedCfg, capturedKey) {
+        sel.addEventListener('change', function() {
+          capturedCfg[capturedKey] = sel.value;
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(cfg, field.key));
+      wrap.appendChild(sel);
+    } else if (field.type === 'number') {
+      var numInp = document.createElement('input');
+      numInp.type = 'number';
+      numInp.className = 'entity-name-input';
+      numInp.style.cssText = 'width:100%;padding:8px 12px;';
+      numInp.value = cfg[field.key] != null ? cfg[field.key] : (field.defaultValue != null ? field.defaultValue : '');
+      if (field.min != null) numInp.min = field.min;
+      (function(capturedCfg, capturedKey) {
+        numInp.addEventListener('input', function() {
+          capturedCfg[capturedKey] = +numInp.value;
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(cfg, field.key));
+      wrap.appendChild(numInp);
+    } else if (field.type === 'text') {
+      var textInp = document.createElement('input');
+      textInp.type = 'text';
+      textInp.className = 'entity-name-input';
+      textInp.style.cssText = 'width:100%;padding:8px 12px;';
+      textInp.value = cfg[field.key] || field.defaultValue || '';
+      textInp.placeholder = field[state.lang] || field.zh || '';
+      (function(capturedCfg, capturedKey) {
+        textInp.addEventListener('input', function() {
+          capturedCfg[capturedKey] = textInp.value;
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(cfg, field.key));
+      wrap.appendChild(textInp);
+    } else if (field.type === 'boolean') {
+      var card = document.createElement('label');
+      card.className = 'schema-toggle-card';
+      var checkedVal = !!(cfg[field.key] !== undefined ? cfg[field.key] : field.defaultValue);
+      if (checkedVal) card.classList.add('is-on');
+      var copy = document.createElement('span');
+      copy.className = 'schema-toggle-copy';
+      var titleEl = document.createElement('span');
+      titleEl.className = 'schema-toggle-label';
+      titleEl.textContent = field[state.lang] || field.zh;
+      copy.appendChild(titleEl);
+      var statusEl = document.createElement('span');
+      statusEl.className = 'schema-toggle-status';
+      statusEl.textContent = checkedVal ? t('enabled') : t('disabled');
+      copy.appendChild(statusEl);
+      var sw = document.createElement('span');
+      sw.className = 'toggle-switch';
+      var chk = document.createElement('input');
+      chk.type = 'checkbox'; chk.checked = checkedVal;
+      var slider = document.createElement('span');
+      slider.className = 'toggle-slider';
+      (function(capturedCfg, capturedKey) {
+        chk.addEventListener('change', function() {
+          capturedCfg[capturedKey] = chk.checked;
+          statusEl.textContent = chk.checked ? t('enabled') : t('disabled');
+          card.classList.toggle('is-on', chk.checked);
+          markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
+        });
+      }(cfg, field.key));
+      sw.appendChild(chk); sw.appendChild(slider);
+      card.appendChild(copy); card.appendChild(sw);
+      wrap.appendChild(card);
+    }
+    container.appendChild(wrap);
+  });
+}
+
+/* ── Dataset-aware preview text helper ── */
+function getDatasetPreviewText() {
+  var raw = state.datasetRawFirstRow;
+  if (!raw || !Object.keys(raw).length) return null;
+  var inputCols = state.datasetParsedColumns.filter(function(col) {
+    return state.fieldRoleMap[col] === 'input';
+  });
+  if (inputCols.length > 0) {
+    var vals = inputCols.map(function(col) {
+      var v = raw[col];
+      return (typeof v === 'string') ? v : null;
+    }).filter(Boolean);
+    if (vals.length > 0) return vals.join('\n');
+  }
+  var bestCol = null;
+  var bestLen = 0;
+  for (var i = 0; i < state.datasetParsedColumns.length; i++) {
+    var col = state.datasetParsedColumns[i];
+    var v = raw[col];
+    if (typeof v === 'string' && v.length > bestLen) {
+      bestCol = col;
+      bestLen = v.length;
+    }
+  }
+  if (bestCol && bestLen > 5) return raw[bestCol];
+  return null;
+}
+
+function getDatasetPairTexts() {
+  var raw = state.datasetRawFirstRow;
+  if (!raw || !Object.keys(raw).length) return null;
+  var inputCols = state.datasetParsedColumns.filter(function(col) {
+    return state.fieldRoleMap[col] === 'input';
+  });
+  if (inputCols.length >= 2) {
+    return { text1: String(raw[inputCols[0]] || ''), text2: String(raw[inputCols[1]] || ''), col1: inputCols[0], col2: inputCols[1] };
+  }
+  return null;
+}
+
+/* ── Multi-dim (VA regression) preview ── */
+function renderMultiDimPreview(container, config) {
+  var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
+  if (dims.length === 0) {
+    var empty = document.createElement('div');
+    empty.className = 'annotation-preview-empty';
+    empty.textContent = state.lang === 'zh' ? '請先新增維度' : 'Add dimensions first';
+    container.appendChild(empty);
+    return;
+  }
+  dims.forEach(function(dim) {
+    var dimWrap = document.createElement('div');
+    dimWrap.style.cssText = 'margin-bottom:16px;';
+    var label = document.createElement('div');
+    label.style.cssText = 'font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--color-text-dark);text-transform:capitalize;';
+    label.textContent = dim.name || '(unnamed)';
+    dimWrap.appendChild(label);
+    var rangeWrap = document.createElement('div');
+    rangeWrap.style.cssText = 'display:flex;align-items:center;gap:10px;';
+    var minLabel = document.createElement('span');
+    minLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:center;';
+    minLabel.textContent = dim.min != null ? dim.min : 1;
+    var slider = document.createElement('input');
+    slider.type = 'range';
+    slider.min = dim.min != null ? dim.min : 1;
+    slider.max = dim.max != null ? dim.max : 9;
+    slider.step = dim.step != null ? dim.step : 1;
+    slider.value = Math.round(((dim.max || 9) + (dim.min || 1)) / 2);
+    slider.disabled = true;
+    slider.style.cssText = 'flex:1;accent-color:var(--color-primary);';
+    var maxLabel = document.createElement('span');
+    maxLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:center;';
+    maxLabel.textContent = dim.max != null ? dim.max : 9;
+    var valLabel = document.createElement('span');
+    valLabel.style.cssText = 'font-size:0.85rem;font-weight:600;color:var(--color-primary);min-width:24px;text-align:center;';
+    valLabel.textContent = slider.value;
+    rangeWrap.appendChild(minLabel);
+    rangeWrap.appendChild(slider);
+    rangeWrap.appendChild(maxLabel);
+    rangeWrap.appendChild(valLabel);
+    dimWrap.appendChild(rangeWrap);
+    container.appendChild(dimWrap);
+  });
+}
+
+/* ── Interactive unified preview (span + relation_triple) ── */
+function initPreviewState() {
+  var rawRow = state.datasetRawFirstRow || {};
+  var spanCfg = state.outputConfigs['span'] || {};
+  var relCfg = state.outputConfigs['relation_triple'] || {};
+  var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
+  var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
+
+  var dataEnts = Array.isArray(rawRow.entities) ? rawRow.entities : [];
+  if (dataEnts.length > 0) {
+    state.previewEntities = dataEnts.map(function(e) { return { text: e.text, type: e.type, start: e.start, end: e.end }; });
+  } else {
+    state.previewEntities = [];
+  }
+
+  var nerTrips = Array.isArray(rawRow.triples) ? rawRow.triples : [];
+  var goldTrips = Array.isArray(rawRow.gold_triplets) ? rawRow.gold_triplets : [];
+  var nameTarget = (cfgEntities[0] && cfgEntities[0].name) || 'target';
+  var nameAspect = (cfgEntities[1] && cfgEntities[1].name) || 'aspect';
+  var nameOpinion = (cfgEntities[2] && cfgEntities[2].name) || 'opinion';
+  var sampleRel1 = relationTypes[0] || 'has_aspect';
+  var sampleRel2 = relationTypes[1] || 'has_opinion';
+
+  if (nerTrips.length > 0) {
+    state.previewTriples = nerTrips.map(function(trip) {
+      var e1 = trip.entity1 || {}, rel = trip.relation || {}, e2 = trip.entity2 || {};
+      function fmt(o) { var s = o.text || '?'; if (o.start != null && o.end != null) s += ' (' + o.start + ',' + o.end + ')'; return s; }
+      return { subj: fmt(e1), rel: fmt(rel), obj: fmt(e2) };
+    });
+  } else if (goldTrips.length > 0) {
+    state.previewTriples = [];
+    goldTrips.forEach(function(trip) {
+      var tgt = trip.target_text || '?', asp = trip.aspect_text || '', opn = trip.opinion_text || '';
+      if (asp) state.previewTriples.push({ subj: tgt + '/' + nameTarget, rel: sampleRel1, obj: asp + '/' + nameAspect });
+      if (opn) state.previewTriples.push({ subj: tgt + '/' + nameTarget, rel: sampleRel2, obj: opn + '/' + nameOpinion });
+    });
+  } else {
+    state.previewTriples = [];
+  }
+
+  state.previewInited = true;
+}
+
+function getPreviewTypeColorMap() {
+  var map = {}, order = [];
+  var spanCfg = state.outputConfigs['span'] || {};
+  var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
+  cfgEntities.forEach(function(e) { if (e.name && !map[e.name]) { map[e.name] = e.color || ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.name); } });
+  state.previewEntities.forEach(function(e) { if (e.type && !map[e.type]) { map[e.type] = ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.type); } });
+  return { map: map, order: order };
+}
+
+function renderAbsaUnifiedPreview(previewContainer) {
+  if (!state.previewInited) initPreviewState();
+  var realText = getDatasetPreviewText();
+  var tc = getPreviewTypeColorMap();
+  var typeColorMap = tc.map, typeOrder = tc.order;
+  var relCfg = state.outputConfigs['relation_triple'] || {};
+  var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
+  var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  /* ── Working Area title ── */
+  var titleEl = document.createElement('div');
+  titleEl.className = 'annotation-preview-task-title';
+  titleEl.style.marginBottom = '10px';
+  titleEl.textContent = t('previewUnifiedTitle');
+  previewContainer.appendChild(titleEl);
+
+  /* ── Annotated text with entity highlights ── */
+  var textEl = document.createElement('div');
+  textEl.className = 'absa-preview-text';
+  textEl.style.cursor = 'text';
+  textEl.style.userSelect = 'text';
+  if (realText && state.previewEntities.length > 0) {
+    var sorted = state.previewEntities.slice().filter(function(e) { return e.start != null; }).sort(function(a, b) { return a.start - b.start; });
+    var charPos = 0;
+    sorted.forEach(function(ent) {
+      if (ent.start > charPos) { var tn = document.createTextNode(realText.substring(charPos, ent.start)); tn._offset = charPos; textEl.appendChild(tn); }
+      var span = document.createElement('span');
+      span.className = 'absa-span-highlight';
+      var c = typeColorMap[ent.type] || '#6366F1';
+      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
+      span.title = ent.type + ' (' + ent.start + ',' + ent.end + ')';
+      span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
+      textEl.appendChild(span);
+      charPos = (ent.end || ent.start) + 1;
+    });
+    if (charPos < realText.length) textEl.appendChild(document.createTextNode(realText.substring(charPos)));
+  } else if (realText) {
+    textEl.appendChild(document.createTextNode(realText.length > 500 ? realText.substring(0, 500) + '…' : realText));
+  }
+  /* Text selection handler: select text → add entity */
+  textEl.addEventListener('mouseup', function() {
+    if (!state.activeEntityType) return;
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+    var selText = sel.toString().trim();
+    if (!realText) return;
+    var idx = realText.indexOf(selText);
+    if (idx < 0) return;
+    state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
+    sel.removeAllRanges();
+    renderAbsaUnifiedPreview_refresh(previewContainer);
+  });
+  previewContainer.appendChild(textEl);
+
+  /* ── Entity Type selector (interactive) ── */
+  var etTitle = document.createElement('div');
+  etTitle.className = 'annotation-preview-task-title';
+  etTitle.style.cssText = 'margin:12px 0 6px;';
+  etTitle.textContent = state.lang === 'zh' ? '實體類型' : 'Entity Type';
+  previewContainer.appendChild(etTitle);
+  var legendRow = document.createElement('div');
+  legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
+  typeOrder.forEach(function(typeName) {
+    var c = typeColorMap[typeName] || '#6366F1';
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    var isActive = state.activeEntityType === typeName;
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+    chip.textContent = typeName;
+    chip.addEventListener('click', function() {
+      state.activeEntityType = state.activeEntityType === typeName ? null : typeName;
+      renderAbsaUnifiedPreview_refresh(previewContainer);
+    });
+    legendRow.appendChild(chip);
+  });
+  previewContainer.appendChild(legendRow);
+
+  /* ── Entity List (interactive, deletable) ── */
+  if (state.previewEntities.length > 0) {
+    var elTitle = document.createElement('div');
+    elTitle.className = 'annotation-preview-task-title';
+    elTitle.style.marginBottom = '6px';
+    elTitle.textContent = state.lang === 'zh' ? '實體列表' : 'Entity List';
+    previewContainer.appendChild(elTitle);
+    var elWrap = document.createElement('div');
+    elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
+    state.previewEntities.forEach(function(ent, i) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
+      var badge = document.createElement('span');
+      var c = typeColorMap[ent.type] || '#6366F1';
+      badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
+      badge.textContent = ent.type;
+      row.appendChild(badge);
+      var txt = document.createElement('span');
+      txt.style.flex = '1';
+      txt.textContent = ent.text;
+      row.appendChild(txt);
+      if (ent.start != null && ent.end != null) {
+        var posEl = document.createElement('span');
+        posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
+        posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
+        row.appendChild(posEl);
+      }
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
+      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
+      (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
+      row.appendChild(delBtn);
+      elWrap.appendChild(row);
+    });
+    previewContainer.appendChild(elWrap);
+  }
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  divider.style.margin = '0 0 12px';
+  previewContainer.appendChild(divider);
+
+  /* ── Relation Builder (interactive dropdowns) ── */
+  var rbTitle = document.createElement('div');
+  rbTitle.className = 'annotation-preview-task-title';
+  rbTitle.style.marginBottom = '8px';
+  rbTitle.textContent = state.lang === 'zh' ? '關係類型' : 'Relation Type';
+  previewContainer.appendChild(rbTitle);
+  var rbRow = document.createElement('div');
+  rbRow.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;';
+  var entOptions = state.previewEntities.map(function(e) { return e.text + '/' + e.type; });
+  var relOptions = relationTypes.length > 0 ? relationTypes : ['causes', 'treats'];
+  function makeSelect(opts, placeholder) {
+    var sel = document.createElement('select');
+    sel.style.cssText = 'padding:4px 8px;border:1.5px solid var(--color-border);border-radius:6px;font-size:0.8rem;min-width:100px;';
+    var ph = document.createElement('option');
+    ph.value = ''; ph.textContent = placeholder; ph.disabled = true; ph.selected = true;
+    sel.appendChild(ph);
+    opts.forEach(function(o) { var opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
+    return sel;
+  }
+  var selE1 = makeSelect(entOptions, 'E1/Arg1');
+  var selRel = makeSelect(relOptions, 'Relation');
+  var selE2 = makeSelect(entOptions, 'E2/Arg2');
+  rbRow.appendChild(selE1); rbRow.appendChild(selRel); rbRow.appendChild(selE2);
+
+  var addTripleBtn = document.createElement('button');
+  addTripleBtn.type = 'button';
+  addTripleBtn.style.cssText = 'padding:4px 12px;border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;';
+  addTripleBtn.textContent = 'Add';
+  addTripleBtn.addEventListener('click', function() {
+    if (!selE1.value || !selRel.value || !selE2.value) return;
+    state.previewTriples.push({ subj: selE1.value, rel: selRel.value, obj: selE2.value });
+    renderAbsaUnifiedPreview_refresh(previewContainer);
+  });
+  rbRow.appendChild(addTripleBtn);
+  previewContainer.appendChild(rbRow);
+
+  /* ── Triple List (interactive, deletable) ── */
+  var tlTitle = document.createElement('div');
+  tlTitle.className = 'annotation-preview-task-title';
+  tlTitle.style.marginBottom = '8px';
+  tlTitle.textContent = state.lang === 'zh' ? '關係三元組標記' : 'Triple List';
+  previewContainer.appendChild(tlTitle);
+
+  var relList = document.createElement('div');
+  relList.className = 'absa-relation-list';
+  state.previewTriples.forEach(function(triple, i) {
+    var row = document.createElement('div');
+    row.className = 'absa-relation-row';
+    row.style.display = 'flex'; row.style.alignItems = 'center';
+    var content = document.createElement('span');
+    content.style.flex = '1';
+    var subjSpan = document.createElement('span');
+    subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
+    content.appendChild(subjSpan);
+    var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
+    content.appendChild(arrow);
+    var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
+    content.appendChild(relBadge);
+    var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
+    content.appendChild(arrow2);
+    var objSpan = document.createElement('span');
+    objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
+    content.appendChild(objSpan);
+    row.appendChild(content);
+    /* type dropdown button */
+    var typeWrap = document.createElement('span');
+    typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
+    var typeBtn = document.createElement('button');
+    typeBtn.type = 'button';
+    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+    typeBtn.textContent = 'type';
+    var typeMenu = document.createElement('div');
+    typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+    var allRelTypes = relationTypes.length > 0 ? relationTypes : ['causes', 'treats'];
+    allRelTypes.forEach(function(rt) {
+      var item = document.createElement('div');
+      item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
+      item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
+      item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
+      var check = document.createElement('span');
+      check.style.cssText = 'width:14px;font-size:0.75rem;';
+      check.textContent = (triple.rel === rt) ? '✓' : '';
+      item.appendChild(check);
+      item.appendChild(document.createTextNode(rt));
+      (function(relType, idx) {
+        item.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          state.previewTriples[idx].rel = relType;
+          renderAbsaUnifiedPreview_refresh(previewContainer);
+        });
+      }(rt, i));
+      typeMenu.appendChild(item);
+    });
+    typeBtn.addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      var isOpen = typeMenu.style.display !== 'none';
+      typeMenu.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
+        setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
+      }
+    });
+    typeWrap.appendChild(typeBtn);
+    typeWrap.appendChild(typeMenu);
+    row.appendChild(typeWrap);
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
+    delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
+    (function(idx) { delBtn.addEventListener('click', function() { state.previewTriples.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
+    row.appendChild(delBtn);
+    relList.appendChild(row);
+  });
+  if (state.previewTriples.length === 0) {
+    var emptyMsg = document.createElement('div');
+    emptyMsg.style.cssText = 'font-size:0.8rem;color:var(--color-text-soft);padding:8px;';
+    emptyMsg.textContent = state.lang === 'zh' ? '（尚無三元組，請從上方新增）' : '(No triples yet — add above)';
+    relList.appendChild(emptyMsg);
+  }
+  previewContainer.appendChild(relList);
+}
+
+function renderAbsaUnifiedPreview_refresh(container) {
+  while (container.firstChild) container.removeChild(container.firstChild);
+  renderAbsaUnifiedPreview(container);
+}
+
+/* ── Per-output-type interactive preview renderers ── */
+function ensurePreviewState(outKey, defaults) {
+  if (!state.previewState[outKey]) state.previewState[outKey] = JSON.parse(JSON.stringify(defaults));
+  return state.previewState[outKey];
+}
+
+function previewTextBlock(container) {
+  var realText = getDatasetPreviewText();
+  var textEl = document.createElement('div');
+  textEl.className = 'absa-preview-text';
+  textEl.style.marginBottom = '12px';
+  var displayText = realText || (state.lang === 'zh' ? '這是一段範例文字，用於預覽標記效果。' : 'This is sample text for annotation preview.');
+  textEl.textContent = displayText.length > 500 ? displayText.substring(0, 500) + '…' : displayText;
+  container.appendChild(textEl);
+  return displayText;
+}
+
+function renderSingleLabelPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
+  if (labels.length === 0) return;
+  var ps = ensurePreviewState(outKey, { selected: null });
+
+  previewTextBlock(container);
+
+  var chipWrap = document.createElement('div');
+  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+  labels.forEach(function(label) {
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    var isActive = ps.selected === label.name;
+    var c = label.color || '#6366F1';
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+    var radio = document.createElement('span');
+    radio.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid ' + (isActive ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;';
+    if (isActive) { var dot = document.createElement('span'); dot.style.cssText = 'width:6px;height:6px;border-radius:50%;background:#fff;'; radio.appendChild(dot); }
+    chip.appendChild(radio);
+    chip.appendChild(document.createTextNode(label.name));
+    chip.addEventListener('click', function() { ps.selected = ps.selected === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
+    chipWrap.appendChild(chip);
+  });
+  container.appendChild(chipWrap);
+}
+
+function renderMultiLabelPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
+  if (labels.length === 0) return;
+  var ps = ensurePreviewState(outKey, { selected: [] });
+
+  previewTextBlock(container);
+
+  var chipWrap = document.createElement('div');
+  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+  labels.forEach(function(label) {
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    var isActive = ps.selected.indexOf(label.name) >= 0;
+    var c = label.color || '#6366F1';
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+    var chkBox = document.createElement('span');
+    chkBox.style.cssText = 'width:14px;height:14px;border-radius:3px;border:2px solid ' + (isActive ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;font-size:10px;';
+    if (isActive) chkBox.textContent = '✓';
+    chip.appendChild(chkBox);
+    chip.appendChild(document.createTextNode(label.name));
+    chip.addEventListener('click', function() {
+      var idx = ps.selected.indexOf(label.name);
+      if (idx >= 0) ps.selected.splice(idx, 1); else ps.selected.push(label.name);
+      refreshOutputPreview(container, outKey);
+    });
+    chipWrap.appendChild(chip);
+  });
+  container.appendChild(chipWrap);
+
+  if (ps.selected.length > 0) {
+    var selInfo = document.createElement('div');
+    selInfo.style.cssText = 'margin-top:8px;font-size:0.8rem;color:var(--color-text-soft);';
+    selInfo.textContent = (state.lang === 'zh' ? '已選：' : 'Selected: ') + ps.selected.join(', ');
+    container.appendChild(selInfo);
+  }
+}
+
+function renderEntityRelationPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
+  if (labels.length === 0) return;
+  var ps = ensurePreviewState(outKey, { selected: null });
+
+  var pairTexts = getDatasetPairTexts();
+  var e1Text = pairTexts ? pairTexts.text1 : (state.lang === 'zh' ? '阿司匹林' : 'Aspirin');
+  var e2Text = pairTexts ? pairTexts.text2 : (state.lang === 'zh' ? '頭痛' : 'Headache');
+  var e1Label = pairTexts ? pairTexts.col1 : 'Entity 1';
+  var e2Label = pairTexts ? pairTexts.col2 : 'Entity 2';
+
+  var pairWrap = document.createElement('div');
+  pairWrap.style.cssText = 'display:flex;align-items:center;gap:16px;margin-bottom:16px;';
+  function makeEntityCard(label, text) {
+    var card = document.createElement('div');
+    card.style.cssText = 'flex:1;padding:12px;background:var(--color-slate-50);border-radius:var(--radius-md);border:1.5px solid var(--color-border);';
+    var lbl = document.createElement('div'); lbl.style.cssText = 'font-size:0.7rem;color:var(--color-text-soft);margin-bottom:4px;'; lbl.textContent = label;
+    var txt = document.createElement('div'); txt.style.cssText = 'font-weight:600;'; txt.textContent = text.length > 60 ? text.substring(0, 60) + '…' : text;
+    card.appendChild(lbl); card.appendChild(txt); return card;
+  }
+  pairWrap.appendChild(makeEntityCard(e1Label, e1Text));
+  var arrowEl = document.createElement('span'); arrowEl.style.cssText = 'font-size:1.2rem;color:var(--color-text-soft);'; arrowEl.textContent = '↔';
+  pairWrap.appendChild(arrowEl);
+  pairWrap.appendChild(makeEntityCard(e2Label, e2Text));
+  container.appendChild(pairWrap);
+
+  var relLabel = document.createElement('div');
+  relLabel.className = 'annotation-preview-task-title';
+  relLabel.style.marginBottom = '8px';
+  relLabel.textContent = state.lang === 'zh' ? '關係標籤' : 'Relation Label';
+  container.appendChild(relLabel);
+
+  var chipWrap = document.createElement('div');
+  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+  labels.forEach(function(label) {
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    var isActive = ps.selected === label.name;
+    var c = label.color || '#6366F1';
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+    chip.textContent = label.name;
+    chip.addEventListener('click', function() { ps.selected = ps.selected === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
+    chipWrap.appendChild(chip);
+  });
+  container.appendChild(chipWrap);
+}
+
+function renderSingleDimPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var dimName = cfg.dimension_name || 'score';
+  var min = cfg.min != null ? cfg.min : 1;
+  var max = cfg.max != null ? cfg.max : 5;
+  var step = cfg.step != null ? cfg.step : 1;
+  var mid = Math.round((min + max) / 2 / step) * step;
+  var ps = ensurePreviewState(outKey, { value: mid });
+
+  previewTextBlock(container);
+
+  var dimTitle = document.createElement('div');
+  dimTitle.style.cssText = 'font-weight:600;font-size:0.9rem;margin-bottom:6px;text-transform:capitalize;';
+  dimTitle.textContent = dimName;
+  container.appendChild(dimTitle);
+
+  var sliderWrap = document.createElement('div');
+  sliderWrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  var minLabel = document.createElement('span');
+  minLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:right;';
+  minLabel.textContent = min;
+  var maxLabel = document.createElement('span');
+  maxLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;';
+  maxLabel.textContent = max;
+  var valLabel = document.createElement('span');
+  valLabel.style.cssText = 'font-size:0.9rem;font-weight:700;color:var(--color-primary);min-width:24px;text-align:center;';
+  valLabel.textContent = ps.value;
+  var range = document.createElement('input');
+  range.type = 'range'; range.min = min; range.max = max; range.step = step; range.value = ps.value;
+  range.style.cssText = 'flex:1;cursor:pointer;';
+  range.addEventListener('input', function() { ps.value = +range.value; valLabel.textContent = ps.value; });
+  sliderWrap.appendChild(minLabel); sliderWrap.appendChild(range); sliderWrap.appendChild(maxLabel); sliderWrap.appendChild(valLabel);
+  container.appendChild(sliderWrap);
+}
+
+function renderTokenClassPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var labels = Array.isArray(cfg.entities) ? cfg.entities.filter(function(e) { return e && e.name; }) : [];
+  var scheme = cfg.tagging_scheme || 'BIO';
+  var ps = ensurePreviewState(outKey, { activeLabel: null, tokens: null });
+
+  var realText = getDatasetPreviewText();
+  var text = realText || (state.lang === 'zh' ? '台積電 董事長 魏哲家 今天 出席 台北 產業論壇' : 'TSMC chairman C.C. Wei attended an industry forum in Taipei today');
+  var tokens = text.split(/\s+/).filter(Boolean);
+  if (!ps.tokens || ps.tokens.length !== tokens.length) { ps.tokens = tokens.map(function() { return 'O'; }); }
+
+  /* Label selector */
+  var typeTitle = document.createElement('div');
+  typeTitle.className = 'annotation-preview-task-title';
+  typeTitle.style.marginBottom = '6px';
+  typeTitle.textContent = state.lang === 'zh' ? '標籤類型' : 'Label Type';
+  container.appendChild(typeTitle);
+
+  var chipWrap = document.createElement('div');
+  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
+  var oChip = document.createElement('button'); oChip.type = 'button';
+  oChip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid #94a3b8;color:' + (ps.activeLabel === null ? '#fff' : '#94a3b8') + ';background:' + (ps.activeLabel === null ? '#94a3b8' : 'transparent') + ';';
+  oChip.textContent = 'O';
+  oChip.addEventListener('click', function() { ps.activeLabel = null; refreshOutputPreview(container, outKey); });
+  chipWrap.appendChild(oChip);
+  labels.forEach(function(label) {
+    var c = label.color || '#6366F1';
+    var chip = document.createElement('button'); chip.type = 'button';
+    var isActive = ps.activeLabel === label.name;
+    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';';
+    chip.textContent = label.name;
+    chip.addEventListener('click', function() { ps.activeLabel = ps.activeLabel === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
+    chipWrap.appendChild(chip);
+  });
+  container.appendChild(chipWrap);
+
+  /* Token grid */
+  var tokenWrap = document.createElement('div');
+  tokenWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;';
+  tokens.forEach(function(tok, i) {
+    var tokEl = document.createElement('button'); tokEl.type = 'button';
+    var tag = ps.tokens[i];
+    var matchedLabel = labels.find(function(l) { return tag.indexOf(l.name) >= 0; });
+    var bgColor = matchedLabel ? matchedLabel.color + '33' : '#f1f5f9';
+    var borderColor = matchedLabel ? matchedLabel.color : '#e2e8f0';
+    var textColor = matchedLabel ? matchedLabel.color : 'var(--color-ink)';
+    tokEl.style.cssText = 'padding:6px 10px;border-radius:6px;font-size:0.85rem;cursor:pointer;border:1.5px solid ' + borderColor + ';background:' + bgColor + ';color:' + textColor + ';display:flex;flex-direction:column;align-items:center;gap:2px;';
+    var tokText = document.createElement('span'); tokText.textContent = tok;
+    tokEl.appendChild(tokText);
+    var tagText = document.createElement('span'); tagText.style.cssText = 'font-size:0.65rem;font-weight:700;'; tagText.textContent = tag;
+    tokEl.appendChild(tagText);
+    (function(idx) {
+      tokEl.addEventListener('click', function() {
+        if (ps.activeLabel === null) { ps.tokens[idx] = 'O'; }
+        else {
+          var prev = idx > 0 ? ps.tokens[idx - 1] : 'O';
+          var prefix = (prev.indexOf(ps.activeLabel) >= 0) ? 'I' : 'B';
+          ps.tokens[idx] = prefix + '-' + ps.activeLabel;
+        }
+        refreshOutputPreview(container, outKey);
+      });
+    }(i));
+    tokenWrap.appendChild(tokEl);
+  });
+  container.appendChild(tokenWrap);
+
+  var schemeInfo = document.createElement('div');
+  schemeInfo.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);';
+  schemeInfo.textContent = (state.lang === 'zh' ? '標記方案：' : 'Scheme: ') + scheme;
+  container.appendChild(schemeInfo);
+}
+
+function renderBoundaryPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var boundaryTypes = Array.isArray(cfg.boundary_types) ? cfg.boundary_types.filter(Boolean) : ['sentence'];
+  var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: [] });
+
+  var realText = getDatasetPreviewText();
+  var text = realText || (state.lang === 'zh' ? '第一段文字。第二段文字。第三段文字。第四段文字。' : 'First sentence. Second sentence. Third sentence. Fourth sentence.');
+  var segments = text.split(/(?<=[。．！？.!?])\s*/);
+  if (segments.length < 2) segments = [text.substring(0, Math.floor(text.length / 2)), text.substring(Math.floor(text.length / 2))];
+
+  /* Boundary type selector */
+  var typeTitle = document.createElement('div');
+  typeTitle.className = 'annotation-preview-task-title';
+  typeTitle.style.marginBottom = '6px';
+  typeTitle.textContent = state.lang === 'zh' ? '邊界類型' : 'Boundary Type';
+  container.appendChild(typeTitle);
+
+  var chipWrap = document.createElement('div');
+  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
+  boundaryTypes.forEach(function(bt) {
+    var chip = document.createElement('button'); chip.type = 'button';
+    var isActive = ps.activeType === bt;
+    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--color-primary);color:' + (isActive ? '#fff' : 'var(--color-primary)') + ';background:' + (isActive ? 'var(--color-primary)' : 'transparent') + ';';
+    chip.textContent = bt;
+    chip.addEventListener('click', function() { ps.activeType = bt; refreshOutputPreview(container, outKey); });
+    chipWrap.appendChild(chip);
+  });
+  container.appendChild(chipWrap);
+
+  /* Text segments with clickable gaps */
+  var segWrap = document.createElement('div');
+  segWrap.style.cssText = 'line-height:2;';
+  segments.forEach(function(seg, i) {
+    var span = document.createElement('span');
+    span.style.cssText = 'background:#f8fafc;padding:2px 4px;border-radius:4px;';
+    span.textContent = seg;
+    segWrap.appendChild(span);
+    if (i < segments.length - 1) {
+      var markerIdx = ps.markers.findIndex(function(m) { return m.position === i; });
+      var hasMarker = markerIdx >= 0;
+      var gap = document.createElement('button'); gap.type = 'button';
+      gap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;margin:0 2px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;vertical-align:middle;border:1.5px dashed ' + (hasMarker ? '#E74C3C' : 'var(--color-border)') + ';background:' + (hasMarker ? '#FEE2E2' : 'transparent') + ';color:' + (hasMarker ? '#E74C3C' : 'var(--color-text-soft)') + ';';
+      gap.textContent = hasMarker ? '✂' : '|';
+      gap.title = hasMarker ? (state.lang === 'zh' ? '移除邊界' : 'Remove boundary') : (state.lang === 'zh' ? '插入邊界' : 'Insert boundary');
+      (function(pos, mIdx) {
+        gap.addEventListener('click', function() {
+          if (mIdx >= 0) ps.markers.splice(mIdx, 1);
+          else ps.markers.push({ position: pos, type: ps.activeType });
+          refreshOutputPreview(container, outKey);
+        });
+      }(i, markerIdx));
+      segWrap.appendChild(gap);
+    }
+  });
+  container.appendChild(segWrap);
+
+  if (ps.markers.length > 0) {
+    var info = document.createElement('div');
+    info.style.cssText = 'margin-top:8px;font-size:0.8rem;color:var(--color-text-soft);';
+    info.textContent = (state.lang === 'zh' ? '已標記 ' : 'Marked ') + ps.markers.length + (state.lang === 'zh' ? ' 個邊界' : ' boundaries');
+    container.appendChild(info);
+  }
+}
+
+function renderSpanOnlyPreview(container, outKey) {
+  if (!state.previewInited) initPreviewState();
+  var realText = getDatasetPreviewText();
+  var tc = getPreviewTypeColorMap();
+  var typeColorMap = tc.map, typeOrder = tc.order;
+
+  /* Text with entity highlights */
+  var textEl = document.createElement('div');
+  textEl.className = 'absa-preview-text';
+  textEl.style.cursor = 'text'; textEl.style.userSelect = 'text';
+  if (realText && state.previewEntities.length > 0) {
+    var sorted = state.previewEntities.slice().filter(function(e) { return e.start != null; }).sort(function(a, b) { return a.start - b.start; });
+    var charPos = 0;
+    sorted.forEach(function(ent) {
+      if (ent.start > charPos) textEl.appendChild(document.createTextNode(realText.substring(charPos, ent.start)));
+      var span = document.createElement('span'); span.className = 'absa-span-highlight';
+      var c = typeColorMap[ent.type] || '#6366F1';
+      span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c; span.title = ent.type;
+      span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
+      textEl.appendChild(span);
+      charPos = (ent.end || ent.start) + 1;
+    });
+    if (charPos < realText.length) textEl.appendChild(document.createTextNode(realText.substring(charPos)));
+  } else if (realText) {
+    textEl.textContent = realText.length > 500 ? realText.substring(0, 500) + '…' : realText;
+  }
+  textEl.addEventListener('mouseup', function() {
+    if (!state.activeEntityType || !realText) return;
+    var sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
+    var selText = sel.toString().trim();
+    var idx = realText.indexOf(selText);
+    if (idx < 0) return;
+    state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
+    sel.removeAllRanges();
+    refreshOutputPreview(container, outKey);
+  });
+  container.appendChild(textEl);
+
+  /* Entity type selector */
+  var etTitle = document.createElement('div');
+  etTitle.className = 'annotation-preview-task-title';
+  etTitle.style.cssText = 'margin:12px 0 6px;';
+  etTitle.textContent = state.lang === 'zh' ? '實體類型' : 'Entity Type';
+  container.appendChild(etTitle);
+  var legendRow = document.createElement('div');
+  legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
+  typeOrder.forEach(function(typeName) {
+    var c = typeColorMap[typeName] || '#6366F1';
+    var chip = document.createElement('button'); chip.type = 'button';
+    var isActive = state.activeEntityType === typeName;
+    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';';
+    chip.textContent = typeName;
+    chip.addEventListener('click', function() { state.activeEntityType = state.activeEntityType === typeName ? null : typeName; refreshOutputPreview(container, outKey); });
+    legendRow.appendChild(chip);
+  });
+  container.appendChild(legendRow);
+
+  /* Entity list */
+  if (state.previewEntities.length > 0) {
+    var elTitle = document.createElement('div');
+    elTitle.className = 'annotation-preview-task-title';
+    elTitle.style.marginBottom = '6px';
+    elTitle.textContent = state.lang === 'zh' ? '實體列表' : 'Entity List';
+    container.appendChild(elTitle);
+    var elWrap = document.createElement('div');
+    elWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
+    state.previewEntities.forEach(function(ent, i) {
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
+      var badge = document.createElement('span');
+      var c = typeColorMap[ent.type] || '#6366F1';
+      badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
+      badge.textContent = ent.type;
+      row.appendChild(badge);
+      var txt = document.createElement('span'); txt.style.flex = '1'; txt.textContent = ent.text; row.appendChild(txt);
+      if (ent.start != null && ent.end != null) { var posEl = document.createElement('span'); posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;'; posEl.textContent = '(' + ent.start + ', ' + ent.end + ')'; row.appendChild(posEl); }
+      var delBtn = document.createElement('button'); delBtn.type = 'button';
+      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
+      (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); refreshOutputPreview(container, outKey); }); }(i));
+      row.appendChild(delBtn);
+      elWrap.appendChild(row);
+    });
+    container.appendChild(elWrap);
+  }
+}
+
+function renderFreeTextPreview(container, outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  var maxLen = cfg.max_length || 512;
+  var showRef = cfg.show_reference || false;
+  var ps = ensurePreviewState(outKey, { text: '' });
+
+  previewTextBlock(container);
+
+  if (showRef) {
+    var refTitle = document.createElement('div');
+    refTitle.style.cssText = 'font-size:0.8rem;color:var(--color-text-soft);margin-bottom:4px;';
+    refTitle.textContent = state.lang === 'zh' ? '參考答案（僅供比對）' : 'Reference (for comparison)';
+    container.appendChild(refTitle);
+    var refBox = document.createElement('div');
+    refBox.style.cssText = 'padding:8px 12px;background:#FFF8E1;border:1px solid #FFE082;border-radius:var(--radius-md);margin-bottom:12px;font-size:0.85rem;color:#F57F17;';
+    refBox.textContent = state.lang === 'zh' ? '（參考答案會在此處顯示）' : '(Reference answer shown here)';
+    container.appendChild(refBox);
+  }
+
+  var ansTitle = document.createElement('div');
+  ansTitle.className = 'annotation-preview-task-title';
+  ansTitle.style.marginBottom = '6px';
+  ansTitle.textContent = state.lang === 'zh' ? '回答' : 'Answer';
+  container.appendChild(ansTitle);
+
+  var textarea = document.createElement('textarea');
+  textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
+  textarea.placeholder = state.lang === 'zh' ? '在此輸入回答…' : 'Type your answer here…';
+  textarea.value = ps.text;
+  textarea.maxLength = maxLen;
+  textarea.addEventListener('input', function() { ps.text = textarea.value; charCount.textContent = textarea.value.length + ' / ' + maxLen; });
+  container.appendChild(textarea);
+
+  var charCount = document.createElement('div');
+  charCount.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);text-align:right;margin-top:4px;';
+  charCount.textContent = ps.text.length + ' / ' + maxLen;
+  container.appendChild(charCount);
+}
+
+function renderRelationTripleOnlyPreview(container, outKey) {
+  if (!state.previewInited) initPreviewState();
+  var relCfg = state.outputConfigs[outKey] || {};
+  var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : ['causes', 'treats'];
+
+  previewTextBlock(container);
+
+  /* Relation builder */
+  var rbTitle = document.createElement('div');
+  rbTitle.className = 'annotation-preview-task-title';
+  rbTitle.style.marginBottom = '8px';
+  rbTitle.textContent = state.lang === 'zh' ? '關係類型' : 'Relation Type';
+  container.appendChild(rbTitle);
+
+  var rbRow = document.createElement('div');
+  rbRow.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;';
+  function makeSelect(opts, placeholder) {
+    var sel = document.createElement('select');
+    sel.style.cssText = 'padding:4px 8px;border:1.5px solid var(--color-border);border-radius:6px;font-size:0.8rem;min-width:100px;';
+    var ph = document.createElement('option'); ph.value = ''; ph.textContent = placeholder; ph.disabled = true; ph.selected = true; sel.appendChild(ph);
+    opts.forEach(function(o) { var opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
+    return sel;
+  }
+  var sampleEnts = ['Entity 1', 'Entity 2', 'Entity 3'];
+  var selE1 = makeSelect(sampleEnts, 'E1/Arg1');
+  var selRel = makeSelect(relationTypes, 'Relation');
+  var selE2 = makeSelect(sampleEnts, 'E2/Arg2');
+  rbRow.appendChild(selE1); rbRow.appendChild(selRel); rbRow.appendChild(selE2);
+  var addBtn = document.createElement('button'); addBtn.type = 'button';
+  addBtn.style.cssText = 'padding:4px 12px;border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;';
+  addBtn.textContent = 'Add';
+  addBtn.addEventListener('click', function() {
+    if (!selE1.value || !selRel.value || !selE2.value) return;
+    state.previewTriples.push({ subj: selE1.value, rel: selRel.value, obj: selE2.value });
+    refreshOutputPreview(container, outKey);
+  });
+  rbRow.appendChild(addBtn);
+  container.appendChild(rbRow);
+
+  /* Triple list */
+  var tlTitle = document.createElement('div');
+  tlTitle.className = 'annotation-preview-task-title';
+  tlTitle.style.marginBottom = '8px';
+  tlTitle.textContent = state.lang === 'zh' ? '關係三元組標記' : 'Triple List';
+  container.appendChild(tlTitle);
+  if (state.previewTriples.length > 0) {
+    state.previewTriples.forEach(function(triple, i) {
+      var row = document.createElement('div'); row.className = 'absa-relation-row'; row.style.display = 'flex'; row.style.alignItems = 'center';
+      var content = document.createElement('span'); content.style.flex = '1';
+      var subjSpan = document.createElement('span'); subjSpan.style.cssText = 'font-weight:600;font-size:11px'; subjSpan.textContent = triple.subj;
+      var arrow1 = document.createElement('span'); arrow1.className = 'absa-arrow'; arrow1.textContent = '→';
+      var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
+      var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = '→';
+      var objSpan = document.createElement('span'); objSpan.style.cssText = 'font-weight:600;font-size:11px'; objSpan.textContent = triple.obj;
+      content.appendChild(subjSpan); content.appendChild(document.createTextNode(' ')); content.appendChild(arrow1); content.appendChild(document.createTextNode(' ')); content.appendChild(relBadge); content.appendChild(document.createTextNode(' ')); content.appendChild(arrow2); content.appendChild(document.createTextNode(' ')); content.appendChild(objSpan);
+      row.appendChild(content);
+      var delBtn = document.createElement('button'); delBtn.type = 'button';
+      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;margin-left:8px;';
+      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
+      (function(idx) { delBtn.addEventListener('click', function() { state.previewTriples.splice(idx, 1); refreshOutputPreview(container, outKey); }); }(i));
+      row.appendChild(delBtn);
+      container.appendChild(row);
+    });
+  } else {
+    var emptyMsg = document.createElement('div');
+    emptyMsg.style.cssText = 'font-size:0.8rem;color:var(--color-text-soft);padding:8px;';
+    emptyMsg.textContent = state.lang === 'zh' ? '（尚無三元組，請從上方新增）' : '(No triples yet — add above)';
+    container.appendChild(emptyMsg);
+  }
+}
+
+/* ── Preview dispatcher ── */
+function renderOutputPreview(container, outKey) {
+  switch (outKey) {
+    case 'single_label': renderSingleLabelPreview(container, outKey); break;
+    case 'multi_label': renderMultiLabelPreview(container, outKey); break;
+    case 'entity_relation': renderEntityRelationPreview(container, outKey); break;
+    case 'single_dim': renderSingleDimPreview(container, outKey); break;
+    case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}); break;
+    case 'token_class': renderTokenClassPreview(container, outKey); break;
+    case 'boundary': renderBoundaryPreview(container, outKey); break;
+    case 'span': renderSpanOnlyPreview(container, outKey); break;
+    case 'relation_triple': renderRelationTripleOnlyPreview(container, outKey); break;
+    case 'free_text': renderFreeTextPreview(container, outKey); break;
+    default:
+      var placeholder = document.createElement('div');
+      placeholder.className = 'annotation-preview-empty';
+      placeholder.textContent = state.lang === 'zh' ? '（設定後顯示預覽）' : '(Preview updates after config)';
+      container.appendChild(placeholder);
+  }
+}
+
+function refreshOutputPreview(container, outKey) {
+  while (container.firstChild) container.removeChild(container.firstChild);
+  renderOutputPreview(container, outKey);
+}
+
 function renderSchemaFields() {
   var container = el('schemaFields');
   while (container.firstChild) container.removeChild(container.firstChild);
+
+  /* ADR-029: render accordion layout for all output types (single or multi) */
+  if (state.selectedOutputTypes.length >= 1) {
+    var autoCollapse = state.selectedOutputTypes.length > 2;
+    state.selectedOutputTypes.forEach(function(outKey, idx) {
+      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+      if (!outReg) return;
+      var isCollapsed = autoCollapse && idx > 0;
+      var accResult = buildOutputAccordion(outKey, outReg, isCollapsed);
+      renderOutputTypeFields(accResult.body, outKey);
+      container.appendChild(accResult.accordion);
+    });
+    /* Sync code panel with unified config */
+    if (!state.codeDraftDirty) {
+      el('codeEditor').value = configToCode();
+    }
+    updateAnnotationPreview();
+    return;
+  }
+
   var schema = state.taskType ? REGISTRY[state.taskType] : null;
   if (!schema) return;
 
@@ -1997,6 +3660,75 @@ function renderSchemaFields() {
       appendSchemaField(polaritySection, spanFieldByKey.polarity_options);
       container.appendChild(polaritySection);
     }
+
+    updateAnnotationPreview();
+    return;
+  }
+
+  if (state.taskType === 'sentence_pairs') {
+    autoPopulateSentencePairsConfig();
+    var spFieldByKey = {};
+    schema.fields.forEach(function(field) { spFieldByKey[field.key] = field; });
+
+    var modeSection = buildSchemaSection(t('spTaskModeSectionTitle'), t('spTaskModeSectionDesc'));
+    var modeGrid = document.createElement('div');
+    modeGrid.className = 'schema-field-grid';
+    appendSchemaField(modeGrid, spFieldByKey.pair_mode);
+    appendSchemaField(modeGrid, spFieldByKey.response_format);
+    modeSection.appendChild(modeGrid);
+    container.appendChild(modeSection);
+
+    var fieldSection = buildSchemaSection(t('spFieldMappingSectionTitle'), t('spFieldMappingSectionDesc'));
+    var fieldGrid = document.createElement('div');
+    fieldGrid.className = 'schema-field-grid';
+    var s1 = Object.assign({}, spFieldByKey.sentence_1_field, { readOnly: true });
+    var s2 = Object.assign({}, spFieldByKey.sentence_2_field, { readOnly: true });
+    appendSchemaField(fieldGrid, s1);
+    appendSchemaField(fieldGrid, s2);
+    fieldSection.appendChild(fieldGrid);
+    var labelGrid = document.createElement('div');
+    labelGrid.className = 'schema-field-grid';
+    appendSchemaField(labelGrid, spFieldByKey.sentence_1_label);
+    appendSchemaField(labelGrid, spFieldByKey.sentence_2_label);
+    fieldSection.appendChild(labelGrid);
+    var evidenceFields = getFieldsByRole('evidence');
+    if (evidenceFields.length > 0) {
+      var evWrap = document.createElement('div');
+      evWrap.className = 'schema-field-wrap';
+      var evLabel = document.createElement('label');
+      evLabel.className = 'field-label';
+      evLabel.textContent = t('spEvidenceFieldsLabel');
+      evWrap.appendChild(evLabel);
+      var evValue = document.createElement('div');
+      evValue.className = 'field-readonly-value';
+      evValue.textContent = evidenceFields.join(', ');
+      evValue.style.cssText = 'padding:6px 10px;background:#f1f5f9;border-radius:6px;color:#475569;font-size:0.85rem;';
+      evWrap.appendChild(evValue);
+      fieldSection.appendChild(evWrap);
+    }
+    container.appendChild(fieldSection);
+
+    var responseFormat = state.configData.response_format || 'classification';
+    var outputSection = buildSchemaSection(t('spOutputSectionTitle'), t('spOutputSectionDesc'));
+    if (responseFormat === 'classification') {
+      appendSchemaField(outputSection, spFieldByKey.label_options);
+    } else {
+      var scoreGrid = document.createElement('div');
+      scoreGrid.className = 'schema-field-grid schema-field-grid-3';
+      appendSchemaField(scoreGrid, spFieldByKey.score_min);
+      appendSchemaField(scoreGrid, spFieldByKey.score_max);
+      appendSchemaField(scoreGrid, spFieldByKey.score_step);
+      outputSection.appendChild(scoreGrid);
+    }
+    container.appendChild(outputSection);
+
+    var annotationSection = buildSchemaSection(t('spAnnotationSectionTitle'), t('spAnnotationSectionDesc'));
+    var toggleList = document.createElement('div');
+    toggleList.className = 'schema-toggle-list';
+    appendSchemaField(toggleList, spFieldByKey.allow_unsure);
+    appendSchemaField(toggleList, spFieldByKey.note_enabled);
+    annotationSection.appendChild(toggleList);
+    container.appendChild(annotationSection);
 
     updateAnnotationPreview();
     return;
@@ -2264,13 +3996,156 @@ function appendPreviewOptionRows(optionsWrap, options, singleSelectPreview) {
   });
 }
 
+function renderSentencePairsPreview(preview, config) {
+  var rawRow = state.datasetRawFirstRow || {};
+  var evidenceFields = config.evidence_fields || [];
+  var s1Field = config.sentence_1_field || '';
+  var s2Field = config.sentence_2_field || '';
+  var pairTexts = getDatasetPairTexts();
+  if (!s1Field && pairTexts) s1Field = pairTexts.col1;
+  if (!s2Field && pairTexts) s2Field = pairTexts.col2;
+  var s1Label = config.sentence_1_label || s1Field || 'Sentence 1';
+  var s2Label = config.sentence_2_label || s2Field || 'Sentence 2';
+  var s1Text = rawRow[s1Field] || (pairTexts ? pairTexts.text1 : '') || (state.lang === 'en' ? '(no data)' : '（無資料）');
+  var s2Text = rawRow[s2Field] || (pairTexts ? pairTexts.text2 : '') || (state.lang === 'en' ? '(no data)' : '（無資料）');
+
+  evidenceFields.forEach(function(evField) {
+    var evText = rawRow[evField];
+    if (!evText) return;
+    var evCard = document.createElement('div');
+    evCard.className = 'sp-evidence-card';
+    evCard.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#475569;font-size:0.85rem;line-height:1.5;border-left:3px solid #94a3b8;';
+    var evLabel = document.createElement('div');
+    evLabel.style.cssText = 'font-weight:600;font-size:0.75rem;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;';
+    evLabel.textContent = evField;
+    evCard.appendChild(evLabel);
+    var evBody = document.createElement('div');
+    evBody.textContent = String(evText).length > 200 ? String(evText).substring(0, 200) + '…' : String(evText);
+    evCard.appendChild(evBody);
+    preview.appendChild(evCard);
+  });
+
+  var pairWrap = document.createElement('div');
+  pairWrap.className = 'annotation-preview-pair';
+
+  var p1LabelEl = document.createElement('div');
+  p1LabelEl.className = 'annotation-preview-pair-label';
+  p1LabelEl.textContent = s1Label;
+  pairWrap.appendChild(p1LabelEl);
+  var p1 = document.createElement('div');
+  p1.className = 'annotation-preview-sample';
+  p1.textContent = String(s1Text).length > 300 ? String(s1Text).substring(0, 300) + '…' : String(s1Text);
+  pairWrap.appendChild(p1);
+
+  var p2LabelEl = document.createElement('div');
+  p2LabelEl.className = 'annotation-preview-pair-label';
+  p2LabelEl.textContent = s2Label;
+  pairWrap.appendChild(p2LabelEl);
+  var p2 = document.createElement('div');
+  p2.className = 'annotation-preview-sample';
+  p2.textContent = String(s2Text).length > 300 ? String(s2Text).substring(0, 300) + '…' : String(s2Text);
+  pairWrap.appendChild(p2);
+
+  preview.appendChild(pairWrap);
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  preview.appendChild(divider);
+
+  var responseFormat = config.response_format || 'classification';
+  if (responseFormat === 'classification') {
+    var labels = Array.isArray(config.label_options) ? config.label_options.filter(function(l) { return l && l.trim(); }) : [];
+    if (labels.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'annotation-preview-empty';
+      empty.textContent = t('previewEmpty');
+      preview.appendChild(empty);
+    } else {
+      var title = document.createElement('div');
+      title.className = 'annotation-preview-task-title';
+      title.textContent = t('previewTaskChooseLabel');
+      preview.appendChild(title);
+      var optionsWrap = document.createElement('div');
+      optionsWrap.className = 'annotation-preview-options';
+      labels.forEach(function(label) {
+        var row = document.createElement('label');
+        row.className = 'annotation-preview-option';
+        var radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'sp_preview_label';
+        radio.disabled = true;
+        row.appendChild(radio);
+        var span = document.createElement('span');
+        span.textContent = label;
+        row.appendChild(span);
+        optionsWrap.appendChild(row);
+      });
+      preview.appendChild(optionsWrap);
+    }
+  } else {
+    var scoreTitle = document.createElement('div');
+    scoreTitle.className = 'annotation-preview-task-title';
+    scoreTitle.textContent = state.lang === 'en' ? 'Score' : '評分';
+    preview.appendChild(scoreTitle);
+    var scoreWrap = document.createElement('div');
+    scoreWrap.className = 'annotation-preview-options';
+    var sMin = config.score_min || 1;
+    var sMax = config.score_max || 5;
+    var sStep = config.score_step || 1;
+    for (var s = sMin; s <= sMax; s += sStep) {
+      var sRow = document.createElement('label');
+      sRow.className = 'annotation-preview-option';
+      var sRadio = document.createElement('input');
+      sRadio.type = 'radio';
+      sRadio.name = 'sp_preview_score';
+      sRadio.disabled = true;
+      sRow.appendChild(sRadio);
+      var sSpan = document.createElement('span');
+      sSpan.textContent = String(s);
+      sRow.appendChild(sSpan);
+      scoreWrap.appendChild(sRow);
+    }
+    preview.appendChild(scoreWrap);
+  }
+
+  if (config.allow_unsure) {
+    var unsureDiv = document.createElement('div');
+    unsureDiv.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;';
+    var unsureRow = document.createElement('label');
+    unsureRow.className = 'annotation-preview-option';
+    var unsureRadio = document.createElement('input');
+    unsureRadio.type = 'radio';
+    unsureRadio.name = 'sp_preview_label';
+    unsureRadio.disabled = true;
+    unsureRow.appendChild(unsureRadio);
+    var unsureSpan = document.createElement('span');
+    unsureSpan.style.color = '#94a3b8';
+    unsureSpan.textContent = state.lang === 'en' ? 'Unsure' : '不確定';
+    unsureRow.appendChild(unsureSpan);
+    unsureDiv.appendChild(unsureRow);
+    preview.appendChild(unsureDiv);
+  }
+
+  if (config.note_enabled) {
+    var noteWrap = document.createElement('div');
+    noteWrap.style.cssText = 'margin-top:8px;';
+    var noteTextarea = document.createElement('textarea');
+    noteTextarea.disabled = true;
+    noteTextarea.placeholder = state.lang === 'en' ? 'Add a note (optional)' : '新增備註（選填）';
+    noteTextarea.style.cssText = 'width:100%;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:0.8rem;resize:vertical;min-height:48px;background:#f8fafc;color:#94a3b8;';
+    noteWrap.appendChild(noteTextarea);
+    preview.appendChild(noteWrap);
+  }
+}
+
 function renderAspectListPreview(preview, config) {
   var allowEdit = !!config.allow_sentence_edit;
   var allowAdd  = config.allow_aspect_add !== false;
   var allowDel  = config.allow_aspect_delete !== false;
   var showSentimentHint = !!config.require_sentiment_context_check;
 
-  var SAMPLE_SENTENCE = t('previewSampleSentenceAspectList');
+  var realText = getDatasetPreviewText();
+  var SAMPLE_SENTENCE = realText ? (realText.length > 300 ? realText.substring(0, 300) + '…' : realText) : t('previewSampleSentenceAspectList');
   var SAMPLE_ASPECTS  = state.lang === 'zh'
     ? ['服務態度', '環境整潔', '餐點品質']
     : ['service attitude', 'cleanliness', 'food quality'];
@@ -2376,10 +4251,11 @@ function renderRelationExtractionPreview(preview, config) {
   var entityTypes = Array.isArray(config.entity_types) ? config.entity_types.filter(function(e) { return e && e.name; }) : [];
   var relationTypes = Array.isArray(config.relation_types) ? config.relation_types.filter(Boolean) : [];
 
-  /* Sample sentence */
+  /* Sample sentence — use uploaded data if available */
+  var realText = getDatasetPreviewText();
   var sampleEl = document.createElement('div');
   sampleEl.className = 'annotation-preview-sample';
-  sampleEl.textContent = t('previewSampleSentenceRelation');
+  sampleEl.textContent = realText ? (realText.length > 300 ? realText.substring(0, 300) + '…' : realText) : t('previewSampleSentenceRelation');
   preview.appendChild(sampleEl);
 
   var divider = document.createElement('div');
@@ -2507,12 +4383,76 @@ function updateAnnotationPreview() {
   if (!preview) return;
   while (preview.firstChild) preview.removeChild(preview.firstChild);
 
+  /* ADR-029: output-type composition preview */
+  if (state.selectedOutputTypes.length >= 1) {
+    /* Check if any output has a dependency on another selected output */
+    var hasDependency = state.selectedOutputTypes.some(function(outKey) {
+      var srcKey = OUTPUT_TYPE_DEPS[outKey];
+      return srcKey && state.selectedOutputTypes.indexOf(srcKey) >= 0;
+    });
+
+    if (hasDependency) {
+      /* Unified preview for dependent outputs (e.g. ABSA: span + relation_triple) */
+      var unifiedWrap = document.createElement('div');
+      unifiedWrap.className = 'preview-unified';
+      renderAbsaUnifiedPreview(unifiedWrap);
+      preview.appendChild(unifiedWrap);
+
+      /* Render independent outputs that aren't part of a dependency chain */
+      var depSet = {};
+      state.selectedOutputTypes.forEach(function(outKey) {
+        var srcKey = OUTPUT_TYPE_DEPS[outKey];
+        if (srcKey && state.selectedOutputTypes.indexOf(srcKey) >= 0) {
+          depSet[outKey] = true;
+          depSet[srcKey] = true;
+        }
+      });
+      var independentOuts = state.selectedOutputTypes.filter(function(outKey) { return !depSet[outKey]; });
+      if (independentOuts.length > 0) {
+        independentOuts.forEach(function(outKey) {
+          var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+          var divider = document.createElement('div');
+          divider.className = 'annotation-preview-divider';
+          preview.appendChild(divider);
+          var cardTitle = document.createElement('div');
+          cardTitle.className = 'annotation-preview-task-title';
+          cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+          preview.appendChild(cardTitle);
+          renderOutputPreview(preview, outKey);
+        });
+      }
+    } else {
+      /* Preview cards for independent outputs */
+      state.selectedOutputTypes.forEach(function(outKey, idx) {
+        if (idx > 0) {
+          var divider = document.createElement('div');
+          divider.className = 'annotation-preview-divider';
+          preview.appendChild(divider);
+        }
+        var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+        var cardTitle = document.createElement('div');
+        cardTitle.className = 'annotation-preview-task-title';
+        cardTitle.style.marginBottom = '8px';
+        cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+        preview.appendChild(cardTitle);
+        renderOutputPreview(preview, outKey);
+      });
+    }
+    if (!state.codeDraftDirty) {
+      el('codeEditor').value = configToCode();
+    }
+    return;
+  }
+
   var taskType = state.taskType;
   var config = state.configData || {};
   var titleText = t('previewTaskChooseLabel');
   var options = [];
 
-  if (taskType === 'sequence_labeling' && currentSubtype() === 'aspect_list') {
+  if (taskType === 'sentence_pairs') {
+    renderSentencePairsPreview(preview, config);
+    return;
+  } else if (taskType === 'sequence_labeling' && currentSubtype() === 'aspect_list') {
     renderAspectListPreview(preview, config);
     return;
   } else if (taskType === 'relation_extraction') {
@@ -2550,40 +4490,16 @@ function updateAnnotationPreview() {
     }) : [];
   }
 
-  if (taskType === 'sentence_pairs') {
-    var pairWrap = document.createElement('div');
-    pairWrap.className = 'annotation-preview-pair';
-
-    var p1Label = document.createElement('div');
-    p1Label.className = 'annotation-preview-pair-label';
-    p1Label.textContent = t('previewSentenceALabel');
-    pairWrap.appendChild(p1Label);
-
-    var p1 = document.createElement('div');
-    p1.className = 'annotation-preview-sample';
-    p1.textContent = t('previewSampleSentenceA');
-    pairWrap.appendChild(p1);
-
-    var p2Label = document.createElement('div');
-    p2Label.className = 'annotation-preview-pair-label';
-    p2Label.textContent = t('previewSentenceBLabel');
-    pairWrap.appendChild(p2Label);
-
-    var p2 = document.createElement('div');
-    p2.className = 'annotation-preview-sample';
-    p2.textContent = t('previewSampleSentenceB');
-    pairWrap.appendChild(p2);
-
-    preview.appendChild(pairWrap);
-  } else {
+  {
     var sampleTextKey = 'previewSampleSentence';
     if (taskType === 'single_sentence_va_scoring') sampleTextKey = 'previewSampleSentenceVA';
     else if (taskType === 'sequence_labeling' && currentSubtype() === 'span') sampleTextKey = 'previewSampleSentenceSpan';
     else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
     else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
+    var realText = getDatasetPreviewText();
     var sample = document.createElement('div');
     sample.className = 'annotation-preview-sample';
-    sample.textContent = t(sampleTextKey);
+    sample.textContent = realText ? (realText.length > 300 ? realText.substring(0, 300) + '…' : realText) : t(sampleTextKey);
     preview.appendChild(sample);
   }
 
@@ -2602,7 +4518,6 @@ function updateAnnotationPreview() {
 
   var singleSelectPreview =
     taskType === 'single_sentence_va_scoring' ||
-    taskType === 'sentence_pairs' ||
     (taskType === 'single_sentence_classification' && !config.allow_multiple);
 
   if (taskType === 'single_sentence_va_scoring') {
@@ -2683,15 +4598,44 @@ function syncI18nTemplateConfig(prevLang, nextLang) {
 function renderTemplateBtns() {
   var container = el('templateBtns');
   while (container.firstChild) container.removeChild(container.firstChild);
-  var schema = state.taskType ? REGISTRY[state.taskType] : null;
-  if (!schema) return;
 
-  function makeTemplateBtn(label, templateData) {
+  function makeTemplateBtn(label, onApply) {
     var btn = document.createElement('button');
     btn.className = 'template-btn';
     btn.setAttribute('type', 'button');
     btn.textContent = label;
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', onApply);
+    container.appendChild(btn);
+  }
+
+  /* ADR-029: show template buttons for output-type composition */
+  if (state.selectedOutputTypes.length >= 1) {
+    var absaKeys = ['span', 'relation_triple'];
+    var isAbsaCombo = state.selectedOutputTypes.length === absaKeys.length &&
+      absaKeys.every(function(k) { return state.selectedOutputTypes.indexOf(k) >= 0; });
+    if (isAbsaCombo) {
+      makeTemplateBtn(t('absa_template_btn'), function() {
+        var tpl = JSON.parse(JSON.stringify(ABSA_MULTI_OUTPUT_TEMPLATE));
+        tpl.outputs.forEach(function(out) {
+          state.outputConfigs[out.type] = JSON.parse(JSON.stringify(out.config));
+        });
+        state.codeDraftDirty = false;
+        renderSchemaFields();
+        el('codeEditor').value = configToCode();
+        el('saveCodeBtn').disabled = true;
+        el('codeErrorBar').classList.add('hidden');
+        revalidateCurrentStep();
+        track('prototype_task_new_template_applied', { taskType: 'multi:' + state.selectedOutputTypes.join('+') });
+      });
+    }
+    return;
+  }
+
+  var schema = state.taskType ? REGISTRY[state.taskType] : null;
+  if (!schema) return;
+
+  function makeSingleTemplateBtn(label, templateData) {
+    makeTemplateBtn(label, function() {
       state.configData = JSON.parse(JSON.stringify(templateData));
       renderSchemaFields();
       state.codeDraftDirty = false;
@@ -2701,20 +4645,22 @@ function renderTemplateBtns() {
       revalidateCurrentStep();
       track('prototype_task_new_template_applied', { taskType: state.taskType });
     });
-    container.appendChild(btn);
   }
 
   if (state.taskType === 'sequence_labeling') {
-    makeTemplateBtn(t('templateBtnNer'), schema.nerTemplate);
-    makeTemplateBtn(t('templateBtnAspectList'), schema.aspectListTemplate);
+    makeSingleTemplateBtn(t('templateBtnNer'), schema.nerTemplate);
+    makeSingleTemplateBtn(t('templateBtnAspectList'), schema.aspectListTemplate);
     var spanPolTpl = cloneObject(schema.spanPolarityTemplate);
     if (schema.spanPolarityTemplateI18n && schema.spanPolarityTemplateI18n[state.lang]) {
       Object.keys(schema.spanPolarityTemplateI18n[state.lang]).forEach(function(k) { spanPolTpl[k] = cloneObject(schema.spanPolarityTemplateI18n[state.lang][k]); });
     }
-    makeTemplateBtn(t('templateBtnSpanEntity'), schema.spanEntityTemplate);
-    makeTemplateBtn(t('templateBtnSpanPolarity'), spanPolTpl);
+    makeSingleTemplateBtn(t('templateBtnSpanEntity'), schema.spanEntityTemplate);
+    makeSingleTemplateBtn(t('templateBtnSpanPolarity'), spanPolTpl);
+  } else if (state.taskType === 'sentence_pairs') {
+    var spTpl = getDefaultTemplateForLang(state.taskType, state.lang);
+    makeSingleTemplateBtn(t('templateBtnSentencePairs'), spTpl);
   } else {
-    makeTemplateBtn(t('applyTemplate') + (schema[state.lang] || schema.zh), getDefaultTemplateForLang(state.taskType, state.lang));
+    makeSingleTemplateBtn(t('applyTemplate') + (schema[state.lang] || schema.zh), getDefaultTemplateForLang(state.taskType, state.lang));
   }
 }
 
@@ -2851,7 +4797,7 @@ function parseJsonDataset(file, onSuccess, onError) {
   reader.onload = function(e) {
     try {
       var data = JSON.parse(e.target.result);
-      var columns, rows;
+      var columns, rows, rawFirstRow, columnUniqueValues;
       if (Array.isArray(data)) {
         if (data.length === 0) {
           onError(state.lang === 'en' ? 'The JSON file is empty.' : '檔案內容為空的 JSON 陣列。');
@@ -2865,9 +4811,28 @@ function parseJsonDataset(file, onSuccess, onError) {
         rows = data.slice(0, 2).map(function(row) {
           return columns.map(function(col) { return previewCellValue(row[col]); });
         });
+        rawFirstRow = {};
+        columns.forEach(function(col) { rawFirstRow[col] = data[0][col]; });
+        var uv = {};
+        columns.forEach(function(col) { uv[col] = {}; });
+        data.forEach(function(row) {
+          columns.forEach(function(col) {
+            var v = row[col];
+            if (typeof v === 'string' && v.length <= 100) uv[col][v] = true;
+          });
+        });
+        columnUniqueValues = {};
+        columns.forEach(function(col) { columnUniqueValues[col] = Object.keys(uv[col]).slice(0, 50); });
       } else if (data && typeof data === 'object') {
         columns = Object.keys(data);
         rows = [columns.map(function(col) { return previewCellValue(data[col]); })];
+        rawFirstRow = {};
+        columns.forEach(function(col) { rawFirstRow[col] = data[col]; });
+        columnUniqueValues = {};
+        columns.forEach(function(col) {
+          var v = data[col];
+          columnUniqueValues[col] = (typeof v === 'string' && v.length <= 100) ? [v] : [];
+        });
       } else {
         onError(state.lang === 'en' ? 'Invalid JSON format.' : 'JSON 格式不正確，請確認檔案內容。');
         return;
@@ -2876,7 +4841,7 @@ function parseJsonDataset(file, onSuccess, onError) {
         onError(state.lang === 'en' ? 'No columns found in JSON.' : '找不到任何欄位，請確認 JSON 格式。');
         return;
       }
-      onSuccess({ columns: columns, rows: rows });
+      onSuccess({ columns: columns, rows: rows, rawFirstRow: rawFirstRow, columnUniqueValues: columnUniqueValues });
     } catch (ex) {
       onError(state.lang === 'en' ? 'Failed to parse JSON.' : '無法解析 JSON，請確認檔案格式正確（UTF-8 編碼）。');
     }
@@ -2909,12 +4874,17 @@ function processFileQueue(queue, idx) {
         return;
       }
       state.datasetParsedRows = parsed.rows;
+      state.datasetRawFirstRow = parsed.rawFirstRow || {};
+      state.datasetColumnUniqueValues = parsed.columnUniqueValues || {};
     } else {
       state.datasetParsedColumns = parsed.columns;
       state.datasetParsedRows = parsed.rows;
+      state.datasetRawFirstRow = parsed.rawFirstRow || {};
+      state.datasetColumnUniqueValues = parsed.columnUniqueValues || {};
       state.fieldRoleMap = {};
     }
     state.datasetFiles.push(file);
+    state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     track('prototype_task_new_dataset_uploaded', { name: file.name, size: file.size });
     el('datasetUploadZone').classList.remove('error');
     showFieldError('errDatasetCompat', false);
@@ -3140,6 +5110,8 @@ function resetInlinePreviewSelection() {
   state.fieldRoleMap = {};
   state.datasetParsedColumns = [];
   state.datasetParsedRows = [];
+  state.datasetRawFirstRow = {};
+  state.datasetColumnUniqueValues = {};
   renderInlineDatasetPreview();
 }
 
@@ -3718,7 +5690,7 @@ function rebuildOutputChips() {
       btn.className = 'task-type-chip';
       btn.setAttribute('data-key', item.key);
       btn.setAttribute('data-cat', groupCatKey);
-      btn.setAttribute('role', 'radio');
+      btn.setAttribute('role', 'checkbox');
       var isPreselected = state.taskOutputTypes.indexOf(item.key) >= 0;
       btn.setAttribute('aria-checked', isPreselected ? 'true' : 'false');
       if (isPreselected) btn.classList.add('selected');
@@ -3734,16 +5706,13 @@ function rebuildOutputChips() {
 
       btn.addEventListener('click', function() {
         var key = btn.getAttribute('data-key');
-        var cat = btn.getAttribute('data-cat');
         var arr = state.taskOutputTypes;
         var idx = arr.indexOf(key);
 
         if (idx >= 0) {
           arr.splice(idx, 1);
         } else {
-          var ownedKeys = catOwnership[cat] || {};
-          state.taskOutputTypes = arr.filter(function(k) { return !ownedKeys[k]; });
-          state.taskOutputTypes.push(key);
+          arr.push(key);
         }
         onChipSelectionChange();
       });
@@ -3761,11 +5730,28 @@ function deriveTaskType() {
 
   if (!cats.length || !outputs.length) {
     state.taskType = '';
+    state.selectedOutputTypes = [];
     return;
   }
 
-  var keys = {};
+  /* ADR-029: populate selectedOutputTypes preserving user selection order */
+  /* Collect all output type keys that are valid given current taxonomy selections */
+  var validOutputKeys = {};
+  Object.keys(TASK_TAXONOMY).forEach(function(catKey) {
+    if (cats.indexOf(catKey) < 0) return;
+    var catDef = TASK_TAXONOMY[catKey];
+    Object.keys(catDef.granularities).forEach(function(granKey) {
+      var granDef = catDef.granularities[granKey];
+      Object.keys(granDef.subtypes).forEach(function(subKey) {
+        if (outputs.indexOf(subKey) >= 0) validOutputKeys[subKey] = true;
+      });
+    });
+  });
+  /* Preserve the order from outputs[] as selected by user */
+  state.selectedOutputTypes = outputs.filter(function(k) { return validOutputKeys[k]; });
 
+  /* Legacy: derive registry keys for backward-compatible single-type rendering */
+  var keys = {};
   Object.keys(TASK_TAXONOMY).forEach(function(catKey) {
     if (cats.indexOf(catKey) < 0) return;
     var catDef = TASK_TAXONOMY[catKey];
@@ -3781,16 +5767,55 @@ function deriveTaskType() {
   });
 
   var resolved = Object.keys(keys);
-  state.taskType = resolved.length ? resolved[0] : '';
+  state.resolvedTaskTypes = resolved;
+
+  if (resolved.length === 0) {
+    state.taskType = '';
+    return;
+  }
+  if (resolved.indexOf(state.taskType) >= 0) return;
+  state.taskType = resolved[0];
+}
+
+function switchConfigTab(newType) {
+  if (newType === state.taskType) return;
+  state.configDataMap[state.taskType] = state.configData;
+  state.taskType = newType;
+  state.configData = state.configDataMap[newType] || {};
+  state.configDataMap[newType] = state.configData;
+  state.codeDraftDirty = false;
+  renderTemplateBtns();
+  renderSchemaFields();
+  el('codeEditor').value = configToCode();
+  el('saveCodeBtn').disabled = true;
+  el('codeErrorBar').classList.add('hidden');
+  revalidateCurrentStep();
 }
 
 /* ── Flat chip: called after any chip toggle ─────────────────── */
 function onChipSelectionChange() {
+  state.configDataMap = {};
   state.configData = {};
   state.codeDraftDirty = false;
   rebuildOutputChips();
   deriveTaskType();
+  state.resolvedTaskTypes.forEach(function(type) {
+    if (!state.configDataMap[type]) state.configDataMap[type] = {};
+  });
+  /* ADR-029: initialize outputConfigs for each selected output type */
+  state.selectedOutputTypes.forEach(function(outKey) {
+    if (!state.outputConfigs[outKey]) {
+      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+      state.outputConfigs[outKey] = outReg ? JSON.parse(JSON.stringify(outReg.defaultConfig)) : {};
+    }
+  });
+  /* Remove outputConfigs entries for deselected output types */
+  Object.keys(state.outputConfigs).forEach(function(k) {
+    if (state.selectedOutputTypes.indexOf(k) < 0) delete state.outputConfigs[k];
+  });
   if (state.taskType) {
+    state.configData = state.configDataMap[state.taskType] || {};
+    state.configDataMap[state.taskType] = state.configData;
     var defs = SAMPLING_DEFAULTS_BY_TYPE[state.taskType];
     if (defs) {
       state.runInit.samplingMode = 'by_count';
@@ -3860,7 +5885,7 @@ function applyLang(l) {
       roleLabel: t('roleUser'),
     });
   }
-  if (state.taskType) {
+  if (state.taskType || state.selectedOutputTypes.length > 1) {
     syncI18nTemplateConfig(prevLang, state.lang);
     renderTemplateBtns();
     renderSchemaFields();

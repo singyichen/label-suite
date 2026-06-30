@@ -11,6 +11,9 @@
       "Edit(*id_rsa*)",
       "Write(*credentials.json)",
       "Edit(*credentials.json)"
+    ],
+    "allow": [
+      "Bash(npx playwright *)"
     ]
   },
   "hooks": {

@@ -1,0 +1,21 @@
+{
+  "task_category": "classification",
+  "input_type": "single_item",
+  "typical_tasks": ["Emotion Detection（情緒偵測）", "Multi-label Text Classification"],
+  "outputs": [
+    {
+      "type": "multi_label",
+      "config": {
+        "label_options": [
+          { "name": "happy", "color": "#2ECC71" },
+          { "name": "sad", "color": "#3498DB" },
+          { "name": "angry", "color": "#E74C3C" },
+          { "name": "surprise", "color": "#F39C12" },
+          { "name": "fear", "color": "#9B59B6" },
+          { "name": "disgust", "color": "#1ABC9C" }
+        ],
+        "max_selections": 3
+      }
+    }
+  ]
+}
