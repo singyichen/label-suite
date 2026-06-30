@@ -4461,8 +4461,9 @@ function updateAnnotationPreview() {
       _pairDiv.className = 'annotation-preview-divider';
       preview.appendChild(_pairDiv);
     } else {
-      var sampleText = getDatasetPreviewText() || t('previewSampleSentence');
       var inputCols = getFieldsByRole('input');
+      var _rawInputVal = (inputCols.length > 0 && state.datasetRawFirstRow) ? state.datasetRawFirstRow[inputCols[0]] : undefined;
+      var sampleText = (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
       var _inputLabel = document.createElement('div');
       _inputLabel.className = 'annotation-preview-pair-label';
       _inputLabel.textContent = inputCols.length > 0 ? inputCols[0] : (state.lang === 'en' ? 'Input' : '輸入');
