@@ -654,6 +654,7 @@
               <!-- table built by renderInlineDatasetPreview() -->
             </div>
             <div class="inline-preview-col-error" id="inlinePreviewColError" role="alert"></div>
+            <div class="field-error-msg" id="errInlineFieldCount" role="alert"></div>
           </div>
           <div class="field-error-msg" id="errDatasetCompat" role="alert"></div>
           <div class="field-error-msg" id="errDataset"></div>
@@ -1432,6 +1433,8 @@ var I18N = {
     inlinePreviewTitle: '欄位預覽・指定欄位角色',
     inlinePreviewHint: '前 2 筆資料・為每個欄位指定 Evidence / Input / Output 角色',
     inlinePreviewColError: '至少須為一個欄位指定角色。',
+    errSingleItemInputCount: '輸入類型為「單一項目」時，欄位預覽中必須恰好選擇 1 個 Input 欄位',
+    errItemPairInputCount: '輸入類型為「項目對」時，欄位預覽中必須恰好選擇 2 個 Input 欄位',
     taskCategoryGroupLabel: '大分類（可多選）',
     taskInputTypeGroupLabel: '輸入類型（單選）',
     taskOutputTypeGroupLabel: '輸出類型（可多選）',
@@ -1569,6 +1572,8 @@ var I18N = {
     inlinePreviewTitle: 'Column preview · assign field roles',
     inlinePreviewHint: 'First 2 rows · assign Evidence / Input / Output role to each field',
     inlinePreviewColError: 'At least one field must have a role assigned.',
+    errSingleItemInputCount: 'Input type "Single item" requires exactly 1 Input field in field preview',
+    errItemPairInputCount: 'Input type "Item pair" requires exactly 2 Input fields in field preview',
     taskCategoryGroupLabel: 'Category (multi-select)',
     taskInputTypeGroupLabel: 'Input type (single-select)',
     taskOutputTypeGroupLabel: 'Output type (multi-select)',
@@ -1966,6 +1971,19 @@ function validateStep1(showErrors) {
     if (showErrors) showFieldError('errDataset', true, t('errDataset'));
     ok = false;
   } else { showFieldError('errDataset', false); }
+  var inputType = (state.taskInputTypes && state.taskInputTypes[0]) || '';
+  if (inputType && state.datasetFiles.length > 0) {
+    var inputFieldCount = getFieldsByRole('input').length;
+    if (inputType === 'single_item' && inputFieldCount !== 1) {
+      if (showErrors) showFieldError('errInlineFieldCount', true, t('errSingleItemInputCount'));
+      ok = false;
+    } else if (inputType === 'item_pair' && inputFieldCount !== 2) {
+      if (showErrors) showFieldError('errInlineFieldCount', true, t('errItemPairInputCount'));
+      ok = false;
+    } else {
+      showFieldError('errInlineFieldCount', false);
+    }
+  }
   return ok;
 }
 function validateStep2(showErrors) {
@@ -3035,6 +3053,7 @@ function ensurePreviewState(outKey, defaults) {
 }
 
 function previewTextBlock(container) {
+  if (state.selectedOutputTypes && state.selectedOutputTypes.length >= 1) return '';
   var realText = getDatasetPreviewText();
   var textEl = document.createElement('div');
   textEl.className = 'absa-preview-text';
@@ -4378,6 +4397,26 @@ function renderRelationExtractionPreview(preview, config) {
   preview.appendChild(tripleRow);
 }
 
+function renderEvidenceCards(container) {
+  var evFields = getFieldsByRole('evidence');
+  var rawRow = state.datasetRawFirstRow || {};
+  evFields.forEach(function(evField) {
+    var evText = rawRow[evField];
+    if (!evText) return;
+    var evCard = document.createElement('div');
+    evCard.className = 'sp-evidence-card';
+    evCard.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#475569;font-size:0.85rem;line-height:1.5;border-left:3px solid #94a3b8;';
+    var evLabel = document.createElement('div');
+    evLabel.style.cssText = 'font-weight:600;font-size:0.75rem;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;';
+    evLabel.textContent = evField;
+    evCard.appendChild(evLabel);
+    var evBody = document.createElement('div');
+    evBody.textContent = String(evText).length > 200 ? String(evText).substring(0, 200) + '…' : String(evText);
+    evCard.appendChild(evBody);
+    container.appendChild(evCard);
+  });
+}
+
 function updateAnnotationPreview() {
   var preview = el('annotationPreview');
   if (!preview) return;
@@ -4385,6 +4424,59 @@ function updateAnnotationPreview() {
 
   /* ADR-029: output-type composition preview */
   if (state.selectedOutputTypes.length >= 1) {
+    renderEvidenceCards(preview);
+
+    /* Show input text (single_item or item_pair) before output previews */
+    var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
+    if (currentInputType === 'item_pair') {
+      var pairTexts = getDatasetPairTexts();
+      var pairWrap = document.createElement('div');
+      pairWrap.className = 'annotation-preview-pair';
+
+      var p1Label = document.createElement('div');
+      p1Label.className = 'annotation-preview-pair-label';
+      p1Label.textContent = pairTexts ? pairTexts.col1 : (state.lang === 'en' ? 'Sentence A' : '句子 A');
+      pairWrap.appendChild(p1Label);
+      var p1 = document.createElement('div');
+      p1.className = 'annotation-preview-sample';
+      var _t1 = pairTexts ? pairTexts.text1 : (state.lang === 'en' ? '(no data)' : '（無資料）');
+      p1.textContent = _t1.length > 300 ? _t1.substring(0, 300) + '…' : _t1;
+      pairWrap.appendChild(p1);
+
+      var p2Label = document.createElement('div');
+      p2Label.className = 'annotation-preview-pair-label';
+      p2Label.textContent = pairTexts ? pairTexts.col2 : (state.lang === 'en' ? 'Sentence B' : '句子 B');
+      pairWrap.appendChild(p2Label);
+      var p2 = document.createElement('div');
+      p2.className = 'annotation-preview-sample';
+      var _t2 = pairTexts ? pairTexts.text2 : (state.lang === 'en' ? '(no data)' : '（無資料）');
+      p2.textContent = _t2.length > 300 ? _t2.substring(0, 300) + '…' : _t2;
+      pairWrap.appendChild(p2);
+
+      preview.appendChild(pairWrap);
+      var _pairDiv = document.createElement('div');
+      _pairDiv.className = 'annotation-preview-divider';
+      preview.appendChild(_pairDiv);
+    } else {
+      var sampleText = getDatasetPreviewText();
+      if (sampleText) {
+        var inputCols = getFieldsByRole('input');
+        if (inputCols.length > 0) {
+          var _inputLabel = document.createElement('div');
+          _inputLabel.className = 'annotation-preview-pair-label';
+          _inputLabel.textContent = inputCols[0];
+          preview.appendChild(_inputLabel);
+        }
+        var _sample = document.createElement('div');
+        _sample.className = 'annotation-preview-sample';
+        _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
+        preview.appendChild(_sample);
+        var _sampleDiv = document.createElement('div');
+        _sampleDiv.className = 'annotation-preview-divider';
+        preview.appendChild(_sampleDiv);
+      }
+    }
+
     /* Check if any output has a dependency on another selected output */
     var hasDependency = state.selectedOutputTypes.some(function(outKey) {
       var srcKey = OUTPUT_TYPE_DEPS[outKey];
@@ -4418,7 +4510,9 @@ function updateAnnotationPreview() {
           cardTitle.className = 'annotation-preview-task-title';
           cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
           preview.appendChild(cardTitle);
-          renderOutputPreview(preview, outKey);
+          var outWrap = document.createElement('div');
+          preview.appendChild(outWrap);
+          renderOutputPreview(outWrap, outKey);
         });
       }
     } else {
@@ -4435,7 +4529,9 @@ function updateAnnotationPreview() {
         cardTitle.style.marginBottom = '8px';
         cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
         preview.appendChild(cardTitle);
-        renderOutputPreview(preview, outKey);
+        var outWrap = document.createElement('div');
+        preview.appendChild(outWrap);
+        renderOutputPreview(outWrap, outKey);
       });
     }
     if (!state.codeDraftDirty) {
@@ -4489,6 +4585,8 @@ function updateAnnotationPreview() {
       return { text: tag.trim(), color: null };
     }) : [];
   }
+
+  renderEvidenceCards(preview);
 
   {
     var sampleTextKey = 'previewSampleSentence';
@@ -5974,8 +6072,12 @@ el('nextBtn').addEventListener('click', function() {
   hideBannerError();
   if (state.step === 1) {
     if (!validateStep1(true)) {
+      var _it = (state.taskInputTypes && state.taskInputTypes[0]) || '';
       if (!state.taskName.trim()) showBannerError(t('errTaskName'));
       else if (!state.taskType) showBannerError(t('errTaskType'));
+      else if (!state.datasetFiles.length) showBannerError(t('errDataset'));
+      else if (_it === 'single_item' && getFieldsByRole('input').length !== 1) showBannerError(t('errSingleItemInputCount'));
+      else if (_it === 'item_pair' && getFieldsByRole('input').length !== 2) showBannerError(t('errItemPairInputCount'));
       else showBannerError(t('errDataset'));
       return;
     }
