@@ -1975,10 +1975,10 @@ function validateStep1(showErrors) {
   if (inputType && state.datasetFiles.length > 0) {
     var inputFieldCount = getFieldsByRole('input').length;
     if (inputType === 'single_item' && inputFieldCount !== 1) {
-      if (showErrors) showFieldError('errInlineFieldCount', true, t('errSingleItemInputCount'));
+      showFieldError('errInlineFieldCount', true, t('errSingleItemInputCount'));
       ok = false;
     } else if (inputType === 'item_pair' && inputFieldCount !== 2) {
-      if (showErrors) showFieldError('errInlineFieldCount', true, t('errItemPairInputCount'));
+      showFieldError('errInlineFieldCount', true, t('errItemPairInputCount'));
       ok = false;
     } else {
       showFieldError('errInlineFieldCount', false);
@@ -2699,7 +2699,8 @@ function getDatasetPairTexts() {
     return state.fieldRoleMap[col] === 'input';
   });
   if (inputCols.length >= 2) {
-    return { text1: String(raw[inputCols[0]] || ''), text2: String(raw[inputCols[1]] || ''), col1: inputCols[0], col2: inputCols[1] };
+    var v1 = raw[inputCols[0]]; var v2 = raw[inputCols[1]];
+    return { text1: String(v1 !== undefined && v1 !== null ? v1 : ''), text2: String(v2 !== undefined && v2 !== null ? v2 : ''), col1: inputCols[0], col2: inputCols[1] };
   }
   return null;
 }
@@ -4027,8 +4028,8 @@ function renderSentencePairsPreview(preview, config) {
   if (!s2Field && pairTexts) s2Field = pairTexts.col2;
   var s1Label = config.sentence_1_label || s1Field || 'Sentence 1';
   var s2Label = config.sentence_2_label || s2Field || 'Sentence 2';
-  var s1Text = rawRow[s1Field] || (pairTexts ? pairTexts.text1 : '') || (state.lang === 'en' ? '(no data)' : '（無資料）');
-  var s2Text = rawRow[s2Field] || (pairTexts ? pairTexts.text2 : '') || (state.lang === 'en' ? '(no data)' : '（無資料）');
+  var _s1Raw = rawRow[s1Field]; var s1Text = (_s1Raw !== undefined && _s1Raw !== null) ? String(_s1Raw) : (pairTexts ? pairTexts.text1 : (state.lang === 'en' ? '(no data)' : '（無資料）'));
+  var _s2Raw = rawRow[s2Field]; var s2Text = (_s2Raw !== undefined && _s2Raw !== null) ? String(_s2Raw) : (pairTexts ? pairTexts.text2 : (state.lang === 'en' ? '(no data)' : '（無資料）'));
 
   evidenceFields.forEach(function(evField) {
     var evText = rawRow[evField];
