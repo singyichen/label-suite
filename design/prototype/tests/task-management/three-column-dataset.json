@@ -1,0 +1,4 @@
+[
+  {"sentence_a": "服務態度很好", "sentence_b": "上菜速度偏慢", "label": "positive"},
+  {"sentence_a": "環境整潔", "sentence_b": "停車不便", "label": "negative"}
+]
