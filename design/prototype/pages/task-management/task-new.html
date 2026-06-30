@@ -1983,6 +1983,8 @@ function validateStep1(showErrors) {
     } else {
       showFieldError('errInlineFieldCount', false);
     }
+  } else {
+    showFieldError('errInlineFieldCount', false);
   }
   return ok;
 }
@@ -4030,7 +4032,7 @@ function renderSentencePairsPreview(preview, config) {
 
   evidenceFields.forEach(function(evField) {
     var evText = rawRow[evField];
-    if (!evText) return;
+    if (evText === undefined || evText === null || evText === '') return;
     var evCard = document.createElement('div');
     evCard.className = 'sp-evidence-card';
     evCard.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#475569;font-size:0.85rem;line-height:1.5;border-left:3px solid #94a3b8;';
@@ -4402,7 +4404,7 @@ function renderEvidenceCards(container) {
   var rawRow = state.datasetRawFirstRow || {};
   evFields.forEach(function(evField) {
     var evText = rawRow[evField];
-    if (!evText) return;
+    if (evText === undefined || evText === null || evText === '') return;
     var evCard = document.createElement('div');
     evCard.className = 'sp-evidence-card';
     evCard.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#475569;font-size:0.85rem;line-height:1.5;border-left:3px solid #94a3b8;';
@@ -4439,7 +4441,7 @@ function updateAnnotationPreview() {
       pairWrap.appendChild(p1Label);
       var p1 = document.createElement('div');
       p1.className = 'annotation-preview-sample';
-      var _t1 = pairTexts ? pairTexts.text1 : (state.lang === 'en' ? '(no data)' : '（無資料）');
+      var _t1 = pairTexts ? pairTexts.text1 : t('previewSampleSentenceA');
       p1.textContent = _t1.length > 300 ? _t1.substring(0, 300) + '…' : _t1;
       pairWrap.appendChild(p1);
 
@@ -4449,7 +4451,7 @@ function updateAnnotationPreview() {
       pairWrap.appendChild(p2Label);
       var p2 = document.createElement('div');
       p2.className = 'annotation-preview-sample';
-      var _t2 = pairTexts ? pairTexts.text2 : (state.lang === 'en' ? '(no data)' : '（無資料）');
+      var _t2 = pairTexts ? pairTexts.text2 : t('previewSampleSentenceB');
       p2.textContent = _t2.length > 300 ? _t2.substring(0, 300) + '…' : _t2;
       pairWrap.appendChild(p2);
 
@@ -4458,23 +4460,20 @@ function updateAnnotationPreview() {
       _pairDiv.className = 'annotation-preview-divider';
       preview.appendChild(_pairDiv);
     } else {
-      var sampleText = getDatasetPreviewText();
-      if (sampleText) {
-        var inputCols = getFieldsByRole('input');
-        if (inputCols.length > 0) {
-          var _inputLabel = document.createElement('div');
-          _inputLabel.className = 'annotation-preview-pair-label';
-          _inputLabel.textContent = inputCols[0];
-          preview.appendChild(_inputLabel);
-        }
-        var _sample = document.createElement('div');
-        _sample.className = 'annotation-preview-sample';
-        _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
-        preview.appendChild(_sample);
-        var _sampleDiv = document.createElement('div');
-        _sampleDiv.className = 'annotation-preview-divider';
-        preview.appendChild(_sampleDiv);
-      }
+      var sampleText = getDatasetPreviewText() || t('previewSampleSentence');
+      var inputCols = getFieldsByRole('input');
+      var _inputLabel = document.createElement('div');
+      _inputLabel.className = 'annotation-preview-pair-label';
+      _inputLabel.textContent = inputCols.length > 0 ? inputCols[0] : (state.lang === 'en' ? 'Input' : '輸入');
+      preview.appendChild(_inputLabel);
+
+      var _sample = document.createElement('div');
+      _sample.className = 'annotation-preview-sample';
+      _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
+      preview.appendChild(_sample);
+      var _sampleDiv = document.createElement('div');
+      _sampleDiv.className = 'annotation-preview-divider';
+      preview.appendChild(_sampleDiv);
     }
 
     /* Check if any output has a dependency on another selected output */
