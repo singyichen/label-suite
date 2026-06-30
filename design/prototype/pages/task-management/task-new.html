@@ -284,6 +284,9 @@
     .absa-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #EEF2FF; color: #6366F1; border: 1px solid rgba(99,102,241,0.3); }
     .absa-arrow { color: var(--color-text-soft); font-size: 12px; }
     .output-type-index-badge { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .sp-evidence-card { background: var(--color-slate-50); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: var(--color-text-soft); font-size: 0.85rem; line-height: 1.5; border-left: 3px solid #94a3b8; }
+    .sp-evidence-card-label { font-weight: 600; font-size: 0.75rem; color: var(--color-text-soft); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    html[data-theme="dark"] .sp-evidence-card { border-left-color: #475569; }
     html[data-theme="dark"] .output-accordion-header:hover { background: var(--color-primary-soft-bg); }
     html[data-theme="dark"] .preview-card { background: var(--color-white); }
     html[data-theme="dark"] .preview-unified { background: var(--color-white); }
@@ -4036,9 +4039,8 @@ function renderSentencePairsPreview(preview, config) {
     if (evText === undefined || evText === null || evText === '') return;
     var evCard = document.createElement('div');
     evCard.className = 'sp-evidence-card';
-    evCard.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#475569;font-size:0.85rem;line-height:1.5;border-left:3px solid #94a3b8;';
     var evLabel = document.createElement('div');
-    evLabel.style.cssText = 'font-weight:600;font-size:0.75rem;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;';
+    evLabel.className = 'sp-evidence-card-label';
     evLabel.textContent = evField;
     evCard.appendChild(evLabel);
     var evBody = document.createElement('div');
@@ -4408,9 +4410,8 @@ function renderEvidenceCards(container) {
     if (evText === undefined || evText === null || evText === '') return;
     var evCard = document.createElement('div');
     evCard.className = 'sp-evidence-card';
-    evCard.style.cssText = 'background:#f1f5f9;border-radius:8px;padding:10px 14px;margin-bottom:10px;color:#475569;font-size:0.85rem;line-height:1.5;border-left:3px solid #94a3b8;';
     var evLabel = document.createElement('div');
-    evLabel.style.cssText = 'font-weight:600;font-size:0.75rem;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;';
+    evLabel.className = 'sp-evidence-card-label';
     evLabel.textContent = evField;
     evCard.appendChild(evLabel);
     var evBody = document.createElement('div');
