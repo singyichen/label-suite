@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
-const FIXTURE = path.resolve(__dirname, '../fixtures/three-column-dataset.json');
+const FIXTURE = path.resolve(__dirname, 'three-column-dataset.json');
 
 async function setupTask(page: import('@playwright/test').Page) {
   await page.goto(TASK_NEW_URL, { waitUntil: 'load' });
