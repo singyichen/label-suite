@@ -73,7 +73,9 @@ Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` �
 
 ### PR Scope — Single Purpose (Enforced)
 
-Every PR must serve exactly **one purpose**. Unrelated changes belong in a separate PR. Decision test: "Can I describe this PR's purpose in one sentence without using 'and' or 'also'?" No → split. Full rules: @.claude/rules/git-workflow.md
+Every PR must serve exactly **one purpose**. Unrelated changes belong in a separate PR. Decision test: "Can I describe this PR's purpose in one sentence without using 'and' or 'also'?" No → split.
+
+@.claude/rules/git-workflow.md
 
 ### Branch Naming
 

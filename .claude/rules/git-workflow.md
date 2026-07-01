@@ -12,7 +12,7 @@ One purpose = one cohesive unit that a reviewer can understand with a single men
 - One bug fix (root cause + regression test)
 - One refactor (one structural concern: rename, extract, simplify)
 - One infra/tooling change (one build/CI/config concern)
-- One governance change (constitution amendment + all propagation caches)
+- One governance change (constitution amendment + all propagation caches, templates, and commands)
 
 ### What must be split into separate PRs
 
