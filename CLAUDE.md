@@ -71,6 +71,12 @@ Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` �
 
 **Body required**: always — every commit must include at least one body bullet explaining the why, regardless of type or size. No subject-only commits.
 
+### PR Scope — Single Purpose (Enforced)
+
+Every PR must serve exactly **one purpose**. Unrelated changes belong in a separate PR. Decision test: "Can I describe this PR's purpose in one sentence without using 'and' or 'also'?" No → split.
+
+@.claude/rules/git-workflow.md
+
 ### Branch Naming
 
 Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `feat/labeling-ui` · `fix/score-calculation`
