@@ -8,7 +8,7 @@ Every PR must serve exactly **one purpose**. Unrelated changes belong in a separ
 
 One purpose = one cohesive unit that a reviewer can understand with a single mental context:
 
-- One feature (spec item, user story, or functional requirement)
+- One feature (spec item, user story, or functional requirement) — domain constitutions may require further layer-level splits within a feature (see backend-constitution XIII, frontend-constitution XVI)
 - One bug fix (root cause + regression test)
 - One refactor (one structural concern: rename, extract, simplify)
 - One infra/tooling change (one build/CI/config concern)
@@ -18,7 +18,7 @@ One purpose = one cohesive unit that a reviewer can understand with a single men
 
 - Feature code + unrelated refactor → 2 PRs
 - Bug fix + opportunistic cleanup → 2 PRs
-- Frontend feature + independent backend feature → 2 PRs (unless they form a single end-to-end user story and neither side is reviewable alone)
+- Frontend feature + independent backend feature → always separate PRs; when a breaking API contract change is involved, cross-reference between PRs
 - Multiple independent bug fixes → 1 PR per bug
 - Dependency upgrade + code changes using the new API → acceptable as 1 PR only if the code changes are required by the upgrade
 
