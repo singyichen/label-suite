@@ -3747,10 +3747,11 @@ function renderSchemaFields() {
 
   rebuildColumnOutputTypeMap();
 
-  /* Reset auto-population flags only when dataset or output-role mapping changes;
-     _datasetVersion distinguishes replaced files that share the same columns */
-  var _outCols_ = getFieldsByRole('output');
-  var _datasetKey = (state._datasetVersion || 0) + ':' + (_outCols_.join(',') || '') + ':' + (state.datasetParsedColumns.join(',') || '');
+  /* Reset auto-population flags only when the dataset or any column role
+     assignment changes; the full role map covers input/evidence/output so
+     e.g. re-pointing the input column also re-seeds offset-based previews,
+     and _datasetVersion distinguishes replaced files sharing the same columns */
+  var _datasetKey = (state._datasetVersion || 0) + ':' + state.datasetParsedColumns.map(function(c) { return c + '=' + (state.fieldRoleMap[c] || ''); }).join(',');
   if (state._lastAutoPopKey !== _datasetKey) {
     state._lastAutoPopKey = _datasetKey;
     state.previewState = {};
@@ -5273,10 +5274,42 @@ function removeDatasetFile(idx) {
   if (state.datasetFiles.length === 0) {
     resetInlinePreviewSelection();
   } else {
-    renderInlineDatasetPreview();
+    rebuildDatasetCaches();
   }
   renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
+}
+
+/* Reparse the remaining files after a removal so cached rawFirstRow / merged
+   unique values no longer include data from the removed file; mirrors the
+   upload path (rows/rawFirstRow from the last file, unique values merged) */
+function rebuildDatasetCaches() {
+  var files = state.datasetFiles.slice();
+  var uvAcc = {};
+  var lastParsed = null;
+  function step(i) {
+    if (i >= files.length) {
+      if (lastParsed) {
+        state.datasetParsedRows = lastParsed.rows;
+        state.datasetRawFirstRow = lastParsed.rawFirstRow || {};
+        var merged = {};
+        state.datasetParsedColumns.forEach(function(col) { merged[col] = Object.keys(uvAcc[col] || {}).slice(0, 50); });
+        state.datasetColumnUniqueValues = merged;
+        state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+      }
+      renderInlineDatasetPreview();
+      return;
+    }
+    parseJsonDataset(files[i], function(parsed) {
+      lastParsed = parsed;
+      state.datasetParsedColumns.forEach(function(col) {
+        if (!uvAcc[col]) uvAcc[col] = {};
+        ((parsed.columnUniqueValues || {})[col] || []).forEach(function(v) { uvAcc[col][v] = true; });
+      });
+      step(i + 1);
+    }, function() { step(i + 1); });
+  }
+  step(0);
 }
 
 function makeDatasetFileItem(file, idx) {
