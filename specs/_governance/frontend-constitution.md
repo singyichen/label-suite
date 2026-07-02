@@ -1,6 +1,6 @@
 # Frontend Constitution
 
-Source of truth: `specs/_governance/constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/011-frontend-source-structure.md`, `docs/adr/012-frontend-testing-strategy.md`, `docs/adr/014-prototype-playwright-testing.md`, `docs/adr/015-role-based-progressive-onboarding.md`, and `docs/adr/016-frontend-component-library-shadcn-storybook.md`.
+Source of truth: `specs/_governance/constitution.md`, `docs/adr/001-monorepo-structure.md`, `docs/adr/002-package-managers.md`, `docs/adr/004-frontend-framework-react-vite.md`, `docs/adr/009-testing-strategy.md`, `docs/adr/010-config-driven-architecture.md`, `docs/adr/011-frontend-source-structure.md`, `docs/adr/012-frontend-testing-strategy.md`, `docs/adr/014-prototype-playwright-testing.md`, `docs/adr/015-role-based-progressive-onboarding.md`, `docs/adr/016-frontend-component-library-shadcn-storybook.md`, and `docs/adr/030-icon-library-lucide.md`.
 
 ## I. React 18 And Vite SPA
 
@@ -52,6 +52,7 @@ Source of truth: `specs/_governance/constitution.md`, `docs/adr/001-monorepo-str
 ## VII. UI System
 
 - shadcn/ui components live in `frontend/src/shared/ui/`.
+- Icons come exclusively from Lucide via `lucide-react`; no other icon sets, emojis, or hand-drawn SVG icons (ADR-030).
 - Tailwind CSS must use project design tokens; hardcoded colors, spacing, and typography scales are not allowed when a token exists.
 - New shared primitives require meaningful variants and accessibility states.
 - Every non-page UI component must have a Storybook story covering at minimum the Default state and applicable boundary states: Empty, Loading, Error, and Disabled.

@@ -231,7 +231,7 @@ html[data-theme="dark"] .workflow-step-connector img {
 
 White icons read heavier than black icons on a matching background, so connector `opacity` should be reduced (e.g. `0.45`) rather than raised when inverting.
 
-For table expand/collapse affordances, prefer inline SVG using `stroke="currentColor"` instead of `<img>`. This keeps chevrons on task detail / reviewer result tables tied to `--color-ink-muted` in light mode and the raised dark token (`#9CA3AF`) in dark mode.
+For table expand/collapse affordances, prefer an inline Lucide chevron SVG using `stroke="currentColor"` instead of `<img>`. This keeps chevrons on task detail / reviewer result tables tied to `--color-ink-muted` in light mode and the raised dark token (`#9CA3AF`) in dark mode.
 
 #### 3. CTA button contrast
 
@@ -1181,7 +1181,7 @@ Used for list-style data display (e.g. task list). Supports row hover interactio
 - `<table role="table" aria-label="...">` — provide a descriptive label
 - `<th scope="col">` — mark column headers
 - Clickable rows: add `tabindex="0"` and `onkeydown` to support Enter/Space
-- Expand buttons in dense result tables: use a 14px inline SVG chevron with `stroke="currentColor"` and button color `var(--color-ink-muted)`; rotate the SVG when expanded. Avoid `<img>` chevrons here because they do not inherit dark-mode text tokens.
+- Expand buttons in dense result tables: use a 14px inline Lucide chevron SVG (e.g. `chevron-down`) with `stroke="currentColor"` and button color `var(--color-ink-muted)`; rotate the SVG when expanded. Avoid `<img>` chevrons here because they do not inherit dark-mode text tokens.
 
 **When NOT to use:**
 - ❌ Fewer than 3 rows → use List instead
