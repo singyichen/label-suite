@@ -49,15 +49,15 @@ When assisting with code review, keep the review narrow, actionable, and tied to
 - Only report issues that are directly supported by the changed code, surrounding code, failing checks, or project rules.
 - Do not expand into unrelated refactors, style preferences, speculative edge cases, or broad architecture redesigns unless they create a concrete bug or policy violation.
 - Treat unchanged code as context, not review scope. Mention unchanged-code concerns only when the PR makes the risk worse.
-- Prefer a small number of high-signal findings over exhaustive commentary. Report at most 5 findings total; if more issues exist, report only the highest-severity ones and summarize the rest as residual risk.
+- Prefer a small number of high-signal findings over exhaustive commentary. Report at most 5 findings total, but always fully report every blocking Critical/High finding; if more non-blocking issues exist, summarize the rest as residual risk.
 - Each finding must include the impacted file/line, the observable risk, and the smallest practical fix direction.
 - Verify project-specific constraints before flagging them: no cross-feature imports, config-driven task types, no annotator access to ground-truth answers, no `any`, explicit CORS origins, and required tests.
 - If review context is incomplete, state the limitation once and continue with the available diff instead of broadening the review.
 
 Classify every finding by severity:
 
-- **Critical** — Must fix before merge. Security vulnerabilities, auth/RBAC bypass, test-set answer or ground-truth leakage, data loss, destructive behavior, production crashes, major correctness regressions, unreviewed breaking API/schema changes, or violations of non-negotiable constitution rules.
-- **High** — Should fix before merge unless the maintainer explicitly accepts the risk. Missing tests for changed behavior, clear regression scenarios, cross-feature imports, hardcoded task logic, `any` in changed TypeScript, `allow_origins=["*"]`, or performance issues likely to affect normal production usage.
+- **Critical** — Must fix before merge. Security vulnerabilities, auth/RBAC bypass, test-set answer or ground-truth leakage, data loss, destructive behavior, production crashes, major correctness regressions, unreviewed breaking API/schema changes, hardcoded task logic, `allow_origins=["*"]`, or other violations of non-negotiable constitution rules.
+- **High** — Should fix before merge unless the maintainer explicitly accepts the risk. Missing tests for changed behavior, clear regression scenarios, cross-feature imports, `any` in changed TypeScript, or performance issues likely to affect normal production usage.
 - **Medium** — Non-blocking unless it accumulates into concrete risk. Incomplete docs for changed public behavior, weak non-critical error handling, maintainability issues that make near-term bugs more likely, or edge-case test gaps outside the main path.
 - **Low** — Non-blocking suggestion only. Naming, formatting, minor readability, small duplication, comment wording, polish, or speculative improvements.
 
