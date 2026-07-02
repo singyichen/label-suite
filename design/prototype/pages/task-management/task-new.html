@@ -2317,6 +2317,38 @@ function getOutputFieldValue(outKey) {
   return String(val);
 }
 
+/* Infer which output types each output column's first-row value shape can
+   seed, so getOutputFieldValue(outKey) picks the right column when several
+   columns are marked output (ADR-029 multi-output tasks) */
+function rebuildColumnOutputTypeMap() {
+  var rawRow = state.datasetRawFirstRow || {};
+  var map = {};
+  getFieldsByRole('output').forEach(function(col) {
+    var v = rawRow[col];
+    var types = [];
+    if (Array.isArray(v) && v.length > 0) {
+      var first = v[0];
+      if (typeof first === 'string') {
+        types = /^(O|[BIES]-.+)$/.test(first) ? ['token_class'] : ['multi_label'];
+      } else if (first && typeof first === 'object') {
+        if (first.position != null) types = ['boundary'];
+        else if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_triple'];
+        else if (first.text != null) types = ['span'];
+      }
+    } else if (v && typeof v === 'object') {
+      types = ['multi_dim'];
+    } else if (typeof v === 'number') {
+      types = ['single_dim', 'single_label'];
+    } else if (typeof v === 'boolean') {
+      types = ['single_label'];
+    } else if (typeof v === 'string') {
+      types = ['single_label', 'entity_relation', 'free_text'];
+    }
+    map[col] = types;
+  });
+  state.columnOutputTypeMap = map;
+}
+
 function autoPopulateSentencePairsConfig() {
   var inputFields = getFieldsByRole('input');
   var outputFields = getFieldsByRole('output');
@@ -3713,9 +3745,12 @@ function renderSchemaFields() {
   var container = el('schemaFields');
   while (container.firstChild) container.removeChild(container.firstChild);
 
-  /* Reset auto-population flags only when dataset or output-role mapping changes */
+  rebuildColumnOutputTypeMap();
+
+  /* Reset auto-population flags only when dataset or output-role mapping changes;
+     _datasetVersion distinguishes replaced files that share the same columns */
   var _outCols_ = getFieldsByRole('output');
-  var _datasetKey = (_outCols_.join(',') || '') + ':' + (state.datasetParsedColumns.join(',') || '');
+  var _datasetKey = (state._datasetVersion || 0) + ':' + (_outCols_.join(',') || '') + ':' + (state.datasetParsedColumns.join(',') || '');
   if (state._lastAutoPopKey !== _datasetKey) {
     state._lastAutoPopKey = _datasetKey;
     state.previewState = {};
@@ -5174,7 +5209,16 @@ function processFileQueue(queue, idx) {
       }
       state.datasetParsedRows = parsed.rows;
       state.datasetRawFirstRow = parsed.rawFirstRow || {};
-      state.datasetColumnUniqueValues = parsed.columnUniqueValues || {};
+      /* Merge unique values across compatible files so labels that only
+         appear in earlier files are not dropped from auto-population */
+      var _mergedUv = {};
+      state.datasetParsedColumns.forEach(function(col) {
+        var seen = {};
+        (state.datasetColumnUniqueValues[col] || []).forEach(function(v) { seen[v] = true; });
+        ((parsed.columnUniqueValues || {})[col] || []).forEach(function(v) { seen[v] = true; });
+        _mergedUv[col] = Object.keys(seen).slice(0, 50);
+      });
+      state.datasetColumnUniqueValues = _mergedUv;
     } else {
       state.datasetParsedColumns = parsed.columns;
       state.datasetParsedRows = parsed.rows;
@@ -5183,6 +5227,7 @@ function processFileQueue(queue, idx) {
       state.fieldRoleMap = {};
     }
     state.datasetFiles.push(file);
+    state._datasetVersion = (state._datasetVersion || 0) + 1;
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     track('prototype_task_new_dataset_uploaded', { name: file.name, size: file.size });
     el('datasetUploadZone').classList.remove('error');
@@ -5223,6 +5268,7 @@ function addDatasetFiles(files) {
 
 function removeDatasetFile(idx) {
   state.datasetFiles.splice(idx, 1);
+  state._datasetVersion = (state._datasetVersion || 0) + 1;
   el('datasetFileInput').value = '';
   if (state.datasetFiles.length === 0) {
     resetInlinePreviewSelection();
@@ -5938,12 +5984,23 @@ function rebuildOutputChips() {
     var catDef = TASK_TAXONOMY[catKey];
     if (!catDef) return;
     var outputsMap = {};
-    Object.keys(catDef.granularities).forEach(function(granKey) {
+    var granKeys = Object.keys(catDef.granularities);
+    function inEveryGranularity(subKey) {
+      return granKeys.every(function(gk) {
+        var gd = catDef.granularities[gk];
+        return gd && gd.subtypes && gd.subtypes[subKey];
+      });
+    }
+    granKeys.forEach(function(granKey) {
       /* When an input type is selected, only include output types from matching granularities */
       if (inputTypes.length > 0 && inputTypes.indexOf(granKey) < 0) return;
       var granDef = catDef.granularities[granKey];
       if (granDef && granDef.subtypes) {
         Object.keys(granDef.subtypes).forEach(function(subKey) {
+          /* Without a selected input type, hide outputs constrained to a specific
+             granularity (e.g. entity_relation is item_pair-only) so an invalid
+             input/output combination cannot be selected */
+          if (inputTypes.length === 0 && !inEveryGranularity(subKey)) return;
           if (!outputsMap[subKey]) {
             var subDef = granDef.subtypes[subKey];
             outputsMap[subKey] = { key: subKey, zh: subDef.zh, en: subDef.en };

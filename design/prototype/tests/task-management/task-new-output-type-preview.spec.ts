@@ -37,14 +37,16 @@ async function setupAndGoToStep2(page: Page, config: SetupConfig) {
     await page.locator(`#taskCategoryChips [data-key="${cat}"]`).click();
   }
 
+  // Input type must be selected before output types: granularity-constrained
+  // outputs (e.g. entity_relation, item_pair only) are hidden until then
+  await page.locator(`#taskInputTypeChips [data-key="${config.inputType}"]`).click();
+
   const outputTypes = Array.isArray(config.outputType)
     ? config.outputType
     : [config.outputType];
   for (const ot of outputTypes) {
     await page.locator(`#taskOutputTypeChips [data-key="${ot}"]`).click();
   }
-
-  await page.locator(`#taskInputTypeChips [data-key="${config.inputType}"]`).click();
 
   await page.locator('#datasetFileInput').setInputFiles(
     path.join(EXAMPLE_DATA, config.dataFile),
