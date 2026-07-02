@@ -2807,32 +2807,40 @@ function initPreviewState() {
     state.previewEntities = [];
   }
 
-  var nerTrips = Array.isArray(rawRow.triples) ? rawRow.triples : [];
-  if (nerTrips.length === 0 && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].entity1) {
-    nerTrips = outputParsed;
+  /* Pick the first candidate triple array whose elements match a supported
+     shape, independent of the field name it was stored under */
+  function tripleShapeOf(arr) {
+    if (!Array.isArray(arr) || arr.length === 0 || !arr[0] || typeof arr[0] !== 'object') return null;
+    if (arr[0].entity1) return 'ner';
+    if (arr[0].subj) return 'gold';
+    if (arr[0].target_text || arr[0].aspect_text || arr[0].opinion_text) return 'absa';
+    return null;
   }
-  var goldTrips = Array.isArray(rawRow.gold_triplets) ? rawRow.gold_triplets : [];
-  if (goldTrips.length === 0 && Array.isArray(rawRow.gold_triples)) goldTrips = rawRow.gold_triples;
-  if (goldTrips.length === 0 && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].subj) goldTrips = outputParsed;
+  var trips = [], tripShape = null;
+  [rawRow.triples, rawRow.gold_triplets, rawRow.gold_triples, outputParsed].some(function(cand) {
+    var shape = tripleShapeOf(cand);
+    if (shape) { trips = cand; tripShape = shape; return true; }
+    return false;
+  });
   var nameTarget = (cfgEntities[0] && cfgEntities[0].name) || 'target';
   var nameAspect = (cfgEntities[1] && cfgEntities[1].name) || 'aspect';
   var nameOpinion = (cfgEntities[2] && cfgEntities[2].name) || 'opinion';
   var sampleRel1 = relationTypes[0] || 'has_aspect';
   var sampleRel2 = relationTypes[1] || 'has_opinion';
 
-  if (nerTrips.length > 0) {
-    state.previewTriples = nerTrips.map(function(trip) {
+  if (tripShape === 'ner') {
+    state.previewTriples = trips.map(function(trip) {
       var e1 = trip.entity1 || {}, rel = trip.relation || {}, e2 = trip.entity2 || {};
       function fmt(o) { var s = o.text || '?'; if (o.start != null && o.end != null) s += ' (' + o.start + ',' + o.end + ')'; return s; }
       return { subj: fmt(e1), rel: fmt(rel), obj: fmt(e2) };
     });
-  } else if (goldTrips.length > 0 && goldTrips[0].subj) {
-    state.previewTriples = goldTrips.map(function(trip) {
+  } else if (tripShape === 'gold') {
+    state.previewTriples = trips.map(function(trip) {
       return { subj: trip.subj || '?', rel: trip.rel || '?', obj: trip.obj || '?' };
     });
-  } else if (goldTrips.length > 0) {
+  } else if (tripShape === 'absa') {
     state.previewTriples = [];
-    goldTrips.forEach(function(trip) {
+    trips.forEach(function(trip) {
       var tgt = trip.target_text || '?', asp = trip.aspect_text || '', opn = trip.opinion_text || '';
       if (asp) state.previewTriples.push({ subj: tgt + '/' + nameTarget, rel: sampleRel1, obj: asp + '/' + nameAspect });
       if (opn) state.previewTriples.push({ subj: tgt + '/' + nameTarget, rel: sampleRel2, obj: opn + '/' + nameOpinion });
@@ -3293,7 +3301,20 @@ function renderTokenClassPreview(container, outKey) {
 
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '台積電 董事長 魏哲家 今天 出席 台北 產業論壇' : 'TSMC chairman C.C. Wei attended an industry forum in Taipei today');
-  var tokens = text.split(/\s+/).filter(Boolean);
+  /* Prefer a dataset-provided token array (e.g. unsegmented Chinese text with a
+     separate tokens field) over whitespace splitting */
+  var rawRow = state.datasetRawFirstRow || {};
+  var tokens = null;
+  if (Array.isArray(rawRow.tokens) && rawRow.tokens.length > 0) {
+    tokens = rawRow.tokens.map(String);
+  } else {
+    var inCols = getFieldsByRole('input');
+    for (var ici = 0; ici < inCols.length; ici++) {
+      var iv = rawRow[inCols[ici]];
+      if (Array.isArray(iv) && iv.length > 0 && typeof iv[0] === 'string') { tokens = iv.map(String); break; }
+    }
+  }
+  if (!tokens) tokens = text.split(/\s+/).filter(Boolean);
   if (!ps.tokens || ps.tokens.length !== tokens.length) {
     var outputVal = getOutputFieldValue(outKey);
     var outputTags = [];
@@ -3376,28 +3397,34 @@ function renderBoundaryPreview(container, outKey) {
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '第一段文字。第二段文字。第三段文字。第四段文字。' : 'First sentence. Second sentence. Third sentence. Fourth sentence.');
   var segments = text.split(/(?<=[。．！？.!?])\s*/);
-  if (segments.length < 2) segments = [text.substring(0, Math.floor(text.length / 2)), text.substring(Math.floor(text.length / 2))];
 
-  /* Convert character-offset markers to gap indices for the preview renderer */
+  /* Cut the text at the union of punctuation gaps and supplied marker offsets
+     so every offset-based boundary gets its own gap, even in punctuation-free
+     text; each marker then maps to its exact gap index */
   var initMarkers = [];
   if (rawMarkers.length > 0) {
-    var gapOffsets = [];
+    var cutSet = {};
     var charPos = 0;
     for (var si = 0; si < segments.length - 1; si++) {
       charPos += segments[si].length;
-      gapOffsets.push(charPos);
+      cutSet[charPos] = true;
     }
     rawMarkers.forEach(function(m) {
-      var pos = m.position;
-      if (typeof pos !== 'number') return;
-      var bestGap = 0, bestDist = Infinity;
-      for (var gi = 0; gi < gapOffsets.length; gi++) {
-        var dist = Math.abs(pos - gapOffsets[gi]);
-        if (dist < bestDist) { bestDist = dist; bestGap = gi; }
-      }
-      initMarkers.push({ position: bestGap, type: m.type || boundaryTypes[0] || 'sentence' });
+      if (typeof m.position === 'number') cutSet[m.position] = true;
+    });
+    var cuts = Object.keys(cutSet).map(Number).filter(function(p) { return p > 0 && p < text.length; }).sort(function(a, b) { return a - b; });
+    if (cuts.length > 0) {
+      segments = [];
+      var prevCut = 0;
+      cuts.forEach(function(p) { segments.push(text.substring(prevCut, p)); prevCut = p; });
+      segments.push(text.substring(prevCut));
+    }
+    rawMarkers.forEach(function(m) {
+      var gi = cuts.indexOf(m.position);
+      if (gi >= 0) initMarkers.push({ position: gi, type: m.type || boundaryTypes[0] || 'sentence' });
     });
   }
+  if (segments.length < 2) segments = [text.substring(0, Math.floor(text.length / 2)), text.substring(Math.floor(text.length / 2))];
   var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: initMarkers, _seeded: initMarkers.length > 0 });
   if (initMarkers.length > 0 && !ps._seeded) { ps.markers = initMarkers; ps._seeded = true; }
 
@@ -3692,6 +3719,7 @@ function renderSchemaFields() {
   if (state._lastAutoPopKey !== _datasetKey) {
     state._lastAutoPopKey = _datasetKey;
     state.previewState = {};
+    state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     Object.keys(state.outputConfigs).forEach(function(k) {
       if (state.outputConfigs[k]) {
         state.outputConfigs[k]._autoPopulated = false;
@@ -5046,6 +5074,13 @@ function previewCellValue(val) {
   return String(val);
 }
 
+/* Normalize a cell value to a label string: short strings pass through and
+   scalar numbers/booleans (e.g. 0/1 class labels) are stringified; otherwise null */
+function scalarLabelValue(v) {
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return (typeof v === 'string' && v.length <= 100) ? v : null;
+}
+
 function parseJsonDataset(file, onSuccess, onError) {
   var reader = new FileReader();
   reader.onload = function(e) {
@@ -5071,11 +5106,11 @@ function parseJsonDataset(file, onSuccess, onError) {
         columns.forEach(function(col) { uv[col] = {}; });
         data.forEach(function(row) {
           columns.forEach(function(col) {
-            var v = row[col];
-            if (typeof v === 'string' && v.length <= 100) {
+            var v = scalarLabelValue(row[col]);
+            if (v !== null) {
               uv[col][v] = true;
-            } else if (Array.isArray(v)) {
-              v.forEach(function(item) { if (typeof item === 'string' && item.length <= 100) uv[col][item] = true; });
+            } else if (Array.isArray(row[col])) {
+              row[col].forEach(function(item) { var s = scalarLabelValue(item); if (s !== null) uv[col][s] = true; });
             }
           });
         });
@@ -5088,11 +5123,11 @@ function parseJsonDataset(file, onSuccess, onError) {
         columns.forEach(function(col) { rawFirstRow[col] = data[col]; });
         columnUniqueValues = {};
         columns.forEach(function(col) {
-          var v = data[col];
-          if (typeof v === 'string' && v.length <= 100) {
+          var v = scalarLabelValue(data[col]);
+          if (v !== null) {
             columnUniqueValues[col] = [v];
-          } else if (Array.isArray(v)) {
-            columnUniqueValues[col] = v.filter(function(item) { return typeof item === 'string' && item.length <= 100; }).slice(0, 50);
+          } else if (Array.isArray(data[col])) {
+            columnUniqueValues[col] = data[col].map(scalarLabelValue).filter(function(item) { return item !== null; }).slice(0, 50);
           } else {
             columnUniqueValues[col] = [];
           }
