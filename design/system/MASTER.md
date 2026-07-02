@@ -1819,7 +1819,7 @@ Monospace textarea used for JSON/YAML schema editing in task-new. Uses `--font-m
 - Allowed micro-interaction: `translateY` up to `-2px` maximum (creates subtle lift without layout shift)
 - Forbidden hover: `scale` transforms, shadow enhancement on hover
 - Transitions: 150–200ms ease
-- Minimal, purposeful icons (Heroicons / Lucide)
+- Minimal, purposeful icons ([Lucide](https://lucide.dev/) — the project's single icon library)
 
 ### Flat Design in This Project
 
@@ -1862,7 +1862,7 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 - ❌ Complex onboarding flow
 - ❌ Cluttered layout
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
+- ❌ **Emojis as icons** — Use Lucide SVG icons
 - ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
 - ❌ **cursor:pointer on non-interactive cards** — Only add when the card is actually clickable
 - ❌ **Layout-shifting hovers** — No scale transforms; translateY max -2px
@@ -1882,7 +1882,7 @@ Before delivering any UI code, verify:
 - [ ] Every `href="#"` placeholder has been replaced with a real path or marked `aria-disabled="true"`
 - [ ] Navigation flow matches the Page Navigation Flow table in `spec.md`
 - [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
+- [ ] All icons from Lucide (the project's single icon set)
 - [ ] `cursor-pointer` on all **clickable** elements only
 - [ ] Hover states with smooth transitions (150-300ms)
 - [ ] Light mode: text contrast 4.5:1 minimum

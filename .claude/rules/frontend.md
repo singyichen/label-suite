@@ -12,6 +12,12 @@
 
 **Localization:** Namespaced per module — e.g. `t('task-management:config_builder.label_name')`. Files at `src/locales/zh-TW/[module].json` and `src/locales/en/[module].json`. Scope: UI strings only (labels, titles, button text, empty states, client-side validation). **Do not** add backend `detail` strings to locale files — backend response messages are pre-localized via `Accept-Language` (ADR-026); render `error.response?.data?.detail` directly.
 
+## Icons
+
+- [Lucide](https://lucide.dev/) is the **only** icon library — use the `lucide-react` package (`pnpm add lucide-react`); do not add Heroicons, react-icons, Font Awesome, or any other icon set
+- Never use emojis or hand-drawn inline SVGs as icons; if Lucide lacks a needed icon, surface it instead of drawing one
+- Prototype assets at `design/prototype/assets/icons/` follow the same Lucide visual grammar (24×24, 2px stroke, `currentColor`)
+
 ## TypeScript Code Style
 
 - No `any` types (strict mode enforced)
