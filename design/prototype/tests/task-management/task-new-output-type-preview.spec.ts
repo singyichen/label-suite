@@ -1,6 +1,13 @@
 import { test, expect, type Page } from '@playwright/test';
 import path from 'path';
 
+declare global {
+  interface Window {
+    state?: Record<string, unknown>;
+    revalidateCurrentStep?: () => void;
+  }
+}
+
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const EXAMPLE_DATA = path.resolve(__dirname, '../../../../docs/product/example-data');
 
@@ -51,7 +58,7 @@ async function setupAndGoToStep2(page: Page, config: SetupConfig) {
   }
 
   await page.evaluate(() => {
-    (window as any).revalidateCurrentStep?.();
+    window.revalidateCurrentStep?.();
   });
   await page.waitForTimeout(200);
 
@@ -59,16 +66,64 @@ async function setupAndGoToStep2(page: Page, config: SetupConfig) {
   await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
 }
 
+interface LabelOption {
+  name: string;
+  color: string;
+}
+
+interface DimensionConfig {
+  name: string;
+  min: number;
+  max: number;
+  step: number;
+}
+
+interface OutputConfig {
+  label_options?: LabelOption[];
+  dimensions?: DimensionConfig[];
+  dimension_name?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  _autoPopulated?: boolean;
+  [key: string]: unknown;
+}
+
+interface PreviewStateEntry {
+  selected?: string | string[];
+  value?: number;
+  text?: string;
+  activeType?: string;
+  markers?: { position: number; type: string }[];
+  tokens?: string[];
+  _seeded?: boolean;
+  [key: string]: unknown;
+}
+
+interface Triple {
+  subj: string;
+  rel: string;
+  obj: string;
+}
+
+interface Entity {
+  text: string;
+  type: string;
+  start: number;
+  end: number;
+  color: string;
+}
+
 type WindowState = {
-  outputConfigs: Record<string, any>;
-  previewState: Record<string, any>;
-  previewTriples: any[];
-  previewEntities: any[];
+  outputConfigs: Record<string, OutputConfig>;
+  previewState: Record<string, PreviewStateEntry>;
+  previewTriples: Triple[];
+  previewEntities: Entity[];
 };
 
 function getState(page: Page, key: string) {
   return page.evaluate(
-    (k) => (window as any).state?.[k],
+    (k) => window.state?.[k],
     key,
   );
 }
@@ -91,7 +146,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    const labels = cfg.single_label.label_options.map((l: any) => l.name);
+    const labels = cfg.single_label.label_options!.map((l: LabelOption) => l.name);
     expect(labels).toContain('positive');
     expect(labels).toContain('negative');
     expect(labels).toContain('neutral');
@@ -113,11 +168,11 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    const labels = cfg.multi_label.label_options.map((l: any) => l.name);
+    const labels = cfg.multi_label.label_options!.map((l: LabelOption) => l.name);
     expect(labels.length).toBeGreaterThanOrEqual(3);
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(ps.multi_label.selected.length).toBeGreaterThanOrEqual(1);
+    expect(ps.multi_label.selected!.length).toBeGreaterThanOrEqual(1);
   });
 
   test('free_text — gold_answer pre-filled in textarea', async ({ page }) => {
@@ -131,9 +186,9 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     });
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(ps.free_text.text).toBeTruthy();
+    expect(ps.free_text.text!).toBeTruthy();
     expect(typeof ps.free_text.text).toBe('string');
-    expect(ps.free_text.text.length).toBeGreaterThan(0);
+    expect(ps.free_text.text!.length).toBeGreaterThan(0);
 
     const textarea = page.locator('#annotationPreview textarea');
     await expect(textarea).toBeVisible();
@@ -168,7 +223,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    const dims = cfg.multi_dim.dimensions.map((d: any) => d.name);
+    const dims = cfg.multi_dim.dimensions!.map((d: DimensionConfig) => d.name);
     expect(dims).toContain('fluency');
     expect(dims).toContain('adequacy');
     expect(dims).toContain('coherence');
@@ -207,7 +262,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     const inited = await getState(page, 'previewInited');
     expect(inited).toBe(true);
 
-    const entities = (await getState(page, 'previewEntities')) as any[];
+    const entities = (await getState(page, 'previewEntities')) as Entity[];
     expect(entities.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -240,7 +295,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       roles: { text: 'input', gold_triples: 'output' },
     });
 
-    const triples = (await getState(page, 'previewTriples')) as any[];
+    const triples = (await getState(page, 'previewTriples')) as Triple[];
     expect(triples.length).toBeGreaterThanOrEqual(1);
     expect(triples[0]).toHaveProperty('subj');
     expect(triples[0]).toHaveProperty('rel');
@@ -265,7 +320,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    const labels = cfg.entity_relation.label_options.map((l: any) => l.name);
+    const labels = cfg.entity_relation.label_options!.map((l: LabelOption) => l.name);
     expect(labels).toContain('treats');
     expect(labels).toContain('causes');
     expect(labels).toContain('prevents');
@@ -305,7 +360,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    const labels = cfg.single_label.label_options.map((l: any) => l.name);
+    const labels = cfg.single_label.label_options!.map((l: LabelOption) => l.name);
     expect(labels).toContain('contradiction');
     expect(labels).toContain('entailment');
 
@@ -335,7 +390,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     });
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(ps.free_text.text.length).toBeGreaterThan(50);
+    expect(ps.free_text.text!.length).toBeGreaterThan(50);
 
     const preview = page.locator('#annotationPreview');
     await expect(preview.locator('.sp-evidence-card')).toHaveCount(1);
@@ -360,12 +415,12 @@ test.describe('Step 2 preview: composite task data files', () => {
       roles: { text: 'input', entities: 'output', triples: 'output' },
     });
 
-    const triples = (await getState(page, 'previewTriples')) as any[];
+    const triples = (await getState(page, 'previewTriples')) as Triple[];
     expect(triples.length).toBe(8);
     expect(triples[0].subj).toContain('左心耳');
     expect(triples[0].obj).toContain('左心房');
 
-    const entities = (await getState(page, 'previewEntities')) as any[];
+    const entities = (await getState(page, 'previewEntities')) as Entity[];
     expect(entities.length).toBe(11);
 
     const html = await page.locator('#annotationPreview').innerHTML();
@@ -389,7 +444,7 @@ test.describe('Step 2 preview: composite task data files', () => {
       },
     });
 
-    const triples = (await getState(page, 'previewTriples')) as any[];
+    const triples = (await getState(page, 'previewTriples')) as Triple[];
     expect(triples.length).toBeGreaterThanOrEqual(2);
     expect(triples[0].subj).toContain('Note 10 plus');
 
@@ -402,5 +457,55 @@ test.describe('Step 2 preview: composite task data files', () => {
     expect(html).toContain('整合預覽');
     expect(html).toContain('多維度回歸');
     expect(html).toContain('rottenrockteahouse');
+  });
+});
+
+// ─── Data Transformation Validation ───────────────────────
+
+test.describe('Step 2 preview: data transformation and config integrity', () => {
+  test.describe.configure({ mode: 'serial', retries: 2 });
+
+  test('generated config does not contain _autoPopulated or other private keys', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'config-integrity-test',
+      category: 'classification',
+      outputType: 'single_label',
+      inputType: 'single_item',
+      dataFile: 'single-label.json',
+      roles: { text: 'input', gold_label: 'output' },
+    });
+
+    const codeContent = await page.evaluate(() => {
+      const editor = document.getElementById('codeEditor') as HTMLTextAreaElement;
+      return editor?.value || '';
+    });
+
+    expect(codeContent).not.toContain('_autoPopulated');
+    expect(codeContent).not.toContain('_seeded');
+    expect(codeContent.length).toBeGreaterThan(0);
+  });
+
+  test('preview renders visible UI elements for seeded data', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'render-validation-test',
+      category: 'regression',
+      outputType: 'single_dim',
+      inputType: 'single_item',
+      dataFile: 'single-dim.json',
+      roles: { text: 'input', gold_score: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    await expect(preview).toBeVisible();
+
+    const slider = preview.locator('input[type="range"]');
+    await expect(slider).toBeVisible();
+
+    const sliderValue = await slider.inputValue();
+    expect(Number(sliderValue)).not.toBeNaN();
   });
 });

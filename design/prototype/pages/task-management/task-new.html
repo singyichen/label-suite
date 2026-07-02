@@ -1624,6 +1624,7 @@ var state = {
   /* ADR-029: multi-output composition support */
   selectedOutputTypes: [],   /* ordered array of output_type keys, e.g. ['span', 'relation_triple'] */
   outputConfigs: {},         /* keyed by output_type key, holds each output's config fragment */
+  columnOutputTypeMap: {},   /* keyed by column name, maps to array of output_type keys */
   /* Interactive preview annotation state */
   previewEntities: [],       /* [{text, type, start, end, color}] — user-annotated or loaded from data */
   previewTriples: [],        /* [{subj, rel, obj}] — same format as rendered triples */
@@ -1739,7 +1740,7 @@ function configToCode() {
             finalCfg[k] = cfg[k] !== undefined ? cfg[k] : outReg.defaultConfig[k];
           });
         }
-        Object.keys(cfg).forEach(function(k) { finalCfg[k] = cfg[k]; });
+        Object.keys(cfg).forEach(function(k) { if (k[0] !== '_') finalCfg[k] = cfg[k]; });
         return { type: outKey, config: finalCfg };
       }),
     };
@@ -2296,11 +2297,20 @@ function getFieldsByRole(role) {
   return result;
 }
 
-/* Return the first output column's value from the first dataset row, or undefined */
-function getOutputFieldValue() {
+/* Return an output column's value from the first dataset row, or undefined.
+   When outKey is given and multiple output columns exist, try to match the
+   column whose name best corresponds to the output type; fall back to first. */
+function getOutputFieldValue(outKey) {
   var outCols = getFieldsByRole('output');
   if (outCols.length === 0 || !state.datasetRawFirstRow) return undefined;
-  var val = state.datasetRawFirstRow[outCols[0]];
+  var col = outCols[0];
+  if (outKey && outCols.length > 1) {
+    for (var ci = 0; ci < outCols.length; ci++) {
+      var colOutputTypes = state.columnOutputTypeMap && state.columnOutputTypeMap[outCols[ci]];
+      if (colOutputTypes && colOutputTypes.indexOf(outKey) >= 0) { col = outCols[ci]; break; }
+    }
+  }
+  var val = state.datasetRawFirstRow[col];
   if (val === undefined || val === null) return undefined;
   if (typeof val === 'object') return JSON.stringify(val);
   return String(val);
@@ -2719,7 +2729,7 @@ function getDatasetPairTexts() {
 }
 
 /* ── Multi-dim (VA regression) preview ── */
-function renderMultiDimPreview(container, config) {
+function renderMultiDimPreview(container, config, outKey) {
   var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
   if (dims.length === 0) {
     var empty = document.createElement('div');
@@ -2728,7 +2738,7 @@ function renderMultiDimPreview(container, config) {
     container.appendChild(empty);
     return;
   }
-  var outputVal = getOutputFieldValue();
+  var outputVal = getOutputFieldValue(outKey);
   var outputObj = null;
   if (outputVal) { try { outputObj = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
   dims.forEach(function(dim) {
@@ -2746,10 +2756,10 @@ function renderMultiDimPreview(container, config) {
     var dMin = dim.min != null ? dim.min : 1;
     var dMax = dim.max != null ? dim.max : 9;
     var dStep = dim.step != null ? dim.step : 1;
-    var initVal = Math.round((dMax + dMin) / 2);
+    var initVal = dMin + Math.round(((dMax - dMin) / 2) / dStep) * dStep;
     if (outputObj && dim.name && outputObj[dim.name] != null) {
       var n = parseFloat(outputObj[dim.name]);
-      if (!isNaN(n) && n >= dMin && n <= dMax) initVal = Math.round(n / dStep) * dStep;
+      if (!isNaN(n) && n >= dMin && n <= dMax) initVal = dMin + Math.round((n - dMin) / dStep) * dStep;
     }
     var slider = document.createElement('input');
     slider.type = 'range';
@@ -2782,7 +2792,7 @@ function initPreviewState() {
   var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
   var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
 
-  var outputVal = getOutputFieldValue();
+  var outputVal = getOutputFieldValue(outKey);
   var outputParsed = null;
   if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
 
@@ -3111,7 +3121,7 @@ function renderSingleLabelPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
   if (labels.length === 0) return;
-  var outputVal = getOutputFieldValue();
+  var outputVal = getOutputFieldValue(outKey);
   var matchedLabel = outputVal ? labels.find(function(l) { return l.name === outputVal; }) : null;
   var ps = ensurePreviewState(outKey, { selected: matchedLabel ? matchedLabel.name : null, _seeded: !!matchedLabel });
   if (matchedLabel && !ps._seeded) { ps.selected = matchedLabel.name; ps._seeded = true; }
@@ -3141,7 +3151,7 @@ function renderMultiLabelPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
   if (labels.length === 0) return;
-  var outputVal = getOutputFieldValue();
+  var outputVal = getOutputFieldValue(outKey);
   var initSelected = [];
   if (outputVal) {
     var vals;
@@ -3187,7 +3197,7 @@ function renderEntityRelationPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
   if (labels.length === 0) return;
-  var outputVal = getOutputFieldValue();
+  var outputVal = getOutputFieldValue(outKey);
   var matchedLabel = outputVal ? labels.find(function(l) { return l.name === outputVal; }) : null;
   var ps = ensurePreviewState(outKey, { selected: matchedLabel ? matchedLabel.name : null, _seeded: !!matchedLabel });
   if (matchedLabel && !ps._seeded) { ps.selected = matchedLabel.name; ps._seeded = true; }
@@ -3240,12 +3250,13 @@ function renderSingleDimPreview(container, outKey) {
   var min = cfg.min != null ? cfg.min : 1;
   var max = cfg.max != null ? cfg.max : 5;
   var step = cfg.step != null ? cfg.step : 1;
-  var mid = Math.round((min + max) / 2 / step) * step;
-  var outputVal = getOutputFieldValue();
+  var mid = min + Math.round(((max - min) / 2) / step) * step;
+  var outputVal = getOutputFieldValue(outKey);
   var initVal = mid;
-  if (outputVal) { var n = parseFloat(outputVal); if (!isNaN(n) && n >= min && n <= max) initVal = Math.round(n / step) * step; }
-  var ps = ensurePreviewState(outKey, { value: initVal, _seeded: outputVal != null });
-  if (outputVal != null && !ps._seeded) { ps.value = initVal; ps._seeded = true; }
+  var seeded = false;
+  if (outputVal) { var n = parseFloat(outputVal); if (!isNaN(n) && n >= min && n <= max) { initVal = min + Math.round((n - min) / step) * step; seeded = true; } }
+  var ps = ensurePreviewState(outKey, { value: initVal, _seeded: seeded });
+  if (seeded && !ps._seeded) { ps.value = initVal; ps._seeded = true; }
 
   previewTextBlock(container);
 
@@ -3283,7 +3294,7 @@ function renderTokenClassPreview(container, outKey) {
   var text = realText || (state.lang === 'zh' ? '台積電 董事長 魏哲家 今天 出席 台北 產業論壇' : 'TSMC chairman C.C. Wei attended an industry forum in Taipei today');
   var tokens = text.split(/\s+/).filter(Boolean);
   if (!ps.tokens || ps.tokens.length !== tokens.length) {
-    var outputVal = getOutputFieldValue();
+    var outputVal = getOutputFieldValue(outKey);
     var outputTags = [];
     if (outputVal) { try { var _arr = JSON.parse(outputVal); if (Array.isArray(_arr)) outputTags = _arr.map(String); } catch(e) { outputTags = outputVal.split(/\s+/).filter(Boolean); } }
     if (outputTags.length === tokens.length && !ps._seeded) {
@@ -3357,16 +3368,37 @@ function renderTokenClassPreview(container, outKey) {
 function renderBoundaryPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var boundaryTypes = Array.isArray(cfg.boundary_types) ? cfg.boundary_types.filter(Boolean) : ['sentence'];
-  var outputVal = getOutputFieldValue();
-  var initMarkers = [];
-  if (outputVal) { try { var parsed = JSON.parse(outputVal); if (Array.isArray(parsed)) initMarkers = parsed; } catch(e) { /* not JSON */ } }
-  var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: initMarkers, _seeded: initMarkers.length > 0 });
-  if (initMarkers.length > 0 && !ps._seeded) { ps.markers = initMarkers; ps._seeded = true; }
+  var outputVal = getOutputFieldValue(outKey);
+  var rawMarkers = [];
+  if (outputVal) { try { var parsed = JSON.parse(outputVal); if (Array.isArray(parsed)) rawMarkers = parsed; } catch(e) { /* not JSON */ } }
 
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '第一段文字。第二段文字。第三段文字。第四段文字。' : 'First sentence. Second sentence. Third sentence. Fourth sentence.');
   var segments = text.split(/(?<=[。．！？.!?])\s*/);
   if (segments.length < 2) segments = [text.substring(0, Math.floor(text.length / 2)), text.substring(Math.floor(text.length / 2))];
+
+  /* Convert character-offset markers to gap indices for the preview renderer */
+  var initMarkers = [];
+  if (rawMarkers.length > 0) {
+    var gapOffsets = [];
+    var charPos = 0;
+    for (var si = 0; si < segments.length - 1; si++) {
+      charPos += segments[si].length;
+      gapOffsets.push(charPos);
+    }
+    rawMarkers.forEach(function(m) {
+      var pos = m.position;
+      if (typeof pos !== 'number') return;
+      var bestGap = 0, bestDist = Infinity;
+      for (var gi = 0; gi < gapOffsets.length; gi++) {
+        var dist = Math.abs(pos - gapOffsets[gi]);
+        if (dist < bestDist) { bestDist = dist; bestGap = gi; }
+      }
+      initMarkers.push({ position: bestGap, type: m.type || boundaryTypes[0] || 'sentence' });
+    });
+  }
+  var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: initMarkers, _seeded: initMarkers.length > 0 });
+  if (initMarkers.length > 0 && !ps._seeded) { ps.markers = initMarkers; ps._seeded = true; }
 
   /* Boundary type selector */
   var typeTitle = document.createElement('div');
@@ -3514,7 +3546,7 @@ function renderFreeTextPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var maxLen = cfg.max_length || 512;
   var showRef = cfg.show_reference || false;
-  var outputVal = getOutputFieldValue();
+  var outputVal = getOutputFieldValue(outKey);
   var ps = ensurePreviewState(outKey, { text: outputVal || '', _seeded: !!outputVal });
   if (outputVal && !ps._seeded) { ps.text = outputVal; ps._seeded = true; }
 
@@ -3630,7 +3662,7 @@ function renderOutputPreview(container, outKey) {
     case 'multi_label': renderMultiLabelPreview(container, outKey); break;
     case 'entity_relation': renderEntityRelationPreview(container, outKey); break;
     case 'single_dim': renderSingleDimPreview(container, outKey); break;
-    case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}); break;
+    case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}, outKey); break;
     case 'token_class': renderTokenClassPreview(container, outKey); break;
     case 'boundary': renderBoundaryPreview(container, outKey); break;
     case 'span': renderSpanOnlyPreview(container, outKey); break;
@@ -3653,6 +3685,16 @@ function renderSchemaFields() {
   var container = el('schemaFields');
   while (container.firstChild) container.removeChild(container.firstChild);
 
+  /* Reset preview state and auto-population flags if a new dataset was uploaded */
+  if (!state.previewInited) {
+    state.previewState = {};
+    Object.keys(state.outputConfigs).forEach(function(k) {
+      if (state.outputConfigs[k]) {
+        state.outputConfigs[k]._autoPopulated = false;
+      }
+    });
+  }
+
   /* Auto-populate label_options from output column unique values */
   var _outCols = getFieldsByRole('output');
   if (_outCols.length > 0) {
@@ -3670,14 +3712,19 @@ function renderSchemaFields() {
     /* Auto-populate multi_dim dimensions from output JSON object */
     var _multiDimCfg = state.outputConfigs['multi_dim'];
     if (_multiDimCfg && !_multiDimCfg._autoPopulated) {
-      var _rawVal = state.datasetRawFirstRow[_outCols[0]];
+      var _rawVal = state.datasetRawFirstRow ? state.datasetRawFirstRow[_outCols[0]] : null;
       if (_rawVal && typeof _rawVal === 'object' && !Array.isArray(_rawVal)) {
         var _dimKeys = Object.keys(_rawVal);
         if (_dimKeys.length > 0) {
           _multiDimCfg.dimensions = _dimKeys.map(function(key) {
             var v = parseFloat(_rawVal[key]);
-            var maxVal = (!isNaN(v) && v > 5) ? Math.ceil(v * 1.5) : 5;
-            return { name: key, min: 1, max: Math.max(maxVal, 5), step: 1 };
+            var minVal = 1, maxVal = 5, stepVal = 1;
+            if (!isNaN(v)) {
+              if (v >= 0 && v <= 1) { minVal = 0; maxVal = 1; stepVal = 0.01; }
+              else if (v < 0) { minVal = Math.floor(v * 1.5); maxVal = Math.max(Math.ceil(Math.abs(v) * 1.5), 5); stepVal = 1; }
+              else if (v > 5) { maxVal = Math.ceil(v * 1.5); }
+            }
+            return { name: key, min: minVal, max: maxVal, step: stepVal };
           });
           _multiDimCfg._autoPopulated = true;
         }
@@ -5038,7 +5085,13 @@ function parseJsonDataset(file, onSuccess, onError) {
         columnUniqueValues = {};
         columns.forEach(function(col) {
           var v = data[col];
-          columnUniqueValues[col] = (typeof v === 'string' && v.length <= 100) ? [v] : [];
+          if (typeof v === 'string' && v.length <= 100) {
+            columnUniqueValues[col] = [v];
+          } else if (Array.isArray(v)) {
+            columnUniqueValues[col] = v.filter(function(item) { return typeof item === 'string' && item.length <= 100; }).slice(0, 50);
+          } else {
+            columnUniqueValues[col] = [];
+          }
         });
       } else {
         onError(state.lang === 'en' ? 'Invalid JSON format.' : 'JSON 格式不正確，請確認檔案內容。');
@@ -5814,7 +5867,8 @@ function rebuildOutputChips() {
   if (!container) return;
 
   var cats = state.taskCategories || [];
-  var catsKey = state.lang + ':' + cats.slice().sort().join(',');
+  var inputTypes = state.taskInputTypes || [];
+  var catsKey = state.lang + ':' + cats.slice().sort().join(',') + ':' + inputTypes.slice().sort().join(',');
   if (_lastOutputCatsKey === catsKey) {
     container.querySelectorAll('.task-type-chip').forEach(function(btn) {
       var key = btn.getAttribute('data-key');
@@ -5846,6 +5900,8 @@ function rebuildOutputChips() {
     if (!catDef) return;
     var outputsMap = {};
     Object.keys(catDef.granularities).forEach(function(granKey) {
+      /* When an input type is selected, only include output types from matching granularities */
+      if (inputTypes.length > 0 && inputTypes.indexOf(granKey) < 0) return;
       var granDef = catDef.granularities[granKey];
       if (granDef && granDef.subtypes) {
         Object.keys(granDef.subtypes).forEach(function(subKey) {
