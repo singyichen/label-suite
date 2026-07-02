@@ -37,8 +37,8 @@ Use **Lucide** (<https://lucide.dev/>) as the **sole** icon library.
 
 - Frontend imports icons only from the `lucide-react` package (installed via `pnpm add lucide-react` when the frontend is scaffolded).
 - No other icon library may be added (Heroicons, react-icons, Font Awesome, Material Symbols, etc.).
-- Emojis and hand-drawn inline SVGs are never used as icons; if Lucide lacks a needed icon, surface it rather than drawing one.
-- Prototype and brand assets continue to follow the Lucide visual grammar: 24×24 viewBox, 2px stroke, `currentColor`.
+- Emojis and hand-drawn inline SVGs are never used as icons — never invent a glyph that does not exist in Lucide; if Lucide lacks a needed icon, surface it rather than drawing one. Prototype HTML necessarily embeds icons as inline SVG markup (no npm at the design layer); that is allowed when each glyph reproduces an actual Lucide icon, per the `label-suite-design` skill.
+- Prototype UI glyphs (`design/prototype/assets/icons/` and inline equivalents) continue to follow the Lucide visual grammar: 24×24 viewBox, 2px stroke, `currentColor`. Brand/logo marks (colored logos, banners, the Google SSO "G") are outside this rule — see Consequences.
 
 ## Consequences
 
