@@ -2792,7 +2792,7 @@ function initPreviewState() {
   var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
   var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
 
-  var outputVal = getOutputFieldValue(outKey);
+  var outputVal = getOutputFieldValue();
   var outputParsed = null;
   if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
 
