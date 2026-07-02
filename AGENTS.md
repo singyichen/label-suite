@@ -49,11 +49,35 @@ When assisting with code review, keep the review narrow, actionable, and tied to
 - Only report issues that are directly supported by the changed code, surrounding code, failing checks, or project rules.
 - Do not expand into unrelated refactors, style preferences, speculative edge cases, or broad architecture redesigns unless they create a concrete bug or policy violation.
 - Treat unchanged code as context, not review scope. Mention unchanged-code concerns only when the PR makes the risk worse.
-- Prefer a small number of high-signal findings over exhaustive commentary. If there are no blocking findings, say that clearly and list residual test or verification gaps separately.
+- Prefer a small number of high-signal findings over exhaustive commentary. Report at most 5 findings total, but always fully report every blocking Critical/High finding; if more non-blocking issues exist, summarize the rest as residual risk.
 - Each finding must include the impacted file/line, the observable risk, and the smallest practical fix direction.
-- Separate blocking findings from non-blocking suggestions. Do not request changes for minor polish, naming, or formatting if existing tooling can handle it.
 - Verify project-specific constraints before flagging them: no cross-feature imports, config-driven task types, no annotator access to ground-truth answers, no `any`, explicit CORS origins, and required tests.
 - If review context is incomplete, state the limitation once and continue with the available diff instead of broadening the review.
+
+Classify every finding by severity:
+
+- **Critical** — Must fix before merge. Security vulnerabilities, auth/RBAC bypass, test-set answer or ground-truth leakage, data loss, destructive behavior, production crashes, major correctness regressions, unreviewed breaking API/schema changes, hardcoded task logic, `allow_origins=["*"]`, or other violations of non-negotiable constitution rules.
+- **High** — Should fix before merge unless the maintainer explicitly accepts the risk. Missing tests for changed behavior, clear regression scenarios, cross-feature imports, `any` in changed TypeScript, or performance issues likely to affect normal production usage.
+- **Medium** — Non-blocking unless it accumulates into concrete risk. Incomplete docs for changed public behavior, weak non-critical error handling, maintainability issues that make near-term bugs more likely, or edge-case test gaps outside the main path.
+- **Low** — Non-blocking suggestion only. Naming, formatting, minor readability, small duplication, comment wording, polish, or speculative improvements.
+
+Blocking policy:
+
+- Only **Critical** and **High** findings are blocking.
+- **Medium** and **Low** findings must be clearly labeled as non-blocking and must not request changes unless the user explicitly asks for cleanup.
+- If there are no Critical or High findings, state: "No blocking findings." Then list Medium/Low items only when they are useful and directly supported by the diff.
+- Do not request changes for minor polish, naming, or formatting if existing tooling can handle it.
+
+Review output format:
+
+- Every finding title must start with one of these prefixes:
+  - `[Critical]`
+  - `[High]`
+  - `[Medium][Non-blocking]`
+  - `[Low][Non-blocking]`
+- Blocking findings must explain why they block merge.
+- Non-blocking findings must not use language such as "must fix", "required", or "blocks merge".
+- If there are no Critical or High findings, start the review summary with: `No blocking findings.`
 
 ## When SDD Is Required
 
