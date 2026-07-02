@@ -1625,6 +1625,7 @@ var state = {
   selectedOutputTypes: [],   /* ordered array of output_type keys, e.g. ['span', 'relation_triple'] */
   outputConfigs: {},         /* keyed by output_type key, holds each output's config fragment */
   columnOutputTypeMap: {},   /* keyed by column name, maps to array of output_type keys */
+  _lastAutoPopKey: '',       /* fingerprint for detecting dataset/role changes */
   /* Interactive preview annotation state */
   previewEntities: [],       /* [{text, type, start, end, color}] — user-annotated or loaded from data */
   previewTriples: [],        /* [{subj, rel, obj}] — same format as rendered triples */
@@ -3685,8 +3686,11 @@ function renderSchemaFields() {
   var container = el('schemaFields');
   while (container.firstChild) container.removeChild(container.firstChild);
 
-  /* Reset preview state and auto-population flags if a new dataset was uploaded */
-  if (!state.previewInited) {
+  /* Reset auto-population flags only when dataset or output-role mapping changes */
+  var _outCols_ = getFieldsByRole('output');
+  var _datasetKey = (_outCols_.join(',') || '') + ':' + (state.datasetParsedColumns.join(',') || '');
+  if (state._lastAutoPopKey !== _datasetKey) {
+    state._lastAutoPopKey = _datasetKey;
     state.previewState = {};
     Object.keys(state.outputConfigs).forEach(function(k) {
       if (state.outputConfigs[k]) {
