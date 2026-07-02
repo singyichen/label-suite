@@ -1250,14 +1250,14 @@ var TASK_TAXONOMY = {
         subtypes: {
           single_label:    { registryKey: 'single_sentence_classification', zh: '單一標籤', en: 'Single label' },
           multi_label:     { registryKey: 'single_sentence_classification', zh: '多標籤', en: 'Multi-label' },
-          entity_relation: { registryKey: 'sentence_pairs', zh: '實體關係標籤', en: 'Entity relation label' },
         },
       },
       item_pair: {
         zh: '項目對', en: 'Item pair',
         subtypes: {
-          single_label: { registryKey: 'sentence_pairs', zh: '單一標籤', en: 'Single label' },
-          multi_label:  { registryKey: 'sentence_pairs', zh: '多標籤', en: 'Multi-label' },
+          single_label:    { registryKey: 'sentence_pairs', zh: '單一標籤', en: 'Single label' },
+          multi_label:     { registryKey: 'sentence_pairs', zh: '多標籤', en: 'Multi-label' },
+          entity_relation: { registryKey: 'sentence_pairs', zh: '實體關係標籤', en: 'Entity relation label' },
         },
       },
     },
@@ -1624,6 +1624,8 @@ var state = {
   /* ADR-029: multi-output composition support */
   selectedOutputTypes: [],   /* ordered array of output_type keys, e.g. ['span', 'relation_triple'] */
   outputConfigs: {},         /* keyed by output_type key, holds each output's config fragment */
+  columnOutputTypeMap: {},   /* keyed by column name, maps to array of output_type keys */
+  _lastAutoPopKey: '',       /* fingerprint for detecting dataset/role changes */
   /* Interactive preview annotation state */
   previewEntities: [],       /* [{text, type, start, end, color}] — user-annotated or loaded from data */
   previewTriples: [],        /* [{subj, rel, obj}] — same format as rendered triples */
@@ -1739,7 +1741,7 @@ function configToCode() {
             finalCfg[k] = cfg[k] !== undefined ? cfg[k] : outReg.defaultConfig[k];
           });
         }
-        Object.keys(cfg).forEach(function(k) { finalCfg[k] = cfg[k]; });
+        Object.keys(cfg).forEach(function(k) { if (k[0] !== '_') finalCfg[k] = cfg[k]; });
         return { type: outKey, config: finalCfg };
       }),
     };
@@ -2296,6 +2298,57 @@ function getFieldsByRole(role) {
   return result;
 }
 
+/* Return an output column's value from the first dataset row, or undefined.
+   When outKey is given and multiple output columns exist, try to match the
+   column whose name best corresponds to the output type; fall back to first. */
+function getOutputFieldValue(outKey) {
+  var outCols = getFieldsByRole('output');
+  if (outCols.length === 0 || !state.datasetRawFirstRow) return undefined;
+  var col = outCols[0];
+  if (outKey && outCols.length > 1) {
+    for (var ci = 0; ci < outCols.length; ci++) {
+      var colOutputTypes = state.columnOutputTypeMap && state.columnOutputTypeMap[outCols[ci]];
+      if (colOutputTypes && colOutputTypes.indexOf(outKey) >= 0) { col = outCols[ci]; break; }
+    }
+  }
+  var val = state.datasetRawFirstRow[col];
+  if (val === undefined || val === null) return undefined;
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
+}
+
+/* Infer which output types each output column's first-row value shape can
+   seed, so getOutputFieldValue(outKey) picks the right column when several
+   columns are marked output (ADR-029 multi-output tasks) */
+function rebuildColumnOutputTypeMap() {
+  var rawRow = state.datasetRawFirstRow || {};
+  var map = {};
+  getFieldsByRole('output').forEach(function(col) {
+    var v = rawRow[col];
+    var types = [];
+    if (Array.isArray(v) && v.length > 0) {
+      var first = v[0];
+      if (typeof first === 'string') {
+        types = /^(O|[BIES]-.+)$/.test(first) ? ['token_class'] : ['multi_label'];
+      } else if (first && typeof first === 'object') {
+        if (first.position != null) types = ['boundary'];
+        else if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_triple'];
+        else if (first.text != null) types = ['span'];
+      }
+    } else if (v && typeof v === 'object') {
+      types = ['multi_dim'];
+    } else if (typeof v === 'number') {
+      types = ['single_dim', 'single_label'];
+    } else if (typeof v === 'boolean') {
+      types = ['single_label'];
+    } else if (typeof v === 'string') {
+      types = ['single_label', 'entity_relation', 'free_text'];
+    }
+    map[col] = types;
+  });
+  state.columnOutputTypeMap = map;
+}
+
 function autoPopulateSentencePairsConfig() {
   var inputFields = getFieldsByRole('input');
   var outputFields = getFieldsByRole('output');
@@ -2709,7 +2762,7 @@ function getDatasetPairTexts() {
 }
 
 /* ── Multi-dim (VA regression) preview ── */
-function renderMultiDimPreview(container, config) {
+function renderMultiDimPreview(container, config, outKey) {
   var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
   if (dims.length === 0) {
     var empty = document.createElement('div');
@@ -2718,6 +2771,9 @@ function renderMultiDimPreview(container, config) {
     container.appendChild(empty);
     return;
   }
+  var outputVal = getOutputFieldValue(outKey);
+  var outputObj = null;
+  if (outputVal) { try { outputObj = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
   dims.forEach(function(dim) {
     var dimWrap = document.createElement('div');
     dimWrap.style.cssText = 'margin-bottom:16px;';
@@ -2730,20 +2786,28 @@ function renderMultiDimPreview(container, config) {
     var minLabel = document.createElement('span');
     minLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:center;';
     minLabel.textContent = dim.min != null ? dim.min : 1;
+    var dMin = dim.min != null ? dim.min : 1;
+    var dMax = dim.max != null ? dim.max : 9;
+    var dStep = dim.step != null ? dim.step : 1;
+    var initVal = dMin + Math.round(((dMax - dMin) / 2) / dStep) * dStep;
+    if (outputObj && dim.name && outputObj[dim.name] != null) {
+      var n = parseFloat(outputObj[dim.name]);
+      if (!isNaN(n) && n >= dMin && n <= dMax) initVal = dMin + Math.round((n - dMin) / dStep) * dStep;
+    }
     var slider = document.createElement('input');
     slider.type = 'range';
-    slider.min = dim.min != null ? dim.min : 1;
-    slider.max = dim.max != null ? dim.max : 9;
-    slider.step = dim.step != null ? dim.step : 1;
-    slider.value = Math.round(((dim.max || 9) + (dim.min || 1)) / 2);
-    slider.disabled = true;
-    slider.style.cssText = 'flex:1;accent-color:var(--color-primary);';
+    slider.min = dMin;
+    slider.max = dMax;
+    slider.step = dStep;
+    slider.value = initVal;
+    slider.style.cssText = 'flex:1;accent-color:var(--color-primary);cursor:pointer;';
     var maxLabel = document.createElement('span');
     maxLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:center;';
-    maxLabel.textContent = dim.max != null ? dim.max : 9;
+    maxLabel.textContent = dMax;
     var valLabel = document.createElement('span');
     valLabel.style.cssText = 'font-size:0.85rem;font-weight:600;color:var(--color-primary);min-width:24px;text-align:center;';
     valLabel.textContent = slider.value;
+    slider.addEventListener('input', function() { valLabel.textContent = slider.value; });
     rangeWrap.appendChild(minLabel);
     rangeWrap.appendChild(slider);
     rangeWrap.appendChild(maxLabel);
@@ -2761,30 +2825,54 @@ function initPreviewState() {
   var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
   var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
 
+  var outputVal = getOutputFieldValue();
+  var outputParsed = null;
+  if (outputVal) { try { outputParsed = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
+
   var dataEnts = Array.isArray(rawRow.entities) ? rawRow.entities : [];
+  if (dataEnts.length === 0 && Array.isArray(outputParsed) && outputParsed.length > 0 && outputParsed[0].text) {
+    dataEnts = outputParsed;
+  }
   if (dataEnts.length > 0) {
     state.previewEntities = dataEnts.map(function(e) { return { text: e.text, type: e.type, start: e.start, end: e.end }; });
   } else {
     state.previewEntities = [];
   }
 
-  var nerTrips = Array.isArray(rawRow.triples) ? rawRow.triples : [];
-  var goldTrips = Array.isArray(rawRow.gold_triplets) ? rawRow.gold_triplets : [];
+  /* Pick the first candidate triple array whose elements match a supported
+     shape, independent of the field name it was stored under */
+  function tripleShapeOf(arr) {
+    if (!Array.isArray(arr) || arr.length === 0 || !arr[0] || typeof arr[0] !== 'object') return null;
+    if (arr[0].entity1) return 'ner';
+    if (arr[0].subj) return 'gold';
+    if (arr[0].target_text || arr[0].aspect_text || arr[0].opinion_text) return 'absa';
+    return null;
+  }
+  var trips = [], tripShape = null;
+  [rawRow.triples, rawRow.gold_triplets, rawRow.gold_triples, outputParsed].some(function(cand) {
+    var shape = tripleShapeOf(cand);
+    if (shape) { trips = cand; tripShape = shape; return true; }
+    return false;
+  });
   var nameTarget = (cfgEntities[0] && cfgEntities[0].name) || 'target';
   var nameAspect = (cfgEntities[1] && cfgEntities[1].name) || 'aspect';
   var nameOpinion = (cfgEntities[2] && cfgEntities[2].name) || 'opinion';
   var sampleRel1 = relationTypes[0] || 'has_aspect';
   var sampleRel2 = relationTypes[1] || 'has_opinion';
 
-  if (nerTrips.length > 0) {
-    state.previewTriples = nerTrips.map(function(trip) {
+  if (tripShape === 'ner') {
+    state.previewTriples = trips.map(function(trip) {
       var e1 = trip.entity1 || {}, rel = trip.relation || {}, e2 = trip.entity2 || {};
       function fmt(o) { var s = o.text || '?'; if (o.start != null && o.end != null) s += ' (' + o.start + ',' + o.end + ')'; return s; }
       return { subj: fmt(e1), rel: fmt(rel), obj: fmt(e2) };
     });
-  } else if (goldTrips.length > 0) {
+  } else if (tripShape === 'gold') {
+    state.previewTriples = trips.map(function(trip) {
+      return { subj: trip.subj || '?', rel: trip.rel || '?', obj: trip.obj || '?' };
+    });
+  } else if (tripShape === 'absa') {
     state.previewTriples = [];
-    goldTrips.forEach(function(trip) {
+    trips.forEach(function(trip) {
       var tgt = trip.target_text || '?', asp = trip.aspect_text || '', opn = trip.opinion_text || '';
       if (asp) state.previewTriples.push({ subj: tgt + '/' + nameTarget, rel: sampleRel1, obj: asp + '/' + nameAspect });
       if (opn) state.previewTriples.push({ subj: tgt + '/' + nameTarget, rel: sampleRel2, obj: opn + '/' + nameOpinion });
@@ -3074,7 +3162,10 @@ function renderSingleLabelPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
   if (labels.length === 0) return;
-  var ps = ensurePreviewState(outKey, { selected: null });
+  var outputVal = getOutputFieldValue(outKey);
+  var matchedLabel = outputVal ? labels.find(function(l) { return l.name === outputVal; }) : null;
+  var ps = ensurePreviewState(outKey, { selected: matchedLabel ? matchedLabel.name : null, _seeded: !!matchedLabel });
+  if (matchedLabel && !ps._seeded) { ps.selected = matchedLabel.name; ps._seeded = true; }
 
   previewTextBlock(container);
 
@@ -3101,7 +3192,15 @@ function renderMultiLabelPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
   if (labels.length === 0) return;
-  var ps = ensurePreviewState(outKey, { selected: [] });
+  var outputVal = getOutputFieldValue(outKey);
+  var initSelected = [];
+  if (outputVal) {
+    var vals;
+    try { var arr = JSON.parse(outputVal); vals = Array.isArray(arr) ? arr.map(String) : [outputVal]; } catch(e) { vals = outputVal.split(/[,;，；]\s*/); }
+    vals.forEach(function(v) { var m = labels.find(function(l) { return l.name === v.trim(); }); if (m) initSelected.push(m.name); });
+  }
+  var ps = ensurePreviewState(outKey, { selected: initSelected, _seeded: initSelected.length > 0 });
+  if (initSelected.length > 0 && !ps._seeded) { ps.selected = initSelected; ps._seeded = true; }
 
   previewTextBlock(container);
 
@@ -3139,7 +3238,10 @@ function renderEntityRelationPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
   if (labels.length === 0) return;
-  var ps = ensurePreviewState(outKey, { selected: null });
+  var outputVal = getOutputFieldValue(outKey);
+  var matchedLabel = outputVal ? labels.find(function(l) { return l.name === outputVal; }) : null;
+  var ps = ensurePreviewState(outKey, { selected: matchedLabel ? matchedLabel.name : null, _seeded: !!matchedLabel });
+  if (matchedLabel && !ps._seeded) { ps.selected = matchedLabel.name; ps._seeded = true; }
 
   var pairTexts = getDatasetPairTexts();
   var e1Text = pairTexts ? pairTexts.text1 : (state.lang === 'zh' ? '阿司匹林' : 'Aspirin');
@@ -3189,8 +3291,13 @@ function renderSingleDimPreview(container, outKey) {
   var min = cfg.min != null ? cfg.min : 1;
   var max = cfg.max != null ? cfg.max : 5;
   var step = cfg.step != null ? cfg.step : 1;
-  var mid = Math.round((min + max) / 2 / step) * step;
-  var ps = ensurePreviewState(outKey, { value: mid });
+  var mid = min + Math.round(((max - min) / 2) / step) * step;
+  var outputVal = getOutputFieldValue(outKey);
+  var initVal = mid;
+  var seeded = false;
+  if (outputVal) { var n = parseFloat(outputVal); if (!isNaN(n) && n >= min && n <= max) { initVal = min + Math.round((n - min) / step) * step; seeded = true; } }
+  var ps = ensurePreviewState(outKey, { value: initVal, _seeded: seeded });
+  if (seeded && !ps._seeded) { ps.value = initVal; ps._seeded = true; }
 
   previewTextBlock(container);
 
@@ -3222,12 +3329,34 @@ function renderTokenClassPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.entities) ? cfg.entities.filter(function(e) { return e && e.name; }) : [];
   var scheme = cfg.tagging_scheme || 'BIO';
-  var ps = ensurePreviewState(outKey, { activeLabel: null, tokens: null });
+  var ps = ensurePreviewState(outKey, { activeLabel: null, tokens: null, _seeded: false });
 
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '台積電 董事長 魏哲家 今天 出席 台北 產業論壇' : 'TSMC chairman C.C. Wei attended an industry forum in Taipei today');
-  var tokens = text.split(/\s+/).filter(Boolean);
-  if (!ps.tokens || ps.tokens.length !== tokens.length) { ps.tokens = tokens.map(function() { return 'O'; }); }
+  /* Prefer a dataset-provided token array (e.g. unsegmented Chinese text with a
+     separate tokens field) over whitespace splitting */
+  var rawRow = state.datasetRawFirstRow || {};
+  var tokens = null;
+  if (Array.isArray(rawRow.tokens) && rawRow.tokens.length > 0) {
+    tokens = rawRow.tokens.map(String);
+  } else {
+    var inCols = getFieldsByRole('input');
+    for (var ici = 0; ici < inCols.length; ici++) {
+      var iv = rawRow[inCols[ici]];
+      if (Array.isArray(iv) && iv.length > 0 && typeof iv[0] === 'string') { tokens = iv.map(String); break; }
+    }
+  }
+  if (!tokens) tokens = text.split(/\s+/).filter(Boolean);
+  if (!ps.tokens || ps.tokens.length !== tokens.length) {
+    var outputVal = getOutputFieldValue(outKey);
+    var outputTags = [];
+    if (outputVal) { try { var _arr = JSON.parse(outputVal); if (Array.isArray(_arr)) outputTags = _arr.map(String); } catch(e) { outputTags = outputVal.split(/\s+/).filter(Boolean); } }
+    if (outputTags.length === tokens.length && !ps._seeded) {
+      ps.tokens = outputTags; ps._seeded = true;
+    } else {
+      ps.tokens = tokens.map(function() { return 'O'; });
+    }
+  }
 
   /* Label selector */
   var typeTitle = document.createElement('div');
@@ -3293,12 +3422,43 @@ function renderTokenClassPreview(container, outKey) {
 function renderBoundaryPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var boundaryTypes = Array.isArray(cfg.boundary_types) ? cfg.boundary_types.filter(Boolean) : ['sentence'];
-  var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: [] });
+  var outputVal = getOutputFieldValue(outKey);
+  var rawMarkers = [];
+  if (outputVal) { try { var parsed = JSON.parse(outputVal); if (Array.isArray(parsed)) rawMarkers = parsed; } catch(e) { /* not JSON */ } }
 
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '第一段文字。第二段文字。第三段文字。第四段文字。' : 'First sentence. Second sentence. Third sentence. Fourth sentence.');
   var segments = text.split(/(?<=[。．！？.!?])\s*/);
+
+  /* Cut the text at the union of punctuation gaps and supplied marker offsets
+     so every offset-based boundary gets its own gap, even in punctuation-free
+     text; each marker then maps to its exact gap index */
+  var initMarkers = [];
+  if (rawMarkers.length > 0) {
+    var cutSet = {};
+    var charPos = 0;
+    for (var si = 0; si < segments.length - 1; si++) {
+      charPos += segments[si].length;
+      cutSet[charPos] = true;
+    }
+    rawMarkers.forEach(function(m) {
+      if (typeof m.position === 'number') cutSet[m.position] = true;
+    });
+    var cuts = Object.keys(cutSet).map(Number).filter(function(p) { return p > 0 && p < text.length; }).sort(function(a, b) { return a - b; });
+    if (cuts.length > 0) {
+      segments = [];
+      var prevCut = 0;
+      cuts.forEach(function(p) { segments.push(text.substring(prevCut, p)); prevCut = p; });
+      segments.push(text.substring(prevCut));
+    }
+    rawMarkers.forEach(function(m) {
+      var gi = cuts.indexOf(m.position);
+      if (gi >= 0) initMarkers.push({ position: gi, type: m.type || boundaryTypes[0] || 'sentence' });
+    });
+  }
   if (segments.length < 2) segments = [text.substring(0, Math.floor(text.length / 2)), text.substring(Math.floor(text.length / 2))];
+  var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: initMarkers, _seeded: initMarkers.length > 0 });
+  if (initMarkers.length > 0 && !ps._seeded) { ps.markers = initMarkers; ps._seeded = true; }
 
   /* Boundary type selector */
   var typeTitle = document.createElement('div');
@@ -3446,7 +3606,9 @@ function renderFreeTextPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var maxLen = cfg.max_length || 512;
   var showRef = cfg.show_reference || false;
-  var ps = ensurePreviewState(outKey, { text: '' });
+  var outputVal = getOutputFieldValue(outKey);
+  var ps = ensurePreviewState(outKey, { text: outputVal || '', _seeded: !!outputVal });
+  if (outputVal && !ps._seeded) { ps.text = outputVal; ps._seeded = true; }
 
   previewTextBlock(container);
 
@@ -3457,14 +3619,15 @@ function renderFreeTextPreview(container, outKey) {
     container.appendChild(refTitle);
     var refBox = document.createElement('div');
     refBox.style.cssText = 'padding:8px 12px;background:#FFF8E1;border:1px solid #FFE082;border-radius:var(--radius-md);margin-bottom:12px;font-size:0.85rem;color:#F57F17;';
-    refBox.textContent = state.lang === 'zh' ? '（參考答案會在此處顯示）' : '(Reference answer shown here)';
+    refBox.textContent = outputVal || (state.lang === 'zh' ? '（參考答案會在此處顯示）' : '(Reference answer shown here)');
     container.appendChild(refBox);
   }
 
+  var outCols = getFieldsByRole('output');
   var ansTitle = document.createElement('div');
   ansTitle.className = 'annotation-preview-task-title';
   ansTitle.style.marginBottom = '6px';
-  ansTitle.textContent = state.lang === 'zh' ? '回答' : 'Answer';
+  ansTitle.textContent = outCols.length > 0 ? outCols[0] : (state.lang === 'zh' ? '回答' : 'Answer');
   container.appendChild(ansTitle);
 
   var textarea = document.createElement('textarea');
@@ -3559,7 +3722,7 @@ function renderOutputPreview(container, outKey) {
     case 'multi_label': renderMultiLabelPreview(container, outKey); break;
     case 'entity_relation': renderEntityRelationPreview(container, outKey); break;
     case 'single_dim': renderSingleDimPreview(container, outKey); break;
-    case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}); break;
+    case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}, outKey); break;
     case 'token_class': renderTokenClassPreview(container, outKey); break;
     case 'boundary': renderBoundaryPreview(container, outKey); break;
     case 'span': renderSpanOnlyPreview(container, outKey); break;
@@ -3581,6 +3744,61 @@ function refreshOutputPreview(container, outKey) {
 function renderSchemaFields() {
   var container = el('schemaFields');
   while (container.firstChild) container.removeChild(container.firstChild);
+
+  rebuildColumnOutputTypeMap();
+
+  /* Reset auto-population flags only when the dataset or any column role
+     assignment changes; the full role map covers input/evidence/output so
+     e.g. re-pointing the input column also re-seeds offset-based previews,
+     and _datasetVersion distinguishes replaced files sharing the same columns */
+  var _datasetKey = (state._datasetVersion || 0) + ':' + state.datasetParsedColumns.map(function(c) { return c + '=' + (state.fieldRoleMap[c] || ''); }).join(',');
+  if (state._lastAutoPopKey !== _datasetKey) {
+    state._lastAutoPopKey = _datasetKey;
+    state.previewState = {};
+    state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+    Object.keys(state.outputConfigs).forEach(function(k) {
+      if (state.outputConfigs[k]) {
+        state.outputConfigs[k]._autoPopulated = false;
+      }
+    });
+  }
+
+  /* Auto-populate label_options from output column unique values */
+  var _outCols = getFieldsByRole('output');
+  if (_outCols.length > 0) {
+    var _uniqueVals = state.datasetColumnUniqueValues[_outCols[0]] || [];
+    if (_uniqueVals.length > 0) {
+      ['single_label', 'multi_label', 'entity_relation'].forEach(function(outKey) {
+        var cfg = state.outputConfigs[outKey];
+        if (!cfg || cfg._autoPopulated) return;
+        cfg.label_options = _uniqueVals.map(function(v, i) {
+          return { name: String(v), color: ENTITY_COLORS[i % ENTITY_COLORS.length] };
+        });
+        cfg._autoPopulated = true;
+      });
+    }
+    /* Auto-populate multi_dim dimensions from output JSON object */
+    var _multiDimCfg = state.outputConfigs['multi_dim'];
+    if (_multiDimCfg && !_multiDimCfg._autoPopulated) {
+      var _rawVal = state.datasetRawFirstRow ? state.datasetRawFirstRow[_outCols[0]] : null;
+      if (_rawVal && typeof _rawVal === 'object' && !Array.isArray(_rawVal)) {
+        var _dimKeys = Object.keys(_rawVal);
+        if (_dimKeys.length > 0) {
+          _multiDimCfg.dimensions = _dimKeys.map(function(key) {
+            var v = parseFloat(_rawVal[key]);
+            var minVal = 1, maxVal = 5, stepVal = 1;
+            if (!isNaN(v)) {
+              if (v >= 0 && v <= 1) { minVal = 0; maxVal = 1; stepVal = 0.01; }
+              else if (v < 0) { minVal = Math.floor(v * 1.5); maxVal = Math.max(Math.ceil(Math.abs(v) * 1.5), 5); stepVal = 1; }
+              else if (v > 5) { maxVal = Math.ceil(v * 1.5); }
+            }
+            return { name: key, min: minVal, max: maxVal, step: stepVal };
+          });
+          _multiDimCfg._autoPopulated = true;
+        }
+      }
+    }
+  }
 
   /* ADR-029: render accordion layout for all output types (single or multi) */
   if (state.selectedOutputTypes.length >= 1) {
@@ -4892,6 +5110,13 @@ function previewCellValue(val) {
   return String(val);
 }
 
+/* Normalize a cell value to a label string: short strings pass through and
+   scalar numbers/booleans (e.g. 0/1 class labels) are stringified; otherwise null */
+function scalarLabelValue(v) {
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return (typeof v === 'string' && v.length <= 100) ? v : null;
+}
+
 function parseJsonDataset(file, onSuccess, onError) {
   var reader = new FileReader();
   reader.onload = function(e) {
@@ -4917,8 +5142,12 @@ function parseJsonDataset(file, onSuccess, onError) {
         columns.forEach(function(col) { uv[col] = {}; });
         data.forEach(function(row) {
           columns.forEach(function(col) {
-            var v = row[col];
-            if (typeof v === 'string' && v.length <= 100) uv[col][v] = true;
+            var v = scalarLabelValue(row[col]);
+            if (v !== null) {
+              uv[col][v] = true;
+            } else if (Array.isArray(row[col])) {
+              row[col].forEach(function(item) { var s = scalarLabelValue(item); if (s !== null) uv[col][s] = true; });
+            }
           });
         });
         columnUniqueValues = {};
@@ -4930,8 +5159,14 @@ function parseJsonDataset(file, onSuccess, onError) {
         columns.forEach(function(col) { rawFirstRow[col] = data[col]; });
         columnUniqueValues = {};
         columns.forEach(function(col) {
-          var v = data[col];
-          columnUniqueValues[col] = (typeof v === 'string' && v.length <= 100) ? [v] : [];
+          var v = scalarLabelValue(data[col]);
+          if (v !== null) {
+            columnUniqueValues[col] = [v];
+          } else if (Array.isArray(data[col])) {
+            columnUniqueValues[col] = data[col].map(scalarLabelValue).filter(function(item) { return item !== null; }).slice(0, 50);
+          } else {
+            columnUniqueValues[col] = [];
+          }
         });
       } else {
         onError(state.lang === 'en' ? 'Invalid JSON format.' : 'JSON 格式不正確，請確認檔案內容。');
@@ -4975,7 +5210,16 @@ function processFileQueue(queue, idx) {
       }
       state.datasetParsedRows = parsed.rows;
       state.datasetRawFirstRow = parsed.rawFirstRow || {};
-      state.datasetColumnUniqueValues = parsed.columnUniqueValues || {};
+      /* Merge unique values across compatible files so labels that only
+         appear in earlier files are not dropped from auto-population */
+      var _mergedUv = {};
+      state.datasetParsedColumns.forEach(function(col) {
+        var seen = {};
+        (state.datasetColumnUniqueValues[col] || []).forEach(function(v) { seen[v] = true; });
+        ((parsed.columnUniqueValues || {})[col] || []).forEach(function(v) { seen[v] = true; });
+        _mergedUv[col] = Object.keys(seen).slice(0, 50);
+      });
+      state.datasetColumnUniqueValues = _mergedUv;
     } else {
       state.datasetParsedColumns = parsed.columns;
       state.datasetParsedRows = parsed.rows;
@@ -4984,6 +5228,7 @@ function processFileQueue(queue, idx) {
       state.fieldRoleMap = {};
     }
     state.datasetFiles.push(file);
+    state._datasetVersion = (state._datasetVersion || 0) + 1;
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     track('prototype_task_new_dataset_uploaded', { name: file.name, size: file.size });
     el('datasetUploadZone').classList.remove('error');
@@ -5024,14 +5269,47 @@ function addDatasetFiles(files) {
 
 function removeDatasetFile(idx) {
   state.datasetFiles.splice(idx, 1);
+  state._datasetVersion = (state._datasetVersion || 0) + 1;
   el('datasetFileInput').value = '';
   if (state.datasetFiles.length === 0) {
     resetInlinePreviewSelection();
   } else {
-    renderInlineDatasetPreview();
+    rebuildDatasetCaches();
   }
   renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
+}
+
+/* Reparse the remaining files after a removal so cached rawFirstRow / merged
+   unique values no longer include data from the removed file; mirrors the
+   upload path (rows/rawFirstRow from the last file, unique values merged) */
+function rebuildDatasetCaches() {
+  var files = state.datasetFiles.slice();
+  var uvAcc = {};
+  var lastParsed = null;
+  function step(i) {
+    if (i >= files.length) {
+      if (lastParsed) {
+        state.datasetParsedRows = lastParsed.rows;
+        state.datasetRawFirstRow = lastParsed.rawFirstRow || {};
+        var merged = {};
+        state.datasetParsedColumns.forEach(function(col) { merged[col] = Object.keys(uvAcc[col] || {}).slice(0, 50); });
+        state.datasetColumnUniqueValues = merged;
+        state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+      }
+      renderInlineDatasetPreview();
+      return;
+    }
+    parseJsonDataset(files[i], function(parsed) {
+      lastParsed = parsed;
+      state.datasetParsedColumns.forEach(function(col) {
+        if (!uvAcc[col]) uvAcc[col] = {};
+        ((parsed.columnUniqueValues || {})[col] || []).forEach(function(v) { uvAcc[col][v] = true; });
+      });
+      step(i + 1);
+    }, function() { step(i + 1); });
+  }
+  step(0);
 }
 
 function makeDatasetFileItem(file, idx) {
@@ -5707,7 +5985,8 @@ function rebuildOutputChips() {
   if (!container) return;
 
   var cats = state.taskCategories || [];
-  var catsKey = state.lang + ':' + cats.slice().sort().join(',');
+  var inputTypes = state.taskInputTypes || [];
+  var catsKey = state.lang + ':' + cats.slice().sort().join(',') + ':' + inputTypes.slice().sort().join(',');
   if (_lastOutputCatsKey === catsKey) {
     container.querySelectorAll('.task-type-chip').forEach(function(btn) {
       var key = btn.getAttribute('data-key');
@@ -5738,10 +6017,23 @@ function rebuildOutputChips() {
     var catDef = TASK_TAXONOMY[catKey];
     if (!catDef) return;
     var outputsMap = {};
-    Object.keys(catDef.granularities).forEach(function(granKey) {
+    var granKeys = Object.keys(catDef.granularities);
+    function inEveryGranularity(subKey) {
+      return granKeys.every(function(gk) {
+        var gd = catDef.granularities[gk];
+        return gd && gd.subtypes && gd.subtypes[subKey];
+      });
+    }
+    granKeys.forEach(function(granKey) {
+      /* When an input type is selected, only include output types from matching granularities */
+      if (inputTypes.length > 0 && inputTypes.indexOf(granKey) < 0) return;
       var granDef = catDef.granularities[granKey];
       if (granDef && granDef.subtypes) {
         Object.keys(granDef.subtypes).forEach(function(subKey) {
+          /* Without a selected input type, hide outputs constrained to a specific
+             granularity (e.g. entity_relation is item_pair-only) so an invalid
+             input/output combination cannot be selected */
+          if (inputTypes.length === 0 && !inEveryGranularity(subKey)) return;
           if (!outputsMap[subKey]) {
             var subDef = granDef.subtypes[subKey];
             outputsMap[subKey] = { key: subKey, zh: subDef.zh, en: subDef.en };
