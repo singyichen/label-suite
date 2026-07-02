@@ -14,7 +14,7 @@
 
 ## Icons
 
-> **Decision:** Lucide as sole icon library — see [ADR-030](docs/adr/030-icon-library-lucide.md).
+> **Decision:** Lucide as sole icon library — see [ADR-030](../../docs/adr/030-icon-library-lucide.md).
 
 - [Lucide](https://lucide.dev/) is the **only** icon library — use the `lucide-react` package (`pnpm add lucide-react`); do not add Heroicons, react-icons, Font Awesome, or any other icon set
 - Never use emojis or hand-drawn inline SVGs as icons; if Lucide lacks a needed icon, surface it instead of drawing one
