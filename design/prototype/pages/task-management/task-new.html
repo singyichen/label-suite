@@ -284,9 +284,6 @@
     .absa-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #EEF2FF; color: #6366F1; border: 1px solid rgba(99,102,241,0.3); }
     .absa-arrow { color: var(--color-text-soft); font-size: 12px; }
     .output-type-index-badge { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-    .sp-evidence-card { background: var(--color-slate-50); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; color: var(--color-text-soft); font-size: 0.85rem; line-height: 1.5; border-left: 3px solid #94a3b8; }
-    .sp-evidence-card-label { font-weight: 600; font-size: 0.75rem; color: var(--color-text-soft); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    html[data-theme="dark"] .sp-evidence-card { border-left-color: #475569; }
     html[data-theme="dark"] .output-accordion-header:hover { background: var(--color-primary-soft-bg); }
     html[data-theme="dark"] .preview-card { background: var(--color-white); }
     html[data-theme="dark"] .preview-unified { background: var(--color-white); }
@@ -4241,7 +4238,6 @@ function appendPreviewOptionRows(optionsWrap, options, singleSelectPreview) {
 
 function renderSentencePairsPreview(preview, config) {
   var rawRow = state.datasetRawFirstRow || {};
-  var evidenceFields = config.evidence_fields || [];
   var s1Field = config.sentence_1_field || '';
   var s2Field = config.sentence_2_field || '';
   var pairTexts = getDatasetPairTexts();
@@ -4251,21 +4247,6 @@ function renderSentencePairsPreview(preview, config) {
   var s2Label = config.sentence_2_label || s2Field || 'Sentence 2';
   var _s1Raw = rawRow[s1Field]; var s1Text = (_s1Raw !== undefined && _s1Raw !== null) ? String(_s1Raw) : (pairTexts ? pairTexts.text1 : (state.lang === 'en' ? '(no data)' : '（無資料）'));
   var _s2Raw = rawRow[s2Field]; var s2Text = (_s2Raw !== undefined && _s2Raw !== null) ? String(_s2Raw) : (pairTexts ? pairTexts.text2 : (state.lang === 'en' ? '(no data)' : '（無資料）'));
-
-  evidenceFields.forEach(function(evField) {
-    var evText = rawRow[evField];
-    if (evText === undefined || evText === null || evText === '') return;
-    var evCard = document.createElement('div');
-    evCard.className = 'sp-evidence-card';
-    var evLabel = document.createElement('div');
-    evLabel.className = 'sp-evidence-card-label';
-    evLabel.textContent = evField;
-    evCard.appendChild(evLabel);
-    var evBody = document.createElement('div');
-    evBody.textContent = String(evText).length > 200 ? String(evText).substring(0, 200) + '…' : String(evText);
-    evCard.appendChild(evBody);
-    preview.appendChild(evCard);
-  });
 
   var pairWrap = document.createElement('div');
   pairWrap.className = 'annotation-preview-pair';
@@ -4620,25 +4601,6 @@ function renderRelationExtractionPreview(preview, config) {
   preview.appendChild(tripleRow);
 }
 
-function renderEvidenceCards(container) {
-  var evFields = getFieldsByRole('evidence');
-  var rawRow = state.datasetRawFirstRow || {};
-  evFields.forEach(function(evField) {
-    var evText = rawRow[evField];
-    if (evText === undefined || evText === null || evText === '') return;
-    var evCard = document.createElement('div');
-    evCard.className = 'sp-evidence-card';
-    var evLabel = document.createElement('div');
-    evLabel.className = 'sp-evidence-card-label';
-    evLabel.textContent = evField;
-    evCard.appendChild(evLabel);
-    var evBody = document.createElement('div');
-    evBody.textContent = String(evText).length > 200 ? String(evText).substring(0, 200) + '…' : String(evText);
-    evCard.appendChild(evBody);
-    container.appendChild(evCard);
-  });
-}
-
 function updateAnnotationPreview() {
   var preview = el('annotationPreview');
   if (!preview) return;
@@ -4646,8 +4608,6 @@ function updateAnnotationPreview() {
 
   /* ADR-029: output-type composition preview */
   if (state.selectedOutputTypes.length >= 1) {
-    renderEvidenceCards(preview);
-
     /* Show input text (single_item or item_pair) before output previews */
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
     if (currentInputType === 'item_pair') {
@@ -4805,8 +4765,6 @@ function updateAnnotationPreview() {
       return { text: tag.trim(), color: null };
     }) : [];
   }
-
-  renderEvidenceCards(preview);
 
   {
     var sampleTextKey = 'previewSampleSentence';
