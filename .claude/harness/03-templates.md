@@ -43,7 +43,7 @@ logic; no ground-truth leakage in annotator-facing responses.
 cleanup outside the named concern. If the refactor reveals a bug, REPORT it — do not fix it here.
 [Acceptance]
 1. Full verification suite exits 0 with NO test modifications
-   (`git diff --stat -- '*test*'` is empty).
+   (`git diff --stat -- '*test*' '*.spec.*'` is empty).
 2. Old symbol/pattern gone: `grep -rn "{old symbol}" {scope}` returns 0 hits.
 3. Diff ≤ {N} files; if it wants to grow beyond, stop and report.
 [Report] <universal contract> + before/after shape (1 line each).

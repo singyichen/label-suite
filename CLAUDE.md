@@ -91,7 +91,7 @@ pnpm test
 
 Each rule traces to a specific incident (Ratchet Principle).
 
-- ❌ Direct commit or push to `main` — violated twice in 2026-04; PreToolUse hook blocks it. Always branch first.
+- ❌ Direct commit or push to `main` — violated twice in 2026-04. The PreToolUse hook only blocks pushes that name `main`/`master` explicitly; `git push origin HEAD` while on `main` is NOT caught. Verify your branch, always branch first.
 - ❌ `pip install` / `npm install` — use `uv add` / `pnpm add` (lockfile divergence breaks CI).
 - ❌ Chinese in commit messages or PR descriptions — English-only contract.
 - ❌ `allow_origins=["*"]` in CORS — list origins explicitly.

@@ -26,6 +26,6 @@
 
 ## Invariants
 
-1. CLAUDE.md is a **router**: core loop + pointers only. Long content lives here or in `.claude/rules/`.
+1. CLAUDE.md is a **router**: core loop + pointers only. Long content lives here (`.claude/harness/`) or in `docs/`, never in always-loaded files.
 2. Everything in `.claude/rules/*.md` is auto-loaded into EVERY session — keep those files short; anything > ~80 lines belongs elsewhere with a pointer.
 3. Conflict rule: if two documents disagree, **the executable artifact wins** (hook script > doc describing it; code > spec describing it). Report the conflict to the user; never silently pick.

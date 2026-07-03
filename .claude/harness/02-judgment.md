@@ -30,7 +30,7 @@ A task may be reported "done" only when every line below is checked with **evide
 - [ ] `git diff --stat` contains ONLY files inside the task's stated scope (§1 signal 1)
 - [ ] No debug artifacts: `grep -rn "console\.log\|print(" <changed files>` returns only pre-existing/intentional hits
 - [ ] Spec artifacts updated if behavior changed: spec version + Changelog, `specs/STATUS.md` row
-- [ ] For PRs: `/speckit.analyze` reports zero findings; diff ≤ 5 files and ≤ 300 non-test lines (else split)
+- [ ] For PRs: `/speckit.analyze` reports zero findings; size within [git-workflow.md](../rules/git-workflow.md) guardrails — ≤ 5 files and ≤ 300 non-test lines, governance-propagation PRs exempt from the file count (else split)
 - [ ] A fresh-context verifier (not you) has confirmed the above per [01-dispatch.md](01-dispatch.md) §5 — for any change > trivial (> 20 lines or > 1 file)
 
 "It should work now", "the main functionality is complete", "tests would pass" — these phrases are banned. Either the boxes are checked or the status is NOT done.
