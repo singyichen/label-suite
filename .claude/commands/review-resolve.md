@@ -1,6 +1,6 @@
 # Review Resolve
 
-Fetch all unresolved PR review threads, fix every finding, commit, push, confirm CI, then resolve each thread.
+Fetch all unresolved PR review threads, triage each finding by severity (per AGENTS.md `## Review Guidelines`), fix blocking findings, commit, push, confirm CI, then resolve each thread — declining non-blocking findings with a reasoned reply instead of a forced fix.
 
 **Usage:** `/review-resolve [PR number]`
 If PR number is omitted, detect from the current branch via `gh pr view`.
@@ -32,6 +32,7 @@ query {
           isResolved
           comments(first: 1) {
             nodes {
+              databaseId
               body
               path
               line
@@ -44,23 +45,38 @@ query {
   }
 }' --jq '.data.repository.pullRequest.reviewThreads.nodes[]
   | select(.isResolved == false)
-  | {id: .id, path: .comments.nodes[0].path, line: .comments.nodes[0].line, body: .comments.nodes[0].body}'
+  | {id: .id, commentId: .comments.nodes[0].databaseId, path: .comments.nodes[0].path, line: .comments.nodes[0].line, body: .comments.nodes[0].body}'
 ```
 
 If output is empty → all threads resolved; run Step 5 to confirm CI, then skip to Step 8.
 
 > **Pagination note:** `first: 100` handles most PRs. If exactly 100 results are returned, there may be more — re-run with `after: "{cursor}"` to fetch the next page before proceeding.
 
-## Step 3 — Analyse and fix each finding
+## Step 3 — Analyse, triage, and fix each finding
+
+Severity source of truth: AGENTS.md `## Review Guidelines` — only **Critical** and **High** findings are blocking; Medium and Low are non-blocking.
 
 For each unresolved thread:
 
 1. **Read** the file at the reported path before making any changes
 2. **Understand** the issue — distinguish between:
    - Already fixed in a previous commit → skip, go to resolve
-   - Genuinely needs a fix → proceed
-3. **Fix** the issue using Edit (not Bash sed/awk)
-4. **Verify** the fix is correct and does not break surrounding content
+   - Genuinely needs attention → proceed to triage
+3. **Triage** by severity:
+   - Use the severity stated in the finding (e.g. `[High]`, `[Medium][Non-blocking]`) when present; if the reviewer did not state one, classify it yourself using the AGENTS.md severity definitions before deciding
+   - **Critical / High** → must fix in this round
+   - **Medium** → fix only when the fix is cheap AND the risk is real; otherwise decline
+   - **Low** → decline by default; fix only when the user explicitly asked for cleanup
+4. **Fix** (blocking or accepted findings) using Edit (not Bash sed/awk), then **verify** the fix is correct and does not break surrounding content
+5. **Decline** (non-blocking findings not worth fixing): reply to the thread with a short rationale, then resolve it in Step 6 — never resolve silently
+
+```bash
+# Reply to a declined thread (commentId from Step 2 output)
+gh api repos/{owner}/{repo}/pulls/{number}/comments/{commentId}/replies \
+  -f body="Declining as non-blocking (Medium/Low per AGENTS.md Review Guidelines): <rationale>"
+```
+
+If every finding in the round is declined (nothing to fix), skip Step 4 and go directly to Step 6.
 
 > **Cross-check rule:** if the finding flags an inconsistency between a rule definition and an example in the same file, verify that ALL other examples in the file also comply before committing.
 
@@ -119,9 +135,9 @@ gh pr checks {number}
 
 Do not resolve review threads or update the PR description while CI is failing. If the failure is unrelated to the PR changes or cannot be fixed in this branch, document the evidence and ask the user before proceeding.
 
-## Step 6 — Resolve all fixed threads
+## Step 6 — Resolve all handled threads
 
-For each thread that was fixed (or was already fixed):
+For each thread that was fixed, was already fixed, or was declined with a reply in Step 3:
 
 ```bash
 for id in <thread-id-1> <thread-id-2> ...; do
@@ -141,7 +157,7 @@ gh pr view {number} --json body --jq '.body'
 
 Count how many `### Round` headings already exist in the body to determine the next round number (N = existing count + 1).
 
-Synthesize a concise summary of **what was fixed in this round** (one bullet per finding), then append it to the existing PR body under a `## Review Resolutions` section. If the section already exists from a previous round, append a new subsection rather than replacing.
+Synthesize a concise summary of **what was fixed or declined in this round** (one bullet per finding), then append it to the existing PR body under a `## Review Resolutions` section. If the section already exists from a previous round, append a new subsection rather than replacing.
 
 Format:
 ```
@@ -149,7 +165,7 @@ Format:
 
 ### Round N — YYYY-MM-DD
 - **`path/to/file`**: short description of what was fixed
-- **`path/to/file`**: short description of what was fixed
+- **`path/to/file`**: declined (Medium, non-blocking) — short rationale
 ```
 
 Apply the update:
@@ -176,7 +192,8 @@ Re-run Step 5 before finishing. The command is complete only when both condition
 
 ## Rules
 
-- Never resolve a thread without fixing it first (or confirming it's already fixed)
+- Never resolve a thread without fixing it first, confirming it's already fixed, or replying with a decline rationale
+- Severity triage follows AGENTS.md `## Review Guidelines`: only Critical and High findings are blocking — never decline a Critical or High finding
 - One commit per review round — do not create separate commits per finding
 - Always read the file before editing
 - After fixing any document with rules + examples, verify all examples comply with all rules in that document

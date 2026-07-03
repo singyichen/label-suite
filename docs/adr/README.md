@@ -48,3 +48,4 @@ Each ADR follows this structure:
 | [027](027-project-management-github-projects.md) | Project Management Tool — GitHub Projects | Accepted | 2026-06-09 |
 | [028](028-ci-security-scanning.md) | CI Security Scanning Strategy — SCA + Deferred SAST | Accepted | 2026-06-11 |
 | [029](029-output-type-composition.md) | Output-Type Composition Model | Accepted | 2026-06-29 |
+| [030](030-icon-library-lucide.md) | Icon Library — Lucide | Accepted | 2026-07-02 |

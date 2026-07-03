@@ -231,7 +231,7 @@ html[data-theme="dark"] .workflow-step-connector img {
 
 White icons read heavier than black icons on a matching background, so connector `opacity` should be reduced (e.g. `0.45`) rather than raised when inverting.
 
-For table expand/collapse affordances, prefer inline SVG using `stroke="currentColor"` instead of `<img>`. This keeps chevrons on task detail / reviewer result tables tied to `--color-ink-muted` in light mode and the raised dark token (`#9CA3AF`) in dark mode.
+For table expand/collapse affordances, prefer an inline Lucide chevron SVG using `stroke="currentColor"` instead of `<img>`. This keeps chevrons on task detail / reviewer result tables tied to `--color-ink-muted` in light mode and the raised dark token (`#9CA3AF`) in dark mode.
 
 #### 3. CTA button contrast
 
@@ -1181,7 +1181,7 @@ Used for list-style data display (e.g. task list). Supports row hover interactio
 - `<table role="table" aria-label="...">` — provide a descriptive label
 - `<th scope="col">` — mark column headers
 - Clickable rows: add `tabindex="0"` and `onkeydown` to support Enter/Space
-- Expand buttons in dense result tables: use a 14px inline SVG chevron with `stroke="currentColor"` and button color `var(--color-ink-muted)`; rotate the SVG when expanded. Avoid `<img>` chevrons here because they do not inherit dark-mode text tokens.
+- Expand buttons in dense result tables: use a 14px inline Lucide chevron SVG (e.g. `chevron-down`) with `stroke="currentColor"` and button color `var(--color-ink-muted)`; rotate the SVG when expanded. Avoid `<img>` chevrons here because they do not inherit dark-mode text tokens.
 
 **When NOT to use:**
 - ❌ Fewer than 3 rows → use List instead
@@ -1819,7 +1819,7 @@ Monospace textarea used for JSON/YAML schema editing in task-new. Uses `--font-m
 - Allowed micro-interaction: `translateY` up to `-2px` maximum (creates subtle lift without layout shift)
 - Forbidden hover: `scale` transforms, shadow enhancement on hover
 - Transitions: 150–200ms ease
-- Minimal, purposeful icons (Heroicons / Lucide)
+- Minimal, purposeful icons ([Lucide](https://lucide.dev/) — the project's single icon library)
 
 ### Flat Design in This Project
 
@@ -1862,7 +1862,7 @@ Label Suite is a **tool-based web app** (not a marketing site). Use these two sh
 
 - ❌ Complex onboarding flow
 - ❌ Cluttered layout
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
+- ❌ **Emojis as icons** — Use Lucide SVG icons
 - ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
 - ❌ **cursor:pointer on non-interactive cards** — Only add when the card is actually clickable
 - ❌ **Layout-shifting hovers** — No scale transforms; translateY max -2px
@@ -1882,7 +1882,7 @@ Before delivering any UI code, verify:
 - [ ] Every `href="#"` placeholder has been replaced with a real path or marked `aria-disabled="true"`
 - [ ] Navigation flow matches the Page Navigation Flow table in `spec.md`
 - [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
+- [ ] All icons from Lucide (the project's single icon set)
 - [ ] `cursor-pointer` on all **clickable** elements only
 - [ ] Hover states with smooth transitions (150-300ms)
 - [ ] Light mode: text contrast 4.5:1 minimum
