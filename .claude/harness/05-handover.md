@@ -39,3 +39,4 @@ Instruction documents (including this harness) are probabilistic for weaker mode
 *(post-scripts below — append only, with date)*
 
 - **2026-07-03**: this file and 00-diagnosis.md were originally written in Traditional Chinese and translated to English at the user's request (content unchanged). Chinese originals archived in the session scratchpad.
+- **2026-07-03**: the §1.3 known hook gap is CLOSED — with owner approval, `pre-tool-use.sh` now detects the current branch (`git branch --show-current`) and blocks any `git push` while on main/master, and the explicit-refspec regex is anchored to command position so quoted prose no longer false-positives. The §1.3 body text above is retained as a historical snapshot.
