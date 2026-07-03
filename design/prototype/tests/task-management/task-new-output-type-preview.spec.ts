@@ -130,6 +130,18 @@ function getState(page: Page, key: string) {
   );
 }
 
+// FR-003g-2: evidence-role fields must never render in the Step 2 preview.
+// The legacy card class guards against a verbatim revert; `evidenceText`
+// must be a substring unique to the evidence field so the check also
+// catches re-introduction under different markup.
+async function expectNoEvidenceInPreview(page: Page, evidenceText?: string) {
+  const preview = page.locator('#annotationPreview');
+  await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
+  if (evidenceText) {
+    await expect(preview).not.toContainText(evidenceText);
+  }
+}
+
 // ─── 10 Basic Output Types ──────────────────────────────────
 
 test.describe('Step 2 preview: all 10 output types with example data', () => {
@@ -195,6 +207,8 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     const textarea = page.locator('#annotationPreview textarea');
     await expect(textarea).toBeVisible();
     await expect(textarea).not.toBeEmpty();
+
+    await expectNoEvidenceInPreview(page, '免費諮商服務');
   });
 
   test('single_dim — gold_score shown on slider', async ({ page }) => {
@@ -330,10 +344,9 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.entity_relation.selected).toBe('treats');
 
-    const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(1);
+    await expectNoEvidenceInPreview(page, '胰島素阻抗');
 
-    const html = await preview.innerHTML();
+    const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('Metformin');
     expect(html).toContain('第二型糖尿病');
   });
@@ -369,8 +382,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.single_label.selected).toBe('contradiction');
 
+    await expectNoEvidenceInPreview(page, '術前仍有必要');
+
     const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(1);
     const pairLabels = preview.locator('.annotation-preview-pair-label');
     await expect(pairLabels).toHaveCount(2);
     await expect(pairLabels.nth(0)).toContainText('Premise');
@@ -394,13 +408,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.free_text.text!.length).toBeGreaterThan(50);
 
-    const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(1);
-    await expect(preview.locator('.sp-evidence-card-label')).toContainText(
-      'background',
-    );
+    await expectNoEvidenceInPreview(page, '免費心理諮商');
 
-    const textarea = preview.locator('textarea');
+    const textarea = page.locator('#annotationPreview textarea');
     await expect(textarea).toBeVisible();
     await expect(textarea).not.toBeEmpty();
   });
@@ -459,6 +469,10 @@ test.describe('Step 2 preview: composite task data files', () => {
     expect(html).toContain('整合預覽');
     expect(html).toContain('多維度回歸');
     expect(html).toContain('rottenrockteahouse');
+
+    // No unique content probe: the input `text` column concatenates the
+    // utterances, so every utterances substring also appears in input text.
+    await expectNoEvidenceInPreview(page);
   });
 });
 
