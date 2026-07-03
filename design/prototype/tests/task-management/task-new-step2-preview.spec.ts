@@ -66,6 +66,16 @@ test.describe('Step 2 preview: evidence exclusion, input layout, and isolation',
     await expect(pairLabels).toHaveCount(2);
     await expect(pairLabels.nth(0)).toContainText('sentence_a');
     await expect(pairLabels.nth(1)).toContainText('sentence_b');
+
+    // FR-003g-2: hiding evidence in the preview must not drop the role
+    // assignment itself — it stays in field_role_map for the workspace
+    const evidenceRole = await page.evaluate(() => {
+      const win = window as typeof window & {
+        state: { fieldRoleMap: Record<string, string> };
+      };
+      return win.state.fieldRoleMap['label'];
+    });
+    expect(evidenceRole).toBe('evidence');
   });
 
   test('clicking a label chip preserves input text with evidence still hidden', async ({
@@ -93,7 +103,6 @@ test.describe('Step 2 preview: evidence exclusion, input layout, and isolation',
     });
 
     const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
     await expect(preview.locator('.annotation-preview-sample')).toBeVisible();
 
     const labelChip = preview.locator('button').filter({ hasText: 'positive' });

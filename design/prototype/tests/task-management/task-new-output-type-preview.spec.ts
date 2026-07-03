@@ -130,6 +130,18 @@ function getState(page: Page, key: string) {
   );
 }
 
+// FR-003g-2: evidence-role fields must never render in the Step 2 preview.
+// The legacy card class guards against a verbatim revert; `evidenceText`
+// must be a substring unique to the evidence field so the check also
+// catches re-introduction under different markup.
+async function expectNoEvidenceInPreview(page: Page, evidenceText?: string) {
+  const preview = page.locator('#annotationPreview');
+  await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
+  if (evidenceText) {
+    await expect(preview).not.toContainText(evidenceText);
+  }
+}
+
 // ─── 10 Basic Output Types ──────────────────────────────────
 
 test.describe('Step 2 preview: all 10 output types with example data', () => {
@@ -144,7 +156,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'single_label',
       inputType: 'single_item',
       dataFile: 'single-label.json',
-      roles: { text: 'input', gold_label: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_label: 'output' },
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
@@ -155,10 +167,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.single_label.selected).toBe('positive');
-
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
   });
 
   test('multi_label — gold_labels array parsed, labels pre-selected', async ({
@@ -170,7 +178,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'multi_label',
       inputType: 'single_item',
       dataFile: 'multi-label.json',
-      roles: { text: 'input', gold_labels: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_labels: 'output' },
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
@@ -179,10 +187,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.multi_label.selected!.length).toBeGreaterThanOrEqual(1);
-
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
   });
 
   test('free_text — gold_answer pre-filled in textarea', async ({ page }) => {
@@ -204,9 +208,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     await expect(textarea).toBeVisible();
     await expect(textarea).not.toBeEmpty();
 
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
+    await expectNoEvidenceInPreview(page, '免費諮商服務');
   });
 
   test('single_dim — gold_score shown on slider', async ({ page }) => {
@@ -216,16 +218,12 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'single_dim',
       inputType: 'single_item',
       dataFile: 'single-dim.json',
-      roles: { text: 'input', gold_score: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_score: 'output' },
     });
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.single_dim.value).toBeDefined();
     expect(typeof ps.single_dim.value).toBe('number');
-
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
   });
 
   test('multi_dim — dimensions auto-populated from gold_scores object', async ({
@@ -237,7 +235,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'multi_dim',
       inputType: 'single_item',
       dataFile: 'multi-dim.json',
-      roles: { source: 'input', gold_scores: 'output', translation: 'evidence' },
+      roles: { source: 'input', gold_scores: 'output' },
     });
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
@@ -245,10 +243,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(dims).toContain('fluency');
     expect(dims).toContain('adequacy');
     expect(dims).toContain('coherence');
-
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
   });
 
   test('token_class — gold_tags parsed as array', async ({ page }) => {
@@ -258,7 +252,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'token_class',
       inputType: 'single_item',
       dataFile: 'token-class.json',
-      roles: { text: 'input', gold_tags: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_tags: 'output' },
     });
 
     const preview = page.locator('#annotationPreview');
@@ -266,8 +260,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.token_class).toBeDefined();
-
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
   });
 
   test('span — gold_spans shown in preview', async ({ page }) => {
@@ -277,7 +269,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'span',
       inputType: 'single_item',
       dataFile: 'span.json',
-      roles: { text: 'input', gold_spans: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_spans: 'output' },
     });
 
     const preview = page.locator('#annotationPreview');
@@ -288,8 +280,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const entities = (await getState(page, 'previewEntities')) as Entity[];
     expect(entities.length).toBeGreaterThanOrEqual(1);
-
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
   });
 
   test('boundary — gold_boundaries shown in preview', async ({ page }) => {
@@ -299,7 +289,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'boundary',
       inputType: 'single_item',
       dataFile: 'boundary.json',
-      roles: { text: 'input', gold_boundaries: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_boundaries: 'output' },
     });
 
     const preview = page.locator('#annotationPreview');
@@ -307,8 +297,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.boundary).toBeDefined();
-
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
   });
 
   test('relation_triple — gold_triples loaded with subj/rel/obj format', async ({
@@ -320,7 +308,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'relation_triple',
       inputType: 'single_item',
       dataFile: 'relation-triple.json',
-      roles: { text: 'input', gold_triples: 'output', id: 'evidence' },
+      roles: { text: 'input', gold_triples: 'output' },
     });
 
     const triples = (await getState(page, 'previewTriples')) as Triple[];
@@ -328,10 +316,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('subj');
     expect(triples[0]).toHaveProperty('rel');
     expect(triples[0]).toHaveProperty('obj');
-
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
   });
 
   test('entity_relation — item_pair with treats/causes/prevents labels', async ({
@@ -360,10 +344,9 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.entity_relation.selected).toBe('treats');
 
-    const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
+    await expectNoEvidenceInPreview(page, '胰島素阻抗');
 
-    const html = await preview.innerHTML();
+    const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('Metformin');
     expect(html).toContain('第二型糖尿病');
   });
@@ -399,8 +382,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.single_label.selected).toBe('contradiction');
 
+    await expectNoEvidenceInPreview(page, '術前仍有必要');
+
     const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
     const pairLabels = preview.locator('.annotation-preview-pair-label');
     await expect(pairLabels).toHaveCount(2);
     await expect(pairLabels.nth(0)).toContainText('Premise');
@@ -424,10 +408,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.free_text.text!.length).toBeGreaterThan(50);
 
-    const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
+    await expectNoEvidenceInPreview(page, '免費心理諮商');
 
-    const textarea = preview.locator('textarea');
+    const textarea = page.locator('#annotationPreview textarea');
     await expect(textarea).toBeVisible();
     await expect(textarea).not.toBeEmpty();
   });
@@ -441,7 +424,7 @@ test.describe('Step 2 preview: composite task data files', () => {
       outputType: ['span', 'relation_triple'],
       inputType: 'single_item',
       dataFile: 'medical-ner-re.json',
-      roles: { text: 'input', entities: 'output', triples: 'output', id: 'evidence' },
+      roles: { text: 'input', entities: 'output', triples: 'output' },
     });
 
     const triples = (await getState(page, 'previewTriples')) as Triple[];
@@ -454,10 +437,6 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
-
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
   });
 
   test('absa-va.json — triple output (span + relation_triple + multi_dim) across two categories', async ({
@@ -491,9 +470,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     expect(html).toContain('多維度回歸');
     expect(html).toContain('rottenrockteahouse');
 
-    await expect(
-      page.locator('#annotationPreview .sp-evidence-card'),
-    ).toHaveCount(0);
+    // No unique content probe: the input `text` column concatenates the
+    // utterances, so every utterances substring also appears in input text.
+    await expectNoEvidenceInPreview(page);
   });
 });
 
