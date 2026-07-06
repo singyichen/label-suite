@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 3.1.7
+版本: 3.2.0
 狀態: Draft
 ---
 
@@ -199,6 +199,7 @@ sequenceDiagram
   - 標記預覽區：
     - 已上傳資料集時，預覽顯示資料集的實際文字內容；未上傳時顯示預設範例文字
     - 每個輸出類型必須有獨立的互動式預覽，使用者可直接操作體驗標記方式（見 FR-003g）
+    - 每個輸出類型（`allow_bypass` 開啟時）於預覽區塊底部提供獨立的「無法判定 (Bypass)」勾選項（見 FR-003j）
     - 存在相依關係的輸出類型（如 `span` + `relation_triple`）合併為整合預覽
     - 獨立輸出類型之間以分隔線區隔
   - `下一步` 啟用條件：所有輸出類型的 schema 必填欄位全部通過 ∧ 無 parser/schema error ∧ code 區無未儲存變更
@@ -256,6 +257,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 4. **Given** 平台新增一種 output type 到 registry，**When** 使用者進入 Step 1/Step 2，**Then** 可選到該輸出類型並看到對應設定，無需變更核心流程。
 5. **Given** 使用者在 Step 2 上傳 `.yaml/.yml/.json` 設定檔，**When** 讀取成功，**Then** code 區應載入檔案內容、切換對應格式並要求使用者按儲存套用。
 6. **Given** 使用者切換語言（zh/en），**When** 當前 labels 仍為預設模板值，**Then** Step 2 預覽、schema 標籤與 code labels 應同步切換為對應語系文案。
+7. **Given** 任一輸出類型的 `allow_bypass` 為開啟（預設），**When** 在該輸出類型的預覽勾選「無法判定 (Bypass)」，**Then** 該輸出類型的其他預覽互動控制項被清空並停用，且不影響輸入文字與其他輸出類型的預覽；取消勾選後恢復可操作並重新初始化。
+8. **Given** 在 schema 設定面板將某輸出類型的 `allow_bypass` 關閉，**When** 預覽刷新，**Then** 該輸出類型的預覽不顯示 Bypass 勾選項，且既有的勾選狀態被清除；code 區同步輸出 `allow_bypass: false`。
 
 **介面定義**：
 
@@ -280,6 +283,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿（含 min/max/當前值） |
     | `multi_dim` | 文字顯示 + 多維度各自獨立可拖曳滑桿（含 min/max/當前值標籤） |
     | `free_text` | 文字顯示 + 可編輯 textarea（含字數計數器）；啟用參考答案時顯示參考區塊 |
+
+  - 上表所有輸出類型的預覽區塊底部（`allow_bypass` 開啟時）均附「無法判定 (Bypass)」勾選項；勾選後清空並停用該輸出類型的其他預覽互動控制項，取消勾選後恢復（見 FR-003j）
 
 - 區塊 B：`設定區（下方左側）`
   - 「從範本開始或者上傳設定檔」區塊置於最上方
@@ -311,6 +316,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `multi_dim` | `dimensions`（維度列表） | `va-dimensions` | 是 |
     | `free_text` | `max_length`（最大字數） | `number` | 否 |
     | `free_text` | `show_reference`（顯示參考答案） | `boolean` | 否 |
+    | *（所有輸出類型共通）* | `allow_bypass`（允許無法判定 Bypass） | `boolean`（預設 `true`） | 否 |
 
 - 區塊 C：`Code 區（下方右側）`
   - 必要元素：YAML/JSON 切換、可編輯區、`儲存` 按鈕、格式與 schema 驗證結果
@@ -339,6 +345,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - code 內容儲存成功後，左側 schema 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤且保留使用者輸入。
 - 預覽文字來源：已上傳資料集時讀取實際欄位內容（依 `field_role_map` 中 `input` 角色的欄位），未上傳時顯示預設範例文字。
 - 預覽狀態初始化：已上傳資料集且有 `output` 角色欄位時，各輸出類型的互動控制項以該欄位的實際值初始化（如預選標籤、設定滑桿值、預填文字）；output 欄位的 unique values 自動帶入分類型輸出類型的 `label_options`；output 欄位值為 JSON object 時自動建立 `multi_dim` 的維度列表（維度範圍依實際資料值推斷）；預標記三元組的關係觸發詞自動帶入 `relation_triple` 的 `relation_types`；存在多個 output 角色欄位時，依欄位值的資料形狀對應各輸出類型，分別取用形狀相符的欄位初始化。
+- 每個輸出類型的 config 一律包含共通欄位 `allow_bypass`（`boolean`，預設 `true`），由 registry 統一附加至所有輸出類型的 `fields` 與 `defaultConfig`，並隨 `outputs[]` 格式序列化至 code 區；schema 設定面板以 toggle 呈現，關閉時該輸出類型的預覽不顯示 Bypass 勾選項（見 FR-003j）。
 
 ---
 
@@ -413,6 +420,9 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
 - 任一輸出類型的 `entity-list` 或 `tag-list` 必填欄位為空或含空白項目：阻擋進入 Step 3 並顯示可定位錯誤。
 - `multi_label` 設定 `max_selections` 大於 `label_options` 數量：顯示提示但不阻擋（視為「不限」語意）。
+- 預覽已勾選 Bypass 時關閉該輸出類型的 `allow_bypass`：勾選狀態一併清除，預覽恢復顯示且不殘留停用樣式。
+- 已勾選 Bypass 的輸出類型存在預標記資料（`output` 角色欄位）：勾選期間不得被預標記值重新填入；取消勾選後預標記初始化重新套用。
+- 整合預覽（`span` + `relation_triple`）中勾選 `span` 的 Bypass：關係建構器隨實體一併停用；取消勾選後實體與三元組依預標記資料重新初始化。
 - `single_dim` 或 `multi_dim` 設定 `min >= max` 或 `step <= 0`：阻擋進入 Step 3 並顯示修正提示。
 - `single_item` 輸入類型且欄位預覽中 Input 欄位數 ≠ 1，或 `item_pair` 輸入類型且 Input 欄位數 ≠ 2：阻擋進入 Step 2 並顯示修正提示（需指出正確數量）。
 - 使用者在 Step 1~4 有變更後直接離頁：需先跳確認視窗，選擇「離開」才可導頁。
@@ -474,6 +484,14 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003g-8**：當預標記三元組資料存在且元素帶有關係觸發詞（`{entity1, relation, entity2}` 的 `relation.text`，或 `{subj, rel, obj}` 的 `rel` 字串）時，`relation_triple` 的 `relation_types` 必須自動從資料中出現過的關係觸發詞（依出現順序去重）帶入，**取代**預設值（`has_aspect`／`has_opinion`），使設定面板的關係類型欄位與三元組列的 `type` 選單皆反映實際資料、不出現寫死預設值；已自動帶入後不重複執行。若三元組不含可辨識的關係觸發詞（如 ABSA 的 `target_text`／`aspect_text`／`opinion_text` 形式），則維持設定預設值。
 - **FR-003h**：Step 2 必須支援上傳 `CONFIG_UPLOAD_FORMATS` 設定檔，載入至 code 區並由使用者手動儲存套用。
 - **FR-003i**：Step 2 預設模板需支援 i18n（至少 zh/en）；切換語言時，若 code 區無未儲存變更（`codeDraftDirty = false`）且使用中為預設 labels，需同步轉換為對應語言 labels；若有未儲存變更則不自動覆寫，保留使用者手動修改。
+- **FR-003j**：每個輸出類型必須提供獨立的「無法判定 (Bypass)」選項，供標記員在無法判定該輸出類型時選擇。行為規則如下：
+  - **共通 schema 欄位**：`OUTPUT_TYPE_REGISTRY` 必須為所有輸出類型統一附加共通欄位 `allow_bypass`（`boolean`，非必填，預設 `true`），出現於每個輸出類型的 `fields` 與 `defaultConfig`，不得在個別輸出類型中重複硬編；schema 設定面板以 toggle 呈現（zh「允許無法判定 (Bypass)」／en「Allow bypass (unable to determine)」），並隨 `outputs[]` 格式序列化至 code 區、支援 code 區編輯儲存回填。
+  - **預覽勾選項**：`allow_bypass` 開啟時，該輸出類型的預覽區塊底部顯示獨立的「無法判定 (Bypass)」勾選項（checkbox 語意，含 `aria-pressed` 狀態）；關閉時不顯示，且既有勾選狀態必須一併清除。
+  - **互斥行為**：勾選 Bypass 後，該輸出類型預覽的其他互動控制項必須**清空既有標記狀態並停用**（視覺弱化且不可操作），僅影響該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型；Bypass 勾選項本身維持可點擊。
+  - **取消恢復**：取消勾選後，該輸出類型的預覽必須恢復可操作並**重新初始化如同初次載入**（含 FR-003g-5～FR-003g-8 的預標記初始化重新套用）。
+  - **整合預覽邊界**：`span` + `relation_triple` 同時選取的整合預覽中，兩者各自顯示帶輸出類型名稱前綴的 Bypass 勾選項（如「Span 區間標記：無法判定 (Bypass)」）；勾選 `span` 的 Bypass 時，因 `relation_triple` 依賴 span 實體，整合預覽全區（含關係建構器）一併清空停用；勾選 `relation_triple` 的 Bypass 時僅清空停用關係建構器與三元組列表，實體標記不受影響。
+  - **狀態重設**：重新上傳或移除資料集檔案時，所有輸出類型的 Bypass 勾選狀態一併重設。
+  - 本欄位定義標記員在 annotation-workspace 的可用行為契約，實際標記介面的 Bypass 呈現由 015 Annotation Workspace 規格另行定義。
 - **FR-004**：Step 3 必須支援啟動設定，包含抽樣方式與資料隔離。
 - **FR-004a**：Step 3 不提供任務成員加入功能；介面必須明確提示使用者於任務建立後到 `task-detail` 進行成員邀請。
 - **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_CATEGORY` 對應大分類自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`；多個大分類時取最高比例。
@@ -533,7 +551,7 @@ flowchart LR
 ### 關鍵實體
 
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
-- **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件）。
+- **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
 - **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（相依的輸出類型或 null）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
@@ -579,6 +597,7 @@ flowchart LR
 - **SC-003e**：`span` + `relation_triple` 同時選取時，預覽合併為整合模式（圈選文字 + 實體列表 + 關係建構器 + 三元組列表）。
 - **SC-003f**：`multi_dim` 可設定任意數量與名稱的維度，不限於特定維度。
 - **SC-003g**：`entity-list` 欄位的新增按鈕文字依輸出類型語境正確顯示。
+- **SC-003h**：10 種輸出類型的預覽均提供獨立「無法判定 (Bypass)」勾選項（`allow_bypass` 預設開啟）；勾選後該輸出類型的其他互動控制項清空停用、其他輸出類型不受影響，取消勾選後重新初始化；schema 面板關閉 `allow_bypass` 後勾選項消失且 code 區同步輸出 `allow_bypass: false`。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、區間標記、關係抽取、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -626,6 +645,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 3.2.0 | 2026-07-06 | **行為新增**：每個輸出類型提供獨立「無法判定 (Bypass)」選項——registry 統一附加共通欄位 `allow_bypass`（`boolean`，預設 `true`）至所有輸出類型的 `fields` 與 `defaultConfig`；預覽區塊底部顯示 Bypass 勾選項，勾選後互斥（清空並停用該輸出類型其他互動控制項）、取消後重新初始化如同初次載入；整合預覽（`span` + `relation_triple`）各自顯示帶名稱前綴的勾選項，span Bypass 連鎖停用全區、relation_triple Bypass 僅停用關係建構器；schema toggle 關閉時勾選項消失並清除狀態（新增 FR-003j、SC-003h、對應邊界情況；更新預覽互動表、registry 欄位表、OutputConfig） |
 | 3.1.7 | 2026-07-06 | **prototype sync（code review 修正）**：切換資料列來源後若任一已上傳檔案於新來源路徑取不出紀錄，須顯示標明該檔案的不相容提示且其紀錄不納入統計，切至相容來源時提示解除（FR-002c-4）；補充對應邊界情況 |
 | 3.1.6 | 2026-07-06 | **prototype sync**：(1) 存在多個 `output` 角色欄位時，依欄位值資料形狀（BIO 標記陣列／字串陣列／含位置物件／JSON object／數字／字串）推斷欄位與輸出類型的對應，各輸出類型分別取用形狀相符的欄位初始化與自動帶入（FR-003g-5）；(2) `multi_dim` 自動建立維度時 `min`／`max`／`step` 依實際資料值範圍推斷，非固定預設（FR-003g-7）；(3) `token_class` 預覽分詞來源優先採資料集 token 陣列、否則空白切分，預標記僅在標記數與 token 數一致時套用（FR-003d-1）；(4) 檔案預覽 Modal 取紀錄回退鏈：所選來源路徑 → 該檔最佳候選 → 原始根節點，確保不開啟為空（FR-002b） |
 | 3.1.5 | 2026-07-06 | **prototype sync**：(1) `relation_triple` 的 `relation_types` 於載入預標記資料時自動帶入資料中的關係觸發詞、取代寫死預設值（`has_aspect`／`has_opinion`），使設定面板欄位與 `type` 選單皆反映實際資料（新增 FR-003g-8）；`type` 選單以「設定值 ∪ 現有三元組觸發詞」為選項（FR-003d-4）；(2) 單獨 `relation_triple`（無 span）預覽改為沿用整合渲染邏輯，與 ABSA 路徑一致（FR-003d-11）；(3) 中文介面按鈕文案 `Undo→退回`、`Add→新增`、`type→類型`（FR-003d-4） |
