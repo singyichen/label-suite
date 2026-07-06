@@ -86,18 +86,16 @@ gh pr create \
 
 ### 5c. Visual change-summary image
 
-Produce one full-page image showing every change in the PR, save it to the user's Downloads folder, and hand it to the user to embed. Skip only for trivial PRs (≤ 2 files) unless the user asks for it.
+Produce one compact image explaining the change, save it to the user's Downloads folder, and hand it to the user to embed. Skip only for trivial PRs (≤ 2 files) unless the user asks for it.
 
-1. **Build a self-contained HTML page** in the session scratchpad (never inside the repo). Required content, all text in **English** (same contract as the PR description):
-   - metric cards: per-file line counts `before → after`
-   - a **flow diagram** of the change when the PR alters a process, pipeline, or user flow: boxes + arrows built with plain HTML/CSS (flex + border boxes, no images), showing the before-flow above the after-flow with changed nodes highlighted; skip only when nothing flow-like changed
-   - a BEFORE / AFTER comparison **table**: one row per changed area, BEFORE and AFTER as short prose cells — style like a design doc, not a diff
-   - the real `git diff main...HEAD` **as a numeric summary only** (per-file `+added / −deleted` counts, from `git diff --stat`); the verbatim diff either goes in ONE collapsed `<details>` at the very bottom or is omitted — it must never dominate the page. Never hand-restate diff content as fake diff lines.
+1. **Build a self-contained HTML page** in the session scratchpad (never inside the repo). The page holds the same content twice, as two stacked blocks separated by a thin rule: **English on top, Traditional Chinese below**. Each block contains ONLY these two elements:
+   - a **short prose summary**: title line (PR title) + one-line meta (PR number · branch · spec version · `+added / −deleted`), followed by two labeled 1–3 sentence paragraphs — **Purpose** (why the change was needed) and **Result** (what the PR delivers) — no metric cards, no BEFORE/AFTER table, no diff restatement of any kind
+   - a **flow diagram**: boxes + arrows built with plain HTML/CSS (flex + border boxes, no images), showing the before-flow above the after-flow with changed nodes highlighted; when nothing flow-like changed, diagram the affected structure (components and their relationships) instead
+
+   File paths, identifiers, and config keys stay in English in both blocks.
 
    **Mandatory style** (design-doc look, not a GitHub diff report):
    - white background, dark-gray body text, generous whitespace; one accent color at most
-   - section numbering `1 ·` `2 ·` `3 ·` with thin horizontal rules between sections
-   - per-item **change-type chips**: small rounded tags — `ADDED` (green), `CHANGED` (amber), `UNCHANGED` (gray outline) — include a legend at the bottom
    - monospace only for file paths and identifiers; everything else in the system sans-serif stack
 2. **Screenshot it with the Playwright MCP browser** (PNG, viewport width 1200, `fullPage: true`):
    - `file://` URLs are blocked — serve the scratchpad first (`python3 -m http.server <port>` as a background task), then navigate to `http://localhost:<port>/<page>.html`
