@@ -88,9 +88,11 @@ gh pr create \
 
 Produce one compact image explaining the change, save it to the user's Downloads folder, and hand it to the user to embed. Skip only for trivial PRs (≤ 2 files) unless the user asks for it.
 
-1. **Build a self-contained HTML page** in the session scratchpad (never inside the repo). Required content — ONLY these two elements, all text in **English** (same contract as the PR description):
+1. **Build a self-contained HTML page** in the session scratchpad (never inside the repo). The page holds the same content twice, as two stacked blocks separated by a thin rule: **English on top, Traditional Chinese below**. Each block contains ONLY these two elements:
    - a **short prose summary**: title line (PR title) + one-line meta (PR number · branch · spec version · `+added / −deleted`), followed by two labeled 1–3 sentence paragraphs — **Purpose** (why the change was needed) and **Result** (what the PR delivers) — no metric cards, no BEFORE/AFTER table, no diff restatement of any kind
    - a **flow diagram**: boxes + arrows built with plain HTML/CSS (flex + border boxes, no images), showing the before-flow above the after-flow with changed nodes highlighted; when nothing flow-like changed, diagram the affected structure (components and their relationships) instead
+
+   File paths, identifiers, and config keys stay in English in both blocks.
 
    **Mandatory style** (design-doc look, not a GitHub diff report):
    - white background, dark-gray body text, generous whitespace; one accent color at most
