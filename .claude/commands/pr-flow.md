@@ -1,6 +1,6 @@
 # PR Flow
 
-Execute after development is complete. Steps 1–6 are automated, except Step 5c.2 (user previews the published artifact) and Step 5c.5 (user drags the image into the PR); **Step 7 (Merge) requires user confirmation**.
+Execute after development is complete. Steps 1–7 are automated, except Step 7.2 (user previews the published artifact) and Step 7.5 (user drags the image into the PR); **Step 8 (Merge) requires user confirmation**.
 
 > **Docs-only changes** (`.md` files only): skip Step 3, but still run Step 2 for cross-reference consistency.
 
@@ -84,27 +84,6 @@ gh pr create \
 - Changed files table
 - Test Plan checklist — every item must be individually verified; mark passed as `[x]`, failed as `[ ]` with reason
 
-### 5c. Visual change-summary image
-
-Produce one compact image explaining the change, save it to the user's Downloads folder, and hand it to the user to embed. Skip only for trivial PRs (≤ 2 files) unless the user asks for it.
-
-1. **Load the `artifact-design` skill, then build the page** in the session scratchpad (never inside the repo) as an Artifact-ready fragment: no `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` wrapper of your own, inline `<title>` and `<style>`, palette as CSS custom properties with a dark-theme variant (the skill covers the token pattern). The page holds the same content twice, as two stacked blocks separated by a thin rule: **English on top, Traditional Chinese below**. Each block contains ONLY these two elements:
-   - a **short prose summary**: title line (PR title) + one-line meta (PR number · branch · spec version · `+added / −deleted`), followed by two labeled 1–3 sentence paragraphs — **Purpose** (why the change was needed) and **Result** (what the PR delivers) — no metric cards, no BEFORE/AFTER table, no diff restatement of any kind
-   - a **flow diagram**: boxes + arrows built with plain HTML/CSS (flex + border boxes, no images), showing the before-flow above the after-flow with changed nodes highlighted; when nothing flow-like changed, diagram the affected structure (components and their relationships) instead
-
-   File paths, identifiers, and config keys stay in English in both blocks.
-
-   **Mandatory style** (design-doc look, not a GitHub diff report — the dark theme is an adaptation of this, not a different design):
-   - white background, dark-gray body text, generous whitespace; one accent color at most
-   - monospace only for file paths and identifiers; everything else in the system sans-serif stack
-2. **Publish it with the Artifact tool** and give the user the URL to preview. If they request changes, edit the same file and republish — the same path redeploys to the same URL. Only proceed to the screenshot after the user is satisfied (or immediately if they have already seen the content another way).
-3. **Screenshot it with the Playwright MCP browser** (PNG, viewport width 1200, `fullPage: true`, light theme):
-   - the artifact URL requires claude.ai auth, so screenshot locally: make a copy of the fragment with `<!doctype html>` prepended (avoids quirks-mode rendering; the artifact version must NOT contain it)
-   - `file://` URLs are blocked — serve the scratchpad first (`python3 -m http.server <port>` as a background task), then navigate to `http://localhost:<port>/<page>.html`
-   - afterwards kill the server and close the browser tab; if the PNG lands in the repo root (Playwright's cwd), move it out immediately so it cannot be committed
-4. **Copy the PNG to `~/Downloads/<branch-name>-changes.png`** — the scratchpad is temporary; Downloads survives the session.
-5. **Tell the user to drag the PNG into the PR description** on GitHub (manual step: `gh` CLI and the API cannot upload PR attachment images). Verify afterwards with `gh pr view <number> --json body` that a `user-attachments` URL is present.
-
 ## Step 6 — Qodo Code Review
 
 After the PR is created, `qodo-code-review` bot reviews automatically.
@@ -152,9 +131,30 @@ gh api graphql -f query='
   }'
 ```
 
-> After each push, the bot re-reviews. Confirm no new findings before proceeding to merge.
+> After each push, the bot re-reviews. Confirm no new findings before proceeding to Step 7.
 
-## Step 7 — Merge + Cleanup _(requires user confirmation)_
+## Step 7 — Visual change-summary image
+
+Runs **after the review loop settles and before merge**, so the line counts and commit list in the image are final — an image made earlier goes stale with every review-fix commit. Produce one compact image explaining the change, save it to the user's Downloads folder, and hand it to the user to embed. Skip only for trivial PRs (≤ 2 files) unless the user asks for it.
+
+1. **Load the `artifact-design` skill, then build the page** in the session scratchpad (never inside the repo) as an Artifact-ready fragment: no `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` wrapper of your own, inline `<title>` and `<style>`, palette as CSS custom properties with a dark-theme variant (the skill covers the token pattern). The page holds the same content twice, as two stacked blocks separated by a thin rule: **English on top, Traditional Chinese below**. Each block contains ONLY these two elements:
+   - a **short prose summary**: title line (PR title) + one-line meta (PR number · branch · spec version · `+added / −deleted`), followed by two labeled 1–3 sentence paragraphs — **Purpose** (why the change was needed) and **Result** (what the PR delivers) — no metric cards, no BEFORE/AFTER table, no diff restatement of any kind
+   - a **flow diagram**: boxes + arrows built with plain HTML/CSS (flex + border boxes, no images), showing the before-flow above the after-flow with changed nodes highlighted; when nothing flow-like changed, diagram the affected structure (components and their relationships) instead
+
+   File paths, identifiers, and config keys stay in English in both blocks.
+
+   **Mandatory style** (design-doc look, not a GitHub diff report — the dark theme is an adaptation of this, not a different design):
+   - white background, dark-gray body text, generous whitespace; one accent color at most
+   - monospace only for file paths and identifiers; everything else in the system sans-serif stack
+2. **Publish it with the Artifact tool** and give the user the URL to preview. If they request changes, edit the same file and republish — the same path redeploys to the same URL. Only proceed to the screenshot after the user is satisfied (or immediately if they have already seen the content another way).
+3. **Screenshot it with the Playwright MCP browser** (PNG, viewport width 1200, `fullPage: true`, light theme):
+   - the artifact URL requires claude.ai auth, so screenshot locally: copy the fragment (e.g. `<page>.html`) to a **separate file** (e.g. `<page>-preview.html`) with `<!doctype html>` prepended — the copy avoids quirks-mode rendering, and the distinct filename prevents overwriting the fragment or republishing the wrong version later (the artifact version must NOT contain the doctype)
+   - `file://` URLs are blocked — serve the scratchpad first (`python3 -m http.server <port>` as a background task), then navigate to `http://localhost:<port>/<page>-preview.html`
+   - afterwards kill the server and close the browser tab; if the PNG lands in the repo root (Playwright's cwd), move it out immediately so it cannot be committed
+4. **Copy the PNG to `~/Downloads/<branch-name>-changes.png`** — the scratchpad is temporary; Downloads survives the session.
+5. **Tell the user to drag the PNG into the PR description** on GitHub (manual step: `gh` CLI and the API cannot upload PR attachment images). Verify afterwards with `gh pr view <number> --json body` that a `user-attachments` URL is present.
+
+## Step 8 — Merge + Cleanup _(requires user confirmation)_
 
 ```bash
 # Merge the PR
