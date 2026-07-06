@@ -316,6 +316,12 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('subj');
     expect(triples[0]).toHaveProperty('rel');
     expect(triples[0]).toHaveProperty('obj');
+
+    // Standalone relation_triple uses the same sequential builder as the ABSA
+    // unified path (E1/Arg1 → Relation → E2/Arg2), not the legacy dropdowns.
+    const html = await page.locator('#annotationPreview').innerHTML();
+    expect(html).toContain('E1/Arg1');
+    expect(html).toContain('E2/Arg2');
   });
 
   test('entity_relation — item_pair with treats/causes/prevents labels', async ({
@@ -437,6 +443,22 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
+
+    // relation_types is auto-populated from the distinct relations in the
+    // pre-labeled triples — NOT the hardcoded has_aspect/has_opinion defaults.
+    const cfg = (await getState(page, 'outputConfigs')) as WindowState['outputConfigs'];
+    const relTypes = (cfg.relation_triple as { relation_types: string[] }).relation_types;
+    expect(relTypes).toEqual(['位於', '產生', '形成', '流至', '造成']);
+    expect(relTypes).not.toContain('has_aspect');
+    expect(relTypes).not.toContain('has_opinion');
+
+    // The generated config must not leak the hardcoded defaults either.
+    const code = await page.evaluate(() => {
+      const editor = document.getElementById('codeEditor') as HTMLTextAreaElement;
+      return editor?.value || '';
+    });
+    expect(code).not.toContain('has_aspect');
+    expect(code).toContain('位於');
   });
 
   test('absa-va.json — triple output (span + relation_triple + multi_dim) across two categories', async ({
