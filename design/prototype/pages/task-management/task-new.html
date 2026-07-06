@@ -3410,7 +3410,7 @@ function clearOutputPreviewState(outKey) {
       var cfg = state.outputConfigs[outKey] || {};
       var min = cfg.min != null ? cfg.min : 1;
       var max = cfg.max != null ? cfg.max : 5;
-      var step = cfg.step != null ? cfg.step : 1;
+      var step = (cfg.step != null && cfg.step > 0) ? cfg.step : 1;
       state.previewState[outKey] = { value: min + Math.round(((max - min) / 2) / step) * step, _seeded: true };
       break;
     }
