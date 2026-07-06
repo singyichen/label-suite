@@ -1209,7 +1209,7 @@ var OUTPUT_TYPE_REGISTRY = {
    「無法判定 (Bypass)」; task creators can turn it off per output type */
 var BYPASS_FIELD = { key: 'allow_bypass', type: 'boolean', zh: '允許無法判定 (Bypass)', en: 'Allow bypass (unable to determine)', required: false, defaultValue: true };
 Object.keys(OUTPUT_TYPE_REGISTRY).forEach(function(outKey) {
-  OUTPUT_TYPE_REGISTRY[outKey].fields.push(BYPASS_FIELD);
+  OUTPUT_TYPE_REGISTRY[outKey].fields.push(Object.assign({}, BYPASS_FIELD));
   OUTPUT_TYPE_REGISTRY[outKey].defaultConfig.allow_bypass = true;
 });
 
@@ -3092,6 +3092,14 @@ function getRelationTypeOptions(relationTypes) {
 }
 
 function renderAbsaUnifiedPreview(previewContainer) {
+  /* allow_bypass turned off while bypassed: clear the flag AND re-init the
+     preview BEFORE rendering, so this pass already shows the restored state */
+  ['span', 'relation_triple'].forEach(function(outKey) {
+    if (state.selectedOutputTypes.indexOf(outKey) >= 0 && !isBypassAllowed(outKey) && state.previewBypass[outKey]) {
+      delete state.previewBypass[outKey];
+      resetOutputPreviewState(outKey);
+    }
+  });
   if (!state.previewInited) initPreviewState();
   var realText = getDatasetPreviewText();
   var tc = getPreviewTypeColorMap();
@@ -3344,8 +3352,6 @@ function renderAbsaUnifiedPreview(previewContainer) {
      (no entities → relation builder unusable), relation bypass only disables relSection ── */
   var hasSpanOut = state.selectedOutputTypes.indexOf('span') >= 0;
   var hasRelOut = state.selectedOutputTypes.indexOf('relation_triple') >= 0;
-  if (hasSpanOut && !isBypassAllowed('span')) delete state.previewBypass['span'];
-  if (hasRelOut && !isBypassAllowed('relation_triple')) delete state.previewBypass['relation_triple'];
   if (hasSpanOut && state.previewBypass['span']) {
     disableBypassedArea(previewContainer.children);
   } else if (hasRelOut && state.previewBypass['relation_triple']) {
@@ -3990,7 +3996,12 @@ function renderRelationTripleOnlyPreview(container, outKey) {
 
 /* ── Preview dispatcher ── */
 function renderOutputPreview(container, outKey) {
-  if (!isBypassAllowed(outKey)) delete state.previewBypass[outKey];
+  /* allow_bypass turned off while bypassed: clear the flag AND re-init the
+     preview, otherwise the cleared `_seeded` state blocks dataset re-seeding */
+  if (!isBypassAllowed(outKey) && state.previewBypass[outKey]) {
+    delete state.previewBypass[outKey];
+    resetOutputPreviewState(outKey);
+  }
   switch (outKey) {
     case 'single_label': renderSingleLabelPreview(container, outKey); break;
     case 'multi_label': renderMultiLabelPreview(container, outKey); break;
@@ -6714,6 +6725,14 @@ function onChipSelectionChange() {
   /* Remove outputConfigs entries for deselected output types */
   Object.keys(state.outputConfigs).forEach(function(k) {
     if (state.selectedOutputTypes.indexOf(k) < 0) delete state.outputConfigs[k];
+  });
+  /* Drop bypass flags of deselected output types so a later reselect
+     does not come back pre-bypassed with a cleared preview */
+  Object.keys(state.previewBypass).forEach(function(k) {
+    if (state.selectedOutputTypes.indexOf(k) < 0) {
+      delete state.previewBypass[k];
+      resetOutputPreviewState(k);
+    }
   });
   if (state.taskType) {
     state.configData = state.configDataMap[state.taskType] || {};
