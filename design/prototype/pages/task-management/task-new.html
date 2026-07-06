@@ -91,17 +91,13 @@
     .upload-file-preview-btn { width: 24px; height: 24px; border: none; background: none; color: var(--color-ink-muted); padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast); }
     .upload-file-preview-btn:hover { color: var(--color-primary); background: var(--color-primary-soft-bg); }
     /* ── Dataset Preview Modal ── */
-    .modal-xl { max-width: 720px; width: 95vw; max-height: 80vh; display: flex; flex-direction: column; }
+    .modal.modal-xl { max-width: 1280px; width: 92vw; max-height: 88vh; display: flex; flex-direction: column; }
     .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md); }
     .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: color var(--dur-fast), background var(--dur-fast); }
     .modal-close-btn:hover { background: var(--color-slate-100); color: var(--color-ink); }
     .preview-hint { font-size: 12px; color: var(--color-text-soft); margin: 2px 0 0; }
-    .preview-table-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
-    .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .preview-table th { position: sticky; top: 0; background: var(--color-slate-50); padding: 8px 12px; text-align: left; font-weight: 600; color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border); white-space: nowrap; font-size: 12px; }
-    .preview-table td { padding: 8px 12px; border-bottom: 1px solid var(--color-border); color: var(--color-ink); max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .preview-table tr:last-child td { border-bottom: none; }
-    .preview-table tr:hover td { background: var(--color-slate-50); }
+    .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
+    .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
 
     /* ── Step 2 ── */
     .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; }
@@ -452,6 +448,18 @@
     .inline-preview-role-select:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
     .inline-preview-col-error { font-size: 12px; color: var(--color-error); margin-top: 6px; display: none; }
     .inline-preview-col-error.show { display: block; }
+    .inline-preview-source-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); margin-bottom: 8px; font-size: 12px; color: var(--color-ink); }
+    .inline-preview-source-bar svg { width: 14px; height: 14px; color: var(--color-primary); flex-shrink: 0; }
+    .inline-preview-source-label { font-weight: 600; color: var(--color-ink-muted); white-space: nowrap; }
+    .inline-preview-source-select { font-size: 12px; padding: 3px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); color: var(--color-ink); cursor: pointer; max-width: 280px; }
+    .inline-preview-source-select:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+    .inline-preview-source-hint { color: var(--color-ink-muted); }
+    .inline-preview-type-badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 0 6px; border-radius: 4px; border: 1px solid var(--color-border); background: var(--color-white); color: var(--color-ink-muted); }
+    .inline-preview-field-note { display: flex; align-items: flex-start; gap: 4px; font-size: 11px; line-height: 1.5; max-width: 220px; white-space: normal; font-weight: 400; }
+    .inline-preview-field-note svg { width: 12px; height: 12px; flex-shrink: 0; margin-top: 2px; }
+    .inline-preview-field-note.note-error { color: var(--color-error); font-weight: 500; }
+    .inline-preview-field-note.note-info { color: var(--color-primary); }
+    .inline-preview-field-note.note-ok { color: var(--color-success); }
     html[data-theme="dark"] .inline-dataset-preview-wrap { background: var(--color-white); }
 
         /* ── Responsive ── */
@@ -650,6 +658,8 @@
               <span class="inline-dataset-preview-title" id="inlinePreviewTitle">欄位預覽・選擇納入 config 的欄位</span>
               <span class="inline-dataset-preview-hint" id="inlinePreviewHint">前 2 筆資料・標頭勾選框決定是否納入 config</span>
             </div>
+            <!-- Record-source bar: detected candidate arrays + manual override (built by renderInlineSourceBar) -->
+            <div class="inline-preview-source-bar hidden" id="inlinePreviewSourceBar"></div>
             <div class="inline-dataset-preview-wrap">
               <!-- table built by renderInlineDatasetPreview() -->
             </div>
@@ -895,11 +905,8 @@
         <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="preview-table-wrap">
-      <table class="preview-table">
-        <thead id="datasetPreviewHead"></thead>
-        <tbody id="datasetPreviewBody"></tbody>
-      </table>
+    <div class="preview-json-wrap">
+      <pre class="preview-json" id="datasetPreviewJson"></pre>
     </div>
   </div>
 </div>
@@ -1412,7 +1419,7 @@ var I18N = {
     leaveModalDesc: '你有尚未儲存的變更，離開將會遺失所有已填寫的內容。',
     leaveModalStay: '繼續編輯', leaveModalLeave: '離開',
     datasetPreviewTitle: '資料集預覽',
-    datasetPreviewHint: '顯示前 10 筆・僅供確認用途',
+    datasetPreviewHint: '顯示第 1 筆原始資料・僅供確認用途',
     datasetPreviewAriaLabel: '預覽資料集',
     datasetRemoveAriaLabel: '移除檔案',
     errTaskName: '請輸入任務名稱', errTaskType: '請選擇任務類型',
@@ -1435,6 +1442,19 @@ var I18N = {
     inlinePreviewColError: '至少須為一個欄位指定角色。',
     errSingleItemInputCount: '輸入類型為「單一項目」時，欄位預覽中必須恰好選擇 1 個 Input 欄位',
     errItemPairInputCount: '輸入類型為「項目對」時，欄位預覽中必須恰好選擇 2 個 Input 欄位',
+    errInputFieldMissing: 'Input 欄位「{col}」有 {n} 筆缺值，請更換欄位或修正資料後重新上傳',
+    errNoRecords: '找不到資料列：JSON 中沒有可辨識的物件陣列',
+    errRecordPathIncompat: '欄位不一致：「{name}」在資料列來源「{path}」下的欄位與已上傳檔案不同',
+    inlineSourceLabel: '資料列來源',
+    inlineSourceCandidates: '偵測到 {n} 個候選陣列',
+    inlineSourceRowUnit: '{n} 筆',
+    inlineTotalRecords: '共 {n} 筆資料',
+    fieldNoteMissing: '{m}/{t} 筆缺值',
+    fieldNoteMissingRefs: '如：{refs}',
+    fieldNoteAllPresent: '全部 {t} 筆有值',
+    fieldNotePreAnnotated: '{p}/{t} 筆有預標記',
+    typeString: '字串', typeNumber: '數字', typeBoolean: '布林',
+    typeArray: '陣列', typeObject: '物件', typeMixed: '混合', typeEmpty: '—',
     taskCategoryGroupLabel: '大分類（可多選）',
     taskInputTypeGroupLabel: '輸入類型（單選）',
     taskOutputTypeGroupLabel: '輸出類型（可多選）',
@@ -1551,7 +1571,7 @@ var I18N = {
     leaveModalDesc: 'You have unsaved changes. Leaving will discard all progress.',
     leaveModalStay: 'Keep editing', leaveModalLeave: 'Leave',
     datasetPreviewTitle: 'Dataset Preview',
-    datasetPreviewHint: 'Showing first 10 rows — for verification only',
+    datasetPreviewHint: 'Showing the first record — for verification only',
     datasetPreviewAriaLabel: 'Preview dataset',
     datasetRemoveAriaLabel: 'Remove file',
     errTaskName: 'Task name is required', errTaskType: 'Please select a task type',
@@ -1574,6 +1594,19 @@ var I18N = {
     inlinePreviewColError: 'At least one field must have a role assigned.',
     errSingleItemInputCount: 'Input type "Single item" requires exactly 1 Input field in field preview',
     errItemPairInputCount: 'Input type "Item pair" requires exactly 2 Input fields in field preview',
+    errInputFieldMissing: 'Input field "{col}" has {n} empty rows. Choose another field or fix the dataset and re-upload',
+    errNoRecords: 'No records found: the JSON contains no recognizable array of objects',
+    errRecordPathIncompat: 'Column mismatch: "{name}" has different columns under record source "{path}"',
+    inlineSourceLabel: 'Record source',
+    inlineSourceCandidates: '{n} candidate arrays detected',
+    inlineSourceRowUnit: '{n} rows',
+    inlineTotalRecords: '{n} rows total',
+    fieldNoteMissing: '{m}/{t} rows empty',
+    fieldNoteMissingRefs: 'e.g. {refs}',
+    fieldNoteAllPresent: 'All {t} rows present',
+    fieldNotePreAnnotated: '{p}/{t} rows pre-annotated',
+    typeString: 'string', typeNumber: 'number', typeBoolean: 'boolean',
+    typeArray: 'array', typeObject: 'object', typeMixed: 'mixed', typeEmpty: '—',
     taskCategoryGroupLabel: 'Category (multi-select)',
     taskInputTypeGroupLabel: 'Input type (single-select)',
     taskOutputTypeGroupLabel: 'Output type (multi-select)',
@@ -1616,6 +1649,14 @@ var state = {
   lang: 'zh', step: 1,
   taskName: '', datasetFiles: [], fieldRoleMap: {},
   datasetParsedColumns: [], datasetParsedRows: [], datasetRawFirstRow: {}, datasetColumnUniqueValues: {},
+  /* Record-source detection + field profile (dirty-JSON support) */
+  _datasetRoots: [],           /* parsed JSON root per uploaded file (prototype-only cache) */
+  datasetCandidates: [],       /* [{path, count, score}] candidate record arrays, best first */
+  datasetRecordPath: '$',      /* currently selected record-source path */
+  _roleMapBySource: {},        /* record path -> saved fieldRoleMap (restored on switch-back) */
+  datasetTotalRecords: 0,
+  datasetFieldProfile: {},     /* col -> {present, missing, missingRefs, types} */
+  datasetPreviewRawRows: [],   /* raw first-2 records for cell tooltips + re-render on lang switch */
   taskCategories: [], taskInputTypes: [], taskOutputTypes: [], taskType: '',
   resolvedTaskTypes: [], configDataMap: {},
   /* ADR-029: multi-output composition support */
@@ -1625,8 +1666,11 @@ var state = {
   _lastAutoPopKey: '',       /* fingerprint for detecting dataset/role changes */
   /* Interactive preview annotation state */
   previewEntities: [],       /* [{text, type, start, end, color}] — user-annotated or loaded from data */
-  previewTriples: [],        /* [{subj, rel, obj}] — same format as rendered triples */
+  previewTriples: [],        /* [{subj, rel, obj, relType}] — rel is the trigger-word span "詞 (s,e)"; relType is the post-hoc semantic type */
   activeEntityType: null,    /* currently selected entity type for text selection */
+  relDraft: { e1: null, rel: null, e2: null }, /* in-progress triple: e1/e2 are entity spans, rel is the trigger-word span {text,start,end} */
+  relSel: null,              /* last text span selected in the passage for the relation flow {text,start,end} */
+  relMsg: '',                /* transient guidance/validation message for the relation builder */
   previewInited: false,      /* whether preview annotation state was initialized from data */
   previewState: {},          /* per-output-type interactive state, keyed by output type key */
   codeFormat: 'yaml', configData: {},
@@ -1974,6 +2018,12 @@ function validateStep1(showErrors) {
     ok = false;
   } else { showFieldError('errDataset', false); }
   var inputType = (state.taskInputTypes && state.taskInputTypes[0]) || '';
+  /* Input fields must have a value in EVERY record (Output may be empty = not pre-annotated) */
+  var missingInput = null;
+  getFieldsByRole('input').forEach(function(col) {
+    var p = state.datasetFieldProfile[col];
+    if (!missingInput && p && p.missing > 0) missingInput = { col: col, n: p.missing };
+  });
   if (inputType && state.datasetFiles.length > 0) {
     var inputFieldCount = getFieldsByRole('input').length;
     if (inputType === 'single_item' && inputFieldCount !== 1) {
@@ -1982,9 +2032,17 @@ function validateStep1(showErrors) {
     } else if (inputType === 'item_pair' && inputFieldCount !== 2) {
       showFieldError('errInlineFieldCount', true, t('errItemPairInputCount'));
       ok = false;
+    } else if (missingInput) {
+      showFieldError('errInlineFieldCount', true,
+        t('errInputFieldMissing').replace('{col}', missingInput.col).replace('{n}', missingInput.n));
+      ok = false;
     } else {
       showFieldError('errInlineFieldCount', false);
     }
+  } else if (missingInput && state.datasetFiles.length > 0) {
+    showFieldError('errInlineFieldCount', true,
+      t('errInputFieldMissing').replace('{col}', missingInput.col).replace('{n}', missingInput.n));
+    ok = false;
   } else {
     showFieldError('errInlineFieldCount', false);
   }
@@ -2878,6 +2936,9 @@ function initPreviewState() {
     state.previewTriples = [];
   }
 
+  state.relDraft = { e1: null, rel: null, e2: null };
+  state.relSel = null;
+  state.relMsg = '';
   state.previewInited = true;
 }
 
@@ -2888,6 +2949,135 @@ function getPreviewTypeColorMap() {
   cfgEntities.forEach(function(e) { if (e.name && !map[e.name]) { map[e.name] = e.color || ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.name); } });
   state.previewEntities.forEach(function(e) { if (e.type && !map[e.type]) { map[e.type] = ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.type); } });
   return { map: map, order: order };
+}
+
+/* Format a span slot ({text,start,end}) as "詞 (start,end)" for display and triple storage. */
+function fmtRelSpan(slot) {
+  if (!slot) return '';
+  var s = slot.text || '?';
+  if (slot.start != null && slot.end != null) s += ' (' + slot.start + ',' + slot.end + ')';
+  return s;
+}
+
+/* Sequential relation builder: E1/Arg1 → Relation → E2/Arg2 → Undo → Add.
+   Each step consumes the current passage selection (state.relSel). E1/E2 must
+   match an already-marked entity; Relation accepts any trigger-word span. */
+function buildRelationStateMachine(container, relationTypes, refresh) {
+  var d = state.relDraft;
+
+  var rbTitle = document.createElement('div');
+  rbTitle.className = 'annotation-preview-task-title';
+  rbTitle.style.marginBottom = '6px';
+  rbTitle.textContent = state.lang === 'zh' ? '關係類型' : 'Relation Type';
+  container.appendChild(rbTitle);
+
+  var hint = document.createElement('div');
+  hint.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);margin-bottom:8px;line-height:1.7;';
+  hint.textContent = state.lang === 'zh'
+    ? '在上方文字中反白選取後，依序按下按鈕：實體 → E1/Arg1、關係觸發詞 → Relation、實體 → E2/Arg2，最後按「新增」。'
+    : 'Select text above, then click in order: entity → E1/Arg1, trigger word → Relation, entity → E2/Arg2, then Add.';
+  container.appendChild(hint);
+
+  /* Current-selection + draft status */
+  var status = document.createElement('div');
+  status.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;font-size:0.75rem;';
+  function chip(label, slot, active) {
+    var c = document.createElement('span');
+    var filled = !!slot;
+    c.style.cssText = 'display:inline-flex;gap:4px;padding:2px 8px;border-radius:999px;border:1.5px solid ' + (active ? 'var(--color-primary)' : 'var(--color-border)') + ';background:' + (filled ? '#EEF2FF' : 'transparent') + ';color:' + (filled ? 'var(--color-primary)' : 'var(--color-text-soft)') + ';font-weight:600;';
+    c.textContent = label + '：' + (filled ? fmtRelSpan(slot) : '—');
+    return c;
+  }
+  status.appendChild(chip('E1', d.e1, !d.e1));
+  status.appendChild(chip('Rel', d.rel, !!d.e1 && !d.rel));
+  status.appendChild(chip('E2', d.e2, !!d.rel && !d.e2));
+  var selBadge = document.createElement('span');
+  selBadge.style.cssText = 'margin-left:auto;color:var(--color-text-soft);';
+  selBadge.textContent = (state.lang === 'zh' ? '目前選取：' : 'Selection: ') + (state.relSel ? fmtRelSpan(state.relSel) : (state.lang === 'zh' ? '（無）' : '(none)'));
+  status.appendChild(selBadge);
+  container.appendChild(status);
+
+  /* Button row */
+  var rbRow = document.createElement('div');
+  rbRow.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;';
+  function findEntitySlot() {
+    /* The current selection must correspond to a marked entity (by text, and by
+       position when available) — mirrors the reference system's entity check. */
+    if (!state.relSel) return null;
+    var sel = state.relSel;
+    var byPos = state.previewEntities.filter(function(e) { return e.text === sel.text && e.start === sel.start; });
+    var m = byPos.length ? byPos[0] : state.previewEntities.filter(function(e) { return e.text === sel.text; })[0];
+    return m ? { text: m.text, start: m.start, end: m.end } : null;
+  }
+  function stepBtn(label, enabled, onClick) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.disabled = !enabled;
+    var base = 'padding:4px 12px;border-radius:6px;font-size:0.8rem;font-weight:600;transition:all 0.15s;';
+    if (enabled) b.style.cssText = base + 'border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;cursor:pointer;';
+    else b.style.cssText = base + 'border:1.5px solid var(--color-border);background:transparent;color:var(--color-text-soft);cursor:not-allowed;opacity:0.6;';
+    b.textContent = label;
+    if (enabled) b.addEventListener('click', onClick);
+    return b;
+  }
+  var msgWord = state.lang === 'zh' ? '請先在文字中選取' : 'Select text first';
+  var notEntity = state.lang === 'zh' ? '該選取不是已標記的實體，請先在上方標記實體' : 'Selection is not a marked entity — mark it first';
+
+  rbRow.appendChild(stepBtn('E1/Arg1', !d.e1, function() {
+    var slot = findEntitySlot();
+    if (!state.relSel) { state.relMsg = msgWord; refresh(); return; }
+    if (!slot) { state.relMsg = notEntity; refresh(); return; }
+    d.e1 = slot; state.relSel = null; state.relMsg = ''; refresh();
+  }));
+  rbRow.appendChild(stepBtn('Relation', !!d.e1 && !d.rel, function() {
+    if (!state.relSel) { state.relMsg = msgWord; refresh(); return; }
+    d.rel = { text: state.relSel.text, start: state.relSel.start, end: state.relSel.end };
+    state.relSel = null; state.relMsg = ''; refresh();
+  }));
+  rbRow.appendChild(stepBtn('E2/Arg2', !!d.rel && !d.e2, function() {
+    var slot = findEntitySlot();
+    if (!state.relSel) { state.relMsg = msgWord; refresh(); return; }
+    if (!slot) { state.relMsg = notEntity; refresh(); return; }
+    d.e2 = slot; state.relSel = null; state.relMsg = ''; refresh();
+  }));
+  rbRow.appendChild(stepBtn(state.lang === 'zh' ? '退回' : 'Undo', !!(d.e2 || d.rel || d.e1), function() {
+    if (d.e2) d.e2 = null; else if (d.rel) d.rel = null; else if (d.e1) d.e1 = null;
+    state.relMsg = ''; refresh();
+  }));
+  rbRow.appendChild(stepBtn(state.lang === 'zh' ? '新增' : 'Add', !!(d.e1 && d.rel && d.e2), function() {
+    state.previewTriples.push({ subj: fmtRelSpan(d.e1), rel: fmtRelSpan(d.rel), obj: fmtRelSpan(d.e2), relType: null });
+    state.relDraft = { e1: null, rel: null, e2: null };
+    state.relSel = null; state.relMsg = ''; refresh();
+  }));
+  container.appendChild(rbRow);
+
+  if (state.relMsg) {
+    var msg = document.createElement('div');
+    msg.style.cssText = 'font-size:0.75rem;color:#E74C3C;margin-bottom:8px;';
+    msg.textContent = state.relMsg;
+    container.appendChild(msg);
+  }
+}
+
+/* Strip the trailing " (start,end)" position suffix from a relation-span label,
+   leaving just the trigger word. */
+function relWordOf(relStr) {
+  return String(relStr == null ? '' : relStr).replace(/\s*\(\d+\s*,\s*\d+\)\s*$/, '').trim();
+}
+
+/* Relation-type options for the post-hoc `type` menu: config relation_types first,
+   then any distinct relation trigger words present in the (possibly pre-labeled)
+   triples, so marked relations always surface even when the config list is empty. */
+function getRelationTypeOptions(relationTypes) {
+  var opts = [], seen = {};
+  (relationTypes || []).forEach(function(rt) {
+    if (rt && !seen[rt]) { seen[rt] = 1; opts.push(rt); }
+  });
+  state.previewTriples.forEach(function(tp) {
+    var w = relWordOf(tp.rel);
+    if (w && !seen[w]) { seen[w] = 1; opts.push(w); }
+  });
+  return opts;
 }
 
 function renderAbsaUnifiedPreview(previewContainer) {
@@ -2929,16 +3119,45 @@ function renderAbsaUnifiedPreview(previewContainer) {
   } else if (realText) {
     textEl.appendChild(document.createTextNode(realText.length > 500 ? realText.substring(0, 500) + '…' : realText));
   }
-  /* Text selection handler: select text → add entity */
+  /* Resolve the selection to its actual character offset in realText by
+     walking textEl's text nodes — indexOf alone would always bind repeated
+     words (e.g. the same entity text occurring twice) to the first occurrence */
+  function selectionCharOffset(sel, selText) {
+    if (sel.rangeCount === 0) return -1;
+    var range = sel.getRangeAt(0);
+    if (range.startContainer.nodeType !== 3 || !textEl.contains(range.startContainer)) return -1;
+    var total = 0;
+    var walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT, null);
+    var tn;
+    while ((tn = walker.nextNode())) {
+      if (tn === range.startContainer) {
+        var raw = sel.toString();
+        var lead = raw.length - raw.replace(/^\s+/, '').length;
+        var start = total + range.startOffset + lead;
+        return realText.slice(start, start + selText.length) === selText ? start : -1;
+      }
+      total += tn.textContent.length;
+    }
+    return -1;
+  }
+  /* Text selection handler: with an entity type armed → add entity;
+     otherwise → capture the selection for the sequential relation flow */
   textEl.addEventListener('mouseup', function() {
-    if (!state.activeEntityType) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
     if (!realText) return;
-    var idx = realText.indexOf(selText);
+    var idx = selectionCharOffset(sel, selText);
+    if (idx < 0) idx = realText.indexOf(selText);
     if (idx < 0) return;
-    state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
+    if (state.activeEntityType) {
+      state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
+      sel.removeAllRanges();
+      renderAbsaUnifiedPreview_refresh(previewContainer);
+      return;
+    }
+    state.relSel = { text: selText, start: idx, end: idx + selText.length - 1 };
+    state.relMsg = '';
     sel.removeAllRanges();
     renderAbsaUnifiedPreview_refresh(previewContainer);
   });
@@ -3010,41 +3229,10 @@ function renderAbsaUnifiedPreview(previewContainer) {
   divider.style.margin = '0 0 12px';
   previewContainer.appendChild(divider);
 
-  /* ── Relation Builder (interactive dropdowns) ── */
-  var rbTitle = document.createElement('div');
-  rbTitle.className = 'annotation-preview-task-title';
-  rbTitle.style.marginBottom = '8px';
-  rbTitle.textContent = state.lang === 'zh' ? '關係類型' : 'Relation Type';
-  previewContainer.appendChild(rbTitle);
-  var rbRow = document.createElement('div');
-  rbRow.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;';
-  var entOptions = state.previewEntities.map(function(e) { return e.text + '/' + e.type; });
-  var relOptions = relationTypes.length > 0 ? relationTypes : ['causes', 'treats'];
-  function makeSelect(opts, placeholder) {
-    var sel = document.createElement('select');
-    sel.style.cssText = 'padding:4px 8px;border:1.5px solid var(--color-border);border-radius:6px;font-size:0.8rem;min-width:100px;';
-    var ph = document.createElement('option');
-    ph.value = ''; ph.textContent = placeholder; ph.disabled = true; ph.selected = true;
-    sel.appendChild(ph);
-    opts.forEach(function(o) { var opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
-    return sel;
-  }
-  var selE1 = makeSelect(entOptions, 'E1/Arg1');
-  var selRel = makeSelect(relOptions, 'Relation');
-  var selE2 = makeSelect(entOptions, 'E2/Arg2');
-  rbRow.appendChild(selE1); rbRow.appendChild(selRel); rbRow.appendChild(selE2);
-
-  var addTripleBtn = document.createElement('button');
-  addTripleBtn.type = 'button';
-  addTripleBtn.style.cssText = 'padding:4px 12px;border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;';
-  addTripleBtn.textContent = 'Add';
-  addTripleBtn.addEventListener('click', function() {
-    if (!selE1.value || !selRel.value || !selE2.value) return;
-    state.previewTriples.push({ subj: selE1.value, rel: selRel.value, obj: selE2.value });
-    renderAbsaUnifiedPreview_refresh(previewContainer);
-  });
-  rbRow.appendChild(addTripleBtn);
-  previewContainer.appendChild(rbRow);
+  /* ── Relation Builder (sequential state machine, mirrors the NER labeling system) ──
+     Flow: 反白選取實體 → E1/Arg1 · 反白選取關係觸發詞 → Relation · 反白選取實體 → E2/Arg2 · Add
+     E1/E2 must be already-marked entities; Relation is any trigger-word span from the text. */
+  buildRelationStateMachine(previewContainer, relationTypes, function() { renderAbsaUnifiedPreview_refresh(previewContainer); });
 
   /* ── Triple List (interactive, deletable) ── */
   var tlTitle = document.createElement('div');
@@ -3073,17 +3261,24 @@ function renderAbsaUnifiedPreview(previewContainer) {
     var objSpan = document.createElement('span');
     objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
     content.appendChild(objSpan);
+    if (triple.relType) {
+      var typeBadge = document.createElement('span');
+      typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
+      typeBadge.textContent = (state.lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
+      content.appendChild(typeBadge);
+    }
     row.appendChild(content);
-    /* type dropdown button */
+    /* type dropdown button: assigns the post-hoc semantic relation type from config relation_types */
     var typeWrap = document.createElement('span');
     typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
     var typeBtn = document.createElement('button');
     typeBtn.type = 'button';
     typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
-    typeBtn.textContent = 'type';
+    typeBtn.textContent = state.lang === 'zh' ? '類型' : 'type';
     var typeMenu = document.createElement('div');
     typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
-    var allRelTypes = relationTypes.length > 0 ? relationTypes : ['causes', 'treats'];
+    var allRelTypes = getRelationTypeOptions(relationTypes);
+    if (allRelTypes.length === 0) allRelTypes = ['causes', 'treats'];
     allRelTypes.forEach(function(rt) {
       var item = document.createElement('div');
       item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
@@ -3091,13 +3286,13 @@ function renderAbsaUnifiedPreview(previewContainer) {
       item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
       var check = document.createElement('span');
       check.style.cssText = 'width:14px;font-size:0.75rem;';
-      check.textContent = (triple.rel === rt) ? '✓' : '';
+      check.textContent = (triple.relType === rt) ? '✓' : '';
       item.appendChild(check);
       item.appendChild(document.createTextNode(rt));
       (function(relType, idx) {
         item.addEventListener('click', function(ev) {
           ev.stopPropagation();
-          state.previewTriples[idx].rel = relType;
+          state.previewTriples[idx].relType = (state.previewTriples[idx].relType === relType) ? null : relType;
           renderAbsaUnifiedPreview_refresh(previewContainer);
         });
       }(rt, i));
@@ -3642,74 +3837,12 @@ function renderFreeTextPreview(container, outKey) {
 }
 
 function renderRelationTripleOnlyPreview(container, outKey) {
-  if (!state.previewInited) initPreviewState();
-  var relCfg = state.outputConfigs[outKey] || {};
-  var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : ['causes', 'treats'];
-
-  previewTextBlock(container);
-
-  /* Relation builder */
-  var rbTitle = document.createElement('div');
-  rbTitle.className = 'annotation-preview-task-title';
-  rbTitle.style.marginBottom = '8px';
-  rbTitle.textContent = state.lang === 'zh' ? '關係類型' : 'Relation Type';
-  container.appendChild(rbTitle);
-
-  var rbRow = document.createElement('div');
-  rbRow.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;';
-  function makeSelect(opts, placeholder) {
-    var sel = document.createElement('select');
-    sel.style.cssText = 'padding:4px 8px;border:1.5px solid var(--color-border);border-radius:6px;font-size:0.8rem;min-width:100px;';
-    var ph = document.createElement('option'); ph.value = ''; ph.textContent = placeholder; ph.disabled = true; ph.selected = true; sel.appendChild(ph);
-    opts.forEach(function(o) { var opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
-    return sel;
-  }
-  var sampleEnts = ['Entity 1', 'Entity 2', 'Entity 3'];
-  var selE1 = makeSelect(sampleEnts, 'E1/Arg1');
-  var selRel = makeSelect(relationTypes, 'Relation');
-  var selE2 = makeSelect(sampleEnts, 'E2/Arg2');
-  rbRow.appendChild(selE1); rbRow.appendChild(selRel); rbRow.appendChild(selE2);
-  var addBtn = document.createElement('button'); addBtn.type = 'button';
-  addBtn.style.cssText = 'padding:4px 12px;border:1.5px solid var(--color-primary);background:var(--color-primary);color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;';
-  addBtn.textContent = 'Add';
-  addBtn.addEventListener('click', function() {
-    if (!selE1.value || !selRel.value || !selE2.value) return;
-    state.previewTriples.push({ subj: selE1.value, rel: selRel.value, obj: selE2.value });
-    refreshOutputPreview(container, outKey);
-  });
-  rbRow.appendChild(addBtn);
-  container.appendChild(rbRow);
-
-  /* Triple list */
-  var tlTitle = document.createElement('div');
-  tlTitle.className = 'annotation-preview-task-title';
-  tlTitle.style.marginBottom = '8px';
-  tlTitle.textContent = state.lang === 'zh' ? '關係三元組標記' : 'Triple List';
-  container.appendChild(tlTitle);
-  if (state.previewTriples.length > 0) {
-    state.previewTriples.forEach(function(triple, i) {
-      var row = document.createElement('div'); row.className = 'absa-relation-row'; row.style.display = 'flex'; row.style.alignItems = 'center';
-      var content = document.createElement('span'); content.style.flex = '1';
-      var subjSpan = document.createElement('span'); subjSpan.style.cssText = 'font-weight:600;font-size:11px'; subjSpan.textContent = triple.subj;
-      var arrow1 = document.createElement('span'); arrow1.className = 'absa-arrow'; arrow1.textContent = '→';
-      var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
-      var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = '→';
-      var objSpan = document.createElement('span'); objSpan.style.cssText = 'font-weight:600;font-size:11px'; objSpan.textContent = triple.obj;
-      content.appendChild(subjSpan); content.appendChild(document.createTextNode(' ')); content.appendChild(arrow1); content.appendChild(document.createTextNode(' ')); content.appendChild(relBadge); content.appendChild(document.createTextNode(' ')); content.appendChild(arrow2); content.appendChild(document.createTextNode(' ')); content.appendChild(objSpan);
-      row.appendChild(content);
-      var delBtn = document.createElement('button'); delBtn.type = 'button';
-      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;margin-left:8px;';
-      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-      (function(idx) { delBtn.addEventListener('click', function() { state.previewTriples.splice(idx, 1); refreshOutputPreview(container, outKey); }); }(i));
-      row.appendChild(delBtn);
-      container.appendChild(row);
-    });
-  } else {
-    var emptyMsg = document.createElement('div');
-    emptyMsg.style.cssText = 'font-size:0.8rem;color:var(--color-text-soft);padding:8px;';
-    emptyMsg.textContent = state.lang === 'zh' ? '（尚無三元組，請從上方新增）' : '(No triples yet — add above)';
-    container.appendChild(emptyMsg);
-  }
+  /* relation_triple depends on span (source_output: 'span'), so reuse the unified
+     span + relation builder to keep the standalone path identical to the ABSA one:
+     same sequential state machine (E1/Arg1 → Relation → E2/Arg2 → 退回 → 新增) and
+     the same post-hoc `type` menu. With no span co-output there are simply no
+     entity-type chips to arm — pre-labeled entities still drive E1/E2. */
+  renderAbsaUnifiedPreview(container);
 }
 
 /* ── Preview dispatcher ── */
@@ -3793,6 +3926,41 @@ function renderSchemaFields() {
           });
           _multiDimCfg._autoPopulated = true;
         }
+      }
+    }
+
+  }
+
+  /* Auto-populate relation_types from the distinct relations present in the
+     pre-labeled triples, so the config + `type` menu reflect the data instead
+     of the hardcoded defaults (has_aspect/has_opinion). Not gated on an output
+     role: the preview reads pre-labeled triples from the raw row regardless of
+     role assignment, and FR-002c-1 allows leaving Output unassigned. */
+  var _relCfg = state.outputConfigs['relation_triple'];
+  if (_relCfg && !_relCfg._autoPopulated) {
+    var _rawRow = state.datasetRawFirstRow || {};
+    var _tripCands = [_rawRow.triples, _rawRow.gold_triplets, _rawRow.gold_triples];
+    if (_outCols.length > 0) _tripCands.unshift(_rawRow[_outCols[0]]);
+    var _trips = null;
+    _tripCands.some(function(cand) {
+      if (!Array.isArray(cand) || cand.length === 0) return false;
+      /* Only claim arrays whose items actually look like triples, so a
+         non-triple output column (e.g. BIO tags) can't shadow the fallbacks */
+      var _f = cand[0];
+      if (!_f || typeof _f !== 'object' || !(_f.relation || typeof _f.rel === 'string')) return false;
+      _trips = cand; return true;
+    });
+    if (_trips) {
+      var _rels = [], _relSeen = {};
+      _trips.forEach(function(tp) {
+        var w = (tp && tp.relation && tp.relation.text) ? tp.relation.text
+              : (tp && typeof tp.rel === 'string') ? relWordOf(tp.rel) : '';
+        w = (w || '').trim();
+        if (w && !_relSeen[w]) { _relSeen[w] = 1; _rels.push(w); }
+      });
+      if (_rels.length > 0) {
+        _relCfg.relation_types = _rels;
+        _relCfg._autoPopulated = true;
       }
     }
   }
@@ -5075,74 +5243,199 @@ function scalarLabelValue(v) {
   return (typeof v === 'string' && v.length <= 100) ? v : null;
 }
 
-function parseJsonDataset(file, onSuccess, onError) {
+function isPlainObject(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+
+/* Parse file text as JSON; fall back to JSON Lines (one object per line) */
+function parseDatasetText(text) {
+  try { return JSON.parse(text); } catch (ex) {}
+  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim() !== ''; });
+  if (lines.length > 1) {
+    var rows = [];
+    for (var i = 0; i < lines.length; i++) {
+      try { rows.push(JSON.parse(lines[i])); } catch (ex2) { return null; }
+    }
+    return rows;
+  }
+  return null;
+}
+
+/* Record detection: walk the tree (depth ≤ 3) collecting arrays whose elements
+   are ≥80% plain objects. Score = count × key consistency ÷ (depth+1) — favors
+   large, homogeneous, shallow arrays. Candidate arrays are not descended into,
+   except short wrapper arrays (≤3 items) which may hide the real records. */
+function collectRecordCandidates(root) {
+  var out = [];
+  function keyConsistency(arr) {
+    var sample = arr.slice(0, 50).filter(isPlainObject);
+    if (sample.length < 2) return 1;
+    var base = Object.keys(sample[0]);
+    var sum = 0;
+    sample.forEach(function(o) {
+      var keys = Object.keys(o);
+      var inter = keys.filter(function(k) { return base.indexOf(k) !== -1; }).length;
+      var union = base.length + keys.length - inter;
+      sum += union === 0 ? 1 : inter / union;
+    });
+    return sum / sample.length;
+  }
+  function walk(node, path, depth) {
+    if (depth > 3) return;
+    if (Array.isArray(node)) {
+      if (node.length > 0 && node.filter(isPlainObject).length / node.length >= 0.8) {
+        /* log-damped count so a large nested array (e.g. per-record utterances)
+           cannot outscore a small root record array purely on element count */
+        out.push({ path: path, count: node.length, score: Math.log2(node.length + 1) * keyConsistency(node) / (depth + 1) });
+        if (node.length <= 3) walk(node[0], path + '[0]', depth + 1);
+      }
+    } else if (isPlainObject(node)) {
+      Object.keys(node).forEach(function(k) { walk(node[k], path + '.' + k, depth + 1); });
+    }
+  }
+  walk(root, '$', 0);
+  if (out.length === 0 && isPlainObject(root)) {
+    out.push({ path: '$', count: 1, score: 0 });
+  }
+  out.sort(function(a, b) { return b.score - a.score; });
+  return out;
+}
+
+function extractRecordsAtPath(root, path) {
+  var node = root;
+  var tokens = path.replace(/^\$/, '').match(/\.[^.\[]+|\[\d+\]/g) || [];
+  for (var i = 0; i < tokens.length; i++) {
+    if (node === undefined || node === null) return null;
+    var tk = tokens[i];
+    node = tk.charAt(0) === '.' ? node[tk.slice(1)] : node[parseInt(tk.slice(1, -1), 10)];
+  }
+  if (Array.isArray(node)) return node.filter(isPlainObject);
+  if (isPlainObject(node)) return [node];
+  return null;
+}
+
+/* Empty = missing key, null, blank string, empty array/object; 0/false count as present */
+function isEmptyCellValue(v) {
+  return v === undefined || v === null ||
+    (typeof v === 'string' && v.trim() === '') ||
+    (Array.isArray(v) && v.length === 0) ||
+    (isPlainObject(v) && Object.keys(v).length === 0);
+}
+
+function cellTypeKey(v) {
+  if (Array.isArray(v)) return 'typeArray';
+  if (isPlainObject(v)) return 'typeObject';
+  if (typeof v === 'number') return 'typeNumber';
+  if (typeof v === 'boolean') return 'typeBoolean';
+  return 'typeString';
+}
+
+/* One-pass field profile over ALL records: columns = union of top-level keys;
+   per column count present/missing, capture up to 50 missing-record refs
+   (record id when the dataset has one, else row number) and a type summary */
+function buildFieldProfile(records) {
+  var cols = [], seen = {};
+  records.forEach(function(r) {
+    Object.keys(r).forEach(function(k) { if (!seen[k]) { seen[k] = true; cols.push(k); } });
+  });
+  var profile = {};
+  cols.forEach(function(c) { profile[c] = { present: 0, missing: 0, missingRefs: [], types: {} }; });
+  records.forEach(function(r, i) {
+    cols.forEach(function(c) {
+      var p = profile[c], v = r[c];
+      if (isEmptyCellValue(v)) {
+        p.missing++;
+        if (p.missingRefs.length < 50) {
+          p.missingRefs.push(seen['id'] && !isEmptyCellValue(r.id) ? String(r.id) : '#' + (i + 1));
+        }
+      } else {
+        p.present++;
+        p.types[cellTypeKey(v)] = true;
+      }
+    });
+  });
+  return { columns: cols, profile: profile };
+}
+
+function fieldTypeLabel(col) {
+  var p = state.datasetFieldProfile[col];
+  if (!p) return '';
+  var keys = Object.keys(p.types);
+  if (keys.length === 0) return t('typeEmpty');
+  return keys.length > 1 ? t('typeMixed') : t(keys[0]);
+}
+
+function readDatasetFile(file, onSuccess, onError) {
   var reader = new FileReader();
   reader.onload = function(e) {
-    try {
-      var data = JSON.parse(e.target.result);
-      var columns, rows, rawFirstRow, columnUniqueValues;
-      if (Array.isArray(data)) {
-        if (data.length === 0) {
-          onError(state.lang === 'en' ? 'The JSON file is empty.' : '檔案內容為空的 JSON 陣列。');
-          return;
-        }
-        if (data[0] === null || typeof data[0] !== 'object') {
-          onError(state.lang === 'en' ? 'Invalid JSON format: array elements must be objects.' : 'JSON 格式不正確：陣列元素必須是物件。');
-          return;
-        }
-        columns = Object.keys(data[0]);
-        rows = data.slice(0, 2).map(function(row) {
-          return columns.map(function(col) { return previewCellValue(row[col]); });
-        });
-        rawFirstRow = {};
-        columns.forEach(function(col) { rawFirstRow[col] = data[0][col]; });
-        var uv = {};
-        columns.forEach(function(col) { uv[col] = {}; });
-        data.forEach(function(row) {
-          columns.forEach(function(col) {
-            var v = scalarLabelValue(row[col]);
-            if (v !== null) {
-              uv[col][v] = true;
-            } else if (Array.isArray(row[col])) {
-              row[col].forEach(function(item) { var s = scalarLabelValue(item); if (s !== null) uv[col][s] = true; });
-            }
-          });
-        });
-        columnUniqueValues = {};
-        columns.forEach(function(col) { columnUniqueValues[col] = Object.keys(uv[col]).slice(0, 50); });
-      } else if (data && typeof data === 'object') {
-        columns = Object.keys(data);
-        rows = [columns.map(function(col) { return previewCellValue(data[col]); })];
-        rawFirstRow = {};
-        columns.forEach(function(col) { rawFirstRow[col] = data[col]; });
-        columnUniqueValues = {};
-        columns.forEach(function(col) {
-          var v = scalarLabelValue(data[col]);
-          if (v !== null) {
-            columnUniqueValues[col] = [v];
-          } else if (Array.isArray(data[col])) {
-            columnUniqueValues[col] = data[col].map(scalarLabelValue).filter(function(item) { return item !== null; }).slice(0, 50);
-          } else {
-            columnUniqueValues[col] = [];
-          }
-        });
-      } else {
-        onError(state.lang === 'en' ? 'Invalid JSON format.' : 'JSON 格式不正確，請確認檔案內容。');
-        return;
-      }
-      if (columns.length === 0) {
-        onError(state.lang === 'en' ? 'No columns found in JSON.' : '找不到任何欄位，請確認 JSON 格式。');
-        return;
-      }
-      onSuccess({ columns: columns, rows: rows, rawFirstRow: rawFirstRow, columnUniqueValues: columnUniqueValues });
-    } catch (ex) {
+    var root = parseDatasetText(e.target.result);
+    if (root === null || (Array.isArray(root) && root.length === 0)) {
       onError(state.lang === 'en' ? 'Failed to parse JSON.' : '無法解析 JSON，請確認檔案格式正確（UTF-8 編碼）。');
+      return;
     }
+    onSuccess(root);
   };
   reader.onerror = function() {
     onError(state.lang === 'en' ? 'Failed to read file.' : '讀取檔案失敗。');
   };
   reader.readAsText(file, 'utf-8');
+}
+
+/* Recompute records, columns, preview rows, unique values and field profile
+   from all parsed roots at the currently selected record path.
+   Returns the names of files whose root yields no records at that path, so
+   callers can surface the incompatibility instead of dropping rows silently. */
+function analyzeDataset() {
+  var allRecords = [];
+  var skippedFiles = [];
+  state._datasetRoots.forEach(function(root, i) {
+    var recs = extractRecordsAtPath(root, state.datasetRecordPath);
+    if (recs && recs.length > 0) {
+      allRecords = allRecords.concat(recs);
+    } else {
+      skippedFiles.push(state.datasetFiles[i] ? state.datasetFiles[i].name : '#' + (i + 1));
+    }
+  });
+  state.datasetTotalRecords = allRecords.length;
+  var fp = buildFieldProfile(allRecords);
+  state.datasetParsedColumns = fp.columns;
+  state.datasetFieldProfile = fp.profile;
+  state.datasetPreviewRawRows = allRecords.slice(0, 2);
+  state.datasetParsedRows = state.datasetPreviewRawRows.map(function(row) {
+    return fp.columns.map(function(col) { return previewCellValue(row[col]); });
+  });
+  state.datasetRawFirstRow = allRecords[0] || {};
+  var uv = {};
+  fp.columns.forEach(function(col) { uv[col] = {}; });
+  allRecords.forEach(function(row) {
+    fp.columns.forEach(function(col) {
+      var v = scalarLabelValue(row[col]);
+      if (v !== null) {
+        uv[col][v] = true;
+      } else if (Array.isArray(row[col])) {
+        row[col].forEach(function(item) { var s = scalarLabelValue(item); if (s !== null) uv[col][s] = true; });
+      }
+    });
+  });
+  var cuv = {};
+  fp.columns.forEach(function(col) { cuv[col] = Object.keys(uv[col]).slice(0, 50); });
+  state.datasetColumnUniqueValues = cuv;
+  /* Drop roles for columns that no longer exist after source switch / removal */
+  Object.keys(state.fieldRoleMap).forEach(function(col) {
+    if (fp.columns.indexOf(col) === -1) delete state.fieldRoleMap[col];
+  });
+  return skippedFiles;
+}
+
+/* Show or clear the incompatibility error for files that yield no records at
+   the currently selected record path (source switch / file removal paths) */
+function reportSkippedFiles(skippedFiles) {
+  if (skippedFiles.length > 0) {
+    showFieldError('errDatasetCompat', true,
+      t('errRecordPathIncompat').replace('{name}', skippedFiles.join(', ')).replace('{path}', state.datasetRecordPath));
+    el('datasetUploadZone').classList.add('error');
+  } else {
+    showFieldError('errDatasetCompat', false);
+    el('datasetUploadZone').classList.remove('error');
+  }
 }
 
 function processFileQueue(queue, idx) {
@@ -5153,9 +5446,33 @@ function processFileQueue(queue, idx) {
     return;
   }
   var file = queue[idx];
-  parseJsonDataset(file, function(parsed) {
-    if (state.datasetParsedColumns.length > 0) {
-      var newCols = parsed.columns.slice().sort().join('|');
+  readDatasetFile(file, function(root) {
+    if (state._datasetRoots.length === 0) {
+      var candidates = collectRecordCandidates(root);
+      if (candidates.length === 0) {
+        showFieldError('errDatasetCompat', true, t('errNoRecords'));
+        el('datasetUploadZone').classList.add('error');
+        processFileQueue(queue, idx + 1);
+        return;
+      }
+      state.datasetCandidates = candidates;
+      state.datasetRecordPath = candidates[0].path;
+      state._datasetRoots.push(root);
+      state.fieldRoleMap = {};
+      state._roleMapBySource = {};
+      analyzeDataset();
+    } else {
+      /* Appended files must expose records at the selected path with the same
+         column set as the files already uploaded (FR-002d) */
+      var newRecs = extractRecordsAtPath(root, state.datasetRecordPath);
+      if (!newRecs || newRecs.length === 0) {
+        showFieldError('errDatasetCompat', true,
+          t('errRecordPathIncompat').replace('{name}', file.name).replace('{path}', state.datasetRecordPath));
+        el('datasetUploadZone').classList.add('error');
+        processFileQueue(queue, idx + 1);
+        return;
+      }
+      var newCols = buildFieldProfile(newRecs).columns.slice().sort().join('|');
       var existCols = state.datasetParsedColumns.slice().sort().join('|');
       if (newCols !== existCols) {
         showFieldError('errDatasetCompat', true,
@@ -5166,24 +5483,8 @@ function processFileQueue(queue, idx) {
         processFileQueue(queue, idx + 1);
         return;
       }
-      state.datasetParsedRows = parsed.rows;
-      state.datasetRawFirstRow = parsed.rawFirstRow || {};
-      /* Merge unique values across compatible files so labels that only
-         appear in earlier files are not dropped from auto-population */
-      var _mergedUv = {};
-      state.datasetParsedColumns.forEach(function(col) {
-        var seen = {};
-        (state.datasetColumnUniqueValues[col] || []).forEach(function(v) { seen[v] = true; });
-        ((parsed.columnUniqueValues || {})[col] || []).forEach(function(v) { seen[v] = true; });
-        _mergedUv[col] = Object.keys(seen).slice(0, 50);
-      });
-      state.datasetColumnUniqueValues = _mergedUv;
-    } else {
-      state.datasetParsedColumns = parsed.columns;
-      state.datasetParsedRows = parsed.rows;
-      state.datasetRawFirstRow = parsed.rawFirstRow || {};
-      state.datasetColumnUniqueValues = parsed.columnUniqueValues || {};
-      state.fieldRoleMap = {};
+      state._datasetRoots.push(root);
+      analyzeDataset();
     }
     state.datasetFiles.push(file);
     state._datasetVersion = (state._datasetVersion || 0) + 1;
@@ -5227,47 +5528,31 @@ function addDatasetFiles(files) {
 
 function removeDatasetFile(idx) {
   state.datasetFiles.splice(idx, 1);
+  state._datasetRoots.splice(idx, 1);
   state._datasetVersion = (state._datasetVersion || 0) + 1;
   el('datasetFileInput').value = '';
   if (state.datasetFiles.length === 0) {
     resetInlinePreviewSelection();
   } else {
-    rebuildDatasetCaches();
+    /* FR-002d: re-detect record-source candidates from the remaining files so
+       the source bar never keeps paths inherited from the removed file */
+    var candidates = collectRecordCandidates(state._datasetRoots[0]);
+    if (candidates.length > 0) {
+      state.datasetCandidates = candidates;
+      var stillValid = candidates.some(function(c) { return c.path === state.datasetRecordPath; });
+      if (!stillValid) {
+        state._roleMapBySource[state.datasetRecordPath] = state.fieldRoleMap;
+        state.datasetRecordPath = candidates[0].path;
+        state.fieldRoleMap = state._roleMapBySource[state.datasetRecordPath] || {};
+      }
+    }
+    /* Roots are cached, so a removal is a synchronous recompute */
+    reportSkippedFiles(analyzeDataset());
+    state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+    renderInlineDatasetPreview();
   }
   renderDatasetFileList();
   markDirty(); revalidateCurrentStep();
-}
-
-/* Reparse the remaining files after a removal so cached rawFirstRow / merged
-   unique values no longer include data from the removed file; mirrors the
-   upload path (rows/rawFirstRow from the last file, unique values merged) */
-function rebuildDatasetCaches() {
-  var files = state.datasetFiles.slice();
-  var uvAcc = {};
-  var lastParsed = null;
-  function step(i) {
-    if (i >= files.length) {
-      if (lastParsed) {
-        state.datasetParsedRows = lastParsed.rows;
-        state.datasetRawFirstRow = lastParsed.rawFirstRow || {};
-        var merged = {};
-        state.datasetParsedColumns.forEach(function(col) { merged[col] = Object.keys(uvAcc[col] || {}).slice(0, 50); });
-        state.datasetColumnUniqueValues = merged;
-        state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
-      }
-      renderInlineDatasetPreview();
-      return;
-    }
-    parseJsonDataset(files[i], function(parsed) {
-      lastParsed = parsed;
-      state.datasetParsedColumns.forEach(function(col) {
-        if (!uvAcc[col]) uvAcc[col] = {};
-        ((parsed.columnUniqueValues || {})[col] || []).forEach(function(v) { uvAcc[col][v] = true; });
-      });
-      step(i + 1);
-    }, function() { step(i + 1); });
-  }
-  step(0);
 }
 
 function makeDatasetFileItem(file, idx) {
@@ -5309,7 +5594,7 @@ function makeDatasetFileItem(file, idx) {
   previewBtn.appendChild(makePreviewSvg());
   previewBtn.addEventListener('click', function(e) {
     e.stopPropagation();
-    showDatasetPreviewModal();
+    showDatasetPreviewModal(idx);
   });
   item.appendChild(previewBtn);
 
@@ -5349,6 +5634,124 @@ function getSelectedColumns() {
   });
 }
 
+/* Small Lucide-style inline icons (alert-circle / info / check / database) */
+function makeMiniIcon(kind) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  function add(tag, attrs) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.keys(attrs).forEach(function(k) { n.setAttribute(k, attrs[k]); });
+    svg.appendChild(n);
+  }
+  if (kind === 'alert') {
+    add('circle', { cx: '12', cy: '12', r: '10' });
+    add('line', { x1: '12', y1: '8', x2: '12', y2: '12' });
+    add('line', { x1: '12', y1: '16', x2: '12.01', y2: '16' });
+  } else if (kind === 'info') {
+    add('circle', { cx: '12', cy: '12', r: '10' });
+    add('line', { x1: '12', y1: '16', x2: '12', y2: '12' });
+    add('line', { x1: '12', y1: '8', x2: '12.01', y2: '8' });
+  } else if (kind === 'check') {
+    add('polyline', { points: '20 6 9 17 4 12' });
+  } else {
+    add('ellipse', { cx: '12', cy: '5', rx: '9', ry: '3' });
+    add('path', { d: 'M21 12c0 1.66-4 3-9 3s-9-1.34-9-3' });
+    add('path', { d: 'M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5' });
+  }
+  return svg;
+}
+
+/* Record-source bar: shows the detected candidate arrays and lets the user
+   switch when the heuristic guessed wrong; switching resets all field roles */
+function renderInlineSourceBar() {
+  var bar = el('inlinePreviewSourceBar');
+  if (!bar) return;
+  while (bar.firstChild) bar.removeChild(bar.firstChild);
+  if (state.datasetCandidates.length === 0) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  bar.appendChild(makeMiniIcon('database'));
+  var lbl = document.createElement('span');
+  lbl.className = 'inline-preview-source-label';
+  lbl.textContent = t('inlineSourceLabel');
+  bar.appendChild(lbl);
+  var sel = document.createElement('select');
+  sel.className = 'inline-preview-source-select';
+  sel.setAttribute('aria-label', t('inlineSourceLabel'));
+  state.datasetCandidates.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.path;
+    opt.textContent = c.path + ' · ' + t('inlineSourceRowUnit').replace('{n}', c.count);
+    if (c.path === state.datasetRecordPath) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.disabled = state.datasetCandidates.length === 1;
+  sel.addEventListener('change', function() {
+    /* Remember role choices per source path so switching back restores them */
+    state._roleMapBySource[state.datasetRecordPath] = state.fieldRoleMap;
+    state.datasetRecordPath = sel.value;
+    state.fieldRoleMap = state._roleMapBySource[sel.value] || {};
+    state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+    state._datasetVersion = (state._datasetVersion || 0) + 1;
+    reportSkippedFiles(analyzeDataset());
+    renderInlineDatasetPreview();
+    markDirty();
+    revalidateCurrentStep();
+    track('prototype_task_new_record_source_switched', { path: sel.value });
+  });
+  bar.appendChild(sel);
+  if (state.datasetCandidates.length > 1) {
+    var hint = document.createElement('span');
+    hint.className = 'inline-preview-source-hint';
+    hint.textContent = t('inlineSourceCandidates').replace('{n}', state.datasetCandidates.length);
+    bar.appendChild(hint);
+  }
+}
+
+/* Per-column feedback under the role select:
+   Input   → missing rows block the step (red) or confirm completeness (green)
+   Output  → pre-annotation coverage (informational; empty = not yet annotated) */
+function makeFieldNote(col) {
+  var role = state.fieldRoleMap[col] || '';
+  var p = state.datasetFieldProfile[col];
+  if (!p || (role !== 'input' && role !== 'output')) return null;
+  var total = state.datasetTotalRecords;
+  var note = document.createElement('div');
+  note.className = 'inline-preview-field-note';
+  var txt = document.createElement('span');
+  if (role === 'input') {
+    if (p.missing > 0) {
+      note.classList.add('note-error');
+      note.appendChild(makeMiniIcon('alert'));
+      var line1 = document.createElement('span');
+      line1.style.display = 'block';
+      line1.textContent = t('fieldNoteMissing').replace('{m}', p.missing).replace('{t}', total);
+      var line2 = document.createElement('span');
+      line2.style.display = 'block';
+      line2.textContent = t('fieldNoteMissingRefs').replace('{refs}',
+        p.missingRefs.slice(0, 3).join(', ') + (p.missing > 3 ? '…' : ''));
+      txt.appendChild(line1);
+      txt.appendChild(line2);
+      note.title = p.missingRefs.join(', ') + (p.missing > p.missingRefs.length ? ' …' : '');
+    } else {
+      note.classList.add('note-ok');
+      note.appendChild(makeMiniIcon('check'));
+      txt.textContent = t('fieldNoteAllPresent').replace('{t}', total);
+    }
+  } else {
+    note.classList.add('note-info');
+    note.appendChild(makeMiniIcon('info'));
+    txt.textContent = t('fieldNotePreAnnotated').replace('{p}', p.present).replace('{t}', total);
+  }
+  note.appendChild(txt);
+  return note;
+}
+
 function renderInlineDatasetPreview() {
   var container = el('inlineDatasetPreview');
   if (!container) return;
@@ -5358,6 +5761,10 @@ function renderInlineDatasetPreview() {
     return;
   }
   container.classList.remove('hidden');
+
+  renderInlineSourceBar();
+  setText('inlinePreviewHint', t('inlinePreviewHint') + (state.lang === 'en' ? ' · ' : '・') +
+    t('inlineTotalRecords').replace('{n}', state.datasetTotalRecords));
 
   var cols = state.datasetParsedColumns;
 
@@ -5390,7 +5797,11 @@ function renderInlineDatasetPreview() {
 
     var lbl = document.createElement('div');
     lbl.className = 'inline-preview-col-label';
-    lbl.textContent = col;
+    lbl.textContent = col + ' ';
+    var badge = document.createElement('span');
+    badge.className = 'inline-preview-type-badge';
+    badge.textContent = fieldTypeLabel(col);
+    lbl.appendChild(badge);
 
     var sel = document.createElement('select');
     sel.className = 'inline-preview-role-select';
@@ -5407,13 +5818,9 @@ function renderInlineDatasetPreview() {
     (function(colName) {
       sel.addEventListener('change', function() {
         state.fieldRoleMap[colName] = sel.value;
-        var colIdx = cols.indexOf(colName);
-        var rows = wrap.querySelectorAll('tbody tr');
-        rows.forEach(function(row) {
-          var td = row.querySelectorAll('td')[colIdx];
-          if (td) td.style.opacity = sel.value ? '' : '0.35';
-        });
         if (errEl) errEl.classList.remove('show');
+        /* Re-render so the per-column completeness note updates instantly */
+        renderInlineDatasetPreview();
         markDirty();
         revalidateCurrentStep();
       });
@@ -5421,6 +5828,8 @@ function renderInlineDatasetPreview() {
 
     inner.appendChild(lbl);
     inner.appendChild(sel);
+    var note = makeFieldNote(col);
+    if (note) inner.appendChild(note);
     th.appendChild(inner);
     headRow.appendChild(th);
   });
@@ -5428,11 +5837,17 @@ function renderInlineDatasetPreview() {
   table.appendChild(thead);
 
   var tbody = document.createElement('tbody');
-  state.datasetParsedRows.forEach(function(row) {
+  state.datasetPreviewRawRows.forEach(function(rawRow) {
     var tr = document.createElement('tr');
-    cols.forEach(function(col, ci) {
+    cols.forEach(function(col) {
       var td = document.createElement('td');
-      td.textContent = row[ci] !== undefined ? row[ci] : '';
+      var v = rawRow[col];
+      td.textContent = previewCellValue(v);
+      /* Hover reveals the underlying JSON for nested values */
+      if (v !== null && typeof v === 'object') {
+        var json = JSON.stringify(v);
+        td.title = json.length > 600 ? json.slice(0, 600) + '…' : json;
+      }
       if (!state.fieldRoleMap[col]) td.style.opacity = '0.35';
       tr.appendChild(td);
     });
@@ -5448,42 +5863,29 @@ function resetInlinePreviewSelection() {
   state.datasetParsedRows = [];
   state.datasetRawFirstRow = {};
   state.datasetColumnUniqueValues = {};
+  state._datasetRoots = [];
+  state.datasetCandidates = [];
+  state.datasetRecordPath = '$';
+  state._roleMapBySource = {};
+  state.datasetTotalRecords = 0;
+  state.datasetFieldProfile = {};
+  state.datasetPreviewRawRows = [];
   renderInlineDatasetPreview();
 }
 
 /* ── Dataset preview modal ───────────────────────────────────── */
-var DATASET_PREVIEW_MOCK = {
-  columns: ['id', 'text'],
-  rows: [
-    ['RAW-001', '立法院三讀通過科技產業條例，明年起適用'],
-    ['RAW-002', '知名球星參與公益演唱會，現場逾萬人聚集'],
-    ['RAW-003', '颱風逼近造成多地停班停課，交通大亂'],
-    ['RAW-004', '國際影展公布入圍名單，台灣導演獲提名'],
-    ['RAW-005', '半導體大廠宣布新晶片量產，效能倍增'],
-    ['RAW-006', '央行維持利率不變，分析師看法分歧'],
-    ['RAW-007', '新北市推動智慧路燈計畫，節電成效顯著'],
-    ['RAW-008', '本土疫情趨緩，衛福部調整防疫措施'],
-    ['RAW-009', '國際油價回落，民生物價壓力暫緩'],
-    ['RAW-010', '青年就業補貼政策上路，申請首日湧入人潮'],
-  ]
-};
-function clearChildren(node) { while (node.firstChild) node.removeChild(node.firstChild); }
-function showDatasetPreviewModal() {
-  var head = el('datasetPreviewHead');
-  var tbody = el('datasetPreviewBody');
-  var headRow = document.createElement('tr');
-  DATASET_PREVIEW_MOCK.columns.forEach(function(col) {
-    var th = document.createElement('th'); th.textContent = col; headRow.appendChild(th);
-  });
-  clearChildren(head); head.appendChild(headRow);
-  clearChildren(tbody);
-  DATASET_PREVIEW_MOCK.rows.forEach(function(row) {
-    var tr = document.createElement('tr');
-    row.forEach(function(cell) {
-      var td = document.createElement('td'); td.textContent = cell; tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
+function showDatasetPreviewModal(idx) {
+  var root = state._datasetRoots[idx];
+  /* Prefer the record shape the rest of Step 1 works with: the current
+     record path. Fall back to the file's own best candidate, then the
+     raw root, so the modal never opens empty. */
+  var recs = extractRecordsAtPath(root, state.datasetRecordPath);
+  if (!recs || recs.length === 0) {
+    var cands = collectRecordCandidates(root);
+    recs = cands.length ? extractRecordsAtPath(root, cands[0].path) : null;
+  }
+  var record = (recs && recs.length) ? recs[0] : root;
+  el('datasetPreviewJson').textContent = JSON.stringify(record, null, 2);
   el('datasetPreviewModal').classList.add('show');
 }
 function hideDatasetPreviewModal() { el('datasetPreviewModal').classList.remove('show'); }
@@ -6330,7 +6732,14 @@ el('nextBtn').addEventListener('click', function() {
       else if (!state.datasetFiles.length) showBannerError(t('errDataset'));
       else if (_it === 'single_item' && getFieldsByRole('input').length !== 1) showBannerError(t('errSingleItemInputCount'));
       else if (_it === 'item_pair' && getFieldsByRole('input').length !== 2) showBannerError(t('errItemPairInputCount'));
-      else showBannerError(t('errDataset'));
+      else {
+        var _missCol = getFieldsByRole('input').filter(function(c) {
+          var p = state.datasetFieldProfile[c]; return p && p.missing > 0;
+        })[0];
+        if (_missCol) showBannerError(t('errInputFieldMissing')
+          .replace('{col}', _missCol).replace('{n}', state.datasetFieldProfile[_missCol].missing));
+        else showBannerError(t('errDataset'));
+      }
       return;
     }
     showStep(2); renderTemplateBtns(); renderSchemaFields();
