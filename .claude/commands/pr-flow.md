@@ -1,6 +1,6 @@
 # PR Flow
 
-Execute after development is complete. Steps 1–6 are automated; **Step 7 (Merge) requires user confirmation**.
+Execute after development is complete. Steps 1–6 are automated, except Step 5c.4 where the user drags the image into the PR; **Step 7 (Merge) requires user confirmation**.
 
 > **Docs-only changes** (`.md` files only): skip Step 3, but still run Step 2 for cross-reference consistency.
 
@@ -83,6 +83,20 @@ gh pr create \
 - Summary (bullet points)
 - Changed files table
 - Test Plan checklist — every item must be individually verified; mark passed as `[x]`, failed as `[ ]` with reason
+
+### 5c. Visual change-summary image
+
+Produce one full-page image showing every change in the PR, save it to the user's Downloads folder, and hand it to the user to embed. Skip only for trivial PRs (≤ 2 files) unless the user asks for it.
+
+1. **Build a self-contained HTML page** in the session scratchpad (never inside the repo). Required content, all text in **English** (same contract as the PR description):
+   - metric cards: per-file line counts `before → after`
+   - a BEFORE / AFTER comparison (file structure or behavior, whichever fits the PR)
+   - the real `git diff main...HEAD` output embedded verbatim (colorized `+`/`-` lines, collapsible `<details>` blocks) — never a hand-written restatement of the diff
+2. **Screenshot it with the Playwright MCP browser** (PNG, viewport width 1200, `fullPage: true`):
+   - `file://` URLs are blocked — serve the scratchpad first (`python3 -m http.server <port>` as a background task), then navigate to `http://localhost:<port>/<page>.html`
+   - afterwards kill the server and close the browser tab; if the PNG lands in the repo root (Playwright's cwd), move it out immediately so it cannot be committed
+3. **Copy the PNG to `~/Downloads/<branch-name>-changes.png`** — the scratchpad is temporary; Downloads survives the session.
+4. **Tell the user to drag the PNG into the PR description** on GitHub (manual step: `gh` CLI and the API cannot upload PR attachment images). Verify afterwards with `gh pr view <number> --json body` that a `user-attachments` URL is present.
 
 ## Step 6 — Qodo Code Review
 
