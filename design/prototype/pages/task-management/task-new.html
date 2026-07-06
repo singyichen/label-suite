@@ -1205,6 +1205,14 @@ var OUTPUT_TYPE_REGISTRY = {
   },
 };
 
+/* Shared bypass field — every output type lets annotators mark an item as
+   「無法判定 (Bypass)」; task creators can turn it off per output type */
+var BYPASS_FIELD = { key: 'allow_bypass', type: 'boolean', zh: '允許無法判定 (Bypass)', en: 'Allow bypass (unable to determine)', required: false, defaultValue: true };
+Object.keys(OUTPUT_TYPE_REGISTRY).forEach(function(outKey) {
+  OUTPUT_TYPE_REGISTRY[outKey].fields.push(BYPASS_FIELD);
+  OUTPUT_TYPE_REGISTRY[outKey].defaultConfig.allow_bypass = true;
+});
+
 /* Known output-type dependencies: which output type depends on which source */
 var OUTPUT_TYPE_DEPS = {
   relation_triple: 'span',
@@ -1673,6 +1681,7 @@ var state = {
   relMsg: '',                /* transient guidance/validation message for the relation builder */
   previewInited: false,      /* whether preview annotation state was initialized from data */
   previewState: {},          /* per-output-type interactive state, keyed by output type key */
+  previewBypass: {},         /* per-output-type「無法判定 (Bypass)」flags, keyed by output type key */
   codeFormat: 'yaml', configData: {},
   memberSource: 'system',
   initialMembers: [],
@@ -2829,6 +2838,8 @@ function renderMultiDimPreview(container, config, outKey) {
   var outputVal = getOutputFieldValue(outKey);
   var outputObj = null;
   if (outputVal) { try { outputObj = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
+  /* sliders are DOM-only; while bypassed, seed from midpoints instead of the output column */
+  if (state.previewBypass[outKey]) outputObj = null;
   dims.forEach(function(dim) {
     var dimWrap = document.createElement('div');
     dimWrap.style.cssText = 'margin-bottom:16px;';
@@ -3231,15 +3242,17 @@ function renderAbsaUnifiedPreview(previewContainer) {
 
   /* ── Relation Builder (sequential state machine, mirrors the NER labeling system) ──
      Flow: 反白選取實體 → E1/Arg1 · 反白選取關係觸發詞 → Relation · 反白選取實體 → E2/Arg2 · Add
-     E1/E2 must be already-marked entities; Relation is any trigger-word span from the text. */
-  buildRelationStateMachine(previewContainer, relationTypes, function() { renderAbsaUnifiedPreview_refresh(previewContainer); });
+     E1/E2 must be already-marked entities; Relation is any trigger-word span from the text.
+     Grouped in relSection so relation_triple's bypass can disable it independently. */
+  var relSection = document.createElement('div');
+  buildRelationStateMachine(relSection, relationTypes, function() { renderAbsaUnifiedPreview_refresh(previewContainer); });
 
   /* ── Triple List (interactive, deletable) ── */
   var tlTitle = document.createElement('div');
   tlTitle.className = 'annotation-preview-task-title';
   tlTitle.style.marginBottom = '8px';
   tlTitle.textContent = state.lang === 'zh' ? '關係三元組標記' : 'Triple List';
-  previewContainer.appendChild(tlTitle);
+  relSection.appendChild(tlTitle);
 
   var relList = document.createElement('div');
   relList.className = 'absa-relation-list';
@@ -3324,7 +3337,39 @@ function renderAbsaUnifiedPreview(previewContainer) {
     emptyMsg.textContent = state.lang === 'zh' ? '（尚無三元組，請從上方新增）' : '(No triples yet — add above)';
     relList.appendChild(emptyMsg);
   }
-  previewContainer.appendChild(relList);
+  relSection.appendChild(relList);
+  previewContainer.appendChild(relSection);
+
+  /* ── Bypass chips — one per selected output type; span bypass cascades
+     (no entities → relation builder unusable), relation bypass only disables relSection ── */
+  var hasSpanOut = state.selectedOutputTypes.indexOf('span') >= 0;
+  var hasRelOut = state.selectedOutputTypes.indexOf('relation_triple') >= 0;
+  if (hasSpanOut && !isBypassAllowed('span')) delete state.previewBypass['span'];
+  if (hasRelOut && !isBypassAllowed('relation_triple')) delete state.previewBypass['relation_triple'];
+  if (hasSpanOut && state.previewBypass['span']) {
+    disableBypassedArea(previewContainer.children);
+  } else if (hasRelOut && state.previewBypass['relation_triple']) {
+    disableBypassedArea([relSection]);
+  }
+  var refreshUnified = function() { renderAbsaUnifiedPreview_refresh(previewContainer); };
+  var bypassChips = [];
+  if (hasSpanOut && isBypassAllowed('span')) bypassChips.push(makeBypassChip('span', refreshUnified, bypassChipLabel('span', hasSpanOut && hasRelOut)));
+  if (hasRelOut && isBypassAllowed('relation_triple')) bypassChips.push(makeBypassChip('relation_triple', refreshUnified, bypassChipLabel('relation_triple', hasSpanOut && hasRelOut)));
+  if (bypassChips.length > 0) {
+    var bypassWrap = document.createElement('div');
+    bypassWrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;gap:8px;';
+    bypassChips.forEach(function(chip) { bypassWrap.appendChild(chip); });
+    previewContainer.appendChild(bypassWrap);
+  }
+}
+
+/* Prefix the chip with the output-type name only when both types share the unified preview */
+function bypassChipLabel(outKey, needPrefix) {
+  var base = state.lang === 'zh' ? '無法判定 (Bypass)' : 'Unable to determine (Bypass)';
+  if (!needPrefix) return base;
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  var name = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+  return name + (state.lang === 'zh' ? '：' : ': ') + base;
 }
 
 function renderAbsaUnifiedPreview_refresh(container) {
@@ -3336,6 +3381,104 @@ function renderAbsaUnifiedPreview_refresh(container) {
 function ensurePreviewState(outKey, defaults) {
   if (!state.previewState[outKey]) state.previewState[outKey] = JSON.parse(JSON.stringify(defaults));
   return state.previewState[outKey];
+}
+
+/* ── Bypass（無法判定）— per-output-type annotator escape hatch ── */
+function isBypassAllowed(outKey) {
+  var cfg = state.outputConfigs[outKey] || {};
+  return cfg.allow_bypass !== false;
+}
+
+/* Bypass ON: reset the output type's preview marks to an explicitly-cleared,
+   seed-proof shape (_seeded blocks re-seeding from the output column) */
+function clearOutputPreviewState(outKey) {
+  switch (outKey) {
+    case 'single_label':
+    case 'entity_relation':
+      state.previewState[outKey] = { selected: null, _seeded: true }; break;
+    case 'multi_label':
+      state.previewState[outKey] = { selected: [], _seeded: true }; break;
+    case 'free_text':
+      state.previewState[outKey] = { text: '', _seeded: true }; break;
+    case 'single_dim': {
+      var cfg = state.outputConfigs[outKey] || {};
+      var min = cfg.min != null ? cfg.min : 1;
+      var max = cfg.max != null ? cfg.max : 5;
+      var step = cfg.step != null ? cfg.step : 1;
+      state.previewState[outKey] = { value: min + Math.round(((max - min) / 2) / step) * step, _seeded: true };
+      break;
+    }
+    case 'token_class':
+      state.previewState[outKey] = { activeLabel: null, tokens: null, _seeded: true }; break;
+    case 'boundary': {
+      var bCfg = state.outputConfigs[outKey] || {};
+      var bTypes = Array.isArray(bCfg.boundary_types) ? bCfg.boundary_types.filter(Boolean) : [];
+      state.previewState[outKey] = { activeType: bTypes[0] || 'sentence', markers: [], _seeded: true };
+      break;
+    }
+    case 'span':
+      /* clearing entities invalidates triples that reference them */
+      state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+      state.relDraft = { e1: null, rel: null, e2: null }; state.relSel = null; state.relMsg = '';
+      delete state.previewState[outKey];
+      break;
+    case 'relation_triple':
+      state.previewTriples = [];
+      state.relDraft = { e1: null, rel: null, e2: null }; state.relSel = null; state.relMsg = '';
+      delete state.previewState[outKey];
+      break;
+    default:
+      delete state.previewState[outKey];
+  }
+}
+
+/* Bypass OFF: drop the cleared state so the next render re-initializes
+   (dataset output-column seeding re-applies, same as first load) */
+function resetOutputPreviewState(outKey) {
+  delete state.previewState[outKey];
+  if (outKey === 'span' || outKey === 'relation_triple') {
+    state.previewInited = false;
+    state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+    state.relDraft = { e1: null, rel: null, e2: null }; state.relSel = null; state.relMsg = '';
+  }
+}
+
+function makeBypassChip(outKey, refresh, labelText) {
+  var active = !!state.previewBypass[outKey];
+  var c = '#64748B';
+  var chip = document.createElement('button');
+  chip.type = 'button';
+  chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+  chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;border:2px dashed ' + c + ';color:' + (active ? '#fff' : c) + ';background:' + (active ? c : 'transparent') + ';';
+  var box = document.createElement('span');
+  box.style.cssText = 'width:14px;height:14px;border-radius:3px;border:2px solid ' + (active ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;font-size:10px;';
+  if (active) box.textContent = '✓';
+  chip.appendChild(box);
+  chip.appendChild(document.createTextNode(labelText));
+  chip.addEventListener('click', function() {
+    if (state.previewBypass[outKey]) {
+      delete state.previewBypass[outKey];
+      resetOutputPreviewState(outKey);
+    } else {
+      state.previewBypass[outKey] = true;
+      clearOutputPreviewState(outKey);
+    }
+    refresh();
+  });
+  return chip;
+}
+
+function appendBypassControl(container, outKey, refresh) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);';
+  wrap.appendChild(makeBypassChip(outKey, refresh, state.lang === 'zh' ? '無法判定 (Bypass)' : 'Unable to determine (Bypass)'));
+  container.appendChild(wrap);
+}
+
+function disableBypassedArea(nodes) {
+  Array.prototype.forEach.call(nodes, function(n) {
+    if (n && n.style) { n.style.opacity = '0.45'; n.style.pointerEvents = 'none'; }
+  });
 }
 
 function previewTextBlock(container) {
@@ -3847,6 +3990,7 @@ function renderRelationTripleOnlyPreview(container, outKey) {
 
 /* ── Preview dispatcher ── */
 function renderOutputPreview(container, outKey) {
+  if (!isBypassAllowed(outKey)) delete state.previewBypass[outKey];
   switch (outKey) {
     case 'single_label': renderSingleLabelPreview(container, outKey); break;
     case 'multi_label': renderMultiLabelPreview(container, outKey); break;
@@ -3863,6 +4007,11 @@ function renderOutputPreview(container, outKey) {
       placeholder.className = 'annotation-preview-empty';
       placeholder.textContent = state.lang === 'zh' ? '（設定後顯示預覽）' : '(Preview updates after config)';
       container.appendChild(placeholder);
+  }
+  /* relation_triple routes to the unified preview, which owns its bypass chip */
+  if (outKey !== 'relation_triple' && isBypassAllowed(outKey)) {
+    if (state.previewBypass[outKey]) disableBypassedArea(container.children);
+    appendBypassControl(container, outKey, function() { refreshOutputPreview(container, outKey); });
   }
 }
 
@@ -3885,6 +4034,7 @@ function renderSchemaFields() {
   if (state._lastAutoPopKey !== _datasetKey) {
     state._lastAutoPopKey = _datasetKey;
     state.previewState = {};
+    state.previewBypass = {};
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     Object.keys(state.outputConfigs).forEach(function(k) {
       if (state.outputConfigs[k]) {
