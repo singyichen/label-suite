@@ -3119,6 +3119,27 @@ function renderAbsaUnifiedPreview(previewContainer) {
   } else if (realText) {
     textEl.appendChild(document.createTextNode(realText.length > 500 ? realText.substring(0, 500) + '…' : realText));
   }
+  /* Resolve the selection to its actual character offset in realText by
+     walking textEl's text nodes — indexOf alone would always bind repeated
+     words (e.g. the same entity text occurring twice) to the first occurrence */
+  function selectionCharOffset(sel, selText) {
+    if (sel.rangeCount === 0) return -1;
+    var range = sel.getRangeAt(0);
+    if (range.startContainer.nodeType !== 3 || !textEl.contains(range.startContainer)) return -1;
+    var total = 0;
+    var walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT, null);
+    var tn;
+    while ((tn = walker.nextNode())) {
+      if (tn === range.startContainer) {
+        var raw = sel.toString();
+        var lead = raw.length - raw.replace(/^\s+/, '').length;
+        var start = total + range.startOffset + lead;
+        return realText.substr(start, selText.length) === selText ? start : -1;
+      }
+      total += tn.textContent.length;
+    }
+    return -1;
+  }
   /* Text selection handler: with an entity type armed → add entity;
      otherwise → capture the selection for the sequential relation flow */
   textEl.addEventListener('mouseup', function() {
@@ -3126,7 +3147,8 @@ function renderAbsaUnifiedPreview(previewContainer) {
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
     if (!realText) return;
-    var idx = realText.indexOf(selText);
+    var idx = selectionCharOffset(sel, selText);
+    if (idx < 0) idx = realText.indexOf(selText);
     if (idx < 0) return;
     if (state.activeEntityType) {
       state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
@@ -3907,29 +3929,38 @@ function renderSchemaFields() {
       }
     }
 
-    /* Auto-populate relation_types from the distinct relations present in the
-       pre-labeled triples, so the config + `type` menu reflect the data instead
-       of the hardcoded defaults (has_aspect/has_opinion). */
-    var _relCfg = state.outputConfigs['relation_triple'];
-    if (_relCfg && !_relCfg._autoPopulated) {
-      var _rawRow = state.datasetRawFirstRow || {};
-      var _trips = null;
-      [_rawRow.triples, _rawRow.gold_triplets, _rawRow.gold_triples].some(function(cand) {
-        if (Array.isArray(cand) && cand.length > 0) { _trips = cand; return true; }
-        return false;
+  }
+
+  /* Auto-populate relation_types from the distinct relations present in the
+     pre-labeled triples, so the config + `type` menu reflect the data instead
+     of the hardcoded defaults (has_aspect/has_opinion). Not gated on an output
+     role: the preview reads pre-labeled triples from the raw row regardless of
+     role assignment, and FR-002c-1 allows leaving Output unassigned. */
+  var _relCfg = state.outputConfigs['relation_triple'];
+  if (_relCfg && !_relCfg._autoPopulated) {
+    var _rawRow = state.datasetRawFirstRow || {};
+    var _tripCands = [_rawRow.triples, _rawRow.gold_triplets, _rawRow.gold_triples];
+    if (_outCols.length > 0) _tripCands.unshift(_rawRow[_outCols[0]]);
+    var _trips = null;
+    _tripCands.some(function(cand) {
+      if (!Array.isArray(cand) || cand.length === 0) return false;
+      /* Only claim arrays whose items actually look like triples, so a
+         non-triple output column (e.g. BIO tags) can't shadow the fallbacks */
+      var _f = cand[0];
+      if (!_f || typeof _f !== 'object' || !(_f.relation || typeof _f.rel === 'string')) return false;
+      _trips = cand; return true;
+    });
+    if (_trips) {
+      var _rels = [], _relSeen = {};
+      _trips.forEach(function(tp) {
+        var w = (tp && tp.relation && tp.relation.text) ? tp.relation.text
+              : (tp && typeof tp.rel === 'string') ? relWordOf(tp.rel) : '';
+        w = (w || '').trim();
+        if (w && !_relSeen[w]) { _relSeen[w] = 1; _rels.push(w); }
       });
-      if (_trips) {
-        var _rels = [], _relSeen = {};
-        _trips.forEach(function(tp) {
-          var w = (tp && tp.relation && tp.relation.text) ? tp.relation.text
-                : (tp && typeof tp.rel === 'string') ? relWordOf(tp.rel) : '';
-          w = (w || '').trim();
-          if (w && !_relSeen[w]) { _relSeen[w] = 1; _rels.push(w); }
-        });
-        if (_rels.length > 0) {
-          _relCfg.relation_types = _rels;
-          _relCfg._autoPopulated = true;
-        }
+      if (_rels.length > 0) {
+        _relCfg.relation_types = _rels;
+        _relCfg._autoPopulated = true;
       }
     }
   }
@@ -5349,12 +5380,19 @@ function readDatasetFile(file, onSuccess, onError) {
 }
 
 /* Recompute records, columns, preview rows, unique values and field profile
-   from all parsed roots at the currently selected record path */
+   from all parsed roots at the currently selected record path.
+   Returns the names of files whose root yields no records at that path, so
+   callers can surface the incompatibility instead of dropping rows silently. */
 function analyzeDataset() {
   var allRecords = [];
-  state._datasetRoots.forEach(function(root) {
+  var skippedFiles = [];
+  state._datasetRoots.forEach(function(root, i) {
     var recs = extractRecordsAtPath(root, state.datasetRecordPath);
-    if (recs) allRecords = allRecords.concat(recs);
+    if (recs && recs.length > 0) {
+      allRecords = allRecords.concat(recs);
+    } else {
+      skippedFiles.push(state.datasetFiles[i] ? state.datasetFiles[i].name : '#' + (i + 1));
+    }
   });
   state.datasetTotalRecords = allRecords.length;
   var fp = buildFieldProfile(allRecords);
@@ -5384,6 +5422,20 @@ function analyzeDataset() {
   Object.keys(state.fieldRoleMap).forEach(function(col) {
     if (fp.columns.indexOf(col) === -1) delete state.fieldRoleMap[col];
   });
+  return skippedFiles;
+}
+
+/* Show or clear the incompatibility error for files that yield no records at
+   the currently selected record path (source switch / file removal paths) */
+function reportSkippedFiles(skippedFiles) {
+  if (skippedFiles.length > 0) {
+    showFieldError('errDatasetCompat', true,
+      t('errRecordPathIncompat').replace('{name}', skippedFiles.join(', ')).replace('{path}', state.datasetRecordPath));
+    el('datasetUploadZone').classList.add('error');
+  } else {
+    showFieldError('errDatasetCompat', false);
+    el('datasetUploadZone').classList.remove('error');
+  }
 }
 
 function processFileQueue(queue, idx) {
@@ -5482,8 +5534,20 @@ function removeDatasetFile(idx) {
   if (state.datasetFiles.length === 0) {
     resetInlinePreviewSelection();
   } else {
+    /* FR-002d: re-detect record-source candidates from the remaining files so
+       the source bar never keeps paths inherited from the removed file */
+    var candidates = collectRecordCandidates(state._datasetRoots[0]);
+    if (candidates.length > 0) {
+      state.datasetCandidates = candidates;
+      var stillValid = candidates.some(function(c) { return c.path === state.datasetRecordPath; });
+      if (!stillValid) {
+        state._roleMapBySource[state.datasetRecordPath] = state.fieldRoleMap;
+        state.datasetRecordPath = candidates[0].path;
+        state.fieldRoleMap = state._roleMapBySource[state.datasetRecordPath] || {};
+      }
+    }
     /* Roots are cached, so a removal is a synchronous recompute */
-    analyzeDataset();
+    reportSkippedFiles(analyzeDataset());
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     renderInlineDatasetPreview();
   }
@@ -5634,7 +5698,7 @@ function renderInlineSourceBar() {
     state.fieldRoleMap = state._roleMapBySource[sel.value] || {};
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     state._datasetVersion = (state._datasetVersion || 0) + 1;
-    analyzeDataset();
+    reportSkippedFiles(analyzeDataset());
     renderInlineDatasetPreview();
     markDirty();
     revalidateCurrentStep();

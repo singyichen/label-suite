@@ -318,10 +318,14 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('obj');
 
     // Standalone relation_triple uses the same sequential builder as the ABSA
-    // unified path (E1/Arg1 → Relation → E2/Arg2), not the legacy dropdowns.
-    const html = await page.locator('#annotationPreview').innerHTML();
-    expect(html).toContain('E1/Arg1');
-    expect(html).toContain('E2/Arg2');
+    // unified path (E1/Arg1 → Relation → E2/Arg2), not the legacy dropdowns:
+    // no <select> anywhere, and the step buttons gate sequentially (only
+    // E1/Arg1 enabled until an entity is bound).
+    const preview = page.locator('#annotationPreview');
+    expect(await preview.locator('select').count()).toBe(0);
+    await expect(preview.getByRole('button', { name: 'E1/Arg1' })).toBeEnabled();
+    await expect(preview.getByRole('button', { name: 'Relation', exact: true })).toBeDisabled();
+    await expect(preview.getByRole('button', { name: 'E2/Arg2' })).toBeDisabled();
   });
 
   test('entity_relation — item_pair with treats/causes/prevents labels', async ({
