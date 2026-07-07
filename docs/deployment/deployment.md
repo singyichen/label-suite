@@ -635,7 +635,7 @@ sudo nginx -t && sudo systemctl reload nginx
       （2026-07-07：寫入 42 → down/up → 讀回 42）
 - [x] VM 重開機（`multipass restart`）後所有服務自動恢復（`restart: unless-stopped` + Nginx systemd）
       （2026-07-07：8 容器全部自動恢復，HTTPS 回 200）
-- [ ] （若安裝 Portainer）`https://portainer.label-suite.test` 可登入，能看到 `label-suite-staging` 專案的容器與日誌（登入待使用者建立管理員帳號）；`https://<VM_IP>:9443` 直連**連不上**（✓ 2026-07-07）
+- [x] （若安裝 Portainer）`https://portainer.label-suite.test` 可登入，能看到 `label-suite-staging` 專案的容器與日誌（登入待使用者建立管理員帳號）；`https://<VM_IP>:9443` 直連**連不上**（✓ 2026-07-07）
 - [x] （若部署監控棧）`https://grafana.label-suite.test` 可登入（✓ 2026-07-07）；Prometheus targets：`postgres`、`redis` 兩個 job 為 **UP**（✓ 2026-07-07）；匯入的 PostgreSQL（9628，version 16.14.0）與 Redis（763）dashboard 皆顯示真實數據（✓ 2026-07-07）
 - [x] （若部署監控棧）`http://<VM_IP>:9090`、`http://<VM_IP>:3000` 直連**連不上**（僅 loopback）（2026-07-07）
 
