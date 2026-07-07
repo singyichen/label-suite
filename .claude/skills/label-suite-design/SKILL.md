@@ -1,6 +1,6 @@
 ---
 name: label-suite-design
-description: Use this skill to generate well-branded interfaces and assets for Label Suite — a config-driven NLP annotation platform for academic research labs — either for production code or throwaway prototypes, mocks, slides, and marketing artifacts. Contains essential design guidelines, colors, typography, fonts, brand assets, iconography, and a React UI kit for prototyping.
+description: Use this skill to generate well-branded interfaces and assets for Label Suite — a config-driven NLP annotation platform for academic research labs — either for production code or throwaway prototypes, mocks, slides, and marketing artifacts. Contains essential design guidelines, colors, typography, fonts, brand assets, and iconography.
 user-invocable: true
 ---
 
@@ -14,7 +14,6 @@ Read `README.md` for the full brand context: product overview, voice/tone, visua
 - `artifact-tokens.css` — dual-theme (light + provisional dark) tokens for claude.ai Artifacts. Copy inline, never `@import`.
 - `artifact-icons.html` — CSP-safe inline Lucide sprite snippet for claude.ai Artifacts.
 - `fonts/README.md` — font manifest (all Google Fonts — Crimson Pro, Inter, Atkinson Hyperlegible, JetBrains Mono).
-- `ui_kits/web-app/` — React/JSX UI kit: `Icon`, `Primitives`, `Navbar`, `LoginScreen`, `Dashboard`, `TaskDetail`.
 - `preview/` — per-concept Design System cards (swatches, type specimens, component samples).
 
 ## Assets (single source of truth in the repo)
@@ -88,7 +87,7 @@ If the user invokes this skill without any specific task, ask what they want to 
 ### If the output is a local visual artifact (slide, mock, throwaway prototype)
 - Copy the needed assets from this skill into the artifact folder.
 - Write a static HTML file that imports `colors_and_type.css` and uses the design tokens directly.
-- If building an interactive prototype, import the relevant JSX components from `ui_kits/web-app/`.
+- If building an interactive prototype, reuse markup from the existing pages under `design/prototype/pages/` and the component samples in `preview/`.
 
 ### If the output is a claude.ai Artifact (Artifact tool)
 Artifacts run under a strict CSP that blocks **all** external requests — `@import`, `<link>`, CDN scripts, and webfonts fail silently. Everything must be inline in one HTML file.
