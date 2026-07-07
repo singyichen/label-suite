@@ -893,3 +893,101 @@ Self-hosted runner + 公開 repo 的組合有已知風險：fork 的 PR 若能�
   會讓每個 feature 多一次 merge、且 `dev` 與 `main` 會逐漸漂移，單人開發沒有對應收益
 - ADR-023 的「release branch」語意由 `main` + `v*` tag 滿足：
   main 永遠可部署（自動進 develop/staging），tag 標記晉升 production 的時點
+
+### 12.6 本機煙霧測試（推送前驗證）
+
+部署 workflow 只會在推上 `main` 後才於 VM 的 self-hosted runner 上真正執行，
+所以改到 `deploy/develop/**` 的設定應先在本機用 Docker 跑一次煙霧測試，
+確認 Compose／Nginx 設定「起得來、健康、順序正確」，再推上去，避免把壞設定送進 staging。
+
+前置：安裝並啟動 **Docker Desktop**（macOS）。
+
+推送前應逐項勾齊以下檢查清單（各項對應下方步驟）：
+
+- [ ] **Docker daemon 就緒** — `docker info` 成功（Step 1）
+- [ ] **Nginx 設定通過** — 容器 `nginx -t` 回報 `syntax is ok` / `test is successful`（Step 2）
+- [ ] **整棧起得來** — `docker compose ps` 顯示 `postgres`、`redis` 為 `healthy`（Step 3）
+- [ ] **啟動順序正確** — `postgres-exporter` / `redis-exporter` 為 `Up` 且未 crash-loop（`depends_on: service_healthy` 生效）
+- [ ] **Prometheus 可熱重載** — `POST /-/reload` 回 `200`（`--web.enable-lifecycle` 生效）
+- [ ] **環境清乾淨** — `docker compose down -v` 後無殘留 `ls-smoke-*` 容器（Step 4）
+
+#### Step 1 — 啟動 Docker Desktop 並等待 daemon 就緒
+
+```bash
+open -a Docker
+# 輪詢直到 daemon 起來（client 端的 `docker info` 成功）
+until docker info >/dev/null 2>&1; do sleep 3; done
+docker version --format 'server {{.Server.Version}}'
+```
+
+#### Step 2 — Nginx 設定語法檢查（`nginx -t`）
+
+三個 host-level vhost（`deploy/nginx/`）用容器驗證語法即可；憑證用臨時自簽的頂替，
+不需真憑證。
+
+```bash
+WORK=$(mktemp -d); mkdir -p "$WORK/certs" "$WORK/conf.d"
+openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj "/CN=test" \
+  -keyout "$WORK/certs/base-key.pem" -out "$WORK/certs/base.pem" >/dev/null 2>&1
+for n in staging.label-suite.test grafana.label-suite.test portainer.label-suite.test; do
+  cp "$WORK/certs/base.pem" "$WORK/certs/$n.pem"
+  cp "$WORK/certs/base-key.pem" "$WORK/certs/$n-key.pem"
+done
+cp deploy/nginx/label-suite-staging "$WORK/conf.d/staging.conf"
+cp deploy/nginx/grafana            "$WORK/conf.d/grafana.conf"
+cp deploy/nginx/portainer          "$WORK/conf.d/portainer.conf"
+printf 'events {}\nhttp {\n  include /etc/nginx/conf.d/*.conf;\n}\n' > "$WORK/nginx.conf"
+docker run --rm \
+  -v "$WORK/nginx.conf:/etc/nginx/nginx.conf:ro" \
+  -v "$WORK/conf.d:/etc/nginx/conf.d:ro" \
+  -v "$WORK/certs:/etc/nginx/certs:ro" \
+  nginx:latest nginx -t
+```
+
+預期 `syntax is ok` / `test is successful`。
+`listen ... http2 directive is deprecated` 的 warning 可忽略：設定針對 VM 上的 Nginx 1.24
+（`listen 443 ssl http2;` 是該版本的正確寫法），警告只因 `nginx:latest` 較新而出現。
+
+#### Step 3 — Compose 煙霧測試（整棧啟動）
+
+Compose 檔綁的是 VM 上的主機路徑（`/data/label-suite/staging/...`），本機沒有，
+所以用 `sed` 把這些路徑重映到臨時目錄、再配一份假 `.env`，**不要**在本機建立 `/data/...`。
+
+```bash
+sed "s#/data/label-suite/staging/#$WORK/data/#g" \
+  deploy/develop/docker-compose.yml > "$WORK/smoke.yml"
+mkdir -p "$WORK/data/compose"
+cp deploy/develop/prometheus.yml "$WORK/data/compose/prometheus.yml"
+cat > "$WORK/smoke.env" <<'EOF'
+POSTGRES_DB=labelsuite
+POSTGRES_USER=smoke
+POSTGRES_PASSWORD=smokepass
+GRAFANA_ADMIN_PASSWORD=smokeadmin
+EOF
+docker compose -p ls-smoke -f "$WORK/smoke.yml" --env-file "$WORK/smoke.env" up -d
+```
+
+驗證重點（對應 review 修正）：
+
+```bash
+# postgres/redis 先 Healthy，exporter 才啟動且不 crash-loop（depends_on: service_healthy）
+docker compose -p ls-smoke -f "$WORK/smoke.yml" ps
+# Prometheus --web.enable-lifecycle 生效：/-/reload 回 200（沒這旗標會是 403）
+curl -s -o /dev/null -w "reload HTTP %{http_code}\n" -X POST http://127.0.0.1:9090/-/reload
+```
+
+> `edge` 佔位服務綁 `127.0.0.1:8080`；若本機該埠已被占用，只有 `edge` 會起不來，
+> 與部署設定無關，其餘服務不受影響。
+> `postgres-exporter` 可能印出 `stat_replication ... slot_name does not exist`——
+> 這是 exporter 預設 collector 與 Postgres 16 的良性落差，容器仍維持健康，非本專案設定問題。
+
+#### Step 4 — 拆除並清理
+
+```bash
+docker compose -p ls-smoke -f "$WORK/smoke.yml" --env-file "$WORK/smoke.env" down -v
+rm -rf "$WORK"
+docker ps -a --filter "name=ls-smoke" --format '{{.Names}}'   # 應無輸出
+```
+
+> 本機煙霧測試只驗證 Compose／Nginx 設定本身；整條 workflow ＋ self-hosted runner
+> 的實際部署仍只能在推上 `main` 後由 VM runner 首次觸發驗證（骨架階段刻意可回滾）。
