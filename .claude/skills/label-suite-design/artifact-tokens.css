@@ -4,160 +4,207 @@
    For claude.ai Artifacts ONLY (Artifact tool output). Artifacts run
    under a strict CSP that blocks ALL external requests, so this file
    has no @import — copy its contents INLINE into the artifact HTML.
-   For repo prototype pages keep using colors_and_type.css / tokens.css.
+   For repo prototype pages keep using design/prototype/assets/tokens.css.
 
-   Light values mirror colors_and_type.css (that file wins if they
-   ever diverge). The DARK palette below is PROVISIONAL: it is an
-   artifact-rendering convenience, NOT part of the official design
-   system (design/system/MASTER.md defines light only). Do not lift
-   dark values into prototypes or production without user approval.
+   All values MIRROR the canonical design system:
+   design/prototype/assets/tokens.css (light + dark, per MASTER.md
+   §Dark Mode Tokens, added v1.6). If they ever diverge, tokens.css
+   wins — fix this file, never fork the palette.
 
-   Theming contract: the artifact viewer applies the OS preference via
-   prefers-color-scheme AND stamps data-theme="dark|light" on <html>
-   when the user toggles. The [data-theme] blocks must therefore
-   override the media query in BOTH directions — keep all three blocks.
+   Why a separate file at all: tokens.css opens with a Google Fonts
+   @import (CSP-blocked) and applies dark mode only via
+   html[data-theme="dark"], which the prototype's theme.js stamps.
+   Artifacts have no theme.js — the viewer applies the OS preference
+   via prefers-color-scheme AND stamps data-theme="dark|light" on
+   <html> when the user toggles. The [data-theme] blocks must
+   therefore override the media query in BOTH directions — keep all
+   four blocks below.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
   /* ── Core palette (light) ─────────────────────────────────── */
-  --color-primary:      #6366F1;
-  --color-secondary:    #818CF8;
-  --color-cta:          #10B981;
-  --color-cta-hover:    #059669;
-  --color-cta-on:       #FFFFFF;   /* text on CTA fills */
-  --color-surface:      #F5F3FF;   /* page bg */
-  --color-white:        #FFFFFF;   /* card/panel bg — name kept for compatibility; goes dark in dark theme */
-  --color-ink:          #1E1B4B;
-  --color-primary-soft-bg: #EEF2FF;
+  --color-primary:          #6366F1;
+  --color-secondary:        #818CF8;
+  --color-cta:              #10B981;
+  --color-cta-hover:        #059669;
+  --color-cta-on:           #FFFFFF;   /* text on CTA fills — dark mode uses slate-900 per MASTER.md §CTA button contrast */
+  --color-surface:          #F5F3FF;   /* page bg */
+  --color-white:            #FFFFFF;   /* card/panel bg — name kept for compatibility; goes dark in dark theme */
+  --color-ink:              #1E1B4B;
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-border:   #C7D2FE;
 
   /* ── Supporting ───────────────────────────────────────────── */
-  --color-border:       #E2E8F0;
-  --color-border-muted: #F1F5F9;
-  --color-text-muted:   #94A3B8;
-  --color-text-soft:    #64748B;
-  --color-slate-50:     #F8FAFC;
+  --color-border:           #E2E8F0;
+  --color-border-muted:     #F1F5F9;
+  --color-ink-muted:        #94A3B8;
+  --color-text-soft:        #64748B;
+  --color-slate-50:         #F8FAFC;
 
   /* ── Semantic states ──────────────────────────────────────── */
-  --color-error:           #B91C1C;
-  --color-error-bg:        #FEF2F2;
-  --color-error-border:    #FECACA;
-  --color-success:         #15803D;
-  --color-success-bg:      #F0FDF4;
-  --color-success-border:  #BBF7D0;
-  --color-warning:         #A16207;
-  --color-warning-bg:      #FEFCE8;
-  --color-warning-border:  #FEF08A;
-  --color-info:            #1D4ED8;
-  --color-info-bg:         #EFF6FF;
-  --color-info-border:     #BFDBFE;
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+
+  /* ── Shadows (dark theme re-maps these) ───────────────────── */
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.10);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.10);
+  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 24px rgba(99, 102, 241, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+
+  /* ── Aliases (define once — they resolve per-theme via var()) ─ */
+  --color-text-muted:          var(--color-ink-muted);  /* deprecated alias (MASTER.md v1.7.1) */
+  --color-error-soft-bg:       var(--color-error-bg);
+  --color-error-soft-border:   var(--color-error-border);
+  --color-success-soft-bg:     var(--color-success-bg);
+  --color-success-soft-border: var(--color-success-border);
+  --color-warning-soft-bg:     var(--color-warning-bg);
+  --color-warning-soft-border: var(--color-warning-border);
+  --fg-1: var(--color-ink);
+  --fg-2: var(--color-text-soft);
+  --fg-3: var(--color-ink-muted);
+  --bg-page:    var(--color-surface);
+  --bg-surface: var(--color-white);
 
   /* ── Type (system-fallback chains only — webfont @import is
         silently blocked by the Artifact CSP) ────────────────── */
   --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
   --font-sans:          'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans-reading:  'Atkinson Hyperlegible', 'Noto Sans TC', 'PingFang TC', sans-serif;
   --font-mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ── Radii / motion (unchanged across themes) ─────────────── */
+  /* ── Type scale / leading ─────────────────────────────────── */
+  --text-display: 48px; --text-h1: 36px; --text-h2: 24px; --text-h3: 18px;
+  --text-body: 16px; --text-caption: 14px; --text-label: 12px;
+  --leading-tight: 1.2; --leading-snug: 1.3; --leading-normal: 1.4;
+  --leading-relaxed: 1.5; --leading-body: 1.6; --leading-body-zh: 1.8;
+
+  /* ── Spacing / radii / z-index / motion (theme-invariant) ──── */
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px;
+  --space-xl: 32px; --space-2xl: 48px; --space-3xl: 64px;
   --radius-sm: 4px;  --radius-md: 8px;  --radius-lg: 12px;
   --radius-xl: 16px; --radius-full: 9999px;
+  --z-base: 0; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200;
+  --z-modal: 300; --z-toast: 400; --z-tooltip: 500;
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --dur-fast: 150ms; --dur-normal: 200ms;
-
-  /* ── Aliases — style components through these where possible ─ */
-  --fg-1: var(--color-ink);
-  --fg-2: var(--color-text-soft);
-  --fg-3: var(--color-text-muted);
-  --bg-page:    var(--color-surface);
-  --bg-surface: var(--color-white);
 }
 
-/* ── Dark (PROVISIONAL — artifact-only, see header) ──────────── */
+/* ── Dark — canonical values from tokens.css html[data-theme="dark"] ── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-primary:      #818CF8;
-    --color-secondary:    #A5B4FC;
-    --color-cta:          #34D399;
-    --color-cta-hover:    #6EE7B7;
-    --color-cta-on:       #06281E;
-    --color-surface:      #131126;
-    --color-white:        #1C1938;
-    --color-ink:          #E7E5F6;
-    --color-primary-soft-bg: #26224E;
-    --color-border:       #322D5C;
-    --color-border-muted: #262149;
-    --color-text-muted:   #6F6B99;
-    --color-text-soft:    #A3A0C7;
-    --color-slate-50:     #221E45;
-    --color-error:           #FCA5A5;
-    --color-error-bg:        #35182A;
-    --color-error-border:    #6B2137;
-    --color-success:         #6EE7B7;
-    --color-success-bg:      #102B27;
-    --color-success-border:  #1D5C4A;
-    --color-warning:         #FDE68A;
-    --color-warning-bg:      #2E2712;
-    --color-warning-border:  #635417;
-    --color-info:            #93C5FD;
-    --color-info-bg:         #14233E;
-    --color-info-border:     #274B77;
+    --color-primary:          #818CF8;
+    --color-secondary:        #A5B4FC;
+    --color-cta:              #34D399;
+    --color-cta-hover:        #10B981;
+    --color-cta-on:           #0F172A;
+    --color-surface:          #0B0B12;
+    --color-white:            #16161F;
+    --color-ink:              #E2E8F0;
+    --color-primary-soft-bg:  #1E1B4B;
+    --color-primary-border:   #3730A3;
+    --color-border:           #2A2A35;
+    --color-border-muted:     #1F1F28;
+    --color-ink-muted:        #9CA3AF;
+    --color-text-soft:        #A1A1AA;
+    --color-slate-50:         #1F1F28;
+    --color-error:            #F87171;
+    --color-error-bg:         #2A1414;
+    --color-error-border:     #5B2222;
+    --color-success:          #4ADE80;
+    --color-success-bg:       #0F2A18;
+    --color-success-border:   #1F5132;
+    --color-warning:          #FACC15;
+    --color-warning-bg:       #2A2210;
+    --color-warning-border:   #5C4A1A;
+    --color-info:             #60A5FA;
+    --color-info-bg:          #0F1F33;
+    --color-info-border:      #1E3A66;
+    --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.40);
+    --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.45);
+    --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.50);
+    --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.55);
+    --shadow-card: 0 0 0 1px rgba(129, 140, 248, 0.10), 0 4px 24px rgba(0, 0, 0, 0.40);
   }
 }
 
 /* Viewer toggle — must beat the media query in both directions. */
 :root[data-theme="dark"] {
-  --color-primary:      #818CF8;
-  --color-secondary:    #A5B4FC;
-  --color-cta:          #34D399;
-  --color-cta-hover:    #6EE7B7;
-  --color-cta-on:       #06281E;
-  --color-surface:      #131126;
-  --color-white:        #1C1938;
-  --color-ink:          #E7E5F6;
-  --color-primary-soft-bg: #26224E;
-  --color-border:       #322D5C;
-  --color-border-muted: #262149;
-  --color-text-muted:   #6F6B99;
-  --color-text-soft:    #A3A0C7;
-  --color-slate-50:     #221E45;
-  --color-error:           #FCA5A5;
-  --color-error-bg:        #35182A;
-  --color-error-border:    #6B2137;
-  --color-success:         #6EE7B7;
-  --color-success-bg:      #102B27;
-  --color-success-border:  #1D5C4A;
-  --color-warning:         #FDE68A;
-  --color-warning-bg:      #2E2712;
-  --color-warning-border:  #635417;
-  --color-info:            #93C5FD;
-  --color-info-bg:         #14233E;
-  --color-info-border:     #274B77;
+  --color-primary:          #818CF8;
+  --color-secondary:        #A5B4FC;
+  --color-cta:              #34D399;
+  --color-cta-hover:        #10B981;
+  --color-cta-on:           #0F172A;
+  --color-surface:          #0B0B12;
+  --color-white:            #16161F;
+  --color-ink:              #E2E8F0;
+  --color-primary-soft-bg:  #1E1B4B;
+  --color-primary-border:   #3730A3;
+  --color-border:           #2A2A35;
+  --color-border-muted:     #1F1F28;
+  --color-ink-muted:        #9CA3AF;
+  --color-text-soft:        #A1A1AA;
+  --color-slate-50:         #1F1F28;
+  --color-error:            #F87171;
+  --color-error-bg:         #2A1414;
+  --color-error-border:     #5B2222;
+  --color-success:          #4ADE80;
+  --color-success-bg:       #0F2A18;
+  --color-success-border:   #1F5132;
+  --color-warning:          #FACC15;
+  --color-warning-bg:       #2A2210;
+  --color-warning-border:   #5C4A1A;
+  --color-info:             #60A5FA;
+  --color-info-bg:          #0F1F33;
+  --color-info-border:      #1E3A66;
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.40);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.45);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.50);
+  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 0 0 1px rgba(129, 140, 248, 0.10), 0 4px 24px rgba(0, 0, 0, 0.40);
 }
 
 :root[data-theme="light"] {
-  --color-primary:      #6366F1;
-  --color-secondary:    #818CF8;
-  --color-cta:          #10B981;
-  --color-cta-hover:    #059669;
-  --color-cta-on:       #FFFFFF;
-  --color-surface:      #F5F3FF;
-  --color-white:        #FFFFFF;
-  --color-ink:          #1E1B4B;
-  --color-primary-soft-bg: #EEF2FF;
-  --color-border:       #E2E8F0;
-  --color-border-muted: #F1F5F9;
-  --color-text-muted:   #94A3B8;
-  --color-text-soft:    #64748B;
-  --color-slate-50:     #F8FAFC;
-  --color-error:           #B91C1C;
-  --color-error-bg:        #FEF2F2;
-  --color-error-border:    #FECACA;
-  --color-success:         #15803D;
-  --color-success-bg:      #F0FDF4;
-  --color-success-border:  #BBF7D0;
-  --color-warning:         #A16207;
-  --color-warning-bg:      #FEFCE8;
-  --color-warning-border:  #FEF08A;
-  --color-info:            #1D4ED8;
-  --color-info-bg:         #EFF6FF;
-  --color-info-border:     #BFDBFE;
+  --color-primary:          #6366F1;
+  --color-secondary:        #818CF8;
+  --color-cta:              #10B981;
+  --color-cta-hover:        #059669;
+  --color-cta-on:           #FFFFFF;
+  --color-surface:          #F5F3FF;
+  --color-white:            #FFFFFF;
+  --color-ink:              #1E1B4B;
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-border:   #C7D2FE;
+  --color-border:           #E2E8F0;
+  --color-border-muted:     #F1F5F9;
+  --color-ink-muted:        #94A3B8;
+  --color-text-soft:        #64748B;
+  --color-slate-50:         #F8FAFC;
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.10);
+  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.10);
+  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 24px rgba(99, 102, 241, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
 }

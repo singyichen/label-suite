@@ -11,7 +11,7 @@ Read `README.md` for the full brand context: product overview, voice/tone, visua
 ## Key files in this skill
 - `README.md` — **read first.** Brand + visual + content fundamentals.
 - `colors_and_type.css` — canonical CSS variables (light theme). Import this from every local HTML artifact.
-- `artifact-tokens.css` — dual-theme (light + provisional dark) tokens for claude.ai Artifacts. Copy inline, never `@import`.
+- `artifact-tokens.css` — dual-theme tokens for claude.ai Artifacts, mirroring canonical `design/prototype/assets/tokens.css`. Copy inline, never `@import`.
 - `artifact-icons.html` — CSP-safe inline Lucide sprite snippet for claude.ai Artifacts.
 - `fonts/README.md` — font manifest (all Google Fonts — Crimson Pro, Inter, Atkinson Hyperlegible, JetBrains Mono).
 - `preview/` — per-concept Design System cards (swatches, type specimens, component samples).
@@ -93,9 +93,9 @@ If the user invokes this skill without any specific task, ask what they want to 
 Artifacts run under a strict CSP that blocks **all** external requests — `@import`, `<link>`, CDN scripts, and webfonts fail silently. Everything must be inline in one HTML file.
 
 - **Tokens:** copy the contents of `artifact-tokens.css` into the artifact `<style>`. Do not `@import` it, and do not reuse `colors_and_type.css` (its Google Fonts `@import` dies silently under the CSP).
-- **Dual theme is mandatory:** keep all three token blocks (`:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme="dark"]` / `:root[data-theme="light"]`) — the viewer's theme toggle stamps `data-theme` on the root and must beat the media query in both directions. Style components only through the tokens. The dark palette is provisional and Artifact-only; never lift it into prototypes or production.
+- **Dual theme is mandatory:** keep all four token blocks (`:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme="dark"]`, `:root[data-theme="light"]`) — the viewer's theme toggle stamps `data-theme` on the root and must beat the media query in both directions. Style components only through the tokens. Values mirror the canonical `design/prototype/assets/tokens.css` (light + dark per MASTER.md §Dark Mode Tokens); if they diverge, tokens.css wins.
 - **Fonts:** rely on the system-fallback chains already in `artifact-tokens.css`; never link a webfont.
-- **Icons:** paste the inline Lucide sprite from `artifact-icons.html` and reference with `<svg class="ic"><use href="#i-name"/></svg>`. Extend it only with path data copied from lucide.dev (ADR-030) — no emoji, no hand-drawn SVGs, no vendor logos (substitute semantic Lucide equivalents).
+- **Icons:** paste the inline Lucide sprite from `artifact-icons.html` and reference with `<svg class="ic"><use href="#i-name"/></svg>`. Extend it only with path data copied from lucide.dev (ADR-030) — no emoji, no hand-drawn SVGs, no vendor logos (substitute semantic Lucide equivalents). Sole exception: the Google SSO mark — inline `design/prototype/assets/google-g.svg` when the artifact shows the login/SSO UI (the design system's single full-color vendor mark).
 - **Color discipline:** emerald (`--color-cta`) is reserved for outcomes and CTA accents; indigo carries structure and navigation.
 - **Disclosure footer:** end every data-bearing artifact with a source note — where the content came from (repo paths, spec versions) — and mark anything illustrative or unverified as such (Source-Verify gate).
 

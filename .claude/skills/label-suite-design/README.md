@@ -206,7 +206,7 @@ The brand mark itself is a **price tag** glyph — drawn inline in every page's 
 |---|---|
 | `README.md` | This file. Product context, content fundamentals, visual foundations, iconography. |
 | `colors_and_type.css` | Canonical CSS vars: colors, type, spacing, radii, shadows, z-index. Import this from every prototype. |
-| `artifact-tokens.css` | Dual-theme (light + provisional dark) tokens for claude.ai Artifacts. Copy inline — the Artifact CSP blocks imports. |
+| `artifact-tokens.css` | Dual-theme tokens for claude.ai Artifacts, mirroring `design/prototype/assets/tokens.css`. Copy inline — the Artifact CSP blocks imports. |
 | `artifact-icons.html` | Inline Lucide sprite snippet for claude.ai Artifacts (CSP-safe, ADR-030 compliant). |
 | `SKILL.md` | Agent-Skill-compatible entry point. Read when invoking this as a Claude Code skill. |
 | `assets/logo/` | Logos (banner, icon, horizontal, social). |
