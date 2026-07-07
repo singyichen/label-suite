@@ -81,7 +81,7 @@
 - [x] 新增 `.github/workflows/deploy-develop.yml`（只綁 push、self-hosted runner、`install` 同步保留 `.env`、健康檢查重試）
 - [x] VM 內安裝 self-hosted runner（2026-07-07；runner 2.335.1 ARM64，name `label-suite-develop-vm`，label `deploy-develop`，systemd 服務 online）
 - [x] repo 安全設定：fork PR 核准政策收緊為 `all_external_contributors`；workflow 預設權限 `read`（2026-07-07）
-- [ ] 推送分支並開 PR（合併到 main 後才會實際觸發自動部署）
+- [x] 推送分支並開 PR：[#98](https://github.com/singyichen/label-suite/pull/98)（合併到 main 後才會實際觸發自動部署）
 
 ---
 
