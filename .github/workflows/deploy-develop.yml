@@ -1,0 +1,45 @@
+name: Deploy to develop VM
+
+# 公開 repo 安全緩解：只綁 push（僅維護者能推 main）與手動觸發，絕不綁 pull_request。
+# self-hosted runner 跑在部署主機內（見 docs/operations/deployment.md §12）。
+on:
+  push:
+    branches: [main]
+    paths: ['deploy/develop/**']
+  workflow_dispatch:  # allow manual trigger
+
+concurrency:
+  group: deploy-develop
+  cancel-in-progress: false  # 部署不可中斷，排隊執行
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: [self-hosted, deploy-develop]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync compose config (preserve .env)
+        run: |
+          install -m 644 deploy/develop/docker-compose.yml /data/label-suite/staging/compose/docker-compose.yml
+          install -m 644 deploy/develop/prometheus.yml     /data/label-suite/staging/compose/prometheus.yml
+
+      - name: Deploy
+        working-directory: /data/label-suite/staging/compose
+        run: |
+          docker compose pull --quiet
+          docker compose up -d --remove-orphans
+
+      - name: Health check
+        run: |
+          sleep 5
+          for i in 1 2 3 4 5; do
+            if curl -fsS http://127.0.0.1:8080/ > /dev/null; then
+              echo "Health check passed"; exit 0
+            fi
+            echo "Attempt $i failed, retrying..."; sleep 3
+          done
+          echo "Health check failed"; exit 1
