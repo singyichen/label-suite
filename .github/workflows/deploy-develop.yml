@@ -1,7 +1,7 @@
 name: Deploy to develop VM
 
 # 公開 repo 安全緩解：只綁 push（僅維護者能推 main）與手動觸發，絕不綁 pull_request。
-# self-hosted runner 跑在部署主機內（見 docs/operations/deployment.md §12）。
+# self-hosted runner 跑在部署主機內（見 docs/deployment/deployment.md §12）。
 on:
   push:
     branches: [main]

@@ -2,7 +2,7 @@
 
 部署設定（納入版控，供 CI/CD 自動部署與可重現性）。機密（`.env`）不在此，僅存於部署主機。
 
-完整說明見 [docs/operations/deployment.md](../docs/operations/deployment.md)。
+完整說明見 [docs/deployment/deployment.md](../docs/deployment/deployment.md)。
 
 ```text
 deploy/

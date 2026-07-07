@@ -2,7 +2,7 @@ name: label-suite-staging
 
 # develop 層級部署演練骨架（對應 ADR-023 prod 剖面的前身、ADR-018 監控棧）。
 # 佔位服務 edge 之後換成正式 frontend+nginx / backend / worker image。
-# 密碼等機密由 VM 上的 .env 提供，不進版控（見 docs/operations/deployment.md §6.2）。
+# 密碼等機密由 VM 上的 .env 提供，不進版控（見 docs/deployment/deployment.md §6.2）。
 
 services:
   edge:

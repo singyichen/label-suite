@@ -789,6 +789,29 @@ brew uninstall multipass mkcert
 > `deploy-prototype.yml`（prototype 推 main 即自動部署到 GitHub Pages）已存在。
 > 本節規劃**應用本體**的自動部署，對齊 [ADR-023](../adr/023-cicd-docker-compose-nginx-deployment.md) 的 CI/CD 流程。
 
+![develop VM 自動部署流程：推 main（deploy/develop/**）→ VM 內 self-hosted runner 同步設定 → docker compose up -d → 健康檢查，並佈署 Host Nginx、資料層與監控層服務棧](assets/deploy-flow.png)
+
+<details>
+<summary>流程圖原始碼（Mermaid，供日後編輯）</summary>
+
+```mermaid
+flowchart LR
+    push["① 推送 main<br/>deploy/develop/**"] --> runner["② self-hosted runner<br/>VM 內"]
+    runner --> sync["③ 同步設定<br/>install · 保留 .env"]
+    sync --> compose["④ docker compose<br/>pull + up -d"]
+    compose --> health["⑤ 健康檢查<br/>重試 5 次"]
+    health --> nginx["Host Nginx<br/>80 / 443"]
+
+    nginx --> edge["staging → edge :8080"]
+    nginx --> grafana["grafana → :3000"]
+    nginx --> portainer["portainer → :9443"]
+
+    compose -. 佈署 .-> db["資料層<br/>postgres:16 / redis:7<br/>healthcheck"]
+    compose -. 佈署 .-> mon["監控層 ADR-018<br/>prometheus --web.enable-lifecycle<br/>exporters depends_on: service_healthy"]
+```
+
+</details>
+
 ### 12.1 關鍵限制與解法：self-hosted runner
 
 GitHub 雲端 runner **連不進部署目標**——Mac 上的 VM 在 NAT 私網內，
