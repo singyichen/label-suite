@@ -1,0 +1,21 @@
+# Host-level Nginx — Portainer 管理介面（label-suite-tooling Compose 專案）。
+server {
+    listen 443 ssl http2;
+    server_name portainer.label-suite.test;
+
+    ssl_certificate     /etc/nginx/certs/portainer.label-suite.test.pem;
+    ssl_certificate_key /etc/nginx/certs/portainer.label-suite.test-key.pem;
+
+    location / {
+        proxy_pass https://127.0.0.1:9443;
+        proxy_ssl_verify off;              # 上游為 Portainer 自簽憑證
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # 容器 console / 即時日誌需要 WebSocket
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade    $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
