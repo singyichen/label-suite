@@ -206,13 +206,14 @@ The brand mark itself is a **price tag** glyph — drawn inline in every page's 
 |---|---|
 | `README.md` | This file. Product context, content fundamentals, visual foundations, iconography. |
 | `colors_and_type.css` | Canonical CSS vars: colors, type, spacing, radii, shadows, z-index. Import this from every prototype. |
+| `artifact-tokens.css` | Dual-theme tokens for claude.ai Artifacts, mirroring `design/prototype/assets/tokens.css`. Copy inline — the Artifact CSP blocks imports. |
+| `artifact-icons.html` | Inline Lucide sprite snippet for claude.ai Artifacts (CSP-safe, ADR-030 compliant). |
 | `SKILL.md` | Agent-Skill-compatible entry point. Read when invoking this as a Claude Code skill. |
 | `assets/logo/` | Logos (banner, icon, horizontal, social). |
 | `assets/icons/` | 24×24 line-icon set (Lucide-style, stroke `currentColor`). |
 | `assets/google-g.svg` | Google SSO mark. |
 | `fonts/README.md` | Font manifest + substitution notes. |
 | `preview/` | HTML cards that populate the Design System tab — one sub-concept per card (including `tabs-desktop.html`). |
-| `ui_kits/web-app/` | React/JSX UI kit for the Label Suite web app (login, dashboard, task list, components). |
 
 See each subfolder's `README.md` for more.
 
@@ -223,4 +224,4 @@ See each subfolder's `README.md` for more.
 - **No slide template was provided.** `slides/` is intentionally not created.
 - **Fonts** are 100% Google Fonts — no self-hosted TTFs needed, no substitutions flagged.
 - **Pencil (`.pen`) source** is encrypted and not read here; all tokens recovered from `design/system/MASTER.md` and the prototype HTML.
-- **Annotation task page (Pattern B)** is referenced in MASTER.md but the prototype never implemented it. The UI kit ships the login, dashboard, and shared components; annotation surface is not mocked.
+- **Annotation task page (Pattern B)** is referenced in MASTER.md but the prototype never implemented it. The prototype pages cover login, dashboard, and shared components; the annotation surface is not mocked.
