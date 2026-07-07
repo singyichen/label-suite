@@ -10,7 +10,9 @@ Read `README.md` for the full brand context: product overview, voice/tone, visua
 
 ## Key files in this skill
 - `README.md` — **read first.** Brand + visual + content fundamentals.
-- `colors_and_type.css` — canonical CSS variables. Import this from every HTML artifact.
+- `colors_and_type.css` — canonical CSS variables (light theme). Import this from every local HTML artifact.
+- `artifact-tokens.css` — dual-theme (light + provisional dark) tokens for claude.ai Artifacts. Copy inline, never `@import`.
+- `artifact-icons.html` — CSP-safe inline Lucide sprite snippet for claude.ai Artifacts.
 - `fonts/README.md` — font manifest (all Google Fonts — Crimson Pro, Inter, Atkinson Hyperlegible, JetBrains Mono).
 - `ui_kits/web-app/` — React/JSX UI kit: `Icon`, `Primitives`, `Navbar`, `LoginScreen`, `Dashboard`, `TaskDetail`.
 - `preview/` — per-concept Design System cards (swatches, type specimens, component samples).
@@ -24,7 +26,7 @@ SVG assets live in `design/prototype/assets/` — do not duplicate them into thi
 When building a new prototype page, reference these via a relative path from the page (e.g. `../../assets/icons/check.svg`). When building a standalone artifact outside the repo, copy the needed SVGs into the artifact folder.
 
 ## Working rules
-- **Import `design/prototype/assets/tokens.css`** from every prototype page — never hardcode hex values. Use `var(--color-primary)` etc. For standalone artifacts outside the repo, import `colors_and_type.css` from this skill folder instead.
+- **Import `design/prototype/assets/tokens.css`** from every prototype page — never hardcode hex values. Use `var(--color-primary)` etc. For standalone artifacts outside the repo, import `colors_and_type.css` from this skill folder instead — except claude.ai Artifacts, which cannot import anything (see the Artifact section below).
 - **Flat Design.** Allowed hover effects: opacity, color shift, `translateY(-1px)`. No scale, no shadow growth, no gradients.
 - **Bilingual (zh-TW / EN) peers.** Chinese uses `你` not `您`. Line-heights: EN 1.6, ZH 1.8.
 - **Sentence case** for buttons; no emoji in UI; no "We"; no exclamation marks in primary flows.
@@ -83,10 +85,20 @@ When creating a **new prototype page** under `design/prototype/pages/`, do not i
 ## When this skill is invoked
 If the user invokes this skill without any specific task, ask what they want to build or design. Ask a few clarifying questions about audience, flow, and variations, then act as an expert Label Suite designer.
 
-### If the output is a visual artifact (slide, mock, throwaway prototype)
+### If the output is a local visual artifact (slide, mock, throwaway prototype)
 - Copy the needed assets from this skill into the artifact folder.
 - Write a static HTML file that imports `colors_and_type.css` and uses the design tokens directly.
 - If building an interactive prototype, import the relevant JSX components from `ui_kits/web-app/`.
+
+### If the output is a claude.ai Artifact (Artifact tool)
+Artifacts run under a strict CSP that blocks **all** external requests — `@import`, `<link>`, CDN scripts, and webfonts fail silently. Everything must be inline in one HTML file.
+
+- **Tokens:** copy the contents of `artifact-tokens.css` into the artifact `<style>`. Do not `@import` it, and do not reuse `colors_and_type.css` (its Google Fonts `@import` dies silently under the CSP).
+- **Dual theme is mandatory:** keep all three token blocks (`:root`, `@media (prefers-color-scheme: dark)`, `:root[data-theme="dark"]` / `:root[data-theme="light"]`) — the viewer's theme toggle stamps `data-theme` on the root and must beat the media query in both directions. Style components only through the tokens. The dark palette is provisional and Artifact-only; never lift it into prototypes or production.
+- **Fonts:** rely on the system-fallback chains already in `artifact-tokens.css`; never link a webfont.
+- **Icons:** paste the inline Lucide sprite from `artifact-icons.html` and reference with `<svg class="ic"><use href="#i-name"/></svg>`. Extend it only with path data copied from lucide.dev (ADR-030) — no emoji, no hand-drawn SVGs, no vendor logos (substitute semantic Lucide equivalents).
+- **Color discipline:** emerald (`--color-cta`) is reserved for outcomes and CTA accents; indigo carries structure and navigation.
+- **Disclosure footer:** end every data-bearing artifact with a source note — where the content came from (repo paths, spec versions) — and mark anything illustrative or unverified as such (Source-Verify gate).
 
 ### If the output is production code
 - Lift the tokens from `colors_and_type.css` into the codebase's own style layer.
