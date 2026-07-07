@@ -53,7 +53,7 @@
 
   /* ── Type (system-fallback chains only — webfont @import is
         silently blocked by the Artifact CSP) ────────────────── */
-  --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Songti TC', Georgia, serif;
+  --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
   --font-sans:          'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
