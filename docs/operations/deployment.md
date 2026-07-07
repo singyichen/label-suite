@@ -831,29 +831,42 @@ name: Deploy to develop VM
 on:
   push:
     branches: [main]
-    paths: ['deploy/**']        # 部署設定進 repo 後，只在相關變更時觸發
+    paths: ['deploy/develop/**']   # 只在 develop 部署設定變更時觸發
+  workflow_dispatch:               # allow manual trigger
 
 concurrency:
   group: deploy-develop
-  cancel-in-progress: false     # 部署不可中斷，排隊執行
+  cancel-in-progress: false        # 部署不可中斷，排隊執行
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
     runs-on: [self-hosted, deploy-develop]   # 跑在 VM 內的 runner 上
     steps:
       - uses: actions/checkout@v4
-      - name: Sync compose config
+      # 逐檔 install，不用 rsync --delete：避免刪掉 VM 上不進版控的 .env
+      - name: Sync compose config (preserve .env)
         run: |
-          rsync -a --delete deploy/develop/ /data/label-suite/staging/compose/
+          install -m 644 deploy/develop/docker-compose.yml /data/label-suite/staging/compose/docker-compose.yml
+          install -m 644 deploy/develop/prometheus.yml     /data/label-suite/staging/compose/prometheus.yml
       - name: Deploy
+        working-directory: /data/label-suite/staging/compose
         run: |
-          cd /data/label-suite/staging/compose
-          docker compose pull
+          docker compose pull --quiet
           docker compose up -d --remove-orphans
+      # 容器啟動有延遲，用重試迴圈取代單發 curl，避免競態誤判
       - name: Health check
         run: |
           sleep 5
-          curl -fsk https://staging.label-suite.test/ > /dev/null
+          for i in 1 2 3 4 5; do
+            if curl -fsS http://127.0.0.1:8080/ > /dev/null; then
+              echo "Health check passed"; exit 0
+            fi
+            echo "Attempt $i failed, retrying..."; sleep 3
+          done
+          echo "Health check failed"; exit 1
 ```
 
 前提：compose 與 Nginx 設定需入版控（建議 repo 內新增 `deploy/develop/`），

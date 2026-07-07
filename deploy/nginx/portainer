@@ -9,7 +9,10 @@ server {
     location / {
         proxy_pass https://127.0.0.1:9443;
         proxy_ssl_verify off;              # 上游為 Portainer 自簽憑證
-        proxy_set_header Host $host;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
         # 容器 console / 即時日誌需要 WebSocket
         proxy_http_version 1.1;
         proxy_set_header Upgrade    $http_upgrade;

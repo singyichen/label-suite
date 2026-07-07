@@ -25,8 +25,8 @@ server {
     }
 
     # /metrics 不對外（ADR-023 路由契約）
+    # return 在 rewrite 階段執行，早於 access 階段的 deny，故 deny all 永遠不會被觸及
     location /metrics {
-        deny all;
         return 404;
     }
 }

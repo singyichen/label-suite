@@ -43,6 +43,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
     ports:
       - "127.0.0.1:9090:9090"
     volumes:
@@ -65,10 +66,16 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     environment:
       DATA_SOURCE_NAME: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   redis-exporter:
     image: oliver006/redis_exporter:latest
     environment:
       REDIS_ADDR: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
