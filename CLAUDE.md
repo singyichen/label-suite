@@ -1,42 +1,104 @@
 # CLAUDE.md
 
-Codex will review your output once you are done.
+Codex will review your output once you are done
 
 ## Project Overview
 
-Label Suite — a configurable, general-purpose NLP data labeling and automated evaluation portal, developed as a master's thesis research outcome (Demo Paper). Modular monorepo (`frontend/` React+TS · `backend/` FastAPI · `e2e/` Playwright). All architectural decisions live in [docs/adr/](docs/adr/).
+Label Suite — A configurable, general-purpose NLP data labeling and automated evaluation portal, developed as a master's thesis research outcome (Demo Paper).
 
-## How instructions load (read this once)
+## Architecture & Code Style
 
-- Every file in `.claude/rules/` is auto-loaded into **every** session (they are NOT path-scoped, despite `frontend/CLAUDE.md` etc. also importing them). Keep those files short; long reference content belongs in `docs/` with a pointer.
-- The files in `.claude/harness/` are **loaded on demand** — this file tells you when.
-- **Conflict rule**: if two documents disagree, the executable artifact wins (hook script > doc describing it; code > spec). Report the conflict to the user; never silently pick a side.
+> **Decision:** Modular Monorepo. All architectural decisions in [docs/adr/](docs/adr/).
+
+Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter load only when Claude reads a file matching the glob; files without frontmatter load in every session.
+
+- `frontend/**` → `frontend.md`, `testing-frontend.md`
+- `backend/**` → `backend.md`, `api.md`, `testing-backend.md`
+- `e2e/**` → `testing-e2e.md`
+- Always loaded: `general.md`, `git-workflow.md`, `issue-reporting.md`
 
 ## Communication
 
-- **English**: code, comments, commit messages, PR descriptions, API contracts, `design/system/MASTER.md`, `.claude/commands/`.
-- **Traditional Chinese allowed**: `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, `design/system/inventory.md`.
-- All conversation with the user is in **Traditional Chinese**.
+- **English:** code, comments, commit messages, API contracts, `design/system/MASTER.md`
+- **Traditional Chinese allowed:** `docs/`, `specs/`, `design/prototype/`, `design/wireframes/`, `design/system/inventory.md`
+- All conversations with Claude should be responded to in Traditional Chinese.
 
-## Routing table — read the right file at the right moment
+## General Coding Rules
 
-| Situation | Read |
-|---|---|
-| Before dispatching ANY subagent | [.claude/harness/01-dispatch.md](.claude/harness/01-dispatch.md) |
-| Writing a subagent prompt | [.claude/harness/03-templates.md](.claude/harness/03-templates.md) |
-| Stuck ≥ 2 attempts · about to claim "done" · unsure whether to ask user · taste/design decision | [.claude/harness/02-judgment.md](.claude/harness/02-judgment.md) |
-| Hit a pitfall worth recording · want to change a harness/rules file | [.claude/harness/04-evolution.md](.claude/harness/04-evolution.md) |
-| Starting a long/multi-session task | [.claude/harness/05-handover.md](.claude/harness/05-handover.md) + copy `.claude/templates/claude-progress.md` to repo root |
-| Git/PR mechanics (single-purpose rule, size limits, splitting) | [.claude/rules/git-workflow.md](.claude/rules/git-workflow.md) (auto-loaded) |
-| Opening a GitHub issue | [.claude/rules/issue-reporting.md](.claude/rules/issue-reporting.md) → templates in [docs/templates/issue-templates.md](docs/templates/issue-templates.md) |
-| Any feature work | The feature's `specs/[module]/NNN-feature/spec.md` + [specs/STATUS.md](specs/STATUS.md) |
-| Architecture change | [docs/adr/](docs/adr/) precedents + [specs/_governance/constitution.md](specs/_governance/constitution.md) |
+@.claude/rules/general.md
 
-## Constitution
+## Agent Execution Rules
 
-All development follows the eight principles in [specs/_governance/constitution.md](specs/_governance/constitution.md).
-NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logic) · **Data Fairness** (no test-set answer leakage).
-⚠️ Known issue: `.specify/memory/constitution.md` diverges from the file above; treat `specs/_governance/` as canonical until the user consolidates (see harness 00-diagnosis §4).
+**Model selection** (by files touched): 0–1 → Haiku 4.5 · 2–9 → Sonnet 4.6 · 10+ → Sonnet + `advisor()` or Opus 4.7. Borderline: bias up.
+
+**Escalation gates** — escalate one tier or surface to user when any triggers:
+
+- Same problem failed ≥ 3 attempts
+- Task touches ≥ 10 files
+- Task type ∈ {Architecture · Counter-factual · Security threat modeling} → Opus or `advisor()`
+- Unrequested code gen > 300 LoC → halt first
+- Single PR diff > 5 files or > 300 lines (excluding tests) → halt, split into separate PRs before opening `[Principle: X]`
+
+**Context management**: **Generator phase** → `/compact` is forbidden; on context limit → full `/clear`, then re-read spec from disk before continuing. All other phases → compact at **70%** (general) or **30–35%** (complex agentic). Behavioral signal (model seems lost) → `/compact` immediately. At 95%+: `/clear`.
+
+**Context anchoring** (proactive): After each SDD stage transition or escalation gate resolution, save confirmed decisions to MEMORY.md. When switching modules, re-read the relevant spec before proceeding.
+
+**Checkpoint reporting**: For multi-step tasks, report at each checkpoint: completed · verified · remaining. If unable to describe current state, stop immediately.
+
+**Error recovery**: Verification command fails → fix before proceeding; never skip or continue past a red gate. Tool call fails ≥ 2 attempts → surface exact error to user before retrying. Ambiguous file state (conflict, missing, unexpected content) → investigate before overwriting; never assume.
+
+**Cross-session tasks**: Create `claude-progress.md` **before starting** when any trigger applies: task spans ≥ 2 SDD pipeline stages · task touches ≥ 5 files · task type ∈ {feature implementation · refactor · migration}. Format: task name, checklist of steps with `[x]` / `[ ]`, last updated date. File is gitignored.
+
+**Source-Verify gate**: any cited number / benchmark / verbatim quote must be locatable via `grep -i <term> <source>`. If not found → remove or correct; never approximate.
+
+## Git Workflow
+
+### Commit Convention
+
+Commit frequently — after every logical group of changes. One logical change per commit — do not bundle unrelated changes (e.g. new tooling + doc version bump = two commits).
+
+**Single purpose per commit (enforced)**: every commit must serve exactly one change purpose; no batch commits. Enforced mechanically by `scripts/git-hooks/pre-commit` (activated via `core.hooksPath`, set by session-init); the hook's thresholds are authoritative — currently 10 files / 600 non-test lines; read the script for live values. Merge commits are exempt. Bypass (`ALLOW_BATCH_COMMIT=1`) requires explicit user approval first — never self-approve.
+
+Format:
+
+```text
+<type>: <subject in English, imperative mood, ≤ 72 chars>
+
+- <why this change was needed — motivation, constraint, or tradeoff>
+- <one bullet per logical aspect; do NOT restate the diff file-by-file>
+```
+
+Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` · `perf` · `ci`
+
+**Body required**: always — every commit must include at least one body bullet explaining the why, regardless of type or size. No subject-only commits.
+
+### PR Scope — Single Purpose (Enforced)
+
+Every PR must serve exactly **one purpose**. Unrelated changes belong in a separate PR. Decision test: "Can I describe this PR's purpose in one sentence without using 'and' or 'also'?" No → split.
+
+@.claude/rules/git-workflow.md
+
+### Branch Naming
+
+Format: `<type>/<short-description>`, lowercase with `-` separator. Example: `feat/labeling-ui` · `fix/score-calculation`
+
+## Three-Layer Sprint Architecture
+
+Every implementation sprint follows a strict **Planner → Generator → Evaluator** pipeline.
+
+| Layer | Responsibility | Input | Output |
+|-------|---------------|-------|--------|
+| **Planner** | Task decomposition, spec generation | User brief (may be vague) | Atomic, executable spec items |
+| **Generator** | Implementation | One spec item | Code change (impl + test) |
+| **Evaluator** | Validation | Code changes | Pass / Fail + exact error details |
+
+**Planner**: Convert vague briefs into fine-grained atomic items before any code is written. Scope is locked once Generator starts — no additions mid-sprint.
+
+**Generator**: Implement exactly one spec item per invocation. On context limit → full `/clear` reset, re-read spec from disk. Never rely on `/compact` summary.
+
+**Evaluator**: External tools only — pytest, mypy, ruff, tsc, Playwright. No self-assessment. **Hard threshold**: any single failure = sprint failure; stop and surface to user.
+
+> SDD mapping: Planner ≈ `speckit.specify → speckit.plan → speckit.tasks` · Generator ≈ `speckit.implement` · Evaluator ≈ `speckit.analyze → speckit.checklist`
 
 ## Spec-Driven Development (SDD)
 
@@ -44,59 +106,75 @@ Full pipeline — each stage is a hard gate:
 
 ```text
 /superpowers:brainstorm → /speckit.specify → /label-suite-design (prototype) → /pencil-wireframe (optional)
-  → /speckit.clarify (optional) → /speckit.plan → /speckit.tasks → /speckit.implement
-  → /speckit.analyze → /speckit.checklist → /pr-flow
+  → /speckit.clarify (optional)
+  → /speckit.plan → /speckit.tasks → /speckit.implement → /speckit.analyze → /speckit.checklist → /pr-flow
 ```
 
-- **TDD (REQUIRED)**: never write implementation before a failing test. No exceptions.
-- **Pre-PR gate**: `/speckit.analyze` must report zero findings before every PR.
-- **Modules**: `account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
-- **Artifact paths**: wireframes `design/wireframes/pages/[module]/[page].pen` · prototypes `design/prototype/pages/[module]/[page].html` · specs `specs/[module]/NNN-feature/`
-- **Status**: update [specs/STATUS.md](specs/STATUS.md) at every stage transition. After PR merge: `mv specs/[module]/NNN-feature specs/_archive/` + update STATUS.
-- **Modify an already-merged feature**: retrieve from `_archive`, create the feature branch (Speckit resolves from branch name; running from `main` aborts), bump spec version + Changelog, resume from `/speckit.clarify`, re-archive after merge.
-- **Lightweight path** (ALL must hold: ≤ 2 production files · no API contract change · minor behavior change): TDD → implement → spec consistency review (version bump + Changelog + no downstream/API impact) → `/pr-flow`. If uncertain, use the full pipeline.
+**TDD (REQUIRED)**: You MUST NOT write implementation code before writing a failing test. No exceptions.
 
-## Agent execution
+**Pre-PR gate (REQUIRED)**: `/speckit.analyze` must report zero findings before every PR.
 
-- Dispatch, model tiers, escalation, and verification isolation: **[.claude/harness/01-dispatch.md](.claude/harness/01-dispatch.md)** (mandatory read before dispatching).
-- Standing gates: same subtask failing repeatedly → follow the escalation ladder in [01-dispatch.md §4](.claude/harness/01-dispatch.md) (3 failures without a tier change is forbidden; hard cap 2 rounds at top tier, then ask user) · task touches ≥ 10 files → Opus-tier planning · unrequested codegen > 300 LoC → halt · PR diff > 5 files or > 300 non-test lines → split before opening.
-- **Checkpoint reporting** on multi-step tasks: completed · verified · remaining. If you cannot describe the current state, stop.
-- **Cross-session tasks** (spans ≥ 2 SDD stages, or ≥ 5 files, or feature/refactor/migration): create `claude-progress.md` from `.claude/templates/` BEFORE starting; keep it updated (it is gitignored and re-read by session-init).
-- **Source-Verify gate**: any cited number/benchmark/quote must be locatable via `grep -i <term> <source>`; otherwise remove or correct.
+**Module names** (align with `features/` and `specs/[module]/`):
+`account` · `dashboard` · `task-management` · `annotation` · `dataset` · `admin`
 
-## Git workflow
+**Design artifact paths:**
 
-- Full rules (single-purpose PR, splitting, size limits): [.claude/rules/git-workflow.md](.claude/rules/git-workflow.md).
-- Commit format: `<type>: <subject in English, imperative, ≤ 72 chars>` + **mandatory body bullets explaining why** (never subject-only, never a file-by-file diff restatement). Types: `feat fix docs refactor test style chore perf ci`.
-- One logical change per commit. The pre-commit hook (`scripts/git-hooks/pre-commit`, activated by session-init) mechanically blocks oversized staged changes — the hook's thresholds are authoritative **for commits** (currently 10 files / 600 non-test lines; read the script for live values). The stricter 300-non-test-line limit in the standing gates above applies to **PRs**, not commits. Bypass `ALLOW_BATCH_COMMIT=1` requires explicit user approval; never self-approve.
-- Branch naming: `<type>/<short-description>`, lowercase-with-dashes (e.g. `feat/labeling-ui`).
+- Wireframes: `design/wireframes/pages/[module]/[page].pen`
+- Prototypes: `design/prototype/pages/[module]/[page].html`
+- Specs: `specs/[module]/NNN-feature/`
 
-## Verification commands (Definition of Done)
+**Spec status**: Update `specs/STATUS.md` at every pipeline stage transition (see STATUS.md for full trigger list).
 
-Run after every change; the task is NOT complete until all pass — plus the full checklist in [.claude/harness/02-judgment.md](.claude/harness/02-judgment.md) §2.
+**Archive**: After PR merged → `mv specs/[module]/NNN-feature specs/_archive/` → update `specs/STATUS.md`.
+
+**Modify Existing Feature**: When changing an already-merged feature, do NOT create a new spec from scratch:
+
+1. `mv specs/_archive/NNN-feature specs/[module]/NNN-feature` — retrieve from archive
+2. `git checkout -b feat/[module]/NNN-feature` — create/switch to feature branch (Speckit scripts resolve from branch name; running from `main` aborts the pipeline)
+3. Bump spec version + record change in spec Changelog
+4. Resume pipeline from `/speckit.clarify` (skip brainstorm + specify)
+5. Re-archive after the modification PR merges
+
+**Lightweight Path**: Skip the full pipeline when ALL of the following are true: ≤ 2 production code files changed (spec and test files excluded) · no API contract changes · minor behavior change requiring a spec update.
+Lightweight sequence: **TDD → implement → spec consistency review → `/pr-flow`**
+(Spec consistency review: verify spec version bump and Changelog entry, confirm no downstream specs affected, confirm no API contracts changed.)
+If any condition is uncertain, default to the full pipeline.
+
+## Constitution
+
+All development must follow the eight core principles in [constitution.md](specs/_governance/constitution.md).
+
+NON-NEGOTIABLEs: **Generalization-First** (config-driven, no hardcoded task logic) · **Data Fairness** (prevent test-set answer leakage).
+
+## Verification Commands
+
+Run after every change. Task is NOT complete until all pass.
 
 ```bash
-# Backend (from backend/)
+# Backend (run from backend/)
 uv run pytest tests/ -q
 uv run mypy app/ --strict
 uv run ruff check . && uv run ruff format --check .
 
-# Frontend (from frontend/)
+# Frontend (run from frontend/)
 pnpm tsc --noEmit
 pnpm lint
 pnpm test
 ```
 
+Definition of Done: all commands above exit 0 + `/speckit.analyze` reports zero findings.
+
 ## Prohibitions
 
-Each rule traces to a specific incident (Ratchet Principle).
+Each rule traces to a specific incident (Ratchet Principle — Mitchell Hashimoto).
 
-- ❌ Direct commit or push to `main` — violated twice in 2026-04. The PreToolUse hook blocks any push while checked out on `main`/`master` (branch-detected) plus any push explicitly naming them. Always branch first.
-- ❌ `pip install` / `npm install` — use `uv add` / `pnpm add` (lockfile divergence breaks CI).
-- ❌ Chinese in commit messages or PR descriptions — English-only contract.
-- ❌ `allow_origins=["*"]` in CORS — list origins explicitly.
-- ❌ Hardcoded API keys/secrets — environment variables only.
-
-## General coding rules
-
-@.claude/rules/general.md
+- ❌ Direct commit or push to `main`
+  - Reason: 2026-04 — violated twice; PreToolUse hook now blocks `git push origin main`
+- ❌ `pip install` or `npm install`
+  - Reason: lockfile divergence causes silent CI failures; use `uv add` / `pnpm add`
+- ❌ Chinese text in commit messages or PR descriptions
+  - Reason: 2026-04 — PR description contained Chinese; breaks English-only contract
+- ❌ `allow_origins=["*"]` in CORS config
+  - Reason: security boundary; explicitly list allowed origins
+- ❌ Hardcoded API keys or secrets in source files
+  - Reason: secret exposure risk; use environment variables only

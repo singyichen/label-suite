@@ -1,3 +1,8 @@
+---
+paths:
+  - "frontend/**"
+---
+
 # Testing Rules — Frontend
 
 ## General

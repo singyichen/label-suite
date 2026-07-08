@@ -265,15 +265,15 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 
 | NFR-ID | 描述 | 來源 |
 |--------|------|------|
-| NFR-I01 | 前端使用 i18n namespace 管理翻譯（例：`t('task-management:config_builder.label_name')`） | frontend/CLAUDE.md |
-| NFR-I02 | 每個模組各自維護翻譯檔（`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`） | frontend/CLAUDE.md |
+| NFR-I01 | 前端使用 i18n namespace 管理翻譯（例：`t('task-management:config_builder.label_name')`） | .claude/rules/frontend.md |
+| NFR-I02 | 每個模組各自維護翻譯檔（`frontend/src/locales/zh-TW/[module].json` 與 `frontend/src/locales/en/[module].json`） | .claude/rules/frontend.md |
 | NFR-I03 | UI 語言目前支援 Traditional Chinese（ZH）與 English（EN）；Demo 以 ZH 為主要展示語言 | impact-map；story-map |
 
 ### 5.5 可靠性（Reliability）
 
 | NFR-ID | 描述 | 來源 |
 |--------|------|------|
-| NFR-R01 | 後端 pytest 測試覆蓋率 ≥ 80%；關鍵路徑（auth / permission / scoring）≥ 90% branch coverage | constitution 原則 IV；backend/CLAUDE.md |
+| NFR-R01 | 後端 pytest 測試覆蓋率 ≥ 80%；關鍵路徑（auth / permission / scoring）≥ 90% branch coverage | constitution 原則 IV；.claude/rules/testing-backend.md |
 | NFR-R02 | 長時間 annotation 作業（30~90 分鐘）中，Token 自動靜默刷新，不中斷工作 | ADR-021 |
 | NFR-R03 | 背景任務（Celery）在失敗後必須可重試或可恢復，不靜默丟棄 | constitution 原則 XVIII |
 
@@ -309,7 +309,7 @@ Label Suite 的核心價值主張在於：研究人員只需撰寫一份簡單�
 | C-AR03 | 雙層角色模型：JWT 只含系統角色；任務角色由 `task_membership` API 按需取得 | ADR-021；IA §1 |
 | C-AR04 | Frontend vertical slice 架構：feature module 不得直接引用其他 feature 的內部 hooks / stores / types | ADR-011 |
 | C-AR05 | `shared/` admission rule：只有被 ≥ 2 個不同 feature module 引用的檔案才可放入 `shared/` | ADR-011 |
-| C-AR06 | Task Role 授權使用 `useTaskRole(taskId)`（TanStack Query 從 API 取得），不依賴 JWT 繼承 | ADR-021；frontend/CLAUDE.md |
+| C-AR06 | Task Role 授權使用 `useTaskRole(taskId)`（TanStack Query 從 API 取得），不依賴 JWT 繼承 | ADR-021；.claude/rules/frontend.md |
 | C-AR07 | 資料庫禁止無外鍵約束；唯一性約束（如「每位 annotator 每筆 item 只能一份提交」）必須由 DB unique constraint 強制，不只靠 application 檢查 | Backend Constitution VI |
 | C-AR08 | 所有 cache 條目必須在寫入時宣告明確 TTL；無 TTL 的 cache 條目不允許 | Backend Constitution VII |
 | C-AR09 | 測試絕對禁止使用生產資料、真實使用者資料或真實標記 ground truth | Testing Constitution XI / NON-NEGOTIABLE |
