@@ -65,7 +65,7 @@
 | Token 分類（ `token_class` ） | Token 級標籤 | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 邊界偵測（ `boundary` ） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 區間標記（ `span` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `span` Config 說明 |
-| 關係三元組（ `relation_triple` ） | 實體 + 關係觸發詞 + 語意類型 + Triple | OpenIE、Relation Extraction（ NER+RE ） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation[]: string`（關係觸發詞）, `relation_types[]: string`（語意類型標籤） |
+| 關係三元組（ `relation_triple` ） | 實體 + 關係觸發詞 + 語意類型 + Triple | OpenIE、Relation Extraction（ NER+RE ） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
 
 #### `span` Config 說明
 
