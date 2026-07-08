@@ -1,8 +1,10 @@
 <div align="center">
 
-<img src="assets/logo/logo-horizontal.png" alt="Label Suite" width="400">
+<img src="assets/logo/banner.svg" alt="Label Suite">
 
 # Label Suite
+
+<strong>繁體中文</strong> | <a href="README.md">English</a>
 
 **以設定檔驅動的 NLP 標註平台，內建資料集分析，專為學術研究實驗室設計。**
 
@@ -13,8 +15,6 @@
 ![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB.svg)
 ![NLP](https://img.shields.io/badge/Domain-NLP%20Annotation-orange.svg)
 ![Demo Paper](https://img.shields.io/badge/Research-Demo%20Paper-8A2BE2.svg)
-
-**[繁體中文](#研究動機)** · **[English](README.md)**
 
 </div>
 
