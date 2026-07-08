@@ -1,16 +1,22 @@
-<p align="center">
-  <img src="assets/logo/banner.svg" alt="Label Suite">
-</p>
+<div align="center">
 
-<h1 align="center">Label Suite</h1>
+<img src="assets/logo/banner.svg" alt="Label Suite" width="600">
 
-<p align="center">
-  <strong>繁體中文</strong> | <a href="README.md">English</a>
-</p>
+# Label Suite
 
-<p align="center">
-  具內建資料集分析之配置驅動 NLP 標記平台，專為學術研究實驗室設計。
-</p>
+**以設定檔驅動的 NLP 標註平台，內建資料集分析，專為學術研究實驗室設計。**
+
+透過簡單設定檔啟動標註任務——不需撰寫客製程式碼。內建資料集統計，省去事後分析腳本。
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#授權)
+![Python](https://img.shields.io/badge/Backend-FastAPI-009688.svg)
+![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB.svg)
+![NLP](https://img.shields.io/badge/Domain-NLP%20Annotation-orange.svg)
+![Demo Paper](https://img.shields.io/badge/Research-Demo%20Paper-8A2BE2.svg)
+
+**[繁體中文](#研究動機)** · **[English](README.md)**
+
+</div>
 
 ---
 
