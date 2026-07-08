@@ -1,6 +1,6 @@
 # Label Suite — Agent Rules
 
-> Full context: [CLAUDE.md](CLAUDE.md) · [CODEX.md](CODEX.md) · Constitution: [.specify/memory/constitution.md](.specify/memory/constitution.md)
+> Full context: [CLAUDE.md](CLAUDE.md) · Constitution: [.specify/memory/constitution.md](.specify/memory/constitution.md)
 
 ## Architecture Boundaries
 
@@ -40,6 +40,13 @@ design/prototype/pages/[module]/   ← HTML prototypes
 - Follow the commit convention in [CLAUDE.md](CLAUDE.md#commit-convention): `<type>: <subject>` in English; every commit must include body bullets explaining the *why* — no subject-only commits
 - Remove all debug `print` / `console.log` before finishing
 - Surface exact error to user when any tool call fails twice; never silently retry a third time
+
+## Codex-Specific Notes
+
+- Give short progress updates while working, especially before edits and during longer verification steps.
+- Prefer `rg` for search and `apply_patch` for manual file edits.
+- When reading [CLAUDE.md](CLAUDE.md) for context, treat Claude-only sections as non-binding: do not use `/compact`, `/clear`, `advisor()`, or Claude model-selection rules.
+- If a required Claude slash command has no Codex equivalent, report that limitation and continue with the closest manual workflow.
 
 ## Review Guidelines
 
