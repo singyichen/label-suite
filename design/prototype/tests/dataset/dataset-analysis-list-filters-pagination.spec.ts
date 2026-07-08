@@ -22,7 +22,7 @@ test.describe('Dataset analysis list filters and pagination', () => {
 
     await page.locator('#taskTypeFilter').selectOption('sequence_labeling');
     await expect(page.locator('#taskTableBody tr')).toHaveCount(2);
-    await expect(page.locator('#taskTableBody')).toContainText('產品評論序列標註（NER / Aspect）');
+    await expect(page.locator('#taskTableBody')).toContainText('產品評論序列標記（NER / Aspect）');
     await expect(page.locator('#taskTableBody')).toContainText('NER 命名實體辨識');
 
     await page.locator('#taskTypeFilter').selectOption('');
@@ -34,7 +34,7 @@ test.describe('Dataset analysis list filters and pagination', () => {
     await page.locator('#iaaStatusFilter').selectOption('');
     await page.locator('#searchInput').fill('NER');
     await expect(page.locator('#taskTableBody tr')).toHaveCount(2);
-    await expect(page.locator('#taskTableBody')).toContainText('產品評論序列標註（NER / Aspect）');
+    await expect(page.locator('#taskTableBody')).toContainText('產品評論序列標記（NER / Aspect）');
     await expect(page.locator('#taskTableBody')).toContainText('NER 命名實體辨識');
   });
 

@@ -1,16 +1,22 @@
-<p align="center">
-  <img src="assets/logo/banner.svg" alt="Label Suite">
-</p>
+<div align="center">
 
-<h1 align="center">Label Suite</h1>
+<img src="assets/logo/icon-colored.svg" alt="Label Suite" width="100">
 
-<p align="center">
-  <a href="README.zh-TW.md">繁體中文</a> | <strong>English</strong>
-</p>
+# Label Suite
 
-<p align="center">
-  A config-driven NLP annotation platform with built-in dataset analytics, designed for academic research labs.
-</p>
+<a href="README.zh-TW.md">繁體中文</a> | <strong>English</strong>
+
+**A config-driven NLP annotation platform with built-in dataset analytics, designed for academic research labs.**
+
+Launch annotation tasks through simple config files — no custom code required. Built-in dataset statistics eliminate post-hoc analysis scripts.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#license)
+![Python](https://img.shields.io/badge/Backend-FastAPI-009688.svg)
+![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB.svg)
+![NLP](https://img.shields.io/badge/Domain-NLP%20Annotation-orange.svg)
+![Demo Paper](https://img.shields.io/badge/Research-Demo%20Paper-8A2BE2.svg)
+
+</div>
 
 ---
 

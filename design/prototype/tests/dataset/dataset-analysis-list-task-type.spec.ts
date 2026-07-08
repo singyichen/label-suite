@@ -20,7 +20,7 @@ test.describe('Dataset analysis list task type labels', () => {
         backgroundColor: 'rgb(250, 245, 255)',
       },
       {
-        taskName: '產品評論序列標註（NER / Aspect）',
+        taskName: '產品評論序列標記（NER / Aspect）',
         badgeText: '序列標記（含 Aspect / NER）',
         className: /badge-task-type-sequence/,
         backgroundColor: 'rgb(255, 247, 237)',

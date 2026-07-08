@@ -25,6 +25,14 @@
             "command": "bash .claude/hooks/session-init.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v harness >/dev/null && harness hook session-start || true"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -64,6 +72,15 @@
             "command": "bash .claude/hooks/post-edit-lint.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v harness >/dev/null && harness hook post-tool || true"
+          }
+        ],
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash"
       }
     ],
     "PreCompact": [
@@ -82,6 +99,24 @@
           {
             "type": "command",
             "command": "bash .claude/hooks/memory-reminder.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v harness >/dev/null && harness hook stop || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v harness >/dev/null && harness hook user-prompt || true"
           }
         ]
       }

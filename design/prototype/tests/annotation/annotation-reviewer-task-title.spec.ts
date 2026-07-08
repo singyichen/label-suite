@@ -14,7 +14,7 @@ const REVIEWER_TASK_TITLE_CASES = [
   {
     name: 'aspect list',
     url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R3&run_type=official_run&task_type=sequence_labeling&sub_type=aspect_list&sample_id=AL-001',
-    expectedTitle: '產品評論序列標註（NER / Aspect）',
+    expectedTitle: '產品評論序列標記（NER / Aspect）',
   },
   {
     name: 'NER',

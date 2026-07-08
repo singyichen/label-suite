@@ -1,0 +1,12 @@
+{
+  "version": "0.1.0",
+  "files": {
+    "agents/evidence-auditor.md": "8141dc47a70c792372a0a4e64e2baa8c37453af035ca97361c50fa4dd68db705",
+    "agents/red-team.md": "678457652eac7ce255d15d29181a432c3571657266a552ccd6380482b1ac7ac4",
+    "agents/simplifier.md": "c2eaa6e6a3cff197fa8047eedacf524be15c114a6d330782f85c30a70a8ca378",
+    "agents/skeptic.md": "8582f19974ab0a90b90b7ff4e3b79e856334a34473b113a5765a204902664eae",
+    "agents/user-advocate.md": "c14d7c68029efc523f3c92e2bc3b13ce82c780267dab158fdcdeeb80550f74e1",
+    "harness/protocol.md": "78dba617f3977c130f7bc6c1a7b1c7cec7a2b885d7a869f971ccc7e083f71357",
+    "skills/adversarial-review/SKILL.md": "36c5ff3161d6382225b77db09bb2f1aec19fbfce19e032f37ac72acd94a7e2fc"
+  }
+}

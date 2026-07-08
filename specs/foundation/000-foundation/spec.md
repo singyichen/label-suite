@@ -848,7 +848,7 @@ Domain 常數不得放入本節。狀態節點、演算法、執行類型、保�
 | 1.12.2 | 2026-06-05 | FR-131 route gate 移除舊 `backend/app/api/routes/` 例外路徑，改為只追蹤 `backend/app/modules/*/router.py` 與 `backend/app/modules/*/router/` |
 | 1.12.1 | 2026-06-05 | FR-131 Bruno API 請求檔案路徑改為 `backend/bruno/[module]/[feature]/<api>.bru`，對齊模組 → 功能 → API 分層追蹤 |
 | 1.12.0 | 2026-06-04 | 將分頁參數由 `page`/`page_size` 改為 `limit`/`offset`；架構常數更名為 `PAGINATION_DEFAULT_LIMIT`/`PAGINATION_MAX_LIMIT`；`PaginatedResponse[T]` 新增 `next_offset: int \| None` 欄位（後端衍生，frontend 無需計算翻頁偏移量）；更新 FR-003、FR-068、FR-069；FR-069 邊界條件改為「大於或等於 total」；FR-003 標注 task-list 與 dataset-analysis-list spec 待移轉 |
-| 1.11.7 | 2026-06-04 | FR-131 補充 skeleton-only route 例外條款：skeleton-only PR 可延後至 PR-FOUND-BRUNO 建立 .bru，PR description 須標註 FR-131-exempt: skeleton-only route |
+| 1.11.7 | 2026-06-04 | FR-131 補充 skeleton-only route 例外條款：skeleton-only PR 可延後至 PR-FOUND-BRUNO 建立 .bru，PR description 須標記 FR-131-exempt: skeleton-only route |
 | 1.11.6 | 2026-06-03 | 新增 F-18 FR-131（Bruno API collection gate）與 ADR-025 上游相依性；補充 Bruno collection 路徑約束與 PR gate 規則 |
 | 1.11.5 | 2026-06-03 | 修正 SC-045 命名衝突：將 `docker-compose.local.yml` 改為 `docker-compose.yml`，對齊 ADR-024 zero-friction quick-start 決定 |
 | 1.11.4 | 2026-06-03 | 補充上游相依性：新增 ADR-024（SQLite / PostgreSQL 分層資料庫策略），對應既有 FR-130 與 SC-045 bootstrap contract |

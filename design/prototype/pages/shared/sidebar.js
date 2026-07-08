@@ -40,7 +40,7 @@
       globalClose: '關閉視窗或取消選取',
       workspaceTitle: '標記作業',
       workspaceSave: '儲存草稿',
-      workspaceSubmit: '提交目前標註',
+      workspaceSubmit: '提交目前標記',
       workspacePrevious: '上一筆',
       workspaceNext: '下一筆',
       reviewTitle: '審核',
@@ -504,7 +504,7 @@
               '</div>' +
               '<dl class="shortcut-help-list">' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSave">儲存草稿</strong></dt>' + keyGroup(['CTRL', 'CMD', 'S']) + '</div>' +
-                '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSubmit">提交目前標註</strong></dt>' + keyGroup(['CTRL', 'CMD', 'ENTER']) + '</div>' +
+                '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceSubmit">提交目前標記</strong></dt>' + keyGroup(['CTRL', 'CMD', 'ENTER']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspacePrevious">上一筆</strong></dt>' + keyGroup(['ALT', 'LEFT']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutWorkspaceNext">下一筆</strong></dt>' + keyGroup(['ALT', 'RIGHT']) + '</div>' +
               '</dl>' +
