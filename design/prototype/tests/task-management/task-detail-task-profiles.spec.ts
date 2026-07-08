@@ -62,7 +62,7 @@ const TASK_PROFILES: TaskProfile[] = [
   {
     id: 'T003',
     name: '產品評論 Aspect List 抽取／校正',
-    listName: '產品評論序列標註（NER / Aspect）',
+    listName: '產品評論序列標記（NER / Aspect）',
     type: '序列標記（含 Aspect / NER）',
     datasetSummary: '860 筆',
     listStatus: '草稿',

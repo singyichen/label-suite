@@ -15,7 +15,7 @@ test.describe('Dataset analysis detail sequence_aspect i18n', () => {
   test('renders sequence_aspect stats panel in zh', async ({ page }) => {
     await gotoWithLang(page, 'zh', 'stats');
 
-    await expect(page.locator('#bcCurrent')).toHaveText('產品評論序列標註（NER / Aspect）');
+    await expect(page.locator('#bcCurrent')).toHaveText('產品評論序列標記（NER / Aspect）');
     await expect(page.locator('#pageTitle')).toHaveText('任務詳情');
     await expect(page.locator('#pageSubtitle')).toHaveText('檢視統計總覽與品質監控');
     await expect(page.locator('section[aria-labelledby="statsSharedTitle"] .stats-metric-card')).toHaveCount(5);
