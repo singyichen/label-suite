@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness hook session-start"
+            "command": "command -v harness >/dev/null && harness hook session-start || true"
           }
         ]
       }
@@ -77,7 +77,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness hook post-tool"
+            "command": "command -v harness >/dev/null && harness hook post-tool || true"
           }
         ],
         "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash"
@@ -106,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness hook stop"
+            "command": "command -v harness >/dev/null && harness hook stop || true"
           }
         ]
       }
@@ -116,7 +116,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "harness hook user-prompt"
+            "command": "command -v harness >/dev/null && harness hook user-prompt || true"
           }
         ]
       }
