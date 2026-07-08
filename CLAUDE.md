@@ -10,11 +10,12 @@ Label Suite — A configurable, general-purpose NLP data labeling and automated 
 
 > **Decision:** Modular Monorepo. All architectural decisions in [docs/adr/](docs/adr/).
 
-Path-scoped rules — loaded only when working in the respective directory:
+Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter load only when Claude reads a file matching the glob; files without frontmatter load in every session.
 
-- `frontend/` → [frontend/CLAUDE.md](frontend/CLAUDE.md) (`frontend.md`, `testing-frontend.md`)
-- `backend/` → [backend/CLAUDE.md](backend/CLAUDE.md) (`backend.md`, `api.md`, `testing-backend.md`)
-- `e2e/` → [e2e/CLAUDE.md](e2e/CLAUDE.md) (`testing-e2e.md`)
+- `frontend/**` → `frontend.md`, `testing-frontend.md`
+- `backend/**` → `backend.md`, `api.md`, `testing-backend.md`
+- `e2e/**` → `testing-e2e.md`
+- Always loaded: `general.md`, `git-workflow.md`, `issue-reporting.md`
 
 ## Communication
 

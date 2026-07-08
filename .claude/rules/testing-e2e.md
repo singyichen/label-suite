@@ -1,3 +1,8 @@
+---
+paths:
+  - "e2e/**"
+---
+
 # Testing Rules — E2E
 
 ## E2E (Playwright)

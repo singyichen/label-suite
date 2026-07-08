@@ -1,3 +1,8 @@
+---
+paths:
+  - "backend/**"
+---
+
 # Testing Rules — Backend
 
 ## General
