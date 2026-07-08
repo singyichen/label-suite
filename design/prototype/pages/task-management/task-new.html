@@ -1109,10 +1109,10 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '關係三元組', en: 'Relation triple',
     source_output: 'span',
     fields: [
-      { key: 'relation_types', type: 'tag-list', zh: '關係類型', en: 'Relation types', required: true, hint_zh: '輸入關係類型後按 Enter', hint_en: 'Type relation type and press Enter' },
+      { key: 'relation_types', type: 'tag-list', zh: '語意類型標籤', en: 'Semantic relation types', required: true, hint_zh: '輸入語意類型（如 causes、bodyLocation）後按 Enter', hint_en: 'Type semantic relation type (e.g. causes, bodyLocation) and press Enter', placeholder_zh: '', placeholder_en: '' },
     ],
     defaultConfig: {
-      relation_types: ['has_aspect', 'has_opinion'],
+      relation_types: ['causes', 'associated_with'],
       source_output: 'span',
     },
   },
@@ -1236,7 +1236,7 @@ var ABSA_MULTI_OUTPUT_TEMPLATE = {
     {
       type: 'relation_triple',
       config: {
-        relation_types: ['has_aspect', 'has_opinion'],
+        relation_types: ['has_aspect', 'has_opinion', 'sentiment_of'],
         source_output: 'span',
       },
     },
@@ -2596,7 +2596,7 @@ function renderOutputTypeFields(container, outKey) {
           });
           var inp = document.createElement('input');
           inp.type = 'text'; inp.className = 'tag-new-input';
-          inp.placeholder = field['hint_' + state.lang] || '';
+          inp.placeholder = ('placeholder_' + state.lang) in field ? field['placeholder_' + state.lang] : (field['hint_' + state.lang] || '');
           inp.addEventListener('compositionstart', function() { isComposing = true; });
           inp.addEventListener('compositionend', function() { isComposing = false; });
           inp.addEventListener('keydown', function(e) {
@@ -2930,11 +2930,11 @@ function initPreviewState() {
     state.previewTriples = trips.map(function(trip) {
       var e1 = trip.entity1 || {}, rel = trip.relation || {}, e2 = trip.entity2 || {};
       function fmt(o) { var s = o.text || '?'; if (o.start != null && o.end != null) s += ' (' + o.start + ',' + o.end + ')'; return s; }
-      return { subj: fmt(e1), rel: fmt(rel), obj: fmt(e2) };
+      return { subj: fmt(e1), rel: fmt(rel), obj: fmt(e2), relType: trip.relation_type || null };
     });
   } else if (tripShape === 'gold') {
     state.previewTriples = trips.map(function(trip) {
-      return { subj: trip.subj || '?', rel: trip.rel || '?', obj: trip.obj || '?' };
+      return { subj: trip.subj || '?', rel: trip.rel || '?', obj: trip.obj || '?', relType: trip.relation_type || null };
     });
   } else if (tripShape === 'absa') {
     state.previewTriples = [];
@@ -3076,17 +3076,13 @@ function relWordOf(relStr) {
   return String(relStr == null ? '' : relStr).replace(/\s*\(\d+\s*,\s*\d+\)\s*$/, '').trim();
 }
 
-/* Relation-type options for the post-hoc `type` menu: config relation_types first,
-   then any distinct relation trigger words present in the (possibly pre-labeled)
-   triples, so marked relations always surface even when the config list is empty. */
+/* Relation-type options for the post-hoc `type` menu: only config relation_types
+   (semantic labels like bodyLocation, causes, possibleTreatment).
+   Trigger words come from text selection and are NOT mixed into this list. */
 function getRelationTypeOptions(relationTypes) {
   var opts = [], seen = {};
   (relationTypes || []).forEach(function(rt) {
     if (rt && !seen[rt]) { seen[rt] = 1; opts.push(rt); }
-  });
-  state.previewTriples.forEach(function(tp) {
-    var w = relWordOf(tp.rel);
-    if (w && !seen[w]) { seen[w] = 1; opts.push(w); }
   });
   return opts;
 }
@@ -4092,11 +4088,11 @@ function renderSchemaFields() {
 
   }
 
-  /* Auto-populate relation_types from the distinct relations present in the
-     pre-labeled triples, so the config + `type` menu reflect the data instead
-     of the hardcoded defaults (has_aspect/has_opinion). Not gated on an output
-     role: the preview reads pre-labeled triples from the raw row regardless of
-     role assignment, and FR-002c-1 allows leaving Output unassigned. */
+  /* Auto-populate relation_types from semantic type labels in the pre-labeled
+     data. Collection priority: (1) per-triple `relation_type` field,
+     (2) record-level `relation_types` array, (3) `{subj, rel, obj}` format
+     where `rel` is already a semantic label. Trigger words (relation.text)
+     are NOT used — they are text spans, not semantic categories. */
   var _relCfg = state.outputConfigs['relation_triple'];
   if (_relCfg && !_relCfg._autoPopulated) {
     var _rawRow = state.datasetRawFirstRow || {};
@@ -4105,24 +4101,34 @@ function renderSchemaFields() {
     var _trips = null;
     _tripCands.some(function(cand) {
       if (!Array.isArray(cand) || cand.length === 0) return false;
-      /* Only claim arrays whose items actually look like triples, so a
-         non-triple output column (e.g. BIO tags) can't shadow the fallbacks */
       var _f = cand[0];
       if (!_f || typeof _f !== 'object' || !(_f.relation || typeof _f.rel === 'string')) return false;
       _trips = cand; return true;
     });
+    var _rels = [], _relSeen = {};
+    /* (1) Collect per-triple relation_type fields */
     if (_trips) {
-      var _rels = [], _relSeen = {};
       _trips.forEach(function(tp) {
-        var w = (tp && tp.relation && tp.relation.text) ? tp.relation.text
-              : (tp && typeof tp.rel === 'string') ? relWordOf(tp.rel) : '';
-        w = (w || '').trim();
+        var rt = tp && tp.relation_type;
+        if (rt && typeof rt === 'string' && !_relSeen[rt]) { _relSeen[rt] = 1; _rels.push(rt); }
+      });
+    }
+    /* (2) Collect from record-level relation_types array */
+    if (Array.isArray(_rawRow.relation_types)) {
+      _rawRow.relation_types.forEach(function(rt) {
+        if (rt && typeof rt === 'string' && !_relSeen[rt]) { _relSeen[rt] = 1; _rels.push(rt); }
+      });
+    }
+    /* (3) Fallback: {subj, rel, obj} format where rel is the semantic label */
+    if (_rels.length === 0 && _trips) {
+      _trips.forEach(function(tp) {
+        var w = (tp && typeof tp.rel === 'string') ? tp.rel.trim() : '';
         if (w && !_relSeen[w]) { _relSeen[w] = 1; _rels.push(w); }
       });
-      if (_rels.length > 0) {
-        _relCfg.relation_types = _rels;
-        _relCfg._autoPopulated = true;
-      }
+    }
+    if (_rels.length > 0) {
+      _relCfg.relation_types = _rels;
+      _relCfg._autoPopulated = true;
     }
   }
 
@@ -4341,7 +4347,7 @@ function buildTagInput(field) {
     });
     var inp = document.createElement('input');
     inp.type = 'text'; inp.className = 'tag-new-input';
-    inp.placeholder = field['hint_' + state.lang] || '';
+    inp.placeholder = ('placeholder_' + state.lang) in field ? field['placeholder_' + state.lang] : (field['hint_' + state.lang] || '');
     inp.addEventListener('compositionstart', function() { isComposing = true; });
     inp.addEventListener('compositionend', function() { isComposing = false; });
     inp.addEventListener('keydown', function(e) {

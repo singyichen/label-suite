@@ -32,7 +32,7 @@
 | 多標籤（ `multi_label` ） | 可同時選多個 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | [主題相似, 情感相同, 語氣相同] | `label_options[]: { name, color? }` |
 
 > `entity_markers` 定義預標記實體的起訖標記，例如 `{ start: "[", end: "]" }`；也可用 XML tag、括號或其他明確成對標記格式。
-> `entities` 的 `color` 為必填，因 span 標記需視覺區分；`relation_types` 為純字串陣列（ tag-list ），不支援 `color`；`label_options`、`tag_options`、`polarity_options` 的 `color` 為選填。
+> `entities` 的 `color` 為必填，因 span 標記需視覺區分；`relation_types` 為語意類型標籤的純字串陣列（ tag-list ），不支援 `color`——關係觸發詞由標記者從文本中反白選取，不在 config 中預定義；`label_options`、`tag_options`、`polarity_options` 的 `color` 為選填。
 
 ---
 
@@ -65,7 +65,7 @@
 | Token 分類（ `token_class` ） | Token 級標籤 | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 邊界偵測（ `boundary` ） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 區間標記（ `span` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `span` Config 說明 |
-| 關係三元組（ `relation_triple` ） | 實體 + 關係 + Triple | OpenIE、Relation Extraction（ NER+RE ） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) | `entity_types[]: { name, color }`, `relation_types[]: string` |
+| 關係三元組（ `relation_triple` ） | 實體 + 關係觸發詞 + 語意類型 + Triple | OpenIE、Relation Extraction（ NER+RE ） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
 
 #### `span` Config 說明
 
@@ -87,12 +87,42 @@
 | `polarity_options` 存在 | `span_with_polarity` | ABSA（ Aspect-Based Sentiment Analysis ） | [(服務, 負面), (環境, 正面)] |
 
 > 同一任務因標記介面設計不同，可對應不同 `output_type`（ e.g. NER 可選 `token_class` 或 `span` ）。
+
+#### `relation_triple` Config 說明
+
+`relation_triple` 的標記流程區分**關係觸發詞**與**語意類型**兩個概念：
+
+| 概念 | 來源 | 說明 | 範例 |
+|------|------|------|------|
+| 關係觸發詞（relation） | 標記者從文本中反白選取的文字區間 | 表達關係的具體用字，不需預定義 | 「位於」「引發」「導致」「治療」 |
+| 語意類型（relation_type） | 標記者從下拉選單選擇，選項來自 config `relation_types[]` | 關係的抽象語意分類 | `bodyLocation`、`causes`、`possibleTreatment` |
+
+> 同一語意類型可對應多種觸發詞（e.g. `causes` ← 「引發」「導致」「造成」「誘發」），將觸發詞歸納至語意類型可支援跨同義詞的聚合分析與 IAA 計算。
+
+| Config 欄位 | 型別 | 說明 |
+|------------|------|------|
+| `relation_types[]` | `string[]` | 語意類型標籤清單，作為標記介面中「類型」下拉選單的選項 |
+| `source_output` | `string` | 宣告依賴的輸出類型（通常為 `span`），E1/E2 取自該輸出類型的已標記實體 |
+
+**標記資料結構：**
+
+每筆三元組同時記錄觸發詞區間與語意類型：
+
+```json
+{
+  "entity1": { "text": "糖尿病", "start": 0, "end": 2 },
+  "relation": { "text": "引發", "start": 16, "end": 17 },
+  "relation_type": "causes",
+  "entity2": { "text": "視網膜病變", "start": 18, "end": 22 }
+}
+```
+
 > `entity_relation` vs `relation_triple` 的使用場景區分
 
 | 對照項目 | `entity_relation` | `relation_triple` |
 |----------|-------------------|-------------------|
 | 起點 | 實體已預標記 | 從零開始標 |
-| 任務 | 只判斷關係類型 | 標實體 + 標關係 |
+| 任務 | 只判斷關係類型 | 標實體 + 標關係觸發詞 + 指定語意類型 |
 | 歸類 | classification | sequence |
 
 ---
@@ -132,5 +162,5 @@
 | 序列（ sequence ） | 單一項目（ single_item ） | Token 分類（ token_class ） | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | 邊界偵測（ boundary ） | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 序列（ sequence ） | 單一項目（ single_item ） | 區間標記（ `span` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `span` Config 說明 ） |
-| 序列（ sequence ） | 單一項目（ single_item ） | 關係三元組（ relation_triple ） | OpenIE、Relation Extraction | `entity_types[]: { name, color }`, `relation_types[]: string` |
+| 序列（ sequence ） | 單一項目（ single_item ） | 關係三元組（ relation_triple ） | OpenIE、Relation Extraction | `relation_types[]: string`（語意類型標籤） |
 | 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |

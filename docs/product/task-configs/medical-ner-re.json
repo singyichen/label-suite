@@ -25,16 +25,14 @@
       "type": "relation_triple",
       "config": {
         "relation_types": [
-          "位於",
-          "產生",
-          "形成",
-          "流至",
-          "造成",
-          "治療",
-          "使用",
-          "檢查",
-          "診斷",
-          "屬於"
+          "bodyLocation",
+          "causes",
+          "adverseOutcome",
+          "typicalTest",
+          "diagnosis",
+          "possibleTreatment",
+          "signOrSymptom",
+          "prevents"
         ],
         "source_output": "span"
       }

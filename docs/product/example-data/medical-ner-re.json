@@ -15,45 +15,54 @@
       { "text": "腦中風", "type": "DISE", "start": 69, "end": 71 },
       { "text": "全身性栓塞", "type": "DISE", "start": 75, "end": 79 }
     ],
+    "relation_types": ["bodyLocation", "causes", "adverseOutcome"],
     "triples": [
       {
         "entity1": { "text": "左心耳", "start": 1, "end": 3 },
         "relation": { "text": "位於", "start": 4, "end": 5 },
+        "relation_type": "bodyLocation",
         "entity2": { "text": "左心房", "start": 6, "end": 8 }
       },
       {
         "entity1": { "text": "左心耳", "start": 1, "end": 3 },
         "relation": { "text": "產生", "start": 40, "end": 41 },
+        "relation_type": "causes",
         "entity2": { "text": "淤滯", "start": 42, "end": 43 }
       },
       {
         "entity1": { "text": "左心耳", "start": 1, "end": 3 },
         "relation": { "text": "形成", "start": 45, "end": 46 },
+        "relation_type": "causes",
         "entity2": { "text": "血栓", "start": 47, "end": 48 }
       },
       {
         "entity1": { "text": "淤滯", "start": 42, "end": 43 },
         "relation": { "text": "形成", "start": 45, "end": 46 },
+        "relation_type": "causes",
         "entity2": { "text": "血栓", "start": 47, "end": 48 }
       },
       {
         "entity1": { "text": "血栓", "start": 50, "end": 51 },
         "relation": { "text": "流至", "start": 54, "end": 55 },
+        "relation_type": "bodyLocation",
         "entity2": { "text": "腦部", "start": 56, "end": 57 }
       },
       {
         "entity1": { "text": "血栓", "start": 50, "end": 51 },
         "relation": { "text": "流至", "start": 54, "end": 55 },
+        "relation_type": "bodyLocation",
         "entity2": { "text": "器官", "start": 61, "end": 62 }
       },
       {
         "entity1": { "text": "血栓", "start": 50, "end": 51 },
         "relation": { "text": "造成", "start": 67, "end": 68 },
+        "relation_type": "adverseOutcome",
         "entity2": { "text": "腦中風", "start": 69, "end": 71 }
       },
       {
         "entity1": { "text": "血栓", "start": 50, "end": 51 },
         "relation": { "text": "造成", "start": 67, "end": 68 },
+        "relation_type": "adverseOutcome",
         "entity2": { "text": "全身性栓塞", "start": 75, "end": 79 }
       }
     ]
@@ -71,25 +80,30 @@
       { "text": "肝素", "type": "DRUG", "start": 46, "end": 47 },
       { "text": "心導管介入手術", "type": "TREAT", "start": 54, "end": 60 }
     ],
+    "relation_types": ["typicalTest", "diagnosis", "possibleTreatment"],
     "triples": [
       {
         "entity1": { "text": "心電圖", "start": 12, "end": 14 },
         "relation": { "text": "發現", "start": 17, "end": 18 },
+        "relation_type": "typicalTest",
         "entity2": { "text": "ST段上升", "start": 19, "end": 23 }
       },
       {
         "entity1": { "text": "ST段上升", "start": 19, "end": 23 },
         "relation": { "text": "診斷", "start": 25, "end": 26 },
+        "relation_type": "diagnosis",
         "entity2": { "text": "急性心肌梗塞", "start": 28, "end": 33 }
       },
       {
         "entity1": { "text": "阿斯匹靈", "start": 41, "end": 44 },
         "relation": { "text": "治療", "start": 48, "end": 49 },
+        "relation_type": "possibleTreatment",
         "entity2": { "text": "急性心肌梗塞", "start": 28, "end": 33 }
       },
       {
         "entity1": { "text": "肝素", "start": 46, "end": 47 },
         "relation": { "text": "治療", "start": 48, "end": 49 },
+        "relation_type": "possibleTreatment",
         "entity2": { "text": "急性心肌梗塞", "start": 28, "end": 33 }
       }
     ]
@@ -106,28 +120,32 @@
       { "text": "眼底檢查", "type": "EXAM", "start": 36, "end": 39 },
       { "text": "Metformin", "type": "DRUG", "start": 44, "end": 52 }
     ],
+    "relation_types": ["causes", "typicalTest", "possibleTreatment"],
     "triples": [
       {
         "entity1": { "text": "糖尿病", "start": 0, "end": 2 },
         "relation": { "text": "引發", "start": 16, "end": 17 },
+        "relation_type": "causes",
         "entity2": { "text": "視網膜病變", "start": 18, "end": 22 }
       },
       {
         "entity1": { "text": "糖尿病", "start": 0, "end": 2 },
         "relation": { "text": "引發", "start": 16, "end": 17 },
+        "relation_type": "causes",
         "entity2": { "text": "腎病變", "start": 24, "end": 26 }
       },
       {
         "entity1": { "text": "眼底檢查", "start": 36, "end": 39 },
         "relation": { "text": "檢查", "start": 38, "end": 39 },
+        "relation_type": "typicalTest",
         "entity2": { "text": "視網膜病變", "start": 18, "end": 22 }
       },
       {
         "entity1": { "text": "Metformin", "start": 44, "end": 52 },
         "relation": { "text": "使用", "start": 42, "end": 43 },
+        "relation_type": "possibleTreatment",
         "entity2": { "text": "糖尿病", "start": 0, "end": 2 }
       }
     ]
   }
 ]
-
