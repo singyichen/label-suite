@@ -448,11 +448,11 @@ test.describe('Step 2 preview: composite task data files', () => {
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
 
-    // relation_types is auto-populated from the distinct relations in the
-    // pre-labeled triples — NOT the hardcoded has_aspect/has_opinion defaults.
+    // relation_types is auto-populated from the distinct semantic type labels
+    // in the pre-labeled triples — NOT trigger words or hardcoded defaults.
     const cfg = (await getState(page, 'outputConfigs')) as WindowState['outputConfigs'];
     const relTypes = (cfg.relation_triple as { relation_types: string[] }).relation_types;
-    expect(relTypes).toEqual(['位於', '產生', '形成', '流至', '造成']);
+    expect(relTypes).toEqual(['bodyLocation', 'causes', 'adverseOutcome']);
     expect(relTypes).not.toContain('has_aspect');
     expect(relTypes).not.toContain('has_opinion');
 
@@ -462,7 +462,7 @@ test.describe('Step 2 preview: composite task data files', () => {
       return editor?.value || '';
     });
     expect(code).not.toContain('has_aspect');
-    expect(code).toContain('位於');
+    expect(code).toContain('bodyLocation');
   });
 
   test('absa-va.json — triple output (span + relation_triple + multi_dim) across two categories', async ({
