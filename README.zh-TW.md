@@ -6,9 +6,9 @@
 
 <strong>繁體中文</strong> | <a href="README.md">English</a>
 
-**以設定檔驅動的 NLP 標註平台，內建資料集分析，專為學術研究實驗室設計。**
+**以設定檔驅動的 NLP 標記平台，內建資料集分析，專為學術研究實驗室設計。**
 
-透過簡單設定檔啟動標註任務——不需撰寫客製程式碼。內建資料集統計，省去事後分析腳本。
+透過簡單設定檔啟動標記任務——不需撰寫客製程式碼。內建資料集統計，省去事後分析腳本。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#授權)
 ![Python](https://img.shields.io/badge/Backend-FastAPI-009688.svg)
