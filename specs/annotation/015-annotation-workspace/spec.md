@@ -196,7 +196,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 3. **Given** 已完成可提交條件，**When** 點擊提交，**Then** 系統記錄提交並預設導向下一筆（`SUBMIT_DEFAULT_ACTION`）。
 4. **Given** 任務最後一筆完成提交，**When** 完成提交流程，**Then** 系統導回 `annotation-list` 並將該任務資料列狀態顯示為 `已提交`。
 5. **Given** 切換樣本或手動儲存，**When** 有編輯行為發生，**Then** 顯示自動儲存狀態更新（Saving → Saved）。
-6. **Given** annotator 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄標記卡標題，**Then** 標題必須顯示與 reviewer 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標註`、`句對語意判定`）。
+6. **Given** annotator 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄標記卡標題，**Then** 標題必須顯示與 reviewer 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標記`、`句對語意判定`）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -251,7 +251,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 
 Annotator 可在 `sequence_labeling.subtype = aspect_list` 任務中，依句子內容校正原句並維護 Aspect List。
 
-**此優先級原因**：Aspect List 是序列標記中的研究情境必要子模式，僅提供一般 NER span 標註不足以完成實際任務。
+**此優先級原因**：Aspect List 是序列標記中的研究情境必要子模式，僅提供一般 NER span 標記不足以完成實際任務。
 **獨立測試方式**：以 `task_type=sequence_labeling` 且 task config `subtype=aspect_list` 進入工作區，驗證句子校正、aspect 新增/刪除/修改、驗證阻擋、儲存與提交。
 
 **驗收情境**：
@@ -299,7 +299,7 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 4. **Given** reviewer 在 Dry Run 審查，**When** 需要產生標準答案，**Then** 可使用 標記分布統計、各標記員結果與手動確認流程完成該筆決策。
 5. **Given** reviewer 審核 `sequence_labeling.subtype = aspect_list` 任務，**When** 發現標記員多標、漏標或文字需修正，**Then** 可直接刪除、新增或修改該標記員的 aspect row；頁面內不額外顯示逐筆新增/刪除/修改 audit 文案，送出審核後再由 History / payload 保留原始提交與 reviewer 修正 diff。
 6. **Given** reviewer 審核 `task_type = sentence_pairs` 任務，**When** 進入工作區，**Then** 必須能查看各標記員的句對判定結果與句對內容，並依 `response_format` 顯示分類分布或分數摘要後執行 `通過 / 退回`。
-7. **Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄審查卡標題，**Then** 標題必須顯示與 annotator 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標註`、`句對語意判定`）。
+7. **Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄審查卡標題，**Then** 標題必須顯示與 annotator 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標記`、`句對語意判定`）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 

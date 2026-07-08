@@ -203,7 +203,7 @@ sequenceDiagram
 **行為規則**：
 
 - `task_type` 由任務資料載入，不由路由 query 決定。
-- `sequence_labeling` 的統計內容除 `task_type` 外，還必須由任務分析設定或後端分析器回傳 `analysis_profile` 決定；不得把 Aspect 專屬圖表硬套到所有序列標註任務。
+- `sequence_labeling` 的統計內容除 `task_type` 外，還必須由任務分析設定或後端分析器回傳 `analysis_profile` 決定；不得把 Aspect 專屬圖表硬套到所有序列標記任務。
 - `sentence_pairs` 的統計內容除 `task_type` 外，還必須由任務 config / API 載入 `pair_mode` 與 `response_format`；不得只以 task type 猜測是蘊含或相似度、分類或評分。
 - 空狀態下仍保留 detail shell 與 Tab 列；`SHARED_METRICS` 可顯示既有值，特定圖表以空狀態取代。
 - 語言切換需同步更新圖表標題、軸標籤、圖例與說明文字。
@@ -214,19 +214,19 @@ sequenceDiagram
 - 統計目標：以 entity span 為主要分析單位，不處理 aspect taxonomy、sentiment 或共現矩陣。
 - 必備統計：實體類型分佈、每句平均實體數、Entity span 長度分佈。
 - `實體類型分佈`：依 task config 的 entity labels 聚合，不得混入非 entity metadata。
-- `每句平均實體數`：以句子中標註 entity span 數量計算平均值，可附帶 0、1、2、3+ bucket 分佈。
+- `每句平均實體數`：以句子中標記 entity span 數量計算平均值，可附帶 0、1、2、3+ bucket 分佈。
 - `Entity span 長度分佈`：以 token 長度為主、字元長度為輔；至少輸出 1、2、3、4+ token buckets。
 
 **sequence_labeling + aspect 分析規則**：
 
 - 任務條件：`task_type=sequence_labeling` 且 `analysis_profile=aspect`。
-- 基本標註單位：`annotation_unit = sentence`；統計母體以已提交句子為準。
+- 基本標記單位：`annotation_unit = sentence`；統計母體以已提交句子為準。
 - span 類別至少支援：`Aspect`；若任務另有子類別、極性或屬性欄位，需視為附加維度，不得混入主 label count。
-- `Aspect 類型分佈`：以標準化 aspect taxonomy 聚合；若原始標註文字為自由文本，需先經 synonym / alias mapping 對齊 taxonomy 後再統計。
+- `Aspect 類型分佈`：以標準化 aspect taxonomy 聚合；若原始標記文字為自由文本，需先經 synonym / alias mapping 對齊 taxonomy 後再統計。
 - `每句平均 Aspect 數量`：每句中 label=`Aspect` 或映射至 aspect taxonomy 的 span 數量平均值；同時輸出分桶分佈（0、1、2、3+）。
 - `span 長度分佈`：以 token 長度為主、字元長度為輔；至少輸出 1、2、3、4+ token buckets 與代表例。
 - `Aspect 共現矩陣`：以同一句內共同出現的兩個不同 aspect taxonomy 作為共現；矩陣需對稱，對角線保留空值或自共現不顯示。
-- `Aspect × Sentiment`：僅當標註結果包含 sentiment 時顯示；需至少提供 positive / neutral / negative 三類比例。
+- `Aspect × Sentiment`：僅當標記結果包含 sentiment 時顯示；需至少提供 positive / neutral / negative 三類比例。
 - `Aspect Coverage`：檢查各 aspect taxonomy 的樣本覆蓋率與分佈偏斜；當稀有類別低於專案設定最小樣本數或明顯低於目標分佈時，標示 `dataset_bias_detected=true`。
 
 ---
@@ -422,16 +422,16 @@ flowchart LR
 - **ClassificationStats**: 分類任務統計，包含各標籤次數 / 比例與多標籤共現矩陣。
 - **VAScoringStats**: VA 評分任務統計，包含 Valence / Arousal 分佈、統計摘要與二維分佈資料。
 - **SequenceLabelingStats**: 序列標記任務統計抽象父型別，必須依 `analysis_profile` 分派至 `NerSequenceLabelingStats` 或 `AspectSequenceLabelingStats`。
-- **NerSequenceLabelingStats**: NER 序列標註統計，包含 `entity_type_distribution`、`avg_entities_per_sentence`、`entity_span_length_distribution`。
-- **AspectSequenceLabelingStats**: Aspect 序列標註統計，包含 `aspect_distribution`、`avg_aspect_per_sentence`、`aspect_count_buckets`、`span_length_distribution`、`aspect_cooccurrence_matrix`、`aspect_sentiment_distribution?`、`aspect_coverage_alerts?`。
+- **NerSequenceLabelingStats**: NER 序列標記統計，包含 `entity_type_distribution`、`avg_entities_per_sentence`、`entity_span_length_distribution`。
+- **AspectSequenceLabelingStats**: Aspect 序列標記統計，包含 `aspect_distribution`、`avg_aspect_per_sentence`、`aspect_count_buckets`、`span_length_distribution`、`aspect_cooccurrence_matrix`、`aspect_sentiment_distribution?`、`aspect_coverage_alerts?`。
 - **RelationExtractionStats**: 關係抽取任務統計，包含實體類型分佈、關係類型分佈與 Triple 數量。
 - **SentencePairsStats**: 句對任務統計，包含 `pair_mode`、`response_format`，並依 `response_format` 對應 ClassificationStats 或 ScoringStats 結構。
 - **ScoringStats**: 通用評分型統計，包含分數分佈、平均值、中位數、標準差與分桶資料，可供 `sentence_pairs` 評分型重用。
 - **StatsTabState**: stats tab 狀態，包含 `view_state`（`loading | empty | ready | error`）、`shared_metrics`、`task_type_stats`、`empty_state`、`loading_state`。
 - **IAAReport**: IAA 報告，包含主要指標名稱、計算結果、閾值、達標狀態與各輔助指標。
-- **SequenceLabelingQualityReport**: 序列標註品質報告抽象父型別，必須依 `analysis_profile` 分派至 `NerSequenceLabelingQualityReport` 或 `AspectSequenceLabelingQualityReport`。
-- **NerSequenceLabelingQualityReport**: NER 序列標註品質報告，包含 `pairwise_entity_f1_strict`、`pairwise_entity_f1_partial`、`active_match_mode`。
-- **AspectSequenceLabelingQualityReport**: Aspect 序列標註品質報告，包含 `exact_span_f1`、`partial_match_f1`、`label_accuracy`、`boundary_error_analysis`、`high_disagreement_samples`。
+- **SequenceLabelingQualityReport**: 序列標記品質報告抽象父型別，必須依 `analysis_profile` 分派至 `NerSequenceLabelingQualityReport` 或 `AspectSequenceLabelingQualityReport`。
+- **NerSequenceLabelingQualityReport**: NER 序列標記品質報告，包含 `pairwise_entity_f1_strict`、`pairwise_entity_f1_partial`、`active_match_mode`。
+- **AspectSequenceLabelingQualityReport**: Aspect 序列標記品質報告，包含 `exact_span_f1`、`partial_match_f1`、`label_accuracy`、`boundary_error_analysis`、`high_disagreement_samples`。
 - **BoundaryErrorSummary**: span 邊界錯誤摘要，包含 `error_type`、`count`、`ratio`、`example_samples[]`。
 - **DisagreementSample**: 高分歧樣本，包含 `sample_id`、`sentence_text`、`disagreement_score`、`conflicting_spans[]`、`annotator_variants[]`、`reviewer_queue_status`。
 - **IAAReportVA**: VA 雙維度 IAA 報告，包含 IAA_V、IAA_A、Overall IAA 與各輔助指標。
