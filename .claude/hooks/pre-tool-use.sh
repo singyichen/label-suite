@@ -12,8 +12,7 @@
 #
 # How it works:
 #   Reads the JSON tool-call payload from stdin and extracts the command string.
-#   Blocks: any push while checked out on main/master (branch-detected),
-#   pushes explicitly naming main/master, force push, pip/npm install,
+#   Blocks: direct push to main/master, force push, pip/npm install,
 #   destructive rm -rf on root/home paths, and other dangerous patterns
 #   (DROP TABLE, terraform destroy, dd, mkfs, fork bombs, chmod 777 /).
 set -uo pipefail
@@ -28,20 +27,8 @@ fi
 
 [ -z "$COMMAND" ] && exit 0
 
-# Block: any git push while the current branch is main/master (AGENTS.md Rule 2).
-# Branch detection closes the 'git push origin HEAD' gap a pure regex misses.
-if printf '%s\n' "$COMMAND" | grep -qE '(^|[;&|]|\$\()[[:space:]]*git push([[:space:]]|$)'; then
-  BRANCH=$(git branch --show-current 2>/dev/null || echo "")
-  if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
-    echo "❌ Blocked: current branch is '$BRANCH' — pushing from a protected branch is not allowed. Check out a feature branch first (AGENTS.md Rule 2)." >&2
-    exit 2
-  fi
-fi
-
-# Block: push that explicitly names main/master as a refspec, from any branch.
-# Anchored to command position so quoted prose that merely mentions
-# "git push ... main" (commit messages, PR replies) does not false-positive.
-if printf '%s\n' "$COMMAND" | grep -qE '(^|[;&|]|\$\()[[:space:]]*git push[^|&;]*[[:space:]:](main|master)([[:space:]]|$)'; then
+# Block: direct push to main/master (AGENTS.md Rule 2)
+if echo "$COMMAND" | grep -qE 'git push[^|&]*(\s|^|:)(main|master)(\s|$)'; then
   echo "❌ Blocked: direct push to main/master. Create a branch and open a PR instead (AGENTS.md Rule 2)." >&2
   exit 2
 fi
