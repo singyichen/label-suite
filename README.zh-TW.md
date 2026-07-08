@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo/banner.svg" alt="Label Suite">
+<img src="assets/logo/icon-colored.png" alt="Label Suite" width="100">
 
 # Label Suite
 
