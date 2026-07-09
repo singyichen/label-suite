@@ -275,6 +275,8 @@
     /* ABSA unified preview */
     .absa-preview-text { font-size: 14px; line-height: 2; color: var(--color-ink); padding: 10px 12px; background: var(--color-slate-50); border-radius: var(--radius-md); margin-bottom: 12px; }
     .absa-span-highlight { display: inline; padding: 1px 4px; border-radius: 3px; font-weight: 500; white-space: nowrap; }
+    .rel-sel-highlight { background: rgba(59, 130, 246, 0.3); border-radius: 2px; }
+    .absa-span-highlight.rel-sel-highlight { outline: 2px solid rgba(59, 130, 246, 0.6); outline-offset: 1px; }
     .absa-relation-list { display: flex; flex-direction: column; gap: 6px; }
     .absa-relation-row { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     .absa-relation-badge { display: inline-flex; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; background: #EEF2FF; color: #6366F1; border: 1px solid rgba(99,102,241,0.3); }
@@ -3199,13 +3201,30 @@ function renderAbsaUnifiedPreview(previewContainer) {
   textEl.className = 'absa-preview-text';
   textEl.style.cursor = 'text';
   textEl.style.userSelect = 'text';
+  function appendTextMaybeHighlighted(parent, text, textStart) {
+    var rs = state.relSel;
+    if (!rs || rs.start == null) { parent.appendChild(document.createTextNode(text)); return; }
+    var ss = rs.start - textStart;
+    var se = rs.start + (rs.text ? rs.text.length : 0) - textStart;
+    if (se <= 0 || ss >= text.length) { parent.appendChild(document.createTextNode(text)); return; }
+    ss = Math.max(0, ss); se = Math.min(text.length, se);
+    if (ss > 0) parent.appendChild(document.createTextNode(text.substring(0, ss)));
+    var hl = document.createElement('span'); hl.className = 'rel-sel-highlight';
+    hl.textContent = text.substring(ss, se); parent.appendChild(hl);
+    if (se < text.length) parent.appendChild(document.createTextNode(text.substring(se)));
+  }
   if (realText && state.previewEntities.length > 0) {
     var sorted = state.previewEntities.slice().filter(function(e) { return e.start != null; }).sort(function(a, b) { return a.start - b.start; });
     var charPos = 0;
     sorted.forEach(function(ent) {
-      if (ent.start > charPos) { var tn = document.createTextNode(realText.substring(charPos, ent.start)); tn._offset = charPos; textEl.appendChild(tn); }
+      if (ent.start > charPos) { appendTextMaybeHighlighted(textEl, realText.substring(charPos, ent.start), charPos); }
       var span = document.createElement('span');
       span.className = 'absa-span-highlight';
+      if (state.relSel && state.relSel.start != null) {
+        var _entEnd = ent.start + ((ent.text || realText.substring(ent.start, (ent.end || ent.start) + 1)).length);
+        var _rsEnd = state.relSel.start + (state.relSel.text ? state.relSel.text.length : 0);
+        if (state.relSel.start <= ent.start && _rsEnd >= _entEnd) span.classList.add('rel-sel-highlight');
+      }
       var c = typeColorMap[ent.type] || '#6366F1';
       span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
       span.title = ent.type + ' (' + ent.start + ',' + ent.end + ')';
@@ -3213,9 +3232,9 @@ function renderAbsaUnifiedPreview(previewContainer) {
       textEl.appendChild(span);
       charPos = (ent.end || ent.start) + 1;
     });
-    if (charPos < realText.length) textEl.appendChild(document.createTextNode(realText.substring(charPos)));
+    if (charPos < realText.length) appendTextMaybeHighlighted(textEl, realText.substring(charPos), charPos);
   } else if (realText) {
-    textEl.appendChild(document.createTextNode(realText.length > 500 ? realText.substring(0, 500) + '…' : realText));
+    appendTextMaybeHighlighted(textEl, realText.length > 500 ? realText.substring(0, 500) + '…' : realText, 0);
   }
   /* Resolve the selection to its actual character offset in realText by
      walking textEl's text nodes — indexOf alone would always bind repeated

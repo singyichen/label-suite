@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 3.3.1
+版本: 3.3.2
 狀態: Draft
 ---
 
@@ -464,7 +464,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003d-1**：`token_class` 必須支援 `entities`（`{ name, color }[]`）與 `tagging_scheme`（`BIO | BIOES | IOB2`）。預覽：標籤類型按鈕列（含 `O` 標籤）+ 可點擊 token 網格，點擊 token 依當前選中標籤推斷 `B-`/`I-` 前綴。token 網格的分詞來源：已上傳資料集且紀錄含 token 陣列欄位（或 `input` 角色欄位本身為陣列）時，須優先採用資料集提供的分詞；否則以空白字元切分文字。預標記初始化（FR-003g-5）僅在 `output` 欄位的標記數量與 token 數量一致時套用，不一致時所有 token 初始化為 `O`。驗證：`entities` 不得為空且不得含空白項目。
 - **FR-003d-2**：`boundary` 必須支援 `boundary_types`（string[]）。預覽：邊界類型選擇列 + 文段間隙可點擊按鈕（插入/移除邊界標記），底部顯示已標記數量。驗證：`boundary_types` 不得為空且不得含空白項目。
 - **FR-003d-3**：`span` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。驗證：`entities` 不得為空且不得含空白項目。
-- **FR-003d-4**：`relation_triple` 必須支援 `relation_types`（string[]，語意類型標籤），並宣告依賴 `span`（`OUTPUT_TYPE_DEPENDENCIES`）。預覽採循序關係建構器（對齊既有 NER 標記系統的操作模式）：使用者先在文本中反白選取，再依序按下逐步解鎖的按鈕 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`——初始僅 `E1/Arg1` 可用，選定 E1 後解鎖 Relation，選定 Relation 後解鎖 E2，三者齊備後解鎖 Add；`Undo` 可逐步回退（E2 → Relation → E1）。按鈕在中文介面顯示為 `E1/Arg1 → Relation → E2/Arg2 → 退回 → 新增`（`E1/Arg1`、`Relation`、`E2/Arg2` 維持技術性英文標籤），英文介面維持 `Undo`／`Add`。其中 **E1/Arg1 與 E2/Arg2 必須是已標記的實體**（選取須對應實體列表中的項目，否則提示錯誤且不採用），**Relation 為文本中任意的關係觸發詞區間**（不需為實體，不受 config 約束）。三元組三個元素皆以「文字 + 字元位置 `(start,end)`」的區間形式儲存與顯示（如 `左心耳 (1,3) → 位於 (4,5) → 左心房 (6,8)`）。關係「語意類型」為**事後**指定：每筆三元組列的 `type`（中文介面顯示「類型」）按鈕開啟以 config `relation_types`（語意分類標籤，如 `bodyLocation`、`causes`、`possibleTreatment`）為選項的下拉選單，指定後以獨立徽章顯示（如 `類型：causes`），不覆寫關係觸發詞文字。語意類型與觸發詞為兩個獨立概念——同一語意類型可對應多種觸發詞（如 `causes` ← 「引發」「導致」「造成」「誘發」）。`relation_types` 於載入預標記資料時會自動從資料中各三元組的 `relation_type` 欄位收集（見 FR-003g-8）。此流程須能在**無任何預標記資料**的空白狀態下，從標記實體開始逐步手動建立完整三元組。預覽初始化需支援多種三元組欄位名稱（`gold_triples`、`gold_triplets`、`triples`）與格式（`{subj, rel, obj}` 及 `{entity1, relation, entity2}`，後者的 `relation` 為帶位置的觸發詞區間；兩種格式均可包含 `relation_type` 欄位）。驗證：`relation_types` 不得為空且不得含空白項目。
+- **FR-003d-4**：`relation_triple` 必須支援 `relation_types`（string[]，語意類型標籤），並宣告依賴 `span`（`OUTPUT_TYPE_DEPENDENCIES`）。預覽採循序關係建構器（對齊既有 NER 標記系統的操作模式）：使用者先在文本中反白選取，再依序按下逐步解鎖的按鈕 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`——初始僅 `E1/Arg1` 可用，選定 E1 後解鎖 Relation，選定 Relation 後解鎖 E2，三者齊備後解鎖 Add；`Undo` 可逐步回退（E2 → Relation → E1）。**反白選取的文字必須以持續的視覺反白（藍色背景高亮）標示於文本中**，直到該選取被按鈕消費或被新的選取取代為止——使用者須能隨時在文本中辨認目前選取的位置（對齊既有 NER 標記系統的操作行為）；當選取的文字恰為已標記實體時，以 outline 框線疊加於實體色塊上方。按鈕在中文介面顯示為 `E1/Arg1 → Relation → E2/Arg2 → 退回 → 新增`（`E1/Arg1`、`Relation`、`E2/Arg2` 維持技術性英文標籤），英文介面維持 `Undo`／`Add`。其中 **E1/Arg1 與 E2/Arg2 必須是已標記的實體**（選取須對應實體列表中的項目，否則提示錯誤且不採用），**Relation 為文本中任意的關係觸發詞區間**（不需為實體，不受 config 約束）。三元組三個元素皆以「文字 + 字元位置 `(start,end)`」的區間形式儲存與顯示（如 `左心耳 (1,3) → 位於 (4,5) → 左心房 (6,8)`）。關係「語意類型」為**事後**指定：每筆三元組列的 `type`（中文介面顯示「類型」）按鈕開啟以 config `relation_types`（語意分類標籤，如 `bodyLocation`、`causes`、`possibleTreatment`）為選項的下拉選單，指定後以獨立徽章顯示（如 `類型：causes`），不覆寫關係觸發詞文字。語意類型與觸發詞為兩個獨立概念——同一語意類型可對應多種觸發詞（如 `causes` ← 「引發」「導致」「造成」「誘發」）。`relation_types` 於載入預標記資料時會自動從資料中各三元組的 `relation_type` 欄位收集（見 FR-003g-8）。此流程須能在**無任何預標記資料**的空白狀態下，從標記實體開始逐步手動建立完整三元組。預覽初始化需支援多種三元組欄位名稱（`gold_triples`、`gold_triplets`、`triples`）與格式（`{subj, rel, obj}` 及 `{entity1, relation, entity2}`，後者的 `relation` 為帶位置的觸發詞區間；兩種格式均可包含 `relation_type` 欄位）。驗證：`relation_types` 不得為空且不得含空白項目。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-6**：`multi_label` 必須支援 `label_options`（`{ name, color }[]`）與 `max_selections`（number，0 = 不限）。預覽：文字區塊 + checkbox 風格 chip 按鈕（可多選），下方顯示已選數量。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-7**：`entity_relation` 必須支援 `label_options`（`{ name, color }[]`）。預覽：兩張實體卡片（E1 ↔ E2，含雙向箭頭）+ 關係標籤 chip 按鈕（互斥單選）。驗證：`label_options` 不得為空且不得含空白項目。
@@ -648,6 +648,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 3.3.2 | 2026-07-09 | **fix**：循序關係建構器反白選取持續高亮——使用者在文本中反白選取後，選取的文字以藍色背景持續標示於文本中，直到被按鈕消費或被新選取取代（對齊既有 NER 標記系統；更新 FR-003d-4） |
 | 3.3.1 | 2026-07-09 | **prototype sync**：精靈狀態持久化——使用者重新整理頁面時，系統透過 session storage 自動還原至先前步驟與所有已填資料（任務名稱、任務類型選擇、資料集資訊、標記設定、啟動設定、標記說明）；成功建立任務後清除暫存狀態；更新介面定義、Prototype 互動規格與邊界情況，區分重新整理（狀態保留）與離頁（狀態遺失） |
 | 3.3.0 | 2026-07-08 | **概念修正**：`relation_types` 從「關係觸發詞」改為「語意類型標籤」（如 `bodyLocation`、`causes`、`possibleTreatment`）——觸發詞由標記者從文本反白選取（不受 config 約束），語意類型由標記者從下拉選單事後指定；auto-populate 來源改為資料中各三元組的 `relation_type` 欄位或 record 層級 `relation_types` 陣列（更新 FR-003d-4、FR-003g-8、registry 欄位表、預覽互動表） |
 | 3.2.0 | 2026-07-06 | **行為新增**：每個輸出類型提供獨立「無法判定 (Bypass)」選項——registry 統一附加共通欄位 `allow_bypass`（`boolean`，預設 `true`）至所有輸出類型的 `fields` 與 `defaultConfig`；預覽區塊底部顯示 Bypass 勾選項，勾選後互斥（清空並停用該輸出類型其他互動控制項）、取消後重新初始化如同初次載入；整合預覽（`span` + `relation_triple`）各自顯示帶名稱前綴的勾選項，span Bypass 連鎖停用全區、relation_triple Bypass 僅停用關係建構器；schema toggle 關閉時勾選項消失並清除狀態（新增 FR-003j、SC-003h、對應邊界情況；更新預覽互動表、registry 欄位表、OutputConfig） |
