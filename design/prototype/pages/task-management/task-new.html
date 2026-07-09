@@ -1727,8 +1727,14 @@ function saveWizardState() {
   try {
     var data = {};
     PERSISTABLE_KEYS.forEach(function(key) { data[key] = state[key]; });
-    data._datasetFileMeta = state.datasetFiles.map(function(f) {
-      return { name: f.name, size: f.size };
+    data._datasetFileMeta = state.datasetFiles.map(function(f, idx) {
+      var root = state._datasetRoots[idx];
+      var placeholder = null;
+      if (root) {
+        var recs = extractRecordsAtPath(root, state.datasetRecordPath);
+        placeholder = (recs && recs.length) ? [recs[0]] : root;
+      }
+      return { name: f.name, size: f.size, rootPlaceholder: placeholder };
     });
     sessionStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(data));
   } catch (e) { /* quota exceeded or private mode */ }
@@ -1745,6 +1751,9 @@ function restoreWizardState() {
     });
     if (data._datasetFileMeta && data._datasetFileMeta.length) {
       state.datasetFiles = data._datasetFileMeta;
+      state._datasetRoots = data._datasetFileMeta.map(function(f) {
+        return f.rootPlaceholder || [];
+      });
     }
     state.isDirty = true;
     return true;
