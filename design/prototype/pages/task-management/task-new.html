@@ -1700,7 +1700,77 @@ var toastTimer = null;
 function t(key) { return (I18N[state.lang] || I18N.zh)[key] || key; }
 function el(id) { return document.getElementById(id); }
 function setText(id, txt) { var e = el(id); if (e) e.textContent = txt; }
-function markDirty() { state.isDirty = true; }
+function markDirty() { state.isDirty = true; saveWizardState(); }
+
+/* ── Wizard state persistence (sessionStorage) ────────────────── */
+var WIZARD_STORAGE_KEY = 'labelsuite.taskNew.wizardState';
+var PERSISTABLE_KEYS = [
+  'step', 'taskName',
+  'taskCategories', 'taskInputTypes', 'taskOutputTypes', 'taskType',
+  'selectedOutputTypes', 'outputConfigs', 'columnOutputTypeMap',
+  'fieldRoleMap', 'datasetParsedColumns', 'datasetParsedRows', 'datasetRawFirstRow',
+  'datasetColumnUniqueValues', 'datasetTotalRecords', 'datasetFieldProfile',
+  'datasetCandidates', 'datasetRecordPath', '_roleMapBySource',
+  'datasetPreviewRawRows',
+  'resolvedTaskTypes', 'configDataMap', 'configData',
+  'previewEntities', 'previewTriples',
+  'codeFormat',
+  'memberSource', 'initialMembers',
+  'runInit',
+  'annotatorGuidelineText', 'reviewerGuidelineText',
+  'forceGuideline',
+  'previewBypass', 'previewState',
+  'codeDraftDirty',
+];
+
+function saveWizardState() {
+  try {
+    var data = {};
+    PERSISTABLE_KEYS.forEach(function(key) { data[key] = state[key]; });
+    data._datasetFileMeta = state.datasetFiles.map(function(f) {
+      return { name: f.name, size: f.size };
+    });
+    sessionStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(data));
+  } catch (e) { /* quota exceeded or private mode */ }
+}
+
+function restoreWizardState() {
+  try {
+    var raw = sessionStorage.getItem(WIZARD_STORAGE_KEY);
+    if (!raw) return false;
+    var data = JSON.parse(raw);
+    if (!data || !data.step) return false;
+    PERSISTABLE_KEYS.forEach(function(key) {
+      if (data[key] !== undefined) state[key] = data[key];
+    });
+    if (data._datasetFileMeta && data._datasetFileMeta.length) {
+      state.datasetFiles = data._datasetFileMeta;
+    }
+    state.isDirty = true;
+    return true;
+  } catch (e) { return false; }
+}
+
+function clearWizardState() {
+  try { sessionStorage.removeItem(WIZARD_STORAGE_KEY); } catch (e) {}
+}
+
+function syncChipsFromState() {
+  ['taskCategoryChips', 'taskInputTypeChips'].forEach(function(containerId) {
+    var container = el(containerId);
+    if (!container) return;
+    var stateKey = containerId === 'taskCategoryChips' ? 'taskCategories' : 'taskInputTypes';
+    var arr = state[stateKey] || [];
+    container.querySelectorAll('.task-type-chip').forEach(function(btn) {
+      var key = btn.getAttribute('data-key');
+      var selected = arr.indexOf(key) >= 0;
+      btn.classList.toggle('selected', selected);
+      btn.setAttribute('aria-checked', selected ? 'true' : 'false');
+    });
+  });
+  _lastOutputCatsKey = undefined;
+  rebuildOutputChips();
+}
 
 /* ── SVG icon helpers (DOM, no innerHTML) ────────────────────── */
 var SVG_NS = 'http://www.w3.org/2000/svg';
@@ -2008,6 +2078,7 @@ function showStep(n) {
     revalidateCurrentStep();
   }
   updateStepIndicator();
+  saveWizardState();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -6388,6 +6459,7 @@ function submitTask() {
     var createdTaskId = generateCreatedTaskId();
     state.isSubmitting = false;
     state.isDirty = false;
+    clearWizardState();
     btn.classList.remove('btn-loading');
     showToast(t('toastCreated'), 'success');
     setTimeout(function() { redirectToTaskDetail(createdTaskId); }, 300);
@@ -6944,10 +7016,28 @@ window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.pre
 var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
 applyLang(initLang);
 initTaskTypeChips();
-showStep(1);
-el('codeEditor').readOnly = false;
-el('codeEditor').disabled = false;
-el('codeEditor').value = configToCode();
+
+var _restored = restoreWizardState();
+if (_restored) {
+  /* Re-render UI from restored state */
+  el('taskNameInput').value = state.taskName;
+  syncChipsFromState();
+  deriveTaskType();
+  if (state.datasetFiles.length) {
+    renderDatasetFileList();
+    renderInlineDatasetPreview();
+  }
+  if (state.step >= 2) { renderTemplateBtns(); renderSchemaFields(); }
+  el('codeEditor').readOnly = false;
+  el('codeEditor').disabled = false;
+  el('codeEditor').value = configToCode();
+  showStep(state.step);
+} else {
+  showStep(1);
+  el('codeEditor').readOnly = false;
+  el('codeEditor').disabled = false;
+  el('codeEditor').value = configToCode();
+}
 
 if (window.LabelSuiteAnalytics) {
   window.LabelSuiteAnalytics.init({ page: 'task-new' });
