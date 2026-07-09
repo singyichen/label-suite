@@ -1719,7 +1719,7 @@ var PERSISTABLE_KEYS = [
   'runInit',
   'annotatorGuidelineText', 'reviewerGuidelineText',
   'forceGuideline',
-  'previewBypass', 'previewState',
+  'previewBypass', 'previewState', 'previewInited',
   'codeDraftDirty',
 ];
 
@@ -7028,6 +7028,11 @@ if (_restored) {
     renderInlineDatasetPreview();
   }
   if (state.step >= 2) { renderTemplateBtns(); renderSchemaFields(); }
+  if (state.initialMembers.length) renderMemberList();
+  if (state.memberSource !== 'system') switchMemberSource(state.memberSource);
+  el('annotatorGuidelineTextInput').value = state.annotatorGuidelineText || '';
+  el('reviewerGuidelineTextInput').value = state.reviewerGuidelineText || '';
+  el('forceGuidelineToggle').checked = !!state.forceGuideline;
   el('codeEditor').readOnly = false;
   el('codeEditor').disabled = false;
   el('codeEditor').value = configToCode();
