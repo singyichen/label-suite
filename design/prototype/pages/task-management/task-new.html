@@ -1718,12 +1718,14 @@ var PERSISTABLE_KEYS = [
   'memberSource', 'initialMembers',
   'runInit',
   'annotatorGuidelineText', 'reviewerGuidelineText',
+  'annotatorGuidelineFiles', 'reviewerGuidelineFiles',
   'forceGuideline',
   'previewBypass', 'previewState', 'previewInited',
   'codeDraftDirty',
 ];
 
 function saveWizardState() {
+  if (!state.isDirty) return;
   try {
     var data = {};
     PERSISTABLE_KEYS.forEach(function(key) { data[key] = state[key]; });
@@ -7042,6 +7044,10 @@ if (_restored) {
   el('annotatorGuidelineTextInput').value = state.annotatorGuidelineText || '';
   el('reviewerGuidelineTextInput').value = state.reviewerGuidelineText || '';
   el('forceGuidelineToggle').checked = !!state.forceGuideline;
+  renderGuidelineList('annotator');
+  renderGuidelineList('reviewer');
+  el('isolationToggle').checked = !!state.runInit.isolationEnabled;
+  state.codeDraftDirty = false;
   el('codeEditor').readOnly = false;
   el('codeEditor').disabled = false;
   el('codeEditor').value = configToCode();
