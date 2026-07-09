@@ -37,7 +37,7 @@ design/prototype/pages/[module]/   ← HTML prototypes
   - `.specify/memory/backend-constitution.md` for backend/API/schema/service/database/migration/Redis/Celery/OpenAPI/backend security/backend performance/backend deployment work
   - `.specify/memory/frontend-constitution.md` for React/prototype-to-React/frontend routing/shared UI/i18n/Storybook/accessibility/frontend state/selector/frontend performance work
   - `.specify/memory/testing-constitution.md` for all behavior changes, bug fixes with regression tests, test strategy, coverage, fixtures, CI checks, Playwright, Vitest, pytest, or security leakage tests
-- Follow the commit convention in [CLAUDE.md](CLAUDE.md#commit-convention): `<type>: <subject>` in English; every commit must include body bullets explaining the *why* — no subject-only commits
+- Follow the commit convention in [`.claude/commands/commit.md`](.claude/commands/commit.md): `<type>: <subject>` in English; every commit must include body bullets with bold action words — no subject-only commits
 - Remove all debug `print` / `console.log` before finishing
 - Surface exact error to user when any tool call fails twice; never silently retry a third time
 
