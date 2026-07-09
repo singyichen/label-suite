@@ -3220,7 +3220,11 @@ function renderAbsaUnifiedPreview(previewContainer) {
       if (ent.start > charPos) { appendTextMaybeHighlighted(textEl, realText.substring(charPos, ent.start), charPos); }
       var span = document.createElement('span');
       span.className = 'absa-span-highlight';
-      if (state.relSel && state.relSel.start === ent.start && state.relSel.text === ent.text) span.classList.add('rel-sel-highlight');
+      if (state.relSel && state.relSel.start != null) {
+        var _entEnd = ent.start + ((ent.text || realText.substring(ent.start, (ent.end || ent.start) + 1)).length);
+        var _rsEnd = state.relSel.start + (state.relSel.text ? state.relSel.text.length : 0);
+        if (state.relSel.start <= ent.start && _rsEnd >= _entEnd) span.classList.add('rel-sel-highlight');
+      }
       var c = typeColorMap[ent.type] || '#6366F1';
       span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c;
       span.title = ent.type + ' (' + ent.start + ',' + ent.end + ')';
