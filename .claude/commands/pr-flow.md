@@ -13,7 +13,7 @@ git add <files>
 git commit -m "<type>: <subject>" -m "- <why this change was needed>"
 ```
 
-> Follow the [Commit Convention](../../CLAUDE.md#commit-convention): every commit must include body bullets explaining the *why* — no subject-only commits.
+> Follow the [Commit Convention](commit.md): every commit must include body bullets explaining the *why* — no subject-only commits.
 
 ## Step 2 — Code Review
 
