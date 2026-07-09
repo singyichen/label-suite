@@ -1722,6 +1722,7 @@ var PERSISTABLE_KEYS = [
   'forceGuideline',
   'previewBypass', 'previewState', 'previewInited',
   'codeDraftDirty',
+  '_lastAutoPopKey', '_datasetVersion',
 ];
 
 function saveWizardState() {
@@ -7019,7 +7020,7 @@ el('nextBtn').addEventListener('click', function() {
 });
 
 el('leaveModalStayBtn').addEventListener('click', hideLeaveModal);
-el('leaveModalLeaveBtn').addEventListener('click', function() { var cb = state.leaveCallback; hideLeaveModal(); if (cb) cb(); });
+el('leaveModalLeaveBtn').addEventListener('click', function() { var cb = state.leaveCallback; clearWizardState(); hideLeaveModal(); if (cb) cb(); });
 el('leaveModal').addEventListener('click', function(e) { if (e.target === el('leaveModal')) hideLeaveModal(); });
 window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.preventDefault(); e.returnValue = ''; } });
 
