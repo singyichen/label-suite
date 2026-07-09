@@ -58,7 +58,7 @@ Co-Authored-By: <model full name> <noreply@anthropic.com>
 - **Language**: English only — no Chinese anywhere in commit messages (project prohibition)
 - **Subject line**: imperative mood ("add", "fix", "remove", not "added", "fixes", "removing"), ≤ 72 characters
 - **Body required**: always — every commit must include at least one body bullet explaining the *why*, regardless of type or size. No subject-only commits.
-- **Body bullets**: each bullet starts with a **bold action word**, then describes what was done and why. Common actions: **Add** / **Fix** / **Remove** / **Update** / **Refactor** / **Move** / **Extract** / **Replace**. Keep technical terms in English (e.g. `Hook`, `PR`, `middleware`). May omit bullets for trivially simple changes.
+- **Body bullets**: each bullet starts with a **bold action word**, then describes what was done and why. Common actions: **Add** / **Fix** / **Remove** / **Update** / **Refactor** / **Move** / **Extract** / **Replace**. Keep technical terms in English (e.g. `Hook`, `PR`, `middleware`).
 - **Single purpose**: one logical change per commit; do not bundle unrelated changes (enforced by `scripts/git-hooks/pre-commit` — currently 10 files / 600 non-test lines)
 - **Commit frequently**: after every logical group of changes
 - **Bypass**: `ALLOW_BATCH_COMMIT=1` requires explicit user approval first — never self-approve
@@ -82,7 +82,7 @@ Co-Authored-By: <model full name> <noreply@anthropic.com>
 Always append a blank line then the `Co-Authored-By` trailer, matching the current model:
 
 - Claude: `Co-Authored-By: <model full name> <noreply@anthropic.com>` (e.g. `Claude Opus 4.6 (1M context)`, `Claude Sonnet 5`)
-- OpenAI Codex: `Co-authored-by: OpenAI Codex <model full name> <noreply@openai.com>`
+- OpenAI Codex: `Co-Authored-By: OpenAI Codex <model full name> <noreply@openai.com>`
 
 ## Examples
 
