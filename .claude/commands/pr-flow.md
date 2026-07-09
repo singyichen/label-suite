@@ -10,10 +10,17 @@ Execute after development is complete. Steps 1–7 are automated, except Step 7.
 
 ```bash
 git add <files>
-git commit -m "<type>: <subject>" -m "- <why this change was needed>"
+# Use the /commit command or the here-doc format:
+git commit -F - <<'EOF'
+<type>: <subject in English, imperative mood>
+
+- **<Action>** <what was done and why>
+
+Co-Authored-By: <model full name> <noreply@anthropic.com>
+EOF
 ```
 
-> Follow the [Commit Convention](../../CLAUDE.md#commit-convention): every commit must include body bullets explaining the *why* — no subject-only commits.
+> Follow the [Commit Convention](commit.md): every commit must include body bullets with bold action words — no subject-only commits.
 
 ## Step 2 — Code Review
 
@@ -99,7 +106,13 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments \
 
 ```bash
 git add <files>
-git commit -m "fix: <what was actually fixed> (qodo review)" -m "- <which finding this addresses and why the fix is correct>"
+git commit -F - <<'EOF'
+fix: <what was actually fixed> (qodo review)
+
+- **<Action>** <which finding this addresses and why the fix is correct>
+
+Co-Authored-By: <model full name> <noreply@anthropic.com>
+EOF
 git push origin <branch-name>
 ```
 

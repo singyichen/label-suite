@@ -53,25 +53,6 @@ Rules in `.claude/rules/` load per situation: files with `paths:` frontmatter lo
 
 ## Git Workflow
 
-### Commit Convention
-
-Commit frequently — after every logical group of changes. One logical change per commit — do not bundle unrelated changes (e.g. new tooling + doc version bump = two commits).
-
-**Single purpose per commit (enforced)**: every commit must serve exactly one change purpose; no batch commits. Enforced mechanically by `scripts/git-hooks/pre-commit` (activated via `core.hooksPath`, set by session-init); the hook's thresholds are authoritative — currently 10 files / 600 non-test lines; read the script for live values. Merge commits are exempt. Bypass (`ALLOW_BATCH_COMMIT=1`) requires explicit user approval first — never self-approve.
-
-Format:
-
-```text
-<type>: <subject in English, imperative mood, ≤ 72 chars>
-
-- <why this change was needed — motivation, constraint, or tradeoff>
-- <one bullet per logical aspect; do NOT restate the diff file-by-file>
-```
-
-Types: `feat` · `fix` · `docs` · `refactor` · `test` · `style` · `chore` · `perf` · `ci`
-
-**Body required**: always — every commit must include at least one body bullet explaining the why, regardless of type or size. No subject-only commits.
-
 ### PR Scope — Single Purpose (Enforced)
 
 Every PR must serve exactly **one purpose**. Unrelated changes belong in a separate PR. Decision test: "Can I describe this PR's purpose in one sentence without using 'and' or 'also'?" No → split.
