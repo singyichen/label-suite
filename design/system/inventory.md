@@ -504,7 +504,7 @@
 | P3 | **Toggle Switch** | task-new.html schema 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
 | P3 | **Code Editor (Schema)** | task-new.html JSON schema 編輯 | ✅ 已補充至 MASTER.md (2026-05-20) |
 | P2 | **Chip** | 12 個頁面使用（篩選、表單選擇、展示），為最常見未定義元件 | ✅ 已補充至 MASTER.md (2026-07-10) |
-| P2 | **Pagination** | 9 個頁面使用，為 list page 基本元件 | ✅ 已補充至 MASTER.md (2026-07-10) |
+| P2 | **Pagination** | 5 個頁面使用（含 task-detail 子面板），為 list page 基本元件 | ✅ 已補充至 MASTER.md (2026-07-10) |
 | P3 | **Accordion** | task-new Step 2 output type 手風琴面板 | ✅ 已補充至 MASTER.md (2026-07-10) |
 | P3 | **Breadcrumb** | task-detail、dataset-analysis-detail 層級導覽 | ✅ 已補充至 MASTER.md (2026-07-10) |
 | P3 | **Skeleton** | task-detail、profile 載入佔位 | ✅ 已補充至 MASTER.md (2026-07-10) |

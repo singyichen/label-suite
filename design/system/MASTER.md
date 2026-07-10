@@ -1945,7 +1945,7 @@ Selectable or read-only pill-shaped labels used for filtering, form selection, a
   padding: 3px 8px;
   border-radius: var(--radius-full);
   background: var(--color-primary-soft-bg);
-  border: 1px solid var(--color-primary-soft-border);
+  border: 1px solid var(--color-primary-border);   /* #C7D2FE */
   color: var(--color-primary);
   font-size: 11px;
   font-weight: 600;
