@@ -1,80 +1,87 @@
-## 變更內容
+## Changes
 
-<!-- 請依照分類列出本次 PR 所有變更，每一項都必須列出，漏寫 = 漏測 -->
-<!-- 沒有變更的分類請直接刪除該區塊 -->
+<!-- List all changes by category; every item must be listed — unlisted = untested -->
+<!-- Delete any category section that has no changes -->
 
-### 新增
+### Added
 
-- [類型]【模組/頁面】變更說明
+- [Type]【Module/Page】Description
 
-### 調整
+### Modified
 
-- [類型]【模組/頁面】變更說明
+- [Type]【Module/Page】Description
 
-### 修正
+### Fixed
 
-- [類型]【模組/頁面】變更說明
+- [Type]【Module/Page】Description
 
-### 移除
+### Removed
 
-- [類型]【模組/頁面】變更說明
+- [Type]【Module/Page】Description
 
-## 注意事項
+## Test Plan
 
-<!-- 沒有則刪除此區塊 -->
+<!-- Every item must be individually verified; mark passed as [x], failed as [ ] with reason -->
 
-- [ ] 包含資料庫 migration，部署前需先執行
-- [ ] 包含設定檔變更（`.env`、config）
-- [ ] 需清除快取
-- [ ] API 欄位結構有異動
-- [ ] 第三方服務整合有異動
+- [ ] Verification item
 
-## Rollback Plan（Migration PR 適用）
+## Notes
 
-<!-- 僅當此 PR 包含資料庫 migration 時填寫，否則刪除此區塊 -->
+<!-- Delete this section if not applicable -->
 
-**Before state**：<!-- migration 執行前的 schema / 資料狀態 -->
+- [ ] Includes database migration — run before deploy
+- [ ] Includes config changes (`.env`, settings)
+- [ ] Requires cache clear
+- [ ] API field/schema changed
+- [ ] Third-party service integration changed
 
-**After state**：<!-- migration 執行後的 schema / 資料狀態 -->
+## Rollback Plan (Migration PR only)
 
-**Rollback procedure**：
-1. <!-- 執行 `uv run alembic downgrade -1` 或具體指令 -->
-2. <!-- 任何額外的資料復原步驟 -->
+<!-- Fill in only when this PR includes a database migration; otherwise delete this section -->
 
-## 影響範圍
+**Before state**: <!-- Schema / data state before migration -->
 
-<!-- 勾選本次 PR 影響的範圍 -->
+**After state**: <!-- Schema / data state after migration -->
 
-- [ ] 前台頁面（請列出：）
-- [ ] 後台頁面（請列出：）
-- [ ] API（請列出：）
-- [ ] 排程 / Queue
-- [ ] 其他（請說明：）
+**Rollback procedure**:
+1. <!-- Run `uv run alembic downgrade -1` or specific command -->
+2. <!-- Any additional data recovery steps -->
 
-## 關聯
+## Impact Scope
 
-- 相關 Issue：#<!-- issue 編號，無則填「無」 -->
+<!-- Check the areas affected by this PR -->
 
-## 檢查清單
+- [ ] Frontend pages (list: )
+- [ ] Admin pages (list: )
+- [ ] API (list: )
+- [ ] Scheduled jobs / Queue
+- [ ] Other (describe: )
 
-- [ ] 我已完整列出所有變更內容
-- [ ] 我已在本地手動測試，確認功能完整性與穩定性
-- [ ] 我已對程式碼進行必要註解，特別是難以理解的部分
-- [ ] 我的 PR 標題符合格式：`[分類]【模組/頁面】簡述變更內容`
+## Related
 
-## 類型清單
-| 類型    | 說明           |
-| ----- | ------------ |
-| 新增    | 新功能          |
-| 修正    | Bug 修正       |
-| 調整    | 功能調整         |
-| 重構    | 程式結構調整但不影響行為 |
-| 效能    | 效能優化         |
-| 樣式    | UI / CSS     |
-| 文件    | 文件更新         |
-| 測試    | 測試相關         |
-| 相依    | 套件更新         |
-| 設定    | 設定檔調整        |
-| 工具    | 建置或開發工具      |
-| CI/CD | 部署或 pipeline |
-| 資安    | 安全性相關        |
+- Issue: #<!-- issue number, or "None" -->
+
+## Checklist
+
+- [ ] I have listed all changes completely
+- [ ] I have tested locally and confirmed functionality and stability
+- [ ] I have added necessary comments, especially for hard-to-understand parts
+- [ ] My PR title follows the format: `<type>: <description>`
+
+## Type Reference
+
+| Type | Description |
+|------|-------------|
+| feat | New feature |
+| fix | Bug fix |
+| change | Feature adjustment |
+| refactor | Code restructuring without behavior change |
+| perf | Performance optimization |
+| style | UI / CSS |
+| docs | Documentation update |
+| test | Test-related |
+| deps | Package update |
+| config | Configuration change |
+| build | Build or dev tooling |
+| ci | CI/CD pipeline |
+| security | Security-related |
