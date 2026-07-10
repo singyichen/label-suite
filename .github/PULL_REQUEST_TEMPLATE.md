@@ -4,23 +4,11 @@
 
 ## Reason
 
-<!-- Why is this change needed? What triggered it? Use a table when comparing scenarios or decisions. -->
-
-<!-- Example — Scenario table:
-| Scenario | Given | When | Then |
-|----------|-------|------|------|
-| ... | ... | ... | ... |
--->
+<!-- Why is this change needed? What triggered it? -->
 
 ## Result
 
-<!-- What does the PR deliver? Summarize the outcome. Use a table for structured comparisons (before/after, decision matrices, etc.) -->
-
-<!-- Example — Decision table:
-| # | Condition | Action | Expected |
-|---|-----------|--------|----------|
-| 1 | ... | ... | ... |
--->
+<!-- What does the PR deliver? Summarize the outcome. -->
 
 ## Test Plan
 
