@@ -76,14 +76,10 @@
 |------|-------------|
 | feat | New feature |
 | fix | Bug fix |
-| change | Feature adjustment |
+| docs | Documentation only |
 | refactor | Code restructuring without behavior change |
-| perf | Performance optimization |
-| style | UI / CSS |
-| docs | Documentation update |
-| test | Test-related |
-| deps | Package update |
-| config | Configuration change |
-| build | Build or dev tooling |
-| ci | CI/CD pipeline |
-| security | Security-related |
+| test | Adding or updating tests only |
+| style | Formatting, whitespace, lint fixes |
+| chore | Tooling, config, dependency updates |
+| perf | Performance improvement |
+| ci | CI/CD pipeline changes |
