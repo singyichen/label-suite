@@ -7048,7 +7048,10 @@ var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.g
 applyLang(initLang);
 initTaskTypeChips();
 
-var _restored = restoreWizardState();
+var _navEntry = performance.getEntriesByType('navigation')[0];
+var _isReload = _navEntry && _navEntry.type === 'reload';
+var _restored = _isReload && restoreWizardState();
+if (!_isReload) clearWizardState();
 if (_restored) {
   /* Re-render UI from restored state */
   el('taskNameInput').value = state.taskName;
