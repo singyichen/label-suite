@@ -3,7 +3,7 @@
 > **用途：** 記錄所有 prototype 頁面中出現的 UI elements，對照 MASTER.md 的定義狀態，作為 design system 擴充的依據。
 >
 > **掃描範圍：** `design/prototype/` 所有頁面
-> **最後掃描：** 2026-05-20
+> **最後掃描：** 2026-07-10
 > **掃描頁面：** account/login.html、account/register.html、account/forgot-password.html、account/reset-password.html、account/profile.html、dashboard/dashboard.html、admin/user-management.html、admin/role-settings.html、task-management/task-detail.html、task-management/task-list.html、task-management/task-new.html、task-management/task-detail.panels/*、annotation/annotation-list.html、annotation/annotation-workspace.html、annotation/annotation-workspace.panels/*、dataset/dataset-analysis-list.html、dataset/dataset-analysis-detail.html、dataset/dataset-analysis-detail.partials/*
 > **Design Token 來源：** `design/prototype/assets/tokens.css`
 
@@ -404,6 +404,68 @@
 
 ---
 
+### ❌ Chip
+
+**MASTER.md 狀態：** 未定義
+
+| 變體 | 說明 | 出現頁面 |
+|------|------|----------|
+| Filter chip (task type / stage / status) | 篩選列可選取/取消 | task-list, annotation-list, dataset-analysis-detail, user-management |
+| Select chip (task category / input type / output type) | 表單選擇器，radio 或 checkbox 語意 | task-new |
+| Display chip (task type badge 內嵌) | 唯讀展示 | task-detail, annotation-workspace |
+
+---
+
+### ❌ Accordion
+
+**MASTER.md 狀態：** 未定義
+
+| 變體 | 說明 | 出現頁面 |
+|------|------|----------|
+| Schema accordion (output type panels) | 可展開/收合面板，標題含序號與輸出類型名稱 | task-new (Step 2) |
+
+---
+
+### ❌ Pagination
+
+**MASTER.md 狀態：** 未定義
+
+| 變體 | 說明 | 出現頁面 |
+|------|------|----------|
+| Page number pagination | 頁碼按鈕列 + 每頁筆數選擇 + 總筆數提示 | task-list, annotation-list, dataset-analysis-list, user-management, task-detail panels (annotation-progress, annotation-results, member-management, work-log) |
+
+---
+
+### ❌ Color Dot
+
+**MASTER.md 狀態：** 未定義
+
+| 變體 | 說明 | 出現頁面 |
+|------|------|----------|
+| Entity color indicator | entity-list 各項目前方的色點，顯示 entity 指定顏色 | task-new (Step 2), task-detail |
+
+---
+
+### ❌ Breadcrumb
+
+**MASTER.md 狀態：** 未定義
+
+| 變體 | 說明 | 出現頁面 |
+|------|------|----------|
+| Path breadcrumb | 層級路徑導覽（如 任務列表 > 任務詳情） | task-detail, dataset-analysis-detail |
+
+---
+
+### ❌ Skeleton
+
+**MASTER.md 狀態：** 未定義
+
+| 變體 | 說明 | 出現頁面 |
+|------|------|----------|
+| Content skeleton | 資料載入前的佔位元素（灰色閃爍區塊） | task-detail, profile |
+
+---
+
 ## MASTER.md 補充歷程
 
 記錄各 component 加入 MASTER.md 的順序與原因，供追蹤設計系統擴充脈絡。
@@ -434,3 +496,9 @@
 | P3 | **Tag Input / Tag Pill** | task-new.html label 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
 | P3 | **Toggle Switch** | task-new.html schema 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
 | P3 | **Code Editor (Schema)** | task-new.html JSON schema 編輯 | ✅ 已補充至 MASTER.md (2026-05-20) |
+| P2 | **Chip** | 12 個頁面使用（篩選、表單選擇、展示），為最常見未定義元件 | ❌ 待補充 (2026-07-10 掃描發現) |
+| P2 | **Pagination** | 9 個頁面使用，為 list page 基本元件 | ❌ 待補充 (2026-07-10 掃描發現) |
+| P3 | **Accordion** | task-new Step 2 output type 手風琴面板 | ❌ 待補充 (2026-07-10 掃描發現) |
+| P3 | **Breadcrumb** | task-detail、dataset-analysis-detail 層級導覽 | ❌ 待補充 (2026-07-10 掃描發現) |
+| P3 | **Skeleton** | task-detail、profile 載入佔位 | ❌ 待補充 (2026-07-10 掃描發現) |
+| P4 | **Color Dot** | task-new、task-detail entity 色點指示 | ❌ 待補充 (2026-07-10 掃描發現) |
