@@ -7048,7 +7048,16 @@ var initLang = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.g
 applyLang(initLang);
 initTaskTypeChips();
 
-var _restored = restoreWizardState();
+var _performance = typeof performance !== 'undefined' ? performance : null;
+var _navEntry = (_performance && _performance.getEntriesByType) ? _performance.getEntriesByType('navigation')[0] : null;
+var _isReload = false;
+if (_navEntry) {
+  _isReload = _navEntry.type === 'reload';
+} else if (_performance && _performance.navigation) {
+  _isReload = _performance.navigation.type === 1;
+}
+var _restored = _isReload && restoreWizardState();
+if (!_isReload) clearWizardState();
 if (_restored) {
   /* Re-render UI from restored state */
   el('taskNameInput').value = state.taskName;
