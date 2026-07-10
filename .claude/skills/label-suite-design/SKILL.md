@@ -24,6 +24,16 @@ SVG assets live in `design/prototype/assets/` — do not duplicate them into thi
 
 When building a new prototype page, reference these via a relative path from the page (e.g. `../../assets/icons/check.svg`). When building a standalone artifact outside the repo, copy the needed SVGs into the artifact folder.
 
+## Upstream design system references
+Before generating any page, read these two files for the authoritative rules:
+- **`design/system/MASTER.md`** — visual tokens, component specs, anti-patterns, pre-delivery checklist.
+- **`design/system/ux-conventions.md`** — cross-feature behavioral patterns (UXC-01–UXC-11): state initialization, wizard persistence, unsaved changes protection, validation timing, error presentation, submit behavior, toast duration, loading/empty states, destructive confirmation, pagination & URL state.
+
+Every prototype page must comply with both files. When this skill's Working rules overlap with MASTER.md or ux-conventions.md, the upstream files are the source of truth.
+
+### Conditional: component inventory
+Read **`design/system/inventory.md`** only when introducing a UI element that does not already appear in existing prototype pages. It tracks which components exist, their definition status in MASTER.md, and the maintenance workflow for adding new ones. After adding a new component to a prototype, update inventory.md (add the component, set its status, list the page it appears on).
+
 ## Working rules
 - **Import `design/prototype/assets/tokens.css`** from every prototype page — never hardcode hex values. Use `var(--color-primary)` etc. For standalone artifacts outside the repo, import `colors_and_type.css` from this skill folder instead — except claude.ai Artifacts, which cannot import anything (see the Artifact section below).
 - **Flat Design.** Allowed hover effects: opacity, color shift, `translateY(-1px)`. No scale, no shadow growth, no gradients.

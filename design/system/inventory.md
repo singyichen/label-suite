@@ -9,14 +9,27 @@
 
 ---
 
-## 新元件維護流程
+## 維護時機
+
+**本文件必須在 prototype 異動時同步更新。** 觸發條件：
+
+| 觸發 | 動作 |
+|------|------|
+| Prototype 新增一個 MASTER.md 尚未定義的 UI 元件 | 在本文件加入該元件，狀態標為 ❌ 未定義 |
+| MASTER.md 補上該元件規格 | 狀態改為 ✅ 已定義 |
+| 既有元件出現在新頁面 | 更新該元件的「出現頁面」欄 |
+| 元件從所有 prototype 中移除 | 狀態改為 🔒 封存 |
+
+> `/label-suite-design` skill 以條件式引用本文件：僅在引入新 UI 元件時讀取，不在每次生成頁面時讀取。
+
+## 新元件完整流程
 
 新 component 出現時，依序更新以下文件：
 
 | 步驟 | 文件 | 說明 |
 |------|------|------|
 | 1 | `design/system/MASTER.md` | 補充元件規格（結構、token、互動規則、a11y） |
-| 2 | `design/system/inventory.md` | 加入清單，狀態標為 ✅ 已定義，更新掃描頁面清單 |
+| 2 | `design/system/inventory.md` | 加入清單，狀態標為 ✅ 已定義，更新出現頁面與最後掃描日期 |
 | 3 | `design/prototype/pages/` | 使用 `/label-suite-design` skill 產生 prototype HTML |
 | 4 | `design/prototype/assets/tokens.css` | 若有新 token，同步更新 CSS 變數 |
 

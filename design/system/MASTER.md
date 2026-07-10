@@ -26,6 +26,8 @@
 
 **Guidelines** — [Style / Flat Design](#style-guidelines) · [Page Shells](#page-shell-patterns) · [Anti-Patterns](#anti-patterns-do-not-use) · [Pre-Delivery Checklist](#pre-delivery-checklist) · [Changelog](#changelog)
 
+**Behavioral** — [UX Conventions](ux-conventions.md) *(cross-feature interaction patterns: state init, validation, feedback, safety)*
+
 ---
 
 ## Global Rules
