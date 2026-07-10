@@ -25,7 +25,7 @@ Critical or High security vulnerabilities are the exception: do **not** create a
 ## Templates
 
 The full `gh issue create` command for every issue type lives in
-[docs/templates/issue-templates.md](../../docs/templates/issue-templates.md).
+[.github/issue-templates.md](../../.github/issue-templates.md).
 **Read that file only when actually opening an issue**, then fill the matching template verbatim. Body sections are in Traditional Chinese; titles and labels stay in English.
 
 ## After Opening an Issue

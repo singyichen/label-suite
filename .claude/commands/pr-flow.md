@@ -86,14 +86,20 @@ gh pr create \
 # Append --label "scope:frontend" --label "scope:backend" etc. only for matching scopes
 ```
 
-**PR body requirements**:
-- Summary (bullet points)
-- Changed files table
-- Test Plan checklist — every item must be individually verified; mark passed as `[x]`, failed as `[ ]` with reason
+**PR body requirements** (structure mirrors `.github/PULL_REQUEST_TEMPLATE.md`):
+- **Purpose** — what this PR is trying to achieve (one sentence)
+- **Reason** — why this change is needed
+- **Result** — what the PR delivers; prefer tables when structured comparison improves readability (scenarios, decisions, before/after)
+- **Changed Files** — table with File and Change columns; brief description per file
+- **Test Plan** — checklist; every item must be individually verified; mark passed as `[x]`, failed as `[ ]` with reason
+- **Notes** _(optional)_ — migration, config, cache, API contract, or third-party flags
+- **Rollback Plan** _(migration PRs only)_ — before/after state + rollback procedure
+- **Impact Scope** — check affected areas (frontend, admin, API, queue, other)
+- **Related** — link to issue (`#N`) or "None"
 
-## Step 6 — Qodo Code Review
+## Step 6 — Bot Code Review
 
-After the PR is created, `qodo-code-review` bot reviews automatically.
+After the PR is created, code review bots review automatically.
 
 **6a. Fetch review findings**
 
@@ -107,7 +113,7 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments \
 ```bash
 git add <files>
 git commit -F - <<'EOF'
-fix: <what was actually fixed> (qodo review)
+fix: <what was actually fixed> (bot review)
 
 - **<Action>** <which finding this addresses and why the fix is correct>
 
