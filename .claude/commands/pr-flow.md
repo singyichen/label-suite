@@ -87,7 +87,9 @@ gh pr create \
 ```
 
 **PR body requirements** (structure mirrors `.github/PULL_REQUEST_TEMPLATE.md`):
-- **Changes** — categorized list (Added / Modified / Fixed / Removed); delete unused categories
+- **Purpose** — what this PR is trying to achieve (one sentence)
+- **Reason** — why this change is needed; use tables for scenario comparisons or decision matrices
+- **Result** — what the PR delivers; use tables for structured before/after or decision summaries
 - **Test Plan** — checklist; every item must be individually verified; mark passed as `[x]`, failed as `[ ]` with reason
 - **Notes** _(optional)_ — migration, config, cache, API contract, or third-party flags
 - **Rollback Plan** _(migration PRs only)_ — before/after state + rollback procedure

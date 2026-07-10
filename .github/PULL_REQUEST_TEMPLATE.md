@@ -1,23 +1,26 @@
-## Changes
+## Purpose
 
-<!-- List all changes by category; every item must be listed — unlisted = untested -->
-<!-- Delete any category section that has no changes -->
+<!-- What is this PR trying to achieve? One sentence is enough. -->
 
-### Added
+## Reason
 
-- [Type]【Module/Page】Description
+<!-- Why is this change needed? What triggered it? Use a table when comparing scenarios or decisions. -->
 
-### Modified
+<!-- Example — Scenario table:
+| Scenario | Given | When | Then |
+|----------|-------|------|------|
+| ... | ... | ... | ... |
+-->
 
-- [Type]【Module/Page】Description
+## Result
 
-### Fixed
+<!-- What does the PR deliver? Summarize the outcome. Use a table for structured comparisons (before/after, decision matrices, etc.) -->
 
-- [Type]【Module/Page】Description
-
-### Removed
-
-- [Type]【Module/Page】Description
+<!-- Example — Decision table:
+| # | Condition | Action | Expected |
+|---|-----------|--------|----------|
+| 1 | ... | ... | ... |
+-->
 
 ## Test Plan
 
@@ -63,7 +66,6 @@
 
 ## Checklist
 
-- [ ] I have listed all changes completely
 - [ ] I have tested locally and confirmed functionality and stability
 - [ ] I have added necessary comments, especially for hard-to-understand parts
 - [ ] My PR title follows the format: `<type>: <description>`
