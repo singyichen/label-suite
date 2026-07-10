@@ -22,6 +22,12 @@
 | 1 | ... | ... | ... |
 -->
 
+## Changed Files
+
+| File | Change |
+|------|--------|
+| `path/to/file` | <!-- Brief description --> |
+
 ## Test Plan
 
 <!-- Every item must be individually verified; mark passed as [x], failed as [ ] with reason -->

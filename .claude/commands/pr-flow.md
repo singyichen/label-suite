@@ -90,6 +90,7 @@ gh pr create \
 - **Purpose** — what this PR is trying to achieve (one sentence)
 - **Reason** — why this change is needed
 - **Result** — what the PR delivers; prefer tables when structured comparison improves readability (scenarios, decisions, before/after)
+- **Changed Files** — table with File and Change columns; brief description per file
 - **Test Plan** — checklist; every item must be individually verified; mark passed as `[x]`, failed as `[ ]` with reason
 - **Notes** _(optional)_ — migration, config, cache, API contract, or third-party flags
 - **Rollback Plan** _(migration PRs only)_ — before/after state + rollback procedure
