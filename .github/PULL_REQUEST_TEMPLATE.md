@@ -6,9 +6,21 @@
 
 <!-- Why is this change needed? What triggered it? -->
 
+<!-- Example — Scenario table:
+| Scenario | Given | When | Then |
+|----------|-------|------|------|
+| ... | ... | ... | ... |
+-->
+
 ## Result
 
 <!-- What does the PR deliver? Summarize the outcome. -->
+
+<!-- Example — Decision table:
+| # | Condition | Action | Expected |
+|---|-----------|--------|----------|
+| 1 | ... | ... | ... |
+-->
 
 ## Test Plan
 
