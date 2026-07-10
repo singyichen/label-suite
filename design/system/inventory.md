@@ -404,65 +404,72 @@
 
 ---
 
-### ❌ Chip
+### ✅ Chip
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（Select chip checkbox/radio + 5 種 display chip 變體 + bypass toggle + a11y 規範）
 
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| Filter chip (task type / stage / status) | 篩選列可選取/取消 | task-list, annotation-list, dataset-analysis-detail, user-management |
-| Select chip (task category / input type / output type) | 表單選擇器，radio 或 checkbox 語意 | task-new |
-| Display chip (task type badge 內嵌) | 唯讀展示 | task-detail, annotation-workspace |
-
----
-
-### ❌ Accordion
-
-**MASTER.md 狀態：** 未定義
-
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| Schema accordion (output type panels) | 可展開/收合面板，標題含序號與輸出類型名稱 | task-new (Step 2) |
+| 變體 | 說明 | 出現頁面 | 頁面數 |
+|------|------|----------|--------|
+| Select chip (checkbox) | 表單多選，`role="checkbox"` + `aria-checked` | task-new | 1 |
+| Select chip (radio) | 表單單選，`role="radio"` + `aria-checked` | task-new | 1 |
+| Classification display | 唯讀標籤展示（紫色 pill） | task-detail, annotation-workspace | 2 |
+| VA scoring | 數值展示含正常/離群語意色 | task-detail | 1 |
+| Metric chip | 小型 KPI 值 | task-detail | 1 |
+| Cause tag | 品質風險原因標籤 | dataset-analysis-detail | 1 |
+| Bypass toggle | 輸出類型 bypass 選項（inline styles） | task-new | 1 |
 
 ---
 
-### ❌ Pagination
+### ✅ Accordion
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（output-accordion 結構、collapsed 狀態、auto-collapse 規則、a11y）
 
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| Page number pagination | 頁碼按鈕列 + 每頁筆數選擇 + 總筆數提示 | task-list, annotation-list, dataset-analysis-list, user-management, task-detail panels (annotation-progress, annotation-results, member-management, work-log) |
-
----
-
-### ❌ Color Dot
-
-**MASTER.md 狀態：** 未定義
-
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| Entity color indicator | entity-list 各項目前方的色點，顯示 entity 指定顏色 | task-new (Step 2), task-detail |
+| 變體 | 說明 | 出現頁面 | 頁面數 |
+|------|------|----------|--------|
+| Schema accordion (output type panels) | 可展開/收合面板，標題含序號與輸出類型名稱 | task-new (Step 2) | 1 |
 
 ---
 
-### ❌ Breadcrumb
+### ✅ Pagination
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（page-btn active/disabled、page-size-select、summary 格式、mobile 堆疊、UXC-11 整合）
 
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| Path breadcrumb | 層級路徑導覽（如 任務列表 > 任務詳情） | task-detail, dataset-analysis-detail |
+| 變體 | 說明 | 出現頁面 | 頁面數 |
+|------|------|----------|--------|
+| Page number pagination | 頁碼按鈕列 + 每頁筆數選擇 + 總筆數提示 | task-list, annotation-list, dataset-analysis-list, user-management, task-detail panels (annotation-progress, annotation-results, member-management, work-log) | 5 |
 
 ---
 
-### ❌ Skeleton
+### ✅ Color Dot
 
-**MASTER.md 狀態：** 未定義
+**MASTER.md 狀態：** 已定義（entity-color-dot 20px 圓角方塊 + preview 12px 變體 + status dot 8px 圓形 + 8 色預設色板）
 
-| 變體 | 說明 | 出現頁面 |
-|------|------|----------|
-| Content skeleton | 資料載入前的佔位元素（灰色閃爍區塊） | task-detail, profile |
+| 變體 | 說明 | 出現頁面 | 頁面數 |
+|------|------|----------|--------|
+| Entity color indicator (20px) | entity-list 各項目前方的色點，顯示 entity 指定顏色 | task-new (Step 2), task-detail | 2 |
+| Preview color (12px) | annotation preview 圖例色點 | task-new | 1 |
+| Status dot (8px) | IAA 門檻通過/失敗圓形指示 | dataset-analysis-detail | 1 |
+
+---
+
+### ✅ Breadcrumb
+
+**MASTER.md 狀態：** 已定義（nav.breadcrumb 結構、› 分隔符、link/current 色彩、a11y）
+
+| 變體 | 說明 | 出現頁面 | 頁面數 |
+|------|------|----------|--------|
+| Path breadcrumb | 層級路徑導覽（如 任務列表 › 任務詳情） | task-detail, dataset-analysis-detail | 2 |
+
+---
+
+### ✅ Skeleton
+
+**MASTER.md 狀態：** 已定義（Pulse 變體 + Shimmer 變體 + dark mode + a11y aria-busy + UXC-08 整合）
+
+| 變體 | 說明 | 出現頁面 | 頁面數 |
+|------|------|----------|--------|
+| Pulse (card skeleton) | opacity 閃爍，card 佈局佔位 | task-detail | 1 |
+| Shimmer (form skeleton) | 水平漸層掃過，表單佈局佔位 | profile | 1 |
 
 ---
 
@@ -496,9 +503,9 @@
 | P3 | **Tag Input / Tag Pill** | task-new.html label 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
 | P3 | **Toggle Switch** | task-new.html schema 設定 | ✅ 已補充至 MASTER.md (2026-05-20) |
 | P3 | **Code Editor (Schema)** | task-new.html JSON schema 編輯 | ✅ 已補充至 MASTER.md (2026-05-20) |
-| P2 | **Chip** | 12 個頁面使用（篩選、表單選擇、展示），為最常見未定義元件 | ❌ 待補充 (2026-07-10 掃描發現) |
-| P2 | **Pagination** | 9 個頁面使用，為 list page 基本元件 | ❌ 待補充 (2026-07-10 掃描發現) |
-| P3 | **Accordion** | task-new Step 2 output type 手風琴面板 | ❌ 待補充 (2026-07-10 掃描發現) |
-| P3 | **Breadcrumb** | task-detail、dataset-analysis-detail 層級導覽 | ❌ 待補充 (2026-07-10 掃描發現) |
-| P3 | **Skeleton** | task-detail、profile 載入佔位 | ❌ 待補充 (2026-07-10 掃描發現) |
-| P4 | **Color Dot** | task-new、task-detail entity 色點指示 | ❌ 待補充 (2026-07-10 掃描發現) |
+| P2 | **Chip** | 12 個頁面使用（篩選、表單選擇、展示），為最常見未定義元件 | ✅ 已補充至 MASTER.md (2026-07-10) |
+| P2 | **Pagination** | 9 個頁面使用，為 list page 基本元件 | ✅ 已補充至 MASTER.md (2026-07-10) |
+| P3 | **Accordion** | task-new Step 2 output type 手風琴面板 | ✅ 已補充至 MASTER.md (2026-07-10) |
+| P3 | **Breadcrumb** | task-detail、dataset-analysis-detail 層級導覽 | ✅ 已補充至 MASTER.md (2026-07-10) |
+| P3 | **Skeleton** | task-detail、profile 載入佔位 | ✅ 已補充至 MASTER.md (2026-07-10) |
+| P4 | **Color Dot** | task-new、task-detail entity 色點指示 | ✅ 已補充至 MASTER.md (2026-07-10) |
