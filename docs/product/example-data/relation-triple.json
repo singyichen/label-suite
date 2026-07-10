@@ -4,16 +4,37 @@
     "text": "高血壓若未妥善控制，可能導致動脈硬化，進而引發冠狀動脈心臟病或腦中風。長期服用降壓藥物如 Amlodipine 有助於控制血壓，降低併發症風險。",
     "entities": [
       { "text": "高血壓", "type": "DISE", "start": 0, "end": 2 },
-      { "text": "動脈硬化", "type": "SYMP", "start": 12, "end": 15 },
-      { "text": "冠狀動脈心臟病", "type": "DISE", "start": 20, "end": 26 },
-      { "text": "腦中風", "type": "DISE", "start": 28, "end": 30 },
-      { "text": "Amlodipine", "type": "DRUG", "start": 46, "end": 55 }
+      { "text": "動脈硬化", "type": "SYMP", "start": 14, "end": 17 },
+      { "text": "冠狀動脈心臟病", "type": "DISE", "start": 23, "end": 29 },
+      { "text": "腦中風", "type": "DISE", "start": 31, "end": 33 },
+      { "text": "Amlodipine", "type": "DRUG", "start": 45, "end": 54 }
     ],
-    "gold_triples": [
-      { "subj": "高血壓", "rel": "causes", "obj": "動脈硬化" },
-      { "subj": "動脈硬化", "rel": "causes", "obj": "冠狀動脈心臟病" },
-      { "subj": "動脈硬化", "rel": "causes", "obj": "腦中風" },
-      { "subj": "Amlodipine", "rel": "treats", "obj": "高血壓" }
+    "relation_types": ["causes", "treats"],
+    "triples": [
+      {
+        "entity1": { "text": "高血壓", "start": 0, "end": 2 },
+        "relation": { "text": "導致", "start": 12, "end": 13 },
+        "relation_type": "causes",
+        "entity2": { "text": "動脈硬化", "start": 14, "end": 17 }
+      },
+      {
+        "entity1": { "text": "動脈硬化", "start": 14, "end": 17 },
+        "relation": { "text": "引發", "start": 21, "end": 22 },
+        "relation_type": "causes",
+        "entity2": { "text": "冠狀動脈心臟病", "start": 23, "end": 29 }
+      },
+      {
+        "entity1": { "text": "動脈硬化", "start": 14, "end": 17 },
+        "relation": { "text": "引發", "start": 21, "end": 22 },
+        "relation_type": "causes",
+        "entity2": { "text": "腦中風", "start": 31, "end": 33 }
+      },
+      {
+        "entity1": { "text": "Amlodipine", "start": 45, "end": 54 },
+        "relation": { "text": "控制", "start": 59, "end": 60 },
+        "relation_type": "treats",
+        "entity2": { "text": "高血壓", "start": 0, "end": 2 }
+      }
     ]
   },
   {
@@ -22,15 +43,36 @@
     "entities": [
       { "text": "糖尿病視網膜病變", "type": "DISE", "start": 0, "end": 7 },
       { "text": "糖尿病", "type": "DISE", "start": 9, "end": 11 },
-      { "text": "視網膜微血管", "type": "BODY", "start": 20, "end": 25 },
-      { "text": "眼底鏡檢查", "type": "EXAM", "start": 28, "end": 32 },
-      { "text": "雷射光凝固術", "type": "TREAT", "start": 39, "end": 44 }
+      { "text": "視網膜微血管", "type": "BODY", "start": 24, "end": 29 },
+      { "text": "眼底鏡檢查", "type": "EXAM", "start": 33, "end": 37 },
+      { "text": "雷射光凝固術", "type": "TREAT", "start": 44, "end": 49 }
     ],
-    "gold_triples": [
-      { "subj": "糖尿病", "rel": "causes", "obj": "糖尿病視網膜病變" },
-      { "subj": "糖尿病視網膜病變", "rel": "located_in", "obj": "視網膜微血管" },
-      { "subj": "眼底鏡檢查", "rel": "diagnoses", "obj": "糖尿病視網膜病變" },
-      { "subj": "雷射光凝固術", "rel": "treats", "obj": "糖尿病視網膜病變" }
+    "relation_types": ["causes", "located_in", "diagnoses", "treats"],
+    "triples": [
+      {
+        "entity1": { "text": "糖尿病", "start": 9, "end": 11 },
+        "relation": { "text": "併發", "start": 15, "end": 16 },
+        "relation_type": "causes",
+        "entity2": { "text": "糖尿病視網膜病變", "start": 0, "end": 7 }
+      },
+      {
+        "entity1": { "text": "糖尿病視網膜病變", "start": 0, "end": 7 },
+        "relation": { "text": "好發於", "start": 19, "end": 21 },
+        "relation_type": "located_in",
+        "entity2": { "text": "視網膜微血管", "start": 24, "end": 29 }
+      },
+      {
+        "entity1": { "text": "眼底鏡檢查", "start": 33, "end": 37 },
+        "relation": { "text": "診斷", "start": 41, "end": 42 },
+        "relation_type": "diagnoses",
+        "entity2": { "text": "糖尿病視網膜病變", "start": 0, "end": 7 }
+      },
+      {
+        "entity1": { "text": "雷射光凝固術", "start": 44, "end": 49 },
+        "relation": { "text": "防止", "start": 53, "end": 54 },
+        "relation_type": "treats",
+        "entity2": { "text": "糖尿病視網膜病變", "start": 0, "end": 7 }
+      }
     ]
   },
   {
@@ -39,14 +81,29 @@
     "entities": [
       { "text": "氣喘", "type": "DISE", "start": 0, "end": 1 },
       { "text": "支氣管平滑肌", "type": "BODY", "start": 11, "end": 16 },
-      { "text": "呼吸困難", "type": "SYMP", "start": 23, "end": 26 },
-      { "text": "Budesonide", "type": "DRUG", "start": 37, "end": 46 }
+      { "text": "呼吸困難", "type": "SYMP", "start": 25, "end": 28 },
+      { "text": "Budesonide", "type": "DRUG", "start": 38, "end": 47 }
     ],
-    "gold_triples": [
-      { "subj": "氣喘", "rel": "located_in", "obj": "支氣管平滑肌" },
-      { "subj": "氣喘", "rel": "causes", "obj": "呼吸困難" },
-      { "subj": "Budesonide", "rel": "treats", "obj": "氣喘" },
-      { "subj": "Budesonide", "rel": "prevents", "obj": "氣喘" }
+    "relation_types": ["causes", "treats", "prevents"],
+    "triples": [
+      {
+        "entity1": { "text": "氣喘", "start": 0, "end": 1 },
+        "relation": { "text": "導致", "start": 23, "end": 24 },
+        "relation_type": "causes",
+        "entity2": { "text": "呼吸困難", "start": 25, "end": 28 }
+      },
+      {
+        "entity1": { "text": "Budesonide", "start": 38, "end": 47 },
+        "relation": { "text": "抑制", "start": 50, "end": 51 },
+        "relation_type": "treats",
+        "entity2": { "text": "氣喘", "start": 0, "end": 1 }
+      },
+      {
+        "entity1": { "text": "Budesonide", "start": 38, "end": 47 },
+        "relation": { "text": "預防", "start": 57, "end": 58 },
+        "relation_type": "prevents",
+        "entity2": { "text": "氣喘", "start": 0, "end": 1 }
+      }
     ]
   }
 ]
