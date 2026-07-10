@@ -94,9 +94,9 @@ gh pr create \
 - **Impact Scope** — check affected areas (frontend, admin, API, queue, other)
 - **Related** — link to issue (`#N`) or "None"
 
-## Step 6 — Qodo Code Review
+## Step 6 — Bot Code Review
 
-After the PR is created, `qodo-code-review` bot reviews automatically.
+After the PR is created, code review bots review automatically.
 
 **6a. Fetch review findings**
 
@@ -110,7 +110,7 @@ gh api repos/{owner}/{repo}/pulls/{number}/comments \
 ```bash
 git add <files>
 git commit -F - <<'EOF'
-fix: <what was actually fixed> (qodo review)
+fix: <what was actually fixed> (bot review)
 
 - **<Action>** <which finding this addresses and why the fix is correct>
 
