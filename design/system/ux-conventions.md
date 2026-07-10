@@ -43,7 +43,7 @@ Multi-step wizards (e.g. task-new) follow these rules:
 | Successful submission | Clear session storage. |
 | Tab close | Browser clears session storage automatically. |
 
-Detection method: `performance.getEntriesByType('navigation')[0].type` — `reload` restores; `navigate` or `back_forward` clears.
+Detection method: `performance.getEntriesByType('navigation')[0]?.type` — `reload` restores; `navigate` or `back_forward` clears. Falls back to `performance.navigation.type === 1` when Navigation Timing Level 2 is unavailable.
 
 ### UXC-03: Unsaved Changes Protection
 

@@ -2137,7 +2137,7 @@ Table pagination control with page number buttons, page size selector, and recor
 **HTML structure:**
 
 ```html
-<div class="pagination" aria-label="Pagination">
+<nav class="pagination" aria-label="Pagination">
   <div class="pagination-info">
     共 <strong>128</strong> 筆 · 第 <strong>1</strong>/<strong>7</strong> 頁
   </div>
@@ -2159,7 +2159,7 @@ Table pagination control with page number buttons, page size selector, and recor
       </select>
     </label>
   </div>
-</div>
+</nav>
 ```
 
 **Specs:**
@@ -2354,7 +2354,7 @@ Placeholder elements displayed while content is loading. Match the expected cont
 
 /* Dark mode */
 html[data-theme="dark"] .skeleton {
-  background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
+  background-image: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
 }
 ```
 
