@@ -1807,6 +1807,594 @@ Monospace textarea used for JSON/YAML schema editing in task-new. Uses `--font-m
 
 ---
 
+### Chip
+
+Selectable or read-only pill-shaped labels used for filtering, form selection, and data display.
+
+**Base CSS (interactive select chip):**
+
+```css
+.task-type-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.task-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-full);         /* 9999px — pill */
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  background: var(--color-white);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+}
+
+.task-type-chip:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+
+.task-type-chip.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+```
+
+**Chip indicator (checkbox mode):**
+
+```css
+.task-type-chip-check {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.task-type-chip.selected .task-type-chip-check {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* Checkmark pseudo-element */
+.task-type-chip.selected .task-type-chip-check::after {
+  content: "";
+  width: 8px;
+  height: 5px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+/* Radio mode — round indicator */
+.task-type-chip[role="radio"] .task-type-chip-check {
+  border-radius: 50%;
+}
+
+.task-type-chip[role="radio"].selected .task-type-chip-check::after {
+  width: 6px;
+  height: 6px;
+  border: none;
+  border-radius: 50%;
+  background: white;
+  transform: none;
+}
+```
+
+**Display chip (read-only):**
+
+```css
+/* Classification / label display */
+.ar-classif-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  white-space: nowrap;
+  background: #EDE9FE;              /* violet-100 */
+  color: #5B21B6;                    /* violet-800 */
+  border: 1px solid #DDD6FE;        /* violet-200 */
+}
+
+/* Semantic display (green = normal, red = outlier) */
+.ar-va-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.ar-va-chip-normal  { background: #DCFCE7; color: #166534; border-color: #86EFAC; }
+.ar-va-chip-outlier { background: #FEE2E2; color: #991B1B; border-color: #FCA5A5; }
+
+/* Metric chip (small, neutral) */
+.round-metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Cause / risk tag */
+.cause-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft-bg);
+  border: 1px solid var(--color-primary-soft-border);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+```
+
+**Chip Variants:**
+
+| Variant | Class | Shape | Interactive | Use case |
+|---------|-------|-------|-------------|----------|
+| Select (checkbox) | `.task-type-chip` | pill | Yes — multi-toggle | Form multi-select (task category, input type) |
+| Select (radio) | `.task-type-chip[role="radio"]` | pill | Yes — single-toggle | Form single-select (output type) |
+| Classification display | `.ar-classif-chip` | pill | No | Label values in results tables |
+| VA scoring | `.ar-va-chip` + `-normal` / `-outlier` | pill | No | Valence/Arousal scores with range status |
+| Metric | `.round-metric-chip` | pill | No | Small KPI values on timeline cards |
+| Cause tag | `.cause-chip` | pill | No | Risk cause labels in quality tables |
+| Bypass toggle | (inline styles) | rounded 8px | Yes — `aria-pressed` | Output type bypass option |
+
+**Accessibility:**
+
+- Interactive chips: `role="checkbox"` or `role="radio"` with `aria-checked` toggled on click
+- Container: `role="group"` with `aria-label`
+- Bypass chips: `aria-pressed="true"` / `"false"`
+- Display chips: no special ARIA needed (read-only text)
+
+**When NOT to use:**
+
+- ❌ Status indicators with fixed semantic colors → use Status Badge
+- ❌ Removable tags in an input → use Tag Input / Tag Pill
+
+---
+
+### Accordion
+
+Collapsible content panel used for grouping related form sections. Each panel has a clickable header that toggles the body content.
+
+**CSS:**
+
+```css
+.output-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);           /* 8px */
+  overflow: hidden;
+}
+
+.output-accordion + .output-accordion {
+  margin-top: var(--space-sm);               /* 8px */
+}
+
+.output-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 12px var(--space-md);             /* 12px 16px */
+  background: var(--color-slate-50);         /* #F8FAFC */
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  transition: background var(--dur-fast);
+}
+
+.output-accordion-header:hover {
+  background: var(--color-primary-soft-bg);  /* #EEF2FF */
+}
+
+.output-accordion-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: var(--color-text-soft);
+  transition: transform var(--dur-fast);
+}
+
+.output-accordion.collapsed .output-accordion-chevron {
+  transform: rotate(-90deg);
+}
+
+.output-accordion-body {
+  padding: var(--space-md);                  /* 16px */
+  border-top: 1px solid var(--color-border);
+}
+
+.output-accordion.collapsed .output-accordion-body {
+  display: none;
+}
+```
+
+**HTML structure:**
+
+```html
+<div class="output-accordion" id="accordion-1">
+  <div class="output-accordion-header" role="button" tabindex="0"
+       aria-expanded="true" aria-controls="accordion-1-body">
+    <span class="output-accordion-number">1</span>
+    <span class="output-accordion-title">Classification</span>
+    <svg class="output-accordion-chevron"><!-- chevron-down --></svg>
+  </div>
+  <div class="output-accordion-body" id="accordion-1-body" role="region">
+    <!-- Panel content -->
+  </div>
+</div>
+```
+
+**Behavior:**
+
+| Interaction | Result |
+|-------------|--------|
+| Click header | Toggle collapsed/expanded state |
+| Enter / Space on header | Same as click |
+| Multiple panels open | Allowed — each panel is independent |
+| Auto-collapse | When output type count > 2, older panels auto-collapse |
+
+**Accessibility:**
+
+- Header: `role="button"`, `tabindex="0"`, `aria-expanded` toggled
+- Body: `role="region"`, `aria-controls` / `id` pairing
+- **Gap (prototype):** No ARIA attributes currently present — should be added at implementation
+
+**When NOT to use:**
+
+- ❌ Navigation between distinct pages → use Tabs or Sidebar
+- ❌ FAQ-style single-open accordion → not in current design; if needed, add a `data-exclusive` variant
+
+---
+
+### Pagination
+
+Table pagination control with page number buttons, page size selector, and record count summary.
+
+**CSS:**
+
+```css
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);  /* 16px 24px */
+  border-top: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-soft);
+}
+
+.page-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);           /* 8px */
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+
+.page-btn:hover {
+  background: var(--color-primary-soft-bg);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.page-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-size-select {
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  background: var(--color-white);
+  appearance: none;
+  /* Custom chevron via background SVG */
+}
+```
+
+**HTML structure:**
+
+```html
+<div class="pagination" aria-label="Pagination">
+  <div class="pagination-info">
+    共 <strong>128</strong> 筆 · 第 <strong>1</strong>/<strong>7</strong> 頁
+  </div>
+  <div class="pagination-controls">
+    <button class="page-btn" aria-label="Previous page" disabled>‹</button>
+    <button class="page-btn active" aria-current="page">1</button>
+    <button class="page-btn">2</button>
+    <button class="page-btn">3</button>
+    <span class="page-ellipsis">…</span>
+    <button class="page-btn">7</button>
+    <button class="page-btn" aria-label="Next page">›</button>
+  </div>
+  <div class="pagination-size">
+    <label>每頁
+      <select class="page-size-select">
+        <option>20</option>
+        <option>50</option>
+        <option selected>100</option>
+      </select>
+    </label>
+  </div>
+</div>
+```
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Page button size | 32 × 32 px |
+| Max visible page buttons | 5 (with ellipsis for overflow) |
+| Page size options | 20, 50, 100 |
+| Summary format | `共 N 筆 · 第 X/Y 頁` |
+| Mobile layout | Stack vertically (info on top, controls center, size selector bottom) |
+
+**Behavior (per UXC-11):**
+
+- Use `limit` / `offset` parameters (not `page` / `page_size`)
+- Sync pagination state to URL query parameters
+- Reset `offset` to `0` when changing filters or sort order
+
+**When NOT to use:**
+
+- ❌ Infinite scroll lists → use virtual scroll instead
+- ❌ Small fixed-size lists (< 20 items) → no pagination needed
+
+---
+
+### Color Dot
+
+Small colored indicator used to visually tag entity types with a unique color.
+
+**CSS:**
+
+```css
+.entity-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);           /* 4px — rounded square */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+/* Smaller variant for annotation previews */
+.annotation-preview-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+```
+
+Color is applied via inline `style.background` from the entity's assigned color. Default palette:
+
+```
+#6366F1 · #10B981 · #F59E0B · #EC4899 · #8B5CF6 · #0EA5E9 · #F97316 · #14B8A6
+```
+
+**Dark mode:** `border-color: rgba(226, 232, 240, 0.18)`
+
+**Variants:**
+
+| Variant | Size | Shape | Use case |
+|---------|------|-------|----------|
+| Standard | 20 × 20 px | rounded square (4px) | Entity type list in form |
+| Preview | 12 × 12 px | rounded square (3px) | Annotation preview legends |
+| Status dot (`.t-dot`) | 8 × 8 px | circle (50%) | IAA threshold pass/fail indicators |
+
+**When NOT to use:**
+
+- ❌ Status indicators with text → use Status Badge
+- ❌ Semantic states (success/error/warning) → use Semantic State Colors with `.t-dot` variant
+
+---
+
+### Breadcrumb
+
+Horizontal path navigation showing the current page's position in the hierarchy. Used on detail pages that are one level below a list page.
+
+**CSS:**
+
+```css
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-soft);
+  margin-bottom: 12px;
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-sep {
+  color: var(--color-ink-muted);             /* #94A3B8 */
+  font-size: 11px;
+}
+```
+
+**HTML structure:**
+
+```html
+<nav class="breadcrumb" aria-label="breadcrumb">
+  <a href="./task-list.html">Task Management</a>
+  <span class="breadcrumb-sep" aria-hidden="true">›</span>
+  <span aria-current="page">Task Detail</span>
+</nav>
+```
+
+**Specs:**
+
+| Property | Value |
+|----------|-------|
+| Font size | 13px |
+| Separator | `›` (U+203A, right-pointing single angle quotation mark) |
+| Link color | `var(--color-primary)` |
+| Current page color | `var(--color-text-soft)` |
+| Spacing | `gap: 6px`, `margin-bottom: 12px` |
+| Max depth | 2 levels (parent → current) in current prototype |
+
+**Accessibility:**
+
+- `<nav>` with `aria-label="breadcrumb"`
+- Separator: `aria-hidden="true"`
+- Current page: `aria-current="page"` (recommended — not yet in prototype)
+
+**When NOT to use:**
+
+- ❌ Deep navigation trees (3+ levels) → consider simplifying the IA instead
+- ❌ Pages accessible from multiple paths → breadcrumb should show the canonical path
+
+---
+
+### Skeleton
+
+Placeholder elements displayed while content is loading. Match the expected content layout to prevent layout shift.
+
+**Variant A — Pulse (card-based content):**
+
+```css
+.skeleton-stack {
+  display: grid;
+  gap: var(--space-md);                      /* 16px */
+}
+
+.skeleton-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);           /* 12px */
+  background: var(--color-white);
+  padding: var(--space-lg);                  /* 24px */
+}
+
+.skeleton-line {
+  border-radius: var(--radius-sm);           /* 4px */
+  background: var(--color-border);
+  animation: skeleton-pulse var(--dur-normal) var(--ease-standard) infinite alternate;
+}
+
+.skeleton-line.title { width: 220px; height: 20px; margin-bottom: 14px; }
+.skeleton-line.body  { width: 100%;  height: 12px; margin-bottom: 10px; }
+.skeleton-line.body.short { width: 65%; }
+
+@keyframes skeleton-pulse {
+  0%   { opacity: 0.55; }
+  100% { opacity: 0.95; }
+}
+```
+
+**Variant B — Shimmer (form-based content):**
+
+```css
+.skeleton {
+  background: linear-gradient(90deg, #E2E8F0 25%, #F1F5F9 50%, #E2E8F0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-md);           /* 8px */
+}
+
+.skel-avatar { width: 72px; height: 72px; border-radius: var(--radius-full); }
+.skel-line   { height: 14px; }
+.skel-input  { height: 42px; width: 100%; margin-top: 6px; }
+.skel-btn    { height: 40px; width: 90px; }
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, #1F1F28 25%, #2A2A35 50%, #1F1F28 75%);
+}
+```
+
+**When to use each variant:**
+
+| Variant | Animation | Duration | Use case |
+|---------|-----------|----------|----------|
+| Pulse | opacity oscillation | 200ms | Card/list layouts (task-detail overview) |
+| Shimmer | horizontal gradient sweep | 1.5s | Form layouts (profile fields) |
+
+**HTML structure (pulse example):**
+
+```html
+<div class="skeleton-stack" aria-live="polite" aria-busy="true">
+  <div class="skeleton-card">
+    <div class="skeleton-line title"></div>
+    <div class="skeleton-line body"></div>
+    <div class="skeleton-line body short"></div>
+  </div>
+</div>
+```
+
+**Accessibility:**
+
+- Container: `aria-live="polite"` + `aria-busy="true"` while loading
+- Set `aria-busy="false"` when content replaces skeleton
+
+**Design rules (per UXC-08):**
+
+- Skeleton dimensions must match loaded content to prevent layout shift
+- Use region-specific skeletons, not full-page spinners
+- Show skeleton immediately on page load — no delay before showing
+
+**When NOT to use:**
+
+- ❌ Button loading state → use inline spinner within the button
+- ❌ Short operations (< 200ms) → no loading indication needed
+
+---
+
 ## Style Guidelines
 
 **Style:** Flat Design
