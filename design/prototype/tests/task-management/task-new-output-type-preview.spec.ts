@@ -297,6 +297,155 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.boundary).toBeDefined();
+    expect(ps.boundary.markers).toEqual([
+      { position: 13, type: 'sentence' },
+      { position: 26, type: 'sentence' },
+      { position: 44, type: 'sentence' },
+      { position: 55, type: 'sentence' },
+    ]);
+  });
+
+  test('boundary — every character gap is operable without gold output', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'boundary-no-gold-test',
+      category: 'sequence',
+      outputType: 'boundary',
+      inputType: 'single_item',
+      dataFile: 'boundary.json',
+      roles: { text: 'input' },
+    });
+
+    const sourceText = await page
+      .locator('#annotationPreview .annotation-preview-sample')
+      .innerText();
+    const gaps = page.locator('[data-testid^="boundary-gap-"]');
+    await expect(gaps).toHaveCount(Array.from(sourceText).length - 1);
+
+    const gap14 = page.getByTestId('boundary-gap-14');
+    await expect(gap14).toHaveAccessibleName('插入 sentence 邊界 (offset 14)');
+    const targetBox = await gap14.boundingBox();
+    expect(targetBox).not.toBeNull();
+    expect(targetBox!.width).toBeGreaterThanOrEqual(24);
+    expect(targetBox!.height).toBeGreaterThanOrEqual(24);
+
+    await gap14.focus();
+    const focusStyle = await gap14.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+    });
+    expect(focusStyle.outlineStyle).not.toBe('none');
+    expect(focusStyle.outlineWidth).not.toBe('0px');
+
+    await gap14.click();
+    let previewState = await getState(page, 'previewState') as WindowState['previewState'];
+    expect(previewState.boundary.markers).toEqual([
+      { position: 14, type: 'sentence' },
+    ]);
+
+    await page.getByTestId('boundary-gap-14').click();
+    previewState = await getState(page, 'previewState') as WindowState['previewState'];
+    expect(previewState.boundary.markers).toEqual([]);
+  });
+
+  test('boundary — result preview distinguishes sentence and paragraph cuts', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'boundary-result-preview-test',
+      category: 'sequence',
+      outputType: 'boundary',
+      inputType: 'single_item',
+      dataFile: 'boundary.json',
+      roles: { text: 'input', gold_boundaries: 'output' },
+    });
+
+    await expect(page.getByTestId('boundary-result')).toBeVisible();
+    await expect(page.getByTestId('boundary-result-paragraph')).toHaveCount(1);
+    await expect(page.getByTestId('boundary-result-sentence')).toHaveCount(5);
+
+    await page.getByTestId('boundary-gap-26').click();
+    await page.getByRole('button', { name: 'paragraph', exact: true }).click();
+    await page.getByTestId('boundary-gap-26').click();
+
+    const paragraphSentences = await page
+      .getByTestId('boundary-result-paragraph')
+      .evaluateAll((paragraphs) => paragraphs.map((paragraph) =>
+        Array.from(paragraph.querySelectorAll('.boundary-result-sentence-text'))
+          .map((sentence) => sentence.textContent),
+      ));
+    expect(paragraphSentences).toEqual([
+      [
+        '慢性腎臟病的早期症狀通常不',
+        '明顯患者可能僅有輕微疲勞或',
+      ],
+      [
+        '食慾下降隨著病程進展可能出現水腫高血',
+        '壓及貧血等問題定期健康',
+        '檢查有助於早期發現及時介入治療可延緩腎功能惡化',
+      ],
+    ]);
+  });
+
+  test('boundary — marker type uses a distinct tone, label, and clear text spacing', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'boundary-marker-style-test',
+      category: 'sequence',
+      outputType: 'boundary',
+      inputType: 'single_item',
+      dataFile: 'boundary.json',
+      roles: { text: 'input', gold_boundaries: 'output' },
+    });
+
+    const sentenceMarker = page.getByTestId('boundary-gap-13');
+    await expect(sentenceMarker).toHaveAttribute('data-boundary-type', 'sentence');
+    await expect(sentenceMarker).toHaveAccessibleName(
+      '移除 sentence 邊界 (offset 13)',
+    );
+    await expect(sentenceMarker.locator('.boundary-marker-code')).toHaveText('S');
+
+    await page.getByTestId('boundary-gap-26').click();
+    await page.getByRole('button', { name: 'paragraph', exact: true }).click();
+    await page.getByTestId('boundary-gap-26').click();
+
+    const paragraphMarker = page.getByTestId('boundary-gap-26');
+    await expect(paragraphMarker).toHaveAttribute('data-boundary-type', 'paragraph');
+    await expect(paragraphMarker).toHaveAccessibleName(
+      '移除 paragraph 邊界 (offset 26)',
+    );
+    await expect(paragraphMarker.locator('.boundary-marker-code')).toHaveText('P');
+
+    const markerStyles = await Promise.all(
+      [sentenceMarker, paragraphMarker].map((marker) => marker.evaluate((element) => {
+        const style = window.getComputedStyle(element);
+        return {
+          color: style.color,
+          backgroundColor: style.backgroundColor,
+          borderColor: style.borderColor,
+        };
+      })),
+    );
+    expect(markerStyles[0]).not.toEqual(markerStyles[1]);
+
+    const spacing = await page.evaluate(() => {
+      const left = document.querySelector('[data-testid="boundary-char-12"]');
+      const marker = document.querySelector('[data-testid="boundary-gap-13"]');
+      const right = document.querySelector('[data-testid="boundary-char-13"]');
+      if (!left || !marker || !right) return null;
+      const leftBox = left.getBoundingClientRect();
+      const markerBox = marker.getBoundingClientRect();
+      const rightBox = right.getBoundingClientRect();
+      return {
+        leftGap: markerBox.left - leftBox.right,
+        rightGap: rightBox.left - markerBox.right,
+      };
+    });
+    expect(spacing).not.toBeNull();
+    expect(spacing!.leftGap).toBeGreaterThanOrEqual(2);
+    expect(spacing!.rightGap).toBeGreaterThanOrEqual(2);
   });
 
   test('relation_triple — triples loaded with subj/rel/obj format', async ({

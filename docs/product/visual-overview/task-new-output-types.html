@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Label Suite — 新增任務・輸出類型總覽</title>
+<style>
+  :root {
+    --primary: #6366F1; --primary-soft: #EEF2FF; --primary-border: #C7D2FE;
+    --cta: #10B981; --surface: #F5F3FF; --card: #FFFFFF;
+    --ink: #1E1B4B; --ink-soft: #64748B; --ink-muted: #94A3B8;
+    --border: #E2E8F0; --slate-50: #F8FAFC;
+    --error: #B91C1C; --error-soft: #FEF2F2;
+    --relation-type: #059669; --relation-type-soft: #ECFDF5; --relation-type-border: rgba(5,150,105,0.3);
+    --font-display: Georgia, 'Noto Serif TC', serif;
+    --font-body: system-ui, -apple-system, 'Noto Sans TC', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --radius: 12px; --radius-md: 8px; --radius-sm: 4px; --radius-full: 9999px;
+    --shadow-card: 0 1px 3px rgba(30,27,75,0.06);
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --primary: #818CF8; --primary-soft: #1E1B4B; --primary-border: #3730A3;
+    --cta: #34D399; --surface: #0B0B14; --card: #16161F;
+    --ink: #E2E8F0; --ink-soft: #A1A1AA; --ink-muted: #71717A;
+    --border: #2A2A38; --slate-50: #1A1A24;
+    --error: #FCA5A5; --error-soft: #3B1515;
+    --relation-type: #34D399; --relation-type-soft: #052E2B; --relation-type-border: rgba(52,211,153,0.35);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+  }}
+  :root[data-theme="dark"] {
+    --primary: #818CF8; --primary-soft: #1E1B4B; --primary-border: #3730A3;
+    --cta: #34D399; --surface: #0B0B14; --card: #16161F;
+    --ink: #E2E8F0; --ink-soft: #A1A1AA; --ink-muted: #71717A;
+    --border: #2A2A38; --slate-50: #1A1A24;
+    --error: #FCA5A5; --error-soft: #3B1515;
+    --relation-type: #34D399; --relation-type-soft: #052E2B; --relation-type-border: rgba(52,211,153,0.35);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  :root[data-theme="light"] {
+    --primary: #6366F1; --primary-soft: #EEF2FF; --primary-border: #C7D2FE;
+    --cta: #10B981; --surface: #F5F3FF; --card: #FFFFFF;
+    --ink: #1E1B4B; --ink-soft: #64748B; --ink-muted: #94A3B8;
+    --border: #E2E8F0; --slate-50: #F8FAFC;
+    --error: #B91C1C; --error-soft: #FEF2F2;
+    --relation-type: #059669; --relation-type-soft: #ECFDF5; --relation-type-border: rgba(5,150,105,0.3);
+    --shadow-card: 0 1px 3px rgba(30,27,75,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font-body); background: var(--surface); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  .page-header { margin-bottom: 40px; text-align: center; }
+  .brand-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--primary-border); padding: 4px 12px; border-radius: var(--radius-full); margin-bottom: 16px; }
+  .brand-tag svg { width: 14px; height: 14px; }
+  .page-title { font-family: var(--font-display); font-size: clamp(26px, 4vw, 36px); font-weight: 700; line-height: 1.2; margin-bottom: 8px; text-wrap: balance; }
+  .page-subtitle { font-size: 15px; color: var(--ink-soft); max-width: 560px; margin: 0 auto; }
+
+  .section { margin-bottom: 56px; }
+  .section-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; }
+  .section-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .section-desc { font-size: 14px; color: var(--ink-soft); margin-bottom: 24px; max-width: 640px; }
+
+  .type-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+  .form-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); overflow: hidden; }
+  .form-card-title { font-size: 14px; font-weight: 700; color: var(--ink); padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .form-card-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: var(--radius-full); border: 1px solid; }
+  .form-card-body { padding: 16px; }
+
+  .ann-preview { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--slate-50); min-height: 60px; }
+  .ann-preview-label { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .ann-preview-sample { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--card); font-size: 13px; line-height: 1.6; color: var(--ink); margin-bottom: 8px; }
+  .ann-preview-options { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+  .ann-preview-opt { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink); }
+  .ann-preview-opt input { accent-color: var(--primary); width: 14px; height: 14px; pointer-events: none; }
+  .ann-preview-color { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.08); }
+
+  .ner-hl { display: inline; padding: 1px 3px; border-radius: 3px; font-weight: 500; font-size: 13px; }
+  .ner-badge { display: inline-block; vertical-align: middle; font-size: 8px; font-weight: 800; padding: 0 4px; border-radius: var(--radius-full); margin-left: 2px; color: #fff; }
+
+  .va-dim-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .va-dim-name { font-weight: 600; min-width: 50px; }
+  .va-dim-scale { display: flex; gap: 4px; }
+  .va-dim-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); }
+  .va-dim-dot.filled { border-color: var(--primary); background: var(--primary); }
+  .va-dim-range { font-size: 10px; color: var(--ink-muted); }
+
+  .tok-row { display: flex; gap: 2px; flex-wrap: wrap; }
+  .tok-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .tok-word { font-size: 13px; }
+  .tok-tag { font-family: var(--font-mono); font-size: 8px; font-weight: 700; padding: 0 3px; border-radius: 2px; }
+
+  .re-ent-btns { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .re-ent-btn { padding: 2px 8px; border-radius: var(--radius-full); border: 1.5px solid; font-size: 10px; font-weight: 700; background: transparent; }
+  .re-ent-list { display: flex; flex-direction: column; gap: 3px; }
+  .re-ent-row { display: flex; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 5px; background: var(--card); border: 1px solid var(--border); font-size: 11px; }
+  .re-ent-badge { padding: 0 5px; border-radius: var(--radius-full); font-size: 9px; font-weight: 700; border: 1px solid; white-space: nowrap; }
+  .re-triple-row { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--radius-md); background: var(--card); border: 1px solid var(--border); font-size: 11px; }
+  .re-triple-content { display: flex; flex: 1 1 260px; min-width: 0; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .re-triple-entity { font-size: 11px; font-weight: 600; }
+  .re-rel-badge { padding: 0 6px; border-radius: var(--radius-full); font-size: 9px; font-weight: 700; background: var(--primary-soft); color: var(--primary); border: 1px solid rgba(99,102,241,0.3); }
+  .re-semantic-type { margin-left: 4px; padding: 0 6px; border-radius: var(--radius-sm); font-size: 9px; font-weight: 700; background: var(--relation-type-soft); color: var(--relation-type); border: 1px solid var(--relation-type-border); }
+  .re-arrow { color: var(--ink-soft); font-size: 10px; }
+  .re-triple-actions { display: inline-flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+  .re-triple-action { padding: 1px 5px; border-radius: var(--radius-sm); background: transparent; font-size: 9px; font-weight: 700; line-height: 1.5; }
+  .re-triple-action-type { color: var(--primary); border: 1.5px solid var(--primary); }
+  .re-triple-action-delete { color: var(--error); border: 1.5px solid var(--error); }
+
+  .sp-block { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--slate-50); margin-bottom: 6px; }
+  .sp-lbl { font-size: 10px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+  .sp-text { font-size: 12px; color: var(--ink); line-height: 1.5; }
+
+  .boundary-task-title { font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+  .boundary-type-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .boundary-tone-0 { --boundary-accent: var(--error); --boundary-soft-bg: var(--error-soft); --boundary-border: var(--error); }
+  .boundary-tone-1 { --boundary-accent: var(--primary); --boundary-soft-bg: var(--primary-soft); --boundary-border: var(--primary); }
+  .boundary-type-chip {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+    border: 2px solid var(--boundary-accent); border-radius: 6px;
+    color: var(--boundary-accent); background: transparent; font-size: 10px; font-weight: 700;
+  }
+  .boundary-type-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .boundary-type-chip.is-selected { color: var(--card); background: var(--boundary-accent); }
+  .boundary-editor { font-size: 13px; line-height: 2.8; overflow-wrap: anywhere; }
+  .boundary-text-segment { position: relative; }
+  .boundary-gap {
+    display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+    width: 36px; height: 24px; margin: 0 3px; padding: 0 4px; vertical-align: middle;
+    border: 1px solid var(--boundary-border); border-radius: var(--radius-sm);
+    color: var(--boundary-accent); background: var(--boundary-soft-bg);
+  }
+  .boundary-marker-icon { width: 12px; height: 12px; flex-shrink: 0; }
+  .boundary-marker-code { min-width: 8px; font-size: 9px; font-weight: 800; line-height: 1; text-transform: uppercase; }
+  .boundary-count { margin-top: 4px; font-size: 10px; color: var(--ink-soft); }
+  .boundary-result { margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--slate-50); }
+  .boundary-result-title { margin-bottom: 7px; font-size: 11px; font-weight: 700; color: var(--ink); }
+  .boundary-result-paragraphs { display: flex; flex-direction: column; gap: 8px; }
+  .boundary-result-paragraph { padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--card); }
+  .boundary-result-paragraph-title { margin-bottom: 5px; font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .boundary-result-sentences { display: flex; flex-direction: column; gap: 3px; }
+  .boundary-result-sentence { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 6px; align-items: start; font-size: 10px; line-height: 1.6; color: var(--ink); }
+  .boundary-result-sentence-index { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary); font-size: 8px; font-weight: 700; }
+  .boundary-result-sentence-text { min-width: 0; overflow-wrap: anywhere; }
+
+  .preview-textarea { width: 100%; min-height: 40px; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 11px; color: var(--ink-muted); resize: none; background: var(--card); font-family: var(--font-body); }
+
+  .bypass-bar { display: flex; gap: 12px; margin-top: 10px; padding: 6px 10px; border: 1px dashed var(--border); border-radius: var(--radius-md); }
+  .bypass-opt { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--ink-soft); }
+  .bypass-opt input { accent-color: var(--primary); width: 13px; height: 13px; pointer-events: none; }
+
+  .comp-section { margin-top: 56px; }
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); margin-bottom: 20px; overflow: hidden; }
+  .comp-card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+  .comp-card-title { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .comp-card-sub { font-size: 12px; color: var(--ink-muted); }
+  .comp-output-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .comp-output-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-full); border: 1.5px solid; }
+  .comp-card-body { padding: 16px; }
+
+  @media (max-width: 680px) {
+    .page { padding: 32px 16px 64px; }
+    .type-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="page-header">
+    <div class="brand-tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Label Suite
+    </div>
+    <h1 class="page-title">新增任務 Step 2 — 輸出類型總覽</h1>
+    <p class="page-subtitle">10 種基本輸出類型的標記預覽介面，對應「新增任務」第二步驟</p>
+  </header>
+
+  <section class="section">
+    <div class="section-eyebrow">Output Types</div>
+    <h2 class="section-title">10 種輸出類型</h2>
+    <p class="section-desc">每張卡片展示 Step 2 標記預覽畫面：標記者在此介面上進行標註操作。</p>
+
+    <div class="type-grid">
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:var(--primary);border-color:var(--primary);">分類</span> Single Label 單一標籤</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample">台積電第三季營收創歷史新高，市場看好 AI 晶片需求持續成長。</div>
+            <div class="ann-preview-options">
+              <label class="ann-preview-opt"><input type="radio" checked disabled /><span class="ann-preview-color" style="background:#2ECC71;"></span> positive</label>
+              <label class="ann-preview-opt"><input type="radio" disabled /><span class="ann-preview-color" style="background:#F39C12;"></span> neutral</label>
+              <label class="ann-preview-opt"><input type="radio" disabled /><span class="ann-preview-color" style="background:#E74C3C;"></span> negative</label>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#8B5CF6;border-color:#8B5CF6;">分類</span> Multi Label 多標籤</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample">今天驚喜收到禮物，真的好開心！</div>
+            <div class="ann-preview-options">
+              <label class="ann-preview-opt"><input type="checkbox" checked disabled /><span class="ann-preview-color" style="background:#2ECC71;"></span> happy</label>
+              <label class="ann-preview-opt"><input type="checkbox" disabled /><span class="ann-preview-color" style="background:#3498DB;"></span> sad</label>
+              <label class="ann-preview-opt"><input type="checkbox" disabled /><span class="ann-preview-color" style="background:#E74C3C;"></span> angry</label>
+              <label class="ann-preview-opt"><input type="checkbox" checked disabled /><span class="ann-preview-color" style="background:#F39C12;"></span> surprise</label>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#3B82F6;border-color:#3B82F6;">序列</span> Span 區間標記</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample">患者服用<span class="ner-hl" style="background:rgba(255,107,107,0.18);color:#DC2626;">阿斯匹靈<span class="ner-badge" style="background:#FF6B6B;">target</span></span>後出現<span class="ner-hl" style="background:rgba(78,205,196,0.18);color:#0D9488;">頭暈<span class="ner-badge" style="background:#4ECDC4;">aspect</span></span>及<span class="ner-hl" style="background:rgba(69,183,209,0.18);color:#0284C7;">嚴重不適<span class="ner-badge" style="background:#45B7D1;">opinion</span></span></div>
+            <div class="re-ent-btns">
+              <span class="re-ent-btn" style="color:#FF6B6B;border-color:#FF6B6B;">target</span>
+              <span class="re-ent-btn" style="color:#4ECDC4;border-color:#4ECDC4;">aspect</span>
+              <span class="re-ent-btn" style="color:#45B7D1;border-color:#45B7D1;">opinion</span>
+            </div>
+            <div class="re-ent-list">
+              <div class="re-ent-row"><span class="re-ent-badge" style="color:#FF6B6B;border-color:#FF6B6B;">target</span> 阿斯匹靈</div>
+              <div class="re-ent-row"><span class="re-ent-badge" style="color:#4ECDC4;border-color:#4ECDC4;">aspect</span> 頭暈</div>
+              <div class="re-ent-row"><span class="re-ent-badge" style="color:#45B7D1;border-color:#45B7D1;">opinion</span> 嚴重不適</div>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#0284C7;border-color:#0284C7;">序列</span> Token Class 詞元分類</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample">
+              <div class="tok-row">
+                <div class="tok-cell"><span class="tok-word">Tim</span><span class="tok-tag" style="background:rgba(255,107,107,0.15);color:#DC2626;">B-PER</span></div>
+                <div class="tok-cell"><span class="tok-word">Cook</span><span class="tok-tag" style="background:rgba(255,107,107,0.15);color:#DC2626;">I-PER</span></div>
+                <div class="tok-cell"><span class="tok-word">leads</span><span class="tok-tag" style="background:rgba(148,163,184,0.12);color:var(--ink-muted);">O</span></div>
+                <div class="tok-cell"><span class="tok-word">Apple</span><span class="tok-tag" style="background:rgba(78,205,196,0.15);color:#0D9488;">B-ORG</span></div>
+                <div class="tok-cell"><span class="tok-word">in</span><span class="tok-tag" style="background:rgba(148,163,184,0.12);color:var(--ink-muted);">O</span></div>
+                <div class="tok-cell"><span class="tok-word">Cupertino</span><span class="tok-tag" style="background:rgba(69,183,209,0.15);color:#0284C7;">B-LOC</span></div>
+              </div>
+            </div>
+            <div class="re-ent-btns">
+              <span class="re-ent-btn" style="color:#FF6B6B;border-color:#FF6B6B;">PER</span>
+              <span class="re-ent-btn" style="color:#4ECDC4;border-color:#4ECDC4;">ORG</span>
+              <span class="re-ent-btn" style="color:#45B7D1;border-color:#45B7D1;">LOC</span>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card" data-testid="relation-triple-overview-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#DB2777;border-color:#DB2777;">序列</span> Relation Triple 關係三元組</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample" style="font-size:12px;line-height:1.8;"><span class="ner-hl" style="background:rgba(231,76,60,0.18);color:#DC2626;">高血壓<span class="ner-badge" style="background:#E74C3C;">DISE</span></span>若未妥善控制，可能導致<span class="ner-hl" style="background:rgba(243,156,18,0.18);color:#D97706;">動脈硬化<span class="ner-badge" style="background:#F39C12;">SYMP</span></span>，長期服用<span class="ner-hl" style="background:rgba(46,204,113,0.18);color:#16A34A;">Amlodipine<span class="ner-badge" style="background:#2ECC71;">DRUG</span></span>有助控制血壓。</div>
+            <div style="font-size:10px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;">關係三元組標記</div>
+            <div class="re-ent-list">
+              <div class="re-triple-row" data-testid="relation-triple-row">
+                <div class="re-triple-content"><span class="re-triple-entity">高血壓 (0,2)</span><span class="re-arrow">→</span><span class="re-rel-badge" data-testid="relation-trigger">導致 (12,13)</span><span class="re-arrow">→</span><span class="re-triple-entity">動脈硬化 (14,17)</span><span class="re-semantic-type" data-testid="relation-semantic-type">類型：causes</span></div>
+                <div class="re-triple-actions"><span class="re-triple-action re-triple-action-type" data-testid="relation-type-action">類型</span><span class="re-triple-action re-triple-action-delete" data-testid="relation-delete-action">刪除</span></div>
+              </div>
+              <div class="re-triple-row" data-testid="relation-triple-row">
+                <div class="re-triple-content"><span class="re-triple-entity">Amlodipine (45,54)</span><span class="re-arrow">→</span><span class="re-rel-badge" data-testid="relation-trigger">控制 (59,60)</span><span class="re-arrow">→</span><span class="re-triple-entity">高血壓 (0,2)</span><span class="re-semantic-type" data-testid="relation-semantic-type">類型：treats</span></div>
+                <div class="re-triple-actions"><span class="re-triple-action re-triple-action-type" data-testid="relation-type-action">類型</span><span class="re-triple-action re-triple-action-delete" data-testid="relation-delete-action">刪除</span></div>
+              </div>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#DC2626;border-color:#DC2626;">分類</span> Entity Relation 實體關係標籤</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample" style="font-size:12px;text-align:center;padding:14px 12px;">
+              <span class="re-ent-badge" style="color:#FF6B6B;border-color:#FF6B6B;font-size:11px;padding:2px 8px;">阿斯匹靈</span>
+              <span style="margin:0 8px;color:var(--ink-muted);">⟷</span>
+              <span class="re-ent-badge" style="color:#4ECDC4;border-color:#4ECDC4;font-size:11px;padding:2px 8px;">頭暈</span>
+            </div>
+            <div class="ann-preview-options">
+              <label class="ann-preview-opt"><input type="radio" disabled /><span class="ann-preview-color" style="background:#E74C3C;"></span> causes</label>
+              <label class="ann-preview-opt"><input type="radio" disabled /><span class="ann-preview-color" style="background:#2ECC71;"></span> treats</label>
+              <label class="ann-preview-opt"><input type="radio" checked disabled /><span class="ann-preview-color" style="background:#3498DB;"></span> prevents</label>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#D97706;border-color:#D97706;">回歸</span> Single Dim 單維度回歸</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample">深度學習在醫學影像分割領域的進展。</div>
+            <div class="va-dim-row">
+              <span class="va-dim-name">score</span>
+              <div class="va-dim-scale">
+                <span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot filled"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span>
+              </div>
+              <span class="va-dim-range">1–5</span>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#EA580C;border-color:#EA580C;">回歸</span> Multi Dim 多維度回歸</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample" style="font-size:12px;">我入手 Note 10 plus 第三天就退廠保修　過熱問題嚴重</div>
+            <div class="va-dim-row" style="margin-bottom:6px;">
+              <span class="va-dim-name">valence</span>
+              <div class="va-dim-scale">
+                <span class="va-dim-dot"></span><span class="va-dim-dot filled"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span>
+              </div>
+              <span class="va-dim-range">1–9</span>
+            </div>
+            <div class="va-dim-row">
+              <span class="va-dim-name">arousal</span>
+              <div class="va-dim-scale">
+                <span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot filled"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span>
+              </div>
+              <span class="va-dim-range">1–9</span>
+            </div>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#059669;border-color:#059669;">生成</span> Free Text 自由文字</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div class="ann-preview-sample" style="font-size:12px;">醫師說我的血糖控制不好，要開始吃藥？</div>
+            <textarea class="preview-textarea" disabled placeholder="在此輸入回答…"></textarea>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card" data-testid="boundary-overview-card">
+        <div class="form-card-title"><span class="form-card-badge" style="color:#0D9488;border-color:#0D9488;">序列</span> Boundary 邊界偵測</div>
+        <div class="form-card-body">
+          <div class="ann-preview">
+            <div class="ann-preview-label">標記預覽</div>
+            <div style="font-size:9px;font-weight:600;color:var(--ink-soft);margin-bottom:3px;">text</div>
+            <div class="ann-preview-sample">慢性腎臟病的早期症狀通常不明顯患者可能僅有輕微疲勞或食慾下降隨著病程進展可能出現水腫高血壓及貧血等問題定期健康檢查有助於早期發現及時介入治療可延緩腎功能惡化</div>
+            <div class="boundary-task-title">邊界偵測</div>
+            <div class="boundary-task-title">邊界類型</div>
+            <div class="boundary-type-list" aria-label="邊界類型圖例">
+              <span class="boundary-type-chip boundary-tone-0 is-selected" data-testid="boundary-type-sentence" data-selected="true">sentence</span>
+              <span class="boundary-type-chip boundary-tone-1" data-testid="boundary-type-paragraph" data-selected="false">paragraph</span>
+            </div>
+            <div class="boundary-editor" aria-label="邊界切割靜態示例">
+              <span class="boundary-text-segment" data-testid="boundary-segment-1">慢性腎臟病的早期症狀通常不</span><span class="boundary-gap boundary-tone-0" data-testid="boundary-gap-13" role="img" aria-label="移除 sentence 邊界 (offset 13)"><svg class="boundary-marker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="17" r="3"/><path d="M14.8 14.8 20 20"/></svg><span class="boundary-marker-code" aria-hidden="true">S</span></span><span class="boundary-text-segment" data-testid="boundary-segment-2">明顯患者可能僅有輕微疲勞或</span><span class="boundary-gap boundary-tone-1" data-testid="boundary-gap-26" role="img" aria-label="移除 paragraph 邊界 (offset 26)"><svg class="boundary-marker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="17" r="3"/><path d="M14.8 14.8 20 20"/></svg><span class="boundary-marker-code" aria-hidden="true">P</span></span><span class="boundary-text-segment">食慾下降隨著病程進展可能出現水腫高血</span><span class="boundary-gap boundary-tone-0" role="img" aria-label="移除 sentence 邊界 (offset 44)"><svg class="boundary-marker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="17" r="3"/><path d="M14.8 14.8 20 20"/></svg><span class="boundary-marker-code" aria-hidden="true">S</span></span><span class="boundary-text-segment">壓及貧血等問題定期健康</span><span class="boundary-gap boundary-tone-0" role="img" aria-label="移除 sentence 邊界 (offset 55)"><svg class="boundary-marker-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="17" r="3"/><path d="M14.8 14.8 20 20"/></svg><span class="boundary-marker-code" aria-hidden="true">S</span></span><span class="boundary-text-segment">檢查有助於早期發現及時介入治療可延緩腎功能惡化</span>
+            </div>
+            <div class="boundary-count">已標記 4 個邊界</div>
+            <section class="boundary-result" data-testid="boundary-result">
+              <div class="boundary-result-title">切割結果</div>
+              <div class="boundary-result-paragraphs">
+                <section class="boundary-result-paragraph" data-testid="boundary-result-paragraph">
+                  <div class="boundary-result-paragraph-title">段落 1</div>
+                  <div class="boundary-result-sentences">
+                    <div class="boundary-result-sentence" data-testid="boundary-result-sentence"><span class="boundary-result-sentence-index">1</span><span class="boundary-result-sentence-text">慢性腎臟病的早期症狀通常不</span></div>
+                    <div class="boundary-result-sentence" data-testid="boundary-result-sentence"><span class="boundary-result-sentence-index">2</span><span class="boundary-result-sentence-text">明顯患者可能僅有輕微疲勞或</span></div>
+                  </div>
+                </section>
+                <section class="boundary-result-paragraph" data-testid="boundary-result-paragraph">
+                  <div class="boundary-result-paragraph-title">段落 2</div>
+                  <div class="boundary-result-sentences">
+                    <div class="boundary-result-sentence" data-testid="boundary-result-sentence"><span class="boundary-result-sentence-index">1</span><span class="boundary-result-sentence-text">食慾下降隨著病程進展可能出現水腫高血</span></div>
+                    <div class="boundary-result-sentence" data-testid="boundary-result-sentence"><span class="boundary-result-sentence-index">2</span><span class="boundary-result-sentence-text">壓及貧血等問題定期健康</span></div>
+                    <div class="boundary-result-sentence" data-testid="boundary-result-sentence"><span class="boundary-result-sentence-index">3</span><span class="boundary-result-sentence-text">檢查有助於早期發現及時介入治療可延緩腎功能惡化</span></div>
+                  </div>
+                </section>
+              </div>
+            </section>
+            <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="comp-section">
+    <div class="section-eyebrow">Composite Tasks</div>
+    <h2 class="section-title">4 個組合型任務</h2>
+    <p class="section-desc">展示多輸出類型組合下的標記預覽：整合顯示所有輸出類型的標記結果。</p>
+
+    <div class="comp-card" data-testid="absa-va-overview-card">
+      <div class="comp-card-header"><div><div class="comp-card-title">ABSA + 情緒回歸（YouTube 留言）</div><div class="comp-card-sub">span + relation_triple + multi_dim</div></div><div class="comp-output-badges"><span class="comp-output-badge" style="color:#3B82F6;border-color:#3B82F6;">span</span><span class="comp-output-badge" style="color:#DB2777;border-color:#DB2777;">relation_triple</span><span class="comp-output-badge" style="color:#EA580C;border-color:#EA580C;">multi_dim</span></div></div>
+      <div class="comp-card-body">
+        <div class="ann-preview">
+          <div class="ann-preview-label">標記預覽</div>
+          <div class="ann-preview-sample" style="font-size:12px;line-height:1.8;"><b>@rottenrockteahouse:</b> 我入手<span class="ner-hl" style="background:rgba(255,107,107,0.18);color:#DC2626;">Note 10 plus<span class="ner-badge" style="background:#FF6B6B;">target</span></span>第三天就退廠保修　<span class="ner-hl" style="background:rgba(78,205,196,0.18);color:#0D9488;">過熱問題<span class="ner-badge" style="background:#4ECDC4;">aspect</span></span><span class="ner-hl" style="background:rgba(69,183,209,0.18);color:#0284C7;">嚴重<span class="ner-badge" style="background:#45B7D1;">opinion</span></span></div>
+          <div class="re-ent-btns">
+            <span class="re-ent-btn" style="color:#FF6B6B;border-color:#FF6B6B;">target</span>
+            <span class="re-ent-btn" style="color:#4ECDC4;border-color:#4ECDC4;">aspect</span>
+            <span class="re-ent-btn" style="color:#45B7D1;border-color:#45B7D1;">opinion</span>
+          </div>
+          <div class="re-ent-list" style="margin-bottom:8px;">
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#FF6B6B;border-color:#FF6B6B;">target</span> Note 10 plus</div>
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#4ECDC4;border-color:#4ECDC4;">aspect</span> 過熱問題</div>
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#45B7D1;border-color:#45B7D1;">opinion</span> 嚴重</div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:6px;margin-bottom:6px;">
+            <div style="font-size:10px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;">關係三元組標記</div>
+            <div class="re-triple-row" data-testid="relation-triple-row" style="margin-bottom:3px;">
+              <div class="re-triple-content"><span class="re-triple-entity">Note 10 plus/target</span><span class="re-arrow">→</span><span class="re-rel-badge" data-testid="relation-trigger" data-origin="task-config" title="由任務設定推導">has_aspect</span><span class="re-arrow">→</span><span class="re-triple-entity">過熱問題/aspect</span></div>
+              <div class="re-triple-actions"><span class="re-triple-action re-triple-action-type" data-testid="relation-type-action">類型</span><span class="re-triple-action re-triple-action-delete" data-testid="relation-delete-action">刪除</span></div>
+            </div>
+            <div class="re-triple-row" data-testid="relation-triple-row">
+              <div class="re-triple-content"><span class="re-triple-entity">Note 10 plus/target</span><span class="re-arrow">→</span><span class="re-rel-badge" data-testid="relation-trigger" data-origin="task-config" title="由任務設定推導">has_opinion</span><span class="re-arrow">→</span><span class="re-triple-entity">嚴重/opinion</span></div>
+              <div class="re-triple-actions"><span class="re-triple-action re-triple-action-type" data-testid="relation-type-action">類型</span><span class="re-triple-action re-triple-action-delete" data-testid="relation-delete-action">刪除</span></div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:6px;">
+            <div class="va-dim-row" style="margin-bottom:4px;"><span class="va-dim-name">valence</span><div class="va-dim-scale"><span class="va-dim-dot"></span><span class="va-dim-dot filled"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span></div><span class="va-dim-range">1–9</span></div>
+            <div class="va-dim-row"><span class="va-dim-name">arousal</span><div class="va-dim-scale"><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span><span class="va-dim-dot filled"></span><span class="va-dim-dot"></span><span class="va-dim-dot"></span></div><span class="va-dim-range">1–9</span></div>
+          </div>
+          <div class="bypass-bar">
+            <label class="bypass-opt"><input type="checkbox" disabled /> Span：無法判定</label>
+            <label class="bypass-opt"><input type="checkbox" disabled /> 關係三元組：無法判定</label>
+            <label class="bypass-opt"><input type="checkbox" disabled /> 多維度：無法判定</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card" data-testid="medical-ner-re-overview-card">
+      <div class="comp-card-header"><div><div class="comp-card-title">醫學 NER + 關係抽取</div><div class="comp-card-sub">span + relation_triple</div></div><div class="comp-output-badges"><span class="comp-output-badge" style="color:#3B82F6;border-color:#3B82F6;">span</span><span class="comp-output-badge" style="color:#DB2777;border-color:#DB2777;">relation_triple</span></div></div>
+      <div class="comp-card-body">
+        <div class="ann-preview">
+          <div class="ann-preview-label">標記預覽</div>
+          <div class="ann-preview-sample" style="font-size:11px;line-height:1.8;"><span class="ner-hl" style="background:rgba(243,156,18,0.18);color:#D97706;">胸痛<span class="ner-badge" style="background:#F39C12;">SYMP</span></span>至<span class="ner-hl" style="background:rgba(155,89,182,0.18);color:#7C3AED;">急診<span class="ner-badge" style="background:#9B59B6;">INST</span></span>就醫，經<span class="ner-hl" style="background:rgba(230,126,34,0.18);color:#C2410C;">心電圖<span class="ner-badge" style="background:#E67E22;">EXAM</span></span>發現<span class="ner-hl" style="background:rgba(231,76,60,0.18);color:#DC2626;">急性心肌梗塞<span class="ner-badge" style="background:#E74C3C;">DISE</span></span>，給予<span class="ner-hl" style="background:rgba(46,204,113,0.18);color:#16A34A;">阿斯匹靈<span class="ner-badge" style="background:#2ECC71;">DRUG</span></span></div>
+          <div class="re-ent-btns">
+            <span class="re-ent-btn" style="color:#4A90D9;border-color:#4A90D9;">BODY</span>
+            <span class="re-ent-btn" style="color:#E74C3C;border-color:#E74C3C;">DISE</span>
+            <span class="re-ent-btn" style="color:#F39C12;border-color:#F39C12;">SYMP</span>
+            <span class="re-ent-btn" style="color:#2ECC71;border-color:#2ECC71;">DRUG</span>
+            <span class="re-ent-btn" style="color:#9B59B6;border-color:#9B59B6;">INST</span>
+            <span class="re-ent-btn" style="color:#E67E22;border-color:#E67E22;">EXAM</span>
+            <span class="re-ent-btn" style="color:#3498DB;border-color:#3498DB;">TREAT</span>
+          </div>
+          <div class="re-ent-list" style="margin-bottom:8px;">
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#F39C12;border-color:#F39C12;">SYMP</span> 胸痛</div>
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#9B59B6;border-color:#9B59B6;">INST</span> 急診</div>
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#E67E22;border-color:#E67E22;">EXAM</span> 心電圖</div>
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#E74C3C;border-color:#E74C3C;">DISE</span> 急性心肌梗塞</div>
+            <div class="re-ent-row"><span class="re-ent-badge" style="color:#2ECC71;border-color:#2ECC71;">DRUG</span> 阿斯匹靈</div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:6px;">
+            <div style="font-size:10px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;">關係三元組標記</div>
+            <div class="re-triple-row" data-testid="relation-triple-row" style="margin-bottom:3px;">
+              <div class="re-triple-content"><span class="re-triple-entity">心電圖 (12,14)</span><span class="re-arrow">→</span><span class="re-rel-badge" data-testid="relation-trigger">發現 (17,18)</span><span class="re-arrow">→</span><span class="re-triple-entity">ST段上升 (19,23)</span><span class="re-semantic-type" data-testid="relation-semantic-type">類型：typicalTest</span></div>
+              <div class="re-triple-actions"><span class="re-triple-action re-triple-action-type" data-testid="relation-type-action">類型</span><span class="re-triple-action re-triple-action-delete" data-testid="relation-delete-action">刪除</span></div>
+            </div>
+            <div class="re-triple-row" data-testid="relation-triple-row">
+              <div class="re-triple-content"><span class="re-triple-entity">阿斯匹靈 (41,44)</span><span class="re-arrow">→</span><span class="re-rel-badge" data-testid="relation-trigger">治療 (48,49)</span><span class="re-arrow">→</span><span class="re-triple-entity">急性心肌梗塞 (28,33)</span><span class="re-semantic-type" data-testid="relation-semantic-type">類型：possibleTreatment</span></div>
+              <div class="re-triple-actions"><span class="re-triple-action re-triple-action-type" data-testid="relation-type-action">類型</span><span class="re-triple-action re-triple-action-delete" data-testid="relation-delete-action">刪除</span></div>
+            </div>
+          </div>
+          <div class="bypass-bar">
+            <label class="bypass-opt"><input type="checkbox" disabled /> Span：無法判定</label>
+            <label class="bypass-opt"><input type="checkbox" disabled /> 關係三元組：無法判定</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><div><div class="comp-card-title">NLI 自然語言推斷</div><div class="comp-card-sub">item_pair + single_label</div></div><div class="comp-output-badges"><span class="comp-output-badge" style="color:var(--primary);border-color:var(--primary);">single_label</span></div></div>
+      <div class="comp-card-body">
+        <div class="ann-preview">
+          <div class="ann-preview-label">標記預覽</div>
+          <div class="sp-block"><div class="sp-lbl">Premise</div><div class="sp-text">阿斯匹靈可抑制血小板凝集，常用於預防心肌梗塞與中風。</div></div>
+          <div class="sp-block"><div class="sp-lbl">Hypothesis</div><div class="sp-text">阿斯匹靈對所有患者均無副作用，可長期安全服用。</div></div>
+          <div class="ann-preview-options" style="margin-top:6px;">
+            <label class="ann-preview-opt"><input type="radio" disabled /><span class="ann-preview-color" style="background:#2ECC71;"></span> entailment</label>
+            <label class="ann-preview-opt"><input type="radio" disabled /><span class="ann-preview-color" style="background:#F39C12;"></span> neutral</label>
+            <label class="ann-preview-opt"><input type="radio" checked disabled /><span class="ann-preview-color" style="background:#E74C3C;"></span> contradiction</label>
+          </div>
+          <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <div class="comp-card-header"><div><div class="comp-card-title">MRC 閱讀理解問答</div><div class="comp-card-sub">background + question → free_text</div></div><div class="comp-output-badges"><span class="comp-output-badge" style="color:#059669;border-color:#059669;">free_text</span></div></div>
+      <div class="comp-card-body">
+        <div class="ann-preview">
+          <div class="ann-preview-label">標記預覽</div>
+          <div class="sp-block"><div class="sp-lbl">背景知識</div><div class="sp-text" style="font-size:11px;">台灣癌症 5 年存活率已突破 6 成，近半數癌症患者出現明顯情緒困擾…</div></div>
+          <div class="sp-block" style="border-color:var(--primary-border);background:var(--primary-soft);"><div class="sp-lbl" style="color:var(--primary);">問題</div><div class="sp-text" style="font-weight:600;">罹癌後一直很焦慮，這是常見的情緒症狀嗎？</div></div>
+          <textarea class="preview-textarea" disabled placeholder="在此輸入回答…"></textarea>
+          <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+</body>
+</html>
