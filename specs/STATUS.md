@@ -36,7 +36,7 @@
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `spec-ready` | `feat/annotation/015-annotation-workspace` | spec v1.4.11；規格狀態：Draft |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v3.2.0；規格狀態：Draft；prototype 迭代（資料集預覽、循序關係三元組建構器 PR #93；輸出類型 Bypass 選項）持續於 spec-ready 階段同步 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v3.4.1；規格狀態：Draft；prototype 迭代新增 Boundary 逐字元可存取切點、類型色系／縮寫辨識、清楚標記間距與 sentence／paragraph 階層式動態結果預覽 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-13 | `task-management-013` spec 同步至 v3.4.1：Boundary 預覽新增依 `boundary_types` 順序配置的類型色系、SVG 剪刀與類型首字縮寫、完整類型可存取名稱、已標記切點防遮蔽間距，以及 `sentence`／`paragraph` 階層式即時切割結果；補齊預覽互動表、邊界情況、FR-003d-2 與 SC-003i；狀態維持 `spec-ready`。 |
 | 2026-07-06 | `task-management-013` spec 更新至 v3.2.0：每個輸出類型新增獨立「無法判定 (Bypass)」選項——registry 共通欄位 `allow_bypass`（預設開啟）、預覽 Bypass 勾選項與互斥清空停用行為、整合預覽（span + relation_triple）前綴勾選項與連鎖停用邊界（新增 FR-003j、SC-003h）；prototype 同步；狀態維持 `spec-ready`。 |
 | 2026-07-06 | `task-management-013` spec 同步至 v3.1.7（PR #93 合併）：資料列來源偵測與髒 JSON 解析、預覽 Modal 回退鏈、循序關係三元組建構器、來源切換不相容提示等 prototype 行為入 spec；狀態維持 `spec-ready`（實作尚未開始，不觸發封存）。 |
 | 2026-06-09 | Update account-001 plan to v2.0.0: full alignment with plan-template v1.13.6; status confirmed `plan-ready`. |
