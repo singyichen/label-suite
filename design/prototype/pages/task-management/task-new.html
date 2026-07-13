@@ -3867,35 +3867,11 @@ function renderBoundaryPreview(container, outKey) {
 
   var realText = getDatasetPreviewText();
   var text = realText || (state.lang === 'zh' ? '第一段文字。第二段文字。第三段文字。第四段文字。' : 'First sentence. Second sentence. Third sentence. Fourth sentence.');
-  var segments = text.split(/(?<=[。．！？.!?])\s*/);
+  var chars = Array.from(text);
 
-  /* Cut the text at the union of punctuation gaps and supplied marker offsets
-     so every offset-based boundary gets its own gap, even in punctuation-free
-     text; each marker then maps to its exact gap index */
-  var initMarkers = [];
-  if (rawMarkers.length > 0) {
-    var cutSet = {};
-    var charPos = 0;
-    for (var si = 0; si < segments.length - 1; si++) {
-      charPos += segments[si].length;
-      cutSet[charPos] = true;
-    }
-    rawMarkers.forEach(function(m) {
-      if (typeof m.position === 'number') cutSet[m.position] = true;
-    });
-    var cuts = Object.keys(cutSet).map(Number).filter(function(p) { return p > 0 && p < text.length; }).sort(function(a, b) { return a - b; });
-    if (cuts.length > 0) {
-      segments = [];
-      var prevCut = 0;
-      cuts.forEach(function(p) { segments.push(text.substring(prevCut, p)); prevCut = p; });
-      segments.push(text.substring(prevCut));
-    }
-    rawMarkers.forEach(function(m) {
-      var gi = cuts.indexOf(m.position);
-      if (gi >= 0) initMarkers.push({ position: gi, type: m.type || boundaryTypes[0] || 'sentence' });
-    });
-  }
-  if (segments.length < 2) segments = [text.substring(0, Math.floor(text.length / 2)), text.substring(Math.floor(text.length / 2))];
+  var initMarkers = rawMarkers
+    .filter(function(m) { return typeof m.position === 'number' && m.position > 0 && m.position < chars.length; })
+    .map(function(m) { return { position: m.position, type: m.type || boundaryTypes[0] || 'sentence' }; });
   var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: initMarkers, _seeded: initMarkers.length > 0 });
   if (initMarkers.length > 0 && !ps._seeded) { ps.markers = initMarkers; ps._seeded = true; }
 
@@ -3918,28 +3894,36 @@ function renderBoundaryPreview(container, outKey) {
   });
   container.appendChild(chipWrap);
 
-  /* Text segments with clickable gaps */
+  /* Per-character rendering with clickable gaps between every character */
   var segWrap = document.createElement('div');
-  segWrap.style.cssText = 'line-height:2;';
-  segments.forEach(function(seg, i) {
+  segWrap.style.cssText = 'line-height:2.2;font-size:15px;';
+  chars.forEach(function(ch, i) {
     var span = document.createElement('span');
-    span.style.cssText = 'background:#f8fafc;padding:2px 4px;border-radius:4px;';
-    span.textContent = seg;
+    span.textContent = ch;
     segWrap.appendChild(span);
-    if (i < segments.length - 1) {
-      var markerIdx = ps.markers.findIndex(function(m) { return m.position === i; });
+    if (i < chars.length - 1) {
+      var offset = i + 1;
+      var markerIdx = ps.markers.findIndex(function(m) { return m.position === offset; });
       var hasMarker = markerIdx >= 0;
       var gap = document.createElement('button'); gap.type = 'button';
-      gap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:20px;margin:0 2px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;vertical-align:middle;border:1.5px dashed ' + (hasMarker ? '#E74C3C' : 'var(--color-border)') + ';background:' + (hasMarker ? '#FEE2E2' : 'transparent') + ';color:' + (hasMarker ? '#E74C3C' : 'var(--color-text-soft)') + ';';
-      gap.textContent = hasMarker ? '✂' : '|';
-      gap.title = hasMarker ? (state.lang === 'zh' ? '移除邊界' : 'Remove boundary') : (state.lang === 'zh' ? '插入邊界' : 'Insert boundary');
+      if (hasMarker) {
+        gap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:22px;margin:0 1px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;border:1.5px solid #E74C3C;background:#FEE2E2;color:#E74C3C;';
+        gap.textContent = '✂';
+      } else {
+        gap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:4px;height:18px;margin:0;padding:0;border:none;border-radius:2px;cursor:pointer;vertical-align:middle;background:transparent;color:transparent;transition:all .15s;';
+        gap.addEventListener('mouseenter', function() { gap.style.width = '14px'; gap.style.background = 'var(--color-primary-bg, #EBF5FB)'; gap.style.color = 'var(--color-primary)'; gap.textContent = '|'; });
+        gap.addEventListener('mouseleave', function() { gap.style.width = '4px'; gap.style.background = 'transparent'; gap.style.color = 'transparent'; gap.textContent = ''; });
+      }
+      gap.title = hasMarker
+        ? (state.lang === 'zh' ? '移除邊界 (offset ' + offset + ')' : 'Remove boundary (offset ' + offset + ')')
+        : (state.lang === 'zh' ? '插入邊界 (offset ' + offset + ')' : 'Insert boundary (offset ' + offset + ')');
       (function(pos, mIdx) {
         gap.addEventListener('click', function() {
           if (mIdx >= 0) ps.markers.splice(mIdx, 1);
           else ps.markers.push({ position: pos, type: ps.activeType });
           refreshOutputPreview(container, outKey);
         });
-      }(i, markerIdx));
+      }(offset, markerIdx));
       segWrap.appendChild(gap);
     }
   });
