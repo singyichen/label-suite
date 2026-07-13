@@ -227,6 +227,58 @@
     .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
     .annotation-preview-pair { display: flex; flex-direction: column; gap: 8px; }
     .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
+    .boundary-editor { font-size: 15px; line-height: 2.6; overflow-wrap: anywhere; }
+    .boundary-char { position: relative; z-index: 0; }
+    .boundary-gap {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; margin: 0 -10px; padding: 0; vertical-align: middle;
+      border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent;
+      color: var(--color-ink-muted); opacity: 0.42; cursor: pointer; font-size: 11px; font-weight: 700;
+      transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast), opacity var(--dur-fast);
+    }
+    .boundary-gap:hover,
+    .boundary-gap:focus,
+    .boundary-gap:focus-visible {
+      z-index: 2; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary); opacity: 1; outline: 2px solid var(--color-primary); outline-offset: 1px;
+    }
+    .boundary-tone-0 { --boundary-accent: var(--color-error); --boundary-soft-bg: var(--color-error-soft-bg); --boundary-border: var(--color-error-soft-border); }
+    .boundary-tone-1 { --boundary-accent: var(--color-primary); --boundary-soft-bg: var(--color-primary-soft-bg); --boundary-border: var(--color-primary); }
+    .boundary-tone-2 { --boundary-accent: var(--color-success); --boundary-soft-bg: var(--color-success-bg); --boundary-border: var(--color-success-border); }
+    .boundary-tone-3 { --boundary-accent: var(--color-warning); --boundary-soft-bg: var(--color-warning-bg); --boundary-border: var(--color-warning-border); }
+    .boundary-type-chip {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border: 2px solid var(--boundary-accent); border-radius: 6px; background: transparent;
+      color: var(--boundary-accent); font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .boundary-type-chip::before {
+      content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0;
+    }
+    .boundary-type-chip[aria-pressed="true"] { color: var(--color-white); background: var(--boundary-accent); }
+    .boundary-type-chip:hover,
+    .boundary-type-chip:focus-visible { outline: 2px solid var(--boundary-accent); outline-offset: 2px; }
+    .boundary-gap.is-active {
+      z-index: 2; width: 36px; margin: 0 3px; padding: 0 4px; gap: 2px;
+      color: var(--boundary-accent); background: var(--boundary-soft-bg);
+      border-color: var(--boundary-border); opacity: 1;
+    }
+    .boundary-gap.is-active:hover,
+    .boundary-gap.is-active:focus,
+    .boundary-gap.is-active:focus-visible {
+      color: var(--boundary-accent); background: var(--boundary-soft-bg);
+      border-color: var(--boundary-accent); outline-color: var(--boundary-accent);
+    }
+    .boundary-marker-icon { width: 12px; height: 12px; flex-shrink: 0; }
+    .boundary-marker-code { min-width: 8px; font-size: 9px; font-weight: 800; line-height: 1; text-transform: uppercase; }
+    .boundary-result { margin-top: var(--space-md); padding: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
+    .boundary-result-title { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--color-ink); }
+    .boundary-result-paragraphs { display: flex; flex-direction: column; gap: 12px; }
+    .boundary-result-paragraph { padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+    .boundary-result-paragraph-title { margin-bottom: 8px; font-size: 11px; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.05em; }
+    .boundary-result-sentences { display: flex; flex-direction: column; gap: 6px; }
+    .boundary-result-sentence { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 14px; line-height: 1.7; color: var(--color-ink); }
+    .boundary-result-sentence-index { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: var(--radius-sm); background: var(--color-primary-soft-bg); color: var(--color-primary); font-size: 10px; font-weight: 700; }
+    .boundary-result-sentence-text { min-width: 0; overflow-wrap: anywhere; }
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
     .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
     .aspect-list-preview-row-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); min-width: 48px; }
@@ -1386,6 +1438,9 @@ var I18N = {
     s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     annotationPreviewLabel: '標記預覽',
+    boundaryResultTitle: '切割結果',
+    boundaryResultParagraph: '段落 {n}',
+    boundaryResultSentenceAria: '段落 {p}，句子 {s}',
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
@@ -1538,6 +1593,9 @@ var I18N = {
     s2TemplateSectionTitle: 'Start from template or upload config',
     uploadConfigBtn: 'Upload config (YAML / JSON)',
     annotationPreviewLabel: 'Annotation preview',
+    boundaryResultTitle: 'Segmentation result',
+    boundaryResultParagraph: 'Paragraph {n}',
+    boundaryResultSentenceAria: 'Paragraph {p}, sentence {s}',
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
@@ -3858,6 +3916,127 @@ function renderTokenClassPreview(container, outKey) {
   container.appendChild(schemeInfo);
 }
 
+function buildBoundaryResult(chars, markers) {
+  var paragraphs = [];
+  var currentParagraph = [];
+  var lastOffset = 0;
+  var sortedMarkers = markers.slice().filter(function(marker) {
+    return typeof marker.position === 'number' && marker.position > 0 && marker.position < chars.length;
+  }).sort(function(a, b) { return a.position - b.position; });
+
+  sortedMarkers.forEach(function(marker) {
+    var sentence = chars.slice(lastOffset, marker.position).join('');
+    if (sentence) currentParagraph.push(sentence);
+    lastOffset = marker.position;
+    if (marker.type === 'paragraph' && currentParagraph.length > 0) {
+      paragraphs.push(currentParagraph);
+      currentParagraph = [];
+    }
+  });
+
+  var remainder = chars.slice(lastOffset).join('');
+  if (remainder) currentParagraph.push(remainder);
+  if (currentParagraph.length > 0 || paragraphs.length === 0) paragraphs.push(currentParagraph);
+  return paragraphs;
+}
+
+function getBoundaryToneClass(type, boundaryTypes) {
+  var typeIndex = boundaryTypes.indexOf(type);
+  var toneIndex = (typeIndex < 0 ? 0 : typeIndex) % 4;
+  return 'boundary-tone-' + toneIndex;
+}
+
+function getBoundaryMarkerCode(type) {
+  var typeChars = Array.from(String(type || '').trim());
+  return (typeChars[0] || '?').toLocaleUpperCase();
+}
+
+function appendBoundaryMarkerVisual(gap, type) {
+  var svgNamespace = 'http://www.w3.org/2000/svg';
+  var icon = document.createElementNS(svgNamespace, 'svg');
+  icon.setAttribute('class', 'boundary-marker-icon');
+  icon.setAttribute('viewBox', '0 0 24 24');
+  icon.setAttribute('fill', 'none');
+  icon.setAttribute('stroke', 'currentColor');
+  icon.setAttribute('stroke-width', '2');
+  icon.setAttribute('stroke-linecap', 'round');
+  icon.setAttribute('stroke-linejoin', 'round');
+  icon.setAttribute('aria-hidden', 'true');
+  icon.setAttribute('focusable', 'false');
+
+  [['circle', { cx: '6', cy: '7', r: '3' }],
+   ['path', { d: 'M8.12 8.12 12 12' }],
+   ['path', { d: 'M20 4 8.12 15.88' }],
+   ['circle', { cx: '6', cy: '17', r: '3' }],
+   ['path', { d: 'M14.8 14.8 20 20' }]].forEach(function(definition) {
+    var element = document.createElementNS(svgNamespace, definition[0]);
+    Object.keys(definition[1]).forEach(function(attribute) {
+      element.setAttribute(attribute, definition[1][attribute]);
+    });
+    icon.appendChild(element);
+  });
+
+  var code = document.createElement('span');
+  code.className = 'boundary-marker-code';
+  code.setAttribute('aria-hidden', 'true');
+  code.textContent = getBoundaryMarkerCode(type);
+  gap.appendChild(icon);
+  gap.appendChild(code);
+}
+
+function renderBoundaryResult(container, chars, markers) {
+  var result = document.createElement('section');
+  result.className = 'boundary-result';
+  result.setAttribute('data-testid', 'boundary-result');
+  result.setAttribute('aria-live', 'polite');
+
+  var title = document.createElement('div');
+  title.className = 'boundary-result-title';
+  title.textContent = t('boundaryResultTitle');
+  result.appendChild(title);
+
+  var paragraphList = document.createElement('div');
+  paragraphList.className = 'boundary-result-paragraphs';
+  buildBoundaryResult(chars, markers).forEach(function(sentences, paragraphIndex) {
+    var paragraph = document.createElement('section');
+    paragraph.className = 'boundary-result-paragraph';
+    paragraph.setAttribute('data-testid', 'boundary-result-paragraph');
+
+    var paragraphTitle = document.createElement('div');
+    paragraphTitle.className = 'boundary-result-paragraph-title';
+    paragraphTitle.textContent = t('boundaryResultParagraph').replace('{n}', String(paragraphIndex + 1));
+    paragraph.appendChild(paragraphTitle);
+
+    var sentenceList = document.createElement('div');
+    sentenceList.className = 'boundary-result-sentences';
+    sentences.forEach(function(sentence, sentenceIndex) {
+      var sentenceRow = document.createElement('div');
+      sentenceRow.className = 'boundary-result-sentence';
+      sentenceRow.setAttribute('data-testid', 'boundary-result-sentence');
+      sentenceRow.setAttribute('aria-label', t('boundaryResultSentenceAria')
+        .replace('{p}', String(paragraphIndex + 1))
+        .replace('{s}', String(sentenceIndex + 1)));
+
+      var index = document.createElement('span');
+      index.className = 'boundary-result-sentence-index';
+      index.textContent = String(sentenceIndex + 1);
+      index.setAttribute('aria-hidden', 'true');
+
+      var sentenceText = document.createElement('span');
+      sentenceText.className = 'boundary-result-sentence-text';
+      sentenceText.textContent = sentence;
+
+      sentenceRow.appendChild(index);
+      sentenceRow.appendChild(sentenceText);
+      sentenceList.appendChild(sentenceRow);
+    });
+    paragraph.appendChild(sentenceList);
+    paragraphList.appendChild(paragraph);
+  });
+  result.appendChild(paragraphList);
+  container.appendChild(result);
+}
+
 function renderBoundaryPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var boundaryTypes = Array.isArray(cfg.boundary_types) ? cfg.boundary_types.filter(Boolean) : ['sentence'];
@@ -3887,8 +4066,12 @@ function renderBoundaryPreview(container, outKey) {
   boundaryTypes.forEach(function(bt) {
     var chip = document.createElement('button'); chip.type = 'button';
     var isActive = ps.activeType === bt;
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--color-primary);color:' + (isActive ? '#fff' : 'var(--color-primary)') + ';background:' + (isActive ? 'var(--color-primary)' : 'transparent') + ';';
+    var toneClass = getBoundaryToneClass(bt, boundaryTypes);
+    chip.className = 'boundary-type-chip ' + toneClass;
     chip.textContent = bt;
+    chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    chip.setAttribute('data-testid', 'boundary-type-' + bt);
+    chip.setAttribute('data-boundary-tone', toneClass);
     chip.addEventListener('click', function() { ps.activeType = bt; refreshOutputPreview(container, outKey); });
     chipWrap.appendChild(chip);
   });
@@ -3896,9 +4079,11 @@ function renderBoundaryPreview(container, outKey) {
 
   /* Per-character rendering with clickable gaps between every character */
   var segWrap = document.createElement('div');
-  segWrap.style.cssText = 'line-height:2.2;font-size:15px;';
+  segWrap.className = 'boundary-editor';
   chars.forEach(function(ch, i) {
     var span = document.createElement('span');
+    span.className = 'boundary-char';
+    span.setAttribute('data-testid', 'boundary-char-' + i);
     span.textContent = ch;
     segWrap.appendChild(span);
     if (i < chars.length - 1) {
@@ -3906,17 +4091,22 @@ function renderBoundaryPreview(container, outKey) {
       var markerIdx = ps.markers.findIndex(function(m) { return m.position === offset; });
       var hasMarker = markerIdx >= 0;
       var gap = document.createElement('button'); gap.type = 'button';
-      if (hasMarker) {
-        gap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:24px;height:22px;margin:0 1px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle;border:1.5px solid #E74C3C;background:#FEE2E2;color:#E74C3C;';
-        gap.textContent = '✂';
-      } else {
-        gap.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:4px;height:18px;margin:0;padding:0;border:none;border-radius:2px;cursor:pointer;vertical-align:middle;background:transparent;color:transparent;transition:all .15s;';
-        gap.addEventListener('mouseenter', function() { gap.style.width = '14px'; gap.style.background = 'var(--color-primary-bg, #EBF5FB)'; gap.style.color = 'var(--color-primary)'; gap.textContent = '|'; });
-        gap.addEventListener('mouseleave', function() { gap.style.width = '4px'; gap.style.background = 'transparent'; gap.style.color = 'transparent'; gap.textContent = ''; });
+      var marker = hasMarker ? ps.markers[markerIdx] : null;
+      var boundaryType = marker ? marker.type : ps.activeType;
+      var gapLabel = hasMarker
+        ? (state.lang === 'zh' ? '移除 ' + boundaryType + ' 邊界 (offset ' + offset + ')' : 'Remove ' + boundaryType + ' boundary (offset ' + offset + ')')
+        : (state.lang === 'zh' ? '插入 ' + boundaryType + ' 邊界 (offset ' + offset + ')' : 'Insert ' + boundaryType + ' boundary (offset ' + offset + ')');
+      var gapToneClass = getBoundaryToneClass(boundaryType, boundaryTypes);
+      gap.className = 'boundary-gap' + (hasMarker ? ' is-active ' + gapToneClass : '');
+      if (hasMarker) appendBoundaryMarkerVisual(gap, boundaryType);
+      else gap.textContent = '|';
+      gap.title = gapLabel;
+      gap.setAttribute('aria-label', gapLabel);
+      gap.setAttribute('data-testid', 'boundary-gap-' + offset);
+      if (marker) {
+        gap.setAttribute('data-boundary-type', marker.type);
+        gap.setAttribute('data-boundary-tone', gapToneClass);
       }
-      gap.title = hasMarker
-        ? (state.lang === 'zh' ? '移除邊界 (offset ' + offset + ')' : 'Remove boundary (offset ' + offset + ')')
-        : (state.lang === 'zh' ? '插入邊界 (offset ' + offset + ')' : 'Insert boundary (offset ' + offset + ')');
       (function(pos, mIdx) {
         gap.addEventListener('click', function() {
           if (mIdx >= 0) ps.markers.splice(mIdx, 1);
@@ -3935,6 +4125,8 @@ function renderBoundaryPreview(container, outKey) {
     info.textContent = (state.lang === 'zh' ? '已標記 ' : 'Marked ') + ps.markers.length + (state.lang === 'zh' ? ' 個邊界' : ' boundaries');
     container.appendChild(info);
   }
+
+  renderBoundaryResult(container, chars, ps.markers);
 }
 
 function renderSpanOnlyPreview(container, outKey) {
