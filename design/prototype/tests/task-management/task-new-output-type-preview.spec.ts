@@ -299,7 +299,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(ps.boundary).toBeDefined();
   });
 
-  test('relation_triple — gold_triples loaded with subj/rel/obj format', async ({
+  test('relation_triple — triples loaded with subj/rel/obj format', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
@@ -308,7 +308,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       outputType: 'relation_triple',
       inputType: 'single_item',
       dataFile: 'relation-triple.json',
-      roles: { text: 'input', gold_triples: 'output' },
+      roles: { text: 'input', triples: 'output' },
     });
 
     const triples = (await getState(page, 'previewTriples')) as Triple[];
