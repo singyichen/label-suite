@@ -36,7 +36,7 @@
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `spec-ready` | `feat/annotation/015-annotation-workspace` | spec v1.4.11；規格狀態：Draft |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v3.4.2；規格狀態：Draft；Step 2 以 `rendersInputPreview` registry metadata 避免專屬／整合預覽重複顯示通用輸入區，`token_class` 與 `boundary` 維持既有顯示 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v3.4.3；規格狀態：Draft；純 `relation_triple` 僅顯示關係介面，明確組合 `span + relation_triple` 時才啟用可編輯實體的整合預覽 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-15 | `task-management-013` spec 同步至 v3.4.3：純 `relation_triple` 僅保留既有實體唯讀高亮、關係建構器與三元組列表，不顯示 Span 編輯介面或 `source_output`；只有明確選擇 `span + relation_triple` 才啟用整合實體編輯並輸出 `source_output: span`；同步驗收情境、功能需求、registry 契約、產品 taxonomy 與範例 task config；狀態維持 `spec-ready`。 |
 | 2026-07-15 | `task-management-013` spec 同步至 v3.4.2：新增 `rendersInputPreview` registry UI metadata；`span`、`relation_triple`、`entity_relation` 與相關複合任務不再重複顯示通用輸入區，`token_class`、`boundary` 維持既有顯示；補齊驗收情境、介面與行為規則、邊界情況、FR-003g-3、關鍵實體、下游相依性與 SC-003j；狀態維持 `spec-ready`。 |
 | 2026-07-13 | `task-management-013` spec 同步至 v3.4.1：Boundary 預覽新增依 `boundary_types` 順序配置的類型色系、SVG 剪刀與類型首字縮寫、完整類型可存取名稱、已標記切點防遮蔽間距，以及 `sentence`／`paragraph` 階層式即時切割結果；補齊預覽互動表、邊界情況、FR-003d-2 與 SC-003i；狀態維持 `spec-ready`。 |
 | 2026-07-06 | `task-management-013` spec 更新至 v3.2.0：每個輸出類型新增獨立「無法判定 (Bypass)」選項——registry 共通欄位 `allow_bypass`（預設開啟）、預覽 Bypass 勾選項與互斥清空停用行為、整合預覽（span + relation_triple）前綴勾選項與連鎖停用邊界（新增 FR-003j、SC-003h）；prototype 同步；狀態維持 `spec-ready`。 |
