@@ -479,6 +479,15 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('rel');
     expect(triples[0]).toHaveProperty('obj');
 
+    const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
+    expect(cfg.relation_triple).not.toHaveProperty('source_output');
+
+    const code = await page.evaluate(() => {
+      const editor = document.getElementById('codeEditor') as HTMLTextAreaElement;
+      return editor?.value || '';
+    });
+    expect(code).not.toContain('source_output');
+
     // Standalone relation_triple keeps pre-annotated entity highlights as
     // read-only context and exposes only relation controls. The span editor is
     // reserved for the explicit span + relation_triple composition.
@@ -634,6 +643,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     });
     expect(code).not.toContain('has_aspect');
     expect(code).toContain('bodyLocation');
+    expect(code).toContain('source_output: span');
     await expectGenericInputPreview(page, 'hidden');
   });
 
