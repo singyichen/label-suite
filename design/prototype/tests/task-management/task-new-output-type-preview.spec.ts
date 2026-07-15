@@ -142,6 +142,16 @@ async function expectNoEvidenceInPreview(page: Page, evidenceText?: string) {
   }
 }
 
+async function expectGenericInputPreview(
+  page: Page,
+  expected: 'visible' | 'hidden',
+) {
+  const genericInput = page
+    .locator('#annotationPreview')
+    .locator(':scope > .annotation-preview-pair, :scope > .annotation-preview-sample');
+  await expect(genericInput).toHaveCount(expected === 'visible' ? 1 : 0);
+}
+
 // ─── 10 Basic Output Types ──────────────────────────────────
 
 test.describe('Step 2 preview: all 10 output types with example data', () => {
@@ -260,6 +270,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.token_class).toBeDefined();
+    await expectGenericInputPreview(page, 'visible');
   });
 
   test('span — gold_spans shown in preview', async ({ page }) => {
@@ -280,6 +291,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const entities = (await getState(page, 'previewEntities')) as Entity[];
     expect(entities.length).toBeGreaterThanOrEqual(1);
+    await expectGenericInputPreview(page, 'hidden');
   });
 
   test('boundary — gold_boundaries shown in preview', async ({ page }) => {
@@ -303,6 +315,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       { position: 44, type: 'sentence' },
       { position: 55, type: 'sentence' },
     ]);
+    await expectGenericInputPreview(page, 'visible');
   });
 
   test('boundary — every character gap is operable without gold output', async ({
@@ -475,6 +488,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     await expect(preview.getByRole('button', { name: 'E1/Arg1' })).toBeEnabled();
     await expect(preview.getByRole('button', { name: 'Relation', exact: true })).toBeDisabled();
     await expect(preview.getByRole('button', { name: 'E2/Arg2' })).toBeDisabled();
+    await expectGenericInputPreview(page, 'hidden');
   });
 
   test('entity_relation — item_pair with treats/causes/prevents labels', async ({
@@ -508,6 +522,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('Metformin');
     expect(html).toContain('第二型糖尿病');
+    await expectGenericInputPreview(page, 'hidden');
   });
 });
 
@@ -612,6 +627,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     });
     expect(code).not.toContain('has_aspect');
     expect(code).toContain('bodyLocation');
+    await expectGenericInputPreview(page, 'hidden');
   });
 
   test('absa-va.json — triple output (span + relation_triple + multi_dim) across two categories', async ({
@@ -648,6 +664,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     // No unique content probe: the input `text` column concatenates the
     // utterances, so every utterances substring also appears in input text.
     await expectNoEvidenceInPreview(page);
+    await expectGenericInputPreview(page, 'hidden');
   });
 });
 
