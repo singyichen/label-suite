@@ -1146,6 +1146,7 @@ var OUTPUT_TYPE_REGISTRY = {
   span: {
     zh: 'Span 區間標記', en: 'Span annotation',
     source_output: null,
+    rendersInputPreview: true,
     fields: [
       { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
       { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false },
@@ -1162,6 +1163,7 @@ var OUTPUT_TYPE_REGISTRY = {
   relation_triple: {
     zh: '關係三元組', en: 'Relation triple',
     source_output: 'span',
+    rendersInputPreview: true,
     fields: [
       { key: 'relation_types', type: 'tag-list', zh: '語意類型標籤', en: 'Semantic relation types', required: true, hint_zh: '輸入語意類型（如 causes、bodyLocation）後按 Enter', hint_en: 'Type semantic relation type (e.g. causes, bodyLocation) and press Enter', placeholder_zh: '', placeholder_en: '' },
     ],
@@ -1205,6 +1207,7 @@ var OUTPUT_TYPE_REGISTRY = {
   entity_relation: {
     zh: '實體關係標籤', en: 'Entity relation label',
     source_output: null,
+    rendersInputPreview: true,
     fields: [
       { key: 'label_options', type: 'entity-list', zh: '關係標籤', en: 'Relation labels', required: true, addLabel_zh: '新增關係標籤', addLabel_en: 'Add relation label' },
     ],
@@ -5221,9 +5224,13 @@ function updateAnnotationPreview() {
 
   /* ADR-029: output-type composition preview */
   if (state.selectedOutputTypes.length >= 1) {
+    var hasOutputOwnedInputPreview = state.selectedOutputTypes.some(function(outKey) {
+      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+      return outReg && outReg.rendersInputPreview === true;
+    });
     /* Show input text (single_item or item_pair) before output previews */
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
-    if (currentInputType === 'item_pair') {
+    if (!hasOutputOwnedInputPreview && currentInputType === 'item_pair') {
       var pairTexts = getDatasetPairTexts();
       var pairWrap = document.createElement('div');
       pairWrap.className = 'annotation-preview-pair';
@@ -5252,7 +5259,7 @@ function updateAnnotationPreview() {
       var _pairDiv = document.createElement('div');
       _pairDiv.className = 'annotation-preview-divider';
       preview.appendChild(_pairDiv);
-    } else {
+    } else if (!hasOutputOwnedInputPreview) {
       var inputCols = getFieldsByRole('input');
       var _rawInputVal = (inputCols.length > 0 && state.datasetRawFirstRow) ? state.datasetRawFirstRow[inputCols[0]] : undefined;
       var sampleText = (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
