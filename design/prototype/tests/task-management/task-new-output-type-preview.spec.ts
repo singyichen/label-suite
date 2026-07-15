@@ -479,11 +479,14 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('rel');
     expect(triples[0]).toHaveProperty('obj');
 
-    // Standalone relation_triple uses the same sequential builder as the ABSA
-    // unified path (E1/Arg1 → Relation → E2/Arg2), not the legacy dropdowns:
-    // no <select> anywhere, and the step buttons gate sequentially (only
-    // E1/Arg1 enabled until an entity is bound).
+    // Standalone relation_triple keeps pre-annotated entity highlights as
+    // read-only context and exposes only relation controls. The span editor is
+    // reserved for the explicit span + relation_triple composition.
     const preview = page.locator('#annotationPreview');
+    await expect(preview).not.toContainText('整合預覽');
+    await expect(preview).not.toContainText('實體類型');
+    await expect(preview).not.toContainText('實體列表');
+    await expect(preview).toContainText('關係三元組標記');
     expect(await preview.locator('select').count()).toBe(0);
     await expect(preview.getByRole('button', { name: 'E1/Arg1' })).toBeEnabled();
     await expect(preview.getByRole('button', { name: 'Relation', exact: true })).toBeDisabled();
@@ -611,6 +614,10 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
+
+    const preview = page.locator('#annotationPreview');
+    await expect(preview).toContainText('實體類型');
+    await expect(preview).toContainText('實體列表');
 
     // relation_types is auto-populated from the distinct semantic type labels
     // in the pre-labeled triples — NOT trigger words or hardcoded defaults.
