@@ -1146,6 +1146,7 @@ var OUTPUT_TYPE_REGISTRY = {
   span: {
     zh: 'Span 區間標記', en: 'Span annotation',
     source_output: null,
+    rendersInputPreview: true,
     fields: [
       { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
       { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false },
@@ -1162,12 +1163,12 @@ var OUTPUT_TYPE_REGISTRY = {
   relation_triple: {
     zh: '關係三元組', en: 'Relation triple',
     source_output: 'span',
+    rendersInputPreview: true,
     fields: [
       { key: 'relation_types', type: 'tag-list', zh: '語意類型標籤', en: 'Semantic relation types', required: true, hint_zh: '輸入語意類型（如 causes、bodyLocation）後按 Enter', hint_en: 'Type semantic relation type (e.g. causes, bodyLocation) and press Enter', placeholder_zh: '', placeholder_en: '' },
     ],
     defaultConfig: {
       relation_types: ['causes', 'associated_with'],
-      source_output: 'span',
     },
   },
   /* ── Classification ── */
@@ -1205,6 +1206,7 @@ var OUTPUT_TYPE_REGISTRY = {
   entity_relation: {
     zh: '實體關係標籤', en: 'Entity relation label',
     source_output: null,
+    rendersInputPreview: true,
     fields: [
       { key: 'label_options', type: 'entity-list', zh: '關係標籤', en: 'Relation labels', required: true, addLabel_zh: '新增關係標籤', addLabel_en: 'Add relation label' },
     ],
@@ -1531,6 +1533,7 @@ var I18N = {
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
     accordionDependsOn: '依賴：',
     previewUnifiedTitle: '整合預覽（Span + 關係三元組）',
+    previewRelationTripleTitle: '關係三元組預覽',
     previewSampleSentenceAbsa: '這家餐廳服務很差，但環境還不錯，食物也挺美味的。',
     absa_template_btn: '套用範本：ABSA（Span + 關係三元組）',
     templateBtnSpanEntity: '套用範本：Span 實體標記',
@@ -1686,6 +1689,7 @@ var I18N = {
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
     accordionDependsOn: 'Depends on: ',
     previewUnifiedTitle: 'Unified preview (Span + Relation triple)',
+    previewRelationTripleTitle: 'Relation triple preview',
     previewSampleSentenceAbsa: 'The restaurant service was poor, but the ambiance was nice, and the food was delicious.',
     absa_template_btn: 'Apply template: ABSA (Span + Relation triple)',
     templateBtnSpanEntity: 'Apply template: Span entity annotation',
@@ -1934,6 +1938,13 @@ function configToCode() {
           });
         }
         Object.keys(cfg).forEach(function(k) { if (k[0] !== '_') finalCfg[k] = cfg[k]; });
+        if (outReg && outReg.source_output) {
+          if (state.selectedOutputTypes.indexOf(outReg.source_output) >= 0) {
+            finalCfg.source_output = outReg.source_output;
+          } else {
+            delete finalCfg.source_output;
+          }
+        }
         return { type: outKey, config: finalCfg };
       }),
     };
@@ -3116,7 +3127,7 @@ function fmtRelSpan(slot) {
 /* Sequential relation builder: E1/Arg1 → Relation → E2/Arg2 → Undo → Add.
    Each step consumes the current passage selection (state.relSel). E1/E2 must
    match an already-marked entity; Relation accepts any trigger-word span. */
-function buildRelationStateMachine(container, relationTypes, refresh) {
+function buildRelationStateMachine(container, relationTypes, refresh, allowEntityEditing) {
   var d = state.relDraft;
 
   var rbTitle = document.createElement('div');
@@ -3175,7 +3186,9 @@ function buildRelationStateMachine(container, relationTypes, refresh) {
     return b;
   }
   var msgWord = state.lang === 'zh' ? '請先在文字中選取' : 'Select text first';
-  var notEntity = state.lang === 'zh' ? '該選取不是已標記的實體，請先在上方標記實體' : 'Selection is not a marked entity — mark it first';
+  var notEntity = allowEntityEditing
+    ? (state.lang === 'zh' ? '該選取不是已標記的實體，請先在上方標記實體' : 'Selection is not a marked entity — mark it first')
+    : (state.lang === 'zh' ? '該選取不是資料中的既有實體，請選取已高亮的實體' : 'Selection is not an existing entity — select a highlighted entity');
 
   rbRow.appendChild(stepBtn('E1/Arg1', !d.e1, function() {
     var slot = findEntitySlot();
@@ -3245,13 +3258,16 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var typeColorMap = tc.map, typeOrder = tc.order;
   var relCfg = state.outputConfigs['relation_triple'] || {};
   var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
+  var hasSpanOut = state.selectedOutputTypes.indexOf('span') >= 0;
+  var hasRelOut = state.selectedOutputTypes.indexOf('relation_triple') >= 0;
+  var allowEntityEditing = hasSpanOut;
   var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
   /* ── Working Area title ── */
   var titleEl = document.createElement('div');
   titleEl.className = 'annotation-preview-task-title';
   titleEl.style.marginBottom = '10px';
-  titleEl.textContent = t('previewUnifiedTitle');
+  titleEl.textContent = t(allowEntityEditing ? 'previewUnifiedTitle' : 'previewRelationTripleTitle');
   previewContainer.appendChild(titleEl);
 
   /* ── Annotated text with entity highlights ── */
@@ -3325,7 +3341,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
     var idx = selectionCharOffset(sel, selText);
     if (idx < 0) idx = realText.indexOf(selText);
     if (idx < 0) return;
-    if (state.activeEntityType) {
+    if (allowEntityEditing && state.activeEntityType) {
       state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
       sel.removeAllRanges();
       renderAbsaUnifiedPreview_refresh(previewContainer);
@@ -3338,65 +3354,67 @@ function renderAbsaUnifiedPreview(previewContainer) {
   });
   previewContainer.appendChild(textEl);
 
-  /* ── Entity Type selector (interactive) ── */
-  var etTitle = document.createElement('div');
-  etTitle.className = 'annotation-preview-task-title';
-  etTitle.style.cssText = 'margin:12px 0 6px;';
-  etTitle.textContent = state.lang === 'zh' ? '實體類型' : 'Entity Type';
-  previewContainer.appendChild(etTitle);
-  var legendRow = document.createElement('div');
-  legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
-  typeOrder.forEach(function(typeName) {
-    var c = typeColorMap[typeName] || '#6366F1';
-    var chip = document.createElement('button');
-    chip.type = 'button';
-    var isActive = state.activeEntityType === typeName;
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
-    chip.textContent = typeName;
-    chip.addEventListener('click', function() {
-      state.activeEntityType = state.activeEntityType === typeName ? null : typeName;
-      renderAbsaUnifiedPreview_refresh(previewContainer);
+  if (allowEntityEditing) {
+    /* ── Entity Type selector (interactive) ── */
+    var etTitle = document.createElement('div');
+    etTitle.className = 'annotation-preview-task-title';
+    etTitle.style.cssText = 'margin:12px 0 6px;';
+    etTitle.textContent = state.lang === 'zh' ? '實體類型' : 'Entity Type';
+    previewContainer.appendChild(etTitle);
+    var legendRow = document.createElement('div');
+    legendRow.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
+    typeOrder.forEach(function(typeName) {
+      var c = typeColorMap[typeName] || '#6366F1';
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      var isActive = state.activeEntityType === typeName;
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
+      chip.textContent = typeName;
+      chip.addEventListener('click', function() {
+        state.activeEntityType = state.activeEntityType === typeName ? null : typeName;
+        renderAbsaUnifiedPreview_refresh(previewContainer);
+      });
+      legendRow.appendChild(chip);
     });
-    legendRow.appendChild(chip);
-  });
-  previewContainer.appendChild(legendRow);
+    previewContainer.appendChild(legendRow);
 
-  /* ── Entity List (interactive, deletable) ── */
-  if (state.previewEntities.length > 0) {
-    var elTitle = document.createElement('div');
-    elTitle.className = 'annotation-preview-task-title';
-    elTitle.style.marginBottom = '6px';
-    elTitle.textContent = state.lang === 'zh' ? '實體列表' : 'Entity List';
-    previewContainer.appendChild(elTitle);
-    var elWrap = document.createElement('div');
-    elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
-    state.previewEntities.forEach(function(ent, i) {
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
-      var badge = document.createElement('span');
-      var c = typeColorMap[ent.type] || '#6366F1';
-      badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
-      badge.textContent = ent.type;
-      row.appendChild(badge);
-      var txt = document.createElement('span');
-      txt.style.flex = '1';
-      txt.textContent = ent.text;
-      row.appendChild(txt);
-      if (ent.start != null && ent.end != null) {
-        var posEl = document.createElement('span');
-        posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
-        posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
-        row.appendChild(posEl);
-      }
-      var delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
-      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-      (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
-      row.appendChild(delBtn);
-      elWrap.appendChild(row);
-    });
-    previewContainer.appendChild(elWrap);
+    /* ── Entity List (interactive, deletable) ── */
+    if (state.previewEntities.length > 0) {
+      var elTitle = document.createElement('div');
+      elTitle.className = 'annotation-preview-task-title';
+      elTitle.style.marginBottom = '6px';
+      elTitle.textContent = state.lang === 'zh' ? '實體列表' : 'Entity List';
+      previewContainer.appendChild(elTitle);
+      var elWrap = document.createElement('div');
+      elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
+      state.previewEntities.forEach(function(ent, i) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
+        var badge = document.createElement('span');
+        var c = typeColorMap[ent.type] || '#6366F1';
+        badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
+        badge.textContent = ent.type;
+        row.appendChild(badge);
+        var txt = document.createElement('span');
+        txt.style.flex = '1';
+        txt.textContent = ent.text;
+        row.appendChild(txt);
+        if (ent.start != null && ent.end != null) {
+          var posEl = document.createElement('span');
+          posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
+          posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
+          row.appendChild(posEl);
+        }
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
+        delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
+        (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
+        row.appendChild(delBtn);
+        elWrap.appendChild(row);
+      });
+      previewContainer.appendChild(elWrap);
+    }
   }
 
   var divider = document.createElement('div');
@@ -3409,7 +3427,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
      E1/E2 must be already-marked entities; Relation is any trigger-word span from the text.
      Grouped in relSection so relation_triple's bypass can disable it independently. */
   var relSection = document.createElement('div');
-  buildRelationStateMachine(relSection, relationTypes, function() { renderAbsaUnifiedPreview_refresh(previewContainer); });
+  buildRelationStateMachine(relSection, relationTypes, function() { renderAbsaUnifiedPreview_refresh(previewContainer); }, allowEntityEditing);
 
   /* ── Triple List (interactive, deletable) ── */
   var tlTitle = document.createElement('div');
@@ -3506,8 +3524,6 @@ function renderAbsaUnifiedPreview(previewContainer) {
 
   /* ── Bypass chips — one per selected output type; span bypass cascades
      (no entities → relation builder unusable), relation bypass only disables relSection ── */
-  var hasSpanOut = state.selectedOutputTypes.indexOf('span') >= 0;
-  var hasRelOut = state.selectedOutputTypes.indexOf('relation_triple') >= 0;
   if (hasSpanOut && state.previewBypass['span']) {
     disableBypassedArea(previewContainer.children);
   } else if (hasRelOut && state.previewBypass['relation_triple']) {
@@ -4260,11 +4276,9 @@ function renderFreeTextPreview(container, outKey) {
 }
 
 function renderRelationTripleOnlyPreview(container, outKey) {
-  /* relation_triple depends on span (source_output: 'span'), so reuse the unified
-     span + relation builder to keep the standalone path identical to the ABSA one:
-     same sequential state machine (E1/Arg1 → Relation → E2/Arg2 → 退回 → 新增) and
-     the same post-hoc `type` menu. With no span co-output there are simply no
-     entity-type chips to arm — pre-labeled entities still drive E1/E2. */
+  /* Reuse the relation state machine while selected outputs determine whether
+     span editing is available. Standalone relation_triple keeps dataset entities
+     as read-only highlights; explicit span + relation_triple enables editing. */
   renderAbsaUnifiedPreview(container);
 }
 
@@ -5221,9 +5235,13 @@ function updateAnnotationPreview() {
 
   /* ADR-029: output-type composition preview */
   if (state.selectedOutputTypes.length >= 1) {
+    var hasOutputOwnedInputPreview = state.selectedOutputTypes.some(function(outKey) {
+      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+      return outReg && outReg.rendersInputPreview === true;
+    });
     /* Show input text (single_item or item_pair) before output previews */
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
-    if (currentInputType === 'item_pair') {
+    if (!hasOutputOwnedInputPreview && currentInputType === 'item_pair') {
       var pairTexts = getDatasetPairTexts();
       var pairWrap = document.createElement('div');
       pairWrap.className = 'annotation-preview-pair';
@@ -5252,7 +5270,7 @@ function updateAnnotationPreview() {
       var _pairDiv = document.createElement('div');
       _pairDiv.className = 'annotation-preview-divider';
       preview.appendChild(_pairDiv);
-    } else {
+    } else if (!hasOutputOwnedInputPreview) {
       var inputCols = getFieldsByRole('input');
       var _rawInputVal = (inputCols.length > 0 && state.datasetRawFirstRow) ? state.datasetRawFirstRow[inputCols[0]] : undefined;
       var sampleText = (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));

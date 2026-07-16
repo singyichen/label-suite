@@ -65,7 +65,7 @@
 | Token 分類（ `token_class` ） | Token 級標籤 | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 邊界偵測（ `boundary` ） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
 | 區間標記（ `span` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `span` Config 說明 |
-| 關係三元組（ `relation_triple` ） | 實體 + 關係觸發詞 + 語意類型 + Triple | OpenIE、Relation Extraction（ NER+RE ） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
+| 關係三元組（ `relation_triple` ） | 以既有實體建立關係觸發詞、語意類型與 Triple；與 `span` 組合時可同時編輯實體 | OpenIE、Relation Extraction、NER+RE（組合模式） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
 
 #### `span` Config 說明
 
@@ -102,7 +102,12 @@
 | Config 欄位 | 型別 | 說明 |
 |------------|------|------|
 | `relation_types[]` | `string[]` | 語意類型標籤清單，作為標記介面中「類型」下拉選單的選項 |
-| `source_output` | `string` | 宣告依賴的輸出類型（通常為 `span`），E1/E2 取自該輸出類型的已標記實體 |
+| `source_output` | `string`（選填） | 僅在 `span + relation_triple` 組合模式輸出為 `span`；E1/E2 取自同一任務中可建立／修改的 span 實體。純 `relation_triple` 不輸出此欄位，E1/E2 取自資料集既有實體且僅供關係標記使用 |
+
+**預覽模式：**
+
+- 純 `relation_triple`：只顯示資料集既有實體的唯讀高亮、循序關係建構器與三元組列表；不得顯示實體類型選擇器、建立／刪除實體或其他 Span 編輯控制項。
+- `span + relation_triple`：顯示整合預覽，允許先建立／修改實體，再以該些實體建立關係三元組。
 
 **標記資料結構：**
 
@@ -121,8 +126,8 @@
 
 | 對照項目 | `entity_relation` | `relation_triple` |
 |----------|-------------------|-------------------|
-| 起點 | 實體已預標記 | 從零開始標 |
-| 任務 | 只判斷關係類型 | 標實體 + 標關係觸發詞 + 指定語意類型 |
+| 起點 | 一組實體配對已提供 | 純模式使用資料集既有實體；與 `span` 組合時可從零建立實體 |
+| 任務 | 只判斷實體配對的關係類型 | 標關係觸發詞 + 指定語意類型；與 `span` 組合時另包含實體標記 |
 | 歸類 | classification | sequence |
 
 ---

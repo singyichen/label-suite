@@ -142,6 +142,16 @@ async function expectNoEvidenceInPreview(page: Page, evidenceText?: string) {
   }
 }
 
+async function expectGenericInputPreview(
+  page: Page,
+  expected: 'visible' | 'hidden',
+) {
+  const genericInput = page
+    .locator('#annotationPreview')
+    .locator(':scope > .annotation-preview-pair, :scope > .annotation-preview-sample');
+  await expect(genericInput).toHaveCount(expected === 'visible' ? 1 : 0);
+}
+
 // ─── 10 Basic Output Types ──────────────────────────────────
 
 test.describe('Step 2 preview: all 10 output types with example data', () => {
@@ -260,6 +270,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.token_class).toBeDefined();
+    await expectGenericInputPreview(page, 'visible');
   });
 
   test('span — gold_spans shown in preview', async ({ page }) => {
@@ -280,6 +291,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
 
     const entities = (await getState(page, 'previewEntities')) as Entity[];
     expect(entities.length).toBeGreaterThanOrEqual(1);
+    await expectGenericInputPreview(page, 'hidden');
   });
 
   test('boundary — gold_boundaries shown in preview', async ({ page }) => {
@@ -303,6 +315,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
       { position: 44, type: 'sentence' },
       { position: 55, type: 'sentence' },
     ]);
+    await expectGenericInputPreview(page, 'visible');
   });
 
   test('boundary — every character gap is operable without gold output', async ({
@@ -466,15 +479,28 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('rel');
     expect(triples[0]).toHaveProperty('obj');
 
-    // Standalone relation_triple uses the same sequential builder as the ABSA
-    // unified path (E1/Arg1 → Relation → E2/Arg2), not the legacy dropdowns:
-    // no <select> anywhere, and the step buttons gate sequentially (only
-    // E1/Arg1 enabled until an entity is bound).
+    const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
+    expect(cfg.relation_triple).not.toHaveProperty('source_output');
+
+    const code = await page.evaluate(() => {
+      const editor = document.getElementById('codeEditor') as HTMLTextAreaElement;
+      return editor?.value || '';
+    });
+    expect(code).not.toContain('source_output');
+
+    // Standalone relation_triple keeps pre-annotated entity highlights as
+    // read-only context and exposes only relation controls. The span editor is
+    // reserved for the explicit span + relation_triple composition.
     const preview = page.locator('#annotationPreview');
+    await expect(preview).not.toContainText('整合預覽');
+    await expect(preview).not.toContainText('實體類型');
+    await expect(preview).not.toContainText('實體列表');
+    await expect(preview).toContainText('關係三元組標記');
     expect(await preview.locator('select').count()).toBe(0);
     await expect(preview.getByRole('button', { name: 'E1/Arg1' })).toBeEnabled();
     await expect(preview.getByRole('button', { name: 'Relation', exact: true })).toBeDisabled();
     await expect(preview.getByRole('button', { name: 'E2/Arg2' })).toBeDisabled();
+    await expectGenericInputPreview(page, 'hidden');
   });
 
   test('entity_relation — item_pair with treats/causes/prevents labels', async ({
@@ -508,6 +534,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('Metformin');
     expect(html).toContain('第二型糖尿病');
+    await expectGenericInputPreview(page, 'hidden');
   });
 });
 
@@ -597,6 +624,10 @@ test.describe('Step 2 preview: composite task data files', () => {
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
 
+    const preview = page.locator('#annotationPreview');
+    await expect(preview).toContainText('實體類型');
+    await expect(preview).toContainText('實體列表');
+
     // relation_types is auto-populated from the distinct semantic type labels
     // in the pre-labeled triples — NOT trigger words or hardcoded defaults.
     const cfg = (await getState(page, 'outputConfigs')) as WindowState['outputConfigs'];
@@ -612,6 +643,8 @@ test.describe('Step 2 preview: composite task data files', () => {
     });
     expect(code).not.toContain('has_aspect');
     expect(code).toContain('bodyLocation');
+    expect(code).toContain('source_output: span');
+    await expectGenericInputPreview(page, 'hidden');
   });
 
   test('absa-va.json — triple output (span + relation_triple + multi_dim) across two categories', async ({
@@ -648,6 +681,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     // No unique content probe: the input `text` column concatenates the
     // utterances, so every utterances substring also appears in input text.
     await expectNoEvidenceInPreview(page);
+    await expectGenericInputPreview(page, 'hidden');
   });
 });
 

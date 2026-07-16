@@ -4,19 +4,9 @@
   "typical_tasks": ["Relation Extraction（關係抽取）"],
   "outputs": [
     {
-      "type": "span",
-      "config": {
-        "entities": [
-          { "name": "Entity", "color": "#3498DB" }
-        ],
-        "allow_overlapping": false
-      }
-    },
-    {
       "type": "relation_triple",
       "config": {
-        "relation_types": ["causes", "treats", "prevents", "diagnoses", "located_in"],
-        "source_output": "span"
+        "relation_types": ["causes", "treats", "prevents", "diagnoses", "located_in"]
       }
     }
   ]
