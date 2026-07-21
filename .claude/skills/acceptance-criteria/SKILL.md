@@ -28,9 +28,9 @@ Generate detailed, SMART Acceptance Criteria for a feature. Criteria must be tes
 ## Functional Acceptance Criteria
 
 ### Core Behavior
-- [ ] **AC-F01** [P1]: Given an authenticated annotator with an assigned task, when they submit valid predictions, then the system accepts the submission and returns HTTP 201 with a task ID for status polling.
-- [ ] **AC-F02** [P1]: Given a scoring task is enqueued, when the Celery worker processes it, then the score is computed using the metric defined in the task config and stored to the database.
-- [ ] **AC-F03** [P1]: Given scoring completes, when the annotator polls the task status, then the response includes the final score and leaderboard rank (no raw answer data).
+- [ ] **AC-F01** [P1]: Given an authenticated annotator with an assigned task, when they submit valid predictions, then the system accepts the submission and returns HTTP 201 with a task ID for status polling. (Source: AC-1.1)
+- [ ] **AC-F02** [P1]: Given a scoring task is enqueued, when the Celery worker processes it, then the score is computed using the metric defined in the task config and stored to the database. (Source: AC-1.2)
+- [ ] **AC-F03** [P1]: Given scoring completes, when the annotator polls the task status, then the response includes the final score and leaderboard rank (no raw answer data). (Source: AC-1.3)
 
 ### UI / Interaction
 - [ ] **AC-F04** [P1]: Given an annotator is on the annotation workspace, when the task loads, then the form renders correctly based on the task type config (text classification, sequence labeling, etc.).
