@@ -38,7 +38,7 @@ Step 2: Implement (following tasks.md)
   [code changes]
 
 Step 3: Self-review gate
-  /code-review
+  /code-review-deep
   /code-review-checklist
 
 Step 4: Fix issues found in self-review

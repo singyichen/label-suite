@@ -4,7 +4,7 @@ This document explains how to use the Code Review related Skills in the Label Su
 
 ## Available Skills
 
-### 1. `code-review` — Comprehensive Code Review
+### 1. `code-review-deep` — Comprehensive Code Review
 **Use when**: Before merging any PR; after implementing a new feature
 
 **Outputs**:
@@ -17,9 +17,9 @@ This document explains how to use the Code Review related Skills in the Label Su
 
 **Examples**:
 ```bash
-/code-review
-/code-review backend/app/services/scoring.py
-/code-review backend/app/routers/
+/code-review-deep
+/code-review-deep backend/app/services/scoring.py
+/code-review-deep backend/app/routers/
 ```
 
 ---
@@ -80,7 +80,7 @@ This document explains how to use the Code Review related Skills in the Label Su
 ### Scenario 1: Pre-PR Self-Review
 ```bash
 # 1. Comprehensive code review
-/code-review
+/code-review-deep
 
 # 2. Check scoring module specifically (if modified)
 /code-review-checklist scoring
@@ -95,7 +95,7 @@ This document explains how to use the Code Review related Skills in the Label Su
 /pr-review #42
 
 # 2. Detailed code review on changed files
-/code-review backend/app/services/scoring.py
+/code-review-deep backend/app/services/scoring.py
 
 # 3. Provide specific fix suggestions
 ```
@@ -107,7 +107,7 @@ This document explains how to use the Code Review related Skills in the Label Su
 /code-review-checklist scoring
 
 # Then full code review:
-/code-review backend/app/services/scoring.py backend/app/tasks/scoring.py
+/code-review-deep backend/app/services/scoring.py backend/app/tasks/scoring.py
 
 # Verify no leakage in tests:
 pytest backend/tests/test_security.py -v

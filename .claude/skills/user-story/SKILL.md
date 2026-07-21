@@ -65,7 +65,7 @@ Then I receive a 403 Forbidden response
 
 - [ ] All ACs implemented and verified (pytest / Playwright)
 - [ ] Test coverage ≥ target threshold for affected modules
-- [ ] Code reviewed and approved (`/code-review` + `/pr-review`)
+- [ ] Code reviewed and approved (`/code-review-deep` + `/pr-review`)
 - [ ] No Chinese strings introduced outside README
 - [ ] Security checklist passed (test-set leakage check if applicable)
 - [ ] Spec checklist completed (`/speckit.checklist`)

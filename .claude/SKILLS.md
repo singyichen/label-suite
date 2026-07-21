@@ -20,41 +20,43 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── pr-flow.md               # Full PR flow (commit → review → test → merge)
 │   ├── review-resolve.md        # Fetch PR review threads, fix findings, resolve
 │   └── agent-team.md            # Multi-phase agent team workflow for new features
-├── skills/                      # Knowledge-Domain Skills (30 total)
-│   ├── spec-driven-development/
-│   │   ├── sdd-workflow/
-│   │   ├── spec-to-plan/
-│   │   └── spec-review/
-│   ├── requirements-engineering/
-│   │   ├── user-story/
-│   │   ├── functional-req/
-│   │   ├── acceptance-criteria/
-│   │   └── requirement-to-ac/
-│   ├── system-design/
-│   │   ├── api-spec/
-│   │   ├── backend-spec/
-│   │   ├── frontend-spec/
-│   │   ├── data-model/
-│   │   └── flowchart/
-│   ├── code-quality/
-│   │   ├── CODE_REVIEW_GUIDE.md
-│   │   ├── code-review/
-│   │   ├── code-review-checklist/
-│   │   ├── pr-review/
-│   │   ├── code-smell/
-│   │   └── git-branch/
-│   ├── test-engineering/
-│   │   ├── test-plan/
-│   │   ├── test-coverage/
-│   │   ├── test-data-strategy/
-│   │   ├── test-tracking/
-│   │   ├── exploratory-testing/
-│   │   └── regression-suite/
-│   ├── quality-assurance/
-│   │   ├── quality-gate/
-│   │   ├── defect-report/
-│   │   ├── traceability-matrix/
-│   │   └── test-report/
+├── skills/                      # Knowledge-Domain Skills (flat — Claude Code only discovers `.claude/skills/<name>/SKILL.md` one level deep)
+│   │                            # Spec-Driven Development
+│   ├── sdd-workflow/
+│   ├── spec-to-plan/
+│   ├── spec-review/
+│   ├── spec-format/                 # frontmatter name: speckit-spec-format
+│   │                            # Requirements Engineering
+│   ├── user-story/
+│   ├── functional-req/
+│   ├── acceptance-criteria/
+│   ├── requirement-to-ac/
+│   │                            # System Design
+│   ├── api-spec/
+│   ├── backend-spec/
+│   ├── frontend-spec/
+│   ├── data-model/
+│   ├── flowchart/
+│   │                            # Code Quality
+│   ├── code-review-deep/            # incl. CODE_REVIEW_GUIDE.md (renamed from code-review to avoid clashing with the built-in /code-review command)
+│   ├── code-review-checklist/
+│   ├── pr-review/
+│   ├── code-smell/
+│   ├── git-branch/
+│   ├── independent-review/
+│   │                            # Test Engineering
+│   ├── test-plan/
+│   ├── test-coverage/
+│   ├── test-data-strategy/
+│   ├── test-tracking/
+│   ├── exploratory-testing/
+│   ├── regression-suite/
+│   │                            # Quality Assurance
+│   ├── quality-gate/
+│   ├── defect-report/
+│   ├── traceability-matrix/
+│   ├── test-report/
+│   │                            # Standalone
 │   ├── xmind-import/                # Fetch XMind share URL → Mermaid
 │   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
 │   ├── ui-ux-pro-max/               # UI/UX Design Intelligence
@@ -196,13 +198,13 @@ Skills for code review, PR evaluation, technical debt management, and git workfl
 
 | Skill | Purpose | Example Usage |
 |-------|---------|---------------|
-| `/code-review` | Comprehensive code review (quality, security, test-set leakage) | `/code-review backend/app/services/scoring.py` |
+| `/code-review-deep` | Comprehensive code review (quality, security, test-set leakage) | `/code-review-deep backend/app/services/scoring.py` |
 | `/code-review-checklist` | Generate project-specific review checklists | `/code-review-checklist scoring` |
 | `/pr-review` | Full PR review with spec traceability and leakage audit | `/pr-review #42` |
 | `/code-smell` | Detect code smells and suggest refactoring | `/code-smell backend/app/services/` |
 | `/git-branch` | Standardized git branch lifecycle | `/git-branch feat/001-annotation-submission` |
 
-See [CODE_REVIEW_GUIDE.md](skills/code-quality/CODE_REVIEW_GUIDE.md) for the detailed code review usage guide.
+See [CODE_REVIEW_GUIDE.md](skills/code-review-deep/CODE_REVIEW_GUIDE.md) for the detailed code review usage guide.
 
 ### Test Engineering (6 skills)
 
@@ -237,7 +239,7 @@ Skills for quality gates, defect management, traceability, and reporting.
 | Spec-Driven Development | 3 | sdd-workflow, spec-to-plan, spec-review |
 | Requirements Engineering | 4 | user-story, functional-req, acceptance-criteria, requirement-to-ac |
 | System Design | 6 | api-spec, backend-spec, frontend-spec, data-model, flowchart, d2-diagram |
-| Code Quality | 5 | code-review, code-review-checklist, pr-review, code-smell, git-branch |
+| Code Quality | 5 | code-review-deep, code-review-checklist, pr-review, code-smell, git-branch |
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
 | UI/UX Design | 1 | ui-ux-pro-max |
@@ -253,7 +255,7 @@ For the Label Suite project, these skills enforce additional constraints for the
 | Skill | Special Requirement |
 |-------|---------------------|
 | `/test-coverage` | Scoring engine requires ≥90% coverage (vs ≥80% general) |
-| `/code-review` | Must audit every annotator-facing API response for `answer` field exposure |
+| `/code-review-deep` | Must audit every annotator-facing API response for `answer` field exposure |
 | `/code-review-checklist scoring` | Includes Celery task isolation and test-set answer access checks |
 | `/quality-gate` | Test-set leakage security checks are blocking — any failure = NO-GO |
 | `/test-report security` | Dedicated leakage prevention test report section |
@@ -274,7 +276,7 @@ For the Label Suite project, these skills enforce additional constraints for the
 | 3b. UI Design | `/ui-ux-pro-max` (design system) → `/frontend-spec` (component spec) |
 | 4. Implementation | `/speckit.plan` → `/speckit.tasks` → `/speckit.implement` |
 | 5. Testing | `/test-plan` → `/test-data-strategy` → `/test-coverage` |
-| 6. Code Review | `/code-review-checklist` → `/code-review` → `/pr-review` |
+| 6. Code Review | `/code-review-checklist` → `/code-review-deep` → `/pr-review` |
 | 7. QA | `/quality-gate` → `/traceability-matrix` → `/test-report` |
 | 8. Bug Fix | `/defect-report` → `/exploratory-testing` → `/regression-suite` |
 
@@ -284,10 +286,10 @@ For the Label Suite project, these skills enforce additional constraints for the
 
 - **[CLAUDE.md](../CLAUDE.md)**: Project coding standards and conventions
 - **[AGENTS.md](../AGENTS.md)**: Reference for all 26 AI agents and agent team structure
-- **[CODE_REVIEW_GUIDE.md](skills/code-quality/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
+- **[CODE_REVIEW_GUIDE.md](skills/code-review-deep/CODE_REVIEW_GUIDE.md)**: Detailed code review usage guide
 - **[Constitution](./../.specify/memory/constitution.md)**: Six core development principles
 
 ---
 
-*Last Updated: 2026-04-04*
+*Last Updated: 2026-07-21*
 *Total Skills: 30 | Spec-Kit Commands: 9 | Workflow Commands: 4*
