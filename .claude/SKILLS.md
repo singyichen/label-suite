@@ -30,7 +30,6 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── user-story/
 │   ├── functional-req/
 │   ├── acceptance-criteria/
-│   ├── requirement-to-ac/
 │   │                            # System Design
 │   ├── api-spec/
 │   ├── backend-spec/
@@ -58,7 +57,6 @@ This document provides a comprehensive overview of all available Spec-Kit Comman
 │   ├── test-report/
 │   │                            # Standalone
 │   ├── xmind-import/                # Fetch XMind share URL → Mermaid
-│   ├── adamelliotfields-skills-d2-diagram/  # Diagramming
 │   ├── ui-ux-pro-max/               # UI/UX Design Intelligence
 │   └── react-best-practices/        # React/Next.js performance optimization (Vercel)
 ├── agents/                      # AI Agent definitions (26 agents)
@@ -127,7 +125,7 @@ Skills for the SDD workflow — writing, reviewing, and transforming spec artifa
 | `/spec-to-plan` | Transform a `spec.md` into a detailed `plan.md` | `/spec-to-plan specs/annotation/001-annotation-submission/spec.md` |
 | `/spec-review` | Review spec completeness and Constitution compliance | `/spec-review specs/annotation/001-annotation-submission/spec.md` |
 
-### Requirements Engineering (4 skills)
+### Requirements Engineering (3 skills)
 
 Skills for defining, converting, and validating requirements.
 
@@ -136,9 +134,8 @@ Skills for defining, converting, and validating requirements.
 | `/user-story` | Create User Stories with AC and story points | `/user-story annotator submits predictions for text classification` |
 | `/functional-req` | Write functional and non-functional requirements | `/functional-req annotation submission and scoring pipeline` |
 | `/acceptance-criteria` | Generate comprehensive AC checklists | `/acceptance-criteria annotation submission feature` |
-| `/requirement-to-ac` | Convert User Story to testable SMART AC | `/requirement-to-ac annotator submits predictions` |
 
-### System Design (6 skills)
+### System Design (5 skills)
 
 Skills for designing APIs, services, data models, and architecture.
 
@@ -149,7 +146,6 @@ Skills for designing APIs, services, data models, and architecture.
 | `/frontend-spec` | Generate frontend component specifications | `/frontend-spec AnnotationWorkspace component` |
 | `/data-model` | Design PostgreSQL schemas and ER diagrams | `/data-model annotation submission and leaderboard` |
 | `/flowchart` | Generate Mermaid flowcharts | `/flowchart annotation submission and async scoring flow` |
-| `/d2-diagram` | Generate D2 diagrams (architecture, flow, thesis chapter) | `/d2-diagram system architecture` |
 
 ### Diagramming (1 skill)
 
@@ -237,14 +233,14 @@ Skills for quality gates, defect management, traceability, and reporting.
 | Domain | Count | Skills |
 |--------|-------|--------|
 | Spec-Driven Development | 3 | sdd-workflow, spec-to-plan, spec-review |
-| Requirements Engineering | 4 | user-story, functional-req, acceptance-criteria, requirement-to-ac |
-| System Design | 6 | api-spec, backend-spec, frontend-spec, data-model, flowchart, d2-diagram |
+| Requirements Engineering | 3 | user-story, functional-req, acceptance-criteria |
+| System Design | 5 | api-spec, backend-spec, frontend-spec, data-model, flowchart |
 | Code Quality | 5 | code-review-deep, code-review-checklist, pr-review, code-smell, git-branch |
 | Test Engineering | 6 | test-plan, test-coverage, test-data-strategy, test-tracking, exploratory-testing, regression-suite |
 | Quality Assurance | 4 | quality-gate, defect-report, traceability-matrix, test-report |
 | UI/UX Design | 1 | ui-ux-pro-max |
 | Diagramming | 1 | xmind-import |
-| **Total** | **30** | |
+| **Total** | **28** | |
 
 ---
 
