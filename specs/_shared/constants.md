@@ -13,7 +13,7 @@
 ## 使用規則
 
 - **引用方式**：spec 於「規格常數」章節以 `參照 specs/_shared/constants.md` 引用共用常數，不得複製值。
-- **新增門檻**：常數出現在 ≥ 2 份 spec 即應上收至本文件，並自各 spec 移除重複定義。
+- **新增門檻**：常數出現在 ≥ 2 份 spec **且值完全一致**（或差異僅為待統一的異名／子集）即應上收至本文件，並自各 spec 移除重複定義；值因情境而異的常數維持 spec 特有，不得上收。
 - **修改流程**：修改任一常數須 bump 本文件版本、更新 Changelog，並同步 bump 所有引用 spec 的版本與 Changelog。
 - **命名規則**：同一概念只得有一個常數名稱；異名（alias）視為待修正項，列於「衝突註記」。
 
@@ -45,7 +45,6 @@
 |------|-----|----------|
 | `PAGE_SIZE_DEFAULT` | `20` | 010, 016, 006（3 份） |
 | `PAGE_SIZE_OPTIONS` | `20 \| 50 \| 100` | 010, 016, 006（3 份） |
-| `DEFAULT_SORT` | `updated_at desc` | 010, 006（2 份）⚠ 見衝突註記 |
 
 ### 資料集分析
 
@@ -76,7 +75,9 @@
 | 常數 | 本文件採用值 | 差異 spec 與值 |
 |------|-------------|---------------|
 | `TASK_ROLES` | `project_leader \| reviewer \| annotator`（4/5 多數） | 015 定義為 `annotator \| reviewer`（該 spec 僅涉及此二角色，屬子集；仍應改為引用本文件並於情境中限縮） |
-| `DEFAULT_SORT` | `updated_at desc`（010 task-list） | 006 user-management 為 `created_at desc`；兩者情境不同，006 得保留 spec 特有覆寫值，但須註明覆寫本文件預設 |
+
+> `DEFAULT_SORT` 曾評估上收：010 為 `updated_at desc`、006 為 `created_at desc`，值因情境而異、無法統一，
+> 屬 spec 特有常數，不納入本文件（值相異的常數不得上收，避免與 /speckit.analyze 重複定義檢查矛盾）。
 
 **同值異名（待統一命名）**：`TASK_TYPE_KEYS`（015, 017）→ `TASK_TYPE_ENUM`；`TASK_STATUSES`（014）→ `TASK_STATUS_ENUM`；`RUN_TYPES`（015）→ `RUN_STAGE_ENUM`；`IAA_SUMMARY_STATES`（017）→ `IAA_BADGE_STATES`。
 
