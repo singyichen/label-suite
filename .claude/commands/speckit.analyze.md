@@ -125,6 +125,9 @@ Focus on high-signal findings. List at most 50 findings; summarize any overflow 
 - Task ordering contradictions (e.g., integration task before setup task, no dependency noted)
 - Conflicting requirements (e.g., one section requires Next.js, another specifies Vue)
 - **Feature Goal mismatch**: if both spec.md and plan.md exist, their Feature Goal sections (## 功能目標) must be consistent — a divergence is a CRITICAL finding (constitution Principle I, Goal Declaration)
+- **Shared-constant duplication**: spec.md defines a constant (same name) that already exists in `specs/_shared/constants.md` — constants shared by ≥2 specs must be referenced from the shared file, not redefined; a duplicate definition is a HIGH finding (DRY / single source of truth)
+- **Layer violation in spec flow diagram**: the spec.md flow diagram (`## 流程圖`) contains system-layer participants (API, Service, Repository, Database, framework components, or concrete endpoints) — System Flow belongs to plan.md `## 系統流程與資料流` per Flow Chart Ownership; a violation is a MEDIUM finding
+- **Deprecated meta sections** (grandfathered): spec.md contains `## 輸入與生成規則`, `## 審查與驗收清單`, or `### 執行狀態` — removed from spec-template v1.6.0 (2026-07-21); a LOW finding. Only flag specs whose latest changelog entry is dated on or after 2026-07-21; older specs are grandfathered until their next MINOR/MAJOR version bump
 
 ### 5. Severity Classification
 

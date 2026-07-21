@@ -9,6 +9,8 @@ description: Use when writing or reviewing a spec.md file for the label-suite pr
 
 label-suite spec.md 的撰寫規範。所有大標題必須用**繁體中文**，格式以 `specs/account/005-profile-settings/spec.md` 為標準參考。
 
+spec-template v1.6.0 起，「輸入與生成規則」「審查與驗收清單」「執行狀態」為模板內部自檢註解，**不出現在 spec 實例**；既有 spec 適用祖父條款，於下次 MINOR/MAJOR 版本更新時移除。
+
 ---
 
 ## 檔案位置
@@ -48,6 +50,7 @@ specs/[module]/[###-feature-name]/spec.md
 | 導覽流程 | `### User Flow & Navigation` | 保持英文（唯一例外）|
 | 關鍵實體 | `### 關鍵實體` | 有資料模型時才填 |
 | 成功標準 | `## 成功標準 *(必填)*` | `SC-001`、`SC-002` … |
+| 規格常數（選填）| `## 規格常數` | 共用常數（≥2 份 spec 使用）引用 specs/_shared/constants.md，不得重複定義；僅列本規格特有常數 |
 
 ---
 
@@ -84,6 +87,8 @@ specs/[module]/[###-feature-name]/spec.md
 - **`User Flow & Navigation` 譯成中文**：此小節例外，保持英文標題
 - **FR 未指明角色**：凡有 RoleGuard 限制，FR 必須明確寫出允許角色
 - **驗收情境缺少 AC ID**：條目只有清單序號 → 應加上 `**AC-N.N**：` 前綴，否則 changelog 與 traceability matrix 無法穩定引用
+- **重複定義共用常數**：`SYSTEM_ROLES`、`MOBILE_BP` 等已在 `specs/_shared/constants.md` 定義 → 應引用，不得在 spec 內重新定義
+- **流程圖含系統層 participant**：sequenceDiagram 出現 API/Service/DB → 該層級屬 plan.md「系統流程與資料流」，spec 流程圖只保留業務層（角色/產品介面/系統規則/資料來源）
 
 ---
 

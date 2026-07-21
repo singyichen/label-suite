@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.14.0
+版本: 1.15.0
 狀態: Draft
 ---
 
@@ -34,6 +34,29 @@
   spec.md 與 plan.md 不得出現工時估算數字（人天、工時）——工時是工程師在
   Sprint Planning 的職責，且不同技術棧差異可達 3-5 倍，寫死數字很快過時。
 -->
+
+## 決策記錄（Decisions）*(有技術取捨或 clarify 決議時必填)*
+
+<!--
+  集中記錄本功能的關鍵技術決策，每筆決策必須含：決策內容、理由、被否決的替代方案。
+  Clarify 決議：/speckit.clarify 的問答結論記錄於此（含日期），不散落於 spec 正文。
+  實作偏差：實作階段偏離本計畫的決定也記錄於此，並同步 spec Changelog（對應 SDD 流程
+  「post-implementation write-back」）。
+  ADR 分工：跨功能、影響全專案的架構決策仍開 ADR（docs/adr/），此處記錄該 ADR 編號與
+  本功能的採用方式；僅影響本功能的決策直接記錄於此，不開 ADR。
+-->
+
+### 技術決策
+
+| ID | 決策 | 理由 | 被否決的替代方案 |
+|----|------|------|----------------|
+| D1 | [決策內容] | [為什麼] | [替代方案 + 否決原因] |
+
+### Clarify 決議 *(執行過 /speckit.clarify 時必填)*
+
+| 日期 | 問題 | 決議 | 影響範圍 |
+|------|------|------|---------|
+| YYYY-MM-DD | [Q] | [A] | [受影響的 FR/SC/章節] |
 
 ## 憲章檢查
 
@@ -490,6 +513,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.15.0 | 2026-07-21 | 新增「決策記錄（Decisions）」章節：技術決策表（含否決方案）+ Clarify 決議表，集中原本散落於 spec 正文 / Changelog / ADR 的決策脈絡；明確與 ADR 的分工 |
 | 1.14.0 | 2026-07-21 | 技術脈絡新增「技術複雜度」欄位（低 / 中 / 高三級制，取代工時估算）；明訂 spec / plan 不得出現工時估算數字，工時由工程師於 Sprint Planning 估算 |
 | 1.13.6 | 2026-06-05 | 系統流程圖補齊 Route → Controller boundary → Service → Repository → SQLAlchemy Model → DB，對齊 Foundation backend component responsibility |
 | 1.13.5 | 2026-06-05 | 後端模組拆分慣例擴充至全部五個檔案：`router`、`schemas`、`models`、`service`、`repository` 超過 300 行時均按 feature 拆子目錄；`models/__init__.py` 需 re-export 所有 Model 供 Alembic 自動發現 |
