@@ -107,3 +107,11 @@ Generate detailed, SMART Acceptance Criteria for a feature. Criteria must be tes
 | Achievable | Is this technically feasible with current stack? |
 | Relevant | Does this directly serve a User Story? |
 | Testable | Can this be verified by pytest or Playwright without ambiguity? |
+
+## Writing Principles (blueprint-grade AC)
+
+Aligned with spec-template v1.4.0 / checklist-template v1.9.0 (CHK032, CHK033):
+
+- **Concrete values in Given**: every Given must state specific values or explicit states ("a task with 10,000 samples", "account status = Active") — never vague references ("some task").
+- **Observable events in When**: the trigger must be observable by the system (an API call, a threshold crossing), not an intention.
+- **≥2 edge cases per rule**: every functional rule needs at least 2 edge cases, prioritizing (1) priority order when two rules trigger simultaneously, (2) time/timezone boundaries, (3) degraded behavior on incomplete or abnormal data.

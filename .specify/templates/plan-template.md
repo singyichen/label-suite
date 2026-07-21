@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.13.6
+版本: 1.14.0
 狀態: Draft
 ---
 
@@ -23,6 +23,17 @@
 
 **效能目標**: [例：API p95 < 500ms]
 **限制**: [例：Config-driven，不得硬編碼 task 邏輯]
+**技術複雜度**: [低 / 中 / 高]
+
+<!--
+  技術複雜度三級制（取代工時估算）：
+  - 低：邏輯單純、無外部依賴、可獨立完成（CRUD、簡單 UI 調整、參數配置）
+  - 中：涉及多個模組協作或中等演算法（API 整合、狀態機、基礎數據分析）
+  - 高：需要新架構、ML 模型或跨系統協調（即時計算引擎、分散式系統）
+  多期交付時，對照 spec.md §範圍外 的分期邊界表，於本欄為每一階段分別標注複雜度。
+  spec.md 與 plan.md 不得出現工時估算數字（人天、工時）——工時是工程師在
+  Sprint Planning 的職責，且不同技術棧差異可達 3-5 倍，寫死數字很快過時。
+-->
 
 ## 憲章檢查
 
@@ -479,6 +490,7 @@ sequenceDiagram
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.14.0 | 2026-07-21 | 技術脈絡新增「技術複雜度」欄位（低 / 中 / 高三級制，取代工時估算）；明訂 spec / plan 不得出現工時估算數字，工時由工程師於 Sprint Planning 估算 |
 | 1.13.6 | 2026-06-05 | 系統流程圖補齊 Route → Controller boundary → Service → Repository → SQLAlchemy Model → DB，對齊 Foundation backend component responsibility |
 | 1.13.5 | 2026-06-05 | 後端模組拆分慣例擴充至全部五個檔案：`router`、`schemas`、`models`、`service`、`repository` 超過 300 行時均按 feature 拆子目錄；`models/__init__.py` 需 re-export 所有 Model 供 Alembic 自動發現 |
 | 1.13.4 | 2026-06-05 | 後端模組拆分慣例說明：`router/`、`schemas/` 超過 300 行時按 feature 拆子目錄；`models.py`、`service.py`、`repository.py` 保持單一檔案 |
