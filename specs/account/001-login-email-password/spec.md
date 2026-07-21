@@ -23,7 +23,7 @@
 
 **已釐清事項**：
 
-- 本版成功登入為原型行為：Email / Password 皆非空即可進入 loading，約 800ms 後導向 dashboard 原型頁。
+- 本版成功登入為原型行為：Email / Password 皆非空即可進入 loading，`REDIRECT_DELAY_MS`（800ms）後導向 dashboard 原型頁。
 - Google 按鈕在本規格中僅要求可點擊且 no-op；完整 Google SSO 行為由下游規格 `002` 定義。
 - 語言狀態需跨登入、註冊、忘記密碼與 dashboard 原型頁持久化。
 
@@ -146,6 +146,7 @@ sequenceDiagram
 2. **AC-4.2**：**Given** 頁面已載入且語言為 `zh`，**When** 點擊語言切換，**Then** `lang-toggle`、Google 按鈕、導覽品牌連結與密碼切換按鈕 `aria-label` 皆同步切換為 `en` 對應文案。
 3. **AC-4.3**：**Given** 表單曾出現錯誤，**When** 切換語言，**Then** 既有錯誤狀態會被清除。
 4. **AC-4.4**：**Given** 使用者在登入頁切換語言後，**When** 導向 `register` 或 `forgot-password`，**Then** 目標頁必須維持相同語言，不得回到預設語言。
+5. **AC-4.5**：**Given** 目前語言為 `en`，**When** 點擊語言切換，**Then** 切換回 `zh` 並同步更新頁面標題、欄位標籤、按鈕文案與 AC-4.2 所列各項 `aria-label`（雙向切換皆須成立）。
 
 ---
 
@@ -298,7 +299,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 1.2.3 | 2026-07-21 | AC 對齊 blueprint-grade 寫作原則：檢視型 When 改為可觀察事件；新增 `REDIRECT_DELAY_MS` 常數取代「約 800ms」；邊界情況補齊規則同時觸發、時間邊界與異常資料情境；驗收情境補上 `AC-N.N` 穩定 ID（spec-template v1.5.0）；移除重複的需求來源行 |
+| 1.2.3 | 2026-07-21 | AC 對齊 blueprint-grade 寫作原則：檢視型 When 改為可觀察事件；新增 `REDIRECT_DELAY_MS` 常數取代「約 800ms」；邊界情況補齊規則同時觸發、時間邊界與異常資料情境；驗收情境補上 `AC-N.N` 穩定 ID（spec-template v1.5.0）；新增 AC-4.5 覆蓋 `en → zh` 反向語言切換；移除重複的需求來源行 |
 | 1.2.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：登入頁切換語言後，導向 register/forgot-password/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕規格改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
