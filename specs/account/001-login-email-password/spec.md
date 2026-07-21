@@ -1,13 +1,11 @@
 ---
 功能分支: feat/account/001-login-email-password
 建立日期: 2026-04-05
-版本: 1.2.2
+版本: 1.2.3
 狀態: Clarified
 ---
 
 # 功能規格：登入 — Email / Password + 頁面 UI
-
-**需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 
 **需求來源**: 最新原型 [design/prototype/pages/account/login.html](../../../design/prototype/pages/account/login.html)
 
@@ -25,7 +23,7 @@
 
 **已釐清事項**：
 
-- 本版成功登入為原型行為：Email / Password 皆非空即可進入 loading，約 800ms 後導向 dashboard 原型頁。
+- 本版成功登入為原型行為：Email / Password 皆非空即可進入 loading，`REDIRECT_DELAY_MS`（800ms）後導向 dashboard 原型頁。
 - Google 按鈕在本規格中僅要求可點擊且 no-op；完整 Google SSO 行為由下游規格 `002` 定義。
 - 語言狀態需跨登入、註冊、忘記密碼與 dashboard 原型頁持久化。
 
@@ -41,6 +39,7 @@
 
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
+- `REDIRECT_DELAY_MS = 800`（原型模式：表單驗證通過後導向 dashboard 的延遲毫秒數）
 
 ## 流程圖
 
@@ -94,9 +93,9 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 使用者進入登入頁，**When** 頁面載入完成，**Then** 顯示導覽列（Logo + Label Suite + 語言切換）。
-2. **Given** 使用者進入登入頁，**When** 檢視登入卡片，**Then** 顯示標題、副標、Google 按鈕、Email 欄、Password 欄、登入按鈕。
-3. **Given** 使用者進入登入頁，**When** 檢視底部導流，**Then** 顯示「忘記密碼？」與「前往註冊」連結。
+1. **AC-1.1**：**Given** 使用者進入登入頁，**When** 頁面載入完成，**Then** 顯示導覽列（Logo + Label Suite + 語言切換）。
+2. **AC-1.2**：**Given** 使用者進入登入頁，**When** 頁面載入完成，**Then** 登入卡片顯示標題、副標、Google 按鈕、Email 欄、Password 欄、登入按鈕。
+3. **AC-1.3**：**Given** 使用者進入登入頁，**When** 頁面載入完成，**Then** 底部導流區顯示「忘記密碼？」與「前往註冊」連結。
 
 ---
 
@@ -110,10 +109,10 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** Email 為空，**When** 點擊登入，**Then** Email 欄位顯示必填錯誤訊息。
-2. **Given** Password 為空，**When** 點擊登入，**Then** Password 欄位顯示必填錯誤訊息。
-3. **Given** 任一欄位曾報錯，**When** 使用者重新輸入，**Then** 對應欄位錯誤即時清除。
-4. **Given** 使用者點擊密碼眼睛圖示，**When** 反覆切換，**Then** 密碼欄位在 `password` / `text` 間切換且 `aria-label` 同步更新。
+1. **AC-2.1**：**Given** Email 為空，**When** 點擊登入，**Then** Email 欄位顯示必填錯誤訊息。
+2. **AC-2.2**：**Given** Password 為空，**When** 點擊登入，**Then** Password 欄位顯示必填錯誤訊息。
+3. **AC-2.3**：**Given** 任一欄位曾報錯，**When** 使用者重新輸入，**Then** 對應欄位錯誤即時清除。
+4. **AC-2.4**：**Given** 使用者點擊密碼眼睛圖示，**When** 反覆切換，**Then** 密碼欄位在 `password` / `text` 間切換且 `aria-label` 同步更新。
 
 ---
 
@@ -127,9 +126,9 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** Email/Password 皆為非空，**When** 送出表單，**Then** 登入按鈕切為 disabled + spinner。
-2. **Given** 表單驗證通過，**When** 約 800ms 後，**Then** 導向 `../dashboard/dashboard.html`（原型行為）。
-3. **Given** 使用者點擊 Google 按鈕，**When** 觸發事件，**Then** 不導頁、無錯誤（原型 no-op）。
+1. **AC-3.1**：**Given** Email/Password 皆為非空，**When** 送出表單，**Then** 登入按鈕切為 disabled + spinner。
+2. **AC-3.2**：**Given** 表單驗證通過，**When** 經過 `REDIRECT_DELAY_MS` 後，**Then** 導向 `../dashboard/dashboard.html`（原型行為）。
+3. **AC-3.3**：**Given** 使用者點擊 Google 按鈕，**When** 觸發事件，**Then** 不導頁、無錯誤（原型 no-op）。
 
 ---
 
@@ -143,10 +142,11 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** 預設語言為 `zh`，**When** 點擊語言切換，**Then** 切換為 `en` 並更新頁面標題、欄位標籤、按鈕文案。
-2. **Given** 語言切換後，**When** 檢查互動元件，**Then** `lang-toggle`、Google 按鈕、導覽品牌連結與密碼切換按鈕 `aria-label` 皆同步切換。
-3. **Given** 表單曾出現錯誤，**When** 切換語言，**Then** 既有錯誤狀態會被清除。
-4. **Given** 使用者在登入頁切換語言後，**When** 導向 `register` 或 `forgot-password`，**Then** 目標頁必須維持相同語言，不得回到預設語言。
+1. **AC-4.1**：**Given** 預設語言為 `zh`，**When** 點擊語言切換，**Then** 切換為 `en` 並更新頁面標題、欄位標籤、按鈕文案。
+2. **AC-4.2**：**Given** 頁面已載入且語言為 `zh`，**When** 點擊語言切換，**Then** `lang-toggle`、Google 按鈕、導覽品牌連結與密碼切換按鈕 `aria-label` 皆同步切換為 `en` 對應文案。
+3. **AC-4.3**：**Given** 表單曾出現錯誤，**When** 切換語言，**Then** 既有錯誤狀態會被清除。
+4. **AC-4.4**：**Given** 使用者在登入頁切換語言後，**When** 導向 `register` 或 `forgot-password`，**Then** 目標頁必須維持相同語言，不得回到預設語言。
+5. **AC-4.5**：**Given** 目前語言為 `en`，**When** 點擊語言切換，**Then** 切換回 `zh` 並同步更新頁面標題、欄位標籤、按鈕文案與 AC-4.2 所列各項 `aria-label`（雙向切換皆須成立）。
 
 ---
 
@@ -160,16 +160,20 @@ sequenceDiagram
 
 **驗收情境**：
 
-1. **Given** `<= MOBILE_BP`，**When** 開啟登入頁，**Then** 導覽列高度為 56px、左右內距為 16px。
-2. **Given** `<= MOBILE_BP`，**When** 檢視登入卡片，**Then** 卡片內距縮小（28/20/24）且內容不溢出。
-3. **Given** `RWD_VIEWPORTS` 任一寬度，**When** 操作完整流程，**Then** 無文字重疊、無元件遮擋、無水平捲軸。
+1. **AC-5.1**：**Given** `<= MOBILE_BP`，**When** 開啟登入頁，**Then** 導覽列高度為 56px、左右內距為 16px。
+2. **AC-5.2**：**Given** `<= MOBILE_BP`，**When** 頁面載入完成，**Then** 登入卡片內距縮小（28/20/24）且內容不溢出。
+3. **AC-5.3**：**Given** `RWD_VIEWPORTS` 任一寬度，**When** 操作完整流程，**Then** 無文字重疊、無元件遮擋、無水平捲軸。
 
 ---
 
 ### 邊界情況
 
 - 僅填空白字元（Email）後送出？→ Email 會先 `trim()`，視為空值並顯示必填錯誤。
+- Email 與 Password 同時為空送出？→ 兩欄位同時顯示各自的必填錯誤，不得只顯示第一個欄位。
 - 語言切換發生在密碼顯示狀態下？→ 保留目前顯示狀態，只更新對應 `aria-label`。
+- loading 期間（`REDIRECT_DELAY_MS` 未到）點擊語言切換或任何連結？→ 全頁不可互動（FR-010），語言與頁面維持原狀。
+- 驗證通過後、導頁完成前重複點擊登入按鈕？→ 按鈕已 disabled，僅觸發一次導頁。
+- `localStorage` 不可用或 `labelsuite.lang` 為非法值（非 `zh` / `en`）？→ fallback 到 `zh`，不報錯。
 - 已顯示錯誤後再次送出成功？→ 先清除錯誤，再進入 loading 與導頁流程。
 - 目前原型是否已串接真實 `/auth/login` 與 JWT？→ 尚未；現階段為前端互動原型，成功送出後固定導向 dashboard 原型頁。
 
@@ -190,7 +194,7 @@ sequenceDiagram
 - **FR-008**：使用者於錯誤欄位重新輸入時，系統必須即時清除該欄位錯誤狀態。
 - **FR-009**：Password 欄位必須提供顯示/隱藏切換按鈕，且按鈕 `aria-label` 必須依狀態切換。
 - **FR-010**：表單驗證通過後，登入按鈕必須進入 disabled + spinner 的 loading 狀態，且整頁其餘元件同步不可互動（全頁 pointer-events 停用或等效 overlay）。
-- **FR-011**：原型模式下，表單驗證通過後必須於約 800ms 內導向 `../dashboard/dashboard.html`。
+- **FR-011**：原型模式下，表單驗證通過後必須於 `REDIRECT_DELAY_MS` 後導向 `../dashboard/dashboard.html`。
 - **FR-012**：Google 按鈕在原型模式必須可點擊且不報錯，但不觸發導頁（no-op）。
 - **FR-013**：忘記密碼連結必須導向 `./forgot-password.html`。
 - **FR-014**：註冊連結必須導向 `./register.html`。
@@ -253,7 +257,7 @@ flowchart LR
 
 - **SC-001**：登入頁首屏完整顯示核心元件（導覽列、登入卡片、雙登入入口、兩個導流連結）。
 - **SC-002**：Email/Password 任一缺漏時會顯示欄位錯誤，且不進入導頁流程。
-- **SC-003**：Email/Password 皆非空送出後，按鈕進入 loading 並於約 800ms 導向 `../dashboard/dashboard.html`。
+- **SC-003**：Email/Password 皆非空送出後，按鈕進入 loading 並於 `REDIRECT_DELAY_MS` 後導向 `../dashboard/dashboard.html`。
 - **SC-004**：語言切換可在 1 秒內完成主要文案與 `aria-label` 更新（不重新整理頁面）。
 - **SC-004A**：切換語言後導向 `register` / `forgot-password` / `dashboard` 時，語系需維持一致。
 - **SC-005**：Password 顯示/隱藏切換後，欄位 type 與眼睛按鈕 `aria-label` 一致。
@@ -295,6 +299,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.2.3 | 2026-07-21 | AC 對齊 blueprint-grade 寫作原則：檢視型 When 改為可觀察事件；新增 `REDIRECT_DELAY_MS` 常數取代「約 800ms」；邊界情況補齊規則同時觸發、時間邊界與異常資料情境；驗收情境補上 `AC-N.N` 穩定 ID（spec-template v1.5.0）；新增 AC-4.5 覆蓋 `en → zh` 反向語言切換；移除重複的需求來源行 |
 | 1.2.2 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.2.1 | 2026-04-16 | 新增跨頁語言持久化規範：登入頁切換語言後，導向 register/forgot-password/dashboard 必須維持同語系 |
 | 1.2.0 | 2026-04-15 | 語言切換按鈕規格改為單一語言代碼顯示（`ZH` / `EN`），移除 `ZH \| EN` 寫法 |
