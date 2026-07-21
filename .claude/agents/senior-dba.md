@@ -2,6 +2,8 @@
 name: senior-dba
 description: Senior Database Administrator specialist. Use proactively for PostgreSQL schema design, query optimization, indexing strategy, and data migration.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - data-model
 model: sonnet
 color: green
 ---

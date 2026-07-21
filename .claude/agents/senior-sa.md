@@ -2,6 +2,9 @@
 name: senior-sa
 description: Senior System Analyst specialist. Use proactively for system design, requirement analysis, technical specifications, and architecture documentation.
 tools: Read, Edit, Write, Grep, Glob, Bash
+skills:
+  - spec-review
+  - flowchart
 model: sonnet
 color: blue
 ---

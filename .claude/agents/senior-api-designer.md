@@ -2,6 +2,8 @@
 name: senior-api-designer
 description: Senior API Designer specialist. Use proactively for REST API design, OpenAPI specification, endpoint naming, and API contract definition.
 tools: Read, Edit, Write, Grep, Glob
+skills:
+  - api-spec
 model: sonnet
 color: purple
 ---

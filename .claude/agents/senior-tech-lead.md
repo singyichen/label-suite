@@ -2,6 +2,8 @@
 name: senior-tech-lead
 description: Senior Tech Lead specialist. Use proactively for technical decision making, constitution compliance review, engineering best practices, and cross-cutting concerns.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - quality-gate
 model: sonnet
 color: purple
 ---

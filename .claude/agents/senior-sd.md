@@ -2,6 +2,8 @@
 name: senior-sd
 description: Senior System Designer specialist. Use proactively for system design, component design, interface design, and technical specifications.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - flowchart
 model: sonnet
 color: purple
 ---

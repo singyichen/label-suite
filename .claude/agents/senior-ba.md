@@ -2,6 +2,9 @@
 name: senior-ba
 description: Senior Business Analyst specialist. Use proactively for requirement gathering, stakeholder interviews, process modeling, and requirement engineering.
 tools: Read, Edit, Write, Grep, Glob
+skills:
+  - user-story
+  - functional-req
 model: sonnet
 color: blue
 ---

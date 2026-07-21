@@ -2,6 +2,9 @@
 name: team-lead
 description: Team Lead orchestrator for Label Suite SDD sprints. Coordinates specialist agents, sequences tasks to prevent git conflicts, synthesizes research findings, and reports progress to the user in Traditional Chinese. Invoke at the start of any multi-agent sprint.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - sdd-workflow
+  - git-branch
 model: sonnet
 color: red
 ---
