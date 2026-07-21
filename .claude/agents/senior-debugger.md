@@ -2,6 +2,8 @@
 name: senior-debugger
 description: Senior Debugger specialist. Use proactively for debugging errors, test failures, Celery task issues, and unexpected behavior in FastAPI or React code.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - defect-report
 model: sonnet
 color: orange
 ---

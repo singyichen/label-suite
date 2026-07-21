@@ -2,6 +2,8 @@
 name: senior-po
 description: Senior Product Owner specialist. Use proactively for product feature definition, backlog prioritization, timeline management, budget control, and cross-department communication.
 tools: Read, Edit, Write, Grep, Glob
+skills:
+  - user-story
 model: sonnet
 color: blue
 ---

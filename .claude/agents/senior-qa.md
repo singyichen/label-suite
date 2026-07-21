@@ -2,6 +2,10 @@
 name: senior-qa
 description: Senior QA Engineer specialist. Use proactively for test strategy, Playwright E2E test design, pytest test coverage, and quality assurance planning.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - test-plan
+  - test-coverage
+  - test-data-strategy
 model: sonnet
 color: orange
 ---

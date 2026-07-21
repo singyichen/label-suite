@@ -2,6 +2,9 @@
 name: senior-backend
 description: Senior Backend Engineer specialist. Use proactively for FastAPI development, API design, database integration, Celery task queue, and backend performance optimization.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - backend-spec
+  - api-spec
 model: sonnet
 color: green
 ---

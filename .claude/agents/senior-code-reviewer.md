@@ -2,6 +2,10 @@
 name: senior-code-reviewer
 description: Senior Code Reviewer specialist. Use proactively after code changes to review code quality, security, performance, and best practices.
 tools: Read, Grep, Glob, Bash
+skills:
+  - code-review-deep
+  - code-review-checklist
+  - pr-review
 model: sonnet
 color: orange
 ---

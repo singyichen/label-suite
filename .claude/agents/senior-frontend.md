@@ -2,6 +2,9 @@
 name: senior-frontend
 description: Senior Frontend Engineer specialist. Use proactively for React + TypeScript development, component architecture, Vite build optimization, and Playwright E2E testing.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - frontend-spec
+  - react-best-practices
 model: sonnet
 color: green
 ---
