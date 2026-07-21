@@ -1,7 +1,7 @@
 ---
 name: senior-qa
 description: Senior QA Engineer specialist. Use proactively for test strategy, Playwright E2E test design, pytest test coverage, and quality assurance planning.
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools: Read, Edit, Write, Bash, Grep, Glob, Skill
 skills:
   - test-plan
   - test-coverage
@@ -49,6 +49,8 @@ Label Suite — a config-driven NLP data labeling and automated evaluation platf
 - vs senior-code-reviewer: Code reviewer reviews code quality; QA owns test quality and coverage
 
 ## Workflow
+
+For stage-gated deliverables — traceability matrix, regression suite planning, test execution reports, or test progress tracking — invoke the matching skill on demand via the Skill tool (`traceability-matrix`, `regression-suite`, `test-report`, `test-tracking`) instead of reproducing those formats from memory.
 
 ### Phase A — TDD Red
 
