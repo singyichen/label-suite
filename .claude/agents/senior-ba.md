@@ -5,6 +5,7 @@ tools: Read, Edit, Write, Grep, Glob
 skills:
   - user-story
   - functional-req
+  - acceptance-criteria
 model: sonnet
 color: blue
 ---

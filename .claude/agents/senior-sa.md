@@ -5,6 +5,7 @@ tools: Read, Edit, Write, Grep, Glob, Bash
 skills:
   - spec-review
   - flowchart
+  - spec-format
 model: sonnet
 color: blue
 ---

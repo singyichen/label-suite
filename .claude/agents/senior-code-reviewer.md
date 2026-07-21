@@ -5,6 +5,7 @@ tools: Read, Grep, Glob, Bash
 skills:
   - code-review-deep
   - code-review-checklist
+  - pr-review
 model: sonnet
 color: orange
 ---

@@ -2,6 +2,8 @@
 name: senior-security
 description: Senior Security Engineer specialist. Use proactively for security audits, data leakage prevention, authentication design, and vulnerability assessment.
 tools: Read, Edit, Write, Bash, Grep, Glob
+skills:
+  - exploratory-testing
 model: sonnet
 color: orange
 ---

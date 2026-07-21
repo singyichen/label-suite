@@ -4,6 +4,7 @@ description: Senior Frontend Engineer specialist. Use proactively for React + Ty
 tools: Read, Edit, Write, Bash, Grep, Glob
 skills:
   - frontend-spec
+  - react-best-practices
 model: sonnet
 color: green
 ---
