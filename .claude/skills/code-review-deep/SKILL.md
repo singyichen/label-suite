@@ -1,5 +1,5 @@
 ---
-name: code-review
+name: code-review-deep
 description: Perform a comprehensive code review covering code quality, security (test-set leakage), performance, and best practices for FastAPI + React + TypeScript.
 ---
 
@@ -10,9 +10,9 @@ Execute a thorough code review across all dimensions: code quality, security, pe
 ## Usage
 
 ```
-/code-review                          # Review all changed files
-/code-review backend/app/routers/     # Review specific directory
-/code-review backend/app/services/scoring.py  # Review specific file
+/code-review-deep                          # Review all changed files
+/code-review-deep backend/app/routers/     # Review specific directory
+/code-review-deep backend/app/services/scoring.py  # Review specific file
 ```
 
 ## Output Format
