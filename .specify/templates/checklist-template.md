@@ -1,7 +1,7 @@
 ---
 功能分支: feat/[module]/NNN-feature
 建立日期: YYYY-MM-DD
-版本: 1.9.0
+版本: 1.9.1
 狀態: Draft
 ---
 
@@ -44,7 +44,7 @@
 ## 需求一致性
 
 - [ ] CHK007 功能需求是否與每個使用者故事的驗收情境一致？[Consistency, Spec §功能需求]
-- [ ] CHK008 原型、規格與需求來源的差異是否有記錄，而非靜默衝突？[Consistency, Spec §輸入與生成規則]
+- [ ] CHK008 原型、規格與需求來源的差異是否有記錄，而非靜默衝突？[Consistency, Spec §已釐清事項]
 - [ ] CHK009 使用者故事、需求、實體與成功標準中的共用詞彙是否一致使用？[Consistency, Spec §需求規格]
 - [ ] CHK034 spec 與 plan 是否不含工時估算數字（人天、工時），僅以技術複雜度（低 / 中 / 高）標注？[Consistency, Plan §技術脈絡]
 
@@ -65,7 +65,7 @@
 
 - [ ] CHK016 若 task type 行為有變動，規格是否要求以 config-driven registry/schema/frozen task config 實現，而非硬編碼 task 邏輯？[Principle: II, Spec §需求規格]
 - [ ] CHK017 若標注者端資料受影響，規格是否明確禁止暴露 ground-truth、評分鍵、答案路徑或隱藏標籤？[Principle: III, Spec §需求規格]
-- [ ] CHK018 若 UI 受影響，規格是否參照了已核可的設計 token / 原型期望，並記錄任何有意的偏差？[Principle: VII, Spec §輸入與生成規則]
+- [ ] CHK018 若 UI 受影響，規格是否參照了已核可的設計 token / 原型期望，並記錄任何有意的偏差？[Principle: VII, Spec §已釐清事項]
 - [ ] CHK023 若 UI 受影響，互動元件的無障礙期望（鍵盤操作、螢幕閱讀器標記）是否納入規格的邊界情況或成功標準？[Principle: VII, Spec §邊界情況]
 - [ ] CHK024 若功能涉及驗證流程、角色權限或使用者私密資料，規格是否定義未授權存取的預期行為，並要求相應的安全路徑測試情境？[Principle: XI, Spec §功能需求]
 - [ ] CHK025 規格的需求範圍是否僅涵蓋請求功能本身，無預期外的重構、格式調整或相鄰功能變更？[Principle: X, Gap]
@@ -95,6 +95,7 @@
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.9.1 | 2026-07-21 | CHK008/CHK018 引用章節自 Spec §輸入與生成規則改為 Spec §已釐清事項（spec-template v1.6.0 已將該章節轉為模板內部註解，What/How 分離 PR #120 的後續修正） |
 | 1.9.0 | 2026-07-21 | 新增 CHK032（Given 具體數值）、CHK033（每規則 ≥2 邊界情境）、CHK034（禁工時數字，僅複雜度標注）；CHK010 改為六狀態列舉檢查並引用 Spec §畫面狀態規格；CHK020 補分期邊界表並引用 Spec §範圍外（跳過 CHK031，該編號已於 PR #68 移出本模板） |
 | 1.8.0 | 2026-06-03 | 將 CHK027-CHK030 從舊憲章 Principle XXI/XXII/XXVIII/XXX 引用改為對應 domain constitution 引用，對齊 constitution v1.31.0 |
 | 1.7.0 | 2026-05-29 | 新增 CHK026-CHK030：補齊 Principle IX（error case 可見結果）、XXI（async 邊界行為）、XXII（API 文件需求）、XXVIII（狀態機轉換定義）、XXX（測試資料策略）（配合憲章 v1.28.0） |
