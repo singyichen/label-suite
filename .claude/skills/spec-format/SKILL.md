@@ -56,8 +56,8 @@ specs/[module]/[###-feature-name]/spec.md
 ```markdown
 **驗收情境**：
 
-1. **AC-1.1**：**Given** [初始狀態]，**When** [操作]，**Then** [預期結果]。
-2. **AC-1.2**：**Given** [初始狀態]，**When** [操作]，**Then** [預期結果]。
+1. **AC-1.1**：**Given** [初始條件]，**When** [動作]，**Then** [預期結果]
+2. **AC-1.2**：**Given** [初始條件]，**When** [動作]，**Then** [預期結果]
 ```
 
 `Given` / `When` / `Then` 保持英文，其餘內容繁體中文。
