@@ -38,7 +38,7 @@ $ARGUMENTS
 |---|---|---|
 | 產品概述與目標 | spec §功能目標 | plus 需求來源 line |
 | 功能規格 | spec §功能需求 + §使用者情境與測試 | group FR-* under their user story; each block ends with its AC table |
-| 驗收標準（AC） | spec 驗收情境 + §邊界情況 | Given/When/Then table with an Edge Case column; keep FR/SC IDs for traceability |
+| 驗收標準（AC） | spec 驗收情境 + §邊界情況 | Given/When/Then table with an Edge Case column; keep FR/SC/AC-N.N IDs for traceability |
 | 畫面規格 | spec §畫面狀態規格 + §使用者流程與導頁 | six-state table per screen; missing section → `規格未定義` flag |
 | 範圍外（Out of Scope） | spec §範圍外 | include 分期邊界 table when present |
 | 路線圖與複雜度 | spec §範圍外 分期邊界 + plan 技術複雜度 | complexity level only — never man-day numbers, even if asked |
