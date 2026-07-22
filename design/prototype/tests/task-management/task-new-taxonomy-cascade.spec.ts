@@ -33,6 +33,49 @@ test.describe('Task new taxonomy cascade', () => {
     await expect(page.locator('#taskOutputTypeChips [data-key="single_label"]')).not.toBeVisible();
   });
 
+  test('SC-002e keeps classification and regression outputs single-select while sequence stays multi-select', async ({ page }) => {
+    await page.goto(TASK_NEW_URL);
+
+    await page.click('#taskCategoryChips [data-key="classification"]');
+    await page.click('#taskCategoryChips [data-key="regression"]');
+    await page.click('#taskCategoryChips [data-key="sequence"]');
+    await page.click('#taskInputTypeChips [data-key="single_item"]');
+
+    const singleLabel = page.locator('#taskOutputTypeChips [data-key="single_label"]');
+    const multiLabel = page.locator('#taskOutputTypeChips [data-key="multi_label"]');
+    const singleDim = page.locator('#taskOutputTypeChips [data-key="single_dim"]');
+    const multiDim = page.locator('#taskOutputTypeChips [data-key="multi_dim"]');
+    const entityRecognition = page.locator('#taskOutputTypeChips [data-key="entity_recognition"]');
+    const relationIdentification = page.locator('#taskOutputTypeChips [data-key="relation_identification"]');
+
+    await expect(singleLabel).toHaveAttribute('role', 'radio');
+    await expect(multiLabel).toHaveAttribute('role', 'radio');
+    await expect(singleDim).toHaveAttribute('role', 'radio');
+    await expect(multiDim).toHaveAttribute('role', 'radio');
+    await expect(entityRecognition).toHaveAttribute('role', 'checkbox');
+    await expect(relationIdentification).toHaveAttribute('role', 'checkbox');
+    await expect(singleLabel.locator('.task-type-chip-check')).toHaveCSS('border-radius', '50%');
+    await expect(entityRecognition.locator('.task-type-chip-check')).toHaveCSS('border-radius', '3px');
+
+    await singleLabel.click();
+    await multiLabel.click();
+    await expect(singleLabel).toHaveAttribute('aria-checked', 'false');
+    await expect(multiLabel).toHaveAttribute('aria-checked', 'true');
+    await multiLabel.click();
+    await expect(multiLabel).toHaveAttribute('aria-checked', 'true');
+
+    await singleDim.click();
+    await multiDim.click();
+    await expect(singleDim).toHaveAttribute('aria-checked', 'false');
+    await expect(multiDim).toHaveAttribute('aria-checked', 'true');
+    await expect(multiLabel).toHaveAttribute('aria-checked', 'true');
+
+    await entityRecognition.click();
+    await relationIdentification.click();
+    await expect(entityRecognition).toHaveAttribute('aria-checked', 'true');
+    await expect(relationIdentification).toHaveAttribute('aria-checked', 'true');
+  });
+
   test('resolves selected taxonomy combination to the matching config schema', async ({ page }) => {
     await page.goto(TASK_NEW_URL);
 
