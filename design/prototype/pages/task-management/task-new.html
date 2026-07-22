@@ -101,6 +101,46 @@
 
     /* ── Step 2 ── */
     .s2-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: start; }
+    .s2-primary-workspace.is-settings-first-preview {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+      align-items: start;
+      margin-bottom: var(--space-md);
+    }
+    .s2-primary-workspace.is-settings-first-preview .s2-preview-top { margin-bottom: 0; }
+    .s2-settings-panel { min-width: 0; }
+    #s2PrimarySettingsSlot:empty { display: none; }
+    .s2-layout.is-integrated-config-tools {
+      display: block;
+      padding: var(--space-md);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-white);
+    }
+    .s2-layout.is-integrated-config-tools .template-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-sm) var(--space-md);
+      margin: 0 0 var(--space-md);
+      padding: 0 0 var(--space-md);
+      border: none;
+      border-bottom: 1px solid var(--color-border);
+      border-radius: 0;
+      background: transparent;
+    }
+    .s2-layout.is-integrated-config-tools .template-section-title { margin-bottom: 0; }
+    .s2-layout.is-integrated-config-tools .template-actions,
+    .s2-layout.is-integrated-config-tools #templateBtns { flex-direction: row; flex-wrap: wrap; }
+    .s2-layout.is-integrated-config-tools .s2-code-panel {
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+    }
+    .s2-layout.is-integrated-config-tools .code-editor { min-height: 240px; height: 240px; }
     .template-section { margin-bottom: var(--space-md); padding: var(--space-md); background: var(--color-slate-50); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
     .template-section-title { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
     .template-btn { padding: 5px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-full); font-size: 12px; font-weight: 500; background: var(--color-white); color: var(--color-ink); transition: border-color var(--dur-fast), background var(--dur-fast); }
@@ -483,6 +523,9 @@
       .step-label { display: none; }
       .action-bar { flex-wrap: wrap; }
     }
+    @media (max-width: 1100px) {
+      .s2-primary-workspace.is-settings-first-preview { grid-template-columns: 1fr; }
+    }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
     .char-count { font-size: 11px; color: var(--color-ink-muted); text-align: right; margin-top: 2px; }
 
@@ -706,13 +749,16 @@
       <div class="form-card">
         <div class="form-card-title" id="s2CardTitle">標記設定檔</div>
 
-        <div class="s2-preview-top">
-          <div class="yaml-preview-label" id="annotationPreviewLabel">標記預覽</div>
-          <div class="annotation-preview" id="annotationPreview" aria-label="Annotation preview"></div>
+        <div class="s2-primary-workspace" id="s2PrimaryWorkspace" data-layout="default" data-testid="step2-primary-workspace">
+          <div id="s2PrimarySettingsSlot"></div>
+          <div class="s2-preview-top" data-testid="step2-preview-panel">
+            <div class="yaml-preview-label" id="annotationPreviewLabel">標記預覽</div>
+            <div class="annotation-preview" id="annotationPreview" aria-label="Annotation preview"></div>
+          </div>
         </div>
 
-        <div class="s2-layout">
-          <div>
+        <div class="s2-layout" id="s2SupportingTools" data-presentation="default" data-testid="step2-supporting-tools">
+          <div class="s2-visual-config-column">
             <div class="template-section">
               <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始或者上傳設定檔</div>
               <div class="template-actions">
@@ -721,8 +767,12 @@
                 <input type="file" id="configFileInput" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" style="display:none" aria-hidden="true" />
               </div>
             </div>
-            <div id="schemaFields"></div>
-            <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
+            <div id="s2DefaultSettingsSlot">
+              <div class="s2-settings-panel" id="s2SettingsPanel" data-testid="step2-settings-panel">
+                <div id="schemaFields"></div>
+                <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
+              </div>
+            </div>
           </div>
           <div class="s2-code-panel">
             <div class="s2-code-header">
@@ -1113,6 +1163,7 @@ var OUTPUT_TYPE_REGISTRY = {
   single_label: {
     zh: '單一標籤', en: 'Single label',
     source_output: null,
+    step2Layout: 'settings-first-preview',
     fields: [
       { key: 'label_options', type: 'entity-list', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增標籤', addLabel_en: 'Add label' },
     ],
@@ -3964,7 +4015,26 @@ function refreshOutputPreview(container, outKey) {
   renderOutputPreview(container, outKey);
 }
 
+function syncStep2Layout() {
+  var workspace = el('s2PrimaryWorkspace');
+  var settingsPanel = el('s2SettingsPanel');
+  var primarySlot = el('s2PrimarySettingsSlot');
+  var defaultSlot = el('s2DefaultSettingsSlot');
+  var supportingTools = el('s2SupportingTools');
+  var soleOutputKey = state.selectedOutputTypes.length === 1 ? state.selectedOutputTypes[0] : null;
+  var soleOutputRegistry = soleOutputKey ? OUTPUT_TYPE_REGISTRY[soleOutputKey] : null;
+  var usesSettingsFirstPreview = !!soleOutputRegistry && soleOutputRegistry.step2Layout === 'settings-first-preview';
+  var targetSlot = usesSettingsFirstPreview ? primarySlot : defaultSlot;
+
+  if (settingsPanel.parentNode !== targetSlot) targetSlot.appendChild(settingsPanel);
+  workspace.classList.toggle('is-settings-first-preview', usesSettingsFirstPreview);
+  workspace.setAttribute('data-layout', usesSettingsFirstPreview ? 'settings-first-preview' : 'default');
+  supportingTools.classList.toggle('is-integrated-config-tools', usesSettingsFirstPreview);
+  supportingTools.setAttribute('data-presentation', usesSettingsFirstPreview ? 'integrated' : 'default');
+}
+
 function renderSchemaFields() {
+  syncStep2Layout();
   var container = el('schemaFields');
   while (container.firstChild) container.removeChild(container.firstChild);
 

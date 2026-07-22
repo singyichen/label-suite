@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 4.1.0
+版本: 4.2.0
 狀態: Draft
 ---
 
@@ -33,6 +33,7 @@
 - **v3.0.0 架構轉型**：本版依 ADR-029 將固定 `TASK_TYPE_ENUM` 替換為可組合的 `outputs[]` 模型。任務不再對應單一固定型別，而是由使用者從 `OUTPUT_TYPE_REGISTRY` 中選擇一至多個輸出類型組合而成。
 - **v4.0.0 taxonomy 收斂**：`entity_relation` 與 `boundary` 自合法輸出類型、Step 1 選項及 Step 2 registry／預覽移除；既有 key `span`、`relation_triple`、`token_class` 分別遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不提供舊 key 相容別名；顯示名稱同步為 Entity Recognition（實體辨識）、Relation Identification（關係識別）、Sequence Tagging（序列標註）。
 - **v4.1.0 輸出選擇語意**：Step 1 由 taxonomy 的 `outputSelection` metadata 決定各大分類輸出 chip 的選擇模式；分類與回歸為 radio 單選，序列與生成維持 checkbox 多選語意，跨大分類仍可同時選取。
+- **v4.2.0 單一標籤設定優先佈局**：當唯一輸出類型的 registry item 宣告 `step2Layout: settings-first-preview`（目前僅 `single_label`）時，Step 2 桌面版先以左側 schema 設定、右側即時預覽呈現；1100px 以下改為設定在上、預覽在下；範本／上傳與 Code 整合為下方單一輔助工具卡。其他輸出類型維持既有預覽優先佈局。
 
 ## 規格常數
 
@@ -99,7 +100,7 @@ sequenceDiagram
     Registry-->>UI: 回傳各 output type 的 fields + defaultConfig
 
     U->>UI: 進入 Step 2（標記設定檔）
-    UI-->>U: 上方顯示標記預覽；下方左側顯示「範本/上傳設定檔 + schema 欄位（手風琴）」、右側顯示 YAML/JSON code 區
+    UI-->>U: 依 output registry metadata 顯示 Step 2；單一標籤先並列設定與預覽，再於下方顯示整合設定檔工具卡
 
     U->>UI: 進入 Step 3（啟動設定）
     U->>UI: 設定試標抽樣筆數（含資料隔離）
@@ -192,7 +193,8 @@ sequenceDiagram
     - 已移除的 `entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在任何分類、輸入類型或語系下
   - `下一步` 啟用條件：`task_name` 非空 ∧ 至少選擇一個輸出類型 ∧ dataset 檔案通過格式/大小/編碼檢查 ∧ Input 欄位數量符合輸入類型（`single_item` 須恰好 1 個、`item_pair` 須恰好 2 個）∧ 所有 Input 角色欄位無缺值
 - Step 2：`標記設定檔`
-  - 佈局：上方標記預覽區、下方左側「範本/上傳設定檔 + schema 設定區」、下方右側 code 區
+  - 預設佈局（未宣告特殊 `step2Layout`）：上方標記預覽區、下方左側「範本/上傳設定檔 + schema 設定區」、下方右側 code 區
+  - 設定優先佈局（唯一輸出宣告 `step2Layout: settings-first-preview`；目前僅 `single_label`）：桌面寬度大於 1100px 時，schema 設定區在左、標記預覽在右且頂端對齊；1100px 以下依序改為 schema 設定區、標記預覽。範本／上傳與 Code 置於主工作區下方並整合為單一外框工具卡，Code 編輯器高度為 240px
   - 範本/上傳設定檔區塊：
     - 範本按鈕：依已選 output types 提供預設模板，點擊即載入
     - 上傳設定檔：支援 `CONFIG_UPLOAD_FORMATS`（yaml / yml / json），載入至 code 區由使用者手動儲存套用
@@ -273,10 +275,14 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 11. **Given** 僅選擇 `relation_identification` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
 12. **Given** 同時選擇 `entity_recognition + relation_identification`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_identification.config.source_output` 自動輸出為 `entity_recognition`。
 13. **Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
+14. **Given** 唯一輸出類型宣告 `step2Layout: settings-first-preview`，**When** 使用者在桌面寬度進入 Step 2，**Then** schema 設定置左、標記預覽置右，範本／上傳與 Code 於下方共用單一外框；**When** 寬度不超過 1100px，**Then** schema 設定改置於標記預覽上方。未宣告此 metadata 的輸出類型維持既有預覽優先佈局。
 
 **介面定義**：
 
-- 區塊 A：`標記預覽（上方）`
+- `step2Layout` 未宣告時使用下列預設 A／B／C 區塊順序。
+- 唯一輸出宣告 `step2Layout: settings-first-preview` 時，區塊 B 的 schema 手風琴移到第一個主工作區；桌面與區塊 A 左右並列，1100px 以下依 B → A 排列。範本／上傳列自區塊 B 移至區塊 C，與 Code 共用單一外框。
+
+- 區塊 A：`標記預覽（預設上方；設定優先佈局為右側或設定下方）`
   - 每個輸出類型有各自的互動式預覽區塊，使用者可直接操作體驗標記方式
   - 已上傳資料集時，預覽顯示資料集實際文字內容；未上傳時顯示預設範例文字
   - 指定為 `evidence` 角色的欄位不在標記預覽中顯示獨立區塊；Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另記錄於 config 的 `evidence_fields`），其內容留待標記工作區呈現
@@ -299,8 +305,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 
   - 上表所有輸出類型的預覽區塊底部（`allow_bypass` 開啟時）均附「無法判定 (Bypass)」勾選項；勾選後清空並停用該輸出類型的其他預覽互動控制項，取消勾選後恢復（見 FR-003j）
 
-- 區塊 B：`設定區（下方左側）`
-  - 「從範本開始或者上傳設定檔」區塊置於最上方
+- 區塊 B：`設定區（預設下方左側；設定優先佈局為第一主區塊）`
+  - 預設佈局先顯示「從範本開始或者上傳設定檔」，再顯示 schema 手風琴；設定優先佈局只保留 schema 手風琴，範本／上傳移至區塊 C
   - 每個輸出類型以手風琴面板呈現，面板標題含序號與輸出類型名稱，可展開/收合
   - 面板內由 registry 動態生成欄位，支援 7 種欄位類型（`OUTPUT_TYPE_FIELD_TYPES`）：
     - `entity-list`：可新增/刪除的 `{ name, color }[]` 列表，每列含色點、名稱輸入框與移除按鈕；新增按鈕文字依語境顯示
@@ -329,7 +335,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `free_text` | `show_reference`（顯示參考答案） | `boolean` | 否 |
     | *（所有輸出類型共通）* | `allow_bypass`（允許無法判定 Bypass） | `boolean`（預設 `true`） | 否 |
 
-- 區塊 C：`Code 區（下方右側）`
+- 區塊 C：`設定檔工具（預設為下方 Code 區；設定優先佈局為整合工具卡）`
+  - 設定優先佈局以單一外框依序容納橫向範本／上傳列、分隔線、Code 格式切換、240px 編輯器與儲存按鈕；範本與 Code 不得各自再建立外框卡片
   - 必要元素：YAML/JSON 切換、可編輯區、`儲存` 按鈕、格式與 schema 驗證結果
   - code 輸出格式遵循 ADR-029 `outputs[]` 結構：
 
@@ -357,6 +364,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - code 內容儲存成功後，左側 schema 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤且保留使用者輸入。
 - 預覽文字來源：已上傳資料集時讀取實際欄位內容（依 `field_role_map` 中 `input` 角色的欄位），未上傳時顯示預設範例文字。
 - 通用輸入文字區塊是否顯示必須由已選輸出類型的 registry metadata 推導：任一項 `rendersInputPreview = true` 時，由專屬或整合預覽呈現輸入內容並省略通用區塊；所有項目皆為 `false` 或未宣告時，保留通用區塊。不得以特定任務名稱或複合任務名稱硬編分支。
+- Step 2 版面必須由唯一已選輸出類型的 `step2Layout` registry metadata 推導；只有值為 `settings-first-preview` 時啟用設定優先主工作區與整合設定檔工具卡，核心流程不得直接判斷 `single_label` key。
 - 預覽狀態初始化：已上傳資料集且有 `output` 角色欄位時，各輸出類型的互動控制項以該欄位的實際值初始化（如預選標籤、設定滑桿值、預填文字）；output 欄位的 unique values 自動帶入分類型輸出類型的 `label_options`；output 欄位值為 JSON object 時自動建立 `multi_dim` 的維度列表（維度範圍依實際資料值推斷）；預標記三元組的語意類型（`relation_type` 欄位）自動帶入 `relation_identification` 的 `relation_types`；存在多個 output 角色欄位時，依欄位值的資料形狀對應各輸出類型，分別取用形狀相符的欄位初始化。
 - 每個輸出類型的 config 一律包含共通欄位 `allow_bypass`（`boolean`，預設 `true`），由 registry 統一附加至所有輸出類型的 `fields` 與 `defaultConfig`，並隨 `outputs[]` 格式序列化至 code 區；schema 設定面板以 toggle 呈現，關閉時該輸出類型的預覽不顯示 Bypass 勾選項（見 FR-003j）。
 
@@ -471,9 +479,10 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-002c-7**：任一 Input 角色欄位存在缺值時，系統必須阻擋進入 Step 2，並以欄位下方 inline 錯誤與頁首錯誤提示指出欄位名稱與缺值筆數。
 - **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案於目前所選資料列來源路徑可取出紀錄、且紀錄欄位集合與已上傳檔案完全一致；不符合時阻擋該檔案加入並顯示不相容提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理；移除任一檔案後，系統必須同步重新偵測資料列來源並重建欄位剖析與預覽。
 - **FR-003**：Step 2 標記設定檔必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型的 schema 欄位由 registry 定義。
-- **FR-003a**：Step 2 必須採單頁佈局：上方標記預覽、下方左側 schema 設定區、下方右側 code 區。
-- **FR-003a-1**：Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 設定欄位。
+- **FR-003a**：Step 2 必須採單頁佈局；未宣告 `step2Layout` 時使用上方標記預覽、下方左側 schema 設定區、下方右側 code 區的預設佈局。唯一輸出宣告 `step2Layout: settings-first-preview` 時改用設定優先佈局。
+- **FR-003a-1**：預設佈局的 Step 2 左側必須先顯示「從範本開始或者上傳設定檔」區塊，再顯示 schema 設定欄位。
 - **FR-003a-2**：Step 2 左側 schema 設定區必須採手風琴佈局，無論選擇單一或多個輸出類型，每個輸出類型均以獨立手風琴面板呈現，面板標題顯示序號與輸出類型名稱。
+- **FR-003a-3**：唯一輸出宣告 `step2Layout: settings-first-preview` 時，桌面寬度大於 1100px 必須以 schema 設定在左、標記預覽在右的雙欄呈現；1100px 以下必須依 schema 設定、標記預覽上下排列。範本／上傳與 Code 必須位於主工作區下方並整合為單一外框，內部範本列與 Code 區不得各自顯示外框；Code 編輯器高度為 240px。未宣告此 metadata 的輸出類型不得改變既有順序。
 - **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過所有輸出類型的 schema 驗證。
 - **FR-003c**：新增 output type 應可透過 registry 擴充，不修改核心流程（Step 1–4）。
 - **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須包含 8 種輸出類型：`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱；其中 `sequence_tagging` 顯示 Sequence Tagging／序列標註，`entity_recognition` 顯示 Entity Recognition／實體辨識，`relation_identification` 顯示 Relation Identification／關係識別。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得存在於 registry，亦不得作為相容別名接受。
@@ -570,7 +579,7 @@ flowchart LR
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
-- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容，屬 UI registry metadata，不序列化至 `outputs[]` config）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。
+- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`step2Layout`（可選 UI metadata；`settings-first-preview` 表示唯一選取該輸出時先顯示設定再顯示預覽，並啟用整合設定檔工具卡；目前由 `single_label` 宣告）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview` 與 `step2Layout` 均不得序列化至 `outputs[]` config。
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
@@ -617,6 +626,7 @@ flowchart LR
 - **SC-003g**：`entity-list` 欄位的新增按鈕文字依輸出類型語境正確顯示。
 - **SC-003h**：8 種輸出類型的預覽均提供獨立「無法判定 (Bypass)」勾選項（`allow_bypass` 預設開啟）；勾選後該輸出類型的其他互動控制項清空停用、其他輸出類型不受影響，取消勾選後重新初始化；schema 面板關閉 `allow_bypass` 後勾選項消失且 code 區同步輸出 `allow_bypass: false`。
 - **SC-003j**：`entity_recognition`、`relation_identification` 及包含它們的複合任務（如 `medical-ner-re`、`absa-va`）僅由專屬或整合預覽呈現輸入內容，不重複顯示通用輸入文字區塊；`sequence_tagging` 仍保留通用輸入文字區塊。此行為由 `rendersInputPreview` registry metadata 推導。
+- **SC-003k**：唯一選取 `single_label` 時，1440px 的 Step 2 以設定左／預覽右呈現，1024px 改為設定上／預覽下；範本／上傳與 Code 在兩種寬度皆位於主工作區下方並共用單一外框，Code 編輯器高度不超過 260px。`multi_label` 與其他未宣告 `step2Layout` 的輸出維持原預覽優先佈局；此差異由 registry metadata 推導。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -664,6 +674,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.2.0 | 2026-07-22 | **單一標籤設定優先與工具卡整合**：`single_label` 新增 UI registry metadata `step2Layout: settings-first-preview`；1440px 以設定左／預覽右呈現，1100px 以下改為設定上／預覽下；範本／上傳與 Code 移至主工作區下方並整合為單一外框，Code 高度縮為 240px。其他輸出類型維持既有預覽優先佈局。新增 FR-003a-3、SC-003k 與 prototype Playwright 驗收；`outputs[]` 契約未變，已檢查下游規格無需調整。 |
 | 4.1.0 | 2026-07-22 | **分類／回歸輸出改為 radio 單選**：Step 1 的分類（單一標籤／多標籤）與回歸（單維度／多維度）各自組內互斥，介面沿用輸入類型的圓形 radio chip；新增 taxonomy `outputSelection` metadata 驅動單選／多選語意，序列維持 checkbox 多選以支援 `entity_recognition + relation_identification`，跨大分類仍可多選；新增 SC-002e 與對應邊界行為。下游 `outputs[]` 契約未變，無需調整相依 spec。 |
 | 4.0.0 | 2026-07-22 | **任務類型 taxonomy 與 config key 收斂**：從 Step 1、Step 2 與 `OUTPUT_TYPE_REGISTRY` 移除 `entity_relation`、`boundary`；將 `span`、`relation_triple`、`token_class` 破壞性遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不保留相容別名，並同步 zh/en 顯示名稱、config 範例、介面定義、驗收情境、功能需求與成功標準。 |
 | 3.4.3 | 2026-07-15 | **分離純關係與 Span 組合預覽**：純 `relation_triple` 只顯示既有實體唯讀高亮、循序關係建構器與三元組列表，不顯示 Span 編輯介面或 `source_output`；只有明確選擇 `span + relation_triple` 才啟用可建立／修改實體的整合預覽並輸出 `source_output: span`。解除自動加入／連帶取消 Span 的舊規則，更新驗收情境、介面表、行為與邊界規則、FR-003d-4／11／13、registry 契約與 SC-003e |

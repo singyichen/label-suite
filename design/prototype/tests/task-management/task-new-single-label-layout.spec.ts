@@ -44,12 +44,20 @@ test.describe('Step 2 single-label settings-first layout', () => {
     const preview = page.getByTestId('step2-preview-panel');
     const supportingTools = page.getByTestId('step2-supporting-tools');
 
-    await expect(workspace).toHaveAttribute('data-layout', 'single-label-settings-first');
-    const settingsBox = await box(settings);
+    await expect(workspace).toHaveAttribute('data-layout', 'settings-first-preview');
+    await expect(settings).toBeVisible();
+    const settingsBox = await box(page.locator('#s2PrimarySettingsSlot'));
     const previewBox = await box(preview);
     const supportingToolsBox = await box(supportingTools);
+    const workspaceLayout = await workspace.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return {
+        columns: style.gridTemplateColumns.split(' ').filter(Boolean).length,
+        alignment: style.alignItems,
+      };
+    });
 
-    expect(Math.abs(settingsBox.y - previewBox.y)).toBeLessThanOrEqual(2);
+    expect(workspaceLayout).toEqual({ columns: 2, alignment: 'start' });
     expect(settingsBox.x).toBeLessThan(previewBox.x);
     expect(supportingToolsBox.y).toBeGreaterThanOrEqual(
       Math.max(settingsBox.y + settingsBox.height, previewBox.y + previewBox.height),
