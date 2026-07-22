@@ -1,10 +1,10 @@
 {
   "task_category": "sequence",
   "input_type": "single_item",
-  "typical_tasks": ["Span Extraction（區間標記）", "Aspect Term Extraction"],
+  "typical_tasks": ["Entity Recognition（實體辨識）", "Aspect Term Extraction"],
   "outputs": [
     {
-      "type": "span",
+      "type": "entity_recognition",
       "config": {
         "entities": [
           { "name": "target", "color": "#3498DB" },
