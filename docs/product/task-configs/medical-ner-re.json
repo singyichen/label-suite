@@ -4,7 +4,7 @@
   "typical_tasks": ["NER + Relation Extraction（醫學命名實體辨識與關係抽取）"],
   "outputs": [
     {
-      "type": "span",
+      "type": "entity_recognition",
       "config": {
         "entities": [
           { "name": "BODY", "color": "#4A90D9" },
@@ -22,7 +22,7 @@
       }
     },
     {
-      "type": "relation_triple",
+      "type": "relation_identification",
       "config": {
         "relation_types": [
           "bodyLocation",
@@ -34,7 +34,7 @@
           "signOrSymptom",
           "prevents"
         ],
-        "source_output": "span"
+        "source_output": "entity_recognition"
       }
     }
   ]

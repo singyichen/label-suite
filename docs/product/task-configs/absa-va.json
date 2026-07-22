@@ -9,7 +9,7 @@
   "input_type": "single_item",
   "outputs": [
     {
-      "type": "span",
+      "type": "entity_recognition",
       "config": {
         "entities": [
           { "name": "Target", "color": "#3498DB" },
@@ -20,10 +20,10 @@
       }
     },
     {
-      "type": "relation_triple",
+      "type": "relation_identification",
       "config": {
         "relation_types": ["has_aspect", "has_opinion"],
-        "source_output": "span"
+        "source_output": "entity_recognition"
       }
     },
     {
