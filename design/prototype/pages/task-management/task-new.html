@@ -227,58 +227,6 @@
     .annotation-preview-empty { font-size: 13px; color: var(--color-text-soft); }
     .annotation-preview-pair { display: flex; flex-direction: column; gap: 8px; }
     .annotation-preview-pair-label { font-size: 11px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; }
-    .boundary-editor { font-size: 15px; line-height: 2.6; overflow-wrap: anywhere; }
-    .boundary-char { position: relative; z-index: 0; }
-    .boundary-gap {
-      position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center;
-      width: 24px; height: 24px; margin: 0 -10px; padding: 0; vertical-align: middle;
-      border: 1px solid transparent; border-radius: var(--radius-sm); background: transparent;
-      color: var(--color-ink-muted); opacity: 0.42; cursor: pointer; font-size: 11px; font-weight: 700;
-      transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast), opacity var(--dur-fast);
-    }
-    .boundary-gap:hover,
-    .boundary-gap:focus,
-    .boundary-gap:focus-visible {
-      z-index: 2; color: var(--color-primary); background: var(--color-primary-soft-bg);
-      border-color: var(--color-primary); opacity: 1; outline: 2px solid var(--color-primary); outline-offset: 1px;
-    }
-    .boundary-tone-0 { --boundary-accent: var(--color-error); --boundary-soft-bg: var(--color-error-soft-bg); --boundary-border: var(--color-error-soft-border); }
-    .boundary-tone-1 { --boundary-accent: var(--color-primary); --boundary-soft-bg: var(--color-primary-soft-bg); --boundary-border: var(--color-primary); }
-    .boundary-tone-2 { --boundary-accent: var(--color-success); --boundary-soft-bg: var(--color-success-bg); --boundary-border: var(--color-success-border); }
-    .boundary-tone-3 { --boundary-accent: var(--color-warning); --boundary-soft-bg: var(--color-warning-bg); --boundary-border: var(--color-warning-border); }
-    .boundary-type-chip {
-      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
-      border: 2px solid var(--boundary-accent); border-radius: 6px; background: transparent;
-      color: var(--boundary-accent); font-size: 12px; font-weight: 700; cursor: pointer;
-    }
-    .boundary-type-chip::before {
-      content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0;
-    }
-    .boundary-type-chip[aria-pressed="true"] { color: var(--color-white); background: var(--boundary-accent); }
-    .boundary-type-chip:hover,
-    .boundary-type-chip:focus-visible { outline: 2px solid var(--boundary-accent); outline-offset: 2px; }
-    .boundary-gap.is-active {
-      z-index: 2; width: 36px; margin: 0 3px; padding: 0 4px; gap: 2px;
-      color: var(--boundary-accent); background: var(--boundary-soft-bg);
-      border-color: var(--boundary-border); opacity: 1;
-    }
-    .boundary-gap.is-active:hover,
-    .boundary-gap.is-active:focus,
-    .boundary-gap.is-active:focus-visible {
-      color: var(--boundary-accent); background: var(--boundary-soft-bg);
-      border-color: var(--boundary-accent); outline-color: var(--boundary-accent);
-    }
-    .boundary-marker-icon { width: 12px; height: 12px; flex-shrink: 0; }
-    .boundary-marker-code { min-width: 8px; font-size: 9px; font-weight: 800; line-height: 1; text-transform: uppercase; }
-    .boundary-result { margin-top: var(--space-md); padding: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
-    .boundary-result-title { margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--color-ink); }
-    .boundary-result-paragraphs { display: flex; flex-direction: column; gap: 12px; }
-    .boundary-result-paragraph { padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
-    .boundary-result-paragraph-title { margin-bottom: 8px; font-size: 11px; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.05em; }
-    .boundary-result-sentences { display: flex; flex-direction: column; gap: 6px; }
-    .boundary-result-sentence { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 14px; line-height: 1.7; color: var(--color-ink); }
-    .boundary-result-sentence-index { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: var(--radius-sm); background: var(--color-primary-soft-bg); color: var(--color-primary); font-size: 10px; font-weight: 700; }
-    .boundary-result-sentence-text { min-width: 0; overflow-wrap: anywhere; }
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
     .aspect-list-preview-row { display: flex; align-items: center; gap: 8px; }
     .aspect-list-preview-row-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); min-width: 48px; }
@@ -1000,11 +948,11 @@ var REGISTRY = {
     },
   },
   sequence_labeling: {
-    zh: '序列標記（含 Aspect / NER / Span）', en: 'Sequence Labeling (Aspect / NER / Span)',
+    zh: '序列標記（含 Aspect / NER / 實體辨識）', en: 'Sequence Labeling (Aspect / NER / Entity Recognition)',
     fields: [
       { key: 'subtype', type: 'subtype-select', zh: '子類型', en: 'Subtype', required: true,
-        options: ['ner', 'aspect_list', 'span'],
-        optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正', span: 'Span 區間標記' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction', span: 'Span annotation' } },
+        options: ['ner', 'aspect_list', 'entity_recognition'],
+        optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正', entity_recognition: '實體辨識' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction', entity_recognition: 'Entity Recognition' } },
         defaultValue: 'ner' },
       /* NER-only fields */
       { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'ner', addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
@@ -1027,20 +975,20 @@ var REGISTRY = {
       { key: 'min_aspects', type: 'number', zh: '最少 Aspect 數量', en: 'Min aspects', required: false, defaultValue: 1, showWhen: 'aspect_list' },
       { key: 'max_aspects', type: 'number', zh: '最多 Aspect 數量', en: 'Max aspects', required: false, defaultValue: 10, showWhen: 'aspect_list' },
       { key: 'require_sentiment_context_check', type: 'boolean', zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', required: false, defaultValue: false, showWhen: 'aspect_list' },
-      /* span-only fields */
+      /* Entity Recognition-only fields */
       { key: 'span_mode', type: 'select', zh: '標記模式', en: 'Annotation mode', required: true,
         options: ['entity_based', 'polarity_based'],
-        optionLabels: { zh: { entity_based: '實體／區間類型', polarity_based: '極性標籤（ABSA）' }, en: { entity_based: 'Entity / span types', polarity_based: 'Polarity labels (ABSA)' } },
-        defaultValue: 'entity_based', showWhen: 'span' },
-      { key: 'entities', type: 'entity-list', zh: '區間類型', en: 'Span types', required: true, showWhen: 'span', addLabel_zh: '新增區間類型', addLabel_en: 'Add span type' },
-      { key: 'polarity_options', type: 'tag-list', zh: '極性標籤', en: 'Polarity labels', required: true, hint_zh: '輸入極性標籤後按 Enter（如：正面、負面、中立）', hint_en: 'Type polarity label and press Enter (e.g. Positive, Negative, Neutral)', showWhen: 'span' },
-      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'span' },
-      { key: 'scheme', type: 'select', zh: '匯出格式', en: 'Export scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'span' },
+        optionLabels: { zh: { entity_based: '實體類型', polarity_based: '極性標籤（ABSA）' }, en: { entity_based: 'Entity types', polarity_based: 'Polarity labels (ABSA)' } },
+        defaultValue: 'entity_based', showWhen: 'entity_recognition' },
+      { key: 'entities', type: 'entity-list', zh: '實體類型', en: 'Entity types', required: true, showWhen: 'entity_recognition', addLabel_zh: '新增實體類型', addLabel_en: 'Add entity type' },
+      { key: 'polarity_options', type: 'tag-list', zh: '極性標籤', en: 'Polarity labels', required: true, hint_zh: '輸入極性標籤後按 Enter（如：正面、負面、中立）', hint_en: 'Type polarity label and press Enter (e.g. Positive, Negative, Neutral)', showWhen: 'entity_recognition' },
+      { key: 'allow_overlapping', type: 'boolean', zh: '允許重疊標記', en: 'Allow overlapping spans', required: false, defaultValue: false, showWhen: 'entity_recognition' },
+      { key: 'scheme', type: 'select', zh: '匯出格式', en: 'Export scheme', required: true, options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'entity_recognition' },
     ],
     nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
     aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
-    spanEntityTemplate: { subtype: 'span', span_mode: 'entity_based', entities: [{ name: 'ASPECT', color: '#6366F1' }], allow_overlapping: false, scheme: 'IOB2' },
-    spanPolarityTemplate: { subtype: 'span', span_mode: 'polarity_based', polarity_options: ['正面', '負面', '中立'] },
+    spanEntityTemplate: { subtype: 'entity_recognition', span_mode: 'entity_based', entities: [{ name: 'ASPECT', color: '#6366F1' }], allow_overlapping: false, scheme: 'IOB2' },
+    spanPolarityTemplate: { subtype: 'entity_recognition', span_mode: 'polarity_based', polarity_options: ['正面', '負面', '中立'] },
     spanPolarityTemplateI18n: { zh: { polarity_options: ['正面', '負面', '中立'] }, en: { polarity_options: ['Positive', 'Negative', 'Neutral'] } },
     defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
   },
@@ -1117,8 +1065,8 @@ var TASK_TYPE_ORDER = [
 /* Each entry maps an output_type key to its config schema fields  */
 var OUTPUT_TYPE_REGISTRY = {
   /* ── Sequence ── */
-  token_class: {
-    zh: 'Token 分類', en: 'Token classification',
+  sequence_tagging: {
+    zh: '序列標註', en: 'Sequence Tagging',
     source_output: null,
     fields: [
       { key: 'entities', type: 'entity-list', zh: '標籤類型', en: 'Label types', required: true, addLabel_zh: '新增標籤類型', addLabel_en: 'Add label type' },
@@ -1133,18 +1081,8 @@ var OUTPUT_TYPE_REGISTRY = {
       tagging_scheme: 'BIO',
     },
   },
-  boundary: {
-    zh: '邊界偵測', en: 'Boundary detection',
-    source_output: null,
-    fields: [
-      { key: 'boundary_types', type: 'tag-list', zh: '邊界類型', en: 'Boundary types', required: true, hint_zh: '輸入邊界類型後按 Enter', hint_en: 'Type boundary type and press Enter' },
-    ],
-    defaultConfig: {
-      boundary_types: ['sentence', 'paragraph'],
-    },
-  },
-  span: {
-    zh: 'Span 區間標記', en: 'Span annotation',
+  entity_recognition: {
+    zh: '實體辨識', en: 'Entity Recognition',
     source_output: null,
     rendersInputPreview: true,
     fields: [
@@ -1160,9 +1098,9 @@ var OUTPUT_TYPE_REGISTRY = {
       allow_overlapping: true,
     },
   },
-  relation_triple: {
-    zh: '關係三元組', en: 'Relation triple',
-    source_output: 'span',
+  relation_identification: {
+    zh: '關係識別', en: 'Relation Identification',
+    source_output: 'entity_recognition',
     rendersInputPreview: true,
     fields: [
       { key: 'relation_types', type: 'tag-list', zh: '語意類型標籤', en: 'Semantic relation types', required: true, hint_zh: '輸入語意類型（如 causes、bodyLocation）後按 Enter', hint_en: 'Type semantic relation type (e.g. causes, bodyLocation) and press Enter', placeholder_zh: '', placeholder_en: '' },
@@ -1201,21 +1139,6 @@ var OUTPUT_TYPE_REGISTRY = {
         { name: 'surprise', color: '#F39C12' },
       ],
       max_selections: 0,
-    },
-  },
-  entity_relation: {
-    zh: '實體關係標籤', en: 'Entity relation label',
-    source_output: null,
-    rendersInputPreview: true,
-    fields: [
-      { key: 'label_options', type: 'entity-list', zh: '關係標籤', en: 'Relation labels', required: true, addLabel_zh: '新增關係標籤', addLabel_en: 'Add relation label' },
-    ],
-    defaultConfig: {
-      label_options: [
-        { name: 'causes', color: '#E74C3C' },
-        { name: 'treats', color: '#2ECC71' },
-        { name: 'prevents', color: '#3498DB' },
-      ],
     },
   },
   /* ── Regression ── */
@@ -1271,7 +1194,7 @@ Object.keys(OUTPUT_TYPE_REGISTRY).forEach(function(outKey) {
 
 /* Known output-type dependencies: which output type depends on which source */
 var OUTPUT_TYPE_DEPS = {
-  relation_triple: 'span',
+  relation_identification: 'entity_recognition',
 };
 
 /* Canonical ABSA multi-output template (ADR-029 §Example: ABSA) */
@@ -1279,7 +1202,7 @@ var ABSA_MULTI_OUTPUT_TEMPLATE = {
   input_type: 'single_item',
   outputs: [
     {
-      type: 'span',
+      type: 'entity_recognition',
       config: {
         entities: [
           { name: 'target', color: '#FF6B6B' },
@@ -1290,10 +1213,10 @@ var ABSA_MULTI_OUTPUT_TEMPLATE = {
       },
     },
     {
-      type: 'relation_triple',
+      type: 'relation_identification',
       config: {
         relation_types: ['has_aspect', 'has_opinion', 'sentiment_of'],
-        source_output: 'span',
+        source_output: 'entity_recognition',
       },
     },
     {
@@ -1325,7 +1248,6 @@ var TASK_TAXONOMY = {
         subtypes: {
           single_label:    { registryKey: 'sentence_pairs', zh: '單一標籤', en: 'Single label' },
           multi_label:     { registryKey: 'sentence_pairs', zh: '多標籤', en: 'Multi-label' },
-          entity_relation: { registryKey: 'sentence_pairs', zh: '實體關係標籤', en: 'Entity relation label' },
         },
       },
     },
@@ -1355,10 +1277,9 @@ var TASK_TAXONOMY = {
       single_item: {
         zh: '單一項目', en: 'Single item',
         subtypes: {
-          token_class:     { registryKey: 'sequence_labeling', zh: 'Token 分類', en: 'Token classification' },
-          boundary:        { registryKey: 'sequence_labeling', zh: '邊界偵測', en: 'Boundary detection' },
-          span:            { registryKey: 'sequence_labeling', zh: '區間標記', en: 'Span' },
-          relation_triple: { registryKey: 'relation_extraction', zh: '關係三元組', en: 'Relation triple' },
+          sequence_tagging:     { registryKey: 'sequence_labeling', zh: '序列標註', en: 'Sequence Tagging' },
+          entity_recognition:            { registryKey: 'sequence_labeling', zh: '實體辨識', en: 'Entity Recognition' },
+          relation_identification: { registryKey: 'relation_extraction', zh: '關係識別', en: 'Relation Identification' },
         },
       },
     },
@@ -1440,9 +1361,6 @@ var I18N = {
     s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     annotationPreviewLabel: '標記預覽',
-    boundaryResultTitle: '切割結果',
-    boundaryResultParagraph: '段落 {n}',
-    boundaryResultSentenceAria: '段落 {p}，句子 {s}',
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
@@ -1532,16 +1450,16 @@ var I18N = {
     applyTemplate: '套用預設範本：',
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
     accordionDependsOn: '依賴：',
-    previewUnifiedTitle: '整合預覽（Span + 關係三元組）',
-    previewRelationTripleTitle: '關係三元組預覽',
+    previewUnifiedTitle: '整合預覽（實體辨識 + 關係識別）',
+    previewRelationTripleTitle: '關係識別預覽',
     previewSampleSentenceAbsa: '這家餐廳服務很差，但環境還不錯，食物也挺美味的。',
-    absa_template_btn: '套用範本：ABSA（Span + 關係三元組）',
-    templateBtnSpanEntity: '套用範本：Span 實體標記',
-    templateBtnSpanPolarity: '套用範本：Span 極性標記（ABSA）',
+    absa_template_btn: '套用範本：ABSA（實體辨識 + 關係識別）',
+    templateBtnSpanEntity: '套用範本：實體辨識',
+    templateBtnSpanPolarity: '套用範本：實體辨識極性標記（ABSA）',
     spanModeSectionTitle: '標記模式',
-    spanModeSectionDesc: '選擇區間標記的模式：實體類型標記或極性標籤標記（兩者互斥）。',
-    spanEntitySectionTitle: '區間類型設定',
-    spanEntitySectionDesc: '定義可標記的區間類型，並設定重疊與匯出格式。',
+    spanModeSectionDesc: '選擇實體辨識模式：實體類型標記或極性標籤標記（兩者互斥）。',
+    spanEntitySectionTitle: '實體類型設定',
+    spanEntitySectionDesc: '定義可辨識的實體類型，並設定重疊與匯出格式。',
     spanPolaritySectionTitle: '極性標籤設定',
     spanPolaritySectionDesc: '定義每個標記區間需選擇的極性標籤（如正面／負面／中立）。',
     previewSampleSentenceSpan: '這家餐廳服務很差，但環境不錯。',
@@ -1596,9 +1514,6 @@ var I18N = {
     s2TemplateSectionTitle: 'Start from template or upload config',
     uploadConfigBtn: 'Upload config (YAML / JSON)',
     annotationPreviewLabel: 'Annotation preview',
-    boundaryResultTitle: 'Segmentation result',
-    boundaryResultParagraph: 'Paragraph {n}',
-    boundaryResultSentenceAria: 'Paragraph {p}, sentence {s}',
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
@@ -1688,16 +1603,16 @@ var I18N = {
     applyTemplate: 'Apply default template: ',
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
     accordionDependsOn: 'Depends on: ',
-    previewUnifiedTitle: 'Unified preview (Span + Relation triple)',
-    previewRelationTripleTitle: 'Relation triple preview',
+    previewUnifiedTitle: 'Unified preview (Entity Recognition + Relation Identification)',
+    previewRelationTripleTitle: 'Relation Identification preview',
     previewSampleSentenceAbsa: 'The restaurant service was poor, but the ambiance was nice, and the food was delicious.',
-    absa_template_btn: 'Apply template: ABSA (Span + Relation triple)',
-    templateBtnSpanEntity: 'Apply template: Span entity annotation',
-    templateBtnSpanPolarity: 'Apply template: Span polarity annotation (ABSA)',
+    absa_template_btn: 'Apply template: ABSA (Entity Recognition + Relation Identification)',
+    templateBtnSpanEntity: 'Apply template: Entity Recognition',
+    templateBtnSpanPolarity: 'Apply template: Entity Recognition polarity annotation (ABSA)',
     spanModeSectionTitle: 'Annotation mode',
-    spanModeSectionDesc: 'Choose span annotation mode: entity type labeling or polarity labeling (mutually exclusive).',
-    spanEntitySectionTitle: 'Span type settings',
-    spanEntitySectionDesc: 'Define span types, overlapping behavior, and export scheme.',
+    spanModeSectionDesc: 'Choose an Entity Recognition mode: entity type labeling or polarity labeling (mutually exclusive).',
+    spanEntitySectionTitle: 'Entity type settings',
+    spanEntitySectionDesc: 'Define entity types, overlapping behavior, and export scheme.',
     spanPolaritySectionTitle: 'Polarity label settings',
     spanPolaritySectionDesc: 'Define the polarity labels each span must be assigned (e.g. Positive / Negative / Neutral).',
     previewSampleSentenceSpan: 'The service at this restaurant was poor, but the ambiance was nice.',
@@ -1732,7 +1647,7 @@ var state = {
   taskCategories: [], taskInputTypes: [], taskOutputTypes: [], taskType: '',
   resolvedTaskTypes: [], configDataMap: {},
   /* ADR-029: multi-output composition support */
-  selectedOutputTypes: [],   /* ordered array of output_type keys, e.g. ['span', 'relation_triple'] */
+  selectedOutputTypes: [],   /* ordered array of output_type keys, e.g. ['entity_recognition', 'relation_identification'] */
   outputConfigs: {},         /* keyed by output_type key, holds each output's config fragment */
   columnOutputTypeMap: {},   /* keyed by column name, maps to array of output_type keys */
   _lastAutoPopKey: '',       /* fingerprint for detecting dataset/role changes */
@@ -2298,7 +2213,7 @@ function currentSubtype() {
 function fieldVisible(field) {
   if (!field.showWhen) return true;
   if (currentSubtype() !== field.showWhen) return false;
-  if (field.showWhen === 'span') {
+  if (field.showWhen === 'entity_recognition') {
     var spanMode = state.configData.span_mode || 'entity_based';
     if (field.key === 'entities' || field.key === 'allow_overlapping' || field.key === 'scheme') return spanMode === 'entity_based';
     if (field.key === 'polarity_options') return spanMode === 'polarity_based';
@@ -2547,11 +2462,10 @@ function rebuildColumnOutputTypeMap() {
     if (Array.isArray(v) && v.length > 0) {
       var first = v[0];
       if (typeof first === 'string') {
-        types = /^(O|[BIES]-.+)$/.test(first) ? ['token_class'] : ['multi_label'];
+        types = /^(O|[BIES]-.+)$/.test(first) ? ['sequence_tagging'] : ['multi_label'];
       } else if (first && typeof first === 'object') {
-        if (first.position != null) types = ['boundary'];
-        else if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_triple'];
-        else if (first.text != null) types = ['span'];
+        if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_identification'];
+        else if (first.text != null) types = ['entity_recognition'];
       }
     } else if (v && typeof v === 'object') {
       types = ['multi_dim'];
@@ -2560,7 +2474,7 @@ function rebuildColumnOutputTypeMap() {
     } else if (typeof v === 'boolean') {
       types = ['single_label'];
     } else if (typeof v === 'string') {
-      types = ['single_label', 'entity_relation', 'free_text'];
+      types = ['single_label', 'free_text'];
     }
     map[col] = types;
   });
@@ -3037,11 +2951,11 @@ function renderMultiDimPreview(container, config, outKey) {
   });
 }
 
-/* ── Interactive unified preview (span + relation_triple) ── */
+/* ── Interactive unified preview (Entity Recognition + Relation Identification) ── */
 function initPreviewState() {
   var rawRow = state.datasetRawFirstRow || {};
-  var spanCfg = state.outputConfigs['span'] || {};
-  var relCfg = state.outputConfigs['relation_triple'] || {};
+  var spanCfg = state.outputConfigs['entity_recognition'] || {};
+  var relCfg = state.outputConfigs['relation_identification'] || {};
   var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
   var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
 
@@ -3109,7 +3023,7 @@ function initPreviewState() {
 
 function getPreviewTypeColorMap() {
   var map = {}, order = [];
-  var spanCfg = state.outputConfigs['span'] || {};
+  var spanCfg = state.outputConfigs['entity_recognition'] || {};
   var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
   cfgEntities.forEach(function(e) { if (e.name && !map[e.name]) { map[e.name] = e.color || ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.name); } });
   state.previewEntities.forEach(function(e) { if (e.type && !map[e.type]) { map[e.type] = ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.type); } });
@@ -3246,7 +3160,7 @@ function getRelationTypeOptions(relationTypes) {
 function renderAbsaUnifiedPreview(previewContainer) {
   /* allow_bypass turned off while bypassed: clear the flag AND re-init the
      preview BEFORE rendering, so this pass already shows the restored state */
-  ['span', 'relation_triple'].forEach(function(outKey) {
+  ['entity_recognition', 'relation_identification'].forEach(function(outKey) {
     if (state.selectedOutputTypes.indexOf(outKey) >= 0 && !isBypassAllowed(outKey) && state.previewBypass[outKey]) {
       delete state.previewBypass[outKey];
       resetOutputPreviewState(outKey);
@@ -3256,10 +3170,10 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var realText = getDatasetPreviewText();
   var tc = getPreviewTypeColorMap();
   var typeColorMap = tc.map, typeOrder = tc.order;
-  var relCfg = state.outputConfigs['relation_triple'] || {};
+  var relCfg = state.outputConfigs['relation_identification'] || {};
   var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
-  var hasSpanOut = state.selectedOutputTypes.indexOf('span') >= 0;
-  var hasRelOut = state.selectedOutputTypes.indexOf('relation_triple') >= 0;
+  var hasSpanOut = state.selectedOutputTypes.indexOf('entity_recognition') >= 0;
+  var hasRelOut = state.selectedOutputTypes.indexOf('relation_identification') >= 0;
   var allowEntityEditing = hasSpanOut;
   var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
@@ -3425,7 +3339,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   /* ── Relation Builder (sequential state machine, mirrors the NER labeling system) ──
      Flow: 反白選取實體 → E1/Arg1 · 反白選取關係觸發詞 → Relation · 反白選取實體 → E2/Arg2 · Add
      E1/E2 must be already-marked entities; Relation is any trigger-word span from the text.
-     Grouped in relSection so relation_triple's bypass can disable it independently. */
+     Grouped in relSection so relation_identification's bypass can disable it independently. */
   var relSection = document.createElement('div');
   buildRelationStateMachine(relSection, relationTypes, function() { renderAbsaUnifiedPreview_refresh(previewContainer); }, allowEntityEditing);
 
@@ -3433,7 +3347,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var tlTitle = document.createElement('div');
   tlTitle.className = 'annotation-preview-task-title';
   tlTitle.style.marginBottom = '8px';
-  tlTitle.textContent = state.lang === 'zh' ? '關係三元組標記' : 'Triple List';
+  tlTitle.textContent = state.lang === 'zh' ? '關係識別' : 'Relation Identification';
   relSection.appendChild(tlTitle);
 
   var relList = document.createElement('div');
@@ -3524,15 +3438,15 @@ function renderAbsaUnifiedPreview(previewContainer) {
 
   /* ── Bypass chips — one per selected output type; span bypass cascades
      (no entities → relation builder unusable), relation bypass only disables relSection ── */
-  if (hasSpanOut && state.previewBypass['span']) {
+  if (hasSpanOut && state.previewBypass['entity_recognition']) {
     disableBypassedArea(previewContainer.children);
-  } else if (hasRelOut && state.previewBypass['relation_triple']) {
+  } else if (hasRelOut && state.previewBypass['relation_identification']) {
     disableBypassedArea([relSection]);
   }
   var refreshUnified = function() { renderAbsaUnifiedPreview_refresh(previewContainer); };
   var bypassChips = [];
-  if (hasSpanOut && isBypassAllowed('span')) bypassChips.push(makeBypassChip('span', refreshUnified, bypassChipLabel('span', hasSpanOut && hasRelOut)));
-  if (hasRelOut && isBypassAllowed('relation_triple')) bypassChips.push(makeBypassChip('relation_triple', refreshUnified, bypassChipLabel('relation_triple', hasSpanOut && hasRelOut)));
+  if (hasSpanOut && isBypassAllowed('entity_recognition')) bypassChips.push(makeBypassChip('entity_recognition', refreshUnified, bypassChipLabel('entity_recognition', hasSpanOut && hasRelOut)));
+  if (hasRelOut && isBypassAllowed('relation_identification')) bypassChips.push(makeBypassChip('relation_identification', refreshUnified, bypassChipLabel('relation_identification', hasSpanOut && hasRelOut)));
   if (bypassChips.length > 0) {
     var bypassWrap = document.createElement('div');
     bypassWrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;gap:8px;';
@@ -3572,7 +3486,6 @@ function isBypassAllowed(outKey) {
 function clearOutputPreviewState(outKey) {
   switch (outKey) {
     case 'single_label':
-    case 'entity_relation':
       state.previewState[outKey] = { selected: null, _seeded: true }; break;
     case 'multi_label':
       state.previewState[outKey] = { selected: [], _seeded: true }; break;
@@ -3586,21 +3499,15 @@ function clearOutputPreviewState(outKey) {
       state.previewState[outKey] = { value: min + Math.round(((max - min) / 2) / step) * step, _seeded: true };
       break;
     }
-    case 'token_class':
+    case 'sequence_tagging':
       state.previewState[outKey] = { activeLabel: null, tokens: null, _seeded: true }; break;
-    case 'boundary': {
-      var bCfg = state.outputConfigs[outKey] || {};
-      var bTypes = Array.isArray(bCfg.boundary_types) ? bCfg.boundary_types.filter(Boolean) : [];
-      state.previewState[outKey] = { activeType: bTypes[0] || 'sentence', markers: [], _seeded: true };
-      break;
-    }
-    case 'span':
+    case 'entity_recognition':
       /* clearing entities invalidates triples that reference them */
       state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
       state.relDraft = { e1: null, rel: null, e2: null }; state.relSel = null; state.relMsg = '';
       delete state.previewState[outKey];
       break;
-    case 'relation_triple':
+    case 'relation_identification':
       state.previewTriples = [];
       state.relDraft = { e1: null, rel: null, e2: null }; state.relSel = null; state.relMsg = '';
       delete state.previewState[outKey];
@@ -3614,7 +3521,7 @@ function clearOutputPreviewState(outKey) {
    (dataset output-column seeding re-applies, same as first load) */
 function resetOutputPreviewState(outKey) {
   delete state.previewState[outKey];
-  if (outKey === 'span' || outKey === 'relation_triple') {
+  if (outKey === 'entity_recognition' || outKey === 'relation_identification') {
     state.previewInited = false;
     state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
     state.relDraft = { e1: null, rel: null, e2: null }; state.relSel = null; state.relMsg = '';
@@ -3745,57 +3652,6 @@ function renderMultiLabelPreview(container, outKey) {
     selInfo.textContent = (state.lang === 'zh' ? '已選：' : 'Selected: ') + ps.selected.join(', ');
     container.appendChild(selInfo);
   }
-}
-
-function renderEntityRelationPreview(container, outKey) {
-  var cfg = state.outputConfigs[outKey] || {};
-  var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
-  if (labels.length === 0) return;
-  var outputVal = getOutputFieldValue(outKey);
-  var matchedLabel = outputVal ? labels.find(function(l) { return l.name === outputVal; }) : null;
-  var ps = ensurePreviewState(outKey, { selected: matchedLabel ? matchedLabel.name : null, _seeded: !!matchedLabel });
-  if (matchedLabel && !ps._seeded) { ps.selected = matchedLabel.name; ps._seeded = true; }
-
-  var pairTexts = getDatasetPairTexts();
-  var e1Text = pairTexts ? pairTexts.text1 : (state.lang === 'zh' ? '阿司匹林' : 'Aspirin');
-  var e2Text = pairTexts ? pairTexts.text2 : (state.lang === 'zh' ? '頭痛' : 'Headache');
-  var e1Label = pairTexts ? pairTexts.col1 : 'Entity 1';
-  var e2Label = pairTexts ? pairTexts.col2 : 'Entity 2';
-
-  var pairWrap = document.createElement('div');
-  pairWrap.style.cssText = 'display:flex;align-items:center;gap:16px;margin-bottom:16px;';
-  function makeEntityCard(label, text) {
-    var card = document.createElement('div');
-    card.style.cssText = 'flex:1;padding:12px;background:var(--color-slate-50);border-radius:var(--radius-md);border:1.5px solid var(--color-border);';
-    var lbl = document.createElement('div'); lbl.style.cssText = 'font-size:0.7rem;color:var(--color-text-soft);margin-bottom:4px;'; lbl.textContent = label;
-    var txt = document.createElement('div'); txt.style.cssText = 'font-weight:600;'; txt.textContent = text.length > 60 ? text.substring(0, 60) + '…' : text;
-    card.appendChild(lbl); card.appendChild(txt); return card;
-  }
-  pairWrap.appendChild(makeEntityCard(e1Label, e1Text));
-  var arrowEl = document.createElement('span'); arrowEl.style.cssText = 'font-size:1.2rem;color:var(--color-text-soft);'; arrowEl.textContent = '↔';
-  pairWrap.appendChild(arrowEl);
-  pairWrap.appendChild(makeEntityCard(e2Label, e2Text));
-  container.appendChild(pairWrap);
-
-  var relLabel = document.createElement('div');
-  relLabel.className = 'annotation-preview-task-title';
-  relLabel.style.marginBottom = '8px';
-  relLabel.textContent = state.lang === 'zh' ? '關係標籤' : 'Relation Label';
-  container.appendChild(relLabel);
-
-  var chipWrap = document.createElement('div');
-  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
-  labels.forEach(function(label) {
-    var chip = document.createElement('button');
-    chip.type = 'button';
-    var isActive = ps.selected === label.name;
-    var c = label.color || '#6366F1';
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
-    chip.textContent = label.name;
-    chip.addEventListener('click', function() { ps.selected = ps.selected === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
-    chipWrap.appendChild(chip);
-  });
-  container.appendChild(chipWrap);
 }
 
 function renderSingleDimPreview(container, outKey) {
@@ -3932,219 +3788,6 @@ function renderTokenClassPreview(container, outKey) {
   container.appendChild(schemeInfo);
 }
 
-function buildBoundaryResult(chars, markers) {
-  var paragraphs = [];
-  var currentParagraph = [];
-  var lastOffset = 0;
-  var sortedMarkers = markers.slice().filter(function(marker) {
-    return typeof marker.position === 'number' && marker.position > 0 && marker.position < chars.length;
-  }).sort(function(a, b) { return a.position - b.position; });
-
-  sortedMarkers.forEach(function(marker) {
-    var sentence = chars.slice(lastOffset, marker.position).join('');
-    if (sentence) currentParagraph.push(sentence);
-    lastOffset = marker.position;
-    if (marker.type === 'paragraph' && currentParagraph.length > 0) {
-      paragraphs.push(currentParagraph);
-      currentParagraph = [];
-    }
-  });
-
-  var remainder = chars.slice(lastOffset).join('');
-  if (remainder) currentParagraph.push(remainder);
-  if (currentParagraph.length > 0 || paragraphs.length === 0) paragraphs.push(currentParagraph);
-  return paragraphs;
-}
-
-function getBoundaryToneClass(type, boundaryTypes) {
-  var typeIndex = boundaryTypes.indexOf(type);
-  var toneIndex = (typeIndex < 0 ? 0 : typeIndex) % 4;
-  return 'boundary-tone-' + toneIndex;
-}
-
-function getBoundaryMarkerCode(type) {
-  var typeChars = Array.from(String(type || '').trim());
-  return (typeChars[0] || '?').toLocaleUpperCase();
-}
-
-function appendBoundaryMarkerVisual(gap, type) {
-  var svgNamespace = 'http://www.w3.org/2000/svg';
-  var icon = document.createElementNS(svgNamespace, 'svg');
-  icon.setAttribute('class', 'boundary-marker-icon');
-  icon.setAttribute('viewBox', '0 0 24 24');
-  icon.setAttribute('fill', 'none');
-  icon.setAttribute('stroke', 'currentColor');
-  icon.setAttribute('stroke-width', '2');
-  icon.setAttribute('stroke-linecap', 'round');
-  icon.setAttribute('stroke-linejoin', 'round');
-  icon.setAttribute('aria-hidden', 'true');
-  icon.setAttribute('focusable', 'false');
-
-  [['circle', { cx: '6', cy: '7', r: '3' }],
-   ['path', { d: 'M8.12 8.12 12 12' }],
-   ['path', { d: 'M20 4 8.12 15.88' }],
-   ['circle', { cx: '6', cy: '17', r: '3' }],
-   ['path', { d: 'M14.8 14.8 20 20' }]].forEach(function(definition) {
-    var element = document.createElementNS(svgNamespace, definition[0]);
-    Object.keys(definition[1]).forEach(function(attribute) {
-      element.setAttribute(attribute, definition[1][attribute]);
-    });
-    icon.appendChild(element);
-  });
-
-  var code = document.createElement('span');
-  code.className = 'boundary-marker-code';
-  code.setAttribute('aria-hidden', 'true');
-  code.textContent = getBoundaryMarkerCode(type);
-  gap.appendChild(icon);
-  gap.appendChild(code);
-}
-
-function renderBoundaryResult(container, chars, markers) {
-  var result = document.createElement('section');
-  result.className = 'boundary-result';
-  result.setAttribute('data-testid', 'boundary-result');
-  result.setAttribute('aria-live', 'polite');
-
-  var title = document.createElement('div');
-  title.className = 'boundary-result-title';
-  title.textContent = t('boundaryResultTitle');
-  result.appendChild(title);
-
-  var paragraphList = document.createElement('div');
-  paragraphList.className = 'boundary-result-paragraphs';
-  buildBoundaryResult(chars, markers).forEach(function(sentences, paragraphIndex) {
-    var paragraph = document.createElement('section');
-    paragraph.className = 'boundary-result-paragraph';
-    paragraph.setAttribute('data-testid', 'boundary-result-paragraph');
-
-    var paragraphTitle = document.createElement('div');
-    paragraphTitle.className = 'boundary-result-paragraph-title';
-    paragraphTitle.textContent = t('boundaryResultParagraph').replace('{n}', String(paragraphIndex + 1));
-    paragraph.appendChild(paragraphTitle);
-
-    var sentenceList = document.createElement('div');
-    sentenceList.className = 'boundary-result-sentences';
-    sentences.forEach(function(sentence, sentenceIndex) {
-      var sentenceRow = document.createElement('div');
-      sentenceRow.className = 'boundary-result-sentence';
-      sentenceRow.setAttribute('data-testid', 'boundary-result-sentence');
-      sentenceRow.setAttribute('aria-label', t('boundaryResultSentenceAria')
-        .replace('{p}', String(paragraphIndex + 1))
-        .replace('{s}', String(sentenceIndex + 1)));
-
-      var index = document.createElement('span');
-      index.className = 'boundary-result-sentence-index';
-      index.textContent = String(sentenceIndex + 1);
-      index.setAttribute('aria-hidden', 'true');
-
-      var sentenceText = document.createElement('span');
-      sentenceText.className = 'boundary-result-sentence-text';
-      sentenceText.textContent = sentence;
-
-      sentenceRow.appendChild(index);
-      sentenceRow.appendChild(sentenceText);
-      sentenceList.appendChild(sentenceRow);
-    });
-    paragraph.appendChild(sentenceList);
-    paragraphList.appendChild(paragraph);
-  });
-  result.appendChild(paragraphList);
-  container.appendChild(result);
-}
-
-function renderBoundaryPreview(container, outKey) {
-  var cfg = state.outputConfigs[outKey] || {};
-  var boundaryTypes = Array.isArray(cfg.boundary_types) ? cfg.boundary_types.filter(Boolean) : ['sentence'];
-  var outputVal = getOutputFieldValue(outKey);
-  var rawMarkers = [];
-  if (outputVal) { try { var parsed = JSON.parse(outputVal); if (Array.isArray(parsed)) rawMarkers = parsed; } catch(e) { /* not JSON */ } }
-
-  var realText = getDatasetPreviewText();
-  var text = realText || (state.lang === 'zh' ? '第一段文字。第二段文字。第三段文字。第四段文字。' : 'First sentence. Second sentence. Third sentence. Fourth sentence.');
-  var chars = Array.from(text);
-
-  var initMarkers = rawMarkers
-    .filter(function(m) { return typeof m.position === 'number' && m.position > 0 && m.position < chars.length; })
-    .map(function(m) { return { position: m.position, type: m.type || boundaryTypes[0] || 'sentence' }; });
-  var ps = ensurePreviewState(outKey, { activeType: boundaryTypes[0] || 'sentence', markers: initMarkers, _seeded: initMarkers.length > 0 });
-  if (initMarkers.length > 0 && !ps._seeded) { ps.markers = initMarkers; ps._seeded = true; }
-
-  /* Boundary type selector */
-  var typeTitle = document.createElement('div');
-  typeTitle.className = 'annotation-preview-task-title';
-  typeTitle.style.marginBottom = '6px';
-  typeTitle.textContent = state.lang === 'zh' ? '邊界類型' : 'Boundary Type';
-  container.appendChild(typeTitle);
-
-  var chipWrap = document.createElement('div');
-  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
-  boundaryTypes.forEach(function(bt) {
-    var chip = document.createElement('button'); chip.type = 'button';
-    var isActive = ps.activeType === bt;
-    var toneClass = getBoundaryToneClass(bt, boundaryTypes);
-    chip.className = 'boundary-type-chip ' + toneClass;
-    chip.textContent = bt;
-    chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-    chip.setAttribute('data-testid', 'boundary-type-' + bt);
-    chip.setAttribute('data-boundary-tone', toneClass);
-    chip.addEventListener('click', function() { ps.activeType = bt; refreshOutputPreview(container, outKey); });
-    chipWrap.appendChild(chip);
-  });
-  container.appendChild(chipWrap);
-
-  /* Per-character rendering with clickable gaps between every character */
-  var segWrap = document.createElement('div');
-  segWrap.className = 'boundary-editor';
-  chars.forEach(function(ch, i) {
-    var span = document.createElement('span');
-    span.className = 'boundary-char';
-    span.setAttribute('data-testid', 'boundary-char-' + i);
-    span.textContent = ch;
-    segWrap.appendChild(span);
-    if (i < chars.length - 1) {
-      var offset = i + 1;
-      var markerIdx = ps.markers.findIndex(function(m) { return m.position === offset; });
-      var hasMarker = markerIdx >= 0;
-      var gap = document.createElement('button'); gap.type = 'button';
-      var marker = hasMarker ? ps.markers[markerIdx] : null;
-      var boundaryType = marker ? marker.type : ps.activeType;
-      var gapLabel = hasMarker
-        ? (state.lang === 'zh' ? '移除 ' + boundaryType + ' 邊界 (offset ' + offset + ')' : 'Remove ' + boundaryType + ' boundary (offset ' + offset + ')')
-        : (state.lang === 'zh' ? '插入 ' + boundaryType + ' 邊界 (offset ' + offset + ')' : 'Insert ' + boundaryType + ' boundary (offset ' + offset + ')');
-      var gapToneClass = getBoundaryToneClass(boundaryType, boundaryTypes);
-      gap.className = 'boundary-gap' + (hasMarker ? ' is-active ' + gapToneClass : '');
-      if (hasMarker) appendBoundaryMarkerVisual(gap, boundaryType);
-      else gap.textContent = '|';
-      gap.title = gapLabel;
-      gap.setAttribute('aria-label', gapLabel);
-      gap.setAttribute('data-testid', 'boundary-gap-' + offset);
-      if (marker) {
-        gap.setAttribute('data-boundary-type', marker.type);
-        gap.setAttribute('data-boundary-tone', gapToneClass);
-      }
-      (function(pos, mIdx) {
-        gap.addEventListener('click', function() {
-          if (mIdx >= 0) ps.markers.splice(mIdx, 1);
-          else ps.markers.push({ position: pos, type: ps.activeType });
-          refreshOutputPreview(container, outKey);
-        });
-      }(offset, markerIdx));
-      segWrap.appendChild(gap);
-    }
-  });
-  container.appendChild(segWrap);
-
-  if (ps.markers.length > 0) {
-    var info = document.createElement('div');
-    info.style.cssText = 'margin-top:8px;font-size:0.8rem;color:var(--color-text-soft);';
-    info.textContent = (state.lang === 'zh' ? '已標記 ' : 'Marked ') + ps.markers.length + (state.lang === 'zh' ? ' 個邊界' : ' boundaries');
-    container.appendChild(info);
-  }
-
-  renderBoundaryResult(container, chars, ps.markers);
-}
-
 function renderSpanOnlyPreview(container, outKey) {
   if (!state.previewInited) initPreviewState();
   var realText = getDatasetPreviewText();
@@ -4277,8 +3920,8 @@ function renderFreeTextPreview(container, outKey) {
 
 function renderRelationTripleOnlyPreview(container, outKey) {
   /* Reuse the relation state machine while selected outputs determine whether
-     span editing is available. Standalone relation_triple keeps dataset entities
-     as read-only highlights; explicit span + relation_triple enables editing. */
+     entity editing is available. Standalone Relation Identification keeps dataset entities
+     as read-only highlights; explicit Entity Recognition + Relation Identification enables editing. */
   renderAbsaUnifiedPreview(container);
 }
 
@@ -4293,13 +3936,11 @@ function renderOutputPreview(container, outKey) {
   switch (outKey) {
     case 'single_label': renderSingleLabelPreview(container, outKey); break;
     case 'multi_label': renderMultiLabelPreview(container, outKey); break;
-    case 'entity_relation': renderEntityRelationPreview(container, outKey); break;
     case 'single_dim': renderSingleDimPreview(container, outKey); break;
     case 'multi_dim': renderMultiDimPreview(container, state.outputConfigs['multi_dim'] || {}, outKey); break;
-    case 'token_class': renderTokenClassPreview(container, outKey); break;
-    case 'boundary': renderBoundaryPreview(container, outKey); break;
-    case 'span': renderSpanOnlyPreview(container, outKey); break;
-    case 'relation_triple': renderRelationTripleOnlyPreview(container, outKey); break;
+    case 'sequence_tagging': renderTokenClassPreview(container, outKey); break;
+    case 'entity_recognition': renderSpanOnlyPreview(container, outKey); break;
+    case 'relation_identification': renderRelationTripleOnlyPreview(container, outKey); break;
     case 'free_text': renderFreeTextPreview(container, outKey); break;
     default:
       var placeholder = document.createElement('div');
@@ -4307,8 +3948,8 @@ function renderOutputPreview(container, outKey) {
       placeholder.textContent = state.lang === 'zh' ? '（設定後顯示預覽）' : '(Preview updates after config)';
       container.appendChild(placeholder);
   }
-  /* relation_triple routes to the unified preview, which owns its bypass chip */
-  if (outKey !== 'relation_triple' && isBypassAllowed(outKey)) {
+  /* relation_identification routes to the unified preview, which owns its bypass chip */
+  if (outKey !== 'relation_identification' && isBypassAllowed(outKey)) {
     if (state.previewBypass[outKey]) disableBypassedArea(container.children);
     appendBypassControl(container, outKey, function() { refreshOutputPreview(container, outKey); });
   }
@@ -4347,7 +3988,7 @@ function renderSchemaFields() {
   if (_outCols.length > 0) {
     var _uniqueVals = state.datasetColumnUniqueValues[_outCols[0]] || [];
     if (_uniqueVals.length > 0) {
-      ['single_label', 'multi_label', 'entity_relation'].forEach(function(outKey) {
+      ['single_label', 'multi_label'].forEach(function(outKey) {
         var cfg = state.outputConfigs[outKey];
         if (!cfg || cfg._autoPopulated) return;
         cfg.label_options = _uniqueVals.map(function(v, i) {
@@ -4385,7 +4026,7 @@ function renderSchemaFields() {
      (2) record-level `relation_types` array, (3) `{subj, rel, obj}` format
      where `rel` is already a semantic label. Trigger words (relation.text)
      are NOT used — they are text spans, not semantic categories. */
-  var _relCfg = state.outputConfigs['relation_triple'];
+  var _relCfg = state.outputConfigs['relation_identification'];
   if (_relCfg && !_relCfg._autoPopulated) {
     var _rawRow = state.datasetRawFirstRow || {};
     var _tripCands = [_rawRow.triples, _rawRow.gold_triplets, _rawRow.gold_triples];
@@ -4506,7 +4147,7 @@ function renderSchemaFields() {
     return;
   }
 
-  if (state.taskType === 'sequence_labeling' && currentSubtype() === 'span') {
+  if (state.taskType === 'sequence_labeling' && currentSubtype() === 'entity_recognition') {
     var spanFieldByKey = {};
     schema.fields.forEach(function(field) { spanFieldByKey[field.key] = field; });
     appendSchemaField(container, spanFieldByKey.subtype);
@@ -5295,7 +4936,7 @@ function updateAnnotationPreview() {
     });
 
     if (hasDependency) {
-      /* Unified preview for dependent outputs (e.g. ABSA: span + relation_triple) */
+      /* Unified preview for dependent outputs (e.g. ABSA: Entity Recognition + Relation Identification) */
       var unifiedWrap = document.createElement('div');
       unifiedWrap.className = 'preview-unified';
       renderAbsaUnifiedPreview(unifiedWrap);
@@ -5365,7 +5006,7 @@ function updateAnnotationPreview() {
   } else if (taskType === 'relation_extraction') {
     renderRelationExtractionPreview(preview, config);
     return;
-  } else if (taskType === 'sequence_labeling' && currentSubtype() === 'span') {
+  } else if (taskType === 'sequence_labeling' && currentSubtype() === 'entity_recognition') {
     var spanMode = config.span_mode || 'entity_based';
     if (spanMode === 'polarity_based') {
       titleText = t('previewSpanPolarityTitle');
@@ -5400,7 +5041,7 @@ function updateAnnotationPreview() {
   {
     var sampleTextKey = 'previewSampleSentence';
     if (taskType === 'single_sentence_va_scoring') sampleTextKey = 'previewSampleSentenceVA';
-    else if (taskType === 'sequence_labeling' && currentSubtype() === 'span') sampleTextKey = 'previewSampleSentenceSpan';
+    else if (taskType === 'sequence_labeling' && currentSubtype() === 'entity_recognition') sampleTextKey = 'previewSampleSentenceSpan';
     else if (taskType === 'sequence_labeling') sampleTextKey = 'previewSampleSentenceSequence';
     else if (taskType === 'relation_extraction') sampleTextKey = 'previewSampleSentenceRelation';
     var realText = getDatasetPreviewText();
@@ -5517,7 +5158,7 @@ function renderTemplateBtns() {
 
   /* ADR-029: show template buttons for output-type composition */
   if (state.selectedOutputTypes.length >= 1) {
-    var absaKeys = ['span', 'relation_triple'];
+    var absaKeys = ['entity_recognition', 'relation_identification'];
     var isAbsaCombo = state.selectedOutputTypes.length === absaKeys.length &&
       absaKeys.every(function(k) { return state.selectedOutputTypes.indexOf(k) >= 0; });
     if (isAbsaCombo) {
@@ -6855,8 +6496,7 @@ function rebuildOutputChips() {
       if (granDef && granDef.subtypes) {
         Object.keys(granDef.subtypes).forEach(function(subKey) {
           /* Without a selected input type, hide outputs constrained to a specific
-             granularity (e.g. entity_relation is item_pair-only) so an invalid
-             input/output combination cannot be selected */
+             granularity so an invalid input/output combination cannot be selected */
           if (inputTypes.length === 0 && !inEveryGranularity(subKey)) return;
           if (!outputsMap[subKey]) {
             var subDef = granDef.subtypes[subKey];

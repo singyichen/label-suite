@@ -61,4 +61,64 @@ test.describe('Task new taxonomy cascade', () => {
     await expect(page.locator('#schemaFields')).toContainText('最大字數');
     await expect(page.locator('#schemaFields')).toContainText('顯示參考答案給標記者');
   });
+
+  test('removes retired outputs and migrates sequence output config keys', async ({ page }) => {
+    await page.goto(TASK_NEW_URL);
+
+    const retiredRegistryItems = await page.evaluate(() => {
+      const win = window as typeof window & {
+        OUTPUT_TYPE_REGISTRY: Record<string, unknown>;
+      };
+      return {
+        entityRelation: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'entity_relation'),
+        boundary: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'boundary'),
+        span: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'span'),
+        relationTriple: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'relation_triple'),
+        tokenClass: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'token_class'),
+        entityRecognition: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'entity_recognition'),
+        relationIdentification: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'relation_identification'),
+        sequenceTagging: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'sequence_tagging'),
+      };
+    });
+    expect(retiredRegistryItems).toEqual({
+      entityRelation: false,
+      boundary: false,
+      span: false,
+      relationTriple: false,
+      tokenClass: false,
+      entityRecognition: true,
+      relationIdentification: true,
+      sequenceTagging: true,
+    });
+
+    await page.click('#taskCategoryChips [data-key="classification"]');
+    await page.click('#taskInputTypeChips [data-key="item_pair"]');
+    await expect(page.locator('#taskOutputTypeChips [data-key="entity_relation"]')).toHaveCount(0);
+
+    await page.click('#taskCategoryChips [data-key="classification"]');
+    await page.click('#taskCategoryChips [data-key="sequence"]');
+    await page.click('#taskInputTypeChips [data-key="single_item"]');
+
+    await expect(page.locator('#taskOutputTypeChips [data-key="boundary"]')).toHaveCount(0);
+    await expect(page.locator('#taskOutputTypeChips [data-key="span"]')).toHaveCount(0);
+    await expect(page.locator('#taskOutputTypeChips [data-key="relation_triple"]')).toHaveCount(0);
+    await expect(page.locator('#taskOutputTypeChips [data-key="token_class"]')).toHaveCount(0);
+    await expect(page.locator('#taskOutputTypeChips [data-key="entity_recognition"]')).toHaveText('實體辨識');
+    await expect(page.locator('#taskOutputTypeChips [data-key="relation_identification"]')).toHaveText('關係識別');
+    await expect(page.locator('#taskOutputTypeChips [data-key="sequence_tagging"]')).toHaveText('序列標註');
+  });
+
+  test('uses the current English sequence task names', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto(TASK_NEW_URL);
+
+    await page.click('#taskCategoryChips [data-key="sequence"]');
+    await page.click('#taskInputTypeChips [data-key="single_item"]');
+
+    await expect(page.locator('#taskOutputTypeChips [data-key="entity_recognition"]')).toHaveText('Entity Recognition');
+    await expect(page.locator('#taskOutputTypeChips [data-key="relation_identification"]')).toHaveText('Relation Identification');
+    await expect(page.locator('#taskOutputTypeChips [data-key="sequence_tagging"]')).toHaveText('Sequence Tagging');
+  });
 });

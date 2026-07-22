@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import fs from 'fs';
 import path from 'path';
 
 declare global {
@@ -10,6 +11,24 @@ declare global {
 
 const TASK_NEW_URL = '/pages/task-management/task-new.html';
 const EXAMPLE_DATA = path.resolve(__dirname, '../../../../docs/product/example-data');
+
+test('Entity Recognition fixture uses current fields and valid inclusive offsets', () => {
+  const records = JSON.parse(
+    fs.readFileSync(path.join(EXAMPLE_DATA, 'entity-recognition.json'), 'utf8'),
+  ) as Array<{
+    id: string;
+    text: string;
+    gold_entities: Array<{ text: string; start: number; end: number }>;
+  }>;
+
+  for (const record of records) {
+    expect(record.id).toMatch(/^entity-recognition-\d{3}$/);
+    expect(record.gold_entities).toBeInstanceOf(Array);
+    for (const entity of record.gold_entities) {
+      expect(record.text.substring(entity.start, entity.end + 1)).toBe(entity.text);
+    }
+  }
+});
 
 interface SetupConfig {
   taskName: string;
@@ -37,8 +56,8 @@ async function setupAndGoToStep2(page: Page, config: SetupConfig) {
     await page.locator(`#taskCategoryChips [data-key="${cat}"]`).click();
   }
 
-  // Input type must be selected before output types: granularity-constrained
-  // outputs (e.g. entity_relation, item_pair only) are hidden until then
+  // Input type must be selected before output types so the taxonomy can apply
+  // any granularity constraints before rendering the output choices.
   await page.locator(`#taskInputTypeChips [data-key="${config.inputType}"]`).click();
 
   const outputTypes = Array.isArray(config.outputType)
@@ -152,9 +171,9 @@ async function expectGenericInputPreview(
   await expect(genericInput).toHaveCount(expected === 'visible' ? 1 : 0);
 }
 
-// ─── 10 Basic Output Types ──────────────────────────────────
+// ─── 8 Basic Output Types ───────────────────────────────────
 
-test.describe('Step 2 preview: all 10 output types with example data', () => {
+test.describe('Step 2 preview: all 8 output types with example data', () => {
   test.describe.configure({ mode: 'serial', retries: 2 });
 
   test('single_label — gold_label pre-selected, labels from unique values', async ({
@@ -255,13 +274,13 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(dims).toContain('coherence');
   });
 
-  test('token_class — gold_tags parsed as array', async ({ page }) => {
+  test('Sequence Tagging — gold_tags parsed as array', async ({ page }) => {
     await setupAndGoToStep2(page, {
-      taskName: 'token-class-test',
+      taskName: 'sequence-tagging-test',
       category: 'sequence',
-      outputType: 'token_class',
+      outputType: 'sequence_tagging',
       inputType: 'single_item',
-      dataFile: 'token-class.json',
+      dataFile: 'sequence-tagging.json',
       roles: { text: 'input', gold_tags: 'output' },
     });
 
@@ -269,18 +288,18 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     await expect(preview).toBeVisible();
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(ps.token_class).toBeDefined();
+    expect(ps.sequence_tagging).toBeDefined();
     await expectGenericInputPreview(page, 'visible');
   });
 
-  test('span — gold_spans shown in preview', async ({ page }) => {
+  test('Entity Recognition — gold_entities shown in preview', async ({ page }) => {
     await setupAndGoToStep2(page, {
-      taskName: 'span-test',
+      taskName: 'entity-recognition-test',
       category: 'sequence',
-      outputType: 'span',
+      outputType: 'entity_recognition',
       inputType: 'single_item',
-      dataFile: 'span.json',
-      roles: { text: 'input', gold_spans: 'output' },
+      dataFile: 'entity-recognition.json',
+      roles: { text: 'input', gold_entities: 'output' },
     });
 
     const preview = page.locator('#annotationPreview');
@@ -294,182 +313,15 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     await expectGenericInputPreview(page, 'hidden');
   });
 
-  test('boundary — gold_boundaries shown in preview', async ({ page }) => {
-    await setupAndGoToStep2(page, {
-      taskName: 'boundary-test',
-      category: 'sequence',
-      outputType: 'boundary',
-      inputType: 'single_item',
-      dataFile: 'boundary.json',
-      roles: { text: 'input', gold_boundaries: 'output' },
-    });
-
-    const preview = page.locator('#annotationPreview');
-    await expect(preview).toBeVisible();
-
-    const ps = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(ps.boundary).toBeDefined();
-    expect(ps.boundary.markers).toEqual([
-      { position: 13, type: 'sentence' },
-      { position: 26, type: 'sentence' },
-      { position: 44, type: 'sentence' },
-      { position: 55, type: 'sentence' },
-    ]);
-    await expectGenericInputPreview(page, 'visible');
-  });
-
-  test('boundary — every character gap is operable without gold output', async ({
+  test('Relation Identification — triples loaded with subj/rel/obj format', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
-      taskName: 'boundary-no-gold-test',
+      taskName: 'relation-identification-test',
       category: 'sequence',
-      outputType: 'boundary',
+      outputType: 'relation_identification',
       inputType: 'single_item',
-      dataFile: 'boundary.json',
-      roles: { text: 'input' },
-    });
-
-    const sourceText = await page
-      .locator('#annotationPreview .annotation-preview-sample')
-      .innerText();
-    const gaps = page.locator('[data-testid^="boundary-gap-"]');
-    await expect(gaps).toHaveCount(Array.from(sourceText).length - 1);
-
-    const gap14 = page.getByTestId('boundary-gap-14');
-    await expect(gap14).toHaveAccessibleName('插入 sentence 邊界 (offset 14)');
-    const targetBox = await gap14.boundingBox();
-    expect(targetBox).not.toBeNull();
-    expect(targetBox!.width).toBeGreaterThanOrEqual(24);
-    expect(targetBox!.height).toBeGreaterThanOrEqual(24);
-
-    await gap14.focus();
-    const focusStyle = await gap14.evaluate((element) => {
-      const style = window.getComputedStyle(element);
-      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
-    });
-    expect(focusStyle.outlineStyle).not.toBe('none');
-    expect(focusStyle.outlineWidth).not.toBe('0px');
-
-    await gap14.click();
-    let previewState = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(previewState.boundary.markers).toEqual([
-      { position: 14, type: 'sentence' },
-    ]);
-
-    await page.getByTestId('boundary-gap-14').click();
-    previewState = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(previewState.boundary.markers).toEqual([]);
-  });
-
-  test('boundary — result preview distinguishes sentence and paragraph cuts', async ({
-    page,
-  }) => {
-    await setupAndGoToStep2(page, {
-      taskName: 'boundary-result-preview-test',
-      category: 'sequence',
-      outputType: 'boundary',
-      inputType: 'single_item',
-      dataFile: 'boundary.json',
-      roles: { text: 'input', gold_boundaries: 'output' },
-    });
-
-    await expect(page.getByTestId('boundary-result')).toBeVisible();
-    await expect(page.getByTestId('boundary-result-paragraph')).toHaveCount(1);
-    await expect(page.getByTestId('boundary-result-sentence')).toHaveCount(5);
-
-    await page.getByTestId('boundary-gap-26').click();
-    await page.getByRole('button', { name: 'paragraph', exact: true }).click();
-    await page.getByTestId('boundary-gap-26').click();
-
-    const paragraphSentences = await page
-      .getByTestId('boundary-result-paragraph')
-      .evaluateAll((paragraphs) => paragraphs.map((paragraph) =>
-        Array.from(paragraph.querySelectorAll('.boundary-result-sentence-text'))
-          .map((sentence) => sentence.textContent),
-      ));
-    expect(paragraphSentences).toEqual([
-      [
-        '慢性腎臟病的早期症狀通常不',
-        '明顯患者可能僅有輕微疲勞或',
-      ],
-      [
-        '食慾下降隨著病程進展可能出現水腫高血',
-        '壓及貧血等問題定期健康',
-        '檢查有助於早期發現及時介入治療可延緩腎功能惡化',
-      ],
-    ]);
-  });
-
-  test('boundary — marker type uses a distinct tone, label, and clear text spacing', async ({
-    page,
-  }) => {
-    await setupAndGoToStep2(page, {
-      taskName: 'boundary-marker-style-test',
-      category: 'sequence',
-      outputType: 'boundary',
-      inputType: 'single_item',
-      dataFile: 'boundary.json',
-      roles: { text: 'input', gold_boundaries: 'output' },
-    });
-
-    const sentenceMarker = page.getByTestId('boundary-gap-13');
-    await expect(sentenceMarker).toHaveAttribute('data-boundary-type', 'sentence');
-    await expect(sentenceMarker).toHaveAccessibleName(
-      '移除 sentence 邊界 (offset 13)',
-    );
-    await expect(sentenceMarker.locator('.boundary-marker-code')).toHaveText('S');
-
-    await page.getByTestId('boundary-gap-26').click();
-    await page.getByRole('button', { name: 'paragraph', exact: true }).click();
-    await page.getByTestId('boundary-gap-26').click();
-
-    const paragraphMarker = page.getByTestId('boundary-gap-26');
-    await expect(paragraphMarker).toHaveAttribute('data-boundary-type', 'paragraph');
-    await expect(paragraphMarker).toHaveAccessibleName(
-      '移除 paragraph 邊界 (offset 26)',
-    );
-    await expect(paragraphMarker.locator('.boundary-marker-code')).toHaveText('P');
-
-    const markerStyles = await Promise.all(
-      [sentenceMarker, paragraphMarker].map((marker) => marker.evaluate((element) => {
-        const style = window.getComputedStyle(element);
-        return {
-          color: style.color,
-          backgroundColor: style.backgroundColor,
-          borderColor: style.borderColor,
-        };
-      })),
-    );
-    expect(markerStyles[0]).not.toEqual(markerStyles[1]);
-
-    const spacing = await page.evaluate(() => {
-      const left = document.querySelector('[data-testid="boundary-char-12"]');
-      const marker = document.querySelector('[data-testid="boundary-gap-13"]');
-      const right = document.querySelector('[data-testid="boundary-char-13"]');
-      if (!left || !marker || !right) return null;
-      const leftBox = left.getBoundingClientRect();
-      const markerBox = marker.getBoundingClientRect();
-      const rightBox = right.getBoundingClientRect();
-      return {
-        leftGap: markerBox.left - leftBox.right,
-        rightGap: rightBox.left - markerBox.right,
-      };
-    });
-    expect(spacing).not.toBeNull();
-    expect(spacing!.leftGap).toBeGreaterThanOrEqual(2);
-    expect(spacing!.rightGap).toBeGreaterThanOrEqual(2);
-  });
-
-  test('relation_triple — triples loaded with subj/rel/obj format', async ({
-    page,
-  }) => {
-    await setupAndGoToStep2(page, {
-      taskName: 'relation-triple-test',
-      category: 'sequence',
-      outputType: 'relation_triple',
-      inputType: 'single_item',
-      dataFile: 'relation-triple.json',
+      dataFile: 'relation-identification.json',
       roles: { text: 'input', triples: 'output' },
     });
 
@@ -480,7 +332,7 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     expect(triples[0]).toHaveProperty('obj');
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    expect(cfg.relation_triple).not.toHaveProperty('source_output');
+    expect(cfg.relation_identification).not.toHaveProperty('source_output');
 
     const code = await page.evaluate(() => {
       const editor = document.getElementById('codeEditor') as HTMLTextAreaElement;
@@ -488,14 +340,14 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     });
     expect(code).not.toContain('source_output');
 
-    // Standalone relation_triple keeps pre-annotated entity highlights as
-    // read-only context and exposes only relation controls. The span editor is
-    // reserved for the explicit span + relation_triple composition.
+    // Standalone Relation Identification keeps pre-annotated entity highlights as
+    // read-only context and exposes only relation controls. Entity editing is
+    // reserved for the explicit Entity Recognition + Relation Identification composition.
     const preview = page.locator('#annotationPreview');
     await expect(preview).not.toContainText('整合預覽');
     await expect(preview).not.toContainText('實體類型');
     await expect(preview).not.toContainText('實體列表');
-    await expect(preview).toContainText('關係三元組標記');
+    await expect(preview).toContainText('關係識別');
     expect(await preview.locator('select').count()).toBe(0);
     await expect(preview.getByRole('button', { name: 'E1/Arg1' })).toBeEnabled();
     await expect(preview.getByRole('button', { name: 'Relation', exact: true })).toBeDisabled();
@@ -503,39 +355,6 @@ test.describe('Step 2 preview: all 10 output types with example data', () => {
     await expectGenericInputPreview(page, 'hidden');
   });
 
-  test('entity_relation — item_pair with treats/causes/prevents labels', async ({
-    page,
-  }) => {
-    await setupAndGoToStep2(page, {
-      taskName: 'entity-relation-test',
-      category: 'classification',
-      outputType: 'entity_relation',
-      inputType: 'item_pair',
-      dataFile: 'entity-relation.json',
-      roles: {
-        entity1: 'input',
-        entity2: 'input',
-        gold_relation: 'output',
-        context: 'evidence',
-      },
-    });
-
-    const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
-    const labels = cfg.entity_relation.label_options!.map((l: LabelOption) => l.name);
-    expect(labels).toContain('treats');
-    expect(labels).toContain('causes');
-    expect(labels).toContain('prevents');
-
-    const ps = await getState(page, 'previewState') as WindowState['previewState'];
-    expect(ps.entity_relation.selected).toBe('treats');
-
-    await expectNoEvidenceInPreview(page, '胰島素阻抗');
-
-    const html = await page.locator('#annotationPreview').innerHTML();
-    expect(html).toContain('Metformin');
-    expect(html).toContain('第二型糖尿病');
-    await expectGenericInputPreview(page, 'hidden');
-  });
 });
 
 // ─── 4 Composite Tasks ─────────────────────────────────────
@@ -601,13 +420,13 @@ test.describe('Step 2 preview: composite task data files', () => {
     await expect(textarea).not.toBeEmpty();
   });
 
-  test('medical-ner-re.json — dual output (span + relation_triple) with entities and triples', async ({
+  test('medical-ner-re.json — dual output (Entity Recognition + Relation Identification) with entities and triples', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
       taskName: 'medical-ner-re-test',
       category: 'sequence',
-      outputType: ['span', 'relation_triple'],
+      outputType: ['entity_recognition', 'relation_identification'],
       inputType: 'single_item',
       dataFile: 'medical-ner-re.json',
       roles: { text: 'input', entities: 'output', triples: 'output' },
@@ -631,7 +450,7 @@ test.describe('Step 2 preview: composite task data files', () => {
     // relation_types is auto-populated from the distinct semantic type labels
     // in the pre-labeled triples — NOT trigger words or hardcoded defaults.
     const cfg = (await getState(page, 'outputConfigs')) as WindowState['outputConfigs'];
-    const relTypes = (cfg.relation_triple as { relation_types: string[] }).relation_types;
+    const relTypes = (cfg.relation_identification as { relation_types: string[] }).relation_types;
     expect(relTypes).toEqual(['bodyLocation', 'causes', 'adverseOutcome']);
     expect(relTypes).not.toContain('has_aspect');
     expect(relTypes).not.toContain('has_opinion');
@@ -643,17 +462,17 @@ test.describe('Step 2 preview: composite task data files', () => {
     });
     expect(code).not.toContain('has_aspect');
     expect(code).toContain('bodyLocation');
-    expect(code).toContain('source_output: span');
+    expect(code).toContain('source_output: entity_recognition');
     await expectGenericInputPreview(page, 'hidden');
   });
 
-  test('absa-va.json — triple output (span + relation_triple + multi_dim) across two categories', async ({
+  test('absa-va.json — triple output (Entity Recognition + Relation Identification + multi_dim) across two categories', async ({
     page,
   }) => {
     await setupAndGoToStep2(page, {
       taskName: 'absa-va-test',
       category: ['regression', 'sequence'],
-      outputType: ['span', 'relation_triple', 'multi_dim'],
+      outputType: ['entity_recognition', 'relation_identification', 'multi_dim'],
       inputType: 'single_item',
       dataFile: 'absa-va.json',
       roles: {
@@ -670,8 +489,8 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const cfg = await getState(page, 'outputConfigs') as WindowState['outputConfigs'];
     expect(Object.keys(cfg)).toContain('multi_dim');
-    expect(Object.keys(cfg)).toContain('span');
-    expect(Object.keys(cfg)).toContain('relation_triple');
+    expect(Object.keys(cfg)).toContain('entity_recognition');
+    expect(Object.keys(cfg)).toContain('relation_identification');
 
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
