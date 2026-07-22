@@ -70,14 +70,14 @@ test.describe('Task new taxonomy cascade', () => {
         OUTPUT_TYPE_REGISTRY: Record<string, unknown>;
       };
       return {
-        entityRelation: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'entity_relation'),
-        boundary: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'boundary'),
-        span: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'span'),
-        relationTriple: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'relation_triple'),
-        tokenClass: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'token_class'),
-        entityRecognition: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'entity_recognition'),
-        relationIdentification: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'relation_identification'),
-        sequenceTagging: Object.hasOwn(win.OUTPUT_TYPE_REGISTRY, 'sequence_tagging'),
+        entityRelation: 'entity_relation' in win.OUTPUT_TYPE_REGISTRY,
+        boundary: 'boundary' in win.OUTPUT_TYPE_REGISTRY,
+        span: 'span' in win.OUTPUT_TYPE_REGISTRY,
+        relationTriple: 'relation_triple' in win.OUTPUT_TYPE_REGISTRY,
+        tokenClass: 'token_class' in win.OUTPUT_TYPE_REGISTRY,
+        entityRecognition: 'entity_recognition' in win.OUTPUT_TYPE_REGISTRY,
+        relationIdentification: 'relation_identification' in win.OUTPUT_TYPE_REGISTRY,
+        sequenceTagging: 'sequence_tagging' in win.OUTPUT_TYPE_REGISTRY,
       };
     });
     expect(retiredRegistryItems).toEqual({
