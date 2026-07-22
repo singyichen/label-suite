@@ -141,7 +141,13 @@ uv run ruff check . && uv run ruff format --check .
 pnpm tsc --noEmit
 pnpm lint
 pnpm test
+
+# Prototype (run from design/prototype/, when design/prototype/** changed)
+pnpm typecheck
+pnpm playwright test
 ```
+
+Every CI job must have a matching local command above — when adding a CI job, add its command here in the same PR.
 
 Definition of Done: all commands above exit 0 + `/speckit.analyze` reports zero findings.
 
