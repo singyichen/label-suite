@@ -38,6 +38,14 @@ Existing annotation platforms such as [Label Studio](https://labelstud.io/) are 
 
 ---
 
+## Site Map
+
+![Label Suite site map](docs/site-map/site-map.en.png)
+
+> Standalone HTML version: [docs/site-map/site-map.en.html](docs/site-map/site-map.en.html) — open it locally in a browser to see hover descriptions for each page.
+
+---
+
 ## Key Features
 
 - **Config-driven Task Launch:** Define NLP annotation tasks through simple YAML/JSON config files — no custom code required. Supports Single Sentence, Sentence Pairs, Sequence Labeling, and Generative Labeling.
