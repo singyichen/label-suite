@@ -64,8 +64,8 @@ Existing annotation platforms such as [Label Studio](https://labelstud.io/) are 
 5. **Low Entry Barrier**
    Designed for researchers and annotators without deep engineering backgrounds — spin up a labeling server in minutes, not days.
 
-6. **Open Source**
-   Released as an open-source toolkit for the broader NLP research community, enabling reuse and community-driven improvement.
+6. **Publicly Viewable Research Preview**
+   The source code is publicly viewable for academic evaluation and citation; usage rights are governed by the repository's [LICENSE](LICENSE) notice.
 
 ---
 
@@ -104,7 +104,7 @@ This project is positioned as a **Demo Paper**, with its core value in:
 | Built-in dataset statistics | ✗ | ✓ |
 | Dry Run / Official Run isolation | ✗ | ✓ |
 | Designed for NLP research teams | ✓ | ✓ |
-| Open source | ✓ | ✓ |
+| Open source | ✓ | ✗ (Research Preview — viewable, all rights reserved) |
 
 ---
 
