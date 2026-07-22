@@ -32,6 +32,14 @@
 
 ---
 
+## 網站地圖
+
+![Label Suite 網站地圖](docs/site-map/site-map.zh-TW.png)
+
+> 獨立 HTML 版本：[docs/site-map/site-map.zh-TW.html](docs/site-map/site-map.zh-TW.html)——以瀏覽器開啟後，將滑鼠停在頁面節點上可查看各頁用途說明。
+
+---
+
 ## 核心功能
 
 - **配置驅動任務啟動：** 透過簡單的 YAML/JSON 設定檔定義 NLP 標記任務，無需撰寫自訂程式碼。支援單一句子、句子對、序列標記與生成標記四種任務類型。
