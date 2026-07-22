@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Label Suite 網站地圖</title>
+<style>
+/* ═══ Label Suite — Artifact Tokens (dual-theme, CSP-safe) ═══ */
+:root {
+  --color-primary:          #6366F1;
+  --color-secondary:        #818CF8;
+  --color-cta:              #10B981;
+  --color-cta-hover:        #059669;
+  --color-cta-on:           #FFFFFF;
+  --color-surface:          #F5F3FF;
+  --color-white:            #FFFFFF;
+  --color-ink:              #1E1B4B;
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-border:   #C7D2FE;
+  --color-border:           #E2E8F0;
+  --color-border-muted:     #F1F5F9;
+  --color-ink-muted:        #94A3B8;
+  --color-text-soft:        #64748B;
+  --color-slate-50:         #F8FAFC;
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+  --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
+  --font-sans:          'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-h1: 36px; --text-h2: 24px; --text-h3: 18px;
+  --text-body: 16px; --text-caption: 14px; --text-label: 12px;
+  --leading-body-zh: 1.8;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px;
+  --space-xl: 32px; --space-2xl: 48px;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 9999px;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms; --dur-normal: 200ms;
+}
+/* 本頁刻意固定為 light 主題(不隨檢視者的深色模式切換) */
+:root, :root[data-theme="dark"], :root[data-theme="light"] {
+  --color-primary:          #6366F1;
+  --color-secondary:        #818CF8;
+  --color-cta:              #10B981;
+  --color-cta-hover:        #059669;
+  --color-cta-on:           #FFFFFF;
+  --color-surface:          #F5F3FF;
+  --color-white:            #FFFFFF;
+  --color-ink:              #1E1B4B;
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-border:   #C7D2FE;
+  --color-border:           #E2E8F0;
+  --color-border-muted:     #F1F5F9;
+  --color-ink-muted:        #94A3B8;
+  --color-text-soft:        #64748B;
+  --color-slate-50:         #F8FAFC;
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ═══ Page styles ═══ */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.01ms !important; }
+}
+body {
+  margin: 0;
+  color-scheme: light;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-body-zh);
+  --line: var(--color-primary-border);
+}
+.wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg) var(--space-xl);
+}
+.ic {
+  width: 18px; height: 18px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  vertical-align: -3px;
+}
+
+/* ── Hero ── */
+.brand-row {
+  display: flex; align-items: center; gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+.brand-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #FFFFFF;
+}
+.brand-name {
+  font-family: var(--font-serif-display);
+  font-size: 22px; font-weight: 600; letter-spacing: 0.01em;
+}
+h1 {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h1);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.lede {
+  margin: 0;
+  max-width: 42em;
+  color: var(--color-text-soft);
+}
+.hero-meta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  font-size: var(--text-caption);
+  color: var(--color-text-soft);
+}
+.hero-meta .dot { color: var(--color-ink-muted); }
+
+.badge {
+  display: inline-block;
+  padding: 0 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.badge.public   { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+.badge.login    { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
+.badge.taskrole { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+.badge.admin    { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+
+/* ── Diagram canvas ── */
+.canvas {
+  margin-top: var(--space-xl);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+}
+.canvas-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-sm);
+  padding: 0 var(--space-sm) var(--space-md);
+}
+.canvas-title {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h3);
+  font-weight: 600;
+}
+.tree {
+  width: 100%;
+  padding-top: var(--space-sm);
+}
+
+/* Root */
+.root-row { display: flex; justify-content: center; }
+.node.root {
+  display: flex; align-items: center; gap: var(--space-sm);
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 10px 22px;
+}
+.node.root .ic { color: #FFFFFF; }
+.root-name {
+  font-family: var(--font-serif-display);
+  font-size: 20px; font-weight: 600; line-height: 1.3;
+}
+.stem {
+  width: 0; height: 24px;
+  border-left: 1px solid var(--line);
+  margin: 0 auto;
+}
+
+/* Level 1 — horizontal branches (org-chart bus) */
+.branches {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.branches > li {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 24px 5px 0;
+}
+.branches > li::before,
+.branches > li::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 50%;
+  width: 50%; height: 24px;
+  border-top: 1px solid var(--line);
+}
+.branches > li::after {
+  right: auto; left: 50%;
+  border-left: 1px solid var(--line);
+}
+.branches > li:first-child::before { border-top: none; }
+.branches > li:last-child::after { border-top: none; }
+.branches > li:only-child::before,
+.branches > li:only-child::after { border-top: none; }
+
+/* Section node */
+.node.section {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--color-primary-soft-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: var(--text-caption);
+  line-height: 1.5;
+}
+.node.section .ic { color: var(--color-primary); width: 16px; height: 16px; }
+
+/* Level 2 — vertical page rail (file-tree elbows) */
+.pages {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+}
+.pages > li {
+  position: relative;
+  padding-top: 10px;
+}
+.pages > li::after {          /* rail */
+  content: '';
+  position: absolute;
+  left: -10px; top: 0;
+  height: 100%;
+  border-left: 1px solid var(--line);
+}
+.pages > li:last-child::after { height: 30px; }
+.pages > li::before {         /* elbow stub */
+  content: '';
+  position: absolute;
+  left: -10px; top: 30px;
+  width: 10px;
+  border-top: 1px solid var(--line);
+}
+
+/* Page node */
+.node.page {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  min-height: 40px;
+  box-sizing: border-box;
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.node.page:hover {
+  border-color: var(--color-primary-border);
+  transform: translateY(-1px);
+}
+.p-line1 {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 2px 6px;
+  line-height: 1.5;
+}
+.p-name { white-space: nowrap; }
+.p-name { font-weight: 600; font-size: var(--text-caption); }
+.p-line1 .badge { margin-left: auto; }
+
+/* Level 3 — tab / step stubs */
+.tabs {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 16px;
+}
+.tabs > li {
+  position: relative;
+  padding-top: 6px;
+}
+.tabs > li::after {
+  content: '';
+  position: absolute;
+  left: -8px; top: 0;
+  height: 100%;
+  border-left: 1px solid var(--line);
+}
+.tabs > li:last-child::after { height: 18px; }
+.tabs > li::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 18px;
+  width: 8px;
+  border-top: 1px solid var(--line);
+}
+.node.tab {
+  display: inline-block;
+  background: var(--color-slate-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--color-text-soft);
+}
+
+</style>
+</head>
+<body>
+<svg class="sprite" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></symbol>
+  <symbol id="i-bar-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="i-list-checks" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand-row">
+      <span class="brand-mark"><svg class="ic"><use href="#i-tag"/></svg></span>
+      <span class="brand-name">Label Suite</span>
+    </div>
+    <h1>網站地圖</h1>
+    <p class="lede">Label Suite 是一個 NLP 資料標記平台。</p>
+    <div class="hero-meta">
+      <span>存取層級:</span>
+      <span class="badge public">公開</span>
+      <span class="badge login">需登入</span>
+      <span class="badge taskrole">需任務角色</span>
+      <span class="badge admin">限管理員</span>
+    </div>
+  </header>
+
+  <section class="canvas" aria-label="網站結構樹狀圖">
+    <div class="canvas-head">
+      <span class="canvas-title">網站結構</span>
+    </div>
+    <div class="tree">
+
+        <div class="root-row">
+          <div class="node root">
+            <svg class="ic"><use href="#i-tag"/></svg>
+            <span class="root-name">Label Suite</span>
+          </div>
+        </div>
+        <div class="stem"></div>
+
+        <ul class="branches">
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-arrow-right"/></svg>帳號入口</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="用電子郵件與密碼或 Google 帳號登入 Label Suite,也可以從這裡前往註冊或找回密碼。">
+                  <div class="p-line1"><span class="p-name">登入</span><span class="badge public">公開</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">電子郵件 / 密碼</span></li>
+                  <li><span class="node tab">Google 帳號登入</span></li>
+                </ul>
+              </li>
+              <li>
+                <div class="node page" title="填寫姓名、電子郵件與密碼建立新帳號,完成後即可進入系統。">
+                  <div class="p-line1"><span class="p-name">註冊</span><span class="badge public">公開</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="輸入你的電子郵件申請重設密碼,系統會寄送重設連結給你。">
+                  <div class="p-line1"><span class="p-name">忘記密碼</span><span class="badge public">公開</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="透過信件中的連結設定新密碼;連結逾期或已使用時會顯示對應提示。">
+                  <div class="p-line1"><span class="p-name">重設密碼</span><span class="badge public">公開</span></div>
+                </div>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-bar-chart"/></svg>儀表板</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="登入後的首頁,依你的角色自動顯示對應的任務進度與團隊協作狀態總覽。">
+                  <div class="p-line1"><span class="p-name">儀表板</span><span class="badge login">需登入</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">一般使用者視圖</span></li>
+                  <li><span class="node tab">專案負責人視圖</span></li>
+                  <li><span class="node tab">標記者視圖</span></li>
+                  <li><span class="node tab">審核者視圖</span></li>
+                  <li><span class="node tab">超級管理員視圖</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-list-checks"/></svg>任務管理</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="快速找到你要處理的標記任務,用搜尋、篩選與分頁定位目標;一般使用者只會看到自己參與的任務。">
+                  <div class="p-line1"><span class="p-name">任務列表</span><span class="badge login">需登入</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="透過四步驟精靈,一步步設定並建立一個新的標記任務。">
+                  <div class="p-line1"><span class="p-name">新增任務</span><span class="badge login">需登入</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">步驟一 基本資料</span></li>
+                  <li><span class="node tab">步驟二 標記設定檔</span></li>
+                  <li><span class="node tab">步驟三 啟動設定</span></li>
+                  <li><span class="node tab">步驟四 標記說明(選填)</span></li>
+                </ul>
+              </li>
+              <li>
+                <div class="node page" title="總覽單一任務、管理成員、追蹤進度、查看與匯出標記結果並檢視工時;由專案負責人與審核者使用。">
+                  <div class="p-line1"><span class="p-name">任務詳情</span><span class="badge taskrole">需任務角色</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">任務概覽</span></li>
+                  <li><span class="node tab">成員管理</span></li>
+                  <li><span class="node tab">標記進度</span></li>
+                  <li><span class="node tab">標記結果</span></li>
+                  <li><span class="node tab">工時紀錄</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-tag"/></svg>標記作業</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="檢索與篩選被指派給你的標記或審核任務,再挑一筆進入工作區。">
+                  <div class="p-line1"><span class="p-name">標記清單</span><span class="badge taskrole">需任務角色</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="在三欄工作區逐筆進行標記或審核,依任務設定即時儲存與提交。">
+                  <div class="p-line1"><span class="p-name">標記工作區</span><span class="badge taskrole">需任務角色</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">說明檔案</span></li>
+                  <li><span class="node tab">歷程</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-database"/></svg>資料集分析</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="瀏覽你有權限的任務,查看完成率與一致性狀態,選一個進入深入分析。">
+                  <div class="p-line1"><span class="p-name">資料集分析列表</span><span class="badge taskrole">需任務角色</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="深入單一任務的統計總覽與品質監控,掌握標記一致性與異常偵測結果。">
+                  <div class="p-line1"><span class="p-name">資料集分析詳情</span><span class="badge taskrole">需任務角色</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">統計總覽</span></li>
+                  <li><span class="node tab">品質監控</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-shield-check"/></svg>系統管理</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="查看全平台使用者,搜尋篩選帳號,並新增、編輯、停用或啟用帳號、指派系統角色與查看異動紀錄。">
+                  <div class="p-line1"><span class="p-name">使用者管理</span><span class="badge admin">限管理員</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="檢視與編輯角色權限矩陣,區分系統角色與任務角色,並儲存變更或查看操作紀錄。">
+                  <div class="p-line1"><span class="p-name">角色設定</span><span class="badge admin">限管理員</span></div>
+                </div>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-user"/></svg>個人設定</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="管理個人資料與頭像、變更電子郵件、修改密碼,以及調整通知偏好。">
+                  <div class="p-line1"><span class="p-name">個人設定</span><span class="badge login">需登入</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">個人資料</span></li>
+                  <li><span class="node tab">變更電子郵件</span></li>
+                  <li><span class="node tab">修改密碼</span></li>
+                  <li><span class="node tab">通知設定</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
