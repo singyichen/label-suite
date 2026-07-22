@@ -10,7 +10,7 @@
 
 透過簡單設定檔啟動標記任務——不需撰寫客製程式碼。內建資料集統計，省去事後分析腳本。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#授權)
+[![License: Research Preview](https://img.shields.io/badge/License-Research%20Preview-red.svg)](#授權)
 ![Python](https://img.shields.io/badge/Backend-FastAPI-009688.svg)
 ![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB.svg)
 ![NLP](https://img.shields.io/badge/Domain-NLP%20Annotation-orange.svg)
@@ -204,4 +204,8 @@ gantt
 
 ## 授權
 
-MIT License
+**Copyright © 2026 Sing-Yi Chen（陳欣怡）。保留所有權利。**
+
+Label Suite 為尚未發表的研究軟體。未經著作權人事前書面授權，不得複製、
+修改、發布、散布、部署或製作衍生作品。完整聲明請見 [LICENSE](LICENSE)，
+引用資訊請見 [CITATION.cff](CITATION.cff)。

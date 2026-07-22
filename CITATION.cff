@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: >-
+  If you use or refer to this research software, please cite it using the
+  metadata below and comply with the repository's license notice.
+title: Label Suite
+type: software
+authors:
+  - family-names: Chen
+    given-names: Sing-Yi
+    orcid: "https://orcid.org/0009-0006-4718-6596"
+    affiliation: "National Yang Ming Chiao Tung University"
+repository-code: "https://github.com/singyichen/label-suite"
+abstract: >-
+  A config-driven NLP annotation platform with built-in dataset analytics,
+  designed for academic research labs.
+keywords:
+  - natural language processing
+  - data annotation
+  - research software
+# Add preferred-citation after the associated paper is accepted and assigned a DOI.

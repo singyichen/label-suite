@@ -10,7 +10,7 @@
 
 Launch annotation tasks through simple config files — no custom code required. Built-in dataset statistics eliminate post-hoc analysis scripts.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#license)
+[![License: Research Preview](https://img.shields.io/badge/License-Research%20Preview-red.svg)](#license)
 ![Python](https://img.shields.io/badge/Backend-FastAPI-009688.svg)
 ![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB.svg)
 ![NLP](https://img.shields.io/badge/Domain-NLP%20Annotation-orange.svg)
@@ -210,4 +210,9 @@ Research focus: Chinese NLP, text annotation, and language model evaluation.
 
 ## License
 
-MIT License
+**Copyright © 2026 Sing-Yi Chen (陳欣怡). All rights reserved.**
+
+Label Suite is unpublished research software. No permission is granted to
+copy, modify, publish, distribute, deploy, or create derivative works without
+prior written authorization from the copyright holder. See [LICENSE](LICENSE)
+for the complete notice and [CITATION.cff](CITATION.cff) for citation metadata.
