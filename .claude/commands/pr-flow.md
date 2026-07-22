@@ -36,6 +36,9 @@ cd backend && uv run pytest
 
 # Frontend E2E
 cd frontend && pnpm playwright test
+
+# Prototype (when design/prototype/** changed)
+cd design/prototype && pnpm typecheck && pnpm playwright test
 ```
 
 Fix failures, re-commit, and re-run until all tests pass.
