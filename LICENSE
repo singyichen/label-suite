@@ -1,21 +1,46 @@
-MIT License
+Label Suite Research Preview Notice
 
-Copyright (c) 2026 Ｍandy
+Copyright (c) 2026 Sing-Yi Chen (陳欣怡)
+All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Research status
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Label Suite, including its source code, specifications, documentation,
+prototypes, designs, data schemas, and other repository contents (the
+"Project"), is unpublished research work. When the Project is made
+accessible, it is provided solely for viewing and evaluation unless the
+copyright holder gives prior written permission for another use.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+2. No license grant
+
+Except for limited rights required by applicable platform terms or expressly
+granted in writing by the copyright holder, no license or permission is
+granted to use, copy, modify, merge, publish, distribute, sublicense, sell,
+deploy, publicly display, create derivative works from, or otherwise exploit
+the Project, in whole or in part.
+
+3. Citation does not grant permission
+
+The citation information in CITATION.cff explains how to acknowledge the
+Project. Citing the Project does not grant permission to use, reproduce,
+modify, distribute, or deploy it.
+
+4. Third-party materials
+
+Third-party software, assets, datasets, and other materials remain subject to
+their respective licenses and terms. This notice does not restrict rights
+granted by those third parties.
+
+5. Earlier versions
+
+Versions of the Project previously distributed with a different license
+remain governed by the license that accompanied those versions. This notice
+applies to versions distributed with this notice.
+
+6. Disclaimer
+
+THE PROJECT IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE PROJECT OR ITS USE.

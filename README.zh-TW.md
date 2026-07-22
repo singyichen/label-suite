@@ -10,7 +10,7 @@
 
 透過簡單設定檔啟動標記任務——不需撰寫客製程式碼。內建資料集統計，省去事後分析腳本。
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](#授權)
+[![License: Research Preview](https://img.shields.io/badge/License-Research%20Preview-red.svg)](#授權)
 ![Python](https://img.shields.io/badge/Backend-FastAPI-009688.svg)
 ![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB.svg)
 ![NLP](https://img.shields.io/badge/Domain-NLP%20Annotation-orange.svg)
@@ -58,8 +58,8 @@
 5. **低使用門檻**
    專為沒有深厚工程背景的研究人員與標記人員設計，數分鐘內即可啟動標記伺服器。
 
-6. **開放原始碼**
-   以開源工具包形式釋出，供更廣泛的 NLP 研究社群使用與共同改善。
+6. **公開檢視的研究預覽**
+   原始碼公開供學術檢視、評估與引用；使用權利以本儲存庫的 [LICENSE](LICENSE) 聲明為準。
 
 ---
 
@@ -98,7 +98,7 @@
 | 內建資料集統計 | ✗ | ✓ |
 | Dry Run / Official Run 隔離 | ✗ | ✓ |
 | 專為 NLP 研究團隊設計 | ✓ | ✓ |
-| 開放原始碼 | ✓ | ✓ |
+| 開放原始碼 | ✓ | ✗（Research Preview——可檢視，保留所有權利） |
 
 ---
 
@@ -204,4 +204,8 @@ gantt
 
 ## 授權
 
-MIT License
+**Copyright © 2026 Sing-Yi Chen（陳欣怡）。保留所有權利。**
+
+Label Suite 為尚未發表的研究軟體。未經著作權人事前書面授權，不得複製、
+修改、發布、散布、部署或製作衍生作品。完整聲明請見 [LICENSE](LICENSE)，
+引用資訊請見 [CITATION.cff](CITATION.cff)。
