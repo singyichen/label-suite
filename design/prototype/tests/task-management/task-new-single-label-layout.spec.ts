@@ -54,6 +54,22 @@ test.describe('Step 2 single-label settings-first layout', () => {
     expect(supportingToolsBox.y).toBeGreaterThanOrEqual(
       Math.max(settingsBox.y + settingsBox.height, previewBox.y + previewBox.height),
     );
+
+    await expect(supportingTools).toHaveAttribute('data-presentation', 'integrated');
+    const panelBorders = await page.evaluate(() => {
+      const readBorder = (selector: string) => {
+        const element = document.querySelector(selector);
+        return element ? window.getComputedStyle(element).borderTopStyle : null;
+      };
+      return {
+        outer: readBorder('[data-testid="step2-supporting-tools"]'),
+        template: readBorder('.template-section'),
+        code: readBorder('.s2-code-panel'),
+      };
+    });
+    expect(panelBorders).toEqual({ outer: 'solid', template: 'none', code: 'none' });
+    const codeEditorBox = await box(page.locator('#codeEditor'));
+    expect(codeEditorBox.height).toBeLessThanOrEqual(260);
   });
 
   test('stacks settings before preview when the available width is narrow', async ({ page }) => {
@@ -73,11 +89,13 @@ test.describe('Step 2 single-label settings-first layout', () => {
     await openStep2(page, 'multi_label');
 
     const workspace = page.getByTestId('step2-primary-workspace');
+    const supportingTools = page.getByTestId('step2-supporting-tools');
     const previewBox = await box(page.getByTestId('step2-preview-panel'));
     const templateBox = await box(page.locator('.template-section'));
     const settingsBox = await box(page.getByTestId('step2-settings-panel'));
 
     await expect(workspace).toHaveAttribute('data-layout', 'default');
+    await expect(supportingTools).toHaveAttribute('data-presentation', 'default');
     expect(previewBox.y + previewBox.height).toBeLessThanOrEqual(templateBox.y);
     expect(templateBox.y + templateBox.height).toBeLessThanOrEqual(settingsBox.y);
   });
