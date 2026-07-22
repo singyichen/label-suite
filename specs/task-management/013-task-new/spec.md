@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 4.0.0
+版本: 4.1.0
 狀態: Draft
 ---
 
@@ -32,6 +32,7 @@
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 - **v3.0.0 架構轉型**：本版依 ADR-029 將固定 `TASK_TYPE_ENUM` 替換為可組合的 `outputs[]` 模型。任務不再對應單一固定型別，而是由使用者從 `OUTPUT_TYPE_REGISTRY` 中選擇一至多個輸出類型組合而成。
 - **v4.0.0 taxonomy 收斂**：`entity_relation` 與 `boundary` 自合法輸出類型、Step 1 選項及 Step 2 registry／預覽移除；既有 key `span`、`relation_triple`、`token_class` 分別遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不提供舊 key 相容別名；顯示名稱同步為 Entity Recognition（實體辨識）、Relation Identification（關係識別）、Sequence Tagging（序列標註）。
+- **v4.1.0 輸出選擇語意**：Step 1 由 taxonomy 的 `outputSelection` metadata 決定各大分類輸出 chip 的選擇模式；分類與回歸為 radio 單選，序列與生成維持 checkbox 多選語意，跨大分類仍可同時選取。
 
 ## 規格常數
 
@@ -40,14 +41,15 @@
 - `TASK_CREATION_STEPS = step-1-basic | step-2-config-builder | step-3-startup-settings | step-4-guideline`
 - `TASK_CATEGORIES = classification | regression | sequence | generation`
 - `TASK_INPUT_TYPES = single_item | item_pair`
+- `TASK_OUTPUT_SELECTION_MODES = single | multiple`
 - `OUTPUT_TYPE_KEYS = sequence_tagging | entity_recognition | relation_identification | single_label | multi_label | single_dim | multi_dim | free_text`
 
-  | 大分類 | 對應輸出類型 |
-  |--------|-------------|
-  | `classification` | `single_label` · `multi_label` |
-  | `regression` | `single_dim` · `multi_dim` |
-  | `sequence` | `sequence_tagging` · `entity_recognition` · `relation_identification` |
-  | `generation` | `free_text` |
+  | 大分類 | `outputSelection` | 對應輸出類型 |
+  |--------|--------------------|-------------|
+  | `classification` | `single` | `single_label` · `multi_label` |
+  | `regression` | `single` | `single_dim` · `multi_dim` |
+  | `sequence` | `multiple` | `sequence_tagging` · `entity_recognition` · `relation_identification` |
+  | `generation` | `multiple` | `free_text` |
 
 - `OUTPUT_TYPE_DEPENDENCIES`：`relation_identification` 可獨立使用；僅在與 `entity_recognition` 同時被選取時，以 `entity_recognition` 作為可編輯實體來源，預覽與 config 合併為整合模式。此關聯不得自動加入或移除 output type
 - `OUTPUT_TYPE_FIELD_TYPES = entity-list | tag-list | select | number | text | boolean | va-dimensions`
@@ -177,16 +179,16 @@ sequenceDiagram
     - 輸入類型（單選，`role="radio"`，互斥）
       - `單一項目`
       - `項目對`
-    - 輸出類型（cascade 過濾，組內單選 `role="radio"`，跨組可多選）
+    - 輸出類型（cascade 過濾，選擇模式由 taxonomy 的 `outputSelection` 決定，跨組可多選）
 
-      | 大分類 | 輸出類型 |
-      |--------|----------|
-      | 分類 | `單一標籤` · `多標籤` |
-      | 回歸 | `單維度` · `多維度` |
-      | 序列 | `序列標註` · `實體辨識` · `關係識別` |
-      | 生成 | `自由文字` |
+      | 大分類 | 選擇語意 | 輸出類型 |
+      |--------|----------|----------|
+      | 分類 | 單選 radio；兩項互斥 | `單一標籤` · `多標籤` |
+      | 回歸 | 單選 radio；兩項互斥 | `單維度` · `多維度` |
+      | 序列 | 多選 checkbox | `序列標註` · `實體辨識` · `關係識別` |
+      | 生成 | 多選 checkbox | `自由文字` |
 
-    - cascade 行為：未選大分類 → 顯示「請先選擇大分類」；選 1 個 → 直接顯示輸出類型（無分組標題）；選 2+ 個 → 依大分類分組顯示並加子標題；取消大分類 → 該組輸出類型消失且已選項自動取消
+    - cascade 行為：未選大分類 → 顯示「請先選擇大分類」；選 1 個 → 直接顯示輸出類型（無分組標題）；選 2+ 個 → 依大分類分組顯示並加子標題；取消大分類 → 該組輸出類型消失且已選項自動取消。分類／回歸切換同組選項時自動取消原選項；序列可保留多個已選項（含 `entity_recognition + relation_identification`）
     - 已移除的 `entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在任何分類、輸入類型或語系下
   - `下一步` 啟用條件：`task_name` 非空 ∧ 至少選擇一個輸出類型 ∧ dataset 檔案通過格式/大小/編碼檢查 ∧ Input 欄位數量符合輸入類型（`single_item` 須恰好 1 個、`item_pair` 須恰好 2 個）∧ 所有 Input 角色欄位無缺值
 - Step 2：`標記設定檔`
@@ -426,6 +428,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - 切換資料列來源後再切回原來源：原來源已指定的欄位角色必須完整還原，不得遺失。
 - 切換資料列來源後任一已上傳檔案於新來源路徑取不出紀錄：顯示標明該檔案的不相容提示，該檔案紀錄不納入統計；不阻擋使用者切換回相容來源。
 - 變更輸出類型選擇後已填 Step 2 設定不相容：移除已被取消選擇的輸出類型之 config，保留仍選中的輸出類型之 config。
+- 分類或回歸組已選一個輸出類型後選擇同組另一項：原項目必須自動取消且清除其 config；不得出現同組兩個 radio 同時選取。序列組的多個 checkbox 選取不受影響。
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
@@ -455,7 +458,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
 - **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、至少一個輸出類型；未上傳任何資料集時不得進入下一步。輸出類型由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型依大分類 cascade 過濾且跨組可多選）；選擇結果存為 `selectedOutputTypes[]`。
-- **FR-002e**：Step 1 任務類型選擇器必須由 `OUTPUT_TYPE_REGISTRY` 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（cascade 過濾，**組內單選、跨組可多選**，`role="radio"`）。大分類與輸入類型始終可見；**輸出類型依大分類 cascade 過濾**：未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應的輸出類型（不加分組標題），同組內互斥（單選）；選擇 2 個以上大分類時，輸出類型依已選大分類**分組顯示**，每組加分類名稱作為子標題，**每組內互斥（單選），但跨組可各選一個**；取消某個大分類時，該組輸出類型消失且已選的該組項目自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在 taxonomy 或 registry 產生的選項中。
+- **FR-002e**：Step 1 任務類型選擇器必須由 `OUTPUT_TYPE_REGISTRY` 與 taxonomy metadata 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（依大分類 cascade 過濾且跨組可多選）。每個大分類必須以 taxonomy 的 `outputSelection` 宣告輸出選擇模式，不得在 selector 核心流程依大分類 key 硬編分支：`classification` 與 `regression` 為 `single`，其 chip 使用 `role="radio"` 且同組互斥；`sequence` 與 `generation` 為 `multiple`，其 chip 使用 `role="checkbox"` 且可保留同組多個選項。大分類與輸入類型始終可見；未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應輸出類型（不加分組標題）；選擇 2 個以上大分類時，輸出類型依已選大分類分組顯示並加分類名稱子標題；取消某個大分類時，該組輸出類型消失且已選項自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在 taxonomy 或 registry 產生的選項中。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。`.json` 檔內容為 JSON Lines（逐行 JSON object）時，系統必須可解析為紀錄集合。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示該檔案第 1 筆紀錄的原始 JSON（依目前所選資料列來源路徑取出，格式化縮排呈現）；Modal 以近全視窗尺寸呈現以盡量完整顯示該筆 JSON：長字串值於區塊寬度內自動換行（無需水平捲動），高度隨內容伸縮、超出上限時於 JSON 區塊內垂直捲動；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。若於目前所選資料列來源路徑取不出該檔案的紀錄，系統須依序回退：先改用該檔案自身偵測出的最佳候選來源，仍取不出時顯示該檔案的原始根節點 JSON，確保 Modal 開啟後必有內容可顯示。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現所選資料列來源的**前 2 筆資料列**，表格欄位為該來源**所有紀錄**第一層 key 的聯集，欄位標頭顯示原始 JSON key 名稱（不做中文轉換）並附型別摘要 badge（字串／數字／布林／陣列／物件／混合／空）；陣列或物件型儲存格以摘要文字呈現，hover 可檢視原始 JSON 內容；預覽提示列須顯示資料總筆數。**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。
@@ -603,6 +606,7 @@ flowchart LR
 - **SC-002b**：Step 3 設定的抽樣方式可於建立後在 task-detail overview 正確呈現。
 - **SC-002c**：Step 3 會明確提示成員邀請需於 task-detail 執行，建立後可在 member-management 看到對應入口。
 - **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
+- **SC-002e**：Step 1 的分類（單一標籤／多標籤）與回歸（單維度／多維度）輸出 chip 皆以 radio 呈現且各組同時最多選一項；切換同組選項會取消原項目，跨分類／回歸組可各保留一項；序列輸出仍可用 checkbox 同時選取多項。
 - **SC-003**：Step 2 可依 `OUTPUT_TYPE_REGISTRY` 產生設定介面，且 schema 設定區與 code 區內容一致。
 - **SC-003a**：Step 2 上方預覽可呈現每個輸出類型的互動式標記體驗，並可反映當前設定。
 - **SC-003b**：Step 2 預覽支援使用者實際操作（點擊 token 上標、圈選文字、拖曳滑桿、選取標籤等）。
@@ -660,6 +664,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.1.0 | 2026-07-22 | **分類／回歸輸出改為 radio 單選**：Step 1 的分類（單一標籤／多標籤）與回歸（單維度／多維度）各自組內互斥，介面沿用輸入類型的圓形 radio chip；新增 taxonomy `outputSelection` metadata 驅動單選／多選語意，序列維持 checkbox 多選以支援 `entity_recognition + relation_identification`，跨大分類仍可多選；新增 SC-002e 與對應邊界行為。下游 `outputs[]` 契約未變，無需調整相依 spec。 |
 | 4.0.0 | 2026-07-22 | **任務類型 taxonomy 與 config key 收斂**：從 Step 1、Step 2 與 `OUTPUT_TYPE_REGISTRY` 移除 `entity_relation`、`boundary`；將 `span`、`relation_triple`、`token_class` 破壞性遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不保留相容別名，並同步 zh/en 顯示名稱、config 範例、介面定義、驗收情境、功能需求與成功標準。 |
 | 3.4.3 | 2026-07-15 | **分離純關係與 Span 組合預覽**：純 `relation_triple` 只顯示既有實體唯讀高亮、循序關係建構器與三元組列表，不顯示 Span 編輯介面或 `source_output`；只有明確選擇 `span + relation_triple` 才啟用可建立／修改實體的整合預覽並輸出 `source_output: span`。解除自動加入／連帶取消 Span 的舊規則，更新驗收情境、介面表、行為與邊界規則、FR-003d-4／11／13、registry 契約與 SC-003e |
 | 3.4.2 | 2026-07-15 | **避免重複輸入預覽**：新增 registry UI metadata `rendersInputPreview`；`span`、`relation_triple`、`entity_relation` 及包含它們的複合任務由專屬／整合預覽完整呈現輸入內容，不再額外顯示通用輸入區；`token_class`、`boundary` 維持通用輸入區。更新驗收情境、介面與行為規則、邊界情況、FR-003g-3、`OutputTypeRegistryItem`、下游相依性與 SC-003j |

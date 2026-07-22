@@ -1235,6 +1235,7 @@ var ABSA_MULTI_OUTPUT_TEMPLATE = {
 var TASK_TAXONOMY = {
   classification: {
     zh: '分類（Classification）', en: 'Classification',
+    outputSelection: 'single',
     granularities: {
       single_item: {
         zh: '單一項目', en: 'Single item',
@@ -1254,6 +1255,7 @@ var TASK_TAXONOMY = {
   },
   regression: {
     zh: '回歸（Regression）', en: 'Regression',
+    outputSelection: 'single',
     granularities: {
       single_item: {
         zh: '單一項目', en: 'Single item',
@@ -1273,6 +1275,7 @@ var TASK_TAXONOMY = {
   },
   sequence: {
     zh: '序列（Sequence）', en: 'Sequence',
+    outputSelection: 'multiple',
     granularities: {
       single_item: {
         zh: '單一項目', en: 'Single item',
@@ -1286,6 +1289,7 @@ var TASK_TAXONOMY = {
   },
   generation: {
     zh: '生成（Generation）', en: 'Generation',
+    outputSelection: 'multiple',
     granularities: {
       single_item: {
         zh: '單一項目', en: 'Single item',
@@ -6508,6 +6512,7 @@ function rebuildOutputChips() {
     groups.push({
       catKey: catKey,
       label: catDef[state.lang] || catDef.zh,
+      singleSelect: catDef.outputSelection === 'single',
       outputs: Object.keys(outputsMap).map(function(k) { return outputsMap[k]; }),
     });
   });
@@ -6526,9 +6531,20 @@ function rebuildOutputChips() {
 
   // prune outputs that no longer belong to any selected category
   state.taskOutputTypes = state.taskOutputTypes.filter(function(k) { return validKeys[k]; });
+  groups.forEach(function(group) {
+    if (!group.singleSelect) return;
+    var keptSelection = false;
+    state.taskOutputTypes = state.taskOutputTypes.filter(function(outputKey) {
+      if (!catOwnership[group.catKey][outputKey]) return true;
+      if (keptSelection) return false;
+      keptSelection = true;
+      return true;
+    });
+  });
 
   var showSubheaders = groups.length > 1;
   groups.forEach(function(group) {
+    var groupSingleSelect = group.singleSelect;
     if (showSubheaders) {
       var subLabel = document.createElement('div');
       subLabel.className = 'task-type-subgroup-label';
@@ -6539,6 +6555,8 @@ function rebuildOutputChips() {
     var grid = document.createElement('div');
     grid.className = 'task-type-chip-grid';
     grid.setAttribute('data-cat', group.catKey);
+    grid.setAttribute('role', groupSingleSelect ? 'radiogroup' : 'group');
+    grid.setAttribute('aria-label', group.label);
     var groupCatKey = group.catKey;
     group.outputs.forEach(function(item) {
       var btn = document.createElement('button');
@@ -6546,7 +6564,7 @@ function rebuildOutputChips() {
       btn.className = 'task-type-chip';
       btn.setAttribute('data-key', item.key);
       btn.setAttribute('data-cat', groupCatKey);
-      btn.setAttribute('role', 'checkbox');
+      btn.setAttribute('role', groupSingleSelect ? 'radio' : 'checkbox');
       var isPreselected = state.taskOutputTypes.indexOf(item.key) >= 0;
       btn.setAttribute('aria-checked', isPreselected ? 'true' : 'false');
       if (isPreselected) btn.classList.add('selected');
@@ -6565,7 +6583,13 @@ function rebuildOutputChips() {
         var arr = state.taskOutputTypes;
         var idx = arr.indexOf(key);
 
-        if (idx >= 0) {
+        if (groupSingleSelect) {
+          if (idx >= 0) return;
+          state.taskOutputTypes = arr.filter(function(outputKey) {
+            return !catOwnership[groupCatKey][outputKey];
+          });
+          state.taskOutputTypes.push(key);
+        } else if (idx >= 0) {
           arr.splice(idx, 1);
         } else {
           arr.push(key);
