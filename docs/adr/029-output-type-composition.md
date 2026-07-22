@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-06-29
+**Amended**: 2026-07-22 — active output keys reduced to eight; `span`, `relation_triple`, and `token_class` migrated without aliases
 **Supersedes**: Partially evolves ADR-010 config schema (ADR-010 principles remain; schema structure changes)
 
 ## Context
@@ -23,9 +24,9 @@ Consider three real research datasets from this project (`docs/product/example-d
 |---------|------------------------|----------------------|
 | **NLI** (nli.json) | Read premise + hypothesis → pick a label | `single_label` |
 | **MRC** (mrc.json) | Read background + question → write an answer | `free_text` |
-| **ABSA** (absa-va.json) | Read text → mark spans (target, aspect, opinion) → link them as triples | `span` + `relation_triple` |
+| **ABSA** (absa-va.json) | Read text → mark entities (target, aspect, opinion) → identify their relations | `entity_recognition` + `relation_identification` |
 
-The ABSA task requires **two output types working together** — span extraction feeds into relation triple construction. Under the current enum-based model, this either requires:
+The ABSA task requires **two output types working together** — entity recognition feeds into relation identification. Under the current enum-based model, this either requires:
 - A new `TASK_TYPE_ENUM` value (e.g., `absa_combined`) — violates config-driven principle
 - Two separate tasks on the same dataset — breaks annotator workflow
 
@@ -33,9 +34,9 @@ The ABSA task requires **two output types working together** — span extraction
 
 #### Option A — Extend the TASK_TYPE_ENUM (status quo evolution)
 
-Add new entries for each combination: `span_with_relation`, `classification_with_span`, etc.
+Add new entries for each combination: `entity_recognition_with_relation`, `classification_with_entity_recognition`, etc.
 
-**Rejected**: Combinatorial explosion. With 10 output types and pairwise combinations, the enum would need ~55 entries (C(10,2) + 10). Each needs a dedicated schema. This is the `if task_type ==` anti-pattern at the schema level.
+**Rejected**: Combinatorial explosion. With 8 output types and pairwise combinations, the enum would need 36 entries (C(8,2) + 8). Each needs a dedicated schema. This is the `if task_type ==` anti-pattern at the schema level.
 
 #### Option B — Output-Type Composition Model (selected)
 
@@ -65,7 +66,7 @@ task:
   input_type: single_item          # single_item | item_pair
 
   outputs:
-    - type: span
+    - type: entity_recognition
       config:
         entities:
           - { name: target, color: "#FF6B6B" }
@@ -73,10 +74,10 @@ task:
           - { name: opinion, color: "#45B7D1" }
         allow_overlapping: true
 
-    - type: relation_triple
+    - type: relation_identification
       config:
         relation_types: [has_aspect, has_opinion]
-        source_output: span        # ← references the span output above
+        source_output: entity_recognition  # ← references the entity recognition output above
 
   field_role_map:
     utterances: input
@@ -103,12 +104,12 @@ Each output type is a self-contained unit with its own config fragment schema, a
 | `multi_label` | `label_options[]: {name, color?}` | Checkbox group | f1_micro, f1_macro, hamming_loss |
 | `single_dim` | `dimension_name`, `min`, `max`, `step` | Slider | pearson_r, spearman_rho, mse |
 | `multi_dim` | `dimensions[]: {name, min, max, step}` | Multiple sliders | pearson_r (per dim), mean_mse |
-| `token_class` | `entities[]: {name, color?}`, `tagging_scheme` | Token-level tagging | token_f1, token_accuracy |
-| `boundary` | `boundary_types[]` | Boundary markers | boundary_f1 |
-| `span` | `entities[]` or `polarity_options[]`, `allow_overlapping`, `scheme` | Span selection + label | entity_f1, span_f1 |
-| `relation_triple` | `relation_types[]`, `source_output` | Entity + relation drawing | triple_f1 |
-| `entity_relation` | `label_options[]` | Relation classification on pre-marked entities | f1_macro |
+| `sequence_tagging` | `entities[]: {name, color?}`, `tagging_scheme` | Token-level tagging | token_f1, token_accuracy |
+| `entity_recognition` | `entities[]` or `polarity_options[]`, `allow_overlapping`, `scheme` | Entity selection + label | entity_f1, span_f1 |
+| `relation_identification` | `relation_types[]`, `source_output` | Entity + relation drawing | triple_f1 |
 | `free_text` | `max_length`, `show_reference` | Text area | ROUGE, BERTScore, BLEU |
+
+The retired keys `entity_relation` and `boundary` are not part of the catalog. The former keys `span`, `relation_triple`, and `token_class` are also invalid; active configs must use `entity_recognition`, `relation_identification`, and `sequence_tagging` respectively.
 
 #### 3. Output Dependencies
 
@@ -124,16 +125,16 @@ Some output types can reference the results of other output types within the sam
 
 | Dependent | Source | Relationship |
 |-----------|--------|-------------|
-| `relation_triple` | `span` | Uses span-extracted entities as triple endpoints |
-| `single_label` | `span` | Classifies each extracted span (e.g., sentiment per aspect) |
-| `single_dim` | `span` | Scores each extracted span (e.g., intensity per aspect) |
+| `relation_identification` | `entity_recognition` | Uses recognized entities as relation endpoints |
+| `single_label` | `entity_recognition` | Classifies each recognized entity (e.g., sentiment per aspect) |
+| `single_dim` | `entity_recognition` | Scores each recognized entity (e.g., intensity per aspect) |
 
 **Independent combinations** (no dependency, parallel annotation):
 
 | Combination | Use Case |
 |-------------|----------|
 | `single_label` + `free_text` | Classification with explanation / justification |
-| `span` + `single_label` (no dep) | Document-level label + entity extraction |
+| `entity_recognition` + `single_label` (no dep) | Document-level label + entity recognition |
 | `multi_dim` + `free_text` | Multi-dimension scoring with free-form comment |
 
 #### 4. Config Validation
@@ -193,17 +194,17 @@ task:
   name: "Aspect-Based Sentiment Analysis"
   input_type: single_item
   outputs:
-    - type: span
+    - type: entity_recognition
       config:
         entities:
           - { name: target, color: "#FF6B6B" }
           - { name: aspect, color: "#4ECDC4" }
           - { name: opinion, color: "#45B7D1" }
         allow_overlapping: true
-    - type: relation_triple
+    - type: relation_identification
       config:
         relation_types: [has_aspect, has_opinion]
-        source_output: span
+        source_output: entity_recognition
   field_role_map:
     utterances: input
     gold_triplets: output
@@ -232,7 +233,7 @@ task:
 **Schema section layout — Hybrid accordion:**
 
 - Left side: accordion sections, one per output type. Default behavior: all expanded when ≤ 2 outputs; when > 2 outputs, auto-collapse non-active sections (the one being edited stays expanded).
-- Dependent outputs display a dependency badge (e.g., `⤷ depends on: span`) beneath their accordion header.
+- Dependent outputs display a dependency badge (e.g., `⤷ depends on: entity_recognition`) beneath their accordion header.
 - Right side: code panel always displays the full unified config (all outputs combined).
 - Editing either side (schema form or code panel) syncs the other in real-time.
 
@@ -249,10 +250,10 @@ Each output type registers its own metrics in the metric registry (ADR-010 Enfor
 ```json
 {
   "scores": {
-    "span": { "entity_f1": 0.82, "span_f1": 0.78 },
-    "relation_triple": { "triple_f1": 0.71 }
+    "entity_recognition": { "entity_f1": 0.82, "span_f1": 0.78 },
+    "relation_identification": { "triple_f1": 0.71 }
   },
-  "primary_metric": "span.entity_f1"
+  "primary_metric": "entity_recognition.entity_f1"
 }
 ```
 
@@ -265,8 +266,8 @@ Inter-Annotator Agreement is computed **per output type independently**. A multi
 ```json
 {
   "iaa": {
-    "span": { "krippendorff_alpha": 0.82 },
-    "relation_triple": { "krippendorff_alpha": 0.71 }
+    "entity_recognition": { "krippendorff_alpha": 0.82 },
+    "relation_identification": { "krippendorff_alpha": 0.71 }
   }
 }
 ```
@@ -287,7 +288,7 @@ Since no backend code exists yet (Phase 3 starts 2027-02-01), this is a **design
 4. Existing prototype HTML — update to reflect new chip structure
 5. Foundation spec — update task config API contract
 
-No database migrations, no code changes, no backwards-compatibility concerns.
+No database migrations are needed. Because this remains a design-time migration, old output keys are removed without backwards-compatible aliases.
 
 ## Resolved Design Decisions
 
@@ -295,7 +296,7 @@ All open questions have been resolved (2026-06-29):
 
 1. **Output type compatibility matrix**: All output_type + input_type combinations are valid. No restrictions — researchers decide what makes sense for their use case.
 
-2. **Same output type twice**: Not allowed in v1. Each output_type may appear at most once per task. Use config-internal differentiation (e.g., `span` with `entities[]` vs `polarity_options[]`) to cover multi-purpose scenarios. May be revisited post-thesis if a concrete research need arises.
+2. **Same output type twice**: Not allowed in v1. Each output_type may appear at most once per task. Use config-internal differentiation (e.g., `entity_recognition` with `entities[]` vs `polarity_options[]`) to cover multi-purpose scenarios. May be revisited post-thesis if a concrete research need arises.
 
 3. **Maximum outputs per task**: No hard limit. Researchers decide based on their annotation design. The platform does not restrict the number of output types per task.
 

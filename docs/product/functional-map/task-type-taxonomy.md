@@ -5,12 +5,14 @@
 ```
 層 1 任務類別（ task_category ）   分類 / 回歸 / 序列 / 生成 / 混合
 層 2 輸入類型（ input_type ）      單一項目 / 項目對
-層 3 輸出類型（ output_type ）     單一標籤 / 多標籤 / 單維度 / 多維度 / span / …
+層 3 輸出類型（ output_type ）     單一標籤 / 多標籤 / 單維度 / 多維度 / entity_recognition / …
                                       ↓
                         組合決定對應的 config 設定欄位
 ```
 
 > 「整篇文章」與「句子／段落」視為相同輸入類型（ `single_item` ），差異只在資料長度，不影響 task config 結構。
+
+> 本次同步遷移顯示名稱與技術識別碼：`span` → `entity_recognition`、`relation_triple` → `relation_identification`、`token_class` → `sequence_tagging`。舊 key 與 `entity_relation`、`boundary` 均已自合法任務類型移除，不提供相容別名。
 
 ---
 
@@ -22,7 +24,6 @@
 |------------------------|------|----------|----------|----------|-------------|
 | 單一標籤（ `single_label` ） | 從選項中選一個，含二元 | 文本分類、情感分析、主題分類 | 「蘋果發表了新款 iPhone。」 | 科技 | `label_options[]: { name, color? }` |
 | 多標籤（ `multi_label` ） | 可同時選多個 | 多標籤文本分類、內容標記 | 「這部電影有暴力和恐怖情節。」 | [暴力, 恐怖] | `label_options[]: { name, color? }` |
-| 實體關係標籤（ `entity_relation` ） | 對預標記實體對分類關係；輸入為含實體標記的單一文本，非兩段獨立文本（ 與 `item_pair` 的區別 ） | 實體關係分類（ Relation Classification ） | 「[台積電] 創辦人是 [張忠謀]。」 | 創辦關係 | `label_options[]: { name, color? }`, `entity_markers: { start, end }` |
 
 ### 項目對（ `item_pair` ）
 
@@ -62,14 +63,13 @@
 
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
-| Token 分類（ `token_class` ） | Token 級標籤 | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
-| 邊界偵測（ `boundary` ） | 切分邊界 | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | 「台積電創辦人退休。」 | 台積電｜創辦人｜退休｜。 | `boundary_type: sentence\|word\|phrase\|paragraph` |
-| 區間標記（ `span` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `span` Config 說明 |
-| 關係三元組（ `relation_triple` ） | 以既有實體建立關係觸發詞、語意類型與 Triple；與 `span` 組合時可同時編輯實體 | OpenIE、Relation Extraction、NER+RE（組合模式） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
+| Sequence Tagging 序列標註（ `sequence_tagging` ） | Token 級標籤 | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | 「台積電創辦人張忠謀退休。」 | 台積電/NNP 創辦人/NN 張忠謀/NNP 退休/VV | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
+| Entity Recognition 實體辨識（ `entity_recognition` ） | 選取文字起訖位置，可搭配類型標籤或極性標籤 | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | 「這家餐廳服務很差，但環境不錯。」 | [服務, 環境] 或 [(服務, 負面), (環境, 正面)] | 見下方 `entity_recognition` Config 說明 |
+| Relation Identification 關係識別（ `relation_identification` ） | 以既有實體建立關係觸發詞、語意類型與 Triple；與 `entity_recognition` 組合時可同時編輯實體 | OpenIE、Relation Extraction、NER+RE（組合模式） | 「台積電供應晶片給輝達。」 | (台積電, 供應, 輝達) type:supplier | `relation_types[]: string`（語意類型標籤） |
 
-#### `span` Config 說明
+#### Entity Recognition（`entity_recognition`）Config 說明
 
-`span` 統一了三種原本獨立的 output_type，透過 config 欄位組合決定標注行為：
+`entity_recognition` 統一了三種原本獨立的 output_type，透過 config 欄位組合決定標注行為：
 
 | Config 欄位 | 型別 | 說明 |
 |------------|------|------|
@@ -86,11 +86,11 @@
 | `entities` 有多項 | `multi_type_span` | NER（ span-level ）、Trigger Detection | [台積電→ORG, 張忠謀→PER] |
 | `polarity_options` 存在 | `span_with_polarity` | ABSA（ Aspect-Based Sentiment Analysis ） | [(服務, 負面), (環境, 正面)] |
 
-> 同一任務因標記介面設計不同，可對應不同 `output_type`（ e.g. NER 可選 `token_class` 或 `span` ）。
+> 同一任務因標記介面設計不同，可對應不同 `output_type`（ e.g. NER 可選 Sequence Tagging `sequence_tagging` 或 Entity Recognition `entity_recognition` ）。
 
-#### `relation_triple` Config 說明
+#### Relation Identification（`relation_identification`）Config 說明
 
-`relation_triple` 的標記流程區分**關係觸發詞**與**語意類型**兩個概念：
+`relation_identification` 的標記流程區分**關係觸發詞**與**語意類型**兩個概念：
 
 | 概念 | 來源 | 說明 | 範例 |
 |------|------|------|------|
@@ -102,12 +102,12 @@
 | Config 欄位 | 型別 | 說明 |
 |------------|------|------|
 | `relation_types[]` | `string[]` | 語意類型標籤清單，作為標記介面中「類型」下拉選單的選項 |
-| `source_output` | `string`（選填） | 僅在 `span + relation_triple` 組合模式輸出為 `span`；E1/E2 取自同一任務中可建立／修改的 span 實體。純 `relation_triple` 不輸出此欄位，E1/E2 取自資料集既有實體且僅供關係標記使用 |
+| `source_output` | `string`（選填） | 僅在 `entity_recognition + relation_identification` 組合模式輸出為 `entity_recognition`；E1/E2 取自同一任務中可建立／修改的 span 實體。純 `relation_identification` 不輸出此欄位，E1/E2 取自資料集既有實體且僅供關係標記使用 |
 
 **預覽模式：**
 
-- 純 `relation_triple`：只顯示資料集既有實體的唯讀高亮、循序關係建構器與三元組列表；不得顯示實體類型選擇器、建立／刪除實體或其他 Span 編輯控制項。
-- `span + relation_triple`：顯示整合預覽，允許先建立／修改實體，再以該些實體建立關係三元組。
+- 純 `relation_identification`：只顯示資料集既有實體的唯讀高亮、循序關係建構器與三元組列表；不得顯示實體類型選擇器、建立／刪除實體或其他 Span 編輯控制項。
+- `entity_recognition + relation_identification`：顯示整合預覽，允許先建立／修改實體，再以該些實體建立關係三元組。
 
 **標記資料結構：**
 
@@ -121,16 +121,6 @@
   "entity2": { "text": "視網膜病變", "start": 18, "end": 22 }
 }
 ```
-
-> `entity_relation` vs `relation_triple` 的使用場景區分
-
-| 對照項目 | `entity_relation` | `relation_triple` |
-|----------|-------------------|-------------------|
-| 起點 | 一組實體配對已提供 | 純模式使用資料集既有實體；與 `span` 組合時可從零建立實體 |
-| 任務 | 只判斷實體配對的關係類型 | 標關係觸發詞 + 指定語意類型；與 `span` 組合時另包含實體標記 |
-| 歸類 | classification | sequence |
-
----
 
 ## 4. 生成（ Generation ）
 
@@ -157,15 +147,13 @@
 |--------------------------|----------------------|------------------------|----------|-------------|
 | 分類（ classification ） | 單一項目（ single_item ） | 單一標籤（ single_label ） | 文本分類、情感分析、主題分類 | `label_options[]: { name, color? }` |
 | 分類（ classification ） | 單一項目（ single_item ） | 多標籤（ multi_label ） | 多標籤文本分類、內容標記 | `label_options[]: { name, color? }` |
-| 分類（ classification ） | 單一項目（ single_item ） | 實體關係標籤（ entity_relation ） | 實體關係分類（含實體標記的單一文本） | `label_options[]: { name, color? }`, `entity_markers: { start, end }` |
 | 分類（ classification ） | 項目對（ item_pair ） | 單一標籤（ single_label ） | NLI、文本蘊含識別 | `label_options[]: { name, color? }` |
 | 分類（ classification ） | 項目對（ item_pair ） | 多標籤（ multi_label ） | 句對 MLTC（多標籤分類） | `label_options[]: { name, color? }` |
 | 回歸（ regression ） | 單一項目（ single_item ） | 單維度（ single_dim ） | 情感強度評估、可讀性評分 | `va_dimensions[]: { name, min, max, step }`（單一元素） |
 | 回歸（ regression ） | 單一項目（ single_item ） | 多維度（ multi_dim ） | 情感維度評估（ Valence-Arousal ）、多維度品質評估 | `va_dimensions[]: { name, min, max, step }` |
 | 回歸（ regression ） | 項目對（ item_pair ） | 單維度（ single_dim ） | 語義相似度（ STS ）、文本相關性評分 | `va_dimensions[]: { name, min, max, step }`（單一元素） |
 | 回歸（ regression ） | 項目對（ item_pair ） | 多維度（ multi_dim ） | 語義相似度 + 句法相似度 + 主題一致性評估 | `va_dimensions[]: { name, min, max, step }` |
-| 序列（ sequence ） | 單一項目（ single_item ） | Token 分類（ token_class ） | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
-| 序列（ sequence ） | 單一項目（ single_item ） | 邊界偵測（ boundary ） | Segmentation（斷詞／斷句）、Chunking（邊界切分）、段落切分 | `boundary_type: sentence\|word\|phrase\|paragraph` |
-| 序列（ sequence ） | 單一項目（ single_item ） | 區間標記（ `span` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `span` Config 說明 ） |
-| 序列（ sequence ） | 單一項目（ single_item ） | 關係三元組（ relation_triple ） | OpenIE、Relation Extraction | `relation_types[]: string`（語意類型標籤） |
+| 序列（ sequence ） | 單一項目（ single_item ） | Sequence Tagging 序列標註（ `sequence_tagging` ） | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
+| 序列（ sequence ） | 單一項目（ single_item ） | Entity Recognition 實體辨識（ `entity_recognition` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `entity_recognition` Config 說明 ） |
+| 序列（ sequence ） | 單一項目（ single_item ） | Relation Identification 關係識別（ `relation_identification` ） | OpenIE、Relation Extraction | `relation_types[]: string`（語意類型標籤） |
 | 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |

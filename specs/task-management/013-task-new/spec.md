@@ -1,13 +1,17 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 3.4.3
+版本: 4.0.0
 狀態: Draft
 ---
 
 **需求來源**：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（`task-new`）
 
 # 功能規格：New Task — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔）
+
+## 功能目標
+
+讓 Project Leader 透過 config-driven 的四步驟精靈建立任務，並在 Step 1、Step 2 以單一 taxonomy 與 registry 呈現目前支援的輸出類型、設定欄位及可操作預覽。
 
 ## 輸入與生成規則
 
@@ -27,6 +31,7 @@
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
 - **v3.0.0 架構轉型**：本版依 ADR-029 將固定 `TASK_TYPE_ENUM` 替換為可組合的 `outputs[]` 模型。任務不再對應單一固定型別，而是由使用者從 `OUTPUT_TYPE_REGISTRY` 中選擇一至多個輸出類型組合而成。
+- **v4.0.0 taxonomy 收斂**：`entity_relation` 與 `boundary` 自合法輸出類型、Step 1 選項及 Step 2 registry／預覽移除；既有 key `span`、`relation_triple`、`token_class` 分別遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不提供舊 key 相容別名；顯示名稱同步為 Entity Recognition（實體辨識）、Relation Identification（關係識別）、Sequence Tagging（序列標註）。
 
 ## 規格常數
 
@@ -35,17 +40,16 @@
 - `TASK_CREATION_STEPS = step-1-basic | step-2-config-builder | step-3-startup-settings | step-4-guideline`
 - `TASK_CATEGORIES = classification | regression | sequence | generation`
 - `TASK_INPUT_TYPES = single_item | item_pair`
-- `OUTPUT_TYPE_KEYS = token_class | boundary | span | relation_triple | single_label | multi_label | entity_relation | single_dim | multi_dim | free_text`
+- `OUTPUT_TYPE_KEYS = sequence_tagging | entity_recognition | relation_identification | single_label | multi_label | single_dim | multi_dim | free_text`
 
   | 大分類 | 對應輸出類型 |
   |--------|-------------|
-  | `classification` | `single_label` · `multi_label` · `entity_relation`† |
+  | `classification` | `single_label` · `multi_label` |
   | `regression` | `single_dim` · `multi_dim` |
-  | `sequence` | `token_class` · `boundary` · `span` · `relation_triple` |
+  | `sequence` | `sequence_tagging` · `entity_recognition` · `relation_identification` |
   | `generation` | `free_text` |
 
-- `OUTPUT_TYPE_INPUT_CONSTRAINTS`：`entity_relation` 僅在輸入類型為 `item_pair` 時可選（†）
-- `OUTPUT_TYPE_DEPENDENCIES`：`relation_triple` 可獨立使用；僅在與 `span` 同時被選取時，以 `span` 作為可編輯實體來源，預覽與 config 合併為整合模式。此關聯不得自動加入或移除 output type
+- `OUTPUT_TYPE_DEPENDENCIES`：`relation_identification` 可獨立使用；僅在與 `entity_recognition` 同時被選取時，以 `entity_recognition` 作為可編輯實體來源，預覽與 config 合併為整合模式。此關聯不得自動加入或移除 output type
 - `OUTPUT_TYPE_FIELD_TYPES = entity-list | tag-list | select | number | text | boolean | va-dimensions`
 - `TASK_CONFIG_MODES = visual | code`
 - `CONFIG_FORMATS = yaml | json`
@@ -177,13 +181,13 @@ sequenceDiagram
 
       | 大分類 | 輸出類型 |
       |--------|----------|
-      | 分類 | `單一標籤` · `多標籤` · `實體關係標籤` |
+      | 分類 | `單一標籤` · `多標籤` |
       | 回歸 | `單維度` · `多維度` |
-      | 序列 | `Token 分類` · `邊界偵測` · `區間標記` · `關係三元組` |
+      | 序列 | `序列標註` · `實體辨識` · `關係識別` |
       | 生成 | `自由文字` |
 
     - cascade 行為：未選大分類 → 顯示「請先選擇大分類」；選 1 個 → 直接顯示輸出類型（無分組標題）；選 2+ 個 → 依大分類分組顯示並加子標題；取消大分類 → 該組輸出類型消失且已選項自動取消
-    - 輸入類型約束：`實體關係標籤`（`entity_relation`）僅在輸入類型為 `項目對` 時出現於分類組；選擇 `單一項目` 時該選項不可見
+    - 已移除的 `entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在任何分類、輸入類型或語系下
   - `下一步` 啟用條件：`task_name` 非空 ∧ 至少選擇一個輸出類型 ∧ dataset 檔案通過格式/大小/編碼檢查 ∧ Input 欄位數量符合輸入類型（`single_item` 須恰好 1 個、`item_pair` 須恰好 2 個）∧ 所有 Input 角色欄位無缺值
 - Step 2：`標記設定檔`
   - 佈局：上方標記預覽區、下方左側「範本/上傳設定檔 + schema 設定區」、下方右側 code 區
@@ -193,14 +197,14 @@ sequenceDiagram
   - schema 設定區（手風琴佈局）：
     - 無論選擇單一或多個輸出類型，每個輸出類型均以**手風琴面板**呈現，面板標題顯示序號與輸出類型名稱
     - 手風琴面板可展開/收合；面板內部由 `OUTPUT_TYPE_REGISTRY` 動態生成對應的設定欄位
-    - 存在已啟用來源關聯的輸出類型（如同時選取 `span + relation_triple`），關係三元組面板標題附帶相依提示；純 `relation_triple` 不顯示 Span 面板或相依提示
+    - 存在已啟用來源關聯的輸出類型（如同時選取 `entity_recognition + relation_identification`），Relation Identification（關係識別）面板標題附帶相依提示；純 `relation_identification` 不顯示 Entity Recognition（實體辨識）面板或相依提示
     - 各輸出類型設定欄位的 `entity-list` 新增按鈕文字需依語境顯示（如「新增標籤」、「新增實體類型」、「新增關係標籤」）
   - code 區：可編輯 YAML/JSON，提供格式切換與 `儲存` 按鈕；schema 設定與 code 區同步同一份 config
   - 標記預覽區：
     - 已上傳資料集時，預覽顯示資料集的實際文字內容；未上傳時顯示預設範例文字
     - 每個輸出類型必須有獨立的互動式預覽，使用者可直接操作體驗標記方式（見 FR-003g）
     - 每個輸出類型（`allow_bypass` 開啟時）於預覽區塊底部提供獨立的「無法判定 (Bypass)」勾選項（見 FR-003j）
-    - 存在相依關係的輸出類型（如 `span` + `relation_triple`）合併為整合預覽
+    - 存在相依關係的輸出類型（如 `entity_recognition` + `relation_identification`）合併為整合預覽
     - 獨立輸出類型之間以分隔線區隔
   - `下一步` 啟用條件：所有輸出類型的 schema 必填欄位全部通過 ∧ 無 parser/schema error ∧ code 區無未儲存變更
 - Step 3：`啟動設定`
@@ -263,9 +267,10 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 7. **Given** 任一輸出類型的 `allow_bypass` 為開啟（預設），**When** 在該輸出類型的預覽勾選「無法判定 (Bypass)」，**Then** 該輸出類型的其他預覽互動控制項被清空並停用，且不影響輸入文字與其他輸出類型的預覽；取消勾選後恢復可操作並重新初始化。
 8. **Given** 在 schema 設定面板將某輸出類型的 `allow_bypass` 關閉，**When** 預覽刷新，**Then** 該輸出類型的預覽不顯示 Bypass 勾選項，且既有的勾選狀態被清除；code 區同步輸出 `allow_bypass: false`。
 9. **Given** 已選輸出類型中至少一項於 registry 宣告 `rendersInputPreview: true`，**When** Step 2 標記預覽載入，**Then** 不顯示額外的通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。
-10. **Given** 選擇 `token_class` 或 `boundary`，**When** Step 2 標記預覽載入，**Then** 通用輸入文字區塊仍顯示於輸出類型預覽之前。
-11. **Given** 僅選擇 `relation_triple` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
-12. **Given** 同時選擇 `span + relation_triple`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_triple.config.source_output` 自動輸出為 `span`。
+10. **Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 通用輸入文字區塊仍顯示於輸出類型預覽之前。
+11. **Given** 僅選擇 `relation_identification` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
+12. **Given** 同時選擇 `entity_recognition + relation_identification`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_identification.config.source_output` 自動輸出為 `entity_recognition`。
+13. **Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
 
 **介面定義**：
 
@@ -275,19 +280,17 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
   - 指定為 `evidence` 角色的欄位不在標記預覽中顯示獨立區塊；Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另記錄於 config 的 `evidence_fields`），其內容留待標記工作區呈現
   - 通用輸入文字區塊依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤 + 單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊，呈現配對輸入
   - 當已選輸出類型均未於 registry 宣告 `rendersInputPreview: true` 時，通用輸入文字區塊位於所有輸出類型預覽之上方；任一已選輸出類型宣告該 metadata 時，專屬或整合預覽負責完整呈現輸入內容，不得再顯示通用輸入文字區塊
-  - `span`、`relation_triple`、`entity_relation` 宣告 `rendersInputPreview: true`；`token_class` 與 `boundary` 維持預設值 `false`，繼續顯示通用輸入文字區塊。複合任務依已選輸出類型的 registry metadata 推導，不得以任務名稱硬編判斷
-  - 存在相依關係的輸出類型合併為整合預覽（如 `span` + `relation_triple` 合併為含圈選文字、實體列表、關係建構器的統一介面）
+  - `entity_recognition`、`relation_identification` 宣告 `rendersInputPreview: true`；`sequence_tagging` 維持預設值 `false`，繼續顯示通用輸入文字區塊。複合任務依已選輸出類型的 registry metadata 推導，不得以任務名稱硬編判斷
+  - 存在相依關係的輸出類型合併為整合預覽（如 `entity_recognition` + `relation_identification` 合併為含圈選文字、實體列表、關係建構器的統一介面）
   - 各輸出類型的預覽互動方式：
 
     | 輸出類型 | 預覽互動方式 |
     |----------|-------------|
-    | `token_class` | 標籤類型按鈕列 + 可點擊 token 網格（點擊 token 上 BIO 標記）+ 標記方案顯示 |
-    | `boundary` | 使用一致色系作為圖例的邊界類型選擇器 + 每個字元間隙皆可透過滑鼠、觸控或鍵盤插入/移除邊界標記；已標記位置顯示 SVG 剪刀、類型名稱首字縮寫與防遮蔽間距 + 階層式切割結果即時預覽 |
-    | `span` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除） |
-    | `relation_triple` | 純模式：既有實體唯讀高亮 + 循序關係建構器（E1/Arg1 → Relation → E2/Arg2 → 新增）+ 三元組列表，不顯示 Span 編輯控制項；與 `span` 組合時：整合預覽允許先建立／修改實體，再建立關係。兩種模式皆以「類型」選單事後指定 config `relation_types` 中的語意類型 |
+    | `sequence_tagging` | 標籤類型按鈕列 + 可點擊 token 網格（點擊 token 上 BIO 標記）+ 標記方案顯示 |
+    | `entity_recognition` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除） |
+    | `relation_identification` | 純模式：既有實體唯讀高亮 + 循序關係建構器（E1/Arg1 → Relation → E2/Arg2 → 新增）+ 三元組列表，不顯示 Span 編輯控制項；與 `entity_recognition` 組合時：整合預覽允許先建立／修改實體，再建立關係。兩種模式皆以「類型」選單事後指定 config `relation_types` 中的語意類型 |
     | `single_label` | 文字顯示 + radio 風格可點選標籤 chip（單選） |
     | `multi_label` | 文字顯示 + checkbox 風格可點選標籤 chip（多選）+ 已選顯示 |
-    | `entity_relation` | 實體配對卡片（E1 ↔ E2）+ 可點選關係標籤 chip |
     | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿（含 min/max/當前值） |
     | `multi_dim` | 文字顯示 + 多維度各自獨立可拖曳滑桿（含 min/max/當前值標籤） |
     | `free_text` | 文字顯示 + 可編輯 textarea（含字數計數器）；啟用參考答案時顯示參考區塊 |
@@ -309,16 +312,14 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 
     | 輸出類型 | 欄位 | 類型 | 必填 |
     |----------|------|------|------|
-    | `token_class` | `entities`（標籤類型） | `entity-list` | 是 |
-    | `token_class` | `tagging_scheme`（標記方案） | `select`（BIO/BIOES/IOB2） | 是 |
-    | `boundary` | `boundary_types`（邊界類型） | `tag-list` | 是 |
-    | `span` | `entities`（實體類型） | `entity-list` | 是 |
-    | `span` | `allow_overlapping`（允許重疊標記） | `boolean` | 否 |
-    | `relation_triple` | `relation_types`（語意類型標籤，如 `bodyLocation`、`causes`） | `tag-list` | 是 |
+    | `sequence_tagging` | `entities`（標籤類型） | `entity-list` | 是 |
+    | `sequence_tagging` | `tagging_scheme`（標記方案） | `select`（BIO/BIOES/IOB2） | 是 |
+    | `entity_recognition` | `entities`（實體類型） | `entity-list` | 是 |
+    | `entity_recognition` | `allow_overlapping`（允許重疊標記） | `boolean` | 否 |
+    | `relation_identification` | `relation_types`（語意類型標籤，如 `bodyLocation`、`causes`） | `tag-list` | 是 |
     | `single_label` | `label_options`（標籤選項） | `entity-list` | 是 |
     | `multi_label` | `label_options`（標籤選項） | `entity-list` | 是 |
     | `multi_label` | `max_selections`（最多可選數量） | `number` | 否 |
-    | `entity_relation` | `label_options`（關係標籤） | `entity-list` | 是 |
     | `single_dim` | `dimension_name`（維度名稱） | `text` | 是 |
     | `single_dim` | `min` / `max` / `step` | `number` | 是 |
     | `multi_dim` | `dimensions`（維度列表） | `va-dimensions` | 是 |
@@ -347,14 +348,14 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - 上方預覽需呈現每個輸出類型的互動式標記體驗，並隨 schema 欄位變更即時更新。
 - 預覽互動必須支援使用者實際操作（點擊、圈選、拖曳、輸入等），非僅靜態展示。
 - 各輸出類型的預覽互動（如點擊標籤 chip 切換選取狀態）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽內容。
-- `entity-list` 欄位的新增按鈕文字必須依語境顯示（如 `single_label` 顯示「新增標籤」、`span` 顯示「新增實體類型」、`entity_relation` 顯示「新增關係標籤」、`token_class` 顯示「新增標籤類型」）。
+- `entity-list` 欄位的新增按鈕文字必須依語境顯示（如 `single_label` 顯示「新增標籤」、`entity_recognition` 顯示「新增實體類型」、`sequence_tagging` 顯示「新增標籤類型」）。
 - `multi_dim` 的維度設定為通用模式，使用者可自訂任意維度名稱與 min/max/step，不限於特定維度（如 VA）。
-- 存在 `OUTPUT_TYPE_DEPENDENCIES` 的輸出類型（如 `span` + `relation_triple`）同時被選取時，預覽須合併為整合模式（含圈選文字建立實體、實體列表、關係建構器、三元組列表）。
-- `relation_triple` 的 `source_output` 必須由 registry metadata 與目前已選 output types 推導：僅當 `span` 同時被選取時輸出 `source_output: span`；純 `relation_triple` 不得保留或序列化該欄位。
+- 存在 `OUTPUT_TYPE_DEPENDENCIES` 的輸出類型（如 `entity_recognition` + `relation_identification`）同時被選取時，預覽須合併為整合模式（含圈選文字建立實體、實體列表、關係建構器、三元組列表）。
+- `relation_identification` 的 `source_output` 必須由 registry metadata 與目前已選 output types 推導：僅當 `entity_recognition` 同時被選取時輸出 `source_output: entity_recognition`；純 `relation_identification` 不得保留或序列化該欄位。
 - code 內容儲存成功後，左側 schema 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤且保留使用者輸入。
 - 預覽文字來源：已上傳資料集時讀取實際欄位內容（依 `field_role_map` 中 `input` 角色的欄位），未上傳時顯示預設範例文字。
 - 通用輸入文字區塊是否顯示必須由已選輸出類型的 registry metadata 推導：任一項 `rendersInputPreview = true` 時，由專屬或整合預覽呈現輸入內容並省略通用區塊；所有項目皆為 `false` 或未宣告時，保留通用區塊。不得以特定任務名稱或複合任務名稱硬編分支。
-- 預覽狀態初始化：已上傳資料集且有 `output` 角色欄位時，各輸出類型的互動控制項以該欄位的實際值初始化（如預選標籤、設定滑桿值、預填文字）；output 欄位的 unique values 自動帶入分類型輸出類型的 `label_options`；output 欄位值為 JSON object 時自動建立 `multi_dim` 的維度列表（維度範圍依實際資料值推斷）；預標記三元組的語意類型（`relation_type` 欄位）自動帶入 `relation_triple` 的 `relation_types`；存在多個 output 角色欄位時，依欄位值的資料形狀對應各輸出類型，分別取用形狀相符的欄位初始化。
+- 預覽狀態初始化：已上傳資料集且有 `output` 角色欄位時，各輸出類型的互動控制項以該欄位的實際值初始化（如預選標籤、設定滑桿值、預填文字）；output 欄位的 unique values 自動帶入分類型輸出類型的 `label_options`；output 欄位值為 JSON object 時自動建立 `multi_dim` 的維度列表（維度範圍依實際資料值推斷）；預標記三元組的語意類型（`relation_type` 欄位）自動帶入 `relation_identification` 的 `relation_types`；存在多個 output 角色欄位時，依欄位值的資料形狀對應各輸出類型，分別取用形狀相符的欄位初始化。
 - 每個輸出類型的 config 一律包含共通欄位 `allow_bypass`（`boolean`，預設 `true`），由 registry 統一附加至所有輸出類型的 `fields` 與 `defaultConfig`，並隨 `outputs[]` 格式序列化至 code 區；schema 設定面板以 toggle 呈現，關閉時該輸出類型的預覽不顯示 Bypass 勾選項（見 FR-003j）。
 
 ---
@@ -429,16 +430,14 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
 - 任一輸出類型的 `entity-list` 或 `tag-list` 必填欄位為空或含空白項目：阻擋進入 Step 3 並顯示可定位錯誤。
-- `boundary` 切點位於文字換行前後：已標記按鈕可隨文字自然換行，但 SVG 剪刀與類型縮寫不得覆蓋任一側文字；移除標記後該位置恢復未標記間隙的緊密排版。
-- `boundary` 使用者切換目前邊界類型：所有未標記間隙的可存取名稱立即反映新類型；既有標記保留建立時的完整類型、對應色系與首字縮寫，直到使用者移除或重新建立該標記。
 - `multi_label` 設定 `max_selections` 大於 `label_options` 數量：顯示提示但不阻擋（視為「不限」語意）。
 - 預覽已勾選 Bypass 時關閉該輸出類型的 `allow_bypass`：勾選狀態一併清除，預覽恢復顯示且不殘留停用樣式。
 - 已勾選 Bypass 的輸出類型存在預標記資料（`output` 角色欄位）：勾選期間不得被預標記值重新填入；取消勾選後預標記初始化重新套用。
-- 整合預覽（`span` + `relation_triple`）中勾選 `span` 的 Bypass：關係建構器隨實體一併停用；取消勾選後實體與三元組依預標記資料重新初始化。
-- 純 `relation_triple` 載入含既有實體的資料集：實體僅以唯讀高亮作為 E1/E2 候選，不顯示實體類型、實體列表、建立實體或刪除實體控制項；切換為 `span + relation_triple` 後才顯示完整 Span 編輯介面。
-- 由 `span + relation_triple` 取消 `span`：保留 `relation_triple`，預覽切換為純關係模式並移除 config 的 `source_output`；不得連帶取消關係三元組。
-- 已選輸出類型包含 `span`、`relation_triple` 或 `entity_relation`：不得在專屬或整合預覽之外重複顯示通用輸入文字區塊；專屬或整合預覽仍須完整顯示資料集實際輸入內容。
-- 已選輸出類型為 `token_class` 或 `boundary`：即使輸出互動控制項會操作同一份文字，仍保留位於其前方的通用輸入文字區塊。
+- 整合預覽（`entity_recognition` + `relation_identification`）中勾選 `entity_recognition` 的 Bypass：關係建構器隨實體一併停用；取消勾選後實體與三元組依預標記資料重新初始化。
+- 純 `relation_identification` 載入含既有實體的資料集：實體僅以唯讀高亮作為 E1/E2 候選，不顯示實體類型、實體列表、建立實體或刪除實體控制項；切換為 `entity_recognition + relation_identification` 後才顯示完整 Span 編輯介面。
+- 由 `entity_recognition + relation_identification` 取消 `entity_recognition`：保留 `relation_identification`，預覽切換為純關係模式並移除 config 的 `source_output`；不得連帶取消關係三元組。
+- 已選輸出類型包含 `entity_recognition` 或 `relation_identification`：不得在專屬或整合預覽之外重複顯示通用輸入文字區塊；專屬或整合預覽仍須完整顯示資料集實際輸入內容。
+- 已選輸出類型為 `sequence_tagging`：即使輸出互動控制項會操作同一份文字，仍保留位於其前方的通用輸入文字區塊。
 - `single_dim` 或 `multi_dim` 設定 `min >= max` 或 `step <= 0`：阻擋進入 Step 3 並顯示修正提示。
 - `single_item` 輸入類型且欄位預覽中 Input 欄位數 ≠ 1，或 `item_pair` 輸入類型且 Input 欄位數 ≠ 2：阻擋進入 Step 2 並顯示修正提示（需指出正確數量）。
 - 使用者在 Step 1~4 有變更後離頁（側欄跳轉、關閉分頁）：需先跳確認視窗，選擇「離開」才可導頁；離頁後再次從外部導航進入時，系統清除暫存狀態並從第一步空白開始。
@@ -456,7 +455,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
 - **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、至少一個輸出類型；未上傳任何資料集時不得進入下一步。輸出類型由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型依大分類 cascade 過濾且跨組可多選）；選擇結果存為 `selectedOutputTypes[]`。
-- **FR-002e**：Step 1 任務類型選擇器必須由 `OUTPUT_TYPE_REGISTRY` 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（cascade 過濾，**組內單選、跨組可多選**，`role="radio"`）。大分類與輸入類型始終可見；**輸出類型依大分類 cascade 過濾**：未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應的輸出類型（不加分組標題），同組內互斥（單選）；選擇 2 個以上大分類時，輸出類型依已選大分類**分組顯示**，每組加分類名稱作為子標題，**每組內互斥（單選），但跨組可各選一個**；取消某個大分類時，該組輸出類型消失且已選的該組項目自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。此外，`entity_relation` 僅在輸入類型為 `item_pair` 時可選；切換至 `single_item` 時該選項自動移除。
+- **FR-002e**：Step 1 任務類型選擇器必須由 `OUTPUT_TYPE_REGISTRY` 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（cascade 過濾，**組內單選、跨組可多選**，`role="radio"`）。大分類與輸入類型始終可見；**輸出類型依大分類 cascade 過濾**：未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應的輸出類型（不加分組標題），同組內互斥（單選）；選擇 2 個以上大分類時，輸出類型依已選大分類**分組顯示**，每組加分類名稱作為子標題，**每組內互斥（單選），但跨組可各選一個**；取消某個大分類時，該組輸出類型消失且已選的該組項目自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在 taxonomy 或 registry 產生的選項中。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。`.json` 檔內容為 JSON Lines（逐行 JSON object）時，系統必須可解析為紀錄集合。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示該檔案第 1 筆紀錄的原始 JSON（依目前所選資料列來源路徑取出，格式化縮排呈現）；Modal 以近全視窗尺寸呈現以盡量完整顯示該筆 JSON：長字串值於區塊寬度內自動換行（無需水平捲動），高度隨內容伸縮、超出上限時於 JSON 區塊內垂直捲動；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。若於目前所選資料列來源路徑取不出該檔案的紀錄，系統須依序回退：先改用該檔案自身偵測出的最佳候選來源，仍取不出時顯示該檔案的原始根節點 JSON，確保 Modal 開啟後必有內容可顯示。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現所選資料列來源的**前 2 筆資料列**，表格欄位為該來源**所有紀錄**第一層 key 的聯集，欄位標頭顯示原始 JSON key 名稱（不做中文轉換）並附型別摘要 badge（字串／數字／布林／陣列／物件／混合／空）；陣列或物件型儲存格以摘要文字呈現，hover 可檢視原始 JSON 內容；預覽提示列須顯示資料總筆數。**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。
@@ -474,31 +473,29 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003a-2**：Step 2 左側 schema 設定區必須採手風琴佈局，無論選擇單一或多個輸出類型，每個輸出類型均以獨立手風琴面板呈現，面板標題顯示序號與輸出類型名稱。
 - **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過所有輸出類型的 schema 驗證。
 - **FR-003c**：新增 output type 應可透過 registry 擴充，不修改核心流程（Step 1–4）。
-- **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須至少包含 10 種輸出類型：`token_class`、`boundary`、`span`、`relation_triple`、`single_label`、`multi_label`、`entity_relation`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱。
-- **FR-003d-1**：`token_class` 必須支援 `entities`（`{ name, color }[]`）與 `tagging_scheme`（`BIO | BIOES | IOB2`）。預覽：標籤類型按鈕列（含 `O` 標籤）+ 可點擊 token 網格，點擊 token 依當前選中標籤推斷 `B-`/`I-` 前綴。token 網格的分詞來源：已上傳資料集且紀錄含 token 陣列欄位（或 `input` 角色欄位本身為陣列）時，須優先採用資料集提供的分詞；否則以空白字元切分文字。預標記初始化（FR-003g-5）僅在 `output` 欄位的標記數量與 token 數量一致時套用，不一致時所有 token 初始化為 `O`。驗證：`entities` 不得為空且不得含空白項目。
-- **FR-003d-2**：`boundary` 必須支援 `boundary_types`（string[]）。預覽：邊界類型選擇列 + 每個字元間隙皆可透過滑鼠、觸控或鍵盤操作的按鈕（插入/移除邊界標記），底部顯示已標記數量與即時切割結果。未標記按鈕必須具備固定且足以操作的命中區、可見的 hover／`focus-visible` 狀態與包含目前邊界類型及 offset 的可存取名稱，不得依賴 ground-truth 邊界才產生可選位置。已標記邊界必須依 `boundary_types` 順序套用可辨識的色系，並同時顯示 SVG 剪刀與由類型名稱第一個 Unicode 字元產生的縮寫（拉丁字母轉為大寫，例如 `sentence → S`、`paragraph → P`）；類型選擇列須使用相同色系作為圖例，辨識不得只依賴顏色。已標記按鈕與左右文字之間必須保留至少 2px 的可見間距，避免圖示遮蔽文字；未標記間隙仍應維持緊密排版。切割結果採階層式語意：`sentence` 結束目前句子但保留於目前段落；`paragraph` 結束目前句子並結束目前段落，後續文字建立為新段落。結果預覽須以段落分組、於段落內依序列出句子，並在新增、移除或變更邊界類型時同步更新。驗證：`boundary_types` 不得為空且不得含空白項目。
-- **FR-003d-3**：`span` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。驗證：`entities` 不得為空且不得含空白項目。
-- **FR-003d-4**：`relation_triple` 必須支援 `relation_types`（string[]，語意類型標籤），且可單獨使用或與 `span` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_triple` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項；若選取非既有實體，需提示改選已高亮實體。與 `span` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；語意類型由每筆三元組的 `type` 選單事後指定，選項僅來自 `relation_types`，不得覆寫觸發詞。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：`relation_types` 不得為空且不得含空白項目。
+- **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須包含 8 種輸出類型：`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱；其中 `sequence_tagging` 顯示 Sequence Tagging／序列標註，`entity_recognition` 顯示 Entity Recognition／實體辨識，`relation_identification` 顯示 Relation Identification／關係識別。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得存在於 registry，亦不得作為相容別名接受。
+- **FR-003d-1**：`sequence_tagging` 必須支援 `entities`（`{ name, color }[]`）與 `tagging_scheme`（`BIO | BIOES | IOB2`）。預覽：標籤類型按鈕列（含 `O` 標籤）+ 可點擊 token 網格，點擊 token 依當前選中標籤推斷 `B-`/`I-` 前綴。token 網格的分詞來源：已上傳資料集且紀錄含 token 陣列欄位（或 `input` 角色欄位本身為陣列）時，須優先採用資料集提供的分詞；否則以空白字元切分文字。預標記初始化（FR-003g-5）僅在 `output` 欄位的標記數量與 token 數量一致時套用，不一致時所有 token 初始化為 `O`。驗證：`entities` 不得為空且不得含空白項目。
+- **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。驗證：`entities` 不得為空且不得含空白項目。
+- **FR-003d-4**：`relation_identification` 必須支援 `relation_types`（string[]，語意類型標籤），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；語意類型由每筆三元組的 `type` 選單事後指定，選項僅來自 `relation_types`，不得覆寫觸發詞。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：`relation_types` 不得為空且不得含空白項目。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-6**：`multi_label` 必須支援 `label_options`（`{ name, color }[]`）與 `max_selections`（number，0 = 不限）。預覽：文字區塊 + checkbox 風格 chip 按鈕（可多選），下方顯示已選數量。驗證：`label_options` 不得為空且不得含空白項目。
-- **FR-003d-7**：`entity_relation` 必須支援 `label_options`（`{ name, color }[]`）。預覽：兩張實體卡片（E1 ↔ E2，含雙向箭頭）+ 關係標籤 chip 按鈕（互斥單選）。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider（含 min/max/當前值標籤）。驗證：`min` < `max`、`step` > `0`。
 - **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider（含 min/max 標籤與即時更新的當前值標籤）；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`。
 - **FR-003d-10**：`free_text` 必須支援 `max_length`（number）與 `show_reference`（boolean）。預覽：文字區塊 + textarea（含字元計數 `N / max_length`）；textarea 標題優先顯示 output 欄位原始名稱，無 output 欄位時顯示「回答」/「Answer」。`show_reference = true` 時額外顯示參考答案區塊，已上傳資料集且有 output 欄位時顯示該欄位實際值，否則顯示佔位提示文字。驗證：`max_length` > `0`。
-- **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `span + relation_triple` 時，預覽區必須以統一模式呈現：共用同一份文本，使用者可先圈選、建立、修改或刪除 Span 實體，再以循序關係建構器建立 relation triple；實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_triple` 時，預覽沿用相同的循序關係建構器與 `type` 選單，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
+- **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `entity_recognition + relation_identification` 時，預覽區必須以統一模式呈現：共用同一份文本，使用者可先圈選、建立、修改或刪除 Span 實體，再以循序關係建構器建立 relation triple；實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_identification` 時，預覽沿用相同的循序關係建構器與 `type` 選單，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
 - **FR-003d-12**：Step 2 左側 schema 設定區每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題可點擊切換展開/收合。有依賴關係時，面板標題下方必須顯示依賴提示。
-- **FR-003d-13**：輸出類型來源關聯規則：選擇 `relation_triple` 不得自動加入 `span`；只有使用者明確同時選取 `span + relation_triple` 時，系統才啟用整合模式並由 registry 的 `source_output` metadata 在輸出 config 加入 `source_output: span`。取消 `span` 時保留 `relation_triple`、切回純關係模式並移除 `source_output`，不得連帶取消關係三元組。
+- **FR-003d-13**：輸出類型來源關聯規則：選擇 `relation_identification` 不得自動加入 `entity_recognition`；只有使用者明確同時選取 `entity_recognition + relation_identification` 時，系統才啟用整合模式並由 registry 的 `source_output` metadata 在輸出 config 加入 `source_output: entity_recognition`。取消 `entity_recognition` 時保留 `relation_identification`、切回純關係模式並移除 `source_output`，不得連帶取消關係三元組。
 - **FR-003e**：code 區必須支援可編輯 YAML/JSON，並提供 `儲存` 操作以套用回 schema 設定欄位。
 - **FR-003f**：當 code 區有未儲存變更且使用者嘗試進入下一步時，系統必須阻擋前進並提示先儲存；不得自動儲存。
 - **FR-003g**：Step 2 上方必須提供每個輸出類型的互動式標記預覽區，使用者可實際操作體驗標記方式（點擊、圈選、拖曳、輸入等），且在設定變更時即時同步更新。
 - **FR-003g-1**：預覽文字來源：已上傳資料集時讀取 `field_role_map` 中 `input` 角色欄位的實際內容；未上傳時顯示各輸出類型的預設範例文字。
 - **FR-003g-2**：Step 2 標記預覽區不得為 `evidence` 角色欄位顯示獨立卡片或區塊（所有輸出類型一致）；Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另將欄位記錄於 config 的 `evidence_fields`），其內容留待標記工作區呈現。
-- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤與單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`span`、`relation_triple`、`entity_relation` 的該 metadata 為 `true`；`token_class`、`boundary` 維持預設 `false`。複合任務（如 `span + relation_triple`、`span + relation_triple + multi_dim`）須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
+- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤與單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`entity_recognition`、`relation_identification` 的該 metadata 為 `true`；`sequence_tagging` 維持預設 `false`。複合任務（如 `entity_recognition + relation_identification`、`entity_recognition + relation_identification + multi_dim`）須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
 - **FR-003g-4**：各輸出類型的預覽互動（如點擊標籤 chip）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽。
-- **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` / `entity_relation` 預選匹配的標籤；`multi_label` 預選匹配的多個標籤；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`token_class` 以實際 BIO 標記初始化 token 標記；`boundary` 以實際邊界位置初始化邊界標記；`free_text` 預填實際答案文字；`span` 以實際實體列表初始化；`relation_triple` 以實際三元組初始化。無 output 欄位時維持預設值。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應（如 BIO 標記格式的字串陣列對應 `token_class`、一般字串陣列對應 `multi_label`、含位置資訊的物件對應 `boundary`、JSON object 對應 `multi_dim`、數字對應 `single_dim`／`single_label`、字串對應 `single_label`／`entity_relation`／`free_text`），各輸出類型的預覽初始化與自動帶入（FR-003g-6／FR-003g-7）分別取用形狀相符的欄位，而非一律採用同一欄位。
-- **FR-003g-6**：當 `output` 角色欄位的 unique values 存在時，`single_label`、`multi_label`、`entity_relation` 的 `label_options` 必須自動從該欄位的 unique values 帶入（每個 unique value 對應一筆 `{ name, color }`），免除使用者手動新增；已自動帶入後不重複執行。
+- **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 預選匹配的多個標籤；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以實際 BIO 標記初始化 token 標記；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時維持預設值。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應（如 BIO 標記格式的字串陣列對應 `sequence_tagging`、一般字串陣列對應 `multi_label`、JSON object 對應 `multi_dim`、數字對應 `single_dim`／`single_label`、字串對應 `single_label`／`free_text`），各輸出類型的預覽初始化與自動帶入（FR-003g-6／FR-003g-7）分別取用形狀相符的欄位，而非一律採用同一欄位。
+- **FR-003g-6**：當 `output` 角色欄位的 unique values 存在時，`single_label`、`multi_label` 的 `label_options` 必須自動從該欄位的 unique values 帶入（每個 unique value 對應一筆 `{ name, color }`），免除使用者手動新增；已自動帶入後不重複執行。
 - **FR-003g-7**：當 `output` 角色欄位的首筆資料為 JSON object（非 array）時，`multi_dim` 的 `dimensions` 必須自動從該 object 的 keys 建立維度列表（每個 key 對應一筆 `{ name, min, max, step }`），免除使用者手動新增；已自動帶入後不重複執行。各維度的 `min`／`max`／`step` 必須依該維度實際資料值範圍推斷（如值域介於 0–1 時採 0～1 範圍與小數步進、含負值時對稱擴展範圍、值較大時依最大值放大範圍上限），不得一律套用固定預設範圍。
-- **FR-003g-8**：當預標記三元組資料存在且元素帶有語意類型欄位（`relation_type` 字串，或 record 層級的 `relation_types` 陣列）時，`relation_triple` 的 `relation_types` 必須自動從資料中出現過的語意類型（依出現順序去重）帶入，**取代**預設值，使設定面板的語意類型欄位與三元組列的 `type` 選單皆反映實際資料、不出現寫死預設值；已自動帶入後不重複執行。收集優先順序：(1) 各三元組的 `relation_type` 欄位；(2) record 層級的 `relation_types` 陣列；(3) `{subj, rel, obj}` 格式中 `rel` 本身為語意標籤時直接採用。若三元組不含可辨識的語意類型（如 ABSA 的 `target_text`／`aspect_text`／`opinion_text` 形式），則維持設定預設值。
+- **FR-003g-8**：當預標記三元組資料存在且元素帶有語意類型欄位（`relation_type` 字串，或 record 層級的 `relation_types` 陣列）時，`relation_identification` 的 `relation_types` 必須自動從資料中出現過的語意類型（依出現順序去重）帶入，**取代**預設值，使設定面板的語意類型欄位與三元組列的 `type` 選單皆反映實際資料、不出現寫死預設值；已自動帶入後不重複執行。收集優先順序：(1) 各三元組的 `relation_type` 欄位；(2) record 層級的 `relation_types` 陣列；(3) `{subj, rel, obj}` 格式中 `rel` 本身為語意標籤時直接採用。若三元組不含可辨識的語意類型（如 ABSA 的 `target_text`／`aspect_text`／`opinion_text` 形式），則維持設定預設值。
 - **FR-003h**：Step 2 必須支援上傳 `CONFIG_UPLOAD_FORMATS` 設定檔，載入至 code 區並由使用者手動儲存套用。
 - **FR-003i**：Step 2 預設模板需支援 i18n（至少 zh/en）；切換語言時，若 code 區無未儲存變更（`codeDraftDirty = false`）且使用中為預設 labels，需同步轉換為對應語言 labels；若有未儲存變更則不自動覆寫，保留使用者手動修改。
 - **FR-003j**：每個輸出類型必須提供獨立的「無法判定 (Bypass)」選項，供標記員在無法判定該輸出類型時選擇。行為規則如下：
@@ -506,7 +503,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
   - **預覽勾選項**：`allow_bypass` 開啟時，該輸出類型的預覽區塊底部顯示獨立的「無法判定 (Bypass)」勾選項（toggle button 語意，含 `aria-pressed` 狀態）；關閉時不顯示，且既有勾選狀態必須一併清除、預覽重新初始化。
   - **互斥行為**：勾選 Bypass 後，該輸出類型預覽的其他互動控制項必須**清空既有標記狀態並停用**（視覺弱化且不可操作），僅影響該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型；Bypass 勾選項本身維持可點擊。
   - **取消恢復**：取消勾選後，該輸出類型的預覽必須恢復可操作並**重新初始化如同初次載入**（含 FR-003g-5～FR-003g-8 的預標記初始化重新套用）。
-  - **整合預覽邊界**：`span` + `relation_triple` 同時選取的整合預覽中，兩者各自顯示帶輸出類型名稱前綴的 Bypass 勾選項（如「Span 區間標記：無法判定 (Bypass)」）；勾選 `span` 的 Bypass 時，因 `relation_triple` 依賴 span 實體，整合預覽全區（含關係建構器）一併清空停用；勾選 `relation_triple` 的 Bypass 時僅清空停用關係建構器與三元組列表，實體標記不受影響。
+  - **整合預覽邊界**：`entity_recognition` + `relation_identification` 同時選取的整合預覽中，兩者各自顯示帶輸出類型名稱前綴的 Bypass 勾選項（如「實體辨識：無法判定 (Bypass)」與「關係識別：無法判定 (Bypass)」）；勾選 `entity_recognition` 的 Bypass 時，因 `relation_identification` 依賴 entity_recognition 實體，整合預覽全區（含關係建構器）一併清空停用；勾選 `relation_identification` 的 Bypass 時僅清空停用關係建構器與三元組列表，實體標記不受影響。
   - **狀態重設**：重新上傳或移除資料集檔案時，所有輸出類型的 Bypass 勾選狀態一併重設。
   - 本欄位定義標記員在 annotation-workspace 的可用行為契約，實際標記介面的 Bypass 呈現由 015 Annotation Workspace 規格另行定義。
 - **FR-004**：Step 3 必須支援啟動設定，包含抽樣方式與資料隔離。
@@ -533,7 +530,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-008c**：在 mobile viewport 下，annotation-workspace 右側說明區塊收合後，主內容區必須維持單欄滿寬佈局，不得因收合狀態套用桌面欄位寬度造成跑版。
 - **FR-008d**：頁面必須支援 `prefers-reduced-motion: reduce`，啟用時所有過渡動畫降至最低。
 - **FR-008e**：頁面必須支援深色模式（`data-theme="dark"`），所有表單元素、卡片、預覽區域、步驟指示器皆須正確適配暗色配色。
-- **FR-009**：輸出類型組合需覆蓋研究生現行任務情境：情感分類（`single_label`）、多標籤分類（`multi_label`）、多維度評分（`multi_dim`）、區間標記（`span`）、關係抽取（`span` + `relation_triple`）、自由文字（`free_text`）。
+- **FR-009**：輸出類型組合需覆蓋研究生現行任務情境：情感分類（`single_label`）、多標籤分類（`multi_label`）、多維度評分（`multi_dim`）、實體辨識（`entity_recognition`）、關係識別（`entity_recognition` + `relation_identification`）、自由文字（`free_text`）。
 
 ### 使用者流程與導頁
 
@@ -610,15 +607,14 @@ flowchart LR
 - **SC-003a**：Step 2 上方預覽可呈現每個輸出類型的互動式標記體驗，並可反映當前設定。
 - **SC-003b**：Step 2 預覽支援使用者實際操作（點擊 token 上標、圈選文字、拖曳滑桿、選取標籤等）。
 - **SC-003c**：Step 2 預覽文字在已上傳資料集時顯示資料集實際內容，未上傳時顯示預設範例文字。
-- **SC-003d**：10 種輸出類型均可在 Step 2 完成 schema 設定與預覽互動。
-- **SC-003e**：純 `relation_triple` 僅顯示既有實體唯讀高亮、關係建構器與三元組列表，且 config 不含 `source_output`；`span + relation_triple` 同時選取時才合併為可建立／修改實體的整合模式，並輸出 `source_output: span`。
+- **SC-003d**：8 種輸出類型均可在 Step 2 完成 schema 設定與預覽互動；`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 在 Step 1／Step 2 皆不可選、不可設定且無預覽入口。
+- **SC-003e**：純 `relation_identification` 僅顯示既有實體唯讀高亮、關係建構器與三元組列表，且 config 不含 `source_output`；`entity_recognition + relation_identification` 同時選取時才合併為可建立／修改實體的整合模式，並輸出 `source_output: entity_recognition`。
 - **SC-003f**：`multi_dim` 可設定任意數量與名稱的維度，不限於特定維度。
 - **SC-003g**：`entity-list` 欄位的新增按鈕文字依輸出類型語境正確顯示。
-- **SC-003h**：10 種輸出類型的預覽均提供獨立「無法判定 (Bypass)」勾選項（`allow_bypass` 預設開啟）；勾選後該輸出類型的其他互動控制項清空停用、其他輸出類型不受影響，取消勾選後重新初始化；schema 面板關閉 `allow_bypass` 後勾選項消失且 code 區同步輸出 `allow_bypass: false`。
-- **SC-003i**：`boundary` 預覽在無 output／gold 欄位時仍為每個字元間隙提供可存取的操作按鈕；任意 offset 可新增／移除邊界。切割結果會即時反映目前 markers，`sentence` 僅分句、`paragraph` 另建立新段落。不同邊界類型可透過一致的色系與文字縮寫辨識，已標記圖示不遮蔽左右文字，滑鼠、觸控與鍵盤操作皆能辨識類型與焦點位置。
-- **SC-003j**：`span`、`relation_triple`、`entity_relation` 及包含它們的複合任務（如 `medical-ner-re`、`absa-va`）僅由專屬或整合預覽呈現輸入內容，不重複顯示通用輸入文字區塊；`token_class` 與 `boundary` 仍保留通用輸入文字區塊。此行為由 `rendersInputPreview` registry metadata 推導。
+- **SC-003h**：8 種輸出類型的預覽均提供獨立「無法判定 (Bypass)」勾選項（`allow_bypass` 預設開啟）；勾選後該輸出類型的其他互動控制項清空停用、其他輸出類型不受影響，取消勾選後重新初始化；schema 面板關閉 `allow_bypass` 後勾選項消失且 code 區同步輸出 `allow_bypass: false`。
+- **SC-003j**：`entity_recognition`、`relation_identification` 及包含它們的複合任務（如 `medical-ner-re`、`absa-va`）僅由專屬或整合預覽呈現輸入內容，不重複顯示通用輸入文字區塊；`sequence_tagging` 仍保留通用輸入文字區塊。此行為由 `rendersInputPreview` registry metadata 推導。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
-- **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、區間標記、關係抽取、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
+- **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
 - **SC-004c**：上傳 `.yaml/.yml/.json` 設定檔後，code 區可載入內容並等待使用者手動儲存套用。
 - **SC-004d**：切換 zh/en 時，新增任務頁 sidebar 與 Step 2 預設模板 labels 皆可正確切換語系。
@@ -664,6 +660,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.0.0 | 2026-07-22 | **任務類型 taxonomy 與 config key 收斂**：從 Step 1、Step 2 與 `OUTPUT_TYPE_REGISTRY` 移除 `entity_relation`、`boundary`；將 `span`、`relation_triple`、`token_class` 破壞性遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不保留相容別名，並同步 zh/en 顯示名稱、config 範例、介面定義、驗收情境、功能需求與成功標準。 |
 | 3.4.3 | 2026-07-15 | **分離純關係與 Span 組合預覽**：純 `relation_triple` 只顯示既有實體唯讀高亮、循序關係建構器與三元組列表，不顯示 Span 編輯介面或 `source_output`；只有明確選擇 `span + relation_triple` 才啟用可建立／修改實體的整合預覽並輸出 `source_output: span`。解除自動加入／連帶取消 Span 的舊規則，更新驗收情境、介面表、行為與邊界規則、FR-003d-4／11／13、registry 契約與 SC-003e |
 | 3.4.2 | 2026-07-15 | **避免重複輸入預覽**：新增 registry UI metadata `rendersInputPreview`；`span`、`relation_triple`、`entity_relation` 及包含它們的複合任務由專屬／整合預覽完整呈現輸入內容，不再額外顯示通用輸入區；`token_class`、`boundary` 維持通用輸入區。更新驗收情境、介面與行為規則、邊界情況、FR-003g-3、`OutputTypeRegistryItem`、下游相依性與 SC-003j |
 | 3.4.1 | 2026-07-13 | **Boundary 類型辨識與間距**：依 `boundary_types` 順序為選擇列與已標記邊界套用一致色系，標記同時顯示 SVG 剪刀與類型首字縮寫且可存取名稱包含完整類型；已標記圖示與左右文字保留至少 2px 間距；同步預覽互動表與換行／切換類型邊界情況（更新 FR-003d-2、SC-003i） |
