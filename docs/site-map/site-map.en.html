@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Label Suite Site Map</title>
+<style>
+/* ═══ Label Suite — Artifact Tokens (dual-theme, CSP-safe) ═══ */
+:root {
+  --color-primary:          #6366F1;
+  --color-secondary:        #818CF8;
+  --color-cta:              #10B981;
+  --color-cta-hover:        #059669;
+  --color-cta-on:           #FFFFFF;
+  --color-surface:          #F5F3FF;
+  --color-white:            #FFFFFF;
+  --color-ink:              #1E1B4B;
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-border:   #C7D2FE;
+  --color-border:           #E2E8F0;
+  --color-border-muted:     #F1F5F9;
+  --color-ink-muted:        #94A3B8;
+  --color-text-soft:        #64748B;
+  --color-slate-50:         #F8FAFC;
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+  --font-serif-display: 'Crimson Pro', 'Noto Serif TC', 'Source Han Serif TC', Georgia, serif;
+  --font-sans:          'Inter', 'Noto Sans TC', 'PingFang TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:          'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-h1: 36px; --text-h2: 24px; --text-h3: 18px;
+  --text-body: 16px; --text-caption: 14px; --text-label: 12px;
+  --leading-body-zh: 1.8;
+  --space-xs: 4px; --space-sm: 8px; --space-md: 16px; --space-lg: 24px;
+  --space-xl: 32px; --space-2xl: 48px;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-full: 9999px;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms; --dur-normal: 200ms;
+}
+/* This page is intentionally fixed to the light theme (ignores viewer dark mode) */
+:root, :root[data-theme="dark"], :root[data-theme="light"] {
+  --color-primary:          #6366F1;
+  --color-secondary:        #818CF8;
+  --color-cta:              #10B981;
+  --color-cta-hover:        #059669;
+  --color-cta-on:           #FFFFFF;
+  --color-surface:          #F5F3FF;
+  --color-white:            #FFFFFF;
+  --color-ink:              #1E1B4B;
+  --color-primary-soft-bg:  #EEF2FF;
+  --color-primary-border:   #C7D2FE;
+  --color-border:           #E2E8F0;
+  --color-border-muted:     #F1F5F9;
+  --color-ink-muted:        #94A3B8;
+  --color-text-soft:        #64748B;
+  --color-slate-50:         #F8FAFC;
+  --color-error:            #B91C1C;
+  --color-error-bg:         #FEF2F2;
+  --color-error-border:     #FECACA;
+  --color-success:          #15803D;
+  --color-success-bg:       #F0FDF4;
+  --color-success-border:   #BBF7D0;
+  --color-warning:          #A16207;
+  --color-warning-bg:       #FEFCE8;
+  --color-warning-border:   #FEF08A;
+  --color-info:             #1D4ED8;
+  --color-info-bg:          #EFF6FF;
+  --color-info-border:      #BFDBFE;
+  --shadow-sm:   0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ═══ Page styles ═══ */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.01ms !important; }
+}
+body {
+  margin: 0;
+  color-scheme: light;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  --line: var(--color-primary-border);
+}
+.wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-lg) var(--space-xl);
+}
+.ic {
+  width: 18px; height: 18px; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  vertical-align: -3px;
+}
+
+/* ── Hero ── */
+.brand-row {
+  display: flex; align-items: center; gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+.brand-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #FFFFFF;
+}
+.brand-name {
+  font-family: var(--font-serif-display);
+  font-size: 22px; font-weight: 600; letter-spacing: 0.01em;
+}
+h1 {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h1);
+  font-weight: 600;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.lede {
+  margin: 0;
+  max-width: 42em;
+  color: var(--color-text-soft);
+}
+.hero-meta {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  font-size: var(--text-caption);
+  color: var(--color-text-soft);
+}
+.hero-meta .dot { color: var(--color-ink-muted); }
+
+.badge {
+  display: inline-block;
+  padding: 0 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.badge.public   { color: var(--color-success); background: var(--color-success-bg); border-color: var(--color-success-border); }
+.badge.login    { color: var(--color-primary); background: var(--color-primary-soft-bg); border-color: var(--color-primary-border); }
+.badge.taskrole { color: var(--color-info); background: var(--color-info-bg); border-color: var(--color-info-border); }
+.badge.admin    { color: var(--color-warning); background: var(--color-warning-bg); border-color: var(--color-warning-border); }
+
+/* ── Diagram canvas ── */
+.canvas {
+  margin-top: var(--space-xl);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+}
+.canvas-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-sm);
+  padding: 0 var(--space-sm) var(--space-md);
+}
+.canvas-title {
+  font-family: var(--font-serif-display);
+  font-size: var(--text-h3);
+  font-weight: 600;
+}
+.tree {
+  width: 100%;
+  padding-top: var(--space-sm);
+}
+
+/* Root */
+.root-row { display: flex; justify-content: center; }
+.node.root {
+  display: flex; align-items: center; gap: var(--space-sm);
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 10px 22px;
+}
+.node.root .ic { color: #FFFFFF; }
+.root-name {
+  font-family: var(--font-serif-display);
+  font-size: 20px; font-weight: 600; line-height: 1.3;
+}
+.stem {
+  width: 0; height: 24px;
+  border-left: 1px solid var(--line);
+  margin: 0 auto;
+}
+
+/* Level 1 — horizontal branches (org-chart bus) */
+.branches {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.branches > li {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 24px 5px 0;
+}
+.branches > li::before,
+.branches > li::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 50%;
+  width: 50%; height: 24px;
+  border-top: 1px solid var(--line);
+}
+.branches > li::after {
+  right: auto; left: 50%;
+  border-left: 1px solid var(--line);
+}
+.branches > li:first-child::before { border-top: none; }
+.branches > li:last-child::after { border-top: none; }
+.branches > li:only-child::before,
+.branches > li:only-child::after { border-top: none; }
+
+/* Section node */
+.node.section {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--color-primary-soft-bg);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-weight: 600;
+  font-size: var(--text-caption);
+  line-height: 1.5;
+}
+.node.section .ic { color: var(--color-primary); width: 16px; height: 16px; }
+
+/* Level 2 — vertical page rail (file-tree elbows) */
+.pages {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+}
+.pages > li {
+  position: relative;
+  padding-top: 10px;
+}
+.pages > li::after {          /* rail */
+  content: '';
+  position: absolute;
+  left: -10px; top: 0;
+  height: 100%;
+  border-left: 1px solid var(--line);
+}
+.pages > li:last-child::after { height: 30px; }
+.pages > li::before {         /* elbow stub */
+  content: '';
+  position: absolute;
+  left: -10px; top: 30px;
+  width: 10px;
+  border-top: 1px solid var(--line);
+}
+
+/* Page node */
+.node.page {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  min-height: 40px;
+  box-sizing: border-box;
+  transition: border-color var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.node.page:hover {
+  border-color: var(--color-primary-border);
+  transform: translateY(-1px);
+}
+.p-line1 {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 2px 6px;
+  line-height: 1.5;
+}
+.p-name { white-space: nowrap; }
+.p-name { font-weight: 600; font-size: var(--text-caption); }
+.p-line1 .badge { margin-left: auto; }
+
+/* Level 3 — tab / step stubs */
+.tabs {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 16px;
+}
+.tabs > li {
+  position: relative;
+  padding-top: 6px;
+}
+.tabs > li::after {
+  content: '';
+  position: absolute;
+  left: -8px; top: 0;
+  height: 100%;
+  border-left: 1px solid var(--line);
+}
+.tabs > li:last-child::after { height: 18px; }
+.tabs > li::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 18px;
+  width: 8px;
+  border-top: 1px solid var(--line);
+}
+.node.tab {
+  display: inline-block;
+  background: var(--color-slate-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--color-text-soft);
+}
+
+</style>
+</head>
+<body>
+<svg class="sprite" width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><circle cx="7" cy="7" r="1.5"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></symbol>
+  <symbol id="i-bar-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+  <symbol id="i-list-checks" viewBox="0 0 24 24"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1 1 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+
+  <header>
+    <div class="brand-row">
+      <span class="brand-mark"><svg class="ic"><use href="#i-tag"/></svg></span>
+      <span class="brand-name">Label Suite</span>
+    </div>
+    <h1>Site Map</h1>
+    <p class="lede">Label Suite is an NLP data labeling platform.</p>
+    <div class="hero-meta">
+      <span>Access levels:</span>
+      <span class="badge public">Public</span>
+      <span class="badge login">Sign-in required</span>
+      <span class="badge taskrole">Task role required</span>
+      <span class="badge admin">Admin only</span>
+    </div>
+  </header>
+
+  <section class="canvas" aria-label="Site structure tree diagram">
+    <div class="canvas-head">
+      <span class="canvas-title">Site structure</span>
+    </div>
+    <div class="tree">
+
+        <div class="root-row">
+          <div class="node root">
+            <svg class="ic"><use href="#i-tag"/></svg>
+            <span class="root-name">Label Suite</span>
+          </div>
+        </div>
+        <div class="stem"></div>
+
+        <ul class="branches">
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-arrow-right"/></svg>Account Access</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="Sign in to Label Suite with your email and password or your Google account; you can also register or recover your password from here.">
+                  <div class="p-line1"><span class="p-name">Login</span><span class="badge public">Public</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">Email / password</span></li>
+                  <li><span class="node tab">Sign in with Google</span></li>
+                </ul>
+              </li>
+              <li>
+                <div class="node page" title="Fill in your name, email, and password to create a new account and get started.">
+                  <div class="p-line1"><span class="p-name">Register</span><span class="badge public">Public</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="Enter your email to request a password reset; a reset link will be sent to you.">
+                  <div class="p-line1"><span class="p-name">Forgot Password</span><span class="badge public">Public</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="Set a new password via the link in the email; expired or already-used links show a corresponding notice.">
+                  <div class="p-line1"><span class="p-name">Reset Password</span><span class="badge public">Public</span></div>
+                </div>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-bar-chart"/></svg>Dashboard</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="Your home page after signing in; shows task progress and team collaboration overviews tailored to your role.">
+                  <div class="p-line1"><span class="p-name">Dashboard</span><span class="badge login">Sign-in required</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">General user view</span></li>
+                  <li><span class="node tab">Project leader view</span></li>
+                  <li><span class="node tab">Annotator view</span></li>
+                  <li><span class="node tab">Reviewer view</span></li>
+                  <li><span class="node tab">Super admin view</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-list-checks"/></svg>Task Management</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="Quickly find the labeling tasks you need to work on using search, filters, and pagination; regular users only see tasks they participate in.">
+                  <div class="p-line1"><span class="p-name">Task List</span><span class="badge login">Sign-in required</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="Create a new labeling task step by step with a four-step wizard.">
+                  <div class="p-line1"><span class="p-name">New Task</span><span class="badge login">Sign-in required</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">Step 1 Basic info</span></li>
+                  <li><span class="node tab">Step 2 Labeling config</span></li>
+                  <li><span class="node tab">Step 3 Launch settings</span></li>
+                  <li><span class="node tab">Step 4 Guidelines (optional)</span></li>
+                </ul>
+              </li>
+              <li>
+                <div class="node page" title="Review a single task, manage members, track progress, view and export annotation results, and check work logs; used by project leaders and reviewers.">
+                  <div class="p-line1"><span class="p-name">Task Detail</span><span class="badge taskrole">Task role required</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">Overview</span></li>
+                  <li><span class="node tab">Member management</span></li>
+                  <li><span class="node tab">Annotation progress</span></li>
+                  <li><span class="node tab">Annotation results</span></li>
+                  <li><span class="node tab">Work log</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-tag"/></svg>Annotation</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="Search and filter the labeling or review tasks assigned to you, then pick one to enter the workspace.">
+                  <div class="p-line1"><span class="p-name">Annotation List</span><span class="badge taskrole">Task role required</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="Label or review items one by one in a three-pane workspace, with saving and submission per task settings.">
+                  <div class="p-line1"><span class="p-name">Annotation Workspace</span><span class="badge taskrole">Task role required</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">Guideline files</span></li>
+                  <li><span class="node tab">History</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-database"/></svg>Dataset Analysis</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="Browse the tasks you can access, check completion and agreement status, and pick one to analyze in depth.">
+                  <div class="p-line1"><span class="p-name">Dataset Analysis List</span><span class="badge taskrole">Task role required</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="Dive into a task's statistics overview and quality monitoring to track annotation agreement and anomaly detection results.">
+                  <div class="p-line1"><span class="p-name">Dataset Analysis Detail</span><span class="badge taskrole">Task role required</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">Statistics overview</span></li>
+                  <li><span class="node tab">Quality monitoring</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-shield-check"/></svg>Administration</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="View all platform users, search and filter accounts, create, edit, deactivate or activate accounts, assign system roles, and view change history.">
+                  <div class="p-line1"><span class="p-name">User Management</span><span class="badge admin">Admin only</span></div>
+                </div>
+              </li>
+              <li>
+                <div class="node page" title="View and edit the role permission matrix, distinguish system roles from task roles, save changes, and view operation history.">
+                  <div class="p-line1"><span class="p-name">Role Settings</span><span class="badge admin">Admin only</span></div>
+                </div>
+              </li>
+            </ul>
+          </li>
+
+          <li>
+            <div class="node section"><svg class="ic"><use href="#i-user"/></svg>Profile</div>
+            <ul class="pages">
+              <li>
+                <div class="node page" title="Manage your profile and avatar, change your email, update your password, and adjust notification preferences.">
+                  <div class="p-line1"><span class="p-name">Profile Settings</span><span class="badge login">Sign-in required</span></div>
+                </div>
+                <ul class="tabs">
+                  <li><span class="node tab">Profile info</span></li>
+                  <li><span class="node tab">Change email</span></li>
+                  <li><span class="node tab">Change password</span></li>
+                  <li><span class="node tab">Notification settings</span></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
