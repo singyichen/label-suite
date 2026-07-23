@@ -186,6 +186,7 @@
     .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
     #schemaFields { display: flex; flex-direction: column; gap: 14px; }
     #schemaFields .form-field { margin-bottom: 0; }
+    #schemaFields .schema-bypass-field { margin-top: calc(var(--space-sm) + var(--space-xs)); }
     .schema-section {
       padding: 14px;
       border: 1px solid var(--color-border);
@@ -2627,6 +2628,7 @@ function renderOutputTypeFields(container, outKey) {
   outReg.fields.forEach(function(field) {
     var wrap = document.createElement('div');
     wrap.className = 'form-field';
+    if (field.key === BYPASS_FIELD.key) wrap.classList.add('schema-bypass-field');
     if (field.type !== 'boolean') {
       var lbl = document.createElement('label');
       lbl.className = 'field-label';
