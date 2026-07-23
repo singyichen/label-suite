@@ -64,6 +64,17 @@ test.describe('Step 2 single-label settings-first layout', () => {
     expect(labelGeometry).not.toBeNull();
     expect(Math.abs(labelGeometry!.settingsTop - labelGeometry!.previewTop)).toBeLessThanOrEqual(2);
     expect(Math.abs(labelGeometry!.settingsHeight - labelGeometry!.previewHeight)).toBeLessThanOrEqual(2);
+    const bypassGap = await page
+      .locator('.output-accordion[data-output-key="single_label"] .output-accordion-body')
+      .evaluate((element) => {
+        const bypassField = element.querySelector('.schema-toggle-card')?.parentElement;
+        const previousField = bypassField?.previousElementSibling;
+        if (!bypassField || !previousField) return null;
+        return bypassField.getBoundingClientRect().top - previousField.getBoundingClientRect().bottom;
+      });
+    expect(bypassGap).not.toBeNull();
+    expect(bypassGap!).toBeGreaterThanOrEqual(12);
+    expect(bypassGap!).toBeLessThanOrEqual(16);
     const settingsBox = await box(page.locator('#s2PrimarySettingsSlot'));
     const previewBox = await box(preview);
     const supportingToolsBox = await box(supportingTools);
