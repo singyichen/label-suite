@@ -36,7 +36,7 @@
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `spec-ready` | `feat/annotation/015-annotation-workspace` | spec v1.4.11；規格狀態：Draft |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v4.1.0；規格狀態：Draft；Step 1 分類／回歸輸出改為 taxonomy metadata 驅動的 radio 單選，序列維持 checkbox 多選 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v4.3.0；規格狀態：Draft；Step 2 全輸出類型與多輸出組合統一採設定優先響應式版面及下方整合設定檔工具卡 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,8 +55,9 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-23 | `task-management-013` spec 更新至 v4.3.0：全部 8 種輸出類型、單一輸出及多輸出組合統一採 Step 2 設定優先版面（>1100px 設定左／預覽右，≤1100px 設定上／預覽下），左右小標同層級頂端對齊；範本／上傳與 Code 固定於下方共用單一外框及分隔線，Code 為 240px，各 output 的 Bypass 與前一 schema 欄位保留 12px。版面改為頁面層級共通契約；`outputs[]` 不變，已檢查下游 014–017 無需改版，狀態維持 `spec-ready`。 |
 | 2026-07-23 | `task-management-013` spec 更新至 v4.2.1：設定優先 Step 2 新增「標記設定」小標並與「標記預覽」維持相同樣式及頂端對齊；共通 Bypass schema toggle 與前一欄位保留 12px token-based 群組間距；同步 FR-003a-3、FR-003j、SC-003h／SC-003k 與 prototype 驗收，`outputs[]` 契約及下游規格不變，狀態維持 `spec-ready`。 |
-| 2026-07-22 | `task-management-013` spec 更新至 v4.2.0：單一標籤 Step 2 改由 `step2Layout` registry metadata 啟用設定優先版面，桌面採設定左／預覽右、1100px 以下改為上下排列；範本／上傳與 Code 整合為下方單一工具卡並降低 Code 高度；其他輸出維持原狀，prototype 與 SC-003k 測試同步，狀態維持 `spec-ready`。 |
+| 2026-07-22 | `task-management-013` spec 更新至 v4.2.0：導入 Step 2 設定優先響應式版面與下方整合設定檔工具卡初版；適用範圍後由 v4.3.0 統一為全部輸出類型及多輸出組合，狀態維持 `spec-ready`。 |
 | 2026-07-22 | `task-management-013` spec 更新至 v4.1.0：Step 1 分類（單一標籤／多標籤）與回歸（單維度／多維度）輸出改為組內 radio 單選，選擇語意由 taxonomy `outputSelection` metadata 驅動；序列維持 checkbox 多選、跨大分類仍可多選；prototype 與 SC-002e 測試同步，狀態維持 `spec-ready`。 |
 | 2026-07-22 | `task-management-013` spec 更新至 v4.0.0：從新增任務 Step 1／Step 2 與 registry 移除 `entity_relation`、`boundary`；將 `span`、`relation_triple`、`token_class` config key 破壞性遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不保留相容別名，並同步顯示名稱、taxonomy、config 範例、prototype、visual overview 與回歸測試；狀態維持 `spec-ready`。 |
 | 2026-07-15 | `task-management-013` spec 同步至 v3.4.3：純 `relation_triple` 僅保留既有實體唯讀高亮、關係建構器與三元組列表，不顯示 Span 編輯介面或 `source_output`；只有明確選擇 `span + relation_triple` 才啟用整合實體編輯並輸出 `source_output: span`；同步驗收情境、功能需求、registry 契約、產品 taxonomy 與範例 task config；狀態維持 `spec-ready`。 |
