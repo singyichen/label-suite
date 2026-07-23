@@ -43,15 +43,27 @@ test.describe('Step 2 single-label settings-first layout', () => {
     const settings = page.getByTestId('step2-settings-panel');
     const settingsLabel = page.getByTestId('step2-settings-label');
     const preview = page.getByTestId('step2-preview-panel');
-    const previewLabel = page.locator('#annotationPreviewLabel');
     const supportingTools = page.getByTestId('step2-supporting-tools');
 
     await expect(workspace).toHaveAttribute('data-layout', 'settings-first-preview');
     await expect(settings).toBeVisible();
     await expect(settingsLabel).toHaveText('標記設定');
-    const settingsLabelBox = await box(settingsLabel);
-    const previewLabelBox = await box(previewLabel);
-    expect(Math.abs(settingsLabelBox.y - previewLabelBox.y)).toBeLessThanOrEqual(2);
+    const labelGeometry = await workspace.evaluate((element) => {
+      const settingsHeading = element.querySelector('[data-testid="step2-settings-label"]');
+      const previewHeading = element.querySelector('#annotationPreviewLabel');
+      if (!settingsHeading || !previewHeading) return null;
+      const settingsRect = settingsHeading.getBoundingClientRect();
+      const previewRect = previewHeading.getBoundingClientRect();
+      return {
+        settingsTop: settingsRect.top,
+        previewTop: previewRect.top,
+        settingsHeight: settingsRect.height,
+        previewHeight: previewRect.height,
+      };
+    });
+    expect(labelGeometry).not.toBeNull();
+    expect(Math.abs(labelGeometry!.settingsTop - labelGeometry!.previewTop)).toBeLessThanOrEqual(2);
+    expect(Math.abs(labelGeometry!.settingsHeight - labelGeometry!.previewHeight)).toBeLessThanOrEqual(2);
     const settingsBox = await box(page.locator('#s2PrimarySettingsSlot'));
     const previewBox = await box(preview);
     const supportingToolsBox = await box(supportingTools);

@@ -294,7 +294,10 @@
     .aspect-list-preview-sentence-readonly { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: 13px; color: var(--color-ink); background: var(--color-slate-50); line-height: 1.6; }
     .code-error-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--color-error-soft-bg); border: 1px solid var(--color-error-soft-border); border-radius: var(--radius-md); margin-top: 6px; font-size: 12px; color: var(--color-error); }
     .yaml-preview-label { font-size: 12px; font-weight: 600; color: var(--color-text-soft); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-sm); }
+    #settingsPanelLabel,
     #annotationPreviewLabel { font-size: 13px; font-weight: 600; color: var(--color-ink); text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
+    .s2-settings-panel-label { display: none; }
+    .is-settings-first-preview .s2-settings-panel-label { display: block; }
     .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
 
     /* ── Output Accordion (Step 2 multi-output) ── */
@@ -769,6 +772,7 @@
             </div>
             <div id="s2DefaultSettingsSlot">
               <div class="s2-settings-panel" id="s2SettingsPanel" data-testid="step2-settings-panel">
+                <div class="yaml-preview-label s2-settings-panel-label" id="settingsPanelLabel" data-testid="step2-settings-label">標記設定</div>
                 <div id="schemaFields"></div>
                 <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
               </div>
@@ -1415,7 +1419,7 @@ var I18N = {
     isolationToggleDesc: '預設啟用，避免試標與正式標記資料混用',
     s2TemplateSectionTitle: '從範本開始或者上傳設定檔',
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
-    annotationPreviewLabel: '標記預覽',
+    settingsPanelLabel: '標記設定', annotationPreviewLabel: '標記預覽',
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
@@ -1568,7 +1572,7 @@ var I18N = {
     isolationToggleDesc: 'Enabled by default to prevent Dry/Official data mixing',
     s2TemplateSectionTitle: 'Start from template or upload config',
     uploadConfigBtn: 'Upload config (YAML / JSON)',
-    annotationPreviewLabel: 'Annotation preview',
+    settingsPanelLabel: 'Label settings', annotationPreviewLabel: 'Annotation preview',
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
@@ -6810,7 +6814,7 @@ function applyLang(l) {
     'forceToggleLabel','forceToggleDesc','s3NoticeText','s4NoticeText','s2TemplateSectionTitle','uploadConfigBtn',
     'startupRunTitle','samplingValueLabel',
     'samplingHint','isolationToggleLabel','isolationToggleDesc',
-    'annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
+    'settingsPanelLabel','annotationPreviewLabel','saveCodeBtnLabel','cancelBtnLabel','prevBtnLabel','leaveModalTitle','leaveModalDesc',
     'inlinePreviewTitle','inlinePreviewHint',
     'taskCategoryGroupLabel','taskInputTypeGroupLabel','taskOutputTypeGroupLabel',
   ];
