@@ -41,11 +41,17 @@ test.describe('Step 2 single-label settings-first layout', () => {
 
     const workspace = page.getByTestId('step2-primary-workspace');
     const settings = page.getByTestId('step2-settings-panel');
+    const settingsLabel = page.getByTestId('step2-settings-label');
     const preview = page.getByTestId('step2-preview-panel');
+    const previewLabel = page.locator('#annotationPreviewLabel');
     const supportingTools = page.getByTestId('step2-supporting-tools');
 
     await expect(workspace).toHaveAttribute('data-layout', 'settings-first-preview');
     await expect(settings).toBeVisible();
+    await expect(settingsLabel).toHaveText('標記設定');
+    const settingsLabelBox = await box(settingsLabel);
+    const previewLabelBox = await box(previewLabel);
+    expect(Math.abs(settingsLabelBox.y - previewLabelBox.y)).toBeLessThanOrEqual(2);
     const settingsBox = await box(page.locator('#s2PrimarySettingsSlot'));
     const previewBox = await box(preview);
     const supportingToolsBox = await box(supportingTools);
@@ -78,6 +84,9 @@ test.describe('Step 2 single-label settings-first layout', () => {
     expect(panelBorders).toEqual({ outer: 'solid', template: 'none', code: 'none' });
     const codeEditorBox = await box(page.locator('#codeEditor'));
     expect(codeEditorBox.height).toBeLessThanOrEqual(260);
+
+    await page.locator('#langToggle').click();
+    await expect(settingsLabel).toHaveText('Label settings');
   });
 
   test('stacks settings before preview when the available width is narrow', async ({ page }) => {
