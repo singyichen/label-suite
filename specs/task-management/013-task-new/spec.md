@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 4.7.0
+版本: 4.8.0
 狀態: Draft
 ---
 
@@ -40,6 +40,7 @@
 - **v4.5.0 回歸數值精確輸入**：`single_dim` 與 `multi_dim` 每列滑桿右側改為可直接編輯的 number input，並與滑桿及上方數值標籤雙向同步；完成輸入後滑塊移至對應位置，超出範圍或不符合 step 的輸入自動校正至最近合法值。
 - **v4.6.0 回歸小數直接輸入**：右側 number input 允許直接鍵入 min/max 範圍內的小數值，不因 slider `step` 吸附或改寫；`step` 僅控制滑桿拖曳與鍵盤微調，手動輸入仍會同步滑塊與上方數值標籤。
 - **v4.7.0 回歸設定卡統一**：`single_dim` 與 `multi_dim` 的維度設定使用相同卡片、欄位標籤及 min/max/step 三欄排列；單維度固定顯示一張不可新增／刪除的卡片，多維度顯示一張以上並保留新增／刪除功能。多維度不再顯示重複的外層「維度設定 *」標題。
+- **v4.8.0 實體辨識雙向選取與設定間距**：單一及混合輸出中的 `entity_recognition` 均支援「先選實體類型再圈選文字」與「先圈選文字再選實體類型」；未指定類型的圈選範圍持續反白但不顯示提示，點擊類型後完成新增並保留該類型為作用中狀態。混合式任務由多個單一輸出類型組成，每個輸出類型保留自身互動契約；`entity-list` 後方的 boolean 設定與前一欄保留 12px 群組間距。
 
 ## 規格常數
 
@@ -301,7 +302,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | 輸出類型 | 預覽互動方式 |
     |----------|-------------|
     | `sequence_tagging` | 標籤類型按鈕列 + 可點擊 token 網格（點擊 token 上 BIO 標記）+ 標記方案顯示 |
-    | `entity_recognition` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除） |
+    | `entity_recognition` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除）；單一或與其他輸出類型組合時皆支援先選類型再圈選，以及先圈選再選類型 |
     | `relation_identification` | 純模式：既有實體唯讀高亮 + 循序關係建構器（E1/Arg1 → Relation → E2/Arg2 → 新增）+ 三元組列表，不顯示 Span 編輯控制項；與 `entity_recognition` 組合時：整合預覽允許先建立／修改實體，再建立關係。兩種模式皆以「類型」選單事後指定 config `relation_types` 中的語意類型 |
     | `single_label` | 文字顯示 + radio 風格可點選標籤 chip（單選） |
     | `multi_label` | 文字顯示 + checkbox 風格可點選標籤 chip（多選）+ 已選顯示 |
@@ -365,7 +366,10 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - 標記預覽需呈現每個輸出類型的互動式標記體驗，並隨 schema 欄位變更即時更新。
 - 預覽互動必須支援使用者實際操作（點擊、圈選、拖曳、輸入等），非僅靜態展示。
 - 各輸出類型的預覽互動（如點擊標籤 chip 切換選取狀態）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽內容。
+- 任何包含 `entity_recognition` 的單一或混合預覽都必須保留兩種建立順序：已選實體類型時，圈選文字後立即新增；尚未選擇類型時，圈選範圍持續反白並暫存，不顯示「請選擇實體類型」或其他提示，待使用者點擊類型後完成新增。新的圈選範圍取代尚未分類的舊範圍；完成新增後該類型維持作用中，供後續連續標記。混合預覽中的同一反白範圍也可由關係建構器消費；使用者點擊實體類型時視為建立實體，點擊關係步驟時視為建立關係草稿。
+- 混合式任務必須視為多個單一輸出類型的組合；除已明訂的相依協作外，每個輸出類型在混合預覽中仍保留自身的設定、互動、Bypass 與驗收契約，不得因合併渲染而省略。
 - `entity-list` 欄位的新增按鈕文字必須依語境顯示（如 `single_label` 顯示「新增標籤」、`entity_recognition` 顯示「新增實體類型」、`sequence_tagging` 顯示「新增標籤類型」）。
+- 當 boolean 欄位緊接在 `entity-list` 欄位之後時，boolean 設定卡與前一欄必須保留 12px 群組間距；`entity_recognition` 的「允許重疊標記」與上方新增實體類型區，以及其後的「允許無法判定 (Bypass)」皆使用相同間距。
 - `multi_dim` 的維度設定為通用模式，使用者可自訂任意維度名稱與 min/max/step，不限於特定維度（如 VA）。
 - `single_dim` 與 `multi_dim` 的設定介面必須由 registry 的維度設定 metadata 驅動並共用同一種卡片結構、欄位標籤及數值欄排列，不得依 output type 在核心流程分別硬編版面。`single_dim` 固定一張卡片且不顯示新增／刪除控制；`multi_dim` 顯示可新增／刪除的卡片清單，並省略清單外層重複的「維度設定 *」標題。
 - `single_dim` 與 `multi_dim` 必須共用相同的回歸滑桿互動語法：拖曳或鍵盤調整時，數值標籤與右側 number input 需在 100ms 內同步更新，數值標籤跟隨目前滑塊位置顯示於正上方；完成 number input 輸入後，滑塊與數值標籤同步至對應位置。number input 必須允許直接鍵入範圍內的小數，不得依 slider `step` 自動吸附；超出 min/max 時才校正至邊界。`multi_dim` 必須依維度順序配置可區辨顏色；顏色僅作輔助辨識，維度名稱、當前數值與範圍限制仍必須可取得。
@@ -458,6 +462,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - 純 `relation_identification` 載入含既有實體的資料集：實體僅以唯讀高亮作為 E1/E2 候選，不顯示實體類型、實體列表、建立實體或刪除實體控制項；切換為 `entity_recognition + relation_identification` 後才顯示完整 Span 編輯介面。
 - 由 `entity_recognition + relation_identification` 取消 `entity_recognition`：保留 `relation_identification`，預覽切換為純關係模式並移除 config 的 `source_output`；不得連帶取消關係三元組。
 - 已選輸出類型包含 `entity_recognition` 或 `relation_identification`：不得在專屬或整合預覽之外重複顯示通用輸入文字區塊；專屬或整合預覽仍須完整顯示資料集實際輸入內容。
+- 單一或混合 `entity_recognition` 尚未選擇實體類型時圈選文字：圈選範圍持續反白且不顯示提示；再次圈選時以新範圍取代舊範圍，點擊任一實體類型後才新增一筆實體並清除暫存範圍。混合預覽若先點擊關係建構器步驟，則反白範圍由關係草稿消費，不建立實體。
 - 已選輸出類型為 `sequence_tagging`：即使輸出互動控制項會操作同一份文字，仍保留位於其前方的通用輸入文字區塊。
 - `single_dim` 或 `multi_dim` 設定 `min >= max` 或 `step <= 0`：阻擋進入 Step 3 並顯示修正提示。
 - `single_item` 輸入類型且欄位預覽中 Input 欄位數 ≠ 1，或 `item_pair` 輸入類型且 Input 欄位數 ≠ 2：阻擋進入 Step 2 並顯示修正提示（需指出正確數量）。
@@ -497,14 +502,14 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003c**：新增 output type 應可透過 registry 擴充，不修改核心流程（Step 1–4）。
 - **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須包含 8 種輸出類型：`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱；其中 `sequence_tagging` 顯示 Sequence Tagging／序列標註，`entity_recognition` 顯示 Entity Recognition／實體辨識，`relation_identification` 顯示 Relation Identification／關係識別。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得存在於 registry，亦不得作為相容別名接受。
 - **FR-003d-1**：`sequence_tagging` 必須支援 `entities`（`{ name, color }[]`）與 `tagging_scheme`（`BIO | BIOES | IOB2`）。預覽：標籤類型按鈕列（含 `O` 標籤）+ 可點擊 token 網格，點擊 token 依當前選中標籤推斷 `B-`/`I-` 前綴。token 網格的分詞來源：已上傳資料集且紀錄含 token 陣列欄位（或 `input` 角色欄位本身為陣列）時，須優先採用資料集提供的分詞；否則以空白字元切分文字。預標記初始化（FR-003g-5）僅在 `output` 欄位的標記數量與 token 數量一致時套用，不一致時所有 token 初始化為 `O`。驗證：`entities` 不得為空且不得含空白項目。
-- **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。驗證：`entities` 不得為空且不得含空白項目。
+- **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。設定：`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。單一或混合 `entity_recognition` 模式都必須支援兩種順序：（1）先選擇實體類型再圈選文字，圈選後立即新增；（2）先圈選文字再選擇實體類型，圈選範圍持續反白但不顯示提示，點擊類型後才新增並保留該類型為作用中。未分類期間若重新圈選，以最新範圍取代前一範圍。驗證：`entities` 不得為空且不得含空白項目。
 - **FR-003d-4**：`relation_identification` 必須支援 `relation_types`（string[]，語意類型標籤），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；語意類型由每筆三元組的 `type` 選單事後指定，選項僅來自 `relation_types`，不得覆寫觸發詞。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：`relation_types` 不得為空且不得含空白項目。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-6**：`multi_label` 必須支援 `label_options`（`{ name, color }[]`）與 `max_selections`（number，0 = 不限）。預覽：文字區塊 + checkbox 風格 chip 按鈕（可多選），下方顯示已選數量。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。設定介面固定顯示一張與 `multi_dim` 相同結構的維度卡片，依序包含維度名稱與 min/max/step 三欄，不顯示新增或刪除控制。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider；當前值標籤必須即時更新並跟隨滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數。滑桿與 number input 必須雙向同步並支援鍵盤操作；slider 依 config `step` 微調，number input 採 `step="any"` 並只依 min/max 校正，不得把範圍內小數吸附至 slider step。驗證：`min` < `max`、`step` > `0`。
 - **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。設定介面以與 `single_dim` 相同結構的維度卡片重複呈現各維度並提供新增／刪除控制，卡片清單前不得再顯示「維度設定 *」外層標題。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider；當前值標籤必須即時更新並跟隨各自滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數並與該列滑桿雙向同步。每個維度必須依順序配置不同滑桿色，並同時保留文字標籤以避免只靠顏色辨識；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`；slider 依各維度 step 微調，number input 採 `step="any"` 並只依各維度 min/max 校正。
 - **FR-003d-10**：`free_text` 必須支援 `max_length`（number）與 `show_reference`（boolean）。預覽：文字區塊 + textarea（含字元計數 `N / max_length`）；textarea 標題優先顯示 output 欄位原始名稱，無 output 欄位時顯示「回答」/「Answer」。`show_reference = true` 時額外顯示參考答案區塊，已上傳資料集且有 output 欄位時顯示該欄位實際值，否則顯示佔位提示文字。驗證：`max_length` > `0`。
-- **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `entity_recognition + relation_identification` 時，預覽區必須以統一模式呈現：共用同一份文本，使用者可先圈選、建立、修改或刪除 Span 實體，再以循序關係建構器建立 relation triple；實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_identification` 時，預覽沿用相同的循序關係建構器與 `type` 選單，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
+- **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `entity_recognition + relation_identification` 時，預覽區必須以統一模式呈現，但兩個單一輸出類型仍保留各自互動契約：共用同一份文本，`entity_recognition` 保留 FR-003d-3 的兩種實體建立順序，`relation_identification` 保留循序關係建構器；未指定實體類型的同一反白範圍可由實體類型按鈕消費以建立實體，或由關係步驟消費以建立 relation 草稿。實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_identification` 時，預覽沿用相同的循序關係建構器與 `type` 選單，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
 - **FR-003d-12**：Step 2 標記設定區的每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題可點擊切換展開/收合。有依賴關係時，面板標題下方必須顯示依賴提示。
 - **FR-003d-13**：輸出類型來源關聯規則：選擇 `relation_identification` 不得自動加入 `entity_recognition`；只有使用者明確同時選取 `entity_recognition + relation_identification` 時，系統才啟用整合模式並由 registry 的 `source_output` metadata 在輸出 config 加入 `source_output: entity_recognition`。取消 `entity_recognition` 時保留 `relation_identification`、切回純關係模式並移除 `source_output`，不得連帶取消關係三元組。
 - **FR-003e**：code 區必須支援可編輯 YAML/JSON，並提供 `儲存` 操作以套用回 schema 設定欄位。
@@ -619,6 +624,8 @@ flowchart LR
 > **v4.3.0 下游影響檢查**：已檢查 014–017。本次僅統一 `task-new` Step 2 的 presentation 與 responsive layout，不變更 `outputs[]`、registry schema 或提交 payload；014 Visual 編輯器的 registry/schema 語意、015 標記介面，以及 016／017 資料分析契約均不受影響，無需改版。
 >
 > **v4.7.0 下游影響檢查**：本次只統一 `task-new` Step 2 回歸設定卡的呈現與 registry UI metadata；`single_dim` 的 `dimension_name/min/max/step`、`multi_dim` 的 `dimensions[]`、`outputs[]` 與提交 payload 均不變。014–017 無需改版。
+>
+> **v4.8.0 下游影響檢查**：已檢查 014–017。本次調整 `task-new` Step 2 單一及混合 `entity_recognition` 預覽的操作順序、暫存反白與設定欄位間距；`entities` schema、`outputs[]`、提交 payload、Annotation Workspace 及資料分析契約均不變，014–017 無需改版。
 
 ---
 
@@ -643,6 +650,8 @@ flowchart LR
 - **SC-003k**：8 種單一輸出類型及多輸出組合在 1440px 的 Step 2 均以設定左／預覽右呈現，左右小標分別為「標記設定」與「標記預覽」、樣式相同且頂端位置差不超過 2px；1024px 均改為設定上／預覽下，且多輸出設定面板完整保留。範本／上傳與 Code 在兩種寬度皆位於主工作區下方並共用單一外框與分隔線，Code 編輯器高度固定為 240px；此版面為頁面層級共通契約，不依 output type metadata 分流。
 - **SC-003l**：`single_dim` 與 `multi_dim` 預覽在滑鼠拖曳及鍵盤方向鍵調整後，當前值標籤與右側 number input 皆於 100ms 內更新，標籤對齊滑塊正上方；number input 可直接輸入範圍內的非 step 小數（例如 step=1 時輸入 3.5），滑塊與標籤保留該小數且移至對應位置，僅超出 min/max 時校正。`multi_dim` 同畫面各維度滑桿顏色可區辨，且每列仍顯示維度名稱與範圍限制。
 - **SC-003m**：`single_dim` 與 `multi_dim` 的維度設定卡片具相同視覺結構、欄位標籤及 min/max/step 排列；單維度恰有一張卡片且無新增／刪除按鈕，多維度卡片數等於 `dimensions` 筆數且保留新增／刪除按鈕，面板內不存在獨立的「維度設定 *」標題。兩者編輯後仍分別同步至既有 `dimension_name/min/max/step` 與 `dimensions[]` config。
+- **SC-003n**：單一及 `entity_recognition + relation_identification` 混合預覽中，「先選類型再圈選文字」會立即新增實體；「先圈選文字再選類型」會先持續反白且不顯示提示，點擊類型後新增相同範圍的實體。兩種順序新增後皆在實體列表顯示正確文字、類型與字元位置，且所選類型維持作用中；混合預覽的關係建構器仍可消費反白範圍。
+- **SC-003o**：`entity_recognition` 設定面板中，上方 entity-list 結尾至「允許重疊標記」、以及「允許重疊標記」至「允許無法判定 (Bypass)」的垂直間距均為 12px；單一與混合輸出設定面板結果一致。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -690,6 +699,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.8.0 | 2026-07-23 | 單一及混合 `entity_recognition` 預覽新增雙向操作順序：保留「先選類型再圈選」立即新增，並支援「先圈選再選類型」以持續反白暫存範圍、無提示、點擊類型後新增；明訂混合任務保留各單一輸出類型的互動契約。`allow_overlapping` 與上方 entity-list、下方 Bypass 均保留 12px 間距。新增 SC-003n／SC-003o 與 Prototype Playwright 驗收；schema、`outputs[]` 與下游契約不變。 |
 | 4.7.0 | 2026-07-23 | `single_dim`／`multi_dim` 設定介面統一使用相同維度卡片、欄位標籤與 min/max/step 排列；單維度固定一張且無新增／刪除，多維度保留卡片清單與新增／刪除，移除外層「維度設定 *」重複標題。新增 registry `dimensionSettings` 呈現 metadata；既有 config 與 `outputs[]` 契約不變。 |
 | 4.6.0 | 2026-07-23 | 右側 number input 改為 `step="any"`，允許直接鍵入範圍內的非 step 小數並同步 slider／數值標籤；slider 仍依 task config step 拖曳與鍵盤微調，手動輸入只依 min/max 校正。同步 FR-003d-8／9、SC-003l 與 annotation-015。 |
 | 4.5.0 | 2026-07-23 | `single_dim`／`multi_dim` 每列右側改為 number input，與滑桿及上方數值標籤雙向同步；完成輸入後滑塊移至對應位置，並依 min/max/step 自動校正。同步 FR-003d-8／9、SC-003l 與 annotation-015；`outputs[]` 契約不變。 |

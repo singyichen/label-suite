@@ -263,7 +263,8 @@
     .code-editor:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
     #schemaFields { display: flex; flex-direction: column; gap: 14px; }
     #schemaFields .form-field { margin-bottom: 0; }
-    #schemaFields .schema-bypass-field { margin-top: calc(var(--space-sm) + var(--space-xs)); }
+    #schemaFields .schema-bypass-field,
+    #schemaFields .schema-group-start-field { margin-top: calc(var(--space-sm) + var(--space-xs)); }
     .schema-section {
       padding: 14px;
       border: 1px solid var(--color-border);
@@ -2901,11 +2902,15 @@ function renderOutputTypeFields(container, outKey) {
     }
   }
 
-  outReg.fields.forEach(function(field) {
+  outReg.fields.forEach(function(field, fieldIndex) {
     if (dimensionFieldKeys.indexOf(field.key) >= 0) return;
     var wrap = document.createElement('div');
     wrap.className = 'form-field';
     if (field.key === BYPASS_FIELD.key) wrap.classList.add('schema-bypass-field');
+    var previousField = fieldIndex > 0 ? outReg.fields[fieldIndex - 1] : null;
+    if (field.type === 'boolean' && previousField && previousField.type === 'entity-list') {
+      wrap.classList.add('schema-group-start-field');
+    }
     if (field.type !== 'boolean') {
       var lbl = document.createElement('label');
       lbl.className = 'field-label';
@@ -3513,6 +3518,7 @@ function initPreviewState() {
   state.relDraft = { e1: null, rel: null, e2: null };
   state.relSel = null;
   state.relMsg = '';
+  if (state.previewState.entity_recognition) state.previewState.entity_recognition.pendingSelection = null;
   state.previewInited = true;
 }
 
@@ -3780,7 +3786,19 @@ function renderAbsaUnifiedPreview(previewContainer) {
       chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
       chip.textContent = typeName;
       chip.addEventListener('click', function() {
-        state.activeEntityType = state.activeEntityType === typeName ? null : typeName;
+        if (state.relSel) {
+          state.previewEntities.push({
+            text: state.relSel.text,
+            type: typeName,
+            start: state.relSel.start,
+            end: state.relSel.end
+          });
+          state.relSel = null;
+          state.relMsg = '';
+          state.activeEntityType = typeName;
+        } else {
+          state.activeEntityType = state.activeEntityType === typeName ? null : typeName;
+        }
         renderAbsaUnifiedPreview_refresh(previewContainer);
       });
       legendRow.appendChild(chip);
@@ -4287,35 +4305,75 @@ function renderSpanOnlyPreview(container, outKey) {
   var realText = getDatasetPreviewText();
   var tc = getPreviewTypeColorMap();
   var typeColorMap = tc.map, typeOrder = tc.order;
+  var ps = ensurePreviewState(outKey, { pendingSelection: null });
 
   /* Text with entity highlights */
   var textEl = document.createElement('div');
   textEl.className = 'absa-preview-text';
   textEl.style.cursor = 'text'; textEl.style.userSelect = 'text';
+  function appendTextMaybePending(parent, text, textStart) {
+    var pending = ps.pendingSelection;
+    if (!pending || pending.start == null) { parent.appendChild(document.createTextNode(text)); return; }
+    var selectionStart = pending.start - textStart;
+    var selectionEnd = pending.end + 1 - textStart;
+    if (selectionEnd <= 0 || selectionStart >= text.length) { parent.appendChild(document.createTextNode(text)); return; }
+    selectionStart = Math.max(0, selectionStart);
+    selectionEnd = Math.min(text.length, selectionEnd);
+    if (selectionStart > 0) parent.appendChild(document.createTextNode(text.substring(0, selectionStart)));
+    var highlight = document.createElement('span');
+    highlight.className = 'rel-sel-highlight';
+    highlight.textContent = text.substring(selectionStart, selectionEnd);
+    parent.appendChild(highlight);
+    if (selectionEnd < text.length) parent.appendChild(document.createTextNode(text.substring(selectionEnd)));
+  }
   if (realText && state.previewEntities.length > 0) {
     var sorted = state.previewEntities.slice().filter(function(e) { return e.start != null; }).sort(function(a, b) { return a.start - b.start; });
     var charPos = 0;
     sorted.forEach(function(ent) {
-      if (ent.start > charPos) textEl.appendChild(document.createTextNode(realText.substring(charPos, ent.start)));
+      if (ent.start > charPos) appendTextMaybePending(textEl, realText.substring(charPos, ent.start), charPos);
       var span = document.createElement('span'); span.className = 'absa-span-highlight';
+      if (ps.pendingSelection && ps.pendingSelection.start <= ent.start && ps.pendingSelection.end >= ent.end) span.classList.add('rel-sel-highlight');
       var c = typeColorMap[ent.type] || '#6366F1';
       span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c; span.title = ent.type;
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
       textEl.appendChild(span);
       charPos = (ent.end || ent.start) + 1;
     });
-    if (charPos < realText.length) textEl.appendChild(document.createTextNode(realText.substring(charPos)));
+    if (charPos < realText.length) appendTextMaybePending(textEl, realText.substring(charPos), charPos);
   } else if (realText) {
-    textEl.textContent = realText.length > 500 ? realText.substring(0, 500) + '…' : realText;
+    appendTextMaybePending(textEl, realText.length > 500 ? realText.substring(0, 500) + '…' : realText, 0);
+  }
+  function selectionCharOffset(sel, selText) {
+    if (sel.rangeCount === 0) return -1;
+    var range = sel.getRangeAt(0);
+    if (range.startContainer.nodeType !== 3 || !textEl.contains(range.startContainer)) return -1;
+    var total = 0;
+    var walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT, null);
+    var textNode;
+    while ((textNode = walker.nextNode())) {
+      if (textNode === range.startContainer) {
+        var raw = sel.toString();
+        var leadingWhitespace = raw.length - raw.replace(/^\s+/, '').length;
+        var start = total + range.startOffset + leadingWhitespace;
+        return realText.slice(start, start + selText.length) === selText ? start : -1;
+      }
+      total += textNode.textContent.length;
+    }
+    return -1;
   }
   textEl.addEventListener('mouseup', function() {
-    if (!state.activeEntityType || !realText) return;
+    if (!realText) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
-    var idx = realText.indexOf(selText);
+    var idx = selectionCharOffset(sel, selText);
+    if (idx < 0) idx = realText.indexOf(selText);
     if (idx < 0) return;
-    state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
+    if (state.activeEntityType) {
+      state.previewEntities.push({ text: selText, type: state.activeEntityType, start: idx, end: idx + selText.length - 1 });
+    } else {
+      ps.pendingSelection = { text: selText, start: idx, end: idx + selText.length - 1 };
+    }
     sel.removeAllRanges();
     refreshOutputPreview(container, outKey);
   });
@@ -4335,7 +4393,21 @@ function renderSpanOnlyPreview(container, outKey) {
     var isActive = state.activeEntityType === typeName;
     chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';';
     chip.textContent = typeName;
-    chip.addEventListener('click', function() { state.activeEntityType = state.activeEntityType === typeName ? null : typeName; refreshOutputPreview(container, outKey); });
+    chip.addEventListener('click', function() {
+      if (ps.pendingSelection) {
+        state.previewEntities.push({
+          text: ps.pendingSelection.text,
+          type: typeName,
+          start: ps.pendingSelection.start,
+          end: ps.pendingSelection.end
+        });
+        ps.pendingSelection = null;
+        state.activeEntityType = typeName;
+      } else {
+        state.activeEntityType = state.activeEntityType === typeName ? null : typeName;
+      }
+      refreshOutputPreview(container, outKey);
+    });
     legendRow.appendChild(chip);
   });
   container.appendChild(legendRow);
