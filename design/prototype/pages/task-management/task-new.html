@@ -2907,7 +2907,12 @@ function renderOutputTypeFields(container, outKey) {
     var wrap = document.createElement('div');
     wrap.className = 'form-field';
     if (field.key === BYPASS_FIELD.key) wrap.classList.add('schema-bypass-field');
-    var previousField = fieldIndex > 0 ? outReg.fields[fieldIndex - 1] : null;
+    /* Previous *rendered* field — dimension-settings fields are skipped above
+       and must not count as the boolean's visual predecessor */
+    var previousField = null;
+    for (var prevIdx = fieldIndex - 1; prevIdx >= 0; prevIdx--) {
+      if (dimensionFieldKeys.indexOf(outReg.fields[prevIdx].key) < 0) { previousField = outReg.fields[prevIdx]; break; }
+    }
     if (field.type === 'boolean' && previousField && previousField.type === 'entity-list') {
       wrap.classList.add('schema-group-start-field');
     }
@@ -3658,6 +3663,28 @@ function getRelationTypeOptions(relationTypes) {
   return opts;
 }
 
+/* Resolve the selection to its actual character offset in realText by
+   walking containerEl's text nodes — indexOf alone would always bind repeated
+   words (e.g. the same entity text occurring twice) to the first occurrence */
+function resolveSelectionOffset(sel, selText, containerEl, realText) {
+  if (sel.rangeCount === 0) return -1;
+  var range = sel.getRangeAt(0);
+  if (range.startContainer.nodeType !== 3 || !containerEl.contains(range.startContainer)) return -1;
+  var total = 0;
+  var walker = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT, null);
+  var textNode;
+  while ((textNode = walker.nextNode())) {
+    if (textNode === range.startContainer) {
+      var raw = sel.toString();
+      var leadingWhitespace = raw.length - raw.replace(/^\s+/, '').length;
+      var start = total + range.startOffset + leadingWhitespace;
+      return realText.slice(start, start + selText.length) === selText ? start : -1;
+    }
+    total += textNode.textContent.length;
+  }
+  return -1;
+}
+
 function renderAbsaUnifiedPreview(previewContainer) {
   /* allow_bypass turned off while bypassed: clear the flag AND re-init the
      preview BEFORE rendering, so this pass already shows the restored state */
@@ -3725,27 +3752,6 @@ function renderAbsaUnifiedPreview(previewContainer) {
   } else if (realText) {
     appendTextMaybeHighlighted(textEl, realText.length > 500 ? realText.substring(0, 500) + '…' : realText, 0);
   }
-  /* Resolve the selection to its actual character offset in realText by
-     walking textEl's text nodes — indexOf alone would always bind repeated
-     words (e.g. the same entity text occurring twice) to the first occurrence */
-  function selectionCharOffset(sel, selText) {
-    if (sel.rangeCount === 0) return -1;
-    var range = sel.getRangeAt(0);
-    if (range.startContainer.nodeType !== 3 || !textEl.contains(range.startContainer)) return -1;
-    var total = 0;
-    var walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT, null);
-    var tn;
-    while ((tn = walker.nextNode())) {
-      if (tn === range.startContainer) {
-        var raw = sel.toString();
-        var lead = raw.length - raw.replace(/^\s+/, '').length;
-        var start = total + range.startOffset + lead;
-        return realText.slice(start, start + selText.length) === selText ? start : -1;
-      }
-      total += tn.textContent.length;
-    }
-    return -1;
-  }
   /* Text selection handler: with an entity type armed → add entity;
      otherwise → capture the selection for the sequential relation flow */
   textEl.addEventListener('mouseup', function() {
@@ -3753,7 +3759,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
     if (!realText) return;
-    var idx = selectionCharOffset(sel, selText);
+    var idx = resolveSelectionOffset(sel, selText, textEl, realText);
     if (idx < 0) idx = realText.indexOf(selText);
     if (idx < 0) return;
     if (allowEntityEditing && state.activeEntityType) {
@@ -4332,7 +4338,10 @@ function renderSpanOnlyPreview(container, outKey) {
     sorted.forEach(function(ent) {
       if (ent.start > charPos) appendTextMaybePending(textEl, realText.substring(charPos, ent.start), charPos);
       var span = document.createElement('span'); span.className = 'absa-span-highlight';
-      if (ps.pendingSelection && ps.pendingSelection.start <= ent.start && ps.pendingSelection.end >= ent.end) span.classList.add('rel-sel-highlight');
+      if (ps.pendingSelection && ps.pendingSelection.start != null) {
+        var entEnd = ent.start + (ent.text || realText.substring(ent.start, (ent.end || ent.start) + 1)).length - 1;
+        if (ps.pendingSelection.start <= ent.start && ps.pendingSelection.end >= entEnd) span.classList.add('rel-sel-highlight');
+      }
       var c = typeColorMap[ent.type] || '#6366F1';
       span.style.background = c + '33'; span.style.borderBottom = '2px solid ' + c; span.style.color = c; span.title = ent.type;
       span.appendChild(document.createTextNode(ent.text || realText.substring(ent.start, ent.end + 1)));
@@ -4343,30 +4352,12 @@ function renderSpanOnlyPreview(container, outKey) {
   } else if (realText) {
     appendTextMaybePending(textEl, realText.length > 500 ? realText.substring(0, 500) + '…' : realText, 0);
   }
-  function selectionCharOffset(sel, selText) {
-    if (sel.rangeCount === 0) return -1;
-    var range = sel.getRangeAt(0);
-    if (range.startContainer.nodeType !== 3 || !textEl.contains(range.startContainer)) return -1;
-    var total = 0;
-    var walker = document.createTreeWalker(textEl, NodeFilter.SHOW_TEXT, null);
-    var textNode;
-    while ((textNode = walker.nextNode())) {
-      if (textNode === range.startContainer) {
-        var raw = sel.toString();
-        var leadingWhitespace = raw.length - raw.replace(/^\s+/, '').length;
-        var start = total + range.startOffset + leadingWhitespace;
-        return realText.slice(start, start + selText.length) === selText ? start : -1;
-      }
-      total += textNode.textContent.length;
-    }
-    return -1;
-  }
   textEl.addEventListener('mouseup', function() {
     if (!realText) return;
     var sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.toString().trim()) return;
     var selText = sel.toString().trim();
-    var idx = selectionCharOffset(sel, selText);
+    var idx = resolveSelectionOffset(sel, selText, textEl, realText);
     if (idx < 0) idx = realText.indexOf(selText);
     if (idx < 0) return;
     if (state.activeEntityType) {
@@ -7279,6 +7270,14 @@ function onChipSelectionChange() {
       delete state.previewBypass[k];
       resetOutputPreviewState(k);
     }
+  });
+  /* An uncommitted highlighted span lives in renderer-specific slots
+     (standalone: previewState pendingSelection · composite: relSel); a
+     composition change may swap renderers, so drop it from both */
+  state.relSel = null;
+  state.relMsg = '';
+  Object.keys(state.previewState).forEach(function(k) {
+    if (state.previewState[k] && state.previewState[k].pendingSelection) state.previewState[k].pendingSelection = null;
   });
   if (state.taskType) {
     state.configData = state.configDataMap[state.taskType] || {};

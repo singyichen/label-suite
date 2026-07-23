@@ -589,6 +589,42 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     );
   });
 
+  test('Entity Recognition — pending selection is dropped when the output composition changes', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'entity-recognition-pending-mode-switch-test',
+      category: 'sequence',
+      outputType: 'entity_recognition',
+      inputType: 'single_item',
+      dataFile: 'entity-recognition.json',
+      roles: { text: 'input', gold_entities: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    await selectPreviewText(page, '這款');
+    await expect(preview.locator('.rel-sel-highlight')).toHaveText('這款');
+
+    // Adding relation_identification swaps the preview to the composite
+    // renderer — the uncommitted highlight must not leak into it.
+    await page.locator('#prevBtn').click();
+    await page
+      .locator('#taskOutputTypeChips [data-key="relation_identification"]')
+      .click();
+    await page.locator('#nextBtn').click();
+    await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
+    await expect(preview.locator('.rel-sel-highlight')).toHaveCount(0);
+
+    // Removing it again must not resurrect the stale standalone highlight.
+    await page.locator('#prevBtn').click();
+    await page
+      .locator('#taskOutputTypeChips [data-key="relation_identification"]')
+      .click();
+    await page.locator('#nextBtn').click();
+    await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
+    await expect(preview.locator('.rel-sel-highlight')).toHaveCount(0);
+  });
+
   test('Relation Identification — triples loaded with subj/rel/obj format', async ({
     page,
   }) => {
