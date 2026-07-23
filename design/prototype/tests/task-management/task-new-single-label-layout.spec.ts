@@ -171,6 +171,9 @@ async function expectUnifiedDesktopLayout(page: Page, layoutCase: LayoutCase) {
   expect((await box(page.locator('#codeEditor'))).height).toBeLessThanOrEqual(260);
 
   for (const outputType of layoutCase.outputTypes) {
+    const outputAccordion = page.locator(
+      `.output-accordion[data-output-key="${outputType}"]`,
+    );
     const bypassGap = await page
       .locator(`.output-accordion[data-output-key="${outputType}"] .schema-bypass-field`)
       .evaluate((element) => {
@@ -180,6 +183,20 @@ async function expectUnifiedDesktopLayout(page: Page, layoutCase: LayoutCase) {
       });
     expect(bypassGap).not.toBeNull();
     expect(bypassGap!).toBeCloseTo(12, 0);
+
+    if (outputType === 'entity_recognition') {
+      const overlapField = outputAccordion.locator('.form-field').filter({
+        hasText: '允許重疊標記',
+      });
+      await expect(overlapField).toHaveCount(1);
+      const overlapGap = await overlapField.evaluate((element) => {
+        const previousField = element.previousElementSibling;
+        if (!previousField) return null;
+        return element.getBoundingClientRect().top - previousField.getBoundingClientRect().bottom;
+      });
+      expect(overlapGap).not.toBeNull();
+      expect(overlapGap!).toBeCloseTo(12, 0);
+    }
   }
 }
 

@@ -171,6 +171,58 @@ async function expectGenericInputPreview(
   await expect(genericInput).toHaveCount(expected === 'visible' ? 1 : 0);
 }
 
+async function selectPreviewText(page: Page, text: string) {
+  await page.evaluate((selectedText) => {
+    const textElement = document.querySelector(
+      '#annotationPreview .absa-preview-text',
+    );
+    if (!textElement) throw new Error('Entity Recognition preview text not found');
+
+    const walker = document.createTreeWalker(
+      textElement,
+      NodeFilter.SHOW_TEXT,
+    );
+    const range = document.createRange();
+    let startNode: Text | null = null;
+    let startOffset = 0;
+    let endNode: Text | null = null;
+    let endOffset = 0;
+    let consumed = 0;
+    let node = walker.nextNode();
+    const selectionStart = textElement.textContent?.indexOf(selectedText) ?? -1;
+    const selectionEnd = selectionStart + selectedText.length;
+
+    while (node) {
+      const content = node.textContent || '';
+      const nodeStart = consumed;
+      const nodeEnd = consumed + content.length;
+
+      if (selectionStart >= nodeStart && selectionStart < nodeEnd) {
+        startNode = node as Text;
+        startOffset = selectionStart - nodeStart;
+      }
+      if (selectionEnd > nodeStart && selectionEnd <= nodeEnd) {
+        endNode = node as Text;
+        endOffset = selectionEnd - nodeStart;
+      }
+      if (startNode && endNode) break;
+
+      consumed = nodeEnd;
+      node = walker.nextNode();
+    }
+
+    if (!startNode || !endNode) {
+      throw new Error(`Unable to select preview text: ${selectedText}`);
+    }
+    range.setStart(startNode, startOffset);
+    range.setEnd(endNode, endOffset);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    textElement.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+  }, text);
+}
+
 // ─── 8 Basic Output Types ───────────────────────────────────
 
 test.describe('Step 2 preview: all 8 output types with example data', () => {
@@ -496,6 +548,83 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expectGenericInputPreview(page, 'hidden');
   });
 
+  test('Entity Recognition — creates entities in either selection order without prompting', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'entity-recognition-selection-order-test',
+      category: 'sequence',
+      outputType: 'entity_recognition',
+      inputType: 'single_item',
+      dataFile: 'entity-recognition.json',
+      roles: { text: 'input', gold_entities: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    const initialEntities = (await getState(page, 'previewEntities')) as Entity[];
+
+    await selectPreviewText(page, '這款');
+    await expect(preview).not.toContainText('請選擇實體類型');
+    await expect(preview.locator('.rel-sel-highlight')).toHaveText('這款');
+    expect((await getState(page, 'previewEntities') as Entity[])).toHaveLength(
+      initialEntities.length,
+    );
+
+    await selectPreviewText(page, '手指');
+    await expect(preview.locator('.rel-sel-highlight')).toHaveText('手指');
+    await preview.getByRole('button', { name: 'target', exact: true }).click();
+    expect(await getState(page, 'previewEntities')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ text: '手指', type: 'target', start: 35, end: 36 }),
+      ]),
+    );
+    expect(await getState(page, 'activeEntityType')).toBe('target');
+
+    await preview.getByRole('button', { name: 'aspect', exact: true }).click();
+    await selectPreviewText(page, '打字');
+    expect(await getState(page, 'previewEntities')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ text: '打字', type: 'aspect', start: 31, end: 32 }),
+      ]),
+    );
+  });
+
+  test('Entity Recognition — pending selection is dropped when the output composition changes', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'entity-recognition-pending-mode-switch-test',
+      category: 'sequence',
+      outputType: 'entity_recognition',
+      inputType: 'single_item',
+      dataFile: 'entity-recognition.json',
+      roles: { text: 'input', gold_entities: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    await selectPreviewText(page, '這款');
+    await expect(preview.locator('.rel-sel-highlight')).toHaveText('這款');
+
+    // Adding relation_identification swaps the preview to the composite
+    // renderer — the uncommitted highlight must not leak into it.
+    await page.locator('#prevBtn').click();
+    await page
+      .locator('#taskOutputTypeChips [data-key="relation_identification"]')
+      .click();
+    await page.locator('#nextBtn').click();
+    await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
+    await expect(preview.locator('.rel-sel-highlight')).toHaveCount(0);
+
+    // Removing it again must not resurrect the stale standalone highlight.
+    await page.locator('#prevBtn').click();
+    await page
+      .locator('#taskOutputTypeChips [data-key="relation_identification"]')
+      .click();
+    await page.locator('#nextBtn').click();
+    await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
+    await expect(preview.locator('.rel-sel-highlight')).toHaveCount(0);
+  });
+
   test('Relation Identification — triples loaded with subj/rel/obj format', async ({
     page,
   }) => {
@@ -647,6 +776,28 @@ test.describe('Step 2 preview: composite task data files', () => {
     expect(code).toContain('bodyLocation');
     expect(code).toContain('source_output: entity_recognition');
     await expectGenericInputPreview(page, 'hidden');
+
+    const initialEntityCount = entities.length;
+    await selectPreviewText(page, '囊袋狀');
+    await expect(preview.locator('.rel-sel-highlight')).toHaveText('囊袋狀');
+    expect((await getState(page, 'previewEntities') as Entity[])).toHaveLength(
+      initialEntityCount,
+    );
+
+    await preview.getByRole('button', { name: 'BODY', exact: true }).click();
+    expect(await getState(page, 'previewEntities')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ text: '囊袋狀', type: 'BODY', start: 16, end: 18 }),
+      ]),
+    );
+    expect(await getState(page, 'activeEntityType')).toBe('BODY');
+
+    await selectPreviewText(page, '小空腔');
+    expect(await getState(page, 'previewEntities')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ text: '小空腔', type: 'BODY', start: 23, end: 25 }),
+      ]),
+    );
   });
 
   test('absa-va.json — triple output (Entity Recognition + Relation Identification + multi_dim) across two categories', async ({
