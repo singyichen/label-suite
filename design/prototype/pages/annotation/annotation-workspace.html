@@ -3912,15 +3912,6 @@ function syncVaSliderValue(slider, valueLabel, valueInput, hasValue, updateValue
     : (state.lang === 'zh' ? '尚未評分' : 'Not rated'));
 }
 
-function updateVaLegacyValue(inputName, value, hasValue) {
-  if (inputName === 'va_valence') {
-    setText('vaValenceValue', hasValue ? formatVaValue(value) : '-');
-  }
-  if (inputName === 'va_arousal') {
-    setText('vaArousalValue', hasValue ? formatVaValue(value) : '-');
-  }
-}
-
 function buildVaSlider(containerId, dimension, selectedValue, dimensionIndex) {
   var container = el(containerId);
   if (!container) return;
@@ -3976,7 +3967,6 @@ function buildVaSlider(containerId, dimension, selectedValue, dimensionIndex) {
     if (nextHasValue) input.value = String(value);
     input.dataset.valueSet = String(nextHasValue);
     syncVaSliderValue(input, valueLabel, valueInput, nextHasValue, updateValueInput);
-    updateVaLegacyValue(inputName, input.value, nextHasValue);
   }
 
   function commitNumericValue() {
@@ -4553,8 +4543,6 @@ function renderSampleContent() {
     var vaDimensions = TASK_TYPE_UI_CONFIG.single_sentence_va_scoring.dimensions;
     buildVaSlider('vaValenceScale', vaDimensions[0], valence, 0);
     buildVaSlider('vaArousalScale', vaDimensions[1], arousal, 1);
-    setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
-    setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
   } else if (isNerTaskType()) {
     initNerState(sample);
     renderNerPanel();

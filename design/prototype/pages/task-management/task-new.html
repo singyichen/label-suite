@@ -3258,7 +3258,6 @@ function syncRegressionSliderValue(slider, valueLabel, valueInput, updateValueIn
 function createRegressionSliderControl(options) {
   var control = document.createElement('div');
   control.className = 'regression-slider-control regression-dimension-color-' + (options.colorIndex % 8);
-  if (options.controlTestId) control.setAttribute('data-testid', options.controlTestId);
 
   var shell = document.createElement('div');
   shell.className = 'regression-slider-shell';
@@ -3436,7 +3435,6 @@ function renderMultiDimPreview(container, config, outKey) {
       step: dStep,
       value: initVal,
       colorIndex: dimensionIndex,
-      controlTestId: 'multi-dim-control',
       inputTestId: 'multi-dim-slider',
       valueTestId: 'multi-dim-value-tooltip',
       numericInputTestId: 'multi-dim-value-input',
@@ -4168,7 +4166,7 @@ function renderSingleDimPreview(container, outKey) {
   previewTextBlock(container);
 
   var dimTitle = document.createElement('div');
-  dimTitle.className = 'regression-dimension-title regression-slider-control regression-dimension-color-0';
+  dimTitle.className = 'regression-dimension-title regression-dimension-color-0';
   var colorDot = document.createElement('span');
   colorDot.className = 'regression-dimension-dot';
   colorDot.setAttribute('aria-hidden', 'true');
