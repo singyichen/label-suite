@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-annotation-workspace
 建立日期: 2026-04-23
-版本: 1.4.11
+版本: 1.7.0
 狀態: Draft
 ---
 
@@ -9,7 +9,7 @@
 ---
 功能分支: feat/annotation/015-annotation-workspace
 建立日期: 2026-04-23
-版本: 1.4.11
+版本: 1.7.0
 狀態: Draft
 ---
 
@@ -197,6 +197,7 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
 4. **Given** 任務最後一筆完成提交，**When** 完成提交流程，**Then** 系統導回 `annotation-list` 並將該任務資料列狀態顯示為 `已提交`。
 5. **Given** 切換樣本或手動儲存，**When** 有編輯行為發生，**Then** 顯示自動儲存狀態更新（Saving → Saved）。
 6. **Given** annotator 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄標記卡標題，**Then** 標題必須顯示與 reviewer 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用 task type 文案（例如 `標記標籤`、`序列標記`、`句對語意判定`）。
+7. **Given** `task_type = single_sentence_va_scoring`，**When** 標記員以滑鼠拖曳、鍵盤調整或右側 number input 輸入 Valence／Arousal，**Then** 每個維度的滑桿、當前值標籤與 number input 於 100ms 內雙向同步，當前值跟隨滑塊顯示於正上方，且兩個維度使用不同輔助色；尚未操作且無既存結果的維度仍顯示未評分狀態。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -206,6 +207,12 @@ Annotator 可在同一工作區中，依任務當前 `run_type` 完成逐筆標�
   - 左欄：標記清單、目前定位、完成狀態
   - 中欄：樣本內容、`task_type` 動態標記控制項、儲存/提交操作
   - 右欄：`說明與檔案`（預設）與 `History`（次頁）
+- `task_type = single_sentence_va_scoring` 中欄控制項：
+  - Valence 與 Arousal 各以獨立 range slider 呈現，範圍與步進由凍結的 task config 決定；不得展開為大量 radio 選項。
+  - 每列必須顯示維度名稱、語意提示與範圍限制；Valence 與 Arousal 使用不同輔助色，但不得以顏色作為唯一辨識資訊。
+  - 當前值標籤必須即時跟隨滑塊並顯示於正上方；滑鼠拖曳與鍵盤方向鍵皆依 config `step` 更新，右側 number input 顯示相同當前值。
+  - number input 必須採 `step="any"` 並套用 config `min`／`max`；完成輸入後滑塊與上方標籤同步至對應位置，範圍內小數不得依 slider step 吸附，超出範圍時才校正至邊界。
+  - `status=pending` 且無儲存值時，滑桿維持未評分狀態且不得將視覺中點視為有效值；使用者實際調整後才產生可提交數值。
 - `sequence_labeling.subtype = ner` 中欄控制項：
   - 必要元素：原始文本區、依 task config `entities` 動態產生的 Entity Type 按鈕列、待指派文字提示區、已標記實體列表、儲存草稿、提交。
   - 互動方式：Annotator 先在原始文本中選取 span，再點擊 Entity Type 按鈕完成標記；未先選取文字時點擊 Entity Type 按鈕需顯示錯誤提示且不得建立實體。
@@ -487,8 +494,9 @@ Reviewer 在同一工作區執行審查，先查看單一句子的 標記分布�
 - **FR-024S**: `sentence_pairs` 標記結果 payload 必須至少包含 `pair_mode`、`response_format`、`label?`、`score?`、`unsure`、`note?`、`version`；分類型不得提交 `score`，評分型不得提交 `label`。
 - **FR-024T**: Reviewer 視圖遇到 `sentence_pairs` 時，必須依 `response_format` 顯示句對結果摘要：分類型顯示標籤分布與各標記員標籤；評分型顯示平均值、標準差與各標記員分數；Reviewer 僅提供 `通過 / 退回` 決策。
 - **FR-024U**: `sentence_pairs` 的 Reviewer 視圖中，位於審查卡上方的句對來源區不得顯示與審查卡相同的重複標題；僅保留 mode badge、Sentence 1 / Sentence 2（或 `pair_mode = entailment` 時的 `Premise / Hypothesis`）與句子內容。
+- **FR-024V**: `single_sentence_va_scoring` 的 Annotator 工作區必須以兩列獨立 range slider 呈現 Valence 與 Arousal；每列當前值標籤須在滑鼠拖曳或鍵盤調整時即時更新並跟隨滑塊顯示於正上方，右側 number input 顯示相同當前值並允許直接輸入整數或小數。slider、number input 與標籤必須雙向同步；slider 依 task config step 微調，number input 採 `step="any"` 且只依 task config min/max 校正，不得吸附範圍內的非 step 小數。各維度使用不同輔助色，並同時保留維度名稱、語意提示與範圍限制；不得以顏色作為唯一辨識資訊。
 - **FR-025**: 工作區啟動時若缺少 `task_type` query，必須讀取 `ACTIVE_TASK_TYPE_STORAGE_KEY` 作為 fallback。
-- **FR-026**: `annotation-workspace` 初始化每一筆樣本時，所有標記控制項（radio、分類選項、VA scale 等）必須呈現空白/未選取狀態，**除非該筆樣本已有儲存的標記結果**（`status=saved` 且含有效值，或 `status=submitted`）。`status=pending` 或無儲存值的樣本，不得預填任何預設選取值（包含數值中間點如 5）。
+- **FR-026**: `annotation-workspace` 初始化每一筆樣本時，所有標記控制項（分類選項、VA sliders 等）必須呈現空白/未選取狀態，**除非該筆樣本已有儲存的標記結果**（`status=saved` 且含有效值，或 `status=submitted`）。`status=pending` 或無儲存值的樣本，不得預填任何預設選取值（包含數值中間點如 5）；VA range slider 即使因原生控制項需要視覺 thumb 位置，也必須以未評分狀態區分，且在使用者操作前不得被提交為有效值。
 - **FR-027**: `annotation-list` 在 `role=reviewer` 時，toolbar 右側必須顯示 `送出審核` 按鈕（`i18n: submitReviewLabel`）；`role=annotator` 時不得顯示此按鈕。
 - **FR-028**: `annotation-list` 頁面必須支援 `labelsuite:langchange` 事件，接收到語言切換後需重新套用 i18n strings（至少包含：頁面副標題、`送出審核` 按鈕文字）。
 - **FR-029**: `annotation-list` 的 `送出審核` 按鈕點擊時，必須驗證當前任務所有樣本中每位標記員皆已完成審核決策（`approved` 或 `rejected`）；若有任一標記員決策為 `null`，顯示 `toastSelectDecision` 錯誤 toast 並中止提交；全部完成後方顯示 `toastReviewSubmitted` 成功 toast。此行為與 `annotation-workspace` 的 `rvSaveBtn` 邏輯一致。
@@ -588,7 +596,7 @@ flowchart LR
 - **SC-005A**: 在 `375px`（行動版）檢視 `annotation-list` 時，清單首列不得出現異常大列高或內容下沉；列表可維持單列緊湊掃讀。
 - **SC-006**: Annotator 與 Reviewer 主要流程（標記/審查/提交/返回）端到端可完成，且關鍵操作皆有歷程可追溯。
 - **SC-007**: autosave 提示於 sample 切換、手動儲存、15 秒 heartbeat 皆可被觸發。
-- **SC-008**: 開啟任意 `status=pending` 樣本時，所有標記控制項（分類 radio、VA scale radio）均呈未選取狀態；開啟已有儲存值的樣本時，控制項正確還原先前選取值。
+- **SC-008**: 開啟任意 `status=pending` 樣本時，所有標記控制項（分類 radio、VA sliders）均呈未選取／未評分狀態且無法以視覺中點直接提交；VA number input 為空值。開啟已有儲存值的樣本時，控制項正確還原先前選取值。VA slider 或右側 number input 調整後，slider、標籤與 number input 於 100ms 內雙向同步，當前值跟隨滑塊顯示於正上方；number input 可直接輸入範圍內非 step 小數且不被吸附，超出範圍時自動校正，Valence／Arousal 色彩可區辨且文字資訊完整。
 
 ---
 
@@ -626,6 +634,9 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 1.7.0 | 2026-07-23 | VA number input 改為 `step="any"`，允許直接鍵入範圍內非 step 小數並同步 slider／數值標籤；slider 保留 task config step 微調，手動輸入只依 min/max 校正（FR-024V、SC-008） |
+| 1.6.0 | 2026-07-23 | VA 每列滑桿右側改為 number input，與 slider 及上方數值標籤雙向同步；pending 維度維持空值，完成輸入後依 task config min/max/step 校正並移動滑塊（FR-024V、SC-008） |
+| 1.5.0 | 2026-07-23 | 將 `single_sentence_va_scoring` Annotator 控制項由大量 radio 選項改為 Valence／Arousal 雙列 range slider；數值即時跟隨滑塊顯示於正上方，各維度採不同輔助色，並保留 pending 未評分與鍵盤操作契約（FR-024V、FR-026、SC-008） |
 | 1.4.11 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.4.10 | 2026-05-10 | Clarified annotation-list data source: list items are materialized only by task-detail run publish events; dry run lists show the current trial round item count, while official run lists show the remaining samples created when official labeling starts |
 | 1.4.9 | 2026-05-06 | Synced annotation-list footer pagination with prototype: both annotator and reviewer list views now require task-list-style pagination (total/page info, page-size switcher, prev/next, numbered pages), plus reset-to-page-1 behavior after filter/search changes |

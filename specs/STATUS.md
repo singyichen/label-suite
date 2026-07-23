@@ -34,9 +34,9 @@
 | dashboard-012 | Dashboard | dashboard | `spec-ready` | `feat/dashboard/012-dashboard` | spec v1.3.28；規格狀態：Clarified |
 | shared-008 | Shared Sidebar Navbar | shared | `spec-ready` | `feat/shared/008-sidebar-navbar-shared` | spec v1.3.9；規格狀態：Clarified |
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
-| annotation-015 | Annotation List + Workspace | annotation | `spec-ready` | `feat/annotation/015-annotation-workspace` | spec v1.4.11；規格狀態：Draft |
+| annotation-015 | Annotation List + Workspace | annotation | `in-progress` | `feat/regression-slider-ui` | spec v1.7.0；規格狀態：Draft；VA Annotator 介面採雙列彩色滑桿、跟隨數值標籤與可直接輸入小數的右側欄位 |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/task-management/013-task-new` | spec v4.3.0；規格狀態：Draft；Step 2 全輸出類型與多輸出組合統一採設定優先響應式版面及下方整合設定檔工具卡 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/regression-slider-ui` | spec v4.7.0；規格狀態：Draft；Step 2 單／多維回歸設定統一維度卡片，預覽採跟隨數值標籤、可直接輸入小數的右側欄位與多維度輔助色 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,10 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-23 | `task-management-013` 更新至 v4.7.0：單／多維度回歸設定統一為相同維度卡片與欄位排列；單維度固定一張且無新增／刪除，多維度保留卡片清單操作並移除外層「維度設定 *」重複標題，既有 config 與 `outputs[]` 契約不變。 |
+| 2026-07-23 | `task-management-013` 更新至 v4.6.0、`annotation-015` 更新至 v1.7.0：右側 number input 採 `step="any"`，範圍內小數不再依 slider step 吸附；slider 仍依 task config step 微調，手動輸入僅依 min/max 校正。 |
+| 2026-07-23 | `task-management-013` 更新至 v4.5.0、`annotation-015` 更新至 v1.6.0：回歸滑桿右側改為 number input，與滑塊及上方數值標籤雙向同步；完成輸入後依 min/max/step 校正並移動滑塊，資料契約不變。 |
+| 2026-07-23 | `task-management-013` 更新至 v4.4.0、`annotation-015` 更新至 v1.5.0：單／多維度回歸統一採 range slider，數值即時跟隨滑塊顯示於正上方；多維度使用不同輔助色並保留文字辨識，annotation pending 樣本維持未評分契約。兩項進入 `feat/regression-slider-ui` prototype 實作，狀態更新為 `in-progress`。 |
 | 2026-07-23 | `task-management-013` spec 更新至 v4.3.0：全部 8 種輸出類型、單一輸出及多輸出組合統一採 Step 2 設定優先版面（>1100px 設定左／預覽右，≤1100px 設定上／預覽下），左右小標同層級頂端對齊；範本／上傳與 Code 固定於下方共用單一外框及分隔線，Code 為 240px，各 output 的 Bypass 與前一 schema 欄位保留 12px。版面改為頁面層級共通契約；`outputs[]` 不變，已檢查下游 014–017 無需改版，狀態維持 `spec-ready`。 |
 | 2026-07-23 | `task-management-013` spec 更新至 v4.2.1：設定優先 Step 2 新增「標記設定」小標並與「標記預覽」維持相同樣式及頂端對齊；共通 Bypass schema toggle 與前一欄位保留 12px token-based 群組間距；同步 FR-003a-3、FR-003j、SC-003h／SC-003k 與 prototype 驗收，`outputs[]` 契約及下游規格不變，狀態維持 `spec-ready`。 |
 | 2026-07-22 | `task-management-013` spec 更新至 v4.2.0：導入 Step 2 設定優先響應式版面與下方整合設定檔工具卡初版；適用範圍後由 v4.3.0 統一為全部輸出類型及多輸出組合，狀態維持 `spec-ready`。 |

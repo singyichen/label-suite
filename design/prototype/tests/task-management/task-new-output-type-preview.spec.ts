@@ -253,6 +253,41 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.single_dim.value).toBeDefined();
     expect(typeof ps.single_dim.value).toBe('number');
+
+    const slider = page.getByTestId('single-dim-slider');
+    const valueTooltip = page.getByTestId('single-dim-value-tooltip');
+    const valueInput = page.getByTestId('single-dim-value-input');
+    await expect(slider).toBeVisible();
+    await expect(valueInput).toHaveAttribute('type', 'number');
+    await expect(valueInput).toHaveAttribute('step', 'any');
+    await expect(valueTooltip).toHaveText(await slider.inputValue());
+    await expect(valueInput).toHaveValue(await slider.inputValue());
+
+    await valueInput.fill('');
+    await valueInput.pressSequentially('3.5');
+    await valueInput.blur();
+    await expect(valueInput).toHaveValue('3.5');
+    await expect(slider).toHaveValue('3.5');
+    await expect(valueTooltip).toHaveText('3.5');
+
+    await slider.focus();
+    await slider.press('Home');
+    await expect(valueTooltip).toHaveText(await slider.inputValue());
+    await expect(valueInput).toHaveValue(await slider.inputValue());
+    const before = await valueTooltip.boundingBox();
+    await slider.press('ArrowRight');
+    const after = await valueTooltip.boundingBox();
+
+    await expect(valueTooltip).toHaveText(await slider.inputValue());
+    await expect(valueInput).toHaveValue(await slider.inputValue());
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(after!.x).toBeGreaterThan(before!.x);
+
+    await valueInput.fill('999');
+    await valueInput.blur();
+    await expect(valueInput).toHaveValue(await slider.getAttribute('max') ?? '');
+    await expect(slider).toHaveValue(await slider.getAttribute('max') ?? '');
   });
 
   test('multi_dim — dimensions auto-populated from gold_scores object', async ({
@@ -272,6 +307,154 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     expect(dims).toContain('fluency');
     expect(dims).toContain('adequacy');
     expect(dims).toContain('coherence');
+
+    const controls = page.getByTestId('multi-dim-control');
+    await expect(controls).toHaveCount(dims.length);
+    const dimensionColors = await controls.evaluateAll((nodes) =>
+      nodes.map((node) =>
+        getComputedStyle(node).getPropertyValue('--regression-dimension-color').trim(),
+      ),
+    );
+    expect(new Set(dimensionColors).size).toBe(dimensionColors.length);
+
+    const sliders = page.getByTestId('multi-dim-slider');
+    const valueTooltips = page.getByTestId('multi-dim-value-tooltip');
+    const valueInputs = page.getByTestId('multi-dim-value-input');
+    await expect(sliders).toHaveCount(dims.length);
+    await expect(valueTooltips).toHaveCount(dims.length);
+    await expect(valueInputs).toHaveCount(dims.length);
+    for (let index = 0; index < dims.length; index += 1) {
+      await expect(valueTooltips.nth(index)).toHaveText(await sliders.nth(index).inputValue());
+      await expect(valueInputs.nth(index)).toHaveValue(await sliders.nth(index).inputValue());
+    }
+
+    await valueInputs.first().fill('2.5');
+    await valueInputs.first().blur();
+    await expect(valueInputs.first()).toHaveValue('2.5');
+    await expect(sliders.first()).toHaveValue('2.5');
+    await expect(valueTooltips.first()).toHaveText('2.5');
+  });
+
+  test('single_dim and multi_dim use the same dimension settings card', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'single-dim-settings-card-test',
+      category: 'regression',
+      outputType: 'single_dim',
+      inputType: 'single_item',
+      dataFile: 'single-dim.json',
+      roles: { text: 'input', gold_score: 'output' },
+    });
+
+    const singleAccordion = page.locator(
+      '.output-accordion[data-output-key="single_dim"]',
+    );
+    const singleCard = singleAccordion.getByTestId(
+      'regression-dimension-settings-card',
+    );
+    await expect(singleCard).toHaveCount(1);
+    await expect(
+      singleCard.getByTestId('regression-dimension-name-input'),
+    ).toHaveCount(1);
+    await expect(
+      singleCard.getByTestId('regression-dimension-min-input'),
+    ).toHaveCount(1);
+    await expect(
+      singleCard.getByTestId('regression-dimension-max-input'),
+    ).toHaveCount(1);
+    await expect(
+      singleCard.getByTestId('regression-dimension-step-input'),
+    ).toHaveCount(1);
+    await expect(
+      singleAccordion.getByTestId('regression-dimension-add-btn'),
+    ).toHaveCount(0);
+    await expect(
+      singleAccordion.getByTestId('regression-dimension-remove-btn'),
+    ).toHaveCount(0);
+
+    await singleCard
+      .getByTestId('regression-dimension-name-input')
+      .fill('quality');
+    const singleConfig = await getState(
+      page,
+      'outputConfigs',
+    ) as WindowState['outputConfigs'];
+    expect(singleConfig.single_dim.dimension_name).toBe('quality');
+
+    const singleCardStyle = await singleCard.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        className: element.className,
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderRadius,
+        padding: style.padding,
+      };
+    });
+
+    await setupAndGoToStep2(page, {
+      taskName: 'multi-dim-settings-card-test',
+      category: 'regression',
+      outputType: 'multi_dim',
+      inputType: 'single_item',
+      dataFile: 'multi-dim.json',
+      roles: { source: 'input', gold_scores: 'output' },
+    });
+
+    const multiAccordion = page.locator(
+      '.output-accordion[data-output-key="multi_dim"]',
+    );
+    const multiCards = multiAccordion.getByTestId(
+      'regression-dimension-settings-card',
+    );
+    const multiConfig = await getState(
+      page,
+      'outputConfigs',
+    ) as WindowState['outputConfigs'];
+    const dimensionCount = multiConfig.multi_dim.dimensions!.length;
+
+    await expect(multiCards).toHaveCount(dimensionCount);
+    await expect(
+      multiAccordion.getByText('維度設定', { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      multiAccordion.getByTestId('regression-dimension-name-input'),
+    ).toHaveCount(dimensionCount);
+    await expect(
+      multiAccordion.getByTestId('regression-dimension-remove-btn'),
+    ).toHaveCount(dimensionCount);
+    await expect(
+      multiAccordion.getByTestId('regression-dimension-add-btn'),
+    ).toHaveCount(1);
+
+    await multiCards
+      .first()
+      .getByTestId('regression-dimension-name-input')
+      .fill('clarity');
+    const updatedMultiConfig = await getState(
+      page,
+      'outputConfigs',
+    ) as WindowState['outputConfigs'];
+    expect(updatedMultiConfig.multi_dim.dimensions![0].name).toBe('clarity');
+
+    await multiAccordion.getByTestId('regression-dimension-add-btn').click();
+    await expect(multiCards).toHaveCount(dimensionCount + 1);
+    await multiAccordion
+      .getByTestId('regression-dimension-remove-btn')
+      .last()
+      .click();
+    await expect(multiCards).toHaveCount(dimensionCount);
+
+    const multiCardStyle = await multiCards.first().evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        className: element.className,
+        backgroundColor: style.backgroundColor,
+        borderRadius: style.borderRadius,
+        padding: style.padding,
+      };
+    });
+    expect(multiCardStyle).toEqual(singleCardStyle);
   });
 
   test('Sequence Tagging — gold_tags parsed as array', async ({ page }) => {
