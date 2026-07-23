@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-23 | `task-management-013` spec 更新至 v4.2.1：設定優先 Step 2 新增「標記設定」小標並與「標記預覽」維持相同樣式及頂端對齊；共通 Bypass schema toggle 與前一欄位保留 12px token-based 群組間距；同步 FR-003a-3、FR-003j、SC-003h／SC-003k 與 prototype 驗收，`outputs[]` 契約及下游規格不變，狀態維持 `spec-ready`。 |
 | 2026-07-22 | `task-management-013` spec 更新至 v4.2.0：單一標籤 Step 2 改由 `step2Layout` registry metadata 啟用設定優先版面，桌面採設定左／預覽右、1100px 以下改為上下排列；範本／上傳與 Code 整合為下方單一工具卡並降低 Code 高度；其他輸出維持原狀，prototype 與 SC-003k 測試同步，狀態維持 `spec-ready`。 |
 | 2026-07-22 | `task-management-013` spec 更新至 v4.1.0：Step 1 分類（單一標籤／多標籤）與回歸（單維度／多維度）輸出改為組內 radio 單選，選擇語意由 taxonomy `outputSelection` metadata 驅動；序列維持 checkbox 多選、跨大分類仍可多選；prototype 與 SC-002e 測試同步，狀態維持 `spec-ready`。 |
 | 2026-07-22 | `task-management-013` spec 更新至 v4.0.0：從新增任務 Step 1／Step 2 與 registry 移除 `entity_relation`、`boundary`；將 `span`、`relation_triple`、`token_class` config key 破壞性遷移為 `entity_recognition`、`relation_identification`、`sequence_tagging`，不保留相容別名，並同步顯示名稱、taxonomy、config 範例、prototype、visual overview 與回歸測試；狀態維持 `spec-ready`。 |
