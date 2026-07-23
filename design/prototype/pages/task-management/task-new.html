@@ -1168,7 +1168,6 @@ var OUTPUT_TYPE_REGISTRY = {
   single_label: {
     zh: '單一標籤', en: 'Single label',
     source_output: null,
-    step2Layout: 'settings-first-preview',
     fields: [
       { key: 'label_options', type: 'entity-list', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增標籤', addLabel_en: 'Add label' },
     ],
@@ -4027,9 +4026,7 @@ function syncStep2Layout() {
   var primarySlot = el('s2PrimarySettingsSlot');
   var defaultSlot = el('s2DefaultSettingsSlot');
   var supportingTools = el('s2SupportingTools');
-  var soleOutputKey = state.selectedOutputTypes.length === 1 ? state.selectedOutputTypes[0] : null;
-  var soleOutputRegistry = soleOutputKey ? OUTPUT_TYPE_REGISTRY[soleOutputKey] : null;
-  var usesSettingsFirstPreview = !!soleOutputRegistry && soleOutputRegistry.step2Layout === 'settings-first-preview';
+  var usesSettingsFirstPreview = state.selectedOutputTypes.length > 0;
   var targetSlot = usesSettingsFirstPreview ? primarySlot : defaultSlot;
 
   if (settingsPanel.parentNode !== targetSlot) targetSlot.appendChild(settingsPanel);
