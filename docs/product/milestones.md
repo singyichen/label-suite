@@ -48,7 +48,7 @@ Demo-Ready（M8）← 論文 demo video + User Study
 | **M0** | Foundation — 工程基準與 CI | foundation | FastAPI 骨架、DB migrations、Celery、Redis、CI pipeline、Prometheus / Sentry 整合 | 3 週 | — |
 | **M1** | Auth + Shared Sidebar | account（001）、shared（008）| Email / Password 登入 / 登出、JWT cookie auth、Sidebar Navbar RWD | 2 週 | M0 |
 | **M2** | Dashboard + 任務列表 | dashboard（012）、task-management（010） | 五角色動態 Dashboard、任務列表頁（搜尋 / 篩選） | 2 週 | M1 |
-| **M3** | 新增任務（Config Builder） | task-management（013）| 四步驟精靈、Config Builder 視覺 / Code 模式、五種 task_type 支援 | 4 週 | M2 |
+| **M3** | 新增任務（Config Builder） | task-management（013）| 四步驟精靈、Config Builder 視覺 / Code 模式、8 種輸出類型與複選組合 | 4 週 | M2 |
 | **M4** | Annotation Workspace（Annotator 核心路徑） | annotation（015 — Annotator flow）| annotation-list、annotation-workspace（Dry Run / Official Run）、草稿儲存 | 4 週 | M3 |
 | **M5** | 任務管理完整協作流程 | task-management（014）| 任務詳情五 Tab、狀態機轉換（draft → dry_run → iaa → official → completed）、成員管理、工時紀錄 | 4 週 | M4 |
 | **M6** | 資料集分析 + 品質監控 | dataset（016 + 017） | 統計總覽（#Sentence/#Token/#Label）、IAA 計算（Kappa / F1 / ICC）、異常偵測 | 4 週 | M5 |
@@ -167,25 +167,26 @@ Demo-Ready（M8）← 論文 demo video + User Study
 
 **目標描述**
 
-實作四步驟任務建立精靈，包含 Config Builder 視覺模式與 Code 模式，支援五種 task_type（單句分類、單句評分/回歸、句對任務、序列標記、關係抽取）。
+實作四步驟任務建立精靈，包含 Config Builder 視覺模式與 Code 模式，支援 8 種 registry-driven 輸出類型及多輸出組合。
 
-**涵蓋 Spec：** `specs/task-management/013-task-new/spec.md` v2.0.4（`spec-ready`）
+**涵蓋 Spec：** `specs/task-management/013-task-new/spec.md` v4.3.0（`spec-ready`）
 
 **Definition of Done**
 
 - [ ] `POST /api/v1/tasks`：建立任務，task config 以 Pydantic 驗證，無效 config 回傳 422
 - [ ] 建立後自動在 `task_membership` 建立一筆 `project_leader` 紀錄
-- [ ] Config Builder 視覺模式：五種 task_type 各有對應 UI 控制項
+- [ ] Config Builder 視覺模式：8 種輸出類型皆有 registry-driven UI 控制項，並支援多輸出組合
+- [ ] Step 2 統一版面：大於 1100px 設定左／預覽右，1100px 以下設定上／預覽下；範本／上傳與 Code 共用單一外框
 - [ ] Config Builder Code 模式：顯示 YAML / JSON，可手動編輯，與視覺模式雙向同步
 - [ ] 範本選擇：常用任務類型預設 config 可直接套用後微調
 - [ ] 步驟四標記說明：支援上傳 PDF / 圖片 / Markdown，設定「強制首次顯示」
 - [ ] 資料集上傳（txt / csv / tsv / json）並顯示預覽
-- [ ] task_type registry：新增任務類型不需修改 Step 1~4 核心路由
-- [ ] Unit test：每種 task_type 的 config 驗證（合法 + 非法）覆蓋率 ≥ 90%
+- [ ] output type registry：新增輸出類型不需修改 Step 1~4 核心路由
+- [ ] Unit test：每種輸出類型的 config 驗證（合法 + 非法）覆蓋率 ≥ 90%
 
 **關鍵技術決策**
 
-- task_type registry 的 Python 實作模式（dict of Pydantic validators or Protocol class）
+- output type registry 的 Python 實作模式（dict of Pydantic validators or Protocol class）
 - Config JSONB 儲存策略（PostgreSQL）
 - Visual ↔ Code 模式切換不丟失資料的狀態管理設計
 
