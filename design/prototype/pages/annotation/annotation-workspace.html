@@ -253,44 +253,78 @@
     }
     .va-axis-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xs); gap: var(--space-sm); }
     .va-axis-title { font-size: 13px; font-weight: 700; color: var(--color-ink); }
-    .va-axis-value {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 50px;
-      padding: 2px 8px;
-      border-radius: var(--radius-full);
-      background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
-      font-size: 12px;
-      font-weight: 700;
-    }
+    .va-axis-value { display: none; }
     .va-axis-hint { font-size: 12px; color: var(--color-text-soft); margin-bottom: var(--space-sm); }
     .va-scale-row {
-      display: flex;
-      flex-wrap: nowrap;
-      gap: 12px 18px;
-      align-items: center;
-      padding-top: 2px;
-      overflow-x: auto;
-      scrollbar-width: thin;
+      --regression-dimension-color: #4F46E5;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) 68px;
+      align-items: end;
+      gap: var(--space-sm);
     }
-    .va-scale-option {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--color-ink);
+    .regression-dimension-color-0 { --regression-dimension-color: #4F46E5; }
+    .regression-dimension-color-1 { --regression-dimension-color: #0369A1; }
+    .regression-slider-field { position: relative; min-width: 0; padding-top: 32px; }
+    .regression-slider-input {
+      display: block;
+      width: 100%;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--regression-dimension-color);
+    }
+    .regression-slider-input:focus-visible { outline: 2px solid var(--regression-dimension-color); outline-offset: 4px; }
+    .regression-slider-input[data-value-set="false"] { opacity: 0.58; }
+    .regression-slider-value {
+      position: absolute;
+      top: 0;
+      left: 9px;
+      z-index: 1;
+      transform: translateX(-50%);
+      min-width: 30px;
+      padding: 2px 7px;
+      border: 1px solid var(--regression-dimension-color);
+      border-radius: var(--radius-sm);
+      background: var(--color-white);
+      color: var(--regression-dimension-color);
       font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      user-select: none;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      pointer-events: none;
     }
-    .va-scale-option input[type="radio"] {
-      width: 14px;
-      height: 14px;
-      accent-color: var(--color-primary);
-      cursor: pointer;
+    .regression-slider-value[data-value-set="false"] { color: var(--color-text-soft); border-style: dashed; }
+    .regression-slider-value::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      border-right: 1px solid currentColor;
+      border-bottom: 1px solid currentColor;
+      background: var(--color-white);
+      transform: translate(-50%, -3px) rotate(45deg);
     }
+    .regression-slider-bound { min-width: 24px; padding-bottom: 1px; color: var(--color-text-soft); font-size: 12px; text-align: center; }
+    .regression-value-input {
+      width: 68px;
+      height: 38px;
+      padding: 6px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+    }
+    .regression-value-input:focus {
+      border-color: var(--regression-dimension-color);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--regression-dimension-color) 18%, transparent);
+    }
+    .regression-value-input[data-value-set="false"] { color: var(--color-text-soft); }
     .va-range-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--color-text-soft); margin-top: 8px; }
     .va-scale-divider {
       width: 100%;
@@ -1235,6 +1269,10 @@
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
+      .regression-dimension-color-0 { --regression-dimension-color: #A5B4FC; }
+      .regression-dimension-color-1 { --regression-dimension-color: #7DD3FC; }
+      .regression-value-input { background: var(--color-surface); }
+
       /* Task-type badges */
       .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
       .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
@@ -1646,6 +1684,7 @@ var I18N = {
     toastApproved: '已通過', toastRejected: '已退回',
     toastReviewSubmitted: '審核結果已送出',
     toastSelectLabel: '請先選擇標籤',
+    toastSelectVaScores: '請先完成 Valence 與 Arousal 評分',
     toastSelectDecision: '請完成每位標記員的審核決策',
     mobileDrawerTitle: '說明與檔案',
     mobileGuidelineText: '新聞標題多標籤分類：可同時勾選多個類別。',
@@ -1806,6 +1845,7 @@ var I18N = {
     toastApproved: 'Approved', toastRejected: 'Returned',
     toastReviewSubmitted: 'Review submitted',
     toastSelectLabel: 'Please select a label first',
+    toastSelectVaScores: 'Rate both Valence and Arousal first',
     toastSelectDecision: 'Please complete a review decision for each annotator',
     mobileDrawerTitle: 'Guidelines',
     mobileGuidelineText: 'News headline multi-label classification: multiple selections are allowed.',
@@ -2627,7 +2667,11 @@ var TASK_TYPE_UI_CONFIG = {
     mobileGuideline: {
       zh: 'VA 評分：請分別完成 Valence 與 Arousal。',
       en: 'VA scoring: rate both Valence and Arousal.'
-    }
+    },
+    dimensions: [
+      { name: 'Valence', inputName: 'va_valence', min: 1, max: 9, step: 0.5 },
+      { name: 'Arousal', inputName: 'va_arousal', min: 1, max: 9, step: 0.5 }
+    ]
   },
   sequence_labeling: {
     taskTypeLabel: {
@@ -3480,8 +3524,6 @@ function isVaTaskType(taskType) {
 
 var VA_GUIDELINE_IMAGE_SRC = '../../assets/images/task-management/VA_emj.png';
 
-var VA_SCALE_VALUES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9];
-
 function formatVaValue(value) {
   var numeric = typeof value === 'number' ? value : parseFloat(value);
   if (isNaN(numeric)) return '';
@@ -3839,36 +3881,191 @@ function getReviewerData(sample) {
   return sample.reviewerData;
 }
 
-function buildVaScaleOptions(containerId, inputName, selectedValue) {
+function normalizeVaValue(rawValue, min, max) {
+  if (String(rawValue).trim() === '') return null;
+  var numeric = Number(rawValue);
+  if (!Number.isFinite(numeric)) return null;
+  return Math.min(max, Math.max(min, numeric));
+}
+
+function countVaDecimals(value) {
+  var text = String(value);
+  var decimalIndex = text.indexOf('.');
+  return decimalIndex === -1 ? 0 : text.length - decimalIndex - 1;
+}
+
+function syncVaSliderValue(slider, valueLabel, valueInput, hasValue, updateValueInput) {
+  var min = parseFloat(slider.min);
+  var max = parseFloat(slider.max);
+  var value = parseFloat(slider.value);
+  var ratio = max > min ? (value - min) / (max - min) : 0;
+  var thumbSize = 18;
+  valueLabel.textContent = hasValue ? formatVaValue(value) : '—';
+  valueLabel.dataset.valueSet = String(hasValue);
+  valueLabel.style.left = 'calc(' + (ratio * 100) + '% + ' + ((thumbSize / 2) - (ratio * thumbSize)) + 'px)';
+  if (updateValueInput !== false) {
+    valueInput.value = hasValue ? formatVaValue(value) : '';
+  }
+  valueInput.dataset.valueSet = String(hasValue);
+  slider.setAttribute('aria-valuetext', hasValue
+    ? formatVaValue(value)
+    : (state.lang === 'zh' ? '尚未評分' : 'Not rated'));
+}
+
+function updateVaLegacyValue(inputName, value, hasValue) {
+  if (inputName === 'va_valence') {
+    setText('vaValenceValue', hasValue ? formatVaValue(value) : '-');
+  }
+  if (inputName === 'va_arousal') {
+    setText('vaArousalValue', hasValue ? formatVaValue(value) : '-');
+  }
+}
+
+function buildVaSlider(containerId, dimension, selectedValue, dimensionIndex) {
   var container = el(containerId);
   if (!container) return;
   while (container.firstChild) container.removeChild(container.firstChild);
+  var inputName = dimension.inputName;
+  var dimensionKey = inputName === 'va_valence' ? 'valence' : 'arousal';
+  var hasValue = selectedValue !== null && selectedValue !== undefined;
+  var initialValue = hasValue ? selectedValue : (dimension.min + dimension.max) / 2;
+  container.className = 'va-scale-row regression-dimension-color-' + (dimensionIndex % 2);
+  container.setAttribute('data-testid', 'va-' + dimensionKey + '-control');
 
-  var selected = (selectedValue !== null && selectedValue !== undefined) ? formatVaValue(selectedValue) : null;
-  VA_SCALE_VALUES.forEach(function(value, index) {
-    var valueText = formatVaValue(value);
-    var label = document.createElement('label');
-    label.className = 'va-scale-option';
+  var minLabel = document.createElement('span');
+  minLabel.className = 'regression-slider-bound';
+  minLabel.textContent = dimension.min;
 
-    var input = document.createElement('input');
-    input.type = 'radio';
-    input.name = inputName;
-    input.value = valueText;
-    if (selected !== null && valueText === selected) input.checked = true;
+  var field = document.createElement('div');
+  field.className = 'regression-slider-field';
 
-    var text = document.createElement('span');
-    text.textContent = valueText;
+  var valueLabel = document.createElement('output');
+  valueLabel.className = 'regression-slider-value';
+  valueLabel.setAttribute('aria-live', 'polite');
+  valueLabel.setAttribute('data-testid', 'va-' + dimensionKey + '-value-tooltip');
 
-    label.appendChild(input);
-    label.appendChild(text);
-    container.appendChild(label);
+  var input = document.createElement('input');
+  input.className = 'regression-slider-input';
+  input.type = 'range';
+  input.name = inputName;
+  input.min = dimension.min;
+  input.max = dimension.max;
+  input.step = 'any';
+  input.dataset.configStep = String(dimension.step);
+  input.value = initialValue;
+  input.dataset.valueSet = String(hasValue);
+  input.setAttribute('data-testid', 'va-' + dimensionKey + '-slider');
+  input.setAttribute('aria-label', dimension.name);
 
+  var valueInput = document.createElement('input');
+  valueInput.className = 'regression-value-input';
+  valueInput.type = 'number';
+  valueInput.inputMode = 'decimal';
+  valueInput.min = dimension.min;
+  valueInput.max = dimension.max;
+  valueInput.step = 'any';
+  valueInput.placeholder = '—';
+  valueInput.dataset.valueSet = String(hasValue);
+  valueInput.setAttribute('data-testid', 'va-' + dimensionKey + '-value-input');
+  valueInput.setAttribute(
+    'aria-label',
+    dimension.name + (state.lang === 'zh' ? ' 數值輸入' : ' value input')
+  );
+
+  function applyValue(value, nextHasValue, updateValueInput) {
+    if (nextHasValue) input.value = String(value);
+    input.dataset.valueSet = String(nextHasValue);
+    syncVaSliderValue(input, valueLabel, valueInput, nextHasValue, updateValueInput);
+    updateVaLegacyValue(inputName, input.value, nextHasValue);
+  }
+
+  function commitNumericValue() {
+    if (valueInput.value.trim() === '') {
+      applyValue(input.value, false);
+      return;
+    }
+    var normalized = normalizeVaValue(
+      valueInput.value,
+      parseFloat(input.min),
+      parseFloat(input.max)
+    );
+    if (normalized === null) {
+      applyValue(input.value, false);
+      return;
+    }
+    applyValue(normalized, true);
+  }
+
+  input.addEventListener('input', function() {
+    applyValue(input.value, true);
   });
+  input.addEventListener('pointerdown', function() {
+    input.step = input.dataset.configStep;
+  });
+  input.addEventListener('pointerup', function() {
+    input.step = 'any';
+  });
+  input.addEventListener('pointercancel', function() {
+    input.step = 'any';
+  });
+  input.addEventListener('keydown', function(event) {
+    var direction = 0;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') direction = 1;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') direction = -1;
+    var nextValue = null;
+    if (direction !== 0) {
+      var configuredStep = parseFloat(input.dataset.configStep);
+      var precision = Math.max(
+        countVaDecimals(input.value),
+        countVaDecimals(configuredStep)
+      );
+      nextValue = Number(
+        (parseFloat(input.value) + direction * configuredStep).toFixed(precision)
+      );
+    } else if (event.key === 'Home') {
+      nextValue = parseFloat(input.min);
+    } else if (event.key === 'End') {
+      nextValue = parseFloat(input.max);
+    }
+    if (nextValue !== null) {
+      event.preventDefault();
+      input.step = 'any';
+      applyValue(
+        normalizeVaValue(nextValue, parseFloat(input.min), parseFloat(input.max)),
+        true
+      );
+    }
+  });
+  valueInput.addEventListener('input', function() {
+    var numeric = Number(valueInput.value);
+    var normalized = normalizeVaValue(
+      valueInput.value,
+      parseFloat(input.min),
+      parseFloat(input.max)
+    );
+    if (normalized !== null && Math.abs(normalized - numeric) < 0.0000001) {
+      applyValue(normalized, true, false);
+    }
+  });
+  valueInput.addEventListener('change', commitNumericValue);
+  valueInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commitNumericValue();
+    }
+  });
+
+  field.appendChild(valueLabel);
+  field.appendChild(input);
+  container.appendChild(minLabel);
+  container.appendChild(field);
+  container.appendChild(valueInput);
+  syncVaSliderValue(input, valueLabel, valueInput, hasValue);
 }
 
 function readSelectedVaValue(inputName) {
-  var selected = document.querySelector('input[name="' + inputName + '"]:checked');
-  if (!selected) return null;
+  var selected = document.querySelector('input[name="' + inputName + '"]');
+  if (!selected || selected.dataset.valueSet !== 'true') return null;
   var numeric = parseFloat(selected.value);
   return isNaN(numeric) ? null : numeric;
 }
@@ -4353,8 +4550,9 @@ function renderSampleContent() {
   } else if (isVaTaskType(state.taskTypeKey)) {
     var valence = (sample.va && sample.va.valence != null) ? sample.va.valence : null;
     var arousal = (sample.va && sample.va.arousal != null) ? sample.va.arousal : null;
-    buildVaScaleOptions('vaValenceScale', 'va_valence', valence);
-    buildVaScaleOptions('vaArousalScale', 'va_arousal', arousal);
+    var vaDimensions = TASK_TYPE_UI_CONFIG.single_sentence_va_scoring.dimensions;
+    buildVaSlider('vaValenceScale', vaDimensions[0], valence, 0);
+    buildVaSlider('vaArousalScale', vaDimensions[1], arousal, 1);
     setText('vaValenceValue', valence !== null ? formatVaValue(valence) : '-');
     setText('vaArousalValue', arousal !== null ? formatVaValue(arousal) : '-');
   } else if (isNerTaskType()) {
@@ -4616,15 +4814,6 @@ function bindEvents() {
       if (option) option.classList.toggle('selected', input.checked);
     });
   });
-  var vaPanel = el('vaAnnotatorPanel');
-  if (vaPanel) {
-    vaPanel.addEventListener('change', function(event) {
-      var target = event.target;
-      if (!target || target.tagName !== 'INPUT' || target.type !== 'radio') return;
-      if (target.name === 'va_valence') setText('vaValenceValue', target.value);
-      if (target.name === 'va_arousal') setText('vaArousalValue', target.value);
-    });
-  }
   var collapseBtn = el('guidelineCollapseBtn');
   if (collapseBtn) {
     collapseBtn.addEventListener('click', function() {
@@ -4771,7 +4960,7 @@ function bindEvents() {
     if (isVaTaskType(state.taskTypeKey)) {
       var v = readSelectedVaValue('va_valence');
       var a = readSelectedVaValue('va_arousal');
-      if (v === null || a === null) { showToast(t('toastSelectLabel'), 'error'); return; }
+      if (v === null || a === null) { showToast(t('toastSelectVaScores'), 'error'); return; }
       sample.va = { valence: v, arousal: a };
       setSampleLabels(sample, []);
       toValue = 'V=' + formatVaValue(v) + ' / A=' + formatVaValue(a);

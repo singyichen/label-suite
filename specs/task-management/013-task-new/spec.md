@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 4.3.0
+版本: 4.7.0
 狀態: Draft
 ---
 
@@ -36,6 +36,10 @@
 - **v4.2.0 設定優先佈局初版**：Step 2 建立桌面版左側 schema 設定、右側即時預覽的主工作區；1100px 以下改為設定在上、預覽在下；範本／上傳與 Code 整合為下方單一輔助工具卡。
 - **v4.2.1 設定區視覺層級補充**：Step 2 左右主區塊分別顯示「標記設定」與「標記預覽」小標，兩者使用相同文字層級並於桌面版頂端對齊；共通 `allow_bypass` toggle 與前一 schema 欄位保留 12px 群組間距。
 - **v4.3.0 全輸出類型統一 Step 2 佈局**：設定優先主工作區與整合設定檔工具卡改為 Step 2 全域共通版面，適用於全部 8 種輸出類型、單一輸出及多輸出組合，不再需要 output type 專屬的 layout metadata。桌面寬度大於 1100px 時設定置左、預覽置右；1100px 以下設定置上、預覽置下；下方工具卡固定以單一外框與分隔線整合範本／上傳及 240px Code 編輯器。`outputs[]` 契約不變。
+- **v4.4.0 回歸滑桿互動統一**：`single_dim` 與 `multi_dim` 預覽統一採用 range slider；當前數值以跟隨滑塊的標籤即時顯示於滑塊正上方。`multi_dim` 依維度順序配置不同顏色，但維度辨識仍同時保留名稱與端點文字，不以顏色作為唯一資訊來源。
+- **v4.5.0 回歸數值精確輸入**：`single_dim` 與 `multi_dim` 每列滑桿右側改為可直接編輯的 number input，並與滑桿及上方數值標籤雙向同步；完成輸入後滑塊移至對應位置，超出範圍或不符合 step 的輸入自動校正至最近合法值。
+- **v4.6.0 回歸小數直接輸入**：右側 number input 允許直接鍵入 min/max 範圍內的小數值，不因 slider `step` 吸附或改寫；`step` 僅控制滑桿拖曳與鍵盤微調，手動輸入仍會同步滑塊與上方數值標籤。
+- **v4.7.0 回歸設定卡統一**：`single_dim` 與 `multi_dim` 的維度設定使用相同卡片、欄位標籤及 min/max/step 三欄排列；單維度固定顯示一張不可新增／刪除的卡片，多維度顯示一張以上並保留新增／刪除功能。多維度不再顯示重複的外層「維度設定 *」標題。
 
 ## 規格常數
 
@@ -278,6 +282,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 13. **Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
 14. **Given** 已選擇任一單一輸出類型或多輸出組合，**When** 使用者在寬度大於 1100px 的桌面進入 Step 2，**Then** schema 設定置左、標記預覽置右，範本／上傳與 Code 於下方共用單一外框；**When** 寬度不超過 1100px，**Then** schema 設定改置於標記預覽上方，且所有已選輸出類型仍在設定欄依序以手風琴面板呈現。
 15. **Given** 任一輸出類型或多輸出組合的 Step 2 schema 與預覽完成渲染，**When** 檢視主工作區，**Then** 左右小標分別顯示「標記設定」與「標記預覽」，桌面版頂端位置差不得超過 2px；**Given** `allow_bypass` 前方存在其他 schema 欄位，**Then** 每個輸出類型的 Bypass toggle 與前一欄位之間必須保留 12px 垂直間距。
+16. **Given** 使用者分別選擇 `single_dim` 或 `multi_dim`，**When** 進入 Step 2 標記設定，**Then** 維度名稱、最小值、最大值與間距皆以同一種維度卡片結構呈現；`single_dim` 固定一張且無新增／刪除控制，`multi_dim` 依維度數量重複卡片並提供新增／刪除控制，且卡片清單上方不顯示「維度設定 *」重複標題。
 
 **介面定義**：
 
@@ -300,8 +305,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `relation_identification` | 純模式：既有實體唯讀高亮 + 循序關係建構器（E1/Arg1 → Relation → E2/Arg2 → 新增）+ 三元組列表，不顯示 Span 編輯控制項；與 `entity_recognition` 組合時：整合預覽允許先建立／修改實體，再建立關係。兩種模式皆以「類型」選單事後指定 config `relation_types` 中的語意類型 |
     | `single_label` | 文字顯示 + radio 風格可點選標籤 chip（單選） |
     | `multi_label` | 文字顯示 + checkbox 風格可點選標籤 chip（多選）+ 已選顯示 |
-    | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿（含 min/max/當前值） |
-    | `multi_dim` | 文字顯示 + 多維度各自獨立可拖曳滑桿（含 min/max/當前值標籤） |
+    | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿；當前值即時跟隨滑塊顯示於正上方，左側顯示 min、右側提供 number input 精確輸入 |
+    | `multi_dim` | 文字顯示 + 多維度各自獨立可拖曳滑桿；每列使用不同維度色，當前值即時跟隨各自滑塊顯示於正上方，左側顯示 min、右側提供 number input 精確輸入 |
     | `free_text` | 文字顯示 + 可編輯 textarea（含字數計數器）；啟用參考答案時顯示參考區塊 |
 
   - 上表所有輸出類型的預覽區塊底部（`allow_bypass` 開啟時）均附「無法判定 (Bypass)」勾選項；勾選後清空並停用該輸出類型的其他預覽互動控制項，取消勾選後恢復（見 FR-003j）
@@ -316,7 +321,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     - `number`：數字輸入框（含 min/max 限制）
     - `text`：單行文字輸入框
     - `boolean`：toggle 開關
-    - `va-dimensions`：維度卡片列表，每張卡片含維度名稱 + min/max/step 三欄，可新增/刪除維度
+    - `va-dimensions`：維度卡片列表，每張卡片含維度名稱 + min/max/step 三欄；多維度模式可新增／刪除，單維度模式固定一張卡片
   - 各輸出類型的 registry 欄位定義：
 
     | 輸出類型 | 欄位 | 類型 | 必填 |
@@ -362,6 +367,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - 各輸出類型的預覽互動（如點擊標籤 chip 切換選取狀態）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽內容。
 - `entity-list` 欄位的新增按鈕文字必須依語境顯示（如 `single_label` 顯示「新增標籤」、`entity_recognition` 顯示「新增實體類型」、`sequence_tagging` 顯示「新增標籤類型」）。
 - `multi_dim` 的維度設定為通用模式，使用者可自訂任意維度名稱與 min/max/step，不限於特定維度（如 VA）。
+- `single_dim` 與 `multi_dim` 的設定介面必須由 registry 的維度設定 metadata 驅動並共用同一種卡片結構、欄位標籤及數值欄排列，不得依 output type 在核心流程分別硬編版面。`single_dim` 固定一張卡片且不顯示新增／刪除控制；`multi_dim` 顯示可新增／刪除的卡片清單，並省略清單外層重複的「維度設定 *」標題。
+- `single_dim` 與 `multi_dim` 必須共用相同的回歸滑桿互動語法：拖曳或鍵盤調整時，數值標籤與右側 number input 需在 100ms 內同步更新，數值標籤跟隨目前滑塊位置顯示於正上方；完成 number input 輸入後，滑塊與數值標籤同步至對應位置。number input 必須允許直接鍵入範圍內的小數，不得依 slider `step` 自動吸附；超出 min/max 時才校正至邊界。`multi_dim` 必須依維度順序配置可區辨顏色；顏色僅作輔助辨識，維度名稱、當前數值與範圍限制仍必須可取得。
 - 存在 `OUTPUT_TYPE_DEPENDENCIES` 的輸出類型（如 `entity_recognition` + `relation_identification`）同時被選取時，預覽須合併為整合模式（含圈選文字建立實體、實體列表、關係建構器、三元組列表）。
 - `relation_identification` 的 `source_output` 必須由 registry metadata 與目前已選 output types 推導：僅當 `entity_recognition` 同時被選取時輸出 `source_output: entity_recognition`；純 `relation_identification` 不得保留或序列化該欄位。
 - Code 內容儲存成功後，schema 欄位需即時重建並顯示更新結果；儲存失敗需顯示可定位錯誤且保留使用者輸入。
@@ -494,8 +501,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003d-4**：`relation_identification` 必須支援 `relation_types`（string[]，語意類型標籤），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；語意類型由每筆三元組的 `type` 選單事後指定，選項僅來自 `relation_types`，不得覆寫觸發詞。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：`relation_types` 不得為空且不得含空白項目。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
 - **FR-003d-6**：`multi_label` 必須支援 `label_options`（`{ name, color }[]`）與 `max_selections`（number，0 = 不限）。預覽：文字區塊 + checkbox 風格 chip 按鈕（可多選），下方顯示已選數量。驗證：`label_options` 不得為空且不得含空白項目。
-- **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider（含 min/max/當前值標籤）。驗證：`min` < `max`、`step` > `0`。
-- **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider（含 min/max 標籤與即時更新的當前值標籤）；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`。
+- **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。設定介面固定顯示一張與 `multi_dim` 相同結構的維度卡片，依序包含維度名稱與 min/max/step 三欄，不顯示新增或刪除控制。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider；當前值標籤必須即時更新並跟隨滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數。滑桿與 number input 必須雙向同步並支援鍵盤操作；slider 依 config `step` 微調，number input 採 `step="any"` 並只依 min/max 校正，不得把範圍內小數吸附至 slider step。驗證：`min` < `max`、`step` > `0`。
+- **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。設定介面以與 `single_dim` 相同結構的維度卡片重複呈現各維度並提供新增／刪除控制，卡片清單前不得再顯示「維度設定 *」外層標題。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider；當前值標籤必須即時更新並跟隨各自滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數並與該列滑桿雙向同步。每個維度必須依順序配置不同滑桿色，並同時保留文字標籤以避免只靠顏色辨識；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`；slider 依各維度 step 微調，number input 採 `step="any"` 並只依各維度 min/max 校正。
 - **FR-003d-10**：`free_text` 必須支援 `max_length`（number）與 `show_reference`（boolean）。預覽：文字區塊 + textarea（含字元計數 `N / max_length`）；textarea 標題優先顯示 output 欄位原始名稱，無 output 欄位時顯示「回答」/「Answer」。`show_reference = true` 時額外顯示參考答案區塊，已上傳資料集且有 output 欄位時顯示該欄位實際值，否則顯示佔位提示文字。驗證：`max_length` > `0`。
 - **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `entity_recognition + relation_identification` 時，預覽區必須以統一模式呈現：共用同一份文本，使用者可先圈選、建立、修改或刪除 Span 實體，再以循序關係建構器建立 relation triple；實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_identification` 時，預覽沿用相同的循序關係建構器與 `type` 選單，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
 - **FR-003d-12**：Step 2 標記設定區的每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題可點擊切換展開/收合。有依賴關係時，面板標題下方必須顯示依賴提示。
@@ -582,7 +589,7 @@ flowchart LR
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
-- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview` 不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
+- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`dimensionSettings`（可選的回歸設定呈現 metadata；宣告單張或多張模式及對應 config keys）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview` 與 `dimensionSettings` 不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
@@ -610,6 +617,8 @@ flowchart LR
 | 017 | Dataset Quality | 依 `outputs[]` config 計算品質指標 |
 
 > **v4.3.0 下游影響檢查**：已檢查 014–017。本次僅統一 `task-new` Step 2 的 presentation 與 responsive layout，不變更 `outputs[]`、registry schema 或提交 payload；014 Visual 編輯器的 registry/schema 語意、015 標記介面，以及 016／017 資料分析契約均不受影響，無需改版。
+>
+> **v4.7.0 下游影響檢查**：本次只統一 `task-new` Step 2 回歸設定卡的呈現與 registry UI metadata；`single_dim` 的 `dimension_name/min/max/step`、`multi_dim` 的 `dimensions[]`、`outputs[]` 與提交 payload 均不變。014–017 無需改版。
 
 ---
 
@@ -632,6 +641,8 @@ flowchart LR
 - **SC-003h**：8 種輸出類型的預覽均提供獨立「無法判定 (Bypass)」勾選項（`allow_bypass` 預設開啟）；勾選後該輸出類型的其他互動控制項清空停用、其他輸出類型不受影響，取消勾選後重新初始化；schema 面板中的 `allow_bypass` toggle 與前一欄位保留 12px 間距，關閉後預覽勾選項消失且 code 區同步輸出 `allow_bypass: false`。
 - **SC-003j**：`entity_recognition`、`relation_identification` 及包含它們的複合任務（如 `medical-ner-re`、`absa-va`）僅由專屬或整合預覽呈現輸入內容，不重複顯示通用輸入文字區塊；`sequence_tagging` 仍保留通用輸入文字區塊。此行為由 `rendersInputPreview` registry metadata 推導。
 - **SC-003k**：8 種單一輸出類型及多輸出組合在 1440px 的 Step 2 均以設定左／預覽右呈現，左右小標分別為「標記設定」與「標記預覽」、樣式相同且頂端位置差不超過 2px；1024px 均改為設定上／預覽下，且多輸出設定面板完整保留。範本／上傳與 Code 在兩種寬度皆位於主工作區下方並共用單一外框與分隔線，Code 編輯器高度固定為 240px；此版面為頁面層級共通契約，不依 output type metadata 分流。
+- **SC-003l**：`single_dim` 與 `multi_dim` 預覽在滑鼠拖曳及鍵盤方向鍵調整後，當前值標籤與右側 number input 皆於 100ms 內更新，標籤對齊滑塊正上方；number input 可直接輸入範圍內的非 step 小數（例如 step=1 時輸入 3.5），滑塊與標籤保留該小數且移至對應位置，僅超出 min/max 時校正。`multi_dim` 同畫面各維度滑桿顏色可區辨，且每列仍顯示維度名稱與範圍限制。
+- **SC-003m**：`single_dim` 與 `multi_dim` 的維度設定卡片具相同視覺結構、欄位標籤及 min/max/step 排列；單維度恰有一張卡片且無新增／刪除按鈕，多維度卡片數等於 `dimensions` 筆數且保留新增／刪除按鈕，面板內不存在獨立的「維度設定 *」標題。兩者編輯後仍分別同步至既有 `dimension_name/min/max/step` 與 `dimensions[]` config。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -679,6 +690,10 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 4.7.0 | 2026-07-23 | `single_dim`／`multi_dim` 設定介面統一使用相同維度卡片、欄位標籤與 min/max/step 排列；單維度固定一張且無新增／刪除，多維度保留卡片清單與新增／刪除，移除外層「維度設定 *」重複標題。新增 registry `dimensionSettings` 呈現 metadata；既有 config 與 `outputs[]` 契約不變。 |
+| 4.6.0 | 2026-07-23 | 右側 number input 改為 `step="any"`，允許直接鍵入範圍內的非 step 小數並同步 slider／數值標籤；slider 仍依 task config step 拖曳與鍵盤微調，手動輸入只依 min/max 校正。同步 FR-003d-8／9、SC-003l 與 annotation-015。 |
+| 4.5.0 | 2026-07-23 | `single_dim`／`multi_dim` 每列右側改為 number input，與滑桿及上方數值標籤雙向同步；完成輸入後滑塊移至對應位置，並依 min/max/step 自動校正。同步 FR-003d-8／9、SC-003l 與 annotation-015；`outputs[]` 契約不變。 |
+| 4.4.0 | 2026-07-23 | 統一 `single_dim`／`multi_dim` 回歸預覽為可拖曳滑桿；當前值即時跟隨滑塊顯示於正上方，`multi_dim` 各維度採不同輔助色並保留文字辨識與鍵盤操作。同步 FR-003d-8／9、SC-003l 與 annotation-015；`outputs[]` 契約不變。 |
 | 4.3.0 | 2026-07-23 | **全輸出類型統一 Step 2 設定優先版面**：全部 8 種輸出類型、單一輸出及多輸出組合統一採桌面大於 1100px 設定左／預覽右、1100px 以下設定上／預覽下；左右小標樣式與頂端對齊一致。範本／上傳與 Code 固定於下方共用單一外框及分隔線，Code 編輯器固定 240px；每個 output 的 `allow_bypass` 與前一 schema 欄位保留 12px。移除 output type 專屬 layout metadata，版面改為頁面層級共通契約；同步 prototype M3 驗收。`outputs[]` 契約不變，已檢查下游 014–017 無需改版。 |
 | 4.2.1 | 2026-07-23 | **設定區視覺層級同步**：設定優先佈局新增「標記設定」／`Label settings` 小標，與「標記預覽」使用相同樣式且桌面頂端位置差不超過 2px；共通 `allow_bypass` toggle 與前一 schema 欄位保留 12px token-based 群組間距。同步驗收情境、FR-003a-3、FR-003j、SC-003h／SC-003k 與 prototype Playwright 驗收；`outputs[]` 契約未變，下游規格無需調整。 |
 | 4.2.0 | 2026-07-22 | **設定優先與工具卡整合初版**：建立 1440px 設定左／預覽右、1100px 以下設定上／預覽下的 Step 2 版面，並將範本／上傳與 Code 移至主工作區下方整合為單一外框，Code 高度縮為 240px。適用範圍後由 v4.3.0 統一為全部輸出類型及多輸出組合；`outputs[]` 契約未變。 |

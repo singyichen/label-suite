@@ -8,6 +8,17 @@ async function dismissGuidelineModal(page: import('@playwright/test').Page) {
   await expect(guidelineModal).toBeHidden();
 }
 
+async function setRangeValue(
+  slider: import('@playwright/test').Locator,
+  value: string,
+) {
+  await slider.evaluate((node, nextValue) => {
+    const input = node as HTMLInputElement;
+    input.value = nextValue;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }, value);
+}
+
 test.describe('Annotation list routing', () => {
   test('shows task info card above filters for selected task', async ({ page }) => {
     await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
@@ -529,14 +540,14 @@ test.describe('Annotation list routing', () => {
 
     // A2-004 and A2-005 are todo (va: null) — must select VA values before submitting
     await dismissGuidelineModal(page);
-    await page.locator('input[name="va_valence"][value="5"]').check();
-    await page.locator('input[name="va_arousal"][value="5"]').check();
+    await setRangeValue(page.locator('input[name="va_valence"]'), '5');
+    await setRangeValue(page.locator('input[name="va_arousal"]'), '5');
     await page.locator('#submitBtn').click();
     await page.waitForTimeout(500);
 
     await dismissGuidelineModal(page);
-    await page.locator('input[name="va_valence"][value="5"]').check();
-    await page.locator('input[name="va_arousal"][value="5"]').check();
+    await setRangeValue(page.locator('input[name="va_valence"]'), '5');
+    await setRangeValue(page.locator('input[name="va_arousal"]'), '5');
     await page.locator('#submitBtn').click();
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);

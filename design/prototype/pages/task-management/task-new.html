@@ -151,6 +151,83 @@
     .s2-code-panel { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); padding: var(--space-md); }
     .s2-code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); }
 
+    /* ── Regression slider ── */
+    .regression-slider-control { --regression-dimension-color: #4F46E5; }
+    .regression-dimension-color-0 { --regression-dimension-color: #4F46E5; }
+    .regression-dimension-color-1 { --regression-dimension-color: #0369A1; }
+    .regression-dimension-color-2 { --regression-dimension-color: #047857; }
+    .regression-dimension-color-3 { --regression-dimension-color: #B45309; }
+    .regression-dimension-color-4 { --regression-dimension-color: #BE185D; }
+    .regression-dimension-color-5 { --regression-dimension-color: #7E22CE; }
+    .regression-dimension-color-6 { --regression-dimension-color: #C2410C; }
+    .regression-dimension-color-7 { --regression-dimension-color: #0F766E; }
+    .regression-slider-shell {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) 68px;
+      align-items: end;
+      gap: var(--space-sm);
+    }
+    .regression-slider-field { position: relative; min-width: 0; padding-top: 32px; }
+    .regression-slider-input {
+      display: block;
+      width: 100%;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--regression-dimension-color);
+    }
+    .regression-slider-input:focus-visible { outline: 2px solid var(--regression-dimension-color); outline-offset: 4px; }
+    .regression-slider-value {
+      position: absolute;
+      top: 0;
+      left: 9px;
+      z-index: 1;
+      transform: translateX(-50%);
+      min-width: 30px;
+      padding: 2px 7px;
+      border: 1px solid var(--regression-dimension-color);
+      border-radius: var(--radius-sm);
+      background: var(--color-white);
+      color: var(--regression-dimension-color);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      pointer-events: none;
+    }
+    .regression-slider-value::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      border-right: 1px solid var(--regression-dimension-color);
+      border-bottom: 1px solid var(--regression-dimension-color);
+      background: var(--color-white);
+      transform: translate(-50%, -3px) rotate(45deg);
+    }
+    .regression-slider-bound { min-width: 24px; padding-bottom: 1px; color: var(--color-text-soft); font-size: 12px; text-align: center; }
+    .regression-value-input {
+      width: 68px;
+      height: 38px;
+      padding: 6px 8px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+    }
+    .regression-value-input:focus {
+      border-color: var(--regression-dimension-color);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--regression-dimension-color) 18%, transparent);
+    }
+    .regression-dimension-title { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; color: var(--color-ink); font-size: 13px; font-weight: 600; text-transform: capitalize; }
+    .regression-dimension-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--regression-dimension-color); flex-shrink: 0; }
+
     /* ── Tag list ── */
     .tag-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); min-height: 44px; align-items: flex-start; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
     .tag-input-wrap:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
@@ -257,6 +334,26 @@
     .schema-toggle-label { display: block; font-size: 13px; font-weight: 650; line-height: 1.35; color: var(--color-ink); }
     .schema-toggle-status { display: block; margin-top: 3px; font-size: 12px; line-height: 1.35; color: var(--color-text-soft); }
     .schema-number-field .input-text { max-width: 132px; }
+    .regression-dimension-settings-list { display: flex; flex-direction: column; gap: 12px; }
+    .regression-dimension-settings-card {
+      position: relative;
+      padding: 12px 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-slate-50);
+    }
+    .regression-dimension-settings-card > .form-field { margin-bottom: 10px !important; }
+    .regression-dimension-settings-card .entity-name-input { width: 100%; padding: 8px 12px; }
+    .regression-dimension-settings-number-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .regression-dimension-settings-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
     .annotation-preview { min-height: 220px; padding: 12px var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); display: flex; flex-direction: column; gap: 10px; }
     .annotation-preview-sample { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); font-size: 14px; line-height: 1.6; color: var(--color-ink); }
     .annotation-preview-divider { height: 1px; background: var(--color-border); }
@@ -513,6 +610,7 @@
       .layout { padding: var(--space-md); }
       .s2-layout { grid-template-columns: 1fr; }
       .schema-field-grid { grid-template-columns: 1fr; }
+      .regression-dimension-settings-number-grid { grid-template-columns: 1fr; }
       .startup-layout { grid-template-columns: 1fr; }
       .startup-section { padding: 20px 14px; }
       .member-add-row {
@@ -576,6 +674,16 @@
       --color-warning-border: #5C4A1A;
       --shadow-lg: 0 10px 15px rgba(0,0,0,0.4);
       --shadow-xl: 0 20px 25px rgba(0,0,0,0.5);
+
+      .regression-dimension-color-0 { --regression-dimension-color: #A5B4FC; }
+      .regression-dimension-color-1 { --regression-dimension-color: #7DD3FC; }
+      .regression-dimension-color-2 { --regression-dimension-color: #6EE7B7; }
+      .regression-dimension-color-3 { --regression-dimension-color: #FCD34D; }
+      .regression-dimension-color-4 { --regression-dimension-color: #F9A8D4; }
+      .regression-dimension-color-5 { --regression-dimension-color: #D8B4FE; }
+      .regression-dimension-color-6 { --regression-dimension-color: #FDBA74; }
+      .regression-dimension-color-7 { --regression-dimension-color: #5EEAD4; }
+      .regression-value-input { background: var(--color-surface); }
 
       /* Code editor — shift hardcoded indigo bg to true dark surface */
       .code-editor { background: #0D0D14; border-color: var(--color-border); }
@@ -1200,6 +1308,13 @@ var OUTPUT_TYPE_REGISTRY = {
   single_dim: {
     zh: '單維度回歸', en: 'Single-dimensional regression',
     source_output: null,
+    dimensionSettings: {
+      mode: 'single',
+      nameKey: 'dimension_name',
+      minKey: 'min',
+      maxKey: 'max',
+      stepKey: 'step',
+    },
     fields: [
       { key: 'dimension_name', type: 'text', zh: '維度名稱', en: 'Dimension name', required: true, defaultValue: 'score' },
       { key: 'min', type: 'number', zh: '最小值', en: 'Min value', required: true, defaultValue: 1, min: -100 },
@@ -1214,6 +1329,10 @@ var OUTPUT_TYPE_REGISTRY = {
   multi_dim: {
     zh: '多維度回歸', en: 'Multi-dimensional regression',
     source_output: null,
+    dimensionSettings: {
+      mode: 'multiple',
+      collectionKey: 'dimensions',
+    },
     fields: [
       { key: 'dimensions', type: 'va-dimensions', zh: '維度設定', en: 'Dimension settings', required: true },
     ],
@@ -2615,6 +2734,148 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
   return { accordion: accordion, body: body };
 }
 
+var regressionDimensionInputId = 0;
+
+function buildRegressionDimensionSettings(config, settings) {
+  var isMultiple = settings.mode === 'multiple';
+  var dimensions = isMultiple
+    ? (Array.isArray(config[settings.collectionKey]) ? config[settings.collectionKey] : [])
+    : [{
+        name: config[settings.nameKey],
+        min: config[settings.minKey],
+        max: config[settings.maxKey],
+        step: config[settings.stepKey],
+      }];
+  if (isMultiple) config[settings.collectionKey] = dimensions;
+
+  var labels = {
+    name: { zh: '維度名稱', en: 'Dimension name' },
+    min: { zh: '最小值', en: 'Min value' },
+    max: { zh: '最大值', en: 'Max value' },
+    step: { zh: '間距', en: 'Step' },
+  };
+  var defaults = { name: '', min: 1, max: 9, step: 1 };
+  var testIds = {
+    name: 'regression-dimension-name-input',
+    min: 'regression-dimension-min-input',
+    max: 'regression-dimension-max-input',
+    step: 'regression-dimension-step-input',
+  };
+  var REMOVE_SVG = '<svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  var ADD_SVG = '<svg style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  var list = document.createElement('div');
+  list.className = 'regression-dimension-settings-list';
+  list.setAttribute('data-testid', 'regression-dimension-settings-list');
+
+  function syncDimension(index, property, value) {
+    var normalized = property === 'name' ? value : (value === '' ? '' : Number(value));
+    if (isMultiple) {
+      dimensions[index][property] = normalized;
+    } else {
+      var configKey = settings[property + 'Key'];
+      config[configKey] = normalized;
+    }
+    markDirty();
+    updateAnnotationPreview();
+    revalidateCurrentStep();
+  }
+
+  function makeField(index, property, value) {
+    var field = document.createElement('div');
+    field.className = 'form-field';
+
+    regressionDimensionInputId += 1;
+    var inputId = 'regression-dimension-setting-' + regressionDimensionInputId;
+    var label = document.createElement('label');
+    label.className = 'field-label';
+    label.htmlFor = inputId;
+    label.textContent = labels[property][state.lang] || labels[property].zh;
+    var required = document.createElement('span');
+    required.className = 'required';
+    required.textContent = '*';
+    label.appendChild(required);
+    field.appendChild(label);
+
+    var input = document.createElement('input');
+    input.id = inputId;
+    input.type = property === 'name' ? 'text' : 'number';
+    if (property !== 'name') input.step = 'any';
+    input.className = 'entity-name-input';
+    input.value = value != null ? value : defaults[property];
+    input.setAttribute('data-testid', testIds[property]);
+    input.addEventListener('input', function() {
+      syncDimension(index, property, input.value);
+    });
+    field.appendChild(input);
+    return field;
+  }
+
+  function renderCards() {
+    while (list.firstChild) list.removeChild(list.firstChild);
+
+    dimensions.forEach(function(dimension, index) {
+      var card = document.createElement('div');
+      card.className = 'regression-dimension-settings-card';
+      card.setAttribute('data-testid', 'regression-dimension-settings-card');
+      card.setAttribute(
+        'aria-label',
+        dimension.name || (state.lang === 'en' ? 'Unnamed dimension' : '未命名維度'),
+      );
+
+      if (isMultiple) {
+        var removeButton = document.createElement('button');
+        removeButton.className = 'entity-remove-btn regression-dimension-settings-remove';
+        removeButton.type = 'button';
+        removeButton.setAttribute('data-testid', 'regression-dimension-remove-btn');
+        removeButton.setAttribute(
+          'aria-label',
+          state.lang === 'en' ? 'Remove dimension' : '移除維度',
+        );
+        removeButton.innerHTML = REMOVE_SVG;
+        removeButton.addEventListener('click', function() {
+          dimensions.splice(index, 1);
+          renderCards();
+          markDirty();
+          updateAnnotationPreview();
+          revalidateCurrentStep();
+        });
+        card.appendChild(removeButton);
+      }
+
+      card.appendChild(makeField(index, 'name', dimension.name));
+      var numberGrid = document.createElement('div');
+      numberGrid.className = 'regression-dimension-settings-number-grid';
+      numberGrid.appendChild(makeField(index, 'min', dimension.min));
+      numberGrid.appendChild(makeField(index, 'max', dimension.max));
+      numberGrid.appendChild(makeField(index, 'step', dimension.step));
+      card.appendChild(numberGrid);
+      list.appendChild(card);
+    });
+
+    if (isMultiple) {
+      var addButton = document.createElement('button');
+      addButton.className = 'add-row-btn';
+      addButton.type = 'button';
+      addButton.setAttribute('data-testid', 'regression-dimension-add-btn');
+      addButton.innerHTML = ADD_SVG;
+      addButton.appendChild(
+        document.createTextNode(' ' + (state.lang === 'en' ? 'Add dimension' : '新增維度')),
+      );
+      addButton.addEventListener('click', function() {
+        dimensions.push({ name: '', min: 1, max: 9, step: 1 });
+        renderCards();
+        markDirty();
+        updateAnnotationPreview();
+        revalidateCurrentStep();
+      });
+      list.appendChild(addButton);
+    }
+  }
+
+  renderCards();
+  return list;
+}
+
 /* ── Render schema fields for a single output type into a container ── */
 function renderOutputTypeFields(container, outKey) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
@@ -2625,8 +2886,23 @@ function renderOutputTypeFields(container, outKey) {
     state.outputConfigs[outKey] = outReg.defaultConfig ? JSON.parse(JSON.stringify(outReg.defaultConfig)) : {};
   }
   var cfg = state.outputConfigs[outKey];
+  var dimensionFieldKeys = [];
+  if (outReg.dimensionSettings) {
+    container.appendChild(buildRegressionDimensionSettings(cfg, outReg.dimensionSettings));
+    if (outReg.dimensionSettings.mode === 'multiple') {
+      dimensionFieldKeys.push(outReg.dimensionSettings.collectionKey);
+    } else {
+      dimensionFieldKeys.push(
+        outReg.dimensionSettings.nameKey,
+        outReg.dimensionSettings.minKey,
+        outReg.dimensionSettings.maxKey,
+        outReg.dimensionSettings.stepKey,
+      );
+    }
+  }
 
   outReg.fields.forEach(function(field) {
+    if (dimensionFieldKeys.indexOf(field.key) >= 0) return;
     var wrap = document.createElement('div');
     wrap.className = 'form-field';
     if (field.key === BYPASS_FIELD.key) wrap.classList.add('schema-bypass-field');
@@ -2955,6 +3231,170 @@ function getDatasetPairTexts() {
   return null;
 }
 
+function normalizeRegressionValue(rawValue, min, max) {
+  if (String(rawValue).trim() === '') return null;
+  var numeric = Number(rawValue);
+  if (!Number.isFinite(numeric)) return null;
+  return Math.min(max, Math.max(min, numeric));
+}
+
+function countRegressionDecimals(value) {
+  var text = String(value);
+  var decimalIndex = text.indexOf('.');
+  return decimalIndex === -1 ? 0 : text.length - decimalIndex - 1;
+}
+
+function syncRegressionSliderValue(slider, valueLabel, valueInput, updateValueInput) {
+  var min = parseFloat(slider.min);
+  var max = parseFloat(slider.max);
+  var value = parseFloat(slider.value);
+  var ratio = max > min ? (value - min) / (max - min) : 0;
+  var thumbSize = 18;
+  valueLabel.textContent = slider.value;
+  valueLabel.style.left = 'calc(' + (ratio * 100) + '% + ' + ((thumbSize / 2) - (ratio * thumbSize)) + 'px)';
+  if (valueInput && updateValueInput !== false) valueInput.value = slider.value;
+}
+
+function createRegressionSliderControl(options) {
+  var control = document.createElement('div');
+  control.className = 'regression-slider-control regression-dimension-color-' + (options.colorIndex % 8);
+  if (options.controlTestId) control.setAttribute('data-testid', options.controlTestId);
+
+  var shell = document.createElement('div');
+  shell.className = 'regression-slider-shell';
+
+  var minLabel = document.createElement('span');
+  minLabel.className = 'regression-slider-bound';
+  minLabel.textContent = options.min;
+
+  var field = document.createElement('div');
+  field.className = 'regression-slider-field';
+
+  var valueLabel = document.createElement('output');
+  valueLabel.className = 'regression-slider-value';
+  valueLabel.setAttribute('aria-live', 'polite');
+  if (options.valueTestId) valueLabel.setAttribute('data-testid', options.valueTestId);
+
+  var slider = document.createElement('input');
+  slider.className = 'regression-slider-input';
+  slider.type = 'range';
+  slider.min = options.min;
+  slider.max = options.max;
+  slider.step = 'any';
+  slider.dataset.configStep = String(options.step);
+  slider.value = options.value;
+  slider.setAttribute('aria-label', options.ariaLabel);
+  if (options.inputTestId) slider.setAttribute('data-testid', options.inputTestId);
+
+  var valueInput = document.createElement('input');
+  valueInput.className = 'regression-value-input';
+  valueInput.type = 'number';
+  valueInput.inputMode = 'decimal';
+  valueInput.min = options.min;
+  valueInput.max = options.max;
+  valueInput.step = 'any';
+  valueInput.value = slider.value;
+  valueInput.setAttribute(
+    'aria-label',
+    options.ariaLabel + (state.lang === 'zh' ? ' 數值輸入' : ' value input')
+  );
+  if (options.numericInputTestId) {
+    valueInput.setAttribute('data-testid', options.numericInputTestId);
+  }
+
+  function publishSliderValue() {
+    syncRegressionSliderValue(slider, valueLabel, valueInput);
+    if (options.onInput) options.onInput(slider.value);
+  }
+
+  slider.addEventListener('input', publishSliderValue);
+  slider.addEventListener('pointerdown', function() {
+    slider.step = slider.dataset.configStep;
+  });
+  slider.addEventListener('pointerup', function() {
+    slider.step = 'any';
+  });
+  slider.addEventListener('pointercancel', function() {
+    slider.step = 'any';
+  });
+  slider.addEventListener('keydown', function(event) {
+    var direction = 0;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowUp') direction = 1;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') direction = -1;
+    var nextValue = null;
+    if (direction !== 0) {
+      var configuredStep = parseFloat(slider.dataset.configStep);
+      var precision = Math.max(
+        countRegressionDecimals(slider.value),
+        countRegressionDecimals(configuredStep)
+      );
+      nextValue = Number(
+        (parseFloat(slider.value) + direction * configuredStep).toFixed(precision)
+      );
+    } else if (event.key === 'Home') {
+      nextValue = parseFloat(slider.min);
+    } else if (event.key === 'End') {
+      nextValue = parseFloat(slider.max);
+    }
+    if (nextValue !== null) {
+      event.preventDefault();
+      slider.step = 'any';
+      slider.value = String(normalizeRegressionValue(
+        nextValue,
+        parseFloat(slider.min),
+        parseFloat(slider.max)
+      ));
+      publishSliderValue();
+    }
+  });
+
+  function commitNumericValue() {
+    var normalized = normalizeRegressionValue(
+      valueInput.value,
+      parseFloat(slider.min),
+      parseFloat(slider.max)
+    );
+    if (normalized === null) {
+      valueInput.value = slider.value;
+      return;
+    }
+    slider.value = String(normalized);
+    syncRegressionSliderValue(slider, valueLabel, valueInput);
+    if (options.onInput) options.onInput(slider.value);
+  }
+
+  valueInput.addEventListener('input', function() {
+    var numeric = Number(valueInput.value);
+    var normalized = normalizeRegressionValue(
+      valueInput.value,
+      parseFloat(slider.min),
+      parseFloat(slider.max)
+    );
+    if (normalized !== null && Math.abs(normalized - numeric) < 0.0000001) {
+      slider.value = String(normalized);
+      syncRegressionSliderValue(slider, valueLabel, valueInput, false);
+      if (options.onInput) options.onInput(slider.value);
+    }
+  });
+  valueInput.addEventListener('change', commitNumericValue);
+  valueInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commitNumericValue();
+    }
+  });
+
+  field.appendChild(valueLabel);
+  field.appendChild(slider);
+  shell.appendChild(minLabel);
+  shell.appendChild(field);
+  shell.appendChild(valueInput);
+  control.appendChild(shell);
+  syncRegressionSliderValue(slider, valueLabel, valueInput);
+
+  return control;
+}
+
 /* ── Multi-dim (VA regression) preview ── */
 function renderMultiDimPreview(container, config, outKey) {
   var dims = Array.isArray(config.dimensions) ? config.dimensions : (Array.isArray(config.va_dimensions) ? config.va_dimensions : []);
@@ -2970,18 +3410,18 @@ function renderMultiDimPreview(container, config, outKey) {
   if (outputVal) { try { outputObj = JSON.parse(outputVal); } catch(e) { /* not JSON */ } }
   /* sliders are DOM-only; while bypassed, seed from midpoints instead of the output column */
   if (state.previewBypass[outKey]) outputObj = null;
-  dims.forEach(function(dim) {
+  dims.forEach(function(dim, dimensionIndex) {
     var dimWrap = document.createElement('div');
+    dimWrap.className = 'regression-slider-control regression-dimension-color-' + (dimensionIndex % 8);
     dimWrap.style.cssText = 'margin-bottom:16px;';
     var label = document.createElement('div');
-    label.style.cssText = 'font-weight:600;font-size:0.85rem;margin-bottom:6px;color:var(--color-text-dark);text-transform:capitalize;';
-    label.textContent = dim.name || '(unnamed)';
+    label.className = 'regression-dimension-title';
+    var colorDot = document.createElement('span');
+    colorDot.className = 'regression-dimension-dot';
+    colorDot.setAttribute('aria-hidden', 'true');
+    label.appendChild(colorDot);
+    label.appendChild(document.createTextNode(dim.name || '(unnamed)'));
     dimWrap.appendChild(label);
-    var rangeWrap = document.createElement('div');
-    rangeWrap.style.cssText = 'display:flex;align-items:center;gap:10px;';
-    var minLabel = document.createElement('span');
-    minLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:center;';
-    minLabel.textContent = dim.min != null ? dim.min : 1;
     var dMin = dim.min != null ? dim.min : 1;
     var dMax = dim.max != null ? dim.max : 9;
     var dStep = dim.step != null ? dim.step : 1;
@@ -2990,25 +3430,20 @@ function renderMultiDimPreview(container, config, outKey) {
       var n = parseFloat(outputObj[dim.name]);
       if (!isNaN(n) && n >= dMin && n <= dMax) initVal = dMin + Math.round((n - dMin) / dStep) * dStep;
     }
-    var slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = dMin;
-    slider.max = dMax;
-    slider.step = dStep;
-    slider.value = initVal;
-    slider.style.cssText = 'flex:1;accent-color:var(--color-primary);cursor:pointer;';
-    var maxLabel = document.createElement('span');
-    maxLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:center;';
-    maxLabel.textContent = dMax;
-    var valLabel = document.createElement('span');
-    valLabel.style.cssText = 'font-size:0.85rem;font-weight:600;color:var(--color-primary);min-width:24px;text-align:center;';
-    valLabel.textContent = slider.value;
-    slider.addEventListener('input', function() { valLabel.textContent = slider.value; });
-    rangeWrap.appendChild(minLabel);
-    rangeWrap.appendChild(slider);
-    rangeWrap.appendChild(maxLabel);
-    rangeWrap.appendChild(valLabel);
-    dimWrap.appendChild(rangeWrap);
+    var sliderControl = createRegressionSliderControl({
+      min: dMin,
+      max: dMax,
+      step: dStep,
+      value: initVal,
+      colorIndex: dimensionIndex,
+      controlTestId: 'multi-dim-control',
+      inputTestId: 'multi-dim-slider',
+      valueTestId: 'multi-dim-value-tooltip',
+      numericInputTestId: 'multi-dim-value-input',
+      ariaLabel: dim.name || (state.lang === 'zh' ? '未命名維度' : 'Unnamed dimension')
+    });
+    dimWrap.appendChild(sliderControl.firstChild);
+    dimWrap.setAttribute('data-testid', 'multi-dim-control');
     container.appendChild(dimWrap);
   });
 }
@@ -3733,27 +4168,26 @@ function renderSingleDimPreview(container, outKey) {
   previewTextBlock(container);
 
   var dimTitle = document.createElement('div');
-  dimTitle.style.cssText = 'font-weight:600;font-size:0.9rem;margin-bottom:6px;text-transform:capitalize;';
-  dimTitle.textContent = dimName;
+  dimTitle.className = 'regression-dimension-title regression-slider-control regression-dimension-color-0';
+  var colorDot = document.createElement('span');
+  colorDot.className = 'regression-dimension-dot';
+  colorDot.setAttribute('aria-hidden', 'true');
+  dimTitle.appendChild(colorDot);
+  dimTitle.appendChild(document.createTextNode(dimName));
   container.appendChild(dimTitle);
 
-  var sliderWrap = document.createElement('div');
-  sliderWrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
-  var minLabel = document.createElement('span');
-  minLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;text-align:right;';
-  minLabel.textContent = min;
-  var maxLabel = document.createElement('span');
-  maxLabel.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);min-width:20px;';
-  maxLabel.textContent = max;
-  var valLabel = document.createElement('span');
-  valLabel.style.cssText = 'font-size:0.9rem;font-weight:700;color:var(--color-primary);min-width:24px;text-align:center;';
-  valLabel.textContent = ps.value;
-  var range = document.createElement('input');
-  range.type = 'range'; range.min = min; range.max = max; range.step = step; range.value = ps.value;
-  range.style.cssText = 'flex:1;cursor:pointer;';
-  range.addEventListener('input', function() { ps.value = +range.value; valLabel.textContent = ps.value; });
-  sliderWrap.appendChild(minLabel); sliderWrap.appendChild(range); sliderWrap.appendChild(maxLabel); sliderWrap.appendChild(valLabel);
-  container.appendChild(sliderWrap);
+  container.appendChild(createRegressionSliderControl({
+    min: min,
+    max: max,
+    step: step,
+    value: ps.value,
+    colorIndex: 0,
+    inputTestId: 'single-dim-slider',
+    valueTestId: 'single-dim-value-tooltip',
+    numericInputTestId: 'single-dim-value-input',
+    ariaLabel: dimName,
+    onInput: function(value) { ps.value = +value; }
+  }));
 }
 
 function renderTokenClassPreview(container, outKey) {
