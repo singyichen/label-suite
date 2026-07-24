@@ -87,6 +87,16 @@ async function setupAndGoToStep2(page: Page, config: SetupConfig) {
   await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
 }
 
+async function clearSemanticRelationTypes(page: Page) {
+  const relationAccordion = page.locator(
+    '[data-output-key="relation_identification"]',
+  );
+  const removeButtons = relationAccordion.locator('.tag-pill-remove');
+  while ((await removeButtons.count()) > 0) {
+    await removeButtons.first().click();
+  }
+}
+
 interface LabelOption {
   name: string;
   color: string;
@@ -667,6 +677,46 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expectGenericInputPreview(page, 'hidden');
   });
 
+  test('Relation Identification — semantic types are optional and control type actions', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'optional-relation-types-test',
+      category: 'sequence',
+      outputType: 'relation_identification',
+      inputType: 'single_item',
+      dataFile: 'relation-identification.json',
+      roles: { text: 'input', triples: 'output' },
+    });
+
+    const relationAccordion = page.locator(
+      '[data-output-key="relation_identification"]',
+    );
+    const semanticTypeLabel = relationAccordion
+      .locator('.field-label')
+      .filter({ hasText: '語意類型標籤' });
+    const preview = page.locator('#annotationPreview');
+
+    await expect(semanticTypeLabel).toHaveText('語意類型標籤');
+    await expect(preview).not.toContainText('關係識別預覽');
+    await expect(
+      preview.getByRole('button', { name: '類型', exact: true }).first(),
+    ).toBeVisible();
+
+    await clearSemanticRelationTypes(page);
+
+    await expect(page.locator('#nextBtn')).toBeEnabled();
+    await expect(
+      preview.getByRole('button', { name: '類型', exact: true }),
+    ).toHaveCount(0);
+
+    await relationAccordion.locator('.tag-new-input').fill('causal');
+    await relationAccordion.locator('.tag-new-input').press('Enter');
+    await expect(
+      preview.getByRole('button', { name: '類型', exact: true }).first(),
+    ).toBeVisible();
+  });
+
 });
 
 // ─── 4 Composite Tasks ─────────────────────────────────────
@@ -798,6 +848,41 @@ test.describe('Step 2 preview: composite task data files', () => {
         expect.objectContaining({ text: '小空腔', type: 'BODY', start: 23, end: 25 }),
       ]),
     );
+  });
+
+  test('medical-ner-re.json — optional semantic types control composite type actions', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'optional-composite-relation-types-test',
+      category: 'sequence',
+      outputType: ['entity_recognition', 'relation_identification'],
+      inputType: 'single_item',
+      dataFile: 'medical-ner-re.json',
+      roles: { text: 'input', entities: 'output', triples: 'output' },
+    });
+
+    const relationAccordion = page.locator(
+      '[data-output-key="relation_identification"]',
+    );
+    const preview = page.locator('#annotationPreview');
+
+    await expect(
+      preview.getByRole('button', { name: '類型', exact: true }).first(),
+    ).toBeVisible();
+
+    await clearSemanticRelationTypes(page);
+
+    await expect(page.locator('#nextBtn')).toBeEnabled();
+    await expect(
+      preview.getByRole('button', { name: '類型', exact: true }),
+    ).toHaveCount(0);
+
+    await relationAccordion.locator('.tag-new-input').fill('causal');
+    await relationAccordion.locator('.tag-new-input').press('Enter');
+    await expect(
+      preview.getByRole('button', { name: '類型', exact: true }).first(),
+    ).toBeVisible();
   });
 
   test('absa-va.json — triple output (Entity Recognition + Relation Identification + multi_dim) across two categories', async ({

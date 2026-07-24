@@ -1267,10 +1267,10 @@ var OUTPUT_TYPE_REGISTRY = {
     source_output: 'entity_recognition',
     rendersInputPreview: true,
     fields: [
-      { key: 'relation_types', type: 'tag-list', zh: '語意類型標籤', en: 'Semantic relation types', required: true, hint_zh: '輸入語意類型（如 causes、bodyLocation）後按 Enter', hint_en: 'Type semantic relation type (e.g. causes, bodyLocation) and press Enter', placeholder_zh: '', placeholder_en: '' },
+      { key: 'relation_types', type: 'tag-list', zh: '語意類型標籤', en: 'Semantic relation types', required: false, hint_zh: '輸入語意類型（如 causes、bodyLocation）後按 Enter', hint_en: 'Type semantic relation type (e.g. causes, bodyLocation) and press Enter', placeholder_zh: '', placeholder_en: '' },
     ],
     defaultConfig: {
-      relation_types: ['causes', 'associated_with'],
+      relation_types: [],
     },
   },
   /* ── Classification ── */
@@ -1631,7 +1631,6 @@ var I18N = {
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
     accordionDependsOn: '依賴：',
     previewUnifiedTitle: '整合預覽（實體辨識 + 關係識別）',
-    previewRelationTripleTitle: '關係識別預覽',
     previewSampleSentenceAbsa: '這家餐廳服務很差，但環境還不錯，食物也挺美味的。',
     absa_template_btn: '套用範本：ABSA（實體辨識 + 關係識別）',
     templateBtnSpanEntity: '套用範本：實體辨識',
@@ -1785,7 +1784,6 @@ var I18N = {
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
     accordionDependsOn: 'Depends on: ',
     previewUnifiedTitle: 'Unified preview (Entity Recognition + Relation Identification)',
-    previewRelationTripleTitle: 'Relation Identification preview',
     previewSampleSentenceAbsa: 'The restaurant service was poor, but the ambiance was nice, and the food was delicious.',
     absa_template_btn: 'Apply template: ABSA (Entity Recognition + Relation Identification)',
     templateBtnSpanEntity: 'Apply template: Entity Recognition',
@@ -3706,11 +3704,13 @@ function renderAbsaUnifiedPreview(previewContainer) {
   var DEL_SVG = '<svg style="width:12px;height:12px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
   /* ── Working Area title ── */
-  var titleEl = document.createElement('div');
-  titleEl.className = 'annotation-preview-task-title';
-  titleEl.style.marginBottom = '10px';
-  titleEl.textContent = t(allowEntityEditing ? 'previewUnifiedTitle' : 'previewRelationTripleTitle');
-  previewContainer.appendChild(titleEl);
+  if (allowEntityEditing) {
+    var titleEl = document.createElement('div');
+    titleEl.className = 'annotation-preview-task-title';
+    titleEl.style.marginBottom = '10px';
+    titleEl.textContent = t('previewUnifiedTitle');
+    previewContainer.appendChild(titleEl);
+  }
 
   /* ── Annotated text with entity highlights ── */
   var textEl = document.createElement('div');
@@ -3871,6 +3871,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
 
   var relList = document.createElement('div');
   relList.className = 'absa-relation-list';
+  var allRelTypes = getRelationTypeOptions(relationTypes);
   state.previewTriples.forEach(function(triple, i) {
     var row = document.createElement('div');
     row.className = 'absa-relation-row';
@@ -3889,7 +3890,7 @@ function renderAbsaUnifiedPreview(previewContainer) {
     var objSpan = document.createElement('span');
     objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
     content.appendChild(objSpan);
-    if (triple.relType) {
+    if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
       var typeBadge = document.createElement('span');
       typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
       typeBadge.textContent = (state.lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
@@ -3897,47 +3898,47 @@ function renderAbsaUnifiedPreview(previewContainer) {
     }
     row.appendChild(content);
     /* type dropdown button: assigns the post-hoc semantic relation type from config relation_types */
-    var typeWrap = document.createElement('span');
-    typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
-    var typeBtn = document.createElement('button');
-    typeBtn.type = 'button';
-    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
-    typeBtn.textContent = state.lang === 'zh' ? '類型' : 'type';
-    var typeMenu = document.createElement('div');
-    typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
-    var allRelTypes = getRelationTypeOptions(relationTypes);
-    if (allRelTypes.length === 0) allRelTypes = ['causes', 'treats'];
-    allRelTypes.forEach(function(rt) {
-      var item = document.createElement('div');
-      item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
-      item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
-      item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
-      var check = document.createElement('span');
-      check.style.cssText = 'width:14px;font-size:0.75rem;';
-      check.textContent = (triple.relType === rt) ? '✓' : '';
-      item.appendChild(check);
-      item.appendChild(document.createTextNode(rt));
-      (function(relType, idx) {
-        item.addEventListener('click', function(ev) {
-          ev.stopPropagation();
-          state.previewTriples[idx].relType = (state.previewTriples[idx].relType === relType) ? null : relType;
-          renderAbsaUnifiedPreview_refresh(previewContainer);
-        });
-      }(rt, i));
-      typeMenu.appendChild(item);
-    });
-    typeBtn.addEventListener('click', function(ev) {
-      ev.stopPropagation();
-      var isOpen = typeMenu.style.display !== 'none';
-      typeMenu.style.display = isOpen ? 'none' : 'block';
-      if (!isOpen) {
-        var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
-        setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
-      }
-    });
-    typeWrap.appendChild(typeBtn);
-    typeWrap.appendChild(typeMenu);
-    row.appendChild(typeWrap);
+    if (allRelTypes.length > 0) {
+      var typeWrap = document.createElement('span');
+      typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
+      var typeBtn = document.createElement('button');
+      typeBtn.type = 'button';
+      typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+      typeBtn.textContent = state.lang === 'zh' ? '類型' : 'type';
+      var typeMenu = document.createElement('div');
+      typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+      allRelTypes.forEach(function(rt) {
+        var item = document.createElement('div');
+        item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
+        item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
+        item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
+        var check = document.createElement('span');
+        check.style.cssText = 'width:14px;font-size:0.75rem;';
+        check.textContent = (triple.relType === rt) ? '✓' : '';
+        item.appendChild(check);
+        item.appendChild(document.createTextNode(rt));
+        (function(relType, idx) {
+          item.addEventListener('click', function(ev) {
+            ev.stopPropagation();
+            state.previewTriples[idx].relType = (state.previewTriples[idx].relType === relType) ? null : relType;
+            renderAbsaUnifiedPreview_refresh(previewContainer);
+          });
+        }(rt, i));
+        typeMenu.appendChild(item);
+      });
+      typeBtn.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        var isOpen = typeMenu.style.display !== 'none';
+        typeMenu.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+          var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
+          setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
+        }
+      });
+      typeWrap.appendChild(typeBtn);
+      typeWrap.appendChild(typeMenu);
+      row.appendChild(typeWrap);
+    }
     var delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
