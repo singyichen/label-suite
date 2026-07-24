@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 5.1.0
+版本: 5.2.0
 狀態: Draft
 ---
 
@@ -44,6 +44,7 @@
 - **v4.9.0 關係語意類型改為選填**：`relation_identification.relation_types` 預設為空陣列且不再阻擋 Step 2；純關係與所有包含關係識別的複合任務只在欄位存在至少一個語意類型標籤時顯示三元組列的「類型」選單，空陣列時不顯示類型徽章或選單。純關係預覽移除重複的「關係識別預覽」內層標題，保留輸出類型區塊標題「關係識別」。
 - **v5.0.0 階層式多標籤 taxonomy**：`multi_label.label_options` 由扁平 `{name,color}[]` 重定義為遞迴 `LabelOptionNode[]`；Step 2 使用樹狀編輯器與可搜尋的階層選擇器，每一層節點皆可獨立勾選，branch checkbox 與展開／收合控制分離，parent selection 不連動 children。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 僅作選項身分與資料儲存。既有 flat config／資料只在匯入時正規化相容；014 Task Detail、015 Annotation Workspace、017 Dataset Quality 的顯示、提交與統計契約依本次決策延後同步。
 - **v5.1.0 階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器清單攤平顯示全部層級（移除 branch 展開／收合控制），階層改由縮排與可存取名稱的完整路徑表達；選項不再顯示完整路徑文字；選取節點後選擇器保持開啟，直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉，期間搜尋字串、捲動位置與焦點須跨選取保留。搜尋比對節點名稱與祖先鏈；搜尋列與標題固定於選擇器頂端。
+- **v5.2.0 taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 改用頁內確認 modal（遵循 UXC-10），取代瀏覽器原生 `confirm`；內文載明將一併刪除的子節點數量與不可復原後果，Escape／背景點擊取消，開啟時焦點置於危險紅「刪除」鈕使 Enter 確認。無子節點的 leaf 刪除維持不需確認。
 
 ## 規格常數
 
@@ -334,7 +335,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
   - 每個輸出類型以手風琴面板呈現，面板標題含序號與輸出類型名稱，可展開/收合
   - 面板內由 registry 動態生成欄位，支援 8 種欄位類型（`OUTPUT_TYPE_FIELD_TYPES`）：
     - `entity-list`：可新增/刪除的 `{ name, color }[]` 列表，每列含色點、名稱輸入框與移除按鈕；新增按鈕文字依語境顯示
-    - `taxonomy-tree`：遞迴 `LabelOptionNode[]` 編輯器，可新增 root／child／sibling、編輯穩定 ID 與顯示名稱、設定 leaf color、同層排序、展開／收合及刪除 subtree；結構操作不得只依賴拖拉
+    - `taxonomy-tree`：遞迴 `LabelOptionNode[]` 編輯器，可新增 root／child／sibling、編輯穩定 ID 與顯示名稱、設定 leaf color、同層排序、展開／收合及刪除 subtree（刪除含子節點的 branch 需經頁內確認 modal，遵循 UXC-10）；結構操作不得只依賴拖拉
     - `tag-list`：可輸入的標籤列表，按 Enter 新增，各標籤可個別移除
     - `select`：下拉選單
     - `number`：數字輸入框（含 min/max 限制）
@@ -532,7 +533,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。設定：`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。單一或混合 `entity_recognition` 模式都必須支援兩種順序：（1）先選擇實體類型再圈選文字，圈選後立即新增；（2）先圈選文字再選擇實體類型，圈選範圍持續反白但不顯示提示，點擊類型後才新增並保留該類型為作用中。未分類期間若重新圈選，以最新範圍取代前一範圍。驗證：`entities` 不得為空且不得含空白項目。
 - **FR-003d-4**：`relation_identification` 必須支援選填的 `relation_types`（string[]，語意類型標籤，預設 `[]`），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項，亦不得顯示重複的「關係識別預覽」內層標題；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；`relation_types` 至少有一個非空白項目時，每筆三元組才顯示 `type` 選單與已指定類型徽章，選項僅來自目前 `relation_types`，不得覆寫觸發詞；`relation_types = []` 時不得顯示類型徽章或選單，且不得使用寫死 fallback。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：空陣列合法；若有項目則不得包含空白字串。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
-- **FR-003d-6**：`multi_label` 必須支援 `label_options: LabelOptionNode[]` 與 `max_selections`（number，0 = 不限）。每個 node 包含全樹唯一且穩定的 `id`、顯示用 `name`、leaf 選填 `color` 及遞迴 `children`；branch 不可設定 color，但每個 node 都可獨立選取。設定介面使用 `taxonomy-tree` 新增 root／child／sibling、編輯、同層排序、展開／收合與刪除 subtree；預覽使用可搜尋階層多選器：清單攤平顯示全部層級並以縮排表達階層（不提供 branch 展開／收合），每個節點顯示 checkbox 且不顯示完整路徑文字（完整路徑保留於可存取名稱），選取後選擇器保持開啟直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 仍作選項身分與資料儲存。驗證：至少一個 root、非空 ID/name、全樹 ID 唯一、`children` 存在時為非空陣列、深度／節點數／字串長度不超過 taxonomy 常數；`max_selections >= 0` 且以 selected node path 數量計算。
+- **FR-003d-6**：`multi_label` 必須支援 `label_options: LabelOptionNode[]` 與 `max_selections`（number，0 = 不限）。每個 node 包含全樹唯一且穩定的 `id`、顯示用 `name`、leaf 選填 `color` 及遞迴 `children`；branch 不可設定 color，但每個 node 都可獨立選取。設定介面使用 `taxonomy-tree` 新增 root／child／sibling、編輯、同層排序、展開／收合與刪除 subtree；刪除含子節點的 branch 必須以頁內確認 modal 攔截（遵循 UXC-10：標題點名動作、內文載明將一併刪除的子節點數量與不可復原後果、危險紅主按鈕「刪除」、次要「取消」，Escape 取消、開啟時焦點置於確認鈕使 Enter 確認），不得使用瀏覽器原生 `confirm`；無子節點的 leaf 刪除不需確認；預覽使用可搜尋階層多選器：清單攤平顯示全部層級並以縮排表達階層（不提供 branch 展開／收合），每個節點顯示 checkbox 且不顯示完整路徑文字（完整路徑保留於可存取名稱），選取後選擇器保持開啟直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 仍作選項身分與資料儲存。驗證：至少一個 root、非空 ID/name、全樹 ID 唯一、`children` 存在時為非空陣列、深度／節點數／字串長度不超過 taxonomy 常數；`max_selections >= 0` 且以 selected node path 數量計算。
 - **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。設定介面固定顯示一張與 `multi_dim` 相同結構的維度卡片，依序包含維度名稱與 min/max/step 三欄，不顯示新增或刪除控制。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider；當前值標籤必須即時更新並跟隨滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數。滑桿與 number input 必須雙向同步並支援鍵盤操作；slider 依 config `step` 微調，number input 採 `step="any"` 並只依 min/max 校正，不得把範圍內小數吸附至 slider step。驗證：`min` < `max`、`step` > `0`。
 - **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。設定介面以與 `single_dim` 相同結構的維度卡片重複呈現各維度並提供新增／刪除控制，卡片清單前不得再顯示「維度設定 *」外層標題。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider；當前值標籤必須即時更新並跟隨各自滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數並與該列滑桿雙向同步。每個維度必須依順序配置不同滑桿色，並同時保留文字標籤以避免只靠顏色辨識；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`；slider 依各維度 step 微調，number input 採 `step="any"` 並只依各維度 min/max 校正。
 - **FR-003d-10**：`free_text` 必須支援 `max_length`（number）與 `show_reference`（boolean）。預覽：文字區塊 + textarea（含字元計數 `N / max_length`）；textarea 標題優先顯示 output 欄位原始名稱，無 output 欄位時顯示「回答」/「Answer」。`show_reference = true` 時額外顯示參考答案區塊，已上傳資料集且有 output 欄位時顯示該欄位實際值，否則顯示佔位提示文字。驗證：`max_length` > `0`。
@@ -740,6 +741,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 5.2.0 | 2026-07-24 | **taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 由瀏覽器原生 `confirm` 改為頁內確認 modal（遵循 UXC-10）：標題點名動作、內文含子節點數量與不可復原後果、危險紅「刪除」主按鈕與「取消」次按鈕、Escape／背景點擊取消、焦點置於確認鈕使 Enter 確認；leaf 刪除維持不確認。Prototype 與 Playwright 回歸測試同步。 |
 | 5.1.0 | 2026-07-24 | **階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器移除 branch 展開／收合控制，清單攤平顯示全部層級並以縮排表達階層；選項不再顯示完整路徑文字，完整路徑保留於可存取名稱；選取後選擇器保持開啟（跨選取保留搜尋字串、捲動位置與焦點，aria-live 播報已選數量），新增點擊外部關閉；搜尋列與標題固定於選擇器頂端，搜尋比對節點名稱與祖先鏈。ARIA 由 tree/treeitem 改為扁平 group + checkbox。 |
 | 5.0.0 | 2026-07-24 | **階層式多標籤 taxonomy（producer-side）**：`multi_label.label_options` 由扁平列表破壞性重定義為 bounded recursive `LabelOptionNode[]`，新增 registry `taxonomy-tree`、全樹唯一 stable ID、all-node independent selection、branch checkbox 與 disclosure 分離、只顯示 selected node 名稱的 chips、完整 path 身分與儲存、flat／hierarchical 資料 shape-aware 正規化、8 層／500 節點／100 字元限制、JSON/YAML round-trip、鍵盤與 375/768/1440 RWD 驗收。保留原 flat fixture 並規劃另增 hierarchical fixture；014／015／017 consumer 顯示、提交與統計契約依產品決策延後同步，本版不進入實作。 |
 | 4.9.0 | 2026-07-24 | `relation_identification.relation_types` 改為選填並預設 `[]`；純關係與所有相關複合任務只在存在語意類型標籤時顯示三元組列的類型徽章與「類型」選單，移除空設定的 `causes/treats` fallback；純關係預覽移除重複的「關係識別預覽」內層標題。新增驗收情境 17、SC-003p 與純／複合 prototype Playwright 回歸測試。 |

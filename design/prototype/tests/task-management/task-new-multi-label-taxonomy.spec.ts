@@ -239,6 +239,43 @@ test.describe('SC-003q–u hierarchical multi-label taxonomy prototype', () => {
     await expect(emotion.getByTestId('taxonomy-child-count')).toHaveText('5');
     await emotionRow.locator('.taxonomy-disclosure').click();
     await expect(emotion.getByTestId('taxonomy-child-count')).toHaveCount(0);
+
+    /* Branch deletion confirms via the in-page UXC-10 modal, not window.confirm */
+    let nativeDialogSeen = false;
+    page.on('dialog', (dialog) => {
+      nativeDialogSeen = true;
+      void dialog.dismiss();
+    });
+    const negativeRow = editor
+      .locator('[data-testid="taxonomy-treeitem"][data-node-id="negative"]')
+      .locator(':scope > .taxonomy-node-row');
+    await negativeRow.hover();
+    await negativeRow.getByRole('button', { name: '刪除' }).click();
+    const deleteModal = page.locator('#taxonomyDeleteModal');
+    await expect(deleteModal).toBeVisible();
+    await expect(deleteModal.locator('.modal-title')).toContainText('刪除');
+    await expect(deleteModal.locator('.modal-desc')).toContainText('2 個子節點');
+    expect(nativeDialogSeen).toBe(false);
+    /* Cancel keeps the subtree; Escape also dismisses */
+    await deleteModal.getByRole('button', { name: '取消' }).click();
+    await expect(deleteModal).toBeHidden();
+    await expect(editor.getByRole('treeitem')).toHaveCount(13);
+    await negativeRow.hover();
+    await negativeRow.getByRole('button', { name: '刪除' }).click();
+    await expect(deleteModal).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(deleteModal).toBeHidden();
+    await expect(editor.getByRole('treeitem')).toHaveCount(13);
+    /* Confirm button holds focus (Enter confirms) and deletes the subtree */
+    await negativeRow.hover();
+    await negativeRow.getByRole('button', { name: '刪除' }).click();
+    await expect(deleteModal.getByRole('button', { name: '刪除' })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(deleteModal).toBeHidden();
+    await expect(editor.getByRole('treeitem')).toHaveCount(10);
+    await expect(
+      editor.locator('[data-testid="taxonomy-treeitem"][data-node-id="negative"]'),
+    ).toHaveCount(0);
   });
 
   test('uses keyboard-operable controls and a mobile selector dialog without overflow', async ({

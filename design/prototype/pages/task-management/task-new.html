@@ -1136,6 +1136,18 @@
   </div>
 </div>
 
+<!-- Taxonomy branch delete confirm modal (UXC-10) -->
+<div class="modal-overlay" id="taxonomyDeleteModal" role="dialog" aria-modal="true" aria-labelledby="taxonomyDeleteModalTitle">
+  <div class="modal">
+    <div class="modal-title" id="taxonomyDeleteModalTitle">刪除標籤分支？</div>
+    <p class="modal-desc" id="taxonomyDeleteModalDesc"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="taxonomyDeleteCancelBtn">取消</button>
+      <button class="btn btn-primary" id="taxonomyDeleteConfirmBtn" style="background:var(--color-error);border-color:var(--color-error);">刪除</button>
+    </div>
+  </div>
+</div>
+
 <!-- Dataset preview modal -->
 <div class="modal-overlay" id="datasetPreviewModal" role="dialog" aria-modal="true" aria-labelledby="datasetPreviewModalTitle">
   <div class="modal modal-xl">
@@ -3382,14 +3394,15 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
         down.disabled = index >= list.length - 1;
         actionButton(ICON_TRASH, state.lang === 'en' ? 'Delete' : '刪除', 'danger', function() {
           var count = collectTaxonomyEntries([node]).length;
-          if (count > 1 && !window.confirm(state.lang === 'en'
-            ? 'Delete this branch and its ' + (count - 1) + ' descendants?'
-            : '要刪除此分支與其 ' + (count - 1) + ' 個子節點嗎？')) return;
-          clearSelectedTaxonomyBranch(node.id);
-          list.splice(index, 1);
-          sync();
-          renderTree(parentNode ? parentNode.id : (list[Math.max(0, index - 1)] || {}).id);
-          announce('已刪除標籤。', 'Label deleted.');
+          var doDelete = function() {
+            clearSelectedTaxonomyBranch(node.id);
+            list.splice(index, 1);
+            sync();
+            renderTree(parentNode ? parentNode.id : (list[Math.max(0, index - 1)] || {}).id);
+            announce('已刪除標籤。', 'Label deleted.');
+          };
+          if (count > 1) showTaxonomyDeleteModal(count - 1, doDelete);
+          else doDelete();
         });
         row.appendChild(actions);
         item.appendChild(row);
@@ -7731,6 +7744,20 @@ function showLeaveModal(callback) {
 function hideLeaveModal() { el('leaveModal').classList.remove('show'); state.leaveCallback = null; }
 function maybeLeave(action) { if (!state.isDirty) { action(); return; } showLeaveModal(action); }
 
+/* ── Taxonomy branch delete confirm (UXC-10) ─────────────────── */
+function showTaxonomyDeleteModal(descendantCount, onConfirm) {
+  state.taxonomyDeleteCallback = onConfirm;
+  el('taxonomyDeleteModalTitle').textContent = state.lang === 'en' ? 'Delete label branch?' : '刪除標籤分支？';
+  el('taxonomyDeleteModalDesc').textContent = state.lang === 'en'
+    ? 'This deletes the branch and its ' + descendantCount + ' descendant label' + (descendantCount > 1 ? 's' : '') + '. This action cannot be undone.'
+    : '將一併刪除此分支與其 ' + descendantCount + ' 個子節點，此操作無法復原。';
+  el('taxonomyDeleteCancelBtn').textContent = state.lang === 'en' ? 'Cancel' : '取消';
+  el('taxonomyDeleteConfirmBtn').textContent = state.lang === 'en' ? 'Delete' : '刪除';
+  el('taxonomyDeleteModal').classList.add('show');
+  el('taxonomyDeleteConfirmBtn').focus();
+}
+function hideTaxonomyDeleteModal() { el('taxonomyDeleteModal').classList.remove('show'); state.taxonomyDeleteCallback = null; }
+
 function generateCreatedTaskId() {
   var normalizedName = state.taskName.trim().toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -8335,6 +8362,16 @@ el('nextBtn').addEventListener('click', function() {
 el('leaveModalStayBtn').addEventListener('click', hideLeaveModal);
 el('leaveModalLeaveBtn').addEventListener('click', function() { var cb = state.leaveCallback; clearWizardState(); hideLeaveModal(); if (cb) cb(); });
 el('leaveModal').addEventListener('click', function(e) { if (e.target === el('leaveModal')) hideLeaveModal(); });
+el('taxonomyDeleteCancelBtn').addEventListener('click', hideTaxonomyDeleteModal);
+el('taxonomyDeleteConfirmBtn').addEventListener('click', function() {
+  var cb = state.taxonomyDeleteCallback;
+  hideTaxonomyDeleteModal();
+  if (cb) cb();
+});
+el('taxonomyDeleteModal').addEventListener('click', function(e) { if (e.target === el('taxonomyDeleteModal')) hideTaxonomyDeleteModal(); });
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && el('taxonomyDeleteModal').classList.contains('show')) hideTaxonomyDeleteModal();
+});
 window.addEventListener('beforeunload', function(e) { if (state.isDirty) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ── Init ────────────────────────────────────────────────────── */
