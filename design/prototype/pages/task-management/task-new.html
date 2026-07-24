@@ -246,6 +246,67 @@
     .add-row-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px dashed var(--color-border); border-radius: var(--radius-md); font-size: 12px; color: var(--color-text-soft); background: transparent; transition: border-color var(--dur-fast), color var(--dur-fast); }
     .add-row-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
 
+    /* ── Hierarchical taxonomy editor + preview selector ── */
+    .taxonomy-editor { display: flex; flex-direction: column; gap: 10px; }
+    .taxonomy-editor-note { display: block; padding: 9px 11px; border: 1px solid var(--color-primary); border-radius: var(--radius-md); background: var(--color-primary-soft-bg); color: var(--color-ink); font-size: 12px; line-height: 1.5; }
+    .taxonomy-editor-note strong { margin-right: 4px; color: var(--color-primary); }
+    .taxonomy-tree { display: flex; flex-direction: column; gap: 2px; padding: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); overflow-x: auto; }
+    .taxonomy-tree > .taxonomy-treeitem + .taxonomy-treeitem { margin-top: 5px; padding-top: 5px; border-top: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent); }
+    .taxonomy-treeitem { min-width: 0; outline: none; }
+    .taxonomy-treeitem:focus-visible > .taxonomy-node-row { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+    .taxonomy-node-row { position: relative; display: grid; grid-template-columns: 28px 14px minmax(110px, 1fr) minmax(72px, .6fr) auto; align-items: center; gap: 7px; min-height: 38px; padding: 3px 7px; border-radius: var(--radius-sm); background: transparent; }
+    .taxonomy-node-row:hover { background: var(--color-slate-50); }
+    .taxonomy-disclosure, .taxonomy-action-btn { display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-white); color: var(--color-text-soft); cursor: pointer; }
+    .taxonomy-disclosure { width: 28px; height: 28px; transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .taxonomy-disclosure[aria-expanded="false"] { transform: rotate(-90deg); }
+    .taxonomy-disclosure-placeholder { width: 28px; }
+    .taxonomy-leaf-dot { appearance: none; width: 14px; height: 14px; padding: 0; overflow: hidden; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); background: transparent; cursor: pointer; }
+    .taxonomy-leaf-dot::-webkit-color-swatch-wrapper { padding: 0; }
+    .taxonomy-leaf-dot::-webkit-color-swatch { border: none; }
+    .taxonomy-branch-dot { width: 11px; height: 9px; border: 2px solid var(--color-text-soft); border-top-width: 4px; border-radius: 2px; opacity: .72; }
+    .taxonomy-node-input { width: 100%; min-width: 0; height: 32px; padding: 5px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-white); color: var(--color-ink); font: inherit; font-size: 12px; outline: none; }
+    .taxonomy-node-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    .taxonomy-node-id { color: var(--color-text-soft); font-family: var(--font-mono); font-size: 11px; border-color: transparent; background: transparent; }
+    .taxonomy-node-id:hover { border-color: var(--color-border); background: var(--color-white); }
+    .taxonomy-name-cell { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .taxonomy-name-cell .taxonomy-node-input { flex: 1; }
+    .taxonomy-child-count { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 6px; border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-slate-50); color: var(--color-text-soft); font-size: 11px; font-weight: 600; }
+    .taxonomy-node-actions { display: flex; align-items: center; gap: 3px; opacity: 0; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .taxonomy-node-row:hover .taxonomy-node-actions, .taxonomy-node-row:focus-within .taxonomy-node-actions, .taxonomy-treeitem:focus > .taxonomy-node-row .taxonomy-node-actions { opacity: 1; }
+    @media (hover: none) { .taxonomy-node-actions { opacity: 1; } }
+    .taxonomy-action-btn { width: 28px; height: 28px; }
+    .taxonomy-action-btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .taxonomy-action-btn.danger:hover { border-color: var(--color-error); color: var(--color-error); background: var(--color-error-soft-bg); }
+    .taxonomy-action-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .taxonomy-children { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; margin-left: 12px; padding-left: 10px; border-left: 1px solid var(--color-border); }
+    .taxonomy-children > .taxonomy-treeitem > .taxonomy-node-row::before { content: ''; position: absolute; left: -10px; top: 50%; width: 7px; height: 1px; background: var(--color-border); }
+    .taxonomy-add-root { align-self: flex-start; min-height: 36px; }
+    .taxonomy-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+    .taxonomy-selector { position: relative; display: flex; flex-direction: column; gap: 9px; }
+    .taxonomy-selected-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .taxonomy-selected-path { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 5px 9px; border: 1px solid color-mix(in srgb, var(--color-primary) 45%, var(--color-border)); border-radius: var(--radius-full); background: var(--color-primary-soft-bg); color: var(--color-primary); font-size: 12px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+    .taxonomy-selected-path button { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%; background: transparent; color: currentColor; cursor: pointer; }
+    .taxonomy-selector-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); color: var(--color-ink); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+    .taxonomy-selector-trigger:hover, .taxonomy-selector-trigger:focus-visible { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    .taxonomy-selector-dialog { position: absolute; z-index: 40; top: calc(100% + 5px); left: 0; right: 0; max-height: min(70vh, 480px); overflow: auto; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); box-shadow: var(--shadow-xl); }
+    .taxonomy-selector-dialog[hidden] { display: none; }
+    .taxonomy-selector-sticky { position: sticky; top: 0; z-index: 1; padding: 12px 12px 9px; background: var(--color-white); border-bottom: 1px solid var(--color-border); }
+    .taxonomy-selector-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
+    .taxonomy-selector-dialog-title { color: var(--color-ink); font-size: 14px; font-weight: 700; }
+    .taxonomy-selector-close { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); color: var(--color-text-soft); cursor: pointer; }
+    .taxonomy-selector-close:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .taxonomy-search-input { width: 100%; height: 38px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); color: var(--color-ink); font: inherit; font-size: 13px; outline: none; }
+    .taxonomy-search-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+    .taxonomy-preview-tree { display: flex; flex-direction: column; gap: 3px; padding: 9px 12px 12px; }
+    .taxonomy-preview-row { display: flex; align-items: center; gap: 7px; min-height: 36px; padding: 3px 6px; border-radius: var(--radius-sm); }
+    .taxonomy-preview-row:hover { background: var(--color-slate-50); }
+    .taxonomy-preview-option { display: flex; align-items: center; gap: 7px; flex: 1; min-width: 0; min-height: 34px; padding: 5px 7px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--color-ink); font: inherit; font-size: 13px; font-weight: 600; text-align: left; cursor: pointer; }
+    .taxonomy-preview-option:hover { background: var(--color-slate-50); }
+    .taxonomy-option-checkbox { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 14px; width: 14px; height: 14px; border: 1.5px solid var(--color-border); border-radius: 3px; background: var(--color-white); color: transparent; }
+    .taxonomy-preview-option[aria-checked="true"] .taxonomy-option-checkbox { border-color: var(--color-primary); background: var(--color-primary); color: white; }
+    .taxonomy-preview-option[aria-disabled="true"] { opacity: .48; cursor: not-allowed; }
+    .taxonomy-selector-empty { padding: 16px 8px; color: var(--color-text-soft); font-size: 12px; text-align: center; }
+
     /* ── Toggle switch ── */
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
     .toggle-info { flex: 1; }
@@ -401,8 +462,9 @@
 
     /* ── Output Accordion (Step 2 multi-output) ── */
     .output-accordion { border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 12px; overflow: hidden; }
-    .output-accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--color-slate-50); cursor: pointer; user-select: none; border-bottom: 1px solid var(--color-border); }
+    .output-accordion-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 16px; background: var(--color-slate-50); color: inherit; font: inherit; text-align: left; cursor: pointer; user-select: none; border: none; border-bottom: 1px solid var(--color-border); }
     .output-accordion-header:hover { background: #EEF2FF; }
+    .output-accordion-header:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
     .output-accordion-title { font-size: 14px; font-weight: 600; color: var(--color-ink); display: flex; align-items: center; gap: 8px; }
     .output-accordion-chevron { transition: transform 0.2s; font-size: 16px; color: var(--color-text-soft); }
     .output-accordion.collapsed .output-accordion-chevron { transform: rotate(-90deg); }
@@ -625,6 +687,21 @@
       .page-header { flex-direction: column; }
       .step-label { display: none; }
       .action-bar { flex-wrap: wrap; }
+      .taxonomy-node-row { grid-template-columns: 28px 14px minmax(0, 1fr) minmax(92px, .7fr); }
+      .taxonomy-node-actions { grid-column: 3 / -1; justify-content: flex-end; }
+    }
+    @media (max-width: 480px) {
+      .taxonomy-node-row { grid-template-columns: 28px 12px minmax(0, 1fr); }
+      .taxonomy-children { margin-left: 8px; padding-left: 8px; }
+      .taxonomy-children > .taxonomy-treeitem > .taxonomy-node-row::before { left: -8px; width: 5px; }
+      .taxonomy-node-id { grid-column: 3; }
+      .taxonomy-node-actions { grid-column: 3; justify-content: flex-start; flex-wrap: wrap; }
+      .taxonomy-action-btn { width: 36px; height: 36px; }
+      .taxonomy-selector-dialog { position: fixed; z-index: 500; top: auto; left: 0; right: 0; bottom: 0; max-height: 78vh; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+      .taxonomy-selector-sticky { padding: 16px 16px 9px; }
+      .taxonomy-selector-sticky::before { content: ''; display: block; width: 44px; height: 4px; margin: -7px auto 9px; border-radius: var(--radius-full); background: var(--color-border); }
+      .taxonomy-preview-tree { padding: 9px 16px 16px; }
+      .taxonomy-preview-option { min-height: 44px; }
     }
     @media (max-width: 1100px) {
       .s2-primary-workspace.is-settings-first-preview { grid-template-columns: 1fr; }
@@ -1292,15 +1369,27 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '多標籤', en: 'Multi-label',
     source_output: null,
     fields: [
-      { key: 'label_options', type: 'entity-list', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增標籤', addLabel_en: 'Add label' },
+      { key: 'label_options', type: 'taxonomy-tree', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增根標籤', addLabel_en: 'Add root label' },
       { key: 'max_selections', type: 'number', zh: '最多可選數量（0 = 不限）', en: 'Max selections (0 = unlimited)', required: false, defaultValue: 0, min: 0 },
     ],
     defaultConfig: {
       label_options: [
-        { name: 'happy', color: '#2ECC71' },
-        { name: 'sad', color: '#3498DB' },
-        { name: 'angry', color: '#E74C3C' },
-        { name: 'surprise', color: '#F39C12' },
+        {
+          id: 'emotion', name: 'emotion', children: [
+            {
+              id: 'positive', name: 'positive', children: [
+                { id: 'happy', name: 'happy', color: '#10B981' },
+              ],
+            },
+            {
+              id: 'negative', name: 'negative', children: [
+                { id: 'sad', name: 'sad', color: '#6366F1' },
+                { id: 'angry', name: 'angry', color: '#E74C3C' },
+              ],
+            },
+          ],
+        },
+        { id: 'surprise', name: 'surprise', color: '#F39C12' },
       ],
       max_selections: 0,
     },
@@ -1975,6 +2064,7 @@ function makePlusIcon(size) {
 
 /* ── YAML serialiser (no user data injected via innerHTML) ────── */
 function yamlScalar(v) {
+  if (v === null) return 'null';
   if (typeof v === 'boolean') return v ? 'true' : 'false';
   if (typeof v === 'number') return String(v);
   if (typeof v === 'string') {
@@ -1988,33 +2078,44 @@ function yamlScalar(v) {
   }
   return String(v);
 }
-function toYaml(obj, indent) {
-  indent = indent || '';
+function toYaml(value) {
   var lines = [];
-  Object.keys(obj).forEach(function(key) {
-    var val = obj[key];
-    if (Array.isArray(val)) {
-      if (val.length === 0) { lines.push(indent + key + ': []'); return; }
-      if (typeof val[0] === 'object') {
-        lines.push(indent + key + ':');
-        val.forEach(function(item) {
-          var first = true;
-          Object.keys(item).forEach(function(k) {
-            lines.push(indent + '  ' + (first ? '- ' : '  ') + k + ': ' + yamlScalar(item[k]));
-            first = false;
-          });
-        });
-      } else {
-        lines.push(indent + key + ':');
-        val.forEach(function(v) { lines.push(indent + '  - ' + yamlScalar(v)); });
-      }
-    } else if (val && typeof val === 'object') {
-      lines.push(indent + key + ':');
-      lines.push(toYaml(val, indent + '  '));
+  function plainObject(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function writeComplex(label, child, childIndent) {
+    if (Array.isArray(child)) {
+      if (child.length === 0) lines.push(label + ' []');
+      else { lines.push(label); writeArray(child, childIndent); }
+    } else if (plainObject(child)) {
+      if (Object.keys(child).length === 0) lines.push(label + ' {}');
+      else { lines.push(label); writeMap(child, childIndent); }
     } else {
-      lines.push(indent + key + ': ' + yamlScalar(val));
+      lines.push(label + ' ' + yamlScalar(child));
     }
-  });
+  }
+  function writeMap(obj, indent) {
+    Object.keys(obj).forEach(function(key) {
+      if (obj[key] === undefined || key.charAt(0) === '_') return;
+      writeComplex(indent + key + ':', obj[key], indent + '  ');
+    });
+  }
+  function writeArray(arr, indent) {
+    arr.forEach(function(item) {
+      if (plainObject(item)) {
+        var keys = Object.keys(item).filter(function(key) { return item[key] !== undefined && key.charAt(0) !== '_'; });
+        if (keys.length === 0) { lines.push(indent + '- {}'); return; }
+        keys.forEach(function(key, index) {
+          writeComplex((index === 0 ? indent + '- ' : indent + '  ') + key + ':', item[key], indent + '    ');
+        });
+      } else if (Array.isArray(item)) {
+        if (item.length === 0) lines.push(indent + '- []');
+        else { lines.push(indent + '-'); writeArray(item, indent + '  '); }
+      } else {
+        lines.push(indent + '- ' + yamlScalar(item));
+      }
+    });
+  }
+  if (Array.isArray(value)) writeArray(value, '');
+  else writeMap(value, '');
   return lines.join('\n');
 }
 function configToCode() {
@@ -2043,36 +2144,7 @@ function configToCode() {
       }),
     };
     if (state.codeFormat === 'json') return JSON.stringify(unifiedConfig, null, 2);
-    /* Hand-craft YAML for outputs[] array-of-objects with nested config */
-    var lines = [];
-    lines.push('input_type: ' + yamlScalar(unifiedConfig.input_type));
-    lines.push('outputs:');
-    unifiedConfig.outputs.forEach(function(out) {
-      lines.push('  - type: ' + yamlScalar(out.type));
-      lines.push('    config:');
-      Object.keys(out.config).forEach(function(k) {
-        var v = out.config[k];
-        if (Array.isArray(v)) {
-          if (v.length === 0) { lines.push('      ' + k + ': []'); return; }
-          if (typeof v[0] === 'object') {
-            lines.push('      ' + k + ':');
-            v.forEach(function(item) {
-              var first = true;
-              Object.keys(item).forEach(function(ik) {
-                lines.push('      ' + (first ? '  - ' : '    ') + ik + ': ' + yamlScalar(item[ik]));
-                first = false;
-              });
-            });
-          } else {
-            lines.push('      ' + k + ':');
-            v.forEach(function(sv) { lines.push('        - ' + yamlScalar(sv)); });
-          }
-        } else {
-          lines.push('      ' + k + ': ' + yamlScalar(v));
-        }
-      });
-    });
-    return lines.join('\n');
+    return toYaml(unifiedConfig);
   }
   /* Single-output: backward compatible */
   if (state.codeFormat === 'json') return JSON.stringify(state.configData, null, 2);
@@ -2083,99 +2155,97 @@ function configToCode() {
 function yamlParseScalar(raw) {
   var val = String(raw || '').trim();
   if (val === '') return '';
+  if (val === '[]') return [];
+  if (val === '{}') return {};
+  if (val === 'null' || val === '~') return null;
   if (val === 'true') return true;
   if (val === 'false') return false;
-  if (/^-?\d+(\.\d+)?$/.test(val)) return Number(val);
+  if (/^[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?$/.test(val)) return Number(val);
   if ((val[0] === '"' && val[val.length - 1] === '"') || (val[0] === "'" && val[val.length - 1] === "'")) {
-    if (val[0] === "'") return val.slice(1, -1);
+    if (val[0] === "'") return val.slice(1, -1).replace(/''/g, "'");
     return JSON.parse(val);
   }
   return val;
 }
 function yamlIndentOf(line) { return line.length - line.replace(/^\s+/, '').length; }
 function yamlSplitKeyVal(text) {
-  var idx = text.indexOf(':');
-  if (idx < 0) return null;
-  return { key: text.slice(0, idx).trim(), value: text.slice(idx + 1).trim() };
+  var single = false, double = false, escaped = false;
+  for (var idx = 0; idx < text.length; idx++) {
+    var char = text.charAt(idx);
+    if (escaped) { escaped = false; continue; }
+    if (char === '\\' && double) { escaped = true; continue; }
+    if (char === "'" && !double) single = !single;
+    else if (char === '"' && !single) double = !double;
+    else if (char === ':' && !single && !double && (idx === text.length - 1 || /\s/.test(text.charAt(idx + 1)))) {
+      return { key: text.slice(0, idx).trim(), value: text.slice(idx + 1).trim() };
+    }
+  }
+  return null;
 }
 function parseYamlSubset(text) {
-  var lines = String(text || '').replace(/\r/g, '').split('\n');
-  var i = 0;
-  var result = {};
+  var rows = [];
+  String(text || '').replace(/\r/g, '').split('\n').forEach(function(line, lineIndex) {
+    if (!line.trim() || /^\s*#/.test(line)) return;
+    if (line.indexOf('\t') >= 0) throw new Error('YAML tabs are not supported (line ' + (lineIndex + 1) + ')');
+    var indent = yamlIndentOf(line);
+    if (indent % 2 !== 0) throw new Error('YAML indentation must use two spaces (line ' + (lineIndex + 1) + ')');
+    rows.push({ indent: indent, text: line.trim(), line: lineIndex + 1 });
+  });
+  if (rows.length === 0) return {};
+  var cursor = 0;
 
-  function skipEmpty() {
-    while (i < lines.length && !lines[i].trim()) i++;
+  function assignEntry(target, kv, mapIndent) {
+    if (!kv || !kv.key) throw new Error('Invalid YAML mapping on line ' + rows[cursor - 1].line);
+    if (kv.value !== '') { target[kv.key] = yamlParseScalar(kv.value); return; }
+    if (cursor < rows.length && rows[cursor].indent > mapIndent) {
+      if (rows[cursor].indent !== mapIndent + 2) throw new Error('Invalid YAML nesting on line ' + rows[cursor].line);
+      target[kv.key] = parseNode(mapIndent + 2);
+    } else {
+      target[kv.key] = '';
+    }
   }
-  function parseBlock(expectedIndent) {
-    var map = {};
-    while (i < lines.length) {
-      var line = lines[i];
-      if (!line.trim()) { i++; continue; }
-      var indent = yamlIndentOf(line);
-      if (indent < expectedIndent) break;
-      if (indent > expectedIndent) throw new Error('Invalid YAML indentation');
-      var kv = yamlSplitKeyVal(line.trim());
-      if (!kv || !kv.key) throw new Error('Invalid YAML line: ' + line.trim());
-      i++;
-      if (kv.value) {
-        map[kv.key] = yamlParseScalar(kv.value);
-        continue;
-      }
-      skipEmpty();
-      if (i >= lines.length) { map[kv.key] = ''; continue; }
-      var next = lines[i];
-      var nextIndent = yamlIndentOf(next);
-      if (nextIndent <= indent) { map[kv.key] = ''; continue; }
-      map[kv.key] = parseNested(nextIndent);
+  function parseMap(indent, target) {
+    var map = target || {};
+    while (cursor < rows.length && rows[cursor].indent === indent && rows[cursor].text.charAt(0) !== '-') {
+      var row = rows[cursor];
+      var kv = yamlSplitKeyVal(row.text);
+      cursor += 1;
+      assignEntry(map, kv, indent);
     }
     return map;
   }
-  function parseNested(expectedIndent) {
-    var outArr = [];
-    var firstNonEmpty = null;
-    var start = i;
-    while (start < lines.length && !lines[start].trim()) start++;
-    if (start >= lines.length) return '';
-    firstNonEmpty = lines[start];
-    if (yamlIndentOf(firstNonEmpty) !== expectedIndent) throw new Error('Invalid YAML nesting');
-    if (firstNonEmpty.trim().indexOf('- ') === 0) {
-      i = start;
-      while (i < lines.length) {
-        var line = lines[i];
-        if (!line.trim()) { i++; continue; }
-        var indent = yamlIndentOf(line);
-        if (indent < expectedIndent) break;
-        if (indent > expectedIndent) throw new Error('Invalid array indentation');
-        var itemText = line.trim().slice(2).trim();
-        i++;
-        if (!itemText) { outArr.push(''); continue; }
-        var itemKv = yamlSplitKeyVal(itemText);
-        if (!itemKv) {
-          outArr.push(yamlParseScalar(itemText));
-          continue;
-        }
-        var obj = {};
-        obj[itemKv.key] = yamlParseScalar(itemKv.value);
-        while (i < lines.length) {
-          var sub = lines[i];
-          if (!sub.trim()) { i++; continue; }
-          var subIndent = yamlIndentOf(sub);
-          if (subIndent <= expectedIndent) break;
-          if (subIndent !== expectedIndent + 2) throw new Error('Invalid object indentation');
-          var subKv = yamlSplitKeyVal(sub.trim());
-          if (!subKv) throw new Error('Invalid object line: ' + sub.trim());
-          obj[subKv.key] = yamlParseScalar(subKv.value);
-          i++;
-        }
-        outArr.push(obj);
+  function parseSequence(indent) {
+    var array = [];
+    while (cursor < rows.length && rows[cursor].indent === indent && rows[cursor].text.charAt(0) === '-') {
+      var row = rows[cursor];
+      var rest = row.text.slice(1).trim();
+      cursor += 1;
+      if (!rest) {
+        if (cursor >= rows.length || rows[cursor].indent !== indent + 2) throw new Error('Invalid YAML sequence on line ' + row.line);
+        array.push(parseNode(indent + 2));
+        continue;
       }
-      return outArr;
+      var kv = yamlSplitKeyVal(rest);
+      if (!kv) { array.push(yamlParseScalar(rest)); continue; }
+      var item = {};
+      assignEntry(item, kv, indent + 2);
+      if (cursor < rows.length && rows[cursor].indent === indent + 2 && rows[cursor].text.charAt(0) !== '-') {
+        parseMap(indent + 2, item);
+      }
+      array.push(item);
     }
-    return parseBlock(expectedIndent);
+    return array;
+  }
+  function parseNode(indent) {
+    if (cursor >= rows.length || rows[cursor].indent !== indent) throw new Error('Invalid YAML nesting');
+    return rows[cursor].text.charAt(0) === '-' ? parseSequence(indent) : parseMap(indent);
   }
 
-  skipEmpty();
-  result = parseBlock(0);
+  var result = parseNode(rows[0].indent);
+  if (rows[0].indent !== 0 || cursor !== rows.length) {
+    var bad = rows[cursor] || rows[0];
+    throw new Error('Invalid YAML indentation on line ' + bad.line);
+  }
   return result;
 }
 
@@ -2326,6 +2396,7 @@ function validateStep2(showErrors) {
         var val = cfg[f.key];
         if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
         else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
+        else if (f.type === 'taxonomy-tree') { if (!validateTaxonomyNodes(val).valid) ok = false; }
       });
     });
     if (!ok && showErrors) showFieldError('errSchema', true, t('errSchemaRequired'));
@@ -2629,6 +2700,214 @@ function getOutputFieldValue(outKey) {
   return String(val);
 }
 
+var TAXONOMY_MAX_DEPTH = 8;
+var TAXONOMY_MAX_NODES = 500;
+var TAXONOMY_MAX_TEXT = 100;
+
+function taxonomyPathKey(path) { return JSON.stringify(path || []); }
+
+function getOutputFieldName(outKey) {
+  var outCols = getFieldsByRole('output');
+  if (outCols.length === 0) return null;
+  for (var i = 0; i < outCols.length; i++) {
+    var types = state.columnOutputTypeMap && state.columnOutputTypeMap[outCols[i]];
+    if (types && types.indexOf(outKey) >= 0) return outCols[i];
+  }
+  return outCols[0];
+}
+
+function getAllDatasetRecords() {
+  var rows = [];
+  state._datasetRoots.forEach(function(root) {
+    var records = extractRecordsAtPath(root, state.datasetRecordPath);
+    if (records) rows = rows.concat(records);
+  });
+  return rows;
+}
+
+function collectTaxonomyEntries(nodes, idPrefix, namePrefix, depth, output, parentId) {
+  output = output || [];
+  idPrefix = idPrefix || [];
+  namePrefix = namePrefix || [];
+  depth = depth || 1;
+  (Array.isArray(nodes) ? nodes : []).forEach(function(node) {
+    if (!node || typeof node !== 'object') return;
+    var idPath = idPrefix.concat(String(node.id != null ? node.id : node.name || ''));
+    var namePath = namePrefix.concat(String(node.name != null ? node.name : node.id || ''));
+    var children = Array.isArray(node.children) ? node.children : [];
+    output.push({
+      node: node,
+      idPath: idPath,
+      namePath: namePath,
+      depth: depth,
+      parentId: parentId || null,
+      isLeaf: children.length === 0,
+    });
+    collectTaxonomyEntries(children, idPath, namePath, depth + 1, output, String(node.id || ''));
+  });
+  return output;
+}
+
+function normalizeTaxonomyNodes(nodes) {
+  var colorIndex = 0;
+  function walk(list) {
+    return (Array.isArray(list) ? list : []).map(function(raw) {
+      var fallback = raw && raw.name != null ? String(raw.name) : '';
+      var node = {
+        id: raw && raw.id != null ? String(raw.id) : fallback,
+        name: fallback || (raw && raw.id != null ? String(raw.id) : ''),
+      };
+      var children = raw && Array.isArray(raw.children) ? walk(raw.children) : [];
+      if (children.length > 0) {
+        node.children = children;
+      } else {
+        node.color = raw && raw.color ? raw.color : ENTITY_COLORS[colorIndex % ENTITY_COLORS.length];
+        colorIndex += 1;
+      }
+      return node;
+    });
+  }
+  return walk(nodes);
+}
+
+function validateTaxonomyNodes(nodes) {
+  var entries = collectTaxonomyEntries(nodes);
+  var seen = {};
+  var error = '';
+  if (entries.length === 0) error = state.lang === 'en' ? 'Add at least one label.' : '請至少新增一個標籤。';
+  if (entries.length > TAXONOMY_MAX_NODES) error = state.lang === 'en' ? 'Taxonomy exceeds 500 nodes.' : '標籤樹不可超過 500 個節點。';
+  entries.some(function(entry) {
+    var node = entry.node;
+    var id = String(node.id || '').trim();
+    var name = String(node.name || '').trim();
+    if (!id || !name) { error = state.lang === 'en' ? 'Every node needs an ID and name.' : '每個節點都需要 ID 與顯示名稱。'; return true; }
+    if (id.length > TAXONOMY_MAX_TEXT || name.length > TAXONOMY_MAX_TEXT) { error = state.lang === 'en' ? 'Node ID and name must be 100 characters or fewer.' : '節點 ID 與名稱不得超過 100 字。'; return true; }
+    if (seen[id]) { error = state.lang === 'en' ? 'Node IDs must be unique across the tree.' : '節點 ID 必須在整棵樹中唯一。'; return true; }
+    if (entry.depth > TAXONOMY_MAX_DEPTH) { error = state.lang === 'en' ? 'Taxonomy depth cannot exceed 8 levels.' : '標籤樹深度不可超過 8 層。'; return true; }
+    if (!entry.isLeaf && node.color) { error = state.lang === 'en' ? 'Only leaf nodes may define a color.' : '只有葉節點可以設定顏色。'; return true; }
+    seen[id] = true;
+    return false;
+  });
+  return { valid: !error, error: error, entries: entries };
+}
+
+function buildTaxonomyFromPaths(paths) {
+  var roots = [];
+  var byId = {};
+  var parentById = {};
+  var error = '';
+  (paths || []).forEach(function(path) {
+    if (error || !Array.isArray(path) || path.length === 0 || path.length > TAXONOMY_MAX_DEPTH) {
+      if (path && path.length > TAXONOMY_MAX_DEPTH) error = state.lang === 'en' ? 'Dataset paths cannot exceed 8 levels.' : '資料中的標籤路徑不可超過 8 層。';
+      return;
+    }
+    var siblings = roots;
+    var parentId = '$';
+    path.forEach(function(rawId) {
+      if (error) return;
+      var id = String(rawId).trim();
+      if (!id || id.length > TAXONOMY_MAX_TEXT) {
+        error = state.lang === 'en' ? 'Dataset label IDs must contain 1–100 characters.' : '資料中的標籤 ID 長度需為 1–100 字。';
+        return;
+      }
+      if (parentById[id] !== undefined && parentById[id] !== parentId) {
+        error = state.lang === 'en' ? 'Dataset label IDs must be globally unique.' : '資料中的標籤 ID 必須在整棵樹中唯一。';
+        return;
+      }
+      var node = byId[id];
+      if (!node) {
+        node = { id: id, name: id };
+        byId[id] = node;
+        parentById[id] = parentId;
+        siblings.push(node);
+      }
+      if (!Array.isArray(node.children)) node.children = [];
+      delete node.color;
+      siblings = node.children;
+      parentId = id;
+    });
+  });
+  var leafIndex = 0;
+  function finish(list) {
+    list.forEach(function(node) {
+      if (node.children && node.children.length > 0) finish(node.children);
+      else {
+        delete node.children;
+        node.color = ENTITY_COLORS[leafIndex % ENTITY_COLORS.length];
+        leafIndex += 1;
+      }
+    });
+  }
+  finish(roots);
+  if (!error && collectTaxonomyEntries(roots).length > TAXONOMY_MAX_NODES) {
+    error = state.lang === 'en' ? 'Dataset taxonomy exceeds 500 nodes.' : '資料中的標籤樹超過 500 個節點。';
+  }
+  return { nodes: roots, error: error };
+}
+
+function getMultiLabelDatasetPaths() {
+  var column = getOutputFieldName('multi_label');
+  if (!column) return { paths: [], error: '' };
+  var paths = [];
+  var shape = null;
+  var error = '';
+  getAllDatasetRecords().some(function(row) {
+    var value = row[column];
+    if (value == null || (Array.isArray(value) && value.length === 0)) return false;
+    if (!Array.isArray(value)) { error = state.lang === 'en' ? 'Multi-label data must be an array.' : '多標籤資料必須是陣列。'; return true; }
+    var currentShape = Array.isArray(value[0]) ? 'paths' : 'flat';
+    if (shape && shape !== currentShape) { error = state.lang === 'en' ? 'Flat labels and hierarchical paths cannot be mixed.' : '同一欄位不可混用扁平標籤與階層路徑。'; return true; }
+    shape = currentShape;
+    value.forEach(function(item) {
+      if (currentShape === 'paths') {
+        if (!Array.isArray(item) || item.some(function(segment) { return typeof segment !== 'string' && typeof segment !== 'number'; })) {
+          error = state.lang === 'en' ? 'Every hierarchical label must be an ID path.' : '每個階層標籤都必須是 ID 路徑。';
+          return;
+        }
+        paths.push(item.map(String));
+      } else {
+        var scalar = scalarLabelValue(item);
+        if (scalar === null) error = state.lang === 'en' ? 'Flat labels must be scalar values.' : '扁平標籤必須是純量值。';
+        else paths.push([scalar]);
+      }
+    });
+    return !!error;
+  });
+  return { paths: paths, error: error };
+}
+
+function findTaxonomyPosition(nodes, targetId, parent) {
+  for (var i = 0; i < nodes.length; i++) {
+    if (String(nodes[i].id) === String(targetId)) return { siblings: nodes, index: i, parent: parent || null };
+    var children = Array.isArray(nodes[i].children) ? nodes[i].children : [];
+    var found = findTaxonomyPosition(children, targetId, nodes[i]);
+    if (found) return found;
+  }
+  return null;
+}
+
+function replaceSelectedTaxonomyId(oldId, newId) {
+  var ps = state.previewState.multi_label;
+  if (!ps || !Array.isArray(ps.selected)) return;
+  ps.selected = ps.selected.map(function(path) {
+    return Array.isArray(path) ? path.map(function(segment) { return segment === oldId ? newId : segment; }) : path;
+  });
+}
+
+function clearSelectedTaxonomyBranch(nodeId) {
+  var ps = state.previewState.multi_label;
+  if (!ps || !Array.isArray(ps.selected)) return;
+  ps.selected = ps.selected.filter(function(path) { return !Array.isArray(path) || path.indexOf(nodeId) === -1; });
+}
+
+function nextTaxonomyNodeId(nodes) {
+  var used = {};
+  collectTaxonomyEntries(nodes).forEach(function(entry) { used[String(entry.node.id)] = true; });
+  var index = 1;
+  while (used['label_' + index]) index += 1;
+  return 'label_' + index;
+}
+
 /* Infer which output types each output column's first-row value shape can
    seed, so getOutputFieldValue(outKey) picks the right column when several
    columns are marked output (ADR-029 multi-output tasks) */
@@ -2640,7 +2919,9 @@ function rebuildColumnOutputTypeMap() {
     var types = [];
     if (Array.isArray(v) && v.length > 0) {
       var first = v[0];
-      if (typeof first === 'string') {
+      if (Array.isArray(first)) {
+        types = ['multi_label'];
+      } else if (typeof first === 'string') {
         types = /^(O|[BIES]-.+)$/.test(first) ? ['sequence_tagging'] : ['multi_label'];
       } else if (first && typeof first === 'object') {
         if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_identification'];
@@ -2686,8 +2967,11 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
   accordion.className = 'output-accordion' + (isCollapsed ? ' collapsed' : '');
   accordion.setAttribute('data-output-key', outKey);
 
-  var header = document.createElement('div');
+  var header = document.createElement('button');
+  header.type = 'button';
   header.className = 'output-accordion-header';
+  header.setAttribute('data-testid', 'output-accordion-toggle');
+  header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
 
   var titleWrap = document.createElement('div');
 
@@ -2724,10 +3008,13 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
 
   var body = document.createElement('div');
   body.className = 'output-accordion-body';
+  body.id = 'output-accordion-body-' + outKey;
+  header.setAttribute('aria-controls', body.id);
   accordion.appendChild(body);
 
   header.addEventListener('click', function() {
     accordion.classList.toggle('collapsed');
+    header.setAttribute('aria-expanded', accordion.classList.contains('collapsed') ? 'false' : 'true');
   });
 
   return { accordion: accordion, body: body };
@@ -2875,6 +3162,297 @@ function buildRegressionDimensionSettings(config, settings) {
   return list;
 }
 
+/* Lucide icon path data (design system: no text-glyph icons) */
+function taxonomyIcon(paths, size) {
+  return '<svg style="width:' + (size || 14) + 'px;height:' + (size || 14) + 'px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+}
+var ICON_CHEVRON_DOWN = taxonomyIcon('<path d="m6 9 6 6 6-6"/>');
+var ICON_X = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>');
+
+function buildTaxonomyTreeEditor(config, field, outKey) {
+  var nodes = normalizeTaxonomyNodes(config[field.key]);
+  config[field.key] = nodes;
+  if (!config._taxonomyExpanded) config._taxonomyExpanded = {};
+  var expanded = config._taxonomyExpanded;
+  var ICON_PLUS = taxonomyIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>');
+  var ICON_CORNER_DOWN_RIGHT = taxonomyIcon('<polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>');
+  var ICON_ARROW_UP = taxonomyIcon('<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>');
+  var ICON_ARROW_DOWN = taxonomyIcon('<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>');
+  var ICON_TRASH = taxonomyIcon('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>');
+  var editor = document.createElement('div');
+  editor.className = 'taxonomy-editor';
+  editor.setAttribute('data-testid', 'taxonomy-tree-editor');
+
+  var note = document.createElement('div');
+  note.className = 'taxonomy-editor-note';
+  var noteStrong = document.createElement('strong');
+  noteStrong.textContent = state.lang === 'en'
+    ? 'Every level is selectable'
+    : '所有層級皆可選';
+  note.appendChild(noteStrong);
+  note.appendChild(document.createTextNode(state.lang === 'en'
+    ? '— Parent and child labels are checked independently, and their category position is retained.'
+    : '— 父、子標籤可分別勾選，系統會保留其分類位置。'));
+  editor.appendChild(note);
+
+  var tree = document.createElement('div');
+  tree.className = 'taxonomy-tree';
+  tree.setAttribute('role', 'tree');
+  tree.setAttribute('aria-label', state.lang === 'en' ? 'Label taxonomy' : '標籤分類樹');
+  editor.appendChild(tree);
+
+  var live = document.createElement('div');
+  live.className = 'taxonomy-live';
+  live.setAttribute('aria-live', 'polite');
+  editor.appendChild(live);
+
+  function announce(zh, en) { live.textContent = state.lang === 'en' ? en : zh; }
+  function sync() {
+    config[field.key] = nodes;
+    config._taxonomyError = '';
+    markDirty();
+    updateAnnotationPreview();
+    revalidateCurrentStep();
+  }
+  function focusNode(nodeId) {
+    setTimeout(function() {
+      var target = tree.querySelector('[data-node-id="' + CSS.escape(String(nodeId)) + '"]');
+      if (target) target.focus();
+    }, 0);
+  }
+  function renderTree(focusId) {
+    while (tree.firstChild) tree.removeChild(tree.firstChild);
+    var validation = validateTaxonomyNodes(nodes);
+    if (config._taxonomyError) validation = { valid: false, error: config._taxonomyError };
+
+    function renderLevel(list, depth, parentNode, parentGroup) {
+      list.forEach(function(node, index) {
+        var children = Array.isArray(node.children) ? node.children : [];
+        var isBranch = children.length > 0;
+        if (expanded[node.id] === undefined) expanded[node.id] = true;
+
+        var item = document.createElement('div');
+        item.className = 'taxonomy-treeitem';
+        item.setAttribute('role', 'treeitem');
+        item.setAttribute('tabindex', tree.querySelector('[role="treeitem"]') ? '-1' : '0');
+        item.setAttribute('aria-level', String(depth));
+        item.setAttribute('aria-label', String(node.name || node.id || ''));
+        item.setAttribute('data-testid', 'taxonomy-treeitem');
+        item.setAttribute('data-node-id', String(node.id || ''));
+        if (isBranch) item.setAttribute('aria-expanded', expanded[node.id] ? 'true' : 'false');
+
+        var row = document.createElement('div');
+        row.className = 'taxonomy-node-row';
+        var descendantCount = collectTaxonomyEntries(children).length;
+
+        if (isBranch) {
+          var disclosure = document.createElement('button');
+          disclosure.type = 'button';
+          disclosure.className = 'taxonomy-disclosure';
+          disclosure.innerHTML = ICON_CHEVRON_DOWN;
+          disclosure.setAttribute('aria-label', expanded[node.id]
+            ? (state.lang === 'en' ? 'Collapse ' : '收合 ') + (node.name || node.id)
+            : (state.lang === 'en' ? 'Expand ' : '展開 ') + (node.name || node.id)
+              + (state.lang === 'en' ? ', ' + descendantCount + ' labels inside' : '，含 ' + descendantCount + ' 個子標籤'));
+          disclosure.setAttribute('aria-expanded', expanded[node.id] ? 'true' : 'false');
+          disclosure.addEventListener('click', function() {
+            expanded[node.id] = !expanded[node.id];
+            renderTree(node.id);
+          });
+          row.appendChild(disclosure);
+        } else {
+          var disclosurePlaceholder = document.createElement('span');
+          disclosurePlaceholder.className = 'taxonomy-disclosure-placeholder';
+          row.appendChild(disclosurePlaceholder);
+        }
+
+        if (isBranch) {
+          var branchDot = document.createElement('span');
+          branchDot.className = 'taxonomy-branch-dot';
+          branchDot.setAttribute('aria-hidden', 'true');
+          row.appendChild(branchDot);
+        } else {
+          var color = document.createElement('input');
+          color.type = 'color';
+          color.className = 'taxonomy-leaf-dot';
+          color.value = node.color || ENTITY_COLORS[index % ENTITY_COLORS.length];
+          color.setAttribute('aria-label', (state.lang === 'en' ? 'Color for ' : '顏色：') + (node.name || node.id));
+          color.addEventListener('input', function() { node.color = color.value; sync(); });
+          row.appendChild(color);
+        }
+
+        var nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.className = 'taxonomy-node-input';
+        nameInput.value = node.name || '';
+        nameInput.maxLength = TAXONOMY_MAX_TEXT;
+        nameInput.placeholder = state.lang === 'en' ? 'Display name' : '顯示名稱';
+        nameInput.setAttribute('data-testid', 'taxonomy-node-name-input');
+        nameInput.setAttribute('aria-label', (state.lang === 'en' ? 'Display name ' : '顯示名稱 ') + (node.id || ''));
+        nameInput.addEventListener('input', function() {
+          node.name = nameInput.value;
+          item.setAttribute('aria-label', node.name || node.id || '');
+          sync();
+        });
+        var nameCell = document.createElement('div');
+        nameCell.className = 'taxonomy-name-cell';
+        nameCell.appendChild(nameInput);
+        if (isBranch && !expanded[node.id]) {
+          /* Count is voiced through the disclosure button's aria-label */
+          var childCount = document.createElement('span');
+          childCount.className = 'taxonomy-child-count';
+          childCount.setAttribute('data-testid', 'taxonomy-child-count');
+          childCount.setAttribute('aria-hidden', 'true');
+          childCount.textContent = String(descendantCount);
+          nameCell.appendChild(childCount);
+        }
+        row.appendChild(nameCell);
+
+        var idInput = document.createElement('input');
+        idInput.type = 'text';
+        idInput.className = 'taxonomy-node-input taxonomy-node-id';
+        idInput.value = node.id || '';
+        idInput.maxLength = TAXONOMY_MAX_TEXT;
+        idInput.placeholder = 'node_id';
+        idInput.setAttribute('data-testid', 'taxonomy-node-id-input');
+        idInput.setAttribute('aria-label', (state.lang === 'en' ? 'Node ID ' : '節點 ID ') + (node.name || ''));
+        idInput.addEventListener('input', function() {
+          var oldId = String(node.id || '');
+          node.id = idInput.value;
+          replaceSelectedTaxonomyId(oldId, node.id);
+          sync();
+        });
+        row.appendChild(idInput);
+
+        var actions = document.createElement('div');
+        actions.className = 'taxonomy-node-actions';
+
+        function actionButton(iconSvg, label, className, handler) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'taxonomy-action-btn' + (className ? ' ' + className : '');
+          button.innerHTML = iconSvg;
+          button.title = label;
+          button.setAttribute('aria-label', label + ' ' + (node.name || node.id || ''));
+          button.addEventListener('click', handler);
+          actions.appendChild(button);
+          return button;
+        }
+
+        var addChild = actionButton(ICON_PLUS, state.lang === 'en' ? 'Add child to' : '新增子標籤至', '', function() {
+          if (depth >= TAXONOMY_MAX_DEPTH || collectTaxonomyEntries(nodes).length >= TAXONOMY_MAX_NODES) {
+            announce('已達標籤樹限制。', 'The taxonomy limit has been reached.');
+            return;
+          }
+          var newId = nextTaxonomyNodeId(nodes);
+          if (!Array.isArray(node.children)) node.children = [];
+          if (node.children.length === 0) {
+            delete node.color;
+          }
+          node.children.push({ id: newId, name: state.lang === 'en' ? 'New label' : '新標籤', color: ENTITY_COLORS[collectTaxonomyEntries(nodes).length % ENTITY_COLORS.length] });
+          expanded[node.id] = true;
+          sync();
+          renderTree(newId);
+          announce('已新增子標籤。', 'Child label added.');
+        });
+        addChild.setAttribute('data-testid', 'taxonomy-add-child-btn');
+        addChild.disabled = depth >= TAXONOMY_MAX_DEPTH;
+
+        actionButton(ICON_CORNER_DOWN_RIGHT, state.lang === 'en' ? 'Add sibling after' : '在後方新增同層標籤', '', function() {
+          if (collectTaxonomyEntries(nodes).length >= TAXONOMY_MAX_NODES) return;
+          var newId = nextTaxonomyNodeId(nodes);
+          list.splice(index + 1, 0, { id: newId, name: state.lang === 'en' ? 'New label' : '新標籤', color: ENTITY_COLORS[collectTaxonomyEntries(nodes).length % ENTITY_COLORS.length] });
+          sync();
+          renderTree(newId);
+          announce('已新增同層標籤。', 'Sibling label added.');
+        });
+        var up = actionButton(ICON_ARROW_UP, state.lang === 'en' ? 'Move up' : '上移', '', function() {
+          if (index === 0) return;
+          var moved = list.splice(index, 1)[0];
+          list.splice(index - 1, 0, moved);
+          sync(); renderTree(node.id);
+        });
+        up.disabled = index === 0;
+        var down = actionButton(ICON_ARROW_DOWN, state.lang === 'en' ? 'Move down' : '下移', '', function() {
+          if (index >= list.length - 1) return;
+          var moved = list.splice(index, 1)[0];
+          list.splice(index + 1, 0, moved);
+          sync(); renderTree(node.id);
+        });
+        down.disabled = index >= list.length - 1;
+        actionButton(ICON_TRASH, state.lang === 'en' ? 'Delete' : '刪除', 'danger', function() {
+          var count = collectTaxonomyEntries([node]).length;
+          if (count > 1 && !window.confirm(state.lang === 'en'
+            ? 'Delete this branch and its ' + (count - 1) + ' descendants?'
+            : '要刪除此分支與其 ' + (count - 1) + ' 個子節點嗎？')) return;
+          clearSelectedTaxonomyBranch(node.id);
+          list.splice(index, 1);
+          sync();
+          renderTree(parentNode ? parentNode.id : (list[Math.max(0, index - 1)] || {}).id);
+          announce('已刪除標籤。', 'Label deleted.');
+        });
+        row.appendChild(actions);
+        item.appendChild(row);
+        parentGroup.appendChild(item);
+
+        if (isBranch && expanded[node.id]) {
+          var group = document.createElement('div');
+          group.className = 'taxonomy-children';
+          group.setAttribute('role', 'group');
+          renderLevel(children, depth + 1, node, group);
+          item.appendChild(group);
+        }
+
+        item.addEventListener('keydown', function(event) {
+          if (event.target !== item) return;
+          var visible = Array.prototype.slice.call(tree.querySelectorAll('[role="treeitem"]'));
+          var at = visible.indexOf(item);
+          if (event.key === 'ArrowDown' && visible[at + 1]) { event.preventDefault(); visible[at + 1].focus(); }
+          else if (event.key === 'ArrowUp' && visible[at - 1]) { event.preventDefault(); visible[at - 1].focus(); }
+          else if (event.key === 'Home' && visible[0]) { event.preventDefault(); visible[0].focus(); }
+          else if (event.key === 'End' && visible.length) { event.preventDefault(); visible[visible.length - 1].focus(); }
+          else if (event.key === 'ArrowRight' && isBranch) {
+            event.preventDefault();
+            if (!expanded[node.id]) { expanded[node.id] = true; renderTree(node.id); }
+            else {
+              var firstChild = item.querySelector('[role="group"] > [role="treeitem"]');
+              if (firstChild) firstChild.focus();
+            }
+          } else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            if (isBranch && expanded[node.id]) { expanded[node.id] = false; renderTree(node.id); }
+            else if (parentNode) focusNode(parentNode.id);
+          }
+        });
+      });
+    }
+
+    renderLevel(nodes, 1, null, tree);
+    if (!validation.valid) {
+      var warning = document.createElement('div');
+      warning.className = 'field-error show';
+      warning.textContent = validation.error;
+      tree.appendChild(warning);
+    }
+    if (focusId) focusNode(focusId);
+  }
+
+  var addRoot = document.createElement('button');
+  addRoot.type = 'button';
+  addRoot.className = 'add-row-btn taxonomy-add-root';
+  addRoot.innerHTML = taxonomyIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 12) + ' ' + (field['addLabel_' + state.lang] || (state.lang === 'en' ? 'Add root label' : '新增根標籤'));
+  addRoot.addEventListener('click', function() {
+    if (collectTaxonomyEntries(nodes).length >= TAXONOMY_MAX_NODES) return;
+    var newId = nextTaxonomyNodeId(nodes);
+    nodes.push({ id: newId, name: state.lang === 'en' ? 'New label' : '新標籤', color: ENTITY_COLORS[collectTaxonomyEntries(nodes).length % ENTITY_COLORS.length] });
+    sync(); renderTree(newId);
+    announce('已新增根標籤。', 'Root label added.');
+  });
+  editor.appendChild(addRoot);
+  renderTree();
+  return editor;
+}
+
 /* ── Render schema fields for a single output type into a container ── */
 function renderOutputTypeFields(container, outKey) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
@@ -2926,7 +3504,9 @@ function renderOutputTypeFields(container, outKey) {
       wrap.appendChild(lbl);
     }
 
-    if (field.type === 'entity-list') {
+    if (field.type === 'taxonomy-tree') {
+      wrap.appendChild(buildTaxonomyTreeEditor(cfg, field, outKey));
+    } else if (field.type === 'entity-list') {
       /* Build entity list scoped to this output type's config */
       var entities = Array.isArray(cfg[field.key]) ? cfg[field.key] : [];
       cfg[field.key] = entities;
@@ -4130,48 +4710,249 @@ function renderSingleLabelPreview(container, outKey) {
 
 function renderMultiLabelPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
-  var labels = Array.isArray(cfg.label_options) ? cfg.label_options.filter(function(l) { return l && l.name; }) : [];
-  if (labels.length === 0) return;
+  var nodes = normalizeTaxonomyNodes(cfg.label_options);
+  cfg.label_options = nodes;
+  var entries = collectTaxonomyEntries(nodes);
+  if (entries.length === 0) return;
   var outputVal = getOutputFieldValue(outKey);
   var initSelected = [];
   if (outputVal) {
-    var vals;
-    try { var arr = JSON.parse(outputVal); vals = Array.isArray(arr) ? arr.map(String) : [outputVal]; } catch(e) { vals = outputVal.split(/[,;，；]\s*/); }
-    vals.forEach(function(v) { var m = labels.find(function(l) { return l.name === v.trim(); }); if (m) initSelected.push(m.name); });
+    try {
+      var parsed = JSON.parse(outputVal);
+      if (Array.isArray(parsed)) {
+        var paths = parsed.map(function(value) { return Array.isArray(value) ? value.map(String) : [String(value)]; });
+        paths.forEach(function(path) {
+          if (entries.some(function(entry) { return taxonomyPathKey(entry.idPath) === taxonomyPathKey(path); })) initSelected.push(path);
+        });
+      }
+    } catch(e) {
+      outputVal.split(/[,;，；]\s*/).forEach(function(value) {
+        var match = entries.find(function(entry) { return entry.node.id === value.trim() || entry.node.name === value.trim(); });
+        if (match) initSelected.push(match.idPath);
+      });
+    }
   }
-  var ps = ensurePreviewState(outKey, { selected: initSelected, _seeded: initSelected.length > 0 });
-  if (initSelected.length > 0 && !ps._seeded) { ps.selected = initSelected; ps._seeded = true; }
+  var ps = ensurePreviewState(outKey, { selected: initSelected, _seeded: true });
+  if (!Array.isArray(ps.selected)) ps.selected = [];
+  ps.selected = ps.selected.map(function(value) { return Array.isArray(value) ? value.map(String) : [String(value)]; });
+  if (!ps._seeded) { ps.selected = initSelected; ps._seeded = true; }
 
   previewTextBlock(container);
 
-  var chipWrap = document.createElement('div');
-  chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
-  labels.forEach(function(label) {
-    var chip = document.createElement('button');
-    chip.type = 'button';
-    var isActive = ps.selected.indexOf(label.name) >= 0;
-    var c = label.color || '#6366F1';
-    chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
-    var chkBox = document.createElement('span');
-    chkBox.style.cssText = 'width:14px;height:14px;border-radius:3px;border:2px solid ' + (isActive ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;font-size:10px;';
-    if (isActive) chkBox.textContent = '✓';
-    chip.appendChild(chkBox);
-    chip.appendChild(document.createTextNode(label.name));
-    chip.addEventListener('click', function() {
-      var idx = ps.selected.indexOf(label.name);
-      if (idx >= 0) ps.selected.splice(idx, 1); else ps.selected.push(label.name);
+  var selector = document.createElement('div');
+  selector.className = 'taxonomy-selector';
+
+  var selectedList = document.createElement('div');
+  selectedList.className = 'taxonomy-selected-list';
+  ps.selected.forEach(function(path) {
+    var entry = entries.find(function(candidate) { return taxonomyPathKey(candidate.idPath) === taxonomyPathKey(path); });
+    if (!entry) return;
+    var chip = document.createElement('span');
+    chip.className = 'taxonomy-selected-path';
+    chip.setAttribute('data-testid', 'taxonomy-selected-path');
+    var leafLabel = String(entry.node.name || entry.node.id || '');
+    var accessiblePathLabel = entry.namePath.join(' / ');
+    chip.appendChild(document.createTextNode(leafLabel));
+    var remove = document.createElement('button');
+    remove.type = 'button';
+    remove.innerHTML = taxonomyIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 12);
+    remove.setAttribute('aria-label', (state.lang === 'en' ? 'Remove ' : '移除 ') + accessiblePathLabel);
+    remove.addEventListener('click', function() {
+      ps.selected = ps.selected.filter(function(selected) { return taxonomyPathKey(selected) !== taxonomyPathKey(path); });
       refreshOutputPreview(container, outKey);
     });
-    chipWrap.appendChild(chip);
+    chip.appendChild(remove);
+    selectedList.appendChild(chip);
   });
-  container.appendChild(chipWrap);
+  selector.appendChild(selectedList);
 
-  if (ps.selected.length > 0) {
-    var selInfo = document.createElement('div');
-    selInfo.style.cssText = 'margin-top:8px;font-size:0.8rem;color:var(--color-text-soft);';
-    selInfo.textContent = (state.lang === 'zh' ? '已選：' : 'Selected: ') + ps.selected.join(', ');
-    container.appendChild(selInfo);
+  var trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'taxonomy-selector-trigger';
+  trigger.setAttribute('data-testid', 'taxonomy-selector-trigger');
+  trigger.setAttribute('aria-haspopup', 'dialog');
+  trigger.setAttribute('aria-expanded', ps.selectorOpen ? 'true' : 'false');
+  trigger.appendChild(document.createTextNode(state.lang === 'en'
+    ? (ps.selected.length ? ps.selected.length + ' selected — choose labels' : 'Choose labels')
+    : (ps.selected.length ? '已選 ' + ps.selected.length + ' 個 — 選擇標籤' : '選擇標籤')));
+  var triggerIcon = document.createElement('span');
+  triggerIcon.innerHTML = ICON_CHEVRON_DOWN;
+  triggerIcon.setAttribute('aria-hidden', 'true');
+  trigger.appendChild(triggerIcon);
+  selector.appendChild(trigger);
+
+  var dialog = document.createElement('div');
+  dialog.className = 'taxonomy-selector-dialog';
+  dialog.setAttribute('data-testid', 'taxonomy-selector-dialog');
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-label', state.lang === 'en' ? 'Choose hierarchical labels' : '選擇階層標籤');
+  dialog.setAttribute('tabindex', '-1');
+  dialog.hidden = !ps.selectorOpen;
+
+  var stickyWrap = document.createElement('div');
+  stickyWrap.className = 'taxonomy-selector-sticky';
+
+  var dialogHeader = document.createElement('div');
+  dialogHeader.className = 'taxonomy-selector-dialog-header';
+  var dialogTitle = document.createElement('div');
+  dialogTitle.className = 'taxonomy-selector-dialog-title';
+  dialogTitle.textContent = state.lang === 'en' ? 'Choose hierarchical labels' : '選擇階層標籤';
+  dialogHeader.appendChild(dialogTitle);
+  var dialogClose = document.createElement('button');
+  dialogClose.type = 'button';
+  dialogClose.className = 'taxonomy-selector-close';
+  dialogClose.innerHTML = ICON_X;
+  dialogClose.setAttribute('aria-label', state.lang === 'en' ? 'Close label selector' : '關閉標籤選擇器');
+  dialogClose.addEventListener('click', closeDialog);
+  dialogHeader.appendChild(dialogClose);
+  stickyWrap.appendChild(dialogHeader);
+
+  var search = document.createElement('input');
+  search.type = 'search';
+  search.className = 'taxonomy-search-input';
+  search.placeholder = state.lang === 'en' ? 'Search label names (matches parent categories too)' : '搜尋標籤名稱（含上層分類）';
+  search.setAttribute('data-testid', 'taxonomy-search-input');
+  search.setAttribute('aria-label', search.placeholder);
+  search.value = ps.searchQuery || '';
+  stickyWrap.appendChild(search);
+  dialog.appendChild(stickyWrap);
+
+  var previewTree = document.createElement('div');
+  previewTree.className = 'taxonomy-preview-tree';
+  previewTree.setAttribute('role', 'group');
+  previewTree.setAttribute('aria-label', state.lang === 'en' ? 'Available labels' : '可選標籤');
+  dialog.appendChild(previewTree);
+
+  function isSelected(path) {
+    return ps.selected.some(function(selected) { return taxonomyPathKey(selected) === taxonomyPathKey(path); });
   }
+  function nodeMatches(node, idPrefix, namePrefix, query) {
+    var nextIds = idPrefix.concat(String(node.id));
+    var nextNames = namePrefix.concat(String(node.name));
+    if (!query) return true;
+    if ((nextIds.join(' / ') + ' ' + nextNames.join(' / ')).toLowerCase().indexOf(query) >= 0) return true;
+    return (Array.isArray(node.children) ? node.children : []).some(function(child) {
+      return nodeMatches(child, nextIds, nextNames, query);
+    });
+  }
+  function renderChoices() {
+    while (previewTree.firstChild) previewTree.removeChild(previewTree.firstChild);
+    var query = search.value.trim().toLowerCase();
+    var rendered = 0;
+    function renderLevel(list, idPrefix, namePrefix, depth, parent) {
+      list.forEach(function(node) {
+        if (!nodeMatches(node, idPrefix, namePrefix, query)) return;
+        var idPath = idPrefix.concat(String(node.id));
+        var namePath = namePrefix.concat(String(node.name));
+        var children = Array.isArray(node.children) ? node.children : [];
+        var isBranch = children.length > 0;
+        var row = document.createElement('div');
+        row.className = 'taxonomy-preview-row';
+        row.style.paddingLeft = Math.min((depth - 1) * 16, 80) + 'px';
+        var selected = isSelected(idPath);
+        var max = Number(cfg.max_selections) || 0;
+        var limitReached = max > 0 && ps.selected.length >= max && !selected;
+        var option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'taxonomy-preview-option';
+        option.setAttribute('data-testid', 'taxonomy-preview-option');
+        option.setAttribute('data-node-id', String(node.id));
+        option.setAttribute('role', 'checkbox');
+        option.setAttribute('aria-label', namePath.join(' / '));
+        option.setAttribute('aria-checked', selected ? 'true' : 'false');
+        option.setAttribute('aria-disabled', limitReached ? 'true' : 'false');
+        var checkbox = document.createElement('span');
+        checkbox.className = 'taxonomy-option-checkbox';
+        checkbox.setAttribute('aria-hidden', 'true');
+        checkbox.innerHTML = taxonomyIcon('<path d="M20 6 9 17l-5-5"/>', 10);
+        option.appendChild(checkbox);
+        option.appendChild(document.createTextNode(node.name));
+        option.addEventListener('click', function() {
+          if (limitReached) return;
+          if (selected) ps.selected = ps.selected.filter(function(path) { return taxonomyPathKey(path) !== taxonomyPathKey(idPath); });
+          else ps.selected.push(idPath);
+          /* Keep the dialog open across picks: restore scroll + focus after re-render */
+          ps._restoreScrollTop = dialog.scrollTop;
+          ps._refocusNodeId = String(node.id);
+          ps._announce = state.lang === 'en'
+            ? (selected ? 'Removed ' : 'Added ') + node.name + ', ' + ps.selected.length + ' selected'
+            : (selected ? '已移除 ' : '已新增 ') + node.name + '，共已選 ' + ps.selected.length + ' 個';
+          refreshOutputPreview(container, outKey);
+        });
+        row.appendChild(option);
+        parent.appendChild(row);
+        rendered += 1;
+        if (isBranch) renderLevel(children, idPath, namePath, depth + 1, parent);
+      });
+    }
+    renderLevel(nodes, [], [], 1, previewTree);
+    if (!rendered) {
+      var empty = document.createElement('div');
+      empty.className = 'taxonomy-selector-empty';
+      empty.textContent = state.lang === 'en' ? 'No matching labels.' : '找不到符合的標籤。';
+      previewTree.appendChild(empty);
+    }
+  }
+  search.addEventListener('input', function() {
+    ps.searchQuery = search.value;
+    renderChoices();
+  });
+  renderChoices();
+  selector.appendChild(dialog);
+  var live = document.createElement('div');
+  live.className = 'taxonomy-live';
+  live.setAttribute('aria-live', 'polite');
+  selector.appendChild(live);
+  container.appendChild(selector);
+
+  function handleOutsideClick(event) {
+    if (!document.body.contains(selector)) { document.removeEventListener('click', handleOutsideClick); return; }
+    if (selector.contains(event.target)) return;
+    ps.selectorOpen = false;
+    dialog.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', handleOutsideClick);
+  }
+  function watchOutsideClick() {
+    setTimeout(function() { document.addEventListener('click', handleOutsideClick); }, 0);
+  }
+
+  if (ps.selectorOpen) {
+    watchOutsideClick();
+    setTimeout(function() {
+      if (ps._restoreScrollTop != null) { dialog.scrollTop = ps._restoreScrollTop; ps._restoreScrollTop = null; }
+      if (ps._refocusNodeId != null) {
+        var refocus = previewTree.querySelector('[data-testid="taxonomy-preview-option"][data-node-id="' + CSS.escape(ps._refocusNodeId) + '"]');
+        if (refocus) refocus.focus({ preventScroll: true });
+        ps._refocusNodeId = null;
+      }
+      if (ps._announce) { live.textContent = ps._announce; ps._announce = null; }
+    }, 0);
+  }
+
+  function closeDialog() {
+    ps.selectorOpen = false;
+    dialog.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', handleOutsideClick);
+    trigger.focus();
+  }
+  trigger.addEventListener('click', function() {
+    var willOpen = dialog.hidden;
+    ps.selectorOpen = willOpen;
+    dialog.hidden = !willOpen;
+    trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    if (willOpen) {
+      renderChoices();
+      watchOutsideClick();
+      setTimeout(function() { dialog.focus(); }, 0);
+    } else {
+      document.removeEventListener('click', handleOutsideClick);
+    }
+  });
+  dialog.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') { event.preventDefault(); closeDialog(); }
+  });
 }
 
 function renderSingleDimPreview(container, outKey) {
@@ -4558,19 +5339,30 @@ function renderSchemaFields() {
     });
   }
 
-  /* Auto-populate label_options from output column unique values */
+  /* Auto-populate flat single-label options and hierarchical multi-label
+     taxonomy from all records. Flat multi-label arrays become one-level paths. */
   var _outCols = getFieldsByRole('output');
   if (_outCols.length > 0) {
-    var _uniqueVals = state.datasetColumnUniqueValues[_outCols[0]] || [];
+    var _singleLabelColumn = getOutputFieldName('single_label') || _outCols[0];
+    var _uniqueVals = state.datasetColumnUniqueValues[_singleLabelColumn] || [];
     if (_uniqueVals.length > 0) {
-      ['single_label', 'multi_label'].forEach(function(outKey) {
-        var cfg = state.outputConfigs[outKey];
-        if (!cfg || cfg._autoPopulated) return;
-        cfg.label_options = _uniqueVals.map(function(v, i) {
+      var _singleLabelCfg = state.outputConfigs.single_label;
+      if (_singleLabelCfg && !_singleLabelCfg._autoPopulated) {
+        _singleLabelCfg.label_options = _uniqueVals.map(function(v, i) {
           return { name: String(v), color: ENTITY_COLORS[i % ENTITY_COLORS.length] };
         });
-        cfg._autoPopulated = true;
-      });
+        _singleLabelCfg._autoPopulated = true;
+      }
+    }
+    var _multiLabelCfg = state.outputConfigs.multi_label;
+    if (_multiLabelCfg && !_multiLabelCfg._autoPopulated) {
+      var _datasetPaths = getMultiLabelDatasetPaths();
+      var _treeResult = buildTaxonomyFromPaths(_datasetPaths.paths);
+      _multiLabelCfg._taxonomyError = _datasetPaths.error || _treeResult.error || '';
+      if (!_multiLabelCfg._taxonomyError && _treeResult.nodes.length > 0) {
+        _multiLabelCfg.label_options = _treeResult.nodes;
+      }
+      _multiLabelCfg._autoPopulated = true;
     }
     /* Auto-populate multi_dim dimensions from output JSON object */
     var _multiDimCfg = state.outputConfigs['multi_dim'];
@@ -5844,6 +6636,71 @@ function saveCodeToVisual(showSuccessToast) {
     el('codeErrorBar').classList.remove('hidden');
     setText('codeErrorMsg', t('errCodeInvalid'));
     return false;
+  }
+
+  /* ADR-029 unified output composition. Keep the selected output order from
+     Step 1, but replace each config atomically after the whole payload passes. */
+  if (Array.isArray(parsed.outputs)) {
+    var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
+    if (parsed.input_type && parsed.input_type !== currentInputType) {
+      el('codeErrorBar').classList.remove('hidden');
+      setText('codeErrorMsg', state.lang === 'en' ? 'input_type must match Step 1.' : 'input_type 必須與第一步設定一致。');
+      return false;
+    }
+    var imported = {};
+    var unifiedError = '';
+    parsed.outputs.forEach(function(output) {
+      if (unifiedError) return;
+      if (!output || typeof output !== 'object' || Array.isArray(output) || !OUTPUT_TYPE_REGISTRY[output.type]) {
+        unifiedError = state.lang === 'en' ? 'Every output needs a supported type.' : '每個 output 都必須指定支援的 type。';
+        return;
+      }
+      if (imported[output.type]) {
+        unifiedError = state.lang === 'en' ? 'Output types cannot be duplicated.' : 'output type 不可重複。';
+        return;
+      }
+      if (!output.config || typeof output.config !== 'object' || Array.isArray(output.config)) {
+        unifiedError = state.lang === 'en' ? 'Every output needs a config object.' : '每個 output 都必須包含 config 物件。';
+        return;
+      }
+      imported[output.type] = cloneObject(output.config);
+    });
+    state.selectedOutputTypes.forEach(function(type) {
+      if (!imported[type] && !unifiedError) unifiedError = state.lang === 'en'
+        ? 'The code must include every output selected in Step 1.'
+        : '程式碼必須包含第一步選取的所有輸出類型。';
+    });
+    Object.keys(imported).forEach(function(type) {
+      if (state.selectedOutputTypes.indexOf(type) === -1 && !unifiedError) unifiedError = state.lang === 'en'
+        ? 'The code contains an output not selected in Step 1.'
+        : '程式碼包含第一步未選取的輸出類型。';
+    });
+    if (!unifiedError && imported.multi_label) {
+      imported.multi_label.label_options = normalizeTaxonomyNodes(imported.multi_label.label_options);
+      var importedTaxonomy = validateTaxonomyNodes(imported.multi_label.label_options);
+      if (!importedTaxonomy.valid) unifiedError = importedTaxonomy.error;
+    }
+    if (unifiedError) {
+      el('codeErrorBar').classList.remove('hidden');
+      setText('codeErrorMsg', unifiedError);
+      return false;
+    }
+    state.selectedOutputTypes.forEach(function(type) {
+      imported[type]._autoPopulated = true;
+      state.outputConfigs[type] = imported[type];
+    });
+    state.previewState = {};
+    state.previewBypass = {};
+    state.codeDraftDirty = false;
+    el('saveCodeBtn').disabled = true;
+    el('codeErrorBar').classList.add('hidden');
+    renderSchemaFields();
+    updateAnnotationPreview();
+    markDirty();
+    revalidateCurrentStep();
+    if (showSuccessToast) showToast(t('toastCodeSaved'), 'success');
+    track('prototype_task_new_code_saved', { taskType: state.taskType, format: state.codeFormat });
+    return true;
   }
 
   if (state.taskType === 'sequence_labeling' && (parsed.subtype || currentSubtype()) === 'ner') {
