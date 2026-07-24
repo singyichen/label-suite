@@ -102,7 +102,34 @@ test.describe('Task new taxonomy cascade', () => {
     });
 
     await expect(page.locator('#schemaFields')).toContainText('最大字數');
-    await expect(page.locator('#schemaFields')).toContainText('顯示參考答案給標記者');
+    await expect(page.locator('#schemaFields')).not.toContainText(
+      '顯示參考答案給標記者',
+    );
+    await expect(page.locator('#schemaFields')).not.toContainText(
+      'Show reference to annotator',
+    );
+
+    const generatedConfig = await page.locator('#codeEditor').inputValue();
+    expect(generatedConfig).not.toContain('show_reference');
+
+    const normalizedLegacyConfigs = await page.evaluate(() => {
+      const win = window as typeof window & {
+        state: {
+          codeFormat: 'yaml' | 'json';
+          outputConfigs: Record<string, Record<string, unknown>>;
+        };
+        configToCode: () => string;
+      };
+      win.state.outputConfigs.free_text.show_reference = true;
+      win.state.outputConfigs.free_text.show_reference_to_annotator = true;
+      win.state.codeFormat = 'yaml';
+      const yaml = win.configToCode();
+      win.state.codeFormat = 'json';
+      const json = win.configToCode();
+      return { yaml, json };
+    });
+    expect(normalizedLegacyConfigs.yaml).not.toContain('show_reference');
+    expect(normalizedLegacyConfigs.json).not.toContain('show_reference');
   });
 
   test('removes retired outputs and migrates sequence output config keys', async ({ page }) => {
