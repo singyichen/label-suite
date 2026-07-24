@@ -1,0 +1,64 @@
+{
+  "task_category": "classification",
+  "input_type": "single_item",
+  "typical_tasks": ["Hierarchical Multi-label Classification（階層式多標籤分類）", "Taxonomy Tagging（分類體系標記）"],
+  "outputs": [
+    {
+      "type": "multi_label",
+      "config": {
+        "label_options": [
+          {
+            "id": "emotion",
+            "name": "情緒",
+            "children": [
+              {
+                "id": "negative",
+                "name": "負向",
+                "children": [
+                  { "id": "sad", "name": "悲傷", "color": "#6366F1" },
+                  { "id": "anxious", "name": "焦慮", "color": "#10B981" }
+                ]
+              },
+              {
+                "id": "positive",
+                "name": "正向",
+                "children": [
+                  { "id": "hopeful", "name": "有盼望", "color": "#F59E0B" }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "care_context",
+            "name": "照護情境",
+            "children": [
+              {
+                "id": "clinical",
+                "name": "臨床處置",
+                "children": [
+                  { "id": "urgent", "name": "緊急", "color": "#EC4899" }
+                ]
+              },
+              {
+                "id": "recovery",
+                "name": "康復",
+                "children": [
+                  { "id": "follow_up", "name": "後續追蹤", "color": "#8B5CF6" }
+                ]
+              },
+              {
+                "id": "communication",
+                "name": "溝通",
+                "children": [
+                  { "id": "needs_explanation", "name": "需要說明", "color": "#0EA5E9" }
+                ]
+              }
+            ]
+          }
+        ],
+        "max_selections": 0,
+        "allow_bypass": true
+      }
+    }
+  ]
+}

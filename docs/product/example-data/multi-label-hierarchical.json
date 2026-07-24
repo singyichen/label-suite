@@ -1,0 +1,39 @@
+[
+  {
+    "id": "taxonomy-001",
+    "text": "病人表示確診後情緒低落，同時擔心治療副作用，今晚需要護理人員主動關懷。",
+    "gold_labels": [
+      ["emotion", "negative", "sad"],
+      ["care_context", "clinical", "urgent"]
+    ]
+  },
+  {
+    "id": "taxonomy-002",
+    "text": "完成療程後，病人對恢復狀況感到安心，也開始期待回到日常生活。",
+    "gold_labels": [
+      ["emotion", "positive", "hopeful"],
+      ["care_context", "recovery", "follow_up"]
+    ]
+  },
+  {
+    "id": "taxonomy-003",
+    "text": "病人因檢查結果延遲而焦慮，希望醫療團隊提供更清楚的說明。",
+    "gold_labels": [
+      ["emotion", "negative", "anxious"],
+      ["care_context", "communication", "needs_explanation"]
+    ]
+  },
+  {
+    "id": "taxonomy-004",
+    "text": "家屬理解治療計畫後情緒較穩定，暫時沒有額外協助需求。",
+    "gold_labels": []
+  },
+  {
+    "id": "taxonomy-005",
+    "text": "家屬情緒反應複雜暫難細分，先標記情緒大類；另對出院後照護安排有疑問，歸入溝通類別待補充說明。",
+    "gold_labels": [
+      ["emotion"],
+      ["care_context", "communication"]
+    ]
+  }
+]
