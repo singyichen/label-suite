@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-03-19
+**Amended**: 2026-06-29 — ADR-029 evolves the fixed task-type schema into composable `input_type + outputs[]`
 
 ## Context
 
@@ -45,7 +46,7 @@ Every task type is defined by a configuration object stored in the database (`JS
 
 ### Config Schema
 
-> **Full schema specification: [`docs/schema/config-schema.md`](../schema/config-schema.md)** — field definitions for all five task types, Pydantic validation constraints, and metrics registry. The example below is illustrative only.
+> **Current architecture:** [ADR-029 Output-Type Composition Model](029-output-type-composition.md) and [013 New Task spec](../../specs/task-management/013-task-new/spec.md) define the composable `input_type + outputs[]` model. [`docs/schema/config-schema.md`](../schema/config-schema.md) remains a Legacy v1 reference pending a complete v2 rewrite. The fixed `task.type + annotation` example below is retained only as historical context and is not a canonical contract.
 
 ```yaml
 # example task config
@@ -80,7 +81,7 @@ leaderboard:
 
 1. **No `if task_type ==` in service code** — task behavior must be derived from the config object.
 2. **Config schema is validated by Pydantic** at task creation — invalid configs are rejected before any data is saved.
-3. **New task types require only a new config file**, not code changes.
+3. **New combinations of registered output capabilities require config only**. A genuinely new output capability still requires a fragment schema, registry renderer, validation, and metric registration; core task flows must remain registry-driven.
 4. **Evaluation metrics are registered** in a metric registry (`metrics/registry.py`); new metrics are added to the registry, not inlined in scoring logic.
 
 ## Consequences
@@ -101,4 +102,5 @@ leaderboard:
 ## Referenced by
 
 - [Constitution](../../.specify/memory/constitution.md) — Principle 2: Generalization-First (NON-NEGOTIABLE)
+- [ADR-029](029-output-type-composition.md) — evolves the fixed schema into output-type composition
 - [README.md](../../README.md) — Key Contributions §1: Configurable and General-Purpose

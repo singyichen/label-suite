@@ -10,6 +10,8 @@
                         組合決定對應的 config 設定欄位
 ```
 
+> 本節是 **task type taxonomy**（任務 category／input／output 的組合），不是 `multi_label` 的 **label taxonomy**。標籤樹可遞迴建立多層，但受平台資源上限約束。
+>
 > 「整篇文章」與「句子／段落」視為相同輸入類型（ `single_item` ），差異只在資料長度，不影響 task config 結構。
 
 > 本次同步遷移顯示名稱與技術識別碼：`span` → `entity_recognition`、`relation_triple` → `relation_identification`、`token_class` → `sequence_tagging`。舊 key 與 `entity_relation`、`boundary` 均已自合法任務類型移除，不提供相容別名。
@@ -23,17 +25,45 @@
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
 | 單一標籤（ `single_label` ） | 從選項中選一個，含二元 | 文本分類、情感分析、主題分類 | 「蘋果發表了新款 iPhone。」 | 科技 | `label_options[]: { name, color? }` |
-| 多標籤（ `multi_label` ） | 可同時選多個 | 多標籤文本分類、內容標記 | 「這部電影有暴力和恐怖情節。」 | [暴力, 恐怖] | `label_options[]: { name, color? }` |
+| 多標籤（ `multi_label` ） | 從階層標籤樹的葉節點同時選取多個 | 多標籤文本分類、內容標記 | 「這部電影有暴力和恐怖情節。」 | `content / safety / violence`、`content / safety / horror` | `label_options[]: LabelOptionNode` |
 
 ### 項目對（ `item_pair` ）
 
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
 | 單一標籤（ `single_label` ） | 從選項中選一個 | NLI（自然語言推斷）、文本蘊含識別 | S1:「小明養了一隻貓。」 S2:「小明有寵物。」 | entailment（蘊含） | `label_options[]: { name, color? }` |
-| 多標籤（ `multi_label` ） | 可同時選多個 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | [主題相似, 情感相同, 語氣相同] | `label_options[]: { name, color? }` |
+| 多標籤（ `multi_label` ） | 從階層標籤樹的葉節點同時選取多個 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | `comparison / topic / similar`、`comparison / sentiment / same` | `label_options[]: LabelOptionNode` |
 
 > `entity_markers` 定義預標記實體的起訖標記，例如 `{ start: "[", end: "]" }`；也可用 XML tag、括號或其他明確成對標記格式。
 > `entities` 的 `color` 為必填，因 span 標記需視覺區分；`relation_types` 為語意類型標籤的純字串陣列（ tag-list ），不支援 `color`——關係觸發詞由標記者從文本中反白選取，不在 config 中預定義；`label_options`、`tag_options`、`polarity_options` 的 `color` 為選填。
+
+#### Multi-label Label Taxonomy
+
+`multi_label.label_options` 使用相同節點型別遞迴組成樹：
+
+```yaml
+label_options:
+  - id: content
+    name: 內容
+    children:
+      - id: safety
+        name: 安全
+        children:
+          - id: violence
+            name: 暴力
+            color: "#6366F1"
+          - id: horror
+            name: 恐怖
+            color: "#14B8A6"
+max_selections: 0
+```
+
+- `id` 是全樹唯一且不隨顯示名稱修改的穩定識別；`name` 可在不同分支重複。
+- 每一層節點都可獨立選取；branch 的 checkbox 與展開／收合控制分離，選取 parent 不會自動選取 children。選取狀態以完整 root-to-selected-node ID path 區分，但預覽中的已選 chip 只顯示被選節點名稱。
+- 資料模型不固定層數，但 MVP 限制深度最多 8 層（root 為第 1 層，完整 path 長度最多 8）、總節點最多 500 個，節點 `id`／`name` 各最多 100 字元。
+- 階層式來源資料的 path segment 是全樹唯一 node ID；自動建樹時先以該 ID 作初始名稱。若不同分支需顯示同名 leaf，使用不同 ID 並在 Visual 將 `name` 設為相同文字。
+- 一層樹仍是合法的 flat taxonomy；既有 flat config 與 `string[]` 範例資料只作匯入正規化相容。
+- Task Detail、Annotation Workspace 與 Dataset Quality 的顯示、提交與統計契約留待 014、015、017 後續同步。
 
 ---
 
@@ -137,7 +167,7 @@
 
 ## 5. 混合（ Mixed ）
 
-> 尚未展開（ e.g. 同一筆資料同時做分類 + 序列標記 ）
+> 混合任務由 ADR-029 的 `outputs[]` composition 組成，不另建立固定的 `mixed` output type。
 
 ---
 
@@ -146,9 +176,9 @@
 | 任務類別（ task_category ） | 輸入類型（ input_type ） | 輸出類型（ output_type ） | 典型任務 | Config 設定 |
 |--------------------------|----------------------|------------------------|----------|-------------|
 | 分類（ classification ） | 單一項目（ single_item ） | 單一標籤（ single_label ） | 文本分類、情感分析、主題分類 | `label_options[]: { name, color? }` |
-| 分類（ classification ） | 單一項目（ single_item ） | 多標籤（ multi_label ） | 多標籤文本分類、內容標記 | `label_options[]: { name, color? }` |
+| 分類（ classification ） | 單一項目（ single_item ） | 多標籤（ multi_label ） | 多標籤文本分類、內容標記 | `label_options[]: LabelOptionNode` |
 | 分類（ classification ） | 項目對（ item_pair ） | 單一標籤（ single_label ） | NLI、文本蘊含識別 | `label_options[]: { name, color? }` |
-| 分類（ classification ） | 項目對（ item_pair ） | 多標籤（ multi_label ） | 句對 MLTC（多標籤分類） | `label_options[]: { name, color? }` |
+| 分類（ classification ） | 項目對（ item_pair ） | 多標籤（ multi_label ） | 句對 MLTC（多標籤分類） | `label_options[]: LabelOptionNode` |
 | 回歸（ regression ） | 單一項目（ single_item ） | 單維度（ single_dim ） | 情感強度評估、可讀性評分 | `va_dimensions[]: { name, min, max, step }`（單一元素） |
 | 回歸（ regression ） | 單一項目（ single_item ） | 多維度（ multi_dim ） | 情感維度評估（ Valence-Arousal ）、多維度品質評估 | `va_dimensions[]: { name, min, max, step }` |
 | 回歸（ regression ） | 項目對（ item_pair ） | 單維度（ single_dim ） | 語義相似度（ STS ）、文本相關性評分 | `va_dimensions[]: { name, min, max, step }`（單一元素） |
