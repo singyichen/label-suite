@@ -36,7 +36,7 @@
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `in-progress` | `feat/regression-slider-ui` | spec v1.7.0；規格狀態：Draft；VA Annotator 介面採雙列彩色滑桿、跟隨數值標籤與可直接輸入小數的右側欄位 |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/regression-slider-ui` | spec v4.7.0；規格狀態：Draft；Step 2 單／多維回歸設定統一維度卡片，預覽採跟隨數值標籤、可直接輸入小數的右側欄位與多維度輔助色 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/optional-relation-semantic-types` | spec v4.9.0；規格狀態：Draft；Step 2 關係語意類型改為選填，純關係與相關複合任務僅在標籤非空時顯示類型控制 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-24 | `task-management-013` 更新至 v4.9.0：Step 2 的 `relation_types` 改為選填並預設空陣列；純關係與所有相關複合任務僅在存在語意類型標籤時顯示「類型」控制，純關係預覽移除重複標題；狀態維持 `in-progress`。 |
 | 2026-07-23 | `task-management-013` 更新至 v4.7.0：單／多維度回歸設定統一為相同維度卡片與欄位排列；單維度固定一張且無新增／刪除，多維度保留卡片清單操作並移除外層「維度設定 *」重複標題，既有 config 與 `outputs[]` 契約不變。 |
 | 2026-07-23 | `task-management-013` 更新至 v4.6.0、`annotation-015` 更新至 v1.7.0：右側 number input 採 `step="any"`，範圍內小數不再依 slider step 吸附；slider 仍依 task config step 微調，手動輸入僅依 min/max 校正。 |
 | 2026-07-23 | `task-management-013` 更新至 v4.5.0、`annotation-015` 更新至 v1.6.0：回歸滑桿右側改為 number input，與滑塊及上方數值標籤雙向同步；完成輸入後依 min/max/step 校正並移動滑塊，資料契約不變。 |
