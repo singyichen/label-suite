@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 5.2.0
+版本: 5.2.1
 狀態: Draft
 ---
 
@@ -661,7 +661,7 @@ flowchart LR
 >
 > **v4.9.0 下游影響檢查**：已檢查 014–017。本次將 `relation_types` 放寬為可接受空陣列，並只調整 `task-new` Step 2 的預覽控制項顯示；014 已要求 Visual 編輯器沿用 013 的 registry/schema，無需重複定義；015–017 未規範 `relation_types` 非空限制，且 `outputs[]` 結構與 API 契約不變，因此無需改版。
 >
-> **v5.0.0 下游同步延後**：本次先確立 013 producer-side 的 `multi_label` Task Config、Step 2 樹編輯、preview `LabelPath` 正規化與驗收界線。014 Task Detail、015 Annotation Workspace、017 Dataset Quality 的顯示、持久化提交 envelope 與階層統計／IAA 契約尚未同步檢查，依產品決策留待後續一起處理；在該同步完成前不得宣稱 consumer contract 已相容，也不得進入實作或 PR review。
+> **v5.0.0 下游同步延後**：本次先確立 013 producer-side 的 `multi_label` Task Config、Step 2 樹編輯、preview `LabelPath` 正規化與驗收界線。014 Task Detail、015 Annotation Workspace、017 Dataset Quality 的顯示、持久化提交 envelope 與階層統計／IAA 契約尚未同步檢查，依產品決策留待後續一起處理；在該同步完成前不得宣稱 consumer contract 已相容，014／015／017 consumer 端功能亦不得進入實作或 PR review。013 producer-side 的 prototype 迭代屬設計階段產物，不受此延後限制。
 
 ---
 
@@ -741,6 +741,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 5.2.1 | 2026-07-24 | **下游延後範圍釐清**：v5.0.0「下游同步延後」原文「不得進入實作或 PR review」範圍過廣，與 013 producer-side prototype 迭代（設計階段產物）矛盾；改為僅限 014／015／017 consumer 端功能。同步修正 ADR-029 對應句。無行為變更。 |
 | 5.2.0 | 2026-07-24 | **taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 由瀏覽器原生 `confirm` 改為頁內確認 modal（遵循 UXC-10）：標題點名動作、內文含子節點數量與不可復原後果、危險紅「刪除」主按鈕與「取消」次按鈕、Escape／背景點擊取消、焦點置於確認鈕使 Enter 確認；leaf 刪除維持不確認。Prototype 與 Playwright 回歸測試同步。 |
 | 5.1.0 | 2026-07-24 | **階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器移除 branch 展開／收合控制，清單攤平顯示全部層級並以縮排表達階層；選項不再顯示完整路徑文字，完整路徑保留於可存取名稱；選取後選擇器保持開啟（跨選取保留搜尋字串、捲動位置與焦點，aria-live 播報已選數量），新增點擊外部關閉；搜尋列與標題固定於選擇器頂端，搜尋比對節點名稱與祖先鏈。ARIA 由 tree/treeitem 改為扁平 group + checkbox。 |
 | 5.0.0 | 2026-07-24 | **階層式多標籤 taxonomy（producer-side）**：`multi_label.label_options` 由扁平列表破壞性重定義為 bounded recursive `LabelOptionNode[]`，新增 registry `taxonomy-tree`、全樹唯一 stable ID、all-node independent selection、branch checkbox 與 disclosure 分離、只顯示 selected node 名稱的 chips、完整 path 身分與儲存、flat／hierarchical 資料 shape-aware 正規化、8 層／500 節點／100 字元限制、JSON/YAML round-trip、鍵盤與 375/768/1440 RWD 驗收。保留原 flat fixture 並規劃另增 hierarchical fixture；014／015／017 consumer 顯示、提交與統計契約依產品決策延後同步，本版不進入實作。 |

@@ -160,7 +160,7 @@ The following rules are canonical for Task Config and Task New Step 2:
 - The Task New contract is bounded by depth 8 (root depth = 1, so `LabelPath.length <= 8`), 500 total nodes, and 100 characters per `id` or `name`. Validation rejects, rather than truncates, over-limit input.
 - `max_selections = 0` means unlimited. A positive value counts selected node paths; a value above the selectable node count is treated as unlimited with a non-blocking prompt.
 
-Runtime annotation submission, Task Detail editing, and dataset statistics/IAA interpretation are deliberately not resolved by this amendment. Specs 014, 015, and 017 must synchronize those consumer contracts before implementation or PR review.
+Runtime annotation submission, Task Detail editing, and dataset statistics/IAA interpretation are deliberately not resolved by this amendment. Specs 014, 015, and 017 must synchronize those consumer contracts before consumer-side implementation or PR review; producer-side prototype iteration under spec 013 is a design-stage artifact and is not gated by this deferral.
 
 #### 4. Output Dependencies
 
@@ -344,7 +344,7 @@ Since no backend code exists yet (Phase 3 starts 2027-02-01), this is a **design
 5. Foundation spec — update task config API contract
 6. Add a hierarchical multi-label fixture while retaining `multi-label.json` as the flat normalization regression fixture
 7. Add recursive JSON/YAML round-trip, tree validation, keyboard interaction, and responsive acceptance tests before implementation
-8. Synchronize the consumer-side display, submission, and statistics contracts in specs 014, 015, and 017 before implementation or PR review
+8. Synchronize the consumer-side display, submission, and statistics contracts in specs 014, 015, and 017 before consumer-side implementation or PR review (producer-side prototype iteration under spec 013 is not gated)
 
 No database migrations are needed. Because this remains a design-time migration, old output keys are removed without backwards-compatible aliases.
 
