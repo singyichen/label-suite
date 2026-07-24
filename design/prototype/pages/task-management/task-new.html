@@ -263,7 +263,7 @@
     .taxonomy-leaf-dot { appearance: none; width: 14px; height: 14px; padding: 0; overflow: hidden; border-radius: 3px; border: 1px solid rgba(0,0,0,.12); background: transparent; cursor: pointer; }
     .taxonomy-leaf-dot::-webkit-color-swatch-wrapper { padding: 0; }
     .taxonomy-leaf-dot::-webkit-color-swatch { border: none; }
-    .taxonomy-branch-dot { width: 11px; height: 9px; border: 2px solid var(--color-text-soft); border-top-width: 4px; border-radius: 2px; opacity: .72; }
+    .taxonomy-branch-dot { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; color: var(--color-text-soft); opacity: .72; flex-shrink: 0; }
     .taxonomy-node-input { width: 100%; min-width: 0; height: 32px; padding: 5px 8px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-white); color: var(--color-ink); font: inherit; font-size: 12px; outline: none; }
     .taxonomy-node-input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
     .taxonomy-node-id { color: var(--color-text-soft); font-family: var(--font-mono); font-size: 11px; border-color: transparent; background: transparent; }
@@ -2399,6 +2399,7 @@ function validateStep2(showErrors) {
   /* ADR-029: validate each output type's required fields */
   if (state.selectedOutputTypes.length >= 1) {
     var ok = true;
+    var schemaErrMsg = '';
     state.selectedOutputTypes.forEach(function(outKey) {
       var outReg = OUTPUT_TYPE_REGISTRY[outKey];
       if (!outReg) return;
@@ -2408,10 +2409,26 @@ function validateStep2(showErrors) {
         var val = cfg[f.key];
         if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
         else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
-        else if (f.type === 'taxonomy-tree') { if (!validateTaxonomyNodes(val).valid) ok = false; }
+        else if (f.type === 'taxonomy-tree') {
+          var check = validateTaxonomyNodes(val);
+          if (!check.valid) { ok = false; return; }
+          /* Data-preselected paths beyond a positive max_selections block
+             Step 3 with the offending row and field — never trim silently. */
+          var maxSel = Number(cfg.max_selections) || 0;
+          if (maxSel > 0) {
+            var dataPaths = readTaxonomyDataPaths(outKey, check.entries);
+            if (dataPaths.paths.length > maxSel) {
+              ok = false;
+              var fieldName = getOutputFieldName(outKey) || 'output';
+              schemaErrMsg = state.lang === 'en'
+                ? 'Row 1 field "' + fieldName + '" preselects ' + dataPaths.paths.length + ' labels, exceeding max selections (' + maxSel + '). Adjust the data or the limit.'
+                : '資料列 1 的欄位「' + fieldName + '」預選 ' + dataPaths.paths.length + ' 個標籤，超過最多可選數量（' + maxSel + '），請調整資料或上限。';
+            }
+          }
+        }
       });
     });
-    if (!ok && showErrors) showFieldError('errSchema', true, t('errSchemaRequired'));
+    if (!ok && showErrors) showFieldError('errSchema', true, schemaErrMsg || t('errSchemaRequired'));
     if (ok) showFieldError('errSchema', false);
     return ok;
   }
@@ -2718,6 +2735,30 @@ var TAXONOMY_MAX_TEXT = 100;
 
 function taxonomyPathKey(path) { return JSON.stringify(path || []); }
 
+/* Parse the first dataset row's output column into taxonomy paths.
+   Auto-fill is blocked entirely (issue set, paths emptied) when the column
+   mixes flat and hierarchical formats or contains a path that matches no
+   existing root-to-node route — never guess or truncate. Non-JSON values
+   fall through as `raw` for the legacy comma-separated fallback. */
+function readTaxonomyDataPaths(outKey, entries) {
+  var result = { paths: [], issue: null, raw: null };
+  var outputVal = getOutputFieldValue(outKey);
+  if (!outputVal) return result;
+  var parsed;
+  try { parsed = JSON.parse(outputVal); } catch(e) { result.raw = outputVal; return result; }
+  if (!Array.isArray(parsed)) return result;
+  var hasNested = parsed.some(function(value) { return Array.isArray(value); });
+  var hasFlat = parsed.some(function(value) { return !Array.isArray(value); });
+  if (hasNested && hasFlat) { result.issue = 'mixed'; return result; }
+  parsed.forEach(function(value) {
+    var path = Array.isArray(value) ? value.map(String) : [String(value)];
+    if (entries.some(function(entry) { return taxonomyPathKey(entry.idPath) === taxonomyPathKey(path); })) result.paths.push(path);
+    else result.issue = 'unmatched';
+  });
+  if (result.issue) result.paths = [];
+  return result;
+}
+
 function getOutputFieldName(outKey) {
   var outCols = getFieldsByRole('output');
   if (outCols.length === 0) return null;
@@ -2789,6 +2830,7 @@ function validateTaxonomyNodes(nodes) {
   if (entries.length === 0) error = state.lang === 'en' ? 'Add at least one label.' : '請至少新增一個標籤。';
   if (entries.length > TAXONOMY_MAX_NODES) error = state.lang === 'en' ? 'Taxonomy exceeds 500 nodes.' : '標籤樹不可超過 500 個節點。';
   entries.some(function(entry) {
+    if (error) return true;
     var node = entry.node;
     var id = String(node.id || '').trim();
     var name = String(node.name || '').trim();
@@ -3282,6 +3324,8 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
           var branchDot = document.createElement('span');
           branchDot.className = 'taxonomy-branch-dot';
           branchDot.setAttribute('aria-hidden', 'true');
+          /* Lucide "folder" — ADR-030: no hand-drawn glyphs */
+          branchDot.innerHTML = taxonomyIcon('<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>', 13);
           row.appendChild(branchDot);
         } else {
           var color = document.createElement('input');
@@ -4727,30 +4771,34 @@ function renderMultiLabelPreview(container, outKey) {
   cfg.label_options = nodes;
   var entries = collectTaxonomyEntries(nodes);
   if (entries.length === 0) return;
-  var outputVal = getOutputFieldValue(outKey);
-  var initSelected = [];
-  if (outputVal) {
-    try {
-      var parsed = JSON.parse(outputVal);
-      if (Array.isArray(parsed)) {
-        var paths = parsed.map(function(value) { return Array.isArray(value) ? value.map(String) : [String(value)]; });
-        paths.forEach(function(path) {
-          if (entries.some(function(entry) { return taxonomyPathKey(entry.idPath) === taxonomyPathKey(path); })) initSelected.push(path);
-        });
-      }
-    } catch(e) {
-      outputVal.split(/[,;，；]\s*/).forEach(function(value) {
-        var match = entries.find(function(entry) { return entry.node.id === value.trim() || entry.node.name === value.trim(); });
-        if (match) initSelected.push(match.idPath);
-      });
-    }
+  var dataPaths = readTaxonomyDataPaths(outKey, entries);
+  var initSelected = dataPaths.paths;
+  if (dataPaths.raw != null) {
+    dataPaths.raw.split(/[,;，；]\s*/).forEach(function(value) {
+      var match = entries.find(function(entry) { return entry.node.id === value.trim() || entry.node.name === value.trim(); });
+      if (match) initSelected.push(match.idPath);
+    });
   }
-  var ps = ensurePreviewState(outKey, { selected: initSelected, _seeded: true });
+  var ps = ensurePreviewState(outKey, { selected: initSelected });
   if (!Array.isArray(ps.selected)) ps.selected = [];
   ps.selected = ps.selected.map(function(value) { return Array.isArray(value) ? value.map(String) : [String(value)]; });
-  if (!ps._seeded) { ps.selected = initSelected; ps._seeded = true; }
 
   previewTextBlock(container);
+
+  if (dataPaths.issue) {
+    var issueMsg = document.createElement('div');
+    issueMsg.className = 'field-error-msg show';
+    issueMsg.setAttribute('data-testid', 'taxonomy-data-issue');
+    var issueField = getOutputFieldName(outKey) || 'output';
+    issueMsg.textContent = dataPaths.issue === 'mixed'
+      ? (state.lang === 'en'
+        ? 'Row 1 field "' + issueField + '" mixes flat and hierarchical label formats; auto-fill was blocked.'
+        : '資料列 1 的欄位「' + issueField + '」混用扁平與階層標籤格式，已停止自動帶入。')
+      : (state.lang === 'en'
+        ? 'Row 1 field "' + issueField + '" contains label paths that do not match the taxonomy; auto-fill was blocked.'
+        : '資料列 1 的欄位「' + issueField + '」含未對應標籤樹的標籤路徑，已停止自動帶入。');
+    container.appendChild(issueMsg);
+  }
 
   var selector = document.createElement('div');
   selector.className = 'taxonomy-selector';
@@ -4793,6 +4841,27 @@ function renderMultiLabelPreview(container, outKey) {
   triggerIcon.setAttribute('aria-hidden', 'true');
   trigger.appendChild(triggerIcon);
   selector.appendChild(trigger);
+
+  var maxSetting = Number(cfg.max_selections) || 0;
+  if (maxSetting > 0 && dataPaths.paths.length > maxSetting) {
+    var maxExceeded = document.createElement('div');
+    maxExceeded.className = 'field-error-msg show';
+    maxExceeded.setAttribute('data-testid', 'taxonomy-max-exceeded');
+    var exceededField = getOutputFieldName(outKey) || 'output';
+    maxExceeded.textContent = state.lang === 'en'
+      ? 'Row 1 field "' + exceededField + '" preselects ' + dataPaths.paths.length + ' labels, exceeding max selections (' + maxSetting + '). Adjust the data or the limit.'
+      : '資料列 1 的欄位「' + exceededField + '」預選 ' + dataPaths.paths.length + ' 個標籤，超過最多可選數量（' + maxSetting + '），請調整資料或上限。';
+    selector.appendChild(maxExceeded);
+  }
+  if (maxSetting > 0 && maxSetting > entries.length) {
+    var maxHint = document.createElement('div');
+    maxHint.className = 'field-hint';
+    maxHint.setAttribute('data-testid', 'taxonomy-max-hint');
+    maxHint.textContent = state.lang === 'en'
+      ? 'Max selections (' + maxSetting + ') exceeds the ' + entries.length + ' selectable nodes; treated as unlimited.'
+      : '最多可選數量（' + maxSetting + '）大於可選節點數（' + entries.length + '），視為不限。';
+    selector.appendChild(maxHint);
+  }
 
   var dialog = document.createElement('div');
   dialog.className = 'taxonomy-selector-dialog';
@@ -4919,14 +4988,22 @@ function renderMultiLabelPreview(container, outKey) {
   container.appendChild(selector);
 
   function handleOutsideClick(event) {
-    if (!document.body.contains(selector)) { document.removeEventListener('click', handleOutsideClick); return; }
+    if (!document.body.contains(selector)) { unwatchOutsideClick(); return; }
     if (selector.contains(event.target)) return;
     ps.selectorOpen = false;
     dialog.hidden = true;
     trigger.setAttribute('aria-expanded', 'false');
+    unwatchOutsideClick();
+  }
+  function unwatchOutsideClick() {
     document.removeEventListener('click', handleOutsideClick);
+    if (ps._outsideClickHandler === handleOutsideClick) ps._outsideClickHandler = null;
   }
   function watchOutsideClick() {
+    /* Each re-render creates a fresh closure — drop the previous render's
+       listener before registering this one so exactly one is ever active. */
+    if (ps._outsideClickHandler) document.removeEventListener('click', ps._outsideClickHandler);
+    ps._outsideClickHandler = handleOutsideClick;
     setTimeout(function() { document.addEventListener('click', handleOutsideClick); }, 0);
   }
 
@@ -4947,7 +5024,7 @@ function renderMultiLabelPreview(container, outKey) {
     ps.selectorOpen = false;
     dialog.hidden = true;
     trigger.setAttribute('aria-expanded', 'false');
-    document.removeEventListener('click', handleOutsideClick);
+    unwatchOutsideClick();
     trigger.focus();
   }
   trigger.addEventListener('click', function() {
@@ -4960,7 +5037,7 @@ function renderMultiLabelPreview(container, outKey) {
       watchOutsideClick();
       setTimeout(function() { dialog.focus(); }, 0);
     } else {
-      document.removeEventListener('click', handleOutsideClick);
+      unwatchOutsideClick();
     }
   });
   dialog.addEventListener('keydown', function(event) {

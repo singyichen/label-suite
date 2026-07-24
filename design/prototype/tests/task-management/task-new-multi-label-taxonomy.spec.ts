@@ -278,6 +278,71 @@ test.describe('SC-003q–u hierarchical multi-label taxonomy prototype', () => {
     ).toHaveCount(0);
   });
 
+  test('blocks Step 3 when data preselects more labels than max_selections', async ({ page }) => {
+    await setupHierarchicalMultiLabel(page);
+
+    const maxInput = page.locator(
+      '.output-accordion[data-output-key="multi_label"] input[type="number"]',
+    );
+    await maxInput.fill('1');
+
+    /* Step 3 is blocked and the inline error cites the row and field */
+    await expect(page.locator('#nextBtn')).toBeDisabled();
+    const exceeded = page.getByTestId('taxonomy-max-exceeded');
+    await expect(exceeded).toBeVisible();
+    await expect(exceeded).toContainText('資料列 1');
+    await expect(exceeded).toContainText('gold_labels');
+    /* Preselected values are not silently trimmed */
+    await expect(page.getByTestId('taxonomy-selected-path')).toHaveCount(2);
+  });
+
+  test('blocks auto-fill and cites the row and field when a data path no longer matches', async ({
+    page,
+  }) => {
+    await setupHierarchicalMultiLabel(page);
+
+    /* Diverge the taxonomy from the dataset: rename node id "sad" */
+    const sadNode = page.locator(
+      '[data-testid="taxonomy-treeitem"][data-node-id="sad"]',
+    );
+    await sadNode.getByTestId('taxonomy-node-id-input').fill('melancholy');
+
+    const issue = page.getByTestId('taxonomy-data-issue');
+    await expect(issue).toBeVisible();
+    await expect(issue).toContainText('資料列 1');
+    await expect(issue).toContainText('gold_labels');
+
+    /* A fresh preview must not partially auto-fill the still-valid paths */
+    await page.evaluate(() => {
+      const prototypeState = window.state as { previewState?: Record<string, unknown> };
+      delete prototypeState.previewState?.multi_label;
+      (window as unknown as { updateAnnotationPreview: () => void }).updateAnnotationPreview();
+    });
+    await expect(page.getByTestId('taxonomy-selected-path')).toHaveCount(0);
+    await expect(page.getByTestId('taxonomy-data-issue')).toBeVisible();
+  });
+
+  test('shows a non-blocking hint when max_selections exceeds the selectable node count', async ({
+    page,
+  }) => {
+    await setupHierarchicalMultiLabel(page);
+
+    const maxInput = page.locator(
+      '.output-accordion[data-output-key="multi_label"] input[type="number"]',
+    );
+    await maxInput.fill('99');
+
+    const hint = page.getByTestId('taxonomy-max-hint');
+    await expect(hint).toBeVisible();
+    await expect(hint).toContainText('視為不限');
+    /* Non-blocking: Step 2 validation still passes */
+    expect(
+      await page.evaluate(() =>
+        (window as unknown as { validateStep2: (show: boolean) => boolean }).validateStep2(false),
+      ),
+    ).toBe(true);
+  });
+
   test('uses keyboard-operable controls and a mobile selector dialog without overflow', async ({
     page,
   }) => {
