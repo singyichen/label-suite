@@ -1,10 +1,14 @@
 # Label Suite — Config Schema Reference
 
-> **用途：** 作為 SDD 開發的 config 基準。撰寫 task-management、annotation 模組的 spec.md 前，應先對照本文件確認欄位名稱、型別與約束。後端 Pydantic schema 與前端 `WidgetProps.config` 型別皆以本文件為準。
+> **狀態：Legacy v1（不可作為新功能的 canonical contract）**
 >
-> **關聯文件：** [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) · [Information Architecture](../product/ia/information-architecture.md)
+> 本文件仍描述 ADR-029 之前的五種固定 `task.type + annotation` 結構，尚未遷移至現行 `input_type + outputs[]` composition model。新的 Task Config 規劃應先依 [ADR-029 Output-Type Composition Model](../adr/029-output-type-composition.md) 與 [013 New Task spec](../../specs/task-management/013-task-new/spec.md)；在完整 v2 重寫完成前，不得只抽取本文件局部欄位與新契約混用。
 >
-> **版本：** v1（2026-04-04）
+> **後續工作：** v2 必須一次重寫頂層結構、八種 output fragment、metric registry 與 recursive `LabelOptionNode`／`LabelPath` 驗證；本次階層式多標籤規劃不以局部補丁假裝完成同步。
+>
+> **關聯文件：** [ADR-010 Config-Driven Architecture](../adr/010-config-driven-architecture.md) · [ADR-029 Output-Type Composition Model](../adr/029-output-type-composition.md) · [Information Architecture](../product/ia/information-architecture.md)
+>
+> **版本：** v1 Legacy（2026-04-04）
 
 ---
 

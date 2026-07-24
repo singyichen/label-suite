@@ -36,7 +36,7 @@
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `in-progress` | `feat/regression-slider-ui` | spec v1.7.0；規格狀態：Draft；VA Annotator 介面採雙列彩色滑桿、跟隨數值標籤與可直接輸入小數的右側欄位 |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/optional-relation-semantic-types` | spec v4.9.0；規格狀態：Draft；Step 2 關係語意類型改為選填，純關係與相關複合任務僅在標籤非空時顯示類型控制 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/hierarchical-multi-label-taxonomy` | spec v5.2.1；規格狀態：Draft；階層式 `multi_label` producer-side prototype 已實作（taxonomy 樹編輯器、攤平保持開啟選擇器、UXC-10 分支刪除確認 modal、資料路徑／max_selections 驗證）；014／015／017 consumer 契約延後同步 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,8 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-24 | `task-management-013` 更新至 v5.2.1：v5.1.0 階層選擇器攤平與保持開啟、v5.2.0 taxonomy 分支刪除確認改用 UXC-10 頁內 modal、v5.2.1 釐清下游延後範圍僅限 014／015／017 consumer 端（同步修正 ADR-029）。producer-side prototype 已於 `feat/hierarchical-multi-label-taxonomy` 實作（樹編輯器、攤平選擇器、刪除確認 modal、資料路徑與 `max_selections` 驗證），更正 v5.0.0 列「本階段不修改 prototype」的描述。 |
+| 2026-07-24 | `task-management-013` 更新至 v5.0.0 並調整為 `spec-ready`：`multi_label.label_options` 改為 bounded recursive taxonomy，新增 `taxonomy-tree`、stable ID、leaf-only preview、flat／hierarchical shape-aware 正規化、8 層／500 節點／100 字元資源界線及 JSON/YAML、鍵盤、RWD 驗收規劃；保留原 flat fixture，另規劃 hierarchical fixture。014／015／017 consumer 顯示、提交與統計契約延後同步，本階段不修改 prototype 或程式碼。 |
 | 2026-07-24 | `task-management-013` 更新至 v4.9.0：Step 2 的 `relation_types` 改為選填並預設空陣列；純關係與所有相關複合任務僅在存在語意類型標籤時顯示「類型」控制，純關係預覽移除重複標題；狀態維持 `in-progress`。 |
 | 2026-07-23 | `task-management-013` 更新至 v4.7.0：單／多維度回歸設定統一為相同維度卡片與欄位排列；單維度固定一張且無新增／刪除，多維度保留卡片清單操作並移除外層「維度設定 *」重複標題，既有 config 與 `outputs[]` 契約不變。 |
 | 2026-07-23 | `task-management-013` 更新至 v4.6.0、`annotation-015` 更新至 v1.7.0：右側 number input 採 `step="any"`，範圍內小數不再依 slider step 吸附；slider 仍依 task config step 微調，手動輸入僅依 min/max 校正。 |

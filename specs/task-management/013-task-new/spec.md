@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/013-task-new
 建立日期: 2026-04-20
-版本: 4.9.0
+版本: 5.2.1
 狀態: Draft
 ---
 
@@ -42,6 +42,9 @@
 - **v4.7.0 回歸設定卡統一**：`single_dim` 與 `multi_dim` 的維度設定使用相同卡片、欄位標籤及 min/max/step 三欄排列；單維度固定顯示一張不可新增／刪除的卡片，多維度顯示一張以上並保留新增／刪除功能。多維度不再顯示重複的外層「維度設定 *」標題。
 - **v4.8.0 實體辨識雙向選取與設定間距**：單一及混合輸出中的 `entity_recognition` 均支援「先選實體類型再圈選文字」與「先圈選文字再選實體類型」；未指定類型的圈選範圍持續反白但不顯示提示，點擊類型後完成新增並保留該類型為作用中狀態。混合式任務由多個單一輸出類型組成，每個輸出類型保留自身互動契約；`entity-list` 後方的 boolean 設定與前一欄保留 12px 群組間距。
 - **v4.9.0 關係語意類型改為選填**：`relation_identification.relation_types` 預設為空陣列且不再阻擋 Step 2；純關係與所有包含關係識別的複合任務只在欄位存在至少一個語意類型標籤時顯示三元組列的「類型」選單，空陣列時不顯示類型徽章或選單。純關係預覽移除重複的「關係識別預覽」內層標題，保留輸出類型區塊標題「關係識別」。
+- **v5.0.0 階層式多標籤 taxonomy**：`multi_label.label_options` 由扁平 `{name,color}[]` 重定義為遞迴 `LabelOptionNode[]`；Step 2 使用樹狀編輯器與可搜尋的階層選擇器，每一層節點皆可獨立勾選，branch checkbox 與展開／收合控制分離，parent selection 不連動 children。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 僅作選項身分與資料儲存。既有 flat config／資料只在匯入時正規化相容；014 Task Detail、015 Annotation Workspace、017 Dataset Quality 的顯示、提交與統計契約依本次決策延後同步。
+- **v5.1.0 階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器清單攤平顯示全部層級（移除 branch 展開／收合控制），階層改由縮排與可存取名稱的完整路徑表達；選項不再顯示完整路徑文字；選取節點後選擇器保持開啟，直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉，期間搜尋字串、捲動位置與焦點須跨選取保留。搜尋比對節點名稱與祖先鏈；搜尋列與標題固定於選擇器頂端。
+- **v5.2.0 taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 改用頁內確認 modal（遵循 UXC-10），取代瀏覽器原生 `confirm`；內文載明將一併刪除的子節點數量與不可復原後果，Escape／背景點擊取消，開啟時焦點置於危險紅「刪除」鈕使 Enter 確認。無子節點的 leaf 刪除維持不需確認。
 
 ## 規格常數
 
@@ -61,7 +64,13 @@
   | `generation` | `multiple` | `free_text` |
 
 - `OUTPUT_TYPE_DEPENDENCIES`：`relation_identification` 可獨立使用；僅在與 `entity_recognition` 同時被選取時，以 `entity_recognition` 作為可編輯實體來源，預覽與 config 合併為整合模式。此關聯不得自動加入或移除 output type
-- `OUTPUT_TYPE_FIELD_TYPES = entity-list | tag-list | select | number | text | boolean | va-dimensions`
+- `OUTPUT_TYPE_FIELD_TYPES = entity-list | taxonomy-tree | tag-list | select | number | text | boolean | va-dimensions`
+- `TAXONOMY_MAX_DEPTH = 8`
+- `TAXONOMY_MAX_NODES = 500`
+- `TAXONOMY_NODE_ID_MAX_LENGTH = 100`
+- `TAXONOMY_NODE_NAME_MAX_LENGTH = 100`
+
+> `TAXONOMY_MAX_DEPTH` 以 root 為第 1 層；合法 `LabelPath.length <= 8`。
 - `TASK_CONFIG_MODES = visual | code`
 - `CONFIG_FORMATS = yaml | json`
 - `CONFIG_UPLOAD_FORMATS = yaml | yml | json`
@@ -286,6 +295,13 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 15. **Given** 任一輸出類型或多輸出組合的 Step 2 schema 與預覽完成渲染，**When** 檢視主工作區，**Then** 左右小標分別顯示「標記設定」與「標記預覽」，桌面版頂端位置差不得超過 2px；**Given** `allow_bypass` 前方存在其他 schema 欄位，**Then** 每個輸出類型的 Bypass toggle 與前一欄位之間必須保留 12px 垂直間距。
 16. **Given** 使用者分別選擇 `single_dim` 或 `multi_dim`，**When** 進入 Step 2 標記設定，**Then** 維度名稱、最小值、最大值與間距皆以同一種維度卡片結構呈現；`single_dim` 固定一張且無新增／刪除控制，`multi_dim` 依維度數量重複卡片並提供新增／刪除控制，且卡片清單上方不顯示「維度設定 *」重複標題。
 17. **Given** 使用者選擇純 `relation_identification` 或任一包含它的複合任務，**When** `relation_types` 為空陣列，**Then** 「語意類型標籤」不顯示必填標記、Step 2 仍可通過驗證，且三元組列不顯示類型徽章或「類型」選單；**When** 使用者新增至少一個語意類型標籤，**Then** 三元組列立即顯示「類型」選單且選項只來自目前 `relation_types`。純 `relation_identification` 的預覽不得再顯示重複的「關係識別預覽」內層標題。
+18. **Given** 使用者選擇 `multi_label`，**When** 在 Step 2 建立 root、child 與 sibling，**Then** 可完成至少三層的 label taxonomy，且 Code 區同步保留每個節點的穩定 `id`、`name`、選填的 leaf `color` 與遞迴 `children`。
+19. **Given** label taxonomy 同時含 branch 與 leaf，**When** 操作標記預覽，**Then** 每個節點皆顯示獨立 checkbox，清單攤平顯示全部層級並以縮排表達階層（無展開／收合控制）；選取 parent 不連動 children，選取後選擇器保持開啟，已選 chip 只顯示被選節點名稱，但內部選取值保留完整 root-to-selected-node ID path。
+20. **Given** 不同分支各有一個同名 leaf，**When** 分別選取，**Then** 兩者以完整 ID path 維持獨立選取，不得因顯示名稱相同而互相覆蓋。
+21. **Given** 使用者在 Visual 建立至少三層 taxonomy，**When** 依序以 JSON 與 YAML 儲存再回填 Visual，**Then** 樹結構、節點順序、ID、名稱、leaf color 與 `max_selections` deep-equal。
+22. **Given** 使用既有 `multi-label.json` 的 flat `string[]` output，**When** Step 2 自動帶入，**Then** 系統建立一層 leaf taxonomy 並將值正規化為單段 preview paths；原 fixture 不需改寫。
+23. **Given** 使用階層式 `string[][]` output，**When** Step 2 自動帶入，**Then** 系統依所有 records 首次出現順序合併共同 prefix 建立 union tree，並只以第一筆資料初始化預覽選取。
+24. **Given** taxonomy 超過深度、節點數或字串長度上限，或含空值／重複 ID／無效 children，**When** 從 Visual、Code 或資料自動帶入任一入口套用，**Then** 三個入口以相同規則阻擋並保留最後一份有效 config。
 
 **介面定義**：
 
@@ -307,7 +323,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `entity_recognition` | 圈選文字建立實體 + 實體類型按鈕列 + 實體列表（含位置與刪除）；單一或與其他輸出類型組合時皆支援先選類型再圈選，以及先圈選再選類型 |
     | `relation_identification` | 純模式：既有實體唯讀高亮 + 循序關係建構器（E1/Arg1 → Relation → E2/Arg2 → 新增）+ 三元組列表，不顯示 Span 編輯控制項或重複的「關係識別預覽」內層標題；與 `entity_recognition` 組合時：整合預覽允許先建立／修改實體，再建立關係。兩種模式僅在 config `relation_types` 非空時顯示「類型」選單供事後指定語意類型 |
     | `single_label` | 文字顯示 + radio 風格可點選標籤 chip（單選） |
-    | `multi_label` | 文字顯示 + checkbox 風格可點選標籤 chip（多選）+ 已選顯示 |
+    | `multi_label` | 文字顯示 + 可搜尋的階層多選器；清單攤平顯示全部層級並以縮排表達階層，每個節點皆有獨立 checkbox，選取後選擇器保持開啟，已選 chip 只顯示被選節點名稱 |
     | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿；當前值即時跟隨滑塊顯示於正上方，左側顯示 min、右側提供 number input 精確輸入 |
     | `multi_dim` | 文字顯示 + 多維度各自獨立可拖曳滑桿；每列使用不同維度色，當前值即時跟隨各自滑塊顯示於正上方，左側顯示 min、右側提供 number input 精確輸入 |
     | `free_text` | 文字顯示 + 可編輯 textarea（含字數計數器）；啟用參考答案時顯示參考區塊 |
@@ -317,8 +333,9 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - 區塊 B：`標記設定（桌面左側；1100px 以下為第一個主區塊）`
   - schema 手風琴上方顯示小標「標記設定」（en：`Label settings`），其字級、字重、色彩、下方間距與區塊 A 的「標記預覽」一致
   - 每個輸出類型以手風琴面板呈現，面板標題含序號與輸出類型名稱，可展開/收合
-  - 面板內由 registry 動態生成欄位，支援 7 種欄位類型（`OUTPUT_TYPE_FIELD_TYPES`）：
+  - 面板內由 registry 動態生成欄位，支援 8 種欄位類型（`OUTPUT_TYPE_FIELD_TYPES`）：
     - `entity-list`：可新增/刪除的 `{ name, color }[]` 列表，每列含色點、名稱輸入框與移除按鈕；新增按鈕文字依語境顯示
+    - `taxonomy-tree`：遞迴 `LabelOptionNode[]` 編輯器，可新增 root／child／sibling、編輯穩定 ID 與顯示名稱、設定 leaf color、同層排序、展開／收合及刪除 subtree（刪除含子節點的 branch 需經頁內確認 modal，遵循 UXC-10）；結構操作不得只依賴拖拉
     - `tag-list`：可輸入的標籤列表，按 Enter 新增，各標籤可個別移除
     - `select`：下拉選單
     - `number`：數字輸入框（含 min/max 限制）
@@ -335,7 +352,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `entity_recognition` | `allow_overlapping`（允許重疊標記） | `boolean` | 否 |
     | `relation_identification` | `relation_types`（語意類型標籤，如 `bodyLocation`、`causes`） | `tag-list` | 否 |
     | `single_label` | `label_options`（標籤選項） | `entity-list` | 是 |
-    | `multi_label` | `label_options`（標籤選項） | `entity-list` | 是 |
+    | `multi_label` | `label_options`（階層標籤選項） | `taxonomy-tree` | 是 |
     | `multi_label` | `max_selections`（最多可選數量） | `number` | 否 |
     | `single_dim` | `dimension_name`（維度名稱） | `text` | 是 |
     | `single_dim` | `min` / `max` / `step` | `number` | 是 |
@@ -371,6 +388,11 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - 任何包含 `entity_recognition` 的單一或混合預覽都必須保留兩種建立順序：已選實體類型時，圈選文字後立即新增；尚未選擇類型時，圈選範圍持續反白並暫存，不顯示「請選擇實體類型」或其他提示，待使用者點擊類型後完成新增。新的圈選範圍取代尚未分類的舊範圍；完成新增後該類型維持作用中，供後續連續標記。混合預覽中的同一反白範圍也可由關係建構器消費；使用者點擊實體類型時視為建立實體，點擊關係步驟時視為建立關係草稿。
 - 混合式任務必須視為多個單一輸出類型的組合；除已明訂的相依協作外，每個輸出類型在混合預覽中仍保留自身的設定、互動、Bypass 與驗收契約，不得因合併渲染而省略。
 - `entity-list` 欄位的新增按鈕文字必須依語境顯示（如 `single_label` 顯示「新增標籤」、`entity_recognition` 顯示「新增實體類型」、`sequence_tagging` 顯示「新增標籤類型」）。
+- `taxonomy-tree` 必須完全由 registry field type 驅動，不得在 Step 2 核心流程以 `outputType === "multi_label"` 硬編樹操作。節點 `id` 在整棵樹中唯一且不隨 `name` 修改；`name` 可跨分支重複；新增第一個 child 後該節點轉為 branch 但仍可選取，既有 preview selection 必須保留，原 leaf color 則因 branch 不可設定 color 而移除。
+- `taxonomy-tree` 的所有結構操作都必須有可聚焦且具體命名的按鈕；樹使用 `role="tree"`／`treeitem`、`aria-level` 與 `aria-expanded`，支援 Arrow Up/Down 在可見節點移動、Arrow Right 展開或進入第一個 child、Arrow Left 收合或回到 parent、Home/End 移至首末節點。新增、刪除及驗證結果透過 `aria-live` 回報。
+- 刪除含 child 的 subtree 前必須確認並顯示影響節點數；若 subtree 含任何預覽已選節點，刪除後一併移除無效預覽選取，並將焦點移至前一個可見節點或 parent。
+- `multi_label` 預覽階層選擇器必須可搜尋（比對節點名稱與祖先鏈）；清單攤平顯示全部層級，每個節點皆為獨立 checkbox，選項不顯示完整路徑文字，但完整路徑必須保留於選項的可存取名稱以區分不同 branch 下的同名節點。選取節點後選擇器保持開啟，以 aria-live 播報選取結果與已選數量，焦點停留在剛操作的 checkbox；Escape、關閉按鈕、trigger 或點擊選擇器外部才關閉，Escape／關閉按鈕關閉後焦點回到 trigger。選取 parent 不得自動選取或清除 children。已選 chip 的可見文字只顯示被選節點名稱；移除按鈕的可存取名稱可保留完整 breadcrumb。搜尋列與標題須固定於選擇器頂端，不隨清單捲動。
+- `max_selections` 以選取的 node paths 數量計算；達到正數上限時，未選節點設為 `aria-disabled=true`，既有選取仍可取消。`0` 代表不限，正數大於 selectable node count 時顯示非阻擋提示並視同不限。
 - 當 boolean 欄位緊接在 `entity-list` 欄位之後時，boolean 設定卡與前一欄必須保留 12px 群組間距；`entity_recognition` 的「允許重疊標記」與上方新增實體類型區，以及其後的「允許無法判定 (Bypass)」皆使用相同間距。
 - `multi_dim` 的維度設定為通用模式，使用者可自訂任意維度名稱與 min/max/step，不限於特定維度（如 VA）。
 - `single_dim` 與 `multi_dim` 的設定介面必須由 registry 的維度設定 metadata 驅動並共用同一種卡片結構、欄位標籤及數值欄排列，不得依 output type 在核心流程分別硬編版面。`single_dim` 固定一張卡片且不顯示新增／刪除控制；`multi_dim` 顯示可新增／刪除的卡片清單，並省略清單外層重複的「維度設定 *」標題。
@@ -381,7 +403,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 - 預覽文字來源：已上傳資料集時讀取實際欄位內容（依 `field_role_map` 中 `input` 角色的欄位），未上傳時顯示預設範例文字。
 - 通用輸入文字區塊是否顯示必須由已選輸出類型的 registry metadata 推導：任一項 `rendersInputPreview = true` 時，由專屬或整合預覽呈現輸入內容並省略通用區塊；所有項目皆為 `false` 或未宣告時，保留通用區塊。不得以特定任務名稱或複合任務名稱硬編分支。
 - Step 2 版面是所有輸出類型與多輸出組合的全域共通契約，不得以 output type key 或 task-specific registry metadata 分流版面；新增 output type 時亦自動沿用相同的設定優先主工作區與整合設定檔工具卡。
-- 預覽狀態初始化：已上傳資料集且有 `output` 角色欄位時，各輸出類型的互動控制項以該欄位的實際值初始化（如預選標籤、設定滑桿值、預填文字）；output 欄位的 unique values 自動帶入分類型輸出類型的 `label_options`；output 欄位值為 JSON object 時自動建立 `multi_dim` 的維度列表（維度範圍依實際資料值推斷）；預標記三元組的語意類型（`relation_type` 欄位）自動帶入 `relation_identification` 的 `relation_types`；存在多個 output 角色欄位時，依欄位值的資料形狀對應各輸出類型，分別取用形狀相符的欄位初始化。
+- 預覽狀態初始化：已上傳資料集且有 `output` 角色欄位時，各輸出類型的互動控制項以該欄位的實際值初始化（如預選標籤、設定滑桿值、預填文字）；`single_label` 由 scalar unique values 建立扁平 `label_options`；`multi_label` 依 `string[]` 或 `string[][]` shape-aware 規則建立一層 taxonomy 或共同 prefix union tree；output 欄位值為 JSON object 時自動建立 `multi_dim` 的維度列表（維度範圍依實際資料值推斷）；預標記三元組的語意類型（`relation_type` 欄位）自動帶入 `relation_identification` 的 `relation_types`；存在多個 output 角色欄位時，依欄位值的資料形狀對應各輸出類型，分別取用形狀相符的欄位初始化。
 - 每個輸出類型的 config 一律包含共通欄位 `allow_bypass`（`boolean`，預設 `true`），由 registry 統一附加至所有輸出類型的 `fields` 與 `defaultConfig`，並隨 `outputs[]` 格式序列化至 code 區；schema 設定面板以 toggle 呈現，關閉時該輸出類型的預覽不顯示 Bypass 勾選項（見 FR-003j）。
 
 ---
@@ -456,8 +478,12 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - Code 區輸入非有效 YAML/JSON：保留輸入內容並顯示可定位錯誤。
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
-- 任一輸出類型的 `entity-list` 或 `tag-list` 必填欄位為空或含空白項目：阻擋進入 Step 3 並顯示可定位錯誤。
-- `multi_label` 設定 `max_selections` 大於 `label_options` 數量：顯示提示但不阻擋（視為「不限」語意）。
+- 任一輸出類型的 `entity-list`、`taxonomy-tree` 或 `tag-list` 必填欄位為空或含空白項目：阻擋進入 Step 3 並顯示可定位錯誤。
+- `multi_label` taxonomy 無 root、`id` 全樹重複、`children` 為空陣列或非陣列、branch 設定 color、深度超過 `TAXONOMY_MAX_DEPTH`、總節點超過 `TAXONOMY_MAX_NODES`，或節點 `id`／`name` 超過對應字數上限：阻擋套用並保留最後一份有效 config，不得截斷或略過。
+- `multi_label` 設定 `max_selections` 大於 selectable node 數量：顯示提示但不阻擋（視為「不限」語意）。
+- `multi_label` 的 output 欄位在同一欄混用 flat `string[]` 與 hierarchical `string[][]`、階層 path 未從 root 開始、含 orphan segment 或未對應既有 root-to-node route：阻擋自動帶入並顯示資料列與欄位位置，不猜測或截斷路徑。路徑終止於 branch 或 leaf 均合法。
+- 已有 output 預選數量大於正數 `max_selections`：阻擋進入 Step 3 並指出問題資料列與欄位，不得靜默裁掉預選值。
+- 刪除含已選節點的 subtree：確認訊息顯示受影響節點數；確認刪除後清除對應 preview paths，不保留 orphan selection。
 - 預覽已勾選 Bypass 時關閉該輸出類型的 `allow_bypass`：勾選狀態一併清除，預覽恢復顯示且不殘留停用樣式。
 - 已勾選 Bypass 的輸出類型存在預標記資料（`output` 角色欄位）：勾選期間不得被預標記值重新填入；取消勾選後預標記初始化重新套用。
 - 整合預覽（`entity_recognition` + `relation_identification`）中勾選 `entity_recognition` 的 Bypass：關係建構器隨實體一併停用；取消勾選後實體與三元組依預標記資料重新初始化。
@@ -489,7 +515,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現所選資料列來源的**前 2 筆資料列**，表格欄位為該來源**所有紀錄**第一層 key 的聯集，欄位標頭顯示原始 JSON key 名稱（不做中文轉換）並附型別摘要 badge（字串／數字／布林／陣列／物件／混合／空）；陣列或物件型儲存格以摘要文字呈現，hover 可檢視原始 JSON 內容；預覽提示列須顯示資料總筆數。**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。
 - **FR-002c-1**：欄位角色指定行為規則：預設全部欄位角色為「不使用」；重新上傳或移除檔案後，所有欄位角色重設為「不使用」；**切換資料列來源時，系統必須保留各來源已指定的角色，切回原來源時自動還原**；驗證與 payload 僅以目前所選來源的角色指定為準。最終角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload（僅包含已指定角色的欄位；未指定角色欄位不列入）。Evidence 與 Output 角色為 optional，全部留空代表不特別標記角色，所有欄位照常納入 config。**Input 角色受 FR-002c-2 約束**：當使用者已選定輸入類型時，Input 欄位數量必須符合該類型要求，否則阻擋進入 Step 2。
 - **FR-002c-2**：當輸入類型為 `single_item` 時，`field_role_map` 中 `input` 角色欄位數量必須恰好為 1；當輸入類型為 `item_pair` 時，必須恰好為 2；不符合時阻擋進入 Step 2 並顯示修正提示。
-- **FR-002c-3**：資料集解析時，array 型別欄位的各元素必須個別收集為該欄位的 unique values（例如 `["positive","negative"]` 應拆為 `positive`、`negative` 兩個 unique values），以支援 multi-label 等陣列型輸出欄位的自動解析。
+- **FR-002c-3**：資料集解析 array 型別欄位時必須先辨識 shape，不得一律 flatten。`string[]` 各元素個別收集為 flat unique values（例如 `["positive","negative"]` 拆為兩個值）；`string[][]` 的每個內層陣列視為一條完整 root-to-selected-node ID path，segment 必須在全樹唯一，並依所有 records 首次出現順序合併共同 prefix；路徑終點可以是後續仍有 children 的 branch。同一欄位混用兩種 shape、出現非字串 segment 或相同 ID 出現在不同 parent 下時視為資料錯誤。
 - **FR-002c-4**：資料集上傳成功後，系統必須自動偵測 JSON 中可作為紀錄集合的陣列（含巢狀結構與物件包裹形式，如 `{ meta, data: [...] }`），預設選擇最合適的候選作為**資料列來源**；偵測到多個候選時，須於預覽表格上方提供下拉選單供手動切換並顯示候選數提示，僅一個候選時下拉選單停用；完全偵測不到可用紀錄集合時，顯示錯誤並阻擋進入下一步。切換資料列來源後，若任一已上傳檔案於新來源路徑取不出紀錄，系統必須顯示標明該檔案的不相容提示，且該檔案的紀錄不納入合併資料集統計；切換至所有檔案皆可取出紀錄的來源時提示解除。
 - **FR-002c-5**：欄位剖析必須涵蓋所選資料列來源的**全部紀錄**（非僅預覽的前 2 筆），逐欄統計缺值筆數。空值定義：缺少該 key、`null`、空字串或僅含空白字元的字串、空陣列、空物件；**`0` 與 `false` 視為有值**。
 - **FR-002c-6**：指定欄位角色後，系統必須於該欄位下方顯示回饋註記：Input 角色且有缺值 → 紅色錯誤，列出問題紀錄識別（紀錄含 `id` 欄位時顯示其值，否則顯示列號，先列出前幾筆）；Input 角色且全數有值 → 綠色確認；Output 角色 → 藍色預標記覆蓋率資訊（N/total 筆有預標記）；**Output 欄位存在空值不阻擋流程**，視為該筆未預標記；Evidence 角色 → 無註記。
@@ -507,12 +533,12 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。設定：`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。單一或混合 `entity_recognition` 模式都必須支援兩種順序：（1）先選擇實體類型再圈選文字，圈選後立即新增；（2）先圈選文字再選擇實體類型，圈選範圍持續反白但不顯示提示，點擊類型後才新增並保留該類型為作用中。未分類期間若重新圈選，以最新範圍取代前一範圍。驗證：`entities` 不得為空且不得含空白項目。
 - **FR-003d-4**：`relation_identification` 必須支援選填的 `relation_types`（string[]，語意類型標籤，預設 `[]`），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項，亦不得顯示重複的「關係識別預覽」內層標題；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；`relation_types` 至少有一個非空白項目時，每筆三元組才顯示 `type` 選單與已指定類型徽章，選項僅來自目前 `relation_types`，不得覆寫觸發詞；`relation_types = []` 時不得顯示類型徽章或選單，且不得使用寫死 fallback。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：空陣列合法；若有項目則不得包含空白字串。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
-- **FR-003d-6**：`multi_label` 必須支援 `label_options`（`{ name, color }[]`）與 `max_selections`（number，0 = 不限）。預覽：文字區塊 + checkbox 風格 chip 按鈕（可多選），下方顯示已選數量。驗證：`label_options` 不得為空且不得含空白項目。
+- **FR-003d-6**：`multi_label` 必須支援 `label_options: LabelOptionNode[]` 與 `max_selections`（number，0 = 不限）。每個 node 包含全樹唯一且穩定的 `id`、顯示用 `name`、leaf 選填 `color` 及遞迴 `children`；branch 不可設定 color，但每個 node 都可獨立選取。設定介面使用 `taxonomy-tree` 新增 root／child／sibling、編輯、同層排序、展開／收合與刪除 subtree；刪除含子節點的 branch 必須以頁內確認 modal 攔截（遵循 UXC-10：標題點名動作、內文載明將一併刪除的子節點數量與不可復原後果、危險紅主按鈕「刪除」、次要「取消」，Escape 取消、開啟時焦點置於確認鈕使 Enter 確認），不得使用瀏覽器原生 `confirm`；無子節點的 leaf 刪除不需確認；預覽使用可搜尋階層多選器：清單攤平顯示全部層級並以縮排表達階層（不提供 branch 展開／收合），每個節點顯示 checkbox 且不顯示完整路徑文字（完整路徑保留於可存取名稱），選取後選擇器保持開啟直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 仍作選項身分與資料儲存。驗證：至少一個 root、非空 ID/name、全樹 ID 唯一、`children` 存在時為非空陣列、深度／節點數／字串長度不超過 taxonomy 常數；`max_selections >= 0` 且以 selected node path 數量計算。
 - **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。設定介面固定顯示一張與 `multi_dim` 相同結構的維度卡片，依序包含維度名稱與 min/max/step 三欄，不顯示新增或刪除控制。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider；當前值標籤必須即時更新並跟隨滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數。滑桿與 number input 必須雙向同步並支援鍵盤操作；slider 依 config `step` 微調，number input 採 `step="any"` 並只依 min/max 校正，不得把範圍內小數吸附至 slider step。驗證：`min` < `max`、`step` > `0`。
 - **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。設定介面以與 `single_dim` 相同結構的維度卡片重複呈現各維度並提供新增／刪除控制，卡片清單前不得再顯示「維度設定 *」外層標題。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider；當前值標籤必須即時更新並跟隨各自滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數並與該列滑桿雙向同步。每個維度必須依順序配置不同滑桿色，並同時保留文字標籤以避免只靠顏色辨識；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`；slider 依各維度 step 微調，number input 採 `step="any"` 並只依各維度 min/max 校正。
 - **FR-003d-10**：`free_text` 必須支援 `max_length`（number）與 `show_reference`（boolean）。預覽：文字區塊 + textarea（含字元計數 `N / max_length`）；textarea 標題優先顯示 output 欄位原始名稱，無 output 欄位時顯示「回答」/「Answer」。`show_reference = true` 時額外顯示參考答案區塊，已上傳資料集且有 output 欄位時顯示該欄位實際值，否則顯示佔位提示文字。驗證：`max_length` > `0`。
 - **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `entity_recognition + relation_identification` 時，預覽區必須以統一模式呈現，但兩個單一輸出類型仍保留各自互動契約：共用同一份文本，`entity_recognition` 保留 FR-003d-3 的兩種實體建立順序，`relation_identification` 保留循序關係建構器；未指定實體類型的同一反白範圍可由實體類型按鈕消費以建立實體，或由關係步驟消費以建立 relation 草稿。實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_identification` 時，預覽沿用相同的循序關係建構器，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。純模式與整合模式的 `type` 選單皆依 FR-003d-4 由非空的 `relation_types` 條件式顯示。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
-- **FR-003d-12**：Step 2 標記設定區的每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題可點擊切換展開/收合。有依賴關係時，面板標題下方必須顯示依賴提示。
+- **FR-003d-12**：Step 2 標記設定區的每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題使用可聚焦的 button，支援 Enter／Space 切換並正確暴露 `aria-expanded`／`aria-controls`。有依賴關係時，面板標題下方必須顯示依賴提示。
 - **FR-003d-13**：輸出類型來源關聯規則：選擇 `relation_identification` 不得自動加入 `entity_recognition`；只有使用者明確同時選取 `entity_recognition + relation_identification` 時，系統才啟用整合模式並由 registry 的 `source_output` metadata 在輸出 config 加入 `source_output: entity_recognition`。取消 `entity_recognition` 時保留 `relation_identification`、切回純關係模式並移除 `source_output`，不得連帶取消關係三元組。
 - **FR-003e**：code 區必須支援可編輯 YAML/JSON，並提供 `儲存` 操作以套用回 schema 設定欄位。
 - **FR-003f**：當 code 區有未儲存變更且使用者嘗試進入下一步時，系統必須阻擋前進並提示先儲存；不得自動儲存。
@@ -521,8 +547,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003g-2**：Step 2 標記預覽區不得為 `evidence` 角色欄位顯示獨立卡片或區塊（所有輸出類型一致）；Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另將欄位記錄於 config 的 `evidence_fields`），其內容留待標記工作區呈現。
 - **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤與單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`entity_recognition`、`relation_identification` 的該 metadata 為 `true`；`sequence_tagging` 維持預設 `false`。複合任務（如 `entity_recognition + relation_identification`、`entity_recognition + relation_identification + multi_dim`）須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
 - **FR-003g-4**：各輸出類型的預覽互動（如點擊標籤 chip）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽。
-- **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 預選匹配的多個標籤；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以實際 BIO 標記初始化 token 標記；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時維持預設值。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應（如 BIO 標記格式的字串陣列對應 `sequence_tagging`、一般字串陣列對應 `multi_label`、JSON object 對應 `multi_dim`、數字對應 `single_dim`／`single_label`、字串對應 `single_label`／`free_text`），各輸出類型的預覽初始化與自動帶入（FR-003g-6／FR-003g-7）分別取用形狀相符的欄位，而非一律採用同一欄位。
-- **FR-003g-6**：當 `output` 角色欄位的 unique values 存在時，`single_label`、`multi_label` 的 `label_options` 必須自動從該欄位的 unique values 帶入（每個 unique value 對應一筆 `{ name, color }`），免除使用者手動新增；已自動帶入後不重複執行。
+- **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 將 flat `string[]` 正規化為單段 paths，或直接使用 hierarchical `string[][]` 完整 paths，且只以第一筆資料的合法 paths 初始化；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以實際 BIO 標記初始化 token 標記；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時維持預設值。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應；`string[][]` 優先識別為 hierarchical `multi_label` path，BIO 字串陣列與一般 flat 字串陣列依既有規則區分，不得一律採用同一欄位。
+- **FR-003g-6**：`single_label` 的 `label_options` 仍由 scalar unique values 自動帶入 `{ name, color }`。`multi_label` 的自動帶入必須 shape-aware：flat `string[]` 建立一層 leaf taxonomy，舊值同時作 `id` 與 `name`；hierarchical `string[][]` 的 segment 是全樹唯一 node ID，依全部 records 合併共同 prefix 建立 union tree，並先以該 ID 作初始 `name`。若需跨分支同名顯示，使用者在 Visual 將不同 ID 節點的 `name` 改為相同文字。節點與 sibling 的順序依資料首次出現順序，已帶入後不重複執行；混合 shape、ID 出現在不同 parent、其他無效 segment 或超過 taxonomy 資源限制時不得建立部分樹。
 - **FR-003g-7**：當 `output` 角色欄位的首筆資料為 JSON object（非 array）時，`multi_dim` 的 `dimensions` 必須自動從該 object 的 keys 建立維度列表（每個 key 對應一筆 `{ name, min, max, step }`），免除使用者手動新增；已自動帶入後不重複執行。各維度的 `min`／`max`／`step` 必須依該維度實際資料值範圍推斷（如值域介於 0–1 時採 0～1 範圍與小數步進、含負值時對稱擴展範圍、值較大時依最大值放大範圍上限），不得一律套用固定預設範圍。
 - **FR-003g-8**：當預標記三元組資料存在且元素帶有語意類型欄位（`relation_type` 字串，或 record 層級的 `relation_types` 陣列）時，`relation_identification` 的 `relation_types` 必須自動從資料中出現過的語意類型（依出現順序去重）帶入，使設定面板的語意類型欄位與三元組列的 `type` 選單皆反映實際資料、不出現寫死預設值；已自動帶入後不重複執行。收集優先順序：(1) 各三元組的 `relation_type` 欄位；(2) record 層級的 `relation_types` 陣列；(3) `{subj, rel, obj}` 格式中 `rel` 本身為語意標籤時直接採用。若三元組不含可辨識的語意類型（如 ABSA 的 `target_text`／`aspect_text`／`opinion_text` 形式），則維持預設空陣列並依 FR-003d-4 隱藏類型徽章與選單。
 - **FR-003h**：Step 2 必須支援上傳 `CONFIG_UPLOAD_FORMATS` 設定檔，載入至 code 區並由使用者手動儲存套用。
@@ -556,6 +582,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-007a**：使用者在任一步驟已有未儲存變更時，離頁前必須顯示確認視窗（含取消建立、側欄跳頁、重新整理、關閉分頁）。
 - **FR-008**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成四步流程。
 - **FR-008a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：Step 1 填寫與驗證、Step 2 預覽/設定/code 編輯與驗證、Step 3 抽樣與資料隔離設定、Step 4 上傳或略過、建立成功導頁、取消返回。
+- **FR-008b**：`multi_label` 階層選擇器在 375px 使用全寬 dialog／bottom sheet 顯示攤平清單，操作目標至少 44×44px，Escape 關閉後焦點回到 trigger；樹編輯器的深層節點不得以無上限縮排推離畫面，須以 level／breadcrumb 補足層級資訊。375px、768px、1440px 均不得產生頁面水平 overflow。
 - **FR-008c**：在 mobile viewport 下，annotation-workspace 右側說明區塊收合後，主內容區必須維持單欄滿寬佈局，不得因收合狀態套用桌面欄位寬度造成跑版。
 - **FR-008d**：頁面必須支援 `prefers-reduced-motion: reduce`，啟用時所有過渡動畫降至最低。
 - **FR-008e**：頁面必須支援深色模式（`data-theme="dark"`），所有表單元素、卡片、預覽區域、步驟指示器皆須正確適配暗色配色。
@@ -595,8 +622,11 @@ flowchart LR
 
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
+- **LabelOptionNode**：`multi_label.label_options` 的遞迴節點。欄位：`id: string`（全樹唯一、穩定）、`name: string`（顯示文字）、`color?: string`（僅 leaf）、`children?: LabelOptionNode[]`（存在時必須非空）。
+- **LabelPath**：Task New 資料解析與預覽選取使用的 `string[]`，依序記錄 root 到 selected node 的 node IDs；路徑可以結束於 branch 或 leaf。本規格不先定義 015 的持久化 submission envelope。
+- **MultiLabelConfig**：欄位：`label_options: LabelOptionNode[]`、`max_selections: number`（`0` = 不限）、`allow_bypass: boolean`。selection policy 固定為 all-node independent selection，parent 不 cascade children；preview selected chip 只顯示被選節點名稱，不提供使用者 toggle。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
-- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`dimensionSettings`（可選的回歸設定呈現 metadata；宣告單張或多張模式及對應 config keys）、`fields[]`（schema 欄位定義，每項含 key / type / zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview` 與 `dimensionSettings` 不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
+- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`dimensionSettings`（可選的回歸設定呈現 metadata；宣告單張或多張模式及對應 config keys）、`fields[]`（schema 欄位定義，每項含 key / type〔含 `taxonomy-tree`〕/ zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview` 與 `dimensionSettings` 不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
@@ -630,6 +660,8 @@ flowchart LR
 > **v4.8.0 下游影響檢查**：已檢查 014–017。本次調整 `task-new` Step 2 單一及混合 `entity_recognition` 預覽的操作順序、暫存反白與設定欄位間距；`entities` schema、`outputs[]`、提交 payload、Annotation Workspace 及資料分析契約均不變，014–017 無需改版。
 >
 > **v4.9.0 下游影響檢查**：已檢查 014–017。本次將 `relation_types` 放寬為可接受空陣列，並只調整 `task-new` Step 2 的預覽控制項顯示；014 已要求 Visual 編輯器沿用 013 的 registry/schema，無需重複定義；015–017 未規範 `relation_types` 非空限制，且 `outputs[]` 結構與 API 契約不變，因此無需改版。
+>
+> **v5.0.0 下游同步延後**：本次先確立 013 producer-side 的 `multi_label` Task Config、Step 2 樹編輯、preview `LabelPath` 正規化與驗收界線。014 Task Detail、015 Annotation Workspace、017 Dataset Quality 的顯示、持久化提交 envelope 與階層統計／IAA 契約尚未同步檢查，依產品決策留待後續一起處理；在該同步完成前不得宣稱 consumer contract 已相容，014／015／017 consumer 端功能亦不得進入實作或 PR review。013 producer-side 的 prototype 迭代屬設計階段產物，不受此延後限制。
 
 ---
 
@@ -657,6 +689,11 @@ flowchart LR
 - **SC-003n**：單一及 `entity_recognition + relation_identification` 混合預覽中，「先選類型再圈選文字」會立即新增實體；「先圈選文字再選類型」會先持續反白且不顯示提示，點擊類型後新增相同範圍的實體。兩種順序新增後皆在實體列表顯示正確文字、類型與字元位置，且所選類型維持作用中；混合預覽的關係建構器仍可消費反白範圍。
 - **SC-003o**：`entity_recognition` 設定面板中，上方 entity-list 結尾至「允許重疊標記」、以及「允許重疊標記」至「允許無法判定 (Bypass)」的垂直間距均為 12px；單一與混合輸出設定面板結果一致。
 - **SC-003p**：純 `relation_identification` 與所有包含它的複合任務均允許 `relation_types = []` 且不阻擋 Step 2；空陣列時三元組列不顯示類型徽章或「類型」選單，新增至少一個語意類型標籤後控制項立即恢復。純模式不顯示重複的「關係識別預覽」內層標題。
+- **SC-003q**：`multi_label` 可在 Visual 建立至少三層、總節點不超過 500 的 taxonomy；新增 root／child／sibling、重新命名、同層排序與刪除 subtree 後，Code 區在 100ms 內反映等價 `LabelOptionNode[]`，且核心流程不含 output-key 特例。
+- **SC-003r**：`multi_label` 預覽允許 branch 與 leaf selection；每個節點 checkbox 獨立，選取 parent 不 cascade children。不同分支的同名節點可依完整 path 獨立選取，selected chip 的可見文字只顯示被選節點名稱，移除按鈕的可存取名稱可包含完整 breadcrumb，`max_selections` 只計算 selected node paths。
+- **SC-003s**：至少三層 taxonomy 依序完成 Visual → JSON → Save → Visual 與 Visual → YAML → Save → Visual 後，樹結構、順序、ID、名稱、leaf color、`max_selections` 與 `allow_bypass` deep-equal；無效 Code 不覆蓋最後有效 config。
+- **SC-003t**：既有 flat fixture 可建立一層 taxonomy 並正規化為單段 preview paths；新的 hierarchical fixture 可由所有 records 建立共同 prefix union tree，第一筆的完整 paths 正確預選；flat/path 混用、duplicate ID、invalid path、深度 9、節點 501 及 101 字元 ID/name 均被拒絕。
+- **SC-003u**：`taxonomy-tree` 與 preview selector 可由鍵盤完整操作並暴露正確 tree ARIA 狀態；375px 使用全寬 dialog／bottom sheet 且 Escape 還原焦點，375px／768px／1440px 的 `document.scrollWidth` 不超過 viewport width。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -704,6 +741,10 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 5.2.1 | 2026-07-24 | **下游延後範圍釐清**：v5.0.0「下游同步延後」原文「不得進入實作或 PR review」範圍過廣，與 013 producer-side prototype 迭代（設計階段產物）矛盾；改為僅限 014／015／017 consumer 端功能。同步修正 ADR-029 對應句。無行為變更。 |
+| 5.2.0 | 2026-07-24 | **taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 由瀏覽器原生 `confirm` 改為頁內確認 modal（遵循 UXC-10）：標題點名動作、內文含子節點數量與不可復原後果、危險紅「刪除」主按鈕與「取消」次按鈕、Escape／背景點擊取消、焦點置於確認鈕使 Enter 確認；leaf 刪除維持不確認。Prototype 與 Playwright 回歸測試同步。 |
+| 5.1.0 | 2026-07-24 | **階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器移除 branch 展開／收合控制，清單攤平顯示全部層級並以縮排表達階層；選項不再顯示完整路徑文字，完整路徑保留於可存取名稱；選取後選擇器保持開啟（跨選取保留搜尋字串、捲動位置與焦點，aria-live 播報已選數量），新增點擊外部關閉；搜尋列與標題固定於選擇器頂端，搜尋比對節點名稱與祖先鏈。ARIA 由 tree/treeitem 改為扁平 group + checkbox。 |
+| 5.0.0 | 2026-07-24 | **階層式多標籤 taxonomy（producer-side）**：`multi_label.label_options` 由扁平列表破壞性重定義為 bounded recursive `LabelOptionNode[]`，新增 registry `taxonomy-tree`、全樹唯一 stable ID、all-node independent selection、branch checkbox 與 disclosure 分離、只顯示 selected node 名稱的 chips、完整 path 身分與儲存、flat／hierarchical 資料 shape-aware 正規化、8 層／500 節點／100 字元限制、JSON/YAML round-trip、鍵盤與 375/768/1440 RWD 驗收。保留原 flat fixture 並規劃另增 hierarchical fixture；014／015／017 consumer 顯示、提交與統計契約依產品決策延後同步，本版不進入實作。 |
 | 4.9.0 | 2026-07-24 | `relation_identification.relation_types` 改為選填並預設 `[]`；純關係與所有相關複合任務只在存在語意類型標籤時顯示三元組列的類型徽章與「類型」選單，移除空設定的 `causes/treats` fallback；純關係預覽移除重複的「關係識別預覽」內層標題。新增驗收情境 17、SC-003p 與純／複合 prototype Playwright 回歸測試。 |
 | 4.8.0 | 2026-07-23 | 單一及混合 `entity_recognition` 預覽新增雙向操作順序：保留「先選類型再圈選」立即新增，並支援「先圈選再選類型」以持續反白暫存範圍、無提示、點擊類型後新增；明訂混合任務保留各單一輸出類型的互動契約。`allow_overlapping` 與上方 entity-list、下方 Bypass 均保留 12px 間距。新增 SC-003n／SC-003o 與 Prototype Playwright 驗收；schema、`outputs[]` 與下游契約不變。 |
 | 4.7.0 | 2026-07-23 | `single_dim`／`multi_dim` 設定介面統一使用相同維度卡片、欄位標籤與 min/max/step 排列；單維度固定一張且無新增／刪除，多維度保留卡片清單與新增／刪除，移除外層「維度設定 *」重複標題。新增 registry `dimensionSettings` 呈現 metadata；既有 config 與 `outputs[]` 契約不變。 |

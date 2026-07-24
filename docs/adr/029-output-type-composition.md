@@ -2,7 +2,9 @@
 
 **Status**: Accepted
 **Date**: 2026-06-29
-**Amended**: 2026-07-22 — active output keys reduced to eight; `span`, `relation_triple`, and `token_class` migrated without aliases
+**Amended**:
+- 2026-07-22 — active output keys reduced to eight; `span`, `relation_triple`, and `token_class` migrated without aliases
+- 2026-07-24 — `multi_label` adopts a bounded recursive label taxonomy for Task Config and Task New Step 2
 **Supersedes**: Partially evolves ADR-010 config schema (ADR-010 principles remain; schema structure changes)
 
 ## Context
@@ -54,6 +56,8 @@ Adopt an **Output-Type Composition Model** that replaces the fixed `TASK_TYPE_EN
 
 ### New Task Config Structure
 
+The examples in this ADR use `task` as an illustrative create-document envelope. The canonical `TaskConfig` fragment owned by spec 013 is `{ input_type, outputs, field_role_map }`; a concrete create-task API envelope must embed that fragment without redefining its fields and is finalized in the API contract, not by this ADR.
+
 ```yaml
 # OLD (ADR-010 era): task_type determines everything
 task:
@@ -101,7 +105,7 @@ Each output type is a self-contained unit with its own config fragment schema, a
 | Output Type | Config Fragment | Annotation UI | Scoring Metrics |
 |-------------|----------------|---------------|-----------------|
 | `single_label` | `label_options[]: {name, color?}` | Radio/button group | accuracy, f1_macro, cohen_kappa |
-| `multi_label` | `label_options[]: {name, color?}` | Checkbox group | f1_micro, f1_macro, hamming_loss |
+| `multi_label` | `label_options[]: LabelOptionNode`, `max_selections` | Searchable hierarchical multi-select (all nodes independently selectable) | f1_micro, f1_macro, hamming_loss |
 | `single_dim` | `dimension_name`, `min`, `max`, `step` | Slider | pearson_r, spearman_rho, mse |
 | `multi_dim` | `dimensions[]: {name, min, max, step}` | Multiple sliders | pearson_r (per dim), mean_mse |
 | `sequence_tagging` | `entities[]: {name, color?}`, `tagging_scheme` | Token-level tagging | token_f1, token_accuracy |
@@ -111,7 +115,54 @@ Each output type is a self-contained unit with its own config fragment schema, a
 
 The retired keys `entity_relation` and `boundary` are not part of the catalog. The former keys `span`, `relation_triple`, and `token_class` are also invalid; active configs must use `entity_recognition`, `relation_identification`, and `sequence_tagging` respectively.
 
-#### 3. Output Dependencies
+#### 3. Hierarchical Label Taxonomy for `multi_label`
+
+`multi_label` uses a recursive label option tree. The data model has no fixed number of levels, but validation bounds it for predictable editing, serialization, and rendering:
+
+```ts
+interface LabelOptionNode {
+  id: string
+  name: string
+  color?: string
+  children?: LabelOptionNode[]
+}
+
+type LabelPath = string[] // root node id → selected node id
+```
+
+```yaml
+- type: multi_label
+  config:
+    label_options:
+      - id: emotion
+        name: 情緒
+        children:
+          - id: negative
+            name: 負向
+            children:
+              - id: sad
+                name: 悲傷
+                color: "#6366F1"
+    max_selections: 0
+    allow_bypass: true
+```
+
+The following rules are canonical for Task Config and Task New Step 2:
+
+- `id` is a stable identity and must be unique across the entire label taxonomy. Renaming `name` must not change `id`.
+- `name` is display text and may repeat in different branches. A complete `LabelPath` distinguishes same-named nodes.
+- Every node is independently selectable. A branch exposes a checkbox in addition to a separate expand/collapse control; selecting a parent does not automatically select or clear any child.
+- Preview selections use complete root-to-selected-node ID paths as their identity, while selected chips display only the selected node name; assistive labels may retain the complete human-readable path for disambiguation.
+- `color` is optional for leaf nodes. Branch nodes must not define `color`; validation rejects it rather than silently ignoring it.
+- A flat taxonomy is the valid one-level form of the same recursive model.
+- Legacy flat nodes shaped as `{name, color?}` may be accepted only at an import/normalization boundary. They receive `id = name` and are then serialized in canonical node form.
+- Legacy flat dataset values shaped as `string[]` normalize to one-segment preview paths. A hierarchical field uses `string[][]`; each segment is a globally unique node ID, and the two shapes may not be mixed in one field. When auto-creating the taxonomy, the source ID is also used as the initial display name; users may later rename `name` without changing `id`.
+- The Task New contract is bounded by depth 8 (root depth = 1, so `LabelPath.length <= 8`), 500 total nodes, and 100 characters per `id` or `name`. Validation rejects, rather than truncates, over-limit input.
+- `max_selections = 0` means unlimited. A positive value counts selected node paths; a value above the selectable node count is treated as unlimited with a non-blocking prompt.
+
+Runtime annotation submission, Task Detail editing, and dataset statistics/IAA interpretation are deliberately not resolved by this amendment. Specs 014, 015, and 017 must synchronize those consumer contracts before consumer-side implementation or PR review; producer-side prototype iteration under spec 013 is a design-stage artifact and is not gated by this deferral.
+
+#### 4. Output Dependencies
 
 Some output types can reference the results of other output types within the same task. Dependencies are declared via a `source_output` field that references another output's `type` (or index, when the same type appears twice).
 
@@ -137,7 +188,7 @@ Some output types can reference the results of other output types within the sam
 | `entity_recognition` + `single_label` (no dep) | Document-level label + entity recognition |
 | `multi_dim` + `free_text` | Multi-dimension scoring with free-form comment |
 
-#### 4. Config Validation
+#### 5. Config Validation
 
 Validation occurs in two stages:
 
@@ -146,6 +197,8 @@ Validation occurs in two stages:
    - `source_output` references must point to an existing output in the same task
    - No circular dependencies
    - All output_type + input_type combinations are valid (no compatibility restrictions — researchers decide what makes sense for their use case)
+
+`multi_label` fragment validation additionally requires at least one root, non-empty `id` and `name`, globally unique IDs, non-empty `children` when present, and compliance with the depth/node/string limits above. Every preview `LabelPath` must exactly match an existing root-to-node route; selecting a branch path is valid, while orphaned or nonexistent paths are invalid.
 
 ### Example: Mapping the Three Research Datasets
 
@@ -259,6 +312,8 @@ Each output type registers its own metrics in the metric registry (ADR-010 Enfor
 
 The task creator selects which metric is the `primary_metric` for leaderboard ranking.
 
+Hierarchical `multi_label` scoring semantics—including whether each selected node path is an atomic class and whether ancestor roll-up is supported—remain deferred to the Dataset Quality contract (017). This amendment must not be read as defining those statistics.
+
 ### IAA Calculation
 
 Inter-Annotator Agreement is computed **per output type independently**. A multi-output task produces an IAA vector:
@@ -287,12 +342,15 @@ Since no backend code exists yet (Phase 3 starts 2027-02-01), this is a **design
 3. Update `010-config-driven-architecture.md` — add "Referenced by ADR-029" note; config example updated
 4. Existing prototype HTML — update to reflect new chip structure
 5. Foundation spec — update task config API contract
+6. Add a hierarchical multi-label fixture while retaining `multi-label.json` as the flat normalization regression fixture
+7. Add recursive JSON/YAML round-trip, tree validation, keyboard interaction, and responsive acceptance tests before implementation
+8. Synchronize the consumer-side display, submission, and statistics contracts in specs 014, 015, and 017 before consumer-side implementation or PR review (producer-side prototype iteration under spec 013 is not gated)
 
 No database migrations are needed. Because this remains a design-time migration, old output keys are removed without backwards-compatible aliases.
 
 ## Resolved Design Decisions
 
-All open questions have been resolved (2026-06-29):
+The following decisions include the original 2026-06-29 resolution and the 2026-07-24 hierarchical taxonomy amendment:
 
 1. **Output type compatibility matrix**: All output_type + input_type combinations are valid. No restrictions — researchers decide what makes sense for their use case.
 
@@ -305,6 +363,16 @@ All open questions have been resolved (2026-06-29):
 5. **Annotation workflow ordering**: Free ordering for independent outputs. Annotators may complete independent (non-dependent) output types in any order. Dependent outputs (with `source_output`) must wait for their source to be completed first.
 
 6. **IAA calculation**: Per output type independently. Each output type produces its own IAA score. No weighted average — each is evaluated against its own threshold.
+
+7. **Hierarchical label scope**: Hierarchical options apply to `multi_label` only. `single_label`, entity types, and tag types remain flat in this amendment.
+
+8. **Selection policy**: Every taxonomy node is independently selectable. Branch checkboxes are separate from expand/collapse controls, parent selection does not cascade to children, and selected chips show only the selected node name. These are not user-configurable toggles.
+
+9. **Identity and compatibility**: Node IDs are globally unique and stable; names may repeat. Existing flat config/data are accepted only through the normalization rules above.
+
+10. **Bounded recursion**: A taxonomy is limited to depth 8, 500 total nodes, and 100 characters per node ID/name. “Unlimited levels” is a UI description, not a platform resource contract.
+
+11. **Downstream synchronization**: Specs 014, 015, and 017 are explicitly deferred and must define consumer-side behavior before implementation.
 
 ## Consequences
 
@@ -322,10 +390,13 @@ All open questions have been resolved (2026-06-29):
 - Scoring pipeline must handle score vectors instead of single metrics
 - Annotator cognitive load increases with more output types per task — may need UX guardrails
 - Template design becomes combinatorial — cannot pre-build a template for every possible combination
+- Hierarchical option editing requires recursive validation, accessible tree navigation, search, and bounded rendering
+- Full config-schema v2 alignment and downstream consumer contracts must be completed before implementation
 
 ## Referenced by
 
 - ADR-010 — Config-Driven Task Architecture (evolved, not superseded)
-- `docs/product/functional-map/task-type-taxonomy.md` — to be updated
-- `specs/task-management/013-task-new/spec.md` — to be updated
+- `docs/product/functional-map/task-type-taxonomy.md`
+- `docs/schema/config-schema.md` — legacy v1 reference pending a complete ADR-029-aligned v2 rewrite
+- `specs/task-management/013-task-new/spec.md`
 - `specs/_governance/constitution.md` — Principle 2: Generalization-First (reinforced)
