@@ -1319,9 +1319,37 @@ var OUTPUT_TYPE_REGISTRY = {
   sequence_tagging: {
     zh: '序列標註', en: 'Sequence Tagging',
     source_output: null,
+    rendersInputPreview: true,
     fields: [
+      {
+        key: 'tokenization',
+        valueKey: 'unit',
+        type: 'select',
+        zh: '標記單位',
+        en: 'Token unit',
+        testId: 'sequence-token-unit-select',
+        required: true,
+        options: ['character', 'word'],
+        optionLabels: {
+          zh: { character: '字（Character）', word: '詞（Word）' },
+          en: { character: 'Character', word: 'Word' },
+        },
+      },
       { key: 'entities', type: 'entity-list', zh: '標籤類型', en: 'Label types', required: true, addLabel_zh: '新增標籤類型', addLabel_en: 'Add label type' },
-      { key: 'tagging_scheme', type: 'select', zh: '標記方案', en: 'Tagging scheme', required: true, options: ['BIO', 'BIOES', 'IOB2'], defaultValue: 'BIO' },
+      {
+        key: 'tagging_scheme',
+        type: 'select',
+        zh: '標記方案',
+        en: 'Tagging scheme',
+        testId: 'sequence-tagging-scheme-select',
+        required: true,
+        options: ['BIO', 'BIOES', 'IOB2', 'SINGLE'],
+        optionLabels: {
+          zh: { BIO: 'BIO', BIOES: 'BIOES', IOB2: 'IOB2', SINGLE: '單一標籤' },
+          en: { BIO: 'BIO', BIOES: 'BIOES', IOB2: 'IOB2', SINGLE: 'Single label' },
+        },
+        defaultValue: 'BIO',
+      },
     ],
     defaultConfig: {
       entities: [
@@ -1330,6 +1358,24 @@ var OUTPUT_TYPE_REGISTRY = {
         { name: 'LOC', color: '#45B7D1' },
       ],
       tagging_scheme: 'BIO',
+      tokenization: {
+        unit: 'character',
+        mode: 'unit_based',
+        punctuation: 'separate',
+        version: 2,
+      },
+    },
+    normalizeConfig: function(config) {
+      var tokenization = config.tokenization && typeof config.tokenization === 'object' && !Array.isArray(config.tokenization)
+        ? config.tokenization
+        : {};
+      config.tokenization = {
+        unit: tokenization.unit === 'word' ? 'word' : 'character',
+        mode: 'unit_based',
+        punctuation: 'separate',
+        version: 2,
+      };
+      return config;
     },
   },
   entity_recognition: {
@@ -1501,13 +1547,33 @@ function getOutputFieldDefault(field, lang) {
   return field.defaultValue;
 }
 
+function getOutputConfigFieldValue(config, field) {
+  var value = config[field.key];
+  if (!field.valueKey) return value;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  return value[field.valueKey];
+}
+
+function setOutputConfigFieldValue(config, field, value) {
+  if (!field.valueKey) {
+    config[field.key] = value;
+    return;
+  }
+  if (!config[field.key] || typeof config[field.key] !== 'object' || Array.isArray(config[field.key])) {
+    config[field.key] = {};
+  }
+  config[field.key][field.valueKey] = value;
+}
+
 function getOutputTypeDefaultConfig(outKey, lang) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
   if (!outReg) return {};
   var defaults = JSON.parse(JSON.stringify(outReg.defaultConfig || {}));
   outReg.fields.forEach(function(field) {
     var value = getOutputFieldDefault(field, lang);
-    if (value !== undefined) defaults[field.key] = JSON.parse(JSON.stringify(value));
+    if (value !== undefined) {
+      setOutputConfigFieldValue(defaults, field, JSON.parse(JSON.stringify(value)));
+    }
   });
   return defaults;
 }
@@ -1523,6 +1589,9 @@ function normalizeOutputConfig(outKey, config, lang) {
   });
   if (outReg && Array.isArray(outReg.retiredConfigKeys)) {
     outReg.retiredConfigKeys.forEach(function(key) { delete normalized[key]; });
+  }
+  if (outReg && typeof outReg.normalizeConfig === 'function') {
+    normalized = outReg.normalizeConfig(normalized, lang);
   }
   return normalized;
 }
@@ -2492,9 +2561,13 @@ function validateStep2(showErrors) {
       var outReg = OUTPUT_TYPE_REGISTRY[outKey];
       if (!outReg) return;
       var cfg = state.outputConfigs[outKey] || {};
+      if (outKey === 'sequence_tagging' && cfg._tokenAlignmentError) {
+        ok = false;
+        if (!schemaErrMsg) schemaErrMsg = cfg._tokenAlignmentError;
+      }
       outReg.fields.forEach(function(f) {
         if (!f.required) return;
-        var val = cfg[f.key];
+        var val = getOutputConfigFieldValue(cfg, f);
         if (f.type === 'tag-list') { if (!val || val.length === 0) ok = false; }
         else if (f.type === 'entity-list') { if (!val || val.length === 0 || val.some(function(e) { return !e.name.trim(); })) ok = false; }
         else if (f.type === 'taxonomy-tree') {
@@ -3076,7 +3149,28 @@ function rebuildColumnOutputTypeMap() {
       if (Array.isArray(first)) {
         types = ['multi_label'];
       } else if (typeof first === 'string') {
-        types = /^(O|[BIES]-.+)$/.test(first) ? ['sequence_tagging'] : ['multi_label'];
+        if (/^(O|[BIES]-.+)$/.test(first)) {
+          types = ['sequence_tagging'];
+        } else {
+          types = ['multi_label'];
+          var inputCols = getFieldsByRole('input');
+          var inputValue = inputCols.length > 0 ? rawRow[inputCols[0]] : '';
+          var sequenceConfig = state.outputConfigs.sequence_tagging || {};
+          var sequenceTokenization = sequenceConfig.tokenization && typeof sequenceConfig.tokenization === 'object'
+            ? sequenceConfig.tokenization
+            : {};
+          var sequenceTokens = getSequencePreviewTokens(
+            Array.isArray(inputValue) ? inputValue.join(' ') : String(inputValue || ''),
+            rawRow,
+            sequenceTokenization.unit === 'word' ? 'word' : 'character'
+          );
+          if (
+            state.selectedOutputTypes.indexOf('sequence_tagging') >= 0
+            && sequenceTokens.length === v.length
+          ) {
+            types.unshift('sequence_tagging');
+          }
+        }
       } else if (first && typeof first === 'object') {
         if (first.entity1 || first.subj || first.target_text || first.aspect_text || first.opinion_text) types = ['relation_identification'];
         else if (first.text != null) types = ['entity_recognition'];
@@ -3855,18 +3949,25 @@ function renderOutputTypeFields(container, outKey) {
       var sel = document.createElement('select');
       sel.className = 'select-field';
       sel.style.cssText = 'width:100%;padding:8px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;';
+      sel.setAttribute('data-testid', field.testId || (outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-select'));
+      var selectLabels = (field.optionLabels && field.optionLabels[state.lang]) || {};
+      var selectedValue = getOutputConfigFieldValue(cfg, field);
       (field.options || []).forEach(function(opt) {
         var option = document.createElement('option');
-        option.value = opt; option.textContent = opt;
-        if ((cfg[field.key] || field.defaultValue) === opt) option.selected = true;
+        option.value = opt; option.textContent = selectLabels[opt] || opt;
+        if ((selectedValue || field.defaultValue) === opt) option.selected = true;
         sel.appendChild(option);
       });
-      (function(capturedCfg, capturedKey) {
+      (function(capturedCfg, capturedField) {
         sel.addEventListener('change', function() {
-          capturedCfg[capturedKey] = sel.value;
+          setOutputConfigFieldValue(capturedCfg, capturedField, sel.value);
+          var capturedRegistry = OUTPUT_TYPE_REGISTRY[outKey];
+          if (capturedRegistry && typeof capturedRegistry.normalizeConfig === 'function') {
+            state.outputConfigs[outKey] = capturedRegistry.normalizeConfig(capturedCfg, state.lang);
+          }
           markDirty(); updateAnnotationPreview(); revalidateCurrentStep();
         });
-      }(cfg, field.key));
+      }(cfg, field));
       wrap.appendChild(sel);
     } else if (field.type === 'number') {
       var numInp = document.createElement('input');
@@ -4772,7 +4873,7 @@ function clearOutputPreviewState(outKey) {
       break;
     }
     case 'sequence_tagging':
-      state.previewState[outKey] = { activeLabel: null, tokens: null, _seeded: true }; break;
+      state.previewState[outKey] = { activeTag: 'O', tokens: null, scheme: (state.outputConfigs[outKey] || {}).tagging_scheme || 'BIO', tokenKey: null, _seeded: true }; break;
     case 'entity_recognition':
       /* clearing entities invalidates triples that reference them */
       state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
@@ -5199,87 +5300,258 @@ function renderSingleDimPreview(container, outKey) {
   }));
 }
 
+function tokenizeSequenceCharacters(text) {
+  var source = String(text || '');
+  if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
+    return Array.from(
+      new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(source),
+      function(entry) { return entry.segment; }
+    ).filter(function(segment) { return /\S/u.test(segment); });
+  }
+  return Array.from(source).filter(function(segment) { return /\S/u.test(segment); });
+}
+
+function tokenizeSequenceWords(text) {
+  var source = String(text || '');
+  var coarseSegments = source.match(/[\p{Script=Latin}\p{Number}]+(?:[.'’_-][\p{Script=Latin}\p{Number}]+)*|[\p{Script=Han}]+|[^\s]/gu) || [];
+  return coarseSegments.reduce(function(result, segment) {
+    if (!/^[\p{Script=Han}]+$/u.test(segment)) {
+      result.push(segment);
+      return result;
+    }
+    if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
+      Array.from(
+        new Intl.Segmenter('zh-TW', { granularity: 'word' }).segment(segment),
+        function(entry) { return entry.segment; }
+      ).filter(function(word) { return /\S/u.test(word); })
+        .forEach(function(word) { result.push(word); });
+      return result;
+    }
+    result.push(segment);
+    return result;
+  }, []);
+}
+
+function tokenizeSequenceText(text, unit) {
+  return unit === 'word'
+    ? tokenizeSequenceWords(text)
+    : tokenizeSequenceCharacters(text);
+}
+
+function getSequencePreviewTokens(text, rawRow, unit) {
+  var source = String(text || '');
+  if (source.trim()) return tokenizeSequenceText(source, unit);
+
+  var explicitTokens = Array.isArray(rawRow.tokens) ? rawRow.tokens : null;
+  if (!explicitTokens) {
+    var inCols = getFieldsByRole('input');
+    for (var i = 0; i < inCols.length; i++) {
+      var value = rawRow[inCols[i]];
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+        explicitTokens = value;
+        break;
+      }
+    }
+  }
+  if (!explicitTokens) return [];
+  return tokenizeSequenceText(explicitTokens.join(unit === 'word' ? ' ' : ''), unit);
+}
+
+function getSequenceBaseLabel(tag, labels) {
+  if (!tag || tag === 'O') return null;
+  for (var i = 0; i < labels.length; i++) {
+    var name = labels[i].name;
+    if (tag === name || tag.slice(-(name.length + 1)) === '-' + name) return name;
+  }
+  return null;
+}
+
+function inferSequenceScheme(tags) {
+  if (tags.some(function(tag) { return /^[ES]-/.test(tag); })) return 'BIOES';
+  if (tags.some(function(tag) { return /^[BI]-/.test(tag); })) return 'BIO';
+  return 'SINGLE';
+}
+
+function convertSequenceTags(tags, fromScheme, toScheme, labels) {
+  var assignments = tags.map(function(tag, index) {
+    var label = getSequenceBaseLabel(tag, labels);
+    if (!label) return { label: null, starts: false };
+    var previousLabel = index > 0 ? getSequenceBaseLabel(tags[index - 1], labels) : null;
+    var starts = index === 0 || previousLabel !== label;
+    if (fromScheme !== 'SINGLE' && /^[BS]-/.test(tag)) starts = true;
+    return { label: label, starts: starts };
+  });
+
+  return assignments.map(function(assignment, index) {
+    if (!assignment.label) return 'O';
+    if (toScheme === 'SINGLE') return assignment.label;
+    var prefix = assignment.starts ? 'B' : 'I';
+    if (toScheme === 'BIOES') {
+      var next = assignments[index + 1];
+      var ends = !next || next.label !== assignment.label || next.starts;
+      if (assignment.starts && ends) prefix = 'S';
+      else if (ends) prefix = 'E';
+    }
+    return prefix + '-' + assignment.label;
+  });
+}
+
 function renderTokenClassPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var labels = Array.isArray(cfg.entities) ? cfg.entities.filter(function(e) { return e && e.name; }) : [];
   var scheme = cfg.tagging_scheme || 'BIO';
-  var ps = ensurePreviewState(outKey, { activeLabel: null, tokens: null, _seeded: false });
+  var tokenization = cfg.tokenization && typeof cfg.tokenization === 'object' ? cfg.tokenization : {};
+  var tokenUnit = tokenization.unit === 'word' ? 'word' : 'character';
+  var ps = ensurePreviewState(outKey, { activeTag: 'O', tokens: null, scheme: scheme, tokenKey: null, _seeded: false });
 
   var realText = getDatasetPreviewText();
-  var text = realText || (state.lang === 'zh' ? '台積電 董事長 魏哲家 今天 出席 台北 產業論壇' : 'TSMC chairman C.C. Wei attended an industry forum in Taipei today');
-  /* Prefer a dataset-provided token array (e.g. unsegmented Chinese text with a
-     separate tokens field) over whitespace splitting */
+  var text = realText || (state.lang === 'zh' ? '台積電董事長魏哲家今天出席台北產業論壇' : 'The chairman of TSMC attended the forum in Taipei today.');
   var rawRow = state.datasetRawFirstRow || {};
-  var tokens = null;
-  if (Array.isArray(rawRow.tokens) && rawRow.tokens.length > 0) {
-    tokens = rawRow.tokens.map(String);
-  } else {
-    var inCols = getFieldsByRole('input');
-    for (var ici = 0; ici < inCols.length; ici++) {
-      var iv = rawRow[inCols[ici]];
-      if (Array.isArray(iv) && iv.length > 0 && typeof iv[0] === 'string') { tokens = iv.map(String); break; }
+  var tokens = getSequencePreviewTokens(text, rawRow, tokenUnit);
+  var tokenKey = tokenUnit + '\u241F' + tokens.join('\u241E');
+  var outputVal = getOutputFieldValue(outKey);
+  var outputTags = [];
+  if (outputVal) {
+    try {
+      var parsedTags = JSON.parse(outputVal);
+      if (Array.isArray(parsedTags)) outputTags = parsedTags.map(String);
+    } catch(e) {
+      outputTags = outputVal.split(/\s+/).filter(Boolean);
     }
   }
-  if (!tokens) tokens = text.split(/\s+/).filter(Boolean);
-  if (!ps.tokens || ps.tokens.length !== tokens.length) {
-    var outputVal = getOutputFieldValue(outKey);
-    var outputTags = [];
-    if (outputVal) { try { var _arr = JSON.parse(outputVal); if (Array.isArray(_arr)) outputTags = _arr.map(String); } catch(e) { outputTags = outputVal.split(/\s+/).filter(Boolean); } }
-    if (outputTags.length === tokens.length && !ps._seeded) {
-      ps.tokens = outputTags; ps._seeded = true;
+
+  cfg._tokenAlignmentError = '';
+  if (outputTags.length > 0 && outputTags.length !== tokens.length) {
+    var altUnit = tokenUnit === 'word' ? 'character' : 'word';
+    var altUnitAligned = outputTags.length === getSequencePreviewTokens(text, rawRow, altUnit).length;
+    var unitNames = state.lang === 'zh'
+      ? { character: { full: '字（Character）', short: '字' }, word: { full: '詞（Word）', short: '詞' } }
+      : { character: { full: 'Character', short: 'Character' }, word: { full: 'Word', short: 'Word' } };
+    var countClause = state.lang === 'zh'
+      ? '預標記數量（' + outputTags.length + '）與 Token 數量（' + tokens.length + '）不一致'
+      : 'The pre-annotation count (' + outputTags.length + ') does not match the token count (' + tokens.length + ').';
+    if (altUnitAligned) {
+      cfg._tokenAlignmentError = state.lang === 'zh'
+        ? countClause + '；預標記與「' + unitNames[altUnit].full + '」單位對齊，請將標記單位切回「' + unitNames[altUnit].short + '」，或改用符合「' + unitNames[tokenUnit].short + '」單位的預標記。'
+        : countClause + ' The pre-annotations align with the ' + unitNames[altUnit].full + ' unit — switch the unit back to ' + unitNames[altUnit].short + ', or provide ' + unitNames[tokenUnit].short + '-level pre-annotations.';
+    } else {
+      cfg._tokenAlignmentError = state.lang === 'zh'
+        ? countClause + '，請修正資料欄位。'
+        : countClause + ' Fix the dataset field.';
+    }
+  }
+
+  if (!ps.tokens || ps.tokenKey !== tokenKey) {
+    /* a non-null previous tokenKey means the token boundaries themselves changed
+       (unit switch or new row) — re-seed then; a null one is the Bypass explicit
+       clear, which must stay seed-proof */
+    var boundaryChanged = !!ps.tokenKey && ps.tokenKey !== tokenKey;
+    if (!cfg._tokenAlignmentError && outputTags.length === tokens.length && (!ps._seeded || boundaryChanged)) {
+      ps.tokens = convertSequenceTags(outputTags, inferSequenceScheme(outputTags), scheme, labels);
+      ps._seeded = true;
     } else {
       ps.tokens = tokens.map(function() { return 'O'; });
     }
+    ps.scheme = scheme;
+    ps.tokenKey = tokenKey;
+    ps.activeTag = 'O';
+  } else if (ps.scheme !== scheme) {
+    ps.tokens = convertSequenceTags(ps.tokens, ps.scheme || inferSequenceScheme(ps.tokens), scheme, labels);
+    ps.scheme = scheme;
+    ps.activeTag = 'O';
   }
 
-  /* Label selector */
+  var unitNote = document.createElement('div');
+  unitNote.setAttribute('data-testid', 'sequence-token-unit-note');
+  unitNote.style.cssText = 'margin-bottom:12px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-slate-50);font-size:0.78rem;color:var(--color-text-soft);line-height:1.5;';
+  if (tokenUnit === 'word') {
+    unitNote.textContent = state.lang === 'zh'
+      ? '標記單位：詞（Word）；中文依詞界、英文依單字切分，標點符號獨立成一個 Token。'
+      : 'Token unit: Word; Chinese uses word boundaries, English uses words, and punctuation is separate.';
+  } else {
+    unitNote.textContent = state.lang === 'zh'
+      ? '標記單位：字（Character）；中文與英文皆逐字切分，空白略過，標點符號獨立成一個 Token。'
+      : 'Token unit: Character; Chinese and English are split by character, whitespace is skipped, and punctuation is separate.';
+  }
+  container.appendChild(unitNote);
+
+  if (cfg._tokenAlignmentError) {
+    var alignmentError = document.createElement('div');
+    alignmentError.setAttribute('role', 'alert');
+    alignmentError.setAttribute('data-testid', 'sequence-token-alignment-error');
+    alignmentError.style.cssText = 'margin-bottom:12px;padding:8px 10px;border:1px solid var(--color-danger);border-radius:var(--radius-md);background:var(--color-danger-bg);color:var(--color-danger);font-size:0.78rem;line-height:1.5;';
+    alignmentError.textContent = cfg._tokenAlignmentError;
+    container.appendChild(alignmentError);
+  }
+
   var typeTitle = document.createElement('div');
   typeTitle.className = 'annotation-preview-task-title';
   typeTitle.style.marginBottom = '6px';
-  typeTitle.textContent = state.lang === 'zh' ? '標籤類型' : 'Label Type';
+  typeTitle.textContent = state.lang === 'zh' ? '可套用標記' : 'Available tags';
   container.appendChild(typeTitle);
 
   var chipWrap = document.createElement('div');
   chipWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
-  var oChip = document.createElement('button'); oChip.type = 'button';
-  oChip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid #94a3b8;color:' + (ps.activeLabel === null ? '#fff' : '#94a3b8') + ';background:' + (ps.activeLabel === null ? '#94a3b8' : 'transparent') + ';';
-  oChip.textContent = 'O';
-  oChip.addEventListener('click', function() { ps.activeLabel = null; refreshOutputPreview(container, outKey); });
-  chipWrap.appendChild(oChip);
+  var tagOptions = [{ tag: 'O', color: '#64748B' }];
   labels.forEach(function(label) {
-    var c = label.color || '#6366F1';
-    var chip = document.createElement('button'); chip.type = 'button';
-    var isActive = ps.activeLabel === label.name;
-    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';';
-    chip.textContent = label.name;
-    chip.addEventListener('click', function() { ps.activeLabel = ps.activeLabel === label.name ? null : label.name; refreshOutputPreview(container, outKey); });
+    var prefixes = scheme === 'SINGLE'
+      ? ['']
+      : (scheme === 'BIOES' ? ['B', 'I', 'E', 'S'] : ['B', 'I']);
+    prefixes.forEach(function(prefix) {
+      tagOptions.push({
+        tag: prefix ? prefix + '-' + label.name : label.name,
+        color: label.color || '#6366F1',
+      });
+    });
+  });
+  tagOptions.forEach(function(option) {
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.setAttribute('data-testid', 'sequence-tag-option');
+    var isActive = ps.activeTag === option.tag;
+    chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    chip.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + option.color + ';color:' + (isActive ? '#fff' : option.color) + ';background:' + (isActive ? option.color : 'transparent') + ';';
+    chip.textContent = option.tag;
+    chip.addEventListener('click', function() {
+      ps.activeTag = option.tag;
+      refreshOutputPreview(container, outKey);
+    });
     chipWrap.appendChild(chip);
   });
   container.appendChild(chipWrap);
 
-  /* Token grid */
   var tokenWrap = document.createElement('div');
+  tokenWrap.setAttribute('role', 'group');
+  tokenWrap.setAttribute('aria-label', state.lang === 'zh' ? 'Token 標記網格' : 'Token tagging grid');
   tokenWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;';
   tokens.forEach(function(tok, i) {
-    var tokEl = document.createElement('button'); tokEl.type = 'button';
+    var tokEl = document.createElement('button');
+    tokEl.type = 'button';
+    tokEl.setAttribute('data-testid', 'sequence-token');
     var tag = ps.tokens[i];
-    var matchedLabel = labels.find(function(l) { return tag.indexOf(l.name) >= 0; });
+    var matchedLabel = labels.find(function(label) { return getSequenceBaseLabel(tag, [label]) === label.name; });
     var bgColor = matchedLabel ? matchedLabel.color + '33' : '#f1f5f9';
     var borderColor = matchedLabel ? matchedLabel.color : '#e2e8f0';
     var textColor = matchedLabel ? matchedLabel.color : 'var(--color-ink)';
-    tokEl.style.cssText = 'padding:6px 10px;border-radius:6px;font-size:0.85rem;cursor:pointer;border:1.5px solid ' + borderColor + ';background:' + bgColor + ';color:' + textColor + ';display:flex;flex-direction:column;align-items:center;gap:2px;';
-    var tokText = document.createElement('span'); tokText.textContent = tok;
+    tokEl.setAttribute(
+      'aria-label',
+      state.lang === 'zh'
+        ? ('第 ' + (i + 1) + ' 個 Token「' + tok + '」，目前 ' + tag + '，套用 ' + (ps.activeTag || 'O'))
+        : ('Token ' + (i + 1) + ' "' + tok + '", currently ' + tag + ', apply ' + (ps.activeTag || 'O'))
+    );
+    tokEl.style.cssText = 'min-width:44px;min-height:44px;padding:6px 10px;border-radius:6px;font-size:0.85rem;cursor:pointer;border:1.5px solid ' + borderColor + ';background:' + bgColor + ';color:' + textColor + ';display:flex;flex-direction:column;align-items:center;gap:2px;';
+    var tokText = document.createElement('span');
+    tokText.setAttribute('data-testid', 'sequence-token-text');
+    tokText.textContent = tok;
     tokEl.appendChild(tokText);
-    var tagText = document.createElement('span'); tagText.style.cssText = 'font-size:0.65rem;font-weight:700;'; tagText.textContent = tag;
+    var tagText = document.createElement('span');
+    tagText.setAttribute('data-testid', 'sequence-token-tag');
+    tagText.style.cssText = 'font-size:0.65rem;font-weight:700;';
+    tagText.textContent = tag;
     tokEl.appendChild(tagText);
     (function(idx) {
       tokEl.addEventListener('click', function() {
-        if (ps.activeLabel === null) { ps.tokens[idx] = 'O'; }
-        else {
-          var prev = idx > 0 ? ps.tokens[idx - 1] : 'O';
-          var prefix = (prev.indexOf(ps.activeLabel) >= 0) ? 'I' : 'B';
-          ps.tokens[idx] = prefix + '-' + ps.activeLabel;
-        }
+        ps.tokens[idx] = ps.activeTag || 'O';
         refreshOutputPreview(container, outKey);
       });
     }(i));
@@ -5291,6 +5563,26 @@ function renderTokenClassPreview(container, outKey) {
   schemeInfo.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);';
   schemeInfo.textContent = (state.lang === 'zh' ? '標記方案：' : 'Scheme: ') + scheme;
   container.appendChild(schemeInfo);
+
+  var schemeHelp = document.createElement('div');
+  schemeHelp.setAttribute('data-testid', 'sequence-scheme-help');
+  schemeHelp.style.cssText = 'margin-top:4px;font-size:0.75rem;color:var(--color-text-soft);line-height:1.5;';
+  var schemeHelpText = {
+    zh: {
+      BIO: 'BIO 使用 B／I／O 表示實體開頭、內部與非實體。',
+      BIOES: 'BIOES 增加 E（結尾）與 S（單一 Token 實體），邊界更明確。',
+      IOB2: 'IOB2 強制每個實體以 B 開始；相鄰同類實體也要重新標記 B。',
+      SINGLE: '單一標籤直接套用類型或 O，不含位置前綴與實體邊界。',
+    },
+    en: {
+      BIO: 'BIO uses B, I, and O for entity beginnings, interiors, and outside tokens.',
+      BIOES: 'BIOES adds E for endings and S for single-token entities.',
+      IOB2: 'IOB2 requires every entity to begin with B, including adjacent entities of the same type.',
+      SINGLE: 'Single label applies the type or O directly, without positional prefixes or entity boundaries.',
+    },
+  };
+  schemeHelp.textContent = schemeHelpText[state.lang][scheme] || '';
+  container.appendChild(schemeHelp);
 }
 
 function renderSpanOnlyPreview(container, outKey) {
