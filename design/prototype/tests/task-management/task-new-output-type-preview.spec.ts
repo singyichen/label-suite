@@ -6,6 +6,7 @@ declare global {
   interface Window {
     state?: Record<string, unknown>;
     revalidateCurrentStep?: () => void;
+    updateAnnotationPreview?: () => void;
   }
 }
 
@@ -28,6 +29,32 @@ test('Entity Recognition fixture uses current fields and valid inclusive offsets
       expect(record.text.substring(entity.start, entity.end + 1)).toBe(entity.text);
     }
   }
+});
+
+test('Sequence Tagging default fixture uses character tokens for Chinese and English', () => {
+  const records = JSON.parse(
+    fs.readFileSync(path.join(EXAMPLE_DATA, 'sequence-tagging.json'), 'utf8'),
+  ) as Array<{
+    id: string;
+    text: string;
+    tokens: string[];
+    pre_tags: string[];
+  }>;
+
+  expect(records.length).toBeGreaterThanOrEqual(4);
+  for (const record of records) {
+    expect(record.id).toMatch(/^sequence-tagging-\d{3}$/);
+    expect(record.tokens).toHaveLength(record.pre_tags.length);
+    for (const token of record.tokens) {
+      expect(Array.from(token)).toHaveLength(1);
+    }
+  }
+
+  const englishRecord = records.find((record) => (
+    !/\p{Script=Han}/u.test(record.text)
+  ));
+  expect(englishRecord).toBeDefined();
+  expect(englishRecord?.tokens.slice(0, 3)).toEqual(['T', 'h', 'e']);
 });
 
 interface SetupConfig {
@@ -611,14 +638,14 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     expect(multiCardStyle).toEqual(singleCardStyle);
   });
 
-  test('Sequence Tagging — gold_tags parsed as array', async ({ page }) => {
+  test('Sequence Tagging — visible pre_tags parsed as array', async ({ page }) => {
     await setupAndGoToStep2(page, {
       taskName: 'sequence-tagging-test',
       category: 'sequence',
       outputType: 'sequence_tagging',
       inputType: 'single_item',
       dataFile: 'sequence-tagging.json',
-      roles: { text: 'input', gold_tags: 'output' },
+      roles: { text: 'input', pre_tags: 'output' },
     });
 
     const preview = page.locator('#annotationPreview');
@@ -626,7 +653,273 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.sequence_tagging).toBeDefined();
-    await expectGenericInputPreview(page, 'visible');
+    await expectGenericInputPreview(page, 'hidden');
+  });
+
+  test('Sequence Tagging — switches character and word units and updates the token preview', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-token-unit-switch-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    const sequenceSettings = page.locator(
+      '.output-accordion[data-output-key="sequence_tagging"]',
+    );
+    const unitSelect = page.getByTestId('sequence-token-unit-select');
+    const unitNote = preview.getByTestId('sequence-token-unit-note');
+    const tokens = preview.getByTestId('sequence-token');
+
+    await expect(unitSelect.locator('option')).toHaveText([
+      '字（Character）',
+      '詞（Word）',
+    ]);
+    await expect(
+      sequenceSettings.locator('.form-field > .field-label'),
+    ).toHaveText(['標記單位*', '標籤類型*', '標記方案*']);
+    await expect(unitSelect).toHaveValue('character');
+    await expect(unitNote).toContainText('標記單位：字');
+    await expect(tokens.nth(0).getByTestId('sequence-token-text')).toHaveText('台');
+    await expect(tokens.nth(1).getByTestId('sequence-token-text')).toHaveText('積');
+    await expect(tokens.nth(2).getByTestId('sequence-token-text')).toHaveText('電');
+    const characterCount = await tokens.count();
+
+    await unitSelect.selectOption('word');
+    await expect(unitNote).toContainText('標記單位：詞');
+    await expect(
+      tokens.filter({ has: page.getByTestId('sequence-token-text').filter({ hasText: /^董事長$/ }) }),
+    ).toHaveCount(1);
+    await expect(tokens).not.toHaveCount(characterCount);
+    expect(await tokens.count()).toBeLessThan(characterCount);
+
+    const outputConfigsAfterWord = await getState(
+      page,
+      'outputConfigs',
+    ) as WindowState['outputConfigs'];
+    expect(outputConfigsAfterWord.sequence_tagging.tokenization).toEqual({
+      unit: 'word',
+      mode: 'unit_based',
+      punctuation: 'separate',
+      version: 2,
+    });
+
+    await page.evaluate(() => {
+      const state = window.state as {
+        datasetRawFirstRow?: Record<string, unknown>;
+        previewState?: Record<string, unknown>;
+      };
+      if (state.datasetRawFirstRow) {
+        state.datasetRawFirstRow.text = 'The chairman of TSMC.';
+      }
+      state.previewState = {};
+      window.updateAnnotationPreview?.();
+    });
+
+    await expect(tokens.nth(0).getByTestId('sequence-token-text')).toHaveText('The');
+    await expect(tokens.nth(1).getByTestId('sequence-token-text')).toHaveText('chairman');
+    await expect(tokens.last().getByTestId('sequence-token-text')).toHaveText('.');
+
+    await unitSelect.selectOption('character');
+    await expect(unitNote).toContainText('標記單位：字');
+    await expect(tokens.nth(0).getByTestId('sequence-token-text')).toHaveText('T');
+    await expect(tokens.nth(1).getByTestId('sequence-token-text')).toHaveText('h');
+    await expect(tokens.nth(2).getByTestId('sequence-token-text')).toHaveText('e');
+  });
+
+  test('Sequence Tagging — restores visible pre-annotations after switching the unit away and back', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-unit-roundtrip-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input', pre_tags: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    const unitSelect = page.getByTestId('sequence-token-unit-select');
+    const tokens = preview.getByTestId('sequence-token');
+    const alignmentError = preview.getByTestId('sequence-token-alignment-error');
+
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('I-ORG');
+
+    await unitSelect.selectOption('word');
+    await expect(alignmentError).toBeVisible();
+    await expect(page.locator('#nextBtn')).toBeDisabled();
+
+    await unitSelect.selectOption('character');
+    await expect(alignmentError).toHaveCount(0);
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('I-ORG');
+    await expect(tokens.nth(2).getByTestId('sequence-token-tag')).toHaveText('I-ORG');
+    await expect(page.locator('#nextBtn')).toBeEnabled();
+  });
+
+  test('Sequence Tagging — Bypass-cleared tags stay cleared across a unit round-trip', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-bypass-unit-roundtrip-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input', pre_tags: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    const unitSelect = page.getByTestId('sequence-token-unit-select');
+    const tokens = preview.getByTestId('sequence-token');
+    const bypassToggle = preview.getByRole('button', { name: '無法判定 (Bypass)' });
+
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+
+    await bypassToggle.click();
+    await expect(bypassToggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('O');
+
+    await unitSelect.selectOption('word');
+    await unitSelect.selectOption('character');
+
+    await expect(bypassToggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('O');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('O');
+    await expect(tokens.nth(2).getByTestId('sequence-token-tag')).toHaveText('O');
+  });
+
+  test('Sequence Tagging — mismatch error names the aligned unit and offers both remedies', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-unit-mismatch-hint-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input', pre_tags: 'output' },
+    });
+
+    const alignmentError = page.getByTestId('sequence-token-alignment-error');
+    await page.getByTestId('sequence-token-unit-select').selectOption('word');
+
+    await expect(alignmentError).toContainText('預標記數量（29）與 Token 數量');
+    await expect(alignmentError).toContainText('與「字（Character）」單位對齊');
+    await expect(alignmentError).toContainText('切回「字」');
+    await expect(alignmentError).toContainText('符合「詞」單位的預標記');
+  });
+
+  test('Sequence Tagging — supports BIO, BIOES, IOB2, and single-label schemes', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-token-unit-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    await expect(
+      preview.getByTestId('sequence-token-unit-note'),
+    ).toContainText('標記單位：字');
+
+    const schemeSelect = page.getByTestId('sequence-tagging-scheme-select');
+    await expect(schemeSelect.locator('option')).toHaveText([
+      'BIO',
+      'BIOES',
+      'IOB2',
+      '單一標籤',
+    ]);
+    const outputConfigs = await getState(
+      page,
+      'outputConfigs',
+    ) as WindowState['outputConfigs'];
+    expect(outputConfigs.sequence_tagging.tokenization).toEqual({
+      unit: 'character',
+      mode: 'unit_based',
+      punctuation: 'separate',
+      version: 2,
+    });
+
+    const tokens = preview.getByTestId('sequence-token');
+    await expect(tokens.nth(0).getByTestId('sequence-token-text')).toHaveText('台');
+    await expect(tokens.nth(1).getByTestId('sequence-token-text')).toHaveText('積');
+    await expect(tokens.nth(2).getByTestId('sequence-token-text')).toHaveText('電');
+
+    await schemeSelect.selectOption('BIOES');
+    await preview.getByRole('button', { name: 'B-ORG', exact: true }).click();
+    await tokens.nth(0).click();
+    await preview.getByRole('button', { name: 'I-ORG', exact: true }).click();
+    await tokens.nth(1).click();
+    await preview.getByRole('button', { name: 'E-ORG', exact: true }).click();
+    await tokens.nth(2).click();
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('I-ORG');
+    await expect(tokens.nth(2).getByTestId('sequence-token-tag')).toHaveText('E-ORG');
+
+    await preview.getByRole('button', { name: 'S-ORG', exact: true }).click();
+    await tokens.nth(3).click();
+    await expect(tokens.nth(3).getByTestId('sequence-token-tag')).toHaveText('S-ORG');
+
+    await schemeSelect.selectOption('IOB2');
+    await expect(preview.getByTestId('sequence-scheme-help')).toContainText(
+      '相鄰同類實體',
+    );
+    await preview.getByRole('button', { name: 'B-ORG', exact: true }).click();
+    await tokens.nth(0).click();
+    await tokens.nth(1).click();
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+
+    await schemeSelect.selectOption('SINGLE');
+    await expect(preview.getByTestId('sequence-scheme-help')).toContainText(
+      '不含位置前綴',
+    );
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('ORG');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('ORG');
+    await expect(tokens.nth(2).getByTestId('sequence-token-tag')).toHaveText('ORG');
+  });
+
+  test('Sequence Tagging — blocks mismatched token and pre-annotation counts with a locatable error', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-alignment-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input', pre_tags: 'output' },
+    });
+
+    await page.evaluate(() => {
+      const state = window.state as {
+        datasetRawFirstRow?: Record<string, unknown>;
+        previewState?: Record<string, unknown>;
+      };
+      if (state.datasetRawFirstRow) {
+        state.datasetRawFirstRow.pre_tags = ['B-ORG'];
+      }
+      state.previewState = {};
+      window.updateAnnotationPreview?.();
+      window.revalidateCurrentStep?.();
+    });
+
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Token 數量' }),
+    ).toContainText('預標記數量');
+    await expect(page.locator('#nextBtn')).toBeDisabled();
   });
 
   test('Entity Recognition — gold_entities shown in preview', async ({ page }) => {

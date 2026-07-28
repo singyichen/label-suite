@@ -12,7 +12,14 @@
           { "name": "LOC", "color": "#2ECC71" },
           { "name": "TIME", "color": "#F39C12" }
         ],
-        "tagging_scheme": "BIO"
+        "tagging_scheme": "BIO",
+        "tokenization": {
+          "unit": "character",
+          "mode": "unit_based",
+          "punctuation": "separate",
+          "version": 2
+        },
+        "allow_bypass": true
       }
     }
   ]

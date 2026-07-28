@@ -23,6 +23,18 @@ test.describe('Task new output types visual overview', () => {
     await expect(page.getByTestId('sequence-tagging-overview-card')).toContainText(
       'Sequence Tagging 序列標註',
     );
+    await expect(
+      page.getByTestId('sequence-token-unit-note'),
+    ).toContainText('標記單位：字');
+    await expect(
+      page.getByTestId('sequence-token-unit-control'),
+    ).toContainText('字（Character）');
+    await expect(
+      page.getByTestId('sequence-token-unit-control'),
+    ).toContainText('詞（Word）');
+    await expect(
+      page.getByTestId('sequence-tagging-overview-card').getByTestId('sequence-token'),
+    ).toHaveCount(6);
   });
 
   test('relation cards separate trigger spans from semantic relation types', async ({

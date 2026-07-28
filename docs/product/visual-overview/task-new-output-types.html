@@ -211,14 +211,20 @@
         <div class="form-card-body">
           <div class="ann-preview">
             <div class="ann-preview-label">標記預覽</div>
+            <div data-testid="sequence-token-unit-control" style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:10px;">
+              <span style="color:var(--ink-soft);">標記單位</span>
+              <span style="padding:3px 7px;border-radius:5px;background:var(--primary);color:#fff;font-weight:700;">字（Character）</span>
+              <span style="padding:3px 7px;border:1px solid var(--border);border-radius:5px;color:var(--ink-soft);">詞（Word）</span>
+            </div>
+            <div data-testid="sequence-token-unit-note" style="font-size:10px;color:var(--ink-soft);margin-bottom:8px;">標記單位：字；中文與英文皆逐字切分，標點符號獨立成一個 Token</div>
             <div class="ann-preview-sample">
               <div class="tok-row">
-                <div class="tok-cell"><span class="tok-word">Tim</span><span class="tok-tag" style="background:rgba(255,107,107,0.15);color:#DC2626;">B-PER</span></div>
-                <div class="tok-cell"><span class="tok-word">Cook</span><span class="tok-tag" style="background:rgba(255,107,107,0.15);color:#DC2626;">I-PER</span></div>
-                <div class="tok-cell"><span class="tok-word">leads</span><span class="tok-tag" style="background:rgba(148,163,184,0.12);color:var(--ink-muted);">O</span></div>
-                <div class="tok-cell"><span class="tok-word">Apple</span><span class="tok-tag" style="background:rgba(78,205,196,0.15);color:#0D9488;">B-ORG</span></div>
-                <div class="tok-cell"><span class="tok-word">in</span><span class="tok-tag" style="background:rgba(148,163,184,0.12);color:var(--ink-muted);">O</span></div>
-                <div class="tok-cell"><span class="tok-word">Cupertino</span><span class="tok-tag" style="background:rgba(69,183,209,0.15);color:#0284C7;">B-LOC</span></div>
+                <div class="tok-cell" data-testid="sequence-token"><span class="tok-word">台</span><span class="tok-tag" style="background:rgba(78,205,196,0.15);color:#0D9488;">B-ORG</span></div>
+                <div class="tok-cell" data-testid="sequence-token"><span class="tok-word">積</span><span class="tok-tag" style="background:rgba(78,205,196,0.15);color:#0D9488;">I-ORG</span></div>
+                <div class="tok-cell" data-testid="sequence-token"><span class="tok-word">電</span><span class="tok-tag" style="background:rgba(78,205,196,0.15);color:#0D9488;">I-ORG</span></div>
+                <div class="tok-cell" data-testid="sequence-token"><span class="tok-word">在</span><span class="tok-tag" style="background:rgba(148,163,184,0.12);color:var(--ink-muted);">O</span></div>
+                <div class="tok-cell" data-testid="sequence-token"><span class="tok-word">台</span><span class="tok-tag" style="background:rgba(69,183,209,0.15);color:#0284C7;">B-LOC</span></div>
+                <div class="tok-cell" data-testid="sequence-token"><span class="tok-word">北</span><span class="tok-tag" style="background:rgba(69,183,209,0.15);color:#0284C7;">I-LOC</span></div>
               </div>
             </div>
             <div class="re-ent-btns">
@@ -226,6 +232,7 @@
               <span class="re-ent-btn" style="color:#4ECDC4;border-color:#4ECDC4;">ORG</span>
               <span class="re-ent-btn" style="color:#45B7D1;border-color:#45B7D1;">LOC</span>
             </div>
+            <div style="font-size:10px;color:var(--ink-soft);margin-top:6px;">標記方案：BIO / BIOES / IOB2 / 單一標籤</div>
             <div class="bypass-bar"><label class="bypass-opt"><input type="checkbox" disabled /> 無法判定 (Bypass)</label></div>
           </div>
         </div>
