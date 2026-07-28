@@ -36,7 +36,7 @@
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `in-progress` | `feat/regression-slider-ui` | spec v1.7.0；規格狀態：Draft；VA Annotator 介面採雙列彩色滑桿、跟隨數值標籤與可直接輸入小數的右側欄位 |
 | task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `spec-ready` | `feat/generation-evidence-output-prefill` | spec v6.0.0；規格狀態：Draft；`free_text` 移除參考答案顯示設定，Step 2 依 Evidence → Input → 回答框呈現，回答區只保留「自由文字」標題；Output 角色資料直接作為回答預標記，未指定 Output 時保持空白；014／015／017 consumer 契約延後同步 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/task-management/013-free-text-guidance` | spec v6.1.0；規格狀態：Draft；`free_text` Step 2 依 Evidence → Input → 回答框呈現且 Output 角色資料預填回答框（v6.0.0），Evidence 全資料完整性檢查與輸入／作答指示設定已實作（v6.1.0），`show_reference` 已退役；014／015／017 consumer 契約延後同步 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-28 | `task-management-013` 更新至 v6.1.0 並進入 `in-progress`：Evidence 欄位新增全資料完整性結果與缺值阻擋；`free_text` 新增必要且支援 zh/en 預設的輸入區／作答區說明，設定值即時同步預覽與 Code，主要標題不再暴露原始 JSON key；舊 config 會補 instruction 並清除 v6.0.0 退役 key。Prototype 與 Playwright 回歸測試同步於 `feat/task-management/013-free-text-guidance`；014／015 consumer 契約留待後續同步。 |
 | 2026-07-24 | `task-management-013` 更新至 v6.0.0：破壞性移除 `free_text.show_reference`、舊名 `show_reference_to_annotator` 與「顯示參考答案給標記者」設定；指定 Evidence 時，Step 2 依「背景參考 (Evidence) → Input → 回答框」顯示，回答區只保留「自由文字」標題，Output 角色資料直接預填回答框，未指定 Output 時保持空白。同步 producer-side prototype、Playwright、`rendersEvidencePreview` metadata 與 ground-truth 安全界線；014／015／017 consumer 同步維持延後。 |
 | 2026-07-24 | `task-management-013` 更新至 v5.2.1：v5.1.0 階層選擇器攤平與保持開啟、v5.2.0 taxonomy 分支刪除確認改用 UXC-10 頁內 modal、v5.2.1 釐清下游延後範圍僅限 014／015／017 consumer 端（同步修正 ADR-029）。producer-side prototype 已於 `feat/hierarchical-multi-label-taxonomy` 實作（樹編輯器、攤平選擇器、刪除確認 modal、資料路徑與 `max_selections` 驗證），更正 v5.0.0 列「本階段不修改 prototype」的描述。 |
 | 2026-07-24 | `task-management-013` 更新至 v5.0.0 並調整為 `spec-ready`：`multi_label.label_options` 改為 bounded recursive taxonomy，新增 `taxonomy-tree`、stable ID、leaf-only preview、flat／hierarchical shape-aware 正規化、8 層／500 節點／100 字元資源界線及 JSON/YAML、鍵盤、RWD 驗收規劃；保留原 flat fixture，另規劃 hierarchical fixture。014／015／017 consumer 顯示、提交與統計契約延後同步，本階段不修改 prototype 或程式碼。 |
