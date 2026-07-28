@@ -2517,7 +2517,7 @@ function validateStep2(showErrors) {
         else if (f.type === 'text') {
           if (typeof val !== 'string' || !val.trim()) {
             ok = false;
-          } else if (f.maxLength != null && val.length > f.maxLength) {
+          } else if (f.maxLength != null && val.trim().length > f.maxLength) {
             ok = false;
             if (!schemaErrMsg) {
               schemaErrMsg = t('errTextMaxLength')
@@ -3954,11 +3954,15 @@ function getDatasetPreviewText() {
     return state.fieldRoleMap[col] === 'input';
   });
   if (inputCols.length > 0) {
+    /* Once Input roles are assigned, never fall back to other columns —
+       the longest-string fallback could surface Evidence or Output data */
     var vals = inputCols.map(function(col) {
       var v = raw[col];
-      return (typeof v === 'string') ? v : null;
-    }).filter(Boolean);
+      if (v === undefined || v === null) return null;
+      return (typeof v === 'string') ? v : String(v);
+    }).filter(function(v) { return v !== null && v !== ''; });
     if (vals.length > 0) return vals.join('\n');
+    return null;
   }
   var bestCol = null;
   var bestLen = 0;
@@ -5423,31 +5427,35 @@ function renderFreeTextPreview(container, outKey) {
   var ps = ensurePreviewState(outKey, { text: outputVal || '', _seeded: !!outputVal });
   if (outputVal && !ps._seeded) { ps.text = outputVal; ps._seeded = true; }
 
-  var inputInstruction = typeof cfg.input_instruction === 'string' && cfg.input_instruction.trim()
+  /* A blank stored instruction must stay blank in the preview — substituting
+     the default here would hide why Step 2 validation is failing */
+  var inputInstruction = typeof cfg.input_instruction === 'string'
     ? cfg.input_instruction.trim()
     : (state.lang === 'zh' ? '請閱讀以下內容' : 'Read the following content');
-  var outputInstruction = typeof cfg.output_instruction === 'string' && cfg.output_instruction.trim()
+  var outputInstruction = typeof cfg.output_instruction === 'string'
     ? cfg.output_instruction.trim()
     : (state.lang === 'zh' ? '請輸入回答' : 'Enter your response');
 
   /* Another selected output (e.g. entity_recognition) already renders the
-     input text; skip free_text's own input block to avoid duplicating it */
+     input text; keep the editable instruction but skip the duplicate content */
   var otherOwnsInputPreview = state.selectedOutputTypes.some(function(k) {
     var reg = OUTPUT_TYPE_REGISTRY[k];
     return k !== outKey && reg && reg.rendersInputPreview === true;
   });
 
+  var inputWrap = document.createElement('div');
   if (!otherOwnsInputPreview) {
-    var inputWrap = document.createElement('div');
     inputWrap.setAttribute('data-testid', 'generation-input-preview');
+  }
 
-    var inputTitle = document.createElement('div');
-    inputTitle.className = 'annotation-preview-task-title';
-    inputTitle.style.marginBottom = '6px';
-    inputTitle.setAttribute('data-testid', 'free-text-input-instruction');
-    inputTitle.textContent = inputInstruction;
-    inputWrap.appendChild(inputTitle);
+  var inputTitle = document.createElement('div');
+  inputTitle.className = 'annotation-preview-task-title';
+  inputTitle.style.marginBottom = '6px';
+  inputTitle.setAttribute('data-testid', 'free-text-input-instruction');
+  inputTitle.textContent = inputInstruction;
+  inputWrap.appendChild(inputTitle);
 
+  if (!otherOwnsInputPreview) {
     var realText = getDatasetPreviewText();
     var inputSample = document.createElement('div');
     inputSample.className = 'annotation-preview-sample';
@@ -5457,12 +5465,12 @@ function renderFreeTextPreview(container, outKey) {
       : 'This is sample text for the free-text response preview.');
     inputSample.textContent = inputText.length > 500 ? inputText.substring(0, 500) + '…' : inputText;
     inputWrap.appendChild(inputSample);
-    container.appendChild(inputWrap);
-
-    var divider = document.createElement('div');
-    divider.className = 'annotation-preview-divider';
-    container.appendChild(divider);
   }
+  container.appendChild(inputWrap);
+
+  var divider = document.createElement('div');
+  divider.className = 'annotation-preview-divider';
+  container.appendChild(divider);
 
   var responseArea = document.createElement('div');
   responseArea.setAttribute('data-testid', 'free-text-response-area');

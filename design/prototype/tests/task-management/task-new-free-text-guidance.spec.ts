@@ -167,6 +167,57 @@ test.describe('Free-text task guidance and Evidence completeness', () => {
     await expect(page.locator('#nextBtn')).toBeEnabled();
   });
 
+  test('mixed output keeps the input instruction while skipping the duplicate input block', async ({
+    page,
+  }) => {
+    await setupFreeTextStep1(page, COMPLETE_ROWS);
+    await page.locator('#taskCategoryChips [data-key="sequence"]').click();
+    await page
+      .locator('#taskOutputTypeChips [data-key="entity_recognition"]')
+      .click();
+    await page.locator('#nextBtn').click();
+    await expect(page.locator('#step2Panel')).not.toHaveClass(/hidden/);
+
+    // entity_recognition owns the input preview, so free_text must not repeat
+    // the input content — but its editable instruction stays observable.
+    await expect(page.getByTestId('free-text-input-content')).toHaveCount(0);
+    await expect(page.getByTestId('free-text-input-instruction')).toHaveText(
+      '請閱讀以下內容',
+    );
+    await page
+      .getByTestId('free-text-input-instruction-input')
+      .fill('請先閱讀實體標記文本');
+    await expect(page.getByTestId('free-text-input-instruction')).toHaveText(
+      '請先閱讀實體標記文本',
+    );
+  });
+
+  test('preview input content stays scoped to the Input field for non-string values', async ({
+    page,
+  }) => {
+    const numericInputRows = COMPLETE_ROWS.map((row) => ({
+      ...row,
+      text: 12345 as unknown as string,
+    }));
+    await openFreeTextStep2(page, numericInputRows);
+
+    const inputContent = page.getByTestId('free-text-input-content');
+    await expect(inputContent).toHaveText('12345');
+    // Evidence / Output columns must never leak into the input block
+    await expect(inputContent).not.toContainText('調查涵蓋三個虛構行政區。');
+    await expect(inputContent).not.toContainText('研究團隊完成城市樹木調查。');
+  });
+
+  test('cleared instructions show the actual empty value instead of the default', async ({
+    page,
+  }) => {
+    await openFreeTextStep2(page);
+
+    await page.getByTestId('free-text-input-instruction-input').fill('   ');
+    await expect(page.getByTestId('free-text-input-instruction')).toHaveText('');
+    await expect(page.locator('#nextBtn')).toBeDisabled();
+  });
+
   test('legacy free-text config receives instruction defaults on import', async ({
     page,
   }) => {
