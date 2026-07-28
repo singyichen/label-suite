@@ -24,8 +24,11 @@ test.describe('Task new output types visual overview', () => {
       'Sequence Tagging 序列標註',
     );
     await expect(
-      page.getByTestId('sequence-token-unit-note'),
-    ).toContainText('標記單位：字');
+      page.getByTestId('sequence-tagging-overview-card'),
+    ).toContainText('原始文本');
+    await expect(
+      page.getByTestId('sequence-source-text'),
+    ).toContainText('台積電在台北');
     await expect(
       page.getByTestId('sequence-token-unit-control'),
     ).toContainText('字（Character）');

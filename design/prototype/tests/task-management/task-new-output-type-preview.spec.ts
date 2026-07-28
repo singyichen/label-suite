@@ -673,7 +673,10 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
       '.output-accordion[data-output-key="sequence_tagging"]',
     );
     const unitSelect = page.getByTestId('sequence-token-unit-select');
-    const unitNote = preview.getByTestId('sequence-token-unit-note');
+    const sourceText = preview.getByTestId('sequence-source-text');
+    await expect(
+      preview.getByTestId('sequence-source-text-label'),
+    ).toHaveText('原始文本');
     const tokens = preview.getByTestId('sequence-token');
 
     await expect(unitSelect.locator('option')).toHaveText([
@@ -684,14 +687,18 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
       sequenceSettings.locator('.form-field > .field-label'),
     ).toHaveText(['標記單位*', '標籤類型*', '標記方案*']);
     await expect(unitSelect).toHaveValue('character');
-    await expect(unitNote).toContainText('標記單位：字');
+    await expect(sourceText).toHaveText(
+      '台積電董事長魏哲家今天出席台北國際半導體論壇並發表主題演講',
+    );
     await expect(tokens.nth(0).getByTestId('sequence-token-text')).toHaveText('台');
     await expect(tokens.nth(1).getByTestId('sequence-token-text')).toHaveText('積');
     await expect(tokens.nth(2).getByTestId('sequence-token-text')).toHaveText('電');
     const characterCount = await tokens.count();
 
     await unitSelect.selectOption('word');
-    await expect(unitNote).toContainText('標記單位：詞');
+    await expect(sourceText).toHaveText(
+      '台積電董事長魏哲家今天出席台北國際半導體論壇並發表主題演講',
+    );
     await expect(
       tokens.filter({ has: page.getByTestId('sequence-token-text').filter({ hasText: /^董事長$/ }) }),
     ).toHaveCount(1);
@@ -726,7 +733,7 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expect(tokens.last().getByTestId('sequence-token-text')).toHaveText('.');
 
     await unitSelect.selectOption('character');
-    await expect(unitNote).toContainText('標記單位：字');
+    await expect(sourceText).toHaveText('The chairman of TSMC.');
     await expect(tokens.nth(0).getByTestId('sequence-token-text')).toHaveText('T');
     await expect(tokens.nth(1).getByTestId('sequence-token-text')).toHaveText('h');
     await expect(tokens.nth(2).getByTestId('sequence-token-text')).toHaveText('e');
@@ -831,8 +838,8 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
 
     const preview = page.locator('#annotationPreview');
     await expect(
-      preview.getByTestId('sequence-token-unit-note'),
-    ).toContainText('標記單位：字');
+      preview.getByTestId('sequence-source-text'),
+    ).toHaveText('台積電董事長魏哲家今天出席台北國際半導體論壇並發表主題演講');
 
     const schemeSelect = page.getByTestId('sequence-tagging-scheme-select');
     await expect(schemeSelect.locator('option')).toHaveText([
@@ -1137,6 +1144,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     await expectNoEvidenceInPreview(page, '術前仍有必要');
 
     const preview = page.locator('#annotationPreview');
+    await expect(
+      preview.locator('.annotation-preview-task-title').filter({ hasText: '原始文本' }),
+    ).toHaveCount(1);
     const pairLabels = preview.locator('.annotation-preview-pair-label');
     await expect(pairLabels).toHaveCount(2);
     await expect(pairLabels.nth(0)).toContainText('Premise');
@@ -1194,6 +1204,9 @@ test.describe('Step 2 preview: composite task data files', () => {
     expect(html).toContain('整合預覽');
 
     const preview = page.locator('#annotationPreview');
+    await expect(
+      preview.locator('.annotation-preview-task-title').filter({ hasText: '整合預覽' }),
+    ).toHaveText('整合預覽');
     await expect(preview).toContainText('實體類型');
     await expect(preview).toContainText('實體列表');
 
@@ -1301,6 +1314,11 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const html = await page.locator('#annotationPreview').innerHTML();
     expect(html).toContain('整合預覽');
+    await expect(
+      page
+        .locator('#annotationPreview .annotation-preview-task-title')
+        .filter({ hasText: '整合預覽' }),
+    ).toHaveText('整合預覽');
     expect(html).toContain('多維度回歸');
     expect(html).toContain('rottenrockteahouse');
 
