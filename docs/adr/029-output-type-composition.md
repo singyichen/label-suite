@@ -111,7 +111,7 @@ Each output type is a self-contained unit with its own config fragment schema, a
 | `sequence_tagging` | `entities[]: {name, color?}`, `tagging_scheme` | Token-level tagging | token_f1, token_accuracy |
 | `entity_recognition` | `entities[]` or `polarity_options[]`, `allow_overlapping`, `scheme` | Entity selection + label | entity_f1, span_f1 |
 | `relation_identification` | `relation_types[]`, `source_output` | Entity + relation drawing | triple_f1 |
-| `free_text` | `max_length`, `show_reference` | Text area | ROUGE, BERTScore, BLEU |
+| `free_text` | `max_length` | Text area | ROUGE, BERTScore, BLEU |
 
 The retired keys `entity_relation` and `boundary` are not part of the catalog. The former keys `span`, `relation_triple`, and `token_class` are also invalid; active configs must use `entity_recognition`, `relation_identification`, and `sequence_tagging` respectively.
 
@@ -232,11 +232,9 @@ task:
     - type: free_text
       config:
         max_length: 500
-        show_reference: false
   field_role_map:
-    instruction: input
-    background: input
     question: input
+    background: evidence
     answer: output
 ```
 

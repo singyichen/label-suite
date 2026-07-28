@@ -159,10 +159,10 @@ function getState(page: Page, key: string) {
   );
 }
 
-// FR-003g-2: evidence-role fields must never render in the Step 2 preview.
+// FR-003g-2: output types without rendersEvidencePreview keep Evidence hidden.
 // The legacy card class guards against a verbatim revert; `evidenceText`
-// must be a substring unique to the evidence field so the check also
-// catches re-introduction under different markup.
+// must be a substring unique to the evidence field so the check also catches
+// re-introduction under different markup for non-generation previews.
 async function expectNoEvidenceInPreview(page: Page, evidenceText?: string) {
   const preview = page.locator('#annotationPreview');
   await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
@@ -280,7 +280,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     expect(ps.multi_label.selected!.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('free_text — gold_answer pre-filled in textarea', async ({ page }) => {
+  test('free_text — Evidence, Input, and pre-filled answer render in order', async ({
+    page,
+  }) => {
     await setupAndGoToStep2(page, {
       taskName: 'free-text-test',
       category: 'generation',
@@ -297,10 +299,100 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
 
     const textarea = page.locator('#annotationPreview textarea');
     await expect(textarea).toBeVisible();
-    await expect(textarea).not.toBeEmpty();
+    await expect(textarea).toHaveValue(
+      '台灣癌症存活率逾六成，但近半患者有情緒困擾。癌症希望基金會於台北設立專屬諮商所，提供每人最多六次免費心理諮商。',
+    );
 
-    await expectNoEvidenceInPreview(page, '免費諮商服務');
+    const preview = page.locator('#annotationPreview');
+    await expect(
+      preview.getByText('自由文字', { exact: true }),
+    ).toBeVisible();
+    await expect(
+      preview.getByText('gold_answer', { exact: true }),
+    ).toHaveCount(0);
+    const evidenceHeading = preview.getByText('背景參考 (Evidence)', {
+      exact: true,
+    });
+    const evidenceContent = preview.getByText(
+      /癌症希望基金會在台北成立癌友專屬心理諮商所/,
+    );
+    const inputContent = preview.getByText(
+      /台灣癌症五年存活率已突破六成/,
+    );
+    await expect(evidenceHeading).toBeVisible();
+    await expect(evidenceContent).toBeVisible();
+    await expect(inputContent).toBeVisible();
+
+    const order = await preview.evaluate((root) => {
+      const evidence = root.querySelector('[data-testid="generation-evidence-preview"]');
+      const input = root.querySelector('[data-testid="generation-input-preview"]');
+      const answer = root.querySelector('[data-testid="generation-answer-input"]');
+      if (!evidence || !input || !answer) return [];
+      return [evidence, input, answer]
+        .map((node) => Array.from(root.querySelectorAll('*')).indexOf(node));
+    });
+    expect(order).toHaveLength(3);
+    expect(order[0]).toBeLessThan(order[1]);
+    expect(order[1]).toBeLessThan(order[2]);
   });
+
+  test('free_text — answer stays blank when no Output field is selected', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'free-text-blank-answer-test',
+      category: 'generation',
+      outputType: 'free_text',
+      inputType: 'single_item',
+      dataFile: 'free-text.json',
+      roles: { text: 'input', reference: 'evidence' },
+    });
+
+    const textarea = page.getByTestId('generation-answer-input');
+    await expect(textarea).toBeVisible();
+    await expect(textarea).toHaveValue('');
+    await expect(
+      page.locator('#annotationPreview').getByText('回答', { exact: true }),
+    ).toHaveCount(0);
+  });
+
+  for (const outputTypes of [
+    ['free_text', 'entity_recognition'],
+    ['entity_recognition', 'free_text'],
+  ]) {
+    test(`free_text — mixed output order ${outputTypes.join(' → ')} keeps Input before answer`, async ({
+      page,
+    }) => {
+      await setupAndGoToStep2(page, {
+        taskName: `free-text-mixed-${outputTypes.join('-')}`,
+        category: ['generation', 'sequence'],
+        outputType: outputTypes,
+        inputType: 'single_item',
+        dataFile: 'free-text.json',
+        roles: { text: 'input', gold_answer: 'output', reference: 'evidence' },
+      });
+
+      const preview = page.locator('#annotationPreview');
+      const order = await preview.evaluate((root) => {
+        const evidence = root.querySelector(
+          '[data-testid="generation-evidence-preview"]',
+        );
+        const input = root.querySelector('.absa-preview-text');
+        const answer = root.querySelector(
+          '[data-testid="generation-answer-input"]',
+        );
+        if (!evidence || !input || !answer) return [];
+        const descendants = Array.from(root.querySelectorAll('*'));
+        return [evidence, input, answer].map((node) =>
+          descendants.indexOf(node),
+        );
+      });
+
+      expect(order).toHaveLength(3);
+      expect(order[0]).toBeLessThan(order[1]);
+      expect(order[1]).toBeLessThan(order[2]);
+    });
+  }
 
   test('single_dim — gold_score shown on slider', async ({ page }) => {
     await setupAndGoToStep2(page, {
@@ -775,9 +867,12 @@ test.describe('Step 2 preview: composite task data files', () => {
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.free_text.text!.length).toBeGreaterThan(50);
 
-    await expectNoEvidenceInPreview(page, '免費心理諮商');
+    const preview = page.locator('#annotationPreview');
+    await expect(
+      preview.getByTestId('generation-evidence-preview'),
+    ).toContainText('免費心理諮商');
 
-    const textarea = page.locator('#annotationPreview textarea');
+    const textarea = preview.getByTestId('generation-answer-input');
     await expect(textarea).toBeVisible();
     await expect(textarea).not.toBeEmpty();
   });

@@ -158,10 +158,10 @@ max_selections: 0
 
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
-| 自由文字（ `free_text` ） | 開放式文字輸出 | Summarization（摘要）、Question Answering（問答）、Translation（翻譯）、Paraphrase（改寫） | 「台積電今日宣布與輝達合作，共同開發下一代 AI 晶片，預計明年量產。」 | 台積電與輝達合作開發 AI 晶片，明年量產。 | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |
+| 自由文字（ `free_text` ） | 開放式文字輸出 | Summarization（摘要）、Question Answering（問答）、Translation（翻譯）、Paraphrase（改寫） | 「台積電今日宣布與輝達合作，共同開發下一代 AI 晶片，預計明年量產。」 | 台積電與輝達合作開發 AI 晶片，明年量產。 | `max_length` |
 
 > 生成任務的「評估」通常需搭配另一個標記任務（ e.g. 人工評分回歸 ）或自動指標（ ROUGE / BERTScore ）。
-> `show_reference_to_annotator` 控制標記者是否可見參考輸出；`evaluation_reference_required` 控制系統評估是否需要 reference。
+> Step 1 指定的 Evidence 會顯示於 Input 上方；指定 Output 即代表以該欄位資料預填回答框，未指定 Output 時回答框保持空白。系統評估層的 `evaluation_reference_required` 不屬於 `free_text` output config。
 
 ---
 
@@ -186,4 +186,4 @@ max_selections: 0
 | 序列（ sequence ） | 單一項目（ single_item ） | Sequence Tagging 序列標註（ `sequence_tagging` ） | POS tagging、Chunking（ BIO 格式 ）、NER（ token-level, IOB2 標記格式 ） | `tag_options[]: { name, color? }`, `scheme: IOB2\|BIOES`（ 決定合法 tag 集合，為介面標記格式 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | Entity Recognition 實體辨識（ `entity_recognition` ） | NER（ span-level ）、Aspect Term Extraction、Keyword Extraction、ABSA | `entities[]: { name, color }` 或 `polarity_options[]: { name, color? }`（ 見 `entity_recognition` Config 說明 ） |
 | 序列（ sequence ） | 單一項目（ single_item ） | Relation Identification 關係識別（ `relation_identification` ） | OpenIE、Relation Extraction | `relation_types[]: string`（語意類型標籤） |
-| 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `max_length`, `show_reference_to_annotator`, `evaluation_reference_required` |
+| 生成（ generation ） | 單一項目（ single_item ） | 自由文字（ free_text ） | Summarization、Question Answering、Translation、Paraphrase | `max_length` |

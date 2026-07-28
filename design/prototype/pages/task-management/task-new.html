@@ -1296,12 +1296,10 @@ var REGISTRY = {
     zh: '自由文字生成', en: 'Free Text Generation',
     fields: [
       { key: 'max_length', type: 'number', zh: '最大長度', en: 'Max length', required: true, defaultValue: 512 },
-      { key: 'show_reference_to_annotator', type: 'boolean', zh: '標注者可見參考輸出', en: 'Show reference to annotator', required: false, defaultValue: false },
       { key: 'evaluation_reference_required', type: 'boolean', zh: '系統評估需要參考輸出', en: 'Evaluation reference required', required: false, defaultValue: true },
     ],
     defaultTemplate: {
       max_length: 512,
-      show_reference_to_annotator: false,
       evaluation_reference_required: true,
     },
   },
@@ -1449,13 +1447,13 @@ var OUTPUT_TYPE_REGISTRY = {
   free_text: {
     zh: '自由文字', en: 'Free text',
     source_output: null,
+    rendersEvidencePreview: true,
+    retiredConfigKeys: ['show_reference', 'show_reference_to_annotator'],
     fields: [
       { key: 'max_length', type: 'number', zh: '最大字數', en: 'Max length', required: false, defaultValue: 512, min: 1 },
-      { key: 'show_reference', type: 'boolean', zh: '顯示參考答案給標記者', en: 'Show reference to annotator', required: false, defaultValue: false },
     ],
     defaultConfig: {
       max_length: 512,
-      show_reference: false,
     },
   },
 };
@@ -1642,6 +1640,7 @@ var I18N = {
     uploadConfigBtn: '上傳設定檔（YAML / JSON）',
     settingsPanelLabel: '標記設定',
     annotationPreviewLabel: '標記預覽',
+    previewEvidenceHeading: '背景參考 (Evidence)',
     previewTaskChooseLabel: '請選擇標記',
     previewTaskEntity: '請選擇實體類型',
     previewTaskRelation: '請選擇關係類型',
@@ -1795,6 +1794,7 @@ var I18N = {
     uploadConfigBtn: 'Upload config (YAML / JSON)',
     settingsPanelLabel: 'Label settings',
     annotationPreviewLabel: 'Annotation preview',
+    previewEvidenceHeading: 'Background reference (Evidence)',
     previewTaskChooseLabel: 'Choose labels',
     previewTaskEntity: 'Choose entity types',
     previewTaskRelation: 'Choose relation types',
@@ -2145,6 +2145,9 @@ function configToCode() {
           });
         }
         Object.keys(cfg).forEach(function(k) { if (k[0] !== '_') finalCfg[k] = cfg[k]; });
+        if (outReg && Array.isArray(outReg.retiredConfigKeys)) {
+          outReg.retiredConfigKeys.forEach(function(k) { delete finalCfg[k]; });
+        }
         if (outReg && outReg.source_output) {
           if (state.selectedOutputTypes.indexOf(outReg.source_output) >= 0) {
             finalCfg.source_output = outReg.source_output;
@@ -5308,34 +5311,16 @@ function renderSpanOnlyPreview(container, outKey) {
 function renderFreeTextPreview(container, outKey) {
   var cfg = state.outputConfigs[outKey] || {};
   var maxLen = cfg.max_length || 512;
-  var showRef = cfg.show_reference || false;
   var outputVal = getOutputFieldValue(outKey);
   var ps = ensurePreviewState(outKey, { text: outputVal || '', _seeded: !!outputVal });
   if (outputVal && !ps._seeded) { ps.text = outputVal; ps._seeded = true; }
 
   previewTextBlock(container);
 
-  if (showRef) {
-    var refTitle = document.createElement('div');
-    refTitle.style.cssText = 'font-size:0.8rem;color:var(--color-text-soft);margin-bottom:4px;';
-    refTitle.textContent = state.lang === 'zh' ? '參考答案（僅供比對）' : 'Reference (for comparison)';
-    container.appendChild(refTitle);
-    var refBox = document.createElement('div');
-    refBox.style.cssText = 'padding:8px 12px;background:#FFF8E1;border:1px solid #FFE082;border-radius:var(--radius-md);margin-bottom:12px;font-size:0.85rem;color:#F57F17;';
-    refBox.textContent = outputVal || (state.lang === 'zh' ? '（參考答案會在此處顯示）' : '(Reference answer shown here)');
-    container.appendChild(refBox);
-  }
-
-  var outCols = getFieldsByRole('output');
-  var ansTitle = document.createElement('div');
-  ansTitle.className = 'annotation-preview-task-title';
-  ansTitle.style.marginBottom = '6px';
-  ansTitle.textContent = outCols.length > 0 ? outCols[0] : (state.lang === 'zh' ? '回答' : 'Answer');
-  container.appendChild(ansTitle);
-
   var textarea = document.createElement('textarea');
   textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
   textarea.placeholder = state.lang === 'zh' ? '在此輸入回答…' : 'Type your answer here…';
+  textarea.setAttribute('data-testid', 'generation-answer-input');
   textarea.value = ps.text;
   textarea.maxLength = maxLen;
   textarea.addEventListener('input', function() { ps.text = textarea.value; charCount.textContent = textarea.value.length + ' / ' + maxLen; });
@@ -6337,6 +6322,43 @@ function updateAnnotationPreview() {
       var outReg = OUTPUT_TYPE_REGISTRY[outKey];
       return outReg && outReg.rendersInputPreview === true;
     });
+    var hasEvidencePreviewOutput = state.selectedOutputTypes.some(function(outKey) {
+      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+      return outReg && outReg.rendersEvidencePreview === true;
+    });
+    var evidenceCols = getFieldsByRole('evidence');
+    if (hasEvidencePreviewOutput && evidenceCols.length > 0) {
+      var evidenceWrap = document.createElement('div');
+      evidenceWrap.setAttribute('data-testid', 'generation-evidence-preview');
+
+      var evidenceHeading = document.createElement('div');
+      evidenceHeading.className = 'annotation-preview-task-title';
+      evidenceHeading.style.marginBottom = '8px';
+      evidenceHeading.textContent = t('previewEvidenceHeading');
+      evidenceWrap.appendChild(evidenceHeading);
+
+      evidenceCols.forEach(function(col) {
+        if (evidenceCols.length > 1) {
+          var evidenceLabel = document.createElement('div');
+          evidenceLabel.className = 'annotation-preview-pair-label';
+          evidenceLabel.textContent = col;
+          evidenceWrap.appendChild(evidenceLabel);
+        }
+        var evidenceValue = state.datasetRawFirstRow ? state.datasetRawFirstRow[col] : undefined;
+        var evidenceText = evidenceValue === undefined || evidenceValue === null
+          ? ''
+          : (typeof evidenceValue === 'object' ? JSON.stringify(evidenceValue) : String(evidenceValue));
+        var evidenceContent = document.createElement('div');
+        evidenceContent.className = 'annotation-preview-sample';
+        evidenceContent.textContent = evidenceText.length > 500 ? evidenceText.substring(0, 500) + '…' : evidenceText;
+        evidenceWrap.appendChild(evidenceContent);
+      });
+
+      preview.appendChild(evidenceWrap);
+      var evidenceDivider = document.createElement('div');
+      evidenceDivider.className = 'annotation-preview-divider';
+      preview.appendChild(evidenceDivider);
+    }
     /* Show input text (single_item or item_pair) before output previews */
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
     if (!hasOutputOwnedInputPreview && currentInputType === 'item_pair') {
@@ -6379,6 +6401,9 @@ function updateAnnotationPreview() {
 
       var _sample = document.createElement('div');
       _sample.className = 'annotation-preview-sample';
+      if (hasEvidencePreviewOutput) {
+        _sample.setAttribute('data-testid', 'generation-input-preview');
+      }
       _sample.textContent = sampleText.length > 300 ? sampleText.substring(0, 300) + '…' : sampleText;
       preview.appendChild(_sample);
       var _sampleDiv = document.createElement('div');
@@ -6426,7 +6451,19 @@ function updateAnnotationPreview() {
       }
     } else {
       /* Preview cards for independent outputs */
-      state.selectedOutputTypes.forEach(function(outKey, idx) {
+      var orderedPreviewOutputs = state.selectedOutputTypes
+        .map(function(outKey, originalIndex) {
+          var outReg = OUTPUT_TYPE_REGISTRY[outKey] || {};
+          var previewRank = outReg.rendersInputPreview === true
+            ? 0
+            : (outReg.rendersEvidencePreview === true ? 2 : 1);
+          return { key: outKey, rank: previewRank, originalIndex: originalIndex };
+        })
+        .sort(function(a, b) {
+          return a.rank - b.rank || a.originalIndex - b.originalIndex;
+        })
+        .map(function(item) { return item.key; });
+      orderedPreviewOutputs.forEach(function(outKey, idx) {
         if (idx > 0) {
           var divider = document.createElement('div');
           divider.className = 'annotation-preview-divider';

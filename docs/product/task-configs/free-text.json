@@ -6,8 +6,7 @@
     {
       "type": "free_text",
       "config": {
-        "max_length": 256,
-        "show_reference": false
+        "max_length": 256
       }
     }
   ]
