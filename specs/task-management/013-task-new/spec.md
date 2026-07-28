@@ -1,7 +1,7 @@
 ---
-功能分支: feat/sequence-tagging-token-units
+功能分支: feat/sequence-preview-source-text
 建立日期: 2026-04-20
-版本: 6.3.0
+版本: 6.4.0
 狀態: Draft
 ---
 
@@ -49,6 +49,7 @@
 - **v6.1.0 Evidence 完整性與自由文字指示**：已指定為 Evidence 的欄位與 Input 採相同全資料完整性檢查，缺值時阻擋進入 Step 2；`free_text` 新增必要的 `input_instruction`／`output_instruction`，由 registry 產生設定欄位並取代原始 JSON key 作為預覽主要標題（作答區標題由 v6.0.0 的固定「自由文字」改為可設定的 `output_instruction`，輸出卡片標題不變）；已移除的 `show_reference` 不得再顯示或序列化。
 - **v6.2.0 Sequence Tagging Token 單位與方案**：`sequence_tagging` 採固定 language-aware v1 tokenization（中文逐字、英文逐詞、標點獨立、空白不產生 Token），保留 `BIO / BIOES / IOB2` 並新增無位置前綴的 `SINGLE`。Step 2 專屬預覽以完整 tag 按鈕精確套用到 Token，不再依前一 Token 自動推斷；`tokens` 與可見預標記數量不一致時顯示錯誤並阻擋前進。本版僅完成 013 producer-side，014／015／016／017 consumer 同步延後。
 - **v6.3.0 Sequence Tagging 標記單位**：將「標記單位」與「標記方案」拆成兩個獨立設定維度。`tokenization.unit` 支援 `character / word`，預設 `character`；字模式依可見字元切分，詞模式依語言感知詞界切分，兩者皆略過空白並讓標點獨立。切換單位後 Step 2 Token 網格與規則說明須立即重建，既有預覽 tag 不得錯套到新邊界；可見預標記數量改依目前單位重新驗證。數量不一致且預標記與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路；切換單位使數量重新一致時，可見預標記須自資料重新初始化（Bypass 明確清空的預覽狀態除外）。本版仍只完成 013 producer-side，正式 Annotation Workspace 與其他 consumer 維持延後。
+- **v6.4.0 標記預覽原始文本**：Step 2 序列標註預覽將 Token 網格上方的字／詞切分規則說明，改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本；該文本不隨標記單位切換而改變，切分行為改由 Token 網格本身呈現。通用輸入文字區塊的標籤由 Input 欄位名稱改為「原始文本」（英文 Text）；`item_pair` 於配對區塊上方顯示一次「原始文本」標題並保留兩段文本的欄位名稱小標。`entity_recognition`／`relation_identification` 的互動圈選文本區不另加標題，`free_text` 維持可設定的 `input_instruction` 契約。整合預覽標題由「整合預覽（實體辨識 + 關係識別）」簡化為「整合預覽」（英文 Unified preview）。tokenization 契約與預標記驗證行為不變。
 
 ## 規格常數
 
@@ -295,8 +296,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 7. **Given** 任一輸出類型的 `allow_bypass` 為開啟（預設），**When** 在該輸出類型的預覽勾選「無法判定 (Bypass)」，**Then** 該輸出類型的其他預覽互動控制項被清空並停用，且不影響輸入文字與其他輸出類型的預覽；取消勾選後恢復可操作並重新初始化。
 8. **Given** 在 schema 設定面板將某輸出類型的 `allow_bypass` 關閉，**When** 預覽刷新，**Then** 該輸出類型的預覽不顯示 Bypass 勾選項，且既有的勾選狀態被清除；code 區同步輸出 `allow_bypass: false`。
 9. **Given** 已選輸出類型中至少一項於 registry 宣告 `rendersInputPreview: true`，**When** Step 2 標記預覽載入，**Then** 不顯示額外的通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。
-10. **Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 不顯示重複的通用輸入文字區塊，輸入內容改由專屬 Token 網格完整呈現；設定區依序顯示「標記單位」、「標籤類型」與「標記方案」，預覽顯示目前字／詞切分規則。
-11. **Given** `sequence_tagging` 的標記單位為「字」，**When** 預覽載入中文或英文輸入，**Then** 每個非空白可見字元各自成為 Token，標點獨立；切換為「詞」後，中文依語言感知詞界、英文依單字重新分組，標點仍獨立，Token 網格與規則說明於 100ms 內同步更新。
+10. **Given** 選擇 `sequence_tagging`，**When** Step 2 標記預覽載入，**Then** 不顯示重複的通用輸入文字區塊，輸入內容改由專屬 Token 網格完整呈現；設定區依序顯示「標記單位」、「標籤類型」與「標記方案」，預覽於 Token 網格上方顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本。
+11. **Given** `sequence_tagging` 的標記單位為「字」，**When** 預覽載入中文或英文輸入，**Then** 每個非空白可見字元各自成為 Token，標點獨立；切換為「詞」後，中文依語言感知詞界、英文依單字重新分組，標點仍獨立，Token 網格於 100ms 內同步更新，預覽顯示的原始輸入文本維持原文不變。
 12. **Given** 僅選擇 `relation_identification` 且資料集提供既有實體，**When** Step 2 標記預覽載入，**Then** 僅顯示既有實體的唯讀高亮、關係建構器與三元組列表，不顯示實體類型、實體列表或任何建立／刪除 Span 的控制項，且 config 不輸出 `source_output`。
 13. **Given** 同時選擇 `entity_recognition + relation_identification`，**When** Step 2 標記預覽載入，**Then** 顯示整合預覽並允許先建立／修改實體再建立關係，且 `relation_identification.config.source_output` 自動輸出為 `entity_recognition`。
 14. **Given** 使用者在任一語系進入 Step 1 或 Step 2，**When** taxonomy 與 registry 載入，**Then** `entity_relation`、`boundary`、`span`、`relation_triple`、`token_class` 均不存在，且 `entity_recognition`、`relation_identification`、`sequence_tagging` 分別顯示 Entity Recognition／實體辨識、Relation Identification／關係識別、Sequence Tagging／序列標註。
@@ -326,7 +327,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
   - 每個輸出類型有各自的互動式預覽區塊，使用者可直接操作體驗標記方式
   - 已上傳資料集時，預覽顯示資料集實際文字內容；未上傳時顯示預設範例文字
   - 預設不為 `evidence` 角色欄位顯示獨立區塊；當已選輸出類型於 registry 宣告 `rendersEvidencePreview: true`（目前為 `free_text`）且 Step 1 已指定 Evidence 時，最上方必須顯示「背景參考 (Evidence)」與該欄位的實際內容。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另記錄於 config 的 `evidence_fields`）
-  - 通用輸入文字區塊依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤 + 單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊，呈現配對輸入
+  - 通用輸入文字區塊依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）+ 單一文字區塊；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶欄位名稱標籤的文字區塊，呈現配對輸入
   - 當已選輸出類型均未於 registry 宣告 `rendersInputPreview: true` 時，通用輸入文字區塊位於所有輸出類型預覽之上方；任一已選輸出類型宣告該 metadata 時，專屬或整合預覽負責完整呈現輸入內容，不得再顯示通用輸入文字區塊
   - `sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 宣告 `rendersInputPreview: true`，由專屬或整合預覽完整呈現輸入內容。複合任務依已選輸出類型的 registry metadata 推導，不得以任務名稱硬編判斷
   - 存在相依關係的輸出類型合併為整合預覽（如 `entity_recognition` + `relation_identification` 合併為含圈選文字、實體列表、關係建構器的統一介面）
@@ -556,7 +557,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003b**：schema 設定區與 code 區必須同步同一份 config，並在提交前通過所有輸出類型的 schema 驗證。
 - **FR-003c**：新增 output type 應可透過 registry 擴充，不修改核心流程（Step 1–4）。
 - **FR-003d**：`OUTPUT_TYPE_REGISTRY` 必須包含 8 種輸出類型：`sequence_tagging`、`entity_recognition`、`relation_identification`、`single_label`、`multi_label`、`single_dim`、`multi_dim`、`free_text`。每種輸出類型需定義 `fields`（欄位清單）、`defaultConfig`（預設值）與 zh/en 顯示名稱；其中 `sequence_tagging` 顯示 Sequence Tagging／序列標註，`entity_recognition` 顯示 Entity Recognition／實體辨識，`relation_identification` 顯示 Relation Identification／關係識別。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得存在於 registry，亦不得作為相容別名接受。
-- **FR-003d-1**：`sequence_tagging` 必須支援 `entities`（`{ name, color }[]`）、`tokenization`（`{ unit: character | word, mode: unit_based, punctuation: separate, version: 2 }`）與 `tagging_scheme`（`BIO | BIOES | IOB2 | SINGLE`）。`tokenization.unit` 與 `tagging_scheme` 為兩個獨立可組合維度；設定面板依序顯示必要的「標記單位」、「標籤類型」與「標記方案」，不得把 `character-BIO` 等組合寫死為單一 enum。字模式以 Unicode grapheme 為單位，中文漢字與英文字母皆逐字切分；詞模式以語言感知詞界切分，中文可形成多字詞、英文與拉丁字母／數字連續詞（例如 `the`、`COVID-19`）保持一個 Token。兩種模式皆略過空白並讓標點獨立。預覽以 Input 原文依目前單位重建 Token；切換單位後須清除無法安全對應新邊界的暫存 tag，於 100ms 內更新 Token 網格與規則說明。預覽須依方案產生完整可套用 tag：BIO=`B/I/O`、BIOES=`B/I/O/E/S`、IOB2=`B/I/O` 且每個實體起點一律使用 `B`、SINGLE=直接類型標籤或 `O`。使用者先選完整 tag 再點擊 Token，系統不得只依前一 Token 猜測前綴。可見預標記只在標記數量與目前單位產生的 Token 數量一致時初始化；Token 邊界變更（切換單位或更換資料列）後數量重新一致時須自資料重新初始化，Bypass 明確清空的預覽狀態除外。切換單位造成不一致時顯示兩側數量、阻擋進入 Step 3，且不得靜默保留或錯套舊 tag；預標記數量與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路。驗證：`entities` 不得為空且不得含空白項目；`tokenization.unit` 必須為列舉值。
+- **FR-003d-1**：`sequence_tagging` 必須支援 `entities`（`{ name, color }[]`）、`tokenization`（`{ unit: character | word, mode: unit_based, punctuation: separate, version: 2 }`）與 `tagging_scheme`（`BIO | BIOES | IOB2 | SINGLE`）。`tokenization.unit` 與 `tagging_scheme` 為兩個獨立可組合維度；設定面板依序顯示必要的「標記單位」、「標籤類型」與「標記方案」，不得把 `character-BIO` 等組合寫死為單一 enum。字模式以 Unicode grapheme 為單位，中文漢字與英文字母皆逐字切分；詞模式以語言感知詞界切分，中文可形成多字詞、英文與拉丁字母／數字連續詞（例如 `the`、`COVID-19`）保持一個 Token。兩種模式皆略過空白並讓標點獨立。預覽於 Token 網格上方顯示「原始文本」標題（英文 Text）與未經切分的 Input 原始文本，並以 Input 原文依目前單位重建 Token；切換單位後須清除無法安全對應新邊界的暫存 tag，於 100ms 內更新 Token 網格，原始文本顯示不隨單位改變。預覽須依方案產生完整可套用 tag：BIO=`B/I/O`、BIOES=`B/I/O/E/S`、IOB2=`B/I/O` 且每個實體起點一律使用 `B`、SINGLE=直接類型標籤或 `O`。使用者先選完整 tag 再點擊 Token，系統不得只依前一 Token 猜測前綴。可見預標記只在標記數量與目前單位產生的 Token 數量一致時初始化；Token 邊界變更（切換單位或更換資料列）後數量重新一致時須自資料重新初始化，Bypass 明確清空的預覽狀態除外。切換單位造成不一致時顯示兩側數量、阻擋進入 Step 3，且不得靜默保留或錯套舊 tag；預標記數量與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路。驗證：`entities` 不得為空且不得含空白項目；`tokenization.unit` 必須為列舉值。
 - **FR-003d-3**：`entity_recognition` 必須支援 `entities`（`{ name, color }[]`）與 `allow_overlapping`（boolean）。設定：`allow_overlapping` 的設定卡與前一個 `entity-list` 結尾保留 12px，並與後方 `allow_bypass` 的群組間距一致。預覽：文本區域可圈選文字建立實體 + 實體類型按鈕列 + 已標記實體列表（含類型 badge、文字、字元位置、刪除按鈕），已標記實體以對應顏色底線顯示。單一或混合 `entity_recognition` 模式都必須支援兩種順序：（1）先選擇實體類型再圈選文字，圈選後立即新增；（2）先圈選文字再選擇實體類型，圈選範圍持續反白但不顯示提示，點擊類型後才新增並保留該類型為作用中。未分類期間若重新圈選，以最新範圍取代前一範圍。驗證：`entities` 不得為空且不得含空白項目。
 - **FR-003d-4**：`relation_identification` 必須支援選填的 `relation_types`（string[]，語意類型標籤，預設 `[]`），且可單獨使用或與 `entity_recognition` 組合。預覽採循序關係建構器：使用者在文本中反白選取後，依序操作 `E1/Arg1 → Relation → E2/Arg2 → Undo → Add`；E1/E2 必須對應既有實體，Relation 為文本中的任意關係觸發詞區間。純 `relation_identification` 的既有實體由資料集提供並僅以唯讀高亮呈現，介面不得顯示實體類型選擇器、實體列表、建立或刪除實體控制項，亦不得顯示重複的「關係識別預覽」內層標題；若選取非既有實體，需提示改選已高亮實體。與 `entity_recognition` 組合時，E1/E2 改由同一整合預覽中可建立／修改的 Span 實體提供。反白選取須持續以藍色背景高亮，直到被按鈕消費或被新選取取代；選取已標記實體時以 outline 疊加於實體色塊。三元組三個元素皆儲存與顯示「文字 + 字元位置 `(start,end)`」；`relation_types` 至少有一個非空白項目時，每筆三元組才顯示 `type` 選單與已指定類型徽章，選項僅來自目前 `relation_types`，不得覆寫觸發詞；`relation_types = []` 時不得顯示類型徽章或選單，且不得使用寫死 fallback。預覽初始化需支援 `gold_triples`、`gold_triplets`、`triples` 與 `{subj, rel, obj}`、`{entity1, relation, entity2}` 格式及選填 `relation_type`。驗證：空陣列合法；若有項目則不得包含空白字串。
 - **FR-003d-5**：`single_label` 必須支援 `label_options`（`{ name, color }[]`）。預覽：文字區塊 + radio 風格 chip 按鈕（互斥單選，點擊切換）。驗證：`label_options` 不得為空且不得含空白項目。
@@ -572,7 +573,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003g**：Step 2 標記預覽區必須提供每個輸出類型的互動式標記體驗，使用者可實際操作標記方式（點擊、圈選、拖曳、輸入等），且在設定變更時即時同步更新。
 - **FR-003g-1**：預覽文字來源：已上傳資料集時讀取 `field_role_map` 中 `input` 角色欄位的實際內容；未上傳時顯示各輸出類型的預設範例文字。
 - **FR-003g-2**：Step 2 標記預覽區預設不得為 `evidence` 角色欄位顯示獨立卡片或區塊；只有已選輸出類型於 registry 宣告 `rendersEvidencePreview: true` 時例外顯示，目前 `free_text` 的該 metadata 為 `true`。例外情況下 Evidence 必須位於 Input 與輸出互動控制項之前；未指定 Evidence 時不得顯示空的背景區塊。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另將欄位記錄於 config 的 `evidence_fields`）。
-- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤與單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 的該 metadata 均為 `true`。複合任務須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
+- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）與單一文字區塊，不再顯示 Input 欄位名稱標籤；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 的該 metadata 均為 `true`。複合任務須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
 - **FR-003g-4**：各輸出類型的預覽互動（如點擊標籤 chip）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽。
 - **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 將 flat `string[]` 正規化為單段 paths，或直接使用 hierarchical `string[][]` 完整 paths，且只以第一筆資料的合法 paths 初始化；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以符合目前方案且與 Token 等長的可見預標記初始化；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時其他輸出類型維持各自預設值，`free_text` textarea 則必須為空字串。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應；`string[][]` 優先識別為 hierarchical `multi_label` path，含位置前綴的 sequence tag 陣列可直接辨識，`SINGLE` 字串陣列則須同時依已選 output type 與 Token 數量對齊判定，不得一律誤判為 `multi_label`。Output 角色資料是建立者明確指定的 annotator-visible preannotation；隱藏 test-set ground truth 仍不得透過 API、前端 state 或 preview 下發給標記者。
 - **FR-003g-6**：`single_label` 的 `label_options` 仍由 scalar unique values 自動帶入 `{ name, color }`。`multi_label` 的自動帶入必須 shape-aware：flat `string[]` 建立一層 leaf taxonomy，舊值同時作 `id` 與 `name`；hierarchical `string[][]` 的 segment 是全樹唯一 node ID，依全部 records 合併共同 prefix 建立 union tree，並先以該 ID 作初始 `name`。若需跨分支同名顯示，使用者在 Visual 將不同 ID 節點的 `name` 改為相同文字。節點與 sibling 的順序依資料首次出現順序，已帶入後不重複執行；混合 shape、ID 出現在不同 parent、其他無效 segment 或超過 taxonomy 資源限制時不得建立部分樹。
@@ -740,7 +741,7 @@ flowchart LR
 - **SC-003u**：`taxonomy-tree` 與 preview selector 可由鍵盤完整操作並暴露正確 tree ARIA 狀態；375px 使用全寬 dialog／bottom sheet 且 Escape 還原焦點，375px／768px／1440px 的 `document.scrollWidth` 不超過 viewport width。
 - **SC-003v**：`free_text` 在指定 Evidence、Input、Output 時，Step 2 可驗證 DOM 與視覺順序為「背景參考 (Evidence) → Input → 回答框」，回答區顯示可設定的 `output_instruction`（不再顯示「回答」或 Output 欄位名稱），回答框值等於首筆 Output；未指定 Output 時值為空字串。schema 與產生的 YAML/JSON 均不含 `show_reference` 或 `show_reference_to_annotator`。
 - **SC-003w**：`free_text` 設定面板顯示必要的「輸入區說明」與「作答區說明」，zh 預設值分別為「請閱讀以下內容」與「請輸入回答」，en 預設值分別為 `Read the following content` 與 `Enter your response`；修改後 100ms 內同步至專屬預覽與 Code。任一值 trim 後為空或超過 100 字時阻擋進入 Step 3 並顯示可定位錯誤；Bypass 只停用作答區，輸入內容持續可讀；舊 config 缺少 instruction 時須補預設並可繼續。
-- **SC-003x**：`sequence_tagging` 預設字模式下，中文「台積電」顯示為「台／積／電」，英文 `the` 顯示為 `t／h／e`；切換詞模式後，中文範例中的「董事長／今天／出席」可形成多字 Token，英文 `the` 保持一個 Token，標點在兩種模式皆獨立。設定值、Token 規則說明與 Token 網格於 100ms 內同步；切換單位時不沿用錯位暫存 tag，並依新 Token 數重新顯示可見預標記對齊錯誤。方案選單仍包含 BIO／BIOES／IOB2／單一標籤，完整 tag 可精確套用，IOB2 可建立相鄰 `B-X, B-X`，BIOES 可建立 `S-X`。
+- **SC-003x**：`sequence_tagging` 預設字模式下，中文「台積電」顯示為「台／積／電」，英文 `the` 顯示為 `t／h／e`；切換詞模式後，中文範例中的「董事長／今天／出席」可形成多字 Token，英文 `the` 保持一個 Token，標點在兩種模式皆獨立。設定值與 Token 網格於 100ms 內同步，預覽的原始輸入文本於兩種模式皆維持原文；切換單位時不沿用錯位暫存 tag，並依新 Token 數重新顯示可見預標記對齊錯誤。方案選單仍包含 BIO／BIOES／IOB2／單一標籤，完整 tag 可精確套用，IOB2 可建立相鄰 `B-X, B-X`，BIOES 可建立 `S-X`。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -788,6 +789,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.4.0 | 2026-07-28 | **標記預覽原始文本**：Step 2 序列標註預覽區將 Token 網格上方的切分規則說明改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本，文本不隨標記單位切換改變；通用輸入文字區塊標籤由 Input 欄位名稱改為「原始文本」，`item_pair` 於配對區塊上方顯示一次該標題並保留欄位名稱小標；`entity_recognition`／`relation_identification` 互動文本區與 `free_text` `input_instruction` 契約不變；整合預覽標題簡化為「整合預覽」（英文 Unified preview）。同步 prototype、visual overview 與 Playwright 測試；tokenization 契約與預標記驗證不變。 |
 | 6.3.0 | 2026-07-28 | **Sequence Tagging 標記單位**：將 `tokenization.unit` 與 `tagging_scheme` 拆為獨立設定，新增字（character）／詞（word）選單並預設字模式。Step 2 依選定單位即時重建 Token 網格與說明；切換邊界時不沿用錯位暫存 tag，預標記數量依新 Token 數重新驗證，數量重新一致時自資料重新初始化可見預標記（Bypass 清空除外）。不一致錯誤在預標記對齊另一單位時點名該單位並提供切回或改用對應粒度預標記兩條出路。`tokenization` 契約升級為 unit-based v2；正式 Annotation Workspace 與 014／016／017 consumer 仍延後。另記三項未來版本候選（015 拖曳選取多 Token 實體、標籤 `description` 欄位、標籤過濾與快捷鍵），非本版承諾範圍。 |
 | 6.2.0 | 2026-07-28 | **Sequence Tagging Token 單位與方案**：中文改為逐字 Token、英文維持逐詞、標點獨立；保留 BIO／BIOES／IOB2 並新增 SINGLE。Step 2 由專屬 Token 網格完整呈現輸入，移除重複通用輸入卡，以完整 tag 按鈕精確套用並支援相鄰同類型 `B-X`；新增固定 language-aware v1 metadata、可見 `pre_tags` fixture、數量不一致阻擋與錯誤提示。同步 taxonomy、task config、visual overview 與 Playwright；正式 Annotation Workspace 及 014／016／017 consumer 依產品決策延後。 |
 | 6.1.0 | 2026-07-28 | **Evidence 完整性與自由文字指示**：Step 1 對每個 Evidence 欄位執行全資料缺值檢查，顯示綠／紅欄位回饋並於缺值時阻擋下一步；`free_text` 新增必要且支援 zh/en 預設的 `input_instruction`／`output_instruction`（trim 非空、100 字上限），專屬預覽改以兩段可編輯指示文字呈現輸入與作答區標題（作答區標題由 v6.0.0 的固定「自由文字」改為可設定的 `output_instruction`），並同步 Visual／Code。舊 config 缺 instruction 時補預設並清除 v6.0.0 退役 key；Bypass 僅停用作答區。新增驗收情境 27–30、SC-002f／SC-003w 與 Prototype Playwright 回歸測試；014／015 consumer 影響另行追蹤。 |

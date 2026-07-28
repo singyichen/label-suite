@@ -44,9 +44,10 @@ test.describe('Step 2 preview: evidence exclusion, input layout, and isolation',
     });
 
     const preview = page.locator('#annotationPreview');
-    await expect(preview.locator('.annotation-preview-pair-label')).toContainText(
-      'sentence_a',
-    );
+    await expect(
+      preview.locator('.annotation-preview-task-title').first(),
+    ).toHaveText('原始文本');
+    await expect(preview.locator('.annotation-preview-pair-label')).toHaveCount(0);
     await expect(preview.locator('.annotation-preview-sample')).toBeVisible();
     await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
   });
@@ -62,6 +63,9 @@ test.describe('Step 2 preview: evidence exclusion, input layout, and isolation',
 
     const preview = page.locator('#annotationPreview');
     await expect(preview.locator('.sp-evidence-card')).toHaveCount(0);
+    await expect(
+      preview.locator('.annotation-preview-task-title').filter({ hasText: '原始文本' }),
+    ).toHaveCount(1);
     const pairLabels = preview.locator('.annotation-preview-pair-label');
     await expect(pairLabels).toHaveCount(2);
     await expect(pairLabels.nth(0)).toContainText('sentence_a');

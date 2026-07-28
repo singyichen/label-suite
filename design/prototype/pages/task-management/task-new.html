@@ -1862,7 +1862,7 @@ var I18N = {
     applyTemplate: '套用預設範本：',
     addEntity: '新增實體類型', enabled: '已啟用', disabled: '已停用',
     accordionDependsOn: '依賴：',
-    previewUnifiedTitle: '整合預覽（實體辨識 + 關係識別）',
+    previewUnifiedTitle: '整合預覽',
     previewSampleSentenceAbsa: '這家餐廳服務很差，但環境還不錯，食物也挺美味的。',
     absa_template_btn: '套用範本：ABSA（實體辨識 + 關係識別）',
     templateBtnSpanEntity: '套用範本：實體辨識',
@@ -2018,7 +2018,7 @@ var I18N = {
     applyTemplate: 'Apply default template: ',
     addEntity: 'Add entity type', enabled: 'Enabled', disabled: 'Disabled',
     accordionDependsOn: 'Depends on: ',
-    previewUnifiedTitle: 'Unified preview (Entity Recognition + Relation Identification)',
+    previewUnifiedTitle: 'Unified preview',
     previewSampleSentenceAbsa: 'The restaurant service was poor, but the ambiance was nice, and the food was delicious.',
     absa_template_btn: 'Apply template: ABSA (Entity Recognition + Relation Identification)',
     templateBtnSpanEntity: 'Apply template: Entity Recognition',
@@ -5462,19 +5462,18 @@ function renderTokenClassPreview(container, outKey) {
     ps.activeTag = 'O';
   }
 
-  var unitNote = document.createElement('div');
-  unitNote.setAttribute('data-testid', 'sequence-token-unit-note');
-  unitNote.style.cssText = 'margin-bottom:12px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-slate-50);font-size:0.78rem;color:var(--color-text-soft);line-height:1.5;';
-  if (tokenUnit === 'word') {
-    unitNote.textContent = state.lang === 'zh'
-      ? '標記單位：詞（Word）；中文依詞界、英文依單字切分，標點符號獨立成一個 Token。'
-      : 'Token unit: Word; Chinese uses word boundaries, English uses words, and punctuation is separate.';
-  } else {
-    unitNote.textContent = state.lang === 'zh'
-      ? '標記單位：字（Character）；中文與英文皆逐字切分，空白略過，標點符號獨立成一個 Token。'
-      : 'Token unit: Character; Chinese and English are split by character, whitespace is skipped, and punctuation is separate.';
-  }
-  container.appendChild(unitNote);
+  var sourceTextLabel = document.createElement('div');
+  sourceTextLabel.className = 'annotation-preview-task-title';
+  sourceTextLabel.style.marginBottom = '6px';
+  sourceTextLabel.setAttribute('data-testid', 'sequence-source-text-label');
+  sourceTextLabel.textContent = state.lang === 'en' ? 'Text' : '原始文本';
+  container.appendChild(sourceTextLabel);
+
+  var sourceTextNote = document.createElement('div');
+  sourceTextNote.setAttribute('data-testid', 'sequence-source-text');
+  sourceTextNote.style.cssText = 'margin-bottom:12px;padding:8px 10px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-slate-50);font-size:0.78rem;color:var(--color-text-soft);line-height:1.5;';
+  sourceTextNote.textContent = text;
+  container.appendChild(sourceTextNote);
 
   if (cfg._tokenAlignmentError) {
     var alignmentError = document.createElement('div');
@@ -6831,6 +6830,12 @@ function updateAnnotationPreview() {
       var pairWrap = document.createElement('div');
       pairWrap.className = 'annotation-preview-pair';
 
+      var pairHeading = document.createElement('div');
+      pairHeading.className = 'annotation-preview-task-title';
+      pairHeading.style.marginBottom = '6px';
+      pairHeading.textContent = state.lang === 'en' ? 'Text' : '原始文本';
+      pairWrap.appendChild(pairHeading);
+
       var p1Label = document.createElement('div');
       p1Label.className = 'annotation-preview-pair-label';
       p1Label.textContent = pairTexts ? pairTexts.col1 : (state.lang === 'en' ? 'Sentence A' : '句子 A');
@@ -6860,8 +6865,9 @@ function updateAnnotationPreview() {
       var _rawInputVal = (inputCols.length > 0 && state.datasetRawFirstRow) ? state.datasetRawFirstRow[inputCols[0]] : undefined;
       var sampleText = (_rawInputVal !== undefined && _rawInputVal !== null) ? String(_rawInputVal) : (getDatasetPreviewText() || t('previewSampleSentence'));
       var _inputLabel = document.createElement('div');
-      _inputLabel.className = 'annotation-preview-pair-label';
-      _inputLabel.textContent = inputCols.length > 0 ? inputCols[0] : (state.lang === 'en' ? 'Input' : '輸入');
+      _inputLabel.className = 'annotation-preview-task-title';
+      _inputLabel.style.marginBottom = '6px';
+      _inputLabel.textContent = state.lang === 'en' ? 'Text' : '原始文本';
       preview.appendChild(_inputLabel);
 
       var _sample = document.createElement('div');
