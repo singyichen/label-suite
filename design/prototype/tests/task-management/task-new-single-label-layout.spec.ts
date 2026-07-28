@@ -53,7 +53,7 @@ const SINGLE_OUTPUT_CASES: LayoutCase[] = [
     category: 'sequence',
     outputTypes: ['sequence_tagging'],
     dataFile: 'sequence-tagging.json',
-    roles: { text: 'input', gold_tags: 'output' },
+    roles: { text: 'input', pre_tags: 'output' },
   },
   {
     name: 'entity_recognition',
