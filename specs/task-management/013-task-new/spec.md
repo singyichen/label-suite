@@ -699,6 +699,12 @@ flowchart LR
 > **v6.2.0 下游同步延後**：本次只完成 013 Task New producer-side 的 `sequence_tagging` config、language-aware Token 預覽、scheme 選擇與資料對齊驗證。014 Task Detail 尚未同步設定摘要；015 Annotation Workspace 尚未同步 Token 操作與提交 payload；016／017 尚未同步 Token 分布、IAA 與品質指標。依產品決策留待後續一起調整；在 consumer 完成前不得宣稱正式標記介面已支援本契約。
 >
 > **v6.3.0 下游同步延後**：本次新增的 `tokenization.unit` 與字／詞切分只同步 013 Task New 設定和預覽。014 尚未顯示標記單位摘要；015 尚未依單位建立正式 Token、驗證提交 payload 或凍結可重現的 production tokenizer（tokenization 契約與凍結義務見 ADR-031）；016／017 尚未依單位調整統計與品質指標。這些 consumer 依產品決策留待後續一起調整。
+>
+> **未來版本候選（非 013 承諾範圍，2026-07-28 對照 Label Studio／Scale 評估後記錄）**：
+>
+> 1. **拖曳選取多 Token 實體**：015 Annotation Workspace 的正式標記介面應支援拖曳選取連續 Token 後自動展開 `B-X / I-X` 前綴（參考 Label Studio／Prodigy），取代逐 Token 點選；013 Step 2 預覽維持點選即可。
+> 2. **標籤說明欄位**：`label_options` 增加選填 `description`，於標記介面顯示給標注者以提升標注一致性（參考 Scale 的 label taxonomy alias + description）。
+> 3. **標籤過濾與快捷鍵**：標籤類型數量大時（如 10+），標記介面提供標籤搜尋過濾與 hotkey 綁定（參考 Label Studio `<Filter>`）。
 
 ---
 
@@ -782,7 +788,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 6.3.0 | 2026-07-28 | **Sequence Tagging 標記單位**：將 `tokenization.unit` 與 `tagging_scheme` 拆為獨立設定，新增字（character）／詞（word）選單並預設字模式。Step 2 依選定單位即時重建 Token 網格與說明；切換邊界時不沿用錯位暫存 tag，預標記數量依新 Token 數重新驗證，數量重新一致時自資料重新初始化可見預標記（Bypass 清空除外）。不一致錯誤在預標記對齊另一單位時點名該單位並提供切回或改用對應粒度預標記兩條出路。`tokenization` 契約升級為 unit-based v2；正式 Annotation Workspace 與 014／016／017 consumer 仍延後。 |
+| 6.3.0 | 2026-07-28 | **Sequence Tagging 標記單位**：將 `tokenization.unit` 與 `tagging_scheme` 拆為獨立設定，新增字（character）／詞（word）選單並預設字模式。Step 2 依選定單位即時重建 Token 網格與說明；切換邊界時不沿用錯位暫存 tag，預標記數量依新 Token 數重新驗證，數量重新一致時自資料重新初始化可見預標記（Bypass 清空除外）。不一致錯誤在預標記對齊另一單位時點名該單位並提供切回或改用對應粒度預標記兩條出路。`tokenization` 契約升級為 unit-based v2；正式 Annotation Workspace 與 014／016／017 consumer 仍延後。另記三項未來版本候選（015 拖曳選取多 Token 實體、標籤 `description` 欄位、標籤過濾與快捷鍵），非本版承諾範圍。 |
 | 6.2.0 | 2026-07-28 | **Sequence Tagging Token 單位與方案**：中文改為逐字 Token、英文維持逐詞、標點獨立；保留 BIO／BIOES／IOB2 並新增 SINGLE。Step 2 由專屬 Token 網格完整呈現輸入，移除重複通用輸入卡，以完整 tag 按鈕精確套用並支援相鄰同類型 `B-X`；新增固定 language-aware v1 metadata、可見 `pre_tags` fixture、數量不一致阻擋與錯誤提示。同步 taxonomy、task config、visual overview 與 Playwright；正式 Annotation Workspace 及 014／016／017 consumer 依產品決策延後。 |
 | 6.1.0 | 2026-07-28 | **Evidence 完整性與自由文字指示**：Step 1 對每個 Evidence 欄位執行全資料缺值檢查，顯示綠／紅欄位回饋並於缺值時阻擋下一步；`free_text` 新增必要且支援 zh/en 預設的 `input_instruction`／`output_instruction`（trim 非空、100 字上限），專屬預覽改以兩段可編輯指示文字呈現輸入與作答區標題（作答區標題由 v6.0.0 的固定「自由文字」改為可設定的 `output_instruction`），並同步 Visual／Code。舊 config 缺 instruction 時補預設並清除 v6.0.0 退役 key；Bypass 僅停用作答區。新增驗收情境 27–30、SC-002f／SC-003w 與 Prototype Playwright 回歸測試；014／015 consumer 影響另行追蹤。 |
 | 6.0.0 | 2026-07-24 | **自由文字 Evidence 與預標記契約**：破壞性移除 `free_text.show_reference`、舊名 `show_reference_to_annotator` 與「顯示參考答案給標記者」設定；Step 1 指定 Evidence 時，Step 2 依「背景參考 (Evidence) → Input → 回答框」顯示，回答區只保留輸出卡片的「自由文字」標題，不再重複顯示「回答」或 Output 欄位名稱。指定 Output 即以其資料預填回答框，未指定則保持空白；新增 `rendersEvidencePreview` UI metadata 與 `retiredConfigKeys` 舊設定清理、FR-003d-10／FR-003g-2／FR-003g-5、SC-003v、下游與 test-set ground-truth 安全界線，並同步 prototype Playwright 驗收。 |
