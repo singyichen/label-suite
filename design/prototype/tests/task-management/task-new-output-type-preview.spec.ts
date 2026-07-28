@@ -764,6 +764,38 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     await expect(page.locator('#nextBtn')).toBeEnabled();
   });
 
+  test('Sequence Tagging — Bypass-cleared tags stay cleared across a unit round-trip', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'sequence-tagging-bypass-unit-roundtrip-test',
+      category: 'sequence',
+      outputType: 'sequence_tagging',
+      inputType: 'single_item',
+      dataFile: 'sequence-tagging.json',
+      roles: { text: 'input', pre_tags: 'output' },
+    });
+
+    const preview = page.locator('#annotationPreview');
+    const unitSelect = page.getByTestId('sequence-token-unit-select');
+    const tokens = preview.getByTestId('sequence-token');
+    const bypassToggle = preview.getByRole('button', { name: '無法判定 (Bypass)' });
+
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('B-ORG');
+
+    await bypassToggle.click();
+    await expect(bypassToggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('O');
+
+    await unitSelect.selectOption('word');
+    await unitSelect.selectOption('character');
+
+    await expect(bypassToggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(tokens.nth(0).getByTestId('sequence-token-tag')).toHaveText('O');
+    await expect(tokens.nth(1).getByTestId('sequence-token-tag')).toHaveText('O');
+    await expect(tokens.nth(2).getByTestId('sequence-token-tag')).toHaveText('O');
+  });
+
   test('Sequence Tagging — mismatch error names the aligned unit and offers both remedies', async ({
     page,
   }) => {

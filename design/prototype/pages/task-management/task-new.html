@@ -5443,10 +5443,11 @@ function renderTokenClassPreview(container, outKey) {
 
   if (!ps.tokens || ps.tokenKey !== tokenKey) {
     /* a non-null previous tokenKey means the token boundaries themselves changed
-       (unit switch or new row) — re-seed then; a null one is the Bypass explicit
-       clear, which must stay seed-proof */
+       (unit switch or new row) — re-seed then; while Bypass is active the cleared
+       state must stay seed-proof even across boundary changes (unchecking Bypass
+       resets the state, which re-enables seeding) */
     var boundaryChanged = !!ps.tokenKey && ps.tokenKey !== tokenKey;
-    if (!cfg._tokenAlignmentError && outputTags.length === tokens.length && (!ps._seeded || boundaryChanged)) {
+    if (!cfg._tokenAlignmentError && outputTags.length === tokens.length && !state.previewBypass[outKey] && (!ps._seeded || boundaryChanged)) {
       ps.tokens = convertSequenceTags(outputTags, inferSequenceScheme(outputTags), scheme, labels);
       ps._seeded = true;
     } else {
