@@ -1448,11 +1448,40 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '自由文字', en: 'Free text',
     source_output: null,
     rendersEvidencePreview: true,
-    retiredConfigKeys: ['show_reference', 'show_reference_to_annotator'],
+    rendersInputPreview: true,
     fields: [
+      {
+        key: 'input_instruction',
+        type: 'text',
+        zh: '輸入區說明',
+        en: 'Input section instruction',
+        required: true,
+        defaultValue: '請閱讀以下內容',
+        defaultValue_zh: '請閱讀以下內容',
+        defaultValue_en: 'Read the following content',
+        maxLength: 100,
+        hint_zh: '顯示在輸入內容上方，告訴標記員要閱讀或處理什麼。例：請閱讀以下文章',
+        hint_en: 'Shown above the input content to explain what annotators should read or process. Example: Read the following article',
+      },
+      {
+        key: 'output_instruction',
+        type: 'text',
+        zh: '作答區說明',
+        en: 'Response section instruction',
+        required: true,
+        defaultValue: '請輸入回答',
+        defaultValue_zh: '請輸入回答',
+        defaultValue_en: 'Enter your response',
+        maxLength: 100,
+        hint_zh: '顯示在自由文字欄位上方，告訴標記員要輸入什麼。例：請用一句話摘要文章重點',
+        hint_en: 'Shown above the free-text field to explain what annotators should enter. Example: Summarize the article in one sentence',
+      },
       { key: 'max_length', type: 'number', zh: '最大字數', en: 'Max length', required: false, defaultValue: 512, min: 1 },
     ],
+    retiredConfigKeys: ['show_reference', 'show_reference_to_annotator'],
     defaultConfig: {
+      input_instruction: '請閱讀以下內容',
+      output_instruction: '請輸入回答',
       max_length: 512,
     },
   },
@@ -1465,6 +1494,38 @@ Object.keys(OUTPUT_TYPE_REGISTRY).forEach(function(outKey) {
   OUTPUT_TYPE_REGISTRY[outKey].fields.push(Object.assign({}, BYPASS_FIELD));
   OUTPUT_TYPE_REGISTRY[outKey].defaultConfig.allow_bypass = true;
 });
+
+function getOutputFieldDefault(field, lang) {
+  var localizedKey = 'defaultValue_' + (lang || state.lang || 'zh');
+  if (Object.prototype.hasOwnProperty.call(field, localizedKey)) return field[localizedKey];
+  return field.defaultValue;
+}
+
+function getOutputTypeDefaultConfig(outKey, lang) {
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  if (!outReg) return {};
+  var defaults = JSON.parse(JSON.stringify(outReg.defaultConfig || {}));
+  outReg.fields.forEach(function(field) {
+    var value = getOutputFieldDefault(field, lang);
+    if (value !== undefined) defaults[field.key] = JSON.parse(JSON.stringify(value));
+  });
+  return defaults;
+}
+
+function normalizeOutputConfig(outKey, config, lang) {
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  var normalized = config && typeof config === 'object' && !Array.isArray(config)
+    ? JSON.parse(JSON.stringify(config))
+    : {};
+  var defaults = getOutputTypeDefaultConfig(outKey, lang);
+  Object.keys(defaults).forEach(function(key) {
+    if (normalized[key] === undefined) normalized[key] = defaults[key];
+  });
+  if (outReg && Array.isArray(outReg.retiredConfigKeys)) {
+    outReg.retiredConfigKeys.forEach(function(key) { delete normalized[key]; });
+  }
+  return normalized;
+}
 
 /* Known output-type dependencies: which output type depends on which source */
 var OUTPUT_TYPE_DEPS = {
@@ -1692,6 +1753,7 @@ var I18N = {
     errDatasetFormat: '不支援此格式，請上傳 JSON 檔案（.json）',
     errDatasetSize: '檔案超過 200 MB 上限',
     errSchemaRequired: '請完成所有必填欄位',
+    errTextMaxLength: '「{field}」不可超過 {max} 字',
     errStartupMemberRequired: '至少需加入 1 位 annotator',
     errStartupMemberPickUser: '請先選擇一位平台使用者',
     errStartupMemberDuplicate: '此成員已在任務名單中',
@@ -1708,6 +1770,7 @@ var I18N = {
     errSingleItemInputCount: '輸入類型為「單一項目」時，欄位預覽中必須恰好選擇 1 個 Input 欄位',
     errItemPairInputCount: '輸入類型為「項目對」時，欄位預覽中必須恰好選擇 2 個 Input 欄位',
     errInputFieldMissing: 'Input 欄位「{col}」有 {n} 筆缺值，請更換欄位或修正資料後重新上傳',
+    errEvidenceFieldMissing: 'Evidence 欄位「{col}」有 {n} 筆缺值，請更換欄位或修正資料後重新上傳',
     errNoRecords: '找不到資料列：JSON 中沒有可辨識的物件陣列',
     errRecordPathIncompat: '欄位不一致：「{name}」在資料列來源「{path}」下的欄位與已上傳檔案不同',
     inlineSourceLabel: '資料列來源',
@@ -1846,6 +1909,7 @@ var I18N = {
     errDatasetFormat: 'Unsupported format — only .json files are accepted',
     errDatasetSize: 'File exceeds the 200 MB limit',
     errSchemaRequired: 'Please complete all required fields',
+    errTextMaxLength: '"{field}" cannot exceed {max} characters',
     errStartupMemberRequired: 'At least 1 annotator is required',
     errStartupMemberPickUser: 'Please select a platform user first',
     errStartupMemberDuplicate: 'This member is already in the task member list',
@@ -1862,6 +1926,7 @@ var I18N = {
     errSingleItemInputCount: 'Input type "Single item" requires exactly 1 Input field in field preview',
     errItemPairInputCount: 'Input type "Item pair" requires exactly 2 Input fields in field preview',
     errInputFieldMissing: 'Input field "{col}" has {n} empty rows. Choose another field or fix the dataset and re-upload',
+    errEvidenceFieldMissing: 'Evidence field "{col}" has {n} empty rows. Choose another field or fix the dataset and re-upload',
     errNoRecords: 'No records found: the JSON contains no recognizable array of objects',
     errRecordPathIncompat: 'Column mismatch: "{name}" has different columns under record source "{path}"',
     inlineSourceLabel: 'Record source',
@@ -2011,6 +2076,11 @@ function restoreWizardState() {
     PERSISTABLE_KEYS.forEach(function(key) {
       if (data[key] !== undefined) state[key] = data[key];
     });
+    if (state.outputConfigs && typeof state.outputConfigs === 'object') {
+      Object.keys(state.outputConfigs).forEach(function(outKey) {
+        state.outputConfigs[outKey] = normalizeOutputConfig(outKey, state.outputConfigs[outKey], state.lang);
+      });
+    }
     if (data._datasetFileMeta && data._datasetFileMeta.length) {
       state.datasetFiles = data._datasetFileMeta;
       state._datasetRoots = data._datasetFileMeta.map(function(f) {
@@ -2139,9 +2209,10 @@ function configToCode() {
         var cfg = state.outputConfigs[outKey] || {};
         var outReg = OUTPUT_TYPE_REGISTRY[outKey];
         var finalCfg = {};
-        if (outReg && outReg.defaultConfig) {
-          Object.keys(outReg.defaultConfig).forEach(function(k) {
-            finalCfg[k] = cfg[k] !== undefined ? cfg[k] : outReg.defaultConfig[k];
+        var defaultCfg = getOutputTypeDefaultConfig(outKey, state.lang);
+        if (outReg) {
+          Object.keys(defaultCfg).forEach(function(k) {
+            finalCfg[k] = cfg[k] !== undefined ? cfg[k] : defaultCfg[k];
           });
         }
         Object.keys(cfg).forEach(function(k) { if (k[0] !== '_') finalCfg[k] = cfg[k]; });
@@ -2360,11 +2431,17 @@ function validateStep1(showErrors) {
     ok = false;
   } else { showFieldError('errDataset', false); }
   var inputType = (state.taskInputTypes && state.taskInputTypes[0]) || '';
-  /* Input fields must have a value in EVERY record (Output may be empty = not pre-annotated) */
+  /* Input and selected Evidence fields must have a value in EVERY record.
+     Output may be empty because it represents optional pre-annotation. */
   var missingInput = null;
   getFieldsByRole('input').forEach(function(col) {
     var p = state.datasetFieldProfile[col];
     if (!missingInput && p && p.missing > 0) missingInput = { col: col, n: p.missing };
+  });
+  var missingEvidence = null;
+  getFieldsByRole('evidence').forEach(function(col) {
+    var p = state.datasetFieldProfile[col];
+    if (!missingEvidence && p && p.missing > 0) missingEvidence = { col: col, n: p.missing };
   });
   if (inputType && state.datasetFiles.length > 0) {
     var inputFieldCount = getFieldsByRole('input').length;
@@ -2378,12 +2455,20 @@ function validateStep1(showErrors) {
       showFieldError('errInlineFieldCount', true,
         t('errInputFieldMissing').replace('{col}', missingInput.col).replace('{n}', missingInput.n));
       ok = false;
+    } else if (missingEvidence) {
+      showFieldError('errInlineFieldCount', true,
+        t('errEvidenceFieldMissing').replace('{col}', missingEvidence.col).replace('{n}', missingEvidence.n));
+      ok = false;
     } else {
       showFieldError('errInlineFieldCount', false);
     }
   } else if (missingInput && state.datasetFiles.length > 0) {
     showFieldError('errInlineFieldCount', true,
       t('errInputFieldMissing').replace('{col}', missingInput.col).replace('{n}', missingInput.n));
+    ok = false;
+  } else if (missingEvidence && state.datasetFiles.length > 0) {
+    showFieldError('errInlineFieldCount', true,
+      t('errEvidenceFieldMissing').replace('{col}', missingEvidence.col).replace('{n}', missingEvidence.n));
     ok = false;
   } else {
     showFieldError('errInlineFieldCount', false);
@@ -2426,6 +2511,18 @@ function validateStep2(showErrors) {
               schemaErrMsg = state.lang === 'en'
                 ? 'Row 1 field "' + fieldName + '" preselects ' + dataPaths.paths.length + ' labels, exceeding max selections (' + maxSel + '). Adjust the data or the limit.'
                 : '資料列 1 的欄位「' + fieldName + '」預選 ' + dataPaths.paths.length + ' 個標籤，超過最多可選數量（' + maxSel + '），請調整資料或上限。';
+            }
+          }
+        }
+        else if (f.type === 'text') {
+          if (typeof val !== 'string' || !val.trim()) {
+            ok = false;
+          } else if (f.maxLength != null && val.length > f.maxLength) {
+            ok = false;
+            if (!schemaErrMsg) {
+              schemaErrMsg = t('errTextMaxLength')
+                .replace('{field}', f[state.lang] || f.zh || f.key)
+                .replace('{max}', f.maxLength);
             }
           }
         }
@@ -3519,9 +3616,7 @@ function renderOutputTypeFields(container, outKey) {
   if (!outReg) return;
 
   /* Ensure outputConfigs[outKey] exists */
-  if (!state.outputConfigs[outKey]) {
-    state.outputConfigs[outKey] = outReg.defaultConfig ? JSON.parse(JSON.stringify(outReg.defaultConfig)) : {};
-  }
+  state.outputConfigs[outKey] = normalizeOutputConfig(outKey, state.outputConfigs[outKey], state.lang);
   var cfg = state.outputConfigs[outKey];
   var dimensionFieldKeys = [];
   if (outReg.dimensionSettings) {
@@ -3794,6 +3889,11 @@ function renderOutputTypeFields(container, outKey) {
       textInp.style.cssText = 'width:100%;padding:8px 12px;';
       textInp.value = cfg[field.key] || field.defaultValue || '';
       textInp.placeholder = field[state.lang] || field.zh || '';
+      var textControlId = 'output-config-' + outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-');
+      textInp.id = textControlId;
+      textInp.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-input');
+      if (field.maxLength != null) textInp.maxLength = field.maxLength;
+      if (lbl) lbl.htmlFor = textControlId;
       (function(capturedCfg, capturedKey) {
         textInp.addEventListener('input', function() {
           capturedCfg[capturedKey] = textInp.value;
@@ -3801,6 +3901,14 @@ function renderOutputTypeFields(container, outKey) {
         });
       }(cfg, field.key));
       wrap.appendChild(textInp);
+      if (field['hint_' + state.lang]) {
+        var textHint = document.createElement('div');
+        textHint.className = 'field-hint';
+        textHint.id = textControlId + '-hint';
+        textHint.textContent = field['hint_' + state.lang];
+        textInp.setAttribute('aria-describedby', textHint.id);
+        wrap.appendChild(textHint);
+      }
     } else if (field.type === 'boolean') {
       var card = document.createElement('label');
       card.className = 'schema-toggle-card';
@@ -5315,21 +5423,73 @@ function renderFreeTextPreview(container, outKey) {
   var ps = ensurePreviewState(outKey, { text: outputVal || '', _seeded: !!outputVal });
   if (outputVal && !ps._seeded) { ps.text = outputVal; ps._seeded = true; }
 
-  previewTextBlock(container);
+  var inputInstruction = typeof cfg.input_instruction === 'string' && cfg.input_instruction.trim()
+    ? cfg.input_instruction.trim()
+    : (state.lang === 'zh' ? '請閱讀以下內容' : 'Read the following content');
+  var outputInstruction = typeof cfg.output_instruction === 'string' && cfg.output_instruction.trim()
+    ? cfg.output_instruction.trim()
+    : (state.lang === 'zh' ? '請輸入回答' : 'Enter your response');
+
+  /* Another selected output (e.g. entity_recognition) already renders the
+     input text; skip free_text's own input block to avoid duplicating it */
+  var otherOwnsInputPreview = state.selectedOutputTypes.some(function(k) {
+    var reg = OUTPUT_TYPE_REGISTRY[k];
+    return k !== outKey && reg && reg.rendersInputPreview === true;
+  });
+
+  if (!otherOwnsInputPreview) {
+    var inputWrap = document.createElement('div');
+    inputWrap.setAttribute('data-testid', 'generation-input-preview');
+
+    var inputTitle = document.createElement('div');
+    inputTitle.className = 'annotation-preview-task-title';
+    inputTitle.style.marginBottom = '6px';
+    inputTitle.setAttribute('data-testid', 'free-text-input-instruction');
+    inputTitle.textContent = inputInstruction;
+    inputWrap.appendChild(inputTitle);
+
+    var realText = getDatasetPreviewText();
+    var inputSample = document.createElement('div');
+    inputSample.className = 'annotation-preview-sample';
+    inputSample.setAttribute('data-testid', 'free-text-input-content');
+    var inputText = realText || (state.lang === 'zh'
+      ? '這是一段範例文字，用於預覽自由文字作答介面。'
+      : 'This is sample text for the free-text response preview.');
+    inputSample.textContent = inputText.length > 500 ? inputText.substring(0, 500) + '…' : inputText;
+    inputWrap.appendChild(inputSample);
+    container.appendChild(inputWrap);
+
+    var divider = document.createElement('div');
+    divider.className = 'annotation-preview-divider';
+    container.appendChild(divider);
+  }
+
+  var responseArea = document.createElement('div');
+  responseArea.setAttribute('data-testid', 'free-text-response-area');
+  responseArea.setAttribute('data-bypass-sensitive', 'true');
+  container.appendChild(responseArea);
+
+  var ansTitle = document.createElement('div');
+  ansTitle.className = 'annotation-preview-task-title';
+  ansTitle.style.marginBottom = '6px';
+  ansTitle.setAttribute('data-testid', 'free-text-output-instruction');
+  ansTitle.textContent = outputInstruction;
+  responseArea.appendChild(ansTitle);
 
   var textarea = document.createElement('textarea');
   textarea.style.cssText = 'width:100%;min-height:100px;padding:10px 12px;border:1.5px solid var(--color-border);border-radius:var(--radius-md);font-size:0.9rem;resize:vertical;font-family:inherit;';
   textarea.placeholder = state.lang === 'zh' ? '在此輸入回答…' : 'Type your answer here…';
+  textarea.setAttribute('aria-label', outputInstruction);
   textarea.setAttribute('data-testid', 'generation-answer-input');
   textarea.value = ps.text;
   textarea.maxLength = maxLen;
   textarea.addEventListener('input', function() { ps.text = textarea.value; charCount.textContent = textarea.value.length + ' / ' + maxLen; });
-  container.appendChild(textarea);
+  responseArea.appendChild(textarea);
 
   var charCount = document.createElement('div');
   charCount.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);text-align:right;margin-top:4px;';
   charCount.textContent = ps.text.length + ' / ' + maxLen;
-  container.appendChild(charCount);
+  responseArea.appendChild(charCount);
 }
 
 function renderRelationTripleOnlyPreview(container, outKey) {
@@ -5364,7 +5524,11 @@ function renderOutputPreview(container, outKey) {
   }
   /* relation_identification routes to the unified preview, which owns its bypass chip */
   if (outKey !== 'relation_identification' && isBypassAllowed(outKey)) {
-    if (state.previewBypass[outKey]) disableBypassedArea(container.children);
+    if (state.previewBypass[outKey]) {
+      var scopedTargets = container.querySelectorAll('[data-bypass-sensitive="true"]');
+      var bypassTargets = scopedTargets.length ? scopedTargets : container.children;
+      disableBypassedArea(bypassTargets);
+    }
     appendBypassControl(container, outKey, function() { refreshOutputPreview(container, outKey); });
   }
 }
@@ -6454,9 +6618,9 @@ function updateAnnotationPreview() {
       var orderedPreviewOutputs = state.selectedOutputTypes
         .map(function(outKey, originalIndex) {
           var outReg = OUTPUT_TYPE_REGISTRY[outKey] || {};
-          var previewRank = outReg.rendersInputPreview === true
-            ? 0
-            : (outReg.rendersEvidencePreview === true ? 2 : 1);
+          var previewRank = outReg.rendersEvidencePreview === true
+            ? 2
+            : (outReg.rendersInputPreview === true ? 0 : 1);
           return { key: outKey, rank: previewRank, originalIndex: originalIndex };
         })
         .sort(function(a, b) {
@@ -6637,6 +6801,26 @@ function syncI18nTemplateConfig(prevLang, nextLang) {
   }
 }
 
+function syncOutputConfigI18nDefaults(prevLang, nextLang) {
+  if (prevLang === nextLang || state.codeDraftDirty) return;
+  state.selectedOutputTypes.forEach(function(outKey) {
+    var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+    var cfg = state.outputConfigs[outKey];
+    if (!outReg || !cfg) return;
+    outReg.fields.forEach(function(field) {
+      var prevKey = 'defaultValue_' + prevLang;
+      var nextKey = 'defaultValue_' + nextLang;
+      if (
+        Object.prototype.hasOwnProperty.call(field, prevKey)
+        && Object.prototype.hasOwnProperty.call(field, nextKey)
+        && cfg[field.key] === field[prevKey]
+      ) {
+        cfg[field.key] = field[nextKey];
+      }
+    });
+  });
+}
+
 function renderTemplateBtns() {
   var container = el('templateBtns');
   while (container.firstChild) container.removeChild(container.firstChild);
@@ -6790,7 +6974,7 @@ function saveCodeToVisual(showSuccessToast) {
         unifiedError = state.lang === 'en' ? 'Every output needs a config object.' : '每個 output 都必須包含 config 物件。';
         return;
       }
-      imported[output.type] = cloneObject(output.config);
+      imported[output.type] = normalizeOutputConfig(output.type, output.config, state.lang);
     });
     state.selectedOutputTypes.forEach(function(type) {
       if (!imported[type] && !unifiedError) unifiedError = state.lang === 'en'
@@ -6824,6 +7008,7 @@ function saveCodeToVisual(showSuccessToast) {
     renderSchemaFields();
     updateAnnotationPreview();
     markDirty();
+    validateStep2(true);
     revalidateCurrentStep();
     if (showSuccessToast) showToast(t('toastCodeSaved'), 'success');
     track('prototype_task_new_code_saved', { taskType: state.taskType, format: state.codeFormat });
@@ -7377,17 +7562,20 @@ function renderInlineSourceBar() {
 }
 
 /* Per-column feedback under the role select:
-   Input   → missing rows block the step (red) or confirm completeness (green)
-   Output  → pre-annotation coverage (informational; empty = not yet annotated) */
+   Input / Evidence → missing rows block the step (red) or confirm completeness (green)
+   Output           → pre-annotation coverage (informational; empty = not yet annotated) */
 function makeFieldNote(col) {
   var role = state.fieldRoleMap[col] || '';
   var p = state.datasetFieldProfile[col];
-  if (!p || (role !== 'input' && role !== 'output')) return null;
+  if (!p || (role !== 'input' && role !== 'evidence' && role !== 'output')) return null;
   var total = state.datasetTotalRecords;
   var note = document.createElement('div');
   note.className = 'inline-preview-field-note';
+  note.setAttribute('data-testid', 'field-role-feedback');
+  note.setAttribute('data-field-name', col);
+  note.setAttribute('data-field-role', role);
   var txt = document.createElement('span');
-  if (role === 'input') {
+  if (role === 'input' || role === 'evidence') {
     if (p.missing > 0) {
       note.classList.add('note-error');
       note.appendChild(makeMiniIcon('alert'));
@@ -8254,8 +8442,7 @@ function onChipSelectionChange() {
   /* ADR-029: initialize outputConfigs for each selected output type */
   state.selectedOutputTypes.forEach(function(outKey) {
     if (!state.outputConfigs[outKey]) {
-      var outReg = OUTPUT_TYPE_REGISTRY[outKey];
-      state.outputConfigs[outKey] = outReg ? JSON.parse(JSON.stringify(outReg.defaultConfig)) : {};
+      state.outputConfigs[outKey] = getOutputTypeDefaultConfig(outKey, state.lang);
     }
   });
   /* Remove outputConfigs entries for deselected output types */
@@ -8352,6 +8539,7 @@ function applyLang(l) {
   }
   if (state.taskType || state.selectedOutputTypes.length > 1) {
     syncI18nTemplateConfig(prevLang, state.lang);
+    syncOutputConfigI18nDefaults(prevLang, state.lang);
     renderTemplateBtns();
     renderSchemaFields();
   }
@@ -8451,7 +8639,14 @@ el('nextBtn').addEventListener('click', function() {
         })[0];
         if (_missCol) showBannerError(t('errInputFieldMissing')
           .replace('{col}', _missCol).replace('{n}', state.datasetFieldProfile[_missCol].missing));
-        else showBannerError(t('errDataset'));
+        else {
+          var _missEvidenceCol = getFieldsByRole('evidence').filter(function(c) {
+            var p = state.datasetFieldProfile[c]; return p && p.missing > 0;
+          })[0];
+          if (_missEvidenceCol) showBannerError(t('errEvidenceFieldMissing')
+            .replace('{col}', _missEvidenceCol).replace('{n}', state.datasetFieldProfile[_missEvidenceCol].missing));
+          else showBannerError(t('errDataset'));
+        }
       }
       return;
     }

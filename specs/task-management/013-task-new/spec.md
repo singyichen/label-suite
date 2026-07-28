@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-management/013-task-new
+功能分支: feat/task-management/013-free-text-guidance
 建立日期: 2026-04-20
-版本: 6.0.0
+版本: 6.1.0
 狀態: Draft
 ---
 
@@ -46,6 +46,7 @@
 - **v5.1.0 階層選擇器攤平與保持開啟**：`multi_label` 預覽選擇器清單攤平顯示全部層級（移除 branch 展開／收合控制），階層改由縮排與可存取名稱的完整路徑表達；選項不再顯示完整路徑文字；選取節點後選擇器保持開啟，直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉，期間搜尋字串、捲動位置與焦點須跨選取保留。搜尋比對節點名稱與祖先鏈；搜尋列與標題固定於選擇器頂端。
 - **v5.2.0 taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 改用頁內確認 modal（遵循 UXC-10），取代瀏覽器原生 `confirm`；內文載明將一併刪除的子節點數量與不可復原後果，Escape／背景點擊取消，開啟時焦點置於危險紅「刪除」鈕使 Enter 確認。無子節點的 leaf 刪除維持不需確認。
 - **v6.0.0 自由文字 Evidence 與預標記契約**：`free_text` 移除 `show_reference`、舊名 `show_reference_to_annotator` 與「顯示參考答案給標記者」設定；Step 1 指定 Evidence 時，Step 2 依「背景參考 (Evidence) → Input → 回答框」順序呈現，回答區只保留輸出卡片的「自由文字」標題。指定 Output 欄位即代表其資料為可供標記者編修的預標記，回答框以該值初始化；未指定 Output 時回答框保持空白。此 Output 預標記不得被解讀為可下發隱藏 test-set ground truth。
+- **v6.1.0 Evidence 完整性與自由文字指示**：已指定為 Evidence 的欄位與 Input 採相同全資料完整性檢查，缺值時阻擋進入 Step 2；`free_text` 新增必要的 `input_instruction`／`output_instruction`，由 registry 產生設定欄位並取代原始 JSON key 作為預覽主要標題（作答區標題由 v6.0.0 的固定「自由文字」改為可設定的 `output_instruction`，輸出卡片標題不變）；已移除的 `show_reference` 不得再顯示或序列化。
 
 ## 規格常數
 
@@ -186,7 +187,7 @@ sequenceDiagram
       - 陣列或物件型儲存格以摘要文字呈現，hover 可檢視原始 JSON 內容
       - 預覽提示列顯示資料總筆數（共 N 筆資料）
       - 每個欄位標頭下方提供角色下拉選單：`Evidence（背景）` · `Input（輸入）` · `Output（輸出）` · `— 不使用 —`
-      - 指定角色後於欄位下方顯示回饋註記：Input 有缺值 → 紅色錯誤並列出問題紀錄；Input 全數有值 → 綠色確認；Output → 藍色預標記覆蓋率資訊（N/total 筆有預標記）；Evidence → 無註記
+      - 指定角色後於欄位下方顯示回饋註記：Input／Evidence 有缺值 → 紅色錯誤並列出問題紀錄；Input／Evidence 全數有值 → 綠色確認；Output → 藍色預標記覆蓋率資訊（N/total 筆有預標記）
       - 預設全部欄位為「不使用」；重新上傳或移除檔案後角色重設為「不使用」；切換資料列來源時保留各來源已指定的角色，切回原來源時自動還原
       - 角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload；僅含已指定角色的欄位
   - `task_type`：三組 chip
@@ -209,7 +210,7 @@ sequenceDiagram
 
     - cascade 行為：未選大分類 → 顯示「請先選擇大分類」；選 1 個 → 直接顯示輸出類型（無分組標題）；選 2+ 個 → 依大分類分組顯示並加子標題；取消大分類 → 該組輸出類型消失且已選項自動取消。分類／回歸切換同組選項時自動取消原選項；序列可保留多個已選項（含 `entity_recognition + relation_identification`）
     - 已移除的 `entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在任何分類、輸入類型或語系下
-  - `下一步` 啟用條件：`task_name` 非空 ∧ 至少選擇一個輸出類型 ∧ dataset 檔案通過格式/大小/編碼檢查 ∧ Input 欄位數量符合輸入類型（`single_item` 須恰好 1 個、`item_pair` 須恰好 2 個）∧ 所有 Input 角色欄位無缺值
+  - `下一步` 啟用條件：`task_name` 非空 ∧ 至少選擇一個輸出類型 ∧ dataset 檔案通過格式/大小/編碼檢查 ∧ Input 欄位數量符合輸入類型（`single_item` 須恰好 1 個、`item_pair` 須恰好 2 個）∧ 所有 Input 與已指定 Evidence 角色欄位無缺值
 - Step 2：`標記設定檔`
   - 全域共通佈局：所有輸出類型及多輸出組合皆使用設定優先主工作區。桌面寬度大於 1100px 時，schema 設定區在左、標記預覽在右且頂端對齊；左欄顯示「標記設定」、右欄顯示「標記預覽」小標，兩者字級、字重、色彩與垂直位置一致。1100px 以下依序改為 schema 設定區、標記預覽。範本／上傳與 Code 置於主工作區下方並整合為單一外框工具卡，Code 編輯器高度固定為 240px
   - 整合設定檔工具卡中的範本／上傳列：
@@ -303,8 +304,12 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 22. **Given** 使用既有 `multi-label.json` 的 flat `string[]` output，**When** Step 2 自動帶入，**Then** 系統建立一層 leaf taxonomy 並將值正規化為單段 preview paths；原 fixture 不需改寫。
 23. **Given** 使用階層式 `string[][]` output，**When** Step 2 自動帶入，**Then** 系統依所有 records 首次出現順序合併共同 prefix 建立 union tree，並只以第一筆資料初始化預覽選取。
 24. **Given** taxonomy 超過深度、節點數或字串長度上限，或含空值／重複 ID／無效 children，**When** 從 Visual、Code 或資料自動帶入任一入口套用，**Then** 三個入口以相同規則阻擋並保留最後一份有效 config。
-25. **Given** 選擇 `free_text` 並在 Step 1 分別指定 Evidence、Input 與 Output 欄位，**When** Step 2 標記預覽載入，**Then** 依「背景參考 (Evidence) → Input → 回答框」順序顯示第一筆實際資料，且回答框以 Output 欄位值預填；回答區只顯示輸出卡片的「自由文字」標題，不得再顯示 Output 欄位名稱。
+25. **Given** 選擇 `free_text` 並在 Step 1 分別指定 Evidence、Input 與 Output 欄位，**When** Step 2 標記預覽載入，**Then** 依「背景參考 (Evidence) → Input → 回答框」順序顯示第一筆實際資料，且回答框以 Output 欄位值預填；回答區顯示輸出卡片的「自由文字」標題與可設定的 `output_instruction`，不得再顯示 Output 欄位名稱。
 26. **Given** 選擇 `free_text` 並指定 Input、選填 Evidence 但未指定 Output，**When** Step 2 標記預覽載入，**Then** 回答框值為空字串且回答框上方不得顯示「回答」／「Answer」；標記設定與 Code 區均不得顯示或序列化 `show_reference` 或 `show_reference_to_annotator`。
+27. **Given** 使用者將欄位指定為 Evidence 且全部紀錄皆有值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示綠色「全部 N 筆有值」，且不阻擋進入 Step 2。
+28. **Given** 已指定的 Evidence 欄位有任一紀錄缺值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示紅色缺值數與問題紀錄識別，頁面停用「下一步」；將角色改回「不使用」後錯誤立即清除。
+29. **Given** 使用者建立 `free_text` 任務，**When** 在 Step 2 編輯「輸入區說明」與「作答區說明」，**Then** 右側預覽立即以兩段說明取代 Input／Output 原始 JSON key 作為主要標題，且 Code 與 `outputs[].config` 同步保存 `input_instruction`／`output_instruction`。
+30. **Given** 使用者開啟 `free_text` 設定或載入含舊 `show_reference` 的 config，**When** Step 2 完成正規化，**Then** 設定面板不顯示「顯示參考答案給標記者」，Code 與 `outputs[].config` 亦不保留 `show_reference`；若舊 config 缺少 instruction，依當前語系補入預設值且不阻擋下一步。
 
 **介面定義**：
 
@@ -316,7 +321,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
   - 預設不為 `evidence` 角色欄位顯示獨立區塊；當已選輸出類型於 registry 宣告 `rendersEvidencePreview: true`（目前為 `free_text`）且 Step 1 已指定 Evidence 時，最上方必須顯示「背景參考 (Evidence)」與該欄位的實際內容。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另記錄於 config 的 `evidence_fields`）
   - 通用輸入文字區塊依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤 + 單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊，呈現配對輸入
   - 當已選輸出類型均未於 registry 宣告 `rendersInputPreview: true` 時，通用輸入文字區塊位於所有輸出類型預覽之上方；任一已選輸出類型宣告該 metadata 時，專屬或整合預覽負責完整呈現輸入內容，不得再顯示通用輸入文字區塊
-  - `entity_recognition`、`relation_identification` 宣告 `rendersInputPreview: true`；`sequence_tagging` 維持預設值 `false`，繼續顯示通用輸入文字區塊。複合任務依已選輸出類型的 registry metadata 推導，不得以任務名稱硬編判斷
+  - `entity_recognition`、`relation_identification`、`free_text` 宣告 `rendersInputPreview: true`；`sequence_tagging` 維持預設值 `false`，繼續顯示通用輸入文字區塊。複合任務依已選輸出類型的 registry metadata 推導，不得以任務名稱硬編判斷
   - 存在相依關係的輸出類型合併為整合預覽（如 `entity_recognition` + `relation_identification` 合併為含圈選文字、實體列表、關係建構器的統一介面）
   - 各輸出類型的預覽互動方式：
 
@@ -329,7 +334,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `multi_label` | 文字顯示 + 可搜尋的階層多選器；清單攤平顯示全部層級並以縮排表達階層，每個節點皆有獨立 checkbox，選取後選擇器保持開啟，已選 chip 只顯示被選節點名稱 |
     | `single_dim` | 文字顯示 + 維度名稱 + 可拖曳滑桿；當前值即時跟隨滑塊顯示於正上方，左側顯示 min、右側提供 number input 精確輸入 |
     | `multi_dim` | 文字顯示 + 多維度各自獨立可拖曳滑桿；每列使用不同維度色，當前值即時跟隨各自滑塊顯示於正上方，左側顯示 min、右側提供 number input 精確輸入 |
-    | `free_text` | 選填的「背景參考 (Evidence)」+ Input 文字 + 可編輯 textarea（含字數計數器）；有 Output 欄位時預填其資料，無 Output 欄位時保持空白 |
+    | `free_text` | 選填的「背景參考 (Evidence)」+ `input_instruction` + Input 實際內容卡 + `output_instruction` + 可編輯 textarea（含字數計數器）；主要標題不得使用 Input／Output 原始 JSON key；有 Output 欄位時預填其資料，無 Output 欄位時保持空白 |
 
   - 上表所有輸出類型的預覽區塊底部（`allow_bypass` 開啟時）均附「無法判定 (Bypass)」勾選項；勾選後清空並停用該輸出類型的其他預覽互動控制項，取消勾選後恢復（見 FR-003j）
 
@@ -360,6 +365,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | `single_dim` | `dimension_name`（維度名稱） | `text` | 是 |
     | `single_dim` | `min` / `max` / `step` | `number` | 是 |
     | `multi_dim` | `dimensions`（維度列表） | `va-dimensions` | 是 |
+    | `free_text` | `input_instruction`（輸入區說明，預設「請閱讀以下內容」，最多 100 字） | `text` | 是 |
+    | `free_text` | `output_instruction`（作答區說明，預設「請輸入回答」，最多 100 字） | `text` | 是 |
     | `free_text` | `max_length`（最大字數） | `number` | 否 |
     | *（所有輸出類型共通）* | `allow_bypass`（允許無法判定 Bypass） | `boolean`（預設 `true`） | 否 |
 
@@ -472,6 +479,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - 追加上傳的資料集檔案於所選資料列來源路徑取不出紀錄、或紀錄欄位集合與已上傳檔案不一致：阻擋該檔案加入並顯示不相容提示；已通過驗證的其他檔案不受影響。
 - 上傳的 JSON 完全偵測不到可用紀錄集合（無任何以物件為元素的陣列且根節點非單一物件）：顯示錯誤並阻擋進入下一步。
 - Input 角色欄位存在缺值（缺 key、`null`、空白字串、空陣列、空物件）：阻擋進入 Step 2 並列出問題紀錄；`0` 與 `false` 視為有值不計入缺值。
+- 已指定的 Evidence 角色欄位存在缺值：採與 Input 相同的空值定義，阻擋進入 Step 2 並列出問題紀錄；將該欄位改回「不使用」後立即解除該欄位造成的阻擋。
 - Output 角色欄位部分或全部為空：不阻擋流程，該些紀錄視為未預標記，覆蓋率資訊如實顯示。
 - `free_text` 未指定 Output 角色欄位：回答框保持空白，不得以 Evidence、Input、預設範例或前一筆資料代填。
 - `free_text` 同時指定 Evidence、Input 與 Output：Evidence 永遠位於 Input 之前，Output 僅用於初始化最後的回答框，不另顯示「參考答案」區塊。
@@ -483,6 +491,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - Step 3 `每回合抽樣筆數` 輸入為 `0`、負數、或 `>= 資料集總筆數`：阻擋進入 Step 4 並顯示修正提示。
 - Step 4 僅填標記員說明、僅填審核員說明，或兩者皆空：皆視為合法；不得強制要求兩個角色都填。
 - 任一輸出類型的 `entity-list`、`taxonomy-tree` 或 `tag-list` 必填欄位為空或含空白項目：阻擋進入 Step 3 並顯示可定位錯誤。
+- `free_text.input_instruction` 或 `free_text.output_instruction` 為空字串、全空白或超過 100 字：阻擋進入 Step 3，保留使用者輸入並顯示可定位錯誤。
+- 舊版 `free_text` config 缺少 instruction 或仍含 `show_reference`：依目前語系補入兩個 instruction 預設值，並移除已退役 key；不得出現「畫面看似有預設值但 state 缺值而無法前進」的狀態。
 - `multi_label` taxonomy 無 root、`id` 全樹重複、`children` 為空陣列或非陣列、branch 設定 color、深度超過 `TAXONOMY_MAX_DEPTH`、總節點超過 `TAXONOMY_MAX_NODES`，或節點 `id`／`name` 超過對應字數上限：阻擋套用並保留最後一份有效 config，不得截斷或略過。
 - `multi_label` 設定 `max_selections` 大於 selectable node 數量：顯示提示但不阻擋（視為「不限」語意）。
 - `multi_label` 的 output 欄位在同一欄混用 flat `string[]` 與 hierarchical `string[][]`、階層 path 未從 root 開始、含 orphan segment 或未對應既有 root-to-node route：阻擋自動帶入並顯示資料列與欄位位置，不猜測或截斷路徑。路徑終止於 branch 或 leaf 均合法。
@@ -522,8 +532,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-002c-3**：資料集解析 array 型別欄位時必須先辨識 shape，不得一律 flatten。`string[]` 各元素個別收集為 flat unique values（例如 `["positive","negative"]` 拆為兩個值）；`string[][]` 的每個內層陣列視為一條完整 root-to-selected-node ID path，segment 必須在全樹唯一，並依所有 records 首次出現順序合併共同 prefix；路徑終點可以是後續仍有 children 的 branch。同一欄位混用兩種 shape、出現非字串 segment 或相同 ID 出現在不同 parent 下時視為資料錯誤。
 - **FR-002c-4**：資料集上傳成功後，系統必須自動偵測 JSON 中可作為紀錄集合的陣列（含巢狀結構與物件包裹形式，如 `{ meta, data: [...] }`），預設選擇最合適的候選作為**資料列來源**；偵測到多個候選時，須於預覽表格上方提供下拉選單供手動切換並顯示候選數提示，僅一個候選時下拉選單停用；完全偵測不到可用紀錄集合時，顯示錯誤並阻擋進入下一步。切換資料列來源後，若任一已上傳檔案於新來源路徑取不出紀錄，系統必須顯示標明該檔案的不相容提示，且該檔案的紀錄不納入合併資料集統計；切換至所有檔案皆可取出紀錄的來源時提示解除。
 - **FR-002c-5**：欄位剖析必須涵蓋所選資料列來源的**全部紀錄**（非僅預覽的前 2 筆），逐欄統計缺值筆數。空值定義：缺少該 key、`null`、空字串或僅含空白字元的字串、空陣列、空物件；**`0` 與 `false` 視為有值**。
-- **FR-002c-6**：指定欄位角色後，系統必須於該欄位下方顯示回饋註記：Input 角色且有缺值 → 紅色錯誤，列出問題紀錄識別（紀錄含 `id` 欄位時顯示其值，否則顯示列號，先列出前幾筆）；Input 角色且全數有值 → 綠色確認；Output 角色 → 藍色預標記覆蓋率資訊（N/total 筆有預標記）；**Output 欄位存在空值不阻擋流程**，視為該筆未預標記；Evidence 角色 → 無註記。
-- **FR-002c-7**：任一 Input 角色欄位存在缺值時，系統必須阻擋進入 Step 2，並以欄位下方 inline 錯誤與頁首錯誤提示指出欄位名稱與缺值筆數。
+- **FR-002c-6**：指定欄位角色後，系統必須於該欄位下方顯示回饋註記：Input 或 Evidence 角色且有缺值 → 紅色錯誤，列出問題紀錄識別（紀錄含 `id` 欄位時顯示其值，否則顯示列號，先列出前幾筆）；Input 或 Evidence 角色且全數有值 → 綠色確認；Output 角色 → 藍色預標記覆蓋率資訊（N/total 筆有預標記）。**Output 欄位存在空值不阻擋流程**，視為該筆未預標記；未指定 Evidence 時不檢核、不顯示 Evidence 結果。
+- **FR-002c-7**：任一 Input 或已指定 Evidence 角色欄位存在缺值時，系統必須阻擋進入 Step 2，並以欄位下方 inline 錯誤與頁首錯誤提示指出角色、欄位名稱與缺值筆數；多個缺值欄位並存時頁首先顯示第一個不完整欄位。角色改回「不使用」後，該欄位造成的錯誤與阻擋必須立即解除。
 - **FR-002d**：當使用者追加上傳資料集檔案時，系統必須驗證新檔案於目前所選資料列來源路徑可取出紀錄、且紀錄欄位集合與已上傳檔案完全一致；不符合時阻擋該檔案加入並顯示不相容提示，已上傳的其他檔案不受影響；嵌入式預覽表格必須於每次上傳成功後即時重新整理；移除任一檔案後，系統必須同步重新偵測資料列來源並重建欄位剖析與預覽。
 - **FR-003**：Step 2 標記設定檔必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型的 schema 欄位由 registry 定義。
 - **FR-003a**：Step 2 必須採所有輸出類型及多輸出組合共通的單頁設定優先佈局，由設定與預覽主工作區及下方整合設定檔工具卡組成，不得依 output type key 切換為其他版面。
@@ -540,7 +550,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003d-6**：`multi_label` 必須支援 `label_options: LabelOptionNode[]` 與 `max_selections`（number，0 = 不限）。每個 node 包含全樹唯一且穩定的 `id`、顯示用 `name`、leaf 選填 `color` 及遞迴 `children`；branch 不可設定 color，但每個 node 都可獨立選取。設定介面使用 `taxonomy-tree` 新增 root／child／sibling、編輯、同層排序、展開／收合與刪除 subtree；刪除含子節點的 branch 必須以頁內確認 modal 攔截（遵循 UXC-10：標題點名動作、內文載明將一併刪除的子節點數量與不可復原後果、危險紅主按鈕「刪除」、次要「取消」，Escape 取消、開啟時焦點置於確認鈕使 Enter 確認），不得使用瀏覽器原生 `confirm`；無子節點的 leaf 刪除不需確認；預覽使用可搜尋階層多選器：清單攤平顯示全部層級並以縮排表達階層（不提供 branch 展開／收合），每個節點顯示 checkbox 且不顯示完整路徑文字（完整路徑保留於可存取名稱），選取後選擇器保持開啟直到使用者以 Escape、關閉按鈕、trigger 或點擊外部關閉。已選 chip 只顯示被選節點名稱，完整 root-to-selected-node ID path 仍作選項身分與資料儲存。驗證：至少一個 root、非空 ID/name、全樹 ID 唯一、`children` 存在時為非空陣列、深度／節點數／字串長度不超過 taxonomy 常數；`max_selections >= 0` 且以 selected node path 數量計算。
 - **FR-003d-8**：`single_dim` 必須支援 `dimension_name`（text）、`min`/`max`/`step`（number）。設定介面固定顯示一張與 `multi_dim` 相同結構的維度卡片，依序包含維度名稱與 min/max/step 三欄，不顯示新增或刪除控制。預覽：文字區塊 + 維度名稱 + 可拖曳 range slider；當前值標籤必須即時更新並跟隨滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數。滑桿與 number input 必須雙向同步並支援鍵盤操作；slider 依 config `step` 微調，number input 採 `step="any"` 並只依 min/max 校正，不得把範圍內小數吸附至 slider step。驗證：`min` < `max`、`step` > `0`。
 - **FR-003d-9**：`multi_dim` 必須支援 `dimensions`（`{ name, min, max, step }[]`），使用者可自訂任意維度名稱與範圍，不限於特定維度。設定介面以與 `single_dim` 相同結構的維度卡片重複呈現各維度並提供新增／刪除控制，卡片清單前不得再顯示「維度設定 *」外層標題。預覽：每個維度以獨立區塊呈現維度名稱與**可拖曳** range slider；當前值標籤必須即時更新並跟隨各自滑塊顯示於正上方，左側顯示 min，右側 number input 可直接輸入整數或小數並與該列滑桿雙向同步。每個維度必須依順序配置不同滑桿色，並同時保留文字標籤以避免只靠顏色辨識；無維度時顯示提示。驗證：至少一個維度、每個維度 `min` < `max` 且 `step` > `0`；slider 依各維度 step 微調，number input 採 `step="any"` 並只依各維度 min/max 校正。
-- **FR-003d-10**：`free_text` 僅支援 `max_length`（number），不得提供或序列化 `show_reference`／「顯示參考答案給標記者」設定。預覽依序顯示選填的「背景參考 (Evidence)」、Input 文字與 textarea（含字元計數 `N / max_length`）；回答區只保留輸出卡片的「自由文字」/「Free text」標題，textarea 上方不得再顯示「回答」/「Answer」或 Output 欄位原始名稱。有 Output 欄位時以該欄位實際值預填 textarea，未指定 Output 時 textarea 值必須為空字串。驗證：`max_length` > `0`。
+- **FR-003d-10**：`free_text` 必須支援必要的 `input_instruction`（string，zh 預設「請閱讀以下內容」、en 預設 `Read the following content`）與 `output_instruction`（string，zh 預設「請輸入回答」、en 預設 `Enter your response`），以及 `max_length`（number）；不得提供或序列化 `show_reference`／舊名 `show_reference_to_annotator`／「顯示參考答案給標記者」設定。兩個 instruction 皆為單行文字、trim 後不可為空且最多 100 字，設定欄位須提供用途與範例 helper text。`free_text` 宣告 `rendersInputPreview: true` 與 `rendersEvidencePreview: true`，專屬預覽依序呈現選填的「背景參考 (Evidence)」、`input_instruction`、Input 實際內容卡、分隔線、`output_instruction`、textarea 與字元計數 `N / max_length`；Input／Output 原始 JSON key 不得作為主要可見標題，textarea 上方不得顯示「回答」/「Answer」或 Output 欄位原始名稱；當其他已選輸出類型已宣告 `rendersInputPreview: true`（如與 `entity_recognition` 組合）時，`free_text` 專屬預覽不得重複顯示 `input_instruction` 與 Input 內容卡。有 Output 欄位時以該欄位實際值預填 textarea，未指定 Output 時 textarea 值必須為空字串。修改 instruction 後預覽與 Code 必須於 100ms 內同步；切換語系時，仍等於前語系預設值者才切換成新語系預設，自訂內容須保留。勾選 Bypass 時只清空停用作答區，輸入說明與 Input 內容持續可讀。載入舊 config 時移除退役 key，缺少 instruction 時依當前語系補預設。驗證：`input_instruction`／`output_instruction` 非空且各不超過 100 字，`max_length` > `0`。
 - **FR-003d-11**：當 `selectedOutputTypes` 同時包含 `entity_recognition + relation_identification` 時，預覽區必須以統一模式呈現，但兩個單一輸出類型仍保留各自互動契約：共用同一份文本，`entity_recognition` 保留 FR-003d-3 的兩種實體建立順序，`relation_identification` 保留循序關係建構器；未指定實體類型的同一反白範圍可由實體類型按鈕消費以建立實體，或由關係步驟消費以建立 relation 草稿。實體列表與三元組列表合併呈現，並支援從無預標記資料的空白狀態完成標記。當僅選取 `relation_identification` 時，預覽沿用相同的循序關係建構器，但既有實體僅為唯讀候選，不得顯示任何 Span 編輯介面。純模式與整合模式的 `type` 選單皆依 FR-003d-4 由非空的 `relation_types` 條件式顯示。其他非依賴鏈的輸出類型以獨立區塊各自渲染。
 - **FR-003d-12**：Step 2 標記設定區的每個輸出類型均以獨立手風琴面板呈現；選中超過 2 個時僅第一個面板預設展開，其餘預設收合；面板標題使用可聚焦的 button，支援 Enter／Space 切換並正確暴露 `aria-expanded`／`aria-controls`。有依賴關係時，面板標題下方必須顯示依賴提示。
 - **FR-003d-13**：輸出類型來源關聯規則：選擇 `relation_identification` 不得自動加入 `entity_recognition`；只有使用者明確同時選取 `entity_recognition + relation_identification` 時，系統才啟用整合模式並由 registry 的 `source_output` metadata 在輸出 config 加入 `source_output: entity_recognition`。取消 `entity_recognition` 時保留 `relation_identification`、切回純關係模式並移除 `source_output`，不得連帶取消關係三元組。
@@ -549,7 +559,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003g**：Step 2 標記預覽區必須提供每個輸出類型的互動式標記體驗，使用者可實際操作標記方式（點擊、圈選、拖曳、輸入等），且在設定變更時即時同步更新。
 - **FR-003g-1**：預覽文字來源：已上傳資料集時讀取 `field_role_map` 中 `input` 角色欄位的實際內容；未上傳時顯示各輸出類型的預設範例文字。
 - **FR-003g-2**：Step 2 標記預覽區預設不得為 `evidence` 角色欄位顯示獨立卡片或區塊；只有已選輸出類型於 registry 宣告 `rendersEvidencePreview: true` 時例外顯示，目前 `free_text` 的該 metadata 為 `true`。例外情況下 Evidence 必須位於 Input 與輸出互動控制項之前；未指定 Evidence 時不得顯示空的背景區塊。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另將欄位記錄於 config 的 `evidence_fields`）。
-- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤與單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`entity_recognition`、`relation_identification` 的該 metadata 為 `true`；`sequence_tagging` 維持預設 `false`。複合任務（如 `entity_recognition + relation_identification`、`entity_recognition + relation_identification + multi_dim`）須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
+- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示 Input 欄位名稱標籤與單一文字區塊；`item_pair` 顯示兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`entity_recognition`、`relation_identification`、`free_text` 的該 metadata 為 `true`；`sequence_tagging` 維持預設 `false`。複合任務（如 `entity_recognition + relation_identification`、`entity_recognition + relation_identification + multi_dim`）須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
 - **FR-003g-4**：各輸出類型的預覽互動（如點擊標籤 chip）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽。
 - **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 將 flat `string[]` 正規化為單段 paths，或直接使用 hierarchical `string[][]` 完整 paths，且只以第一筆資料的合法 paths 初始化；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以實際 BIO 標記初始化 token 標記；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時其他輸出類型維持各自預設值，`free_text` textarea 則必須為空字串。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應；`string[][]` 優先識別為 hierarchical `multi_label` path，BIO 字串陣列與一般 flat 字串陣列依既有規則區分，不得一律採用同一欄位。Output 角色資料是建立者明確指定的 annotator-visible preannotation；隱藏 test-set ground truth 仍不得透過 API、前端 state 或 preview 下發給標記者。
 - **FR-003g-6**：`single_label` 的 `label_options` 仍由 scalar unique values 自動帶入 `{ name, color }`。`multi_label` 的自動帶入必須 shape-aware：flat `string[]` 建立一層 leaf taxonomy，舊值同時作 `id` 與 `name`；hierarchical `string[][]` 的 segment 是全樹唯一 node ID，依全部 records 合併共同 prefix 建立 union tree，並先以該 ID 作初始 `name`。若需跨分支同名顯示，使用者在 Visual 將不同 ID 節點的 `name` 改為相同文字。節點與 sibling 的順序依資料首次出現順序，已帶入後不重複執行；混合 shape、ID 出現在不同 parent、其他無效 segment 或超過 taxonomy 資源限制時不得建立部分樹。
@@ -626,11 +636,12 @@ flowchart LR
 
 - **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
+- **FreeTextConfig**：`free_text` 的 config。欄位：`input_instruction: string`、`output_instruction: string`（皆為必要、trim 後非空且最多 100 字）、`max_length: number`（`> 0`）、`allow_bypass: boolean`；不包含已退役的 `show_reference`。
 - **LabelOptionNode**：`multi_label.label_options` 的遞迴節點。欄位：`id: string`（全樹唯一、穩定）、`name: string`（顯示文字）、`color?: string`（僅 leaf）、`children?: LabelOptionNode[]`（存在時必須非空）。
 - **LabelPath**：Task New 資料解析與預覽選取使用的 `string[]`，依序記錄 root 到 selected node 的 node IDs；路徑可以結束於 branch 或 leaf。本規格不先定義 015 的持久化 submission envelope。
 - **MultiLabelConfig**：欄位：`label_options: LabelOptionNode[]`、`max_selections: number`（`0` = 不限）、`allow_bypass: boolean`。selection policy 固定為 all-node independent selection，parent 不 cascade children；preview selected chip 只顯示被選節點名稱，不提供使用者 toggle。
 - **FieldRole**：`'evidence' | 'input' | 'output'`。
-- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`rendersEvidencePreview`（可選 boolean、預設 `false`；表示該輸出類型允許在輸入之前顯示 Step 1 指定的 Evidence）、`retiredConfigKeys`（可選 string array；序列化時必須移除的舊 config keys，`free_text` 包含 `show_reference` 與 `show_reference_to_annotator`）、`dimensionSettings`（可選的回歸設定呈現 metadata；宣告單張或多張模式及對應 config keys）、`fields[]`（schema 欄位定義，每項含 key / type〔含 `taxonomy-tree`〕/ zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview`、`rendersEvidencePreview`、`retiredConfigKeys` 與 `dimensionSettings` 均為 UI／migration metadata，不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
+- **OutputTypeRegistryItem**：輸出類型 registry 定義。欄位：`key`（`OUTPUT_TYPE_KEYS`）、`zh` / `en`（顯示名稱）、`source_output`（可選的組合來源 output type；只有來源同時被選取時才序列化至該 output config）、`rendersInputPreview`（可選 boolean、預設 `false`；表示專屬或整合預覽已完整呈現輸入內容）、`rendersEvidencePreview`（可選 boolean、預設 `false`；表示該輸出類型允許在輸入之前顯示 Step 1 指定的 Evidence）、`retiredConfigKeys`（可選 string array；序列化時必須移除的舊 config keys，`free_text` 包含 `show_reference` 與 `show_reference_to_annotator`）、`dimensionSettings`（可選的回歸設定呈現 metadata；宣告單張或多張模式及對應 config keys）、`fields[]`（schema 欄位定義，每項含 key / type〔含 `taxonomy-tree`〕/ zh / en / required / addLabel_zh / addLabel_en / options[] / defaultValue / defaultValue_zh / defaultValue_en / placeholder_zh / placeholder_en / hint_zh / hint_en）、`defaultConfig`（預設值物件）。`rendersInputPreview`、`rendersEvidencePreview`、`retiredConfigKeys` 與 `dimensionSettings` 均為 UI／migration metadata，不得序列化至 `outputs[]` config；Step 2 版面為頁面層級共通契約，不屬於 output type registry 欄位。
 - **TaskConfig**：提交時的完整設定，含 `input_type` + `outputs[]`（供 annotation/dataset 模組使用）。
 - **TaskMembership**：建立者自動加入的任務角色關係（`project_leader`）。
 - **RunInitConfig**：首次啟動設定。欄位：`sampling_value`（筆數，`>= 1` 且 `< dataset_total`）、`isolation_enabled`。
@@ -668,6 +679,8 @@ flowchart LR
 > **v5.0.0 下游同步延後**：本次先確立 013 producer-side 的 `multi_label` Task Config、Step 2 樹編輯、preview `LabelPath` 正規化與驗收界線。014 Task Detail、015 Annotation Workspace、017 Dataset Quality 的顯示、持久化提交 envelope 與階層統計／IAA 契約尚未同步檢查，依產品決策留待後續一起處理；在該同步完成前不得宣稱 consumer contract 已相容，014／015／017 consumer 端功能亦不得進入實作或 PR review。013 producer-side 的 prototype 迭代屬設計階段產物，不受此延後限制。
 >
 > **v6.0.0 下游影響檢查**：本次移除 `free_text.config.show_reference`，並將 Output 角色明確定義為 annotator-visible preannotation。014 Visual 編輯器與 015 Annotation Workspace 後續接上 `outputs[]` consumer contract 時不得再呈現或依賴 `show_reference`；015 必須以 `field_role_map` 區分 Evidence／Input／Output，且隱藏 test-set ground truth 仍不得下發。016／017 的評估資料需求不因移除可見性 toggle 而刪除 Output 資料。consumer 端同步仍受 v5.0.0 延後規則約束，本次僅實作 013 producer-side prototype。
+>
+> **v6.1.0 下游影響檢查**：Evidence 完整性屬 013 Step 1 producer-side 上傳驗證，不改變 `field_role_map` 結構，016／017 無需調整。`free_text.config` 新增必要的 `input_instruction`／`output_instruction`，014 Visual 編輯器與 015 Annotation Workspace 後續消費 `outputs[]` 時必須沿用兩個顯示字串且不得再依賴 v6.0.0 已退役的 `show_reference`／`show_reference_to_annotator`；本版只同步 013 prototype 與 producer contract，不宣稱 014／015 consumer 已完成相容實作。
 
 ---
 
@@ -679,6 +692,7 @@ flowchart LR
 - **SC-002c**：Step 3 會明確提示成員邀請需於 task-detail 執行，建立後可在 member-management 看到對應入口。
 - **SC-002d**：Step 4 分別設定的標記員/審核員說明內容與附件，可於建立後在 task-detail 或 annotation-workspace 依角色正確讀取。
 - **SC-002e**：Step 1 的分類（單一標籤／多標籤）與回歸（單維度／多維度）輸出 chip 皆以 radio 呈現且各組同時最多選一項；切換同組選項會取消原項目，跨分類／回歸組可各保留一項；序列輸出仍可用 checkbox 同時選取多項。
+- **SC-002f**：Step 1 每個指定為 Evidence 的欄位皆顯示全資料完整性結果；全數有值時顯示綠色「全部 N 筆有值」，任一缺值時顯示紅色缺值筆數與可定位紀錄並阻擋進入 Step 2，改回「不使用」後立即解除該欄位的阻擋。
 - **SC-003**：Step 2 可依 `OUTPUT_TYPE_REGISTRY` 產生設定介面，且 schema 設定區與 code 區內容一致。
 - **SC-003a**：Step 2 標記預覽可呈現每個輸出類型的互動式標記體驗，並可反映當前設定。
 - **SC-003b**：Step 2 預覽支援使用者實際操作（點擊 token 上標、圈選文字、拖曳滑桿、選取標籤等）。
@@ -700,7 +714,8 @@ flowchart LR
 - **SC-003s**：至少三層 taxonomy 依序完成 Visual → JSON → Save → Visual 與 Visual → YAML → Save → Visual 後，樹結構、順序、ID、名稱、leaf color、`max_selections` 與 `allow_bypass` deep-equal；無效 Code 不覆蓋最後有效 config。
 - **SC-003t**：既有 flat fixture 可建立一層 taxonomy 並正規化為單段 preview paths；新的 hierarchical fixture 可由所有 records 建立共同 prefix union tree，第一筆的完整 paths 正確預選；flat/path 混用、duplicate ID、invalid path、深度 9、節點 501 及 101 字元 ID/name 均被拒絕。
 - **SC-003u**：`taxonomy-tree` 與 preview selector 可由鍵盤完整操作並暴露正確 tree ARIA 狀態；375px 使用全寬 dialog／bottom sheet 且 Escape 還原焦點，375px／768px／1440px 的 `document.scrollWidth` 不超過 viewport width。
-- **SC-003v**：`free_text` 在指定 Evidence、Input、Output 時，Step 2 可驗證 DOM 與視覺順序為「背景參考 (Evidence) → Input → 回答框」，回答區只顯示輸出卡片的「自由文字」標題，回答框值等於首筆 Output；未指定 Output 時值為空字串。schema 與產生的 YAML/JSON 均不含 `show_reference` 或 `show_reference_to_annotator`。
+- **SC-003v**：`free_text` 在指定 Evidence、Input、Output 時，Step 2 可驗證 DOM 與視覺順序為「背景參考 (Evidence) → Input → 回答框」，回答區顯示可設定的 `output_instruction`（不再顯示「回答」或 Output 欄位名稱），回答框值等於首筆 Output；未指定 Output 時值為空字串。schema 與產生的 YAML/JSON 均不含 `show_reference` 或 `show_reference_to_annotator`。
+- **SC-003w**：`free_text` 設定面板顯示必要的「輸入區說明」與「作答區說明」，zh 預設值分別為「請閱讀以下內容」與「請輸入回答」，en 預設值分別為 `Read the following content` 與 `Enter your response`；修改後 100ms 內同步至專屬預覽與 Code。任一值 trim 後為空或超過 100 字時阻擋進入 Step 3 並顯示可定位錯誤；Bypass 只停用作答區，輸入內容持續可讀；舊 config 缺少 instruction 時須補預設並可繼續。
 - **SC-004**：新增 output type 到 registry 後，可直接在流程中使用，不需改核心流程程式碼。
 - **SC-004a**：研究生現行任務情境（情感分類、多標籤、多維度評分、實體辨識、關係識別、自由文字）可在 `task-new` 透過輸出類型組合完成設定。
 - **SC-004b**：在 code 區編輯 YAML/JSON 後，點擊 `儲存` 可立即回填並反映於 schema 欄位；格式錯誤時不覆蓋既有設定。
@@ -748,6 +763,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.1.0 | 2026-07-28 | **Evidence 完整性與自由文字指示**：Step 1 對每個 Evidence 欄位執行全資料缺值檢查，顯示綠／紅欄位回饋並於缺值時阻擋下一步；`free_text` 新增必要且支援 zh/en 預設的 `input_instruction`／`output_instruction`（trim 非空、100 字上限），專屬預覽改以兩段可編輯指示文字呈現輸入與作答區標題（作答區標題由 v6.0.0 的固定「自由文字」改為可設定的 `output_instruction`），並同步 Visual／Code。舊 config 缺 instruction 時補預設並清除 v6.0.0 退役 key；Bypass 僅停用作答區。新增驗收情境 27–30、SC-002f／SC-003w 與 Prototype Playwright 回歸測試；014／015 consumer 影響另行追蹤。 |
 | 6.0.0 | 2026-07-24 | **自由文字 Evidence 與預標記契約**：破壞性移除 `free_text.show_reference`、舊名 `show_reference_to_annotator` 與「顯示參考答案給標記者」設定；Step 1 指定 Evidence 時，Step 2 依「背景參考 (Evidence) → Input → 回答框」顯示，回答區只保留輸出卡片的「自由文字」標題，不再重複顯示「回答」或 Output 欄位名稱。指定 Output 即以其資料預填回答框，未指定則保持空白；新增 `rendersEvidencePreview` UI metadata 與 `retiredConfigKeys` 舊設定清理、FR-003d-10／FR-003g-2／FR-003g-5、SC-003v、下游與 test-set ground-truth 安全界線，並同步 prototype Playwright 驗收。 |
 | 5.2.1 | 2026-07-24 | **下游延後範圍釐清**：v5.0.0「下游同步延後」原文「不得進入實作或 PR review」範圍過廣，與 013 producer-side prototype 迭代（設計階段產物）矛盾；改為僅限 014／015／017 consumer 端功能。同步修正 ADR-029 對應句。無行為變更。 |
 | 5.2.0 | 2026-07-24 | **taxonomy 分支刪除確認 modal**：`taxonomy-tree` 刪除含子節點的 branch 由瀏覽器原生 `confirm` 改為頁內確認 modal（遵循 UXC-10）：標題點名動作、內文含子節點數量與不可復原後果、危險紅「刪除」主按鈕與「取消」次按鈕、Escape／背景點擊取消、焦點置於確認鈕使 Enter 確認；leaf 刪除維持不確認。Prototype 與 Playwright 回歸測試同步。 |
