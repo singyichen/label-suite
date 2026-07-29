@@ -1,0 +1,417 @@
+    .list-item.role-task-card {
+      cursor: pointer;
+    }
+
+    .list-item:hover {
+      border-color: var(--color-primary);
+      background: #F9FAFB;
+    }
+
+    .list-item-title {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .list-item-detail {
+      display: block;
+      margin-top: 4px;
+      color: var(--color-ink-muted);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    /* ── Workflow Role Cards ──────────────────────────────── */
+    .workflow-role-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-md);
+    }
+
+    .workflow-role-card {
+      padding: var(--space-lg) var(--space-md) var(--space-md);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: var(--space-xs);
+    }
+
+    .role-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .role-avatar img,
+    .role-avatar svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .role-avatar--emerald { background: #D1FAE5; color: #059669; }
+    .role-avatar--violet  { background: #EDE9FE; color: #7C3AED; }
+    .role-avatar--indigo  { background: #DBEAFE; color: #1D4ED8; }
+
+    .role-name {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--color-ink);
+    }
+
+    .role-subtitle {
+      font-size: 0.8125rem;
+      color: var(--color-ink-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    /* ── Workflow Step Diagrams ───────────────────────────── */
+    .workflow-steps-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 2px;
+      width: 100%;
+      margin: var(--space-xs) 0;
+    }
+
+    .workflow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .step-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-icon img,
+    .step-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .step-icon--emerald-solid { background: #10B981; color: #fff; }
+    .step-icon--emerald       { background: #D1FAE5; color: #059669; }
+    .step-icon--violet-solid  { background: #7C3AED; color: #fff; }
+    .step-icon--violet        { background: #EDE9FE; color: #7C3AED; }
+    .step-icon--indigo-solid  { background: #4F46E5; color: #fff; }
+    .step-icon--indigo        { background: #E0E7FF; color: #4F46E5; }
+    .step-icon--ink           { color: var(--color-ink); }
+
+    .step-title {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-ink);
+      line-height: 1.3;
+    }
+
+    .step-desc {
+      display: block;
+      font-size: 0.6875rem;
+      color: var(--color-ink-muted);
+      line-height: 1.4;
+    }
+
+    .workflow-step-connector {
+      display: flex;
+      align-items: center;
+      padding-top: 12px;
+      flex-shrink: 0;
+      opacity: 0.4;
+    }
+
+    .workflow-role-cta {
+      margin-top: auto;
+      padding-top: var(--space-sm);
+      width: 100%;
+    }
+
+    .btn-full {
+      width: 100%;
+      justify-content: center;
+      gap: var(--space-xs);
+    }
+
+    .btn-emerald {
+      color: #fff;
+      background: #10B981;
+      border-color: #10B981;
+    }
+
+    .btn-emerald:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-violet {
+      color: #fff;
+      background: #7C3AED;
+      border-color: #7C3AED;
+    }
+
+    .btn-violet:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-indigo {
+      color: #fff;
+      background: #4F46E5;
+      border-color: #4F46E5;
+    }
+
+    .btn-indigo:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .task-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .task-item-summary {
+      min-width: 0;
+    }
+
+    .task-item-badges {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .output-type-tags {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .output-type-tag {
+      white-space: nowrap;
+    }
+
+    .task-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .task-item-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Progress Bar ──────────────────────────────────────────– */
+    .progress {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: #E2E8F0;
+      overflow: hidden;
+    }
+
+    .progress > span {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      display: block;
+      transition: width 300ms ease;
+    }
+
+    /* ── Responsive ────────────────────────────────────────────– */
+    @media (max-width: 768px) {
+      .layout {
+        padding: var(--space-md) var(--space-md) var(--space-xl);
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .scenario-list {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .scenario-pill {
+        width: 100%;
+        text-align: center;
+      }
+
+      .grid-3,
+      .grid-2,
+      .workflow-role-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .metrics.metrics-readable-labels {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .task-item-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .task-item-meta {
+        width: 100%;
+        margin-left: 0;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .task-item-badges {
+        width: 100%;
+        min-width: 0;
+        justify-content: flex-start;
+      }
+
+      .task-item-actions {
+        width: 100%;
+      }
+
+      .task-item-actions .btn {
+        width: 100%;
+      }
+    }
+
+    /* ── Dark mode overrides ──────────────────────────────────── */
+    html[data-theme="dark"] {
+      /* CTA role buttons — dark text on bright bg for contrast */
+      .btn-emerald {
+        color: #064E3B;
+        background: #34D399;
+        border-color: #34D399;
+      }
+      .btn-violet {
+        color: #2E1065;
+        background: #A78BFA;
+        border-color: #A78BFA;
+      }
+      .btn-indigo {
+        color: #1E1B4B;
+        background: #818CF8;
+        border-color: #818CF8;
+      }
+
+      /* Step icons — solid: keep same vibrant hue; non-solid: match brightness with lighter icon */
+      .step-icon--emerald-solid { background: #047857; }
+      .step-icon--emerald       { background: #059669; color: #D1FAE5; }
+      .step-icon--violet        { background: #6D28D9; color: #EDE9FE; }
+      .step-icon--indigo        { background: #4338CA; color: #E0E7FF; }
+
+      /* Role avatars — same vibrant treatment */
+      .role-avatar--emerald { background: #059669; color: #D1FAE5; }
+      .role-avatar--violet  { background: #6D28D9; color: #EDE9FE; }
+      .role-avatar--indigo  { background: #4338CA; color: #E0E7FF; }
+
+      /* Workflow connector — invert to white; opacity pulled back since white reads heavier */
+      .workflow-step-connector { opacity: 0.45; }
+      .workflow-step-connector img { filter: brightness(0) invert(1); }
+
+      /* Badges — replace hardcoded light-bg with dark equivalents */
+      .badge-info {
+        color: var(--color-info);
+        background: var(--color-info-bg);
+        border-color: var(--color-info-border);
+      }
+      .badge-success {
+        color: var(--color-success);
+        background: var(--color-success-soft-bg);
+        border-color: var(--color-success-soft-border);
+      }
+      .badge-dry-run {
+        color: #9CA3AF;
+        background: #1F1F28;
+        border-color: #2A2A35;
+      }
+      .badge-official {
+        color: #A78BFA;
+        background: #1E1B4B;
+        border-color: #3730A3;
+      }
+      .badge-task-type-single {
+        color: #A5F3FC;
+        background: #0C2230;
+        border-color: #155E75;
+      }
+      .badge-task-type-sequence {
+        color: #FB923C;
+        background: #2A1805;
+        border-color: #7C3A16;
+      }
+      .badge-task-type-relation {
+        color: #A5F3FC;
+        background: #0C2230;
+        border-color: #155E75;
+      }
+      .badge-task-type-pairs {
+        color: #4ADE80;
+        background: #0F2A18;
+        border-color: #1F5132;
+      }
+      .badge-task-type-scoring {
+        color: #C084FC;
+        background: #1A0A2E;
+        border-color: #4C1D95;
+      }
+      .badge-task-type-default {
+        color: #94A3B8;
+        background: #1F1F28;
+        border-color: #2A2A35;
+      }
+      .badge-warning {
+        color: #FACC15;
+        background: #2A2210;
+        border-color: #5C4A1A;
+      }
+
+      /* <img> SVG icons — invert to white (currentColor not inherited by <img>) */
+      .step-icon img, .role-avatar img { filter: brightness(0) invert(1); }
+
+      /* List item hover — use dark hover bg token */
+      .list-item:hover { background: var(--color-slate-50); }
+
+      /* Progress track */
+      .progress { background: var(--color-border); }
+    }

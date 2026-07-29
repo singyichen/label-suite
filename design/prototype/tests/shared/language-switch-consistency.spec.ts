@@ -4,15 +4,17 @@ import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '../..');
 
+// Each entry lists the page shell plus the runtime modules it loads; the
+// language-switch rules apply to their combined source.
 const pagesNeedingUnifiedLanguageSwitch = [
-  'pages/dashboard/dashboard.html',
-  'pages/admin/user-management.html',
-  'pages/admin/role-settings.html',
-  'pages/account/profile.html',
-  'pages/account/login.html',
-  'pages/account/register.html',
-  'pages/account/forgot-password.html',
-  'pages/account/reset-password.html',
+  ['pages/dashboard/dashboard.html', 'pages/dashboard/dashboard.js'],
+  ['pages/admin/user-management.html'],
+  ['pages/admin/role-settings.html'],
+  ['pages/account/profile.html'],
+  ['pages/account/login.html'],
+  ['pages/account/register.html'],
+  ['pages/account/forgot-password.html'],
+  ['pages/account/reset-password.html'],
 ];
 
 const mobileSidebarPages = [
@@ -23,18 +25,20 @@ const mobileSidebarPages = [
 
 test.describe('Prototype global language switch implementation', () => {
   test('uses shared sidebar global language API across all pages', () => {
-    for (const relativePath of pagesNeedingUnifiedLanguageSwitch) {
-      const fullPath = path.join(ROOT, relativePath);
-      const source = fs.readFileSync(fullPath, 'utf8');
+    for (const sourceFiles of pagesNeedingUnifiedLanguageSwitch) {
+      const label = sourceFiles.join(' + ');
+      const source = sourceFiles
+        .map((relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8'))
+        .join('\n');
 
-      expect(source, `${relativePath} should use shared applyGlobalLanguage`).toContain(
-        'window.LabelSuiteSharedSidebar.applyGlobalLanguage('
+      expect(source, `${label} should use shared applyGlobalLanguage`).toContain(
+        'LabelSuiteSharedSidebar.applyGlobalLanguage('
       );
-      expect(source, `${relativePath} should not write html lang directly`).not.toContain(
+      expect(source, `${label} should not write html lang directly`).not.toContain(
         'document.documentElement.lang'
       );
-      expect(source, `${relativePath} should not persist language directly`).not.toContain(
-        'window.LabelSuiteSharedSidebar.setStoredLang('
+      expect(source, `${label} should not persist language directly`).not.toContain(
+        'LabelSuiteSharedSidebar.setStoredLang('
       );
     }
   });

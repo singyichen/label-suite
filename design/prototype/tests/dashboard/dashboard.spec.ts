@@ -12,6 +12,8 @@ import { test, expect, type Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
+test.describe.configure({ mode: 'serial' });
+
 async function openScenario(page: Page, scenario: 'super_admin_data' | 'project_leader' | 'annotator' | 'reviewer') {
   await page.goto(DASHBOARD_URL);
   const trigger = page.locator(`.scenario-pill[data-scenario="${scenario}"]`);
@@ -40,12 +42,17 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView.locator('.metric strong').nth(1)).toContainText('24');
     await expect(leaderView.locator('.metric strong').nth(2)).toContainText('5');
     await expect(leaderView.locator('.metric strong').nth(3)).toContainText('3');
-    await expect(leaderView.getByText('新聞標題分類')).toBeVisible();
-    await expect(leaderView.getByText('情感分析基準')).toBeVisible();
-    await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 89%/)).toBeVisible();
-    await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 42%/)).toBeVisible();
-    await expect(leaderView.getByText('單句分類（含多標籤）')).toBeVisible();
-    await expect(leaderView.getByText('單句 VA 雙維度評分（Valence / Arousal）')).toBeVisible();
+    await expect(leaderView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
+    await expect(leaderView.getByText('產品評論觀點實體辨識')).toBeVisible();
+    await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 18%/)).toBeVisible();
+    await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 64%/)).toBeVisible();
+    await expect(leaderView.getByText('多標籤')).toBeVisible();
+    await expect(
+      leaderView
+        .locator('.output-type-tag')
+        .filter({ hasText: '實體辨識' })
+        .first(),
+    ).toBeVisible();
     await expect(leaderView.locator('.progress')).toHaveCount(3);
   });
 
@@ -87,38 +94,42 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.locator('#annotatorCompletedLabel')).toHaveText(/待標記|Pending/);
     await expect(annotatorView.locator('.metric strong').nth(1)).toContainText('53');
     await expect(annotatorView.locator('.metric strong').nth(2)).toContainText('4.2');
-    await expect(annotatorView.getByText('新聞標題多標籤分類')).toBeVisible();
-    await expect(annotatorView.getByText('情感 VA 雙維度評分')).toBeVisible();
-    await expect(annotatorView.getByText(/已完成 89% · 今日 53 筆 · 平均速度 3.0/)).toBeVisible();
-    await expect(annotatorView.getByText(/已完成 42% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
+    await expect(annotatorView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
+    await expect(annotatorView.getByText('醫療翻譯品質多維度評分')).toBeVisible();
+    await expect(annotatorView.getByText(/已完成 18% · 今日 53 筆 · 平均速度 3.0/)).toBeVisible();
+    await expect(annotatorView.getByText(/已完成 76% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(6);
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(13);
   });
 
-  test('annotator task type badges use per-category colors matching task list styles', async ({ page }) => {
+  test('annotator output tags use registry colors and preserve composite outputs', async ({ page }) => {
     await openScenario(page, 'annotator');
     const annotatorView = page.getByTestId('annotator-view');
 
-    const classificationBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '單句分類（含多標籤）' });
-    const scoringBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '單句 VA 雙維度評分（Valence / Arousal）' });
-    const sequenceBadges = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '序列標記（含 Aspect / NER）' });
-    const relationBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '關係抽取（Entity + Relation + Triple）' });
-    const pairsBadge = annotatorView.locator('#annotatorTaskList .task-item-badges .badge').filter({ hasText: '句對任務（相似度 / 蘊含）' });
+    const multiLabelBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '多標籤' });
+    const scoringBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '多維度' });
+    const sequenceBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '序列標註' });
+    const entityBadges = annotatorView.locator('.output-type-tag').filter({ hasText: '實體辨識' });
+    const relationBadges = annotatorView.locator('.output-type-tag').filter({ hasText: '關係識別' });
+    const singleLabelBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '單一標籤' });
 
-    await expect(classificationBadge).toHaveClass(/badge-task-type-single/);
-    await expect(scoringBadge).toHaveClass(/badge-task-type-scoring/);
-    await expect(sequenceBadges).toHaveCount(2);
-    await expect(sequenceBadges.first()).toHaveClass(/badge-task-type-sequence/);
-    await expect(sequenceBadges.nth(1)).toHaveClass(/badge-task-type-sequence/);
-    await expect(relationBadge).toHaveClass(/badge-task-type-relation/);
-    await expect(pairsBadge).toHaveClass(/badge-task-type-pairs/);
+    await expect(multiLabelBadge).toHaveCount(2);
+    await expect(multiLabelBadge.first()).toHaveClass(/badge-task-type-single/);
+    await expect(scoringBadge).toHaveCount(2);
+    await expect(scoringBadge.first()).toHaveClass(/badge-task-type-scoring/);
+    await expect(sequenceBadge).toHaveClass(/badge-task-type-sequence/);
+    await expect(entityBadges).toHaveCount(3);
+    await expect(entityBadges.first()).toHaveClass(/badge-task-type-sequence/);
+    await expect(relationBadges).toHaveCount(3);
+    await expect(relationBadges.first()).toHaveClass(/badge-task-type-relation/);
+    await expect(singleLabelBadge).toHaveCount(2);
+    await expect(singleLabelBadge.first()).toHaveClass(/badge-task-type-single/);
 
-    await expect(classificationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
-    await expect(scoringBadge).toHaveCSS('background-color', 'rgb(250, 245, 255)');
-    await expect(sequenceBadges.first()).toHaveCSS('background-color', 'rgb(255, 247, 237)');
-    await expect(relationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
-    await expect(pairsBadge).toHaveCSS('background-color', 'rgb(236, 253, 245)');
+    await expect(multiLabelBadge.first()).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(scoringBadge.first()).toHaveCSS('background-color', 'rgb(250, 245, 255)');
+    await expect(sequenceBadge).toHaveCSS('background-color', 'rgb(255, 247, 237)');
+    await expect(relationBadges.first()).toHaveCSS('background-color', 'rgb(236, 254, 255)');
   });
 
   test('reviewer view shows pending review panel and start-review action', async ({ page }) => {
@@ -130,11 +141,11 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.locator('.metric strong').nth(0)).toContainText('12');
     await expect(reviewerView.locator('.metric strong').nth(1)).toContainText('18');
     await expect(reviewerView.locator('.metric strong').nth(2)).toContainText('0.81');
-    await expect(reviewerView.getByText('新聞標題多標籤分類')).toBeVisible();
-    await expect(reviewerView.getByText('情感 VA 雙維度評分')).toBeVisible();
-    await expect(reviewerView.getByText(/待審 12 筆 · 進度 67% · IAA 0.81/)).toBeVisible();
-    await expect(reviewerView.getByText(/待審 8 筆 · 進度 52% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(6);
+    await expect(reviewerView.getByText('病患情緒與照護情境階層分類')).toBeVisible();
+    await expect(reviewerView.getByText('醫療翻譯品質多維度評分')).toBeVisible();
+    await expect(reviewerView.getByText(/待審 12 筆 · 進度 18% · IAA 0.81/)).toBeVisible();
+    await expect(reviewerView.getByText(/待審 8 筆 · 進度 76% · IAA 0.78/)).toBeVisible();
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(13);
   });
 
   test('annotator quick continue routes to workspace first non-submitted sample', async ({ page }) => {
@@ -143,8 +154,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await firstContinueButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
-    await expect(page).toHaveURL(/sample_id=A1-002/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A7/);
+    await expect(page).toHaveURL(/sample_id=R2-003/);
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
@@ -155,7 +166,7 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A7/);
     await expect(page).toHaveURL(/task_type=single_sentence_classification/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).not.toHaveURL(/sample_id=/);
@@ -167,8 +178,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await firstReviewButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
-    await expect(page).toHaveURL(/task_id=TASK-015-R1/);
-    await expect(page).toHaveURL(/sample_id=R1-001/);
+    await expect(page).toHaveURL(/task_id=TASK-015-R7/);
+    await expect(page).toHaveURL(/sample_id=R2-003/);
     await expect(page).toHaveURL(/run_type=official_run/);
 
     const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
@@ -178,28 +189,28 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page.locator('#sampleList .sample-item.active .sample-status-label')).toHaveText(/待審核|Pending Review|已儲存|Saved/);
   });
 
-  test('annotator quick continue uses the first non-submitted sample for NER and sentence-pairs tasks', async ({ page }) => {
+  test('annotator quick continue preserves routing for sequence and NLI examples', async ({ page }) => {
     await openScenario(page, 'annotator');
     const annotatorView = page.getByTestId('annotator-view');
 
-    const nerCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
-    await nerCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
+    const sequenceCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '新聞命名實體序列標註' });
+    await sequenceCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
     await expect(page).toHaveURL(/task_id=TASK-015-A6/);
     await expect(page).toHaveURL(/sample_id=NER-003/);
 
     await openScenario(page, 'annotator');
-    const sentencePairsCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '句對相似度 \/ 蘊含判定' });
-    await sentencePairsCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
+    const nliCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '醫療自然語言推斷' });
+    await nliCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
     await expect(page).toHaveURL(/task_id=TASK-015-A5/);
     await expect(page).toHaveURL(/sample_id=A5-003/);
   });
 
-  test('reviewer quick review uses the first non-submitted sample for NER tasks', async ({ page }) => {
+  test('reviewer quick review uses the first non-submitted sample for sequence tasks', async ({ page }) => {
     await openScenario(page, 'reviewer');
     const reviewerView = page.getByTestId('reviewer-view');
-    const nerCard = reviewerView.locator('#reviewerTaskList .list-item').filter({ hasText: 'NER 命名實體辨識' });
+    const sequenceCard = reviewerView.locator('#reviewerTaskList .list-item').filter({ hasText: '新聞命名實體序列標註' });
 
-    await nerCard.getByRole('button', { name: /快速審核|Quick Review/ }).click();
+    await sequenceCard.getByRole('button', { name: /快速審核|Quick Review/ }).click();
     await expect(page).toHaveURL(/task_id=TASK-015-R6/);
     await expect(page).toHaveURL(/sample_id=NER-003/);
   });
@@ -211,7 +222,7 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
-    await expect(page).toHaveURL(/task_id=TASK-015-R1/);
+    await expect(page).toHaveURL(/task_id=TASK-015-R7/);
     await expect(page).toHaveURL(/task_type=single_sentence_classification/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).not.toHaveURL(/sample_id=/);
@@ -267,19 +278,19 @@ test.describe('Dashboard page — language toggle', () => {
     const superAdminView = page.getByTestId('super-admin-view');
     await expect(superAdminView.locator('.metric strong').nth(0)).toHaveText('156 人');
     await expect(superAdminView.locator('.metric strong').nth(4)).toHaveText('127 個');
-    await expect(superAdminView.locator('#adminTask3Title')).toHaveText('NER 命名實體辨識');
+    await expect(superAdminView.locator('#adminTask3Title')).toHaveText('醫療實體與關係辨識');
 
     await page.getByTestId('lang-toggle').click();
 
     await expect(superAdminView.locator('.metric strong').nth(0)).toHaveText('156 Users');
     await expect(superAdminView.locator('.metric strong').nth(4)).toHaveText('127 Tasks');
-    await expect(superAdminView.locator('#adminTask3Title')).toHaveText('NER Named Entity Recognition');
-    await expect(superAdminView.locator('#adminTask3Detail')).toHaveText('Project Leader C · Reviewer C · 5 Annotators · 28% Completed');
+    await expect(superAdminView.locator('#adminTask3Title')).toHaveText('Medical Entity and Relation Recognition');
+    await expect(superAdminView.locator('#adminTask3Detail')).toHaveText('Project Leader C · Reviewer C · 5 Annotators · 53% Completed');
 
     await page.locator('.scenario-pill[data-scenario="project_leader"]').click();
     const projectLeaderView = page.getByTestId('project-leader-view');
-    await expect(projectLeaderView.locator('#plTask3Title')).toHaveText('NER Named Entity Recognition');
-    await expect(projectLeaderView.locator('#plTask3Detail')).toHaveText('Reviewer C · 5 Annotators · 28% Completed');
+    await expect(projectLeaderView.locator('#plTask3Title')).toHaveText('Medical Entity and Relation Recognition');
+    await expect(projectLeaderView.locator('#plTask3Detail')).toHaveText('Reviewer C · 5 Annotators · 53% Completed');
 
     await page.locator('.scenario-pill[data-scenario="annotator"]').click();
     const annotatorView = page.getByTestId('annotator-view');
