@@ -111,21 +111,25 @@ test.describe('Dashboard page — scenario rendering', () => {
     const scoringBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '多維度' });
     const sequenceBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '序列標註' });
     const entityBadges = annotatorView.locator('.output-type-tag').filter({ hasText: '實體辨識' });
-    const relationBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '關係識別' });
+    const relationBadges = annotatorView.locator('.output-type-tag').filter({ hasText: '關係識別' });
     const singleLabelBadge = annotatorView.locator('.output-type-tag').filter({ hasText: '單一標籤' });
 
-    await expect(multiLabelBadge).toHaveClass(/badge-task-type-single/);
-    await expect(scoringBadge).toHaveClass(/badge-task-type-scoring/);
+    await expect(multiLabelBadge).toHaveCount(2);
+    await expect(multiLabelBadge.first()).toHaveClass(/badge-task-type-single/);
+    await expect(scoringBadge).toHaveCount(2);
+    await expect(scoringBadge.first()).toHaveClass(/badge-task-type-scoring/);
     await expect(sequenceBadge).toHaveClass(/badge-task-type-sequence/);
-    await expect(entityBadges).toHaveCount(2);
+    await expect(entityBadges).toHaveCount(3);
     await expect(entityBadges.first()).toHaveClass(/badge-task-type-sequence/);
-    await expect(relationBadge).toHaveClass(/badge-task-type-relation/);
-    await expect(singleLabelBadge).toHaveClass(/badge-task-type-single/);
+    await expect(relationBadges).toHaveCount(3);
+    await expect(relationBadges.first()).toHaveClass(/badge-task-type-relation/);
+    await expect(singleLabelBadge).toHaveCount(2);
+    await expect(singleLabelBadge.first()).toHaveClass(/badge-task-type-single/);
 
-    await expect(multiLabelBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
-    await expect(scoringBadge).toHaveCSS('background-color', 'rgb(250, 245, 255)');
+    await expect(multiLabelBadge.first()).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(scoringBadge.first()).toHaveCSS('background-color', 'rgb(250, 245, 255)');
     await expect(sequenceBadge).toHaveCSS('background-color', 'rgb(255, 247, 237)');
-    await expect(relationBadge).toHaveCSS('background-color', 'rgb(236, 254, 255)');
+    await expect(relationBadges.first()).toHaveCSS('background-color', 'rgb(236, 254, 255)');
   });
 
   test('reviewer view shows pending review panel and start-review action', async ({ page }) => {
@@ -151,7 +155,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
     await expect(page).toHaveURL(/task_id=TASK-015-A7/);
-    await expect(page).toHaveURL(/sample_id=SL-002/);
+    await expect(page).toHaveURL(/sample_id=R2-003/);
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
@@ -175,7 +179,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
     await expect(page).toHaveURL(/task_id=TASK-015-R7/);
-    await expect(page).toHaveURL(/sample_id=SL-R001/);
+    await expect(page).toHaveURL(/sample_id=R2-003/);
     await expect(page).toHaveURL(/run_type=official_run/);
 
     const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
