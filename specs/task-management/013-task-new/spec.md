@@ -1,5 +1,5 @@
 ---
-功能分支: feat/sequence-preview-source-text
+功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
 版本: 6.4.1
 狀態: Draft

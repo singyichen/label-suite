@@ -1,5 +1,5 @@
 ---
-功能分支: feat/task-output-type-list
+功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
 版本: 2.0.0
 狀態: In Progress
