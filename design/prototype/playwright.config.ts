@@ -19,7 +19,15 @@ export default defineConfig({
   },
 
   webServer: {
-    command: 'python3 -m http.server 8888 --bind 127.0.0.1',
+    // HTTP/1.1 keep-alive + larger accept backlog: the stock `python3 -m http.server`
+    // CLI is HTTP/1.0 (one connection per request) and intermittently drops sockets
+    // (net::ERR_SOCKET_NOT_CONNECTED) under full-suite load, killing page scripts.
+    command:
+      'python3 -c "'
+      + "from http.server import ThreadingHTTPServer as S, SimpleHTTPRequestHandler as H; "
+      + "H.protocol_version='HTTP/1.1'; S.request_queue_size=128; "
+      + "S(('127.0.0.1', 8888), H).serve_forever()"
+      + '"',
     cwd: path.resolve(__dirname),
     url: 'http://localhost:8888',
     reuseExistingServer: !process.env.CI,
