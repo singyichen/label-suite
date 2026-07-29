@@ -291,56 +291,7 @@
                 <button id="adminViewAllBtn" class="btn btn-secondary slim">查看全部</button>
               </div>
             </div>
-            <div class="list" id="adminTaskList">
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="adminTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="adminTask1Detail" class="list-item-detail">專案負責人A · 審核員A · 8 位標記員 · 已完成 89%</span>
-                  </div>
-                  <div class="task-item-badges">
-                    <span id="adminTask1TaskType" class="badge badge-task-type-single">單句分類（含多標籤）</span>
-                    <span id="adminTask1RunType" class="badge badge-official">正式標記</span>
-                    <span id="adminTask1Badge" class="badge badge-info">進行中</span>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 89%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="adminTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="adminTask2Detail" class="list-item-detail">專案負責人B · 審核員B · 6 位標記員 · 已完成 42%</span>
-                  </div>
-                  <div class="task-item-badges">
-                    <span id="adminTask2TaskType" class="badge badge-task-type-scoring">單句 VA 雙維度評分（Valence / Arousal）</span>
-                    <span id="adminTask2RunType" class="badge badge-dry-run">試標</span>
-                    <span id="adminTask2Badge" class="badge badge-warning">待確認</span>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 42%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="adminTask3Title" class="list-item-title">NER 命名實體辨識</span>
-                    <span id="adminTask3Detail" class="list-item-detail">專案負責人C · 審核員C · 5 位標記員 · 已完成 28%</span>
-                  </div>
-                  <div class="task-item-badges">
-                    <span id="adminTask3TaskType" class="badge badge-task-type-sequence">序列標記（含 Aspect / NER）</span>
-                    <span id="adminTask3RunType" class="badge badge-official">正式標記</span>
-                    <span id="adminTask3Badge" class="badge badge-info">進行中</span>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 28%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="list" id="adminTaskList"></div>
           </article>
         </section>
 
@@ -383,56 +334,7 @@
                 <button id="plViewAllBtn" class="btn btn-secondary slim">查看全部</button>
               </div>
             </div>
-            <div class="list" id="plTaskList">
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="plTask1Title" class="list-item-title">新聞標題分類</span>
-                    <span id="plTask1Detail" class="list-item-detail">審核員A · 8 位標記員 · 已完成 89%</span>
-                  </div>
-                  <div class="task-item-badges">
-                    <span id="plTask1TaskType" class="badge badge-task-type-single">單句分類（含多標籤）</span>
-                    <span id="plTask1RunType" class="badge badge-official">正式標記</span>
-                    <span id="plTask1Badge" class="badge badge-info">進行中</span>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 89%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="plTask2Title" class="list-item-title">情感分析基準</span>
-                    <span id="plTask2Detail" class="list-item-detail">審核員B · 6 位標記員 · 已完成 42%</span>
-                  </div>
-                  <div class="task-item-badges">
-                    <span id="plTask2TaskType" class="badge badge-task-type-scoring">單句 VA 雙維度評分（Valence / Arousal）</span>
-                    <span id="plTask2RunType" class="badge badge-dry-run">試標</span>
-                    <span id="plTask2Badge" class="badge badge-warning">待確認</span>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 42%;"></span>
-                </div>
-              </div>
-              <div class="list-item">
-                <div class="task-item-header">
-                  <div class="task-item-summary">
-                    <span id="plTask3Title" class="list-item-title">NER 命名實體辨識</span>
-                    <span id="plTask3Detail" class="list-item-detail">審核員C · 5 位標記員 · 已完成 28%</span>
-                  </div>
-                  <div class="task-item-badges">
-                    <span id="plTask3TaskType" class="badge badge-task-type-sequence">序列標記（含 Aspect / NER）</span>
-                    <span id="plTask3RunType" class="badge badge-official">正式標記</span>
-                    <span id="plTask3Badge" class="badge badge-info">進行中</span>
-                  </div>
-                </div>
-                <div class="progress" style="margin-top: 10px;">
-                  <span style="width: 28%;"></span>
-                </div>
-              </div>
-            </div>
+            <div class="list" id="plTaskList"></div>
           </article>
         </section>
 
@@ -517,7 +419,26 @@
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
   <script src="./dashboard.data.js"></script>
-  <script src="./dashboard.i18n.js"></script>
-  <script src="./dashboard.js"></script>
+  <script>
+    (function loadDashboardRuntime() {
+      var sources = ["./dashboard.i18n.js", "./dashboard.js"];
+
+      function loadNext(index, attempt) {
+        if (index >= sources.length) return;
+        var script = document.createElement("script");
+        script.src = sources[index];
+        script.onload = function () { loadNext(index + 1, 0); };
+        script.onerror = function () {
+          if (attempt >= 2) return;
+          window.setTimeout(function () {
+            loadNext(index, attempt + 1);
+          }, 100);
+        };
+        document.body.appendChild(script);
+      }
+
+      loadNext(0, 0);
+    }());
+  </script>
 </body>
 </html>
