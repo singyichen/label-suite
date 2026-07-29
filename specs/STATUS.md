@@ -31,7 +31,7 @@
 | account-005 | Profile Settings | account | `spec-ready` | `feat/account/005-profile-settings` | spec v1.2.9；規格狀態：Clarified |
 | admin-006 | User Management | admin | `spec-ready` | `feat/admin/006-user-management` | spec v1.0.8；規格狀態：Clarified |
 | admin-007 | Role & Permission Settings | admin | `spec-ready` | `feat/admin/007-role-settings` | spec v1.1.4；規格狀態：Draft |
-| dashboard-012 | Dashboard | dashboard | `in-progress` | `feat/task-output-type-list` | spec v2.0.0；規格狀態：In Progress；Super Admin／Project Leader／Annotator／Reviewer 任務摘要直接依 `outputs[].type` 順序顯示多 tag，支援 8 個 registry key、複合輸出、zh/en、可存取名稱與手機換行；13 筆 fixture 僅為安全 prototype 示例，第 14 筆任意合法組合可 config-driven 呈現；014／015 consumer 仍延後 |
+| dashboard-012 | Dashboard | dashboard | `in-progress` | `feat/task-output-type-list` | spec v2.0.1；規格狀態：In Progress；各角色任務摘要依 `outputs[].type` 順序顯示多 tag；Annotator／Reviewer prototype 皆完整呈現 T001–T013，並以獨立 task／sample／compatibility route 導向對應角色介面；13 筆僅為安全示例，第 14 筆合法組合仍可 config-driven 呈現；正式 membership 與 014／015 consumer 邊界不變 |
 | shared-008 | Shared Sidebar Navbar | shared | `spec-ready` | `feat/shared/008-sidebar-navbar-shared` | spec v1.3.9；規格狀態：Clarified |
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `in-progress` | `feat/regression-slider-ui` | spec v1.7.0；規格狀態：Draft；VA Annotator 介面採雙列彩色滑桿、跟隨數值標籤與可直接輸入小數的右側欄位 |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-29 | `dashboard-012` 更新至 v2.0.1：Annotator 與 Reviewer prototype 場景皆補齊 T001–T013 完整清單，每筆保留獨立 task ID、可操作 sample 與明確 compatibility route，可分別載入標記／審核介面；13 筆仍只作 prototype 驗收基線，正式產品依 membership 顯示且不限制未來任務數量或輸出組合。 |
 | 2026-07-29 | `dashboard-012` 更新至 v2.0.0 並於 `feat/task-output-type-list` 進入 `in-progress`：四種有任務角色的 Dashboard 任務摘要改由 `outputs[].type` 依序顯示一至多個 registry-driven tag，涵蓋 8 個合法 key、複合輸出、zh/en、可存取名稱與手機換行；13 筆 fixture 僅為安全 summary metadata 的 prototype 基線，第 14 筆任意合法組合不需新增 renderer 分支，並明訂答案資料不得暴露。同步 `task-management-013` v6.4.3；014／015／017 consumer 延後範圍不變，legacy `task_type` 僅保留為獨立 routing compatibility 欄位。 |
 | 2026-07-29 | `dataset-016` 更新至 v2.0.0 並於 `feat/task-output-type-list` 同步 prototype：資料集分析列表改以 `outputs[].type` 顯示一至多個唯讀 tag，下拉由 registry 提供 8 個輸出類型並採 membership 篩選，URL 分頁改為 `limit`／`offset`；13 份 example-data fixture 僅為可驗收示例，不構成任務數量或合法組合上限，並新增資料載入失敗、權限過濾、14th-task 泛化與三個 RWD viewport 驗收。同步 `task-management-010` v2.0.1、`task-management-013` v6.4.2 的下游界線；017 detail consumer 仍延後。 |
 | 2026-07-29 | `task-management-010` 更新至 v2.0.0 並於 `feat/task-output-type-list` 進入 `in-progress`：任務列表由固定 `task_type` 遷移為 `outputs[].type` 多 tag，輸出類型下拉由 registry 提供 8 個合法 key 並採 membership 篩選，URL 分頁改為 `limit`／`offset`；以 13 份 example-data fixture 建立 prototype mapping／命中數基線、複合 tag 與第 14 筆合法任務泛化驗收，明訂示例不得限制未來任務或暴露答案內容。`task-management-013` 釐清 Step 1 狀態為 `selected_categories[]` + `input_type` + `selectedOutputTypes[]` 並更新至 v6.4.1；014／015／016／017 consumer 同步仍延後。 |
