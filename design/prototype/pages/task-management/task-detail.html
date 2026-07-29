@@ -6,6 +6,8 @@
   <title>Label Suite — 任務詳情</title>
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
+  <link rel="stylesheet" href="./task-config.editor.css" />
+  <link rel="stylesheet" href="./task-detail.config.css" />
   <script src="../../assets/theme-fouc.js"></script>
   <style>
     :root {
@@ -2569,6 +2571,10 @@
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
+<script src="./task-config.catalog.js"></script>
+<script src="./task-list.data.js"></script>
+<script src="./task-detail.data.js"></script>
+<script src="./task-detail.config.js"></script>
 <script>
   var I18N = {
     zh: {
@@ -2710,7 +2716,7 @@
       editGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineLabel: '開始標記前強制顯示',
       basicDatasetDropTitle: '點擊或拖曳上傳資料集',
-      basicDatasetDropHint: '支援 TXT / CSV / TSV / JSON，最大 200 MB，UTF-8',
+      basicDatasetDropHint: '僅支援 JSON · 最大 200 MB · UTF-8',
       samplingTitle: '抽樣設定',
       samplingEditBtn: '編輯',
       samplingSaveBtn: '儲存',
@@ -3190,7 +3196,7 @@
       editGuidelineFilesLabel: 'Upload files',
       editForceGuidelineLabel: 'Force show before annotation',
       basicDatasetDropTitle: 'Click or drag to upload dataset',
-      basicDatasetDropHint: 'Supports TXT / CSV / TSV / JSON, up to 200 MB, UTF-8',
+      basicDatasetDropHint: 'JSON only · Up to 200 MB · UTF-8',
       samplingTitle: 'Sampling settings',
       samplingEditBtn: 'Edit',
       samplingSaveBtn: 'Save',
@@ -4852,13 +4858,19 @@ function interpolate(template, payload) {
 
   function resetTaskData(taskId) {
     TASK_DATA = cloneData(DEFAULT_TASK_DATA);
-    if (taskId && TASK_PROFILE_MAP[taskId]) {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    var appliedSharedConfig = Boolean(
+      taskId
+      && configRuntime
+      && configRuntime.applyTaskSeed(TASK_DATA, taskId)
+    );
+    if (!appliedSharedConfig && taskId && TASK_PROFILE_MAP[taskId]) {
       var taskProfile = cloneData(TASK_PROFILE_MAP[taskId]);
       Object.assign(TASK_DATA, taskProfile);
       if (!Object.prototype.hasOwnProperty.call(taskProfile, 'trialRounds')) {
         resetRunProgressData();
       }
-    } else if (taskId) {
+    } else if (!appliedSharedConfig && taskId) {
       TASK_DATA.taskId = taskId;
     }
   }
@@ -5861,7 +5873,7 @@ function getTaskTypeLabel(taskTypeKey) {
 
   function createOverviewDatasetFileItem(file, idx) {
     var item = document.createElement('div');
-    item.className = 'overview-upload-file-preview';
+    item.className = 'upload-file-preview overview-upload-file-preview';
     item.setAttribute('role', 'button');
     item.setAttribute('tabindex', '0');
     item.setAttribute('aria-label', (state.lang === 'zh' ? '查看資料集 ' : 'Preview dataset ') + file.name);
@@ -5876,7 +5888,7 @@ function getTaskTypeLabel(taskTypeKey) {
     });
 
     var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    icon.setAttribute('class', 'overview-upload-file-icon');
+    icon.setAttribute('class', 'upload-file-icon overview-upload-file-icon');
     icon.setAttribute('viewBox', '0 0 24 24');
     icon.setAttribute('fill', 'none');
     icon.setAttribute('stroke', 'currentColor');
@@ -5893,18 +5905,18 @@ function getTaskTypeLabel(taskTypeKey) {
     item.appendChild(icon);
 
     var nameSpan = document.createElement('span');
-    nameSpan.className = 'overview-upload-file-name';
+    nameSpan.className = 'upload-file-name overview-upload-file-name';
     nameSpan.textContent = file.name;
     item.appendChild(nameSpan);
 
     var sizeSpan = document.createElement('span');
-    sizeSpan.className = 'overview-upload-file-size';
+    sizeSpan.className = 'upload-file-size overview-upload-file-size';
     sizeSpan.textContent = formatBytes(file.sizeBytes || 0);
     item.appendChild(sizeSpan);
 
     var previewBtn = document.createElement('button');
     previewBtn.type = 'button';
-    previewBtn.className = 'overview-upload-file-preview-btn';
+    previewBtn.className = 'upload-file-preview-btn overview-upload-file-preview-btn';
     previewBtn.setAttribute('aria-label', state.lang === 'zh' ? '查看資料集' : 'Preview dataset');
     previewBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
     previewBtn.addEventListener('click', function(e) {
@@ -5915,7 +5927,7 @@ function getTaskTypeLabel(taskTypeKey) {
 
     var removeBtn = document.createElement('button');
     removeBtn.type = 'button';
-    removeBtn.className = 'overview-upload-file-remove';
+    removeBtn.className = 'upload-file-remove overview-upload-file-remove';
     removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除資料集' : 'Remove dataset');
     removeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
     removeBtn.addEventListener('click', function(e) {
@@ -5942,6 +5954,14 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function renderOverviewEditState() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (
+      configRuntime
+      && configRuntime.isManaged(TASK_DATA)
+      && configRuntime.renderBasicEditState(TASK_DATA, state, state.lang)
+    ) {
+      return;
+    }
     var editable = isOverviewEditable();
     var editBtn = document.getElementById('overviewEditBtn');
     var saveBtn = document.getElementById('overviewSaveBtn');
@@ -5975,6 +5995,15 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function startOverviewEdit() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      if (configRuntime.startBasic(TASK_DATA, state, state.lang)) {
+        renderOverviewDatasetFileList();
+        setOverviewEditError('');
+        trackEvent('prototype_overview_edit_started');
+      }
+      return;
+    }
     if (!isOverviewEditable()) return;
     state.overviewEditMode = true;
     state.overviewDirty = false;
@@ -5984,6 +6013,14 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function cancelOverviewEdit(force) {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      if (!state.overviewEditMode) return true;
+      if (!force && state.overviewDirty && !window.confirm(t('overviewLeaveConfirm'))) return false;
+      configRuntime.cancelBasic(state);
+      renderOverviewEditState();
+      return true;
+    }
     if (!state.overviewEditMode) return true;
     if (!force && state.overviewDirty && !window.confirm(t('overviewLeaveConfirm'))) return false;
     state.overviewEditMode = false;
@@ -6002,6 +6039,14 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function saveOverviewEdit() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      if (!configRuntime.saveBasic(TASK_DATA, state, state.lang)) return;
+      showToast(t('overviewSaveSuccess'));
+      renderOverview();
+      trackEvent('prototype_overview_edit_saved');
+      return;
+    }
     if (!isOverviewEditable() || !state.overviewDraft) return;
 
     var taskNameInput = document.getElementById('editTaskNameInput');
@@ -6824,6 +6869,11 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function markSettingsCodeDirty() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      configRuntime.markCodeDirty(state);
+      return;
+    }
     state.settingsCodeDraftDirty = true;
     var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
     if (saveCodeBtn) saveCodeBtn.disabled = false;
@@ -7600,12 +7650,22 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function setSettingsCodeFormat(fmt) {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      configRuntime.setFormat(fmt, state);
+      return;
+    }
     if (!state.settingsDraft || state.settingsCodeDraftDirty) return;
     state.settingsDraft.codeFormat = fmt === 'json' ? 'json' : 'yaml';
     renderSettingsCodeFromConfig();
   }
 
   function loadSettingsConfigFile(file) {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      configRuntime.loadConfigFile(file, state, state.lang);
+      return;
+    }
     var fileName = file.name || '';
     var name = fileName.toLowerCase();
     var ext = name.slice(name.lastIndexOf('.'));
@@ -7633,6 +7693,12 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function saveSettingsCodeToVisual(showSuccessToast) {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      var saved = configRuntime.saveCode(state, state.lang, false);
+      if (saved && showSuccessToast) showToast(t('settingsCodeSaved'));
+      return saved;
+    }
     if (!state.settingsDraft) return false;
     var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
     if (!schema) return false;
@@ -7732,6 +7798,14 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function renderSettingsEditState() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (
+      configRuntime
+      && configRuntime.isManaged(TASK_DATA)
+      && configRuntime.renderSettingsEditState(TASK_DATA, state, state.lang)
+    ) {
+      return;
+    }
     var editable = isSettingsEditable();
     var editBtn = document.getElementById('settingsEditBtn');
     var saveBtn = document.getElementById('settingsSaveBtn');
@@ -7765,6 +7839,15 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function startSettingsEdit() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      if (configRuntime.startSettings(TASK_DATA, state, state.lang)) {
+        setSettingsEditError('');
+        setSettingsCodeError('');
+        trackEvent('prototype_settings_edit_started');
+      }
+      return;
+    }
     if (!isSettingsEditable()) return;
     state.settingsEditMode = true;
     state.settingsDirty = false;
@@ -7775,6 +7858,14 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function cancelSettingsEdit(force) {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      if (!state.settingsEditMode) return true;
+      if (!force && state.settingsDirty && !window.confirm(t('settingsLeaveConfirm'))) return false;
+      configRuntime.cancelSettings(state);
+      renderSettingsEditState();
+      return true;
+    }
     if (!state.settingsEditMode) return true;
     if (!force && state.settingsDirty && !window.confirm(t('settingsLeaveConfirm'))) return false;
     state.settingsEditMode = false;
@@ -7786,6 +7877,19 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function saveSettingsEdit() {
+    var configRuntime = window.LabelSuiteTaskDetailConfig;
+    if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
+      if (state.settingsCodeDraftDirty) {
+        setSettingsCodeError(t('settingsCodeUnsaved'));
+        setSettingsEditError(t('settingsCodeUnsaved'));
+        return;
+      }
+      if (!configRuntime.saveSettings(TASK_DATA, state, state.lang)) return;
+      showToast(t('settingsSaveSuccess'));
+      renderOverview();
+      trackEvent('prototype_settings_edit_saved');
+      return;
+    }
     if (!isSettingsEditable() || !state.settingsDraft) return;
     if (state.settingsCodeDraftDirty) {
       setSettingsCodeError(t('settingsCodeUnsaved'));
@@ -7933,6 +8037,9 @@ function getTaskTypeLabel(taskTypeKey) {
     setText('valueConfigVersion', settingsSummary.configFileName);
     setText('valueConfigTaskType', settingsSummary.taskTypeLabel);
     renderSettingsSummaryRows(settingsSummary.summaryRows);
+    if (window.LabelSuiteTaskDetailConfig) {
+      window.LabelSuiteTaskDetailConfig.renderSummary(TASK_DATA, state, state.lang);
+    }
     setText('valueAnnotatorGuidelineStatus', hasTaskGuidelineRoleContent('annotator') ? t('guidelineUploaded') : t('guidelineEmpty'));
     setText('valueAnnotatorGuidelineFilesSummary', annotatorGuidelineFilesText);
     setText('valueAnnotatorGuidelineContentSummary', annotatorGuidelineContentText);

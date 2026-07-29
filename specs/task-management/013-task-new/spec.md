@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.4.3
+版本: 6.4.4
 狀態: Draft
 ---
 
@@ -52,6 +52,7 @@
 - **v6.4.0 標記預覽原始文本**：Step 2 序列標註預覽將 Token 網格上方的字／詞切分規則說明，改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本；該文本不隨標記單位切換而改變，切分行為改由 Token 網格本身呈現。通用輸入文字區塊的標籤由 Input 欄位名稱改為「原始文本」（英文 Text）；`item_pair` 於配對區塊上方顯示一次「原始文本」標題並保留兩段文本的欄位名稱小標。`entity_recognition`／`relation_identification` 的互動圈選文本區不另加標題，`free_text` 維持可設定的 `input_instruction` 契約。整合預覽標題由「整合預覽（實體辨識 + 關係識別）」簡化為「整合預覽」（英文 Unified preview）。tokenization 契約與預標記驗證行為不變。
 - **v6.4.1 選擇狀態與下游語意釐清**：Step 1 的三組 chip 分別寫入 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不建立單一固定 `task_type`；完成設定後，`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 Task List 直接以 `outputs[].type` 顯示與篩選；`docs/product/example-data/` 的 13 份 fixture 僅為 prototype 示例，不是合法任務或輸出組合上限。
 - **v6.4.3 Dashboard consumer 同步**：012 Dashboard 與 010／016 一致，直接依 `outputs[].type` 順序顯示一至多個 registry-driven tag；13 筆 fixture 只作 prototype 基線，第 14 筆任意合法組合無需新增 renderer 分支。014／015 consumer 延後範圍不變。
+- **v6.4.4 Task Detail Overview consumer 同步**：014 Task Detail v2.0.0 的「任務概覽」基本資料與標記設定已同步 Step 1 的 `selected_categories[]`、`input_type`、`field_role_map`、`selectedOutputTypes[]` 及 Step 2 的 ordered `outputs[]` registry/schema 契約；13 筆 fixture 仍只作 prototype 示例，第 14 筆合法組合無需新增核心分支。014 其他分頁及 results／export legacy consumer、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍維持延後。
 
 ## 規格常數
 
@@ -708,6 +709,8 @@ flowchart LR
 >
 > **v6.4.3 Dashboard consumer 同步**：012 Dashboard 已直接逐項顯示 `outputs[].type`，並沿用 8 個 `OUTPUT_TYPE_KEYS`、複合 tag、13 筆非上限示例與第 14 筆 config-driven 泛化契約。014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 的 consumer 延後範圍不變；Dashboard 保留的 legacy `task_type` 只是獨立 routing compatibility 欄位，不得由 `outputs[]` 推導。
 >
+> **v6.4.4 Task Detail Overview consumer 同步**：014 Task Detail v2.0.0 已將「任務概覽」的基本資料與標記設定同步為 Step 1／Step 2 的 consumer 契約，包括 JSON 資料集與欄位角色、taxonomy 選擇狀態、ordered `outputs[]`、registry-driven schema、Visual／Code／預覽及輸出新增／保留／移除規則。此同步只涵蓋 Overview；014 其他分頁及 results／export legacy consumer、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍維持延後，不得把 Overview 相容性延伸解讀為所有正式 consumer 已完成。
+>
 > **未來版本候選（非 013 承諾範圍，2026-07-28 對照 Label Studio／Scale 評估後記錄）**：
 >
 > 1. **拖曳選取多 Token 實體**：015 Annotation Workspace 的正式標記介面應支援拖曳選取連續 Token 後自動展開 `B-X / I-X` 前綴（參考 Label Studio／Prodigy），取代逐 Token 點選；013 Step 2 預覽維持點選即可。
@@ -796,6 +799,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.4.4 | 2026-07-29 | **同步 Task Detail Overview consumer**：014 v2.0.0 的基本資料與標記設定改為直接消費 Step 1 的分類／輸入／欄位角色／輸出選擇狀態，以及 Step 2 ordered `outputs[]` 的 registry/schema、Visual／Code／預覽與輸出變更規則；13 筆 fixture 仍非白名單，第 14 筆合法組合可直接泛化。014 其他分頁及 results／export legacy consumer、015／017 維持延後。 |
 | 6.4.3 | 2026-07-29 | **同步 Dashboard consumer**：012 Dashboard 任務摘要改為依 `outputs[].type` 順序顯示一至多個 registry-driven tag，沿用 8 類、13 筆非上限示例與第 14 筆 config-driven 泛化契約；014／015／017 consumer 延後範圍不變。 |
 | 6.4.2 | 2026-07-29 | **同步 Dataset Analysis List 消費語意**：016 列表與 010 一致，逐項顯示 `outputs[].type` 並採單一 `output_type` membership 篩選；13 筆 fixture 維持非上限的 prototype 基線。延後範圍收斂為 014／015／017，列表相容性不代表 detail／workspace 已全面相容。 |
 | 6.4.1 | 2026-07-29 | **選擇狀態與 Task List 消費語意釐清**：Step 1 三組 chip 明確分別維護 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不再以 `task_type` 指稱或儲存單一固定任務型別；`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 依該欄位逐項顯示與 membership 篩選；13 份 example-data fixture 僅為 prototype 示例，不構成任務數量或合法組合上限。無 producer payload 行為變更。 |

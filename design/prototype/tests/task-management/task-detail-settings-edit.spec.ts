@@ -3,17 +3,39 @@ import { test, expect } from '@playwright/test';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
 test.describe('Task detail settings edit state', () => {
-  const EN_EDIT_EXPECTATIONS = [
+  type EnglishEditExpectation = {
+    name: string;
+    url: string;
+    previewTexts: string[];
+    previewInputValues?: string[];
+    formTexts: string[];
+    codeTexts: string[];
+    blockedTexts: string[];
+    legacyTask?: {
+      taskTypeKey: string;
+      configContent: string;
+    };
+  };
+
+  const EN_EDIT_EXPECTATIONS: EnglishEditExpectation[] = [
     {
-      name: 'single sentence classification',
+      name: 'single-label config-driven task',
       url: `${TASK_DETAIL_URL}?task_id=T001`,
-      previewTexts: ['Politics', 'Society', 'Entertainment', 'Sports', 'Technology'],
-      formTexts: ['Politics', 'Society', 'Entertainment', 'Sports', 'Technology'],
-      codeTexts: ['- Politics', '- Society', '- Entertainment', '- Sports', '- Technology'],
-      blockedTexts: ['政治', '社會', '娛樂', '體育', '科技'],
+      previewTexts: ['Single label', 'This is a sample text'],
+      formTexts: ['Single label', 'Label options', 'Allow bypass'],
+      codeTexts: ['type: single_label', 'name: positive', 'allow_bypass: true'],
+      blockedTexts: ['單一標籤', '標籤選項', '允許無法判定'],
     },
     {
-      name: 'VA scoring',
+      name: 'sequence-tagging config-driven task',
+      url: `${TASK_DETAIL_URL}?task_id=T006`,
+      previewTexts: ['Sequence Tagging', 'This is a sample text'],
+      formTexts: ['Sequence Tagging', 'Token unit', 'Label types', 'Tagging scheme'],
+      codeTexts: ['type: sequence_tagging', 'unit: character', 'name: PER', 'tagging_scheme: BIO'],
+      blockedTexts: ['序列標註', '標記單位', '標籤類型', '標記方案'],
+    },
+    {
+      name: 'legacy default VA scoring',
       url: TASK_DETAIL_URL,
       previewTexts: ['Valence', 'Arousal', '1', '9'],
       formTexts: ['Min', 'Max', 'Step'],
@@ -21,37 +43,93 @@ test.describe('Task detail settings edit state', () => {
       blockedTexts: ['最小值', '最大值', '間距'],
     },
     {
-      name: 'aspect list',
-      url: `${TASK_DETAIL_URL}?task_id=T003`,
+      name: 'legacy aspect-list task',
+      url: TASK_DETAIL_URL,
       previewTexts: ['Sentence', 'Aspect List'],
       previewInputValues: ['service attitude', 'cleanliness', 'food quality'],
       formTexts: ['Field mapping', 'Aspect editing rules', 'Quantity limits'],
       codeTexts: ['subtype: aspect_list', 'input_field: sentence', 'aspect_list_field: aspects'],
       blockedTexts: ['欄位對應', 'Aspect 編輯規則', '數量限制', '服務態度', '環境整潔', '餐點品質'],
+      legacyTask: {
+        taskTypeKey: 'sequence_labeling',
+        configContent: [
+          'subtype: aspect_list',
+          'input_field: sentence',
+          'aspect_list_field: aspects',
+          'allow_sentence_edit: false',
+          'allow_aspect_add: true',
+          'allow_aspect_delete: true',
+          'require_exact_match_in_sentence: true',
+          'min_aspects: 1',
+          'max_aspects: 10',
+          'require_sentiment_context_check: false',
+        ].join('\n'),
+      },
     },
     {
-      name: 'relation extraction',
-      url: `${TASK_DETAIL_URL}?task_id=T004`,
+      name: 'legacy relation-extraction task',
+      url: TASK_DETAIL_URL,
       previewTexts: ['Mark relations', 'treats', 'causes', 'indicates'],
       formTexts: ['Entity types', 'Relation types', 'Tuple mode'],
       codeTexts: ['- treats', '- causes', '- indicates'],
       blockedTexts: ['標記關係', '實體類型', '關係類型', '結構模式'],
+      legacyTask: {
+        taskTypeKey: 'relation_extraction',
+        configContent: [
+          'entity_types:',
+          '  - name: DRUG',
+          '    color: "#6366F1"',
+          '  - name: DISEASE',
+          '    color: "#10B981"',
+          '  - name: SYMPTOM',
+          '    color: "#F59E0B"',
+          'relation_types:',
+          '  - treats',
+          '  - causes',
+          '  - indicates',
+          'tuple_mode: triple',
+        ].join('\n'),
+      },
     },
     {
-      name: 'sentence pairs',
-      url: `${TASK_DETAIL_URL}?task_id=T005`,
+      name: 'legacy sentence-pairs task',
+      url: TASK_DETAIL_URL,
       previewTexts: ['Sentence A', 'Sentence B', 'Entailment', 'Contradiction', 'Neutral'],
       formTexts: ['Relation labels', 'Entailment', 'Contradiction', 'Neutral'],
       codeTexts: ['- Entailment', '- Contradiction', '- Neutral'],
       blockedTexts: ['句子 A', '句子 B', '蘊含', '矛盾', '中立'],
+      legacyTask: {
+        taskTypeKey: 'sentence_pairs',
+        configContent: [
+          'labels:',
+          '  - Entailment',
+          '  - Contradiction',
+          '  - Neutral',
+        ].join('\n'),
+      },
     },
     {
-      name: 'NER',
-      url: `${TASK_DETAIL_URL}?task_id=T006`,
+      name: 'legacy NER task',
+      url: TASK_DETAIL_URL,
       previewTexts: ['Mark entities', 'PER', 'ORG', 'LOC'],
       formTexts: ['Subtype', 'Entity types', 'Labeling scheme'],
       codeTexts: ['subtype: ner', 'name: PER', 'name: ORG', 'name: LOC'],
       blockedTexts: ['請標記實體', '子類型', '實體類型', '標記格式'],
+      legacyTask: {
+        taskTypeKey: 'sequence_labeling',
+        configContent: [
+          'subtype: ner',
+          'entities:',
+          '  - name: PER',
+          '    color: "#6366F1"',
+          '  - name: ORG',
+          '    color: "#10B981"',
+          '  - name: LOC',
+          '    color: "#F59E0B"',
+          'scheme: IOB2',
+          'allow_overlapping: false',
+        ].join('\n'),
+      },
     },
   ];
 
@@ -67,6 +145,21 @@ test.describe('Task detail settings edit state', () => {
         await page.locator('#langToggle').click();
       }
       await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+      if (item.legacyTask) {
+        await page.evaluate((legacyTask) => {
+          const win = window as typeof window & {
+            TASK_DATA: {
+              taskTypeKey: string;
+              configContent: string;
+            };
+            renderOverview: () => void;
+          };
+          win.TASK_DATA.taskTypeKey = legacyTask.taskTypeKey;
+          win.TASK_DATA.configContent = legacyTask.configContent;
+          win.renderOverview();
+        }, item.legacyTask);
+      }
 
       const editBtn = page.locator('#settingsEditBtn');
       await expect(editBtn).toBeEnabled();

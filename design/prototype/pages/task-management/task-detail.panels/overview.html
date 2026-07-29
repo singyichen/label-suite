@@ -3,54 +3,89 @@
     <div class="panel-head-row">
       <h2 class="panel-title" id="basicInfoTitle">基本資料</h2>
       <div class="overview-edit-actions">
-        <button class="btn btn-secondary" type="button" id="overviewEditBtn">編輯</button>
+        <button class="btn btn-secondary" type="button" id="overviewEditBtn" data-testid="task-basic-edit-btn">編輯</button>
         <button class="btn btn-secondary hidden" type="button" id="overviewCancelBtn">取消</button>
         <button class="btn btn-primary hidden" type="button" id="overviewSaveBtn">儲存</button>
       </div>
     </div>
     <p class="status-hint" id="overviewReadonlyHint"></p>
 
-    <div id="basicInfoView" class="kv-dl">
+    <div id="basicInfoView" class="kv-dl task-config-summary" data-testid="task-config-summary">
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelTaskName">任務名稱</span>
-        <span class="kv-dl-value" id="valueTaskName"></span>
+        <span class="kv-dl-key" id="labelTaskName">任務名稱 <span class="required">*</span></span>
+        <span class="kv-dl-value" id="valueTaskName" data-testid="task-name-value"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelTaskType">任務類型</span>
-        <span class="kv-dl-value" id="valueTaskType"></span>
+        <span class="kv-dl-key" id="labelTaskCategories">大分類 <span class="required">*</span></span>
+        <span class="kv-dl-value task-config-tag-list" id="valueTaskCategories"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelDatasetSummary">資料集</span>
+        <span class="kv-dl-key" id="labelTaskInputType">輸入類型 <span class="required">*</span></span>
+        <span class="kv-dl-value" id="valueTaskInputType" data-testid="task-input-type-value"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelTaskType">輸出類型 <span class="required">*</span></span>
+        <span class="kv-dl-value task-config-tag-list" id="valueTaskType"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelDatasetSummary">資料集 <span class="required">*</span></span>
         <span class="kv-dl-value" id="valueDatasetSummary"></span>
       </div>
+      <div class="task-config-field-role-summary" id="fieldRoleSummaryRows"></div>
     </div>
 
-    <div class="overview-edit-form hidden" id="overviewEditForm">
-      <div class="field-group">
-        <label class="field-label" id="editTaskNameLabel" for="editTaskNameInput">任務名稱</label>
-        <input class="input-number" id="editTaskNameInput" type="text" maxlength="100" placeholder="例：新聞標題情感分類" />
+    <div class="overview-edit-form hidden" id="overviewEditForm" data-testid="task-config-step1-editor" data-editor-source="task-new-step1">
+      <div class="form-field">
+        <label class="field-label" id="editTaskNameLabel" for="editTaskNameInput">任務名稱 <span class="required">*</span></label>
+        <input class="input-text" id="editTaskNameInput" type="text" maxlength="100" placeholder="例：新聞標題情感分類" data-testid="task-name-input" />
+        <div class="char-count"><span id="editTaskNameCount">0</span> / 100</div>
+        <div class="field-error-msg" id="editTaskNameError"></div>
       </div>
 
-      <div class="field-group">
-        <label class="field-label" id="editTaskTypeLabel" for="editTaskTypeSelect">任務類型</label>
-        <select class="input-select" id="editTaskTypeSelect"></select>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集</label>
+      <div class="form-field">
+        <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集 <span class="required">*</span></label>
         <div class="upload-zone overview-dataset-upload-zone" id="overviewDatasetUploadZone" role="button" tabindex="0">
-          <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 10px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
-          <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
+          <div class="upload-zone-label" id="basicDatasetDropTitle">點擊或拖曳上傳資料集</div>
+          <div class="upload-zone-hint" id="basicDatasetDropHint">僅支援 JSON · 最大 200 MB · UTF-8</div>
         </div>
-        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" multiple />
+        <input class="hidden" id="editDatasetFileInput" type="file" accept=".json,application/json" multiple data-testid="dataset-file-input" />
         <div class="overview-dataset-file-list hidden" id="editDatasetFileList"></div>
+        <div class="inline-dataset-preview" id="editDatasetFieldMapper" data-testid="task-dataset-field-mapper" role="region" aria-label="資料集欄位角色指定">
+          <div class="inline-dataset-preview-header">
+            <span class="inline-dataset-preview-title" id="editDatasetFieldMapperTitle">欄位預覽・指定欄位角色</span>
+            <span class="inline-dataset-preview-hint" id="editDatasetFieldMapperHint">現有欄位・為每個欄位指定 Evidence / Input / Output 角色</span>
+          </div>
+          <div class="inline-dataset-preview-wrap" id="editDatasetFieldMapperTable"></div>
+          <div class="field-error-msg" id="editDatasetFieldMapperError"></div>
+        </div>
+        <div class="task-config-field-role-editor hidden" id="editFieldRoleRows" aria-hidden="true"></div>
       </div>
 
+      <div class="form-field">
+        <span class="field-label" id="editTaskTypeLabel">任務類型 <span class="required">*</span></span>
+        <div class="task-type-selector" id="editTaskTypeSelector" role="group" aria-labelledby="editTaskTypeLabel">
+          <div class="task-type-group">
+            <div class="task-type-group-label" id="editTaskCategoryLabel">大分類（可多選）</div>
+            <div class="task-type-chip-grid task-config-chip-list" id="editTaskCategoryChips" role="group"></div>
+          </div>
+          <div class="task-type-group">
+            <div class="task-type-group-label" id="editTaskInputTypeLabel">輸入類型（單選）</div>
+            <div class="task-type-chip-grid task-config-chip-list" id="editTaskInputTypeChips" role="radiogroup"></div>
+          </div>
+          <div class="task-type-group">
+            <div class="task-type-group-label" id="editTaskOutputTypeLabel">輸出類型（可多選）</div>
+            <div class="task-type-chip-grid task-config-output-groups" id="editTaskOutputTypeChips" role="group"></div>
+          </div>
+        </div>
+        <div class="field-error-msg" id="editTaskTypeError"></div>
+      </div>
+
+      <select class="input-select hidden" id="editTaskTypeSelect" aria-hidden="true" tabindex="-1"></select>
       <p class="inline-error" id="overviewEditError"></p>
     </div>
   </section>
@@ -75,27 +110,30 @@
         <span class="kv-dl-key" id="labelConfigTaskType">標記類型</span>
         <span class="kv-dl-value" id="valueConfigTaskType"></span>
       </div>
-      <div id="settingsConfigDynamicRows"></div>
+      <div id="settingsConfigDynamicRows" class="task-config-output-summary-list"></div>
     </div>
 
-    <div class="settings-edit-form hidden" id="settingsEditForm">
-      <div class="s2-preview-top">
-        <div class="yaml-preview-label" id="settingsAnnotationPreviewLabel">標記預覽</div>
-        <div class="annotation-preview" id="settingsAnnotationPreview"></div>
-      </div>
-
-      <div class="settings-editor-layout">
-        <div>
-          <div class="template-section">
-            <div class="template-section-title" id="settingsTemplateSectionTitle">從範本開始或者上傳設定檔</div>
-            <div class="template-actions">
-              <div id="settingsTemplateBtns"></div>
-              <button class="template-btn" id="settingsUploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
-              <input class="hidden" id="settingsConfigFileInput" type="file" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" />
-            </div>
-          </div>
+    <div class="settings-edit-form hidden" id="settingsEditForm" data-editor-source="task-new-step2">
+      <div class="s2-primary-workspace is-settings-first-preview" data-layout="settings-first-preview">
+        <div class="s2-settings-panel">
+          <div class="yaml-preview-label s2-settings-panel-label" id="settingsPanelLabel">標記設定</div>
           <div id="settingsSchemaFields"></div>
           <p class="inline-error" id="settingsEditError"></p>
+        </div>
+        <div class="s2-preview-top">
+          <div class="yaml-preview-label" id="settingsAnnotationPreviewLabel">標記預覽</div>
+          <div class="annotation-preview" id="settingsAnnotationPreview" aria-label="Annotation preview"></div>
+        </div>
+      </div>
+
+      <div class="s2-layout is-integrated-config-tools">
+        <div class="template-section">
+          <div class="template-section-title" id="settingsTemplateSectionTitle">從範本開始或者上傳設定檔</div>
+          <div class="template-actions">
+            <div id="settingsTemplateBtns"></div>
+            <button class="template-btn" id="settingsUploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
+            <input class="hidden" id="settingsConfigFileInput" type="file" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" />
+          </div>
         </div>
 
         <div class="s2-code-panel">
@@ -106,7 +144,7 @@
               <button class="btn btn-ghost" type="button" id="settingsFormatJsonBtn">JSON</button>
             </div>
           </div>
-          <textarea class="code-editor" id="settingsCodeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
+          <textarea class="code-editor" id="settingsCodeEditor" spellcheck="false" aria-label="YAML / JSON 設定" data-testid="task-config-code-editor"></textarea>
           <div class="code-error-bar hidden" id="settingsCodeErrorBar">
             <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <span id="settingsCodeErrorMsg"></span>

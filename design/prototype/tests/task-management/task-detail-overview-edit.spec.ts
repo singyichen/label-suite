@@ -14,6 +14,8 @@ test.describe('Task detail overview edit state', () => {
     await expect(saveBtn).toHaveText('儲存');
     await expect(page.locator('#overviewPanel')).not.toContainText('僅 draft 狀態可編輯');
     await expect(page.locator('#labelTaskName .required')).toHaveText('*');
+    await expect(page.locator('#labelTaskCategories .required')).toHaveText('*');
+    await expect(page.locator('#labelTaskInputType .required')).toHaveText('*');
     await expect(page.locator('#labelTaskType .required')).toHaveText('*');
     await expect(page.locator('#labelDatasetSummary .required')).toHaveText('*');
 
@@ -24,9 +26,12 @@ test.describe('Task detail overview edit state', () => {
     await expect(page.locator('#overviewReadonlyHint')).toHaveText('');
     await expect(page.locator('#editTaskNameLabel .required')).toHaveText('*');
     await expect(page.locator('#editTaskTypeLabel .required')).toHaveText('*');
+    await expect(page.locator('#editTaskCategoryLabel .required')).toHaveCount(0);
+    await expect(page.locator('#editTaskInputTypeLabel .required')).toHaveCount(0);
+    await expect(page.locator('#editTaskOutputTypeLabel .required')).toHaveCount(0);
     await expect(page.locator('#editDatasetLabel .required')).toHaveText('*');
     await expect(page.locator('#editDatasetFileList .overview-upload-file-preview')).toHaveCount(1);
-    await expect(page.locator('#editDatasetFileList .overview-upload-file-name')).toContainText('news_headlines_multilabel_2026.csv');
+    await expect(page.locator('#editDatasetFileList .overview-upload-file-name')).toContainText('single-label.json');
 
     const cancelBox = await cancelBtn.boundingBox();
     const saveBox = await saveBtn.boundingBox();

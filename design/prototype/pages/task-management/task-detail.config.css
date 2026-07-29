@@ -1,0 +1,412 @@
+.task-config-summary {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.task-config-tag-list,
+.task-config-chip-list,
+.task-config-output-groups {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.task-config-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-slate-50);
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+button.task-config-chip {
+  transition:
+    border-color var(--dur-fast),
+    background var(--dur-fast),
+    color var(--dur-fast);
+}
+
+button.task-config-chip:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+
+button.task-config-chip[aria-checked="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+
+button.task-config-chip:focus-visible,
+.task-config-field-role-select:focus-visible,
+.task-config-field-control:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.task-config-field-role-summary,
+.task-config-field-role-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.task-config-field-role-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(130px, 180px);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.task-config-field-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.task-config-field-role-badge {
+  justify-self: start;
+  padding: 2px 8px;
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.task-config-field-role-select,
+.task-config-field-control {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink);
+  padding: 8px 10px;
+  font: inherit;
+}
+
+textarea.task-config-field-control {
+  min-height: 104px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.task-config-output-summary-list,
+.task-config-output-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-config-output-section,
+.task-config-output-editor {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+}
+
+.task-config-output-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-slate-50);
+}
+
+.task-config-output-title {
+  min-width: 0;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.task-config-output-key {
+  flex-shrink: 0;
+  color: var(--color-text-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.task-config-output-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.task-config-setting-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.45fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.task-config-setting-label {
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.task-config-setting-value {
+  min-width: 0;
+  color: var(--color-ink);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.task-config-preview-grid {
+  gap: 10px;
+}
+
+.task-config-preview-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+}
+
+.task-config-preview-card-title {
+  margin-bottom: 6px;
+  color: var(--color-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.task-config-preview-card-copy {
+  color: var(--color-text-soft);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.task-config-selector-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.task-config-empty {
+  color: var(--color-text-soft);
+  font-size: 12px;
+}
+
+.overview-edit-form .form-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.overview-edit-form .char-count {
+  margin-top: 4px;
+  color: var(--color-ink-muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.overview-dataset-file-list {
+  margin-top: var(--space-sm);
+}
+
+#editDatasetFieldMapper {
+  margin-top: 12px;
+}
+
+#editDatasetFieldMapperTable {
+  overflow-x: auto;
+}
+
+#editDatasetFieldMapperTable .inline-preview-table {
+  min-width: 620px;
+}
+
+.task-config-output-heading {
+  width: 100%;
+}
+
+.task-config-output-heading .output-accordion-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.task-config-setting-row {
+  display: block;
+}
+
+.task-config-setting-row .field-hint {
+  margin-top: 6px;
+}
+
+.schema-list-editor,
+.dimension-editor-list,
+.taxonomy-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schema-list-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+}
+
+.schema-color-input {
+  width: 38px;
+  height: 38px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  cursor: pointer;
+}
+
+.schema-list-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  cursor: pointer;
+}
+
+.schema-list-add {
+  align-self: flex-start;
+}
+
+.tag-input-text {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.taxonomy-editor-row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding-left: calc(var(--taxonomy-depth, 0) * 18px);
+}
+
+.taxonomy-editor-marker {
+  width: 8px;
+  height: 8px;
+  border-left: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dimension-editor-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) repeat(3, minmax(72px, 0.6fr));
+  gap: 8px;
+}
+
+.preview-multi.task-config-preview-grid {
+  flex-wrap: wrap;
+}
+
+.preview-multi.task-config-preview-grid > .preview-card {
+  flex: 1 1 260px;
+}
+
+.task-config-preview-card-copy {
+  margin: 4px 0 10px;
+  color: var(--color-text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.preview-section-label,
+.preview-response-label {
+  margin-top: 12px;
+}
+
+.preview-range-row {
+  display: grid;
+  grid-template-columns: minmax(80px, auto) minmax(120px, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.preview-range-label {
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.preview-range-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--color-primary);
+}
+
+.preview-bypass {
+  margin-top: 12px;
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 1100px) {
+  .s2-primary-workspace.is-settings-first-preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .task-config-field-role-row,
+  .task-config-setting-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .task-config-field-role-select {
+    width: 100%;
+  }
+
+  .task-config-output-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task-config-output-key {
+    white-space: normal;
+  }
+
+  .dimension-editor-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  #editDatasetFieldMapperTable .inline-preview-table {
+    min-width: 560px;
+  }
+}

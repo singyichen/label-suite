@@ -773,6 +773,8 @@
 
   function syncUrl() {
     var p = new URLSearchParams();
+    var unauthorizedRole = new URLSearchParams(window.location.search).get('unauthorized');
+    if (unauthorizedRole) p.set('unauthorized', unauthorizedRole);
     if (state.loadFailed) p.set('view', 'error');
     if (getDisplayedTaskRole() !== 'user') p.set('task_role', getDisplayedTaskRole());
     if (state.keyword) p.set('keyword', state.keyword);

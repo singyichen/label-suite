@@ -1,21 +1,17 @@
 ---
-功能分支: feat/task-management/014-task-detail
+功能分支: feat/task-detail-settings-sync
 建立日期: 2026-04-20
-版本: 1.7.16
-狀態: Draft
----
-
-# 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
----
-功能分支: feat/task-management/014-task-detail
-建立日期: 2026-04-20
-版本: 1.7.15
-狀態: Draft
+版本: 2.0.1
+狀態: In Progress
 ---
 
 # 功能規格：Task Detail — 任務詳情（5 Tabs + 成員管理 + 執行控制）
 
 **需求來源**: IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
+
+## 功能目標
+
+讓 Project Leader 與 Reviewer 在任務詳情中依權限管理任務生命週期，並使 Overview 的「基本資料」與「標記設定」直接消費 `013-task-new` 的 config-driven Step 1／Step 2 契約；任何通過 taxonomy、registry 與 schema 驗證的 `outputs[]` 組合都能顯示與編輯，不受 prototype 13 筆示例限制。
 
 ## 輸入與生成規則
 
@@ -34,6 +30,8 @@
 - 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
 - 若後續新增實作層契約，需先確認是否構成行為變更；若是，必須依 SDD 流程更新 spec。
+- **v2.0.0 Overview consumer 同步範圍**：本版只將 Overview「基本資料」與「標記設定」同步至 013 的 `selected_categories[] + input_type + field_role_map + outputs[]` 契約。其他 tabs、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍可保留既有 legacy compatibility，且不因本版宣稱已完成任意輸出組合的正式標記、結果統計或品質分析。
+- **Prototype 示例不是白名單**：`docs/product/example-data/` 與任務列表中的 T001–T013 只提供可驗收示意；第 14 筆或後續任何合法 config 不得要求新增 task profile、任務名稱分支或 core renderer switch。
 
 ## Clarifications
 
@@ -49,10 +47,11 @@
 
 - `TASK_ROLES = project_leader | reviewer | annotator`
 - `TASK_TABS = overview | member-management | annotation-progress | annotation-results | work-log`
-- `TASK_TYPE_ENUM = single_sentence_classification | single_sentence_va_scoring | sequence_labeling | relation_extraction | sentence_pairs`
-- `SEQUENCE_LABELING_SUBTYPES = ner | aspect_list`
-- `SENTENCE_PAIRS_MODES = similarity | entailment`
-- `SENTENCE_PAIRS_RESPONSE_FORMATS = classification | scoring`
+- `TASK_CATEGORIES = classification | regression | sequence | generation`（來源：013）
+- `TASK_INPUT_TYPES = single_item | item_pair`（來源：013）
+- `OUTPUT_TYPE_KEYS = sequence_tagging | entity_recognition | relation_identification | single_label | multi_label | single_dim | multi_dim | free_text`（目前 registry baseline；不是未來上限）
+- `FIELD_ROLES = evidence | input | output`（來源：013；未指定角色的欄位不納入 config）
+- `TASK_DETAIL_CONFIG_SOURCE = selected_categories[] + input_type + field_role_map + ordered outputs[]`
 - `TASK_STATUSES = draft | dry_run_in_progress | waiting_iaa_confirmation | official_run_in_progress | completed`
 - `EXPORT_FORMATS = json | json-min`
 - `EXPORT_JSON_SHAPE = top-level object { manifest, items[] }`
@@ -71,7 +70,7 @@
 - `ANNOTATION_LIST_MATERIALIZATION_EVENTS = add_trial_round | start_official_run`
 - `OVERVIEW_EDITABLE_STATUS = draft`
 - `OVERVIEW_EDITABLE_ROLE = project_leader`
-- `OVERVIEW_EDITABLE_FIELDS = task_name | task_type | dataset | config | config_file_name | sampling_value | iaa_method | target_agreement | min_annotators | isolation_enabled | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
+- `OVERVIEW_EDITABLE_FIELDS = task_name | dataset | field_role_map | selected_categories | input_type | outputs | config_file_name | sampling_value | iaa_method | target_agreement | min_annotators | isolation_enabled | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
@@ -158,34 +157,23 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 **介面定義（需與 IA 導覽語意一致）**：
 
 - Tab A：`任務概覽`（預設）
-  - 區塊 1：`基本資料`（名稱、類型、資料集上傳）
-    - 顯示狀態：任務名稱、`task_type`、資料集（總筆數）、建立者、建立時間、最近更新時間；資料集欄位僅顯示合計筆數，不顯示檔案名稱；詳細檔案清單需進入編輯模式查看
-    - 編輯狀態：任務名稱可改(必填)、任務類型可重選(必填)、資料集可追加/移除（至少保留一個）
-    - 必填欄位樣式：`任務名稱`、`任務類型`、`資料集` 的 `*` 必須沿用「標記設定 schema 必填欄位」相同 `required` 樣式（label 文字 + 紅色星號 span）
-    - 資料集檔案顯示：已上傳資料集沿用 `013-task-new` Step 1 的 dataset 檔案列元件，每個已上傳檔案獨立一列顯示檔名、檔案大小、眼睛預覽按鈕與移除按鈕；upload zone 持續可見，支援追加多個資料集檔案；所有已上傳檔案合併為同一資料集
+  - 區塊 1：`基本資料`（名稱、資料集與輸出組合）
+    - 顯示狀態：任務名稱、資料集總筆數、建立者、建立時間、最近更新時間，以及依 `selected_categories[]`、`input_type` 與 `outputs[].type` 產生的唯讀摘要；不得把這些欄位壓回單一固定 `task_type`
+    - 編輯狀態：完整沿用 `013-task-new` Step 1。任務名稱、JSON 多檔上傳、資料列來源、原始 JSON 預覽、欄位角色與三組 taxonomy chips 均須回填既有值，並使用相同驗證、錯誤文案與可存取語意
+    - 三組 chips 分別維護 `selected_categories[]`、`input_type`、`selectedOutputTypes[]`；分類／回歸的組內選擇模式與序列／生成的多選模式由 013 taxonomy `outputSelection` metadata 決定，跨大分類仍可組合
+    - 儲存時 `selectedOutputTypes[]` 必須依畫面順序一對一產生 ordered `outputs[].type`；不得另存或推導單一固定任務類型
+    - Dataset 僅接受 013 規定的 JSON 格式；upload zone 持續可見，每個檔案獨立顯示檔名、大小、預覽與移除，並沿用資料列來源偵測、欄位集合相容性、Input 數量及 Input／Evidence 完整性檢查
+    - `field_role_map` 必須回填 Evidence／Input／Output 角色；Output 只代表建立者明確指定、可供 annotator 編修的預標記資料，不得用來載入或顯示隱藏 test-set answer
+    - 必填欄位樣式必須沿用 013 Step 1 與本頁「標記設定」schema 的同一 `required` 樣式
   - 區塊 2：`標記設定`（設定檔介面）
-    - 顯示狀態：固定顯示 `設定檔版本`（顯示使用者上傳的 config 檔名；未上傳時為空字串）與 `標記類型`；其餘摘要欄位需依當前 `task_type` 與 subtype 的 schema 動態顯示（例如 `sequence_labeling.subtype = ner` 顯示 `實體類型`、`標記格式`、`允許重疊標記`；`sequence_labeling.subtype = aspect_list` 顯示 `輸入欄位`、`Aspect List 欄位`、`Aspect 編輯規則`、`數量限制`、`Exact match 驗證`、`情緒描述檢查`；`single_sentence_va_scoring` 顯示 `Valence`、`Arousal` 兩列分數維度設定；`sentence_pairs` 顯示 `pair_mode`、`response_format`、兩句欄位對應與作答設定）
-    - 編輯狀態：根據不同任務有各自的必填項目，設定檔可透過 Visual/Code 重設（套用範本或上傳 YAML/JSON），儲存後同步更新摘要；Visual 編輯器必須與 `013-task-new` Step 2 使用同一份 registry/schema 與 config source-of-truth
-    - 顯示模式必填提示：動態摘要欄位若為 schema 必填欄位，欄位標籤旁必須顯示紅色 `*`
-    - `single_sentence_va_scoring` 專屬規則：Visual 編輯需提供 `Valence`、`Arousal` 兩組 `min/max/step` 設定；標記預覽需同頁顯示兩列可操作評分元件（Valence 一列、Arousal 一列）
-    - `sequence_labeling.subtype = ner` 專屬規則：
-      - 顯示狀態摘要需先顯示 `entities`、`scheme`、`allow_overlapping` 三個核心欄位；若進階欄位有非預設值，仍需納入摘要列，不得遺失。
-      - 編輯狀態 Visual schema 需採 `核心設定` + `進階設定` 漸進揭露；`核心設定` 預設展開，`進階設定` 預設收合。
-      - NER config key 必須與 `013-task-new` 一致使用 `entities`（`{ name, color }[]`）、`scheme`、`allow_overlapping`；不得在 task-detail 另行改用 `entity_types`、`span_scheme`、`allow_overlapping_spans` 作為主要輸出。
-    - `sequence_labeling.subtype = aspect_list` 專屬規則：
-      - 顯示狀態摘要需揭露欄位對應：`input_field`（預設 `sentence`）與 `aspect_list_field`（預設 `aspects`）。
-      - 顯示狀態摘要需揭露五個 boolean 規則：`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`require_sentiment_context_check`，並以啟用 / 停用語意顯示，不得以 NER 欄位替代。
-      - 顯示狀態摘要需揭露 `min_aspects` / `max_aspects`；未設定上限時需以「未限制」或等價空值語意呈現。
-      - 編輯狀態 Visual schema 需分為 `欄位對應`、`Aspect 編輯規則`、`數量限制` 三個視覺群組；boolean 規則需以 toggle card 呈現並顯示啟用 / 停用狀態；欄位與數量群組在 desktop 可雙欄並排，在 mobile viewport 必須單欄排列且不得水平 overflow。
-      - 編輯狀態標記預覽必須呈現可編輯句子與 Aspect List rows，且新增、刪除、修改 aspect 的狀態需反映到同一份 config/preview source-of-truth。Aspect List rows 的輸入機制為自由文字輸入框（text input），每列代表一個 aspect 文字片段；不採用 NER 式的句子 span 拖拉選取。
-      - `require_sentiment_context_check = true` 時，預覽或設定摘要需清楚標示此規則為標記者判斷用的軟性指引，不觸發系統硬性攔截；`require_exact_match_in_sentence = true` 才是阻擋儲存的硬性驗證。
-      - 發布至 annotation-workspace 後，Reviewer 對 `aspect_list` 任務需可在審核介面直接新增、刪除或修改標記員提交的 aspect，並保留 reviewer 修正 diff；此為 reviewer-corrected result，不等同於退回標記員。
-    - `task_type = sentence_pairs` 專屬規則：
-      - 顯示狀態摘要需揭露 `pair_mode`（`similarity | entailment`）與 `response_format`（`classification | scoring`）；`pair_mode = entailment` 時不得顯示評分型設定。
-      - 顯示狀態摘要需揭露兩句欄位對應：`sentence_1_field`、`sentence_2_field`，以及顯示文案 `sentence_1_label`、`sentence_2_label`。
-      - `response_format = classification` 時，摘要需顯示 `label_options`、`allow_unsure`、`note_enabled`；`response_format = scoring` 時，摘要需顯示 `score_min / score_max / score_step`、`allow_unsure`、`note_enabled`。
-      - 編輯狀態 Visual schema 需分為 `任務模式`、`欄位對應`、`顯示文案`、`作答設定` 四個視覺群組；`pair_mode = entailment` 時需即時鎖定 `response_format = classification`。
-      - 編輯狀態標記預覽必須呈現雙句卡片與對應作答控制項；`similarity + classification` 顯示單選標籤、`similarity + scoring` 顯示分數選擇器、`entailment + classification` 顯示三分類或自訂分類標籤。
+    - 顯示狀態：固定顯示使用者上傳的設定檔名稱（未上傳時為空字串），再依 ordered `outputs[]` 逐項顯示 registry 名稱與目前 config 摘要；每個摘要欄位的標籤、順序、格式與必填 `*` 均由該 output 的 registry field metadata 產生
+    - 編輯狀態：完整沿用 `013-task-new` Step 2 的 `OUTPUT_TYPE_REGISTRY`、schema field renderer、defaultConfig、Visual／Code source-of-truth、互動預覽、dependency、Bypass、i18n 與驗證規則，不得在 task-detail 另建 task-specific schema
+    - 所有單一 output 與多 output 組合使用相同的設定優先工作區：桌面設定在左、預覽在右；1100px 以下設定在上、預覽在下；範本／上傳與 YAML/JSON Code 工具置於下方整合工具卡
+    - 每個 `outputs[]` 項目依順序產生一個設定手風琴；存在 registry dependency 時才合併預覽，其他輸出仍保持獨立 config、預覽與 Bypass 狀態
+    - Visual、Code 與預覽必須共享 `input_type + outputs[]`；任何一方修改並儲存後，其他兩方與唯讀摘要立即反映等價值
+    - 基本資料新增 output 時，以 registry defaultConfig 初始化；保留 output 時保留既有 config；移除 output 或更換資料集／欄位角色可能造成 config 或預標記失效時，必須先列出影響並取得確認
+    - T001–T013 可作目前 8 個 registry output 與複合組合的示例，但不得形成 if/switch 白名單；合成第 14 筆合法組合時必須直接使用相同 renderer
+    - 014 不重複定義各 output 的所有專屬欄位與預覽細節；其唯一來源是 013 當前已接受的 Step 2 registry/schema 契約
   - 區塊 3：`說明文件上傳`
     - 顯示狀態：分為 `提供給標記員` 與 `提供給審核員` 兩個角色區塊；各自顯示說明內容摘要、附件上傳狀態（已上傳/未上傳）、附件清單，以及共用的 `開始標記前強制顯示` 狀態
     - 編輯狀態：可分別編輯 `標記說明內容`、`審核說明內容`，並於兩個角色區塊各自上傳/移除多份附件；上傳文件可點開顯示；可切換 `開始標記前強制顯示`
@@ -337,17 +325,15 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 - `member-management` 的 Email 邀請必須驗證 email 格式，並阻擋與既有任務成員或既有邀請重複的 email。
 - Overview 可編輯模式僅在 `OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE` 同時成立時啟用。
 - Overview 編輯模式需支援未儲存變更保護；切換 tab、返回列表、重新整理時，若有未儲存內容需先確認。
-- 變更 `task_type`、`dataset`、`config` 前，系統需顯示影響確認（可能影響抽樣設定與既有預覽設定）；使用者確認後才套用。
+- 變更 `selected_categories[]`、`input_type`、`outputs[]`、`dataset` 或 `field_role_map` 前，系統需顯示影響確認（可能移除既有 output config、改變抽樣預設或使預標記失效）；使用者確認後才套用。
 - Overview 送出更新需以單一 patch transaction 寫入 `OVERVIEW_EDITABLE_FIELDS`，避免部分成功造成設定不一致。
 - Overview 編輯模式的欄位元件、驗證規則、錯誤文案、上傳限制，必須與 `013-task-new` 對應欄位保持一致。
-- `task_type`、`dataset`、`config`、`sampling`、`guideline` 的 UI 結構需優先沿用 `task-new`；差異僅允許在版位（多步驟 vs 同頁區塊編輯）與唯讀欄位。
+- `task_name`、`dataset`、`field_role_map`、`selected_categories[]`、`input_type`、`outputs[]`、`sampling`、`guideline` 的 UI 結構需優先沿用 `task-new`；差異僅允許在版位（多步驟 vs 同頁區塊編輯）、既有值回填、影響確認與唯讀欄位。
 - Overview「基本資料」編輯模式中的必填星號樣式，必須與「標記設定」schema 必填欄位一致。
 - Overview「基本資料」中的資料集已上傳檔案顯示，必須與 `013-task-new` Step 1 dataset 上傳成功後的檔案列一致（每檔案一列、含檔案大小 / 預覽 / 移除）。
-- Overview「標記設定」摘要區塊不得固定為「標籤清單/允許多選」；需依 `task_type` 對應 schema 欄位動態渲染摘要列。
-- Overview「標記設定」摘要區塊需進一步依 `sequence_labeling.subtype` 分流；`subtype = ner` 才顯示實體/span 相關欄位，`subtype = aspect_list` 必須顯示 Aspect List 專用欄位與規則。
-- Overview 編輯模式重設或修改 `sequence_labeling.subtype = ner` config 時，需沿用 `013-task-new` Step 2 的 NER key、預設值、群組方式與預覽語意，不得建立 task-detail 專用 NER schema。
-- Overview 編輯模式重設或修改 `sequence_labeling.subtype = aspect_list` config 時，需沿用 `013-task-new` Step 2 的欄位、預設值、驗證與預覽語意，不得建立 task-detail 專用 config key。
-- Overview 編輯模式重設或修改 `task_type = sentence_pairs` config 時，需沿用 `013-task-new` Step 2 的 sentence-pairs key、預設值、驗證與預覽語意，不得建立 task-detail 專用 config key。
+- Overview「標記設定」摘要不得固定為任何示例任務欄位；需依 ordered `outputs[]` 與 registry field metadata 動態渲染。
+- Overview 編輯模式必須逐項沿用 `013-task-new` Step 2 的 output schema、預設值、欄位 renderer、dependency、預覽與驗證語意，不得以 task ID、任務名稱、示例檔名或 output key 在 core flow 建立專屬表單分支。
+- 新增 registry output 時，只要其 config 通過 013 的 schema 驗證，task-detail Overview 必須自動得到同一套顯示與編輯能力；不得同步修改 task-detail core renderer 才能使用。
 - Overview 各區塊於顯示模式中，凡屬必填欄位皆需在欄位標籤旁顯示紅色 `*`，用於提示尚未完成風險。
 - 若因任務上下文差異需與 `task-new` 不一致，規格必須列出差異清單（欄位/規則/文案）後方可實作。
 
@@ -460,6 +446,25 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 
 ---
 
+### 使用者故事 4 — 以 Task New 契約檢視與編輯既有任務設定（優先級：P1）
+
+Project Leader 可在 draft 任務的 Overview 中，以與 `task-new` Step 1／Step 2 相同的 config-driven 介面回填、調整並儲存基本資料與標記設定；Reviewer 與非 draft 任務則以相同資料契約唯讀查看。
+
+**此優先級原因**：若建立與詳情使用不同 taxonomy、schema 或預覽 renderer，同一份 Task Config 會在生命週期中產生漂移，且新 output 組合會被固定示例阻擋。
+
+**獨立測試方式**：依序開啟 T001–T013，驗證各自的 `selected_categories[]`、`input_type`、`field_role_map` 與 ordered `outputs[]` 均正確回填；再注入一筆未列於示例 profile 的第 14 筆合法組合，確認不新增 core branch 仍可顯示、編輯與完成 Visual／Code round-trip。
+
+**驗收情境**：
+
+1. **Given** draft 任務保存了 Step 1 狀態，**When** Project Leader 編輯基本資料，**Then** 任務名稱、JSON dataset、資料列來源、欄位角色與三組 taxonomy chips 以既有值回填，選擇與驗證語意和 013 Step 1 一致。
+2. **Given** 任務保存 ordered `outputs[]`，**When** 開啟標記設定，**Then** 系統依順序為每個 output 建立 registry-driven 摘要、schema 手風琴與互動預覽，Visual、YAML/JSON Code 與摘要共享同一份 config。
+3. **Given** 基本資料保留、加入或移除 output，**When** 確認影響並儲存，**Then** 保留項目維持原 config、新增項目使用 registry defaultConfig、已確認移除的項目才從 `outputs[]` 刪除。
+4. **Given** 任務為 Reviewer 可見或狀態不是 draft，**When** 開啟 Overview，**Then** 仍以相同 registry metadata 顯示摘要，但不提供可提交的基本資料或標記設定編輯入口。
+5. **Given** T001–T013 之外存在第 14 筆通過 taxonomy 與 schema 驗證的任意合法組合，**When** 開啟該任務詳情，**Then** 系統使用相同 renderer 完成顯示與編輯，不要求新增 task ID、任務名稱、fixture 檔名或固定型別分支。
+6. **Given** dataset 含 Output 角色或測試集欄位，**When** 初始化標記預覽，**Then** 只可使用明確 annotator-visible 的預標記資料，且 hidden answer、ground truth、gold label 或等價欄位不得進入 DOM、前端 state 或可下載 config。
+
+---
+
 ### 邊界情況
 
 - `task_id` 不存在或使用者無 membership：導回 `/task-list` 並顯示提示。
@@ -481,13 +486,10 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - 在 Overview 編輯模式中切換 tab 或返回列表：若有未儲存變更，需先顯示離頁確認，要跳彈窗提醒。
 - 非 `draft` 狀態（例如 `dry_run_in_progress`）嘗試送出 Overview 編輯：系統需拒絕並提示目前僅草稿可編輯。
 - 重新上傳資料集後，若既有抽樣值超出新資料集合法範圍：需阻擋儲存並提示修正抽樣值。
-- `sequence_labeling.subtype = aspect_list` 的 config 缺少 `input_field`、`aspect_list_field` 或必要驗證規則：Overview「標記設定」顯示模式需標示設定不完整；編輯儲存時需阻擋並顯示可定位錯誤。
-- `sequence_labeling.subtype = aspect_list` 且 `require_exact_match_in_sentence = true` 時，若預覽或 code 範例中的 aspect 無法在句子中找到完全一致片段：Overview 編輯儲存需阻擋並顯示 schema/preview 驗證提示。
-- `sequence_labeling.subtype = aspect_list` 且 `allow_sentence_edit = true` 時，標記結果 payload 仍必須區分原始句子、修正後句子與 Aspect List；task-detail 重設 config 不得把資料集原文覆寫為預覽中的修正文。
-- `task_type = sentence_pairs` 但缺少 `sentence_1_field` 或 `sentence_2_field`：Overview「標記設定」顯示模式需標示設定不完整；編輯儲存時需阻擋並顯示可定位錯誤。
-- `task_type = sentence_pairs` 且 `pair_mode = entailment` 但 `response_format = scoring`：Overview 編輯儲存需阻擋，並提示蘊含任務僅支援分類型。
-- `task_type = sentence_pairs` 且 `response_format = classification` 但 `label_options` 為空：Overview 編輯儲存需阻擋。
-- `task_type = sentence_pairs` 且 `response_format = scoring` 時，若 `score_min >= score_max` 或 `score_step <= 0`：Overview 編輯儲存需阻擋。
+- 任一 `outputs[]` 項目缺少 registry 必填欄位、違反欄位驗證或帶有無效 dependency：Overview 顯示模式需標示設定不完整；編輯儲存時需阻擋並顯示 output 名稱、欄位與修正方向。
+- 修改基本資料而移除既有 output：未確認影響前不得刪除該 output config；取消確認時保留原 `outputs[]` 與 Visual／Code 內容。
+- 修改資料集或 `field_role_map` 後，若預標記 shape 與目前 output config 不相容：不得靜默回退到其他欄位或顯示 Evidence／hidden answer；需顯示可定位錯誤並保留最後一份有效設定。
+- 第 14 筆或後續合法 config 未出現在示例 profile：仍必須正常顯示與編輯；不得回退到 T001、預設任務或空白固定模板。
 
 ---
 
@@ -548,23 +550,24 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-014e**：Overview 編輯過程若存在未儲存變更，系統必須在離頁/切 tab/重新整理時顯示確認提示。
 - **FR-014f**：Overview 必須以 5 區塊雙模式呈現：`基本資料`、`標記設定`、`說明文件上傳`、`抽樣設定`、`任務狀態與執行控制`；各區塊需明確定義顯示狀態與編輯狀態。匯出功能已移至 `annotation-results` tab。
 - **FR-014f-1**：Overview「說明文件上傳」必須與 `013-task-new` Step 4 對齊為雙角色結構：`提供給標記員` 與 `提供給審核員`；兩區塊需各自獨立維護說明文字與附件清單，不得混為單一 guideline 欄位。
-- **FR-014g**：Overview「基本資料」中 `任務名稱`、`任務類型`、`資料集` 的必填星號，必須與「標記設定 schema」必填欄位使用相同 `required` 樣式。
+- **FR-014g**：Overview「基本資料」中 `任務名稱`、`資料集`、`selected_categories[]`、`input_type`、`selectedOutputTypes[]` 的必填星號，必須與「標記設定 schema」必填欄位使用相同 `required` 樣式。
 - **FR-014h**：Overview「基本資料」中資料集已上傳檔案，必須使用與 `013-task-new` Step 1 dataset 上傳成功後相同的檔案列元件，顯示檔名、檔案大小、眼睛預覽按鈕與移除按鈕，並支援每檔案獨立一列呈現。
-- **FR-014i**：Overview「標記設定」摘要區塊必須依當前 `task_type` 的 schema 欄位動態顯示摘要列；除 `設定檔版本`、`標記類型` 外，不得固定顯示與當前 task type 無關欄位。
+- **FR-014i**：Overview「標記設定」摘要區塊必須依 ordered `outputs[]` 與各 output 的 registry field metadata 動態顯示摘要列；除設定檔名稱外，不得固定顯示與目前 outputs 無關的欄位。
 - **FR-014j**：Overview 顯示模式中，所有必填欄位標籤必須顯示紅色 `*`（沿用 `required` 樣式）；不限於編輯模式。
-- **FR-014k**：當 `task_type = single_sentence_va_scoring` 時，Overview「標記設定」摘要必須顯示 `Valence`、`Arousal` 兩列維度（含 `min/max/step` 組態），且編輯模式標記預覽必須同步顯示雙列評分元件。
-- **FR-014l**：當 `task_type = sequence_labeling` 時，Overview「標記設定」摘要與編輯模式必須讀取 `subtype`；`subtype = ner` 顯示 NER schema 欄位，`subtype = aspect_list` 顯示 Aspect List schema 欄位，不得混用兩種 subtype 的摘要或預覽。
-- **FR-014l-1**：當 `sequence_labeling.subtype = ner` 時，Overview 編輯模式 Visual schema 必須依序呈現 `核心設定`、`進階設定`；`核心設定` 預設展開，`進階設定` 預設收合，且須與 `013-task-new` 使用同一份 schema/config source-of-truth。
-- **FR-014l-2**：當 `sequence_labeling.subtype = ner` 時，Overview「標記設定」的主要 config key 必須統一為 `entities`（`{ name, color }[]`）、`scheme`、`allow_overlapping`；若載入舊版 config 使用 `entity_types`、`span_scheme`、`allow_overlapping_spans`，系統可做相容轉換，但儲存輸出不得沿用舊 key。
-- **FR-014m**：當 `sequence_labeling.subtype = aspect_list` 時，Overview「標記設定」摘要必須至少顯示 `input_field`、`aspect_list_field`、`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`min_aspects`、`max_aspects`、`require_sentiment_context_check`。
-- **FR-014n**：當 `sequence_labeling.subtype = aspect_list` 時，Overview 編輯模式 Visual schema 必須依序呈現 `欄位對應`、`Aspect 編輯規則`、`數量限制` 三個群組；boolean 規則需以 toggle card 呈現，且欄位與數量群組在 mobile viewport 必須單欄排列。
-- **FR-014o**：當 `sequence_labeling.subtype = aspect_list` 時，Overview 編輯模式標記預覽必須呈現可編輯句子與 Aspect List rows；新增、刪除、修改 aspect 的狀態需與 Visual schema/code 區共享同一份 config/preview source-of-truth。
-- **FR-014p**：當 `sequence_labeling.subtype = aspect_list` 且 `require_exact_match_in_sentence = true` 時，Overview 編輯儲存必須驗證 aspect 完全出現在句子中；驗證失敗時不得儲存 config。`require_sentiment_context_check = true` 僅提供標記者判斷用提示文字，不作為硬性阻擋。
-- **FR-014q**：當 `sequence_labeling.subtype = aspect_list` 且 `allow_sentence_edit = true` 時，task-detail 儲存後的 config 必須保留 annotation-workspace 可區分原始句子、修正後句子與 Aspect List 的 payload 語意，不得把修正後句子覆寫為資料集原文。
-- **FR-014r**：當 `sequence_labeling.subtype = aspect_list` 任務發布至 annotation-workspace 後，Reviewer 端必須能基於 task-detail 凍結的 Aspect List schema 直接產生 reviewer-corrected result（新增 / 刪除 / 修改 aspect 與句子修正），並保留 annotator 原始提交與 reviewer 修正 diff。
-- **FR-014s**：當 `task_type = sentence_pairs` 時，Overview「標記設定」摘要必須至少顯示 `pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label` 與作答設定（分類型顯示 `label_options`；評分型顯示 `score_min / score_max / score_step`）。
-- **FR-014t**：當 `task_type = sentence_pairs` 時，Overview 編輯模式 Visual schema 必須依序呈現 `任務模式`、`欄位對應`、`顯示文案`、`作答設定` 四個群組，並與 `013-task-new` 使用同一份 registry/schema 與 config source-of-truth。
-- **FR-014u**：當 `task_type = sentence_pairs` 且 `pair_mode = entailment` 時，Overview 編輯儲存必須阻擋 `response_format = scoring`；當 `response_format = classification` 時 `label_options[]` 為必填，當 `response_format = scoring` 時 `score_min / score_max / score_step` 為必填且需可直接供 annotation-workspace / dataset-analysis 共用。
+- **FR-014k**：Overview「基本資料」編輯必須完整沿用 `013-task-new` Step 1 的任務名稱、JSON dataset、多檔案列、資料列來源、原始 JSON 預覽、欄位角色與 taxonomy chip 行為。
+- **FR-014l**：三組 taxonomy chip 狀態必須分別保存為 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`；儲存時 `selectedOutputTypes[]` 一對一形成 ordered `outputs[].type`，不得另存單一固定 `task_type`。
+- **FR-014l-1**：Dataset 與 `field_role_map` 必須沿用 013 Step 1 的格式、欄位集合、Input 數量及 Input／Evidence 完整性驗證；不通過時阻擋基本資料儲存。
+- **FR-014l-2**：Output 角色只能初始化明確 annotator-visible 的預標記；hidden answer、ground truth、gold label、correct label 或等價測試集答案不得進入 Overview DOM、前端 state、Visual／Code 或下載設定檔。
+- **FR-014m**：Overview「標記設定」編輯必須完整沿用 `013-task-new` Step 2 的 `OUTPUT_TYPE_REGISTRY`、schema field renderer、defaultConfig、互動預覽、dependency、Bypass、i18n 與驗證規則。
+- **FR-014m-1**：Overview 編輯模式必須在元件層級沿用 `013-task-new` Step 1／Step 2 當前已接受的視覺與互動契約。Step 1 對齊範圍包含任務名稱、JSON upload zone、多檔案列、資料列來源、嵌入式欄位預覽、原始 JSON modal、欄位角色 selector、taxonomy chips、標籤／hint／錯誤訊息與操作按鈕；Step 2 對齊範圍包含 schema 手風琴、「標記設定」／「標記預覽」小標、互動預覽、Bypass、範本／上傳列、格式切換、YAML/JSON Code 編輯器與儲存操作。上述元件的 typography、色彩、border、radius、padding、gap、尺寸及 default／hover／focus／error／disabled 狀態必須一致；1440px（`> 1100px`）使用設定左／預覽右，1024px、768px、375px（`<= 1100px`）使用設定上／預覽下，並沿用單一外框工具卡、分隔線與 240px Code 高度。比對範圍排除 Task Detail 自身頁首、tabs 與 Overview 外層卡片。視覺呈現仍必須由 taxonomy、registry 與 config 產生，T001–T013 及第 14 筆合法組合均使用相同元件與版面規則，不得建立 task-specific 視覺分支。
+- **FR-014n**：Visual、YAML/JSON Code、互動預覽與唯讀摘要必須共享同一份 `input_type + outputs[]` source-of-truth；任一合法修改儲存後，其他呈現須同步為等價 config。
+- **FR-014o**：變更 output 組合時，保留項目必須維持既有 config、新增項目使用 registry defaultConfig；移除項目前必須列出影響並取得確認，取消時不得修改原 `outputs[]`。
+- **FR-014p**：Overview Step 1／Step 2 core flow 不得依 task ID、任務名稱、fixture 檔名或 output key 建立 task-specific renderer branch；新增 registry output 不需修改 task-detail core flow。
+- **FR-014q**：T001–T013 只作目前輸出與複合組合的 prototype 驗收資料，不構成任務數量、output 數量或合法組合上限；第 14 筆任意合法 config 必須使用相同 renderer 顯示、編輯與儲存。
+- **FR-014r**：Reviewer 或非 `draft` 任務必須以與可編輯模式相同的 registry metadata 顯示基本資料與標記設定摘要，但不得提交修改。
+- **FR-014s**：Overview Step 1／Step 2 在 `375px`、`768px`、`1440px` 均須可完成查看、編輯、驗證與取消；Step 2 需沿用 013 的桌面設定左／預覽右及 1100px 以下設定上／預覽下順序。
+- **FR-014t**：任何 output schema 驗證錯誤必須標示 output 名稱、欄位與修正方向，保留最後一份有效 config，不得部分套用或靜默回退到示例模板。
+- **FR-014u**：本版同步範圍限 Overview「基本資料」與「標記設定」；`annotation-results`、`annotation-progress`、015 Annotation Workspace、017 Dataset Analysis Detail 與 legacy routing compatibility 不因本 FR 自動改為 `outputs[]` consumer。
 - **FR-015**：系統必須提供 `annotation-results` tab，讓 `project_leader` 與 `reviewer` 查看逐筆樣本的標記員提交內容與審核員審核決定，且全部唯讀。
 - **FR-015a**：`annotation-results` tab 必須提供篩選列，包含標記階段切換（試標 / 正式標記）、提交狀態篩選（全部 / 已提交 / 草稿 / 待處理）、標記員多選篩選；`project_leader` 與 `reviewer` 皆可使用全部篩選維度。標記員多選篩選的觸發按鈕視覺樣式（border、border-radius、padding、font-size、line-height）必須與相鄰 `input-select` 元素的計算值完全一致。
 - **FR-015b**：`annotation-results` tab 的 `標記結果表` 必須為可展開兩層的階層式結構：父列顯示樣本摘要（樣本 ID、完成狀態、完成時間、標記階段、文本摘要截斷、標記分布統計），展開後子列每位標記員各一列。
@@ -626,11 +629,13 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`task_type`、`status`、`run_stage`、`settings`、`sampling_value`（每回合抽樣筆數）、`iaa_method`、`trial_round`（唯讀 round 狀態資訊）、`target_agreement`、`min_annotators`、`isolation_enabled`、`sample_snapshot_id`。
-- **TaskConfig**：schema 驗證後的任務設定內容，來源與 `013-task-new` 相同。`task_type = sequence_labeling` 時必須包含 `subtype`，並由 subtype 決定摘要、編輯欄位、預覽與驗證規則。
+- **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`selected_categories[]`、`input_type`、`field_role_map`、ordered `outputs[]`、`status`、`run_stage`、`sampling_value`（每回合抽樣筆數）、`iaa_method`、`trial_round`（唯讀 round 狀態資訊）、`target_agreement`、`min_annotators`、`isolation_enabled`、`sample_snapshot_id`。Overview 不保存或推導單一固定 `task_type`。
+- **TaskConfig**：schema 驗證後的任務設定內容，來源與 `013-task-new` 相同，核心為 `input_type + ordered outputs[]`；每個 `OutputConfig` 由 registry 的 `type + config` 定義，摘要、編輯欄位、預覽與驗證均從 registry metadata 推導。
+- **TaskBasicSettings**：Overview Step 1 的既有任務編輯狀態。欄位：`task_name`、dataset 檔案與資料列來源、`field_role_map`、`selected_categories[]`、`input_type`、`selectedOutputTypes[]`；最後一項在儲存時一對一映射至 `outputs[].type`。
+- **OutputConfig**：單一輸出設定。欄位：`type` 與 registry 驗證後的 `config`；保留項目維持原值、新增項目採 defaultConfig、移除項目需經影響確認。
+- **OutputTypeRegistryItem**：沿用 013 的顯示名稱、fields、defaultConfig、dependency、preview metadata、i18n 與 migration metadata；014 不建立第二份 task-specific registry。
 - **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
-- **AspectListTaskConfig**：`sequence_labeling.subtype = aspect_list` 專用設定。欄位：`input_field`、`aspect_list_field`、`allow_sentence_edit`、`allow_aspect_add`、`allow_aspect_delete`、`require_exact_match_in_sentence`、`min_aspects`、`max_aspects`、`require_sentiment_context_check`。
-- **SentencePairsTaskConfig**：`sentence_pairs` 專用設定。欄位：`pair_mode`、`response_format`、`sentence_1_field`、`sentence_2_field`、`sentence_1_label`、`sentence_2_label`、`label_options[]?`、`score_min?`、`score_max?`、`score_step?`、`allow_unsure`、`note_enabled`。
+- **LegacyResultCompatibility**：`annotation-results`、匯出與尚未遷移的 015／017 consumer 可暫時保留既有 `task_type` compatibility 欄位；它不得反向成為 Overview Step 1／Step 2 的資料來源，也不得由 `outputs[]` 猜測產生。
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
@@ -647,8 +652,8 @@ flowchart LR
 
 | 規格編號 | 功能 | 本規格需要的內容 |
 |---------|------|----------------|
-| 010 | Task List | 任務入口與 task_id 導入 |
-| 013 | New Task | 任務初始設定、建立者 membership、自動導頁、task_type registry/schema、`sequence_labeling.subtype = aspect_list` 與 `sentence_pairs` 的 config 欄位、預設值、預覽與驗證規則 |
+| 010 | Task List | 任務入口、task_id 導入、`outputs[].type` 順序與 13 筆非上限示例語意 |
+| 013 | New Task | Step 1 的 `selected_categories[]`、`input_type`、`field_role_map` 與 dataset 驗證；Step 2 的 ordered `outputs[]`、registry/schema、Visual／Code、預覽、dependency、Bypass、i18n 與 hidden-answer 安全規則 |
 | 012 | Dashboard | 待處理提醒顯示與導覽語意 |
 
 ### 下游（依賴本規格的規格）
@@ -658,6 +663,8 @@ flowchart LR
 | 015 | Annotation Workspace | run 階段控制、說明設定、成員角色授權；Aspect List reviewer 直接修正與 diff 追溯；Sentence Pairs 工作區需依凍結 config 顯示雙句內容、標籤或分數控制項 |
 | 016 | Dataset Stats | 任務階段與產出統計來源 |
 | 017 | Dataset Quality | IAA 與品質分析所依賴的 run 階段與資料隔離；Sentence Pairs 需依 `pair_mode / response_format` 分流 |
+
+> **v2.0.0 下游檢查**：本版只完成 014 Overview「基本資料」與「標記設定」對 013 Step 1／Step 2 的 config-driven consumer 同步。010 與 016 的列表展示契約不受影響；015 的正式標記控制、017 的品質／IAA 統計，以及 014 自身 `annotation-results`／匯出中的 legacy result compatibility 仍依既有延後決策處理，不得因 Overview 已相容而宣稱這些 consumer 已支援任意 `outputs[]` 組合。
 
 ---
 
@@ -674,24 +681,25 @@ flowchart LR
 - **SC-005**：當 `isolation_enabled = true` 時，匯出與查詢結果中 Dry Run / Official Run 資料不會混入；當 `isolation_enabled = false` 時，系統可清楚揭露風險狀態與審計紀錄。
 - **SC-006**：`reviewer` 不可見 `member-management`，且直連嘗試會導回 `overview`。
 - **SC-007**：在 `375px`、`768px`、`1440px` 下可完成進入詳情、tab 切換、執行權限顯示、成員管理（PL）、work-log 篩選、匯出操作，且無資訊重疊。
-- **SC-010**：`project_leader` 在 `draft` 可於 Overview 成功修改任務名稱、任務類型、資料集、標記設定檔、每回合試標抽樣筆數、IAA 計算方式、目標 IAA，以及標記員/審核員各自的標記說明（含附件）。
+- **SC-010**：`project_leader` 在 `draft` 可於 Overview 成功修改任務名稱、JSON 資料集、`field_role_map`、`selected_categories[]`、`input_type`、ordered `outputs[]`、每回合試標抽樣筆數、IAA 計算方式、目標 IAA，以及標記員/審核員各自的標記說明（含附件）。
 - **SC-011**：`reviewer` 或非 `draft` 狀態下，Overview 編輯入口不可用且顯示唯讀原因，不可提交更新。
 - **SC-012**：Overview 編輯若有未儲存變更，切 tab/返回/重整皆會觸發離頁確認，避免資料遺失。
 - **SC-013**：Overview 介面可依規格穩定切換 5 區塊雙模式，且資訊層級一致、不混用欄位語意。
 - **SC-013a**：Overview「說明文件上傳」可穩定呈現 `提供給標記員`、`提供給審核員` 兩個角色區塊，並各自維持獨立的說明文字與附件列表，不發生資料串接或覆寫。
-- **SC-014**：Overview「基本資料」顯示模式僅顯示資料集總筆數，不顯示檔案名稱；必填星號與編輯模式中的資料集檔案列視覺，分別與「標記設定 schema 必填樣式」及 `013-task-new` Step 1 dataset 上傳成功檔案列一致。
-- **SC-015**：切換不同 `task_type` 時，Overview「標記設定」摘要欄位會同步切換為該 task type 對應欄位（例如序列標記顯示實體類型/標記格式），且不出現無關欄位。
+- **SC-014**：Overview「基本資料」顯示模式顯示資料集總筆數與 config-driven 輸出摘要；編輯模式完整回填 013 Step 1 的 JSON 檔案列、資料列來源、欄位角色及 taxonomy chips，且必填樣式與驗證結果一致。
+- **SC-015**：ordered `outputs[]` 變更時，Overview「標記設定」摘要依 registry metadata 同步增減與排序，不出現目前 outputs 無關欄位，也不使用單一固定 `task_type` 決定內容。
 - **SC-016**：Overview 顯示模式下，使用者可透過紅色 `*` 立即辨識各區塊中的必填欄位（包含基本資料與標記設定動態欄位）。
 - **SC-017**：Overview「抽樣設定」中的 `每回合抽樣筆數` 在顯示模式與編輯模式皆顯示紅色 `*`，並與其他必填欄位樣式一致；編輯模式的抽樣筆數驗證規則需由欄位標籤旁的 info tooltip 顯示，不在輸入框下方常駐顯示。
 - **SC-018**：Overview「抽樣設定」可正確顯示並編輯 `sampling_value`、`iaa_method`、`target_agreement`（含 IAA 方式切換時自動帶入建議值）、`min_annotators`，且違反驗證規則時會阻擋儲存並提供可修正提示；數字欄位採直接鍵入方式，不使用 spinner。
 - **SC-019**：Overview「任務狀態與執行控制」可顯示試標回合、樣本池分配摘要與 IAA/標準差達標條件；任務層級 stage flow 維持 `draft → 試標階段 → 正式標記中 → 已完成`，且目前階段只由 stepper 的 current step 呈現；單一執行判定 banner 僅顯示最近回合或正式標記的判定標題與下一步說明，不得再顯示額外的「目前任務階段」標題/描述，也不得再顯示獨立「正式標記判定」卡；`試標階段` 內需逐步呈現例如 `R1 未通過 → R2 通過 → 開始正式標記` 的回合歷程；樣本池分配需隨回合動態調整，且不同回合需以不同顏色區隔；執行控制區不顯示額外狀態 badge 或 stage meta pills，trial history 日期維持單行且無垂直連接線。
-- **SC-020**：當任務類型切換為 `single_sentence_va_scoring` 時，Overview「標記設定」摘要會顯示 `Valence`、`Arousal` 兩列維度值，且編輯模式預覽同時出現雙列評分元件。
-- **SC-021**：當任務為 `sequence_labeling.subtype = aspect_list` 時，Overview「標記設定」摘要會顯示欄位對應、Aspect 編輯規則、數量限制、exact match 與情緒描述檢查狀態，且不顯示 NER 專用實體/span 欄位。
-- **SC-022**：當任務為 `sequence_labeling.subtype = aspect_list` 時，Overview 編輯模式會以 `欄位對應`、`Aspect 編輯規則`、`數量限制` 三個群組呈現設定；五個 boolean 規則以 toggle card 呈現，切換後摘要、code 與預覽同步更新。
-- **SC-023**：當 `require_exact_match_in_sentence = true` 時，Overview 編輯模式會阻擋不存在於句子中的 aspect 儲存；當 `require_sentiment_context_check = true` 時，系統只顯示軟性提示，不阻擋儲存。
-- **SC-024**：當任務類型為 `sentence_pairs` 時，Overview「標記設定」摘要會顯示 `pair_mode`、`response_format`、兩句欄位對應與作答設定，且不混入 VA 或 sequence labeling 專屬欄位。
-- **SC-025**：當任務類型為 `sentence_pairs` 時，Overview 編輯模式會以 `任務模式`、`欄位對應`、`顯示文案`、`作答設定` 四個群組呈現設定；切換 `response_format` 後，摘要、code 與預覽同步更新。
-- **SC-026**：當 `pair_mode = entailment` 時，Overview 編輯模式會阻擋 `response_format = scoring`；缺少 `sentence_1_field / sentence_2_field`、分類標籤為空或評分區間非法時皆不可儲存。
+- **SC-020**：Overview Step 1 回填後，分類／回歸組內 radio、序列／生成多選、跨大分類組合、Input 數量與 Input／Evidence 完整性驗證均與 013 Step 1 相同。
+- **SC-021**：目前 registry 的 8 個 output 與合法多輸出組合均可在 Overview Step 2 產生對應摘要、schema 手風琴及互動預覽；結果由 registry/config 決定，不由 task profile 決定。
+- **SC-022**：任一合法 config 完成 Visual → YAML/JSON → 儲存 → Visual round-trip 後，`input_type`、ordered `outputs[]`、各 output config 與唯讀摘要等價；無效 code 不覆蓋最後有效值。
+- **SC-023**：變更輸出組合後，保留 output config deep-equal、新增 output 使用 registry defaultConfig；未確認移除時原 config 不變，確認後才刪除該 output。
+- **SC-024**：T001–T013 各自開啟詳情時，任務名稱、`input_type`、ordered `outputs[].type`、摘要及編輯器均與其 fixture config 一致；不得只驗證導頁成功。
+- **SC-025**：注入未列於任何 task profile 的第 14 筆合法組合（至少含兩個跨分類 outputs）時，無需新增 task ID／名稱／fixture switch 即可顯示、編輯、驗證與儲存。
+- **SC-026**：Overview 初始化與編輯期間，hidden answer、ground truth、gold label、expected/correct label 或等價答案不得出現在 DOM、前端 state、Visual／Code 或可下載設定檔；僅明確 Output 角色的 annotator-visible preannotation 可進入預覽。
+- **SC-026a**：以相同內容寬度在 1440px、1024px、768px、375px 分別擷取 Task New Step 1／Step 2 與 Task Detail Overview 編輯模式的元件級 screenshot，並對共同元件檢查 computed style；排除頁首、tabs 與 Overview 外層卡片後，FR-014m-1 所列元件的 `font-size`、`font-weight`、`line-height`、文字／背景色、border、border-radius、padding、gap、控制項高度及 focus／error／disabled 的 box-shadow 或 outline 必須一致。1440px 的 Step 2 必須為設定左／預覽右，「標記設定」與「標記預覽」小標樣式相同且頂端位置差不超過 2px；1024px、768px、375px 必須為設定上／預覽下；所有 viewport 的範本／上傳與 Code 必須位於主工作區下方、共用單一外框與分隔線，且 Code 編輯器高度為 240px。此驗收須至少覆蓋一個單一 output、一個多 output 及未列於 T001–T013 task profile 的第 14 筆合法組合，三者皆不得產生專屬視覺分支。
 - **SC-027**：`annotation-results` tab 正確以可展開兩層的階層式結構顯示每筆樣本的各標記員提交內容，標記值依 `task_type` 動態呈現，且審核員審核結果以唯讀 badge 顯示（無任何操作按鈕）。
 - **SC-027a**：六種 prototype 任務型別（`single_sentence_classification`、`single_sentence_va_scoring`、`sequence_labeling.subtype = aspect_list`、`sequence_labeling.subtype = ner`、`relation_extraction`、`sentence_pairs`）於 `annotation-results` 首筆展開列中，文本摘要不得出現殘留的舊標記階段區塊或額外空白佔位。
 - **SC-027b**：六種 prototype 任務型別於 `annotation-results` 首筆展開列中，右側 `審核狀態` badge 皆完整可見，且不得超出表格右界。
@@ -712,6 +720,7 @@ flowchart LR
 ### 內容品質
 
 - [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
+- [x] `## 功能目標` 已與 Overview Step 1／Step 2 的 config-driven 範圍一致。
 - [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
 - [x] 無未解決的待釐清標記殘留。
 - [x] 需求、驗收情境與成功標準皆可測試。
@@ -720,7 +729,7 @@ flowchart LR
 
 - [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
-- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] Overview task config 以 `selected_categories[] + input_type + field_role_map + ordered outputs[]` 及 registry/schema 驅動；T001–T013 不構成白名單。
 - [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
@@ -741,6 +750,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.1 | 2026-07-29 | **補齊 Overview 編輯視覺同步驗收**：明訂 Task Detail 編輯模式在元件層級沿用 013 Step 1／Step 2 的視覺與互動契約，涵蓋基本資料、dataset、欄位角色、taxonomy chips、schema／預覽／Code 工具與各互動狀態；補上 1440px／1024px／768px／375px breakpoint、computed-style 與元件級 screenshot 驗收，排除 Task Detail 自身頁首、tabs 與外層卡片，並維持第 14 筆合法組合的 config-driven 泛化。 |
+| 2.0.0 | 2026-07-29 | **Overview Step 1／Step 2 遷移至可組合輸出契約**：移除 Overview 對固定 `TASK_TYPE_ENUM` 與 task-specific schema 分支的依賴；「基本資料」改為回填並編輯 `selected_categories[]`、`input_type`、`field_role_map`、JSON dataset 與 `selectedOutputTypes[]`，「標記設定」改為依 ordered `outputs[]` 與 013 `OUTPUT_TYPE_REGISTRY` 產生摘要、Visual／Code、互動預覽、dependency、Bypass 與驗證。T001–T013 僅為 prototype 示例，新增第 14 筆合法組合與 hidden-answer 安全驗收；本版同步範圍限 Overview，其他 tabs、015／017 consumer 與 legacy result compatibility 仍延後。 |
 | 1.7.16 | 2026-05-22 | 新增 `annotation-progress` 成員標記細項功能：成員進度表增加「操作」欄與「查看細項」按鈕；點擊後展開成員標記細項區塊（樣本 ID、文本摘要、標記結果、提交時間、審核狀態）；底部分頁列與 `task-list` 樣式一致，分頁狀態（`mdPage` / `mdPageSize`）獨立；新增 FR-016a、FR-016b |
 | 1.7.15 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.7.14 | 2026-05-15 | 調整 detail 頁首與 shared Dashboard heading baseline 對齊：breadcrumb 改置於頁首標題區塊下方，避免推移最上層主標題位置 |

@@ -414,6 +414,156 @@ test.describe('Task detail Step 1–2 config parity', () => {
     );
   });
 
+  test('Step 1 edit reuses the task-new selector and dataset field-mapper surface', async ({
+    page,
+  }) => {
+    await openTaskDetail(page, 'T013', { forceDraft: true });
+    await page.getByTestId('task-basic-edit-btn').click();
+
+    const editor = page.getByTestId('task-config-step1-editor');
+    await expect(editor).toHaveAttribute('data-editor-source', 'task-new-step1');
+    await expect(editor.locator('.task-type-selector')).toBeVisible();
+    await expect(editor.locator('.task-type-group')).toHaveCount(3);
+    await expect(editor.locator('.task-type-chip-check')).toHaveCount(
+      4 + 2 + 5,
+    );
+
+    const datasetPreview = editor.getByTestId('task-dataset-field-mapper');
+    await expect(datasetPreview).toBeVisible();
+    await expect(datasetPreview.locator('table')).toBeVisible();
+    await expect(
+      datasetPreview.locator('[data-testid="field-role-select"]'),
+    ).toHaveCount(4);
+
+    const firstChipStyles = await editor
+      .locator('.task-type-chip')
+      .first()
+      .evaluate((element) => {
+        const styles = getComputedStyle(element);
+        return {
+          borderRadius: styles.borderRadius,
+          fontSize: styles.fontSize,
+          padding: styles.padding,
+        };
+      });
+    expect(firstChipStyles).toEqual({
+      borderRadius: '9999px',
+      fontSize: '13px',
+      padding: '6px 12px',
+    });
+
+    await page.setViewportSize({ width: 375, height: 900 });
+    const step1MobileLayout = await editor.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    expect(step1MobileLayout.documentWidth).toBeLessThanOrEqual(
+      step1MobileLayout.viewportWidth,
+    );
+  });
+
+  test('Step 2 edit reuses the task-new settings, preview, accordion, and code layout', async ({
+    page,
+  }) => {
+    await openTaskDetail(page, 'T013', { forceDraft: true });
+    await page.locator('#settingsEditBtn').click();
+
+    const editor = page.locator('#settingsEditForm');
+    await expect(editor).toHaveAttribute('data-editor-source', 'task-new-step2');
+    await expect(
+      editor.locator('.s2-primary-workspace.is-settings-first-preview'),
+    ).toBeVisible();
+    await expect(editor.locator('.s2-settings-panel')).toBeVisible();
+    await expect(editor.locator('.s2-preview-top')).toBeVisible();
+
+    const accordions = editor.locator('.output-accordion');
+    await expect(accordions).toHaveCount(3);
+    await expect(
+      accordions.locator('.output-accordion-header[aria-expanded]'),
+    ).toHaveCount(3);
+    await expect(
+      editor.locator('.annotation-preview [data-output-key]'),
+    ).toHaveCount(3);
+
+    const supportingTools = editor.locator(
+      '.s2-layout.is-integrated-config-tools',
+    );
+    await expect(supportingTools).toBeVisible();
+    await expect(
+      supportingTools.locator('.template-section'),
+    ).toBeVisible();
+    await expect(supportingTools.locator('.s2-code-panel')).toBeVisible();
+    await expect(supportingTools.locator('.code-editor')).toHaveCSS(
+      'height',
+      '240px',
+    );
+
+    await page.setViewportSize({ width: 375, height: 900 });
+    const step2MobileLayout = await editor.evaluate((element) => {
+      const primary = element.querySelector('.s2-primary-workspace');
+      const settings = element.querySelector('.s2-settings-panel');
+      const preview = element.querySelector('.s2-preview-top');
+      const settingsRect = settings?.getBoundingClientRect();
+      const previewRect = preview?.getBoundingClientRect();
+      return {
+        columns: primary ? getComputedStyle(primary).gridTemplateColumns : '',
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth,
+        settingsTop: settingsRect?.top ?? 0,
+        previewTop: previewRect?.top ?? 0,
+      };
+    });
+    expect(step2MobileLayout.documentWidth).toBeLessThanOrEqual(
+      step2MobileLayout.viewportWidth,
+    );
+    expect(step2MobileLayout.columns.trim().split(/\s+/)).toHaveLength(1);
+    expect(step2MobileLayout.previewTop).toBeGreaterThan(
+      step2MobileLayout.settingsTop,
+    );
+  });
+
+  test('Step 2 edit reuses task-new accordion badges, bypass toggle-card, preview pills, and plain-text code toggle for single_label', async ({
+    page,
+  }) => {
+    await openTaskDetail(page, 'T001', { forceDraft: true });
+    await page.locator('#settingsEditBtn').click();
+
+    const editor = page.locator('#settingsEditForm');
+
+    // Diff 1: numbered indigo badge in the accordion title, no separate mono type-key span
+    const accordionTitle = editor.locator('.output-accordion-title').first();
+    await expect(accordionTitle.locator('.output-type-index-badge')).toHaveText('1');
+    await expect(accordionTitle.locator('.task-config-output-key')).toHaveCount(0);
+
+    // Diff 2: bypass renders as one integrated schema-toggle-card (title + status + switch together)
+    const bypassCard = editor.locator('.schema-toggle-card').first();
+    await expect(bypassCard).toBeVisible();
+    await expect(bypassCard.locator('.schema-toggle-label')).toHaveText('允許無法判定 (Bypass)');
+    await expect(bypassCard.locator('.schema-toggle-status')).toHaveText('已啟用');
+    await expect(bypassCard.locator('.toggle-switch input[type="checkbox"]')).toHaveCount(1);
+    await expect(
+      editor.locator('.task-config-setting-row > .field-label:has-text("允許無法判定")'),
+    ).toHaveCount(0);
+
+    // Diff 3: preview reuses the shared raw-text header and large pill-style options, no leftover per-card copy text
+    const preview = page.locator('#settingsAnnotationPreview');
+    await expect(preview).toContainText('原始文本');
+    await expect(preview.locator('.annotation-preview-option-pill')).toHaveCount(3);
+    await expect(preview.locator('.annotation-preview-bypass-chip')).toHaveCount(1);
+    await expect(preview).not.toContainText('此輸出依相同 registry config 產生設定與標記介面');
+
+    // Diff 4: YAML/JSON toggle is plain text emphasis (fontWeight), not a bordered/filled active pill
+    const yamlBtn = page.locator('#settingsFormatYamlBtn');
+    const jsonBtn = page.locator('#settingsFormatJsonBtn');
+    await expect(yamlBtn).not.toHaveClass(/active/);
+    await expect(jsonBtn).not.toHaveClass(/active/);
+    const weights = await Promise.all([
+      yamlBtn.evaluate((el) => Number(getComputedStyle(el).fontWeight)),
+      jsonBtn.evaluate((el) => Number(getComputedStyle(el).fontWeight)),
+    ]);
+    expect(weights[0]).toBeGreaterThan(weights[1]);
+  });
+
   test('a synthetic fourteenth task renders through the data extension hook without a task-id branch', async ({
     page,
   }) => {
