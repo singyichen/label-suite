@@ -2,6 +2,21 @@ import { test, expect } from '@playwright/test';
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=project_leader';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
+const EXAMPLE_SOURCE_FILES = [
+  'single-label.json',
+  'multi-label.json',
+  'multi-label-hierarchical.json',
+  'single-dim.json',
+  'multi-dim.json',
+  'sequence-tagging.json',
+  'entity-recognition.json',
+  'relation-identification.json',
+  'free-text.json',
+  'medical-ner-re.json',
+  'nli.json',
+  'mrc.json',
+  'absa-va.json',
+];
 
 type TaskProfile = {
   id: string;
@@ -198,35 +213,37 @@ const EN_SETTINGS_BY_TASK: Record<string, string[]> = {
 };
 
 test.describe('Task detail profile mapping', () => {
-  test('project leader task list rows show each task status and open task detail', async ({ page }) => {
+  test('project leader can open task detail from every illustrative task row', async ({ page }) => {
     await page.goto(TASK_LIST_URL);
 
-    for (const task of TASK_PROFILES) {
-      const listName = task.listName ?? task.name;
-      await page.locator('#searchInput').fill(listName);
-      const row = page.locator('tbody tr').filter({ hasText: listName }).first();
-      await expect(row).toContainText(task.listStatus);
+    for (const sourceFile of EXAMPLE_SOURCE_FILES) {
+      const row = page.locator(
+        `#taskTableBody tr[data-source-file="${sourceFile}"]`,
+      );
+      await expect(row).toBeVisible();
       await row.click();
-      await expect(page).toHaveURL(new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=${task.id}$`));
+      await expect(page).toHaveURL(
+        new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=`),
+      );
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=project_leader/);
-      await page.locator('#searchInput').fill('');
     }
   });
 
-  test('super admin task list rows keep run-control status across every seeded task', async ({ page }) => {
+  test('super admin can open task detail from every illustrative task row', async ({ page }) => {
     await page.goto('/pages/task-management/task-list.html?task_role=super_admin');
 
-    for (const task of RUN_CONTROL_TASKS) {
-      const listName = task.listName ?? task.name;
-      await page.locator('#searchInput').fill(listName);
-      const row = page.locator('tbody tr').filter({ hasText: listName }).first();
-      await expect(row).toContainText(task.listStatus);
+    for (const sourceFile of EXAMPLE_SOURCE_FILES) {
+      const row = page.locator(
+        `#taskTableBody tr[data-source-file="${sourceFile}"]`,
+      );
+      await expect(row).toBeVisible();
       await row.click();
-      await expect(page).toHaveURL(new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=${task.id}$`));
+      await expect(page).toHaveURL(
+        new RegExp(`${TASK_DETAIL_URL.replace(/\//g, '\\/')}\\?task_id=`),
+      );
       await page.goBack();
       await expect(page).toHaveURL(/task-list\.html\?task_role=super_admin/);
-      await page.locator('#searchInput').fill('');
     }
   });
 

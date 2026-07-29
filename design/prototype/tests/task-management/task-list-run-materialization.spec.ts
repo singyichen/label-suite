@@ -4,7 +4,9 @@ test.describe('Run materialization cues', () => {
   test('draft task rows show that no annotation list has been created yet', async ({ page }) => {
     await page.goto('/pages/task-management/task-list.html?task_role=project_leader');
 
-    const row = page.locator('tbody tr').filter({ hasText: '新聞標題多標籤分類' }).first();
+    const row = page.locator(
+      '#taskTableBody tr[data-source-file="single-label.json"]',
+    );
     await expect(row).toContainText('草稿');
     await expect(row).toContainText('未建立清單');
     await expect(row).not.toContainText('正式標記');
@@ -64,22 +66,28 @@ test.describe('Task list clarified behavior', () => {
   test('delete action is only available to leaders/admins on draft tasks', async ({ page }) => {
     await page.goto('/pages/task-management/task-list.html?task_role=project_leader');
 
-    const draftRow = page.locator('tbody tr').filter({ hasText: '新聞標題多標籤分類' }).first();
+    const draftRow = page.locator(
+      '#taskTableBody tr[data-source-file="single-label.json"]',
+    );
     await expect(draftRow.getByRole('button', { name: '刪除' })).toBeVisible();
 
-    const inProgressRow = page.locator('tbody tr').filter({ hasText: '情感 VA 雙維度評分' }).first();
+    const inProgressRow = page.locator(
+      '#taskTableBody tr[data-source-file="multi-label.json"]',
+    );
     await expect(inProgressRow.getByRole('button', { name: '刪除' })).toHaveCount(0);
 
     await page.goto('/pages/task-management/task-list.html');
-    const userDraftRow = page.locator('tbody tr').filter({ hasText: '新聞標題多標籤分類' }).first();
+    const userDraftRow = page.locator(
+      '#taskTableBody tr[data-source-file="single-label.json"]',
+    );
     await expect(userDraftRow.getByRole('button', { name: '刪除' })).toHaveCount(0);
   });
 
   test('invalid query values are normalized out of the URL', async ({ page }) => {
-    await page.goto('/pages/task-management/task-list.html?task_type=bad_type&run_stage=bad_stage&status=bad_status&page=-1&page_size=999');
+    await page.goto('/pages/task-management/task-list.html?output_type=bad_type&run_stage=bad_stage&status=bad_status&limit=999&offset=-1');
 
     await expect(page).toHaveURL(/task-list\.html$/);
-    await expect(page.locator('#taskTypeFilter')).toHaveValue('');
+    await expect(page.locator('#outputTypeFilter')).toHaveValue('');
     await expect(page.locator('#runTypeFilter')).toHaveValue('');
     await expect(page.locator('#statusFilter')).toHaveValue('');
     await expect(page.locator('#pageSizeSelect')).toHaveValue('20');

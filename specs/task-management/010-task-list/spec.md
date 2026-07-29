@@ -1,21 +1,17 @@
 ---
-功能分支: feat/task-management/010-task-list
+功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 1.3.8
-狀態: Draft
----
-
-# 功能規格：Task List — 任務列表
----
-功能分支: feat/task-management/010-task-list
-建立日期: 2026-04-20
-版本: 1.3.8
-狀態: Draft
+版本: 2.0.0
+狀態: In Progress
 ---
 
 # 功能規格：Task List — 任務列表
 
 **需求來源**: IA Spec 清單 #010 — 任務列表（搜尋、篩選、空狀態）（`task-list`）
+
+## 功能目標
+
+讓使用者以 config-driven 的輸出類型快速辨識、搜尋與篩選任務；任務列表直接消費 `outputs[].type`，並以一至多個唯讀標籤呈現組合，不將任務壓縮回單一固定類型。Prototype 以 `docs/product/example-data/` 的 13 份任務作為可驗收示例資料，但系統能力不得被限制為這 13 筆、既有組合或固定任務名稱。
 
 ## 輸入與生成規則
 
@@ -41,7 +37,7 @@
 
 - Q: 刪除任務的權限應該限定給哪些角色？ → A: 僅 `project_leader` 與 `super_admin` 可刪除。
 - Q: 搜尋「所有欄位」時，enum 欄位應該比對哪一種文字？ → A: 同時比對 raw enum 值與目前語系顯示文案。
-- Q: URL query 出現無效的 `page`、`page_size` 或 enum 值時應如何處理？ → A: 忽略無效值，使用預設值並更新 URL。
+- Q: URL query 出現無效的 `limit`、`offset` 或 enum 值時應如何處理？ → A: 忽略無效值，使用預設值並更新 URL。
 - Q: 任務列表資料載入失敗時，畫面應如何呈現？ → A: 保留表頭，在 `tbody` 顯示錯誤列與重試操作。
 - Q: 刪除任務是否應受任務狀態限制？ → A: 僅 `draft` 可刪除。
 
@@ -49,13 +45,13 @@
 
 - `SYSTEM_ROLES = user | super_admin`
 - `TASK_ROLES = project_leader | reviewer | annotator`
-- `PAGE_SIZE_DEFAULT = 20`
-- `PAGE_SIZE_OPTIONS = 20 | 50 | 100`
+- `LIST_LIMIT_DEFAULT = 20`
+- `LIST_LIMIT_OPTIONS = 20 | 50 | 100`
+- `LIST_OFFSET_DEFAULT = 0`
 - `DEFAULT_SORT = updated_at desc`
 - `TASK_STATUS_ENUM = draft | dry_run_in_progress | waiting_iaa_confirmation | official_run_in_progress | completed`
-- `TASK_TYPE_ENUM = single_sentence_classification | single_sentence_va_scoring | sequence_labeling | relation_extraction | sentence_pairs`
-- `TASK_TYPE_SOURCE = task_type_registry`（回傳值需對齊 `TASK_TYPE_ENUM`）
-- `ACTIVE_TASK_TYPE_STORAGE_KEY = labelsuite.activeTaskType`
+- `OUTPUT_TYPE_KEYS = single_label | multi_label | single_dim | multi_dim | sequence_tagging | entity_recognition | relation_identification | free_text`
+- `OUTPUT_TYPE_SOURCE = OUTPUT_TYPE_REGISTRY`（唯一合法 key 與 zh/en 顯示文案來源）
 - `RUN_STAGE_ENUM = dry_run | official_run`
 - `TASK_DELETE_MODE = soft_delete`
 - `MOBILE_BP = 767px`
@@ -133,7 +129,7 @@ sequenceDiagram
 
 1. **Given** `system role = user`，**When** 進入 `/task-list`，**Then** 僅顯示該使用者有成員資格的任務。
 2. **Given** `system role = super_admin`，**When** 進入 `/task-list`，**Then** 預設顯示全平台任務，且不提供檢視切換。
-3. **Given** 位於 `/task-list`，**When** 輸入關鍵字並套用任務類型 / 標記階段 / 狀態篩選，**Then** 列表僅顯示符合條件的任務。
+3. **Given** 位於 `/task-list`，**When** 輸入關鍵字並套用輸出類型 / 標記階段 / 狀態篩選，**Then** 列表僅顯示符合條件的任務。
 4. **Given** 搜尋結果超過單頁，**When** 切換分頁，**Then** 顯示對應頁資料且保留現有篩選條件。
 5. **Given** 位於任務列表，**When** 點選列內 `編輯`，**Then** 導向 `/task-detail?task_id=...`。
 6. **Given** 位於任務列表，**When** 點選列內 `刪除` 並確認，**Then** 任務被軟刪除，列表不再顯示該任務。
@@ -143,14 +139,14 @@ sequenceDiagram
 - 區塊 A：`任務列表`
   - 必要元素：
     - 搜尋輸入框（`搜尋`，作用於列表所有欄位）
-    - 任務類型篩選器（顯示文案對應 `TASK_TYPE_ENUM`）
+    - 輸出類型篩選器（`全部輸出類型` 加上 `OUTPUT_TYPE_KEYS` 的 8 個選項）
     - 標記階段篩選器（顯示文案對應 `RUN_STAGE_ENUM`）
     - 狀態篩選器（顯示文案對應 `TASK_STATUS_ENUM`）
     - 空資料時保留表頭（`thead`）與欄位語意
     - 空資料 / 空結果內容以 `tbody` 單列 empty row 呈現（`colspan` 全欄）
     - 載入失敗時保留表頭，並以 `tbody` 單列 error row 呈現錯誤訊息與重試操作（`colspan` 全欄）
     - 分頁控制
-    - 任務列欄位（任務名稱、任務類型、標記階段（Annotation stage）、狀態、更新時間、操作）
+    - 任務列欄位（任務名稱、輸出類型、標記階段（Annotation stage）、狀態、更新時間、操作）
     - 操作欄位：`刪除`、`編輯`（由左至右）
 - 區塊 B：`頁面操作`
   - 必要元素：
@@ -160,26 +156,28 @@ sequenceDiagram
 
 - `user` 不可查看沒有 membership 的任務。
 - 搜尋輸入框需配置於篩選器列最右側。
-- 任務類型篩選器查詢值必須使用 `TASK_TYPE_ENUM`；顯示文案由 i18n 映射，不可作為 API 契約值。
-- 任務類型選項來源需為 `TASK_TYPE_SOURCE`（registry），且回傳值需對齊 `TASK_TYPE_ENUM`。
+- 輸出類型篩選器必須顯示 `全部輸出類型` 與正好 8 個 `OUTPUT_TYPE_KEYS` 選項；查詢值使用 raw output key，顯示文案由 `OUTPUT_TYPE_REGISTRY` 的 i18n metadata 映射，不可作為 API 契約值。
+- 選定單一 `output_type` 時，只要任務的 `outputs[]` 任一項滿足 `output.type === selectedOutputType` 即符合篩選；複合任務可同時出現在多個輸出類型篩選結果中。
 - 標記階段篩選器查詢值必須使用 `RUN_STAGE_ENUM`；顯示文案由 i18n 映射，不可作為 API 契約值。
 - 狀態篩選器查詢值必須使用 `TASK_STATUS_ENUM`；顯示文案由 i18n 映射，不可作為 API 契約值。
 - `super_admin` 進入 `/task-list` 預設即為全平台任務視角，且不提供「我的任務 / 全平台任務」切換。
-- 搜尋條件採 `contains`，不分大小寫，作用於任務列表所有欄位（任務名稱、任務類型、標記階段、狀態、更新時間）。
-- 搜尋 enum 欄位（任務類型、標記階段、狀態）時，必須同時比對 raw enum 值與目前語系的 i18n 顯示文案。
-- 列表預設排序 `DEFAULT_SORT`，分頁預設 `PAGE_SIZE_DEFAULT`。
-- 查詢條件（`keyword`、`task_type`、`run_stage`、`status`、`page`、`page_size`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
-- URL query 中的無效 `page`、`page_size` 或 enum 值必須忽略，改用對應預設值或無篩選狀態，並以正規化後的 query 更新 URL。
+- 搜尋條件採 `contains`，不分大小寫，作用於任務列表所有欄位（任務名稱、每個輸出類型、標記階段、狀態、更新時間）。
+- 搜尋輸出類型、標記階段、狀態等 enum 欄位時，必須同時比對每個 raw enum 值與目前語系的 i18n 顯示文案。
+- 列表預設排序 `DEFAULT_SORT`，分頁預設 `limit = LIST_LIMIT_DEFAULT`、`offset = LIST_OFFSET_DEFAULT`。
+- 查詢條件（`keyword`、`output_type`、`run_stage`、`status`、`limit`、`offset`）需同步到 URL query，於同頁分頁切換、重新整理與返回 `/task-list` 時保留。
+- 套用、切換或清除任一搜尋／篩選條件時，`offset` 必須重設為 `0`；切換每頁筆數時也必須以新 `limit` 與 `offset = 0` 重查。
+- URL query 中的無效 `limit`、`offset` 或 enum 值必須忽略，改用對應預設值或無篩選狀態，並以正規化後的 query 更新 URL。
 - 任務列點擊時若使用者無 `/task-detail` 存取權，系統需顯示「無權限檢視任務詳情」提示，且不得導頁。
 - `編輯` 操作需與點擊任務列同語意，導向 `/task-detail?task_id=...`。
-- 任務列點擊（含 `編輯`）導向 `/task-detail` 前，需先把該列 `task_type` 寫入 `ACTIVE_TASK_TYPE_STORAGE_KEY`，供 `annotation-workspace` 預設 task type 使用。
+- 任務列點擊（含 `編輯`）只以 `task_id` 建立 task context；不得把複合任務壓縮為第一個輸出類型，也不得寫入舊 `labelsuite.activeTaskType` 單值快取。
 - `刪除` 操作必須為軟刪除（`TASK_DELETE_MODE`），不得物理刪除資料。
 - `刪除` 操作僅允許 `project_leader` 與 `super_admin` 執行；其他角色不得看到可用刪除操作，若直接呼叫刪除動作需收到無權限提示且不得變更任務。
 - `刪除` 操作僅允許套用於 `status = draft` 的任務；非 `draft` 任務不得顯示可用刪除操作，若直接觸發刪除需被拒絕且不得變更任務。
 - `刪除` 操作需先經刪除確認彈窗；彈窗樣式需沿用 task-management 既有共用 modal（`modal-backdrop` / `modal` / `modal-actions`）。
 - 軟刪除後任務不應出現在預設任務列表；資料保留供審計與復原。
-- 任務類型 badge 需依 `task_type` 類型套用不同色彩樣式（不可全部同色）。
-- 語系為中文時，任務類型 badge 文案需顯示中文映射（例如：`single_sentence_classification` → `單句分類（含多標籤）`）。
+- 輸出類型欄必須依 `outputs[]` 順序，為每個 `output.type` 各呈現一個唯讀 tag；複合任務不得合併成自訂的固定類型 badge。
+- 輸出類型 tag 的 zh/en 文案必須來自 `OUTPUT_TYPE_REGISTRY`；顏色只能作為輔助，tag 必須保留可見文字，且 tag 群組需具有可存取名稱，使螢幕閱讀器可讀出完整輸出類型清單。
+- 多個 tag 在欄寬不足時必須於儲存格內換行，不得截斷標籤文字、互相重疊或造成整頁水平 overflow。
 - 標記階段 `official_run` 的中文顯示文案需為 `正式標記`。
 - 「尚無任務」狀態不顯示第二顆 `新增任務` 按鈕；新增入口維持頁面主操作區（搜尋列同列）單一 `新增任務` CTA。
 - 「空結果（篩選後）」需顯示清除篩選操作（例如 `清除所有篩選`）。
@@ -217,7 +215,7 @@ sequenceDiagram
 - `super_admin` 在全平台任務無資料：顯示表格內空狀態（保留表頭），不顯示錯誤頁。
 - 以失效 `task_id` 嘗試進入 `/task-detail`：導回 `/task-list` 並顯示「任務不存在或無存取權限」。
 - 高篩選條件組合導致無結果：顯示空結果狀態，保留一鍵清除篩選。
-- URL query 含無效 `page`、`page_size` 或 enum 值：使用預設值或無篩選狀態載入列表，並更新為正規化後的 URL query。
+- URL query 含無效 `limit`、`offset` 或 enum 值：使用預設值或無篩選狀態載入列表，並更新為正規化後的 URL query。
 - 任務列表資料載入失敗：保留表格表頭，於 `tbody` error row 顯示錯誤訊息與重試操作。
 - 任務可見但無 `/task-detail` 存取權（如 `annotator`）：點擊任務列後停留原頁並顯示無權限提示。
 - 任務已被軟刪除：不顯示於預設列表；以舊連結直連時需回應「任務不存在或無存取權限」。
@@ -234,17 +232,19 @@ sequenceDiagram
 - **FR-001**：系統必須提供 `/task-list` 作為 task-management 模組 Landing。
 - **FR-002**：`user` 在 `/task-list` 只可看見自己有 `task_membership` 的任務。
 - **FR-003**：`super_admin` 在 `/task-list` 必須預設載入全平台任務，且不得提供「我的任務 / 全平台任務」切換。
-- **FR-004**：系統必須支援任務列表搜尋（所有欄位）、任務類型篩選、標記階段篩選、狀態篩選與分頁。
+- **FR-004**：系統必須支援任務列表搜尋（所有欄位）、輸出類型篩選、標記階段篩選、狀態篩選與分頁。
 - **FR-004a**：搜尋需為 `contains` 且不分大小寫，作用於列表所有欄位。
-- **FR-004ad**：搜尋 enum 欄位時，系統必須同時比對 raw enum 值與目前語系的 i18n 顯示文案。
-- **FR-004aa**：任務類型篩選查詢值必須使用 `TASK_TYPE_ENUM`，且與顯示文案分離。
-- **FR-004aaa**：任務類型選項來源必須來自 `TASK_TYPE_SOURCE`（registry），且回傳值需對齊 `TASK_TYPE_ENUM`。
+- **FR-004ad**：搜尋輸出類型時，系統必須逐一比對 `outputs[].type` 的 raw key 與目前語系顯示文案；其他 enum 欄位亦同。
+- **FR-004aa**：輸出類型篩選查詢值必須使用 `OUTPUT_TYPE_KEYS`，且與顯示文案分離；預設選項為不帶值的 `全部輸出類型`。
+- **FR-004aaa**：輸出類型選項與 zh/en 文案必須來自 `OUTPUT_TYPE_REGISTRY`，且篩選器必須正好列出 8 個 `OUTPUT_TYPE_KEYS`。
+- **FR-004aae**：`output_type` 採 membership 語意；任務的 `outputs[]` 任一項符合選定 key 即納入結果，不得只比較第一項或要求輸出組合完全相等。
 - **FR-004ab**：標記階段篩選查詢值必須使用 `RUN_STAGE_ENUM`，且與顯示文案分離。
 - **FR-004ac**：狀態篩選查詢值必須使用 `TASK_STATUS_ENUM`，且與顯示文案分離。
 - **FR-004b**：列表預設排序必須為 `DEFAULT_SORT`。
-- **FR-004c**：分頁預設為 `PAGE_SIZE_DEFAULT`，可切換 `PAGE_SIZE_OPTIONS`。
-- **FR-004d**：查詢條件（`keyword`、`task_type`、`run_stage`、`status`、`page`、`page_size`）必須序列化於 URL query，並於重整與返回頁面時還原。
-- **FR-004e**：URL query 中的無效 `page`、`page_size` 或 enum 值必須被正規化為預設值或無篩選狀態，且 URL 必須更新為正規化後的 query。
+- **FR-004c**：分頁契約必須使用 `limit` / `offset`；預設為 `LIST_LIMIT_DEFAULT` / `LIST_OFFSET_DEFAULT`，並可切換 `LIST_LIMIT_OPTIONS`。
+- **FR-004d**：查詢條件（`keyword`、`output_type`、`run_stage`、`status`、`limit`、`offset`）必須序列化於 URL query，並於重整與返回頁面時還原。
+- **FR-004e**：URL query 中的無效 `limit`、`offset` 或 enum 值必須被正規化為預設值或無篩選狀態，且 URL 必須更新為正規化後的 query。
+- **FR-004f**：任何搜尋或篩選條件改變，以及 `limit` 改變時，必須將 `offset` 重設為 `0`。
 - **FR-005**：列表每列必須包含 `task_id` 導航資訊，供導向 `/task-detail`。
 - **FR-005a**：當點擊任務列但無 `/task-detail` 存取權時，系統必須停留 `/task-list` 並顯示無權限提示。
 - **FR-006**：頁面必須提供 `新增任務` CTA 並導向 `/task-new`。
@@ -262,10 +262,11 @@ sequenceDiagram
 - **FR-010d**：刪除確認流程必須使用 task-management 共用 modal 樣式，不得使用瀏覽器原生 `confirm`。
 - **FR-010e**：刪除任務僅允許 `project_leader` 與 `super_admin`；其他角色不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示無權限提示。
 - **FR-010f**：刪除任務僅允許 `status = draft`；非 `draft` 任務不得看到可用刪除操作，且直接觸發刪除時必須被拒絕並顯示狀態不允許刪除的提示。
-- **FR-011**：任務類型 badge 必須依 `task_type` 使用不同視覺色彩，不得全部使用同一 badge 色彩。
-- **FR-011a**：當語系為 `zh` 時，任務類型 badge 文案必須顯示中文映射；語系為 `en` 時顯示英文文案。
+- **FR-011**：任務列表必須將每筆任務的 `outputs[].type` 逐項呈現為唯讀 tag；複合任務顯示多個 tag，且不得硬編固定組合名稱或渲染分支。
+- **FR-011a**：輸出類型 tag 必須依 `OUTPUT_TYPE_REGISTRY` 顯示 zh/en 文案，並以可見文字與可存取名稱傳達類型，不得只依賴顏色。
+- **FR-011c**：多個輸出類型 tag 必須支援儲存格內換行；在 `RWD_VIEWPORTS` 均不得截斷文字、互相重疊或造成頁面水平 overflow。
 - **FR-011b**：標記階段 `official_run` 在中文文案必須顯示為 `正式標記`。
-- **FR-012**：點擊任務列或 `編輯` 導向 `/task-detail` 前，系統必須持久化該任務 `task_type` 至 `ACTIVE_TASK_TYPE_STORAGE_KEY`。
+- **FR-012**：點擊任務列或 `編輯` 時只以 `task_id` 導入 task context；系統不得持久化單一 `task_type`，亦不得將 `outputs[]` 壓縮成第一個輸出類型。
 
 ### 使用者流程與導頁
 
@@ -296,10 +297,31 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`task_type`、`run_stage`、`status`、`updated_at`、`deleted_at`、`deleted_by`。
+- **TaskSummary**：任務列表列項。關鍵欄位：`task_id`、`task_name`、`outputs: { type: OUTPUT_TYPE_KEYS }[]`、`run_stage`、`status`、`updated_at`、`deleted_at`、`deleted_by`。
 - **TaskMembership**：任務成員關係。關鍵欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
-- **TaskListQuery**：列表查詢條件。欄位：`keyword`、`task_type`（`TASK_TYPE_ENUM`）、`run_stage`（`RUN_STAGE_ENUM`）、`status`（`TASK_STATUS_ENUM`）、`page`、`page_size`。
-- **ActiveTaskTypeState**：跨頁 task type 快取。欄位：`storage_key = labelsuite.activeTaskType`、`task_type`（值域同 `TASK_TYPE_ENUM`）。
+- **TaskListQuery**：列表查詢條件。欄位：`keyword`、`output_type`（`OUTPUT_TYPE_KEYS`）、`run_stage`（`RUN_STAGE_ENUM`）、`status`（`TASK_STATUS_ENUM`）、`limit`、`offset`。
+
+### Prototype 示例資料基線
+
+下表是 prototype 的靜態示例資料對照，用於驗收 8 種合法輸出類型與複合標籤呈現；它不是 API、任務數量、輸出組合或未來產品能力的上限。Prototype 只讀取每份 fixture 的任務展示 metadata，不得顯示或序列化資料中的 gold、reference、answer、ground truth 或其他答案內容。
+
+| `docs/product/example-data/` fixture | `outputs[].type` 標籤 |
+|------|------|
+| `single-label.json` | `single_label` |
+| `nli.json` | `single_label` |
+| `multi-label.json` | `multi_label` |
+| `multi-label-hierarchical.json` | `multi_label` |
+| `single-dim.json` | `single_dim` |
+| `multi-dim.json` | `multi_dim` |
+| `sequence-tagging.json` | `sequence_tagging` |
+| `entity-recognition.json` | `entity_recognition` |
+| `relation-identification.json` | `relation_identification` |
+| `medical-ner-re.json` | `entity_recognition`、`relation_identification` |
+| `absa-va.json` | `entity_recognition`、`relation_identification`、`multi_dim` |
+| `free-text.json` | `free_text` |
+| `mrc.json` | `free_text` |
+
+依 membership 語意套用單一輸出類型篩選時，這 13 筆示例的命中數必須為：`single_label = 2`、`multi_label = 2`、`single_dim = 1`、`multi_dim = 2`、`sequence_tagging = 1`、`entity_recognition = 3`、`relation_identification = 3`、`free_text = 2`。
 
 ---
 
@@ -312,6 +334,7 @@ flowchart LR
 | 001 | Login — Email / Password | 已登入狀態與路由守門 |
 | 008 | Shared Sidebar Navbar | L0 導覽、active 狀態與 RWD 導覽規範 |
 | 012 | Dashboard | 從 dashboard 進入 task-management 的入口語意 |
+| 013 | New Task | `OUTPUT_TYPE_REGISTRY`、8 個 `OUTPUT_TYPE_KEYS` 與 `outputs[]` producer contract |
 
 ### 下游（依賴本規格的規格）
 
@@ -323,21 +346,27 @@ flowchart LR
 | 016 | Dataset Stats | 任務清單入口與 task context 導入 |
 | 017 | Dataset Quality | 任務清單入口與 task context 導入 |
 
+> **v2.0.0 下游同步界線**：本版只定義 010 Task List 對 `outputs[].type` 的展示、搜尋與篩選契約。014／015／016／017 仍有舊固定任務類型或未完成的 consumer contract，依既有產品決策延後同步；本版不得宣稱這些 consumer 已與 `outputs[]` 相容。
+
 ---
 
 ## 成功標準 *(必填)*
 
 - **SC-001**：`user` 進入 `/task-list` 時，只會看到有 membership 的任務。
 - **SC-002**：`super_admin` 進入 `/task-list` 時，預設顯示全平台任務，且頁面不出現檢視切換控制。
-- **SC-003**：搜尋（所有欄位）、任務類型 / 標記階段 / 狀態篩選、分頁可獨立與組合運作，並於同頁更新結果。
+- **SC-003**：搜尋（所有欄位）、輸出類型 / 標記階段 / 狀態篩選、`limit` / `offset` 分頁可獨立與組合運作，並於同頁更新結果。
 - **SC-004**：點擊任務列時，有權限者可導向 `/task-detail`，無權限者停留 `/task-list` 並收到提示。
-- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成搜尋、任務類型篩選、標記階段篩選、狀態篩選、分頁、點擊任務列、點擊 `新增任務`，且無資訊重疊。
+- **SC-005**：在 `375px`、`768px`、`1440px` 下皆可完成搜尋、輸出類型篩選、標記階段篩選、狀態篩選、分頁、點擊任務列、點擊 `新增任務`，且多 tag 可換行、無截斷或資訊重疊。
 - **SC-006**：查詢條件經由 URL query 保留，重新整理與返回 `/task-list` 時可正確還原。
 - **SC-007**：無資料與空結果時，`task-list` 皆保留表頭，並於 `tbody` 顯示對應 empty row 內容。
 - **SC-008**：`尚無任務` 狀態僅保留頁面主 `新增任務` CTA；`空結果` 狀態可直接清除篩選返回列表。
 - **SC-009**：點擊任務列 `編輯` 可導向 `/task-detail`；點擊 `刪除` 後任務會軟刪除並從列表隱藏。
-- **SC-010**：點擊任務列或 `編輯` 導頁後，`labelsuite.activeTaskType` 必須更新為該任務的 `task_type`。
+- **SC-010**：Prototype 預設資料顯示上表 13 筆不同任務；`全部輸出類型` 不遺漏任一筆，且 8 個單一篩選結果命中數完全符合示例基線。
 - **SC-011**：任務列表載入失敗時，頁面保留表頭並顯示錯誤列與重試操作，不得誤呈現為無資料或空結果。
+- **SC-012**：`medical-ner-re.json` 顯示 2 個輸出類型 tag，`absa-va.json` 顯示 3 個；tag 文字、順序、可存取名稱與換行行為均由 `outputs[]` 與 registry metadata 驅動。
+- **SC-013**：新增第 14 筆具有任意合法 `outputs[]` 組合的任務後，列表與對應 `output_type` 篩選可直接呈現該任務，不需新增任務名稱、輸出組合或 renderer/filter 分支。
+- **SC-014**：任務列表及其可供 annotator 存取的資料不得出現任何示例 fixture 的 gold、reference、answer、ground truth 或等價答案內容。
+- **SC-015**：本版新增或修改的 prototype 驗收情境皆有對應 Playwright 測試，涵蓋 13 筆基線、8 個篩選器選項與命中數、複合 tag、14th-task 泛化及三個 `RWD_VIEWPORTS`。
 
 ---
 
@@ -352,9 +381,9 @@ flowchart LR
 
 ### Label Suite 合規性
 
-- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
+- [x] 本次實作分支已記錄為 `feat/task-output-type-list`，並與 `STATUS.md` 一致。
 - [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
-- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
+- [x] 涉及 output type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
 - [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
 - [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
 - [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
@@ -375,6 +404,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.0 | 2026-07-29 | **任務列表遷移至可組合輸出類型**：移除固定 `TASK_TYPE_ENUM`、`task_type` 篩選與 `labelsuite.activeTaskType` 單值快取契約；列表改以 `outputs[].type` 逐項呈現可換行、具文字與可存取名稱的 tag，篩選器由 `OUTPUT_TYPE_REGISTRY` 列出 8 個合法 key 並以 membership 語意比對。URL query 與分頁改為 `output_type`、`limit`、`offset`。加入 13 份 prototype 示例 fixture 的 mapping／命中數基線、複合 tag、14th-task 泛化與答案資料不外露驗收；13 筆僅為示例，不構成系統上限。014／015／016／017 consumer 同步維持延後。 |
 | 1.3.9 | 2026-05-22 | 釐清並同步 task-list 原型：刪除權限限 `project_leader` / `super_admin` 且僅 `draft` 可刪；搜尋 enum 比對 raw value 與目前語系文案；無效 URL query 正規化；載入失敗以表格 error row 與重試操作呈現 |
 | 1.3.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.7 | 2026-04-23 | 同步原型：`TASK_TYPE_ENUM` 以 `single_sentence_va_scoring` 取代 `single_sentence_scoring_regression`，並新增 `labelsuite.activeTaskType` 持久化契約供 annotation-workspace 啟動 fallback |

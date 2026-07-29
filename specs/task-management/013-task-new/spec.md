@@ -1,7 +1,7 @@
 ---
-功能分支: feat/sequence-preview-source-text
+功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.4.0
+版本: 6.4.1
 狀態: Draft
 ---
 
@@ -50,6 +50,7 @@
 - **v6.2.0 Sequence Tagging Token 單位與方案**：`sequence_tagging` 採固定 language-aware v1 tokenization（中文逐字、英文逐詞、標點獨立、空白不產生 Token），保留 `BIO / BIOES / IOB2` 並新增無位置前綴的 `SINGLE`。Step 2 專屬預覽以完整 tag 按鈕精確套用到 Token，不再依前一 Token 自動推斷；`tokens` 與可見預標記數量不一致時顯示錯誤並阻擋前進。本版僅完成 013 producer-side，014／015／016／017 consumer 同步延後。
 - **v6.3.0 Sequence Tagging 標記單位**：將「標記單位」與「標記方案」拆成兩個獨立設定維度。`tokenization.unit` 支援 `character / word`，預設 `character`；字模式依可見字元切分，詞模式依語言感知詞界切分，兩者皆略過空白並讓標點獨立。切換單位後 Step 2 Token 網格與規則說明須立即重建，既有預覽 tag 不得錯套到新邊界；可見預標記數量改依目前單位重新驗證。數量不一致且預標記與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路；切換單位使數量重新一致時，可見預標記須自資料重新初始化（Bypass 明確清空的預覽狀態除外）。本版仍只完成 013 producer-side，正式 Annotation Workspace 與其他 consumer 維持延後。
 - **v6.4.0 標記預覽原始文本**：Step 2 序列標註預覽將 Token 網格上方的字／詞切分規則說明，改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本；該文本不隨標記單位切換而改變，切分行為改由 Token 網格本身呈現。通用輸入文字區塊的標籤由 Input 欄位名稱改為「原始文本」（英文 Text）；`item_pair` 於配對區塊上方顯示一次「原始文本」標題並保留兩段文本的欄位名稱小標。`entity_recognition`／`relation_identification` 的互動圈選文本區不另加標題，`free_text` 維持可設定的 `input_instruction` 契約。整合預覽標題由「整合預覽（實體辨識 + 關係識別）」簡化為「整合預覽」（英文 Unified preview）。tokenization 契約與預標記驗證行為不變。
+- **v6.4.1 選擇狀態與下游語意釐清**：Step 1 的三組 chip 分別寫入 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不建立單一固定 `task_type`；完成設定後，`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 Task List 直接以 `outputs[].type` 顯示與篩選；`docs/product/example-data/` 的 13 份 fixture 僅為 prototype 示例，不是合法任務或輸出組合上限。
 
 ## 規格常數
 
@@ -174,7 +175,7 @@ sequenceDiagram
 **介面定義（需與 IA 導覽語意一致）**：
 
 - Step 1：`基本資料`
-  - 必要欄位：`task_name`、`dataset_file`、`task_type`（三組 chip）
+  - 必要欄位：`task_name`、`dataset_file`、`selected_categories[]`、`input_type`、`selectedOutputTypes[]`（後三者各由一組 chip 維護）
   - `task_name`：
     - 單行文字輸入框，附字數計數器（上限 100 字）
   - `dataset_file`：
@@ -197,7 +198,7 @@ sequenceDiagram
       - 指定角色後於欄位下方顯示回饋註記：Input／Evidence 有缺值 → 紅色錯誤並列出問題紀錄；Input／Evidence 全數有值 → 綠色確認；Output → 藍色預標記覆蓋率資訊（N/total 筆有預標記）
       - 預設全部欄位為「不使用」；重新上傳或移除檔案後角色重設為「不使用」；切換資料列來源時保留各來源已指定的角色，切回原來源時自動還原
       - 角色指定結果以 `field_role_map: Record<string, FieldRole>` 傳入建立任務 payload；僅含已指定角色的欄位
-  - `task_type`：三組 chip
+  - 輸出組合選擇狀態：三組 chip（分別維護 `selected_categories[]`、`input_type`、`selectedOutputTypes[]`，不存在單一 `task_type`）
     - 大分類（可多選，`role="checkbox"`）
       - `分類 Classification`
       - `回歸 Regression`
@@ -536,8 +537,8 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 
 - **FR-001**：系統必須提供 `/task-new` 四步驟建立流程（Step 1/2/3/4）。
 - **FR-001a**：僅 `TASK_CREATOR_SYSTEM_ROLES` 可進入 `/task-new` 與呼叫建立任務 API。
-- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、至少一個輸出類型；未上傳任何資料集時不得進入下一步。輸出類型由三組 chip 決定（大分類可多選、輸入類型單選、輸出類型依大分類 cascade 過濾且跨組可多選）；選擇結果存為 `selectedOutputTypes[]`。
-- **FR-002e**：Step 1 任務類型選擇器必須由 `OUTPUT_TYPE_REGISTRY` 與 taxonomy metadata 動態萃取三組 chip。選擇語意如下：`大分類`（可多選，`role="checkbox"`）、`輸入類型`（單選，`role="radio"`，同一組互斥）、`輸出類型`（依大分類 cascade 過濾且跨組可多選）。每個大分類必須以 taxonomy 的 `outputSelection` 宣告輸出選擇模式，不得在 selector 核心流程依大分類 key 硬編分支：`classification` 與 `regression` 為 `single`，其 chip 使用 `role="radio"` 且同組互斥；`sequence` 與 `generation` 為 `multiple`，其 chip 使用 `role="checkbox"` 且可保留同組多個選項。大分類與輸入類型始終可見；未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應輸出類型（不加分組標題）；選擇 2 個以上大分類時，輸出類型依已選大分類分組顯示並加分類名稱子標題；取消某個大分類時，該組輸出類型消失且已選項自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在 taxonomy 或 registry 產生的選項中。
+- **FR-002**：Step 1 必須要求任務名稱、至少一個資料集檔案、至少一個輸出類型；未上傳任何資料集時不得進入下一步。三組 chip 的狀態分別為大分類 `selected_categories[]`、單一輸入類型 `input_type`、以及依大分類 cascade 過濾且跨組可多選的 `selectedOutputTypes[]`；不得另行推導或儲存單一固定 `task_type`。
+- **FR-002e**：Step 1 輸出組合選擇器必須由 `OUTPUT_TYPE_REGISTRY` 與 taxonomy metadata 動態萃取三組 chip。選擇語意如下：`大分類`（寫入 `selected_categories[]`，可多選，`role="checkbox"`）、`輸入類型`（寫入 `input_type`，單選，`role="radio"`，同一組互斥）、`輸出類型`（寫入 `selectedOutputTypes[]`，依大分類 cascade 過濾且跨組可多選）。每個大分類必須以 taxonomy 的 `outputSelection` 宣告輸出選擇模式，不得在 selector 核心流程依大分類 key 硬編分支：`classification` 與 `regression` 為 `single`，其 chip 使用 `role="radio"` 且同組互斥；`sequence` 與 `generation` 為 `multiple`，其 chip 使用 `role="checkbox"` 且可保留同組多個選項。大分類與輸入類型始終可見；未選任何大分類時，輸出類型區塊顯示灰色提示「請先選擇大分類」且不顯示任何 chip；選擇 1 個大分類時，直接顯示該分類對應輸出類型（不加分組標題）；選擇 2 個以上大分類時，輸出類型依已選大分類分組顯示並加分類名稱子標題；取消某個大分類時，該組輸出類型消失且已選項自動取消。chip 標籤必須依 `state.lang` 顯示 zh/en 文案，語言切換時即時更新。`entity_relation`、`boundary`、`span`、`relation_triple` 與 `token_class` 不得出現在 taxonomy 或 registry 產生的選項中。
 - **FR-002a**：每個資料集檔案必須為 `.json` 格式（`DATASET_UPLOAD_FORMATS = json`），且符合 `DATASET_MAX_FILE_SIZE_MB`；非 JSON 格式的檔案須個別顯示錯誤並阻擋加入；已通過驗證的其他檔案不受影響。`.json` 檔內容為 JSON Lines（逐行 JSON object）時，系統必須可解析為紀錄集合。
 - **FR-002b**：每個已上傳資料集檔案獨立一列，顯示眼睛預覽圖示與 × 移除按鈕；點擊該列（× 除外）或眼睛按鈕開啟 Modal，顯示該檔案第 1 筆紀錄的原始 JSON（依目前所選資料列來源路徑取出，格式化縮排呈現）；Modal 以近全視窗尺寸呈現以盡量完整顯示該筆 JSON：長字串值於區塊寬度內自動換行（無需水平捲動），高度隨內容伸縮、超出上限時於 JSON 區塊內垂直捲動；Modal 提供關閉按鈕，點擊 overlay 亦可關閉；預覽為唯讀。若於目前所選資料列來源路徑取不出該檔案的紀錄，系統須依序回退：先改用該檔案自身偵測出的最佳候選來源，仍取不出時顯示該檔案的原始根節點 JSON，確保 Modal 開啟後必有內容可顯示。系統將所有已上傳檔案合併視為同一資料集進行後續處理。
 - **FR-002c**：資料集上傳成功後，系統必須在 Step 1 上傳區塊下方即時顯示一個**嵌入式資料預覽表格**，無需使用者點擊任何按鈕觸發。預覽表格呈現所選資料列來源的**前 2 筆資料列**，表格欄位為該來源**所有紀錄**第一層 key 的聯集，欄位標頭顯示原始 JSON key 名稱（不做中文轉換）並附型別摘要 badge（字串／數字／布林／陣列／物件／混合／空）；陣列或物件型儲存格以摘要文字呈現，hover 可檢視原始 JSON 內容；預覽提示列須顯示資料總筆數。**每個欄位標頭下方提供角色下拉選單**（`FIELD_ROLES`：`Evidence（背景）`、`Input（輸入）`、`Output（輸出）`，以及「不使用」），使用者可逐欄指定角色。
@@ -648,7 +649,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
+- **TaskDraftInput**：建立任務輸入草稿。欄位：`task_name`、`dataset`、`input_type`（`TASK_INPUT_TYPES`）、`selected_categories[]`（`TASK_CATEGORIES`）、`selectedOutputTypes[]`（`OUTPUT_TYPE_KEYS`）、`outputs[]`（`OutputConfig[]`，每項含 `type` + `config`）、`field_role_map: Record<string, FieldRole>`、`run_init`、`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。`selectedOutputTypes[]` 是 Step 1 UI 選擇狀態；進入設定與提交時，一對一對應 `outputs[].type`。
 - **OutputConfig**：單一輸出類型設定。欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`config`（由該 output type 的 registry fields 定義的 key-value 物件；一律包含共通欄位 `allow_bypass: boolean`，預設 `true`）。
 - **SequenceTaggingConfig**：`sequence_tagging` 的 config。欄位：`entities: { name, color }[]`、`tokenization: { unit: character | word, mode: unit_based, punctuation: separate, version: 2 }`、`tagging_scheme: BIO | BIOES | IOB2 | SINGLE`、`allow_bypass: boolean`。
 - **FreeTextConfig**：`free_text` 的 config。欄位：`input_instruction: string`、`output_instruction: string`（皆為必要、trim 後非空且最多 100 字）、`max_length: number`（`> 0`）、`allow_bypass: boolean`；不包含已退役的 `show_reference`。
@@ -700,6 +701,8 @@ flowchart LR
 > **v6.2.0 下游同步延後**：本次只完成 013 Task New producer-side 的 `sequence_tagging` config、language-aware Token 預覽、scheme 選擇與資料對齊驗證。014 Task Detail 尚未同步設定摘要；015 Annotation Workspace 尚未同步 Token 操作與提交 payload；016／017 尚未同步 Token 分布、IAA 與品質指標。依產品決策留待後續一起調整；在 consumer 完成前不得宣稱正式標記介面已支援本契約。
 >
 > **v6.3.0 下游同步延後**：本次新增的 `tokenization.unit` 與字／詞切分只同步 013 Task New 設定和預覽。014 尚未顯示標記單位摘要；015 尚未依單位建立正式 Token、驗證提交 payload 或凍結可重現的 production tokenizer（tokenization 契約與凍結義務見 ADR-031）；016／017 尚未依單位調整統計與品質指標。這些 consumer 依產品決策留待後續一起調整。
+>
+> **v6.4.1 Task List 消費語意**：010 Task List 直接逐項顯示 `outputs[].type`，並以單一 `output_type` membership 語意篩選。`docs/product/example-data/` 的 13 份 fixture 只提供 prototype 驗收基線，不限制 `OUTPUT_TYPE_REGISTRY` 可建立的任務數量或合法組合；014／015／016／017 的 consumer 延後狀態不因本次釐清而改變。
 >
 > **未來版本候選（非 013 承諾範圍，2026-07-28 對照 Label Studio／Scale 評估後記錄）**：
 >
@@ -789,6 +792,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.4.1 | 2026-07-29 | **選擇狀態與 Task List 消費語意釐清**：Step 1 三組 chip 明確分別維護 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不再以 `task_type` 指稱或儲存單一固定任務型別；`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 依該欄位逐項顯示與 membership 篩選；13 份 example-data fixture 僅為 prototype 示例，不構成任務數量或合法組合上限。無 producer payload 行為變更。 |
 | 6.4.0 | 2026-07-28 | **標記預覽原始文本**：Step 2 序列標註預覽區將 Token 網格上方的切分規則說明改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本，文本不隨標記單位切換改變；通用輸入文字區塊標籤由 Input 欄位名稱改為「原始文本」，`item_pair` 於配對區塊上方顯示一次該標題並保留欄位名稱小標；`entity_recognition`／`relation_identification` 互動文本區與 `free_text` `input_instruction` 契約不變；整合預覽標題簡化為「整合預覽」（英文 Unified preview）。同步 prototype、visual overview 與 Playwright 測試；tokenization 契約與預標記驗證不變。 |
 | 6.3.0 | 2026-07-28 | **Sequence Tagging 標記單位**：將 `tokenization.unit` 與 `tagging_scheme` 拆為獨立設定，新增字（character）／詞（word）選單並預設字模式。Step 2 依選定單位即時重建 Token 網格與說明；切換邊界時不沿用錯位暫存 tag，預標記數量依新 Token 數重新驗證，數量重新一致時自資料重新初始化可見預標記（Bypass 清空除外）。不一致錯誤在預標記對齊另一單位時點名該單位並提供切回或改用對應粒度預標記兩條出路。`tokenization` 契約升級為 unit-based v2；正式 Annotation Workspace 與 014／016／017 consumer 仍延後。另記三項未來版本候選（015 拖曳選取多 Token 實體、標籤 `description` 欄位、標籤過濾與快捷鍵），非本版承諾範圍。 |
 | 6.2.0 | 2026-07-28 | **Sequence Tagging Token 單位與方案**：中文改為逐字 Token、英文維持逐詞、標點獨立；保留 BIO／BIOES／IOB2 並新增 SINGLE。Step 2 由專屬 Token 網格完整呈現輸入，移除重複通用輸入卡，以完整 tag 按鈕精確套用並支援相鄰同類型 `B-X`；新增固定 language-aware v1 metadata、可見 `pre_tags` fixture、數量不一致阻擋與錯誤提示。同步 taxonomy、task config、visual overview 與 Playwright；正式 Annotation Workspace 及 014／016／017 consumer 依產品決策延後。 |

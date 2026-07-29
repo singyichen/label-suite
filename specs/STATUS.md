@@ -35,8 +35,8 @@
 | shared-008 | Shared Sidebar Navbar | shared | `spec-ready` | `feat/shared/008-sidebar-navbar-shared` | spec v1.3.9；規格狀態：Clarified |
 | shared-018 | Help Button — 平台說明入口 | shared | `deferred` | `feat/shared/018-help-button` | spec v1.1.1；最新 sidebar prototype baseline 尚未提供 Help button / Help modal |
 | annotation-015 | Annotation List + Workspace | annotation | `in-progress` | `feat/regression-slider-ui` | spec v1.7.0；規格狀態：Draft；VA Annotator 介面採雙列彩色滑桿、跟隨數值標籤與可直接輸入小數的右側欄位 |
-| task-management-010 | Task List | task-management | `spec-ready` | `feat/task-management/010-task-list` | spec v1.3.8；規格狀態：Draft |
-| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/sequence-preview-source-text` | spec v6.4.0；規格狀態：Draft；Step 2 標記預覽統一顯示帶「原始文本」標題的未切分輸入文本（通用區塊、`item_pair`、`sequence_tagging`；互動圈選區與 `free_text` 指示契約除外），標記單位（字／詞）與方案（BIO／BIOES／IOB2／SINGLE）仍為獨立設定並依單位動態重建 Token；正式 Annotation Workspace 及 014／016／017 consumer 契約延後同步 |
+| task-management-010 | Task List | task-management | `in-progress` | `feat/task-output-type-list` | spec v2.0.0；規格狀態：In Progress；列表改由 `outputs[].type` 顯示多 tag，提供 registry-driven 8 輸出類型 membership 篩選與 `limit`／`offset` 分頁；13 份 example-data fixture 僅為 prototype 示例，不構成系統上限；014／015／016／017 consumer 同步延後 |
+| task-management-013 | New Task (+ Config Builder) | task-management | `in-progress` | `feat/sequence-preview-source-text` | spec v6.4.1；規格狀態：Draft；Step 1 選擇狀態明確為 `selected_categories[]` + `input_type` + `selectedOutputTypes[]`，一對一產生 `outputs[].type`；Step 2 原始文本、標記單位與方案既有契約不變；正式 Annotation Workspace 及 014／016／017 consumer 契約延後同步 |
 | task-management-014 | Task Detail (incl. task-member-management/work-log) | task-management | `spec-ready` | `feat/task-management/014-task-detail` | spec v1.7.15；規格狀態：Draft |
 | dataset-016 | Dataset Analysis List + Stats Tab | dataset | `in-progress` | `feat/dataset/016-dataset-analysis-list` | spec v1.3.1；規格狀態：In Progress |
 | dataset-017 | Dataset Quality Tab (IAA / Anomaly Detection) | dataset | `spec-ready` | `feat/dataset/017-dataset-analysis-detail` | spec v1.4.5；規格狀態：Draft |
@@ -55,6 +55,7 @@
 
 | 日期 | 更新內容 |
 |------|----------|
+| 2026-07-29 | `task-management-010` 更新至 v2.0.0 並於 `feat/task-output-type-list` 進入 `in-progress`：任務列表由固定 `task_type` 遷移為 `outputs[].type` 多 tag，輸出類型下拉由 registry 提供 8 個合法 key 並採 membership 篩選，URL 分頁改為 `limit`／`offset`；以 13 份 example-data fixture 建立 prototype mapping／命中數基線、複合 tag 與第 14 筆合法任務泛化驗收，明訂示例不得限制未來任務或暴露答案內容。`task-management-013` 釐清 Step 1 狀態為 `selected_categories[]` + `input_type` + `selectedOutputTypes[]` 並更新至 v6.4.1；014／015／016／017 consumer 同步仍延後。 |
 | 2026-07-28 | `task-management-013` 更新至 v6.4.0：Step 2 `sequence_tagging` 預覽將 Token 網格上方的字／詞切分規則說明改為顯示帶「原始文本」標題（英文 Text）、未經切分的原始輸入文本，文本不隨標記單位切換改變；通用輸入文字區塊標籤由 Input 欄位名稱改為「原始文本」，`item_pair` 於配對區塊上方顯示一次該標題並保留欄位名稱小標，互動圈選文本區與 `free_text` `input_instruction` 契約不變，整合預覽標題簡化為「整合預覽」；同步 prototype、visual overview 與 Playwright 測試，tokenization 契約與預標記驗證不變。 |
 | 2026-07-28 | `task-management-013` 更新至 v6.3.0：`sequence_tagging` 新增獨立的標記單位設定 `tokenization.unit = character \| word`，設定面板依序顯示標記單位與標記方案；Step 2 預覽依選定單位即時重建字／詞 Token、更新規則說明並重新驗證可見預標記數量。`tokenization` 契約升級為 unit-based v2；正式 Annotation Workspace 及 014／016／017 consumer 維持延後。 |
 | 2026-07-28 | `task-management-013` 更新至 v6.2.0：本次僅調整 New Task producer-side 的 `sequence_tagging` 設定與 Step 2 預覽；Token 固定採 language-aware v1（中文逐字、英文逐詞、標點獨立），方案保留 BIO／BIOES／IOB2 並新增 SINGLE，完整 tag 可精確套用且可見預標記數量不一致時阻擋。同步 example data、task config、taxonomy、visual overview 與 Playwright；正式 Annotation Workspace 及 014／016／017 consumer 留待後續一起調整。 |

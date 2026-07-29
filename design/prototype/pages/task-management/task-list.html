@@ -248,6 +248,12 @@
     .badge-run-dry         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
     .badge-run-official    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
     .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
+    .output-type-cell { width: 280px; max-width: 280px; white-space: normal; }
+    .output-type-tags {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+      width: 100%; max-width: 280px; min-width: 0;
+    }
+    .output-type-tag { max-width: 100%; }
 
     /* ── Pagination ──────────────────────────────────────────── */
     .pagination {
@@ -332,7 +338,7 @@
       .badge-run-official   { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
       .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
 
-      /* Task-type badges */
+      /* Output-type badges */
       .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
       .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
       .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
@@ -377,8 +383,8 @@
       <!-- Toolbar -->
       <div class="toolbar" role="search" aria-label="任務搜尋與篩選">
         <div class="toolbar-left">
-          <select class="filter-select" id="taskTypeFilter" aria-label="依任務類型篩選">
-            <option value="">全部任務類型</option>
+          <select class="filter-select" id="outputTypeFilter" aria-label="依輸出類型篩選">
+            <option value="">全部輸出類型</option>
           </select>
           <select class="filter-select" id="runTypeFilter" aria-label="依標記階段篩選">
             <option value="">全部標記階段</option>
@@ -422,7 +428,7 @@
             <thead>
               <tr>
                 <th id="thTaskName">任務名稱</th>
-                <th id="thTaskType">任務類型</th>
+                <th id="thTaskType">輸出類型</th>
                 <th id="thRunType">標記階段</th>
                 <th id="thStatus">狀態</th>
                 <th id="thUpdatedAt">更新時間</th>
@@ -482,6 +488,7 @@
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
+<script src="./task-list.data.js"></script>
 <script>
   /* ── i18n ────────────────────────────────────────────────────── */
   var I18N = {
@@ -492,7 +499,7 @@
       navDashboard: '儀表板', navTaskManagement: '任務管理',
       navAnnotation: '標記作業', navDataset: '資料集分析', navAdmin: '系統管理', navProfile: '個人設定',
       newTaskBtnLabel: '新增任務',
-      thTaskName: '任務名稱', thTaskType: '任務類型', thRunType: '標記階段',
+      thTaskName: '任務名稱', thTaskType: '輸出類型', thRunType: '標記階段',
       thStatus: '狀態', thUpdatedAt: '更新時間', thActions: '操作',
       actionEdit: '編輯',
       actionDelete: '刪除',
@@ -507,14 +514,9 @@
       errorRetryLabel: '重試',
       searchPlaceholder: '搜尋',
       searchAriaLabel: '搜尋（所有欄位）',
-      taskTypeOptions: [
-        { value: '', label: '全部任務類型' },
-        { value: 'single_sentence_classification', label: '單句分類（含多標籤）' },
-        { value: 'single_sentence_va_scoring', label: '單句 VA 雙維度評分（Valence / Arousal）' },
-        { value: 'sequence_labeling', label: '序列標記（含 Aspect / NER）' },
-        { value: 'relation_extraction', label: '關係抽取（Entity + Relation + Triple）' },
-        { value: 'sentence_pairs', label: '句對任務（相似度 / 蘊含）' },
-      ],
+      allOutputTypes: '全部輸出類型',
+      outputTypeFilterAria: '依輸出類型篩選',
+      outputTypeGroupAriaTpl: '輸出類型：{types}',
       runTypeOptions: [
         { value: '', label: '全部標記階段' },
         { value: 'unmaterialized', label: '未建立清單' },
@@ -550,13 +552,6 @@
         official_run_in_progress: '正式標記中', completed: '已完成',
       },
       runBadge: { unmaterialized: '未建立清單', dry_run: '試標', official_run: '正式標記' },
-      taskTypeLabel: {
-        single_sentence_classification: '單句分類（含多標籤）',
-        single_sentence_va_scoring: '單句 VA 雙維度評分（Valence / Arousal）',
-        sequence_labeling: '序列標記（含 Aspect / NER）',
-        relation_extraction: '關係抽取（Entity + Relation + Triple）',
-        sentence_pairs: '句對任務（相似度 / 蘊含）',
-      },
     },
     en: {
       docTitle: 'Task List — Label Suite (Prototype)',
@@ -565,7 +560,7 @@
       navDashboard: 'Dashboard', navTaskManagement: 'Task Management',
       navAnnotation: 'Annotation', navDataset: 'Dataset Analytics', navAdmin: 'System Administration', navProfile: 'Profile',
       newTaskBtnLabel: 'New task',
-      thTaskName: 'Task Name', thTaskType: 'Task Type', thRunType: 'Annotation Stage',
+      thTaskName: 'Task Name', thTaskType: 'Output types', thRunType: 'Annotation Stage',
       thStatus: 'Status', thUpdatedAt: 'Updated', thActions: 'Actions',
       actionEdit: 'Edit',
       actionDelete: 'Delete',
@@ -580,14 +575,9 @@
       errorRetryLabel: 'Retry',
       searchPlaceholder: 'Search',
       searchAriaLabel: 'Search (all columns)',
-      taskTypeOptions: [
-        { value: '', label: 'All task types' },
-        { value: 'single_sentence_classification', label: 'Single Sentence Classification (Multi-label)' },
-        { value: 'single_sentence_va_scoring', label: 'Single-sentence VA Scoring (Valence / Arousal)' },
-        { value: 'sequence_labeling', label: 'Sequence Labeling (Aspect / NER)' },
-        { value: 'relation_extraction', label: 'Relation Extraction (Entity + Relation + Triple)' },
-        { value: 'sentence_pairs', label: 'Sentence Pairs (Similarity / Entailment)' },
-      ],
+      allOutputTypes: 'All output types',
+      outputTypeFilterAria: 'Filter by output type',
+      outputTypeGroupAriaTpl: 'Output types: {types}',
       runTypeOptions: [
         { value: '', label: 'All annotation stages' },
         { value: 'unmaterialized', label: 'No list yet' },
@@ -623,37 +613,25 @@
         official_run_in_progress: 'Official Run', completed: 'Completed',
       },
       runBadge: { unmaterialized: 'No list yet', dry_run: 'Dry Run', official_run: 'Official' },
-      taskTypeLabel: {
-        single_sentence_classification: 'Single Sentence Classification (Multi-label)',
-        single_sentence_va_scoring: 'Single-sentence VA Scoring (Valence / Arousal)',
-        sequence_labeling: 'Sequence Labeling (Aspect / NER)',
-        relation_extraction: 'Relation Extraction (Entity + Relation + Triple)',
-        sentence_pairs: 'Sentence Pairs (Similarity / Entailment)',
-      },
     },
   };
 
-  /* ── Static task data ────────────────────────────────────────── */
+  /* ── Registry-driven task data ───────────────────────────────── */
   var TASKS = [];
-  var CREATED_TASKS_SEED = [
-    { id: 'T001', nameZh: '新聞標題多標籤分類',       nameEn: 'News Headline Multi-label Classification',      taskType: 'single_sentence_classification', runType: 'official_run', status: 'draft', updatedAt: '2026-04-19', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T002', nameZh: '情感 VA 雙維度評分',        nameEn: 'Sentiment VA Dual-axis Scoring',               taskType: 'single_sentence_va_scoring',      runType: 'dry_run', status: 'waiting_iaa_confirmation', updatedAt: '2026-05-03', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T003', nameZh: '產品評論序列標記（NER / Aspect）', nameEn: 'Product Review Sequence Labeling (NER / Aspect)', taskType: 'sequence_labeling', runType: 'dry_run',      status: 'draft', updatedAt: '2026-04-17', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T004', nameZh: '醫療關係抽取（Entity / Triple）',   nameEn: 'Medical Relation Extraction (Entity / Triple)',   taskType: 'relation_extraction',  runType: 'official_run', status: 'draft',                 updatedAt: '2026-04-15', canViewDetail: true,  isMine: true, deletedAt: ''  },
-    { id: 'T005', nameZh: '句對相似度 / 蘊含判定',      nameEn: 'Sentence Pair Similarity / Entailment',        taskType: 'sentence_pairs',      runType: 'dry_run',      status: 'draft',                     updatedAt: '2026-04-14', canViewDetail: true,  isMine: true, deletedAt: '' },
-    { id: 'T006', nameZh: 'NER 命名實體辨識',        nameEn: 'NER Named Entity Recognition',                  taskType: 'sequence_labeling', runType: 'official_run', status: 'draft', updatedAt: '2026-04-16', canViewDetail: true, isMine: true, deletedAt: ''  },
-    { id: 'T007', nameZh: '商品評論分類 v2',     nameEn: 'Product Review Classification', taskType: 'single_sentence_classification', runType: 'official_run', status: 'official_run_in_progress', updatedAt: '2026-04-13', canViewDetail: true, isMine: false, deletedAt: ''  },
-    { id: 'T009', nameZh: '對話意圖標記',        nameEn: 'Dialogue Intent Labeling',     taskType: 'single_sentence_classification', runType: 'dry_run',      status: 'dry_run_in_progress',       updatedAt: '2026-04-11', canViewDetail: true,  isMine: false, deletedAt: '' },
-    { id: 'T010', nameZh: '醫療文本 NER',        nameEn: 'Medical NER',                  taskType: 'sequence_labeling', runType: 'official_run', status: 'completed',               updatedAt: '2026-04-12', canViewDetail: true, isMine: false, deletedAt: ''  },
-  ];
+  var TASK_LIST_DATA = window.LabelSuiteTaskListData || {};
+  var TASK_LIST_DATA_READY = Array.isArray(TASK_LIST_DATA.outputTypes)
+    && Array.isArray(TASK_LIST_DATA.tasks);
+  var OUTPUT_TYPES = TASK_LIST_DATA_READY ? TASK_LIST_DATA.outputTypes : [];
 
   function loadCreatedTaskSeed() {
-    TASKS = CREATED_TASKS_SEED.map(function (task) {
+    var seedTasks = Array.isArray(TASK_LIST_DATA.tasks) ? TASK_LIST_DATA.tasks : [];
+    TASKS = seedTasks.map(function (task) {
       return {
         id: task.id,
         nameZh: task.nameZh,
         nameEn: task.nameEn,
-        taskType: task.taskType,
+        sourceFile: task.sourceFile,
+        outputTypes: Array.isArray(task.outputTypes) ? task.outputTypes.slice() : [],
         runType: task.runType,
         status: task.status,
         updatedAt: task.updatedAt,
@@ -672,16 +650,9 @@
     completed: 'badge-completed',
   };
   var RUN_BADGE_CLS = { unmaterialized: 'badge-run-unmaterialized', dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
-  var TASK_TYPE_BADGE_CLS = {
-    single_sentence_classification: 'badge-task-type-single',
-    single_sentence_va_scoring: 'badge-task-type-scoring',
-    sequence_labeling: 'badge-task-type-sequence',
-    relation_extraction: 'badge-task-type-relation',
-    sentence_pairs: 'badge-task-type-pairs',
-  };
 
   /* ── State ───────────────────────────────────────────────────── */
-  var state = { lang: 'zh', keyword: '', taskType: '', runType: '', status: '', page: 1, pageSize: 20, loadFailed: false };
+  var state = { lang: 'zh', keyword: '', outputType: '', runType: '', status: '', limit: 20, offset: 0, loadFailed: !TASK_LIST_DATA_READY };
   var pendingDeleteTaskId = null;
   var toastTimer = null;
   var pageTaskRole = 'user';
@@ -714,18 +685,29 @@
     return task.status === 'draft' ? 'unmaterialized' : task.runType;
   }
 
+  function getOutputTypeMeta(outputType) {
+    return OUTPUT_TYPES.find(function (item) { return item.key === outputType; }) || null;
+  }
+
+  function getOutputTypeLabel(outputType) {
+    var meta = getOutputTypeMeta(outputType);
+    if (!meta) return outputType;
+    return state.lang === 'en' ? meta.en : meta.zh;
+  }
+
   function getTaskSearchText(task) {
     var langMap = I18N[state.lang] || I18N.zh;
-    var typeLabel = (langMap.taskTypeLabel && langMap.taskTypeLabel[task.taskType]) || '';
     var runStage = getTaskRunStage(task);
     var runLabel = (langMap.runBadge && langMap.runBadge[runStage]) || '';
     var statusLabel = (langMap.statusBadge && langMap.statusBadge[task.status]) || '';
+    var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
+    var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
     return [
       task.id,
       task.nameZh,
       task.nameEn,
-      task.taskType,
-      typeLabel,
+      outputTypeKeys.join(' '),
+      outputTypeLabels.join(' '),
       runStage,
       runLabel,
       task.status,
@@ -740,8 +722,10 @@
       tasks = tasks.filter(function(tk) { return tk.isMine; });
     }
     tasks = tasks.filter(function(tk) { return !tk.deletedAt; });
-    if (state.taskType) {
-      tasks = tasks.filter(function(tk) { return tk.taskType === state.taskType; });
+    if (state.outputType) {
+      tasks = tasks.filter(function(tk) {
+        return Array.isArray(tk.outputTypes) && tk.outputTypes.includes(state.outputType);
+      });
     }
     if (state.runType) {
       tasks = tasks.filter(function(tk) { return getTaskRunStage(tk) === state.runType; });
@@ -770,11 +754,11 @@
       lang: state.lang,
       role: getDisplayedTaskRole(),
       keyword: state.keyword,
-      task_type: state.taskType,
+      output_type: state.outputType,
       run_type: state.runType,
       status: state.status,
-      page: state.page,
-      page_size: state.pageSize,
+      limit: state.limit,
+      offset: state.offset,
       task_count: getFilteredTasks().length,
     };
   }
@@ -787,34 +771,20 @@
     window.LabelSuiteAnalytics.track(eventName, payload);
   }
 
-  function persistActiveTaskType(taskType) {
-    if (!taskType) return;
-    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
-      window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
-      return;
-    }
-    try {
-      window.localStorage.setItem('labelsuite.activeTaskType', String(taskType));
-    } catch (error) {
-      // Ignore storage errors in prototype mode.
-    }
-  }
-
   function syncUrl() {
     var p = new URLSearchParams();
     if (state.loadFailed) p.set('view', 'error');
     if (getDisplayedTaskRole() !== 'user') p.set('task_role', getDisplayedTaskRole());
     if (state.keyword) p.set('keyword', state.keyword);
-    if (state.taskType) p.set('task_type', state.taskType);
+    if (state.outputType) p.set('output_type', state.outputType);
     if (state.runType) p.set('run_stage', state.runType);
     if (state.status) p.set('status', state.status);
-    if (state.page > 1) p.set('page', String(state.page));
-    if (state.pageSize !== 20) p.set('page_size', String(state.pageSize));
+    if (state.limit !== 20) p.set('limit', String(state.limit));
+    if (state.offset > 0) p.set('offset', String(state.offset));
     history.replaceState(null, '', p.toString() ? location.pathname + '?' + p.toString() : location.pathname);
   }
 
   function navigateToTaskDetail(task, source) {
-    persistActiveTaskType(task.taskType);
     if (task.canViewDetail) {
       trackAnalytics('prototype_task_row_clicked', { allowed: true, task_id: task.id, source: source || 'row' });
       showToast(t('toastNavigating'), false);
@@ -837,7 +807,7 @@
       return;
     }
     task.deletedAt = new Date().toISOString();
-    state.page = 1;
+    state.offset = 0;
     trackAnalytics('prototype_task_soft_deleted', { task_id: task.id });
     showToast(t('toastTaskSoftDeleted'));
     render();
@@ -879,30 +849,42 @@
     var tr = document.createElement('tr');
     tr.setAttribute('tabindex', '0');
     tr.setAttribute('role', 'button');
+    tr.dataset.sourceFile = task.sourceFile || '';
 
     var statusInfo = I18N[state.lang].statusBadge;
     var runInfo = I18N[state.lang].runBadge;
-    var typeInfo = I18N[state.lang].taskTypeLabel || {};
     var taskName = state.lang === 'en' ? task.nameEn : task.nameZh;
     var runStage = getTaskRunStage(task);
     var statusLabel = statusInfo[task.status] || task.status;
     var runLabel = runInfo[runStage] || runStage;
-    var typeLabel = typeInfo[task.taskType] || task.taskType;
     var statusCls = STATUS_BADGE_CLS[task.status] || 'badge-draft';
     var runCls = RUN_BADGE_CLS[runStage] || 'badge-run-dry';
-    var typeCls = TASK_TYPE_BADGE_CLS[task.taskType] || 'badge-task-type-default';
+    var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
+    var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
 
     // Task name cell
     var tdName = document.createElement('td');
     tdName.className = 'task-name-cell';
     tdName.textContent = taskName;
 
-    // Task type cell
+    // Output types cell
     var tdType = document.createElement('td');
-    var spanType = document.createElement('span');
-    spanType.className = 'badge ' + typeCls;
-    spanType.textContent = typeLabel;
-    tdType.appendChild(spanType);
+    tdType.className = 'output-type-cell';
+    var outputTypeTags = document.createElement('div');
+    outputTypeTags.className = 'output-type-tags';
+    outputTypeTags.setAttribute('role', 'group');
+    outputTypeTags.setAttribute(
+      'aria-label',
+      t('outputTypeGroupAriaTpl').replace('{types}', outputTypeLabels.join(', '))
+    );
+    outputTypeKeys.forEach(function (outputType, index) {
+      var meta = getOutputTypeMeta(outputType);
+      var outputTypeTag = document.createElement('span');
+      outputTypeTag.className = 'badge output-type-tag ' + (meta && meta.badgeClass ? meta.badgeClass : 'badge-task-type-default');
+      outputTypeTag.textContent = outputTypeLabels[index];
+      outputTypeTags.appendChild(outputTypeTag);
+    });
+    tdType.appendChild(outputTypeTags);
 
     // Run type cell
     var tdRun = document.createElement('td');
@@ -1034,6 +1016,10 @@
     retryBtn.type = 'button';
     retryBtn.textContent = t('errorRetryLabel');
     retryBtn.addEventListener('click', function () {
+      if (!TASK_LIST_DATA_READY) {
+        window.location.reload();
+        return;
+      }
       state.loadFailed = false;
       render();
     });
@@ -1050,15 +1036,17 @@
   function render() {
     var filtered = state.loadFailed ? [] : getFilteredTasks();
     var total = filtered.length;
-    var totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
+    var totalPages = Math.max(1, Math.ceil(total / state.limit));
+    var lastPageOffset = Math.max(0, (totalPages - 1) * state.limit);
+    if (state.offset > lastPageOffset) state.offset = lastPageOffset;
+    var currentPage = Math.floor(state.offset / state.limit) + 1;
 
     var tableWrap = document.getElementById('tableWrap');
     var paginationBar = document.getElementById('paginationBar');
     var tbody = document.getElementById('taskTableBody');
 
-    var showEmpty = total === 0 && !state.keyword && !state.taskType && !state.runType && !state.status;
-    var showNoResults = total === 0 && (state.keyword || state.taskType || state.runType || state.status);
+    var showEmpty = total === 0 && !state.keyword && !state.outputType && !state.runType && !state.status;
+    var showNoResults = total === 0 && (state.keyword || state.outputType || state.runType || state.status);
 
     if (state.loadFailed) {
       tableWrap.classList.remove('hidden');
@@ -1080,7 +1068,7 @@
       paginationBar.classList.remove('hidden');
 
       // Build rows using DOM methods
-      var paged = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      var paged = filtered.slice(state.offset, state.offset + state.limit);
       while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
       paged.forEach(function(task) { tbody.appendChild(createTaskRow(task)); });
     }
@@ -1091,7 +1079,7 @@
       'paginationInfo',
       infoTpl
         .replace('{total}', total)
-        .replace('{page}', state.page)
+        .replace('{page}', currentPage)
         .replace('{totalPages}', totalPages)
     );
 
@@ -1102,30 +1090,34 @@
     });
 
     // Prev/Next buttons
-    document.getElementById('prevPageBtn').disabled = state.page <= 1;
-    document.getElementById('nextPageBtn').disabled = state.page >= totalPages;
+    document.getElementById('prevPageBtn').disabled = state.offset <= 0;
+    document.getElementById('nextPageBtn').disabled = state.offset + state.limit >= total;
 
     // Numbered page buttons
     var controls = document.getElementById('paginationControls');
     var nextBtn = document.getElementById('nextPageBtn');
     controls.querySelectorAll('[data-page]').forEach(function(b) { b.remove(); });
     var maxVisible = 5;
-    var startP = Math.max(1, state.page - 2);
+    var startP = Math.max(1, currentPage - 2);
     var endP = Math.min(totalPages, startP + maxVisible - 1);
     if (endP - startP < maxVisible - 1) startP = Math.max(1, endP - maxVisible + 1);
     for (var p = startP; p <= endP; p++) {
       (function(pg) {
         var btn = document.createElement('button');
-        btn.className = 'page-btn' + (pg === state.page ? ' active' : '');
+        btn.className = 'page-btn' + (pg === currentPage ? ' active' : '');
         btn.dataset.page = pg;
         btn.textContent = pg;
-        btn.addEventListener('click', function() { state.page = pg; syncUrl(); render(); });
+        btn.addEventListener('click', function() {
+          state.offset = (pg - 1) * state.limit;
+          syncUrl();
+          render();
+        });
         nextBtn.insertAdjacentElement('beforebegin', btn);
       }(p));
     }
 
     // Clear filter button
-    var hasFilter = state.keyword.trim() || state.taskType || state.runType || state.status;
+    var hasFilter = state.keyword.trim() || state.outputType || state.runType || state.status;
     document.getElementById('clearFiltersBtn').classList.toggle('hide-clear', !hasFilter);
 
     // Admin nav
@@ -1161,17 +1153,22 @@
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
     document.getElementById('searchInput').setAttribute('aria-label', t('searchAriaLabel'));
     document.getElementById('searchInput').value = state.keyword;
-    document.getElementById('pageSizeSelect').value = String(state.pageSize);
+    document.getElementById('pageSizeSelect').value = String(state.limit);
 
-    var typeSel = document.getElementById('taskTypeFilter');
-    var typeOpts = t('taskTypeOptions');
-    while (typeSel.firstChild) typeSel.removeChild(typeSel.firstChild);
-    typeOpts.forEach(function(o) {
+    var outputTypeSel = document.getElementById('outputTypeFilter');
+    outputTypeSel.setAttribute('aria-label', t('outputTypeFilterAria'));
+    while (outputTypeSel.firstChild) outputTypeSel.removeChild(outputTypeSel.firstChild);
+    var allOutputTypesOption = document.createElement('option');
+    allOutputTypesOption.value = '';
+    allOutputTypesOption.textContent = t('allOutputTypes');
+    allOutputTypesOption.selected = !state.outputType;
+    outputTypeSel.appendChild(allOutputTypesOption);
+    OUTPUT_TYPES.forEach(function(outputType) {
       var opt = document.createElement('option');
-      opt.value = o.value;
-      opt.textContent = o.label;
-      if (o.value === state.taskType) opt.selected = true;
-      typeSel.appendChild(opt);
+      opt.value = outputType.key;
+      opt.textContent = state.lang === 'en' ? outputType.en : outputType.zh;
+      if (outputType.key === state.outputType) opt.selected = true;
+      outputTypeSel.appendChild(opt);
     });
 
     var runSel = document.getElementById('runTypeFilter');
@@ -1229,38 +1226,38 @@
 
   document.getElementById('searchInput').addEventListener('input', function(e) {
     state.keyword = e.target.value;
-    state.page = 1;
+    state.offset = 0;
     trackAnalytics('prototype_task_list_search_changed', { keyword: state.keyword });
     render();
   });
 
-  document.getElementById('taskTypeFilter').addEventListener('change', function(e) {
-    state.taskType = e.target.value;
-    state.page = 1;
-    trackAnalytics('prototype_task_list_filter_changed', { filter: 'task_type', value: state.taskType || '__all__' });
+  document.getElementById('outputTypeFilter').addEventListener('change', function(e) {
+    state.outputType = e.target.value;
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_filter_changed', { filter: 'output_type', value: state.outputType || '__all__' });
     render();
   });
 
   document.getElementById('runTypeFilter').addEventListener('change', function(e) {
     state.runType = e.target.value;
-    state.page = 1;
+    state.offset = 0;
     trackAnalytics('prototype_task_list_filter_changed', { filter: 'run_stage', value: state.runType || '__all__' });
     render();
   });
 
   document.getElementById('statusFilter').addEventListener('change', function(e) {
     state.status = e.target.value;
-    state.page = 1;
+    state.offset = 0;
     trackAnalytics('prototype_task_list_filter_changed', { filter: 'status', value: state.status || '__all__' });
     render();
   });
 
   function clearFilters() {
     state.keyword = '';
-    state.taskType = '';
+    state.outputType = '';
     state.runType = '';
     state.status = '';
-    state.page = 1;
+    state.offset = 0;
     document.getElementById('searchInput').value = '';
     trackAnalytics('prototype_task_list_filters_cleared');
     applyLang(state.lang);
@@ -1273,26 +1270,33 @@
   });
 
   document.getElementById('prevPageBtn').addEventListener('click', function() {
-    if (state.page > 1) {
-      state.page--;
-      trackAnalytics('prototype_task_list_page_changed', { source: 'prev', to_page: state.page });
+    if (state.offset > 0) {
+      state.offset = Math.max(0, state.offset - state.limit);
+      trackAnalytics('prototype_task_list_page_changed', {
+        source: 'prev',
+        to_page: Math.floor(state.offset / state.limit) + 1,
+        offset: state.offset,
+      });
       render();
     }
   });
   document.getElementById('nextPageBtn').addEventListener('click', function() {
     var total = getFilteredTasks().length;
-    var totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-    if (state.page < totalPages) {
-      state.page++;
-      trackAnalytics('prototype_task_list_page_changed', { source: 'next', to_page: state.page });
+    if (state.offset + state.limit < total) {
+      state.offset += state.limit;
+      trackAnalytics('prototype_task_list_page_changed', {
+        source: 'next',
+        to_page: Math.floor(state.offset / state.limit) + 1,
+        offset: state.offset,
+      });
       render();
     }
   });
 
   document.getElementById('pageSizeSelect').addEventListener('change', function(e) {
-    state.pageSize = parseInt(e.target.value, 10);
-    state.page = 1;
-    trackAnalytics('prototype_task_list_page_size_changed', { page_size: state.pageSize });
+    state.limit = parseInt(e.target.value, 10);
+    state.offset = 0;
+    trackAnalytics('prototype_task_list_limit_changed', { limit: state.limit, offset: state.offset });
     render();
   });
 
@@ -1324,25 +1328,27 @@
       loadCreatedTaskSeed();
     }
     var keyword = q.get('keyword');
-    var taskType = q.get('task_type');
+    var outputType = q.get('output_type');
     var runStage = q.get('run_stage');
     var status = q.get('status');
-    var page = parseInt(q.get('page') || '', 10);
-    var pageSize = parseInt(q.get('page_size') || '', 10);
+    var limitQuery = q.get('limit');
+    var offsetQuery = q.get('offset');
+    var limit = limitQuery !== null && /^\d+$/.test(limitQuery) ? Number(limitQuery) : NaN;
+    var offset = offsetQuery !== null && /^\d+$/.test(offsetQuery) ? Number(offsetQuery) : NaN;
     pageTaskRole = taskRole;
-    var validTaskTypes = I18N.zh.taskTypeOptions.map(function(item) { return item.value; });
+    var validOutputTypes = OUTPUT_TYPES.map(function(item) { return item.key; });
     var validRunStages = I18N.zh.runTypeOptions.map(function(item) { return item.value; });
     var validStatuses = I18N.zh.statusOptions.map(function(item) { return item.value; });
-    state.loadFailed = view === 'error';
+    state.loadFailed = view === 'error' || !TASK_LIST_DATA_READY;
     if (window.LabelSuiteSharedSidebar) {
       window.LabelSuiteSharedSidebar.setSystemRole(taskRole === 'super_admin' ? 'super_admin' : 'user');
     }
     if (keyword) state.keyword = keyword;
-    if (taskType && validTaskTypes.indexOf(taskType) !== -1) state.taskType = taskType;
+    if (outputType && validOutputTypes.indexOf(outputType) !== -1) state.outputType = outputType;
     if (runStage && validRunStages.indexOf(runStage) !== -1) state.runType = runStage;
     if (status && validStatuses.indexOf(status) !== -1) state.status = status;
-    if (!isNaN(page) && page > 0) state.page = page;
-    if (!isNaN(pageSize) && [20, 50, 100].indexOf(pageSize) !== -1) state.pageSize = pageSize;
+    if (!isNaN(limit) && [20, 50, 100].indexOf(limit) !== -1) state.limit = limit;
+    if (!isNaN(offset) && offset >= 0) state.offset = offset;
   }());
 
   if (window.LabelSuiteSharedSidebar) {
