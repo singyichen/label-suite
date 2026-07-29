@@ -239,21 +239,32 @@ test.describe('Dashboard output-type task summaries', () => {
         ),
       )).toBe(true);
 
-      const lastTask = page.locator(
-        `#${ROLE_EXPECTATIONS[role].listId} `
-        + '[data-example-task-id="T013"]',
-      );
-      const [response] = await Promise.all([
-        page.waitForNavigation(),
-        lastTask.getByRole('button').click(),
-      ]);
-      expect(response?.status()).toBe(200);
-      await expect(page).toHaveURL(
-        new RegExp(`role=${role}.*task_type=relation_extraction`),
-      );
-      await expect(page).toHaveURL(
-        new RegExp(`task_id=TASK-015-${role === 'annotator' ? 'A' : 'R'}13`),
-      );
+      for (const entry of entries) {
+        const query = new URLSearchParams({
+          task_id: entry.navigationTaskId,
+          sample_id: entry.latestUnfinishedSampleId,
+          role,
+          run_type: entry.runType,
+          task_type: entry.annotationTaskType,
+        });
+        if (entry.subType) query.set('sub_type', entry.subType);
+
+        const response = await page.goto(
+          `/pages/annotation/annotation-workspace.html?${query.toString()}`,
+        );
+        expect(response?.status()).toBe(200);
+        const activeSampleId = await page.evaluate(() => {
+          const runtime = window as unknown as {
+            SAMPLES: Array<{ sampleId: string }>;
+            state: { currentIdx: number };
+          };
+          return runtime.SAMPLES[runtime.state.currentIdx]?.sampleId;
+        });
+        expect(activeSampleId).toBe(entry.latestUnfinishedSampleId);
+        await expect(
+          page.locator('#sampleList .sample-item.active .sample-status-label'),
+        ).not.toHaveText(/已提交|Submitted/);
+      }
     });
   }
 
