@@ -45,14 +45,28 @@ const ROLE_EXPECTATIONS = {
   annotator: {
     testId: 'annotator-view',
     listId: 'annotatorTaskList',
-    taskIds: ['T003', 'T005', 'T006', 'T007', 'T010', 'T011'],
+    taskIds: [
+      'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
+      'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
+    ],
   },
   reviewer: {
     testId: 'reviewer-view',
     listId: 'reviewerTaskList',
-    taskIds: ['T003', 'T005', 'T006', 'T007', 'T010', 'T011'],
+    taskIds: [
+      'T001', 'T002', 'T003', 'T004', 'T005', 'T006', 'T007',
+      'T008', 'T009', 'T010', 'T011', 'T012', 'T013',
+    ],
   },
 } as const;
+
+const ANNOTATION_ROUTE_TYPES = [
+  'single_sentence_classification',
+  'single_sentence_va_scoring',
+  'sequence_labeling',
+  'relation_extraction',
+  'sentence_pairs',
+] as const;
 
 type LocalizedText = {
   zh: string;
@@ -80,6 +94,7 @@ type DashboardRoleTask = {
   statusText: LocalizedText;
   statusClass: string;
   actionText: LocalizedText;
+  subType?: string;
 };
 
 type DashboardWindow = Window & {
@@ -201,6 +216,46 @@ test.describe('Dashboard output-type task summaries', () => {
       '輸出類型：實體辨識、關係識別',
     );
   });
+
+  for (const role of ['annotator', 'reviewer'] as const) {
+    test(`${role} exposes all 13 tasks with independent workspace routes`, async ({
+      page,
+    }) => {
+      await openScenario(page, role);
+
+      const entries = await page.evaluate((roleKey) => {
+        const dashboardWindow = window as unknown as DashboardWindow;
+        return dashboardWindow.LabelSuiteDashboard.data.roleLists[roleKey];
+      }, role);
+      expect(entries.map((entry) => entry.exampleTaskId)).toEqual(
+        ROLE_EXPECTATIONS[role].taskIds,
+      );
+      expect(new Set(entries.map((entry) => entry.navigationTaskId)).size)
+        .toBe(13);
+      expect(entries.every((entry) =>
+        Boolean(entry.latestUnfinishedSampleId)
+        && ANNOTATION_ROUTE_TYPES.includes(
+          entry.annotationTaskType as (typeof ANNOTATION_ROUTE_TYPES)[number],
+        ),
+      )).toBe(true);
+
+      const lastTask = page.locator(
+        `#${ROLE_EXPECTATIONS[role].listId} `
+        + '[data-example-task-id="T013"]',
+      );
+      const [response] = await Promise.all([
+        page.waitForNavigation(),
+        lastTask.getByRole('button').click(),
+      ]);
+      expect(response?.status()).toBe(200);
+      await expect(page).toHaveURL(
+        new RegExp(`role=${role}.*task_type=relation_extraction`),
+      );
+      await expect(page).toHaveURL(
+        new RegExp(`task_id=TASK-015-${role === 'annotator' ? 'A' : 'R'}13`),
+      );
+    });
+  }
 
   test('translates output tags without changing annotation routing metadata', async ({
     page,

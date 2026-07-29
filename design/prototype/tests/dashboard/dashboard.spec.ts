@@ -100,7 +100,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(annotatorView.getByText(/已完成 76% · 今日 18 筆 · 平均速度 4.2/)).toBeVisible();
     await expect(annotatorView.getByText(/試標|Dry Run/).first()).toBeVisible();
     await expect(annotatorView.getByText(/正式標記|Official Run/).first()).toBeVisible();
-    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(6);
+    await expect(annotatorView.getByRole('button', { name: /快速繼續|Continue/ })).toHaveCount(13);
   });
 
   test('annotator output tags use registry colors and preserve composite outputs', async ({ page }) => {
@@ -141,7 +141,7 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(reviewerView.getByText('醫療翻譯品質多維度評分')).toBeVisible();
     await expect(reviewerView.getByText(/待審 12 筆 · 進度 18% · IAA 0.81/)).toBeVisible();
     await expect(reviewerView.getByText(/待審 8 筆 · 進度 76% · IAA 0.78/)).toBeVisible();
-    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(6);
+    await expect(reviewerView.getByRole('button', { name: /快速審核|Quick Review/ })).toHaveCount(13);
   });
 
   test('annotator quick continue routes to workspace first non-submitted sample', async ({ page }) => {
@@ -150,8 +150,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await firstContinueButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
-    await expect(page).toHaveURL(/sample_id=A1-002/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A7/);
+    await expect(page).toHaveURL(/sample_id=SL-002/);
     await expect(page).toHaveURL(/run_type=official_run/);
   });
 
@@ -162,7 +162,7 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
+    await expect(page).toHaveURL(/task_id=TASK-015-A7/);
     await expect(page).toHaveURL(/task_type=single_sentence_classification/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).not.toHaveURL(/sample_id=/);
@@ -174,8 +174,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     await firstReviewButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
-    await expect(page).toHaveURL(/task_id=TASK-015-R1/);
-    await expect(page).toHaveURL(/sample_id=R1-001/);
+    await expect(page).toHaveURL(/task_id=TASK-015-R7/);
+    await expect(page).toHaveURL(/sample_id=SL-R001/);
     await expect(page).toHaveURL(/run_type=official_run/);
 
     const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
@@ -218,7 +218,7 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
-    await expect(page).toHaveURL(/task_id=TASK-015-R1/);
+    await expect(page).toHaveURL(/task_id=TASK-015-R7/);
     await expect(page).toHaveURL(/task_type=single_sentence_classification/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).not.toHaveURL(/sample_id=/);
