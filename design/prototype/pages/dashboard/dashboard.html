@@ -418,21 +418,36 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
-  <script src="./dashboard.data.js"></script>
   <script>
     (function loadDashboardRuntime() {
-      var sources = ["./dashboard.i18n.js", "./dashboard.js"];
+      var sources = [
+        "./dashboard.data.js",
+        "./dashboard.i18n.js",
+        "./dashboard.js"
+      ];
 
       function loadNext(index, attempt) {
         if (index >= sources.length) return;
         var script = document.createElement("script");
-        script.src = sources[index];
-        script.onload = function () { loadNext(index + 1, 0); };
+        var settled = false;
+        script.src = sources[index] + (attempt ? "?retry=" + attempt : "");
+        var timeoutId = window.setTimeout(function () {
+          if (settled) return;
+          settled = true;
+          script.remove();
+          if (attempt < 3) loadNext(index, attempt + 1);
+        }, 1500);
+        script.onload = function () {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          loadNext(index + 1, 0);
+        };
         script.onerror = function () {
-          if (attempt >= 2) return;
-          window.setTimeout(function () {
-            loadNext(index, attempt + 1);
-          }, 100);
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          if (attempt < 3) loadNext(index, attempt + 1);
         };
         document.body.appendChild(script);
       }
