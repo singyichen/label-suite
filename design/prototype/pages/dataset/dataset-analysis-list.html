@@ -227,10 +227,6 @@
     .empty-row:hover { background: transparent !important; }
     .empty-row-cell { padding: 48px 20px !important; }
     .empty-row-wrap { text-align: center; max-width: 420px; margin: 0 auto; }
-    .empty-icon {
-      width: 48px; height: 48px; margin: 0 auto 16px;
-      color: var(--color-ink-muted);
-    }
     .empty-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
     .empty-desc { font-size: 14px; color: var(--color-text-soft); margin: 0; }
 
@@ -406,27 +402,9 @@
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
   <script src="./dataset-analysis-list.data.js"></script>
-  <script>
-    (function loadDatasetAnalysisRuntime() {
-      var sources = [
-        './dataset-analysis-list.i18n.js',
-        './dataset-analysis-list.model.js',
-        './dataset-analysis-list.view.js',
-        './dataset-analysis-list.js',
-      ];
-
-      function loadNext(index) {
-        if (index >= sources.length) return;
-        var script = document.createElement('script');
-        script.src = sources[index];
-        script.onload = function () {
-          loadNext(index + 1);
-        };
-        document.body.appendChild(script);
-      }
-
-      loadNext(0);
-    }());
-  </script>
+  <script src="./dataset-analysis-list.i18n.js"></script>
+  <script src="./dataset-analysis-list.model.js"></script>
+  <script src="./dataset-analysis-list.view.js"></script>
+  <script src="./dataset-analysis-list.js"></script>
 </body>
 </html>

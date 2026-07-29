@@ -1,5 +1,5 @@
 ---
-功能分支: feat/task-output-type-list
+功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
 版本: 2.0.0
 狀態: In Progress
