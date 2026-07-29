@@ -45,7 +45,12 @@ test.describe('Dashboard page — scenario rendering', () => {
     await expect(leaderView.getByText(/審核員A · 8 位標記員 · 已完成 18%/)).toBeVisible();
     await expect(leaderView.getByText(/審核員B · 6 位標記員 · 已完成 64%/)).toBeVisible();
     await expect(leaderView.getByText('多標籤')).toBeVisible();
-    await expect(leaderView.getByText('實體辨識')).toBeVisible();
+    await expect(
+      leaderView
+        .locator('.output-type-tag')
+        .filter({ hasText: '實體辨識' })
+        .first(),
+    ).toBeVisible();
     await expect(leaderView.locator('.progress')).toHaveCount(3);
   });
 
