@@ -418,43 +418,9 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
-  <script>
-    (function loadDashboardRuntime() {
-      var sources = [
-        "./dashboard.data.js",
-        "./dashboard.assignments.js",
-        "./dashboard.i18n.js",
-        "./dashboard.js"
-      ];
-
-      function loadNext(index, attempt) {
-        if (index >= sources.length) return;
-        var script = document.createElement("script");
-        var settled = false;
-        script.src = sources[index] + (attempt ? "?retry=" + attempt : "");
-        var timeoutId = window.setTimeout(function () {
-          if (settled) return;
-          settled = true;
-          script.remove();
-          if (attempt < 3) loadNext(index, attempt + 1);
-        }, 1500);
-        script.onload = function () {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeoutId);
-          loadNext(index + 1, 0);
-        };
-        script.onerror = function () {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeoutId);
-          if (attempt < 3) loadNext(index, attempt + 1);
-        };
-        document.body.appendChild(script);
-      }
-
-      loadNext(0, 0);
-    }());
-  </script>
+  <script src="./dashboard.data.js"></script>
+  <script src="./dashboard.assignments.js"></script>
+  <script src="./dashboard.i18n.js"></script>
+  <script src="./dashboard.js"></script>
 </body>
 </html>

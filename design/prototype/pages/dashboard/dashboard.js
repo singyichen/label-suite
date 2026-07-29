@@ -3,6 +3,9 @@
 
   var dashboard = global.LabelSuiteDashboard;
   if (!dashboard || !dashboard.data || !dashboard.i18n) return;
+  if (!dashboard.data.roleLists
+    || !dashboard.data.roleLists.annotator
+    || !dashboard.data.roleLists.reviewer) return;
 
   var data = dashboard.data;
   var i18n = dashboard.i18n;
@@ -95,12 +98,9 @@
         + escapeHtml(label)
         + '</span>';
     }).join('');
+    var typeSeparator = lang === 'en' ? ', ' : '、';
     var ariaLabel = t('outputTypeGroupAriaTpl')
-      .replace('{types}', labels.join('、'));
-    if (lang === 'en') {
-      ariaLabel = t('outputTypeGroupAriaTpl')
-        .replace('{types}', labels.join(', '));
-    }
+      .replace('{types}', labels.join(typeSeparator));
     return '<div class="output-type-tags" role="group" aria-label="'
       + escapeHtml(ariaLabel)
       + '">'
@@ -496,7 +496,6 @@
         pill.disabled = false;
       }
     );
-    document.documentElement.dataset.dashboardReady = 'true';
   }
 
   dashboard.renderTaskLists = renderTaskLists;

@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-output-type-list
+功能分支: feat/dashboard-output-types
 建立日期: 2026-04-05
-版本: 2.0.1
+版本: 2.0.2
 狀態: In Progress
 ---
 
@@ -473,6 +473,8 @@ flowchart LR
 
 > **v2.0.0 同步界線**：本版只同步 Dashboard 任務摘要對 `outputs[].type` 的顯示消費；014 Task Detail 與 015 Annotation Workspace 仍保留既有 consumer／routing 契約，`task_type` 僅是獨立 legacy routing compatibility 欄位，不得由輸出 tag 推導，也不得據此宣稱任意輸出組合已可進入正式工作區。
 
+> **v2.0.2 過渡性相容寫入**：Dashboard 導向標記／審核頁前仍寫入 legacy `localStorage` 鍵 `labelsuite.activeTaskType`（值取自各任務的獨立 `task_type` compatibility 欄位），因為 `annotation-list`、`annotation-workspace` 與 shared sidebar 在 014／015 遷移前仍讀取該鍵。010 Task List v2.0.0 已移除該頁的寫入路徑，Dashboard 是目前唯一寫入者；此為 static annotation prototype 的過渡性相容路徑，014／015 完成 `outputs[]` 遷移後應一併移除。
+
 ## 成功標準 *(必填)*
 
 - **SC-001**：`super_admin` 與 `user` 可正確進入對應 Dashboard 類型。
@@ -511,6 +513,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.2 | 2026-07-29 | **記錄 legacy `labelsuite.activeTaskType` 過渡寫入**：明確 Dashboard 為該 `localStorage` 鍵目前唯一寫入者（010 v2.0.0 已移除其寫入），值僅取自獨立 `task_type` compatibility 欄位、不得由 `outputs[]` 推導；014／015 遷移完成後一併移除。 |
 | 2.0.1 | 2026-07-29 | **補齊 Annotator／Reviewer 的 13 任務導頁基線**：兩個 prototype 場景皆依 T001–T013 呈現完整安全摘要，每筆保留獨立 task／sample／compatibility route 並可進入對應角色介面；正式產品的 membership 權限與任務數量不受 13 筆示例限制。 |
 | 2.0.0 | 2026-07-29 | **Dashboard 任務摘要遷移至可組合輸出類型**：四種有任務角色的列表改由 `outputs[].type` 依序顯示一至多個 registry-driven tag，涵蓋 8 個合法 key、複合輸出、zh/en、可存取名稱與手機換行；13 筆 fixture 僅為安全 summary metadata 的 prototype 基線，新增第 14 筆任意合法組合泛化與答案資料不外露驗收。014／015 consumer 仍延後，legacy `task_type` 僅保留為獨立 routing compatibility 欄位。 |
 | 1.3.34 | 2026-05-22 | 修正流程圖多角色優先順序：sequenceDiagram 中 reviewer/annotator else 分支順序與文字規則不符，調整為 project_leader > reviewer > annotator；更新 FR-018 與 SC-017 Skeleton 描述為更泛用的「主要內容區域」，避免 General User Dashboard（無指標卡/任務列表）造成誤導 |
