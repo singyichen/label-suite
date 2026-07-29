@@ -21,8 +21,13 @@ const EXAMPLE_SOURCE_FILES = [
 type TaskProfile = {
   id: string;
   name: string;
-  listName?: string;
-  type: string;
+  categories: string[];
+  categoryLabels: string[];
+  inputType: string;
+  inputTypeLabel: string;
+  outputTypes: string[];
+  outputLabels: string[];
+  fieldRoleMap: Record<string, string>;
   datasetSummary: string;
   listStatus: string;
   detailStatus: string;
@@ -41,9 +46,15 @@ type TaskProfile = {
 const TASK_PROFILES: TaskProfile[] = [
   {
     id: 'T001',
-    name: '新聞標題多標籤分類',
-    type: '單句分類（含多標籤）',
-    datasetSummary: '3200 筆',
+    name: '醫療文本情感分類',
+    categories: ['classification'],
+    categoryLabels: ['分類（Classification）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['single_label'],
+    outputLabels: ['單一標籤'],
+    fieldRoleMap: { text: 'input', gold_label: 'output' },
+    datasetSummary: '5 筆',
     listStatus: '草稿',
     detailStatus: '草稿',
     editable: true,
@@ -53,33 +64,44 @@ const TASK_PROFILES: TaskProfile[] = [
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
     },
-    settings: ['標籤清單', '政治, 社會, 娛樂, 體育, 科技', '允許多選', '是'],
-    editPreview: ['政治', '社會', '娛樂', '體育', '科技'],
+    settings: ['標籤選項', 'positive, neutral, negative', '允許無法判定 (Bypass)', '是'],
+    editPreview: ['單一標籤', '標籤選項', '允許無法判定 (Bypass)'],
   },
   {
     id: 'T002',
-    name: '情感 VA 雙維度評分',
-    type: '單句 VA 雙維度評分（Valence / Arousal）',
-    datasetSummary: '1280 筆',
-    listStatus: '待 IAA 確認',
-    detailStatus: '待 IAA 確認',
-    editable: false,
+    name: '癌症歷程情緒多標籤分類',
+    categories: ['classification'],
+    categoryLabels: ['分類（Classification）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['multi_label'],
+    outputLabels: ['多標籤'],
+    fieldRoleMap: { text: 'input', gold_labels: 'output' },
+    datasetSummary: '5 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
     runControl: {
-      activeStepLabel: '試標階段',
-      roundCount: 2,
-      actionButton: '#publishOfficialRunBtn',
-      actionText: '開始正式標記',
-      absentButton: '#publishDryRunBtn',
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+      absentButton: '#publishOfficialRunBtn',
     },
-    settings: ['Valence', '1 ~ 9', 'Arousal', '1 ~ 9'],
-    editPreview: ['Valence 評分', 'Arousal 評分'],
+    settings: ['標籤選項', 'happy, sad, angry, surprise, fear, disgust', '最多可選數量（0 = 不限）', '3'],
+    editPreview: ['多標籤', '標籤選項'],
   },
   {
     id: 'T003',
-    name: '產品評論 Aspect List 抽取／校正',
-    listName: '產品評論序列標記（NER / Aspect）',
-    type: '序列標記（含 Aspect / NER）',
-    datasetSummary: '860 筆',
+    name: '病患情緒與照護情境階層分類',
+    categories: ['classification'],
+    categoryLabels: ['分類（Classification）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['multi_label'],
+    outputLabels: ['多標籤'],
+    fieldRoleMap: { text: 'input', gold_labels: 'output' },
+    datasetSummary: '5 筆',
     listStatus: '草稿',
     detailStatus: '草稿',
     editable: true,
@@ -89,14 +111,20 @@ const TASK_PROFILES: TaskProfile[] = [
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
     },
-    settings: ['子類型', 'Aspect List 抽取／校正', '輸入欄位名稱', 'sentence', '輸出欄位名稱', 'aspects'],
-    editPreview: ['欄位對應', 'Aspect 編輯規則', '數量限制', 'Aspect List'],
+    settings: ['標籤選項', '情緒, 負向, 悲傷, 焦慮, 正向, 有盼望', '照護情境, 臨床處置, 緊急, 溝通, 需要說明'],
+    editPreview: ['多標籤', '標籤選項'],
   },
   {
     id: 'T004',
-    name: '醫療關係抽取（Entity / Triple）',
-    type: '關係抽取（Entity + Relation + Triple）',
-    datasetSummary: '1420 筆',
+    name: '醫療文本可讀性評分',
+    categories: ['regression'],
+    categoryLabels: ['回歸（Regression）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['single_dim'],
+    outputLabels: ['單維度'],
+    fieldRoleMap: { text: 'input', gold_score: 'output' },
+    datasetSummary: '5 筆',
     listStatus: '草稿',
     detailStatus: '草稿',
     editable: true,
@@ -106,14 +134,20 @@ const TASK_PROFILES: TaskProfile[] = [
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
     },
-    settings: ['實體類型', 'DRUG, DISEASE, SYMPTOM', '關係類型', 'treats, causes, indicates'],
-    editPreview: ['treats', 'causes', 'indicates', 'triple'],
+    settings: ['維度名稱', 'readability', '最小值', '最大值', '間距'],
+    editPreview: ['單維度', '維度名稱'],
   },
   {
     id: 'T005',
-    name: '句對相似度 / 蘊含判定',
-    type: '句對任務（相似度 / 蘊含）',
-    datasetSummary: '2100 筆',
+    name: '醫療翻譯品質多維度評分',
+    categories: ['regression'],
+    categoryLabels: ['回歸（Regression）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['multi_dim'],
+    outputLabels: ['多維度'],
+    fieldRoleMap: { source: 'input', gold_scores: 'output' },
+    datasetSummary: '5 筆',
     listStatus: '草稿',
     detailStatus: '草稿',
     editable: true,
@@ -122,15 +156,22 @@ const TASK_PROFILES: TaskProfile[] = [
       roundCount: 0,
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
+      absentButton: '#publishCompleteBtn',
     },
-    settings: ['關係標籤', '蘊含, 矛盾, 中立'],
-    editPreview: ['句子 A', '句子 B', '蘊含', '矛盾'],
+    settings: ['維度設定', 'fluency 1–5 / 1', 'adequacy 1–5 / 1', 'coherence 1–5 / 1'],
+    editPreview: ['多維度', '維度設定'],
   },
   {
     id: 'T006',
-    name: 'NER 命名實體辨識',
-    type: '序列標記（含 Aspect / NER）',
-    datasetSummary: '950 筆',
+    name: '新聞命名實體序列標註',
+    categories: ['sequence'],
+    categoryLabels: ['序列（Sequence）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['sequence_tagging'],
+    outputLabels: ['序列標註'],
+    fieldRoleMap: { text: 'input', pre_tags: 'output' },
+    datasetSummary: '4 筆',
     listStatus: '草稿',
     detailStatus: '草稿',
     editable: true,
@@ -140,8 +181,8 @@ const TASK_PROFILES: TaskProfile[] = [
       actionButton: '#publishDryRunBtn',
       actionText: '新增試標回合 R1',
     },
-    settings: ['子類型', 'NER 命名實體辨識', '實體類型', 'PER, ORG, LOC'],
-    editPreview: ['PER', 'ORG', 'LOC', 'IOB2'],
+    settings: ['標記單位', 'character', '標籤類型', 'PER, ORG, LOC, TIME', '標記方案', 'BIO'],
+    editPreview: ['序列標註', '標記單位', '標籤類型', '標記方案'],
   },
 ];
 
@@ -149,51 +190,71 @@ const RUN_CONTROL_TASKS: TaskProfile[] = [
   ...TASK_PROFILES,
   {
     id: 'T007',
-    name: '商品評論分類 v2',
-    type: '單句分類（含多標籤）',
-    datasetSummary: '1750 筆',
-    listStatus: '正式標記中',
-    detailStatus: '正式標記進行中',
-    editable: false,
+    name: '產品評論觀點實體辨識',
+    categories: ['sequence'],
+    categoryLabels: ['序列（Sequence）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['entity_recognition'],
+    outputLabels: ['實體辨識'],
+    fieldRoleMap: { text: 'input', gold_entities: 'output' },
+    datasetSummary: '3 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
     runControl: {
-      activeStepLabel: '正式標記中',
-      roundCount: 1,
-      actionButton: '#publishCompleteBtn',
-      actionText: '標記完成',
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+      absentButton: '#publishCompleteBtn',
     },
     settings: [],
     editPreview: [],
   },
   {
     id: 'T009',
-    name: '對話意圖標記',
-    type: '單句分類（含多標籤）',
-    datasetSummary: '640 筆',
-    listStatus: '試標進行中',
-    detailStatus: '試標進行中',
-    editable: false,
+    name: '醫療文本摘要',
+    categories: ['generation'],
+    categoryLabels: ['生成（Generation）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['free_text'],
+    outputLabels: ['自由文字'],
+    fieldRoleMap: { reference: 'evidence', text: 'input', gold_answer: 'output' },
+    datasetSummary: '3 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
     runControl: {
-      activeStepLabel: '試標階段',
-      roundCount: 1,
+      activeStepLabel: '草稿',
+      roundCount: 0,
       actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R2',
+      actionText: '新增試標回合 R1',
     },
     settings: [],
     editPreview: [],
   },
   {
     id: 'T010',
-    name: '醫療文本 NER',
-    type: '序列標記（含 Aspect / NER）',
-    datasetSummary: '1800 筆',
-    listStatus: '已完成',
-    detailStatus: '已完成',
-    editable: false,
+    name: '醫療實體與關係辨識',
+    categories: ['sequence'],
+    categoryLabels: ['序列（Sequence）'],
+    inputType: 'single_item',
+    inputTypeLabel: '單一項目',
+    outputTypes: ['entity_recognition', 'relation_identification'],
+    outputLabels: ['實體辨識', '關係識別'],
+    fieldRoleMap: { text: 'input', entities: 'output', triples: 'output' },
+    datasetSummary: '3 筆',
+    listStatus: '草稿',
+    detailStatus: '草稿',
+    editable: true,
     runControl: {
-      activeStepLabel: '已完成',
-      roundCount: 1,
-      actionButton: '#publishActionRow',
-      actionText: '此狀態不提供發布操作。',
+      activeStepLabel: '草稿',
+      roundCount: 0,
+      actionButton: '#publishDryRunBtn',
+      actionText: '新增試標回合 R1',
+      absentButton: '#publishCompleteBtn',
     },
     settings: [],
     editPreview: [],
@@ -201,15 +262,15 @@ const RUN_CONTROL_TASKS: TaskProfile[] = [
 ];
 
 const EN_SETTINGS_BY_TASK: Record<string, string[]> = {
-  T001: ['Labels', 'Politics, Society, Entertainment, Sports, Technology', 'Allow multiple labels', 'Yes'],
-  T002: ['Valence', '1 ~ 9 (step 1)', 'Arousal', '1 ~ 9 (step 1)'],
-  T003: ['Subtype', 'Aspect List extraction / correction', 'Input field name', 'sentence', 'Aspect list field name', 'aspects'],
-  T004: ['Entity types', 'DRUG, DISEASE, SYMPTOM', 'Relation types', 'treats, causes, indicates'],
-  T005: ['Relation labels', 'Entailment, Contradiction, Neutral'],
-  T006: ['Subtype', 'NER (Named Entity Recognition)', 'Entity types', 'PER, ORG, LOC'],
-  T007: ['Labels', 'Positive, Neutral, Negative', 'Allow multiple labels', 'No'],
-  T009: ['Labels', 'Query, Application, Cancellation, Complaint', 'Allow multiple labels', 'No'],
-  T010: ['Subtype', 'NER (Named Entity Recognition)', 'Entity types', 'DRUG, DISEASE, SYMPTOM'],
+  T001: ['Label options', 'positive, neutral, negative', 'Allow bypass (unable to determine)', 'Yes'],
+  T002: ['Label options', 'happy, sad, angry, surprise, fear, disgust', 'Max selections (0 = unlimited)', '3'],
+  T003: ['Label options', 'Max selections (0 = unlimited)', '0', 'Allow bypass (unable to determine)'],
+  T004: ['Dimension name', 'readability', 'Min value', 'Max value', 'Step'],
+  T005: ['Dimension settings', 'fluency 1–5 / 1', 'adequacy 1–5 / 1', 'coherence 1–5 / 1'],
+  T006: ['Token unit', 'character', 'Label types', 'PER, ORG, LOC, TIME', 'Tagging scheme', 'BIO'],
+  T007: ['Entity types', 'target, aspect, opinion', 'Allow overlapping spans', 'No'],
+  T009: ['Input section instruction', 'Response section instruction', 'Max length', '256'],
+  T010: ['Entity Recognition', 'Relation Identification', 'BODY, DISE, SYMP, DRUG, EXAM, TREAT', 'Semantic relation types'],
 };
 
 test.describe('Task detail profile mapping', () => {
@@ -255,8 +316,32 @@ test.describe('Task detail profile mapping', () => {
 
       const overview = page.locator('#overviewPanel');
       await expect(overview).toContainText(task.name);
-      await expect(overview).toContainText(task.type);
       await expect(page.locator('#valueDatasetSummary')).toHaveText(task.datasetSummary);
+      await expect(page.getByTestId('task-selected-category')).toHaveText(task.categoryLabels);
+      await expect(page.getByTestId('task-input-type-value')).toHaveText(task.inputTypeLabel);
+      await expect(page.getByTestId('task-input-type-value')).toHaveAttribute(
+        'data-input-type',
+        task.inputType,
+      );
+      await expect(page.getByTestId('task-output-type-tag')).toHaveText(task.outputLabels);
+
+      const categoryKeys = await page
+        .getByTestId('task-selected-category')
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-category-key')));
+      expect(categoryKeys).toEqual(task.categories);
+
+      const outputKeys = await page
+        .getByTestId('task-output-type-tag')
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-output-key')));
+      expect(outputKeys).toEqual(task.outputTypes);
+
+      for (const [field, role] of Object.entries(task.fieldRoleMap)) {
+        await expect(
+          page.locator(
+            `[data-testid="field-role-summary-row"] [data-field-key="${field}"]`,
+          ),
+        ).toHaveAttribute('data-field-role', role);
+      }
 
       for (const text of task.settings) {
         await expect(page.locator('#settingsConfigView')).toContainText(text);
@@ -275,7 +360,14 @@ test.describe('Task detail profile mapping', () => {
       for (const text of expectedSettings) {
         await expect(page.locator('#settingsConfigView')).toContainText(text);
       }
-      await expect(page.locator('#settingsConfigView')).not.toContainText(/[政治社會娛樂體育科技蘊含矛盾好評普通差評查詢申請取消客訴]/);
+      const translatedLabels = await page.locator(
+        '#settingsConfigView .kv-dl-key, '
+        + '#settingsConfigView .task-config-output-title, '
+        + '#settingsConfigView .task-config-setting-label',
+      ).allInnerTexts();
+      expect(translatedLabels.join(' ')).not.toMatch(
+        /[標籤清單允許多選子類型欄位對應關係標籤實體類型標記格式]/,
+      );
     });
   }
 

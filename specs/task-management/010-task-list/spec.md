@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 2.0.1
+版本: 2.1.0
 狀態: In Progress
 ---
 
@@ -323,6 +323,8 @@ flowchart LR
 
 依 membership 語意套用單一輸出類型篩選時，這 13 筆示例的命中數必須為：`single_label = 2`、`multi_label = 2`、`single_dim = 1`、`multi_dim = 2`、`sequence_tagging = 1`、`entity_recognition = 3`、`relation_identification = 3`、`free_text = 2`。
 
+13 筆示例資料的 `status` 一律為 `draft`，讓 Project Leader 可直接從列表進入任務詳情並驗收草稿編輯流程（基本資料／標記設定同步 013 Step 1／Step 2）；`TASK_STATUS_ENUM` 其餘狀態值與其行為（run-control、僅 `draft` 可刪、僅 `draft` 可編輯）不因此改變，非 `draft` 情境改以注入示例或 URL `status` 覆寫驗收。
+
 ---
 
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
@@ -347,6 +349,8 @@ flowchart LR
 | 017 | Dataset Quality | 任務清單入口與 task context 導入 |
 
 > **v2.0.1 下游同步界線**：016 Dataset Analysis List 已同步 `outputs[].type` 的展示、搜尋、篩選與分頁契約；014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍有舊固定任務類型或未完成的 consumer contract，依既有產品決策延後同步。本版不得將 016 列表相容性延伸解讀為這些 detail／workspace consumer 已相容所有 `outputs[]` 組合。
+>
+> **v2.0.2 Task Detail Overview 同步界線**：014 Task Detail v2.0.0 的「任務概覽」基本資料與標記設定已直接消費 Step 1／Step 2 的 config-driven 契約，並以 ordered `outputs[]` 支援 13 筆示例與第 14 筆合法組合；013／014 不以任務 ID、名稱或 fixture 數量建立白名單。014 其他分頁及 results／export legacy consumer、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍維持延後，本版不得將 Overview 相容性延伸至這些 consumer。
 
 ---
 
@@ -404,6 +408,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.1.0 | 2026-07-29 | **示例資料狀態基線改為全 `draft`**：13 筆 prototype 示例任務的 `status` 一律為 `draft`，供 Project Leader 從列表直接驗收任務詳情的草稿編輯流程（同步 013 Step 1／Step 2）；`TASK_STATUS_ENUM`、run-control 與「僅 `draft` 可刪／可編輯」規則不變，非 `draft` 情境改以注入示例或 URL `status` 覆寫驗收。 |
+| 2.0.2 | 2026-07-29 | **同步 Task Detail Overview 相依界線**：014 v2.0.0 的基本資料與標記設定已同步 New Task Step 1／Step 2 的 config-driven 契約，支援 ordered `outputs[]`、13 筆非上限示例與第 14 筆合法組合；014 其他分頁及 results／export legacy consumer、015／017 仍維持延後。 |
 | 2.0.1 | 2026-07-29 | **同步 Dataset Analysis List 相依性**：016 列表已採用 `outputs[].type` 多 tag、8 類 membership 篩選、13 筆示例基線與 `limit`／`offset`；延後範圍收斂為 014／015／017，且不把列表相容性延伸至 detail／workspace consumer。 |
 | 2.0.0 | 2026-07-29 | **任務列表遷移至可組合輸出類型**：移除固定 `TASK_TYPE_ENUM`、`task_type` 篩選與 `labelsuite.activeTaskType` 單值快取契約；列表改以 `outputs[].type` 逐項呈現可換行、具文字與可存取名稱的 tag，篩選器由 `OUTPUT_TYPE_REGISTRY` 列出 8 個合法 key 並以 membership 語意比對。URL query 與分頁改為 `output_type`、`limit`、`offset`。加入 13 份 prototype 示例 fixture 的 mapping／命中數基線、複合 tag、14th-task 泛化與答案資料不外露驗收；13 筆僅為示例，不構成系統上限。014／015／016／017 consumer 同步維持延後。 |
 | 1.3.9 | 2026-05-22 | 釐清並同步 task-list 原型：刪除權限限 `project_leader` / `super_admin` 且僅 `draft` 可刪；搜尋 enum 比對 raw value 與目前語系文案；無效 URL query 正規化；載入失敗以表格 error row 與重試操作呈現 |
