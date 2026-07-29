@@ -10,7 +10,9 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <script src="../../assets/theme-fouc.js"></script>
-  <style>
+  <link rel="stylesheet" href="./dashboard.layout.css" />
+  <link rel="stylesheet" href="./dashboard.components.css" />
+  <style type="text/plain" id="legacy-dashboard-styles">
     /* ── Design Tokens (MASTER.md) ───────────────────────────────── */
     :root {
       /* Color Palette */
@@ -895,11 +897,11 @@
           <span id="scenarioHint" class="controls-hint">切換不同的角色視圖</span>
         </div>
         <div class="scenario-list" id="scenarioList" data-testid="scenario-list">
-          <button class="scenario-pill active" data-scenario="user">一般使用者</button>
-          <button class="scenario-pill" data-scenario="super_admin_data">系統管理員</button>
-          <button class="scenario-pill" data-scenario="project_leader">專案負責人</button>
-          <button class="scenario-pill" data-scenario="annotator">標記員</button>
-          <button class="scenario-pill" data-scenario="reviewer">審核員</button>
+          <button class="scenario-pill active" data-scenario="user" disabled>一般使用者</button>
+          <button class="scenario-pill" data-scenario="super_admin_data" disabled>系統管理員</button>
+          <button class="scenario-pill" data-scenario="project_leader" disabled>專案負責人</button>
+          <button class="scenario-pill" data-scenario="annotator" disabled>標記員</button>
+          <button class="scenario-pill" data-scenario="reviewer" disabled>審核員</button>
         </div>
       </section>
 
@@ -1136,7 +1138,7 @@
                 <button id="adminViewAllBtn" class="btn btn-secondary slim">查看全部</button>
               </div>
             </div>
-            <div class="list">
+            <div class="list" id="adminTaskList">
               <div class="list-item">
                 <div class="task-item-header">
                   <div class="task-item-summary">
@@ -1228,7 +1230,7 @@
                 <button id="plViewAllBtn" class="btn btn-secondary slim">查看全部</button>
               </div>
             </div>
-            <div class="list">
+            <div class="list" id="plTaskList">
               <div class="list-item">
                 <div class="task-item-header">
                   <div class="task-item-summary">
@@ -1361,7 +1363,10 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <script src="../../assets/theme.js"></script>
   <script src="../../assets/analytics.js"></script>
-  <script>
+  <script src="./dashboard.data.js"></script>
+  <script src="./dashboard.i18n.js"></script>
+  <script src="./dashboard.js"></script>
+  <script type="text/plain" id="legacy-dashboard-runtime">
     window.LabelSuiteAnalytics.init({
       page: 'dashboard',
     });
