@@ -12,6 +12,8 @@ import { test, expect, type Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
+test.describe.configure({ mode: 'serial' });
+
 async function openScenario(page: Page, scenario: 'super_admin_data' | 'project_leader' | 'annotator' | 'reviewer') {
   await page.goto(DASHBOARD_URL);
   const trigger = page.locator(`.scenario-pill[data-scenario="${scenario}"]`);

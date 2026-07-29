@@ -2,6 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 const DASHBOARD_URL = '/pages/dashboard/dashboard.html';
 
+test.describe.configure({ mode: 'serial' });
+
 const OUTPUT_TYPE_KEYS = [
   'single_label',
   'multi_label',
@@ -119,6 +121,21 @@ test.describe('Dashboard output-type task summaries', () => {
     expect(dashboardData.tasks.map((task) => task.sourceFile).sort()).toEqual(
       [...EXAMPLE_DATA_FILES].sort(),
     );
+    const outputsBySource = Object.fromEntries(
+      dashboardData.tasks.map((task) => [
+        task.sourceFile,
+        task.outputTypes,
+      ]),
+    );
+    expect(outputsBySource['medical-ner-re.json']).toEqual([
+      'entity_recognition',
+      'relation_identification',
+    ]);
+    expect(outputsBySource['absa-va.json']).toEqual([
+      'entity_recognition',
+      'relation_identification',
+      'multi_dim',
+    ]);
     expect(
       dashboardData.tasks.every(
         (task) =>
