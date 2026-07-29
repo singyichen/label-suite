@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.4.2
+版本: 6.4.3
 狀態: Draft
 ---
 
@@ -51,6 +51,7 @@
 - **v6.3.0 Sequence Tagging 標記單位**：將「標記單位」與「標記方案」拆成兩個獨立設定維度。`tokenization.unit` 支援 `character / word`，預設 `character`；字模式依可見字元切分，詞模式依語言感知詞界切分，兩者皆略過空白並讓標點獨立。切換單位後 Step 2 Token 網格與規則說明須立即重建，既有預覽 tag 不得錯套到新邊界；可見預標記數量改依目前單位重新驗證。數量不一致且預標記與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路；切換單位使數量重新一致時，可見預標記須自資料重新初始化（Bypass 明確清空的預覽狀態除外）。本版仍只完成 013 producer-side，正式 Annotation Workspace 與其他 consumer 維持延後。
 - **v6.4.0 標記預覽原始文本**：Step 2 序列標註預覽將 Token 網格上方的字／詞切分規則說明，改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本；該文本不隨標記單位切換而改變，切分行為改由 Token 網格本身呈現。通用輸入文字區塊的標籤由 Input 欄位名稱改為「原始文本」（英文 Text）；`item_pair` 於配對區塊上方顯示一次「原始文本」標題並保留兩段文本的欄位名稱小標。`entity_recognition`／`relation_identification` 的互動圈選文本區不另加標題，`free_text` 維持可設定的 `input_instruction` 契約。整合預覽標題由「整合預覽（實體辨識 + 關係識別）」簡化為「整合預覽」（英文 Unified preview）。tokenization 契約與預標記驗證行為不變。
 - **v6.4.1 選擇狀態與下游語意釐清**：Step 1 的三組 chip 分別寫入 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不建立單一固定 `task_type`；完成設定後，`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 Task List 直接以 `outputs[].type` 顯示與篩選；`docs/product/example-data/` 的 13 份 fixture 僅為 prototype 示例，不是合法任務或輸出組合上限。
+- **v6.4.3 Dashboard consumer 同步**：012 Dashboard 與 010／016 一致，直接依 `outputs[].type` 順序顯示一至多個 registry-driven tag；13 筆 fixture 只作 prototype 基線，第 14 筆任意合法組合無需新增 renderer 分支。014／015 consumer 延後範圍不變。
 
 ## 規格常數
 
@@ -679,6 +680,7 @@ flowchart LR
 
 | 規格編號 | 功能 | 依賴本規格的內容 |
 |---------|------|----------------|
+| 012 | Dashboard | 依 `outputs[].type` 呈現一至多個 registry-driven tag；13 筆示例非白名單 |
 | 014 | Task Detail | 建立成功後導向與初始任務資料（含抽樣與資料隔離方式）；成員邀請改於 task-detail member-management 執行；Visual 編輯器沿用 Step 2 registry/schema、`rendersInputPreview` 與預覽語意 |
 | 015 | Annotation Workspace | 讀取 `outputs[]` config 驅動標記介面；依各 output type 的 schema 呈現對應標記控制項 |
 | 016 | Dataset Analysis List | 依 `outputs[].type` 呈現多 tag、搜尋與 membership 篩選 |
@@ -703,6 +705,8 @@ flowchart LR
 > **v6.3.0 下游同步延後**：本次新增的 `tokenization.unit` 與字／詞切分只同步 013 Task New 設定和預覽。014 尚未顯示標記單位摘要；015 尚未依單位建立正式 Token、驗證提交 payload 或凍結可重現的 production tokenizer（tokenization 契約與凍結義務見 ADR-031）；016／017 尚未依單位調整統計與品質指標。這些 consumer 依產品決策留待後續一起調整。
 >
 > **v6.4.2 列表消費語意**：010 Task List 與 016 Dataset Analysis List 均直接逐項顯示 `outputs[].type`，並以單一 `output_type` membership 語意篩選。`docs/product/example-data/` 的 13 份 fixture 只提供 prototype 驗收基線，不限制 `OUTPUT_TYPE_REGISTRY` 可建立的任務數量或合法組合；014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 的 consumer 仍延後。本版不得把兩個列表的相容性延伸解讀為 detail／workspace 已相容所有輸出組合。
+>
+> **v6.4.3 Dashboard consumer 同步**：012 Dashboard 已直接逐項顯示 `outputs[].type`，並沿用 8 個 `OUTPUT_TYPE_KEYS`、複合 tag、13 筆非上限示例與第 14 筆 config-driven 泛化契約。014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 的 consumer 延後範圍不變；Dashboard 保留的 legacy `task_type` 只是獨立 routing compatibility 欄位，不得由 `outputs[]` 推導。
 >
 > **未來版本候選（非 013 承諾範圍，2026-07-28 對照 Label Studio／Scale 評估後記錄）**：
 >
@@ -792,6 +796,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.4.3 | 2026-07-29 | **同步 Dashboard consumer**：012 Dashboard 任務摘要改為依 `outputs[].type` 順序顯示一至多個 registry-driven tag，沿用 8 類、13 筆非上限示例與第 14 筆 config-driven 泛化契約；014／015／017 consumer 延後範圍不變。 |
 | 6.4.2 | 2026-07-29 | **同步 Dataset Analysis List 消費語意**：016 列表與 010 一致，逐項顯示 `outputs[].type` 並採單一 `output_type` membership 篩選；13 筆 fixture 維持非上限的 prototype 基線。延後範圍收斂為 014／015／017，列表相容性不代表 detail／workspace 已全面相容。 |
 | 6.4.1 | 2026-07-29 | **選擇狀態與 Task List 消費語意釐清**：Step 1 三組 chip 明確分別維護 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不再以 `task_type` 指稱或儲存單一固定任務型別；`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 依該欄位逐項顯示與 membership 篩選；13 份 example-data fixture 僅為 prototype 示例，不構成任務數量或合法組合上限。無 producer payload 行為變更。 |
 | 6.4.0 | 2026-07-28 | **標記預覽原始文本**：Step 2 序列標註預覽區將 Token 網格上方的切分規則說明改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本，文本不隨標記單位切換改變；通用輸入文字區塊標籤由 Input 欄位名稱改為「原始文本」，`item_pair` 於配對區塊上方顯示一次該標題並保留欄位名稱小標；`entity_recognition`／`relation_identification` 互動文本區與 `free_text` `input_instruction` 契約不變；整合預覽標題簡化為「整合預覽」（英文 Unified preview）。同步 prototype、visual overview 與 Playwright 測試；tokenization 契約與預標記驗證不變。 |
