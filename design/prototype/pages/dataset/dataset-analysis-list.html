@@ -53,7 +53,7 @@
     .hidden { display: none !important; }
 
     /* ── Layout ─────────────────────────────────────────────── */
-    main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+    main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; }
     .layout { max-width: 1280px; width: 100%; margin: 0 auto; padding: var(--space-lg); }
     .page { min-width: 0; }
 
@@ -193,7 +193,20 @@
       border-radius: var(--radius-sm); border: 1px solid transparent;
       font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
     }
-    /* Task type badges */
+    .output-type-cell {
+      min-width: 220px;
+      max-width: 320px;
+      white-space: normal;
+    }
+    .output-type-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      max-width: 100%;
+    }
+    /* Output type badges */
     .badge-task-type-single   { color: #0E7490; background: #ECFEFF; border-color: #A5F3FC; }
     .badge-task-type-sequence { color: #7C2D12; background: #FFF7ED; border-color: #FDBA74; }
     .badge-task-type-relation { color: #155E75; background: #ECFEFF; border-color: #67E8F9; }
@@ -277,7 +290,7 @@
 
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
-      /* Task-type badges */
+      /* Output type badges */
       .badge-task-type-single   { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
       .badge-task-type-sequence { color: #FB923C; background: #2A1805; border-color: #7C3A16; }
       .badge-task-type-relation { color: #A5F3FC; background: #0C2230; border-color: #155E75; }
@@ -323,8 +336,8 @@
 
       <div class="toolbar" role="search" aria-label="資料集分析篩選">
         <div class="toolbar-left">
-          <select class="filter-select" id="taskTypeFilter" aria-label="依任務類型篩選">
-            <option value="">全部任務類型</option>
+          <select class="filter-select" id="outputTypeFilter" aria-label="依輸出類型篩選">
+            <option value="">全部輸出類型</option>
           </select>
           <select class="filter-select" id="iaaStatusFilter" aria-label="依 IAA 狀態篩選">
             <option value="">全部 IAA 狀態</option>
@@ -350,7 +363,7 @@
             <thead>
               <tr>
                 <th id="thTaskName">任務名稱</th>
-                <th id="thTaskType">任務類型</th>
+                <th id="thTaskType">輸出類型</th>
                 <th id="thCompletion">完成率</th>
                 <th id="thIaaStatus">IAA 狀態</th>
                 <th id="thRole">成員角色</th>
@@ -390,9 +403,10 @@
   </div>
 </div>
 
-<script src="../../assets/theme.js"></script>
-<script src="../../assets/analytics.js"></script>
-<script>
+  <script src="../../assets/theme.js"></script>
+  <script src="../../assets/analytics.js"></script>
+  <script src="./dataset-analysis-list.data.js"></script>
+  <script type="text/plain" id="legacy-dataset-analysis-runtime">
   /* ── i18n ─────────────────────────────────────────────────── */
   var I18N = {
     zh: {
@@ -1065,6 +1079,28 @@
       window.LabelSuiteAnalytics.trackPageView('dataset-analysis-list', getTrackingContext);
     }
   }());
-</script>
+  </script>
+  <script>
+    (function loadDatasetAnalysisRuntime() {
+      var sources = [
+        './dataset-analysis-list.i18n.js',
+        './dataset-analysis-list.model.js',
+        './dataset-analysis-list.view.js',
+        './dataset-analysis-list.js',
+      ];
+
+      function loadNext(index) {
+        if (index >= sources.length) return;
+        var script = document.createElement('script');
+        script.src = sources[index];
+        script.onload = function () {
+          loadNext(index + 1);
+        };
+        document.body.appendChild(script);
+      }
+
+      loadNext(0);
+    }());
+  </script>
 </body>
 </html>
