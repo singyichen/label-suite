@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 2.0.0
+版本: 2.0.1
 狀態: In Progress
 ---
 
@@ -343,10 +343,10 @@ flowchart LR
 | 013 | New Task | 從任務列表進入新增任務流程 |
 | 014 | Task Detail | 從任務列表進入任務詳情 |
 | 015 | Annotation Workspace | 任務清單入口與 task context 導入 |
-| 016 | Dataset Stats | 任務清單入口與 task context 導入 |
+| 016 | Dataset Analysis List | `outputs[].type` 多 tag、8 類 membership 篩選、13 筆 prototype 基線與 `limit`／`offset` |
 | 017 | Dataset Quality | 任務清單入口與 task context 導入 |
 
-> **v2.0.0 下游同步界線**：本版只定義 010 Task List 對 `outputs[].type` 的展示、搜尋與篩選契約。014／015／016／017 仍有舊固定任務類型或未完成的 consumer contract，依既有產品決策延後同步；本版不得宣稱這些 consumer 已與 `outputs[]` 相容。
+> **v2.0.1 下游同步界線**：016 Dataset Analysis List 已同步 `outputs[].type` 的展示、搜尋、篩選與分頁契約；014 Task Detail、015 Annotation Workspace 與 017 Dataset Analysis Detail 仍有舊固定任務類型或未完成的 consumer contract，依既有產品決策延後同步。本版不得將 016 列表相容性延伸解讀為這些 detail／workspace consumer 已相容所有 `outputs[]` 組合。
 
 ---
 
@@ -404,6 +404,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.1 | 2026-07-29 | **同步 Dataset Analysis List 相依性**：016 列表已採用 `outputs[].type` 多 tag、8 類 membership 篩選、13 筆示例基線與 `limit`／`offset`；延後範圍收斂為 014／015／017，且不把列表相容性延伸至 detail／workspace consumer。 |
 | 2.0.0 | 2026-07-29 | **任務列表遷移至可組合輸出類型**：移除固定 `TASK_TYPE_ENUM`、`task_type` 篩選與 `labelsuite.activeTaskType` 單值快取契約；列表改以 `outputs[].type` 逐項呈現可換行、具文字與可存取名稱的 tag，篩選器由 `OUTPUT_TYPE_REGISTRY` 列出 8 個合法 key 並以 membership 語意比對。URL query 與分頁改為 `output_type`、`limit`、`offset`。加入 13 份 prototype 示例 fixture 的 mapping／命中數基線、複合 tag、14th-task 泛化與答案資料不外露驗收；13 筆僅為示例，不構成系統上限。014／015／016／017 consumer 同步維持延後。 |
 | 1.3.9 | 2026-05-22 | 釐清並同步 task-list 原型：刪除權限限 `project_leader` / `super_admin` 且僅 `draft` 可刪；搜尋 enum 比對 raw value 與目前語系文案；無效 URL query 正規化；載入失敗以表格 error row 與重試操作呈現 |
 | 1.3.8 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
