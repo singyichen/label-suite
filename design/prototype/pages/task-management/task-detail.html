@@ -7695,7 +7695,7 @@ function getTaskTypeLabel(taskTypeKey) {
   function saveSettingsCodeToVisual(showSuccessToast) {
     var configRuntime = window.LabelSuiteTaskDetailConfig;
     if (configRuntime && configRuntime.isManaged(TASK_DATA)) {
-      var saved = configRuntime.saveCode(state, state.lang, false);
+      var saved = configRuntime.saveCode(state, state.lang);
       if (saved && showSuccessToast) showToast(t('settingsCodeSaved'));
       return saved;
     }

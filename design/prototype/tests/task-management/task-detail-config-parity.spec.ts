@@ -564,6 +564,53 @@ test.describe('Task detail Step 1–2 config parity', () => {
     expect(weights[0]).toBeGreaterThan(weights[1]);
   });
 
+  test('removing selected outputs asks for impact confirmation and cancel keeps outputs unchanged', async ({
+    page,
+  }) => {
+    await openTaskDetail(page, 'T010', { forceDraft: true });
+    await page.getByTestId('task-basic-edit-btn').click();
+
+    const relationChip = page.locator(
+      '[data-testid="task-output-type-chip"][data-key="relation_identification"]',
+    );
+    const selectedOutputChips = page.locator(
+      '[data-testid="task-output-type-chip"][aria-checked="true"]',
+    );
+    await expect(relationChip).toHaveAttribute('aria-checked', 'true');
+    await expect(selectedOutputChips).toHaveCount(2);
+
+    const messages: string[] = [];
+    page.once('dialog', (dialog) => {
+      messages.push(dialog.message());
+      void dialog.dismiss();
+    });
+    await relationChip.click();
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toContain('關係識別');
+    await expect(relationChip).toHaveAttribute('aria-checked', 'true');
+    await expect(selectedOutputChips).toHaveCount(2);
+
+    page.once('dialog', (dialog) => {
+      messages.push(dialog.message());
+      void dialog.dismiss();
+    });
+    await page
+      .locator('[data-testid="task-category-chip"][data-key="sequence"]')
+      .click();
+    expect(messages).toHaveLength(2);
+    await expect(
+      page.locator('[data-testid="task-category-chip"][data-key="sequence"]'),
+    ).toHaveAttribute('aria-checked', 'true');
+    await expect(selectedOutputChips).toHaveCount(2);
+
+    page.once('dialog', (dialog) => {
+      void dialog.accept();
+    });
+    await relationChip.click();
+    await expect(relationChip).toHaveAttribute('aria-checked', 'false');
+    await expect(selectedOutputChips).toHaveCount(1);
+  });
+
   test('a synthetic fourteenth task renders through the data extension hook without a task-id branch', async ({
     page,
   }) => {

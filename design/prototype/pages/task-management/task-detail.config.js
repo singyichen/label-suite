@@ -46,7 +46,6 @@
       inputRoleError: 'Input 欄位數量不符合目前輸入類型。',
       jsonOnlyError: '資料集僅支援 JSON 檔案。',
       removeOutputConfirm: '移除此輸出類型會刪除其設定，是否繼續？',
-      codeSaved: 'Code 設定已同步',
     },
     en: {
       categories: 'Categories',
@@ -82,7 +81,6 @@
       inputRoleError: 'The number of Input fields does not match the selected input type.',
       jsonOnlyError: 'Only JSON dataset files are supported.',
       removeOutputConfirm: 'Removing this output type also removes its config. Continue?',
-      codeSaved: 'Code settings synchronized',
     },
   };
 
@@ -547,6 +545,15 @@
     });
   }
 
+  function confirmOutputRemoval(removedKeys, lang) {
+    if (!removedKeys.length) return true;
+    var labels = removedKeys.map(function (outputKey) {
+      return catalog.getOutputLabel(outputKey, lang);
+    });
+    var separator = lang === 'en' ? ', ' : '、';
+    return global.confirm(labels.join(separator) + '\n' + copy(lang, 'removeOutputConfirm'));
+  }
+
   function renderCategoryChips(lang, state) {
     var container = document.getElementById('editTaskCategoryChips');
     if (!container || !basicDraft) return;
@@ -558,9 +565,14 @@
       chip.addEventListener('click', function () {
         var index = basicDraft.selected_categories.indexOf(category);
         if (index >= 0) {
+          var categoryOutputKeys = catalog.getCategoryOutputKeys(category, basicDraft.input_type);
+          var removedKeys = basicDraft.selected_output_types.filter(function (outputKey) {
+            return categoryOutputKeys.indexOf(outputKey) >= 0;
+          });
+          if (!confirmOutputRemoval(removedKeys, lang)) return;
           basicDraft.selected_categories.splice(index, 1);
           basicDraft.selected_output_types = basicDraft.selected_output_types.filter(function (outputKey) {
-            return catalog.getCategoryOutputKeys(category, basicDraft.input_type).indexOf(outputKey) === -1;
+            return categoryOutputKeys.indexOf(outputKey) === -1;
           });
         } else {
           basicDraft.selected_categories.push(category);
@@ -586,8 +598,16 @@
       );
       chip.setAttribute('data-testid', 'task-input-type-chip');
       chip.addEventListener('click', function () {
+        var previousInputType = basicDraft.input_type;
         basicDraft.input_type = inputType;
         var allowed = outputKeysForDraft();
+        var removedKeys = basicDraft.selected_output_types.filter(function (outputKey) {
+          return allowed.indexOf(outputKey) === -1;
+        });
+        if (!confirmOutputRemoval(removedKeys, lang)) {
+          basicDraft.input_type = previousInputType;
+          return;
+        }
         basicDraft.selected_output_types = basicDraft.selected_output_types.filter(function (outputKey) {
           return allowed.indexOf(outputKey) >= 0;
         });
@@ -630,10 +650,15 @@
         var index = basicDraft.selected_output_types.indexOf(outputKey);
         if (index >= 0) {
           if (mode === 'radio') return;
+          if (!confirmOutputRemoval([outputKey], lang)) return;
           basicDraft.selected_output_types.splice(index, 1);
         } else {
           if (mode === 'radio') {
             var categoryOutputs = catalog.getCategoryOutputKeys(category, basicDraft.input_type);
+            var replacedKeys = basicDraft.selected_output_types.filter(function (key) {
+              return categoryOutputs.indexOf(key) >= 0;
+            });
+            if (!confirmOutputRemoval(replacedKeys, lang)) return;
             basicDraft.selected_output_types = basicDraft.selected_output_types.filter(function (key) {
               return categoryOutputs.indexOf(key) === -1;
             });
@@ -1486,7 +1511,7 @@
     return catalog.parseYaml(raw);
   }
 
-  function saveCode(state, lang, showSuccess) {
+  function saveCode(state, lang) {
     if (!settingsDraft) return false;
     var editor = document.getElementById('settingsCodeEditor');
     try {
@@ -1502,9 +1527,6 @@
       state.settingsDirty = true;
       setCodeError('');
       renderSettingsEditor(lang, state);
-      if (showSuccess && typeof global.showToast === 'function') {
-        global.showToast(copy(lang, 'codeSaved'));
-      }
       return true;
     } catch (error) {
       setCodeError(error && error.message ? error.message : copy(lang, 'configError'));

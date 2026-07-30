@@ -250,7 +250,7 @@ textarea.task-config-field-control {
   flex: 0 0 auto;
 }
 
-.task-config-setting-row {
+.form-field.task-config-setting-row {
   display: block;
 }
 
