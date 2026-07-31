@@ -167,9 +167,21 @@ function resetTaskConfigSeedGuard() {
    branch, so a newly registered output type needs no changes here
    (constitution: Generalization-First). */
 function getOutputTypeDisplayLabel(outKey) {
-  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
-  if (!outReg) return outKey;
-  return state.lang === 'en' ? outReg.en : outReg.zh;
+  /* Display labels come from TASK_TAXONOMY's subtype names (the Step 1
+     output-chip labels, e.g. 單維度), matching task-list's 任務類型 column.
+     OUTPUT_TYPE_REGISTRY labels are the Step 2 editor names (e.g.
+     單維度回歸) and intentionally differ for the regression types. */
+  var found = null;
+  Object.keys(TASK_TAXONOMY).some(function(catKey) {
+    var grans = TASK_TAXONOMY[catKey].granularities;
+    return Object.keys(grans).some(function(granKey) {
+      var subDef = grans[granKey].subtypes[outKey];
+      if (subDef) { found = subDef; return true; }
+      return false;
+    });
+  });
+  if (!found) return outKey;
+  return state.lang === 'en' ? found.en : found.zh;
 }
 
 function summarizeOutputConfigForDisplay(outKey, config) {
