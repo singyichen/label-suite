@@ -333,7 +333,10 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     const preview = page.locator('#annotationPreview');
     await expect(
       preview.getByText('自由文字', { exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
+    await expect(
+      preview.locator('.annotation-preview-divider'),
+    ).toHaveCount(0);
     await expect(
       preview.getByText('gold_answer', { exact: true }),
     ).toHaveCount(0);

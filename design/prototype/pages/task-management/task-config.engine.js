@@ -3132,13 +3132,10 @@ function renderFreeTextPreview(container, outKey) {
   }
   container.appendChild(inputWrap);
 
-  var divider = document.createElement('div');
-  divider.className = 'annotation-preview-divider';
-  container.appendChild(divider);
-
   var responseArea = document.createElement('div');
   responseArea.setAttribute('data-testid', 'free-text-response-area');
   responseArea.setAttribute('data-bypass-sensitive', 'true');
+  responseArea.style.marginTop = '12px';
   container.appendChild(responseArea);
 
   var ansTitle = document.createElement('div');
@@ -4191,9 +4188,6 @@ function updateAnnotationPreview() {
       });
 
       preview.appendChild(evidenceWrap);
-      var evidenceDivider = document.createElement('div');
-      evidenceDivider.className = 'annotation-preview-divider';
-      preview.appendChild(evidenceDivider);
     }
     /* Show input text (single_item or item_pair) before output previews */
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
@@ -4282,10 +4276,12 @@ function updateAnnotationPreview() {
           var divider = document.createElement('div');
           divider.className = 'annotation-preview-divider';
           preview.appendChild(divider);
-          var cardTitle = document.createElement('div');
-          cardTitle.className = 'annotation-preview-task-title';
-          cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
-          preview.appendChild(cardTitle);
+          if (!(outReg && outReg.hidePreviewTitle)) {
+            var cardTitle = document.createElement('div');
+            cardTitle.className = 'annotation-preview-task-title';
+            cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+            preview.appendChild(cardTitle);
+          }
           var outWrap = document.createElement('div');
           preview.appendChild(outWrap);
           renderOutputPreview(outWrap, outKey);
@@ -4312,11 +4308,13 @@ function updateAnnotationPreview() {
           preview.appendChild(divider);
         }
         var outReg = OUTPUT_TYPE_REGISTRY[outKey];
-        var cardTitle = document.createElement('div');
-        cardTitle.className = 'annotation-preview-task-title';
-        cardTitle.style.marginBottom = '8px';
-        cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
-        preview.appendChild(cardTitle);
+        if (!(outReg && outReg.hidePreviewTitle)) {
+          var cardTitle = document.createElement('div');
+          cardTitle.className = 'annotation-preview-task-title';
+          cardTitle.style.marginBottom = '8px';
+          cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+          preview.appendChild(cardTitle);
+        }
         var outWrap = document.createElement('div');
         preview.appendChild(outWrap);
         renderOutputPreview(outWrap, outKey);

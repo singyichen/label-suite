@@ -319,6 +319,7 @@ var OUTPUT_TYPE_REGISTRY = {
     source_output: null,
     rendersEvidencePreview: true,
     rendersInputPreview: true,
+    hidePreviewTitle: true,
     fields: [
       {
         key: 'input_instruction',
