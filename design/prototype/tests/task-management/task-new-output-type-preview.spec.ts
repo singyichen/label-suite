@@ -366,6 +366,44 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     expect(order[1]).toBeLessThan(order[2]);
   });
 
+  test('free_text — instruction hints render as tooltips, hidden until hover or focus', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'free-text-hint-tooltip-test',
+      category: 'generation',
+      outputType: 'free_text',
+      inputType: 'single_item',
+      dataFile: 'free-text.json',
+      roles: { text: 'input', gold_answer: 'output', reference: 'evidence' },
+    });
+
+    const inputHint = page.locator('#output-config-free-text-input-instruction-hint');
+    const outputHint = page.locator('#output-config-free-text-output-instruction-hint');
+    await expect(inputHint).toBeHidden();
+    await expect(outputHint).toBeHidden();
+
+    const inputHelp = page.getByTestId('free-text-input-instruction-help');
+    const outputHelp = page.getByTestId('free-text-output-instruction-help');
+    await expect(inputHelp).toBeVisible();
+    await expect(outputHelp).toBeVisible();
+    await expect(inputHelp).toHaveText('?');
+    await expect(outputHelp).toHaveText('?');
+
+    await inputHelp.hover();
+    await expect(inputHint).toBeVisible();
+    await expect(inputHint).toHaveText(
+      '顯示在輸入內容上方，告訴標記員要閱讀或處理什麼。例：請閱讀以下文章',
+    );
+    await expect(outputHint).toBeHidden();
+
+    await outputHelp.focus();
+    await expect(outputHint).toBeVisible();
+    await expect(outputHint).toHaveText(
+      '顯示在自由文字欄位上方，告訴標記員要輸入什麼。例：請用一句話摘要文章重點',
+    );
+  });
+
   test('free_text — answer stays blank when no Output field is selected', async ({
     page,
   }) => {

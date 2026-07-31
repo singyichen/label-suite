@@ -254,6 +254,78 @@
     #schemaFields .form-field { margin-bottom: 0; }
     #schemaFields .schema-bypass-field,
     #schemaFields .schema-group-start-field { margin-top: calc(var(--space-sm) + var(--space-xs)); }
+
+    /* ── Field help tooltip (label row + "?" trigger + bubble above, per MASTER.md §Tooltip) ── */
+    .field-label-row {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-bottom: 6px;
+    }
+    .field-label-row .field-label { margin-bottom: 0; }
+    .tooltip-wrap { position: relative; display: inline-flex; }
+    .field-help-tooltip {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 50%;
+      background: var(--color-ink-muted);
+      color: #fff;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      cursor: help;
+      padding: 0;
+      transition: background var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .field-help-tooltip:hover,
+    .field-help-tooltip:focus {
+      background: var(--color-ink);
+    }
+    .field-help-tooltip:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    }
+    .tooltip-bubble {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: -10px;
+      z-index: 500;
+      width: max-content;
+      max-width: min(320px, calc(100vw - 48px));
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: var(--color-ink);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.6;
+      font-weight: 400;
+      margin: 0;
+      white-space: normal;
+      text-align: left;
+      pointer-events: none;
+      transition: opacity var(--dur-fast) ease;
+    }
+    .tooltip-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 14px;
+      border: 4px solid transparent;
+      border-top-color: var(--color-ink);
+    }
+    .field-help-tooltip:hover + .tooltip-bubble,
+    .field-help-tooltip:focus + .tooltip-bubble {
+      visibility: visible;
+      opacity: 1;
+    }
     .schema-section {
       padding: 14px;
       border: 1px solid var(--color-border);
@@ -385,8 +457,11 @@
     .code-actions { display: flex; justify-content: flex-end; margin-top: var(--space-sm); }
 
     /* ── Output Accordion (Step 2 multi-output) ── */
-    .output-accordion { border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 12px; overflow: hidden; }
-    .output-accordion-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 16px; background: var(--color-slate-50); color: inherit; font: inherit; text-align: left; cursor: pointer; user-select: none; border: none; border-bottom: 1px solid var(--color-border); }
+    /* No overflow:hidden — field help tooltips must be able to pop out of the accordion;
+       the header rounds its own corners instead */
+    .output-accordion { border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 12px; }
+    .output-accordion-header { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 12px 16px; background: var(--color-slate-50); color: inherit; font: inherit; text-align: left; cursor: pointer; user-select: none; border: none; border-bottom: 1px solid var(--color-border); border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0; }
+    .output-accordion.collapsed .output-accordion-header { border-radius: calc(var(--radius-md) - 1px); }
     .output-accordion-header:hover { background: #EEF2FF; }
     .output-accordion-header:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
     .output-accordion-title { font-size: 14px; font-weight: 600; color: var(--color-ink); display: flex; align-items: center; gap: 8px; }

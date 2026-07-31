@@ -1427,12 +1427,39 @@ function renderOutputTypeFields(container, outKey) {
       }(cfg, field.key));
       wrap.appendChild(textInp);
       if (field['hint_' + state.lang]) {
-        var textHint = document.createElement('div');
-        textHint.className = 'field-hint';
-        textHint.id = textControlId + '-hint';
-        textHint.textContent = field['hint_' + state.lang];
-        textInp.setAttribute('aria-describedby', textHint.id);
-        wrap.appendChild(textHint);
+        if (field.hintAsTooltip) {
+          /* Hint as tooltip: label + "i" trigger share a row; bubble shows on hover/focus */
+          var labelRow = document.createElement('div');
+          labelRow.className = 'field-label-row';
+          var helpBtn = document.createElement('button');
+          helpBtn.className = 'field-help-tooltip';
+          helpBtn.setAttribute('type', 'button');
+          helpBtn.textContent = '?';
+          helpBtn.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-help');
+          var hintBubble = document.createElement('p');
+          hintBubble.className = 'tooltip-bubble';
+          hintBubble.id = textControlId + '-hint';
+          hintBubble.setAttribute('role', 'tooltip');
+          hintBubble.textContent = field['hint_' + state.lang];
+          helpBtn.setAttribute('aria-label', field[state.lang] || field.zh);
+          helpBtn.setAttribute('aria-describedby', hintBubble.id);
+          textInp.setAttribute('aria-describedby', hintBubble.id);
+          /* Bubble anchors to .tooltip-wrap so the arrow centers on the trigger */
+          var tipWrap = document.createElement('span');
+          tipWrap.className = 'tooltip-wrap';
+          tipWrap.appendChild(helpBtn);
+          tipWrap.appendChild(hintBubble);
+          if (lbl) labelRow.appendChild(lbl);
+          labelRow.appendChild(tipWrap);
+          wrap.insertBefore(labelRow, wrap.firstChild);
+        } else {
+          var textHint = document.createElement('div');
+          textHint.className = 'field-hint';
+          textHint.id = textControlId + '-hint';
+          textHint.textContent = field['hint_' + state.lang];
+          textInp.setAttribute('aria-describedby', textHint.id);
+          wrap.appendChild(textHint);
+        }
       }
     } else if (field.type === 'boolean') {
       var card = document.createElement('label');

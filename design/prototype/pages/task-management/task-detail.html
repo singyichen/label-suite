@@ -1204,66 +1204,7 @@
       background: var(--color-primary-soft-bg);
     }
     .required { color: var(--color-error); margin-left: 2px; }
-    .field-label-row {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      width: fit-content;
-    }
-    .field-label-row .field-label { margin-bottom: 0; }
-    .field-help-tooltip {
-      width: 20px;
-      height: 20px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1.5px solid var(--color-ink-muted);
-      border-radius: 50%;
-      background: transparent;
-      color: var(--color-text-soft);
-      font-size: 12px;
-      line-height: 1;
-      font-weight: 700;
-      cursor: help;
-      padding: 0;
-      transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast);
-    }
-    .field-help-tooltip:hover,
-    .field-help-tooltip:focus {
-      border-color: var(--color-text-soft);
-      background: rgba(15, 23, 42, 0.04);
-      color: var(--color-ink);
-    }
-    .field-help-tooltip:focus {
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-    }
-    .tooltip-bubble {
-      position: absolute;
-      left: calc(100% + 10px);
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 20;
-      display: none;
-      width: max-content;
-      max-width: min(360px, calc(100vw - 48px));
-      padding: 16px 20px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      border-radius: 16px;
-      background: #111111;
-      color: #D6D3CD;
-      font-size: 14px;
-      line-height: 1.5;
-      font-weight: 500;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-      margin: 0;
-      white-space: normal;
-    }
-    .field-help-tooltip:hover + .tooltip-bubble,
-    .field-help-tooltip:focus + .tooltip-bubble {
-      display: block;
-    }
+    /* .field-label-row / .field-help-tooltip / .tooltip-bubble moved to task-config.css (shared with task-new) */
     .field-hint {
       font-size: 12px;
       color: var(--color-text-soft);
