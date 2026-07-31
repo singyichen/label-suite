@@ -119,6 +119,30 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
     await expect(page.locator('#schemaFields .output-accordion')).toHaveCount(3);
   });
 
+  test('overview edit localizes Step 1 labels in English mode (T001)', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem('labelsuite.lang', 'en');
+    });
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    const langLabel = page.locator('#langLabel');
+    await langLabel.waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    if ((await langLabel.textContent()) !== 'EN') {
+      await page.locator('#langToggle').click();
+    }
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+    const editBtn = page.locator('#overviewEditBtn');
+    await expect(editBtn).toBeEnabled();
+    await editBtn.click();
+    await expect(page.locator('#overviewEditForm')).not.toHaveClass(/hidden/);
+
+    await expect(page.locator('#uploadZoneLabel')).toHaveText('Click or drag to upload dataset');
+    await expect(page.locator('#inlinePreviewTitle')).toHaveText('Column preview · assign field roles');
+    await expect(page.locator('#taskCategoryGroupLabel')).toHaveText('Category (multi-select)');
+    await expect(page.locator('#taskInputTypeGroupLabel')).toHaveText('Input type (single-select)');
+    await expect(page.locator('#taskOutputTypeGroupLabel')).toHaveText('Output type (multi-select)');
+  });
+
   test('non-draft status keeps both surfaces read-only (T001)', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001&status=official_run_in_progress`);
     await expect(page.locator('#overviewEditBtn')).toBeDisabled({ timeout: PANEL_LOAD_TIMEOUT });

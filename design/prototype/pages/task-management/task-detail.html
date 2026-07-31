@@ -2729,8 +2729,6 @@
       editGuidelineLabel: '說明內容',
       editGuidelineFilesLabel: '上傳檔案',
       editForceGuidelineLabel: '開始標記前強制顯示',
-      basicDatasetDropTitle: '點擊或拖曳上傳資料集',
-      basicDatasetDropHint: '支援 TXT / CSV / TSV / JSON，最大 200 MB，UTF-8',
       samplingTitle: '抽樣設定',
       samplingEditBtn: '編輯',
       samplingSaveBtn: '儲存',
@@ -3209,8 +3207,6 @@
       editGuidelineLabel: 'Guideline content',
       editGuidelineFilesLabel: 'Upload files',
       editForceGuidelineLabel: 'Force show before annotation',
-      basicDatasetDropTitle: 'Click or drag to upload dataset',
-      basicDatasetDropHint: 'Supports TXT / CSV / TSV / JSON, up to 200 MB, UTF-8',
       samplingTitle: 'Sampling settings',
       samplingEditBtn: 'Edit',
       samplingSaveBtn: 'Save',
@@ -4721,8 +4717,17 @@ function interpolate(template, payload) {
     setText('editReviewerGuidelineFilesLabel', t('editReviewerGuidelineFilesLabel'));
     setText('editForceGuidelineLabel', t('editForceGuidelineLabel'));
     setText('editForceGuidelineDesc', t('editForceGuidelineDesc'));
-    setText('basicDatasetDropTitle', t('basicDatasetDropTitle'));
-    setText('basicDatasetDropHint', t('basicDatasetDropHint'));
+    setText('uploadZoneLabel', t('uploadZoneLabel'));
+    setText('uploadZoneHint', t('uploadZoneHint'));
+    setText('inlinePreviewTitle', t('inlinePreviewTitle'));
+    setText('inlinePreviewHint', t('inlinePreviewHint'));
+    setText('taskCategoryGroupLabel', t('taskCategoryGroupLabel'));
+    setText('taskInputTypeGroupLabel', t('taskInputTypeGroupLabel'));
+    setText('taskOutputTypeGroupLabel', t('taskOutputTypeGroupLabel'));
+    ['taskCategoryChips', 'taskInputTypeChips', 'taskOutputTypeChips'].forEach(function(chipId, i) {
+      var chipEl = document.getElementById(chipId);
+      if (chipEl) chipEl.setAttribute('aria-label', t(['taskCategoryGroupLabel', 'taskInputTypeGroupLabel', 'taskOutputTypeGroupLabel'][i]));
+    });
     setText('samplingTitle', t('samplingTitle'));
     setText('samplingEditBtn', t('samplingEditBtn'));
     setText('samplingSaveBtn', t('samplingSaveBtn'));

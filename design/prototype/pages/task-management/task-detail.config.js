@@ -189,10 +189,9 @@ function resetTaskConfigSeedGuard() {
    branch, so a newly registered output type needs no changes here
    (constitution: Generalization-First). */
 function getOutputTypeDisplayLabel(outKey) {
-  var registry = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.outputTypes) || [];
-  var match = registry.filter(function(o) { return o.key === outKey; })[0];
-  if (!match) return outKey;
-  return state.lang === 'en' ? match.en : match.zh;
+  var outReg = OUTPUT_TYPE_REGISTRY[outKey];
+  if (!outReg) return outKey;
+  return state.lang === 'en' ? outReg.en : outReg.zh;
 }
 
 function summarizeOutputConfigForDisplay(outKey, config) {
