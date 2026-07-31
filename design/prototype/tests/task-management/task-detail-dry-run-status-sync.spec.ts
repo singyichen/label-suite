@@ -11,6 +11,10 @@ test('moves task status to waiting IAA confirmation after all 5 dry-run samples 
     await guidelineModalConfirm.click();
   }
 
+  /* Wait for the seeded progress to render before interacting, so the first
+     submit click cannot land while the workspace is still initializing. */
+  await expect(page.locator('#progressText')).toHaveText('2 / 5 已提交', { timeout: 15000 });
+
   for (let done = 3; done <= 5; done += 1) {
     await page.locator('.class-option').nth(2).click();
     await page.locator('#submitBtn').click();

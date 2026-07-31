@@ -124,12 +124,7 @@ test.describe('Task detail config parity with task-new Step 1/2', () => {
       window.localStorage.setItem('labelsuite.lang', 'en');
     });
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
-    const langLabel = page.locator('#langLabel');
-    await langLabel.waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
-    if ((await langLabel.textContent()) !== 'EN') {
-      await page.locator('#langToggle').click();
-    }
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
 
     const editBtn = page.locator('#overviewEditBtn');
     await expect(editBtn).toBeEnabled();

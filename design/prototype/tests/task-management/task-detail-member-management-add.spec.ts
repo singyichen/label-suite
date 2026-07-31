@@ -2,10 +2,15 @@ import { test, expect } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
 
+// Tab panels arrive via fetched partials and event bindings only attach after
+// the last partial (#workLogPanel) lands; wait for it before interacting.
+const PANEL_LOAD_TIMEOUT = 15000;
+
 test.describe('Task detail member management add flows', () => {
   test('supports search-add and email invite instead of candidate list', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await page.locator('#tabMemberManagement').click();
     await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
 
