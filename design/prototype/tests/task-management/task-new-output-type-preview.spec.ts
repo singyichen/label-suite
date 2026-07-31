@@ -1197,6 +1197,44 @@ test.describe('Step 2 preview: composite task data files', () => {
     await expect(pairLabels.nth(1)).toContainText('Hypothesis');
   });
 
+  test('nli.json — item pair labels are editable and sync to preview and code', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'nli-pair-label-test',
+      category: 'classification',
+      outputType: 'single_label',
+      inputType: 'item_pair',
+      dataFile: 'nli.json',
+      roles: {
+        Premise: 'input',
+        Hypothesis: 'input',
+        Label: 'output',
+      },
+    });
+
+    const label1 = page.getByTestId('item-pair-label-input-1');
+    const label2 = page.getByTestId('item-pair-label-input-2');
+    await expect(label1).toHaveValue('Premise');
+    await expect(label2).toHaveValue('Hypothesis');
+
+    const preview = page.locator('#annotationPreview');
+    const pairLabels = preview.locator('.annotation-preview-pair-label');
+    await expect(pairLabels).toHaveCount(2);
+
+    await label1.fill('前提');
+    await expect(pairLabels.nth(0)).toHaveText('前提');
+    await expect(pairLabels.nth(1)).toHaveText('Hypothesis');
+
+    /* Emptied label falls back to the dataset column name */
+    await label2.fill('');
+    await expect(pairLabels.nth(1)).toHaveText('Hypothesis');
+
+    const code = await page.locator('#codeEditor').inputValue();
+    expect(code).toContain('item_pair_labels');
+    expect(code).toContain('前提');
+  });
+
   test('mrc.json — free_text with background as evidence', async ({ page }) => {
     await setupAndGoToStep2(page, {
       taskName: 'mrc-composite-test',
@@ -1213,6 +1251,9 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.free_text.text!.length).toBeGreaterThan(50);
+
+    /* Pair label settings only appear for item_pair input */
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveCount(0);
 
     const preview = page.locator('#annotationPreview');
     await expect(

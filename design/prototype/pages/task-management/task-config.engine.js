@@ -692,6 +692,51 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
   return { accordion: accordion, body: body };
 }
 
+/* ── Item-pair display-name settings (input-level, not per output type) ── */
+function buildItemPairLabelSection() {
+  var card = document.createElement('div');
+  card.className = 'output-accordion item-pair-labels-card';
+  card.setAttribute('data-testid', 'item-pair-labels-card');
+
+  var header = document.createElement('div');
+  header.className = 'output-accordion-header item-pair-labels-header';
+  var title = document.createElement('div');
+  title.className = 'output-accordion-title';
+  title.textContent = t('itemPairLabelsTitle');
+  header.appendChild(title);
+  card.appendChild(header);
+
+  var body = document.createElement('div');
+  body.className = 'output-accordion-body';
+
+  if (!state.itemPairLabels) state.itemPairLabels = getItemPairLabels().slice();
+  [t('itemPairLabel1'), t('itemPairLabel2')].forEach(function(labelText, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'form-field';
+    var lbl = document.createElement('label');
+    lbl.className = 'field-label';
+    lbl.textContent = labelText;
+    var inputId = 'item-pair-label-input-' + (i + 1);
+    lbl.htmlFor = inputId;
+    wrap.appendChild(lbl);
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'entity-name-input';
+    inp.style.cssText = 'width:100%;padding:8px 12px;';
+    inp.id = inputId;
+    inp.setAttribute('data-testid', inputId);
+    inp.value = state.itemPairLabels[i] || '';
+    inp.addEventListener('input', function() {
+      state.itemPairLabels[i] = inp.value;
+      markDirty(); updateAnnotationPreview();
+    });
+    wrap.appendChild(inp);
+    body.appendChild(wrap);
+  });
+  card.appendChild(body);
+  return card;
+}
+
 var regressionDimensionInputId = 0;
 
 function buildRegressionDimensionSettings(config, settings) {
@@ -1539,6 +1584,21 @@ function getDatasetPairTexts() {
     return { text1: String(v1 !== undefined && v1 !== null ? v1 : ''), text2: String(v2 !== undefined && v2 !== null ? v2 : ''), col1: inputCols[0], col2: inputCols[1] };
   }
   return null;
+}
+
+/* Effective item_pair display names: the user-edited Step 2 values, falling
+   back per slot to the dataset input column name when unset or blank. */
+function getItemPairLabels() {
+  var pairTexts = getDatasetPairTexts();
+  var defaults = [
+    pairTexts ? pairTexts.col1 : (state.lang === 'en' ? 'Sentence A' : '句子 A'),
+    pairTexts ? pairTexts.col2 : (state.lang === 'en' ? 'Sentence B' : '句子 B'),
+  ];
+  var edited = state.itemPairLabels || [];
+  return [
+    (typeof edited[0] === 'string' && edited[0].trim()) ? edited[0].trim() : defaults[0],
+    (typeof edited[1] === 'string' && edited[1].trim()) ? edited[1].trim() : defaults[1],
+  ];
 }
 
 function normalizeRegressionValue(rawValue, min, max) {
@@ -3265,6 +3325,11 @@ function renderSchemaFields() {
     state.previewState = {};
     state.previewBypass = {};
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+    /* Task-detail seeding provides a one-shot pending value so saved labels
+       survive the seed-triggered reset; genuine dataset/role changes have no
+       pending value and re-derive defaults from the new columns. */
+    state.itemPairLabels = state._pendingItemPairLabels || null;
+    state._pendingItemPairLabels = null;
     Object.keys(state.outputConfigs).forEach(function(k) {
       if (state.outputConfigs[k]) {
         state.outputConfigs[k]._autoPopulated = false;
@@ -3367,6 +3432,9 @@ function renderSchemaFields() {
 
   /* ADR-029: render accordion layout for all output types (single or multi) */
   if (state.selectedOutputTypes.length >= 1) {
+    if (((state.taskInputTypes && state.taskInputTypes[0]) || 'single_item') === 'item_pair') {
+      container.appendChild(buildItemPairLabelSection());
+    }
     var autoCollapse = state.selectedOutputTypes.length > 2;
     state.selectedOutputTypes.forEach(function(outKey, idx) {
       var outReg = OUTPUT_TYPE_REGISTRY[outKey];
@@ -4218,6 +4286,7 @@ function updateAnnotationPreview() {
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
     if (!hasOutputOwnedInputPreview && currentInputType === 'item_pair') {
       var pairTexts = getDatasetPairTexts();
+      var pairLabels = getItemPairLabels();
       var pairWrap = document.createElement('div');
       pairWrap.className = 'annotation-preview-pair';
 
@@ -4228,7 +4297,7 @@ function updateAnnotationPreview() {
 
       var p1Label = document.createElement('div');
       p1Label.className = 'annotation-preview-pair-label';
-      p1Label.textContent = pairTexts ? pairTexts.col1 : (state.lang === 'en' ? 'Sentence A' : '句子 A');
+      p1Label.textContent = pairLabels[0];
       pairWrap.appendChild(p1Label);
       var p1 = document.createElement('div');
       p1.className = 'annotation-preview-sample';
@@ -4238,7 +4307,7 @@ function updateAnnotationPreview() {
 
       var p2Label = document.createElement('div');
       p2Label.className = 'annotation-preview-pair-label';
-      p2Label.textContent = pairTexts ? pairTexts.col2 : (state.lang === 'en' ? 'Sentence B' : '句子 B');
+      p2Label.textContent = pairLabels[1];
       pairWrap.appendChild(p2Label);
       var p2 = document.createElement('div');
       p2.className = 'annotation-preview-sample';
@@ -4658,6 +4727,19 @@ function saveCodeToVisual(showSuccessToast) {
       setText('codeErrorMsg', state.lang === 'en' ? 'input_type must match Step 1.' : 'input_type 必須與第一步設定一致。');
       return false;
     }
+    if (parsed.item_pair_labels !== undefined) {
+      var pairLabelsValid = currentInputType === 'item_pair'
+        && Array.isArray(parsed.item_pair_labels)
+        && parsed.item_pair_labels.length === 2
+        && parsed.item_pair_labels.every(function(v) { return typeof v === 'string'; });
+      if (!pairLabelsValid) {
+        el('codeErrorBar').classList.remove('hidden');
+        setText('codeErrorMsg', state.lang === 'en'
+          ? 'item_pair_labels must be an array of exactly 2 strings and requires the item_pair input type.'
+          : 'item_pair_labels 必須是恰好 2 個字串的陣列，且輸入類型須為項目對。');
+        return false;
+      }
+    }
     var imported = {};
     var unifiedError = '';
     parsed.outputs.forEach(function(output) {
@@ -4700,6 +4782,9 @@ function saveCodeToVisual(showSuccessToast) {
       imported[type]._autoPopulated = true;
       state.outputConfigs[type] = imported[type];
     });
+    if (parsed.item_pair_labels !== undefined) {
+      state.itemPairLabels = parsed.item_pair_labels.slice();
+    }
     state.previewState = {};
     state.previewBypass = {};
     state.codeDraftDirty = false;

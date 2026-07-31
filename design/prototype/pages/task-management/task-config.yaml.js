@@ -2,7 +2,8 @@
  * YAML subset serializer/parser for the shared task-config engine's code
  * editor (Step 2's YAML <-> JSON tabs). No DOM access.
  * Depends on: state, REGISTRY, OUTPUT_TYPE_REGISTRY, getOutputConfigFieldValue
- * (from task-config.data.js). Loaded after task-config.data.js.
+ * (from task-config.data.js) and getItemPairLabels (from task-config.engine.js,
+ * resolved at call time). Loaded after task-config.data.js.
  */
 
 /* ── YAML serialiser (no user data injected via innerHTML) ────── */
@@ -66,7 +67,11 @@ function configToCode() {
   if (state.selectedOutputTypes.length >= 1) {
     var unifiedConfig = {
       input_type: (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item',
-      outputs: state.selectedOutputTypes.map(function(outKey) {
+    };
+    if (unifiedConfig.input_type === 'item_pair') {
+      unifiedConfig.item_pair_labels = getItemPairLabels();
+    }
+    unifiedConfig.outputs = state.selectedOutputTypes.map(function(outKey) {
         var cfg = state.outputConfigs[outKey] || {};
         var outReg = OUTPUT_TYPE_REGISTRY[outKey];
         var finalCfg = {};
@@ -88,8 +93,7 @@ function configToCode() {
           }
         }
         return { type: outKey, config: finalCfg };
-      }),
-    };
+      });
     if (state.codeFormat === 'json') return JSON.stringify(unifiedConfig, null, 2);
     return toYaml(unifiedConfig);
   }

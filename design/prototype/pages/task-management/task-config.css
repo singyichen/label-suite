@@ -469,6 +469,10 @@
     .output-accordion-body { padding: 16px; }
     .output-accordion-dep { font-size: 12px; color: var(--color-text-soft); margin-top: 2px; }
     .output-accordion-dep::before { content: '⤷ '; }
+    /* Item-pair display-name card: same shell as accordions but non-collapsible */
+    .item-pair-labels-header { cursor: default; }
+    .item-pair-labels-header:hover { background: var(--color-slate-50); }
+    .item-pair-labels-card .output-accordion-body { display: flex; flex-direction: column; gap: 12px; }
     /* Multi-output preview */
     .preview-unified { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: white; }
     /* ABSA unified preview */
@@ -482,6 +486,7 @@
     .absa-arrow { color: var(--color-text-soft); font-size: 12px; }
     .output-type-index-badge { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); color: white; font-size: 11px; font-weight: 700; flex-shrink: 0; }
     html[data-theme="dark"] .output-accordion-header:hover { background: var(--color-primary-soft-bg); }
+    html[data-theme="dark"] .item-pair-labels-header:hover { background: var(--color-slate-50); }
     html[data-theme="dark"] .preview-unified { background: var(--color-white); }
     html[data-theme="dark"] .absa-preview-text { background: var(--color-slate-50); }
     html[data-theme="dark"] .absa-relation-row { background: var(--color-white); }

@@ -308,7 +308,25 @@ test.describe('Task detail profile mapping', () => {
       await editBtn.click();
 
       await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
-      await expect(page.locator('#schemaFields .output-accordion')).toHaveCount(task.outputCount);
+      /* The item-pair labels card shares .output-accordion styling but is not an output accordion */
+      await expect(page.locator('#schemaFields .output-accordion:not(.item-pair-labels-card)')).toHaveCount(task.outputCount);
     });
   }
+
+  test('persists edited item pair labels across settings edit sessions for T011', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
+
+    const editBtn = page.locator('#settingsEditBtn');
+    await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
+    await editBtn.click();
+
+    const label1 = page.getByTestId('item-pair-label-input-1');
+    await expect(label1).toHaveValue('Premise');
+    await label1.fill('前提');
+    await page.locator('#settingsSaveBtn').click();
+    await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
+
+    await editBtn.click();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('前提');
+  });
 });

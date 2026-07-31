@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.8.0
+版本: 6.9.0
 狀態: Draft
 ---
 
@@ -51,6 +51,7 @@
 - **v6.3.0 Sequence Tagging 標記單位**：將「標記單位」與「標記方案」拆成兩個獨立設定維度。`tokenization.unit` 支援 `character / word`，預設 `character`；字模式依可見字元切分，詞模式依語言感知詞界切分，兩者皆略過空白並讓標點獨立。切換單位後 Step 2 Token 網格與規則說明須立即重建，既有預覽 tag 不得錯套到新邊界；可見預標記數量改依目前單位重新驗證。數量不一致且預標記與另一單位的 Token 數對齊時，錯誤訊息須點名該單位並提供「切回該單位」或「改用符合目前單位的預標記」兩條出路；切換單位使數量重新一致時，可見預標記須自資料重新初始化（Bypass 明確清空的預覽狀態除外）。本版仍只完成 013 producer-side，正式 Annotation Workspace 與其他 consumer 維持延後。
 - **v6.4.0 標記預覽原始文本**：Step 2 序列標註預覽將 Token 網格上方的字／詞切分規則說明，改為顯示帶「原始文本」標題（英文 Text）、未經字／詞切分的原始輸入文本；該文本不隨標記單位切換而改變，切分行為改由 Token 網格本身呈現。通用輸入文字區塊的標籤由 Input 欄位名稱改為「原始文本」（英文 Text）；`item_pair` 於配對區塊上方顯示一次「原始文本」標題並保留兩段文本的欄位名稱小標。`entity_recognition`／`relation_identification` 的互動圈選文本區不另加標題，`free_text` 維持可設定的 `input_instruction` 契約。整合預覽標題由「整合預覽（實體辨識 + 關係識別）」簡化為「整合預覽」（英文 Unified preview）。tokenization 契約與預標記驗證行為不變。
 - **v6.4.1 選擇狀態與下游語意釐清**：Step 1 的三組 chip 分別寫入 `selected_categories[]`、`input_type` 與 `selectedOutputTypes[]`，不建立單一固定 `task_type`；完成設定後，`selectedOutputTypes[]` 一對一產生 `outputs[].type`。010 Task List 直接以 `outputs[].type` 顯示與篩選；`docs/product/example-data/` 的 13 份 fixture 僅為 prototype 示例，不是合法任務或輸出組合上限。
+- **v6.9.0 項目對名稱設定**：輸入類型為 `item_pair` 時，Step 2 標記設定於輸出類型手風琴清單上方顯示一張不可收合的「項目對名稱」設定卡，提供兩個單行文字欄位設定配對文本的顯示名稱；預設值自動帶入 Step 1 兩個 Input 角色欄位的原始欄位名稱，開放使用者編輯。標記預覽配對區塊的兩個小標即時顯示設定後名稱；欄位清空（trim 後為空）時該側小標回退顯示原始欄位名稱。更換資料集或欄位角色指定時名稱重新以新欄位名初始化。config 於 `input_type: item_pair` 時新增頂層 `item_pair_labels: [string, string]`（序列化生效值），Code 儲存回填同步驗證；014 Task Detail 概覽與標記設定編輯模式經共用引擎同步生效並持久化。`single_item` 與傳統 `sentence_pairs` 路徑不受影響。
 - **v6.8.0 序列標註預覽移除輸出卡片標題**：`sequence_tagging` 於 registry 宣告 `hidePreviewTitle: true`，Step 2 標記預覽（含 014 Overview「標記設定」編輯模式的 parity surface）不再顯示輸出卡片的「序列標註」標題，預覽直接以「原始文本」區塊起始。其他輸出類型的卡片標題與多輸出組合之間的分隔線行為不變。
 - **v6.7.0 多標籤「所有層級皆可選」提示改為 Tooltip**：`multi_label` 的 `label_options` 欄位於 registry 宣告 `hintAsTooltip: true` 並將「所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。」提示移入 `hint_zh`／`hint_en`；taxonomy 樹編輯器內不再顯示固定的提示框（`.taxonomy-editor-note` 移除），改為「標籤選項」欄位標題旁的實心圓形「?」按鈕，hover 或鍵盤 focus 時以 v6.6.0 相同樣式的 tooltip 泡泡顯示。共用引擎抽出 `attachFieldHintTooltip` helper，text 與 taxonomy-tree 欄位共用同一 tooltip 產生邏輯；task-detail 標記設定編輯模式經共用引擎同步生效。
 - **v6.6.0 自由文字說明欄位 helper text 改為 Tooltip**：`free_text` 的「輸入區說明」與「作答區說明」欄位於 registry 宣告 `hintAsTooltip: true`，用途與範例說明不再固定顯示於欄位下方，改為欄位標題旁的實心圓形「?」按鈕，hover 或鍵盤 focus 時以 tooltip 泡泡顯示。泡泡樣式對齊 MASTER.md §Tooltip：深色（`--color-ink`）泡泡置於觸發點上方、帶指向觸發點的向下箭頭、opacity 150ms 過場，並因多行說明文字放寬為 `max-width: 320px` 自動換行、左緣對齊觸發點（置中會被欄位左緣裁切）；`.output-accordion` 移除 `overflow: hidden`（圓角改由 header 自身處理），泡泡才能完整彈出 accordion 邊界。`.field-help-tooltip` + `.tooltip-bubble` 樣式集中於共用 `task-config.css`（移除 task-new／task-detail 頁內重複定義），task-new 與 task-detail 的抽樣筆數提示同步套用新樣式，task-detail 標記設定編輯模式經共用引擎同步生效。其他欄位的 helper text 顯示方式不變。
@@ -324,6 +325,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
 29. **Given** 已指定的 Evidence 欄位有任一紀錄缺值，**When** 檢查欄位預覽，**Then** 該欄位下方顯示紅色缺值數與問題紀錄識別，頁面停用「下一步」；將角色改回「不使用」後錯誤立即清除。
 30. **Given** 使用者建立 `free_text` 任務，**When** 在 Step 2 編輯「輸入區說明」與「作答區說明」，**Then** 右側預覽立即以兩段說明取代 Input／Output 原始 JSON key 作為主要標題，且 Code 與 `outputs[].config` 同步保存 `input_instruction`／`output_instruction`。
 31. **Given** 使用者開啟 `free_text` 設定或載入含舊 `show_reference` 的 config，**When** Step 2 完成正規化，**Then** 設定面板不顯示「顯示參考答案給標記者」，Code 與 `outputs[].config` 亦不保留 `show_reference`；若舊 config 缺少 instruction，依當前語系補入預設值且不阻擋下一步。
+32. **Given** 輸入類型為 `item_pair` 且 Step 1 已指定兩個 Input 欄位，**When** 進入 Step 2，**Then** 手風琴清單上方顯示「項目對名稱」設定卡，兩欄位預設值為兩個 Input 欄位的原始欄位名稱，且預覽配對區塊小標與之一致；**When** 編輯任一名稱，**Then** 對應預覽小標即時更新且 Code 區 `item_pair_labels` 同步序列化生效值；**When** 將欄位清空，**Then** 該側小標回退顯示原始欄位名稱。`single_item` 任務不顯示此設定卡。
 
 **介面定義**：
 
@@ -333,7 +335,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
   - 每個輸出類型有各自的互動式預覽區塊，使用者可直接操作體驗標記方式
   - 已上傳資料集時，預覽顯示資料集實際文字內容；未上傳時顯示預設範例文字
   - 預設不為 `evidence` 角色欄位顯示獨立區塊；當已選輸出類型於 registry 宣告 `rendersEvidencePreview: true`（目前為 `free_text`）且 Step 1 已指定 Evidence 時，最上方必須顯示「背景參考 (Evidence)」與該欄位的實際內容。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另記錄於 config 的 `evidence_fields`）
-  - 通用輸入文字區塊依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）+ 單一文字區塊；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶欄位名稱標籤的文字區塊，呈現配對輸入
+  - 通用輸入文字區塊依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）+ 單一文字區塊；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶項目對名稱小標的文字區塊（名稱依區塊 B 的「項目對名稱」設定，預設為 Input 欄位名稱），呈現配對輸入
   - 當已選輸出類型均未於 registry 宣告 `rendersInputPreview: true` 時，通用輸入文字區塊位於所有輸出類型預覽之上方；任一已選輸出類型宣告該 metadata 時，專屬或整合預覽負責完整呈現輸入內容，不得再顯示通用輸入文字區塊
   - `sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 宣告 `rendersInputPreview: true`，由專屬或整合預覽完整呈現輸入內容。複合任務依已選輸出類型的 registry metadata 推導，不得以任務名稱硬編判斷
   - 存在相依關係的輸出類型合併為整合預覽（如 `entity_recognition` + `relation_identification` 合併為含圈選文字、實體列表、關係建構器的統一介面）
@@ -386,6 +388,7 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
     | *（所有輸出類型共通）* | `allow_bypass`（允許無法判定 Bypass） | `boolean`（預設 `true`） | 否 |
 
   - 共通 `allow_bypass` toggle 視為獨立設定群組；前方存在其他 schema 欄位時，與前一欄位保留 12px 垂直間距，使用既有 spacing tokens 組合，不新增分隔線或額外外框
+  - 輸入類型為 `item_pair` 時，手風琴清單上方顯示一張與輸出類型面板同視覺外框、不可收合的「項目對名稱」設定卡（en：`Item pair labels`），內含「項目一名稱」與「項目二名稱」兩個單行文字欄位；預設值為 Step 1 兩個 Input 角色欄位的原始欄位名稱，開放編輯並即時同步預覽小標（見 FR-003k）；`single_item` 時不顯示此卡
 
 - 區塊 C：`整合設定檔工具（主工作區下方）`
   - 以單一外框依序容納橫向範本／上傳列、分隔線、Code 格式切換、固定 240px 編輯器與儲存按鈕；範本與 Code 不得各自再建立外框卡片
@@ -399,6 +402,8 @@ Step 2 必須由 `OUTPUT_TYPE_REGISTRY` 驅動，每個輸出類型在 registry 
         config:
           <field_key>: <value>
     ```
+
+  - `input_type: item_pair` 時，config 另含頂層 `item_pair_labels: [<項目一名稱>, <項目二名稱>]`（見 FR-003k）
 
 **行為規則**：
 
@@ -579,7 +584,7 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
 - **FR-003g**：Step 2 標記預覽區必須提供每個輸出類型的互動式標記體驗，使用者可實際操作標記方式（點擊、圈選、拖曳、輸入等），且在設定變更時即時同步更新。
 - **FR-003g-1**：預覽文字來源：已上傳資料集時讀取 `field_role_map` 中 `input` 角色欄位的實際內容；未上傳時顯示各輸出類型的預設範例文字。
 - **FR-003g-2**：Step 2 標記預覽區預設不得為 `evidence` 角色欄位顯示獨立卡片或區塊；只有已選輸出類型於 registry 宣告 `rendersEvidencePreview: true` 時例外顯示，目前 `free_text` 的該 metadata 為 `true`。例外情況下 Evidence 必須位於 Input 與輸出互動控制項之前；未指定 Evidence 時不得顯示空的背景區塊。Evidence 角色指定保留於 `field_role_map`（傳統 `sentence_pairs` 設定另將欄位記錄於 config 的 `evidence_fields`）。
-- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）與單一文字區塊，不再顯示 Input 欄位名稱標籤；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶欄位名稱標籤的文字區塊。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 的該 metadata 均為 `true`。複合任務須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
+- **FR-003g-3**：Step 2 標記預覽區的通用輸入文字須依輸入類型呈現：`single_item` 顯示「原始文本」標題（英文 Text）與單一文字區塊，不再顯示 Input 欄位名稱標籤；`item_pair` 於配對區塊上方顯示一次「原始文本」標題，並保留兩個帶項目對名稱小標的文字區塊，小標顯示 FR-003k 的項目對名稱生效值（預設為 Input 欄位名稱）。當所有已選輸出類型的 registry item 均未宣告 `rendersInputPreview: true` 時，通用輸入文字位於輸出類型預覽之前；任一已選輸出類型宣告 `rendersInputPreview: true` 時，系統不得顯示通用輸入文字區塊，輸入內容改由該輸出類型的專屬或整合預覽完整呈現。`sequence_tagging`、`entity_recognition`、`relation_identification`、`free_text` 的該 metadata 均為 `true`。複合任務須依已選輸出類型 metadata 自動套用，不得以任務名稱硬編。
 - **FR-003g-4**：各輸出類型的預覽互動（如點擊標籤 chip）僅刷新該輸出類型的預覽區塊，不影響輸入文字與其他輸出類型的預覽。
 - **FR-003g-5**：當 `field_role_map` 中存在 `output` 角色欄位時，Step 2 各輸出類型的預覽互動控制項必須以該欄位的實際資料值初始化預覽狀態：`single_label` 預選匹配的標籤；`multi_label` 將 flat `string[]` 正規化為單段 paths，或直接使用 hierarchical `string[][]` 完整 paths，且只以第一筆資料的合法 paths 初始化；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以符合目前方案且與 Token 等長的可見預標記初始化；`free_text` 預填實際答案文字；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化。無 output 欄位時其他輸出類型維持各自預設值，`free_text` textarea 則必須為空字串。當存在多個 `output` 角色欄位時，系統必須依各欄位值的資料形狀推斷欄位與輸出類型的對應；`string[][]` 優先識別為 hierarchical `multi_label` path，含位置前綴的 sequence tag 陣列可直接辨識，`SINGLE` 字串陣列則須同時依已選 output type 與 Token 數量對齊判定，不得一律誤判為 `multi_label`。Output 角色資料是建立者明確指定的 annotator-visible preannotation；隱藏 test-set ground truth 仍不得透過 API、前端 state 或 preview 下發給標記者。
 - **FR-003g-6**：`single_label` 的 `label_options` 仍由 scalar unique values 自動帶入 `{ name, color }`。`multi_label` 的自動帶入必須 shape-aware：flat `string[]` 建立一層 leaf taxonomy，舊值同時作 `id` 與 `name`；hierarchical `string[][]` 的 segment 是全樹唯一 node ID，依全部 records 合併共同 prefix 建立 union tree，並先以該 ID 作初始 `name`。若需跨分支同名顯示，使用者在 Visual 將不同 ID 節點的 `name` 改為相同文字。節點與 sibling 的順序依資料首次出現順序，已帶入後不重複執行；混合 shape、ID 出現在不同 parent、其他無效 segment 或超過 taxonomy 資源限制時不得建立部分樹。
@@ -595,6 +600,12 @@ Project Leader 在建立任務時可分別設定提供給標記員與審核員�
   - **整合預覽邊界**：`entity_recognition` + `relation_identification` 同時選取的整合預覽中，兩者各自顯示帶輸出類型名稱前綴的 Bypass 勾選項（如「實體辨識：無法判定 (Bypass)」與「關係識別：無法判定 (Bypass)」）；勾選 `entity_recognition` 的 Bypass 時，因 `relation_identification` 依賴 entity_recognition 實體，整合預覽全區（含關係建構器）一併清空停用；勾選 `relation_identification` 的 Bypass 時僅清空停用關係建構器與三元組列表，實體標記不受影響。
   - **狀態重設**：重新上傳或移除資料集檔案時，所有輸出類型的 Bypass 勾選狀態一併重設。
   - 本欄位定義標記員在 annotation-workspace 的可用行為契約，實際標記介面的 Bypass 呈現由 015 Annotation Workspace 規格另行定義。
+- **FR-003k**：輸入類型為 `item_pair` 時，Step 2 標記設定必須於輸出類型手風琴清單上方顯示一張不可收合的「項目對名稱」設定卡（en：`Item pair labels`），提供「項目一名稱」與「項目二名稱」兩個單行文字欄位。行為規則如下：
+  - **預設值**：兩欄位預設帶入 Step 1 兩個 Input 角色欄位的原始欄位名稱（依 Input 欄位順序）；無可用 Input 欄位時退回「句子 A」／「句子 B」（en：`Sentence A`／`Sentence B`）。
+  - **編輯同步**：編輯任一欄位時，標記預覽配對區塊對應的小標即時顯示編輯後名稱；欄位 trim 後為空時，該側小標回退顯示預設值（原始欄位名稱），另一側不受影響。
+  - **重新初始化**：更換或重新上傳資料集、變更欄位角色指定時，兩欄位重新以新的 Input 欄位名稱初始化，捨棄先前編輯值。
+  - **序列化**：`input_type` 為 `item_pair` 時，code 區的 unified config 必須含頂層 `item_pair_labels: [string, string]`，序列化生效值（含空欄位回退後的預設值）；`single_item` 時不得出現此欄位。Code 儲存回填時驗證 `item_pair_labels` 若存在必須為恰好 2 個字串的陣列且輸入類型為 `item_pair`，違反時顯示錯誤並不套用。
+  - **範圍**：僅影響 Step 2 設定與預覽顯示名稱，不改變 `field_role_map` 或資料欄位本身；014 Task Detail 概覽與標記設定編輯模式經共用引擎同步生效，儲存時持久化至任務資料。傳統 `sentence_pairs` 設定路徑不受影響。
 - **FR-004**：Step 3 必須支援啟動設定，包含抽樣方式與資料隔離。
 - **FR-004a**：Step 3 不提供任務成員加入功能；介面必須明確提示使用者於任務建立後到 `task-detail` 進行成員邀請。
 - **FR-004c**：Step 3 必須提供試標初始化，抽樣模式固定為 `RUN_INIT_SAMPLING_MODE`（`by_count`）；初始值應依 `SAMPLING_DEFAULTS_BY_CATEGORY` 對應大分類自動帶入，換算公式為 `round(dataset_total × trialPercent / 100)`；多個大分類時取最高比例。
@@ -800,6 +811,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.0 | 2026-07-31 | **項目對名稱設定**：輸入類型為 `item_pair` 時，Step 2 標記設定於手風琴清單上方新增不可收合的「項目對名稱」設定卡，兩個單行文字欄位預設帶入 Step 1 兩個 Input 欄位的原始欄位名稱並開放編輯；標記預覽配對區塊小標即時顯示生效值，欄位清空時該側回退原始欄位名稱，更換資料集或角色指定時重新初始化。unified config 於 `item_pair` 輸入時新增頂層 `item_pair_labels: [string, string]` 並於 Code 儲存回填時驗證；014 經共用引擎同步生效並於儲存時持久化。新增 FR-003k 與驗收情境 32，更新 FR-003g-3、介面定義與 Prototype Playwright 斷言；`single_item` 與傳統 `sentence_pairs` 路徑不受影響。 |
 | 6.8.0 | 2026-07-31 | **序列標註預覽移除輸出卡片標題**：`sequence_tagging` 於 `OUTPUT_TYPE_REGISTRY` 宣告 `hidePreviewTitle: true`，Step 2 標記預覽不再顯示輸出卡片的「序列標註」標題（含多輸出組合的獨立卡片路徑），預覽直接以「原始文本」區塊起始；014 Overview「標記設定」編輯模式經共用引擎同步生效。其他輸出類型卡片標題與多輸出組合之間的分隔線行為不變；更新驗收情境 10、FR-003d-1 與 Prototype Playwright 斷言。 |
 | 6.7.0 | 2026-07-31 | **多標籤「所有層級皆可選」提示改為 Tooltip**：`multi_label` 的 `label_options` 欄位宣告 `hintAsTooltip: true`，「所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。」提示移入 registry `hint_zh`／`hint_en`，taxonomy 樹編輯器移除固定提示框（`.taxonomy-editor-note`），改為「標籤選項」標題旁實心圓形「?」按鈕的 tooltip（hover／focus 顯示，樣式同 v6.6.0）；共用引擎抽出 `attachFieldHintTooltip` helper 供 text 與 taxonomy-tree 欄位共用；014 標記設定編輯模式經共用引擎同步生效。更新 FR-003d-6 與 Prototype Playwright 斷言。 |
 | 6.6.0 | 2026-07-31 | **自由文字說明欄位 helper text 改為 Tooltip**：`free_text` 的 `input_instruction`／`output_instruction` 設定欄位於 registry 宣告 `hintAsTooltip: true`，用途與範例說明改為欄位標題旁實心圓形「?」按鈕的 tooltip（hover／focus 顯示，`role="tooltip"` + `aria-describedby`），不再固定佔用欄位下方版面；泡泡樣式對齊 MASTER.md §Tooltip（深色泡泡置於觸發點上方、帶箭頭、150ms opacity 過場，多行文字放寬 `max-width: 320px`、左緣對齊觸發點），樣式集中於共用 `task-config.css` 並移除 task-new／task-detail 頁內重複定義，task-new 與 task-detail 抽樣筆數提示同步套用；`.output-accordion` 移除 `overflow: hidden`（header 自帶圓角）避免泡泡被 accordion 裁切；014 標記設定編輯模式經共用引擎同步生效。其他欄位 helper text 顯示方式不變；更新 FR-003d-10 與 Prototype Playwright 斷言。 |

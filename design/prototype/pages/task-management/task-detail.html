@@ -5230,6 +5230,8 @@ function getTaskTypeLabel() {
       return { type: outKey, config: state.outputConfigs[outKey] || {} };
     });
     TASK_DATA.fieldRoleMap = Object.assign({}, state.fieldRoleMap);
+    if (state.taskInputTypes[0] === 'item_pair') TASK_DATA.itemPairLabels = getItemPairLabels();
+    else delete TASK_DATA.itemPairLabels;
     TASK_DATA.datasetFileName = (state.datasetFiles[0] && state.datasetFiles[0].name) || TASK_DATA.datasetFileName;
     TASK_DATA.datasetSourceZh = TASK_DATA.datasetFileName;
     TASK_DATA.datasetSourceEn = TASK_DATA.datasetFileName;
@@ -5748,6 +5750,8 @@ function getTaskTypeLabel() {
     TASK_DATA.outputs = state.selectedOutputTypes.map(function(outKey) {
       return { type: outKey, config: state.outputConfigs[outKey] || {} };
     });
+    if ((state.taskInputTypes && state.taskInputTypes[0]) === 'item_pair') TASK_DATA.itemPairLabels = getItemPairLabels();
+    else delete TASK_DATA.itemPairLabels;
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
     state.settingsEditMode = false;
