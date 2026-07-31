@@ -31,24 +31,56 @@
         <input class="input-number" id="editTaskNameInput" type="text" maxlength="100" placeholder="例：新聞標題情感分類" />
       </div>
 
+      <!-- Step 1 parity: dataset upload (shared task-config engine ids) -->
       <div class="field-group">
-        <label class="field-label" id="editTaskTypeLabel" for="editTaskTypeSelect">任務類型</label>
-        <select class="input-select" id="editTaskTypeSelect"></select>
+        <label class="field-label" id="editDatasetLabel">資料集</label>
+        <div class="upload-zone" id="datasetUploadZone" role="button" tabindex="0">
+          <svg class="upload-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="upload-zone-label" id="uploadZoneLabel">點擊或拖曳上傳資料集</div>
+          <div class="upload-zone-hint" id="uploadZoneHint">僅支援 JSON · 最大 200 MB · UTF-8</div>
+          <input type="file" id="datasetFileInput" accept=".json" multiple style="display:none" aria-hidden="true" />
+        </div>
+        <div id="datasetFileList"></div>
+        <!-- Inline dataset preview table (field-role assignment) — auto-shown after upload -->
+        <div id="inlineDatasetPreview" class="inline-dataset-preview hidden" role="region" aria-label="資料集欄位角色指定">
+          <div class="inline-dataset-preview-header">
+            <span class="inline-dataset-preview-title" id="inlinePreviewTitle">欄位預覽・選擇納入 config 的欄位</span>
+            <span class="inline-dataset-preview-hint" id="inlinePreviewHint">前 2 筆資料・標頭勾選框決定是否納入 config</span>
+          </div>
+          <!-- Record-source bar: detected candidate arrays + manual override (built by renderInlineSourceBar) -->
+          <div class="inline-preview-source-bar hidden" id="inlinePreviewSourceBar"></div>
+          <div class="inline-dataset-preview-wrap">
+            <!-- table built by renderInlineDatasetPreview() -->
+          </div>
+          <div class="inline-preview-col-error" id="inlinePreviewColError" role="alert"></div>
+          <div class="field-error-msg" id="errInlineFieldCount" role="alert"></div>
+        </div>
+        <div class="field-error-msg" id="errDatasetCompat" role="alert"></div>
+        <div class="field-error-msg" id="errDataset"></div>
       </div>
 
+      <!-- Step 1 parity: task-type flat multi-select (categories / input types / output types) -->
       <div class="field-group">
-        <label class="field-label" id="editDatasetLabel" for="editDatasetFileInput">資料集</label>
-        <div class="upload-zone overview-dataset-upload-zone" id="overviewDatasetUploadZone" role="button" tabindex="0">
-          <svg style="width:28px;height:28px;color:var(--color-ink-muted);margin:0 auto 10px;display:block;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <span class="basic-dataset-drop-title" id="basicDatasetDropTitle">點擊上傳資料集</span>
-          <span class="basic-dataset-drop-hint" id="basicDatasetDropHint">支援 TXT / CSV / TSV / JSON</span>
+        <label class="field-label" id="editTaskTypeLabel">任務類型</label>
+        <div class="task-type-selector" id="taskTypeSelector" role="group" aria-labelledby="editTaskTypeLabel">
+          <div class="task-type-group">
+            <div class="task-type-group-label" id="taskCategoryGroupLabel">大分類（可多選）</div>
+            <div class="task-type-chip-grid" id="taskCategoryChips" role="group" aria-label="大分類（可多選）"></div>
+          </div>
+          <div class="task-type-group">
+            <div class="task-type-group-label" id="taskInputTypeGroupLabel">輸入類型（單選）</div>
+            <div class="task-type-chip-grid" id="taskInputTypeChips" role="group" aria-label="輸入類型（單選）"></div>
+          </div>
+          <div class="task-type-group">
+            <div class="task-type-group-label" id="taskOutputTypeGroupLabel">輸出類型（可多選）</div>
+            <div id="taskOutputTypeChips" role="group" aria-label="輸出類型（可多選）">
+              <p class="task-type-placeholder" id="outputTypePlaceholder">請先選擇大分類</p>
+            </div>
+          </div>
         </div>
-        <input class="hidden" id="editDatasetFileInput" type="file" accept=".txt,.csv,.tsv,.json" multiple />
-        <div class="overview-dataset-file-list hidden" id="editDatasetFileList"></div>
+        <div class="field-error-msg" id="errTaskType"></div>
       </div>
 
       <p class="inline-error" id="overviewEditError"></p>
@@ -78,46 +110,57 @@
       <div id="settingsConfigDynamicRows"></div>
     </div>
 
+    <!-- Step 2 parity: per-output accordions + interactive preview + YAML/JSON code
+         (shared task-config engine ids, matching task-new.html's #step2Panel scaffold) -->
     <div class="settings-edit-form hidden" id="settingsEditForm">
-      <div class="s2-preview-top">
-        <div class="yaml-preview-label" id="settingsAnnotationPreviewLabel">標記預覽</div>
-        <div class="annotation-preview" id="settingsAnnotationPreview"></div>
+      <div class="s2-primary-workspace" id="s2PrimaryWorkspace" data-layout="default" data-testid="step2-primary-workspace">
+        <div id="s2PrimarySettingsSlot"></div>
+        <div class="s2-preview-top" data-testid="step2-preview-panel">
+          <div class="yaml-preview-label" id="annotationPreviewLabel">標記預覽</div>
+          <div class="annotation-preview" id="annotationPreview" aria-label="Annotation preview"></div>
+        </div>
       </div>
 
-      <div class="settings-editor-layout">
-        <div>
+      <div class="s2-layout" id="s2SupportingTools" data-presentation="default" data-testid="step2-supporting-tools">
+        <div class="s2-visual-config-column">
           <div class="template-section">
-            <div class="template-section-title" id="settingsTemplateSectionTitle">從範本開始或者上傳設定檔</div>
+            <div class="template-section-title" id="s2TemplateSectionTitle">從範本開始或者上傳設定檔</div>
             <div class="template-actions">
-              <div id="settingsTemplateBtns"></div>
-              <button class="template-btn" id="settingsUploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
-              <input class="hidden" id="settingsConfigFileInput" type="file" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" />
+              <div id="templateBtns"></div>
+              <button class="template-btn" id="uploadConfigBtn" type="button">上傳設定檔（YAML / JSON）</button>
+              <input type="file" id="configFileInput" accept=".yaml,.yml,.json,application/json,text/yaml,text/x-yaml" style="display:none" aria-hidden="true" />
             </div>
           </div>
-          <div id="settingsSchemaFields"></div>
-          <p class="inline-error" id="settingsEditError"></p>
+          <div id="s2DefaultSettingsSlot">
+            <div class="s2-settings-panel" id="s2SettingsPanel" data-testid="step2-settings-panel">
+              <div class="yaml-preview-label s2-settings-panel-label" id="settingsPanelLabel" data-testid="step2-settings-label">標記設定</div>
+              <div id="schemaFields"></div>
+              <div class="field-error-msg" id="errSchema" style="margin-top:var(--space-sm);"></div>
+            </div>
+          </div>
         </div>
-
         <div class="s2-code-panel">
           <div class="s2-code-header">
             <div class="yaml-preview-label" id="settingsCodeLabel" style="margin-bottom:0;">CODE</div>
-            <div class="settings-code-format" id="settingsCodeFormatBtns">
-              <button class="btn btn-ghost" type="button" id="settingsFormatYamlBtn">YAML</button>
-              <button class="btn btn-ghost" type="button" id="settingsFormatJsonBtn">JSON</button>
+            <div id="codeFormatBtns" style="display:flex;gap:6px;">
+              <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;font-weight:700;" id="formatYamlBtn" type="button" onclick="setCodeFormat('yaml')">YAML</button>
+              <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" id="formatJsonBtn" type="button" onclick="setCodeFormat('json')">JSON</button>
             </div>
           </div>
-          <textarea class="code-editor" id="settingsCodeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
-          <div class="code-error-bar hidden" id="settingsCodeErrorBar">
+          <textarea class="code-editor" id="codeEditor" spellcheck="false" aria-label="YAML / JSON 設定"></textarea>
+          <div class="code-error-bar hidden" id="codeErrorBar">
             <svg style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span id="settingsCodeErrorMsg"></span>
+            <span id="codeErrorMsg"></span>
           </div>
           <div class="code-actions">
-            <button class="btn btn-secondary" id="settingsSaveCodeBtn" type="button" disabled>
-              <span id="settingsSaveCodeBtnLabel">儲存</span>
+            <button class="btn btn-secondary" id="saveCodeBtn" type="button" disabled>
+              <span id="saveCodeBtnLabel">儲存</span>
             </button>
           </div>
         </div>
       </div>
+
+      <p class="inline-error" id="settingsEditError"></p>
     </div>
   </section>
 

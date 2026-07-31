@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../../assets/tokens.css" />
   <link rel="stylesheet" href="../shared/sidebar.css" />
   <script src="../../assets/theme-fouc.js"></script>
+  <link rel="stylesheet" href="task-config.css">
   <style>
     :root {
       --navbar-mobile-height: 84px;
@@ -879,6 +880,8 @@
       padding: 16px;
     }
     .modal-backdrop.show { display: flex; }
+    .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
+    .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
     .modal {
       width: min(520px, 100%);
       background: var(--color-white);
@@ -2524,17 +2527,25 @@
     <div class="modal-xl-header">
       <div>
         <h2 id="datasetPreviewModalTitle">資料集預覽</h2>
-        <p class="preview-hint">顯示前 10 筆・僅供確認用途</p>
+        <p class="preview-hint" id="datasetPreviewModalHint">顯示第一筆資料・僅供確認用途</p>
       </div>
       <button class="modal-close-btn" id="datasetPreviewCloseBtn" type="button" aria-label="關閉">
         <svg class="modal-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <div class="preview-table-wrap">
-      <table class="preview-table">
-        <thead id="datasetPreviewHead"></thead>
-        <tbody id="datasetPreviewBody"></tbody>
-      </table>
+    <div class="preview-json-wrap">
+      <pre class="preview-json" id="datasetPreviewJson"></pre>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="taxonomyDeleteModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="taxonomyDeleteModalTitle">
+  <div class="modal">
+    <h2 id="taxonomyDeleteModalTitle">刪除標籤分支？</h2>
+    <p id="taxonomyDeleteModalDesc"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" type="button" id="taxonomyDeleteCancelBtn">取消</button>
+      <button class="btn btn-primary" type="button" id="taxonomyDeleteConfirmBtn" style="background:var(--color-error);border-color:var(--color-error);">刪除</button>
     </div>
   </div>
 </div>
@@ -2569,6 +2580,13 @@
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
+<script src="task-list.data.js"></script>
+<script src="task-detail.data.js"></script>
+<script src="task-config.data.js"></script>
+<script src="task-config.yaml.js"></script>
+<script src="task-config.dataset.js"></script>
+<script src="task-config.engine.js"></script>
+<script src="task-detail.config.js"></script>
 <script>
   var I18N = {
     zh: {
@@ -2636,6 +2654,8 @@
       overviewSaveSuccess: '基本資料已更新',
       overviewLeaveConfirm: '你有尚未儲存的基本資訊變更，確定要離開編輯模式嗎？',
       overviewEditTaskNameRequired: '任務名稱不可為空。',
+      overviewEditTaskTypeRequired: '請至少選擇大分類、輸入類型與輸出類型各一項。',
+      overviewEditDatasetRequired: '請上傳資料集。',
       settingsEditBtn: '編輯',
       settingsSaveBtn: '儲存',
       settingsCancelBtn: '取消',
@@ -3532,6 +3552,10 @@
       navProfile: 'Profile',
     }
   };
+  /* Merge the shared task-config engine's Step 1/Step 2 i18n keys (chip labels,
+     dataset preview, template/code editor strings) into this page's own I18N. */
+  Object.assign(I18N.zh, TASK_CONFIG_I18N.zh);
+  Object.assign(I18N.en, TASK_CONFIG_I18N.en);
 
   var TASK_DATA = {
     taskId: 'TASK-014',
@@ -3602,306 +3626,6 @@
     ]
   };
   var DEFAULT_TASK_DATA = JSON.parse(JSON.stringify(TASK_DATA));
-
-  var TASK_PROFILE_MAP = {
-    T001: {
-      taskId: 'T001',
-      taskNameZh: '新聞標題多標籤分類',
-      taskNameEn: 'News Headline Multi-label Classification',
-      taskTypeKey: 'single_sentence_classification',
-      datasetTotal: 3200,
-      datasetSourceZh: 'news_headlines_multilabel_2026.csv',
-      datasetSourceEn: 'news_headlines_multilabel_2026.csv',
-      datasetSizeBytes: 413,
-      configVersion: 'cfg-t001-v2.1.0',
-      configFileName: '',
-      configContent: 'labels:\n  - 政治\n  - 社會\n  - 娛樂\n  - 體育\n  - 科技\nallow_multiple: true',
-      guidelineUploaded: true,
-      guidelineTextZh: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
-      guidelineTextEn: 'Select multiple topic labels when the headline covers more than one news category.',
-      guidelineText: '可複選多個主題標籤，若標題同時涉及多個新聞面向請一併標記。',
-      guidelineFiles: [{ name: 'headline_taxonomy.pdf', type: 'pdf' }],
-      forceGuideline: true,
-      samplingMode: 'by_count',
-      samplingValue: 10,
-      iaaMethod: 'krippendorff_alpha_nominal',
-      trialRound: 0,
-      targetAgreement: 0.8,
-      currentAgreement: 0,
-      minAnnotators: 3,
-      currentAnnotators: 0,
-      currentStd: 0,
-      isolationEnabled: true,
-      isolationLastActor: 'Mandy Chen',
-      isolationLastUpdated: '2026-05-07 09:00',
-      trialRounds: [],
-      status: 'draft',
-    },
-    T002: {
-      taskId: 'T002',
-      taskNameZh: '情感 VA 雙維度評分',
-      taskNameEn: 'Sentiment VA Dual-axis Scoring',
-      taskTypeKey: 'single_sentence_va_scoring',
-      datasetTotal: 1280,
-      datasetSourceZh: 'sentiment_va_corpus_v2.csv',
-      datasetSourceEn: 'sentiment_va_corpus_v2.csv',
-      datasetSizeBytes: 413,
-      configVersion: 'cfg-t002-v1.4.0',
-      configFileName: '',
-      configContent: 'valence:\n  min: 1\n  max: 9\n  step: 1\narousal:\n  min: 1\n  max: 9\n  step: 1',
-      guidelineUploaded: true,
-      guidelineTextZh: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
-      guidelineTextEn: 'Rate both valence and arousal based on the emotion evoked by the sentence.',
-      guidelineText: '請依句子引發的正負情緒與激發程度分別填入 Valence 與 Arousal 分數。',
-      guidelineFiles: [{ name: 'VA_emj.png', type: 'png' }],
-      forceGuideline: true,
-      status: 'waiting_iaa_confirmation',
-      samplingMode: 'by_count',
-      samplingValue: 10,
-      iaaMethod: 'krippendorff_alpha_nominal',
-      trialRound: 2,
-      targetAgreement: 0.8,
-      currentAgreement: 0.81,
-      minAnnotators: 3,
-      currentAnnotators: 3,
-      currentStd: 0.08,
-      trialRounds: [
-        {
-          round: 1,
-          sampleCount: 10,
-          agreement: 0.68,
-          annotators: 3,
-          std: 0.15,
-          result: 'failed',
-          usedSamples: 10,
-          date: '2026-05-01',
-          noteZh: '第一回合在情緒界線案例分歧較大，未達正式啟動門檻。',
-          noteEn: 'Round 1 showed large disagreement on borderline sentiment cases and did not pass.'
-        },
-        {
-          round: 2,
-          sampleCount: 10,
-          agreement: 0.81,
-          annotators: 3,
-          std: 0.08,
-          result: 'passed',
-          usedSamples: 10,
-          date: '2026-05-03',
-          noteZh: '第二回合調整說明後達標，可用剩餘樣本進入正式標記。',
-          noteEn: 'Round 2 passed after guideline refinement and unlocks the remaining pool for official work.'
-        }
-      ],
-    },
-    T003: {
-      taskId: 'T003',
-      taskNameZh: '產品評論 Aspect List 抽取／校正',
-      taskNameEn: 'Product Review Aspect List Extraction / Correction',
-      taskTypeKey: 'sequence_labeling',
-      datasetTotal: 860,
-      datasetSourceZh: 'product_reviews_ner_aspect.tsv',
-      datasetSourceEn: 'product_reviews_ner_aspect.tsv',
-      datasetSizeBytes: 526,
-      configVersion: 'cfg-t003-v3.0.2',
-      configFileName: '',
-      configContent: 'subtype: aspect_list\ninput_field: sentence\naspect_list_field: aspects\nallow_sentence_edit: false\nallow_aspect_add: true\nallow_aspect_delete: true\nrequire_exact_match_in_sentence: true\nmin_aspects: 1\nmax_aspects: 10\nrequire_sentiment_context_check: true',
-      guidelineUploaded: true,
-      guidelineTextZh: '請根據產品評論句子整理 Aspect List，可新增或刪除不符合前後文情緒描述的 aspect。',
-      guidelineTextEn: 'Review each product sentence and produce an Aspect List. Add or remove aspects according to the sentiment context.',
-      guidelineText: '請根據產品評論句子整理 Aspect List，可新增或刪除不符合前後文情緒描述的 aspect。',
-      guidelineFiles: [{ name: 'sequence_labeling_examples.pdf', type: 'pdf' }],
-      forceGuideline: true,
-      status: 'draft',
-    },
-    T004: {
-      taskId: 'T004',
-      taskNameZh: '醫療關係抽取（Entity / Triple）',
-      taskNameEn: 'Medical Relation Extraction (Entity / Triple)',
-      taskTypeKey: 'relation_extraction',
-      datasetTotal: 1420,
-      datasetSourceZh: 'medical_relation_triples.jsonl',
-      datasetSourceEn: 'medical_relation_triples.jsonl',
-      datasetSizeBytes: 768,
-      configVersion: 'cfg-t004-v1.8.3',
-      configFileName: '',
-      configContent: 'entity_types:\n  - name: DRUG\n    color: "#6366F1"\n  - name: DISEASE\n    color: "#10B981"\n  - name: SYMPTOM\n    color: "#F59E0B"\nrelation_types:\n  - treats\n  - causes\n  - indicates\ntuple_mode: triple',
-      guidelineUploaded: true,
-      guidelineTextZh: '先標出醫療實體，再建立對應的藥物、疾病與症狀關係三元組。',
-      guidelineTextEn: 'Mark medical entities first, then annotate triples between drugs, diseases, and symptoms.',
-      guidelineText: '先標出醫療實體，再建立對應的藥物、疾病與症狀關係三元組。',
-      guidelineFiles: [{ name: 'medical_relation_schema.md', type: 'md' }],
-      forceGuideline: false,
-      status: 'draft',
-    },
-    T005: {
-      taskId: 'T005',
-      taskNameZh: '句對相似度 / 蘊含判定',
-      taskNameEn: 'Sentence Pair Similarity / Entailment',
-      taskTypeKey: 'sentence_pairs',
-      datasetTotal: 2100,
-      datasetSourceZh: 'sentence_pairs_similarity.jsonl',
-      datasetSourceEn: 'sentence_pairs_similarity.jsonl',
-      datasetSizeBytes: 682,
-      configVersion: 'cfg-t005-v1.3.1',
-      configFileName: '',
-      configContent: 'task_type: sentence_pairs\nsimilarity_metric: cosine\nentailment_mode: binary\nallow_bidirectional: false\nlabels:\n  - 蘊含\n  - 矛盾\n  - 中立',
-      guidelineUploaded: true,
-      guidelineTextZh: '判斷兩句語意是否相似，以及第一句是否蘊含第二句。',
-      guidelineTextEn: 'Determine if two sentences are semantically similar, and whether the first sentence entails the second.',
-      guidelineText: '判斷兩句語意是否相似，以及第一句是否蘊含第二句。',
-      guidelineFiles: [{ name: 'sentence_pairs_guide.pdf', type: 'pdf' }],
-      forceGuideline: false,
-      status: 'draft',
-    },
-    T006: {
-      taskId: 'T006',
-      taskNameZh: 'NER 命名實體辨識',
-      taskNameEn: 'NER Named Entity Recognition',
-      taskTypeKey: 'sequence_labeling',
-      datasetTotal: 950,
-      datasetSourceZh: 'news_ner_corpus_v1.csv',
-      datasetSourceEn: 'news_ner_corpus_v1.csv',
-      datasetSizeBytes: 504,
-      configVersion: 'cfg-t006-v1.2.0',
-      configFileName: '',
-      configContent: 'subtype: ner\nentities:\n  - name: PER\n    color: "#6366F1"\n  - name: ORG\n    color: "#10B981"\n  - name: LOC\n    color: "#F59E0B"\nscheme: IOB2\nallow_overlapping: false\ninput_field: text\nentity_field: entities\nallow_custom_entity_type: false\nrequire_entity_type: true\nallow_nested_entities: false\nmin_entity_length: 1\nmax_entity_length: 50',
-      guidelineUploaded: true,
-      guidelineTextZh: '從新聞文本中識別並標記命名實體，包括人名、組織、地名和其他實體類型。',
-      guidelineTextEn: 'Identify and annotate named entities from news text, including persons, organizations, locations, and other entity types.',
-      guidelineText: '從新聞文本中識別並標記命名實體，包括人名、組織、地名和其他實體類型。',
-      guidelineFiles: [{ name: 'ner_guidelines.pdf', type: 'pdf' }],
-      forceGuideline: true,
-      status: 'draft',
-    },
-    T007: {
-      taskId: 'T007',
-      taskNameZh: '商品評論分類 v2',
-      taskNameEn: 'Product Review Classification v2',
-      taskTypeKey: 'single_sentence_classification',
-      datasetTotal: 1750,
-      datasetSourceZh: 'product_review_classification_v2.csv',
-      datasetSourceEn: 'product_review_classification_v2.csv',
-      datasetSizeBytes: 462,
-      configVersion: 'cfg-t007-v2.0.0',
-      configFileName: '',
-      configContent: 'labels:\n  - 好評\n  - 普通\n  - 差評\nallow_multiple: false',
-      guidelineUploaded: true,
-      guidelineTextZh: '依商品評論整體語氣標記好評、普通或差評。',
-      guidelineTextEn: 'Classify each product review as positive, neutral, or negative.',
-      guidelineText: '依商品評論整體語氣標記好評、普通或差評。',
-      guidelineFiles: [{ name: 'product_review_taxonomy.pdf', type: 'pdf' }],
-      forceGuideline: true,
-      status: 'official_run_in_progress',
-      samplingMode: 'by_count',
-      samplingValue: 10,
-      iaaMethod: 'krippendorff_alpha_nominal',
-      trialRound: 1,
-      targetAgreement: 0.8,
-      currentAgreement: 0.84,
-      minAnnotators: 3,
-      currentAnnotators: 3,
-      currentStd: 0.06,
-      trialRounds: [
-        {
-          round: 1,
-          sampleCount: 10,
-          agreement: 0.84,
-          annotators: 3,
-          std: 0.06,
-          result: 'passed',
-          usedSamples: 10,
-          date: '2026-04-24',
-          noteZh: '商品評論分類試標已達標，已進入正式標記。',
-          noteEn: 'The product review classification trial passed and moved to official work.'
-        }
-      ],
-    },
-    T009: {
-      taskId: 'T009',
-      taskNameZh: '對話意圖標記',
-      taskNameEn: 'Dialogue Intent Labeling',
-      taskTypeKey: 'single_sentence_classification',
-      datasetTotal: 640,
-      datasetSourceZh: 'dialogue_intent_v1.csv',
-      datasetSourceEn: 'dialogue_intent_v1.csv',
-      datasetSizeBytes: 318,
-      configVersion: 'cfg-t009-v1.1.0',
-      configFileName: '',
-      configContent: 'labels:\n  - 查詢\n  - 申請\n  - 取消\n  - 客訴\nallow_multiple: false',
-      guidelineUploaded: true,
-      guidelineTextZh: '根據使用者訊息判斷主要對話意圖。',
-      guidelineTextEn: 'Label the primary intent of each user message.',
-      guidelineText: '根據使用者訊息判斷主要對話意圖。',
-      guidelineFiles: [{ name: 'dialogue_intent_guide.pdf', type: 'pdf' }],
-      forceGuideline: false,
-      status: 'dry_run_in_progress',
-      samplingMode: 'by_count',
-      samplingValue: 10,
-      iaaMethod: 'krippendorff_alpha_nominal',
-      trialRound: 1,
-      targetAgreement: 0.8,
-      currentAgreement: 0.62,
-      minAnnotators: 3,
-      currentAnnotators: 3,
-      currentStd: 0.18,
-      trialRounds: [
-        {
-          round: 1,
-          sampleCount: 10,
-          agreement: 0.62,
-          annotators: 3,
-          std: 0.18,
-          result: 'failed',
-          usedSamples: 10,
-          date: '2026-04-23',
-          noteZh: '第一回合意圖邊界仍不一致，需新增 R2 試標回合。',
-          noteEn: 'Round 1 did not align on intent boundaries, so R2 is needed.'
-        }
-      ],
-    },
-    T010: {
-      taskId: 'T010',
-      taskNameZh: '醫療文本 NER',
-      taskNameEn: 'Medical NER',
-      taskTypeKey: 'sequence_labeling',
-      datasetTotal: 1800,
-      datasetSourceZh: 'medical_ner_corpus.csv',
-      datasetSourceEn: 'medical_ner_corpus.csv',
-      datasetSizeBytes: 912,
-      configVersion: 'cfg-t010-v1.6.0',
-      configFileName: '',
-      configContent: 'subtype: ner\nentities:\n  - name: DRUG\n    color: "#6366F1"\n  - name: DISEASE\n    color: "#10B981"\n  - name: SYMPTOM\n    color: "#F59E0B"\nscheme: IOB2\nallow_overlapping: false',
-      guidelineUploaded: true,
-      guidelineTextZh: '標記醫療文本中的藥物、疾病與症狀實體。',
-      guidelineTextEn: 'Mark drug, disease, and symptom entities in medical text.',
-      guidelineText: '標記醫療文本中的藥物、疾病與症狀實體。',
-      guidelineFiles: [{ name: 'medical_ner_guidelines.pdf', type: 'pdf' }],
-      forceGuideline: true,
-      status: 'completed',
-      samplingMode: 'by_count',
-      samplingValue: 10,
-      iaaMethod: 'pairwise_f1_strict',
-      trialRound: 1,
-      targetAgreement: 0.82,
-      currentAgreement: 0.87,
-      minAnnotators: 3,
-      currentAnnotators: 3,
-      currentStd: 0.04,
-      trialRounds: [
-        {
-          round: 1,
-          sampleCount: 10,
-          agreement: 0.87,
-          annotators: 3,
-          std: 0.04,
-          result: 'passed',
-          usedSamples: 10,
-          date: '2026-04-25',
-          noteZh: '醫療 NER 試標已達標，正式標記已完成。',
-          noteEn: 'The medical NER trial passed and the official work is complete.'
-        }
-      ],
-    },
-  };
 
   var SAMPLING_DEFAULTS_BY_TYPE = {
     single_sentence_classification: { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 12 },
@@ -4035,15 +3759,11 @@
     pendingReviewerTabToast: false,
     overviewEditMode: false,
     overviewDirty: false,
-    overviewDraft: null,
     guidelineEditMode: false,
     guidelineDirty: false,
     guidelineDraft: null,
     settingsEditMode: false,
     settingsDirty: false,
-    settingsDraft: null,
-    settingsCodeDraftDirty: false,
-    settingsNerAdvancedOpen: false,
     samplingEditMode: false,
     samplingDirty: false,
     samplingDraft: null,
@@ -4061,89 +3781,43 @@
     mdPageSize: 20,
     mdRows: [],
     wlPage: 1,
-    wlPageSize: 20
+    wlPageSize: 20,
+    /* ── Shared task-config engine (Step 1/Step 2 parity) state ──────
+       Mirrors task-new.html's own `state` fields; consumed by
+       task-config.engine.js / .data.js / .yaml.js / .dataset.js and
+       task-detail.config.js. Seeded per-task by ensureTaskConfigSeeded(). */
+    datasetFiles: [], fieldRoleMap: {},
+    datasetParsedColumns: [], datasetParsedRows: [], datasetRawFirstRow: {}, datasetColumnUniqueValues: {},
+    _datasetRoots: [],
+    _datasetVersion: 0,
+    datasetCandidates: [],
+    datasetRecordPath: '$',
+    _roleMapBySource: {},
+    datasetTotalRecords: 0,
+    datasetFieldProfile: {},
+    datasetPreviewRawRows: [],
+    taskCategories: [], taskInputTypes: [], taskOutputTypes: [], taskType: '',
+    resolvedTaskTypes: [], configDataMap: {},
+    selectedOutputTypes: [],
+    outputConfigs: {},
+    columnOutputTypeMap: {},
+    _lastAutoPopKey: '',
+    previewEntities: [],
+    previewTriples: [],
+    activeEntityType: null,
+    relDraft: { e1: null, rel: null, e2: null },
+    relSel: null,
+    relMsg: '',
+    previewInited: false,
+    previewState: {},
+    previewBypass: {},
+    codeFormat: 'yaml', configData: {},
+    codeDraftDirty: false,
+    nerAdvancedOpen: false,
+    taxonomyDeleteCallback: null,
+    _configSeededForTaskId: null
   };
 
-  var TASK_TYPE_OPTIONS = [
-    { key: 'single_sentence_classification', zh: '單句分類（含多標籤）', en: 'Single Sentence Classification (Multi-label)' },
-    { key: 'single_sentence_va_scoring', zh: '單句 VA 雙維度評分（Valence / Arousal）', en: 'Single Sentence VA Scoring (Valence / Arousal)' },
-    { key: 'sequence_labeling', zh: '序列標記（含 Aspect / NER）', en: 'Sequence Labeling (Aspect / NER)' },
-    { key: 'relation_extraction', zh: '關係抽取（Entity + Relation + Triple）', en: 'Relation Extraction (Entity + Relation + Triple)' },
-    { key: 'sentence_pairs', zh: '句對任務（相似度 / 蘊含）', en: 'Sentence Pairs (Similarity / Entailment)' },
-  ];
-
-  var SETTINGS_REGISTRY = {
-    single_sentence_classification: {
-      fields: [
-        { key: 'labels', type: 'tag-list', required: true, zh: '標籤清單', en: 'Labels', hint_zh: '輸入標籤後按 Enter', hint_en: 'Type label and press Enter' },
-        { key: 'allow_multiple', type: 'boolean', required: false, zh: '允許多選', en: 'Allow multiple labels', defaultValue: false },
-      ],
-      defaultTemplate: { labels: ['正向', '負向', '中立'], allow_multiple: false },
-      defaultTemplateI18n: {
-        zh: { labels: ['正向', '負向', '中立'], allow_multiple: false },
-        en: { labels: ['Positive', 'Negative', 'Neutral'], allow_multiple: false },
-      },
-    },
-    single_sentence_va_scoring: {
-      fields: [
-        { key: 'va_dimensions', type: 'va-dimensions', required: true, zh: 'VA 雙維度設定', en: 'VA dimensions' },
-      ],
-      defaultTemplate: {
-        valence: { min: 1, max: 9, step: 1 },
-        arousal: { min: 1, max: 9, step: 1 },
-      },
-    },
-    sequence_labeling: {
-      fields: [
-        { key: 'subtype', type: 'subtype-select', required: true, zh: '子類型', en: 'Subtype', options: ['ner', 'aspect_list'], optionLabels: { zh: { ner: 'NER 命名實體辨識', aspect_list: 'Aspect List 抽取／校正' }, en: { ner: 'NER (Named Entity Recognition)', aspect_list: 'Aspect List extraction / correction' } }, defaultValue: 'ner' },
-        { key: 'entities', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types', showWhen: 'ner' },
-        { key: 'scheme', type: 'select', required: true, zh: '標記格式', en: 'Labeling scheme', options: ['IOB2', 'BIOES'], defaultValue: 'IOB2', showWhen: 'ner' },
-        { key: 'allow_overlapping', type: 'boolean', required: false, zh: '允許重疊標記', en: 'Allow overlapping spans', defaultValue: false, showWhen: 'ner' },
-        { key: 'input_field', type: 'text', required: true, zh: '輸入欄位名稱', en: 'Input field name', defaultValue: 'text', placeholder_zh: '預設：text', placeholder_en: 'Default: text', showWhen: 'ner', advanced: true },
-        { key: 'entity_field', type: 'text', required: true, zh: '實體欄位名稱', en: 'Entity field name', defaultValue: 'entities', placeholder_zh: '預設：entities', placeholder_en: 'Default: entities', showWhen: 'ner', advanced: true },
-        { key: 'allow_custom_entity_type', type: 'boolean', required: false, zh: '允許自訂實體類型', en: 'Allow custom entity type', defaultValue: false, showWhen: 'ner', advanced: true },
-        { key: 'require_entity_type', type: 'boolean', required: false, zh: '要求實體類型', en: 'Require entity type', defaultValue: true, showWhen: 'ner', advanced: true },
-        { key: 'allow_nested_entities', type: 'boolean', required: false, zh: '允許巢狀實體', en: 'Allow nested entities', defaultValue: false, showWhen: 'ner', advanced: true },
-        { key: 'min_entity_length', type: 'number', required: false, zh: '最少實體長度', en: 'Min entity length', defaultValue: 1, showWhen: 'ner', advanced: true },
-        { key: 'max_entity_length', type: 'number', required: false, zh: '最多實體長度', en: 'Max entity length', defaultValue: 50, showWhen: 'ner', advanced: true },
-        { key: 'input_field', type: 'text', required: true, zh: '輸入欄位名稱', en: 'Input field name', placeholder_zh: '預設：sentence', placeholder_en: 'Default: sentence', showWhen: 'aspect_list' },
-        { key: 'aspect_list_field', type: 'text', required: true, zh: '輸出欄位名稱', en: 'Aspect list field name', placeholder_zh: '預設：aspects', placeholder_en: 'Default: aspects', showWhen: 'aspect_list' },
-        { key: 'allow_sentence_edit', type: 'boolean', required: false, zh: '允許修改原句', en: 'Allow sentence edit', defaultValue: false, showWhen: 'aspect_list' },
-        { key: 'allow_aspect_add', type: 'boolean', required: false, zh: '允許新增 Aspect', en: 'Allow adding aspects', defaultValue: true, showWhen: 'aspect_list' },
-        { key: 'allow_aspect_delete', type: 'boolean', required: false, zh: '允許刪除 Aspect', en: 'Allow deleting aspects', defaultValue: true, showWhen: 'aspect_list' },
-        { key: 'require_exact_match_in_sentence', type: 'boolean', required: false, zh: '要求 Aspect 完全出現在句子中', en: 'Require exact match in sentence', defaultValue: true, showWhen: 'aspect_list' },
-        { key: 'min_aspects', type: 'number', required: false, zh: '最少 Aspect 數量', en: 'Min aspects', defaultValue: 1, showWhen: 'aspect_list' },
-        { key: 'max_aspects', type: 'number', required: false, zh: '最多 Aspect 數量', en: 'Max aspects', defaultValue: 10, showWhen: 'aspect_list' },
-        { key: 'require_sentiment_context_check', type: 'boolean', required: false, zh: '提示前後文情緒描述核查（軟性指引）', en: 'Prompt sentiment context check (soft guidance)', defaultValue: false, showWhen: 'aspect_list' },
-      ],
-      nerTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
-      aspectListTemplate: { subtype: 'aspect_list', input_field: 'sentence', aspect_list_field: 'aspects', allow_sentence_edit: false, allow_aspect_add: true, allow_aspect_delete: true, require_exact_match_in_sentence: true, min_aspects: 1, max_aspects: 10, require_sentiment_context_check: false },
-      defaultTemplate: { subtype: 'ner', entities: [{ name: 'PER', color: '#6366F1' }, { name: 'ORG', color: '#10B981' }, { name: 'LOC', color: '#F59E0B' }], scheme: 'IOB2', allow_overlapping: false, input_field: 'text', entity_field: 'entities', allow_custom_entity_type: false, require_entity_type: true, allow_nested_entities: false, min_entity_length: 1, max_entity_length: 50 },
-    },
-    relation_extraction: {
-      fields: [
-        { key: 'entity_types', type: 'entity-list', required: true, zh: '實體類型', en: 'Entity types' },
-        { key: 'relation_types', type: 'tag-list', required: true, zh: '關係類型', en: 'Relation types', hint_zh: '輸入關係類型後按 Enter', hint_en: 'Type relation and press Enter' },
-        { key: 'tuple_mode', type: 'select', required: true, zh: '結構模式', en: 'Tuple mode', options: ['triple', 'five_tuple'], defaultValue: 'triple' },
-      ],
-      defaultTemplate: {
-        entity_types: [{ name: 'BODY', color: '#6366F1' }, { name: 'SYMPTOM', color: '#10B981' }],
-        relation_types: ['causes', 'associated_with'],
-        tuple_mode: 'triple',
-      },
-    },
-    sentence_pairs: {
-      fields: [
-        { key: 'labels', type: 'tag-list', required: true, zh: '關係標籤', en: 'Relation labels', hint_zh: '輸入標籤後按 Enter', hint_en: 'Type and press Enter' },
-      ],
-      defaultTemplate: { labels: ['蘊含', '矛盾', '中立'] },
-      defaultTemplateI18n: {
-        zh: { labels: ['蘊含', '矛盾', '中立'] },
-        en: { labels: ['Entailment', 'Contradiction', 'Neutral'] },
-      },
-    }
-  };
-  var SETTINGS_ENTITY_COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#0EA5E9', '#F97316', '#14B8A6'];
   var RESULT_LABEL_I18N = {
     '政治': { zh: '政治', en: 'Politics' },
     '社會': { zh: '社會', en: 'Society' },
@@ -4227,8 +3901,7 @@
     '執行長 Sundar Pichai': { zh: '執行長 Sundar Pichai', en: 'CEO Sundar Pichai' }
   };
 
-  var ANNOTATION_RESULTS_BY_TASK = {
-    T001: [
+  var AR_SAMPLES_CLASSIFICATION = [
       {
         sampleId: 'CLS-001', stage: 'official',
         textZh: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。',
@@ -4301,8 +3974,9 @@
           { annotator: 'tony0950127', value: { labels: ['健康'] }, submittedAt: '2026-05-01 09:44', reviewStatus: 'pending' }
         ]
       }
-    ],
-    T002: [
+  ];
+
+  var AR_SAMPLES_VA = [
       {
         sampleId: 'VA-001', stage: 'official',
         textZh: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。',
@@ -4378,8 +4052,9 @@
           { annotator: 'tony0950127', value: { valence: 2, arousal: 7.5 }, submittedAt: '2026-05-02 11:37', reviewStatus: 'returned' }
         ]
       }
-    ],
-    T003: [
+  ];
+
+  var AR_SAMPLES_ASPECT = [
       {
         sampleId: 'ASP-001', stage: 'official',
         textZh: '這支手機的螢幕顯示很細緻，但電池續航還有進步空間。',
@@ -4452,8 +4127,9 @@
           { annotator: 'tony0950127', value: { aspects: ['出風', '安裝預約'] }, submittedAt: '2026-05-01 14:38', reviewStatus: 'pending' }
         ]
       }
-    ],
-    T004: [
+  ];
+
+  var AR_SAMPLES_RELATION = [
       {
         sampleId: 'RE-001', stage: 'official',
         textZh: '阿司匹靈可緩解發燒症狀，醫師建議搭配補水。',
@@ -4526,8 +4202,9 @@
           { annotator: 'tony0950127', value: { resultText: '(DRUG:止咳藥)→weak_on→(SYMP:喉嚨乾癢)' }, submittedAt: '2026-05-01 15:36', reviewStatus: 'pending' }
         ]
       }
-    ],
-    T005: [
+  ];
+
+  var AR_SAMPLES_PAIRS = [
       {
         sampleId: 'SP-001', stage: 'official',
         textZh: '句子 A：公司宣布今年營收創新高。句子 B：企業營收表現刷新紀錄。',
@@ -4600,8 +4277,9 @@
           { annotator: 'tony0950127', value: { label: '中立' }, submittedAt: '2026-05-01 10:42', reviewStatus: 'pending' }
         ]
       }
-    ],
-    T006: [
+  ];
+
+  var AR_SAMPLES_NER = [
       {
         sampleId: 'NER-001', stage: 'official',
         textZh: '台積電創辦人張忠謀在台北出席 2024 年半導體產業論壇。',
@@ -4674,7 +4352,25 @@
           { annotator: 'tony0950127', value: { entities: [{ type: 'ORG', text: 'Google' }, { type: 'PER', text: '執行長 Sundar Pichai' }, { type: 'PRODUCT', text: 'Gemini' }] }, submittedAt: '2026-05-01 16:40', reviewStatus: 'pending' }
         ]
       }
-    ]
+    ];
+
+  /* Structural remap after the 13-seed data unification: mock result sets
+     are matched to each task's annotation STRUCTURE (labels / VA scores /
+     aspects / relations / pairs / entities), not its domain text. T009 and
+     T012 (free-text generation) intentionally have no entry and fall back
+     to the classification set via getAnnotationResults(). */
+  var ANNOTATION_RESULTS_BY_TASK = {
+    T001: AR_SAMPLES_CLASSIFICATION,
+    T002: AR_SAMPLES_CLASSIFICATION,
+    T003: AR_SAMPLES_CLASSIFICATION,
+    T004: AR_SAMPLES_VA,
+    T005: AR_SAMPLES_VA,
+    T006: AR_SAMPLES_NER,
+    T007: AR_SAMPLES_ASPECT,
+    T008: AR_SAMPLES_RELATION,
+    T010: AR_SAMPLES_NER,
+    T011: AR_SAMPLES_PAIRS,
+    T013: AR_SAMPLES_VA
   };
 
   var MEMBER_ANNOTATOR_MAP = {
@@ -4701,22 +4397,6 @@
   };
   var DRY_RUN_PROGRESS_KEY = 'labelsuite.prototypeDryRunProgress';
   var STATUS_ORDER = ['draft', 'dry_run_in_progress', 'waiting_iaa_confirmation', 'official_run_in_progress', 'completed'];
-  var DATASET_PREVIEW_MOCK = {
-    columns: ['id', 'text'],
-    rows: [
-      ['RAW-001', '立法院三讀通過科技產業條例，明年起適用'],
-      ['RAW-002', '知名球星參與公益演唱會，現場逾萬人聚集'],
-      ['RAW-003', '颱風逼近造成多地停班停課，交通大亂'],
-      ['RAW-004', '國際影展公布入圍名單，台灣導演獲提名'],
-      ['RAW-005', '半導體大廠宣布新晶片量產，效能倍增'],
-      ['RAW-006', '央行維持利率不變，分析師看法分歧'],
-      ['RAW-007', '新北市推動智慧路燈計畫，節電成效顯著'],
-      ['RAW-008', '本土疫情趨緩，衛福部調整防疫措施'],
-      ['RAW-009', '國際油價回落，民生物價壓力暫緩'],
-      ['RAW-010', '青年就業補貼政策上路，申請首日湧入人潮'],
-    ]
-  };
-
   var toastTimer = null;
 
   function t(key) {
@@ -4748,36 +4428,9 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
-  function showDatasetPreviewModal() {
-    var head = document.getElementById('datasetPreviewHead');
-    var tbody = document.getElementById('datasetPreviewBody');
-    var modal = document.getElementById('datasetPreviewModal');
-    if (!head || !tbody || !modal) return;
-    var headRow = document.createElement('tr');
-    DATASET_PREVIEW_MOCK.columns.forEach(function(col) {
-      var th = document.createElement('th');
-      th.textContent = col;
-      headRow.appendChild(th);
-    });
-    clearChildren(head);
-    head.appendChild(headRow);
-    clearChildren(tbody);
-    DATASET_PREVIEW_MOCK.rows.forEach(function(row) {
-      var tr = document.createElement('tr');
-      row.forEach(function(cell) {
-        var td = document.createElement('td');
-        td.textContent = cell;
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
-    });
-    modal.classList.add('show');
-  }
-
-  function hideDatasetPreviewModal() {
-    var modal = document.getElementById('datasetPreviewModal');
-    if (modal) modal.classList.remove('show');
-  }
+  /* showDatasetPreviewModal(idx) / hideDatasetPreviewModal() are provided by
+     task-config.engine.js (loaded before this script) and operate on the
+     shared #datasetPreviewModal markup. */
 
   function renderPanelLoadError() {
     var mount = document.getElementById('tabPanelMount');
@@ -4788,14 +4441,33 @@
       '</section>';
   }
 
-  function appendPanelPartial(path) {
-    return fetch(path, { cache: 'no-store' })
+  function fetchPanelPartial(path, retriesLeft) {
+    // The static test server intermittently drops or hangs sockets under
+    // parallel-worker load; abort slow attempts and retry before surfacing
+    // the failure UI.
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = controller ? setTimeout(function() { controller.abort(); }, 3000) : null;
+    return fetch(path, { cache: 'no-store', signal: controller ? controller.signal : undefined })
       .then(function(response) {
         if (!response.ok) {
           throw new Error('Failed to load panel partial: ' + path);
         }
         return response.text();
       })
+      .catch(function(error) {
+        if (retriesLeft > 0) {
+          return new Promise(function(resolve) { setTimeout(resolve, 250); })
+            .then(function() { return fetchPanelPartial(path, retriesLeft - 1); });
+        }
+        throw error;
+      })
+      .finally(function() {
+        if (timer) clearTimeout(timer);
+      });
+  }
+
+  function appendPanelPartial(path) {
+    return fetchPanelPartial(path, 3)
       .then(function(html) {
         var mount = document.getElementById('tabPanelMount');
         if (!mount) return;
@@ -4850,17 +4522,53 @@ function interpolate(template, payload) {
     }
   }
 
+  /* Resolves the current task against the unified seed data (single source of
+     truth: task-list.data.js for name/status, task-detail.data.js for the
+     ADR-029 outputs[]/dataset/field-role config). Falls back to T001 when
+     taskId is missing or unknown to either seed. */
   function resetTaskData(taskId) {
     TASK_DATA = cloneData(DEFAULT_TASK_DATA);
-    if (taskId && TASK_PROFILE_MAP[taskId]) {
-      var taskProfile = cloneData(TASK_PROFILE_MAP[taskId]);
-      Object.assign(TASK_DATA, taskProfile);
-      if (!Object.prototype.hasOwnProperty.call(taskProfile, 'trialRounds')) {
-        resetRunProgressData();
-      }
-    } else if (taskId) {
-      TASK_DATA.taskId = taskId;
+    var resolvedId = (taskId && taskId.trim()) ? taskId.trim() : 'T001';
+    var listTasks = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.tasks) || [];
+    var profiles = (window.LabelSuiteTaskDetailData && window.LabelSuiteTaskDetailData.profiles) || {};
+    var listEntry = listTasks.filter(function(item) { return item.id === resolvedId; })[0];
+    var profile = profiles[resolvedId];
+    if (!listEntry || !profile) {
+      resolvedId = 'T001';
+      listEntry = listTasks.filter(function(item) { return item.id === resolvedId; })[0];
+      profile = profiles[resolvedId];
     }
+    TASK_DATA.taskId = resolvedId;
+    if (listEntry) {
+      TASK_DATA.taskNameZh = listEntry.nameZh;
+      TASK_DATA.taskNameEn = listEntry.nameEn;
+      TASK_DATA.status = listEntry.status;
+      TASK_DATA.updatedAt = listEntry.updatedAt;
+      TASK_DATA.datasetSourceZh = listEntry.sourceFile;
+      TASK_DATA.datasetSourceEn = listEntry.sourceFile;
+    }
+    if (profile) {
+      TASK_DATA.taskCategories = (profile.taskCategories || []).slice();
+      TASK_DATA.taskInputTypes = (profile.taskInputTypes || []).slice();
+      TASK_DATA.outputs = cloneData(profile.outputs || []);
+      TASK_DATA.fieldRoleMap = Object.assign({}, profile.fieldRoleMap || {});
+      TASK_DATA.datasetFileName = profile.datasetFileName || TASK_DATA.datasetSourceZh;
+      TASK_DATA.datasetRecords = cloneData(profile.datasetRecords || []);
+      TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
+      /* DEFAULT_TASK_DATA.samplingValue targets its legacy 3200-record
+         dataset; re-derive from this profile's actual record count. */
+      TASK_DATA.samplingValue = null;
+      TASK_DATA.configVersion = 'cfg-' + resolvedId.toLowerCase() + '-v1.0.0';
+      TASK_DATA.taskTypeKey = resolveLegacyTaskTypeKey(
+        TASK_DATA.taskCategories,
+        TASK_DATA.taskInputTypes,
+        TASK_DATA.outputs.map(function(o) { return o.type; })
+      );
+    }
+    /* None of the unified profiles carry legacy trialRounds/run-control data;
+       &status= URL overrides (see parseRole()) still exercise every run-control
+       state via the generic DEFAULT_TASK_DATA trial history. */
+    resetRunProgressData();
   }
 
   function parseRole() {
@@ -4997,11 +4705,12 @@ function interpolate(template, payload) {
     setText('settingsEditBtn', t('settingsEditBtn'));
     setText('settingsSaveBtn', t('settingsSaveBtn'));
     setText('settingsCancelBtn', t('settingsCancelBtn'));
-    setText('settingsAnnotationPreviewLabel', t('settingsAnnotationPreviewLabel'));
-    setText('settingsTemplateSectionTitle', t('settingsTemplateSectionTitle'));
-    setText('settingsUploadConfigBtn', t('settingsUploadConfigBtn'));
+    setText('annotationPreviewLabel', t('settingsAnnotationPreviewLabel'));
+    setText('s2TemplateSectionTitle', t('settingsTemplateSectionTitle'));
+    setText('uploadConfigBtn', t('settingsUploadConfigBtn'));
+    setText('settingsPanelLabel', t('settingsSummaryTitle'));
     setText('settingsCodeLabel', t('settingsCodeLabel'));
-    setText('settingsSaveCodeBtnLabel', t('settingsSaveCodeBtnLabel'));
+    setText('saveCodeBtnLabel', t('settingsSaveCodeBtnLabel'));
     setRequiredLabel('editTaskNameLabel', t('editTaskNameLabel'));
     setRequiredLabel('editTaskTypeLabel', t('editTaskTypeLabel'));
     setRequiredLabel('editDatasetLabel', t('editDatasetLabel'));
@@ -5192,7 +4901,15 @@ function interpolate(template, payload) {
     if (annotatorGuidelineTextInput) annotatorGuidelineTextInput.placeholder = t('annotatorGuidelineTextPlaceholder');
     if (reviewerGuidelineTextInput) reviewerGuidelineTextInput.placeholder = t('reviewerGuidelineTextPlaceholder');
 
-    renderSettingsTemplateBtns();
+    if (state.settingsEditMode) {
+      renderTemplateBtns();
+      renderSchemaFields();
+    }
+    if (state.overviewEditMode) {
+      initTaskTypeChips();
+      syncChipsFromState();
+      renderInlineDatasetPreview();
+    }
 
     var workLogStageSelect = document.getElementById('workLogStageSelect');
     if (workLogStageSelect && workLogStageSelect.options.length >= 3) {
@@ -5219,11 +4936,14 @@ function interpolate(template, payload) {
   }
 
   function applySamplingDefaultsToTaskData() {
-    var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey];
-    if (!defs) return;
+    var defs = SAMPLING_DEFAULTS_BY_TYPE[TASK_DATA.taskTypeKey] ||
+      { targetIAA: 0.75, targetStd: null, minAnnotators: 3, trialPercent: 15 };
     TASK_DATA.samplingMode = 'by_count';
     if (!Number.isFinite(Number(TASK_DATA.samplingValue)) || Number(TASK_DATA.samplingValue) < 1) {
-      TASK_DATA.samplingValue = Math.round(TASK_DATA.datasetTotal * defs.trialPercent / 100);
+      var derived = Math.round(TASK_DATA.datasetTotal * defs.trialPercent / 100);
+      /* validateSamplingData() requires 1 <= samplingValue < datasetTotal;
+         clamp so small seed datasets stay publishable. */
+      TASK_DATA.samplingValue = Math.min(Math.max(derived, 1), Math.max(TASK_DATA.datasetTotal - 1, 1));
     }
     if (!Number.isFinite(Number(TASK_DATA.targetAgreement))) {
       TASK_DATA.targetAgreement = defs.targetIAA;
@@ -5771,174 +5491,21 @@ function interpolate(template, payload) {
     updateStatusStepper();
   }
 
-function getTaskTypeLabel(taskTypeKey) {
-    var option = TASK_TYPE_OPTIONS.find(function(item) { return item.key === taskTypeKey; });
-    if (!option) return taskTypeKey || '-';
-    return state.lang === 'zh' ? option.zh : option.en;
+/* Config-driven (constitution: Generalization-First) — reads TASK_DATA.outputs[]
+   (ADR-029) via getOutputTypeDisplayLabel() instead of any hardcoded per-type
+   branch, so a newly registered output type needs no changes here. */
+function getTaskTypeLabel() {
+    var outputs = TASK_DATA.outputs || [];
+    if (!outputs.length) return '-';
+    return outputs.map(function(o) { return getOutputTypeDisplayLabel(o.type); }).join(' + ');
   }
 
   function isOverviewEditable() {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
 
-  function createOverviewDraft() {
-    var existingName = TASK_DATA.datasetSourceZh || '';
-    var existingFiles = [];
-    if (existingName) {
-      var names = existingName.split(' + ');
-      var perFileBytes = Math.floor((TASK_DATA.datasetSizeBytes || 0) / names.length);
-      names.forEach(function(n) { existingFiles.push({ name: n.trim(), sizeBytes: perFileBytes }); });
-    }
-    return {
-      taskNameZh: TASK_DATA.taskNameZh,
-      taskNameEn: TASK_DATA.taskNameEn,
-      taskTypeKey: TASK_DATA.taskTypeKey,
-      datasetSourceZh: TASK_DATA.datasetSourceZh,
-      datasetSourceEn: TASK_DATA.datasetSourceEn,
-      datasetSizeBytes: TASK_DATA.datasetSizeBytes || 0,
-      datasetFiles: existingFiles,
-    };
-  }
-
-  function formatBytes(bytes) {
-    if (!bytes || bytes < 0) return '0 B';
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / 1048576).toFixed(1) + ' MB';
-  }
-
   function setOverviewEditError(message) {
-    var errorNode = document.getElementById('overviewEditError');
-    if (!errorNode) return;
-    if (message) {
-      errorNode.textContent = message;
-      errorNode.classList.add('show');
-      return;
-    }
-    errorNode.textContent = '';
-    errorNode.classList.remove('show');
-  }
-
-  function fillOverviewEditForm() {
-    if (!state.overviewDraft) return;
-
-    var taskNameInput = document.getElementById('editTaskNameInput');
-    var taskTypeSelect = document.getElementById('editTaskTypeSelect');
-
-    if (taskTypeSelect) {
-      taskTypeSelect.innerHTML = '';
-      TASK_TYPE_OPTIONS.forEach(function(item) {
-        var option = document.createElement('option');
-        option.value = item.key;
-        option.textContent = state.lang === 'zh' ? item.zh : item.en;
-        if (item.key === state.overviewDraft.taskTypeKey) option.selected = true;
-        taskTypeSelect.appendChild(option);
-      });
-    }
-
-    if (taskNameInput) taskNameInput.value = state.lang === 'zh' ? state.overviewDraft.taskNameZh : state.overviewDraft.taskNameEn;
-    renderOverviewDatasetFileList();
-    setOverviewEditError('');
-  }
-
-  function syncOverviewDatasetUploadState(hasFile) {
-    var list = document.getElementById('editDatasetFileList');
-    if (list) list.classList.toggle('hidden', !hasFile);
-  }
-
-  function clearOverviewDatasetFile(idx) {
-    if (!state.overviewDraft) return;
-    if (typeof idx === 'number') {
-      state.overviewDraft.datasetFiles.splice(idx, 1);
-    } else {
-      state.overviewDraft.datasetFiles = [];
-    }
-    var input = document.getElementById('editDatasetFileInput');
-    if (input) input.value = '';
-    renderOverviewDatasetFileList();
-    markOverviewDirty();
-  }
-
-  function createOverviewDatasetFileItem(file, idx) {
-    var item = document.createElement('div');
-    item.className = 'overview-upload-file-preview';
-    item.setAttribute('role', 'button');
-    item.setAttribute('tabindex', '0');
-    item.setAttribute('aria-label', (state.lang === 'zh' ? '查看資料集 ' : 'Preview dataset ') + file.name);
-    item.addEventListener('click', function() {
-      showDatasetPreviewModal();
-    });
-    item.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        showDatasetPreviewModal();
-      }
-    });
-
-    var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    icon.setAttribute('class', 'overview-upload-file-icon');
-    icon.setAttribute('viewBox', '0 0 24 24');
-    icon.setAttribute('fill', 'none');
-    icon.setAttribute('stroke', 'currentColor');
-    icon.setAttribute('stroke-width', '2');
-    icon.setAttribute('stroke-linecap', 'round');
-    icon.setAttribute('stroke-linejoin', 'round');
-    icon.setAttribute('aria-hidden', 'true');
-    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z');
-    var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    polyline.setAttribute('points', '14 2 14 8 20 8');
-    icon.appendChild(path);
-    icon.appendChild(polyline);
-    item.appendChild(icon);
-
-    var nameSpan = document.createElement('span');
-    nameSpan.className = 'overview-upload-file-name';
-    nameSpan.textContent = file.name;
-    item.appendChild(nameSpan);
-
-    var sizeSpan = document.createElement('span');
-    sizeSpan.className = 'overview-upload-file-size';
-    sizeSpan.textContent = formatBytes(file.sizeBytes || 0);
-    item.appendChild(sizeSpan);
-
-    var previewBtn = document.createElement('button');
-    previewBtn.type = 'button';
-    previewBtn.className = 'overview-upload-file-preview-btn';
-    previewBtn.setAttribute('aria-label', state.lang === 'zh' ? '查看資料集' : 'Preview dataset');
-    previewBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-    previewBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      showDatasetPreviewModal();
-    });
-    item.appendChild(previewBtn);
-
-    var removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'overview-upload-file-remove';
-    removeBtn.setAttribute('aria-label', state.lang === 'zh' ? '移除資料集' : 'Remove dataset');
-    removeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
-    removeBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      clearOverviewDatasetFile(idx);
-    });
-    item.appendChild(removeBtn);
-
-    return item;
-  }
-
-  function renderOverviewDatasetFileList() {
-    var list = document.getElementById('editDatasetFileList');
-    if (!list) return;
-    while (list.firstChild) list.removeChild(list.firstChild);
-    if (!state.overviewDraft || !state.overviewDraft.datasetFiles || !state.overviewDraft.datasetFiles.length) {
-      syncOverviewDatasetUploadState(false);
-      return;
-    }
-    state.overviewDraft.datasetFiles.forEach(function(file, idx) {
-      list.appendChild(createOverviewDatasetFileItem(file, idx));
-    });
-    syncOverviewDatasetUploadState(true);
+    showFieldError('overviewEditError', Boolean(message), message);
   }
 
   function renderOverviewEditState() {
@@ -5966,19 +5533,22 @@ function getTaskTypeLabel(taskTypeKey) {
       hint.textContent = '';
     }
 
-    if (state.overviewEditMode) fillOverviewEditForm();
-  }
-
-  function markOverviewDirty() {
-    if (!state.overviewEditMode) return;
-    state.overviewDirty = true;
+    if (state.overviewEditMode) {
+      var taskNameInput = document.getElementById('editTaskNameInput');
+      if (taskNameInput) taskNameInput.value = state.lang === 'zh' ? TASK_DATA.taskNameZh : TASK_DATA.taskNameEn;
+      setOverviewEditError('');
+      ensureTaskConfigSeeded();
+      initTaskTypeChips();
+      syncChipsFromState();
+      renderDatasetFileList();
+      renderInlineDatasetPreview();
+    }
   }
 
   function startOverviewEdit() {
     if (!isOverviewEditable()) return;
     state.overviewEditMode = true;
     state.overviewDirty = false;
-    state.overviewDraft = createOverviewDraft();
     renderOverviewEditState();
     trackEvent('prototype_overview_edit_started');
   }
@@ -5988,7 +5558,7 @@ function getTaskTypeLabel(taskTypeKey) {
     if (!force && state.overviewDirty && !window.confirm(t('overviewLeaveConfirm'))) return false;
     state.overviewEditMode = false;
     state.overviewDirty = false;
-    state.overviewDraft = null;
+    resetTaskConfigSeedGuard();
     renderOverviewEditState();
     return true;
   }
@@ -6002,32 +5572,43 @@ function getTaskTypeLabel(taskTypeKey) {
   }
 
   function saveOverviewEdit() {
-    if (!isOverviewEditable() || !state.overviewDraft) return;
+    if (!isOverviewEditable()) return;
 
     var taskNameInput = document.getElementById('editTaskNameInput');
-    var taskTypeSelect = document.getElementById('editTaskTypeSelect');
-
     var taskName = (taskNameInput ? taskNameInput.value : '').trim();
     if (!taskName) {
       setOverviewEditError(t('overviewEditTaskNameRequired'));
       return;
     }
+    if (!state.taskCategories.length || !state.taskInputTypes.length || !state.selectedOutputTypes.length) {
+      setOverviewEditError(t('overviewEditTaskTypeRequired'));
+      return;
+    }
+    if (!state.datasetFiles.length) {
+      setOverviewEditError(t('overviewEditDatasetRequired'));
+      return;
+    }
 
-    if (state.lang === 'zh') state.overviewDraft.taskNameZh = taskName;
-    else state.overviewDraft.taskNameEn = taskName;
+    if (state.lang === 'zh') TASK_DATA.taskNameZh = taskName;
+    else TASK_DATA.taskNameEn = taskName;
 
-    TASK_DATA.taskNameZh = state.overviewDraft.taskNameZh;
-    TASK_DATA.taskNameEn = state.overviewDraft.taskNameEn;
-    TASK_DATA.taskTypeKey = taskTypeSelect ? taskTypeSelect.value : TASK_DATA.taskTypeKey;
-    var draftFiles = state.overviewDraft.datasetFiles || [];
-    TASK_DATA.datasetSourceZh = draftFiles.map(function(f) { return f.name; }).join(' + ') || '';
-    TASK_DATA.datasetSourceEn = TASK_DATA.datasetSourceZh;
-    TASK_DATA.datasetSizeBytes = draftFiles.reduce(function(sum, f) { return sum + (f.sizeBytes || 0); }, 0);
+    TASK_DATA.taskCategories = state.taskCategories.slice();
+    TASK_DATA.taskInputTypes = state.taskInputTypes.slice();
+    TASK_DATA.outputs = state.selectedOutputTypes.map(function(outKey) {
+      return { type: outKey, config: state.outputConfigs[outKey] || {} };
+    });
+    TASK_DATA.fieldRoleMap = Object.assign({}, state.fieldRoleMap);
+    TASK_DATA.datasetFileName = (state.datasetFiles[0] && state.datasetFiles[0].name) || TASK_DATA.datasetFileName;
+    TASK_DATA.datasetSourceZh = TASK_DATA.datasetFileName;
+    TASK_DATA.datasetSourceEn = TASK_DATA.datasetFileName;
+    TASK_DATA.datasetRecords = extractRecordsAtPath(state._datasetRoots[0], state.datasetRecordPath) || TASK_DATA.datasetRecords;
+    TASK_DATA.datasetTotal = TASK_DATA.datasetRecords.length;
+    TASK_DATA.taskTypeKey = resolveLegacyTaskTypeKey(TASK_DATA.taskCategories, TASK_DATA.taskInputTypes, state.selectedOutputTypes);
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
 
     state.overviewEditMode = false;
     state.overviewDirty = false;
-    state.overviewDraft = null;
+    resetTaskConfigSeedGuard();
     showToast(t('overviewSaveSuccess'));
     renderOverview();
     trackEvent('prototype_overview_edit_saved');
@@ -6458,1277 +6039,16 @@ function getTaskTypeLabel(taskTypeKey) {
     input.value = '';
   };
 
+  /* ── 標記設定 edit = Step 2 parity ─────────────────────────────
+     Built directly on the shared task-config engine: state.outputConfigs
+     is the single source of truth while editing, and TASK_DATA.outputs[]
+     is only written back to on save (see saveSettingsEdit()). */
   function isSettingsEditable() {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
 
-  function cloneObject(obj) {
-    return JSON.parse(JSON.stringify(obj));
-  }
-
-  function getSettingsSchema(taskTypeKey) {
-    return SETTINGS_REGISTRY[taskTypeKey] || null;
-  }
-
-  function getDefaultSettingsTemplateForLang(taskTypeKey, lang) {
-    var schema = getSettingsSchema(taskTypeKey);
-    if (!schema) return {};
-    if (taskTypeKey === 'sequence_labeling' && state.settingsDraft && currentSettingsSubtype() === 'aspect_list' && schema.aspectListTemplate) {
-      return cloneObject(schema.aspectListTemplate);
-    }
-    if (schema.defaultTemplateI18n && schema.defaultTemplateI18n[lang]) return cloneObject(schema.defaultTemplateI18n[lang]);
-    return cloneObject(schema.defaultTemplate || {});
-  }
-
-  function currentSettingsSubtype() {
-    var config = state.settingsDraft ? state.settingsDraft.configData : null;
-    if (config && config.subtype) return config.subtype;
-    try {
-      var code = (TASK_DATA.configContent || '').trim();
-      var parsed = settingsParseCode(code, code.startsWith('{') ? 'json' : 'yaml');
-      if (parsed && parsed.subtype) return parsed.subtype;
-    } catch (error) {
-      return 'ner';
-    }
-    return 'ner';
-  }
-
-  function settingsFieldVisible(field) {
-    if (!field.showWhen) return true;
-    return currentSettingsSubtype() === field.showWhen;
-  }
-
-  function settingsFieldVisibleForConfig(field, config) {
-    if (!field.showWhen) return true;
-    return (config && config.subtype ? config.subtype : 'ner') === field.showWhen;
-  }
-
-  function getSettingsSubtypeLabel(value) {
-    if (value === 'aspect_list') return t('settingsSubtypeAspectList');
-    return t('settingsSubtypeNer');
-  }
-
-  function settingsToYaml(obj, indent) {
-    var pad = Array((indent || 0) + 1).join(' ');
-    if (obj === null) return 'null';
-    if (typeof obj === 'boolean' || typeof obj === 'number') return String(obj);
-    if (typeof obj === 'string') return obj;
-    if (Array.isArray(obj)) {
-      return obj.map(function(item) {
-        if (item && typeof item === 'object' && !Array.isArray(item)) {
-          var lines = [];
-          Object.keys(item).forEach(function(k, idx) {
-            var v = item[k];
-            if (idx === 0) lines.push('- ' + k + ': ' + settingsToYaml(v, (indent || 0) + 2));
-            else lines.push('  ' + k + ': ' + settingsToYaml(v, (indent || 0) + 2));
-          });
-          return lines.map(function(line) { return pad + line; }).join('\n');
-        }
-        return pad + '- ' + settingsToYaml(item, (indent || 0) + 2);
-      }).join('\n');
-    }
-    var lines = [];
-    Object.keys(obj).forEach(function(key) {
-      var val = obj[key];
-      if (val && typeof val === 'object') {
-        if (Array.isArray(val) && val.length === 0) {
-          lines.push(pad + key + ': []');
-        } else {
-          lines.push(pad + key + ':');
-          lines.push(settingsToYaml(val, (indent || 0) + 2));
-        }
-      } else {
-        lines.push(pad + key + ': ' + settingsToYaml(val, (indent || 0) + 2));
-      }
-    });
-    return lines.join('\n');
-  }
-
-  function settingsConfigToCode() {
-    if (!state.settingsDraft) return '';
-    if (state.settingsDraft.codeFormat === 'json') return JSON.stringify(state.settingsDraft.configData, null, 2);
-    return settingsToYaml(state.settingsDraft.configData);
-  }
-
-  function settingsYamlParseScalar(raw) {
-    var val = String(raw || '').trim();
-    if (val === '') return '';
-    if (val === '[]') return [];
-    if (val === '{}') return {};
-    if (val[0] === '[' && val[val.length - 1] === ']') {
-      var inner = val.slice(1, -1).trim();
-      if (!inner) return [];
-      return inner.split(',').map(function(part) {
-        return settingsYamlParseScalar(part.trim());
-      });
-    }
-    if (val === 'true') return true;
-    if (val === 'false') return false;
-    if (/^-?\d+(\.\d+)?$/.test(val)) return Number(val);
-    if ((val[0] === '"' && val[val.length - 1] === '"') || (val[0] === "'" && val[val.length - 1] === "'")) {
-      if (val[0] === "'") return val.slice(1, -1);
-      return JSON.parse(val);
-    }
-    return val;
-  }
-
-  function settingsYamlIndentOf(line) {
-    return line.length - line.replace(/^\s+/, '').length;
-  }
-
-  function settingsYamlSplitKeyVal(text) {
-    var idx = text.indexOf(':');
-    if (idx < 0) return null;
-    return { key: text.slice(0, idx).trim(), value: text.slice(idx + 1).trim() };
-  }
-
-  function parseSettingsYamlSubset(text) {
-    var lines = String(text || '').replace(/\r/g, '').split('\n');
-    var i = 0;
-
-    function skipEmpty() {
-      while (i < lines.length && !lines[i].trim()) i += 1;
-    }
-
-    function parseBlock(expectedIndent) {
-      var map = {};
-      while (i < lines.length) {
-        var line = lines[i];
-        if (!line.trim()) { i += 1; continue; }
-        var indent = settingsYamlIndentOf(line);
-        if (indent < expectedIndent) break;
-        if (indent > expectedIndent) throw new Error('Invalid YAML indentation');
-        var kv = settingsYamlSplitKeyVal(line.trim());
-        if (!kv || !kv.key) throw new Error('Invalid YAML line');
-        i += 1;
-        if (kv.value) {
-          map[kv.key] = settingsYamlParseScalar(kv.value);
-          continue;
-        }
-        skipEmpty();
-        if (i >= lines.length) { map[kv.key] = ''; continue; }
-        var next = lines[i];
-        var nextIndent = settingsYamlIndentOf(next);
-        if (nextIndent <= indent) { map[kv.key] = ''; continue; }
-        map[kv.key] = parseNested(nextIndent);
-      }
-      return map;
-    }
-
-    function parseNested(expectedIndent) {
-      var start = i;
-      while (start < lines.length && !lines[start].trim()) start += 1;
-      if (start >= lines.length) return '';
-      var first = lines[start];
-      if (settingsYamlIndentOf(first) !== expectedIndent) throw new Error('Invalid YAML nesting');
-      if (first.trim().indexOf('- ') === 0) {
-        var outArr = [];
-        i = start;
-        while (i < lines.length) {
-          var line = lines[i];
-          if (!line.trim()) { i += 1; continue; }
-          var indent = settingsYamlIndentOf(line);
-          if (indent < expectedIndent) break;
-          if (indent > expectedIndent) throw new Error('Invalid array indentation');
-          var itemText = line.trim().slice(2).trim();
-          i += 1;
-          if (!itemText) { outArr.push(''); continue; }
-          var itemKv = settingsYamlSplitKeyVal(itemText);
-          if (!itemKv) {
-            outArr.push(settingsYamlParseScalar(itemText));
-            continue;
-          }
-          var obj = {};
-          obj[itemKv.key] = settingsYamlParseScalar(itemKv.value);
-          while (i < lines.length) {
-            var sub = lines[i];
-            if (!sub.trim()) { i += 1; continue; }
-            var subIndent = settingsYamlIndentOf(sub);
-            if (subIndent <= expectedIndent) break;
-            if (subIndent !== expectedIndent + 2) throw new Error('Invalid object indentation');
-            var subKv = settingsYamlSplitKeyVal(sub.trim());
-            if (!subKv) throw new Error('Invalid object line');
-            obj[subKv.key] = settingsYamlParseScalar(subKv.value);
-            i += 1;
-          }
-          outArr.push(obj);
-        }
-        return outArr;
-      }
-      return parseBlock(expectedIndent);
-    }
-
-    skipEmpty();
-    return parseBlock(0);
-  }
-
-  function settingsParseCode(raw, codeFormat) {
-    var content = String(raw || '').trim();
-    if (!content) return {};
-    if (codeFormat === 'json' || content.startsWith('{') || content.startsWith('[')) return JSON.parse(content);
-    return parseSettingsYamlSubset(content);
-  }
-
-  function createSettingsDraft() {
-    var code = (TASK_DATA.configContent || '').trim();
-    var codeFormat = code.startsWith('{') ? 'json' : 'yaml';
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    var parsed = {};
-    try {
-      parsed = settingsParseCode(code, codeFormat);
-    } catch (error) {
-      parsed = {};
-    }
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && (parsed.subtype || 'ner') === 'ner') {
-      if (Array.isArray(parsed.entity_types) && !parsed.entities) {
-        parsed.entities = parsed.entity_types.map(function(entity, idx) {
-          if (entity && typeof entity === 'object') {
-            return {
-              name: String(entity.name || '').trim(),
-              color: entity.color || SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
-            };
-          }
-          return {
-            name: String(entity || '').trim(),
-            color: SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
-          };
-        });
-      }
-      if (parsed.span_scheme && !parsed.scheme) parsed.scheme = parsed.span_scheme;
-      if (parsed.allow_overlapping_spans !== undefined && parsed.allow_overlapping === undefined) parsed.allow_overlapping = parsed.allow_overlapping_spans;
-      delete parsed.entity_types;
-      delete parsed.span_scheme;
-      delete parsed.allow_overlapping_spans;
-    }
-    var defaults = getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang);
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && parsed && parsed.subtype === 'aspect_list' && schema && schema.aspectListTemplate) {
-      defaults = cloneObject(schema.aspectListTemplate);
-    }
-    var merged = cloneObject(defaults);
-    Object.keys(parsed || {}).forEach(function(key) { merged[key] = parsed[key]; });
-    if (schema) {
-      schema.fields.forEach(function(field) {
-        if (!settingsFieldVisibleForConfig(field, merged)) return;
-        if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
-        if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
-        if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
-        if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
-        if (field.type === 'va-dimensions') {
-          if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
-          if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
-        }
-      });
-    }
-    localizeSettingsDraftConfigForCurrentLang(merged, schema);
-    return {
-      taskTypeKey: TASK_DATA.taskTypeKey,
-      configData: merged,
-      codeFormat: codeFormat,
-      uploadedConfigName: TASK_DATA.configFileName || '',
-    };
-  }
-
-  function localizeSettingsDraftConfigForCurrentLang(config, schema) {
-    if (state.lang !== 'en' || !config || !schema || !Array.isArray(schema.fields)) return;
-    schema.fields.forEach(function(field) {
-      if (!settingsFieldVisibleForConfig(field, config)) return;
-      if (field.type === 'tag-list' && Array.isArray(config[field.key])) {
-        config[field.key] = config[field.key].map(localizeResultLabel);
-      }
-      if (field.type === 'entity-list' && Array.isArray(config[field.key])) {
-        config[field.key] = config[field.key].map(function(entity) {
-          if (entity && typeof entity === 'object') {
-            var nextEntity = cloneObject(entity);
-            nextEntity.name = localizeResultLabel(nextEntity.name);
-            return nextEntity;
-          }
-          return localizeResultLabel(entity);
-        });
-      }
-    });
-  }
-
   function setSettingsEditError(message) {
-    var errorNode = document.getElementById('settingsEditError');
-    if (!errorNode) return;
-    if (message) {
-      errorNode.textContent = message;
-      errorNode.classList.add('show');
-      return;
-    }
-    errorNode.textContent = '';
-    errorNode.classList.remove('show');
-  }
-
-  function setSettingsCodeError(message) {
-    var bar = document.getElementById('settingsCodeErrorBar');
-    var msg = document.getElementById('settingsCodeErrorMsg');
-    if (!bar || !msg) return;
-    if (message) {
-      msg.textContent = message;
-      bar.classList.remove('hidden');
-      return;
-    }
-    msg.textContent = '';
-    bar.classList.add('hidden');
-  }
-
-  function renderSettingsTemplateBtns() {
-    var container = document.getElementById('settingsTemplateBtns');
-    if (!container || !state.settingsDraft) return;
-    while (container.firstChild) container.removeChild(container.firstChild);
-
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    if (!schema) return;
-
-    function makeTemplateBtn(label, templateData) {
-      var btn = document.createElement('button');
-      btn.className = 'template-btn';
-      btn.type = 'button';
-      btn.textContent = label;
-      btn.addEventListener('click', function() {
-        applySettingsTemplate(templateData);
-      });
-      container.appendChild(btn);
-    }
-
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling') {
-      makeTemplateBtn(t('settingsTemplateBtnNer'), schema.nerTemplate || schema.defaultTemplate || {});
-      makeTemplateBtn(t('settingsTemplateBtnAspectList'), schema.aspectListTemplate || {});
-      return;
-    }
-
-    makeTemplateBtn(
-      interpolate(t('settingsApplyTemplateBtnTpl'), { template: getTaskTypeLabel(TASK_DATA.taskTypeKey) }),
-      getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang)
-    );
-  }
-
-  function updateSettingsCodeFormatButtons() {
-    var yamlBtn = document.getElementById('settingsFormatYamlBtn');
-    var jsonBtn = document.getElementById('settingsFormatJsonBtn');
-    if (!state.settingsDraft || !yamlBtn || !jsonBtn) return;
-    yamlBtn.classList.toggle('active', state.settingsDraft.codeFormat === 'yaml');
-    jsonBtn.classList.toggle('active', state.settingsDraft.codeFormat === 'json');
-  }
-
-  function updateSettingsMainSaveState() {
-    var saveBtn = document.getElementById('settingsSaveBtn');
-    if (!saveBtn) return;
-    saveBtn.disabled = state.settingsCodeDraftDirty;
-  }
-
-  function markSettingsDirty() {
-    if (!state.settingsEditMode) return;
-    state.settingsDirty = true;
-  }
-
-  function markSettingsCodeDirty() {
-    state.settingsCodeDraftDirty = true;
-    var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
-    if (saveCodeBtn) saveCodeBtn.disabled = false;
-    updateSettingsMainSaveState();
-  }
-
-  function renderSettingsCodeFromConfig() {
-    var editor = document.getElementById('settingsCodeEditor');
-    if (!editor || !state.settingsDraft) return;
-    editor.value = settingsConfigToCode();
-    state.settingsCodeDraftDirty = false;
-    var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
-    if (saveCodeBtn) saveCodeBtn.disabled = true;
-    setSettingsCodeError('');
-    updateSettingsCodeFormatButtons();
-    updateSettingsMainSaveState();
-  }
-
-  function buildSettingsTagInput(field) {
-    var tags = Array.isArray(state.settingsDraft.configData[field.key]) ? state.settingsDraft.configData[field.key].slice() : [];
-    state.settingsDraft.configData[field.key] = tags;
-    var isComposing = false;
-    var wrap = document.createElement('div');
-    wrap.className = 'tag-input-wrap';
-
-    function render() {
-      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
-      tags.forEach(function(tag, idx) {
-        var pill = document.createElement('span');
-        pill.className = 'tag-pill';
-        pill.appendChild(document.createTextNode(tag));
-        var removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'tag-pill-remove';
-        removeBtn.textContent = '×';
-        removeBtn.setAttribute('aria-label', 'Remove');
-        removeBtn.addEventListener('click', function() {
-          tags.splice(idx, 1);
-          render();
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        pill.appendChild(removeBtn);
-        wrap.appendChild(pill);
-      });
-
-      var input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'tag-new-input';
-      input.placeholder = field['hint_' + state.lang] || '';
-      input.addEventListener('compositionstart', function() { isComposing = true; });
-      input.addEventListener('compositionend', function() { isComposing = false; });
-      input.addEventListener('keydown', function(event) {
-        if (event.key !== 'Enter' && event.key !== ',') return;
-        if (event.isComposing || isComposing || event.keyCode === 229) return;
-        event.preventDefault();
-        var value = input.value.trim();
-        if (!value) return;
-        input.value = '';
-        if (tags.indexOf(value) !== -1) return;
-        tags.push(value);
-        render();
-        setTimeout(function() {
-          var nextInput = wrap.querySelector('.tag-new-input');
-          if (nextInput) nextInput.focus();
-        }, 0);
-        markSettingsDirty();
-        renderSettingsAnnotationPreview();
-        if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-      });
-      wrap.appendChild(input);
-    }
-
-    render();
-    return wrap;
-  }
-
-  function buildSettingsEntityList(field) {
-    var entities = Array.isArray(state.settingsDraft.configData[field.key]) ? state.settingsDraft.configData[field.key] : [];
-    state.settingsDraft.configData[field.key] = entities;
-    var wrap = document.createElement('div');
-
-    function render() {
-      while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
-      entities.forEach(function(ent, idx) {
-        var row = document.createElement('div');
-        row.className = 'entity-row';
-        var dot = document.createElement('div');
-        dot.className = 'entity-color-dot';
-        dot.style.background = ent.color || SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length];
-
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'entity-name-input';
-        input.value = ent.name || '';
-        input.placeholder = state.lang === 'zh' ? '實體名稱，如 PER' : 'Entity name, e.g. PER';
-        input.addEventListener('input', function() {
-          entities[idx].name = input.value;
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-
-        var removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'entity-remove-btn';
-        removeBtn.textContent = '×';
-        removeBtn.setAttribute('aria-label', 'Remove');
-        removeBtn.addEventListener('click', function() {
-          entities.splice(idx, 1);
-          render();
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-
-        row.appendChild(dot);
-        row.appendChild(input);
-        row.appendChild(removeBtn);
-        wrap.appendChild(row);
-      });
-
-      var addBtn = document.createElement('button');
-      addBtn.type = 'button';
-      addBtn.className = 'add-row-btn';
-      addBtn.textContent = t('settingsAddEntity');
-      addBtn.addEventListener('click', function() {
-        entities.push({ name: '', color: SETTINGS_ENTITY_COLORS[entities.length % SETTINGS_ENTITY_COLORS.length] });
-        render();
-        markSettingsDirty();
-        renderSettingsAnnotationPreview();
-        if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-      });
-      wrap.appendChild(addBtn);
-    }
-
-    render();
-    return wrap;
-  }
-
-  function isValidVADimensionConfig(config) {
-    if (!config || typeof config !== 'object') return false;
-    var min = Number(config.min);
-    var max = Number(config.max);
-    var step = Number(config.step);
-    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return false;
-    if (step <= 0) return false;
-    return max >= min;
-  }
-
-  function normalizeSettingsVADimensionConfig(key, fallback) {
-    var dim = state.settingsDraft.configData[key];
-    if (!dim || typeof dim !== 'object') dim = {};
-    var min = Number(dim.min);
-    var max = Number(dim.max);
-    var step = Number(dim.step);
-    if (!Number.isFinite(min)) min = fallback.min;
-    if (!Number.isFinite(max)) max = fallback.max;
-    if (!Number.isFinite(step) || step <= 0) step = fallback.step;
-    if (max < min) max = min;
-    state.settingsDraft.configData[key] = { min: min, max: max, step: step };
-  }
-
-  function buildSettingsVADimensionsInput() {
-    normalizeSettingsVADimensionConfig('valence', { min: 1, max: 9, step: 1 });
-    normalizeSettingsVADimensionConfig('arousal', { min: 1, max: 9, step: 1 });
-    var wrap = document.createElement('div');
-    wrap.style.display = 'flex';
-    wrap.style.flexDirection = 'column';
-    wrap.style.gap = '12px';
-
-    function makeDimensionRow(key, title) {
-      var row = document.createElement('div');
-      row.style.display = 'grid';
-      row.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
-      row.style.gap = '10px';
-      row.style.padding = '10px 12px';
-      row.style.border = '1px solid var(--color-border)';
-      row.style.borderRadius = 'var(--radius-md)';
-      row.style.background = 'var(--color-slate-50)';
-
-      var titleEl = document.createElement('div');
-      titleEl.textContent = title;
-      titleEl.style.gridColumn = '1 / -1';
-      titleEl.style.fontWeight = '600';
-      titleEl.style.fontSize = '13px';
-      row.appendChild(titleEl);
-
-      [
-        { prop: 'min', zh: '最小值', en: 'Min' },
-        { prop: 'max', zh: '最大值', en: 'Max' },
-        { prop: 'step', zh: '間距', en: 'Step' },
-      ].forEach(function(item) {
-        var fieldWrap = document.createElement('label');
-        fieldWrap.style.display = 'flex';
-        fieldWrap.style.flexDirection = 'column';
-        fieldWrap.style.gap = '6px';
-        fieldWrap.style.fontSize = '12px';
-        fieldWrap.style.color = 'var(--color-text-soft)';
-
-        var label = document.createElement('span');
-        label.textContent = state.lang === 'en' ? item.en : item.zh;
-        fieldWrap.appendChild(label);
-
-        var input = document.createElement('input');
-        input.type = 'number';
-        input.className = 'input-number';
-        input.step = 'any';
-        input.value = String(state.settingsDraft.configData[key][item.prop]);
-        input.addEventListener('input', function() {
-          var numeric = Number(input.value);
-          state.settingsDraft.configData[key][item.prop] = Number.isFinite(numeric) ? numeric : input.value;
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        input.addEventListener('blur', function() {
-          normalizeSettingsVADimensionConfig(key, { min: 1, max: 9, step: 1 });
-          input.value = String(state.settingsDraft.configData[key][item.prop]);
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        fieldWrap.appendChild(input);
-        row.appendChild(fieldWrap);
-      });
-
-      return row;
-    }
-
-    wrap.appendChild(makeDimensionRow('valence', 'Valence'));
-    wrap.appendChild(makeDimensionRow('arousal', 'Arousal'));
-    return wrap;
-  }
-
-  function buildSettingsScoreOptionsFromDimension(dimConfig) {
-    if (!dimConfig || typeof dimConfig !== 'object') return [];
-    var min = Number(dimConfig.min);
-    var max = Number(dimConfig.max);
-    var step = Number(dimConfig.step);
-    if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) return [];
-    if (step <= 0 || max < min) return [];
-    var values = [];
-    var stepText = String(step);
-    var decimal = stepText.indexOf('.') >= 0 ? stepText.split('.')[1].length : 0;
-    for (var value = min; value <= max + step / 1000; value += step) {
-      values.push({ text: value.toFixed(decimal), color: null });
-    }
-    return values;
-  }
-
-  function appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect) {
-    options.forEach(function(option) {
-      var row = document.createElement('label');
-      row.className = 'annotation-preview-option';
-      var checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      if (singleSelect) {
-        checkbox.addEventListener('change', function() {
-          if (!checkbox.checked) return;
-          optionsWrap.querySelectorAll('input[type=\"checkbox\"]').forEach(function(cb) {
-            if (cb !== checkbox) cb.checked = false;
-          });
-        });
-      }
-      row.appendChild(checkbox);
-      if (option.color) {
-        var color = document.createElement('span');
-        color.className = 'annotation-preview-color';
-        color.style.background = option.color;
-        row.appendChild(color);
-      }
-      var text = document.createElement('span');
-      text.textContent = option.text;
-      row.appendChild(text);
-      optionsWrap.appendChild(row);
-    });
-  }
-
-  function renderSettingsAspectListPreview(preview, config) {
-    var allowEdit = !!config.allow_sentence_edit;
-    var allowAdd = config.allow_aspect_add !== false;
-    var allowDel = config.allow_aspect_delete !== false;
-    var showSentimentHint = !!config.require_sentiment_context_check;
-    var sampleSentence = t('settingsPreviewSampleSentenceAspectList');
-    var aspects = state.lang === 'zh'
-      ? ['服務態度', '環境整潔', '餐點品質']
-      : ['service attitude', 'cleanliness', 'food quality'];
-
-    var sentenceSection = document.createElement('div');
-    sentenceSection.className = 'aspect-list-preview-sentence';
-
-    var sentenceLabel = document.createElement('div');
-    sentenceLabel.className = 'annotation-preview-task-title';
-    sentenceLabel.textContent = t('settingsAspectListSentenceLabel');
-    sentenceSection.appendChild(sentenceLabel);
-
-    if (allowEdit) {
-      var sentenceInput = document.createElement('textarea');
-      sentenceInput.className = 'aspect-list-preview-sentence-input';
-      sentenceInput.value = sampleSentence;
-      sentenceInput.rows = 2;
-      sentenceSection.appendChild(sentenceInput);
-    } else {
-      var sentenceReadonly = document.createElement('div');
-      sentenceReadonly.className = 'aspect-list-preview-sentence-readonly';
-      sentenceReadonly.textContent = sampleSentence;
-      sentenceSection.appendChild(sentenceReadonly);
-    }
-    preview.appendChild(sentenceSection);
-
-    var divider = document.createElement('div');
-    divider.className = 'annotation-preview-divider';
-    preview.appendChild(divider);
-
-    var listTitle = document.createElement('div');
-    listTitle.className = 'annotation-preview-task-title';
-    listTitle.textContent = t('settingsAspectListPreviewTitle');
-    preview.appendChild(listTitle);
-
-    var rowsWrap = document.createElement('div');
-    rowsWrap.className = 'aspect-list-preview-rows';
-
-    function renderRows() {
-      while (rowsWrap.firstChild) rowsWrap.removeChild(rowsWrap.firstChild);
-      aspects.forEach(function(aspect, index) {
-        var row = document.createElement('div');
-        row.className = 'aspect-list-preview-row';
-
-        var rowLabel = document.createElement('span');
-        rowLabel.className = 'aspect-list-preview-row-label';
-        rowLabel.textContent = 'Aspect ' + (index + 1);
-        row.appendChild(rowLabel);
-
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'aspect-list-preview-input';
-        input.value = aspect;
-        input.placeholder = t('settingsAspectRowPlaceholder');
-        input.addEventListener('input', function() { aspects[index] = input.value; });
-        row.appendChild(input);
-
-        if (allowDel) {
-          var deleteBtn = document.createElement('button');
-          deleteBtn.type = 'button';
-          deleteBtn.className = 'aspect-list-preview-delete';
-          deleteBtn.setAttribute('aria-label', state.lang === 'zh' ? '刪除' : 'Delete');
-          deleteBtn.textContent = '×';
-          deleteBtn.addEventListener('click', function() {
-            aspects.splice(index, 1);
-            renderRows();
-          });
-          row.appendChild(deleteBtn);
-        }
-        rowsWrap.appendChild(row);
-      });
-
-      if (allowAdd) {
-        var addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'aspect-list-preview-add';
-        addBtn.textContent = t('settingsAddAspectBtnLabel');
-        addBtn.addEventListener('click', function() {
-          aspects.push('');
-          renderRows();
-        });
-        rowsWrap.appendChild(addBtn);
-      }
-    }
-
-    renderRows();
-    preview.appendChild(rowsWrap);
-
-    if (showSentimentHint) {
-      var hint = document.createElement('div');
-      hint.className = 'aspect-list-preview-hint';
-      hint.textContent = t('settingsRequireSentimentContextHint');
-      preview.appendChild(hint);
-    }
-  }
-
-  function buildSettingsSchemaSection(title, desc) {
-    var section = document.createElement('div');
-    section.className = 'settings-schema-section';
-    var header = document.createElement('div');
-    header.className = 'settings-schema-section-header';
-    var titleEl = document.createElement('div');
-    titleEl.className = 'settings-schema-section-title';
-    titleEl.textContent = title;
-    header.appendChild(titleEl);
-    if (desc) {
-      var descEl = document.createElement('div');
-      descEl.className = 'settings-schema-section-desc';
-      descEl.textContent = desc;
-      header.appendChild(descEl);
-    }
-    section.appendChild(header);
-    return section;
-  }
-
-  function buildSettingsSchemaDisclosureSection(title, desc, isOpen, onToggle) {
-    var section = document.createElement('details');
-    section.className = 'settings-schema-disclosure';
-    section.open = !!isOpen;
-    section.addEventListener('toggle', function() {
-      onToggle(section.open);
-    });
-
-    var summary = document.createElement('summary');
-    var copy = document.createElement('div');
-    copy.className = 'settings-schema-disclosure-summary-copy';
-    var titleEl = document.createElement('div');
-    titleEl.className = 'settings-schema-disclosure-summary-title';
-    titleEl.textContent = title;
-    copy.appendChild(titleEl);
-    if (desc) {
-      var descEl = document.createElement('div');
-      descEl.className = 'settings-schema-disclosure-summary-desc';
-      descEl.textContent = desc;
-      copy.appendChild(descEl);
-    }
-    summary.appendChild(copy);
-    var chevron = document.createElement('span');
-    chevron.className = 'settings-schema-disclosure-chevron';
-    chevron.textContent = '›';
-    summary.appendChild(chevron);
-    section.appendChild(summary);
-
-    var body = document.createElement('div');
-    body.className = 'settings-schema-disclosure-body';
-    section.appendChild(body);
-    return { section: section, body: body };
-  }
-
-  function appendSettingsSchemaField(container, field) {
-      if (!field) return;
-      var wrap = document.createElement('div');
-      wrap.className = 'field-group';
-      if (field.type === 'number') wrap.className += ' schema-number-field';
-      wrap.style.marginBottom = '10px';
-
-      if (field.type !== 'boolean') {
-        var label = document.createElement('label');
-        label.className = 'field-label';
-        label.textContent = field[state.lang] || field.zh;
-        if (field.required) {
-          var req = document.createElement('span');
-          req.className = 'required';
-          req.textContent = '*';
-          label.appendChild(req);
-        }
-        wrap.appendChild(label);
-      }
-
-      if (field.type === 'tag-list') {
-        wrap.appendChild(buildSettingsTagInput(field));
-        if (field['hint_' + state.lang]) {
-          var hint = document.createElement('div');
-          hint.className = 'field-hint';
-          hint.textContent = field['hint_' + state.lang];
-          wrap.appendChild(hint);
-        }
-      } else if (field.type === 'va-dimensions') {
-        wrap.appendChild(buildSettingsVADimensionsInput());
-      } else if (field.type === 'entity-list') {
-        wrap.appendChild(buildSettingsEntityList(field));
-      } else if (field.type === 'boolean') {
-        var chkLabel = document.createElement('label');
-        chkLabel.className = 'settings-toggle-card';
-        var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = !!(state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue);
-        chkLabel.classList.toggle('is-on', checkbox.checked);
-        var copy = document.createElement('span');
-        copy.className = 'settings-toggle-copy';
-        var title = document.createElement('span');
-        title.className = 'settings-toggle-label';
-        title.textContent = field[state.lang] || field.zh;
-        var status = document.createElement('span');
-        status.className = 'settings-toggle-status';
-        status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
-        copy.appendChild(title);
-        copy.appendChild(status);
-        checkbox.addEventListener('change', function() {
-          state.settingsDraft.configData[field.key] = checkbox.checked;
-          status.textContent = checkbox.checked ? t('settingsEnabled') : t('settingsDisabled');
-          chkLabel.classList.toggle('is-on', checkbox.checked);
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        var switchWrap = document.createElement('span');
-        switchWrap.className = 'toggle-switch';
-        var slider = document.createElement('span');
-        slider.className = 'toggle-slider';
-        switchWrap.appendChild(checkbox);
-        switchWrap.appendChild(slider);
-        chkLabel.appendChild(copy);
-        chkLabel.appendChild(switchWrap);
-        wrap.innerHTML = '';
-        wrap.appendChild(chkLabel);
-      } else if (field.type === 'select' || field.type === 'subtype-select') {
-        var select = document.createElement('select');
-        select.className = 'input-select';
-        var currentValue = state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : field.defaultValue;
-        field.options.forEach(function(optionValue) {
-          var option = document.createElement('option');
-          option.value = optionValue;
-          option.textContent = field.optionLabels && field.optionLabels[state.lang] && field.optionLabels[state.lang][optionValue]
-            ? field.optionLabels[state.lang][optionValue]
-            : optionValue;
-          if (optionValue === currentValue) option.selected = true;
-          select.appendChild(option);
-        });
-        select.addEventListener('change', function() {
-          state.settingsDraft.configData[field.key] = select.value;
-          if (field.type === 'subtype-select') {
-            var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-            var template = select.value === 'aspect_list' && schema && schema.aspectListTemplate
-              ? schema.aspectListTemplate
-              : schema.nerTemplate || schema.defaultTemplate || {};
-            state.settingsDraft.configData = cloneObject(template);
-            renderSettingsSchemaFields();
-          }
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        wrap.appendChild(select);
-      } else if (field.type === 'textarea') {
-        var textarea = document.createElement('textarea');
-        textarea.className = 'input-textarea';
-        textarea.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
-        textarea.value = state.settingsDraft.configData[field.key] || '';
-        textarea.addEventListener('input', function() {
-          state.settingsDraft.configData[field.key] = textarea.value;
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        wrap.appendChild(textarea);
-      } else if (field.type === 'number') {
-        var numberInput = document.createElement('input');
-        numberInput.type = 'number';
-        numberInput.className = 'input-text';
-        numberInput.style.width = '100px';
-        numberInput.value = state.settingsDraft.configData[field.key] !== undefined ? state.settingsDraft.configData[field.key] : (field.defaultValue !== undefined ? field.defaultValue : '');
-        numberInput.addEventListener('input', function() {
-          state.settingsDraft.configData[field.key] = numberInput.value === '' ? '' : Number(numberInput.value);
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        wrap.appendChild(numberInput);
-      } else {
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'input-text';
-        input.placeholder = field['placeholder_' + state.lang] || field.placeholder_zh || '';
-        input.value = state.settingsDraft.configData[field.key] || '';
-        input.addEventListener('input', function() {
-          state.settingsDraft.configData[field.key] = input.value;
-          markSettingsDirty();
-          renderSettingsAnnotationPreview();
-          if (!state.settingsCodeDraftDirty) renderSettingsCodeFromConfig();
-        });
-        wrap.appendChild(input);
-      }
-
-      container.appendChild(wrap);
-  }
-
-  function renderSettingsSchemaFields() {
-    var container = document.getElementById('settingsSchemaFields');
-    if (!container || !state.settingsDraft) return;
-    while (container.firstChild) container.removeChild(container.firstChild);
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    if (!schema) return;
-
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && currentSettingsSubtype() === 'aspect_list') {
-      var fieldByKey = {};
-      schema.fields.forEach(function(field) { fieldByKey[field.key] = field; });
-      appendSettingsSchemaField(container, fieldByKey.subtype);
-
-      var fieldSection = buildSettingsSchemaSection(t('settingsAspectFieldSectionTitle'), t('settingsAspectFieldSectionDesc'));
-      var fieldGrid = document.createElement('div');
-      fieldGrid.className = 'settings-schema-field-grid';
-      appendSettingsSchemaField(fieldGrid, fieldByKey.input_field);
-      appendSettingsSchemaField(fieldGrid, fieldByKey.aspect_list_field);
-      fieldSection.appendChild(fieldGrid);
-      container.appendChild(fieldSection);
-
-      var ruleSection = buildSettingsSchemaSection(t('settingsAspectRuleSectionTitle'), t('settingsAspectRuleSectionDesc'));
-      var toggleList = document.createElement('div');
-      toggleList.className = 'settings-schema-toggle-list';
-      ['allow_sentence_edit', 'allow_aspect_add', 'allow_aspect_delete', 'require_exact_match_in_sentence', 'require_sentiment_context_check'].forEach(function(key) {
-        appendSettingsSchemaField(toggleList, fieldByKey[key]);
-      });
-      ruleSection.appendChild(toggleList);
-      container.appendChild(ruleSection);
-
-      var limitSection = buildSettingsSchemaSection(t('settingsAspectLimitSectionTitle'), t('settingsAspectLimitSectionDesc'));
-      var limitGrid = document.createElement('div');
-      limitGrid.className = 'settings-schema-field-grid';
-      appendSettingsSchemaField(limitGrid, fieldByKey.min_aspects);
-      appendSettingsSchemaField(limitGrid, fieldByKey.max_aspects);
-      limitSection.appendChild(limitGrid);
-      container.appendChild(limitSection);
-      return;
-    }
-
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && currentSettingsSubtype() === 'ner') {
-      var nerFieldByKey = {};
-      schema.fields.forEach(function(field) { nerFieldByKey[field.key] = field; });
-      appendSettingsSchemaField(container, nerFieldByKey.subtype);
-
-      var coreSection = buildSettingsSchemaSection(t('settingsNerCoreSectionTitle'), t('settingsNerCoreSectionDesc'));
-      appendSettingsSchemaField(coreSection, nerFieldByKey.entities);
-      appendSettingsSchemaField(coreSection, nerFieldByKey.scheme);
-      appendSettingsSchemaField(coreSection, nerFieldByKey.allow_overlapping);
-      container.appendChild(coreSection);
-
-      var advancedSection = buildSettingsSchemaDisclosureSection(
-        t('settingsNerAdvancedSectionTitle'),
-        t('settingsNerAdvancedSectionDesc'),
-        state.settingsNerAdvancedOpen,
-        function(open) { state.settingsNerAdvancedOpen = open; }
-      );
-      ['input_field', 'entity_field', 'allow_custom_entity_type', 'require_entity_type', 'allow_nested_entities', 'min_entity_length', 'max_entity_length'].forEach(function(key) {
-        appendSettingsSchemaField(advancedSection.body, nerFieldByKey[key]);
-      });
-      container.appendChild(advancedSection.section);
-      return;
-    }
-
-    schema.fields.forEach(function(field) {
-      if (!settingsFieldVisible(field)) return;
-      appendSettingsSchemaField(container, field);
-    });
-  }
-
-  function renderSettingsAnnotationPreview() {
-    var preview = document.getElementById('settingsAnnotationPreview');
-    if (!preview || !state.settingsDraft) return;
-    while (preview.firstChild) preview.removeChild(preview.firstChild);
-    var taskType = TASK_DATA.taskTypeKey;
-    var config = state.settingsDraft.configData || {};
-    var titleText = t('settingsPreviewTaskChooseLabel');
-    var options = [];
-
-    if (taskType === 'sequence_labeling' && currentSettingsSubtype() === 'aspect_list') {
-      renderSettingsAspectListPreview(preview, config);
-      return;
-    } else if (taskType === 'sequence_labeling') {
-      titleText = t('settingsPreviewTaskEntity');
-      options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
-        return { text: ent.name.trim(), color: ent.color || null };
-      }) : [];
-    } else if (taskType === 'relation_extraction') {
-      titleText = t('settingsPreviewTaskRelation');
-      options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
-        return { text: tag.trim(), color: null };
-      }) : [];
-    } else if (taskType === 'single_sentence_va_scoring') {
-      titleText = t('settingsPreviewTaskValence');
-      options = buildSettingsScoreOptionsFromDimension(config.valence);
-    } else {
-      options = Array.isArray(config.labels) ? config.labels.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
-        return { text: tag.trim(), color: null };
-      }) : [];
-    }
-
-    if (taskType === 'sentence_pairs') {
-      var pairWrap = document.createElement('div');
-      pairWrap.className = 'annotation-preview-pair';
-      var labelA = document.createElement('div');
-      labelA.className = 'annotation-preview-pair-label';
-      labelA.textContent = t('settingsPreviewSentenceALabel');
-      var sampleA = document.createElement('div');
-      sampleA.className = 'annotation-preview-sample';
-      sampleA.textContent = t('settingsPreviewSampleSentenceA');
-      var labelB = document.createElement('div');
-      labelB.className = 'annotation-preview-pair-label';
-      labelB.textContent = t('settingsPreviewSentenceBLabel');
-      var sampleB = document.createElement('div');
-      sampleB.className = 'annotation-preview-sample';
-      sampleB.textContent = t('settingsPreviewSampleSentenceB');
-      pairWrap.appendChild(labelA);
-      pairWrap.appendChild(sampleA);
-      pairWrap.appendChild(labelB);
-      pairWrap.appendChild(sampleB);
-      preview.appendChild(pairWrap);
-    } else {
-      var sampleKey = 'settingsPreviewSampleSentence';
-      if (taskType === 'single_sentence_va_scoring') sampleKey = 'settingsPreviewSampleSentenceVA';
-      else if (taskType === 'sequence_labeling') sampleKey = 'settingsPreviewSampleSentenceSequence';
-      else if (taskType === 'relation_extraction') sampleKey = 'settingsPreviewSampleSentenceRelation';
-      var sample = document.createElement('div');
-      sample.className = 'annotation-preview-sample';
-      sample.textContent = t(sampleKey);
-      preview.appendChild(sample);
-    }
-
-    var divider = document.createElement('div');
-    divider.className = 'annotation-preview-divider';
-    preview.appendChild(divider);
-
-    var title = document.createElement('div');
-    title.className = 'annotation-preview-task-title';
-    title.textContent = titleText;
-    preview.appendChild(title);
-
-    var optionsWrap = document.createElement('div');
-    optionsWrap.className = 'annotation-preview-options';
-    preview.appendChild(optionsWrap);
-
-    var singleSelect = taskType === 'single_sentence_va_scoring' || taskType === 'sentence_pairs' || (taskType === 'single_sentence_classification' && !config.allow_multiple);
-    if (taskType === 'single_sentence_va_scoring') {
-      if (!options.length) {
-        var emptyVa = document.createElement('div');
-        emptyVa.className = 'annotation-preview-empty';
-        emptyVa.textContent = t('settingsPreviewEmpty');
-        optionsWrap.appendChild(emptyVa);
-      } else {
-        appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
-      }
-
-      var arousalTitle = document.createElement('div');
-      arousalTitle.className = 'annotation-preview-task-title';
-      arousalTitle.style.marginTop = '8px';
-      arousalTitle.textContent = t('settingsPreviewTaskArousal');
-      preview.appendChild(arousalTitle);
-
-      var arousalOptionsWrap = document.createElement('div');
-      arousalOptionsWrap.className = 'annotation-preview-options';
-      preview.appendChild(arousalOptionsWrap);
-
-      var arousalOptions = buildSettingsScoreOptionsFromDimension(config.arousal);
-      if (!arousalOptions.length) {
-        var emptyArousal = document.createElement('div');
-        emptyArousal.className = 'annotation-preview-empty';
-        emptyArousal.textContent = t('settingsPreviewEmpty');
-        arousalOptionsWrap.appendChild(emptyArousal);
-      } else {
-        appendSettingsPreviewOptionRows(arousalOptionsWrap, arousalOptions, singleSelect);
-      }
-      return;
-    }
-
-    if (!options.length) {
-      var empty = document.createElement('div');
-      empty.className = 'annotation-preview-empty';
-      empty.textContent = t('settingsPreviewEmpty');
-      optionsWrap.appendChild(empty);
-      return;
-    }
-
-    appendSettingsPreviewOptionRows(optionsWrap, options, singleSelect);
-  }
-
-  function applySettingsTemplate(templateData) {
-    if (!state.settingsDraft) return;
-    state.settingsDraft.configData = cloneObject(templateData || getDefaultSettingsTemplateForLang(TASK_DATA.taskTypeKey, state.lang));
-    state.settingsDraft.uploadedConfigName = '';
-    renderSettingsTemplateBtns();
-    renderSettingsSchemaFields();
-    state.settingsCodeDraftDirty = false;
-    renderSettingsCodeFromConfig();
-    setSettingsEditError('');
-    setSettingsCodeError('');
-    renderSettingsAnnotationPreview();
-    markSettingsDirty();
-  }
-
-  function setSettingsCodeFormat(fmt) {
-    if (!state.settingsDraft || state.settingsCodeDraftDirty) return;
-    state.settingsDraft.codeFormat = fmt === 'json' ? 'json' : 'yaml';
-    renderSettingsCodeFromConfig();
-  }
-
-  function loadSettingsConfigFile(file) {
-    var fileName = file.name || '';
-    var name = fileName.toLowerCase();
-    var ext = name.slice(name.lastIndexOf('.'));
-    if (['.yaml', '.yml', '.json'].indexOf(ext) === -1) {
-      setSettingsEditError(t('settingsConfigFormatError'));
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function() {
-      if (!state.settingsDraft) return;
-      state.settingsDraft.codeFormat = ext === '.json' ? 'json' : 'yaml';
-      state.settingsDraft.uploadedConfigName = fileName;
-      var editor = document.getElementById('settingsCodeEditor');
-      if (editor) editor.value = String(reader.result || '');
-      markSettingsCodeDirty();
-      setSettingsCodeError('');
-      setSettingsEditError('');
-      showToast(t('settingsConfigLoaded'));
-      markSettingsDirty();
-    };
-    reader.onerror = function() {
-      setSettingsEditError(t('settingsConfigReadError'));
-    };
-    reader.readAsText(file);
-  }
-
-  function saveSettingsCodeToVisual(showSuccessToast) {
-    if (!state.settingsDraft) return false;
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    if (!schema) return false;
-    var editor = document.getElementById('settingsCodeEditor');
-    var parsed;
-    try {
-      parsed = settingsParseCode(editor ? editor.value : '', state.settingsDraft.codeFormat);
-    } catch (error) {
-      setSettingsCodeError(error.message || t('settingsCodeInvalid'));
-      return false;
-    }
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      setSettingsCodeError(t('settingsCodeInvalid'));
-      return false;
-    }
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && (parsed.subtype || currentSettingsSubtype()) === 'ner') {
-      if (Array.isArray(parsed.entity_types) && !parsed.entities) {
-        parsed.entities = parsed.entity_types.map(function(entity, idx) {
-          if (entity && typeof entity === 'object') {
-            return {
-              name: String(entity.name || '').trim(),
-              color: entity.color || SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
-            };
-          }
-          return {
-            name: String(entity || '').trim(),
-            color: SETTINGS_ENTITY_COLORS[idx % SETTINGS_ENTITY_COLORS.length],
-          };
-        });
-      }
-      if (parsed.span_scheme && !parsed.scheme) parsed.scheme = parsed.span_scheme;
-      if (parsed.allow_overlapping_spans !== undefined && parsed.allow_overlapping === undefined) parsed.allow_overlapping = parsed.allow_overlapping_spans;
-      delete parsed.entity_types;
-      delete parsed.span_scheme;
-      delete parsed.allow_overlapping_spans;
-    }
-    var merged = {};
-    if (TASK_DATA.taskTypeKey === 'sequence_labeling' && parsed.subtype === 'aspect_list' && schema.aspectListTemplate) {
-      merged = cloneObject(schema.aspectListTemplate);
-    }
-    Object.keys(parsed).forEach(function(key) { merged[key] = parsed[key]; });
-    schema.fields.forEach(function(field) {
-      if (!settingsFieldVisibleForConfig(field, merged)) return;
-      if (merged[field.key] === undefined && field.defaultValue !== undefined) merged[field.key] = field.defaultValue;
-      if (field.type === 'tag-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
-      if (field.type === 'entity-list' && !Array.isArray(merged[field.key])) merged[field.key] = [];
-      if (field.type === 'boolean' && typeof merged[field.key] !== 'boolean') merged[field.key] = !!merged[field.key];
-      if (field.type === 'va-dimensions') {
-        if (!merged.valence || typeof merged.valence !== 'object') merged.valence = { min: 1, max: 9, step: 1 };
-        if (!merged.arousal || typeof merged.arousal !== 'object') merged.arousal = { min: 1, max: 9, step: 1 };
-      }
-    });
-    state.settingsDraft.configData = merged;
-    state.settingsCodeDraftDirty = false;
-    var saveCodeBtn = document.getElementById('settingsSaveCodeBtn');
-    if (saveCodeBtn) saveCodeBtn.disabled = true;
-    setSettingsCodeError('');
-    renderSettingsSchemaFields();
-    renderSettingsAnnotationPreview();
-    markSettingsDirty();
-    updateSettingsMainSaveState();
-    if (showSuccessToast) showToast(t('settingsCodeSaved'));
-    return true;
-  }
-
-  function validateSettingsRequiredFields() {
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    if (!schema || !state.settingsDraft) return false;
-    var config = state.settingsDraft.configData || {};
-    var ok = true;
-    schema.fields.forEach(function(field) {
-      if (!settingsFieldVisible(field)) return;
-      if (!field.required) return;
-      var val = config[field.key];
-      if (field.type === 'tag-list') {
-        if (!val || !Array.isArray(val) || !val.length) ok = false;
-      } else if (field.type === 'entity-list') {
-        if (!val || !Array.isArray(val) || !val.length || val.some(function(ent) { return !ent.name || !ent.name.trim(); })) ok = false;
-      } else if (field.type === 'va-dimensions') {
-        if (!isValidVADimensionConfig(config.valence) || !isValidVADimensionConfig(config.arousal)) ok = false;
-      } else if (field.type === 'textarea' || field.type === 'text' || field.type === 'select' || field.type === 'subtype-select' || field.type === 'number') {
-        if (val === undefined || val === null || (typeof val === 'string' && !val.trim())) ok = false;
-      } else if (field.type === 'boolean') {
-        if (val === undefined || val === null) ok = false;
-      }
-    });
-    return ok;
-  }
-
-  function fillSettingsEditForm() {
-    if (!state.settingsDraft) return;
-    renderSettingsTemplateBtns();
-    renderSettingsSchemaFields();
-    renderSettingsAnnotationPreview();
-    renderSettingsCodeFromConfig();
-    setSettingsEditError('');
+    showFieldError('settingsEditError', Boolean(message), message);
   }
 
   function renderSettingsEditState() {
@@ -7751,7 +6071,10 @@ function getTaskTypeLabel(taskTypeKey) {
     if (state.settingsEditMode) {
       hint.classList.add('hidden');
       hint.textContent = '';
-      fillSettingsEditForm();
+      setSettingsEditError('');
+      ensureTaskConfigSeeded();
+      renderTemplateBtns();
+      renderSchemaFields();
       return;
     }
 
@@ -7768,8 +6091,7 @@ function getTaskTypeLabel(taskTypeKey) {
     if (!isSettingsEditable()) return;
     state.settingsEditMode = true;
     state.settingsDirty = false;
-    state.settingsCodeDraftDirty = false;
-    state.settingsDraft = createSettingsDraft();
+    state.codeDraftDirty = false;
     renderSettingsEditState();
     trackEvent('prototype_settings_edit_started');
   }
@@ -7779,108 +6101,44 @@ function getTaskTypeLabel(taskTypeKey) {
     if (!force && state.settingsDirty && !window.confirm(t('settingsLeaveConfirm'))) return false;
     state.settingsEditMode = false;
     state.settingsDirty = false;
-    state.settingsCodeDraftDirty = false;
-    state.settingsDraft = null;
+    state.codeDraftDirty = false;
+    resetTaskConfigSeedGuard();
     renderSettingsEditState();
     return true;
   }
 
   function saveSettingsEdit() {
-    if (!isSettingsEditable() || !state.settingsDraft) return;
-    if (state.settingsCodeDraftDirty) {
-      setSettingsCodeError(t('settingsCodeUnsaved'));
+    if (!isSettingsEditable()) return;
+    if (state.codeDraftDirty) {
       setSettingsEditError(t('settingsCodeUnsaved'));
       return;
     }
-    if (!validateSettingsRequiredFields()) {
-      setSettingsEditError(t('settingsSchemaRequired'));
-      return;
-    }
-    TASK_DATA.configContent = settingsConfigToCode();
-    TASK_DATA.configFileName = state.settingsDraft.uploadedConfigName || '';
+    TASK_DATA.outputs = state.selectedOutputTypes.map(function(outKey) {
+      return { type: outKey, config: state.outputConfigs[outKey] || {} };
+    });
     TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
     state.settingsEditMode = false;
     state.settingsDirty = false;
-    state.settingsCodeDraftDirty = false;
-    state.settingsDraft = null;
+    resetTaskConfigSeedGuard();
     showToast(t('settingsSaveSuccess'));
     renderOverview();
     trackEvent('prototype_settings_edit_saved');
   }
 
+  /* Generalization-First: iterates TASK_DATA.outputs[] and the shared
+     OUTPUT_TYPE_REGISTRY instead of any per-task-type branch. */
   function getSettingsSummary() {
-    var code = (TASK_DATA.configContent || '').trim();
-    var codeFormat = code.startsWith('{') ? 'json' : 'yaml';
-    var parsed = {};
-    try {
-      parsed = settingsParseCode(code, codeFormat) || {};
-    } catch (error) {
-      parsed = {};
-    }
-    var schema = getSettingsSchema(TASK_DATA.taskTypeKey);
-    var summaryRows = [];
-    if (schema && Array.isArray(schema.fields)) {
-      schema.fields.forEach(function(field) {
-        if (!settingsFieldVisibleForConfig(field, parsed)) return;
-        if (field.type === 'va-dimensions') {
-          var dims = [
-            { key: 'valence', label: 'Valence' },
-            { key: 'arousal', label: 'Arousal' },
-          ];
-          dims.forEach(function(dim) {
-            var dimValue = parsed[dim.key];
-            var text = '-';
-            if (dimValue && typeof dimValue === 'object') {
-              var min = Number(dimValue.min);
-              var max = Number(dimValue.max);
-              var step = Number(dimValue.step);
-              if (Number.isFinite(min) && Number.isFinite(max) && Number.isFinite(step) && step > 0 && max >= min) {
-                text = state.lang === 'zh'
-                  ? (min + ' ~ ' + max + '（間距 ' + step + '）')
-                  : (min + ' ~ ' + max + ' (step ' + step + ')');
-              }
-            }
-            summaryRows.push({
-              label: dim.label,
-              value: text,
-              required: true,
-            });
-          });
-          return;
-        }
-
-        var rawValue = parsed[field.key];
-        if (rawValue === undefined && field.defaultValue !== undefined) rawValue = field.defaultValue;
-        var text = '-';
-        if (field.type === 'tag-list') {
-          var tags = Array.isArray(rawValue) ? rawValue.filter(function(item) { return String(item || '').trim(); }) : [];
-          text = tags.length ? tags.map(localizeResultLabel).join(', ') : '-';
-        } else if (field.type === 'entity-list') {
-          var names = Array.isArray(rawValue) ? rawValue.map(function(entity) {
-            if (entity && typeof entity === 'object') return String(entity.name || '').trim();
-            return String(entity || '').trim();
-          }).filter(function(name) { return name; }) : [];
-          text = names.length ? names.map(localizeResultLabel).join(', ') : '-';
-        } else if (field.type === 'boolean') {
-          text = rawValue ? t('yes') : t('no');
-        } else if (field.type === 'subtype-select') {
-          text = getSettingsSubtypeLabel(rawValue || field.defaultValue);
-        } else if (field.type === 'select' || field.type === 'textarea') {
-          text = String(rawValue || '').trim() || '-';
-        } else {
-          text = String(rawValue || '').trim() || '-';
-        }
-        summaryRows.push({
-          label: field[state.lang] || field.zh || field.key,
-          value: text,
-          required: Boolean(field.required),
-        });
-      });
-    }
-
+    var summaryRows = (TASK_DATA.outputs || []).map(function(out) {
+      return {
+        label: getOutputTypeDisplayLabel(out.type),
+        value: summarizeOutputConfigForDisplay(out.type, out.config || {}) || '-',
+        required: true,
+      };
+    });
     return {
-      configFileName: TASK_DATA.configFileName || '',
-      taskTypeLabel: getTaskTypeLabel(TASK_DATA.taskTypeKey),
+      configVersion: TASK_DATA.configVersion || '',
+      taskTypeLabel: getTaskTypeLabel(),
       summaryRows: summaryRows,
     };
   }
@@ -7928,9 +6186,9 @@ function getTaskTypeLabel(taskTypeKey) {
 
     renderBreadcrumbCurrent();
     setText('valueTaskName', taskName);
-    setText('valueTaskType', getTaskTypeLabel(TASK_DATA.taskTypeKey));
+    setText('valueTaskType', getTaskTypeLabel());
     setText('valueDatasetSummary', datasetSummary);
-    setText('valueConfigVersion', settingsSummary.configFileName);
+    setText('valueConfigVersion', settingsSummary.configVersion);
     setText('valueConfigTaskType', settingsSummary.taskTypeLabel);
     renderSettingsSummaryRows(settingsSummary.summaryRows);
     setText('valueAnnotatorGuidelineStatus', hasTaskGuidelineRoleContent('annotator') ? t('guidelineUploaded') : t('guidelineEmpty'));
@@ -9618,19 +7876,15 @@ function getTaskTypeLabel(taskTypeKey) {
     return 'snapshot-' + TASK_DATA.taskId + '-' + (stage || 'all') + '-v1';
   }
 
+  /* ADR-029: outputs[] is the single source of truth; export reads the
+     primary output's config directly instead of parsing configContent text. */
   function getExportConfigData() {
-    var code = (TASK_DATA.configContent || '').trim();
-    if (!code) return {};
-    try {
-      return settingsParseCode(code, code.startsWith('{') ? 'json' : 'yaml') || {};
-    } catch (error) {
-      return {};
-    }
+    var out = (TASK_DATA.outputs || [])[0];
+    return out ? (out.config || {}) : {};
   }
 
   function getExportSequenceSubtype(config) {
-    if (config && config.subtype) return config.subtype;
-    return currentSettingsSubtype();
+    return (config && config.subtype) || '';
   }
 
   function getExportedByName() {
@@ -10220,15 +8474,7 @@ function getTaskTypeLabel(taskTypeKey) {
     var settingsEditBtn = document.getElementById('settingsEditBtn');
     var settingsSaveBtn = document.getElementById('settingsSaveBtn');
     var settingsCancelBtn = document.getElementById('settingsCancelBtn');
-    var settingsUploadConfigBtn = document.getElementById('settingsUploadConfigBtn');
-    var settingsConfigFileInput = document.getElementById('settingsConfigFileInput');
-    var settingsCodeEditor = document.getElementById('settingsCodeEditor');
-    var settingsSaveCodeBtn = document.getElementById('settingsSaveCodeBtn');
-    var settingsFormatYamlBtn = document.getElementById('settingsFormatYamlBtn');
-    var settingsFormatJsonBtn = document.getElementById('settingsFormatJsonBtn');
     var editTaskNameInput = document.getElementById('editTaskNameInput');
-    var editTaskTypeSelect = document.getElementById('editTaskTypeSelect');
-    var editDatasetFileInput = document.getElementById('editDatasetFileInput');
     var tabOverview = document.getElementById('tabOverview');
     var tabAnnotationProgress = document.getElementById('tabAnnotationProgress');
     var tabWorkLog = document.getElementById('tabWorkLog');
@@ -10361,102 +8607,10 @@ function getTaskTypeLabel(taskTypeKey) {
       });
     }
 
-    if (settingsUploadConfigBtn && settingsConfigFileInput) {
-      settingsUploadConfigBtn.addEventListener('click', function() {
-        settingsConfigFileInput.click();
-      });
-    }
-
-    if (settingsConfigFileInput) {
-      settingsConfigFileInput.addEventListener('change', function() {
-        if (!this.files || !this.files[0]) return;
-        loadSettingsConfigFile(this.files[0]);
-        this.value = '';
-      });
-    }
-
-    if (settingsFormatYamlBtn) {
-      settingsFormatYamlBtn.addEventListener('click', function() {
-        setSettingsCodeFormat('yaml');
-      });
-    }
-
-    if (settingsFormatJsonBtn) {
-      settingsFormatJsonBtn.addEventListener('click', function() {
-        setSettingsCodeFormat('json');
-      });
-    }
-
-    if (settingsCodeEditor) {
-      settingsCodeEditor.addEventListener('input', function() {
-        if (!state.settingsDraft) return;
-        markSettingsCodeDirty();
-        setSettingsCodeError('');
-        markSettingsDirty();
-      });
-    }
-
-    if (settingsSaveCodeBtn) {
-      settingsSaveCodeBtn.addEventListener('click', function() {
-        saveSettingsCodeToVisual(true);
-      });
-    }
-
     if (editTaskNameInput) {
       editTaskNameInput.addEventListener('input', function() {
-        if (state.overviewDraft && state.lang === 'zh') state.overviewDraft.taskNameZh = editTaskNameInput.value;
-        if (state.overviewDraft && state.lang === 'en') state.overviewDraft.taskNameEn = editTaskNameInput.value;
         setOverviewEditError('');
-        markOverviewDirty();
-      });
-    }
-
-    if (editTaskTypeSelect) {
-      editTaskTypeSelect.addEventListener('change', function() {
-        if (state.overviewDraft) state.overviewDraft.taskTypeKey = editTaskTypeSelect.value;
-        markOverviewDirty();
-      });
-    }
-
-    if (editDatasetFileInput) {
-      editDatasetFileInput.addEventListener('change', function() {
-        if (!state.overviewDraft || !this.files || !this.files.length) return;
-        Array.prototype.forEach.call(this.files, function(file) {
-          state.overviewDraft.datasetFiles.push({ name: file.name, sizeBytes: file.size || 0 });
-        });
-        renderOverviewDatasetFileList();
-        markOverviewDirty();
-        editDatasetFileInput.value = '';
-      });
-    }
-
-    var overviewDatasetUploadZone = document.getElementById('overviewDatasetUploadZone');
-    if (overviewDatasetUploadZone && editDatasetFileInput) {
-      overviewDatasetUploadZone.addEventListener('click', function() {
-        editDatasetFileInput.click();
-      });
-      overviewDatasetUploadZone.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          editDatasetFileInput.click();
-        }
-      });
-      overviewDatasetUploadZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        overviewDatasetUploadZone.classList.add('dragover');
-      });
-      overviewDatasetUploadZone.addEventListener('dragleave', function() {
-        overviewDatasetUploadZone.classList.remove('dragover');
-      });
-      overviewDatasetUploadZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        overviewDatasetUploadZone.classList.remove('dragover');
-        if (!state.overviewDraft || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
-        Array.prototype.forEach.call(e.dataTransfer.files, function(file) {
-          state.overviewDraft.datasetFiles.push({ name: file.name, sizeBytes: file.size || 0 });
-        });
-        renderOverviewDatasetFileList();
-        markOverviewDirty();
+        markDirty();
       });
     }
 
@@ -10930,6 +9084,7 @@ document.getElementById('memberProgressSort').addEventListener('change', functio
 
         applyLang(state.lang);
         bindEvents();
+        bindTaskConfigEvents();
         showOverviewWithSkeleton();
 
         if (window.LabelSuiteAnalytics) {
