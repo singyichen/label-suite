@@ -144,6 +144,7 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '序列標註', en: 'Sequence Tagging',
     source_output: null,
     rendersInputPreview: true,
+    hidePreviewTitle: true,
     fields: [
       {
         key: 'tokenization',
@@ -249,7 +250,7 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '多標籤', en: 'Multi-label',
     source_output: null,
     fields: [
-      { key: 'label_options', type: 'taxonomy-tree', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增根標籤', addLabel_en: 'Add root label' },
+      { key: 'label_options', type: 'taxonomy-tree', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增根標籤', addLabel_en: 'Add root label', hintAsTooltip: true, hint_zh: '所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。', hint_en: 'Every level is selectable — parent and child labels are checked independently, and their category position is retained.' },
       { key: 'max_selections', type: 'number', zh: '最多可選數量（0 = 不限）', en: 'Max selections (0 = unlimited)', required: false, defaultValue: 0, min: 0 },
     ],
     defaultConfig: {
@@ -319,6 +320,7 @@ var OUTPUT_TYPE_REGISTRY = {
     source_output: null,
     rendersEvidencePreview: true,
     rendersInputPreview: true,
+    hidePreviewTitle: true,
     fields: [
       {
         key: 'input_instruction',
@@ -330,6 +332,7 @@ var OUTPUT_TYPE_REGISTRY = {
         defaultValue_zh: '請閱讀以下內容',
         defaultValue_en: 'Read the following content',
         maxLength: 100,
+        hintAsTooltip: true,
         hint_zh: '顯示在輸入內容上方，告訴標記員要閱讀或處理什麼。例：請閱讀以下文章',
         hint_en: 'Shown above the input content to explain what annotators should read or process. Example: Read the following article',
       },
@@ -343,6 +346,7 @@ var OUTPUT_TYPE_REGISTRY = {
         defaultValue_zh: '請輸入回答',
         defaultValue_en: 'Enter your response',
         maxLength: 100,
+        hintAsTooltip: true,
         hint_zh: '顯示在自由文字欄位上方，告訴標記員要輸入什麼。例：請用一句話摘要文章重點',
         hint_en: 'Shown above the free-text field to explain what annotators should enter. Example: Summarize the article in one sentence',
       },
@@ -639,6 +643,9 @@ var TASK_CONFIG_I18N = {
     accordionDependsOn: '依賴：',
     previewUnifiedTitle: '整合預覽',
     previewSourceTextTitle: '原始文本',
+    itemPairLabelsTitle: '項目對名稱',
+    itemPairLabel1: '項目一名稱',
+    itemPairLabel2: '項目二名稱',
     absa_template_btn: '套用範本：ABSA（實體辨識 + 關係識別）',
     templateBtnSpanEntity: '套用範本：實體辨識',
     templateBtnSpanPolarity: '套用範本：實體辨識極性標記（ABSA）',
@@ -739,6 +746,9 @@ var TASK_CONFIG_I18N = {
     accordionDependsOn: 'Depends on: ',
     previewUnifiedTitle: 'Unified preview',
     previewSourceTextTitle: 'Text',
+    itemPairLabelsTitle: 'Item pair labels',
+    itemPairLabel1: 'Item 1 label',
+    itemPairLabel2: 'Item 2 label',
     absa_template_btn: 'Apply template: ABSA (Entity Recognition + Relation Identification)',
     templateBtnSpanEntity: 'Apply template: Entity Recognition',
     templateBtnSpanPolarity: 'Apply template: Entity Recognition polarity annotation (ABSA)',

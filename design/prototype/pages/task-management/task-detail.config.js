@@ -125,6 +125,10 @@ function replaceDatasetFiles(fileList) {
   state.datasetCandidates = [];
   state.fieldRoleMap = {};
   state._roleMapBySource = {};
+  /* A replaced dataset must re-derive the item-pair display names from its
+     own columns; drop the seeded one-shot value so the auto-population reset
+     does not restore the previous dataset's saved labels. */
+  state._pendingItemPairLabels = null;
   addDatasetFiles(fileList);
 }
 
@@ -150,6 +154,11 @@ function ensureTaskConfigSeeded() {
   (TASK_DATA.outputs || []).forEach(function(out) {
     state.outputConfigs[out.type] = normalizeOutputConfig(out.type, out.config || {}, state.lang);
   });
+  state.itemPairLabels = Array.isArray(TASK_DATA.itemPairLabels) ? TASK_DATA.itemPairLabels.slice() : null;
+  /* seedDatasetFromProfile() below bumps _datasetVersion, so the next
+     renderSchemaFields() runs its auto-population reset; the pending copy
+     lets that reset restore the saved labels instead of wiping them. */
+  state._pendingItemPairLabels = state.itemPairLabels ? state.itemPairLabels.slice() : null;
   seedDatasetFromProfile({
     datasetRecords: TASK_DATA.datasetRecords,
     datasetFileName: TASK_DATA.datasetFileName,

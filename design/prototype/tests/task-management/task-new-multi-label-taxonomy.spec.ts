@@ -43,6 +43,27 @@ async function setupHierarchicalMultiLabel(page: Page) {
 }
 
 test.describe('SC-003q–u hierarchical multi-label taxonomy prototype', () => {
+  test('shows the every-level hint as a tooltip instead of a fixed note', async ({ page }) => {
+    await setupHierarchicalMultiLabel(page);
+
+    const editor = page.getByTestId('taxonomy-tree-editor');
+    await expect(editor).toBeVisible();
+    await expect(editor.locator('.taxonomy-editor-note')).toHaveCount(0);
+
+    const hint = page.locator('#output-config-multi-label-label-options-hint');
+    await expect(hint).toBeHidden();
+
+    const help = page.getByTestId('multi-label-label-options-help');
+    await expect(help).toBeVisible();
+    await expect(help).toHaveText('?');
+
+    await help.hover();
+    await expect(hint).toBeVisible();
+    await expect(hint).toHaveText(
+      '所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。',
+    );
+  });
+
   test('makes every taxonomy level independently selectable while retaining paths', async ({ page }) => {
     await setupHierarchicalMultiLabel(page);
 

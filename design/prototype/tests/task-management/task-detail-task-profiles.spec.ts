@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import path from 'path';
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=project_leader';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
@@ -308,7 +309,48 @@ test.describe('Task detail profile mapping', () => {
       await editBtn.click();
 
       await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
-      await expect(page.locator('#schemaFields .output-accordion')).toHaveCount(task.outputCount);
+      /* The item-pair labels card shares .output-accordion styling but is not an output accordion */
+      await expect(page.locator('#schemaFields .output-accordion:not(.item-pair-labels-card)')).toHaveCount(task.outputCount);
     });
   }
+
+  test('persists edited item pair labels across settings edit sessions for T011', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
+
+    const editBtn = page.locator('#settingsEditBtn');
+    await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
+    await editBtn.click();
+
+    const label1 = page.getByTestId('item-pair-label-input-1');
+    await expect(label1).toHaveValue('Premise');
+    await label1.fill('前提');
+    await page.locator('#settingsSaveBtn').click();
+    await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
+
+    await editBtn.click();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('前提');
+  });
+
+  test('re-derives item pair labels after replacing the dataset in overview edit for T011', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T011`);
+
+    /* Save custom labels first so the stale-pending path has a saved value */
+    const settingsEditBtn = page.locator('#settingsEditBtn');
+    await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
+    await settingsEditBtn.click();
+    await page.getByTestId('item-pair-label-input-1').fill('前提');
+    await page.locator('#settingsSaveBtn').click();
+    await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
+
+    await page.locator('#overviewEditBtn').click();
+    await page.locator('#datasetFileInput').setInputFiles(
+      path.join(__dirname, 'three-column-dataset.json'),
+    );
+    await expect(page.locator('#datasetFileList .upload-file-name')).toContainText('three-column-dataset.json');
+
+    /* The fresh dataset has no input roles assigned yet, so the saved NLI
+       labels must not leak through — labels fall back to the generic pair names */
+    await settingsEditBtn.click();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('句子 A');
+  });
 });

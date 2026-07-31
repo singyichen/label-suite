@@ -333,8 +333,10 @@
         <div class="field-group">
           <div class="field-label-row">
             <label class="field-label" id="samplingValueLabel" for="samplingValue">每回合抽樣筆數</label>
-            <button class="field-help-tooltip" id="samplingValueHelp" type="button" aria-label="抽樣筆數規則" aria-describedby="samplingValueHint">i</button>
-            <p class="tooltip-bubble" id="samplingValueHint" role="tooltip">筆數需 >= 1 且 &lt; 資料集總筆數</p>
+            <span class="tooltip-wrap">
+              <button class="field-help-tooltip" id="samplingValueHelp" type="button" aria-label="抽樣筆數規則" aria-describedby="samplingValueHint">?</button>
+              <p class="tooltip-bubble" id="samplingValueHint" role="tooltip">筆數需 >= 1 且 &lt; 資料集總筆數</p>
+            </span>
           </div>
           <input class="input-number" id="samplingValue" type="text" inputmode="numeric" pattern="[0-9]*" value="10" />
         </div>

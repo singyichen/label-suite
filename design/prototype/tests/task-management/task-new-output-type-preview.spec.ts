@@ -333,7 +333,10 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     const preview = page.locator('#annotationPreview');
     await expect(
       preview.getByText('自由文字', { exact: true }),
-    ).toBeVisible();
+    ).toHaveCount(0);
+    await expect(
+      preview.locator('.annotation-preview-divider'),
+    ).toHaveCount(0);
     await expect(
       preview.getByText('gold_answer', { exact: true }),
     ).toHaveCount(0);
@@ -361,6 +364,44 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
     expect(order).toHaveLength(3);
     expect(order[0]).toBeLessThan(order[1]);
     expect(order[1]).toBeLessThan(order[2]);
+  });
+
+  test('free_text — instruction hints render as tooltips, hidden until hover or focus', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'free-text-hint-tooltip-test',
+      category: 'generation',
+      outputType: 'free_text',
+      inputType: 'single_item',
+      dataFile: 'free-text.json',
+      roles: { text: 'input', gold_answer: 'output', reference: 'evidence' },
+    });
+
+    const inputHint = page.locator('#output-config-free-text-input-instruction-hint');
+    const outputHint = page.locator('#output-config-free-text-output-instruction-hint');
+    await expect(inputHint).toBeHidden();
+    await expect(outputHint).toBeHidden();
+
+    const inputHelp = page.getByTestId('free-text-input-instruction-help');
+    const outputHelp = page.getByTestId('free-text-output-instruction-help');
+    await expect(inputHelp).toBeVisible();
+    await expect(outputHelp).toBeVisible();
+    await expect(inputHelp).toHaveText('?');
+    await expect(outputHelp).toHaveText('?');
+
+    await inputHelp.hover();
+    await expect(inputHint).toBeVisible();
+    await expect(inputHint).toHaveText(
+      '顯示在輸入內容上方，告訴標記員要閱讀或處理什麼。例：請閱讀以下文章',
+    );
+    await expect(outputHint).toBeHidden();
+
+    await outputHelp.focus();
+    await expect(outputHint).toBeVisible();
+    await expect(outputHint).toHaveText(
+      '顯示在自由文字欄位上方，告訴標記員要輸入什麼。例：請用一句話摘要文章重點',
+    );
   });
 
   test('free_text — answer stays blank when no Output field is selected', async ({
@@ -650,6 +691,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
 
     const preview = page.locator('#annotationPreview');
     await expect(preview).toBeVisible();
+    await expect(
+      preview.getByText('序列標註', { exact: true }),
+    ).toHaveCount(0);
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.sequence_tagging).toBeDefined();
@@ -1153,6 +1197,82 @@ test.describe('Step 2 preview: composite task data files', () => {
     await expect(pairLabels.nth(1)).toContainText('Hypothesis');
   });
 
+  test('nli.json — item pair labels are editable and sync to preview and code', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'nli-pair-label-test',
+      category: 'classification',
+      outputType: 'single_label',
+      inputType: 'item_pair',
+      dataFile: 'nli.json',
+      roles: {
+        Premise: 'input',
+        Hypothesis: 'input',
+        Label: 'output',
+      },
+    });
+
+    const label1 = page.getByTestId('item-pair-label-input-1');
+    const label2 = page.getByTestId('item-pair-label-input-2');
+    await expect(label1).toHaveValue('Premise');
+    await expect(label2).toHaveValue('Hypothesis');
+
+    const preview = page.locator('#annotationPreview');
+    const pairLabels = preview.locator('.annotation-preview-pair-label');
+    await expect(pairLabels).toHaveCount(2);
+
+    await label1.fill('前提');
+    await expect(pairLabels.nth(0)).toHaveText('前提');
+    await expect(pairLabels.nth(1)).toHaveText('Hypothesis');
+
+    /* Emptied label falls back to the dataset column name */
+    await label2.fill('');
+    await expect(pairLabels.nth(1)).toHaveText('Hypothesis');
+
+    const code = await page.locator('#codeEditor').inputValue();
+    expect(code).toContain('item_pair_labels');
+    expect(code).toContain('前提');
+  });
+
+  test('nli.json — item pair labels survive reload and reset when removed from code', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'nli-pair-label-persist-test',
+      category: 'classification',
+      outputType: 'single_label',
+      inputType: 'item_pair',
+      dataFile: 'nli.json',
+      roles: {
+        Premise: 'input',
+        Hypothesis: 'input',
+        Label: 'output',
+      },
+    });
+
+    const label1 = page.getByTestId('item-pair-label-input-1');
+    await expect(label1).toHaveValue('Premise');
+    await label1.fill('前提');
+
+    /* Edited labels persist with the rest of the wizard state across reload */
+    await page.reload();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('前提', {
+      timeout: 15000,
+    });
+
+    /* Removing the key from the code resets the labels to dataset defaults */
+    await page.locator('#formatJsonBtn').click();
+    const parsed = JSON.parse(await page.locator('#codeEditor').inputValue()) as {
+      item_pair_labels?: string[];
+    };
+    expect(parsed.item_pair_labels).toEqual(['前提', 'Hypothesis']);
+    delete parsed.item_pair_labels;
+    await page.locator('#codeEditor').fill(JSON.stringify(parsed, null, 2));
+    await page.locator('#saveCodeBtn').click();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('Premise');
+  });
+
   test('mrc.json — free_text with background as evidence', async ({ page }) => {
     await setupAndGoToStep2(page, {
       taskName: 'mrc-composite-test',
@@ -1169,6 +1289,9 @@ test.describe('Step 2 preview: composite task data files', () => {
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.free_text.text!.length).toBeGreaterThan(50);
+
+    /* Pair label settings only appear for item_pair input */
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveCount(0);
 
     const preview = page.locator('#annotationPreview');
     await expect(

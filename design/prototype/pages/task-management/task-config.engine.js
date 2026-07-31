@@ -692,6 +692,51 @@ function buildOutputAccordion(outKey, outReg, isCollapsed) {
   return { accordion: accordion, body: body };
 }
 
+/* ── Item-pair display-name settings (input-level, not per output type) ── */
+function buildItemPairLabelSection() {
+  var card = document.createElement('div');
+  card.className = 'output-accordion item-pair-labels-card';
+  card.setAttribute('data-testid', 'item-pair-labels-card');
+
+  var header = document.createElement('div');
+  header.className = 'output-accordion-header item-pair-labels-header';
+  var title = document.createElement('div');
+  title.className = 'output-accordion-title';
+  title.textContent = t('itemPairLabelsTitle');
+  header.appendChild(title);
+  card.appendChild(header);
+
+  var body = document.createElement('div');
+  body.className = 'output-accordion-body';
+
+  if (!state.itemPairLabels) state.itemPairLabels = getItemPairLabels().slice();
+  [t('itemPairLabel1'), t('itemPairLabel2')].forEach(function(labelText, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'form-field';
+    var lbl = document.createElement('label');
+    lbl.className = 'field-label';
+    lbl.textContent = labelText;
+    var inputId = 'item-pair-label-input-' + (i + 1);
+    lbl.htmlFor = inputId;
+    wrap.appendChild(lbl);
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'entity-name-input';
+    inp.style.cssText = 'width:100%;padding:8px 12px;';
+    inp.id = inputId;
+    inp.setAttribute('data-testid', inputId);
+    inp.value = state.itemPairLabels[i] || '';
+    inp.addEventListener('input', function() {
+      state.itemPairLabels[i] = inp.value;
+      markDirty(); updateAnnotationPreview();
+    });
+    wrap.appendChild(inp);
+    body.appendChild(wrap);
+  });
+  card.appendChild(body);
+  return card;
+}
+
 var regressionDimensionInputId = 0;
 
 function buildRegressionDimensionSettings(config, settings) {
@@ -854,18 +899,6 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
   var editor = document.createElement('div');
   editor.className = 'taxonomy-editor';
   editor.setAttribute('data-testid', 'taxonomy-tree-editor');
-
-  var note = document.createElement('div');
-  note.className = 'taxonomy-editor-note';
-  var noteStrong = document.createElement('strong');
-  noteStrong.textContent = state.lang === 'en'
-    ? 'Every level is selectable'
-    : '所有層級皆可選';
-  note.appendChild(noteStrong);
-  note.appendChild(document.createTextNode(state.lang === 'en'
-    ? '— Parent and child labels are checked independently, and their category position is retained.'
-    : '— 父、子標籤可分別勾選，系統會保留其分類位置。'));
-  editor.appendChild(note);
 
   var tree = document.createElement('div');
   tree.className = 'taxonomy-tree';
@@ -1129,6 +1162,38 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
 }
 
 /* ── Render schema fields for a single output type into a container ── */
+/* Field hint as tooltip (registry hintAsTooltip): moves the label into a
+ * .field-label-row with a "?" trigger; the bubble shows on hover/focus.
+ * The bubble anchors to .tooltip-wrap so the arrow centers on the trigger. */
+function outputFieldControlId(outKey, fieldKey) {
+  return 'output-config-' + outKey.replace(/_/g, '-') + '-' + fieldKey.replace(/_/g, '-');
+}
+
+function attachFieldHintTooltip(wrap, lbl, field, outKey, hintId, describedEl) {
+  var labelRow = document.createElement('div');
+  labelRow.className = 'field-label-row';
+  var helpBtn = document.createElement('button');
+  helpBtn.className = 'field-help-tooltip';
+  helpBtn.setAttribute('type', 'button');
+  helpBtn.textContent = '?';
+  helpBtn.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-help');
+  var hintBubble = document.createElement('p');
+  hintBubble.className = 'tooltip-bubble';
+  hintBubble.id = hintId;
+  hintBubble.setAttribute('role', 'tooltip');
+  hintBubble.textContent = field['hint_' + state.lang];
+  helpBtn.setAttribute('aria-label', (state.lang === 'en' ? 'Help: ' : '說明：') + (field[state.lang] || field.zh));
+  helpBtn.setAttribute('aria-describedby', hintBubble.id);
+  if (describedEl) describedEl.setAttribute('aria-describedby', hintBubble.id);
+  var tipWrap = document.createElement('span');
+  tipWrap.className = 'tooltip-wrap';
+  tipWrap.appendChild(helpBtn);
+  tipWrap.appendChild(hintBubble);
+  if (lbl) labelRow.appendChild(lbl);
+  labelRow.appendChild(tipWrap);
+  wrap.insertBefore(labelRow, wrap.firstChild);
+}
+
 function renderOutputTypeFields(container, outKey) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
   if (!outReg) return;
@@ -1178,7 +1243,12 @@ function renderOutputTypeFields(container, outKey) {
     }
 
     if (field.type === 'taxonomy-tree') {
-      wrap.appendChild(buildTaxonomyTreeEditor(cfg, field, outKey));
+      var taxonomyEditor = buildTaxonomyTreeEditor(cfg, field, outKey);
+      wrap.appendChild(taxonomyEditor);
+      if (field.hintAsTooltip && field['hint_' + state.lang]) {
+        var taxonomyHintId = outputFieldControlId(outKey, field.key) + '-hint';
+        attachFieldHintTooltip(wrap, lbl, field, outKey, taxonomyHintId, taxonomyEditor);
+      }
     } else if (field.type === 'entity-list') {
       /* Build entity list scoped to this output type's config */
       var entities = Array.isArray(cfg[field.key]) ? cfg[field.key] : [];
@@ -1414,7 +1484,7 @@ function renderOutputTypeFields(container, outKey) {
       textInp.style.cssText = 'width:100%;padding:8px 12px;';
       textInp.value = cfg[field.key] || field.defaultValue || '';
       textInp.placeholder = field[state.lang] || field.zh || '';
-      var textControlId = 'output-config-' + outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-');
+      var textControlId = outputFieldControlId(outKey, field.key);
       textInp.id = textControlId;
       textInp.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-input');
       if (field.maxLength != null) textInp.maxLength = field.maxLength;
@@ -1427,12 +1497,16 @@ function renderOutputTypeFields(container, outKey) {
       }(cfg, field.key));
       wrap.appendChild(textInp);
       if (field['hint_' + state.lang]) {
-        var textHint = document.createElement('div');
-        textHint.className = 'field-hint';
-        textHint.id = textControlId + '-hint';
-        textHint.textContent = field['hint_' + state.lang];
-        textInp.setAttribute('aria-describedby', textHint.id);
-        wrap.appendChild(textHint);
+        if (field.hintAsTooltip) {
+          attachFieldHintTooltip(wrap, lbl, field, outKey, textControlId + '-hint', textInp);
+        } else {
+          var textHint = document.createElement('div');
+          textHint.className = 'field-hint';
+          textHint.id = textControlId + '-hint';
+          textHint.textContent = field['hint_' + state.lang];
+          textInp.setAttribute('aria-describedby', textHint.id);
+          wrap.appendChild(textHint);
+        }
       }
     } else if (field.type === 'boolean') {
       var card = document.createElement('label');
@@ -1514,6 +1588,21 @@ function getDatasetPairTexts() {
     return { text1: String(v1 !== undefined && v1 !== null ? v1 : ''), text2: String(v2 !== undefined && v2 !== null ? v2 : ''), col1: inputCols[0], col2: inputCols[1] };
   }
   return null;
+}
+
+/* Effective item_pair display names: the user-edited Step 2 values, falling
+   back per slot to the dataset input column name when unset or blank. */
+function getItemPairLabels() {
+  var pairTexts = getDatasetPairTexts();
+  var defaults = [
+    pairTexts ? pairTexts.col1 : (state.lang === 'en' ? 'Sentence A' : '句子 A'),
+    pairTexts ? pairTexts.col2 : (state.lang === 'en' ? 'Sentence B' : '句子 B'),
+  ];
+  var edited = state.itemPairLabels || [];
+  return [
+    (typeof edited[0] === 'string' && edited[0].trim()) ? edited[0].trim() : defaults[0],
+    (typeof edited[1] === 'string' && edited[1].trim()) ? edited[1].trim() : defaults[1],
+  ];
 }
 
 function normalizeRegressionValue(rawValue, min, max) {
@@ -3132,13 +3221,10 @@ function renderFreeTextPreview(container, outKey) {
   }
   container.appendChild(inputWrap);
 
-  var divider = document.createElement('div');
-  divider.className = 'annotation-preview-divider';
-  container.appendChild(divider);
-
   var responseArea = document.createElement('div');
   responseArea.setAttribute('data-testid', 'free-text-response-area');
   responseArea.setAttribute('data-bypass-sensitive', 'true');
+  responseArea.style.marginTop = '12px';
   container.appendChild(responseArea);
 
   var ansTitle = document.createElement('div');
@@ -3243,6 +3329,11 @@ function renderSchemaFields() {
     state.previewState = {};
     state.previewBypass = {};
     state.previewInited = false; state.previewEntities = []; state.previewTriples = []; state.activeEntityType = null;
+    /* Task-detail seeding provides a one-shot pending value so saved labels
+       survive the seed-triggered reset; genuine dataset/role changes have no
+       pending value and re-derive defaults from the new columns. */
+    state.itemPairLabels = state._pendingItemPairLabels || null;
+    state._pendingItemPairLabels = null;
     Object.keys(state.outputConfigs).forEach(function(k) {
       if (state.outputConfigs[k]) {
         state.outputConfigs[k]._autoPopulated = false;
@@ -3345,6 +3436,9 @@ function renderSchemaFields() {
 
   /* ADR-029: render accordion layout for all output types (single or multi) */
   if (state.selectedOutputTypes.length >= 1) {
+    if (((state.taskInputTypes && state.taskInputTypes[0]) || 'single_item') === 'item_pair') {
+      container.appendChild(buildItemPairLabelSection());
+    }
     var autoCollapse = state.selectedOutputTypes.length > 2;
     state.selectedOutputTypes.forEach(function(outKey, idx) {
       var outReg = OUTPUT_TYPE_REGISTRY[outKey];
@@ -4191,14 +4285,12 @@ function updateAnnotationPreview() {
       });
 
       preview.appendChild(evidenceWrap);
-      var evidenceDivider = document.createElement('div');
-      evidenceDivider.className = 'annotation-preview-divider';
-      preview.appendChild(evidenceDivider);
     }
     /* Show input text (single_item or item_pair) before output previews */
     var currentInputType = (state.taskInputTypes && state.taskInputTypes[0]) || 'single_item';
     if (!hasOutputOwnedInputPreview && currentInputType === 'item_pair') {
       var pairTexts = getDatasetPairTexts();
+      var pairLabels = getItemPairLabels();
       var pairWrap = document.createElement('div');
       pairWrap.className = 'annotation-preview-pair';
 
@@ -4209,7 +4301,7 @@ function updateAnnotationPreview() {
 
       var p1Label = document.createElement('div');
       p1Label.className = 'annotation-preview-pair-label';
-      p1Label.textContent = pairTexts ? pairTexts.col1 : (state.lang === 'en' ? 'Sentence A' : '句子 A');
+      p1Label.textContent = pairLabels[0];
       pairWrap.appendChild(p1Label);
       var p1 = document.createElement('div');
       p1.className = 'annotation-preview-sample';
@@ -4219,7 +4311,7 @@ function updateAnnotationPreview() {
 
       var p2Label = document.createElement('div');
       p2Label.className = 'annotation-preview-pair-label';
-      p2Label.textContent = pairTexts ? pairTexts.col2 : (state.lang === 'en' ? 'Sentence B' : '句子 B');
+      p2Label.textContent = pairLabels[1];
       pairWrap.appendChild(p2Label);
       var p2 = document.createElement('div');
       p2.className = 'annotation-preview-sample';
@@ -4282,10 +4374,12 @@ function updateAnnotationPreview() {
           var divider = document.createElement('div');
           divider.className = 'annotation-preview-divider';
           preview.appendChild(divider);
-          var cardTitle = document.createElement('div');
-          cardTitle.className = 'annotation-preview-task-title';
-          cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
-          preview.appendChild(cardTitle);
+          if (!(outReg && outReg.hidePreviewTitle)) {
+            var cardTitle = document.createElement('div');
+            cardTitle.className = 'annotation-preview-task-title';
+            cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+            preview.appendChild(cardTitle);
+          }
           var outWrap = document.createElement('div');
           preview.appendChild(outWrap);
           renderOutputPreview(outWrap, outKey);
@@ -4312,11 +4406,13 @@ function updateAnnotationPreview() {
           preview.appendChild(divider);
         }
         var outReg = OUTPUT_TYPE_REGISTRY[outKey];
-        var cardTitle = document.createElement('div');
-        cardTitle.className = 'annotation-preview-task-title';
-        cardTitle.style.marginBottom = '8px';
-        cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
-        preview.appendChild(cardTitle);
+        if (!(outReg && outReg.hidePreviewTitle)) {
+          var cardTitle = document.createElement('div');
+          cardTitle.className = 'annotation-preview-task-title';
+          cardTitle.style.marginBottom = '8px';
+          cardTitle.textContent = outReg ? (outReg[state.lang] || outReg.zh) : outKey;
+          preview.appendChild(cardTitle);
+        }
         var outWrap = document.createElement('div');
         preview.appendChild(outWrap);
         renderOutputPreview(outWrap, outKey);
@@ -4635,6 +4731,19 @@ function saveCodeToVisual(showSuccessToast) {
       setText('codeErrorMsg', state.lang === 'en' ? 'input_type must match Step 1.' : 'input_type 必須與第一步設定一致。');
       return false;
     }
+    if (parsed.item_pair_labels !== undefined) {
+      var pairLabelsValid = currentInputType === 'item_pair'
+        && Array.isArray(parsed.item_pair_labels)
+        && parsed.item_pair_labels.length === 2
+        && parsed.item_pair_labels.every(function(v) { return typeof v === 'string'; });
+      if (!pairLabelsValid) {
+        el('codeErrorBar').classList.remove('hidden');
+        setText('codeErrorMsg', state.lang === 'en'
+          ? 'item_pair_labels must be an array of exactly 2 strings and requires the item_pair input type.'
+          : 'item_pair_labels 必須是恰好 2 個字串的陣列，且輸入類型須為項目對。');
+        return false;
+      }
+    }
     var imported = {};
     var unifiedError = '';
     parsed.outputs.forEach(function(output) {
@@ -4677,6 +4786,12 @@ function saveCodeToVisual(showSuccessToast) {
       imported[type]._autoPopulated = true;
       state.outputConfigs[type] = imported[type];
     });
+    if (parsed.item_pair_labels !== undefined) {
+      state.itemPairLabels = parsed.item_pair_labels.slice();
+    } else if (currentInputType === 'item_pair') {
+      /* Omitting the key resets the labels to the dataset-derived defaults */
+      state.itemPairLabels = null;
+    }
     state.previewState = {};
     state.previewBypass = {};
     state.codeDraftDirty = false;
