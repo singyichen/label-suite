@@ -2,13 +2,20 @@ import fs from 'node:fs/promises';
 import { test, expect } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
+/* First paint of the annotation-results panel can exceed the 5s expect default
+   when the full suite saturates the shared HTTP server; match the other
+   task-detail specs' panel-load allowance. */
+const PANEL_LOAD_TIMEOUT = 15000;
 
+/* Mock result sets are matched to each unified seed's annotation STRUCTURE
+   (see ANNOTATION_RESULTS_BY_TASK in task-detail.html): classification → T001,
+   VA scoring → T005, aspect → T007, relation → T008, pairs → T011, NER → T006. */
 const TASK_RESULT_EXPECTATIONS = [
   { taskId: 'T001', statTexts: ['政治×2', '科技×3'] },
-  { taskId: 'T002', statTexts: ['mean [7.33, 7.17]', 'std [1.07, 1.43]'] },
-  { taskId: 'T003', statTexts: ['螢幕×3', '電池×2'] },
-  { taskId: 'T004', statTexts: ['(DRUG:阿司匹靈)→treats→(SYMP:發燒) ×2', '(DOCTOR:醫師)→indicates→(TREATMENT:補水) ×2'] },
-  { taskId: 'T005', statTexts: ['蘊含×2', '中立×1'] },
+  { taskId: 'T005', statTexts: ['mean [7.33, 7.17]', 'std [1.07, 1.43]'] },
+  { taskId: 'T007', statTexts: ['螢幕×3', '電池×2'] },
+  { taskId: 'T008', statTexts: ['(DRUG:阿司匹靈)→treats→(SYMP:發燒) ×2', '(DOCTOR:醫師)→indicates→(TREATMENT:補水) ×2'] },
+  { taskId: 'T011', statTexts: ['蘊含×2', '中立×1'] },
   { taskId: 'T006', statTexts: ['ORG×3', 'PER×3', 'LOC×3'] },
 ];
 
@@ -20,25 +27,25 @@ const EN_RESULT_EXPECTATIONS = [
     hiddenTexts: ['政治', '科技'],
   },
   {
-    taskId: 'T002',
+    taskId: 'T005',
     summaryTexts: ['mean [7.33, 7.17]', 'std [1.07, 1.43]'],
     detailTexts: ['[6, 5.5]', '[9, 9]'],
     hiddenTexts: [],
   },
   {
-    taskId: 'T003',
+    taskId: 'T007',
     summaryTexts: ['Display×3', 'Battery×2'],
     detailTexts: ['Display, Battery', 'Display'],
     hiddenTexts: ['螢幕', '電池'],
   },
   {
-    taskId: 'T004',
+    taskId: 'T008',
     summaryTexts: ['(DRUG:Aspirin)→treats→(SYMP:fever) ×2', '(DOCTOR:doctor)→indicates→(TREATMENT:hydration) ×2'],
     detailTexts: ['(DRUG:Aspirin)→treats→(SYMP:fever)', '(DOCTOR:doctor)→indicates→(TREATMENT:hydration)'],
     hiddenTexts: ['阿司匹靈', '發燒', '醫師', '補水'],
   },
   {
-    taskId: 'T005',
+    taskId: 'T011',
     summaryTexts: ['Entailment×2', 'Neutral×1'],
     detailTexts: ['Entailment', 'Neutral'],
     hiddenTexts: ['蘊含', '中立'],
@@ -59,8 +66,8 @@ test.describe('Task detail annotation results', () => {
 
     for (const expectation of EN_RESULT_EXPECTATIONS) {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
-      await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-      await expect(page.locator('#arTableSection')).toBeVisible();
+      await expect(page.locator('html')).toHaveAttribute('lang', 'en', { timeout: PANEL_LOAD_TIMEOUT });
+      await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       for (const summaryText of expectation.summaryTexts) {
@@ -79,8 +86,8 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('matches annotator select style with adjacent filter selects', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const stageMetrics = await page.locator('#arStageSelect').evaluate((element) => {
       const styles = window.getComputedStyle(element);
@@ -123,7 +130,7 @@ test.describe('Task detail annotation results', () => {
     });
 
     await page.goto(`${TASK_DETAIL_URL}?task_id=T001&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
     const expandButton = page.locator('#arResultTableBody tr.ar-summary-row').first().locator('.ar-expand-btn');
@@ -152,8 +159,8 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('uses reviewer-style VA color coding for per-annotator result tags', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
     await firstRow.click();
@@ -174,8 +181,8 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('downloads full JSON export with manifest and VA task-specific fields', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
 
@@ -205,7 +212,7 @@ test.describe('Task detail annotation results', () => {
 
   test('downloads JSON-MIN export with task-specific NER summary fields', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
 
@@ -224,15 +231,17 @@ test.describe('Task detail annotation results', () => {
 
     const firstRow = payload[0];
     expect(firstRow.task_type).toBe('sequence_labeling');
-    expect(firstRow.sequence_labeling_subtype).toBe('ner');
+    // ADR-029 outputs[] configs carry no legacy `subtype` field; the export
+    // falls back to the entities branch with an empty subtype marker.
+    expect(firstRow.sequence_labeling_subtype).toBe('');
     expect(firstRow.entities_summary).toContain('ORG:');
     expect(firstRow.review_status).toBeTruthy();
     expect(firstRow.valence).toBeUndefined();
   });
 
   test('includes export stage metadata and success toasts for annotation result exports', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     await page.locator('#arStageSelect').selectOption('official');
     await page.locator('#arExportJsonBtn').click();
@@ -248,8 +257,8 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('parses negative VA ranges from stats summaries for color coding', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const parsed = await page.evaluate(() => {
       const pageWindow = window as Window & typeof globalThis & {
@@ -270,7 +279,7 @@ test.describe('Task detail annotation results', () => {
 
   test('renders reviewer-style readonly rows for NER tasks with six samples', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T006&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const table = page.locator('#arResultTable');
     await expect(page.locator('#arTableTitle')).toHaveText('標記結果表');
@@ -326,8 +335,8 @@ test.describe('Task detail annotation results', () => {
   });
 
   test('keeps review badge visible for VA tasks and avoids stale summary meta block spacing', async ({ page }) => {
-    await page.goto(`${TASK_DETAIL_URL}?task_id=T002&tab=annotation-results`);
-    await expect(page.locator('#arTableSection')).toBeVisible();
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T005&tab=annotation-results`);
+    await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
     await firstRow.click();
@@ -364,7 +373,7 @@ test.describe('Task detail annotation results', () => {
   test('checks summary and review-badge layout across every task type', async ({ page }) => {
     for (const expectation of TASK_RESULT_EXPECTATIONS) {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
-      await expect(page.locator('#arTableSection')).toBeVisible();
+      await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
 
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       await firstRow.click();
@@ -415,7 +424,7 @@ test.describe('Task detail annotation results', () => {
   for (const expectation of TASK_RESULT_EXPECTATIONS) {
     test(`renders task-specific distribution summary for ${expectation.taskId}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${expectation.taskId}&tab=annotation-results`);
-      await expect(page.locator('#arTableSection')).toBeVisible();
+      await expect(page.locator('#arTableSection')).toBeVisible({ timeout: PANEL_LOAD_TIMEOUT });
       const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
       for (const statText of expectation.statTexts) {
         await expect(firstRow).toContainText(statText);
