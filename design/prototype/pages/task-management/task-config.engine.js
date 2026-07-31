@@ -2317,6 +2317,37 @@ function resetOutputPreviewState(outKey) {
   }
 }
 
+/* Reconcile per-output config state with the current chip selection:
+   seed registry defaults for newly selected output types, drop config /
+   bypass state for deselected ones, and clear any uncommitted preview
+   selection that a renderer swap would orphan (standalone renderers keep
+   it in previewState pendingSelection · composite in relSel). */
+function reconcileOutputConfigs() {
+  /* ADR-029: initialize outputConfigs for each selected output type */
+  state.selectedOutputTypes.forEach(function(outKey) {
+    if (!state.outputConfigs[outKey]) {
+      state.outputConfigs[outKey] = getOutputTypeDefaultConfig(outKey, state.lang);
+    }
+  });
+  /* Remove outputConfigs entries for deselected output types */
+  Object.keys(state.outputConfigs).forEach(function(k) {
+    if (state.selectedOutputTypes.indexOf(k) < 0) delete state.outputConfigs[k];
+  });
+  /* Drop bypass flags of deselected output types so a later reselect
+     does not come back pre-bypassed with a cleared preview */
+  Object.keys(state.previewBypass).forEach(function(k) {
+    if (state.selectedOutputTypes.indexOf(k) < 0) {
+      delete state.previewBypass[k];
+      resetOutputPreviewState(k);
+    }
+  });
+  state.relSel = null;
+  state.relMsg = '';
+  Object.keys(state.previewState).forEach(function(k) {
+    if (state.previewState[k] && state.previewState[k].pendingSelection) state.previewState[k].pendingSelection = null;
+  });
+}
+
 function makeBypassChip(outKey, refresh, labelText) {
   var active = !!state.previewBypass[outKey];
   var c = '#64748B';
@@ -4487,6 +4518,10 @@ function renderTemplateBtns() {
       makeTemplateBtn(t('absa_template_btn'), function() {
         var tpl = JSON.parse(JSON.stringify(ABSA_MULTI_OUTPUT_TEMPLATE));
         tpl.outputs.forEach(function(out) {
+          /* Only apply template entries for currently selected output types;
+             an untracked entry would silently resurface later when its type
+             is reselected, instead of seeding the registry default */
+          if (state.selectedOutputTypes.indexOf(out.type) < 0) return;
           state.outputConfigs[out.type] = JSON.parse(JSON.stringify(out.config));
         });
         state.codeDraftDirty = false;

@@ -81,29 +81,7 @@ function onChipSelectionChange() {
   state.codeDraftDirty = false;
   rebuildOutputChips();
   deriveTaskType();
-  /* ADR-029: initialize outputConfigs for each selected output type */
-  state.selectedOutputTypes.forEach(function(outKey) {
-    if (!state.outputConfigs[outKey]) {
-      state.outputConfigs[outKey] = getOutputTypeDefaultConfig(outKey, state.lang);
-    }
-  });
-  /* Remove outputConfigs entries for deselected output types */
-  Object.keys(state.outputConfigs).forEach(function(k) {
-    if (state.selectedOutputTypes.indexOf(k) < 0) delete state.outputConfigs[k];
-  });
-  /* Drop bypass flags of deselected output types so a later reselect
-     does not come back pre-bypassed with a cleared preview */
-  Object.keys(state.previewBypass).forEach(function(k) {
-    if (state.selectedOutputTypes.indexOf(k) < 0) {
-      delete state.previewBypass[k];
-      resetOutputPreviewState(k);
-    }
-  });
-  state.relSel = null;
-  state.relMsg = '';
-  Object.keys(state.previewState).forEach(function(k) {
-    if (state.previewState[k] && state.previewState[k].pendingSelection) state.previewState[k].pendingSelection = null;
-  });
+  reconcileOutputConfigs();
   renderTemplateBtns();
   renderSchemaFields();
   markDirty();
