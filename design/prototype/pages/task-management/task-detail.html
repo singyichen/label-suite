@@ -7676,9 +7676,11 @@ function getTaskTypeLabel() {
       return fields;
     }
     if (TASK_DATA.taskTypeKey === 'sequence_labeling') {
-      var subtype = getExportSequenceSubtype(config);
-      fields.sequence_labeling_subtype = subtype;
-      if (subtype === 'aspect_list') {
+      fields.sequence_labeling_subtype = getExportSequenceSubtype(config);
+      /* FR-015i: outputs[] configs no longer carry `subtype`, so branch on
+         the annotation value's actual shape — aspect-style results carry
+         `aspects[]`, entity-style results carry `entities[]`. */
+      if (value && Array.isArray(value.aspects)) {
         fields.original_sentence = state.lang === 'en' ? sample.textEn : sample.textZh;
         fields.corrected_sentence = value && value.corrected_sentence ? value.corrected_sentence : fields.original_sentence;
         fields.aspects = value && value.aspects ? value.aspects.slice() : [];
