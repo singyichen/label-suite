@@ -144,6 +144,7 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '序列標註', en: 'Sequence Tagging',
     source_output: null,
     rendersInputPreview: true,
+    hidePreviewTitle: true,
     fields: [
       {
         key: 'tokenization',

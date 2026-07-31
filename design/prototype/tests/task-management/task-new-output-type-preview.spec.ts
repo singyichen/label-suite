@@ -691,6 +691,9 @@ test.describe('Step 2 preview: all 8 output types with example data', () => {
 
     const preview = page.locator('#annotationPreview');
     await expect(preview).toBeVisible();
+    await expect(
+      preview.getByText('序列標註', { exact: true }),
+    ).toHaveCount(0);
 
     const ps = await getState(page, 'previewState') as WindowState['previewState'];
     expect(ps.sequence_tagging).toBeDefined();
