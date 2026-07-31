@@ -855,18 +855,6 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
   editor.className = 'taxonomy-editor';
   editor.setAttribute('data-testid', 'taxonomy-tree-editor');
 
-  var note = document.createElement('div');
-  note.className = 'taxonomy-editor-note';
-  var noteStrong = document.createElement('strong');
-  noteStrong.textContent = state.lang === 'en'
-    ? 'Every level is selectable'
-    : '所有層級皆可選';
-  note.appendChild(noteStrong);
-  note.appendChild(document.createTextNode(state.lang === 'en'
-    ? '— Parent and child labels are checked independently, and their category position is retained.'
-    : '— 父、子標籤可分別勾選，系統會保留其分類位置。'));
-  editor.appendChild(note);
-
   var tree = document.createElement('div');
   tree.className = 'taxonomy-tree';
   tree.setAttribute('role', 'tree');
@@ -1129,6 +1117,34 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
 }
 
 /* ── Render schema fields for a single output type into a container ── */
+/* Field hint as tooltip (registry hintAsTooltip): moves the label into a
+ * .field-label-row with a "?" trigger; the bubble shows on hover/focus.
+ * The bubble anchors to .tooltip-wrap so the arrow centers on the trigger. */
+function attachFieldHintTooltip(wrap, lbl, field, outKey, hintId, describedEl) {
+  var labelRow = document.createElement('div');
+  labelRow.className = 'field-label-row';
+  var helpBtn = document.createElement('button');
+  helpBtn.className = 'field-help-tooltip';
+  helpBtn.setAttribute('type', 'button');
+  helpBtn.textContent = '?';
+  helpBtn.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-help');
+  var hintBubble = document.createElement('p');
+  hintBubble.className = 'tooltip-bubble';
+  hintBubble.id = hintId;
+  hintBubble.setAttribute('role', 'tooltip');
+  hintBubble.textContent = field['hint_' + state.lang];
+  helpBtn.setAttribute('aria-label', field[state.lang] || field.zh);
+  helpBtn.setAttribute('aria-describedby', hintBubble.id);
+  if (describedEl) describedEl.setAttribute('aria-describedby', hintBubble.id);
+  var tipWrap = document.createElement('span');
+  tipWrap.className = 'tooltip-wrap';
+  tipWrap.appendChild(helpBtn);
+  tipWrap.appendChild(hintBubble);
+  if (lbl) labelRow.appendChild(lbl);
+  labelRow.appendChild(tipWrap);
+  wrap.insertBefore(labelRow, wrap.firstChild);
+}
+
 function renderOutputTypeFields(container, outKey) {
   var outReg = OUTPUT_TYPE_REGISTRY[outKey];
   if (!outReg) return;
@@ -1178,7 +1194,12 @@ function renderOutputTypeFields(container, outKey) {
     }
 
     if (field.type === 'taxonomy-tree') {
-      wrap.appendChild(buildTaxonomyTreeEditor(cfg, field, outKey));
+      var taxonomyEditor = buildTaxonomyTreeEditor(cfg, field, outKey);
+      wrap.appendChild(taxonomyEditor);
+      if (field.hintAsTooltip && field['hint_' + state.lang]) {
+        var taxonomyHintId = 'output-config-' + outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-hint';
+        attachFieldHintTooltip(wrap, lbl, field, outKey, taxonomyHintId, taxonomyEditor);
+      }
     } else if (field.type === 'entity-list') {
       /* Build entity list scoped to this output type's config */
       var entities = Array.isArray(cfg[field.key]) ? cfg[field.key] : [];
@@ -1428,30 +1449,7 @@ function renderOutputTypeFields(container, outKey) {
       wrap.appendChild(textInp);
       if (field['hint_' + state.lang]) {
         if (field.hintAsTooltip) {
-          /* Hint as tooltip: label + "i" trigger share a row; bubble shows on hover/focus */
-          var labelRow = document.createElement('div');
-          labelRow.className = 'field-label-row';
-          var helpBtn = document.createElement('button');
-          helpBtn.className = 'field-help-tooltip';
-          helpBtn.setAttribute('type', 'button');
-          helpBtn.textContent = '?';
-          helpBtn.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-help');
-          var hintBubble = document.createElement('p');
-          hintBubble.className = 'tooltip-bubble';
-          hintBubble.id = textControlId + '-hint';
-          hintBubble.setAttribute('role', 'tooltip');
-          hintBubble.textContent = field['hint_' + state.lang];
-          helpBtn.setAttribute('aria-label', field[state.lang] || field.zh);
-          helpBtn.setAttribute('aria-describedby', hintBubble.id);
-          textInp.setAttribute('aria-describedby', hintBubble.id);
-          /* Bubble anchors to .tooltip-wrap so the arrow centers on the trigger */
-          var tipWrap = document.createElement('span');
-          tipWrap.className = 'tooltip-wrap';
-          tipWrap.appendChild(helpBtn);
-          tipWrap.appendChild(hintBubble);
-          if (lbl) labelRow.appendChild(lbl);
-          labelRow.appendChild(tipWrap);
-          wrap.insertBefore(labelRow, wrap.firstChild);
+          attachFieldHintTooltip(wrap, lbl, field, outKey, textControlId + '-hint', textInp);
         } else {
           var textHint = document.createElement('div');
           textHint.className = 'field-hint';

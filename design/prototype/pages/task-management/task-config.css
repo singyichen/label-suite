@@ -176,8 +176,6 @@
 
     /* ── Hierarchical taxonomy editor + preview selector ── */
     .taxonomy-editor { display: flex; flex-direction: column; gap: 10px; }
-    .taxonomy-editor-note { display: block; padding: 9px 11px; border: 1px solid var(--color-primary); border-radius: var(--radius-md); background: var(--color-primary-soft-bg); color: var(--color-ink); font-size: 12px; line-height: 1.5; }
-    .taxonomy-editor-note strong { margin-right: 4px; color: var(--color-primary); }
     .taxonomy-tree { display: flex; flex-direction: column; gap: 2px; padding: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-white); overflow-x: auto; }
     .taxonomy-tree > .taxonomy-treeitem + .taxonomy-treeitem { margin-top: 5px; padding-top: 5px; border-top: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent); }
     .taxonomy-treeitem { min-width: 0; outline: none; }

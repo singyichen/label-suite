@@ -249,7 +249,7 @@ var OUTPUT_TYPE_REGISTRY = {
     zh: '多標籤', en: 'Multi-label',
     source_output: null,
     fields: [
-      { key: 'label_options', type: 'taxonomy-tree', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增根標籤', addLabel_en: 'Add root label' },
+      { key: 'label_options', type: 'taxonomy-tree', zh: '標籤選項', en: 'Label options', required: true, addLabel_zh: '新增根標籤', addLabel_en: 'Add root label', hintAsTooltip: true, hint_zh: '所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。', hint_en: 'Every level is selectable — parent and child labels are checked independently, and their category position is retained.' },
       { key: 'max_selections', type: 'number', zh: '最多可選數量（0 = 不限）', en: 'Max selections (0 = unlimited)', required: false, defaultValue: 0, min: 0 },
     ],
     defaultConfig: {
