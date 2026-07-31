@@ -201,11 +201,14 @@ function cellTypeKey(v) {
    per column count present/missing, capture up to 50 missing-record refs
    (record id when the dataset has one, else row number) and a type summary */
 function buildFieldProfile(records) {
-  var cols = [], seen = {};
+  /* Object.create(null): plain {} would treat columns named after
+     Object.prototype members (constructor, toString, …) as already seen
+     and silently drop them from the profile. */
+  var cols = [], seen = Object.create(null);
   records.forEach(function(r) {
     Object.keys(r).forEach(function(k) { if (!seen[k]) { seen[k] = true; cols.push(k); } });
   });
-  var profile = {};
+  var profile = Object.create(null);
   cols.forEach(function(c) { profile[c] = { present: 0, missing: 0, missingRefs: [], types: {} }; });
   records.forEach(function(r, i) {
     cols.forEach(function(c) {

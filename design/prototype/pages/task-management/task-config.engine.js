@@ -26,6 +26,14 @@
  * task-config.dataset.js (all three load before this file).
  */
 
+/* Entity/label colors originate from user-editable config (code editor,
+   config-file upload) and are concatenated into style.cssText strings; a
+   value containing ';' could escape the declaration and inject arbitrary
+   CSS. Only pass through hex colors (the app's palette format). */
+function safeCssColor(value, fallback) {
+  return (typeof value === 'string' && /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value)) ? value : fallback;
+}
+
 function syncChipsFromState() {
   ['taskCategoryChips', 'taskInputTypeChips'].forEach(function(containerId) {
     var container = el(containerId);
@@ -1798,7 +1806,7 @@ function getPreviewTypeColorMap() {
   var map = {}, order = [];
   var spanCfg = state.outputConfigs['entity_recognition'] || {};
   var cfgEntities = Array.isArray(spanCfg.entities) ? spanCfg.entities.filter(function(e) { return e && e.name; }) : [];
-  cfgEntities.forEach(function(e) { if (e.name && !map[e.name]) { map[e.name] = e.color || ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.name); } });
+  cfgEntities.forEach(function(e) { if (e.name && !map[e.name]) { map[e.name] = safeCssColor(e.color, ENTITY_COLORS[order.length % ENTITY_COLORS.length]); order.push(e.name); } });
   state.previewEntities.forEach(function(e) { if (e.type && !map[e.type]) { map[e.type] = ENTITY_COLORS[order.length % ENTITY_COLORS.length]; order.push(e.type); } });
   return { map: map, order: order };
 }
@@ -2415,7 +2423,7 @@ function renderSingleLabelPreview(container, outKey) {
     var chip = document.createElement('button');
     chip.type = 'button';
     var isActive = ps.selected === label.name;
-    var c = label.color || '#6366F1';
+    var c = safeCssColor(label.color, '#6366F1');
     chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:2px solid ' + c + ';color:' + (isActive ? '#fff' : c) + ';background:' + (isActive ? c : 'transparent') + ';transition:all 0.15s;';
     var radio = document.createElement('span');
     radio.style.cssText = 'width:14px;height:14px;border-radius:50%;border:2px solid ' + (isActive ? '#fff' : c) + ';display:inline-flex;align-items:center;justify-content:center;';
@@ -2869,7 +2877,7 @@ function renderTokenClassPreview(container, outKey) {
     prefixes.forEach(function(prefix) {
       tagOptions.push({
         tag: prefix ? prefix + '-' + label.name : label.name,
-        color: label.color || '#6366F1',
+        color: safeCssColor(label.color, '#6366F1'),
       });
     });
   });
@@ -2899,9 +2907,10 @@ function renderTokenClassPreview(container, outKey) {
     tokEl.setAttribute('data-testid', 'sequence-token');
     var tag = ps.tokens[i];
     var matchedLabel = labels.find(function(label) { return getSequenceBaseLabel(tag, [label]) === label.name; });
-    var bgColor = matchedLabel ? matchedLabel.color + '33' : '#f1f5f9';
-    var borderColor = matchedLabel ? matchedLabel.color : '#e2e8f0';
-    var textColor = matchedLabel ? matchedLabel.color : 'var(--color-ink)';
+    var matchedColor = matchedLabel ? safeCssColor(matchedLabel.color, '#6366F1') : null;
+    var bgColor = matchedColor ? matchedColor + '33' : '#f1f5f9';
+    var borderColor = matchedColor || '#e2e8f0';
+    var textColor = matchedColor || 'var(--color-ink)';
     tokEl.setAttribute(
       'aria-label',
       state.lang === 'zh'
