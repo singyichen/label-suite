@@ -11,9 +11,12 @@ test('moves task status to waiting IAA confirmation after all 5 dry-run samples 
     await guidelineModalConfirm.click();
   }
 
-  /* Wait for the seeded progress to render before interacting, so the first
-     submit click cannot land while the workspace is still initializing. */
-  await expect(page.locator('#progressText')).toHaveText('2 / 5 已提交', { timeout: 15000 });
+  /* Annotation panels arrive via fetched partials and bindEvents() only runs
+     after the last one (#sentencePairsAnnotatorPanel) lands; the class options
+     ship in the first partial, so wait for the last before clicking. */
+  await page
+    .locator('#sentencePairsAnnotatorPanel')
+    .waitFor({ state: 'attached', timeout: 15000 });
 
   for (let done = 3; done <= 5; done += 1) {
     await page.locator('.class-option').nth(2).click();
