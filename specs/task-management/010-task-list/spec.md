@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-list-output-types
+功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.0.1
+版本: 2.0.2
 狀態: In Progress
 ---
 
@@ -323,6 +323,8 @@ flowchart LR
 
 依 membership 語意套用單一輸出類型篩選時，這 13 筆示例的命中數必須為：`single_label = 2`、`multi_label = 2`、`single_dim = 1`、`multi_dim = 2`、`sequence_tagging = 1`、`entity_recognition = 3`、`relation_identification = 3`、`free_text = 2`。
 
+13 筆示例 seed 一律以 `status = draft` 起始（供 `014-task-detail` 的 draft 設定編輯情境驗收）；非 `draft` 狀態的行為驗收（如刪除拒絕）以測試注入的合成任務涵蓋，不依賴示例基線。
+
 ---
 
 ## 規格相依性 *(本功能依賴其他規格，或被其他規格依賴時填寫)*
@@ -404,6 +406,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.0.2 | 2026-07-31 | **示例基線狀態統一為 draft**：13 筆 prototype seed 全數以 `status = draft` 起始，支援 014 任務詳情 draft 編輯情境；非 `draft` 行為（刪除拒絕等）改由測試注入合成任務驗收；命中數基線不變 |
 | 2.0.1 | 2026-07-29 | **同步 Dataset Analysis List 相依性**：016 列表已採用 `outputs[].type` 多 tag、8 類 membership 篩選、13 筆示例基線與 `limit`／`offset`；延後範圍收斂為 014／015／017，且不把列表相容性延伸至 detail／workspace consumer。 |
 | 2.0.0 | 2026-07-29 | **任務列表遷移至可組合輸出類型**：移除固定 `TASK_TYPE_ENUM`、`task_type` 篩選與 `labelsuite.activeTaskType` 單值快取契約；列表改以 `outputs[].type` 逐項呈現可換行、具文字與可存取名稱的 tag，篩選器由 `OUTPUT_TYPE_REGISTRY` 列出 8 個合法 key 並以 membership 語意比對。URL query 與分頁改為 `output_type`、`limit`、`offset`。加入 13 份 prototype 示例 fixture 的 mapping／命中數基線、複合 tag、14th-task 泛化與答案資料不外露驗收；13 筆僅為示例，不構成系統上限。014／015／016／017 consumer 同步維持延後。 |
 | 1.3.9 | 2026-05-22 | 釐清並同步 task-list 原型：刪除權限限 `project_leader` / `super_admin` 且僅 `draft` 可刪；搜尋 enum 比對 raw value 與目前語系文案；無效 URL query 正規化；載入失敗以表格 error row 與重試操作呈現 |

@@ -1,0 +1,1007 @@
+/*
+ * Seed configuration profiles for the 13 task-list example tasks (T001-T013).
+ *
+ * Sources:
+ *  - docs/product/task-configs/<sourceFile>   -> outputs[] (ADR-029 composition model)
+ *  - docs/product/example-data/<sourceFile>   -> datasetRecords[]
+ *
+ * These are illustrative seeds for the prototype demo, not a system limit on
+ * task categories, input types, output types, or dataset shape.
+ */
+(function (global) {
+  'use strict';
+
+  var profiles = {
+    T001: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'positive', color: '#2ECC71' },
+              { name: 'neutral', color: '#F39C12' },
+              { name: 'negative', color: '#E74C3C' }
+            ]
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_label: 'output' },
+      datasetFileName: 'single-label.json',
+      datasetRecords: [
+        {
+          id: 'sent-001',
+          text: '這次手術非常成功，主治醫師技術精湛，術後恢復也很順利，非常感謝醫療團隊的照顧。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'sent-002',
+          text: '候診時間太長了，等了三個小時才看到醫生，而且掛號系統一直當機，整個流程讓人很不滿意。',
+          gold_label: 'negative'
+        },
+        {
+          id: 'sent-003',
+          text: '醫院的環境還算乾淨，停車場也夠大，不過門診量太多，每次都要等很久。',
+          gold_label: 'neutral'
+        },
+        {
+          id: 'sent-004',
+          text: '護理師非常親切有耐心，每次換藥都會詳細解釋傷口狀況，讓我覺得很安心。',
+          gold_label: 'positive'
+        },
+        {
+          id: 'sent-005',
+          text: '藥袋上的用藥說明印刷模糊，字太小根本看不清楚，對年長患者很不友善。',
+          gold_label: 'negative'
+        }
+      ]
+    },
+
+    T002: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'multi_label',
+          config: {
+            label_options: [
+              { name: 'happy', color: '#2ECC71' },
+              { name: 'sad', color: '#3498DB' },
+              { name: 'angry', color: '#E74C3C' },
+              { name: 'surprise', color: '#F39C12' },
+              { name: 'fear', color: '#9B59B6' },
+              { name: 'disgust', color: '#1ABC9C' }
+            ],
+            max_selections: 3
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_labels: 'output' },
+      datasetFileName: 'multi-label.json',
+      datasetRecords: [
+        {
+          id: 'emo-001',
+          text: '收到確診通知的那一刻，我整個人都僵住了，腦袋一片空白，然後就開始掉眼淚，覺得為什麼是我。',
+          gold_labels: ['sad', 'fear', 'surprise']
+        },
+        {
+          id: 'emo-002',
+          text: '治療結束後回診，醫生說腫瘤指數恢復正常，我高興到在診間哭出來，覺得這半年的辛苦值得了！',
+          gold_labels: ['happy', 'surprise']
+        },
+        {
+          id: 'emo-003',
+          text: '護理站的態度很差，我問個問題就被白眼，住院這幾天心情都很糟，覺得自己被當皮球踢。',
+          gold_labels: ['angry', 'sad']
+        },
+        {
+          id: 'emo-004',
+          text: '看到隔壁床的阿嬤因為沒有家人來探病，一個人默默吃飯，心裡覺得很難過也很心疼。',
+          gold_labels: ['sad']
+        },
+        {
+          id: 'emo-005',
+          text: '手術前一晚完全睡不著，一直想著萬一出什麼意外怎麼辦，護理師來安慰我才稍微放鬆一點。',
+          gold_labels: ['fear']
+        }
+      ]
+    },
+
+    T003: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'multi_label',
+          config: {
+            label_options: [
+              {
+                id: 'emotion',
+                name: '情緒',
+                children: [
+                  {
+                    id: 'negative',
+                    name: '負向',
+                    children: [
+                      { id: 'sad', name: '悲傷', color: '#6366F1' },
+                      { id: 'anxious', name: '焦慮', color: '#10B981' }
+                    ]
+                  },
+                  {
+                    id: 'positive',
+                    name: '正向',
+                    children: [
+                      { id: 'hopeful', name: '有盼望', color: '#F59E0B' }
+                    ]
+                  }
+                ]
+              },
+              {
+                id: 'care_context',
+                name: '照護情境',
+                children: [
+                  {
+                    id: 'clinical',
+                    name: '臨床處置',
+                    children: [
+                      { id: 'urgent', name: '緊急', color: '#EC4899' }
+                    ]
+                  },
+                  {
+                    id: 'recovery',
+                    name: '康復',
+                    children: [
+                      { id: 'follow_up', name: '後續追蹤', color: '#8B5CF6' }
+                    ]
+                  },
+                  {
+                    id: 'communication',
+                    name: '溝通',
+                    children: [
+                      { id: 'needs_explanation', name: '需要說明', color: '#0EA5E9' }
+                    ]
+                  }
+                ]
+              }
+            ],
+            max_selections: 0,
+            allow_bypass: true
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_labels: 'output' },
+      datasetFileName: 'multi-label-hierarchical.json',
+      datasetRecords: [
+        {
+          id: 'taxonomy-001',
+          text: '病人表示確診後情緒低落，同時擔心治療副作用，今晚需要護理人員主動關懷。',
+          gold_labels: [
+            ['emotion', 'negative', 'sad'],
+            ['care_context', 'clinical', 'urgent']
+          ]
+        },
+        {
+          id: 'taxonomy-002',
+          text: '完成療程後，病人對恢復狀況感到安心，也開始期待回到日常生活。',
+          gold_labels: [
+            ['emotion', 'positive', 'hopeful'],
+            ['care_context', 'recovery', 'follow_up']
+          ]
+        },
+        {
+          id: 'taxonomy-003',
+          text: '病人因檢查結果延遲而焦慮，希望醫療團隊提供更清楚的說明。',
+          gold_labels: [
+            ['emotion', 'negative', 'anxious'],
+            ['care_context', 'communication', 'needs_explanation']
+          ]
+        },
+        {
+          id: 'taxonomy-004',
+          text: '家屬理解治療計畫後情緒較穩定，暫時沒有額外協助需求。',
+          gold_labels: []
+        },
+        {
+          id: 'taxonomy-005',
+          text: '家屬情緒反應複雜暫難細分，先標記情緒大類；另對出院後照護安排有疑問，歸入溝通類別待補充說明。',
+          gold_labels: [
+            ['emotion'],
+            ['care_context', 'communication']
+          ]
+        }
+      ]
+    },
+
+    T004: {
+      taskCategories: ['regression'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'single_dim',
+          config: {
+            dimension_name: 'readability',
+            min: 1,
+            max: 5,
+            step: 1
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_score: 'output' },
+      datasetFileName: 'single-dim.json',
+      datasetRecords: [
+        {
+          id: 'read-001',
+          text: '慢性腎臟病的早期症狀通常不明顯，患者可能僅有輕微疲勞或食慾下降。建議四十歲以上民眾每年進行腎功能篩檢，早期發現並介入治療，可有效延緩腎功能惡化。',
+          gold_score: 4
+        },
+        {
+          id: 'read-002',
+          text: '本研究採用多中心隨機雙盲對照試驗設計，以 Cox 比例風險模型分析主要複合終點事件（包含心血管死亡、非致命性心肌梗塞及非致命性腦中風），經校正基線共變量後，實驗組之風險比為 0.74（95% CI: 0.62–0.89, p=0.001）。',
+          gold_score: 1
+        },
+        {
+          id: 'read-003',
+          text: '感冒了怎麼辦？多喝水、多休息是最基本的。如果發燒超過三天或症狀變嚴重，記得去看醫生喔！',
+          gold_score: 5
+        },
+        {
+          id: 'read-004',
+          text: '高血壓是一種常見的慢性疾病，血壓持續偏高會增加心臟病和中風的風險。醫師通常會建議患者減少鹽分攝取、規律運動，必要時搭配降壓藥物治療。',
+          gold_score: 4
+        },
+        {
+          id: 'read-005',
+          text: '於組織病理學切片中觀察到腺管上皮細胞異型增生，核質比增大伴有核分裂象，間質纖維化合併淋巴球浸潤，免疫組織化學染色 Ki-67 陽性率達 45%，符合高級別上皮內瘤變之診斷標準。',
+          gold_score: 1
+        }
+      ]
+    },
+
+    T005: {
+      taskCategories: ['regression'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'multi_dim',
+          config: {
+            dimensions: [
+              { name: 'fluency', min: 1, max: 5, step: 1 },
+              { name: 'adequacy', min: 1, max: 5, step: 1 },
+              { name: 'coherence', min: 1, max: 5, step: 1 }
+            ]
+          }
+        }
+      ],
+      // Judgment call: "source" is the reference-language text needed to judge
+      // adequacy but is not itself the item being scored, so it is mapped as
+      // evidence (background) rather than input; "translation" is the scored item.
+      fieldRoleMap: { source: 'evidence', translation: 'input', gold_scores: 'output' },
+      datasetFileName: 'multi-dim.json',
+      datasetRecords: [
+        {
+          id: 'mt-001',
+          source: 'Chronic kidney disease (CKD) is defined as abnormalities of kidney structure or function, present for more than 3 months, with implications for health.',
+          translation: '慢性腎臟病（CKD）定義為腎臟結構或功能異常，持續超過三個月，且對健康有影響。',
+          gold_scores: { fluency: 5, adequacy: 5, coherence: 5 }
+        },
+        {
+          id: 'mt-002',
+          source: 'The patient presented with acute onset of chest pain radiating to the left arm, associated with diaphoresis and dyspnea.',
+          translation: '病人出現急性胸痛放射到左手臂，伴隨流汗和呼吸困難的表現。',
+          gold_scores: { fluency: 3, adequacy: 4, coherence: 3 }
+        },
+        {
+          id: 'mt-003',
+          source: 'Randomized controlled trials provide the highest level of evidence for evaluating treatment efficacy.',
+          translation: '隨機控制試驗提供了評估治療效果的最高等級證據。',
+          gold_scores: { fluency: 5, adequacy: 5, coherence: 5 }
+        },
+        {
+          id: 'mt-004',
+          source: 'Immunoglobulin E–mediated hypersensitivity reactions can manifest as urticaria, angioedema, or anaphylaxis.',
+          translation: '免疫球蛋白E介導的過敏反應可以表現為蕁麻疹、血管性水腫或過敏性休克。',
+          gold_scores: { fluency: 4, adequacy: 5, coherence: 4 }
+        },
+        {
+          id: 'mt-005',
+          source: 'Early ambulation after surgery reduces the risk of deep vein thrombosis and promotes faster recovery.',
+          translation: '手術後早點下床走路可以減少深層靜脈血栓的風險，而且恢復也會比較快。',
+          gold_scores: { fluency: 5, adequacy: 4, coherence: 5 }
+        }
+      ]
+    },
+
+    T006: {
+      taskCategories: ['sequence'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'sequence_tagging',
+          config: {
+            entities: [
+              { name: 'PER', color: '#E74C3C' },
+              { name: 'ORG', color: '#3498DB' },
+              { name: 'LOC', color: '#2ECC71' },
+              { name: 'TIME', color: '#F39C12' }
+            ],
+            tagging_scheme: 'BIO',
+            tokenization: {
+              unit: 'character',
+              mode: 'unit_based',
+              punctuation: 'separate',
+              version: 2
+            },
+            allow_bypass: true
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', tokens: 'input', pre_tags: 'output' },
+      datasetFileName: 'sequence-tagging.json',
+      datasetRecords: [
+        {
+          id: 'sequence-tagging-001',
+          text: '台積電董事長魏哲家今天出席台北國際半導體論壇並發表主題演講',
+          tokens: ['台', '積', '電', '董', '事', '長', '魏', '哲', '家', '今', '天', '出', '席', '台', '北', '國', '際', '半', '導', '體', '論', '壇', '並', '發', '表', '主', '題', '演', '講'],
+          pre_tags: ['B-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'B-TIME', 'I-TIME', 'O', 'O', 'B-LOC', 'I-LOC', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+        },
+        {
+          id: 'sequence-tagging-002',
+          text: '衛福部部長薛瑞元於三月十五日宣布全國COVID-19疫苗第四劑接種計畫',
+          tokens: ['衛', '福', '部', '部', '長', '薛', '瑞', '元', '於', '三', '月', '十', '五', '日', '宣', '布', '全', '國', 'C', 'O', 'V', 'I', 'D', '-', '1', '9', '疫', '苗', '第', '四', '劑', '接', '種', '計', '畫'],
+          pre_tags: ['B-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'O', 'B-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+        },
+        {
+          id: 'sequence-tagging-003',
+          text: '長庚醫院急診醫學部主任陳日昌指出桃園地區流感病患持續增加',
+          tokens: ['長', '庚', '醫', '院', '急', '診', '醫', '學', '部', '主', '任', '陳', '日', '昌', '指', '出', '桃', '園', '地', '區', '流', '感', '病', '患', '持', '續', '增', '加'],
+          pre_tags: ['B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'O', 'O', 'B-LOC', 'I-LOC', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']
+        },
+        {
+          id: 'sequence-tagging-004',
+          text: 'The chairman of TSMC attended the forum in Taipei today.',
+          tokens: ['T', 'h', 'e', 'c', 'h', 'a', 'i', 'r', 'm', 'a', 'n', 'o', 'f', 'T', 'S', 'M', 'C', 'a', 't', 't', 'e', 'n', 'd', 'e', 'd', 't', 'h', 'e', 'f', 'o', 'r', 'u', 'm', 'i', 'n', 'T', 'a', 'i', 'p', 'e', 'i', 't', 'o', 'd', 'a', 'y', '.'],
+          pre_tags: ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-ORG', 'I-ORG', 'I-ORG', 'I-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-LOC', 'I-LOC', 'I-LOC', 'I-LOC', 'I-LOC', 'I-LOC', 'B-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'I-TIME', 'O']
+        }
+      ]
+    },
+
+    T007: {
+      taskCategories: ['sequence'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'entity_recognition',
+          config: {
+            entities: [
+              { name: 'target', color: '#3498DB' },
+              { name: 'aspect', color: '#2ECC71' },
+              { name: 'opinion', color: '#E74C3C' }
+            ],
+            allow_overlapping: false
+          }
+        }
+      ],
+      fieldRoleMap: { text: 'input', gold_entities: 'output' },
+      datasetFileName: 'entity-recognition.json',
+      datasetRecords: [
+        {
+          id: 'entity-recognition-001',
+          text: '這款筆電的螢幕解析度非常高，色彩還原度也很好，但鍵盤手感偏硬，打字久了手指會痠。',
+          gold_entities: [
+            { text: '筆電', type: 'target', start: 2, end: 3 },
+            { text: '螢幕解析度', type: 'aspect', start: 5, end: 9 },
+            { text: '非常高', type: 'opinion', start: 10, end: 12 },
+            { text: '色彩還原度', type: 'aspect', start: 14, end: 18 },
+            { text: '很好', type: 'opinion', start: 20, end: 21 },
+            { text: '鍵盤手感', type: 'aspect', start: 24, end: 27 },
+            { text: '偏硬', type: 'opinion', start: 28, end: 29 }
+          ]
+        },
+        {
+          id: 'entity-recognition-002',
+          text: '飯店的地理位置絕佳，步行五分鐘就到捷運站，房間乾淨但隔音效果差，半夜都能聽到走廊的聲音。',
+          gold_entities: [
+            { text: '飯店', type: 'target', start: 0, end: 1 },
+            { text: '地理位置', type: 'aspect', start: 3, end: 6 },
+            { text: '絕佳', type: 'opinion', start: 7, end: 8 },
+            { text: '房間', type: 'target', start: 21, end: 22 },
+            { text: '隔音效果', type: 'aspect', start: 26, end: 29 },
+            { text: '差', type: 'opinion', start: 30, end: 30 }
+          ]
+        },
+        {
+          id: 'entity-recognition-003',
+          text: '這家餐廳的牛排煎得恰到好處，外酥內嫩，但服務速度太慢，等了四十分鐘才上菜。',
+          gold_entities: [
+            { text: '餐廳', type: 'target', start: 2, end: 3 },
+            { text: '牛排', type: 'aspect', start: 5, end: 6 },
+            { text: '恰到好處', type: 'opinion', start: 9, end: 12 },
+            { text: '服務速度', type: 'aspect', start: 20, end: 23 },
+            { text: '太慢', type: 'opinion', start: 24, end: 25 }
+          ]
+        }
+      ]
+    },
+
+    T008: {
+      taskCategories: ['sequence'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'relation_identification',
+          config: {
+            relation_types: ['causes', 'treats', 'prevents', 'diagnoses', 'located_in']
+          }
+        }
+      ],
+      // Judgment call: "entities" are pre-recognized spans given as scaffolding
+      // (entity_recognition is not an output type for this task), so they are
+      // mapped as evidence. "relation_types" per record enumerates the gold
+      // relation categories actually present in "triples", so it is treated
+      // as output alongside "triples" rather than as neutral metadata.
+      fieldRoleMap: {
+        text: 'input',
+        entities: 'evidence',
+        relation_types: 'output',
+        triples: 'output'
+      },
+      datasetFileName: 'relation-identification.json',
+      datasetRecords: [
+        {
+          id: 'rel-001',
+          text: '高血壓若未妥善控制，可能導致動脈硬化，進而引發冠狀動脈心臟病或腦中風。長期服用降壓藥物如 Amlodipine 有助於控制血壓，降低併發症風險。',
+          entities: [
+            { text: '高血壓', type: 'DISE', start: 0, end: 2 },
+            { text: '動脈硬化', type: 'SYMP', start: 14, end: 17 },
+            { text: '冠狀動脈心臟病', type: 'DISE', start: 23, end: 29 },
+            { text: '腦中風', type: 'DISE', start: 31, end: 33 },
+            { text: 'Amlodipine', type: 'DRUG', start: 45, end: 54 }
+          ],
+          relation_types: ['causes', 'treats'],
+          triples: [
+            {
+              entity1: { text: '高血壓', start: 0, end: 2 },
+              relation: { text: '導致', start: 12, end: 13 },
+              relation_type: 'causes',
+              entity2: { text: '動脈硬化', start: 14, end: 17 }
+            },
+            {
+              entity1: { text: '動脈硬化', start: 14, end: 17 },
+              relation: { text: '引發', start: 21, end: 22 },
+              relation_type: 'causes',
+              entity2: { text: '冠狀動脈心臟病', start: 23, end: 29 }
+            },
+            {
+              entity1: { text: '動脈硬化', start: 14, end: 17 },
+              relation: { text: '引發', start: 21, end: 22 },
+              relation_type: 'causes',
+              entity2: { text: '腦中風', start: 31, end: 33 }
+            },
+            {
+              entity1: { text: 'Amlodipine', start: 45, end: 54 },
+              relation: { text: '控制', start: 59, end: 60 },
+              relation_type: 'treats',
+              entity2: { text: '高血壓', start: 0, end: 2 }
+            }
+          ]
+        },
+        {
+          id: 'rel-002',
+          text: '糖尿病視網膜病變是糖尿病的常見併發症，好發於眼底視網膜微血管。定期眼底鏡檢查可早期診斷，雷射光凝固術可有效防止病變惡化。',
+          entities: [
+            { text: '糖尿病視網膜病變', type: 'DISE', start: 0, end: 7 },
+            { text: '糖尿病', type: 'DISE', start: 9, end: 11 },
+            { text: '視網膜微血管', type: 'BODY', start: 24, end: 29 },
+            { text: '眼底鏡檢查', type: 'EXAM', start: 33, end: 37 },
+            { text: '雷射光凝固術', type: 'TREAT', start: 44, end: 49 }
+          ],
+          relation_types: ['causes', 'located_in', 'diagnoses', 'treats'],
+          triples: [
+            {
+              entity1: { text: '糖尿病', start: 9, end: 11 },
+              relation: { text: '併發', start: 15, end: 16 },
+              relation_type: 'causes',
+              entity2: { text: '糖尿病視網膜病變', start: 0, end: 7 }
+            },
+            {
+              entity1: { text: '糖尿病視網膜病變', start: 0, end: 7 },
+              relation: { text: '好發於', start: 19, end: 21 },
+              relation_type: 'located_in',
+              entity2: { text: '視網膜微血管', start: 24, end: 29 }
+            },
+            {
+              entity1: { text: '眼底鏡檢查', start: 33, end: 37 },
+              relation: { text: '診斷', start: 41, end: 42 },
+              relation_type: 'diagnoses',
+              entity2: { text: '糖尿病視網膜病變', start: 0, end: 7 }
+            },
+            {
+              entity1: { text: '雷射光凝固術', start: 44, end: 49 },
+              relation: { text: '防止', start: 53, end: 54 },
+              relation_type: 'treats',
+              entity2: { text: '糖尿病視網膜病變', start: 0, end: 7 }
+            }
+          ]
+        },
+        {
+          id: 'rel-003',
+          text: '氣喘患者吸入過敏原後，支氣管平滑肌會痙攣收縮，導致呼吸困難。吸入型類固醇如 Budesonide 可抑制氣道發炎，預防氣喘發作。',
+          entities: [
+            { text: '氣喘', type: 'DISE', start: 0, end: 1 },
+            { text: '支氣管平滑肌', type: 'BODY', start: 11, end: 16 },
+            { text: '呼吸困難', type: 'SYMP', start: 25, end: 28 },
+            { text: 'Budesonide', type: 'DRUG', start: 38, end: 47 }
+          ],
+          relation_types: ['causes', 'treats', 'prevents'],
+          triples: [
+            {
+              entity1: { text: '氣喘', start: 0, end: 1 },
+              relation: { text: '導致', start: 23, end: 24 },
+              relation_type: 'causes',
+              entity2: { text: '呼吸困難', start: 25, end: 28 }
+            },
+            {
+              entity1: { text: 'Budesonide', start: 38, end: 47 },
+              relation: { text: '抑制', start: 50, end: 51 },
+              relation_type: 'treats',
+              entity2: { text: '氣喘', start: 0, end: 1 }
+            },
+            {
+              entity1: { text: 'Budesonide', start: 38, end: 47 },
+              relation: { text: '預防', start: 57, end: 58 },
+              relation_type: 'prevents',
+              entity2: { text: '氣喘', start: 0, end: 1 }
+            }
+          ]
+        }
+      ]
+    },
+
+    T009: {
+      taskCategories: ['generation'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'free_text',
+          config: {
+            max_length: 256
+          }
+        }
+      ],
+      // Judgment call: "reference" is a shorter, separately authored reference
+      // summary used as background/comparison context; "gold_answer" is the
+      // actual gold free-text target, so only it is mapped as output.
+      fieldRoleMap: { text: 'input', reference: 'evidence', gold_answer: 'output' },
+      datasetFileName: 'free-text.json',
+      datasetRecords: [
+        {
+          id: 'sum-001',
+          text: '台灣癌症五年存活率已突破六成，除了治癒疾病，心理健康支持也備受重視。國內外研究顯示，近半數癌症患者出現明顯情緒困擾，三至四成病患有焦慮或憂鬱反應。癌症希望基金會今年在台北設立全台首家專屬癌友與家屬的心理諮商所，提供每人最多六次免費個別諮商，由專業心理師陪伴癌友修復內在韌性。',
+          reference: '癌症希望基金會在台北成立癌友專屬心理諮商所，提供最多六次免費諮商服務，因近半癌友有情緒困擾。',
+          gold_answer: '台灣癌症存活率逾六成，但近半患者有情緒困擾。癌症希望基金會於台北設立專屬諮商所，提供每人最多六次免費心理諮商。'
+        },
+        {
+          id: 'sum-002',
+          text: '第二型糖尿病的治療以生活型態改變為基礎，包括飲食控制與規律運動。當血糖仍未達標時，醫師通常會優先處方 Metformin，因其安全性高、價格低廉，且有助於體重控制。若 Metformin 不耐受或禁忌，可考慮 SGLT-2 抑制劑或 GLP-1 受體促效劑，後者尚有心血管保護效益。',
+          reference: '第二型糖尿病先調整生活型態，藥物首選 Metformin，不耐受者可改用 SGLT-2 或 GLP-1 類藥物。',
+          gold_answer: '糖尿病治療以飲食與運動為基礎，藥物首選 Metformin，若不耐受可改用 SGLT-2 抑制劑或 GLP-1 促效劑。'
+        },
+        {
+          id: 'sum-003',
+          text: '居家血壓監測有助於提供更真實的血壓數據，建議每天早晨起床後、服藥前，以及晚上睡前各量一次，每次坐姿休息五分鐘後再測量，連續記錄七天。飲食方面，得舒飲食法已有充分證據可降低血壓，強調多攝取蔬果、全穀類、低脂乳製品，並減少紅肉、含糖飲料與高鈉食物。每日鈉攝取建議控制在 2,300 毫克以下。',
+          reference: '居家量血壓應早晚各一次、休息五分鐘後測量、連續記錄七天；飲食採得舒飲食法，控制鈉攝取。',
+          gold_answer: '居家血壓監測建議早晚各量一次，休息五分鐘後測量並連續記錄七天。飲食建議採用得舒飲食法，每日鈉攝取控制在 2,300 毫克以下。'
+        }
+      ]
+    },
+
+    T010: {
+      taskCategories: ['sequence'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'entity_recognition',
+          config: {
+            entities: [
+              { name: 'BODY', color: '#4A90D9' },
+              { name: 'DISE', color: '#E74C3C' },
+              { name: 'SYMP', color: '#F39C12' },
+              { name: 'DRUG', color: '#2ECC71' },
+              { name: 'INST', color: '#9B59B6' },
+              { name: 'SUPP', color: '#1ABC9C' },
+              { name: 'EXAM', color: '#E67E22' },
+              { name: 'TREAT', color: '#3498DB' },
+              { name: 'CHEM', color: '#95A5A6' },
+              { name: 'TIME', color: '#34495E' }
+            ],
+            allow_overlapping: false
+          }
+        },
+        {
+          type: 'relation_identification',
+          config: {
+            relation_types: [
+              'bodyLocation',
+              'causes',
+              'adverseOutcome',
+              'typicalTest',
+              'diagnosis',
+              'possibleTreatment',
+              'signOrSymptom',
+              'prevents'
+            ],
+            source_output: 'entity_recognition'
+          }
+        }
+      ],
+      // Unlike T008, entity_recognition IS an output type here, so "entities"
+      // is gold output data (not scaffolding evidence).
+      fieldRoleMap: {
+        text: 'input',
+        entities: 'output',
+        relation_types: 'output',
+        triples: 'output'
+      },
+      datasetFileName: 'medical-ner-re.json',
+      datasetRecords: [
+        {
+          id: 'med-001',
+          text: '而左心耳位於左心房前外側，是一個囊袋狀、突起的小空腔，容易在心房顫動時於左心耳內產生淤滯，形成血栓，血栓脫落流至腦部或其他器官時，即會造成腦中風或甚至全身性栓塞。',
+          entities: [
+            { text: '左心耳', type: 'BODY', start: 1, end: 3 },
+            { text: '左心房', type: 'BODY', start: 6, end: 8 },
+            { text: '心房', type: 'BODY', start: 30, end: 31 },
+            { text: '左心耳', type: 'BODY', start: 36, end: 38 },
+            { text: '淤滯', type: 'SYMP', start: 42, end: 43 },
+            { text: '血栓', type: 'SYMP', start: 47, end: 48 },
+            { text: '血栓', type: 'SYMP', start: 50, end: 51 },
+            { text: '腦部', type: 'BODY', start: 56, end: 57 },
+            { text: '器官', type: 'BODY', start: 61, end: 62 },
+            { text: '腦中風', type: 'DISE', start: 69, end: 71 },
+            { text: '全身性栓塞', type: 'DISE', start: 75, end: 79 }
+          ],
+          relation_types: ['bodyLocation', 'causes', 'adverseOutcome'],
+          triples: [
+            {
+              entity1: { text: '左心耳', start: 1, end: 3 },
+              relation: { text: '位於', start: 4, end: 5 },
+              relation_type: 'bodyLocation',
+              entity2: { text: '左心房', start: 6, end: 8 }
+            },
+            {
+              entity1: { text: '左心耳', start: 1, end: 3 },
+              relation: { text: '產生', start: 40, end: 41 },
+              relation_type: 'causes',
+              entity2: { text: '淤滯', start: 42, end: 43 }
+            },
+            {
+              entity1: { text: '左心耳', start: 1, end: 3 },
+              relation: { text: '形成', start: 45, end: 46 },
+              relation_type: 'causes',
+              entity2: { text: '血栓', start: 47, end: 48 }
+            },
+            {
+              entity1: { text: '淤滯', start: 42, end: 43 },
+              relation: { text: '形成', start: 45, end: 46 },
+              relation_type: 'causes',
+              entity2: { text: '血栓', start: 47, end: 48 }
+            },
+            {
+              entity1: { text: '血栓', start: 50, end: 51 },
+              relation: { text: '流至', start: 54, end: 55 },
+              relation_type: 'bodyLocation',
+              entity2: { text: '腦部', start: 56, end: 57 }
+            },
+            {
+              entity1: { text: '血栓', start: 50, end: 51 },
+              relation: { text: '流至', start: 54, end: 55 },
+              relation_type: 'bodyLocation',
+              entity2: { text: '器官', start: 61, end: 62 }
+            },
+            {
+              entity1: { text: '血栓', start: 50, end: 51 },
+              relation: { text: '造成', start: 67, end: 68 },
+              relation_type: 'adverseOutcome',
+              entity2: { text: '腦中風', start: 69, end: 71 }
+            },
+            {
+              entity1: { text: '血栓', start: 50, end: 51 },
+              relation: { text: '造成', start: 67, end: 68 },
+              relation_type: 'adverseOutcome',
+              entity2: { text: '全身性栓塞', start: 75, end: 79 }
+            }
+          ]
+        },
+        {
+          id: 'med-002',
+          text: '患者因胸痛至急診就醫，經心電圖檢查發現ST段上升，診斷為急性心肌梗塞，醫師立即給予阿斯匹靈及肝素治療，並安排心導管介入手術。',
+          entities: [
+            { text: '胸痛', type: 'SYMP', start: 3, end: 4 },
+            { text: '急診', type: 'INST', start: 6, end: 7 },
+            { text: '心電圖', type: 'EXAM', start: 12, end: 14 },
+            { text: 'ST段上升', type: 'SYMP', start: 19, end: 23 },
+            { text: '急性心肌梗塞', type: 'DISE', start: 28, end: 33 },
+            { text: '阿斯匹靈', type: 'DRUG', start: 41, end: 44 },
+            { text: '肝素', type: 'DRUG', start: 46, end: 47 },
+            { text: '心導管介入手術', type: 'TREAT', start: 54, end: 60 }
+          ],
+          relation_types: ['typicalTest', 'diagnosis', 'possibleTreatment'],
+          triples: [
+            {
+              entity1: { text: '心電圖', start: 12, end: 14 },
+              relation: { text: '發現', start: 17, end: 18 },
+              relation_type: 'typicalTest',
+              entity2: { text: 'ST段上升', start: 19, end: 23 }
+            },
+            {
+              entity1: { text: 'ST段上升', start: 19, end: 23 },
+              relation: { text: '診斷', start: 25, end: 26 },
+              relation_type: 'diagnosis',
+              entity2: { text: '急性心肌梗塞', start: 28, end: 33 }
+            },
+            {
+              entity1: { text: '阿斯匹靈', start: 41, end: 44 },
+              relation: { text: '治療', start: 48, end: 49 },
+              relation_type: 'possibleTreatment',
+              entity2: { text: '急性心肌梗塞', start: 28, end: 33 }
+            },
+            {
+              entity1: { text: '肝素', start: 46, end: 47 },
+              relation: { text: '治療', start: 48, end: 49 },
+              relation_type: 'possibleTreatment',
+              entity2: { text: '急性心肌梗塞', start: 28, end: 33 }
+            }
+          ]
+        },
+        {
+          id: 'med-003',
+          text: '糖尿病患者長期血糖控制不佳，容易引發視網膜病變及腎病變，需定期至眼科進行眼底檢查，並使用Metformin控制血糖。',
+          entities: [
+            { text: '糖尿病', type: 'DISE', start: 0, end: 2 },
+            { text: '血糖控制不佳', type: 'SYMP', start: 7, end: 12 },
+            { text: '視網膜病變', type: 'DISE', start: 18, end: 22 },
+            { text: '腎病變', type: 'DISE', start: 24, end: 26 },
+            { text: '眼科', type: 'INST', start: 32, end: 33 },
+            { text: '眼底檢查', type: 'EXAM', start: 36, end: 39 },
+            { text: 'Metformin', type: 'DRUG', start: 44, end: 52 }
+          ],
+          relation_types: ['causes', 'typicalTest', 'possibleTreatment'],
+          triples: [
+            {
+              entity1: { text: '糖尿病', start: 0, end: 2 },
+              relation: { text: '引發', start: 16, end: 17 },
+              relation_type: 'causes',
+              entity2: { text: '視網膜病變', start: 18, end: 22 }
+            },
+            {
+              entity1: { text: '糖尿病', start: 0, end: 2 },
+              relation: { text: '引發', start: 16, end: 17 },
+              relation_type: 'causes',
+              entity2: { text: '腎病變', start: 24, end: 26 }
+            },
+            {
+              entity1: { text: '眼底檢查', start: 36, end: 39 },
+              relation: { text: '檢查', start: 38, end: 39 },
+              relation_type: 'typicalTest',
+              entity2: { text: '視網膜病變', start: 18, end: 22 }
+            },
+            {
+              entity1: { text: 'Metformin', start: 44, end: 52 },
+              relation: { text: '使用', start: 42, end: 43 },
+              relation_type: 'possibleTreatment',
+              entity2: { text: '糖尿病', start: 0, end: 2 }
+            }
+          ]
+        }
+      ]
+    },
+
+    T011: {
+      taskCategories: ['classification'],
+      taskInputTypes: ['item_pair'],
+      outputs: [
+        {
+          type: 'single_label',
+          config: {
+            label_options: [
+              { name: 'entailment', color: '#2ECC71' },
+              { name: 'neutral', color: '#F39C12' },
+              { name: 'contradiction', color: '#E74C3C' }
+            ]
+          }
+        }
+      ],
+      // "Evidence" here is a rationale explaining the gold Label, so it also
+      // reveals ground truth and is mapped as output, not the "evidence" role.
+      // "Title", "Source ID", "Source URL", "ID" are left unassigned metadata.
+      fieldRoleMap: {
+        Premise: 'input',
+        Hypothesis: 'input',
+        Label: 'output',
+        Evidence: 'output'
+      },
+      datasetFileName: 'nli.json',
+      datasetRecords: [
+        {
+          ID: '00183',
+          Title: '麻醉科',
+          Premise: '運動員可能出現每分鐘小於60跳的心搏過緩；但若心跳每分鐘僅30跳以下，術前仍需由心臟內科醫師確認心臟生理…（畫面截斷）',
+          Hypothesis: '每分鐘30跳以下的心搏過緩在術前可按運動員生理性心搏過緩處理，適合直接接受脊椎手術，心臟內科安全性…（畫面截斷）',
+          Label: 'contradiction',
+          Evidence: '運動員有可能有"心搏過緩"(每分鐘小於60跳)的狀態。但是如每分鐘僅有30跳以下，術前仍有必要請心臟內科醫師…（畫面截斷）',
+          'Source ID': '32895f62',
+          'Source URL': 'https://sp1.hso.mohw.gov.tw/doctor/All/ShowDetail.php?q_no=151387'
+        },
+        {
+          ID: '00184',
+          Title: '心臟科',
+          Premise: '阿斯匹靈可抑制血小板凝集，常用於預防心肌梗塞與中風，但長期服用可能增加胃腸道出血風險，需定期追蹤。',
+          Hypothesis: '阿斯匹靈對所有心血管疾病患者均無副作用，可長期安全服用，不需醫師監控。',
+          Label: 'contradiction',
+          Evidence: '長期服用阿斯匹靈可能增加胃腸道出血風險，因此需在醫師指導下定期追蹤，而非任意自行長期服用。',
+          'Source ID': '48a1c9e3',
+          'Source URL': 'https://sp1.hso.mohw.gov.tw/doctor/All/ShowDetail.php?q_no=203451'
+        },
+        {
+          ID: '00185',
+          Title: '腎臟科',
+          Premise: '慢性腎臟病患者應限制蛋白質攝取，以減少含氮廢物堆積；但同時需維持足夠熱量，避免營養不良。',
+          Hypothesis: '慢性腎臟病患者在限制蛋白質攝取的同時，必須確保充足的熱量供應以避免肌肉消耗。',
+          Label: 'entailment',
+          Evidence: '限制蛋白質攝取須搭配足夠熱量，否則身體會分解肌肉蛋白質產生能量，反而加重腎臟負擔。',
+          'Source ID': '71f3d2b8',
+          'Source URL': 'https://sp1.hso.mohw.gov.tw/doctor/All/ShowDetail.php?q_no=318762'
+        }
+      ]
+    },
+
+    T012: {
+      taskCategories: ['generation'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'free_text',
+          config: {
+            max_length: 512
+          }
+        }
+      ],
+      // Judgment call: "instruction" is shown to frame every item so it is
+      // mapped as input alongside "question"; "background" is explicitly
+      // 背景知識 (background knowledge) so it maps to evidence.
+      // "article_id" and "angle" are left unassigned metadata.
+      fieldRoleMap: {
+        instruction: 'input',
+        background: 'evidence',
+        question: 'input',
+        answer: 'output'
+      },
+      datasetFileName: 'mrc.json',
+      datasetRecords: [
+        {
+          article_id: 'eac8d013',
+          angle: '病因與症狀',
+          instruction: '你是一個專業的 AI 醫療助手。請根據提供的背景知識，回答患者的問題。',
+          background: '【背景知識】：\n標題：近半癌友有情緒困擾，今年起可享最多6次免費心理諮商\n內容：\n台灣癌症 5 年存活率已突破 6 成，除了治癒疾病，心理健康支持也備受重視。國內外研究顯示，近半數癌症患者出現明顯情緒困擾，3 至 4 成病患有焦慮或憂鬱反應，將增加癌症死亡率及死亡率。對此癌症希望基金會設立全台首家專屬癌友與家屬的心理諮商所，今年起提供每人最多 6 次免費心理諮商，由專業心理師陪伴癌友及病家修復內在韌性，找回與病前行的力量。\n根據國健署 111 年癌症登記報告，平均每 4 分 2 秒就有一個家庭被癌症打亂生活節奏，癌友須面對確診衝擊、治癒焦慮、復發擔憂與預後不確幸，也會經歷身體形象改變、自我認同重建及回歸生活的適應歷程。\n癌症希望基金會執行長蘇連瓔指出，癌後心理照護長期缺乏性統性資源，費用負擔大、可近性低，2018 年基金會在台北、台中和高雄提供癌友及家屬心理諮商服務，並納入癌後性諮詢，近 3 年累計服務近 500 人次。\n為提升服務量能和可近性，今年基金會在台北新設專屬癌友及家屬的心理諮商所，並由心理師視個案需求，提供每人最多 6 次免費個別諮商，或最多 4 次伴侶、家庭諮商。曾抗癌長達 20 多年的所長葉北辰表示，心理師將在整個疾病路程陪伴癌友，同時協助癌友處理睡眠困擾或癌因性疲憊、醫病溝通與醫療決策思考，並透過正念減壓與身心整合練習，幫助身體與心理重新對話，家屬也能放下重擔。\n若癌友在治療過程中產生新疑慮與照護需求，心理師將同步轉介其他資源，由護理師和社工師提供相關服務，形成完整身心照護網。基金會表示，心理諮師所已開放預約，初次提供實體心理諮商服務，預計 2 月增設通訊遠距心理諮商服務，民眾可撥打免費服務專線 0809-010-580 預約或洽詢。\n\n',
+          question: '我罹癌後一直很焦慮、睡不好又覺得很累，這是癌症常見的情緒症狀嗎？通常是哪些原因造成的？',
+          answer: '是的，這在癌友身上其實很常見。我會跟您說，癌症不只影響身體，心理也常一起承受很大壓力。近半數癌症患者會出現明顯情緒困擾，大約 3 到 4 成會有焦慮或憂鬱反應。常見原因包括剛確診時的衝擊、對治療效果的焦慮、擔心復發、對預後的不確定感，以及治療過程中面對身體形象改變、自我認同重建和回歸生活的適應壓力。這些心理負擔也可能伴隨睡眠困擾或癌因性疲憊，讓人覺得特別累、特別撐不住。若這些情況已經影響生活，建議盡早尋求心理支持，讓專業人員陪您一起處理，對身心都很重要。'
+        },
+        {
+          article_id: 'b3f72c91',
+          angle: '治療與用藥',
+          instruction: '你是一個專業的 AI 醫療助手。請根據提供的背景知識，回答患者的問題。',
+          background: '【背景知識】：\n標題：糖尿病患者的血糖控制與口服藥物選擇\n內容：\n第二型糖尿病的治療以生活型態改變為基礎，包括飲食控制與規律運動。當血糖仍未達標時，醫師通常會優先處方 Metformin，因其安全性高、價格低廉，且有助於體重控制。若 Metformin 不耐受或禁忌，可考慮 SGLT-2 抑制劑或 GLP-1 受體促效劑，後者尚有心血管保護效益。胰島素通常用於口服藥物血糖控制不佳或有特殊臨床狀況時。所有藥物的選擇須依個別患者的腎功能、心血管風險及經濟負擔綜合考量。\n\n',
+          question: '醫師說我的血糖控制不好，要開始吃藥，第一線通常會用什麼藥？有什麼副作用嗎？',
+          answer: '第二型糖尿病的第一線口服藥物通常是 Metformin。它的主要優點是安全、便宜，而且不容易造成低血糖，還可能幫助體重稍微下降。常見副作用主要是腸胃道不適，例如噁心、腹瀉，通常隨餐服用或從低劑量開始可以減少不適。如果您有腎功能問題，醫師可能會考慮其他選項，例如 SGLT-2 抑制劑或 GLP-1 促效劑，這些藥物對心臟也有額外保護效果。建議與您的主治醫師討論最適合您個人狀況的選擇。'
+        },
+        {
+          article_id: 'd9a14e57',
+          angle: '預防與生活照護',
+          instruction: '你是一個專業的 AI 醫療助手。請根據提供的背景知識，回答患者的問題。',
+          background: '【背景知識】：\n標題：高血壓患者的居家血壓監測與飲食建議\n內容：\n居家血壓監測有助於提供更真實的血壓數據，建議每天早晨起床後、服藥前，以及晚上睡前各量一次，每次坐姿休息 5 分鐘後再測量，連續記錄 7 天。飲食方面，DASH 飲食法（得舒飲食）已有充分證據可降低血壓，強調多攝取蔬果、全穀類、低脂乳製品，並減少紅肉、含糖飲料與高鈉食物。每日鈉攝取建議控制在 2,300 毫克以下，理想目標為 1,500 毫克。規律有氧運動（每週至少 150 分鐘中等強度）及維持健康體重亦是重要的非藥物介入。\n\n',
+          question: '我最近被診斷有高血壓，醫師叫我先觀察生活習慣，請問在家要怎麼量血壓才準確？飲食上要注意什麼？',
+          answer: '在家量血壓要準確，有幾個重點：建議每天早上起床後和晚上睡前各量一次，量之前先坐著休息 5 分鐘，不要剛運動完或喝完咖啡就量。手臂與心臟保持同高，連續記錄至少一週，再帶給醫師參考。飲食方面，最重要的是減少鹽分，每天鈉的攝取量盡量不超過 2,300 毫克，少吃加工食品和外食。可以參考「得舒飲食」，多吃蔬菜水果、全穀類和低脂乳品。配合規律運動和維持健康體重，對血壓控制很有幫助。'
+        }
+      ]
+    },
+
+    T013: {
+      taskCategories: ['sequence', 'regression'],
+      taskInputTypes: ['single_item'],
+      outputs: [
+        {
+          type: 'entity_recognition',
+          config: {
+            entities: [
+              { name: 'Target', color: '#3498DB' },
+              { name: 'Aspect', color: '#2ECC71' },
+              { name: 'Opinion', color: '#E74C3C' }
+            ],
+            allow_overlapping: true
+          }
+        },
+        {
+          type: 'relation_identification',
+          config: {
+            relation_types: ['has_aspect', 'has_opinion'],
+            source_output: 'entity_recognition'
+          }
+        },
+        {
+          type: 'multi_dim',
+          config: {
+            dimensions: [
+              { name: 'valence', min: 1, max: 9, step: 1 },
+              { name: 'arousal', min: 1, max: 9, step: 1 }
+            ]
+          }
+        }
+      ],
+      // "utterances" and "text" are two representations of the same
+      // cross-utterance dialogue input; both are shown to the annotator.
+      fieldRoleMap: {
+        utterances: 'input',
+        text: 'input',
+        gold_triplets: 'output',
+        incomplete_annotations: 'output'
+      },
+      datasetFileName: 'absa-va.json',
+      datasetRecords: [
+        {
+          id: 'absa-001',
+          utterances: [
+            { utt_id: 0, speaker: 'rottenrockteahouse', text: '我入手Note 10 plus第三天就退廠保修\n過熱問題嚴重！差評' },
+            { utt_id: 1, speaker: '張峯獎-f6w', text: '我已經拿了九天了就沒有這個問題你在唬爛' },
+            { utt_id: 2, speaker: 'isbonny', text: '唉！在哪裡購買的呢？這款手機才上市兩天啊～' },
+            { utt_id: 3, speaker: 'rottenrockteahouse', text: '@isbonny 澳門的代理商' },
+            { utt_id: 4, speaker: 'rottenrockteahouse', text: '我在首發當天買' }
+          ],
+          text: '@rottenrockteahouse: 我入手Note 10 plus第三天就退廠保修 過熱問題嚴重！差評\n@張峯獎-f6w: 我已經拿了九天了就沒有這個問題你在唬爛\n@isbonny: 唉！在哪裡購買的呢？這款手機才上市兩天啊～\n@rottenrockteahouse: @isbonny 澳門的代理商\n@rottenrockteahouse: 我在首發當天買',
+          gold_triplets: [
+            {
+              target_utt_id: 0,
+              target_text: 'Note 10 plus',
+              aspect_utt_id: 0,
+              aspect_text: '過熱問題',
+              opinion_utt_id: 0,
+              opinion_text: '嚴重',
+              cross_utterance: false,
+              evidence_utt_ids: [0],
+              notes: ''
+            },
+            {
+              target_utt_id: 0,
+              target_text: 'Note 10 plus',
+              aspect_utt_id: 0,
+              aspect_text: '過熱問題',
+              opinion_utt_id: 1,
+              opinion_text: '沒有這個問題',
+              cross_utterance: true,
+              evidence_utt_ids: [0, 1],
+              notes: ''
+            }
+          ],
+          incomplete_annotations: [
+            {
+              completeness: 'missing_aspect',
+              target_utt_id: 0,
+              target_text: 'Note 10 plus',
+              aspect_utt_id: null,
+              aspect_text: '',
+              opinion_utt_id: 0,
+              opinion_text: '差評',
+              cross_utterance: false,
+              evidence_utt_ids: [0],
+              notes: ''
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  global.LabelSuiteTaskDetailData = {
+    profiles: profiles
+  };
+}(window));

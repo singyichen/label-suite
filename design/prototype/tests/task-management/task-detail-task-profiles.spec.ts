@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const TASK_LIST_URL = '/pages/task-management/task-list.html?task_role=project_leader';
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html';
+const PANEL_LOAD_TIMEOUT = 15000;
 const EXAMPLE_SOURCE_FILES = [
   'single-label.json',
   'multi-label.json',
@@ -21,196 +22,196 @@ const EXAMPLE_SOURCE_FILES = [
 type TaskProfile = {
   id: string;
   name: string;
-  listName?: string;
   type: string;
   datasetSummary: string;
-  listStatus: string;
-  detailStatus: string;
-  editable: boolean;
-  runControl: {
-    activeStepLabel: string;
-    roundCount: number;
-    actionButton: string;
-    actionText: string;
-    absentButton?: string;
-  };
+  outputCount: number;
   settings: string[];
-  editPreview: string[];
 };
 
+/* Expected values derive from the unified seeds (task-list.data.js +
+   task-detail.data.js) rendered through getSettingsSummary(): one row per
+   ADR-029 output with its registry display label and config field summary. */
 const TASK_PROFILES: TaskProfile[] = [
   {
     id: 'T001',
-    name: '新聞標題多標籤分類',
-    type: '單句分類（含多標籤）',
-    datasetSummary: '3200 筆',
-    listStatus: '草稿',
-    detailStatus: '草稿',
-    editable: true,
-    runControl: {
-      activeStepLabel: '草稿',
-      roundCount: 0,
-      actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R1',
-    },
-    settings: ['標籤清單', '政治, 社會, 娛樂, 體育, 科技', '允許多選', '是'],
-    editPreview: ['政治', '社會', '娛樂', '體育', '科技'],
+    name: '醫療文本情感分類',
+    type: '單一標籤',
+    datasetSummary: '5 筆',
+    outputCount: 1,
+    settings: ['cfg-t001-v1.0.0', 'positive, neutral, negative'],
   },
   {
     id: 'T002',
-    name: '情感 VA 雙維度評分',
-    type: '單句 VA 雙維度評分（Valence / Arousal）',
-    datasetSummary: '1280 筆',
-    listStatus: '待 IAA 確認',
-    detailStatus: '待 IAA 確認',
-    editable: false,
-    runControl: {
-      activeStepLabel: '試標階段',
-      roundCount: 2,
-      actionButton: '#publishOfficialRunBtn',
-      actionText: '開始正式標記',
-      absentButton: '#publishDryRunBtn',
-    },
-    settings: ['Valence', '1 ~ 9', 'Arousal', '1 ~ 9'],
-    editPreview: ['Valence 評分', 'Arousal 評分'],
+    name: '癌症歷程情緒多標籤分類',
+    type: '多標籤',
+    datasetSummary: '5 筆',
+    outputCount: 1,
+    settings: ['cfg-t002-v1.0.0', 'happy, sad, angry, surprise, fear, disgust'],
   },
   {
     id: 'T003',
-    name: '產品評論 Aspect List 抽取／校正',
-    listName: '產品評論序列標記（NER / Aspect）',
-    type: '序列標記（含 Aspect / NER）',
-    datasetSummary: '860 筆',
-    listStatus: '草稿',
-    detailStatus: '草稿',
-    editable: true,
-    runControl: {
-      activeStepLabel: '草稿',
-      roundCount: 0,
-      actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R1',
-    },
-    settings: ['子類型', 'Aspect List 抽取／校正', '輸入欄位名稱', 'sentence', '輸出欄位名稱', 'aspects'],
-    editPreview: ['欄位對應', 'Aspect 編輯規則', '數量限制', 'Aspect List'],
+    name: '病患情緒與照護情境階層分類',
+    type: '多標籤',
+    datasetSummary: '5 筆',
+    outputCount: 1,
+    settings: ['cfg-t003-v1.0.0', '情緒, 照護情境'],
   },
   {
     id: 'T004',
-    name: '醫療關係抽取（Entity / Triple）',
-    type: '關係抽取（Entity + Relation + Triple）',
-    datasetSummary: '1420 筆',
-    listStatus: '草稿',
-    detailStatus: '草稿',
-    editable: true,
-    runControl: {
-      activeStepLabel: '草稿',
-      roundCount: 0,
-      actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R1',
-    },
-    settings: ['實體類型', 'DRUG, DISEASE, SYMPTOM', '關係類型', 'treats, causes, indicates'],
-    editPreview: ['treats', 'causes', 'indicates', 'triple'],
+    name: '醫療文本可讀性評分',
+    type: '單維度',
+    datasetSummary: '5 筆',
+    outputCount: 1,
+    settings: ['cfg-t004-v1.0.0', 'readability · 1 · 5 · 1'],
   },
   {
     id: 'T005',
-    name: '句對相似度 / 蘊含判定',
-    type: '句對任務（相似度 / 蘊含）',
-    datasetSummary: '2100 筆',
-    listStatus: '草稿',
-    detailStatus: '草稿',
-    editable: true,
-    runControl: {
-      activeStepLabel: '草稿',
-      roundCount: 0,
-      actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R1',
-    },
-    settings: ['關係標籤', '蘊含, 矛盾, 中立'],
-    editPreview: ['句子 A', '句子 B', '蘊含', '矛盾'],
+    name: '醫療翻譯品質多維度評分',
+    type: '多維度',
+    datasetSummary: '5 筆',
+    outputCount: 1,
+    settings: ['cfg-t005-v1.0.0', 'fluency, adequacy, coherence'],
   },
   {
     id: 'T006',
-    name: 'NER 命名實體辨識',
-    type: '序列標記（含 Aspect / NER）',
-    datasetSummary: '950 筆',
-    listStatus: '草稿',
-    detailStatus: '草稿',
-    editable: true,
-    runControl: {
-      activeStepLabel: '草稿',
-      roundCount: 0,
-      actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R1',
-    },
-    settings: ['子類型', 'NER 命名實體辨識', '實體類型', 'PER, ORG, LOC'],
-    editPreview: ['PER', 'ORG', 'LOC', 'IOB2'],
+    name: '新聞命名實體序列標註',
+    type: '序列標註',
+    datasetSummary: '4 筆',
+    outputCount: 1,
+    settings: ['cfg-t006-v1.0.0', 'PER, ORG, LOC, TIME', 'BIO'],
   },
-];
-
-const RUN_CONTROL_TASKS: TaskProfile[] = [
-  ...TASK_PROFILES,
   {
     id: 'T007',
-    name: '商品評論分類 v2',
-    type: '單句分類（含多標籤）',
-    datasetSummary: '1750 筆',
-    listStatus: '正式標記中',
-    detailStatus: '正式標記進行中',
-    editable: false,
-    runControl: {
-      activeStepLabel: '正式標記中',
-      roundCount: 1,
-      actionButton: '#publishCompleteBtn',
-      actionText: '標記完成',
-    },
-    settings: [],
-    editPreview: [],
+    name: '產品評論觀點實體辨識',
+    type: '實體辨識',
+    datasetSummary: '3 筆',
+    outputCount: 1,
+    settings: ['cfg-t007-v1.0.0', 'target, aspect, opinion'],
+  },
+  {
+    id: 'T008',
+    name: '醫療文本關係辨識',
+    type: '關係識別',
+    datasetSummary: '3 筆',
+    outputCount: 1,
+    settings: ['cfg-t008-v1.0.0', 'causes, treats, prevents, diagnoses, located_in'],
   },
   {
     id: 'T009',
-    name: '對話意圖標記',
-    type: '單句分類（含多標籤）',
-    datasetSummary: '640 筆',
-    listStatus: '試標進行中',
-    detailStatus: '試標進行中',
-    editable: false,
-    runControl: {
-      activeStepLabel: '試標階段',
-      roundCount: 1,
-      actionButton: '#publishDryRunBtn',
-      actionText: '新增試標回合 R2',
-    },
-    settings: [],
-    editPreview: [],
+    name: '醫療文本摘要',
+    type: '自由文字',
+    datasetSummary: '3 筆',
+    outputCount: 1,
+    settings: ['cfg-t009-v1.0.0', '256'],
   },
   {
     id: 'T010',
-    name: '醫療文本 NER',
-    type: '序列標記（含 Aspect / NER）',
-    datasetSummary: '1800 筆',
-    listStatus: '已完成',
-    detailStatus: '已完成',
-    editable: false,
-    runControl: {
-      activeStepLabel: '已完成',
-      roundCount: 1,
-      actionButton: '#publishActionRow',
-      actionText: '此狀態不提供發布操作。',
-    },
-    settings: [],
-    editPreview: [],
+    name: '醫療實體與關係辨識',
+    type: '實體辨識 + 關係識別',
+    datasetSummary: '3 筆',
+    outputCount: 2,
+    settings: [
+      'cfg-t010-v1.0.0',
+      'BODY, DISE, SYMP, DRUG',
+      'bodyLocation, causes, adverseOutcome',
+    ],
+  },
+  {
+    id: 'T011',
+    name: '醫療自然語言推斷',
+    type: '單一標籤',
+    datasetSummary: '3 筆',
+    outputCount: 1,
+    settings: ['cfg-t011-v1.0.0', 'entailment, neutral, contradiction'],
+  },
+  {
+    id: 'T012',
+    name: '醫療閱讀理解問答',
+    type: '自由文字',
+    datasetSummary: '3 筆',
+    outputCount: 1,
+    settings: ['cfg-t012-v1.0.0', '512'],
+  },
+  {
+    id: 'T013',
+    name: 'ABSA + 情緒回歸（YouTube 留言）',
+    type: '實體辨識 + 關係識別 + 多維度',
+    datasetSummary: '1 筆',
+    outputCount: 3,
+    settings: [
+      'cfg-t013-v1.0.0',
+      'Target, Aspect, Opinion',
+      'has_aspect, has_opinion',
+      'valence, arousal',
+    ],
   },
 ];
 
-const EN_SETTINGS_BY_TASK: Record<string, string[]> = {
-  T001: ['Labels', 'Politics, Society, Entertainment, Sports, Technology', 'Allow multiple labels', 'Yes'],
-  T002: ['Valence', '1 ~ 9 (step 1)', 'Arousal', '1 ~ 9 (step 1)'],
-  T003: ['Subtype', 'Aspect List extraction / correction', 'Input field name', 'sentence', 'Aspect list field name', 'aspects'],
-  T004: ['Entity types', 'DRUG, DISEASE, SYMPTOM', 'Relation types', 'treats, causes, indicates'],
-  T005: ['Relation labels', 'Entailment, Contradiction, Neutral'],
-  T006: ['Subtype', 'NER (Named Entity Recognition)', 'Entity types', 'PER, ORG, LOC'],
-  T007: ['Labels', 'Positive, Neutral, Negative', 'Allow multiple labels', 'No'],
-  T009: ['Labels', 'Query, Application, Cancellation, Complaint', 'Allow multiple labels', 'No'],
-  T010: ['Subtype', 'NER (Named Entity Recognition)', 'Entity types', 'DRUG, DISEASE, SYMPTOM'],
+const EN_SETTINGS_BY_TASK: Record<string, { type: string; settings: string[] }> = {
+  T001: { type: 'Single label', settings: ['positive, neutral, negative'] },
+  T004: { type: 'Single dimension', settings: ['readability · 1 · 5 · 1'] },
+  T010: {
+    type: 'Entity Recognition + Relation Identification',
+    settings: ['BODY, DISE, SYMP, DRUG', 'bodyLocation, causes, adverseOutcome'],
+  },
 };
+
+/* All 13 unified seeds are drafts; non-draft run-control states are reached
+   through the ?status= URL override (see parseRole()), which synthesizes one
+   auto-derived trial round for any non-draft status. */
+type RunControlCase = {
+  status: string | null;
+  badge: string;
+  activeStepLabel: string;
+  roundCount: number;
+  actionButton: string;
+  actionText: string;
+  absentButton?: string;
+};
+
+const RUN_CONTROL_CASES: RunControlCase[] = [
+  {
+    status: null,
+    badge: '草稿',
+    activeStepLabel: '草稿',
+    roundCount: 0,
+    actionButton: '#publishDryRunBtn',
+    actionText: '新增試標回合 R1',
+  },
+  {
+    status: 'dry_run_in_progress',
+    badge: '試標進行中',
+    activeStepLabel: '試標階段',
+    roundCount: 1,
+    actionButton: '#publishDryRunBtn',
+    actionText: '新增試標回合 R2',
+  },
+  {
+    status: 'waiting_iaa_confirmation',
+    badge: '待 IAA 確認',
+    activeStepLabel: '試標階段',
+    roundCount: 1,
+    actionButton: '#publishOfficialRunBtn',
+    actionText: '開始正式標記',
+    absentButton: '#publishDryRunBtn',
+  },
+  {
+    status: 'official_run_in_progress',
+    badge: '正式標記進行中',
+    activeStepLabel: '正式標記中',
+    roundCount: 1,
+    actionButton: '#publishCompleteBtn',
+    actionText: '標記完成',
+  },
+  {
+    status: 'completed',
+    badge: '已完成',
+    activeStepLabel: '已完成',
+    roundCount: 1,
+    actionButton: '#publishActionRow',
+    actionText: '此狀態不提供發布操作。',
+  },
+];
 
 test.describe('Task detail profile mapping', () => {
   test('project leader can open task detail from every illustrative task row', async ({ page }) => {
@@ -251,69 +252,63 @@ test.describe('Task detail profile mapping', () => {
     test(`renders task-specific overview for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
-      await expect(page.locator('#bcCurrent')).toHaveText(task.name);
+      await expect(page.locator('#bcCurrent')).toHaveText(task.name, { timeout: PANEL_LOAD_TIMEOUT });
 
       const overview = page.locator('#overviewPanel');
       await expect(overview).toContainText(task.name);
-      await expect(overview).toContainText(task.type);
+      await expect(page.locator('#valueTaskType')).toHaveText(task.type);
       await expect(page.locator('#valueDatasetSummary')).toHaveText(task.datasetSummary);
 
       for (const text of task.settings) {
         await expect(page.locator('#settingsConfigView')).toContainText(text);
       }
+      await expect(page.locator('#settingsConfigDynamicRows .kv-dl-row')).toHaveCount(task.outputCount);
     });
   }
 
-  for (const [taskId, expectedSettings] of Object.entries(EN_SETTINGS_BY_TASK)) {
+  for (const [taskId, expected] of Object.entries(EN_SETTINGS_BY_TASK)) {
     test(`renders English label settings summary for ${taskId}`, async ({ page }) => {
       await page.addInitScript(() => {
         window.localStorage.setItem('labelsuite.lang', 'en');
       });
       await page.goto(`${TASK_DETAIL_URL}?task_id=${taskId}`);
 
-      await expect(page.locator('#settingsSummaryTitle')).toHaveText('Label settings');
-      for (const text of expectedSettings) {
+      await expect(page.locator('#settingsSummaryTitle')).toHaveText('Label settings', { timeout: PANEL_LOAD_TIMEOUT });
+      await expect(page.locator('#valueTaskType')).toHaveText(expected.type);
+      for (const text of expected.settings) {
         await expect(page.locator('#settingsConfigView')).toContainText(text);
       }
-      await expect(page.locator('#settingsConfigView')).not.toContainText(/[政治社會娛樂體育科技蘊含矛盾好評普通差評查詢申請取消客訴]/);
     });
   }
 
-  for (const task of RUN_CONTROL_TASKS) {
-    test(`renders coherent run-control state for ${task.id}`, async ({ page }) => {
-      await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
+  for (const rc of RUN_CONTROL_CASES) {
+    test(`renders coherent run-control state for status ${rc.status || 'draft'}`, async ({ page }) => {
+      const statusParam = rc.status ? `&status=${rc.status}` : '';
+      await page.goto(`${TASK_DETAIL_URL}?task_id=T001${statusParam}`);
 
-      await expect(page.locator('#statusBadge')).toContainText(task.detailStatus);
+      await expect(page.locator('#statusBadge')).toContainText(rc.badge, { timeout: PANEL_LOAD_TIMEOUT });
       await expect(page.locator('#executionStageTitle')).toHaveCount(0);
       await expect(page.locator('#executionStageDesc')).toHaveCount(0);
-      await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText(task.runControl.activeStepLabel);
-      await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(task.runControl.roundCount);
-      await expect(page.locator(task.runControl.actionButton)).toHaveText(task.runControl.actionText);
-      if (task.runControl.absentButton) {
-        await expect(page.locator(task.runControl.absentButton)).toHaveCount(0);
+      await expect(page.locator('#statusStepper .step-current .step-label-wrap')).toHaveText(rc.activeStepLabel);
+      await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(rc.roundCount);
+      await expect(page.locator(rc.actionButton)).toHaveText(rc.actionText);
+      if (rc.absentButton) {
+        await expect(page.locator(rc.absentButton)).toHaveCount(0);
       }
     });
   }
 
   for (const task of TASK_PROFILES) {
-    test(`respects settings edit availability for ${task.id}`, async ({ page }) => {
+    test(`opens the settings edit form with one accordion per output for ${task.id}`, async ({ page }) => {
       await page.goto(`${TASK_DETAIL_URL}?task_id=${task.id}`);
 
       const editBtn = page.locator('#settingsEditBtn');
-      await expect(page.locator('#statusBadge')).toContainText(task.detailStatus);
-      if (!task.editable) {
-        await expect(editBtn).toBeDisabled();
-        await expect(page.locator('#settingsEditForm')).toHaveClass(/hidden/);
-        return;
-      }
-
+      await expect(page.locator('#statusBadge')).toContainText('草稿', { timeout: PANEL_LOAD_TIMEOUT });
       await expect(editBtn).toBeEnabled();
       await editBtn.click();
 
       await expect(page.locator('#settingsEditForm')).not.toHaveClass(/hidden/);
-      for (const text of task.editPreview) {
-        await expect(page.locator('#settingsEditForm')).toContainText(text);
-      }
+      await expect(page.locator('#schemaFields .output-accordion')).toHaveCount(task.outputCount);
     });
   }
 });

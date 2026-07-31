@@ -71,8 +71,32 @@ test.describe('Task list clarified behavior', () => {
     );
     await expect(draftRow.getByRole('button', { name: '刪除' })).toBeVisible();
 
+    // All seed tasks are draft baselines now, so a non-draft row is injected
+    // at runtime to keep this scenario alive.
+    await page.evaluate(() => {
+      type TaskListWindow = Window & {
+        TASKS: Array<Record<string, unknown>>;
+        render: () => void;
+      };
+      const taskListWindow = window as unknown as TaskListWindow;
+      taskListWindow.TASKS.push({
+        id: 'EX-NONDRAFT',
+        nameZh: '非草稿示例任務',
+        nameEn: 'Non-draft example task',
+        sourceFile: 'synthetic-non-draft.json',
+        outputTypes: ['single_label'],
+        runType: 'official_run',
+        status: 'official_run_in_progress',
+        updatedAt: '2026-07-29',
+        canViewDetail: true,
+        isMine: true,
+        deletedAt: '',
+      });
+      taskListWindow.render();
+    });
+
     const inProgressRow = page.locator(
-      '#taskTableBody tr[data-source-file="multi-label.json"]',
+      '#taskTableBody tr[data-source-file="synthetic-non-draft.json"]',
     );
     await expect(inProgressRow.getByRole('button', { name: '刪除' })).toHaveCount(0);
 

@@ -2,10 +2,15 @@ import { test, expect } from '@playwright/test';
 
 const TASK_DETAIL_URL = '/pages/task-management/task-detail.html?task_role=project_leader&task_id=T001';
 
+// Tab panels arrive via fetched partials and event bindings only attach after
+// the last partial (#workLogPanel) lands; wait for it before interacting.
+const PANEL_LOAD_TIMEOUT = 15000;
+
 test.describe('Task detail guideline edit state', () => {
   test('uses task-new step4-like edit UI in overview guideline section', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#guidelineSectionTitle')).toHaveText('標記說明');
 
     const editBtn = page.locator('#guidelineEditBtn');
@@ -36,6 +41,7 @@ test.describe('Task detail guideline edit state', () => {
   test('uploads files for annotator and reviewer guideline sections', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
     await expect(page.locator('#guidelineEditBtn')).toBeEnabled();
 
     await page.evaluate(() => {
