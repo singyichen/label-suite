@@ -125,6 +125,10 @@ function replaceDatasetFiles(fileList) {
   state.datasetCandidates = [];
   state.fieldRoleMap = {};
   state._roleMapBySource = {};
+  /* A replaced dataset must re-derive the item-pair display names from its
+     own columns; drop the seeded one-shot value so the auto-population reset
+     does not restore the previous dataset's saved labels. */
+  state._pendingItemPairLabels = null;
   addDatasetFiles(fileList);
 }
 

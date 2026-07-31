@@ -1235,6 +1235,44 @@ test.describe('Step 2 preview: composite task data files', () => {
     expect(code).toContain('前提');
   });
 
+  test('nli.json — item pair labels survive reload and reset when removed from code', async ({
+    page,
+  }) => {
+    await setupAndGoToStep2(page, {
+      taskName: 'nli-pair-label-persist-test',
+      category: 'classification',
+      outputType: 'single_label',
+      inputType: 'item_pair',
+      dataFile: 'nli.json',
+      roles: {
+        Premise: 'input',
+        Hypothesis: 'input',
+        Label: 'output',
+      },
+    });
+
+    const label1 = page.getByTestId('item-pair-label-input-1');
+    await expect(label1).toHaveValue('Premise');
+    await label1.fill('前提');
+
+    /* Edited labels persist with the rest of the wizard state across reload */
+    await page.reload();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('前提', {
+      timeout: 15000,
+    });
+
+    /* Removing the key from the code resets the labels to dataset defaults */
+    await page.locator('#formatJsonBtn').click();
+    const parsed = JSON.parse(await page.locator('#codeEditor').inputValue()) as {
+      item_pair_labels?: string[];
+    };
+    expect(parsed.item_pair_labels).toEqual(['前提', 'Hypothesis']);
+    delete parsed.item_pair_labels;
+    await page.locator('#codeEditor').fill(JSON.stringify(parsed, null, 2));
+    await page.locator('#saveCodeBtn').click();
+    await expect(page.getByTestId('item-pair-label-input-1')).toHaveValue('Premise');
+  });
+
   test('mrc.json — free_text with background as evidence', async ({ page }) => {
     await setupAndGoToStep2(page, {
       taskName: 'mrc-composite-test',

@@ -1165,6 +1165,10 @@ function buildTaxonomyTreeEditor(config, field, outKey) {
 /* Field hint as tooltip (registry hintAsTooltip): moves the label into a
  * .field-label-row with a "?" trigger; the bubble shows on hover/focus.
  * The bubble anchors to .tooltip-wrap so the arrow centers on the trigger. */
+function outputFieldControlId(outKey, fieldKey) {
+  return 'output-config-' + outKey.replace(/_/g, '-') + '-' + fieldKey.replace(/_/g, '-');
+}
+
 function attachFieldHintTooltip(wrap, lbl, field, outKey, hintId, describedEl) {
   var labelRow = document.createElement('div');
   labelRow.className = 'field-label-row';
@@ -1178,7 +1182,7 @@ function attachFieldHintTooltip(wrap, lbl, field, outKey, hintId, describedEl) {
   hintBubble.id = hintId;
   hintBubble.setAttribute('role', 'tooltip');
   hintBubble.textContent = field['hint_' + state.lang];
-  helpBtn.setAttribute('aria-label', field[state.lang] || field.zh);
+  helpBtn.setAttribute('aria-label', (state.lang === 'en' ? 'Help: ' : '說明：') + (field[state.lang] || field.zh));
   helpBtn.setAttribute('aria-describedby', hintBubble.id);
   if (describedEl) describedEl.setAttribute('aria-describedby', hintBubble.id);
   var tipWrap = document.createElement('span');
@@ -1242,7 +1246,7 @@ function renderOutputTypeFields(container, outKey) {
       var taxonomyEditor = buildTaxonomyTreeEditor(cfg, field, outKey);
       wrap.appendChild(taxonomyEditor);
       if (field.hintAsTooltip && field['hint_' + state.lang]) {
-        var taxonomyHintId = 'output-config-' + outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-hint';
+        var taxonomyHintId = outputFieldControlId(outKey, field.key) + '-hint';
         attachFieldHintTooltip(wrap, lbl, field, outKey, taxonomyHintId, taxonomyEditor);
       }
     } else if (field.type === 'entity-list') {
@@ -1480,7 +1484,7 @@ function renderOutputTypeFields(container, outKey) {
       textInp.style.cssText = 'width:100%;padding:8px 12px;';
       textInp.value = cfg[field.key] || field.defaultValue || '';
       textInp.placeholder = field[state.lang] || field.zh || '';
-      var textControlId = 'output-config-' + outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-');
+      var textControlId = outputFieldControlId(outKey, field.key);
       textInp.id = textControlId;
       textInp.setAttribute('data-testid', outKey.replace(/_/g, '-') + '-' + field.key.replace(/_/g, '-') + '-input');
       if (field.maxLength != null) textInp.maxLength = field.maxLength;
@@ -4784,6 +4788,9 @@ function saveCodeToVisual(showSuccessToast) {
     });
     if (parsed.item_pair_labels !== undefined) {
       state.itemPairLabels = parsed.item_pair_labels.slice();
+    } else if (currentInputType === 'item_pair') {
+      /* Omitting the key resets the labels to the dataset-derived defaults */
+      state.itemPairLabels = null;
     }
     state.previewState = {};
     state.previewBypass = {};
