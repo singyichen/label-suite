@@ -912,74 +912,6 @@
     .dataset-preview-trigger { display: inline-flex; align-items: center; gap: 5px; background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit; }
     .dataset-preview-trigger:hover { color: var(--color-primary); }
     .dataset-preview-eye { width: 13px; height: 13px; flex-shrink: 0; }
-    .overview-dataset-upload-zone { margin-top: var(--space-sm); }
-    .overview-dataset-file-list {
-      margin-top: var(--space-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .overview-upload-file-preview {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border: 1px solid var(--color-success-border);
-      border-radius: var(--radius-md);
-      background: var(--color-success-bg);
-      cursor: pointer;
-      transition: border-color var(--dur-fast), background var(--dur-fast);
-    }
-    .overview-upload-file-preview:hover {
-      border-color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-    }
-    .overview-upload-file-icon {
-      width: 16px;
-      height: 16px;
-      color: var(--color-success);
-      flex-shrink: 0;
-    }
-    .overview-upload-file-name {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--color-success);
-    }
-    .overview-upload-file-size {
-      font-size: 12px;
-      color: var(--color-text-soft);
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .overview-upload-file-preview-btn,
-    .overview-upload-file-remove {
-      width: 24px;
-      height: 24px;
-      border: none;
-      background: none;
-      color: var(--color-ink-muted);
-      padding: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: color var(--dur-fast), background var(--dur-fast);
-    }
-    .overview-upload-file-preview-btn:hover {
-      color: var(--color-primary);
-      background: var(--color-primary-soft-bg);
-    }
-    .overview-upload-file-remove:hover {
-      color: var(--color-error);
-      background: var(--color-error-soft-bg);
-    }
     .modal-xl { width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
     .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md, 16px); }
     .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -1251,7 +1183,6 @@
       min-height: 92px;
       resize: vertical;
     }
-    .basic-dataset-drop,
     .upload-zone {
       border: 2px dashed var(--color-border);
       border-radius: var(--radius-md);
@@ -1267,22 +1198,10 @@
       transition: border-color var(--dur-fast), background var(--dur-fast);
       cursor: pointer;
     }
-    .basic-dataset-drop:hover,
     .upload-zone:hover,
     .upload-zone.dragover {
       border-color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-    }
-    .basic-dataset-drop-title {
-      font-size: 20px;
-      line-height: 1.4;
-      font-weight: 700;
-      color: var(--color-ink);
-    }
-    .basic-dataset-drop-hint {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--color-text-soft);
     }
     .required { color: var(--color-error); margin-left: 2px; }
     .field-label-row {
@@ -1439,13 +1358,6 @@
       border-color: var(--color-primary);
       color: var(--color-primary);
       background: var(--color-primary-soft-bg);
-    }
-    #settingsTemplateBtns {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: auto;
-      align-self: flex-start;
     }
     .tag-input-wrap {
       display: flex;
@@ -1721,123 +1633,6 @@
     }
     .annotation-preview-empty {
       font-size: 13px;
-      color: var(--color-text-soft);
-    }
-    #settingsSchemaFields {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    #settingsSchemaFields .field-group { margin-bottom: 0 !important; }
-    .settings-schema-section {
-      padding: 14px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-slate-50);
-    }
-    .settings-schema-section-header {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-bottom: 12px;
-    }
-    .settings-schema-section-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--color-ink);
-    }
-    .settings-schema-section-desc {
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--color-text-soft);
-    }
-    .settings-schema-field-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .settings-schema-toggle-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .settings-schema-disclosure {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-    }
-    .settings-schema-disclosure summary {
-      list-style: none;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px;
-      cursor: pointer;
-    }
-    .settings-schema-disclosure summary::-webkit-details-marker { display: none; }
-    .settings-schema-disclosure-summary-copy { min-width: 0; }
-    .settings-schema-disclosure-summary-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--color-ink);
-    }
-    .settings-schema-disclosure-summary-desc {
-      margin-top: 2px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: var(--color-text-soft);
-    }
-    .settings-schema-disclosure-chevron {
-      width: 20px;
-      height: 20px;
-      border-radius: 999px;
-      border: 1px solid var(--color-border);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--color-text-soft);
-      flex-shrink: 0;
-      transition: transform var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
-    }
-    .settings-schema-disclosure[open] .settings-schema-disclosure-chevron {
-      transform: rotate(90deg);
-      color: var(--color-primary);
-      border-color: rgba(99,102,241,0.28);
-    }
-    .settings-schema-disclosure-body {
-      border-top: 1px solid var(--color-border);
-      padding: 14px;
-      background: var(--color-slate-50);
-    }
-    .settings-toggle-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 58px;
-      padding: 11px 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      transition: border-color var(--dur-fast), background var(--dur-fast), box-shadow var(--dur-fast);
-    }
-    .settings-toggle-card:hover { border-color: rgba(99,102,241,0.45); }
-    .settings-toggle-card.is-on { border-color: rgba(99,102,241,0.38); background: var(--color-primary-soft-bg); }
-    .settings-toggle-card:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .settings-toggle-copy { min-width: 0; }
-    .settings-toggle-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 650;
-      line-height: 1.35;
-      color: var(--color-ink);
-    }
-    .settings-toggle-status {
-      display: block;
-      margin-top: 3px;
-      font-size: 12px;
-      line-height: 1.35;
       color: var(--color-text-soft);
     }
     .aspect-list-preview-rows { display: flex; flex-direction: column; gap: 8px; }
@@ -2418,7 +2213,6 @@
       .overview-info-row { grid-template-columns: 1fr; }
       .overview-edit-grid { grid-template-columns: 1fr; }
       .settings-editor-layout { grid-template-columns: 1fr; }
-      .settings-schema-field-grid { grid-template-columns: 1fr; }
       .member-entry-grid { grid-template-columns: 1fr; }
       .member-entry-row {
         flex-direction: column;
@@ -2661,67 +2455,13 @@
       settingsCancelBtn: '取消',
       settingsReadonlyRoleOnly: '目前為唯讀角色，僅 project leader 可編輯標記設定。',
       settingsAnnotationPreviewLabel: '標記預覽',
-      settingsPreviewSample: '這是一段範例文本，請依目前設定完成標記。',
-      settingsPreviewSelectLabel: '請選擇標記',
-      settingsPreviewEmpty: '請先新增至少一個標記選項',
       settingsTemplateSectionTitle: '從範本開始或者上傳設定檔',
-      settingsApplyTemplateBtnTpl: '套用預設範本：{template}',
-      settingsTemplateBtnNer: '套用預設範本：NER 命名實體辨識',
-      settingsTemplateBtnAspectList: '套用預設範本：Aspect List 抽取／校正',
       settingsUploadConfigBtn: '上傳設定檔（YAML / JSON）',
-      settingsLabelsLabel: '標籤清單',
-      settingsLabelsHint: '輸入標籤後按 Enter',
-      settingsTagPlaceholder: '輸入標籤後按 Enter',
-      settingsAllowMultipleLabel: '允許多選',
-      settingsAllowMultipleOn: '已啟用',
-      settingsAllowMultipleOff: '已停用',
       settingsCodeLabel: 'CODE',
       settingsSaveCodeBtnLabel: '儲存',
       settingsSaveSuccess: '標記設定已更新',
       settingsLeaveConfirm: '你有尚未儲存的標記設定變更，確定要離開編輯模式嗎？',
-      settingsEditLabelRequired: '請至少新增一個標籤。',
-      settingsCodeParseError: '設定檔格式錯誤，請檢查 YAML / JSON 內容。',
-      settingsConfigLoaded: '設定檔已載入',
-      settingsCodeSaved: '設定碼已套用至表單',
-      settingsCodeInvalid: '設定碼格式錯誤',
       settingsCodeUnsaved: '請先按「儲存」同步設定碼後再儲存變更。',
-      settingsSchemaRequired: '請完成必填設定欄位。',
-      settingsConfigFormatError: '僅支援 .yaml/.yml/.json',
-      settingsConfigReadError: '設定檔讀取失敗',
-      settingsEnabled: '已啟用',
-      settingsDisabled: '已停用',
-      settingsAddEntity: '新增實體類型',
-      settingsSubtypeNer: 'NER 命名實體辨識',
-      settingsSubtypeAspectList: 'Aspect List 抽取／校正',
-      settingsNerCoreSectionTitle: '核心設定',
-      settingsNerCoreSectionDesc: '優先設定實體類型、標記格式與是否允許重疊標記，覆蓋大多數 NER 任務。',
-      settingsNerAdvancedSectionTitle: '進階設定',
-      settingsNerAdvancedSectionDesc: '僅在欄位映射、自訂實體類型、巢狀實體或長度限制有特殊需求時再展開。',
-      settingsAspectFieldSectionTitle: '欄位對應',
-      settingsAspectFieldSectionDesc: '指定資料集中的原句欄位，以及標記結果輸出的 Aspect List 欄位。',
-      settingsAspectRuleSectionTitle: 'Aspect 編輯規則',
-      settingsAspectRuleSectionDesc: '控制標記員是否可修正句子、增刪 aspect，以及是否啟用比對與軟性核查。',
-      settingsAspectLimitSectionTitle: '數量限制',
-      settingsAspectLimitSectionDesc: '設定每筆資料需要提交的 Aspect List 長度範圍。',
-      settingsAspectListSentenceLabel: '句子',
-      settingsAspectListPreviewTitle: 'Aspect List',
-      settingsAspectRowPlaceholder: '輸入 aspect 文字',
-      settingsAddAspectBtnLabel: '+ 新增 Aspect',
-      settingsPreviewSampleSentenceAspectList: '這家餐廳服務態度親切，環境整潔，餐點品質也很穩定。',
-      settingsRequireSentimentContextHint: '提示：請確認每個 Aspect 在句子前後文中是否有對應的情緒描述，沒有的話請刪除。（軟性指引，不強制攔截）',
-      settingsPreviewTaskChooseLabel: '請選擇標記',
-      settingsPreviewTaskEntity: '請標記實體',
-      settingsPreviewTaskRelation: '請標記關係',
-      settingsPreviewTaskValence: 'Valence 評分',
-      settingsPreviewTaskArousal: 'Arousal 評分',
-      settingsPreviewSampleSentence: '這是一段範例文本，請依目前設定完成標記。',
-      settingsPreviewSampleSentenceVA: '這次住宿整體舒適，但隔音稍差。',
-      settingsPreviewSampleSentenceSequence: '王小明今天在台北參加 AI 研討會。',
-      settingsPreviewSampleSentenceRelation: '患者出現發燒與咳嗽，可能與流感相關。',
-      settingsPreviewSentenceALabel: '句子 A',
-      settingsPreviewSentenceBLabel: '句子 B',
-      settingsPreviewSampleSentenceA: '這家餐廳的服務速度很快。',
-      settingsPreviewSampleSentenceB: '服務效率令人滿意。',
       editTaskNameLabel: '任務名稱',
       editTaskTypeLabel: '任務類型',
       editDatasetLabel: '資料集',
@@ -3139,67 +2879,13 @@
       settingsCancelBtn: 'Cancel',
       settingsReadonlyRoleOnly: 'Read-only role. Only project leader can edit label settings.',
       settingsAnnotationPreviewLabel: 'Annotation preview',
-      settingsPreviewSample: 'This is a sample text. Please annotate using current settings.',
-      settingsPreviewSelectLabel: 'Select label',
-      settingsPreviewEmpty: 'Please add at least one label option',
       settingsTemplateSectionTitle: 'Start from template or upload config',
-      settingsApplyTemplateBtnTpl: 'Apply default template: {template}',
-      settingsTemplateBtnNer: 'Apply template: NER (Named Entity Recognition)',
-      settingsTemplateBtnAspectList: 'Apply template: Aspect List extraction / correction',
       settingsUploadConfigBtn: 'Upload config (YAML / JSON)',
-      settingsLabelsLabel: 'Labels',
-      settingsLabelsHint: 'Type label and press Enter',
-      settingsTagPlaceholder: 'Type label and press Enter',
-      settingsAllowMultipleLabel: 'Allow multiple labels',
-      settingsAllowMultipleOn: 'Enabled',
-      settingsAllowMultipleOff: 'Disabled',
       settingsCodeLabel: 'CODE',
       settingsSaveCodeBtnLabel: 'Save',
       settingsSaveSuccess: 'Label settings updated',
       settingsLeaveConfirm: 'You have unsaved label settings changes. Leave edit mode?',
-      settingsEditLabelRequired: 'Please add at least one label.',
-      settingsCodeParseError: 'Invalid config format. Check YAML / JSON content.',
-      settingsConfigLoaded: 'Config loaded',
-      settingsCodeSaved: 'Code has been applied to form fields',
-      settingsCodeInvalid: 'Invalid config code',
       settingsCodeUnsaved: 'Please click "Save" to sync code before saving changes.',
-      settingsSchemaRequired: 'Please complete required config fields.',
-      settingsConfigFormatError: 'Only .yaml/.yml/.json is supported',
-      settingsConfigReadError: 'Failed to read config file',
-      settingsEnabled: 'Enabled',
-      settingsDisabled: 'Disabled',
-      settingsAddEntity: 'Add entity type',
-      settingsSubtypeNer: 'NER (Named Entity Recognition)',
-      settingsSubtypeAspectList: 'Aspect List extraction / correction',
-      settingsNerCoreSectionTitle: 'Core settings',
-      settingsNerCoreSectionDesc: 'Configure entity types, labeling scheme, and overlapping spans first for the common NER path.',
-      settingsNerAdvancedSectionTitle: 'Advanced settings',
-      settingsNerAdvancedSectionDesc: 'Expand only when you need field mapping, custom entity types, nested entities, or length limits.',
-      settingsAspectFieldSectionTitle: 'Field mapping',
-      settingsAspectFieldSectionDesc: 'Map the dataset sentence field and the output Aspect List field.',
-      settingsAspectRuleSectionTitle: 'Aspect editing rules',
-      settingsAspectRuleSectionDesc: 'Control sentence correction, aspect add/delete behavior, exact match, and soft review guidance.',
-      settingsAspectLimitSectionTitle: 'Quantity limits',
-      settingsAspectLimitSectionDesc: 'Set the accepted Aspect List length for each dataset row.',
-      settingsAspectListSentenceLabel: 'Sentence',
-      settingsAspectListPreviewTitle: 'Aspect List',
-      settingsAspectRowPlaceholder: 'Enter aspect text',
-      settingsAddAspectBtnLabel: '+ Add aspect',
-      settingsPreviewSampleSentenceAspectList: 'The service was friendly, the space was clean, and the food quality was consistent.',
-      settingsRequireSentimentContextHint: 'Hint: check that each aspect has a matching sentiment description in context. Remove any that do not. (Soft guidance, not system-enforced)',
-      settingsPreviewTaskChooseLabel: 'Select label',
-      settingsPreviewTaskEntity: 'Mark entities',
-      settingsPreviewTaskRelation: 'Mark relations',
-      settingsPreviewTaskValence: 'Valence score',
-      settingsPreviewTaskArousal: 'Arousal score',
-      settingsPreviewSampleSentence: 'This is a sample text. Please annotate using current settings.',
-      settingsPreviewSampleSentenceVA: 'The hotel stay was comfortable overall, but the soundproofing was weak.',
-      settingsPreviewSampleSentenceSequence: 'John attended an AI workshop in Taipei today.',
-      settingsPreviewSampleSentenceRelation: 'The patient has fever and cough, possibly related to flu.',
-      settingsPreviewSentenceALabel: 'Sentence A',
-      settingsPreviewSentenceBLabel: 'Sentence B',
-      settingsPreviewSampleSentenceA: 'The restaurant service is very fast.',
-      settingsPreviewSampleSentenceB: 'The service efficiency is satisfactory.',
       editTaskNameLabel: 'Task name',
       editTaskTypeLabel: 'Task type',
       editDatasetLabel: 'Dataset',

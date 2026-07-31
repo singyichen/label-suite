@@ -1921,12 +1921,6 @@ function buildRelationStateMachine(container, relationTypes, refresh, allowEntit
   }
 }
 
-/* Strip the trailing " (start,end)" position suffix from a relation-span label,
-   leaving just the trigger word. */
-function relWordOf(relStr) {
-  return String(relStr == null ? '' : relStr).replace(/\s*\(\d+\s*,\s*\d+\)\s*$/, '').trim();
-}
-
 /* Relation-type options for the post-hoc `type` menu: only config relation_types
    (semantic labels like bodyLocation, causes, possibleTreatment).
    Trigger words come from text selection and are NOT mixed into this list. */
@@ -4366,11 +4360,6 @@ function updateAnnotationPreview() {
     options = Array.isArray(config.entities) ? config.entities.filter(function(ent) { return ent && ent.name && ent.name.trim(); }).map(function(ent) {
       return { text: ent.name.trim(), color: ent.color || null };
     }) : [];
-  } else if (taskType === 'relation_extraction') {
-    titleText = t('previewTaskRelation');
-    options = Array.isArray(config.relation_types) ? config.relation_types.filter(function(tag) { return tag && tag.trim(); }).map(function(tag) {
-      return { text: tag.trim(), color: null };
-    }) : [];
   } else if (taskType === 'single_sentence_va_scoring') {
     titleText = t('previewTaskValence');
     options = buildScoreOptionsFromDimension(config.valence);
@@ -5666,20 +5655,6 @@ function deriveTaskType() {
   state.taskType = resolved[0];
 }
 
-function switchConfigTab(newType) {
-  if (newType === state.taskType) return;
-  state.configDataMap[state.taskType] = state.configData;
-  state.taskType = newType;
-  state.configData = state.configDataMap[newType] || {};
-  state.configDataMap[newType] = state.configData;
-  state.codeDraftDirty = false;
-  renderTemplateBtns();
-  renderSchemaFields();
-  el('codeEditor').value = configToCode();
-  el('saveCodeBtn').disabled = true;
-  el('codeErrorBar').classList.add('hidden');
-  revalidateCurrentStep();
-}
 /* ── Cascade: detect granularity from uploaded file ─────────── */
 function runGranularityDetection(file) {
   // Granularity auto-detection removed — chip selection is now manual.

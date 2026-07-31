@@ -136,14 +136,6 @@ var REGISTRY = {
     },
   },
 };
-var TASK_TYPE_ORDER = [
-  'single_sentence_classification',
-  'single_sentence_va_scoring',
-  'sequence_labeling',
-  'relation_extraction',
-  'sentence_pairs',
-];
-
 /* ── Output-type registry (ADR-029 composition model) ─────────── */
 /* Each entry maps an output_type key to its config schema fields  */
 var OUTPUT_TYPE_REGISTRY = {
@@ -536,7 +528,6 @@ var TASK_TAXONOMY = {
     },
   },
 };
-var FIELD_ROLES = ['evidence', 'input', 'output'];
 var FIELD_ROLE_LABELS = {
   zh: { '': '— 不使用 —', evidence: 'Evidence（背景）', input: 'Input（輸入）', output: 'Output（輸出）' },
   en: { '': '— not used —', evidence: 'Evidence', input: 'Input', output: 'Output' },
