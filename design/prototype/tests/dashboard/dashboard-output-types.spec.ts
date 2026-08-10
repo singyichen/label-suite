@@ -60,14 +60,6 @@ const ROLE_EXPECTATIONS = {
   },
 } as const;
 
-const ANNOTATION_ROUTE_TYPES = [
-  'single_sentence_classification',
-  'single_sentence_va_scoring',
-  'sequence_labeling',
-  'relation_extraction',
-  'sentence_pairs',
-] as const;
-
 type LocalizedText = {
   zh: string;
   en: string;
@@ -83,9 +75,7 @@ type DashboardTask = {
 
 type DashboardRoleTask = {
   exampleTaskId: string;
-  navigationTaskId: string;
   latestUnfinishedSampleId: string;
-  annotationTaskType: string;
   runType: string;
   progress: number;
   detail: LocalizedText;
@@ -94,7 +84,6 @@ type DashboardRoleTask = {
   statusText: LocalizedText;
   statusClass: string;
   actionText: LocalizedText;
-  subType?: string;
 };
 
 type DashboardWindow = Window & {
@@ -105,6 +94,21 @@ type DashboardWindow = Window & {
       roleLists: Record<string, DashboardRoleTask[]>;
     };
     renderTaskLists: () => void;
+  };
+};
+
+/* Same TaskProfile shape the annotation workspace/list pages load via
+ * <script src="task-detail.data.js">; used to verify the workspace
+ * genuinely resolved task_id/sample_id from the URL without depending on
+ * any workspace-internal global (e.g. the old SAMPLES/state.currentIdx). */
+type TaskDetailProfile = {
+  fieldRoleMap: Record<string, string>;
+  datasetRecords: Array<Record<string, unknown>>;
+};
+
+type TaskDetailWindow = Window & {
+  LabelSuiteTaskDetailData?: {
+    profiles: Record<string, TaskDetailProfile>;
   };
 };
 
@@ -230,40 +234,80 @@ test.describe('Dashboard output-type task summaries', () => {
       expect(entries.map((entry) => entry.exampleTaskId)).toEqual(
         ROLE_EXPECTATIONS[role].taskIds,
       );
-      expect(new Set(entries.map((entry) => entry.navigationTaskId)).size)
-        .toBe(13);
       expect(entries.every((entry) =>
-        Boolean(entry.latestUnfinishedSampleId)
-        && ANNOTATION_ROUTE_TYPES.includes(
-          entry.annotationTaskType as (typeof ANNOTATION_ROUTE_TYPES)[number],
-        ),
+        Boolean(entry.latestUnfinishedSampleId),
       )).toBe(true);
 
       for (const entry of entries) {
         const query = new URLSearchParams({
-          task_id: entry.navigationTaskId,
+          task_id: entry.exampleTaskId,
           sample_id: entry.latestUnfinishedSampleId,
           role,
           run_type: entry.runType,
-          task_type: entry.annotationTaskType,
         });
-        if (entry.subType) query.set('sub_type', entry.subType);
 
         const response = await page.goto(
           `/pages/annotation/annotation-workspace.html?${query.toString()}`,
         );
         expect(response?.status()).toBe(200);
-        const activeSampleId = await page.evaluate(() => {
-          const runtime = window as unknown as {
-            SAMPLES: Array<{ sampleId: string }>;
-            state: { currentIdx: number };
-          };
-          return runtime.SAMPLES[runtime.state.currentIdx]?.sampleId;
-        });
-        expect(activeSampleId).toBe(entry.latestUnfinishedSampleId);
+
+        // task_id consumed correctly: the rendered sample list length must
+        // match the resolved TaskProfile's datasetRecords, sourced from the
+        // same public data global the workspace itself loads.
+        const recordCount = await page.evaluate((taskId) => {
+          const detailWindow = window as unknown as TaskDetailWindow;
+          const profile = detailWindow.LabelSuiteTaskDetailData?.profiles[taskId];
+          return profile ? profile.datasetRecords.length : null;
+        }, entry.exampleTaskId);
+        if (recordCount === null) {
+          throw new Error(`No TaskDetailData profile found for ${entry.exampleTaskId}`);
+        }
+        await expect(page.getByTestId('ws-sample-item')).toHaveCount(recordCount);
+
+        // sample_id consumed correctly: the input area must surface the
+        // 'input'-role field of the exact record matching latestUnfinishedSampleId.
+        const inputSnippet = await page.evaluate(
+          ({ taskId, sampleId }) => {
+            const detailWindow = window as unknown as TaskDetailWindow;
+            const profile = detailWindow.LabelSuiteTaskDetailData?.profiles[taskId];
+            if (!profile) return null;
+            const record = profile.datasetRecords.find((candidate) => {
+              const rawId = candidate['id'] ?? candidate['ID'] ?? candidate['article_id'];
+              return String(rawId) === sampleId;
+            });
+            if (!record) return null;
+            // A TaskProfile may declare multiple 'input'-role fields (e.g.
+            // T013's absa_va composed input carries both a structured
+            // `utterances` array and its flattened `text` string
+            // representation). Only a string-shaped field can ever appear
+            // verbatim as a substring of the rendered ws-input-content DOM
+            // text, so skip non-string input-role fields instead of only
+            // ever checking the first-declared one (mirrors
+            // annotation-list.html's getRecordSnippet(), which stringifies
+            // every input field rather than assuming the first is a scalar).
+            const inputFields = Object.keys(profile.fieldRoleMap).filter(
+              (field) => profile.fieldRoleMap[field] === 'input',
+            );
+            const stringField = inputFields.find(
+              (field) => typeof record[field] === 'string',
+            );
+            const value = stringField ? record[stringField] : undefined;
+            return typeof value === 'string' ? value.slice(0, 8) : null;
+          },
+          { taskId: entry.exampleTaskId, sampleId: entry.latestUnfinishedSampleId },
+        );
+        if (inputSnippet === null) {
+          throw new Error(
+            `No input-role snippet resolved for ${entry.exampleTaskId}/${entry.latestUnfinishedSampleId}`,
+          );
+        }
+        await expect(page.getByTestId('ws-input-content')).toContainText(inputSnippet);
+
+        // The URL's sample is a fresh, unfinished sample — the corresponding
+        // row must not already carry the submitted contract flag.
         await expect(
-          page.locator('#sampleList .sample-item.active .sample-status-label'),
-        ).not.toHaveText(/已提交|Submitted/);
+          page.getByTestId('ws-sample-item').first(),
+        ).not.toHaveAttribute('data-submitted', 'true');
       }
     });
   }
@@ -283,8 +327,8 @@ test.describe('Dashboard output-type task summaries', () => {
     ]);
 
     await firstRow.getByRole('button', { name: /Continue/ }).click();
-    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A1/);
+    await expect(page).toHaveURL(/task_id=T003/);
+    await expect(page).not.toHaveURL(/task_type=/);
   });
 
   test('renders a fourteenth legal output composition without a task-specific branch', async ({
@@ -303,9 +347,7 @@ test.describe('Dashboard output-type task summaries', () => {
       });
       dashboardWindow.LabelSuiteDashboard.data.roleLists.annotator.push({
         exampleTaskId: 'T014',
-        navigationTaskId: 'TASK-SYNTHETIC',
         latestUnfinishedSampleId: 'SYN-001',
-        annotationTaskType: 'synthetic_config',
         runType: 'official_run',
         progress: 33,
         detail: {

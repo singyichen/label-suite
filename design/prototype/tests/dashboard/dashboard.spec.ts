@@ -154,9 +154,11 @@ test.describe('Dashboard page — scenario rendering', () => {
     await firstContinueButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A7/);
-    await expect(page).toHaveURL(/sample_id=R2-003/);
+    await expect(page).toHaveURL(/task_id=T001/);
+    await expect(page).toHaveURL(/sample_id=sent-001/);
     await expect(page).toHaveURL(/run_type=official_run/);
+    await expect(page).not.toHaveURL(/task_type=/);
+    await expect(page).not.toHaveURL(/sub_type=/);
   });
 
   test('annotator task card routes to annotation list when clicking outside quick continue action', async ({ page }) => {
@@ -166,9 +168,10 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
     await expect(page).toHaveURL(/role=annotator/);
-    await expect(page).toHaveURL(/task_id=TASK-015-A7/);
-    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
+    await expect(page).toHaveURL(/task_id=T001/);
     await expect(page).toHaveURL(/run_type=official_run/);
+    await expect(page).not.toHaveURL(/task_type=/);
+    await expect(page).not.toHaveURL(/sub_type=/);
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 
@@ -178,15 +181,17 @@ test.describe('Dashboard page — scenario rendering', () => {
     await firstReviewButton.click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
-    await expect(page).toHaveURL(/task_id=TASK-015-R7/);
-    await expect(page).toHaveURL(/sample_id=R2-003/);
+    await expect(page).toHaveURL(/task_id=T001/);
+    await expect(page).toHaveURL(/sample_id=sent-001/);
     await expect(page).toHaveURL(/run_type=official_run/);
 
     const guidelineModalConfirm = page.locator('#guidelineModalConfirm');
     if (await guidelineModalConfirm.isVisible()) {
       await guidelineModalConfirm.click();
     }
-    await expect(page.locator('#sampleList .sample-item.active .sample-status-label')).toHaveText(/待審核|Pending Review|已儲存|Saved/);
+    // Reviewer-mode DOM contract (tests/annotation/annotation-workspace-reviewer.spec.ts):
+    // routing into reviewer role for a real sample must surface a review row.
+    await expect(page.getByTestId('ws-review-row').first()).toBeVisible();
   });
 
   test('annotator quick continue preserves routing for sequence and NLI examples', async ({ page }) => {
@@ -195,14 +200,14 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     const sequenceCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '新聞命名實體序列標註' });
     await sequenceCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
-    await expect(page).toHaveURL(/task_id=TASK-015-A6/);
-    await expect(page).toHaveURL(/sample_id=NER-003/);
+    await expect(page).toHaveURL(/task_id=T006/);
+    await expect(page).toHaveURL(/sample_id=sequence-tagging-001/);
 
     await openScenario(page, 'annotator');
     const nliCard = annotatorView.locator('#annotatorTaskList .list-item').filter({ hasText: '醫療自然語言推斷' });
     await nliCard.getByRole('button', { name: /快速繼續|Continue/ }).click();
-    await expect(page).toHaveURL(/task_id=TASK-015-A5/);
-    await expect(page).toHaveURL(/sample_id=A5-003/);
+    await expect(page).toHaveURL(/task_id=T011/);
+    await expect(page).toHaveURL(/sample_id=00183/);
   });
 
   test('reviewer quick review uses the first non-submitted sample for sequence tasks', async ({ page }) => {
@@ -211,8 +216,8 @@ test.describe('Dashboard page — scenario rendering', () => {
     const sequenceCard = reviewerView.locator('#reviewerTaskList .list-item').filter({ hasText: '新聞命名實體序列標註' });
 
     await sequenceCard.getByRole('button', { name: /快速審核|Quick Review/ }).click();
-    await expect(page).toHaveURL(/task_id=TASK-015-R6/);
-    await expect(page).toHaveURL(/sample_id=NER-003/);
+    await expect(page).toHaveURL(/task_id=T006/);
+    await expect(page).toHaveURL(/sample_id=sequence-tagging-001/);
   });
 
   test('reviewer task card routes to annotation list when clicking outside quick review action', async ({ page }) => {
@@ -222,9 +227,10 @@ test.describe('Dashboard page — scenario rendering', () => {
 
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-list\.html\?/);
     await expect(page).toHaveURL(/role=reviewer/);
-    await expect(page).toHaveURL(/task_id=TASK-015-R7/);
-    await expect(page).toHaveURL(/task_type=single_sentence_classification/);
+    await expect(page).toHaveURL(/task_id=T001/);
     await expect(page).toHaveURL(/run_type=official_run/);
+    await expect(page).not.toHaveURL(/task_type=/);
+    await expect(page).not.toHaveURL(/sub_type=/);
     await expect(page).not.toHaveURL(/sample_id=/);
   });
 });

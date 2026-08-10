@@ -130,17 +130,6 @@
       padding: 10px 18px;
       min-width: 138px;
     }
-    .btn-indigo {
-      color: var(--color-white);
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-    }
-    .btn-indigo:hover {
-      background: #4F46E5;
-      border-color: #4F46E5;
-      opacity: 1;
-      transform: translateY(-1px);
-    }
     .badge {
       display: inline-flex;
       align-items: center;
@@ -161,6 +150,11 @@
       color: var(--color-warning);
       background: var(--color-warning-soft-bg);
       border-color: var(--color-warning-soft-border);
+    }
+    .badge-success {
+      color: var(--color-success);
+      background: var(--color-success-soft-bg);
+      border-color: var(--color-success-soft-border);
     }
     .badge-dry-run {
       color: #6B7280;
@@ -329,7 +323,6 @@
       font-weight: 700;
     }
     .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
-    .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
     .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
     .mini-btn {
       border: 1px solid var(--color-border);
@@ -410,54 +403,6 @@
       -webkit-appearance: none;
       cursor: pointer;
     }
-    /* === Reviewer list styles === */
-    .expand-cell { width: 32px; padding: 14px 4px 14px 16px !important; }
-    .expand-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 20px; height: 20px; border: none; background: none;
-      color: var(--color-ink-muted); cursor: pointer; padding: 0;
-      border-radius: 4px; transition: color var(--dur-fast);
-    }
-    .expand-btn:hover { color: var(--color-ink); }
-    .expand-btn svg { transition: transform 0.15s ease; }
-    .expand-btn.open svg { transform: rotate(90deg); }
-    .reviewer-stats {
-      font-size: 12px; color: var(--color-text-soft); font-family: monospace;
-      display: block;
-      min-width: 240px;
-      white-space: pre-line;
-      line-height: 1.6;
-    }
-    .reviewer-stats-cell {
-      min-width: 280px;
-      width: 280px;
-    }
-    .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
-    .mini-btn-approve:hover:not(:disabled) { background: #BBF7D0; border-color: #4ADE80; color: #166534; }
-    .mini-btn-reject { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
-    .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
-    .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
-    .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
-    .annotator-detail-row { background: var(--color-slate-50); }
-    .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
-    .annotator-detail-inner { padding: 8px 20px 8px 52px; border-top: 1px solid var(--color-border); }
-    .annotator-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 7px 0; border-bottom: 1px solid var(--color-border-muted);
-    }
-    .annotator-row:last-child { border-bottom: none; }
-    .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
-    .annotator-result-tag {
-      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
-      border: 1px solid var(--color-primary-soft-bg); border-radius: var(--radius-md);
-      padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
-    }
-    .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
-    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
-    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
-    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
-
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .task-item-header {
@@ -510,28 +455,8 @@
     @media (max-width: 420px) {
       .mobile-user-name { max-width: 56px; font-size: 11px; }
     }
-    .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
-    .toast {
-      background: var(--color-ink);
-      color: white;
-      padding: 12px 18px;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 500;
-      box-shadow: var(--shadow-lg);
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity var(--dur-normal) var(--ease-standard), transform var(--dur-normal) var(--ease-standard);
-    }
-    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .toast.success { background: var(--color-success); }
-    .toast.error { background: var(--color-error); }
-
     /* ── Dark mode overrides ──────────────────────────────────── */
     html[data-theme="dark"] {
-      /* btn-indigo hover — hardcoded #4F46E5 */
-      .btn-indigo:hover { background: #6366F1; border-color: #6366F1; }
-
       /* Run-phase badges */
       .badge-dry-run  { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
       .badge-official { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
@@ -543,17 +468,6 @@
       .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
       .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
       .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
-
-      /* Reviewer action mini-buttons */
-      .mini-btn-approve { background: #0F2A18; border-color: #1F5132; color: #4ADE80; }
-      .mini-btn-approve:hover:not(:disabled) { background: #1F5132; border-color: #4ADE80; color: #86EFAC; }
-      .mini-btn-reject  { background: #2A1414; border-color: #5B2222; color: #F87171; }
-      .mini-btn-reject:hover:not(:disabled)  { background: #3D1A1A; border-color: #F87171; color: #FCA5A5; }
-
-      /* Result tags with !important — need matching specificity */
-      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
-      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
-      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
     }
   </style>
 </head>
@@ -583,7 +497,7 @@
     </div>
   </section>
 
-  <section class="list hidden" id="taskInfoCard" aria-label="任務資訊">
+  <section class="list hidden" id="taskInfoCard" aria-label="任務資訊" data-testid="list-task-info-card">
     <article class="list-item">
       <div class="task-item-header">
         <div class="task-item-summary">
@@ -591,13 +505,13 @@
           <span class="list-item-detail" id="taskInfoDetail">-</span>
         </div>
         <div class="task-item-meta">
+          <div class="task-item-badges" id="taskInfoOutputTypes"></div>
           <div class="task-item-badges">
-            <span class="badge badge-task-type-default" id="taskInfoTaskType">-</span>
             <span class="badge" id="taskInfoRunType">-</span>
             <span class="badge" id="taskInfoStatus">-</span>
           </div>
           <div class="task-item-actions">
-            <button class="btn btn-primary slim" id="taskQuickContinueBtn" type="button">快速繼續</button>
+            <button class="btn btn-primary slim" id="taskQuickContinueBtn" type="button" data-testid="list-quick-continue-btn">快速繼續</button>
           </div>
         </div>
       </div>
@@ -607,12 +521,13 @@
     </article>
   </section>
 
-  <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選">
+  <section class="empty hidden" id="taskNotFound" data-testid="list-task-not-found"></section>
+
+  <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
       <select class="filter-select" id="statusFilter" aria-label="依完成狀態篩選">
         <option value="">全部完成狀態</option>
         <option value="submitted">已提交</option>
-        <option value="saved">草稿</option>
         <option value="pending">待處理</option>
       </select>
       <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
@@ -628,22 +543,18 @@
         <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
       </div>
     </div>
-    <button class="btn btn-indigo slim hidden" id="submitReviewBtn" type="button">
-      <span>送出審核</span>
-    </button>
   </div>
 
-  <section class="table-container">
+  <section class="table-container" id="tableContainer">
     <div class="task-table-wrap">
       <table class="task-table" aria-label="標記清單" id="taskTable">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>完成狀態</th>
-            <th>完成時間</th>
-            <th>標記者</th>
-            <th>文本摘要</th>
-            <th>操作</th>
+            <th id="thId">ID</th>
+            <th id="thStatusHeader">完成狀態</th>
+            <th id="thCompletedAtHeader">完成時間</th>
+            <th id="thTextSummaryHeader">文本摘要</th>
+            <th id="thActionsHeader">操作</th>
           </tr>
         </thead>
         <tbody id="sampleRows"></tbody>
@@ -671,12 +582,10 @@
   </section>
 </main>
 
-<div class="toast-container" aria-live="polite" aria-atomic="true">
-  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
-</div>
-
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
+<script src="../task-management/task-list.data.js"></script>
+<script src="../task-management/task-detail.data.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────────── */
   var CURRENT_LANG = 'zh';
@@ -685,13 +594,6 @@
       pageTitle: '標記清單',
       pageSubtitleAnnotator: '請先選擇要處理的資料筆次，再進入標記作業頁。',
       pageSubtitleReviewer: '請先選擇要審查的資料筆次，再進入審核作業頁。',
-      submitReviewLabel: '送出審核',
-      toastReviewSubmitted: '審核結果已送出。',
-      toastSelectDecision: '請完成每位標記員的審核決策',
-      trialRoundLabelTpl: '試標回合 R{round}',
-      trialListCountTpl: '本回合清單 {total} 筆',
-      officialListLabel: '正式標記清單',
-      officialListCountTpl: '正式清單 {total} 筆',
       langToggleAria: '切換語言',
       navDashboard: '儀表板',
       navTaskManagement: '任務管理',
@@ -701,23 +603,17 @@
       navProfile: '個人設定',
       thStatus: '完成狀態',
       thCompletedAt: '完成時間',
-      thAnnotator: '標記者',
       thTextSummary: '文本摘要',
       thActions: '操作',
-      thLabelStats: '標記分布統計',
       runTypeLabelOfficial: '正式標記',
       runTypeLabelDry: '試標',
       statusSubmitted: '已提交',
-      statusSaved: '草稿',
       statusPending: '待處理',
+      taskStatusCompleted: '已完成',
+      taskStatusInProgress: '進行中',
       quickContinueBtnAnnotator: '快速繼續',
       quickContinueBtnReviewer: '快速審核',
       editBtnLabel: '編輯',
-      expandBtnLabel: '展開',
-      approveBtnLabel: '通過',
-      rejectBtnLabel: '退回',
-      approveAllBtnLabel: '全部通過',
-      rejectAllBtnLabel: '全部退回',
       searchPlaceholder: '搜尋',
       searchAriaLabel: '搜尋',
       statusFilterAll: '全部完成狀態',
@@ -727,18 +623,15 @@
       pageSizeTpl: '{size} / 頁',
       roleLabelAnnotator: '標記員',
       roleLabelReviewer: '審核員',
+      sampleCountTpl: '共 {total} 筆資料',
+      openSampleAriaTpl: '開啟樣本 {id}',
+      notFoundTitle: '找不到這個任務',
+      notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
     },
     en: {
       pageTitle: 'Annotation List',
       pageSubtitleAnnotator: 'Select a sample to annotate, then open the annotation workspace.',
       pageSubtitleReviewer: 'Select a sample to review, then open the review workspace.',
-      submitReviewLabel: 'Submit review',
-      toastReviewSubmitted: 'Review submitted.',
-      toastSelectDecision: 'Please complete a review decision for each annotator',
-      trialRoundLabelTpl: 'Trial round R{round}',
-      trialListCountTpl: 'This round: {total} items',
-      officialListLabel: 'Official annotation list',
-      officialListCountTpl: 'Official list: {total} items',
       langToggleAria: 'Switch language',
       navDashboard: 'Dashboard',
       navTaskManagement: 'Task Management',
@@ -748,23 +641,17 @@
       navProfile: 'Profile',
       thStatus: 'Status',
       thCompletedAt: 'Completed At',
-      thAnnotator: 'Annotator',
       thTextSummary: 'Text Summary',
       thActions: 'Actions',
-      thLabelStats: 'Label Stats',
       runTypeLabelOfficial: 'Official',
       runTypeLabelDry: 'Trial',
       statusSubmitted: 'Submitted',
-      statusSaved: 'Draft',
       statusPending: 'Pending',
+      taskStatusCompleted: 'Completed',
+      taskStatusInProgress: 'In Progress',
       quickContinueBtnAnnotator: 'Quick Resume',
       quickContinueBtnReviewer: 'Quick Review',
       editBtnLabel: 'Edit',
-      expandBtnLabel: 'Expand',
-      approveBtnLabel: 'Approve',
-      rejectBtnLabel: 'Reject',
-      approveAllBtnLabel: 'Approve all',
-      rejectAllBtnLabel: 'Reject all',
       searchPlaceholder: 'Search',
       searchAriaLabel: 'Search',
       statusFilterAll: 'All statuses',
@@ -774,6 +661,10 @@
       pageSizeTpl: '{size} / page',
       roleLabelAnnotator: 'Annotator',
       roleLabelReviewer: 'Reviewer',
+      sampleCountTpl: '{total} samples total',
+      openSampleAriaTpl: 'Open sample {id}',
+      notFoundTitle: 'Task not found',
+      notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
     }
   };
   function t(key, vars) {
@@ -783,854 +674,87 @@
     }
     return str;
   }
-  function getSampleText(sample) {
-    return CURRENT_LANG === 'en' && sample.textEn ? sample.textEn : sample.text;
-  }
-
-  var REVIEWER_RESULT_TRANSLATIONS = {
-    '電池續航力': 'battery life',
-    '服務員的態度': 'staff attitude',
-    '操作流程順暢': 'smooth workflow',
-    '客服回應速度': 'support response speed',
-    '半導體產業論壇': 'Semiconductor Industry Forum',
-    '創辦人張忠謀': 'founder Morris Chang',
-    '鴻海精密工業': 'Foxconn',
-    '越南胡志明市': 'Ho Chi Minh City, Vietnam',
-    '超音波檢查': 'ultrasound exam',
-    '賀爾蒙變化': 'hormonal changes',
-    '胃部不適': 'gastrointestinal discomfort',
-    '整體設計': 'overall design',
-    '菜色選擇': 'menu options',
-    '服務態度': 'service attitude',
-    '用餐體驗': 'dining experience',
-    '停車空間': 'parking space',
-    '房間隔音': 'room soundproofing',
-    '介面設計': 'interface design',
-    '操作流程': 'workflow',
-    '客戶支援': 'customer support',
-    '佩戴舒適度': 'wearing comfort',
-    '主動降噪功能': 'active noise cancellation',
-    '主動降噪': 'active noise cancellation',
-    '降噪功能': 'noise cancellation',
-    '音質表現': 'audio quality',
-    '服務員': 'staff',
-    '早餐品質': 'breakfast quality',
-    '停車場': 'parking',
-    '隔音效果': 'soundproofing',
-    '電池壽命': 'battery life',
-    '高效能': 'high performance',
-    '未完全出現在句子中': 'not an exact sentence match',
-    '已刪除': 'deleted',
-    '螢幕': 'screen',
-    '價格': 'price',
-    '環境': 'ambiance',
-    '介面': 'interface',
-    '音質': 'audio quality',
-    '舒適度': 'comfort',
-    '隔音': 'soundproofing',
-    '體育': 'Sports',
-    '娛樂': 'Entertainment',
-    '社會': 'Society',
-    '政治': 'Politics',
-    '科技': 'Technology',
-    '財經': 'Finance',
-    '等價': 'Equivalent',
-    '相關': 'Related',
-    '無關': 'Unrelated',
-    '阿司匹靈': 'Aspirin',
-    '頭痛': 'headache',
-    '乳房': 'breast',
-    '疼痛': 'pain',
-    '月經週期': 'menstrual cycle',
-    '超音波': 'ultrasound',
-    '膽囊結石': 'gallstones',
-    '腹部疼痛': 'abdominal pain',
-    '台積電': 'TSMC',
-    '張忠謀': 'Morris Chang',
-    '台北': 'Taipei',
-    '鴻海': 'Foxconn',
-    '越南': 'Vietnam',
-    '胡志明市': 'Ho Chi Minh City',
-    '衛生福利部': 'Ministry of Health and Welfare',
-    '薛瑞元': 'Hsueh Jui-yuan',
-    '2025年': '2025',
-    '草稿': 'draft'
-  };
-
-  var SORTED_REVIEWER_TRANSLATION_KEYS = Object.keys(REVIEWER_RESULT_TRANSLATIONS).sort(function (a, b) {
-    return b.length - a.length;
-  });
-
-  function localizeReviewerText(text) {
-    var output = String(text || '');
-    if (CURRENT_LANG !== 'en' || output === '-') return output;
-    SORTED_REVIEWER_TRANSLATION_KEYS.forEach(function (source) {
-      output = output.split(source).join(REVIEWER_RESULT_TRANSLATIONS[source]);
-    });
-    return output
-      .replace(/、/g, ', ')
-      .replace(/（/g, ' (')
-      .replace(/）/g, ')')
-      .replace(/原：/g, 'original: ')
-      .replace(/\s+,/g, ',')
-      .replace(/,\s*/g, ', ')
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-  }
-
-  var toastTimer = null;
-  function showToast(msg, type) {
-    var toast = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    toast.className = 'toast' + (type ? ' ' + type : '');
-    toast.classList.add('show');
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function() { toast.classList.remove('show'); }, 2800);
-  }
-
-  var ACTIVE_TASK_TYPE_STORAGE_KEY = 'labelsuite.activeTaskType';
-  var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
-
-  var TASK_TYPE_META = {
-    single_sentence_classification: { text: '單句分類（含多標籤）', textEn: 'Single Sentence Classification (Multi-label)', badgeClass: 'badge-task-type-single' },
-    single_sentence_va_scoring: { text: '單句 VA 雙維度評分（Valence / Arousal）', textEn: 'Single-sentence VA Scoring (Valence / Arousal)', badgeClass: 'badge-task-type-scoring' },
-    sequence_labeling: { text: '序列標記（含 Aspect / NER）', textEn: 'Sequence Labeling (Aspect / NER)', badgeClass: 'badge-task-type-sequence' },
-    relation_extraction: { text: '關係抽取（Entity + Relation + Triple）', textEn: 'Relation Extraction (Entity + Relation + Triple)', badgeClass: 'badge-task-type-relation' },
-    sentence_pairs: { text: '句對任務（相似度 / 蘊含）', textEn: 'Sentence Pairs (Similarity / Entailment)', badgeClass: 'badge-task-type-pairs' }
-  };
-
-  var MATERIALIZED_RUN_CONTEXT = {
-    'TASK-015-A1': { round: null, total: 3180 },
-    'TASK-015-A2': { round: 2, total: 10 },
-    'TASK-015-A3': { round: null, total: 840 },
-    'TASK-015-A4': { round: null, total: 1400 },
-    'TASK-015-A5': { round: 1, total: 10 },
-    'TASK-015-A6': { round: null, total: 930 },
-    'TASK-015-R1': { round: null, total: 3180 },
-    'TASK-015-R2': { round: 2, total: 10 },
-    'TASK-015-R3': { round: null, total: 840 },
-    'TASK-015-R4': { round: null, total: 1400 },
-    'TASK-015-R5': { round: 1, total: 10 },
-    'TASK-015-R6': { round: null, total: 930 }
-  };
-
-  var TASKS_BY_ROLE = {
-    annotator: [
-      {
-        taskId: 'TASK-015-A1',
-        title: '新聞標題多標籤分類',
-        titleEn: 'News Headline Multi-label Classification',
-        taskType: 'single_sentence_classification',
-        runType: 'official_run',
-        dashboardTaskTypeText: '單句分類（含多標籤）',
-        dashboardDetail: '已完成 89% · 今日 53 筆 · 平均速度 3.0',
-        dashboardDetailEn: 'Completed 89% · Today 53 items · Avg speed 3.0',
-        dashboardProgress: 89,
-        dashboardStatusText: '繼續中',
-        dashboardStatusTextEn: 'Ongoing',
-        dashboardStatusClass: 'badge-info',
-        samples: [
-          { sampleId: 'A1-001', status: 'submitted', completedAt: '2026-04-23 10:21', annotatedBy: 'Mandy', text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。', textEn: 'Legislature passes tech industry transformation act; government announces expanded R&D subsidies.' },
-          { sampleId: 'A1-002', status: 'saved', completedAt: '2026-04-23 10:27', annotatedBy: 'Mandy', text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。', textEn: 'Star athlete joins charity concert as sports and entertainment communities unite to fundraise for children\'s education.' },
-          { sampleId: 'A1-003', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。', textEn: 'Approaching typhoon triggers work and school shutdowns; central and local governments activate disaster response.' },
-          { sampleId: 'A1-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。', textEn: 'International film festival reveals nominees; Taiwanese director\'s new work addresses social issues.' },
-          { sampleId: 'A1-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。', textEn: 'Chipmaker announces mass production schedule for new chips, boosting Taiwan tech stocks.' }
-        ]
-      },
-      {
-        taskId: 'TASK-015-A2',
-        title: '情感 VA 雙維度評分',
-        titleEn: 'Sentiment VA Dual-axis Scoring',
-        taskType: 'single_sentence_va_scoring',
-        runType: 'dry_run',
-        dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
-        dashboardDetail: '已完成 42% · 今日 18 筆 · 平均速度 4.2',
-        dashboardDetailEn: 'Completed 42% · Today 18 items · Avg speed 4.2',
-        dashboardProgress: 42,
-        dashboardStatusText: '待繼續',
-        dashboardStatusTextEn: 'Resume',
-        dashboardStatusClass: 'badge-warning',
-        samples: [
-          { sampleId: 'A2-001', status: 'submitted', completedAt: '2026-04-23 09:11', annotatedBy: 'Mandy', text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。', textEn: 'Overall service was excellent; staff were patient and thorough, making me feel genuinely valued.' },
-          { sampleId: 'A2-002', status: 'submitted', completedAt: '2026-04-23 09:16', annotatedBy: 'Mandy', text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。', textEn: 'Waited nearly an hour for food, cold and indifferent service, lukewarm dishes — completely not worth it.' },
-          { sampleId: 'A2-003', status: 'saved', completedAt: '2026-04-23 09:22', annotatedBy: 'Mandy', text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。', textEn: 'This phone truly exceeded my expectations — the display is crystal clear and the battery lasts well.' },
-          { sampleId: 'A2-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。', textEn: 'Nice sunny day; went for a walk outside, came back and had lunch.' },
-          { sampleId: 'A2-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。', textEn: 'The product manual was extremely thorough; installation went smoothly step by step with no issues at all.' }
-        ]
-      },
-      {
-        taskId: 'TASK-015-A3',
-        title: '產品評論序列標記（NER / Aspect）',
-        titleEn: 'Product Review Sequence Labeling (NER / Aspect)',
-        taskType: 'sequence_labeling',
-        subType: 'aspect_list',
-        runType: 'official_run',
-        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
-        dashboardDetail: '已完成 64% · 今日 31 筆 · 平均速度 2.8',
-        dashboardDetailEn: 'Completed 64% · Today 31 items · Avg speed 2.8',
-        dashboardProgress: 64,
-        dashboardStatusText: '進行中',
-        dashboardStatusTextEn: 'In Progress',
-        dashboardStatusClass: 'badge-info',
-        samples: [
-          { sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 10:30', annotatedBy: 'Mandy', text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。', textEn: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.' },
-          { sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 10:45', annotatedBy: 'Mandy', text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。', textEn: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.' },
-          { sampleId: 'AL-003', status: 'saved', completedAt: '2026-04-23 11:00', annotatedBy: 'Mandy', text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。', textEn: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.' },
-          { sampleId: 'AL-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。', textEn: 'The software UI is clean and intuitive with smooth workflows, though customer support response is a bit slow.' },
-          { sampleId: 'AL-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。', textEn: 'These headphones deliver outstanding audio quality, a comfortable fit, and highly effective active noise cancellation.' }
-        ]
-      },
-      {
-        taskId: 'TASK-015-A5',
-        title: '句對相似度 / 蘊含判定',
-        titleEn: 'Sentence Pair Similarity / Entailment',
-        taskType: 'sentence_pairs',
-        runType: 'dry_run',
-        dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
-        dashboardDetail: '已完成 58% · 今日 25 筆 · 平均速度 3.4',
-        dashboardDetailEn: 'Completed 58% · Today 25 items · Avg speed 3.4',
-        dashboardProgress: 58,
-        dashboardStatusText: '進行中',
-        dashboardStatusTextEn: 'In Progress',
-        dashboardStatusClass: 'badge-info',
-        samples: [
-          { sampleId: 'A5-001', status: 'submitted', completedAt: '2026-04-28 10:00', annotatedBy: 'Mandy', text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。', textEn: 'The film\'s visual effects are breathtaking and the plot is tightly paced. | The special effects are spectacular, the story flows well — worth watching.' },
-          { sampleId: 'A5-002', status: 'submitted', completedAt: '2026-04-28 10:15', annotatedBy: 'Mandy', text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。', textEn: 'Government announces electricity rate hike of approximately 8% starting next week. | Electricity prices rise next week; official adjustment is 8%.' },
-          { sampleId: 'A5-003', status: 'saved', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。', textEn: 'TSMC releases Q1 earnings with revenue at an all-time high. | Tech stocks show notable volatility this quarter due to global developments.' },
-          { sampleId: 'A5-004', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。', textEn: 'Typhoon warning lifted; transport links resuming across counties. | Meteorological bureau issues typhoon warning, landfall expected tomorrow.' },
-          { sampleId: 'A5-005', status: 'pending', completedAt: '-', annotatedBy: 'Mandy', text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。', textEn: 'Research shows prolonged sitting negatively impacts cardiovascular health. | Regular exercise effectively reduces the risk of heart disease.' }
-        ]
-      },
-      {
-        taskId: 'TASK-015-A6',
-        title: 'NER 命名實體辨識',
-        titleEn: 'NER Named Entity Recognition',
-        taskType: 'sequence_labeling',
-        subType: 'ner',
-        runType: 'official_run',
-        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
-        dashboardDetail: '已完成 28% · 今日 12 筆 · 平均速度 2.5',
-        dashboardDetailEn: 'Completed 28% · Today 12 items · Avg speed 2.5',
-        dashboardProgress: 28,
-        dashboardStatusText: '進行中',
-        dashboardStatusTextEn: 'In Progress',
-        dashboardStatusClass: 'badge-info',
-        samples: [
-          { sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。', textEn: 'TSMC founder Morris Chang attended the 2024 Semiconductor Industry Forum in Taipei.' },
-          { sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。', textEn: 'Foxconn announced a new factory in Ho Chi Minh City, Vietnam, expected to complete in 2025.' },
-          { sampleId: 'NER-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。', textEn: 'Minister of Health Hsueh Jui-yuan attended the World Health Assembly to promote Taiwan\'s health policies.' },
-          { sampleId: 'NER-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。', textEn: 'The US Federal Reserve announced it will hold rates steady; Chair Powell said it will continue monitoring inflation.' },
-          { sampleId: 'NER-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。', textEn: 'The EU Parliament passed the updated AI Act, expected to take effect across Europe next year.' }
-        ]
-      },
-      {
-        taskId: 'TASK-015-A4',
-        title: '醫療關係抽取（Entity / Triple）',
-        titleEn: 'Medical Relation Extraction (Entity / Triple)',
-        taskType: 'relation_extraction',
-        runType: 'official_run',
-        dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
-        dashboardDetail: '已完成 37% · 今日 14 筆 · 平均速度 5.1',
-        dashboardDetailEn: 'Completed 37% · Today 14 items · Avg speed 5.1',
-        dashboardProgress: 37,
-        dashboardStatusText: '待繼續',
-        dashboardStatusTextEn: 'Resume',
-        dashboardStatusClass: 'badge-warning',
-        samples: [
-          { sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30', annotatedBy: 'Mandy', text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。', textEn: 'Aspirin can relieve headaches, but long-term use may cause gastrointestinal discomfort.' },
-          { sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45', annotatedBy: 'Mandy', text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。', textEn: 'Breast pain is largely associated with hormonal changes during the menstrual cycle.' },
-          { sampleId: 'RE-003', status: 'saved',     completedAt: '2026-04-28 11:00', annotatedBy: 'Mandy', text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。', textEn: 'Ultrasound can diagnose gallstones and is typically performed in cases of abdominal pain.' },
-          { sampleId: 'RE-004', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。', textEn: 'Chemotherapy drugs inhibit tumor cell growth but may cause side effects including nausea and hair loss.' },
-          { sampleId: 'RE-005', status: 'pending',   completedAt: '-',                annotatedBy: 'Mandy', text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。', textEn: 'Patients with hypertension should monitor blood pressure regularly and take prescribed antihypertensives.' }
-        ]
-      }
-    ],
-    reviewer: [
-      {
-        taskId: 'TASK-015-R1',
-        title: '新聞標題多標籤分類',
-        titleEn: 'News Headline Multi-label Classification',
-        taskType: 'single_sentence_classification',
-        runType: 'official_run',
-        dashboardTaskTypeText: '單句分類（含多標籤）',
-        dashboardDetail: '待審 12 筆 · 進度 67% · IAA 0.81',
-        dashboardDetailEn: 'Pending review 12 · Progress 67% · IAA 0.81',
-        dashboardProgress: 67,
-        dashboardStatusText: '待審查',
-        dashboardStatusTextEn: 'Pending Review',
-        dashboardStatusClass: 'badge-warning',
-        samples: [
-          {
-            sampleId: 'R1-001', status: 'pending', completedAt: '-',
-            text: '立法院三讀通過科技產業轉型條例，政府宣布擴大研發補助方案。', textEn: 'Legislature passes tech industry transformation act; government announces expanded R&D subsidies.',
-            labelStats: '政治×4 · 科技×5',
-            annotators: [
-              { username: 'kioleemg12', result: '政治, 科技', reviewStatus: null },
-              { username: '113450022', result: '政治, 科技', reviewStatus: null },
-              { username: 'tony0950127', result: '科技', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R1-002', status: 'saved', completedAt: '2026-04-23 08:58',
-            text: '知名球星參與公益演唱會，體育與娛樂圈聯手募款關注兒童教育。', textEn: 'Star athlete joins charity concert as sports and entertainment communities unite to fundraise for children\'s education.',
-            labelStats: '體育×4 · 娛樂×4 · 社會×3',
-            annotators: [
-              { username: 'kioleemg12', result: '體育, 娛樂', reviewStatus: 'approved' },
-              { username: '113450022', result: '體育, 娛樂, 社會', reviewStatus: null },
-              { username: 'hui', result: '娛樂, 社會', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R1-003', status: 'pending', completedAt: '-',
-            text: '颱風逼近造成多地停班停課，中央與地方啟動防災應變機制。', textEn: 'Approaching typhoon triggers work and school shutdowns; central and local governments activate disaster response.',
-            labelStats: '社會×5 · 政治×3',
-            annotators: [
-              { username: 'kioleemg12', result: '社會, 政治', reviewStatus: null },
-              { username: '113450022', result: '社會', reviewStatus: null },
-              { username: 'tony0950127', result: '社會, 政治', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R1-004', status: 'pending', completedAt: '-',
-            text: '國際影展公布入圍名單，台灣導演新作同時關注社會議題。', textEn: 'International film festival reveals nominees; Taiwanese director\'s new work addresses social issues.',
-            labelStats: '娛樂×5 · 社會×4',
-            annotators: [
-              { username: 'kioleemg12', result: '娛樂, 社會', reviewStatus: null },
-              { username: '113450022', result: '娛樂', reviewStatus: null },
-              { username: 'hui', result: '娛樂, 社會', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R1-005', status: 'pending', completedAt: '-',
-            text: '半導體大廠宣布新晶片量產時程，帶動台股科技類股上揚。', textEn: 'Chipmaker announces mass production schedule for new chips, boosting Taiwan tech stocks.',
-            labelStats: '科技×5 · 財經×3',
-            annotators: [
-              { username: 'kioleemg12', result: '科技', reviewStatus: null },
-              { username: '113450022', result: '科技, 財經', reviewStatus: null },
-              { username: 'tony0950127', result: '科技', reviewStatus: null }
-            ]
-          }
-        ]
-      },
-      {
-        taskId: 'TASK-015-R2',
-        taskAliases: ['TASK-015-A2'],
-        title: '情感 VA 雙維度評分',
-        titleEn: 'Sentiment VA Dual-axis Scoring',
-        taskType: 'single_sentence_va_scoring',
-        runType: 'dry_run',
-        dashboardTaskTypeText: '單句 VA 雙維度評分（Valence / Arousal）',
-        dashboardDetail: '待審 8 筆 · 進度 52% · IAA 0.78',
-        dashboardDetailEn: 'Pending review 8 · Progress 52% · IAA 0.78',
-        dashboardProgress: 52,
-        dashboardStatusText: '進行中',
-        dashboardStatusTextEn: 'In Progress',
-        dashboardStatusClass: 'badge-info',
-        samples: [
-          {
-            sampleId: 'R2-001', status: 'submitted', completedAt: '2026-04-23 11:02',
-            text: '整體服務態度很好，店員非常有耐心地解釋，讓我感受到被重視。', textEn: 'Overall service was excellent; staff were patient and thorough, making me feel genuinely valued.',
-            labelStats: 'mean [4.33, 5.25]\nstd [0.99, 1.55]\n±1.5std V : 2.845~5.815\n ±1.5std A : 2.925~7.575',
-            vaRange: { loV: 2.845, hiV: 5.815, loA: 2.925, hiA: 7.575 },
-            annotators: [
-              { username: 'kioleemg12', result: '[3.5, 5.5]', reviewStatus: 'approved' },
-              { username: '113450022', result: '[6, 4]', reviewStatus: 'approved' },
-              { username: 'tony0950127', result: '[5, 7]', reviewStatus: 'approved' },
-              { username: 'hui', result: '[5, 6]', reviewStatus: 'approved' },
-              { username: 'chiao11', result: '[2, 6.5]', reviewStatus: 'approved' }
-            ]
-          },
-          {
-            sampleId: 'R2-002', status: 'submitted', completedAt: '2026-04-23 11:08',
-            text: '等了快一個小時才上菜，服務生態度冷淡，食物還是涼的，完全不值得。', textEn: 'Waited nearly an hour for food, cold and indifferent service, lukewarm dishes — completely not worth it.',
-            labelStats: 'mean [1.83, 1.5]\nstd [0.24, 0.44]\n±1.5std V : 1.470~2.190\n ±1.5std A : 0.840~2.160',
-            vaRange: { loV: 1.470, hiV: 2.190, loA: 0.840, hiA: 2.160 },
-            annotators: [
-              { username: 'kioleemg12', result: '[2, 1]', reviewStatus: 'approved' },
-              { username: '113450022', result: '[1.5, 2]', reviewStatus: 'approved' },
-              { username: 'tony0950127', result: '[2, 1.5]', reviewStatus: 'approved' }
-            ]
-          },
-          {
-            sampleId: 'R2-003', status: 'saved', completedAt: '2026-04-23 11:15',
-            text: '這款手機真的超出我的預期，螢幕顯示效果非常清晰，電池也撐得久。', textEn: 'This phone truly exceeded my expectations — the display is crystal clear and the battery lasts well.',
-            labelStats: 'mean [6.40, 5.75]\nstd [0.43, 0.25]\n±1.5std V : 5.755~7.045\n ±1.5std A : 5.375~6.125',
-            vaRange: { loV: 5.755, hiV: 7.045, loA: 5.375, hiA: 6.125 },
-            annotators: [
-              { username: 'kioleemg12', result: '[6, 5.5]', reviewStatus: null },
-              { username: '113450022', result: '[7, 6]', reviewStatus: null },
-              { username: 'tony0950127', result: '[6.5, 5.5]', reviewStatus: null },
-              { username: 'hui', result: '[6, 6]', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R2-004', status: 'pending', completedAt: '-',
-            text: '今天天氣晴朗，出門散步了一圈，回來後吃了午飯。', textEn: 'Nice sunny day; went for a walk outside, came back and had lunch.',
-            labelStats: 'mean [4.50, 4.83]\nstd [0.50, 0.47]\n±1.5std V : 3.750~5.250\n ±1.5std A : 4.125~5.535',
-            vaRange: { loV: 3.750, hiV: 5.250, loA: 4.125, hiA: 5.535 },
-            annotators: [
-              { username: 'kioleemg12', result: '[4, 4]', reviewStatus: null },
-              { username: '113450022', result: '[5, 5.5]', reviewStatus: null },
-              { username: 'tony0950127', result: '[4.5, 5]', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R2-005', status: 'pending', completedAt: '-',
-            text: '產品說明書寫得非常詳盡，安裝過程完全按照步驟就順利完成，沒遇到任何問題。', textEn: 'The product manual was extremely thorough; installation went smoothly step by step with no issues at all.',
-            labelStats: 'mean [6.67, 5.33]\nstd [0.24, 0.24]\n±1.5std V : 6.310~7.030\n ±1.5std A : 4.970~5.690',
-            vaRange: { loV: 6.310, hiV: 7.030, loA: 4.970, hiA: 5.690 },
-            annotators: [
-              { username: 'kioleemg12', result: '[7, 5]', reviewStatus: null },
-              { username: '113450022', result: '[6.5, 5.5]', reviewStatus: null },
-              { username: 'tony0950127', result: '[6.5, 5.5]', reviewStatus: null }
-            ]
-          }
-        ]
-      },
-      {
-        taskId: 'TASK-015-R3',
-        taskAliases: ['TASK-015-A3'],
-        title: '產品評論序列標記（NER / Aspect）',
-        titleEn: 'Product Review Sequence Labeling (NER / Aspect)',
-        taskType: 'sequence_labeling',
-        subType: 'aspect_list',
-        runType: 'official_run',
-        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
-        dashboardDetail: '待審 15 筆 · 進度 61% · IAA 0.83',
-        dashboardDetailEn: 'Pending review 15 · Progress 61% · IAA 0.83',
-        dashboardProgress: 61,
-        dashboardStatusText: '待審查',
-        dashboardStatusTextEn: 'Pending Review',
-        dashboardStatusClass: 'badge-warning',
-        samples: [
-          {
-            sampleId: 'AL-001', status: 'submitted', completedAt: '2026-04-23 11:30',
-            text: '這款手機的螢幕非常清晰，但電池續航力讓人失望，整體設計還算簡潔。', textEn: 'The phone\'s display is very sharp, but battery life is disappointing; overall the design is fairly clean.',
-            labelStats: '螢幕×3 · 電池續航力×2 · 整體設計×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '螢幕、電池續航力、價格', reviewStatus: null },
-              { username: '113450022', result: '螢幕、電池壽命、整體設計', reviewStatus: null },
-              { username: 'tony0950127', result: '螢幕、電池續航力、整體設計', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'AL-002', status: 'submitted', completedAt: '2026-04-23 11:45',
-            text: '餐廳環境很舒適，菜色選擇豐富，但服務員的態度需要改善。', textEn: 'The restaurant has a comfortable ambiance and varied menu, but staff attitude needs improvement.',
-            labelStats: '環境×3 · 菜色選擇×2 · 服務員的態度×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '環境、菜色選擇、服務態度', reviewStatus: 'approved' },
-              { username: '113450022', result: '環境、服務員的態度、用餐體驗', reviewStatus: null },
-              { username: 'hui', result: '環境、菜色選擇、服務員的態度', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'AL-003', status: 'pending', completedAt: '-',
-            text: '這家飯店的早餐品質優秀，停車場空間充足，房間隔音效果也不錯。', textEn: 'The hotel\'s breakfast quality is excellent, parking is ample, and room soundproofing is solid.',
-            labelStats: '早餐品質×3 · 停車場×2 · 隔音效果×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '早餐品質、停車場、隔音效果', reviewStatus: null },
-              { username: '113450022', result: '早餐品質、停車空間、房間隔音', reviewStatus: null },
-              { username: 'tony0950127', result: '早餐品質、停車場、隔音', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'AL-004', status: 'pending', completedAt: '-',
-            text: '軟體介面設計簡潔直覺，操作流程順暢，不過客戶支援回應速度稍慢。', textEn: 'The software UI is clean and intuitive with smooth workflows, though customer support response is a bit slow.',
-            labelStats: '介面設計×3 · 操作流程×3 · 客戶支援×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '介面設計、操作流程、客戶支援', reviewStatus: null },
-              { username: '113450022', result: '介面設計、操作流程順暢、客服回應速度', reviewStatus: null },
-              { username: 'hui', result: '介面、操作流程、客戶支援', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'AL-005', status: 'pending', completedAt: '-',
-            text: '這款耳機的音質表現出色，佩戴舒適度很高，主動降噪功能效果顯著。', textEn: 'These headphones deliver outstanding audio quality, a comfortable fit, and highly effective active noise cancellation.',
-            labelStats: '音質×3 · 佩戴舒適度×3 · 降噪功能×3',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '音質、佩戴舒適度、主動降噪', reviewStatus: null },
-              { username: '113450022', result: '音質表現、舒適度、降噪功能', reviewStatus: null },
-              { username: 'tony0950127', result: '音質、佩戴舒適度、主動降噪功能', reviewStatus: null }
-            ]
-          }
-        ]
-      },
-      {
-        taskId: 'TASK-015-R5',
-        taskAliases: ['TASK-015-A5'],
-        title: '句對相似度 / 蘊含判定',
-        titleEn: 'Sentence Pair Similarity / Entailment',
-        taskType: 'sentence_pairs',
-        runType: 'dry_run',
-        dashboardTaskTypeText: '句對任務（相似度 / 蘊含）',
-        dashboardDetail: '待審 11 筆 · 進度 56% · IAA 0.82',
-        dashboardDetailEn: 'Pending review 11 · Progress 56% · IAA 0.82',
-        dashboardProgress: 56,
-        dashboardStatusText: '待審查',
-        dashboardStatusTextEn: 'Pending Review',
-        dashboardStatusClass: 'badge-warning',
-        samples: [
-          {
-            sampleId: 'R5-001', status: 'submitted', completedAt: '2026-04-28 10:00',
-            text: '這部電影的視覺特效令人嘆為觀止，故事情節也相當緊湊。 ｜ 這部片的特效非常精彩，劇情節奏流暢，值得一看。', textEn: 'The film\'s visual effects are breathtaking and the plot is tightly paced. | The special effects are spectacular, the story flows well — worth watching.',
-            labelStats: '等價×3 · 相關×2',
-            annotators: [
-              { username: 'kioleemg12', result: '等價', reviewStatus: null },
-              { username: '113450022', result: '相關', reviewStatus: null },
-              { username: 'tony0950127', result: '等價', reviewStatus: null },
-              { username: 'hui', result: '等價', reviewStatus: null },
-              { username: 'chiao11', result: '相關', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R5-002', status: 'submitted', completedAt: '2026-04-28 10:15',
-            text: '政府宣布下週起調漲電費，幅度約為 8%。 ｜ 下週電費將上漲，政府公告調幅 8%。', textEn: 'Government announces electricity rate hike of approximately 8% starting next week. | Electricity prices rise next week; official adjustment is 8%.',
-            labelStats: '等價×4 · 相關×1',
-            annotators: [
-              { username: 'kioleemg12', result: '等價', reviewStatus: null },
-              { username: '113450022', result: '等價', reviewStatus: null },
-              { username: 'tony0950127', result: '等價', reviewStatus: null },
-              { username: 'hui', result: '相關', reviewStatus: null },
-              { username: 'mandy610425', result: '等價', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R5-003', status: 'saved', completedAt: '2026-04-28 10:30',
-            text: '台積電公布第一季財報，營收創歷史新高。 ｜ 本季科技類股受國際情勢影響出現明顯震盪。', textEn: 'TSMC releases Q1 earnings with revenue at an all-time high. | Tech stocks show notable volatility this quarter due to global developments.',
-            labelStats: '無關×3 · 相關×1',
-            annotators: [
-              { username: 'kioleemg12', result: '無關', reviewStatus: null },
-              { username: '113450022', result: '無關', reviewStatus: null },
-              { username: 'tony0950127', result: '相關', reviewStatus: null },
-              { username: 'hui', result: '無關', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'R5-004', status: 'pending', completedAt: '-',
-            text: '颱風警報解除，各縣市陸續恢復對外交通。 ｜ 氣象局發布颱風警報，預計明天登陸。', textEn: 'Typhoon warning lifted; transport links resuming across counties. | Meteorological bureau issues typhoon warning, landfall expected tomorrow.',
-            labelStats: '-',
-            annotators: []
-          },
-          {
-            sampleId: 'R5-005', status: 'pending', completedAt: '-',
-            text: '研究指出長期久坐對心血管健康有負面影響。 ｜ 定期運動能有效降低心臟病風險。', textEn: 'Research shows prolonged sitting negatively impacts cardiovascular health. | Regular exercise effectively reduces the risk of heart disease.',
-            labelStats: '-',
-            annotators: []
-          }
-        ]
-      },
-      {
-        taskId: 'TASK-015-R6',
-        taskAliases: ['TASK-015-A6'],
-        title: 'NER 命名實體辨識',
-        titleEn: 'NER Named Entity Recognition',
-        taskType: 'sequence_labeling',
-        subType: 'ner',
-        runType: 'official_run',
-        dashboardTaskTypeText: '序列標記（含 Aspect / NER）',
-        dashboardDetail: '待審 10 筆 · 進度 28% · IAA 0.79',
-        dashboardDetailEn: 'Pending review 10 · Progress 28% · IAA 0.79',
-        dashboardProgress: 28,
-        dashboardStatusText: '待審查',
-        dashboardStatusTextEn: 'Pending Review',
-        dashboardStatusClass: 'badge-warning',
-        samples: [
-          {
-            sampleId: 'NER-001', status: 'submitted', completedAt: '2026-04-28 10:30',
-            text: '台積電創辦人張忠謀在台北出席2024年半導體產業論壇。', textEn: 'TSMC founder Morris Chang attended the 2024 Semiconductor Industry Forum in Taipei.',
-            labelStats: 'ORG×3 · PER×3 · LOC×3 · DATE×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: 'ORG:台積電, PER:張忠謀, LOC:台北', reviewStatus: null },
-              { username: '113450022',  result: 'ORG:台積電, PER:張忠謀, LOC:台北, MISC:半導體產業論壇', reviewStatus: null },
-              { username: 'tony0950127', result: 'ORG:台積電, PER:創辦人張忠謀, LOC:台北', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'NER-002', status: 'submitted', completedAt: '2026-04-28 10:45',
-            text: '鴻海精密工業宣布在越南胡志明市設立新廠，預計2025年完工。', textEn: 'Foxconn announced a new factory in Ho Chi Minh City, Vietnam, expected to complete in 2025.',
-            labelStats: 'ORG×3 · LOC×3 · DATE×3',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: 'ORG:鴻海精密工業, LOC:越南, LOC:胡志明市, DATE:2025年', reviewStatus: null },
-              { username: '113450022',  result: 'ORG:鴻海精密工業, LOC:越南胡志明市, DATE:2025年', reviewStatus: null },
-              { username: 'tony0950127', result: 'ORG:鴻海, LOC:越南, LOC:胡志明市, DATE:2025年', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'NER-003', status: 'saved', completedAt: '2026-04-28 11:00',
-            text: '衛生福利部長薛瑞元出席世界衛生大會，代表台灣宣導健康政策。', textEn: 'Minister of Health Hsueh Jui-yuan attended the World Health Assembly to promote Taiwan\'s health policies.',
-            labelStats: 'ORG×2 · PER×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: 'ORG:衛生福利部, PER:薛瑞元', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'NER-004', status: 'pending', completedAt: '-',
-            text: '美國聯準會宣布維持利率不變，聯準會主席鮑威爾表示將持續觀察通膨走勢。', textEn: 'The US Federal Reserve announced it will hold rates steady; Chair Powell said it will continue monitoring inflation.',
-            labelStats: '-', vaRange: null, annotators: []
-          },
-          {
-            sampleId: 'NER-005', status: 'pending', completedAt: '-',
-            text: '歐盟議會通過新版人工智慧法案，預計明年在歐洲全境正式生效。', textEn: 'The EU Parliament passed the updated AI Act, expected to take effect across Europe next year.',
-            labelStats: '-', vaRange: null, annotators: []
-          }
-        ]
-      },
-      {
-        taskId: 'TASK-015-R4',
-        taskAliases: ['TASK-015-A4'],
-        title: '醫療關係抽取（Entity / Triple）',
-        titleEn: 'Medical Relation Extraction (Entity / Triple)',
-        taskType: 'relation_extraction',
-        runType: 'official_run',
-        dashboardTaskTypeText: '關係抽取（Entity + Relation + Triple）',
-        dashboardDetail: '待審 9 筆 · 進度 44% · IAA 0.79',
-        dashboardDetailEn: 'Pending review 9 · Progress 44% · IAA 0.79',
-        dashboardProgress: 44,
-        dashboardStatusText: '進行中',
-        dashboardStatusTextEn: 'In Progress',
-        dashboardStatusClass: 'badge-info',
-        samples: [
-          {
-            sampleId: 'RE-001', status: 'submitted', completedAt: '2026-04-28 10:30',
-            text: '阿司匹靈可緩解頭痛症狀，但長期使用可能造成胃部不適。', textEn: 'Aspirin can relieve headaches, but long-term use may cause gastrointestinal discomfort.',
-            labelStats: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛) ×2 · (DRUG:阿司匹靈)→causes→(SYMP:胃部不適) ×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', reviewStatus: null },
-              { username: '113450022',  result: '(DRUG:阿司匹靈)→treats→(SYMP:頭痛)', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'RE-002', status: 'submitted', completedAt: '2026-04-28 10:45',
-            text: '乳房疼痛大部分與月經週期的賀爾蒙變化相關。', textEn: 'Breast pain is largely associated with hormonal changes during the menstrual cycle.',
-            labelStats: '(SYMP:疼痛)→associated_with→(TIME:月經週期) ×2 · (SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化) ×2',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '(SYMP:疼痛)→associated_with→(TIME:月經週期)', reviewStatus: null },
-              { username: '113450022',  result: '(SYMP:疼痛)→associated_with→(BODY:賀爾蒙變化)', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'RE-003', status: 'saved', completedAt: '2026-04-28 11:00',
-            text: '超音波檢查可用於診斷膽囊結石，通常在腹部疼痛時進行。', textEn: 'Ultrasound can diagnose gallstones and is typically performed in cases of abdominal pain.',
-            labelStats: '(EXAM:超音波檢查)→diagnoses→(DISE:膽囊結石) ×1（草稿）',
-            vaRange: null,
-            annotators: [
-              { username: 'kioleemg12', result: '(EXAM:超音波)→diagnoses→(DISE:膽囊結石)', reviewStatus: null }
-            ]
-          },
-          {
-            sampleId: 'RE-004', status: 'pending', completedAt: '-',
-            text: '化療藥物可抑制腫瘤細胞增殖，同時可能引起噁心和脫髮的副作用。', textEn: 'Chemotherapy drugs inhibit tumor cell growth but may cause side effects including nausea and hair loss.',
-            labelStats: '-', vaRange: null, annotators: []
-          },
-          {
-            sampleId: 'RE-005', status: 'pending', completedAt: '-',
-            text: '高血壓患者應定期監測血壓，並遵醫囑服用降壓藥物控制症狀。', textEn: 'Patients with hypertension should monitor blood pressure regularly and take prescribed antihypertensives.',
-            labelStats: '-', vaRange: null, annotators: []
-          }
-        ]
-      }
-    ]
-  };
-  var FILTER_STATE = {
-    status: '',
-    query: ''
-  };
-  var PAGINATION_STATE = {
-    page: 1,
-    pageSize: 20
-  };
-
-  var REVIEW_STATES = {};
-
-  function reviewKey(sampleId, idx) { return sampleId + '|' + idx; }
-
-  function initReviewStates(samples) {
-    samples.forEach(function (s) {
-      if (!Array.isArray(s.annotators)) return;
-      s.annotators.forEach(function (ann, idx) {
-        var key = reviewKey(s.sampleId, idx);
-        if (!(key in REVIEW_STATES)) {
-          REVIEW_STATES[key] = ann.reviewStatus || null;
-        }
-      });
-    });
-  }
-
-  function updateAnnotatorBtns(approveBtn, rejectBtn, state) {
-    if (state === 'approved') {
-      approveBtn.classList.add('mini-btn-active-approve');
-      rejectBtn.classList.remove('mini-btn-active-reject');
-    } else if (state === 'rejected') {
-      approveBtn.classList.remove('mini-btn-active-approve');
-      rejectBtn.classList.add('mini-btn-active-reject');
-    } else {
-      approveBtn.classList.remove('mini-btn-active-approve');
-      rejectBtn.classList.remove('mini-btn-active-reject');
+  function getOutputTypeMeta(key) {
+    var registry = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.outputTypes) || [];
+    for (var i = 0; i < registry.length; i += 1) {
+      if (registry[i].key === key) return registry[i];
     }
-  }
-
-  function updateBulkReviewBtns(approveBtn, rejectBtn, state) {
-    if (state === 'approved') {
-      approveBtn.classList.add('mini-btn-active-approve');
-      rejectBtn.classList.remove('mini-btn-active-reject');
-    } else if (state === 'rejected') {
-      approveBtn.classList.remove('mini-btn-active-approve');
-      rejectBtn.classList.add('mini-btn-active-reject');
-    } else {
-      approveBtn.classList.remove('mini-btn-active-approve');
-      rejectBtn.classList.remove('mini-btn-active-reject');
-    }
-  }
-
-  function getBulkReviewState(sampleId, annotators) {
-    if (!annotators || annotators.length === 0) return null;
-    var approvedCount = 0;
-    var rejectedCount = 0;
-    annotators.forEach(function (ann, idx) {
-      var state = REVIEW_STATES[reviewKey(sampleId, idx)];
-      if (state === 'approved') approvedCount += 1;
-      if (state === 'rejected') rejectedCount += 1;
-    });
-    if (approvedCount === annotators.length) return 'approved';
-    if (rejectedCount === annotators.length) return 'rejected';
     return null;
   }
 
-  function getVaColorClass(resultStr, vaRange) {
-    if (!vaRange) return '';
-    var match = resultStr.match(/\[([0-9.]+),\s*([0-9.]+)\]/);
-    if (!match) return '';
-    var v = parseFloat(match[1]);
-    var a = parseFloat(match[2]);
-    if (v > vaRange.hiV || a > vaRange.hiA) return 'result-tag-red';
-    if (v < vaRange.loV || a < vaRange.loA) return 'result-tag-blue';
-    return 'result-tag-green';
+  function getOutputTypeLabel(key) {
+    var meta = getOutputTypeMeta(key);
+    if (!meta) return key;
+    return CURRENT_LANG === 'en' ? meta.en : meta.zh;
   }
 
-  function buildAnnotatorDetailContent(sampleId, annotators, vaRange) {
-    var div = document.createElement('div');
-    div.className = 'annotator-detail-inner';
-    annotators.forEach(function (ann, idx) {
-      var key = reviewKey(sampleId, idx);
-      var row = document.createElement('div');
-      row.className = 'annotator-row';
+  var ANNOTATION_COMPLETION_KEY = 'labelsuite.prototypeAnnotationCompletion';
 
-      var usernameSpan = document.createElement('span');
-      usernameSpan.className = 'annotator-username';
-      usernameSpan.textContent = ann.username;
+  /*
+   * Resolves a TaskProfile by task_id from the shared task-list/task-detail
+   * seeds (loaded via <script src>). Returns null when either seed source
+   * is missing the task_id, driving the not-found error state instead of a
+   * hardcoded per-task_id branch.
+   */
+  function resolveTaskProfile(taskId) {
+    if (!taskId) return null;
+    var listData = window.LabelSuiteTaskListData;
+    var detailData = window.LabelSuiteTaskDetailData;
+    if (!listData || !detailData) return null;
 
-      var resultSpan = document.createElement('span');
-      var colorClass = getVaColorClass(ann.result, vaRange);
-      resultSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
-      resultSpan.textContent = localizeReviewerText(ann.result);
+    var listEntry = null;
+    for (var i = 0; i < listData.tasks.length; i += 1) {
+      if (listData.tasks[i].id === taskId) { listEntry = listData.tasks[i]; break; }
+    }
+    if (!listEntry) return null;
 
-      var approveBtn = document.createElement('button');
-      approveBtn.type = 'button';
-      approveBtn.className = 'mini-btn mini-btn-approve';
-      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
+    var detailProfile = detailData.profiles ? detailData.profiles[taskId] : null;
+    if (!detailProfile) return null;
 
-      var rejectBtn = document.createElement('button');
-      rejectBtn.type = 'button';
-      rejectBtn.className = 'mini-btn mini-btn-reject';
-      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
+    return {
+      id: taskId,
+      nameZh: listEntry.nameZh,
+      nameEn: listEntry.nameEn,
+      outputTypes: listEntry.outputTypes || [],
+      fieldRoleMap: detailProfile.fieldRoleMap || {},
+      datasetRecords: detailProfile.datasetRecords || []
+    };
+  }
 
-      updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+  /*
+   * Dataset record id-field names vary across seed profiles (id / ID /
+   * article_id / ...). Resolve generically instead of assuming `record.id`.
+   */
+  function getRecordId(record, index) {
+    if (!record) return String(index);
+    if (record.id !== undefined && record.id !== null) return String(record.id);
+    if (record.ID !== undefined && record.ID !== null) return String(record.ID);
+    var idKey = Object.keys(record).filter(function (key) { return (/_id$/i).test(key); })[0];
+    if (idKey) return String(record[idKey]);
+    return String(index);
+  }
 
-      function syncBulkButtons() {
-        var bulkApproveBtn = document.querySelector('[data-bulk-approve-for="' + sampleId + '"]');
-        var bulkRejectBtn = document.querySelector('[data-bulk-reject-for="' + sampleId + '"]');
-        if (bulkApproveBtn && bulkRejectBtn) {
-          updateBulkReviewBtns(bulkApproveBtn, bulkRejectBtn, getBulkReviewState(sampleId, annotators));
-        }
-      }
+  function stringifyFieldValue(value) {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value)) return value.map(stringifyFieldValue).join(', ');
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  }
 
-      approveBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        REVIEW_STATES[key] = REVIEW_STATES[key] === 'approved' ? null : 'approved';
-        updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
-        syncBulkButtons();
-      });
-      rejectBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        REVIEW_STATES[key] = REVIEW_STATES[key] === 'rejected' ? null : 'rejected';
-        updateAnnotatorBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
-        syncBulkButtons();
-      });
-
-      var actionsDiv = document.createElement('div');
-      actionsDiv.className = 'annotator-row-actions';
-      actionsDiv.appendChild(rejectBtn);
-      actionsDiv.appendChild(approveBtn);
-
-      row.appendChild(usernameSpan);
-      row.appendChild(resultSpan);
-      row.appendChild(actionsDiv);
-      div.appendChild(row);
+  /*
+   * Data Fairness: only fieldRoleMap 'input' fields may appear in the list
+   * preview snippet. 'evidence' and 'output' fields are never read here.
+   */
+  function getRecordSnippet(record, fieldRoleMap) {
+    if (!record) return '-';
+    var inputKeys = Object.keys(fieldRoleMap || {}).filter(function (key) {
+      return fieldRoleMap[key] === 'input';
     });
-    return div;
-  }
-
-  function makeTh(text, width) {
-    var th = document.createElement('th');
-    th.textContent = text;
-    if (width) th.style.width = width;
-    return th;
-  }
-
-  function renderTableHeader(role) {
-    var thead = document.querySelector('#taskTable thead tr');
-    if (!thead) return;
-    while (thead.firstChild) thead.removeChild(thead.firstChild);
-    if (role === 'reviewer') {
-      thead.appendChild(makeTh('', '32px'));
-      thead.appendChild(makeTh('ID'));
-      thead.appendChild(makeTh(t('thStatus')));
-      thead.appendChild(makeTh(t('thCompletedAt')));
-      thead.appendChild(makeTh(t('thTextSummary')));
-      thead.appendChild(makeTh(t('thLabelStats'), '280px'));
-      thead.appendChild(makeTh(t('thActions')));
-    } else {
-      thead.appendChild(makeTh('ID'));
-      thead.appendChild(makeTh(t('thStatus')));
-      thead.appendChild(makeTh(t('thCompletedAt')));
-      thead.appendChild(makeTh(t('thAnnotator')));
-      thead.appendChild(makeTh(t('thTextSummary')));
-      thead.appendChild(makeTh(t('thActions')));
-    }
-  }
-
-  function getStoredActiveTaskType() {
-    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.getStoredActiveTaskType === 'function') {
-      return window.LabelSuiteSharedSidebar.getStoredActiveTaskType();
-    }
-    try {
-      return window.localStorage.getItem(ACTIVE_TASK_TYPE_STORAGE_KEY) || '';
-    } catch (error) {
-      return '';
-    }
-  }
-
-  function setStoredActiveTaskType(taskType) {
-    if (!taskType) return;
-    if (window.LabelSuiteSharedSidebar && typeof window.LabelSuiteSharedSidebar.setStoredActiveTaskType === 'function') {
-      window.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
-      return;
-    }
-    try {
-      window.localStorage.setItem(ACTIVE_TASK_TYPE_STORAGE_KEY, String(taskType));
-    } catch (error) {
-      // Ignore storage errors in prototype mode.
-    }
+    var parts = inputKeys
+      .map(function (key) { return stringifyFieldValue(record[key]); })
+      .filter(Boolean);
+    return parts.length > 0 ? parts.join(' ｜ ') : '-';
   }
 
   function completionStateKey(role, taskId, runType) {
@@ -1656,23 +780,34 @@
     return [date.getFullYear(), '-', pad(date.getMonth() + 1), '-', pad(date.getDate())].join('');
   }
 
-  function displayDate(val) {
-    if (!val || val === '-') return '-';
-    return val.slice(0, 10);
+  function runTypeLabel(runType) {
+    return runType === 'official_run' ? t('runTypeLabelOfficial') : t('runTypeLabelDry');
   }
 
-  function applySampleCompletionOverride(sample, completionState) {
-    if (!completionState || !completionState.allSubmitted) return sample;
-    var completedAt = sample.completedAt && sample.completedAt !== '-'
-      ? sample.completedAt
-      : formatCompletedAt(completionState.completedAt);
-    return {
-      sampleId: sample.sampleId,
-      status: 'submitted',
-      completedAt: completedAt,
-      annotatedBy: sample.annotatedBy,
-      text: sample.text
-    };
+  function runTypeBadgeClass(runType) {
+    return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
+  }
+
+  function buildWorkspaceUrl(taskId, sampleId, role, runType) {
+    return '../annotation/annotation-workspace.html' +
+      '?task_id=' + encodeURIComponent(taskId) +
+      '&sample_id=' + encodeURIComponent(sampleId) +
+      '&role=' + encodeURIComponent(role) +
+      '&run_type=' + encodeURIComponent(runType);
+  }
+
+  function findFirstNonSubmittedSampleId(profile) {
+    var records = profile.datasetRecords || [];
+    if (records.length === 0) return '';
+    return getRecordId(records[0], 0);
+  }
+
+  function statusBadgeClass(status) {
+    return status === 'submitted' ? 'status-submitted' : 'status-pending';
+  }
+
+  function statusText(status) {
+    return status === 'submitted' ? t('statusSubmitted') : t('statusPending');
   }
 
   function parseContext() {
@@ -1680,29 +815,22 @@
     var role = params.get('role');
     var runType = params.get('run_type');
     var taskId = params.get('task_id');
-    var taskType = params.get('task_type') || getStoredActiveTaskType();
-    var subType = params.get('sub_type');
 
     return {
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
-      taskId: taskId ? taskId.trim() : '',
-      taskType: TASK_TYPE_META[taskType] ? taskType : 'single_sentence_classification',
-      subType: subType ? subType.trim() : ''
+      taskId: taskId ? taskId.trim() : ''
     };
   }
 
-  function statusBadgeClass(status) {
-    if (status === 'submitted') return 'status-submitted';
-    if (status === 'saved') return 'status-saved';
-    return 'status-pending';
-  }
-
-  function statusText(status) {
-    if (status === 'submitted') return t('statusSubmitted');
-    if (status === 'saved') return t('statusSaved');
-    return t('statusPending');
-  }
+  var FILTER_STATE = {
+    status: '',
+    query: ''
+  };
+  var PAGINATION_STATE = {
+    page: 1,
+    pageSize: 20
+  };
 
   function updateClearFilterState() {
     var clearFiltersBtn = document.getElementById('clearFiltersBtn');
@@ -1780,308 +908,79 @@
 
   function filterRows(rows) {
     return rows.filter(function (item) {
-      if (FILTER_STATE.status && item.sample.status !== FILTER_STATE.status) return false;
+      if (FILTER_STATE.status && item.status !== FILTER_STATE.status) return false;
       if (!FILTER_STATE.query) return true;
 
       var query = FILTER_STATE.query.toLowerCase();
-      var status = statusText(item.sample.status).toLowerCase();
+      var status = statusText(item.status).toLowerCase();
       return (
-        item.sample.sampleId.toLowerCase().indexOf(query) !== -1 ||
+        item.recordId.toLowerCase().indexOf(query) !== -1 ||
         status.indexOf(query) !== -1 ||
-        item.sample.completedAt.toLowerCase().indexOf(query) !== -1 ||
-        (item.sample.annotatedBy || '').toLowerCase().indexOf(query) !== -1 ||
-        getSampleText(item.sample).toLowerCase().indexOf(query) !== -1
+        item.completedAt.toLowerCase().indexOf(query) !== -1 ||
+        item.text.toLowerCase().indexOf(query) !== -1
       );
     });
-  }
-
-  function matchesTaskId(task, taskId) {
-    if (!taskId) return true;
-    if (task.taskId === taskId) return true;
-    if (Array.isArray(task.taskAliases) && task.taskAliases.indexOf(taskId) !== -1) return true;
-    return false;
-  }
-
-  function matchesTaskContext(task, context) {
-    if (!task) return false;
-    if (context.runType && task.runType !== context.runType) return false;
-    if (context.taskId && !matchesTaskId(task, context.taskId)) return false;
-    if (context.taskType && task.taskType !== context.taskType) return false;
-    if (context.subType && (task.subType || '') !== context.subType) return false;
-    return true;
-  }
-
-  function findCurrentTask(context) {
-    var roleTasks = TASKS_BY_ROLE[context.role] || [];
-    for (var i = 0; i < roleTasks.length; i += 1) {
-      var task = roleTasks[i];
-      if (!matchesTaskContext(task, context)) continue;
-      return task;
-    }
-    return null;
-  }
-
-  function runTypeLabel(runType) {
-    return runType === 'official_run' ? t('runTypeLabelOfficial') : t('runTypeLabelDry');
-  }
-
-  function runTypeBadgeClass(runType) {
-    return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
-  }
-
-  function getMaterializedRunContext(task) {
-    var meta = MATERIALIZED_RUN_CONTEXT[task.taskId] || {};
-    var total = (meta.total !== undefined && meta.total !== null) ? Number(meta.total) : (Array.isArray(task.samples) ? task.samples.length : 0);
-    if (task.runType === 'dry_run') {
-      var round = Number(meta.round) || 1;
-      return {
-        label: t('trialRoundLabelTpl', { round: round }),
-        countLabel: t('trialListCountTpl', { total: total })
-      };
-    }
-    return {
-      label: t('officialListLabel'),
-      countLabel: t('officialListCountTpl', { total: total })
-    };
-  }
-
-  function taskTypeBadgeClass(taskType) {
-    return (TASK_TYPE_META[taskType] && TASK_TYPE_META[taskType].badgeClass) || 'badge-task-type-default';
-  }
-
-  function findFirstNonSubmittedSampleId(task) {
-    if (!task || !Array.isArray(task.samples) || task.samples.length === 0) return '';
-
-    for (var i = 0; i < task.samples.length; i += 1) {
-      if (task.samples[i].status !== 'submitted') return task.samples[i].sampleId;
-    }
-    return task.samples[0].sampleId;
-  }
-
-  function buildWorkspaceUrl(taskId, sampleId, role, runType, taskType, subType) {
-    var url = '../annotation/annotation-workspace.html' +
-      '?task_id=' + encodeURIComponent(taskId) +
-      '&sample_id=' + encodeURIComponent(sampleId) +
-      '&role=' + encodeURIComponent(role) +
-      '&run_type=' + encodeURIComponent(runType) +
-      '&task_type=' + encodeURIComponent(taskType);
-    if (subType) url += '&sub_type=' + encodeURIComponent(subType);
-    return url;
-  }
-
-  function renderTaskInfo(context) {
-    var card = document.getElementById('taskInfoCard');
-    var quickBtn = document.getElementById('taskQuickContinueBtn');
-    if (!card) return;
-
-    var task = findCurrentTask(context);
-    if (!task) {
-      card.classList.add('hidden');
-      return;
-    }
-
-    var title = document.getElementById('taskInfoTitle');
-    var detail = document.getElementById('taskInfoDetail');
-    var taskType = document.getElementById('taskInfoTaskType');
-    var runType = document.getElementById('taskInfoRunType');
-    var status = document.getElementById('taskInfoStatus');
-    var progressBar = document.getElementById('taskInfoProgressBar');
-
-    var progress = typeof task.dashboardProgress === 'number' ? task.dashboardProgress : 0;
-    var statusClass = task.dashboardStatusClass || 'badge-info';
-
-    var isEn = CURRENT_LANG === 'en';
-    title.textContent = (isEn && task.titleEn) ? task.titleEn : task.title;
-    var runContext = getMaterializedRunContext(task);
-    var detailStr = isEn ? (task.dashboardDetailEn || task.dashboardDetail || '-') : (task.dashboardDetail || '-');
-    detail.textContent = [detailStr, runContext.label, runContext.countLabel].filter(Boolean).join(' · ');
-    var meta = TASK_TYPE_META[task.taskType];
-    taskType.textContent = (isEn && meta && meta.textEn) ? meta.textEn : (task.dashboardTaskTypeText || (meta && meta.text) || task.taskType);
-    taskType.className = 'badge ' + taskTypeBadgeClass(task.taskType);
-    runType.textContent = runTypeLabel(task.runType);
-    runType.className = 'badge ' + runTypeBadgeClass(task.runType);
-    status.textContent = (isEn && task.dashboardStatusTextEn) ? task.dashboardStatusTextEn : (task.dashboardStatusText || t('statusPending'));
-    status.className = 'badge ' + statusClass;
-    progressBar.style.width = String(progress) + '%';
-
-    if (quickBtn) {
-      quickBtn.textContent = context.role === 'reviewer' ? t('quickContinueBtnReviewer') : t('quickContinueBtnAnnotator');
-      quickBtn.onclick = function () {
-        var sampleId = findFirstNonSubmittedSampleId(task);
-        if (!sampleId) return;
-        setStoredActiveTaskType(task.taskType);
-        window.location.href = buildWorkspaceUrl(task.taskId, sampleId, context.role, task.runType, task.taskType, task.subType);
-      };
-    }
-
-    card.classList.remove('hidden');
   }
 
   function makeTd(content, className) {
     var td = document.createElement('td');
     if (className) td.className = className;
-    if (typeof content === 'string') td.textContent = content;
-    else if (content) td.appendChild(content);
+    if (typeof content === 'string') {
+      td.textContent = content;
+    } else {
+      td.appendChild(content);
+    }
     return td;
   }
 
-  function formatReviewerLabelStats(sample, taskType) {
-    var statsText = sample && sample.labelStats ? localizeReviewerText(sample.labelStats) : '-';
-    if (taskType !== 'relation_extraction') return statsText;
-    return statsText.replace(/\s·\s/g, '\n');
-  }
+  function renderRows(context) {
+    var tbodyEl = document.getElementById('sampleRows');
+    var emptyEl = document.getElementById('emptyState');
+    var profile = context.profile;
+    if (!tbodyEl || !emptyEl || !profile) return;
+    tbodyEl.innerHTML = '';
 
-  function renderReviewerRows(visibleRows, tbodyEl, context) {
-    visibleRows.forEach(function (item) {
-      var sample = item.sample;
-      var annotators = Array.isArray(sample.annotators) ? sample.annotators : [];
-      initReviewStates([sample]);
+    var completionMap = readCompletionStateMap();
+    var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
+    var isCompleted = Boolean(completionState && completionState.allSubmitted);
+    var completedAtLabel = isCompleted ? formatCompletedAt(completionState.completedAt) : '-';
 
-      // --- Summary row ---
-      var summaryTr = document.createElement('tr');
-      summaryTr.style.cursor = 'pointer';
-
-      // Detail row — NOT appended to DOM initially (lazy insert on first expand)
-      var detailTr = document.createElement('tr');
-      detailTr.className = 'annotator-detail-row hidden';
-      var detailTd = document.createElement('td');
-      detailTd.setAttribute('colspan', '7');
-      var detailContent = buildAnnotatorDetailContent(sample.sampleId, annotators, sample.vaRange || null);
-      detailTd.appendChild(detailContent);
-      detailTr.appendChild(detailTd);
-
-      // Expand button (chevron)
-      var expandBtn = document.createElement('button');
-      expandBtn.className = 'expand-btn';
-      expandBtn.setAttribute('aria-label', t('expandBtnLabel'));
-      var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
-      chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
-      chevronSvg.setAttribute('stroke', 'currentColor'); chevronSvg.setAttribute('stroke-width', '2.5');
-      chevronSvg.setAttribute('stroke-linecap', 'round'); chevronSvg.setAttribute('stroke-linejoin', 'round');
-      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-      polyline.setAttribute('points', '9 18 15 12 9 6');
-      chevronSvg.appendChild(polyline);
-      expandBtn.appendChild(chevronSvg);
-
-      var detailInserted = false;
-      function showDetail() {
-        if (!detailInserted) {
-          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
-          detailInserted = true;
-        }
-        detailTr.classList.remove('hidden');
-        expandBtn.classList.add('open');
-      }
-      function hideDetail() {
-        detailTr.classList.add('hidden');
-        expandBtn.classList.remove('open');
-      }
-      function toggleDetail(e) {
-        if (e) e.stopPropagation();
-        if (detailTr.classList.contains('hidden')) { showDetail(); } else { hideDetail(); }
-      }
-      expandBtn.addEventListener('click', toggleDetail);
-
-      // Status badge
-      var statusSpan = document.createElement('span');
-      statusSpan.className = 'status-badge ' + statusBadgeClass(sample.status);
-      statusSpan.textContent = statusText(sample.status);
-
-      var actionsDiv = document.createElement('div');
-      actionsDiv.className = 'reviewer-actions';
-
-      function openWorkspace() {
-        setStoredActiveTaskType(item.taskType);
-        var url = buildWorkspaceUrl(item.taskId, sample.sampleId, context.role, item.runType, item.taskType, item.subType);
-        window.location.href = url;
-      }
-
-      var editBtn = document.createElement('button');
-      editBtn.className = 'mini-btn mini-btn-primary';
-      editBtn.type = 'button';
-      editBtn.textContent = t('editBtnLabel');
-      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
-      actionsDiv.appendChild(editBtn);
-
-      summaryTr.addEventListener('click', function () { toggleDetail(null); });
-
-      var approveAllBtn = document.createElement('button');
-      approveAllBtn.type = 'button';
-      approveAllBtn.className = 'mini-btn mini-btn-approve';
-      approveAllBtn.textContent = '✓ ' + t('approveAllBtnLabel');
-      approveAllBtn.dataset.bulkApproveFor = sample.sampleId;
-      var rejectAllBtn = document.createElement('button');
-      rejectAllBtn.type = 'button';
-      rejectAllBtn.className = 'mini-btn mini-btn-reject';
-      rejectAllBtn.textContent = '✕ ' + t('rejectAllBtnLabel');
-      rejectAllBtn.dataset.bulkRejectFor = sample.sampleId;
-
-      updateBulkReviewBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(sample.sampleId, annotators));
-
-      function applyAllReview(newState) {
-        var currentBulkState = getBulkReviewState(sample.sampleId, annotators);
-        var targetState = currentBulkState === newState ? null : newState;
-        annotators.forEach(function (ann, idx) {
-          REVIEW_STATES[reviewKey(sample.sampleId, idx)] = targetState;
-        });
-        updateBulkReviewBtns(approveAllBtn, rejectAllBtn, targetState);
-        var annotatorRowEls = detailTd.querySelectorAll('.annotator-row');
-        annotatorRowEls.forEach(function (row) {
-          var approveBtn = row.querySelector('.mini-btn-approve');
-          var rejectBtn = row.querySelector('.mini-btn-reject');
-          if (approveBtn && rejectBtn) updateAnnotatorBtns(approveBtn, rejectBtn, targetState);
-        });
-        showDetail();
-      }
-      approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
-      rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
-
-      actionsDiv.appendChild(rejectAllBtn);
-      actionsDiv.appendChild(approveAllBtn);
-
-      var expandTd = document.createElement('td');
-      expandTd.className = 'expand-cell';
-      expandTd.appendChild(expandBtn);
-
-      var statsEl = document.createElement('span');
-      statsEl.className = 'reviewer-stats';
-      statsEl.textContent = formatReviewerLabelStats(sample, item.taskType);
-      var statsTd = makeTd(statsEl, 'reviewer-stats-cell');
-
-      var textTd = document.createElement('td');
-      textTd.className = 'text-snippet';
-      textTd.textContent = getSampleText(sample);
-
-      summaryTr.appendChild(expandTd);
-      summaryTr.appendChild(makeTd(sample.sampleId));
-      summaryTr.appendChild(makeTd(statusSpan));
-      summaryTr.appendChild(makeTd(displayDate(sample.completedAt)));
-      summaryTr.appendChild(textTd);
-      summaryTr.appendChild(statsTd);
-      summaryTr.appendChild(makeTd(actionsDiv));
-
-      tbodyEl.appendChild(summaryTr);
-      // detailTr is NOT appended here — lazy insert on first expand
+    var rows = profile.datasetRecords.map(function (record, index) {
+      return {
+        recordId: getRecordId(record, index),
+        status: isCompleted ? 'submitted' : 'pending',
+        completedAt: completedAtLabel,
+        text: getRecordSnippet(record, profile.fieldRoleMap)
+      };
     });
-  }
 
-  function renderAnnotatorRows(visibleRows, tbodyEl, context) {
-    visibleRows.forEach(function (item) {
+    var visibleRows = filterRows(rows);
+    var totalPages = renderPagination(visibleRows.length, context);
+    if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
+
+    if (visibleRows.length === 0) {
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+
+    var startIndex = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
+    var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
+
+    pagedRows.forEach(function (item) {
       var tr = document.createElement('tr');
       tr.setAttribute('tabindex', '0');
       tr.setAttribute('role', 'button');
-      tr.setAttribute('aria-label', '開啟樣本 ' + item.sample.sampleId);
+      tr.setAttribute('aria-label', t('openSampleAriaTpl', { id: item.recordId }));
+      tr.setAttribute('data-testid', 'ws-sample-item');
 
       function openWorkspace() {
-        setStoredActiveTaskType(item.taskType);
-        var url = buildWorkspaceUrl(item.taskId, item.sample.sampleId, context.role, item.runType, item.taskType, item.subType);
-        window.location.href = url;
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
       }
 
       var statusSpan = document.createElement('span');
-      statusSpan.className = 'status-badge ' + statusBadgeClass(item.sample.status);
-      statusSpan.textContent = statusText(item.sample.status);
+      statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
+      statusSpan.textContent = statusText(item.status);
 
       var editBtn = document.createElement('button');
       editBtn.className = 'mini-btn mini-btn-primary';
@@ -2091,12 +990,11 @@
 
       var textTd = document.createElement('td');
       textTd.className = 'text-snippet';
-      textTd.textContent = getSampleText(item.sample);
+      textTd.textContent = item.text;
 
-      tr.appendChild(makeTd(item.sample.sampleId));
+      tr.appendChild(makeTd(item.recordId));
       tr.appendChild(makeTd(statusSpan));
-      tr.appendChild(makeTd(displayDate(item.sample.completedAt)));
-      tr.appendChild(makeTd(item.sample.annotatedBy || '-'));
+      tr.appendChild(makeTd(item.completedAt));
       tr.appendChild(textTd);
       tr.appendChild(makeTd(editBtn));
 
@@ -2107,51 +1005,6 @@
 
       tbodyEl.appendChild(tr);
     });
-  }
-
-  function renderRows(context) {
-    var tbodyEl = document.getElementById('sampleRows');
-    var empty = document.getElementById('emptyState');
-    tbodyEl.innerHTML = '';
-
-    var roleTasks = TASKS_BY_ROLE[context.role] || [];
-    var completionMap = readCompletionStateMap();
-    var filteredTasks = roleTasks.filter(function (task) {
-      return matchesTaskContext(task, context);
-    });
-
-    var flatRows = [];
-    filteredTasks.forEach(function (task) {
-      var completionState = completionMap[completionStateKey(context.role, task.taskId, task.runType)];
-      task.samples.forEach(function (sample) {
-        flatRows.push({
-          taskId: task.taskId,
-          taskType: task.taskType,
-          subType: task.subType || '',
-          runType: task.runType,
-          sample: applySampleCompletionOverride(sample, completionState)
-        });
-      });
-    });
-
-    var visibleRows = filterRows(flatRows);
-    var totalPages = renderPagination(visibleRows.length, context);
-    if (PAGINATION_STATE.page > totalPages) PAGINATION_STATE.page = totalPages;
-
-    if (visibleRows.length === 0) {
-      empty.classList.remove('hidden');
-      return;
-    }
-    empty.classList.add('hidden');
-
-    var startIndex = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
-    var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
-
-    if (context.role === 'reviewer') {
-      renderReviewerRows(pagedRows, tbodyEl, context);
-    } else {
-      renderAnnotatorRows(pagedRows, tbodyEl, context);
-    }
   }
 
   function bindPagination(context) {
@@ -2214,6 +1067,70 @@
     });
   }
 
+  function renderTaskInfo(context, profile) {
+    document.getElementById('taskInfoCard').classList.remove('hidden');
+    document.getElementById('listToolbar').classList.remove('hidden');
+    document.getElementById('tableContainer').classList.remove('hidden');
+    document.getElementById('taskNotFound').classList.add('hidden');
+
+    var isEn = CURRENT_LANG === 'en';
+    document.getElementById('taskInfoTitle').textContent =
+      (isEn && profile.nameEn) ? profile.nameEn : profile.nameZh;
+
+    var completionMap = readCompletionStateMap();
+    var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
+    var isCompleted = Boolean(completionState && completionState.allSubmitted);
+
+    document.getElementById('taskInfoDetail').textContent =
+      t('sampleCountTpl', { total: profile.datasetRecords.length });
+
+    var outputTypesEl = document.getElementById('taskInfoOutputTypes');
+    outputTypesEl.innerHTML = '';
+    profile.outputTypes.forEach(function (key) {
+      var meta = getOutputTypeMeta(key);
+      var span = document.createElement('span');
+      span.className = 'badge output-type-tag ' + (meta ? meta.badgeClass : 'badge-task-type-default');
+      span.textContent = getOutputTypeLabel(key);
+      outputTypesEl.appendChild(span);
+    });
+
+    var runTypeEl = document.getElementById('taskInfoRunType');
+    runTypeEl.textContent = runTypeLabel(context.runType);
+    runTypeEl.className = 'badge ' + runTypeBadgeClass(context.runType);
+
+    var statusEl = document.getElementById('taskInfoStatus');
+    statusEl.textContent = isCompleted ? t('taskStatusCompleted') : t('taskStatusInProgress');
+    statusEl.className = 'badge ' + (isCompleted ? 'badge-success' : 'badge-info');
+
+    document.getElementById('taskInfoProgressBar').style.width = isCompleted ? '100%' : '0%';
+
+    var quickBtn = document.getElementById('taskQuickContinueBtn');
+    quickBtn.textContent = context.role === 'reviewer' ? t('quickContinueBtnReviewer') : t('quickContinueBtnAnnotator');
+    quickBtn.onclick = function () {
+      var sampleId = findFirstNonSubmittedSampleId(profile);
+      if (!sampleId) return;
+      window.location.href = buildWorkspaceUrl(profile.id, sampleId, context.role, context.runType);
+    };
+  }
+
+  function renderNotFound(taskId) {
+    document.getElementById('taskInfoCard').classList.add('hidden');
+    document.getElementById('listToolbar').classList.add('hidden');
+    document.getElementById('tableContainer').classList.add('hidden');
+
+    var el = document.getElementById('taskNotFound');
+    el.classList.remove('hidden');
+    el.innerHTML = '';
+    var title = document.createElement('strong');
+    title.style.display = 'block';
+    title.style.marginBottom = '4px';
+    title.textContent = t('notFoundTitle');
+    var message = document.createElement('span');
+    message.textContent = t('notFoundMessage', { taskId: taskId });
+    el.appendChild(title);
+    el.appendChild(message);
+  }
+
   function renderContext(context) {
     document.getElementById('pageTitle').textContent = t('pageTitle');
     document.getElementById('pageSubtitle').textContent =
@@ -2233,29 +1150,19 @@
     var emptyState = document.getElementById('emptyState');
     if (emptyState) emptyState.textContent = t('emptyNoResults');
 
-    renderTableHeader(context.role);
-    renderTaskInfo(context);
+    var thStatusHeader = document.getElementById('thStatusHeader');
+    if (thStatusHeader) thStatusHeader.textContent = t('thStatus');
+    var thCompletedAtHeader = document.getElementById('thCompletedAtHeader');
+    if (thCompletedAtHeader) thCompletedAtHeader.textContent = t('thCompletedAt');
+    var thTextSummaryHeader = document.getElementById('thTextSummaryHeader');
+    if (thTextSummaryHeader) thTextSummaryHeader.textContent = t('thTextSummary');
+    var thActionsHeader = document.getElementById('thActionsHeader');
+    if (thActionsHeader) thActionsHeader.textContent = t('thActions');
 
-    var submitReviewBtn = document.getElementById('submitReviewBtn');
-    if (!submitReviewBtn) return;
-    submitReviewBtn.querySelector('span') && (submitReviewBtn.querySelector('span').textContent = t('submitReviewLabel'));
-    if (context.role === 'reviewer') {
-      submitReviewBtn.classList.remove('hidden');
-      submitReviewBtn.onclick = function () {
-        var roleTasks = TASKS_BY_ROLE['reviewer'] || [];
-        var allDecided = true;
-        roleTasks.forEach(function(task) {
-          if (!matchesTaskContext(task, context)) return;
-          (task.samples || []).forEach(function(sample) {
-            (sample.annotators || []).forEach(function(ann, idx) {
-              var state = REVIEW_STATES[reviewKey(sample.sampleId, idx)];
-              if (state !== 'approved' && state !== 'rejected') allDecided = false;
-            });
-          });
-        });
-        if (!allDecided) { showToast(t('toastSelectDecision'), 'error'); return; }
-        showToast(t('toastReviewSubmitted'), 'success');
-      };
+    if (context.profile) {
+      renderTaskInfo(context, context.profile);
+    } else {
+      renderNotFound(context.taskId);
     }
   }
 
@@ -2268,22 +1175,25 @@
 
   function init() {
     var context = parseContext();
-    setStoredActiveTaskType(context.taskType);
     CURRENT_LANG = window.LabelSuiteSharedSidebar ? window.LabelSuiteSharedSidebar.getStoredLang() : 'zh';
+    context.profile = resolveTaskProfile(context.taskId);
+
     renderContext(context);
-    bindPagination(context);
-    bindFilters(context);
-    updateClearFilterState();
-    updatePageSizeLabels();
-    renderRows(context);
+
+    if (context.profile) {
+      bindPagination(context);
+      bindFilters(context);
+      updateClearFilterState();
+      updatePageSizeLabels();
+      renderRows(context);
+    }
 
     if (window.LabelSuiteAnalytics) {
       window.LabelSuiteAnalytics.init({ page: 'annotation-list' });
       window.LabelSuiteAnalytics.trackPageView('annotation-list', {
         role: context.role,
         run_type: context.runType,
-        task_id: context.taskId || null,
-        task_type: context.taskType
+        task_id: context.taskId || null
       });
     }
 
@@ -2308,12 +1218,13 @@
         }
         applyNavLabels();
         renderContext(context);
-        renderRows(context);
+        if (context.profile) renderRows(context);
       });
     });
   }
 
   init();
+
 </script>
 </body>
 </html>
