@@ -342,14 +342,6 @@
       Array.prototype.forEach.call(options, function (option) {
         var nodeId = option.getAttribute('data-node-id');
         if (nodeId != null) option.setAttribute('data-testid', 'ws-multi-label-node-' + nodeId);
-        /* The engine sets aria-disabled="true" once max_selections is
-           reached, which Playwright's click actionability check honors
-           (refuses to dispatch the click at all) -- but the annotator is
-           still meant to be able to click a limit-blocked option and see
-           nothing happen (the engine's own click handler already no-ops
-           via its closed-over `limitReached` check, independent of this
-           attribute). Clear it so the click reaches that handler. */
-        option.setAttribute('aria-disabled', 'false');
       });
     }
     tagOptions();
@@ -1092,13 +1084,21 @@
     if (!listEl) return;
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
     var records = currentProfile.datasetRecords;
-    if (countEl) countEl.textContent = records.length + (state.lang === 'zh' ? ' 筆' : ' items');
+    /* Spec 015 line "筆數仍需依 materialized run context 顯示": the count
+       reflects the run's materialized list size when the profile declares
+       one for the current run_type; the rendered rows stay the seed
+       records (prototype subset). Title stays a fixed 標記清單 -- run
+       labels in the column title are forbidden by the same clause. */
+    var runCtx = currentProfile.materializedRuns && currentProfile.materializedRuns[currentRunType];
+    var totalCount = runCtx && typeof runCtx.total === 'number' ? runCtx.total : records.length;
+    if (countEl) countEl.textContent = totalCount + (state.lang === 'zh' ? ' 筆' : ' items');
 
     records.forEach(function (record, idx) {
       var recordId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx);
       var submitted = window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
         currentProfile.id,
         currentRole,
+        currentRunType,
         recordId
       );
       var item = document.createElement('button');
@@ -1171,7 +1171,7 @@
       showToast(t('wsSubmitIncomplete'));
       return;
     }
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentSampleId, {
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, {
       previewState: deepClone(state.previewState),
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
@@ -1460,7 +1460,7 @@
     reviewRowOriginals = {};
 
     var submission =
-      window.LabelSuiteAnnotationWorkspaceData.getSubmission(currentProfile.id, 'annotator', currentSampleId) || {};
+      window.LabelSuiteAnnotationWorkspaceData.getSubmission(currentProfile.id, 'annotator', currentRunType, currentSampleId) || {};
     var rawRecord = findRecordById(currentSampleId) || {};
 
     /* Output types whose registry entry declares rendersInputPreview:true
@@ -1507,7 +1507,7 @@
     history.appendChild(entry);
     history.classList.remove('hidden');
 
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentSampleId, {
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, {
       previewState: deepClone(state.previewState),
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),

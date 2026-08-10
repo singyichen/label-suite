@@ -228,6 +228,11 @@
         }
       ],
       fieldRoleMap: { text: 'input', gold_score: 'output' },
+      /* Materialized run context (spec 015: annotation list counts come
+         from task-detail run publish events, not raw dataset size). Seed
+         demo: dry run round R2 materialized a 10-item list; the 5 records
+         below are the prototype's rendered subset. */
+      materializedRuns: { dry_run: { round: 2, total: 10 } },
       datasetFileName: 'single-dim.json',
       datasetRecords: [
         {

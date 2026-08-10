@@ -46,7 +46,10 @@ test.describe('multi_label output type — flat options (T002)', () => {
     await expect(page.getByTestId('ws-multi-label-chip-fear')).toBeVisible();
 
     await page.getByTestId('ws-multi-label-node-surprise').click();
-    await page.getByTestId('ws-multi-label-node-angry').click();
+    // At the limit the engine marks unselected options aria-disabled="true",
+    // which Playwright's actionability check honors -- force the click to
+    // verify the engine's own handler still no-ops.
+    await page.getByTestId('ws-multi-label-node-angry').click({ force: true });
     await expect(page.getByTestId('ws-multi-label-limit-hint')).toBeVisible();
     await expect(page.getByTestId('ws-multi-label-node-angry')).not.toBeChecked();
     await expect(page.getByTestId('ws-multi-label-chip-angry')).toHaveCount(0);

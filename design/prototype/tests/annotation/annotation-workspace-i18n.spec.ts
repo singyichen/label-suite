@@ -64,7 +64,9 @@ test.describe('Annotation workspace UI-chrome localization', () => {
     for (const label of ['sad', 'fear', 'surprise']) {
       await page.getByTestId(`ws-multi-label-node-${label}`).click();
     }
-    await page.getByTestId('ws-multi-label-node-angry').click();
+    // Limit reached -> the option is aria-disabled; force past Playwright's
+    // actionability check (the engine handler no-ops, the hint still shows).
+    await page.getByTestId('ws-multi-label-node-angry').click({ force: true });
     await expect(page.getByTestId('ws-multi-label-limit-hint')).toContainText('most 3');
   });
 });

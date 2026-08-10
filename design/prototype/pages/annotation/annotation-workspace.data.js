@@ -50,22 +50,25 @@
       taskInputTypes: detail.taskInputTypes || ['single_item'],
       itemPairLabels: detail.itemPairLabels || null,
       guidelineFiles: detail.guidelineFiles || [],
+      materializedRuns: detail.materializedRuns || null,
     };
   }
 
-  /* Data Fairness (constitution NON-NEGOTIABLE): strip every field whose
-   * role is 'output' (ground truth) from a dataset record before it is
-   * ever assigned to the engine's state.datasetRawFirstRow for
-   * annotator-facing rendering. This is the single, generalized
-   * enforcement point -- every engine reader that later inspects the row
-   * (getOutputFieldValue, initPreviewState's rawRow.entities/rawRow.triples,
-   * etc.) transparently sees no seed value, without any per-output-type
-   * special case. Reviewer mode (Phase 3) reads the raw, unsanitized
-   * record separately for diff/comparison. */
+  /* Data Fairness (constitution NON-NEGOTIABLE, FR-024M-1): before a
+   * dataset record is assigned to the engine's state.datasetRawFirstRow
+   * for annotator-facing rendering, keep ONLY fields explicitly mapped to
+   * a non-output role in field_role_map. Unmapped fields are dropped too
+   * (not just output-role ones) so engine readers that inspect literal
+   * keys (initPreviewState's rawRow.entities/rawRow.triples) can never
+   * pick up an unmapped answer column. Mapped output-role fields are
+   * re-added by buildAnnotatorRecord (config.js) as creator-designated
+   * annotator-visible preannotation per 013 FR-003g-5. Reviewer mode
+   * reads the raw record separately for diff/comparison. */
   function sanitizeRecordForAnnotator(record, fieldRoleMap) {
     var sanitized = {};
     Object.keys(record || {}).forEach(function (key) {
-      if (fieldRoleMap && fieldRoleMap[key] === OUTPUT_ROLE) return;
+      var role = fieldRoleMap ? fieldRoleMap[key] : undefined;
+      if (!role || role === OUTPUT_ROLE) return;
       sanitized[key] = record[key];
     });
     return sanitized;
@@ -113,38 +116,42 @@
     }
   }
 
-  function submissionBucketKey(taskId, role) {
-    return taskId + '::' + role;
+  /* Buckets are scoped per run_type as well: a dry_run submission must
+   * never mark the same sample as done in official_run (and vice versa) --
+   * mirrors annotation-list.html's completionStateKey(role, taskId,
+   * runType). */
+  function submissionBucketKey(taskId, role, runType) {
+    return taskId + '::' + role + '::' + runType;
   }
 
-  function isSampleSubmitted(taskId, role, sampleId) {
+  function isSampleSubmitted(taskId, role, runType, sampleId) {
     var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role)];
+    var bucket = store[submissionBucketKey(taskId, role, runType)];
     return !!(bucket && bucket[sampleId]);
   }
 
-  function markSampleSubmitted(taskId, role, sampleId, payload) {
+  function markSampleSubmitted(taskId, role, runType, sampleId, payload) {
     var store = readSubmissionStore();
-    var key = submissionBucketKey(taskId, role);
+    var key = submissionBucketKey(taskId, role, runType);
     if (!store[key]) store[key] = {};
     store[key][sampleId] = { submittedAt: new Date().toISOString(), answers: payload || {} };
     writeSubmissionStore(store);
   }
 
   /* Reviewer mode (Phase 3, FR-024L-1) reads back the annotator's own
-   * submitted OutputAnswer payload -- keyed the same task/sample/role way
-   * markSampleSubmitted wrote it -- to seed the row-level correction
+   * submitted OutputAnswer payload -- keyed the same task/sample/role/run
+   * way markSampleSubmitted wrote it -- to seed the row-level correction
    * control. Returns null when no submission exists yet for that sample. */
-  function getSubmission(taskId, role, sampleId) {
+  function getSubmission(taskId, role, runType, sampleId) {
     var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role)];
+    var bucket = store[submissionBucketKey(taskId, role, runType)];
     var entry = bucket && bucket[sampleId];
     return entry ? entry.answers : null;
   }
 
-  function getSubmittedSampleCount(taskId, role) {
+  function getSubmittedSampleCount(taskId, role, runType) {
     var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role)];
+    var bucket = store[submissionBucketKey(taskId, role, runType)];
     return bucket ? Object.keys(bucket).length : 0;
   }
 
@@ -156,7 +163,7 @@
    * official_run submissions never drive this status transition. */
   function syncDryRunProgress(taskId, role, runType, totalSamples) {
     if (runType !== 'dry_run' || role !== 'annotator') return;
-    var submitted = getSubmittedSampleCount(taskId, role);
+    var submitted = getSubmittedSampleCount(taskId, role, runType);
     try {
       global.localStorage.setItem(
         DRY_RUN_PROGRESS_KEY,

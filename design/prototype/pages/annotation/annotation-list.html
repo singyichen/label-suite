@@ -624,6 +624,7 @@
       roleLabelAnnotator: '標記員',
       roleLabelReviewer: '審核員',
       sampleCountTpl: '共 {total} 筆資料',
+      trialRoundTpl: '試標回合 R{round}',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
@@ -662,6 +663,7 @@
       roleLabelAnnotator: 'Annotator',
       roleLabelReviewer: 'Reviewer',
       sampleCountTpl: '{total} samples total',
+      trialRoundTpl: 'Trial round R{round}',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
@@ -717,7 +719,8 @@
       nameEn: listEntry.nameEn,
       outputTypes: listEntry.outputTypes || [],
       fieldRoleMap: detailProfile.fieldRoleMap || {},
-      datasetRecords: detailProfile.datasetRecords || []
+      datasetRecords: detailProfile.datasetRecords || [],
+      materializedRuns: detailProfile.materializedRuns || null
     };
   }
 
@@ -1081,8 +1084,18 @@
     var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
     var isCompleted = Boolean(completionState && completionState.allSubmitted);
 
-    document.getElementById('taskInfoDetail').textContent =
-      t('sampleCountTpl', { total: profile.datasetRecords.length });
+    /* Count follows the materialized run context when the profile declares
+       one for this run_type (spec 015: list items are materialized by
+       task-detail run publish events, not raw dataset size). */
+    var runCtx = profile.materializedRuns && profile.materializedRuns[context.runType];
+    var totalCount = runCtx && typeof runCtx.total === 'number'
+      ? runCtx.total
+      : profile.datasetRecords.length;
+    var detailText = t('sampleCountTpl', { total: totalCount });
+    if (context.runType === 'dry_run' && runCtx && runCtx.round != null) {
+      detailText = t('trialRoundTpl', { round: runCtx.round }) + ' · ' + detailText;
+    }
+    document.getElementById('taskInfoDetail').textContent = detailText;
 
     var outputTypesEl = document.getElementById('taskInfoOutputTypes');
     outputTypesEl.innerHTML = '';
