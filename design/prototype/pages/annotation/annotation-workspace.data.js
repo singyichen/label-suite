@@ -124,17 +124,58 @@
     return taskId + '::' + role + '::' + runType;
   }
 
-  function isSampleSubmitted(taskId, role, runType, sampleId) {
+  function readSampleEntry(taskId, role, runType, sampleId) {
     var store = readSubmissionStore();
     var bucket = store[submissionBucketKey(taskId, role, runType)];
-    return !!(bucket && bucket[sampleId]);
+    return (bucket && bucket[sampleId]) || null;
+  }
+
+  /* Entries written before the saved-draft feature carry no status field;
+     they were only ever written by markSampleSubmitted, so a missing
+     status means 'submitted'. */
+  function entryStatus(entry) {
+    if (!entry) return 'pending';
+    return entry.status === 'saved' ? 'saved' : 'submitted';
+  }
+
+  function isSampleSubmitted(taskId, role, runType, sampleId) {
+    return entryStatus(readSampleEntry(taskId, role, runType, sampleId)) === 'submitted';
+  }
+
+  /* Per-sample tri-state for annotation-list rows / filtering (FR-007B)
+     and the quick-continue latest-unfinished rule (FR-004B). */
+  function getSampleStatus(taskId, role, runType, sampleId) {
+    return entryStatus(readSampleEntry(taskId, role, runType, sampleId));
+  }
+
+  function getSampleSubmittedAt(taskId, role, runType, sampleId) {
+    var entry = readSampleEntry(taskId, role, runType, sampleId);
+    return entryStatus(entry) === 'submitted' ? entry.submittedAt || null : null;
   }
 
   function markSampleSubmitted(taskId, role, runType, sampleId, payload) {
     var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType);
     if (!store[key]) store[key] = {};
-    store[key][sampleId] = { submittedAt: new Date().toISOString(), answers: payload || {} };
+    store[key][sampleId] = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
+    writeSubmissionStore(store);
+  }
+
+  /* Draft save (AC-2.3 / FR-013). Saving never downgrades an
+     already-submitted sample back to 'saved' -- the submission stands and
+     only its answers are refreshed (spec 015 has no un-submit transition);
+     pending samples become 'saved'. */
+  function markSampleSaved(taskId, role, runType, sampleId, payload) {
+    var store = readSubmissionStore();
+    var key = submissionBucketKey(taskId, role, runType);
+    if (!store[key]) store[key] = {};
+    var existing = store[key][sampleId];
+    if (existing && entryStatus(existing) === 'submitted') {
+      existing.answers = payload || {};
+      existing.savedAt = new Date().toISOString();
+    } else {
+      store[key][sampleId] = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
+    }
     writeSubmissionStore(store);
   }
 
@@ -143,16 +184,25 @@
    * way markSampleSubmitted wrote it -- to seed the row-level correction
    * control. Returns null when no submission exists yet for that sample. */
   function getSubmission(taskId, role, runType, sampleId) {
-    var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role, runType)];
-    var entry = bucket && bucket[sampleId];
+    var entry = readSampleEntry(taskId, role, runType, sampleId);
+    return entry && entryStatus(entry) === 'submitted' ? entry.answers : null;
+  }
+
+  /* Annotator revisit restore (FR-026): a saved draft's answers count too,
+     unlike getSubmission which is submitted-only (reviewers must never see
+     drafts). */
+  function getSampleAnswers(taskId, role, runType, sampleId) {
+    var entry = readSampleEntry(taskId, role, runType, sampleId);
     return entry ? entry.answers : null;
   }
 
   function getSubmittedSampleCount(taskId, role, runType) {
     var store = readSubmissionStore();
     var bucket = store[submissionBucketKey(taskId, role, runType)];
-    return bucket ? Object.keys(bucket).length : 0;
+    if (!bucket) return 0;
+    return Object.keys(bucket).filter(function (sampleId) {
+      return entryStatus(bucket[sampleId]) === 'submitted';
+    }).length;
   }
 
   /* Bridges the workspace's per-sample submission tracking to
@@ -185,8 +235,12 @@
     getRecordId: getRecordId,
     getRecordPreviewText: getRecordPreviewText,
     isSampleSubmitted: isSampleSubmitted,
+    getSampleStatus: getSampleStatus,
+    getSampleSubmittedAt: getSampleSubmittedAt,
     markSampleSubmitted: markSampleSubmitted,
+    markSampleSaved: markSampleSaved,
     getSubmission: getSubmission,
+    getSampleAnswers: getSampleAnswers,
     getSubmittedSampleCount: getSubmittedSampleCount,
     syncDryRunProgress: syncDryRunProgress,
   };

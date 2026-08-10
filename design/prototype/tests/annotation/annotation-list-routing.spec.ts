@@ -36,14 +36,15 @@ test.describe('Annotation list routing', () => {
     await expect(page.getByTestId('ws-sample-item')).toHaveCount(4);
   });
 
-  test('quick continue opens the first non-submitted sample in the workspace using the 4-param contract', async ({ page }) => {
+  test('quick continue opens the latest unfinished sample in the workspace using the 4-param contract', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T001', role: 'annotator', run_type: 'official_run' }));
     await expect(page.getByTestId('annotation-list-shell')).toBeVisible();
 
     await page.getByTestId('list-quick-continue-btn').click();
     await expect(page).toHaveURL(/\/pages\/annotation\/annotation-workspace\.html\?/);
     await expect(page).toHaveURL(/task_id=T001/);
-    await expect(page).toHaveURL(/sample_id=sent-001/);
+    // FR-004B: with no progress every record is pending, so the LAST record wins.
+    await expect(page).toHaveURL(/sample_id=sent-005/);
     await expect(page).toHaveURL(/role=annotator/);
     await expect(page).toHaveURL(/run_type=official_run/);
     await expect(page).not.toHaveURL(/task_type=/);

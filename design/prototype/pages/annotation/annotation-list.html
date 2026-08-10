@@ -323,6 +323,7 @@
       font-weight: 700;
     }
     .status-submitted { color: var(--color-success); background: var(--color-success-soft-bg); }
+    .status-saved { color: var(--color-warning); background: var(--color-warning-soft-bg); }
     .status-pending { color: var(--color-ink-muted); background: var(--color-border); }
     .mini-btn {
       border: 1px solid var(--color-border);
@@ -528,6 +529,7 @@
       <select class="filter-select" id="statusFilter" aria-label="依完成狀態篩選">
         <option value="">全部完成狀態</option>
         <option value="submitted">已提交</option>
+        <option value="saved">已儲存</option>
         <option value="pending">待處理</option>
       </select>
       <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
@@ -586,6 +588,7 @@
 <script src="../../assets/analytics.js"></script>
 <script src="../task-management/task-list.data.js"></script>
 <script src="../task-management/task-detail.data.js"></script>
+<script src="annotation-workspace.data.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────────── */
   var CURRENT_LANG = 'zh';
@@ -608,6 +611,7 @@
       runTypeLabelOfficial: '正式標記',
       runTypeLabelDry: '試標',
       statusSubmitted: '已提交',
+      statusSaved: '已儲存',
       statusPending: '待處理',
       taskStatusCompleted: '已完成',
       taskStatusInProgress: '進行中',
@@ -647,6 +651,7 @@
       runTypeLabelOfficial: 'Official',
       runTypeLabelDry: 'Trial',
       statusSubmitted: 'Submitted',
+      statusSaved: 'Saved',
       statusPending: 'Pending',
       taskStatusCompleted: 'Completed',
       taskStatusInProgress: 'In Progress',
@@ -799,18 +804,37 @@
       '&run_type=' + encodeURIComponent(runType);
   }
 
-  function findFirstNonSubmittedSampleId(profile) {
+  function getSampleStatus(profile, context, record, index) {
+    return window.LabelSuiteAnnotationWorkspaceData.getSampleStatus(
+      profile.id, context.role, context.runType, getRecordId(record, index));
+  }
+
+  /* Quick-continue target (spec 015 FR-004B): prefer the LAST pending
+     record, else the last saved record, else fall back to the task's last
+     record (everything already submitted). */
+  function findLatestUnfinishedSampleId(profile, context) {
     var records = profile.datasetRecords || [];
     if (records.length === 0) return '';
-    return getRecordId(records[0], 0);
+    var lastPending = '';
+    var lastSaved = '';
+    records.forEach(function (record, index) {
+      var status = getSampleStatus(profile, context, record, index);
+      if (status === 'pending') lastPending = getRecordId(record, index);
+      else if (status === 'saved') lastSaved = getRecordId(record, index);
+    });
+    return lastPending || lastSaved || getRecordId(records[records.length - 1], records.length - 1);
   }
 
   function statusBadgeClass(status) {
-    return status === 'submitted' ? 'status-submitted' : 'status-pending';
+    if (status === 'submitted') return 'status-submitted';
+    if (status === 'saved') return 'status-saved';
+    return 'status-pending';
   }
 
   function statusText(status) {
-    return status === 'submitted' ? t('statusSubmitted') : t('statusPending');
+    if (status === 'submitted') return t('statusSubmitted');
+    if (status === 'saved') return t('statusSaved');
+    return t('statusPending');
   }
 
   function parseContext() {
@@ -943,16 +967,17 @@
     if (!tbodyEl || !emptyEl || !profile) return;
     tbodyEl.innerHTML = '';
 
-    var completionMap = readCompletionStateMap();
-    var completionState = completionMap[completionStateKey(context.role, profile.id, context.runType)];
-    var isCompleted = Boolean(completionState && completionState.allSubmitted);
-    var completedAtLabel = isCompleted ? formatCompletedAt(completionState.completedAt) : '-';
-
+    /* Per-sample tri-state (FR-007B): each row reads its own submission
+       entry from the workspace store instead of the task-level completion
+       flag, so submitted / saved / pending can coexist in one list. */
     var rows = profile.datasetRecords.map(function (record, index) {
+      var status = getSampleStatus(profile, context, record, index);
+      var submittedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSubmittedAt(
+        profile.id, context.role, context.runType, getRecordId(record, index));
       return {
         recordId: getRecordId(record, index),
-        status: isCompleted ? 'submitted' : 'pending',
-        completedAt: completedAtLabel,
+        status: status,
+        completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
         text: getRecordSnippet(record, profile.fieldRoleMap)
       };
     });
@@ -1120,7 +1145,7 @@
     var quickBtn = document.getElementById('taskQuickContinueBtn');
     quickBtn.textContent = context.role === 'reviewer' ? t('quickContinueBtnReviewer') : t('quickContinueBtnAnnotator');
     quickBtn.onclick = function () {
-      var sampleId = findFirstNonSubmittedSampleId(profile);
+      var sampleId = findLatestUnfinishedSampleId(profile, context);
       if (!sampleId) return;
       window.location.href = buildWorkspaceUrl(profile.id, sampleId, context.role, context.runType);
     };

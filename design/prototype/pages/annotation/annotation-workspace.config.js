@@ -21,6 +21,8 @@
       noteLabel: '備註（選填）',
       notePlaceholder: '若有特殊情況可在此說明…',
       submitLabel: '提交',
+      saveLabel: '儲存',
+      wsSaveSuccess: '已儲存',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
@@ -44,6 +46,8 @@
       noteLabel: 'Notes (optional)',
       notePlaceholder: 'Describe special cases here...',
       submitLabel: 'Submit',
+      saveLabel: 'Save',
+      wsSaveSuccess: 'Saved',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
@@ -51,7 +55,7 @@
       guidelineImageModalCloseAria: 'Close image preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
       wsSubmitSuccess: 'Submitted',
-      reviewSubmitLabel: 'Submit Review',
+      reviewSubmitLabel: 'Submit review',
       reviewApproveLabel: 'Approve',
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
@@ -479,7 +483,7 @@
       btn.setAttribute('data-testid', 'ws-seq-tag-btn-' + label.name);
       var isActive = ps.activeEntityType === label.name;
       btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      var color = label.color || '#6366F1';
+      var color = label.color || 'var(--color-primary)';
       btn.style.cssText = 'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid ' + color + ';color:' + (isActive ? '#fff' : color) + ';background:' + (isActive ? color : 'transparent') + ';';
       btn.textContent = label.name;
       btn.addEventListener('click', function () {
@@ -593,9 +597,9 @@
   renderAbsaUnifiedPreview = patchedRenderAbsaUnifiedPreview;
 
   function fmtEntityForTriple(ent) {
-    var s = ent.text || '?';
-    if (ent.start != null && ent.end != null) s += ' (' + ent.start + ',' + ent.end + ')';
-    return s;
+    var entityLabel = ent.text || '?';
+    if (ent.start != null && ent.end != null) entityLabel += ' (' + ent.start + ',' + ent.end + ')';
+    return entityLabel;
   }
   function tripleReferencesEntity(triple, ent) {
     var label = fmtEntityForTriple(ent);
@@ -668,9 +672,11 @@
     }
     var e1Select = document.createElement('select');
     e1Select.setAttribute('data-testid', 'ws-ri-e1-select');
+    e1Select.setAttribute('aria-label', state.lang === 'zh' ? '主體實體' : 'Subject entity');
     fillEntityOptions(e1Select);
     var relSelect = document.createElement('select');
     relSelect.setAttribute('data-testid', 'ws-ri-relation-select');
+    relSelect.setAttribute('aria-label', state.lang === 'zh' ? '關係類型' : 'Relation type');
     var relBlank = document.createElement('option');
     relBlank.value = '';
     relBlank.textContent = '';
@@ -684,6 +690,7 @@
     relSelect.disabled = disabled;
     var e2Select = document.createElement('select');
     e2Select.setAttribute('data-testid', 'ws-ri-e2-select');
+    e2Select.setAttribute('aria-label', state.lang === 'zh' ? '客體實體' : 'Object entity');
     fillEntityOptions(e2Select);
 
     var addBtn = document.createElement('button');
@@ -958,7 +965,7 @@
   /* ── TaskProfile / sample state ──────────────────────────────────── */
   var currentProfile = null;
   var currentRole = 'annotator';
-  var currentRunType = 'official_run';
+  var currentRunType = 'dry_run';
   var currentSampleId = null;
   var sampleAnswers = {};
 
@@ -981,6 +988,32 @@
 
   function restoreSample(sampleId) {
     var snap = sampleAnswers[sampleId];
+    /* FR-026 cross-visit restore: with no in-memory snapshot (fresh page
+       load), an annotator's persisted answers -- saved draft or earlier
+       submission -- seed the controls instead of a blank state.
+       Annotator-only: reviewer mode seeds from the annotator's submission
+       via seedReviewState(), never from the reviewer's own bucket. */
+    if (!snap && currentRole === 'annotator') {
+      var stored = window.LabelSuiteAnnotationWorkspaceData.getSampleAnswers(
+        currentProfile.id,
+        currentRole,
+        currentRunType,
+        sampleId
+      );
+      if (stored && stored.previewState) {
+        snap = {
+          previewState: stored.previewState,
+          previewEntities: stored.previewEntities || [],
+          previewTriples: stored.previewTriples || [],
+          previewBypass: stored.previewBypass || {},
+          relDraft: { e1: null, rel: null, e2: null },
+          activeEntityType: null,
+          /* Restored answers must not be overwritten by the engine's
+             prefill re-seed on first render. */
+          previewInited: true,
+        };
+      }
+    }
     if (snap) {
       state.previewState = deepClone(snap.previewState);
       state.previewEntities = deepClone(snap.previewEntities);
@@ -1074,6 +1107,12 @@
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
+    /* The engine only rebuilds columnOutputTypeMap inside its own
+       renderSchemaFields() (a task-new Step 2 path this host never runs);
+       without it getOutputFieldValue(outKey) falls back to the first
+       output column whenever a task maps several, mis-seeding prefill on
+       multi-output tasks. */
+    rebuildColumnOutputTypeMap();
     restoreSample(currentSampleId);
     renderWorkspace();
   }
@@ -1132,20 +1171,50 @@
   }
 
   /* ── submit ───────────────────────────────────────────────────────── */
+  /* Spec 015 AC-2A.10: every outputs[] entry must be answered or bypassed
+     before submit. FR-024M output-role prefill counts as answered for
+     every type -- most types carry the prefill in previewState/
+     previewEntities/previewTriples already, but multi_dim's engine-seeded
+     sliders are DOM-only (ps.dims never sees the prefill), so it checks
+     the raw output column instead. */
   function isOutputAnswered(outKey) {
     if (state.previewBypass[outKey]) return true;
     var ps = state.previewState[outKey];
     switch (outKey) {
       case 'single_label':
         return !!(ps && ps.selected);
+      case 'multi_label':
+        return !!(ps && Array.isArray(ps.selected) && ps.selected.length > 0);
       case 'single_dim':
         return !!(ps && (ps._touched || ps._seeded));
+      case 'multi_dim': {
+        var cfg = state.outputConfigs.multi_dim || {};
+        var dims = Array.isArray(cfg.dimensions)
+          ? cfg.dimensions
+          : Array.isArray(cfg.va_dimensions) ? cfg.va_dimensions : [];
+        if (dims.length === 0) return true;
+        var dimState = (ps && ps.dims) || {};
+        var allTouched = dims.every(function (dim) {
+          return dimState[dim.name] && dimState[dim.name].touched;
+        });
+        if (allTouched) return true;
+        var record = findRecordById(currentSampleId);
+        var prefill = record ? findRawOutputValue('multi_dim', record) : null;
+        return !!(prefill && typeof prefill === 'object');
+      }
+      case 'sequence_tagging':
+        /* Engine seeds ps.tokens all-'O' for pending samples; any non-O
+           tag (annotator's own or FR-024M prefill) counts as answered. */
+        return !!(ps && Array.isArray(ps.tokens) && ps.tokens.some(function (tag) {
+          return tag && tag !== 'O';
+        }));
+      case 'entity_recognition':
+        return state.previewEntities.length > 0;
+      case 'relation_identification':
+        return state.previewTriples.length > 0;
       case 'free_text':
         return !!(ps && ps.text && ps.text.trim().length > 0);
       default:
-        /* Phase 2 output types: treated as answered until their own
-           validation lands, so Phase 1 submit-blocking stays scoped to
-           the output types Phase 1 actually renders. */
         return true;
     }
   }
@@ -1155,6 +1224,29 @@
       var panel = document.querySelector('[data-testid="ws-output-panel-' + outKey + '"]');
       if (panel) panel.removeAttribute('data-error');
     });
+  }
+
+  /* The persisted OutputAnswer payload -- same shape for submit, draft
+     save (AC-2.3), and the reviewer decision write, and the same fields
+     snapshotCurrentSample()/restoreSample() round-trip in memory. */
+  function collectAnswerPayload() {
+    return {
+      previewState: deepClone(state.previewState),
+      previewEntities: deepClone(state.previewEntities),
+      previewTriples: deepClone(state.previewTriples),
+      previewBypass: deepClone(state.previewBypass),
+    };
+  }
+
+  function handleSave() {
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSaved(
+      currentProfile.id,
+      currentRole,
+      currentRunType,
+      currentSampleId,
+      collectAnswerPayload()
+    );
+    showToast(t('wsSaveSuccess'));
   }
 
   function handleSubmit() {
@@ -1171,12 +1263,7 @@
       showToast(t('wsSubmitIncomplete'));
       return;
     }
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, {
-      previewState: deepClone(state.previewState),
-      previewEntities: deepClone(state.previewEntities),
-      previewTriples: deepClone(state.previewTriples),
-      previewBypass: deepClone(state.previewBypass),
-    });
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload());
     /* task-detail.html's dry-run status sync (waiting_iaa_confirmation once
        every sample is submitted) reads this key -- see
        annotation-workspace.data.js's syncDryRunProgress() doc comment. */
@@ -1310,13 +1397,14 @@
     var color = 'green';
     if (std > 0 && maxDeviation > 1.5 * std) color = 'red';
     else if (std > 0 && maxDeviation > std) color = 'blue';
-    var colorHex = color === 'red' ? '#ef4444' : color === 'blue' ? '#3b82f6' : '#22c55e';
+    var colorToken = color === 'red' ? 'var(--color-error)'
+      : color === 'blue' ? 'var(--color-info)' : 'var(--color-success)';
     var tag = document.createElement('span');
     tag.setAttribute('data-testid', 'ws-review-result-tag-' + outKey);
     tag.textContent = color;
     tag.style.cssText =
       'display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;background:' +
-      colorHex +
+      colorToken +
       ';';
     return tag;
   }
@@ -1507,12 +1595,7 @@
     history.appendChild(entry);
     history.classList.remove('hidden');
 
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, {
-      previewState: deepClone(state.previewState),
-      previewEntities: deepClone(state.previewEntities),
-      previewTriples: deepClone(state.previewTriples),
-      previewBypass: deepClone(state.previewBypass),
-    });
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload());
     renderSampleList();
     showToast(t('wsReviewSubmitSuccess'));
   }
@@ -1597,13 +1680,8 @@
       var open = drawer.classList.toggle('open');
       handle.setAttribute('aria-expanded', String(open));
     }
+    /* Native <button>: Enter/Space activation comes for free, no keydown shim. */
     handle.addEventListener('click', toggle);
-    handle.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggle();
-      }
-    });
   }
 
   /* ── guideline modal ──────────────────────────────────────────────── */
@@ -1611,14 +1689,23 @@
     var modal = document.getElementById('wsGuidelineModal');
     var confirmBtn = document.getElementById('wsGuidelineModalConfirm');
     if (!modal || !confirmBtn) return;
-    var seen = window.localStorage.getItem('labelsuite.guidelineModalSeen');
+    var seen = null;
+    try {
+      seen = window.localStorage.getItem('labelsuite.guidelineModalSeen');
+    } catch (e) {
+      /* treat blocked storage as not-seen: showing the modal again is safe */
+    }
     if (!seen) {
       modal.classList.remove('hidden');
     } else {
       modal.classList.add('hidden');
     }
     confirmBtn.addEventListener('click', function () {
-      window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+      try {
+        window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
+      } catch (e) {
+        /* ignore quota/serialization errors in the prototype */
+      }
       modal.classList.add('hidden');
     });
   }
@@ -1657,6 +1744,7 @@
       if (reviewSubmitBtn) setText('wsReviewSubmitLabel', t('reviewSubmitLabel'));
     } else if (submitBtn) {
       setText('wsSubmitLabel', t('submitLabel'));
+      setText('wsSaveLabel', t('saveLabel'));
     }
     var noteLabel = document.getElementById('wsNoteLabel');
     if (noteLabel) noteLabel.textContent = t('noteLabel');
@@ -1692,8 +1780,11 @@
     var params = new URLSearchParams(window.location.search);
     var taskId = params.get('task_id');
     var sampleId = params.get('sample_id');
-    currentRole = params.get('role') || 'annotator';
-    currentRunType = params.get('run_type') || 'official_run';
+    /* FR-006: missing/unsupported role or run_type fall back to the
+       defaults (annotator / dry_run) -- same normalization annotation-list's
+       parseContext() applies, so both pages resolve an identical context. */
+    currentRole = params.get('role') === 'reviewer' ? 'reviewer' : 'annotator';
+    currentRunType = params.get('run_type') === 'official_run' ? 'official_run' : 'dry_run';
 
     currentProfile = window.LabelSuiteAnnotationWorkspaceData.resolveTaskProfile(taskId);
     if (!currentProfile) {
@@ -1706,15 +1797,18 @@
     applyStaticI18nText();
 
     var submitBtn = document.getElementById('wsSubmitBtn');
+    var saveBtn = document.getElementById('wsSaveBtn');
     var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
     if (currentRole === 'reviewer') {
       if (submitBtn) submitBtn.classList.add('hidden');
+      if (saveBtn) saveBtn.classList.add('hidden');
       if (reviewSubmitBtn) {
         reviewSubmitBtn.classList.remove('hidden');
         reviewSubmitBtn.addEventListener('click', handleReviewSubmit);
       }
-    } else if (submitBtn) {
-      submitBtn.addEventListener('click', handleSubmit);
+    } else {
+      if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
+      if (saveBtn) saveBtn.addEventListener('click', handleSave);
     }
 
     seedEngineState(currentProfile);
