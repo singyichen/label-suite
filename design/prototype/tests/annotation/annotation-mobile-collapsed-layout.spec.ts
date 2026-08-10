@@ -1,23 +1,12 @@
 import { test, expect } from '@playwright/test';
-
-async function dismissGuidelineModal(page: import('@playwright/test').Page) {
-  const guidelineModal = page.locator('#guidelineModal');
-  const confirmBtn = page.locator('#guidelineModalConfirm');
-  if (await confirmBtn.isVisible()) {
-    await confirmBtn.click();
-    await expect(guidelineModal).toBeHidden();
-  }
-}
+import { buildWorkspaceUrl, dismissGuidelineModal, skipGuidelineModal } from './_workspace-helpers';
 
 test('keeps single-column content width on mobile even after guideline panel is collapsed', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem('labelsuite.guidelineModalSeen', '1');
-  });
-  await page.goto('/pages/annotation/annotation-workspace.html?task_type=single_sentence_va_scoring');
-
+  await skipGuidelineModal(page);
+  await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
   await dismissGuidelineModal(page);
 
-  await page.locator('#guidelineCollapseBtn').click();
+  await page.getByTestId('ws-guideline-collapse-btn').click();
   await page.setViewportSize({ width: 390, height: 844 });
 
   const metrics = await page.evaluate(() => {

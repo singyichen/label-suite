@@ -1,6 +1,17 @@
 import { test, expect } from '@playwright/test';
+import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile } from './_workspace-helpers';
 
-test.describe('Annotation workspace localized sample content', () => {
+/* UI-chrome localization only (zh / en). The old TASK-015-* mock fixtures
+ * carried bilingual dataset content (e.g. `#sampleText` itself switched
+ * language), which let earlier tests assert on translated SAMPLE CONTENT.
+ * The 13 new seed TaskProfiles are single-language (uploaded dataset
+ * content is whatever language the file was authored in — translating it
+ * based on a UI language toggle isn't a real product behavior), so this
+ * rewrite narrows scope to genuine UI chrome: labels, placeholders, and
+ * aria-labels that this workspace itself owns and localizes. See the QA
+ * report for this scope reduction rationale. */
+
+test.describe('Annotation workspace UI-chrome localization', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       window.localStorage.setItem('labelsuite.lang', 'en');
@@ -9,132 +20,51 @@ test.describe('Annotation workspace localized sample content', () => {
   });
 
   async function ensureEnglishMode(page: import('@playwright/test').Page) {
-    if (await page.locator('#langLabel').textContent() !== 'EN') {
-      await page.locator('#langToggle').click();
+    if ((await page.getByTestId('ws-lang-label').textContent()) !== 'EN') {
+      await page.getByTestId('ws-lang-toggle').click();
     }
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   }
 
-  test('classification sample list and source text use English content', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A1&run_type=official_run&task_type=single_sentence_classification&sample_id=R2-001');
+  test('annotation note label and placeholder follow English language mode', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
+    await dismissGuidelineModal(page);
     await ensureEnglishMode(page);
 
-    await expect(page.locator('#sampleList .sample-item').first()).toContainText('Legislature passes tech industry transformation act');
-    await expect(page.locator('#sampleText')).toContainText('Legislature passes tech industry transformation act');
-    await expect(page.locator('#sampleList')).not.toContainText('立法院三讀通過');
-    await expect(page.locator('#sampleText')).not.toContainText('立法院三讀通過');
+    await expect(page.getByTestId('ws-note-label')).toHaveText('Notes (optional)');
+    await expect(page.getByTestId('ws-note-input')).toHaveAttribute('placeholder', 'Describe special cases here...');
   });
 
-  test('aspect-list source, editable sentence, and aspects use English content', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A3&run_type=official_run&task_type=sequence_labeling&sub_type=aspect_list&sample_id=AL-003');
+  test('submit validation error follows English language mode', async ({ page }) => {
+    // read-001's gold_score is an output-role prefill (013 FR-003g-5) that
+    // would otherwise leave this sample already-answered on load; strip it
+    // so submit is genuinely exercised against a blank output type.
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T004.datasetRecords[0].gold_score = null;
+    `);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T004', sample_id: 'read-001' }));
+    await dismissGuidelineModal(page);
     await ensureEnglishMode(page);
 
-    await expect(page.locator('#sampleList .sample-item').nth(2)).toContainText("The hotel's breakfast quality is excellent");
-    await expect(page.locator('#sampleText')).toContainText("The hotel's breakfast quality is excellent");
-    await expect(page.locator('#aspectOriginalSentence')).toContainText("The hotel's breakfast quality is excellent");
-    await expect(page.locator('#aspectCorrectedSentence')).toHaveValue(/room soundproofing/);
-    await expect(page.locator('#aspectRows input').nth(0)).toHaveValue('breakfast quality');
-    await expect(page.locator('#aspectRows input').nth(1)).toHaveValue('parking');
-    await expect(page.locator('#aspectRows')).not.toContainText('早餐品質');
-    await expect(page.locator('#sampleText')).not.toContainText('這家飯店的早餐品質');
+    await page.getByTestId('ws-submit-btn').click();
+    await expect(page.getByTestId('ws-output-panel-single_dim')).toHaveAttribute('data-error', 'true');
   });
 
-  test('relation extraction source and entity list use English content', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A4&run_type=official_run&task_type=relation_extraction&sample_id=RE-001');
+  test('multi_label selection limit hint follows English language mode', async ({ page }) => {
+    // emo-001's gold_labels prefill is already at max_selections=3; strip it
+    // so the picks below genuinely exercise hitting the limit.
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T002.datasetRecords[0].gold_labels = [];
+    `);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T002', sample_id: 'emo-001' }));
+    await dismissGuidelineModal(page);
     await ensureEnglishMode(page);
 
-    await expect(page.locator('#sampleList .sample-item').first()).toContainText('Aspirin can relieve headaches');
-    await expect(page.locator('#sampleText')).toContainText('Aspirin can relieve headaches');
-    await expect(page.locator('#reEntityList')).toContainText('Aspirin');
-    await expect(page.locator('#reEntityList')).toContainText('headaches');
-    await expect(page.locator('#reEntityList')).not.toContainText('阿司匹靈');
-    await expect(page.locator('#sampleText')).not.toContainText('阿司匹靈');
-  });
-
-  test('sentence-pair list and pair source use English content', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R5&run_type=dry_run&task_type=sentence_pairs&sample_id=R5-001');
-    await ensureEnglishMode(page);
-
-    await expect(page.locator('#sampleList .sample-item').first()).toContainText("The film's visual effects are breathtaking");
-    await expect(page.locator('#spReviewerSentence1Text')).toContainText("The film's visual effects are breathtaking");
-    await expect(page.locator('#spReviewerSentence2Text')).toContainText('The special effects are spectacular');
-    await expect(page.locator('#sampleList')).not.toContainText('這部電影的視覺特效');
-    await expect(page.locator('#spReviewerSentence1Text')).not.toContainText('這部電影的視覺特效');
-  });
-
-  test('annotation note placeholder follows English language mode', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A5&run_type=dry_run&task_type=sentence_pairs&sample_id=A5-003');
-    await ensureEnglishMode(page);
-
-    await expect(page.locator('#annotationNoteLabel')).toHaveText('Notes (optional)');
-    await expect(page.locator('#annotationNote')).toHaveAttribute('placeholder', 'Describe special cases here...');
-  });
-
-  test('reviewer panel localizes aggregate stats and annotator results in English mode across task types', async ({ page }) => {
-    const cases: Array<{
-      url: string;
-      expectedStats: string;
-      expectedResult: string;
-      forbidden: string[];
-      expectedCorrectionValues?: string[];
-    }> = [
-      {
-        url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R1&run_type=official_run&task_type=single_sentence_classification&sample_id=R1-001',
-        expectedStats: 'Politics×4 · Technology×5',
-        expectedResult: 'Politics, Technology',
-        forbidden: ['政治', '科技'],
-      },
-      {
-        url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R2&run_type=dry_run&task_type=single_sentence_va_scoring&sample_id=R2-001',
-        expectedStats: 'mean : [7.33, 7.17]',
-        expectedResult: '[6, 5.5]',
-        forbidden: [],
-      },
-      {
-        url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R3&run_type=official_run&task_type=sequence_labeling&sub_type=aspect_list&sample_id=AL-001',
-        expectedStats: 'Aspect List task - review each annotator extraction',
-        expectedResult: 'screen',
-        forbidden: ['螢幕', '電池續航力', '請查看'],
-        expectedCorrectionValues: ['screen', 'battery life', 'price'],
-      },
-      {
-        url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R5&run_type=dry_run&task_type=sentence_pairs&sample_id=R5-001',
-        expectedStats: 'Equivalent×3 · Related×2',
-        expectedResult: 'Equivalent',
-        forbidden: ['等價', '相關'],
-      },
-      {
-        url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R6&run_type=official_run&task_type=sequence_labeling&sub_type=ner&sample_id=NER-001',
-        expectedStats: 'F1 mean: 0.81 · Macro-F1: 0.79 · 3 annotators',
-        expectedResult: 'TSMC',
-        forbidden: ['台積電', '張忠謀'],
-      },
-      {
-        url: '/pages/annotation/annotation-workspace.html?role=reviewer&task_id=TASK-015-R4&run_type=official_run&task_type=relation_extraction&sample_id=RE-001',
-        expectedStats: 'Relation extraction task - review each annotator triple',
-        expectedResult: '(DRUG:Aspirin)→treats→(SYMP:headache)',
-        forbidden: ['阿司匹靈', '頭痛', '請查看'],
-      },
-    ];
-
-    for (const item of cases) {
-      await page.goto(item.url);
-      await ensureEnglishMode(page);
-      await expect(page.locator('#reviewerCard')).toBeVisible();
-      await expect(page.locator('#rvStatsSummary')).toContainText(item.expectedStats);
-      const firstReviewerRow = page.locator('#rvAnnotatorRows .rv-annotator-review-row').first();
-      await expect(firstReviewerRow).toContainText(item.expectedResult);
-      if (item.expectedCorrectionValues) {
-        await expect(firstReviewerRow.locator('.rv-aspect-correction-input')).toHaveCount(item.expectedCorrectionValues.length);
-        const correctionValues = await firstReviewerRow.locator('.rv-aspect-correction-input').evaluateAll((inputs) =>
-          inputs.map((input) => (input as HTMLInputElement).value)
-        );
-        expect(correctionValues).toEqual(item.expectedCorrectionValues);
-      }
-      for (const forbiddenText of item.forbidden) {
-        await expect(page.locator('#rvStatsSummary')).not.toContainText(forbiddenText);
-        await expect(firstReviewerRow).not.toContainText(forbiddenText);
-      }
+    await page.getByTestId('ws-multi-label-selector-toggle').click();
+    for (const label of ['sad', 'fear', 'surprise']) {
+      await page.getByTestId(`ws-multi-label-node-${label}`).click();
     }
+    await page.getByTestId('ws-multi-label-node-angry').click();
+    await expect(page.getByTestId('ws-multi-label-limit-hint')).toContainText('most 3');
   });
 });

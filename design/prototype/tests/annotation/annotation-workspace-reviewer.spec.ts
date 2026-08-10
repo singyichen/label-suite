@@ -1,0 +1,161 @@
+import { test, expect, type Page } from '@playwright/test';
+import {
+  assertNoPageErrors,
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  setRangeValue,
+  skipGuidelineModal,
+  trackPageErrors,
+} from './_workspace-helpers';
+
+/* Reviewer mode (spec 015 v2.0.0, FR-024L-1/FR-024L-2): registry-driven —
+ * ALL 8 output types get a row-level direct-correction entry point that
+ * reuses the corresponding annotator control, seeded with the annotator's
+ * submitted answer. Also guards against the OLD workspace's
+ * `summarizeReviewerAspectCorrections` ReferenceError on review submit
+ * (annotation-workspace.html:5029) recurring in the rewrite.
+ *
+ * Reviewer rows are sourced from an actual runtime annotator submission
+ * (performed in-test via the real UI), not from a static "expected answer"
+ * fixture — the 13 seed profiles only ship one gold/output-role answer per
+ * record, not simulated multi-annotator submissions. */
+
+async function submitAsAnnotator(page: Page, taskId: string, sampleId: string, answer: () => Promise<void>) {
+  await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'annotator' }));
+  await dismissGuidelineModal(page);
+  await answer();
+  await page.getByTestId('ws-submit-btn').click();
+}
+
+test.beforeEach(async ({ page }) => {
+  await skipGuidelineModal(page);
+});
+
+test.describe('reviewer direct correction — deep example (single_label, T001)', () => {
+  test('row is seeded with the annotator answer and the correction control reuses the chip UI', async ({ page }) => {
+    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
+      await page.getByTestId('ws-single-label-chip-negative').click();
+    });
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const row = page.getByTestId('ws-review-row').first();
+    await expect(row).toBeVisible();
+    const correction = row.getByTestId('ws-review-correct-single_label');
+    await expect(correction.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
+
+    await correction.getByTestId('ws-single-label-chip-positive').click();
+    await expect(correction.getByTestId('ws-single-label-chip-positive')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('review submit does not throw and retains both the original and corrected answer', async ({ page }) => {
+    const errors = trackPageErrors(page);
+
+    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
+      await page.getByTestId('ws-single-label-chip-negative').click();
+    });
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const row = page.getByTestId('ws-review-row').first();
+    await row.getByTestId('ws-review-correct-single_label').getByTestId('ws-single-label-chip-positive').click();
+    await row.getByTestId('ws-review-decision-approve').click();
+    await page.getByTestId('ws-review-submit-btn').click();
+
+    await expect(page.getByTestId('ws-review-history')).toContainText('negative');
+    await expect(page.getByTestId('ws-review-history')).toContainText('positive');
+    assertNoPageErrors(errors);
+  });
+});
+
+const REGISTRY_CASES: Array<{
+  outKey: string;
+  taskId: string;
+  sampleId: string;
+  answer: (page: Page) => Promise<void>;
+}> = [
+  {
+    outKey: 'single_label',
+    taskId: 'T001',
+    sampleId: 'sent-001',
+    answer: async (page) => page.getByTestId('ws-single-label-chip-positive').click(),
+  },
+  {
+    outKey: 'multi_label',
+    taskId: 'T002',
+    sampleId: 'emo-001',
+    answer: async (page) => {
+      await page.getByTestId('ws-multi-label-selector-toggle').click();
+      await page.getByTestId('ws-multi-label-node-sad').click();
+    },
+  },
+  {
+    outKey: 'single_dim',
+    taskId: 'T004',
+    sampleId: 'read-001',
+    answer: async (page) => setRangeValue(page.getByTestId('ws-single-dim-slider'), '4'),
+  },
+  {
+    outKey: 'multi_dim',
+    taskId: 'T005',
+    sampleId: 'mt-001',
+    answer: async (page) => {
+      await setRangeValue(page.getByTestId('ws-multi-dim-slider-fluency'), '5');
+      await setRangeValue(page.getByTestId('ws-multi-dim-slider-adequacy'), '4');
+      await setRangeValue(page.getByTestId('ws-multi-dim-slider-coherence'), '5');
+    },
+  },
+  {
+    outKey: 'sequence_tagging',
+    taskId: 'T006',
+    sampleId: 'sequence-tagging-001',
+    answer: async (page) => {
+      await page.getByTestId('ws-seq-tag-btn-PER').click();
+      await page.getByTestId('ws-seq-token').nth(6).click();
+    },
+  },
+  {
+    outKey: 'entity_recognition',
+    taskId: 'T007',
+    sampleId: 'entity-recognition-001',
+    // T007's gold_entities is 'output'-role prefill, already populating the
+    // answer — no manual span selection required to reach a submittable
+    // state.
+    answer: async () => {},
+  },
+  {
+    outKey: 'relation_identification',
+    taskId: 'T008',
+    sampleId: 'rel-001',
+    // T008's triples/relation_types are 'output'-role prefill.
+    answer: async () => {},
+  },
+  {
+    outKey: 'free_text',
+    taskId: 'T009',
+    sampleId: 'sum-001',
+    // T009's gold_answer is 'output'-role prefill.
+    answer: async () => {},
+  },
+];
+
+for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
+  test(`reviewer direct correction is available for ${outKey} and review submit throws no page error`, async ({ page }) => {
+    const errors = trackPageErrors(page);
+
+    await submitAsAnnotator(page, taskId, sampleId, () => answer(page));
+
+    await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const row = page.getByTestId('ws-review-row').first();
+    await expect(row.getByTestId(`ws-review-correct-${outKey}`)).toBeVisible();
+
+    await row.getByTestId('ws-review-decision-approve').click();
+    await page.getByTestId('ws-review-submit-btn').click();
+
+    assertNoPageErrors(errors);
+  });
+}

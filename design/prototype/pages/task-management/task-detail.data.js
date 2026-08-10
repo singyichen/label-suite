@@ -1001,6 +1001,26 @@
     }
   };
 
+  /* Guideline & Files (spec 015 v2.0.0 AC-5.1-5.3, 區塊 C): every
+   * TaskProfile carries a generic, task-agnostic file list -- the
+   * annotation workspace's right-column panel renders these purely by
+   * `type` (pdf/image/markdown), never by task_id or task category
+   * (Generalization-First). One shared demo file set covers all 13 seed
+   * profiles; the only real binary asset shipped with the prototype is
+   * reused for every image entry. */
+  var DEFAULT_GUIDELINE_FILES = [
+    { name: '標記範例圖.png', type: 'image', url: '../../assets/images/task-management/VA_emj.png' },
+    { name: '標記指引.pdf', type: 'pdf', url: '../../assets/guidelines/annotation-guideline.pdf' },
+    {
+      name: '常見問題.md',
+      type: 'markdown',
+      content: '# 常見問題\n\n- **Q: 如何開始標記？** 依左側清單逐筆完成標記，完成後點擊提交。\n- **Q: 不確定答案怎麼辦？** 可於備註欄說明特殊情況，交由 Reviewer 複核。'
+    }
+  ];
+  Object.keys(profiles).forEach(function (taskId) {
+    profiles[taskId].guidelineFiles = DEFAULT_GUIDELINE_FILES;
+  });
+
   global.LabelSuiteTaskDetailData = {
     profiles: profiles
   };
