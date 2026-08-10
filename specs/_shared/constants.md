@@ -1,5 +1,5 @@
 ---
-版本: 1.0.0
+版本: 1.1.0
 建立日期: 2026-07-21
 狀態: Active
 ---
@@ -31,13 +31,14 @@
 
 | 常數 | 值 | 引用 spec |
 |------|-----|----------|
-| `TASK_TYPE_ENUM` | `single_sentence_classification \| single_sentence_va_scoring \| sequence_labeling \| relation_extraction \| sentence_pairs` | 010, 014 定義；013 引用；015, 017 以異名 `TASK_TYPE_KEYS` 同值定義 |
+| `TASK_TYPE_ENUM` | `single_sentence_classification \| single_sentence_va_scoring \| sequence_labeling \| relation_extraction \| sentence_pairs` | 010, 014 定義；013 引用；017 以異名 `TASK_TYPE_KEYS` 同值定義（015 已於 v2.0.0 起改用 `OUTPUT_TYPE_KEYS`，不再消費本常數） |
 | `TASK_STATUS_ENUM` | `draft \| dry_run_in_progress \| waiting_iaa_confirmation \| official_run_in_progress \| completed` | 010；014 以異名 `TASK_STATUSES` 同值定義 |
 | `RUN_STAGE_ENUM` | `dry_run \| official_run` | 010；015 以異名 `RUN_TYPES` 同值定義 |
-| `SEQUENCE_LABELING_SUBTYPES` | `ner \| aspect_list` | 014, 015（2 份） |
-| `SENTENCE_PAIRS_MODES` | `similarity \| entailment` | 014, 015, 017（3 份） |
-| `SENTENCE_PAIRS_RESPONSE_FORMATS` | `classification \| scoring` | 014, 015, 017（3 份） |
-| `ACTIVE_TASK_TYPE_STORAGE_KEY` | `labelsuite.activeTaskType` | 010, 008, 015（3 份） |
+| `OUTPUT_TYPE_KEYS` | `sequence_tagging \| entity_recognition \| relation_identification \| single_label \| multi_label \| single_dim \| multi_dim \| free_text` | 013 定義（source of truth：`OUTPUT_TYPE_REGISTRY`）；015 引用（同值，見 015 v2.0.0） |
+| `SEQUENCE_LABELING_SUBTYPES` | `ner \| aspect_list` | 014（1 份；015 已於 v2.0.0 起改用 `OUTPUT_TYPE_KEYS` 的 `entity_recognition`，不再消費本常數） |
+| `SENTENCE_PAIRS_MODES` | `similarity \| entailment` | 014, 017（2 份；015 已於 v2.0.0 起改用 `OUTPUT_TYPE_KEYS`，不再消費本常數） |
+| `SENTENCE_PAIRS_RESPONSE_FORMATS` | `classification \| scoring` | 014, 017（2 份；015 已於 v2.0.0 起改用 `OUTPUT_TYPE_KEYS`，不再消費本常數） |
+| `ACTIVE_TASK_TYPE_STORAGE_KEY` | `labelsuite.activeTaskType` | 010, 008（2 份；015 已於 v2.0.0 起改以 `task_id` 查詢 `TaskProfile`，移除 localStorage fallback，不再消費本常數） |
 
 ### 清單與分頁
 
@@ -79,10 +80,11 @@
 > `DEFAULT_SORT` 曾評估上收：010 為 `updated_at desc`、006 為 `created_at desc`，值因情境而異、無法統一，
 > 屬 spec 特有常數，不納入本文件（值相異的常數不得上收，避免與 /speckit.analyze 重複定義檢查矛盾）。
 
-**同值異名（待統一命名）**：`TASK_TYPE_KEYS`（015, 017）→ `TASK_TYPE_ENUM`；`TASK_STATUSES`（014）→ `TASK_STATUS_ENUM`；`RUN_TYPES`（015）→ `RUN_STAGE_ENUM`；`IAA_SUMMARY_STATES`（017）→ `IAA_BADGE_STATES`。
+**同值異名（待統一命名）**：`TASK_TYPE_KEYS`（017）→ `TASK_TYPE_ENUM`；`TASK_STATUSES`（014）→ `TASK_STATUS_ENUM`；`RUN_TYPES`（015）→ `RUN_STAGE_ENUM`；`IAA_SUMMARY_STATES`（017）→ `IAA_BADGE_STATES`。
 
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.1.0 | 2026-08-07 | 同步 annotation-015 v2.0.0 taxonomy 遷移：移除 015 作為 `TASK_TYPE_ENUM`／`SEQUENCE_LABELING_SUBTYPES`／`SENTENCE_PAIRS_MODES`／`SENTENCE_PAIRS_RESPONSE_FORMATS`／`ACTIVE_TASK_TYPE_STORAGE_KEY` 消費者的過時引用；新增 `OUTPUT_TYPE_KEYS`（013 定義，015 引用）。`SEQUENCE_LABELING_SUBTYPES` 現僅剩 014 消費，低於 2 份上收門檻，是否應改列 014 專屬常數留待下次相關 spec 改版一併檢視 |
 | 1.0.0 | 2026-07-21 | 初版：自 16 份 spec 萃取共用常數 |
