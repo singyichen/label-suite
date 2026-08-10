@@ -21,8 +21,21 @@
       noteLabel: '備註（選填）',
       notePlaceholder: '若有特殊情況可在此說明…',
       submitLabel: '提交',
-      saveLabel: '儲存',
+      saveLabel: '儲存草稿',
       wsSaveSuccess: '已儲存',
+      wsPrevBtnLabel: '上一筆',
+      wsNextBtnLabel: '下一筆',
+      wsProgressText: '{done} / {total} 已提交',
+      wsAutosaveSaved: '草稿已自動儲存',
+      wsAutosaveSaving: '儲存中…',
+      wsTabGuideline: '說明與檔案',
+      wsTabHistory: '歷程',
+      wsStatusSubmitted: '已提交',
+      wsStatusSaved: '已儲存',
+      wsStatusPending: '待標記',
+      wsHistoryEmpty: '此筆樣本尚無歷程紀錄',
+      wsHistoryRoleAnnotator: '標記員',
+      wsHistoryRoleReviewer: '審核員',
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
@@ -46,8 +59,21 @@
       noteLabel: 'Notes (optional)',
       notePlaceholder: 'Describe special cases here...',
       submitLabel: 'Submit',
-      saveLabel: 'Save',
+      saveLabel: 'Save draft',
       wsSaveSuccess: 'Saved',
+      wsPrevBtnLabel: 'Previous',
+      wsNextBtnLabel: 'Next',
+      wsProgressText: '{done} / {total} submitted',
+      wsAutosaveSaved: 'Draft auto-saved',
+      wsAutosaveSaving: 'Saving…',
+      wsTabGuideline: 'Guidelines & Files',
+      wsTabHistory: 'History',
+      wsStatusSubmitted: 'Submitted',
+      wsStatusSaved: 'Saved',
+      wsStatusPending: 'Pending',
+      wsHistoryEmpty: 'No history for this sample yet',
+      wsHistoryRoleAnnotator: 'Annotator',
+      wsHistoryRoleReviewer: 'Reviewer',
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
@@ -177,6 +203,71 @@
     if (outKey !== 'relation_identification') patchBypassChip(container, outKey);
   }
   renderOutputPreview = patchedRenderOutputPreview;
+
+  /* ── card-regrouping monkeypatch of updateAnnotationPreview ──────
+     The engine re-runs updateAnnotationPreview() from its own interaction
+     handlers (chip clicks, taxonomy picks, ...), each time rebuilding
+     #annotationPreview as flat siblings. The question-vs-annotation card
+     split (spec 015 v2.3.0, 區塊 B) must therefore live on the patched
+     function itself -- patching only renderWorkspace() would lose the
+     cards on the first in-panel interaction. */
+  var originalUpdateAnnotationPreview = updateAnnotationPreview;
+  function patchedUpdateAnnotationPreview() {
+    originalUpdateAnnotationPreview();
+    if (!currentProfile || currentRole === 'reviewer') return;
+    patchEvidenceAndInputContent();
+    patchItemPairLayout();
+    wrapAnnotatorCards();
+  }
+  updateAnnotationPreview = patchedUpdateAnnotationPreview;
+
+  /* Regroup the engine's flat sibling output into two content-cards: the
+     question block (evidence + input text) and the annotation block (all
+     output-type panels). The boundary is found structurally -- the first
+     .preview-unified wrap or ws-output-panel-* container, stepping back
+     over the title/divider the engine renders immediately before it --
+     never by task_id or output-type name (Generalization-First). */
+  function wrapAnnotatorCards() {
+    var preview = document.getElementById('annotationPreview');
+    if (!preview || preview.children.length === 0) return;
+    var first = preview.children[0];
+    if (first.getAttribute && /^ws-(question|annotation)-card$/.test(first.getAttribute('data-testid') || '')) return;
+    var children = Array.prototype.slice.call(preview.children);
+    var boundary = children.length;
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      var testid = (child.getAttribute && child.getAttribute('data-testid')) || '';
+      if ((child.classList && child.classList.contains('preview-unified')) || /^ws-output-panel-/.test(testid)) {
+        boundary = i;
+        break;
+      }
+    }
+    while (boundary > 0) {
+      var prev = children[boundary - 1];
+      var isTitleOrDivider =
+        prev.classList &&
+        (prev.classList.contains('annotation-preview-task-title') ||
+          prev.classList.contains('annotation-preview-divider'));
+      if (!isTitleOrDivider) break;
+      boundary--;
+    }
+    var questionEls = children.slice(0, boundary);
+    var outputEls = children.slice(boundary);
+    if (questionEls.length > 0) {
+      var questionCard = document.createElement('div');
+      questionCard.className = 'content-card';
+      questionCard.setAttribute('data-testid', 'ws-question-card');
+      questionEls.forEach(function (node) { questionCard.appendChild(node); });
+      preview.appendChild(questionCard);
+    }
+    if (outputEls.length > 0) {
+      var annotationCard = document.createElement('div');
+      annotationCard.className = 'content-card';
+      annotationCard.setAttribute('data-testid', 'ws-annotation-card');
+      outputEls.forEach(function (node) { annotationCard.appendChild(node); });
+      preview.appendChild(annotationCard);
+    }
+  }
 
   function patchOutputPanel(outKey, container) {
     if (outKey === 'single_label') patchSingleLabelPanel(container);
@@ -1081,17 +1172,125 @@
   }
 
   function renderWorkspace() {
-    /* FR-014C: the review card title uses the actual task name, same as the
-       annotator workspace -- both roles share this single call. */
-    setText('wsCardTitle', state.lang === 'zh' ? currentProfile.nameZh : currentProfile.nameEn);
     if (currentRole === 'reviewer') {
       renderReviewerWorkspace();
     } else {
+      /* patched: original render + testid patches + question/annotation
+         card regrouping (patchedUpdateAnnotationPreview above) */
       updateAnnotationPreview();
-      patchEvidenceAndInputContent();
-      patchItemPairLayout();
     }
     renderSampleList();
+    renderSampleNav();
+    renderHistoryPanel();
+  }
+
+  function currentSampleIndex() {
+    var records = currentProfile.datasetRecords;
+    for (var i = 0; i < records.length; i++) {
+      if (window.LabelSuiteAnnotationWorkspaceData.getRecordId(records[i], i) === String(currentSampleId)) return i;
+    }
+    return 0;
+  }
+
+  /* Top-of-column sample nav (區塊 B 上方導覽列): prev/next + submitted
+     progress. Progress counts THIS role+run's submissions over the seeded
+     record list, matching what the prev/next buttons can actually reach. */
+  function renderSampleNav() {
+    var total = currentProfile.datasetRecords.length;
+    var done = window.LabelSuiteAnnotationWorkspaceData.getSubmittedSampleCount(
+      currentProfile.id,
+      currentRole,
+      currentRunType
+    );
+    if (done > total) done = total;
+    setText(
+      'wsProgressText',
+      t('wsProgressText').replace('{done}', String(done)).replace('{total}', String(total))
+    );
+    var pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    var fill = document.getElementById('wsProgressFill');
+    if (fill) fill.style.width = pct + '%';
+    var track = document.getElementById('wsProgressTrack');
+    if (track) track.setAttribute('aria-valuenow', String(pct));
+    var idx = currentSampleIndex();
+    var prevBtn = document.getElementById('wsPrevBtn');
+    var nextBtn = document.getElementById('wsNextBtn');
+    if (prevBtn) prevBtn.disabled = idx <= 0;
+    if (nextBtn) nextBtn.disabled = idx >= total - 1;
+  }
+
+  /* Bottom-bar autosave indicator (AC-2.6 / SC-007): a transient 儲存中…
+     flash that settles back to 草稿已自動儲存. Purely visual in the
+     prototype -- actual draft persistence stays on 儲存草稿 (handleSave). */
+  var autosaveTimer = null;
+  function triggerAutosave() {
+    var dot = document.getElementById('wsAutosaveDot');
+    if (!dot) return;
+    dot.className = 'autosave-dot saving';
+    setText('wsAutosaveLabel', t('wsAutosaveSaving'));
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(function () {
+      dot.className = 'autosave-dot saved';
+      setText('wsAutosaveLabel', t('wsAutosaveSaved'));
+    }, 700);
+  }
+
+  /* Right-column 歷程 tab (FR-016 / AC-3.8): renders the merged
+     annotator+reviewer event chain for the current sample. */
+  function formatHistoryTime(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+    return pad(d.getMonth() + 1) + '/' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function renderHistoryPanel() {
+    var container = document.getElementById('wsHistoryContainer');
+    if (!container) return;
+    while (container.firstChild) container.removeChild(container.firstChild);
+    var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
+      currentProfile.id,
+      currentRunType,
+      currentSampleId
+    );
+    if (events.length === 0) {
+      var empty = document.createElement('p');
+      empty.className = 'history-empty';
+      empty.textContent = t('wsHistoryEmpty');
+      container.appendChild(empty);
+      return;
+    }
+    var list = document.createElement('div');
+    list.className = 'history-list';
+    events.slice().reverse().forEach(function (event) {
+      var card = document.createElement('div');
+      card.className = 'history-item';
+      var header = document.createElement('div');
+      header.className = 'history-item-header';
+      var actor = document.createElement('span');
+      actor.className = 'history-actor';
+      actor.textContent = event.role === 'reviewer' ? t('wsHistoryRoleReviewer') : t('wsHistoryRoleAnnotator');
+      var meta = document.createElement('div');
+      meta.className = 'history-meta';
+      var time = document.createElement('span');
+      time.className = 'history-time';
+      time.textContent = formatHistoryTime(event.at);
+      var badge = document.createElement('span');
+      badge.className = 'history-action-badge ' + (event.action === 'saved' ? 'saved' : 'submitted');
+      badge.textContent = event.action;
+      meta.appendChild(time);
+      meta.appendChild(badge);
+      header.appendChild(actor);
+      header.appendChild(meta);
+      card.appendChild(header);
+      if (event.summary) {
+        var summary = document.createElement('div');
+        summary.className = 'history-summary';
+        summary.textContent = event.summary;
+        card.appendChild(summary);
+      }
+      list.appendChild(card);
+    });
+    container.appendChild(list);
   }
 
   function findRecordById(sampleId) {
@@ -1104,6 +1303,9 @@
     var record = findRecordById(sampleId) || currentProfile.datasetRecords[0];
     if (!record) return;
     var recordIdx = currentProfile.datasetRecords.indexOf(record);
+    /* SC-007: sample switch is an autosave trigger; skip the very first
+       (boot) call so the page doesn't open on a 儲存中… flash. */
+    if (currentSampleId) triggerAutosave();
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
@@ -1134,7 +1336,9 @@
 
     records.forEach(function (record, idx) {
       var recordId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx);
-      var submitted = window.LabelSuiteAnnotationWorkspaceData.isSampleSubmitted(
+      /* Tri-state per sample (submitted / saved / pending) drives both the
+         index-badge tint and the text status label under the snippet. */
+      var status = window.LabelSuiteAnnotationWorkspaceData.getSampleStatus(
         currentProfile.id,
         currentRole,
         currentRunType,
@@ -1143,9 +1347,10 @@
       var item = document.createElement('button');
       item.type = 'button';
       item.className = 'sample-item' + (recordId === String(currentSampleId) ? ' active' : '');
-      if (submitted) item.classList.add('status-submitted');
+      if (status === 'submitted') item.classList.add('status-submitted');
+      else if (status === 'saved') item.classList.add('status-saved');
       item.setAttribute('data-testid', 'ws-sample-item');
-      item.setAttribute('data-submitted', submitted ? 'true' : 'false');
+      item.setAttribute('data-submitted', status === 'submitted' ? 'true' : 'false');
 
       var indexBadge = document.createElement('span');
       indexBadge.className = 'sample-index';
@@ -1161,6 +1366,12 @@
         currentProfile.fieldRoleMap
       );
       meta.appendChild(snippet);
+      var statusLabel = document.createElement('span');
+      statusLabel.className = 'sample-status-label status-color-' + status;
+      statusLabel.setAttribute('data-testid', 'ws-sample-status');
+      statusLabel.textContent =
+        status === 'submitted' ? t('wsStatusSubmitted') : status === 'saved' ? t('wsStatusSaved') : t('wsStatusPending');
+      meta.appendChild(statusLabel);
       item.appendChild(meta);
 
       item.addEventListener('click', function () {
@@ -1238,14 +1449,34 @@
     };
   }
 
+  /* Per-output textual answer summary attached to every history event
+     (FR-016 對應輸出類型 + 修改內容), reusing the reviewer diff's own
+     describeOutputAnswer() rather than a second formatter. */
+  function buildHistorySummary() {
+    return state.selectedOutputTypes
+      .map(function (outKey) {
+        var described = describeOutputAnswer(outKey, {
+          previewState: state.previewState,
+          previewEntities: state.previewEntities,
+          previewTriples: state.previewTriples,
+        });
+        return outKey + ': ' + (described || t('reviewNoAnswer'));
+      })
+      .join('\n');
+  }
+
   function handleSave() {
     window.LabelSuiteAnnotationWorkspaceData.markSampleSaved(
       currentProfile.id,
       currentRole,
       currentRunType,
       currentSampleId,
-      collectAnswerPayload()
+      collectAnswerPayload(),
+      buildHistorySummary()
     );
+    triggerAutosave();
+    renderSampleList();
+    renderHistoryPanel();
     showToast(t('wsSaveSuccess'));
   }
 
@@ -1263,7 +1494,7 @@
       showToast(t('wsSubmitIncomplete'));
       return;
     }
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload());
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary());
     /* task-detail.html's dry-run status sync (waiting_iaa_confirmation once
        every sample is submitted) reads this key -- see
        annotation-workspace.data.js's syncDryRunProgress() doc comment. */
@@ -1274,6 +1505,8 @@
       currentProfile.datasetRecords.length
     );
     renderSampleList();
+    renderSampleNav();
+    renderHistoryPanel();
     showToast(t('wsSubmitSuccess'));
   }
 
@@ -1595,8 +1828,10 @@
     history.appendChild(entry);
     history.classList.remove('hidden');
 
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload());
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary());
     renderSampleList();
+    renderSampleNav();
+    renderHistoryPanel();
     showToast(t('wsReviewSubmitSuccess'));
   }
 
@@ -1672,6 +1907,51 @@
       btn.setAttribute('aria-expanded', String(!collapsed));
     });
   }
+  /* 說明與檔案 / 歷程 tab switching (區塊 C): tab state is page-level and
+     never re-rendered on sample switch, so the active tab survives
+     navigation (AC-5.1); only the history CONTENT re-renders per sample. */
+  function setupGuidelineTabs() {
+    var tabGuideline = document.getElementById('wsTabGuideline');
+    var tabHistory = document.getElementById('wsTabHistory');
+    var guidelinePanel = document.getElementById('wsGuidelinePanel');
+    var historyPanel = document.getElementById('wsHistoryPanel');
+    if (!tabGuideline || !tabHistory || !guidelinePanel || !historyPanel) return;
+    tabGuideline.addEventListener('click', function () {
+      tabGuideline.classList.add('active');
+      tabHistory.classList.remove('active');
+      guidelinePanel.classList.remove('hidden');
+      historyPanel.classList.add('hidden');
+    });
+    tabHistory.addEventListener('click', function () {
+      tabHistory.classList.add('active');
+      tabGuideline.classList.remove('active');
+      historyPanel.classList.remove('hidden');
+      guidelinePanel.classList.add('hidden');
+      renderHistoryPanel();
+    });
+  }
+
+  function setupSampleNav() {
+    var prevBtn = document.getElementById('wsPrevBtn');
+    var nextBtn = document.getElementById('wsNextBtn');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function () {
+        var idx = currentSampleIndex();
+        if (idx <= 0) return;
+        var record = currentProfile.datasetRecords[idx - 1];
+        selectSample(window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx - 1));
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        var idx = currentSampleIndex();
+        if (idx >= currentProfile.datasetRecords.length - 1) return;
+        var record = currentProfile.datasetRecords[idx + 1];
+        selectSample(window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx + 1));
+      });
+    }
+  }
+
   function setupMobileDrawer() {
     var drawer = document.getElementById('wsMobileDrawer');
     var handle = document.getElementById('wsMobileDrawerHandle');
@@ -1710,13 +1990,12 @@
     });
   }
 
-  /* ── UI-chrome language toggle (spec 015 v2.0.0 -- workspace-local,
-     separate from the shared sidebar's own lang-toggle: the sidebar chrome
-     and this workspace's translated labels/aria-labels are two independent
-     concerns). Reuses the SAME localStorage key the shared sidebar already
-     writes (pages/shared/sidebar.js LANG_STORAGE_KEY) so a language choice
-     made anywhere in the app is honored on the next workspace load, without
-     requiring a live cross-page sync mechanism this prototype doesn't have. */
+  /* ── Language toggle (spec 015 v2.2.0): the workspace no longer renders
+     its own task-title card / in-card toggle -- language switching binds to
+     the shared sidebar's lang-toggle buttons, same as every other page.
+     Reuses the SAME localStorage key the shared sidebar already writes
+     (pages/shared/sidebar.js LANG_STORAGE_KEY) so a language choice made
+     anywhere in the app is honored on the next workspace load. */
   var LANG_STORAGE_KEY = 'labelsuite.lang';
   function readStoredLang() {
     try {
@@ -1746,6 +2025,11 @@
       setText('wsSubmitLabel', t('submitLabel'));
       setText('wsSaveLabel', t('saveLabel'));
     }
+    setText('wsPrevBtnLabel', t('wsPrevBtnLabel'));
+    setText('wsNextBtnLabel', t('wsNextBtnLabel'));
+    setText('wsAutosaveLabel', t('wsAutosaveSaved'));
+    setText('wsTabGuidelineLabel', t('wsTabGuideline'));
+    setText('wsTabHistoryLabel', t('wsTabHistory'));
     var noteLabel = document.getElementById('wsNoteLabel');
     if (noteLabel) noteLabel.textContent = t('noteLabel');
     var noteInput = document.getElementById('wsNoteInput');
@@ -1760,18 +2044,22 @@
     var taskName = currentProfile ? (state.lang === 'zh' ? currentProfile.nameZh : currentProfile.nameEn) : '';
     setText('guidelineSummaryText', taskName);
     setText('wsMobileGuidelineSummaryText', taskName);
-    var langLabel = document.getElementById('wsLangLabel');
-    if (langLabel) langLabel.textContent = state.lang === 'zh' ? 'ZH' : 'EN';
+    ['langLabel', 'mobileLangLabel'].forEach(function (id) {
+      var langLabel = document.getElementById(id);
+      if (langLabel) langLabel.textContent = state.lang === 'zh' ? 'ZH' : 'EN';
+    });
   }
   function setupLangToggle() {
-    var toggle = document.getElementById('wsLangToggle');
-    if (!toggle) return;
-    toggle.addEventListener('click', function () {
-      state.lang = state.lang === 'zh' ? 'en' : 'zh';
-      persistLang(state.lang);
-      applyDocumentLang();
-      applyStaticI18nText();
-      renderWorkspace();
+    ['langToggle', 'mobileLangToggle'].forEach(function (id) {
+      var toggle = document.getElementById(id);
+      if (!toggle) return;
+      toggle.addEventListener('click', function () {
+        state.lang = state.lang === 'zh' ? 'en' : 'zh';
+        persistLang(state.lang);
+        applyDocumentLang();
+        applyStaticI18nText();
+        renderWorkspace();
+      });
     });
   }
 
@@ -1820,9 +2108,14 @@
     renderGuidelinePanel();
     setupGuidelineImageModal();
     setupGuidelineCollapse();
+    setupGuidelineTabs();
+    setupSampleNav();
     setupMobileDrawer();
     setupGuidelineModal();
     setupLangToggle();
+    /* SC-007 15s autosave heartbeat (visual, matches the pre-outputs[]
+       design's cadence). */
+    setInterval(triggerAutosave, 15000);
   }
 
   if (document.readyState === 'loading') {

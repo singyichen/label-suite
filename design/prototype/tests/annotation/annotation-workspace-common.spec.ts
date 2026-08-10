@@ -26,11 +26,15 @@ test.describe('Annotation workspace common contract', () => {
     await expect(page).not.toHaveURL(/sub_type=/);
   });
 
-  test('task title and description come from the TaskProfile, not localStorage', async ({ page }) => {
+  test('the middle column renders no task-title card; the task name comes from the TaskProfile via the guideline panel', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001' }));
     await dismissGuidelineModal(page);
 
-    await expect(page.getByTestId('ws-card-title')).toContainText('醫療文本情感分類');
+    // Spec 015 v2.2.0: the task-title header card (task name + in-card
+    // language toggle) was removed for both annotator and reviewer views.
+    await expect(page.getByTestId('ws-card-title')).toHaveCount(0);
+    await expect(page.getByTestId('ws-lang-toggle')).toHaveCount(0);
+    await expect(page.getByTestId('ws-guideline-panel')).toContainText('醫療文本情感分類');
   });
 
   test('sample list count and content are sourced from datasetRecords', async ({ page }) => {

@@ -20,8 +20,10 @@ test.describe('Annotation workspace UI-chrome localization', () => {
   });
 
   async function ensureEnglishMode(page: import('@playwright/test').Page) {
-    if ((await page.getByTestId('ws-lang-label').textContent()) !== 'EN') {
-      await page.getByTestId('ws-lang-toggle').click();
+    // Spec 015 v2.2.0: the workspace has no in-card language toggle anymore;
+    // language switching binds to the shared sidebar's lang-toggle.
+    if ((await page.getByTestId('lang-label').textContent()) !== 'EN') {
+      await page.getByTestId('lang-toggle').click();
     }
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   }

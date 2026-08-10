@@ -110,6 +110,7 @@
     }
     .sample-item.active .sample-index { background: var(--color-primary); color: white; border-color: var(--color-primary); }
     .sample-item.status-submitted .sample-index { background: var(--color-cta); color: white; border-color: var(--color-cta); }
+    .sample-item.status-saved .sample-index { background: var(--color-warning-bg); color: var(--color-warning); border-color: var(--color-warning-border); }
     .sample-meta { flex: 1; min-width: 0; }
     .sample-snippet {
       font-size: 12px;
@@ -120,6 +121,17 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .sample-status-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 3px;
+    }
+    .status-color-submitted { color: var(--color-cta); }
+    .status-color-saved { color: var(--color-warning); }
+    .status-color-pending { color: var(--color-ink-muted); }
 
     /* ── Middle: Content + Annotation ───────────────────────── */
     .col-content {
@@ -145,8 +157,61 @@
       letter-spacing: 0.05em;
       margin-bottom: var(--space-sm);
     }
-    .ws-card-title { font-size: 18px; font-weight: 700; color: var(--color-ink); }
-    .content-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-md); }
+    /* Engine renders question + output panels as flat siblings; the host
+       regroups them into two content-cards (wrapAnnotatorCards) with the
+       normal column gap between them. */
+    #annotationPreview { display: flex; flex-direction: column; gap: var(--space-md); }
+    /* The content-cards already frame each block, so the engine's own
+       preview chrome reads as doubled lines here (spec 015 v2.4.0):
+       input inner box, section dividers, and the bypass row's dashed
+       top rule (inline-styled by the engine, hence !important). */
+    #annotationPreview .annotation-preview-sample { border: none; padding: 0; background: transparent; }
+    #annotationPreview .annotation-preview-divider { display: none; }
+    #annotationPreview div[style*="dashed"] { border-top: none !important; padding-top: 0 !important; }
+
+    /* ── Sample nav (top of middle column) ───────────────────── */
+    .sample-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+    .nav-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .sample-progress-summary { flex: 1; max-width: 260px; min-width: 180px; }
+    .progress-text {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .progress-track {
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--color-border);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--color-cta);
+      transition: width var(--dur-normal) var(--ease-standard);
+    }
 
     .field-group { margin-top: var(--space-md); }
     .field-label {
@@ -202,9 +267,24 @@
       border-top: 1px solid var(--color-border);
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: var(--space-sm);
     }
+    .autosave-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--color-text-soft);
+    }
+    .autosave-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .autosave-dot.saved { background: var(--color-cta); }
+    .autosave-dot.saving { background: var(--color-warning); animation: pulse-dot 1s ease-in-out infinite; }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+    .action-bar-right { display: flex; align-items: center; gap: var(--space-sm); }
 
     /* ── Right: Guideline ────────────────────────────────────── */
     .col-guideline {
@@ -242,7 +322,56 @@
     .workspace-body.guideline-collapsed .guideline-collapse-btn { right: 8px; }
     .guideline-collapse-btn svg { width: 16px; height: 16px; transition: transform var(--dur-normal) var(--ease-standard); }
     .workspace-body.guideline-collapsed .guideline-collapse-btn svg { transform: rotate(180deg); }
+    .guideline-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--color-border);
+      padding: 0 var(--space-md);
+      flex-shrink: 0;
+    }
+    .guideline-tab {
+      padding: 12px 14px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-soft);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+    }
+    .guideline-tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
     .guideline-panel { flex: 1; overflow-y: auto; padding: var(--space-md); }
+    .history-empty { font-size: 12px; color: var(--color-ink-muted); text-align: center; padding: var(--space-lg) 0; }
+    .history-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .history-item {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      background: var(--color-white);
+    }
+    .history-item-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .history-actor { font-size: 12px; font-weight: 700; color: var(--color-ink); }
+    .history-meta { display: flex; align-items: center; gap: 8px; }
+    .history-time { font-size: 11px; color: var(--color-ink-muted); }
+    .history-action-badge {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-surface);
+      color: var(--color-text-soft);
+    }
+    .history-action-badge.submitted { background: var(--color-surface); color: var(--color-cta); }
+    .history-action-badge.saved { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-summary {
+      margin-top: 6px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--color-text-soft);
+      white-space: pre-line;
+    }
     .guideline-summary {
       border: 1px solid rgba(99,102,241,0.2);
       border-radius: var(--radius-lg);
@@ -438,16 +567,22 @@
     <div class="col-content">
       <div class="content-scroll" id="contentScroll" data-testid="ws-content-scroll">
 
-        <div class="content-card">
-          <div class="content-card-header">
-            <div>
-              <div class="content-card-title" id="cardTitleLabel">任務</div>
-              <h1 class="ws-card-title" id="wsCardTitle" data-testid="ws-card-title"></h1>
+        <!-- Sample nav: prev / progress summary / next -->
+        <div class="sample-nav">
+          <button class="nav-btn" type="button" id="wsPrevBtn" data-testid="ws-prev-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            <span id="wsPrevBtnLabel"></span>
+          </button>
+          <div class="sample-progress-summary">
+            <span class="progress-text" id="wsProgressText" data-testid="ws-progress-text"></span>
+            <div class="progress-track" id="wsProgressTrack" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" id="wsProgressFill" style="width:0%"></div>
             </div>
-            <button class="lang-toggle" type="button" id="wsLangToggle" data-testid="ws-lang-toggle" aria-label="切換語言">
-              <span id="wsLangLabel" data-testid="ws-lang-label">ZH</span>
-            </button>
           </div>
+          <button class="nav-btn" type="button" id="wsNextBtn" data-testid="ws-next-btn">
+            <span id="wsNextBtnLabel"></span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
 
         <!-- Engine mounts the evidence card / input content / output-type
@@ -465,27 +600,41 @@
       </div>
 
       <div class="action-bar">
-        <button class="btn btn-outline" type="button" id="wsSaveBtn" data-testid="ws-save-btn">
-          <span id="wsSaveLabel"></span>
-        </button>
-        <button class="btn btn-cta" type="button" id="wsSubmitBtn" data-testid="ws-submit-btn">
-          <span id="wsSubmitLabel"></span>
-        </button>
-        <button class="btn btn-cta hidden" type="button" id="wsReviewSubmitBtn" data-testid="ws-review-submit-btn">
-          <span id="wsReviewSubmitLabel"></span>
-        </button>
+        <div class="autosave-status" data-testid="ws-autosave-status">
+          <div class="autosave-dot saved" id="wsAutosaveDot"></div>
+          <span id="wsAutosaveLabel"></span>
+        </div>
+        <div class="action-bar-right">
+          <button class="btn btn-outline" type="button" id="wsSaveBtn" data-testid="ws-save-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span id="wsSaveLabel"></span>
+          </button>
+          <button class="btn btn-cta" type="button" id="wsSubmitBtn" data-testid="ws-submit-btn">
+            <span id="wsSubmitLabel"></span>
+          </button>
+          <button class="btn btn-cta hidden" type="button" id="wsReviewSubmitBtn" data-testid="ws-review-submit-btn">
+            <span id="wsReviewSubmitLabel"></span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Right: Guideline -->
+    <!-- Right: Guideline + History tabs -->
     <div class="col-guideline" data-testid="ws-guideline-panel">
-      <div class="guideline-panel">
+      <div class="guideline-tabs">
+        <button class="guideline-tab active" type="button" id="wsTabGuideline" data-testid="ws-guideline-tab-guideline"><span id="wsTabGuidelineLabel"></span></button>
+        <button class="guideline-tab" type="button" id="wsTabHistory" data-testid="ws-guideline-tab-history"><span id="wsTabHistoryLabel"></span></button>
+      </div>
+      <div class="guideline-panel" id="wsGuidelinePanel">
         <div class="guideline-summary">
           <div class="guideline-summary-title" id="guidelineSummaryTitle"></div>
           <p class="guideline-summary-text" id="guidelineSummaryText"></p>
         </div>
         <div class="guideline-file-list" id="wsGuidelineFileList"></div>
         <div class="guideline-md-preview hidden" id="wsGuidelineMdPreview"></div>
+      </div>
+      <div class="guideline-panel hidden" id="wsHistoryPanel" data-testid="ws-history-panel">
+        <div id="wsHistoryContainer"></div>
       </div>
     </div>
 

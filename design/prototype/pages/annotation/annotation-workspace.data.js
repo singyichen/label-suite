@@ -153,11 +153,29 @@
     return entryStatus(entry) === 'submitted' ? entry.submittedAt || null : null;
   }
 
-  function markSampleSubmitted(taskId, role, runType, sampleId, payload) {
+  /* Per-sample history events (FR-016 / AC-3.8): every save/submit appends
+     {action, role, at, summary} onto the entry, so the right-column 歷程
+     tab can trace who did what and when. `summary` is the host-provided
+     per-output description (對應輸出類型 + 修改內容). */
+  function appendHistoryEvent(entry, action, role, summary) {
+    if (!Array.isArray(entry.history)) entry.history = [];
+    entry.history.push({
+      action: action,
+      role: role,
+      at: new Date().toISOString(),
+      summary: summary || '',
+    });
+  }
+
+  function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary) {
     var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType);
     if (!store[key]) store[key] = {};
-    store[key][sampleId] = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
+    var existing = store[key][sampleId];
+    var entry = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
+    if (existing && Array.isArray(existing.history)) entry.history = existing.history;
+    appendHistoryEvent(entry, 'submitted', role, historySummary);
+    store[key][sampleId] = entry;
     writeSubmissionStore(store);
   }
 
@@ -165,7 +183,7 @@
      already-submitted sample back to 'saved' -- the submission stands and
      only its answers are refreshed (spec 015 has no un-submit transition);
      pending samples become 'saved'. */
-  function markSampleSaved(taskId, role, runType, sampleId, payload) {
+  function markSampleSaved(taskId, role, runType, sampleId, payload, historySummary) {
     var store = readSubmissionStore();
     var key = submissionBucketKey(taskId, role, runType);
     if (!store[key]) store[key] = {};
@@ -173,8 +191,12 @@
     if (existing && entryStatus(existing) === 'submitted') {
       existing.answers = payload || {};
       existing.savedAt = new Date().toISOString();
+      appendHistoryEvent(existing, 'saved', role, historySummary);
     } else {
-      store[key][sampleId] = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
+      var entry = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
+      if (existing && Array.isArray(existing.history)) entry.history = existing.history;
+      appendHistoryEvent(entry, 'saved', role, historySummary);
+      store[key][sampleId] = entry;
     }
     writeSubmissionStore(store);
   }
@@ -194,6 +216,22 @@
   function getSampleAnswers(taskId, role, runType, sampleId) {
     var entry = readSampleEntry(taskId, role, runType, sampleId);
     return entry ? entry.answers : null;
+  }
+
+  /* Full traceability view for one sample: merges the annotator's and the
+     reviewer's history events (they live in separate role buckets) into a
+     single chronological list, so the 歷程 tab shows the complete chain
+     regardless of which role is looking at it (AC-3.8). */
+  function getSampleHistory(taskId, runType, sampleId) {
+    var merged = [];
+    ['annotator', 'reviewer'].forEach(function (role) {
+      var entry = readSampleEntry(taskId, role, runType, sampleId);
+      if (entry && Array.isArray(entry.history)) merged = merged.concat(entry.history);
+    });
+    merged.sort(function (a, b) {
+      return String(a.at).localeCompare(String(b.at));
+    });
+    return merged;
   }
 
   function getSubmittedSampleCount(taskId, role, runType) {
@@ -241,6 +279,7 @@
     markSampleSaved: markSampleSaved,
     getSubmission: getSubmission,
     getSampleAnswers: getSampleAnswers,
+    getSampleHistory: getSampleHistory,
     getSubmittedSampleCount: getSubmittedSampleCount,
     syncDryRunProgress: syncDryRunProgress,
   };
