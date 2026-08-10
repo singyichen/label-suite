@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.1.0
+版本: 2.4.0
 狀態: Draft
 ---
 
@@ -46,7 +46,7 @@
 - `ANNOTATION_WORKSPACE_ROUTE_QUERY = task_id | sample_id | role | run_type`
 - `TASK_CONTEXT_SOURCE = route_query`（`role` / `run_type` 缺值或非支援值時套用預設值；`task_id` 查無對應 `TaskProfile` 時導回 `annotation-list`，不再有 localStorage fallback）
 - `TASK_PROFILE_SOURCE = task-detail 已發布的 TaskConfig（task-management-013 outputs[] config、field_role_map、item_pair_labels）+ sample_snapshot_id`
-- `GUIDELINE_PANEL_TABS = guideline-files-static`（右欄「說明與檔案」為常駐顯示區塊，不提供 guideline-files/history 雙 tab 切換；`History` 為 Reviewer 流程內建的獨立追溯區塊，透過既有機制呈現，非本面板分頁——pending user confirmation，見 Changelog 2.1.0）
+- `GUIDELINE_PANEL_TABS = guideline-files | history`（Desktop 右欄提供「說明與檔案」/「歷程」雙頁籤，annotator 與 reviewer 視角一致；`歷程` 頁籤顯示當前樣本合併 annotator/reviewer 事件後的時序紀錄。2.1.0 的 `guideline-files-static` 暫定修訂已由使用者於 2.3.0 定案回滾，見 Changelog 2.3.0。Mobile 底部抽屜僅承載「說明與檔案」，不含歷程頁籤）
 - `GUIDELINE_MODAL_BEHAVIOR = show-on-entry-per-page-load`
 - `GUIDELINE_PANEL_COLLAPSE = desktop-toggleable`
 - `SAMPLE_SOURCE_CONTRACT = sample_snapshot_id`
@@ -195,19 +195,27 @@ Annotator 可在同一工作區中，依任務 `outputs[]` 組成逐一完成各
 4. **AC-2.4**：**Given** 已完成可提交條件（所有輸出類型皆已作答或已勾選 Bypass），**When** 點擊提交，**Then** 系統記錄提交並預設導向下一筆（`SUBMIT_DEFAULT_ACTION`）。
 5. **AC-2.5**：**Given** 任務最後一筆完成提交，**When** 完成提交流程，**Then** 系統導回 `annotation-list` 並將該任務資料列狀態顯示為 `已提交`。
 6. **AC-2.6**：**Given** 切換樣本或手動儲存，**When** 有編輯行為發生，**Then** 顯示自動儲存狀態更新（Saving → Saved）。
-7. **AC-2.7**：**Given** annotator 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄標記卡標題，**Then** 標題必須顯示與 reviewer 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用輸出類型文案。
+7. **AC-2.7**：**Given** annotator 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄，**Then** 中欄不得顯示任務標題卡（任務名稱標題與卡內語言切換鈕）；任務名稱由右欄「說明與檔案」的任務說明摘要呈現（依 `task_id` 對應的實際任務名稱，與 reviewer 視角一致），語言切換由共用 sidebar 的語言切換鈕提供。
+8. **AC-2.8**：**Given** 左欄標記清單，**When** 樣本經歷 未作答 → 儲存草稿 → 提交，**Then** 該筆樣本下方的完成狀態標籤依序顯示 `待標記` → `已儲存` → `已提交`，且其他樣本的狀態標籤不受影響。
+9. **AC-2.9**：**Given** 中欄頂部樣本導覽列，**When** 點擊 `上一筆` / `下一筆`，**Then** 工作區切換至對應樣本；位於首筆時 `上一筆` 停用、位於末筆時 `下一筆` 停用；進度摘要顯示 `已提交筆數 / 總筆數`，並於提交後即時更新。
+10. **AC-2.10**：**Given** 任務含有獨立題目內容（Evidence 或 input 欄位）的輸出類型，**When** annotator 進入工作區，**Then** 題目內容與標記控制項分別置於兩張獨立卡片，視覺上明確區隔。
+11. **AC-2.11**：**Given** 右欄 `歷程` 頁籤，**When** annotator 儲存草稿或提交後切換至該頁籤，**Then** 顯示當前樣本的事件紀錄（操作者角色、時間、動作、對應輸出類型作答摘要），最新事件在前；尚無紀錄時顯示空狀態文案。
+12. **AC-2.12**：**Given** 中欄題目卡與標記卡，**When** annotator 檢視卡片內容，**Then** 題目卡內的 input 內容不得再包一層內框（卡片邊框為唯一外框），標記卡內不得出現殘留的水平分隔線或 Bypass 選項上方的虛線隔線；Bypass 選項自身的虛線外框保留。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`上方任務目標列（固定）`
   - 必要元素：任務目標、操作指引、已標記數量、總量、當前階段、微型進度視覺
 - 區塊 B：`三欄工作區（Desktop）`
-  - 左欄：標記清單、目前定位、完成狀態
-  - 中欄：依 `outputs[]` 順序逐一渲染的輸出類型標記卡（見使用者故事 2A）、儲存/提交操作
-  - 右欄：`說明與檔案` 常駐顯示（無分頁切換）；`History` 為 Reviewer 流程內建的獨立追溯區塊，非本欄分頁（見 `GUIDELINE_PANEL_TABS`，pending user confirmation）
+  - 左欄：標記清單、目前定位；每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`）
+  - 中欄（上）：樣本導覽列——`上一筆` 按鈕、`已提交筆數 / 總筆數` 進度摘要（含進度條）、`下一筆` 按鈕；位於首筆/末筆時對應按鈕停用
+  - 中欄（主體）：題目區塊與標記區塊以獨立卡片區隔——題目卡承載 Evidence 與 input 內容，標記卡承載依 `outputs[]` 順序逐一渲染的輸出類型標記區（見使用者故事 2A）；輸出類型無獨立題目呈現時（其標記區內嵌原文，如 `sequence_tagging`／`entity_recognition`），題目卡可省略
+  - 卡片內視覺：卡片邊框為題目/標記區塊的唯一外框——題目卡內的 input 內容直接呈現，不得再包一層內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）；Bypass 選項自身的虛線外框為刻意設計，予以保留
+  - 中欄（下）：底部操作列——左側自動儲存狀態（`草稿已自動儲存` / `儲存中…`）、右側 `儲存草稿` 與提交按鈕
+  - 右欄：`說明與檔案` / `歷程` 雙頁籤（見 `GUIDELINE_PANEL_TABS`），預設顯示說明與檔案
 - 區塊 C：`Mobile 佈局`
   - 精簡任務目標列 + 主操作區
-  - 說明與檔案使用底部抽屜（預設收合，可展開；無 `History` 分頁，同區塊 B 之修訂）
+  - 說明與檔案使用底部抽屜（預設收合，可展開；抽屜僅承載說明與檔案，`歷程` 頁籤為 Desktop 右欄功能）
 
 **行為規則**：
 
@@ -219,7 +227,7 @@ Annotator 可在同一工作區中，依任務 `outputs[]` 組成逐一完成各
 - Desktop 右欄支援收合/展開切換按鈕，收合後可再次展開。
 - 提交後預設停留於 workspace 並載入下一筆；任務全部完成時導回 `annotation-list`（`SUBMIT_ALL_DONE_ACTION`）。
 - 提交前必須驗證 `outputs[]` 中每個輸出類型皆已完成作答或已勾選 Bypass；任一輸出類型未完成時阻擋提交並提示對應區塊。
-- 中欄主卡 header 必須優先使用 `task_id` 對應的實際任務名稱；此規則同時適用於 annotator 的標記卡與 reviewer 的審查卡。僅在缺少任務上下文時，才可退回輸出類型層級的預設文案。
+- 中欄不得渲染任務標題卡（含任務名稱 header 與卡內語言切換鈕）；此規則同時適用於 annotator 與 reviewer 視角。任務名稱僅由右欄「說明與檔案」的任務說明摘要呈現，來源必須優先使用 `task_id` 對應的實際任務名稱，僅在缺少任務上下文時，才可退回輸出類型層級的預設文案。工作區語言切換改由共用 sidebar 的語言切換鈕提供，與其他頁面一致。
 
 ---
 
@@ -293,12 +301,12 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 7. **AC-3.7**：**Given** reviewer 需快速處理同一句的多位標記員結果，**When** 點擊 `全部通過` 或 `全部退回`，**Then** 系統必須以勾選式批次套用到所有標記員列。
 8. **AC-3.8**：**Given** reviewer 退回或通過某位標記員結果，**When** 送出審核，**Then** 該筆歷程新增一筆可追溯紀錄（誰、何時、對哪位標記員的哪個輸出類型做了什麼決策）。
 9. **AC-3.9**：**Given** reviewer 對任一輸出類型（8 型皆適用）直接修正標記員結果，**When** 送出審核，**Then** 系統必須同時保留 annotator 原始提交、reviewer 修正後結果與修正 diff，供品質追溯；修正控件必須重用該輸出類型對應的 annotator 作答互動控件，不得另建輸出類型專屬修正介面。
-10. **AC-3.10**：**Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄審查卡標題，**Then** 標題必須顯示與 annotator 視角一致的實際任務名稱（依 `task_id` 對應），不得退回成泛用輸出類型文案。
+10. **AC-3.10**：**Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄，**Then** 中欄不得顯示任務標題卡（任務名稱標題與卡內語言切換鈕）；任務名稱由右欄「說明與檔案」的任務說明摘要呈現（依 `task_id` 對應的實際任務名稱，與 annotator 視角一致），語言切換由共用 sidebar 的語言切換鈕提供。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`中欄審查操作區`
-  - 標題規則：審查卡 header 必須顯示當前任務名稱，並與 annotator 視角、Dashboard 任務卡、annotation-list 任務資訊卡的任務名稱保持一致；同一任務在 reviewer 視角不得改顯示為輸出類型通稱
+  - 標題規則：中欄不顯示任務標題卡；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，並與 annotator 視角、Dashboard 任務卡、annotation-list 任務資訊卡的任務名稱保持一致；同一任務在 reviewer 視角不得改顯示為輸出類型通稱
   - 必要元素：依 `outputs[]` 順序逐一呈現的輸出類型審查摘要區塊（標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對，依 FR-024L 對應規則），各區塊皆提供直接修正入口
   - 必要元素：標記員逐列結果（帳號、依輸出類型呈現的標記值）
   - 必要元素：逐列決策按鈕（`通過` / `退回`）
@@ -310,8 +318,10 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
   - 狀態回饋：批次操作按鈕需支援 active/inactive 兩態，active 態沿用逐列 `通過 / 退回` 的深色實心視覺；再次點擊 active 態時需取消整筆批次決策
   - 逐筆按鈕行為：逐筆 `通過 / 退回` 按鈕點擊後切換為 active 深色實心；再次點擊當前 active 按鈕時視為取消該筆決策，回到未選取狀態；逐筆決策狀態與批次按鈕狀態保持同步
   - 修正入口：全部 8 個輸出類型皆提供 row-level 直接修正控制項，控制項重用對應 annotator 作答互動控件並以 annotator 提交結果為初始值（seed），不得另建輸出類型專屬修正介面；由 reviewer 新增/修改的項目需以簡單色彩狀態區分（例如淺綠底/綠色邊框），頁面內不需額外顯示逐筆操作的文字 audit
-- 區塊 B：`右欄 History`
-  - 必要元素：操作者、時間、輸出類型、欄位差異、決策狀態
+- 區塊 B：`右欄 History（歷程頁籤）`
+  - 承載位置：右欄 `歷程` 頁籤（與 annotator 視角共用同一頁籤結構，見 `GUIDELINE_PANEL_TABS`）
+  - 必要元素：操作者角色、時間、動作（儲存/提交/決策）、對應輸出類型摘要
+  - 合併規則：同一樣本的 annotator 與 reviewer 事件合併為單一時序清單，兩種角色檢視內容一致，最新事件在前
 - 區塊 C：`右欄說明與檔案`
   - 必要元素：任務說明摘要、檔案列表、預覽/新分頁開啟能力
   - 圖片預覽規範：點擊圖片檔後，必須以置中的圖片預覽 modal 顯示大圖；不可僅在右欄底部以小尺寸 inline 圖片呈現
@@ -321,7 +331,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - Reviewer 可於 Dry Run 協助產出標準答案（多數決、IAA 輔助判讀或手動確認）。
 - Reviewer 操作必須留下完整審計資訊，供後續品質追溯。
 - Reviewer 與 Annotator 共用相同樣本來源契約與導覽骨架，避免視圖不一致。
-- Reviewer 工作區的審查卡標題必須優先使用 `task_id` 對應的實際任務名稱；Annotator 工作區的標記卡標題也必須共用同一名稱來源。僅在缺少任務上下文時，才可退回輸出類型層級的預設文案。
+- Reviewer 與 Annotator 工作區皆不顯示中欄任務標題卡；右欄任務說明摘要顯示的任務名稱必須優先使用 `task_id` 對應的實際任務名稱，兩種視角共用同一名稱來源。僅在缺少任務上下文時，才可退回輸出類型層級的預設文案。
 - 審查呈現與修正能力完全由 `outputs[].type` 決定，不得依任務名稱或個別任務硬編分支；新增輸出類型時只需擴充 registry 對應的呈現規則，不需修改核心審查流程。
 - 全部 8 個輸出類型皆提供 Reviewer `通過 / 退回` 決策，並皆提供直接修改標記值入口；修正控件必須重用對應 annotator 作答互動控件（單選 chip／階層多選器／slider＋number input／Token 網格／entity 建構器／relation 建構器／textarea），不得為任一輸出類型另建修正專屬介面。
 - Reviewer 對任一輸出類型執行直接修正時，系統必須保留 annotator 原始提交、reviewer 修正後結果、修正 diff、Reviewer 身分、時間與最終決策，供品質追溯。
@@ -426,14 +436,20 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-011**: 工作區樣本來源必須鎖定為 `SAMPLE_SOURCE_CONTRACT`，不得在 workspace 端重算或覆寫切分。
 - **FR-012**: 系統必須支援 `RUN_TYPES` 並在 UI 明確標示當前階段。
 - **FR-013**: Annotator 模式必須支援逐筆標記、儲存草稿、提交。
+- **FR-013A**: 工作區左欄標記清單必須於每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`），並於儲存草稿或提交後即時更新對應樣本的標籤。
+- **FR-013B**: 工作區中欄頂部必須提供樣本導覽列：`上一筆` / `下一筆` 按鈕與 `已提交筆數 / 總筆數` 進度摘要（含進度條）；位於首筆/末筆時對應按鈕停用，提交後進度即時更新。annotator 與 reviewer 視角皆適用。
+- **FR-013C**: 工作區中欄底部必須提供操作列：左側自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`，對應 `AUTOSAVE_TRIGGERS`），右側 `儲存草稿` 與提交按鈕。
+- **FR-013D**: 中欄題目內容（Evidence 與 input 欄位）與標記控制項必須以獨立卡片區隔；卡片切分依欄位角色與輸出類型結構決定，不得依任務名稱或個別輸出類型硬編分支。
+- **FR-013E**: 卡片邊框必須是題目/標記區塊的唯一外框：題目卡內 input 內容直接呈現、不得再包內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）。Bypass 選項自身的虛線外框為刻意設計，必須保留。此規則以結構性樣式覆寫達成，一體適用所有輸出類型，不得逐類型硬編。
 - **FR-014**: Reviewer 模式必須支援通過、退回、修正、刪除標記結果。
 - **FR-014A**: Reviewer 視圖（workspace）中，`single_dim` / `multi_dim` 類任務每位標記員的維度值 result tag 必須依 ±1.5std 範圍著色（綠/藍/紅；優先順序紅 > 藍 > 綠），規則與 `annotation-list` reviewer 視圖一致。
 - **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態。
-- **FR-014C**: 工作區 reviewer 視圖的審查卡標題必須顯示與 annotator 視角一致的實際任務名稱，名稱來源需與 Dashboard / annotation-list 的任務名稱一致；不得以輸出類型通稱取代。
-- **FR-014D**: 工作區 annotator 視圖的標記卡標題必須顯示與 reviewer 視角一致的實際任務名稱，名稱來源需與 Dashboard / annotation-list 的任務名稱一致；不得以輸出類型通稱取代。
+- **FR-014C**: 工作區中欄不得渲染任務標題卡（任務名稱 header 與卡內語言切換鈕），annotator 與 reviewer 視角皆適用；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，名稱來源需與 Dashboard / annotation-list 的任務名稱一致（依 `task_id` 對應），不得以輸出類型通稱取代。
+- **FR-014D**: 工作區語言切換必須綁定共用 sidebar 的語言切換鈕（含 mobile 版），與其他頁面行為一致；切換後需重新套用工作區 i18n strings 並重繪工作區，語言選擇沿用全站共用的儲存機制。
 - **FR-015**: Reviewer 在 Dry Run 必須可使用多數決或手動確認流程協助產出標準答案。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
+- **FR-016B**: 標記歷程必須於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件（儲存/提交/決策）合併為單一時序清單，每筆事件包含操作者角色、時間、動作與對應輸出類型作答摘要，最新事件在前；尚無紀錄時顯示空狀態文案。
 - **FR-017**: Desktop 介面必須提供三欄工作區與固定任務目標列。
 - **FR-018**: Mobile 介面必須提供精簡目標列、主操作區與底部抽屜說明區（預設收合）。
 - **FR-019**: `說明與檔案` 面板必須於翻筆後持續可見，不可自動收起或清空。
@@ -606,7 +622,7 @@ flowchart LR
 ## Open Questions
 
 - [ ] `sequence_tagging` 正式 Token 邊界依 ADR-031 由後端提供，惟 word-mode 分詞引擎選型（CKIP／Jieba／PyICU）尚未定案；待引擎選定後需回頭確認 FR-024A-1 的實作可行性與時程。
-- [ ] **GUIDELINE_PANEL_TABS 修訂待確認**（v2.1.0 pending user confirmation）：`GUIDELINE_PANEL_TABS` 常數、AC-5.2、使用者故事 2 區塊 B 與使用者故事 5 區塊 C 已全數修訂為「右欄常駐無 tab、History 為 Reviewer 專屬既有機制（wsReviewHistory）」以對齊實作（主 session 裁決，循 proto-sync 前例）。整組修訂待使用者確認；若使用者要求 Annotator 側 History 分頁功能，需另開 Feature 補實作並回滾此組條文。
+- [x] **GUIDELINE_PANEL_TABS 修訂已定案**（v2.3.0 resolved）：v2.1.0 暫定的「右欄常駐無 tab」修訂已由使用者於 2026-08-10 定案回滾——使用者要求恢復右欄 `說明與檔案` / `歷程` 雙頁籤（annotator 與 reviewer 皆適用），相關條文（`GUIDELINE_PANEL_TABS`、使用者故事 2 區塊 B、使用者故事 3 區塊 B、FR-016B）已於 2.3.0 修訂完成，prototype 已同步實作。
 
 ## Constitution Compliance
 
@@ -619,6 +635,9 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 2.4.0 | 2026-08-10 | **移除中欄卡片內多餘框線與隔線**（使用者比對舊版介面後要求）：題目卡內 input 內容不得再包一層內框（engine 預覽的 `.annotation-preview-sample` 內框在卡片內為重複框線，予以剝除）；標記卡內移除殘留的水平分隔線（engine 的 `.annotation-preview-divider`）與 Bypass 選項上方的虛線隔線；Bypass 選項自身的虛線外框為刻意設計、保留。落實為 workspace 頁面 scoped 樣式覆寫，一體適用所有輸出類型，不動共用 engine（FR-013E、AC-2.12，使用者故事 2 區塊 B 補「卡片內視覺」規則）。 |
+| 2.3.0 | 2026-08-10 | **還原舊版工作區 chrome 並定案右欄雙頁籤**（使用者要求對齊 pre-outputs[] 版本的工作區框架，annotator 與 reviewer 視角一致）：(1) 左欄標記清單每筆樣本下方新增三態完成狀態標籤 `已提交` / `已儲存` / `待標記`（FR-013A、AC-2.8）。(2) 中欄頂部新增樣本導覽列——`上一筆` / `下一筆` 按鈕（首末筆停用）＋ `已提交筆數 / 總筆數` 進度摘要與進度條（FR-013B、AC-2.9）。(3) 中欄題目區塊與標記區塊改以獨立卡片區隔，切分依欄位角色與輸出類型結構決定、不得硬編分支（FR-013D、AC-2.10）。(4) 中欄底部新增操作列——自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`）＋ `儲存草稿`（原 `儲存` 更名）與提交按鈕（FR-013C）。(5) **`GUIDELINE_PANEL_TABS` 由 `guideline-files-static` 定案回滾為 `guideline-files | history` 雙頁籤**：v2.1.0 暫定修訂由使用者定案否決，右欄恢復 `說明與檔案` / `歷程` 兩個頁籤且兩種角色皆可見；`歷程` 頁籤顯示當前樣本合併 annotator/reviewer 事件後的時序紀錄（操作者角色、時間、動作、輸出類型作答摘要，最新在前，空狀態文案），落實 FR-016 的歷程呈現面（FR-016B、AC-2.11）；使用者故事 3 區塊 B 同步改寫為歷程頁籤承載；Mobile 抽屜維持僅承載說明與檔案。對應 Open Question 已結案。 |
+| 2.2.0 | 2026-08-10 | 移除工作區中欄任務標題卡（任務名稱 header＋卡內 ZH/EN 語言切換鈕），annotator 與 reviewer 視角一致適用；任務名稱僅由右欄「說明與檔案」任務說明摘要呈現（名稱來源與 Dashboard / annotation-list 一致，依 `task_id` 對應）。工作區語言切換改綁共用 sidebar 的語言切換鈕（含 mobile 版），與其他頁面行為一致。AC-2.7、AC-3.10 改寫為「不得顯示任務標題卡」的負向驗收；FR-014C 改寫為標題卡移除規則、FR-014D 改寫為 sidebar 語言切換綁定規則；使用者故事 2 / 3 的介面定義與行為規則同步修訂。另修正前版 header 版本欄位漏跟 changelog 2.1.1 同步的問題（本版直接自 2.1.1 遞增）。 |
 | 2.1.1 | 2026-08-10 | `TaskProfile` 實體新增 `materializedRuns?: Record<RunType, { round?, total }>` 通用欄位，落實既有條文「筆數仍需依 materialized run context 顯示」與「清單由 task-detail run 發布事件建立」於 outputs[] 模型下的資料建模（取代舊 prototype 的 `MATERIALIZED_RUN_CONTEXT` 硬編 map）；`annotation-list`／`annotation-workspace` 筆數優先讀取對應 `run_type` 的 `total`，未宣告時回退 `datasetRecords` 長度。同時依 FR-024M-1 收緊 `sanitizeRecordForAnnotator`：未映射任何角色的欄位亦於送達 annotator 前端 state 前剝除（先前僅剝除 output 角色欄位、未映射欄位僅靠渲染層不讀取），封閉 engine 以字面 key（`entities`／`triples`）讀取未映射答案欄位的潛在洩漏路徑。 |
 | 2.1.0 | 2026-08-10 | **實作後 spec 一致性修訂**（post-implementation review，循 PR #142 前例）：(1) 新增 FR-024M／FR-024M-1，明文化 Output-role prefill 適用全部 8 個 `OUTPUT_TYPE_KEYS`（`field_role_map` 存在 output 角色欄位時以其實際值初始化作答控制項，annotator-visible、可編修、可直接提交），對齊 013 FR-003g-5；並明文 Data Fairness 邊界——僅明文映射為 output 角色的欄位可下發，未映射欄位一律剝除，隱藏 test-set ground truth 不得下發（`sanitizeRecordForAnnotator` 實作行為）。FR-026、FR-024F、AC-2A.4 同步加註「Output-role preannotation 依 FR-024M 不在此限」例外字句，避免與既有「不得預填合成預設值」規則衝突；`free_text` FR-024H-1 維持不變（已相容）。(2) `GUIDELINE_PANEL_TABS` 修訂為反映實作：右欄「說明與檔案」為常駐顯示，不提供 guideline-files/history 雙 tab 切換，`History` 為 Reviewer 流程內建區塊（既有機制，非本面板分頁）——**pending user confirmation**；與此修訂同源的使用者故事 2 區塊 B 與使用者故事 5 區塊 C 已由主 session 裁決一併修訂對齊（見 Open Questions），FR-024G 亦同步補上與 AC-2A.4 對應的 FR-024M 例外字句。AC-5.2 移除重複的「並保留目前 tab」字句，簡化為「抽屜維持目前開合狀態」。(3) `TaskProfile` 實體新增 `guidelineFiles?: GuidelineFile[]`（`{ name, type, url }`）通用欄位描述，`GuidelineAsset` 實體同步補充檔案清單來源，對齊實作採用的通用資料建模（非 per-category 硬編文案，符合 Generalization-First）。 |
 | 2.0.0 | 2026-08-07 | **Breaking：taxonomy 全面遷移至 outputs[] 模型**。移除 5 型 `task_type`（`single_sentence_classification`／`single_sentence_va_scoring`／`sequence_labeling`＋`SEQUENCE_LABELING_SUBTYPES`／`relation_extraction`／`sentence_pairs`）與對應常數（`TASK_TYPE_KEYS`、`SEQUENCE_LABELING_SUBTYPES`、`ASPECT_LIST_CONFIG_FIELDS`、`SENTENCE_PAIRS_MODES`、`SENTENCE_PAIRS_RESPONSE_FORMATS`、`SENTENCE_PAIRS_CONFIG_FIELDS`、`ACTIVE_TASK_TYPE_STORAGE_KEY`）；改採 task-management-013 v6.9.0 的 8-key `OUTPUT_TYPE_KEYS`（`sequence_tagging`／`entity_recognition`／`relation_identification`／`single_label`／`multi_label`／`single_dim`／`multi_dim`／`free_text`）與 `outputs[]` 組合模型。**路由契約變更**：`ANNOTATION_WORKSPACE_ROUTE_QUERY` 移除 `task_type`／`sub_type`，改為以 `task_id` 查詢已發布 `TaskProfile`；查無對應 `TaskProfile` 時導回 `annotation-list`。**Reviewer 呈現 registry 化**：審查摘要（標籤分布/分數統計/entity diff/triple 清單/文字比對）與直接修正入口改依 `outputs[].type` 決定，不再逐 task 硬編分支。移除 `AspectListAnnotationRecord`、`SentencePairsAnnotationRecord`、`AspectItem`、`AspectListTaskConfig`、`SentencePairsTaskConfig` 實體，改為通用的 `AnnotationRecord` / `OutputAnswer` / `TaskProfile`。移除 `FR-004D`（`sub_type` 路由保留）與 `FR-025`（`ACTIVE_TASK_TYPE_STORAGE_KEY` fallback）；`FR-024` 系列重編為共通 FR + 8 個輸出類型子 FR + 整合模式 FR（`FR-024I`）+ Bypass FR（`FR-024J` 系列）+ item_pair FR（`FR-024K`）+ Reviewer 呈現 FR（`FR-024L` 系列）。明確標註 `docs/product/example-data` 13 份 fixture（T001–T013）為 prototype 示例基線，非合法輸出組合上限（對齊 013 v6.4.1／v6.4.3 changelog 措辭）。使用者故事全面改寫（US2A 依 8 種輸出類型與整合模式重寫、US2B 聚焦 item_pair／Evidence 呈現、US3 改為 registry 驅動審查）；AC 改採 `AC-N.N` 穩定 ID 格式。移除「執行狀態」章節（依 spec-template v1.6.0 於 MAJOR/MINOR 版本更新時淘汰）。**本版同日定案修訂**：Reviewer 直接修正入口原草案暫定僅 `entity_recognition`／`sequence_tagging` 可用（列於 Open Questions 待確認），使用者已定案擴大為全部 8 個 `OUTPUT_TYPE_KEYS` 皆提供 row-level 直接修正，修正 UI 一律重用對應 annotator 作答互動控件並以其答案為初始值（seed），不得另建輸出類型專屬修正介面（FR-024L-1、FR-024L-2 已同步更新）；因本版尚未合併，此決策併入 2.0.0 條目一併記錄，不另行 patch bump。 |
