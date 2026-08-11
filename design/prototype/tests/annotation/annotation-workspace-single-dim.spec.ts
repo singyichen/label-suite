@@ -36,7 +36,7 @@ test.describe('single_dim output type', () => {
 
   test('value survives switching away to another sample and back', async ({ page }) => {
     // read-002 (sample index 1) also has its own gold_score prefill; strip
-    // it at runtime so switching to it exercises the genuine blank/untouched
+    // it at runtime so switching to it exercises the genuine no-prefill
     // state, isolating this test's real target -- that switching back to
     // read-001 restores the value this test itself set, not read-001's own
     // gold_score prefill.
@@ -49,8 +49,11 @@ test.describe('single_dim output type', () => {
     const slider = page.getByTestId('ws-single-dim-slider');
     await setRangeValue(slider, '2');
 
+    // With no prefill the engine seeds the range midpoint (1-5 -> 3); the
+    // value label shows that starting number, matching the number input --
+    // never a dash while the slider holds a value.
     await page.getByTestId('ws-sample-item').nth(1).click();
-    await expect(page.getByTestId('ws-single-dim-value')).toHaveText('—');
+    await expect(page.getByTestId('ws-single-dim-value')).toHaveText('3');
 
     await page.getByTestId('ws-sample-item').nth(0).click();
     await expect(page.getByTestId('ws-single-dim-value')).toHaveText('2');

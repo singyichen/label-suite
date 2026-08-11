@@ -369,18 +369,18 @@
     if (input) input.setAttribute('data-testid', 'ws-single-dim-input');
 
     var ps = state.previewState.single_dim || {};
-    /* A dataset-seeded value (013 FR-003g-5, engine's own renderSingleDimPreview
-       ps._seeded) is a valid, already-touched preannotation -- editable and
-       directly submittable -- not the untouched/dash placeholder state.
-       Exception: clearOutputPreviewState() (task-config.engine.js) also
-       stamps _seeded:true on the bypass-cleared midpoint placeholder as a
-       seed-proof marker (so re-seeding from the dataset stays blocked while
-       bypassed) -- that is NOT a real value, so bypass wins over _seeded. */
-    if (!state.previewBypass.single_dim && (ps._touched || ps._seeded)) {
-      slider.dataset.valueSet = 'true';
-    } else {
+    /* The value label always mirrors the slider's current number (prefill
+       per FR-024M, or the engine's midpoint start position), matching the
+       number input beside it -- the engine's own task-new Step 2 behavior.
+       "Unanswered" is enforced at the submit gate (isOutputAnswered reads
+       ps._touched/ps._seeded), not by dashing the display. The one state
+       that dashes the label is bypass: the answer is explicitly cleared,
+       so no number may show. */
+    if (state.previewBypass.single_dim) {
       slider.dataset.valueSet = 'false';
       if (valueEl) valueEl.textContent = '—';
+    } else {
+      slider.dataset.valueSet = 'true';
     }
 
     slider.addEventListener('input', function () {
@@ -495,8 +495,9 @@
      control its per-dimension testid, and ps.dims{} (this host's own nested
      previewState, persisted/restored generically like any other output
      type's previewState) tracks which dimensions the annotator has actually
-     touched so untouched ones can display '—' instead of the engine's
-     always-numeric default. */
+     touched -- the submit gate (isOutputAnswered) needs that distinction;
+     the value label itself keeps the engine's always-numeric display
+     (prefill or midpoint), dashing only while bypassed. */
   function patchMultiDimPanel(container) {
     var cfg = state.outputConfigs.multi_dim || {};
     var dims = Array.isArray(cfg.dimensions) ? cfg.dimensions : (Array.isArray(cfg.va_dimensions) ? cfg.va_dimensions : []);
@@ -528,7 +529,10 @@
         if (slider) slider.value = saved.value;
         if (valueEl) valueEl.textContent = saved.value;
         if (input) input.value = saved.value;
-      } else if (valueEl) {
+      } else if (state.previewBypass.multi_dim && valueEl) {
+        /* Bypass clears the answer (ps.dims included), so the label may not
+           show a number; every other state keeps the engine's numeric
+           display -- see the block comment above. */
         valueEl.textContent = '—';
       }
 
