@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.10.0
+版本: 2.11.0
 狀態: Draft
 ---
 
@@ -301,7 +301,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 1. **AC-3.1**：**Given** `role=reviewer`，**When** 進入工作區，**Then** 在 Dry Run 與 Official Run 都顯示 reviewer 可用操作（通過 / 退回），且依 `outputs[]` 順序逐一顯示每個輸出類型的審查摘要。
 2. **AC-3.2**：**Given** `outputs[]` 含 `single_label` / `multi_label` / `sequence_tagging`，**When** reviewer 查看審查摘要，**Then** 顯示各標籤（或 tag）的出現次數分布。
 3. **AC-3.3**：**Given** `outputs[]` 含 `single_dim` / `multi_dim`，**When** reviewer 查看審查摘要，**Then** 顯示各維度的 `mean`、`std` 與 `±1.5std` 範圍，且各標記員的維度值 result tag 依跨標記員偏差程度著色（綠/藍/紅，優先序紅 > 藍 > 綠，規則見 FR-014A）；`multi_dim` 的 result tag 以 `[v1, v2, …]` 陣列格式依維度序呈現為單一 tag。
-4. **AC-3.4**：**Given** `outputs[]` 含 `entity_recognition`，**When** reviewer 查看審查摘要，**Then** 以可掃讀的 entity diff 呈現各標記員的新增/刪除/相符實體，並可執行直接修正（新增/刪除/修改實體，重用 annotator 的 entity 建構器並以其提交結果為初始值）。
+4. **AC-3.4**：**Given** `outputs[]` 含 `entity_recognition`，**When** reviewer 查看審查摘要，**Then** 每位標記員的實體結果以逐行「實體類型徽章＋標記文字」呈現（徽章為實心型別色底，顏色取自任務 entity config，見 FR-014K），並可執行直接修正（新增/刪除/修改實體，重用 annotator 的 entity 建構器並以其提交結果為初始值）。
 5. **AC-3.5**：**Given** `outputs[]` 含 `relation_identification`，**When** reviewer 查看審查摘要，**Then** 以 monospace 多行文字呈現各標記員的 triple 清單，每筆三元組各占一行，並可執行直接修正（重用 annotator 的關係建構器並以其提交結果為初始值；純模式與整合模式皆不提供 reviewer 直接改寫實體的入口，僅可調整/新增/刪除 triple）。
 6. **AC-3.6**：**Given** `outputs[]` 含 `free_text`，**When** reviewer 查看審查摘要，**Then** 以可掃讀方式並列顯示各標記員的文字內容供比對，並可執行直接修正（重用 annotator 的 textarea 控件並以其提交文字為初始值）。
 7. **AC-3.7**：**Given** reviewer 需快速處理同一句的多位標記員結果，**When** 點擊 `全部通過` 或 `全部退回`，**Then** 系統必須以勾選式批次套用到所有標記員列。
@@ -314,12 +314,14 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 14. **AC-3.14**：**Given** reviewer 點擊「送出審核」（`ws-review-submit-btn`），**When** 當前樣本任一 outKey × 標記員組合尚無決策，**Then** 系統顯示 toast「請完成每位標記員的審核決策」並中止送出；全部組合皆有決策時方可送出成功。
 15. **AC-3.15**：**Given** 「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 被判定為 `退回`，**When** 送出審核成功，**Then** 系統將該 annotator bucket 的樣本狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板以紅色徽章顯示。
 16. **AC-3.16**：**Given** 目前登入使用者（annotator 身分）於某樣本已提交紀錄，**When** reviewer 檢視該樣本的標記員清單，**Then** 「目前標記員」列固定顯示於清單最上方；清單其餘列依 `REVIEWER_MOCK_ANNOTATORS` 提供的固定模擬標記員呈現。
+17. **AC-3.17**：**Given** `outputs[]` 含 `entity_recognition` 且 `role=reviewer`，**When** 進入工作區，**Then** 中欄最上方顯示「原始文本」卡：原始輸入文字內以行內高亮呈現**所有標記員標記結果的聯集**（含任一標記員標出而其他人遺漏的實體），每個高亮片段帶型別色淡底與底線並附實心型別徽章；高亮顏色取自任務 entity config，與標記員清單的型別徽章同色（見 FR-014K）。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`中欄審查操作區`
   - 標題規則：中欄不顯示任務標題卡；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，並與 annotator 視角、Dashboard 任務卡、annotation-list 任務資訊卡的任務名稱保持一致；同一任務在 reviewer 視角不得改顯示為輸出類型通稱
-  - 審查列結構（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染，見 FR-014E）：由上至下固定為 (1) 型別標題（`single_dim` / `multi_dim` 類型於標題旁另顯示彙總結果標籤）(2) 標記分布統計盒 `ws-review-stats`（chip「標記分布統計」+ 渲染時依當前標記員清單計算的統計文字，見 FR-014F；並列同步既有 標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對呈現，依 FR-024L 對應規則）(3) 審查說明文案 `ws-review-note` 與批次操作 `ws-review-bulk-reject` / `ws-review-bulk-approve` 同一行 (4) 標記員清單 `ws-review-annotator-list`（每列 `ws-review-annotator-row` 帶 `data-annotator` 屬性，含帳號 `ws-review-annotator-name`、依輸出類型呈現的標記值 `ws-review-annotator-answer`（`single_dim` / `multi_dim` 為單一 result tag——`multi_dim` 以 `[v1, v2, …]` 依維度序陣列格式呈現各維度值；依 FR-014A 偏差規則著色，且與 `annotation-list` 展開明細的標記結果 tag 使用相同視覺樣式）、逐列決策按鈕 `ws-review-row-reject` / `ws-review-row-approve`；清單最上方若目前登入使用者已提交，固定插入 `data-annotator="current"` 的「目前標記員」列，其餘列依 `REVIEWER_MOCK_ANNOTATORS` 呈現，見 FR-014J）(5) 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，規則不變，見 FR-024L-1）；各區塊皆提供直接修正入口
+  - 審查列結構（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染，見 FR-014E）：由上至下固定為 (1) 型別標題（`single_dim` / `multi_dim` 類型於標題旁另顯示彙總結果標籤）(2) 標記分布統計盒 `ws-review-stats`（chip「標記分布統計」+ 渲染時依當前標記員清單計算的統計文字，見 FR-014F；並列同步既有 標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對呈現，依 FR-024L 對應規則）(3) 審查說明文案 `ws-review-note` 與批次操作 `ws-review-bulk-reject` / `ws-review-bulk-approve` 同一行 (4) 標記員清單 `ws-review-annotator-list`（每列 `ws-review-annotator-row` 帶 `data-annotator` 屬性，含帳號 `ws-review-annotator-name`、依輸出類型呈現的標記值 `ws-review-annotator-answer`（`single_dim` / `multi_dim` 為單一 result tag——`multi_dim` 以 `[v1, v2, …]` 依維度序陣列格式呈現各維度值；依 FR-014A 偏差規則著色，且與 `annotation-list` 展開明細的標記結果 tag 使用相同視覺樣式；`entity_recognition` 為逐行「實體類型徽章＋標記文字」——徽章為實心型別色底，顏色取自任務 entity config，見 FR-014K）、逐列決策按鈕 `ws-review-row-reject` / `ws-review-row-approve`；清單最上方若目前登入使用者已提交，固定插入 `data-annotator="current"` 的「目前標記員」列，其餘列依 `REVIEWER_MOCK_ANNOTATORS` 呈現，見 FR-014J）(5) 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，規則不變，見 FR-024L-1）；各區塊皆提供直接修正入口
+  - 原始文本卡（`ws-review-source-text`，僅 `outputs[]` 含 `entity_recognition` 時）：中欄最上方渲染「原始文本」卡，於原始輸入文字內以行內高亮（`ws-review-source-mark`）呈現所有標記員實體結果的聯集，每個高亮片段帶型別色淡底＋底線＋實心型別徽章，顏色取自任務 entity config（見 FR-014K、AC-3.17）
   - 必要元素：批次操作（`全部通過` / `全部退回`），呈現方式需接近 checkbox 勾選
   - 必要元素：toolbar 或底部操作列提供 `送出審核` 按鈕（`ws-review-submit-btn`）；送出前需驗證當前樣本所有 outKey × 標記員組合皆已有決策，否則顯示 toast「請完成每位標記員的審核決策」並中止（見 FR-014H）
   - 操作順序：`退回` 置左，`通過` 置右；批次操作與逐列操作一致
@@ -486,6 +488,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-014H**: 工作區 reviewer 「送出審核」按鈕（`ws-review-submit-btn`）點擊時，必須驗證當前樣本所有 outKey × 標記員組合皆已有決策（`approve` / `reject`）；任一組合缺值時顯示 toast「請完成每位標記員的審核決策」並中止送出。送出成功時，歷程必須新增逐標記員、逐輸出類型的決策紀錄（對誰、哪個輸出類型、做了什麼決策）。
 - **FR-014I**: 「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 於送出審核時被判定為 `退回`，系統必須將該 annotator bucket 對應樣本的狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板必須以紅色徽章顯示。`REVIEWER_MOCK_ANNOTATORS` 的模擬標記員列因無對應可回退的即時使用者狀態，僅記錄決策，不觸發狀態回退。
 - **FR-014J**: 工作區 reviewer 模式必須以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）於每筆樣本每個 outKey 呈現三位標記員結果列；若目前登入使用者（annotator 身分）於該樣本已提交，系統必須於標記員清單最上方額外插入「目前標記員」列（`data-annotator="current"`）。此為 prototype 資料模擬機制，供 reviewer 端到端驗證使用，見 `ReviewerMockRow（Prototype）`。
+- **FR-014K**: 當 `outputs[]` 含 `entity_recognition` 時，工作區 reviewer 視圖必須於中欄最上方渲染「原始文本」卡（`ws-review-source-text`）：於原始輸入文字內以行內高亮（`ws-review-source-mark`）呈現**所有標記員實體結果的聯集**（Bypass 列不納入），每個高亮片段帶型別色淡底＋底線＋實心型別徽章；實體依其文字於原始文本中首次出現的位置定位，無法定位或與已放置片段重疊的實體略過高亮（仍列於標記員清單）。高亮與徽章顏色必須取自任務 entity config（不得硬編色盤），且與標記員清單的型別徽章同色。標記員清單中每位標記員的 `entity_recognition` 答案必須以逐行「實體類型徽章＋標記文字」呈現，徽章為實心型別色底。
 - **FR-015**: Reviewer 在 Dry Run 必須可使用多數決或手動確認流程協助產出標準答案。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
@@ -677,6 +680,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 2.11.0 | 2026-08-11 | **prototype sync — entity 審核卡原始文本聯集高亮卡＋標記員實體徽章結果列**（使用者比對舊版 NER 審核工作區後要求還原兩項舊版視覺：中欄最上方原始文本卡顯示所有標記結果、每位標記員結果附彩色實體標籤）：(1) 新增 FR-014K——`outputs[]` 含 `entity_recognition` 時 reviewer 中欄最上方渲染「原始文本」卡（`ws-review-source-text`），行內高亮（`ws-review-source-mark`）呈現所有標記員實體結果的聯集（Bypass 列不納入；依文本首次出現位置定位，無法定位或重疊者略過高亮但仍列於清單），高亮帶型別色淡底＋底線＋實心型別徽章，顏色取自任務 entity config 不得硬編色盤；(2) 標記員清單 `entity_recognition` 答案由外框 chip 改為逐行「實體類型徽章（實心型別色底）＋標記文字」。修訂 AC-3.4、區塊 A（審查列結構＋原始文本卡）；新增 AC-3.17、FR-014K。 |
 | 2.10.0 | 2026-08-11 | **prototype sync — 工作區審核卡維度型標記結果 tag 陣列格式＋偏差著色＋樣式與清單統一**（使用者比對舊版工作區審核卡後要求：多維度輸出類型每位標記員的標記結果改以 `[]` 呈現並依離群值差異著色；後續補充修正：tag 視覺樣式必須與標記清單展開明細完全一致）：(1) 工作區聚合審核卡 `multi_dim` 每位標記員的標記值由逐維度 `{dim}:{v}` chips 改為單一 result tag，以 `[v1, v2, …]` 陣列格式依維度序呈現；(2) FR-014A 著色規則具體化——依該筆樣本跨標記員 mean/std（Bypass 不計入）之偏差程度著色，任一維度偏差 >1.5·std 紅、>1·std 藍、其餘綠（含 std=0），Bypass 列不著色；著色演算法與 `annotation-list` reviewer 視圖抽出為同一單一實作來源，不得兩處各自計算；(3) workspace 與 `annotation-list` 的 result tag 必須使用相同視覺樣式。修訂 FR-014A、區塊 A（審查列結構）、AC-3.3、AC-3.11 相鄰結構描述。 |
 | 2.9.0 | 2026-08-11 | **prototype sync — multi_dim 統計還原舊版多行呈現 + 標記結果 tag 陣列格式**（使用者比對舊版 reviewer 標記清單後要求：多維度輸出類型的標記分布統計改回舊版呈現、標記內容以 `[]` 顯示多維度資料）：(1) `multi_dim` 統計由單行「逐維度 `mean : m , std : s` 串接並於行末標註 `(±1.5std)`」改為舊版多行區塊——第一行 `mean [m1, m2, …]`、第二行 `std [s1, s2, …]`（皆 2 位小數、依維度序），其後每個維度一行 `±1.5std {維度名} : lo~hi`（界值 3 位小數，lo/hi = mean ∓ 1.5·std）；維度標籤取 config 維度名稱（Generalization-First，不得如舊版硬編 V/A 縮寫）；`single_dim` 維持 `mean : m , std : s` 不變。因清單統計欄與工作區標記分布統計盒（FR-014F）為同一單一實作來源（v2.8.0 定案），工作區統計盒的 `multi_dim` 呈現一併變更。多輸出類型任務中 `multi_dim` 的多行區塊完整置於其型別前綴行之後。(2) 清單展開明細的 `multi_dim` 標記結果摘要 tag 由 `{dim}:{v}` 鍵值對改為 `[v1, v2, …]` 陣列格式（依維度序）；偏差著色規則（FR-014A）不變。修訂區塊 C'（統計呈現規則、展開行為）、AC-3.12、FR-014F。 |
 | 2.8.0 | 2026-08-11 | **prototype sync — Reviewer 清單聚合審核還原**（使用者比對舊版清單後回報三項缺漏：標記分布統計欄、`全部退回/全部通過` 批次與逐標記員明細、toolbar `送出審核` 按鈕；為 consumers 遷移（eff1938）時遺落的回歸，區塊 C' 與 FR-027–FR-029 原即要求此組行為，本版為一致性 + 具體化修訂，全部 13 個任務 × 8 種輸出類型一體適用）：(1) 統計欄算法定案為與工作區標記分布統計盒（FR-014F）同一單一實作來源——label 族（`single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification`）以 `{label}×{n}` 依次數降冪 `·` 串接、`single_dim` / `multi_dim` 逐維度 `mean : m , std : s`（2 位小數，`multi_dim` 行末標註 `(±1.5std)`）、`free_text` 固定說明句、Bypass 不計入；多輸出類型任務每型各佔一行並以輸出類型名稱前綴——取代舊版逐型別各異的呈現條文（多行 mean/std、entity diff 摘要、triple 逐行 monospace、文字比對摘要）。(2) 維度型 result tag 著色由 `[lo, hi]` 範圍規則改為跨標記員 mean/std 偏差規則（>1.5·std 紅、>1·std 藍、其餘綠，std=0 視為綠，Bypass 列不著色），與工作區 FR-014A 為同一規則。(3) 明文化 Reviewer 視圖資料列點擊為展開/收合、導頁僅經由 `編輯` 按鈕（AC-1.3、FR-008 同步修訂）；展開明細補 Bypass `無法判定 (Bypass)` 標示與無作答佔位。(4) `送出審核` 驗證範圍明文化為整個任務全部清單筆次（非僅當前分頁）；決策狀態於篩選/分頁/語言切換後必須保留。修訂使用者故事 1 區塊 C'、AC-1.3、FR-008、行為規則；FR-027–FR-029 條文本身不變（本版為其 prototype 落實）。 |
