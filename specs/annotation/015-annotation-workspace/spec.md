@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.4.0
+版本: 2.5.0
 狀態: Draft
 ---
 
@@ -58,6 +58,7 @@
 - `CONFLICT_RESOLUTION_POLICY = optimistic-lock-with-version-check`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
+- `REVIEWER_MOCK_ANNOTATORS = kioleemg12 | 113450022 | tony0950127`（US3 聚合審核卡的固定模擬標記員帳號，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；不含目前登入使用者本人的既有提交，見 `ReviewerMockRow（Prototype）`）
 
 ## 流程圖
 
@@ -302,20 +303,24 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 8. **AC-3.8**：**Given** reviewer 退回或通過某位標記員結果，**When** 送出審核，**Then** 該筆歷程新增一筆可追溯紀錄（誰、何時、對哪位標記員的哪個輸出類型做了什麼決策）。
 9. **AC-3.9**：**Given** reviewer 對任一輸出類型（8 型皆適用）直接修正標記員結果，**When** 送出審核，**Then** 系統必須同時保留 annotator 原始提交、reviewer 修正後結果與修正 diff，供品質追溯；修正控件必須重用該輸出類型對應的 annotator 作答互動控件，不得另建輸出類型專屬修正介面。
 10. **AC-3.10**：**Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄，**Then** 中欄不得顯示任務標題卡（任務名稱標題與卡內語言切換鈕）；任務名稱由右欄「說明與檔案」的任務說明摘要呈現（依 `task_id` 對應的實際任務名稱，與 annotator 視角一致），語言切換由共用 sidebar 的語言切換鈕提供。
+11. **AC-3.11**：**Given** `outputs[]` 中任一輸出類型的審查列（`ws-review-row`），**When** reviewer 檢視該列，**Then** 由上至下依序顯示：型別標題（維度型另顯示彙總結果標籤）、標記分布統計盒（`ws-review-stats`）、審查說明文案（`ws-review-note`）與批次操作（`ws-review-bulk-reject` / `ws-review-bulk-approve`）同一行、標記員清單（`ws-review-annotator-list`，每列 `ws-review-annotator-row[data-annotator]` 含 `ws-review-annotator-name`、`ws-review-annotator-answer`、`ws-review-row-reject`、`ws-review-row-approve`）、直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`）。
+12. **AC-3.12**：**Given** 標記分布統計盒（`ws-review-stats`）渲染，**When** reviewer 檢視統計文字，**Then** `single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification` 皆以 `{label}×{n}` 依出現次數降冪並以 `·` 串接（`sequence_tagging` 計 tag、`entity_recognition` 計實體類型、`relation_identification` 計關係類型，此統計盒為既有 entity diff／triple 清單呈現之外的額外彙總資訊，不取代 AC-3.4／AC-3.5 的既有呈現）；`single_dim` / `multi_dim` 每個維度顯示 `mean : m , std : s`（2 位小數）；`free_text` 顯示固定說明句「自由文本任務 — 請並列比對各標記員結果」；已標記為 Bypass 的標記員結果不計入統計。
+13. **AC-3.13**：**Given** 同一 outKey 下全部標記員列的逐列決策同值，**When** reviewer 檢視批次按鈕（`ws-review-bulk-reject` / `ws-review-bulk-approve`），**Then** 對應批次按鈕 `aria-pressed` 為 `true`；任一標記員列決策不同或缺值時，兩個批次按鈕 `aria-pressed` 皆為 `false`。
+14. **AC-3.14**：**Given** reviewer 點擊「送出審核」（`ws-review-submit-btn`），**When** 當前樣本任一 outKey × 標記員組合尚無決策，**Then** 系統顯示 toast「請完成每位標記員的審核決策」並中止送出；全部組合皆有決策時方可送出成功。
+15. **AC-3.15**：**Given** 「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 被判定為 `退回`，**When** 送出審核成功，**Then** 系統將該 annotator bucket 的樣本狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板以紅色徽章顯示。
+16. **AC-3.16**：**Given** 目前登入使用者（annotator 身分）於某樣本已提交紀錄，**When** reviewer 檢視該樣本的標記員清單，**Then** 「目前標記員」列固定顯示於清單最上方；清單其餘列依 `REVIEWER_MOCK_ANNOTATORS` 提供的固定模擬標記員呈現。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`中欄審查操作區`
   - 標題規則：中欄不顯示任務標題卡；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，並與 annotator 視角、Dashboard 任務卡、annotation-list 任務資訊卡的任務名稱保持一致；同一任務在 reviewer 視角不得改顯示為輸出類型通稱
-  - 必要元素：依 `outputs[]` 順序逐一呈現的輸出類型審查摘要區塊（標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對，依 FR-024L 對應規則），各區塊皆提供直接修正入口
-  - 必要元素：標記員逐列結果（帳號、依輸出類型呈現的標記值）
-  - 必要元素：逐列決策按鈕（`通過` / `退回`）
+  - 審查列結構（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染，見 FR-014E）：由上至下固定為 (1) 型別標題（`single_dim` / `multi_dim` 類型於標題旁另顯示彙總結果標籤）(2) 標記分布統計盒 `ws-review-stats`（chip「標記分布統計」+ 渲染時依當前標記員清單計算的統計文字，見 FR-014F；並列同步既有 標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對呈現，依 FR-024L 對應規則）(3) 審查說明文案 `ws-review-note` 與批次操作 `ws-review-bulk-reject` / `ws-review-bulk-approve` 同一行 (4) 標記員清單 `ws-review-annotator-list`（每列 `ws-review-annotator-row` 帶 `data-annotator` 屬性，含帳號 `ws-review-annotator-name`、依輸出類型呈現的標記值 `ws-review-annotator-answer`、逐列決策按鈕 `ws-review-row-reject` / `ws-review-row-approve`；清單最上方若目前登入使用者已提交，固定插入 `data-annotator="current"` 的「目前標記員」列，其餘列依 `REVIEWER_MOCK_ANNOTATORS` 呈現，見 FR-014J）(5) 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，規則不變，見 FR-024L-1）；各區塊皆提供直接修正入口
   - 必要元素：批次操作（`全部通過` / `全部退回`），呈現方式需接近 checkbox 勾選
-  - 必要元素：審查說明文案（`通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。`）
+  - 必要元素：toolbar 或底部操作列提供 `送出審核` 按鈕（`ws-review-submit-btn`）；送出前需驗證當前樣本所有 outKey × 標記員組合皆已有決策，否則顯示 toast「請完成每位標記員的審核決策」並中止（見 FR-014H）
   - 操作順序：`退回` 置左，`通過` 置右；批次操作與逐列操作一致
   - 按鈕視覺一致性：工作區 reviewer 的批次與逐列 `退回 / 通過` 按鈕，必須與 `annotation-list` reviewer 視圖使用完全一致的 icon 與樣式規格；包含 `✕ / ✓` icon 呈現方式、按鈕內距、色彩、邊框、hover、focus、active filled state，不可使用另一套按鈕結構替代
   - 版面排列（Desktop）：審查說明文案需與批次操作按鈕位於同一行，文案在左、`全部退回 / 全部通過` 在右
-  - 狀態回饋：批次操作按鈕需支援 active/inactive 兩態，active 態沿用逐列 `通過 / 退回` 的深色實心視覺；再次點擊 active 態時需取消整筆批次決策
+  - 狀態回饋：批次操作按鈕需支援 active/inactive 兩態，active 態沿用逐列 `通過 / 退回` 的深色實心視覺；再次點擊 active 態時需取消整筆批次決策；`aria-pressed` 僅在該 outKey 所有標記員列決策同值時為 `true`（見 FR-014G）
   - 逐筆按鈕行為：逐筆 `通過 / 退回` 按鈕點擊後切換為 active 深色實心；再次點擊當前 active 按鈕時視為取消該筆決策，回到未選取狀態；逐筆決策狀態與批次按鈕狀態保持同步
   - 修正入口：全部 8 個輸出類型皆提供 row-level 直接修正控制項，控制項重用對應 annotator 作答互動控件並以 annotator 提交結果為初始值（seed），不得另建輸出類型專屬修正介面；由 reviewer 新增/修改的項目需以簡單色彩狀態區分（例如淺綠底/綠色邊框），頁面內不需額外顯示逐筆操作的文字 audit
 - 區塊 B：`右欄 History（歷程頁籤）`
@@ -326,6 +331,24 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
   - 必要元素：任務說明摘要、檔案列表、預覽/新分頁開啟能力
   - 圖片預覽規範：點擊圖片檔後，必須以置中的圖片預覽 modal 顯示大圖；不可僅在右欄底部以小尺寸 inline 圖片呈現
 
+**Testid 契約（審查列）**：
+
+| Testid | 元素 | 備註 |
+|--------|------|------|
+| `ws-review-row` | 單一輸出類型審查列容器 | 每個 outKey 一列，依 `outputs[]` 順序渲染 |
+| `ws-review-stats` | 標記分布統計盒 | chip「標記分布統計」+ 渲染時計算的統計文字（FR-014F） |
+| `ws-review-note` | 審查說明文案 | 固定文案（見區塊 A 必要元素） |
+| `ws-review-bulk-reject` / `ws-review-bulk-approve` | 批次「全部退回」/「全部通過」按鈕 | 三態 toggle，`aria-pressed` 僅全列同值時為 `true`（FR-014G） |
+| `ws-review-annotator-list` | 標記員清單容器 | |
+| `ws-review-annotator-row` | 單一標記員列 | 帶 `data-annotator` 屬性（帳號或 `current`） |
+| `ws-review-annotator-name` | 標記員帳號顯示 | |
+| `ws-review-annotator-answer` | 該標記員本輸出類型答案呈現 | |
+| `ws-review-row-reject` / `ws-review-row-approve` | 逐列「退回」/「通過」按鈕 | 三態 toggle（FR-014B） |
+| `ws-review-correct-{outKey}` | 直接修正控件 | 既有規則不變（FR-024L-1） |
+| `ws-review-submit-btn` | 「送出審核」按鈕 | 送出前驗證見 FR-014H |
+
+> 本版決策一律以「標記員 × 輸出類型」為單位透過上列逐列 testid 呈現；不再提供不區分標記員的單一決策入口。
+
 **行為規則**：
 
 - Reviewer 可於 Dry Run 協助產出標準答案（多數決、IAA 輔助判讀或手動確認）。
@@ -335,7 +358,10 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - 審查呈現與修正能力完全由 `outputs[].type` 決定，不得依任務名稱或個別任務硬編分支；新增輸出類型時只需擴充 registry 對應的呈現規則，不需修改核心審查流程。
 - 全部 8 個輸出類型皆提供 Reviewer `通過 / 退回` 決策，並皆提供直接修改標記值入口；修正控件必須重用對應 annotator 作答互動控件（單選 chip／階層多選器／slider＋number input／Token 網格／entity 建構器／relation 建構器／textarea），不得為任一輸出類型另建修正專屬介面。
 - Reviewer 對任一輸出類型執行直接修正時，系統必須保留 annotator 原始提交、reviewer 修正後結果、修正 diff、Reviewer 身分、時間與最終決策，供品質追溯。
-- `通過` 表示該筆標記有效；若 Reviewer 對該筆有直接修正，則表示修正後結果有效。`退回` 表示該筆標記狀態回到未標記，由原標記員重新標記。
+- `通過` 表示該筆標記有效；若 Reviewer 對該筆有直接修正，則表示修正後結果有效。`退回` 表示該筆標記狀態回到未標記，由原標記員重新標記（此行為於「目前標記員」列由 FR-014I 落地為真實狀態回退；`REVIEWER_MOCK_ANNOTATORS` 的模擬標記員列因無對應可回退的即時使用者狀態，僅記錄決策不觸發狀態回退）。
+- 標記分布統計盒（`ws-review-stats`）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；已標記為 Bypass 的標記員結果不計入統計（見 FR-014F）。
+- 工作區 reviewer 的「送出審核」（`ws-review-submit-btn`）必須驗證當前樣本所有 outKey × 標記員組合皆已有決策，缺值時顯示 toast「請完成每位標記員的審核決策」並中止（見 FR-014H）。
+- 本模組以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）呈現除目前登入使用者外的標記員列，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；此為 prototype 資料模擬機制（見 `ReviewerMockRow（Prototype）`、FR-014J）。
 - 手機版（`<= MOBILE_BP`）Reviewer 工作區中，批次操作區需右對齊；各標記員列的 result tag 與逐列 `退回 / 通過` 按鈕也需靠右對齊，維持一致的行尾操作視覺。
 
 ---
@@ -446,6 +472,12 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態。
 - **FR-014C**: 工作區中欄不得渲染任務標題卡（任務名稱 header 與卡內語言切換鈕），annotator 與 reviewer 視角皆適用；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，名稱來源需與 Dashboard / annotation-list 的任務名稱一致（依 `task_id` 對應），不得以輸出類型通稱取代。
 - **FR-014D**: 工作區語言切換必須綁定共用 sidebar 的語言切換鈕（含 mobile 版），與其他頁面行為一致；切換後需重新套用工作區 i18n strings 並重繪工作區，語言選擇沿用全站共用的儲存機制。
+- **FR-014E**: 工作區 reviewer 審查列（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染）必須依序呈現：型別標題（維度型另顯示彙總結果標籤）→ 標記分布統計盒（`ws-review-stats`）→ 審查說明文案（`ws-review-note`）與批次操作（`ws-review-bulk-reject` / `ws-review-bulk-approve`）同一行 → 標記員清單（`ws-review-annotator-list`；每列 `ws-review-annotator-row[data-annotator]` 含 `ws-review-annotator-name` / `ws-review-annotator-answer` / `ws-review-row-reject` / `ws-review-row-approve`）→ 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，依 FR-024L-1 不變）。
+- **FR-014F**: 標記分布統計盒（`ws-review-stats`）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；依輸出類型套用下列規則：`single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification` 以 `{label}×{n}` 依出現次數降冪並以 `·` 串接（`sequence_tagging` 計 tag、`entity_recognition` 計實體類型、`relation_identification` 計關係類型；此統計盒為 FR-024L 既有的 entity diff／triple 清單呈現之外的額外彙總資訊，不取代該呈現）；`single_dim` / `multi_dim` 每個維度顯示 `mean : m , std : s`（2 位小數），並依 FR-014A 的 ±1.5std 規則對各標記員列的 result tag 著色；`free_text` 顯示固定說明句「自由文本任務 — 請並列比對各標記員結果」。已標記為 Bypass 的標記員結果不計入統計。
+- **FR-014G**: 工作區 reviewer 批次按鈕（`ws-review-bulk-reject` / `ws-review-bulk-approve`）之 `aria-pressed` 僅在該 outKey 所有標記員列決策同值時為 `true`；任一標記員列決策不同或缺值時為 `false`。再次點擊當前已為 active（同值）的批次按鈕，視為取消整列同值決策並回到未選取狀態，與逐筆按鈕（FR-014B）的 toggle 行為保持一致。
+- **FR-014H**: 工作區 reviewer 「送出審核」按鈕（`ws-review-submit-btn`）點擊時，必須驗證當前樣本所有 outKey × 標記員組合皆已有決策（`approve` / `reject`）；任一組合缺值時顯示 toast「請完成每位標記員的審核決策」並中止送出。送出成功時，歷程必須新增逐標記員、逐輸出類型的決策紀錄（對誰、哪個輸出類型、做了什麼決策）。
+- **FR-014I**: 「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 於送出審核時被判定為 `退回`，系統必須將該 annotator bucket 對應樣本的狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板必須以紅色徽章顯示。`REVIEWER_MOCK_ANNOTATORS` 的模擬標記員列因無對應可回退的即時使用者狀態，僅記錄決策，不觸發狀態回退。
+- **FR-014J**: 工作區 reviewer 模式必須以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）於每筆樣本每個 outKey 呈現三位標記員結果列；若目前登入使用者（annotator 身分）於該樣本已提交，系統必須於標記員清單最上方額外插入「目前標記員」列（`data-annotator="current"`）。此為 prototype 資料模擬機制，供 reviewer 端到端驗證使用，見 `ReviewerMockRow（Prototype）`。
 - **FR-015**: Reviewer 在 Dry Run 必須可使用多數決或手動確認流程協助產出標準答案。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
@@ -544,8 +576,9 @@ flowchart LR
 - **TaskProfile（Read-only）**: 從 task-management-013 發布後凍結讀取的任務設定。欄位：`task_id`、`input_type`（`TASK_INPUT_TYPES`）、`outputs[]`（`OutputConfig[]`，每項含 `type`（`OUTPUT_TYPE_KEYS`）與 `config`）、`field_role_map: Record<string, FieldRole>`、`item_pair_labels?: [string, string]`（僅 `input_type = item_pair` 時存在）、`guidelineFiles?: GuidelineFile[]`（`{ name, type, url }`；任務通用的說明檔案清單，供右欄常駐「說明與檔案」呈現與檔案預覽，所有任務共用同一資料形狀，不得為個別任務類型硬編檔案清單文案）、`materializedRuns?: Record<RunType, { round?: number, total: number }>`（由 task-detail run 發布事件建立的 materialized run context；`annotation-list` 資訊卡與 `annotation-workspace` 標記清單筆數優先取對應 `run_type` 的 `total`，未宣告時回退 `datasetRecords` 長度；`dry_run` 且有 `round` 時清單資訊卡顯示試標回合徽章，workspace 左欄標題仍固定為「標記清單」不得附加 run label）。
 - **AnnotationRecord**: 單一樣本的標記結果。欄位：`sample_id`、`answers: OutputAnswer[]`（依 `TaskProfile.outputs[]` 順序，一至多筆）、`note?`（整筆備註）、`version`、`status`（`pending | saved | submitted`）、`annotator_id`、`submitted_at?`。
 - **OutputAnswer**: 單一輸出類型的作答結果。共通欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`bypass: boolean`、`note?`（該輸出類型專屬備註，例如 Bypass 原因）、`version`。依 `type` 額外攜帶下列 payload 欄位之一：`single_label` → `{selected: string}`；`multi_label` → `{selected: LabelPath[]}`；`single_dim` → `{value: number}`；`multi_dim` → `{values: Record<string, number>}`；`sequence_tagging` → `{tokens: string[], tags: string[], scheme: string, unit: string}`；`entity_recognition` → `{entities: { id, text, type, start, end }[]}`；`relation_identification` → `{triples: { id, e1Id, relation?, e2Id }[]}`；`free_text` → `{text: string}`。`bypass = true` 時其餘 payload 欄位須為空值或省略。
-- **ReviewDecision**: Reviewer 對單一標記員 `AnnotationRecord` 的審查結果。欄位：`output_type`（`OUTPUT_TYPE_KEYS`，適用於逐輸出類型決策時）、`decision`（`approve | reject`）、`correction?`（全部 8 個 `OUTPUT_TYPE_KEYS` 皆支援，含修正後結果與 diff；修正控件重用對應 annotator 作答控件並以其答案為初始值）、`reason?`、`reviewer_id`、`decided_at`。
-- **AnnotationHistoryItem**: 標記歷程節點，包含操作者、時間、對應輸出類型、修改前後差異、來源動作。
+- **ReviewDecision**: Reviewer 對單一標記員（`annotator_id`）於單一輸出類型（`output_type`）的審查決策，決策維度為「標記員 × 輸出類型」而非整筆樣本。欄位：`annotator_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`decision`（`approve | reject`）、`correction?`（全部 8 個 `OUTPUT_TYPE_KEYS` 皆支援，含修正後結果與 diff；修正控件重用對應 annotator 作答控件並以其答案為初始值）、`reason?`、`reviewer_id`、`decided_at`。當 `annotator_id` 對應目前登入使用者（「目前標記員」列）且 `decision = reject` 時，系統必須觸發該 annotator bucket 的樣本狀態回退（見 FR-014I）；對 `REVIEWER_MOCK_ANNOTATORS` 模擬標記員則僅記錄決策。
+- **ReviewerMockRow（Prototype）**: US3 聚合審核卡的模擬標記員提交資料，來源為 `annotation-workspace.data.js` 的 `REVIEWER_MOCK_ROWS`（13 個任務全樣本 × 固定 3 位標記員 `REVIEWER_MOCK_ANNOTATORS`），透過 `getReviewerMockRows(taskId, sampleId)` 取得。每位標記員逐 outKey 攜帶精簡答案格式：`single_label` → `string`、`multi_label` → `string[]`、`single_dim` → `number`、`multi_dim` → `{dim: number}`、`sequence_tagging` → `{text, tag}[]`、`entity_recognition` → `{text, type}[]`、`relation_identification` → `{subj, rel, obj}[]`、`free_text` → `string`；可選 `bypass` map（依 outKey 標記該標記員該輸出類型是否為 Bypass，Bypass 者不計入 `ws-review-stats` 統計）。若目前登入使用者於該樣本已提交，畫面於清單最上方插入代表目前使用者的「目前標記員」列（`data-annotator="current"`），其資料來源為真實 `AnnotationRecord` 而非模擬資料。
+- **AnnotationHistoryItem**: 標記歷程節點，包含操作者、時間、對應輸出類型、修改前後差異、來源動作；`action = 'rejected'` 且 `role = 'reviewer'` 的事件於歷程面板以紅色徽章顯示（見 FR-014I）。
 - **GuidelineAsset**: 任務說明資產，包含文字摘要、檔案清單（來源為 `TaskProfile.guidelineFiles`，`{ name, type, url }[]`）、modal 與右欄同步呈現設定。
 
 ---
@@ -635,6 +668,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 2.5.0 | 2026-08-10 | **US3 聚合審核卡具體化**（prototype 補齊既有 US3 契約，非新增功能——US3 原已要求逐標記員列＋批次操作＋歷程追溯，本版是一致性 + 具體化修訂）：新增審查列固定結構順序與 testid 契約（`ws-review-row` / `ws-review-stats` / `ws-review-note` / `ws-review-bulk-reject` / `ws-review-bulk-approve` / `ws-review-annotator-list` / `ws-review-annotator-row` / `ws-review-annotator-name` / `ws-review-annotator-answer` / `ws-review-row-reject` / `ws-review-row-approve` / `ws-review-submit-btn`，FR-014E，AC-3.11）；標記分布統計改為渲染時依標記員清單計算（取代任何寫死字串），逐型別公式明文化（`{label}×{n}` 依次數降冪以 `·` 串接 / `mean : m , std : s` 2 位小數 / free_text 固定說明句，Bypass 不計入，FR-014F，AC-3.12）；批次按鈕新增 `aria-pressed` 僅全列同值時為真的三態 toggle 規則（FR-014G，AC-3.13）；`送出審核`（`ws-review-submit-btn`）新增全 outKey × 標記員決策完整性驗證，未完成時顯示 toast「請完成每位標記員的審核決策」並中止（FR-014H，AC-3.14）；「目前標記員」列任一 outKey 被退回時，落實既有條文「退回即回到未標記」為真實狀態回退——annotator bucket 回到待標記並保留原答案，並新增 `{action:'rejected', role:'reviewer'}` 歷程事件（歷程面板紅色徽章顯示），舊 prototype 僅文案宣稱、從未實作（FR-014I，AC-3.15）；新增固定模擬標記員資料模型 `REVIEWER_MOCK_ANNOTATORS`（`kioleemg12` / `113450022` / `tony0950127`）與 `ReviewerMockRow（Prototype）` 關鍵實體（`REVIEWER_MOCK_ROWS` / `getReviewerMockRows(taskId, sampleId)`），涵蓋 13 個任務全樣本 × 8 種輸出類型，含「目前標記員」列插入規則（FR-014J，AC-3.16）。`ReviewDecision` 關鍵實體對齊為「標記員 × 輸出類型」決策維度，新增 `annotator_id` 欄位並註記退回時的狀態回退觸發條件。新增 AC-3.11–AC-3.16、FR-014E–FR-014J；既有 AC-3.1–3.10、FR-014～FR-014D、FR-024L 系列不變號、不改義（新條文為並列補強，AC-3.12 明文不取代 AC-3.4／AC-3.5 的 entity diff／triple 清單既有呈現）。FR-027–FR-029（`annotation-list` 送出審核，尚未實作）維持原樣不動；FR-029 對 `annotation-workspace` 的 `rvSaveBtn` 既有措辭與本版新增 `ws-review-submit-btn` testid 為同一顆按鈕在不同修訂輪次下的命名，本版不回頭改寫 FR-029 措辭。 |
 | 2.4.0 | 2026-08-10 | **移除中欄卡片內多餘框線與隔線**（使用者比對舊版介面後要求）：題目卡內 input 內容不得再包一層內框（engine 預覽的 `.annotation-preview-sample` 內框在卡片內為重複框線，予以剝除）；標記卡內移除殘留的水平分隔線（engine 的 `.annotation-preview-divider`）與 Bypass 選項上方的虛線隔線；Bypass 選項自身的虛線外框為刻意設計、保留。落實為 workspace 頁面 scoped 樣式覆寫，一體適用所有輸出類型，不動共用 engine（FR-013E、AC-2.12，使用者故事 2 區塊 B 補「卡片內視覺」規則）。 |
 | 2.3.0 | 2026-08-10 | **還原舊版工作區 chrome 並定案右欄雙頁籤**（使用者要求對齊 pre-outputs[] 版本的工作區框架，annotator 與 reviewer 視角一致）：(1) 左欄標記清單每筆樣本下方新增三態完成狀態標籤 `已提交` / `已儲存` / `待標記`（FR-013A、AC-2.8）。(2) 中欄頂部新增樣本導覽列——`上一筆` / `下一筆` 按鈕（首末筆停用）＋ `已提交筆數 / 總筆數` 進度摘要與進度條（FR-013B、AC-2.9）。(3) 中欄題目區塊與標記區塊改以獨立卡片區隔，切分依欄位角色與輸出類型結構決定、不得硬編分支（FR-013D、AC-2.10）。(4) 中欄底部新增操作列——自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`）＋ `儲存草稿`（原 `儲存` 更名）與提交按鈕（FR-013C）。(5) **`GUIDELINE_PANEL_TABS` 由 `guideline-files-static` 定案回滾為 `guideline-files | history` 雙頁籤**：v2.1.0 暫定修訂由使用者定案否決，右欄恢復 `說明與檔案` / `歷程` 兩個頁籤且兩種角色皆可見；`歷程` 頁籤顯示當前樣本合併 annotator/reviewer 事件後的時序紀錄（操作者角色、時間、動作、輸出類型作答摘要，最新在前，空狀態文案），落實 FR-016 的歷程呈現面（FR-016B、AC-2.11）；使用者故事 3 區塊 B 同步改寫為歷程頁籤承載；Mobile 抽屜維持僅承載說明與檔案。對應 Open Question 已結案。 |
 | 2.2.0 | 2026-08-10 | 移除工作區中欄任務標題卡（任務名稱 header＋卡內 ZH/EN 語言切換鈕），annotator 與 reviewer 視角一致適用；任務名稱僅由右欄「說明與檔案」任務說明摘要呈現（名稱來源與 Dashboard / annotation-list 一致，依 `task_id` 對應）。工作區語言切換改綁共用 sidebar 的語言切換鈕（含 mobile 版），與其他頁面行為一致。AC-2.7、AC-3.10 改寫為「不得顯示任務標題卡」的負向驗收；FR-014C 改寫為標題卡移除規則、FR-014D 改寫為 sidebar 語言切換綁定規則；使用者故事 2 / 3 的介面定義與行為規則同步修訂。另修正前版 header 版本欄位漏跟 changelog 2.1.1 同步的問題（本版直接自 2.1.1 遞增）。 |
