@@ -43,16 +43,20 @@
       guidelineImageModalCloseAria: '關閉圖片預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
       wsSubmitSuccess: '已提交',
-      reviewSubmitLabel: '提交審查',
+      reviewSubmitLabel: '送出審核',
       reviewApproveLabel: '通過',
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審查已提交',
-      reviewLabelDistribution: '標籤分布',
-      reviewMeanStd: '平均值／標準差',
-      reviewEntityDiff: '實體差異（提交／資料集）',
-      reviewTripleList: '關係清單',
-      reviewTextComparison: '文字比對（提交／資料集）',
       reviewNoAnswer: '（無）',
+      reviewStatsChip: '標記分布統計',
+      reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
+      reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
+      reviewBulkRejectLabel: '全部退回',
+      reviewBulkApproveLabel: '全部通過',
+      reviewCurrentAnnotatorLabel: '目前標記員',
+      reviewCorrectionTitle: '直接修正',
+      reviewBypassPill: '無法判定 (Bypass)',
+      toastSelectDecision: '請完成每位標記員的審核決策',
     },
     en: {
       sampleListTitle: 'Samples',
@@ -85,12 +89,16 @@
       reviewApproveLabel: 'Approve',
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
-      reviewLabelDistribution: 'Label distribution',
-      reviewMeanStd: 'Mean / Std',
-      reviewEntityDiff: 'Entity diff (submitted / dataset)',
-      reviewTripleList: 'Relation list',
-      reviewTextComparison: 'Text comparison (submitted / dataset)',
       reviewNoAnswer: '(none)',
+      reviewStatsChip: 'Label distribution',
+      reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
+      reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
+      reviewBulkRejectLabel: 'Reject all',
+      reviewBulkApproveLabel: 'Approve all',
+      reviewCurrentAnnotatorLabel: 'Current annotator',
+      reviewCorrectionTitle: 'Direct correction',
+      reviewBypassPill: 'Bypassed (cannot determine)',
+      toastSelectDecision: 'Please decide on every annotator before submitting',
     },
   };
   if (window.TASK_CONFIG_I18N) {
@@ -1275,7 +1283,8 @@
       time.className = 'history-time';
       time.textContent = formatHistoryTime(event.at);
       var badge = document.createElement('span');
-      badge.className = 'history-action-badge ' + (event.action === 'saved' ? 'saved' : 'submitted');
+      badge.className =
+        'history-action-badge ' + (event.action === 'saved' ? 'saved' : event.action === 'rejected' ? 'rejected' : 'submitted');
       badge.textContent = event.action;
       meta.appendChild(time);
       meta.appendChild(badge);
@@ -1580,36 +1589,6 @@
     return scalarCol ? rawRecord[scalarCol] : null;
   }
 
-  /* FR-024L: registry-driven review presentation per output-type category
-     (not per task_id) -- label distribution / mean-std / entity diff /
-     triple list / text comparison. */
-  function buildReviewSummaryText(outKey, submission, rawRecord) {
-    var submittedText = describeOutputAnswer(outKey, submission);
-    var na = t('reviewNoAnswer');
-    switch (outKey) {
-      case 'single_label':
-      case 'multi_label':
-      case 'sequence_tagging':
-        return t('reviewLabelDistribution') + '：' + (submittedText || na);
-      case 'single_dim':
-      case 'multi_dim':
-        return t('reviewMeanStd') + '：' + (submittedText || na) + ' / 0';
-      case 'entity_recognition': {
-        var goldEntities = findRawOutputValue(outKey, rawRecord) || [];
-        var goldText = goldEntities.map(function (e) { return e.text; }).join(', ');
-        return t('reviewEntityDiff') + '：' + (submittedText || na) + ' / ' + (goldText || na);
-      }
-      case 'relation_identification':
-        return t('reviewTripleList') + '：\n' + (submittedText || na);
-      case 'free_text': {
-        var goldValue = findRawOutputValue(outKey, rawRecord);
-        return t('reviewTextComparison') + '：' + (submittedText || na) + ' / ' + (goldValue || na);
-      }
-      default:
-        return '';
-    }
-  }
-
   /* FR-014A: single_dim/multi_dim result tag, ±1.5std colored (priority
      red > blue > green). Computed from every touched dimension's submitted
      value against their own mean/std (a single-annotator submission
@@ -1642,42 +1621,472 @@
     return tag;
   }
 
-  /* FR-014B: pass/reject toggle -- clicking the already-active decision
-     cancels it back to undecided. */
-  function buildDecisionButtons(outKey) {
-    var wrap = document.createElement('div');
-    wrap.className = 'review-row-decisions';
+  /* ── FR-014 aggregate review card (spec 015 v2.5.0) ──────────────────
+     Replaces the old per-outKey approve/reject pair with a legacy-parity
+     multi-annotator comparison: a stats box, a bulk approve/reject bar,
+     and one decision row per annotator. reviewRowDecisions is now keyed
+     `${outKey}::${annotatorName}` (annotatorName is 'current' for the
+     live annotator's own submission) instead of just outKey. */
+  function decisionKey(outKey, rowName) {
+    return outKey + '::' + rowName;
+  }
 
-    var approveBtn = document.createElement('button');
-    approveBtn.type = 'button';
-    approveBtn.className = 'btn btn-outline';
-    approveBtn.setAttribute('data-testid', 'ws-review-decision-approve');
-    approveBtn.textContent = t('reviewApproveLabel');
+  /* Converts the live annotator's engine-shape submission (previewState /
+     previewEntities / previewTriples) into the SAME CompactAnswer shape
+     annotation-workspace.data.js's REVIEWER_MOCK_ROWS ships, so the mock
+     rows and the prepended "current" row can share one answer renderer. */
+  function buildSequencePairsFromTags(tags) {
+    if (!Array.isArray(tags)) return [];
+    var cfg = state.outputConfigs.sequence_tagging || {};
+    var tokenization = cfg.tokenization && typeof cfg.tokenization === 'object' ? cfg.tokenization : {};
+    var unit = tokenization.unit === 'word' ? 'word' : 'character';
+    var rawRow = findRecordById(currentSampleId) || {};
+    /* getDatasetPreviewText() (task-config.engine.js) always returns null
+       in this workspace -- it reads state.datasetParsedColumns, which is
+       only ever populated by the task-builder's CSV-upload flow, never by
+       annotation-workspace.config.js. Mirror engine.js's own
+       renderTokenClassPreview() fallback sentence here (line ~2867) so
+       this reconstructed token list stays aligned with the token
+       positions the correction control right below is already showing. */
+    var realText = getDatasetPreviewText();
+    var fallbackText =
+      state.lang === 'zh' ? '台積電董事長魏哲家今天出席台北產業論壇' : 'The chairman of TSMC attended the forum in Taipei today.';
+    var tokenTexts = getSequencePreviewTokens(realText || fallbackText, rawRow, unit);
+    var pairs = [];
+    for (var i = 0; i < tags.length && i < tokenTexts.length; i++) {
+      if (tags[i] && tags[i] !== 'O') pairs.push({ text: tokenTexts[i], tag: tags[i] });
+    }
+    return pairs;
+  }
+  function convertSubmissionAnswer(outKey, submission) {
+    var ps = (submission.previewState && submission.previewState[outKey]) || {};
+    switch (outKey) {
+      case 'single_label':
+        return ps.selected || null;
+      case 'multi_label':
+        return (Array.isArray(ps.selected) ? ps.selected : []).map(function (path) {
+          return Array.isArray(path) ? path[path.length - 1] : String(path);
+        });
+      case 'single_dim':
+        return ps.value != null ? Number(ps.value) : null;
+      case 'multi_dim': {
+        var dims = {};
+        Object.keys(ps.dims || {}).forEach(function (name) { dims[name] = ps.dims[name].value; });
+        return dims;
+      }
+      case 'sequence_tagging':
+        return buildSequencePairsFromTags(ps.tokens);
+      case 'entity_recognition':
+        return (submission.previewEntities || []).map(function (e) { return { text: e.text, type: e.type }; });
+      case 'relation_identification':
+        return (submission.previewTriples || []).map(function (tr) { return { subj: tr.subj, rel: tr.rel, obj: tr.obj }; });
+      case 'free_text':
+        return ps.text || '';
+      default:
+        return null;
+    }
+  }
+
+  /* One row per mock annotator (fixed order, annotation-workspace.data.js's
+     getReviewerMockRows), with the live annotator's own submitted answer
+     PREPENDED as a 'current' row when one exists (AC-3.2/AC-3.9). */
+  function getReviewerRows(outKey) {
+    var mockRows = window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || [];
+    var rows = mockRows.map(function (mockRow) {
+      return {
+        name: mockRow.annotator,
+        displayName: mockRow.annotator,
+        answer: mockRow.answers ? mockRow.answers[outKey] : undefined,
+        bypass: !!(mockRow.bypass && mockRow.bypass[outKey]),
+      };
+    });
+    var liveSubmission = window.LabelSuiteAnnotationWorkspaceData.getSubmission(
+      currentProfile.id,
+      'annotator',
+      currentRunType,
+      currentSampleId
+    );
+    if (liveSubmission) {
+      rows.unshift({
+        name: 'current',
+        displayName: t('reviewCurrentAnnotatorLabel'),
+        answer: convertSubmissionAnswer(outKey, liveSubmission),
+        bypass: !!(liveSubmission.previewBypass && liveSubmission.previewBypass[outKey]),
+      });
+    }
+    return rows;
+  }
+
+  function meanStd(values) {
+    if (values.length === 0) return { mean: 0, std: 0 };
+    var mean = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+    var variance = values.reduce(function (a, v) { return a + Math.pow(v - mean, 2); }, 0) / values.length;
+    return { mean: mean, std: Math.sqrt(variance) };
+  }
+  function fmt2(n) {
+    return Number(n).toFixed(2);
+  }
+  function countKeysForRow(outKey, answer) {
+    switch (outKey) {
+      case 'single_label':
+        return answer ? [answer] : [];
+      case 'multi_label':
+        return Array.isArray(answer) ? answer : [];
+      case 'sequence_tagging':
+        return (Array.isArray(answer) ? answer : []).map(function (pair) { return pair.tag; });
+      case 'entity_recognition':
+        return (Array.isArray(answer) ? answer : []).map(function (ent) { return ent.type; });
+      case 'relation_identification':
+        return (Array.isArray(answer) ? answer : []).map(function (tr) { return tr.rel; });
+      default:
+        return [];
+    }
+  }
+
+  /* FR-014F: registry-driven stats box summary, one algorithm per
+     output-type category (not per task_id). Bypassed rows are excluded
+     from every computation below. */
+  function computeReviewStats(outKey, rows) {
+    var effectiveRows = rows.filter(function (row) { return !row.bypass; });
+    switch (outKey) {
+      case 'single_label':
+      case 'multi_label':
+      case 'sequence_tagging':
+      case 'entity_recognition':
+      case 'relation_identification': {
+        var counts = {};
+        var order = [];
+        effectiveRows.forEach(function (row) {
+          countKeysForRow(outKey, row.answer).forEach(function (key) {
+            if (!(key in counts)) { counts[key] = 0; order.push(key); }
+            counts[key] += 1;
+          });
+        });
+        order.sort(function (a, b) { return counts[b] - counts[a]; });
+        return order.map(function (key) { return key + '×' + counts[key]; }).join(' · ');
+      }
+      case 'single_dim': {
+        var values = effectiveRows
+          .map(function (row) { return Number(row.answer); })
+          .filter(function (v) { return !isNaN(v); });
+        if (values.length === 0) return '';
+        var stats = meanStd(values);
+        return 'mean : ' + fmt2(stats.mean) + ' , std : ' + fmt2(stats.std);
+      }
+      case 'multi_dim': {
+        var dimNames = {};
+        effectiveRows.forEach(function (row) {
+          Object.keys(row.answer || {}).forEach(function (name) { dimNames[name] = true; });
+        });
+        var parts = Object.keys(dimNames).map(function (name) {
+          var dimValues = effectiveRows
+            .map(function (row) { return Number((row.answer || {})[name]); })
+            .filter(function (v) { return !isNaN(v); });
+          var dimStats = meanStd(dimValues);
+          return name + ' mean : ' + fmt2(dimStats.mean) + ' , std : ' + fmt2(dimStats.std);
+        });
+        parts.push('(±1.5std)');
+        return parts.join(' · ');
+      }
+      case 'free_text':
+        return t('reviewFreeTextStats');
+      default:
+        return '';
+    }
+  }
+
+  function buildStatsBox(outKey, rows) {
+    var box = document.createElement('div');
+    box.className = 'rv-summary-card';
+
+    var head = document.createElement('div');
+    head.className = 'rv-summary-head';
+    var chip = document.createElement('span');
+    chip.className = 'rv-summary-chip';
+    chip.textContent = t('reviewStatsChip');
+    head.appendChild(chip);
+    box.appendChild(head);
+
+    var summaryText = document.createElement('div');
+    summaryText.className = 'rv-summary-text';
+    summaryText.setAttribute('data-testid', 'ws-review-stats');
+    summaryText.textContent = computeReviewStats(outKey, rows);
+    box.appendChild(summaryText);
+
+    return box;
+  }
+
+  /* free_text/entity_recognition/relation_identification/sequence_tagging
+     get the two-column long-content row layout -- the same registry flag
+     (rendersInputPreview) renderReviewerWorkspace() already reuses for the
+     input-preview-card skip decision, not a hardcoded type list. */
+  function isLongContentOutput(outKey) {
+    var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[outKey];
+    return !!(outReg && outReg.rendersInputPreview === true);
+  }
+
+  function buildAnswerCell(outKey, answer, bypass) {
+    var cell = document.createElement('div');
+    cell.className = 'rv-answer-cell';
+    cell.setAttribute('data-testid', 'ws-review-annotator-answer');
+    if (bypass) {
+      var bypassPill = document.createElement('span');
+      bypassPill.className = 'rv-bypass-pill';
+      bypassPill.textContent = t('reviewBypassPill');
+      cell.appendChild(bypassPill);
+      return cell;
+    }
+    switch (outKey) {
+      case 'single_label': {
+        var labelPill = document.createElement('span');
+        labelPill.className = 'rv-answer-chip';
+        labelPill.textContent = answer || t('reviewNoAnswer');
+        cell.appendChild(labelPill);
+        break;
+      }
+      case 'multi_label': {
+        var labels = Array.isArray(answer) ? answer : [];
+        if (labels.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
+        var chipsWrap = document.createElement('div');
+        chipsWrap.className = 'rv-answer-chips';
+        labels.forEach(function (label) {
+          var chip = document.createElement('span');
+          chip.className = 'rv-answer-chip';
+          chip.textContent = label;
+          chipsWrap.appendChild(chip);
+        });
+        cell.appendChild(chipsWrap);
+        break;
+      }
+      case 'single_dim': {
+        var scorePill = document.createElement('span');
+        scorePill.className = 'rv-score-pill';
+        scorePill.textContent = answer != null ? String(answer) : t('reviewNoAnswer');
+        cell.appendChild(scorePill);
+        break;
+      }
+      case 'multi_dim': {
+        var dims = answer || {};
+        var dimNames = Object.keys(dims);
+        if (dimNames.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
+        dimNames.forEach(function (name) {
+          var dimPill = document.createElement('span');
+          dimPill.className = 'rv-score-pill';
+          dimPill.textContent = name + ': ' + dims[name];
+          cell.appendChild(dimPill);
+        });
+        break;
+      }
+      case 'sequence_tagging': {
+        var pairs = Array.isArray(answer) ? answer : [];
+        if (pairs.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
+        var seqWrap = document.createElement('div');
+        seqWrap.className = 'rv-answer-chips';
+        pairs.forEach(function (pair) {
+          var chip = document.createElement('span');
+          chip.className = 'rv-answer-chip';
+          chip.textContent = pair.text + ' (' + pair.tag + ')';
+          seqWrap.appendChild(chip);
+        });
+        cell.appendChild(seqWrap);
+        break;
+      }
+      case 'entity_recognition': {
+        var entities = Array.isArray(answer) ? answer : [];
+        if (entities.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
+        var colorMap = getPreviewTypeColorMap().map || {};
+        var entWrap = document.createElement('div');
+        entWrap.className = 'rv-answer-chips';
+        entities.forEach(function (ent) {
+          var chip = document.createElement('span');
+          chip.className = 'rv-answer-chip';
+          var color = colorMap[ent.type];
+          if (color) chip.style.borderColor = safeCssColor(color, 'var(--color-border)');
+          chip.textContent = ent.text + ' (' + ent.type + ')';
+          entWrap.appendChild(chip);
+        });
+        cell.appendChild(entWrap);
+        break;
+      }
+      case 'relation_identification': {
+        var triples = Array.isArray(answer) ? answer : [];
+        if (triples.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
+        var relWrap = document.createElement('div');
+        relWrap.className = 'rv-answer-relations';
+        triples.forEach(function (tr) {
+          var line = document.createElement('div');
+          line.className = 'rv-answer-relation-line';
+          line.textContent = tr.subj + ' → ' + tr.rel + ' → ' + tr.obj;
+          relWrap.appendChild(line);
+        });
+        cell.appendChild(relWrap);
+        break;
+      }
+      case 'free_text': {
+        var block = document.createElement('div');
+        block.className = 'rv-answer-freetext';
+        block.textContent = answer || t('reviewNoAnswer');
+        cell.appendChild(block);
+        break;
+      }
+      default:
+        cell.textContent = t('reviewNoAnswer');
+    }
+    return cell;
+  }
+
+  /* Builds a small icon-only span via safe DOM methods (no innerHTML) so
+     mini-buttons never parse untrusted markup. */
+  function buildIconSpan(icon) {
+    var span = document.createElement('span');
+    span.className = 'rv-btn-icon';
+    span.textContent = icon;
+    return span;
+  }
+
+  /* FR-014B: pass/reject toggle -- clicking the already-active decision
+     cancels it back to undecided. Returns {el, refresh} so the bulk bar
+     can force every row's buttons to redraw after a bulk decision. */
+  function buildRowDecisionButtons(outKey, rowName, onChange) {
+    var wrap = document.createElement('div');
+    wrap.className = 'rv-choice-group';
 
     var rejectBtn = document.createElement('button');
     rejectBtn.type = 'button';
-    rejectBtn.className = 'btn btn-outline';
-    rejectBtn.setAttribute('data-testid', 'ws-review-decision-reject');
-    rejectBtn.textContent = t('reviewRejectLabel');
+    rejectBtn.className = 'mini-btn mini-btn-reject';
+    rejectBtn.setAttribute('data-testid', 'ws-review-row-reject');
+    rejectBtn.appendChild(buildIconSpan('✕'));
+
+    var approveBtn = document.createElement('button');
+    approveBtn.type = 'button';
+    approveBtn.className = 'mini-btn mini-btn-approve';
+    approveBtn.setAttribute('data-testid', 'ws-review-row-approve');
+    approveBtn.appendChild(buildIconSpan('✓'));
 
     function refresh() {
-      var decision = reviewRowDecisions[outKey];
+      var decision = reviewRowDecisions[decisionKey(outKey, rowName)];
       approveBtn.setAttribute('aria-pressed', decision === 'approve' ? 'true' : 'false');
+      approveBtn.classList.toggle('mini-btn-active-approve', decision === 'approve');
       rejectBtn.setAttribute('aria-pressed', decision === 'reject' ? 'true' : 'false');
+      rejectBtn.classList.toggle('mini-btn-active-reject', decision === 'reject');
     }
     approveBtn.addEventListener('click', function () {
-      reviewRowDecisions[outKey] = reviewRowDecisions[outKey] === 'approve' ? null : 'approve';
+      var key = decisionKey(outKey, rowName);
+      reviewRowDecisions[key] = reviewRowDecisions[key] === 'approve' ? null : 'approve';
       refresh();
+      if (onChange) onChange();
     });
     rejectBtn.addEventListener('click', function () {
-      reviewRowDecisions[outKey] = reviewRowDecisions[outKey] === 'reject' ? null : 'reject';
+      var key = decisionKey(outKey, rowName);
+      reviewRowDecisions[key] = reviewRowDecisions[key] === 'reject' ? null : 'reject';
       refresh();
+      if (onChange) onChange();
     });
     refresh();
 
-    wrap.appendChild(approveBtn);
     wrap.appendChild(rejectBtn);
-    return wrap;
+    wrap.appendChild(approveBtn);
+    return { el: wrap, refresh: refresh };
+  }
+
+  function buildAnnotatorRow(outKey, row, onDecisionChange) {
+    var longContent = isLongContentOutput(outKey);
+    var rowEl = document.createElement('div');
+    rowEl.className = 'rv-annotator-review-row' + (longContent ? ' rv-annotator-review-row-sequence' : '');
+    rowEl.setAttribute('data-testid', 'ws-review-annotator-row');
+    rowEl.setAttribute('data-annotator', row.name);
+
+    var content = document.createElement('div');
+    content.className = longContent ? 'rv-sequence-review-content' : 'rv-annotator-meta';
+
+    var nameEl = document.createElement('span');
+    nameEl.className = 'rv-annotator-name';
+    nameEl.setAttribute('data-testid', 'ws-review-annotator-name');
+    nameEl.textContent = row.displayName || row.name;
+    content.appendChild(nameEl);
+    content.appendChild(buildAnswerCell(outKey, row.answer, row.bypass));
+    rowEl.appendChild(content);
+
+    var buttons = buildRowDecisionButtons(outKey, row.name, onDecisionChange);
+    rowEl.appendChild(buttons.el);
+
+    return { el: rowEl, refresh: buttons.refresh };
+  }
+
+  /* FR-014C: bulk approve-all/reject-all shortcuts. A bulk button is only
+     shown "active" (aria-pressed) once every row already shares that same
+     decision; clicking it again clears every row back to undecided. */
+  function buildDecisionSection(outKey, rows) {
+    var list = document.createElement('div');
+    list.className = 'rv-annotator-list';
+    list.setAttribute('data-testid', 'ws-review-annotator-list');
+
+    var rowRefreshers = [];
+    rows.forEach(function (row) {
+      var built = buildAnnotatorRow(outKey, row, function () { refreshBulk(); });
+      rowRefreshers.push(built.refresh);
+      list.appendChild(built.el);
+    });
+
+    var bulkBar = document.createElement('div');
+    bulkBar.className = 'rv-bulk-bar';
+
+    var note = document.createElement('div');
+    note.className = 'rv-review-note';
+    note.setAttribute('data-testid', 'ws-review-note');
+    note.textContent = t('reviewNote');
+
+    var actions = document.createElement('div');
+    actions.className = 'rv-bulk-actions';
+
+    var bulkReject = document.createElement('button');
+    bulkReject.type = 'button';
+    bulkReject.className = 'mini-btn mini-btn-reject';
+    bulkReject.setAttribute('data-testid', 'ws-review-bulk-reject');
+    bulkReject.appendChild(buildIconSpan('✕'));
+    bulkReject.appendChild(document.createTextNode(' ' + t('reviewBulkRejectLabel')));
+
+    var bulkApprove = document.createElement('button');
+    bulkApprove.type = 'button';
+    bulkApprove.className = 'mini-btn mini-btn-approve';
+    bulkApprove.setAttribute('data-testid', 'ws-review-bulk-approve');
+    bulkApprove.appendChild(buildIconSpan('✓'));
+    bulkApprove.appendChild(document.createTextNode(' ' + t('reviewBulkApproveLabel')));
+
+    function refreshBulk() {
+      var allApprove = rows.length > 0 && rows.every(function (row) {
+        return reviewRowDecisions[decisionKey(outKey, row.name)] === 'approve';
+      });
+      var allReject = rows.length > 0 && rows.every(function (row) {
+        return reviewRowDecisions[decisionKey(outKey, row.name)] === 'reject';
+      });
+      bulkApprove.setAttribute('aria-pressed', allApprove ? 'true' : 'false');
+      bulkApprove.classList.toggle('mini-btn-active-approve', allApprove);
+      bulkReject.setAttribute('aria-pressed', allReject ? 'true' : 'false');
+      bulkReject.classList.toggle('mini-btn-active-reject', allReject);
+    }
+    bulkApprove.addEventListener('click', function () {
+      var allApprove = rows.every(function (row) { return reviewRowDecisions[decisionKey(outKey, row.name)] === 'approve'; });
+      var nextValue = allApprove ? null : 'approve';
+      rows.forEach(function (row) { reviewRowDecisions[decisionKey(outKey, row.name)] = nextValue; });
+      rowRefreshers.forEach(function (fn) { fn(); });
+      refreshBulk();
+    });
+    bulkReject.addEventListener('click', function () {
+      var allReject = rows.every(function (row) { return reviewRowDecisions[decisionKey(outKey, row.name)] === 'reject'; });
+      var nextValue = allReject ? null : 'reject';
+      rows.forEach(function (row) { reviewRowDecisions[decisionKey(outKey, row.name)] = nextValue; });
+      rowRefreshers.forEach(function (fn) { fn(); });
+      refreshBulk();
+    });
+    refreshBulk();
+
+    actions.appendChild(bulkReject);
+    actions.appendChild(bulkApprove);
+    bulkBar.appendChild(note);
+    bulkBar.appendChild(actions);
+
+    return { bulkBar: bulkBar, list: list };
   }
 
   /* Seeds the shared engine state with the annotator's submitted answer for
@@ -1716,7 +2125,7 @@
     }
   }
 
-  function buildReviewRow(outKey, submission, rawRecord) {
+  function buildReviewRow(outKey, submission) {
     var row = document.createElement('div');
     row.className = 'content-card';
     row.setAttribute('data-testid', 'ws-review-row');
@@ -1731,14 +2140,23 @@
     if (tag) header.appendChild(tag);
     row.appendChild(header);
 
-    var summary = document.createElement('div');
-    summary.style.cssText = 'font-size:13px;color:var(--color-ink-muted);margin-bottom:10px;white-space:pre-line;';
-    if (outKey === 'relation_identification') summary.style.fontFamily = 'var(--font-mono, monospace)';
-    summary.textContent = buildReviewSummaryText(outKey, submission, rawRecord);
-    row.appendChild(summary);
+    /* FR-014 aggregate review card: stats box, then the bulk bar + one
+       decision row per annotator (mock rows + the live 'current' row). */
+    var rows = getReviewerRows(outKey);
+    row.appendChild(buildStatsBox(outKey, rows));
+    var decisionSection = buildDecisionSection(outKey, rows);
+    row.appendChild(decisionSection.bulkBar);
+    row.appendChild(decisionSection.list);
 
     reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
     seedReviewState(outKey, submission);
+
+    /* FR-024L: direct correction control, reusing the same per-type
+       annotator control the annotator role uses, seeded above. */
+    var correctionTitle = document.createElement('div');
+    correctionTitle.className = 'rv-correction-title';
+    correctionTitle.textContent = t('reviewCorrectionTitle');
+    row.appendChild(correctionTitle);
 
     var correction = document.createElement('div');
     correction.setAttribute('data-testid', 'ws-review-correct-' + outKey);
@@ -1746,8 +2164,6 @@
     correction.appendChild(panelMount);
     renderOutputPreview(panelMount, outKey);
     row.appendChild(correction);
-
-    row.appendChild(buildDecisionButtons(outKey));
 
     return row;
   }
@@ -1805,30 +2221,71 @@
     }
 
     state.selectedOutputTypes.forEach(function (outKey) {
-      preview.appendChild(buildReviewRow(outKey, submission, rawRecord));
+      preview.appendChild(buildReviewRow(outKey, submission));
     });
   }
 
+  /* FR-014D: submit is blocked until every annotator row of every output
+     type has an explicit approve/reject decision -- validation runs
+     BEFORE any history/state mutation so a failed submit leaves
+     #wsReviewHistory untouched (still hidden if it was hidden before). */
   function handleReviewSubmit() {
     var history = document.getElementById('wsReviewHistory');
     if (!history) return;
-    var lines = state.selectedOutputTypes.map(function (outKey) {
+
+    var rowsByOutKey = {};
+    var allDecided = true;
+    var currentRejectedSomewhere = false;
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var rows = getReviewerRows(outKey);
+      rowsByOutKey[outKey] = rows;
+      rows.forEach(function (row) {
+        var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
+        if (!decision) allDecided = false;
+        if (row.name === 'current' && decision === 'reject') currentRejectedSomewhere = true;
+      });
+    });
+    if (!allDecided) {
+      showToast(t('toastSelectDecision'));
+      return;
+    }
+
+    var decisionLines = [];
+    state.selectedOutputTypes.forEach(function (outKey) {
+      rowsByOutKey[outKey].forEach(function (row) {
+        var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
+        decisionLines.push(outKey + ' · ' + row.name + ': ' + decision);
+      });
+    });
+    var correctionLines = state.selectedOutputTypes.map(function (outKey) {
       var corrected = describeOutputAnswer(outKey, {
         previewState: state.previewState,
         previewEntities: state.previewEntities,
         previewTriples: state.previewTriples,
       });
       var original = reviewRowOriginals[outKey] || '';
-      var decision = reviewRowDecisions[outKey] || 'pending';
-      return outKey + ' [' + decision + ']: ' + original + ' -> ' + corrected;
+      return outKey + ': ' + original + ' -> ' + corrected;
     });
+
     var entry = document.createElement('div');
     entry.style.cssText = 'font-size:12px;white-space:pre-line;padding:6px 0;border-top:1px solid var(--color-border);';
-    entry.textContent = lines.join('\n');
+    entry.textContent = decisionLines.concat(correctionLines).join('\n');
     history.appendChild(entry);
     history.classList.remove('hidden');
 
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary());
+    var summary = buildHistorySummary() + '\n' + decisionLines.join('\n');
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
+      currentProfile.id,
+      currentRole,
+      currentRunType,
+      currentSampleId,
+      collectAnswerPayload(),
+      summary
+    );
+    if (currentRejectedSomewhere) {
+      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary);
+    }
+
     renderSampleList();
     renderSampleNav();
     renderHistoryPanel();
