@@ -68,6 +68,33 @@ export async function setRangeValue(locator: import('@playwright/test').Locator,
   }, value);
 }
 
+/* Selects `text` (first occurrence) inside the element located by `testId`
+ * and fires the mouseup the engine's passage-selection handler listens for.
+ * Walks text nodes so the target can live inside an entity highlight span
+ * or a plain text segment between spans — mirrors how an annotator drags
+ * over the passage in the relation builder flow (E1/Arg1 → Relation →
+ * E2/Arg2). */
+export async function selectWorkspaceText(page: Page, testId: string, text: string) {
+  const el = page.getByTestId(testId);
+  await el.evaluate((node, target) => {
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    let textNode: Node | null;
+    while ((textNode = walker.nextNode())) {
+      const idx = textNode.textContent?.indexOf(target) ?? -1;
+      if (idx < 0) continue;
+      const range = document.createRange();
+      range.setStart(textNode, idx);
+      range.setEnd(textNode, idx + target.length);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      return;
+    }
+    throw new Error(`selectWorkspaceText: "${target}" not found in any text node`);
+  }, text);
+  await el.dispatchEvent('mouseup');
+}
+
 /* Regression guard for the old workspace's `summarizeReviewerAspectCorrections`
  * ReferenceError (annotation-workspace.html:5029) that fired on review
  * submit. Attach before navigation; call assertNoPageErrors() after the

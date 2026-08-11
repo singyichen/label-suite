@@ -1,26 +1,39 @@
 import { test, expect } from '@playwright/test';
-import { buildWorkspaceUrl, dismissGuidelineModal, patchDataFile, skipGuidelineModal } from './_workspace-helpers';
+import {
+  buildWorkspaceUrl,
+  dismissGuidelineModal,
+  patchDataFile,
+  selectWorkspaceText,
+  skipGuidelineModal,
+} from './_workspace-helpers';
 
 /* entity_recognition + relation_identification INTEGRATED mode (spec 015
  * v2.0.0, OUTPUT_TYPE_DEPENDENCIES: relation_identification.source_output =
  * 'entity_recognition'). T010: both types are declared in outputs[], so
- * entities are editable and become the shared source for the relation
- * builder's e1/e2 selects — unlike T008's pure/standalone mode. */
+ * entities are editable and become the shared E1/E2 source for the engine's
+ * sequential relation builder — unlike T008's pure/standalone mode. */
 
 test.beforeEach(async ({ page }) => {
   await skipGuidelineModal(page);
 });
 
 test.describe('entity_recognition + relation_identification integrated mode (T010)', () => {
-  test('entities created in the entity_recognition panel populate the relation builder selects', async ({ page }) => {
+  test('entities marked in the entity_recognition region feed the sequential relation builder', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001' }));
     await dismissGuidelineModal(page);
 
     // med-001 ships 11 pre-annotated (output-role) entities.
     await expect(page.getByTestId('ws-er-entity-item')).toHaveCount(11);
 
-    const e1Options = await page.getByTestId('ws-ri-e1-select').locator('option').allTextContents();
-    expect(e1Options).toContain('左心耳');
+    // Engine-builder parity (task-new Step 2 / task-detail 標記設定): the
+    // relation builder is the sequential button flow, not <select> dropdowns.
+    const relPanel = page.getByTestId('ws-output-panel-relation_identification');
+    expect(await relPanel.locator('select').count()).toBe(0);
+
+    // A marked entity is accepted as E1/Arg1 via passage selection.
+    await selectWorkspaceText(page, 'ws-input-content', '左心耳');
+    await page.getByTestId('ws-ri-e1-btn').click();
+    await expect(page.getByTestId('ws-ri-slot-e1')).toContainText('左心耳');
   });
 
   test('deleting an entity in entity_recognition removes any triple that referenced it', async ({ page }) => {

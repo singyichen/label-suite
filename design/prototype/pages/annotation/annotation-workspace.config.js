@@ -749,107 +749,59 @@
     });
   }
 
-  /* Replaces buildRelationStateMachine()'s own click/passage-selection flow
-     with a <select>-driven E1/relation/E2 builder (annotator-facing target
-     UI, spec 015 v2.0.0). state.previewEntities/previewTriples stay the
-     single source of truth either way, so cross-sample persistence keeps
-     working for free via the existing snapshotCurrentSample()/restoreSample()
-     deep-clone mechanism. */
-  function buildRiSelectBuilder(container, relationTypes, disabled) {
-    var wrap = document.createElement('div');
-    wrap.className = 'ri-builder';
-    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;';
-
-    function fillEntityOptions(select) {
-      var blank = document.createElement('option');
-      blank.value = '';
-      blank.textContent = '';
-      select.appendChild(blank);
-      state.previewEntities.forEach(function (ent, i) {
-        var opt = document.createElement('option');
-        opt.value = String(i);
-        opt.textContent = ent.text;
-        select.appendChild(opt);
-      });
-      select.disabled = disabled;
-    }
-    var e1Select = document.createElement('select');
-    e1Select.setAttribute('data-testid', 'ws-ri-e1-select');
-    e1Select.setAttribute('aria-label', state.lang === 'zh' ? '主體實體' : 'Subject entity');
-    fillEntityOptions(e1Select);
-    var relSelect = document.createElement('select');
-    relSelect.setAttribute('data-testid', 'ws-ri-relation-select');
-    relSelect.setAttribute('aria-label', state.lang === 'zh' ? '關係類型' : 'Relation type');
-    var relBlank = document.createElement('option');
-    relBlank.value = '';
-    relBlank.textContent = '';
-    relSelect.appendChild(relBlank);
-    getRelationTypeOptions(relationTypes).forEach(function (rt) {
-      var opt = document.createElement('option');
-      opt.value = rt;
-      opt.textContent = rt;
-      relSelect.appendChild(opt);
-    });
-    relSelect.disabled = disabled;
-    var e2Select = document.createElement('select');
-    e2Select.setAttribute('data-testid', 'ws-ri-e2-select');
-    e2Select.setAttribute('aria-label', state.lang === 'zh' ? '客體實體' : 'Object entity');
-    fillEntityOptions(e2Select);
-
-    var addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.setAttribute('data-testid', 'ws-ri-add-btn');
-    addBtn.textContent = state.lang === 'zh' ? '新增' : 'Add';
-    addBtn.disabled = disabled;
-    addBtn.addEventListener('click', function () {
-      var e1 = state.previewEntities[Number(e1Select.value)];
-      var e2 = state.previewEntities[Number(e2Select.value)];
-      var relType = relSelect.value;
-      if (!e1 || !e2 || !relType) return;
-      state.previewTriples.push({ subj: e1.text, rel: relType, obj: e2.text, relType: relType });
-      renderAbsaUnifiedPreview_refresh(container);
-    });
-
-    var undoBtn = document.createElement('button');
-    undoBtn.type = 'button';
-    undoBtn.setAttribute('data-testid', 'ws-ri-undo-btn');
-    undoBtn.textContent = state.lang === 'zh' ? '復原' : 'Undo';
-    undoBtn.setAttribute('aria-label', state.lang === 'zh' ? '撤銷' : 'Undo');
-    undoBtn.disabled = disabled;
-    undoBtn.addEventListener('click', function () {
-      state.previewTriples.pop();
-      renderAbsaUnifiedPreview_refresh(container);
-    });
-
-    wrap.appendChild(e1Select);
-    wrap.appendChild(relSelect);
-    wrap.appendChild(e2Select);
-    wrap.appendChild(addBtn);
-    wrap.appendChild(undoBtn);
-    return wrap;
-  }
-
-  /* Replaces buildRelationStateMachine()'s native builder DOM (everything in
-     relSection ahead of its own triple-list title) with the select-based
-     builder above; tags each rendered triple row for the annotator-facing
-     testid contract. */
-  function patchRelationSection(container, relSection, relationTypes, disabled) {
+  /* The relation builder itself is the engine's own sequential state
+     machine (buildRelationStateMachine: passage selection → E1/Arg1 →
+     Relation → E2/Arg2 → 退回/新增, plus the per-row 類型/刪除 controls on
+     the triple list) — the exact control task-new Step 2 and task-detail
+     標記設定 render. The workspace only relabels it with the ws-ri-*
+     testid contract; it must not swap in a different builder UI.
+     state.previewEntities/previewTriples/relDraft stay the single source
+     of truth, so cross-sample persistence keeps working via the existing
+     snapshotCurrentSample()/restoreSample() deep-clone mechanism. */
+  function patchRelationSection(relSection) {
     var relList = relSection.querySelector('.absa-relation-list');
-    var tlTitle = relList ? relList.previousElementSibling : null;
-    if (tlTitle) {
-      var node = relSection.firstChild;
-      while (node && node !== tlTitle) {
-        var next = node.nextSibling;
-        relSection.removeChild(node);
-        node = next;
-      }
-      relSection.insertBefore(buildRiSelectBuilder(container, relationTypes, disabled), tlTitle);
+
+    /* Draft status chips render in fixed order E1 / Rel / E2 ahead of the
+       button row (buildRelationStateMachine's status div) -- located by the
+       'E1：' chip text rather than child position. */
+    var statusEl = Array.prototype.find.call(relSection.children, function (child) {
+      var first = child.firstElementChild;
+      return first && first.tagName === 'SPAN' && first.textContent.indexOf('E1') === 0;
+    });
+    if (statusEl && statusEl.children.length >= 3) {
+      ['e1', 'rel', 'e2'].forEach(function (key, i) {
+        statusEl.children[i].setAttribute('data-testid', 'ws-ri-slot-' + key);
+      });
     }
+
+    var builderBtnIds = {};
+    builderBtnIds['E1/Arg1'] = 'ws-ri-e1-btn';
+    builderBtnIds['Relation'] = 'ws-ri-relation-btn';
+    builderBtnIds['E2/Arg2'] = 'ws-ri-e2-btn';
+    builderBtnIds[state.lang === 'zh' ? '退回' : 'Undo'] = 'ws-ri-undo-btn';
+    builderBtnIds[state.lang === 'zh' ? '新增' : 'Add'] = 'ws-ri-add-btn';
+    Array.prototype.forEach.call(relSection.querySelectorAll('button'), function (btn) {
+      if (relList && relList.contains(btn)) return;
+      var id = builderBtnIds[btn.textContent.trim()];
+      if (!id) return;
+      btn.setAttribute('data-testid', id);
+      if (id === 'ws-ri-undo-btn') {
+        btn.setAttribute('aria-label', state.lang === 'zh' ? '撤銷' : 'Undo');
+      }
+    });
+
     if (relList) {
       Array.prototype.forEach.call(relList.children, function (row) {
-        if (row.classList && row.classList.contains('absa-relation-row')) {
-          row.setAttribute('data-testid', 'ws-ri-triple-item');
-        }
+        if (!row.classList || !row.classList.contains('absa-relation-row')) return;
+        row.setAttribute('data-testid', 'ws-ri-triple-item');
+        Array.prototype.forEach.call(row.querySelectorAll('button'), function (btn) {
+          var text = btn.textContent.trim();
+          if (text === '類型' || text === 'type') {
+            btn.setAttribute('data-testid', 'ws-ri-triple-type-btn');
+          } else if (text === '刪除' || text === 'Del') {
+            btn.setAttribute('data-testid', 'ws-ri-triple-delete');
+          }
+        });
       });
     }
   }
@@ -894,12 +846,6 @@
 
     var hasSpanOut = state.selectedOutputTypes.indexOf('entity_recognition') >= 0;
     var hasRelOut = state.selectedOutputTypes.indexOf('relation_identification') >= 0;
-    var relCfg = state.outputConfigs.relation_identification || {};
-    var relationTypes = Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : [];
-    var disabled = !!(
-      (hasSpanOut && state.previewBypass.entity_recognition) ||
-      (hasRelOut && state.previewBypass.relation_identification)
-    );
 
     var relListEl = container.querySelector('.absa-relation-list');
     var relSection = relListEl ? relListEl.parentElement : null;
@@ -928,7 +874,7 @@
       if (relSection) relSection.setAttribute('data-testid', 'ws-output-panel-relation_identification');
     }
 
-    if (relSection && hasRelOut) patchRelationSection(container, relSection, relationTypes, disabled);
+    if (relSection && hasRelOut) patchRelationSection(relSection);
 
     patchAbsaBypassChips(container, entityWrap, relSection, hasSpanOut, hasRelOut);
   }
