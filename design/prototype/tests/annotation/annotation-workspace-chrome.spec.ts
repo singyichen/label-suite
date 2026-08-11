@@ -97,6 +97,17 @@ test.describe('Middle column: top sample nav + progress summary', () => {
     await expect(bypassRow).toBeVisible();
     expect(await bypassRow.evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe('none');
   });
+
+  test('the integrated ER+RI preview draws no outer frame inside the annotation card', async ({ page }) => {
+    // T010 is the integrated entity+relation fixture; the engine wraps it in
+    // .preview-unified, whose own border doubles the annotation card's frame.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001' }));
+    await dismissGuidelineModal(page);
+
+    const unified = page.getByTestId('ws-annotation-card').locator('.preview-unified');
+    await expect(unified).toBeVisible();
+    expect(await unified.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
+  });
 });
 
 test.describe('Bottom action bar: autosave status + save draft', () => {
