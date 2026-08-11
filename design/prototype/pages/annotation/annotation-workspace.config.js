@@ -39,6 +39,8 @@
       guidelineModalTitle: '請先閱讀任務說明',
       guidelineModalConfirm: '我已閱讀，開始標記',
       guidelineSummaryTitle: '任務說明',
+      guidelineFileActionNewTab: '新分頁',
+      guidelineFileActionPreview: '預覽',
       mobileDrawerTitle: '說明與檔案',
       guidelineImageModalCloseAria: '關閉圖片預覽',
       wsSubmitIncomplete: '請完成所有標記項目後再提交',
@@ -81,6 +83,8 @@
       guidelineModalTitle: 'Please read the task guideline first',
       guidelineModalConfirm: "I've read it, start annotating",
       guidelineSummaryTitle: 'Task Guideline',
+      guidelineFileActionNewTab: 'New tab',
+      guidelineFileActionPreview: 'Preview',
       mobileDrawerTitle: 'Guidelines & Files',
       guidelineImageModalCloseAria: 'Close image preview',
       wsSubmitIncomplete: 'Please answer every output before submitting',
@@ -2316,6 +2320,12 @@
     preview.textContent = content || '';
     preview.classList.remove('hidden');
   }
+  var GUIDELINE_FILE_ICON_SVG = {
+    pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    image: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    markdown: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
+  };
+  var GUIDELINE_FILE_ICON_CLASS = { pdf: 'pdf', image: 'img', markdown: 'md' };
   function renderGuidelineFileList(container, files, taggedForTest) {
     if (!container) return;
     while (container.firstChild) container.removeChild(container.firstChild);
@@ -2324,7 +2334,22 @@
       item.type = 'button';
       item.className = 'guideline-file-item';
       if (taggedForTest) item.setAttribute('data-testid', 'ws-guideline-file-item');
-      item.textContent = file.name;
+      var icon = document.createElement('div');
+      icon.className = 'guideline-file-icon ' + (GUIDELINE_FILE_ICON_CLASS[file.type] || 'md');
+      icon.setAttribute('aria-hidden', 'true');
+      /* innerHTML must only ever receive the static GUIDELINE_FILE_ICON_SVG
+         constants above -- file-derived strings (name, url) stay on
+         textContent paths */
+      icon.innerHTML = GUIDELINE_FILE_ICON_SVG[file.type] || GUIDELINE_FILE_ICON_SVG.markdown;
+      item.appendChild(icon);
+      var name = document.createElement('span');
+      name.className = 'guideline-file-name';
+      name.textContent = file.name;
+      item.appendChild(name);
+      var action = document.createElement('span');
+      action.className = 'guideline-file-action';
+      action.textContent = file.type === 'pdf' ? t('guidelineFileActionNewTab') : t('guidelineFileActionPreview');
+      item.appendChild(action);
       item.addEventListener('click', function () {
         if (file.type === 'pdf') {
           window.open(file.url, '_blank');
@@ -2515,6 +2540,10 @@
         persistLang(state.lang);
         applyDocumentLang();
         applyStaticI18nText();
+        /* file-action labels (新分頁/預覽) are i18n text rendered into the
+           list items, so the list must re-render on language switch; this
+           is not a sample switch, so AC-5.1/5.2 persistence is unaffected */
+        renderGuidelinePanel();
         renderWorkspace();
       });
     });

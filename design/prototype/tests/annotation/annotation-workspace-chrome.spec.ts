@@ -144,6 +144,27 @@ test.describe('Right column: 說明與檔案 / 歷程 tabs', () => {
     await expect(panel).toContainText('single_label');
   });
 
+  test('guideline summary title carries the info icon and file rows show typed icons with action hints', async ({ page }) => {
+    await gotoT001(page);
+
+    await expect(page.locator('.guideline-summary-title svg')).toBeVisible();
+
+    const items = page.getByTestId('ws-guideline-file-item');
+    await expect(items).toHaveCount(3);
+
+    const pdfRow = items.filter({ hasText: '標記指引.pdf' });
+    await expect(pdfRow.locator('.guideline-file-icon.pdf svg')).toBeVisible();
+    await expect(pdfRow.locator('.guideline-file-action')).toHaveText('新分頁');
+
+    const imgRow = items.filter({ hasText: '標記範例圖.png' });
+    await expect(imgRow.locator('.guideline-file-icon.img svg')).toBeVisible();
+    await expect(imgRow.locator('.guideline-file-action')).toHaveText('預覽');
+
+    const mdRow = items.filter({ hasText: '常見問題.md' });
+    await expect(mdRow.locator('.guideline-file-icon.md svg')).toBeVisible();
+    await expect(mdRow.locator('.guideline-file-action')).toHaveText('預覽');
+  });
+
   test('reviewer view renders the same two tabs', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
     await dismissGuidelineModal(page);

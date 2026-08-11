@@ -501,7 +501,15 @@
       background: var(--color-primary-soft-bg);
       margin-bottom: var(--space-md);
     }
-    .guideline-summary-title { font-size: 13px; font-weight: 700; color: var(--color-primary); margin-bottom: var(--space-sm); }
+    .guideline-summary-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
     .guideline-summary-text { font-size: 13px; line-height: 1.7; color: var(--color-ink); }
     .guideline-file-list { display: flex; flex-direction: column; gap: var(--space-sm); }
     .guideline-file-item {
@@ -519,6 +527,21 @@
       color: var(--color-ink);
     }
     .guideline-file-item:hover { border-color: var(--color-primary); background: var(--color-primary-soft-bg); }
+    .guideline-file-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .guideline-file-icon.pdf { background: var(--color-error-soft-bg); color: var(--color-error); }
+    .guideline-file-icon.img { background: var(--color-primary-soft-bg); color: var(--color-primary); }
+    .guideline-file-icon.md { background: var(--color-surface); color: #7C3AED; }
+    html[data-theme="dark"] .guideline-file-icon.md { background: var(--color-primary-soft-bg); color: #A78BFA; }
+    .guideline-file-name { font-size: 13px; font-weight: 500; color: var(--color-ink); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .guideline-file-action { font-size: 11px; color: var(--color-ink-muted); flex-shrink: 0; }
     .guideline-md-preview {
       margin-top: var(--space-md);
       padding: var(--space-md);
@@ -749,7 +772,10 @@
       </div>
       <div class="guideline-panel" id="wsGuidelinePanel">
         <div class="guideline-summary">
-          <div class="guideline-summary-title" id="guidelineSummaryTitle"></div>
+          <div class="guideline-summary-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="guidelineSummaryTitle"></span>
+          </div>
           <p class="guideline-summary-text" id="guidelineSummaryText"></p>
         </div>
         <div class="guideline-file-list" id="wsGuidelineFileList"></div>
