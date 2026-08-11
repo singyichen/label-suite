@@ -58,6 +58,7 @@
       reviewCurrentAnnotatorLabel: '目前標記員',
       reviewCorrectionTitle: '直接修正',
       reviewBypassPill: '無法判定 (Bypass)',
+      reviewSourceTextTitle: '原始文本',
       toastSelectDecision: '請完成每位標記員的審核決策',
     },
     en: {
@@ -102,6 +103,7 @@
       reviewCurrentAnnotatorLabel: 'Current annotator',
       reviewCorrectionTitle: 'Direct correction',
       reviewBypassPill: 'Bypassed (cannot determine)',
+      reviewSourceTextTitle: 'Source text',
       toastSelectDecision: 'Please decide on every annotator before submitting',
     },
   };
@@ -1774,14 +1776,21 @@
         if (entities.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
         var colorMap = getPreviewTypeColorMap().map || {};
         var entWrap = document.createElement('div');
-        entWrap.className = 'rv-answer-chips';
+        entWrap.className = 'rv-answer-entities';
         entities.forEach(function (ent) {
-          var chip = document.createElement('span');
-          chip.className = 'rv-answer-chip';
-          var color = colorMap[ent.type];
-          if (color) chip.style.borderColor = safeCssColor(color, 'var(--color-border)');
-          chip.textContent = ent.text + ' (' + ent.type + ')';
-          entWrap.appendChild(chip);
+          var line = document.createElement('div');
+          line.className = 'rv-answer-entity-line';
+          line.setAttribute('data-testid', 'ws-review-entity-line');
+          var badge = document.createElement('span');
+          badge.className = 'rv-entity-badge';
+          badge.textContent = ent.type;
+          badge.style.background = safeCssColor(colorMap[ent.type], '#6366F1');
+          line.appendChild(badge);
+          var text = document.createElement('span');
+          text.className = 'rv-entity-text';
+          text.textContent = ent.text;
+          line.appendChild(text);
+          entWrap.appendChild(line);
         });
         cell.appendChild(entWrap);
         break;
@@ -2069,6 +2078,74 @@
       .filter(Boolean)
       .join('\n\n');
   }
+  /* Legacy-parity 原始文本 card for entity tasks (reviewer view): the raw
+     input text with ONE inline highlight per distinct annotated entity
+     across ALL annotator rows (union, not a single annotator's view --
+     e.g. an entity two annotators tagged and one missed still shows).
+     Highlight visuals mirror the engine's own absa-span-highlight rule
+     (tinted background + colored bottom border) plus a solid type badge,
+     colored from the task's entity config via getPreviewTypeColorMap().
+     Entities are placed at their first occurrence in the text; entities
+     whose text no longer matches (or overlaps an earlier placement) are
+     skipped here but still listed in the per-annotator rows below. */
+  function buildReviewerSourceTextCard(rawRecord) {
+    var card = document.createElement('div');
+    card.className = 'content-card';
+    card.setAttribute('data-testid', 'ws-review-source-text');
+
+    var title = document.createElement('div');
+    title.className = 'rv-source-title';
+    title.textContent = t('reviewSourceTextTitle');
+    card.appendChild(title);
+
+    var body = document.createElement('div');
+    body.className = 'rv-source-body';
+    var rawText = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
+
+    var seen = {};
+    var placed = [];
+    getReviewerRows('entity_recognition').forEach(function (row) {
+      if (row.bypass) return;
+      (Array.isArray(row.answer) ? row.answer : []).forEach(function (ent) {
+        if (!ent || !ent.text) return;
+        var key = ent.text + ' ' + ent.type;
+        if (seen[key]) return;
+        seen[key] = true;
+        var idx = rawText.indexOf(ent.text);
+        if (idx < 0) return;
+        var overlaps = placed.some(function (span) {
+          return idx < span.end && idx + ent.text.length > span.start;
+        });
+        if (!overlaps) placed.push({ start: idx, end: idx + ent.text.length, text: ent.text, type: ent.type });
+      });
+    });
+    placed.sort(function (a, b) { return a.start - b.start; });
+
+    var colorMap = getPreviewTypeColorMap().map || {};
+    var pos = 0;
+    placed.forEach(function (span) {
+      if (span.start > pos) body.appendChild(document.createTextNode(rawText.substring(pos, span.start)));
+      var mark = document.createElement('span');
+      mark.className = 'rv-source-mark';
+      mark.setAttribute('data-testid', 'ws-review-source-mark');
+      var color = safeCssColor(colorMap[span.type], '#6366F1');
+      mark.style.background = color + '33';
+      mark.style.borderBottom = '2px solid ' + color;
+      mark.style.color = color;
+      mark.appendChild(document.createTextNode(span.text));
+      var badge = document.createElement('span');
+      badge.className = 'rv-source-badge';
+      badge.textContent = span.type;
+      badge.style.background = color;
+      mark.appendChild(badge);
+      body.appendChild(mark);
+      pos = span.end;
+    });
+    if (pos < rawText.length) body.appendChild(document.createTextNode(rawText.substring(pos)));
+
+    card.appendChild(body);
+    return card;
+  }
   function renderReviewerWorkspace() {
     var preview = document.getElementById('annotationPreview');
     if (!preview) return;
@@ -2098,6 +2175,12 @@
       inputCard.setAttribute('data-testid', 'ws-input-content');
       inputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
       preview.appendChild(inputCard);
+    }
+
+    /* Entity tasks additionally restore the legacy 原始文本 card on top,
+       showing every annotated result inline (union across annotators). */
+    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0) {
+      preview.appendChild(buildReviewerSourceTextCard(rawRecord));
     }
 
     state.selectedOutputTypes.forEach(function (outKey) {

@@ -312,6 +312,51 @@ test.describe('Dimension answer tags — bracketed arrays with deviation colorin
   });
 });
 
+test.describe('Entity recognition review — source-text highlights and labeled result lines', () => {
+  async function gotoT007Reviewer(page: Page) {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-002', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+  }
+
+  test('source text card shows the raw text with one highlight mark per union entity', async ({ page }) => {
+    // T007 entity-recognition-002: tony0950127 misses the trailing 差/opinion
+    // entity, but the union across all annotators still ships 6 entities --
+    // the card must show every annotated result, not one annotator's view.
+    await gotoT007Reviewer(page);
+
+    const card = page.getByTestId('ws-review-source-text');
+    await expect(card).toContainText('原始文本');
+    await expect(card).toContainText('步行五分鐘就到捷運站');
+
+    const marks = card.getByTestId('ws-review-source-mark');
+    await expect(marks).toHaveCount(6);
+    await expect(marks.nth(0)).toContainText('飯店');
+    await expect(marks.nth(0).locator('.rv-source-badge')).toHaveText('target');
+    await expect(marks.nth(5)).toContainText('差');
+    await expect(marks.nth(5).locator('.rv-source-badge')).toHaveText('opinion');
+  });
+
+  test('annotator answers render one colored type badge + entity text line per entity', async ({ page }) => {
+    await gotoT007Reviewer(page);
+
+    const firstAnswer = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer').first();
+    const lines = firstAnswer.getByTestId('ws-review-entity-line');
+    await expect(lines).toHaveCount(6);
+    await expect(lines.first().locator('.rv-entity-badge')).toHaveText('target');
+    await expect(lines.first().locator('.rv-entity-text')).toHaveText('飯店');
+    // Badge color comes from the task's entity config (T007 target #3498DB),
+    // not a hardcoded palette.
+    await expect(lines.first().locator('.rv-entity-badge')).toHaveCSS('background-color', 'rgb(52, 152, 219)');
+  });
+
+  test('an annotator missing an entity still shows only their own lines', async ({ page }) => {
+    await gotoT007Reviewer(page);
+
+    const answers = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer');
+    await expect(answers.nth(2).getByTestId('ws-review-entity-line')).toHaveCount(5);
+  });
+});
+
 test.describe('EN i18n spot check', () => {
   async function ensureEnglishMode(p: Page) {
     if ((await p.getByTestId('lang-label').textContent()) !== 'EN') {

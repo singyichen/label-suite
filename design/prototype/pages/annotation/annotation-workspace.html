@@ -384,6 +384,35 @@
       border-radius: var(--radius-md);
       padding: 2px 8px;
     }
+    /* Entity answers: legacy-parity solid type badge + entity text, one
+       line per entity; badge background color is set inline from the
+       task's entity config (getPreviewTypeColorMap). */
+    .rv-answer-entities { display: flex; flex-direction: column; gap: 6px; }
+    .rv-answer-entity-line { display: flex; align-items: center; gap: 8px; }
+    .rv-entity-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      border-radius: var(--radius-sm);
+      padding: 1px 8px;
+    }
+    .rv-entity-text { font-size: 13px; color: var(--color-ink); }
+    /* 原始文本 card (entity tasks, reviewer view): inline highlight marks
+       carry their per-type colors inline; only layout lives here. */
+    .rv-source-title { font-size: 13px; font-weight: 700; color: var(--color-ink-muted); margin-bottom: 10px; }
+    .rv-source-body { font-size: 15px; line-height: 2; color: var(--color-ink); }
+    .rv-source-mark { padding: 1px 2px; border-radius: var(--radius-sm); }
+    .rv-source-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      border-radius: var(--radius-sm);
+      padding: 0 6px;
+      margin: 0 2px 0 4px;
+      vertical-align: middle;
+    }
     .rv-answer-relations { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono, monospace); font-size: 12px; }
     .rv-answer-relation-line { color: var(--color-ink); }
     .rv-answer-freetext { font-size: 13px; color: var(--color-ink); white-space: pre-line; }
