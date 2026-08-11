@@ -2021,6 +2021,88 @@ function getRelationTypeOptions(relationTypes) {
   return opts;
 }
 
+/* Shared relation triple-row builder -- the annotator's 關係識別 list and the
+   reviewer aggregate card's per-annotator relation rows both render through
+   this single implementation so the two views can never drift. `triple` is
+   the display shape {subj, rel, obj, relType}; mutation stays with the
+   caller via onSetType(newTypeOrNull)/onDelete(). */
+function buildRelationTripleRow(triple, allRelTypes, opts) {
+  var lang = (opts && opts.lang) || 'zh';
+  var row = document.createElement('div');
+  row.className = 'absa-relation-row';
+  row.setAttribute('data-testid', 'relation-triple-row');
+  row.style.display = 'flex'; row.style.alignItems = 'center';
+  var content = document.createElement('span');
+  content.style.flex = '1';
+  var subjSpan = document.createElement('span');
+  subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
+  content.appendChild(subjSpan);
+  var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
+  content.appendChild(arrow);
+  var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
+  content.appendChild(relBadge);
+  var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
+  content.appendChild(arrow2);
+  var objSpan = document.createElement('span');
+  objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
+  content.appendChild(objSpan);
+  if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
+    var typeBadge = document.createElement('span');
+    typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
+    typeBadge.textContent = (lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
+    content.appendChild(typeBadge);
+  }
+  row.appendChild(content);
+  /* type dropdown button: assigns the post-hoc semantic relation type from config relation_types */
+  if (allRelTypes.length > 0 && opts && opts.onSetType) {
+    var typeWrap = document.createElement('span');
+    typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
+    var typeBtn = document.createElement('button');
+    typeBtn.type = 'button';
+    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+    typeBtn.textContent = lang === 'zh' ? '類型' : 'type';
+    var typeMenu = document.createElement('div');
+    typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+    allRelTypes.forEach(function(rt) {
+      var item = document.createElement('div');
+      item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
+      item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
+      item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
+      var check = document.createElement('span');
+      check.style.cssText = 'width:14px;font-size:0.75rem;';
+      check.textContent = (triple.relType === rt) ? '✓' : '';
+      item.appendChild(check);
+      item.appendChild(document.createTextNode(rt));
+      item.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        opts.onSetType((triple.relType === rt) ? null : rt);
+      });
+      typeMenu.appendChild(item);
+    });
+    typeBtn.addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      var isOpen = typeMenu.style.display !== 'none';
+      typeMenu.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
+        setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
+      }
+    });
+    typeWrap.appendChild(typeBtn);
+    typeWrap.appendChild(typeMenu);
+    row.appendChild(typeWrap);
+  }
+  if (opts && opts.onDelete) {
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
+    delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
+    delBtn.addEventListener('click', function() { opts.onDelete(); });
+    row.appendChild(delBtn);
+  }
+  return row;
+}
+
 /* Resolve the selection to its actual character offset in realText by
    walking containerEl's text nodes — indexOf alone would always bind repeated
    words (e.g. the same entity text occurring twice) to the first occurrence */
@@ -2233,79 +2315,11 @@ function renderAbsaUnifiedPreview(previewContainer) {
   relList.className = 'absa-relation-list';
   var allRelTypes = getRelationTypeOptions(relationTypes);
   state.previewTriples.forEach(function(triple, i) {
-    var row = document.createElement('div');
-    row.className = 'absa-relation-row';
-    row.style.display = 'flex'; row.style.alignItems = 'center';
-    var content = document.createElement('span');
-    content.style.flex = '1';
-    var subjSpan = document.createElement('span');
-    subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
-    content.appendChild(subjSpan);
-    var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
-    content.appendChild(arrow);
-    var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
-    content.appendChild(relBadge);
-    var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
-    content.appendChild(arrow2);
-    var objSpan = document.createElement('span');
-    objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
-    content.appendChild(objSpan);
-    if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
-      var typeBadge = document.createElement('span');
-      typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
-      typeBadge.textContent = (state.lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
-      content.appendChild(typeBadge);
-    }
-    row.appendChild(content);
-    /* type dropdown button: assigns the post-hoc semantic relation type from config relation_types */
-    if (allRelTypes.length > 0) {
-      var typeWrap = document.createElement('span');
-      typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
-      var typeBtn = document.createElement('button');
-      typeBtn.type = 'button';
-      typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
-      typeBtn.textContent = state.lang === 'zh' ? '類型' : 'type';
-      var typeMenu = document.createElement('div');
-      typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
-      allRelTypes.forEach(function(rt) {
-        var item = document.createElement('div');
-        item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
-        item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
-        item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
-        var check = document.createElement('span');
-        check.style.cssText = 'width:14px;font-size:0.75rem;';
-        check.textContent = (triple.relType === rt) ? '✓' : '';
-        item.appendChild(check);
-        item.appendChild(document.createTextNode(rt));
-        (function(relType, idx) {
-          item.addEventListener('click', function(ev) {
-            ev.stopPropagation();
-            state.previewTriples[idx].relType = (state.previewTriples[idx].relType === relType) ? null : relType;
-            renderAbsaUnifiedPreview_refresh(previewContainer);
-          });
-        }(rt, i));
-        typeMenu.appendChild(item);
-      });
-      typeBtn.addEventListener('click', function(ev) {
-        ev.stopPropagation();
-        var isOpen = typeMenu.style.display !== 'none';
-        typeMenu.style.display = isOpen ? 'none' : 'block';
-        if (!isOpen) {
-          var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
-          setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
-        }
-      });
-      typeWrap.appendChild(typeBtn);
-      typeWrap.appendChild(typeMenu);
-      row.appendChild(typeWrap);
-    }
-    var delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
-    delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-    (function(idx) { delBtn.addEventListener('click', function() { state.previewTriples.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
-    row.appendChild(delBtn);
-    relList.appendChild(row);
+    relList.appendChild(buildRelationTripleRow(triple, allRelTypes, {
+      lang: state.lang,
+      onSetType: function(v) { state.previewTriples[i].relType = v; renderAbsaUnifiedPreview_refresh(previewContainer); },
+      onDelete: function() { state.previewTriples.splice(i, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }
+    }));
   });
   if (state.previewTriples.length === 0) {
     var emptyMsg = document.createElement('div');

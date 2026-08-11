@@ -1083,7 +1083,8 @@
       case 'entity_recognition':
         return (Array.isArray(answer) ? answer : []).map(function (ent) { return ent.type; });
       case 'relation_identification':
-        return (Array.isArray(answer) ? answer : []).map(function (tr) { return tr.rel; });
+        /* a toggled-off (null) relation type is excluded from stats */
+        return (Array.isArray(answer) ? answer : []).map(function (tr) { return tr.rel; }).filter(Boolean);
       default:
         return [];
     }

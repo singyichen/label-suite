@@ -357,6 +357,95 @@ test.describe('Entity recognition review — source-text highlights and labeled 
   });
 });
 
+test.describe('Relation review — annotator-view-parity triple rows', () => {
+  function relationCard(page: Page) {
+    return page.getByTestId('ws-review-row').filter({ hasText: 'relation_identification' });
+  }
+
+  async function gotoMed001Reviewer(page: Page) {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+  }
+
+  test('each annotator answer renders the annotator-style triple rows with token positions and type badge', async ({ page }) => {
+    // T010 med-001: mock triples mirror the record's ner-shape gold triples,
+    // so every row must resolve its entity/trigger positions from the record
+    // -- the same data the annotator's own 關係識別 list renders from.
+    await gotoMed001Reviewer(page);
+
+    const firstAnswer = relationCard(page).getByTestId('ws-review-annotator-answer').first();
+    const rows = firstAnswer.getByTestId('relation-triple-row');
+    await expect(rows).toHaveCount(8);
+    await expect(rows.nth(0)).toContainText('左心耳 (1,3)');
+    await expect(rows.nth(0)).toContainText('位於 (4,5)');
+    await expect(rows.nth(0)).toContainText('左心房 (6,8)');
+    await expect(rows.nth(0)).toContainText('類型：bodyLocation');
+    await expect(rows.nth(0).getByRole('button', { name: '類型' })).toBeVisible();
+    await expect(rows.nth(0).getByRole('button', { name: '刪除' })).toBeVisible();
+  });
+
+  test('an annotator missing a triple still shows only their own rows', async ({ page }) => {
+    await gotoMed001Reviewer(page);
+
+    const answers = relationCard(page).getByTestId('ws-review-annotator-answer');
+    await expect(answers.nth(2).getByTestId('relation-triple-row')).toHaveCount(7);
+  });
+
+  test('deleting a triple row removes it and recomputes the stats box', async ({ page }) => {
+    await gotoMed001Reviewer(page);
+
+    const card = relationCard(page);
+    await expect(card.getByTestId('ws-review-stats')).toContainText('bodyLocation×9');
+
+    const firstAnswer = card.getByTestId('ws-review-annotator-answer').first();
+    await firstAnswer.getByTestId('relation-triple-row').first().getByRole('button', { name: '刪除' }).click();
+
+    await expect(card.getByTestId('ws-review-annotator-answer').first().getByTestId('relation-triple-row')).toHaveCount(7);
+    await expect(card.getByTestId('ws-review-stats')).toContainText('bodyLocation×8');
+  });
+
+  test('absa-shape records without ner triples fall back to positionless rows', async ({ page }) => {
+    // T013 absa-001 has gold_triplets (absa shape, no trigger spans), matching
+    // the annotator view which also renders its triple list without positions.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const rows = relationCard(page).getByTestId('ws-review-annotator-answer').first().getByTestId('relation-triple-row');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0)).toContainText('Note 10 plus');
+    await expect(rows.nth(0)).toContainText('has_aspect');
+    await expect(rows.nth(0)).not.toContainText(/\(\d+,\d+\)/);
+  });
+
+  test('relation-only tasks show the 原始文本 card with evidence-entity highlights on top', async ({ page }) => {
+    // T008 rel-001 has no entity_recognition output (entities are evidence
+    // scaffolding), yet the reviewer must still see the same highlighted
+    // source text the annotator's own relation view opens with.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const card = page.getByTestId('ws-review-source-text');
+    await expect(card).toContainText('原始文本');
+    // highlight badges (type text) interleave the raw text, so assert an
+    // unhighlighted segment rather than one crossing a mark boundary
+    await expect(card).toContainText('若未妥善控制，可能導致');
+    await expect(card.getByTestId('ws-review-source-mark')).toHaveCount(5);
+    await expect(card.getByTestId('ws-review-source-mark').nth(0)).toContainText('高血壓');
+  });
+
+  test('composed entity+relation tasks keep the annotator-answer highlight path', async ({ page }) => {
+    // T013 selects entity_recognition too, so the 原始文本 card must keep
+    // sourcing highlights from the annotator entity answers (union), not
+    // switch to the relation-only evidence fallback.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const card = page.getByTestId('ws-review-source-text');
+    await expect(card).toContainText('原始文本');
+    await expect(card.getByTestId('ws-review-source-mark')).toHaveCount(4);
+  });
+});
+
 test.describe('EN i18n spot check', () => {
   async function ensureEnglishMode(p: Page) {
     if ((await p.getByTestId('lang-label').textContent()) !== 'EN') {

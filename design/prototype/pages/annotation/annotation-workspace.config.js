@@ -1707,6 +1707,50 @@
     return !!(outReg && outReg.rendersInputPreview === true);
   }
 
+  /* Reviewer relation rows must mirror the annotator's own 關係識別 list
+     (FR-014L): token positions + trigger word resolve at render time from the
+     record's ner-shape triples (single data source -- mock answers stay
+     type-level {subj, rel, obj}). Records without ner triples (e.g. absa
+     gold_triplets) fall back to positionless rows, matching what the
+     annotator view shows for those records. */
+  function findRecordNerTriples(record) {
+    if (!record) return [];
+    var cands = [record.triples, record.gold_triples];
+    for (var i = 0; i < cands.length; i++) {
+      var cand = cands[i];
+      if (Array.isArray(cand) && cand.length > 0 && cand[0] && cand[0].entity1) return cand;
+    }
+    return [];
+  }
+
+  function fmtRelationSpan(span) {
+    var s = (span && span.text) || '?';
+    if (span && span.start != null && span.end != null) s += ' (' + span.start + ',' + span.end + ')';
+    return s;
+  }
+
+  /* Match on the subj+obj entity pair (exact relation_type match preferred)
+     so a reviewer 類型 change keeps the row anchored to the same span pair. */
+  function toReviewDisplayTriple(tr, nerTrips) {
+    var exact = null, pair = null;
+    nerTrips.forEach(function (rt) {
+      if (!rt.entity1 || !rt.entity2) return;
+      if (rt.entity1.text !== tr.subj || rt.entity2.text !== tr.obj) return;
+      if (!pair) pair = rt;
+      if (!exact && rt.relation_type === tr.rel) exact = rt;
+    });
+    var match = exact || pair;
+    if (match) {
+      return {
+        subj: fmtRelationSpan(match.entity1),
+        rel: fmtRelationSpan(match.relation),
+        obj: fmtRelationSpan(match.entity2),
+        relType: tr.rel
+      };
+    }
+    return { subj: tr.subj, rel: tr.rel, obj: tr.obj, relType: null };
+  }
+
   function buildAnswerCell(outKey, answer, bypass, colorClass) {
     var cell = document.createElement('div');
     cell.className = 'rv-answer-cell';
@@ -1798,13 +1842,20 @@
       case 'relation_identification': {
         var triples = Array.isArray(answer) ? answer : [];
         if (triples.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
+        var relCfg = state.outputConfigs.relation_identification || {};
+        var relTypeOpts = getRelationTypeOptions(
+          Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : []
+        );
+        var nerTrips = findRecordNerTriples(findRecordById(currentSampleId));
         var relWrap = document.createElement('div');
         relWrap.className = 'rv-answer-relations';
-        triples.forEach(function (tr) {
-          var line = document.createElement('div');
-          line.className = 'rv-answer-relation-line';
-          line.textContent = tr.subj + ' → ' + tr.rel + ' → ' + tr.obj;
-          relWrap.appendChild(line);
+        triples.forEach(function (tr, idx) {
+          var display = toReviewDisplayTriple(tr, nerTrips);
+          relWrap.appendChild(buildRelationTripleRow(display, relTypeOpts, {
+            lang: state.lang,
+            onSetType: function (v) { tr.rel = v; renderReviewerWorkspace(); },
+            onDelete: function () { triples.splice(idx, 1); renderReviewerWorkspace(); }
+          }));
         });
         cell.appendChild(relWrap);
         break;
@@ -2078,10 +2129,11 @@
       .filter(Boolean)
       .join('\n\n');
   }
-  /* Legacy-parity 原始文本 card for entity tasks (reviewer view): the raw
-     input text with ONE inline highlight per distinct annotated entity
-     across ALL annotator rows (union, not a single annotator's view --
-     e.g. an entity two annotators tagged and one missed still shows).
+  /* Legacy-parity 原始文本 card for entity/relation tasks (reviewer view):
+     the raw input text with ONE inline highlight per distinct annotated
+     entity across ALL annotator rows (union, not a single annotator's view
+     -- e.g. an entity two annotators tagged and one missed still shows);
+     relation-only tasks highlight the record's evidence entities instead.
      Highlight visuals mirror the engine's own absa-span-highlight rule
      (tinted background + colored bottom border) plus a solid type badge,
      colored from the task's entity config via getPreviewTypeColorMap().
@@ -2104,24 +2156,42 @@
 
     var seen = {};
     var placed = [];
-    getReviewerRows('entity_recognition').forEach(function (row) {
-      if (row.bypass) return;
-      (Array.isArray(row.answer) ? row.answer : []).forEach(function (ent) {
-        if (!ent || !ent.text) return;
-        var key = ent.text + ' ' + ent.type;
-        if (seen[key]) return;
-        seen[key] = true;
-        var idx = rawText.indexOf(ent.text);
-        if (idx < 0) return;
-        var overlaps = placed.some(function (span) {
-          return idx < span.end && idx + ent.text.length > span.start;
-        });
-        if (!overlaps) placed.push({ start: idx, end: idx + ent.text.length, text: ent.text, type: ent.type });
+    function placeSpan(ent) {
+      if (!ent || !ent.text) return;
+      var key = ent.text + ' ' + ent.type;
+      if (seen[key]) return;
+      seen[key] = true;
+      var idx = rawText.indexOf(ent.text);
+      if (idx < 0) return;
+      var overlaps = placed.some(function (span) {
+        return idx < span.end && idx + ent.text.length > span.start;
       });
-    });
+      if (!overlaps) placed.push({ start: idx, end: idx + ent.text.length, text: ent.text, type: ent.type });
+    }
+    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0) {
+      getReviewerRows('entity_recognition').forEach(function (row) {
+        if (row.bypass) return;
+        (Array.isArray(row.answer) ? row.answer : []).forEach(placeSpan);
+      });
+    } else {
+      /* Relation-only tasks (entity_recognition is not an output): highlight
+         the record's evidence entities instead -- the same spans the
+         annotator's own relation view opens with. Records without an
+         evidence entities field (e.g. absa) show the plain text. */
+      (Array.isArray(rawRecord.entities) ? rawRecord.entities : []).forEach(placeSpan);
+    }
     placed.sort(function (a, b) { return a.start - b.start; });
 
-    var colorMap = getPreviewTypeColorMap().map || {};
+    var colorInfo = getPreviewTypeColorMap();
+    var colorMap = colorInfo.map || {};
+    /* Evidence-entity types are absent from the entity config's color map --
+       assign palette colors by first appearance, mirroring the engine rule. */
+    placed.forEach(function (span) {
+      if (span.type && !colorMap[span.type]) {
+        colorMap[span.type] = ENTITY_COLORS[colorInfo.order.length % ENTITY_COLORS.length];
+        colorInfo.order.push(span.type);
+      }
+    });
     var pos = 0;
     placed.forEach(function (span) {
       if (span.start > pos) body.appendChild(document.createTextNode(rawText.substring(pos, span.start)));
@@ -2177,9 +2247,12 @@
       preview.appendChild(inputCard);
     }
 
-    /* Entity tasks additionally restore the legacy 原始文本 card on top,
-       showing every annotated result inline (union across annotators). */
-    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0) {
+    /* Entity and relation tasks additionally restore the legacy 原始文本
+       card on top: entity tasks show every annotated result inline (union
+       across annotators), relation-only tasks show the record's evidence-
+       entity highlights instead (FR-014L). */
+    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0 ||
+        state.selectedOutputTypes.indexOf('relation_identification') >= 0) {
       preview.appendChild(buildReviewerSourceTextCard(rawRecord));
     }
 
