@@ -221,6 +221,11 @@
       color: var(--color-text-soft);
       margin-bottom: 6px;
     }
+    /* Engine-rendered hints (e.g. the multi_label max-selections notice)
+       reuse the field-hint class defined inline by task-new/task-detail;
+       mirror the same rule here so they don't fall back to browser
+       defaults on this page. */
+    .field-hint { font-size: 12px; color: var(--color-text-soft); margin-top: 4px; }
     .field-textarea {
       width: 100%;
       min-height: 64px;

@@ -51,6 +51,10 @@ test.describe('multi_label output type — flat options (T002)', () => {
     // verify the engine's own handler still no-ops.
     await page.getByTestId('ws-multi-label-node-angry').click({ force: true });
     await expect(page.getByTestId('ws-multi-label-limit-hint')).toBeVisible();
+    // The hint must render with the page's own field-hint typography (12px),
+    // not the browser default 16px it falls back to when the class is
+    // undefined on this page.
+    await expect(page.getByTestId('ws-multi-label-limit-hint')).toHaveCSS('font-size', '12px');
     await expect(page.getByTestId('ws-multi-label-node-angry')).not.toBeChecked();
     await expect(page.getByTestId('ws-multi-label-chip-angry')).toHaveCount(0);
   });
@@ -89,6 +93,27 @@ test.describe('multi_label output type — hierarchical taxonomy (T003)', () => 
     await expect(page.getByTestId('ws-multi-label-chip-sad')).toBeVisible();
   });
 
+  test('open selector dialog overlays the bypass control instead of bleeding through', async ({ page }) => {
+    // Same task-new Step 2 visual contract: while the dialog is open it is
+    // the topmost layer over everything rendered after it in the card (the
+    // bypass row included) -- nothing may paint on top of the dialog.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T003', sample_id: 'taxonomy-001' }));
+    await dismissGuidelineModal(page);
+
+    await page.getByTestId('ws-multi-label-selector-toggle').click();
+    await expect(page.getByTestId('taxonomy-selector-dialog')).toBeVisible();
+
+    const chipCoveredByDialog = await page.evaluate(() => {
+      const dialog = document.querySelector('[data-testid="taxonomy-selector-dialog"]');
+      const chip = document.querySelector('[data-testid="ws-bypass-multi_label"]');
+      if (!dialog || !chip) return 'missing element';
+      const rect = chip.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return dialog.contains(hit);
+    });
+    expect(chipCoveredByDialog).toBe(true);
+  });
+
   test('bypass checkbox clears and disables the taxonomy selector', async ({ page }) => {
     // See the from-scratch note above -- strip the gold_labels prefill so
     // selecting 'sad' below is unambiguously a toggle-on.
@@ -102,6 +127,9 @@ test.describe('multi_label output type — hierarchical taxonomy (T003)', () => 
     await page.getByTestId('ws-multi-label-node-sad').click();
     await expect(page.getByTestId('ws-multi-label-chip-sad')).toBeVisible();
 
+    // The open dialog overlays the bypass row (task-new Step 2 contract),
+    // so close it first -- the real annotator path to reach the control.
+    await page.getByTestId('ws-multi-label-selector-toggle').click();
     await page.getByTestId('ws-bypass-multi_label').check();
     await expect(page.getByTestId('ws-multi-label-chip-sad')).toHaveCount(0);
     await expect(page.getByTestId('ws-multi-label-selector-toggle')).toBeDisabled();

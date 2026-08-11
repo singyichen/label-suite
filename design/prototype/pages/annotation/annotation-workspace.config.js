@@ -335,16 +335,12 @@
     chip.setAttribute('role', 'checkbox');
     chip.setAttribute('aria-checked', chip.getAttribute('aria-pressed') === 'true' ? 'true' : 'false');
     /* The taxonomy selector dialog (multi_label) is absolutely positioned
-       with z-index:40 and can overlay whatever renders after it in the
-       same container (the bypass control included), since the engine
-       deliberately keeps the dialog open across node picks. Lift the
-       bypass control's own stacking context above it so it always stays
-       clickable regardless of dialog open/closed state. */
-    var wrap = chip.parentElement;
-    if (wrap) {
-      wrap.style.position = 'relative';
-      wrap.style.zIndex = '41';
-    }
+       with z-index:40 and overlays whatever renders after it in the same
+       container (the bypass control included) while open -- the same
+       visual contract as task-new Step 2. Do NOT lift the bypass row above
+       it: the engine's outside-click handler already closes the dialog on
+       the first click outside the selector, so the control is reachable by
+       simply dismissing the dialog first. */
     if (state.previewBypass[outKey]) applyBypassDisabledState(container, chip);
   }
 
