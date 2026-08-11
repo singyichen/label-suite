@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.7.1
+版本: 2.7.2
 狀態: Draft
 ---
 
@@ -126,13 +126,17 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 5. **AC-1.5**：**Given** 使用者從工作區返回清單，**When** 回到 `annotation-list`，**Then** 保留當前任務上下文與捲動位置。
 6. **AC-1.6**：**Given** 清單中某筆資料被他人鎖定，**When** 點擊該筆，**Then** 顯示鎖定狀態並提供唯讀檢視或稍後再試。
 7. **AC-1.7**：**Given** 使用者於標記清單切換完成狀態篩選，**When** 選擇 `已提交/草稿/待處理`，**Then** 清單只顯示符合該完成狀態的資料列。
+8. **AC-1.8**：**Given** annotator 或 reviewer 進入 `annotation-list`，**When** 任務資訊卡渲染，**Then** 進度摘要顯示與 Dashboard 同任務、同角色列項一致的工作統計（annotator：完成率/今日完成/平均速度；reviewer：待審筆數/進度/IAA），後接 run-scoped 清單筆數，且進度條寬度等於該完成率百分比。
+9. **AC-1.9**：**Given** `run_type = dry_run` 進入 `annotation-list`，**When** 任務資訊卡渲染，**Then** 清單筆數段顯示 `試標回合 R{n} · 本回合清單 {total} 筆`；TaskProfile 未宣告對應 materialized run context 時回合顯示 R1、筆數回退 `datasetRecords` 長度。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
 - 區塊 A：`頁首資訊`
   - 必要元素：頁面標題與導引文案
 - 區塊 B：`任務資訊卡`
-  - 必要元素：任務名稱、進度摘要（例如：完成率/今日完成/平均速度）、依 `outputs[].type` 順序顯示的一至多個輸出類型 tag（registry-driven，對齊 012 Dashboard／010 Task List 的呈現契約）、Run Type badge、狀態 badge、進度條
+  - 必要元素：任務名稱、進度摘要、依 `outputs[].type` 順序顯示的一至多個輸出類型 tag（registry-driven，對齊 012 Dashboard／010 Task List 的呈現契約）、Run Type badge、狀態 badge、進度條
+  - 進度摘要組成：以「工作統計 + run-scoped 清單筆數」依序以 ` · ` 串接。工作統計依角色呈現——annotator 為 完成率/今日完成筆數/平均速度，reviewer 為 待審筆數/進度/IAA——且數值必須與 Dashboard 同任務、同角色列項的工作統計一致（同一資料來源，不得兩處各自維護）；清單筆數段依 `run_type` 呈現——`dry_run` 為 `試標回合 R{n} · 本回合清單 {total} 筆`（無 materialized run context 時回合預設 R1），`official_run` 為 `共 {total} 筆資料`
+  - 進度條：以工作統計的完成率百分比呈現；該任務於當前 run 全數提交時覆寫為 100%（狀態 badge 同步顯示 `已完成`）；查無對應工作統計時，進度摘要回退為僅顯示清單筆數段、進度條顯示 0%
   - 必要元素（操作）：`快速繼續`（annotator）或 `快速審核`（reviewer）按鈕，位置需與 Dashboard 任務列表一致（卡片右側操作區）
   - 位置規範：必須位於篩選列上方（頁首資訊下方、資料清單上方）
   - 視覺樣式：必須與 Dashboard 任務列表列項樣式一致（`list-item` + `badge` + `progress`）
@@ -454,8 +458,8 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-007**: `annotation-list` 必須顯示當前任務上下文的資料清單（樣本 ID、完成狀態、完成時間、標記者、文本摘要）。
 - **FR-007A**: `annotation-list` 的表格容器與欄位樣式必須與 `task-list` 一致，且不得顯示「任務資料清單」區塊標題。
 - **FR-007B**: `annotation-list` 必須提供完成狀態篩選（`submitted | saved | pending`）與清除篩選操作，篩選結果須即時反映於資料列。
-- **FR-007C**: `annotation-list` 必須在篩選列上方顯示任務資訊卡（任務名稱、進度摘要、依 `outputs[].type` 順序顯示的輸出類型 tag、Run Type / 狀態 badge、進度條）。
-- **FR-007D**: `annotation-list` 的任務資訊卡視覺樣式必須與 Dashboard 任務列表列項一致（同款 badge 與 progress 規格）。
+- **FR-007C**: `annotation-list` 必須在篩選列上方顯示任務資訊卡（任務名稱、進度摘要、依 `outputs[].type` 順序顯示的輸出類型 tag、Run Type / 狀態 badge、進度條）。進度摘要為「角色別工作統計 + run-scoped 清單筆數」——annotator 顯示 完成率/今日完成筆數/平均速度，reviewer 顯示 待審筆數/進度/IAA；`dry_run` 筆數段為 `試標回合 R{n} · 本回合清單 {total} 筆`（無 materialized run context 時回合預設 R1），`official_run` 為 `共 {total} 筆資料`；進度條寬度等於工作統計完成率，全數提交時覆寫 100%；查無工作統計時回退為僅筆數段 + 0% 進度條。
+- **FR-007D**: `annotation-list` 的任務資訊卡視覺樣式必須與 Dashboard 任務列表列項一致（同款 badge 與 progress 規格），且進度摘要的工作統計數值與進度百分比必須與 Dashboard 同任務、同角色列項取自同一資料來源，不得兩處各自維護造成數字漂移。
 - **FR-007F**: `annotation-list` 任務資訊卡必須提供 `快速繼續/快速審核` 按鈕，並以同任務「最新未完成 sample」導向 `annotation-workspace`。
 - **FR-007E**: 在 `<= MOBILE_BP` 時，清單列內容必須避免異常垂直撐高；文本摘要需提供行動版可讀截斷策略，且儲存格對齊不得造成首列明顯下沉。
 - **FR-007G**: `annotation-list` 的資料表底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕，且 Annotator / Reviewer 兩種視圖皆適用。
@@ -673,6 +677,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 2.7.2 | 2026-08-11 | **prototype sync — 任務資訊卡進度摘要與進度條還原**（使用者回報清單上方缺少舊版「已完成 % · 今日筆數 · 平均速度 · 試標回合 · 本回合清單筆數」描述且進度條未正常顯示；為 consumers 遷移時遺落的回歸，FR-007C/FR-007D 原即要求進度摘要與 Dashboard 同款 progress 規格）：具體化進度摘要組成——「角色別工作統計 + run-scoped 清單筆數」以 ` · ` 串接，annotator 統計為 完成率/今日完成筆數/平均速度、reviewer 為 待審筆數/進度/IAA，統計數值與進度百分比必須與 Dashboard 同任務、同角色列項取自同一資料來源；`dry_run` 筆數段為 `試標回合 R{n} · 本回合清單 {total} 筆`（無 materialized run context 時回合預設 R1），`official_run` 為 `共 {total} 筆資料`；進度條寬度等於完成率、全數提交覆寫 100%、查無統計時回退僅筆數段 + 0%。修訂使用者故事 1 區塊 B、FR-007C、FR-007D，新增 AC-1.8、AC-1.9。 |
 | 2.7.1 | 2026-08-11 | **prototype sync — 整合預覽區塊移除卡片內重複外框**（使用者回報整合預覽外框造成畫面雜亂）：ER+RI 整合模式的整合預覽區塊在標記卡內不得再包一層外框，卡片邊框為唯一外框——延伸 v2.4.0「卡片邊框唯一外框」規則至整合預覽包裝層。修訂 FR-013E、AC-2.12。 |
 | 2.7.0 | 2026-08-11 | **relation_identification 建構器與 task-new Step 2 對齊**（使用者回報工作區關係識別介面與 task-new Step 2／task-detail 標記設定差距過大）：工作區（純模式與 ER+RI 整合模式一體適用，reviewer 直接修正依 FR-024L-1 重用同控件）的關係建構器定案為與 task-new Step 2 相同的循序建構器——於原始文本反白選取後依序按 `E1/Arg1 → Relation → E2/Arg2` 填入草稿欄位（含 E1/Rel/E2 草稿狀態欄與當前選取顯示），最後按「新增」入列；E1/E2 僅接受與既有實體相符的選取（不符或未選取時顯示錯誤且不填入），Relation 接受任意選取作為關係觸發詞；各步驟按鈕依草稿進度循序啟用，「新增」於三欄未填妥前 disabled；「退回」改為草稿逐格撤回（E2→Rel→E1，草稿空時 disabled），已入列三元組由每列刪除按鈕移除；`relation` 語意類型改為入列後經該列類型選單事後指定的選填欄位（對齊 OutputAnswer `relation?`），workspace 不得另行提供下拉選單等不同型態的關係建構介面。修訂 AC-2A.7、FR-024C、FR-024C-1、FR-024C-2 與邊界情況。**移除舊條文**：(1) 「E1 與 E2 相同時阻擋新增」——循序建構器下「新增」在三欄未填妥前即為 disabled，且該阻擋規則為 spec-only、任何 prototype 版本皆未實作；(2) 「Undo 移除最後一筆 triple」——退回作用於草稿欄位而非已入列三元組；(3) 「`relation_types` 非空時每筆 triple 需附語意類型」——與 OutputAnswer 既有的 `relation?` 選填定義矛盾，定案為選填。 |
 | 2.6.2 | 2026-08-11 | **prototype sync — single_dim/multi_dim 當前值標籤恆顯示數字**（使用者回報標記介面缺陷：滑塊上方顯示「—」而非數值）：`single_dim` 與 `multi_dim` 的當前值標籤於任何時刻皆須顯示滑桿當前數值、與 number input 一致——Output-role preannotation 依 FR-024M 顯示實際值，無 preannotation 時顯示範圍中點起始位置——不得以佔位符號取代數字；唯 Bypass 勾選中例外，此時顯示未評分佔位符號（答案已明確清空）。「未作答」的判定移至提交閘門（起始中點不計為已作答、不得作為有效值提交），不再以佔位符號呈現於顯示層——原「未調整維度顯示佔位符號」設計與 FR-024M preannotation 顯示互相矛盾（滑桿與 number input 已顯示 preannotation 實際值、上方標籤卻顯示佔位符號）。修訂 AC-2A.3、AC-2A.4、FR-024F、FR-024G、SC-008（原「number input 為空值」措辭同步修正為與滑桿一致的起始數值顯示）。 |
