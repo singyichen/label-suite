@@ -1,9 +1,6 @@
 (function (global) {
   'use strict';
 
-  var dashboard = global.LabelSuiteDashboard;
-  if (!dashboard || !dashboard.data || !dashboard.data.roleLists) return;
-
   function text(zh, en) {
     return { zh: zh, en: en };
   }
@@ -282,6 +279,15 @@
       ),
     },
   ];
+
+  /* Shared export: annotation-list.html reads the same seeds so its task
+     info card shows the exact stats/progress the dashboard row shows
+     (spec 015 FR-007C/FR-007D). Published before the dashboard guard so
+     pages without LabelSuiteDashboard can still consume it. */
+  global.LabelSuiteAssignmentSeeds = assignments;
+
+  var dashboard = global.LabelSuiteDashboard;
+  if (!dashboard || !dashboard.data || !dashboard.data.roleLists) return;
 
   function createRoleEntry(assignment, role) {
     var work = assignment[role];

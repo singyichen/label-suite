@@ -24,7 +24,7 @@ test.describe('Run materialization cues', () => {
 
     const infoCard = page.getByTestId('list-task-info-card');
     await expect(infoCard).toContainText('試標回合 R2');
-    await expect(infoCard).toContainText('共 10 筆資料');
+    await expect(infoCard).toContainText('本回合清單 10 筆');
     // Rendered rows stay the seed subset, not the materialized total.
     await expect(page.getByTestId('ws-sample-item')).toHaveCount(5);
   });
@@ -47,7 +47,7 @@ test.describe('Run materialization cues', () => {
     `);
     await page.goto(buildListUrl({ task_id: 'T004', role: 'annotator', run_type: 'dry_run' }));
 
-    await expect(page.getByTestId('list-task-info-card')).toContainText('共 0 筆資料');
+    await expect(page.getByTestId('list-task-info-card')).toContainText('本回合清單 0 筆');
   });
 
   test('workspace sample list respects a materialized zero-count context', async ({ page }) => {

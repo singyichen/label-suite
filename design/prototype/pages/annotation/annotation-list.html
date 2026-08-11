@@ -588,6 +588,7 @@
 <script src="../../assets/analytics.js"></script>
 <script src="../task-management/task-list.data.js"></script>
 <script src="../task-management/task-detail.data.js"></script>
+<script src="../dashboard/dashboard.assignments.js"></script>
 <script src="annotation-workspace.data.js"></script>
 <script>
   /* ── i18n ─────────────────────────────────────────────────────── */
@@ -629,6 +630,7 @@
       roleLabelReviewer: '審核員',
       sampleCountTpl: '共 {total} 筆資料',
       trialRoundTpl: '試標回合 R{round}',
+      trialListCountTpl: '本回合清單 {total} 筆',
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
@@ -669,6 +671,7 @@
       roleLabelReviewer: 'Reviewer',
       sampleCountTpl: '{total} samples total',
       trialRoundTpl: 'Trial round R{round}',
+      trialListCountTpl: 'This round: {total} items',
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
@@ -680,6 +683,15 @@
       Object.keys(vars).forEach(function(k) { str = str.replace('{' + k + '}', String(vars[k])); });
     }
     return str;
+  }
+  function findAssignmentStats(taskId, role) {
+    var seeds = window.LabelSuiteAssignmentSeeds || [];
+    for (var i = 0; i < seeds.length; i += 1) {
+      if (seeds[i].exampleTaskId === taskId) {
+        return seeds[i][role === 'reviewer' ? 'reviewer' : 'annotator'] || null;
+      }
+    }
+    return null;
   }
   function getOutputTypeMeta(key) {
     var registry = (window.LabelSuiteTaskListData && window.LabelSuiteTaskListData.outputTypes) || [];
@@ -1116,11 +1128,22 @@
     var totalCount = runCtx && typeof runCtx.total === 'number'
       ? runCtx.total
       : profile.datasetRecords.length;
-    var detailText = t('sampleCountTpl', { total: totalCount });
-    if (context.runType === 'dry_run' && runCtx && runCtx.round != null) {
-      detailText = t('trialRoundTpl', { round: runCtx.round }) + ' · ' + detailText;
+    /* Progress summary reuses the dashboard assignment seeds so the card
+       shows the exact stats/progress of the matching dashboard row
+       (FR-007C/FR-007D: same progress contract as the dashboard list). */
+    var stats = findAssignmentStats(profile.id, context.role);
+    var detailParts = [];
+    if (stats && stats.detail) {
+      detailParts.push(isEn ? stats.detail.en : stats.detail.zh);
     }
-    document.getElementById('taskInfoDetail').textContent = detailText;
+    if (context.runType === 'dry_run') {
+      var round = runCtx && runCtx.round != null ? runCtx.round : 1;
+      detailParts.push(t('trialRoundTpl', { round: round }));
+      detailParts.push(t('trialListCountTpl', { total: totalCount }));
+    } else {
+      detailParts.push(t('sampleCountTpl', { total: totalCount }));
+    }
+    document.getElementById('taskInfoDetail').textContent = detailParts.join(' · ');
 
     var outputTypesEl = document.getElementById('taskInfoOutputTypes');
     outputTypesEl.innerHTML = '';
@@ -1140,7 +1163,10 @@
     statusEl.textContent = isCompleted ? t('taskStatusCompleted') : t('taskStatusInProgress');
     statusEl.className = 'badge ' + (isCompleted ? 'badge-success' : 'badge-info');
 
-    document.getElementById('taskInfoProgressBar').style.width = isCompleted ? '100%' : '0%';
+    var progressPct = isCompleted
+      ? 100
+      : (stats && typeof stats.progress === 'number' ? stats.progress : 0);
+    document.getElementById('taskInfoProgressBar').style.width = progressPct + '%';
 
     var quickBtn = document.getElementById('taskQuickContinueBtn');
     quickBtn.textContent = context.role === 'reviewer' ? t('quickContinueBtnReviewer') : t('quickContinueBtnAnnotator');
