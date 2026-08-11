@@ -1063,6 +1063,138 @@
     }
   };
 
+  function meanStd(values) {
+    if (values.length === 0) return { mean: 0, std: 0 };
+    var mean = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+    var variance = values.reduce(function (a, v) { return a + Math.pow(v - mean, 2); }, 0) / values.length;
+    return { mean: mean, std: Math.sqrt(variance) };
+  }
+  function fmt2(n) {
+    return Number(n).toFixed(2);
+  }
+  function countKeysForRow(outKey, answer) {
+    switch (outKey) {
+      case 'single_label':
+        return answer ? [answer] : [];
+      case 'multi_label':
+        return Array.isArray(answer) ? answer : [];
+      case 'sequence_tagging':
+        return (Array.isArray(answer) ? answer : []).map(function (pair) { return pair.tag; });
+      case 'entity_recognition':
+        return (Array.isArray(answer) ? answer : []).map(function (ent) { return ent.type; });
+      case 'relation_identification':
+        return (Array.isArray(answer) ? answer : []).map(function (tr) { return tr.rel; });
+      default:
+        return [];
+    }
+  }
+
+  /* FR-014F: label-distribution stats summary shared by the workspace
+   * aggregate review card AND the annotation list's reviewer stats column
+   * -- one algorithm per output-type category (not per task_id), one
+   * implementation for both consumers so their numbers can never drift.
+   * Rows are {answer, bypass} views; bypassed rows are excluded from every
+   * computation. free_text has no numeric stats: returns null so each
+   * caller renders its own localized placeholder. */
+  function computeReviewStats(outKey, rows) {
+    var effectiveRows = rows.filter(function (row) { return !row.bypass; });
+    switch (outKey) {
+      case 'single_label':
+      case 'multi_label':
+      case 'sequence_tagging':
+      case 'entity_recognition':
+      case 'relation_identification': {
+        var counts = {};
+        var order = [];
+        effectiveRows.forEach(function (row) {
+          countKeysForRow(outKey, row.answer).forEach(function (key) {
+            if (!(key in counts)) { counts[key] = 0; order.push(key); }
+            counts[key] += 1;
+          });
+        });
+        order.sort(function (a, b) { return counts[b] - counts[a]; });
+        return order.map(function (key) { return key + '×' + counts[key]; }).join(' · ');
+      }
+      case 'single_dim': {
+        var values = effectiveRows
+          .map(function (row) { return Number(row.answer); })
+          .filter(function (v) { return !isNaN(v); });
+        if (values.length === 0) return '';
+        var stats = meanStd(values);
+        return 'mean : ' + fmt2(stats.mean) + ' , std : ' + fmt2(stats.std);
+      }
+      case 'multi_dim': {
+        /* Legacy multi-line block: `mean [..]` / `std [..]` across dims in
+         * first-seen order, then one `±1.5std {dim} : lo~hi` line per dim
+         * (bounds at 3 decimals). Dim labels are the config dimension
+         * names -- never a hardcoded per-task abbreviation. */
+        var dimOrder = [];
+        var dimSeen = {};
+        effectiveRows.forEach(function (row) {
+          Object.keys(row.answer || {}).forEach(function (name) {
+            if (!dimSeen[name]) { dimSeen[name] = true; dimOrder.push(name); }
+          });
+        });
+        if (dimOrder.length === 0) return '';
+        var perDim = dimOrder.map(function (name) {
+          var dimValues = effectiveRows
+            .map(function (row) { return Number((row.answer || {})[name]); })
+            .filter(function (v) { return !isNaN(v); });
+          return { name: name, stats: meanStd(dimValues) };
+        });
+        var lines = [
+          'mean [' + perDim.map(function (d) { return fmt2(d.stats.mean); }).join(', ') + ']',
+          'std [' + perDim.map(function (d) { return fmt2(d.stats.std); }).join(', ') + ']'
+        ];
+        perDim.forEach(function (d) {
+          var half = 1.5 * d.stats.std;
+          lines.push('±1.5std ' + d.name + ' : ' + (d.stats.mean - half).toFixed(3) + '~' + (d.stats.mean + half).toFixed(3));
+        });
+        return lines.join('\n');
+      }
+      case 'free_text':
+        return null;
+      default:
+        return '';
+    }
+  }
+
+  /* FR-014A: deviation coloring for single_dim/multi_dim result tags,
+   * shared by the workspace aggregate review card AND the annotation
+   * list's expanded annotator rows -- same single-source rationale as
+   * computeReviewStats. Rows are {answer, bypass} views; returns the CSS
+   * class for rows[rowIdx] ('' for bypassed rows and non-dimension types).
+   * Ratio = |value - mean| / std against the non-bypassed rows; the worst
+   * dimension decides: >1.5 red, >1 blue, else green (std=0 counts green). */
+  function dimDeviationClass(outKey, rows, rowIdx) {
+    if (outKey !== 'single_dim' && outKey !== 'multi_dim') return '';
+    if (rows[rowIdx].bypass) return '';
+    var activeRows = rows.filter(function (row) { return !row.bypass; });
+    var maxRatio = 0;
+    if (outKey === 'single_dim') {
+      var values = activeRows
+        .map(function (row) { return Number(row.answer); })
+        .filter(function (v) { return !isNaN(v); });
+      var stats = meanStd(values);
+      var value = Number(rows[rowIdx].answer);
+      if (isNaN(value)) return '';
+      maxRatio = stats.std === 0 ? 0 : Math.abs(value - stats.mean) / stats.std;
+    } else {
+      Object.keys(rows[rowIdx].answer || {}).forEach(function (name) {
+        var dimValues = activeRows
+          .map(function (row) { return Number((row.answer || {})[name]); })
+          .filter(function (v) { return !isNaN(v); });
+        var dimStats = meanStd(dimValues);
+        var dimValue = Number((rows[rowIdx].answer || {})[name]);
+        if (isNaN(dimValue) || dimStats.std === 0) return;
+        maxRatio = Math.max(maxRatio, Math.abs(dimValue - dimStats.mean) / dimStats.std);
+      });
+    }
+    if (maxRatio > 1.5) return 'result-tag-red';
+    if (maxRatio > 1) return 'result-tag-blue';
+    return 'result-tag-green';
+  }
+
   /* Getter for REVIEWER_MOCK_ROWS -- reads through the exported namespace
    * (not the closured local var) on every call, so a Playwright test can
    * override window.LabelSuiteAnnotationWorkspaceData.REVIEWER_MOCK_ROWS
@@ -1091,5 +1223,8 @@
     syncDryRunProgress: syncDryRunProgress,
     REVIEWER_MOCK_ROWS: REVIEWER_MOCK_ROWS,
     getReviewerMockRows: getReviewerMockRows,
+    computeReviewStats: computeReviewStats,
+    dimDeviationClass: dimDeviationClass,
+    meanStd: meanStd,
   };
 })(window);

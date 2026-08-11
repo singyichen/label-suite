@@ -404,6 +404,81 @@
       -webkit-appearance: none;
       cursor: pointer;
     }
+    .btn-indigo {
+      color: var(--color-white);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+    .btn-indigo:hover {
+      background: #4F46E5;
+      border-color: #4F46E5;
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+    .btn-indigo.slim { padding: 10px 18px; }
+    /* === Reviewer list styles === */
+    .expand-cell { width: 32px; padding: 14px 4px 14px 16px !important; }
+    .expand-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border: none; background: none;
+      color: var(--color-ink-muted); cursor: pointer; padding: 0;
+      border-radius: 4px; transition: color var(--dur-fast);
+    }
+    .expand-btn:hover { color: var(--color-ink); }
+    .expand-btn svg { transition: transform 0.15s ease; }
+    .expand-btn.open svg { transform: rotate(90deg); }
+    .reviewer-stats {
+      font-size: 12px; color: var(--color-text-soft); font-family: monospace;
+      display: block;
+      min-width: 240px;
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+    .reviewer-stats-cell {
+      min-width: 280px;
+      width: 280px;
+    }
+    .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
+    .mini-btn-approve:hover:not(:disabled) { background: #BBF7D0; border-color: #4ADE80; color: #166534; }
+    .mini-btn-reject { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
+    .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
+    .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
+    .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
+    .annotator-detail-row { background: var(--color-slate-50); }
+    .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
+    .annotator-detail-inner { padding: 8px 20px 8px 52px; border-top: 1px solid var(--color-border); }
+    .annotator-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 7px 0; border-bottom: 1px solid var(--color-border-muted);
+    }
+    .annotator-row:last-child { border-bottom: none; }
+    .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
+    .annotator-result-tag {
+      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-primary-soft-bg); border-radius: var(--radius-md);
+      padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
+    }
+    .annotator-row-actions { display: flex; gap: 6px; margin-left: auto; }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
+    .toast {
+      background: var(--color-ink);
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity var(--dur-normal) var(--ease-standard), transform var(--dur-normal) var(--ease-standard);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .toast.success { background: var(--color-success); }
+    .toast.error { background: var(--color-error); }
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .task-item-header {
@@ -469,6 +544,20 @@
       .badge-task-type-pairs    { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
       .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
       .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
+
+      /* btn-indigo hover — hardcoded #4F46E5 */
+      .btn-indigo:hover { background: #6366F1; border-color: #6366F1; }
+
+      /* Reviewer action mini-buttons */
+      .mini-btn-approve { background: #0F2A18; border-color: #1F5132; color: #4ADE80; }
+      .mini-btn-approve:hover:not(:disabled) { background: #1F5132; border-color: #4ADE80; color: #86EFAC; }
+      .mini-btn-reject  { background: #2A1414; border-color: #5B2222; color: #F87171; }
+      .mini-btn-reject:hover:not(:disabled)  { background: #3D1A1A; border-color: #F87171; color: #FCA5A5; }
+
+      /* Result tags with !important — need matching specificity */
+      .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+      .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+      .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
     }
   </style>
 </head>
@@ -545,6 +634,9 @@
         <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
       </div>
     </div>
+    <button class="btn btn-indigo slim hidden" id="submitReviewBtn" type="button" data-testid="list-submit-review-btn">
+      <span>送出審核</span>
+    </button>
   </div>
 
   <section class="table-container" id="tableContainer">
@@ -552,11 +644,11 @@
       <table class="task-table" aria-label="標記清單" id="taskTable">
         <thead>
           <tr>
-            <th id="thId">ID</th>
-            <th id="thStatusHeader">完成狀態</th>
-            <th id="thCompletedAtHeader">完成時間</th>
-            <th id="thTextSummaryHeader">文本摘要</th>
-            <th id="thActionsHeader">操作</th>
+            <th>ID</th>
+            <th>完成狀態</th>
+            <th>完成時間</th>
+            <th>文本摘要</th>
+            <th>操作</th>
           </tr>
         </thead>
         <tbody id="sampleRows"></tbody>
@@ -583,6 +675,10 @@
     </div>
   </section>
 </main>
+
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
+</div>
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
@@ -634,6 +730,18 @@
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
+      thLabelStats: '標記分布統計',
+      submitReviewLabel: '送出審核',
+      approveBtnLabel: '通過',
+      rejectBtnLabel: '退回',
+      approveAllBtnLabel: '全部通過',
+      rejectAllBtnLabel: '全部退回',
+      expandBtnLabel: '展開標記細項',
+      toastReviewSubmitted: '審核結果已送出。',
+      toastSelectDecision: '請完成每位標記員的審核決策',
+      reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
+      reviewBypassPill: '無法判定 (Bypass)',
+      reviewNoAnswer: '（無）',
     },
     en: {
       pageTitle: 'Annotation List',
@@ -675,6 +783,18 @@
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
+      thLabelStats: 'Label Distribution',
+      submitReviewLabel: 'Submit Review',
+      approveBtnLabel: 'Approve',
+      rejectBtnLabel: 'Reject',
+      approveAllBtnLabel: 'Approve All',
+      rejectAllBtnLabel: 'Reject All',
+      expandBtnLabel: 'Expand annotator details',
+      toastReviewSubmitted: 'Review submitted.',
+      toastSelectDecision: 'Please complete a review decision for each annotator',
+      reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
+      reviewBypassPill: 'Bypassed (cannot determine)',
+      reviewNoAnswer: '(none)',
     }
   };
   function t(key, vars) {
@@ -972,6 +1092,362 @@
     return td;
   }
 
+  function makeTh(text, width) {
+    var th = document.createElement('th');
+    th.textContent = text;
+    if (width) th.style.width = width;
+    return th;
+  }
+
+  function renderTableHeader(role) {
+    var theadRow = document.querySelector('#taskTable thead tr');
+    if (!theadRow) return;
+    while (theadRow.firstChild) theadRow.removeChild(theadRow.firstChild);
+    if (role === 'reviewer') {
+      theadRow.appendChild(makeTh('', '32px'));
+      theadRow.appendChild(makeTh('ID'));
+      theadRow.appendChild(makeTh(t('thStatus')));
+      theadRow.appendChild(makeTh(t('thCompletedAt')));
+      theadRow.appendChild(makeTh(t('thTextSummary')));
+      theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
+      theadRow.appendChild(makeTh(t('thActions')));
+    } else {
+      theadRow.appendChild(makeTh('ID'));
+      theadRow.appendChild(makeTh(t('thStatus')));
+      theadRow.appendChild(makeTh(t('thCompletedAt')));
+      theadRow.appendChild(makeTh(t('thTextSummary')));
+      theadRow.appendChild(makeTh(t('thActions')));
+    }
+  }
+
+  /* ── Reviewer aggregate review (spec 015 user story 3) ─────────────
+     In-memory review decisions keyed by recordId|annotatorIndex. The map
+     survives re-renders (filter / pagination / lang toggle) because rows
+     only initialize absent keys. */
+  var REVIEW_STATES = {};
+  var toastTimer = null;
+
+  function reviewKey(recordId, idx) { return recordId + '|' + idx; }
+
+  function getMockRows(profile, recordId) {
+    return window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(profile.id, recordId);
+  }
+
+  function initReviewStates(recordId, mockRows) {
+    mockRows.forEach(function (row, idx) {
+      var key = reviewKey(recordId, idx);
+      if (!(key in REVIEW_STATES)) REVIEW_STATES[key] = null;
+    });
+  }
+
+  function updateDecisionBtns(approveBtn, rejectBtn, state) {
+    approveBtn.classList.toggle('mini-btn-active-approve', state === 'approved');
+    rejectBtn.classList.toggle('mini-btn-active-reject', state === 'rejected');
+  }
+
+  function getBulkReviewState(recordId, mockRows) {
+    if (!mockRows || mockRows.length === 0) return null;
+    var approvedCount = 0;
+    var rejectedCount = 0;
+    mockRows.forEach(function (row, idx) {
+      var state = REVIEW_STATES[reviewKey(recordId, idx)];
+      if (state === 'approved') approvedCount += 1;
+      if (state === 'rejected') rejectedCount += 1;
+    });
+    if (approvedCount === mockRows.length) return 'approved';
+    if (rejectedCount === mockRows.length) return 'rejected';
+    return null;
+  }
+
+  /* Per-output-type answer views feeding the shared stats algorithm in
+     annotation-workspace.data.js (same rows contract as the workspace
+     aggregate review card). */
+  function buildOutKeyRows(outKey, mockRows) {
+    return mockRows.map(function (row) {
+      return {
+        answer: row.answers ? row.answers[outKey] : undefined,
+        bypass: !!(row.bypass && row.bypass[outKey])
+      };
+    });
+  }
+
+  function buildReviewStatsText(profile, mockRows) {
+    if (mockRows.length === 0) return '-';
+    var multi = profile.outputTypes.length > 1;
+    return profile.outputTypes.map(function (outKey) {
+      var stats = window.LabelSuiteAnnotationWorkspaceData.computeReviewStats(
+        outKey, buildOutKeyRows(outKey, mockRows));
+      if (stats === null) stats = t('reviewFreeTextStats');
+      if (stats === '') stats = '-';
+      return multi ? getOutputTypeLabel(outKey) + '：' + stats : stats;
+    }).join('\n');
+  }
+
+  function formatCompactAnswer(outKey, answer) {
+    if (answer === undefined || answer === null || (Array.isArray(answer) && answer.length === 0)) {
+      return t('reviewNoAnswer');
+    }
+    var text;
+    switch (outKey) {
+      case 'multi_label':
+        text = answer.join(', ');
+        break;
+      case 'multi_dim':
+        text = '[' + Object.keys(answer).map(function (k) { return answer[k]; }).join(', ') + ']';
+        break;
+      case 'sequence_tagging':
+        text = answer.map(function (pair) { return pair.text + '/' + pair.tag; }).join(' ');
+        break;
+      case 'entity_recognition':
+        text = answer.map(function (ent) { return ent.text + '(' + ent.type + ')'; }).join(', ');
+        break;
+      case 'relation_identification':
+        text = answer.map(function (tr) { return tr.subj + '-' + tr.rel + '-' + tr.obj; }).join(', ');
+        break;
+      default:
+        text = String(answer);
+    }
+    return text.length > 40 ? text.slice(0, 39) + '…' : text;
+  }
+
+  /* Dimension result tags color by deviation from the sample's
+     cross-annotator mean (shared FR-014A algorithm in
+     annotation-workspace.data.js, same source as the workspace card). */
+  function dimColorClass(outKey, rowIdx, mockRows) {
+    return window.LabelSuiteAnnotationWorkspaceData.dimDeviationClass(outKey, buildOutKeyRows(outKey, mockRows), rowIdx);
+  }
+
+  function buildAnnotatorDetailContent(profile, recordId, mockRows) {
+    var div = document.createElement('div');
+    div.className = 'annotator-detail-inner';
+    mockRows.forEach(function (mockRow, idx) {
+      var key = reviewKey(recordId, idx);
+      var row = document.createElement('div');
+      row.className = 'annotator-row';
+      row.setAttribute('data-testid', 'list-review-annotator-row');
+
+      var usernameSpan = document.createElement('span');
+      usernameSpan.className = 'annotator-username';
+      usernameSpan.textContent = mockRow.annotator;
+      row.appendChild(usernameSpan);
+
+      profile.outputTypes.forEach(function (outKey) {
+        var tagSpan = document.createElement('span');
+        var colorClass = dimColorClass(outKey, idx, mockRows);
+        tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+        var bypassed = !!(mockRow.bypass && mockRow.bypass[outKey]);
+        tagSpan.textContent = bypassed
+          ? t('reviewBypassPill')
+          : formatCompactAnswer(outKey, mockRow.answers ? mockRow.answers[outKey] : undefined);
+        row.appendChild(tagSpan);
+      });
+
+      var approveBtn = document.createElement('button');
+      approveBtn.type = 'button';
+      approveBtn.className = 'mini-btn mini-btn-approve';
+      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
+
+      var rejectBtn = document.createElement('button');
+      rejectBtn.type = 'button';
+      rejectBtn.className = 'mini-btn mini-btn-reject';
+      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
+
+      updateDecisionBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+
+      function syncBulkButtons() {
+        var bulkApproveBtn = document.querySelector('[data-bulk-approve-for="' + recordId + '"]');
+        var bulkRejectBtn = document.querySelector('[data-bulk-reject-for="' + recordId + '"]');
+        if (bulkApproveBtn && bulkRejectBtn) {
+          updateDecisionBtns(bulkApproveBtn, bulkRejectBtn, getBulkReviewState(recordId, mockRows));
+        }
+      }
+
+      approveBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        REVIEW_STATES[key] = REVIEW_STATES[key] === 'approved' ? null : 'approved';
+        updateDecisionBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+        syncBulkButtons();
+      });
+      rejectBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        REVIEW_STATES[key] = REVIEW_STATES[key] === 'rejected' ? null : 'rejected';
+        updateDecisionBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
+        syncBulkButtons();
+      });
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'annotator-row-actions';
+      actionsDiv.appendChild(rejectBtn);
+      actionsDiv.appendChild(approveBtn);
+      row.appendChild(actionsDiv);
+      div.appendChild(row);
+    });
+    return div;
+  }
+
+  function renderReviewerRows(pagedRows, tbodyEl, context) {
+    var profile = context.profile;
+    pagedRows.forEach(function (item) {
+      var mockRows = getMockRows(profile, item.recordId);
+      initReviewStates(item.recordId, mockRows);
+
+      var summaryTr = document.createElement('tr');
+      summaryTr.style.cursor = 'pointer';
+      summaryTr.setAttribute('data-testid', 'ws-sample-item');
+
+      // Detail row — NOT appended to DOM initially (lazy insert on first expand)
+      var detailTr = document.createElement('tr');
+      detailTr.className = 'annotator-detail-row hidden';
+      var detailTd = document.createElement('td');
+      detailTd.setAttribute('colspan', '7');
+      detailTd.appendChild(buildAnnotatorDetailContent(profile, item.recordId, mockRows));
+      detailTr.appendChild(detailTd);
+
+      var expandBtn = document.createElement('button');
+      expandBtn.className = 'expand-btn';
+      expandBtn.type = 'button';
+      expandBtn.setAttribute('aria-label', t('expandBtnLabel'));
+      expandBtn.setAttribute('data-testid', 'list-review-expand');
+      var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
+      chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
+      chevronSvg.setAttribute('stroke', 'currentColor'); chevronSvg.setAttribute('stroke-width', '2.5');
+      chevronSvg.setAttribute('stroke-linecap', 'round'); chevronSvg.setAttribute('stroke-linejoin', 'round');
+      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', '9 18 15 12 9 6');
+      chevronSvg.appendChild(polyline);
+      expandBtn.appendChild(chevronSvg);
+
+      var detailInserted = false;
+      function showDetail() {
+        if (!detailInserted) {
+          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
+          detailInserted = true;
+        }
+        detailTr.classList.remove('hidden');
+        expandBtn.classList.add('open');
+      }
+      function hideDetail() {
+        detailTr.classList.add('hidden');
+        expandBtn.classList.remove('open');
+      }
+      function toggleDetail(e) {
+        if (e) e.stopPropagation();
+        if (detailTr.classList.contains('hidden')) { showDetail(); } else { hideDetail(); }
+      }
+      expandBtn.addEventListener('click', toggleDetail);
+      summaryTr.addEventListener('click', function () { toggleDetail(null); });
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
+      statusSpan.textContent = statusText(item.status);
+
+      function openWorkspace() {
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
+      }
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'reviewer-actions';
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      editBtn.textContent = t('editBtnLabel');
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+      actionsDiv.appendChild(editBtn);
+
+      var approveAllBtn = document.createElement('button');
+      approveAllBtn.type = 'button';
+      approveAllBtn.className = 'mini-btn mini-btn-approve';
+      approveAllBtn.textContent = '✓ ' + t('approveAllBtnLabel');
+      approveAllBtn.dataset.bulkApproveFor = item.recordId;
+      approveAllBtn.setAttribute('data-testid', 'list-review-approve-all');
+      var rejectAllBtn = document.createElement('button');
+      rejectAllBtn.type = 'button';
+      rejectAllBtn.className = 'mini-btn mini-btn-reject';
+      rejectAllBtn.textContent = '✕ ' + t('rejectAllBtnLabel');
+      rejectAllBtn.dataset.bulkRejectFor = item.recordId;
+      rejectAllBtn.setAttribute('data-testid', 'list-review-reject-all');
+
+      updateDecisionBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(item.recordId, mockRows));
+
+      function applyAllReview(newState) {
+        var currentBulkState = getBulkReviewState(item.recordId, mockRows);
+        var targetState = currentBulkState === newState ? null : newState;
+        mockRows.forEach(function (row, idx) {
+          REVIEW_STATES[reviewKey(item.recordId, idx)] = targetState;
+        });
+        updateDecisionBtns(approveAllBtn, rejectAllBtn, targetState);
+        detailTd.querySelectorAll('.annotator-row').forEach(function (row) {
+          var approveBtn = row.querySelector('.mini-btn-approve');
+          var rejectBtn = row.querySelector('.mini-btn-reject');
+          if (approveBtn && rejectBtn) updateDecisionBtns(approveBtn, rejectBtn, targetState);
+        });
+        showDetail();
+      }
+      approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
+      rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
+
+      actionsDiv.appendChild(rejectAllBtn);
+      actionsDiv.appendChild(approveAllBtn);
+
+      var expandTd = document.createElement('td');
+      expandTd.className = 'expand-cell';
+      expandTd.appendChild(expandBtn);
+
+      var statsEl = document.createElement('span');
+      statsEl.className = 'reviewer-stats';
+      statsEl.setAttribute('data-testid', 'list-review-stats');
+      statsEl.textContent = buildReviewStatsText(profile, mockRows);
+
+      var textTd = document.createElement('td');
+      textTd.className = 'text-snippet';
+      textTd.textContent = item.text;
+
+      summaryTr.appendChild(expandTd);
+      summaryTr.appendChild(makeTd(item.recordId));
+      summaryTr.appendChild(makeTd(statusSpan));
+      summaryTr.appendChild(makeTd(item.completedAt));
+      summaryTr.appendChild(textTd);
+      summaryTr.appendChild(makeTd(statsEl, 'reviewer-stats-cell'));
+      summaryTr.appendChild(makeTd(actionsDiv));
+
+      tbodyEl.appendChild(summaryTr);
+      // detailTr is NOT appended here — lazy insert on first expand
+    });
+  }
+
+  function showToast(msg, type) {
+    var toast = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    toast.className = 'toast' + (type ? ' ' + type : '');
+    toast.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2800);
+  }
+
+  /* Submit validates EVERY annotator decision across the whole task (not
+     just the visible page) before it reports success. */
+  function bindSubmitReview(context) {
+    var submitReviewBtn = document.getElementById('submitReviewBtn');
+    if (!submitReviewBtn) return;
+    submitReviewBtn.querySelector('span').textContent = t('submitReviewLabel');
+    if (context.role !== 'reviewer' || !context.profile) return;
+    submitReviewBtn.classList.remove('hidden');
+    submitReviewBtn.onclick = function () {
+      var allDecided = true;
+      context.profile.datasetRecords.forEach(function (record, index) {
+        var recordId = getRecordId(record, index);
+        getMockRows(context.profile, recordId).forEach(function (row, idx) {
+          var state = REVIEW_STATES[reviewKey(recordId, idx)];
+          if (state !== 'approved' && state !== 'rejected') allDecided = false;
+        });
+      });
+      if (!allDecided) { showToast(t('toastSelectDecision'), 'error'); return; }
+      showToast(t('toastReviewSubmitted'), 'success');
+    };
+  }
+
   function renderRows(context) {
     var tbodyEl = document.getElementById('sampleRows');
     var emptyEl = document.getElementById('emptyState');
@@ -1006,6 +1482,11 @@
 
     var startIndex = (PAGINATION_STATE.page - 1) * PAGINATION_STATE.pageSize;
     var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
+
+    if (context.role === 'reviewer') {
+      renderReviewerRows(pagedRows, tbodyEl, context);
+      return;
+    }
 
     pagedRows.forEach(function (item) {
       var tr = document.createElement('tr');
@@ -1214,14 +1695,8 @@
     var emptyState = document.getElementById('emptyState');
     if (emptyState) emptyState.textContent = t('emptyNoResults');
 
-    var thStatusHeader = document.getElementById('thStatusHeader');
-    if (thStatusHeader) thStatusHeader.textContent = t('thStatus');
-    var thCompletedAtHeader = document.getElementById('thCompletedAtHeader');
-    if (thCompletedAtHeader) thCompletedAtHeader.textContent = t('thCompletedAt');
-    var thTextSummaryHeader = document.getElementById('thTextSummaryHeader');
-    if (thTextSummaryHeader) thTextSummaryHeader.textContent = t('thTextSummary');
-    var thActionsHeader = document.getElementById('thActionsHeader');
-    if (thActionsHeader) thActionsHeader.textContent = t('thActions');
+    renderTableHeader(context.role);
+    bindSubmitReview(context);
 
     if (context.profile) {
       renderTaskInfo(context, context.profile);

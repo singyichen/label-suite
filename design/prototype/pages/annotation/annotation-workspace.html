@@ -347,18 +347,21 @@
     .rv-btn-icon { line-height: 1; }
 
     .rv-answer-cell { flex: 1; min-width: 0; }
-    .rv-score-pill {
-      display: inline-flex;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--color-ink);
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-full);
-      padding: 2px 8px;
-      margin-right: 6px;
+    /* Dimension result tags: same rules as annotation-list's expanded
+       annotator rows (.annotator-result-tag + FR-014A deviation colors) so
+       the workspace card and the list read identically. */
+    .annotator-result-tag {
+      font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
+      border: 1px solid var(--color-primary-soft-bg); border-radius: var(--radius-md);
+      padding: 3px 12px; font-family: monospace; min-width: 80px; text-align: center;
+      display: inline-block;
     }
+    .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
+    .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
+    .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
+    html[data-theme="dark"] .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
+    html[data-theme="dark"] .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
+    html[data-theme="dark"] .result-tag-red   { color: #F87171 !important; background: #2A1414 !important; border-color: #5B2222 !important; }
     .rv-bypass-pill {
       display: inline-flex;
       align-items: center;

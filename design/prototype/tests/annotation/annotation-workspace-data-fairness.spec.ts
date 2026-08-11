@@ -66,7 +66,9 @@ test.describe('output-role prefill is confined to its own answer control', () =>
 test.describe('reviewer mode does not leak unassigned metadata either', () => {
   test('T011 reviewer view still hides Source ID / Source URL', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T011', role: 'reviewer' }));
-    await page.getByTestId('ws-sample-item').first().click();
+    // Reviewer rows toggle the annotator detail on click (spec 015 user
+    // story 3); navigation to the workspace goes through the 編輯 button.
+    await page.getByTestId('ws-sample-item').first().getByRole('button', { name: '編輯' }).click();
     await dismissGuidelineModal(page);
 
     const root = page.getByTestId('ws-root');

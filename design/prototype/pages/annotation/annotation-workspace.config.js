@@ -1667,82 +1667,12 @@
     return rows;
   }
 
-  function meanStd(values) {
-    if (values.length === 0) return { mean: 0, std: 0 };
-    var mean = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
-    var variance = values.reduce(function (a, v) { return a + Math.pow(v - mean, 2); }, 0) / values.length;
-    return { mean: mean, std: Math.sqrt(variance) };
-  }
-  function fmt2(n) {
-    return Number(n).toFixed(2);
-  }
-  function countKeysForRow(outKey, answer) {
-    switch (outKey) {
-      case 'single_label':
-        return answer ? [answer] : [];
-      case 'multi_label':
-        return Array.isArray(answer) ? answer : [];
-      case 'sequence_tagging':
-        return (Array.isArray(answer) ? answer : []).map(function (pair) { return pair.tag; });
-      case 'entity_recognition':
-        return (Array.isArray(answer) ? answer : []).map(function (ent) { return ent.type; });
-      case 'relation_identification':
-        return (Array.isArray(answer) ? answer : []).map(function (tr) { return tr.rel; });
-      default:
-        return [];
-    }
-  }
-
-  /* FR-014F: registry-driven stats box summary, one algorithm per
-     output-type category (not per task_id). Bypassed rows are excluded
-     from every computation below. */
+  /* FR-014F: stats algorithm lives in annotation-workspace.data.js
+     (shared with the annotation list's reviewer stats column). free_text
+     comes back as null -- render the localized placeholder here. */
   function computeReviewStats(outKey, rows) {
-    var effectiveRows = rows.filter(function (row) { return !row.bypass; });
-    switch (outKey) {
-      case 'single_label':
-      case 'multi_label':
-      case 'sequence_tagging':
-      case 'entity_recognition':
-      case 'relation_identification': {
-        var counts = {};
-        var order = [];
-        effectiveRows.forEach(function (row) {
-          countKeysForRow(outKey, row.answer).forEach(function (key) {
-            if (!(key in counts)) { counts[key] = 0; order.push(key); }
-            counts[key] += 1;
-          });
-        });
-        order.sort(function (a, b) { return counts[b] - counts[a]; });
-        return order.map(function (key) { return key + '×' + counts[key]; }).join(' · ');
-      }
-      case 'single_dim': {
-        var values = effectiveRows
-          .map(function (row) { return Number(row.answer); })
-          .filter(function (v) { return !isNaN(v); });
-        if (values.length === 0) return '';
-        var stats = meanStd(values);
-        return 'mean : ' + fmt2(stats.mean) + ' , std : ' + fmt2(stats.std);
-      }
-      case 'multi_dim': {
-        var dimNames = {};
-        effectiveRows.forEach(function (row) {
-          Object.keys(row.answer || {}).forEach(function (name) { dimNames[name] = true; });
-        });
-        var parts = Object.keys(dimNames).map(function (name) {
-          var dimValues = effectiveRows
-            .map(function (row) { return Number((row.answer || {})[name]); })
-            .filter(function (v) { return !isNaN(v); });
-          var dimStats = meanStd(dimValues);
-          return name + ' mean : ' + fmt2(dimStats.mean) + ' , std : ' + fmt2(dimStats.std);
-        });
-        parts.push('(±1.5std)');
-        return parts.join(' · ');
-      }
-      case 'free_text':
-        return t('reviewFreeTextStats');
-      default:
-        return '';
-    }
+    var stats = window.LabelSuiteAnnotationWorkspaceData.computeReviewStats(outKey, rows);
+    return stats === null ? t('reviewFreeTextStats') : stats;
   }
 
   function buildStatsBox(outKey, rows) {
@@ -1775,7 +1705,7 @@
     return !!(outReg && outReg.rendersInputPreview === true);
   }
 
-  function buildAnswerCell(outKey, answer, bypass) {
+  function buildAnswerCell(outKey, answer, bypass, colorClass) {
     var cell = document.createElement('div');
     cell.className = 'rv-answer-cell';
     cell.setAttribute('data-testid', 'ws-review-annotator-answer');
@@ -1810,7 +1740,7 @@
       }
       case 'single_dim': {
         var scorePill = document.createElement('span');
-        scorePill.className = 'rv-score-pill';
+        scorePill.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
         scorePill.textContent = answer != null ? String(answer) : t('reviewNoAnswer');
         cell.appendChild(scorePill);
         break;
@@ -1819,12 +1749,10 @@
         var dims = answer || {};
         var dimNames = Object.keys(dims);
         if (dimNames.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
-        dimNames.forEach(function (name) {
-          var dimPill = document.createElement('span');
-          dimPill.className = 'rv-score-pill';
-          dimPill.textContent = name + ': ' + dims[name];
-          cell.appendChild(dimPill);
-        });
+        var dimPill = document.createElement('span');
+        dimPill.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+        dimPill.textContent = '[' + dimNames.map(function (name) { return dims[name]; }).join(', ') + ']';
+        cell.appendChild(dimPill);
         break;
       }
       case 'sequence_tagging': {
@@ -1939,7 +1867,7 @@
     return { el: wrap, refresh: refresh };
   }
 
-  function buildAnnotatorRow(outKey, row, onDecisionChange) {
+  function buildAnnotatorRow(outKey, row, onDecisionChange, colorClass) {
     var longContent = isLongContentOutput(outKey);
     var rowEl = document.createElement('div');
     rowEl.className = 'rv-annotator-review-row' + (longContent ? ' rv-annotator-review-row-sequence' : '');
@@ -1954,7 +1882,7 @@
     nameEl.setAttribute('data-testid', 'ws-review-annotator-name');
     nameEl.textContent = row.displayName || row.name;
     content.appendChild(nameEl);
-    content.appendChild(buildAnswerCell(outKey, row.answer, row.bypass));
+    content.appendChild(buildAnswerCell(outKey, row.answer, row.bypass, colorClass));
     rowEl.appendChild(content);
 
     var buttons = buildRowDecisionButtons(outKey, row.name, onDecisionChange);
@@ -1972,8 +1900,10 @@
     list.setAttribute('data-testid', 'ws-review-annotator-list');
 
     var rowRefreshers = [];
-    rows.forEach(function (row) {
-      var built = buildAnnotatorRow(outKey, row, function () { refreshBulk(); });
+    rows.forEach(function (row, idx) {
+      /* FR-014A: same deviation-coloring source as the annotation list. */
+      var colorClass = window.LabelSuiteAnnotationWorkspaceData.dimDeviationClass(outKey, rows, idx);
+      var built = buildAnnotatorRow(outKey, row, function () { refreshBulk(); }, colorClass);
       rowRefreshers.push(built.refresh);
       list.appendChild(built.el);
     });

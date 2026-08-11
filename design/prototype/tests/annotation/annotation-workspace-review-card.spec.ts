@@ -278,6 +278,40 @@ test.describe('Type-specific stats sanity', () => {
   });
 });
 
+test.describe('Dimension answer tags — bracketed arrays with deviation coloring', () => {
+  test('multi_dim annotator answers render as one bracketed value-array pill per annotator', async ({ page }) => {
+    // T005 mt-002 ships fluency 3/3/4, adequacy 4/4/4, coherence 3/3/3.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T005', sample_id: 'mt-002', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const answers = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer');
+    await expect(answers.nth(0)).toHaveText('[3, 4, 3]');
+    await expect(answers.nth(2)).toHaveText('[4, 4, 3]');
+  });
+
+  test('multi_dim answer pills color by cross-annotator deviation like the list result tags', async ({ page }) => {
+    // tony0950127's fluency 4 deviates ~1.41std from mean 3.33 (blue); the
+    // other two rows stay within 1std (green).
+    await page.goto(buildWorkspaceUrl({ task_id: 'T005', sample_id: 'mt-002', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const answers = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer');
+    await expect(answers.nth(0).locator('.annotator-result-tag')).toHaveClass(/result-tag-green/);
+    await expect(answers.nth(2).locator('.annotator-result-tag')).toHaveClass(/result-tag-blue/);
+  });
+
+  test('single_dim answer pills share the same deviation coloring rule', async ({ page }) => {
+    // T004 read-001 ships scores 4 / 4 / 3 -> mean 3.67, std 0.47; the
+    // 3-score row deviates by more than 1std but less than 1.5std (blue).
+    await page.goto(buildWorkspaceUrl({ task_id: 'T004', sample_id: 'read-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const answers = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer');
+    await expect(answers.nth(0).locator('.annotator-result-tag')).toHaveClass(/result-tag-green/);
+    await expect(answers.nth(2).locator('.annotator-result-tag')).toHaveClass(/result-tag-blue/);
+  });
+});
+
 test.describe('EN i18n spot check', () => {
   async function ensureEnglishMode(p: Page) {
     if ((await p.getByTestId('lang-label').textContent()) !== 'EN') {
