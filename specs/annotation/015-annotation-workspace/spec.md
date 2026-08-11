@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.6.2
+版本: 2.7.1
 狀態: Draft
 ---
 
@@ -201,7 +201,7 @@ Annotator 可在同一工作區中，依任務 `outputs[]` 組成逐一完成各
 9. **AC-2.9**：**Given** 中欄頂部樣本導覽列，**When** 點擊 `上一筆` / `下一筆`，**Then** 工作區切換至對應樣本；位於首筆時 `上一筆` 停用、位於末筆時 `下一筆` 停用；進度摘要顯示 `已提交筆數 / 總筆數`，並於提交後即時更新。
 10. **AC-2.10**：**Given** 任務含有獨立題目內容（Evidence 或 input 欄位）的輸出類型，**When** annotator 進入工作區，**Then** 題目內容與標記控制項分別置於兩張獨立卡片，視覺上明確區隔。
 11. **AC-2.11**：**Given** 右欄 `歷程` 頁籤，**When** annotator 儲存草稿或提交後切換至該頁籤，**Then** 顯示當前樣本的事件紀錄（操作者角色、時間、動作、對應輸出類型作答摘要），最新事件在前；尚無紀錄時顯示空狀態文案。
-12. **AC-2.12**：**Given** 中欄題目卡與標記卡，**When** annotator 檢視卡片內容，**Then** 題目卡內的 input 內容不得再包一層內框（卡片邊框為唯一外框），標記卡內不得出現殘留的水平分隔線或 Bypass 選項上方的虛線隔線；Bypass 選項自身的虛線外框保留。
+12. **AC-2.12**：**Given** 中欄題目卡與標記卡，**When** annotator 檢視卡片內容，**Then** 題目卡內的 input 內容不得再包一層內框（卡片邊框為唯一外框），標記卡內不得出現殘留的水平分隔線或 Bypass 選項上方的虛線隔線，ER+RI 整合模式的整合預覽區塊亦不得再包一層外框；Bypass 選項自身的虛線外框保留。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -248,7 +248,7 @@ Annotator 依任務 `outputs[]` 中每個輸出類型的 registry schema，完�
 5. **AC-2A.4（multi_dim）**：**Given** `outputs[]` 含 `multi_dim`，**When** annotator 調整任一維度滑桿或 number input，**Then** 僅該維度數值更新並雙向同步，各維度使用不同輔助色但同時保留文字標籤；每個維度的當前值標籤於任何時刻皆與該維度滑桿及 number input 顯示相同數值（含未調整維度——Output-role preannotation 依 FR-024M 顯示實際值，無 preannotation 時顯示範圍中點起始位置），不得以佔位符號取代數字——唯 Bypass 勾選中例外，此時全部維度顯示未評分佔位符號；未評分維度的滑桿數值不計為已作答，不得作為有效值提交（依 FR-024M 之 Output-role preannotation 不在此限）。
 6. **AC-2A.5（sequence_tagging）**：**Given** `outputs[]` 含 `sequence_tagging`，**When** annotator 依 config `tagging_scheme` 選擇 tag 後點擊 Token，**Then** 該 Token 依方案套用完整 tag（`BIO`/`BIOES`/`IOB2` 每個實體起點使用 `B`；`SINGLE` 為直接類型標籤或 `O`）；Token 邊界由後端依 `tokenization.unit` 提供的正式切分結果決定（見 ADR-031），workspace 不得自行重新切分覆寫正式邊界。
 7. **AC-2A.6（entity_recognition）**：**Given** `outputs[]` 含 `entity_recognition`，**When** annotator 先圈選文字再選擇實體類型，或先選擇實體類型再圈選文字，**Then** 兩種順序皆可成功建立實體並記錄 `text/type/start/end`（半開區間）；未先圈選文字即點擊實體類型按鈕時顯示錯誤且不得建立實體。
-8. **AC-2A.7（relation_identification 純模式）**：**Given** `outputs[]` 僅含 `relation_identification`（未選 `entity_recognition`），**When** annotator 依序操作 `E1 → Relation → E2 → Add`，**Then** 系統以資料集既有唯讀實體作為 E1/E2 候選，不顯示實體建立或刪除控制項；E1 與 E2 相同或任一欄位為空時阻擋新增並顯示錯誤。
+8. **AC-2A.7（relation_identification 純模式）**：**Given** `outputs[]` 僅含 `relation_identification`（未選 `entity_recognition`），**When** annotator 於原始文本反白選取文字後依序按下 `E1/Arg1 → Relation → E2/Arg2` 逐格填入草稿、最後按「新增」，**Then** 系統以資料集既有唯讀實體作為 E1/E2 候選（不顯示實體建立或刪除控制項），E1/E2 步驟僅接受與既有實體相符的選取（不符時顯示錯誤且不填入）、Relation 步驟接受任意選取範圍作為關係觸發詞；三個草稿欄位未全部填妥前「新增」為 disabled，「退回」依 E2 → Relation → E1 順序逐格撤回草稿（草稿為空時 disabled）。此循序建構器與 task-new Step 2 標記預覽為同一互動控制。
 9. **AC-2A.8（entity_recognition + relation_identification 整合模式）**：**Given** `outputs[]` 同時含 `entity_recognition` 與 `relation_identification`，**When** annotator 於整合預覽建立實體後接續建立三元組，**Then** 兩者共用同一份文本與可編輯實體來源，實體列表與三元組列表合併呈現於同一區塊，且各自的作答仍分別記錄為獨立的 `entity_recognition` 與 `relation_identification` OutputAnswer。
 10. **AC-2A.9（free_text）**：**Given** `outputs[]` 含 `free_text`，**When** annotator 於 textarea 輸入文字，**Then** 系統即時顯示字元計數 `N / max_length`，超過 `max_length` 時阻擋繼續輸入；`input_instruction` 與 `output_instruction` 必須顯示 config 設定的文案。
 11. **AC-2A.10（多輸出任務同畫面）**：**Given** `outputs[]` 含 3 個以上輸出類型（例如 `entity_recognition + relation_identification + multi_dim`），**When** annotator 依序完成各區塊作答，**Then** 全部區塊皆可在同一 sample 頁面內完成，任一區塊尚未完成時提交按鈕阻擋並提示對應區塊，其餘已完成區塊的作答不受影響。
@@ -422,7 +422,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - `TaskProfile.outputs[]` 為空陣列或缺少必要欄位（未通過對應輸出類型的 registry 驗證）時，需顯示 task config 錯誤並阻擋標記提交；不得以任一輸出類型的預設控制項頂替。
 - `sequence_tagging` 的可見預標記數量與後端提供的正式 Token 數量不一致時，需顯示錯誤並阻擋提交，不得靜默保留或錯套舊 tag（對齊 ADR-031 決定 4：determinism 為硬性要求）。
 - `entity_recognition` 未先圈選文字即點擊實體類型按鈕：顯示錯誤提示，不建立實體。
-- `relation_identification`（純模式）E1 與 E2 選擇相同實體，或任一欄位為空：阻擋新增三元組並顯示錯誤。
+- `relation_identification` 於 E1/Arg1 或 E2/Arg2 步驟按下按鈕時，選取範圍與任何既有（純模式：資料集唯讀；整合模式：已標記）實體不符，或未先反白選取任何文字：顯示對應錯誤提示，該草稿欄位不填入；三個草稿欄位未全部填妥前「新增」維持 disabled，不存在部分填寫即新增三元組的路徑。
 - `multi_label` 選取節點數超過 `max_selections`（非 0）：阻擋新增選取並顯示上限提示。
 - `single_dim` / `multi_dim` 樣本值不落在 config `min`/`max`/`step` 合法範圍：需顯示 payload 驗證錯誤並阻擋提交。
 - `free_text` 輸入字數超過 `max_length`：阻擋繼續輸入並顯示上限提示。
@@ -470,7 +470,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-013B**: 工作區中欄頂部必須提供樣本導覽列：`上一筆` / `下一筆` 按鈕與 `已提交筆數 / 總筆數` 進度摘要（含進度條）；位於首筆/末筆時對應按鈕停用，提交後進度即時更新。annotator 與 reviewer 視角皆適用。
 - **FR-013C**: 工作區中欄底部必須提供操作列：左側自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`，對應 `AUTOSAVE_TRIGGERS`），右側 `儲存草稿` 與提交按鈕。
 - **FR-013D**: 中欄題目內容（Evidence 與 input 欄位）與標記控制項必須以獨立卡片區隔；卡片切分依欄位角色與輸出類型結構決定，不得依任務名稱或個別輸出類型硬編分支。
-- **FR-013E**: 卡片邊框必須是題目/標記區塊的唯一外框：題目卡內 input 內容直接呈現、不得再包內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）。Bypass 選項自身的虛線外框為刻意設計，必須保留。此規則以結構性樣式覆寫達成，一體適用所有輸出類型，不得逐類型硬編。
+- **FR-013E**: 卡片邊框必須是題目/標記區塊的唯一外框：題目卡內 input 內容直接呈現、不得再包內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）；`entity_recognition` + `relation_identification` 整合模式的整合預覽區塊不得於卡片內再包一層外框。Bypass 選項自身的虛線外框為刻意設計，必須保留。此規則以結構性樣式覆寫達成，一體適用所有輸出類型，不得逐類型硬編。
 - **FR-014**: Reviewer 模式必須支援通過、退回、修正、刪除標記結果。
 - **FR-014A**: Reviewer 視圖（workspace）中，`single_dim` / `multi_dim` 類任務每位標記員的維度值 result tag 必須依 ±1.5std 範圍著色（綠/藍/紅；優先順序紅 > 藍 > 綠），規則與 `annotation-list` reviewer 視圖一致。
 - **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態。
@@ -506,9 +506,9 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-024B**: 當 `outputs[]` 含 `entity_recognition` 時，Annotator 工作區必須顯示：原始文本圈選區、依 config `entities` 動態產生的 Entity Type 按鈕列、已標記實體列表（含類型 badge、文字、字元位置 `(start, end)`、刪除按鈕）；已標記 span 需以對應顏色底線於原始文本中呈現。
 - **FR-024B-1**: `entity_recognition` 標記流程必須同時支援「先選類型後圈選」與「先圈選後選類型」兩種順序；未先圈選文字即點擊 Entity Type 按鈕時必須顯示錯誤提示且不得建立實體。
 - **FR-024B-2**: `entity_recognition` 標記結果 payload 必須包含 `entities[]`（`id`、`text`、`type`、`start`、`end`，半開區間）、`bypass`、`version`；annotator 可見資料不得包含 ground truth。
-- **FR-024C**: 當 `outputs[]` 僅含 `relation_identification`（未選 `entity_recognition`）時，既有實體必須以資料集提供的唯讀高亮呈現，不得顯示實體類型選擇器、實體列表或建立/刪除實體控制項；使用者依序操作 `E1 → Relation → E2 → Undo → Add` 建立三元組。
-- **FR-024C-1**: `relation_identification` 的 Undo 操作：若 Triple List 非空則移除最後一筆 triple；Triple List 為空時 Undo 按鈕為 disabled（純模式不移除既有唯讀實體）。E1 與 E2 相同或任一欄位為空時，Add 操作必須阻擋並顯示錯誤。
-- **FR-024C-2**: `relation_identification` 標記結果 payload 必須包含 `triples[]`（`id`、`e1Id`、`relation?`、`e2Id`）、`bypass`、`version`；純模式不得於此 payload 重複輸出實體資料，實體為資料集既有內容。`relation_types` 非空時，每筆 triple 需附 `relation` 語意類型；為空時不得輸出寫死類型。
+- **FR-024C**: 當 `outputs[]` 僅含 `relation_identification`（未選 `entity_recognition`）時，既有實體必須以資料集提供的唯讀高亮呈現，不得顯示實體類型選擇器、實體列表或建立/刪除實體控制項；三元組以循序建構器建立：annotator 於原始文本反白選取文字，依序按下 `E1/Arg1 → Relation → E2/Arg2` 將選取填入對應草稿欄位，最後按「新增」寫入三元組列表。建構器需顯示 E1/Rel/E2 三個草稿狀態欄與當前選取內容；E1/E2 步驟僅接受與既有實體相符的選取（不符或未選取時顯示錯誤），Relation 步驟接受任意選取範圍作為關係觸發詞；各步驟按鈕依草稿進度循序啟用（前一欄未填時後續步驟為 disabled）。此循序建構器必須與 task-new Step 2 標記預覽／task-detail 標記設定為同一互動控制，workspace 不得另行提供不同型態的關係建構介面（例如下拉選單）。
+- **FR-024C-1**: `relation_identification` 的「退回」操作作用於草稿欄位：依 `E2/Arg2 → Relation → E1/Arg1` 順序撤回最後填入的一格；草稿全空時「退回」為 disabled（不移除已入列的三元組，純模式亦不移除既有唯讀實體）。三個草稿欄位未全部填妥前「新增」為 disabled。已入列的三元組由每列的刪除按鈕個別移除；`relation_types` 非空時，每列另提供類型選單供事後指定或變更該筆 triple 的 `relation` 語意類型，已指定者於該列顯示類型 badge。
+- **FR-024C-2**: `relation_identification` 標記結果 payload 必須包含 `triples[]`（`id`、`e1Id`、`relation?`、`e2Id`）、`bypass`、`version`；純模式不得於此 payload 重複輸出實體資料，實體為資料集既有內容。`relation_types` 非空時，`relation` 語意類型由 annotator 於三元組入列後經該列類型選單指定，屬選填欄位（未指定時為空，對應 OutputAnswer 的 `relation?`）；`relation_types` 為空時不顯示類型選單、不得輸出寫死類型。
 - **FR-024D**: 當 `outputs[]` 含 `single_label` 時，Annotator 工作區必須以互斥單選 chip 呈現 `label_options`；標記結果 payload 必須包含 `{selected}`、`bypass`、`version`。
 - **FR-024E**: 當 `outputs[]` 含 `multi_label` 時，Annotator 工作區必須以可搜尋階層多選器呈現 `label_options`（`LabelOptionNode[]`）；已選 chip 僅顯示節點名稱，選取後選擇器保持開啟直到使用者明確關閉。選擇器展開時必須為該區塊的最上層不透明覆蓋層，完整遮蓋其後方渲染的內容（含 Bypass 勾選項），不得有任何後方元素穿透顯示於選擇器之上（與 task-new Step 2 標記預覽的選擇器呈現一致）；被遮蓋的控制項需先關閉選擇器方可操作，關閉途徑包含關閉鈕、Escape 鍵、再次點擊觸發器或點擊選擇器範圍外任意處（自動關閉）。
 - **FR-024E-1**: `multi_label` 選取節點數超過 config `max_selections`（非 0）時，必須阻擋新增選取並提示上限；上限提示文字必須沿用工作區既有欄位提示文字的字級與顏色樣式，不得以瀏覽器預設樣式呈現。標記結果 payload 必須包含 `{selected: LabelPath[]}`（完整 root-to-selected-node ID path）、`bypass`、`version`。
@@ -673,6 +673,8 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 2.7.1 | 2026-08-11 | **prototype sync — 整合預覽區塊移除卡片內重複外框**（使用者回報整合預覽外框造成畫面雜亂）：ER+RI 整合模式的整合預覽區塊在標記卡內不得再包一層外框，卡片邊框為唯一外框——延伸 v2.4.0「卡片邊框唯一外框」規則至整合預覽包裝層。修訂 FR-013E、AC-2.12。 |
+| 2.7.0 | 2026-08-11 | **relation_identification 建構器與 task-new Step 2 對齊**（使用者回報工作區關係識別介面與 task-new Step 2／task-detail 標記設定差距過大）：工作區（純模式與 ER+RI 整合模式一體適用，reviewer 直接修正依 FR-024L-1 重用同控件）的關係建構器定案為與 task-new Step 2 相同的循序建構器——於原始文本反白選取後依序按 `E1/Arg1 → Relation → E2/Arg2` 填入草稿欄位（含 E1/Rel/E2 草稿狀態欄與當前選取顯示），最後按「新增」入列；E1/E2 僅接受與既有實體相符的選取（不符或未選取時顯示錯誤且不填入），Relation 接受任意選取作為關係觸發詞；各步驟按鈕依草稿進度循序啟用，「新增」於三欄未填妥前 disabled；「退回」改為草稿逐格撤回（E2→Rel→E1，草稿空時 disabled），已入列三元組由每列刪除按鈕移除；`relation` 語意類型改為入列後經該列類型選單事後指定的選填欄位（對齊 OutputAnswer `relation?`），workspace 不得另行提供下拉選單等不同型態的關係建構介面。修訂 AC-2A.7、FR-024C、FR-024C-1、FR-024C-2 與邊界情況。**移除舊條文**：(1) 「E1 與 E2 相同時阻擋新增」——循序建構器下「新增」在三欄未填妥前即為 disabled，且該阻擋規則為 spec-only、任何 prototype 版本皆未實作；(2) 「Undo 移除最後一筆 triple」——退回作用於草稿欄位而非已入列三元組；(3) 「`relation_types` 非空時每筆 triple 需附語意類型」——與 OutputAnswer 既有的 `relation?` 選填定義矛盾，定案為選填。 |
 | 2.6.2 | 2026-08-11 | **prototype sync — single_dim/multi_dim 當前值標籤恆顯示數字**（使用者回報標記介面缺陷：滑塊上方顯示「—」而非數值）：`single_dim` 與 `multi_dim` 的當前值標籤於任何時刻皆須顯示滑桿當前數值、與 number input 一致——Output-role preannotation 依 FR-024M 顯示實際值，無 preannotation 時顯示範圍中點起始位置——不得以佔位符號取代數字；唯 Bypass 勾選中例外，此時顯示未評分佔位符號（答案已明確清空）。「未作答」的判定移至提交閘門（起始中點不計為已作答、不得作為有效值提交），不再以佔位符號呈現於顯示層——原「未調整維度顯示佔位符號」設計與 FR-024M preannotation 顯示互相矛盾（滑桿與 number input 已顯示 preannotation 實際值、上方標籤卻顯示佔位符號）。修訂 AC-2A.3、AC-2A.4、FR-024F、FR-024G、SC-008（原「number input 為空值」措辭同步修正為與滑桿一致的起始數值顯示）。 |
 | 2.6.1 | 2026-08-11 | **prototype sync — multi_label 選擇器覆蓋層與上限提示樣式修正**（使用者回報標記介面缺陷）：(1) 階層選擇器展開時必須為標記卡內最上層不透明覆蓋層，完整遮蓋其後方內容（含 Bypass 勾選項），不得有後方元素穿透顯示於選擇器之上，與 task-new Step 2 標記預覽一致；被遮蓋的控制項需先關閉選擇器（關閉鈕／Escape／再次點擊觸發器／點擊選擇器外任意處自動關閉）方可操作——移除 prototype 原為維持 Bypass 常時可點而將其抬升至選擇器之上的堆疊處理（該處理造成 Bypass 勾選項穿透疊在選擇器標題上）。(2) `max_selections` 上限提示文字必須沿用工作區既有欄位提示文字的字級與顏色樣式，不得以瀏覽器預設樣式呈現。修訂 FR-024E、FR-024E-1、AC-2A.2，新增 AC-2A.2a。 |
 | 2.6.0 | 2026-08-11 | **還原右欄說明與檔案面板的舊版視覺**（使用者比對舊版介面後要求）：(1) `任務說明` 摘要標題左側加回提示圖示（info circle icon），與標題同色並排。(2) 檔案列表每列加回檔案類型小圖示（PDF/圖片/Markdown 三型各異、以類型色彩區分）與檔名右側動作提示文字——PDF 顯示 `新分頁`、圖片/Markdown 顯示 `預覽`；動作提示為 i18n 文字，隨語言切換即時更新。圖示與動作提示由 `GuidelineFile.type` 驅動、不得依任務別硬編，維持 v2.1.0 引入的 `guidelineFiles` 動態渲染架構（僅還原視覺，非回退為靜態清單）。新增 FR-020B、AC-5.4，使用者故事 3 區塊 C（右欄說明與檔案，annotator/reviewer 共用面板）補任務說明標題與檔案列規範。 |
