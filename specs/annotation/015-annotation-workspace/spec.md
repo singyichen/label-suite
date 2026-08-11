@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.5.0
+版本: 2.6.0
 狀態: Draft
 ---
 
@@ -329,6 +329,8 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
   - 合併規則：同一樣本的 annotator 與 reviewer 事件合併為單一時序清單，兩種角色檢視內容一致，最新事件在前
 - 區塊 C：`右欄說明與檔案`
   - 必要元素：任務說明摘要、檔案列表、預覽/新分頁開啟能力
+  - 任務說明標題規範：`任務說明` 標題左側必須帶提示圖示（info/驚嘆號 circle icon），與標題同色並排呈現
+  - 檔案列規範：每列必須依檔案類型顯示對應小圖示（PDF/圖片/Markdown 三型各異，並以類型色彩區分），檔名之後靠右顯示動作提示文字——PDF 顯示 `新分頁`、圖片與 Markdown 顯示 `預覽`；動作提示文字須隨語言切換更新
   - 圖片預覽規範：點擊圖片檔後，必須以置中的圖片預覽 modal 顯示大圖；不可僅在右欄底部以小尺寸 inline 圖片呈現
 
 **Testid 契約（審查列）**：
@@ -401,6 +403,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 1. **AC-5.1**：**Given** Desktop 三欄佈局，**When** 切換下一筆，**Then** 右欄說明不收起且內容不重置。
 2. **AC-5.2**：**Given** Mobile 底部抽屜模式，**When** 切換下一筆，**Then** 抽屜維持目前開合狀態。
 3. **AC-5.3**：**Given** 檔案為 PDF/圖片/Markdown，**When** 在右欄點擊檔案，**Then** PDF 以新分頁開啟、Markdown 以面板內預覽、圖片以 modal 顯示大圖預覽。
+4. **AC-5.4**：**Given** 右欄說明與檔案面板，**When** 查看任務說明與檔案列表，**Then** `任務說明` 標題帶提示圖示，且每個檔案列顯示對應類型小圖示與動作提示文字（PDF → `新分頁`、圖片/Markdown → `預覽`）。
 
 **行為規則**：
 
@@ -487,6 +490,7 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-019**: `說明與檔案` 面板必須於翻筆後持續可見，不可自動收起或清空。
 - **FR-020**: 說明檔案至少必須支援圖片/Markdown 快速預覽與 PDF 新分頁開啟。
 - **FR-020A**: 圖片類說明檔在右欄被點擊時，必須開啟置中 modal 顯示大圖；modal 需支援關閉按鈕、點擊遮罩關閉與 `Esc` 關閉，且不得以僅限右欄底部的小圖 inline 預覽取代。
+- **FR-020B**: `任務說明` 摘要標題必須帶提示圖示（info circle icon）；檔案列表每列必須依檔案類型（PDF/圖片/Markdown）顯示對應的小圖示，並於檔名右側顯示動作提示文字（PDF → `新分頁`、圖片/Markdown → `預覽`），動作提示文字須隨語言切換即時更新。圖示與動作提示由檔案 `type` 欄位驅動，不得依任務別硬編。
 - **FR-021**: 原型頁每次 page load 進入時，必須顯示一次說明 modal。
 - **FR-022**: 自動儲存必須支援 `on-sample-switch`、`on-save-click` 與每 `AUTOSAVE_HEARTBEAT_INTERVAL_SECONDS` 秒 heartbeat 觸發。
 - **FR-022A**: 提交後預設行為必須為載入下一筆（`SUBMIT_DEFAULT_ACTION`）。
@@ -668,6 +672,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 2.6.0 | 2026-08-11 | **還原右欄說明與檔案面板的舊版視覺**（使用者比對舊版介面後要求）：(1) `任務說明` 摘要標題左側加回提示圖示（info circle icon），與標題同色並排。(2) 檔案列表每列加回檔案類型小圖示（PDF/圖片/Markdown 三型各異、以類型色彩區分）與檔名右側動作提示文字——PDF 顯示 `新分頁`、圖片/Markdown 顯示 `預覽`；動作提示為 i18n 文字，隨語言切換即時更新。圖示與動作提示由 `GuidelineFile.type` 驅動、不得依任務別硬編，維持 v2.1.0 引入的 `guidelineFiles` 動態渲染架構（僅還原視覺，非回退為靜態清單）。新增 FR-020B、AC-5.4，使用者故事 3 區塊 C（右欄說明與檔案，annotator/reviewer 共用面板）補任務說明標題與檔案列規範。 |
 | 2.5.0 | 2026-08-10 | **US3 聚合審核卡具體化**（prototype 補齊既有 US3 契約，非新增功能——US3 原已要求逐標記員列＋批次操作＋歷程追溯，本版是一致性 + 具體化修訂）：新增審查列固定結構順序與 testid 契約（`ws-review-row` / `ws-review-stats` / `ws-review-note` / `ws-review-bulk-reject` / `ws-review-bulk-approve` / `ws-review-annotator-list` / `ws-review-annotator-row` / `ws-review-annotator-name` / `ws-review-annotator-answer` / `ws-review-row-reject` / `ws-review-row-approve` / `ws-review-submit-btn`，FR-014E，AC-3.11）；標記分布統計改為渲染時依標記員清單計算（取代任何寫死字串），逐型別公式明文化（`{label}×{n}` 依次數降冪以 `·` 串接 / `mean : m , std : s` 2 位小數 / free_text 固定說明句，Bypass 不計入，FR-014F，AC-3.12）；批次按鈕新增 `aria-pressed` 僅全列同值時為真的三態 toggle 規則（FR-014G，AC-3.13）；`送出審核`（`ws-review-submit-btn`）新增全 outKey × 標記員決策完整性驗證，未完成時顯示 toast「請完成每位標記員的審核決策」並中止（FR-014H，AC-3.14）；「目前標記員」列任一 outKey 被退回時，落實既有條文「退回即回到未標記」為真實狀態回退——annotator bucket 回到待標記並保留原答案，並新增 `{action:'rejected', role:'reviewer'}` 歷程事件（歷程面板紅色徽章顯示），舊 prototype 僅文案宣稱、從未實作（FR-014I，AC-3.15）；新增固定模擬標記員資料模型 `REVIEWER_MOCK_ANNOTATORS`（`kioleemg12` / `113450022` / `tony0950127`）與 `ReviewerMockRow（Prototype）` 關鍵實體（`REVIEWER_MOCK_ROWS` / `getReviewerMockRows(taskId, sampleId)`），涵蓋 13 個任務全樣本 × 8 種輸出類型，含「目前標記員」列插入規則（FR-014J，AC-3.16）。`ReviewDecision` 關鍵實體對齊為「標記員 × 輸出類型」決策維度，新增 `annotator_id` 欄位並註記退回時的狀態回退觸發條件。新增 AC-3.11–AC-3.16、FR-014E–FR-014J；既有 AC-3.1–3.10、FR-014～FR-014D、FR-024L 系列不變號、不改義（新條文為並列補強，AC-3.12 明文不取代 AC-3.4／AC-3.5 的 entity diff／triple 清單既有呈現）。FR-027–FR-029（`annotation-list` 送出審核，尚未實作）維持原樣不動；FR-029 對 `annotation-workspace` 的 `rvSaveBtn` 既有措辭與本版新增 `ws-review-submit-btn` testid 為同一顆按鈕在不同修訂輪次下的命名，本版不回頭改寫 FR-029 措辭。 |
 | 2.4.0 | 2026-08-10 | **移除中欄卡片內多餘框線與隔線**（使用者比對舊版介面後要求）：題目卡內 input 內容不得再包一層內框（engine 預覽的 `.annotation-preview-sample` 內框在卡片內為重複框線，予以剝除）；標記卡內移除殘留的水平分隔線（engine 的 `.annotation-preview-divider`）與 Bypass 選項上方的虛線隔線；Bypass 選項自身的虛線外框為刻意設計、保留。落實為 workspace 頁面 scoped 樣式覆寫，一體適用所有輸出類型，不動共用 engine（FR-013E、AC-2.12，使用者故事 2 區塊 B 補「卡片內視覺」規則）。 |
 | 2.3.0 | 2026-08-10 | **還原舊版工作區 chrome 並定案右欄雙頁籤**（使用者要求對齊 pre-outputs[] 版本的工作區框架，annotator 與 reviewer 視角一致）：(1) 左欄標記清單每筆樣本下方新增三態完成狀態標籤 `已提交` / `已儲存` / `待標記`（FR-013A、AC-2.8）。(2) 中欄頂部新增樣本導覽列——`上一筆` / `下一筆` 按鈕（首末筆停用）＋ `已提交筆數 / 總筆數` 進度摘要與進度條（FR-013B、AC-2.9）。(3) 中欄題目區塊與標記區塊改以獨立卡片區隔，切分依欄位角色與輸出類型結構決定、不得硬編分支（FR-013D、AC-2.10）。(4) 中欄底部新增操作列——自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`）＋ `儲存草稿`（原 `儲存` 更名）與提交按鈕（FR-013C）。(5) **`GUIDELINE_PANEL_TABS` 由 `guideline-files-static` 定案回滾為 `guideline-files | history` 雙頁籤**：v2.1.0 暫定修訂由使用者定案否決，右欄恢復 `說明與檔案` / `歷程` 兩個頁籤且兩種角色皆可見；`歷程` 頁籤顯示當前樣本合併 annotator/reviewer 事件後的時序紀錄（操作者角色、時間、動作、輸出類型作答摘要，最新在前，空狀態文案），落實 FR-016 的歷程呈現面（FR-016B、AC-2.11）；使用者故事 3 區塊 B 同步改寫為歷程頁籤承載；Mobile 抽屜維持僅承載說明與檔案。對應 Open Question 已結案。 |
