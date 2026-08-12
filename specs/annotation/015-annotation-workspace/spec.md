@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 2.13.0
+版本: 3.0.0
 狀態: Draft
 ---
 
@@ -9,20 +9,7 @@
 
 **需求來源**: IA v1.3.1（2026-04-23）標記任務模組規範（`annotation-list` → `annotation-workspace`）；本版遷移對齊 task-management-013 v6.9.0 `OUTPUT_TYPE_REGISTRY` / `outputs[]` 契約，取代原本單一分類欄位驅動的舊版任務類型模型
 
-## 輸入與生成規則
-
-**輸入描述**：本規格需定義 Annotation List + Workspace 的標記/審核清單與工作區流程、以 `outputs[]` 為核心的 task profile 驅動畫面、提交 payload、安全邊界與 RWD 行為。
-
-**產生規格時必須遵守**：
-
-1. 先確認本規格範圍與需求來源一致：IA v1.3.1（2026-04-23）標記任務模組規範（annotation-list → annotation-workspace），並與 task-management-013 v6.9.0 的 `OUTPUT_TYPE_REGISTRY` / `outputs[]` 契約保持一致。
-2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
-3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
-4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
-5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
-6. 本規格不得為任何 output type 或欄位組合寫死專屬分支邏輯；標記/審查介面必須完全由 `outputs[]` 與 `OUTPUT_TYPE_REGISTRY` 驅動（Generalization-First，NON-NEGOTIABLE）。
-
-**已釐清事項**：
+## 已釐清事項
 
 - 本版以既有需求來源、task-management-013 v6.9.0 outputs[] 契約，以及本文件中的流程圖、使用者情境、功能需求、成功標準作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
@@ -58,7 +45,13 @@
 - `CONFLICT_RESOLUTION_POLICY = optimistic-lock-with-version-check`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
-- `REVIEWER_MOCK_ANNOTATORS = kioleemg12 | 113450022 | tony0950127`（US3 聚合審核卡的固定模擬標記員帳號，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；不含目前登入使用者本人的既有提交，見 `ReviewerMockRow（Prototype）`）
+- `REVIEWER_MOCK_ANNOTATORS = kioleemg12 | 113450022 | tony0950127`（US3 聚合審核卡的固定模擬標記員帳號，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；不含目前登入使用者本人的既有提交，見 `ReviewerMockRow（Prototype）`；**v3.0.0 起僅適用 `run_type = dry_run`，`official_run` 不使用模擬標記員，見 FR-044**）
+- `REVIEW_MODEL_BY_RUN_TYPE = dry_run: consensus_adjudication | official_run: single_annotator_review`（v3.0.0 新增；reviewer 呈現依 `run_type` 分流的頂層規則來源，`annotation-list` 與 `annotation-workspace` 的 reviewer 視圖皆須讀取此規則決定渲染分支，不得逐頁各自硬編判斷，見 FR-030）
+- `CONSENSUS_MERGE_KEYS`（v3.0.0 新增；dry_run 共識合併鍵，逐輸出類型定義）：`entity_recognition` = `start + end + type` 精確匹配；`relation_identification` = `subj + obj + type` 精確匹配（`type` 缺值視為固定佔位鍵值，仍需精確相同）
+- `DIM_CONSENSUS_TOLERANCE = 0.10 × (scale_max − scale_min)`（v3.0.0 新增，定案值；`single_dim`/`multi_dim` 一致性 gate 的固定容忍區間，取該題型量表滿分區間的 10% 為門檻，不採 std-based gate；一致性判定式為 `max − min ≤ DIM_CONSENSUS_TOLERANCE`，見 AC-3.22、FR-033）
+- `SEQ_MAJORITY_INVALID_BIO_FALLBACK = mark-divergent`（v3.0.0 新增；`sequence_tagging` 逐 token 多數決若平手或拼出不合法 `BIO`/`BIOES` 序列，該 token 一律歸為分歧項，見 FR-035）
+- `ADJUDICATION_STATUS = pending | consensus | overridden | divergent | adjudicated`（v3.0.0 新增；dry_run 逐項仲裁狀態機，見 FR-040）
+- `GOLD_STATUS = draft | gold_confirmed`（v3.0.0 新增；dry_run 樣本層級 gold 狀態，`gold_reopened` 為狀態轉移歷程事件而非新狀態值——轉移後回到 `draft` 並記錄事件，見 FR-041、FR-043）
 
 ## 流程圖
 
@@ -106,6 +99,8 @@ sequenceDiagram
 | 6 | 使用者 | 返回清單 | 保留清單篩選條件與捲動定位 |
 | 7 | 使用者 | 中途操作 | 由 sample 切換、儲存、heartbeat 觸發自動儲存提示 |
 
+> **v3.0.0 起**：Step 5 的 reviewer 呈現依 `run_type` 分流（`REVIEW_MODEL_BY_RUN_TYPE`）——`dry_run` 採共識合併 + gold 仲裁模型，`official_run` 採單標記員通過/退回模型；兩者不再共用同一套「逐標記員通過/退回 + 批次全通過/全退回」介面。詳見使用者故事 3（dry_run 共識仲裁）與使用者故事 6（official_run 單標記員審核）。
+
 ---
 
 ## 使用者情境與測試 *(必填)*
@@ -128,6 +123,10 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 7. **AC-1.7**：**Given** 使用者於標記清單切換完成狀態篩選，**When** 選擇 `已提交/草稿/待處理`，**Then** 清單只顯示符合該完成狀態的資料列。
 8. **AC-1.8**：**Given** annotator 或 reviewer 進入 `annotation-list`，**When** 任務資訊卡渲染，**Then** 進度摘要顯示與 Dashboard 同任務、同角色列項一致的工作統計（annotator：完成率/今日完成/平均速度；reviewer：待審筆數/進度/IAA），後接 run-scoped 清單筆數，且進度條寬度等於該完成率百分比。
 9. **AC-1.9**：**Given** `run_type = dry_run` 進入 `annotation-list`，**When** 任務資訊卡渲染，**Then** 清單筆數段顯示 `試標回合 R{n} · 本回合清單 {total} 筆`；TaskProfile 未宣告對應 materialized run context 時回合顯示 R1、筆數回退 `datasetRecords` 長度。
+10. **AC-1.10（v3.0.0 新增）**：**Given** `run_type = official_run` 且 `role = reviewer` 進入 `annotation-list`，**When** 檢視資料清單，**Then** 每筆樣本僅顯示一列單一標記員資料、不提供展開比對；標記結果摘要欄資料來源為該筆樣本的真實提交（非 `REVIEWER_MOCK_ANNOTATORS`），且不顯示 IAA/分布統計欄（見 FR-047）。`run_type = dry_run` 之對應規則見 AC-1.12、AC-1.13（清單改為唯讀總覽，決策入口收斂至 workspace CTA）。
+11. **AC-1.11（v3.0.0 新增）**：**Given** `run_type = official_run` 且 `role = reviewer` 點擊「送出審核」，**When** 尚有樣本未完成決策，**Then** 驗證條件收斂為「每筆樣本 1 個決策」，未完成時顯示 `toastSelectDecision` 並中止；全部完成後顯示 `toastReviewSubmitted`（見 FR-048）。`run_type = dry_run` 之 `annotation-list` 自 v3.0.0 起不提供「送出審核」動作（無清單層級決策可送出）；逐標記員決策、共識合併與 gold 送出一律於 `annotation-workspace` 完成（FR-041），原 FR-029 之清單送出審核驗證邏輯僅為歷史行為記錄，`dry_run` 不再適用。
+12. **AC-1.12（v3.0.0 新增，對應 FR-047 dry_run 唯讀總覽）**：**Given** `run_type = dry_run` 且 `role = reviewer` 於 `annotation-list` 展開任一筆資料列，**When** 檢視標記員明細，**Then** 系統唯讀呈現多標記員標記結果比對（逐標記員答案摘要 tag、標記分布統計、一致度/IAA 摘要），不提供逐列或批次的 `通過` / `退回` 決策控件；任何決策僅可於 `annotation-workspace` 完成。
+13. **AC-1.13（v3.0.0 新增，對應 FR-047 dry_run CTA）**：**Given** `run_type = dry_run` 且 `role = reviewer` 於清單點擊任一筆資料列的 `編輯` 按鈕（見 AC-1.3），**When** 觸發導頁，**Then** 導向該筆樣本的 `annotation-workspace` 並進入共識合併／gold 仲裁畫面（FR-036 ~ FR-043）；`annotation-list` 本身不記錄或送出任何逐標記員決策。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -147,13 +146,12 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
   - 顯示限制：不顯示「任務資料清單」區塊標題文字
   - 列表底部：需顯示與 `task-list` 相同視覺語法的 footer pagination
 - 區塊 C'：`資料清單（Reviewer 視圖）`
-  - 必要元素：樣本 ID、完成狀態、完成時間、文本摘要、依 `outputs[].type` registry 呈現的標記分布統計、展開控制項
-  - 必要元素（操作）：每列提供 `全部通過` / `全部退回` 批次按鈕；展開後每位標記員一列，含 `通過` / `退回` 逐筆按鈕；toolbar 右側提供 `送出審核` 按鈕（Reviewer 專屬，Annotator 不顯示）；送出前需完成任務內全部清單筆次每位標記員的審核決策（涵蓋整個任務，非僅當前分頁或篩選結果），否則顯示 `toastSelectDecision` 錯誤提示；全數完成時顯示 `toastReviewSubmitted` 成功提示
-  - 操作順序：批次與逐筆操作皆固定為左側 `退回`、右側 `通過`
-  - 狀態回饋：批次按鈕被按下後，需比照逐筆按鈕切換為深色實心 active 樣式；未按下維持淺色描邊樣式，兩者需可明確區分；再次點擊當前 active 的批次按鈕時，視為取消整筆決策並回到未選取狀態
-  - 展開行為：點擊列或展開箭頭展開/收合該筆的標記員明細（含帳號、逐輸出類型的標記結果摘要 tag、逐列操作）；`multi_dim` 的標記結果摘要 tag 以 `[v1, v2, …]` 陣列格式依維度序呈現各維度值；Reviewer 視圖下資料列點擊僅切換展開/收合、不觸發導頁，導向工作區僅經由每列 `編輯` 按鈕；標記員於某輸出類型標記 Bypass 時，該結果 tag 改顯示 `無法判定 (Bypass)` 標示；無作答時顯示佔位文字
-  - 批次操作：`全部通過` / `全部退回` 套用至同筆所有標記員，展開行同步更新按鈕狀態；若同筆所有逐筆決策一致，對應批次按鈕也需同步切為 active；再次點擊當前 active 的批次按鈕時，需清除同筆全部逐筆決策
+  - **v3.0.0 起依 `run_type` 分流（已定案）**：`run_type = dry_run` 之展開明細改為**唯讀總覽**——保留多標記員答案比對顯示與一致度/IAA 資訊，移除逐列與批次的通過/退回決策控件，決策入口收斂為每列 `編輯` CTA（導向 `annotation-workspace` 進行共識合併／gold 仲裁，見 AC-1.12、AC-1.13、FR-047）；`run_type = official_run` 改為每筆樣本一列單一標記員資料、不提供展開，規則見 FR-047、AC-1.10。
+  - 必要元素：樣本 ID、完成狀態、完成時間、文本摘要、依 `outputs[].type` registry 呈現的標記分布統計、一致度/IAA 摘要、展開控制項
+  - 必要元素（操作）：每列提供 `編輯` 按鈕（見 AC-1.3），作為進入該筆 `annotation-workspace` 的唯一決策入口；`annotation-list` 自 v3.0.0 起不再提供批次或逐列的 `通過` / `退回` 決策控件，亦不顯示 `送出審核` 按鈕（`dry_run` 專屬，官方 run 之 `送出審核` 規則另見 FR-027、FR-048）
+  - 展開行為：點擊列或展開箭頭展開/收合該筆的標記員明細（含帳號、逐輸出類型的標記結果摘要 tag，唯讀不可互動）；`multi_dim` 的標記結果摘要 tag 以 `[v1, v2, …]` 陣列格式依維度序呈現各維度值；Reviewer 視圖下資料列點擊僅切換展開/收合、不觸發導頁，導向工作區僅經由每列 `編輯` 按鈕；標記員於某輸出類型標記 Bypass 時，該結果 tag 改顯示 `無法判定 (Bypass)` 標示；無作答時顯示佔位文字
   - 標記分布統計呈現規則（依 `outputs[].type` registry 驅動，不得逐 task 硬編；統計算法必須與工作區標記分布統計盒（FR-014F）取自同一單一實作來源，不得清單與工作區各自計算造成數字漂移）：`single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification` 以 `{label}×{n}` 依出現次數降冪並以 `·` 串接（`sequence_tagging` 計 tag、`entity_recognition` 計實體類型、`relation_identification` 計關係類型）；`single_dim` 顯示 `mean : m , std : s`（2 位小數）；`multi_dim` 以多行區塊呈現——第一行 `mean [m1, m2, …]`、第二行 `std [s1, s2, …]`（皆 2 位小數、依維度序），其後每個維度一行 `±1.5std {維度名} : lo~hi`（界值 3 位小數，lo/hi = mean ∓ 1.5·std；維度標籤為 config 維度名稱，不得逐任務硬編縮寫）；`free_text` 顯示固定說明句「自由文本任務 — 請並列比對各標記員結果」；已標記 Bypass 的標記員結果不計入統計；任務含多個輸出類型時，統計欄每個輸出類型各佔一行並以其輸出類型名稱前綴，`multi_dim` 的多行區塊完整置於其前綴行之後
+  - 一致度/IAA 資訊呈現規則：展開明細需呈現該筆樣本的一致度／IAA 摘要（與任務資訊卡 IAA 同一資料來源，不得清單另行計算造成數字漂移），供 reviewer 唯讀參考；本摘要僅供資訊呈現，不作為清單內決策依據（清單已無決策動作）
   - 標記結果顏色標記（`single_dim` / `multi_dim` 類任務）：展開行中每位標記員的維度值 result tag 依該筆樣本跨標記員統計（mean/std，Bypass 不計入）之偏差程度著色：🔴 紅色（`result-tag-red`）：任一維度偏差超過 `1.5·std`；🔵 藍色（`result-tag-blue`）：任一維度偏差超過 `1·std`（未達紅色門檻）；🟢 綠色（`result-tag-green`）：其餘（含 `std = 0`）；優先順序：紅色 > 藍色 > 綠色；標記 Bypass 的標記員列不著色；規則與工作區 reviewer 視圖的 ±1.5std 著色（FR-014A）為同一規則
   - 視覺樣式：與 Annotator 視圖共用相同 table shell；展開行背景以 `#F8FAFC` 區分
   - 列表底部：需顯示與 `task-list` 相同視覺語法的 footer pagination
@@ -181,7 +179,7 @@ Annotator / Reviewer 進入標記模組時，支援兩種入口：dashboard 任�
 - 清單底部必須提供 footer pagination，且 Annotator / Reviewer 兩種視圖皆需顯示總筆數、目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕。
 - 清單套用完成狀態篩選、關鍵字搜尋或清除篩選時，footer pagination 必須回到第 1 頁並以篩選後結果重算總筆數與頁數。
 - 手機版（`<= MOBILE_BP`）清單首列不得因文本摘要換行造成異常大列高；需維持可快速掃讀的緊湊列高。
-- Reviewer 視圖下，`通過` / `退回` 決策僅更新前端原型狀態；不觸發導頁，reviewer 可在清單直接完成審核流程。已做出的決策於切換篩選、分頁或語言後必須保留，不得因清單重繪而遺失。
+- （v3.0.0 起）Reviewer 視圖下清單內決策僅適用於 `run_type = official_run`：單筆樣本的 `通過` / `退回` 決策僅更新前端原型狀態、不觸發導頁，reviewer 可在清單直接完成審核流程；已做出的決策於切換篩選、分頁或語言後必須保留，不得因清單重繪而遺失。`run_type = dry_run` 之 `annotation-list` 不提供任何決策控件（唯讀總覽），決策一律經每列 `編輯` CTA 導向 `annotation-workspace` 完成（見 AC-1.12、AC-1.13、FR-047）。
 
 ---
 
@@ -289,49 +287,65 @@ Annotator 在 `input_type = item_pair` 的任務中，以雙欄呈現兩個比�
 
 ---
 
-### 使用者故事 3 — Reviewer 審查與追溯歷程（優先級：P1）
+### 使用者故事 3 — Reviewer Dry Run 共識合併與 Gold 仲裁（優先級：P1）
 
-Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每個輸出類型的審查呈現（標籤分布、分數統計、entity diff、triple 清單或文字比對），以通過 / 退回完成逐列或批次審核，必要時對任一輸出類型直接修正（重用對應 annotator 作答控件並以其答案為初始值），並追溯每筆決策歷程。
+Reviewer 在 `run_type = dry_run` 的工作區中，依任務 `outputs[]` 逐一查看每個輸出類型的標記員答案共識合併結果（一致項預接受、分歧項待裁定），必要時對任一輸出類型執行 gold 仲裁（重用對應 annotator 作答控件並以合併共識為初始值），並追溯每筆裁定歷程。個人標記品質問題不在本流程處理，而是交由任務層級 IAA 閘門與重新試跑機制（概念性提及，細節屬 dataset-017／後端範圍）。
 
-**此優先級原因**：Dry Run 一致性與正式資料品質依賴 reviewer 決策，且審查呈現必須對任意合法 `outputs[]` 組合一致運作。
-**獨立測試方式**：以 `reviewer` 身分進入涵蓋不同輸出類型組合的待審任務，驗證各輸出類型的審查呈現、決策操作與 History 追溯欄位。
+**⚠️ v3.0.0 適用範圍收斂**：本故事（含 AC-3.2 ~ AC-3.19，以及對應 FR-014A、FR-014E ~ FR-014M）自本版起僅適用 `run_type = dry_run`。原 AC-3.1 所述「Dry Run 與 Official Run 都顯示相同通過/退回操作」的模型自本版廢止，由 AC-3.1A 取代；`official_run` 的單標記員審核行為改由使用者故事 6（AC-6.1 ~ AC-6.5）定義，不再套用本故事所述之多標記員統計盒、批次操作與逐標記員清單。`dry_run` 完全採共識合併 + gold 仲裁模型，**取代**逐標記員通過/退回與批次全通過/全退回（AC-3.7、AC-3.13、AC-3.14 所述批次操作標註為已廢止，不提供「退回個人重標」通道）。
+
+**此優先級原因**：Dry Run 一致性與正式資料品質依賴 reviewer 的共識裁定，且審查呈現必須對任意合法 `outputs[]` 組合一致運作。
+**獨立測試方式**：以 `reviewer` 身分進入 `run_type=dry_run` 且涵蓋不同輸出類型組合的待審任務，驗證各輸出類型的共識合併呈現、一致項預接受、分歧項裁定與 History 追溯欄位。
 
 **驗收情境**：
 
-1. **AC-3.1**：**Given** `role=reviewer`，**When** 進入工作區，**Then** 在 Dry Run 與 Official Run 都顯示 reviewer 可用操作（通過 / 退回），且依 `outputs[]` 順序逐一顯示每個輸出類型的審查摘要。
+1. **AC-3.1（已廢止 v3.0.0）**：~~**Given** `role=reviewer`，**When** 進入工作區，**Then** 在 Dry Run 與 Official Run 都顯示 reviewer 可用操作（通過 / 退回），且依 `outputs[]` 順序逐一顯示每個輸出類型的審查摘要。~~ 本情境所述模型已廢止，由 AC-3.1A 取代；ID 保留不重用。
+1A. **AC-3.1A（v3.0.0 新增）**：**Given** `role=reviewer`，**When** 進入工作區，**Then** 系統依 `run_type` 分流呈現（`REVIEW_MODEL_BY_RUN_TYPE`）：`dry_run` 顯示共識合併＋gold 仲裁介面（依 `outputs[]` 順序逐一顯示各輸出類型的合併結果，一致項預接受、分歧項待裁定，無逐標記員通過/退回、無批次全通過/全退回）；`official_run` 顯示單標記員審核介面（見使用者故事 6）。
 2. **AC-3.2**：**Given** `outputs[]` 含 `single_label` / `multi_label` / `sequence_tagging`，**When** reviewer 查看審查摘要，**Then** 顯示各標籤（或 tag）的出現次數分布。
 3. **AC-3.3**：**Given** `outputs[]` 含 `single_dim` / `multi_dim`，**When** reviewer 查看審查摘要，**Then** 顯示各維度的 `mean`、`std` 與 `±1.5std` 範圍，且各標記員的維度值 result tag 依跨標記員偏差程度著色（綠/藍/紅，優先序紅 > 藍 > 綠，規則見 FR-014A）；`multi_dim` 的 result tag 以 `[v1, v2, …]` 陣列格式依維度序呈現為單一 tag。
 4. **AC-3.4**：**Given** `outputs[]` 含 `entity_recognition`，**When** reviewer 查看審查摘要，**Then** 每位標記員的實體結果以與標記員「實體列表」相同的列樣式逐行呈現（每列：實心型別色底徽章＋標記文字＋`(start, end)` token 位置＋列右「刪除」按鈕，徽章顏色取自任務 entity config，見 FR-014M），並可執行直接修正（新增/刪除/修改實體，重用 annotator 的 entity 建構器並以其提交結果為初始值）。
 5. **AC-3.5**：**Given** `outputs[]` 含 `relation_identification`，**When** reviewer 查看審查摘要，**Then** 每位標記員的 triple 清單以與標記員「關係識別」清單相同的列樣式呈現（每筆三元組一列：主體與客體實體文字粗體並附 `(start,end)` token 位置、關係觸發詞 pill 附位置、有語意關係類型時附「類型：X」徽章，列右側提供可操作的「類型」下拉與「刪除」按鈕，見 FR-014L），並可執行直接修正（重用 annotator 的關係建構器並以其提交結果為初始值；純模式與整合模式皆不提供 reviewer 直接改寫實體的入口，僅可調整/新增/刪除 triple）。
 6. **AC-3.6**：**Given** `outputs[]` 含 `free_text`，**When** reviewer 查看審查摘要，**Then** 以可掃讀方式並列顯示各標記員的文字內容供比對，並可執行直接修正（重用 annotator 的 textarea 控件並以其提交文字為初始值）。
-7. **AC-3.7**：**Given** reviewer 需快速處理同一句的多位標記員結果，**When** 點擊 `全部通過` 或 `全部退回`，**Then** 系統必須以勾選式批次套用到所有標記員列。
+7. **AC-3.7（已廢止 v3.0.0）**：~~**Given** reviewer 需快速處理同一句的多位標記員結果，**When** 點擊 `全部通過` 或 `全部退回`，**Then** 系統必須以勾選式批次套用到所有標記員列。~~ 批次全通過/全退回已由共識合併模型取代；快速處理分歧項改用「套用多數決至全部分歧項」（見 AC-3.28、FR-039），語意不同，不得混用同一元件或文案。ID 保留不重用。
 8. **AC-3.8**：**Given** reviewer 退回或通過某位標記員結果，**When** 送出審核，**Then** 該筆歷程新增一筆可追溯紀錄（誰、何時、對哪位標記員的哪個輸出類型做了什麼決策）。
-9. **AC-3.9**：**Given** reviewer 對任一輸出類型（8 型皆適用）直接修正標記員結果，**When** 送出審核，**Then** 系統必須同時保留 annotator 原始提交、reviewer 修正後結果與修正 diff，供品質追溯；修正控件必須重用該輸出類型對應的 annotator 作答互動控件，不得另建輸出類型專屬修正介面。
+9. **AC-3.9**（v3.0.0 起修訂）：**Given** reviewer 對任一輸出類型（8 型皆適用）於 gold 仲裁區修正結果，**When** 送出審核，**Then** 系統必須同時保留修正前共識（consensus，依 FR-031 ~ FR-035 合併結果）、reviewer 修正後 gold 結果與修正 diff，供品質追溯；修正控件必須重用該輸出類型對應的 annotator 作答互動控件，不得另建輸出類型專屬修正介面（見 FR-042；`official_run` 對應行為改為保留 annotator 原始提交，見 AC-6.3）。
 10. **AC-3.10**：**Given** reviewer 由 Dashboard 或 annotation-list 進入任一任務工作區，**When** 查看中欄，**Then** 中欄不得顯示任務標題卡（任務名稱標題與卡內語言切換鈕）；任務名稱由右欄「說明與檔案」的任務說明摘要呈現（依 `task_id` 對應的實際任務名稱，與 annotator 視角一致），語言切換由共用 sidebar 的語言切換鈕提供。
-11. **AC-3.11**：**Given** `outputs[]` 中任一輸出類型的審查列（`ws-review-row`），**When** reviewer 檢視該列，**Then** 由上至下依序顯示：型別標題（維度型另顯示彙總結果標籤）、標記分布統計盒（`ws-review-stats`）、審查說明文案（`ws-review-note`）與批次操作（`ws-review-bulk-reject` / `ws-review-bulk-approve`）同一行、標記員清單（`ws-review-annotator-list`，每列 `ws-review-annotator-row[data-annotator]` 含 `ws-review-annotator-name`、`ws-review-annotator-answer`、`ws-review-row-reject`、`ws-review-row-approve`）、直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`）。
+11. **AC-3.11**（v3.0.0 起修訂）：**Given** `outputs[]` 中任一輸出類型的審查列（`ws-review-row`，`run_type=dry_run`），**When** reviewer 檢視該列，**Then** 由上至下依序顯示：型別標題（維度型另顯示彙總結果標籤）、標記分布統計盒（`ws-review-stats`）、審查說明文案（`ws-review-note`）與「套用多數決至全部分歧項」（`ws-review-apply-majority`）同一行（已廢止的 `ws-review-bulk-reject` / `ws-review-bulk-approve` 不再渲染，見 AC-3.7）、標記員清單（`ws-review-annotator-list`，每列 `ws-review-annotator-row[data-annotator]` 含 `ws-review-annotator-name`、`ws-review-annotator-answer`、一致/分歧徽章 `ws-review-consensus-badge`）、gold 仲裁區（標題「直接修正」+ `ws-review-correct-{outKey}`，seed 改為共識合併結果，見 FR-042）。
 12. **AC-3.12**：**Given** 標記分布統計盒（`ws-review-stats`）渲染，**When** reviewer 檢視統計文字，**Then** `single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification` 皆以 `{label}×{n}` 依出現次數降冪並以 `·` 串接（`sequence_tagging` 計 tag、`entity_recognition` 計實體類型、`relation_identification` 計關係類型，此統計盒為既有 entity diff／triple 清單呈現之外的額外彙總資訊，不取代 AC-3.4／AC-3.5 的既有呈現）；`single_dim` 顯示 `mean : m , std : s`（2 位小數）；`multi_dim` 以多行區塊呈現——`mean [m1, m2, …]`、`std [s1, s2, …]`（2 位小數、依維度序）與每維度一行 `±1.5std {維度名} : lo~hi`（界值 3 位小數）；`free_text` 顯示固定說明句「自由文本任務 — 請並列比對各標記員結果」；已標記為 Bypass 的標記員結果不計入統計。
-13. **AC-3.13**：**Given** 同一 outKey 下全部標記員列的逐列決策同值，**When** reviewer 檢視批次按鈕（`ws-review-bulk-reject` / `ws-review-bulk-approve`），**Then** 對應批次按鈕 `aria-pressed` 為 `true`；任一標記員列決策不同或缺值時，兩個批次按鈕 `aria-pressed` 皆為 `false`。
-14. **AC-3.14**：**Given** reviewer 點擊「送出審核」（`ws-review-submit-btn`），**When** 當前樣本任一 outKey × 標記員組合尚無決策，**Then** 系統顯示 toast「請完成每位標記員的審核決策」並中止送出；全部組合皆有決策時方可送出成功。
-15. **AC-3.15**：**Given** 「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 被判定為 `退回`，**When** 送出審核成功，**Then** 系統將該 annotator bucket 的樣本狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板以紅色徽章顯示。
-16. **AC-3.16**：**Given** 目前登入使用者（annotator 身分）於某樣本已提交紀錄，**When** reviewer 檢視該樣本的標記員清單，**Then** 「目前標記員」列固定顯示於清單最上方；清單其餘列依 `REVIEWER_MOCK_ANNOTATORS` 提供的固定模擬標記員呈現。
+13. **AC-3.13（已廢止 v3.0.0）**：~~**Given** 同一 outKey 下全部標記員列的逐列決策同值，**When** reviewer 檢視批次按鈕（`ws-review-bulk-reject` / `ws-review-bulk-approve`），**Then** 對應批次按鈕 `aria-pressed` 為 `true`；任一標記員列決策不同或缺值時，兩個批次按鈕 `aria-pressed` 皆為 `false`。~~ 批次按鈕已隨批次全通過/全退回一併廢止（見 AC-3.7）。ID 保留不重用。
+14. **AC-3.14（已廢止 v3.0.0，由 AC-3.29 取代）**：~~**Given** reviewer 點擊「送出審核」（`ws-review-submit-btn`），**When** 當前樣本任一 outKey × 標記員組合尚無決策，**Then** 系統顯示 toast「請完成每位標記員的審核決策」並中止送出；全部組合皆有決策時方可送出成功。~~ dry_run 送出驗證收斂為「僅分歧項需 gold 裁定」（見 AC-3.29、FR-041）；official_run 對應驗證見 AC-6.5、FR-044。ID 保留不重用。
+15. **AC-3.15（v3.0.0 起僅適用 `official_run`）**：**Given** `run_type = official_run` 且「目前標記員」（該樣本的真實提交）任一 outKey 被判定為 `退回`，**When** 送出審核成功，**Then** 系統將該 annotator bucket 的樣本狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板以紅色徽章顯示。機制本身沿用不變，僅適用範圍收斂為 `official_run`（`dry_run` 無「退回個人重標」通道，見本故事適用範圍收斂說明、FR-014I）；亦見 AC-6.4。
+16. **AC-3.16（v3.0.0 起僅適用 `dry_run`）**：**Given** `run_type = dry_run` 且目前登入使用者（annotator 身分）於某樣本已提交紀錄，**When** reviewer 檢視該樣本的標記員清單，**Then** 「目前標記員」列固定顯示於清單最上方；清單其餘列依 `REVIEWER_MOCK_ANNOTATORS` 提供的固定模擬標記員呈現。`official_run` 不適用本情境（僅目前標記員一列，見使用者故事 6）。
 17. **AC-3.17**：**Given** `outputs[]` 含 `entity_recognition` 且 `role=reviewer`，**When** 進入工作區，**Then** 中欄最上方顯示「原始文本」卡：原始輸入文字內以行內高亮呈現**所有標記員標記結果的聯集**（含任一標記員標出而其他人遺漏的實體），每個高亮片段帶型別色淡底與底線並附實心型別徽章；高亮顏色取自任務 entity config，與標記員清單的型別徽章同色（見 FR-014K）。
 18. **AC-3.18**：**Given** `outputs[]` 含 `relation_identification` 且 `role=reviewer`，**When** 進入工作區，**Then** (1) 每位標記員的關係答案逐列渲染為與標記員「關係識別」清單同源的三元組列，token 位置與關係觸發詞由資料紀錄的 ner 形態三元組於渲染時以主體＋客體實體文字配對解析（關係類型一致者優先）；紀錄無 ner 形態三元組（如 absa 形態）時退回無位置列，與 annotator 視圖一致；(2) 列上「類型」下拉可切換／取消該列語意關係類型、「刪除」可移除該列，操作即時生效且標記分布統計盒隨之重新計算（類型為空的列不計入統計）；(3) 中欄最上方顯示「原始文本」卡——任務同時含 `entity_recognition` 輸出時沿用 AC-3.17 的標記聯集高亮，純 relation 任務（實體僅為 evidence）改高亮資料紀錄的 evidence 實體並附型別徽章，紀錄無 evidence 實體欄位時顯示純文字（見 FR-014L）。
 19. **AC-3.19**：**Given** `outputs[]` 含 `entity_recognition` 且 `role=reviewer`，**When** 查看標記員清單，**Then** (1) 每位標記員的實體答案逐列渲染為與標記員「實體列表」同源的實體列，token 位置由資料紀錄的實體 span 欄位於渲染時以「文字＋型別」配對解析；同文字實體出現多次時（如同一實體被標記兩處）依答案順序依序取用未使用的紀錄 span，各列顯示相異位置；紀錄無實體 span 欄位時退回無位置列，與 annotator 視圖一致；(2) 列上「刪除」按鈕可移除該列，操作即時生效且標記分布統計盒隨之重新計算（見 FR-014M）。
 
+**v3.0.0 新增驗收情境（dry_run 共識合併與 gold 仲裁）**：
+
+20. **AC-3.20（single_label 共識）**：**Given** `outputs[]` 含 `single_label` 且 `run_type=dry_run`，**When** reviewer 檢視審查列，**Then** 僅全體標記員（排除 Bypass 後）答案完全相同時該項標記為 `consensus`；任何比例分歧（含 2:1）皆標記為 `divergent`，系統不得以多數決自動判定一致（見 FR-031）。
+21. **AC-3.21（multi_label 共識）**：**Given** `outputs[]` 含 `multi_label` 且 `run_type=dry_run`，**When** reviewer 檢視合併清單，**Then** 清單為所有標記員已選標籤聯集，每個標籤獨立顯示支持人數 `×n`，得票數 ≥ ⌈(N+1)/2⌉ 者納入 gold 候選（見 FR-032）。
+22. **AC-3.22（single_dim/multi_dim 容忍區間 gate）**：**Given** `outputs[]` 含 `single_dim`/`multi_dim` 且 `run_type=dry_run`，**When** reviewer 檢視一致性判定，**Then** 系統以 `max − min ≤ DIM_CONSENSUS_TOLERANCE` 判定一致/分歧（非 std-based）；一致度以中性灰底 outline 徽章呈現，與既有 ±1.5std 偏差著色（FR-014A）視覺上明確分離；gold 候選值預填為排除 Bypass 後的 mean（見 FR-033）。
+23. **AC-3.23（entity/relation 精確匹配合併與部分一致高亮）**：**Given** `outputs[]` 含 `entity_recognition` 或 `relation_identification` 且 `run_type=dry_run`，**When** reviewer 檢視合併清單與原始文本卡，**Then** 合併鍵完全相同（`CONSENSUS_MERGE_KEYS`）者列為一致項；部分重疊或單一標記員獨有者列為分歧項；原文高亮中完全一致 span 為實線、部分一致 span 為虛線並附同意比例小徽章（如 `2/3`）（見 FR-034）。
+24. **AC-3.24（sequence_tagging 逐 token 多數決）**：**Given** `outputs[]` 含 `sequence_tagging` 且 `run_type=dry_run`，**When** 逐 token 多數決出現平手，或多數決結果拼出不合法 `BIO`/`BIOES` 序列，**Then** 該 token 歸為分歧項，Token 網格底部顯示每人一段的微型分色底線（不可點擊、不佔用可點擊區域），focus 或 hover 時以 tooltip 列出「標記員：tag」對照；修正入口唯一為 Token 網格本身（見 FR-035、FR-024L-1）。
+25. **AC-3.25（free_text 設為底稿）**：**Given** `outputs[]` 含 `free_text` 且 `run_type=dry_run`，**When** reviewer 於任一標記員文字上方點擊「設為底稿」，**Then** 該文字帶入仲裁 textarea 供編修；系統不自動選稿或自動合併多份文字；選稿結果與編輯後 diff 皆留痕於歷程（見 FR-036）。
+26. **AC-3.26（一致項預接受可逆）**：**Given** 某項為 `consensus` 狀態，**When** reviewer 檢視或推翻該項，**Then** 文字/徽章以淡化色階呈現（非 `disabled`，`opacity`/`pointer-events`/`tabindex` 皆維持正常）、「通過」對應狀態預先點亮（`aria-pressed="true"`）、推翻透過既有退回/修改操作入口達成（狀態轉為 `overridden`）、旁附不可點擊的純資訊標籤「依 N/N 共識預接受」，容器帶 `aria-describedby` 說明狀態可逆（見 FR-037、FR-040）。
+27. **AC-3.27（Bypass 分母）**：**Given** 部分標記員於某輸出類型勾選 Bypass，**When** reviewer 檢視合併比對，**Then** 分母顯示排除 Bypass 後的人數（例如「2/2 一致 · 1 人 Bypass」）；排除 Bypass 後可比對答案少於 2 份時，該項強制歸為 `divergent`（見 FR-038）。
+28. **AC-3.28（套用多數決至全部分歧項）**：**Given** 審查列存在多筆 `divergent` 項，**When** reviewer 點擊「套用多數決至全部分歧項」（`ws-review-apply-majority`），**Then** 系統將多數決結果套用至全部分歧項並轉為 `adjudicated`，reviewer 仍可逐項覆寫；此操作與已廢止的批次全通過/全退回（AC-3.7）語意不同，不得共用同一元件或文案（見 FR-039）。
+29. **AC-3.29（dry_run 送出驗證收斂）**：**Given** `run_type=dry_run` 且當前樣本存在尚未裁定的 `divergent` 項，**When** reviewer 點擊「送出審核」（`ws-review-submit-btn`），**Then** 系統於未裁定分歧項旁顯示 inline 錯誤（紅字）、顯示 toast「請先裁定所有分歧項目」，並捲動聚焦第一個未裁定項目；全部分歧項皆有 gold 值（一致項不計入待驗證）時方可送出成功（見 FR-041）。
+
 **介面定義（需與 IA 導覽語意一致）**：
 
-- 區塊 A：`中欄審查操作區`
+- 區塊 A：`中欄審查操作區（run_type = dry_run，見 FR-030）`（v3.0.0 起：`official_run` 的中欄審查操作區改由使用者故事 6「區塊 A（official_run）」定義，不套用以下 dry_run 結構）
   - 標題規則：中欄不顯示任務標題卡；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，並與 annotator 視角、Dashboard 任務卡、annotation-list 任務資訊卡的任務名稱保持一致；同一任務在 reviewer 視角不得改顯示為輸出類型通稱
-  - 審查列結構（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染，見 FR-014E）：由上至下固定為 (1) 型別標題（`single_dim` / `multi_dim` 類型於標題旁另顯示彙總結果標籤）(2) 標記分布統計盒 `ws-review-stats`（chip「標記分布統計」+ 渲染時依當前標記員清單計算的統計文字，見 FR-014F；並列同步既有 標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對呈現，依 FR-024L 對應規則）(3) 審查說明文案 `ws-review-note` 與批次操作 `ws-review-bulk-reject` / `ws-review-bulk-approve` 同一行 (4) 標記員清單 `ws-review-annotator-list`（每列 `ws-review-annotator-row` 帶 `data-annotator` 屬性，含帳號 `ws-review-annotator-name`、依輸出類型呈現的標記值 `ws-review-annotator-answer`（`single_dim` / `multi_dim` 為單一 result tag——`multi_dim` 以 `[v1, v2, …]` 依維度序陣列格式呈現各維度值；依 FR-014A 偏差規則著色，且與 `annotation-list` 展開明細的標記結果 tag 使用相同視覺樣式；`entity_recognition` 為與標記員「實體列表」同源的實體列——含實心型別色底徽章（顏色取自任務 entity config）、標記文字、`(start, end)` token 位置與可操作的「刪除」按鈕，見 FR-014M；`relation_identification` 為與標記員「關係識別」清單同源的三元組列——含 token 位置、觸發詞 pill、類型徽章與可操作的「類型」／「刪除」按鈕，見 FR-014L）、逐列決策按鈕 `ws-review-row-reject` / `ws-review-row-approve`；清單最上方若目前登入使用者已提交，固定插入 `data-annotator="current"` 的「目前標記員」列，其餘列依 `REVIEWER_MOCK_ANNOTATORS` 呈現，見 FR-014J）(5) 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，規則不變，見 FR-024L-1）；各區塊皆提供直接修正入口
-  - 原始文本卡（`ws-review-source-text`，`outputs[]` 含 `entity_recognition` 或 `relation_identification` 時）：中欄最上方渲染「原始文本」卡；任務含 `entity_recognition` 輸出時於原始輸入文字內以行內高亮（`ws-review-source-mark`）呈現所有標記員實體結果的聯集，每個高亮片段帶型別色淡底＋底線＋實心型別徽章，顏色取自任務 entity config（見 FR-014K、AC-3.17）；純 relation 任務改高亮資料紀錄的 evidence 實體（見 FR-014L、AC-3.18），紀錄無 evidence 實體欄位時顯示純文字
-  - 必要元素：批次操作（`全部通過` / `全部退回`），呈現方式需接近 checkbox 勾選
-  - 必要元素：toolbar 或底部操作列提供 `送出審核` 按鈕（`ws-review-submit-btn`）；送出前需驗證當前樣本所有 outKey × 標記員組合皆已有決策，否則顯示 toast「請完成每位標記員的審核決策」並中止（見 FR-014H）
-  - 操作順序：`退回` 置左，`通過` 置右；批次操作與逐列操作一致
-  - 按鈕視覺一致性：工作區 reviewer 的批次與逐列 `退回 / 通過` 按鈕，必須與 `annotation-list` reviewer 視圖使用完全一致的 icon 與樣式規格；包含 `✕ / ✓` icon 呈現方式、按鈕內距、色彩、邊框、hover、focus、active filled state，不可使用另一套按鈕結構替代
-  - 版面排列（Desktop）：審查說明文案需與批次操作按鈕位於同一行，文案在左、`全部退回 / 全部通過` 在右
-  - 狀態回饋：批次操作按鈕需支援 active/inactive 兩態，active 態沿用逐列 `通過 / 退回` 的深色實心視覺；再次點擊 active 態時需取消整筆批次決策；`aria-pressed` 僅在該 outKey 所有標記員列決策同值時為 `true`（見 FR-014G）
-  - 逐筆按鈕行為：逐筆 `通過 / 退回` 按鈕點擊後切換為 active 深色實心；再次點擊當前 active 按鈕時視為取消該筆決策，回到未選取狀態；逐筆決策狀態與批次按鈕狀態保持同步
-  - 修正入口：全部 8 個輸出類型皆提供 row-level 直接修正控制項，控制項重用對應 annotator 作答互動控件並以 annotator 提交結果為初始值（seed），不得另建輸出類型專屬修正介面；由 reviewer 新增/修改的項目需以簡單色彩狀態區分（例如淺綠底/綠色邊框），頁面內不需額外顯示逐筆操作的文字 audit
+  - 審查列結構（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染，見 FR-014E）：由上至下固定為 (1) 型別標題（`single_dim` / `multi_dim` 類型於標題旁另顯示彙總結果標籤）(2) 標記分布統計盒 `ws-review-stats`（chip「標記分布統計」+ 渲染時依當前標記員清單計算的統計文字，見 FR-014F；並列同步既有 標籤分布 / 分數統計 / entity diff / triple 清單 / 文字比對呈現，依 FR-024L 對應規則）(3) 審查說明文案 `ws-review-note`（v3.0.0 起：本行不再與批次操作同列，`ws-review-bulk-reject`／`ws-review-bulk-approve` 已廢止，取而代之為「套用多數決至全部分歧項」`ws-review-apply-majority`，見 FR-039） (4) 標記員清單 `ws-review-annotator-list`（每列 `ws-review-annotator-row` 帶 `data-annotator` 屬性，含帳號 `ws-review-annotator-name`、依輸出類型呈現的標記值 `ws-review-annotator-answer`（`single_dim` / `multi_dim` 為單一 result tag——`multi_dim` 以 `[v1, v2, …]` 依維度序陣列格式呈現各維度值；依 FR-014A 偏差規則著色，且與 `annotation-list` 展開明細的標記結果 tag 使用相同視覺樣式；`entity_recognition` 為與標記員「實體列表」同源的實體列——含實心型別色底徽章（顏色取自任務 entity config）、標記文字、`(start, end)` token 位置與可操作的「刪除」按鈕，見 FR-014M；`relation_identification` 為與標記員「關係識別」清單同源的三元組列——含 token 位置、觸發詞 pill、類型徽章與可操作的「類型」／「刪除」按鈕，見 FR-014L；一致/分歧狀態以 `ws-review-consensus-badge` 呈現，見 FR-040）；清單最上方若目前登入使用者已提交，固定插入 `data-annotator="current"` 的「目前標記員」列，其餘列依 `REVIEWER_MOCK_ANNOTATORS` 呈現，見 FR-014J）(5) gold 仲裁區（標題「直接修正」沿用、`ws-review-correct-{outKey}`，seed 改為共識合併結果，見 FR-042）；各區塊皆提供仲裁/覆寫入口
+  - 原始文本卡（`ws-review-source-text`，`outputs[]` 含 `entity_recognition` 或 `relation_identification` 時）：中欄最上方渲染「原始文本」卡；任務含 `entity_recognition` 輸出時於原始輸入文字內以行內高亮（`ws-review-source-mark`）呈現所有標記員實體結果的聯集，完全一致片段為實線、部分一致片段為虛線＋分數徽章，顏色取自任務 entity config（見 FR-014K、FR-034、AC-3.17、AC-3.23）；純 relation 任務改高亮資料紀錄的 evidence 實體（見 FR-014L、AC-3.18），紀錄無 evidence 實體欄位時顯示純文字
+  - 必要元素（v3.0.0 起）：「套用多數決至全部分歧項」（`ws-review-apply-majority`），呈現方式接近既有批次操作按鈕視覺（延續原「呈現方式需接近 checkbox 勾選」之視覺基調），取代已廢止的「全部通過 / 全部退回」（見 FR-039）
+  - 必要元素：toolbar 或底部操作列提供 `送出審核` 按鈕（`ws-review-submit-btn`）；`dry_run` 下送出前需驗證當前樣本所有 outKey 之分歧項皆已有 gold 值，一致項不需額外動作，否則顯示 toast「請先裁定所有分歧項目」並中止（見 FR-041、AC-3.29）
+  - 操作順序（v3.0.0 起）：一致項的「通過」語意預先點亮於左、分歧項裁定操作於右，覆寫入口沿用既有退回/修改操作位置
+  - 按鈕視覺一致性（v3.0.0 起）：仲裁區內覆寫/裁定所用之退回、修正相關按鈕，其 icon（`✕ / ✓`）、內距、色彩、邊框、hover、focus、active filled state 沿用既有工作區按鈕樣式規格，不另建第二套按鈕結構；「套用多數決至全部分歧項」按鈕獨立樣式，不與 `annotation-list` 逐列 `退回 / 通過` 按鈕共用同一視覺規格
+  - 版面排列（Desktop，v3.0.0 起）：審查說明文案 `ws-review-note` 與「套用多數決至全部分歧項」按鈕位於同一行，文案在左、按鈕在右
+  - 狀態回饋（v3.0.0 起）：一致項狀態徽章 `ws-review-consensus-badge` 依 `ADJUDICATION_STATUS` 呈現淡化色階預接受（非 disabled），覆寫後轉為 `overridden`（見 FR-037、FR-040）
+  - 逐筆覆寫行為（v3.0.0 起）：一致項可透過既有退回/修改入口覆寫（狀態轉 `overridden`）；分歧項經裁定（手動選取、編輯或套用多數決）後狀態轉 `adjudicated`；狀態變更即時反映於 `ws-review-consensus-badge`
+  - 修正入口（v3.0.0 起）：全部 8 個輸出類型皆提供 row-level 仲裁控制項，控制項重用對應 annotator 作答互動控件並以共識合併結果為初始值（seed，見 FR-042），不得另建輸出類型專屬修正介面；由 reviewer 覆寫/裁定的項目需以簡單色彩狀態區分（例如淺綠底/綠色邊框），頁面內不需額外顯示逐筆操作的文字 audit
 - 區塊 B：`右欄 History（歷程頁籤）`
   - 承載位置：右欄 `歷程` 頁籤（與 annotator 視角共用同一頁籤結構，見 `GUIDELINE_PANEL_TABS`）
   - 必要元素：操作者角色、時間、動作（儲存/提交/決策）、對應輸出類型摘要
@@ -349,31 +363,68 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 | `ws-review-row` | 單一輸出類型審查列容器 | 每個 outKey 一列，依 `outputs[]` 順序渲染 |
 | `ws-review-stats` | 標記分布統計盒 | chip「標記分布統計」+ 渲染時計算的統計文字（FR-014F） |
 | `ws-review-note` | 審查說明文案 | 固定文案（見區塊 A 必要元素） |
-| `ws-review-bulk-reject` / `ws-review-bulk-approve` | 批次「全部退回」/「全部通過」按鈕 | 三態 toggle，`aria-pressed` 僅全列同值時為 `true`（FR-014G） |
-| `ws-review-annotator-list` | 標記員清單容器 | |
-| `ws-review-annotator-row` | 單一標記員列 | 帶 `data-annotator` 屬性（帳號或 `current`） |
-| `ws-review-annotator-name` | 標記員帳號顯示 | |
-| `ws-review-annotator-answer` | 該標記員本輸出類型答案呈現 | |
-| `ws-review-row-reject` / `ws-review-row-approve` | 逐列「退回」/「通過」按鈕 | 三態 toggle（FR-014B） |
-| `ws-review-correct-{outKey}` | 直接修正控件 | 既有規則不變（FR-024L-1） |
-| `ws-review-submit-btn` | 「送出審核」按鈕 | 送出前驗證見 FR-014H |
+| `ws-review-bulk-reject` / `ws-review-bulk-approve` | ~~批次「全部退回」/「全部通過」按鈕~~ | **已廢止（v3.0.0）**：批次全通過/全退回隨舊模型廢止；dry_run 分歧項快速處理改用 `ws-review-apply-majority` |
+| `ws-review-annotator-list` | 標記員清單容器 | v3.0.0 起僅 `dry_run` 適用；`official_run` 不渲染（FR-044） |
+| `ws-review-annotator-row` | 單一標記員列 | 帶 `data-annotator` 屬性（帳號或 `current`）；v3.0.0 起僅 `dry_run` 適用 |
+| `ws-review-annotator-name` | 標記員帳號顯示 | 同上，僅 `dry_run` |
+| `ws-review-annotator-answer` | 該標記員本輸出類型答案呈現 | 同上，僅 `dry_run` |
+| `ws-review-row-reject` / `ws-review-row-approve` | 逐列/型別標題列「退回」/「通過」按鈕 | v3.0.0 起：`dry_run` 已由共識/gold 模型取代（不再作為個別標記員通過/退回入口）；`official_run` 移至型別標題列右側，代表單筆審核決策（見 AC-6.3、FR-014B、FR-044） |
+| `ws-review-correct-{outKey}` | 直接修正控件 | `dry_run` 升級為 gold 仲裁區（seed=合併共識，見 FR-042）；`official_run` 沿用既有 seed=annotator 提交規則（FR-024L-1、FR-044） |
+| `ws-review-submit-btn` | 「送出審核」按鈕 | `dry_run` 送出前驗證見 FR-041；`official_run` 送出前驗證見 FR-044 |
+| `ws-review-consensus-badge`（v3.0.0 新增） | 逐項一致/分歧狀態徽章 | 依 `ADJUDICATION_STATUS` 呈現（FR-040） |
+| `ws-review-apply-majority`（v3.0.0 新增） | 「套用多數決至全部分歧項」按鈕 | 僅 `dry_run`；取代已廢止批次按鈕（FR-039） |
+| `ws-review-set-draft`（v3.0.0 新增） | `free_text`「設為底稿」單選 | 僅 `free_text` 且 `dry_run`（FR-036） |
+| `ws-review-gold-status`（v3.0.0 新增） | 樣本層級 gold 狀態徽章 | `draft` / `gold_confirmed`（FR-041） |
 
-> 本版決策一律以「標記員 × 輸出類型」為單位透過上列逐列 testid 呈現；不再提供不區分標記員的單一決策入口。
+> **v3.0.0 起**：決策維度改依 `run_type` 分流——`dry_run` 以「輸出類型 × 合併項」為單位透過共識/gold 相關 testid 呈現；`official_run` 以「標記員（僅目前標記員）× 輸出類型」為單位，決策入口收斂為型別標題列的 `ws-review-row-reject` / `ws-review-row-approve`。原「本版決策一律以『標記員 × 輸出類型』為單位」措辭自本版起僅適用 `official_run`。
 
 **行為規則**：
 
-- Reviewer 可於 Dry Run 協助產出標準答案（多數決、IAA 輔助判讀或手動確認）。
+> **v3.0.0 起**：以下行為規則除另行標註者外，皆為 `run_type = dry_run` 情境；`official_run` 的對應行為規則見使用者故事 6。
+
+- Reviewer 於 Dry Run 依共識合併結果產出標準答案（一致項預接受、分歧項經多數決輔助或手動 gold 仲裁確認，見 FR-031 ~ FR-036）。
 - Reviewer 操作必須留下完整審計資訊，供後續品質追溯。
 - Reviewer 與 Annotator 共用相同樣本來源契約與導覽骨架，避免視圖不一致。
 - Reviewer 與 Annotator 工作區皆不顯示中欄任務標題卡；右欄任務說明摘要顯示的任務名稱必須優先使用 `task_id` 對應的實際任務名稱，兩種視角共用同一名稱來源。僅在缺少任務上下文時，才可退回輸出類型層級的預設文案。
 - 審查呈現與修正能力完全由 `outputs[].type` 決定，不得依任務名稱或個別任務硬編分支；新增輸出類型時只需擴充 registry 對應的呈現規則，不需修改核心審查流程。
-- 全部 8 個輸出類型皆提供 Reviewer `通過 / 退回` 決策，並皆提供直接修改標記值入口；修正控件必須重用對應 annotator 作答互動控件（單選 chip／階層多選器／slider＋number input／Token 網格／entity 建構器／relation 建構器／textarea），不得為任一輸出類型另建修正專屬介面。
-- Reviewer 對任一輸出類型執行直接修正時，系統必須保留 annotator 原始提交、reviewer 修正後結果、修正 diff、Reviewer 身分、時間與最終決策，供品質追溯。
-- `通過` 表示該筆標記有效；若 Reviewer 對該筆有直接修正，則表示修正後結果有效。`退回` 表示該筆標記狀態回到未標記，由原標記員重新標記（此行為於「目前標記員」列由 FR-014I 落地為真實狀態回退；`REVIEWER_MOCK_ANNOTATORS` 的模擬標記員列因無對應可回退的即時使用者狀態，僅記錄決策不觸發狀態回退）。
-- 標記分布統計盒（`ws-review-stats`）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；已標記為 Bypass 的標記員結果不計入統計（見 FR-014F）。
-- 工作區 reviewer 的「送出審核」（`ws-review-submit-btn`）必須驗證當前樣本所有 outKey × 標記員組合皆已有決策，缺值時顯示 toast「請完成每位標記員的審核決策」並中止（見 FR-014H）。
-- 本模組以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）呈現除目前登入使用者外的標記員列，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；此為 prototype 資料模擬機制（見 `ReviewerMockRow（Prototype）`、FR-014J）。
-- 手機版（`<= MOBILE_BP`）Reviewer 工作區中，批次操作區需右對齊；各標記員列的 result tag 與逐列 `退回 / 通過` 按鈕也需靠右對齊，維持一致的行尾操作視覺。
+- （v3.0.0 起修訂）全部 8 個輸出類型於 `dry_run` 皆提供仲裁區直接修改標記值入口（不再是逐標記員 `通過 / 退回` 決策，改為一致項預接受可覆寫、分歧項裁定，見 FR-031 ~ FR-041）；修正控件必須重用對應 annotator 作答互動控件（單選 chip／階層多選器／slider＋number input／Token 網格／entity 建構器／relation 建構器／textarea），不得為任一輸出類型另建修正專屬介面。
+- （v3.0.0 起修訂）Reviewer 於 `dry_run` 仲裁區執行修正時，系統必須保留修正前共識（consensus）、reviewer 修正後 gold 結果、修正 diff、Reviewer 身分、時間與最終仲裁狀態，供品質追溯（見 FR-042、AC-3.9）。
+- （**official_run 沿用**）「目前標記員」被 `退回` 時的狀態回退機制沿用不變，僅適用範圍收斂為 `official_run`（見 FR-014I、AC-3.15、AC-6.4）；`dry_run` 不提供逐標記員通過/退回，個人品質問題交由 IAA 閘門與重新試跑處理，不觸發個別標記員狀態回退。
+- 標記分布統計盒（`ws-review-stats`，僅 `dry_run` 適用）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；已標記為 Bypass 的標記員結果不計入統計（見 FR-014F、FR-038）。
+- 工作區 reviewer 的「送出審核」（`ws-review-submit-btn`）於 `dry_run` 下驗證當前樣本所有 outKey 的分歧項皆已有 gold 值，缺值時顯示 toast「請先裁定所有分歧項目」並中止（見 FR-041、AC-3.29）；`official_run` 驗證規則見 FR-044、AC-6.5。
+- 本模組於 `dry_run` 以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）呈現除目前登入使用者外的標記員列，供 13 個任務 × 8 種輸出類型的審查流程端到端驗證；此為 prototype 資料模擬機制（見 `ReviewerMockRow（Prototype）`、FR-014J）；`official_run` 不使用模擬標記員（見 FR-044）。
+- 手機版（`<= MOBILE_BP`）Reviewer 工作區中（`dry_run`），套用多數決按鈕與標記員清單需右對齊；各標記員列的 result tag 與逐列裁定操作也需靠右對齊，維持一致的行尾操作視覺。
+
+---
+
+### 使用者故事 6 — Reviewer Official Run 單標記員審核（優先級：P1）（v3.0.0 新增）
+
+Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記員」單筆真實提交逐輸出類型完成通過/退回與必要修正，不涉及多標記員共識或聚合統計；此為使用者故事 3（dry_run 共識合併）model 分流後對應的 official_run 端行為。
+
+**此優先級原因**：official_run 為正式資料產出階段，品質把關依賴單一標記員逐筆審核而非共識機制；若沿用 dry_run 的聚合審查介面，將呈現不存在的多標記員資料，違反單一資料來源原則。
+**獨立測試方式**：以 `reviewer` 身分進入 `run_type=official_run` 的任務，驗證審查列不渲染統計盒/批次操作/多標記員清單、答案直接呈現於修正控件、通過/退回位於型別標題列右側，並可完成送出審核。
+
+**驗收情境**：
+
+1. **AC-6.1**：**Given** `run_type=official_run` 且 `role=reviewer`，**When** 進入工作區，**Then** 審查列不得渲染標記分布統計盒（`ws-review-stats`）、批次操作列（`ws-review-bulk-reject`/`ws-review-bulk-approve`）、偏差著色與多標記員清單（`ws-review-annotator-list`），且不得以空殼 DOM 形式殘留上述元件。
+2. **AC-6.2**：**Given** `run_type=official_run`，**When** reviewer 檢視審查列，**Then** 該筆樣本「目前標記員」的答案必須直接 seed 進修正控件（控件兼具顯示與編輯功能），不得另外渲染一份唯讀答案列。
+3. **AC-6.3**：**Given** `run_type=official_run`，**When** reviewer 檢視審查列，**Then** 通過/退回操作位於該輸出類型標題列右側（卡片語意為單筆審核項），且點擊行為與既有逐列 active/inactive toggle 一致（沿用 FR-014B）。
+4. **AC-6.4**：**Given** `run_type=official_run` 且 reviewer 對「目前標記員」的某 outKey 判定為 `退回`，**When** 送出審核成功，**Then** 系統依既有 FR-014I 機制將該筆樣本狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件、於歷程面板以紅色徽章顯示（同 AC-3.15）。
+5. **AC-6.5**：**Given** `run_type=official_run`，**When** reviewer 點擊「送出審核」（`ws-review-submit-btn`），**Then** 驗證條件收斂為「當前樣本每個 outKey 皆已有決策」，任一 outKey 缺值時顯示 toast 並中止送出；全部 outKey 皆有決策時方可送出成功。
+
+**介面定義（需與 IA 導覽語意一致）**：
+
+- 區塊 A：`中欄審查操作區（official_run）`
+  - 審查列結構：每個 outKey 一列，依序為 (1) 型別標題（右側附通過/退回操作） (2) 答案控件（seed=目前標記員提交結果，兼具顯示與編輯） (3) 直接修正/裁定即發生於同一控件，不另立「直接修正區」標題
+  - 明確排除：不渲染 `ws-review-stats`、`ws-review-bulk-reject`/`ws-review-bulk-approve`、`ws-review-annotator-list` 及其子元素
+  - 必要元素：toolbar 或底部操作列提供 `送出審核` 按鈕（`ws-review-submit-btn`），驗證規則見 AC-6.5
+
+**行為規則**：
+
+- 本故事所有規則僅適用 `run_type = official_run`；`dry_run` 見使用者故事 3。
+- Reviewer 對任一輸出類型執行修正時，系統仍須保留 annotator 原始提交、reviewer 修正後結果、修正 diff、Reviewer 身分、時間與最終決策，供品質追溯（沿用 FR-024L-2）。
+- 修正控件必須重用對應 annotator 作答互動控件並以 annotator 提交結果為初始值（seed），不得為任一輸出類型另建修正專屬介面（沿用 FR-024L-1）。
+- 「目前標記員」被退回時的狀態回退與歷程事件規則沿用 FR-014I，不因本故事新增而改變其實作，僅明確其適用範圍為 `official_run`。
 
 ---
 
@@ -443,6 +494,19 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - 清單中樣本鎖定狀態變更（未鎖定→鎖定）時，點擊進入需即時阻擋並提示。
 - 說明檔案連結失效時，不影響標記主流程，但需顯示可追蹤錯誤訊息。
 
+**v3.0.0 新增（dry_run 共識合併 / gold 仲裁 / official_run 單標記員邊界情境）**：
+
+- reviewer 仲裁到一半離開工作區：已裁定或已預接受的項目須保留狀態草稿，返回同一樣本時續接既有狀態，不得重置為初始未裁定狀態。
+- 樣本已達 `gold_confirmed` 後 reviewer 重新開啟編修：`GOLD_STATUS` 須退回 `draft`，新增一筆 `gold_reopened` 歷程事件，且不得覆寫或刪除先前既有的歷程事件。
+- `official_run` 樣本被退回、annotator 重新標記後再次送審：系統須清除該筆舊有審核決策狀態（不得沿用前次「已通過」殘留狀態），歷程僅以追加方式記錄新事件，不覆寫舊事件。
+- 一致項（`consensus`）reviewer 自行輸入第三種不在任何標記員答案中的值：狀態須轉為 `overridden` 並留痕（原共識值、覆寫後值、操作者、時間）。
+- Bypass 排除後可比對答案少於 2 份：該項強制歸為 `divergent`，不得因樣本數不足而回退為一致（見 FR-038、AC-3.27）。
+- 分歧項裁定時 reviewer 提供的 gold 值與三位標記員任一答案皆不相同（自行修正）：系統須允許此操作，並保留對全部原始答案的 diff（而非僅對其中一份）。
+- IAA 未達標而開啟新一輪試標回合：舊回合已確認的 gold 值須維持可追溯（不得刪除或覆寫），新回合的清單與 gold 集合須獨立建立，不得與舊回合混用。
+- 多分頁同時對同一樣本執行仲裁：沿用既有 `CONFLICT_RESOLUTION_POLICY = optimistic-lock-with-version-check`，版本衝突時阻擋覆寫並提示手動合併（不因仲裁模型而另立機制）。
+- 當前樣本所有分歧項皆已 `gold_confirmed`，但任務層級 IAA 尚未計算完成：IAA 閘門狀態須顯示為 `pending`，不得誤判為已通過或已失敗。
+- `official_run` 決策已完成但尚未點擊「送出審核」即離開工作區：決策須維持草稿狀態，並依既有 autosave 機制保留，不得遺失。
+
 ## 需求規格 *(必填)*
 
 ### 功能需求
@@ -479,20 +543,35 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-013C**: 工作區中欄底部必須提供操作列：左側自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`，對應 `AUTOSAVE_TRIGGERS`），右側 `儲存草稿` 與提交按鈕。
 - **FR-013D**: 中欄題目內容（Evidence 與 input 欄位）與標記控制項必須以獨立卡片區隔；卡片切分依欄位角色與輸出類型結構決定，不得依任務名稱或個別輸出類型硬編分支。
 - **FR-013E**: 卡片邊框必須是題目/標記區塊的唯一外框：題目卡內 input 內容直接呈現、不得再包內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）；`entity_recognition` + `relation_identification` 整合模式的整合預覽區塊不得於卡片內再包一層外框。Bypass 選項自身的虛線外框為刻意設計，必須保留。此規則以結構性樣式覆寫達成，一體適用所有輸出類型，不得逐類型硬編。
-- **FR-014**: Reviewer 模式必須支援通過、退回、修正、刪除標記結果。
-- **FR-014A**: Reviewer 視圖（workspace）中，`single_dim` / `multi_dim` 類任務每位標記員的維度值 result tag 必須依該筆樣本跨標記員統計（mean/std，Bypass 不計入）之偏差程度著色：任一維度偏差超過 `1.5·std` 為紅、超過 `1·std` 為藍、其餘為綠（含 `std = 0`；優先順序紅 > 藍 > 綠）；標記 Bypass 的標記員列不著色。著色演算法必須與 `annotation-list` reviewer 視圖取自同一單一實作來源，不得兩處各自計算；`multi_dim` 的 result tag 以 `[v1, v2, …]` 陣列格式依維度序呈現為單一 tag，且 workspace 與 `annotation-list` 的 result tag 必須使用相同視覺樣式。
-- **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態。
+- **FR-014**: Reviewer 模式必須支援通過、退回、修正、刪除標記結果（v3.0.0 起：`official_run` 維持本條字面語意；`dry_run` 的「通過/退回」由共識/gold 仲裁狀態取代，「修正/刪除」對應分歧項裁定與一致項推翻，見 FR-030 ~ FR-043）。
+- **FR-014A**: （v3.0.0 起僅適用 `dry_run` 多標記員審查列；`official_run` 無多標記員清單，見 FR-044）Reviewer 視圖（workspace）中，`single_dim` / `multi_dim` 類任務每位標記員的維度值 result tag 必須依該筆樣本跨標記員統計（mean/std，Bypass 不計入）之偏差程度著色：任一維度偏差超過 `1.5·std` 為紅、超過 `1·std` 為藍、其餘為綠（含 `std = 0`；優先順序紅 > 藍 > 綠）；標記 Bypass 的標記員列不著色。著色演算法必須與 `annotation-list` reviewer 視圖取自同一單一實作來源，不得兩處各自計算；`multi_dim` 的 result tag 以 `[v1, v2, …]` 陣列格式依維度序呈現為單一 tag，且 workspace 與 `annotation-list` 的 result tag 必須使用相同視覺樣式。
+- **FR-014B**: 工作區 reviewer 視圖的逐筆 `通過 / 退回` 按鈕需支援 active/inactive 切換；再次點擊當前 active 按鈕時，視為取消該筆決策並回到未選取狀態（v3.0.0 起：`dry_run` 已由共識/gold 模型取代，不再作為個別標記員通過/退回入口；本規則僅保留適用於 `official_run` 型別標題列的單筆審核決策，見 FR-044、AC-6.3）。
 - **FR-014C**: 工作區中欄不得渲染任務標題卡（任務名稱 header 與卡內語言切換鈕），annotator 與 reviewer 視角皆適用；任務名稱由右欄「說明與檔案」的任務說明摘要呈現，名稱來源需與 Dashboard / annotation-list 的任務名稱一致（依 `task_id` 對應），不得以輸出類型通稱取代。
 - **FR-014D**: 工作區語言切換必須綁定共用 sidebar 的語言切換鈕（含 mobile 版），與其他頁面行為一致；切換後需重新套用工作區 i18n strings 並重繪工作區，語言選擇沿用全站共用的儲存機制。
-- **FR-014E**: 工作區 reviewer 審查列（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染）必須依序呈現：型別標題（維度型另顯示彙總結果標籤）→ 標記分布統計盒（`ws-review-stats`）→ 審查說明文案（`ws-review-note`）與批次操作（`ws-review-bulk-reject` / `ws-review-bulk-approve`）同一行 → 標記員清單（`ws-review-annotator-list`；每列 `ws-review-annotator-row[data-annotator]` 含 `ws-review-annotator-name` / `ws-review-annotator-answer` / `ws-review-row-reject` / `ws-review-row-approve`）→ 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，依 FR-024L-1 不變）。
-- **FR-014F**: 標記分布統計盒（`ws-review-stats`）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；依輸出類型套用下列規則：`single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification` 以 `{label}×{n}` 依出現次數降冪並以 `·` 串接（`sequence_tagging` 計 tag、`entity_recognition` 計實體類型、`relation_identification` 計關係類型；此統計盒為 FR-024L 既有的 entity diff／triple 清單呈現之外的額外彙總資訊，不取代該呈現）；`single_dim` 顯示 `mean : m , std : s`（2 位小數）；`multi_dim` 以多行區塊呈現——第一行 `mean [m1, m2, …]`、第二行 `std [s1, s2, …]`（皆 2 位小數、依維度序），其後每個維度一行 `±1.5std {維度名} : lo~hi`（界值 3 位小數，lo/hi = mean ∓ 1.5·std；維度標籤為 config 維度名稱，不得逐任務硬編縮寫），並依 FR-014A 的 ±1.5std 規則對各標記員列的 result tag 著色；`free_text` 顯示固定說明句「自由文本任務 — 請並列比對各標記員結果」。已標記為 Bypass 的標記員結果不計入統計。
-- **FR-014G**: 工作區 reviewer 批次按鈕（`ws-review-bulk-reject` / `ws-review-bulk-approve`）之 `aria-pressed` 僅在該 outKey 所有標記員列決策同值時為 `true`；任一標記員列決策不同或缺值時為 `false`。再次點擊當前已為 active（同值）的批次按鈕，視為取消整列同值決策並回到未選取狀態，與逐筆按鈕（FR-014B）的 toggle 行為保持一致。
-- **FR-014H**: 工作區 reviewer 「送出審核」按鈕（`ws-review-submit-btn`）點擊時，必須驗證當前樣本所有 outKey × 標記員組合皆已有決策（`approve` / `reject`）；任一組合缺值時顯示 toast「請完成每位標記員的審核決策」並中止送出。送出成功時，歷程必須新增逐標記員、逐輸出類型的決策紀錄（對誰、哪個輸出類型、做了什麼決策）。
-- **FR-014I**: 「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 於送出審核時被判定為 `退回`，系統必須將該 annotator bucket 對應樣本的狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板必須以紅色徽章顯示。`REVIEWER_MOCK_ANNOTATORS` 的模擬標記員列因無對應可回退的即時使用者狀態，僅記錄決策，不觸發狀態回退。
-- **FR-014J**: 工作區 reviewer 模式必須以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）於每筆樣本每個 outKey 呈現三位標記員結果列；若目前登入使用者（annotator 身分）於該樣本已提交，系統必須於標記員清單最上方額外插入「目前標記員」列（`data-annotator="current"`）。此為 prototype 資料模擬機制，供 reviewer 端到端驗證使用，見 `ReviewerMockRow（Prototype）`。
-- **FR-014K**: 當 `outputs[]` 含 `entity_recognition` 時，工作區 reviewer 視圖必須於中欄最上方渲染「原始文本」卡（`ws-review-source-text`）：於原始輸入文字內以行內高亮（`ws-review-source-mark`）呈現**所有標記員實體結果的聯集**（Bypass 列不納入），每個高亮片段帶型別色淡底＋底線＋實心型別徽章；實體依其文字於原始文本中首次出現的位置定位，無法定位或與已放置片段重疊的實體略過高亮（仍列於標記員清單）。高亮與徽章顏色必須取自任務 entity config（不得硬編色盤），且與標記員清單的型別徽章同色。標記員清單中每位標記員的 `entity_recognition` 答案必須以逐行「實體類型徽章＋標記文字」呈現，徽章為實心型別色底。
-- **FR-014L**: 當 `outputs[]` 含 `relation_identification` 時：(1) 工作區 reviewer 標記員清單中每位標記員的關係答案必須與 annotator「關係識別」清單共用同一列渲染實作（單一實作來源，禁止並存第二份三元組列樣板）——每列（`relation-triple-row`）含粗體主體/客體實體文字附 `(start,end)` token 位置、關係觸發詞 pill 附位置、語意關係類型徽章「類型：X」（僅類型存在且屬於任務 `relation_types` 時顯示），列右側為可操作的「類型」下拉（可切換／取消該列語意關係類型；取消後該列不計入標記分布統計）與「刪除」按鈕，操作即時生效並重新渲染統計；token 位置與觸發詞由資料紀錄的 ner 形態三元組於渲染時以主體＋客體實體文字配對解析（關係類型一致者優先，類型變更後仍錨定同一實體對），配對失敗或紀錄無 ner 形態三元組（如 absa 形態）時退回無位置列，與 annotator 視圖一致。(2) 工作區 reviewer 中欄最上方必須渲染「原始文本」卡（`ws-review-source-text`）：任務同時含 `entity_recognition` 輸出時依 FR-014K 呈現標記聯集高亮；純 relation 任務（實體僅為 evidence scaffolding）改高亮資料紀錄的 evidence 實體並附實心型別徽章，型別配色沿用共用色盤依型別首次出現順序配色（與 annotator 關係視圖的開場高亮同源）；紀錄無 evidence 實體欄位時顯示純文字。
-- **FR-014M**: 當 `outputs[]` 含 `entity_recognition` 時，工作區 reviewer 標記員清單中每位標記員的實體答案必須與 annotator「實體列表」共用同一列渲染實作（單一實作來源，禁止並存第二份實體列樣板）——每列（`entity-list-row`）含實心型別色底徽章（顏色取自任務 entity config，不得硬編色盤）、標記文字、`(start, end)` token 位置（僅位置存在時顯示）與列右「刪除」按鈕，刪除即時生效並重新渲染標記分布統計。token 位置由資料紀錄的實體 span 欄位於渲染時以「文字＋型別」配對解析（單一資料來源——標記員答案維持 `{text, type}` 型別層級）；同文字實體出現多次時依答案順序依序取用未使用的紀錄 span；配對失敗或紀錄無實體 span 欄位時退回無位置列，與 annotator 視圖一致。
+- **FR-014E**: （v3.0.0 起僅適用 `run_type = dry_run`；`official_run` 審查列結構定義於 FR-044，不渲染本條所列統計盒、批次操作與多標記員清單）工作區 reviewer 審查列（`ws-review-row`，每個 outKey 一列，依 `outputs[]` 順序渲染）必須依序呈現：型別標題（維度型另顯示彙總結果標籤）→ 標記分布統計盒（`ws-review-stats`）→ 審查說明文案（`ws-review-note`）與批次操作（`ws-review-bulk-reject` / `ws-review-bulk-approve`）同一行 → 標記員清單（`ws-review-annotator-list`；每列 `ws-review-annotator-row[data-annotator]` 含 `ws-review-annotator-name` / `ws-review-annotator-answer` / `ws-review-row-reject` / `ws-review-row-approve`）→ 直接修正區（標題「直接修正」+ `ws-review-correct-{outKey}`，依 FR-024L-1 不變）。
+- **FR-014F**: （v3.0.0 起僅適用 `dry_run`；`official_run` 不渲染統計盒，見 FR-044）標記分布統計盒（`ws-review-stats`）必須於渲染時依當前標記員清單計算，不得使用預先寫死的統計字串；依輸出類型套用下列規則：`single_label` / `multi_label` / `sequence_tagging` / `entity_recognition` / `relation_identification` 以 `{label}×{n}` 依出現次數降冪並以 `·` 串接（`sequence_tagging` 計 tag、`entity_recognition` 計實體類型、`relation_identification` 計關係類型；此統計盒為 FR-024L 既有的 entity diff／triple 清單呈現之外的額外彙總資訊，不取代該呈現）；`single_dim` 顯示 `mean : m , std : s`（2 位小數）；`multi_dim` 以多行區塊呈現——第一行 `mean [m1, m2, …]`、第二行 `std [s1, s2, …]`（皆 2 位小數、依維度序），其後每個維度一行 `±1.5std {維度名} : lo~hi`（界值 3 位小數，lo/hi = mean ∓ 1.5·std；維度標籤為 config 維度名稱，不得逐任務硬編縮寫），並依 FR-014A 的 ±1.5std 規則對各標記員列的 result tag 著色；`free_text` 顯示固定說明句「自由文本任務 — 請並列比對各標記員結果」。已標記為 Bypass 的標記員結果不計入統計。
+- **FR-014G**（已廢止 v3.0.0）：~~工作區 reviewer 批次按鈕（`ws-review-bulk-reject` / `ws-review-bulk-approve`）之 `aria-pressed` 僅在該 outKey 所有標記員列決策同值時為 `true`；任一標記員列決策不同或缺值時為 `false`。再次點擊當前已為 active（同值）的批次按鈕，視為取消整列同值決策並回到未選取狀態，與逐筆按鈕（FR-014B）的 toggle 行為保持一致。~~ `dry_run` 已無批次全通過/全退回按鈕（見 FR-030、FR-039「套用多數決至全部分歧項」為不同語意的替代操作）；`official_run` 本無批次操作。本條規則不再適用於任一 `run_type`，ID 保留不重用。
+- **FR-014H**（已被取代 v3.0.0）：~~工作區 reviewer 「送出審核」按鈕（`ws-review-submit-btn`）點擊時，必須驗證當前樣本所有 outKey × 標記員組合皆已有決策（`approve` / `reject`）；任一組合缺值時顯示 toast「請完成每位標記員的審核決策」並中止送出。送出成功時，歷程必須新增逐標記員、逐輸出類型的決策紀錄（對誰、哪個輸出類型、做了什麼決策）。~~ `dry_run` 的送出驗證改採 FR-041（每個 outKey 之分歧項須有 gold 值，一致項免動作）；`official_run` 的送出驗證改採 FR-044（每個 outKey 對單一標記員須有一筆決策）。ID 保留不重用。
+- **FR-014I**：（v3.0.0 起僅適用 `run_type = official_run`，機制文字維持不變，對應 AC-3.15、AC-6.4；`dry_run` 不再有「目前標記員」列可回退，個別標記品質問題改經 IAA 門檻與重試輪次處理，見 FR-030）「目前標記員」列（`data-annotator="current"`，代表目前登入使用者於該任務的既有提交）任一 outKey 於送出審核時被判定為 `退回`，系統必須將該 annotator bucket 對應樣本的狀態回退為 `待標記`（保留原答案供修改），並新增一筆 `{action:'rejected', role:'reviewer'}` 歷程事件；該事件於歷程面板必須以紅色徽章顯示。`REVIEWER_MOCK_ANNOTATORS` 的模擬標記員列因無對應可回退的即時使用者狀態，僅記錄決策，不觸發狀態回退。
+- **FR-014J**：（v3.0.0 起僅適用 `dry_run`；`official_run` 不使用模擬標記員，直接呈現當前登入標記員的真實提交，見 FR-044）工作區 reviewer 模式必須以固定模擬標記員（`REVIEWER_MOCK_ANNOTATORS`）於每筆樣本每個 outKey 呈現三位標記員結果列；若目前登入使用者（annotator 身分）於該樣本已提交，系統必須於標記員清單最上方額外插入「目前標記員」列（`data-annotator="current"`）。此為 prototype 資料模擬機制，供 reviewer 端到端驗證使用，見 `ReviewerMockRow（Prototype）`。
+- **FR-014K**：（v3.0.0 起為 `dry_run` 基準規則，聯集高亮邏輯由 FR-034 擴充為「精確匹配=實線／部分重疊或僅單一標記員=虛線＋分數徽章」；`official_run` 不渲染標記員聯集，直接以單一標記員之標記結果高亮，見 FR-044）當 `outputs[]` 含 `entity_recognition` 時，工作區 reviewer 視圖必須於中欄最上方渲染「原始文本」卡（`ws-review-source-text`）：於原始輸入文字內以行內高亮（`ws-review-source-mark`）呈現**所有標記員實體結果的聯集**（Bypass 列不納入），每個高亮片段帶型別色淡底＋底線＋實心型別徽章；實體依其文字於原始文本中首次出現的位置定位，無法定位或與已放置片段重疊的實體略過高亮（仍列於標記員清單）。高亮與徽章顏色必須取自任務 entity config（不得硬編色盤），且與標記員清單的型別徽章同色。標記員清單中每位標記員的 `entity_recognition` 答案必須以逐行「實體類型徽章＋標記文字」呈現，徽章為實心型別色底。
+- **FR-014L**：（v3.0.0 起為 `dry_run` 基準規則，聯集/合併邏輯由 FR-034 擴充；`official_run` 不渲染標記員聯集，直接以單一標記員之關係結果呈現，見 FR-044）當 `outputs[]` 含 `relation_identification` 時：(1) 工作區 reviewer 標記員清單中每位標記員的關係答案必須與 annotator「關係識別」清單共用同一列渲染實作（單一實作來源，禁止並存第二份三元組列樣板）——每列（`relation-triple-row`）含粗體主體/客體實體文字附 `(start,end)` token 位置、關係觸發詞 pill 附位置、語意關係類型徽章「類型：X」（僅類型存在且屬於任務 `relation_types` 時顯示），列右側為可操作的「類型」下拉（可切換／取消該列語意關係類型；取消後該列不計入標記分布統計）與「刪除」按鈕，操作即時生效並重新渲染統計；token 位置與觸發詞由資料紀錄的 ner 形態三元組於渲染時以主體＋客體實體文字配對解析（關係類型一致者優先，類型變更後仍錨定同一實體對），配對失敗或紀錄無 ner 形態三元組（如 absa 形態）時退回無位置列，與 annotator 視圖一致。(2) 工作區 reviewer 中欄最上方必須渲染「原始文本」卡（`ws-review-source-text`）：任務同時含 `entity_recognition` 輸出時依 FR-014K 呈現標記聯集高亮；純 relation 任務（實體僅為 evidence scaffolding）改高亮資料紀錄的 evidence 實體並附實心型別徽章，型別配色沿用共用色盤依型別首次出現順序配色（與 annotator 關係視圖的開場高亮同源）；紀錄無 evidence 實體欄位時顯示純文字。
+- **FR-014M**：（v3.0.0 起為 `dry_run` 基準規則，聯集清單由 FR-034 擴充貢獻者標記與一致性徽章；`official_run` 僅呈現單一標記員的實體列表，不含貢獻者標記，見 FR-044）當 `outputs[]` 含 `entity_recognition` 時，工作區 reviewer 標記員清單中每位標記員的實體答案必須與 annotator「實體列表」共用同一列渲染實作（單一實作來源，禁止並存第二份實體列樣板）——每列（`entity-list-row`）含實心型別色底徽章（顏色取自任務 entity config，不得硬編色盤）、標記文字、`(start, end)` token 位置（僅位置存在時顯示）與列右「刪除」按鈕，刪除即時生效並重新渲染標記分布統計。token 位置由資料紀錄的實體 span 欄位於渲染時以「文字＋型別」配對解析（單一資料來源——標記員答案維持 `{text, type}` 型別層級）；同文字實體出現多次時依答案順序依序取用未使用的紀錄 span；配對失敗或紀錄無實體 span 欄位時退回無位置列，與 annotator 視圖一致。
+- **FR-030**（v3.0.0 新增）：工作區 reviewer 視圖呈現方式必須依 `run_type`（`REVIEW_MODEL_BY_RUN_TYPE`）分流：`dry_run` 採共識合併 + gold 仲裁模型（FR-031 ~ FR-043），`official_run` 採單標記員通過/退回模型（FR-044）。原 AC-3.1 所述「Dry Run 與 Official Run 皆顯示同一套通過/退回」模型自本版廢止；`dry_run` 不再提供「退回個人重標」通道，個別標記員的標記品質問題改經任務層級 IAA 門檻（`iaa_gate_passed` / `iaa_gate_failed`）與重試輪次（`trial_round_started`）處理，其判定與觸發邏輯屬 dataset-017 與後端範圍，本規格僅概念性引用、不展開定義。
+- **FR-031**（v3.0.0 新增，對應 AC-3.20）：`single_label` 之共識判定僅接受「所有非 Bypass 標記員選取同一選項」為一致（consensus）；任何票數分布不一致（含 2:1 多數）一律判定為分歧（divergent），不得以多數決自動判定一致。
+- **FR-032**（v3.0.0 新增，對應 AC-3.21）：`multi_label` 之共識合併結果為所有非 Bypass 標記員選取標籤的聯集；聯集中每個標籤依「該標籤獲選人數 ≥ ⌈(N+1)/2⌉」（N 為非 Bypass 標記員數）判定為一致項，未達門檻者為分歧項；每個標籤旁必須顯示 `×n`（獲選人數）。
+- **FR-033**（v3.0.0 新增，對應 AC-3.22）：`single_dim` / `multi_dim` 之共識判定採固定容忍區間門檻：`max − min ≤ DIM_CONSENSUS_TOLERANCE`（逐維度判定，`multi_dim` 任一維度超出門檻即該維度為分歧）；不得採用以 std 為基礎的門檻。既有 ±1.5std 著色（FR-014A、FR-014F）僅作為獨立的視覺化偏差輔助，與本條一致/分歧判定完全解耦，不得混用同一套視覺編碼；一致/分歧狀態改以中性灰階外框徽章呈現（`ws-review-consensus-badge`，見 FR-040），gold 欄位預先帶入該維度平均值（mean）。
+- **FR-034**（v3.0.0 新增，對應 AC-3.23）：`entity_recognition` / `relation_identification` 之共識合併鍵為 `CONSENSUS_MERGE_KEYS`（entity = `start + end + type` 精確匹配；relation = `subj + obj + type` 精確匹配）；精確匹配者為一致項，部分重疊或僅單一標記員提出者為分歧項。聯集清單必須重用 FR-014M（`buildEntityListRow`）／FR-014L（`buildRelationTripleRow`）之列樣式，並附加貢獻者標記與一致性徽章（`ws-review-consensus-badge`）。原始文本聯集高亮（FR-014K、FR-014L）擴充為：完全一致（所有非 Bypass 標記員精確匹配）以實線標示，部分一致（部分重疊或僅單一標記員）以虛線＋分數徽章（如 `2/3`）標示。
+- **FR-035**（v3.0.0 新增，對應 AC-3.24）：`sequence_tagging` 之共識判定為逐 token 多數決：每個 token 位置採該位置獲票最多之 tag 預填 Token 網格並標示為預接受（consensus）；若多數決票數相同（平局）或多數決結果組成的序列不符合任務 `tagging_scheme`（BIO/BIOES）合法性，依 `SEQ_MAJORITY_INVALID_BIO_FALLBACK` 一律判定該 token 為分歧（divergent），不得以非法序列預填。分歧 token 必須以逐標記員的細底線（micro underline，依標記員區分顏色）標示，該底線本身不可點擊（non-clickable），僅提供 hover/focus 顯示各標記員原始標記之 tooltip；唯一修正入口為 Token 網格本身（點擊該 token 重新選定 tag 即完成仲裁），不得另設分歧清單或側欄修正控制。
+- **FR-036**（v3.0.0 新增，對應 AC-3.25）：`free_text` 不提供自動合併或自動選取結果；每位標記員的文本旁必須提供「設為草稿」控制（`ws-review-set-draft`，radio-semantics，同時僅一位可選中），選取後將該標記員文本載入 gold 仲裁文字區（FR-042）供編輯；選取＋後續編輯所產生的差異（diff）必須被追蹤並可於歷程呈現（見 FR-043）。
+- **FR-037**（v3.0.0 新增，對應 AC-3.26）：一致項（consensus）於仲裁區必須以「淡化色階」呈現預接受狀態，不得使用 disabled 樣式（`opacity`、`pointer-events`、`tabindex` 均維持正常互動狀態）；對應之「通過」語意徽章需預先點亮（`aria-pressed="true"`）；旁側必須顯示不可點擊的說明文字「依 N/N 共識預接受」（N 為分母，依 FR-038 排除 Bypass）；容器須提供 `aria-describedby` 說明該狀態可逆。使用者可透過既有的退回/修正入口覆寫一致項，覆寫後狀態轉為 `overridden`（見 FR-040）。
+- **FR-038**（v3.0.0 新增，對應 AC-3.27）：一致/分歧判定之分母必須排除已標記 Bypass 的標記員（與 FR-014F 統計盒排除規則一致）；排除 Bypass 後可比較答案數 < 2 時，該項目不得判定為一致，強制標示為分歧（divergent），並於統計/說明文案中以「N/M 一致 · K 人 Bypass」格式呈現（N=一致人數、M=可比較分母、K=Bypass 人數）。
+- **FR-039**（v3.0.0 新增，對應 AC-3.28）：仲裁區必須提供「套用多數決至全部分歧項」按鈕（`ws-review-apply-majority`），點擊後對當前 outKey 所有分歧項套用其多數決結果（依 FR-031 ~ FR-035 各輸出類型的多數決定義）填入 gold 值；本操作為顯式點擊觸發，不得於頁面載入或切筆時自動套用；套用後單一項目仍可個別覆寫。本按鈕與已廢止的批次全通過/全退回（FR-014G）語意不同，不得視為其功能延續。
+- **FR-040**（v3.0.0 新增）：每個仲裁項目（AdjudicationItem，見關鍵實體）必須具備狀態機 `ADJUDICATION_STATUS = pending | consensus | overridden | divergent | adjudicated`：初始為 `pending`；共識判定完成後一致項轉為 `consensus`、分歧項轉為 `divergent`；`consensus` 項目經覆寫（FR-037）轉為 `overridden`；`divergent` 項目經裁定寫入 gold 值後轉為 `adjudicated`。狀態變更須即時反映於 `ws-review-consensus-badge`。
+- **FR-041**（v3.0.0 新增，對應 AC-3.29）：每筆樣本具備 gold 狀態（GoldRecord，見關鍵實體）`GOLD_STATUS = draft | gold_confirmed`；不提供第二個「確認 gold」送出按鈕——於仲裁控制項中選取或編輯即視為該項目確認（`ws-review-gold-status` 即時反映當前狀態）。「送出審核」（`ws-review-submit-btn`）維持為唯一 CTA；`dry_run` 下點擊送出時，必須驗證每個 outKey 之所有分歧項（`divergent` / `overridden` 狀態）皆已有 gold 值，一致項（`consensus`）不需額外動作即視為已裁定；驗證失敗時顯示 inline 錯誤並跳出 toast「請先裁定所有分歧項目」，並依 UXC-04/UXC-05 捲動聚焦至第一個未裁定項目。
+- **FR-042**（v3.0.0 新增）：`dry_run` 下既有「直接修正區」（FR-014E、FR-024L-1）語意升級為「gold 仲裁區」：初始帶入值（seed）改為共識合併結果（consensus，依 FR-031 ~ FR-035），不再以任一標記員個人提交為初始值——該語意自本版起僅適用 `official_run`（見 FR-044）。原「原始值」/「修正後」顯示語意相應調整為「修正前共識」→「修正後 gold」。
+- **FR-043**（v3.0.0 新增）：標記歷程須新增下列事件動作類型：`overridden`（橘色徽章，一致項被覆寫）、`adjudicated`（藍色徽章，分歧項完成裁定）、`gold_confirmed`（綠色徽章，樣本 gold 狀態確認）、`gold_reopened`（橘色徽章，已確認 gold 被重新開啟，見邊界情況第 2 項）；既有 `approved` / `rejected` 事件類型自本版起僅於 `official_run` 產生（見 FR-044、AC-6.4）。任務層級 IAA 門檻事件（`iaa_gate_passed` / `iaa_gate_failed` / `trial_round_started`）於歷程面板僅概念性提及其存在，詳細觸發與資料結構屬 dataset-017 與後端範圍，不在本規格定義。
+- **FR-044**（v3.0.0 新增，對應 AC-6.1 ~ AC-6.5）：`official_run` 之 reviewer 審查列僅呈現「當前標記員」的真實提交（既有 `run_type` 隔離機制），不得渲染標記分布統計盒（`ws-review-stats`）、批次操作列、FR-014A 之偏差著色，或多標記員清單（`ws-review-annotator-list`）——不得以空殼 DOM 形式存在，須完全不渲染。標記員答案須直接帶入修正/作答控制項（該控制項同時作為顯示與編輯用途，不另外呈現唯讀答案列）。通過／退回控制移至該輸出類型標題列右側（卡片語意 = 單一審查項目）。「送出審核」驗證維持「每個 outKey 皆須有決策」，但範圍收斂為單一標記員（非 FR-014H 原本逐標記員 × 逐輸出類型的矩陣驗證）。退回後回退為待標記並保留原答案供修改之機制沿用 FR-014I／AC-3.15，跨版本不變。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
 - **FR-016B**: 標記歷程必須於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件（儲存/提交/決策）合併為單一時序清單，每筆事件包含操作者角色、時間、動作與對應輸出類型作答摘要，最新事件在前；尚無紀錄時顯示空狀態文案。
@@ -537,9 +616,11 @@ Reviewer 在同一工作區執行審查，依任務 `outputs[]` 逐一查看每�
 - **FR-024M**: 當 `field_role_map` 中存在對應輸出類型的 `output` 角色欄位時，`annotation-workspace` 初始化該筆樣本時必須以該欄位實際值初始化對應輸出類型的作答控制項，呈現為 annotator-visible preannotation（可編修、可直接提交），此規則適用全部 8 個 `OUTPUT_TYPE_KEYS`：`single_label` 預選匹配標籤；`multi_label` 以正規化後的 paths 預選；`single_dim` 滑桿設於實際分數值；`multi_dim` 各維度滑桿設於對應維度值；`sequence_tagging` 以符合目前方案且與 Token 等長的可見預標記初始化；`entity_recognition` 以實際實體列表初始化；`relation_identification` 以實際三元組初始化；`free_text` 預填實際答案文字（見 FR-024H-1）。此初始化行為對齊 013 FR-003g-5 的 Step 2 預覽初始化契約。無對應 `output` 角色欄位時，該輸出類型必須依 FR-026 維持空白/未選取狀態。
 - **FR-024M-1**: Output-role prefill 僅限 `field_role_map` 明文映射為 `output` 角色的欄位；未映射任何角色、或映射為 `input`/`evidence` 角色的欄位一律於送達 annotator 前剝除，不得以任何形式（API、前端 state、預覽）下發隱藏的 test-set ground truth（對齊 FR-023、Data Fairness NON-NEGOTIABLE）。
 - **FR-026**: `annotation-workspace` 初始化每一筆樣本時，所有輸出類型的標記控制項（分類選項、階層選擇器、維度 sliders、Token 網格、entity/triple 建構器、textarea 等）必須呈現空白/未選取狀態，**除非該筆樣本已有儲存的標記結果**（`status=saved` 且含有效值，或 `status=submitted`），**或該輸出類型依 FR-024M 具備 Output-role preannotation**。`status=pending`、無儲存值且無 Output-role preannotation 的輸出類型，不得預填任何合成預設選取值（包含數值中間點如 5）；range slider 即使因原生控制項需要視覺 thumb 位置，也必須以未評分狀態區分，且在使用者操作前不得被提交為有效值。
-- **FR-027**: `annotation-list` 在 `role=reviewer` 時，toolbar 右側必須顯示 `送出審核` 按鈕（`i18n: submitReviewLabel`）；`role=annotator` 時不得顯示此按鈕。
+- **FR-027**（v3.0.0 起僅適用 `run_type = official_run`；`dry_run` 已無清單層級送出審核，見 FR-047）：`annotation-list` 在 `role=reviewer` 且 `run_type=official_run` 時，toolbar 右側必須顯示 `送出審核` 按鈕（`i18n: submitReviewLabel`）；`role=annotator` 時不得顯示此按鈕；`run_type=dry_run` 之 reviewer 視圖不顯示此按鈕。
 - **FR-028**: `annotation-list` 頁面必須支援 `labelsuite:langchange` 事件，接收到語言切換後需重新套用 i18n strings（至少包含：頁面副標題、`送出審核` 按鈕文字）。
-- **FR-029**: `annotation-list` 的 `送出審核` 按鈕點擊時，必須驗證當前任務所有樣本中每位標記員皆已完成審核決策（`approved` 或 `rejected`）；若有任一標記員決策為 `null`，顯示 `toastSelectDecision` 錯誤 toast 並中止提交；全部完成後方顯示 `toastReviewSubmitted` 成功 toast。此行為與 `annotation-workspace` 的 `rvSaveBtn` 邏輯一致。
+- **FR-029**（已由清單移除 v3.0.0；`dry_run` 決策改於 workspace 完成，ID 保留不重用）：~~`annotation-list` 的 `送出審核` 按鈕點擊時，必須驗證當前任務所有樣本中每位標記員皆已完成審核決策（`approved` 或 `rejected`）；若有任一標記員決策為 `null`，顯示 `toastSelectDecision` 錯誤 toast 並中止提交；全部完成後方顯示 `toastReviewSubmitted` 成功 toast。此行為與 `annotation-workspace` 的 `rvSaveBtn` 邏輯一致。~~ `run_type = dry_run` 之 `annotation-list` 自 v3.0.0 起為唯讀總覽，不提供 `送出審核` 動作，本條驗證邏輯不再適用；逐標記員決策、共識合併與 gold 送出改於 `annotation-workspace` 完成並驗證（FR-041）。`run_type = official_run` 之清單送出審核驗證改依 FR-048。
+- **FR-047**（v3.0.0 新增並已定案，對應 AC-1.10、AC-1.12、AC-1.13）：`annotation-list` reviewer 視圖必須依 `run_type` 分流呈現：`dry_run` 改為**唯讀總覽**——展開明細保留多標記員答案比對顯示（逐標記員答案摘要 tag、標記分布統計）與一致度/IAA 資訊，移除逐列與批次的通過/退回決策控件，亦不顯示 `送出審核` 按鈕（見 FR-027）；決策入口收斂為每列既有 `編輯` 按鈕（AC-1.3），點擊後導向 `annotation-workspace` 完成共識合併與 gold 仲裁（FR-031 ~ FR-043）。`official_run` 改為每筆樣本一列、單一標記員、不提供展開比對，摘要欄位資料來源改為該標記員之真實提交（`getSubmission`），不得顯示 IAA 或分布統計欄位。
+- **FR-048**（v3.0.0 新增並已定案，對應 AC-1.11）：`annotation-list` 之「送出審核」動作僅存在於 `run_type = official_run`，驗證規則為「每筆樣本一筆決策」（單一標記員 `approved` / `rejected` 皆已填寫方可送出）；`run_type = dry_run` 之 `annotation-list` 自 v3.0.0 起不提供「送出審核」動作（原 FR-029 之清單送出審核驗證邏輯不再適用），逐標記員決策與 gold 送出改於 `annotation-workspace` 完成並驗證（FR-041）。
 
 > **v2.0.0 移除項目**：原 `FR-004D`（保留次分類路由參數）與原 `FR-025`（任務分類 localStorage fallback 機制）隨 taxonomy 遷移一併移除，不再適用；詳見 Changelog。
 
@@ -591,9 +672,11 @@ flowchart LR
 - **TaskProfile（Read-only）**: 從 task-management-013 發布後凍結讀取的任務設定。欄位：`task_id`、`input_type`（`TASK_INPUT_TYPES`）、`outputs[]`（`OutputConfig[]`，每項含 `type`（`OUTPUT_TYPE_KEYS`）與 `config`）、`field_role_map: Record<string, FieldRole>`、`item_pair_labels?: [string, string]`（僅 `input_type = item_pair` 時存在）、`guidelineFiles?: GuidelineFile[]`（`{ name, type, url }`；任務通用的說明檔案清單，供右欄常駐「說明與檔案」呈現與檔案預覽，所有任務共用同一資料形狀，不得為個別任務類型硬編檔案清單文案）、`materializedRuns?: Record<RunType, { round?: number, total: number }>`（由 task-detail run 發布事件建立的 materialized run context；`annotation-list` 資訊卡與 `annotation-workspace` 標記清單筆數優先取對應 `run_type` 的 `total`，未宣告時回退 `datasetRecords` 長度；`dry_run` 且有 `round` 時清單資訊卡顯示試標回合徽章，workspace 左欄標題仍固定為「標記清單」不得附加 run label）。
 - **AnnotationRecord**: 單一樣本的標記結果。欄位：`sample_id`、`answers: OutputAnswer[]`（依 `TaskProfile.outputs[]` 順序，一至多筆）、`note?`（整筆備註）、`version`、`status`（`pending | saved | submitted`）、`annotator_id`、`submitted_at?`。
 - **OutputAnswer**: 單一輸出類型的作答結果。共通欄位：`type`（`OUTPUT_TYPE_KEYS` 之一）、`bypass: boolean`、`note?`（該輸出類型專屬備註，例如 Bypass 原因）、`version`。依 `type` 額外攜帶下列 payload 欄位之一：`single_label` → `{selected: string}`；`multi_label` → `{selected: LabelPath[]}`；`single_dim` → `{value: number}`；`multi_dim` → `{values: Record<string, number>}`；`sequence_tagging` → `{tokens: string[], tags: string[], scheme: string, unit: string}`；`entity_recognition` → `{entities: { id, text, type, start, end }[]}`；`relation_identification` → `{triples: { id, e1Id, relation?, e2Id }[]}`；`free_text` → `{text: string}`。`bypass = true` 時其餘 payload 欄位須為空值或省略。
-- **ReviewDecision**: Reviewer 對單一標記員（`annotator_id`）於單一輸出類型（`output_type`）的審查決策，決策維度為「標記員 × 輸出類型」而非整筆樣本。欄位：`annotator_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`decision`（`approve | reject`）、`correction?`（全部 8 個 `OUTPUT_TYPE_KEYS` 皆支援，含修正後結果與 diff；修正控件重用對應 annotator 作答控件並以其答案為初始值）、`reason?`、`reviewer_id`、`decided_at`。當 `annotator_id` 對應目前登入使用者（「目前標記員」列）且 `decision = reject` 時，系統必須觸發該 annotator bucket 的樣本狀態回退（見 FR-014I）；對 `REVIEWER_MOCK_ANNOTATORS` 模擬標記員則僅記錄決策。
+- **ReviewDecision**（v3.0.0 起僅適用 `run_type = official_run`；`dry_run` 改用 AdjudicationItem／GoldRecord，見下）: Reviewer 對單一標記員（`annotator_id`）於單一輸出類型（`output_type`）的審查決策，決策維度為「標記員 × 輸出類型」而非整筆樣本。欄位：`annotator_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`decision`（`approve | reject`）、`correction?`（全部 8 個 `OUTPUT_TYPE_KEYS` 皆支援，含修正後結果與 diff；修正控件重用對應 annotator 作答控件並以其答案為初始值）、`reason?`、`reviewer_id`、`decided_at`。當 `annotator_id` 對應目前登入使用者（「目前標記員」列）且 `decision = reject` 時，系統必須觸發該 annotator bucket 的樣本狀態回退（見 FR-014I）；`official_run` 下無 `REVIEWER_MOCK_ANNOTATORS` 模擬標記員（見 FR-044）。
+- **AdjudicationItem**（v3.0.0 新增，僅適用 `run_type = dry_run`）：單一樣本、單一輸出類型下的一個仲裁單位（`single_label`/`free_text` 為整個 outKey 一項；`multi_label`/`entity_recognition`/`relation_identification`/`sequence_tagging` 為聯集中每個標籤/實體/關係/token 各一項；`single_dim`/`multi_dim` 為每個維度一項）。欄位：`sample_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`item_key`（合併鍵，依 FR-031 ~ FR-035 定義）、`status`（`ADJUDICATION_STATUS`，見 FR-040）、`consensus_value?`（一致判定時的合併結果）、`gold_value?`（裁定後寫入的 gold 值）、`agreement_count`（一致人數）、`total_count`（排除 Bypass 後的可比較分母，依 FR-038）、`contributors[]`（提出該項目的標記員 ID 清單）。
+- **GoldRecord**（v3.0.0 新增，僅適用 `run_type = dry_run`）：單一樣本、單一輸出類型的 gold 仲裁彙總結果。欄位：`sample_id`、`output_type`（`OUTPUT_TYPE_KEYS`）、`gold_status`（`GOLD_STATUS`，見 FR-041）、`gold_answer`（與 `OutputAnswer` 同形狀，彙總各 AdjudicationItem 的 `gold_value` / `consensus_value`）、`adjudicated_by`（reviewer_id）、`adjudicated_at`。`gold_status` 由 `draft` 轉為 `gold_confirmed` 後若被重新開啟（見邊界情況第 2 項），須回到 `draft` 並新增 `gold_reopened` 歷程事件，既有歷程事件不得被覆寫。
 - **ReviewerMockRow（Prototype）**: US3 聚合審核卡的模擬標記員提交資料，來源為 `annotation-workspace.data.js` 的 `REVIEWER_MOCK_ROWS`（13 個任務全樣本 × 固定 3 位標記員 `REVIEWER_MOCK_ANNOTATORS`），透過 `getReviewerMockRows(taskId, sampleId)` 取得。每位標記員逐 outKey 攜帶精簡答案格式：`single_label` → `string`、`multi_label` → `string[]`、`single_dim` → `number`、`multi_dim` → `{dim: number}`、`sequence_tagging` → `{text, tag}[]`、`entity_recognition` → `{text, type}[]`、`relation_identification` → `{subj, rel, obj}[]`、`free_text` → `string`；可選 `bypass` map（依 outKey 標記該標記員該輸出類型是否為 Bypass，Bypass 者不計入 `ws-review-stats` 統計）。若目前登入使用者於該樣本已提交，畫面於清單最上方插入代表目前使用者的「目前標記員」列（`data-annotator="current"`），其資料來源為真實 `AnnotationRecord` 而非模擬資料。
-- **AnnotationHistoryItem**: 標記歷程節點，包含操作者、時間、對應輸出類型、修改前後差異、來源動作；`action = 'rejected'` 且 `role = 'reviewer'` 的事件於歷程面板以紅色徽章顯示（見 FR-014I）。
+- **AnnotationHistoryItem**: 標記歷程節點，包含操作者、時間、對應輸出類型、修改前後差異、來源動作。`action` 可能值：`approved` / `rejected`（v3.0.0 起僅 `official_run` 產生，`rejected` 於 `role='reviewer'` 時以紅色徽章顯示，見 FR-014I）、`overridden`（v3.0.0 新增，橘色徽章，`dry_run` 一致項被覆寫）、`adjudicated`（v3.0.0 新增，藍色徽章，`dry_run` 分歧項完成裁定）、`gold_confirmed`（v3.0.0 新增，綠色徽章）、`gold_reopened`（v3.0.0 新增，橘色徽章）；詳見 FR-043。
 - **GuidelineAsset**: 任務說明資產，包含文字摘要、檔案清單（來源為 `TaskProfile.guidelineFiles`，`{ name, type, url }[]`）、modal 與右欄同步呈現設定。
 
 ---
@@ -636,8 +719,12 @@ flowchart LR
 - **SC-004A**: 最後一筆提交後可自動導回 `annotation-list`，且該任務樣本狀態皆顯示 `已提交`。
 - **SC-004B**: 多輸出任務（含 `entity_recognition + relation_identification` 整合模式、`entity_recognition + relation_identification + multi_dim` 三輸出組合）可在同一 sample 頁面內逐一完成所有輸出類型的作答並提交，任一輸出類型的互動不影響其他輸出類型的既有作答。
 - **SC-004C**: 任意合法 `outputs[]` 組合（不限於 `docs/product/example-data` 的 13 份 fixture）皆可在不新增 workspace 分支邏輯的前提下完成標記與審查流程。
-- **SC-004D**: Reviewer 檢視涵蓋 5 種呈現規則（標籤分布、分數統計、entity diff、triple 清單、文字比對）的任務時，皆可正確辨識審查摘要並完成通過 / 退回決策；全部 8 個 `OUTPUT_TYPE_KEYS` 皆可完成直接修正（重用對應 annotator 作答控件並以其答案為初始值）並保留修正 diff。
+- **SC-004D**（v3.0.0 起本條僅適用 `run_type = official_run`；`dry_run` 對應標準改為 SC-004F/SC-004G）: Reviewer 檢視涵蓋 5 種呈現規則（標籤分布、分數統計、entity diff、triple 清單、文字比對）的任務時，皆可正確辨識審查摘要並完成通過 / 退回決策；全部 8 個 `OUTPUT_TYPE_KEYS` 皆可完成直接修正（重用對應 annotator 作答控件並以其答案為初始值）並保留修正 diff。
 - **SC-004E**: `TaskProfile.input_type = item_pair` 的任務在 workspace 中正確顯示雙欄配對版面與 `item_pair_labels` 生效值；`single_item` 任務僅顯示單欄版面。
+- **SC-004F**（v3.0.0 新增）: `dry_run` 下，8 種 `OUTPUT_TYPE_KEYS` 的共識/分歧判定規則（FR-031 ~ FR-035）於涵蓋各輸出類型的測試樣本上皆能正確判定一致/分歧項目，判定結果 100% 符合各條規則定義。
+- **SC-004G**（v3.0.0 新增）: `dry_run` 送出審核僅要求分歧項目具備 gold 值即可通過驗證，一致項目無需任何額外操作即可送出成功；反向情境（存在未裁定分歧項目）100% 被攔截並提示。
+- **SC-004H**（v3.0.0 新增）: `official_run` 審查列不渲染統計盒、批次操作列與多標記員清單（無空殼 DOM 殘留），且標記員答案 100% 正確帶入修正/作答控制項作為初始值。
+- **SC-004I**（v3.0.0 新增）: `annotation-list` 於 `official_run` 下每筆樣本僅顯示單一標記員一列且不可展開比對；`dry_run` 下展開明細為唯讀總覽（保留多標記員答案比對與一致度/IAA 資訊，無任何決策控件與送出按鈕），決策入口僅剩「編輯」CTA 導向 `annotation-workspace` 仲裁（AC-1.12、AC-1.13、FR-047、FR-048）。
 - **SC-005**: 在 `375px / 768px / 1440px` 下，翻筆後 `說明與檔案` 內容維持，Desktop 可收合/展開且 Mobile 抽屜開合可用。
 - **SC-005B**: 點擊右欄圖片檔後，會開啟圖片預覽 modal 並顯示對應大圖；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉。
 - **SC-005A**: 在 `375px`（行動版）檢視 `annotation-list` 時，清單首列不得出現異常大列高或內容下沉；列表可維持單列緊湊掃讀。
@@ -647,35 +734,17 @@ flowchart LR
 
 ---
 
-## 審查與驗收清單
-
-### 內容品質
-
-- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
-- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
-- [x] 無未解決的待釐清標記殘留（Open Questions 已列出跨檔案落後項，供後續處理）。
-- [x] 需求、驗收情境與成功標準皆可測試。
-
-### Label Suite 合規性
-
-- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
-- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
-- [x] 涉及輸出類型的行為皆要求由 `OUTPUT_TYPE_REGISTRY`、schema 或凍結 `TaskProfile` 驅動，不以硬編任務邏輯定義（Generalization-First）。
-- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料（Data Fairness，FR-023）。
-- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
-- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響（016／017 延後範圍已記錄）。
-
----
-
 ## Open Questions
 
 - [ ] `sequence_tagging` 正式 Token 邊界依 ADR-031 由後端提供，惟 word-mode 分詞引擎選型（CKIP／Jieba／PyICU）尚未定案；待引擎選定後需回頭確認 FR-024A-1 的實作可行性與時程。
 - [x] **GUIDELINE_PANEL_TABS 修訂已定案**（v2.3.0 resolved）：v2.1.0 暫定的「右欄常駐無 tab」修訂已由使用者於 2026-08-10 定案回滾——使用者要求恢復右欄 `說明與檔案` / `歷程` 雙頁籤（annotator 與 reviewer 皆適用），相關條文（`GUIDELINE_PANEL_TABS`、使用者故事 2 區塊 B、使用者故事 3 區塊 B、FR-016B）已於 2.3.0 修訂完成，prototype 已同步實作。
+- [x]（v3.0.0 已定案）`annotation-list` 之 `dry_run` reviewer 視圖仲裁化：採用。已改寫為正式規則，見 AC-1.12、AC-1.13、FR-047、US1 區塊 C'。
+- [x]（v3.0.0 已定案）`DIM_CONSENSUS_TOLERANCE` 定值為量表滿分區間之 10%：`DIM_CONSENSUS_TOLERANCE = 0.10 × (scale_max − scale_min)`，已寫入規格常數區並套用於 AC-3.22、FR-033。
 
 ## Constitution Compliance
 
-- Generalization-First: 標記與審查介面完全由 `TaskProfile.outputs[]` 與 `OUTPUT_TYPE_REGISTRY` 驅動；新增輸出類型只需擴充 registry 對應的呈現規則，不需修改核心 workspace 流程（FR-024、FR-024L）。
-- Data Fairness: `output` 角色欄位值為任務建立者明確指定的 annotator-visible preannotation，可用於初始化全部 8 個輸出類型的作答狀態（FR-024M）；僅 `field_role_map` 明文映射為 `output` 角色的欄位可下發，未映射欄位一律剝除，隱藏的 test-set ground truth 不得透過 API、前端 state 或預覽下發給 annotator（FR-023、FR-024M-1）。
+- Generalization-First: 標記與審查介面完全由 `TaskProfile.outputs[]` 與 `OUTPUT_TYPE_REGISTRY` 驅動；新增輸出類型只需擴充 registry 對應的呈現規則，不需修改核心 workspace 流程（FR-024、FR-024L）。v3.0.0 起，`dry_run` 共識合併/分歧判定規則（FR-031 ~ FR-035）同樣依輸出類型 registry 分派，不為特定任務或標籤組合寫死專屬判定邏輯。
+- Data Fairness: `output` 角色欄位值為任務建立者明確指定的 annotator-visible preannotation，可用於初始化全部 8 個輸出類型的作答狀態（FR-024M）；僅 `field_role_map` 明文映射為 `output` 角色的欄位可下發，未映射欄位一律剝除，隱藏的 test-set ground truth 不得透過 API、前端 state 或預覽下發給 annotator（FR-023、FR-024M-1）。v3.0.0 起，`GoldRecord`／`AdjudicationItem` 之 `gold_value`／`gold_answer` 僅供 reviewer 視角存取，不得透過任何路徑下發至 annotator-facing 介面或 API。
 
 ---
 
@@ -683,6 +752,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 3.0.0 | 2026-08-12 | **Reviewer 呈現依 `run_type` 分流（breaking）— dry_run 改採共識合併 + gold 仲裁模型，official_run 收斂為單標記員審核**：(1) 原 AC-3.1「Dry Run 與 Official Run 皆顯示同一套通過/退回」廢止，由 AC-3.1A 取代；使用者故事 3 更名為「Reviewer Dry Run 共識合併與 Gold 仲裁」並收斂適用範圍（AC-3.2 ~ AC-3.19、FR-014A/FR-014E ~ FR-014M 起僅適用 `dry_run`）；批次全通過/全退回（AC-3.7、FR-014G）與逐標記員送出驗證（AC-3.13、AC-3.14、FR-014H）廢止/取代，不再提供「退回個人重標」通道，個別標記品質改經任務層級 IAA 門檻與重試輪次處理（僅概念性引用，詳見 dataset-017）；(2) 新增 8 種輸出類型的共識/分歧合併規則（FR-031 ~ FR-035、AC-3.20 ~ AC-3.24）：`single_label` 僅全員一致為 consensus；`multi_label` 聯集 + 每標籤多數決 `≥⌈(N+1)/2⌉`；`single_dim`/`multi_dim` 改採固定容忍區間門檻 `max−min ≤ DIM_CONSENSUS_TOLERANCE`（非 std-based），既有 ±1.5std 著色降級為獨立視覺輔助、與一致/分歧判定解耦，改用中性灰階徽章（`ws-review-consensus-badge`）；`entity_recognition`/`relation_identification` 採 `CONSENSUS_MERGE_KEYS` 精確匹配、聯集清單附貢獻者標記，原始文本聯集高亮擴充實線（全一致）／虛線＋分數徽章（部分一致）；`sequence_tagging` 逐 token 多數決預填，平局或非法 BIO/BIOES 序列一律 fallback 為分歧（`SEQ_MAJORITY_INVALID_BIO_FALLBACK`），分歧 token 以逐標記員細底線＋tooltip 呈現、唯一修正入口為 Token 網格；`free_text` 無自動合併，改用「設為草稿」選取控制（`ws-review-set-draft`）；(3) 新增仲裁互動與狀態機（FR-036 ~ FR-043、AC-3.25 ~ AC-3.29）：一致項以淡化色階預接受（非 disabled）＋可覆寫；Bypass 排除於分母外、剩餘可比較答案 <2 強制分歧（FR-038）；新增「套用多數決至全部分歧項」按鈕（`ws-review-apply-majority`，FR-039，與已廢止批次操作語意不同）；新增 `ADJUDICATION_STATUS`（pending/consensus/overridden/divergent/adjudicated）與 `GOLD_STATUS`（draft/gold_confirmed）狀態機；不設第二個 gold 確認按鈕，仲裁控制項互動即視為確認，送出驗證收斂為「僅分歧項須有 gold 值」；直接修正區升級為 gold 仲裁區，初始值由「annotator 提交」改為「共識合併結果」；新增歷程事件 `overridden`/`adjudicated`/`gold_confirmed`/`gold_reopened`，既有 `approved`/`rejected` 改僅 `official_run` 產生；(4) 新增使用者故事 6（AC-6.1 ~ AC-6.5、FR-044）定義 `official_run` 單標記員審核：不渲染統計盒/批次操作/偏差著色/多標記員清單，答案直接帶入修正控制項，通過/退回移至型別標題列右側，退回回退機制沿用 FR-014I/AC-3.15；(5) `annotation-list` reviewer 視圖同步分流（AC-1.10、AC-1.11、FR-047、FR-048）：`official_run` 改每筆樣本一列、單一標記員、不可展開比對，送出驗證收斂為「每筆樣本一筆決策」；(6) 新增關鍵實體 `AdjudicationItem`、`GoldRecord`，`ReviewDecision` 收斂為僅 `official_run` 適用；(7) 新增 SC-004F ~ SC-004I；補充 Constitution Compliance 說明。**測試銜接事項留待 plan 階段處理，本次未執行**：既有聚合審核卡測試情境需重新指向 `dry_run`，測試 helper 預設 `run_type` 需一併更新。**（同版本內修訂）使用者已定案本版初稿留下的 2 項 Open Question，補充如下**：(8a) **`annotation-list` dry_run 仲裁化：採用**——展開明細改為唯讀總覽，保留多標記員答案比對顯示與一致度/IAA 資訊，移除逐列與批次的通過/退回決策控件及 `送出審核` 按鈕，決策入口收斂為既有 `編輯` CTA 導向 `annotation-workspace` 完成仲裁；新增 AC-1.12、AC-1.13，改寫 US1 區塊 C'、FR-027（送出審核按鈕僅 `official_run` 顯示）、FR-029（清單送出審核驗證邏輯廢止，ID 保留不重用）、FR-047、FR-048 與行為規則；`official_run` 之單列模型（AC-1.10、AC-1.11 原文）維持不變；(8b) **`DIM_CONSENSUS_TOLERANCE` 定值為量表滿分區間之 10%**：`DIM_CONSENSUS_TOLERANCE = 0.10 × (scale_max − scale_min)`，已寫入規格常數區並確認 AC-3.22、FR-033 引用一致；原 2 項 Open Questions 移除並改寫為正式規則。**（同版本內修訂，speckit.analyze）**：修正 SC-004I 使其與 changelog 8a（dry_run 清單唯讀總覽 + `編輯` CTA）一致；依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單），「已釐清事項」升為頂層章節。 |
 | 2.13.0 | 2026-08-11 | **prototype sync — entity 審核列比照標記員視圖（token 位置＋刪除）**（使用者要求含實體辨識輸出的審核介面，每位標記員的實體答案依標記員原本的實體列表呈現——含 `(start, end)` token 位置與刪除功能）：(1) 新增 FR-014M——reviewer 實體答案列與 annotator「實體列表」共用同一列渲染實作（單一實作來源，`entity-list-row`：實心型別徽章＋標記文字＋token 位置＋「刪除」按鈕，刪除即時生效並重新計算統計）；token 位置由資料紀錄實體 span 欄位於渲染時以文字＋型別配對解析，同文字多次出現依答案順序取用未使用 span，無 span 欄位退回無位置列；(2) 新增 AC-3.19；修訂 AC-3.4（逐行徽章＋文字 → 標記員視圖同源實體列）、區塊 A 審查列結構 (4) entity 條款。 |
 | 2.12.0 | 2026-08-11 | **prototype sync — relation 審核列比照標記員視圖＋原始文本卡擴及 relation 任務**（使用者要求 reviewer 看到的每位標記員關係答案依標記員原本的標記畫面呈現——含 token 位置、觸發詞、類型徽章與類型/刪除功能，且畫面最上方需有原始文本區塊）：(1) 新增 FR-014L——reviewer 關係答案列與 annotator「關係識別」清單共用同一列渲染實作（單一實作來源，`relation-triple-row`：粗體實體文字附 `(start,end)`、觸發詞 pill 附位置、「類型：X」徽章、可操作「類型」下拉與「刪除」按鈕，操作即時生效並重新計算統計、類型取消不計入統計）；token 位置與觸發詞由資料紀錄 ner 形態三元組於渲染時以主體＋客體配對解析（類型一致優先），無 ner 形態（absa）退回無位置列；「原始文本」卡擴及 relation 任務——純 relation 任務高亮紀錄 evidence 實體（共用色盤依型別首次出現順序），無 evidence 欄位顯示純文字；(2) 新增 AC-3.18；修訂 AC-3.5（monospace 多行文字 → 標記員視圖同源三元組列）、區塊 A 審查列結構 (4) 與原始文本卡條目（觸發條件擴為 entity 或 relation）。 |
 | 2.11.0 | 2026-08-11 | **prototype sync — entity 審核卡原始文本聯集高亮卡＋標記員實體徽章結果列**（使用者比對舊版 NER 審核工作區後要求還原兩項舊版視覺：中欄最上方原始文本卡顯示所有標記結果、每位標記員結果附彩色實體標籤）：(1) 新增 FR-014K——`outputs[]` 含 `entity_recognition` 時 reviewer 中欄最上方渲染「原始文本」卡（`ws-review-source-text`），行內高亮（`ws-review-source-mark`）呈現所有標記員實體結果的聯集（Bypass 列不納入；依文本首次出現位置定位，無法定位或重疊者略過高亮但仍列於清單），高亮帶型別色淡底＋底線＋實心型別徽章，顏色取自任務 entity config 不得硬編色盤；(2) 標記員清單 `entity_recognition` 答案由外框 chip 改為逐行「實體類型徽章（實心型別色底）＋標記文字」。修訂 AC-3.4、區塊 A（審查列結構＋原始文本卡）；新增 AC-3.17、FR-014K。 |

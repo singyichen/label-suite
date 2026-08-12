@@ -1,7 +1,7 @@
 ---
 功能分支: feat/dataset-analysis-output-types
 建立日期: 2026-04-24
-版本: 2.0.0
+版本: 2.1.0
 狀態: In Progress
 ---
 
@@ -173,7 +173,7 @@ Prototype 使用 task-management-010「Prototype 示例資料基線」所列的�
 - **FR-002**: 僅具 `TASK_ROLES_ALLOWED` membership 的任務可出現在列表。
 - **FR-003**: 列表必須以 `LIST_VIEW_STATES` 互斥驅動 loading、ready、empty、error 呈現。
 - **FR-004**: 列表必須提供全欄位搜尋、輸出類型篩選、IAA 狀態篩選及 `limit`／`offset` 分頁。
-- **FR-004A**: IAA 徽章必須只顯示最新 quality 摘要，值限定於 `IAA_BADGE_STATES`。
+- **FR-004A**: IAA 徽章必須只顯示最新 quality 摘要，值限定於 `IAA_BADGE_STATES`；當任務 `outputs[]` 僅含 IAA 排除類型（如僅 `free_text`）時，徽章須顯示 `not_applicable`，不得顯示 `pass`／`fail`／`pending`／`not_started` 或空白。
 - **FR-004B**: 輸出類型篩選必須由 `OUTPUT_TYPE_REGISTRY` 提供 `全部輸出類型` 與正好 8 個 `OUTPUT_TYPE_KEYS`，raw value 與顯示文案分離。
 - **FR-004C**: `output_type` 必須以 `outputs[].type` membership 語意比對。
 - **FR-004D**: 搜尋必須比對每個 output raw key 與目前語系 registry 文案，並於 `SEARCH_DEBOUNCE_MS` 內同步 URL。
@@ -210,7 +210,7 @@ flowchart LR
 ### 關鍵實體 *(必填)*
 
 - **TaskSummaryRow**: 任務列表摘要，至少包含 `task_id`、`task_name`、`outputs: { type: OUTPUT_TYPE_KEYS }[]`、`overall_completion_rate`、`membership_role`、`iaa_status`；不得包含 output config、原始標記答案或評估答案。
-- **IAAStatusSummary**: quality 結果摘要狀態，值為 `IAA_BADGE_STATES`；只供列表徽章顯示。
+- **IAAStatusSummary**: quality 結果摘要狀態，值為 `IAA_BADGE_STATES`（含 `not_applicable`）；只供列表徽章顯示。
 - **DatasetAnalysisListViewState**: 包含 `keyword`、`output_type`、`iaa_status`、`limit`、`offset`。
 - **DatasetAnalysisListResponse**: 包含 `items: TaskSummaryRow[]`、`total`、`limit`、`offset`；`items` 僅含列表必要 metadata。
 
@@ -232,7 +232,7 @@ flowchart LR
 |--------|---------|----------------------------------|
 | dataset-017 | Dataset Analysis Detail | detail 頁入口路徑、`task_id` 導頁與列表返回目標 |
 
-> **v2.0.0 scope boundary**：本版只同步 Dataset Analysis List 對 `outputs[].type` 的展示、搜尋與篩選。dataset-017 的統計、IAA 與品質分析仍是待同步的 detail consumer；在其完成 `outputs[]` 遷移前，不得宣稱 detail 已支援全部 8 種輸出類型或任意複合組合。
+> **v2.0.0 scope boundary（已由 dataset-017 v2.0.0 補齊，見下方 v2.1.0 Changelog）**：dataset-017 已於 v2.0.0 完成統計、IAA 與品質分析對 `outputs[]`（8-key `OUTPUT_TYPE_KEYS`）的完整遷移，detail 頁現已支援全部 8 種輸出類型與任意複合組合的逐型並列顯示；`IAA_BADGE_STATES` 的 `not_applicable` 值（任務 `outputs[]` 僅含 `free_text` 等 IAA 排除類型時）已由 dataset-017 定義並由本規格列表徽章一併呈現。
 
 ---
 
@@ -257,6 +257,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 | --- | --- | --- |
+| 2.1.0 | 2026-08-12 | **同步 dataset-017 v2.0.0 IAA 策略 v2（minor）**：`IAA_BADGE_STATES` 新增 `not_applicable`（任務 `outputs[]` 僅含 IAA 排除類型如 `free_text` 時，徽章顯示 `not_applicable` 而非 `pass`／`fail`／`pending`／`not_started` 或空白），更新 FR-004A 與 `IAAStatusSummary` 實體；移除已過時的「v2.0.0 scope boundary（detail 待同步）」註記，改記錄 dataset-017 已完成 8-key `outputs[]` 遷移，detail 頁現支援全部 8 種輸出類型與複合組合。 |
 | 2.0.0 | 2026-07-29 | **Dataset Analysis List 遷移至可組合輸出類型**：移除固定單一 `task_type` 與 `page`／`page_size` 契約，改以 `outputs[].type` 多 tag、registry-driven 8 種輸出類型 membership filter、raw／localized 搜尋及 `output_type`／`limit`／`offset` URL query。加入 empty/error 分流、摘要 metadata 安全界線、13 筆 prototype baseline 與 filter／IAA／角色分布、medical／ABSA 複合 tag、第 14 筆合法任務泛化及 Playwright 驗收。13 筆只作示意，不構成產品上限；dataset-017 detail consumer 仍延後。 |
 | 1.3.1 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.0 | 2026-04-30 | Sync with current prototype: 列表入口改為對齊 task-list 的 table layout；新增 task type / IAA status / keyword filters、footer pagination、URL query 保留、空結果清除篩選、membership role 欄位 |
