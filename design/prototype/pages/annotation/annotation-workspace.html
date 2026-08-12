@@ -514,6 +514,15 @@
     .history-action-badge.submitted { background: var(--color-surface); color: var(--color-cta); }
     .history-action-badge.saved { background: var(--color-warning-bg); color: var(--color-warning); }
     .history-action-badge.rejected { background: var(--color-error-bg); color: var(--color-error); }
+    /* v3.0.0 reviewer run_type split (spec 015 FR-040/041/043): dry_run
+       consensus-adjudication badges (ws-review-consensus-badge /
+       ws-review-gold-status), reusing .history-action-badge's shape. */
+    .history-action-badge.consensus,
+    .history-action-badge.draft { background: var(--color-surface); color: var(--color-text-soft); }
+    .history-action-badge.divergent { background: var(--color-error-bg); color: var(--color-error); }
+    .history-action-badge.overridden,
+    .history-action-badge.adjudicated { background: var(--color-warning-bg); color: var(--color-warning); }
+    .history-action-badge.gold_confirmed { background: var(--color-success-bg, var(--color-warning-bg)); color: var(--color-success, var(--color-cta)); }
     .history-summary {
       margin-top: 6px;
       font-size: 12px;

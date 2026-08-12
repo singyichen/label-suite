@@ -8,24 +8,19 @@ import {
   trackPageErrors,
 } from './_workspace-helpers';
 
-/* Reviewer mode (FR-024L/FR-024L-1/FR-014A-C): registry-driven -- ALL 8
- * output types get a row-level direct-correction entry point that reuses
- * the corresponding annotator control, seeded with the annotator's
- * submitted answer. Also guards against the OLD workspace's
- * `summarizeReviewerAspectCorrections` ReferenceError on review submit
- * (annotation-workspace.html:5029) recurring in the rewrite.
+/* official_run reviewer mode (spec 015 v3.0.0, FR-044): registry-driven --
+ * ALL 8 output types get a row-level direct-correction entry point that
+ * reuses the corresponding annotator control, seeded with the CURRENT
+ * annotator's own submitted answer (single-annotator model, no mock
+ * multi-annotator comparison; see annotation-workspace-review-card.spec.ts
+ * for the dry_run consensus-merge card). Also guards against the OLD
+ * workspace's `summarizeReviewerAspectCorrections` ReferenceError on review
+ * submit (annotation-workspace.html:5029) recurring in the rewrite.
  *
- * REWRITE (aggregate review card): the old per-outKey
- * ws-review-decision-approve/reject buttons are REMOVED. Every row now
- * carries a per-annotator ws-review-annotator-list with individual
- * ws-review-row-approve/ws-review-row-reject toggles, plus row-level
- * ws-review-bulk-approve/ws-review-bulk-reject shortcuts (see
- * annotation-workspace-review-card.spec.ts for full aggregate-card
- * coverage). This file keeps its original purpose -- the FR-024L direct
- * correction control reuse -- but drives the decision step through the new
- * bulk-approve flow instead of the removed per-outKey buttons, since
- * ws-review-submit-btn now requires every annotator row across every
- * output type to be decided before it will submit.
+ * Each output-type row carries exactly one header-level approve/reject
+ * decision pair (ws-review-row-approve/ws-review-row-reject, via
+ * buildRowDecisionButtons) -- ws-review-submit-btn requires every row to
+ * carry a decision before it will submit.
  *
  * Reviewer rows are sourced from an actual runtime annotator submission
  * (performed in-test via the real UI), not from a static "expected answer"
@@ -40,15 +35,15 @@ async function submitAsAnnotator(page: Page, taskId: string, sampleId: string, a
   await page.getByTestId('ws-submit-btn').click();
 }
 
-/* Bulk-decides every ws-review-row on the page (each row's bulk-approve
- * covers that row's own annotator list, including any prepended "current"
- * row) so ws-review-submit-btn's "every row of every output type must be
- * decided" validation passes. */
-async function bulkApproveAllRows(page: Page) {
+/* Approves every ws-review-row's header-level decision directly (official_run
+ * has exactly one decision per output-type row, no per-annotator drilling),
+ * so ws-review-submit-btn's "every row must carry a decision" validation
+ * passes. */
+async function approveAllRows(page: Page) {
   const rows = page.getByTestId('ws-review-row');
   const count = await rows.count();
   for (let i = 0; i < count; i++) {
-    await rows.nth(i).getByTestId('ws-review-bulk-approve').click();
+    await rows.nth(i).getByTestId('ws-review-row-approve').click();
   }
 }
 
@@ -67,6 +62,8 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
 
     const row = page.getByTestId('ws-review-row').first();
     await expect(row).toBeVisible();
+    await expect(row.getByTestId('ws-review-stats')).toHaveCount(0);
+    await expect(row.getByTestId('ws-review-annotator-list')).toHaveCount(0);
     const correction = row.getByTestId('ws-review-correct-single_label');
     await expect(correction.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
 
@@ -86,7 +83,7 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
 
     const row = page.getByTestId('ws-review-row').first();
     await row.getByTestId('ws-review-correct-single_label').getByTestId('ws-single-label-chip-positive').click();
-    await bulkApproveAllRows(page);
+    await approveAllRows(page);
     await page.getByTestId('ws-review-submit-btn').click();
 
     const history = page.getByTestId('ws-review-history');
@@ -94,6 +91,40 @@ test.describe('reviewer direct correction — deep example (single_label, T001)'
     const historyText = (await history.textContent()) || '';
     expect(historyText.trim().length).toBeGreaterThan(0);
     assertNoPageErrors(errors);
+  });
+
+  test('submit is blocked until every row carries a decision', async ({ page }) => {
+    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
+      await page.getByTestId('ws-single-label-chip-negative').click();
+    });
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+
+    await approveAllRows(page);
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  });
+
+  test('rejecting the row reopens the annotator sample', async ({ page }) => {
+    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
+      await page.getByTestId('ws-single-label-chip-negative').click();
+    });
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const row = page.getByTestId('ws-review-row').first();
+    await row.getByTestId('ws-review-row-reject').click();
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'annotator' }));
+    await dismissGuidelineModal(page);
+    await expect(page.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
   });
 });
 
@@ -179,13 +210,28 @@ for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
 
     const row = page.getByTestId('ws-review-row').first();
     await expect(row.getByTestId(`ws-review-correct-${outKey}`)).toBeVisible();
+    await expect(row.getByTestId('ws-review-row-approve')).toBeVisible();
+    await expect(row.getByTestId('ws-review-row-reject')).toBeVisible();
 
-    // Every output type in this loop has exactly one row -- bulk-approve it
-    // (covers every annotator row within, including the prepended "current"
-    // row seeded from the submission above) so submit validation passes.
-    await bulkApproveAllRows(page);
+    // Every output type in this loop has exactly one row -- approve it so
+    // submit validation passes.
+    await approveAllRows(page);
     await page.getByTestId('ws-review-submit-btn').click();
 
     assertNoPageErrors(errors);
   });
 }
+
+test.describe('official_run reviewer with no prior annotator submission', () => {
+  test('the row still renders with an empty correction control and no stats/consensus chrome', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-002', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const row = page.getByTestId('ws-review-row').first();
+    await expect(row).toHaveCount(1);
+    await expect(row.getByTestId('ws-review-stats')).toHaveCount(0);
+    await expect(row.getByTestId('ws-review-gold-status')).toHaveCount(0);
+    await expect(row.getByTestId('ws-review-annotator-list')).toHaveCount(0);
+    await expect(row.getByTestId('ws-review-correct-single_label')).toBeVisible();
+  });
+});

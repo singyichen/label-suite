@@ -734,11 +734,9 @@
       submitReviewLabel: '送出審核',
       approveBtnLabel: '通過',
       rejectBtnLabel: '退回',
-      approveAllBtnLabel: '全部通過',
-      rejectAllBtnLabel: '全部退回',
       expandBtnLabel: '展開標記細項',
       toastReviewSubmitted: '審核結果已送出。',
-      toastSelectDecision: '請完成每位標記員的審核決策',
+      toastSelectDecision: '請完成每筆樣本的審核決策',
       reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewBypassPill: '無法判定 (Bypass)',
       reviewNoAnswer: '（無）',
@@ -787,11 +785,9 @@
       submitReviewLabel: 'Submit Review',
       approveBtnLabel: 'Approve',
       rejectBtnLabel: 'Reject',
-      approveAllBtnLabel: 'Approve All',
-      rejectAllBtnLabel: 'Reject All',
       expandBtnLabel: 'Expand annotator details',
       toastReviewSubmitted: 'Review submitted.',
-      toastSelectDecision: 'Please complete a review decision for each annotator',
+      toastSelectDecision: 'Please complete a review decision for each sample',
       reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewBypassPill: 'Bypassed (cannot determine)',
       reviewNoAnswer: '(none)',
@@ -1099,11 +1095,11 @@
     return th;
   }
 
-  function renderTableHeader(role) {
+  function renderTableHeader(role, runType) {
     var theadRow = document.querySelector('#taskTable thead tr');
     if (!theadRow) return;
     while (theadRow.firstChild) theadRow.removeChild(theadRow.firstChild);
-    if (role === 'reviewer') {
+    if (role === 'reviewer' && runType === 'dry_run') {
       theadRow.appendChild(makeTh('', '32px'));
       theadRow.appendChild(makeTh('ID'));
       theadRow.appendChild(makeTh(t('thStatus')));
@@ -1120,43 +1116,21 @@
     }
   }
 
-  /* ── Reviewer aggregate review (spec 015 user story 3) ─────────────
-     In-memory review decisions keyed by recordId|annotatorIndex. The map
-     survives re-renders (filter / pagination / lang toggle) because rows
-     only initialize absent keys. */
-  var REVIEW_STATES = {};
+  /* ── Reviewer aggregate review (spec 015 v3.0.0, FR-047/FR-048) ─────
+     dry_run: read-only multi-annotator comparison, no list-level decision
+     (adjudication happens in the workspace). official_run: single
+     approve/reject decision per sample, kept in-memory here and validated
+     by bindSubmitReview before the toast confirms submission. */
   var toastTimer = null;
-
-  function reviewKey(recordId, idx) { return recordId + '|' + idx; }
+  var OFFICIAL_REVIEW_DECISIONS = {};
 
   function getMockRows(profile, recordId) {
     return window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(profile.id, recordId);
   }
 
-  function initReviewStates(recordId, mockRows) {
-    mockRows.forEach(function (row, idx) {
-      var key = reviewKey(recordId, idx);
-      if (!(key in REVIEW_STATES)) REVIEW_STATES[key] = null;
-    });
-  }
-
   function updateDecisionBtns(approveBtn, rejectBtn, state) {
     approveBtn.classList.toggle('mini-btn-active-approve', state === 'approved');
     rejectBtn.classList.toggle('mini-btn-active-reject', state === 'rejected');
-  }
-
-  function getBulkReviewState(recordId, mockRows) {
-    if (!mockRows || mockRows.length === 0) return null;
-    var approvedCount = 0;
-    var rejectedCount = 0;
-    mockRows.forEach(function (row, idx) {
-      var state = REVIEW_STATES[reviewKey(recordId, idx)];
-      if (state === 'approved') approvedCount += 1;
-      if (state === 'rejected') rejectedCount += 1;
-    });
-    if (approvedCount === mockRows.length) return 'approved';
-    if (rejectedCount === mockRows.length) return 'rejected';
-    return null;
   }
 
   /* Per-output-type answer views feeding the shared stats algorithm in
@@ -1217,11 +1191,13 @@
     return window.LabelSuiteAnnotationWorkspaceData.dimDeviationClass(outKey, buildOutKeyRows(outKey, mockRows), rowIdx);
   }
 
+  /* dry_run detail rows are read-only (FR-047): the list page shows the
+     multi-annotator comparison only, all adjudication decisions are made
+     in the workspace's consensus-merge review card. */
   function buildAnnotatorDetailContent(profile, recordId, mockRows) {
     var div = document.createElement('div');
     div.className = 'annotator-detail-inner';
     mockRows.forEach(function (mockRow, idx) {
-      var key = reviewKey(recordId, idx);
       var row = document.createElement('div');
       row.className = 'annotator-row';
       row.setAttribute('data-testid', 'list-review-annotator-row');
@@ -1242,44 +1218,6 @@
         row.appendChild(tagSpan);
       });
 
-      var approveBtn = document.createElement('button');
-      approveBtn.type = 'button';
-      approveBtn.className = 'mini-btn mini-btn-approve';
-      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
-
-      var rejectBtn = document.createElement('button');
-      rejectBtn.type = 'button';
-      rejectBtn.className = 'mini-btn mini-btn-reject';
-      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
-
-      updateDecisionBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
-
-      function syncBulkButtons() {
-        var bulkApproveBtn = document.querySelector('[data-bulk-approve-for="' + recordId + '"]');
-        var bulkRejectBtn = document.querySelector('[data-bulk-reject-for="' + recordId + '"]');
-        if (bulkApproveBtn && bulkRejectBtn) {
-          updateDecisionBtns(bulkApproveBtn, bulkRejectBtn, getBulkReviewState(recordId, mockRows));
-        }
-      }
-
-      approveBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        REVIEW_STATES[key] = REVIEW_STATES[key] === 'approved' ? null : 'approved';
-        updateDecisionBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
-        syncBulkButtons();
-      });
-      rejectBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        REVIEW_STATES[key] = REVIEW_STATES[key] === 'rejected' ? null : 'rejected';
-        updateDecisionBtns(approveBtn, rejectBtn, REVIEW_STATES[key]);
-        syncBulkButtons();
-      });
-
-      var actionsDiv = document.createElement('div');
-      actionsDiv.className = 'annotator-row-actions';
-      actionsDiv.appendChild(rejectBtn);
-      actionsDiv.appendChild(approveBtn);
-      row.appendChild(actionsDiv);
       div.appendChild(row);
     });
     return div;
@@ -1289,7 +1227,6 @@
     var profile = context.profile;
     pagedRows.forEach(function (item) {
       var mockRows = getMockRows(profile, item.recordId);
-      initReviewStates(item.recordId, mockRows);
 
       var summaryTr = document.createElement('tr');
       summaryTr.style.cursor = 'pointer';
@@ -1356,41 +1293,6 @@
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
       actionsDiv.appendChild(editBtn);
 
-      var approveAllBtn = document.createElement('button');
-      approveAllBtn.type = 'button';
-      approveAllBtn.className = 'mini-btn mini-btn-approve';
-      approveAllBtn.textContent = '✓ ' + t('approveAllBtnLabel');
-      approveAllBtn.dataset.bulkApproveFor = item.recordId;
-      approveAllBtn.setAttribute('data-testid', 'list-review-approve-all');
-      var rejectAllBtn = document.createElement('button');
-      rejectAllBtn.type = 'button';
-      rejectAllBtn.className = 'mini-btn mini-btn-reject';
-      rejectAllBtn.textContent = '✕ ' + t('rejectAllBtnLabel');
-      rejectAllBtn.dataset.bulkRejectFor = item.recordId;
-      rejectAllBtn.setAttribute('data-testid', 'list-review-reject-all');
-
-      updateDecisionBtns(approveAllBtn, rejectAllBtn, getBulkReviewState(item.recordId, mockRows));
-
-      function applyAllReview(newState) {
-        var currentBulkState = getBulkReviewState(item.recordId, mockRows);
-        var targetState = currentBulkState === newState ? null : newState;
-        mockRows.forEach(function (row, idx) {
-          REVIEW_STATES[reviewKey(item.recordId, idx)] = targetState;
-        });
-        updateDecisionBtns(approveAllBtn, rejectAllBtn, targetState);
-        detailTd.querySelectorAll('.annotator-row').forEach(function (row) {
-          var approveBtn = row.querySelector('.mini-btn-approve');
-          var rejectBtn = row.querySelector('.mini-btn-reject');
-          if (approveBtn && rejectBtn) updateDecisionBtns(approveBtn, rejectBtn, targetState);
-        });
-        showDetail();
-      }
-      approveAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('approved'); });
-      rejectAllBtn.addEventListener('click', function (e) { e.stopPropagation(); applyAllReview('rejected'); });
-
-      actionsDiv.appendChild(rejectAllBtn);
-      actionsDiv.appendChild(approveAllBtn);
-
       var expandTd = document.createElement('td');
       expandTd.className = 'expand-cell';
       expandTd.appendChild(expandBtn);
@@ -1417,6 +1319,77 @@
     });
   }
 
+  /* official_run reviewer rows (FR-048): a single flat row per sample, no
+     expansion / stats / IAA — the reviewer decides approve or reject for
+     that one annotator's submission directly on the list row. */
+  function renderOfficialRunReviewerRows(pagedRows, tbodyEl, context) {
+    var profile = context.profile;
+    pagedRows.forEach(function (item) {
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-testid', 'ws-sample-item');
+
+      function openWorkspace() {
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
+      }
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
+      statusSpan.textContent = statusText(item.status);
+
+      var textTd = document.createElement('td');
+      textTd.className = 'text-snippet';
+      textTd.textContent = item.text;
+
+      var actionsDiv = document.createElement('div');
+      actionsDiv.className = 'reviewer-actions';
+
+      var approveBtn = document.createElement('button');
+      approveBtn.type = 'button';
+      approveBtn.className = 'mini-btn mini-btn-approve';
+      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
+      approveBtn.setAttribute('data-testid', 'list-review-row-approve');
+
+      var rejectBtn = document.createElement('button');
+      rejectBtn.type = 'button';
+      rejectBtn.className = 'mini-btn mini-btn-reject';
+      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
+      rejectBtn.setAttribute('data-testid', 'list-review-row-reject');
+
+      updateDecisionBtns(approveBtn, rejectBtn, OFFICIAL_REVIEW_DECISIONS[item.recordId] || null);
+
+      approveBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        OFFICIAL_REVIEW_DECISIONS[item.recordId] = OFFICIAL_REVIEW_DECISIONS[item.recordId] === 'approved' ? null : 'approved';
+        updateDecisionBtns(approveBtn, rejectBtn, OFFICIAL_REVIEW_DECISIONS[item.recordId]);
+      });
+      rejectBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        OFFICIAL_REVIEW_DECISIONS[item.recordId] = OFFICIAL_REVIEW_DECISIONS[item.recordId] === 'rejected' ? null : 'rejected';
+        updateDecisionBtns(approveBtn, rejectBtn, OFFICIAL_REVIEW_DECISIONS[item.recordId]);
+      });
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'mini-btn mini-btn-primary';
+      editBtn.type = 'button';
+      editBtn.textContent = t('editBtnLabel');
+      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
+
+      actionsDiv.appendChild(rejectBtn);
+      actionsDiv.appendChild(approveBtn);
+      actionsDiv.appendChild(editBtn);
+
+      tr.appendChild(makeTd(item.recordId));
+      tr.appendChild(makeTd(statusSpan));
+      tr.appendChild(makeTd(item.completedAt));
+      tr.appendChild(textTd);
+      tr.appendChild(makeTd(actionsDiv));
+
+      tr.addEventListener('click', openWorkspace);
+
+      tbodyEl.appendChild(tr);
+    });
+  }
+
   function showToast(msg, type) {
     var toast = document.getElementById('toast');
     document.getElementById('toastMsg').textContent = msg;
@@ -1426,22 +1399,23 @@
     toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2800);
   }
 
-  /* Submit validates EVERY annotator decision across the whole task (not
-     just the visible page) before it reports success. */
+  /* official_run only (FR-048): dry_run reviewer decisions are made and
+     submitted per-sample inside the workspace's consensus-merge review
+     card, so the list page never shows this button for dry_run. Submit
+     validates one decision (approve/reject) per sample across the whole
+     task (not just the visible page) before it reports success. */
   function bindSubmitReview(context) {
     var submitReviewBtn = document.getElementById('submitReviewBtn');
     if (!submitReviewBtn) return;
     submitReviewBtn.querySelector('span').textContent = t('submitReviewLabel');
-    if (context.role !== 'reviewer' || !context.profile) return;
+    if (context.role !== 'reviewer' || !context.profile || context.runType !== 'official_run') return;
     submitReviewBtn.classList.remove('hidden');
     submitReviewBtn.onclick = function () {
       var allDecided = true;
       context.profile.datasetRecords.forEach(function (record, index) {
         var recordId = getRecordId(record, index);
-        getMockRows(context.profile, recordId).forEach(function (row, idx) {
-          var state = REVIEW_STATES[reviewKey(recordId, idx)];
-          if (state !== 'approved' && state !== 'rejected') allDecided = false;
-        });
+        var decision = OFFICIAL_REVIEW_DECISIONS[recordId];
+        if (decision !== 'approved' && decision !== 'rejected') allDecided = false;
       });
       if (!allDecided) { showToast(t('toastSelectDecision'), 'error'); return; }
       showToast(t('toastReviewSubmitted'), 'success');
@@ -1484,7 +1458,11 @@
     var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
 
     if (context.role === 'reviewer') {
-      renderReviewerRows(pagedRows, tbodyEl, context);
+      if (context.runType === 'official_run') {
+        renderOfficialRunReviewerRows(pagedRows, tbodyEl, context);
+      } else {
+        renderReviewerRows(pagedRows, tbodyEl, context);
+      }
       return;
     }
 
@@ -1695,7 +1673,7 @@
     var emptyState = document.getElementById('emptyState');
     if (emptyState) emptyState.textContent = t('emptyNoResults');
 
-    renderTableHeader(context.role);
+    renderTableHeader(context.role, context.runType);
     bindSubmitReview(context);
 
     if (context.profile) {
