@@ -336,24 +336,76 @@ test.describe('Entity recognition review — source-text highlights and labeled 
     await expect(marks.nth(5).locator('.rv-source-badge')).toHaveText('opinion');
   });
 
-  test('annotator answers render one colored type badge + entity text line per entity', async ({ page }) => {
+  test('annotator answers render annotator-style entity rows with badge, text and token positions', async ({ page }) => {
+    // Parity with the annotator's own 實體列表: each entity renders through
+    // the shared engine row (colored type badge + text + (start, end) +
+    // 刪除), with positions resolved from the record's entity spans
+    // (T007 gold_entities: 飯店 target 0-1).
     await gotoT007Reviewer(page);
 
     const firstAnswer = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer').first();
-    const lines = firstAnswer.getByTestId('ws-review-entity-line');
+    const lines = firstAnswer.getByTestId('entity-list-row');
     await expect(lines).toHaveCount(6);
-    await expect(lines.first().locator('.rv-entity-badge')).toHaveText('target');
-    await expect(lines.first().locator('.rv-entity-text')).toHaveText('飯店');
+    const badge = lines.first().locator('span').first();
+    await expect(badge).toHaveText('target');
     // Badge color comes from the task's entity config (T007 target #3498DB),
     // not a hardcoded palette.
-    await expect(lines.first().locator('.rv-entity-badge')).toHaveCSS('background-color', 'rgb(52, 152, 219)');
+    await expect(badge).toHaveCSS('background-color', 'rgb(52, 152, 219)');
+    await expect(lines.first()).toContainText('飯店');
+    await expect(lines.first()).toContainText('(0, 1)');
+    await expect(lines.first().getByRole('button', { name: '刪除' })).toBeVisible();
   });
 
   test('an annotator missing an entity still shows only their own lines', async ({ page }) => {
     await gotoT007Reviewer(page);
 
     const answers = page.getByTestId('ws-review-row').first().getByTestId('ws-review-annotator-answer');
-    await expect(answers.nth(2).getByTestId('ws-review-entity-line')).toHaveCount(5);
+    await expect(answers.nth(2).getByTestId('entity-list-row')).toHaveCount(5);
+  });
+
+  test('duplicate entity texts consume record spans in order', async ({ page }) => {
+    // T010 med-001 answers contain 左心耳 twice; the record's entities field
+    // lists spans (1, 3) and (36, 38) -- each answer line must claim the next
+    // unused span so the two rows show distinct positions, exactly like the
+    // annotator's own 實體列表.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const entityCard = page.getByTestId('ws-review-row').filter({ hasText: /entity_recognition/i });
+    const rows = entityCard.getByTestId('ws-review-annotator-answer').first().getByTestId('entity-list-row');
+    await expect(rows).toHaveCount(11);
+    await expect(rows.nth(0)).toContainText('左心耳');
+    await expect(rows.nth(0)).toContainText('(1, 3)');
+    await expect(rows.nth(3)).toContainText('左心耳');
+    await expect(rows.nth(3)).toContainText('(36, 38)');
+  });
+
+  test('deleting an entity row removes it and recomputes the stats box', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const entityCard = page.getByTestId('ws-review-row').filter({ hasText: /entity_recognition/i });
+    await expect(entityCard.getByTestId('ws-review-stats')).toContainText('BODY×18');
+
+    const firstAnswer = entityCard.getByTestId('ws-review-annotator-answer').first();
+    await firstAnswer.getByTestId('entity-list-row').first().getByRole('button', { name: '刪除' }).click();
+
+    await expect(entityCard.getByTestId('ws-review-annotator-answer').first().getByTestId('entity-list-row')).toHaveCount(10);
+    await expect(entityCard.getByTestId('ws-review-stats')).toContainText('BODY×17');
+  });
+
+  test('records without entity spans fall back to positionless rows that still delete', async ({ page }) => {
+    // T013 absa-001 has no entities/gold_entities field, matching the
+    // annotator view which renders its entity list without positions there.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer' }));
+    await dismissGuidelineModal(page);
+
+    const entityCard = page.getByTestId('ws-review-row').filter({ hasText: /entity_recognition/i });
+    const rows = entityCard.getByTestId('ws-review-annotator-answer').first().getByTestId('entity-list-row');
+    await expect(rows).toHaveCount(4);
+    await expect(rows.nth(0)).toContainText('Note 10 plus');
+    await expect(rows.nth(0)).not.toContainText(/\(\d+, \d+\)/);
+    await expect(rows.nth(0).getByRole('button', { name: '刪除' })).toBeVisible();
   });
 });
 

@@ -2021,6 +2021,41 @@ function getRelationTypeOptions(relationTypes) {
   return opts;
 }
 
+/* Shared entity list-row builder -- the annotator's 實體列表 and the reviewer
+   aggregate card's per-annotator entity rows both render through this single
+   implementation so the two views can never drift. `ent` is the display shape
+   {text, type, start?, end?} (positions render only when both are present);
+   mutation stays with the caller via onDelete(). */
+function buildEntityListRow(ent, color, opts) {
+  var lang = (opts && opts.lang) || 'zh';
+  var row = document.createElement('div');
+  row.setAttribute('data-testid', 'entity-list-row');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
+  var badge = document.createElement('span');
+  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + (color || '#6366F1') + ';flex-shrink:0;';
+  badge.textContent = ent.type;
+  row.appendChild(badge);
+  var txt = document.createElement('span');
+  txt.style.flex = '1';
+  txt.textContent = ent.text;
+  row.appendChild(txt);
+  if (ent.start != null && ent.end != null) {
+    var posEl = document.createElement('span');
+    posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
+    posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
+    row.appendChild(posEl);
+  }
+  if (opts && opts.onDelete) {
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
+    delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
+    delBtn.addEventListener('click', function() { opts.onDelete(); });
+    row.appendChild(delBtn);
+  }
+  return row;
+}
+
 /* Shared relation triple-row builder -- the annotator's 關係識別 list and the
    reviewer aggregate card's per-annotator relation rows both render through
    this single implementation so the two views can never drift. `triple` is
@@ -2263,30 +2298,10 @@ function renderAbsaUnifiedPreview(previewContainer) {
       var elWrap = document.createElement('div');
       elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
       state.previewEntities.forEach(function(ent, i) {
-        var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
-        var badge = document.createElement('span');
-        var c = typeColorMap[ent.type] || '#6366F1';
-        badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
-        badge.textContent = ent.type;
-        row.appendChild(badge);
-        var txt = document.createElement('span');
-        txt.style.flex = '1';
-        txt.textContent = ent.text;
-        row.appendChild(txt);
-        if (ent.start != null && ent.end != null) {
-          var posEl = document.createElement('span');
-          posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
-          posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
-          row.appendChild(posEl);
-        }
-        var delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
-        delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-        (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
-        row.appendChild(delBtn);
-        elWrap.appendChild(row);
+        elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+          lang: state.lang,
+          onDelete: function() { state.previewEntities.splice(i, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }
+        }));
       });
       previewContainer.appendChild(elWrap);
     }
@@ -3167,21 +3182,10 @@ function renderSpanOnlyPreview(container, outKey) {
     var elWrap = document.createElement('div');
     elWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
     state.previewEntities.forEach(function(ent, i) {
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
-      var badge = document.createElement('span');
-      var c = typeColorMap[ent.type] || '#6366F1';
-      badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
-      badge.textContent = ent.type;
-      row.appendChild(badge);
-      var txt = document.createElement('span'); txt.style.flex = '1'; txt.textContent = ent.text; row.appendChild(txt);
-      if (ent.start != null && ent.end != null) { var posEl = document.createElement('span'); posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;'; posEl.textContent = '(' + ent.start + ', ' + ent.end + ')'; row.appendChild(posEl); }
-      var delBtn = document.createElement('button'); delBtn.type = 'button';
-      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
-      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-      (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); refreshOutputPreview(container, outKey); }); }(i));
-      row.appendChild(delBtn);
-      elWrap.appendChild(row);
+      elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+        lang: state.lang,
+        onDelete: function() { state.previewEntities.splice(i, 1); refreshOutputPreview(container, outKey); }
+      }));
     });
     container.appendChild(elWrap);
   }

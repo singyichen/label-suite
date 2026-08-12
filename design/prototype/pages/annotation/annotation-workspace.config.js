@@ -1751,6 +1751,22 @@
     return { subj: tr.subj, rel: tr.rel, obj: tr.obj, relType: null };
   }
 
+  /* Reviewer entity rows must mirror the annotator's own 實體列表 (FR-014M):
+     token positions resolve at render time from the record's entity spans
+     (single data source -- mock answers stay {text, type}). Duplicate texts
+     (e.g. 左心耳 twice in T010 med-001) consume record spans in answer order
+     so each row shows a distinct position. Records without an entity span
+     field fall back to positionless rows. */
+  function findRecordEntitySpans(record) {
+    if (!record) return [];
+    var cands = [record.entities, record.gold_entities];
+    for (var i = 0; i < cands.length; i++) {
+      var cand = cands[i];
+      if (Array.isArray(cand) && cand.length > 0 && cand[0] && cand[0].text != null && cand[0].start != null) return cand;
+    }
+    return [];
+  }
+
   function buildAnswerCell(outKey, answer, bypass, colorClass) {
     var cell = document.createElement('div');
     cell.className = 'rv-answer-cell';
@@ -1819,22 +1835,23 @@
         var entities = Array.isArray(answer) ? answer : [];
         if (entities.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
         var colorMap = getPreviewTypeColorMap().map || {};
+        var recordSpans = findRecordEntitySpans(findRecordById(currentSampleId));
+        var spanUsed = recordSpans.map(function () { return false; });
         var entWrap = document.createElement('div');
         entWrap.className = 'rv-answer-entities';
-        entities.forEach(function (ent) {
-          var line = document.createElement('div');
-          line.className = 'rv-answer-entity-line';
-          line.setAttribute('data-testid', 'ws-review-entity-line');
-          var badge = document.createElement('span');
-          badge.className = 'rv-entity-badge';
-          badge.textContent = ent.type;
-          badge.style.background = safeCssColor(colorMap[ent.type], '#6366F1');
-          line.appendChild(badge);
-          var text = document.createElement('span');
-          text.className = 'rv-entity-text';
-          text.textContent = ent.text;
-          line.appendChild(text);
-          entWrap.appendChild(line);
+        entities.forEach(function (ent, idx) {
+          var display = ent;
+          for (var si = 0; si < recordSpans.length; si++) {
+            if (!spanUsed[si] && recordSpans[si].text === ent.text && recordSpans[si].type === ent.type) {
+              spanUsed[si] = true;
+              display = { text: ent.text, type: ent.type, start: recordSpans[si].start, end: recordSpans[si].end };
+              break;
+            }
+          }
+          entWrap.appendChild(buildEntityListRow(display, safeCssColor(colorMap[ent.type], '#6366F1'), {
+            lang: state.lang,
+            onDelete: function () { entities.splice(idx, 1); renderReviewerWorkspace(); }
+          }));
         });
         cell.appendChild(entWrap);
         break;
