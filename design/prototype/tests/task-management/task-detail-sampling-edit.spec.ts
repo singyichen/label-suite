@@ -22,6 +22,10 @@ test.describe('Task detail sampling edit state', () => {
     await expect(page.locator('#valueTrialRoundControl')).not.toBeEmpty();
     await expect(page.locator('#samplingEditForm')).toHaveClass(/hidden/);
 
+    // IAA_METHOD_ENUM dropdown removed (task-management-014 IAA strategy v2).
+    await expect(page.locator('#iaaMethodSelect')).toHaveCount(0);
+    await expect(page.locator('#targetAgreementInput')).toHaveCount(0);
+
     await editBtn.click();
 
     await expect(editBtn).toBeHidden();
@@ -30,9 +34,7 @@ test.describe('Task detail sampling edit state', () => {
     await expect(page.locator('#samplingSummaryView')).toHaveClass(/hidden/);
     await expect(page.locator('#samplingEditForm')).not.toHaveClass(/hidden/);
     await expect(page.locator('#samplingValue')).toBeEnabled();
-    await expect(page.locator('#iaaMethodSelect')).toBeEnabled();
     await expect(page.locator('#samplingRoundInput')).toHaveCount(0);
-    await expect(page.locator('#targetAgreementInput')).toBeEnabled();
     await expect(page.locator('#minAnnotatorsInput')).toBeEnabled();
     await expect(page.locator('#isolationToggle')).toBeEnabled();
 
@@ -47,10 +49,12 @@ test.describe('Task detail sampling edit state', () => {
     await page.locator('#samplingValueHelp').hover();
     await expect(page.locator('#samplingValueHint')).toBeVisible();
 
-    const secondRowFields = page.locator('#samplingEditForm .sampling-fields-advanced').first().locator('.field-group');
-    await expect(secondRowFields).toHaveCount(2);
-    await expect(secondRowFields.nth(0).locator('label')).toContainText('IAA 計算方式');
-    await expect(secondRowFields.nth(1).locator('label')).toContainText('目標 IAA');
+    // T001 (default seed) has a single `single_label` output — one read-only
+    // registry-driven row with an editable target-agreement input.
+    const iaaRows = page.locator('#samplingIaaEditRows .sampling-iaa-type-row');
+    await expect(iaaRows).toHaveCount(1);
+    await expect(iaaRows.nth(0)).toContainText("Krippendorff's Alpha（nominal）");
+    await expect(iaaRows.nth(0).locator('.iaa-override-input')).toHaveValue('0.80');
 
     const samplingBox = await firstRowFields.nth(0).boundingBox();
     const minAnnotatorsBox = await firstRowFields.nth(1).boundingBox();
@@ -59,5 +63,70 @@ test.describe('Task detail sampling edit state', () => {
     expect(minAnnotatorsBox).not.toBeNull();
     expect(Math.abs((samplingBox?.y ?? 0) - (minAnnotatorsBox?.y ?? 0))).toBeLessThanOrEqual(2);
     expect(Math.abs(((samplingBox?.y ?? 0) + (samplingBox?.height ?? 0)) - ((minAnnotatorsBox?.y ?? 0) + (minAnnotatorsBox?.height ?? 0)))).toBeLessThanOrEqual(2);
+  });
+
+  test('renders one read-only IAA metric row per output type, sourced from OUTPUT_TYPE_IAA_REGISTRY', async ({ page }) => {
+    // T010 = entity_recognition + relation_identification.
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T010`);
+
+    const summaryRows = page.locator('#samplingIaaSummaryList .kv-dl-row');
+    await expect(summaryRows).toHaveCount(2);
+    await expect(summaryRows.nth(0)).toContainText('Span F1（嚴格）');
+    await expect(summaryRows.nth(0)).toContainText('0.80');
+    await expect(summaryRows.nth(1)).toContainText('Triple F1');
+    await expect(summaryRows.nth(1)).toContainText('0.75');
+
+    await page.locator('#samplingEditBtn').click();
+
+    const iaaRows = page.locator('#samplingIaaEditRows .sampling-iaa-type-row');
+    await expect(iaaRows).toHaveCount(2);
+    await expect(iaaRows.nth(0)).toContainText('Span F1（嚴格）');
+    await expect(iaaRows.nth(0).locator('.iaa-override-input')).toHaveValue('0.80');
+    await expect(iaaRows.nth(1)).toContainText('Triple F1');
+    await expect(iaaRows.nth(1).locator('.iaa-override-input')).toHaveValue('0.75');
+  });
+
+  test('shows not-applicable IAA state for free_text outputs with no override input', async ({ page }) => {
+    // T009 = free_text only (no automatic IAA metric).
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T009`);
+
+    const summaryRows = page.locator('#samplingIaaSummaryList .kv-dl-row');
+    await expect(summaryRows).toHaveCount(1);
+    await expect(summaryRows.nth(0)).toContainText('不適用');
+
+    await page.locator('#samplingEditBtn').click();
+
+    const iaaRows = page.locator('#samplingIaaEditRows .sampling-iaa-type-row');
+    await expect(iaaRows).toHaveCount(1);
+    await expect(iaaRows.nth(0)).toContainText('不適用');
+    await expect(iaaRows.nth(0).locator('.iaa-override-input')).toHaveCount(0);
+  });
+
+  test('edits per-output-type target agreement override, validates 0..1 bounds, and persists on save', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T001`);
+    await page.locator('#samplingEditBtn').click();
+
+    const overrideInput = page.locator('#samplingIaaEditRows .iaa-override-input').first();
+    await overrideInput.fill('0.85');
+    await page.locator('#samplingSaveBtn').click();
+
+    await expect(page.locator('#samplingIaaSummaryList .kv-dl-row').first()).toContainText('0.85');
+
+    await page.locator('#samplingEditBtn').click();
+    await page.locator('#samplingIaaEditRows .iaa-override-input').first().fill('1.5');
+    await page.locator('#samplingSaveBtn').click();
+
+    await expect(page.locator('#samplingError')).toHaveText('目標 IAA 需介於 0..1。');
+    await expect(page.locator('#samplingError')).toHaveClass(/show/);
+  });
+
+  test('translates IAA metric labels and not-applicable text to English', async ({ page }) => {
+    await page.goto(`${TASK_DETAIL_URL}?task_id=T009`);
+    await page.locator('#langToggle').click();
+
+    await expect(page.locator('#samplingIaaSummaryList .kv-dl-row').first()).toContainText('Not applicable');
+
+    await page.locator('#samplingEditBtn').click();
+    await expect(page.locator('#samplingIaaEditRows .sampling-iaa-type-row').first()).toContainText('Not applicable');
   });
 });

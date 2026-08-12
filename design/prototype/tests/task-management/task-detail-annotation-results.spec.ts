@@ -198,6 +198,10 @@ test.describe('Task detail annotation results', () => {
     expect(payload.manifest.export_format).toBe('json');
     expect(payload.manifest.task_type).toBe('single_sentence_va_scoring');
     expect(payload.manifest.applied_filters.run_stage).toBe('official');
+    expect(payload.manifest.iaa_method).toBeUndefined();
+    expect(payload.manifest.applied_iaa_metrics).toEqual([
+      { output_type: 'multi_dim', metric: 'ICC(2,1)', threshold: 0.8 },
+    ]);
     expect(Array.isArray(payload.items)).toBe(true);
     expect(payload.items.length).toBeGreaterThan(0);
     expect(payload.items.every((item: { run_stage: string }) => item.run_stage === 'official')).toBe(true);
