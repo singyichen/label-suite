@@ -20,4 +20,20 @@ test.describe('Dataset analysis detail quality block order', () => {
       expect(titles.indexOf('標記一致性偏離分析')).toBeGreaterThan(titles.indexOf('標記員風險評估'));
     });
   }
+
+  test('SC-006B: entity_recognition partial-overlap F1 toggle does not change the IAA gate badge', async ({ page }) => {
+    await page.goto(`${DETAIL_URL}?task_id=T006&tab=quality`);
+
+    const badge = page.locator('#iaaSummaryBadge');
+    await expect(badge).toHaveText('0/1 達標');
+
+    await page.locator('#matchPartial').click();
+    await expect(page.locator('#seqPartialCard')).toBeVisible();
+    // Toggling the display-only partial-overlap F1 view must never flip the gate badge —
+    // strict Span F1 is the only metric that gates pass/fail (SC-006B).
+    await expect(badge).toHaveText('0/1 達標');
+
+    await page.locator('#matchStrict').click();
+    await expect(badge).toHaveText('0/1 達標');
+  });
 });

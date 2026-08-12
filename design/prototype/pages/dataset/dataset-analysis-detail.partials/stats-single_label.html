@@ -1,0 +1,32 @@
+<!-- Single-label Classification Statistics -->
+<section class="panel" aria-labelledby="statsSingleLabelDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsSingleLabelDistTitle" data-i18n="singleLabelStats.distTitle">標籤分佈</h2>
+      <p class="panel-subtitle" id="statsSingleLabelDistDesc" data-i18n="singleLabelStats.distDesc">各標籤在提交標記中的次數與比例（每筆樣本僅能選擇一個標籤）</p>
+    </div>
+  </div>
+  <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="singleLabelStats.labels.positive">正向</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:76%"></div></div>
+      <div class="stats-hbar-value">42% · 524</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="singleLabelStats.labels.neutral">中立</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:52%;background:var(--color-primary);opacity:.8"></div></div>
+      <div class="stats-hbar-value">29% · 362</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="singleLabelStats.labels.negative">負向</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:33%;background:var(--color-primary);opacity:.6"></div></div>
+      <div class="stats-hbar-value">18% · 225</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="singleLabelStats.labels.mixed">混合</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:19%;background:var(--color-primary);opacity:.4"></div></div>
+      <div class="stats-hbar-value">11% · 137</div>
+    </div>
+  </div>
+  <p class="group-avg-note" style="margin-top:var(--space-sm)" id="statsSingleLabelDistNote" data-i18n="singleLabelStats.distNote">單標籤任務：每筆標記恰包含 1 個標籤，比例合計 100%</p>
+</section>

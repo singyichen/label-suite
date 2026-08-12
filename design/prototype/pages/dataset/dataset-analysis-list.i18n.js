@@ -27,6 +27,7 @@
         { value: 'pending', label: '計算中' },
         { value: 'fail', label: '未通過' },
         { value: 'not_started', label: '尚未開始' },
+        { value: 'not_applicable', label: '不適用' },
       ],
       pageSizeAria: '每頁筆數',
       pageSizeLabel: ' 筆/頁',
@@ -54,6 +55,7 @@
         pending: '計算中',
         fail: '未通過',
         not_started: '尚未開始',
+        not_applicable: '不適用',
       },
       roleLabel: {
         project_leader: '專案負責人',
@@ -86,6 +88,7 @@
         { value: 'pending', label: 'Pending' },
         { value: 'fail', label: 'Fail' },
         { value: 'not_started', label: 'Not started' },
+        { value: 'not_applicable', label: 'Not applicable' },
       ],
       pageSizeAria: 'Items per page',
       pageSizeLabel: ' / page',
@@ -113,6 +116,7 @@
         pending: 'Pending',
         fail: 'Fail',
         not_started: 'Not started',
+        not_applicable: 'Not applicable',
       },
       roleLabel: {
         project_leader: 'Project Leader',

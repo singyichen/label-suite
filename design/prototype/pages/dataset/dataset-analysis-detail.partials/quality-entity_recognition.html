@@ -1,7 +1,6 @@
 <section class="panel" aria-labelledby="iaaTitle">
   <div class="panel-head-row">
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
-    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">整體未達標</span>
   </div>
   <div class="iaa-method-row">
     <span class="iaa-primary-star" aria-label="主要指標">★</span>
@@ -58,6 +57,89 @@
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="lowConsistencyTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="lowConsistencyTitle" data-i18n="qualityListRank.lowConsistencyTitle">一致性最低樣本清單</h2>
+    <span class="badge badge-neutral">2 筆</span>
+  </div>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（命名實體辨識）">
+        <thead>
+          <tr>
+            <th data-i18n="qualityListRank.headerSample">樣本</th>
+            <th data-i18n="qualityListRank.headerScore">分歧分數</th>
+            <th style="min-width:200px" data-i18n="qualityListRank.headerDetail">分歧描述</th>
+            <th data-i18n="qualityListRank.headerQueue">佇列狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#204</span></td>
+            <td><span class="badge badge-fail">0.65</span></td>
+            <td style="white-space:normal;font-size:12px" data-i18n="entityRecognitionListRank.sample1Detail">「台大醫院」實體邊界標記不一致（ORG vs LOC 類型分歧）</td>
+            <td><span class="badge badge-warn" data-i18n="qualityListRank.queuePending">待審核</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#156</span></td>
+            <td><span class="badge badge-warn">0.49</span></td>
+            <td style="white-space:normal;font-size:12px" data-i18n="entityRecognitionListRank.sample2Detail">「神經內科」span 起訖位置在 2 位標記員間相差 2 個字元</td>
+            <td><span class="badge badge-neutral" data-i18n="qualityListRank.queueCompleted">已完成</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="rankingTitle">
+  <h2 class="panel-title" id="rankingTitle" data-i18n="qualityListRank.rankingTitle">標記員品質排名</h2>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="標記員品質排名（命名實體辨識）">
+        <thead>
+          <tr>
+            <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
+            <th data-i18n="qualityListRank.rankHeaderAnnotator">標記員</th>
+            <th data-i18n="qualityListRank.rankHeaderMetric">一致率指標</th>
+            <th data-i18n="qualityListRank.rankHeaderValue">數值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><span class="annotator-name">Mandy Chen</span></td><td data-i18n="entityRecognitionListRank.rankMetricName">與合併聚合參考值 F1</td><td>0.79</td></tr>
+          <tr><td>2</td><td><span class="annotator-name">Avery Lin</span></td><td data-i18n="entityRecognitionListRank.rankMetricName">與合併聚合參考值 F1</td><td>0.73</td></tr>
+          <tr><td>3</td><td><span class="annotator-name">Jordan Wu</span></td><td data-i18n="entityRecognitionListRank.rankMetricName">與合併聚合參考值 F1</td><td>0.61</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="boundaryTitle">
+  <h2 class="panel-title" id="boundaryTitle" data-i18n="qualityListRank.boundaryTitle">邊界分歧分析</h2>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.boundarySubtitle">統計部分重疊但邊界不一致的案例（span_too_long / span_too_short / wrong_boundary）</p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+    <div style="border:1px solid var(--color-warning-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-warning-bg)">
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">span_too_long</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)">11</div>
+    </div>
+    <div style="border:1px solid var(--color-info-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-info-bg)">
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">span_too_short</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)">8</div>
+    </div>
+    <div style="border:1px solid var(--color-error-border);border-radius:var(--radius-md);padding:14px 16px;background:var(--color-error-bg)">
+      <div style="font-size:11px;font-weight:700;color:var(--color-ink-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">wrong_boundary</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--font-mono);color:var(--color-ink)">5</div>
+    </div>
+  </div>
+  <div style="margin-top:var(--space-md)">
+    <div style="font-size:13px;font-weight:700;color:var(--color-ink)" data-i18n="qualityListRank.boundaryExampleTitle">代表範例</div>
+    <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 14px;margin-top:8px;font-size:12px;color:var(--color-text-soft)" data-i18n="entityRecognitionListRank.boundaryExampleDetail">Gold: 「台大醫院」｜Annotator: 「台大」（少標 2 字元，span_too_short）</div>
   </div>
 </section>
 

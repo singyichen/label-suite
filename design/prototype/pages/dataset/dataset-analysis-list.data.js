@@ -146,7 +146,7 @@
       sourceFile: 'free-text.json',
       outputTypes: ['free_text'],
       completionRate: 25,
-      iaaStatus: 'not_started',
+      iaaStatus: 'not_applicable',
       membershipRole: 'reviewer'
     },
     {
@@ -176,7 +176,7 @@
       sourceFile: 'mrc.json',
       outputTypes: ['free_text'],
       completionRate: 100,
-      iaaStatus: 'pass',
+      iaaStatus: 'not_applicable',
       membershipRole: 'reviewer'
     },
     {

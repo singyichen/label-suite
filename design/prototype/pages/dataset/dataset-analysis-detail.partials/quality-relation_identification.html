@@ -1,7 +1,6 @@
 <section class="panel" aria-labelledby="iaaTitle">
   <div class="panel-head-row">
     <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
-    <span class="badge iaa-summary-badge" id="iaaSummaryBadge">部分通過</span>
   </div>
   <div class="iaa-method-row">
     <span class="iaa-primary-star" aria-label="主要指標">★</span>
@@ -37,6 +36,66 @@
         <tbody>
           <tr><td><span class="alt-metric-name">Entity-level F1</span></td><td>0.82</td></tr>
           <tr><td><span class="alt-metric-name">Relation-only agreement</span></td><td>0.79</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="lowConsistencyTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="lowConsistencyTitle" data-i18n="qualityListRank.lowConsistencyTitle">一致性最低樣本清單</h2>
+    <span class="badge badge-neutral">2 筆</span>
+  </div>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（關係抽取）">
+        <thead>
+          <tr>
+            <th data-i18n="qualityListRank.headerSample">樣本</th>
+            <th data-i18n="qualityListRank.headerScore">分歧分數</th>
+            <th style="min-width:200px" data-i18n="qualityListRank.headerDetail">分歧描述</th>
+            <th data-i18n="qualityListRank.headerQueue">佇列狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#33</span></td>
+            <td><span class="badge badge-fail">0.63</span></td>
+            <td style="white-space:normal;font-size:12px" data-i18n="relationIdentificationListRank.sample1Detail">樣本 #33：「阿斯匹靈」與「胃出血」關係類型標記為「causes」與「associated_with」不一致</td>
+            <td><span class="badge badge-warn" data-i18n="qualityListRank.queuePending">待審核</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#19</span></td>
+            <td><span class="badge badge-warn">0.48</span></td>
+            <td style="white-space:normal;font-size:12px" data-i18n="relationIdentificationListRank.sample2Detail">樣本 #19：三元組邊界（subject span）在 2 位標記員間相差 3 個字元</td>
+            <td><span class="badge badge-neutral" data-i18n="qualityListRank.queueCompleted">已完成</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="rankingTitle">
+  <h2 class="panel-title" id="rankingTitle" data-i18n="qualityListRank.rankingTitle">標記員品質排名</h2>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="標記員品質排名（關係抽取）">
+        <thead>
+          <tr>
+            <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
+            <th data-i18n="qualityListRank.rankHeaderAnnotator">標記員</th>
+            <th data-i18n="qualityListRank.rankHeaderMetric">一致率指標</th>
+            <th data-i18n="qualityListRank.rankHeaderValue">數值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><span class="annotator-name">Mandy Chen</span></td><td data-i18n="relationIdentificationListRank.rankMetricName">與合併聚合參考值 Triple F1</td><td>0.81</td></tr>
+          <tr><td>2</td><td><span class="annotator-name">Avery Lin</span></td><td data-i18n="relationIdentificationListRank.rankMetricName">與合併聚合參考值 Triple F1</td><td>0.77</td></tr>
+          <tr><td>3</td><td><span class="annotator-name">Jordan Wu</span></td><td data-i18n="relationIdentificationListRank.rankMetricName">與合併聚合參考值 Triple F1</td><td>0.64</td></tr>
         </tbody>
       </table>
     </div>
