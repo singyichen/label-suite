@@ -66,8 +66,6 @@
       adjudicationStatusOverridden: '已覆寫',
       adjudicationStatusDivergent: '分歧',
       adjudicationStatusAdjudicated: '已裁定',
-      goldStatusDraft: '草稿',
-      goldStatusGoldConfirmed: '已確認為標準答案',
       reviewApplyMajority: '套用多數決至全部分歧項',
       reviewSetDraft: '採用此份為草稿',
       historyActionOverridden: '已覆寫',
@@ -125,8 +123,6 @@
       adjudicationStatusOverridden: 'Overridden',
       adjudicationStatusDivergent: 'Divergent',
       adjudicationStatusAdjudicated: 'Adjudicated',
-      goldStatusDraft: 'Draft',
-      goldStatusGoldConfirmed: 'Gold confirmed',
       reviewApplyMajority: 'Apply majority to all divergent items',
       reviewSetDraft: 'Use as draft',
       historyActionOverridden: 'Overridden',
@@ -143,7 +139,6 @@
   /* v3.0.0 reviewer run_type split (spec 015): shared constants/algorithms
      live once in annotation-workspace.data.js. */
   var ADJUDICATION_STATUS = window.LabelSuiteAnnotationWorkspaceData.ADJUDICATION_STATUS;
-  var GOLD_STATUS = window.LabelSuiteAnnotationWorkspaceData.GOLD_STATUS;
 
   /* ── shared engine state (see task-config.engine.js header comment for
      the full list of fields the engine reads) ────────────────────── */
@@ -1525,30 +1520,6 @@
      with), silently discarding any live correction the reviewer already
      made on other output types. */
   var reviewRowSeeded = {};
-  /* dry_run only (US3): sample-level gold status (FR-041), reset whenever
-     the reviewer opens a sample. Seeded 'gold_confirmed' when a reviewer
-     submission already exists for this sample (re-opening an adjudicated
-     sample); any further interaction flips it back to 'draft' and logs a
-     gold_reopened history event exactly once per re-open. */
-  var reviewGoldStatus = GOLD_STATUS.DRAFT;
-  var reviewGoldStatusBadgeEl = null;
-
-  function buildGoldStatusBadgeCard() {
-    var card = document.createElement('div');
-    card.className = 'content-card';
-    var badge = document.createElement('span');
-    badge.setAttribute('data-testid', 'ws-review-gold-status');
-    card.appendChild(badge);
-    reviewGoldStatusBadgeEl = badge;
-    updateGoldStatusBadge();
-    return card;
-  }
-  function updateGoldStatusBadge() {
-    if (!reviewGoldStatusBadgeEl) return;
-    reviewGoldStatusBadgeEl.className = 'history-action-badge ' + reviewGoldStatus;
-    reviewGoldStatusBadgeEl.textContent =
-      reviewGoldStatus === GOLD_STATUS.GOLD_CONFIRMED ? t('goldStatusGoldConfirmed') : t('goldStatusDraft');
-  }
 
   function describeOutputAnswer(outKey, src) {
     src = src || {};
@@ -2507,17 +2478,6 @@
       window.LabelSuiteAnnotationWorkspaceData.getSubmission(currentProfile.id, 'annotator', currentRunType, currentSampleId) || {};
     var rawRecord = findRecordById(currentSampleId) || {};
 
-    if (currentRunType === 'dry_run') {
-      var existingReviewSubmission = window.LabelSuiteAnnotationWorkspaceData.getSubmission(
-        currentProfile.id,
-        'reviewer',
-        currentRunType,
-        currentSampleId
-      );
-      reviewGoldStatus = existingReviewSubmission ? GOLD_STATUS.GOLD_CONFIRMED : GOLD_STATUS.DRAFT;
-      preview.appendChild(buildGoldStatusBadgeCard());
-    }
-
     /* Output types whose registry entry declares rendersInputPreview:true
        (free_text/entity_recognition/relation_identification/sequence_tagging)
        already embed their own ws-input-content-taggable element inside the
@@ -2623,8 +2583,10 @@
      'divergent' (unresolved) -- 'consensus'/'overridden'/'adjudicated' are
      all valid gold states. Successful submit writes the sample's gold
      answer (collectAnswerPayload(), already reading off state.previewState/
-     previewEntities/previewTriples the correction controls just edited) and
-     flips the sample-level gold status badge to gold_confirmed. */
+     previewEntities/previewTriples the correction controls just edited).
+     The sample's gold_confirmed state surfaces through the sample list
+     status and the history panel -- there is no dedicated status badge
+     (spec 015 v3.1.0 dropped ws-review-gold-status as redundant). */
   function handleDryRunSubmit(history) {
     var unresolved = state.selectedOutputTypes.filter(function (outKey) {
       return deriveAdjudicationStatus(outKey, computeMerge(outKey)) === ADJUDICATION_STATUS.DIVERGENT;
@@ -2654,9 +2616,6 @@
       collectAnswerPayload(),
       summary
     );
-
-    reviewGoldStatus = GOLD_STATUS.GOLD_CONFIRMED;
-    updateGoldStatusBadge();
 
     renderSampleList();
     renderSampleNav();

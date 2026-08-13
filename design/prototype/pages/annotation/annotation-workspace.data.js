@@ -1213,7 +1213,6 @@
    * two pages. */
   var REVIEW_MODEL_BY_RUN_TYPE = { dry_run: 'consensus_adjudication', official_run: 'single_annotator_review' };
   var ADJUDICATION_STATUS = { PENDING: 'pending', CONSENSUS: 'consensus', OVERRIDDEN: 'overridden', DIVERGENT: 'divergent', ADJUDICATED: 'adjudicated' };
-  var GOLD_STATUS = { DRAFT: 'draft', GOLD_CONFIRMED: 'gold_confirmed' };
   function reviewModelForRunType(runType) {
     return REVIEW_MODEL_BY_RUN_TYPE[runType] || REVIEW_MODEL_BY_RUN_TYPE.dry_run;
   }
@@ -1483,7 +1482,6 @@
     meanStd: meanStd,
     REVIEW_MODEL_BY_RUN_TYPE: REVIEW_MODEL_BY_RUN_TYPE,
     ADJUDICATION_STATUS: ADJUDICATION_STATUS,
-    GOLD_STATUS: GOLD_STATUS,
     reviewModelForRunType: reviewModelForRunType,
     convertSubmissionAnswer: convertSubmissionAnswer,
     computeConsensusMerge: computeConsensusMerge,

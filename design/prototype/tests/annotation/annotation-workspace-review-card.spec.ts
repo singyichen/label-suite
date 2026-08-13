@@ -24,8 +24,9 @@ import {
  *      `ws-review-set-draft`)
  *   6. the existing FR-024L direct-correction control (unchanged), seeded
  *      from the merge result
- * A sample-level `ws-review-gold-status` badge (draft/gold_confirmed) sits
- * above the per-outKey rows.
+ * No sample-level status badge sits above the per-outKey rows (the
+ * `ws-review-gold-status` card was removed in v3.1.0 as redundant with the
+ * sample list status and the history panel).
  *
  * Mock data: 3 annotators per sample, fixed order kioleemg12 / 113450022 /
  * tony0950127, via getReviewerMockRows(taskId, sampleId). dry_run never
@@ -212,14 +213,15 @@ test.describe('T009 (free_text) — no auto-merge, explicit draft pick required'
   });
 });
 
-test.describe('Sample-level gold status badge', () => {
-  test('starts as draft and flips to gold_confirmed after a successful dry_run submit', async ({ page }) => {
+test.describe('Sample-level gold status badge (removed v3.1.0)', () => {
+  test('no gold status badge card renders, before or after a dry_run submit', async ({ page }) => {
     await gotoT001Reviewer(page);
 
-    await expect(page.getByTestId('ws-review-gold-status')).toHaveText('草稿');
+    await expect(page.getByTestId('ws-review-gold-status')).toHaveCount(0);
 
     await page.getByTestId('ws-review-submit-btn').click();
-    await expect(page.getByTestId('ws-review-gold-status')).toHaveText('已確認為標準答案');
+    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+    await expect(page.getByTestId('ws-review-gold-status')).toHaveCount(0);
   });
 });
 
