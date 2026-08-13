@@ -223,7 +223,7 @@ for (const { outKey, taskId, sampleId, answer } of REGISTRY_CASES) {
 }
 
 test.describe('official_run reviewer with no prior annotator submission', () => {
-  test('the row still renders with an empty correction control and no stats/consensus chrome', async ({ page }) => {
+  test('the row renders the correction control alone, with no stats/consensus chrome', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-002', role: 'reviewer' }));
     await dismissGuidelineModal(page);
 
@@ -293,8 +293,8 @@ test.describe('official_run review card chrome', () => {
   });
 
   test('a docked decision still drives submit validation', async ({ page }) => {
-    // Validation only has a row to check once an annotator has submitted:
-    // getReviewerRows returns [] otherwise, and submit passes vacuously.
+    // Submitting a real annotator answer first, so the row under review is
+    // that submission rather than the demo fallback.
     await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
       await page.getByTestId('ws-single-label-chip-negative').click();
     });
@@ -350,5 +350,59 @@ test.describe('dry_run consensus seeding across output types', () => {
     await expect(panel.locator('.absa-span-highlight').first()).toBeVisible();
     // The multi_dim card renders after the span card and seeds last.
     await expect(page.getByTestId('ws-review-correct-multi_dim')).toBeVisible();
+  });
+});
+
+/* official_run reviews the annotator's own submission, which the prototype
+ * only ever has in localStorage -- so a reviewer arriving from the dashboard's
+ * 快速審核 in a fresh browser had nothing to review at all, while the list
+ * still promised 待審 N 筆. The demo now falls back to the first mock
+ * annotator REVIEWER_MOCK_ROWS already ships for that sample (spec 015
+ * FR-044a); a real submission always wins over it. */
+test.describe('official_run demo annotator submission', () => {
+  test('a span task shows the annotator entities, relations and highlights (T010)', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    const panel = page.getByTestId('ws-review-correct-span');
+    // One annotator, not a merge: the two repeated (text, type) pairs stay as
+    // the 11 separate spans that annotator marked.
+    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(11);
+    await expect(panel.getByTestId('ws-ri-triple-item')).toHaveCount(8);
+    await expect(panel.locator('.absa-span-highlight')).toHaveCount(11);
+  });
+
+  test('a single-type span task shows the annotator entities (T007)', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    const panel = page.getByTestId('ws-review-correct-entity_recognition');
+    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(7);
+    await expect(panel.locator('.absa-span-highlight')).toHaveCount(7);
+  });
+
+  test('a later card of another output type is seeded too (T013)', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    const panel = page.getByTestId('ws-review-correct-span');
+    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(4);
+    await expect(panel.getByTestId('ws-ri-triple-item')).toHaveCount(3);
+    // previewInited is one shared flag: a span seed that sets it must not
+    // leave the multi_dim card rendering blank defaults behind it.
+    await expect(page.getByTestId('ws-multi-dim-value-valence')).toHaveText('3');
+    await expect(page.getByTestId('ws-multi-dim-value-arousal')).toHaveText('6');
+  });
+
+  test('a real annotator submission wins over the demo fallback (T001)', async ({ page }) => {
+    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
+      await page.getByTestId('ws-single-label-chip-negative').click();
+    });
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    // The mock annotator answered 'positive' for this sample.
+    await expect(page.getByTestId('ws-single-label-chip-negative')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('ws-single-label-chip-positive')).toHaveAttribute('aria-pressed', 'false');
   });
 });

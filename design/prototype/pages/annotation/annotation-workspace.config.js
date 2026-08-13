@@ -1686,20 +1686,49 @@
      adjudication, US3); official_run reviews only the real current
      annotator's own submission (single_annotator_review, US6). The two
      models never mix rows. */
+  /* official_run reviews the annotator's own submission, which only ever
+     exists in this browser's localStorage -- so a prototype visitor arriving
+     from the dashboard's 快速審核 without having annotated anything first got
+     an empty review panel on every output type, while the list beside it
+     promised 待審 N 筆. Fall back to the first mock annotator
+     REVIEWER_MOCK_ROWS already ships for this sample: the same fixture the
+     dry_run consensus is built from, so nothing new is invented here and no
+     dataset gold column is read. A real submission always wins over it. */
+  function officialRunDemoRow() {
+    var rows = window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(
+      currentProfile.id,
+      currentSampleId
+    ) || [];
+    return rows.length ? rows[0] : null;
+  }
+
+  function getOfficialRunSubmission() {
+    return window.LabelSuiteAnnotationWorkspaceData.getSubmission(
+      currentProfile.id,
+      'annotator',
+      currentRunType,
+      currentSampleId
+    );
+  }
+
   function getReviewerRows(outKey) {
     if (currentRunType === 'official_run') {
-      var submission = window.LabelSuiteAnnotationWorkspaceData.getSubmission(
-        currentProfile.id,
-        'annotator',
-        currentRunType,
-        currentSampleId
-      );
-      if (!submission) return [];
+      var submission = getOfficialRunSubmission();
+      if (submission) {
+        return [{
+          name: 'current',
+          displayName: t('reviewCurrentAnnotatorLabel'),
+          answer: convertSubmissionAnswer(outKey, submission),
+          bypass: !!(submission.previewBypass && submission.previewBypass[outKey]),
+        }];
+      }
+      var demoRow = officialRunDemoRow();
+      if (!demoRow) return [];
       return [{
         name: 'current',
         displayName: t('reviewCurrentAnnotatorLabel'),
-        answer: convertSubmissionAnswer(outKey, submission),
-        bypass: !!(submission.previewBypass && submission.previewBypass[outKey]),
+        answer: demoRow.answers ? demoRow.answers[outKey] : undefined,
+        bypass: !!(demoRow.bypass && demoRow.bypass[outKey]),
       }];
     }
     var mockRows = window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || [];
@@ -2439,14 +2468,33 @@
   /* official_run (US6, FR-044/FR-014P): single-annotator review -- no title
      row, no stats box, no bulk bar, no annotator list, no deviation coloring;
      just the correction panel, closing on one decision line. */
+  /* A real submission carries the annotator's own engine state (exact spans
+     included), so it seeds through the OutputAnswer path. The demo fallback
+     only has a CompactAnswer, the same shape the dry_run merge produces, and
+     takes the same compact path -- entity offsets get resolved against the
+     passage there (placeConsensusEntities). */
+  function seedOfficialRunRow(outKey, submission) {
+    if (submission) {
+      reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
+      if (!reviewRowSeeded[outKey]) {
+        seedReviewState(outKey, submission, false);
+        reviewRowSeeded[outKey] = true;
+      }
+      return;
+    }
+    var demoRow = officialRunDemoRow();
+    var answer = demoRow && demoRow.answers ? demoRow.answers[outKey] : null;
+    reviewRowOriginals[outKey] = answer != null ? describeCompactAnswer(outKey, answer) : '';
+    if (!reviewRowSeeded[outKey]) {
+      seedReviewState(outKey, answer, true);
+      reviewRowSeeded[outKey] = true;
+    }
+  }
+
   function buildOfficialRunReviewRow(outKey, submission) {
     var row = buildReviewRowShell(null);
 
-    reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
-    if (!reviewRowSeeded[outKey]) {
-      seedReviewState(outKey, submission || {}, false);
-      reviewRowSeeded[outKey] = true;
-    }
+    seedOfficialRunRow(outKey, submission);
     var correction = appendCorrectionControl(row, outKey);
     dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, 'current', null).el]);
     return row;
@@ -2507,11 +2555,7 @@
     var bars = [];
     outKeys.forEach(function (outKey) {
       if (isOfficialRun) {
-        reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
-        if (!reviewRowSeeded[outKey]) {
-          seedReviewState(outKey, submission || {}, false);
-          reviewRowSeeded[outKey] = true;
-        }
+        seedOfficialRunRow(outKey, submission);
         return;
       }
       var rows = getReviewerRows(outKey);
@@ -2669,8 +2713,9 @@
     reviewRowDecisions = {};
     reviewRowOriginals = {};
 
-    var submission =
-      window.LabelSuiteAnnotationWorkspaceData.getSubmission(currentProfile.id, 'annotator', currentRunType, currentSampleId) || {};
+    /* null, not {}: seedOfficialRunRow() branches on whether a real
+       submission exists at all. */
+    var submission = currentRunType === 'official_run' ? getOfficialRunSubmission() : null;
     var rawRecord = findRecordById(currentSampleId) || {};
 
     /* Output types whose registry entry declares rendersInputPreview:true

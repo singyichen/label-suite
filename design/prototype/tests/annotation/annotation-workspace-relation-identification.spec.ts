@@ -155,13 +155,27 @@ test.describe('relation_identification output type — reviewer, pure mode (T008
 
   /* The mirror rule (Constitution: Data Fairness). When entity_recognition IS
    * an output type the spans ARE the answer under review, so the dataset's own
-   * entity column must never be injected as if an annotator had marked it. */
+   * entity column must never be injected as if an annotator had marked it.
+   * The panel is no longer empty here -- official_run falls back to the mock
+   * annotator when nobody has submitted -- so the rule is checked by giving
+   * that annotator an answer the dataset column does not have: what shows up
+   * must be the annotator's one entity, not the record's eleven. */
   test('a composed entity_recognition task is never seeded from the dataset entities', async ({ page }) => {
+    await patchDataFile(page, 'annotation-workspace.data.js', `
+      var data = window.LabelSuiteAnnotationWorkspaceData;
+      data.REVIEWER_MOCK_ROWS.T010['med-001'] = [{
+        annotator: 'kioleemg12',
+        answers: { entity_recognition: [{ text: '心房顫動', type: 'DISE' }], relation_identification: [] },
+      }];
+    `);
     await page.goto(
       buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' })
     );
     await dismissGuidelineModal(page);
 
-    await expect(page.getByTestId('ws-review-correct-span').locator('.absa-span-highlight')).toHaveCount(0);
+    const panel = page.getByTestId('ws-review-correct-span');
+    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(1);
+    await expect(panel.getByTestId('ws-er-entity-item')).toContainText('心房顫動');
+    await expect(panel.locator('.absa-span-highlight')).toHaveCount(1);
   });
 });
