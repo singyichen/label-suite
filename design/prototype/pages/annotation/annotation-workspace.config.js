@@ -2258,18 +2258,22 @@
     }
   }
 
-  function buildReviewRowShell(outKey, headerExtra) {
+  /* title is null for official_run rows (FR-014P): that card carries nothing
+     but the correction panel, which already shows what is under review, so a
+     header repeating the output-type key is noise -- the whole header row
+     goes away with it. */
+  function buildReviewRowShell(title) {
     var row = document.createElement('div');
     row.className = 'content-card';
     row.setAttribute('data-testid', 'ws-review-row');
+    if (!title) return row;
 
     var header = document.createElement('div');
     header.className = 'review-row-header';
-    var title = document.createElement('div');
-    title.className = 'content-card-title';
-    title.textContent = outKey;
-    header.appendChild(title);
-    if (headerExtra) header.appendChild(headerExtra);
+    var titleEl = document.createElement('div');
+    titleEl.className = 'content-card-title';
+    titleEl.textContent = title;
+    header.appendChild(titleEl);
     row.appendChild(header);
     return row;
   }
@@ -2291,6 +2295,40 @@
     return correction;
   }
 
+  /* FR-014P: an official_run card must end with exactly ONE decision line,
+     the same shape for every output type. The engine's Bypass row already is
+     that line ("無法判定 (Bypass)"), so the approve/reject pair is docked into
+     it instead of floating in a card header far above the answer it judges.
+     Two things make this more than an appendChild: the engine rebuilds the
+     whole panel on every Bypass toggle and every entity/relation edit, which
+     detaches whatever we put inside it, and a task configured with
+     allow_bypass:false renders no such row at all. So docking is idempotent,
+     re-runs from a MutationObserver, and always re-attaches the SAME element
+     -- a rebuilt copy would drop the reviewer's pending decision. */
+  function dockDecisionsOnBypassRow(correction, decisionEls) {
+    var fallbackRow = null;
+    function place() {
+      var bypassRow = correction.querySelector('.' + BYPASS_ROW_CLASS + ':not(.rv-decision-row)');
+      if (!bypassRow) {
+        if (!fallbackRow) {
+          fallbackRow = document.createElement('div');
+          fallbackRow.className = BYPASS_ROW_CLASS + ' rv-decision-row';
+        }
+        if (fallbackRow.parentNode !== correction) correction.appendChild(fallbackRow);
+        bypassRow = fallbackRow;
+      } else if (fallbackRow && fallbackRow.parentNode) {
+        fallbackRow.parentNode.removeChild(fallbackRow);
+      }
+      decisionEls.forEach(function (decisionEl) {
+        /* Guard the append: without it, each re-dock would itself be a
+           mutation and the observer would never settle. */
+        if (decisionEl.parentNode !== bypassRow) bypassRow.appendChild(decisionEl);
+      });
+    }
+    place();
+    new MutationObserver(place).observe(correction, { childList: true, subtree: true });
+  }
+
   /* dry_run (US3, FR-030/FR-039~FR-042): consensus badge, apply-majority,
      the mock-annotator comparison list, then the gold correction control
      seeded from the merge result -- NO stats box, NO bulk approve/reject
@@ -2299,7 +2337,7 @@
   function buildDryRunReviewRow(outKey) {
     var rows = getReviewerRows(outKey);
     var merge = computeMerge(outKey);
-    var row = buildReviewRowShell(outKey, null);
+    var row = buildReviewRowShell(outKey);
 
     /* FR-014F/FR-044: the legacy distribution-stats box is dry_run-only. */
     row.appendChild(buildStatsBox(outKey, rows));
@@ -2338,20 +2376,19 @@
     return row;
   }
 
-  /* official_run (US6, FR-044): single-annotator review -- header-row
-     approve/reject (repurposing the old per-row buttons, now the ONLY
-     decision on the card), no stats box, no bulk bar, no annotator list, no
-     deviation coloring. */
+  /* official_run (US6, FR-044/FR-014P): single-annotator review -- no title
+     row, no stats box, no bulk bar, no annotator list, no deviation coloring;
+     just the correction panel, closing on one decision line. */
   function buildOfficialRunReviewRow(outKey, submission) {
-    var decisionButtons = buildRowDecisionButtons(outKey, 'current', null);
-    var row = buildReviewRowShell(outKey, decisionButtons.el);
+    var row = buildReviewRowShell(null);
 
     reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
     if (!reviewRowSeeded[outKey]) {
       seedReviewState(outKey, submission || {}, false);
       reviewRowSeeded[outKey] = true;
     }
-    appendCorrectionControl(row, outKey);
+    var correction = appendCorrectionControl(row, outKey);
+    dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, 'current', null).el]);
     return row;
   }
 
@@ -2395,19 +2432,17 @@
   function buildMergedSpanReviewRow(outKeys, submission) {
     var isOfficialRun = currentRunType === 'official_run';
 
-    var headerExtra = null;
-    if (isOfficialRun) {
-      headerExtra = document.createElement('div');
-      headerExtra.className = 'rv-merged-decisions';
-      outKeys.forEach(function (outKey) {
-        var group = document.createElement('div');
-        group.className = 'rv-merged-decision';
-        group.appendChild(buildSectionLabel(outKey));
-        group.appendChild(buildRowDecisionButtons(outKey, 'current', null).el);
-        headerExtra.appendChild(group);
-      });
-    }
-    var row = buildReviewRowShell(outKeys.join(' + '), headerExtra);
+    /* One panel stands in for both output types, so each decision pair keeps
+       its type label -- unlike a single-type card, where the pair is
+       unambiguous on its own (FR-014P). */
+    var decisionEls = !isOfficialRun ? [] : outKeys.map(function (outKey) {
+      var group = document.createElement('div');
+      group.className = 'rv-merged-decision';
+      group.appendChild(buildSectionLabel(outKey));
+      group.appendChild(buildRowDecisionButtons(outKey, 'current', null).el);
+      return group;
+    });
+    var row = buildReviewRowShell(isOfficialRun ? null : outKeys.join(' + '));
 
     var bars = [];
     outKeys.forEach(function (outKey) {
@@ -2448,6 +2483,7 @@
     });
 
     var correction = appendCorrectionControl(row, 'relation_identification', 'span');
+    if (decisionEls.length) dockDecisionsOnBypassRow(correction, decisionEls);
     if (bars.length) {
       var refreshAll = function () {
         bars.forEach(function (entry) { entry.bar.refresh(); });

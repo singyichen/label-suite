@@ -415,12 +415,26 @@
       color: var(--color-ink-muted);
       margin: 12px 0 6px;
     }
-    /* Two decision groups plus a two-type title overflow the header on a
-       narrow centre pane, so this header wraps instead of clipping. */
-    .review-row-header:has(.rv-merged-decisions) { flex-wrap: wrap; }
-    .rv-merged-decisions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-left: auto; }
     .rv-merged-decision { display: flex; align-items: center; gap: 6px; }
     .rv-merged-decision .rv-section-label { margin: 0; }
+
+    /* ── Reviewer mode: official_run decision docked on the Bypass row (FR-014P) ── */
+    /* Bypass chips sit at the row's left, the decision pair at its right; the
+       second merged group follows the first instead of being pushed away too. */
+    .preview-bypass-row > .rv-choice-group,
+    .preview-bypass-row > .rv-merged-decision { margin-left: auto; }
+    .preview-bypass-row > .rv-merged-decision ~ .rv-merged-decision { margin-left: 12px; }
+    /* Stand-in row for a task configured with allow_bypass:false, where the
+       engine renders no Bypass line of its own to dock onto. */
+    .rv-decision-row {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--color-border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
 
     /* ── Action bar ──────────────────────────────────────────── */
     .action-bar {

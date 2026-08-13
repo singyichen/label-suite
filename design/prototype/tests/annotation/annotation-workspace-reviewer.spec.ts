@@ -17,10 +17,10 @@ import {
  * workspace's `summarizeReviewerAspectCorrections` ReferenceError on review
  * submit (annotation-workspace.html:5029) recurring in the rewrite.
  *
- * Each output-type row carries exactly one header-level approve/reject
- * decision pair (ws-review-row-approve/ws-review-row-reject, via
- * buildRowDecisionButtons) -- ws-review-submit-btn requires every row to
- * carry a decision before it will submit.
+ * Each output-type row carries exactly one approve/reject decision pair
+ * (ws-review-row-approve/ws-review-row-reject, via buildRowDecisionButtons),
+ * docked on the correction panel's Bypass row (FR-014P) -- ws-review-submit-btn
+ * requires every row to carry a decision before it will submit.
  *
  * Reviewer rows are sourced from an actual runtime annotator submission
  * (performed in-test via the real UI), not from a static "expected answer"
@@ -35,7 +35,7 @@ async function submitAsAnnotator(page: Page, taskId: string, sampleId: string, a
   await page.getByTestId('ws-submit-btn').click();
 }
 
-/* Approves every ws-review-row's header-level decision directly (official_run
+/* Approves every ws-review-row's decision directly (official_run
  * has exactly one decision per output-type row, no per-annotator drilling),
  * so ws-review-submit-btn's "every row must carry a decision" validation
  * passes. */
@@ -233,5 +233,88 @@ test.describe('official_run reviewer with no prior annotator submission', () => 
     await expect(row.getByTestId('ws-review-gold-status')).toHaveCount(0);
     await expect(row.getByTestId('ws-review-annotator-list')).toHaveCount(0);
     await expect(row.getByTestId('ws-review-correct-single_label')).toBeVisible();
+  });
+});
+
+/* official_run card chrome (spec 015 v3.4.0, FR-014P): the output-type title
+ * row is gone -- the correction panel below it already shows what is being
+ * reviewed -- and the approve/reject pair moved down onto the panel's own
+ * Bypass row, so every card ends with one decision line
+ * (無法判定 … ✕ ✓) regardless of output type. Covers all 8 registry types
+ * plus both merged span tasks. */
+const CHROME_CASES: Array<{ taskId: string; sampleId: string; outKeys: string[] }> = [
+  { taskId: 'T001', sampleId: 'sent-001', outKeys: ['single_label'] },
+  { taskId: 'T002', sampleId: 'emo-001', outKeys: ['multi_label'] },
+  { taskId: 'T003', sampleId: 'taxonomy-001', outKeys: ['multi_label'] },
+  { taskId: 'T004', sampleId: 'read-001', outKeys: ['single_dim'] },
+  { taskId: 'T005', sampleId: 'mt-001', outKeys: ['multi_dim'] },
+  { taskId: 'T006', sampleId: 'sequence-tagging-001', outKeys: ['sequence_tagging'] },
+  { taskId: 'T007', sampleId: 'entity-recognition-001', outKeys: ['entity_recognition'] },
+  { taskId: 'T008', sampleId: 'rel-001', outKeys: ['relation_identification'] },
+  { taskId: 'T009', sampleId: 'sum-001', outKeys: ['free_text'] },
+  { taskId: 'T010', sampleId: 'med-001', outKeys: ['entity_recognition', 'relation_identification'] },
+  { taskId: 'T011', sampleId: '00183', outKeys: ['single_label'] },
+  { taskId: 'T012', sampleId: 'eac8d013', outKeys: ['free_text'] },
+  { taskId: 'T013', sampleId: 'absa-001', outKeys: ['entity_recognition', 'relation_identification', 'multi_dim'] },
+];
+
+test.describe('official_run review card chrome', () => {
+  for (const { taskId, sampleId, outKeys } of CHROME_CASES) {
+    test(`${taskId} (${outKeys.join('+')}) drops the type title and docks decisions on the Bypass row`, async ({ page }) => {
+      await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'official_run' }));
+      await dismissGuidelineModal(page);
+
+      const rows = page.getByTestId('ws-review-row');
+      await expect(rows.first()).toBeVisible();
+      await expect(rows.locator('.content-card-title')).toHaveCount(0);
+
+      // One decision pair per output type, every one of them sitting on a
+      // Bypass row rather than floating in a header.
+      await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(outKeys.length);
+      await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve'))
+        .toHaveCount(outKeys.length);
+      await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-reject'))
+        .toHaveCount(outKeys.length);
+    });
+  }
+
+  test('toggling Bypass re-renders the panel without losing the decision buttons', async ({ page }) => {
+    // The engine rebuilds the whole preview container on a Bypass toggle, so
+    // the docked decision pair has to survive that re-render.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    const bypassChip = page.locator('.preview-bypass-row button[aria-pressed]').first();
+    await bypassChip.click();
+    await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve')).toHaveCount(1);
+
+    await page.locator('.preview-bypass-row button[aria-pressed]').first().click();
+    await expect(page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve')).toHaveCount(1);
+  });
+
+  test('a docked decision still drives submit validation', async ({ page }) => {
+    // Validation only has a row to check once an annotator has submitted:
+    // getReviewerRows returns [] otherwise, and submit passes vacuously.
+    await submitAsAnnotator(page, 'T001', 'sent-001', async () => {
+      await page.getByTestId('ws-single-label-chip-negative').click();
+    });
+    await page.goto(buildWorkspaceUrl({ task_id: 'T001', sample_id: 'sent-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).not.toHaveText('審查已提交');
+
+    await page.locator('.preview-bypass-row').getByTestId('ws-review-row-approve').click();
+    await page.getByTestId('ws-review-submit-btn').click();
+    await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
+  });
+
+  test('dry_run keeps its output-type titles', async ({ page }) => {
+    // The consensus card still needs a title: its stats box and annotator
+    // list carry no type of their own.
+    await page.goto(buildWorkspaceUrl({ task_id: 'T005', sample_id: 'mt-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-row').locator('.content-card-title')).toHaveCount(1);
   });
 });

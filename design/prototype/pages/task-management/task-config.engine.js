@@ -34,6 +34,11 @@ function safeCssColor(value, fallback) {
   return (typeof value === 'string' && /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value)) ? value : fallback;
 }
 
+/* The trailing Bypass line of an output preview. Consumers outside this file
+   (the reviewer workspace) look it up to dock their own controls onto the same
+   row, so the name is part of the engine's contract, not a private detail. */
+var BYPASS_ROW_CLASS = 'preview-bypass-row';
+
 function syncChipsFromState() {
   ['taskCategoryChips', 'taskInputTypeChips'].forEach(function(containerId) {
     var container = el(containerId);
@@ -2358,7 +2363,8 @@ function renderAbsaUnifiedPreview(previewContainer) {
   if (hasRelOut && isBypassAllowed('relation_identification')) bypassChips.push(makeBypassChip('relation_identification', refreshUnified, bypassChipLabel('relation_identification', hasSpanOut && hasRelOut)));
   if (bypassChips.length > 0) {
     var bypassWrap = document.createElement('div');
-    bypassWrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;gap:8px;';
+    bypassWrap.className = BYPASS_ROW_CLASS;
+    bypassWrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
     bypassChips.forEach(function(chip) { bypassWrap.appendChild(chip); });
     previewContainer.appendChild(bypassWrap);
   }
@@ -2493,9 +2499,12 @@ function makeBypassChip(outKey, refresh, labelText) {
   return chip;
 }
 
+/* Consumers (the reviewer workspace) dock their own trailing controls onto
+   this row, so it carries a stable class and lays out as a flex line. */
 function appendBypassControl(container, outKey, refresh) {
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);';
+  wrap.className = BYPASS_ROW_CLASS;
+  wrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
   wrap.appendChild(makeBypassChip(outKey, refresh, state.lang === 'zh' ? '無法判定 (Bypass)' : 'Unable to determine (Bypass)'));
   container.appendChild(wrap);
 }
