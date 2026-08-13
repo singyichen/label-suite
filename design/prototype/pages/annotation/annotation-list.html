@@ -1099,13 +1099,14 @@
     var theadRow = document.querySelector('#taskTable thead tr');
     if (!theadRow) return;
     while (theadRow.firstChild) theadRow.removeChild(theadRow.firstChild);
-    if (role === 'reviewer' && runType === 'dry_run') {
+    if (role === 'reviewer') {
+      // Both run types are expandable; only dry_run compares annotators.
       theadRow.appendChild(makeTh('', '32px'));
       theadRow.appendChild(makeTh('ID'));
       theadRow.appendChild(makeTh(t('thStatus')));
       theadRow.appendChild(makeTh(t('thCompletedAt')));
       theadRow.appendChild(makeTh(t('thTextSummary')));
-      theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
+      if (runType === 'dry_run') theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
       theadRow.appendChild(makeTh(t('thActions')));
     } else {
       theadRow.appendChild(makeTh('ID'));
@@ -1223,6 +1224,55 @@
     return div;
   }
 
+  /* Expand control shared by both reviewer run types: a chevron cell plus
+     a detail row that is inserted into the DOM only on first expand.
+     Returns the cell and the toggle so callers can also wire a row click. */
+  function buildExpandControl(summaryTr, tbodyEl, colspan, contentEl) {
+    var detailTr = document.createElement('tr');
+    detailTr.className = 'annotator-detail-row hidden';
+    var detailTd = document.createElement('td');
+    detailTd.setAttribute('colspan', String(colspan));
+    detailTd.appendChild(contentEl);
+    detailTr.appendChild(detailTd);
+
+    var expandBtn = document.createElement('button');
+    expandBtn.className = 'expand-btn';
+    expandBtn.type = 'button';
+    expandBtn.setAttribute('aria-label', t('expandBtnLabel'));
+    expandBtn.setAttribute('data-testid', 'list-review-expand');
+    var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
+    chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
+    chevronSvg.setAttribute('stroke', 'currentColor'); chevronSvg.setAttribute('stroke-width', '2.5');
+    chevronSvg.setAttribute('stroke-linecap', 'round'); chevronSvg.setAttribute('stroke-linejoin', 'round');
+    var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', '9 18 15 12 9 6');
+    chevronSvg.appendChild(polyline);
+    expandBtn.appendChild(chevronSvg);
+
+    var detailInserted = false;
+    function toggleDetail(e) {
+      if (e) e.stopPropagation();
+      if (detailTr.classList.contains('hidden')) {
+        if (!detailInserted) {
+          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
+          detailInserted = true;
+        }
+        detailTr.classList.remove('hidden');
+        expandBtn.classList.add('open');
+      } else {
+        detailTr.classList.add('hidden');
+        expandBtn.classList.remove('open');
+      }
+    }
+    expandBtn.addEventListener('click', toggleDetail);
+
+    var expandTd = document.createElement('td');
+    expandTd.className = 'expand-cell';
+    expandTd.appendChild(expandBtn);
+    return { expandTd: expandTd, toggleDetail: toggleDetail };
+  }
+
   function renderReviewerRows(pagedRows, tbodyEl, context) {
     var profile = context.profile;
     pagedRows.forEach(function (item) {
@@ -1232,48 +1282,9 @@
       summaryTr.style.cursor = 'pointer';
       summaryTr.setAttribute('data-testid', 'ws-sample-item');
 
-      // Detail row — NOT appended to DOM initially (lazy insert on first expand)
-      var detailTr = document.createElement('tr');
-      detailTr.className = 'annotator-detail-row hidden';
-      var detailTd = document.createElement('td');
-      detailTd.setAttribute('colspan', '7');
-      detailTd.appendChild(buildAnnotatorDetailContent(profile, item.recordId, mockRows));
-      detailTr.appendChild(detailTd);
-
-      var expandBtn = document.createElement('button');
-      expandBtn.className = 'expand-btn';
-      expandBtn.type = 'button';
-      expandBtn.setAttribute('aria-label', t('expandBtnLabel'));
-      expandBtn.setAttribute('data-testid', 'list-review-expand');
-      var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
-      chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
-      chevronSvg.setAttribute('stroke', 'currentColor'); chevronSvg.setAttribute('stroke-width', '2.5');
-      chevronSvg.setAttribute('stroke-linecap', 'round'); chevronSvg.setAttribute('stroke-linejoin', 'round');
-      var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-      polyline.setAttribute('points', '9 18 15 12 9 6');
-      chevronSvg.appendChild(polyline);
-      expandBtn.appendChild(chevronSvg);
-
-      var detailInserted = false;
-      function showDetail() {
-        if (!detailInserted) {
-          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
-          detailInserted = true;
-        }
-        detailTr.classList.remove('hidden');
-        expandBtn.classList.add('open');
-      }
-      function hideDetail() {
-        detailTr.classList.add('hidden');
-        expandBtn.classList.remove('open');
-      }
-      function toggleDetail(e) {
-        if (e) e.stopPropagation();
-        if (detailTr.classList.contains('hidden')) { showDetail(); } else { hideDetail(); }
-      }
-      expandBtn.addEventListener('click', toggleDetail);
-      summaryTr.addEventListener('click', function () { toggleDetail(null); });
+      var expand = buildExpandControl(summaryTr, tbodyEl, 7,
+        buildAnnotatorDetailContent(profile, item.recordId, mockRows));
+      summaryTr.addEventListener('click', function () { expand.toggleDetail(null); });
 
       var statusSpan = document.createElement('span');
       statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
@@ -1293,10 +1304,6 @@
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
       actionsDiv.appendChild(editBtn);
 
-      var expandTd = document.createElement('td');
-      expandTd.className = 'expand-cell';
-      expandTd.appendChild(expandBtn);
-
       var statsEl = document.createElement('span');
       statsEl.className = 'reviewer-stats';
       statsEl.setAttribute('data-testid', 'list-review-stats');
@@ -1306,7 +1313,7 @@
       textTd.className = 'text-snippet';
       textTd.textContent = item.text;
 
-      summaryTr.appendChild(expandTd);
+      summaryTr.appendChild(expand.expandTd);
       summaryTr.appendChild(makeTd(item.recordId));
       summaryTr.appendChild(makeTd(statusSpan));
       summaryTr.appendChild(makeTd(item.completedAt));
@@ -1319,14 +1326,20 @@
     });
   }
 
-  /* official_run reviewer rows (FR-048): a single flat row per sample, no
-     expansion / stats / IAA — the reviewer decides approve or reject for
-     that one annotator's submission directly on the list row. */
+  /* official_run reviewer rows (FR-048): one row per sample with no stats
+     / IAA — the reviewer decides approve or reject for that one
+     annotator's submission directly on the list row. The row expands to
+     the assigned annotator's account and answers; with a single annotator
+     there is nothing to compare, so the mock rows are sliced to one. */
   function renderOfficialRunReviewerRows(pagedRows, tbodyEl, context) {
     var profile = context.profile;
     pagedRows.forEach(function (item) {
       var tr = document.createElement('tr');
       tr.setAttribute('data-testid', 'ws-sample-item');
+
+      var expand = buildExpandControl(tr, tbodyEl, 6,
+        buildAnnotatorDetailContent(profile, item.recordId,
+          getMockRows(profile, item.recordId).slice(0, 1)));
 
       function openWorkspace() {
         window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
@@ -1378,6 +1391,7 @@
       actionsDiv.appendChild(approveBtn);
       actionsDiv.appendChild(editBtn);
 
+      tr.appendChild(expand.expandTd);
       tr.appendChild(makeTd(item.recordId));
       tr.appendChild(makeTd(statusSpan));
       tr.appendChild(makeTd(item.completedAt));

@@ -10,11 +10,13 @@ import { buildListUrl } from './_workspace-helpers';
  * in the workspace's consensus-merge review card). The sole row action is
  * 編輯, and the toolbar submit button never renders for dry_run.
  *
- * official_run: a single flat row per sample -- no expansion, no stats
- * column, no IAA. The row carries exactly one approve/reject decision
- * (list-review-row-approve/list-review-row-reject) plus 編輯, and the
- * toolbar 送出審核 button validates one decision per sample (across the
- * whole task, not just the current page) before submitting.
+ * official_run: one row per sample -- no stats column, no IAA. The row
+ * carries exactly one approve/reject decision (list-review-row-approve/
+ * list-review-row-reject) plus 編輯, and the toolbar 送出審核 button
+ * validates one decision per sample (across the whole task, not just the
+ * current page) before submitting. Since v3.2.0 the row is expandable
+ * too, reusing the dry_run expand control to reveal the single assigned
+ * annotator's account + answers.
  *
  * Stats reuse the same algorithm as the workspace aggregate review card
  * (one algorithm per output-type category, in annotation-workspace.data.js),
@@ -129,12 +131,36 @@ test.describe('dry_run reviewer rows — read-only multi-annotator overview', ()
 });
 
 test.describe('official_run reviewer rows — single-annotator decision', () => {
-  test('table drops the stats column and expansion, keeping the 5-column layout', async ({ page }) => {
+  test('table drops the stats column but keeps the expand control', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
 
     await expect(page.locator('#taskTable thead')).not.toContainText('標記分布統計');
-    await expect(page.getByTestId('list-review-expand')).toHaveCount(0);
     await expect(page.getByTestId('list-review-stats')).toHaveCount(0);
+    // T001 ships 5 dataset records, each expandable.
+    await expect(page.getByTestId('list-review-expand')).toHaveCount(5);
+  });
+
+  test('expanding a row reveals exactly one annotator row with account and answer', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
+
+    await page.getByTestId('list-review-expand').first().click();
+    const annotatorRows = page.getByTestId('list-review-annotator-row');
+    await expect(annotatorRows).toHaveCount(1);
+    await expect(annotatorRows.first()).toContainText('kioleemg12');
+    await expect(annotatorRows.first()).toContainText('positive');
+    await expect(annotatorRows.first().getByRole('button')).toHaveCount(0);
+  });
+
+  test('the expand control toggles the detail row without navigating to the workspace', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
+
+    const expandBtn = page.getByTestId('list-review-expand').first();
+    await expandBtn.click();
+    await expect(page).toHaveURL(/annotation-list\.html/);
+    await expect(page.getByTestId('list-review-annotator-row')).toBeVisible();
+
+    await expandBtn.click();
+    await expect(page.getByTestId('list-review-annotator-row')).toBeHidden();
   });
 
   test('each row carries exactly one approve/reject decision plus 編輯', async ({ page }) => {
