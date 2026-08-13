@@ -1794,6 +1794,33 @@
      either -- buildConsensusBar excludes it from that button entirely
      (grid-click-only correction entry for divergent tokens, per FR-035's
      "唯一修正入口為 Token 網格本身"). */
+  /* A consensus merge carries only {text, type}: the mock annotator rows model
+     what an annotator answered, not the character offsets the marking flow
+     records alongside it. The engine highlights an entity in the passage only
+     when it has a start offset, so resolve one here -- first occurrence not yet
+     taken by an earlier entity, `end` inclusive to match the engine's own span
+     convention. Offsets come from the passage the panel already renders, never
+     from the record's entity column (Constitution: Data Fairness); an entity
+     whose text no longer occurs stays position-less and simply does not
+     highlight, exactly as before. */
+  function placeConsensusEntities(entities) {
+    var text = getDatasetPreviewText() || '';
+    var placed = [];
+    entities.forEach(function (entity) {
+      var out = { text: entity.text, type: entity.type };
+      for (var from = 0; text && entity.text; ) {
+        var start = text.indexOf(entity.text, from);
+        if (start < 0) break;
+        var end = start + entity.text.length - 1;
+        var taken = placed.some(function (p) { return p.start != null && start <= p.end && end >= p.start; });
+        if (!taken) { out.start = start; out.end = end; break; }
+        from = start + 1;
+      }
+      placed.push(out);
+    });
+    return placed;
+  }
+
   function applyMergedValueToState(outKey, mergedValue) {
     switch (outKey) {
       case 'single_label':
@@ -1819,7 +1846,7 @@
         break;
       }
       case 'entity_recognition':
-        state.previewEntities = (mergedValue || []).map(function (e) { return { text: e.text, type: e.type }; });
+        state.previewEntities = placeConsensusEntities(mergedValue || []);
         state.previewInited = true;
         break;
       case 'relation_identification':
@@ -2238,8 +2265,22 @@
   function seedReviewState(outKey, value, isCompactAnswer) {
     if (isCompactAnswer) {
       delete state.previewState[outKey];
-      state.previewEntities = scaffoldingEntities();
-      state.previewTriples = [];
+      /* Reset ONLY the slice this output type owns. previewEntities and
+         previewTriples are shared engine state, not per-type slots like
+         previewState[outKey], and a dry_run workspace seeds them once per
+         output type: the merged span card seeds entity_recognition and then
+         relation_identification (T010/T013), and T013 seeds a third card
+         afterwards. Clearing both arrays on every seed therefore wiped the
+         sibling that had just been seeded -- the correction panel lost its
+         entity highlights, and in T013 its relations too. */
+      if (outKey === 'entity_recognition') state.previewEntities = [];
+      if (outKey === 'relation_identification') {
+        state.previewTriples = [];
+        /* Empty unless the task has no entity_recognition output, in which
+           case this is the only seed the panel's entities ever get. */
+        var scaffolding = scaffoldingEntities();
+        if (scaffolding.length) state.previewEntities = scaffolding;
+      }
       state.previewBypass[outKey] = false;
       if (value != null) applyMergedValueToState(outKey, value);
       state.previewInited = true;

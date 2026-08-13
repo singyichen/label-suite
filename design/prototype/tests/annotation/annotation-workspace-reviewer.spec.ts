@@ -318,3 +318,37 @@ test.describe('official_run review card chrome', () => {
     await expect(page.getByTestId('ws-review-row').locator('.content-card-title')).toHaveCount(1);
   });
 });
+
+/* entity and relation answers share ONE engine state (previewEntities /
+ * previewTriples) while every other output type keeps its own slot under
+ * previewState[outKey]. A dry_run workspace seeds that shared state once per
+ * output type, so a seed that clears more than the slice it owns silently
+ * wipes an already-seeded sibling: the merged span card seeds both span types,
+ * and T013 seeds a third card afterwards. */
+test.describe('dry_run consensus seeding across output types', () => {
+  test('the merged span card keeps the entity consensus after the relation seed (T010)', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    const panel = page.getByTestId('ws-review-correct-span');
+    // 11 entities per annotator, unanimous; the merge collapses the two
+    // repeated (text, type) pairs, so 9 distinct entities reach the panel.
+    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(9);
+    await expect(panel.getByTestId('ws-ri-triple-item')).toHaveCount(8);
+    // Merged entities carry no offsets of their own; the panel resolves them
+    // against the passage so the reviewer can still see what is marked.
+    await expect(panel.locator('.absa-span-highlight')).toHaveCount(9);
+  });
+
+  test('a later card of another output type leaves both span consensuses intact (T013)', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    const panel = page.getByTestId('ws-review-correct-span');
+    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(4);
+    await expect(panel.getByTestId('ws-ri-triple-item')).toHaveCount(3);
+    await expect(panel.locator('.absa-span-highlight').first()).toBeVisible();
+    // The multi_dim card renders after the span card and seeds last.
+    await expect(page.getByTestId('ws-review-correct-multi_dim')).toBeVisible();
+  });
+});
