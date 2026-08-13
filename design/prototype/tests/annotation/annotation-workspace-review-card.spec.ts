@@ -246,6 +246,30 @@ const TASK_COVERAGE: Array<{ taskId: string; sampleId: string; outKeys: string[]
 
 const APPLY_MAJORITY_EXCLUDED = new Set(['sequence_tagging', 'free_text']);
 
+/* v3.3.0 FR-014N: entity_recognition and relation_identification share one
+ * engine preview, so a task shipping both collapses them into ONE review
+ * card ("review unit") holding both comparison sections but a single
+ * correction panel. Every other output type stays one unit per key. */
+const SPAN_KEYS = ['entity_recognition', 'relation_identification'];
+
+function reviewUnits(outKeys: string[]): string[][] {
+  const spanKeys = outKeys.filter((key) => SPAN_KEYS.includes(key));
+  const merged = spanKeys.length === SPAN_KEYS.length;
+  const units: string[][] = [];
+  for (const key of outKeys) {
+    if (merged && SPAN_KEYS.includes(key)) {
+      if (key === spanKeys[0]) units.push(spanKeys);
+      continue;
+    }
+    units.push([key]);
+  }
+  return units;
+}
+
+function correctionTestId(unit: string[]): string {
+  return unit.length > 1 ? 'ws-review-correct-span' : `ws-review-correct-${unit[0]}`;
+}
+
 for (const { taskId, sampleId, outKeys } of TASK_COVERAGE) {
   test(`reviewer consensus card renders for ${taskId} (${outKeys.join('+')})`, async ({ page }) => {
     const errors = trackPageErrors(page);
@@ -253,33 +277,127 @@ for (const { taskId, sampleId, outKeys } of TASK_COVERAGE) {
     await page.goto(buildWorkspaceUrl({ task_id: taskId, sample_id: sampleId, role: 'reviewer', run_type: 'dry_run' }));
     await dismissGuidelineModal(page);
 
+    const units = reviewUnits(outKeys);
     const rows = page.getByTestId('ws-review-row');
-    await expect(rows).toHaveCount(outKeys.length);
+    await expect(rows).toHaveCount(units.length);
 
-    for (let i = 0; i < outKeys.length; i++) {
-      const outKey = outKeys[i];
+    for (let i = 0; i < units.length; i++) {
+      const unit = units[i];
       const row = rows.nth(i);
-      await expect(row.getByTestId('ws-review-stats')).toHaveText(/.+/);
-      await expect(row.getByTestId('ws-review-consensus-badge')).toHaveText(/.+/);
-      if (APPLY_MAJORITY_EXCLUDED.has(outKey)) {
-        await expect(row.getByTestId('ws-review-apply-majority')).toHaveCount(0);
-      } else {
-        await expect(row.getByTestId('ws-review-apply-majority')).toBeVisible();
-      }
+      // One comparison section per output type, even inside a merged card.
+      await expect(row.getByTestId('ws-review-stats')).toHaveCount(unit.length);
+      await expect(row.getByTestId('ws-review-consensus-badge')).toHaveCount(unit.length);
+      await expect(row.getByTestId('ws-review-stats').first()).toHaveText(/.+/);
+      await expect(row.getByTestId('ws-review-consensus-badge').first()).toHaveText(/.+/);
+
+      const majorityCount = unit.filter((key) => !APPLY_MAJORITY_EXCLUDED.has(key)).length;
+      await expect(row.getByTestId('ws-review-apply-majority')).toHaveCount(majorityCount);
 
       const annotatorRows = row.getByTestId('ws-review-annotator-row');
-      await expect(annotatorRows).toHaveCount(3);
-      for (let a = 0; a < 3; a++) {
+      await expect(annotatorRows).toHaveCount(3 * unit.length);
+      for (let a = 0; a < 3 * unit.length; a++) {
         const answerText = await annotatorRows.nth(a).getByTestId('ws-review-annotator-answer').textContent();
         expect((answerText || '').trim().length).toBeGreaterThan(0);
       }
 
-      await expect(row.getByTestId(`ws-review-correct-${outKey}`)).toBeVisible();
+      // ...but exactly one correction panel per card.
+      await expect(row.getByTestId(correctionTestId(unit))).toHaveCount(1);
+      await expect(row.getByTestId(correctionTestId(unit))).toBeVisible();
     }
 
     assertNoPageErrors(errors);
   });
 }
+
+/* v3.3.0 FR-014N/FR-014O — the raw sample text used to be painted up to
+ * three times on one reviewer screen (the 原始文本 card, the
+ * entity_recognition correction panel and the relation_identification
+ * correction panel), all three visually identical, so nothing signalled
+ * which copy was the interactive one. Two rules cut that down: span output
+ * types share one card, and the 原始文本 card -- whose value is the UNION of
+ * every annotator's spans -- is dry_run-only, because official_run has a
+ * single annotator whose answers the correction panel already shows. */
+test.describe('Span output types share one review card', () => {
+  const previewText = (page: Page) => page.locator('.absa-preview-text');
+
+  test('T010 (entity+relation) renders one card with both comparison sections and one correction panel', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-row')).toHaveCount(1);
+    const row = page.getByTestId('ws-review-row').first();
+    await expect(row.getByTestId('ws-review-stats')).toHaveCount(2);
+    await expect(row.getByTestId('ws-review-annotator-list')).toHaveCount(2);
+    await expect(row.getByTestId('ws-review-correct-span')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-correct-entity_recognition')).toHaveCount(0);
+    await expect(page.getByTestId('ws-review-correct-relation_identification')).toHaveCount(0);
+  });
+
+  test('each comparison section is labeled with its output type', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    const labels = page.getByTestId('ws-review-section-label');
+    await expect(labels).toHaveCount(2);
+    await expect(labels.nth(0)).toHaveText('entity_recognition');
+    await expect(labels.nth(1)).toHaveText('relation_identification');
+  });
+
+  test('T013 keeps multi_dim as its own card next to the merged span card', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-row')).toHaveCount(2);
+    await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-correct-multi_dim')).toHaveCount(1);
+  });
+
+  test('official_run keeps one approve/reject pair per output type on the merged card', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-row')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-row-approve')).toHaveCount(2);
+    await expect(page.getByTestId('ws-review-row-reject')).toHaveCount(2);
+    await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(1);
+  });
+
+  test('single-span tasks are untouched — T007 and T008 still render their own correction panel', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+    await expect(page.getByTestId('ws-review-correct-entity_recognition')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(0);
+
+    await page.goto(buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+    await expect(page.getByTestId('ws-review-correct-relation_identification')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-correct-span')).toHaveCount(0);
+  });
+
+  test('official_run paints the sample text exactly once', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-source-text')).toHaveCount(0);
+    await expect(previewText(page)).toHaveCount(1);
+  });
+
+  test('dry_run keeps the union 原始文本 card plus the single correction preview', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-source-text')).toHaveCount(1);
+    await expect(previewText(page)).toHaveCount(1);
+  });
+
+  test('T007 official_run drops the 原始文本 card the correction panel already duplicates', async ({ page }) => {
+    await page.goto(buildWorkspaceUrl({ task_id: 'T007', sample_id: 'entity-recognition-001', role: 'reviewer', run_type: 'official_run' }));
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-source-text')).toHaveCount(0);
+    await expect(previewText(page)).toHaveCount(1);
+  });
+});
 
 test.describe('Type-specific stats sanity', () => {
   test('T004 (single_dim) stats contains "mean :"', async ({ page }) => {
@@ -396,7 +514,9 @@ test.describe('Entity recognition review — source-text highlights and labeled 
     await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
     await dismissGuidelineModal(page);
 
-    const entityCard = page.getByTestId('ws-review-row').filter({ hasText: /entity_recognition/i });
+    // T010/T013 merge both span output types into one card (FR-014N), so
+    // scope to the entity section rather than the card.
+    const entityCard = page.getByTestId('ws-review-section-entity_recognition');
     const rows = entityCard.getByTestId('ws-review-annotator-answer').first().getByTestId('entity-list-row');
     await expect(rows).toHaveCount(11);
     await expect(rows.nth(0)).toContainText('左心耳');
@@ -409,7 +529,9 @@ test.describe('Entity recognition review — source-text highlights and labeled 
     await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
     await dismissGuidelineModal(page);
 
-    const entityCard = page.getByTestId('ws-review-row').filter({ hasText: /entity_recognition/i });
+    // T010/T013 merge both span output types into one card (FR-014N), so
+    // scope to the entity section rather than the card.
+    const entityCard = page.getByTestId('ws-review-section-entity_recognition');
     await expect(entityCard.getByTestId('ws-review-stats')).toContainText('BODY×18');
 
     const firstAnswer = entityCard.getByTestId('ws-review-annotator-answer').first();
@@ -425,7 +547,9 @@ test.describe('Entity recognition review — source-text highlights and labeled 
     await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
     await dismissGuidelineModal(page);
 
-    const entityCard = page.getByTestId('ws-review-row').filter({ hasText: /entity_recognition/i });
+    // T010/T013 merge both span output types into one card (FR-014N), so
+    // scope to the entity section rather than the card.
+    const entityCard = page.getByTestId('ws-review-section-entity_recognition');
     const rows = entityCard.getByTestId('ws-review-annotator-answer').first().getByTestId('entity-list-row');
     await expect(rows).toHaveCount(4);
     await expect(rows.nth(0)).toContainText('Note 10 plus');
@@ -435,8 +559,10 @@ test.describe('Entity recognition review — source-text highlights and labeled 
 });
 
 test.describe('Relation review — annotator-view-parity triple rows', () => {
+  // Every task in this block ships both span output types, so they share one
+  // review card (FR-014N) and the relation comparison lives in its section.
   function relationCard(page: Page) {
-    return page.getByTestId('ws-review-row').filter({ hasText: 'relation_identification' });
+    return page.getByTestId('ws-review-section-relation_identification');
   }
 
   async function gotoMed001Reviewer(page: Page) {

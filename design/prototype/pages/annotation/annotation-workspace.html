@@ -407,6 +407,21 @@
 
     .rv-correction-title { font-size: 12px; font-weight: 700; color: var(--color-ink-muted); margin: 12px 0 6px; }
 
+    /* ── Reviewer mode: merged span review card (FR-014N) ────── */
+    .rv-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--color-ink-muted);
+      margin: 12px 0 6px;
+    }
+    /* Two decision groups plus a two-type title overflow the header on a
+       narrow centre pane, so this header wraps instead of clipping. */
+    .review-row-header:has(.rv-merged-decisions) { flex-wrap: wrap; }
+    .rv-merged-decisions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-left: auto; }
+    .rv-merged-decision { display: flex; align-items: center; gap: 6px; }
+    .rv-merged-decision .rv-section-label { margin: 0; }
+
     /* ── Action bar ──────────────────────────────────────────── */
     .action-bar {
       flex-shrink: 0;

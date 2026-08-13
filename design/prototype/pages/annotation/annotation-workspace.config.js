@@ -2274,14 +2274,16 @@
     return row;
   }
 
-  function appendCorrectionControl(row, outKey) {
+  /* testidSuffix defaults to outKey; the merged span card passes 'span'
+     because its single panel stands in for both of its output types. */
+  function appendCorrectionControl(row, outKey, testidSuffix) {
     var correctionTitle = document.createElement('div');
     correctionTitle.className = 'rv-correction-title';
     correctionTitle.textContent = t('reviewCorrectionTitle');
     row.appendChild(correctionTitle);
 
     var correction = document.createElement('div');
-    correction.setAttribute('data-testid', 'ws-review-correct-' + outKey);
+    correction.setAttribute('data-testid', 'ws-review-correct-' + (testidSuffix || outKey));
     var panelMount = document.createElement('div');
     correction.appendChild(panelMount);
     renderOutputPreview(panelMount, outKey);
@@ -2357,6 +2359,103 @@
     return currentRunType === 'official_run'
       ? buildOfficialRunReviewRow(outKey, submission)
       : buildDryRunReviewRow(outKey);
+  }
+
+  /* FR-014N: entity_recognition and relation_identification are two stages
+     of ONE annotation action (mark the spans, then link them), and the
+     engine already models them that way -- the relation panel it mounts is
+     a superset that renders the raw text, the entity type selector, both
+     bypass toggles and the relation builder. Giving each output type its
+     own correction control therefore painted the same sample text twice on
+     one screen (three times with the 原始文本 card on top), all copies
+     visually identical, so nothing told the reviewer which one was
+     interactive. A task shipping both collapses them into a single card:
+     comparison stays per output type (each keeps its own stats, consensus
+     badge, apply-majority and annotator list, under a type label), and the
+     card closes with exactly one 直接修正 panel mounted from
+     relation_identification. Decisions and adjudication state stay keyed by
+     output type, so both submit paths are unaffected. */
+  var SPAN_OUTPUT_KEYS = ['entity_recognition', 'relation_identification'];
+
+  function mergedSpanKeys() {
+    var keys = SPAN_OUTPUT_KEYS.filter(function (outKey) {
+      return state.selectedOutputTypes.indexOf(outKey) >= 0;
+    });
+    return keys.length === SPAN_OUTPUT_KEYS.length ? keys : null;
+  }
+
+  function buildSectionLabel(outKey) {
+    var label = document.createElement('div');
+    label.className = 'rv-section-label';
+    label.setAttribute('data-testid', 'ws-review-section-label');
+    label.textContent = outKey;
+    return label;
+  }
+
+  function buildMergedSpanReviewRow(outKeys, submission) {
+    var isOfficialRun = currentRunType === 'official_run';
+
+    var headerExtra = null;
+    if (isOfficialRun) {
+      headerExtra = document.createElement('div');
+      headerExtra.className = 'rv-merged-decisions';
+      outKeys.forEach(function (outKey) {
+        var group = document.createElement('div');
+        group.className = 'rv-merged-decision';
+        group.appendChild(buildSectionLabel(outKey));
+        group.appendChild(buildRowDecisionButtons(outKey, 'current', null).el);
+        headerExtra.appendChild(group);
+      });
+    }
+    var row = buildReviewRowShell(outKeys.join(' + '), headerExtra);
+
+    var bars = [];
+    outKeys.forEach(function (outKey) {
+      if (isOfficialRun) {
+        reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
+        if (!reviewRowSeeded[outKey]) {
+          seedReviewState(outKey, submission || {}, false);
+          reviewRowSeeded[outKey] = true;
+        }
+        return;
+      }
+      var rows = getReviewerRows(outKey);
+      var merge = computeMerge(outKey);
+      /* One card now holds two comparison blocks, so each gets its own
+         wrapper -- otherwise 'the stats box' or 'the first annotator
+         answer' is ambiguous for both readers and tests. */
+      var section = document.createElement('div');
+      section.setAttribute('data-testid', 'ws-review-section-' + outKey);
+      section.appendChild(buildSectionLabel(outKey));
+      section.appendChild(buildStatsBox(outKey, rows));
+      var consensusBar = buildConsensusBar(outKey, merge);
+      section.appendChild(consensusBar.el);
+      section.appendChild(buildConsensusAnnotatorList(outKey, rows, function () {
+        renderReviewerWorkspace();
+      }));
+      row.appendChild(section);
+      bars.push({ bar: consensusBar, merge: merge });
+
+      reviewRowOriginals[outKey] = merge.mergedValue != null ? describeCompactAnswer(outKey, merge.mergedValue) : '';
+      if (!reviewRowSeeded[outKey]) {
+        seedReviewState(outKey, merge.mergedValue, true);
+        reviewRowSeeded[outKey] = true;
+      }
+    });
+    /* Same post-seed re-paint buildDryRunReviewRow() needs, per bar. */
+    bars.forEach(function (entry) {
+      if (entry.merge.status === ADJUDICATION_STATUS.CONSENSUS) entry.bar.refresh();
+    });
+
+    var correction = appendCorrectionControl(row, 'relation_identification', 'span');
+    if (bars.length) {
+      var refreshAll = function () {
+        bars.forEach(function (entry) { entry.bar.refresh(); });
+      };
+      correction.addEventListener('input', refreshAll, true);
+      correction.addEventListener('click', refreshAll, true);
+    }
+    return row;
   }
 
   /* Reviewer and annotator share the same sample-source contract (spec 015
@@ -2501,13 +2600,27 @@
     /* Entity and relation tasks additionally restore the legacy 原始文本
        card on top: entity tasks show every annotated result inline (union
        across annotators), relation-only tasks show the record's evidence-
-       entity highlights instead (FR-014L). */
-    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0 ||
-        state.selectedOutputTypes.indexOf('relation_identification') >= 0) {
+       entity highlights instead (FR-014L). dry_run only (FR-014O): the
+       card earns its place by showing the UNION across annotators, which
+       the correction panel below -- seeded from the merge -- does not.
+       official_run has a single annotator whose spans that same panel
+       already renders, so the card would be a pixel-identical second copy
+       of the sample text with no added information. */
+    if (currentRunType !== 'official_run' &&
+        (state.selectedOutputTypes.indexOf('entity_recognition') >= 0 ||
+         state.selectedOutputTypes.indexOf('relation_identification') >= 0)) {
       preview.appendChild(buildReviewerSourceTextCard(rawRecord));
     }
 
+    var spanKeys = mergedSpanKeys();
+    var spanRowRendered = false;
     state.selectedOutputTypes.forEach(function (outKey) {
+      if (spanKeys && spanKeys.indexOf(outKey) >= 0) {
+        if (spanRowRendered) return;
+        spanRowRendered = true;
+        preview.appendChild(buildMergedSpanReviewRow(spanKeys, submission));
+        return;
+      }
       preview.appendChild(buildReviewRow(outKey, submission));
     });
   }
