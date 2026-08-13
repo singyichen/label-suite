@@ -129,3 +129,39 @@ test.describe('relation_identification output type — pure mode (T008)', () => 
     await expect(page.getByTestId('ws-ri-triple-item')).toHaveCount(1);
   });
 });
+
+/* Reviewer parity for the same pure mode. A relation-only task's entity spans
+ * live in the dataset (evidence role) and never travel inside an annotator's
+ * submission -- seeding the review panel purely from that submission left the
+ * engine's entity list empty, so findEntitySlot() rejected every passage pick
+ * with 「該選取不是資料中的既有實體」 and the reviewer could not correct a
+ * single relation. */
+test.describe('relation_identification output type — reviewer, pure mode (T008)', () => {
+  for (const runType of ['dry_run', 'official_run'] as const) {
+    test(`${runType} reviewer sees the dataset entities and can build a relation`, async ({ page }) => {
+      await page.goto(
+        buildWorkspaceUrl({ task_id: 'T008', sample_id: 'rel-001', role: 'reviewer', run_type: runType })
+      );
+      await dismissGuidelineModal(page);
+
+      const panel = page.getByTestId('ws-review-correct-relation_identification');
+      await expect(panel.locator('.absa-span-highlight')).toHaveCount(5);
+
+      await selectWorkspaceText(page, panel.locator('.absa-preview-text'), '高血壓');
+      await panel.getByTestId('ws-ri-e1-btn').click();
+      await expect(panel.getByTestId('ws-ri-slot-e1')).toContainText('高血壓');
+    });
+  }
+
+  /* The mirror rule (Constitution: Data Fairness). When entity_recognition IS
+   * an output type the spans ARE the answer under review, so the dataset's own
+   * entity column must never be injected as if an annotator had marked it. */
+  test('a composed entity_recognition task is never seeded from the dataset entities', async ({ page }) => {
+    await page.goto(
+      buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' })
+    );
+    await dismissGuidelineModal(page);
+
+    await expect(page.getByTestId('ws-review-correct-span').locator('.absa-span-highlight')).toHaveCount(0);
+  });
+});

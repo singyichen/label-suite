@@ -6,7 +6,7 @@
  * annotation list both resolve everything from `task_id` -> TaskProfile.
  * `task_type` / `sub_type` query params no longer exist.
  */
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export type Role = 'annotator' | 'reviewer';
 export type RunType = 'dry_run' | 'official_run';
@@ -68,14 +68,17 @@ export async function setRangeValue(locator: import('@playwright/test').Locator,
   }, value);
 }
 
-/* Selects `text` (first occurrence) inside the element located by `testId`
+/* Selects `text` (first occurrence) inside the element located by `target`
  * and fires the mouseup the engine's passage-selection handler listens for.
  * Walks text nodes so the target can live inside an entity highlight span
  * or a plain text segment between spans — mirrors how an annotator drags
  * over the passage in the relation builder flow (E1/Arg1 → Relation →
- * E2/Arg2). */
-export async function selectWorkspaceText(page: Page, testId: string, text: string) {
-  const el = page.getByTestId(testId);
+ * E2/Arg2).
+ * `target` is a testid for the annotator's input card; reviewer panels render
+ * the passage inside the engine's own element, whose mouseup listener the
+ * dispatch must land on directly, so those callers pass a Locator. */
+export async function selectWorkspaceText(page: Page, target: string | Locator, text: string) {
+  const el = typeof target === 'string' ? page.getByTestId(target) : target;
   await el.evaluate((node, target) => {
     const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
     let textNode: Node | null;

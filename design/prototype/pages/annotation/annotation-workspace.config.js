@@ -2217,10 +2217,28 @@
      OutputAnswer submission (official_run, FR-044) or a CompactAnswer-shaped
      consensus-merge result (dry_run, FR-042); both paths go through the
      SAME assignment logic below. */
+  /* A task whose outputs[] carries no entity_recognition treats the dataset's
+     entity spans as scaffolding (evidence role, T008): the annotator picks
+     relations out of them but never marks or submits an entity list, so a
+     review panel seeded purely from the submission starts with none -- and the
+     engine's relation builder then rejects every passage pick, because
+     findEntitySlot() only accepts spans present in state.previewEntities.
+     Re-seed from the dataset record, exactly as initPreviewState() does for
+     the annotator.
+     Conditioned on composition, not on emptiness alone: when
+     entity_recognition IS an output type those spans are the answer under
+     review, and injecting the dataset's own column would hand the reviewer a
+     gold answer nobody submitted (Constitution: Data Fairness). */
+  function scaffoldingEntities() {
+    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0) return [];
+    var raw = state.datasetRawFirstRow || {};
+    return Array.isArray(raw.entities) ? deepClone(raw.entities) : [];
+  }
+
   function seedReviewState(outKey, value, isCompactAnswer) {
     if (isCompactAnswer) {
       delete state.previewState[outKey];
-      state.previewEntities = [];
+      state.previewEntities = scaffoldingEntities();
       state.previewTriples = [];
       state.previewBypass[outKey] = false;
       if (value != null) applyMergedValueToState(outKey, value);
@@ -2252,7 +2270,8 @@
     }
     state.previewBypass[outKey] = !!(submission.previewBypass && submission.previewBypass[outKey]);
     if (outKey === 'entity_recognition' || outKey === 'relation_identification') {
-      state.previewEntities = deepClone(submission.previewEntities || []);
+      var submitted = deepClone(submission.previewEntities || []);
+      state.previewEntities = submitted.length ? submitted : scaffoldingEntities();
       state.previewTriples = deepClone(submission.previewTriples || []);
       state.previewInited = true;
     }
