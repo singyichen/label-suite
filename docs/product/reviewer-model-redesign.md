@@ -294,13 +294,16 @@ P4 與 P5 都只相依 P1，**可與 P2／P3 並行**。原本想把設定與統
 
 ## 10. 實機操作順帶發現的既有缺陷
 
-與本次需求無關，尚未開 issue：
+與本次需求無關，已各自開單追蹤：
 
-- 按「下一筆」後畫面已換，網址列 `sample_id` 沒同步——重整或分享連結會跳回錯的樣本
-- `全部通過` / `全部退回` 是沒有任何引用點的 i18n 死字串
-- 資料集分析頁的「審核標記」按鈕沒有 `href` 也沒有 `onclick`，點了沒反應
-- 審核員沒帶 `task_id` 進清單會卡在「找不到這個任務」，無任務選擇器也無返回引導
-- `annotation-list.html` 只讀 `role` 參數，`task_role` 是無效參數
+| 缺陷 | 位置 | Issue |
+|------|------|-------|
+| 切換樣本後網址列 `sample_id` 沒同步——重整或分享連結會回到進入時那一筆 | `annotation-workspace.config.js` 讀 `sample_id`（:3147）但 `selectSample()`（:1291-1310）從不寫回 | [#151](https://github.com/singyichen/label-suite/issues/151) |
+| 側邊欄宣傳的 8 個快捷鍵全數未實作；`全部通過` / `全部退回` 是零引用的 i18n 死字串 | workspace 唯一的 `keydown` 只處理 Esc（:2970-2972）；死鍵在 :56-57 / :113-114 | [#152](https://github.com/singyichen/label-suite/issues/152) |
+| 資料集分析頁「審核標記」/「調整參與狀態」按鈕無 `href`、無 `onclick`、無事件綁定 | `quality-*.html` 各 partial；全 repo 對 `risk-action-btn` 只有一處 CSS 引用 | [#153](https://github.com/singyichen/label-suite/issues/153) |
+| 沒帶 `task_id` 進標記清單會卡在「找不到這個任務」，無出口；訊息插值為空字串；`dashboardHref` 是死常數 | `annotation-list.html` :968-978 / :1658-1668 / :573 | [#154](https://github.com/singyichen/label-suite/issues/154) |
+
+**已撤回的一項**：原先記錄「`annotation-list.html` 只讀 `role`，`task_role` 是無效參數」。查證後**不是缺陷**——`task_role` 是 task-list / task-detail 的檢視者角色參數（`project_leader` / `super_admin`），annotation-list 用的 `role` 是作業角色（`annotator` / `reviewer`），兩者是不同軸線；且沒有任何頁面會把 `task_role` 帶向 annotation-list（`dashboard.js` 的 `task_role` 只是 analytics 屬性，導頁 URL 帶的是 `role`）。
 
 ---
 
