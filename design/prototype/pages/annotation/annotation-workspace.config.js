@@ -1726,9 +1726,9 @@
 
   /* The one annotator an official_run row belongs to (FR-049). Both branches
      below name the SAME person on purpose: DEFAULT_ANNOTATOR_ID is the first
-     annotator of each REVIEWER_MOCK_ROWS group, so a real submission and the FR-044a
-     demo fallback that stands in for it produce one continuous review trail
-     rather than splitting across two ids. */
+     annotator of each REVIEWER_MOCK_ROWS group, so a real submission and the
+     FR-044a demo fallback that stands in for it produce one continuous review
+     trail rather than splitting across two ids. */
   function currentAnnotatorId() {
     return (
       (currentIdentity && currentIdentity.annotatorId) ||

@@ -268,7 +268,7 @@
 
   /* Full traceability view for one annotation: the annotator's own bucket
      plus EVERY reviewer bucket that audited that annotator, merged into one
-     chronological list (AC-3.8, and v3.8.0's AC-7.4 標記員 → 審核員 →
+     chronological list (AC-3.8, and v3.8.0's AC-4.8 標記員 → 審核員 →
      仲裁 trail). Scanning by prefix rather than reading one known reviewer
      bucket is what makes the trail complete under 一式 N 份 -- with the
      reviewer id now in the key, reading only the current reviewer's bucket
