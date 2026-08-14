@@ -6,6 +6,7 @@
     pending: 'badge-iaa-pending',
     fail: 'badge-iaa-fail',
     not_started: 'badge-iaa-not-started',
+    not_applicable: 'badge-iaa-not-applicable',
   };
   var ROLE_BADGE_CLS = {
     project_leader: 'badge-role-pl',

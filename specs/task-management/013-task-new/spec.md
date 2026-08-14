@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-list-output-types
 建立日期: 2026-04-20
-版本: 6.9.0
+版本: 6.9.1
 狀態: Draft
 ---
 
@@ -13,19 +13,7 @@
 
 讓 Project Leader 透過 config-driven 的四步驟精靈建立任務，並在 Step 1、Step 2 以單一 taxonomy 與 registry 呈現目前支援的輸出類型、設定欄位及可操作預覽。
 
-## 輸入與生成規則
-
-**輸入描述**：本規格需定義 New Task 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
-
-**產生規格時必須遵守**：
-
-1. 先確認本規格範圍與需求來源一致：IA Spec 清單 #013 — 新增任務（Step 1–4 + 啟動設定 + 標記設定檔 全任務類型）（task-new）。
-2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
-3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
-4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
-5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
-
-**已釐清事項**：
+## 已釐清事項
 
 - 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
@@ -107,7 +95,7 @@
 | `classification` | 0.75 | — | 3 | 12% |
 | `regression` | 0.75 | 0.10 | 5 | 15% |
 | `sequence` | 0.82 | — | 3 | 15% |
-| `generation` | 0.70 | — | 3 | 18% |
+| `generation` | 不適用（free_text 由審核員評估，不計自動 IAA） | — | 3 | 18% |
 
 > **注意**：`試標比例參數` 僅作為系統換算預設抽樣筆數之用（`round(dataset_total × trialPercent / 100)`），UI 不暴露百分比模式，使用者僅輸入筆數。當使用者選擇多個大分類時，取最高試標比例參數。
 
@@ -777,40 +765,11 @@ flowchart LR
 
 ---
 
-## 審查與驗收清單
-
-### 內容品質
-
-- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
-- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
-- [x] 無未解決的待釐清標記殘留。
-- [x] 需求、驗收情境與成功標準皆可測試。
-
-### Label Suite 合規性
-
-- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
-- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
-- [x] 涉及 output type 的行為皆要求由 `OUTPUT_TYPE_REGISTRY` 驅動，不以硬編任務邏輯定義。
-- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
-- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
-- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
-
-### 執行狀態
-
-- [x] 輸入描述已解析。
-- [x] 角色、互動、資料狀態與限制已萃取。
-- [x] 模糊點已釐清或明確排除於本版範圍。
-- [x] 使用者情境已定義。
-- [x] 功能需求已定義。
-- [x] 關鍵實體或狀態模型已定義。
-- [x] Review checklist 已通過。
-
----
-
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 6.9.1 | 2026-08-12 | **IAA 策略 v2 — generation 分類不再顯示建議 IAA（patch）**：`SAMPLING_DEFAULTS_BY_CATEGORY` 表格 `generation` 列「建議 IAA」欄由 `0.70` 改為「不適用（free_text 由審核員評估，不計自動 IAA）」，對齊 `dataset-017` v2.0.0 `free_text` 排除自動 IAA 的規則；`試標比例參數` 與其餘欄位不變，不新增 UI 或 FR。**（同版本內修訂，speckit.analyze）**：依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 6.9.0 | 2026-07-31 | **項目對名稱設定**：輸入類型為 `item_pair` 時，Step 2 標記設定於手風琴清單上方新增不可收合的「項目對名稱」設定卡，兩個單行文字欄位預設帶入 Step 1 兩個 Input 欄位的原始欄位名稱並開放編輯；標記預覽配對區塊小標即時顯示生效值，欄位清空時該側回退原始欄位名稱，更換資料集或角色指定時重新初始化。unified config 於 `item_pair` 輸入時新增頂層 `item_pair_labels: [string, string]` 並於 Code 儲存回填時驗證；014 經共用引擎同步生效並於儲存時持久化。新增 FR-003k 與驗收情境 32，更新 FR-003g-3、介面定義與 Prototype Playwright 斷言；`single_item` 與傳統 `sentence_pairs` 路徑不受影響。 |
 | 6.8.0 | 2026-07-31 | **序列標註預覽移除輸出卡片標題**：`sequence_tagging` 於 `OUTPUT_TYPE_REGISTRY` 宣告 `hidePreviewTitle: true`，Step 2 標記預覽不再顯示輸出卡片的「序列標註」標題（含多輸出組合的獨立卡片路徑），預覽直接以「原始文本」區塊起始；014 Overview「標記設定」編輯模式經共用引擎同步生效。其他輸出類型卡片標題與多輸出組合之間的分隔線行為不變；更新驗收情境 10、FR-003d-1 與 Prototype Playwright 斷言。 |
 | 6.7.0 | 2026-07-31 | **多標籤「所有層級皆可選」提示改為 Tooltip**：`multi_label` 的 `label_options` 欄位宣告 `hintAsTooltip: true`，「所有層級皆可選 — 父、子標籤可分別勾選，系統會保留其分類位置。」提示移入 registry `hint_zh`／`hint_en`，taxonomy 樹編輯器移除固定提示框（`.taxonomy-editor-note`），改為「標籤選項」標題旁實心圓形「?」按鈕的 tooltip（hover／focus 顯示，樣式同 v6.6.0）；共用引擎抽出 `attachFieldHintTooltip` helper 供 text 與 taxonomy-tree 欄位共用；014 標記設定編輯模式經共用引擎同步生效。更新 FR-003d-6 與 Prototype Playwright 斷言。 |

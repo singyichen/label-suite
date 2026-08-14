@@ -1,0 +1,104 @@
+<section class="panel" aria-labelledby="iaaTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="iaaTitle">IAA 報告</h2>
+  </div>
+  <div class="iaa-method-row">
+    <span class="iaa-primary-star" aria-label="主要指標">★</span>
+    <span class="iaa-method-name" id="iaaMethodName" data-i18n="singleDimQuality.methodName">ICC（2,1）（Intraclass Correlation Coefficient）</span>
+    <span id="iaaMethodSuffix" data-i18n="singleDimQuality.methodSuffix">— 主要指標</span>
+  </div>
+  <div class="iaa-score-grid iaa-score-grid-1">
+    <div class="iaa-score-card card-pass">
+      <div class="iaa-card-label" id="lblSingleDimMetric" data-i18n="singleDimQuality.metricLabel">ICC（2,1）</div>
+      <div class="iaa-card-value pass">0.79</div>
+      <div class="iaa-card-calc" id="lblSingleDimCalc" data-i18n="singleDimQuality.calcDesc">單一評分維度</div>
+      <div class="iaa-bar-wrap"><div class="iaa-bar-fill pass" style="width:79%"></div></div>
+      <div class="iaa-threshold-row">
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-pass"></span>
+          <span id="lblSingleDimThrRec" data-i18n="singleDimQuality.thresholdRecommended">建議門檻 0.75 — <strong class="t-pass">通過</strong></span>
+        </span>
+        <span class="iaa-threshold-item">
+          <span class="t-dot t-dot-fail"></span>
+          <span id="lblSingleDimThrStrict" data-i18n="singleDimQuality.thresholdStrict">嚴格門檻 0.80 — <strong class="t-fail">未達</strong></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <button class="alt-toggle-btn" id="altBtnSingleDim" type="button" aria-expanded="false" aria-controls="altBodySingleDim">
+    <svg class="alt-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    <span id="altLblSingleDim" data-i18n="singleDimQuality.altToggle">輔助指標</span>
+  </button>
+  <div class="alt-metrics-body" id="altBodySingleDim" aria-hidden="true">
+    <div class="table-scroll">
+      <table class="alt-table">
+        <thead><tr><th id="altHSingleDimMetric" data-i18n="singleDimQuality.altHeaderMetric">指標</th><th id="altHSingleDimVal" data-i18n="singleDimQuality.altHeaderVal">數值</th></tr></thead>
+        <tbody>
+          <tr><td><span class="alt-metric-name">Krippendorff's Alpha</span> <span class="alt-metric-note">（interval）</span></td><td>0.76</td></tr>
+          <tr><td><span class="alt-metric-name">Pearson Correlation</span></td><td>0.84</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="lowConsistencyTitle">
+  <div class="panel-head-row">
+    <h2 class="panel-title" id="lowConsistencyTitle" data-i18n="qualityListRank.lowConsistencyTitle">一致性最低樣本清單</h2>
+    <span class="badge badge-neutral">2 筆</span>
+  </div>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.lowConsistencySubtitle">依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="一致性最低樣本清單（單維度評分）">
+        <thead>
+          <tr>
+            <th data-i18n="qualityListRank.headerSample">樣本</th>
+            <th data-i18n="qualityListRank.headerScore">分歧分數</th>
+            <th style="min-width:200px" data-i18n="qualityListRank.headerDetail">分歧描述</th>
+            <th data-i18n="qualityListRank.headerQueue">佇列狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#05</span></td>
+            <td><span class="badge badge-fail">0.58</span></td>
+            <td style="white-space:normal;font-size:12px" data-i18n="singleDimListRank.sample1Detail">樣本 #05：3 位標記員對品質評分為 2、3、5，分歧達 3 分</td>
+            <td><span class="badge badge-warn" data-i18n="qualityListRank.queuePending">待審核</span></td>
+          </tr>
+          <tr>
+            <td><span style="font-family:var(--font-mono);color:var(--color-primary)">#02</span></td>
+            <td><span class="badge badge-warn">0.41</span></td>
+            <td style="white-space:normal;font-size:12px" data-i18n="singleDimListRank.sample2Detail">樣本 #02：對是否達到「可接受品質」門檻（3 分）意見不一致</td>
+            <td><span class="badge badge-neutral" data-i18n="qualityListRank.queueCompleted">已完成</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="rankingTitle">
+  <h2 class="panel-title" id="rankingTitle" data-i18n="qualityListRank.rankingTitle">標記員品質排名</h2>
+  <p class="panel-subtitle" style="margin-top:0;margin-bottom:var(--space-md)" data-i18n="qualityListRank.rankingSubtitle">依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名</p>
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table class="annotator-table" aria-label="標記員品質排名（單維度評分）">
+        <thead>
+          <tr>
+            <th data-i18n="qualityListRank.rankHeaderRank">名次</th>
+            <th data-i18n="qualityListRank.rankHeaderAnnotator">標記員</th>
+            <th data-i18n="qualityListRank.rankHeaderMetric">一致率指標</th>
+            <th data-i18n="qualityListRank.rankHeaderValue">數值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td><span class="annotator-name">Mandy Chen</span></td><td data-i18n="singleDimListRank.rankMetricName">與群體平均評分差距（越小越一致）</td><td>0.12</td></tr>
+          <tr><td>2</td><td><span class="annotator-name">Avery Lin</span></td><td data-i18n="singleDimListRank.rankMetricName">與群體平均評分差距（越小越一致）</td><td>0.20</td></tr>
+          <tr><td>3</td><td><span class="annotator-name">Jordan Wu</span></td><td data-i18n="singleDimListRank.rankMetricName">與群體平均評分差距（越小越一致）</td><td>0.35</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="group-avg-note" style="margin-top:var(--space-md)" data-i18n="qualityListRank.rankSmallSample">小樣本估計</p>
+</section>

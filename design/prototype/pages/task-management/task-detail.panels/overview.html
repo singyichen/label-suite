@@ -299,17 +299,10 @@
         <span class="kv-dl-value" id="valueTrialRoundControl"></span>
       </div>
       <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelIaaMethodControl">IAA 計算方式</span>
-        <span class="kv-dl-value" id="valueIaaMethodControl"></span>
-      </div>
-      <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelRoundOutcomeControl">目前判定</span>
         <span class="kv-dl-value" id="valueRoundOutcomeControl"></span>
       </div>
-      <div class="kv-dl-row">
-        <span class="kv-dl-key" id="labelTargetAgreementControl">目標 IAA</span>
-        <span class="kv-dl-value" id="valueTargetAgreementControl"></span>
-      </div>
+      <div id="samplingIaaSummaryList"></div>
       <div class="kv-dl-row">
         <span class="kv-dl-key" id="labelMinAnnotatorsControl">最少標記者數</span>
         <span class="kv-dl-value" id="valueMinAnnotatorsControl"></span>
@@ -347,25 +340,7 @@
         </div>
       </div>
 
-      <div class="sampling-fields sampling-fields-advanced">
-        <div class="field-group">
-          <label class="field-label" id="iaaMethodLabel" for="iaaMethodSelect">IAA 計算方式</label>
-          <select class="input-select" id="iaaMethodSelect">
-            <option id="iaaOptKrippendorff" value="krippendorff_alpha_nominal">Krippendorff's Alpha（nominal）</option>
-            <option id="iaaOptCohensKappa" value="cohens_kappa">Cohen's Kappa</option>
-            <option id="iaaOptFleissKappa" value="fleiss_kappa">Fleiss' Kappa</option>
-            <option id="iaaOptIcc" value="icc">ICC（組內相關係數）</option>
-            <option id="iaaOptPairwiseF1Strict" value="pairwise_f1_strict">Pairwise F1（嚴格）</option>
-            <option id="iaaOptPairwiseF1Partial" value="pairwise_f1_partial">Pairwise F1（部分重疊）</option>
-            <option id="iaaOptPairwiseTripleF1" value="pairwise_triple_f1">Pairwise Triple-level F1</option>
-          </select>
-        </div>
-        <div class="field-group">
-          <label class="field-label" id="targetAgreementInputLabel" for="targetAgreementInput">目標 IAA</label>
-          <input class="input-number" id="targetAgreementInput" type="text" inputmode="decimal" value="0.80" />
-          <p class="field-hint" id="targetAgreementHint"></p>
-        </div>
-      </div>
+      <div id="samplingIaaEditRows" class="sampling-fields sampling-fields-advanced"></div>
 
       <p class="inline-error" id="samplingError"></p>
 

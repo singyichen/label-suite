@@ -1,0 +1,32 @@
+<!-- Sequence Tagging (Token-level) Statistics -->
+<section class="panel" aria-labelledby="statsSeqTagDistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsSeqTagDistTitle" data-i18n="sequenceTaggingStats.distTitle">標記類型分佈</h2>
+      <p class="panel-subtitle" id="statsSeqTagDistDesc" data-i18n="sequenceTaggingStats.distDesc">各 tag 類型在提交標記中的 token 數量與比例（含 O tag）</p>
+    </div>
+  </div>
+  <div class="stats-hbar-chart" style="margin-top:var(--space-sm)">
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="sequenceTaggingStats.tags.o">O</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:88%"></div></div>
+      <div class="stats-hbar-value">71% · 8,842</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="sequenceTaggingStats.tags.bPer">B-PER</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:18%;background:var(--color-primary);opacity:.75"></div></div>
+      <div class="stats-hbar-value">9% · 1,120</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="sequenceTaggingStats.tags.iPer">I-PER</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:12%;background:var(--color-primary);opacity:.6"></div></div>
+      <div class="stats-hbar-value">6% · 748</div>
+    </div>
+    <div class="stats-hbar-row">
+      <div class="stats-hbar-label" data-i18n="sequenceTaggingStats.tags.bOrg">B-ORG</div>
+      <div class="stats-hbar-track"><div class="stats-hbar-fill" style="width:14%;background:var(--color-primary);opacity:.55"></div></div>
+      <div class="stats-hbar-value">7% · 872</div>
+    </div>
+  </div>
+  <p class="group-avg-note" style="margin-top:var(--space-sm)" id="statsSeqTagDistNote" data-i18n="sequenceTaggingStats.distNote">O tag 佔全體 token 71%；IAA 計算時 O tag 全體標記員一致的 token 會依規則遮罩（見品質分頁說明）</p>
+</section>

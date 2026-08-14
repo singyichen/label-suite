@@ -13,6 +13,11 @@ test('run control stepper and metric labels translate to english', async ({ page
     '已完成',
   ]);
 
+  // #langToggle listener binds only after every tab panel fetch resolves;
+  // #statusBadge leaves its static 草稿 text in the render pass after binding,
+  // so this wait closes the click-before-bind race seen under CI load.
+  await expect(page.locator('#statusBadge')).toHaveText('試標進行中');
+
   await page.locator('#langToggle').click();
 
   await expect(page.locator('#executionTitle')).toHaveText('Task status and run control');

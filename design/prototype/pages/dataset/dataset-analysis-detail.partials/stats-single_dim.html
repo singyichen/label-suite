@@ -1,0 +1,54 @@
+<!-- Single-dimension Scoring Statistics -->
+<section class="panel" aria-labelledby="statsSingleDimHistTitle">
+  <div class="panel-head-row">
+    <div>
+      <h2 class="panel-title" id="statsSingleDimHistTitle" data-i18n="singleDimStats.histTitle">評分分佈直方圖</h2>
+      <p class="panel-subtitle" id="statsSingleDimHistDesc" data-i18n="singleDimStats.histDesc">標記員在 1–5 評分量表上的分佈情形（共 396 筆有效標記）</p>
+    </div>
+  </div>
+  <!-- Data: [12,28,74,158,124], max=158, bar heights=[10,24,63,135,106], bottom=115 -->
+  <svg viewBox="0 0 230 145" style="width:100%;max-width:320px;height:auto;display:block;overflow:visible" role="img" aria-label="評分分佈直方圖" data-i18n-aria-label="singleDimStats.histAria">
+    <g transform="translate(8,5)">
+      <line x1="0" y1="0" x2="0" y2="115" stroke="var(--color-border)" stroke-width="1"/>
+      <rect x="0"   y="105" width="30" height="10"  fill="var(--color-primary)" opacity="0.5"  rx="2"/>
+      <rect x="38"  y="91"  width="30" height="24"  fill="var(--color-primary)" opacity="0.6"  rx="2"/>
+      <rect x="76"  y="52"  width="30" height="63"  fill="var(--color-primary)" opacity="0.75" rx="2"/>
+      <rect x="114" y="0"   width="30" height="135" fill="var(--color-primary)" rx="2"/>
+      <rect x="152" y="9"   width="30" height="106" fill="var(--color-primary)" opacity="0.85" rx="2"/>
+      <text x="129" y="-3"  text-anchor="middle" font-size="9" fill="var(--color-primary)" font-weight="600">158</text>
+      <line x1="0" y1="115" x2="190" y2="115" stroke="var(--color-border)" stroke-width="1"/>
+      <text x="15"  y="129" text-anchor="middle" font-size="10" fill="var(--color-ink-muted)">1</text>
+      <text x="53"  y="129" text-anchor="middle" font-size="10" fill="var(--color-ink-muted)">2</text>
+      <text x="91"  y="129" text-anchor="middle" font-size="10" fill="var(--color-ink-muted)">3</text>
+      <text x="129" y="129" text-anchor="middle" font-size="10" fill="var(--color-ink-muted)">4</text>
+      <text x="167" y="129" text-anchor="middle" font-size="10" fill="var(--color-ink-muted)">5</text>
+    </g>
+  </svg>
+  <hr class="panel-divider"/>
+  <div class="stats-summary-grid">
+    <div class="stats-summary-block">
+      <div class="stats-summary-row">
+        <div class="stats-summary-item">
+          <span class="stats-summary-item-label" id="statsSingleDimLblMean" data-i18n="singleDimStats.mean">Mean</span>
+          <span class="stats-summary-item-val">3.94</span>
+        </div>
+        <div class="stats-summary-item">
+          <span class="stats-summary-item-label" id="statsSingleDimLblStd" data-i18n="singleDimStats.std">SD</span>
+          <span class="stats-summary-item-val">1.08</span>
+        </div>
+        <div class="stats-summary-item">
+          <span class="stats-summary-item-label" id="statsSingleDimLblMedian" data-i18n="singleDimStats.median">Median</span>
+          <span class="stats-summary-item-val">4.0</span>
+        </div>
+        <div class="stats-summary-item">
+          <span class="stats-summary-item-label" id="statsSingleDimLblMin" data-i18n="singleDimStats.min">Min</span>
+          <span class="stats-summary-item-val">1</span>
+        </div>
+        <div class="stats-summary-item">
+          <span class="stats-summary-item-label" id="statsSingleDimLblMax" data-i18n="singleDimStats.max">Max</span>
+          <span class="stats-summary-item-val">5</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

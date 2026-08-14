@@ -15,20 +15,13 @@ test.describe('Dataset analysis detail relation stats i18n', () => {
   test('renders relation statistics overview labels in English mode without mixed Chinese labels', async ({ page }) => {
     await gotoWithLang(page, 'en');
 
-    const entityDistribution = page.locator('section[aria-labelledby="statsRelEntityDistTitle"]');
     const relationDistribution = page.locator('section[aria-labelledby="statsRelRelDistTitle"]');
     const tripleSummary = page.locator('section[aria-labelledby="statsRelTripleTitle"]');
 
     await expect(page.locator('#bcCurrent')).toHaveText('Medical Relation Extraction (Entity / Triple)');
-    await expect(entityDistribution.locator('.panel-title')).toHaveText('Entity Type Distribution');
-    await expect(entityDistribution.locator('.panel-subtitle')).toHaveText('Count of each entity type in labeled triples');
-    await expect(entityDistribution.locator('.stats-hbar-label')).toHaveText([
-      'Drug',
-      'Disease',
-      'Gene',
-      'Chemical',
-    ]);
-    await expect(entityDistribution).not.toContainText(/[藥物疾病基因化合物]/);
+    // FR-009K: relation_identification must not duplicate entity-type distribution
+    // (that belongs to entity_recognition's own stats block).
+    await expect(page.locator('section[aria-labelledby="statsRelEntityDistTitle"]')).toHaveCount(0);
 
     await expect(relationDistribution.locator('.panel-title')).toHaveText('Relation Type Distribution');
     await expect(relationDistribution.locator('.panel-subtitle')).toHaveText('Triple annotation count per relation type');

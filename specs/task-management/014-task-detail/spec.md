@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-detail-config-sync
 建立日期: 2026-04-20
-版本: 2.1.0
+版本: 2.2.0
 狀態: Draft
 ---
 
@@ -9,19 +9,7 @@
 
 **需求來源**: IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（`task-detail`）
 
-## 輸入與生成規則
-
-**輸入描述**：本規格需定義 Task Detail 的任務管理流程、task config 契約、成員/執行狀態、導頁、i18n 與 RWD 行為。
-
-**產生規格時必須遵守**：
-
-1. 先確認本規格範圍與需求來源一致：IA Spec 清單 #014 — 任務詳情（成員管理調整 / 執行控制調整 / Dry Run / Official Run / 工時紀錄 / 匯出）（task-detail）。
-2. 若新增或改動角色權限、導頁、資料欄位、錯誤狀態、i18n、可存取屬性或響應式邊界，必須同步檢查使用者情境、功能需求、成功標準與規格相依性。
-3. 若需求描述缺少角色、狀態、資料來源、權限、錯誤處理、導頁目標或量化門檻，需以待釐清標記記錄具體問題，不得自行假設。
-4. 規格應描述使用者可觀察行為、業務規則與驗收條件；避免描述框架、檔案結構、API 實作或資料庫實作，除非該內容本身是已定義的產品契約。
-5. 本規格若與 prototype、IA 或上游規格不一致，必須明確記錄差異、更新相依性，並新增 changelog。
-
-**已釐清事項**：
+## 已釐清事項
 
 - 本版以既有需求來源與本文件中的 流程圖、使用者情境、功能需求、成功標準 作為 scope baseline。
 - 跨頁或跨模組共用行為需透過「規格相依性」追蹤，不在本文件中隱含建立未列出的依賴。
@@ -57,13 +45,13 @@
 - `TASK_DETAIL_UNAUTHORIZED_REDIRECT = /task-list`
 - `DRY_RUN_COMPLETION_RULE = no unassigned dry-run assignments AND all membership_status=active annotators: assigned_count == completed_count`
 - `DRAFT_SAMPLING_COUNT_MIN = 1`
-- `IAA_METHOD_ENUM = krippendorff_alpha_nominal | cohens_kappa | fleiss_kappa | icc | pairwise_f1_strict | pairwise_f1_partial | pairwise_triple_f1`
-- `IAA_METHOD_DEFAULTS = krippendorff_alpha_nominal:0.80 | cohens_kappa:0.80 | fleiss_kappa:0.80 | icc:0.75 | pairwise_f1_strict:0.80 | pairwise_f1_partial:0.70 | pairwise_triple_f1:0.75`
+- `OUTPUT_TYPE_IAA_REGISTRY`（唯讀顯示用；source of truth：`dataset-017-dataset-analysis-detail` 規格常數同名表格）——每個 `outputs[].type` 對應一筆 `{ type, primary_metric_name, default_threshold }` 紀錄；task-detail 僅讀取顯示，不得另建第二份指標/預設值定義（憲法：Generalization-First）。實作落地點標註：`task-config.data.js`（spec 僅描述 WHAT，落地點為實作註記，非行為契約）。
+- `target_agreement_overrides = { [output_type]: number }`（使用者可對任一 `outputs[].type` 覆寫其 IAA 目標門檻；未設定的 key 回退至 `OUTPUT_TYPE_IAA_REGISTRY` 對應 `default_threshold`）
 - `SAMPLE_SNAPSHOT_LOCK_EVENT = publish_dry_run`
 - `ANNOTATION_LIST_MATERIALIZATION_EVENTS = add_trial_round | start_official_run`
 - `OVERVIEW_EDITABLE_STATUS = draft`
 - `OVERVIEW_EDITABLE_ROLE = project_leader`
-- `OVERVIEW_EDITABLE_FIELDS = task_name | task_type(categories/input_types/outputs) | dataset | field_role_map | outputs[].config | sampling_value | iaa_method | target_agreement | min_annotators | isolation_enabled | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
+- `OVERVIEW_EDITABLE_FIELDS = task_name | task_type(categories/input_types/outputs) | dataset | field_role_map | outputs[].config | sampling_value | target_agreement_overrides | min_annotators | isolation_enabled | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
@@ -182,10 +170,10 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 顯示狀態：分為 `提供給標記員` 與 `提供給審核員` 兩個角色區塊；各自顯示說明內容摘要、附件上傳狀態（已上傳/未上傳）、附件清單，以及共用的 `開始標記前強制顯示` 狀態
     - 編輯狀態：可分別編輯 `標記說明內容`、`審核說明內容`，並於兩個角色區塊各自上傳/移除多份附件；上傳文件可點開顯示；可切換 `開始標記前強制顯示`
   - 區塊 4：`抽樣設定`
-    - 顯示狀態：每回合抽樣筆數、試標回合（唯讀 round 狀態資訊）、IAA 計算方式、目標 IAA、最少標記者數、資料隔離狀態與隔離異動資訊
-    - 編輯狀態：可調整每回合抽樣筆數（固定筆數模式，不提供百分比切換）、IAA 計算方式（`IAA_METHOD_ENUM` 下拉選單）、目標 IAA（隨 IAA 方式自動帶入 `IAA_METHOD_DEFAULTS` 建議值）、最少標記者數、資料隔離開關
-    - 版面排列：編輯狀態第一列依序顯示 `每回合抽樣筆數`、`最少標記者數`；第二列依序顯示 `IAA 計算方式`、`目標 IAA`
-    - 輸入方式：`每回合抽樣筆數`、`目標 IAA`、`最少標記者數` 皆採可直接鍵入的數字輸入框，不使用瀏覽器內建上下箭頭 spinner 控制
+    - 顯示狀態：每回合抽樣筆數、試標回合（唯讀 round 狀態資訊）、逐輸出類型 IAA 指標清單（唯讀，來源 `OUTPUT_TYPE_IAA_REGISTRY`，每列顯示輸出類型名稱、自動選定指標名稱、目標門檻）、最少標記者數、資料隔離狀態與隔離異動資訊
+    - 編輯狀態：可調整每回合抽樣筆數（固定筆數模式，不提供百分比切換）、逐輸出類型目標 IAA 覆寫（`target_agreement_overrides`；每列對應一個 `outputs[].type`，未覆寫時顯示 registry 預設門檻為 placeholder）、最少標記者數、資料隔離開關；IAA 計算方式一律由 registry 依輸出類型自動選定，不提供使用者可選下拉選單
+    - 版面排列：編輯狀態第一列依序顯示 `每回合抽樣筆數`、`最少標記者數`；第二列起依 `outputs[]` 順序逐列顯示各輸出類型的 IAA 指標名稱（唯讀）與目標 IAA 覆寫輸入框
+    - 輸入方式：`每回合抽樣筆數`、逐輸出類型目標 IAA 覆寫、`最少標記者數` 皆採可直接鍵入的數字輸入框，不使用瀏覽器內建上下箭頭 spinner 控制
     - 必填欄位樣式：`每回合抽樣筆數` 為必填，在顯示模式與編輯模式需顯示紅色 `*`（沿用 `required` 樣式）
     - 輔助說明：`每回合抽樣筆數` 的驗證規則（`筆數需 >= 1 且 < 資料集總筆數`）需改由欄位標籤旁的 info tooltip 顯示，不在輸入框下方常駐顯示 hint 文字
   - 區塊 5：`任務狀態與執行控制`
@@ -353,13 +341,13 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
   - `official_run_in_progress`：顯示 `標記完成`
   - `completed`：不顯示執行按鈕，只顯示狀態 badge 與說明文字
 - `draft` 狀態需可調整每回合試標抽樣筆數。
-- 抽樣設定需支援：`sampling_value`（固定筆數，語意為每回合抽樣筆數）、`iaa_method`、`target_agreement`、`min_annotators`。
+- 抽樣設定需支援：`sampling_value`（固定筆數，語意為每回合抽樣筆數）、`target_agreement_overrides`（逐輸出類型目標 IAA 覆寫）、`min_annotators`。
 - `抽樣設定` 區塊不提供 `trial_round` 輸入欄位；回合資訊僅在非編輯摘要與「任務狀態與執行控制」區塊顯示。
 - `draft + project_leader` 需可透過各區塊 `編輯` 進入對應編輯模式，並可儲存 `OVERVIEW_EDITABLE_FIELDS`。
 - `資料隔離` 預設為啟用；若使用者關閉，需先顯示不可逆風險警示並要求二次確認後才可發布。
 - 抽樣輸入需即時驗證：`筆數 >= 1 且 < 資料集總筆數`，違規時阻擋發布並顯示錯誤訊息。
-- 抽樣進階輸入需即時驗證：`target_agreement` 範圍 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。
-- 當使用者切換 `iaa_method` 時，系統需自動更新 `target_agreement` 為對應 `IAA_METHOD_DEFAULTS` 建議值，並以提示文字顯示建議值；使用者仍可手動覆寫。
+- 抽樣進階輸入需即時驗證：`target_agreement_overrides` 中任一填寫值範圍需為 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。
+- IAA 計算方式（指標）一律由 `OUTPUT_TYPE_IAA_REGISTRY` 依 `outputs[].type` 自動選定並唯讀顯示，使用者不可選擇或切換計算方式；使用者僅能於 `target_agreement_overrides` 覆寫個別輸出類型的目標門檻，未覆寫時顯示 registry 預設門檻。
 - `總筆數 / 已用試標 / 可進正式` 的分配進度條與圖例必須顯示在「任務狀態與執行控制」區塊，不得留在「抽樣設定」區塊；圖例需逐一列出 `R1 / R2 / ... / 正式` 對應筆數。
 - `任務狀態與執行控制` 不額外顯示 `草稿` / `已隔離` badge，也不顯示 `已用 {n} 個回合`、`正式池 {count} 筆` 這類 stage banner meta pills。
 - `reviewer` 在 `overview` 需顯示 disabled 執行按鈕（含 tooltip：`僅 project leader 可操作`），避免看不到入口而誤解。
@@ -434,7 +422,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - 每次點擊 `新增試標回合 R{n}` 並成功發布時，系統才為該回合建立標記清單資料；清單筆數必須等於當下 `sampling_value`。例如 `R1 = 10 筆` 只建立 10 筆試標清單，`R2 = 10 筆` 再建立另一組 10 筆試標清單。
 - 點擊 `開始正式標記` 並成功發布時，系統才以尚未進入任何試標回合的剩餘樣本建立正式標記清單；清單筆數必須等於 `dataset_total - 已用試標總筆數`。
 - 匯出請求必須指定標記階段（Annotation stage：Dry Run / Official Run）；啟用資料隔離時必須保證 Dry/Official 資料不混用。
-- 匯出檔案 metadata 必須包含：`run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`；若該範圍含已排除標記作業，metadata 需保留排除紀錄摘要，不得把排除作業輸出為一般 annotation result。
+- 匯出檔案 metadata 必須包含：`run_stage`、`isolation_enabled`、`sampling_value`、`applied_iaa_metrics`（逐輸出類型記錄實際採用的 `OUTPUT_TYPE_IAA_REGISTRY` 指標名稱與生效門檻，含 `target_agreement_overrides` 覆寫後的最終值）、`sample_snapshot_id`；若該範圍含已排除標記作業，metadata 需保留排除紀錄摘要，不得把排除作業輸出為一般 annotation result。
 - 匯出格式規劃需參考 Label Studio 的兩層定位：`JSON` 保留完整結構，`JSON-MIN` 提供扁平化結果列；但最終 schema 必須對齊 Label Suite 的 task / sample / annotation / review domain model。
 - 匯出欄位分為「固定共通欄位」與「task_type 動態欄位」兩層；不同任務類型必須顯示不同結果欄位，未使用的任務欄位不得混入同一筆資料。
 - `JSON` 匯出頂層必須為 `manifest + items[]`；`manifest` 需描述任務、匯出時間、匯出格式、run stage、filters 與 schema version，`items[]` 則逐筆保存 sample、annotations 與 reviews。
@@ -519,15 +507,15 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010f-2**：每次 `新增試標回合 R{n}` 成功時，系統必須建立該回合獨立的試標清單，筆數等於 `sampling_value`，且不得重用前一回合已建立的清單資料。
 - **FR-010f-3**：`開始正式標記` 成功時，系統必須以扣除所有已建立試標回合後的剩餘樣本建立正式標記清單，筆數等於 `dataset_total - sum(trial_round.sampling_value)`。
 - **FR-010h**：Overview 必須顯示資料隔離狀態（`已隔離`/`未隔離`）與最後變更資訊。
-- **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`iaa_method`、`sample_snapshot_id`，以及該匯出範圍內被排除標記作業的摘要紀錄（若有）。
+- **FR-010i**：匯出結果檔 metadata 必須包含 `run_stage`、`isolation_enabled`、`sampling_value`、`applied_iaa_metrics`（逐輸出類型指標名稱與生效門檻）、`sample_snapshot_id`，以及該匯出範圍內被排除標記作業的摘要紀錄（若有）。
 - **FR-010i-1**：所有匯出結果檔 metadata 必須額外包含 `export_format`、`exported_at`、`exported_by`、`schema_version` 與 `applied_filters`，以支援審計與下游解析。
 - **FR-010i-2**：匯出記錄表中的每筆紀錄必須保存 `re-download` 所需的條件快照；重新下載時必須以該快照為唯一依據重建匯出結果，不得讀取使用者當前頁面 filter state。條件快照至少包含 `export_format`、`run_stage`、`submission_status`、`annotator_scope`、`scope_label`、`export_type`，以及任何會改變結果集合的版本/快照識別資訊。
-- **FR-010o**：Overview「抽樣設定」必須提供 `sampling_value`、`iaa_method`、`target_agreement`、`min_annotators` 的檢視與編輯能力，並在非編輯摘要顯示唯讀 `trial_round`；其中 `sampling_value` 文案必須明確為「每回合抽樣筆數」。
-- **FR-010o-1**：Overview「抽樣設定」中的 `iaa_method` 必須以下拉選單呈現，選項對應 `IAA_METHOD_ENUM`；切換方式後系統需自動更新 `target_agreement` 為 `IAA_METHOD_DEFAULTS` 中對應建議值，並以 hint 文字顯示；使用者可手動覆寫。
+- **FR-010o**：Overview「抽樣設定」必須提供 `sampling_value`、逐輸出類型 IAA 指標唯讀清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，依 `outputs[]` 順序列出各輸出類型名稱、自動選定指標、目標門檻）、`target_agreement_overrides`、`min_annotators` 的檢視與編輯能力，並在非編輯摘要顯示唯讀 `trial_round`；其中 `sampling_value` 文案必須明確為「每回合抽樣筆數」。
+- **FR-010o-1**：Overview「抽樣設定」不得提供 IAA 計算方式的可選下拉選單；每個 `outputs[].type` 的計算方式必須由 `OUTPUT_TYPE_IAA_REGISTRY` 自動選定並唯讀顯示。使用者僅能於 `target_agreement_overrides` 針對個別輸出類型輸入覆寫門檻；未覆寫時顯示 registry 的 `default_threshold` 作為 placeholder 建議值。
 - **FR-010p**：Overview「任務狀態與執行控制」必須顯示 `總筆數 / 已用試標 / 可進正式` 的樣本池分配摘要，並與當前回合歷程即時同步；每個試標回合必須有獨立色塊與圖例，正式標記池使用另一組獨立顏色，且任一回合的配色不得與正式標記池混淆。
 - **FR-010p-1**：Overview「試標回合歷程」中的每筆回合 item 之間不得使用垂直連接線；日期必須維持單行顯示，不得因欄寬不足換成兩行。
-- **FR-010q**：抽樣欄位驗證規則必須明確：`sampling_value >= 1 且 < dataset_total`、`target_agreement` 範圍 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。
-- **FR-010r**：Overview「抽樣設定」中的數字欄位（至少包含 `sampling_value`、`target_agreement`、`min_annotators`）必須採可直接鍵入的數字輸入框；不得使用瀏覽器內建上下箭頭 spinner 作為主要互動方式。
+- **FR-010q**：抽樣欄位驗證規則必須明確：`sampling_value >= 1 且 < dataset_total`、`target_agreement_overrides` 中任一已填寫值範圍為 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。
+- **FR-010r**：Overview「抽樣設定」中的數字欄位（至少包含 `sampling_value`、逐輸出類型 `target_agreement_overrides` 輸入框、`min_annotators`）必須採可直接鍵入的數字輸入框；不得使用瀏覽器內建上下箭頭 spinner 作為主要互動方式。
 - **FR-011**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成核心查看與操作。
 - **FR-011a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：進入詳情、tab 切換、run 發布權限顯示、`project_leader` 成員管理、`work-log` 篩選、匯出操作，且不得資訊重疊。
 - **FR-012**：Prototype 必須提供三類畫面狀態：`loading`、`empty`、`error`，且各 tab 至少有一組可展示案例。
@@ -612,14 +600,14 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`task_type`、`status`、`run_stage`、`settings`、`sampling_value`（每回合抽樣筆數）、`iaa_method`、`trial_round`（唯讀 round 狀態資訊）、`target_agreement`、`min_annotators`、`isolation_enabled`、`sample_snapshot_id`。
+- **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`task_type`、`status`、`run_stage`、`settings`、`sampling_value`（每回合抽樣筆數）、`trial_round`（唯讀 round 狀態資訊）、`target_agreement_overrides`（逐輸出類型目標 IAA 覆寫；未覆寫時回退至 `OUTPUT_TYPE_IAA_REGISTRY` 預設門檻）、`min_annotators`、`isolation_enabled`、`sample_snapshot_id`。
 - **TaskConfig**：schema 驗證後的任務設定內容，來源與 `013-task-new` 相同（ADR-029 組合模型）。結構為 `{ categories[], input_types[], outputs[] }`；每個 output 為 `{ type ∈ OUTPUT_TYPE_KEYS, config }`，config 欄位由 `OUTPUT_TYPE_REGISTRY` 對應輸出類型的欄位定義決定摘要、編輯欄位、預覽與驗證規則。另含 `field_role_map`（資料集欄位 → 角色對應）與 `dataset_file_name`。
 - **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型的設定內容（`TaskConfig.outputs[].config`）。欄位由 `OUTPUT_TYPE_REGISTRY` 中該輸出類型的 fields 定義驅動（含共通欄位 `allow_bypass`）；不得為特定輸出類型在 task-detail 硬編第二份欄位定義（憲法：Generalization-First）。
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
-- **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`iaa_method`、`trial_round`、`target_agreement`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
+- **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`trial_round`、`target_agreement_overrides`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
 - **AnnotationListMaterialization**：標記清單建立事件。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`sample_snapshot_id`、`source_sample_ids_ref`、`item_count`、`created_by`、`created_at`。`dry_run` 的 `item_count = sampling_value`；`official_run` 的 `item_count = dataset_total - 已用試標總筆數`。
 - **ExcludedAnnotationAssignment**：被明確排除的標記作業紀錄。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`assignment_id`、`sample_id`、`excluded_by`、`excluded_at`、`reason`。排除紀錄僅供完成條件解除、metadata 與審計追溯使用，不計入完成率、標記分布統計或一般匯出結果列；`run_stage = dry_run` 時亦不計入 IAA。
 - **IsolationAuditLog**：資料隔離設定審計。欄位：`task_id`、`from_isolation_enabled`、`to_isolation_enabled`、`changed_by`、`changed_at`、`reason`。
@@ -668,7 +656,7 @@ flowchart LR
 - **SC-015**：不同 outputs[] 組合的任務，Overview「標記設定」摘要列會同步切換為各輸出類型對應的 registry 欄位摘要（例如序列標註顯示標籤集/標記格式、維度評分顯示維度組態），且不出現無關欄位或抽樣欄位。
 - **SC-016**：Overview 顯示模式下，使用者可透過紅色 `*` 立即辨識各區塊中的必填欄位（包含基本資料與標記設定動態欄位）。
 - **SC-017**：Overview「抽樣設定」中的 `每回合抽樣筆數` 在顯示模式與編輯模式皆顯示紅色 `*`，並與其他必填欄位樣式一致；編輯模式的抽樣筆數驗證規則需由欄位標籤旁的 info tooltip 顯示，不在輸入框下方常駐顯示。
-- **SC-018**：Overview「抽樣設定」可正確顯示並編輯 `sampling_value`、`iaa_method`、`target_agreement`（含 IAA 方式切換時自動帶入建議值）、`min_annotators`，且違反驗證規則時會阻擋儲存並提供可修正提示；數字欄位採直接鍵入方式，不使用 spinner。
+- **SC-018**：Overview「抽樣設定」可正確顯示逐輸出類型 IAA 指標唯讀清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，不提供計算方式下拉選單），並可正確顯示與編輯 `sampling_value`、`target_agreement_overrides`（逐輸出類型覆寫，未覆寫時顯示 registry 預設門檻）、`min_annotators`，且違反驗證規則時會阻擋儲存並提供可修正提示；數字欄位採直接鍵入方式，不使用 spinner。
 - **SC-019**：Overview「任務狀態與執行控制」可顯示試標回合、樣本池分配摘要與 IAA/標準差達標條件；任務層級 stage flow 維持 `draft → 試標階段 → 正式標記中 → 已完成`，且目前階段只由 stepper 的 current step 呈現；單一執行判定 banner 僅顯示最近回合或正式標記的判定標題與下一步說明，不得再顯示額外的「目前任務階段」標題/描述，也不得再顯示獨立「正式標記判定」卡；`試標階段` 內需逐步呈現例如 `R1 未通過 → R2 通過 → 開始正式標記` 的回合歷程；樣本池分配需隨回合動態調整，且不同回合需以不同顏色區隔；執行控制區不顯示額外狀態 badge 或 stage meta pills，trial history 日期維持單行且無垂直連接線。
 - **SC-020**：`project_leader` 在 `draft` 任務開啟「基本資料」編輯後，可見與 `013-task-new` Step 1 同構的資料集檔案列、`欄位預覽・指定欄位角色` 表與任務類型 chips，且三者皆正確反映該任務已儲存的組合；調整後儲存，摘要顯示與推導的 legacy 呈現分流同步更新。
 - **SC-021**：開啟「標記設定」編輯後，`schemaFields` 內 accordion 數量等於該任務 outputs[] 數量，各 accordion 欄位與 `013-task-new` Step 2 完全同源；多輸出任務（如 `entity_recognition + relation_identification + multi_dim`）逐一呈現各自的設定 accordion 與摘要列。
@@ -690,40 +678,11 @@ flowchart LR
 
 ---
 
-## 審查與驗收清單
-
-### 內容品質
-
-- [x] 規格聚焦使用者可觀察行為、業務規則與驗收條件。
-- [x] 所有必填章節已完成；不適用的內容已明確排除或未納入本版範圍。
-- [x] 無未解決的待釐清標記殘留。
-- [x] 需求、驗收情境與成功標準皆可測試。
-
-### Label Suite 合規性
-
-- [x] 功能分支格式符合 `feat/[module]/NNN-feature`。
-- [x] 已檢查本規格未要求跨 feature import；跨模組共用行為需透過 shared contract 或規格相依性追蹤。
-- [x] 涉及 task type / task config 的行為皆要求由 registry、schema 或凍結 config 驅動，不以硬編任務邏輯定義。
-- [x] 已檢查 annotator-facing API / UI 不得暴露 test-set answer、ground-truth 或等價特權資料。
-- [x] Prototype / IA / 上游規格 source of truth 已列於需求來源或規格相依性。
-- [x] 上下游規格相依性已列出；若本規格改版，需檢查 downstream 影響。
-
-### 執行狀態
-
-- [x] 輸入描述已解析。
-- [x] 角色、互動、資料狀態與限制已萃取。
-- [x] 模糊點已釐清或明確排除於本版範圍。
-- [x] 使用者情境已定義。
-- [x] 功能需求已定義。
-- [x] 關鍵實體或狀態模型已定義。
-- [x] Review checklist 已通過。
-
----
-
 ## Changelog
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.2.0 | 2026-08-12 | **IAA 策略 v2 — 移除可選 IAA 計算方式，改為逐輸出類型自動選定（minor）**：移除 `IAA_METHOD_ENUM` 下拉選單與 `IAA_METHOD_DEFAULTS`；Overview「抽樣設定」改顯示唯讀逐輸出類型 IAA 指標清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，source of truth 為 `dataset-017` 規格常數，實作落地點註記為 `task-config.data.js`）。`target_agreement` 單一全域數值改為 `target_agreement_overrides: { [output_type]: number }`（逐輸出類型覆寫，未設定回退 registry 預設門檻），延續 FR-010o-1 使用者覆寫能力。更新 FR-010i／FR-010o／FR-010o-1／FR-010q／FR-010r、`OVERVIEW_EDITABLE_FIELDS`、匯出 metadata（`iaa_method` 改為 `applied_iaa_metrics`）、`TaskDetail`／`SampleSnapshot` 實體、SC-018。**（同版本內修訂，speckit.analyze）**：`OUTPUT_TYPE_IAA_REGISTRY` 之 `default_threshold` 依 `dataset-017` gate 採用階裁決明確化（`single_dim` 0.75／`multi_dim` 0.80）；依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 2.1.0 | 2026-07-31 | 同步 `013-task-new` v6.9.0 項目對名稱：輸入類型為 `item_pair` 時「標記設定」編輯模式呈現「項目對名稱」設定卡（013 FR-003k 同構）；「基本資料」／「標記設定」儲存時持久化生效名稱並於重新進入編輯模式帶回；「基本資料」更換資料集後名稱以新資料集重新初始化；新增 FR-014l-3 |
 | 2.0.0 | 2026-07-31 | **ADR-029 outputs[] 遷移 + 013 Step 1/2 完全同步（major）**：任務類型自 legacy `task_type` 枚舉改為 `categories[] + input_types[] + outputs[]` 組合模型，與 `013-task-new` 共用 `OUTPUT_TYPE_REGISTRY` 與設定引擎（task-config.\* 共用檔）；「基本資料」編輯改為 Step 1 同構（資料集檔案列 + `欄位預覽・指定欄位角色` 表 + 三組 chips），「標記設定」編輯改為 Step 2 同構（每個 output 一個 accordion + 同源預覽 + YAML/JSON code 區含 dirty 鎖與錯誤列）；ABSA 範本僅限 `entity_recognition + relation_identification` 組合；13 個 seed 任務統一為 draft 基準（狀態定義於 task-list.data.js；組合與資料集 seed 於 task-detail.data.js）；匯出檔 `task_type` 改由 outputs[] 推導之 `LEGACY_TASK_TYPE_EXPORT_ENUM` 沿用、`sequence_labeling_subtype` 固定為空字串；FR-014k–u 汰換為 FR-014k/l/l-1/l-2/m/n；關鍵實體 TaskConfig 重構、AspectListTaskConfig 與 SentencePairsTaskConfig 併入 registry 驅動之 OutputConfig；SC-015/020–024 改寫為 parity 驗收；修正 overview 編輯模式未渲染資料集檔案清單問題 |
 | 1.7.16 | 2026-05-22 | 新增 `annotation-progress` 成員標記細項功能：成員進度表增加「操作」欄與「查看細項」按鈕；點擊後展開成員標記細項區塊（樣本 ID、文本摘要、標記結果、提交時間、審核狀態）；底部分頁列與 `task-list` 樣式一致，分頁狀態（`mdPage` / `mdPageSize`）獨立；新增 FR-016a、FR-016b |

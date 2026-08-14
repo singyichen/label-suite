@@ -34,6 +34,11 @@ function safeCssColor(value, fallback) {
   return (typeof value === 'string' && /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value)) ? value : fallback;
 }
 
+/* The trailing Bypass line of an output preview. Consumers outside this file
+   (the reviewer workspace) look it up to dock their own controls onto the same
+   row, so the name is part of the engine's contract, not a private detail. */
+var BYPASS_ROW_CLASS = 'preview-bypass-row';
+
 function syncChipsFromState() {
   ['taskCategoryChips', 'taskInputTypeChips'].forEach(function(containerId) {
     var container = el(containerId);
@@ -2021,6 +2026,123 @@ function getRelationTypeOptions(relationTypes) {
   return opts;
 }
 
+/* Shared entity list-row builder -- the annotator's 實體列表 and the reviewer
+   aggregate card's per-annotator entity rows both render through this single
+   implementation so the two views can never drift. `ent` is the display shape
+   {text, type, start?, end?} (positions render only when both are present);
+   mutation stays with the caller via onDelete(). */
+function buildEntityListRow(ent, color, opts) {
+  var lang = (opts && opts.lang) || 'zh';
+  var row = document.createElement('div');
+  row.setAttribute('data-testid', 'entity-list-row');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
+  var badge = document.createElement('span');
+  badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + (color || '#6366F1') + ';flex-shrink:0;';
+  badge.textContent = ent.type;
+  row.appendChild(badge);
+  var txt = document.createElement('span');
+  txt.style.flex = '1';
+  txt.textContent = ent.text;
+  row.appendChild(txt);
+  if (ent.start != null && ent.end != null) {
+    var posEl = document.createElement('span');
+    posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
+    posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
+    row.appendChild(posEl);
+  }
+  if (opts && opts.onDelete) {
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
+    delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
+    delBtn.addEventListener('click', function() { opts.onDelete(); });
+    row.appendChild(delBtn);
+  }
+  return row;
+}
+
+/* Shared relation triple-row builder -- the annotator's 關係識別 list and the
+   reviewer aggregate card's per-annotator relation rows both render through
+   this single implementation so the two views can never drift. `triple` is
+   the display shape {subj, rel, obj, relType}; mutation stays with the
+   caller via onSetType(newTypeOrNull)/onDelete(). */
+function buildRelationTripleRow(triple, allRelTypes, opts) {
+  var lang = (opts && opts.lang) || 'zh';
+  var row = document.createElement('div');
+  row.className = 'absa-relation-row';
+  row.setAttribute('data-testid', 'relation-triple-row');
+  row.style.display = 'flex'; row.style.alignItems = 'center';
+  var content = document.createElement('span');
+  content.style.flex = '1';
+  var subjSpan = document.createElement('span');
+  subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
+  content.appendChild(subjSpan);
+  var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
+  content.appendChild(arrow);
+  var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
+  content.appendChild(relBadge);
+  var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
+  content.appendChild(arrow2);
+  var objSpan = document.createElement('span');
+  objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
+  content.appendChild(objSpan);
+  if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
+    var typeBadge = document.createElement('span');
+    typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
+    typeBadge.textContent = (lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
+    content.appendChild(typeBadge);
+  }
+  row.appendChild(content);
+  /* type dropdown button: assigns the post-hoc semantic relation type from config relation_types */
+  if (allRelTypes.length > 0 && opts && opts.onSetType) {
+    var typeWrap = document.createElement('span');
+    typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
+    var typeBtn = document.createElement('button');
+    typeBtn.type = 'button';
+    typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
+    typeBtn.textContent = lang === 'zh' ? '類型' : 'type';
+    var typeMenu = document.createElement('div');
+    typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+    allRelTypes.forEach(function(rt) {
+      var item = document.createElement('div');
+      item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
+      item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
+      item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
+      var check = document.createElement('span');
+      check.style.cssText = 'width:14px;font-size:0.75rem;';
+      check.textContent = (triple.relType === rt) ? '✓' : '';
+      item.appendChild(check);
+      item.appendChild(document.createTextNode(rt));
+      item.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        opts.onSetType((triple.relType === rt) ? null : rt);
+      });
+      typeMenu.appendChild(item);
+    });
+    typeBtn.addEventListener('click', function(ev) {
+      ev.stopPropagation();
+      var isOpen = typeMenu.style.display !== 'none';
+      typeMenu.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) {
+        var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
+        setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
+      }
+    });
+    typeWrap.appendChild(typeBtn);
+    typeWrap.appendChild(typeMenu);
+    row.appendChild(typeWrap);
+  }
+  if (opts && opts.onDelete) {
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
+    delBtn.textContent = lang === 'zh' ? '刪除' : 'Del';
+    delBtn.addEventListener('click', function() { opts.onDelete(); });
+    row.appendChild(delBtn);
+  }
+  return row;
+}
+
 /* Resolve the selection to its actual character offset in realText by
    walking containerEl's text nodes — indexOf alone would always bind repeated
    words (e.g. the same entity text occurring twice) to the first occurrence */
@@ -2181,30 +2303,10 @@ function renderAbsaUnifiedPreview(previewContainer) {
       var elWrap = document.createElement('div');
       elWrap.style.cssText = 'margin-bottom:12px;max-height:200px;overflow-y:auto;';
       state.previewEntities.forEach(function(ent, i) {
-        var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
-        var badge = document.createElement('span');
-        var c = typeColorMap[ent.type] || '#6366F1';
-        badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
-        badge.textContent = ent.type;
-        row.appendChild(badge);
-        var txt = document.createElement('span');
-        txt.style.flex = '1';
-        txt.textContent = ent.text;
-        row.appendChild(txt);
-        if (ent.start != null && ent.end != null) {
-          var posEl = document.createElement('span');
-          posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;flex-shrink:0;';
-          posEl.textContent = '(' + ent.start + ', ' + ent.end + ')';
-          row.appendChild(posEl);
-        }
-        var delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;';
-        delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-        (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
-        row.appendChild(delBtn);
-        elWrap.appendChild(row);
+        elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+          lang: state.lang,
+          onDelete: function() { state.previewEntities.splice(i, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }
+        }));
       });
       previewContainer.appendChild(elWrap);
     }
@@ -2233,79 +2335,11 @@ function renderAbsaUnifiedPreview(previewContainer) {
   relList.className = 'absa-relation-list';
   var allRelTypes = getRelationTypeOptions(relationTypes);
   state.previewTriples.forEach(function(triple, i) {
-    var row = document.createElement('div');
-    row.className = 'absa-relation-row';
-    row.style.display = 'flex'; row.style.alignItems = 'center';
-    var content = document.createElement('span');
-    content.style.flex = '1';
-    var subjSpan = document.createElement('span');
-    subjSpan.style.cssText = 'font-weight:600;font-size:11px;'; subjSpan.textContent = triple.subj;
-    content.appendChild(subjSpan);
-    var arrow = document.createElement('span'); arrow.className = 'absa-arrow'; arrow.textContent = ' → ';
-    content.appendChild(arrow);
-    var relBadge = document.createElement('span'); relBadge.className = 'absa-relation-badge'; relBadge.textContent = triple.rel;
-    content.appendChild(relBadge);
-    var arrow2 = document.createElement('span'); arrow2.className = 'absa-arrow'; arrow2.textContent = ' → ';
-    content.appendChild(arrow2);
-    var objSpan = document.createElement('span');
-    objSpan.style.cssText = 'font-weight:600;font-size:11px;'; objSpan.textContent = triple.obj;
-    content.appendChild(objSpan);
-    if (triple.relType && allRelTypes.indexOf(triple.relType) >= 0) {
-      var typeBadge = document.createElement('span');
-      typeBadge.style.cssText = 'margin-left:8px;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid rgba(5,150,105,0.3);';
-      typeBadge.textContent = (state.lang === 'zh' ? '類型：' : 'type: ') + triple.relType;
-      content.appendChild(typeBadge);
-    }
-    row.appendChild(content);
-    /* type dropdown button: assigns the post-hoc semantic relation type from config relation_types */
-    if (allRelTypes.length > 0) {
-      var typeWrap = document.createElement('span');
-      typeWrap.style.cssText = 'position:relative;flex-shrink:0;margin-left:8px;';
-      var typeBtn = document.createElement('button');
-      typeBtn.type = 'button';
-      typeBtn.style.cssText = 'border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
-      typeBtn.textContent = state.lang === 'zh' ? '類型' : 'type';
-      var typeMenu = document.createElement('div');
-      typeMenu.style.cssText = 'display:none;position:absolute;right:0;bottom:calc(100% + 4px);background:#2c2c2c;border-radius:8px;padding:4px 0;min-width:180px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
-      allRelTypes.forEach(function(rt) {
-        var item = document.createElement('div');
-        item.style.cssText = 'padding:6px 14px;font-size:0.8rem;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:6px;';
-        item.addEventListener('mouseenter', function() { item.style.background = '#3c3c3c'; });
-        item.addEventListener('mouseleave', function() { item.style.background = 'transparent'; });
-        var check = document.createElement('span');
-        check.style.cssText = 'width:14px;font-size:0.75rem;';
-        check.textContent = (triple.relType === rt) ? '✓' : '';
-        item.appendChild(check);
-        item.appendChild(document.createTextNode(rt));
-        (function(relType, idx) {
-          item.addEventListener('click', function(ev) {
-            ev.stopPropagation();
-            state.previewTriples[idx].relType = (state.previewTriples[idx].relType === relType) ? null : relType;
-            renderAbsaUnifiedPreview_refresh(previewContainer);
-          });
-        }(rt, i));
-        typeMenu.appendChild(item);
-      });
-      typeBtn.addEventListener('click', function(ev) {
-        ev.stopPropagation();
-        var isOpen = typeMenu.style.display !== 'none';
-        typeMenu.style.display = isOpen ? 'none' : 'block';
-        if (!isOpen) {
-          var closeHandler = function() { typeMenu.style.display = 'none'; document.removeEventListener('click', closeHandler); };
-          setTimeout(function() { document.addEventListener('click', closeHandler); }, 0);
-        }
-      });
-      typeWrap.appendChild(typeBtn);
-      typeWrap.appendChild(typeMenu);
-      row.appendChild(typeWrap);
-    }
-    var delBtn = document.createElement('button');
-    delBtn.type = 'button';
-    delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;flex-shrink:0;margin-left:4px;';
-    delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-    (function(idx) { delBtn.addEventListener('click', function() { state.previewTriples.splice(idx, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }); }(i));
-    row.appendChild(delBtn);
-    relList.appendChild(row);
+    relList.appendChild(buildRelationTripleRow(triple, allRelTypes, {
+      lang: state.lang,
+      onSetType: function(v) { state.previewTriples[i].relType = v; renderAbsaUnifiedPreview_refresh(previewContainer); },
+      onDelete: function() { state.previewTriples.splice(i, 1); renderAbsaUnifiedPreview_refresh(previewContainer); }
+    }));
   });
   if (state.previewTriples.length === 0) {
     var emptyMsg = document.createElement('div');
@@ -2329,7 +2363,8 @@ function renderAbsaUnifiedPreview(previewContainer) {
   if (hasRelOut && isBypassAllowed('relation_identification')) bypassChips.push(makeBypassChip('relation_identification', refreshUnified, bypassChipLabel('relation_identification', hasSpanOut && hasRelOut)));
   if (bypassChips.length > 0) {
     var bypassWrap = document.createElement('div');
-    bypassWrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;gap:8px;';
+    bypassWrap.className = BYPASS_ROW_CLASS;
+    bypassWrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
     bypassChips.forEach(function(chip) { bypassWrap.appendChild(chip); });
     previewContainer.appendChild(bypassWrap);
   }
@@ -2464,9 +2499,12 @@ function makeBypassChip(outKey, refresh, labelText) {
   return chip;
 }
 
+/* Consumers (the reviewer workspace) dock their own trailing controls onto
+   this row, so it carries a stable class and lays out as a flex line. */
 function appendBypassControl(container, outKey, refresh) {
   var wrap = document.createElement('div');
-  wrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);';
+  wrap.className = BYPASS_ROW_CLASS;
+  wrap.style.cssText = 'margin-top:12px;padding-top:10px;border-top:1px dashed var(--color-border);display:flex;flex-wrap:wrap;align-items:center;gap:8px;';
   wrap.appendChild(makeBypassChip(outKey, refresh, state.lang === 'zh' ? '無法判定 (Bypass)' : 'Unable to determine (Bypass)'));
   container.appendChild(wrap);
 }
@@ -3153,21 +3191,10 @@ function renderSpanOnlyPreview(container, outKey) {
     var elWrap = document.createElement('div');
     elWrap.style.cssText = 'max-height:160px;overflow-y:auto;';
     state.previewEntities.forEach(function(ent, i) {
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 10px;margin-bottom:4px;background:#f8fafc;border-radius:6px;font-size:0.85rem;';
-      var badge = document.createElement('span');
-      var c = typeColorMap[ent.type] || '#6366F1';
-      badge.style.cssText = 'display:inline-block;padding:1px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;color:#fff;background:' + c + ';flex-shrink:0;';
-      badge.textContent = ent.type;
-      row.appendChild(badge);
-      var txt = document.createElement('span'); txt.style.flex = '1'; txt.textContent = ent.text; row.appendChild(txt);
-      if (ent.start != null && ent.end != null) { var posEl = document.createElement('span'); posEl.style.cssText = 'font-size:0.75rem;color:var(--color-text-soft);font-family:monospace;'; posEl.textContent = '(' + ent.start + ', ' + ent.end + ')'; row.appendChild(posEl); }
-      var delBtn = document.createElement('button'); delBtn.type = 'button';
-      delBtn.style.cssText = 'border:1.5px solid #E74C3C;background:transparent;color:#E74C3C;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:0.7rem;font-weight:700;';
-      delBtn.textContent = state.lang === 'zh' ? '刪除' : 'Del';
-      (function(idx) { delBtn.addEventListener('click', function() { state.previewEntities.splice(idx, 1); refreshOutputPreview(container, outKey); }); }(i));
-      row.appendChild(delBtn);
-      elWrap.appendChild(row);
+      elWrap.appendChild(buildEntityListRow(ent, typeColorMap[ent.type] || '#6366F1', {
+        lang: state.lang,
+        onDelete: function() { state.previewEntities.splice(i, 1); refreshOutputPreview(container, outKey); }
+      }));
     });
     container.appendChild(elWrap);
   }

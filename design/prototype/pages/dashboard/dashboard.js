@@ -193,55 +193,28 @@
       + '</div>';
   }
 
-  function setActiveTaskType(taskType) {
-    if (
-      global.LabelSuiteSharedSidebar
-      && typeof global.LabelSuiteSharedSidebar.setStoredActiveTaskType
-        === 'function'
-    ) {
-      global.LabelSuiteSharedSidebar.setStoredActiveTaskType(taskType);
-      return;
-    }
-    try {
-      global.localStorage.setItem(
-        'labelsuite.activeTaskType',
-        String(taskType)
-      );
-    } catch (error) {
-      // Storage is optional in the static prototype.
-    }
-  }
-
   function openAnnotationList(role, entry) {
-    setActiveTaskType(entry.annotationTaskType);
     global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
       cta: role === 'annotator'
         ? 'annotator_task_list_open'
         : 'reviewer_task_list_open',
-      task_type: entry.annotationTaskType,
       run_type: entry.runType,
       task_role: role,
       lang: lang,
       scenario: scenario,
     });
-    var listUrl = '../annotation/annotation-list.html?role='
-      + encodeURIComponent(role)
-      + '&task_id=' + encodeURIComponent(entry.navigationTaskId || '')
-      + '&task_type=' + encodeURIComponent(entry.annotationTaskType || '')
+    var listUrl = '../annotation/annotation-list.html?task_id='
+      + encodeURIComponent(entry.exampleTaskId || '')
+      + '&role=' + encodeURIComponent(role)
       + '&run_type=' + encodeURIComponent(entry.runType || '');
-    if (entry.subType) {
-      listUrl += '&sub_type=' + encodeURIComponent(entry.subType);
-    }
     global.location.href = listUrl;
   }
 
   function openAnnotationWorkspace(role, entry) {
-    setActiveTaskType(entry.annotationTaskType);
     global.LabelSuiteAnalytics.track('prototype_cta_clicked', {
       cta: role === 'annotator'
         ? 'annotator_quick_continue'
         : 'reviewer_quick_review',
-      task_type: entry.annotationTaskType,
       run_type: entry.runType,
       task_role: role,
       lang: lang,
@@ -253,14 +226,10 @@
       return;
     }
     var workspaceUrl = '../annotation/annotation-workspace.html?task_id='
-      + encodeURIComponent(entry.navigationTaskId || '')
+      + encodeURIComponent(entry.exampleTaskId || '')
       + '&sample_id=' + encodeURIComponent(sampleId)
       + '&role=' + encodeURIComponent(role)
-      + '&run_type=' + encodeURIComponent(entry.runType || '')
-      + '&task_type=' + encodeURIComponent(entry.annotationTaskType || '');
-    if (entry.subType) {
-      workspaceUrl += '&sub_type=' + encodeURIComponent(entry.subType);
-    }
+      + '&run_type=' + encodeURIComponent(entry.runType || '');
     global.location.href = workspaceUrl;
   }
 

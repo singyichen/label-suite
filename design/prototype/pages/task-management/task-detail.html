@@ -1666,6 +1666,7 @@
       align-items: baseline;
     }
     #settingsConfigDynamicRows { display: contents; }
+    #samplingIaaSummaryList { display: contents; }
     .kv-dl-row { display: contents; }
     .kv-dl-key {
       font-size: 12px;
@@ -2427,8 +2428,6 @@
       labelSamplingValueControl: '每回合抽樣筆數',
       labelTrialRoundControl: '試標回合',
       labelRoundOutcomeControl: '目前判定',
-      labelIaaMethodControl: 'IAA 計算方式',
-      labelTargetAgreementControl: '目標 IAA',
       labelMinAnnotatorsControl: '最少標記者數',
       labelSplitControl: '已用試標 / 可進正式',
       totalSamplesLabel: '總筆數',
@@ -2436,15 +2435,9 @@
       labelIsolationAuditControl: '隔離異動',
       samplingValueLabel: '每回合抽樣筆數',
       samplingValueHint: '筆數需 >= 1 且 < 資料集總筆數',
-      iaaMethodLabel: 'IAA 計算方式',
-      iaaMethodOptKrippendorff: "Krippendorff's Alpha（nominal）",
-      iaaMethodOptCohens: "Cohen's Kappa",
-      iaaMethodOptFleiss: "Fleiss' Kappa",
-      iaaMethodOptIcc: 'ICC（組內相關係數）',
-      iaaMethodOptPairwiseStrict: 'Pairwise F1（嚴格）',
-      iaaMethodOptPairwisePartial: 'Pairwise F1（部分重疊）',
-      iaaMethodOptTriple: 'Pairwise Triple-level F1',
-      targetAgreementHintTpl: '建議值：{value}',
+      iaaMetricInputLabel: 'IAA 指標（自動選定）',
+      iaaNotApplicable: '不適用',
+      iaaSummaryValueTpl: '{metric}（目標 IAA {target}）',
       targetAgreementInputLabel: '目標 IAA',
       minAnnotatorsInputLabel: '最少標記者數',
       sampleUsageLabel: '試標',
@@ -2851,8 +2844,6 @@
       labelSamplingValueControl: 'Per-round sample count',
       labelTrialRoundControl: 'Trial round',
       labelRoundOutcomeControl: 'Current decision',
-      labelIaaMethodControl: 'IAA method',
-      labelTargetAgreementControl: 'Target IAA',
       labelMinAnnotatorsControl: 'Minimum annotators',
       labelSplitControl: 'Used in trial / Ready for official',
       totalSamplesLabel: 'Total',
@@ -2860,15 +2851,9 @@
       labelIsolationAuditControl: 'Isolation changed at',
       samplingValueLabel: 'Per-round sample count',
       samplingValueHint: 'Count must be >= 1 and < total dataset size',
-      iaaMethodLabel: 'IAA method',
-      iaaMethodOptKrippendorff: "Krippendorff's Alpha (nominal)",
-      iaaMethodOptCohens: "Cohen's Kappa",
-      iaaMethodOptFleiss: "Fleiss' Kappa",
-      iaaMethodOptIcc: 'ICC (Intraclass Correlation)',
-      iaaMethodOptPairwiseStrict: 'Pairwise F1 (strict)',
-      iaaMethodOptPairwisePartial: 'Pairwise F1 (partial)',
-      iaaMethodOptTriple: 'Pairwise Triple-level F1',
-      targetAgreementHintTpl: 'Suggested: {value}',
+      iaaMetricInputLabel: 'IAA metric (auto-selected)',
+      iaaNotApplicable: 'Not applicable',
+      iaaSummaryValueTpl: '{metric} (target IAA {target})',
       targetAgreementInputLabel: 'Target IAA',
       minAnnotatorsInputLabel: 'Minimum annotators',
       sampleUsageLabel: 'Dry',
@@ -3206,9 +3191,8 @@
     status: 'draft',
     samplingMode: 'by_count',
     samplingValue: 10,
-    iaaMethod: 'krippendorff_alpha_nominal',
     trialRound: 2,
-    targetAgreement: 0.8,
+    targetAgreementOverrides: {},
     currentAgreement: 0.81,
     minAnnotators: 3,
     currentAnnotators: 3,
@@ -4370,8 +4354,6 @@ function interpolate(template, payload) {
     setText('labelSamplingValueControl', t('labelSamplingValueControl'));
     setText('labelTrialRoundControl', t('labelTrialRoundControl'));
     setText('labelRoundOutcomeControl', t('labelRoundOutcomeControl'));
-    setText('labelIaaMethodControl', t('labelIaaMethodControl'));
-    setText('labelTargetAgreementControl', t('labelTargetAgreementControl'));
     setText('labelMinAnnotatorsControl', t('labelMinAnnotatorsControl'));
     setText('labelSplitControl', t('labelSplitControl'));
     setText('totalSamplesLabel', t('totalSamplesLabel'));
@@ -4379,15 +4361,6 @@ function interpolate(template, payload) {
     setText('labelIsolationAuditControl', t('labelIsolationAuditControl'));
     setRequiredLabel('samplingValueLabel', t('samplingValueLabel'));
     setText('samplingValueHint', t('samplingValueHint'));
-    setText('iaaMethodLabel', t('iaaMethodLabel'));
-    setText('iaaOptKrippendorff', t('iaaMethodOptKrippendorff'));
-    setText('iaaOptCohensKappa', t('iaaMethodOptCohens'));
-    setText('iaaOptFleissKappa', t('iaaMethodOptFleiss'));
-    setText('iaaOptIcc', t('iaaMethodOptIcc'));
-    setText('iaaOptPairwiseF1Strict', t('iaaMethodOptPairwiseStrict'));
-    setText('iaaOptPairwiseF1Partial', t('iaaMethodOptPairwisePartial'));
-    setText('iaaOptPairwiseTripleF1', t('iaaMethodOptTriple'));
-    setText('targetAgreementInputLabel', t('targetAgreementInputLabel'));
     setText('minAnnotatorsInputLabel', t('minAnnotatorsInputLabel'));
     setText('sampleUsageLabel', t('sampleUsageLabel'));
     setText('officialReserveLabel', t('officialReserveLabel'));
@@ -4577,8 +4550,8 @@ function interpolate(template, payload) {
          clamp so small seed datasets stay publishable. */
       TASK_DATA.samplingValue = Math.min(Math.max(derived, 1), Math.max(TASK_DATA.datasetTotal - 1, 1));
     }
-    if (!Number.isFinite(Number(TASK_DATA.targetAgreement))) {
-      TASK_DATA.targetAgreement = defs.targetIAA;
+    if (!TASK_DATA.targetAgreementOverrides || typeof TASK_DATA.targetAgreementOverrides !== 'object') {
+      TASK_DATA.targetAgreementOverrides = {};
     }
     if (!Number.isFinite(Number(TASK_DATA.minAnnotators)) || Number(TASK_DATA.minAnnotators) < 2) {
       TASK_DATA.minAnnotators = defs.minAnnotators;
@@ -4672,7 +4645,7 @@ function interpolate(template, payload) {
       }
     ];
     return scenarios[roundNumber - 1] || {
-      agreement: Number(TASK_DATA.targetAgreement || 0.8),
+      agreement: Number(getPrimaryTargetAgreement() || 0.8),
       std: 0.08,
       result: 'passed',
       date: '2026-05-05',
@@ -4804,8 +4777,13 @@ function interpolate(template, payload) {
       return { valid: false, message: t('samplingErrorCount') };
     }
 
-    if (data.targetAgreement < 0 || data.targetAgreement > 1) {
-      return { valid: false, message: t('samplingErrorAgreement') };
+    var overrides = data.targetAgreementOverrides || {};
+    for (var outputType in overrides) {
+      if (!Object.prototype.hasOwnProperty.call(overrides, outputType)) continue;
+      var overrideVal = Number(overrides[outputType]);
+      if (!Number.isFinite(overrideVal) || overrideVal < 0 || overrideVal > 1) {
+        return { valid: false, message: t('samplingErrorAgreement') };
+      }
     }
 
     if (data.minAnnotators < 2) {
@@ -4826,28 +4804,67 @@ function interpolate(template, payload) {
     return TASK_DATA;
   }
 
-  function getIaaMethodLabel(method) {
-    var map = {
-      krippendorff_alpha_nominal: t('iaaMethodOptKrippendorff'),
-      cohens_kappa: t('iaaMethodOptCohens'),
-      fleiss_kappa: t('iaaMethodOptFleiss'),
-      icc: t('iaaMethodOptIcc'),
-      pairwise_f1_strict: t('iaaMethodOptPairwiseStrict'),
-      pairwise_f1_partial: t('iaaMethodOptPairwisePartial'),
-      pairwise_triple_f1: t('iaaMethodOptTriple'),
-    };
-    return map[method] || method;
+  /* Config-driven (constitution: Generalization-First) — reads the shared
+     OUTPUT_TYPE_IAA_REGISTRY (task-config.data.js) instead of a hardcoded
+     per-type map, so a newly registered output type needs no changes here. */
+  function getIaaEntry(outputType) {
+    return (typeof OUTPUT_TYPE_IAA_REGISTRY !== 'undefined' && OUTPUT_TYPE_IAA_REGISTRY[outputType]) || null;
   }
 
-  var IAA_METHOD_DEFAULTS = {
-    krippendorff_alpha_nominal: 0.80,
-    cohens_kappa: 0.80,
-    fleiss_kappa: 0.80,
-    icc: 0.75,
-    pairwise_f1_strict: 0.80,
-    pairwise_f1_partial: 0.70,
-    pairwise_triple_f1: 0.75,
-  };
+  function getIaaMetricLabel(outputType) {
+    var entry = getIaaEntry(outputType);
+    if (!entry || entry.notApplicable) return t('iaaNotApplicable');
+    return entry[state.lang] || entry.zh;
+  }
+
+  function getEffectiveTargetAgreement(outputType, overridesMap) {
+    var entry = getIaaEntry(outputType);
+    if (!entry || entry.notApplicable) return null;
+    var overrides = overridesMap || TASK_DATA.targetAgreementOverrides || {};
+    var overrideVal = Number(overrides[outputType]);
+    return Number.isFinite(overrideVal) ? overrideVal : entry.defaultThreshold;
+  }
+
+  /* Legacy single-value consumers (trial round scenarios, stop-condition
+     pill) read the target agreement of the first IAA-applicable output type. */
+  function getPrimaryTargetAgreement() {
+    var outputs = TASK_DATA.outputs || [];
+    for (var i = 0; i < outputs.length; i++) {
+      var val = getEffectiveTargetAgreement(outputs[i].type);
+      if (val !== null) return val;
+    }
+    return 0.8;
+  }
+
+  /* Config-driven (constitution: Generalization-First) — one read-only row
+     per TASK_DATA.outputs[] entry (ADR-029); a newly registered output type
+     needs no changes here. */
+  function renderSamplingIaaSummaryList() {
+    var mount = document.getElementById('samplingIaaSummaryList');
+    if (!mount) return;
+    mount.innerHTML = '';
+    (TASK_DATA.outputs || []).forEach(function(out) {
+      var entry = getIaaEntry(out.type);
+      var row = document.createElement('div');
+      row.className = 'kv-dl-row';
+      var key = document.createElement('span');
+      key.className = 'kv-dl-key';
+      key.textContent = getOutputTypeDisplayLabel(out.type);
+      var value = document.createElement('span');
+      value.className = 'kv-dl-value';
+      if (!entry || entry.notApplicable) {
+        value.textContent = t('iaaNotApplicable');
+      } else {
+        value.textContent = interpolate(t('iaaSummaryValueTpl'), {
+          metric: getIaaMetricLabel(out.type),
+          target: Number(getEffectiveTargetAgreement(out.type)).toFixed(2),
+        });
+      }
+      row.appendChild(key);
+      row.appendChild(value);
+      mount.appendChild(row);
+    });
+  }
 
   function renderSamplingSummaryState() {
     var usedTrialCount = getUsedTrialSampleCount();
@@ -4866,8 +4883,7 @@ function interpolate(template, payload) {
     setText('valueSamplingValueControl', interpolate(t('samplingValueCountTpl'), { value: TASK_DATA.samplingValue }));
     setText('valueTrialRoundControl', currentRound ? 'R' + currentRound.round : '-');
     setText('valueRoundOutcomeControl', t('roundOutcome' + (roundOutcomeKey === 'passed' ? 'Passed' : roundOutcomeKey === 'failed' ? 'Failed' : 'InProgress')));
-    setText('valueIaaMethodControl', getIaaMethodLabel(TASK_DATA.iaaMethod));
-    setText('valueTargetAgreementControl', Number(TASK_DATA.targetAgreement).toFixed(2));
+    renderSamplingIaaSummaryList();
     setText('valueMinAnnotatorsControl', String(TASK_DATA.minAnnotators));
     setText('valueSplitControl', splitSummaryText);
     setText('valueIsolationControl', TASK_DATA.isolationEnabled ? t('isolationOn') : t('isolationOff'));
@@ -4881,7 +4897,7 @@ function interpolate(template, payload) {
 
     setText('trialRoundValue', currentRound ? 'R' + currentRound.round : '-');
     setText('trialRoundsUsedValue', String(roundCount));
-    setText('targetAgreementValue', Number(TASK_DATA.targetAgreement).toFixed(2));
+    setText('targetAgreementValue', Number(getPrimaryTargetAgreement()).toFixed(2));
     setText('currentAgreementValue', currentRound ? Number(currentRound.agreement || 0).toFixed(2) : Number(TASK_DATA.currentAgreement).toFixed(2));
     setText('officialPoolValue', String(reserveCount));
     setText('roundHistoryTitle', t('roundHistoryTitle'));
@@ -4906,13 +4922,13 @@ function interpolate(template, payload) {
         : 'Create the first trial round to validate agreement before deciding whether to start official work.');
     }
 
-    setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(TASK_DATA.targetAgreement).toFixed(2) }));
+    setText('stopAgreementPill', interpolate(t('stopAgreementPillTpl'), { target: Number(getPrimaryTargetAgreement()).toFixed(2) }));
     setText('stopAnnotatorPill', interpolate(t('stopAnnotatorPillTpl'), { target: TASK_DATA.minAnnotators }));
 
     var stopAgreementPill = document.getElementById('stopAgreementPill');
     var stopStdPill = document.getElementById('stopStdPill');
     var stopAnnotatorPill = document.getElementById('stopAnnotatorPill');
-    if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(TASK_DATA.targetAgreement));
+    if (stopAgreementPill) stopAgreementPill.classList.toggle('passed', Number(TASK_DATA.currentAgreement) >= Number(getPrimaryTargetAgreement()));
     if (stopStdPill) stopStdPill.classList.add('hidden');
     if (stopAnnotatorPill) stopAnnotatorPill.classList.toggle('passed', Number(TASK_DATA.currentAnnotators) >= Number(TASK_DATA.minAnnotators));
     renderSplitVisualization(
@@ -4952,7 +4968,6 @@ function interpolate(template, payload) {
   function renderSamplingState() {
     var data = getSamplingRenderData();
     var numericSamplingValue = Number(data.samplingValue);
-    var numericTargetAgreement = Number(data.targetAgreement);
     var numericMinAnnotators = Number(data.minAnnotators);
     var sampleCount = Number.isFinite(numericSamplingValue) ? numericSamplingValue : 0;
     var reserveCount = Math.max(TASK_DATA.datasetTotal - sampleCount, 0);
@@ -4973,16 +4988,9 @@ function interpolate(template, payload) {
         }
       ], TASK_DATA.datasetTotal);
     }
-    var iaaMethodSelect = document.getElementById('iaaMethodSelect');
-    if (iaaMethodSelect) iaaMethodSelect.value = data.iaaMethod || 'krippendorff_alpha_nominal';
-    var targetAgreementInput = document.getElementById('targetAgreementInput');
-    if (targetAgreementInput) targetAgreementInput.value = Number.isFinite(numericTargetAgreement) ? numericTargetAgreement.toFixed(2) : '';
+    renderSamplingIaaEditRows();
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
     if (minAnnotatorsInput) minAnnotatorsInput.value = Number.isFinite(numericMinAnnotators) ? String(Math.floor(numericMinAnnotators)) : '';
-
-    var suggestedVal = IAA_METHOD_DEFAULTS[data.iaaMethod || 'krippendorff_alpha_nominal'];
-    var hintEl = document.getElementById('targetAgreementHint');
-    if (hintEl) hintEl.textContent = suggestedVal !== undefined ? interpolate(t('targetAgreementHintTpl'), { value: suggestedVal.toFixed(2) }) : '';
 
     var samplingInput = document.getElementById('samplingValue');
     var samplingError = document.getElementById('samplingError');
@@ -5005,14 +5013,56 @@ function interpolate(template, payload) {
     var isolationToggle = document.getElementById('isolationToggle');
     var risk = document.getElementById('isolationRiskMsg');
     if (samplingInput) samplingInput.disabled = !editable;
-    if (iaaMethodSelect) iaaMethodSelect.disabled = !editable;
-    if (targetAgreementInput) targetAgreementInput.disabled = !editable;
     if (minAnnotatorsInput) minAnnotatorsInput.disabled = !editable;
     if (isolationToggle) {
       isolationToggle.checked = Boolean(data.isolationEnabled);
       isolationToggle.disabled = !editable;
     }
     if (risk) risk.classList.toggle('hidden', Boolean(data.isolationEnabled));
+  }
+
+  /* Config-driven (constitution: Generalization-First) — one editable row
+     per TASK_DATA.outputs[] entry (ADR-029); a newly registered output type
+     needs no changes here. free_text (notApplicable) renders metric text
+     only, with no target-agreement input. */
+  function renderSamplingIaaEditRows() {
+    var mount = document.getElementById('samplingIaaEditRows');
+    if (!mount) return;
+    mount.innerHTML = '';
+    var draft = state.samplingDraft;
+    var overrides = (draft && draft.targetAgreementOverrides) || {};
+    var editable = isSamplingEditable() && state.samplingEditMode;
+
+    (TASK_DATA.outputs || []).forEach(function(out) {
+      var entry = getIaaEntry(out.type);
+      var row = document.createElement('div');
+      row.className = 'field-group sampling-iaa-type-row';
+
+      var label = document.createElement('label');
+      label.className = 'field-label';
+      label.textContent = getOutputTypeDisplayLabel(out.type) + '—' + t('iaaMetricInputLabel');
+      row.appendChild(label);
+
+      var metricText = document.createElement('p');
+      metricText.className = 'status-hint';
+      metricText.textContent = getIaaMetricLabel(out.type);
+      row.appendChild(metricText);
+
+      if (entry && !entry.notApplicable) {
+        var input = document.createElement('input');
+        input.className = 'input-number iaa-override-input';
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.setAttribute('data-output-type', out.type);
+        input.setAttribute('aria-label', t('targetAgreementInputLabel') + ' - ' + getOutputTypeDisplayLabel(out.type));
+        var effective = getEffectiveTargetAgreement(out.type, overrides);
+        input.value = Number(effective).toFixed(2);
+        input.disabled = !editable;
+        row.appendChild(input);
+      }
+
+      mount.appendChild(row);
+    });
   }
 
   function renderPublishActions() {
@@ -5256,8 +5306,7 @@ function getTaskTypeLabel() {
     return {
       samplingMode: 'by_count',
       samplingValue: Number.isFinite(Number(TASK_DATA.samplingValue)) ? Number(TASK_DATA.samplingValue) : 10,
-      iaaMethod: TASK_DATA.iaaMethod || 'krippendorff_alpha_nominal',
-      targetAgreement: Number.isFinite(Number(TASK_DATA.targetAgreement)) ? Number(TASK_DATA.targetAgreement) : 0.8,
+      targetAgreementOverrides: Object.assign({}, TASK_DATA.targetAgreementOverrides || {}),
       minAnnotators: Number.isFinite(Number(TASK_DATA.minAnnotators)) ? Number(TASK_DATA.minAnnotators) : 3,
       isolationEnabled: TASK_DATA.isolationEnabled,
       isolationLastActor: TASK_DATA.isolationLastActor,
@@ -5335,8 +5384,7 @@ function getTaskTypeLabel() {
 
     TASK_DATA.samplingMode = 'by_count';
     TASK_DATA.samplingValue = state.samplingDraft.samplingValue;
-    TASK_DATA.iaaMethod = state.samplingDraft.iaaMethod;
-    TASK_DATA.targetAgreement = state.samplingDraft.targetAgreement;
+    TASK_DATA.targetAgreementOverrides = Object.assign({}, state.samplingDraft.targetAgreementOverrides || {});
     TASK_DATA.minAnnotators = state.samplingDraft.minAnnotators;
     TASK_DATA.isolationEnabled = state.samplingDraft.isolationEnabled;
     TASK_DATA.isolationLastActor = state.samplingDraft.isolationLastActor;
@@ -7658,6 +7706,24 @@ function getTaskTypeLabel() {
     };
   }
 
+  /* Config-driven (constitution: Generalization-First) — one record per
+     TASK_DATA.outputs[] entry (ADR-029), reading the shared
+     OUTPUT_TYPE_IAA_REGISTRY plus any target_agreement_overrides; a newly
+     registered output type needs no changes here. */
+  function getAppliedIaaMetrics() {
+    return (TASK_DATA.outputs || []).map(function(out) {
+      var entry = getIaaEntry(out.type);
+      if (!entry || entry.notApplicable) {
+        return { output_type: out.type, metric: null, threshold: null };
+      }
+      return {
+        output_type: out.type,
+        metric: entry[state.lang] || entry.zh,
+        threshold: getEffectiveTargetAgreement(out.type)
+      };
+    });
+  }
+
   function buildJsonExportPayload(samples) {
     var exportedAt = new Date().toISOString();
     var config = getExportConfigData();
@@ -7674,7 +7740,7 @@ function getTaskTypeLabel() {
         isolation_enabled: TASK_DATA.isolationEnabled,
         sampling_mode: TASK_DATA.samplingMode,
         sampling_value: TASK_DATA.samplingValue,
-        iaa_method: TASK_DATA.iaaMethod,
+        applied_iaa_metrics: getAppliedIaaMetrics(),
         sample_snapshot_id: getExportSampleSnapshotId(state.arStage),
         excluded_annotation_assignments: getExcludedExportMetadata(state.arStage),
         applied_filters: {
@@ -8093,8 +8159,7 @@ function getTaskTypeLabel() {
     var samplingCancelBtn = document.getElementById('samplingCancelBtn');
     var runControlTabExecution = document.getElementById('runControlTabExecution');
     var runControlTabTrial = document.getElementById('runControlTabTrial');
-    var iaaMethodSelect = document.getElementById('iaaMethodSelect');
-    var targetAgreementInput = document.getElementById('targetAgreementInput');
+    var samplingIaaEditRows = document.getElementById('samplingIaaEditRows');
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
     var overviewSaveBtn = document.getElementById('overviewSaveBtn');
@@ -8262,30 +8327,22 @@ function getTaskTypeLabel() {
       });
     }
 
-    if (iaaMethodSelect) {
-      iaaMethodSelect.addEventListener('change', function(e) {
+    /* Delegated listener: renderSamplingIaaEditRows() rebuilds these inputs
+       per output type each render, so a single stable-container listener is
+       used instead of one per dynamically-created input. */
+    if (samplingIaaEditRows) {
+      samplingIaaEditRows.addEventListener('input', function(e) {
+        if (!e.target.classList.contains('iaa-override-input')) return;
         if (!state.samplingEditMode || !state.samplingDraft) return;
-        state.samplingDraft.iaaMethod = e.target.value;
-        var suggested = IAA_METHOD_DEFAULTS[e.target.value];
-        if (suggested !== undefined) {
-          state.samplingDraft.targetAgreement = suggested;
-          if (targetAgreementInput) targetAgreementInput.value = suggested.toFixed(2);
-        }
-        markSamplingDirty();
-        renderSamplingState();
-      });
-    }
-
-    if (targetAgreementInput) {
-      targetAgreementInput.addEventListener('input', function(e) {
-        if (!state.samplingEditMode || !state.samplingDraft) return;
+        var outputType = e.target.getAttribute('data-output-type');
         var normalized = String(e.target.value || '').replace(/[^0-9.]/g, '');
         var firstDot = normalized.indexOf('.');
         if (firstDot >= 0) {
           normalized = normalized.slice(0, firstDot + 1) + normalized.slice(firstDot + 1).replace(/\./g, '');
         }
         e.target.value = normalized;
-        state.samplingDraft.targetAgreement = normalized === '' ? NaN : Number(normalized);
+        if (!state.samplingDraft.targetAgreementOverrides) state.samplingDraft.targetAgreementOverrides = {};
+        state.samplingDraft.targetAgreementOverrides[outputType] = normalized === '' ? NaN : Number(normalized);
         markSamplingDirty();
       });
     }

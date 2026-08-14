@@ -36,10 +36,11 @@ const OUTPUT_FILTER_COUNTS: Record<(typeof OUTPUT_TYPE_KEYS)[number], number> = 
 };
 
 const IAA_FILTER_COUNTS = {
-  pass: 6,
+  pass: 5,
   pending: 3,
   fail: 2,
-  not_started: 2,
+  not_started: 1,
+  not_applicable: 2,
 } as const;
 
 type DatasetAnalysisTask = {
@@ -138,6 +139,35 @@ test.describe('Dataset analysis list filters and pagination', () => {
     await expect(
       page.locator('#taskTableBody .role-cell', { hasText: '審核員' }),
     ).toHaveCount(7);
+  });
+
+  test('shows a not_applicable IAA badge for free_text-only tasks instead of pass/not_started', async ({
+    page,
+  }) => {
+    await page.goto(DATASET_ANALYSIS_URL);
+
+    const iaaStatusFilter = page.locator('#iaaStatusFilter');
+    await expect(iaaStatusFilter.locator('option')).toHaveText([
+      '全部 IAA 狀態',
+      '通過',
+      '計算中',
+      '未通過',
+      '尚未開始',
+      '不適用',
+    ]);
+
+    const freeTextRow = page.locator(
+      '#taskTableBody tr[data-source-file="mrc.json"]',
+    );
+    await expect(freeTextRow.locator('.badge-iaa-not-applicable')).toHaveText(
+      '不適用',
+    );
+    await expect(
+      freeTextRow.locator('.badge-iaa-pass, .badge-iaa-not-started'),
+    ).toHaveCount(0);
+
+    await iaaStatusFilter.selectOption('not_applicable');
+    await expect(page.locator('#taskTableBody tr')).toHaveCount(2);
   });
 
   test('keeps annotator-only tasks out of the analysis list', async ({

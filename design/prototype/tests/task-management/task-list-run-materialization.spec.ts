@@ -1,4 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { buildListUrl, buildWorkspaceUrl, patchDataFile, skipGuidelineModal } from '../annotation/_workspace-helpers';
+
+/* Materialized run context (spec 015): annotation list / workspace counts
+ * come from task-detail run publish events (TaskProfile.materializedRuns),
+ * not raw dataset size. T004 seeds a dry_run round R2 with a materialized
+ * 10-item list while shipping 5 prototype records. The workspace column
+ * title must stay a fixed 標記清單 with no run label suffix. */
 
 test.describe('Run materialization cues', () => {
   test('draft task rows show that no annotation list has been created yet', async ({ page }) => {
@@ -13,50 +20,42 @@ test.describe('Run materialization cues', () => {
   });
 
   test('annotation list exposes the materialized dry-run round context', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await page.goto(buildListUrl({ task_id: 'T004', role: 'annotator', run_type: 'dry_run' }));
 
-    await expect(page.locator('#taskInfoCard')).toContainText('試標回合 R2');
-    await expect(page.locator('#taskInfoCard')).toContainText('本回合清單 10 筆');
-    await expect(page.locator('#sampleRows tr')).toHaveCount(5);
+    const infoCard = page.getByTestId('list-task-info-card');
+    await expect(infoCard).toContainText('試標回合 R2');
+    await expect(infoCard).toContainText('本回合清單 10 筆');
+    // Rendered rows stay the seed subset, not the materialized total.
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(5);
   });
 
-  test('workspace sample list keeps the same dry-run round context', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring&sample_id=A2-001');
+  test('workspace sample list keeps the materialized count but no run label in the title', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T004', sample_id: 'read-001', run_type: 'dry_run' }));
 
-    await expect(page.locator('#sampleListTitle')).toHaveText('標記清單 · 試標回合 R2');
+    // Spec 015: the column title is a fixed 標記清單 -- run labels such as
+    // 試標回合 R{n} are forbidden there; only the count follows the
+    // materialized run context.
+    await expect(page.locator('#sampleListTitle')).not.toContainText('試標回合');
     await expect(page.locator('#sampleListCount')).toHaveText('10 筆');
-    await expect(page.locator('#sampleList .sample-item')).toHaveCount(5);
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(5);
   });
 
   test('annotation list respects a materialized zero-count context', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-list.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring');
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T004.materializedRuns.dry_run.total = 0;
+    `);
+    await page.goto(buildListUrl({ task_id: 'T004', role: 'annotator', run_type: 'dry_run' }));
 
-    await page.evaluate(() => {
-      type AnnotationListWindow = Window & {
-        MATERIALIZED_RUN_CONTEXT: Record<string, { round: number | null; total: number }>;
-        parseContext: () => { role: string; runType: string; taskId: string; taskType: string; subType: string };
-        renderTaskInfo: (context: { role: string; runType: string; taskId: string; taskType: string; subType: string }) => void;
-      };
-      const annotationWindow = window as unknown as AnnotationListWindow;
-      annotationWindow.MATERIALIZED_RUN_CONTEXT['TASK-015-A2'].total = 0;
-      annotationWindow.renderTaskInfo(annotationWindow.parseContext());
-    });
-
-    await expect(page.locator('#taskInfoCard')).toContainText('本回合清單 0 筆');
+    await expect(page.getByTestId('list-task-info-card')).toContainText('本回合清單 0 筆');
   });
 
   test('workspace sample list respects a materialized zero-count context', async ({ page }) => {
-    await page.goto('/pages/annotation/annotation-workspace.html?role=annotator&task_id=TASK-015-A2&run_type=dry_run&task_type=single_sentence_va_scoring&sample_id=A2-001');
-
-    await page.evaluate(() => {
-      type AnnotationWorkspaceWindow = Window & {
-        MATERIALIZED_RUN_CONTEXT: Record<string, { round: number | null; total: number }>;
-        renderSampleListHeader: () => void;
-      };
-      const workspaceWindow = window as unknown as AnnotationWorkspaceWindow;
-      workspaceWindow.MATERIALIZED_RUN_CONTEXT['TASK-015-A2'].total = 0;
-      workspaceWindow.renderSampleListHeader();
-    });
+    await skipGuidelineModal(page);
+    await patchDataFile(page, 'task-detail.data.js', `
+      window.LabelSuiteTaskDetailData.profiles.T004.materializedRuns.dry_run.total = 0;
+    `);
+    await page.goto(buildWorkspaceUrl({ task_id: 'T004', sample_id: 'read-001', run_type: 'dry_run' }));
 
     await expect(page.locator('#sampleListCount')).toHaveText('0 筆');
   });

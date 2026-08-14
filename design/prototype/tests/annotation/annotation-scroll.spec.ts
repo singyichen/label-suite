@@ -1,11 +1,16 @@
 import { test, expect } from '@playwright/test';
+import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+
+test.beforeEach(async ({ page }) => {
+  await skipGuidelineModal(page);
+});
 
 test('middle annotation area can scroll to note section', async ({ page }) => {
-  await page.goto('/pages/annotation/annotation-workspace.html?task_type=single_sentence_va_scoring');
-  await page.waitForTimeout(500);
+  // T005: multi_dim (3 sliders) gives enough vertical content to overflow.
+  await page.goto(buildWorkspaceUrl({ task_id: 'T005', sample_id: 'mt-001' }));
 
   const before = await page.evaluate(() => {
-    const el = document.getElementById('contentScroll') as HTMLElement | null;
+    const el = document.querySelector('[data-testid="ws-content-scroll"]') as HTMLElement | null;
     if (!el) return null;
     return {
       scrollTop: el.scrollTop,
@@ -18,7 +23,7 @@ test('middle annotation area can scroll to note section', async ({ page }) => {
   expect(before!.canScroll).toBeTruthy();
 
   await page.evaluate(() => {
-    const el = document.getElementById('contentScroll') as HTMLElement | null;
+    const el = document.querySelector('[data-testid="ws-content-scroll"]') as HTMLElement | null;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   });
@@ -26,18 +31,13 @@ test('middle annotation area can scroll to note section', async ({ page }) => {
   await page.waitForTimeout(200);
 
   const after = await page.evaluate(() => {
-    const el = document.getElementById('contentScroll') as HTMLElement | null;
+    const el = document.querySelector('[data-testid="ws-content-scroll"]') as HTMLElement | null;
     if (!el) return null;
-    return {
-      scrollTop: el.scrollTop,
-      clientHeight: el.clientHeight,
-      scrollHeight: el.scrollHeight,
-      maxScrollTop: el.scrollHeight - el.clientHeight,
-    };
+    return { scrollTop: el.scrollTop };
   });
   expect(after).not.toBeNull();
   expect(after!.scrollTop).toBeGreaterThan(0);
 
-  const noteLabel = page.locator('#annotationNoteLabel');
+  const noteLabel = page.getByTestId('ws-note-label');
   await expect(noteLabel).toBeVisible();
 });

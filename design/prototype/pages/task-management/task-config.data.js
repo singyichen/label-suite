@@ -369,6 +369,26 @@ Object.keys(OUTPUT_TYPE_REGISTRY).forEach(function(outKey) {
   OUTPUT_TYPE_REGISTRY[outKey].defaultConfig.allow_bypass = true;
 });
 
+/* ── IAA metric registry (task-management-014 IAA strategy v2) ──────────
+ * Read-only per-output-type primary IAA metric + default gate threshold.
+ * Source of truth: dataset-017-dataset-analysis-detail spec's
+ * `OUTPUT_TYPE_IAA_REGISTRY` constant table. task-detail.html only reads
+ * this to render a read-only metric list and to resolve
+ * `target_agreement_overrides` fallback values — it must not define a
+ * second copy of these metric names or thresholds (constitution:
+ * Generalization-First). `free_text` has no automatic IAA metric
+ * (`notApplicable: true`) and is excluded from the IAA gate denominator. */
+var OUTPUT_TYPE_IAA_REGISTRY = {
+  single_label: { zh: "Krippendorff's Alpha（nominal）", en: "Krippendorff's Alpha (nominal)", defaultThreshold: 0.80 },
+  multi_label: { zh: '逐標籤 Alpha macro 平均', en: 'Per-label alpha (macro average)', defaultThreshold: 0.80 },
+  single_dim: { zh: 'ICC(2,1)', en: 'ICC(2,1)', defaultThreshold: 0.75 },
+  multi_dim: { zh: 'ICC(2,1)', en: 'ICC(2,1)', defaultThreshold: 0.80 },
+  entity_recognition: { zh: 'Span F1（嚴格）', en: 'Span F1 (strict)', defaultThreshold: 0.80 },
+  relation_identification: { zh: 'Triple F1', en: 'Triple F1', defaultThreshold: 0.75 },
+  sequence_tagging: { zh: 'Token-level Alpha（O-tag 遮罩）', en: 'Token-level alpha (O-tag masked)', defaultThreshold: 0.75 },
+  free_text: { zh: null, en: null, defaultThreshold: null, notApplicable: true },
+};
+
 function getOutputFieldDefault(field, lang) {
   var localizedKey = 'defaultValue_' + (lang || state.lang || 'zh');
   if (Object.prototype.hasOwnProperty.call(field, localizedKey)) return field[localizedKey];

@@ -229,10 +229,6 @@
     .stats-comatrix-mid{background:var(--color-slate-50);color:var(--color-text-soft)}
     .stats-comatrix-low{color:var(--color-ink-muted)}
     .stats-inline-card{display:inline-flex;align-items:center;gap:var(--space-md);padding:16px 24px;background:var(--color-slate-50);border:1px solid var(--color-border);border-radius:var(--radius-md)}
-    .sp-toggle{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:2px;background:var(--color-slate-50);gap:2px}
-    .sp-btn{border:1px solid transparent;border-radius:6px;background:transparent;color:var(--color-text-soft);font-size:12px;font-weight:600;padding:5px 12px;transition:background var(--dur-fast),color var(--dur-fast)}
-    .sp-btn.active{background:var(--color-white);color:var(--color-primary);border-color:var(--color-primary-soft-border)}
-    .sp-btn:hover:not(.active){color:var(--color-primary)}
 
     /* Responsive */
     @media(max-width:767px){
@@ -369,11 +365,16 @@
       </div>
       <p class="quality-empty-title" id="emptyTitle">IAA 報告將在 Dry Run 完成後產生</p>
       <p class="quality-empty-desc" id="emptyDesc">請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。</p>
+      <div class="quality-pending-badge-row"><span class="badge iaa-summary-badge badge-neutral" id="qualityPendingBadge"></span></div>
       <a href="../task-management/task-detail.html" class="btn btn-secondary btn-sm" id="emptyBtn">前往任務詳情</a>
     </div>
 
     <!-- Ready state -->
     <div id="qualityReady">
+      <div class="panel-head-row" id="compositeBadgeRow">
+        <h2 class="panel-title" id="compositeBadgeTitle">IAA 綜合結果</h2>
+        <span class="badge iaa-summary-badge" id="iaaSummaryBadge"></span>
+      </div>
       <div id="qualityPanelMount" aria-live="polite"></div>
 
     </div><!-- /qualityReady -->
@@ -446,14 +447,7 @@ var I18N = {
     statsSeqSpanLenTitle:'Entity Span 長度分佈',
     statsSeqSpanLenDesc:'以 token 數計算的 span 長度分佈（長度 ≥ 6 合併為「6+」）',
     statsSeqSpanLenXLabel:'Span 長度（token 數）',
-    statsRelEntityDistTitle:'實體類型分佈',statsRelEntityDistDesc:'各實體類型在已標記三元組中的出現次數',
     statsRelRelDistTitle:'關係類型分佈',statsRelRelDistDesc:'各關係類型的三元組標記次數',
-    relationEntityLabels: {
-      drug: 'Drug（藥物）',
-      disease: 'Disease（疾病）',
-      gene: 'Gene（基因）',
-      chemical: 'Chemical（化合物）',
-    },
     relationTypeLabels: {
       treats: 'treats（治療）',
       causes: 'causes（導致）',
@@ -469,24 +463,6 @@ var I18N = {
     statsRelAnnotated5xLabel:'≥ 5 次標記 Triple',statsRelAnnotated5xDesc:'達到一致性比較門檻的 triple 數',
     statsRelAvgAnnotatorsLabel:'平均標記員數 / Triple',statsRelAvgAnnotatorsDesc:'每個唯一 triple 的平均覆蓋標記員數',
     statsRelMaxTripleLabel:'單句最多 Triple',statsRelMaxTripleDesc:'單一樣本出現最多 triple 的數量',
-    statsSpDistTitle:'分佈統計',
-    statsSpLblDistTitle:'各標籤在提交標記中的次數與比例（共 983 筆有效標記）',
-    statsSpScoreDistTitle:'評分分數（0–1）在提交標記中的分佈（共 983 筆有效標記）',
-    statsSpToggleAria:'子類型切換',
-    statsSpClsButton:'分類型',
-    statsSpScoreButton:'評分型',
-    sentencePairLabels: {
-      similar: '相似 / Similar',
-      dissimilar: '不相似 / Dissimilar',
-      entailment: '蘊含 / Entailment',
-      contradiction: '矛盾 / Contradiction',
-    },
-    sentencePairDominantSimilar:'相似',
-    statsSpScoreAria:'評分分佈直方圖',
-    statsSpClsLabelCount:'標籤類別數',statsSpClsSampleCount:'有效標記句對數',
-    statsSpClsDominantLabel:'最常見標籤',
-    statsSpScoreSummaryHead:'評分統計摘要',statsSpScoreQuartileHead:'四分位數',
-    statsSpScoreLenXLabel:'相似度分數',
     iaaTitle: 'IAA 報告', iaaMethodSuffix: '— 主要指標',
     anomalyTitle: '異常偵測', anomalySubtitle: '自動標記標記速度異常與離群標記值',
     consistencyTitle: '標記一致性偏離分析',
@@ -500,29 +476,23 @@ var I18N = {
     emptyDesc: '請先完成 Dry Run，系統將自動計算 IAA 並產生品質報告。',
     emptyBtn: '前往任務詳情',
     iaaSummaryPass: '整體通過', iaaSummaryFail: '整體未達標', iaaSummaryWarn: '部分通過',
-    taskTitles: {
-      va: '情感 VA 雙維度評分',
-      classification: '新聞標題多標籤分類',
-      sequence: '產品評論序列標記（NER / Aspect）',
-      relation: '醫療關係抽取（Entity / Triple）',
-      sentence_pairs: '句對相似度 / 蘊含判定',
-    },
+    iaaCompositeBadgeFmt: '{x}/{y} 達標', iaaExcludedSuffixFmt: ' · {N} 型排除',
+    iaaPendingBadgeFmt: '—/{y} 待完成 Dry Run', iaaNotApplicableBadge: '不適用',
+    iaaSmallSampleBadge: '小樣本估計',
+    compositeBadgeTitle: 'IAA 綜合結果',
     iaaMethodName: {
-      va: 'ICC（Intraclass Correlation Coefficient）',
-      classification: "Krippendorff's Alpha（nominal）",
-      sequence_strict: 'Pairwise Entity-level F1（strict）',
-      sequence_partial: 'Pairwise Entity-level F1（partial overlap）',
-      sequence_aspect: 'Exact Span F1 · Partial Match F1 · Label Accuracy',
-      relation: 'Pairwise Triple-level F1',
-      sentence_pairs: "Krippendorff's Alpha（nominal）",
+      multi_dim: 'ICC（Intraclass Correlation Coefficient）',
+      multi_label: "Krippendorff's Alpha（nominal）",
+      entity_recognition_strict: 'Pairwise Entity-level F1（strict）',
+      entity_recognition_partial: 'Pairwise Entity-level F1（partial overlap）',
+      relation_identification: 'Pairwise Triple-level F1',
     },
     altLblVA:'輔助指標', altLblCls:'替代指標', altLblSeq:'兩種計算模式比較',
-    altLblRel:'輔助指標', altLblSp:'替代指標',
+    altLblRel:'輔助指標',
     altHVAMetric:'指標', altHVAV:'Valence（V）', altHVAA:'Arousal（A）',
     altHClsMetric:'指標', altHClsVal:'數值',
     altHSeqMode:'計算模式', altHSeqVal:'數值', altHSeqThr:'門檻', altHSeqResult:'結果',
     altHRelMetric:'指標', altHRelVal:'數值',
-    altHSpMetric:'指標', altHSpVal:'數值',
     altSeqStrictResult:'未達', altSeqPartialResult:'通過',
     lblV:'Valence（V）', lblA:'Arousal（A）', lblOverall:'Overall IAA', lblOverallCalc:'（V + A）/ 2',
     lblVrec:'建議門檻 0.75 — ', lblVstr:'嚴格門檻 0.80 — ',
@@ -532,7 +502,6 @@ var I18N = {
     lblClsThr:'門檻 0.80 — ',
     lblSeqStrThr:'Strict 門檻 0.80 — ', lblSeqPartThr:'Relaxed 門檻 0.70 — ',
     lblRelThr1:'門檻 0.75 — ', lblRelThr2:'高品質門檻 0.80 — ',
-    lblSpThr:'門檻 0.80 — ',
     thVAName:'標記員', thVASpeed:'平均速度', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs 群體', thVADeltaA:'Δ A vs 群體', thVAStatus:'狀態',
     thClsName:'標記員', thClsSpeed:'平均速度', thClsIaa:'Alpha', thClsDelta:'Δ vs 群體', thClsStatus:'狀態',
     thSeqName:'標記員', thSeqSpeed:'平均速度', thSeqIaa:'F1（strict）', thSeqDelta:'Δ vs 群體', thSeqStatus:'狀態',
@@ -542,7 +511,6 @@ var I18N = {
     clsGroupAvg:'群體平均 — Alpha: 0.83 ／ 平均速度: 31.3s／句',
     seqGroupAvg:'群體平均 — F1（strict）: 0.72 ／ 平均速度: 44.7s／句',
     relGroupAvg:'群體平均 — Triple F1: 0.76 ／ 平均速度: 54.0s／句',
-    spGroupAvg:'群體平均 — Alpha: 0.85 ／ 平均速度: 37.3s／句',
     vaStatus1:'正常', vaStatus2:'注意', vaStatus3:'異常',
     clsStatus1:'正常', clsStatus2:'正常', clsStatus3:'注意',
     seqStatus1:'正常', seqStatus2:'注意', seqStatus3:'異常',
@@ -575,21 +543,19 @@ var I18N = {
     anomSeqOut1Title:'樣本 #89 — 實體邊界 high_divergence 旗標', anomSeqOut1Detail:'Jordan Wu 的 span 邊界與群體中位跨度相差 3 個 token 以上；此旗標與個人風險等級分開處理。',
     anomRelSpeedTitle:'標記速度異常', anomRelOutlierTitle:'高分歧樣本', anomRelOutlierEmpty:'暫無 high_divergence 樣本',
     anomRelSpd1Title:'Jordan Wu — 標記速度過快', anomRelSpd1Detail:'平均 25s／句（門檻：≥ 45s），關係抽取任務複雜度較高',
-    anomSpSpeedTitle:'標記速度異常', anomSpSpeedEmpty:'無速度異常', anomSpOutlierTitle:'高分歧樣本', anomSpOutlierEmpty:'無 high_divergence 樣本',
-    consistencyUnitHeader: { va:'可比較句數', classification:'可比較句數', sequence:'可比較 span 數', sequence_aspect:'可比較 span 數', relation:'標記 5 次的三元組數', sentence_pairs:'可比較句對數' },
+    consistencyUnitHeader: { multi_dim:'可比較句數', multi_label:'可比較句數', entity_recognition:'可比較 span 數', sequence_tagging:'可比較 token 數', relation_identification:'標記 5 次的三元組數', single_label:'可比較樣本數' },
     consistencyNotes: {
-      va:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
-      classification:'分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
-      sequence:'序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
-      sequence_aspect:'Aspect 標記以可對齊的 span（aspect taxonomy 類別相符）作為比較母體；boundary high_divergence 樣本維持獨立 sample-level 旗標。',
-      relation:'關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。',
-      sentence_pairs:'句對任務以可重疊比較的句對結果為母體；適合觀察群體偏離頻率，不單獨作為處置依據。',
+      multi_dim:'以同一樣本之群體中位數為基準彙總；1.5xSTD 為觀測閾值，2xSTD 為較高偏離訊號。',
+      multi_label:'分類任務以每句提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
+      entity_recognition:'序列標記以可對齊的 span 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
+      sequence_tagging:'序列標記以 O tag 遮罩後的 token 作為比較母體；邊界 high_divergence 樣本仍維持獨立旗標呈現。',
+      relation_identification:'關係抽取以重複標記達比較門檻的三元組為母體；此區塊呈現群體偏離程度，不直接等於風險決策。',
+      single_label:'單選標籤任務以每筆提交結果作為可比較單位；此區塊描述偏離現象，不直接代表標記正確性。',
     },
     qualityRisk: {
       vaTableLabel: '標記員分析（VA 評分）',
       sequenceTableLabel: '標記員分析（序列標記）',
       relationTableLabel: '標記員分析（關係抽取）',
-      sentencePairsTableLabel: '標記員分析（句對任務）',
       headerAnnotator: '標記員',
       headerSpeed: '平均速度',
       headerF1Strict: 'F1（strict）',
@@ -623,6 +589,65 @@ var I18N = {
       actionAdjust: '調整參與狀態',
       leaderOnly: '僅 Project Leader 可執行',
     },
+    qualityListRank: {
+      lowConsistencyTitle: '一致性最低樣本清單',
+      lowConsistencySubtitle: '依分歧度由高到低排序，可作為 Reviewer 仲裁優先順序參考（與 dry_run 仲裁 divergent 概念同源）',
+      headerSample: '樣本',
+      headerScore: '分歧分數',
+      headerDetail: '分歧描述',
+      headerQueue: '佇列狀態',
+      queuePending: '待審核',
+      queueCompleted: '已完成',
+      rankingTitle: '標記員品質排名',
+      rankingSubtitle: '依型別對應一致率計算方式排序；完成樣本數不足門檻者標示小樣本估計警示，但不剔除排名',
+      rankHeaderRank: '名次',
+      rankHeaderAnnotator: '標記員',
+      rankHeaderMetric: '一致率指標',
+      rankHeaderValue: '數值',
+      rankSmallSample: '小樣本估計',
+      boundaryTitle: '邊界分歧分析',
+      boundarySubtitle: '統計部分重疊但邊界不一致的案例（span_too_long / span_too_short / wrong_boundary）',
+      boundaryHeaderType: '錯誤類型',
+      boundaryHeaderCount: '案例數',
+      boundaryExampleTitle: '代表範例',
+    },
+    multiLabelListRank: {
+      sample1Detail: '樣本 #101：3 位標記員分別選擇「劇情」「演技」「配樂」等不同主標籤組合，標籤重疊率低',
+      sample2Detail: '樣本 #087：正向／中立標籤各半，對「敘事節奏」是否列入負面訊號意見分歧',
+      rankMetricName: '與多數決一致率',
+    },
+    sequenceTaggingListRank: {
+      sample1Detail: '「散熱表現優異」span 邊界在 3 位標記員間差異達 4 個 token',
+      sample2Detail: '「退換貨流程」與「繁瑣」是否合併為單一 span 意見分歧',
+      rankMetricName: '與多數決 token 標記一致率',
+      boundaryExampleDetail: 'Gold: 「散熱表現優異」｜Annotator: 「散熱表現優異，長時間高負載運作」（多標 6 tokens，span_too_long）',
+    },
+    entityRecognitionListRank: {
+      sample1Detail: '「台大醫院」實體邊界標記不一致（ORG vs LOC 類型分歧）',
+      sample2Detail: '「神經內科」span 起訖位置在 2 位標記員間相差 2 個字元',
+      rankMetricName: '與合併聚合參考值 F1',
+      boundaryExampleDetail: 'Gold: 「台大醫院」｜Annotator: 「台大」（少標 2 字元，span_too_short）',
+    },
+    singleLabelListRank: {
+      sample1Detail: '樣本 #212：3 位標記員對「服務態度不佳但問題已解決」句子分別標為「負向」「中立」「正向」，情緒判斷分歧',
+      sample2Detail: '樣本 #178：對「退款流程」描述句是否屬於「負向」意見不一致',
+      rankMetricName: '與多數決一致率',
+    },
+    singleDimListRank: {
+      sample1Detail: '樣本 #05：3 位標記員對品質評分為 2、3、5，分歧達 3 分',
+      sample2Detail: '樣本 #02：對是否達到「可接受品質」門檻（3 分）意見不一致',
+      rankMetricName: '與群體平均評分差距（越小越一致）',
+    },
+    multiDimListRank: {
+      sample1Detail: '樣本 #47：Valence 評分在標記員間相差達 2.1 分（V: 1.2 vs 3.3）',
+      sample2Detail: '樣本 #112：Arousal 評分呈兩極化分布，標準差偏高',
+      rankMetricName: '與群體平均 V/A 差距（ICC 加權）',
+    },
+    relationIdentificationListRank: {
+      sample1Detail: '樣本 #33：「阿斯匹靈」與「胃出血」關係類型標記為「causes」與「associated_with」不一致',
+      sample2Detail: '樣本 #19：三元組邊界（subject span）在 2 位標記員間相差 3 個字元',
+      rankMetricName: '與合併聚合參考值 Triple F1',
+    },
     emptyStateMsgs: {
       dry_run_in_progress: ['Dry Run 進行中', 'Dry Run 仍在執行中，等待所有標記員完成提交。'],
       report_pending:      ['報告待產生',     'Dry Run 已完成，IAA 報告已排入計算佇列。'],
@@ -630,138 +655,73 @@ var I18N = {
     },
     lblClsMetric:"Krippendorff's Alpha（nominal）", lblClsCalc:'整體 alpha（多標籤 macro average）',
     lblRelCalc:'subject + relation + object 完全一致',
-    lblSpCalc:'分類型子任務',
     matchStrict:'Strict match', matchPartial:'Partial overlap',
     lblSeqStrictMetric:'Pairwise Entity-level F1（strict）',
     lblSeqPartialMetric:'Pairwise Entity-level F1（partial overlap）',
     lblRelMetric:'Pairwise Triple-level F1',
-    lblSpMetric:"Krippendorff's Alpha（nominal）",
-    aspectTaxonomyLabels: {
-      product_quality: '產品品質',
-      value_for_money: 'CP值（性價比）',
-      appearance_design: '外觀設計',
-      customer_service: '客戶服務',
-      packaging_quality: '包裝品質',
-      functionality: '功能性',
+    singleLabelStats: {
+      distTitle: '標籤分佈',
+      distDesc: '各標籤在提交標記中的次數與比例（每筆樣本僅能選擇一個標籤）',
+      labels: { positive: '正向', neutral: '中立', negative: '負向', mixed: '混合' },
+      distNote: '單標籤任務：每筆標記恰包含 1 個標籤，比例合計 100%',
     },
-    sequenceAspectStats: {
-      kpiTitle: 'Aspect 分析摘要',
-      sentenceCountLabel: '句子數量',
-      sentenceCountDesc: '分析母體',
-      tokenCountLabel: 'Token 數量',
-      tokenCountDesc: '空格分詞',
-      completionLabel: '完成率',
-      completionDesc: '1,092 / 1,248',
-      submittedLabel: '已提交樣本',
-      submittedDesc: '至少 1 位已提交',
-      avgTimeLabel: '平均標記時間',
-      avgTimeDesc: '每句平均用時',
-      distTitle: 'Aspect 類型分佈',
-      distDesc: '各 Aspect taxonomy 在提交標記中的出現次數（共 2,617 個 aspect 標記）',
-      avgTitle: '每句平均 Aspect 數量',
-      avgLabel: '平均 Aspect 數 / 句',
-      bucketLabel: '分桶分佈',
-      totalLabel: '總 Aspect 標記數',
-      zeroLabel: '無 Aspect 句子比例',
-      maxLabel: '單句最多 Aspect 數',
-      spanLenTitle: 'Aspect Span 長度分佈',
-      spanLenDesc: '以 token 數計算的 span 長度分佈（長度 ≥ 5 合併為「5+」）',
-      spanLenXLabel: 'Span 長度（token 數）',
-      spanLenAria: 'Aspect Span 長度分佈直方圖',
-      spanLenExample: '代表例：「高品質」(1)、「耐用性強」(2)、「外觀設計精美」(3)、「整體性價比相當高」(4)',
-      cooccTitle: 'Aspect 共現矩陣',
-      cooccDesc: '同一句內兩個不同 Aspect 共同出現的次數；矩陣對稱，對角線不顯示自共現',
-      cooccAria: 'Aspect 共現矩陣',
-      cooccNote: '外觀 × 包裝共現頻率偏高（184 次），反映評論中同時討論視覺與包裝的傾向。',
-      sentimentTitle: 'Aspect × Sentiment 分佈',
-      sentimentDesc: '各 Aspect 的正面 / 中立 / 負面標記比例（sentiment 資料存在時顯示）',
-      sentimentPositive: '正面',
-      sentimentNeutral: '中立',
-      sentimentNegative: '負面',
-      coverageTitle: 'Aspect Coverage 分析',
-      coverageDesc: '各 Aspect taxonomy 的樣本覆蓋率；低於目標分佈最小樣本數時標示偏斜警告',
-      coverageBadge: '偏斜警告',
-      coverageHeaderAspect: 'Aspect',
-      coverageHeaderRate: '樣本覆蓋率',
-      coverageHeaderCount: '樣本數',
-      coverageHeaderStatus: '狀態',
-      statusOnTarget: '符合',
-      statusBelowTarget: '低於目標',
-      statusBiasWarning: '偏斜警告',
-      coverageWarningHtml: '「功能性」覆蓋率（4%）明顯低於目標分佈，已標示 <code style="font-family:var(--font-mono);font-size:11px">dataset_bias_detected = true</code>。建議增加該類別樣本或調整 Dry Run 配置。',
+    singleLabelQuality: {
+      methodName: "Krippendorff's Alpha（nominal）",
+      methodSuffix: '— 主要指標',
+      metricLabel: "Krippendorff's Alpha（nominal）",
+      calcDesc: '整體 alpha（單選標籤）',
+      threshold: '門檻 0.80 — <strong class="t-pass">通過</strong>',
+      altToggle: '替代指標',
+      altHeaderMetric: '指標',
+      altHeaderVal: '數值',
+      groupAvg: '群體平均 — Alpha: 0.85 ／ 平均速度: 31.3s／句',
     },
-    sequenceAspectQuality: {
-      methodSuffix: '— 主要指標群組',
-      exactF1: 'Exact Span F1',
-      exactCalc: 'boundary + label 完全一致',
-      exactThrHtml: '門檻 0.80 — <strong class="t-fail">未達</strong>',
-      partialF1: 'Partial Match F1',
-      partialCalc: 'spans overlap + label 相容',
-      partialThrHtml: 'Relaxed 門檻 0.70 — <strong class="t-pass">通過</strong>',
-      labelAcc: 'Label Accuracy',
-      labelAccCalc: 'matched spans 上的 label 正確率',
-      labelAccThrHtml: '門檻 0.80 — <strong class="t-pass">通過</strong>',
-      perAspectButton: '各 Aspect 類別指標明細',
-      perAspectHeaderAspect: 'Aspect',
-      perAspectHeaderExact: 'Exact Span F1',
-      perAspectHeaderPartial: 'Partial F1',
-      perAspectHeaderLabelAcc: 'Label Acc',
-      perAspectHeaderResult: '結果',
-      perAspectResultExactFail: 'Exact 未達',
-      perAspectResultPass: '通過',
-      perAspectResultFail: '未達',
-      boundaryTitle: '邊界錯誤分析',
-      boundarySubtitle: 'Span 邊界錯誤分類（共 87 筆邊界錯誤），以 gold / consensus span 為基準對比標記員版本',
-      representativeExamples: '代表例句',
-      aspectPrefix: 'Aspect',
-      goldAnnotatorLong: 'Gold: 「外殼材質非常堅固耐用」 | Annotator: 「外殼材質非常堅固耐用，不易刮傷」（多標 3 tokens）',
-      goldAnnotatorShort: 'Gold: 「價格相比同類競品」 | Annotator: 「價格」（少標 6 tokens）',
-      goldAnnotatorWrong: 'Gold: 「客服」 | Annotator: 「客服非常」（邊界偏移 1 token，語意含糊）',
-      highDisagreeTitle: '高分歧樣本分析',
-      highDisagreeCount: '23 筆',
-      highDisagreeSubtitle: '依 disagreement_score 由高到低排序（strict F1 低分 + boundary conflict + label 不一致加權）',
-      highDisagreeHeaderSample: '樣本',
-      highDisagreeHeaderScore: '分歧分數',
-      highDisagreeHeaderSentence: '句子摘要',
-      highDisagreeHeaderConflict: '衝突描述',
-      highDisagreeHeaderQueue: '佇列狀態',
-      queuePending: '待審核',
-      queueCompleted: '已完成',
-      highDisagreeNote: '顯示 disagreement_score ≥ 0.70 的樣本（共 23 筆）。完整清單可於 Reviewer Queue 查看。',
-      anomalySpeedGroup: '標記速度異常',
-      anomalyOutlierGroup: '高分歧樣本（sample-level 旗標）',
-      anomalySpeedTitle: 'Jordan Wu — 標記速度過快',
-      anomalySpeedDetail: '平均 24s／句（群體平均 45.3s；Aspect 任務預期 ≥ 40s），共 35 筆提交紀錄',
-      anomalyOutlierTitle: '樣本 #312 — Aspect span high_divergence 旗標',
-      anomalyOutlierDetail: '功能性 span 邊界在三位標記員間差異超過 4 tokens；此旗標為 sample-level，與個人風險等級分開處理，不拉高任何標記員風險等級。',
-      riskHeaderAnnotator: '標記員',
-      riskHeaderSpeed: '平均速度',
-      riskHeaderAspectF1: 'Aspect F1（exact）',
-      riskHeaderLevel: '風險等級',
-      riskHeaderCause: '異常原因',
-      riskHeaderSamples: '樣本數',
-      riskHeaderAction: '建議行動',
-      riskSpeed1: '52s / 句',
-      riskSpeed2: '60s / 句',
-      riskSpeed3: '24s / 句',
-      causeNone: '無異常原因',
-      causeSystematic: '系統性偏差',
-      causeTooFast: '標記過快',
-      actionReview: '審核標記',
-      actionAdjust: '調整參與狀態',
-      leaderOnly: '僅 Project Leader 可執行',
-      riskGroupAvg: '群體平均 — Aspect F1（exact）: 0.68 ／ 平均速度: 45.3s／句',
-      consistencyHeaderAnnotator: '標記員',
-      sentence312: '「這支手機最令我滿意的是其相機功能以及充電速度極快…」',
-      sentence078: '「客服態度親切，且退換貨流程非常簡便，讓我很滿意…」',
-      sentence445: '「包裝設計很精緻，整個開箱過程令人印象深刻…」',
-      sentence189: '「雖然價格略高，但整體質感與耐用度完全值得…」',
-      sentence521: '「功能雖不算最頂尖，但性價比確實不錯，推薦入手…」',
-      conflict312: '功能性 ↔ 產品品質（3 版本，span 差 4 tokens）',
-      conflict078: '客戶服務（2 標記員 span 不重疊）',
-      conflict445: '外觀設計 ↔ 包裝品質（label 分歧）',
-      conflict189: 'CP值 ↔ 產品品質（boundary overlap）',
-      conflict521: '功能性 span 邊界一致性低',
+    singleDimStats: {
+      histTitle: '評分分佈直方圖',
+      histDesc: '標記員在 1–5 評分量表上的分佈情形（共 396 筆有效標記）',
+      histAria: '評分分佈直方圖',
+      mean: 'Mean',
+      std: 'SD',
+      median: 'Median',
+      min: 'Min',
+      max: 'Max',
+    },
+    singleDimQuality: {
+      methodName: 'ICC（2,1）（Intraclass Correlation Coefficient）',
+      methodSuffix: '— 主要指標',
+      metricLabel: 'ICC（2,1）',
+      calcDesc: '單一評分維度',
+      thresholdRecommended: '建議門檻 0.75 — <strong class="t-pass">通過</strong>',
+      thresholdStrict: '嚴格門檻 0.80 — <strong class="t-fail">未達</strong>',
+      altToggle: '輔助指標',
+      altHeaderMetric: '指標',
+      altHeaderVal: '數值',
+    },
+    sequenceTaggingStats: {
+      distTitle: '標記類型分佈',
+      distDesc: '各 tag 類型在提交標記中的 token 數量與比例（含 O tag）',
+      tags: { o: 'O', bPer: 'B-PER', iPer: 'I-PER', bOrg: 'B-ORG' },
+      distNote: 'O tag 佔全體 token 71%；IAA 計算時 O tag 全體標記員一致的 token 會依規則遮罩（見品質分頁說明）',
+    },
+    sequenceTaggingQuality: {
+      methodName: "Token-level Krippendorff's Alpha",
+      methodSuffix: '— 主要指標',
+      metricLabel: 'Token-level Alpha',
+      calcDesc: '以 token 為比較單位；O tag 已依規則遮罩',
+      threshold: '門檻 0.75 — <strong class="t-pass">通過</strong>',
+      maskingNote: 'O tag 遮罩規則：全體標記員皆標為 O 的 token 不計入比較單位，避免大量背景 token 稀釋分歧訊號（強制套用，不可關閉）。',
+      groupAvg: '群體平均 — Token Alpha: 0.78 ／ 平均速度: 44.0s／句',
+    },
+    freeTextStats: {
+      lenTitle: '回覆長度分佈',
+      lenDesc: '標記員提交的自由文字回覆字數分佈（共 214 筆有效回覆）',
+      meanLabel: '平均字數',
+      medianLabel: '中位數字數',
+      emptyLabel: '空白回覆比例',
+    },
+    freeTextQuality: {
+      lead: '不適用—由審核員評估',
+      desc: '自由文字回覆無標準答案，不納入自動 IAA 計算與整體達標比例分母；品質由 Reviewer 於審核流程中逐筆評估。',
     },
     navDashboard: '儀表板',
     navTaskManagement: '任務管理',
@@ -824,14 +784,7 @@ var I18N = {
     statsSeqSpanLenTitle:'Entity Span Length Distribution',
     statsSeqSpanLenDesc:'Span length distribution in tokens (length ≥ 6 collapsed to "6+")',
     statsSeqSpanLenXLabel:'Span length (tokens)',
-    statsRelEntityDistTitle:'Entity Type Distribution',statsRelEntityDistDesc:'Count of each entity type in labeled triples',
     statsRelRelDistTitle:'Relation Type Distribution',statsRelRelDistDesc:'Triple annotation count per relation type',
-    relationEntityLabels: {
-      drug: 'Drug',
-      disease: 'Disease',
-      gene: 'Gene',
-      chemical: 'Chemical',
-    },
     relationTypeLabels: {
       treats: 'treats',
       causes: 'causes',
@@ -847,24 +800,6 @@ var I18N = {
     statsRelAnnotated5xLabel:'≥ 5× annotated',statsRelAnnotated5xDesc:'Triples meeting comparison threshold',
     statsRelAvgAnnotatorsLabel:'Avg annotators / triple',statsRelAvgAnnotatorsDesc:'Avg annotator coverage per unique triple',
     statsRelMaxTripleLabel:'Max triples / sentence',statsRelMaxTripleDesc:'Max triples in a single sample',
-    statsSpDistTitle:'Distribution Statistics',
-    statsSpLblDistTitle:'Frequency and proportion of each label (983 valid annotations)',
-    statsSpScoreDistTitle:'Score distribution (0–1) in submitted annotations (983 valid)',
-    statsSpToggleAria:'Subtype toggle',
-    statsSpClsButton:'Classification',
-    statsSpScoreButton:'Scoring',
-    sentencePairLabels: {
-      similar: 'Similar',
-      dissimilar: 'Dissimilar',
-      entailment: 'Entailment',
-      contradiction: 'Contradiction',
-    },
-    sentencePairDominantSimilar:'Similar',
-    statsSpScoreAria:'Score distribution histogram',
-    statsSpClsLabelCount:'Label classes',statsSpClsSampleCount:'Valid sentence pairs',
-    statsSpClsDominantLabel:'Most common label',
-    statsSpScoreSummaryHead:'Score summary',statsSpScoreQuartileHead:'Quartiles',
-    statsSpScoreLenXLabel:'Similarity score',
     iaaTitle: 'IAA Report', iaaMethodSuffix: '— Primary metric',
     anomalyTitle: 'Anomaly Detection', anomalySubtitle: 'Flag annotation speed anomalies and outlier values automatically',
     consistencyTitle: 'Annotation Consistency Deviation Analysis',
@@ -878,29 +813,23 @@ var I18N = {
     emptyDesc: 'Please complete the Dry Run first. IAA will be calculated automatically.',
     emptyBtn: 'Go to Task Detail',
     iaaSummaryPass: 'Overall Pass', iaaSummaryFail: 'Overall Fail', iaaSummaryWarn: 'Partial Pass',
-    taskTitles: {
-      va: 'Sentiment VA Dual-axis Scoring',
-      classification: 'News Headline Multi-label Classification',
-      sequence: 'Product Review Sequence Labeling (NER / Aspect)',
-      relation: 'Medical Relation Extraction (Entity / Triple)',
-      sentence_pairs: 'Sentence Pair Similarity / Entailment',
-    },
+    iaaCompositeBadgeFmt: '{x}/{y} Passed', iaaExcludedSuffixFmt: ' · {N} type(s) excluded',
+    iaaPendingBadgeFmt: '—/{y} Pending Dry Run', iaaNotApplicableBadge: 'Not applicable',
+    iaaSmallSampleBadge: 'Small-sample estimate',
+    compositeBadgeTitle: 'IAA Composite Result',
     iaaMethodName: {
-      va: 'ICC (Intraclass Correlation Coefficient)',
-      classification: "Krippendorff's Alpha (nominal)",
-      sequence_strict: 'Pairwise Entity-level F1 (strict)',
-      sequence_partial: 'Pairwise Entity-level F1 (partial overlap)',
-      sequence_aspect: 'Exact Span F1 · Partial Match F1 · Label Accuracy',
-      relation: 'Pairwise Triple-level F1',
-      sentence_pairs: "Krippendorff's Alpha (nominal)",
+      multi_dim: 'ICC (Intraclass Correlation Coefficient)',
+      multi_label: "Krippendorff's Alpha (nominal)",
+      entity_recognition_strict: 'Pairwise Entity-level F1 (strict)',
+      entity_recognition_partial: 'Pairwise Entity-level F1 (partial overlap)',
+      relation_identification: 'Pairwise Triple-level F1',
     },
     altLblVA:'Auxiliary metrics', altLblCls:'Alternative metrics', altLblSeq:'Match mode comparison',
-    altLblRel:'Auxiliary metrics', altLblSp:'Alternative metrics',
+    altLblRel:'Auxiliary metrics',
     altHVAMetric:'Metric', altHVAV:'Valence (V)', altHVAA:'Arousal (A)',
     altHClsMetric:'Metric', altHClsVal:'Value',
     altHSeqMode:'Match mode', altHSeqVal:'Value', altHSeqThr:'Threshold', altHSeqResult:'Result',
     altHRelMetric:'Metric', altHRelVal:'Value',
-    altHSpMetric:'Metric', altHSpVal:'Value',
     altSeqStrictResult:'Fail', altSeqPartialResult:'Pass',
     lblV:'Valence (V)', lblA:'Arousal (A)', lblOverall:'Overall IAA', lblOverallCalc:'(V + A) / 2',
     lblVrec:'Recommended 0.75 — ', lblVstr:'Strict 0.80 — ',
@@ -910,7 +839,6 @@ var I18N = {
     lblClsThr:'Threshold 0.80 — ',
     lblSeqStrThr:'Strict threshold 0.80 — ', lblSeqPartThr:'Relaxed threshold 0.70 — ',
     lblRelThr1:'Threshold 0.75 — ', lblRelThr2:'High-quality 0.80 — ',
-    lblSpThr:'Threshold 0.80 — ',
     thVAName:'Annotator', thVASpeed:'Avg Speed', thVAIaaV:'IAA_V', thVAIaaA:'IAA_A', thVADeltaV:'Δ V vs Group', thVADeltaA:'Δ A vs Group', thVAStatus:'Status',
     thClsName:'Annotator', thClsSpeed:'Avg Speed', thClsIaa:'Alpha', thClsDelta:'Δ vs Group', thClsStatus:'Status',
     thSeqName:'Annotator', thSeqSpeed:'Avg Speed', thSeqIaa:'F1 (strict)', thSeqDelta:'Δ vs Group', thSeqStatus:'Status',
@@ -920,7 +848,6 @@ var I18N = {
     clsGroupAvg:"Group avg — Alpha: 0.83 / Avg speed: 31.3s/sent",
     seqGroupAvg:'Group avg — F1 (strict): 0.72 / Avg speed: 44.7s/sent',
     relGroupAvg:'Group avg — Triple F1: 0.76 / Avg speed: 54.0s/sent',
-    spGroupAvg:"Group avg — Alpha: 0.85 / Avg speed: 37.3s/sent",
     vaStatus1:'Normal', vaStatus2:'Watch', vaStatus3:'Anomaly',
     clsStatus1:'Normal', clsStatus2:'Normal', clsStatus3:'Watch',
     seqStatus1:'Normal', seqStatus2:'Watch', seqStatus3:'Anomaly',
@@ -953,21 +880,19 @@ var I18N = {
     anomSeqOut1Title:'Sample #89 — high-divergence entity boundary flag', anomSeqOut1Detail:"Jordan Wu's span boundary differs from the group median by > 3 tokens; the flag stays sample-level only.",
     anomRelSpeedTitle:'Speed Anomalies', anomRelOutlierTitle:'High-divergence Samples', anomRelOutlierEmpty:'No high-divergence samples',
     anomRelSpd1Title:'Jordan Wu — Annotation speed too fast', anomRelSpd1Detail:'Avg 25s/sent (threshold: ≥ 45s); relation extraction is inherently complex',
-    anomSpSpeedTitle:'Speed Anomalies', anomSpSpeedEmpty:'No speed anomalies', anomSpOutlierTitle:'High-divergence Samples', anomSpOutlierEmpty:'No high-divergence samples',
-    consistencyUnitHeader: { va:'Comparable Sentences', classification:'Comparable Sentences', sequence:'Comparable Spans', sequence_aspect:'Comparable Spans', relation:'Triples Annotated 5 Times', sentence_pairs:'Comparable Sentence Pairs' },
+    consistencyUnitHeader: { multi_dim:'Comparable Sentences', multi_label:'Comparable Sentences', entity_recognition:'Comparable Spans', sequence_tagging:'Comparable Tokens', relation_identification:'Triples Annotated 5 Times', single_label:'Comparable Samples' },
     consistencyNotes: {
-      va:'Aggregated against the group median for the same sample. 1.5xSTD is an observation threshold and 2xSTD signals stronger deviation.',
-      classification:'For classification tasks, each submitted sentence is treated as one comparable unit. This block describes deviation, not ground-truth correctness.',
-      sequence:'For sequence labeling, aligned spans form the comparison pool. Boundary-level high_divergence samples remain separate flags.',
-      sequence_aspect:'For aspect labeling, aligned spans with matching aspect taxonomy form the comparison pool. Boundary high_divergence samples remain separate sample-level flags.',
-      relation:'For relation extraction, only triples with enough repeated annotations enter the comparison pool. This block shows group deviation, not final risk decisions.',
-      sentence_pairs:'For sentence-pair tasks, comparable pair results form the base. Use this to observe deviation frequency, not as a standalone action trigger.',
+      multi_dim:'Aggregated against the group median for the same sample. 1.5xSTD is an observation threshold and 2xSTD signals stronger deviation.',
+      multi_label:'For classification tasks, each submitted sentence is treated as one comparable unit. This block describes deviation, not ground-truth correctness.',
+      entity_recognition:'For sequence labeling, aligned spans form the comparison pool. Boundary-level high_divergence samples remain separate flags.',
+      sequence_tagging:'For sequence tagging, O-tag-masked tokens form the comparison pool. Boundary-level high_divergence samples remain separate flags.',
+      relation_identification:'For relation extraction, only triples with enough repeated annotations enter the comparison pool. This block shows group deviation, not final risk decisions.',
+      single_label:'For single-label tasks, each submitted sample is treated as one comparable unit. This block describes deviation, not ground-truth correctness.',
     },
     qualityRisk: {
       vaTableLabel: 'Annotator analysis (VA scoring)',
       sequenceTableLabel: 'Annotator analysis (sequence labeling)',
       relationTableLabel: 'Annotator analysis (relation extraction)',
-      sentencePairsTableLabel: 'Annotator analysis (sentence-pair task)',
       headerAnnotator: 'Annotator',
       headerSpeed: 'Avg Speed',
       headerF1Strict: 'F1 (strict)',
@@ -1001,6 +926,65 @@ var I18N = {
       actionAdjust: 'Adjust participation',
       leaderOnly: 'Project Leader only',
     },
+    qualityListRank: {
+      lowConsistencyTitle: 'Low-consistency Sample List',
+      lowConsistencySubtitle: 'Sorted by disagreement score, highest first; usable as a reviewer arbitration priority reference (same concept as dry_run "divergent" arbitration)',
+      headerSample: 'Sample',
+      headerScore: 'Disagreement Score',
+      headerDetail: 'Disagreement Detail',
+      headerQueue: 'Queue Status',
+      queuePending: 'Pending review',
+      queueCompleted: 'Completed',
+      rankingTitle: 'Annotator Quality Ranking',
+      rankingSubtitle: 'Sorted by the agreement metric appropriate to this output type; annotators below the small-sample threshold are flagged but not excluded from ranking',
+      rankHeaderRank: 'Rank',
+      rankHeaderAnnotator: 'Annotator',
+      rankHeaderMetric: 'Agreement Metric',
+      rankHeaderValue: 'Value',
+      rankSmallSample: 'Small sample estimate',
+      boundaryTitle: 'Boundary Disagreement Analysis',
+      boundarySubtitle: 'Cases with partial span overlap but inconsistent boundaries (span_too_long / span_too_short / wrong_boundary)',
+      boundaryHeaderType: 'Error Type',
+      boundaryHeaderCount: 'Case Count',
+      boundaryExampleTitle: 'Representative Example',
+    },
+    multiLabelListRank: {
+      sample1Detail: 'Sample #101: 3 annotators chose different label combinations ("plot", "acting", "score"); low label overlap',
+      sample2Detail: 'Sample #087: split evenly between positive/neutral; disagreement on whether "pacing" counts as a negative signal',
+      rankMetricName: 'Majority agreement rate',
+    },
+    sequenceTaggingListRank: {
+      sample1Detail: 'The "thermal performance is excellent" span boundary differs by 4 tokens across 3 annotators',
+      sample2Detail: 'Disagreement on whether "return process" and "tedious" should be merged into a single span',
+      rankMetricName: 'Token majority agreement rate',
+      boundaryExampleDetail: 'Gold: "thermal performance is excellent" | Annotator: "thermal performance is excellent and stays cool under sustained heavy load" (6 extra tokens, span_too_long)',
+    },
+    entityRecognitionListRank: {
+      sample1Detail: 'Inconsistent entity boundary for "NTU Hospital" (ORG vs LOC type disagreement)',
+      sample2Detail: 'The "Neurology" span start/end offsets differ by 2 characters between 2 annotators',
+      rankMetricName: 'F1 vs. merged aggregate reference',
+      boundaryExampleDetail: 'Gold: "NTU Hospital" | Annotator: "NTU" (2 characters short, span_too_short)',
+    },
+    singleLabelListRank: {
+      sample1Detail: 'Sample #212: 3 annotators labeled the sentence "service attitude was poor but the issue was resolved" as negative/neutral/positive — sentiment judgment disagreement',
+      sample2Detail: 'Sample #178: disagreement on whether the "refund process" description counts as negative',
+      rankMetricName: 'Majority agreement rate',
+    },
+    singleDimListRank: {
+      sample1Detail: 'Sample #05: 3 annotators scored quality as 2, 3, and 5 — a 3-point spread',
+      sample2Detail: 'Sample #02: disagreement on whether the sample meets the "acceptable quality" threshold (score 3)',
+      rankMetricName: 'Gap from group-average score (smaller is more consistent)',
+    },
+    multiDimListRank: {
+      sample1Detail: 'Sample #47: Valence scores differ by 2.1 points across annotators (V: 1.2 vs 3.3)',
+      sample2Detail: 'Sample #112: Arousal scores are bimodal with a high standard deviation',
+      rankMetricName: 'Gap from group-average V/A (ICC-weighted)',
+    },
+    relationIdentificationListRank: {
+      sample1Detail: 'Sample #33: relation type for "Aspirin" and "gastric bleeding" tagged as "causes" vs "associated_with" — inconsistent',
+      sample2Detail: 'Sample #19: the triple subject span boundary differs by 3 characters between 2 annotators',
+      rankMetricName: 'Triple F1 vs. merged aggregate reference',
+    },
     emptyStateMsgs: {
       dry_run_in_progress: ['Dry Run in progress', 'Waiting for all annotators to submit.'],
       report_pending:      ['Report pending',       'Dry Run completed. IAA report is queued.'],
@@ -1008,138 +992,73 @@ var I18N = {
     },
     lblClsMetric:"Krippendorff's Alpha (nominal)", lblClsCalc:'Overall alpha (multi-label macro average)',
     lblRelCalc:'subject + relation + object must fully match',
-    lblSpCalc:'Classification subtype',
     matchStrict:'Strict match', matchPartial:'Partial overlap',
     lblSeqStrictMetric:'Pairwise Entity-level F1 (strict)',
     lblSeqPartialMetric:'Pairwise Entity-level F1 (partial overlap)',
     lblRelMetric:'Pairwise Triple-level F1',
-    lblSpMetric:"Krippendorff's Alpha (nominal)",
-    aspectTaxonomyLabels: {
-      product_quality: 'Product Quality',
-      value_for_money: 'Value for Money',
-      appearance_design: 'Appearance Design',
-      customer_service: 'Customer Service',
-      packaging_quality: 'Packaging Quality',
-      functionality: 'Functionality',
+    singleLabelStats: {
+      distTitle: 'Label Distribution',
+      distDesc: 'Count and share of each label in submitted labels (single-select: exactly one label per sample)',
+      labels: { positive: 'Positive', neutral: 'Neutral', negative: 'Negative', mixed: 'Mixed' },
+      distNote: 'Single-label task: each submission has exactly 1 label; shares sum to 100%',
     },
-    sequenceAspectStats: {
-      kpiTitle: 'Aspect Analysis Summary',
-      sentenceCountLabel: 'Sentence Count',
-      sentenceCountDesc: 'Analysis base',
-      tokenCountLabel: 'Token Count',
-      tokenCountDesc: 'Whitespace tokenization',
-      completionLabel: 'Completion Rate',
-      completionDesc: '1,092 / 1,248',
-      submittedLabel: 'Submitted Samples',
-      submittedDesc: 'Submitted by at least 1 annotator',
-      avgTimeLabel: 'Avg Annotation Time',
-      avgTimeDesc: 'Avg time per sentence',
-      distTitle: 'Aspect Type Distribution',
-      distDesc: 'Occurrences of each aspect taxonomy in submitted labels (2,617 aspect labels total)',
-      avgTitle: 'Avg Aspects per Sentence',
-      avgLabel: 'Avg aspects / sentence',
-      bucketLabel: 'Bucket Distribution',
-      totalLabel: 'Total aspect labels',
-      zeroLabel: 'Zero-aspect sentence rate',
-      maxLabel: 'Max aspects / sentence',
-      spanLenTitle: 'Aspect Span Length Distribution',
-      spanLenDesc: 'Span length distribution in tokens (length ≥ 5 collapsed into "5+")',
-      spanLenXLabel: 'Span length (tokens)',
-      spanLenAria: 'Aspect span length histogram',
-      spanLenExample: 'Examples: "High quality" (1), "Very durable" (2), "Elegant exterior design" (3), "Overall excellent value" (4)',
-      cooccTitle: 'Aspect Co-occurrence Matrix',
-      cooccDesc: 'Counts of two different aspects appearing in the same sentence; the matrix is symmetric and hides self-co-occurrence on the diagonal',
-      cooccAria: 'Aspect co-occurrence matrix',
-      cooccNote: 'Appearance × Packaging co-occurs frequently (184), suggesting reviews often discuss visual design and packaging together.',
-      sentimentTitle: 'Aspect × Sentiment Distribution',
-      sentimentDesc: 'Positive / neutral / negative label ratios for each aspect (shown when sentiment data is available)',
-      sentimentPositive: 'Positive',
-      sentimentNeutral: 'Neutral',
-      sentimentNegative: 'Negative',
-      coverageTitle: 'Aspect Coverage Analysis',
-      coverageDesc: 'Sample coverage of each aspect taxonomy; show a skew warning when the count falls below the target minimum',
-      coverageBadge: 'Skew Warning',
-      coverageHeaderAspect: 'Aspect',
-      coverageHeaderRate: 'Sample Coverage',
-      coverageHeaderCount: 'Samples',
-      coverageHeaderStatus: 'Status',
-      statusOnTarget: 'On Target',
-      statusBelowTarget: 'Below Target',
-      statusBiasWarning: 'Skew Warning',
-      coverageWarningHtml: '"Functionality" coverage (4%) is materially below the target distribution and is flagged as <code style="font-family:var(--font-mono);font-size:11px">dataset_bias_detected = true</code>. Increase samples for this class or adjust the Dry Run setup.',
+    singleLabelQuality: {
+      methodName: "Krippendorff's Alpha (nominal)",
+      methodSuffix: '— Primary metric',
+      metricLabel: "Krippendorff's Alpha (nominal)",
+      calcDesc: 'Overall alpha (single-select label)',
+      threshold: 'Threshold 0.80 — <strong class="t-pass">Pass</strong>',
+      altToggle: 'Alternative metrics',
+      altHeaderMetric: 'Metric',
+      altHeaderVal: 'Value',
+      groupAvg: 'Group avg — Alpha: 0.85 / Avg speed: 31.3s/sent',
     },
-    sequenceAspectQuality: {
-      methodSuffix: '— Primary metric group',
-      exactF1: 'Exact Span F1',
-      exactCalc: 'Exact match on boundary + label',
-      exactThrHtml: 'Threshold 0.80 — <strong class="t-fail">Fail</strong>',
-      partialF1: 'Partial Match F1',
-      partialCalc: 'Overlapping spans + compatible label',
-      partialThrHtml: 'Relaxed threshold 0.70 — <strong class="t-pass">Pass</strong>',
-      labelAcc: 'Label Accuracy',
-      labelAccCalc: 'Label accuracy on matched spans',
-      labelAccThrHtml: 'Threshold 0.80 — <strong class="t-pass">Pass</strong>',
-      perAspectButton: 'Per-aspect Metric Details',
-      perAspectHeaderAspect: 'Aspect',
-      perAspectHeaderExact: 'Exact Span F1',
-      perAspectHeaderPartial: 'Partial F1',
-      perAspectHeaderLabelAcc: 'Label Acc',
-      perAspectHeaderResult: 'Result',
-      perAspectResultExactFail: 'Exact Fail',
-      perAspectResultPass: 'Pass',
-      perAspectResultFail: 'Fail',
-      boundaryTitle: 'Boundary Error Analysis',
-      boundarySubtitle: 'Span boundary error categories (87 total), comparing annotator output against the gold / consensus span',
-      representativeExamples: 'Representative examples',
-      aspectPrefix: 'Aspect',
-      goldAnnotatorLong: 'Gold: "外殼材質非常堅固耐用" | Annotator: "外殼材質非常堅固耐用，不易刮傷" (3 extra tokens)',
-      goldAnnotatorShort: 'Gold: "價格相比同類競品" | Annotator: "價格" (6 missing tokens)',
-      goldAnnotatorWrong: 'Gold: "客服" | Annotator: "客服非常" (boundary shifted by 1 token; ambiguous meaning)',
-      highDisagreeTitle: 'High-disagreement Sample Analysis',
-      highDisagreeCount: '23 samples',
-      highDisagreeSubtitle: 'Sorted by disagreement_score from high to low (low strict F1 + boundary conflicts + weighted label disagreement)',
-      highDisagreeHeaderSample: 'Sample',
-      highDisagreeHeaderScore: 'Disagreement Score',
-      highDisagreeHeaderSentence: 'Sentence Summary',
-      highDisagreeHeaderConflict: 'Conflict Description',
-      highDisagreeHeaderQueue: 'Queue Status',
-      queuePending: 'Pending Review',
-      queueCompleted: 'Completed',
-      highDisagreeNote: 'Showing samples with disagreement_score ≥ 0.70 (23 total). Open the Reviewer Queue for the full list.',
-      anomalySpeedGroup: 'Speed Anomalies',
-      anomalyOutlierGroup: 'High-divergence Samples (sample-level flags)',
-      anomalySpeedTitle: 'Jordan Wu — Annotation speed too fast',
-      anomalySpeedDetail: 'Avg 24s/sent (group avg 45.3s; expected ≥ 40s for aspect tasks), 35 submissions',
-      anomalyOutlierTitle: 'Sample #312 — aspect span high_divergence flag',
-      anomalyOutlierDetail: 'Functionality span boundaries differ by more than 4 tokens across three annotators; this is a sample-level flag and does not increase any annotator risk level.',
-      riskHeaderAnnotator: 'Annotator',
-      riskHeaderSpeed: 'Avg Speed',
-      riskHeaderAspectF1: 'Aspect F1 (exact)',
-      riskHeaderLevel: 'Risk Level',
-      riskHeaderCause: 'Cause',
-      riskHeaderSamples: 'Sample Count',
-      riskHeaderAction: 'Recommended Action',
-      riskSpeed1: '52s / sent',
-      riskSpeed2: '60s / sent',
-      riskSpeed3: '24s / sent',
-      causeNone: 'No abnormal cause',
-      causeSystematic: 'Systematic deviation',
-      causeTooFast: 'Too fast',
-      actionReview: 'Review annotations',
-      actionAdjust: 'Adjust participation',
-      leaderOnly: 'Project Leader only',
-      riskGroupAvg: 'Group avg — Aspect F1 (exact): 0.68 / Avg speed: 45.3s/sent',
-      consistencyHeaderAnnotator: 'Annotator',
-      sentence312: '“這支手機最令我滿意的是其相機功能以及充電速度極快…”',
-      sentence078: '“客服態度親切，且退換貨流程非常簡便，讓我很滿意…”',
-      sentence445: '“包裝設計很精緻，整個開箱過程令人印象深刻…”',
-      sentence189: '“雖然價格略高，但整體質感與耐用度完全值得…”',
-      sentence521: '“功能雖不算最頂尖，但性價比確實不錯，推薦入手…”',
-      conflict312: 'Functionality ↔ Product Quality (3 variants, span delta 4 tokens)',
-      conflict078: 'Customer Service (2 annotators with non-overlapping spans)',
-      conflict445: 'Appearance Design ↔ Packaging Quality (label disagreement)',
-      conflict189: 'Value for Money ↔ Product Quality (boundary overlap)',
-      conflict521: 'Low span-boundary consistency for Functionality',
+    singleDimStats: {
+      histTitle: 'Score Distribution Histogram',
+      histDesc: 'Distribution of annotator scores on a 1–5 scale (396 valid labels)',
+      histAria: 'Score distribution histogram',
+      mean: 'Mean',
+      std: 'SD',
+      median: 'Median',
+      min: 'Min',
+      max: 'Max',
+    },
+    singleDimQuality: {
+      methodName: 'ICC(2,1) (Intraclass Correlation Coefficient)',
+      methodSuffix: '— Primary metric',
+      metricLabel: 'ICC(2,1)',
+      calcDesc: 'Single scoring dimension',
+      thresholdRecommended: 'Recommended threshold 0.75 — <strong class="t-pass">Pass</strong>',
+      thresholdStrict: 'Strict threshold 0.80 — <strong class="t-fail">Fail</strong>',
+      altToggle: 'Auxiliary metrics',
+      altHeaderMetric: 'Metric',
+      altHeaderVal: 'Value',
+    },
+    sequenceTaggingStats: {
+      distTitle: 'Tag Type Distribution',
+      distDesc: 'Token count and share of each tag type in submitted labels (includes O tag)',
+      tags: { o: 'O', bPer: 'B-PER', iPer: 'I-PER', bOrg: 'B-ORG' },
+      distNote: 'O tag accounts for 71% of all tokens; tokens where all annotators marked O are masked when computing IAA (see quality tab)',
+    },
+    sequenceTaggingQuality: {
+      methodName: "Token-level Krippendorff's Alpha",
+      methodSuffix: '— Primary metric',
+      metricLabel: 'Token-level Alpha',
+      calcDesc: 'Token-level comparison unit; O tag masking already applied',
+      threshold: 'Threshold 0.75 — <strong class="t-pass">Pass</strong>',
+      maskingNote: 'O-tag masking rule: tokens marked O by every annotator are excluded from the comparison unit, preventing background tokens from diluting the disagreement signal (mandatory, cannot be disabled).',
+      groupAvg: 'Group avg — Token Alpha: 0.78 / Avg speed: 44.0s/sent',
+    },
+    freeTextStats: {
+      lenTitle: 'Response Length Distribution',
+      lenDesc: 'Character-count distribution of submitted free-text responses (214 valid responses)',
+      meanLabel: 'Mean length',
+      medianLabel: 'Median length',
+      emptyLabel: 'Empty response rate',
+    },
+    freeTextQuality: {
+      lead: 'Not applicable — assessed by reviewer',
+      desc: 'Free-text responses have no ground-truth answer and are excluded from automated IAA computation and the composite gate denominator; quality is assessed per-sample by the reviewer during the review workflow.',
     },
     navDashboard: 'Dashboard',
     navTaskManagement: 'Task Management',
@@ -1152,57 +1071,128 @@ var I18N = {
 };
 
 /* ── State ─────────────────────────────────────────────────────────── */
-var S = { lang: 'zh', tab: 'stats', type: 'va', qState: 'ready', seqMode: 'strict', scrollTopByTab: { stats: 0, quality: 0 } };
+var S = { lang: 'zh', tab: 'stats', type: 'multi_label', qState: 'ready', seqMode: 'strict', scrollTopByTab: { stats: 0, quality: 0 } };
 var STATS_PANEL_PATHS = {
-  va: './dataset-analysis-detail.partials/stats-va.html',
-  classification: './dataset-analysis-detail.partials/stats-classification.html',
-  sequence: './dataset-analysis-detail.partials/stats-sequence.html',
-  sequence_aspect: './dataset-analysis-detail.partials/stats-sequence-aspect.html',
-  relation: './dataset-analysis-detail.partials/stats-relation.html',
-  sentence_pairs: './dataset-analysis-detail.partials/stats-sentence_pairs.html',
+  multi_dim: './dataset-analysis-detail.partials/stats-multi_dim.html',
+  multi_label: './dataset-analysis-detail.partials/stats-multi_label.html',
+  entity_recognition: './dataset-analysis-detail.partials/stats-entity_recognition.html',
+  relation_identification: './dataset-analysis-detail.partials/stats-relation_identification.html',
+  single_label: './dataset-analysis-detail.partials/stats-single_label.html',
+  single_dim: './dataset-analysis-detail.partials/stats-single_dim.html',
+  sequence_tagging: './dataset-analysis-detail.partials/stats-sequence_tagging.html',
+  free_text: './dataset-analysis-detail.partials/stats-free_text.html',
 };
 var QUALITY_PANEL_PATHS = {
-  va: './dataset-analysis-detail.partials/quality-va.html',
-  classification: './dataset-analysis-detail.partials/quality-classification.html',
-  sequence: './dataset-analysis-detail.partials/quality-sequence.html',
-  sequence_aspect: './dataset-analysis-detail.partials/quality-sequence-aspect.html',
-  relation: './dataset-analysis-detail.partials/quality-relation.html',
-  sentence_pairs: './dataset-analysis-detail.partials/quality-sentence-pairs.html',
+  multi_dim: './dataset-analysis-detail.partials/quality-multi_dim.html',
+  multi_label: './dataset-analysis-detail.partials/quality-multi_label.html',
+  entity_recognition: './dataset-analysis-detail.partials/quality-entity_recognition.html',
+  relation_identification: './dataset-analysis-detail.partials/quality-relation_identification.html',
+  single_label: './dataset-analysis-detail.partials/quality-single_label.html',
+  single_dim: './dataset-analysis-detail.partials/quality-single_dim.html',
+  sequence_tagging: './dataset-analysis-detail.partials/quality-sequence_tagging.html',
+  free_text: './dataset-analysis-detail.partials/quality-free_text.html',
+};
+/* FR-035/FR-036 registry-driven constants (spec 017 v2.0.0) */
+var IAA_GATE_EXCLUDED_TYPES = ['free_text'];
+var IAA_SMALL_SAMPLE_THRESHOLD = 5;
+var OUTPUT_TYPE_LABELS = {
+  zh: {
+    single_label: '單選標籤', multi_label: '多選標籤', single_dim: '單維度評分', multi_dim: '多維度評分',
+    entity_recognition: '實體辨識', relation_identification: '關係抽取', sequence_tagging: '序列標記', free_text: '自由文字',
+  },
+  en: {
+    single_label: 'Single-label', multi_label: 'Multi-label', single_dim: 'Single-dimension Scoring', multi_dim: 'Multi-dimension Scoring',
+    entity_recognition: 'Entity Recognition', relation_identification: 'Relation Identification', sequence_tagging: 'Sequence Tagging', free_text: 'Free Text',
+  },
 };
 var TASK_META = {
   T001: {
-    type: 'classification',
+    outputs: ['multi_label'],
+    iaaData: { multi_label: { pass: true, n: 15 } },
     title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
     membershipRole: 'project_leader',
   },
   T002: {
-    type: 'va',
+    outputs: ['multi_dim'],
+    iaaData: { multi_dim: { pass: true, n: 14 } },
     title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
     membershipRole: 'reviewer',
   },
   T003: {
-    type: 'sequence_aspect',
-    title: { zh: '產品評論序列標記（NER / Aspect）', en: 'Product Review Sequence Labeling (NER / Aspect)' },
+    outputs: ['sequence_tagging'],
+    iaaData: { sequence_tagging: { pass: true, n: 18 } },
+    title: { zh: '產品評論序列標記', en: 'Product Review Sequence Tagging' },
     membershipRole: 'project_leader',
   },
   T004: {
-    type: 'relation',
+    outputs: ['relation_identification'],
+    iaaData: { relation_identification: { pass: true, n: 16 } },
     title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
     membershipRole: 'project_leader',
   },
   T005: {
-    type: 'sentence_pairs',
-    title: { zh: '句對相似度 / 蘊含判定', en: 'Sentence Pair Similarity / Entailment' },
+    outputs: ['single_label'],
+    iaaData: { single_label: { pass: true, n: 20 } },
+    title: { zh: '客服對話情感單選分類', en: 'Customer Service Sentiment Single-label Classification' },
     membershipRole: 'reviewer',
   },
   T006: {
-    type: 'sequence',
+    outputs: ['entity_recognition'],
+    iaaData: { entity_recognition: { pass: false, n: 12 } },
     title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
     membershipRole: 'reviewer',
   },
+  T007: {
+    outputs: ['entity_recognition', 'single_label', 'free_text'],
+    iaaData: { entity_recognition: { pass: false, n: 12 }, single_label: { pass: true, n: 4 } },
+    title: { zh: '客服工單複合式標記（NER + 情感 + 補充說明）', en: 'Support Ticket Composite Labeling (NER + Sentiment + Notes)' },
+    membershipRole: 'project_leader',
+  },
+  T008: {
+    outputs: ['single_dim'],
+    iaaData: { single_dim: { pass: true, n: 3 } },
+    title: { zh: '早期試辦品質評分（小樣本）', en: 'Pilot Quality Scoring (Small Sample)' },
+    membershipRole: 'reviewer',
+  },
+  T009: {
+    outputs: ['free_text'],
+    iaaData: {},
+    title: { zh: '開放式意見回饋收集', en: 'Open-ended Feedback Collection' },
+    membershipRole: 'reviewer',
+  },
 };
-var DEFAULT_TASK_ID = 'T003';
+var DEFAULT_TASK_ID = 'T001';
 var S_ROUTE = { taskId: DEFAULT_TASK_ID };
+
+/* ── Composite IAA badge (FR-024A/B/C, SC-021/022/023) ────────────── */
+function computeCompositeBadge(taskMeta) {
+  var outputs = (taskMeta && taskMeta.outputs) || [];
+  var iaaData = (taskMeta && taskMeta.iaaData) || {};
+  var counted = outputs.filter(function(type) { return IAA_GATE_EXCLUDED_TYPES.indexOf(type) === -1; });
+  var excludedCount = outputs.length - counted.length;
+  var y = counted.length;
+  if (y === 0) return { state: 'not_applicable', x: 0, y: 0, excludedCount: excludedCount };
+  var x = 0, hasPending = false;
+  counted.forEach(function(type) {
+    var d = iaaData[type];
+    if (!d) { hasPending = true; return; }
+    if (d.pass) x += 1;
+  });
+  if (hasPending) return { state: 'pending', x: null, y: y, excludedCount: excludedCount };
+  return { state: x === y ? 'pass' : 'fail', x: x, y: y, excludedCount: excludedCount };
+}
+function fmt(template, vars) {
+  return String(template).replace(/\{(\w+)\}/g, function(_, key) {
+    return vars[key] !== undefined ? vars[key] : '';
+  });
+}
+function compositeBadgeText(result) {
+  if (result.state === 'not_applicable') return t('iaaNotApplicableBadge');
+  if (result.state === 'pending') return fmt(t('iaaPendingBadgeFmt'), { y: result.y });
+  var text = fmt(t('iaaCompositeBadgeFmt'), { x: result.x, y: result.y });
+  if (result.excludedCount > 0) text += fmt(t('iaaExcludedSuffixFmt'), { N: result.excludedCount });
+  return text;
+}
 
 function t(key) {
   var dict = I18N[S.lang] || I18N.zh;
@@ -1243,15 +1233,11 @@ function applyDataI18n(root) {
     var value = tPath(el.getAttribute('data-i18n-aria-label'));
     if (typeof value === 'string') el.setAttribute('aria-label', value);
   });
-  Array.prototype.forEach.call(root.querySelectorAll('[data-aspect-label]'), function(el) {
-    var value = tPath('aspectTaxonomyLabels.' + el.getAttribute('data-aspect-label'));
-    if (typeof value === 'string') el.textContent = value;
-  });
 }
 
 function loadStatsPanel() {
   var mount = document.getElementById('statsPanelMount');
-  var path = STATS_PANEL_PATHS[S.type] || STATS_PANEL_PATHS.va;
+  var path = STATS_PANEL_PATHS[S.type] || STATS_PANEL_PATHS.multi_dim;
   if (!mount || !path) return Promise.resolve();
   mount.innerHTML = '';
   return fetch(path, { cache: 'no-store' })
@@ -1334,33 +1320,30 @@ var SIMPLE_IDS = [
   'statsSeqEntityDistTitle','statsSeqEntityDistDesc','statsSeqAvgEntityTitle','statsSeqAvgLabel',
   'statsSeqTotalSentLabel','statsSeqTotalEntityLabel','statsSeqZeroEntityLabel','statsSeqMaxEntityLabel',
   'statsSeqSpanLenTitle','statsSeqSpanLenDesc','statsSeqSpanLenXLabel',
-  'statsRelEntityDistTitle','statsRelEntityDistDesc','statsRelRelDistTitle','statsRelRelDistDesc',
+  'statsRelRelDistTitle','statsRelRelDistDesc',
   'statsRelTripleTitle','statsRelTripleDesc',
   'statsRelTotalTripleLabel','statsRelTotalTripleDesc','statsRelUniqueTripleLabel','statsRelUniqueTripleDesc',
   'statsRelAvgTripleLabel','statsRelAvgTripleDesc','statsRelAnnotated5xLabel','statsRelAnnotated5xDesc',
   'statsRelAvgAnnotatorsLabel','statsRelAvgAnnotatorsDesc','statsRelMaxTripleLabel','statsRelMaxTripleDesc',
-  'statsSpDistTitle','statsSpLblDistTitle','statsSpScoreDistTitle',
-  'statsSpClsLabelCount','statsSpClsSampleCount','statsSpClsDominantLabel',
-  'statsSpScoreSummaryHead','statsSpScoreQuartileHead','statsSpScoreLenXLabel',
-  'iaaTitle','iaaMethodSuffix',
+  'iaaTitle','iaaMethodSuffix','compositeBadgeTitle',
   'anomalyTitle','anomalySubtitle','consistencyTitle','consistencySubtitle','consistencyOutlier15CountCol','consistencyOutlier15RateCol','consistencyOutlier2CountCol','consistencyOutlier2RateCol','annotatorTitle','annotatorSubtitle',
   'emptyTitle','emptyDesc','emptyBtn',
   'lblV','lblA','lblOverall','lblOverallCalc',
-  'lblClsMetric','lblClsCalc','lblRelCalc','lblSpCalc',
-  'lblSeqStrictMetric','lblSeqPartialMetric','lblRelMetric','lblSpMetric',
+  'lblClsMetric','lblClsCalc','lblRelCalc',
+  'lblSeqStrictMetric','lblSeqPartialMetric','lblRelMetric',
   'matchStrict','matchPartial',
-  'altLblVA','altLblCls','altLblSeq','altLblRel','altLblSp',
+  'altLblVA','altLblCls','altLblSeq','altLblRel',
   'altHVAMetric','altHVAV','altHVAA',
   'altHClsMetric','altHClsVal',
   'altHSeqMode','altHSeqVal','altHSeqThr','altHSeqResult',
-  'altHRelMetric','altHRelVal','altHSpMetric','altHSpVal',
+  'altHRelMetric','altHRelVal',
   'altSeqStrictResult','altSeqPartialResult',
   'thVAName','thVASpeed','thVAIaaV','thVAIaaA','thVADeltaV','thVADeltaA','thVAStatus',
   'thClsName','thClsSpeed','thClsIaa','thClsDelta','thClsStatus',
   'thSeqName','thSeqSpeed','thSeqIaa','thSeqDelta','thSeqStatus',
   'thRelName','thRelSpeed','thRelIaa','thRelDelta','thRelStatus',
   'thSpName','thSpSpeed','thSpIaa','thSpDelta','thSpStatus',
-  'vaGroupAvg','clsGroupAvg','seqGroupAvg','relGroupAvg','spGroupAvg',
+  'vaGroupAvg','clsGroupAvg','seqGroupAvg','relGroupAvg',
   'vaStatus1','vaStatus2','vaStatus3',
   'clsStatus1','clsStatus2','clsStatus3',
   'seqStatus1','seqStatus2','seqStatus3',
@@ -1371,9 +1354,8 @@ var SIMPLE_IDS = [
   'anomClsSpeedTitle','anomClsSpeedEmpty','anomClsOutlierTitle','anomClsOut1Title','anomClsOut1Detail',
   'anomSeqSpeedTitle','anomSeqOutlierTitle','anomSeqSpd1Title','anomSeqSpd1Detail','anomSeqOut1Title','anomSeqOut1Detail',
   'anomRelSpeedTitle','anomRelOutlierTitle','anomRelOutlierEmpty','anomRelSpd1Title','anomRelSpd1Detail',
-  'anomSpSpeedTitle','anomSpSpeedEmpty','anomSpOutlierTitle','anomSpOutlierEmpty',
   'lblVrec','lblVstr','lblArec','lblAstr','lblOrec','lblOstr','lblClsThr',
-  'lblSeqStrThr','lblSeqPartThr','lblRelThr1','lblRelThr2','lblSpThr',
+  'lblSeqStrThr','lblSeqPartThr','lblRelThr1','lblRelThr2',
 ];
 
 function applyLang(l) {
@@ -1408,35 +1390,65 @@ function updateConsistencyDeviationTexts() {
   var headers = t('consistencyUnitHeader');
   var notes = t('consistencyNotes');
   if (unitHeader && headers && typeof headers === 'object') {
-    unitHeader.textContent = headers[S.type] || headers.va;
+    unitHeader.textContent = headers[S.type] || headers.multi_dim;
   }
   if (note && notes && typeof notes === 'object') {
-    note.textContent = notes[S.type] || notes.va;
+    note.textContent = notes[S.type] || notes.multi_dim;
   }
 }
 
-/* ── Summary badge ──────────────────────────────────────────────── */
-var SUMMARY_BY_TYPE = {
-  va: 'pass', classification: 'pass', sequence: 'fail', sequence_aspect: 'fail', relation: 'warn', sentence_pairs: 'pass',
-};
+/* ── Summary badge (task-level composite, shown once — FR-024A) ──── */
 function updateSummaryBadge() {
   var badge = document.getElementById('iaaSummaryBadge');
-  var state = SUMMARY_BY_TYPE[S.type] || 'pass';
-  if (S.type === 'sequence' && S.seqMode === 'partial') state = 'warn';
-  badge.className = 'badge iaa-summary-badge badge-' + state;
-  var labels = { pass: t('iaaSummaryPass'), fail: t('iaaSummaryFail'), warn: t('iaaSummaryWarn') };
-  badge.textContent = labels[state];
+  if (!badge) return;
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  // SC-006B: entity_recognition's partial-overlap F1 display toggle (S.seqMode) is
+  // display-only and must never change the composite gate state — strict Span F1 is
+  // the only metric that gates pass/fail (iaaData.pass is fixed regardless of S.seqMode).
+  var result = computeCompositeBadge(taskMeta);
+  var cssState = (result.state === 'pending' || result.state === 'not_applicable') ? 'neutral' : result.state;
+  badge.className = 'badge iaa-summary-badge badge-' + cssState;
+  badge.textContent = compositeBadgeText(result);
 }
 
-/* ── IAA method name ────────────────────────────────────────────── */
+/* ── Small-sample badge (FR: n < IAA_SMALL_SAMPLE_THRESHOLD) ──────── */
+/* n is a per-output-type flag, so every entry in outputs[] must be evaluated
+   independently (not just the primary outputs[0]) — a composite task's
+   secondary type can be small-sample even when the primary is not. */
+function applySmallSampleBadge() {
+  var mount = document.getElementById('qualityPanelMount');
+  if (!mount) return;
+  Array.prototype.forEach.call(mount.querySelectorAll('.small-sample-badge'), function(el) { el.remove(); });
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  var outputs = (taskMeta && taskMeta.outputs && taskMeta.outputs.length) ? taskMeta.outputs : [S.type];
+  var iaaData = (taskMeta && taskMeta.iaaData) || {};
+  outputs.forEach(function(type, index) {
+    var data = iaaData[type];
+    if (!data || data.n === undefined || data.n >= IAA_SMALL_SAMPLE_THRESHOLD) return;
+    // Primary type is mounted in full under the un-namespaced iaaTitle section; secondary
+    // types are the buildSecondaryIaaBlock() wrappers tagged with data-output-type.
+    var scope = index === 0
+      ? mount.querySelector('section[aria-labelledby="iaaTitle"]')
+      : mount.querySelector('section[data-output-type="' + type + '"]');
+    var thresholdRow = scope && scope.querySelector('.iaa-threshold-row');
+    if (!thresholdRow) return;
+    var badge = document.createElement('span');
+    badge.className = 'badge badge-neutral small-sample-badge';
+    badge.setAttribute('data-output-type', type);
+    badge.textContent = t('iaaSmallSampleBadge');
+    thresholdRow.appendChild(badge);
+  });
+}
+
+/* ── IAA method name (primary output type only) ───────────────────── */
 function updateMethodName() {
   var methodTarget = document.getElementById('iaaMethodName');
   if (!methodTarget) return;
   var methodMap = t('iaaMethodName');
   var key = S.type;
-  if (S.type === 'sequence') key = 'sequence_' + S.seqMode;
-  if (typeof methodMap === 'object') {
-    methodTarget.textContent = methodMap[key] || methodMap['va'];
+  if (S.type === 'entity_recognition') key = 'entity_recognition_' + S.seqMode;
+  if (typeof methodMap === 'object' && methodMap[key]) {
+    methodTarget.textContent = methodMap[key];
   }
 }
 
@@ -1454,7 +1466,7 @@ function wireAltToggle(btnId, bodyId) {
 }
 
 function closeAllAltToggles() {
-  ['altBtnVA','altBtnCls','altBtnSeq','altBtnAsp','altBtnRel','altBtnSp'].forEach(function(id) {
+  ['altBtnVA','altBtnCls','altBtnSeq','altBtnRel','altBtnSingleLabel','altBtnSingleDim'].forEach(function(id) {
     var btn = document.getElementById(id);
     var bodyId = id.replace('altBtn', 'altBody');
     var body = document.getElementById(bodyId);
@@ -1504,46 +1516,109 @@ function wireQualityPanelInteractions() {
   wireAltToggle('altBtnVA', 'altBodyVA');
   wireAltToggle('altBtnCls', 'altBodyCls');
   wireAltToggle('altBtnSeq', 'altBodySeq');
-  wireAltToggle('altBtnAsp', 'altBodyAsp');
   wireAltToggle('altBtnRel', 'altBodyRel');
-  wireAltToggle('altBtnSp', 'altBodySp');
+  wireAltToggle('altBtnSingleLabel', 'altBodySingleLabel');
+  wireAltToggle('altBtnSingleDim', 'altBodySingleDim');
   wireSequenceToggle();
+}
+
+/* ── outputs[] composition helpers (ADR-029 / spec 017 v2.0.0) ────── */
+function namespaceIds(root, suffix) {
+  var idMap = {};
+  Array.prototype.forEach.call(root.querySelectorAll('[id]'), function(el) {
+    var oldId = el.getAttribute('id');
+    var newId = oldId + '__' + suffix;
+    idMap[oldId] = newId;
+    el.setAttribute('id', newId);
+  });
+  ['aria-labelledby', 'aria-controls', 'aria-describedby', 'for'].forEach(function(attr) {
+    Array.prototype.forEach.call(root.querySelectorAll('[' + attr + ']'), function(el) {
+      var val = el.getAttribute(attr);
+      if (idMap[val]) el.setAttribute(attr, idMap[val]);
+    });
+  });
+}
+
+function buildSecondaryIaaBlock(html, type) {
+  var doc = new DOMParser().parseFromString(html, 'text/html');
+  var section = doc.querySelector('section[aria-labelledby="iaaTitle"]');
+  if (!section) return null;
+  var body = section.querySelector('.iaa-score-grid') || section.querySelector('.iaa-not-applicable-note');
+  if (!body) return null;
+  var clone = body.cloneNode(true);
+  namespaceIds(clone, type);
+  var wrap = document.createElement('section');
+  wrap.className = 'panel';
+  wrap.setAttribute('data-output-type', type);
+  var subtitle = document.createElement('p');
+  subtitle.className = 'panel-subtitle iaa-type-label';
+  subtitle.textContent = (OUTPUT_TYPE_LABELS[S.lang] || OUTPUT_TYPE_LABELS.zh)[type] || type;
+  wrap.appendChild(subtitle);
+  wrap.appendChild(clone);
+  return wrap;
 }
 
 function loadQualityPanel() {
   var mount = document.getElementById('qualityPanelMount');
-  var path = QUALITY_PANEL_PATHS[S.type] || QUALITY_PANEL_PATHS.va;
-  if (!mount || !path) return Promise.resolve();
+  var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+  var outputs = (taskMeta && taskMeta.outputs && taskMeta.outputs.length) ? taskMeta.outputs : [S.type];
+  if (!mount) return Promise.resolve();
   mount.innerHTML = '';
-  return fetch(path, { cache: 'no-store' })
-    .then(function(response) {
-      if (!response.ok) throw new Error('Failed to load panel partial: ' + path);
-      return response.text();
-    })
-    .then(function(html) {
-      mount.innerHTML = html.trim();
-      SIMPLE_IDS.forEach(function(id) { setText(id, id); });
-      applyDataI18n(mount);
-      updateConsistencyDeviationTexts();
-      closeAllAltToggles();
-      syncSequenceUi();
-      updateMethodName();
-      updateSummaryBadge();
-      syncRoleUi();
-      wireQualityPanelInteractions();
-    })
-    .catch(function() {
-      renderPanelLoadError();
-    });
+  var finish = function() {
+    SIMPLE_IDS.forEach(function(id) { setText(id, id); });
+    applyDataI18n(mount);
+    updateConsistencyDeviationTexts();
+    closeAllAltToggles();
+    syncSequenceUi();
+    updateMethodName();
+    updateSummaryBadge();
+    applySmallSampleBadge();
+    syncRoleUi();
+    wireQualityPanelInteractions();
+  };
+  if (outputs.length <= 1) {
+    var path = QUALITY_PANEL_PATHS[outputs[0]] || QUALITY_PANEL_PATHS.multi_label;
+    if (!path) return Promise.resolve();
+    return fetch(path, { cache: 'no-store' })
+      .then(function(response) {
+        if (!response.ok) throw new Error('Failed to load panel partial: ' + path);
+        return response.text();
+      })
+      .then(function(html) { mount.innerHTML = html.trim(); finish(); })
+      .catch(function() { renderPanelLoadError(); });
+  }
+  /* Composite task: 區塊A per-type IAA cards (outputs[] order, primary mounted in
+     full then secondaries appended as IAA-only cards) followed by 區塊B — the
+     primary type's shared anomaly/risk/consistency sections, which stay singular
+     per task (spec.md:293-322). */
+  return Promise.all(outputs.map(function(type) {
+    return fetch(QUALITY_PANEL_PATHS[type], { cache: 'no-store' })
+      .then(function(r) { if (!r.ok) throw new Error('Failed to load panel partial: ' + type); return r.text(); });
+  })).then(function(htmlList) {
+    mount.innerHTML = htmlList[0].trim();
+    var iaaSection = mount.querySelector('section[aria-labelledby="iaaTitle"]');
+    var insertAfter = iaaSection;
+    for (var i = 1; i < outputs.length; i += 1) {
+      var block = buildSecondaryIaaBlock(htmlList[i], outputs[i]);
+      if (!block) continue;
+      if (insertAfter && insertAfter.parentNode === mount) {
+        mount.insertBefore(block, insertAfter.nextSibling);
+        insertAfter = block;
+      } else {
+        mount.appendChild(block);
+        insertAfter = block;
+      }
+    }
+    finish();
+  }).catch(function() { renderPanelLoadError(); });
 }
 
 /* ── Header texts per type ──────────────────────────────────────── */
 function applyTypeContent() {
-  var taskTitles = t('taskTitles');
   var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
   var localizedTitle = taskMeta && taskMeta.title ? (taskMeta.title[S.lang] || taskMeta.title.zh || taskMeta.title.en) : '';
 
-  document.getElementById('bcCurrent').textContent = localizedTitle || (typeof taskTitles === 'object' ? (taskTitles[S.type] || taskTitles.va) : '');
+  document.getElementById('bcCurrent').textContent = localizedTitle;
   updateTaskDetailHref();
   syncRoleUi();
   return Promise.all([loadStatsPanel(), loadQualityPanel()]);
@@ -1560,6 +1635,11 @@ function applyQualityState() {
       document.getElementById('emptyTitle').textContent = msgs[0];
       document.getElementById('emptyDesc').textContent  = msgs[1];
     }
+    var taskMeta = TASK_META[S_ROUTE.taskId] || TASK_META[DEFAULT_TASK_ID];
+    var outputs = (taskMeta && taskMeta.outputs) || [];
+    var counted = outputs.filter(function(type) { return IAA_GATE_EXCLUDED_TYPES.indexOf(type) === -1; });
+    var pendingBadge = document.getElementById('qualityPendingBadge');
+    if (pendingBadge) pendingBadge.textContent = fmt(t('iaaPendingBadgeFmt'), { y: counted.length });
   }
 }
 
@@ -1604,7 +1684,7 @@ function resetSequenceAndAltViews() {
 function applyRouteTask(taskId) {
   var taskMeta = TASK_META[taskId] || TASK_META[DEFAULT_TASK_ID];
   S_ROUTE.taskId = TASK_META[taskId] ? taskId : DEFAULT_TASK_ID;
-  S.type = taskMeta.type;
+  S.type = taskMeta.outputs[0];
   resetSequenceAndAltViews();
   return applyTypeContent();
 }

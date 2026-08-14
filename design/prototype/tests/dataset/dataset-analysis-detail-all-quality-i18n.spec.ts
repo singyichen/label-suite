@@ -49,14 +49,14 @@ const TASK_CASES: TaskCase[] = [
   },
   {
     taskId: 'T005',
-    riskTableLabel: 'Annotator analysis (sentence-pair task)',
-    groupAvgId: 'spGroupAvg',
-    expectedGroupAvg: 'Group avg — Alpha: 0.85 / Avg speed: 37.3s/sent',
+    riskTableLabel: 'Classification annotator risk assessment',
+    groupAvgId: 'singleLabelGroupAvg',
+    expectedGroupAvg: 'Group avg — Alpha: 0.85 / Avg speed: 31.3s/sent',
     expectedHeaders: ['Annotator', 'Avg Speed', 'Alpha', 'Risk Level', 'Cause', 'Sample Count', 'Recommended Action'],
-    expectedRiskLevels: ['Normal', 'Insufficient Data', 'Watch'],
+    expectedRiskLevels: ['Normal', 'Normal', 'Normal'],
     expectedActions: ['Review annotations', 'Review annotations', 'Review annotations'],
-    expectedCauseTexts: ['No anomaly cause', '7 / 10, not evaluated yet', 'Systematic bias'],
-    expectedConsistencyUnit: 'Comparable Sentence Pairs',
+    expectedCauseTexts: ['No anomaly cause', 'No anomaly cause', 'No anomaly cause'],
+    expectedConsistencyUnit: 'Comparable Samples',
   },
 ];
 

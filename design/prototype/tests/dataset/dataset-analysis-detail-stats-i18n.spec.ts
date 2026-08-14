@@ -56,22 +56,19 @@ test.describe('Dataset analysis detail stats i18n across task types', () => {
     );
   });
 
-  test('renders sentence-pair statistics overview labels in English mode without mixed Chinese labels', async ({ page }) => {
+  test('renders single_label statistics overview labels in English mode without mixed Chinese labels', async ({ page }) => {
     await gotoStatsWithLang(page, 'T005', 'en');
 
-    const distribution = page.locator('section[aria-labelledby="statsSpDistTitle"]');
+    const distribution = page.locator('section[aria-labelledby="statsSingleLabelDistTitle"]');
 
-    await expect(page.locator('#bcCurrent')).toHaveText('Sentence Pair Similarity / Entailment');
-    await expect(distribution.locator('.sp-toggle')).toHaveAttribute('aria-label', 'Subtype toggle');
-    await expect(distribution.locator('#spBtnCls')).toHaveText('Classification');
-    await expect(distribution.locator('#spBtnScore')).toHaveText('Scoring');
+    await expect(page.locator('#bcCurrent')).toHaveText('Customer Service Sentiment Single-label Classification');
+    await expect(distribution.locator('.panel-title')).toHaveText('Label Distribution');
     await expect(distribution.locator('.stats-hbar-label')).toHaveText([
-      'Similar',
-      'Dissimilar',
-      'Entailment',
-      'Contradiction',
+      'Positive',
+      'Neutral',
+      'Negative',
+      'Mixed',
     ]);
-    await expect(distribution.locator('.stats-metric-card').nth(2).locator('.stats-metric-value')).toHaveText('Similar');
-    await expect(distribution).not.toContainText(/[相似不相似蘊含矛盾分類型評分型]/);
+    await expect(distribution).not.toContainText(/[正向中立負向混合]/);
   });
 });
