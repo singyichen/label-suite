@@ -7,17 +7,24 @@ import { buildListUrl } from './_workspace-helpers';
  * last record).
  *
  * Sample state is seeded directly into the workspace submission store
- * (labelsuite.wsSubmissions, bucket `taskId::role::runType`) — the same
- * store annotation-workspace.data.js writes — so these list-side specs
- * don't have to drive the full workspace UI per sample. */
+ * (labelsuite.wsSubmissions) — the same store annotation-workspace.data.js
+ * writes — so these list-side specs don't have to drive the full workspace
+ * UI per sample.
+ *
+ * The bucket key gained its identity dimensions in spec 015 v3.8.0
+ * (FR-049): `taskId::role::runType::annotatorId::reviewerId`, where an
+ * annotator bucket has no reviewer dimension and carries '-' so every key
+ * keeps the same arity. These specs open the list without identity params,
+ * so both pages resolve the default roster annotator. */
+const DEFAULT_ANNOTATOR_BUCKET = 'T001::annotator::official_run::kioleemg12::-';
 
 function seedSubmissionStore(page: Page, bucket: Record<string, { status: string }>) {
-  return page.addInitScript((bucketJson) => {
-    window.localStorage.setItem(
-      'labelsuite.wsSubmissions',
-      JSON.stringify({ 'T001::annotator::official_run': JSON.parse(bucketJson) })
-    );
-  }, JSON.stringify(bucket));
+  return page.addInitScript(
+    ([key, bucketJson]) => {
+      window.localStorage.setItem('labelsuite.wsSubmissions', JSON.stringify({ [key]: JSON.parse(bucketJson) }));
+    },
+    [DEFAULT_ANNOTATOR_BUCKET, JSON.stringify(bucket)]
+  );
 }
 
 function entry(status: 'submitted' | 'saved') {
