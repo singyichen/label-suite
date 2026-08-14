@@ -16,6 +16,7 @@
 | Impact Map | [`impact-map/impact-map.md`](./impact-map/impact-map.md) | 對齊產品目標、角色行為改變與對應功能 |
 | Story Map | [`story-map/story-map.md`](./story-map/story-map.md) | 以用戶活動流與 release 切片規劃功能落地順序 |
 | Label Studio Reference | [`ia/label-studio-functional-map.md`](./ia/label-studio-functional-map.md) | 競品或參考系統拆解，用於比較與借鑑，不作為本產品權威基線 |
+| Reviewer Model Redesign | [`reviewer-model-redesign.md`](./reviewer-model-redesign.md) | 審核員模型重構規劃（2026-08-14）：定案決策、目標流程、畫面與資料模型變更、五個 PR 拆分 |
 
 ---
 
