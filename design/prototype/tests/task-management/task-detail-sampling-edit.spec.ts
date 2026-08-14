@@ -122,6 +122,12 @@ test.describe('Task detail sampling edit state', () => {
 
   test('translates IAA metric labels and not-applicable text to English', async ({ page }) => {
     await page.goto(`${TASK_DETAIL_URL}?task_id=T009`);
+
+    // #langToggle is in static markup but its listener binds only after every
+    // tab panel fetch resolves; the summary row is rendered later still, so
+    // waiting for it closes the click-before-bind race seen under CI load.
+    await expect(page.locator('#samplingIaaSummaryList .kv-dl-row').first()).toContainText('不適用');
+
     await page.locator('#langToggle').click();
 
     await expect(page.locator('#samplingIaaSummaryList .kv-dl-row').first()).toContainText('Not applicable');
