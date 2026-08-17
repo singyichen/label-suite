@@ -46,8 +46,6 @@
       reviewTitle: '審核',
       reviewApprove: '通過目前結果',
       reviewReject: '退回目前結果',
-      reviewApproveAll: '全部通過',
-      reviewRejectAll: '全部退回',
       switchToDark: '切換為深色模式',
       switchToLight: '切換為淺色模式'
     },
@@ -66,8 +64,6 @@
       reviewTitle: 'Review',
       reviewApprove: 'Approve current result',
       reviewReject: 'Reject current result',
-      reviewApproveAll: 'Approve all',
-      reviewRejectAll: 'Reject all',
       switchToDark: 'Switch to dark mode',
       switchToLight: 'Switch to light mode'
     }
@@ -130,8 +126,6 @@
     setTextById('shortcutReviewTitle', t.reviewTitle);
     setTextById('shortcutReviewApprove', t.reviewApprove);
     setTextById('shortcutReviewReject', t.reviewReject);
-    setTextById('shortcutReviewApproveAll', t.reviewApproveAll);
-    setTextById('shortcutReviewRejectAll', t.reviewRejectAll);
     updateSidebarThemeToggleLanguage(lang);
   }
 
@@ -516,8 +510,6 @@
               '<dl class="shortcut-help-list">' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutReviewApprove">通過目前結果</strong></dt>' + keyGroup(['A']) + '</div>' +
                 '<div class="shortcut-help-row"><dt><strong id="shortcutReviewReject">退回目前結果</strong></dt>' + keyGroup(['R']) + '</div>' +
-                '<div class="shortcut-help-row"><dt><strong id="shortcutReviewApproveAll">全部通過</strong></dt>' + keyGroup(['SHIFT', 'A']) + '</div>' +
-                '<div class="shortcut-help-row"><dt><strong id="shortcutReviewRejectAll">全部退回</strong></dt>' + keyGroup(['SHIFT', 'R']) + '</div>' +
               '</dl>' +
             '</div>' +
           '</section>' +

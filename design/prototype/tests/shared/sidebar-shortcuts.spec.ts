@@ -20,7 +20,13 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '下一筆' })).toBeVisible();
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '上一筆 / 下一筆' })).toHaveCount(0);
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '通過 / 退回目前結果' })).toHaveCount(0);
-    await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部通過 / 全部退回' })).toHaveCount(0);
+    /* spec 015 v4.0.0 made the review unit one annotator, so there is nothing
+     * left for a batch shortcut to act on -- these two rows are retired
+     * outright rather than merged (spec 008 v1.4.0, SC-009D). */
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '通過目前結果' })).toBeVisible();
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '退回目前結果' })).toBeVisible();
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部通過' })).toHaveCount(0);
+    await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部退回' })).toHaveCount(0);
   });
 
   test('translates shortcut entry and modal through the shared language toggle', async ({ page }) => {
