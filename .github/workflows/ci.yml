@@ -3,8 +3,12 @@ name: CI
 on:
   push:
     branches: [main]
+  # No `branches` filter here on purpose: for `pull_request` it matches the BASE
+  # branch, so a stacked PR (base = another feature branch) was filtered out and
+  # ran zero jobs while still looking reviewed. The 5-file / 300-line size
+  # guardrail actively pushes work into stacks, so those are exactly the PRs the
+  # gate must cover. Deploy workflows stay push-only (see their own headers).
   pull_request:
-    branches: [main]
 
 # Cancel redundant runs on the same branch when a new commit is pushed (M-2)
 concurrency:
