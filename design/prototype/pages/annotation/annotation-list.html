@@ -924,17 +924,22 @@
     return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
   }
 
-  function buildWorkspaceUrl(taskId, sampleId, role, runType) {
+  /* context.identityQuery forwards whichever identity params this page was
+     opened with (FR-049), so a row and the workspace it opens address the
+     same submission bucket. Absent params stay absent: both pages then fall
+     back to the same default roster identity. */
+  function buildWorkspaceUrl(taskId, sampleId, context) {
     return '../annotation/annotation-workspace.html' +
       '?task_id=' + encodeURIComponent(taskId) +
       '&sample_id=' + encodeURIComponent(sampleId) +
-      '&role=' + encodeURIComponent(role) +
-      '&run_type=' + encodeURIComponent(runType);
+      '&role=' + encodeURIComponent(context.role) +
+      '&run_type=' + encodeURIComponent(context.runType) +
+      context.identityQuery;
   }
 
   function getSampleStatus(profile, context, record, index) {
     return window.LabelSuiteAnnotationWorkspaceData.getSampleStatus(
-      profile.id, context.role, context.runType, getRecordId(record, index));
+      profile.id, context.role, context.runType, getRecordId(record, index), context.identity);
   }
 
   /* Quick-continue target (spec 015 FR-004B): prefer the LAST pending
@@ -970,11 +975,17 @@
     var role = params.get('role');
     var runType = params.get('run_type');
     var taskId = params.get('task_id');
+    var identityQuery = ['annotator_id', 'reviewer_id'].map(function (key) {
+      var value = params.get(key);
+      return value ? '&' + key + '=' + encodeURIComponent(value) : '';
+    }).join('');
 
     return {
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
-      taskId: taskId ? taskId.trim() : ''
+      taskId: taskId ? taskId.trim() : '',
+      identity: window.LabelSuiteAnnotationWorkspaceData.resolveIdentity(params),
+      identityQuery: identityQuery
     };
   }
 
@@ -1291,7 +1302,7 @@
       statusSpan.textContent = statusText(item.status);
 
       function openWorkspace() {
-        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context);
       }
 
       var actionsDiv = document.createElement('div');
@@ -1342,7 +1353,7 @@
           getMockRows(profile, item.recordId).slice(0, 1)));
 
       function openWorkspace() {
-        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context);
       }
 
       var statusSpan = document.createElement('span');
@@ -1449,7 +1460,7 @@
     var rows = profile.datasetRecords.map(function (record, index) {
       var status = getSampleStatus(profile, context, record, index);
       var submittedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSubmittedAt(
-        profile.id, context.role, context.runType, getRecordId(record, index));
+        profile.id, context.role, context.runType, getRecordId(record, index), context.identity);
       return {
         recordId: getRecordId(record, index),
         status: status,
@@ -1488,7 +1499,7 @@
       tr.setAttribute('data-testid', 'ws-sample-item');
 
       function openWorkspace() {
-        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context.role, context.runType);
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context);
       }
 
       var statusSpan = document.createElement('span');
@@ -1646,7 +1657,7 @@
     quickBtn.onclick = function () {
       var sampleId = findLatestUnfinishedSampleId(profile, context);
       if (!sampleId) return;
-      window.location.href = buildWorkspaceUrl(profile.id, sampleId, context.role, context.runType);
+      window.location.href = buildWorkspaceUrl(profile.id, sampleId, context);
     };
   }
 

@@ -11,19 +11,33 @@ import { expect, type Locator, type Page } from '@playwright/test';
 export type Role = 'annotator' | 'reviewer';
 export type RunType = 'dry_run' | 'official_run';
 
-export function buildWorkspaceUrl(params: {
-  task_id: string;
-  sample_id: string;
-  role?: Role;
-  run_type?: RunType;
-}): string {
-  const { task_id, sample_id, role = 'annotator', run_type = 'official_run' } = params;
-  return `/pages/annotation/annotation-workspace.html?task_id=${task_id}&sample_id=${sample_id}&role=${role}&run_type=${run_type}`;
+/* `annotator_id` / `reviewer_id` are the spec 015 v3.8.0 identity params
+ * (issue #145): omitted, both pages fall back to the default roster identity,
+ * which is what every pre-v3.8.0 spec here relies on. */
+export type Identity = { annotator_id?: string; reviewer_id?: string };
+
+function identityQuery({ annotator_id, reviewer_id }: Identity): string {
+  return (
+    (annotator_id ? `&annotator_id=${annotator_id}` : '') +
+    (reviewer_id ? `&reviewer_id=${reviewer_id}` : '')
+  );
 }
 
-export function buildListUrl(params: { task_id: string; role?: Role; run_type?: RunType }): string {
+export function buildWorkspaceUrl(
+  params: {
+    task_id: string;
+    sample_id: string;
+    role?: Role;
+    run_type?: RunType;
+  } & Identity
+): string {
+  const { task_id, sample_id, role = 'annotator', run_type = 'official_run' } = params;
+  return `/pages/annotation/annotation-workspace.html?task_id=${task_id}&sample_id=${sample_id}&role=${role}&run_type=${run_type}${identityQuery(params)}`;
+}
+
+export function buildListUrl(params: { task_id: string; role?: Role; run_type?: RunType } & Identity): string {
   const { task_id, role = 'annotator', run_type = 'official_run' } = params;
-  return `/pages/annotation/annotation-list.html?task_id=${task_id}&role=${role}&run_type=${run_type}`;
+  return `/pages/annotation/annotation-list.html?task_id=${task_id}&role=${role}&run_type=${run_type}${identityQuery(params)}`;
 }
 
 /* Every spec below skips the first-visit guideline modal so interaction

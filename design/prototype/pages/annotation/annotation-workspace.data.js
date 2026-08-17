@@ -116,17 +116,59 @@
     }
   }
 
+  /* ── Review identity (v3.8.0, FR-049) ─────────────────────────────────
+   * Prototype demo roster, same standing as REVIEWER_MOCK_ROWS: the backend
+   * replaces it with real accounts. The default annotator IS the first
+   * annotator of every REVIEWER_MOCK_ROWS[taskId][sampleId] group, so a
+   * visitor's own submission and the FR-044a demo fallback belong to the
+   * same person and the review trail stays one continuous chain instead of
+   * splitting across two ids. */
+  var DEFAULT_ANNOTATOR_ID = 'kioleemg12';
+  var REVIEWER_ROSTER = [
+    { id: 'reviewer_wang', name: '王小明' },
+    { id: 'reviewer_li', name: '李大華' },
+    { id: 'reviewer_chen', name: '陳美玲', can_arbitrate: true },
+  ];
+  var DEFAULT_REVIEWER_ID = REVIEWER_ROSTER[0].id;
+  /* Annotator buckets have no reviewer dimension; a literal placeholder keeps
+   * every key the same arity so prefix matching in getSampleHistory is exact. */
+  var NO_REVIEWER = '-';
+
+  /* Both pages resolve identity from the same query params so a list row and
+   * the workspace it opens always address the same bucket (FR-049). */
+  function resolveIdentity(params) {
+    return {
+      annotatorId: (params && params.get('annotator_id')) || DEFAULT_ANNOTATOR_ID,
+      reviewerId: (params && params.get('reviewer_id')) || DEFAULT_REVIEWER_ID,
+    };
+  }
+
+  /* Who performed an action, as opposed to which bucket holds it: a reviewer
+   * rejecting a sample writes into the ANNOTATOR's bucket (markSampleRejected)
+   * while the event's actor is still the reviewer. */
+  function actorIdFor(role, identity) {
+    identity = identity || {};
+    return role === 'reviewer'
+      ? identity.reviewerId || DEFAULT_REVIEWER_ID
+      : identity.annotatorId || DEFAULT_ANNOTATOR_ID;
+  }
+
   /* Buckets are scoped per run_type as well: a dry_run submission must
    * never mark the same sample as done in official_run (and vice versa) --
    * mirrors annotation-list.html's completionStateKey(role, taskId,
-   * runType). */
-  function submissionBucketKey(taskId, role, runType) {
-    return taskId + '::' + role + '::' + runType;
+   * runType). v3.8.0 adds the identity dimensions (FR-049): one sample × one
+   * annotator × one reviewer is one bucket, so two reviewers auditing the
+   * same annotator's answer can no longer overwrite each other. */
+  function submissionBucketKey(taskId, role, runType, identity) {
+    identity = identity || {};
+    var annotatorId = identity.annotatorId || DEFAULT_ANNOTATOR_ID;
+    var reviewerId = role === 'reviewer' ? identity.reviewerId || DEFAULT_REVIEWER_ID : NO_REVIEWER;
+    return taskId + '::' + role + '::' + runType + '::' + annotatorId + '::' + reviewerId;
   }
 
-  function readSampleEntry(taskId, role, runType, sampleId) {
+  function readSampleEntry(taskId, role, runType, sampleId, identity) {
     var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role, runType)];
+    var bucket = store[submissionBucketKey(taskId, role, runType, identity)];
     return (bucket && bucket[sampleId]) || null;
   }
 
@@ -140,43 +182,46 @@
     return 'submitted';
   }
 
-  function isSampleSubmitted(taskId, role, runType, sampleId) {
-    return entryStatus(readSampleEntry(taskId, role, runType, sampleId)) === 'submitted';
+  function isSampleSubmitted(taskId, role, runType, sampleId, identity) {
+    return entryStatus(readSampleEntry(taskId, role, runType, sampleId, identity)) === 'submitted';
   }
 
   /* Per-sample tri-state for annotation-list rows / filtering (FR-007B)
      and the quick-continue latest-unfinished rule (FR-004B). */
-  function getSampleStatus(taskId, role, runType, sampleId) {
-    return entryStatus(readSampleEntry(taskId, role, runType, sampleId));
+  function getSampleStatus(taskId, role, runType, sampleId, identity) {
+    return entryStatus(readSampleEntry(taskId, role, runType, sampleId, identity));
   }
 
-  function getSampleSubmittedAt(taskId, role, runType, sampleId) {
-    var entry = readSampleEntry(taskId, role, runType, sampleId);
+  function getSampleSubmittedAt(taskId, role, runType, sampleId, identity) {
+    var entry = readSampleEntry(taskId, role, runType, sampleId, identity);
     return entryStatus(entry) === 'submitted' ? entry.submittedAt || null : null;
   }
 
   /* Per-sample history events (FR-016 / AC-3.8): every save/submit appends
-     {action, role, at, summary} onto the entry, so the right-column 歷程
-     tab can trace who did what and when. `summary` is the host-provided
-     per-output description (對應輸出類型 + 修改內容). */
-  function appendHistoryEvent(entry, action, role, summary) {
+     {action, role, actorId, at, summary} onto the entry, so the right-column
+     歷程 tab can trace who did what and when. v3.8.0 adds `actorId` (FR-050):
+     `role` alone answers "a reviewer did this", not "which reviewer".
+     `summary` is the host-provided per-output description (對應輸出類型 +
+     修改內容). */
+  function appendHistoryEvent(entry, action, role, summary, actorId) {
     if (!Array.isArray(entry.history)) entry.history = [];
     entry.history.push({
       action: action,
       role: role,
+      actorId: actorId || null,
       at: new Date().toISOString(),
       summary: summary || '',
     });
   }
 
-  function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary) {
+  function markSampleSubmitted(taskId, role, runType, sampleId, payload, historySummary, identity) {
     var store = readSubmissionStore();
-    var key = submissionBucketKey(taskId, role, runType);
+    var key = submissionBucketKey(taskId, role, runType, identity);
     if (!store[key]) store[key] = {};
     var existing = store[key][sampleId];
     var entry = { status: 'submitted', submittedAt: new Date().toISOString(), answers: payload || {} };
     if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-    appendHistoryEvent(entry, 'submitted', role, historySummary);
+    appendHistoryEvent(entry, 'submitted', role, historySummary, actorIdFor(role, identity));
     store[key][sampleId] = entry;
     writeSubmissionStore(store);
   }
@@ -185,19 +230,20 @@
      already-submitted sample back to 'saved' -- the submission stands and
      only its answers are refreshed (spec 015 has no un-submit transition);
      pending samples become 'saved'. */
-  function markSampleSaved(taskId, role, runType, sampleId, payload, historySummary) {
+  function markSampleSaved(taskId, role, runType, sampleId, payload, historySummary, identity) {
     var store = readSubmissionStore();
-    var key = submissionBucketKey(taskId, role, runType);
+    var key = submissionBucketKey(taskId, role, runType, identity);
     if (!store[key]) store[key] = {};
     var existing = store[key][sampleId];
+    var actorId = actorIdFor(role, identity);
     if (existing && entryStatus(existing) === 'submitted') {
       existing.answers = payload || {};
       existing.savedAt = new Date().toISOString();
-      appendHistoryEvent(existing, 'saved', role, historySummary);
+      appendHistoryEvent(existing, 'saved', role, historySummary, actorId);
     } else {
       var entry = { status: 'saved', savedAt: new Date().toISOString(), answers: payload || {} };
       if (existing && Array.isArray(existing.history)) entry.history = existing.history;
-      appendHistoryEvent(entry, 'saved', role, historySummary);
+      appendHistoryEvent(entry, 'saved', role, historySummary, actorId);
       store[key][sampleId] = entry;
     }
     writeSubmissionStore(store);
@@ -207,27 +253,36 @@
    * submitted OutputAnswer payload -- keyed the same task/sample/role/run
    * way markSampleSubmitted wrote it -- to seed the row-level correction
    * control. Returns null when no submission exists yet for that sample. */
-  function getSubmission(taskId, role, runType, sampleId) {
-    var entry = readSampleEntry(taskId, role, runType, sampleId);
+  function getSubmission(taskId, role, runType, sampleId, identity) {
+    var entry = readSampleEntry(taskId, role, runType, sampleId, identity);
     return entry && entryStatus(entry) === 'submitted' ? entry.answers : null;
   }
 
   /* Annotator revisit restore (FR-026): a saved draft's answers count too,
      unlike getSubmission which is submitted-only (reviewers must never see
      drafts). */
-  function getSampleAnswers(taskId, role, runType, sampleId) {
-    var entry = readSampleEntry(taskId, role, runType, sampleId);
+  function getSampleAnswers(taskId, role, runType, sampleId, identity) {
+    var entry = readSampleEntry(taskId, role, runType, sampleId, identity);
     return entry ? entry.answers : null;
   }
 
-  /* Full traceability view for one sample: merges the annotator's and the
-     reviewer's history events (they live in separate role buckets) into a
-     single chronological list, so the 歷程 tab shows the complete chain
-     regardless of which role is looking at it (AC-3.8). */
-  function getSampleHistory(taskId, runType, sampleId) {
+  /* Full traceability view for one annotation: the annotator's own bucket
+     plus EVERY reviewer bucket that audited that annotator, merged into one
+     chronological list (AC-3.8, and v3.8.0's AC-4.8 標記員 → 審核員 →
+     仲裁 trail). Scanning by prefix rather than reading one known reviewer
+     bucket is what makes the trail complete under 一式 N 份 -- with the
+     reviewer id now in the key, reading only the current reviewer's bucket
+     would hide every peer's decision. `identity.reviewerId` is deliberately
+     NOT part of the filter here. */
+  function getSampleHistory(taskId, runType, sampleId, identity) {
+    var store = readSubmissionStore();
+    var annotatorKey = submissionBucketKey(taskId, 'annotator', runType, identity);
+    var annotatorId = (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID;
+    var reviewerPrefix = taskId + '::reviewer::' + runType + '::' + annotatorId + '::';
     var merged = [];
-    ['annotator', 'reviewer'].forEach(function (role) {
-      var entry = readSampleEntry(taskId, role, runType, sampleId);
+    Object.keys(store).forEach(function (key) {
+      if (key !== annotatorKey && key.indexOf(reviewerPrefix) !== 0) return;
+      var entry = store[key][sampleId];
       if (entry && Array.isArray(entry.history)) merged = merged.concat(entry.history);
     });
     merged.sort(function (a, b) {
@@ -236,9 +291,9 @@
     return merged;
   }
 
-  function getSubmittedSampleCount(taskId, role, runType) {
+  function getSubmittedSampleCount(taskId, role, runType, identity) {
     var store = readSubmissionStore();
-    var bucket = store[submissionBucketKey(taskId, role, runType)];
+    var bucket = store[submissionBucketKey(taskId, role, runType, identity)];
     if (!bucket) return 0;
     return Object.keys(bucket).filter(function (sampleId) {
       return entryStatus(bucket[sampleId]) === 'submitted';
@@ -251,9 +306,9 @@
    * task status to 'waiting_iaa_confirmation' once every dataset record has
    * been submitted). Annotator-only, dry_run-only -- reviewer decisions and
    * official_run submissions never drive this status transition. */
-  function syncDryRunProgress(taskId, role, runType, totalSamples) {
+  function syncDryRunProgress(taskId, role, runType, totalSamples, identity) {
     if (runType !== 'dry_run' || role !== 'annotator') return;
-    var submitted = getSubmittedSampleCount(taskId, role, runType);
+    var submitted = getSubmittedSampleCount(taskId, role, runType, identity);
     try {
       global.localStorage.setItem(
         DRY_RUN_PROGRESS_KEY,
@@ -281,17 +336,18 @@
    * being modified. Mirrors markSampleSaved/markSampleSubmitted's
    * read-modify-write shape; when no entry exists yet, a fresh
    * pending-status entry is created so the rejection is still traceable. */
-  function markSampleRejected(taskId, role, runType, sampleId, historySummary) {
+  function markSampleRejected(taskId, role, runType, sampleId, historySummary, identity) {
     var store = readSubmissionStore();
-    var key = submissionBucketKey(taskId, role, runType);
+    var key = submissionBucketKey(taskId, role, runType, identity);
     if (!store[key]) store[key] = {};
     var existing = store[key][sampleId];
+    var actorId = actorIdFor('reviewer', identity);
     if (existing) {
       existing.status = 'pending';
-      appendHistoryEvent(existing, 'rejected', 'reviewer', historySummary);
+      appendHistoryEvent(existing, 'rejected', 'reviewer', historySummary, actorId);
     } else {
       var entry = { status: 'pending', answers: {} };
-      appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary);
+      appendHistoryEvent(entry, 'rejected', 'reviewer', historySummary, actorId);
       store[key][sampleId] = entry;
     }
     writeSubmissionStore(store);
@@ -1219,8 +1275,9 @@
 
   /* Converts a submitted OutputAnswer (engine previewState/previewEntities/
    * previewTriples shape) into the SAME CompactAnswer shape
-   * REVIEWER_MOCK_ROWS ships, shared by both the workspace's live 'current'
-   * row and the official_run list's single real-annotator row (FR-047).
+   * REVIEWER_MOCK_ROWS ships, shared by both the workspace's live
+   * signed-in-annotator row and the official_run list's single
+   * real-annotator row (FR-047; the row was keyed 'current' before v3.8.0).
    * sequence_tagging token text can only be reconstructed with the dataset's
    * real tokenization (only available inside the workspace's engine state);
    * callers without it may pass opts.sequenceTagsToPairs(tags) to supply the
@@ -1475,6 +1532,10 @@
     getSampleHistory: getSampleHistory,
     getSubmittedSampleCount: getSubmittedSampleCount,
     syncDryRunProgress: syncDryRunProgress,
+    DEFAULT_ANNOTATOR_ID: DEFAULT_ANNOTATOR_ID,
+    DEFAULT_REVIEWER_ID: DEFAULT_REVIEWER_ID,
+    REVIEWER_ROSTER: REVIEWER_ROSTER,
+    resolveIdentity: resolveIdentity,
     REVIEWER_MOCK_ROWS: REVIEWER_MOCK_ROWS,
     getReviewerMockRows: getReviewerMockRows,
     computeReviewStats: computeReviewStats,

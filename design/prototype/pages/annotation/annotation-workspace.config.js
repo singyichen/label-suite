@@ -55,7 +55,6 @@
       reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
       reviewBulkRejectLabel: '全部退回',
       reviewBulkApproveLabel: '全部通過',
-      reviewCurrentAnnotatorLabel: '目前標記員',
       reviewCorrectionTitle: '直接修正',
       reviewBypassPill: '無法判定 (Bypass)',
       reviewSourceTextTitle: '原始文本',
@@ -112,7 +111,6 @@
       reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
       reviewBulkRejectLabel: 'Reject all',
       reviewBulkApproveLabel: 'Approve all',
-      reviewCurrentAnnotatorLabel: 'Current annotator',
       reviewCorrectionTitle: 'Direct correction',
       reviewBypassPill: 'Bypassed (cannot determine)',
       reviewSourceTextTitle: 'Source text',
@@ -1045,6 +1043,10 @@
   var currentProfile = null;
   var currentRole = 'annotator';
   var currentRunType = 'dry_run';
+  /* {annotatorId, reviewerId} resolved from the query params in boot();
+     every submission-store call carries it so the workspace and the list it
+     came from address the same bucket (spec 015 v3.8.0, FR-049). */
+  var currentIdentity = null;
   var currentSampleId = null;
   var sampleAnswers = {};
 
@@ -1077,7 +1079,8 @@
         currentProfile.id,
         currentRole,
         currentRunType,
-        sampleId
+        sampleId,
+        currentIdentity
       );
       if (stored && stored.previewState) {
         snap = {
@@ -1188,7 +1191,8 @@
     var done = window.LabelSuiteAnnotationWorkspaceData.getSubmittedSampleCount(
       currentProfile.id,
       currentRole,
-      currentRunType
+      currentRunType,
+      currentIdentity
     );
     if (done > total) done = total;
     setText(
@@ -1238,7 +1242,8 @@
     var events = window.LabelSuiteAnnotationWorkspaceData.getSampleHistory(
       currentProfile.id,
       currentRunType,
-      currentSampleId
+      currentSampleId,
+      currentIdentity
     );
     if (events.length === 0) {
       var empty = document.createElement('p');
@@ -1256,7 +1261,11 @@
       header.className = 'history-item-header';
       var actor = document.createElement('span');
       actor.className = 'history-actor';
-      actor.textContent = event.role === 'reviewer' ? t('wsHistoryRoleReviewer') : t('wsHistoryRoleAnnotator');
+      /* FR-050: the role alone never answered "who did this" -- an official_run
+         trail read 標記員 / 審核員 with no way to tell two reviewers apart.
+         Events written before v3.8.0 carry no actorId, so the role stands alone. */
+      var roleLabel = event.role === 'reviewer' ? t('wsHistoryRoleReviewer') : t('wsHistoryRoleAnnotator');
+      actor.textContent = event.actorId ? roleLabel + ' · ' + event.actorId : roleLabel;
       var meta = document.createElement('div');
       meta.className = 'history-meta';
       var time = document.createElement('span');
@@ -1332,7 +1341,8 @@
         currentProfile.id,
         currentRole,
         currentRunType,
-        recordId
+        recordId,
+        currentIdentity
       );
       var item = document.createElement('button');
       item.type = 'button';
@@ -1462,7 +1472,8 @@
       currentRunType,
       currentSampleId,
       collectAnswerPayload(),
-      buildHistorySummary()
+      buildHistorySummary(),
+      currentIdentity
     );
     triggerAutosave();
     renderSampleList();
@@ -1484,7 +1495,7 @@
       showToast(t('wsSubmitIncomplete'));
       return;
     }
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary());
+    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
     /* task-detail.html's dry-run status sync (waiting_iaa_confirmation once
        every sample is submitted) reads this key -- see
        annotation-workspace.data.js's syncDryRunProgress() doc comment. */
@@ -1492,7 +1503,8 @@
       currentProfile.id,
       currentRole,
       currentRunType,
-      currentProfile.datasetRecords.length
+      currentProfile.datasetRecords.length,
+      currentIdentity
     );
     renderSampleList();
     renderSampleNav();
@@ -1610,8 +1622,8 @@
      Replaces the old per-outKey approve/reject pair with a legacy-parity
      multi-annotator comparison: a stats box, a bulk approve/reject bar,
      and one decision row per annotator. reviewRowDecisions is now keyed
-     `${outKey}::${annotatorName}` (annotatorName is 'current' for the
-     live annotator's own submission) instead of just outKey. */
+     `${outKey}::${annotatorName}` (annotatorName is the real annotator id
+     since v3.8.0 -- it was the literal 'current') instead of just outKey. */
   function decisionKey(outKey, rowName) {
     return outKey + '::' + rowName;
   }
@@ -1707,17 +1719,31 @@
       currentProfile.id,
       'annotator',
       currentRunType,
-      currentSampleId
+      currentSampleId,
+      currentIdentity
+    );
+  }
+
+  /* The one annotator an official_run row belongs to (FR-049). Both branches
+     below name the SAME person on purpose: DEFAULT_ANNOTATOR_ID is the first
+     annotator of each REVIEWER_MOCK_ROWS group, so a real submission and the
+     FR-044a demo fallback that stands in for it produce one continuous review
+     trail rather than splitting across two ids. */
+  function currentAnnotatorId() {
+    return (
+      (currentIdentity && currentIdentity.annotatorId) ||
+      window.LabelSuiteAnnotationWorkspaceData.DEFAULT_ANNOTATOR_ID
     );
   }
 
   function getReviewerRows(outKey) {
     if (currentRunType === 'official_run') {
+      var annotatorId = currentAnnotatorId();
       var submission = getOfficialRunSubmission();
       if (submission) {
         return [{
-          name: 'current',
-          displayName: t('reviewCurrentAnnotatorLabel'),
+          name: annotatorId,
+          displayName: annotatorId,
           answer: convertSubmissionAnswer(outKey, submission),
           bypass: !!(submission.previewBypass && submission.previewBypass[outKey]),
         }];
@@ -1725,8 +1751,8 @@
       var demoRow = officialRunDemoRow();
       if (!demoRow) return [];
       return [{
-        name: 'current',
-        displayName: t('reviewCurrentAnnotatorLabel'),
+        name: annotatorId,
+        displayName: annotatorId,
         answer: demoRow.answers ? demoRow.answers[outKey] : undefined,
         bypass: !!(demoRow.bypass && demoRow.bypass[outKey]),
       }];
@@ -2496,7 +2522,7 @@
 
     seedOfficialRunRow(outKey, submission);
     var correction = appendCorrectionControl(row, outKey);
-    dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, 'current', null).el]);
+    dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el]);
     return row;
   }
 
@@ -2547,7 +2573,7 @@
       var group = document.createElement('div');
       group.className = 'rv-merged-decision';
       group.appendChild(buildSectionLabel(outKey));
-      group.appendChild(buildRowDecisionButtons(outKey, 'current', null).el);
+      group.appendChild(buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el);
       return group;
     });
     var row = buildReviewRowShell(isOfficialRun ? null : outKeys.join(' + '));
@@ -2776,11 +2802,12 @@
 
   /* official_run (FR-044/AC-6.3): single decision per outKey (the header
      row's approve/reject), unchanged from the pre-v3.0.0 single-annotator
-     flow -- getReviewerRows() already narrows to exactly one 'current' row
-     per outKey for this run_type. */
+     flow -- getReviewerRows() already narrows to exactly one row, the
+     current annotator's, per outKey for this run_type. */
   function handleOfficialRunSubmit(history) {
     var rowsByOutKey = {};
     var allDecided = true;
+    var annotatorId = currentAnnotatorId();
     var currentRejectedSomewhere = false;
     state.selectedOutputTypes.forEach(function (outKey) {
       var rows = getReviewerRows(outKey);
@@ -2788,7 +2815,7 @@
       rows.forEach(function (row) {
         var decision = reviewRowDecisions[decisionKey(outKey, row.name)];
         if (!decision) allDecided = false;
-        if (row.name === 'current' && decision === 'reject') currentRejectedSomewhere = true;
+        if (row.name === annotatorId && decision === 'reject') currentRejectedSomewhere = true;
       });
     });
     if (!allDecided) {
@@ -2821,10 +2848,11 @@
       currentRunType,
       currentSampleId,
       collectAnswerPayload(),
-      summary
+      summary,
+      currentIdentity
     );
     if (currentRejectedSomewhere) {
-      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary);
+      window.LabelSuiteAnnotationWorkspaceData.markSampleRejected(currentProfile.id, 'annotator', currentRunType, currentSampleId, summary, currentIdentity);
     }
 
     renderSampleList();
@@ -2868,7 +2896,8 @@
       currentRunType,
       currentSampleId,
       collectAnswerPayload(),
-      summary
+      summary,
+      currentIdentity
     );
 
     renderSampleList();
@@ -3150,6 +3179,7 @@
        parseContext() applies, so both pages resolve an identical context. */
     currentRole = params.get('role') === 'reviewer' ? 'reviewer' : 'annotator';
     currentRunType = params.get('run_type') === 'official_run' ? 'official_run' : 'dry_run';
+    currentIdentity = window.LabelSuiteAnnotationWorkspaceData.resolveIdentity(params);
 
     currentProfile = window.LabelSuiteAnnotationWorkspaceData.resolveTaskProfile(taskId);
     if (!currentProfile) {
