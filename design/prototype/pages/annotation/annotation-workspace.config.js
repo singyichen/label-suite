@@ -50,25 +50,13 @@
       reviewRejectLabel: '退回',
       wsReviewSubmitSuccess: '審查已提交',
       reviewNoAnswer: '（無）',
-      reviewStatsChip: '標記分布統計',
-      reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
       reviewBulkRejectLabel: '全部退回',
       reviewBulkApproveLabel: '全部通過',
       reviewCorrectionTitle: '直接修正',
-      reviewBypassPill: '無法判定 (Bypass)',
-      reviewSourceTextTitle: '原始文本',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastResolveDivergent: '請先裁定所有分歧項目',
-      adjudicationStatusPending: '待裁定',
-      adjudicationStatusConsensus: '一致',
-      adjudicationStatusOverridden: '已覆寫',
-      adjudicationStatusDivergent: '分歧',
-      adjudicationStatusAdjudicated: '已裁定',
-      reviewApplyMajority: '套用多數決至全部分歧項',
-      reviewSetDraft: '採用此份為草稿',
       historyActionOverridden: '已覆寫',
-      historyActionAdjudicated: '已裁定',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
     },
@@ -106,25 +94,13 @@
       reviewRejectLabel: 'Reject',
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
-      reviewStatsChip: 'Label distribution',
-      reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
       reviewBulkRejectLabel: 'Reject all',
       reviewBulkApproveLabel: 'Approve all',
       reviewCorrectionTitle: 'Direct correction',
-      reviewBypassPill: 'Bypassed (cannot determine)',
-      reviewSourceTextTitle: 'Source text',
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
-      adjudicationStatusPending: 'Pending',
-      adjudicationStatusConsensus: 'Consensus',
-      adjudicationStatusOverridden: 'Overridden',
-      adjudicationStatusDivergent: 'Divergent',
-      adjudicationStatusAdjudicated: 'Adjudicated',
-      reviewApplyMajority: 'Apply majority to all divergent items',
-      reviewSetDraft: 'Use as draft',
       historyActionOverridden: 'Overridden',
-      historyActionAdjudicated: 'Adjudicated',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
     },
@@ -1850,198 +1826,6 @@
       default:
         break;
     }
-  }
-
-  /* free_text/entity_recognition/relation_identification/sequence_tagging
-     get the two-column long-content row layout -- the same registry flag
-     (rendersInputPreview) renderReviewerWorkspace() already reuses for the
-     input-preview-card skip decision, not a hardcoded type list. */
-  function isLongContentOutput(outKey) {
-    var outReg = window.OUTPUT_TYPE_REGISTRY && window.OUTPUT_TYPE_REGISTRY[outKey];
-    return !!(outReg && outReg.rendersInputPreview === true);
-  }
-
-  /* Reviewer relation rows must mirror the annotator's own 關係識別 list
-     (FR-014L): token positions + trigger word resolve at render time from the
-     record's ner-shape triples (single data source -- mock answers stay
-     type-level {subj, rel, obj}). Records without ner triples (e.g. absa
-     gold_triplets) fall back to positionless rows, matching what the
-     annotator view shows for those records. */
-  function findRecordNerTriples(record) {
-    if (!record) return [];
-    var cands = [record.triples, record.gold_triples];
-    for (var i = 0; i < cands.length; i++) {
-      var cand = cands[i];
-      if (Array.isArray(cand) && cand.length > 0 && cand[0] && cand[0].entity1) return cand;
-    }
-    return [];
-  }
-
-  function fmtRelationSpan(span) {
-    var s = (span && span.text) || '?';
-    if (span && span.start != null && span.end != null) s += ' (' + span.start + ',' + span.end + ')';
-    return s;
-  }
-
-  /* Match on the subj+obj entity pair (exact relation_type match preferred)
-     so a reviewer 類型 change keeps the row anchored to the same span pair. */
-  function toReviewDisplayTriple(tr, nerTrips) {
-    var exact = null, pair = null;
-    nerTrips.forEach(function (rt) {
-      if (!rt.entity1 || !rt.entity2) return;
-      if (rt.entity1.text !== tr.subj || rt.entity2.text !== tr.obj) return;
-      if (!pair) pair = rt;
-      if (!exact && rt.relation_type === tr.rel) exact = rt;
-    });
-    var match = exact || pair;
-    if (match) {
-      return {
-        subj: fmtRelationSpan(match.entity1),
-        rel: fmtRelationSpan(match.relation),
-        obj: fmtRelationSpan(match.entity2),
-        relType: tr.rel
-      };
-    }
-    return { subj: tr.subj, rel: tr.rel, obj: tr.obj, relType: null };
-  }
-
-  /* Reviewer entity rows must mirror the annotator's own 實體列表 (FR-014M):
-     token positions resolve at render time from the record's entity spans
-     (single data source -- mock answers stay {text, type}). Duplicate texts
-     (e.g. 左心耳 twice in T010 med-001) consume record spans in answer order
-     so each row shows a distinct position. Records without an entity span
-     field fall back to positionless rows. */
-  function findRecordEntitySpans(record) {
-    if (!record) return [];
-    var cands = [record.entities, record.gold_entities];
-    for (var i = 0; i < cands.length; i++) {
-      var cand = cands[i];
-      if (Array.isArray(cand) && cand.length > 0 && cand[0] && cand[0].text != null && cand[0].start != null) return cand;
-    }
-    return [];
-  }
-
-  function buildAnswerCell(outKey, answer, bypass, colorClass) {
-    var cell = document.createElement('div');
-    cell.className = 'rv-answer-cell';
-    cell.setAttribute('data-testid', 'ws-review-annotator-answer');
-    if (bypass) {
-      var bypassPill = document.createElement('span');
-      bypassPill.className = 'rv-bypass-pill';
-      bypassPill.textContent = t('reviewBypassPill');
-      cell.appendChild(bypassPill);
-      return cell;
-    }
-    switch (outKey) {
-      case 'single_label': {
-        var labelPill = document.createElement('span');
-        labelPill.className = 'rv-answer-chip';
-        labelPill.textContent = answer || t('reviewNoAnswer');
-        cell.appendChild(labelPill);
-        break;
-      }
-      case 'multi_label': {
-        var labels = Array.isArray(answer) ? answer : [];
-        if (labels.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
-        var chipsWrap = document.createElement('div');
-        chipsWrap.className = 'rv-answer-chips';
-        labels.forEach(function (label) {
-          var chip = document.createElement('span');
-          chip.className = 'rv-answer-chip';
-          chip.textContent = label;
-          chipsWrap.appendChild(chip);
-        });
-        cell.appendChild(chipsWrap);
-        break;
-      }
-      case 'single_dim': {
-        var scorePill = document.createElement('span');
-        scorePill.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
-        scorePill.textContent = answer != null ? String(answer) : t('reviewNoAnswer');
-        cell.appendChild(scorePill);
-        break;
-      }
-      case 'multi_dim': {
-        var dims = answer || {};
-        var dimNames = Object.keys(dims);
-        if (dimNames.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
-        var dimPill = document.createElement('span');
-        dimPill.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
-        dimPill.textContent = '[' + dimNames.map(function (name) { return dims[name]; }).join(', ') + ']';
-        cell.appendChild(dimPill);
-        break;
-      }
-      case 'sequence_tagging': {
-        var pairs = Array.isArray(answer) ? answer : [];
-        if (pairs.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
-        var seqWrap = document.createElement('div');
-        seqWrap.className = 'rv-answer-chips';
-        pairs.forEach(function (pair) {
-          var chip = document.createElement('span');
-          chip.className = 'rv-answer-chip';
-          chip.textContent = pair.text + ' (' + pair.tag + ')';
-          seqWrap.appendChild(chip);
-        });
-        cell.appendChild(seqWrap);
-        break;
-      }
-      case 'entity_recognition': {
-        var entities = Array.isArray(answer) ? answer : [];
-        if (entities.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
-        var colorMap = getPreviewTypeColorMap().map || {};
-        var recordSpans = findRecordEntitySpans(findRecordById(currentSampleId));
-        var spanUsed = recordSpans.map(function () { return false; });
-        var entWrap = document.createElement('div');
-        entWrap.className = 'rv-answer-entities';
-        entities.forEach(function (ent, idx) {
-          var display = ent;
-          for (var si = 0; si < recordSpans.length; si++) {
-            if (!spanUsed[si] && recordSpans[si].text === ent.text && recordSpans[si].type === ent.type) {
-              spanUsed[si] = true;
-              display = { text: ent.text, type: ent.type, start: recordSpans[si].start, end: recordSpans[si].end };
-              break;
-            }
-          }
-          entWrap.appendChild(buildEntityListRow(display, safeCssColor(colorMap[ent.type], '#6366F1'), {
-            lang: state.lang,
-            onDelete: function () { entities.splice(idx, 1); renderReviewerWorkspace(); }
-          }));
-        });
-        cell.appendChild(entWrap);
-        break;
-      }
-      case 'relation_identification': {
-        var triples = Array.isArray(answer) ? answer : [];
-        if (triples.length === 0) { cell.textContent = t('reviewNoAnswer'); break; }
-        var relCfg = state.outputConfigs.relation_identification || {};
-        var relTypeOpts = getRelationTypeOptions(
-          Array.isArray(relCfg.relation_types) ? relCfg.relation_types.filter(Boolean) : []
-        );
-        var nerTrips = findRecordNerTriples(findRecordById(currentSampleId));
-        var relWrap = document.createElement('div');
-        relWrap.className = 'rv-answer-relations';
-        triples.forEach(function (tr, idx) {
-          var display = toReviewDisplayTriple(tr, nerTrips);
-          relWrap.appendChild(buildRelationTripleRow(display, relTypeOpts, {
-            lang: state.lang,
-            onSetType: function (v) { tr.rel = v; renderReviewerWorkspace(); },
-            onDelete: function () { triples.splice(idx, 1); renderReviewerWorkspace(); }
-          }));
-        });
-        cell.appendChild(relWrap);
-        break;
-      }
-      case 'free_text': {
-        var block = document.createElement('div');
-        block.className = 'rv-answer-freetext';
-        block.textContent = answer || t('reviewNoAnswer');
-        cell.appendChild(block);
-        break;
-      }
-      default:
-        cell.textContent = t('reviewNoAnswer');
-    }
-    return cell;
   }
 
   /* Builds a small icon-only span via safe DOM methods (no innerHTML) so
