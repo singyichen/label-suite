@@ -274,11 +274,15 @@
      reviewer id now in the key, reading only the current reviewer's bucket
      would hide every peer's decision. `identity.reviewerId` is deliberately
      NOT part of the filter here. */
+  function reviewerBucketPrefix(taskId, runType, identity) {
+    var annotatorId = (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID;
+    return taskId + '::reviewer::' + runType + '::' + annotatorId + '::';
+  }
+
   function getSampleHistory(taskId, runType, sampleId, identity) {
     var store = readSubmissionStore();
     var annotatorKey = submissionBucketKey(taskId, 'annotator', runType, identity);
-    var annotatorId = (identity && identity.annotatorId) || DEFAULT_ANNOTATOR_ID;
-    var reviewerPrefix = taskId + '::reviewer::' + runType + '::' + annotatorId + '::';
+    var reviewerPrefix = reviewerBucketPrefix(taskId, runType, identity);
     var merged = [];
     Object.keys(store).forEach(function (key) {
       if (key !== annotatorKey && key.indexOf(reviewerPrefix) !== 0) return;
@@ -1366,6 +1370,170 @@
     return true;
   }
 
+  /* ---- Review unit (spec 015 v3.9.0, issue #146) -------------------------
+   * A review unit is `sample_id x annotator_id x run_type`: the same sample
+   * annotated by three people is three independently reviewable units, in
+   * BOTH run types. This replaces the run_type-branched review model, where
+   * dry_run reviewed a merged consensus and official_run reviewed a single
+   * annotator.
+   *
+   * The five states advance linearly on one axis. `minReviewers` (P2 always
+   * passes 1; the configurable min_reviewers arrives later) is what separates
+   * each "decided" state from its "decided, but not by enough reviewers yet"
+   * predecessor:
+   *
+   *   no annotator submission            -> null (not a review unit yet)
+   *   submitted, no reviewer             -> pending
+   *   every reviewer agrees, n < min     -> approved
+   *   every reviewer agrees, n >= min    -> finalized   (terminal)
+   *   some reviewer changed it, n < min  -> modified
+   *   some reviewer changed it, n >= min -> disputed    (terminal, -> P4 pool)
+   */
+  var REVIEW_UNIT_STATUS = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    MODIFIED: 'modified',
+    DISPUTED: 'disputed',
+    FINALIZED: 'finalized',
+  };
+
+  function normalizeScalar(value) {
+    return value === undefined ? null : value;
+  }
+
+  /* Set-shaped types (multi_label / entity_recognition /
+   * relation_identification) are order-independent: a diff is an item present
+   * on exactly one side, keyed by the same merge key the consensus code
+   * already uses. `identify` maps an item to its key. */
+  function diffItemSets(annotatorItems, reviewerItems, identify) {
+    var byKey = {};
+    var order = [];
+    function collect(items, side) {
+      (Array.isArray(items) ? items : []).forEach(function (item) {
+        var key = identify(item);
+        if (!byKey[key]) {
+          byKey[key] = { key: key, annotator: null, reviewer: null };
+          order.push(key);
+        }
+        byKey[key][side] = item;
+      });
+    }
+    collect(annotatorItems, 'annotator');
+    collect(reviewerItems, 'reviewer');
+    return order
+      .map(function (key) { return byKey[key]; })
+      .filter(function (entry) { return entry.annotator === null || entry.reviewer === null; });
+  }
+
+  /* "Did the reviewer change the annotator's answer", per output type, over
+   * the CompactAnswer shape convertSubmissionAnswer() produces.
+   *
+   * single_dim / multi_dim compare with STRICT equality on purpose:
+   * DIM_CONSENSUS_TOLERANCE answers "are two annotators close enough to
+   * count as agreeing", a different question from "was this value edited".
+   * A 0.1 nudge is still an edit. */
+  function compareOutputAnswer(outKey, annotatorAnswer, reviewerAnswer) {
+    var diffs;
+    switch (outKey) {
+      case 'multi_label':
+        diffs = diffItemSets(annotatorAnswer, reviewerAnswer, function (label) { return String(label); });
+        break;
+      case 'entity_recognition':
+        diffs = diffItemSets(annotatorAnswer, reviewerAnswer, entityMergeKey);
+        break;
+      case 'relation_identification':
+        diffs = diffItemSets(annotatorAnswer, reviewerAnswer, relationMergeKey);
+        break;
+      case 'multi_dim': {
+        var annotatorDims = annotatorAnswer || {};
+        var reviewerDims = reviewerAnswer || {};
+        var names = Object.keys(annotatorDims);
+        Object.keys(reviewerDims).forEach(function (name) {
+          if (names.indexOf(name) < 0) names.push(name);
+        });
+        diffs = names
+          .map(function (name) {
+            return {
+              key: name,
+              annotator: normalizeScalar(annotatorDims[name]),
+              reviewer: normalizeScalar(reviewerDims[name]),
+            };
+          })
+          .filter(function (entry) { return entry.annotator !== entry.reviewer; });
+        break;
+      }
+      /* Positional over the CompactAnswer pair list (which already drops 'O'
+         tokens), so a retag reads as one diff rather than an add plus a
+         delete -- the merge-key treatment the set types get. */
+      case 'sequence_tagging': {
+        var annotatorPairs = Array.isArray(annotatorAnswer) ? annotatorAnswer : [];
+        var reviewerPairs = Array.isArray(reviewerAnswer) ? reviewerAnswer : [];
+        diffs = [];
+        for (var i = 0; i < Math.max(annotatorPairs.length, reviewerPairs.length); i++) {
+          var annotatorTag = annotatorPairs[i] ? annotatorPairs[i].tag : null;
+          var reviewerTag = reviewerPairs[i] ? reviewerPairs[i].tag : null;
+          var sameText =
+            (annotatorPairs[i] ? annotatorPairs[i].text : null) ===
+            (reviewerPairs[i] ? reviewerPairs[i].text : null);
+          if (annotatorTag !== reviewerTag || !sameText) {
+            diffs.push({ key: String(i), annotator: annotatorTag, reviewer: reviewerTag });
+          }
+        }
+        break;
+      }
+      default: {
+        var annotatorValue = normalizeScalar(annotatorAnswer);
+        var reviewerValue = normalizeScalar(reviewerAnswer);
+        diffs =
+          annotatorValue === reviewerValue
+            ? []
+            : [{ key: outKey, annotator: annotatorValue, reviewer: reviewerValue }];
+      }
+    }
+    return { equal: diffs.length === 0, diffs: diffs };
+  }
+
+  /* Every submitted reviewer decision on ONE annotator's work, prefix-scanned
+   * the same way getSampleHistory() builds its trail: reading only the
+   * signed-in reviewer's bucket would hide the peers whose disagreement is
+   * exactly what makes a unit disputed. */
+  function readReviewerSubmissions(taskId, runType, sampleId, identity) {
+    var store = readSubmissionStore();
+    var prefix = reviewerBucketPrefix(taskId, runType, identity);
+    return Object.keys(store)
+      .filter(function (key) { return key.indexOf(prefix) === 0; })
+      .map(function (key) { return store[key][sampleId]; })
+      .filter(function (entry) { return entry && entryStatus(entry) === 'submitted'; })
+      .map(function (entry) { return entry.answers; });
+  }
+
+  /* Derives the review unit's state from the annotator's submission plus
+   * every reviewer submission on it. `outKeys` is the task's composed output
+   * type list; `opts.minReviewers` defaults to 1. Returns null when the
+   * annotator has not submitted -- there is nothing to review yet. */
+  function getReviewUnitStatus(taskId, runType, sampleId, identity, outKeys, opts) {
+    var annotatorSubmission = getSubmission(taskId, 'annotator', runType, sampleId, identity);
+    if (!annotatorSubmission) return null;
+
+    var reviewerSubmissions = readReviewerSubmissions(taskId, runType, sampleId, identity);
+    if (!reviewerSubmissions.length) return REVIEW_UNIT_STATUS.PENDING;
+
+    var keys = Array.isArray(outKeys) ? outKeys : [];
+    var changed = reviewerSubmissions.some(function (reviewerSubmission) {
+      return keys.some(function (outKey) {
+        return !compareOutputAnswer(
+          outKey,
+          convertSubmissionAnswer(outKey, annotatorSubmission),
+          convertSubmissionAnswer(outKey, reviewerSubmission)
+        ).equal;
+      });
+    });
+    var enoughReviewers = reviewerSubmissions.length >= ((opts && opts.minReviewers) || 1);
+
+    if (changed) return enoughReviewers ? REVIEW_UNIT_STATUS.DISPUTED : REVIEW_UNIT_STATUS.MODIFIED;
+    return enoughReviewers ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.APPROVED;
+  }
+
   /* Per-output-type consensus/divergent merge (FR-031~FR-038). `rows` is the
    * {name, answer, bypass}[] contract getReviewerRows()/getMockRows() already
    * ship. `opts.tolerance` (single_dim, absolute value) / `opts.dimTolerances`
@@ -1549,5 +1717,8 @@
     computeSequenceMajority: computeSequenceMajority,
     isBioTagSequenceLegal: isBioTagSequenceLegal,
     canonicalAnswerKey: canonicalAnswerKey,
+    REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
+    compareOutputAnswer: compareOutputAnswer,
+    getReviewUnitStatus: getReviewUnitStatus,
   };
 })(window);
