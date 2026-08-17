@@ -8,12 +8,13 @@ import {
   trackPageErrors,
 } from './_workspace-helpers';
 
-/* official_run reviewer mode (spec 015 v3.0.0, FR-044): registry-driven --
- * ALL 8 output types get a row-level direct-correction entry point that
- * reuses the corresponding annotator control, seeded with the CURRENT
- * annotator's own submitted answer (single-annotator model, no mock
- * multi-annotator comparison; see annotation-workspace-review-card.spec.ts
- * for the dry_run consensus-merge card). Also guards against the OLD
+/* Reviewer mode (spec 015 v3.0.0, FR-044; v4.0.0 FR-053 extends it to both
+ * run_types): registry-driven -- ALL 8 output types get a row-level
+ * direct-correction entry point that reuses the corresponding annotator
+ * control, seeded with the REVIEWED annotator's own submitted answer
+ * (single-annotator model, no multi-annotator merge; see
+ * annotation-workspace-review-card.spec.ts for the cross-run_type card
+ * convergence coverage). Also guards against the OLD
  * workspace's `summarizeReviewerAspectCorrections` ReferenceError on review
  * submit (annotation-workspace.html:5029) recurring in the rewrite.
  *
@@ -309,57 +310,32 @@ test.describe('official_run review card chrome', () => {
     await expect(page.locator('#toastMsg')).toHaveText('審查已提交');
   });
 
-  test('dry_run keeps its output-type titles', async ({ page }) => {
-    // The consensus card still needs a title: its stats box and annotator
-    // list carry no type of their own.
+  test('dry_run drops the type title too (v4.0.0)', async ({ page }) => {
+    // v4.0.0: the consensus card that needed a title (its stats box and
+    // annotator list carried no type of their own) is gone -- dry_run now
+    // renders the same titleless card as official_run (FR-014P, FR-053).
     await page.goto(buildWorkspaceUrl({ task_id: 'T005', sample_id: 'mt-001', role: 'reviewer', run_type: 'dry_run' }));
     await dismissGuidelineModal(page);
 
-    await expect(page.getByTestId('ws-review-row').locator('.content-card-title')).toHaveCount(1);
+    await expect(page.getByTestId('ws-review-row').locator('.content-card-title')).toHaveCount(0);
   });
 });
 
-/* entity and relation answers share ONE engine state (previewEntities /
- * previewTriples) while every other output type keeps its own slot under
- * previewState[outKey]. A dry_run workspace seeds that shared state once per
- * output type, so a seed that clears more than the slice it owns silently
- * wipes an already-seeded sibling: the merged span card seeds both span types,
- * and T013 seeds a third card afterwards. */
-test.describe('dry_run consensus seeding across output types', () => {
-  test('the merged span card keeps the entity consensus after the relation seed (T010)', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'dry_run' }));
-    await dismissGuidelineModal(page);
-
-    const panel = page.getByTestId('ws-review-correct-span');
-    // 11 entities per annotator, unanimous; the merge collapses the two
-    // repeated (text, type) pairs, so 9 distinct entities reach the panel.
-    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(9);
-    await expect(panel.getByTestId('ws-ri-triple-item')).toHaveCount(8);
-    // Merged entities carry no offsets of their own; the panel resolves them
-    // against the passage so the reviewer can still see what is marked.
-    await expect(panel.locator('.absa-span-highlight')).toHaveCount(9);
-  });
-
-  test('a later card of another output type leaves both span consensuses intact (T013)', async ({ page }) => {
-    await page.goto(buildWorkspaceUrl({ task_id: 'T013', sample_id: 'absa-001', role: 'reviewer', run_type: 'dry_run' }));
-    await dismissGuidelineModal(page);
-
-    const panel = page.getByTestId('ws-review-correct-span');
-    await expect(panel.getByTestId('ws-er-entity-item')).toHaveCount(4);
-    await expect(panel.getByTestId('ws-ri-triple-item')).toHaveCount(3);
-    await expect(panel.locator('.absa-span-highlight').first()).toBeVisible();
-    // The multi_dim card renders after the span card and seeds last.
-    await expect(page.getByTestId('ws-review-correct-multi_dim')).toBeVisible();
-  });
-});
-
-/* official_run reviews the annotator's own submission, which the prototype
- * only ever has in localStorage -- so a reviewer arriving from the dashboard's
- * 快速審核 in a fresh browser had nothing to review at all, while the list
- * still promised 待審 N 筆. The demo now falls back to the first mock
- * annotator REVIEWER_MOCK_ROWS already ships for that sample (spec 015
- * FR-044a); a real submission always wins over it. */
-test.describe('official_run demo annotator submission', () => {
+/* The reviewer card seeds the reviewed annotator's own submission, which the
+ * prototype only ever has in localStorage -- so a reviewer arriving from the
+ * dashboard's 快速審核 in a fresh browser had nothing to review at all, while
+ * the list still promised 待審 N 筆. The demo now falls back to the mock
+ * REVIEWER_MOCK_ROWS row for that annotator (spec 015 FR-044a); a real
+ * submission always wins over it.
+ *
+ * These cases also guard the shared-state seeding collision: entity and
+ * relation answers share ONE engine state (previewEntities / previewTriples)
+ * while every other output type keeps its own slot under previewState[outKey],
+ * so a seed that clears more than the slice it owns silently wipes an
+ * already-seeded sibling. T010's merged span card seeds both span types, and
+ * T013 seeds a third card afterwards. v4.0.0 runs one seeding path for both
+ * run_types, so the dry_run duplicates of these cases were dropped. */
+test.describe('reviewer demo annotator submission', () => {
   test('a span task shows the annotator entities, relations and highlights (T010)', async ({ page }) => {
     await page.goto(buildWorkspaceUrl({ task_id: 'T010', sample_id: 'med-001', role: 'reviewer', run_type: 'official_run' }));
     await dismissGuidelineModal(page);
