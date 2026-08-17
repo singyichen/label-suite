@@ -121,6 +121,25 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    /* Reviewer-only: names the review unit (sample × annotator) the entry
+       stands for, since three consecutive entries share one snippet. */
+    .sample-unit-line {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      font-size: 11px;
+      min-width: 0;
+    }
+    .sample-unit-id,
+    .sample-unit-sep { color: var(--color-ink-subtle); flex-shrink: 0; }
+    .sample-unit-annotator {
+      font-weight: 600;
+      color: var(--color-ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .sample-status-label {
       display: block;
       font-size: 10px;

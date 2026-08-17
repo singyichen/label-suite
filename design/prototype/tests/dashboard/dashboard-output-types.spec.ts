@@ -252,17 +252,42 @@ test.describe('Dashboard output-type task summaries', () => {
         expect(response?.status()).toBe(200);
 
         // task_id consumed correctly: the rendered sample list length must
-        // match the resolved TaskProfile's datasetRecords, sourced from the
-        // same public data global the workspace itself loads.
-        const recordCount = await page.evaluate((taskId) => {
-          const detailWindow = window as unknown as TaskDetailWindow;
-          const profile = detailWindow.LabelSuiteTaskDetailData?.profiles[taskId];
-          return profile ? profile.datasetRecords.length : null;
-        }, entry.exampleTaskId);
-        if (recordCount === null) {
+        // match what the resolved TaskProfile implies for this role, sourced
+        // from the same public data globals the workspace itself loads.
+        // An annotator's list is one entry per dataset record, but a reviewer
+        // works one REVIEW UNIT at a time (sample × annotator, spec 015
+        // v4.3.0 FR-056), so their list is the flattened annotator roster --
+        // the same getReviewerMockRows() rows annotation-list flattens.
+        const expectedCount = await page.evaluate(
+          ({ taskId, roleKey }) => {
+            const detailWindow = window as unknown as TaskDetailWindow;
+            const profile = detailWindow.LabelSuiteTaskDetailData?.profiles[taskId];
+            if (!profile) return null;
+            if (roleKey !== 'reviewer') return profile.datasetRecords.length;
+            const workspaceData = (
+              window as unknown as {
+                LabelSuiteAnnotationWorkspaceData: {
+                  getRecordId: (record: Record<string, unknown>, index: number) => string;
+                  getReviewerMockRows: (profileId: string, recordId: string) => unknown[];
+                };
+              }
+            ).LabelSuiteAnnotationWorkspaceData;
+            return profile.datasetRecords.reduce(
+              (total, record, index) =>
+                total +
+                workspaceData.getReviewerMockRows(
+                  taskId,
+                  workspaceData.getRecordId(record, index),
+                ).length,
+              0,
+            );
+          },
+          { taskId: entry.exampleTaskId, roleKey: role },
+        );
+        if (expectedCount === null) {
           throw new Error(`No TaskDetailData profile found for ${entry.exampleTaskId}`);
         }
-        await expect(page.getByTestId('ws-sample-item')).toHaveCount(recordCount);
+        await expect(page.getByTestId('ws-sample-item')).toHaveCount(expectedCount);
 
         // sample_id consumed correctly: the input area must surface the
         // 'input'-role field of the exact record matching latestUnfinishedSampleId.
