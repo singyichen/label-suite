@@ -134,10 +134,6 @@
     Object.assign(I18N.en, window.TASK_CONFIG_I18N.en);
   }
 
-  /* v3.0.0 reviewer run_type split (spec 015): shared constants/algorithms
-     live once in annotation-workspace.data.js. */
-  var ADJUDICATION_STATUS = window.LabelSuiteAnnotationWorkspaceData.ADJUDICATION_STATUS;
-
   /* ── shared engine state (see task-config.engine.js header comment for
      the full list of fields the engine reads) ────────────────────── */
   var state = {
@@ -1524,10 +1520,9 @@
   var reviewRowOriginals = {};
   /* Per-outKey guard, sample-scoped (reset in selectSample only, NOT on
      every renderReviewerWorkspace() re-render): seedReviewState() must only
-     run once per sample per outKey. Both buildDryRunReviewRow's
-     apply-majority/set-draft handlers and buildOfficialRunReviewRow's
-     decision handlers trigger a full renderReviewerWorkspace() re-render
-     of every row; without this guard, that rebuild would call
+     run once per sample per outKey. buildReviewRow's decision handlers
+     trigger a full renderReviewerWorkspace() re-render of every row;
+     without this guard, that rebuild would call
      seedReviewState() again on EVERY row (not just the one interacted
      with), silently discarding any live correction the reviewer already
      made on other output types. */
@@ -1569,8 +1564,8 @@
   }
 
   /* Same stringification as describeOutputAnswer, but reading directly off
-     a CompactAnswer value (a consensus-merge mergedValue) instead of engine
-     state -- used for the dry_run history diff (FR-042). */
+     a CompactAnswer value instead of engine state -- used to snapshot the
+     reviewed annotator's seed for the review history diff. */
   function describeCompactAnswer(outKey, answer) {
     switch (outKey) {
       case 'single_label':
@@ -1693,28 +1688,27 @@
     });
   }
 
-  /* v3.0.0 (spec 015 FR-030): the review model branches by run_type, never
-     by task_id -- dry_run compares REVIEWER_MOCK_ANNOTATORS (consensus
-     adjudication, US3); official_run reviews only the real current
-     annotator's own submission (single_annotator_review, US6). The two
-     models never mix rows. */
-  /* official_run reviews the annotator's own submission, which only ever
-     exists in this browser's localStorage -- so a prototype visitor arriving
-     from the dashboard's 快速審核 without having annotated anything first got
-     an empty review panel on every output type, while the list beside it
-     promised 待審 N 筆. Fall back to the first mock annotator
-     REVIEWER_MOCK_ROWS already ships for this sample: the same fixture the
-     dry_run consensus is built from, so nothing new is invented here and no
-     dataset gold column is read. A real submission always wins over it. */
-  function officialRunDemoRow() {
+  /* A review reads the annotator's own submission, which only ever exists in
+     this browser's localStorage -- so a prototype visitor arriving from the
+     dashboard's 快速審核 without having annotated anything first got an empty
+     review panel on every output type, while the list beside it promised
+     待審 N 筆. Fall back to the REVIEWER_MOCK_ROWS entry for THAT annotator
+     (v4.0.0: the review unit is sample × annotator, so the stand-in must name
+     the same person the card claims to review), or the group's first row when
+     the roster has no entry for them. No dataset gold column is read. A real
+     submission always wins over it. */
+  function demoAnnotatorRow() {
     var rows = window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(
       currentProfile.id,
       currentSampleId
     ) || [];
+    var annotatorId = currentAnnotatorId();
+    var own = rows.filter(function (row) { return row.annotator === annotatorId; });
+    if (own.length) return own[0];
     return rows.length ? rows[0] : null;
   }
 
-  function getOfficialRunSubmission() {
+  function getAnnotatorSubmission() {
     return window.LabelSuiteAnnotationWorkspaceData.getSubmission(
       currentProfile.id,
       'annotator',
@@ -1724,8 +1718,8 @@
     );
   }
 
-  /* The one annotator an official_run row belongs to (FR-049). Both branches
-     below name the SAME person on purpose: DEFAULT_ANNOTATOR_ID is the first
+  /* The one annotator a review row belongs to (FR-049). Both branches below
+     name the SAME person on purpose: DEFAULT_ANNOTATOR_ID is the first
      annotator of each REVIEWER_MOCK_ROWS group, so a real submission and the
      FR-044a demo fallback that stands in for it produce one continuous review
      trail rather than splitting across two ids. */
@@ -1736,129 +1730,47 @@
     );
   }
 
+  /* spec 015 v4.0.0 (FR-051, BREAKING): exactly ONE row -- the reviewed
+     annotator's -- for BOTH run types. dry_run no longer merges the whole
+     roster into a consensus the reviewer adjudicates; it reviews one person's
+     answer at a time, identically to official_run. */
   function getReviewerRows(outKey) {
-    if (currentRunType === 'official_run') {
-      var annotatorId = currentAnnotatorId();
-      var submission = getOfficialRunSubmission();
-      if (submission) {
-        return [{
-          name: annotatorId,
-          displayName: annotatorId,
-          answer: convertSubmissionAnswer(outKey, submission),
-          bypass: !!(submission.previewBypass && submission.previewBypass[outKey]),
-        }];
-      }
-      var demoRow = officialRunDemoRow();
-      if (!demoRow) return [];
+    var annotatorId = currentAnnotatorId();
+    var submission = getAnnotatorSubmission();
+    if (submission) {
       return [{
         name: annotatorId,
         displayName: annotatorId,
-        answer: demoRow.answers ? demoRow.answers[outKey] : undefined,
-        bypass: !!(demoRow.bypass && demoRow.bypass[outKey]),
+        answer: convertSubmissionAnswer(outKey, submission),
+        bypass: !!(submission.previewBypass && submission.previewBypass[outKey]),
       }];
     }
-    var mockRows = window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(currentProfile.id, currentSampleId) || [];
-    return mockRows.map(function (mockRow) {
-      return {
-        name: mockRow.annotator,
-        displayName: mockRow.annotator,
-        answer: mockRow.answers ? mockRow.answers[outKey] : undefined,
-        bypass: !!(mockRow.bypass && mockRow.bypass[outKey]),
-      };
-    });
+    var demoRow = demoAnnotatorRow();
+    if (!demoRow) return [];
+    return [{
+      name: annotatorId,
+      displayName: annotatorId,
+      answer: demoRow.answers ? demoRow.answers[outKey] : undefined,
+      bypass: !!(demoRow.bypass && demoRow.bypass[outKey]),
+    }];
   }
 
-  /* DIM_CONSENSUS_TOLERANCE (FR-033) = 0.10 * (max - min) of the output's own
-     scale config -- this file has no direct scale_min/scale_max fields, the
-     task-config engine's actual field names are min/max (single_dim:
-     state.outputConfigs.single_dim.{min,max}; multi_dim: per-dimension
-     dim.{min,max}). */
-  function getConsensusToleranceOpts(outKey) {
-    if (outKey === 'single_dim') {
-      var cfg = state.outputConfigs.single_dim || {};
-      var min = cfg.min != null ? cfg.min : 1;
-      var max = cfg.max != null ? cfg.max : 5;
-      return { tolerance: 0.1 * (max - min) };
-    }
-    if (outKey === 'multi_dim') {
-      var mcfg = state.outputConfigs.multi_dim || {};
-      var dims = Array.isArray(mcfg.dimensions) ? mcfg.dimensions : (Array.isArray(mcfg.va_dimensions) ? mcfg.va_dimensions : []);
-      var dimTolerances = {};
-      dims.forEach(function (dim) {
-        var dMin = dim.min != null ? dim.min : 1;
-        var dMax = dim.max != null ? dim.max : 5;
-        dimTolerances[dim.name] = 0.1 * (dMax - dMin);
-      });
-      return { dimTolerances: dimTolerances };
-    }
-    return {};
-  }
-
-  function computeMerge(outKey) {
-    var rows = getReviewerRows(outKey);
-    return window.LabelSuiteAnnotationWorkspaceData.computeConsensusMerge(outKey, rows, getConsensusToleranceOpts(outKey));
-  }
-
-  /* The engine-state-shaped "live" answer for outKey, in the SAME
-     CompactAnswer shape the merge/mock rows use, so the two can be diffed
-     via data.js's canonicalAnswerKey to detect a manual override (FR-040)
-     or an unresolved divergence (FR-041/AC-3.29). */
-  function extractLiveCompactAnswer(outKey) {
-    return convertSubmissionAnswer(outKey, {
-      previewState: state.previewState,
-      previewEntities: state.previewEntities,
-      previewTriples: state.previewTriples,
-    });
-  }
-  function liveMatchesMergedValue(outKey, merge) {
-    if (!merge || merge.mergedValue == null) return false;
-    var liveKey = window.LabelSuiteAnnotationWorkspaceData.canonicalAnswerKey(outKey, extractLiveCompactAnswer(outKey));
-    var mergeKey = window.LabelSuiteAnnotationWorkspaceData.canonicalAnswerKey(outKey, merge.mergedValue);
-    return liveKey === mergeKey;
-  }
-
-  /* ADJUDICATION_STATUS state machine (FR-040), derived live from the
-     current correction-control value rather than tracked via a separate
-     event log: pending->consensus/divergent comes straight from the merge;
-     consensus flips to overridden the moment the live value stops matching
-     the merged value; divergent flips to adjudicated once the reviewer has
-     written ANY gold value (isOutputAnswered), matching AC-3.29's "已裁定
-     的分歧項目" gate. */
-  function deriveAdjudicationStatus(outKey, merge) {
-    if (merge.status === ADJUDICATION_STATUS.CONSENSUS) {
-      return liveMatchesMergedValue(outKey, merge) ? ADJUDICATION_STATUS.CONSENSUS : ADJUDICATION_STATUS.OVERRIDDEN;
-    }
-    return isOutputAnswered(outKey) ? ADJUDICATION_STATUS.ADJUDICATED : ADJUDICATION_STATUS.DIVERGENT;
-  }
-
-  /* Applies a merge's mergedValue (CompactAnswer shape) into the live
-     engine state, mirroring convertSubmissionAnswer's shape in reverse --
-     used by both the per-sample gold seed (FR-042) and "套用多數決至全部
-     分歧項" (FR-039). free_text is excluded entirely: FR-036 requires an
-     explicit "pick a draft" action, so it never auto-applies a merge value
-     here. sequence_tagging DOES get a case (FR-035: "每個 token 位置採該
-     位置獲票最多之 tag 預填 Token 網格並標示為預接受") -- but it is only
-     ever reached via the FR-042 initial gold seed, since computeConsensusMerge
-     (annotation-workspace.data.js) only produces a non-null mergedValue for
-     sequence_tagging when merge.status === CONSENSUS (fully unanimous, hence
-     always BIO-legal); a tied/illegal-BIO/otherwise-divergent row's
-     mergedValue stays null (SEQ_MAJORITY_INVALID_BIO_FALLBACK), so
-     seedReviewState's `if (value != null)` guard skips this case for those
-     rows, matching FR-035's "不得以非法序列預填". The "套用多數決至全部
-     分歧項" button (FR-039) still never calls this case for sequence_tagging
-     either -- buildConsensusBar excludes it from that button entirely
-     (grid-click-only correction entry for divergent tokens, per FR-035's
-     "唯一修正入口為 Token 網格本身"). */
-  /* A consensus merge carries only {text, type}: the mock annotator rows model
-     what an annotator answered, not the character offsets the marking flow
-     records alongside it. The engine highlights an entity in the passage only
-     when it has a start offset, so resolve one here -- first occurrence not yet
-     taken by an earlier entity, `end` inclusive to match the engine's own span
-     convention. Offsets come from the passage the panel already renders, never
-     from the record's entity column (Constitution: Data Fairness); an entity
-     whose text no longer occurs stays position-less and simply does not
-     highlight, exactly as before. */
-  function placeConsensusEntities(entities) {
+  /* Applies a CompactAnswer into the live engine state, mirroring
+     convertSubmissionAnswer's shape in reverse -- the seed path for a review
+     row whose source is the demo annotator row rather than a real submission
+     (which carries full engine state and seeds directly). free_text is
+     excluded entirely: its correction entry is the draft text itself, so
+     there is nothing to pre-apply. */
+  /* A CompactAnswer entity carries only {text, type}: the mock annotator rows
+     model what an annotator answered, not the character offsets the marking
+     flow records alongside it. The engine highlights an entity in the passage
+     only when it has a start offset, so resolve one here -- first occurrence
+     not yet taken by an earlier entity, `end` inclusive to match the engine's
+     own span convention. Offsets come from the passage the panel already
+     renders, never from the record's entity column (Constitution: Data
+     Fairness); an entity whose text no longer occurs stays position-less and
+     simply does not highlight, exactly as before. */
+  function placeCompactEntities(entities) {
     var text = getDatasetPreviewText() || '';
     var placed = [];
     entities.forEach(function (entity) {
@@ -1876,7 +1788,7 @@
     return placed;
   }
 
-  function applyMergedValueToState(outKey, mergedValue) {
+  function applyCompactAnswerToState(outKey, mergedValue) {
     switch (outKey) {
       case 'single_label':
         state.previewState[outKey] = state.previewState[outKey] || {};
@@ -1901,7 +1813,7 @@
         break;
       }
       case 'entity_recognition':
-        state.previewEntities = placeConsensusEntities(mergedValue || []);
+        state.previewEntities = placeCompactEntities(mergedValue || []);
         state.previewInited = true;
         break;
       case 'relation_identification':
@@ -1923,35 +1835,6 @@
       default:
         break;
     }
-  }
-
-  /* FR-014F: stats algorithm lives in annotation-workspace.data.js
-     (shared with the annotation list's reviewer stats column). free_text
-     comes back as null -- render the localized placeholder here. */
-  function computeReviewStats(outKey, rows) {
-    var stats = window.LabelSuiteAnnotationWorkspaceData.computeReviewStats(outKey, rows);
-    return stats === null ? t('reviewFreeTextStats') : stats;
-  }
-
-  function buildStatsBox(outKey, rows) {
-    var box = document.createElement('div');
-    box.className = 'rv-summary-card';
-
-    var head = document.createElement('div');
-    head.className = 'rv-summary-head';
-    var chip = document.createElement('span');
-    chip.className = 'rv-summary-chip';
-    chip.textContent = t('reviewStatsChip');
-    head.appendChild(chip);
-    box.appendChild(head);
-
-    var summaryText = document.createElement('div');
-    summaryText.className = 'rv-summary-text';
-    summaryText.setAttribute('data-testid', 'ws-review-stats');
-    summaryText.textContent = computeReviewStats(outKey, rows);
-    box.appendChild(summaryText);
-
-    return box;
   }
 
   /* free_text/entity_recognition/relation_identification/sequence_tagging
@@ -2200,104 +2083,12 @@
     return { el: wrap, refresh: refresh };
   }
 
-  /* dry_run comparison list (US3): one read-only row per REVIEWER_MOCK_
-     ANNOTATOR, no per-row approve/reject (FR-030/FR-044 -- decisions are no
-     longer per-annotator, they are the sample-level consensus/gold
-     adjudication built by buildConsensusBar). free_text additionally gets a
-     "採用此份為草稿" button per row (FR-036: no auto-merge, reviewer must
-     explicitly pick a draft to seed the correction control). Rows stay
-     de-emphasized-but-interactive: nothing here is disabled. */
-  function buildConsensusAnnotatorList(outKey, rows, onDraftPicked) {
-    var list = document.createElement('div');
-    list.className = 'rv-annotator-list';
-    list.setAttribute('data-testid', 'ws-review-annotator-list');
-
-    rows.forEach(function (row, idx) {
-      var longContent = isLongContentOutput(outKey);
-      var colorClass = window.LabelSuiteAnnotationWorkspaceData.dimDeviationClass(outKey, rows, idx);
-      var rowEl = document.createElement('div');
-      rowEl.className = 'rv-annotator-review-row' + (longContent ? ' rv-annotator-review-row-sequence' : '');
-      rowEl.setAttribute('data-testid', 'ws-review-annotator-row');
-      rowEl.setAttribute('data-annotator', row.name);
-
-      var content = document.createElement('div');
-      content.className = longContent ? 'rv-sequence-review-content' : 'rv-annotator-meta';
-      var nameEl = document.createElement('span');
-      nameEl.className = 'rv-annotator-name';
-      nameEl.setAttribute('data-testid', 'ws-review-annotator-name');
-      nameEl.textContent = row.displayName || row.name;
-      content.appendChild(nameEl);
-      content.appendChild(buildAnswerCell(outKey, row.answer, row.bypass, colorClass));
-      rowEl.appendChild(content);
-
-      if (outKey === 'free_text' && !row.bypass) {
-        var draftBtn = document.createElement('button');
-        draftBtn.type = 'button';
-        draftBtn.className = 'mini-btn';
-        draftBtn.setAttribute('data-testid', 'ws-review-set-draft');
-        draftBtn.textContent = t('reviewSetDraft');
-        draftBtn.addEventListener('click', function () {
-          state.previewState.free_text = state.previewState.free_text || {};
-          state.previewState.free_text.text = row.answer || '';
-          if (onDraftPicked) onDraftPicked();
-        });
-        rowEl.appendChild(draftBtn);
-      }
-
-      list.appendChild(rowEl);
-    });
-    return list;
-  }
-
-  /* FR-039/FR-040: one badge + one "apply majority" affordance per outKey
-     row, reflecting the live ADJUDICATION_STATUS (recomputed, not stored,
-     see deriveAdjudicationStatus). sequence_tagging/free_text never get an
-     apply-majority button (see applyMergedValueToState). */
-  function buildConsensusBar(outKey, merge) {
-    var bar = document.createElement('div');
-    bar.className = 'rv-bulk-bar';
-
-    var badge = document.createElement('span');
-    badge.setAttribute('data-testid', 'ws-review-consensus-badge');
-
-    var agreementText = merge.comparableCount + '/' + merge.comparableCount + ' ' + '一致';
-    if (merge.comparableCount > 0) {
-      agreementText = merge.agreeCount + '/' + merge.comparableCount + ' 一致' +
-        (merge.bypassCount > 0 ? ' · ' + merge.bypassCount + ' 人 Bypass' : '');
-    }
-
-    function refresh() {
-      var status = deriveAdjudicationStatus(outKey, merge);
-      badge.className = 'history-action-badge ' + status;
-      badge.textContent = t('adjudicationStatus' + status.charAt(0).toUpperCase() + status.slice(1)) + ' · ' + agreementText;
-      return status;
-    }
-    refresh();
-    bar.appendChild(badge);
-
-    var applyBtn = null;
-    if (outKey !== 'sequence_tagging' && outKey !== 'free_text' && merge.mergedValue != null) {
-      applyBtn = document.createElement('button');
-      applyBtn.type = 'button';
-      applyBtn.className = 'mini-btn';
-      applyBtn.setAttribute('data-testid', 'ws-review-apply-majority');
-      applyBtn.textContent = t('reviewApplyMajority');
-      applyBtn.addEventListener('click', function () {
-        applyMergedValueToState(outKey, merge.mergedValue);
-        renderReviewerWorkspace();
-      });
-      bar.appendChild(applyBtn);
-    }
-
-    return { el: bar, refresh: refresh };
-  }
-
   /* Seeds the shared engine state so renderOutputPreview(container, outKey)
      -- the exact same dispatcher every annotator panel already goes through
      -- renders the correction control pre-filled with `value` instead of
      the dataset's default/prefilled value. `value` is either a real
-     OutputAnswer submission (official_run, FR-044) or a CompactAnswer-shaped
-     consensus-merge result (dry_run, FR-042); both paths go through the
+     OutputAnswer submission (FR-044) or the CompactAnswer of the demo
+     annotator row standing in for one (FR-044a); both paths go through the
      SAME assignment logic below. */
   /* A task whose outputs[] carries no entity_recognition treats the dataset's
      entity spans as scaffolding (evidence role, T008): the annotator picks
@@ -2322,7 +2113,7 @@
       delete state.previewState[outKey];
       /* Reset ONLY the slice this output type owns. previewEntities and
          previewTriples are shared engine state, not per-type slots like
-         previewState[outKey], and a dry_run workspace seeds them once per
+         previewState[outKey], and the reviewer workspace seeds them once per
          output type: the merged span card seeds entity_recognition and then
          relation_identification (T010/T013), and T013 seeds a third card
          afterwards. Clearing both arrays on every seed therefore wiped the
@@ -2337,7 +2128,7 @@
         if (scaffolding.length) state.previewEntities = scaffolding;
       }
       state.previewBypass[outKey] = false;
-      if (value != null) applyMergedValueToState(outKey, value);
+      if (value != null) applyCompactAnswerToState(outKey, value);
       state.previewInited = true;
       return;
     }
@@ -2373,7 +2164,7 @@
     }
   }
 
-  /* title is null for official_run rows (FR-014P): that card carries nothing
+  /* title is null for every review row (FR-014P): that card carries nothing
      but the correction panel, which already shows what is under review, so a
      header repeating the output-type key is noise -- the whole header row
      goes away with it. */
@@ -2410,7 +2201,7 @@
     return correction;
   }
 
-  /* FR-014P: an official_run card must end with exactly ONE decision line,
+  /* FR-014P: a review card must end with exactly ONE decision line,
      the same shape for every output type. The engine's Bypass row already is
      that line ("無法判定 (Bypass)"), so the approve/reject pair is docked into
      it instead of floating in a card header far above the answer it judges.
@@ -2444,62 +2235,17 @@
     new MutationObserver(place).observe(correction, { childList: true, subtree: true });
   }
 
-  /* dry_run (US3, FR-030/FR-039~FR-042): consensus badge, apply-majority,
-     the mock-annotator comparison list, then the gold correction control
-     seeded from the merge result -- NO stats box, NO bulk approve/reject
-     bar, NO per-annotator decision (all deprecated by FR-044 for BOTH run
-     types, replaced here by the consensus/gold model). */
-  function buildDryRunReviewRow(outKey) {
-    var rows = getReviewerRows(outKey);
-    var merge = computeMerge(outKey);
-    var row = buildReviewRowShell(outKey);
-
-    /* FR-014F/FR-044: the legacy distribution-stats box is dry_run-only. */
-    row.appendChild(buildStatsBox(outKey, rows));
-
-    var consensusBar = buildConsensusBar(outKey, merge);
-    row.appendChild(consensusBar.el);
-    row.appendChild(buildConsensusAnnotatorList(outKey, rows, function () {
-      renderReviewerWorkspace();
-    }));
-
-    reviewRowOriginals[outKey] = merge.mergedValue != null ? describeCompactAnswer(outKey, merge.mergedValue) : '';
-    if (!reviewRowSeeded[outKey]) {
-      seedReviewState(outKey, merge.mergedValue, true);
-      reviewRowSeeded[outKey] = true;
-    }
-    /* buildConsensusBar()'s own construction-time refresh() (above) reads
-       the live state BEFORE this seed runs, so a genuinely-unanimous row
-       (merge.status === CONSENSUS, e.g. T006's sequence_tagging fully-
-       agreeing mock rows) would otherwise misreport OVERRIDDEN on first
-       paint purely from that construction-order artifact (liveMatchesMergedValue
-       reads the not-yet-seeded state). Re-run refresh() once the seed has
-       landed so the badge's first paint reflects the true consensus reading
-       (FR-035/FR-040). Scoped to CONSENSUS only: the DIVERGENT branch
-       intentionally keeps showing "分歧" on first paint even though the
-       correction control is already pre-seeded with the merge's majority
-       pick (FR-042) -- adjudicated only becomes true once the reviewer
-       explicitly interacts (AC-3.29), so re-triggering refresh() there would
-       incorrectly flip a still-unreviewed divergent row to "已裁定". */
-    if (merge.status === ADJUDICATION_STATUS.CONSENSUS) {
-      consensusBar.refresh();
-    }
-
-    var correction = appendCorrectionControl(row, outKey);
-    correction.addEventListener('input', function () { consensusBar.refresh(); }, true);
-    correction.addEventListener('click', function () { consensusBar.refresh(); }, true);
-    return row;
-  }
-
-  /* official_run (US6, FR-044/FR-014P): single-annotator review -- no title
-     row, no stats box, no bulk bar, no annotator list, no deviation coloring;
-     just the correction panel, closing on one decision line. */
+  /* spec 015 v4.0.0 (US3/US6, FR-044/FR-014P, BREAKING): ONE review card
+     shape for both run types -- no title row, no stats box, no consensus
+     badge, no apply-majority, no annotator list, no deviation coloring; just
+     the reviewed annotator's answer in the correction panel, closing on one
+     decision pair. dry_run's consensus/gold adjudication model (FR-030/
+     FR-039~FR-042) is gone with the merge it read from. */
   /* A real submission carries the annotator's own engine state (exact spans
      included), so it seeds through the OutputAnswer path. The demo fallback
-     only has a CompactAnswer, the same shape the dry_run merge produces, and
-     takes the same compact path -- entity offsets get resolved against the
-     passage there (placeConsensusEntities). */
-  function seedOfficialRunRow(outKey, submission) {
+     only has a CompactAnswer and takes the compact path -- entity offsets get
+     resolved against the passage there (placeCompactEntities). */
+  function seedReviewRow(outKey, submission) {
     if (submission) {
       reviewRowOriginals[outKey] = describeOutputAnswer(outKey, submission);
       if (!reviewRowSeeded[outKey]) {
@@ -2508,7 +2254,7 @@
       }
       return;
     }
-    var demoRow = officialRunDemoRow();
+    var demoRow = demoAnnotatorRow();
     var answer = demoRow && demoRow.answers ? demoRow.answers[outKey] : null;
     reviewRowOriginals[outKey] = answer != null ? describeCompactAnswer(outKey, answer) : '';
     if (!reviewRowSeeded[outKey]) {
@@ -2517,19 +2263,13 @@
     }
   }
 
-  function buildOfficialRunReviewRow(outKey, submission) {
+  function buildReviewRow(outKey, submission) {
     var row = buildReviewRowShell(null);
 
-    seedOfficialRunRow(outKey, submission);
+    seedReviewRow(outKey, submission);
     var correction = appendCorrectionControl(row, outKey);
     dockDecisionsOnBypassRow(correction, [buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el]);
     return row;
-  }
-
-  function buildReviewRow(outKey, submission) {
-    return currentRunType === 'official_run'
-      ? buildOfficialRunReviewRow(outKey, submission)
-      : buildDryRunReviewRow(outKey);
   }
 
   /* FR-014N: entity_recognition and relation_identification are two stages
@@ -2541,11 +2281,9 @@
      one screen (three times with the 原始文本 card on top), all copies
      visually identical, so nothing told the reviewer which one was
      interactive. A task shipping both collapses them into a single card:
-     comparison stays per output type (each keeps its own stats, consensus
-     badge, apply-majority and annotator list, under a type label), and the
-     card closes with exactly one 直接修正 panel mounted from
-     relation_identification. Decisions and adjudication state stay keyed by
-     output type, so both submit paths are unaffected. */
+     exactly one 直接修正 panel mounted from relation_identification, closing
+     on one labeled decision pair per output type. Decisions stay keyed by
+     output type, so the submit gate is unaffected. */
   var SPAN_OUTPUT_KEYS = ['entity_recognition', 'relation_identification'];
 
   function mergedSpanKeys() {
@@ -2564,63 +2302,24 @@
   }
 
   function buildMergedSpanReviewRow(outKeys, submission) {
-    var isOfficialRun = currentRunType === 'official_run';
-
     /* One panel stands in for both output types, so each decision pair keeps
        its type label -- unlike a single-type card, where the pair is
        unambiguous on its own (FR-014P). */
-    var decisionEls = !isOfficialRun ? [] : outKeys.map(function (outKey) {
+    var decisionEls = outKeys.map(function (outKey) {
       var group = document.createElement('div');
       group.className = 'rv-merged-decision';
       group.appendChild(buildSectionLabel(outKey));
       group.appendChild(buildRowDecisionButtons(outKey, currentAnnotatorId(), null).el);
       return group;
     });
-    var row = buildReviewRowShell(isOfficialRun ? null : outKeys.join(' + '));
+    var row = buildReviewRowShell(null);
 
-    var bars = [];
     outKeys.forEach(function (outKey) {
-      if (isOfficialRun) {
-        seedOfficialRunRow(outKey, submission);
-        return;
-      }
-      var rows = getReviewerRows(outKey);
-      var merge = computeMerge(outKey);
-      /* One card now holds two comparison blocks, so each gets its own
-         wrapper -- otherwise 'the stats box' or 'the first annotator
-         answer' is ambiguous for both readers and tests. */
-      var section = document.createElement('div');
-      section.setAttribute('data-testid', 'ws-review-section-' + outKey);
-      section.appendChild(buildSectionLabel(outKey));
-      section.appendChild(buildStatsBox(outKey, rows));
-      var consensusBar = buildConsensusBar(outKey, merge);
-      section.appendChild(consensusBar.el);
-      section.appendChild(buildConsensusAnnotatorList(outKey, rows, function () {
-        renderReviewerWorkspace();
-      }));
-      row.appendChild(section);
-      bars.push({ bar: consensusBar, merge: merge });
-
-      reviewRowOriginals[outKey] = merge.mergedValue != null ? describeCompactAnswer(outKey, merge.mergedValue) : '';
-      if (!reviewRowSeeded[outKey]) {
-        seedReviewState(outKey, merge.mergedValue, true);
-        reviewRowSeeded[outKey] = true;
-      }
-    });
-    /* Same post-seed re-paint buildDryRunReviewRow() needs, per bar. */
-    bars.forEach(function (entry) {
-      if (entry.merge.status === ADJUDICATION_STATUS.CONSENSUS) entry.bar.refresh();
+      seedReviewRow(outKey, submission);
     });
 
     var correction = appendCorrectionControl(row, 'relation_identification', 'span');
-    if (decisionEls.length) dockDecisionsOnBypassRow(correction, decisionEls);
-    if (bars.length) {
-      var refreshAll = function () {
-        bars.forEach(function (entry) { entry.bar.refresh(); });
-      };
-      correction.addEventListener('input', refreshAll, true);
-      correction.addEventListener('click', refreshAll, true);
-    }
+    dockDecisionsOnBypassRow(correction, decisionEls);
     return row;
   }
 
@@ -2645,93 +2344,6 @@
       .filter(Boolean)
       .join('\n\n');
   }
-  /* Legacy-parity 原始文本 card for entity/relation tasks (reviewer view):
-     the raw input text with ONE inline highlight per distinct annotated
-     entity across ALL annotator rows (union, not a single annotator's view
-     -- e.g. an entity two annotators tagged and one missed still shows);
-     relation-only tasks highlight the record's evidence entities instead.
-     Highlight visuals mirror the engine's own absa-span-highlight rule
-     (tinted background + colored bottom border) plus a solid type badge,
-     colored from the task's entity config via getPreviewTypeColorMap().
-     Entities are placed at their first occurrence in the text; entities
-     whose text no longer matches (or overlaps an earlier placement) are
-     skipped here but still listed in the per-annotator rows below. */
-  function buildReviewerSourceTextCard(rawRecord) {
-    var card = document.createElement('div');
-    card.className = 'content-card';
-    card.setAttribute('data-testid', 'ws-review-source-text');
-
-    var title = document.createElement('div');
-    title.className = 'rv-source-title';
-    title.textContent = t('reviewSourceTextTitle');
-    card.appendChild(title);
-
-    var body = document.createElement('div');
-    body.className = 'rv-source-body';
-    var rawText = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
-
-    var seen = {};
-    var placed = [];
-    function placeSpan(ent) {
-      if (!ent || !ent.text) return;
-      var key = ent.text + ' ' + ent.type;
-      if (seen[key]) return;
-      seen[key] = true;
-      var idx = rawText.indexOf(ent.text);
-      if (idx < 0) return;
-      var overlaps = placed.some(function (span) {
-        return idx < span.end && idx + ent.text.length > span.start;
-      });
-      if (!overlaps) placed.push({ start: idx, end: idx + ent.text.length, text: ent.text, type: ent.type });
-    }
-    if (state.selectedOutputTypes.indexOf('entity_recognition') >= 0) {
-      getReviewerRows('entity_recognition').forEach(function (row) {
-        if (row.bypass) return;
-        (Array.isArray(row.answer) ? row.answer : []).forEach(placeSpan);
-      });
-    } else {
-      /* Relation-only tasks (entity_recognition is not an output): highlight
-         the record's evidence entities instead -- the same spans the
-         annotator's own relation view opens with. Records without an
-         evidence entities field (e.g. absa) show the plain text. */
-      (Array.isArray(rawRecord.entities) ? rawRecord.entities : []).forEach(placeSpan);
-    }
-    placed.sort(function (a, b) { return a.start - b.start; });
-
-    var colorInfo = getPreviewTypeColorMap();
-    var colorMap = colorInfo.map || {};
-    /* Evidence-entity types are absent from the entity config's color map --
-       assign palette colors by first appearance, mirroring the engine rule. */
-    placed.forEach(function (span) {
-      if (span.type && !colorMap[span.type]) {
-        colorMap[span.type] = ENTITY_COLORS[colorInfo.order.length % ENTITY_COLORS.length];
-        colorInfo.order.push(span.type);
-      }
-    });
-    var pos = 0;
-    placed.forEach(function (span) {
-      if (span.start > pos) body.appendChild(document.createTextNode(rawText.substring(pos, span.start)));
-      var mark = document.createElement('span');
-      mark.className = 'rv-source-mark';
-      mark.setAttribute('data-testid', 'ws-review-source-mark');
-      var color = safeCssColor(colorMap[span.type], '#6366F1');
-      mark.style.background = color + '33';
-      mark.style.borderBottom = '2px solid ' + color;
-      mark.style.color = color;
-      mark.appendChild(document.createTextNode(span.text));
-      var badge = document.createElement('span');
-      badge.className = 'rv-source-badge';
-      badge.textContent = span.type;
-      badge.style.background = color;
-      mark.appendChild(badge);
-      body.appendChild(mark);
-      pos = span.end;
-    });
-    if (pos < rawText.length) body.appendChild(document.createTextNode(rawText.substring(pos)));
-
-    card.appendChild(body);
-    return card;
-  }
   function renderReviewerWorkspace() {
     var preview = document.getElementById('annotationPreview');
     if (!preview) return;
@@ -2739,9 +2351,9 @@
     reviewRowDecisions = {};
     reviewRowOriginals = {};
 
-    /* null, not {}: seedOfficialRunRow() branches on whether a real
-       submission exists at all. */
-    var submission = currentRunType === 'official_run' ? getOfficialRunSubmission() : null;
+    /* null, not {}: seedReviewRow() branches on whether a real submission
+       exists at all. */
+    var submission = getAnnotatorSubmission();
     var rawRecord = findRecordById(currentSampleId) || {};
 
     /* Output types whose registry entry declares rendersInputPreview:true
@@ -2764,21 +2376,12 @@
       preview.appendChild(inputCard);
     }
 
-    /* Entity and relation tasks additionally restore the legacy 原始文本
-       card on top: entity tasks show every annotated result inline (union
-       across annotators), relation-only tasks show the record's evidence-
-       entity highlights instead (FR-014L). dry_run only (FR-014O): the
-       card earns its place by showing the UNION across annotators, which
-       the correction panel below -- seeded from the merge -- does not.
-       official_run has a single annotator whose spans that same panel
-       already renders, so the card would be a pixel-identical second copy
-       of the sample text with no added information. */
-    if (currentRunType !== 'official_run' &&
-        (state.selectedOutputTypes.indexOf('entity_recognition') >= 0 ||
-         state.selectedOutputTypes.indexOf('relation_identification') >= 0)) {
-      preview.appendChild(buildReviewerSourceTextCard(rawRecord));
-    }
-
+    /* The legacy 原始文本 card (FR-014L/FR-014O) is gone with the consensus
+       model that justified it: it earned its place by showing the UNION of
+       entity spans ACROSS annotators, which the merge-seeded correction panel
+       below could not. A card reviewing ONE annotator has no union to show --
+       that panel already renders exactly this annotator's spans, so the card
+       would be a pixel-identical second copy of the sample text. */
     var spanKeys = mergedSpanKeys();
     var spanRowRendered = false;
     state.selectedOutputTypes.forEach(function (outKey) {
@@ -2800,11 +2403,12 @@
     history.classList.remove('hidden');
   }
 
-  /* official_run (FR-044/AC-6.3): single decision per outKey (the header
-     row's approve/reject), unchanged from the pre-v3.0.0 single-annotator
-     flow -- getReviewerRows() already narrows to exactly one row, the
-     current annotator's, per outKey for this run_type. */
-  function handleOfficialRunSubmit(history) {
+  /* FR-044/AC-6.3: one decision per outKey, for both run types --
+     getReviewerRows() narrows to exactly one row, the reviewed annotator's
+     (v4.0.0: the review unit is sample × annotator). */
+  function handleReviewSubmit() {
+    var history = document.getElementById('wsReviewHistory');
+    if (!history) return;
     var rowsByOutKey = {};
     var allDecided = true;
     var annotatorId = currentAnnotatorId();
@@ -2861,60 +2465,6 @@
     showToast(t('wsReviewSubmitSuccess'));
   }
 
-  /* dry_run (FR-041/AC-3.29): submit is blocked while ANY outKey is still
-     'divergent' (unresolved) -- 'consensus'/'overridden'/'adjudicated' are
-     all valid gold states. Successful submit writes the sample's gold
-     answer (collectAnswerPayload(), already reading off state.previewState/
-     previewEntities/previewTriples the correction controls just edited).
-     The sample's gold_confirmed state surfaces through the sample list
-     status and the history panel -- there is no dedicated status badge
-     (spec 015 v3.1.0 dropped ws-review-gold-status as redundant). */
-  function handleDryRunSubmit(history) {
-    var unresolved = state.selectedOutputTypes.filter(function (outKey) {
-      return deriveAdjudicationStatus(outKey, computeMerge(outKey)) === ADJUDICATION_STATUS.DIVERGENT;
-    });
-    if (unresolved.length > 0) {
-      showToast(t('toastResolveDivergent'));
-      return;
-    }
-
-    var statusLines = state.selectedOutputTypes.map(function (outKey) {
-      var status = deriveAdjudicationStatus(outKey, computeMerge(outKey));
-      var corrected = describeOutputAnswer(outKey, {
-        previewState: state.previewState,
-        previewEntities: state.previewEntities,
-        previewTriples: state.previewTriples,
-      });
-      return outKey + ' [' + status + ']: ' + (reviewRowOriginals[outKey] || '') + ' -> ' + corrected;
-    });
-    appendReviewHistoryEntry(history, statusLines.join('\n'));
-
-    var summary = buildHistorySummary() + '\n' + statusLines.join('\n');
-    window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(
-      currentProfile.id,
-      currentRole,
-      currentRunType,
-      currentSampleId,
-      collectAnswerPayload(),
-      summary,
-      currentIdentity
-    );
-
-    renderSampleList();
-    renderSampleNav();
-    renderHistoryPanel();
-    showToast(t('wsReviewSubmitSuccess'));
-  }
-
-  function handleReviewSubmit() {
-    var history = document.getElementById('wsReviewHistory');
-    if (!history) return;
-    if (currentRunType === 'official_run') {
-      handleOfficialRunSubmit(history);
-    } else {
-      handleDryRunSubmit(history);
-    }
-  }
 
   /* ── guideline panel (spec 015 v2.0.0 AC-5.1-5.3, 區塊 C) ────────────
      Rendered exactly once per task load (called from boot(), never from
