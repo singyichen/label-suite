@@ -1041,9 +1041,21 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  /* The in-memory answer snapshot is keyed by REVIEW UNIT, not by sample
+     (spec 015 v4.3.0, FR-056): a reviewer moving from sent-001 × kioleemg12
+     to sent-001 × 113450022 stays on the same sample_id, so a sample-keyed
+     map handed the second annotator the corrections made to the first --
+     the reviewer would see their own edit attributed to someone who never
+     gave it. For annotators the two keys are identical by construction
+     (one unit per record), so their behaviour is unchanged. */
+  function unitKey(sampleId, annotatorId) {
+    if (currentRole !== 'reviewer') return String(sampleId);
+    return String(sampleId) + '::' + (annotatorId || currentAnnotatorId());
+  }
+
   function snapshotCurrentSample() {
     if (!currentSampleId) return;
-    sampleAnswers[currentSampleId] = {
+    sampleAnswers[unitKey(currentSampleId)] = {
       previewState: deepClone(state.previewState),
       previewEntities: deepClone(state.previewEntities),
       previewTriples: deepClone(state.previewTriples),
@@ -1055,7 +1067,7 @@
   }
 
   function restoreSample(sampleId) {
-    var snap = sampleAnswers[sampleId];
+    var snap = sampleAnswers[unitKey(sampleId)];
     /* FR-026 cross-visit restore: with no in-memory snapshot (fresh page
        load), an annotator's persisted answers -- saved draft or earlier
        submission -- seed the controls instead of a blank state.
@@ -1162,25 +1174,66 @@
     renderHistoryPanel();
   }
 
-  function currentSampleIndex() {
-    var records = currentProfile.datasetRecords;
-    for (var i = 0; i < records.length; i++) {
-      if (window.LabelSuiteAnnotationWorkspaceData.getRecordId(records[i], i) === String(currentSampleId)) return i;
+  /* The unit the left column, the nav and the review card all address
+     (spec 015 v4.3.0, FR-056). For a reviewer it is sample × annotator --
+     the same flattening annotation-list.html applies, off the same
+     getReviewerMockRows() roster, so the two pages can never disagree on
+     how many units a task holds. For an annotator the record IS the unit,
+     which is why every annotator-facing behaviour below is unchanged. */
+  function buildUnits() {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var units = [];
+    currentProfile.datasetRecords.forEach(function (record, idx) {
+      var recordId = data.getRecordId(record, idx);
+      if (currentRole !== 'reviewer') {
+        units.push({ record: record, recordId: recordId, annotatorId: currentAnnotatorId() });
+        return;
+      }
+      data.getReviewerMockRows(currentProfile.id, recordId).forEach(function (row) {
+        units.push({ record: record, recordId: recordId, annotatorId: row.annotator });
+      });
+    });
+    return units;
+  }
+
+  function unitIdentity(unit) {
+    if (currentRole !== 'reviewer') return currentIdentity;
+    return { annotatorId: unit.annotatorId, reviewerId: currentIdentity.reviewerId };
+  }
+
+  function isCurrentUnit(unit) {
+    if (unit.recordId !== String(currentSampleId)) return false;
+    return currentRole !== 'reviewer' || unit.annotatorId === currentAnnotatorId();
+  }
+
+  function currentUnitIndex(units) {
+    for (var i = 0; i < units.length; i++) {
+      if (isCurrentUnit(units[i])) return i;
     }
     return 0;
   }
 
+  /* Submissions live in per-identity buckets, so a reviewer walking three
+     annotators of one sample has three buckets to consult -- the single
+     getSubmittedSampleCount() call the annotator path uses would only ever
+     see the annotator the URL happened to open on. */
+  function countSubmittedUnits(units) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    if (currentRole !== 'reviewer') {
+      return data.getSubmittedSampleCount(currentProfile.id, currentRole, currentRunType, currentIdentity);
+    }
+    return units.filter(function (unit) {
+      return data.isSampleSubmitted(currentProfile.id, 'reviewer', currentRunType, unit.recordId, unitIdentity(unit));
+    }).length;
+  }
+
   /* Top-of-column sample nav (區塊 B 上方導覽列): prev/next + submitted
      progress. Progress counts THIS role+run's submissions over the seeded
-     record list, matching what the prev/next buttons can actually reach. */
+     unit list, matching what the prev/next buttons can actually reach. */
   function renderSampleNav() {
-    var total = currentProfile.datasetRecords.length;
-    var done = window.LabelSuiteAnnotationWorkspaceData.getSubmittedSampleCount(
-      currentProfile.id,
-      currentRole,
-      currentRunType,
-      currentIdentity
-    );
+    var units = buildUnits();
+    var total = units.length;
+    var done = countSubmittedUnits(units);
     if (done > total) done = total;
     setText(
       'wsProgressText',
@@ -1191,7 +1244,7 @@
     if (fill) fill.style.width = pct + '%';
     var track = document.getElementById('wsProgressTrack');
     if (track) track.setAttribute('aria-valuenow', String(pct));
-    var idx = currentSampleIndex();
+    var idx = currentUnitIndex(units);
     var prevBtn = document.getElementById('wsPrevBtn');
     var nextBtn = document.getElementById('wsNextBtn');
     if (prevBtn) prevBtn.disabled = idx <= 0;
@@ -1284,7 +1337,11 @@
     });
   }
 
-  function selectSample(sampleId) {
+  /* `annotatorId` is the second half of the review unit (FR-056); omitted,
+     the currently reviewed annotator is kept, which is what every annotator
+     call site and the boot call rely on. Snapshotting happens BEFORE the
+     identity moves so the outgoing unit's answers are filed under it. */
+  function selectSample(sampleId, annotatorId) {
     var record = findRecordById(sampleId) || currentProfile.datasetRecords[0];
     if (!record) return;
     var recordIdx = currentProfile.datasetRecords.indexOf(record);
@@ -1293,6 +1350,7 @@
     if (currentSampleId) triggerAutosave();
     snapshotCurrentSample();
     currentSampleId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, recordIdx);
+    if (annotatorId && currentRole === 'reviewer') currentIdentity.annotatorId = annotatorId;
     reviewRowSeeded = {};
     state.datasetRawFirstRow = buildAnnotatorRecord(record, currentProfile);
     /* The engine only rebuilds columnOutputTypeMap inside its own
@@ -1310,18 +1368,24 @@
     var countEl = document.getElementById('sampleListCount');
     if (!listEl) return;
     while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
-    var records = currentProfile.datasetRecords;
+    var units = buildUnits();
     /* Spec 015 line "筆數仍需依 materialized run context 顯示": the count
        reflects the run's materialized list size when the profile declares
        one for the current run_type; the rendered rows stay the seed
        records (prototype subset). Title stays a fixed 標記清單 -- run
-       labels in the column title are forbidden by the same clause. */
+       labels in the column title are forbidden by the same clause.
+       Reviewers are the exception (FR-056): a materialized run counts
+       SAMPLES, which is the annotator's workload, while the reviewer's is
+       one unit per annotator per sample -- so their count is the rendered
+       unit count, matching annotation-list's 共 N 筆. */
     var runCtx = currentProfile.materializedRuns && currentProfile.materializedRuns[currentRunType];
-    var totalCount = runCtx && typeof runCtx.total === 'number' ? runCtx.total : records.length;
+    var totalCount =
+      currentRole === 'reviewer' || !runCtx || typeof runCtx.total !== 'number' ? units.length : runCtx.total;
     if (countEl) countEl.textContent = totalCount + (state.lang === 'zh' ? ' 筆' : ' items');
 
-    records.forEach(function (record, idx) {
-      var recordId = window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx);
+    units.forEach(function (unit, idx) {
+      var record = unit.record;
+      var recordId = unit.recordId;
       /* Tri-state per sample (submitted / saved / pending) drives both the
          index-badge tint and the text status label under the snippet. */
       var status = window.LabelSuiteAnnotationWorkspaceData.getSampleStatus(
@@ -1329,11 +1393,11 @@
         currentRole,
         currentRunType,
         recordId,
-        currentIdentity
+        unitIdentity(unit)
       );
       var item = document.createElement('button');
       item.type = 'button';
-      item.className = 'sample-item' + (recordId === String(currentSampleId) ? ' active' : '');
+      item.className = 'sample-item' + (isCurrentUnit(unit) ? ' active' : '');
       if (status === 'submitted') item.classList.add('status-submitted');
       else if (status === 'saved') item.classList.add('status-saved');
       item.setAttribute('data-testid', 'ws-sample-item');
@@ -1353,6 +1417,26 @@
         currentProfile.fieldRoleMap
       );
       meta.appendChild(snippet);
+      /* Three consecutive reviewer entries share one snippet, so the entry
+         has to name the unit it stands for (FR-056). */
+      if (currentRole === 'reviewer') {
+        var unitLine = document.createElement('div');
+        unitLine.className = 'sample-unit-line';
+        var unitId = document.createElement('span');
+        unitId.className = 'sample-unit-id';
+        unitId.textContent = recordId;
+        var unitSep = document.createElement('span');
+        unitSep.className = 'sample-unit-sep';
+        unitSep.textContent = '·';
+        var unitAnnotator = document.createElement('span');
+        unitAnnotator.className = 'sample-unit-annotator';
+        unitAnnotator.setAttribute('data-testid', 'ws-sample-annotator');
+        unitAnnotator.textContent = unit.annotatorId;
+        unitLine.appendChild(unitId);
+        unitLine.appendChild(unitSep);
+        unitLine.appendChild(unitAnnotator);
+        meta.appendChild(unitLine);
+      }
       var statusLabel = document.createElement('span');
       statusLabel.className = 'sample-status-label status-color-' + status;
       statusLabel.setAttribute('data-testid', 'ws-sample-status');
@@ -1362,7 +1446,7 @@
       item.appendChild(meta);
 
       item.addEventListener('click', function () {
-        selectSample(recordId);
+        selectSample(recordId, unit.annotatorId);
       });
       listEl.appendChild(item);
     });
@@ -2437,20 +2521,22 @@
   function setupSampleNav() {
     var prevBtn = document.getElementById('wsPrevBtn');
     var nextBtn = document.getElementById('wsNextBtn');
+    /* Steps one REVIEW UNIT at a time (FR-056), so a reviewer reaches every
+       annotator of a sample before the sample changes. */
+    function step(delta) {
+      var units = buildUnits();
+      var next = units[currentUnitIndex(units) + delta];
+      if (!next) return;
+      selectSample(next.recordId, next.annotatorId);
+    }
     if (prevBtn) {
       prevBtn.addEventListener('click', function () {
-        var idx = currentSampleIndex();
-        if (idx <= 0) return;
-        var record = currentProfile.datasetRecords[idx - 1];
-        selectSample(window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx - 1));
+        step(-1);
       });
     }
     if (nextBtn) {
       nextBtn.addEventListener('click', function () {
-        var idx = currentSampleIndex();
-        if (idx >= currentProfile.datasetRecords.length - 1) return;
-        var record = currentProfile.datasetRecords[idx + 1];
-        selectSample(window.LabelSuiteAnnotationWorkspaceData.getRecordId(record, idx + 1));
+        step(1);
       });
     }
   }
