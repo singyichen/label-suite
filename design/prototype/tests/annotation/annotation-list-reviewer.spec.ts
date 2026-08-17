@@ -1,77 +1,161 @@
 import { test, expect } from '@playwright/test';
 import { buildListUrl } from './_workspace-helpers';
 
-/* Reviewer rows on the annotation list (spec 015 v3.0.0 FR-047/FR-048,
- * BREAKING): presentation now splits by run_type.
+/* Reviewer rows on the annotation list (spec 015 v4.2.0, FR-055).
  *
- * dry_run: keeps the legacy expandable multi-annotator comparison (標記分布
- * 統計 column, list-review-expand, list-review-annotator-row), but it is now
- * READ-ONLY -- all decision buttons are removed (adjudication happens only
- * in the workspace's consensus-merge review card). The sole row action is
- * 編輯, and the toolbar submit button never renders for dry_run.
+ * v3.0.0 split this page by run_type: dry_run rendered an expandable
+ * multi-annotator comparison, official_run rendered one row per sample with
+ * its own approve/reject pair and a toolbar submit. v3.9.0 then defined the
+ * review unit as `sample_id × annotator_id × run_type` and v4.0.0 collapsed
+ * the workspace onto a single card, which leaves the list as the last place
+ * still branching on run_type.
  *
- * official_run: one row per sample -- no stats column, no IAA. The row
- * carries exactly one approve/reject decision (list-review-row-approve/
- * list-review-row-reject) plus 編輯, and the toolbar 送出審核 button
- * validates one decision per sample (across the whole task, not just the
- * current page) before submitting. Since v3.2.0 the row is expandable
- * too, reusing the dry_run expand control to reveal the single assigned
- * annotator's account + answers.
+ * v4.2.0 finishes the job: one row IS one review unit. A sample marked by
+ * three annotators produces three rows, in BOTH run types, each carrying that
+ * annotator's own answer and its own REVIEW_UNIT_STATUS. The expand control
+ * is gone (there is nothing left to expand into), and so are the list-level
+ * decisions -- the workspace's Bypass row is the single decision surface
+ * since FR-053, so a second one here could only contradict it.
  *
- * Stats reuse the same algorithm as the workspace aggregate review card
- * (one algorithm per output-type category, in annotation-workspace.data.js),
+ * Stats still reuse the workspace algorithm (annotation-workspace.data.js),
  * so list and workspace numbers can never drift. */
 
-test.describe('dry_run reviewer rows — read-only multi-annotator overview', () => {
-  test('table shows the label distribution column with per-sample stats', async ({ page }) => {
+/* T001 ships 5 dataset records and REVIEWER_MOCK_ROWS gives each 3
+ * annotators, so the flattened list is 15 units -- one page at pageSize 20. */
+const T001_UNITS = 15;
+
+test.describe('One row per review unit, identical in both run types', () => {
+  for (const runType of ['dry_run', 'official_run'] as const) {
+    test(`${runType}: 5 samples × 3 annotators renders ${T001_UNITS} rows`, async ({ page }) => {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      await expect(page.getByTestId('ws-sample-item')).toHaveCount(T001_UNITS);
+
+      const first = page.getByTestId('ws-sample-item').first();
+      await expect(first).toContainText('sent-001');
+      await expect(first.getByTestId('list-review-annotator')).toHaveText('kioleemg12');
+    });
+
+    test(`${runType}: consecutive rows carry the same sample and different annotators`, async ({ page }) => {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      const rows = page.getByTestId('ws-sample-item');
+      for (let i = 0; i < 3; i += 1) {
+        await expect(rows.nth(i)).toContainText('sent-001');
+      }
+      await expect(rows.nth(0).getByTestId('list-review-annotator')).toHaveText('kioleemg12');
+      await expect(rows.nth(1).getByTestId('list-review-annotator')).toHaveText('113450022');
+      await expect(rows.nth(2).getByTestId('list-review-annotator')).toHaveText('tony0950127');
+      await expect(rows.nth(3)).toContainText('sent-002');
+    });
+
+    test(`${runType}: the row shows that annotator's own answer, not the sample's`, async ({ page }) => {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      // sent-001 ships positive / negative / positive.
+      const rows = page.getByTestId('ws-sample-item');
+      await expect(rows.nth(0).getByTestId('list-review-answer')).toHaveText('positive');
+      await expect(rows.nth(1).getByTestId('list-review-answer')).toHaveText('negative');
+      await expect(rows.nth(2).getByTestId('list-review-answer')).toHaveText('positive');
+    });
+
+    test(`${runType}: 編輯 opens the workspace addressed to that row's annotator`, async ({ page }) => {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      await page.getByTestId('ws-sample-item').nth(1).getByRole('button', { name: '編輯' }).click();
+
+      await expect(page).toHaveURL(/annotation-workspace\.html/);
+      await expect(page).toHaveURL(/sample_id=sent-001/);
+      await expect(page).toHaveURL(new RegExp(`run_type=${runType}`));
+      await expect(page).toHaveURL(/annotator_id=113450022/);
+    });
+
+    test(`${runType}: pagination counts review units, not samples`, async ({ page }) => {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      await expect(page.locator('#paginationInfo')).toContainText(`共 ${T001_UNITS} 筆`);
+    });
+  }
+
+  test('the retired expand control and detail rows are gone in both run types', async ({ page }) => {
+    for (const runType of ['dry_run', 'official_run'] as const) {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      await expect(page.getByTestId('list-review-expand')).toHaveCount(0);
+      await expect(page.getByTestId('list-review-annotator-row')).toHaveCount(0);
+    }
+  });
+});
+
+test.describe('Review unit status replaces the annotator completion tri-state', () => {
+  test('an unreviewed unit reads 待審', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
 
-    await expect(page.locator('#taskTable thead')).toContainText('標記分布統計');
-    // Pinned fixture: T001 sent-001 ships positive/negative/positive.
-    await expect(page.getByTestId('list-review-stats').first()).toHaveText('positive×2 · negative×1');
+    await expect(page.getByTestId('ws-sample-item').first().locator('.status-badge')).toHaveText('待審');
   });
 
-  test('annotator view keeps the original columns and no review controls', async ({ page }) => {
+  test('the status filter offers every REVIEW_UNIT_STATUS state', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
+
+    const options = page.locator('#statusFilter option');
+    await expect(options).toHaveCount(6); // all + 5 states
+    await expect(options).toHaveText([
+      '全部審核狀態', '待審', '已同意', '已修改', '爭議中', '已定稿',
+    ]);
+  });
+
+  test('filtering by a state no unit is in empties the table', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
+
+    await page.locator('#statusFilter').selectOption('pending');
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(T001_UNITS);
+
+    await page.locator('#statusFilter').selectOption('disputed');
+    await expect(page.getByTestId('ws-sample-item')).toHaveCount(0);
+    await expect(page.locator('#emptyState')).toBeVisible();
+  });
+
+  test('the annotator view keeps its own completion tri-state filter', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T001', role: 'annotator', run_type: 'dry_run' }));
 
-    await expect(page.locator('#taskTable thead')).not.toContainText('標記分布統計');
-    await expect(page.getByTestId('list-review-expand')).toHaveCount(0);
-    await expect(page.locator('#submitReviewBtn')).toBeHidden();
+    await expect(page.locator('#statusFilter option')).toHaveText([
+      '全部完成狀態', '已提交', '已儲存', '待處理',
+    ]);
+  });
+});
+
+test.describe('List-level decisions are retired', () => {
+  for (const runType of ['dry_run', 'official_run'] as const) {
+    test(`${runType}: no approve/reject on the row and no toolbar submit`, async ({ page }) => {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      await expect(page.getByTestId('list-review-row-approve')).toHaveCount(0);
+      await expect(page.getByTestId('list-review-row-reject')).toHaveCount(0);
+      await expect(page.locator('#submitReviewBtn')).toHaveCount(0);
+
+      const row = page.getByTestId('ws-sample-item').first();
+      await expect(row.getByRole('button', { name: '編輯' })).toBeVisible();
+      await expect(row.getByRole('button')).toHaveCount(1);
+    });
+  }
+});
+
+test.describe('Label distribution stats survive as read-only context', () => {
+  test('both run types show the column, with the sample stat on each of its units', async ({ page }) => {
+    for (const runType of ['dry_run', 'official_run'] as const) {
+      await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: runType }));
+
+      await expect(page.locator('#taskTable thead')).toContainText('標記分布統計');
+      // Pinned fixture: T001 sent-001 ships positive/negative/positive, and
+      // all three of its units report that same cross-annotator distribution.
+      const stats = page.getByTestId('list-review-stats');
+      for (let i = 0; i < 3; i += 1) {
+        await expect(stats.nth(i)).toHaveText('positive×2 · negative×1');
+      }
+    }
   });
 
-  test('the toolbar submit button never renders for dry_run reviewer', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
-
-    await expect(page.locator('#submitReviewBtn')).toBeHidden();
-  });
-
-  test('expanding a row reveals one read-only annotator row per mock annotator, no decision buttons', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
-
-    await page.getByTestId('list-review-expand').first().click();
-    const annotatorRows = page.getByTestId('list-review-annotator-row');
-    await expect(annotatorRows).toHaveCount(3);
-    await expect(annotatorRows.first()).toContainText('kioleemg12');
-    await expect(annotatorRows.first()).toContainText('positive');
-    await expect(annotatorRows.first().getByRole('button')).toHaveCount(0);
-    await expect(page.getByTestId('list-review-approve-all')).toHaveCount(0);
-    await expect(page.getByTestId('list-review-reject-all')).toHaveCount(0);
-  });
-
-  test('the sole row action is 編輯, which navigates to the workspace', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
-
-    const row = page.getByTestId('ws-sample-item').first();
-    await expect(row.getByRole('button', { name: '編輯' })).toBeVisible();
-    await expect(row.getByRole('button', { name: /通過/ })).toHaveCount(0);
-    await expect(row.getByRole('button', { name: /退回/ })).toHaveCount(0);
-
-    await row.getByRole('button', { name: '編輯' }).click();
-    await expect(page).toHaveURL(/annotation-workspace\.html/);
-    await expect(page).toHaveURL(/run_type=dry_run/);
-  });
-
-  test('multi-output task stats are prefixed per output type', async ({ page }) => {
+  test('multi-output task stats stay prefixed per output type', async ({ page }) => {
     await page.goto(buildListUrl({ task_id: 'T010', role: 'reviewer', run_type: 'dry_run' }));
 
     const stats = page.getByTestId('list-review-stats').first();
@@ -80,147 +164,53 @@ test.describe('dry_run reviewer rows — read-only multi-annotator overview', ()
     await expect(stats).toContainText('×');
   });
 
-  test('single_dim rows expose mean/std stats and deviation-colored result tags', async ({ page }) => {
+  test('single_dim stats and per-row deviation colors follow the shared algorithm', async ({ page }) => {
     // T004 read-001 ships scores 4 / 4 / 3 -> mean 3.67, std 0.47; the
     // 3-score row deviates by more than 1std but less than 1.5std (blue).
     await page.goto(buildListUrl({ task_id: 'T004', role: 'reviewer', run_type: 'dry_run' }));
 
     await expect(page.getByTestId('list-review-stats').first()).toHaveText('mean : 3.67 , std : 0.47');
-    await page.getByTestId('list-review-expand').first().click();
-    const resultTags = page.getByTestId('list-review-annotator-row').locator('.annotator-result-tag');
-    await expect(resultTags.first()).toHaveClass(/result-tag-green/);
-    await expect(resultTags.nth(2)).toHaveClass(/result-tag-blue/);
+
+    const rows = page.getByTestId('ws-sample-item');
+    await expect(rows.nth(0).locator('.annotator-result-tag')).toHaveClass(/result-tag-green/);
+    await expect(rows.nth(2).locator('.annotator-result-tag')).toHaveClass(/result-tag-blue/);
   });
 
-  test('multi_dim stats render the legacy multi-line mean/std/±1.5std block', async ({ page }) => {
+  test('multi_dim stats keep the legacy multi-line block and bracketed answers', async ({ page }) => {
     // T005 mt-002 ships fluency 3/3/4, adequacy 4/4/4, coherence 3/3/3.
     await page.goto(buildListUrl({ task_id: 'T005', role: 'reviewer', run_type: 'dry_run' }));
 
-    const stats = page.getByTestId('list-review-stats').nth(1);
+    // mt-002 is the second sample, so its units start at index 3.
+    const stats = page.getByTestId('list-review-stats').nth(3);
     await expect(stats).toContainText('mean [3.33, 4.00, 3.00]');
     await expect(stats).toContainText('std [0.47, 0.00, 0.00]');
     await expect(stats).toContainText('±1.5std fluency : 2.626~4.040');
-    await expect(stats).toContainText('±1.5std adequacy : 4.000~4.000');
-    await expect(stats).toContainText('±1.5std coherence : 3.000~3.000');
-  });
 
-  test('multi_dim annotator result tags render as bracketed value arrays', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T005', role: 'reviewer', run_type: 'dry_run' }));
-
-    await page.getByTestId('list-review-expand').nth(1).click();
-    const resultTags = page.getByTestId('list-review-annotator-row').locator('.annotator-result-tag');
-    await expect(resultTags.first()).toHaveText('[3, 4, 3]');
-    await expect(resultTags.nth(2)).toHaveText('[4, 4, 3]');
-  });
-
-  test('multi-output task with multi_dim keeps the multi-line dim block inside the prefixed stats', async ({ page }) => {
-    // T013 absa-001 multi_dim: valence 3/3/4, arousal 6/6/5.
-    await page.goto(buildListUrl({ task_id: 'T013', role: 'reviewer', run_type: 'dry_run' }));
-
-    const stats = page.getByTestId('list-review-stats').first();
-    await expect(stats).toContainText('mean [3.33, 5.67]');
-    await expect(stats).toContainText('±1.5std valence :');
-  });
-
-  test('switching to English localizes the reviewer chrome', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
-
-    await page.locator('#langToggle').click();
-    await expect(page.locator('#taskTable thead')).toContainText('Label Distribution');
+    const rows = page.getByTestId('ws-sample-item');
+    await expect(rows.nth(3).getByTestId('list-review-answer')).toHaveText('[3, 4, 3]');
   });
 });
 
-test.describe('official_run reviewer rows — single-annotator decision', () => {
-  test('table drops the stats column but keeps the expand control', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    await expect(page.locator('#taskTable thead')).not.toContainText('標記分布統計');
-    await expect(page.getByTestId('list-review-stats')).toHaveCount(0);
-    // T001 ships 5 dataset records, each expandable.
-    await expect(page.getByTestId('list-review-expand')).toHaveCount(5);
-  });
-
-  test('expanding a row reveals exactly one annotator row with account and answer', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    await page.getByTestId('list-review-expand').first().click();
-    const annotatorRows = page.getByTestId('list-review-annotator-row');
-    await expect(annotatorRows).toHaveCount(1);
-    await expect(annotatorRows.first()).toContainText('kioleemg12');
-    await expect(annotatorRows.first()).toContainText('positive');
-    await expect(annotatorRows.first().getByRole('button')).toHaveCount(0);
-  });
-
-  test('the expand control toggles the detail row without navigating to the workspace', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    const expandBtn = page.getByTestId('list-review-expand').first();
-    await expandBtn.click();
-    await expect(page).toHaveURL(/annotation-list\.html/);
-    await expect(page.getByTestId('list-review-annotator-row')).toBeVisible();
-
-    await expandBtn.click();
-    await expect(page.getByTestId('list-review-annotator-row')).toBeHidden();
-  });
-
-  test('each row carries exactly one approve/reject decision plus 編輯', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    const row = page.getByTestId('ws-sample-item').first();
-    await expect(row.getByTestId('list-review-row-approve')).toBeVisible();
-    await expect(row.getByTestId('list-review-row-reject')).toBeVisible();
-    await expect(row.getByRole('button', { name: '編輯' })).toBeVisible();
-  });
-
-  test('clicking approve then reject switches the active decision; clicking the active one again cancels it', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    const row = page.getByTestId('ws-sample-item').first();
-    const approveBtn = row.getByTestId('list-review-row-approve');
-    const rejectBtn = row.getByTestId('list-review-row-reject');
-
-    await approveBtn.click();
-    await expect(approveBtn).toHaveClass(/mini-btn-active-approve/);
-    await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
-
-    await rejectBtn.click();
-    await expect(rejectBtn).toHaveClass(/mini-btn-active-reject/);
-    await expect(approveBtn).not.toHaveClass(/mini-btn-active-approve/);
-
-    await rejectBtn.click();
-    await expect(rejectBtn).not.toHaveClass(/mini-btn-active-reject/);
-  });
-
-  test('submit review blocks until every sample in the task has a decision', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    const submitBtn = page.locator('#submitReviewBtn');
-    await expect(submitBtn).toBeVisible();
-    await submitBtn.click();
-    await expect(page.locator('#toastMsg')).toHaveText('請完成每筆樣本的審核決策');
-
-    // T001 ships 5 dataset records, all on one page (pageSize 20).
-    const approveBtns = page.getByTestId('list-review-row-approve');
-    await expect(approveBtns).toHaveCount(5);
-    for (let i = 0; i < 5; i += 1) {
-      await approveBtns.nth(i).click();
-    }
-    await submitBtn.click();
-    await expect(page.locator('#toastMsg')).toHaveText('審核結果已送出。');
-  });
-
-  test('clicking a row (outside the action buttons) navigates to the workspace', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
-
-    await page.getByTestId('ws-sample-item').first().click();
-    await expect(page).toHaveURL(/annotation-workspace\.html/);
-    await expect(page).toHaveURL(/run_type=official_run/);
-  });
-
-  test('switching to English localizes the reviewer chrome and the toolbar submit button', async ({ page }) => {
-    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'official_run' }));
+test.describe('Localization', () => {
+  test('English localizes the reviewer columns and the review status filter', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T001', role: 'reviewer', run_type: 'dry_run' }));
 
     await page.locator('#langToggle').click();
-    await expect(page.locator('#submitReviewBtn')).toContainText('Submit Review');
+
+    const thead = page.locator('#taskTable thead');
+    await expect(thead).toContainText('Label Distribution');
+    await expect(thead).toContainText('Annotator');
+    await expect(thead).toContainText('Review Status');
+    await expect(page.locator('#statusFilter option')).toHaveText([
+      'All review statuses', 'Pending review', 'Approved', 'Modified', 'Disputed', 'Finalized',
+    ]);
+  });
+
+  test('the annotator view keeps the original columns and no review controls', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T001', role: 'annotator', run_type: 'dry_run' }));
+
+    await expect(page.locator('#taskTable thead')).not.toContainText('標記分布統計');
+    await expect(page.getByTestId('list-review-annotator')).toHaveCount(0);
+    await expect(page.locator('#submitReviewBtn')).toHaveCount(0);
   });
 });
