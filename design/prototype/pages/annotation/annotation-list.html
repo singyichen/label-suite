@@ -404,29 +404,7 @@
       -webkit-appearance: none;
       cursor: pointer;
     }
-    .btn-indigo {
-      color: var(--color-white);
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-    }
-    .btn-indigo:hover {
-      background: #4F46E5;
-      border-color: #4F46E5;
-      opacity: 1;
-      transform: translateY(-1px);
-    }
-    .btn-indigo.slim { padding: 10px 18px; }
     /* === Reviewer list styles === */
-    .expand-cell { width: 32px; padding: 14px 4px 14px 16px !important; }
-    .expand-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 20px; height: 20px; border: none; background: none;
-      color: var(--color-ink-muted); cursor: pointer; padding: 0;
-      border-radius: 4px; transition: color var(--dur-fast);
-    }
-    .expand-btn:hover { color: var(--color-ink); }
-    .expand-btn svg { transition: transform 0.15s ease; }
-    .expand-btn.open svg { transform: rotate(90deg); }
     .reviewer-stats {
       font-size: 12px; color: var(--color-text-soft); font-family: monospace;
       display: block;
@@ -439,21 +417,10 @@
       width: 280px;
     }
     .reviewer-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .mini-btn-approve { background: #DCFCE7; border-color: #86EFAC; color: #15803D; }
-    .mini-btn-approve:hover:not(:disabled) { background: #BBF7D0; border-color: #4ADE80; color: #166534; }
-    .mini-btn-reject { background: #FEE2E2; border-color: #FCA5A5; color: #DC2626; }
-    .mini-btn-reject:hover:not(:disabled) { background: #FECACA; border-color: #F87171; color: #B91C1C; }
-    .mini-btn-active-approve { background: #16A34A !important; border-color: #16A34A !important; color: white !important; }
-    .mini-btn-active-reject { background: #DC2626 !important; border-color: #DC2626 !important; color: white !important; }
-    .annotator-detail-row { background: var(--color-slate-50); }
-    .annotator-detail-row td { padding: 0 !important; border-bottom: 1px solid var(--color-border) !important; }
-    .annotator-detail-inner { padding: 8px 20px 8px 52px; border-top: 1px solid var(--color-border); }
-    .annotator-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 7px 0; border-bottom: 1px solid var(--color-border-muted);
-    }
-    .annotator-row:last-child { border-bottom: none; }
-    .annotator-username { font-size: 13px; font-weight: 600; min-width: 110px; color: var(--color-ink); }
+    /* One review unit's answers: one tag per composed output type, wrapping
+       rather than widening the cell on multi-output tasks. */
+    .annotator-answer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .annotator-username { font-size: 13px; font-weight: 600; color: var(--color-ink); }
     .annotator-result-tag {
       font-size: 13px; color: var(--color-primary); background: var(--color-primary-soft-bg);
       border: 1px solid var(--color-primary-soft-bg); border-radius: var(--radius-md);
@@ -463,22 +430,6 @@
     .result-tag-green { color: #15803D !important; background: #DCFCE7 !important; border-color: #86EFAC !important; }
     .result-tag-blue  { color: #1D4ED8 !important; background: #EFF6FF !important; border-color: #BFDBFE !important; }
     .result-tag-red   { color: #DC2626 !important; background: #FEE2E2 !important; border-color: #FCA5A5 !important; }
-    .toast-container { position: fixed; bottom: var(--space-lg); right: var(--space-lg); z-index: var(--z-toast); pointer-events: none; }
-    .toast {
-      background: var(--color-ink);
-      color: white;
-      padding: 12px 18px;
-      border-radius: var(--radius-md);
-      font-size: 13px;
-      font-weight: 500;
-      box-shadow: var(--shadow-lg);
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity var(--dur-normal) var(--ease-standard), transform var(--dur-normal) var(--ease-standard);
-    }
-    .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .toast.success { background: var(--color-success); }
-    .toast.error { background: var(--color-error); }
     @media (max-width: 768px) {
       .layout { padding: var(--space-md) var(--space-md) var(--space-xl); }
       .task-item-header {
@@ -545,15 +496,6 @@
       .badge-task-type-scoring  { color: #C084FC; background: #1A0A2E; border-color: #4C1D95; }
       .badge-task-type-default  { color: #94A3B8; background: #1F1F28; border-color: #2A2A35; }
 
-      /* btn-indigo hover — hardcoded #4F46E5 */
-      .btn-indigo:hover { background: #6366F1; border-color: #6366F1; }
-
-      /* Reviewer action mini-buttons */
-      .mini-btn-approve { background: #0F2A18; border-color: #1F5132; color: #4ADE80; }
-      .mini-btn-approve:hover:not(:disabled) { background: #1F5132; border-color: #4ADE80; color: #86EFAC; }
-      .mini-btn-reject  { background: #2A1414; border-color: #5B2222; color: #F87171; }
-      .mini-btn-reject:hover:not(:disabled)  { background: #3D1A1A; border-color: #F87171; color: #FCA5A5; }
-
       /* Result tags with !important — need matching specificity */
       .result-tag-green { color: #4ADE80 !important; background: #0F2A18 !important; border-color: #1F5132 !important; }
       .result-tag-blue  { color: #60A5FA !important; background: #0F1F33 !important; border-color: #1E3A66 !important; }
@@ -615,12 +557,9 @@
 
   <div class="toolbar" role="search" aria-label="標記清單搜尋與篩選" id="listToolbar">
     <div class="toolbar-left">
-      <select class="filter-select" id="statusFilter" aria-label="依完成狀態篩選">
-        <option value="">全部完成狀態</option>
-        <option value="submitted">已提交</option>
-        <option value="saved">已儲存</option>
-        <option value="pending">待處理</option>
-      </select>
+      <!-- Options are role-dependent (completion tri-state vs. review unit
+           五態) and are built by renderStatusFilterOptions(). -->
+      <select class="filter-select" id="statusFilter"></select>
       <button class="clear-btn hide-clear" id="clearFiltersBtn" aria-label="清除篩選">
         <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
@@ -634,9 +573,6 @@
         <input type="search" class="search-input" id="searchInput" placeholder="搜尋" aria-label="搜尋">
       </div>
     </div>
-    <button class="btn btn-indigo slim hidden" id="submitReviewBtn" type="button" data-testid="list-submit-review-btn">
-      <span>送出審核</span>
-    </button>
   </div>
 
   <section class="table-container" id="tableContainer">
@@ -675,10 +611,6 @@
     </div>
   </section>
 </main>
-
-<div class="toast-container" aria-live="polite" aria-atomic="true">
-  <div class="toast" id="toast" role="alert"><span id="toastMsg"></span></div>
-</div>
 
 <script src="../../assets/theme.js"></script>
 <script src="../../assets/analytics.js"></script>
@@ -731,12 +663,14 @@
       notFoundTitle: '找不到這個任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
       thLabelStats: '標記分布統計',
-      submitReviewLabel: '送出審核',
-      approveBtnLabel: '通過',
-      rejectBtnLabel: '退回',
-      expandBtnLabel: '展開標記細項',
-      toastReviewSubmitted: '審核結果已送出。',
-      toastSelectDecision: '請完成每筆樣本的審核決策',
+      thAnswer: '標記結果',
+      thReviewStatus: '審核狀態',
+      reviewStatusFilterAll: '全部審核狀態',
+      reviewUnitPending: '待審',
+      reviewUnitApproved: '已同意',
+      reviewUnitModified: '已修改',
+      reviewUnitDisputed: '爭議中',
+      reviewUnitFinalized: '已定稿',
       reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewBypassPill: '無法判定 (Bypass)',
       reviewNoAnswer: '（無）',
@@ -782,12 +716,14 @@
       notFoundTitle: 'Task not found',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
       thLabelStats: 'Label Distribution',
-      submitReviewLabel: 'Submit Review',
-      approveBtnLabel: 'Approve',
-      rejectBtnLabel: 'Reject',
-      expandBtnLabel: 'Expand annotator details',
-      toastReviewSubmitted: 'Review submitted.',
-      toastSelectDecision: 'Please complete a review decision for each sample',
+      thAnswer: 'Annotation Result',
+      thReviewStatus: 'Review Status',
+      reviewStatusFilterAll: 'All review statuses',
+      reviewUnitPending: 'Pending review',
+      reviewUnitApproved: 'Approved',
+      reviewUnitModified: 'Modified',
+      reviewUnitDisputed: 'Disputed',
+      reviewUnitFinalized: 'Finalized',
       reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewBypassPill: 'Bypassed (cannot determine)',
       reviewNoAnswer: '(none)',
@@ -924,17 +860,31 @@
     return runType === 'official_run' ? 'badge-official' : 'badge-dry-run';
   }
 
-  /* context.identityQuery forwards whichever identity params this page was
-     opened with (FR-049), so a row and the workspace it opens address the
-     same submission bucket. Absent params stay absent: both pages then fall
-     back to the same default roster identity. */
-  function buildWorkspaceUrl(taskId, sampleId, context) {
+  /* Forwards whichever identity params this page was opened with (FR-049),
+     so a row and the workspace it opens address the same submission bucket.
+     Absent params stay absent: both pages then fall back to the same default
+     roster identity.
+
+     `annotatorId` overrides the forwarded annotator (FR-055): a reviewer row
+     IS one annotator's submission, so it must open that annotator's bucket
+     regardless of which one the reviewer arrived with. */
+  function identityQuery(context, annotatorId) {
+    var values = {
+      annotator_id: annotatorId || context.identityParams.annotator_id,
+      reviewer_id: context.identityParams.reviewer_id
+    };
+    return ['annotator_id', 'reviewer_id'].map(function (key) {
+      return values[key] ? '&' + key + '=' + encodeURIComponent(values[key]) : '';
+    }).join('');
+  }
+
+  function buildWorkspaceUrl(taskId, sampleId, context, annotatorId) {
     return '../annotation/annotation-workspace.html' +
       '?task_id=' + encodeURIComponent(taskId) +
       '&sample_id=' + encodeURIComponent(sampleId) +
       '&role=' + encodeURIComponent(context.role) +
       '&run_type=' + encodeURIComponent(context.runType) +
-      context.identityQuery;
+      identityQuery(context, annotatorId);
   }
 
   function getSampleStatus(profile, context, record, index) {
@@ -970,22 +920,66 @@
     return t('statusPending');
   }
 
+  /* Review unit五態 (spec 015 v3.9.0). Both terminal states reuse the
+     submitted badge and both in-flight states reuse the saved badge — the
+     list only signals "settled / in progress / untouched", the workspace
+     carries the distinction. */
+  var REVIEW_UNIT_STATUS = window.LabelSuiteAnnotationWorkspaceData.REVIEW_UNIT_STATUS;
+  var REVIEW_UNIT_STATUS_ORDER = [
+    REVIEW_UNIT_STATUS.PENDING,
+    REVIEW_UNIT_STATUS.APPROVED,
+    REVIEW_UNIT_STATUS.MODIFIED,
+    REVIEW_UNIT_STATUS.DISPUTED,
+    REVIEW_UNIT_STATUS.FINALIZED
+  ];
+  var ANNOTATOR_STATUS_ORDER = ['submitted', 'saved', 'pending'];
+
+  function reviewUnitStatusText(status) {
+    return t('reviewUnit' + status.charAt(0).toUpperCase() + status.slice(1));
+  }
+
+  function reviewUnitBadgeClass(status) {
+    if (status === REVIEW_UNIT_STATUS.APPROVED || status === REVIEW_UNIT_STATUS.FINALIZED) return 'status-submitted';
+    if (status === REVIEW_UNIT_STATUS.MODIFIED || status === REVIEW_UNIT_STATUS.DISPUTED) return 'status-saved';
+    return 'status-pending';
+  }
+
+  /* The two roles filter on different state machines, so the select is built
+     from whichever one applies rather than carrying both in static markup. */
+  function renderStatusFilterOptions(role) {
+    var statusFilter = document.getElementById('statusFilter');
+    if (!statusFilter) return;
+    var reviewer = role === 'reviewer';
+    var values = reviewer ? REVIEW_UNIT_STATUS_ORDER : ANNOTATOR_STATUS_ORDER;
+    var label = reviewer ? reviewUnitStatusText : statusText;
+
+    statusFilter.setAttribute('aria-label', reviewer ? t('reviewStatusFilterAll') : t('statusFilterAll'));
+    statusFilter.innerHTML = '';
+    [''].concat(values).forEach(function (value) {
+      var option = document.createElement('option');
+      option.value = value;
+      option.textContent = value
+        ? label(value)
+        : t(reviewer ? 'reviewStatusFilterAll' : 'statusFilterAll');
+      statusFilter.appendChild(option);
+    });
+    statusFilter.value = FILTER_STATE.status;
+  }
+
   function parseContext() {
     var params = new URLSearchParams(window.location.search);
     var role = params.get('role');
     var runType = params.get('run_type');
     var taskId = params.get('task_id');
-    var identityQuery = ['annotator_id', 'reviewer_id'].map(function (key) {
-      var value = params.get(key);
-      return value ? '&' + key + '=' + encodeURIComponent(value) : '';
-    }).join('');
-
     return {
       role: role === 'reviewer' ? 'reviewer' : 'annotator',
       runType: runType === 'official_run' ? 'official_run' : 'dry_run',
       taskId: taskId ? taskId.trim() : '',
       identity: window.LabelSuiteAnnotationWorkspaceData.resolveIdentity(params),
-      identityQuery: identityQuery
+      identityParams: {
+        annotator_id: params.get('annotator_id'),
+        reviewer_id: params.get('reviewer_id')
+      }
     };
   }
 
@@ -1078,10 +1072,10 @@
       if (!FILTER_STATE.query) return true;
 
       var query = FILTER_STATE.query.toLowerCase();
-      var status = statusText(item.status).toLowerCase();
       return (
         item.recordId.toLowerCase().indexOf(query) !== -1 ||
-        status.indexOf(query) !== -1 ||
+        item.statusLabel.toLowerCase().indexOf(query) !== -1 ||
+        (item.annotator || '').toLowerCase().indexOf(query) !== -1 ||
         item.completedAt.toLowerCase().indexOf(query) !== -1 ||
         item.text.toLowerCase().indexOf(query) !== -1
       );
@@ -1106,18 +1100,20 @@
     return th;
   }
 
-  function renderTableHeader(role, runType) {
+  function renderTableHeader(role) {
     var theadRow = document.querySelector('#taskTable thead tr');
     if (!theadRow) return;
     while (theadRow.firstChild) theadRow.removeChild(theadRow.firstChild);
     if (role === 'reviewer') {
-      // Both run types are expandable; only dry_run compares annotators.
-      theadRow.appendChild(makeTh('', '32px'));
+      /* One row is one review unit in both run types (FR-055), so the
+         header no longer branches on run_type. */
       theadRow.appendChild(makeTh('ID'));
-      theadRow.appendChild(makeTh(t('thStatus')));
+      theadRow.appendChild(makeTh(t('roleLabelAnnotator')));
+      theadRow.appendChild(makeTh(t('thReviewStatus')));
       theadRow.appendChild(makeTh(t('thCompletedAt')));
       theadRow.appendChild(makeTh(t('thTextSummary')));
-      if (runType === 'dry_run') theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
+      theadRow.appendChild(makeTh(t('thAnswer')));
+      theadRow.appendChild(makeTh(t('thLabelStats'), '280px'));
       theadRow.appendChild(makeTh(t('thActions')));
     } else {
       theadRow.appendChild(makeTh('ID'));
@@ -1128,21 +1124,14 @@
     }
   }
 
-  /* ── Reviewer aggregate review (spec 015 v3.0.0, FR-047/FR-048) ─────
-     dry_run: read-only multi-annotator comparison, no list-level decision
-     (adjudication happens in the workspace). official_run: single
-     approve/reject decision per sample, kept in-memory here and validated
-     by bindSubmitReview before the toast confirms submission. */
-  var toastTimer = null;
-  var OFFICIAL_REVIEW_DECISIONS = {};
-
+  /* ── Reviewer rows (spec 015 v4.2.0, FR-055) ────────────────────────
+     One row is one review unit: sample × annotator × run_type. Both run
+     types render identically — the only thing official_run changes is how
+     many annotators a sample has. The list carries no decision of its own;
+     approve / reject / bypass all live on the workspace's review row
+     (FR-053), so there is exactly one place a decision can be made. */
   function getMockRows(profile, recordId) {
     return window.LabelSuiteAnnotationWorkspaceData.getReviewerMockRows(profile.id, recordId);
-  }
-
-  function updateDecisionBtns(approveBtn, rejectBtn, state) {
-    approveBtn.classList.toggle('mini-btn-active-approve', state === 'approved');
-    rejectBtn.classList.toggle('mini-btn-active-reject', state === 'rejected');
   }
 
   /* Per-output-type answer views feeding the shared stats algorithm in
@@ -1203,107 +1192,48 @@
     return window.LabelSuiteAnnotationWorkspaceData.dimDeviationClass(outKey, buildOutKeyRows(outKey, mockRows), rowIdx);
   }
 
-  /* dry_run detail rows are read-only (FR-047): the list page shows the
-     multi-annotator comparison only, all adjudication decisions are made
-     in the workspace's consensus-merge review card. */
-  function buildAnnotatorDetailContent(profile, recordId, mockRows) {
-    var div = document.createElement('div');
-    div.className = 'annotator-detail-inner';
-    mockRows.forEach(function (mockRow, idx) {
-      var row = document.createElement('div');
-      row.className = 'annotator-row';
-      row.setAttribute('data-testid', 'list-review-annotator-row');
-
-      var usernameSpan = document.createElement('span');
-      usernameSpan.className = 'annotator-username';
-      usernameSpan.textContent = mockRow.annotator;
-      row.appendChild(usernameSpan);
-
-      profile.outputTypes.forEach(function (outKey) {
-        var tagSpan = document.createElement('span');
-        var colorClass = dimColorClass(outKey, idx, mockRows);
-        tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
-        var bypassed = !!(mockRow.bypass && mockRow.bypass[outKey]);
-        tagSpan.textContent = bypassed
-          ? t('reviewBypassPill')
-          : formatCompactAnswer(outKey, mockRow.answers ? mockRow.answers[outKey] : undefined);
-        row.appendChild(tagSpan);
-      });
-
-      div.appendChild(row);
+  /* This unit's own answers, one tag per composed output type. Read-only:
+     the reviewer edits them in the workspace, never on the list. */
+  function buildAnswerCell(profile, item) {
+    var wrap = document.createElement('div');
+    wrap.className = 'annotator-answer';
+    wrap.setAttribute('data-testid', 'list-review-answer');
+    profile.outputTypes.forEach(function (outKey) {
+      var tagSpan = document.createElement('span');
+      var colorClass = dimColorClass(outKey, item.rowIdx, item.mockRows);
+      tagSpan.className = 'annotator-result-tag' + (colorClass ? ' ' + colorClass : '');
+      var bypassed = !!(item.mockRow.bypass && item.mockRow.bypass[outKey]);
+      tagSpan.textContent = bypassed
+        ? t('reviewBypassPill')
+        : formatCompactAnswer(outKey, item.mockRow.answers ? item.mockRow.answers[outKey] : undefined);
+      wrap.appendChild(tagSpan);
     });
-    return div;
-  }
-
-  /* Expand control shared by both reviewer run types: a chevron cell plus
-     a detail row that is inserted into the DOM only on first expand.
-     Returns the cell and the toggle so callers can also wire a row click. */
-  function buildExpandControl(summaryTr, tbodyEl, colspan, contentEl) {
-    var detailTr = document.createElement('tr');
-    detailTr.className = 'annotator-detail-row hidden';
-    var detailTd = document.createElement('td');
-    detailTd.setAttribute('colspan', String(colspan));
-    detailTd.appendChild(contentEl);
-    detailTr.appendChild(detailTd);
-
-    var expandBtn = document.createElement('button');
-    expandBtn.className = 'expand-btn';
-    expandBtn.type = 'button';
-    expandBtn.setAttribute('aria-label', t('expandBtnLabel'));
-    expandBtn.setAttribute('data-testid', 'list-review-expand');
-    var chevronSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    chevronSvg.setAttribute('width', '14'); chevronSvg.setAttribute('height', '14');
-    chevronSvg.setAttribute('viewBox', '0 0 24 24'); chevronSvg.setAttribute('fill', 'none');
-    chevronSvg.setAttribute('stroke', 'currentColor'); chevronSvg.setAttribute('stroke-width', '2.5');
-    chevronSvg.setAttribute('stroke-linecap', 'round'); chevronSvg.setAttribute('stroke-linejoin', 'round');
-    var polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-    polyline.setAttribute('points', '9 18 15 12 9 6');
-    chevronSvg.appendChild(polyline);
-    expandBtn.appendChild(chevronSvg);
-
-    var detailInserted = false;
-    function toggleDetail(e) {
-      if (e) e.stopPropagation();
-      if (detailTr.classList.contains('hidden')) {
-        if (!detailInserted) {
-          tbodyEl.insertBefore(detailTr, summaryTr.nextSibling);
-          detailInserted = true;
-        }
-        detailTr.classList.remove('hidden');
-        expandBtn.classList.add('open');
-      } else {
-        detailTr.classList.add('hidden');
-        expandBtn.classList.remove('open');
-      }
-    }
-    expandBtn.addEventListener('click', toggleDetail);
-
-    var expandTd = document.createElement('td');
-    expandTd.className = 'expand-cell';
-    expandTd.appendChild(expandBtn);
-    return { expandTd: expandTd, toggleDetail: toggleDetail };
+    return wrap;
   }
 
   function renderReviewerRows(pagedRows, tbodyEl, context) {
     var profile = context.profile;
     pagedRows.forEach(function (item) {
-      var mockRows = getMockRows(profile, item.recordId);
-
-      var summaryTr = document.createElement('tr');
-      summaryTr.style.cursor = 'pointer';
-      summaryTr.setAttribute('data-testid', 'ws-sample-item');
-
-      var expand = buildExpandControl(summaryTr, tbodyEl, 7,
-        buildAnnotatorDetailContent(profile, item.recordId, mockRows));
-      summaryTr.addEventListener('click', function () { expand.toggleDetail(null); });
-
-      var statusSpan = document.createElement('span');
-      statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
-      statusSpan.textContent = statusText(item.status);
+      var tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+      tr.setAttribute('aria-label', t('openSampleAriaTpl', { id: item.recordId }));
+      tr.setAttribute('data-testid', 'ws-sample-item');
 
       function openWorkspace() {
-        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context);
+        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context, item.annotator);
       }
+      tr.addEventListener('click', openWorkspace);
+
+      var annotatorSpan = document.createElement('span');
+      annotatorSpan.className = 'annotator-username';
+      annotatorSpan.setAttribute('data-testid', 'list-review-annotator');
+      annotatorSpan.textContent = item.annotator;
+
+      var statusSpan = document.createElement('span');
+      statusSpan.className = 'status-badge ' + reviewUnitBadgeClass(item.status);
+      statusSpan.textContent = item.statusLabel;
 
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'reviewer-actions';
@@ -1315,136 +1245,84 @@
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
       actionsDiv.appendChild(editBtn);
 
+      /* Stats stay a per-sample cross-annotator figure (FR-047) and so
+         repeat across that sample's units — read-only context for judging
+         this one answer against its peers. */
       var statsEl = document.createElement('span');
       statsEl.className = 'reviewer-stats';
       statsEl.setAttribute('data-testid', 'list-review-stats');
-      statsEl.textContent = buildReviewStatsText(profile, mockRows);
+      statsEl.textContent = buildReviewStatsText(profile, item.mockRows);
 
       var textTd = document.createElement('td');
       textTd.className = 'text-snippet';
       textTd.textContent = item.text;
 
-      summaryTr.appendChild(expand.expandTd);
-      summaryTr.appendChild(makeTd(item.recordId));
-      summaryTr.appendChild(makeTd(statusSpan));
-      summaryTr.appendChild(makeTd(item.completedAt));
-      summaryTr.appendChild(textTd);
-      summaryTr.appendChild(makeTd(statsEl, 'reviewer-stats-cell'));
-      summaryTr.appendChild(makeTd(actionsDiv));
-
-      tbodyEl.appendChild(summaryTr);
-      // detailTr is NOT appended here — lazy insert on first expand
-    });
-  }
-
-  /* official_run reviewer rows (FR-048): one row per sample with no stats
-     / IAA — the reviewer decides approve or reject for that one
-     annotator's submission directly on the list row. The row expands to
-     the assigned annotator's account and answers; with a single annotator
-     there is nothing to compare, so the mock rows are sliced to one. */
-  function renderOfficialRunReviewerRows(pagedRows, tbodyEl, context) {
-    var profile = context.profile;
-    pagedRows.forEach(function (item) {
-      var tr = document.createElement('tr');
-      tr.setAttribute('data-testid', 'ws-sample-item');
-
-      var expand = buildExpandControl(tr, tbodyEl, 6,
-        buildAnnotatorDetailContent(profile, item.recordId,
-          getMockRows(profile, item.recordId).slice(0, 1)));
-
-      function openWorkspace() {
-        window.location.href = buildWorkspaceUrl(profile.id, item.recordId, context);
-      }
-
-      var statusSpan = document.createElement('span');
-      statusSpan.className = 'status-badge ' + statusBadgeClass(item.status);
-      statusSpan.textContent = statusText(item.status);
-
-      var textTd = document.createElement('td');
-      textTd.className = 'text-snippet';
-      textTd.textContent = item.text;
-
-      var actionsDiv = document.createElement('div');
-      actionsDiv.className = 'reviewer-actions';
-
-      var approveBtn = document.createElement('button');
-      approveBtn.type = 'button';
-      approveBtn.className = 'mini-btn mini-btn-approve';
-      approveBtn.textContent = '✓ ' + t('approveBtnLabel');
-      approveBtn.setAttribute('data-testid', 'list-review-row-approve');
-
-      var rejectBtn = document.createElement('button');
-      rejectBtn.type = 'button';
-      rejectBtn.className = 'mini-btn mini-btn-reject';
-      rejectBtn.textContent = '✕ ' + t('rejectBtnLabel');
-      rejectBtn.setAttribute('data-testid', 'list-review-row-reject');
-
-      updateDecisionBtns(approveBtn, rejectBtn, OFFICIAL_REVIEW_DECISIONS[item.recordId] || null);
-
-      approveBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        OFFICIAL_REVIEW_DECISIONS[item.recordId] = OFFICIAL_REVIEW_DECISIONS[item.recordId] === 'approved' ? null : 'approved';
-        updateDecisionBtns(approveBtn, rejectBtn, OFFICIAL_REVIEW_DECISIONS[item.recordId]);
-      });
-      rejectBtn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        OFFICIAL_REVIEW_DECISIONS[item.recordId] = OFFICIAL_REVIEW_DECISIONS[item.recordId] === 'rejected' ? null : 'rejected';
-        updateDecisionBtns(approveBtn, rejectBtn, OFFICIAL_REVIEW_DECISIONS[item.recordId]);
-      });
-
-      var editBtn = document.createElement('button');
-      editBtn.className = 'mini-btn mini-btn-primary';
-      editBtn.type = 'button';
-      editBtn.textContent = t('editBtnLabel');
-      editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
-
-      actionsDiv.appendChild(rejectBtn);
-      actionsDiv.appendChild(approveBtn);
-      actionsDiv.appendChild(editBtn);
-
-      tr.appendChild(expand.expandTd);
       tr.appendChild(makeTd(item.recordId));
+      tr.appendChild(makeTd(annotatorSpan));
       tr.appendChild(makeTd(statusSpan));
       tr.appendChild(makeTd(item.completedAt));
       tr.appendChild(textTd);
+      tr.appendChild(makeTd(buildAnswerCell(profile, item)));
+      tr.appendChild(makeTd(statsEl, 'reviewer-stats-cell'));
       tr.appendChild(makeTd(actionsDiv));
-
-      tr.addEventListener('click', openWorkspace);
 
       tbodyEl.appendChild(tr);
     });
   }
 
-  function showToast(msg, type) {
-    var toast = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    toast.className = 'toast' + (type ? ' ' + type : '');
-    toast.classList.add('show');
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2800);
+  /* Per-sample tri-state (FR-007B): each row reads its own submission entry
+     from the workspace store instead of the task-level completion flag, so
+     submitted / saved / pending can coexist in one list. */
+  function buildAnnotatorRows(context) {
+    var profile = context.profile;
+    return profile.datasetRecords.map(function (record, index) {
+      var recordId = getRecordId(record, index);
+      var status = getSampleStatus(profile, context, record, index);
+      var submittedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSubmittedAt(
+        profile.id, context.role, context.runType, recordId, context.identity);
+      return {
+        recordId: recordId,
+        status: status,
+        statusLabel: statusText(status),
+        completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
+        text: getRecordSnippet(record, profile.fieldRoleMap)
+      };
+    });
   }
 
-  /* official_run only (FR-048): dry_run reviewer decisions are made and
-     submitted per-sample inside the workspace's consensus-merge review
-     card, so the list page never shows this button for dry_run. Submit
-     validates one decision (approve/reject) per sample across the whole
-     task (not just the visible page) before it reports success. */
-  function bindSubmitReview(context) {
-    var submitReviewBtn = document.getElementById('submitReviewBtn');
-    if (!submitReviewBtn) return;
-    submitReviewBtn.querySelector('span').textContent = t('submitReviewLabel');
-    if (context.role !== 'reviewer' || !context.profile || context.runType !== 'official_run') return;
-    submitReviewBtn.classList.remove('hidden');
-    submitReviewBtn.onclick = function () {
-      var allDecided = true;
-      context.profile.datasetRecords.forEach(function (record, index) {
-        var recordId = getRecordId(record, index);
-        var decision = OFFICIAL_REVIEW_DECISIONS[recordId];
-        if (decision !== 'approved' && decision !== 'rejected') allDecided = false;
+  /* One row per review unit (FR-055): the sample list is flattened by its
+     annotators, so a sample marked by three people becomes three rows in
+     both run types. getReviewUnitStatus returns null while the annotator
+     has no stored submission — the mock row IS that annotator's answer, so
+     an un-stored unit is still awaiting review, not absent. */
+  function buildReviewUnitRows(context) {
+    var profile = context.profile;
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    var units = [];
+    profile.datasetRecords.forEach(function (record, index) {
+      var recordId = getRecordId(record, index);
+      var mockRows = getMockRows(profile, recordId);
+      var text = getRecordSnippet(record, profile.fieldRoleMap);
+      mockRows.forEach(function (mockRow, rowIdx) {
+        var identity = { annotatorId: mockRow.annotator, reviewerId: context.identity.reviewerId };
+        var status = data.getReviewUnitStatus(
+          profile.id, context.runType, recordId, identity, profile.outputTypes) || REVIEW_UNIT_STATUS.PENDING;
+        var submittedAt = data.getSampleSubmittedAt(
+          profile.id, 'annotator', context.runType, recordId, identity);
+        units.push({
+          recordId: recordId,
+          annotator: mockRow.annotator,
+          mockRow: mockRow,
+          mockRows: mockRows,
+          rowIdx: rowIdx,
+          status: status,
+          statusLabel: reviewUnitStatusText(status),
+          completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
+          text: text
+        });
       });
-      if (!allDecided) { showToast(t('toastSelectDecision'), 'error'); return; }
-      showToast(t('toastReviewSubmitted'), 'success');
-    };
+    });
+    return units;
   }
 
   function renderRows(context) {
@@ -1454,20 +1332,9 @@
     if (!tbodyEl || !emptyEl || !profile) return;
     tbodyEl.innerHTML = '';
 
-    /* Per-sample tri-state (FR-007B): each row reads its own submission
-       entry from the workspace store instead of the task-level completion
-       flag, so submitted / saved / pending can coexist in one list. */
-    var rows = profile.datasetRecords.map(function (record, index) {
-      var status = getSampleStatus(profile, context, record, index);
-      var submittedAt = window.LabelSuiteAnnotationWorkspaceData.getSampleSubmittedAt(
-        profile.id, context.role, context.runType, getRecordId(record, index), context.identity);
-      return {
-        recordId: getRecordId(record, index),
-        status: status,
-        completedAt: submittedAt ? formatCompletedAt(submittedAt) : '-',
-        text: getRecordSnippet(record, profile.fieldRoleMap)
-      };
-    });
+    var rows = context.role === 'reviewer'
+      ? buildReviewUnitRows(context)
+      : buildAnnotatorRows(context);
 
     var visibleRows = filterRows(rows);
     var totalPages = renderPagination(visibleRows.length, context);
@@ -1483,11 +1350,7 @@
     var pagedRows = visibleRows.slice(startIndex, startIndex + PAGINATION_STATE.pageSize);
 
     if (context.role === 'reviewer') {
-      if (context.runType === 'official_run') {
-        renderOfficialRunReviewerRows(pagedRows, tbodyEl, context);
-      } else {
-        renderReviewerRows(pagedRows, tbodyEl, context);
-      }
+      renderReviewerRows(pagedRows, tbodyEl, context);
       return;
     }
 
@@ -1689,17 +1552,13 @@
       searchInput.placeholder = t('searchPlaceholder');
       searchInput.setAttribute('aria-label', t('searchAriaLabel'));
     }
-    var statusFilter = document.getElementById('statusFilter');
-    if (statusFilter && statusFilter.options.length > 0) {
-      statusFilter.options[0].textContent = t('statusFilterAll');
-    }
+    renderStatusFilterOptions(context.role);
     var clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) clearFiltersBtn.setAttribute('aria-label', t('clearFiltersLabel'));
     var emptyState = document.getElementById('emptyState');
     if (emptyState) emptyState.textContent = t('emptyNoResults');
 
-    renderTableHeader(context.role, context.runType);
-    bindSubmitReview(context);
+    renderTableHeader(context.role);
 
     if (context.profile) {
       renderTaskInfo(context, context.profile);
