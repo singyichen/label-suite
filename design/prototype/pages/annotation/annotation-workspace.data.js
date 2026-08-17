@@ -1266,17 +1266,6 @@
     return (bySample && bySample[sampleId]) || [];
   }
 
-  /* ── v3.0.0 reviewer run_type split (spec 015 US3/US6, FR-030~FR-048) ──
-   * Single source of truth for both annotation-list.html and
-   * annotation-workspace.config.js so dry_run consensus/gold adjudication
-   * and official_run single-annotator review can never drift between the
-   * two pages. */
-  var REVIEW_MODEL_BY_RUN_TYPE = { dry_run: 'consensus_adjudication', official_run: 'single_annotator_review' };
-  var ADJUDICATION_STATUS = { PENDING: 'pending', CONSENSUS: 'consensus', OVERRIDDEN: 'overridden', DIVERGENT: 'divergent', ADJUDICATED: 'adjudicated' };
-  function reviewModelForRunType(runType) {
-    return REVIEW_MODEL_BY_RUN_TYPE[runType] || REVIEW_MODEL_BY_RUN_TYPE.dry_run;
-  }
-
   /* Converts a submitted OutputAnswer (engine previewState/previewEntities/
    * previewTriples shape) into the SAME CompactAnswer shape
    * REVIEWER_MOCK_ROWS ships, shared by both the workspace's live
@@ -1322,53 +1311,6 @@
 
   function entityMergeKey(ent) { return (ent && ent.text) + '::' + (ent && ent.type); }
   function relationMergeKey(tr) { return (tr && tr.subj) + '::' + (tr && tr.rel) + '::' + (tr && tr.obj); }
-  function majorityThreshold(n) { return Math.ceil((n + 1) / 2); }
-
-  /* Canonical (order-independent) key for "do these two rows' answers read
-   * as literally the same result" -- used only to size the largest
-   * identical-answer group for the FR-038 "N/M 一致" badge denominator, not
-   * for the per-type consensus/divergent gate itself (see
-   * computeConsensusMerge). */
-  function canonicalAnswerKey(outKey, answer) {
-    switch (outKey) {
-      case 'multi_label':
-        return JSON.stringify((Array.isArray(answer) ? answer.slice() : []).sort());
-      case 'entity_recognition':
-        return JSON.stringify((Array.isArray(answer) ? answer.map(entityMergeKey) : []).sort());
-      case 'relation_identification':
-        return JSON.stringify((Array.isArray(answer) ? answer.map(relationMergeKey) : []).sort());
-      default:
-        return JSON.stringify(answer === undefined ? null : answer);
-    }
-  }
-  function largestAgreementGroupSize(outKey, comparableRows) {
-    var counts = {};
-    comparableRows.forEach(function (row) {
-      var key = canonicalAnswerKey(outKey, row.answer);
-      counts[key] = (counts[key] || 0) + 1;
-    });
-    return Object.keys(counts).reduce(function (max, key) { return Math.max(max, counts[key]); }, 0);
-  }
-
-  /* BIO/BIOES legality check for SEQ_MAJORITY_INVALID_BIO_FALLBACK (FR-035):
-   * every I-X must be immediately preceded (in the merged sequence) by a
-   * B-X/I-X of the same type. */
-  function isBioTagSequenceLegal(tags) {
-    var lastType = null;
-    for (var i = 0; i < tags.length; i++) {
-      var tag = tags[i];
-      if (!tag || tag === 'O') { lastType = null; continue; }
-      var dashIdx = tag.indexOf('-');
-      if (dashIdx < 0) return false;
-      var prefix = tag.slice(0, dashIdx);
-      var type = tag.slice(dashIdx + 1);
-      if (prefix === 'B') { lastType = type; }
-      else if (prefix === 'I' || prefix === 'E') {
-        if (lastType !== type) return false;
-      } else { return false; }
-    }
-    return true;
-  }
 
   /* ---- Review unit (spec 015 v3.9.0, issue #146) -------------------------
    * A review unit is `sample_id x annotator_id x run_type`: the same sample
@@ -1403,8 +1345,8 @@
 
   /* Set-shaped types (multi_label / entity_recognition /
    * relation_identification) are order-independent: a diff is an item present
-   * on exactly one side, keyed by the same merge key the consensus code
-   * already uses. `identify` maps an item to its key. */
+   * on exactly one side, keyed by entityMergeKey/relationMergeKey.
+   * `identify` maps an item to its key. */
   function diffItemSets(annotatorItems, reviewerItems, identify) {
     var byKey = {};
     var order = [];
@@ -1534,156 +1476,6 @@
     return enoughReviewers ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.APPROVED;
   }
 
-  /* Per-output-type consensus/divergent merge (FR-031~FR-038). `rows` is the
-   * {name, answer, bypass}[] contract getReviewerRows()/getMockRows() already
-   * ship. `opts.tolerance` (single_dim, absolute value) / `opts.dimTolerances`
-   * ({dimName: absolute value}) carry the DIM_CONSENSUS_TOLERANCE gate --
-   * computed by the caller from the task's own scale config, since this file
-   * has no access to state.outputConfigs. Returns:
-   *   { status, comparableCount, agreeCount, bypassCount, mergedValue }
-   * mergedValue is the majority/mean-derived gold candidate (also what
-   * "套用多數決至全部分歧項" applies), null when no type-specific merge
-   * exists (sequence_tagging tie/illegal-BIO, free_text). */
-  function computeConsensusMerge(outKey, rows, opts) {
-    opts = opts || {};
-    var comparable = rows.filter(function (row) { return !row.bypass; });
-    var bypassCount = rows.length - comparable.length;
-    var result = {
-      status: ADJUDICATION_STATUS.DIVERGENT,
-      comparableCount: comparable.length,
-      agreeCount: 0,
-      bypassCount: bypassCount,
-      mergedValue: null,
-    };
-    if (comparable.length < 2) return result; // FR-038: forced divergent
-    result.agreeCount = largestAgreementGroupSize(outKey, comparable);
-
-    switch (outKey) {
-      case 'single_label': {
-        var counts = {};
-        comparable.forEach(function (row) { counts[row.answer] = (counts[row.answer] || 0) + 1; });
-        var labels = Object.keys(counts);
-        var best = labels.reduce(function (a, b) { return counts[a] >= counts[b] ? a : b; }, labels[0]);
-        result.mergedValue = best;
-        result.status = counts[best] === comparable.length ? ADJUDICATION_STATUS.CONSENSUS : ADJUDICATION_STATUS.DIVERGENT;
-        break;
-      }
-      case 'multi_label': {
-        var voteCounts = {};
-        comparable.forEach(function (row) {
-          (Array.isArray(row.answer) ? row.answer : []).forEach(function (label) {
-            voteCounts[label] = (voteCounts[label] || 0) + 1;
-          });
-        });
-        var threshold = majorityThreshold(comparable.length);
-        result.mergedValue = Object.keys(voteCounts).filter(function (label) { return voteCounts[label] >= threshold; });
-        result.voteCounts = voteCounts;
-        result.status = result.agreeCount === comparable.length ? ADJUDICATION_STATUS.CONSENSUS : ADJUDICATION_STATUS.DIVERGENT;
-        break;
-      }
-      case 'single_dim': {
-        var values = comparable.map(function (row) { return Number(row.answer); }).filter(function (v) { return !isNaN(v); });
-        var mean = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
-        var spread = Math.max.apply(null, values) - Math.min.apply(null, values);
-        var tolerance = opts.tolerance != null ? opts.tolerance : 0;
-        result.mergedValue = Number(mean.toFixed(2));
-        result.status = spread <= tolerance ? ADJUDICATION_STATUS.CONSENSUS : ADJUDICATION_STATUS.DIVERGENT;
-        break;
-      }
-      case 'multi_dim': {
-        var dimNames = {};
-        comparable.forEach(function (row) { Object.keys(row.answer || {}).forEach(function (n) { dimNames[n] = true; }); });
-        var mergedDims = {};
-        var allWithinTolerance = true;
-        Object.keys(dimNames).forEach(function (name) {
-          var dimValues = comparable
-            .map(function (row) { return Number((row.answer || {})[name]); })
-            .filter(function (v) { return !isNaN(v); });
-          var dMean = dimValues.reduce(function (a, b) { return a + b; }, 0) / dimValues.length;
-          mergedDims[name] = Number(dMean.toFixed(2));
-          var dSpread = Math.max.apply(null, dimValues) - Math.min.apply(null, dimValues);
-          var dTolerance = (opts.dimTolerances && opts.dimTolerances[name] != null) ? opts.dimTolerances[name] : 0;
-          if (dSpread > dTolerance) allWithinTolerance = false;
-        });
-        result.mergedValue = mergedDims;
-        result.status = allWithinTolerance ? ADJUDICATION_STATUS.CONSENSUS : ADJUDICATION_STATUS.DIVERGENT;
-        break;
-      }
-      case 'entity_recognition':
-      case 'relation_identification': {
-        var keyFn = outKey === 'entity_recognition' ? entityMergeKey : relationMergeKey;
-        var itemCounts = {};
-        var itemSample = {};
-        comparable.forEach(function (row) {
-          (Array.isArray(row.answer) ? row.answer : []).forEach(function (item) {
-            var key = keyFn(item);
-            itemCounts[key] = (itemCounts[key] || 0) + 1;
-            itemSample[key] = item;
-          });
-        });
-        var itemThreshold = majorityThreshold(comparable.length);
-        result.mergedValue = Object.keys(itemCounts)
-          .filter(function (key) { return itemCounts[key] >= itemThreshold; })
-          .map(function (key) { return itemSample[key]; });
-        var allUnanimous = Object.keys(itemCounts).every(function (key) { return itemCounts[key] === comparable.length; });
-        result.status = allUnanimous ? ADJUDICATION_STATUS.CONSENSUS : ADJUDICATION_STATUS.DIVERGENT;
-        break;
-      }
-      case 'sequence_tagging': {
-        if (result.agreeCount === comparable.length) {
-          result.mergedValue = comparable[0].answer;
-          result.status = ADJUDICATION_STATUS.CONSENSUS;
-        } else {
-          result.mergedValue = null;
-          result.status = ADJUDICATION_STATUS.DIVERGENT;
-        }
-        break;
-      }
-      case 'free_text':
-      default:
-        result.mergedValue = null;
-        result.status = ADJUDICATION_STATUS.DIVERGENT;
-        break;
-    }
-    return result;
-  }
-
-  /* "套用多數決至全部分歧項" (FR-039) target for sequence_tagging: unlike
-   * the other types (whose computeConsensusMerge mergedValue already IS the
-   * majority result even while status stays divergent), sequence_tagging's
-   * mergedValue is nulled out on divergence per SEQ_MAJORITY_INVALID_BIO_
-   * FALLBACK. This recomputes the positional per-token majority regardless
-   * of BIO legality so the apply-majority button and the divergent-token
-   * legality check can be evaluated independently. Rows' CompactAnswer only
-   * carries non-O tokens, so majority is taken positionally over that
-   * compact index (a reasonable approximation for this prototype's fixed
-   * mock fixtures, which share token order across annotators). */
-  function computeSequenceMajority(rows) {
-    var comparable = rows.filter(function (row) { return !row.bypass; });
-    var maxLen = comparable.reduce(function (m, row) { return Math.max(m, (row.answer || []).length); }, 0);
-    var merged = [];
-    for (var i = 0; i < maxLen; i++) {
-      var counts = {};
-      comparable.forEach(function (row) {
-        var pair = (row.answer || [])[i];
-        var tag = pair ? pair.tag : 'O';
-        counts[tag] = (counts[tag] || 0) + 1;
-      });
-      var tags = Object.keys(counts);
-      var top = tags.reduce(function (a, b) { return counts[a] >= counts[b] ? a : b; }, tags[0]);
-      if (top && top !== 'O') {
-        var text = '#' + i;
-        comparable.some(function (row) {
-          var pair = (row.answer || [])[i];
-          if (pair && pair.tag === top) { text = pair.text; return true; }
-          return false;
-        });
-        merged.push({ text: text, tag: top });
-      }
-    }
-    return { mergedValue: merged, legal: isBioTagSequenceLegal(merged.map(function (p) { return p.tag; })) };
-  }
-
   global.LabelSuiteAnnotationWorkspaceData = {
     resolveTaskProfile: resolveTaskProfile,
     sanitizeRecordForAnnotator: sanitizeRecordForAnnotator,
@@ -1709,14 +1501,7 @@
     computeReviewStats: computeReviewStats,
     dimDeviationClass: dimDeviationClass,
     meanStd: meanStd,
-    REVIEW_MODEL_BY_RUN_TYPE: REVIEW_MODEL_BY_RUN_TYPE,
-    ADJUDICATION_STATUS: ADJUDICATION_STATUS,
-    reviewModelForRunType: reviewModelForRunType,
     convertSubmissionAnswer: convertSubmissionAnswer,
-    computeConsensusMerge: computeConsensusMerge,
-    computeSequenceMajority: computeSequenceMajority,
-    isBioTagSequenceLegal: isBioTagSequenceLegal,
-    canonicalAnswerKey: canonicalAnswerKey,
     REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
