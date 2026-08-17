@@ -1509,6 +1509,10 @@
      annotator control, do not build a dedicated correction UI" mandate. */
   var reviewRowDecisions = {};
   var reviewRowOriginals = {};
+  /* Every decision pair currently on screen, so the A/R shortcuts below can
+     redraw them all after deciding the unit in one go. Rebuilt alongside
+     reviewRowDecisions on each renderReviewerWorkspace(). */
+  var reviewDecisionRefreshers = [];
   /* Per-outKey guard, sample-scoped (reset in selectSample only, NOT on
      every renderReviewerWorkspace() re-render): seedReviewState() must only
      run once per sample per outKey. buildReviewRow's decision handlers
@@ -1876,10 +1880,57 @@
       if (onChange) onChange();
     });
     refresh();
+    reviewDecisionRefreshers.push(refresh);
 
     wrap.appendChild(rejectBtn);
     wrap.appendChild(approveBtn);
     return { el: wrap, refresh: refresh };
+  }
+
+  /* FR-054: the shared sidebar has advertised A / R since spec 008 without
+     either ever being wired up. v4.0.0 made a review unit one annotator, so
+     the two batch shortcuts it also advertised (Shift+A / Shift+R) have no
+     set left to act on and are retired; what survives applies to the whole
+     unit. A unit can carry several output types -- handleReviewSubmit()
+     requires every one of them decided and nothing marks one as focused --
+     so a keystroke decides them all, and repeating it cancels back to
+     undecided exactly like clicking an already-active button does. */
+  function setReviewUnitDecision(decision) {
+    var rowName = currentAnnotatorId();
+    var keys = state.selectedOutputTypes.map(function (outKey) {
+      return decisionKey(outKey, rowName);
+    });
+    if (!keys.length) return;
+    var cancels = keys.every(function (key) {
+      return reviewRowDecisions[key] === decision;
+    });
+    keys.forEach(function (key) {
+      reviewRowDecisions[key] = cancels ? null : decision;
+    });
+    reviewDecisionRefreshers.forEach(function (refresh) {
+      refresh();
+    });
+  }
+
+  /* free_text corrections are typed, so `a` and `r` are ordinary input the
+     moment a field holds focus; a <select> consumes them as type-ahead. */
+  function isTypingTarget(target) {
+    var element = target && target.nodeType === 1 ? target : null;
+    if (!element) return false;
+    if (element.isContentEditable) return true;
+    var tag = element.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  }
+
+  function setupReviewShortcuts() {
+    document.addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      if (isTypingTarget(e.target)) return;
+      var key = String(e.key).toLowerCase();
+      if (key !== 'a' && key !== 'r') return;
+      e.preventDefault();
+      setReviewUnitDecision(key === 'a' ? 'approve' : 'reject');
+    });
   }
 
   /* Seeds the shared engine state so renderOutputPreview(container, outKey)
@@ -2149,6 +2200,7 @@
     while (preview.firstChild) preview.removeChild(preview.firstChild);
     reviewRowDecisions = {};
     reviewRowOriginals = {};
+    reviewDecisionRefreshers = [];
 
     /* null, not {}: seedReviewRow() branches on whether a real submission
        exists at all. */
@@ -2550,6 +2602,7 @@
         reviewSubmitBtn.classList.remove('hidden');
         reviewSubmitBtn.addEventListener('click', handleReviewSubmit);
       }
+      setupReviewShortcuts();
     } else {
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);

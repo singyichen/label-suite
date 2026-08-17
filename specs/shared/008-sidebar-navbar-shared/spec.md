@@ -1,7 +1,7 @@
 ---
 功能分支: feat/shared/008-sidebar-navbar-shared
 建立日期: 2026-04-16
-版本: 1.3.10
+版本: 1.4.0
 狀態: Clarified
 ---
 
@@ -334,7 +334,8 @@ Desktop 使用者可將左側 Sidebar 收合為 icon-only，以增加主內容�
 - **FR-016B**：Desktop 快捷鍵總覽 modal 必須支援 zh/en，並同步更新 `aria-label`、標題、說明與 section 文案。
 - **FR-016C**：Desktop 快捷鍵總覽 modal 中的快捷鍵按鍵必須以獨立 keycap 元素呈現，不得以合併字串呈現。
 - **FR-016D**：快捷鍵總覽第一版僅顯示跨任務共用快捷鍵，不得納入 task-specific 作答快捷鍵。
-- **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果`、`全部通過 / 全部退回` 作為單一列）。
+- **FR-016E**：快捷鍵總覽中每個 action 必須獨立成列，不得將相反或相關 action 合併顯示（例如不得以 `上一筆 / 下一筆`、`通過 / 退回目前結果` 作為單一列）。
+- **FR-016G**（v1.4.0 新增）：`審核` section 僅列出 `A`（通過目前結果）與 `R`（退回目前結果）兩列；批次快捷鍵 `Shift+A`（全部通過）與 `Shift+R`（全部退回）**不得**出現於總覽——annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作已無可批次的對象（其行為定義見 annotation-015 FR-054）。總覽只承諾實際存在的快捷鍵。
 - **FR-016F**：Desktop 快捷鍵總覽 modal 採緊湊視覺密度：section 標題以小寫全大寫（uppercase、muted 色）呈現；每列 action 間距僅以 padding 分隔，列與列之間不加分隔線；按鍵標籤為緊湊尺寸（≤28px 高），複合按鍵間距 ≤6px。
 - **FR-017**：登入後模組頁若包含最上層 `h1` 頁首標題與副標題，該 heading block 必須對齊 Dashboard baseline：`1440px` desktop viewport 下與 Dashboard 相同的左上位置、`28px` serif title、`14px / 1.8` subtitle、title/subtitle 間距 `4px`、heading block 下方留白 `24px`。
 - **FR-018**：Sidebar 必須提供通知鈴鐺（`notification_bell`）入口；Desktop 位於 Sidebar 底部 utility row（`notificationBellBtn`），Mobile 位於 top brand bar（`mobileNotificationBellBtn`）。
@@ -463,7 +464,7 @@ flowchart LR
 - **SC-009A**：Desktop 點擊 keyboard icon 或按 `?` 可開啟快捷鍵總覽 modal；按 `Esc` 或點擊 backdrop 可關閉。Mobile 不顯示 keyboard icon，且按 `?` 不開啟快捷鍵總覽。
 - **SC-009B**：快捷鍵總覽 modal 的 zh/en 文案、section 與可存取屬性同步切換。
 - **SC-009C**：快捷鍵總覽中的複合快捷鍵以獨立 keycap 呈現，例如 `CTRL`、`CMD`、`S` 為三個元素。
-- **SC-009D**：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果`、`全部通過`、`全部退回` 各自獨立顯示。
+- **SC-009D**（v1.4.0 修訂）：快捷鍵總覽不得出現合併 action 列；`上一筆`、`下一筆`、`通過目前結果`、`退回目前結果` 各自獨立顯示，且 `全部通過`、`全部退回` 兩列為 0 個 DOM 節點（見 FR-016G）。
 - **SC-010**：在 `1440px` desktop viewport 下，`dashboard / task-management / annotation / dataset / admin / account` 主要模組頁的最上層 heading block 與 Dashboard baseline 的計算位置與 typography 相符。
 - **SC-011**：Desktop `notificationBellBtn` 與 Mobile `mobileNotificationBellBtn` 的 badge 未讀數與 `aria-expanded` 在 dropdown 開關時同步一致。
 - **SC-011A**：未讀數 = 0 時 badge 不顯示；1–9 顯示實際數字；>9 顯示 `9+`。
@@ -515,6 +516,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 1.4.0 | 2026-08-17 | 移除快捷鍵總覽 `審核` section 的批次兩列（`Shift+A` 全部通過、`Shift+R` 全部退回）：annotation-015 v4.0.0 起審核單位為「樣本 × 標記員」，一次審核只涉及一位標記員，批次操作沒有可批次的對象；同版落地的 `A`／`R` 行為定義見 annotation-015 FR-054。新增 FR-016G，修訂 FR-016E 例示與 SC-009D 列舉。 |
 | 1.3.10 | 2026-05-22 | 釐清 Mobile 不支援快捷鍵總覽入口與 `?` 開啟行為；將快捷鍵 modal 入口與驗收收斂為 Desktop-only；固定缺少任務角色或上下文時的 gating fallback：標記作業導回 `/dashboard`、資料集分析導回 `/task-list`；界定通知 dropdown 僅為前端展示契約，資料由頁面或 prototype mock 提供 |
 | 1.3.9 | 2026-05-21 | 補充輸入與產生規則、已釐清事項、審查清單與執行狀態；同步功能分支格式 |
 | 1.3.8 | 2026-05-19 | 補齊 notification dropdown i18n 規格：事件句型、行為者、任務名稱與相對時間皆依目前語系呈現；新增 SC-011D |
