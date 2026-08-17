@@ -1,7 +1,7 @@
 ---
 功能分支: feat/annotation/015-workspace-output-types
 建立日期: 2026-04-23
-版本: 4.2.0
+版本: 4.3.0
 狀態: Draft
 ---
 
@@ -223,7 +223,7 @@ Annotator 可在同一工作區中，依任務 `outputs[]` 組成逐一完成各
 - 區塊 A：`上方任務目標列（固定）`
   - 必要元素：任務目標、操作指引、已標記數量、總量、當前階段、微型進度視覺
 - 區塊 B：`三欄工作區（Desktop）`
-  - 左欄：標記清單、目前定位；每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`）
+  - 左欄：標記清單、目前定位；每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`）；reviewer 視角下一列為一個審核單位，狀態標籤下方另加一行 `樣本 ID · 標記員帳號`（見 FR-056）
   - 中欄（上）：樣本導覽列——`上一筆` 按鈕、`已提交筆數 / 總筆數` 進度摘要（含進度條）、`下一筆` 按鈕；位於首筆/末筆時對應按鈕停用
   - 中欄（主體）：題目區塊與標記區塊以獨立卡片區隔——題目卡承載 Evidence 與 input 內容，標記卡承載依 `outputs[]` 順序逐一渲染的輸出類型標記區（見使用者故事 2A）；輸出類型無獨立題目呈現時（其標記區內嵌原文，如 `sequence_tagging`／`entity_recognition`），題目卡可省略
   - 卡片內視覺：卡片邊框為題目/標記區塊的唯一外框——題目卡內的 input 內容直接呈現，不得再包一層內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）；Bypass 選項自身的虛線外框為刻意設計，予以保留
@@ -481,6 +481,10 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 9. **AC-4.9（v3.9.0 新增，審核單位以標記員為維度）**：**Given** 同一 `sample_id` 由三位標記員各自提交，**When** 讀取其審核狀態，**Then** 必須解析為三個各自獨立的審核單位（`ReviewUnit`），彼此狀態互不影響；**And** 此規則於 `dry_run` 與 `official_run` 完全一致，不因 `run_type` 分流（見 FR-051）。
 10. **AC-4.10（v3.9.0 新增，五態推進）**：**Given** 某審核單位之標記員已提交，**When** 審核員尚未提交，**Then** 狀態為 `pending`；**When** 所有已提交的審核員答案與標記員答案逐輸出類型相同且審核員人數已達 `min_reviewers`，**Then** 狀態為 `finalized`（未達門檻為 `approved`）；**When** 任一審核員答案與標記員答案存在差異且人數已達門檻，**Then** 狀態為 `disputed`（未達門檻為 `modified`）；**And** 標記員尚未提交者不成立審核單位（見 FR-051）。
 11. **AC-4.11（v3.9.0 新增，逐輸出類型差異比對）**：**Given** 標記員與審核員在同一輸出類型上的答案，**When** 執行差異比對，**Then** `multi_label` / `entity_recognition` / `relation_identification` 必須以合併鍵做順序無關比對（僅存在於單邊者為差異項）、`sequence_tagging` 逐 token 比對、`multi_dim` 逐維度比對；**And** `single_dim` / `multi_dim` 一律採嚴格相等，不得套用 `DIM_CONSENSUS_TOLERANCE`（見 FR-052）。
+12. **AC-4.12（v4.3.0 新增，工作區左欄以審核單位為列）**：**Given** 5 筆樣本 × 3 位標記員的任務，**When** 以 reviewer 身分進入 `annotation-workspace`，**Then** 左欄必須渲染 15 個項目，連續三個項目屬同一樣本且分別標示三位標記員帳號；**And** 進度摘要之總筆數為 `15`；**And** `dry_run` 與 `official_run` 完全一致（見 FR-056）。
+13. **AC-4.13（v4.3.0 新增，逐審核單位翻頁）**：**Given** 目前位於 `sent-001 × 第一位標記員`，**When** 點擊 `下一筆`，**Then** 必須切換至 `sent-001 × 第二位標記員`（而非 `sent-002`），且審核卡 seed 改為該位標記員本人的答案；**And** 位於末筆樣本的最後一位標記員前 `下一筆` 維持可用、之後停用；**And** 位於首筆樣本的第一位標記員時 `上一筆` 停用（見 FR-056）。
+14. **AC-4.14（v4.3.0 新增，選取項目即切換受審標記員）**：**Given** reviewer 左欄清單，**When** 點擊某一審核單位項目，**Then** 目前受審的 `annotator_id` 必須同步更新為該列標記員，審核卡與審核單位狀態皆指向同一人（見 FR-056）。
+15. **AC-4.15（v4.3.0 新增，草稿快照不跨標記員外溢）**：**Given** 審核員於某位標記員的審核卡上做出修正但尚未送出，**When** 切換至同一樣本的下一位標記員，**Then** 該修正不得出現在後者的審核卡上，後者必須顯示其本人的答案（見 FR-056）。
 
 **行為規則**：
 
@@ -580,7 +584,7 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 - **FR-012**: 系統必須支援 `RUN_TYPES` 並在 UI 明確標示當前階段。
 - **FR-013**: Annotator 模式必須支援逐筆標記、儲存草稿、提交。
 - **FR-013A**: 工作區左欄標記清單必須於每筆樣本下方顯示三態完成狀態標籤（`已提交` / `已儲存` / `待標記`），並於儲存草稿或提交後即時更新對應樣本的標籤。
-- **FR-013B**: 工作區中欄頂部必須提供樣本導覽列：`上一筆` / `下一筆` 按鈕與 `已提交筆數 / 總筆數` 進度摘要（含進度條）；位於首筆/末筆時對應按鈕停用，提交後進度即時更新。annotator 與 reviewer 視角皆適用。
+- **FR-013B**: 工作區中欄頂部必須提供樣本導覽列：`上一筆` / `下一筆` 按鈕與 `已提交筆數 / 總筆數` 進度摘要（含進度條）；位於首筆/末筆時對應按鈕停用，提交後進度即時更新。annotator 與 reviewer 視角皆適用。**v4.3.0 修訂**：reviewer 視角下「筆」的單位為審核單位而非樣本，導覽與進度分母依 FR-056 計算；annotator 視角不變。
 - **FR-013C**: 工作區中欄底部必須提供操作列：左側自動儲存狀態指示（`草稿已自動儲存` / `儲存中…`，對應 `AUTOSAVE_TRIGGERS`），右側 `儲存草稿` 與提交按鈕。
 - **FR-013D**: 中欄題目內容（Evidence 與 input 欄位）與標記控制項必須以獨立卡片區隔；卡片切分依欄位角色與輸出類型結構決定，不得依任務名稱或個別輸出類型硬編分支。
 - **FR-013E**: 卡片邊框必須是題目/標記區塊的唯一外框：題目卡內 input 內容直接呈現、不得再包內框；標記卡內不得殘留水平分隔線（含區塊分隔線與 Bypass 選項上方的虛線隔線）；`entity_recognition` + `relation_identification` 整合模式的整合預覽區塊不得於卡片內再包一層外框。Bypass 選項自身的虛線外框為刻意設計，必須保留。此規則以結構性樣式覆寫達成，一體適用所有輸出類型，不得逐類型硬編。
@@ -626,6 +630,14 @@ Reviewer 在 `run_type = official_run` 的工作區中，針對「目前標記�
 - **FR-053**（v4.0.0 新增，BREAKING，對應 AC-3.33 ~ AC-3.36）：工作區 reviewer 審核卡必須對兩種 `run_type` 渲染**同一套版面**，不得存在任何依 `run_type` 分流的呈現分支。版面契約沿用既有 `official_run` 規則：每個 outKey 一列（span 型別依 FR-014N 合併為一列），列內僅有作答/修正控件與其 Bypass 列上的一組通過/退回按鈕，無型別標題（FR-014P）；seed 來源為受審標記員本人答案（FR-044、FR-044a）；送出驗證為「每個 outKey 一筆決策」（FR-044）。`dry_run` 原有之共識模型元件——標記分布統計盒（`ws-review-stats`）、一致/分歧徽章（`ws-review-consensus-badge`）、「套用多數決至全部分歧項」（`ws-review-apply-majority`）、標記員清單（`ws-review-annotator-list` / `ws-review-annotator-row`）、「設為底稿」（`ws-review-set-draft`）與原始文本聯集卡（`ws-review-source-text`）——一律**完全不渲染**，不得以空殼 DOM 形式存在。理由：審核單位為「樣本 × 標記員」（FR-051），一張卡只審一位標記員；跨標記員的分布、共識與多數決在此單位下沒有比對對象，而聯集高亮的資訊價值同樣依賴多位標記員，單人情境退化為作答面板內文本的重複副本（FR-014O）。本條取代 FR-030 的 `run_type` 分流規則。**實作備註**：本版僅移除呈現層；`annotation-workspace.data.js` 的共識演算法（`computeConsensusMerge` / `computeSequenceMajority`）與其孤兒輔助函式已無消費端，其刪除屬後續 PR 範圍（單一 PR 大小上限），不構成行為差異。
 - **FR-054**（v4.1.0 新增，對應 AC-3.37）：工作區 reviewer 模式必須實作 `A`＝通過、`R`＝退回兩個決策快捷鍵，作用對象為**當前審核單位的全部輸出類型**：審核單位為「樣本 × 標記員」（FR-051），一次按鍵即完成該單位的決策，與 FR-044 的「每個 outKey 一筆決策」送出驗證對齊；介面不提供「目前聚焦輸出類型」的概念，因此不得只決定其中一個 outKey。重複按同一鍵取消回未決策（沿用 FR-014B 的 toggle 語意）。下列情況必須不觸發：焦點位於 `input` / `textarea` / `select` / contenteditable（`free_text` 修正即為輸入行為）、按鍵帶有 `Shift` / `Ctrl` / `Cmd` / `Alt` 修飾鍵、以及 `role = annotator`。共用側欄自 spec 008 起即列出這兩個快捷鍵，本條為其行為定義；同時列出的批次快捷鍵 `Shift+A`（全部通過）／`Shift+R`（全部退回）自本版起**廢止並自側欄總覽移除**——審核單位收斂為單一標記員後（FR-051、FR-053），批次操作沒有可批次的對象，其總覽列的移除由 spec 008 v1.4.0 的 SC-009D 承接。
 - **FR-055**（v4.2.0 新增，BREAKING，對應 AC-1.14 ~ AC-1.17）：`annotation-list` reviewer 視圖的清單粒度必須為**審核單位**（`REVIEW_UNIT_DIMENSIONS`＝`sample_id × annotator_id × run_type`，FR-051）——同一樣本由 N 位標記員標記即渲染為 N 個連續資料列，兩種 `run_type` 完全一致，不得存在任何依 `run_type` 分流的清單分支。每列必須呈現：樣本 ID、該列標記員帳號、該審核單位的 `REVIEW_UNIT_STATUS`、完成時間、文本摘要、**該標記員本人**的逐輸出類型答案摘要 tag，以及該樣本的跨標記員標記分布統計（統計單位仍為樣本，故同一樣本各列數值相同；演算法沿用與工作區同一實作來源）。分頁總筆數計審核單位數。狀態篩選選項依角色由對應常數推導：reviewer 為 `REVIEW_UNIT_STATUS` 五態、annotator 維持既有三態，不得於選單硬編狀態清單。導頁（列點擊與 `編輯` 按鈕）必須帶出該列的 `annotator_id`（沿用 FR-049 身分參數傳遞規則），使工作區審核卡開在同一審核單位。**廢止**：展開控制項與標記員明細列（`list-review-expand`、`list-review-annotator-row`）、逐列決策控件（`list-review-row-approve`、`list-review-row-reject`）、`送出審核` 按鈕與其 toast（`submitReviewLabel`、`toastSelectDecision`、`toastReviewSubmitted`），testid 與 i18n key 一律保留不重用。理由：v4.0.0 已將工作區審核卡收斂為「一張卡審一位標記員」（FR-053），清單卻仍是「一列一筆樣本」——`dry_run` 需展開才看得到標記員、`official_run` 更把三位標記員截斷成一位，導致清單根本無法列出、篩選或定位到實際的審核標的；清單層級的通過/退回則會與審核卡的決策面產生兩個互相矛盾的決策來源。本條取代 FR-047、FR-048，並使 FR-027 失去標的。
+- **FR-056**（v4.3.0 新增，BREAKING，對應 AC-4.12 ~ AC-4.15）：`annotation-workspace` reviewer 視角的**導覽單位**必須為審核單位（`REVIEW_UNIT_DIMENSIONS`，FR-051），與 `annotation-list` 的清單粒度（FR-055）一致：
+  1. **左欄清單**：一列一個審核單位——同一樣本由 N 位標記員標記即渲染為 N 個連續項目，每列於狀態標籤下方標示 `樣本 ID · 標記員帳號`（`ws-sample-annotator`），使三個共用同一段文本摘要的連續項目可區分。名冊來源必須與 `annotation-list` 同一函式（`getReviewerMockRows()`），不得各自推導，否則兩頁筆數會漂移。
+  2. **進度分母**：`已提交筆數 / 總筆數` 之總筆數計審核單位數；已提交數必須逐審核單位查詢其身分 bucket（FR-049）後加總，不得只讀目前身分的單一 bucket。
+  3. **`上一筆` / `下一筆`**：每次前進/後退**一個審核單位**——同一樣本的下一位標記員排在下一個樣本之前；位於首個/末個審核單位時對應按鈕停用。
+  4. **切換必須同步身分**：選取左欄項目或按 `上一筆` / `下一筆` 跨越標記員時，必須一併更新目前受審的 `annotator_id`，使審核卡 seed（FR-044、FR-044a）與審核單位狀態（FR-051）指向同一人。
+  5. **草稿快照以審核單位為鍵**：工作區記憶體中的作答快照必須以 `sample_id + annotator_id` 為鍵；僅以 `sample_id` 為鍵會使審核員在同一樣本切換標記員時，看到自己對前一位標記員所做的修正被掛在從未給過該答案的人名下。
+
+  annotator 視角完全不變：其審核單位與樣本一對一（一位標記員對一筆樣本僅有自己的提交），上述規則套用後結果與 v4.2.0 相同。**與 FR-013B 總筆數的落差**：reviewer 的總筆數取審核單位數，而非該 `run_type` 已物化配額（`materializedRuns[run_type].total`）——後者計的是樣本數，代表標記員的工作量，審核員的工作量則是審核單位數；此數值刻意與 `annotation-list` 的 `共 N 筆`（FR-055）一致，兩處必須相同。
 - **FR-016**: 系統必須記錄每筆資料的標記歷程（操作者、時間、修改內容、對應輸出類型）。
 - **FR-016A**: Reviewer 在 Dry Run 與 Official Run 執行修正/刪除時，系統必須強制填寫審計理由並記錄。
 - **FR-016B**: 標記歷程必須於右欄 `歷程` 頁籤呈現，annotator 與 reviewer 視角皆可查看；同一樣本的 annotator 與 reviewer 事件（儲存/提交/決策）合併為單一時序清單，每筆事件包含操作者角色、時間、動作與對應輸出類型作答摘要，最新事件在前；尚無紀錄時顯示空狀態文案。
@@ -785,6 +797,7 @@ flowchart LR
 - **SC-004L**（v4.0.0 新增）: 同一筆樣本分別以 `dry_run` 與 `official_run` 進入 reviewer 工作區時，審查列數量、卡片結構與決策控件 100% 相同，且 `ws-review-stats` / `ws-review-consensus-badge` / `ws-review-apply-majority` / `ws-review-annotator-list` / `ws-review-set-draft` / `ws-review-source-text` 於兩種 `run_type` 下皆為 0 個 DOM 節點；兩種 `run_type` 的送出驗證皆為「每個 outKey 一筆決策」（AC-3.33 ~ AC-3.36、FR-053）。
 - **SC-004M**（v4.1.0 新增）: reviewer 工作區在非輸入焦點下按一次 `A`，`ws-review-row-approve` 全數為 `aria-pressed="true"`（多輸出類型任務含 3 個決策對時亦然）且可直接送出審核成功；於 `free_text` 修正欄位內輸入 `a`／`r` 時決策維持未選取，`Shift+A`／`Shift+R`／`Ctrl+A`／`Cmd+A` 皆不產生決策（AC-3.37、FR-054）。
 - **SC-004N**（v4.2.0 新增）: 5 筆樣本 × 3 位標記員的任務以 reviewer 身分進入 `annotation-list` 時，`dry_run` 與 `official_run` 皆渲染 15 列、分頁顯示 `共 15 筆`，且兩種 `run_type` 的列數、欄位與控件 100% 相同；`list-review-expand` / `list-review-annotator-row` / `list-review-row-approve` / `list-review-row-reject` / `#submitReviewBtn` 於兩種 `run_type` 下皆為 0 個 DOM 節點；狀態篩選恰 6 個選項（全部 + 五態），選任一無對應單位的狀態時清單為 0 列並顯示空狀態（AC-1.14 ~ AC-1.17、FR-055）。
+- **SC-004O**（v4.3.0 新增）: 5 筆樣本 × 3 位標記員的任務以 reviewer 身分進入 `annotation-workspace` 時，`dry_run` 與 `official_run` 皆渲染 15 個左欄項目、進度分母為 `15`，且與 `annotation-list` 的 `共 15 筆`（SC-004N）完全相同；自首個審核單位連按 `下一筆` 14 次可走訪全部 15 個審核單位（每次前進恰一個單位、期間審核卡 seed 隨受審標記員切換），第 15 個單位時 `下一筆` 停用；同一樣本切換標記員後，前一位標記員的未送出修正 0% 出現於後者的審核卡；annotator 視角維持 5 個項目、進度分母 `5` 且無標記員標示（AC-4.12 ~ AC-4.15、FR-056）。
 - **SC-005**: 在 `375px / 768px / 1440px` 下，翻筆後 `說明與檔案` 內容維持，Desktop 可收合/展開且 Mobile 抽屜開合可用。
 - **SC-005B**: 點擊右欄圖片檔後，會開啟圖片預覽 modal 並顯示對應大圖；使用者可透過關閉按鈕、遮罩背景或 `Esc` 成功關閉。
 - **SC-005A**: 在 `375px`（行動版）檢視 `annotation-list` 時，清單首列不得出現異常大列高或內容下沉；列表可維持單列緊湊掃讀。
@@ -812,6 +825,7 @@ flowchart LR
 
 | Version | Date | Change Summary |
 |---------|------|----------------|
+| 4.3.0 | 2026-08-17 | **工作區導覽粒度收斂（BREAKING）：reviewer 左欄與 `上一筆`／`下一筆` 改以審核單位為單位**（issue #146，審核員模型重構 P2 之五；接續 v4.2.0 的清單粒度）：v4.2.0 已把 `annotation-list` 攤平為一列一個審核單位，工作區卻仍是樣本形狀——左欄逐 `datasetRecords` 渲染而無角色分支、進度分母取 `datasetRecords.length`、`annotator_id` 於開頁時解析後即固定不變。審核員自清單點進 `sent-001 × 第一位標記員` 後，`下一筆` 直接跳到 `sent-002` 且身分仍是同一人，同一樣本另外兩位標記員在工作區內**沒有任何抵達路徑**，v4.1.0 的「`A` 通過 → `下一筆`」快速通道因此每輪只能覆蓋三分之一的審核單位。新增 **FR-056**、**AC-4.12 ~ AC-4.15**、**SC-004O**：左欄一列一個審核單位並標示 `樣本 ID · 標記員帳號`（`ws-sample-annotator`）、進度分母計審核單位數且逐單位查詢身分 bucket、翻頁每次前進一個審核單位、切換時同步 `annotator_id`、記憶體作答快照改以 `sample_id + annotator_id` 為鍵。名冊來源沿用 `annotation-list` 同一個 `getReviewerMockRows()`，兩頁筆數不會漂移。連帶修訂 FR-013B（reviewer 的「筆」＝審核單位）與 US2 區塊 B 左欄描述。**快照鍵為必要修正而非附帶重構**：原鍵僅為 `sample_id`，在樣本內可切換標記員後，審核員對前一位標記員所做的未送出修正會直接顯示在下一位名下——審核員將核准一個那個人從未給過的答案（與 v4.0.1 修正的 seed 汙染同類，但來源是審核員自己的編輯）。**已知取捨**：reviewer 進度總筆數取審核單位數，刻意不採 `materializedRuns[run_type].total`（後者計樣本數＝標記員工作量），使其與清單 `共 N 筆` 一致，落差理由已寫入 FR-056。**連帶更新測試**：`dashboard-output-types` 的「reviewer 以獨立路由開啟 13 個任務」原斷言左欄項目數等於 `datasetRecords.length`，該假設正是本版所改，改為依角色推導期望值（reviewer 取攤平後的名冊列數）。 |
 | 4.2.0 | 2026-08-17 | **清單粒度收斂（BREAKING）：`annotation-list` reviewer 視圖改為一列一個審核單位，清單層級決策整體移除**（issue #146，審核員模型重構 P2 之四；接續 v3.9.0 資料模型與 v4.0.0 審核卡收斂）：v4.0.0 已讓工作區「一張卡審一位標記員」，清單卻仍停在「一列一筆樣本」——`dry_run` 需展開才看得到標記員、`official_run` 更把三位標記員截斷成一位，審核員無法在清單列出、篩選或定位到實際的審核標的；清單層級的通過/退回則與審核卡構成兩個互相矛盾的決策來源。新增 **FR-055**、**AC-1.14 ~ AC-1.17**、**SC-004N**：清單粒度＝`REVIEW_UNIT_DIMENSIONS`（同一樣本 N 位標記員 → N 列，兩種 `run_type` 一致），每列顯示該標記員本人答案與該審核單位的 `REVIEW_UNIT_STATUS`；狀態篩選依角色由常數推導（reviewer 五態、annotator 維持三態）；導頁必須帶出該列 `annotator_id`（沿用 FR-049）；標記分布統計欄存續為唯讀跨標記員脈絡（統計單位仍為樣本，故同一樣本各列數值相同）。**廢止**：FR-047、FR-048、FR-027、AC-1.10 ~ AC-1.13，展開控制項與標記員明細列（testid `list-review-expand`／`list-review-annotator-row`）、逐列決策控件（`list-review-row-approve`／`list-review-row-reject`）、`送出審核` 按鈕與其 toast（i18n `submitReviewLabel`／`toastSelectDecision`／`toastReviewSubmitted`）、逐列一致度／IAA 摘要（樣本層級指標在審核單位粒度下無對應對象，任務層級 IAA 仍由 AC-1.8 承載）——ID 與 key 一律保留不重用。AC-1.3 同步修訂：reviewer 資料列點擊由「展開/收合」改為與 `編輯` 相同的導頁動作。**已知取捨**：reviewer 表格維持 8 欄（新增標記員欄但保留完成時間欄——移除欄位屬粒度變更以外的範圍，且逐單位完成時間在本版後更具意義），窄視窗欄寬壓力待後續 RWD 調整。 |
 | 4.1.0 | 2026-08-17 | **Reviewer A / R 決策快捷鍵落地，批次快捷鍵廢止**（issue #146，審核員模型重構 P2 之三）：共用側欄的快捷鍵總覽自 spec 008 起就列出 `A`／`R`／`Shift+A`／`Shift+R` 四個審核快捷鍵，但工作區從未實作其中任何一個——總覽等於承諾了不存在的功能。新增 **FR-054**、**AC-3.37**、**SC-004M**：`A`＝通過、`R`＝退回，作用對象為當前審核單位的**全部**輸出類型（審核單位為「樣本 × 標記員」，介面不存在「目前聚焦輸出類型」的概念，且 FR-044 的送出驗證要求每個 outKey 皆有決策，只決定其一無法送出）；重複按同一鍵取消回未決策（沿用 FR-014B toggle 語意）；焦點位於 `input`／`textarea`／`select`／contenteditable 或按鍵帶修飾鍵時不觸發，`role = annotator` 不註冊。**廢止**：批次快捷鍵 `Shift+A`（全部通過）／`Shift+R`（全部退回）——審核單位收斂為單一標記員後（FR-051、FR-053）沒有可批次的對象，其側欄總覽列的移除由 spec 008 v1.4.0 的 SC-009D 承接。 |
 | 4.0.1 | 2026-08-17 | **修正：審核面板的 seed 被資料集輸出角色欄位覆寫**（issue #161）：v3.7.0 已診斷出「非 span 類型因共用引擎的輸出角色預填而看似有值（實際非標記員答案）」，但當時僅修 span 類型，本版補齊其餘輸出類型。根因為 `buildAnnotatorRecord()` 在 `sanitizeRecordForAnnotator()` 之後回填 output 角色欄位——那是 013 FR-003g-5 對**標記員**的預填設計，但 reviewer 模式沿用同一份紀錄，使共用引擎九處 `getOutputFieldValue()` 預設合併路徑一律以資料集 gold 欄位勝出：T001/sent-001 標記員 `113450022` 提交 `negative`，審核面板卻顯示 `gold_label` 的 `positive`——審核員核准的是無人給過的答案，FR-051／FR-052 的審核單位狀態亦建立在錯誤比對上。修法為將 output 角色欄位的回填限定於 annotator 模式，reviewer 於紀錄邊界即不取得該欄位，一次涵蓋全部 8 種輸出類型（所有預填讀取皆匯流至 `getOutputFieldValue()`，逐型別守衛則需為每個新型別重複補上）。**規格條文未變**：FR-044a、AC-3.35、FR-014Q 本即禁止此 seed 來源，本版為實作補正。013 FR-003g-5 的標記員側預填不受影響，新增回歸測試同時釘住兩側：reviewer 面板在資料集 output 欄位被整批移除後必須逐像素不變（13 任務 × 兩種 `run_type`），annotator 面板則必須改變。 |
