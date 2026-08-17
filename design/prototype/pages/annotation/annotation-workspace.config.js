@@ -1002,7 +1002,20 @@
      output types -- entity_recognition/relation_identification's
      list-of-object columns, free_text/single_label's scalar columns, and
      single_dim/multi_label/multi_dim/sequence_tagging alike -- keyed
-     purely off fieldRoleMap, never off task_id or output-type name. */
+     purely off fieldRoleMap, never off task_id or output-type name.
+     ANNOTATOR ONLY (issue #161). The reviewer reviews one annotator's
+     submitted answer, and FR-044a's seed precedence has no dataset-column
+     term at all -- but every engine renderer default-merges from
+     getOutputFieldValue(), which reads these very columns off
+     datasetRawFirstRow. Re-injecting them for a reviewer therefore let the
+     creator's gold value win wherever the annotator's own answer did not
+     fill the slot: on T001/sent-001 the panel showed `positive` while the
+     reviewed annotator had submitted `negative`, so the reviewer approved
+     an answer nobody gave and FR-051/FR-052's review-unit status was
+     computed off that wrong comparison (AC-3.35). Withholding the columns
+     at the record boundary fixes every output type at once, because all
+     nine prefill readers funnel through getOutputFieldValue(); a per-type
+     guard would have to be re-added for each new type. */
   function looksLikeEntityList(value) {
     return (
       Array.isArray(value) &&
@@ -1027,11 +1040,13 @@
       record,
       profile.fieldRoleMap
     );
-    Object.keys(profile.fieldRoleMap || {}).forEach(function (col) {
-      if (profile.fieldRoleMap[col] !== 'output') return;
-      if (record[col] === undefined) return;
-      sanitized[col] = deepClone(record[col]);
-    });
+    if (currentRole !== 'reviewer') {
+      Object.keys(profile.fieldRoleMap || {}).forEach(function (col) {
+        if (profile.fieldRoleMap[col] !== 'output') return;
+        if (record[col] === undefined) return;
+        sanitized[col] = deepClone(record[col]);
+      });
+    }
     return sanitized;
   }
 
