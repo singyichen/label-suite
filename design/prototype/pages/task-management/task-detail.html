@@ -5488,6 +5488,195 @@ function getTaskTypeLabel() {
     trackEvent('prototype_sampling_edit_saved');
   }
 
+  function isReviewEditable() {
+    return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
+  }
+
+  function getActiveReviewerMembers() {
+    return TASK_MEMBERS.filter(function(member) {
+      return member.taskRole === 'reviewer' && member.status === 'active';
+    });
+  }
+
+  function createReviewDraft() {
+    return {
+      minReviewers: Number.isFinite(Number(TASK_DATA.minReviewers)) ? Number(TASK_DATA.minReviewers) : 1,
+      reviewAssignmentMode: TASK_DATA.reviewAssignmentMode === 'manual' ? 'manual' : 'auto',
+      agreementAutoFinalize: Boolean(TASK_DATA.agreementAutoFinalize),
+      arbitrationEnabled: Boolean(TASK_DATA.arbitrationEnabled),
+      arbiterIds: (TASK_DATA.arbiterIds || []).slice(),
+    };
+  }
+
+  function validateReviewData(data) {
+    if (!Number.isInteger(data.minReviewers) || data.minReviewers < 1) {
+      return { valid: false, message: t('reviewSettingsErrorMin') };
+    }
+    return { valid: true, message: '' };
+  }
+
+  function getReviewRenderData() {
+    return state.reviewEditMode && state.reviewDraft ? state.reviewDraft : TASK_DATA;
+  }
+
+  function renderReviewSummaryState() {
+    setText('valueMinReviewersControl', String(TASK_DATA.minReviewers));
+    setText('valueReviewAssignmentControl', TASK_DATA.reviewAssignmentMode === 'manual' ? t('assignmentModeManualText') : t('assignmentModeAutoText'));
+    setText('valueAutoFinalizeControl', TASK_DATA.agreementAutoFinalize ? t('reviewToggleOn') : t('reviewToggleOff'));
+    var arbiterCount = (TASK_DATA.arbiterIds || []).length;
+    var arbitrationText;
+    if (!TASK_DATA.arbitrationEnabled) {
+      arbitrationText = t('reviewToggleOff');
+    } else if (arbiterCount === 0) {
+      arbitrationText = t('arbitrationValueNoArbiters');
+    } else {
+      arbitrationText = interpolate(t('arbitrationValueWithArbitersTpl'), { count: arbiterCount });
+    }
+    setText('valueArbitrationControl', arbitrationText);
+  }
+
+  function renderArbiterOptionList(data, editable) {
+    var mount = document.getElementById('arbiterOptionList');
+    if (!mount) return;
+    mount.innerHTML = '';
+    getActiveReviewerMembers().forEach(function(member) {
+      var option = document.createElement('label');
+      option.className = 'arbiter-option';
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = member.email;
+      input.checked = (data.arbiterIds || []).indexOf(member.email) >= 0;
+      input.disabled = !editable;
+      var text = document.createElement('span');
+      text.textContent = member.name;
+      option.appendChild(input);
+      option.appendChild(text);
+      mount.appendChild(option);
+    });
+  }
+
+  function renderReviewFormState() {
+    var data = getReviewRenderData();
+    var editable = isReviewEditable() && state.reviewEditMode;
+    var minInput = document.getElementById('minReviewersInput');
+    var autoRadio = document.getElementById('assignmentModeAuto');
+    var manualRadio = document.getElementById('assignmentModeManual');
+    var autoFinalizeToggle = document.getElementById('autoFinalizeToggle');
+    var arbitrationToggle = document.getElementById('arbitrationToggle');
+    var arbiterWrap = document.getElementById('arbiterOptions');
+    var reviewError = document.getElementById('reviewSettingsError');
+    if (!minInput || !autoRadio || !manualRadio || !autoFinalizeToggle || !arbitrationToggle || !arbiterWrap || !reviewError) return;
+
+    var numericMinReviewers = Number(data.minReviewers);
+    minInput.value = Number.isFinite(numericMinReviewers) ? String(Math.floor(numericMinReviewers)) : '';
+    autoRadio.checked = data.reviewAssignmentMode !== 'manual';
+    manualRadio.checked = data.reviewAssignmentMode === 'manual';
+    autoFinalizeToggle.checked = Boolean(data.agreementAutoFinalize);
+    arbitrationToggle.checked = Boolean(data.arbitrationEnabled);
+    arbiterWrap.classList.toggle('hidden', !data.arbitrationEnabled);
+    renderArbiterOptionList(data, editable);
+
+    minInput.disabled = !editable;
+    autoRadio.disabled = !editable;
+    manualRadio.disabled = !editable;
+    autoFinalizeToggle.disabled = !editable;
+    arbitrationToggle.disabled = !editable;
+
+    var result = validateReviewData(data);
+    if (state.reviewEditMode && !result.valid) {
+      minInput.classList.add('error');
+      reviewError.textContent = result.message;
+      reviewError.classList.add('show');
+    } else {
+      minInput.classList.remove('error');
+      reviewError.textContent = '';
+      reviewError.classList.remove('show');
+    }
+  }
+
+  function renderReviewEditState() {
+    var editable = isReviewEditable();
+    var editBtn = document.getElementById('reviewEditBtn');
+    var saveBtn = document.getElementById('reviewSaveBtn');
+    var cancelBtn = document.getElementById('reviewCancelBtn');
+    var form = document.getElementById('reviewEditForm');
+    var view = document.getElementById('reviewSummaryView');
+    var hint = document.getElementById('reviewReadonlyHint');
+
+    if (!editBtn || !saveBtn || !cancelBtn || !form || !view || !hint) return;
+    editBtn.disabled = !editable;
+    editBtn.classList.toggle('hidden', state.reviewEditMode);
+    saveBtn.classList.toggle('hidden', !state.reviewEditMode);
+    cancelBtn.classList.toggle('hidden', !state.reviewEditMode);
+    form.classList.toggle('hidden', !state.reviewEditMode);
+    view.classList.toggle('hidden', state.reviewEditMode);
+
+    if (state.reviewEditMode) {
+      hint.classList.add('hidden');
+      hint.textContent = '';
+      renderReviewFormState();
+      return;
+    }
+
+    renderReviewSummaryState();
+    renderReviewFormState();
+
+    if (!editable && state.taskRole !== 'project_leader') {
+      hint.classList.remove('hidden');
+      hint.textContent = t('reviewReadonlyRoleOnly');
+      return;
+    }
+    hint.classList.add('hidden');
+    hint.textContent = '';
+  }
+
+  function markReviewDirty() {
+    if (!state.reviewEditMode) return;
+    state.reviewDirty = true;
+  }
+
+  function startReviewEdit() {
+    if (!isReviewEditable()) return;
+    state.reviewEditMode = true;
+    state.reviewDirty = false;
+    state.reviewDraft = createReviewDraft();
+    renderReviewEditState();
+    trackEvent('prototype_review_settings_edit_started');
+  }
+
+  function cancelReviewEdit(force) {
+    if (!state.reviewEditMode) return true;
+    if (!force && state.reviewDirty && !window.confirm(t('reviewLeaveConfirm'))) return false;
+    state.reviewEditMode = false;
+    state.reviewDirty = false;
+    state.reviewDraft = null;
+    renderReviewEditState();
+    return true;
+  }
+
+  function saveReviewEdit() {
+    if (!isReviewEditable() || !state.reviewDraft) return;
+    var result = validateReviewData(state.reviewDraft);
+    if (!result.valid) {
+      renderReviewFormState();
+      return;
+    }
+
+    TASK_DATA.minReviewers = state.reviewDraft.minReviewers;
+    TASK_DATA.reviewAssignmentMode = state.reviewDraft.reviewAssignmentMode;
+    TASK_DATA.agreementAutoFinalize = state.reviewDraft.agreementAutoFinalize;
+    TASK_DATA.arbitrationEnabled = state.reviewDraft.arbitrationEnabled;
+    TASK_DATA.arbiterIds = state.reviewDraft.arbiterIds.slice();
+    TASK_DATA.updatedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+    state.reviewEditMode = false;
+    state.reviewDirty = false;
+    state.reviewDraft = null;
+    showToast(t('reviewSaveSuccess'));
+    renderOverview();
+    trackEvent('prototype_review_settings_edit_saved');
+  }
+
   function isGuidelineEditable() {
     return TASK_DATA.status === 'draft' && state.taskRole === 'project_leader';
   }
@@ -5975,6 +6164,7 @@ function getTaskTypeLabel() {
     renderPublishActions();
     renderSamplingSummaryState();
     renderSamplingEditState();
+    renderReviewEditState();
     renderRunControlTabs();
     renderIsolationState();
     renderOverviewEditState();
@@ -8249,6 +8439,15 @@ function getTaskTypeLabel() {
     var runControlTabTrial = document.getElementById('runControlTabTrial');
     var samplingIaaEditRows = document.getElementById('samplingIaaEditRows');
     var minAnnotatorsInput = document.getElementById('minAnnotatorsInput');
+    var reviewEditBtn = document.getElementById('reviewEditBtn');
+    var reviewSaveBtn = document.getElementById('reviewSaveBtn');
+    var reviewCancelBtn = document.getElementById('reviewCancelBtn');
+    var minReviewersInput = document.getElementById('minReviewersInput');
+    var assignmentModeAuto = document.getElementById('assignmentModeAuto');
+    var assignmentModeManual = document.getElementById('assignmentModeManual');
+    var autoFinalizeToggle = document.getElementById('autoFinalizeToggle');
+    var arbitrationToggle = document.getElementById('arbitrationToggle');
+    var arbiterOptionList = document.getElementById('arbiterOptionList');
     var overviewEditBtn = document.getElementById('overviewEditBtn');
     var overviewSaveBtn = document.getElementById('overviewSaveBtn');
     var overviewCancelBtn = document.getElementById('overviewCancelBtn');
@@ -8342,6 +8541,82 @@ function getTaskTypeLabel() {
     if (samplingCancelBtn) {
       samplingCancelBtn.addEventListener('click', function() {
         cancelSamplingEdit(false);
+      });
+    }
+
+    if (reviewEditBtn) {
+      reviewEditBtn.addEventListener('click', function() {
+        startReviewEdit();
+      });
+    }
+
+    if (reviewSaveBtn) {
+      reviewSaveBtn.addEventListener('click', function() {
+        saveReviewEdit();
+      });
+    }
+
+    if (reviewCancelBtn) {
+      reviewCancelBtn.addEventListener('click', function() {
+        cancelReviewEdit(false);
+      });
+    }
+
+    if (minReviewersInput) {
+      minReviewersInput.addEventListener('input', function(e) {
+        if (!state.reviewEditMode || !state.reviewDraft) return;
+        var digits = String(e.target.value || '').replace(/[^\d]/g, '');
+        e.target.value = digits;
+        state.reviewDraft.minReviewers = digits === '' ? NaN : Number(digits);
+        markReviewDirty();
+      });
+    }
+
+    if (assignmentModeAuto) {
+      assignmentModeAuto.addEventListener('change', function() {
+        if (!state.reviewEditMode || !state.reviewDraft) return;
+        state.reviewDraft.reviewAssignmentMode = 'auto';
+        markReviewDirty();
+      });
+    }
+
+    if (assignmentModeManual) {
+      assignmentModeManual.addEventListener('change', function() {
+        if (!state.reviewEditMode || !state.reviewDraft) return;
+        state.reviewDraft.reviewAssignmentMode = 'manual';
+        markReviewDirty();
+      });
+    }
+
+    if (autoFinalizeToggle) {
+      autoFinalizeToggle.addEventListener('change', function(e) {
+        if (!state.reviewEditMode || !state.reviewDraft) return;
+        state.reviewDraft.agreementAutoFinalize = Boolean(e.target.checked);
+        markReviewDirty();
+      });
+    }
+
+    if (arbitrationToggle) {
+      arbitrationToggle.addEventListener('change', function(e) {
+        if (!state.reviewEditMode || !state.reviewDraft) return;
+        state.reviewDraft.arbitrationEnabled = Boolean(e.target.checked);
+        markReviewDirty();
+        renderReviewFormState();
+      });
+    }
+
+    /* Delegated listener: renderArbiterOptionList() rebuilds the checkboxes
+       per active reviewer each render, so a single stable-container listener
+       is used instead of one per dynamically-created input. */
+    if (arbiterOptionList) {
+      arbiterOptionList.addEventListener('change', function(e) {
+        if (e.target.tagName !== 'INPUT') return;
+        if (!state.reviewEditMode || !state.reviewDraft) return;
+        var ids = state.reviewDraft.arbiterIds;
+        var idx = ids.indexOf(e.target.value);
+        if (e.target.checked && idx < 0) ids.push(e.target.value);
+        if (!e.target.checked && idx >= 0) ids.splice(idx, 1);
+        markReviewDirty();
       });
     }
 
