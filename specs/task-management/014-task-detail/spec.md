@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-management/014-review-history
+功能分支: feat/task-management/014-work-log-split
 建立日期: 2026-04-20
-版本: 2.5.0
+版本: 2.6.0
 狀態: Draft
 ---
 
@@ -300,14 +300,15 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 篩選：日期區間、標記階段（Annotation stage：Dry Run / Official Run）
     - `project_leader` 額外可用：成員篩選
   - 區塊 2：`工時明細表`
-    - 版面順序：匯總卡片（總工時、總完成筆數、加權平均速度）固定顯示於明細表上方
-    - 欄位：日期、成員、角色（標記員/審核員）、登入／登出時間、上線時長、工作時長、完成筆數、平均速度、標記階段
+    - 版面順序：匯總卡片（總工時、總標記筆數、總審核筆數、加權平均速度）固定顯示於明細表上方；`加權平均速度` 卡片附「每筆平均耗時」次要說明列
+    - 欄位：日期、成員、角色（標記員/審核員）、登入／登出時間、上線時長、工作時長、標記筆數、審核筆數、仲裁筆數、平均速度、標記階段
+    - 筆數三欄依角色適用性顯示：`標記筆數` 僅適用標記員；`審核筆數` 與 `仲裁筆數` 僅適用審核員；角色不適用的欄位顯示 `—`
     - `登入／登出時間`：顯示實際登入時間與實際登出時間
     - `上線時長`：由實際登入時間與實際登出時間計算出的時間差，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
     - `工作時長`：計算實際標記總時數，使用「小時 + 分」呈現（例如：`3 小時 12 分`）
     - 角色顯示：以 badge 呈現任務角色，`reviewer`（審核員）使用靛藍色（`role-badge-reviewer`：`color-primary` / `color-primary-soft-bg` / `color-primary-border`），`annotator`（標記員）使用綠色（`role-badge-annotator`：`color-success` / `color-success-bg` / `color-success-border`）；兩色須明確可區分，成員管理與工時明細表沿用同一套 CSS class
     - 標記階段顯示：以 badge 呈現，樣式對齊 task-list「標記階段」badge（`試標` / `正式標記`；英文：`Dry Run` / `Official Run`）
-    - 匯總：當前篩選條件下總工時、總完成筆數、加權平均速度；其中 `總工時` 顯示格式需與 `工作時長` / `上線時長` 一致，使用「小時 + 分」呈現
+    - 匯總：當前篩選條件下總工時、總標記筆數、總審核筆數、加權平均速度與每筆平均耗時；其中 `總工時` 顯示格式需與 `工作時長` / `上線時長` 一致，使用「小時 + 分」呈現；加權平均速度與每筆平均耗時以三類筆數總和計算
   - 區塊 3：`異常提醒`
     - 顯示：速度異常（過快/過慢）
   - 角色可見性：
@@ -507,6 +508,7 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
+- **FR-007b**：`工時明細表` 的完成筆數必須拆分為 `標記筆數`、`審核筆數`、`仲裁筆數` 三欄；角色不適用的欄位顯示 `—`（標記員僅有標記筆數；審核員僅有審核筆數與仲裁筆數）。匯總卡片必須為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，且 `加權平均速度` 卡片附「每筆平均耗時」次要說明列；逐列平均速度、匯總與異常提醒計算需以三類筆數總和為分子。
 - **FR-008**：任務狀態轉換必須遵守 `TASK_STATUSES` 狀態機。
 - **FR-008a**：當任務內沒有未指派 Dry Run 標記作業，且每一位 `membership_status = active` 的 `annotator` 皆滿足 `assigned_count == completed_count`（完成各自被指派的全部試標內容）時，系統必須自動轉為 `waiting_iaa_confirmation` 並建立提醒。
 - **FR-009**：系統必須支援在 `annotation-results` 匯出結果，格式至少含 `EXPORT_FORMATS`。
@@ -627,7 +629,7 @@ flowchart LR
 - **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。成員清單「審核負荷」欄顯示值由 `ReviewAssignment` 聚合推導，不儲存於 membership；仲裁身分來自 `TaskDetail.arbiter_ids`，非新的 `task_role`。
 - **ReviewAssignment**：審核指派，連結審核員與審核單位。欄位：`task_id`、`reviewer_id`、`review_unit_id`、`assigned_at`、`assigned_by`、`source`（`auto_rotation | manual | dispute_dispatch`）、`review_status`（`pending | done`）。審核負荷統計（`assigned = pending + done`）由本實體聚合推導。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
-- **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
+- **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`annotated_count`、`reviewed_count`、`arbitrated_count`（角色不適用的筆數欄位為 `null`）、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`trial_round`、`target_agreement_overrides`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
 - **AnnotationListMaterialization**：標記清單建立事件。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`sample_snapshot_id`、`source_sample_ids_ref`、`item_count`、`created_by`、`created_at`。`dry_run` 的 `item_count = sampling_value`；`official_run` 的 `item_count = dataset_total - 已用試標總筆數`。
 - **ExcludedAnnotationAssignment**：被明確排除的標記作業紀錄。欄位：`task_id`、`run_stage`（`dry_run` / `official_run`）、`trial_round?`、`assignment_id`、`sample_id`、`excluded_by`、`excluded_at`、`reason`。排除紀錄僅供完成條件解除、metadata 與審計追溯使用，不計入完成率、標記分布統計或一般匯出結果列；`run_stage = dry_run` 時亦不計入 IAA。
@@ -699,6 +701,7 @@ flowchart LR
 - **SC-033**：Overview「審核設定」區塊於 `draft` + `project_leader` 可完成完整編輯流程（`min_reviewers`／指派方式／兩個 toggle／仲裁者多選），非法 `min_reviewers` 被阻擋並顯示可修正錯誤，儲存後四個摘要欄位（含 FR-010s-2 仲裁摘要值規則）即時反映且雙語一致。
 - **SC-034**：成員管理「審核指派」區塊於 `manual` 模式可完成完整指派流程（自動補齊清空未指派池、單列指派撥一筆、爭議池分派給生效仲裁者），所有數值與成員清單「審核負荷」欄即時一致；`auto` 模式維持唯讀且不出現操作按鈕；全區文案雙語一致。
 - **SC-035**：`annotation-results` 展開列可完整呈現「標記員 → 審核員 → 仲裁」縮排時間軸（含具名人員、決策與時間），同一樣本多位標記員時逐標記員各自成段；審核狀態 badge 採 `AR_REVIEW_STATUS` 五態語彙；審核員與審核狀態兩個新篩選可實際過濾樣本列，且全部文案雙語一致。
+- **SC-036**：`work-log` 工時明細表以 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄呈現完成筆數，角色不適用欄位顯示 `—`；匯總列呈現 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四卡與「每筆平均耗時」次要說明列，且全部文案雙語一致。
 
 ---
 
@@ -706,6 +709,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.6.0 | 2026-08-18 | **工時紀錄完成筆數拆欄（issue #149 P5 之二，minor）**：`work-log` 工時明細表 `完成筆數` 拆為 `標記筆數`／`審核筆數`／`仲裁筆數` 三欄，角色不適用欄位顯示 `—`；匯總卡片改為 `總工時`、`總標記筆數`、`總審核筆數`、`加權平均速度` 四張，`加權平均速度` 卡附「每筆平均耗時」次要說明列；逐列平均速度與異常提醒計算改以三類筆數總和為分子；`WorkLogEntry.completed_count` 拆為 `annotated_count`／`reviewed_count`／`arbitrated_count`（角色不適用為 `null`）。新增 FR-007b、SC-036 |
 | 2.5.0 | 2026-08-18 | **標記結果審核歷程可視化（issue #149 P5 之一，minor）**：`annotation-results` 展開列於每位標記員子列下方新增「審核員 → 仲裁」縮排時間軸（審核員名稱＋`同意`／`修改→{修正後結果}`＋審核時間；經仲裁定案再一行仲裁者名稱＋`採 A`／`採 B`＋仲裁時間；`待審` 不顯示歷程行）；審核狀態 badge 語彙自 `通過／退回／待審核` 三態改為 `AR_REVIEW_STATUS` 五態（沿用 015 `REVIEW_UNIT_STATUS`：待審／已同意／已修改／爭議中／已定稿）；篩選列新增「審核員」與「審核狀態」下拉（審核狀態選項由常數推導）。新增常數 `AR_REVIEW_STATUS`、FR-015a-1、FR-015d-4、SC-035；改寫 FR-015a、FR-015d。工時紀錄完成筆數拆欄屬 P5 後續 PR |
 | 2.4.0 | 2026-08-18 | **審核負荷欄 + 審核指派區塊（issue #148 P4 之二，minor）**：成員清單於「任務角色」與「狀態」之間新增「審核負荷」欄（annotator 顯示 `—`；reviewer 顯示 `{assigned} 筆 · {pending} 待審`，`assigned = pending + done` 推導值）；成員清單之後新增「審核指派」區塊（未指派筆數 + 每位啟用中審核員的已指派／待審／已完成 + 生效仲裁者「仲裁」標籤）；`auto` 模式整區唯讀，`manual` + `project_leader` 提供「自動補齊」與逐列「指派…」；區塊底部爭議池列 `{n} 項待仲裁` + 「分派給仲裁者」（無仲裁、無生效仲裁者或爭議池為 0 時停用）。新增 FR-005i／FR-005j／FR-005k、SC-034、使用者故事 1 驗收情境 6；新增 `ReviewAssignment` 實體並註記 `TaskMembership` 審核負荷為推導值。**（同版本內修訂，code review）**：移除/停用仍有待審負荷的審核員時 `pending` 退回未指派池、`done` 保留歷史統計（比照 FR-005f，補進 FR-005j）。完成 2.3.0 預告之 P4 後續 PR 範圍 |
 | 2.3.0 | 2026-08-18 | **審核設定區塊（issue #148 P4 之一，minor）**：Overview 新增獨立「審核設定」區塊（抽樣設定之後），檢視四欄位（每筆資料審核員數／審核指派方式／一致即定案／第三人仲裁），編輯權限與抽樣設定同規則（`OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE`）；編輯模式提供 `min_reviewers` 直接鍵入數字框（`MIN_REVIEWERS_RULE`：整數且 >= 1，`1` = 單一終審員）、`REVIEW_ASSIGNMENT_MODES`（auto = 系統輪派湊滿 N 位／manual = 成員管理逐一分派）單選、`agreement_auto_finalize` 與 `arbitration_enabled` toggle、仲裁者多選（候選 = `ARBITER_CANDIDATE_RULE`，可留空 = 任一未參與者可認領，對齊 015 FR-060；仲裁停用時不顯示）；仲裁摘要值規則（停用／啟用 · 未指定仲裁者／啟用 · 仲裁者 N 人）。新增 FR-010s／FR-010s-1／FR-010s-2、SC-033、使用者故事 3 驗收情境 7–8；`TaskDetail` 實體新增 `min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`／`arbiter_ids[]`；`OVERVIEW_EDITABLE_FIELDS` 擴充同名五欄位。成員管理「審核負荷」欄、審核指派區塊與 `ReviewAssignment` 實體屬 P4 後續 PR |

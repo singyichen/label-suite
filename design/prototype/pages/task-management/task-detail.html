@@ -609,8 +609,14 @@
     }
     .worklog-summary-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
+    }
+    .worklog-summary-grid .kv-sub {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--color-ink-muted);
     }
     .anomaly-list {
       list-style: none;
@@ -2744,12 +2750,16 @@
       thWorkLogLoginLogout: '登入／登出時間',
       thWorkLogOnlineDuration: '上線時長',
       thWorkLogDuration: '工作時長',
-      thWorkLogCompleted: '完成筆數',
+      thWorkLogAnnotated: '標記筆數',
+      thWorkLogReviewed: '審核筆數',
+      thWorkLogArbitrated: '仲裁筆數',
       thWorkLogSpeed: '平均速度',
       thWorkLogStage: '標記階段',
       workLogSummaryHoursLabel: '總工時',
-      workLogSummaryCompletedLabel: '總完成筆數',
+      workLogSummaryAnnotatedLabel: '總標記筆數',
+      workLogSummaryReviewedLabel: '總審核筆數',
       workLogSummarySpeedLabel: '加權平均速度',
+      workLogSummaryAvgPerItemTpl: '每筆平均耗時 {minutes} 分',
       workLogAlertTitle: '異常提醒',
       workLogAlertNone: '目前篩選條件下無速度異常紀錄。',
       workLogAnomalyFast: '{date} · {member} 速度偏快（{speed}）',
@@ -3219,12 +3229,16 @@
       thWorkLogLoginLogout: 'Login / logout',
       thWorkLogOnlineDuration: 'Online duration',
       thWorkLogDuration: 'Duration',
-      thWorkLogCompleted: 'Completed items',
+      thWorkLogAnnotated: 'Annotated',
+      thWorkLogReviewed: 'Reviewed',
+      thWorkLogArbitrated: 'Arbitrated',
       thWorkLogSpeed: 'Average speed',
       thWorkLogStage: 'Run stage',
       workLogSummaryHoursLabel: 'Total hours',
-      workLogSummaryCompletedLabel: 'Total completed',
+      workLogSummaryAnnotatedLabel: 'Total annotated',
+      workLogSummaryReviewedLabel: 'Total reviewed',
       workLogSummarySpeedLabel: 'Weighted avg speed',
+      workLogSummaryAvgPerItemTpl: 'Avg. {minutes} min per item',
       workLogAlertTitle: 'Anomaly alerts',
       workLogAlertNone: 'No speed anomalies under current filters.',
       workLogAnomalyFast: '{date} · {member} speed is too fast ({speed})',
@@ -3530,13 +3544,13 @@
   var EXCLUDED_ANNOTATION_ASSIGNMENTS = [];
 
   var WORK_LOG_ENTRIES = [
-    { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:02', logoutAt: '12:28', durationHours: 3.2, completedCount: 72, stage: 'dry' },
-    { date: '2026-04-19', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '09:18', logoutAt: '13:07', durationHours: 3.6, completedCount: 61, stage: 'dry' },
-    { date: '2026-04-20', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '10:11', logoutAt: '13:19', durationHours: 2.8, completedCount: 55, stage: 'dry' },
-    { date: '2026-04-20', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '14:06', logoutAt: '16:54', durationHours: 2.4, completedCount: 20, stage: 'dry' },
-    { date: '2026-04-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:35', logoutAt: '12:47', durationHours: 2.9, completedCount: 18, stage: 'official' },
-    { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '13:12', logoutAt: '16:36', durationHours: 3.1, completedCount: 44, stage: 'official' },
-    { date: '2026-04-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '15:08', logoutAt: '17:21', durationHours: 1.8, completedCount: 9, stage: 'official' },
+    { date: '2026-04-19', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:02', logoutAt: '12:28', durationHours: 3.2, annotatedCount: 72, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
+    { date: '2026-04-19', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '09:18', logoutAt: '13:07', durationHours: 3.6, annotatedCount: 61, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
+    { date: '2026-04-20', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '10:11', logoutAt: '13:19', durationHours: 2.8, annotatedCount: 55, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
+    { date: '2026-04-20', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '14:06', logoutAt: '16:54', durationHours: 2.4, annotatedCount: 20, reviewedCount: null, arbitratedCount: null, stage: 'dry' },
+    { date: '2026-04-21', memberEmail: 'alex.wang@labelsuite.io', memberName: 'Alex Wang', loginAt: '09:35', logoutAt: '12:47', durationHours: 2.9, annotatedCount: 18, reviewedCount: null, arbitratedCount: null, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'olivia.lin@labelsuite.io', memberName: 'Olivia Lin', loginAt: '13:12', logoutAt: '16:36', durationHours: 3.1, annotatedCount: 44, reviewedCount: null, arbitratedCount: null, stage: 'official' },
+    { date: '2026-04-21', memberEmail: 'mandy@labelsuite.io', memberName: 'Mandy Chen', loginAt: '15:08', logoutAt: '17:21', durationHours: 1.8, annotatedCount: null, reviewedCount: 7, arbitratedCount: 2, stage: 'official' },
   ];
 
   var state = {
@@ -4707,11 +4721,14 @@ function interpolate(template, payload) {
     setText('thWorkLogLoginLogout', t('thWorkLogLoginLogout'));
     setText('thWorkLogOnlineDuration', t('thWorkLogOnlineDuration'));
     setText('thWorkLogDuration', t('thWorkLogDuration'));
-    setText('thWorkLogCompleted', t('thWorkLogCompleted'));
+    setText('thWorkLogAnnotated', t('thWorkLogAnnotated'));
+    setText('thWorkLogReviewed', t('thWorkLogReviewed'));
+    setText('thWorkLogArbitrated', t('thWorkLogArbitrated'));
     setText('thWorkLogSpeed', t('thWorkLogSpeed'));
     setText('thWorkLogStage', t('thWorkLogStage'));
     setText('workLogSummaryHoursLabel', t('workLogSummaryHoursLabel'));
-    setText('workLogSummaryCompletedLabel', t('workLogSummaryCompletedLabel'));
+    setText('workLogSummaryAnnotatedLabel', t('workLogSummaryAnnotatedLabel'));
+    setText('workLogSummaryReviewedLabel', t('workLogSummaryReviewedLabel'));
     setText('workLogSummarySpeedLabel', t('workLogSummarySpeedLabel'));
     setText('workLogAlertTitle', t('workLogAlertTitle'));
     setText('workLogEmptyTitle', t('workLogEmptyTitle'));
@@ -7565,8 +7582,16 @@ function getTaskTypeLabel() {
     return interpolate(t('workLogOnlineDurationTpl'), { hours: hours, minutes: minutes });
   }
 
+  function getWorkLogEntryTotal(entry) {
+    return (entry.annotatedCount || 0) + (entry.reviewedCount || 0) + (entry.arbitratedCount || 0);
+  }
+
+  function formatWorkLogCount(count) {
+    return count === null || count === undefined ? '—' : String(count);
+  }
+
   function formatWorkLogSpeedByEntry(entry) {
-    var speed = entry.durationHours > 0 ? entry.completedCount / entry.durationHours : 0;
+    var speed = entry.durationHours > 0 ? getWorkLogEntryTotal(entry) / entry.durationHours : 0;
     return speed.toFixed(1) + ' ' + t('workLogSpeedUnit');
   }
 
@@ -7635,7 +7660,9 @@ function getTaskTypeLabel() {
       tr.appendChild(td(formatWorkLogLoginLogout(entry)));
       tr.appendChild(td(formatWorkLogOnlineDuration(entry)));
       tr.appendChild(td(formatWorkLogDuration(entry.durationHours)));
-      tr.appendChild(td(String(entry.completedCount)));
+      tr.appendChild(td(formatWorkLogCount(entry.annotatedCount)));
+      tr.appendChild(td(formatWorkLogCount(entry.reviewedCount)));
+      tr.appendChild(td(formatWorkLogCount(entry.arbitratedCount)));
       tr.appendChild(td(formatWorkLogSpeedByEntry(entry)));
 
       var tdStage = document.createElement('td');
@@ -7650,14 +7677,22 @@ function getTaskTypeLabel() {
 
   function renderWorkLogSummary(entries) {
     var totalHours = entries.reduce(function(sum, entry) { return sum + entry.durationHours; }, 0);
-    var totalCompleted = entries.reduce(function(sum, entry) { return sum + entry.completedCount; }, 0);
-    var weightedSpeed = totalHours > 0 ? totalCompleted / totalHours : 0;
+    var totalAnnotated = entries.reduce(function(sum, entry) { return sum + (entry.annotatedCount || 0); }, 0);
+    var totalReviewed = entries.reduce(function(sum, entry) { return sum + (entry.reviewedCount || 0); }, 0);
+    var totalItems = entries.reduce(function(sum, entry) { return sum + getWorkLogEntryTotal(entry); }, 0);
+    var weightedSpeed = totalHours > 0 ? totalItems / totalHours : 0;
+    var avgMinutesPerItem = totalItems > 0 ? (totalHours * 60) / totalItems : 0;
 
     setText('workLogSummaryHoursValue', formatWorkLogDuration(totalHours));
-    setText('workLogSummaryCompletedValue', String(totalCompleted));
+    setText('workLogSummaryAnnotatedValue', String(totalAnnotated));
+    setText('workLogSummaryReviewedValue', String(totalReviewed));
     setText(
       'workLogSummarySpeedValue',
       (weightedSpeed > 0 ? weightedSpeed.toFixed(1) : '0.0') + ' ' + t('workLogSpeedUnit')
+    );
+    setText(
+      'workLogSummaryAvgPerItemValue',
+      totalItems > 0 ? interpolate(t('workLogSummaryAvgPerItemTpl'), { minutes: avgMinutesPerItem.toFixed(1) }) : ''
     );
   }
 
@@ -7666,7 +7701,7 @@ function getTaskTypeLabel() {
     while (list.firstChild) list.removeChild(list.firstChild);
 
     var anomalies = entries.filter(function(entry) {
-      var speed = entry.durationHours > 0 ? entry.completedCount / entry.durationHours : 0;
+      var speed = entry.durationHours > 0 ? getWorkLogEntryTotal(entry) / entry.durationHours : 0;
       return speed > 24 || speed < 9;
     });
 
@@ -7679,7 +7714,7 @@ function getTaskTypeLabel() {
     }
 
     anomalies.forEach(function(entry) {
-      var speed = entry.durationHours > 0 ? entry.completedCount / entry.durationHours : 0;
+      var speed = entry.durationHours > 0 ? getWorkLogEntryTotal(entry) / entry.durationHours : 0;
       var li = document.createElement('li');
       li.className = 'anomaly-item';
 
