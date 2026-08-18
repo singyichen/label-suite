@@ -14,7 +14,7 @@ Issue: https://github.com/singyichen/label-suite/issues/180
 
 - [ ] W1 規格與架構盤點（senior-ba 視角）：治理文件、核心 feature specs、產品文件、關鍵 ADR；驗證 issue 12.8 已知衝突並找出新衝突與 requirement gap
 - [ ] W2 角色旅程與 UX 走查（senior-uiux 視角，以 prototype 程式碼閱讀方式走查三條角色旅程）
-- [ ] W3 Playwright 測試資產與驗收設計盤點（senior-qa 視角）：既有測試覆蓋地圖、多身份模擬機制、跨角色 E2E 設計骨架
+- [x] W3 Playwright 測試資產與驗收設計盤點（senior-qa 視角）：既有測試覆蓋地圖、多身份模擬機制、跨角色 E2E 設計骨架 — `DONE_WITH_CONCERNS`，報告：`issue-180/w3-playwright-qa.md`，8 項覆蓋缺口；關鍵發現：既有測試無 `storageState`/`newContext` 角色隔離（靠 localStorage bucket key），與 issue「角色獨立 BrowserContext」要求架構衝突
 - [ ] 主 agent 重新驗證各工作流關鍵證據（抽查引用的檔案與行號）
 - [ ] 階段一檢查點報告：completed · verified · remaining
 
