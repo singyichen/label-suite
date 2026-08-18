@@ -39,6 +39,13 @@
 | PL Dashboard 逐列待辦入口（spec 012 未定義） | W1 §4.2 ＋ W2 F-03 交叉證實 | `[Enhancement]` issue（spec 需調整） |
 | IA dataset-analysis 章節舊 `TASK_TYPE_ENUM` | W1 §3.7 | 依 issue #180 邊界，留待 dataset 模組盤點，本輪不處置 |
 
-## 決策紀錄
+## 決策紀錄（2026-08-18 使用者裁決）
 
-（使用者裁決後回填）
+| # | 決策 | 結果 |
+|---|---|---|
+| D1 | 正式 E2E 目錄 | **延後**。使用者指出本輪僅針對 prototype 檢查；本輪測試一律留在 `design/prototype/tests/`（ADR-014 正典，無衝突）。`frontend/tests/` vs `e2e/[module]/` 之爭僅影響未來正式全端 E2E，改立獨立 `[Task]` issue 於正式實作前決議（主 agent 建議傾向 `e2e/[module]/`，與 testing-constitution 及 `.claude/rules/testing-e2e.md` 一致），並需新 ADR 記錄理由 |
+| D2 | `completed` 前置條件 | **採 issue #180 完整條件**：正式標記全提交＋必要 review unit finalized＋無未解決 dispute＋必要仲裁完成＋品質指標可用。落地：修訂 ADR-022＋014 spec 新增 FR（階段四建對應 issue） |
+| D3 | 成員不足發布阻擋 | **阻擋＋顯示缺口原因**：新增 FR「active annotator 數 < `min_annotators` 時 disable 啟動試標，顯示還差 N 位」；ADR-022 與 014 建立交叉引用（階段四建對應 issue） |
+| D4 | 過時產品全景文件 | **聲明為準＋開同步 issue**：驗收文件明文以 013/014/015/reviewer-model-redesign 為準；另開 `[Docs]` issue 批次同步五份文件（含 story-map 三步→四步）；階段三不被阻擋 |
+
+D2～D4 即日起為驗收文件的正典依據；對應 spec／ADR 修訂由階段四的 issue 追蹤，不在本 issue 內直接改 spec。
