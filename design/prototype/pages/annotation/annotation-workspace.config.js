@@ -1360,7 +1360,27 @@
        multi-output tasks. */
     rebuildColumnOutputTypeMap();
     restoreSample(currentSampleId);
+    syncUrlToUnit();
     renderWorkspace();
+  }
+
+  /* A workspace URL addresses one REVIEW UNIT, so every switch writes the
+     displayed unit back into the address bar (issue #151); the page read
+     `sample_id` at boot and never wrote it, leaving reload / bookmark /
+     shared link pinned to whichever record the visitor entered on.
+
+     `replaceState`, not `pushState`: stepping through T001's 15 reviewer
+     units would otherwise bury the list page under 15 Backs.
+
+     The query string is mutated in place rather than rebuilt from known
+     keys, so any param this page does not read survives the rewrite. */
+  function syncUrlToUnit() {
+    var params = new URLSearchParams(window.location.search);
+    params.set('sample_id', currentSampleId);
+    /* Only a reviewer's annotator moves while stepping (FR-056). Writing it
+       for an annotator would add a param their entry link never carried. */
+    if (currentRole === 'reviewer') params.set('annotator_id', currentAnnotatorId());
+    window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
   }
 
   function renderSampleList() {
