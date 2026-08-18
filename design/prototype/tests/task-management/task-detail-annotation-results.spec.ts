@@ -312,7 +312,7 @@ test.describe('Task detail annotation results', () => {
     await expect(detailRows).toHaveCount(3);
     await expect(detailRows.first()).toContainText('kioleemg12');
     await expect(detailRows.first()).toContainText('ORG:台積電');
-    await expect(detailRows.first()).toContainText('待審核');
+    await expect(detailRows.first().locator('.ar-review-badge .badge')).toHaveText('待審');
     const layoutOk = await page.locator('#arResultTable').evaluate((table) => {
       const tableRect = table.getBoundingClientRect();
       const badges = Array.from(table.querySelectorAll('.ar-review-badge'));
@@ -345,7 +345,7 @@ test.describe('Task detail annotation results', () => {
     const firstRow = page.locator('#arResultTableBody tr.ar-summary-row').first();
     await firstRow.click();
 
-    await expect(page.locator('#arResultTableBody .ar-review-badge').first()).toContainText('待審核');
+    await expect(page.locator('#arResultTableBody .ar-review-badge .badge').first()).toHaveText('待審');
     const vaBadgeVisible = await page.locator('#arResultTableBody .ar-review-badge').first().evaluate((badge) => {
       const badgeRect = badge.getBoundingClientRect();
       const table = badge.closest('table');
