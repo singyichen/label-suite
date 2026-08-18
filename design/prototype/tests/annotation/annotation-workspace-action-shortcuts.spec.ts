@@ -1,0 +1,178 @@
+import { test, expect } from '@playwright/test';
+import { buildWorkspaceUrl, skipGuidelineModal } from './_workspace-helpers';
+
+/* The four workspace shortcuts the sidebar panel advertises (issue #152).
+ *
+ * `?`/`ESC` and the reviewer's `A`/`R` were already wired; 儲存草稿,
+ * 提交目前標記, 上一筆 and 下一筆 were advertised but did nothing, so the
+ * panel taught a key that had no effect.
+ *
+ * Each shortcut is an alias for a button that already exists, which is why
+ * the tests assert the BUTTON's outcome (toast, unit change, disabled edge)
+ * rather than any shortcut-specific state.
+ */
+
+const ANNOTATOR_URL = buildWorkspaceUrl({
+  task_id: 'T001',
+  sample_id: 'sent-001',
+  role: 'annotator',
+  run_type: 'dry_run',
+});
+
+function reviewerUrl(annotatorId: string): string {
+  return buildWorkspaceUrl({
+    task_id: 'T001',
+    sample_id: 'sent-001',
+    role: 'reviewer',
+    run_type: 'dry_run',
+    annotator_id: annotatorId,
+  });
+}
+
+function sampleIdOf(url: string): string | null {
+  return new URL(url).searchParams.get('sample_id');
+}
+
+test.describe('Alt+Arrow steps between review units', () => {
+  test('annotator: Alt+ArrowRight moves to the next record', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    await page.keyboard.press('Alt+ArrowRight');
+
+    await expect(page.getByTestId('ws-sample-item').nth(1)).toHaveClass(/active/);
+    expect(sampleIdOf(page.url())).toBe('sent-002');
+  });
+
+  test('annotator: Alt+ArrowLeft moves back', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    await page.keyboard.press('Alt+ArrowRight');
+    await page.keyboard.press('Alt+ArrowRight');
+    await page.keyboard.press('Alt+ArrowLeft');
+
+    expect(sampleIdOf(page.url())).toBe('sent-002');
+  });
+
+  test('Alt+ArrowLeft on the first unit does nothing', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    // 上一筆 is disabled here, and the shortcut must honour that rather than
+    // wrapping around to the last record.
+    await page.keyboard.press('Alt+ArrowLeft');
+
+    await expect(page.getByTestId('ws-sample-item').nth(0)).toHaveClass(/active/);
+    expect(sampleIdOf(page.url())).toBe('sent-001');
+  });
+
+  test('reviewer: Alt+ArrowRight steps one review unit, not one sample', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(reviewerUrl('kioleemg12'));
+
+    await page.keyboard.press('Alt+ArrowRight');
+
+    await expect(page.locator('.sample-item.active').getByTestId('ws-sample-annotator')).toHaveText('113450022');
+    expect(sampleIdOf(page.url())).toBe('sent-001');
+  });
+
+  test('Alt+ArrowRight still steps while a note field has focus', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    // Unlike the bare `a`/`r` review keys, a modifier combo produces no text,
+    // so suppressing it inside inputs would only cost the annotator the
+    // shortcut exactly where they spend most of their time.
+    await page.getByTestId('ws-note-input').click();
+    await page.keyboard.press('Alt+ArrowRight');
+
+    expect(sampleIdOf(page.url())).toBe('sent-002');
+  });
+
+  test('the browser Back navigation is suppressed', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    // Alt+ArrowLeft is Back in Chrome/Firefox; without preventDefault the
+    // shortcut would step forward and leave the workspace at the same time.
+    // Registered after the page's own handler, so it observes the flag the
+    // handler set. Deliberately not awaited -- it settles on the key press.
+    const prevented = page.evaluate(
+      () =>
+        new Promise<boolean>((resolve) => {
+          // Pressing a combo emits a keydown for Alt itself first, which is
+          // not prevented -- wait for the arrow.
+          document.addEventListener('keydown', function onKey(e) {
+            if (e.key !== 'ArrowRight') return;
+            document.removeEventListener('keydown', onKey);
+            resolve(e.defaultPrevented);
+          });
+        })
+    );
+    await page.keyboard.press('Alt+ArrowRight');
+    expect(await prevented).toBe(true);
+  });
+});
+
+test.describe('Ctrl/Cmd+S saves the draft', () => {
+  test('annotator: the shortcut saves and reports it', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    await page.keyboard.press('Control+s');
+
+    await expect(page.locator('#toastMsg')).toHaveText('已儲存');
+    await expect(page.getByTestId('ws-sample-item').nth(0)).toContainText('已儲存');
+  });
+
+  test('the shortcut works while typing in the note field', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    await page.getByTestId('ws-note-input').fill('半途想存檔');
+    await page.keyboard.press('Control+s');
+
+    await expect(page.locator('#toastMsg')).toHaveText('已儲存');
+  });
+
+  test('reviewer: the shortcut does nothing, because 儲存草稿 is hidden', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(reviewerUrl('kioleemg12'));
+
+    await page.keyboard.press('Control+s');
+
+    // A reviewer has no draft; firing the annotator handler would write a
+    // submission row under the reviewer's identity. The toast node is always
+    // in the DOM -- `.visible` is what makes it appear.
+    await expect(page.locator('#toast')).not.toHaveClass(/visible/);
+  });
+});
+
+/* T001 carries an output-role column, which FR-024M counts as answered, so
+   an annotator's incomplete-submit guard is unreachable here; the reviewer
+   case below is what proves the shortcut goes through the guarded handler
+   rather than around it. */
+test.describe('Ctrl/Cmd+Enter submits the unit on screen', () => {
+  test('annotator: a complete answer submits', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(ANNOTATOR_URL);
+
+    await page.getByTestId('ws-single-label-chip-negative').click();
+    await page.keyboard.press('Control+Enter');
+
+    await expect(page.locator('#toastMsg')).toHaveText('已提交');
+    await expect(page.getByTestId('ws-sample-item').nth(0)).toContainText('已提交');
+  });
+
+  test('reviewer: the shortcut routes to 送出審核, not 提交', async ({ page }) => {
+    await skipGuidelineModal(page);
+    await page.goto(reviewerUrl('kioleemg12'));
+
+    await page.keyboard.press('Control+Enter');
+
+    // No decision has been made, so the reviewer submit guard speaks up --
+    // which is what proves the reviewer handler ran rather than handleSubmit.
+    await expect(page.locator('#toastMsg')).toHaveText('請完成每位標記員的審核決策');
+  });
+});
