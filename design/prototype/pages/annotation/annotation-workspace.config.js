@@ -54,6 +54,15 @@
       reviewCorrectionTitle: '直接修正',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastResolveDivergent: '請先裁定所有分歧項目',
+      arbitrationTitle: '爭議仲裁',
+      arbitrationNote: '此審核單位已進入爭議池。請逐項裁定採用 A（標記員）或 B（審核員）的結果；仲裁不重新標記。',
+      arbitrationAgreedTitle: '標記內容（唯讀）',
+      arbitrationConvergedNote: '已依審核員多數決收斂',
+      arbitrationSubmitLabel: '送出仲裁',
+      toastArbitrationIncomplete: '請完成所有爭議項目的裁定',
+      wsArbitrationSubmitSuccess: '仲裁已提交',
+      arbitrationChoiceA: 'A・標記員',
+      arbitrationChoiceB: 'B・審核員',
       historyActionOverridden: '已覆寫',
       historyActionGoldConfirmed: '已確認標準答案',
       historyActionGoldReopened: '重新開放標準答案',
@@ -96,6 +105,15 @@
       reviewCorrectionTitle: 'Direct correction',
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
+      arbitrationTitle: 'Dispute arbitration',
+      arbitrationNote: 'This review unit is in the dispute pool. Decide each item as A (annotator) or B (reviewer); arbitration does not re-annotate.',
+      arbitrationAgreedTitle: 'Annotation (read-only)',
+      arbitrationConvergedNote: 'Converged by reviewer majority',
+      arbitrationSubmitLabel: 'Submit arbitration',
+      toastArbitrationIncomplete: 'Please decide every dispute item first',
+      wsArbitrationSubmitSuccess: 'Arbitration submitted',
+      arbitrationChoiceA: 'A · Annotator',
+      arbitrationChoiceB: 'B · Reviewer',
       historyActionOverridden: 'Overridden',
       historyActionGoldConfirmed: 'Gold confirmed',
       historyActionGoldReopened: 'Gold reopened',
@@ -2324,6 +2342,176 @@
       .filter(Boolean)
       .join('\n\n');
   }
+  /* ---- Arbitration layout (spec 015 v4.8.0, issue #147 P3c) --------------
+     A DISPUTED unit opened by an arbiter candidate (FR-060) swaps the whole
+     review card for this layout: the annotator's answers stay read-only for
+     context, items the reviewers' per-item majority already resolved
+     (resolveDisputeConvergence) render as converged notes, and only the
+     genuinely unresolvable items get an A/B choice. Correction controls and
+     the ✕/✓ row decisions never render — an arbiter picks a side, they do
+     not re-annotate. */
+  var arbitrationChoices = {};
+
+  function formatDisputeValue(value) {
+    if (value == null || value === '') return t('reviewNoAnswer');
+    return typeof value === 'string' ? value : JSON.stringify(value);
+  }
+
+  function disputeItemId(item) {
+    return item.outKey + '::' + item.key;
+  }
+
+  function buildArbitrationChoiceButton(testid, label, value, onSelect) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mini-btn';
+    btn.setAttribute('data-testid', testid);
+    btn.setAttribute('aria-pressed', 'false');
+    btn.textContent = label + '：' + formatDisputeValue(value);
+    btn.addEventListener('click', onSelect);
+    return btn;
+  }
+
+  function buildArbitrationItemRow(item) {
+    var itemId = disputeItemId(item);
+    var row = document.createElement('div');
+    row.setAttribute('data-testid', 'ws-arbitration-item');
+    row.style.cssText = 'padding:10px 0;border-top:1px solid var(--color-border);';
+
+    var label = document.createElement('div');
+    label.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:6px;';
+    label.textContent = item.outKey + ' · ' + item.key;
+    row.appendChild(label);
+
+    var group = document.createElement('div');
+    group.className = 'rv-choice-group';
+    var buttons = [];
+    function select(choice, value, btn) {
+      arbitrationChoices[itemId] = { itemId: itemId, choice: choice, value: value };
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        b.classList.toggle('mini-btn-active-approve', b === btn);
+      });
+    }
+    var aBtn = buildArbitrationChoiceButton(
+      'ws-arbitration-choose-a', t('arbitrationChoiceA'), item.annotatorValue,
+      function () { select('A', item.annotatorValue, aBtn); }
+    );
+    buttons.push(aBtn);
+    group.appendChild(aBtn);
+    /* One B button per DISTINCT reviewer value: reviewers who disagreed the
+       same way collapse into one choice, reviewers who disagreed differently
+       each offer their own. */
+    var seenValues = {};
+    Object.keys(item.reviewerValues).forEach(function (reviewerId) {
+      var value = item.reviewerValues[reviewerId];
+      var dedupKey = JSON.stringify(value === undefined ? null : value);
+      if (seenValues[dedupKey]) return;
+      seenValues[dedupKey] = true;
+      var bBtn = buildArbitrationChoiceButton(
+        'ws-arbitration-choose-b', t('arbitrationChoiceB'), value,
+        function () { select('B', value, bBtn); }
+      );
+      buttons.push(bBtn);
+      group.appendChild(bBtn);
+    });
+    row.appendChild(group);
+    return row;
+  }
+
+  function buildArbitrationResolvedRow(item, value, note, testid) {
+    var row = document.createElement('div');
+    row.setAttribute('data-testid', testid);
+    row.style.cssText = 'padding:10px 0;border-top:1px solid var(--color-border);font-size:12px;';
+    row.textContent = item.outKey + ' · ' + item.key + '：' + formatDisputeValue(value) + '（' + note + '）';
+    return row;
+  }
+
+  function renderArbitrationCard(preview, submission) {
+    var data = window.LabelSuiteAnnotationWorkspaceData;
+    arbitrationChoices = {};
+
+    var card = document.createElement('div');
+    card.className = 'content-card';
+    card.setAttribute('data-testid', 'ws-arbitration-card');
+
+    var title = document.createElement('h3');
+    title.style.cssText = 'font-size:14px;margin:0 0 4px;';
+    title.textContent = t('arbitrationTitle');
+    card.appendChild(title);
+
+    var note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--color-text-secondary);margin:0 0 10px;';
+    note.textContent = t('arbitrationNote');
+    card.appendChild(note);
+
+    /* Read-only context: the annotator's full answers, so the arbiter sees
+       the agreed parts around each disputed value. */
+    var agreedTitle = document.createElement('div');
+    agreedTitle.style.cssText = 'font-size:12px;font-weight:600;margin-bottom:4px;';
+    agreedTitle.textContent = t('arbitrationAgreedTitle');
+    card.appendChild(agreedTitle);
+    state.selectedOutputTypes.forEach(function (outKey) {
+      var line = document.createElement('div');
+      line.style.cssText = 'font-size:12px;white-space:pre-line;margin-bottom:2px;';
+      line.textContent = outKey + '：'
+        + (describeCompactAnswer(outKey, data.convertSubmissionAnswer(outKey, submission)) || t('reviewNoAnswer'));
+      card.appendChild(line);
+    });
+
+    var items = data.getDisputeItems(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+    );
+    var reviewerCount = data.readReviewerSubmissions(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity
+    ).length;
+    var arbState = data.getArbitrationState(currentProfile.id, currentRunType, currentSampleId, currentIdentity);
+    var openItemIds = [];
+    items.forEach(function (item) {
+      var convergence = data.resolveDisputeConvergence(item, reviewerCount);
+      if (convergence.converged) {
+        card.appendChild(buildArbitrationResolvedRow(
+          item, convergence.value, t('arbitrationConvergedNote'), 'ws-arbitration-converged'
+        ));
+        return;
+      }
+      var stored = arbState[disputeItemId(item)];
+      if (stored && stored.finalized_by) {
+        card.appendChild(buildArbitrationResolvedRow(
+          item, stored.finalized_value, stored.finalized_by, 'ws-arbitration-finalized'
+        ));
+        return;
+      }
+      openItemIds.push(disputeItemId(item));
+      card.appendChild(buildArbitrationItemRow(item));
+    });
+
+    if (openItemIds.length) {
+      var submitBtn = document.createElement('button');
+      submitBtn.type = 'button';
+      submitBtn.className = 'btn btn-cta';
+      submitBtn.style.cssText = 'margin-top:12px;';
+      submitBtn.setAttribute('data-testid', 'ws-arbitration-submit');
+      submitBtn.textContent = t('arbitrationSubmitLabel');
+      submitBtn.addEventListener('click', function () {
+        var decisions = openItemIds.map(function (id) { return arbitrationChoices[id]; });
+        if (decisions.some(function (decision) { return !decision; })) {
+          showToast(t('toastArbitrationIncomplete'));
+          return;
+        }
+        data.submitArbitration(
+          currentProfile.id, currentRunType, currentSampleId, currentIdentity, decisions
+        );
+        showToast(t('wsArbitrationSubmitSuccess'));
+        renderSampleList();
+        renderReviewerWorkspace();
+      });
+      card.appendChild(submitBtn);
+    }
+
+    preview.appendChild(card);
+  }
+
   function renderReviewerWorkspace() {
     var preview = document.getElementById('annotationPreview');
     if (!preview) return;
@@ -2336,6 +2524,28 @@
        exists at all. */
     var submission = getAnnotatorSubmission();
     var rawRecord = findRecordById(currentSampleId) || {};
+
+    var workspaceData = window.LabelSuiteAnnotationWorkspaceData;
+    var reviewSubmitBtn = document.getElementById('wsReviewSubmitBtn');
+    var unitStatus = workspaceData.getReviewUnitStatus(
+      currentProfile.id, currentRunType, currentSampleId, currentIdentity, state.selectedOutputTypes
+    );
+    if (
+      unitStatus === workspaceData.REVIEW_UNIT_STATUS.DISPUTED &&
+      workspaceData.isArbiterCandidate(currentProfile.id, currentRunType, currentSampleId, currentIdentity)
+    ) {
+      /* The fixed footer submit drives handleReviewSubmit(); arbitration has
+         its own in-card submit instead. */
+      if (reviewSubmitBtn) reviewSubmitBtn.classList.add('hidden');
+      var inputCard = document.createElement('div');
+      inputCard.className = 'content-card';
+      inputCard.setAttribute('data-testid', 'ws-input-content');
+      inputCard.textContent = buildReviewerInputText(rawRecord, currentProfile.fieldRoleMap);
+      preview.appendChild(inputCard);
+      renderArbitrationCard(preview, submission);
+      return;
+    }
+    if (reviewSubmitBtn) reviewSubmitBtn.classList.remove('hidden');
 
     /* Output types whose registry entry declares rendersInputPreview:true
        (free_text/entity_recognition/relation_identification/sequence_tagging)
