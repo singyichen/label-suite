@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-detail-config-sync
+功能分支: feat/task-management/014-review-settings
 建立日期: 2026-04-20
-版本: 2.2.0
+版本: 2.3.0
 狀態: Draft
 ---
 
@@ -47,11 +47,14 @@
 - `DRAFT_SAMPLING_COUNT_MIN = 1`
 - `OUTPUT_TYPE_IAA_REGISTRY`（唯讀顯示用；source of truth：`dataset-017-dataset-analysis-detail` 規格常數同名表格）——每個 `outputs[].type` 對應一筆 `{ type, primary_metric_name, default_threshold }` 紀錄；task-detail 僅讀取顯示，不得另建第二份指標/預設值定義（憲法：Generalization-First）。實作落地點標註：`task-config.data.js`（spec 僅描述 WHAT，落地點為實作註記，非行為契約）。
 - `target_agreement_overrides = { [output_type]: number }`（使用者可對任一 `outputs[].type` 覆寫其 IAA 目標門檻；未設定的 key 回退至 `OUTPUT_TYPE_IAA_REGISTRY` 對應 `default_threshold`）
+- `REVIEW_ASSIGNMENT_MODES = auto | manual`（`auto` = 系統輪派審核員直到每筆資料湊滿 `min_reviewers` 位；`manual` = `project_leader` 於成員管理逐一分派）
+- `MIN_REVIEWERS_RULE = 整數且 >= 1`（`1` = 單一終審員；`N >= 2` = 每筆資料由 N 位審核員並行審核，收斂語意見 `015` FR-061）
+- `ARBITER_CANDIDATE_RULE = task_role = reviewer AND membership_status = active`（`arbiter_ids` 可留空 = 任一未參與該筆審核的審核員皆可認領，對齊 `015` FR-060）
 - `SAMPLE_SNAPSHOT_LOCK_EVENT = publish_dry_run`
 - `ANNOTATION_LIST_MATERIALIZATION_EVENTS = add_trial_round | start_official_run`
 - `OVERVIEW_EDITABLE_STATUS = draft`
 - `OVERVIEW_EDITABLE_ROLE = project_leader`
-- `OVERVIEW_EDITABLE_FIELDS = task_name | task_type(categories/input_types/outputs) | dataset | field_role_map | outputs[].config | sampling_value | target_agreement_overrides | min_annotators | isolation_enabled | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
+- `OVERVIEW_EDITABLE_FIELDS = task_name | task_type(categories/input_types/outputs) | dataset | field_role_map | outputs[].config | sampling_value | target_agreement_overrides | min_annotators | isolation_enabled | min_reviewers | review_assignment_mode | agreement_auto_finalize | arbitration_enabled | arbiter_ids | annotator_guideline_text | annotator_guideline_assets | reviewer_guideline_text | reviewer_guideline_assets | force_guideline`
 - `MOBILE_BP = 767px`
 - `RWD_VIEWPORTS = 375px / 768px / 1440px`
 
@@ -404,6 +407,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 4. **Given** 任務資料含 Dry 與 Official 兩階段且已啟用資料隔離，**When** 查詢匯出資料，**Then** 系統不得混入不同階段的資料集。
 5. **Given** 任務為 `draft`，**When** 使用者調整每回合試標抽樣為 `N 筆`，**Then** 系統需更新後續回合使用規則；總筆數 / 已用試標 / 可進正式 的分配摘要則顯示於「任務狀態與執行控制」區塊。
 6. **Given** 使用者關閉資料隔離，**When** 發布 Run 前確認，**Then** 系統需顯示風險警告、要求二次確認並寫入審計紀錄。
+7. **Given** 任務為 `draft`，**When** `project_leader` 在「審核設定」把每筆資料審核員數改為 `3`、指派方式改為手動並勾選仲裁者，**Then** 摘要即時更新為 `3`／`手動指派`／`啟用 · 仲裁者 N 人` 且儲存後持久化。
+8. **Given** 使用者在「審核設定」輸入 `0` 或留空，**When** 儲存，**Then** 系統阻擋儲存並顯示可修正錯誤訊息，維持編輯模式。
 
 **行為規則**：
 
@@ -516,6 +521,9 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-010p-1**：Overview「試標回合歷程」中的每筆回合 item 之間不得使用垂直連接線；日期必須維持單行顯示，不得因欄寬不足換成兩行。
 - **FR-010q**：抽樣欄位驗證規則必須明確：`sampling_value >= 1 且 < dataset_total`、`target_agreement_overrides` 中任一已填寫值範圍為 `0..1`、`min_annotators >= 2`；不符時阻擋儲存並顯示可修正錯誤訊息。
 - **FR-010r**：Overview「抽樣設定」中的數字欄位（至少包含 `sampling_value`、逐輸出類型 `target_agreement_overrides` 輸入框、`min_annotators`）必須採可直接鍵入的數字輸入框；不得使用瀏覽器內建上下箭頭 spinner 作為主要互動方式。
+- **FR-010s**：Overview 必須在「抽樣設定」之後提供獨立「審核設定」區塊。檢視模式顯示四個欄位：`每筆資料審核員數`（`min_reviewers`）、`審核指派方式`（`review_assignment_mode`，顯示 `自動輪派`／`手動指派`）、`一致即定案`（`agreement_auto_finalize`，顯示 `啟用`／`停用`）、`第三人仲裁`（`arbitration_enabled` + `arbiter_ids`）。編輯權限與抽樣設定相同（`OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE`），編輯／儲存／取消與未儲存離開確認行為與抽樣設定一致。
+- **FR-010s-1**：審核設定編輯模式必須提供：`min_reviewers` 可直接鍵入的數字輸入框（不得使用瀏覽器內建 spinner 作為主要互動）、`REVIEW_ASSIGNMENT_MODES` 單選、`agreement_auto_finalize` 與 `arbitration_enabled` 兩個 toggle、仲裁者多選清單（候選 = `ARBITER_CANDIDATE_RULE`）。`arbitration_enabled = false` 時不得顯示仲裁者選擇。驗證：`min_reviewers` 不符 `MIN_REVIEWERS_RULE` 時阻擋儲存並顯示可修正錯誤訊息。
+- **FR-010s-2**：`第三人仲裁` 摘要值規則：停用 → `停用`；啟用且 `arbiter_ids` 為空 → `啟用 · 未指定仲裁者`；啟用且已指定 → `啟用 · 仲裁者 N 人`。
 - **FR-011**：頁面必須支援 `RWD_VIEWPORTS`，在 `<= MOBILE_BP` 仍可完成核心查看與操作。
 - **FR-011a**：在 `375px`、`768px`、`1440px` 三個 viewport，必須可完成：進入詳情、tab 切換、run 發布權限顯示、`project_leader` 成員管理、`work-log` 篩選、匯出操作，且不得資訊重疊。
 - **FR-012**：Prototype 必須提供三類畫面狀態：`loading`、`empty`、`error`，且各 tab 至少有一組可展示案例。
@@ -600,7 +608,7 @@ flowchart LR
 
 ### 關鍵實體
 
-- **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`task_type`、`status`、`run_stage`、`settings`、`sampling_value`（每回合抽樣筆數）、`trial_round`（唯讀 round 狀態資訊）、`target_agreement_overrides`（逐輸出類型目標 IAA 覆寫；未覆寫時回退至 `OUTPUT_TYPE_IAA_REGISTRY` 預設門檻）、`min_annotators`、`isolation_enabled`、`sample_snapshot_id`。
+- **TaskDetail**：任務詳情聚合。欄位：`task_id`、`task_name`、`task_type`、`status`、`run_stage`、`settings`、`sampling_value`（每回合抽樣筆數）、`trial_round`（唯讀 round 狀態資訊）、`target_agreement_overrides`（逐輸出類型目標 IAA 覆寫；未覆寫時回退至 `OUTPUT_TYPE_IAA_REGISTRY` 預設門檻）、`min_annotators`、`isolation_enabled`、`min_reviewers`（預設 `1`）、`review_assignment_mode`（`REVIEW_ASSIGNMENT_MODES`，預設 `auto`）、`agreement_auto_finalize`（預設 `true`）、`arbitration_enabled`（預設 `true`）、`arbiter_ids[]`（預設空）、`sample_snapshot_id`。
 - **TaskConfig**：schema 驗證後的任務設定內容，來源與 `013-task-new` 相同（ADR-029 組合模型）。結構為 `{ categories[], input_types[], outputs[] }`；每個 output 為 `{ type ∈ OUTPUT_TYPE_KEYS, config }`，config 欄位由 `OUTPUT_TYPE_REGISTRY` 對應輸出類型的欄位定義決定摘要、編輯欄位、預覽與驗證規則。另含 `field_role_map`（資料集欄位 → 角色對應）與 `dataset_file_name`。
 - **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型的設定內容（`TaskConfig.outputs[].config`）。欄位由 `OUTPUT_TYPE_REGISTRY` 中該輸出類型的 fields 定義驅動（含共通欄位 `allow_bypass`）；不得為特定輸出類型在 task-detail 硬編第二份欄位定義（憲法：Generalization-First）。
@@ -671,6 +679,7 @@ flowchart LR
 - **SC-027e**：`annotation-results` 篩選列中，標記員多選篩選觸發按鈕的計算樣式（border-radius、border-color、background-color、font-size、line-height、padding 四邊、box-shadow）必須與相鄰標記階段 `input-select` 的計算值完全相等。
 - **SC-027f**：`single_sentence_va_scoring` 任務的 `annotation-results` 展開列中，各標記員 result tag 的顏色需依 mean ± 1.5σ 基準正確呈現：落在基準範圍內的標記值顯示綠色、任一維度超出上界顯示紅色、任一維度低於下界顯示藍色；配色邏輯須與 annotation workspace 審核員視角一致。
 - **SC-028**：`annotation-results` tab 的匯出功能已自 Overview 移入，且匯出行為（格式、同步／背景切換門檻、metadata 欄位）與原 FR-009、FR-009a、FR-010i 規格保持一致。
+- **SC-029**：Overview「審核設定」區塊於 `draft` + `project_leader` 可完成完整編輯流程（`min_reviewers`／指派方式／兩個 toggle／仲裁者多選），非法 `min_reviewers` 被阻擋並顯示可修正錯誤，儲存後四個摘要欄位（含 FR-010s-2 仲裁摘要值規則）即時反映且雙語一致。
 - **SC-029**：`reviewer` 進入 `annotation-results` tab 時可唯讀查看全部樣本與審核決定，不可執行任何標記或審核操作。
 - **SC-030**：`JSON` 匯出可完整保留任務 metadata、sample 原始資料、多位 annotator 提交、reviewer 決策與 reviewer-corrected result，足以作為系統交換與備份格式。
 - **SC-031**：`JSON-MIN` 匯出可直接被試算表、SQL 匯入或 BI 工具使用，且每列都保有 sample、annotator、review 與 task-specific result 的最小必要欄位。
@@ -682,6 +691,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.3.0 | 2026-08-18 | **審核設定區塊（issue #148 P4 之一，minor）**：Overview 新增獨立「審核設定」區塊（抽樣設定之後），檢視四欄位（每筆資料審核員數／審核指派方式／一致即定案／第三人仲裁），編輯權限與抽樣設定同規則（`OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE`）；編輯模式提供 `min_reviewers` 直接鍵入數字框（`MIN_REVIEWERS_RULE`：整數且 >= 1，`1` = 單一終審員）、`REVIEW_ASSIGNMENT_MODES`（auto = 系統輪派湊滿 N 位／manual = 成員管理逐一分派）單選、`agreement_auto_finalize` 與 `arbitration_enabled` toggle、仲裁者多選（候選 = `ARBITER_CANDIDATE_RULE`，可留空 = 任一未參與者可認領，對齊 015 FR-060；仲裁停用時不顯示）；仲裁摘要值規則（停用／啟用 · 未指定仲裁者／啟用 · 仲裁者 N 人）。新增 FR-010s／FR-010s-1／FR-010s-2、SC-029、使用者故事 3 驗收情境 7–8；`TaskDetail` 實體新增 `min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`／`arbiter_ids[]`；`OVERVIEW_EDITABLE_FIELDS` 擴充同名五欄位。成員管理「審核負荷」欄、審核指派區塊與 `ReviewAssignment` 實體屬 P4 後續 PR |
 | 2.2.0 | 2026-08-12 | **IAA 策略 v2 — 移除可選 IAA 計算方式，改為逐輸出類型自動選定（minor）**：移除 `IAA_METHOD_ENUM` 下拉選單與 `IAA_METHOD_DEFAULTS`；Overview「抽樣設定」改顯示唯讀逐輸出類型 IAA 指標清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，source of truth 為 `dataset-017` 規格常數，實作落地點註記為 `task-config.data.js`）。`target_agreement` 單一全域數值改為 `target_agreement_overrides: { [output_type]: number }`（逐輸出類型覆寫，未設定回退 registry 預設門檻），延續 FR-010o-1 使用者覆寫能力。更新 FR-010i／FR-010o／FR-010o-1／FR-010q／FR-010r、`OVERVIEW_EDITABLE_FIELDS`、匯出 metadata（`iaa_method` 改為 `applied_iaa_metrics`）、`TaskDetail`／`SampleSnapshot` 實體、SC-018。**（同版本內修訂，speckit.analyze）**：`OUTPUT_TYPE_IAA_REGISTRY` 之 `default_threshold` 依 `dataset-017` gate 採用階裁決明確化（`single_dim` 0.75／`multi_dim` 0.80）；依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 2.1.0 | 2026-07-31 | 同步 `013-task-new` v6.9.0 項目對名稱：輸入類型為 `item_pair` 時「標記設定」編輯模式呈現「項目對名稱」設定卡（013 FR-003k 同構）；「基本資料」／「標記設定」儲存時持久化生效名稱並於重新進入編輯模式帶回；「基本資料」更換資料集後名稱以新資料集重新初始化；新增 FR-014l-3 |
 | 2.0.0 | 2026-07-31 | **ADR-029 outputs[] 遷移 + 013 Step 1/2 完全同步（major）**：任務類型自 legacy `task_type` 枚舉改為 `categories[] + input_types[] + outputs[]` 組合模型，與 `013-task-new` 共用 `OUTPUT_TYPE_REGISTRY` 與設定引擎（task-config.\* 共用檔）；「基本資料」編輯改為 Step 1 同構（資料集檔案列 + `欄位預覽・指定欄位角色` 表 + 三組 chips），「標記設定」編輯改為 Step 2 同構（每個 output 一個 accordion + 同源預覽 + YAML/JSON code 區含 dirty 鎖與錯誤列）；ABSA 範本僅限 `entity_recognition + relation_identification` 組合；13 個 seed 任務統一為 draft 基準（狀態定義於 task-list.data.js；組合與資料集 seed 於 task-detail.data.js）；匯出檔 `task_type` 改由 outputs[] 推導之 `LEGACY_TASK_TYPE_EXPORT_ENUM` 沿用、`sequence_labeling_subtype` 固定為空字串；FR-014k–u 汰換為 FR-014k/l/l-1/l-2/m/n；關鍵實體 TaskConfig 重構、AspectListTaskConfig 與 SentencePairsTaskConfig 併入 registry 驅動之 OutputConfig；SC-015/020–024 改寫為 parity 驗收；修正 overview 編輯模式未渲染資料集檔案清單問題 |
