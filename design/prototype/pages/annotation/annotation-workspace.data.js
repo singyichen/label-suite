@@ -1438,15 +1438,20 @@
   /* Every submitted reviewer decision on ONE annotator's work, prefix-scanned
    * the same way getSampleHistory() builds its trail: reading only the
    * signed-in reviewer's bucket would hide the peers whose disagreement is
-   * exactly what makes a unit disputed. */
+   * exactly what makes a unit disputed. The reviewer id is the bucket key's
+   * suffix (FR-049) -- dispute items need it to record WHOSE B value each
+   * disagreement carries. */
   function readReviewerSubmissions(taskId, runType, sampleId, identity) {
     var store = readSubmissionStore();
     var prefix = reviewerBucketPrefix(taskId, runType, identity);
     return Object.keys(store)
       .filter(function (key) { return key.indexOf(prefix) === 0; })
-      .map(function (key) { return store[key][sampleId]; })
-      .filter(function (entry) { return entry && entryStatus(entry) === 'submitted'; })
-      .map(function (entry) { return entry.answers; });
+      .map(function (key) {
+        var entry = store[key][sampleId];
+        if (!entry || entryStatus(entry) !== 'submitted') return null;
+        return { reviewerId: key.slice(prefix.length), answers: entry.answers };
+      })
+      .filter(function (submission) { return submission !== null; });
   }
 
   /* Derives the review unit's state from the annotator's submission plus
@@ -1466,7 +1471,7 @@
         return !compareOutputAnswer(
           outKey,
           convertSubmissionAnswer(outKey, annotatorSubmission),
-          convertSubmissionAnswer(outKey, reviewerSubmission)
+          convertSubmissionAnswer(outKey, reviewerSubmission.answers)
         ).equal;
       });
     });
@@ -1474,6 +1479,45 @@
 
     if (changed) return enoughReviewers ? REVIEW_UNIT_STATUS.DISPUTED : REVIEW_UNIT_STATUS.MODIFIED;
     return enoughReviewers ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.APPROVED;
+  }
+
+  /* ---- Dispute items (spec 015 v4.6.0, issue #147 P3a) -------------------
+   * A DisputeItem is ONE disagreed label/span/token inside a review unit,
+   * not the whole unit: parts both sides agree on never enter the pool.
+   * Derived at read time from the same FR-052 diffs getReviewUnitStatus()
+   * consumes -- nothing is materialized, so the pool can never drift from
+   * the status machine that says a unit is disputed. Items merge across
+   * reviewers by `outKey + merge key`: the annotator's A value appears
+   * once, and each disagreeing reviewer contributes a B value under their
+   * id (agreeing reviewers stay out -- their consent is what the majority
+   * convergence in P3c counts). Arbitration votes and the finalized value
+   * are the only stored state, and they arrive in P3c. */
+  function getDisputeItems(taskId, runType, sampleId, identity, outKeys) {
+    var annotatorSubmission = getSubmission(taskId, 'annotator', runType, sampleId, identity);
+    if (!annotatorSubmission) return [];
+
+    var reviewerSubmissions = readReviewerSubmissions(taskId, runType, sampleId, identity);
+    var byId = {};
+    var order = [];
+    (Array.isArray(outKeys) ? outKeys : []).forEach(function (outKey) {
+      var annotatorAnswer = convertSubmissionAnswer(outKey, annotatorSubmission);
+      reviewerSubmissions.forEach(function (submission) {
+        var diffs = compareOutputAnswer(
+          outKey,
+          annotatorAnswer,
+          convertSubmissionAnswer(outKey, submission.answers)
+        ).diffs;
+        diffs.forEach(function (diff) {
+          var id = outKey + '::' + diff.key;
+          if (!byId[id]) {
+            byId[id] = { outKey: outKey, key: diff.key, annotatorValue: diff.annotator, reviewerValues: {} };
+            order.push(id);
+          }
+          byId[id].reviewerValues[submission.reviewerId] = diff.reviewer;
+        });
+      });
+    });
+    return order.map(function (id) { return byId[id]; });
   }
 
   global.LabelSuiteAnnotationWorkspaceData = {
@@ -1505,5 +1549,6 @@
     REVIEW_UNIT_STATUS: REVIEW_UNIT_STATUS,
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
+    getDisputeItems: getDisputeItems,
   };
 })(window);
