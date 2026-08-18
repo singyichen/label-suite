@@ -96,22 +96,27 @@ test.describe('Alt+Arrow steps between review units', () => {
 
     // Alt+ArrowLeft is Back in Chrome/Firefox; without preventDefault the
     // shortcut would step forward and leave the workspace at the same time.
-    // Registered after the page's own handler, so it observes the flag the
-    // handler set. Deliberately not awaited -- it settles on the key press.
-    const prevented = page.evaluate(
-      () =>
-        new Promise<boolean>((resolve) => {
-          // Pressing a combo emits a keydown for Alt itself first, which is
-          // not prevented -- wait for the arrow.
-          document.addEventListener('keydown', function onKey(e) {
-            if (e.key !== 'ArrowRight') return;
-            document.removeEventListener('keydown', onKey);
-            resolve(e.defaultPrevented);
-          });
-        })
-    );
+    //
+    // The probe is installed by an AWAITED evaluate that returns at once and
+    // parks the verdict on `window`: an un-awaited evaluate returning a
+    // pending promise races the key press, and on a slow runner the press
+    // wins and nothing ever resolves.
+    await page.evaluate(() => {
+      const probe = window as Window & { __arrowPrevented?: boolean };
+      // Pressing a combo emits a keydown for Alt itself first, which is not
+      // prevented -- wait for the arrow.
+      document.addEventListener('keydown', function onKey(e) {
+        if (e.key !== 'ArrowRight') return;
+        document.removeEventListener('keydown', onKey);
+        probe.__arrowPrevented = e.defaultPrevented;
+      });
+    });
+
     await page.keyboard.press('Alt+ArrowRight');
-    expect(await prevented).toBe(true);
+
+    await expect
+      .poll(() => page.evaluate(() => (window as Window & { __arrowPrevented?: boolean }).__arrowPrevented))
+      .toBe(true);
   });
 });
 
