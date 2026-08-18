@@ -37,8 +37,9 @@
     <h2 class="panel-title" id="workLogTableTitle">工時明細表</h2>
     <div class="worklog-summary-grid" style="margin-bottom: 12px;">
       <article class="kv-item"><span class="kv-key" id="workLogSummaryHoursLabel">總工時</span><span class="kv-value" id="workLogSummaryHoursValue">-</span></article>
-      <article class="kv-item"><span class="kv-key" id="workLogSummaryCompletedLabel">總完成筆數</span><span class="kv-value" id="workLogSummaryCompletedValue">-</span></article>
-      <article class="kv-item"><span class="kv-key" id="workLogSummarySpeedLabel">加權平均速度</span><span class="kv-value" id="workLogSummarySpeedValue">-</span></article>
+      <article class="kv-item"><span class="kv-key" id="workLogSummaryAnnotatedLabel">總標記筆數</span><span class="kv-value" id="workLogSummaryAnnotatedValue">-</span></article>
+      <article class="kv-item"><span class="kv-key" id="workLogSummaryReviewedLabel">總審核筆數</span><span class="kv-value" id="workLogSummaryReviewedValue">-</span></article>
+      <article class="kv-item"><span class="kv-key" id="workLogSummarySpeedLabel">加權平均速度</span><span class="kv-value" id="workLogSummarySpeedValue">-</span><span class="kv-sub" id="workLogSummaryAvgPerItemValue"></span></article>
     </div>
     <div class="table-wrap">
       <div class="table-scroll">
@@ -51,7 +52,9 @@
               <th id="thWorkLogLoginLogout">登入／登出時間</th>
               <th id="thWorkLogOnlineDuration">上線時長</th>
               <th id="thWorkLogDuration">工作時長</th>
-              <th id="thWorkLogCompleted">完成筆數</th>
+              <th id="thWorkLogAnnotated">標記筆數</th>
+              <th id="thWorkLogReviewed">審核筆數</th>
+              <th id="thWorkLogArbitrated">仲裁筆數</th>
               <th id="thWorkLogSpeed">平均速度</th>
               <th id="thWorkLogStage">標記階段</th>
             </tr>
