@@ -1,7 +1,7 @@
 ---
-功能分支: feat/task-management/014-review-settings
+功能分支: feat/task-management/014-review-history
 建立日期: 2026-04-20
-版本: 2.3.0
+版本: 2.4.0
 狀態: Draft
 ---
 
@@ -50,6 +50,7 @@
 - `REVIEW_ASSIGNMENT_MODES = auto | manual`（`auto` = 系統輪派審核員直到每筆資料湊滿 `min_reviewers` 位；`manual` = `project_leader` 於成員管理逐一分派）
 - `MIN_REVIEWERS_RULE = 整數且 >= 1`（`1` = 單一終審員；`N >= 2` = 每筆資料由 N 位審核員並行審核，收斂語意見 `015` FR-061）
 - `ARBITER_CANDIDATE_RULE = task_role = reviewer AND membership_status = active`（`arbiter_ids` 可留空 = 任一未參與該筆審核的審核員皆可認領，對齊 `015` FR-060）
+- `AR_REVIEW_STATUS = pending | approved | modified | disputed | finalized`（沿用 `015` `REVIEW_UNIT_STATUS` 五態；中文語彙 `待審 / 已同意 / 已修改 / 爭議中 / 已定稿`；annotation-results 的審核狀態 badge 與審核狀態篩選選項皆由此常數推導，不得於選單硬編狀態清單）
 - `SAMPLE_SNAPSHOT_LOCK_EVENT = publish_dry_run`
 - `ANNOTATION_LIST_MATERIALIZATION_EVENTS = add_trial_round | start_official_run`
 - `OVERVIEW_EDITABLE_STATUS = draft`
@@ -193,7 +194,8 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
     - 非可編輯條件（非 `draft` 或非 `project_leader`）：顯示唯讀(隱藏編輯按鈕)與不可編輯原因提示
 - Tab D：`標記結果`
   - 區塊 1：`篩選列`
-    - 篩選維度：標記階段（試標 / 正式標記）、提交狀態（全部 / 已提交 / 草稿 / 待處理）、標記員多選篩選
+    - 篩選維度：標記階段（試標 / 正式標記）、提交狀態（全部 / 已提交 / 草稿 / 待處理）、標記員多選篩選、審核員篩選（全部 / 各具名審核員與仲裁者）、審核狀態篩選（全部 + `AR_REVIEW_STATUS` 五態，選項由常數推導）
+    - 審核員篩選語意：保留「任一標記員條目曾由該審核員審核或仲裁」的樣本；審核狀態篩選語意：保留「任一標記員條目的審核狀態相符」的樣本
     - `project_leader` 與 `reviewer` 皆可使用全部篩選維度
     - 標記員多選篩選器的觸發按鈕（trigger）外觀必須與同篩選列的 `input-select` 元素完全一致：border、border-radius、padding、font-size、line-height、background-color 及 box-shadow 計算值需相等；觸發按鈕仍保留自訂 chevron 圖示以支援多選狀態
   - 區塊 2：`標記結果表`
@@ -224,7 +226,11 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
         - `relation_extraction`：tuple / relation 字串（如 `(DRUG:阿司匹靈)→treats→(SYMP:頭痛)`），使用 reviewer list 同款 result tag
         - `sentence_pairs`：分類標籤或評分值，使用 reviewer list 同款 result tag
       - 提交時間
-      - 審核狀態（唯讀 badge）：`通過` / `退回` / `待審核`
+      - 審核狀態（唯讀 badge）：`AR_REVIEW_STATUS` 五態（`待審` / `已同意` / `已修改` / `爭議中` / `已定稿`）
+      - 審核歷程時間軸（每位標記員列下方縮排顯示）：
+        - 每筆審核決策一行：審核員名稱、決策（`同意` 或 `修改→{修正後結果}`）、審核時間
+        - 若該條目經仲裁定案，再一行：仲裁者名稱、裁定（`採 A` = 維持標記員結果 / `採 B` = 採審核員修正）、仲裁時間
+        - `待審` 條目不顯示任何歷程行；歷程行全部唯讀，不提供操作
     - 子列規則：
       - desktop / tablet 展開列需採 `標記員 + 標記值` 在左、`提交時間 + 審核狀態` 在右的兩群組布局；右側 meta 群組需靠右對齊且不可擠壓 `標記值` 到不可讀
       - mobile viewport 下，展開列需改為垂直堆疊；`提交時間 + 審核狀態` meta 群組需移至下方並左對齊，可換行但不得遮蓋或裁切內容
@@ -548,7 +554,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-014m**：Overview「標記設定」編輯模式的範本按鈕必須沿用 `013-task-new` Step 2 規則：僅當 outputs 組合恰為 `entity_recognition + relation_identification` 時提供 ABSA 範本按鈕；設定檔上傳入口則恆常提供。
 - **FR-014n**：Overview 編輯儲存時，系統必須以儲存當下的 categories / input_types / outputs 組合重新推導 `LEGACY_TASK_TYPE_EXPORT_ENUM` 對應值，供 annotation-results 呈現分流與匯出檔 `task_type` 欄位使用。
 - **FR-015**：系統必須提供 `annotation-results` tab，讓 `project_leader` 與 `reviewer` 查看逐筆樣本的標記員提交內容與審核員審核決定，且全部唯讀。
-- **FR-015a**：`annotation-results` tab 必須提供篩選列，包含標記階段切換（試標 / 正式標記）、提交狀態篩選（全部 / 已提交 / 草稿 / 待處理）、標記員多選篩選；`project_leader` 與 `reviewer` 皆可使用全部篩選維度。標記員多選篩選的觸發按鈕視覺樣式（border、border-radius、padding、font-size、line-height）必須與相鄰 `input-select` 元素的計算值完全一致。
+- **FR-015a**：`annotation-results` tab 必須提供篩選列，包含標記階段切換（試標 / 正式標記）、提交狀態篩選（全部 / 已提交 / 草稿 / 待處理）、標記員多選篩選、審核員篩選、審核狀態篩選；`project_leader` 與 `reviewer` 皆可使用全部篩選維度。標記員多選篩選的觸發按鈕視覺樣式（border、border-radius、padding、font-size、line-height）必須與相鄰 `input-select` 元素的計算值完全一致。
+- **FR-015a-1**：審核員篩選選項為「全部 + 審核歷程中出現過的具名審核員與仲裁者（去重）」；選定後僅保留「任一標記員條目曾由該審核員審核或仲裁」的樣本。審核狀態篩選選項為「全部 + `AR_REVIEW_STATUS` 五態」且必須由該常數推導（不得於選單硬編狀態清單）；選定後僅保留「任一標記員條目的審核狀態相符」的樣本。兩個篩選與既有篩選維度為 AND 疊加。
 - **FR-015b**：`annotation-results` tab 的 `標記結果表` 必須為可展開兩層的階層式結構：父列顯示樣本摘要（樣本 ID、完成狀態、完成時間、標記階段、文本摘要截斷、標記分布統計），展開後子列每位標記員各一列。
 - **FR-015b-1**：父列 `標記階段` 必須獨立成欄，以 badge 顯示 `試標` / `正式標記`，樣式對齊既有 stage badge；不得將標記階段文案放入 `文本摘要` 欄內。
 - **FR-015b-2**：父列 `標記結果表` 的視覺語法必須對齊 reviewer `annotation-list`：統計區使用 reviewer stats 文字樣式，展開列標記值使用 reviewer result tag 樣式。
@@ -558,7 +565,8 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-015c-1**：`single_sentence_classification`、`sequence_labeling.subtype = ner`、`sequence_labeling.subtype = aspect_list`、`sentence_pairs` 的子列標記值需以 reviewer list 同款 result tag 顯示。
 - **FR-015c-2**：`single_sentence_va_scoring` 的父列統計必須顯示 reviewer list 同款 `mean / std / ±1.5std` 多行文字；子列標記值必須顯示 `[valence, arousal]`，並沿用相同顏色判斷規則：以該樣本全體標記員 VA 值計算 mean ± 1.5σ 基準範圍，V 或 A 任一維度超出上界顯示紅色（`result-tag-red`），任一維度低於下界顯示藍色（`result-tag-blue`），雙維度皆落在範圍內顯示綠色（`result-tag-green`）。
 - **FR-015c-3**：`relation_extraction` 的父列統計與子列標記值必須保留 relation / tuple 原始字串語意（例如 `(DRUG:阿司匹靈)→treats→(SYMP:頭痛)`），不得退化為 `實體 / 關係 / Triple` 數字摘要或壓縮代碼。
-- **FR-015d**：標記員子列必須顯示該條目的審核員審核結果（`通過` / `退回` / `待審核`），以唯讀 badge 呈現，不提供任何審核操作按鈕。
+- **FR-015d**：標記員子列必須顯示該條目的審核狀態（`AR_REVIEW_STATUS` 五態：`待審` / `已同意` / `已修改` / `爭議中` / `已定稿`），以唯讀 badge 呈現，不提供任何審核操作按鈕。
+- **FR-015d-4**：每位標記員子列下方必須以縮排時間軸唯讀呈現該條目的審核歷程：每筆審核決策一行（審核員名稱、`同意` 或 `修改→{修正後結果}`、審核時間）；若經仲裁定案再一行（仲裁者名稱、`採 A` / `採 B`、仲裁時間）。`待審` 條目不顯示歷程行。同一樣本被多位標記員標註時，歷程逐標記員各自成段，不得合併。
 - **FR-015d-1**：展開列 `提交時間` 與 `審核狀態` 必須在 desktop / tablet 維持右側獨立 meta 群組；任何 `task_type`、字串長度或 viewport 不得導致審核狀態 badge 被截斷或完全不可見。
 - **FR-015d-2**：展開列在 `<= MOBILE_BP` 時必須改為垂直堆疊，右側 meta 群組需移至內容下方並左對齊；result tag 可換行但不得被拉伸為整列寬度色塊。
 - **FR-015d-3**：展開列的可見範圍判定必須以 `annotation-results` 的橫向捲動容器為準，而非以 table 本體寬度為準；table 發生 overflow 時，`審核狀態` badge 與整列內容仍需完整落在 scroll container 內。
@@ -684,6 +692,7 @@ flowchart LR
 - **SC-031**：`JSON-MIN` 匯出可直接被試算表、SQL 匯入或 BI 工具使用，且每列都保有 sample、annotator、review 與 task-specific result 的最小必要欄位。
 - **SC-032**：不同 `task_type` 的匯出欄位會正確切換：分類顯示 labels、VA 顯示 valence/arousal、NER 顯示 entities、Aspect List 顯示 aspects、RE 顯示 relations、Sentence Pairs 顯示 label/score 與 pair metadata；不會錯置欄位。
 - **SC-033**：Overview「審核設定」區塊於 `draft` + `project_leader` 可完成完整編輯流程（`min_reviewers`／指派方式／兩個 toggle／仲裁者多選），非法 `min_reviewers` 被阻擋並顯示可修正錯誤，儲存後四個摘要欄位（含 FR-010s-2 仲裁摘要值規則）即時反映且雙語一致。
+- **SC-034**：`annotation-results` 展開列可完整呈現「標記員 → 審核員 → 仲裁」縮排時間軸（含具名人員、決策與時間），同一樣本多位標記員時逐標記員各自成段；審核狀態 badge 採 `AR_REVIEW_STATUS` 五態語彙；審核員與審核狀態兩個新篩選可實際過濾樣本列，且全部文案雙語一致。
 
 ---
 
@@ -691,6 +700,7 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
+| 2.4.0 | 2026-08-18 | **標記結果審核歷程可視化（issue #149 P5 之一，minor）**：`annotation-results` 展開列於每位標記員子列下方新增「審核員 → 仲裁」縮排時間軸（審核員名稱＋`同意`／`修改→{修正後結果}`＋審核時間；經仲裁定案再一行仲裁者名稱＋`採 A`／`採 B`＋仲裁時間；`待審` 不顯示歷程行）；審核狀態 badge 語彙自 `通過／退回／待審核` 三態改為 `AR_REVIEW_STATUS` 五態（沿用 015 `REVIEW_UNIT_STATUS`：待審／已同意／已修改／爭議中／已定稿）；篩選列新增「審核員」與「審核狀態」下拉（審核狀態選項由常數推導）。新增常數 `AR_REVIEW_STATUS`、FR-015a-1、FR-015d-4、SC-034；改寫 FR-015a、FR-015d。工時紀錄完成筆數拆欄屬 P5 後續 PR |
 | 2.3.0 | 2026-08-18 | **審核設定區塊（issue #148 P4 之一，minor）**：Overview 新增獨立「審核設定」區塊（抽樣設定之後），檢視四欄位（每筆資料審核員數／審核指派方式／一致即定案／第三人仲裁），編輯權限與抽樣設定同規則（`OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE`）；編輯模式提供 `min_reviewers` 直接鍵入數字框（`MIN_REVIEWERS_RULE`：整數且 >= 1，`1` = 單一終審員）、`REVIEW_ASSIGNMENT_MODES`（auto = 系統輪派湊滿 N 位／manual = 成員管理逐一分派）單選、`agreement_auto_finalize` 與 `arbitration_enabled` toggle、仲裁者多選（候選 = `ARBITER_CANDIDATE_RULE`，可留空 = 任一未參與者可認領，對齊 015 FR-060；仲裁停用時不顯示）；仲裁摘要值規則（停用／啟用 · 未指定仲裁者／啟用 · 仲裁者 N 人）。新增 FR-010s／FR-010s-1／FR-010s-2、SC-033、使用者故事 3 驗收情境 7–8；`TaskDetail` 實體新增 `min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`／`arbiter_ids[]`；`OVERVIEW_EDITABLE_FIELDS` 擴充同名五欄位。成員管理「審核負荷」欄、審核指派區塊與 `ReviewAssignment` 實體屬 P4 後續 PR |
 | 2.2.0 | 2026-08-12 | **IAA 策略 v2 — 移除可選 IAA 計算方式，改為逐輸出類型自動選定（minor）**：移除 `IAA_METHOD_ENUM` 下拉選單與 `IAA_METHOD_DEFAULTS`；Overview「抽樣設定」改顯示唯讀逐輸出類型 IAA 指標清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，source of truth 為 `dataset-017` 規格常數，實作落地點註記為 `task-config.data.js`）。`target_agreement` 單一全域數值改為 `target_agreement_overrides: { [output_type]: number }`（逐輸出類型覆寫，未設定回退 registry 預設門檻），延續 FR-010o-1 使用者覆寫能力。更新 FR-010i／FR-010o／FR-010o-1／FR-010q／FR-010r、`OVERVIEW_EDITABLE_FIELDS`、匯出 metadata（`iaa_method` 改為 `applied_iaa_metrics`）、`TaskDetail`／`SampleSnapshot` 實體、SC-018。**（同版本內修訂，speckit.analyze）**：`OUTPUT_TYPE_IAA_REGISTRY` 之 `default_threshold` 依 `dataset-017` gate 採用階裁決明確化（`single_dim` 0.75／`multi_dim` 0.80）；依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 2.1.0 | 2026-07-31 | 同步 `013-task-new` v6.9.0 項目對名稱：輸入類型為 `item_pair` 時「標記設定」編輯模式呈現「項目對名稱」設定卡（013 FR-003k 同構）；「基本資料」／「標記設定」儲存時持久化生效名稱並於重新進入編輯模式帶回；「基本資料」更換資料集後名稱以新資料集重新初始化；新增 FR-014l-3 |
