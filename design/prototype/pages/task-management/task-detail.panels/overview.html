@@ -362,6 +362,86 @@
     </div>
   </section>
 
+  <!-- ①b 審核設定 -->
+  <section class="panel" aria-labelledby="reviewSettingsTitle">
+    <div class="panel-head-row">
+      <h2 class="panel-title" id="reviewSettingsTitle">審核設定</h2>
+      <div class="sampling-edit-actions">
+        <button class="btn btn-secondary" type="button" id="reviewEditBtn">編輯</button>
+        <button class="btn btn-secondary hidden" type="button" id="reviewCancelBtn">取消</button>
+        <button class="btn btn-primary hidden" type="button" id="reviewSaveBtn">儲存</button>
+      </div>
+    </div>
+    <p class="status-hint" id="reviewReadonlyHint"></p>
+
+    <div id="reviewSummaryView" class="kv-dl">
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelMinReviewersControl">每筆資料審核員數</span>
+        <span class="kv-dl-value" id="valueMinReviewersControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelReviewAssignmentControl">審核指派方式</span>
+        <span class="kv-dl-value" id="valueReviewAssignmentControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelAutoFinalizeControl">一致即定案</span>
+        <span class="kv-dl-value" id="valueAutoFinalizeControl"></span>
+      </div>
+      <div class="kv-dl-row">
+        <span class="kv-dl-key" id="labelArbitrationControl">第三人仲裁</span>
+        <span class="kv-dl-value" id="valueArbitrationControl"></span>
+      </div>
+    </div>
+
+    <div class="sampling-edit-form hidden" id="reviewEditForm">
+      <div class="sampling-fields sampling-fields-primary">
+        <div class="field-group">
+          <label class="field-label" id="minReviewersInputLabel" for="minReviewersInput">每筆資料審核員數</label>
+          <input class="input-number" id="minReviewersInput" type="text" inputmode="numeric" pattern="[0-9]*" value="1" />
+          <p class="field-hint" id="minReviewersHint">1 = 單一終審員；N ≥ 2 = 每筆資料由 N 位審核員並行審核</p>
+        </div>
+        <div class="field-group">
+          <span class="field-label" id="assignmentModeLabel">審核指派方式</span>
+          <div class="review-mode-inline" role="radiogroup" aria-labelledby="assignmentModeLabel">
+            <label><input type="radio" name="reviewAssignmentMode" id="assignmentModeAuto" value="auto" /><span id="assignmentModeAutoText">自動輪派</span></label>
+            <label><input type="radio" name="reviewAssignmentMode" id="assignmentModeManual" value="manual" /><span id="assignmentModeManualText">手動指派</span></label>
+          </div>
+          <p class="field-hint" id="assignmentModeHint">自動＝系統輪派每筆湊滿 N 位；手動＝到成員管理逐一分派</p>
+        </div>
+      </div>
+
+      <p class="inline-error" id="reviewSettingsError"></p>
+
+      <hr class="panel-divider" />
+
+      <div class="toggle-row">
+        <div class="toggle-meta">
+          <div class="toggle-title" id="autoFinalizeToggleTitle">標記員與審核員一致即定案</div>
+          <div class="toggle-desc" id="autoFinalizeToggleDesc">審核結果與標記完全一致時自動定案，不需額外確認。</div>
+        </div>
+        <label class="toggle-switch" for="autoFinalizeToggle">
+          <input id="autoFinalizeToggle" type="checkbox" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-meta">
+          <div class="toggle-title" id="arbitrationToggleTitle">不一致時建立爭議項交第三人仲裁</div>
+          <div class="toggle-desc" id="arbitrationToggleDesc">審核員間多數決不成立時，爭議項進入爭議池等待仲裁。</div>
+        </div>
+        <label class="toggle-switch" for="arbitrationToggle">
+          <input id="arbitrationToggle" type="checkbox" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="field-group hidden" id="arbiterOptions">
+        <span class="field-label" id="arbiterSelectLabel">仲裁者</span>
+        <div class="review-mode-inline" id="arbiterOptionList"></div>
+        <p class="field-hint" id="arbiterSelectHint">可留空＝任一未參與該筆審核的審核員皆可認領</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ② 執行控制面板 -->
   <section class="panel" aria-labelledby="executionTitle">
     <div class="panel-head-row">
