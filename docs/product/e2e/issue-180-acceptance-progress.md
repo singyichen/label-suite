@@ -20,15 +20,15 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 
 ## 階段二：整合與正典決策（需使用者 checkpoint）
 
-- [ ] 整合三條工作流 → 需求追溯矩陣草稿（流程節點 × 角色 × Spec 來源 × Prototype 證據 × 判定）
-- [ ] 彙整所有 Spec conflict，至少涵蓋 issue 12.8 已知項目：
-  - [ ] reviewer model redesign vs 舊 PRD／story map 語意的正典優先序
-  - [ ] 三步／四步建立任務流程描述
-  - [ ] 試標是否產生 gold 的規則
-  - [ ] 正式 E2E 目錄（ADR-009/012/014 `frontend/tests/` vs testing constitution `e2e/[module]/`）
-  - [ ] ADR-022 `completed` 前置條件是否含 review／dispute／arbitration 完成
-- [ ] 產出使用者決策清單 → **停下等使用者裁決**
-- [ ] 依決策更新追溯矩陣與驗收條件
+- [x] 整合三條工作流 → 需求追溯矩陣草稿：`issue-180/traceability-matrix.md`（16 節點 × 角色 × Spec 來源 × Prototype 證據 × 判定 × Playwright 處理）
+- [x] 彙整所有 Spec conflict（11 項，見 `issue-180/phase2-decision-list.md` 與 W1 §3）：
+  - [x] reviewer model：015 已內化 redesign；退回機制為正典（AC-3.15 限 official_run）——主 agent 複核後將 W2 F-08 重分類為「dry_run 未設防護的 Implementation mismatch＋文案過時」
+  - [x] 三步／四步：四步為正典（013:53），story-map 過期 → D4 同步 issue
+  - [x] 試標 gold：015 v4.0.0 已統一「official_run 才產 gold」，僅產品全景文件未同步 → D4
+  - [x] 正式 E2E 目錄 → D1：本輪留在 `design/prototype/tests/`，正式目錄延後為 `[Task]` issue
+  - [x] `completed` 前置條件 → D2：採 issue 完整條件，修訂 ADR-022＋014
+- [x] 使用者決策清單 → 2026-08-18 已裁決 D1–D4（見 `phase2-decision-list.md` 決策紀錄）
+- [x] 依決策更新追溯矩陣與驗收條件（matrix「驗收條件更新」節）
 
 ## 階段三：Playwright 驗收文件
 
@@ -50,4 +50,4 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 - [ ] issue register 回填 #180，確認每項發現皆有處置
 
 ---
-最後更新：2026-08-18 — 階段一完成；進入階段二（整合與正典決策）
+最後更新：2026-08-18 — 階段二完成（決策 D1–D4 已裁決、追溯矩陣草稿完成）；下一步：階段三撰寫驗收文件
