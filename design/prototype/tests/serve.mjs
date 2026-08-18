@@ -63,8 +63,8 @@ const server = createServer(async (req, res) => {
       return;
     }
     const status =
-      err instanceof URIError
-        ? 400 // malformed percent-encoding in the request path
+      err instanceof URIError || err instanceof TypeError
+        ? 400 // malformed percent-encoding or unparseable URL in the request path
         : err && (err.code === 'ENOENT' || err.code === 'EISDIR' || err.code === 'ENOTDIR')
           ? 404
           : 500;
