@@ -60,6 +60,7 @@
               <th id="thMemberName">姓名</th>
               <th id="thMemberEmail">Email</th>
               <th id="thMemberTaskRole">任務角色</th>
+              <th id="thMemberReviewLoad">審核負荷</th>
               <th id="thMemberStatus">狀態</th>
               <th id="thMemberJoinedAt">加入時間</th>
               <th id="thMemberLastActive">最後活動</th>
@@ -87,6 +88,39 @@
           </button>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="reviewAssignmentTitle">
+    <div class="review-assignment-head">
+      <div>
+        <h2 class="panel-title" id="reviewAssignmentTitle">審核指派</h2>
+        <p class="panel-subtitle" id="reviewAssignmentHint"></p>
+      </div>
+      <div class="review-assignment-actions">
+        <span class="review-unassigned-count" id="reviewUnassignedCount"></span>
+        <button class="mini-btn mini-btn-primary hidden" id="reviewAutoFillBtn" type="button">自動補齊</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="member-table" role="table" aria-label="Review assignment table">
+          <thead>
+            <tr>
+              <th id="thAssignReviewer">審核員</th>
+              <th id="thAssignAssigned">已指派</th>
+              <th id="thAssignPending">待審</th>
+              <th id="thAssignDone">已完成</th>
+              <th id="thAssignActions">操作</th>
+            </tr>
+          </thead>
+          <tbody id="reviewAssignmentBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dispute-pool-row">
+      <span id="disputePoolText"></span>
+      <button class="mini-btn hidden" id="disputeAssignBtn" type="button">分派給仲裁者</button>
     </div>
   </section>
 </div>
