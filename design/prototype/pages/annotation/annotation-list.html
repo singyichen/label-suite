@@ -662,6 +662,8 @@
       openSampleAriaTpl: '開啟樣本 {id}',
       notFoundTitle: '找不到這個任務',
       notFoundMessage: '任務代碼 {taskId} 不存在，請確認網址或回到儀表板重新選擇任務。',
+      notFoundNoTaskMessage: '未指定任務，請回到儀表板重新選擇任務。',
+      notFoundBackBtn: '回儀表板',
       thLabelStats: '標記分布統計',
       thAnswer: '標記結果',
       thReviewStatus: '審核狀態',
@@ -716,6 +718,8 @@
       openSampleAriaTpl: 'Open sample {id}',
       notFoundTitle: 'Task not found',
       notFoundMessage: 'Task {taskId} does not exist. Please check the URL or return to the dashboard to pick another task.',
+      notFoundNoTaskMessage: 'No task specified. Please return to the dashboard to pick a task.',
+      notFoundBackBtn: 'Back to dashboard',
       thLabelStats: 'Label Distribution',
       thAnswer: 'Annotation Result',
       thReviewStatus: 'Review Status',
@@ -1548,9 +1552,23 @@
     title.style.marginBottom = '4px';
     title.textContent = t('notFoundTitle');
     var message = document.createElement('span');
-    message.textContent = t('notFoundMessage', { taskId: taskId });
+    message.textContent = taskId
+      ? t('notFoundMessage', { taskId: taskId })
+      : t('notFoundNoTaskMessage');
     el.appendChild(title);
     el.appendChild(message);
+
+    var backLink = document.createElement('a');
+    backLink.className = 'mini-btn mini-btn-primary';
+    backLink.style.display = 'inline-block';
+    backLink.style.marginTop = 'var(--space-md)';
+    backLink.style.textDecoration = 'none';
+    backLink.href = '../dashboard/dashboard.html';
+    backLink.setAttribute('data-testid', 'list-not-found-dashboard-link');
+    backLink.textContent = t('notFoundBackBtn');
+    var linkRow = document.createElement('div');
+    linkRow.appendChild(backLink);
+    el.appendChild(linkRow);
   }
 
   function renderContext(context) {
