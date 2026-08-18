@@ -131,6 +131,27 @@ test.describe('Task detail review assignment', () => {
     await expect(page.locator('#disputeAssignBtn')).toBeDisabled();
   });
 
+  test('disabling a reviewer returns their pending load to the unassigned pool', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: PANEL_LOAD_TIMEOUT });
+    await saveReviewSettings(page, { manual: true });
+    await page.locator('#tabMemberManagement').click();
+
+    await page
+      .locator('#memberTableBody tr')
+      .filter({ hasText: 'Rachel Wu' })
+      .locator('button:has-text("停用")')
+      .click();
+    await page.locator('#memberActionConfirmBtn').click();
+
+    // Rachel's 5 pending units flow back to the pool; her 13 done units stay
+    // as historical stats (mirrors FR-005f for annotators).
+    await expect(page.locator('#reviewUnassignedCount')).toHaveText('未指派 23 筆');
+    await expect(page.locator('#reviewAssignmentBody tr')).toHaveCount(2);
+    const rachelRow = page.locator('#memberTableBody tr').filter({ hasText: 'Rachel Wu' });
+    await expect(rachelRow.locator('td').nth(3)).toHaveText('13 筆 · 0 待審');
+  });
+
   test('translates review-load column and assignment section to English', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
     await openMemberTab(page);
