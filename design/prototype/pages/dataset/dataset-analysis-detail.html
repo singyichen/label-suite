@@ -1302,6 +1302,22 @@ function syncRoleUi() {
   });
 }
 
+/* Risk-table action buttons live inside quality-*.html partials injected at
+ * runtime, so a delegated listener is the single binding point for all of
+ * them. The action kind is carried by the button's data-i18n key
+ * (…actionAdjust vs …ActionReview) — the partials define no other
+ * distinguishing attribute. Quality analysis is dry_run-based
+ * (QUALITY_EMPTY_STATE_TRIGGER = dry_run_not_completed), hence
+ * run_type=dry_run on the review target. */
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest ? e.target.closest('.risk-action-btn') : null;
+  if (!btn || btn.disabled) return;
+  var isAdjust = (btn.getAttribute('data-i18n') || '').indexOf('ctionAdjust') !== -1;
+  window.location.href = isAdjust
+    ? '../task-management/task-detail.html?task_id=' + encodeURIComponent(S_ROUTE.taskId) + '&tab=member-management'
+    : '../annotation/annotation-list.html?task_id=' + encodeURIComponent(S_ROUTE.taskId) + '&role=reviewer&run_type=dry_run';
+});
+
 function updateTaskDetailHref() {
   var emptyBtn = document.getElementById('emptyBtn');
   if (!emptyBtn) return;
