@@ -5336,6 +5336,7 @@ function getTaskTypeLabel() {
   function cancelOverviewInlineEdits(force) {
     if (!cancelOverviewEdit(force)) return false;
     if (!cancelSamplingEdit(force)) return false;
+    if (!cancelReviewEdit(force)) return false;
     if (!cancelGuidelineEdit(force)) return false;
     if (!cancelSettingsEdit(force)) return false;
     return true;
@@ -5498,13 +5499,21 @@ function getTaskTypeLabel() {
     });
   }
 
+  /* Stored arbiter emails can go stale when a member is removed or disabled
+     via member management; those entries have no checkbox to uncheck, so
+     every consumer must filter against the current active-reviewer set. */
+  function getEffectiveArbiterIds(ids) {
+    var activeEmails = getActiveReviewerMembers().map(function(member) { return member.email; });
+    return (ids || []).filter(function(email) { return activeEmails.indexOf(email) >= 0; });
+  }
+
   function createReviewDraft() {
     return {
       minReviewers: Number.isFinite(Number(TASK_DATA.minReviewers)) ? Number(TASK_DATA.minReviewers) : 1,
       reviewAssignmentMode: TASK_DATA.reviewAssignmentMode === 'manual' ? 'manual' : 'auto',
       agreementAutoFinalize: Boolean(TASK_DATA.agreementAutoFinalize),
       arbitrationEnabled: Boolean(TASK_DATA.arbitrationEnabled),
-      arbiterIds: (TASK_DATA.arbiterIds || []).slice(),
+      arbiterIds: getEffectiveArbiterIds(TASK_DATA.arbiterIds),
     };
   }
 
@@ -5523,7 +5532,7 @@ function getTaskTypeLabel() {
     setText('valueMinReviewersControl', String(TASK_DATA.minReviewers));
     setText('valueReviewAssignmentControl', TASK_DATA.reviewAssignmentMode === 'manual' ? t('assignmentModeManualText') : t('assignmentModeAutoText'));
     setText('valueAutoFinalizeControl', TASK_DATA.agreementAutoFinalize ? t('reviewToggleOn') : t('reviewToggleOff'));
-    var arbiterCount = (TASK_DATA.arbiterIds || []).length;
+    var arbiterCount = getEffectiveArbiterIds(TASK_DATA.arbiterIds).length;
     var arbitrationText;
     if (!TASK_DATA.arbitrationEnabled) {
       arbitrationText = t('reviewToggleOff');
@@ -6558,6 +6567,9 @@ function getTaskTypeLabel() {
     closeMemberActionModal();
     renderMemberManagement();
     renderAnnotationProgress();
+    /* Membership changes feed the review-settings arbiter pool; refresh its
+       summary so stale arbiter counts never survive a tab switch back. */
+    renderReviewEditState();
   }
 
   function renderMemberManagement() {

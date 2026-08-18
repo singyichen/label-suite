@@ -120,6 +120,48 @@ test.describe('Task detail review settings', () => {
     await expect(page.locator('#valueMinReviewersControl')).toHaveText('1');
   });
 
+  test('guards tab switches against unsaved review-setting changes', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    await page.locator('#reviewEditBtn').click();
+    await page.locator('#minReviewersInput').fill('5');
+
+    let dialogSeen = false;
+    page.on('dialog', (dialog) => {
+      dialogSeen = true;
+      void dialog.accept();
+    });
+    await page.locator('#tabMemberManagement').click();
+    await expect(page.locator('#memberManagementPanel')).not.toHaveClass(/hidden/);
+    expect(dialogSeen).toBe(true);
+
+    // Accepting the leave confirmation discards the draft, so returning to
+    // the overview shows the summary view again (not a stale edit form).
+    await page.locator('#tabOverview').click();
+    await expect(page.locator('#reviewEditForm')).toHaveClass(/hidden/);
+    await expect(page.locator('#valueMinReviewersControl')).toHaveText('1');
+  });
+
+  test('drops arbiters that are no longer active reviewer members', async ({ page }) => {
+    await page.goto(TASK_DETAIL_URL);
+    await page.locator('#workLogPanel').waitFor({ state: 'attached', timeout: 15000 });
+    await page.locator('#reviewEditBtn').click();
+    await page.locator('#arbiterOptions .arbiter-option input').first().check();
+    await page.locator('#reviewSaveBtn').click();
+    await expect(page.locator('#valueArbitrationControl')).toHaveText('啟用 · 仲裁者 1 人');
+
+    await page.locator('#tabMemberManagement').click();
+    await page
+      .locator('#memberTableBody tr')
+      .filter({ hasText: 'Mandy Chen' })
+      .locator('button:has-text("停用")')
+      .click();
+    await page.locator('#memberActionConfirmBtn').click();
+
+    await page.locator('#tabOverview').click();
+    await expect(page.locator('#valueArbitrationControl')).toHaveText('啟用 · 未指定仲裁者');
+  });
+
   test('translates review settings labels and values to English', async ({ page }) => {
     await page.goto(TASK_DETAIL_URL);
 
