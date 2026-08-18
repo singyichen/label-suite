@@ -51,8 +51,6 @@
       wsReviewSubmitSuccess: '審查已提交',
       reviewNoAnswer: '（無）',
       reviewNote: '通過：此筆標記有效。退回：該標記狀態會回到未標記，標記員需要重新標記。',
-      reviewBulkRejectLabel: '全部退回',
-      reviewBulkApproveLabel: '全部通過',
       reviewCorrectionTitle: '直接修正',
       toastSelectDecision: '請完成每位標記員的審核決策',
       toastResolveDivergent: '請先裁定所有分歧項目',
@@ -95,8 +93,6 @@
       wsReviewSubmitSuccess: 'Review submitted',
       reviewNoAnswer: '(none)',
       reviewNote: 'Approve: this annotation is valid. Reject: the sample returns to pending and the annotator must redo it.',
-      reviewBulkRejectLabel: 'Reject all',
-      reviewBulkApproveLabel: 'Approve all',
       reviewCorrectionTitle: 'Direct correction',
       toastSelectDecision: 'Please decide on every annotator before submitting',
       toastResolveDivergent: 'Please resolve every divergent item first',
@@ -2037,6 +2033,36 @@
     });
   }
 
+  /* The four action shortcuts the sidebar panel advertises (issue #152).
+     Each one dispatches the click of the button it duplicates instead of
+     calling the handler directly: the button already carries the role wiring
+     (a reviewer's 儲存草稿 is hidden and has no listener) and the
+     first/last-unit disabled state, and re-deriving either here would be a
+     second source of truth that drifts.
+
+     These stay live while typing, unlike the bare `a`/`r` review keys above:
+     a modifier combo produces no text, and 儲存草稿 is wanted most in the
+     middle of a free_text answer.
+
+     preventDefault is load-bearing, not tidiness -- Ctrl/Cmd+S opens the
+     browser's own save dialog and Alt+← is Back, so an unhandled combo would
+     leave the workspace. It fires before the availability check so a hidden
+     or disabled target still swallows the browser default. */
+  function setupActionShortcuts() {
+    document.addEventListener('keydown', function (e) {
+      var mod = e.ctrlKey || e.metaKey;
+      var id = null;
+      if (mod && String(e.key).toLowerCase() === 's') id = 'wsSaveBtn';
+      else if (mod && e.key === 'Enter') id = currentRole === 'reviewer' ? 'wsReviewSubmitBtn' : 'wsSubmitBtn';
+      else if (e.altKey && e.key === 'ArrowLeft') id = 'wsPrevBtn';
+      else if (e.altKey && e.key === 'ArrowRight') id = 'wsNextBtn';
+      if (!id) return;
+      e.preventDefault();
+      var btn = document.getElementById(id);
+      if (btn && !btn.disabled && !btn.classList.contains('hidden')) btn.click();
+    });
+  }
+
   /* Seeds the shared engine state so renderOutputPreview(container, outKey)
      -- the exact same dispatcher every annotator panel already goes through
      -- renders the correction control pre-filled with `value` instead of
@@ -2713,6 +2739,7 @@
       if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
       if (saveBtn) saveBtn.addEventListener('click', handleSave);
     }
+    setupActionShortcuts();
 
     seedEngineState(currentProfile);
     selectSample(
