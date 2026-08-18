@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-/* Spec 014 v2.5.0 (issue #149 P5) — work-log completed-count split into
+/* Spec 014 v2.6.0 (issue #149 P5) — work-log completed-count split into
    annotate / review / arbitrate columns with per-role summary cards.
 
    Out of scope (needs backend): real work-log aggregation, auth-scoped

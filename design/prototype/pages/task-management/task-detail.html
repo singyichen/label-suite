@@ -832,6 +832,48 @@
       border-color: var(--color-success-border);
     }
     .inline-actions { display: inline-flex; gap: 8px; }
+    .review-assignment-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .review-assignment-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 4px;
+    }
+    .review-unassigned-count {
+      font-size: 13px;
+      color: var(--color-text-soft);
+      white-space: nowrap;
+    }
+    .arbiter-tag {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-primary-border);
+      background: var(--color-primary-soft-bg);
+      color: var(--color-primary);
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .dispute-pool-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border);
+      font-size: 13px;
+      color: var(--color-ink);
+    }
     .mini-btn {
       border: 1px solid var(--color-border);
       border-radius: var(--radius-md);
@@ -2587,6 +2629,7 @@
       thMemberName: '姓名',
       thMemberEmail: 'Email',
       thMemberTaskRole: '任務角色',
+      thMemberReviewLoad: '審核負荷',
       thMemberStatus: '狀態',
       thMemberJoinedAt: '加入時間',
       thMemberLastActive: '最後活動',
@@ -2615,6 +2658,24 @@
       errMemberInviteEmail: '請輸入有效的 Email',
       errMemberDuplicate: '此成員已在任務中或已寄出邀請',
       errPermissionDenied: '您沒有執行此操作的權限',
+      reviewLoadTpl: '{assigned} 筆 · {pending} 待審',
+      reviewAssignmentTitle: '審核指派',
+      reviewAssignmentHintAuto: '指派方式為「自動輪派」，系統輪派湊滿每筆所需審核員數；此區塊唯讀，僅呈現結果。',
+      reviewAssignmentHintManual: '指派方式為「手動指派」，請在此將未指派審核單位分派給審核員。',
+      reviewUnassignedTpl: '未指派 {count} 筆',
+      reviewAutoFillBtn: '自動補齊',
+      thAssignReviewer: '審核員',
+      thAssignAssigned: '已指派',
+      thAssignPending: '待審',
+      thAssignDone: '已完成',
+      thAssignActions: '操作',
+      assignOneBtn: '指派…',
+      arbiterTagLabel: '仲裁',
+      disputePoolTpl: '爭議池 {count} 項待仲裁',
+      disputeAssignBtn: '分派給仲裁者',
+      toastReviewAutoFilled: '未指派審核單位已補齊',
+      toastReviewAssignedOne: '已指派 1 筆給 {name}',
+      toastDisputeAssigned: '爭議項已分派給仲裁者',
       progressSummaryTitle: '整體進度摘要',
       progressStageDry: '試標',
       progressStageOfficial: '正式標記',
@@ -3047,6 +3108,7 @@
       thMemberName: 'Name',
       thMemberEmail: 'Email',
       thMemberTaskRole: 'Task role',
+      thMemberReviewLoad: 'Review load',
       thMemberStatus: 'Status',
       thMemberJoinedAt: 'Joined at',
       thMemberLastActive: 'Last active',
@@ -3075,6 +3137,24 @@
       errMemberInviteEmail: 'Please enter a valid email',
       errMemberDuplicate: 'This member is already in the task or already invited',
       errPermissionDenied: 'You do not have permission to perform this action',
+      reviewLoadTpl: '{assigned} items · {pending} pending',
+      reviewAssignmentTitle: 'Review Assignment',
+      reviewAssignmentHintAuto: 'Assignment mode is "Auto rotation" — the system rotates reviewers to fill each item; this section is read-only.',
+      reviewAssignmentHintManual: 'Assignment mode is "Manual" — dispatch unassigned review units to reviewers here.',
+      reviewUnassignedTpl: '{count} unassigned',
+      reviewAutoFillBtn: 'Auto-fill',
+      thAssignReviewer: 'Reviewer',
+      thAssignAssigned: 'Assigned',
+      thAssignPending: 'Pending',
+      thAssignDone: 'Completed',
+      thAssignActions: 'Actions',
+      assignOneBtn: 'Assign…',
+      arbiterTagLabel: 'Arbiter',
+      disputePoolTpl: 'Dispute pool · {count} awaiting arbitration',
+      disputeAssignBtn: 'Assign to arbiters',
+      toastReviewAutoFilled: 'Unassigned review units distributed',
+      toastReviewAssignedOne: 'Assigned 1 unit to {name}',
+      toastDisputeAssigned: 'Disputes dispatched to arbiters',
       progressSummaryTitle: 'Progress summary',
       progressStageDry: 'Dry Run',
       progressStageOfficial: 'Official Run',
@@ -3355,10 +3435,24 @@
 
   var TASK_MEMBERS = [
     { name: 'Mandy Chen', email: 'mandy@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:13', lastActive: '2026-04-21 09:42' },
+    { name: 'Kevin Liu', email: 'kevin.liu@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:14', lastActive: '2026-04-21 09:31' },
+    { name: 'Rachel Wu', email: 'rachel.wu@labelsuite.io', taskRole: 'reviewer', status: 'active', joinedAt: '2026-04-20 10:14', lastActive: '2026-04-21 08:47' },
     { name: 'Alex Wang', email: 'alex.wang@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:15', lastActive: '2026-04-21 09:12' },
     { name: 'Olivia Lin', email: 'olivia.lin@labelsuite.io', taskRole: 'annotator', status: 'active', joinedAt: '2026-04-20 10:16', lastActive: '2026-04-21 08:58' },
     { name: 'Jason Huang', email: 'jason.h@labelsuite.io', taskRole: 'annotator', status: 'disabled', joinedAt: '2026-04-20 10:18', lastActive: '2026-04-20 16:11' },
   ];
+
+  /* Review workload seed (issue #148). `已指派` is always derived as
+     pending + done, so only the two live counters are stored per reviewer. */
+  var REVIEW_WORKLOAD = {
+    unassignedCount: 18,
+    disputeCount: 7,
+    byReviewer: {
+      'mandy@labelsuite.io': { pending: 12, done: 28 },
+      'kevin.liu@labelsuite.io': { pending: 31, done: 9 },
+      'rachel.wu@labelsuite.io': { pending: 5, done: 13 },
+    },
+  };
 
   var PLATFORM_USERS = [
     { account: 'alex.wang', name: 'Alex Wang', email: 'alex.wang@labelsuite.io', activeTaskCount: 1 },
@@ -4519,6 +4613,7 @@ function interpolate(template, payload) {
     setText('thMemberName', t('thMemberName'));
     setText('thMemberEmail', t('thMemberEmail'));
     setText('thMemberTaskRole', t('thMemberTaskRole'));
+    setText('thMemberReviewLoad', t('thMemberReviewLoad'));
     setText('thMemberStatus', t('thMemberStatus'));
     setText('thMemberJoinedAt', t('thMemberJoinedAt'));
     setText('thMemberLastActive', t('thMemberLastActive'));
@@ -5736,6 +5831,10 @@ function getTaskTypeLabel() {
     state.reviewDraft = null;
     showToast(t('reviewSaveSuccess'));
     renderOverview();
+    /* Assignment mode and arbiter changes drive the member-management
+       review-assignment block; re-render it so its read-only state and
+       arbiter tags never go stale across tabs. */
+    renderMemberManagement();
     trackEvent('prototype_review_settings_edit_saved');
   }
 
@@ -6340,6 +6439,8 @@ function getTaskTypeLabel() {
       tdRole.appendChild(roleBadge);
       tr.appendChild(tdRole);
 
+      tr.appendChild(tdWithClass(member.taskRole === 'reviewer' ? formatReviewLoad(member.email) : '—'));
+
       var tdStatus = document.createElement('td');
       var statusBadge = document.createElement('span');
       statusBadge.className = 'badge ' + getMemberStatusBadgeClass(member.status);
@@ -6609,9 +6710,11 @@ function getTaskTypeLabel() {
 
     if (action.type === 'remove') {
       createUnassignedAssignmentsForRemovedMember(target);
+      releaseReviewerPendingLoad(target);
       TASK_MEMBERS.splice(action.index, 1);
     } else if (action.type === 'disable') {
       target.status = 'disabled';
+      releaseReviewerPendingLoad(target);
     } else if (action.type === 'enable') {
       target.status = 'active';
     }
@@ -6625,9 +6728,142 @@ function getTaskTypeLabel() {
     renderReviewEditState();
   }
 
+  function getReviewWorkload(email) {
+    var byReviewer = REVIEW_WORKLOAD.byReviewer;
+    if (!byReviewer[email]) byReviewer[email] = { pending: 0, done: 0 };
+    return byReviewer[email];
+  }
+
+  function formatReviewLoad(email) {
+    var load = getReviewWorkload(email);
+    return interpolate(t('reviewLoadTpl'), { assigned: load.pending + load.done, pending: load.pending });
+  }
+
+  /* Removing or disabling a reviewer must not orphan their in-flight review
+     units: pending flows back to the unassigned pool, done stays as
+     historical stats (mirrors FR-005f for annotators). */
+  function releaseReviewerPendingLoad(member) {
+    var load = REVIEW_WORKLOAD.byReviewer[member.email];
+    if (!load || !load.pending) return;
+    REVIEW_WORKLOAD.unassignedCount += load.pending;
+    load.pending = 0;
+  }
+
+  function isReviewAssignmentActionable() {
+    return TASK_DATA.reviewAssignmentMode === 'manual' && state.taskRole === 'project_leader';
+  }
+
+  function renderReviewAssignment() {
+    var body = document.getElementById('reviewAssignmentBody');
+    if (!body) return;
+    var actionable = isReviewAssignmentActionable();
+    var arbiters = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
+
+    setText('reviewAssignmentTitle', t('reviewAssignmentTitle'));
+    setText('reviewAssignmentHint', t(TASK_DATA.reviewAssignmentMode === 'auto' ? 'reviewAssignmentHintAuto' : 'reviewAssignmentHintManual'));
+    setText('reviewUnassignedCount', interpolate(t('reviewUnassignedTpl'), { count: REVIEW_WORKLOAD.unassignedCount }));
+    setText('thAssignReviewer', t('thAssignReviewer'));
+    setText('thAssignAssigned', t('thAssignAssigned'));
+    setText('thAssignPending', t('thAssignPending'));
+    setText('thAssignDone', t('thAssignDone'));
+    setText('thAssignActions', t('thAssignActions'));
+    setText('disputePoolText', interpolate(t('disputePoolTpl'), { count: REVIEW_WORKLOAD.disputeCount }));
+
+    var autoFillBtn = document.getElementById('reviewAutoFillBtn');
+    if (autoFillBtn) {
+      autoFillBtn.textContent = t('reviewAutoFillBtn');
+      autoFillBtn.classList.toggle('hidden', !actionable);
+      autoFillBtn.disabled = !actionable || REVIEW_WORKLOAD.unassignedCount === 0;
+    }
+    var disputeBtn = document.getElementById('disputeAssignBtn');
+    if (disputeBtn) {
+      disputeBtn.textContent = t('disputeAssignBtn');
+      disputeBtn.classList.toggle('hidden', !actionable);
+      disputeBtn.disabled = !actionable || !TASK_DATA.arbitrationEnabled || !arbiters.length || REVIEW_WORKLOAD.disputeCount === 0;
+    }
+
+    while (body.firstChild) body.removeChild(body.firstChild);
+    getActiveReviewerMembers().forEach(function(member) {
+      var load = getReviewWorkload(member.email);
+      var tr = document.createElement('tr');
+
+      var tdName = document.createElement('td');
+      tdName.className = 'member-name';
+      tdName.textContent = member.name;
+      if (arbiters.indexOf(member.email) >= 0) {
+        var tag = document.createElement('span');
+        tag.className = 'arbiter-tag';
+        tag.textContent = t('arbiterTagLabel');
+        tdName.appendChild(tag);
+      }
+      tr.appendChild(tdName);
+
+      [load.pending + load.done, load.pending, load.done].forEach(function(count) {
+        var td = document.createElement('td');
+        td.textContent = String(count);
+        tr.appendChild(td);
+      });
+
+      var tdActions = document.createElement('td');
+      if (actionable) {
+        var assignBtn = document.createElement('button');
+        assignBtn.className = 'mini-btn';
+        assignBtn.type = 'button';
+        assignBtn.textContent = t('assignOneBtn');
+        assignBtn.disabled = REVIEW_WORKLOAD.unassignedCount === 0;
+        assignBtn.addEventListener('click', function() {
+          assignOneReviewUnit(member);
+        });
+        tdActions.appendChild(assignBtn);
+      }
+      tr.appendChild(tdActions);
+      body.appendChild(tr);
+    });
+  }
+
+  function assignOneReviewUnit(member) {
+    if (!isReviewAssignmentActionable() || REVIEW_WORKLOAD.unassignedCount <= 0) return;
+    REVIEW_WORKLOAD.unassignedCount -= 1;
+    getReviewWorkload(member.email).pending += 1;
+    showToast(interpolate(t('toastReviewAssignedOne'), { name: member.name }));
+    trackEvent('prototype_review_assignment_assign_one', { reviewer_email: member.email });
+    renderMemberManagement();
+  }
+
+  function autoFillReviewAssignments() {
+    if (!isReviewAssignmentActionable()) return;
+    var reviewers = getActiveReviewerMembers();
+    if (!reviewers.length || REVIEW_WORKLOAD.unassignedCount <= 0) return;
+    var index = 0;
+    while (REVIEW_WORKLOAD.unassignedCount > 0) {
+      getReviewWorkload(reviewers[index % reviewers.length].email).pending += 1;
+      REVIEW_WORKLOAD.unassignedCount -= 1;
+      index += 1;
+    }
+    showToast(t('toastReviewAutoFilled'));
+    trackEvent('prototype_review_assignment_auto_filled');
+    renderMemberManagement();
+  }
+
+  function assignDisputesToArbiters() {
+    if (!isReviewAssignmentActionable()) return;
+    var arbiters = getEffectiveArbiterIds(TASK_DATA.arbiterIds);
+    if (!arbiters.length || REVIEW_WORKLOAD.disputeCount <= 0) return;
+    var index = 0;
+    while (REVIEW_WORKLOAD.disputeCount > 0) {
+      getReviewWorkload(arbiters[index % arbiters.length]).pending += 1;
+      REVIEW_WORKLOAD.disputeCount -= 1;
+      index += 1;
+    }
+    showToast(t('toastDisputeAssigned'));
+    trackEvent('prototype_review_assignment_disputes_dispatched');
+    renderMemberManagement();
+  }
+
   function renderMemberManagement() {
     renderMemberTable();
     renderMemberSearchResults();
+    renderReviewAssignment();
     var isLeader = state.taskRole === 'project_leader';
     var sendBtn = document.getElementById('memberInviteSendBtn');
     if (sendBtn) sendBtn.disabled = !isLeader;
@@ -9069,6 +9305,15 @@ function getTaskTypeLabel() {
         state.memberPage = 1;
         renderMemberManagement();
       });
+    }
+
+    var reviewAutoFillBtn = document.getElementById('reviewAutoFillBtn');
+    if (reviewAutoFillBtn) {
+      reviewAutoFillBtn.addEventListener('click', autoFillReviewAssignments);
+    }
+    var disputeAssignBtn = document.getElementById('disputeAssignBtn');
+    if (disputeAssignBtn) {
+      disputeAssignBtn.addEventListener('click', assignDisputesToArbiters);
     }
 
 document.getElementById('memberProgressSort').addEventListener('change', function(e) {
