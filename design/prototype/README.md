@@ -8,8 +8,7 @@ Tests validate acceptance criteria from the SDD specs against static HTML pages 
 
 ## Prerequisites
 
-- Node.js 20+
-- Python 3 (for the built-in HTTP server)
+- Node.js 20+ (also runs the bundled static test server)
 
 ---
 
@@ -33,7 +32,7 @@ npx playwright install --with-deps chromium
 npm test
 ```
 
-Playwright starts a Python HTTP server on port 8888, runs all tests against it, then shuts it down.
+Playwright starts the bundled Node static server (`tests/serve.mjs`) on port 8888, runs all tests against it, then shuts it down.
 
 ### Interactive UI mode
 
@@ -233,16 +232,18 @@ Clicking a pill updates the role indicator and swaps the visible content section
 
 ## How the Test Server Works
 
-`playwright.config.ts` starts a Python HTTP server before each test run:
+`playwright.config.ts` starts the zero-dependency Node static server before each test run:
 
 ```
-python3 -m http.server 8888 --bind 127.0.0.1
+node tests/serve.mjs
 ```
+
+(It replaced `python3 -m http.server`, whose per-connection threading intermittently dropped sockets under parallel load and flaked unrelated tests.)
 
 The server root is `design/prototype/`, so `pages/account/login.html` is reachable at:
 
 ```
-http://localhost:8888/pages/account/login.html
+http://127.0.0.1:8888/pages/account/login.html
 ```
 
 The server is reused across local runs (`reuseExistingServer: true`) but always restarted fresh in CI.

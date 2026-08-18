@@ -1,49 +1,48 @@
-/* Static file server for the Playwright prototype suite.
+/* Static file server for the Playwright prototype suite and local preview
+ * (scripts/serve-prototype.sh delegates here so the two can never drift).
  *
  * Replaces `python3 -m http.server` (and the ThreadingHTTPServer variant):
  * Python's per-connection threading model intermittently dropped sockets
  * under full-suite parallel load (net::ERR_SOCKET_NOT_CONNECTED on a random
  * <script src>), which killed page globals and flaked unrelated tests.
- * Node's single event loop multiplexes every connection, so there is no
- * accept-queue race to lose.
+ * Node's single event loop multiplexes every connection, and the keep-alive
+ * timeouts below sit far above test think-time so an idle pooled socket is
+ * never FIN-ed in the same tick the browser reuses it.
  *
  * Zero dependencies on purpose -- runs straight off the repo checkout.
  * Not a test file: playwright only collects *.spec.ts.
  */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { extname, join, normalize, sep } from 'node:path';
+import { extname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const PORT = Number(process.env.PORT || 8888);
+// Port comes from argv (serve-prototype.sh passes one), never the ambient
+// environment: playwright.config.ts hardcodes 8888, so an inherited PORT env
+// var would silently move the server out from under the test suite.
+const PORT = Number(process.argv[2]) || 8888;
 
+// Only the types the prototype actually references; octet-stream otherwise.
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.txt': 'text/plain; charset=utf-8',
-  '.md': 'text/plain; charset=utf-8',
+  '.ttf': 'font/ttf',
 };
 
 const server = createServer(async (req, res) => {
   try {
     const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    let filePath = normalize(join(ROOT, urlPath));
-    // normalize() resolved any ".." segments; anything that escaped ROOT is a
-    // traversal attempt.
-    if (!filePath.startsWith(ROOT)) {
+    // join() normalizes ".." segments, so the containment check below is
+    // sound; relative() instead of a string-prefix check so a sibling
+    // directory sharing the prefix (e.g. prototype-archive) can never match.
+    let filePath = join(ROOT, urlPath);
+    const escape = relative(ROOT, filePath);
+    if (escape.startsWith('..') || isAbsolute(escape)) {
       res.writeHead(403).end();
       return;
     }
@@ -56,8 +55,32 @@ const server = createServer(async (req, res) => {
     });
     res.end(body);
   } catch (err) {
-    res.writeHead(err && err.code === 'ENOENT' ? 404 : 500).end();
+    // Never writeHead twice: with the 200 already flushed, a second call
+    // would throw ERR_HTTP_HEADERS_SENT inside this async handler -- an
+    // unhandled rejection that kills the whole server process on Node 15+.
+    if (res.headersSent) {
+      res.destroy();
+      return;
+    }
+    const status =
+      err instanceof URIError
+        ? 400 // malformed percent-encoding in the request path
+        : err && (err.code === 'ENOENT' || err.code === 'EISDIR' || err.code === 'ENOTDIR')
+          ? 404
+          : 500;
+    res.writeHead(status).end();
   }
+});
+
+// Node's 5s keepAliveTimeout default FIN-races a browser reusing a pooled
+// connection after a slow assertion -- the exact symptom class this server
+// exists to eliminate. headersTimeout must stay above keepAliveTimeout.
+server.keepAliveTimeout = 60_000;
+server.headersTimeout = 65_000;
+
+server.on('error', (err) => {
+  console.error(`prototype server failed to start: ${err.message}`);
+  process.exit(1);
 });
 
 server.listen(PORT, '127.0.0.1', () => {

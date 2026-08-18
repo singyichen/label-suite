@@ -2,6 +2,7 @@
 
 **Status**: Accepted
 **Date**: 2026-04-07
+**Updated**: 2026-08-18 — the static server is now the zero-dependency Node script `design/prototype/tests/serve.mjs` (shared by Playwright's `webServer` and `scripts/serve-prototype.sh`). Python's `http.server` intermittently dropped sockets under parallel test load (`net::ERR_SOCKET_NOT_CONNECTED`), flaking unrelated specs. Server references below are updated in place; the rest of the decision is unchanged.
 
 ## Context
 
@@ -27,7 +28,7 @@ The project already mandates TDD (ADR-009) and has a full Playwright E2E suite p
 | Property | Value |
 |----------|-------|
 | Technology | Static HTML + vanilla JS (`design/prototype/`) |
-| Server | Python `http.server` (existing `scripts/serve-prototype.sh`) |
+| Server | Node static server (`design/prototype/tests/serve.mjs`, wrapped by `scripts/serve-prototype.sh`) |
 | State simulation | Client-side only — no backend calls; errors/success simulated in JS |
 | Scope | Design validation and stakeholder review, not production code |
 
@@ -52,7 +53,7 @@ Write **Playwright tests against the static HTML prototype layer** under `design
 | File | Purpose |
 |------|---------|
 | `design/prototype/package.json` | Standalone Node package; `@playwright/test` only |
-| `design/prototype/playwright.config.ts` | Config pointing at `tests/`; `webServer` starts Python HTTP server on port 8888 |
+| `design/prototype/playwright.config.ts` | Config pointing at `tests/`; `webServer` starts the Node static server on port 8888 |
 | `design/prototype/tests/[module]/[page].spec.ts` | Test files mirroring `specs/[module]/NNN-feature/` |
 
 The `design/prototype/` package is intentionally **separate from `frontend/`**: prototype tests are a design-layer artifact, not production test infrastructure. They do not share `tsconfig`, `vite.config`, or msw mocks with the frontend.
@@ -124,7 +125,7 @@ This confirms that `data-testid` selectors are both present and correctly target
 ```
 design/prototype/
 ├── package.json                          # @playwright/test only
-├── playwright.config.ts                  # webServer: python3 -m http.server 8888
+├── playwright.config.ts                  # webServer: node tests/serve.mjs (port 8888)
 └── tests/
     └── account/
         ├── login.spec.ts                 # spec 001 (US1.5, US1.6, US1.7, form validation, navigation)
@@ -154,7 +155,7 @@ npm run test:ui             # Playwright UI mode
 - **Early spec validation** — acceptance criteria are executable before React development begins; spec gaps (e.g., missing simulated states) are caught at the prototype stage.
 - **Selector reuse** — `data-testid` attributes defined in the prototype HTML become the authoritative selector names for React components. React developers do not invent new names.
 - **Living documentation** — `tests/account/login.spec.ts` makes `specs/account/001-login-email-password/spec.md` US1.5–1.7 directly executable; the test is the spec.
-- **Fast feedback** — the full prototype suite (32 tests) runs in under 10 seconds against a Python HTTP server with no Docker or database dependencies.
+- **Fast feedback** — the full prototype suite (32 tests) runs in under 10 seconds against a static file server with no Docker or database dependencies.
 - **Regression guard** — if a prototype page is edited (e.g., an element is renamed or removed), the test catches the breakage before stakeholder review.
 
 ### Harder

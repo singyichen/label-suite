@@ -14,7 +14,9 @@ export default defineConfig({
   reporter: process.env.CI ? 'html' : 'list',
 
   use: {
-    baseURL: 'http://localhost:8888',
+    // 127.0.0.1 literal matches serve.mjs's bind address; 'localhost' can
+    // resolve to ::1 first on IPv6-preferring hosts, where nothing listens.
+    baseURL: 'http://127.0.0.1:8888',
     trace: 'retain-on-failure',
   },
 
@@ -27,7 +29,7 @@ export default defineConfig({
     // loop has no accept-queue race to lose.
     command: 'node tests/serve.mjs',
     cwd: path.resolve(__dirname),
-    url: 'http://localhost:8888',
+    url: 'http://127.0.0.1:8888',
     reuseExistingServer: !process.env.CI,
     timeout: 10_000,
   },
