@@ -670,6 +670,7 @@
       reviewUnitApproved: '已同意',
       reviewUnitModified: '已修改',
       reviewUnitDisputed: '爭議中',
+      arbitrateBtnLabel: '仲裁',
       reviewUnitFinalized: '已定稿',
       reviewFreeTextStats: '自由文本任務 — 請並列比對各標記員結果',
       reviewBypassPill: '無法判定 (Bypass)',
@@ -723,6 +724,7 @@
       reviewUnitApproved: 'Approved',
       reviewUnitModified: 'Modified',
       reviewUnitDisputed: 'Disputed',
+      arbitrateBtnLabel: 'Arbitrate',
       reviewUnitFinalized: 'Finalized',
       reviewFreeTextStats: 'Free-text task — compare annotator answers side by side',
       reviewBypassPill: 'Bypassed (cannot determine)',
@@ -1238,10 +1240,17 @@
       var actionsDiv = document.createElement('div');
       actionsDiv.className = 'reviewer-actions';
 
+      /* A disputed unit this reviewer may claim (FR-060) swaps the entry
+         label to 仲裁 -- same navigation, the workspace decides the layout. */
       var editBtn = document.createElement('button');
       editBtn.className = 'mini-btn mini-btn-primary';
       editBtn.type = 'button';
-      editBtn.textContent = t('editBtnLabel');
+      if (item.arbiterEntry) {
+        editBtn.textContent = t('arbitrateBtnLabel');
+        editBtn.setAttribute('data-testid', 'list-arbitrate-entry');
+      } else {
+        editBtn.textContent = t('editBtnLabel');
+      }
       editBtn.addEventListener('click', function (e) { e.stopPropagation(); openWorkspace(); });
       actionsDiv.appendChild(editBtn);
 
@@ -1312,6 +1321,8 @@
         units.push({
           recordId: recordId,
           annotator: mockRow.annotator,
+          arbiterEntry: status === REVIEW_UNIT_STATUS.DISPUTED &&
+            data.isArbiterCandidate(profile.id, context.runType, recordId, identity),
           mockRow: mockRow,
           mockRows: mockRows,
           rowIdx: rowIdx,

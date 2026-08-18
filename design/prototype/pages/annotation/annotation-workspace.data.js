@@ -1492,6 +1492,16 @@
    * id (agreeing reviewers stay out -- their consent is what the majority
    * convergence in P3c counts). Arbitration votes and the finalized value
    * are the only stored state, and they arrive in P3c. */
+  /* Arbiter candidacy (FR-060): a reviewer may claim a dispute only when the
+   * roster flags them can_arbitrate AND they did not participate in the review
+   * that produced it. Whether the unit IS disputed stays the caller's concern
+   * -- every consumer already derives the unit status for its own display. */
+  function isArbiterCandidate(taskId, runType, sampleId, identity) {
+    var entry = REVIEWER_ROSTER.filter(function (r) { return r.id === identity.reviewerId; })[0];
+    if (!entry || !entry.can_arbitrate) return false;
+    return !getSubmission(taskId, 'reviewer', runType, sampleId, identity);
+  }
+
   function getDisputeItems(taskId, runType, sampleId, identity, outKeys) {
     var annotatorSubmission = getSubmission(taskId, 'annotator', runType, sampleId, identity);
     if (!annotatorSubmission) return [];
@@ -1550,5 +1560,6 @@
     compareOutputAnswer: compareOutputAnswer,
     getReviewUnitStatus: getReviewUnitStatus,
     getDisputeItems: getDisputeItems,
+    isArbiterCandidate: isArbiterCandidate,
   };
 })(window);
