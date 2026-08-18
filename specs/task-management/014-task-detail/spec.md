@@ -1,7 +1,7 @@
 ---
 功能分支: feat/task-management/014-review-history
 建立日期: 2026-04-20
-版本: 2.4.0
+版本: 2.5.0
 狀態: Draft
 ---
 
@@ -138,6 +138,7 @@ Project Leader 可在任務詳情頁操作五個 tab，並執行成員調整、�
 3. **Given** 任務在 `draft`，**When** 點擊「開始試標回合」，**Then** 狀態變為 `dry_run_in_progress`。
 4. **Given** 任務在 `waiting_iaa_confirmation`，**When** 點擊「開始正式標記」，**Then** 狀態變為 `official_run_in_progress`。
 5. **Given** 位於 `annotation-results`，**When** 點擊匯出，**Then** 可匯出 `json` 或 `json-min`，且欄位結構需依格式與 `task_type` 正確切換。
+6. **Given** 位於 `member-management` 且 `review_assignment_mode = manual`，**When** 於審核指派區塊操作「自動補齊」、單列「指派…」或「分派給仲裁者」，**Then** 未指派筆數、爭議池數與各審核員負荷（已指派／待審／已完成）即時更新，並同步反映於成員清單「審核負荷」欄。
 
 **介面定義（需與 IA 導覽語意一致）**：
 
@@ -500,6 +501,9 @@ Reviewer 可進入任務詳情查看必要資訊，但不得執行成員管理�
 - **FR-005f**：移除仍有未完成作業的成員時，系統必須顯示二次確認；確認後保留該成員已完成提交與歷史統計，並將未完成標記作業改為未指派狀態，等待 `project_leader` 手動重新指派或處理。
 - **FR-005g**：`project_leader` 必須可在 `annotation-progress` 查看 Dry Run 與 Official Run 的未指派標記作業，並將其重新指派給啟用中的標記員（`membership_status = active` 且 `task_role = annotator`）。
 - **FR-005h**：`project_leader` 明確排除未指派標記作業時，系統必須保存排除者、排除時間、排除原因、run stage 與原作業識別資訊；被排除作業不得計入完成率或標記分布統計，Dry Run 排除作業亦不得計入 IAA。
+- **FR-005i**：成員清單必須在「任務角色」與「狀態」欄之間提供「審核負荷」欄：`task_role = annotator` 顯示 `—`；`task_role = reviewer` 顯示 `{assigned} 筆 · {pending} 待審`，其中 `assigned` 恆為 `pending + done` 的推導值，不得獨立儲存。
+- **FR-005j**：`member-management` 必須在成員清單之後提供「審核指派」區塊：顯示未指派審核筆數，並為每位啟用中審核員（`ARBITER_CANDIDATE_RULE` 同一母集合）呈現已指派／待審／已完成三欄；被列入生效 `arbiter_ids` 的審核員需顯示「仲裁」標籤。`review_assignment_mode = auto` 時整區唯讀（僅顯示輪派結果，不得出現任何操作按鈕）；`manual` 且操作者為 `project_leader` 時提供「自動補齊」（依審核員輪流分配直到未指派 = 0，清空後停用）與逐列「指派…」（自未指派池撥一筆給該審核員，未指派 = 0 時停用）。移除或停用仍有待審負荷的審核員時，其 `pending` 筆數必須退回未指派池，`done` 保留為歷史統計（比照 FR-005f 對標記員的規則）。
+- **FR-005k**：審核指派區塊底部必須顯示爭議池列 `{n} 項待仲裁`；`manual` 模式提供「分派給仲裁者」按鈕，將爭議池輪流分派給生效仲裁者並計入其負荷；`arbitration_enabled = false`、無生效仲裁者或爭議池為 0 時該按鈕必須停用，`auto` 模式則不顯示。
 - **FR-006**：`reviewer` 不可見 `member-management` tab；若以直連方式進入，系統必須導回 `overview` 並提示無權限。
 - **FR-007**：`reviewer` 的 `work-log` 僅可查看自己的資料。
 - **FR-007a**：`工時明細表` 底部必須提供與 `task-list` 一致的 footer pagination，至少包含總筆數 / 目前頁數、每頁筆數切換與上一頁 / 下一頁 / 頁碼按鈕；其 `page` / `pageSize` 狀態（`wlPage` / `wlPageSize`）必須獨立，不得與其他 tab 分頁狀態共用；篩選條件變更時 `wlPage` 必須重設為 `1`；匯總卡片與異常提醒區塊必須依據完整篩選結果計算，不得僅計算當前頁資料。
@@ -620,7 +624,8 @@ flowchart LR
 - **TaskConfig**：schema 驗證後的任務設定內容，來源與 `013-task-new` 相同（ADR-029 組合模型）。結構為 `{ categories[], input_types[], outputs[] }`；每個 output 為 `{ type ∈ OUTPUT_TYPE_KEYS, config }`，config 欄位由 `OUTPUT_TYPE_REGISTRY` 對應輸出類型的欄位定義決定摘要、編輯欄位、預覽與驗證規則。另含 `field_role_map`（資料集欄位 → 角色對應）與 `dataset_file_name`。
 - **TaskGuidelineConfig**：任務說明設定。欄位：`annotator_guideline_text`、`annotator_guideline_assets[]`、`reviewer_guideline_text`、`reviewer_guideline_assets[]`、`force_guideline`。
 - **OutputConfig**：單一輸出類型的設定內容（`TaskConfig.outputs[].config`）。欄位由 `OUTPUT_TYPE_REGISTRY` 中該輸出類型的 fields 定義驅動（含共通欄位 `allow_bypass`）；不得為特定輸出類型在 task-detail 硬編第二份欄位定義（憲法：Generalization-First）。
-- **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。
+- **TaskMembership**：任務成員。欄位：`task_id`、`user_id`、`task_role`、`membership_status`。成員清單「審核負荷」欄顯示值由 `ReviewAssignment` 聚合推導，不儲存於 membership；仲裁身分來自 `TaskDetail.arbiter_ids`，非新的 `task_role`。
+- **ReviewAssignment**：審核指派，連結審核員與審核單位。欄位：`task_id`、`reviewer_id`、`review_unit_id`、`assigned_at`、`assigned_by`、`source`（`auto_rotation | manual | dispute_dispatch`）、`review_status`（`pending | done`）。審核負荷統計（`assigned = pending + done`）由本實體聚合推導。
 - **RunStateTransition**：狀態轉換紀錄。欄位：`from_status`、`to_status`、`triggered_by`、`triggered_at`。
 - **WorkLogEntry**：工時紀錄。欄位：`user_id`、`task_role`、`date`、`login_at`、`logout_at`、`online_duration`、`duration`、`completed_count`、`avg_speed`、`run_stage`。
 - **SampleSnapshot**：run 抽樣快照。欄位：`sample_snapshot_id`、`task_id`、`sampling_value`、`trial_round`、`target_agreement_overrides`、`min_annotators`、`locked_at`、`locked_by`、`selection_manifest_ref`（指向分片或外部清單，不直接內嵌大量 ids）。
@@ -692,7 +697,8 @@ flowchart LR
 - **SC-031**：`JSON-MIN` 匯出可直接被試算表、SQL 匯入或 BI 工具使用，且每列都保有 sample、annotator、review 與 task-specific result 的最小必要欄位。
 - **SC-032**：不同 `task_type` 的匯出欄位會正確切換：分類顯示 labels、VA 顯示 valence/arousal、NER 顯示 entities、Aspect List 顯示 aspects、RE 顯示 relations、Sentence Pairs 顯示 label/score 與 pair metadata；不會錯置欄位。
 - **SC-033**：Overview「審核設定」區塊於 `draft` + `project_leader` 可完成完整編輯流程（`min_reviewers`／指派方式／兩個 toggle／仲裁者多選），非法 `min_reviewers` 被阻擋並顯示可修正錯誤，儲存後四個摘要欄位（含 FR-010s-2 仲裁摘要值規則）即時反映且雙語一致。
-- **SC-034**：`annotation-results` 展開列可完整呈現「標記員 → 審核員 → 仲裁」縮排時間軸（含具名人員、決策與時間），同一樣本多位標記員時逐標記員各自成段；審核狀態 badge 採 `AR_REVIEW_STATUS` 五態語彙；審核員與審核狀態兩個新篩選可實際過濾樣本列，且全部文案雙語一致。
+- **SC-034**：成員管理「審核指派」區塊於 `manual` 模式可完成完整指派流程（自動補齊清空未指派池、單列指派撥一筆、爭議池分派給生效仲裁者），所有數值與成員清單「審核負荷」欄即時一致；`auto` 模式維持唯讀且不出現操作按鈕；全區文案雙語一致。
+- **SC-035**：`annotation-results` 展開列可完整呈現「標記員 → 審核員 → 仲裁」縮排時間軸（含具名人員、決策與時間），同一樣本多位標記員時逐標記員各自成段；審核狀態 badge 採 `AR_REVIEW_STATUS` 五態語彙；審核員與審核狀態兩個新篩選可實際過濾樣本列，且全部文案雙語一致。
 
 ---
 
@@ -700,7 +706,8 @@ flowchart LR
 
 | 版本 | 日期 | 變更摘要 |
 |------|------|---------|
-| 2.4.0 | 2026-08-18 | **標記結果審核歷程可視化（issue #149 P5 之一，minor）**：`annotation-results` 展開列於每位標記員子列下方新增「審核員 → 仲裁」縮排時間軸（審核員名稱＋`同意`／`修改→{修正後結果}`＋審核時間；經仲裁定案再一行仲裁者名稱＋`採 A`／`採 B`＋仲裁時間；`待審` 不顯示歷程行）；審核狀態 badge 語彙自 `通過／退回／待審核` 三態改為 `AR_REVIEW_STATUS` 五態（沿用 015 `REVIEW_UNIT_STATUS`：待審／已同意／已修改／爭議中／已定稿）；篩選列新增「審核員」與「審核狀態」下拉（審核狀態選項由常數推導）。新增常數 `AR_REVIEW_STATUS`、FR-015a-1、FR-015d-4、SC-034；改寫 FR-015a、FR-015d。工時紀錄完成筆數拆欄屬 P5 後續 PR |
+| 2.5.0 | 2026-08-18 | **標記結果審核歷程可視化（issue #149 P5 之一，minor）**：`annotation-results` 展開列於每位標記員子列下方新增「審核員 → 仲裁」縮排時間軸（審核員名稱＋`同意`／`修改→{修正後結果}`＋審核時間；經仲裁定案再一行仲裁者名稱＋`採 A`／`採 B`＋仲裁時間；`待審` 不顯示歷程行）；審核狀態 badge 語彙自 `通過／退回／待審核` 三態改為 `AR_REVIEW_STATUS` 五態（沿用 015 `REVIEW_UNIT_STATUS`：待審／已同意／已修改／爭議中／已定稿）；篩選列新增「審核員」與「審核狀態」下拉（審核狀態選項由常數推導）。新增常數 `AR_REVIEW_STATUS`、FR-015a-1、FR-015d-4、SC-035；改寫 FR-015a、FR-015d。工時紀錄完成筆數拆欄屬 P5 後續 PR |
+| 2.4.0 | 2026-08-18 | **審核負荷欄 + 審核指派區塊（issue #148 P4 之二，minor）**：成員清單於「任務角色」與「狀態」之間新增「審核負荷」欄（annotator 顯示 `—`；reviewer 顯示 `{assigned} 筆 · {pending} 待審`，`assigned = pending + done` 推導值）；成員清單之後新增「審核指派」區塊（未指派筆數 + 每位啟用中審核員的已指派／待審／已完成 + 生效仲裁者「仲裁」標籤）；`auto` 模式整區唯讀，`manual` + `project_leader` 提供「自動補齊」與逐列「指派…」；區塊底部爭議池列 `{n} 項待仲裁` + 「分派給仲裁者」（無仲裁、無生效仲裁者或爭議池為 0 時停用）。新增 FR-005i／FR-005j／FR-005k、SC-034、使用者故事 1 驗收情境 6；新增 `ReviewAssignment` 實體並註記 `TaskMembership` 審核負荷為推導值。**（同版本內修訂，code review）**：移除/停用仍有待審負荷的審核員時 `pending` 退回未指派池、`done` 保留歷史統計（比照 FR-005f，補進 FR-005j）。完成 2.3.0 預告之 P4 後續 PR 範圍 |
 | 2.3.0 | 2026-08-18 | **審核設定區塊（issue #148 P4 之一，minor）**：Overview 新增獨立「審核設定」區塊（抽樣設定之後），檢視四欄位（每筆資料審核員數／審核指派方式／一致即定案／第三人仲裁），編輯權限與抽樣設定同規則（`OVERVIEW_EDITABLE_STATUS` + `OVERVIEW_EDITABLE_ROLE`）；編輯模式提供 `min_reviewers` 直接鍵入數字框（`MIN_REVIEWERS_RULE`：整數且 >= 1，`1` = 單一終審員）、`REVIEW_ASSIGNMENT_MODES`（auto = 系統輪派湊滿 N 位／manual = 成員管理逐一分派）單選、`agreement_auto_finalize` 與 `arbitration_enabled` toggle、仲裁者多選（候選 = `ARBITER_CANDIDATE_RULE`，可留空 = 任一未參與者可認領，對齊 015 FR-060；仲裁停用時不顯示）；仲裁摘要值規則（停用／啟用 · 未指定仲裁者／啟用 · 仲裁者 N 人）。新增 FR-010s／FR-010s-1／FR-010s-2、SC-033、使用者故事 3 驗收情境 7–8；`TaskDetail` 實體新增 `min_reviewers`／`review_assignment_mode`／`agreement_auto_finalize`／`arbitration_enabled`／`arbiter_ids[]`；`OVERVIEW_EDITABLE_FIELDS` 擴充同名五欄位。成員管理「審核負荷」欄、審核指派區塊與 `ReviewAssignment` 實體屬 P4 後續 PR |
 | 2.2.0 | 2026-08-12 | **IAA 策略 v2 — 移除可選 IAA 計算方式，改為逐輸出類型自動選定（minor）**：移除 `IAA_METHOD_ENUM` 下拉選單與 `IAA_METHOD_DEFAULTS`；Overview「抽樣設定」改顯示唯讀逐輸出類型 IAA 指標清單（來源 `OUTPUT_TYPE_IAA_REGISTRY`，source of truth 為 `dataset-017` 規格常數，實作落地點註記為 `task-config.data.js`）。`target_agreement` 單一全域數值改為 `target_agreement_overrides: { [output_type]: number }`（逐輸出類型覆寫，未設定回退 registry 預設門檻），延續 FR-010o-1 使用者覆寫能力。更新 FR-010i／FR-010o／FR-010o-1／FR-010q／FR-010r、`OVERVIEW_EDITABLE_FIELDS`、匯出 metadata（`iaa_method` 改為 `applied_iaa_metrics`）、`TaskDetail`／`SampleSnapshot` 實體、SC-018。**（同版本內修訂，speckit.analyze）**：`OUTPUT_TYPE_IAA_REGISTRY` 之 `default_threshold` 依 `dataset-017` gate 採用階裁決明確化（`single_dim` 0.75／`multi_dim` 0.80）；依 spec-template v1.6.0 移除過時 meta 區塊（輸入與生成規則樣板、審查與驗收清單、執行狀態），「已釐清事項」升為頂層章節 |
 | 2.1.0 | 2026-07-31 | 同步 `013-task-new` v6.9.0 項目對名稱：輸入類型為 `item_pair` 時「標記設定」編輯模式呈現「項目對名稱」設定卡（013 FR-003k 同構）；「基本資料」／「標記設定」儲存時持久化生效名稱並於重新進入編輯模式帶回；「基本資料」更換資料集後名稱以新資料集重新初始化；新增 FR-014l-3 |

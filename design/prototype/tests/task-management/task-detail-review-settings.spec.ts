@@ -48,11 +48,11 @@ test.describe('Task detail review settings', () => {
     await expect(page.locator('#autoFinalizeToggle')).toBeChecked();
     await expect(page.locator('#arbitrationToggle')).toBeChecked();
 
-    // T001 seeds a single active reviewer member (Mandy Chen); arbiter_ids is
-    // empty, so the option renders unchecked.
+    // The seed carries three active reviewer members (Mandy first); arbiter_ids
+    // is empty, so the options render unchecked.
     const arbiterOptions = page.locator('#arbiterOptions .arbiter-option');
     await expect(page.locator('#arbiterOptions')).toBeVisible();
-    await expect(arbiterOptions).toHaveCount(1);
+    await expect(arbiterOptions).toHaveCount(3);
     await expect(arbiterOptions.first()).toContainText('Mandy Chen');
     await expect(arbiterOptions.first().locator('input')).not.toBeChecked();
 

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-/* Spec 014 v2.4.0 (issue #149 P5) — annotation-results review history timeline
+/* Spec 014 v2.5.0 (issue #149 P5) — annotation-results review history timeline
    + reviewer / review-status filters.
 
    Out of scope (needs backend): real review submission, auth-scoped reviewer

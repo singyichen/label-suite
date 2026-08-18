@@ -17,7 +17,7 @@ test.describe('Task detail member management add flows', () => {
     await expect(page.locator('#memberManagementPanel > section').first().locator('h2')).toHaveText('加入成員');
     await expect(page.locator('#memberManagementPanel > section').nth(1).locator('h2')).toHaveText('目前成員清單');
     await expect(page.locator('#memberPaginationBar')).toBeVisible();
-    await expect(page.locator('#memberPaginationInfo')).toHaveText('共 4 筆 · 第 1 / 1 頁');
+    await expect(page.locator('#memberPaginationInfo')).toHaveText('共 6 筆 · 第 1 / 1 頁');
     await expect(page.locator('#memberPageSizeSelect')).toHaveClass(/page-size-select/);
     await expect(page.locator('#memberPaginationControls .page-btn.active')).toHaveText('1');
     await expect(page.locator('#memberPrevPageBtn')).toBeDisabled();
