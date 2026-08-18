@@ -146,7 +146,7 @@ These names must be used verbatim in the React component (`<input data-testid="e
 ```
 design/prototype/
 ├── package.json               # @playwright/test only; separate from frontend/
-├── playwright.config.ts       # webServer: python3 -m http.server 8888; baseURL: http://localhost:8888
+├── playwright.config.ts       # webServer: node tests/serve.mjs; baseURL: http://127.0.0.1:8888
 └── tests/
     └── [module]/
         └── [page].spec.ts     # mirrors specs/[module]/NNN-feature/

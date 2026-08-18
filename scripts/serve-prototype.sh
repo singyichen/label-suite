@@ -8,54 +8,27 @@
 # IMPORTANT — when to use this script:
 #   Use during design review to browse prototype HTML pages in a browser at
 #   http://localhost:<port>. Do not use in CI or as a production server — this
-#   is a plain Python HTTP server for local developer preview only.
+#   is a local developer preview only.
 #
 # How it works:
-#   Resolves the project root relative to this script's location, then starts
-#   Python's built-in http.server module pointed at design/prototype/. Supports
-#   python3, python, and the Windows py launcher. Press Ctrl+C to stop.
+#   Delegates to design/prototype/tests/serve.mjs — the same zero-dependency
+#   Node server Playwright starts for the test suite — so preview and tests
+#   can never drift apart (and a leftover preview server reused by Playwright
+#   via reuseExistingServer is the same implementation either way).
+#   Press Ctrl+C to stop.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-PROTOTYPE_DIR="$PROJECT_ROOT/design/prototype"
 PORT="${1:-8888}"
 
-detect_python_command() {
-  if command -v python3 >/dev/null 2>&1; then
-    echo "python3"
-    return 0
-  fi
-
-  if command -v python >/dev/null 2>&1; then
-    echo "python"
-    return 0
-  fi
-
-  if command -v py >/dev/null 2>&1; then
-    echo "py"
-    return 0
-  fi
-
-  return 1
-}
-
-PYTHON_CMD="$(detect_python_command || true)"
-
-if [[ -z "$PYTHON_CMD" ]]; then
-  echo "Error: Python not found. Install python3/python/py and try again." >&2
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js not found. Install Node 20+ and try again." >&2
   exit 1
 fi
 
-echo "Serving prototype at http://localhost:${PORT}"
-echo "Using Python launcher: ${PYTHON_CMD}"
+echo "Serving prototype at http://127.0.0.1:${PORT}"
 echo "Press Ctrl+C to stop."
 
-cd "$PROTOTYPE_DIR"
-
-if [[ "$PYTHON_CMD" == "py" ]]; then
-  exec py -3 -m http.server "$PORT"
-else
-  exec "$PYTHON_CMD" -m http.server "$PORT"
-fi
+exec node "$PROJECT_ROOT/design/prototype/tests/serve.mjs" "$PORT"
