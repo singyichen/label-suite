@@ -56,3 +56,31 @@ test.describe('Annotation list routing', () => {
     await expect(page.getByTestId('list-task-not-found')).toBeVisible();
   });
 });
+
+/* Issue #154: the not-found state used to be a dead end — text only, no
+ * clickable exit — and a missing task_id rendered a blank interpolation
+ * (「任務代碼  不存在」). */
+test.describe('Annotation list not-found exit (issue #154)', () => {
+  test('missing task_id says no task was specified instead of a blank task code', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&run_type=dry_run');
+    const notFound = page.getByTestId('list-task-not-found');
+    await expect(notFound).toBeVisible();
+    await expect(notFound).toContainText('未指定任務');
+    await expect(notFound).not.toContainText('任務代碼');
+  });
+
+  test('missing task_id error state links back to the dashboard', async ({ page }) => {
+    await page.goto('/pages/annotation/annotation-list.html?role=reviewer&run_type=dry_run');
+    const backLink = page.getByTestId('list-not-found-dashboard-link');
+    await expect(backLink).toBeVisible();
+    await backLink.click();
+    await expect(page).toHaveURL(/\/pages\/dashboard\/dashboard\.html/);
+  });
+
+  test('invalid task_id error state keeps the task code message and also links back to the dashboard', async ({ page }) => {
+    await page.goto(buildListUrl({ task_id: 'T999-DOES-NOT-EXIST' }));
+    const notFound = page.getByTestId('list-task-not-found');
+    await expect(notFound).toContainText('任務代碼 T999-DOES-NOT-EXIST 不存在');
+    await expect(notFound.getByTestId('list-not-found-dashboard-link')).toBeVisible();
+  });
+});
