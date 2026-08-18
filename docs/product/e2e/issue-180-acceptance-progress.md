@@ -1,6 +1,6 @@
 # Issue #180 — 跨角色 Playwright 生命週期驗收規劃（分階段執行進度）
 
-Issue: https://github.com/singyichen/label-suite/issues/180
+Issue: <https://github.com/singyichen/label-suite/issues/180>
 本輪範圍：`account` · `dashboard` · `task-management` · `annotation`（排除 dataset 分析模組）
 本階段只產出規劃與驗收文件，不跑 Playwright 測試、不實作產品功能。
 
@@ -12,7 +12,7 @@ Issue: https://github.com/singyichen/label-suite/issues/180
 
 ## 階段一：三條平行盤點工作流（read-only）
 
-- [ ] W1 規格與架構盤點（senior-ba 視角）：治理文件、核心 feature specs、產品文件、關鍵 ADR；驗證 issue 12.8 已知衝突並找出新衝突與 requirement gap
+- [x] W1 規格與架構盤點（senior-ba 視角）— `DONE_WITH_CONCERNS`，報告：`issue-180/w1-spec-arch.md`。11 項 spec conflict（12.8 全數核實＋3 項新發現，含 testing-constitution 推翻自述 source-of-truth ADR 的治理缺口）、4 項 requirement gap；最關鍵：ADR-022 `completed` 前置條件未含 review/dispute/arbitration 完成度
 - [ ] W2 角色旅程與 UX 走查（senior-uiux 視角，以 prototype 程式碼閱讀方式走查三條角色旅程）
 - [x] W3 Playwright 測試資產與驗收設計盤點（senior-qa 視角）：既有測試覆蓋地圖、多身份模擬機制、跨角色 E2E 設計骨架 — `DONE_WITH_CONCERNS`，報告：`issue-180/w3-playwright-qa.md`，8 項覆蓋缺口；關鍵發現：既有測試無 `storageState`/`newContext` 角色隔離（靠 localStorage bucket key），與 issue「角色獨立 BrowserContext」要求架構衝突
 - [ ] 主 agent 重新驗證各工作流關鍵證據（抽查引用的檔案與行號）
