@@ -1477,7 +1477,20 @@
     });
     var enoughReviewers = reviewerSubmissions.length >= ((opts && opts.minReviewers) || 1);
 
-    if (changed) return enoughReviewers ? REVIEW_UNIT_STATUS.DISPUTED : REVIEW_UNIT_STATUS.MODIFIED;
+    if (changed) {
+      if (!enoughReviewers) return REVIEW_UNIT_STATUS.MODIFIED;
+      /* v4.8.0: a disputed unit leaves the pool once EVERY dispute item is
+         resolved -- either the reviewers' per-item majority already converged
+         (resolveDisputeConvergence) or an arbiter finalized it by vote. */
+      var items = getDisputeItems(taskId, runType, sampleId, identity, keys);
+      var arbState = getArbitrationState(taskId, runType, sampleId, identity);
+      var allResolved = items.length > 0 && items.every(function (item) {
+        if (resolveDisputeConvergence(item, reviewerSubmissions.length).converged) return true;
+        var stored = arbState[item.outKey + '::' + item.key];
+        return !!(stored && stored.finalized_by);
+      });
+      return allResolved ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.DISPUTED;
+    }
     return enoughReviewers ? REVIEW_UNIT_STATUS.FINALIZED : REVIEW_UNIT_STATUS.APPROVED;
   }
 
@@ -1530,6 +1543,100 @@
     return order.map(function (id) { return byId[id]; });
   }
 
+  /* ---- Arbitration state (spec 015 v4.8.0, issue #147 P3c) ---------------
+   * The ONLY stored dispute state: arbitration votes and the finalized value
+   * (DisputeItem entity, FR-059). Everything else stays derived. Keyed by the
+   * unit (task × run_type × annotator × sample), not by any reviewer bucket
+   * -- a dispute belongs to the unit, and whichever arbiter resolves it must
+   * be visible to every other viewer of that unit. */
+  var ARBITRATION_STORAGE_KEY = 'labelsuite.wsArbitration';
+
+  function readArbitrationStore() {
+    try {
+      var raw = global.localStorage.getItem(ARBITRATION_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function arbitrationBucketKey(taskId, runType, identity) {
+    identity = identity || {};
+    return taskId + '::' + runType + '::' + (identity.annotatorId || DEFAULT_ANNOTATOR_ID);
+  }
+
+  /* Returns { [itemId]: { votes: [{arbiter_id, choice, voted_at}],
+   * finalized_value?, finalized_by? } } for one review unit; itemId is the
+   * getDisputeItems() identity `outKey::key`. */
+  function getArbitrationState(taskId, runType, sampleId, identity) {
+    var bucket = readArbitrationStore()[arbitrationBucketKey(taskId, runType, identity)];
+    return (bucket && bucket[sampleId]) || {};
+  }
+
+  /* Writes one arbiter's complete pass over a unit's open dispute items:
+   * `decisions` is [{itemId, choice: 'A'|'B', value}] where `value` is the
+   * concrete winning value (A -> annotatorValue, B -> the chosen reviewer
+   * value). The prototype has a single arbiter per claim, so each vote
+   * finalizes its item immediately. */
+  function submitArbitration(taskId, runType, sampleId, identity, decisions) {
+    var store = readArbitrationStore();
+    var key = arbitrationBucketKey(taskId, runType, identity);
+    if (!store[key]) store[key] = {};
+    if (!store[key][sampleId]) store[key][sampleId] = {};
+    var arbiterId = (identity && identity.reviewerId) || DEFAULT_REVIEWER_ID;
+    (decisions || []).forEach(function (decision) {
+      var item = store[key][sampleId][decision.itemId] || { votes: [] };
+      item.votes.push({ arbiter_id: arbiterId, choice: decision.choice, voted_at: new Date().toISOString() });
+      item.finalized_value = decision.value;
+      item.finalized_by = arbiterId;
+      store[key][sampleId][decision.itemId] = item;
+    });
+    try {
+      global.localStorage.setItem(ARBITRATION_STORAGE_KEY, JSON.stringify(store));
+    } catch (e) {
+      /* storage unavailable: same silent-tolerant stance as writeSubmissionStore */
+    }
+  }
+
+  /* Per-item majority convergence (issue #147 ⑥③): decides whether one
+   * dispute item resolves WITHOUT arbitration. Among `reviewerCount` (N)
+   * reviewers of the unit, the reviewers present in `item.reviewerValues`
+   * voted for their own value; the remaining N - |reviewerValues| reviewers
+   * agreed with `item.annotatorValue`. A value converges only with a strict
+   * majority (> N/2); anything else -- N=1, an even-N tie, all divergent --
+   * sends the item to the dispute pool.
+   *
+   * Compare values with valueKey() (deep equality via canonical JSON), not
+   * ===: span/token values are objects.
+   *
+   * Returns { converged: true, value: <winning value> } or { converged: false }.
+   */
+  function valueKey(value) {
+    return JSON.stringify(value);
+  }
+
+  function resolveDisputeConvergence(item, reviewerCount) {
+    /* A single reviewer's dissent can never outvote the annotator, even
+       though 1 > 1/2 is technically a strict majority. */
+    if (reviewerCount < 2) return { converged: false };
+    var tally = {};
+    var values = {};
+    function vote(value, count) {
+      var key = valueKey(value);
+      tally[key] = (tally[key] || 0) + count;
+      values[key] = value;
+    }
+    var reviewerIds = Object.keys(item.reviewerValues);
+    reviewerIds.forEach(function (reviewerId) {
+      vote(item.reviewerValues[reviewerId], 1);
+    });
+    vote(item.annotatorValue, reviewerCount - reviewerIds.length);
+    var winner = Object.keys(tally).filter(function (key) {
+      return tally[key] > reviewerCount / 2;
+    })[0];
+    return winner ? { converged: true, value: values[winner] } : { converged: false };
+  }
+
   global.LabelSuiteAnnotationWorkspaceData = {
     resolveTaskProfile: resolveTaskProfile,
     sanitizeRecordForAnnotator: sanitizeRecordForAnnotator,
@@ -1561,5 +1668,9 @@
     getReviewUnitStatus: getReviewUnitStatus,
     getDisputeItems: getDisputeItems,
     isArbiterCandidate: isArbiterCandidate,
+    readReviewerSubmissions: readReviewerSubmissions,
+    getArbitrationState: getArbitrationState,
+    submitArbitration: submitArbitration,
+    resolveDisputeConvergence: resolveDisputeConvergence,
   };
 })(window);
