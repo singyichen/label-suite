@@ -13,10 +13,10 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 ## 階段一：三條平行盤點工作流（read-only）
 
 - [x] W1 規格與架構盤點（senior-ba 視角）— `DONE_WITH_CONCERNS`，報告：`issue-180/w1-spec-arch.md`。11 項 spec conflict（12.8 全數核實＋3 項新發現，含 testing-constitution 推翻自述 source-of-truth ADR 的治理缺口）、4 項 requirement gap；最關鍵：ADR-022 `completed` 前置條件未含 review/dispute/arbitration 完成度
-- [ ] W2 角色旅程與 UX 走查（senior-uiux 視角，以 prototype 程式碼閱讀方式走查三條角色旅程）
+- [x] W2 角色旅程與 UX 走查（senior-uiux 視角，以 prototype 程式碼閱讀方式走查三條角色旅程）— `DONE_WITH_CONCERNS`，報告：`issue-180/w2-ux-journey.md`。11 筆發現（Blocking 2／High 6／Medium 3）；issue 第 8 節 10 項已知風險核實 9 項屬實，敏感欄位防洩漏未發現違規（無需 security escalation）
 - [x] W3 Playwright 測試資產與驗收設計盤點（senior-qa 視角）：既有測試覆蓋地圖、多身份模擬機制、跨角色 E2E 設計骨架 — `DONE_WITH_CONCERNS`，報告：`issue-180/w3-playwright-qa.md`，8 項覆蓋缺口；關鍵發現：既有測試無 `storageState`/`newContext` 角色隔離（靠 localStorage bucket key），與 issue「角色獨立 BrowserContext」要求架構衝突
-- [ ] 主 agent 重新驗證各工作流關鍵證據（抽查引用的檔案與行號）
-- [ ] 階段一檢查點報告：completed · verified · remaining
+- [x] 主 agent 重新驗證各工作流關鍵證據（抽查引用的檔案與行號）：W1 = ADR-022 completed 條件、E2E 目錄衝突；W2 = F-01 指引 modal 無內容主體、F-08 新舊審核模型並存；W3 = storageState 零使用、trace-only 設定 — 全部與 repo 實況相符
+- [x] 階段一檢查點報告：三條工作流皆 `DONE_WITH_CONCERNS`，合計 11 項 spec conflict、4 項 requirement gap、11 筆 UX 發現、8 項測試覆蓋缺口
 
 ## 階段二：整合與正典決策（需使用者 checkpoint）
 
@@ -50,4 +50,4 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 - [ ] issue register 回填 #180，確認每項發現皆有處置
 
 ---
-最後更新：2026-08-18 — 階段一已啟動（三個 sub-agent 平行執行中）
+最後更新：2026-08-18 — 階段一完成；進入階段二（整合與正典決策）
