@@ -1,6 +1,6 @@
 # 審核員模型重構規劃 — 從「一筆資料聚合眾人」到「一人一結果各自審」
 
-> **狀態**：規劃已定案，尚未動工（2026-08-14）
+> **狀態**：執行中（2026-08-18）——P1、P2 已完成；P3 剩最後一個 PR #174 審核中；P4、P5 未動工
 > **來源**：教授對 reviewer 介面的三段回饋
 > **影響**：spec 014（task-detail）、spec 015（annotation workspace）；下游 spec 017
 > **範圍**：本次**只調整 spec 與 prototype**，不動 `backend/` 與 `frontend/`
@@ -263,13 +263,13 @@ emo-001 · 標記員 kioleemg12       1 / 18
 
 動到 spec 015 與 014 兩份（013 因 task-new 不動而落在範圍外），遠超單一 PR 的 5 檔案 / 300 行上限。依相依順序拆分，每個 PR 各自可獨立驗收。
 
-| # | 範圍 | Spec | 相依 | Issue |
-|---|------|------|------|-------|
-| **P1** | **審核身分地基** — `submissionBucketKey` 帶審核員身分、決策與歷程記錄真實標記員／審核員 ID | 015 | 無 · **最先做** | [#145](https://github.com/singyichen/label-suite/issues/145) |
-| **P2** | **審核粒度改版** — 清單改「樣本 × 標記員」、工作區收斂成單一審核卡、一致性自動比對、快捷鍵補實作 | 015 | P1 | [#146](https://github.com/singyichen/label-suite/issues/146) |
-| **P3** | **爭議池與第三人仲裁** — 不一致項自動聯集、指派、逐項 A／B 投票、多審核員多數決收斂 | 015 | P2 | [#147](https://github.com/singyichen/label-suite/issues/147) |
-| **P4** | **審核設定與指派** — 任務概覽新增「審核設定」＋成員管理新增「審核指派」 | 014 | P1 | [#148](https://github.com/singyichen/label-suite/issues/148) |
-| **P5** | **後台可視性** — 標記結果展開列改為審核歷程＋篩選擴充；工時紀錄完成筆數拆欄 | 014 | P1 | [#149](https://github.com/singyichen/label-suite/issues/149) |
+| # | 範圍 | Spec | 相依 | Issue | 狀態（2026-08-18） |
+|---|------|------|------|-------|--------------------|
+| **P1** | **審核身分地基** — `submissionBucketKey` 帶審核員身分、決策與歷程記錄真實標記員／審核員 ID | 015 | 無 · **最先做** | [#145](https://github.com/singyichen/label-suite/issues/145) | ✅ 完成（PR #156，spec v3.8.0） |
+| **P2** | **審核粒度改版** — 清單改「樣本 × 標記員」、工作區收斂成單一審核卡、一致性自動比對、快捷鍵補實作 | 015 | P1 | [#146](https://github.com/singyichen/label-suite/issues/146) | ✅ 完成（PR #157／#159／#162–#165／#167–#170，spec v3.9.0–v4.5.0） |
+| **P3** | **爭議池與第三人仲裁** — 不一致項自動聯集、指派、逐項 A／B 投票、多審核員多數決收斂 | 015 | P2 | [#147](https://github.com/singyichen/label-suite/issues/147) | 🔄 收尾中（PR #172／#173 已 merge，PR #174 審核中，spec v4.6.0–v4.8.0） |
+| **P4** | **審核設定與指派** — 任務概覽新增「審核設定」＋成員管理新增「審核指派」 | 014 | P1 | [#148](https://github.com/singyichen/label-suite/issues/148) | ⬜ 未動工 |
+| **P5** | **後台可視性** — 標記結果展開列改為審核歷程＋篩選擴充；工時紀錄完成筆數拆欄 | 014 | P1 | [#149](https://github.com/singyichen/label-suite/issues/149) | ⬜ 未動工 |
 
 P4 與 P5 都只相依 P1，**可與 P2／P3 並行**。原本想把設定與統計併成一個 PR，但那會同時動到概覽、成員、結果、工時四個面板加兩份 spec，超過單一 PR 的 5 檔案上限，也違反單一目的——一個是「設定得了」，一個是「看得到」。
 
