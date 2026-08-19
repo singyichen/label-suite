@@ -105,7 +105,7 @@
           task_id: task.id,
           iaa_status: task.iaaStatus,
         });
-        options.showToast(t('toastNavigating'));
+        options.showToast(t('toastNavigating'), 'info');
         global.setTimeout(function () {
           global.location.href = './dataset-analysis-detail.html?task_id='
             + encodeURIComponent(task.id)
