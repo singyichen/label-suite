@@ -1293,6 +1293,26 @@
     }, 700);
   }
 
+  /* UXC-03: browser-navigation guard while the work column holds edits
+     that 儲存草稿/提交 has not persisted (the autosave indicator is
+     visual-only in the prototype — see triggerAutosave). Any interaction
+     inside .col-content counts as an edit signal; the three persistence
+     paths clear it. */
+  var hasUnsavedChanges = false;
+  function markUnsaved() { hasUnsavedChanges = true; }
+  function clearUnsaved() { hasUnsavedChanges = false; }
+  var workColumn = document.querySelector('.col-content');
+  if (workColumn) {
+    workColumn.addEventListener('input', markUnsaved, true);
+    workColumn.addEventListener('change', markUnsaved, true);
+    workColumn.addEventListener('click', markUnsaved, true);
+  }
+  window.addEventListener('beforeunload', function (event) {
+    if (!hasUnsavedChanges) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
+
   /* Right-column 歷程 tab (FR-016 / AC-3.8): renders the merged
      annotator+reviewer event chain for the current sample. */
   function formatHistoryTime(iso) {
@@ -1592,6 +1612,7 @@
       buildHistorySummary(),
       currentIdentity
     );
+    clearUnsaved();
     triggerAutosave();
     renderSampleList();
     renderHistoryPanel();
@@ -1625,6 +1646,7 @@
       return;
     }
     window.LabelSuiteAnnotationWorkspaceData.markSampleSubmitted(currentProfile.id, currentRole, currentRunType, currentSampleId, collectAnswerPayload(), buildHistorySummary(), currentIdentity);
+    clearUnsaved();
     /* task-detail.html's dry-run status sync (waiting_iaa_confirmation once
        every sample is submitted) reads this key -- see
        annotation-workspace.data.js's syncDryRunProgress() doc comment. */
@@ -2528,6 +2550,7 @@
         data.submitArbitration(
           currentProfile.id, currentRunType, currentSampleId, currentIdentity, decisions
         );
+        clearUnsaved();
         showToast(t('wsArbitrationSubmitSuccess'));
         renderSampleList();
         renderReviewerWorkspace();
@@ -2672,6 +2695,7 @@
       summary,
       currentIdentity
     );
+    clearUnsaved();
     /* spec 015 AC-3.15/AC-6.4/FR-014I (issue #192): the reject -> pending
        rollback only applies to official_run -- dry_run has no "退回個人重標"
        channel, so a dry_run reject decision must not roll the sample back. */
