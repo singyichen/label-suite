@@ -153,8 +153,11 @@ Any action that is irreversible or removes user data requires a confirmation dia
 - Use `limit` / `offset` parameters (not `page` / `page_size`) — per ADR and Foundation Spec convention.
 - Sync filter, sort, and pagination state to URL query parameters so that:
   - F5 reload restores the same view.
-  - Browser back/forward navigates filter history.
   - The URL is shareable.
+- Baseline sync uses `history.replaceState`. Back/forward filter history
+  (`pushState` + a `popstate` handler) is an optional enhancement, deferred
+  module-wide as of the #183 audit — shipped pages (annotation-list,
+  dashboard scenario, both dataset pages) are compliant without it.
 - Reset `offset` to `0` when changing filters or sort order.
 
 ---
