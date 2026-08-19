@@ -128,6 +128,7 @@ Used for status badges, error banners, alerts, and feedback messages.
 | Relation | `badge-task-type-relation` | `#155E75` (cyan-800) | `#ECFEFF` (cyan-50) | `#67E8F9` (cyan-300) |
 | Pairs | `badge-task-type-pairs` | `#065F46` (emerald-800) | `#ECFDF5` (emerald-50) | `#A7F3D0` (emerald-200) |
 | Scoring | `badge-task-type-scoring` | `#7E22CE` (purple-700) | `#FAF5FF` (purple-50) | `#E9D5FF` (purple-200) |
+| Default / fallback | `badge-task-type-default` | `#334155` (slate-700) | `#F8FAFC` (slate-50) | `#CBD5E1` (slate-300) |
 
 **Run Mode Badge Mapping (light mode):**
 
@@ -135,6 +136,9 @@ Used for status badges, error banners, alerts, and feedback messages.
 |------|-----------|------|------------|--------|
 | Official Run | `badge-official` | `#5B21B6` (indigo-800) | `#EDE9FE` (violet-100) | `#DDD6FE` (violet-200) |
 | Dry Run | `badge-dry-run` | `#6B7280` (gray-500) | `#F3F4F6` (gray-100) | `#D1D5DB` (gray-300) |
+| Unmaterialized | `badge-run-unmaterialized` | `#64748B` (slate-500) | `#F8FAFC` (slate-50) | `#CBD5E1` (slate-300) |
+
+> Naming note: `task-list.html` ships `badge-run-official` / `badge-run-dry` as aliases of `badge-official` / `badge-dry-run` (same values). The MASTER names are canonical; the `badge-run-*` aliases are flagged for renaming in the issue #183 task-management fix PR.
 
 **Base badge CSS:**
 
@@ -691,6 +695,48 @@ For rows containing both caution and destructive actions, place destructive acti
 | Loading | `opacity-70 cursor-not-allowed` + spinner icon |
 | Disabled | `opacity-40 cursor-not-allowed pointer-events-none` |
 
+**Danger (solid) — destructive-modal confirm variant:**
+
+Solid destructive confirm button used only inside destructive-action modals (UXC-10 consumers in admin pages). Shipped CSS (from `role-settings.html`):
+
+```css
+.btn-danger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
+  border: none; background: var(--color-error); color: var(--color-white); transition: opacity 150ms;
+}
+.btn-danger:hover { opacity: 0.9; }
+```
+
+- Table-row destructive actions keep the outline Danger mapping above; the solid variant is reserved for the modal confirm position
+- Dark mode: `--color-error` flips to `#F87171` — verify 4.5:1 contrast against the text color per Implementation Rule 3
+
+**Mini Buttons (dense row actions):**
+
+Compact in-row action buttons used in dense tables and list rows (`annotation-list.html`, `user-management.html` — shipped CSS identical in both):
+
+```css
+.mini-btn {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.mini-btn:hover:not(:disabled) { border-color: var(--color-primary); color: var(--color-primary); }
+.mini-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+.mini-btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+.mini-btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white); }
+.mini-btn-primary:hover:not(:disabled) { opacity: 0.9; }
+.mini-btn-danger { background: var(--color-error-soft-bg); border-color: var(--color-error-soft-border); color: var(--color-error); }
+```
+
+- Use only inside rows; standalone actions use the standard `.btn` sizes
+- Active review states use the semantic-token classes from Dark Mode Implementation Rule 6 (`mini-btn-active-approve` / `-reject`)
+
 ### Cards
 
 ```css
@@ -1101,6 +1147,39 @@ Left fixed navigation used in Pattern C (Profile and other multi-section pages).
 - ❌ Pages with only a single section (use Pattern A instead)
 - ❌ Mobile viewports (use Bottom Tab Bar or Mobile drawer instead)
 
+**Collapsed mode (shared fragment):**
+
+`body.sidebar-collapsed` narrows the sidebar from 240px to `88px` (icon-only): wordmark, nav labels, user info, and language toggle are hidden, and the notification dropdown shifts to `left: 88px`. The state persists via localStorage (`sidebar.js`).
+
+**Notification Bell + Badge + Dropdown (shared fragment):**
+
+| Part | Key values (shipped, `sidebar.css`) |
+|------|-------------------------------------|
+| Count badge | `.notif-badge` — 16px pill, `background: #EF4444`, white 10px/700 text, offset `top: -7px; right: -9px` |
+| Dropdown | `.notif-dropdown` — `fixed; left: 248px; bottom: 24px`, 320px wide, `var(--radius-lg)`, `box-shadow: 0 8px 32px rgba(30, 27, 75, 0.14)`, z-index 600 |
+| Unread item | `background: var(--color-primary-soft-bg)`; read items `var(--color-white)` |
+| Item icon | 24px circle — check: `#D1FAE5` / `#065F46`, assign: `#EDE9FE` / `#5B21B6` |
+
+> Known deviations (tracked in issue #183): `#EF4444` and the icon-circle palette are non-canonical, and z-index 600 is outside the Z-index Scale. This table documents the shipped state; arbitration happens in the shared-fragment fix PR.
+
+**Shortcut-help keycap (shared fragment):**
+
+```css
+.shortcut-keycap {
+  min-width: 26px; height: 26px; padding: 0 7px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-ink);
+  box-shadow: 0 1px 0 rgba(30, 27, 75, 0.12), 0 1px 3px rgba(30, 27, 75, 0.06);
+  font-size: 11px; font-weight: 600;
+}
+```
+
+**Mobile layout contract:**
+
+Host pages must define `--navbar-mobile-height` (84px) and `--navbar-mobile-top-height` (64px) in their own `:root`; `sidebar.css` consumes them for the mobile bottom bar (`padding-bottom: var(--navbar-mobile-height)`).
+
 ---
 
 ### Desktop Content Tabs
@@ -1235,6 +1314,18 @@ Used for list-style data display (e.g. task list). Supports row hover interactio
 - `<th scope="col">` — mark column headers
 - Clickable rows: add `tabindex="0"` and `onkeydown` to support Enter/Space
 - Expand buttons in dense result tables: use a 14px inline Lucide chevron SVG (e.g. `chevron-down`) with `stroke="currentColor"` and button color `var(--color-ink-muted)`; rotate the SVG when expanded. Avoid `<img>` chevrons here because they do not inherit dark-mode text tokens.
+
+**Dense variant (analytics and listing tables):**
+
+For data-dense listing tables (`dataset-analysis-list.html`, `task-list.html`) a compact scale is sanctioned:
+
+| Property | Standard | Dense |
+|----------|----------|-------|
+| Header font | `text-xs` (12px) | 11px uppercase, `letter-spacing: 0.05em` |
+| Header color | — | `var(--color-ink-muted)` |
+| Cell padding | `px-6 py-3` | `12px 20px` |
+
+Use dense only when the column count would overflow at the standard scale; never mix both scales on one page.
 
 **When NOT to use:**
 - ❌ Fewer than 3 rows → use List instead
@@ -2466,6 +2557,62 @@ html[data-theme="dark"] .skeleton {
 
 ---
 
+### Progress Bar
+
+Thin completion indicator used in dashboard task cards. Shipped CSS (`dashboard.components.css`):
+
+```css
+.progress {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-border);   /* shipped page uses literal #E2E8F0 — same value; migrate to the var (issue #183) */
+  overflow: hidden;
+}
+.progress > span {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--color-cta);
+  display: block;
+  transition: width 300ms ease;
+}
+```
+
+- Give the wrapper `role="progressbar"` with `aria-valuenow` / `aria-valuemin` / `aria-valuemax`
+- Fill is always `var(--color-cta)`; no per-status fill colors — pair with a Status Badge when status matters
+
+---
+
+### Metric KPI Tile
+
+Compact stat tile used in dashboard panels — the "Dashboard Summary Card" named (but never specified) under Cards. Shipped CSS (`dashboard.layout.css`):
+
+```css
+.metric {
+  padding: var(--space-md);              /* 16px */
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+}
+.metric span {                           /* label */
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.metric strong {                         /* value */
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+```
+
+- Grid wrapper: `repeat(auto-fit, minmax(100px, 1fr))` with `var(--space-md)` gap; use `minmax(150px, 1fr)` when labels are long
+- The dense 16px-padding scale above is the sanctioned KPI-tile spec; the Cards `p-6` rule applies to content cards, not KPI tiles
+
+---
+
 ## Style Guidelines
 
 **Style:** Flat Design
@@ -2581,3 +2728,4 @@ Before delivering any UI code, verify:
 | v1.7 | 2026-05-20 | **Token 缺口補齊** — 新增 10 個 extended/alias token（`--color-cta-hover`、`--color-primary-soft-bg`、`--color-text-soft`、soft-bg/soft-border aliases）、Motion tokens（`--dur-fast/--dur-normal/--ease-standard`）、Semantic aliases（`--fg-1/2/3`、`--bg-page`、`--bg-surface`）、`--shadow-card` 亮模式值；**字型** — 新增 `Atkinson Hyperlegible`（閱讀用）與 `JetBrains Mono`（程式碼），補充 `--font-*` CSS 變數與 line-height 變數表，新增 Page Title 28px 層級；**Badge** — 擴充 8 種新類型（draft、iaa、task-type-single/sequence/relation/pairs/scoring）；**新元件** — Toolbar、Step Indicator、Upload Zone、Tag Input/Pill、Toggle Switch、Code Editor |
 | v1.7.1 | 2026-05-21 | **Spec drift 修正** — Button padding 統一：`.btn-primary` / `.btn-secondary` 由 `12px 24px` 改為 `10px 20px`（對齊 CTA 實作值）；`.btn-secondary` border 由 `2px solid --color-primary` 改為 `1px solid --color-border`；Token canonical name 修正：`--color-ink-muted` 升為 Supporting token，`--color-text-muted` 降為 deprecated alias；新增 **Run Mode Badge Mapping（light mode）** 章節（badge-official indigo 色板、badge-dry-run gray 色板）；同步修正 `design-system.pen` Button/Primary 與 Button/Secondary 的 padding 與 stroke 屬性 |
 | v1.8 | 2026-08-19 | **Baseline arbitration batch (issue #183)** — Toast re-specified to top-center with per-variant auto-dismiss (Success 3s / Info 5s / Warning 8s / Error manual-only), one-at-a-time; UXC-07 declared single source of truth for Toast behavior; Dark Rule 6 rewritten to semantic-token `mini-btn-active-*` classes (per-page hardcoded overrides deprecated); Dark Rule 7 gains shipped light-value table; Dark Rule 9 auth template migrated to canonical token names (`--color-surface` = page ground, new `--color-card` = card surface; `--color-background`/`--color-text`/`--color-text-muted` deprecated); new Status Pill (borderless, soft) component spec; Sidebar width corrected to `w-60` (240px, matches shipped `sidebar.css`); Prototype-Only State Switcher re-specified to shipped `scenario-pill` pattern; line 71 alias note translated to English |
+| v1.9 | 2026-08-19 | **Cross-module spec debt (issue #183)** — new specs for components shipped in 2+ modules but previously undefined: Mini Buttons (`mini-btn` / `-primary` / `-danger`), solid Danger confirm button, Progress Bar, Metric KPI Tile, dense Table variant, Sidebar collapsed mode + Notification Bell/Badge/Dropdown + Shortcut keycap + mobile layout contract (`--navbar-mobile-*`); badge tables gain `badge-task-type-default` and `badge-run-unmaterialized` light values with a naming note flagging the `badge-run-*` aliases; established `design/system/pages/` with a README defining the page-scoped override convention |
