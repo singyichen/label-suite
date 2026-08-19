@@ -3979,9 +3979,9 @@ function renderSentencePairsPreview(preview, config) {
     preview.appendChild(scoreTitle);
     var scoreWrap = document.createElement('div');
     scoreWrap.className = 'annotation-preview-options';
-    var sMin = config.score_min || 1;
-    var sMax = config.score_max || 5;
-    var sStep = config.score_step || 1;
+    var sMin = typeof config.score_min === 'number' ? config.score_min : 1;
+    var sMax = typeof config.score_max === 'number' ? config.score_max : 5;
+    var sStep = typeof config.score_step === 'number' ? config.score_step : 1;
     for (var s = sMin; s <= sMax; s += sStep) {
       var sRow = document.createElement('label');
       sRow.className = 'annotation-preview-option';
