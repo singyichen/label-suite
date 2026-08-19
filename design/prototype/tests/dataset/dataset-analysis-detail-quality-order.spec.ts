@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html';
 
-const TASK_IDS = ['T001', 'T002', 'T003', 'T004', 'T005'];
+const TASK_IDS = ['T101', 'T102', 'T103', 'T104', 'T105'];
 
 test.describe('Dataset analysis detail quality block order', () => {
   for (const taskId of TASK_IDS) {
@@ -22,7 +22,7 @@ test.describe('Dataset analysis detail quality block order', () => {
   }
 
   test('SC-006B: entity_recognition partial-overlap F1 toggle does not change the IAA gate badge', async ({ page }) => {
-    await page.goto(`${DETAIL_URL}?task_id=T006&tab=quality`);
+    await page.goto(`${DETAIL_URL}?task_id=T106&tab=quality`);
 
     const badge = page.locator('#iaaSummaryBadge');
     await expect(badge).toHaveText('0/1 達標');

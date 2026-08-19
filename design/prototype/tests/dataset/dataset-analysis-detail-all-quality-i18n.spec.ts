@@ -15,7 +15,7 @@ type TaskCase = {
 
 const TASK_CASES: TaskCase[] = [
   {
-    taskId: 'T002',
+    taskId: 'T102',
     riskTableLabel: 'Annotator analysis (VA scoring)',
     groupAvgId: 'vaGroupAvg',
     expectedGroupAvg: 'Group avg — IAA_V: 0.78 / IAA_A: 0.82 / Avg speed: 32.7s/sent',
@@ -26,7 +26,7 @@ const TASK_CASES: TaskCase[] = [
     expectedConsistencyUnit: 'Comparable Sentences',
   },
   {
-    taskId: 'T006',
+    taskId: 'T106',
     riskTableLabel: 'Annotator analysis (sequence labeling)',
     groupAvgId: 'seqGroupAvg',
     expectedGroupAvg: 'Group avg — F1 (strict): 0.72 / Avg speed: 44.7s/sent',
@@ -37,7 +37,7 @@ const TASK_CASES: TaskCase[] = [
     expectedConsistencyUnit: 'Comparable Spans',
   },
   {
-    taskId: 'T004',
+    taskId: 'T104',
     riskTableLabel: 'Annotator analysis (relation extraction)',
     groupAvgId: 'relGroupAvg',
     expectedGroupAvg: 'Group avg — Triple F1: 0.76 / Avg speed: 54.0s/sent',
@@ -48,7 +48,7 @@ const TASK_CASES: TaskCase[] = [
     expectedConsistencyUnit: 'Triples Annotated 5 Times',
   },
   {
-    taskId: 'T005',
+    taskId: 'T105',
     riskTableLabel: 'Classification annotator risk assessment',
     groupAvgId: 'singleLabelGroupAvg',
     expectedGroupAvg: 'Group avg — Alpha: 0.85 / Avg speed: 31.3s/sent',
@@ -70,7 +70,7 @@ async function gotoEnglishQuality(page: Page, taskId: string) {
 
 test.describe('Dataset analysis detail quality i18n across task types', () => {
   test('renders dataset detail sidebar user role in English mode', async ({ page }) => {
-    await gotoEnglishQuality(page, 'T002');
+    await gotoEnglishQuality(page, 'T102');
 
     await expect(page.locator('#userName')).toHaveText('Mandy Chen');
     await expect(page.locator('#roleIndicator')).toHaveText('User');

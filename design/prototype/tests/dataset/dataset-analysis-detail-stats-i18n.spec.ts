@@ -13,7 +13,7 @@ async function gotoStatsWithLang(page: Page, taskId: string, lang: 'zh' | 'en') 
 
 test.describe('Dataset analysis detail stats i18n across task types', () => {
   test('renders VA statistics overview in English mode', async ({ page }) => {
-    await gotoStatsWithLang(page, 'T002', 'en');
+    await gotoStatsWithLang(page, 'T102', 'en');
 
     const histogram = page.locator('section[aria-labelledby="statsVAHistTitle"]');
 
@@ -37,7 +37,7 @@ test.describe('Dataset analysis detail stats i18n across task types', () => {
   });
 
   test('renders sequence statistics overview labels in English mode without mixed Chinese labels', async ({ page }) => {
-    await gotoStatsWithLang(page, 'T006', 'en');
+    await gotoStatsWithLang(page, 'T106', 'en');
 
     const entityDistribution = page.locator('section[aria-labelledby="statsSeqEntityDistTitle"]');
 
@@ -57,7 +57,7 @@ test.describe('Dataset analysis detail stats i18n across task types', () => {
   });
 
   test('renders single_label statistics overview labels in English mode without mixed Chinese labels', async ({ page }) => {
-    await gotoStatsWithLang(page, 'T005', 'en');
+    await gotoStatsWithLang(page, 'T105', 'en');
 
     const distribution = page.locator('section[aria-labelledby="statsSingleLabelDistTitle"]');
 
