@@ -23,8 +23,10 @@ test.describe('Shared sidebar shortcut entry', () => {
     /* spec 015 v4.0.0 made the review unit one annotator, so there is nothing
      * left for a batch shortcut to act on -- these two rows are retired
      * outright rather than merged (spec 008 v1.4.0, SC-009D). */
-    await expect(page.locator('.shortcut-help-row').filter({ hasText: '通過目前結果' })).toBeVisible();
-    await expect(page.locator('.shortcut-help-row').filter({ hasText: '退回目前結果' })).toBeVisible();
+    await expect(page.locator('#shortcutReviewApprove')).toHaveText('通過目前結果');
+    /* Issue #191: AC-3.15 / AC-6.4 (spec 015) scope the reject channel to
+     * official_run only, so the shortcut label must carry that qualifier. */
+    await expect(page.locator('#shortcutReviewReject')).toHaveText('退回目前結果（限正式標記）');
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部通過' })).toHaveCount(0);
     await expect(page.locator('.shortcut-help-row').filter({ hasText: '全部退回' })).toHaveCount(0);
   });
@@ -45,6 +47,8 @@ test.describe('Shared sidebar shortcut entry', () => {
     await expect(page.getByRole('heading', { name: 'Global' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Annotation workspace' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible();
+    await expect(page.locator('#shortcutReviewApprove')).toHaveText('Approve current result');
+    await expect(page.locator('#shortcutReviewReject')).toHaveText('Return current result (formal runs only)');
   });
 
   test('does not expose or open shortcut help on mobile', async ({ page }) => {

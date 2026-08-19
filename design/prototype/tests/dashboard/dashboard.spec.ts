@@ -277,6 +277,25 @@ test.describe('Dashboard page — language toggle', () => {
     await expect(page.locator('#scenarioLabel')).toHaveText('場景模式');
   });
 
+  /* Issue #191: reviewer workflow copy must reflect the spec 015 reviewer
+   * model (independent per-annotator review + direct correction + dispute
+   * arbitration); AC-3.15 / AC-6.4 scope the reject channel to official_run. */
+  test('reviewer workflow card copy reflects the independent-review model in both locales', async ({ page }) => {
+    await page.goto(DASHBOARD_URL);
+
+    await expect(page.locator('#roleReviewerSubtitle')).toHaveText('逐標記員獨立審核，直接修正結果，歧異交付仲裁。');
+    await expect(page.locator('#stepReviewer2Title')).toHaveText('修正或仲裁');
+    await expect(page.locator('#stepReviewer2Desc')).toHaveText('直接修正結果；退回僅限正式標記');
+
+    await page.getByTestId('lang-toggle').click();
+
+    await expect(page.locator('#roleReviewerSubtitle')).toHaveText(
+      'Review each annotator independently, correct results directly, and arbitrate disputes.'
+    );
+    await expect(page.locator('#stepReviewer2Title')).toHaveText('Correct or Arbitrate');
+    await expect(page.locator('#stepReviewer2Desc')).toHaveText('Correct directly; return applies to formal runs only');
+  });
+
   test('translates metric value units between zh-TW and en', async ({ page }) => {
     await page.goto(DASHBOARD_URL);
 
