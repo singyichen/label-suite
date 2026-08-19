@@ -1,5 +1,6 @@
 # 任務類型分類法（ Task Type Taxonomy ）
 
+> **定位與權威：** 本文件僅提供產品 taxonomy 導覽；組合模型以 [ADR-029](../../adr/029-output-type-composition.md) 與 [013 Task New](../../../specs/task-management/013-task-new/spec.md) 為準。最後驗證：2026-08-19（013 v6.9.1、ADR-029／031）。
 ## 三層結構
 
 ```
@@ -13,6 +14,8 @@
 > 本節是 **task type taxonomy**（任務 category／input／output 的組合），不是 `multi_label` 的 **label taxonomy**。標籤樹可遞迴建立多層，但受平台資源上限約束。
 >
 > 「整篇文章」與「句子／段落」視為相同輸入類型（ `single_item` ），差異只在資料長度，不影響 task config 結構。
+>
+> `input_type` 僅有 `single_item | item_pair`；`item_pair` 以 `item_pair_labels` 保存兩側產品顯示名稱。`field_role_map` 將資料欄位指定為 Evidence（背景）、Input（作答輸入）或 Output（可編修預標記），未指定欄位不進入標記脈絡；Output 不等於可下發的隱藏 test-set 答案。
 
 > 本次同步遷移顯示名稱與技術識別碼：`span` → `entity_recognition`、`relation_triple` → `relation_identification`、`token_class` → `sequence_tagging`。舊 key 與 `entity_relation`、`boundary` 均已自合法任務類型移除，不提供相容別名。
 
@@ -25,14 +28,14 @@
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
 | 單一標籤（ `single_label` ） | 從選項中選一個，含二元 | 文本分類、情感分析、主題分類 | 「蘋果發表了新款 iPhone。」 | 科技 | `label_options[]: { name, color? }` |
-| 多標籤（ `multi_label` ） | 從階層標籤樹的葉節點同時選取多個 | 多標籤文本分類、內容標記 | 「這部電影有暴力和恐怖情節。」 | `content / safety / violence`、`content / safety / horror` | `label_options[]: LabelOptionNode` |
+| 多標籤（ `multi_label` ） | 從階層標籤樹獨立選取一個或多個節點 | 多標籤文本分類、內容標記 | 「這部電影有暴力和恐怖情節。」 | `content / safety / violence`、`content / safety / horror` | `label_options[]: LabelOptionNode` |
 
 ### 項目對（ `item_pair` ）
 
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
 | 單一標籤（ `single_label` ） | 從選項中選一個 | NLI（自然語言推斷）、文本蘊含識別 | S1:「小明養了一隻貓。」 S2:「小明有寵物。」 | entailment（蘊含） | `label_options[]: { name, color? }` |
-| 多標籤（ `multi_label` ） | 從階層標籤樹的葉節點同時選取多個 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | `comparison / topic / similar`、`comparison / sentiment / same` | `label_options[]: LabelOptionNode` |
+| 多標籤（ `multi_label` ） | 從階層標籤樹獨立選取一個或多個節點 | MLTC（多標籤文本分類） | S1:「這家餐廳環境很好，服務親切。」 S2:「這間咖啡廳氣氛舒適，店員熱情。」 | `comparison / topic / similar`、`comparison / sentiment / same` | `label_options[]: LabelOptionNode` |
 
 > `entity_markers` 定義預標記實體的起訖標記，例如 `{ start: "[", end: "]" }`；也可用 XML tag、括號或其他明確成對標記格式。
 > `entities` 的 `color` 為必填，因 span 與 token 標記需視覺區分；`relation_types` 為語意類型標籤的純字串陣列（ tag-list ），不支援 `color`——關係觸發詞由標記者從文本中反白選取，不在 config 中預定義；`label_options`、`polarity_options` 的 `color` 為選填。
@@ -60,10 +63,9 @@ max_selections: 0
 
 - `id` 是全樹唯一且不隨顯示名稱修改的穩定識別；`name` 可在不同分支重複。
 - 每一層節點都可獨立選取；branch 的 checkbox 與展開／收合控制分離，選取 parent 不會自動選取 children。選取狀態以完整 root-to-selected-node ID path 區分，但預覽中的已選 chip 只顯示被選節點名稱。
-- 資料模型不固定層數，但 MVP 限制深度最多 8 層（root 為第 1 層，完整 path 長度最多 8）、總節點最多 500 個，節點 `id`／`name` 各最多 100 字元。
 - 階層式來源資料的 path segment 是全樹唯一 node ID；自動建樹時先以該 ID 作初始名稱。若不同分支需顯示同名 leaf，使用不同 ID 並在 Visual 將 `name` 設為相同文字。
 - 一層樹仍是合法的 flat taxonomy；既有 flat config 與 `string[]` 範例資料只作匯入正規化相容。
-- Task Detail、Annotation Workspace 與 Dataset Quality 的顯示、提交與統計契約留待 014、015、017 後續同步。
+- 完整驗證、正規化與 consumer 契約見 013 及其下游 014／015／017；本導覽不複製資源限制或資料轉換細節。
 
 ---
 
@@ -103,7 +105,7 @@ max_selections: 0
 |------------|------|------|
 | `entities[]` | `{ name, color }[]` | 可套用到 Token 的標籤類型。 |
 | `tagging_scheme` | `BIO \| BIOES \| IOB2 \| SINGLE` | 決定可用完整 tag。`SINGLE` 為不含位置前綴的 Token label。 |
-| `tokenization` | `{ unit, mode, punctuation, version }` | unit-based v2；`unit` 可選 `character` 或 `word`，空白不產生 Token、標點獨立。 |
+| `tokenization` | `{ unit, mode, punctuation, version }` | versioned language-aware tokenization，目前為 v1；`unit` 可選 `character` 或 `word`。 |
 | `allow_bypass` | `bool` | 是否允許標記者選擇無法判定。 |
 
 - `BIO`：使用 `B-X / I-X / O`。
@@ -111,7 +113,7 @@ max_selections: 0
 - `IOB2`：使用 `B-X / I-X / O`，且每個實體起點一律為 `B-X`；即使相鄰實體類型相同，也必須重新以 `B-X` 開始。
 - `SINGLE`：每個 Token 直接使用 `ORG / PER / ... / O`，不表達實體內的位置或邊界。
 
-標記單位與標記方案是兩個獨立設定：字模式將中文與英文依可見字元切分；詞模式將中文依語言感知詞界、英文依單字切分。Task New 預覽以完整 tag 按鈕套用到個別 Token，不依前一個 Token 自動猜測前綴，因此可建立相鄰同類型實體。切換單位後依 Input 原文重建 Token；目前 Token 數與可見預標記 `pre_tags.length` 不一致時阻擋進入下一步，不得靜默保留或錯套舊 tag。
+標記單位與標記方案是兩個獨立設定。Task New 的 sequence token preview 屬 producer 合約；正式 tokenization 仍須依 [ADR-031](../../adr/031-sequence-tagging-tokenization-contract.md) 由後端正典整合，word-mode production engine 尚未選定。
 
 #### Entity Recognition（`entity_recognition`）Config 說明
 
@@ -147,7 +149,7 @@ max_selections: 0
 
 | Config 欄位 | 型別 | 說明 |
 |------------|------|------|
-| `relation_types[]` | `string[]` | 語意類型標籤清單，作為標記介面中「類型」下拉選單的選項 |
+| `relation_types[]` | `string[]` | 選填；可為空，空值時不呈現語意類型 selector 或 badge |
 | `source_output` | `string`（選填） | 僅在 `entity_recognition + relation_identification` 組合模式輸出為 `entity_recognition`；E1/E2 取自同一任務中可建立／修改的 span 實體。純 `relation_identification` 不輸出此欄位，E1/E2 取自資料集既有實體且僅供關係標記使用 |
 
 **預覽模式：**
@@ -174,7 +176,7 @@ max_selections: 0
 
 | 輸出類型（ output_type ） | 說明 | 典型任務 | 範例輸入 | 範例輸出 | Config 設定 |
 |------------------------|------|----------|----------|----------|-------------|
-| 自由文字（ `free_text` ） | 開放式文字輸出 | Summarization（摘要）、Question Answering（問答）、Translation（翻譯）、Paraphrase（改寫） | 「台積電今日宣布與輝達合作，共同開發下一代 AI 晶片，預計明年量產。」 | 台積電與輝達合作開發 AI 晶片，明年量產。 | `max_length` |
+| 自由文字（ `free_text` ） | 開放式文字輸出 | Summarization（摘要）、Question Answering（問答）、Translation（翻譯）、Paraphrase（改寫） | 「台積電今日宣布與輝達合作，共同開發下一代 AI 晶片，預計明年量產。」 | 台積電與輝達合作開發 AI 晶片，明年量產。 | `input_instruction`、`output_instruction`、`max_length` |
 
 > 生成任務的「評估」通常需搭配另一個標記任務（ e.g. 人工評分回歸 ）或自動指標（ ROUGE / BERTScore ）。
 > Step 1 指定的 Evidence 會顯示於 Input 上方；指定 Output 即代表以該欄位資料預填回答框，未指定 Output 時回答框保持空白。系統評估層的 `evaluation_reference_required` 不屬於 `free_text` output config。
@@ -184,6 +186,7 @@ max_selections: 0
 ## 5. 混合（ Mixed ）
 
 > 混合任務由 ADR-029 的 `outputs[]` composition 組成，不另建立固定的 `mixed` output type。
+> 下游生命週期與完成 gate 回鏈 014；review unit（sample × annotator × run）及仲裁回鏈 015；IAA 依 output type 由 017 判定（`free_text` 不適用自動 IAA），Dataset 僅呈現具 `project_leader` 或 `reviewer` membership 的任務。
 
 ---
 
