@@ -255,7 +255,7 @@
 
 | 角色 | 必過驗收項目 |
 |------|-------------|
-| Project Leader | 可完成建立任務的前兩步：taxonomy/輸入設定與可組合 `outputs[]` schema/guidelines |
+| Project Leader | 可完成 Task New 四步驟：基本資料、標記設定檔、啟動設定、標記說明；選填的進階設定可採預設值 |
 | Annotator | 可完成最短路徑：看待辦 → 進入標記頁 → 完成 1 筆標記 → 提交下一筆 |
 | Reviewer | R1 不要求完整 reviewer 流程（可僅展示待審入口存在） |
 

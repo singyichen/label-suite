@@ -90,8 +90,10 @@ Label Suite 的核心價值主張在於：研究人員以 `input_type + outputs[
 → 等待所有 annotator 完成試標
 → Dashboard badge 通知：前往 dataset-analysis/quality tab 查看 IAA
 → 依逐型 IAA 與目標確認是否發布 Official Run；未達條件時回到可調整狀態並再試標
-→ 等待 Official Run 完成
-→ task-detail 標記結果 tab：匯出 JSON / JSON-MIN
+→ 等待 Official Run 全數提交
+→ Reviewer 逐 review unit 審核；不一致時直接修正，爭議交由合格且非當事仲裁者處理
+→ 所有 review unit 定案、無未解爭議、應仲裁項目完成且品質指標可用後，任務進入 `completed`
+→ task-detail 標記結果 tab：在 `completed` 後匯出 JSON / JSON-MIN
 ```
 
 ### 3.3 Annotator（標記員）核心旅程
@@ -194,8 +196,8 @@ Foundation 提供可擴充、可觀測與安全的共同能力；API、資料模
 | FR-ID | 描述 | 優先級 | Spec 來源 |
 |-------|------|--------|-----------|
 | FR-DS01 | 資料集分析模組入口（`/dataset-analysis`）列出使用者具 `project_leader` 或 `reviewer` 角色的任務 | P1 | spec 016 |
-| FR-DS02 | 統計總覽 tab（`?tab=stats`）顯示共用指標：Sentence 數量、Token 數量、整體完成率 | P1 | spec 016 |
-| FR-DS03 | 統計總覽依 `outputs[].type` 逐型顯示，複合任務逐型彙整 | P1 | spec 016 |
+| FR-DS02 | 統計總覽 tab（`?tab=stats`）顯示共用指標：Sentence 數量、Token 數量、整體完成率 | P1 | spec 017 |
+| FR-DS03 | 統計總覽依 `outputs[].type` 逐型顯示，複合任務逐型彙整 | P1 | spec 017 |
 | FR-DS04 | 品質監控的 IAA 指標與預設門檻取自 spec 017 的 registry；`free_text` output 的自動 IAA 為 `not_applicable`，混合任務的其他 outputs 仍逐型套用該 registry | P1 | spec 017 |
 | FR-DS05 | 品質監控提供資料品質觀察；異常與比較規則以 spec 017 為準 | P2 | spec 017 |
 

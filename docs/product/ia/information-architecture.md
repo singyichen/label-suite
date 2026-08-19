@@ -270,21 +270,21 @@ flowchart TD
 
 **Project Leader 視角（任務角色：`project_leader`）：**
 - **任務概況：** 總任務、進行中、等待 IAA 確認、速度異常
-- **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
+- **任務列表：** 任務名稱、摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、查看全部
 
 **Annotator 視角（任務角色：`annotator`）：**
 - **標記概況：** 待標記、今日完成、平均速度
-- **任務列表：** 任務名稱、進度摘要、Task Type / Run Type / Status badge、進度條、快速繼續
+- **任務列表：** 任務名稱、進度摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、快速繼續
 
 **Reviewer 視角（任務角色：`reviewer`）：**
 - **審核概況：** 待審總數、今日已審、IAA 摘要
-- **任務列表：** 任務名稱、審查摘要、Task Type / Run Type / Status badge、進度條、快速審核
+- **任務列表：** 任務名稱、審查摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、快速審核
 
 **Super Admin 視角（系統角色：`super_admin`）：**
 - **平台使用者統計：** 總用戶、專案負責人、標記員、審核員
 - **任務概況：** 總任務、進行中、等待 IAA 確認、速度異常
 - **最近提醒：** 系統提醒清單
-- **任務列表：** 任務名稱、摘要、Task Type / Run Type / Status badge、進度條、查看全部
+- **任務列表：** 任務名稱、摘要、依 `outputs[].type` 原順序呈現的一至多個輸出類型 tag、Annotation Stage / Status badge、進度條、查看全部
 
 **導覽與語言切換（RWD）：**
 - `> MOBILE_BP`：左側側邊欄；語言切換按鈕位於品牌列（Logo + Label Suite）右側，顯示單一語言代碼（`ZH` 或 `EN`）
@@ -617,9 +617,9 @@ Foundation Spec 是所有功能 spec 的上游工程基準，不取代本 IA，�
 |------|----------|
 | 本 IA | 定義產品資訊架構：角色、頁面、導覽、進入條件、模組歸屬與 user journey |
 | Foundation Spec | 定義工程基準：架構邊界、API 慣例、錯誤格式、測試策略、task config extensibility、安全約束 |
-| Feature Spec | 定義單一功能或操作流程，且必須同時符合本 IA 與 Foundation Spec |
+| Active Feature Spec | 定義單一功能或操作流程；本 IA 等產品文件必須與其對齊 |
 
-產製任何 feature spec 前，應先確認 Foundation Spec 是否已覆蓋該功能需要的共同約束；若缺少共同約束，應先補 Foundation Spec，再產製 feature spec。若本 IA、Foundation Spec 與 Constitution 之間出現衝突，應以 Constitution 為最高準則，並更新衝突文件使規則一致。
+規劃任何 feature spec 時，應確認 Foundation Spec 是否已覆蓋該功能需要的共同約束；若缺少共同約束，應先補 Foundation Spec，再產製 feature spec。若本 IA 與 active feature spec、Foundation Spec 或 Constitution 衝突，依 [Agent Context Contract](../agent-context-contract.md) 的正典權威階層處理；本 IA 必須更新以對齊較高階來源，不得反向要求 active spec 遷就產品摘要。
 
 建議 Foundation Spec 位置：
 
