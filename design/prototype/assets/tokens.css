@@ -21,12 +21,12 @@
   /* ── Supporting ───────────────────────────────────────────── */
   --color-border:           #E2E8F0;   /* slate-200 */
   --color-border-muted:     #F1F5F9;   /* slate-100 */
-  --color-text-muted:       #94A3B8;   /* slate-400 */
+  --color-text-muted:       #94A3B8;   /* slate-400 — deprecated alias, use --color-ink-muted */
   --color-text-soft:        #64748B;   /* slate-500 */
   --color-slate-50:         #F8FAFC;
 
-  /* Aliases kept for backward compatibility with existing pages */
-  --color-ink-muted:        #94A3B8;   /* = --color-text-muted */
+  /* Canonical muted-text token (MASTER.md v1.7.1) */
+  --color-ink-muted:        #94A3B8;   /* slate-400 — canonical; --color-text-muted is the legacy alias */
 
   /* ── Semantic State Colors ────────────────────────────────── */
   --color-error:            #B91C1C;
@@ -150,12 +150,12 @@ html[data-theme="dark"] {
   /* ── Supporting ───────────────────────────────────────────── */
   --color-border:           #2A2A35;
   --color-border-muted:     #1F1F28;
-  --color-text-muted:       #9CA3AF;   /* slate-400 — raised from zinc-500 for WCAG AA */
+  --color-text-muted:       #9CA3AF;   /* deprecated alias, use --color-ink-muted */
   --color-text-soft:        #A1A1AA;   /* zinc-400 */
   --color-slate-50:         #1F1F28;   /* hover bg in dark */
 
-  /* Aliases */
-  --color-ink-muted:        #9CA3AF;   /* = --color-text-muted */
+  /* Canonical muted-text token (MASTER.md v1.7.1) */
+  --color-ink-muted:        #9CA3AF;   /* raised from zinc-500 for WCAG AA; --color-text-muted is the legacy alias */
 
   /* ── Semantic state — desaturated for dark backgrounds ────── */
   --color-error:            #F87171;
