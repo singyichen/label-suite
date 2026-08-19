@@ -141,11 +141,11 @@
       text-align: left; padding: 12px 20px; font-size: 11px; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-ink-muted);
       border-bottom: 1px solid var(--color-border); white-space: nowrap;
-      background: #F8FAFC;
+      background: var(--color-slate-50);
     }
-    .task-table td { padding: 14px 20px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+    .task-table td { padding: 14px 20px; border-bottom: 1px solid var(--color-border-muted); vertical-align: middle; }
     .task-table tbody tr { cursor: pointer; transition: background var(--dur-fast); }
-    .task-table tbody tr:hover { background: #F8FAFC; }
+    .task-table tbody tr:hover { background: var(--color-slate-50); }
     .task-table tbody tr:last-child td { border-bottom: none; }
     .task-name-cell { font-weight: 600; line-height: 1.4; color: var(--color-ink); }
     .updated-cell { color: var(--color-text-soft); font-size: 13px; white-space: nowrap; }
@@ -225,7 +225,7 @@
     .empty-row-cell { padding: 40px 20px !important; }
     .empty-row-wrap { text-align: center; max-width: 520px; margin: 0 auto; }
     .empty-row-title { font-size: 20px; font-weight: 700; color: var(--color-ink); margin: 0 0 8px; }
-    .empty-row-desc { font-size: 14px; color: #64748B; margin: 0 0 16px; }
+    .empty-row-desc { font-size: 14px; color: var(--color-text-soft); margin: 0 0 16px; }
     .error-row .empty-row-title { color: var(--color-error); }
 
     /* ── Badges ──────────────────────────────────────────────── */
@@ -245,8 +245,8 @@
     .badge-task-type-pairs       { color: #065F46; background: #ECFDF5; border-color: #A7F3D0; }
     .badge-task-type-scoring     { color: #7E22CE; background: #FAF5FF; border-color: #E9D5FF; }
     .badge-task-type-default     { color: #334155; background: #F8FAFC; border-color: #CBD5E1; }
-    .badge-run-dry         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
-    .badge-run-official    { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
+    .badge-dry-run         { color: #6B7280; background: #F3F4F6; border-color: #D1D5DB; }
+    .badge-official        { color: #5B21B6; background: #EDE9FE; border-color: #DDD6FE; }
     .badge-run-unmaterialized { color: #64748B; background: #F8FAFC; border-color: #CBD5E1; }
     .output-type-cell { width: 280px; max-width: 280px; white-space: normal; }
     .output-type-tags {
@@ -262,7 +262,7 @@
       padding: var(--space-md) var(--space-lg);
       border-top: 1px solid var(--color-border);
     }
-    .pagination-info { font-size: 13px; color: #64748B; }
+    .pagination-info { font-size: 13px; color: var(--color-text-soft); }
     .pagination-controls { display: flex; align-items: center; gap: var(--space-xs); }
     .pagination-left { display: flex; align-items: center; gap: var(--space-md); }
     .page-btn {
@@ -319,23 +319,14 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
 
     /* ── Dark mode overrides ──────────────────────────────────── */
+    /* Table chrome, empty-state desc, and pagination info flip automatically:
+       their light rules use theme-aware tokens (slate-50 / border-muted / text-soft) */
     html[data-theme="dark"] {
-      /* Table header and row hover — hardcoded #F8FAFC */
-      .task-table th { background: var(--color-border-muted); }
-      .task-table td { border-bottom-color: var(--color-border-muted); }
-      .task-table tbody tr:hover { background: var(--color-slate-50); }
-
-      /* Empty state desc */
-      .empty-row-desc { color: var(--color-text-soft); }
-
-      /* Pagination info */
-      .pagination-info { color: var(--color-text-soft); }
-
       /* Status / run-phase badges */
       .badge-draft          { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
       .badge-dry-run-status { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-run-dry        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
-      .badge-run-official   { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
+      .badge-dry-run        { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
+      .badge-official       { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
       .badge-run-unmaterialized { color: #9CA3AF; background: #1F1F28; border-color: #2A2A35; }
 
       /* Output-type badges */
@@ -649,7 +640,7 @@
     official_run_in_progress: 'badge-in-progress',
     completed: 'badge-completed',
   };
-  var RUN_BADGE_CLS = { unmaterialized: 'badge-run-unmaterialized', dry_run: 'badge-run-dry', official_run: 'badge-run-official' };
+  var RUN_BADGE_CLS = { unmaterialized: 'badge-run-unmaterialized', dry_run: 'badge-dry-run', official_run: 'badge-official' };
 
   /* ── State ───────────────────────────────────────────────────── */
   var state = { lang: 'zh', keyword: '', outputType: '', runType: '', status: '', limit: 20, offset: 0, loadFailed: !TASK_LIST_DATA_READY };
@@ -858,7 +849,7 @@
     var statusLabel = statusInfo[task.status] || task.status;
     var runLabel = runInfo[runStage] || runStage;
     var statusCls = STATUS_BADGE_CLS[task.status] || 'badge-draft';
-    var runCls = RUN_BADGE_CLS[runStage] || 'badge-run-dry';
+    var runCls = RUN_BADGE_CLS[runStage] || 'badge-dry-run';
     var outputTypeKeys = Array.isArray(task.outputTypes) ? task.outputTypes : [];
     var outputTypeLabels = outputTypeKeys.map(getOutputTypeLabel);
 

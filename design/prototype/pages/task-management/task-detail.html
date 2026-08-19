@@ -917,7 +917,7 @@
       color: var(--color-error);
     }
     .mini-btn-danger:hover:not(:disabled) { border-color: var(--color-error-border); background: var(--color-error-bg); color: var(--color-error); }
-    .modal-backdrop {
+    .modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.45);
@@ -927,7 +927,7 @@
       justify-content: center;
       padding: 16px;
     }
-    .modal-backdrop.show { display: flex; }
+    .modal-overlay.show { display: flex; }
     .preview-json-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-slate-50); }
     .preview-json { margin: 0; padding: var(--space-md); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
     .modal {
@@ -963,7 +963,7 @@
     .modal-xl { width: min(720px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
     .modal-xl-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-md, 16px); }
     .modal-close-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; color: var(--color-ink-muted); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .modal-close-btn:hover { background: var(--color-slate-100); color: var(--color-ink); }
+    .modal-close-btn:hover { background: var(--color-border-muted); color: var(--color-ink); }
     .preview-hint { font-size: 12px; color: var(--color-text-soft); margin: 2px 0 0; }
     .preview-table-wrap { overflow: auto; flex: 1; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
     .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -1356,54 +1356,12 @@
       color: var(--color-primary);
       background: var(--color-primary-soft-bg);
     }
-    .tag-input-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 8px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      background: var(--color-white);
-      min-height: 44px;
-      align-items: center;
-    }
-    .tag-input-wrap:focus-within {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-    }
+    /* .tag-input-wrap / .tag-pill / .tag-pill-remove / .tag-new-input come from
+       task-config.css (shared engine stylesheet) — do not redefine here */
     .settings-tag-pills {
       display: inline-flex;
       flex-wrap: wrap;
       gap: 6px;
-    }
-    .tag-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--color-primary);
-      background: var(--color-primary-soft-bg);
-      color: var(--color-primary);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .tag-pill-remove {
-      border: none;
-      background: transparent;
-      color: inherit;
-      line-height: 1;
-      font-size: 12px;
-      padding: 0;
-    }
-    .tag-new-input {
-      border: none;
-      outline: none;
-      min-width: 120px;
-      flex: 1;
-      font-size: 14px;
-      color: var(--color-ink);
-      background: transparent;
     }
     .entity-row {
       display: flex;
@@ -1672,23 +1630,7 @@
       color: var(--color-primary);
       background: var(--color-primary-soft-bg);
     }
-    .code-editor {
-      width: 100%;
-      min-height: 300px;
-      padding: 12px;
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      outline: none;
-      resize: vertical;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      background: #1E1B4B;
-      color: #E2E8F0;
-    }
-    .code-editor:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-    }
+    /* .code-editor styles come from task-config.css (shared engine stylesheet) */
     .code-error-bar {
       display: flex;
       align-items: center;
@@ -2007,12 +1949,12 @@
       flex-shrink: 0;
     }
     .round-timeline-dot.failed {
-      background: #DC2626;
-      box-shadow: 0 0 0 2px rgba(220,38,38,0.12);
+      background: var(--color-error);
+      box-shadow: 0 0 0 2px rgba(185,28,28,0.12);
     }
     .round-timeline-dot.passed {
-      background: #10B981;
-      box-shadow: 0 0 0 2px rgba(16,185,129,0.14);
+      background: var(--color-success);
+      box-shadow: 0 0 0 2px rgba(21,128,61,0.14);
     }
     .round-timeline-label {
       display: flex;
@@ -2073,19 +2015,19 @@
       border: 1px solid transparent;
     }
     .round-status-badge.failed {
-      color: #B91C1C;
-      background: #FEF2F2;
-      border-color: #FECACA;
+      color: var(--color-error);
+      background: var(--color-error-bg);
+      border-color: var(--color-error-border);
     }
     .round-status-badge.passed {
-      color: #047857;
-      background: #ECFDF5;
-      border-color: #A7F3D0;
+      color: var(--color-success);
+      background: var(--color-success-bg);
+      border-color: var(--color-success-border);
     }
     .round-status-badge.in-progress {
-      color: #6D28D9;
-      background: #F5F3FF;
-      border-color: #DDD6FE;
+      color: var(--color-primary);
+      background: var(--color-primary-soft-bg);
+      border-color: var(--color-primary-border);
     }
     .panel-divider {
       border: none;
@@ -2251,10 +2193,8 @@
       .ar-classif-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
       .md-chip { background: #1E1B4B; color: #A78BFA; border-color: #3730A3; }
 
-      /* Round status badges */
-      .round-status-badge.failed      { color: #F87171; background: #2A1414; border-color: #5B2222; }
-      .round-status-badge.passed      { color: #4ADE80; background: #0F2A18; border-color: #1F5132; }
-      .round-status-badge.in-progress { color: #A78BFA; background: #1E1B4B; border-color: #3730A3; }
+      /* Round status badges flip automatically: the light rules use the
+         semantic error/success/primary token families */
     }
   </style>
 </head>
@@ -2318,7 +2258,7 @@
   </div>
 </main>
 
-<div class="modal-backdrop" id="datasetPreviewModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="datasetPreviewModalTitle">
+<div class="modal-overlay" id="datasetPreviewModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="datasetPreviewModalTitle">
   <div class="modal modal-xl">
     <div class="modal-xl-header">
       <div>
@@ -2335,18 +2275,18 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="taxonomyDeleteModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="taxonomyDeleteModalTitle">
+<div class="modal-overlay" id="taxonomyDeleteModal" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="taxonomyDeleteModalTitle">
   <div class="modal">
     <h2 id="taxonomyDeleteModalTitle">刪除標籤分支？</h2>
     <p id="taxonomyDeleteModalDesc"></p>
     <div class="modal-actions">
       <button class="btn btn-secondary" type="button" id="taxonomyDeleteCancelBtn">取消</button>
-      <button class="btn btn-primary" type="button" id="taxonomyDeleteConfirmBtn" style="background:var(--color-error);border-color:var(--color-error);">刪除</button>
+      <button class="btn btn-danger" type="button" id="taxonomyDeleteConfirmBtn">刪除</button>
     </div>
   </div>
 </div>
 
-<div class="modal-backdrop" id="riskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="riskModalTitle">
+<div class="modal-overlay" id="riskModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="riskModalTitle">
   <div class="modal">
     <h2 id="riskModalTitle">確認停用資料隔離</h2>
     <p id="riskModalBody">你已選擇停用資料隔離。此設定可能導致 Dry Run 與 Official Run 資料混用，風險不可逆。是否確認並繼續發布？</p>
@@ -2357,7 +2297,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="memberActionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
+<div class="modal-overlay" id="memberActionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memberActionModalTitle">
   <div class="modal">
     <h2 id="memberActionModalTitle">確認成員操作</h2>
     <p id="memberActionModalBody">請確認是否要對成員執行危險操作。</p>
@@ -5191,7 +5131,7 @@ function interpolate(template, payload) {
             label: t('officialReserveLabel'),
             valueText: String(reserveCount) + unitText,
             count: reserveCount,
-            color: '#58B88B'
+            color: '#14B8A6'
           });
         }
         return segments;
@@ -5220,7 +5160,7 @@ function interpolate(template, payload) {
           label: t('officialReserveLabel'),
           valueText: reserveCount + (state.lang === 'zh' ? ' 筆' : ' items'),
           count: reserveCount,
-          color: '#58B88B'
+          color: '#14B8A6'
         }
       ], TASK_DATA.datasetTotal);
     }
