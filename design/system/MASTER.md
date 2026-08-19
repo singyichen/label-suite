@@ -12,7 +12,7 @@
 ---
 
 **Project:** Label Suite
-**Updated:** 2026-05-20
+**Updated:** 2026-08-19
 **Category:** Micro SaaS (Tool-based Web App)
 **Pencil Source Sync:** `design/wireframes/design-system.pen` (last modified: 2026-05-20)
 
@@ -68,7 +68,7 @@ The latest `design-system.pen` defines the following variable set. Keep these na
 | Extended | `color-border-muted` | `#F1F5F9` |
 | Extended | `color-text-soft` | `#64748B` |
 | Extended | `color-slate-50` | `#F8FAFC` |
-| Alias (deprecated) | `color-text-muted` | `#94A3B8` (= `color-ink-muted` — 已棄用，改用 `color-ink-muted`) |
+| Alias (deprecated) | `color-text-muted` | `#94A3B8` (= `color-ink-muted` — deprecated, use `color-ink-muted` instead) |
 | Alias | `color-error-soft-bg` / `color-error-soft-border` | `#FEF2F2` / `#FECACA` (= error bg/border) |
 | Alias | `color-success-soft-bg` / `color-success-soft-border` | `#F0FDF4` / `#BBF7D0` |
 | Alias | `color-warning-soft-bg` / `color-warning-soft-border` | `#FEFCE8` / `#FEF08A` |
@@ -275,22 +275,36 @@ Reference values for task-type badges in dark mode:
 | `badge-dry-run` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
 | `badge-draft` / `badge-run-dry` / `badge-run-unmaterialized` | `#9CA3AF` (gray-400) | `#1F1F28` | `#2A2A35` |
 
-#### 6. Reviewer action buttons dark overrides
+#### 6. Reviewer action buttons — use semantic tokens (no per-page dark overrides)
 
-Buttons used in reviewer list rows (`mini-btn-approve` / `mini-btn-reject`) use hardcoded light semantic colors — override in every page that includes them:
+Active-state reviewer buttons (`mini-btn-active-approve` / `mini-btn-active-reject`) must be built from semantic tokens so dark mode flips automatically via `tokens.css`. Shipped CSS (from `annotation-workspace.html`):
 
 ```css
-html[data-theme="dark"] {
-  .mini-btn-approve { background: #0F2A18; border-color: #1F5132; color: #4ADE80; }
-  .mini-btn-approve:hover:not(:disabled) { background: #1F5132; border-color: #4ADE80; color: #86EFAC; }
-  .mini-btn-reject  { background: #2A1414; border-color: #5B2222; color: #F87171; }
-  .mini-btn-reject:hover:not(:disabled)  { background: #3D1A1A; border-color: #F87171; color: #FCA5A5; }
+.mini-btn-active-approve {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border-color: var(--color-success-border);
+}
+.mini-btn-active-reject {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border-color: var(--color-error-border);
 }
 ```
 
-#### 7. Result tags dark overrides
+Per-page `html[data-theme="dark"]` hardcoded overrides for these buttons are **deprecated** — pages still carrying them should migrate to the token classes above (tracked in issue #183 page-fix PRs).
 
-Tags applied to annotation results (`result-tag-green` / `result-tag-blue` / `result-tag-red`) carry `!important` and require a matching-specificity dark override:
+#### 7. Result tags — light values + dark overrides
+
+Tags applied to annotation results (`result-tag-green` / `result-tag-blue` / `result-tag-red`) carry `!important` to defeat inline styles. Light values (shipped, identical in both annotation pages):
+
+| Class | Text | Background | Border |
+|-------|------|-----------|--------|
+| `result-tag-green` | `#15803D` | `#DCFCE7` | `#86EFAC` |
+| `result-tag-blue` | `#1D4ED8` | `#EFF6FF` | `#BFDBFE` (= info tokens) |
+| `result-tag-red` | `#DC2626` | `#FEE2E2` | `#FCA5A5` |
+
+Each page including them requires a matching-specificity dark override:
 
 ```css
 html[data-theme="dark"] {
@@ -314,19 +328,27 @@ html[data-theme="dark"] {
 
 #### 9. Standalone auth pages (no tokens.css)
 
-Pages in `account/` that do not import `tokens.css` (**login, register, forgot-password, reset-password**) define their own `:root` tokens. Each must include a `html[data-theme="dark"]` block that re-maps the local token names:
+Pages in `account/` that do not import `tokens.css` (**login, register, forgot-password, reset-password**) define their own `:root` tokens. Local token names **must reuse the canonical names** from `tokens.css` — do not invent parallel names:
+
+- ✅ `--color-surface` = page ground (light `#F5F3FF` / dark `#0B0B12`) — same meaning as tokens.css
+- ✅ `--color-card` = card background (light `#FFFFFF` / dark `#16161F`) — new canonical name for the auth card surface
+- ✅ `--color-ink` / `--color-ink-muted` for text (dark muted: `#9CA3AF`)
+- ❌ `--color-background`, `--color-text`, `--color-text-muted` — deprecated parallel names (see Anti-Patterns)
+- ⚠️ Never redefine `--color-surface` as `#FFFFFF` (card white): it collides with the canonical meaning (page ground) and breaks any shared snippet pasted between pages
+
+Each page must include a `html[data-theme="dark"]` block that re-maps the local tokens:
 
 ```css
 html[data-theme="dark"] {
-  --color-background:    #0B0B12;
-  --color-surface:       #16161F;
+  --color-surface:       #0B0B12;  /* page ground */
+  --color-card:          #16161F;  /* card surface */
   --color-border:        #2A2A35;
   --color-border-focus:  #818CF8;
-  --color-text:          #E2E8F0;
-  --color-text-muted:    #9CA3AF;
+  --color-ink:           #E2E8F0;
+  --color-ink-muted:     #9CA3AF;
   --color-link:          #818CF8;
   --color-primary:       #818CF8;
-  --color-primary-light: #1E1B4B;
+  --color-primary-soft-bg: #1E1B4B;
   --color-error:         #F87171;
   --color-error-bg:      #2A1414;
   --color-error-border:  #5B2222;
@@ -336,6 +358,8 @@ html[data-theme="dark"] {
   .submit-btn, .login-btn { color: #064E3B; background: #34D399; }
 }
 ```
+
+> Migration note: shipped auth pages currently use the deprecated names above; they will be migrated to canonical names in the issue #183 account page-fix PR. Until then this template is the target state, not the shipped state.
 
 ### Typography
 
@@ -880,6 +904,30 @@ For rows containing both caution and destructive actions, place destructive acti
 - For identity/context labels such as `Admin`, `Reviewer`, `Annotator`
 - Use rounded-full pill shape (`rounded-full`) to visually separate from task status badges
 
+### Status Pill (borderless, soft)
+
+A compact borderless variant for sample-level status in dense lists (e.g. annotation-list sample rows). Uses soft token backgrounds instead of borders. Shipped CSS (from `annotation-list.html`):
+
+```css
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.status-submitted { color: var(--color-success);   background: var(--color-success-soft-bg); }
+.status-saved     { color: var(--color-warning);   background: var(--color-warning-soft-bg); }
+.status-pending   { color: var(--color-ink-muted); background: var(--color-border); }
+```
+
+**Status Pill vs Status Badge:**
+- **Status Badge** (bordered, `rounded` corners) — task-level status in tables and cards
+- **Status Pill** (borderless, `rounded-full`, soft background) — sample-level status in dense list rows where borders add visual noise
+- Both must use semantic tokens so dark mode remaps automatically
+
 ### Error / Alert Banner
 
 ```html
@@ -894,20 +942,20 @@ For rows containing both caution and destructive actions, place destructive acti
 
 | | Alert Banner | Toast |
 |---|---|---|
-| **Position** | Inline within page flow | Fixed floating (bottom-right corner) |
-| **Dismissal** | Manual close or always visible | Auto-dismiss after 4 seconds; closeable manually |
+| **Position** | Inline within page flow | Fixed floating (top-center) |
+| **Dismissal** | Manual close or always visible | Per UXC-07: Success/Info/Warning auto-dismiss; Error requires manual close |
 | **When to use** | Page-level errors (login failure) | Action result feedback (save successful) |
 | **aria** | `role="alert"` | `aria-live="polite"` |
 
 ### Toast
 
-Used for immediate action feedback (save success, update failure, etc.). Floats at the bottom-right corner and auto-dismisses after 4 seconds.
+Used for immediate action feedback (save success, update failure, etc.). Floats at the top-center of the viewport. Behavior (position, duration per variant, single-instance rule) is governed by **UXC-07** in `design/system/ux-conventions.md` — that document is the single source of truth; this section mirrors it for component reference.
 
 ```html
-<!-- Toast container — fixed position, right bottom -->
+<!-- Toast container — fixed position, top-center -->
 <div
   id="toast"
-  class="hidden fixed bottom-6 right-6 z-[400] max-w-sm w-full"
+  class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[400] max-w-sm w-full"
   aria-live="polite"
   aria-atomic="true"
 >
@@ -942,19 +990,22 @@ Used for immediate action feedback (save success, update failure, etc.). Floats 
 
 | Property | Value |
 |----------|-------|
-| Position | `fixed bottom-6 right-6` |
+| Position | `fixed top-6 left-1/2 -translate-x-1/2` (top-center, per UXC-07) |
 | z-index | `400` (Toast layer, above Modal) |
 | Max width | `max-w-sm` (384px) |
-| Auto-dismiss | 4000ms |
+| Concurrency | One toast at a time — a new toast replaces the current one (UXC-07) |
+| Auto-dismiss | Success 3000ms · Info 5000ms · Warning 8000ms · Error **never** (manual close only) |
 | Animation | fade-in 150ms / fade-out 150ms (`transition-opacity`) |
 | Shadow | `shadow-md` (Toast is an approved exception to the no-shadow flat design rule) |
 
 **Toast Variants:**
 
-| Variant | Color role | When to use |
-|---------|-----------|-------------|
-| Success | `bg-green-50 border-green-200 text-green-700` | Action succeeded (save, update) |
-| Error | `bg-red-50 border-red-200 text-red-700` | Action failed (network error, server error) |
+| Variant | Color role | Auto-dismiss | When to use |
+|---------|-----------|--------------|-------------|
+| Success | `bg-green-50 border-green-200 text-green-700` | 3000ms | Action succeeded (save, update) |
+| Info | `bg-blue-50 border-blue-200 text-blue-700` | 5000ms | Neutral notice (background job started) |
+| Warning | `bg-yellow-50 border-yellow-200 text-yellow-700` | 8000ms | Non-blocking caution (partial result) |
+| Error | `bg-red-50 border-red-200 text-red-700` | Never — must be closed manually | Action failed (network error, server error) |
 
 **When NOT to use Toast:**
 - ❌ Page-level errors (login failure) → use Alert Banner instead
@@ -1018,7 +1069,7 @@ Left fixed navigation used in Pattern C (Profile and other multi-section pages).
 
 | Property | Value |
 |----------|-------|
-| Width | `w-56` (224px) |
+| Width | `w-60` (240px) — matches shipped `sidebar.css` |
 | Background | `bg-white` |
 | Right border | `border-r border-slate-200` |
 | z-index | `z-[200]` (Sticky layer) |
@@ -1451,11 +1502,31 @@ Different from Alert Banner (inline message while form remains visible) and Toas
 Used only in static prototypes to switch scenarios within a single HTML file.
 This is a demo helper, not a production component.
 
-**Specs (prototype only):**
-- Container: `inline-flex rounded-lg border border-slate-200 p-1`
-- Segment button:
-  - Active: `bg-primary text-white`
-  - Inactive: `text-slate-600 hover:bg-slate-50`
+**Specs (prototype only)** — shipped `scenario-pill` pattern (from `dashboard.layout.css`), independent pills with no shared container chrome:
+
+```css
+.scenario-pill {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  background: var(--color-white);
+  color: var(--color-ink-muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 150ms;
+}
+.scenario-pill:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft-bg);
+  color: var(--color-primary);
+}
+.scenario-pill.active {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+```
+
 - Place in low-priority area (top-right utility zone), never as a core product interaction
 
 ---
@@ -2509,3 +2580,4 @@ Before delivering any UI code, verify:
 | v1.6.2 | 2026-05-15 | 修正 annotation results 深色模式 `--color-ink-muted` 對應錯誤；修正 i18n 審核結果文字顯示 |
 | v1.7 | 2026-05-20 | **Token 缺口補齊** — 新增 10 個 extended/alias token（`--color-cta-hover`、`--color-primary-soft-bg`、`--color-text-soft`、soft-bg/soft-border aliases）、Motion tokens（`--dur-fast/--dur-normal/--ease-standard`）、Semantic aliases（`--fg-1/2/3`、`--bg-page`、`--bg-surface`）、`--shadow-card` 亮模式值；**字型** — 新增 `Atkinson Hyperlegible`（閱讀用）與 `JetBrains Mono`（程式碼），補充 `--font-*` CSS 變數與 line-height 變數表，新增 Page Title 28px 層級；**Badge** — 擴充 8 種新類型（draft、iaa、task-type-single/sequence/relation/pairs/scoring）；**新元件** — Toolbar、Step Indicator、Upload Zone、Tag Input/Pill、Toggle Switch、Code Editor |
 | v1.7.1 | 2026-05-21 | **Spec drift 修正** — Button padding 統一：`.btn-primary` / `.btn-secondary` 由 `12px 24px` 改為 `10px 20px`（對齊 CTA 實作值）；`.btn-secondary` border 由 `2px solid --color-primary` 改為 `1px solid --color-border`；Token canonical name 修正：`--color-ink-muted` 升為 Supporting token，`--color-text-muted` 降為 deprecated alias；新增 **Run Mode Badge Mapping（light mode）** 章節（badge-official indigo 色板、badge-dry-run gray 色板）；同步修正 `design-system.pen` Button/Primary 與 Button/Secondary 的 padding 與 stroke 屬性 |
+| v1.8 | 2026-08-19 | **Baseline arbitration batch (issue #183)** — Toast re-specified to top-center with per-variant auto-dismiss (Success 3s / Info 5s / Warning 8s / Error manual-only), one-at-a-time; UXC-07 declared single source of truth for Toast behavior; Dark Rule 6 rewritten to semantic-token `mini-btn-active-*` classes (per-page hardcoded overrides deprecated); Dark Rule 7 gains shipped light-value table; Dark Rule 9 auth template migrated to canonical token names (`--color-surface` = page ground, new `--color-card` = card surface; `--color-background`/`--color-text`/`--color-text-muted` deprecated); new Status Pill (borderless, soft) component spec; Sidebar width corrected to `w-60` (240px, matches shipped `sidebar.css`); Prototype-Only State Switcher re-specified to shipped `scenario-pill` pattern; line 71 alias note translated to English |
