@@ -45,11 +45,11 @@ Issue: <https://github.com/singyichen/label-suite/issues/180>
 
 ## 階段四：Finding triage 與建立 issues
 
-- [ ] 建立 finding register（唯一 Finding ID、來源工作流、角色、流程節點、分類、嚴重度）
-- [ ] 逐項查重 open/closed issues
-- [ ] 依 issue #180 第 11 節對應表逐張建立 GitHub issue（Critical/High 安全發現改走私下 escalation，不建公開單）
-- [ ] 每張回報 `ISSUE OPENED: <url> — <summary>`
-- [ ] issue register 回填 #180，確認每項發現皆有處置
+- [x] 建立 finding register（`issue-180/finding-register.md`：F-01～F-18＋11 項治理面＋10 類不建單處置）
+- [x] 逐項查重 open/closed issues（#1–#183 無重疊；#154 作為 F-17 修法先例引用）
+- [x] 依 issue #180 第 11 節對應表逐張建立 GitHub issue：#184–#212 共 29 張（bug 6／enhancement 12／task 6／docs 4／spike 1）；無 Critical/High 安全發現，未觸發私下 escalation
+- [x] 每張已回報 `ISSUE OPENED: <url> — <summary>`
+- [x] issue register 回填 #180（issue comment），每項發現皆有「新 issue／併單／非問題／記錄」處置
 
 ---
-最後更新：2026-08-19 — 階段三完成（驗收計畫 v1.0＋四份草稿附件；10 項整合裁決見 plan doc §10）；下一步：階段四 finding register＋建 issue（需使用者確認後執行）
+最後更新：2026-08-19 — 階段四完成（finding register＋29 張 issue #184–#212）；issue #180 全部階段交付完畢
