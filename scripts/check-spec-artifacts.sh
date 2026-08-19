@@ -14,7 +14,8 @@
 #   - Every specs/[module]/NNN-feature/spec.md has a matching STATUS.md row.
 #   - Every STATUS.md feature row has a matching spec directory.
 #   - STATUS.md module names match feature IDs and allowed project modules.
-#   - Every design/prototype/tests/[module]/ folder maps to a module tracked in STATUS.md.
+#   - Every design/prototype/tests/[module]/ folder maps to a module tracked in
+#     STATUS.md, except registered cross-module acceptance suites (e.g. cross-role).
 #
 # This is intentionally a lightweight cross-artifact harness. It does not parse
 # full spec contents or assert one-to-one acceptance-criteria coverage.
@@ -42,6 +43,20 @@ trim() {
 is_valid_module() {
     case "$1" in
         account|dashboard|task-management|annotation|dataset|admin|shared|foundation)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# Cross-module acceptance suites span several modules at once, so they have no
+# single specs/[module]/ home or STATUS.md rows; exempt them from the per-module
+# test-directory checks only (issue #212, docs/product/e2e/cross-role-task-lifecycle-playwright-plan.md).
+is_cross_module_test_suite() {
+    case "$1" in
+        cross-role)
             return 0
             ;;
         *)
@@ -147,6 +162,9 @@ if [[ -d "$tests_root" ]]; then
 
     while IFS= read -r module; do
         [[ -n "$module" ]] || continue
+        if is_cross_module_test_suite "$module"; then
+            continue
+        fi
         if ! is_valid_module "$module"; then
             echo "ERROR: Prototype tests live under invalid module: $module" >&2
             errors=$((errors + 1))
