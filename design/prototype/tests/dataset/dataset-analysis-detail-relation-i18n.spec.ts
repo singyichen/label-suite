@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T004&tab=stats';
+const DETAIL_URL = '/pages/dataset/dataset-analysis-detail.html?task_id=T104&tab=stats';
 
 async function gotoWithLang(page: Page, lang: 'zh' | 'en') {
   await page.addInitScript((storedLang: 'zh' | 'en') => {

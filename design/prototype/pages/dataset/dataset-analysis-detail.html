@@ -1086,56 +1086,144 @@ var OUTPUT_TYPE_LABELS = {
     entity_recognition: 'Entity Recognition', relation_identification: 'Relation Identification', sequence_tagging: 'Sequence Tagging', free_text: 'Free Text',
   },
 };
+/* T001–T013 mirror the 13-task registry in dataset-analysis-list.data.js
+ * (same titles, outputs, roles; iaaData is consistent with each row's
+ * iaaStatus) so navigating from the list never contradicts the list row.
+ * T101–T109 are spec-scenario fixtures (FR-024A/B/C composite badge,
+ * small-sample flags, …) that have no host among the 13 registry tasks;
+ * they are reachable only by direct URL and are exercised by tests. */
 var TASK_META = {
   T001: {
+    outputs: ['single_label'],
+    iaaData: { single_label: { pass: true, n: 18 } },
+    title: { zh: '醫療文本情感分類', en: 'Medical Text Sentiment Classification' },
+    membershipRole: 'project_leader',
+  },
+  T002: {
+    outputs: ['multi_label'],
+    iaaData: {},
+    title: { zh: '癌症歷程情緒多標籤分類', en: 'Cancer Journey Emotion Multi-label Classification' },
+    membershipRole: 'reviewer',
+  },
+  T003: {
+    outputs: ['multi_label'],
+    iaaData: {},
+    title: { zh: '病患情緒與照護情境階層分類', en: 'Patient Emotion and Care Context Hierarchical Classification' },
+    membershipRole: 'project_leader',
+  },
+  T004: {
+    outputs: ['single_dim'],
+    iaaData: {},
+    title: { zh: '醫療文本可讀性評分', en: 'Medical Text Readability Scoring' },
+    membershipRole: 'reviewer',
+  },
+  T005: {
+    outputs: ['multi_dim'],
+    iaaData: { multi_dim: { pass: true, n: 14 } },
+    title: { zh: '醫療翻譯品質多維度評分', en: 'Medical Translation Quality Scoring' },
+    membershipRole: 'reviewer',
+  },
+  T006: {
+    outputs: ['sequence_tagging'],
+    iaaData: { sequence_tagging: { pass: true, n: 18 } },
+    title: { zh: '新聞命名實體序列標註', en: 'News NER Sequence Tagging' },
+    membershipRole: 'reviewer',
+  },
+  T007: {
+    outputs: ['entity_recognition'],
+    iaaData: { entity_recognition: { pass: true, n: 15 } },
+    title: { zh: '產品評論觀點實體辨識', en: 'Product Review Opinion Entity Recognition' },
+    membershipRole: 'project_leader',
+  },
+  T008: {
+    outputs: ['relation_identification'],
+    iaaData: { relation_identification: { pass: false, n: 16 } },
+    title: { zh: '醫療文本關係辨識', en: 'Medical Relation Identification' },
+    membershipRole: 'project_leader',
+  },
+  T009: {
+    outputs: ['free_text'],
+    iaaData: {},
+    title: { zh: '醫療文本摘要', en: 'Medical Text Summarization' },
+    membershipRole: 'reviewer',
+  },
+  T010: {
+    outputs: ['entity_recognition', 'relation_identification'],
+    iaaData: { entity_recognition: { pass: true, n: 12 } },
+    title: { zh: '醫療實體與關係辨識', en: 'Medical Entity and Relation Recognition' },
+    membershipRole: 'project_leader',
+  },
+  T011: {
+    outputs: ['single_label'],
+    iaaData: { single_label: { pass: true, n: 20 } },
+    title: { zh: '醫療自然語言推斷', en: 'Medical NLI' },
+    membershipRole: 'reviewer',
+  },
+  T012: {
+    outputs: ['free_text'],
+    iaaData: {},
+    title: { zh: '醫療閱讀理解問答', en: 'Medical QA' },
+    membershipRole: 'reviewer',
+  },
+  T013: {
+    outputs: ['entity_recognition', 'relation_identification', 'multi_dim'],
+    iaaData: {
+      entity_recognition: { pass: true, n: 16 },
+      relation_identification: { pass: false, n: 12 },
+      multi_dim: { pass: true, n: 14 },
+    },
+    title: { zh: 'ABSA + 情緒回歸（YouTube 留言）', en: 'ABSA + Emotion Regression (YouTube Comments)' },
+    membershipRole: 'project_leader',
+  },
+  T101: {
     outputs: ['multi_label'],
     iaaData: { multi_label: { pass: true, n: 15 } },
     title: { zh: '新聞標題多標籤分類', en: 'News Headline Multi-label Classification' },
     membershipRole: 'project_leader',
   },
-  T002: {
+  T102: {
     outputs: ['multi_dim'],
     iaaData: { multi_dim: { pass: true, n: 14 } },
     title: { zh: '情感 VA 雙維度評分', en: 'Sentiment VA Dual-axis Scoring' },
     membershipRole: 'reviewer',
   },
-  T003: {
+  T103: {
     outputs: ['sequence_tagging'],
     iaaData: { sequence_tagging: { pass: true, n: 18 } },
     title: { zh: '產品評論序列標記', en: 'Product Review Sequence Tagging' },
     membershipRole: 'project_leader',
   },
-  T004: {
+  T104: {
     outputs: ['relation_identification'],
     iaaData: { relation_identification: { pass: true, n: 16 } },
     title: { zh: '醫療關係抽取（Entity / Triple）', en: 'Medical Relation Extraction (Entity / Triple)' },
     membershipRole: 'project_leader',
   },
-  T005: {
+  T105: {
     outputs: ['single_label'],
     iaaData: { single_label: { pass: true, n: 20 } },
     title: { zh: '客服對話情感單選分類', en: 'Customer Service Sentiment Single-label Classification' },
     membershipRole: 'reviewer',
   },
-  T006: {
+  T106: {
     outputs: ['entity_recognition'],
     iaaData: { entity_recognition: { pass: false, n: 12 } },
     title: { zh: 'NER 命名實體辨識', en: 'NER Named Entity Recognition' },
     membershipRole: 'reviewer',
   },
-  T007: {
+  T107: {
     outputs: ['entity_recognition', 'single_label', 'free_text'],
     iaaData: { entity_recognition: { pass: false, n: 12 }, single_label: { pass: true, n: 4 } },
     title: { zh: '客服工單複合式標記（NER + 情感 + 補充說明）', en: 'Support Ticket Composite Labeling (NER + Sentiment + Notes)' },
     membershipRole: 'project_leader',
   },
-  T008: {
+  T108: {
     outputs: ['single_dim'],
     iaaData: { single_dim: { pass: true, n: 3 } },
     title: { zh: '早期試辦品質評分（小樣本）', en: 'Pilot Quality Scoring (Small Sample)' },
     membershipRole: 'reviewer',
   },
-  T009: {
+  T109: {
     outputs: ['free_text'],
     iaaData: {},
     title: { zh: '開放式意見回饋收集', en: 'Open-ended Feedback Collection' },

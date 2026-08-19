@@ -12,8 +12,8 @@ async function gotoQualityWithLang(page: Page, taskId: string, lang: 'zh' | 'en'
 }
 
 test.describe('Dataset analysis detail composite IAA badge math (outputs[] iteration)', () => {
-  test('T007: partial-pass composite badge shows x/y with excluded-type suffix and mirrors secondary output cards without a title', async ({ page }) => {
-    await gotoQualityWithLang(page, 'T007', 'zh');
+  test('T107: partial-pass composite badge shows x/y with excluded-type suffix and mirrors secondary output cards without a title', async ({ page }) => {
+    await gotoQualityWithLang(page, 'T107', 'zh');
 
     // entity_recognition (fail) + single_label (pass) count toward the gate; free_text is
     // excluded from both numerator and denominator (IAA_GATE_EXCLUDED_TYPES).
@@ -46,16 +46,16 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
     await expect(freeTextCard.locator('.iaa-score-grid')).toHaveCount(0);
   });
 
-  test('T007: composite badge translates to English without mixed Chinese', async ({ page }) => {
-    await gotoQualityWithLang(page, 'T007', 'en');
+  test('T107: composite badge translates to English without mixed Chinese', async ({ page }) => {
+    await gotoQualityWithLang(page, 'T107', 'en');
 
     await expect(page.locator('#iaaSummaryBadge')).toHaveText('1/2 Passed · 1 type(s) excluded');
     await expect(page.locator('section[data-output-type="single_label"] .iaa-type-label')).toHaveText('Single-label');
     await expect(page.locator('section[data-output-type="free_text"] .iaa-type-label')).toHaveText('Free Text');
   });
 
-  test('T008: single-output small-sample badge appears alongside a fully-passed composite badge', async ({ page }) => {
-    await gotoQualityWithLang(page, 'T008', 'zh');
+  test('T108: single-output small-sample badge appears alongside a fully-passed composite badge', async ({ page }) => {
+    await gotoQualityWithLang(page, 'T108', 'zh');
 
     const badge = page.locator('#iaaSummaryBadge');
     await expect(badge).toHaveText('1/1 達標');
@@ -67,13 +67,13 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
   });
 
   const LIST_RANK_SCOPE: Array<{ taskId: string; type: string; hasBoundary: boolean }> = [
-    { taskId: 'T001', type: 'multi_label', hasBoundary: false },
-    { taskId: 'T002', type: 'multi_dim', hasBoundary: false },
-    { taskId: 'T003', type: 'sequence_tagging', hasBoundary: true },
-    { taskId: 'T004', type: 'relation_identification', hasBoundary: false },
-    { taskId: 'T005', type: 'single_label', hasBoundary: false },
-    { taskId: 'T006', type: 'entity_recognition', hasBoundary: true },
-    { taskId: 'T008', type: 'single_dim', hasBoundary: false },
+    { taskId: 'T101', type: 'multi_label', hasBoundary: false },
+    { taskId: 'T102', type: 'multi_dim', hasBoundary: false },
+    { taskId: 'T103', type: 'sequence_tagging', hasBoundary: true },
+    { taskId: 'T104', type: 'relation_identification', hasBoundary: false },
+    { taskId: 'T105', type: 'single_label', hasBoundary: false },
+    { taskId: 'T106', type: 'entity_recognition', hasBoundary: true },
+    { taskId: 'T108', type: 'single_dim', hasBoundary: false },
   ];
 
   for (const { taskId, type, hasBoundary } of LIST_RANK_SCOPE) {
@@ -90,8 +90,8 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
     });
   }
 
-  test('T007: small-sample badge is evaluated per output type, not only outputs[0] — the secondary single_label (n=4) is flagged while the primary entity_recognition (n=12) is not', async ({ page }) => {
-    await gotoQualityWithLang(page, 'T007', 'zh');
+  test('T107: small-sample badge is evaluated per output type, not only outputs[0] — the secondary single_label (n=4) is flagged while the primary entity_recognition (n=12) is not', async ({ page }) => {
+    await gotoQualityWithLang(page, 'T107', 'zh');
 
     const primaryBadges = page.locator('section[aria-labelledby="iaaTitle"] .small-sample-badge');
     await expect(primaryBadges).toHaveCount(0);
@@ -101,8 +101,8 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
     await expect(secondaryBadge).toHaveText('小樣本估計');
   });
 
-  test('T009: free_text-only task shows a not_applicable badge instead of pass/fail', async ({ page }) => {
-    await gotoQualityWithLang(page, 'T009', 'zh');
+  test('T109: free_text-only task shows a not_applicable badge instead of pass/fail', async ({ page }) => {
+    await gotoQualityWithLang(page, 'T109', 'zh');
 
     const badge = page.locator('#iaaSummaryBadge');
     await expect(badge).toHaveText('不適用');
@@ -113,8 +113,8 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
     await expect(page.locator('#qualityPanelMount .small-sample-badge')).toHaveCount(0);
   });
 
-  test('T009: not_applicable badge translates to English', async ({ page }) => {
-    await gotoQualityWithLang(page, 'T009', 'en');
+  test('T109: not_applicable badge translates to English', async ({ page }) => {
+    await gotoQualityWithLang(page, 'T109', 'en');
 
     await expect(page.locator('#iaaSummaryBadge')).toHaveText('Not applicable');
     await expect(page.locator('#freeTextIaaLead')).toHaveText('Not applicable — assessed by reviewer');
@@ -124,7 +124,7 @@ test.describe('Dataset analysis detail composite IAA badge math (outputs[] itera
     // No shipped fixture task currently has a counted output type awaiting its first Dry Run,
     // so this exercises the pure badge-math function directly with a synthetic taskMeta —
     // covering the pending-state branch documented at spec.md IAA_PENDING_BADGE_FORMAT.
-    await gotoQualityWithLang(page, 'T001', 'zh');
+    await gotoQualityWithLang(page, 'T101', 'zh');
 
     const zhText = await page.evaluate(() => {
       const taskMeta = {
