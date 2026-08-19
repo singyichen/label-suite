@@ -67,6 +67,12 @@ test.describe('Publish button double-click guard (issue #198)', () => {
       win.publishDryRun();
     });
 
+    // Settle before counting: if the guard ever regressed, a second
+    // trial-round push/analytics event could land after the first
+    // assertion below already resolves. Wait past the guard's cooldown
+    // window so a regression is reliably caught instead of racing it.
+    await page.waitForTimeout(1000);
+
     await expect(page.locator('#trialRoundTimeline .round-timeline-item')).toHaveCount(1);
     await expect(page.locator('#trialRoundsUsedValue')).toHaveText('1');
     expect(await readPublishSuccessCount(page)).toBe(1);
@@ -104,6 +110,12 @@ test.describe('Publish button double-click guard (issue #198)', () => {
       win.publishOfficialRun();
       win.publishOfficialRun();
     });
+
+    // Settle before counting: if the guard ever regressed, a second
+    // publish/analytics event could land after the first assertion below
+    // already resolves. Wait past the guard's cooldown window so a
+    // regression is reliably caught instead of racing it.
+    await page.waitForTimeout(1000);
 
     await expect(page.locator('#statusBadge')).toHaveText('正式標記進行中');
     expect(await readPublishSuccessCount(page)).toBe(1);
