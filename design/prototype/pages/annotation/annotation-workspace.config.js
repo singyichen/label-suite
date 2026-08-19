@@ -177,17 +177,29 @@
   function revalidateCurrentStep() {}
   function showFieldError() {}
   var toastTimer = null;
-  function showToast(msg) {
+  /* Auto-dismiss per UXC-07: Error never auto-dismisses (manual close only). */
+  var TOAST_DURATIONS = { success: 3000, info: 5000, warning: 8000, error: 0 };
+  function showToast(msg, variant) {
     var toast = document.getElementById('toast');
     var toastMsg = document.getElementById('toastMsg');
     if (!toast || !toastMsg) return;
+    var v = TOAST_DURATIONS.hasOwnProperty(variant) ? variant : 'success';
+    toast.className = 'toast toast-' + v + ' visible';
     toastMsg.textContent = msg || '';
-    toast.classList.add('visible');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () {
-      toast.classList.remove('visible');
-    }, 2200);
+    if (TOAST_DURATIONS[v] > 0) {
+      toastTimer = setTimeout(function () {
+        toast.classList.remove('visible');
+      }, TOAST_DURATIONS[v]);
+    }
   }
+  function hideToast() {
+    var toast = document.getElementById('toast');
+    if (toast) toast.classList.remove('visible');
+    clearTimeout(toastTimer);
+  }
+  var toastCloseBtn = document.getElementById('toastClose');
+  if (toastCloseBtn) toastCloseBtn.addEventListener('click', hideToast);
   function track() {}
   function onChipSelectionChange() {}
   function showTaxonomyDeleteModal(descendantCount, onConfirm) {
@@ -1607,7 +1619,7 @@
       }
     });
     if (!allAnswered) {
-      showToast(t('wsSubmitIncomplete'));
+      showToast(t('wsSubmitIncomplete'), 'warning');
       state.submitBusy = false;
       if (submitBtnEl) submitBtnEl.disabled = false;
       return;
@@ -2510,7 +2522,7 @@
       submitBtn.addEventListener('click', function () {
         var decisions = openItemIds.map(function (id) { return arbitrationChoices[id]; });
         if (decisions.some(function (decision) { return !decision; })) {
-          showToast(t('toastArbitrationIncomplete'));
+          showToast(t('toastArbitrationIncomplete'), 'warning');
           return;
         }
         data.submitArbitration(
@@ -2628,7 +2640,7 @@
       });
     });
     if (!allDecided) {
-      showToast(t('toastSelectDecision'));
+      showToast(t('toastSelectDecision'), 'warning');
       return;
     }
 
